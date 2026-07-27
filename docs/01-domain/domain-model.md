@@ -1,0 +1,49 @@
+# Modelo de dominio — music-platform
+
+Este documento describe las entidades del negocio y cómo se relacionan entre sí, en lenguaje conceptual. La traducción a tablas y constraints concretos vive en `03-data/sql-model.md`.
+
+## Usuario
+
+La persona que usa la aplicación: se registra, valora, comenta, arma listas y sigue la actividad de otros usuarios.
+
+## Artista
+
+Puede ser una **persona** o un **grupo**. Una persona puede pertenecer a uno o más grupos a la vez, y puede tener también su propia carrera solista — ambas discografías conviven en el mismo perfil de artista sin tratarse como conceptos separados. Un grupo también es un Artista, con su propio perfil y discografía, compuesto por personas que fueron o son sus miembros a lo largo del tiempo.
+
+Existe además un tipo especial de Artista, "Various Artists", usado para álbumes compilatorios donde no hay un único artista principal, aunque cada canción dentro sí lo tenga.
+
+## Álbum (concepto) y Edición
+
+Un **Álbum** es el concepto general que el usuario reconoce y valora (ej. "The Dark Side of the Moon"). Ese mismo álbum puede tener múltiples **Ediciones**: la versión original, una edición japonesa con bonus tracks, un remaster de aniversario, etc. La valoración y los comentarios pertenecen al Álbum como concepto, no a cada edición por separado — así no se fragmentan entre versiones. El listado de canciones concreto sí depende de qué Edición se esté mirando.
+
+Un Álbum se clasifica en una de cuatro categorías: de estudio, single/EP, compilado, o en vivo/misceláneo.
+
+## Canción (Grabación) y Pista
+
+Una **Canción** (o Grabación) es la interpretación concreta que un usuario valora y comenta. Una misma Canción puede aparecer en muchas Ediciones distintas (el álbum original, un compilado, un bonus track de otro álbum) sin que eso fragmente su valoración: es un único registro con una única caja de comentarios, sin importar en cuántos discos aparezca.
+
+La **Pista** es la posición concreta de una Canción dentro de una Edición particular (número de disco, número de posición) — es un dato de la Edición, no de la Canción en sí.
+
+Una Canción puede ser una versión distinta de otra: una re-grabación, un remix, o una versión en vivo cuentan como una Canción nueva y separada. Un remaster de audio, en cambio, **no** genera una Canción nueva — sigue siendo la misma grabación, solo con distinto tratamiento de audio.
+
+## Crédito
+
+El **Crédito** conecta un Artista con un Álbum o con una Canción, y resuelve los distintos patrones de autoría de la industria:
+- Artista único.
+- Colaboración con billing menor ("feat.").
+- Colaboración a la par (dúo, "Artista A & Artista B").
+- Álbumes de Various Artists, donde cada Canción adentro tiene su propio crédito real aunque el Álbum en general no tenga un artista principal fijo.
+
+## Valoración
+
+Un Usuario puede valorar un Artista, un Álbum, o una Canción — nunca más de un objetivo a la vez, y solo una Valoración vigente por Usuario y por objetivo (una nueva valoración reemplaza a la anterior, no la duplica). La Valoración combina dos escalas que deben ser siempre coherentes entre sí: estrellas (de 0.5 a 5, en pasos de 0.5) y una "Valoración detallada" opcional (de 1 a 100).
+
+## Comentario
+
+Igual que la Valoración, un Comentario pertenece a exactamente un Artista, Álbum o Canción — pero, a diferencia de la Valoración, un mismo Usuario puede dejar más de un Comentario sobre el mismo objetivo.
+
+## Entidades sociales (a definir en detalle en `05-features/`, cuando se llegue a la Fase 5)
+
+- **Lista**: colección curada de Álbumes/Canciones/Artistas armada por un Usuario.
+- **Favorito**: marca simple de un Usuario sobre un Artista.
+- **Actividad**: registro de lo que un Usuario fue valorando/comentando recientemente, visible para quienes lo siguen — la función inspirada en el "qué estás escuchando" de MSN.
