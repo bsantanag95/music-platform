@@ -13,6 +13,7 @@
 // alcance de la Fase 2 esta cola en memoria es suficiente.
 
 import type {
+  MBArtistSummary,
   MBArtistSearchResponse,
   MBReleaseGroupBrowseResponse,
   MBReleaseGroupWithReleases,
@@ -72,6 +73,11 @@ async function mbFetch<T>(path: string, params: Record<string, string> = {}): Pr
 export const musicbrainz = {
   searchArtist(query: string) {
     return mbFetch<MBArtistSearchResponse>("/artist", { query });
+  },
+
+  /** Detalle básico de un artista ya conocido por id — para enriquecer stubs sin arriesgar un match distinto por nombre. */
+  getArtist(mbid: string) {
+    return mbFetch<MBArtistSummary>(`/artist/${mbid}`, {});
   },
 
   /** Álbumes/EPs/singles etc. donde este artista aparece como crédito. */

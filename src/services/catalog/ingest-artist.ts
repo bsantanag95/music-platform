@@ -13,15 +13,32 @@ const VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377";
  */
 export async function findOrIngestArtist(name: string): Promise<ArtistRow | null> {
   const [local] = await db.select().from(artist).where(ilike(artist.name, name)).limit(1);
-  if (local?.mbid) return local;
+
+  // Ya está completo: tiene mbid y ya sabemos si es persona, grupo o various.
+  if (local?.mbid && local.type !== "unknown") return local;
+
+  if (local?.mbid) {
+    // Stub ya conocido (creado desde el crédito de otro artista): ya tiene
+    // mbid real, solo falta el tipo. Se consulta ese id puntual — no se
+    // busca por nombre de nuevo, para no arriesgar hacer match con un
+    // homónimo distinto al que ya quedó credited.
+    const detail = await musicbrainz.getArtist(local.mbid);
+    const rows = await db
+      .update(artist)
+      .set({ type: mapArtistType(detail.type), bio: detail.disambiguation ?? null })
+      .where(eq(artist.id, local.id))
+      .returning();
+    return rows[0] ?? local;
+  }
 
   const results = await musicbrainz.searchArtist(name);
   const best = results.artists[0];
   if (!best) return local ?? null;
 
   if (local) {
-    // Ya existía un stub sin mbid (ej. creado desde un crédito de otro
-    // artista) — se enriquece esa misma fila en vez de crear una duplicada.
+    // Fila local sin mbid en absoluto (caso residual, ej. datos cargados a
+    // mano) — se actualiza esa misma fila en vez de insertar una nueva,
+    // para no terminar con dos artistas duplicados con el mismo nombre.
     const rows = await db
       .update(artist)
       .set({ mbid: best.id, type: mapArtistType(best.type), bio: best.disambiguation ?? null })
