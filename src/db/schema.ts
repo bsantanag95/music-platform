@@ -41,6 +41,7 @@ export const artist = pgTable(
     bio: text("bio"),
     photoUrl: text("photo_url"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    discographySyncedAt: timestamp("discography_synced_at", { withTimezone: true }),
   },
   (t) => [
     index("idx_artist_name").on(t.name),

@@ -13,9 +13,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "No se encontró ningún artista" }, { status: 404 });
   }
 
-  const releaseGroups = artist.mbid
-    ? await findOrIngestDiscography(artist.mbid)
-    : [];
+  const releaseGroups = await findOrIngestDiscography(artist);
 
   return NextResponse.json({ artist, releaseGroups });
 }

@@ -1,5 +1,6 @@
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { releaseGroup, credit, type ReleaseGroupRow } from "@/db/schema";
+import { artist, releaseGroup, credit, type ReleaseGroupRow, type ArtistRow } from "@/db/schema";
 import { musicbrainz } from "../musicbrainz/client";
 import { mapReleaseGroupCategory } from "../musicbrainz/mappers";
 import { upsertArtistStub } from "./ingest-artist";
@@ -8,9 +9,26 @@ import type { MBArtistCreditItem } from "../musicbrainz/types";
 /**
  * Trae y cachea todos los release-groups donde el artista aparece
  * acreditado (como principal o como feat.), junto con sus créditos.
+ *
+ * Si `target.discographySyncedAt` ya está seteado, se devuelve directo
+ * desde la base local sin tocar MusicBrainz — antes esta función siempre
+ * volvía a consultar la API en cada búsqueda, incluso para un artista ya
+ * conocido, rompiendo el patrón de cacheo bajo demanda justo en el punto
+ * de mayor tráfico.
  */
-export async function findOrIngestDiscography(artistMbid: string): Promise<ReleaseGroupRow[]> {
-  const browse = await musicbrainz.browseReleaseGroupsByArtist(artistMbid);
+export async function findOrIngestDiscography(target: ArtistRow): Promise<ReleaseGroupRow[]> {
+  if (target.discographySyncedAt) {
+    const rows = await db
+      .select({ releaseGroup })
+      .from(credit)
+      .innerJoin(releaseGroup, eq(releaseGroup.id, credit.releaseGroupId))
+      .where(eq(credit.artistId, target.id));
+    return rows.map((r) => r.releaseGroup);
+  }
+
+  if (!target.mbid) return [];
+
+  const browse = await musicbrainz.browseReleaseGroupsByArtist(target.mbid);
   const rows: ReleaseGroupRow[] = [];
 
   for (const rg of browse["release-groups"]) {
@@ -30,6 +48,8 @@ export async function findOrIngestDiscography(artistMbid: string): Promise<Relea
       await ingestCredits(rg["artist-credit"], { releaseGroupId: row.id });
     }
   }
+
+  await db.update(artist).set({ discographySyncedAt: new Date() }).where(eq(artist.id, target.id));
 
   return rows;
 }

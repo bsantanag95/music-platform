@@ -8,6 +8,8 @@
 // públicos, no secretos); el tracklist se acortó y se agregó un crédito
 // extra sintético solo para poder probar el caso "feat." de punta a punta.
 
+export {}; // fuerza module scope; sin esto, TS trata el archivo como script global y colisiona con otros scripts/*.ts
+
 const PINK_FLOYD_MBID = "83d91898-7763-47d7-b03b-b92132375c47";
 const ROGER_WATERS_MBID = "27f0d92e-6de2-4d38-b1a7-1c8ffa32ce2c";
 const DSOTM_RG_MBID = "1e5eb684-d7e9-3699-8fed-6e2e5d0e0d16";
@@ -99,7 +101,7 @@ async function main() {
   console.log("   ->", artist);
 
   console.log("2) Ingiriendo discografía...");
-  const releaseGroups = await findOrIngestDiscography(artist!.mbid!);
+  const releaseGroups = await findOrIngestDiscography(artist!);
   console.log("   ->", releaseGroups);
 
   console.log("3) Ingiriendo tracklist...");
