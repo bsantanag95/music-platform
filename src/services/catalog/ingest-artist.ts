@@ -7,6 +7,37 @@ import { mapArtistType } from "../musicbrainz/mappers";
 const VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377";
 
 /**
+ * Si el artista es un stub (`type='unknown'`) y ya tiene `mbid`, lo enriquece
+ * consultando MusicBrainz por id. Si ya está completo, o no tiene `mbid`
+ * (nada que consultar), lo devuelve tal cual. Compartido entre
+ * `findOrIngestArtist` (stub encontrado por nombre) y `getArtistById`
+ * (stub visitado directo por id) para no duplicar el mismo criterio.
+ */
+async function enrichIfUnknown(row: ArtistRow): Promise<ArtistRow> {
+  if (row.type !== "unknown" || !row.mbid) return row;
+
+  const detail = await musicbrainz.getArtist(row.mbid);
+  const rows = await db
+    .update(artist)
+    .set({ type: mapArtistType(detail.type), bio: detail.disambiguation ?? null })
+    .where(eq(artist.id, row.id))
+    .returning();
+  return rows[0] ?? row;
+}
+
+/**
+ * Busca un artista por su id propio (navegación directa al perfil, no por
+ * nombre ni mbid). Si es un stub pendiente de enriquecer, lo completa
+ * contra MusicBrainz antes de devolverlo — mismo patrón que ya aplica
+ * `findOrIngestArtist` cuando el stub se encuentra por nombre.
+ */
+export async function getArtistById(id: string): Promise<ArtistRow | null> {
+  const [local] = await db.select().from(artist).where(eq(artist.id, id)).limit(1);
+  if (!local) return null;
+  return enrichIfUnknown(local);
+}
+
+/**
  * Busca un artista por nombre. Primero en la base propia; si no está,
  * consulta MusicBrainz en vivo, cachea el mejor resultado y lo retorna.
  * Patrón de cacheo bajo demanda — ver Fase 2 del roadmap.
@@ -14,22 +45,7 @@ const VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377";
 export async function findOrIngestArtist(name: string): Promise<ArtistRow | null> {
   const [local] = await db.select().from(artist).where(ilike(artist.name, name)).limit(1);
 
-  // Ya está completo: tiene mbid y ya sabemos si es persona, grupo o various.
-  if (local?.mbid && local.type !== "unknown") return local;
-
-  if (local?.mbid) {
-    // Stub ya conocido (creado desde el crédito de otro artista): ya tiene
-    // mbid real, solo falta el tipo. Se consulta ese id puntual — no se
-    // busca por nombre de nuevo, para no arriesgar hacer match con un
-    // homónimo distinto al que ya quedó credited.
-    const detail = await musicbrainz.getArtist(local.mbid);
-    const rows = await db
-      .update(artist)
-      .set({ type: mapArtistType(detail.type), bio: detail.disambiguation ?? null })
-      .where(eq(artist.id, local.id))
-      .returning();
-    return rows[0] ?? local;
-  }
+  if (local?.mbid) return enrichIfUnknown(local);
 
   const results = await musicbrainz.searchArtist(name);
   const best = results.artists[0];

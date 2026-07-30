@@ -40,7 +40,7 @@ music-platform/
 
 Esta es la carpeta que implementa el patrón central del proyecto: consultar la base propia primero, y solo si falta, ir a buscar afuera y guardar el resultado.
 
-- **`ingest-artist.ts`** — `findOrIngestArtist(name)` es el punto de entrada: busca localmente por nombre, y si el registro que encuentra no tiene `mbid` (un "stub" creado desde un crédito de otro artista) lo enriquece en vez de devolverlo tal cual. Si no hay nada local, busca en MusicBrainz y hace upsert. También expone `upsertArtistStub`, usado por `ingest-discography.ts` para crear referencias mínimas a artistas credited.
+- **`ingest-artist.ts`** — `findOrIngestArtist(name)` es el punto de entrada por nombre: busca localmente, y si el registro que encuentra no tiene `mbid` (un "stub" creado desde un crédito de otro artista) lo enriquece en vez de devolverlo tal cual. `getArtistById(id)` es el punto de entrada por id propio (navegación directa al perfil): lee el artista por `id` y, si es un stub, lo enriquece igual que `findOrIngestArtist`. Ambas comparten `enrichIfUnknown(row)`, la función que efectivamente consulta MusicBrainz por id y actualiza la fila — evita duplicar el mismo criterio en dos lugares. También expone `upsertArtistStub`, usado por `ingest-discography.ts` para crear referencias mínimas a artistas credited.
 - **`ingest-discography.ts`** — `findOrIngestDiscography(artist)` trae todos los álbumes donde ese artista aparece acreditado y los cachea, chequeando primero si `artist.discographySyncedAt` ya está seteado. `ingestCredits(...)` es la pieza más interesante: toma el array `artist-credit` que devuelve MusicBrainz y lo mapea casi 1:1 al modelo `CREDIT` del proyecto — posición 0 es `primary`, el resto `featured`, y el `joinphrase` de MusicBrainz es literalmente el `join_phrase` propio.
 - **`ingest-release.ts`** — `findOrIngestTracklist(releaseGroupId, releaseGroupMbid)` trae la edición "oficial" de un álbum (o la primera disponible) con su tracklist completo, crea las `recording` y `track` correspondientes, y llama a `ingestCredits` por cada canción que tenga créditos propios.
 
@@ -48,15 +48,32 @@ Esta es la carpeta que implementa el patrón central del proyecto: consultar la 
 
 Un solo helper: `coverThumbUrl(releaseMbid)` arma la URL de la miniatura de 250px en Cover Art Archive. Nunca construye una URL de resolución completa — es la decisión de licencia documentada en `03-data/data-licensing.md` aplicada directamente en código, no solo como política.
 
+## `src/lib/with-error-handling.ts`
+
+Envuelve un route handler en `try/catch` y devuelve `{ error, code: "INTERNAL_ERROR" }`
+con status 500 ante cualquier excepción no controlada (ej. MusicBrainz caído, error de
+base de datos), en vez de que Next.js devuelva un 500 sin body consistente. Los tres route
+handlers de `catalog/` exportan su `GET` envuelto en este helper.
+
 ## `src/app/` — lo que expone la aplicación
 
 - **`layout.tsx`** / **`page.tsx`** — el placeholder mínimo de la Fase 1, solo confirma que el esqueleto levanta. El diseño real de producto llega en la Fase 3.
 - **`api/catalog/search/route.ts`** — `GET ?q=nombre`: llama a `findOrIngestArtist` y después a `findOrIngestDiscography`, devuelve ambos en JSON. Es la ruta que ejercita el flujo completo descripto abajo.
-- **`api/catalog/release-group/[id]/route.ts`** — `GET` sobre un álbum ya conocido: llama a `findOrIngestTracklist`, arma la URL de carátula, y devuelve el tracklist con duración de cada canción.
+- **`api/catalog/artist/[id]/route.ts`** — `GET`: navegación directa al perfil de un artista por su `id` propio (no por nombre). Llama a `getArtistById` (enriquece el stub si hace falta) y después a `findOrIngestDiscography`, mismo shape de respuesta que `search`.
+- **`api/catalog/release-group/[id]/route.ts`** — `GET` sobre un álbum ya conocido: llama a `findOrIngestTracklist`, arma la URL de carátula, y devuelve el tracklist con duración de cada canción **y sus créditos** (`feat.`) — un solo `JOIN` de `credit` + `artist` sobre todos los `recordingId` del tracklist, agrupado en memoria por canción, en vez de una query por track.
 
-## `scripts/smoke-test-ingestion.ts`
+## `scripts/smoke-test-*.ts`
 
-No se despliega — es un fixture de desarrollo. Reemplaza `global.fetch` por uno que devuelve respuestas con la forma exacta de MusicBrainz (usando los mbid reales de Pink Floyd y Roger Waters) y corre el pipeline completo contra una base Postgres real, sin necesitar salida a internet. Sirve para probar cambios en la lógica de ingesta sin gastar el rate limit real, y quedó como referencia para escribir tests de verdad más adelante.
+No se despliegan — son fixtures de desarrollo que reemplazan `global.fetch` por uno que
+devuelve respuestas con la forma exacta de MusicBrainz, y corren contra una base Postgres
+real sin necesitar salida a internet real (el entorno de ejecución no tiene acceso a
+`musicbrainz.org`). Sirven para probar cambios en la lógica de ingesta sin gastar el rate
+limit real, y quedaron como referencia para escribir tests de verdad más adelante.
+
+- **`smoke-test-ingestion.ts`** — el pipeline completo (artista → discografía → tracklist), con los mbid reales de Pink Floyd / Roger Waters.
+- **`smoke-test-unknown-enrichment.ts`** / **`smoke-test-artist-by-id.ts`** — el mismo escenario de stub `unknown` enriquecido, probado por los dos caminos de entrada posibles: búsqueda por nombre (`findOrIngestArtist`) y navegación directa por id (`getArtistById`).
+- **`smoke-test-discography-cache.ts`** — cuenta cuántas veces se llama al endpoint de browse de MusicBrainz y falla si una segunda invocación con el mismo artista lo vuelve a tocar.
+- **`smoke-test-routes.ts`** — invoca los tres route handlers reales (`GET` exportados de `route.ts`) directamente con un `NextRequest` real, sin necesitar un servidor HTTP levantado. Confirma perfil por id, créditos en tracklist, y los `code` de error (`ARTIST_NOT_FOUND`, `VALIDATION_ERROR`) de punta a punta.
 
 ## El flujo completo de una búsqueda
 
@@ -77,3 +94,4 @@ Corriendo esto contra una base real, aparecieron dos casos que el diseño origin
 1. **Un stub sin `mbid` en absoluto** (ej. datos cargados a mano) se devolvía tal cual sin intentar completarlo. Corregido: ahora se trata igual que si no existiera.
 2. **Un stub creado desde un feat., que ya tiene `mbid` real pero `type: 'unknown'`** (ej. Farruko aparece credited en un track de Sabrina Carpenter, y alguien busca "Farruko" directamente después). El chequeo original (`if (local?.mbid) return local`) confundía "tiene `mbid`" con "ya está completo" — un stub también tiene `mbid`, así que nunca se enriquecía. Corregido: ahora se distingue `mbid` de `type !== 'unknown'`, y cuando falta solo el tipo, se consulta a MusicBrainz **por id directo** (`getArtist(mbid)`), no por nombre — para no arriesgar traer un homónimo distinto al artista que ya había quedado credited.
 3. **`findOrIngestDiscography` no chequeaba cache en absoluto** — a diferencia de `findOrIngestArtist` y `findOrIngestTracklist`, esta función volvía a consultar MusicBrainz en *cada* búsqueda de un artista, incluso uno ya sincronizado. Es el punto de mayor tráfico del sistema (se dispara en cada búsqueda), así que era el peor lugar posible para tener este hueco. Corregido con una columna nueva, `artist.discography_synced_at` (migración `0002`): si ya tiene fecha, se devuelve la discografía leyendo `release_group` a través de `credit`, sin tocar la red; si no, se sincroniza una vez y se marca la fecha al final. `findOrIngestDiscography` ahora recibe el `ArtistRow` completo en vez de solo el `mbid`, porque necesita saber si ya fue sincronizado.
+4. **`params` como objeto plano en vez de `Promise` (Next.js 15)** — al agregar `artist/[id]/route.ts` y extender `release-group/[id]/route.ts`, ambos quedaron tipados con la firma vieja de Next.js (`{ params: { id: string } }`). Desde Next 15, `params` en un route handler dinámico es `Promise<{ id: string }>`, no un objeto plano. Ningún smoke test lo detectó porque invocan `GET` directo pasándole un objeto armado a mano — solo apareció con `tsc --noEmit` completo (que sí valida contra `.next/types/`, generado por Next a partir de las rutas reales) y se confirmó con `next build`. Corregido: `{ params: Promise<{ id: string }> }` + `await params` al principio de cada handler. `scripts/smoke-test-routes.ts` también se corrigió para pasar `Promise.resolve({...})` en vez de un objeto plano, para que ese smoke test hubiera detectado esto desde el principio. Lección: `tsc --noEmit` sobre el proyecto completo (no solo sobre el archivo tocado) y, cuando se pueda, `next build`, son necesarios antes de dar por buena una ruta nueva — un smoke test que mockea el input no sustituye al chequeo de tipos real de Next.js.

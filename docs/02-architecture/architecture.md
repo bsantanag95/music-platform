@@ -5,7 +5,7 @@
 ```
 Frontend (PWA, Next.js)
         ↓
-API (tRPC, tipado end-to-end)
+API (route handlers REST, Next.js App Router)
         ↓
 Servicios de aplicación (ingesta/cache, auth, ratings)
         ↓
@@ -18,7 +18,7 @@ Servicios externos (MusicBrainz, Cover Art Archive, APIs de streaming)
 
 **Frontend (Next.js, PWA).** Renderiza catálogo, perfiles, formularios de valoración/comentario. Responsable de la instalabilidad (manifest, service worker) y del shell offline definido en la Fase 6. No contiene lógica de negocio más allá de validación de UX — toda regla de negocio real (coherencia estrellas/detallada, unicidad de valoración por usuario) se valida también del lado del servidor y de la base de datos, nunca solo en el cliente.
 
-**API (tRPC).** Contratos tipados end-to-end entre frontend y backend, sin necesidad de mantener especificación de API por separado durante el desarrollo temprano. Expone los procedimientos que el frontend consume: búsqueda, lectura de catálogo, mutaciones de valoración/comentario, autenticación.
+**API (route handlers REST, Next.js App Router).** Expone los procedimientos que el frontend consume: búsqueda, lectura de catálogo, mutaciones de valoración/comentario, autenticación. Ver ADR 0006 sobre por qué REST en vez de tRPC (decisión original de este documento, corregida para reflejar lo efectivamente construido en Fases 1 y 2) y `04-api/contracts.md`/`04-api/errors.md` para el contrato detallado.
 
 **Servicios de aplicación.**
 - *Servicio de ingesta y cache*: implementa el patrón de cacheo bajo demanda contra MusicBrainz y Cover Art Archive (ver Fase 2 del roadmap). Es la única capa que habla con las APIs externas — el resto del sistema solo consulta la base propia.
