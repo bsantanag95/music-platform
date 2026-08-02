@@ -62,6 +62,49 @@ handlers de `catalog/` exportan su `GET` envuelto en este helper.
 - **`api/catalog/artist/[id]/route.ts`** — `GET`: navegación directa al perfil de un artista por su `id` propio (no por nombre). Llama a `getArtistById` (enriquece el stub si hace falta) y después a `findOrIngestDiscography`, mismo shape de respuesta que `search`.
 - **`api/catalog/release-group/[id]/route.ts`** — `GET` sobre un álbum ya conocido: llama a `findOrIngestTracklist`, arma la URL de carátula, y devuelve el tracklist con duración de cada canción **y sus créditos** (`feat.`) — un solo `JOIN` de `credit` + `artist` sobre todos los `recordingId` del tracklist, agrupado en memoria por canción, en vez de una query por track.
 
+## `src/lib/api/` y `src/lib/query/` — fundaciones del frontend (Etapa 3.0)
+
+- **`schemas.ts`** — espejo en zod de `docs/04-api/contracts.md` y `04-api/errors.md`. Todo dato que cruza la red se valida en runtime contra estos schemas, nunca contra los tipos de compilación de Drizzle (`ArtistRow`, etc.) — ver `03-best-practices.md`.
+- **`client.ts`** — `apiFetch(path, schema)`: hace el `fetch`, parsea la respuesta contra el schema, y lanza `ApiError` (con `.code` tipado) tanto si el servidor devuelve un error con el shape `{ error, code }` como si devuelve cualquier otra cosa inesperada (fallback a `INTERNAL_ERROR`). Tiene test real en `client.test.ts` (4 casos, mockeando `fetch`).
+- **`catalog.ts`** — `searchCatalog`, `getArtistById`, `getReleaseGroupDetail`: funciones de alto nivel sobre `client.ts`, lo único que los componentes deberían importar para hablar con la API.
+- **`query/keys.ts`** — query keys centralizadas de TanStack Query, para no repetir arrays de strings mágicos en cada componente.
+
+## `src/components/ui/` — componentes atómicos, agnósticos de dominio
+
+`Button`, `Input`, `Skeleton`, `EmptyState`, `ErrorState`. El detalle no obvio: `Skeleton` tiene una variante `disc` (anillos concéntricos, como los surcos de un vinilo) pensada para carátulas y fotos de artista en la Etapa 3.2 — un skeleton cuadrado ahí rompería la identidad visual del catálogo. `EmptyState` y `ErrorState` son deliberadamente distintos: "no encontrado" no es un error (no ofrece reintentar), un fallo de red sí.
+
+## `postcss.config.mjs` / `globals.css` — sistema de tokens propio (Tailwind v4)
+
+**Corrección importante:** Tailwind v4 no usa `tailwind.config.ts` — la configuración es
+CSS-first, con la regla `@theme` dentro del propio archivo CSS. El proyecto arrancó con
+convenciones de v3 (`tailwind.config.ts`, `@tailwind base/components/utilities`) y se
+corrigió una vez detectado. `postcss.config.mjs` solo registra `@tailwindcss/postcss`
+(v4 no necesita `autoprefixer` por separado, ni declarar `content` — el escaneo de
+archivos es automático).
+
+Paleta cálida y oscura (fondo `ink`, texto `paper`, acento `amber`, secundario `petrol`)
+en vez de la paleta gris/azul por defecto — inspirada en portadas de vinilo y liner notes,
+no en un dashboard genérico. Definida como variables CSS dentro de `@theme` en
+`globals.css`, no en JavaScript. Tres tipografías vía `next/font/google` en `layout.tsx`:
+`Space Grotesk` (títulos), `Source Serif 4` (cuerpo), `IBM Plex Mono` (datos — duración de
+pistas, posiciones).
+
+**Detalle no obvio:** `next/font` expone sus variables como `--font-display-raw`,
+`--font-body-raw`, `--font-data-raw` (no `--font-display` directo) porque `@theme` define
+`--font-display: var(--font-display-raw), system-ui, sans-serif;` — usar el mismo nombre
+en ambos lados sería una referencia circular en CSS (`--font-display: var(--font-display)`
+nunca resolvería). Se validó que los tokens realmente llegan al CSS compilado (no quedan
+silenciosamente ignorados, un error común de la migración a v4) inspeccionando el output
+de `next build` directamente.
+
+## `eslint.config.mjs`
+
+No existía desde la Fase 1 pese a que `package.json` ya tenía el script `lint` — nunca se había corrido. Se agregó configuración real (flat config de `eslint-config-next`) al construir la Etapa 3.0. `next lint` está deprecado y tiene un conflicto de versión en este proyecto; `lint` corre `eslint .` directo. El lint interno de `next build` (motor distinto) también choca con la misma incompatibilidad — se desactivó en `next.config.mjs` (`eslint.ignoreDuringBuilds`) para no mantener dos linters rotos en paralelo; el real sigue siendo el paso explícito de CI.
+
+## `vitest.config.ts` / `src/test/`
+
+Setup mínimo de testing pedido por la Etapa 3.0: Vitest + Testing Library + jsdom. Por ahora un solo archivo de test real (`src/lib/api/client.test.ts`), que cubre `apiFetch` de punta a punta mockeando `fetch`.
+
 ## `scripts/smoke-test-*.ts`
 
 No se despliegan — son fixtures de desarrollo que reemplazan `global.fetch` por uno que
@@ -95,3 +138,21 @@ Corriendo esto contra una base real, aparecieron dos casos que el diseño origin
 2. **Un stub creado desde un feat., que ya tiene `mbid` real pero `type: 'unknown'`** (ej. Farruko aparece credited en un track de Sabrina Carpenter, y alguien busca "Farruko" directamente después). El chequeo original (`if (local?.mbid) return local`) confundía "tiene `mbid`" con "ya está completo" — un stub también tiene `mbid`, así que nunca se enriquecía. Corregido: ahora se distingue `mbid` de `type !== 'unknown'`, y cuando falta solo el tipo, se consulta a MusicBrainz **por id directo** (`getArtist(mbid)`), no por nombre — para no arriesgar traer un homónimo distinto al artista que ya había quedado credited.
 3. **`findOrIngestDiscography` no chequeaba cache en absoluto** — a diferencia de `findOrIngestArtist` y `findOrIngestTracklist`, esta función volvía a consultar MusicBrainz en *cada* búsqueda de un artista, incluso uno ya sincronizado. Es el punto de mayor tráfico del sistema (se dispara en cada búsqueda), así que era el peor lugar posible para tener este hueco. Corregido con una columna nueva, `artist.discography_synced_at` (migración `0002`): si ya tiene fecha, se devuelve la discografía leyendo `release_group` a través de `credit`, sin tocar la red; si no, se sincroniza una vez y se marca la fecha al final. `findOrIngestDiscography` ahora recibe el `ArtistRow` completo en vez de solo el `mbid`, porque necesita saber si ya fue sincronizado.
 4. **`params` como objeto plano en vez de `Promise` (Next.js 15)** — al agregar `artist/[id]/route.ts` y extender `release-group/[id]/route.ts`, ambos quedaron tipados con la firma vieja de Next.js (`{ params: { id: string } }`). Desde Next 15, `params` en un route handler dinámico es `Promise<{ id: string }>`, no un objeto plano. Ningún smoke test lo detectó porque invocan `GET` directo pasándole un objeto armado a mano — solo apareció con `tsc --noEmit` completo (que sí valida contra `.next/types/`, generado por Next a partir de las rutas reales) y se confirmó con `next build`. Corregido: `{ params: Promise<{ id: string }> }` + `await params` al principio de cada handler. `scripts/smoke-test-routes.ts` también se corrigió para pasar `Promise.resolve({...})` en vez de un objeto plano, para que ese smoke test hubiera detectado esto desde el principio. Lección: `tsc --noEmit` sobre el proyecto completo (no solo sobre el archivo tocado) y, cuando se pueda, `next build`, son necesarios antes de dar por buena una ruta nueva — un smoke test que mockea el input no sustituye al chequeo de tipos real de Next.js.
+5. **Tailwind configurado con convenciones de v3** (`tailwind.config.ts`, `@tailwind base/components/utilities`) en un proyecto que en realidad instaló v4. No lo detectó ningún chequeo automático — v4 acepta `tailwind.config.ts` por compatibilidad hacia atrás si se lo carga explícitamente, pero acá ni siquiera se cargaba, así que los tokens custom simplemente no existían y probablemente hubiera compilado con la paleta por defecto sin avisar. Se corrigió tras una revisión manual: `@theme` dentro de `globals.css` reemplaza al archivo de config, `postcss.config.mjs` reemplaza a `postcss.config.js` con el plugin `@tailwindcss/postcss`. Se validó explícitamente que los tokens llegan al CSS compilado (`grep` sobre el output de `next build`), no solo que el build no tirara error.
+
+## Limitación de red del entorno de desarrollo (no del código)
+
+El entorno donde se valida este proyecto durante su construcción no tiene salida de red
+hacia `musicbrainz.org` ni hacia `fonts.googleapis.com` — solo un puñado de dominios
+permitidos (npm, apt, GitHub). Esto afecta la validación de dos piezas puntuales:
+
+- La ingesta real contra MusicBrainz (Fase 2) se valida con smoke tests que simulan el
+  `fetch`, no contra la API en vivo.
+- `next/font/google` (Etapa 3.0) no puede resolver las tipografías durante `next build` en
+  este entorno — se confirmó por separado, con un layout temporal sin fuentes externas,
+  que el resto del build compila limpio, pero el build completo con las fuentes reales
+  todavía no se corrió de punta a punta.
+
+Ninguna de las dos cosas es un problema del código — son limitaciones del entorno de
+validación. Correr `npm run build` en una máquina con salida a internet completa debería
+funcionar sin cambios.

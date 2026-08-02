@@ -14,7 +14,7 @@ Se propone agregar:
 
 | Dependencia | Para qué | Tipo |
 |---|---|---|
-| `tailwindcss` + `postcss` + `autoprefixer` | Estilos — no hay ningún sistema de estilos hoy (solo `style={{...}}` inline en `page.tsx`/`layout.tsx`) | dependency |
+| `tailwindcss` (v4) + `@tailwindcss/postcss` + `postcss` | Estilos, con configuración CSS-first (`@theme` en `globals.css`, sin `tailwind.config.ts` ni `autoprefixer` — cambio real de v4 frente a v3) | dependency |
 | `zod` | Validar en runtime las respuestas de `/api/catalog/*` — hoy nada valida que el JSON recibido cumple con `ArtistRow`/`ReleaseGroupRow`, son solo tipos de compilación | dependency |
 | `@tanstack/react-query` | Cache y estado de datos remotos del lado del cliente (carga progresiva de carátulas, búsquedas) | dependency |
 | `vitest` + `@testing-library/react` + `jsdom` | Tests unitarios/de componentes — no hay test runner configurado hoy | devDependency |

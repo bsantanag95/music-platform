@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+/* Sistema de tokens propio — ver docs/06-design (cuando exista) para el
+   razonamiento de diseño. Deliberadamente NO se usa la paleta por defecto
+   de Tailwind: la identidad visual del proyecto es cálida y oscura,
+   inspirada en portadas de vinilo y liner notes, no en un dashboard
+   genérico.
+
+   Nota sobre las variables --font-*-raw: next/font/google (layout.tsx)
+   inyecta las tipografías cargadas bajo esos nombres. Acá se re-exponen
+   como --font-display/body/data (con fallback), que es lo que Tailwind
+   usa para generar las utilidades font-display/font-body/font-data. No se
+   puede usar el mismo nombre en ambos lados: --font-display: var(--font-display)
+   sería una referencia circular. */
+@theme {
+  --color-ink: #14120f; /* fondo — negro cálido, no #000 puro */
+  --color-ink-surface: #1f1b17; /* tarjetas y superficies elevadas */
+  --color-ink-border: #2e2a24;
+
+  --color-paper: #f2ede4; /* texto principal — cálido, tipo papel */
+  --color-paper-muted: #a89e8e; /* texto secundario */
+
+  --color-amber: #e8b84b; /* acento primario — dorado de VU meter */
+  --color-amber-hover: #f2c866;
+
+  --color-petrol: #4a7c7c; /* acento secundario — hi-fi vintage */
+  --color-petrol-hover: #5b9494;
+
+  --color-danger: #d96c5f;
+
+  --font-display: var(--font-display-raw), system-ui, sans-serif;
+  --font-body: var(--font-body-raw), Georgia, serif;
+  --font-data: var(--font-data-raw), ui-monospace, monospace;
+
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 10px;
+}
+
+@layer base {
+  body {
+    @apply bg-ink text-paper font-body antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display;
+  }
+
+  /* Foco visible siempre, en el acento del proyecto — nunca se suprime el outline. */
+  :focus-visible {
+    outline: 2px solid var(--color-amber);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

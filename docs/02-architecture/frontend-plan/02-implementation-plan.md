@@ -19,7 +19,9 @@ Leyenda de estado: 🔴 no iniciada · 🟡 en progreso · 🟢 completa · ⚪ 
 providers) antes de construir cualquier pantalla.
 
 **Tareas técnicas**
-- Instalar y configurar Tailwind CSS (`globals.css`, `tailwind.config.ts`).
+- Instalar y configurar Tailwind CSS v4 (`@theme` dentro de `globals.css`, `postcss.config.mjs`
+  con `@tailwindcss/postcss` — v4 no usa `tailwind.config.ts` ni `autoprefixer` por
+  separado, ver corrección en `code-walkthrough.md`).
 - Instalar `zod` y `@tanstack/react-query`.
 - Crear `src/lib/api/schemas.ts`: esquemas zod espejo de las respuestas documentadas en
   `docs/04-api/contracts.md` (`ArtistSchema`, `ReleaseGroupSchema`,
@@ -31,22 +33,44 @@ providers) antes de construir cualquier pantalla.
 - Crear `src/app/providers.tsx` con `QueryClientProvider` y usarlo en `layout.tsx`.
 - Crear componentes base en `src/components/ui/`: `Button`, `Input`, `Skeleton`,
   `EmptyState`, `ErrorState`.
-- (Backend, coordinado — ver bloqueante 2 de `00-backend-analysis.md`) agregar el campo
-  `code` a las dos respuestas de error existentes, según `docs/04-api/errors.md`.
+- (Backend) el campo `code` en las respuestas de error ya se agregó a los tres route
+  handlers al resolver el bloqueante 2 de `00-backend-analysis.md` — nada pendiente acá.
 
 **Archivos**
-`package.json`, `tailwind.config.ts`, `postcss.config.js`, `src/app/globals.css`,
+`package.json`, `postcss.config.mjs`, `src/app/globals.css`,
 `src/app/providers.tsx`, `src/app/layout.tsx` (modificado), `src/lib/api/*` (nuevos),
 `src/components/ui/*` (nuevos), `src/app/api/catalog/search/route.ts` y
 `.../release-group/[id]/route.ts` (modificados — solo agregar `code`).
 
-**Dependencias:** ninguna técnica, pero bloqueada por la confirmación de los puntos 1, 4 y
-6 de `00-backend-analysis.md`.
+**Dependencias:** ninguna — los bloqueantes de `00-backend-analysis.md` ya quedaron
+resueltos.
 
 **Criterios de aceptación**
-- `npm run typecheck && npm run lint && npm run build` pasan (igual que CI).
+- `npm run typecheck && npm run lint && npm run test && npm run build` pasan (igual que CI).
 - La página raíz sigue renderizando sin errores con `QueryClientProvider` envolviendo la app.
 - `searchCatalog("Pink Floyd")` devuelve datos parseados y tipados sin `any`.
+
+**Estado: 🟢 Completa**, con una salvedad de entorno anotada abajo.
+
+Construido: Tailwind v4 con sistema de tokens propio (paleta cálida oscura + acento ámbar,
+tipografías `Space Grotesk`/`Source Serif 4`/`IBM Plex Mono` vía `next/font/google`,
+definidos con `@theme` en `globals.css` — no `tailwind.config.ts`, ver corrección en
+`code-walkthrough.md`), `src/lib/api/{schemas,client,catalog}.ts`, `src/lib/query/keys.ts`,
+`Providers` con `QueryClientProvider`, los 5 componentes de `src/components/ui/`
+(`Skeleton` incluye una variante `disc` — anillos concéntricos tipo surco de vinilo, para
+carátulas/fotos en Etapa 3.2+, en vez de un bloque genérico). También se agregó, fuera del
+alcance original de esta etapa pero necesario para que `npm run lint` funcionara en
+absoluto: configuración real de ESLint (`eslint.config.mjs` — no existía desde la Fase 1),
+y Vitest + Testing Library con un test real de `apiFetch` (4 casos: éxito, error tipado,
+schema inválido, error sin shape esperado).
+
+**Validado:** `typecheck`, `lint`, `test` (4/4), y `next build` — este último compila y
+genera las 5 rutas correctamente. La única pieza no validable en este entorno de
+ejecución: `next/font/google` necesita salida de red a `fonts.googleapis.com`, que no está
+disponible en el sandbox (mismo tipo de restricción que ya afecta a `musicbrainz.org`, ver
+`code-walkthrough.md`). Se confirmó por separado, con un layout temporal sin fuentes
+externas, que el resto del build (Tailwind, componentes, rutas) compila limpio — el build
+completo con las fuentes reales queda para validar en un entorno con red completa.
 
 ---
 
