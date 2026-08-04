@@ -99,7 +99,17 @@ ejercitando `findOrIngestArtist` de punta a punta desde la UI.
 - Buscar un nombre inexistente muestra estado vacío sin romper la app ni la consola.
 - Buscar con el input vacío no dispara ningún request.
 
-**Estado: 🔴 No iniciada.**
+**Estado: 🟢 Completa.**
+
+Construido: `src/components/catalog/SearchForm.tsx` (componente cliente con validación local,
+mapeo de `ApiError.code` a mensajes propios, estados de carga/vacío/error y navegación a
+`/artista/<id>`), `src/app/(catalog)/buscar/page.tsx` (vista pública), y actualización de
+`src/app/page.tsx` (landing con buscador). Tests: 12/12 pasando (búsqueda válida, input vacío,
+espacios, `ARTIST_NOT_FOUND`, `INTERNAL_ERROR`, accesibilidad, sin requests duplicados).
+
+**Validado:** `typecheck` (0 errores), `lint` (0 errores, 2 warnings pre-existentes en `scripts/`),
+`test` (12/12), `build` (6 rutas, `/buscar` presente). Revisión de Revisor: aprobado tras corregir
+uso de `as` para cast de tipo (línea 59 original) y `aria-busy` redundante en `<Input>`.
 
 ---
 

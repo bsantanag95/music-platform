@@ -23,4 +23,6 @@ jobs:
       - run: npm run test
       - run: npm run build
         env:
+          # Next build imports DB modules, requiring DATABASE_URL.
+          # CI does not run database integration tests yet.
           DATABASE_URL: postgres://user:password@localhost:5432/music_platform

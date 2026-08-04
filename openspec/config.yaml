@@ -18,3 +18,58 @@ schema: spec-driven
 #       - Always include a "Non-goals" section
 #     tasks:
 #       - Break tasks into chunks of max 2 hours
+
+context: |
+  Proyecto:
+  - Plataforma web musical desarrollada con Next.js App Router y TypeScript.
+  - Arquitectura documentada en /docs y alineada con ADRs y convenciones del proyecto.
+
+  Stack:
+  - Next.js App Router
+  - TypeScript (strict)
+  - PostgreSQL + Drizzle ORM
+  - Tailwind CSS v4
+  - Zod para validación runtime
+  - TanStack Query solo para interacciones del cliente
+  - Vitest + Testing Library para pruebas
+
+  Convenciones:
+  - Código, comentarios y documentación en español.
+  - No usar any ni silenciar errores de TypeScript.
+  - Todo acceso HTTP pasa por src/lib/api/client.ts.
+  - Nunca usar fetch directamente desde componentes.
+  - Los errores del backend se manejan mediante ApiError.code; nunca mostrar el mensaje crudo al usuario.
+  - Validar todas las respuestas HTTP con Zod.
+
+  Arquitectura:
+  - Preferir Server Components para la carga inicial de datos.
+  - Usar Client Components únicamente cuando exista interactividad.
+  - TanStack Query solo para datos obtenidos después del primer render (refetch, debounce, carga progresiva, etc.).
+  - Estado local de UI mediante useState cuando sea suficiente.
+
+  Organización:
+  - Componentes reutilizables en src/components/ui.
+  - Componentes del dominio musical en src/components/catalog.
+  - Mantener separación entre frontend, servicios y API.
+  - Seguir las convenciones documentadas en docs/.
+
+  Calidad:
+  - Todo cambio debe mantener typecheck, lint, test y build pasando.
+  - No modificar contratos REST existentes sin actualizar la documentación correspondiente.
+  - Mantener sincronizados código, documentación y artefactos de OpenSpec.
+
+rules:
+  proposal:
+    - Incluir siempre Goals y Non-Goals.
+    - No proponer cambios fuera del alcance solicitado.
+    - Respetar la arquitectura existente.
+
+  design:
+    - Justificar cada decisión técnica importante.
+    - No introducir nuevas dependencias sin necesidad.
+    - Mantener coherencia con la arquitectura del proyecto.
+
+  tasks:
+    - Dividir el trabajo en tareas pequeñas y verificables.
+    - Incluir validación y pruebas.
+    - No mezclar implementaciones de distintas etapas del roadmap.

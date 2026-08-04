@@ -1,12 +1,11 @@
+import { SearchForm } from "@/components/catalog/SearchForm";
+
 export default function Home() {
   return (
-    <main style={{ fontFamily: "system-ui, sans-serif", padding: "2rem", maxWidth: 640 }}>
-      <h1>music-platform</h1>
-      <p>Esqueleto de la Fase 1: repo, esquema migrado, deploy mínimo.</p>
-      <p>
-        Ver <code>/docs</code> para la documentación completa del proyecto (visión, dominio,
-        arquitectura y modelo de datos).
-      </p>
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-12">
+      <h1 className="font-display text-3xl text-paper">music-platform</h1>
+      <p className="font-body text-paper-muted">Catalogá lo que escuchaste. Un Letterboxd para música.</p>
+      <SearchForm />
     </main>
   );
 }

@@ -23,7 +23,7 @@ La Etapa 3.0 dejó disponible `searchCatalog()` como cliente tipado de la API, `
 
 - **Componente cliente solo para la interacción.** `SearchForm` usará estado local para el texto, estado de envío y error; la página podrá renderizarlo dentro de la ruta `/buscar`. Esto evita introducir estado global para una etapa pública de solo lectura.
 - **Cliente API existente.** La búsqueda pasará por `searchCatalog()` y, por tanto, por `apiFetch()` y los schemas zod existentes. Se descarta `fetch` directo desde el componente para preservar validación runtime y manejo uniforme de errores.
-- **Navegación con App Router.** Tras una respuesta válida se usará el router del cliente para ir a `/artista/${artist.id}`. Se descarta redirigir por nombre porque el contrato entrega el UUID propio y la navegación directa por id ya es la convención del catálogo.
+- **Navegación con App Router.** Tras una respuesta válida se usará el router del cliente para ir a `/artista/${artist.id}`. Se descarta redirigir por nombre porque el contrato entrega el UUID propio y la navegación directa por id ya es la convención del catálogo. La vista de perfil de artista pertenece a una etapa posterior; durante esta etapa la navegación puede terminar en el fallback 404 de Next.js, lo cual es comportamiento esperado y no representa un fallo del flujo de búsqueda.
 - **Errores mapeados por código.** `ARTIST_NOT_FOUND` se tratará como estado vacío; `INTERNAL_ERROR` y fallos no reconocidos mostrarán un error recuperable. El texto `ApiError.message` no se mostrará directamente.
 - **Carga contextual.** Mientras se ejecuta la ingesta o búsqueda se deshabilitará el envío y se mostrará un mensaje que explique que la primera importación puede tardar, en lugar de un spinner genérico.
 
