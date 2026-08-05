@@ -16,11 +16,19 @@ export const ArtistSchema = z.object({
 });
 export type Artist = z.infer<typeof ArtistSchema>;
 
+export const ReleaseGroupCategorySchema = z.enum([
+  "studio",
+  "single_ep",
+  "compilation",
+  "live_other",
+]);
+export type ReleaseGroupCategory = z.infer<typeof ReleaseGroupCategorySchema>;
+
 export const ReleaseGroupSchema = z.object({
   id: z.uuid(),
   mbid: z.uuid().nullable(),
   title: z.string(),
-  category: z.enum(["studio", "single_ep", "compilation", "live_other"]),
+  category: ReleaseGroupCategorySchema,
   createdAt: z.string(),
 });
 export type ReleaseGroup = z.infer<typeof ReleaseGroupSchema>;

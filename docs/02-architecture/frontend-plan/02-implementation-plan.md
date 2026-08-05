@@ -4,7 +4,7 @@
 canción`) en etapas pequeñas, cada una con un criterio de aceptación verificable, sin
 avanzar a la siguiente hasta cerrar la anterior.
 
-**Estado general: 🟡 En progreso.** Etapas 3.0, 3.0b y 3.1 completas. Lista para Etapa 3.2.
+**Estado general: 🟡 En progreso.** Etapas 3.0, 3.0b, 3.1 y 3.2 completas. Lista para Etapa 3.3.
 Los bloqueantes de `00-backend-analysis.md` quedaron resueltos desde antes.
 
 Leyenda de estado: 🔴 no iniciada · 🟡 en progreso · 🟢 completa · ⚪ pendiente de decisión.
@@ -212,7 +212,15 @@ decisiones pendientes.
 - Las carátulas cargan progresivamente sin bloquear el render inicial de la página.
 - Ningún string nuevo queda hardcodeado fuera de `messages/`.
 
-**Estado: 🔴 No iniciada** (código de frontend), **backend ya resuelto.**
+**Estado: 🟢 Completa.** Frontend construido y validado en `fase-3-2-vista-perfil-artista`,
+archivado en `openspec/changes/archive/2026-08-05-fase-3-2-vista-perfil-artista/`; specs
+sincronizadas en `openspec/specs/catalog-artist/spec.md`.
+
+> **Nota post-Revisor (3.2):** `01-frontend-architecture.md` y el `design.md` de este change
+> mencionan un `error.tsx` (boundary de error) que todavía no existe en el repo. Un fallo
+> inesperado en SSR (ej. MusicBrainz caído durante `findOrIngestDiscography`) terminaría en el
+> error por defecto de Next, no en una página localizada. No es un criterio de 3.2; se agrega
+> como debt anotado para la Etapa 3.3 (o un `error.tsx` global hacia `01-frontend-architecture.md:40`).
 
 ---
 

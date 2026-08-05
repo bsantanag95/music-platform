@@ -5,8 +5,8 @@ lectura** (buscar → artista → álbum → canción), que es el entregable de 
 `docs/00-product/roadmap.md`. No incluye autenticación ni valoraciones/comentarios — eso
 es Fase 4 y queda fuera de alcance de este plan.
 
-**Estado general: 🟢 Etapas 3.0, 3.0b y 3.1 completas.** Backend listo (`00-backend-analysis.md`);
-i18n implementado (Etapa 3.0b); lista para Etapa 3.2.
+**Estado general: 🟢 Etapas 3.0, 3.0b, 3.1 y 3.2 completas.** Backend listo
+(`00-backend-analysis.md`); i18n implementado (Etapa 3.0b); lista para Etapa 3.3.
 
 ## Índice
 

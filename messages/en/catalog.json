@@ -8,5 +8,24 @@
     "validationEmpty": "Enter a name to search.",
     "loadingHint": "We're importing this artist for the first time. It may take a few seconds...",
     "searchAgain": "Search another artist"
+  },
+  "artist": {
+    "discographyHeading": "Discography",
+    "typeLabels": {
+      "person": "Person",
+      "group": "Group",
+      "various": "Various artists",
+      "unknown": "Unclassified"
+    },
+    "categories": {
+      "studio": "Studio",
+      "single_ep": "Singles & EPs",
+      "compilation": "Compilations",
+      "live_other": "Live & other"
+    },
+    "noPhotoAlt": "No photo available",
+    "albumCoverLabel": "Album cover",
+    "coverPlaceholderAlt": "Cover not available",
+    "coverLoading": "Loading cover"
   }
 }
