@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type SubmitEventHandler } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { searchCatalog } from "@/lib/api/catalog";
@@ -19,9 +19,12 @@ export function SearchForm() {
   const [validationError, setValidationError] = useState<string | undefined>();
   const [isSearching, setIsSearching] = useState(false);
   const [notFound, setNotFound] = useState(false);
-  const [apiError, setApiError] = useState<{ title: string; description: string } | null>(null);
+  const [apiError, setApiError] = useState<{
+    title: string;
+    description: string;
+  } | null>(null);
 
-  async function handleSubmit(e: FormEvent) {
+  const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     const normalized = query.trim();
 
@@ -50,7 +53,7 @@ export function SearchForm() {
     } finally {
       setIsSearching(false);
     }
-  }
+  };
 
   function handleRetry() {
     setApiError(null);

@@ -13,6 +13,11 @@ Aplican a todas las etapas de `02-implementation-plan.md`. Complementan, sin rep
   `db/schema.ts` — esos tipos son de compilación (Drizzle), no garantizan nada en runtime
   sobre lo que realmente llegó por HTTP. `ArtistRow` y afines se reservan para código que
   corre en el servidor con acceso directo a la base (Server Components, servicios).
+- Con React 19.2+ y `@types/react` actualizado, usar tipos específicos de evento según el
+  handler: `SubmitEventHandler<HTMLFormElement>` para `onSubmit`, `ChangeEventHandler` para
+  `onChange`, `InputEventHandler` para `onInput`. **No usar `FormEvent` ni `FormEventHandler`**
+  — están marcados como `@deprecated` en `@types/react` porque no corresponden a un evento
+  real del DOM. ESLint bloquea estos imports con `no-restricted-imports`.
 
 ## Manejo de errores
 

@@ -17,6 +17,23 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
+  {
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "react",
+              importNames: ["FormEvent", "FormEventHandler"],
+              message:
+                "FormEvent y FormEventHandler están deprecated en @types/react. Usar SubmitEventHandler, ChangeEventHandler, InputEventHandler o SyntheticEvent según el tipo de evento.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ];
 
 export default eslintConfig;
