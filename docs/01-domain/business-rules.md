@@ -43,3 +43,9 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 
 - El catálogo se completa bajo demanda (patrón de cacheo): no se precarga el catálogo musical completo desde el día uno.
 - Las carátulas se muestran siempre en baja resolución, con fines de identificación del contenido, no como elemento decorativo a resolución completa — ver `03-data/data-licensing.md` para el detalle legal.
+
+## Internacionalización
+
+- Los datos del catálogo musical (nombres de artistas, títulos de álbumes, títulos de canciones, biografías) **no se traducen**. Se muestran tal cual llegan de MusicBrainz, independientemente del idioma activo de la interfaz.
+- La internacionalización (i18n) aplica únicamente al *chrome* de la interfaz: etiquetas de UI, botones, mensajes de error, estados de carga, y demás texto no proveniente del dominio musical.
+- Ver `02-architecture/i18n.md` para la arquitectura completa del sistema de idiomas.

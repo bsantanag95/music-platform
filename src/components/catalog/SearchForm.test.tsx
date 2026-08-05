@@ -1,9 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { SearchForm } from "@/components/catalog/SearchForm";
 import * as catalogApi from "@/lib/api/catalog";
 import { ApiError } from "@/lib/api/client";
 import type { ArtistWithDiscography } from "@/lib/api/schemas";
+import { renderWithIntl } from "@/test/i18n-test-utils";
+import catalogEs from "../../../messages/es/catalog.json";
+import errorsEs from "../../../messages/es/errors.json";
+import commonEs from "../../../messages/es/common.json";
 
 const mockPush = vi.fn();
 
@@ -11,7 +15,7 @@ vi.mock("@/lib/api/catalog", () => ({
   searchCatalog: vi.fn(),
 }));
 
-vi.mock("next/navigation", () => ({
+vi.mock("@/i18n/navigation", () => ({
   useRouter: () => ({
     push: mockPush,
   }),
@@ -44,43 +48,43 @@ describe("SearchForm", () => {
         createMockArtistWithDiscography(),
       );
 
-      render(<SearchForm />);
+      renderWithIntl(<SearchForm />);
 
-      const input = screen.getByLabelText("Buscar artista");
+      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
       fireEvent.change(input, { target: { value: "  Pink Floyd  " } });
 
-      const button = screen.getByRole("button", { name: "Buscar" });
+      const button = screen.getByRole("button", { name: catalogEs.search.submit });
       fireEvent.click(button);
 
       await waitFor(() => {
         expect(mockSearch).toHaveBeenCalledWith("Pink Floyd");
       });
 
-      expect(mockPush).toHaveBeenCalledWith("/artista/test-artist-id");
+      expect(mockPush).toHaveBeenCalledWith("/artist/test-artist-id");
     });
   });
 
   describe("validación de entrada", () => {
     it("no realiza ninguna solicitud con input vacío", async () => {
-      render(<SearchForm />);
+      renderWithIntl(<SearchForm />);
 
-      const button = screen.getByRole("button", { name: "Buscar" });
+      const button = screen.getByRole("button", { name: catalogEs.search.submit });
       fireEvent.click(button);
 
-      expect(screen.getByText("Ingresá un nombre para buscar.")).toBeInTheDocument();
+      expect(screen.getByText(catalogEs.search.validationEmpty)).toBeInTheDocument();
       expect(catalogApi.searchCatalog).not.toHaveBeenCalled();
     });
 
     it("no realiza ninguna solicitud con solo espacios", async () => {
-      render(<SearchForm />);
+      renderWithIntl(<SearchForm />);
 
-      const input = screen.getByLabelText("Buscar artista");
+      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
       fireEvent.change(input, { target: { value: "   " } });
 
-      const button = screen.getByRole("button", { name: "Buscar" });
+      const button = screen.getByRole("button", { name: catalogEs.search.submit });
       fireEvent.click(button);
 
-      expect(screen.getByText("Ingresá un nombre para buscar.")).toBeInTheDocument();
+      expect(screen.getByText(catalogEs.search.validationEmpty)).toBeInTheDocument();
       expect(catalogApi.searchCatalog).not.toHaveBeenCalled();
     });
   });
@@ -91,20 +95,20 @@ describe("SearchForm", () => {
         new ApiError("ARTIST_NOT_FOUND", 404, "No se encontró ningún artista"),
       );
 
-      render(<SearchForm />);
+      renderWithIntl(<SearchForm />);
 
-      const input = screen.getByLabelText("Buscar artista");
+      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
       fireEvent.change(input, { target: { value: "Artista Inexistente" } });
 
-      const button = screen.getByRole("button", { name: "Buscar" });
+      const button = screen.getByRole("button", { name: catalogEs.search.submit });
       fireEvent.click(button);
 
       await waitFor(() => {
-        expect(screen.getByText("No se encontró el artista")).toBeInTheDocument();
+        expect(screen.getByText(errorsEs.ARTIST_NOT_FOUND.title)).toBeInTheDocument();
       });
 
-      expect(screen.queryByRole("button", { name: "Buscar" })).not.toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Buscar otro artista" })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: catalogEs.search.submit })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: catalogEs.search.searchAgain })).toBeInTheDocument();
     });
 
     it("muestra error recuperable ante INTERNAL_ERROR", async () => {
@@ -112,26 +116,26 @@ describe("SearchForm", () => {
         new ApiError("INTERNAL_ERROR", 500, "Error inesperado"),
       );
 
-      render(<SearchForm />);
+      renderWithIntl(<SearchForm />);
 
-      const input = screen.getByLabelText("Buscar artista");
+      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
       fireEvent.change(input, { target: { value: "Pink Floyd" } });
 
-      const button = screen.getByRole("button", { name: "Buscar" });
+      const button = screen.getByRole("button", { name: catalogEs.search.submit });
       fireEvent.click(button);
 
       await waitFor(() => {
-        expect(screen.getByText("Error inesperado")).toBeInTheDocument();
+        expect(screen.getByText(errorsEs.INTERNAL_ERROR.title)).toBeInTheDocument();
       });
 
-      expect(screen.getByRole("button", { name: "Reintentar" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: commonEs.retry })).toBeInTheDocument();
     });
   });
 
   describe("accesibilidad y estados de carga", () => {
     it("expone label asociado al campo", () => {
-      render(<SearchForm />);
-      const input = screen.getByLabelText("Buscar artista");
+      renderWithIntl(<SearchForm />);
+      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
       expect(input).toBeInTheDocument();
     });
 
@@ -142,17 +146,17 @@ describe("SearchForm", () => {
       });
       vi.mocked(catalogApi.searchCatalog).mockReturnValue(pendingPromise);
 
-      render(<SearchForm />);
+      renderWithIntl(<SearchForm />);
 
-      const input = screen.getByLabelText("Buscar artista");
+      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
       fireEvent.change(input, { target: { value: "Pink Floyd" } });
 
-      const button = screen.getByRole("button", { name: "Buscar" });
+      const button = screen.getByRole("button", { name: catalogEs.search.submit });
       fireEvent.click(button);
 
       expect(button).toBeDisabled();
       expect(
-        screen.getByText("Estamos importando este artista por primera vez. Puede tardar unos segundos..."),
+        screen.getByText(catalogEs.search.loadingHint),
       ).toBeInTheDocument();
 
       resolvePromise!(createMockArtistWithDiscography());
@@ -169,12 +173,12 @@ describe("SearchForm", () => {
       });
       vi.mocked(catalogApi.searchCatalog).mockReturnValue(pendingPromise);
 
-      render(<SearchForm />);
+      renderWithIntl(<SearchForm />);
 
-      const input = screen.getByLabelText("Buscar artista");
+      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
       fireEvent.change(input, { target: { value: "Pink Floyd" } });
 
-      const button = screen.getByRole("button", { name: "Buscar" });
+      const button = screen.getByRole("button", { name: catalogEs.search.submit });
       fireEvent.click(button);
       fireEvent.click(button);
       fireEvent.click(button);

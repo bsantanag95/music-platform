@@ -92,3 +92,11 @@ decidida todavía.
 
 Valoración, comentarios, listas, favoritos y actividad social — ver
 `ratings-and-reviews.md`, `lists-and-favorites.md` y `activity-feed.md` (Fases 4-5).
+
+## Internacionalización (i18n)
+
+El catálogo navegable soporta múltiples idiomas (español e inglés inicialmente). La
+internacionalización aplica únicamente al *chrome* de la interfaz — etiquetas de UI,
+botones, mensajes de estado y error. Los datos del catálogo musical (nombres de artistas,
+títulos de álbumes/canciones, biografías) **no se traducen** y se muestran tal cual
+llegan de MusicBrainz. Ver `02-architecture/i18n.md` para la arquitectura completa.

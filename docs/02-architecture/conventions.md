@@ -25,6 +25,29 @@
 
 - Aún no definido en detalle — se documentará en `04-api/errors.md` cuando se escriba la especificación de API en la Fase 1/2.
 
+## Internacionalización (i18n)
+
+**Decisión confirmada** — ver ADR 0007 y `02-architecture/i18n.md` para el detalle completo de
+la arquitectura. Resumen normativo para uso diario:
+
+- **Rutas de página**: slugs neutros en inglés, iguales para todos los locales (`/search`, no
+  `/buscar`; `/artist/[id]`, no `/artista/[id]`). El locale vive exclusivamente como segmento de
+  ruta (`src/app/[locale]/...`), nunca traducido en el slug mismo. Esto corrige la propuesta
+  original de `03-best-practices.md`, que sugería slugs en español antes de que se confirmara
+  soporte multi-idioma.
+- **Rutas de API**: sin cambios — siguen en inglés (`/api/catalog/...`), como ya estaba definido.
+- **Catálogos de mensajes**: `messages/{locale}/{namespace}.json`, namespaces por dominio
+  (`common`, `catalog`, `errors`), nunca por página. Ver `i18n.md` §6 para la estructura completa.
+- **`components/ui/`** nunca importa `useTranslations` ni conoce el locale activo — recibe texto
+  ya traducido vía props requeridas (nunca defaults hardcodeados). Ver `i18n.md` para el
+  razonamiento.
+- **Navegación programática** (`useRouter`, `Link`) siempre se importa desde
+  `src/i18n/navigation.ts`, nunca directo de `next/navigation` — de lo contrario se pierde el
+  prefijo de locale al navegar.
+- **Datos del catálogo musical** (nombre de artista, título de álbum/canción, biografía) nunca
+  se traducen — se muestran tal cual llegan de MusicBrainz. i18n aplica solo al *chrome* de la
+  interfaz.
+
 ## Principio general
 
 Toda convención nueva que surja durante el desarrollo se agrega a este documento en el momento en que se decide, no después — así ninguna herramienta de IA ni colaborador humano tiene que inferir el estilo del proyecto leyendo código existente.

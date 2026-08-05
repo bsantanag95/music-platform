@@ -1,0 +1,12 @@
+{
+  "search": {
+    "pageTitle": "Search artist",
+    "fieldLabel": "Search artist",
+    "placeholder": "E.g.: Pink Floyd",
+    "submit": "Search",
+    "submitting": "Searching...",
+    "validationEmpty": "Enter a name to search.",
+    "loadingHint": "We're importing this artist for the first time. It may take a few seconds...",
+    "searchAgain": "Search another artist"
+  }
+}

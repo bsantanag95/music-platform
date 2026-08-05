@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { searchCatalog } from "@/lib/api/catalog";
 import { ApiError } from "@/lib/api/client";
 import { Input } from "@/components/ui/Input";
@@ -9,19 +10,11 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 
-const ERROR_MESSAGES = {
-  ARTIST_NOT_FOUND: {
-    title: "No se encontró el artista",
-    description: "Probá con otro nombre o verificá que esté bien escrito.",
-  },
-  INTERNAL_ERROR: {
-    title: "Error inesperado",
-    description: "No pudimos completar la búsqueda. Intentá de nuevo en un momento.",
-  },
-} as const;
-
 export function SearchForm() {
   const router = useRouter();
+  const t = useTranslations("catalog");
+  const tErrors = useTranslations("errors");
+  const tCommon = useTranslations("common");
   const [query, setQuery] = useState("");
   const [validationError, setValidationError] = useState<string | undefined>();
   const [isSearching, setIsSearching] = useState(false);
@@ -33,7 +26,7 @@ export function SearchForm() {
     const normalized = query.trim();
 
     if (!normalized) {
-      setValidationError("Ingresá un nombre para buscar.");
+      setValidationError(t("search.validationEmpty"));
       return;
     }
 
@@ -44,12 +37,15 @@ export function SearchForm() {
 
     try {
       const result = await searchCatalog(normalized);
-      router.push(`/artista/${result.artist.id}`);
+      router.push(`/artist/${result.artist.id}`);
     } catch (err) {
       if (err instanceof ApiError && err.code === "ARTIST_NOT_FOUND") {
         setNotFound(true);
       } else {
-        setApiError(ERROR_MESSAGES.INTERNAL_ERROR);
+        setApiError({
+          title: tErrors("INTERNAL_ERROR.title"),
+          description: tErrors("INTERNAL_ERROR.description"),
+        });
       }
     } finally {
       setIsSearching(false);
@@ -64,11 +60,11 @@ export function SearchForm() {
   if (notFound) {
     return (
       <EmptyState
-        title={ERROR_MESSAGES.ARTIST_NOT_FOUND.title}
-        description={ERROR_MESSAGES.ARTIST_NOT_FOUND.description}
+        title={tErrors("ARTIST_NOT_FOUND.title")}
+        description={tErrors("ARTIST_NOT_FOUND.description")}
         action={
           <Button variant="secondary" onClick={handleRetry}>
-            Buscar otro artista
+            {t("search.searchAgain")}
           </Button>
         }
       />
@@ -81,6 +77,7 @@ export function SearchForm() {
         title={apiError.title}
         description={apiError.description}
         onRetry={handleRetry}
+        retryLabel={tCommon("retry")}
       />
     );
   }
@@ -88,19 +85,19 @@ export function SearchForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-md">
       <Input
-        label="Buscar artista"
+        label={t("search.fieldLabel")}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         error={validationError}
         disabled={isSearching}
-        placeholder="Ej: Pink Floyd"
+        placeholder={t("search.placeholder")}
       />
       <Button type="submit" variant="primary" disabled={isSearching}>
-        {isSearching ? "Buscando..." : "Buscar"}
+        {isSearching ? t("search.submitting") : t("search.submit")}
       </Button>
       {isSearching && (
         <p className="text-sm text-paper-muted" role="status">
-          Estamos importando este artista por primera vez. Puede tardar unos segundos...
+          {t("search.loadingHint")}
         </p>
       )}
     </form>

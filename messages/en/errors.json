@@ -1,0 +1,22 @@
+{
+  "VALIDATION_ERROR": {
+    "title": "Validation error",
+    "description": "Check the entered data and try again."
+  },
+  "ARTIST_NOT_FOUND": {
+    "title": "Artist not found",
+    "description": "Try another name or check the spelling."
+  },
+  "ALBUM_NOT_FOUND": {
+    "title": "Album not found",
+    "description": "The requested album does not exist or is not available."
+  },
+  "NO_EDITIONS_FOUND": {
+    "title": "No editions available",
+    "description": "No ingestible editions were found for this album."
+  },
+  "INTERNAL_ERROR": {
+    "title": "Unexpected error",
+    "description": "We couldn't complete the request. Please try again in a moment."
+  }
+}

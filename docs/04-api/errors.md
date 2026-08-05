@@ -41,3 +41,23 @@ devuelve `INTERNAL_ERROR` ante cualquier excepción no manejada explícitamente.
 `src/lib/api/schemas.ts` (Etapa 3.0) define `ApiErrorSchema` con `code` como enum de los
 valores de la tabla de arriba. `src/lib/api/client.ts` parsea toda respuesta no-2xx contra
 ese schema y lanza un `ApiError` tipado con `.code`, nunca el string de `error` crudo.
+
+### Mapeo de `code` a texto visible (i18n)
+
+**Actualizado tras ADR 0007 / `02-architecture/i18n.md`.** El mapeo de cada `code` a un mensaje
+legible para el usuario ya no vive como un objeto TypeScript local dentro de cada componente
+(como ocurría en la versión inicial de `SearchForm.tsx`, Etapa 3.1). Vive en
+`messages/{locale}/errors.json`, indexado 1:1 por el mismo `ErrorCode` que exporta
+`schemas.ts`:
+
+```json
+{
+  "ARTIST_NOT_FOUND": { "title": "No se encontró el artista", "description": "..." }
+}
+```
+
+Cualquier componente que consuma `ApiError.code` (`SearchForm` hoy; los componentes de perfil de
+artista y detalle de álbum de las Etapas 3.2/3.3 después) resuelve el texto vía
+`useTranslations()` contra este namespace — nunca duplicando el mapeo localmente. Esto
+centraliza el catálogo de mensajes de error una sola vez, coherente con que el catálogo de
+`code` en sí (`ErrorCodeSchema`) también vive en un único lugar (`schemas.ts`).

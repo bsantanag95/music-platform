@@ -1,0 +1,22 @@
+{
+  "VALIDATION_ERROR": {
+    "title": "Error de validación",
+    "description": "Revisá los datos ingresados e intentá de nuevo."
+  },
+  "ARTIST_NOT_FOUND": {
+    "title": "No se encontró el artista",
+    "description": "Probá con otro nombre o verificá que esté bien escrito."
+  },
+  "ALBUM_NOT_FOUND": {
+    "title": "No se encontró el álbum",
+    "description": "El álbum solicitado no existe o no está disponible."
+  },
+  "NO_EDITIONS_FOUND": {
+    "title": "Sin ediciones disponibles",
+    "description": "No se encontraron ediciones ingeribles para este álbum."
+  },
+  "INTERNAL_ERROR": {
+    "title": "Error inesperado",
+    "description": "No pudimos completar la solicitud. Intentá de nuevo en un momento."
+  }
+}
