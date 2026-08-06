@@ -56,6 +56,7 @@ export const TrackCreditSchema = z.object({
 });
 
 export const TrackSchema = z.object({
+  recordingId: z.uuid(),
   position: z.number().int(),
   discNumber: z.number().int(),
   title: z.string(),

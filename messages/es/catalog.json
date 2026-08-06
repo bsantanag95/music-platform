@@ -27,5 +27,16 @@
     "albumCoverLabel": "Carátula del álbum",
     "coverPlaceholderAlt": "Carátula no disponible",
     "coverLoading": "Cargando carátula"
+  },
+  "album": {
+    "tracklistHeading": "Tracklist",
+    "discLabel": "Disco {number}",
+    "durationLabel": "Duración",
+    "durationUnknown": "Duración desconocida",
+    "creditsLabel": "Créditos",
+    "coverLabel": "Carátula del álbum",
+    "coverPlaceholderAlt": "Carátula no disponible",
+    "noEditionsTitle": "Sin ediciones disponibles",
+    "noEditionsDescription": "No se encontraron ediciones para este álbum."
   }
 }

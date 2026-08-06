@@ -27,5 +27,16 @@
     "albumCoverLabel": "Album cover",
     "coverPlaceholderAlt": "Cover not available",
     "coverLoading": "Loading cover"
+  },
+  "album": {
+    "tracklistHeading": "Tracklist",
+    "discLabel": "Disc {number}",
+    "durationLabel": "Duration",
+    "durationUnknown": "Duration unknown",
+    "creditsLabel": "Credits",
+    "coverLabel": "Album cover",
+    "coverPlaceholderAlt": "Cover not available",
+    "noEditionsTitle": "No editions available",
+    "noEditionsDescription": "No editions were found for this album."
   }
 }

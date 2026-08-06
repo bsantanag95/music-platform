@@ -231,44 +231,51 @@ sincronizadas en `openspec/specs/catalog-artist/spec.md`.
 > **Nota de i18n:** namespace `album` en `catalog.json`, mismo patrón que `search`/`artist`.
 > Títulos de canción no se traducen; etiquetas de UI ("Créditos", "Duración") sí.
 
-**Tareas técnicas**
+**Estado: 🟢 Completa.**
 
-- `src/app/[locale]/(catalog)/album/[id]/page.tsx` (Server Component): llama directo a
-  `findOrIngestTracklist` (mismo patrón de servicios directos). El `id` que recibe esta
-  ruta es el id propio del `release_group` (el mismo que ya devuelve `releaseGroups[].id`
-  en la respuesta de `search`) — confirmado consistente con la implementación actual de
-  `release-group/[id]/route.ts`, sin ambigüedad ni bloqueante acá.
-- `src/components/catalog/TrackList.tsx`: posición, título, duración formateada `mm:ss`
-  (formato de duración vía utilidades de `next-intl` si aplica localización de números).
-- `src/components/catalog/AlbumCover.tsx`.
-- Manejar el caso "no se encontraron ediciones" (`NO_EDITIONS_FOUND`) reutilizando
-  `messages/{locale}/errors.json`.
+Construido: `src/services/catalog/album-detail.ts` (read-model compartido que resuelve
+`release_group`, edición seleccionada, carátula, tracklist ordenado por disco/posición y
+créditos), `src/app/[locale]/(catalog)/album/[id]/page.tsx` (Server Component que consume
+el read-model directamente), `src/components/catalog/AlbumCover.tsx` (carátula con
+`next/image` y fallback accesible), `src/components/catalog/TrackList.tsx` (tracklist
+agrupado visualmente por disco, con duración formateada `mm:ss` y créditos como texto
+sin enlaces — los enlaces quedan para 3.4). Namespace `album` agregado a
+`messages/{es,en}/catalog.json`. El endpoint REST `GET /api/catalog/release-group/[id]`
+fue refactorizado para consumir el mismo read-model, conservando el shape público actual.
 
-**Sub-etapa 3.3b (créditos) — ✅ backend resuelto:** `release-group/[id]/route.ts` ya
-incluye, por track, sus créditos (`feat.`) vía `JOIN` con `credit` + `artist` en una sola
-query. Validado con Postgres real: "Breathe (In the Air)" muestra correctamente el crédito
-`Pink Floyd feat. Roger Waters`. Solo queda el trabajo de frontend (consumir
-`tracks[].credits` en `TrackList`).
+**Validado:** `typecheck` (0 errores), `lint` (0 errores nuevos), `test` (48/48), `build`
+(8 rutas, `/[locale]/album/[id]` presente). Tests agregados: route handler (4 casos:
+`ALBUM_NOT_FOUND`, `NO_EDITIONS_FOUND`, detalle completo, shape público), `TrackList`
+(5 casos: un disco, multidisco, sin encabezado de disco único, duración nula, locale),
+`TrackList.credits` (3 casos: créditos visibles sin enlaces, sin créditos adicionales,
+múltiples créditos), `AlbumCover` (3 casos: carátula disponible, ausente, accesible),
+página (3 casos: título sin traducir, etiquetas localizadas, créditos como texto).
 
 **Archivos**
 
-`src/app/[locale]/(catalog)/album/[id]/page.tsx`,
-`src/components/catalog/{TrackList,AlbumCover}.tsx`,
-`messages/{es,en}/catalog.json` (namespace `album` agregado)
-(`src/app/api/catalog/release-group/[id]/route.ts` ya tiene los créditos, sin cambios
-pendientes).
+`src/services/catalog/album-detail.ts` (nuevo),
+`src/app/[locale]/(catalog)/album/[id]/page.tsx` (nuevo),
+`src/components/catalog/{AlbumCover,TrackList}.tsx` (nuevos),
+`src/app/api/catalog/release-group/[id]/route.ts` (refactorizado para usar read-model),
+`src/lib/api/schemas.ts` (`TrackSchema` actualizado con `recordingId`),
+`messages/{es,en}/catalog.json` (namespace `album` agregado),
+tests: `route.test.ts`, `TrackList.test.tsx`, `TrackList.credits.test.tsx`,
+`AlbumCover.test.tsx`, `page.test.tsx`.
+
+**Nota sobre 3.3b (créditos):** los créditos se muestran como texto (ej. "feat. Roger
+Waters"), sin enlaces hacia perfiles de artistas. Los enlaces quedan explícitamente
+reservados para la Etapa 3.4 (navegación cruzada entre vistas).
 
 **Dependencias:** Etapa 3.0, 3.0b (i18n) y 3.1 completas. Sin brechas de backend pendientes.
 
 **Criterios de aceptación**
 
-- (3.3a) Visitar `/{locale}/album/<id-válido>` muestra el tracklist ordenado por
+- (3.3a) ✅ Visitar `/{locale}/album/<id-válido>` muestra el tracklist ordenado por
   disco/posición, con duración legible y carátula, en el idioma correspondiente.
-- (3.3a) Un álbum sin ediciones ingeribles muestra un estado vacío claro, traducido.
-- (3.3b) Cada track con `feat.` muestra el crédito correspondiente, enlazado al artista.
-- Ningún string nuevo queda hardcodeado fuera de `messages/`.
-
-**Estado: 🔴 No iniciada.**
+- (3.3a) ✅ Un álbum sin ediciones ingeribles muestra un estado vacío claro, traducido.
+- (3.3b) ✅ Cada track con `feat.` muestra el crédito correspondiente como texto (enlaces
+  diferidos a 3.4).
+- ✅ Ningún string nuevo queda hardcodeado fuera de `messages/`.
 
 ---
 
