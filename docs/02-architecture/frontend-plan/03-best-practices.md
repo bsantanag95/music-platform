@@ -110,7 +110,7 @@ diaria para quien escribe componentes:
 
 ## CI
 
-- Cada etapa debe pasar `npm run typecheck && npm run lint && npm run test && npm run build`
+- Cada etapa debe pasar `pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build`
   (igual que `.github/workflows/ci.yml`) antes de marcarse como completa.
 - El workflow de CI corre el paso de tests desde que la Etapa 3.0 dejó Vitest configurado;
   el test de consistencia de mensajes (i18n) corre como parte de ese mismo paso.

@@ -14,7 +14,7 @@ permission:
     ".github/workflows/ci.yml": ask
     "*": deny
   bash:
-    "npm run *": allow
+    "pnpm run *": allow
     "npx vitest*": allow
     "*": ask
 ---
@@ -32,14 +32,15 @@ Solo puedes crear/editar archivos de test (`*.test.ts`, `*.test.tsx`) y scripts 
 1. **Antes de que cualquier Etapa pase de 🟡 a 🟢** en `02-implementation-plan.md`, corre sobre el proyecto completo (no solo los archivos tocados):
 
    ```
-   npm run typecheck && npm run lint && npm run build
+   pnpm run typecheck && pnpm run lint && pnpm run build
    ```
 
    Esto es no negociable por la lección ya documentada en `code-walkthrough.md`: el bug de `params` como `Promise` en rutas dinámicas de Next.js 15 pasó todos los smoke tests mockeados y solo lo agarró `tsc --noEmit` sobre el proyecto completo.
 
 2. **Extiende la suite de Vitest** (`03-best-practices.md`): unitarios en `src/lib/api/*` mockeando `fetch`, de componente en Testing Library para estados de carga/error/vacío de `components/catalog/*`.
 
-3. **CI todavía no corre tests** (`.github/workflows/ci.yml` solo tiene `typecheck`, `lint`, `build`) — es deuda pendiente señalada explícitamente en `03-best-practices.md`. En cuanto la Etapa 3.0 deje Vitest instalado, agrega el paso `npm test` al workflow.
+3. **Los smoke tests de integración no forman parte de CI** (`.github/workflows/ci.yml` valida
+   typecheck, lint, tests unitarios y build); requieren Postgres real y se ejecutan aparte.
 
 4. Si escribes un smoke test nuevo, sigue el patrón existente de `scripts/smoke-test-*.ts` (mock de `fetch` con forma real de MusicBrainz, contra Postgres real vía `db`) — el entorno de ejecución no tiene salida a `musicbrainz.org`, así que no hay alternativa a mockear.
 

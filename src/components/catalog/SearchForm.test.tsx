@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { SearchForm } from "@/components/catalog/SearchForm";
 import * as catalogApi from "@/lib/api/catalog";
 import { ApiError } from "@/lib/api/client";
@@ -21,7 +22,9 @@ vi.mock("@/i18n/navigation", () => ({
   }),
 }));
 
-function createMockArtistWithDiscography(overrides?: Partial<ArtistWithDiscography>): ArtistWithDiscography {
+function createMockArtistWithDiscography(
+  overrides?: Partial<ArtistWithDiscography>,
+): ArtistWithDiscography {
   return {
     artist: {
       id: overrides?.artist?.id ?? "test-artist-id",
@@ -44,16 +47,18 @@ describe("SearchForm", () => {
 
   describe("búsqueda válida y navegación", () => {
     it("invoca searchCatalog con el nombre normalizado y navega al artista", async () => {
-      const mockSearch = vi.mocked(catalogApi.searchCatalog).mockResolvedValue(
-        createMockArtistWithDiscography(),
-      );
+      const mockSearch = vi
+        .mocked(catalogApi.searchCatalog)
+        .mockResolvedValue(createMockArtistWithDiscography());
 
       renderWithIntl(<SearchForm />);
 
       const input = screen.getByLabelText(catalogEs.search.fieldLabel);
       fireEvent.change(input, { target: { value: "  Pink Floyd  " } });
 
-      const button = screen.getByRole("button", { name: catalogEs.search.submit });
+      const button = screen.getByRole("button", {
+        name: catalogEs.search.submit,
+      });
       fireEvent.click(button);
 
       await waitFor(() => {
@@ -68,10 +73,14 @@ describe("SearchForm", () => {
     it("no realiza ninguna solicitud con input vacío", async () => {
       renderWithIntl(<SearchForm />);
 
-      const button = screen.getByRole("button", { name: catalogEs.search.submit });
+      const button = screen.getByRole("button", {
+        name: catalogEs.search.submit,
+      });
       fireEvent.click(button);
 
-      expect(screen.getByText(catalogEs.search.validationEmpty)).toBeInTheDocument();
+      expect(
+        screen.getByText(catalogEs.search.validationEmpty),
+      ).toBeInTheDocument();
       expect(catalogApi.searchCatalog).not.toHaveBeenCalled();
     });
 
@@ -81,10 +90,14 @@ describe("SearchForm", () => {
       const input = screen.getByLabelText(catalogEs.search.fieldLabel);
       fireEvent.change(input, { target: { value: "   " } });
 
-      const button = screen.getByRole("button", { name: catalogEs.search.submit });
+      const button = screen.getByRole("button", {
+        name: catalogEs.search.submit,
+      });
       fireEvent.click(button);
 
-      expect(screen.getByText(catalogEs.search.validationEmpty)).toBeInTheDocument();
+      expect(
+        screen.getByText(catalogEs.search.validationEmpty),
+      ).toBeInTheDocument();
       expect(catalogApi.searchCatalog).not.toHaveBeenCalled();
     });
   });
@@ -100,15 +113,23 @@ describe("SearchForm", () => {
       const input = screen.getByLabelText(catalogEs.search.fieldLabel);
       fireEvent.change(input, { target: { value: "Artista Inexistente" } });
 
-      const button = screen.getByRole("button", { name: catalogEs.search.submit });
+      const button = screen.getByRole("button", {
+        name: catalogEs.search.submit,
+      });
       fireEvent.click(button);
 
       await waitFor(() => {
-        expect(screen.getByText(errorsEs.ARTIST_NOT_FOUND.title)).toBeInTheDocument();
+        expect(
+          screen.getByText(errorsEs.ARTIST_NOT_FOUND.title),
+        ).toBeInTheDocument();
       });
 
-      expect(screen.queryByRole("button", { name: catalogEs.search.submit })).not.toBeInTheDocument();
-      expect(screen.getByRole("button", { name: catalogEs.search.searchAgain })).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: catalogEs.search.submit }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: catalogEs.search.searchAgain }),
+      ).toBeInTheDocument();
     });
 
     it("muestra error recuperable ante INTERNAL_ERROR", async () => {
@@ -121,14 +142,20 @@ describe("SearchForm", () => {
       const input = screen.getByLabelText(catalogEs.search.fieldLabel);
       fireEvent.change(input, { target: { value: "Pink Floyd" } });
 
-      const button = screen.getByRole("button", { name: catalogEs.search.submit });
+      const button = screen.getByRole("button", {
+        name: catalogEs.search.submit,
+      });
       fireEvent.click(button);
 
       await waitFor(() => {
-        expect(screen.getByText(errorsEs.INTERNAL_ERROR.title)).toBeInTheDocument();
+        expect(
+          screen.getByText(errorsEs.INTERNAL_ERROR.title),
+        ).toBeInTheDocument();
       });
 
-      expect(screen.getByRole("button", { name: commonEs.retry })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: commonEs.retry }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -151,7 +178,9 @@ describe("SearchForm", () => {
       const input = screen.getByLabelText(catalogEs.search.fieldLabel);
       fireEvent.change(input, { target: { value: "Pink Floyd" } });
 
-      const button = screen.getByRole("button", { name: catalogEs.search.submit });
+      const button = screen.getByRole("button", {
+        name: catalogEs.search.submit,
+      });
       fireEvent.click(button);
 
       expect(button).toBeDisabled();
@@ -167,25 +196,37 @@ describe("SearchForm", () => {
     });
 
     it("no permite requests duplicados mientras está pendiente", async () => {
+      const user = userEvent.setup();
+
       let resolvePromise: (value: ArtistWithDiscography) => void;
+
       const pendingPromise = new Promise<ArtistWithDiscography>((resolve) => {
         resolvePromise = resolve;
       });
+
       vi.mocked(catalogApi.searchCatalog).mockReturnValue(pendingPromise);
 
       renderWithIntl(<SearchForm />);
 
       const input = screen.getByLabelText(catalogEs.search.fieldLabel);
-      fireEvent.change(input, { target: { value: "Pink Floyd" } });
 
-      const button = screen.getByRole("button", { name: catalogEs.search.submit });
-      fireEvent.click(button);
-      fireEvent.click(button);
-      fireEvent.click(button);
+      await user.type(input, "Pink Floyd");
+
+      const button = screen.getByRole("button", {
+        name: catalogEs.search.submit,
+      });
+
+      await user.click(button);
+      await user.click(button);
+      await user.click(button);
 
       expect(catalogApi.searchCatalog).toHaveBeenCalledTimes(1);
 
       resolvePromise!(createMockArtistWithDiscography());
+
+      await waitFor(() => {
+        expect(button).not.toBeDisabled();
+      });
     });
   });
 });

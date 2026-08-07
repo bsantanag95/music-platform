@@ -16,11 +16,11 @@ Toda la documentación de producto, dominio, arquitectura y datos vive en [`/doc
 
 ```bash
 cp .env.example .env      # completar DATABASE_URL
-npm install
-npm run db:migrate        # aplica /drizzle/*.sql en orden
-npm run dev
+pnpm install
+pnpm run db:migrate        # aplica /drizzle/*.sql en orden
+pnpm run dev
 ```
 
 ## Migraciones
 
-Las migraciones son archivos SQL escritos a mano en `/drizzle`, no generados automáticamente — `0000_initial.sql` es el esquema completo diseñado en la Fase 0 (ver `docs/03-data/sql-model.md`). `npm run db:migrate` aplica los archivos pendientes en orden y registra cuáles ya se ejecutaron.
+Las migraciones son archivos SQL escritos a mano en `/drizzle`, no generados automáticamente — `0000_initial.sql` es el esquema completo diseñado en la Fase 0 (ver `docs/03-data/sql-model.md`). `pnpm run db:migrate` aplica los archivos pendientes en orden y registra cuáles ya se ejecutaron.

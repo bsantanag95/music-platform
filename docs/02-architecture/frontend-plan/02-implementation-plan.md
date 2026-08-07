@@ -4,7 +4,7 @@
 canción`) en etapas pequeñas, cada una con un criterio de aceptación verificable, sin
 avanzar a la siguiente hasta cerrar la anterior.
 
-**Estado general: 🟡 En progreso.** Etapas 3.0, 3.0b, 3.1 y 3.2 completas. Lista para Etapa 3.3.
+**Estado general: 🟡 En progreso.** Etapas 3.0, 3.0b, 3.1, 3.2 y 3.3 completas. Lista para Etapa 3.4.
 Los bloqueantes de `00-backend-analysis.md` quedaron resueltos desde antes.
 
 Leyenda de estado: 🔴 no iniciada · 🟡 en progreso · 🟢 completa · ⚪ pendiente de decisión.
@@ -24,7 +24,7 @@ definidos con `@theme` en `globals.css` — no `tailwind.config.ts`, ver correcc
 `Providers` con `QueryClientProvider`, los 5 componentes de `src/components/ui/`
 (`Skeleton` incluye una variante `disc` — anillos concéntricos tipo surco de vinilo, para
 carátulas/fotos en Etapa 3.2+, en vez de un bloque genérico). También se agregó, fuera del
-alcance original de esta etapa pero necesario para que `npm run lint` funcionara en
+alcance original de esta etapa pero necesario para que `pnpm run lint` funcionara en
 absoluto: configuración real de ESLint (`eslint.config.mjs` — no existía desde la Fase 1),
 y Vitest + Testing Library con un test real de `apiFetch` (4 casos: éxito, error tipado,
 schema inválido, error sin shape esperado).
@@ -144,7 +144,7 @@ existentes.
 
 **Criterios de aceptación**
 
-- `npm run typecheck && npm run lint && npm run test && npm run build` pasan.
+- `pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build` pasan.
 - Visitar `/` redirige a `/es` (locale por defecto) sin configuración explícita del navegador.
 - Visitar `/en` sirve el mismo landing en inglés.
 - `/es/search` responde (ruta renombrada); `/buscar` ya no existe.
@@ -293,6 +293,9 @@ reservados para la Etapa 3.4 (navegación cruzada entre vistas).
 - `src/components/layout/Header.tsx`: acceso al buscador desde cualquier página, agregado
   a `layout.tsx`. Incluye el selector de idioma (`es`/`en`) preparado desde la Etapa 3.0b.
 - Breadcrumbs simples: Inicio > Artista > Álbum, traducidos vía `useTranslations("common")`.
+- El read-model de `album-detail.ts` incluye el artista principal asociado al `release_group`,
+  para que el breadcrumb pueda enlazar de forma fiable a `/artist/[id]` sin inferirlo desde
+  datos de presentación.
 
 **Archivos**
 
@@ -360,7 +363,7 @@ componentes ya creados.
 
 - Sin errores de consola en ningún flujo del roadmap de referencia, en ninguno de los dos
   locales.
-- `npm run build` sin warnings de `next/image`.
+- `pnpm run build` sin warnings de `next/image`.
 - Revisión manual en viewport móvil sin overflow horizontal ni texto cortado, en `es` y `en`.
 
 **Estado: 🔴 No iniciada.**

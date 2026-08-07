@@ -8,9 +8,9 @@ tools:
   read: true
 permission:
   bash:
-    "npm run typecheck*": allow
-    "npm run lint*": allow
-    "npm run build*": allow
+    "pnpm run typecheck*": allow
+    "pnpm run lint*": allow
+    "pnpm run build*": allow
     "git diff*": allow
     "*": ask
 ---

@@ -33,7 +33,7 @@ music-platform/
 
 - **`schema.ts`** — el mirror en TypeScript de las tablas, usado para dar autocompletado y tipado a las queries (`db.select().from(artist)...`). No genera migraciones — ver ADR 0005 en `/docs`. Al final del archivo se exportan los tipos inferidos de cada tabla (`ArtistRow`, `ReleaseGroupRow`, etc.) que el resto del código importa.
 - **`index.ts`** — crea el cliente de Postgres (`postgres.js`) y lo envuelve con Drizzle. Falla explícitamente si falta `DATABASE_URL`.
-- **`migrate.ts`** — el runner de migraciones: lee los archivos `.sql` de `/drizzle` en orden, lleva registro de cuáles ya se aplicaron en una tabla `_migrations`, y aplica los pendientes dentro de una transacción cada uno. Se corre con `npm run db:migrate`.
+- **`migrate.ts`** — el runner de migraciones: lee los archivos `.sql` de `/drizzle` en orden, lleva registro de cuáles ya se aplicaron en una tabla `_migrations`, y aplica los pendientes dentro de una transacción cada uno. Se corre con `pnpm run db:migrate`.
 
 ## `src/services/musicbrainz/` — el cliente de la API externa
 
@@ -208,5 +208,5 @@ permitidos (npm, apt, GitHub). Esto afecta la validación de dos piezas puntuale
   todavía no se corrió de punta a punta.
 
 Ninguna de las dos cosas es un problema del código — son limitaciones del entorno de
-validación. Correr `npm run build` en una máquina con salida a internet completa debería
+validación. Correr `pnpm run build` en una máquina con salida a internet completa debería
 funcionar sin cambios.

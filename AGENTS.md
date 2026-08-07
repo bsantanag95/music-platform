@@ -6,15 +6,15 @@ empezar por `/docs/README.md` antes de tocar código. Código y comentarios en e
 ## Comandos
 
 - **Setup:** `cp .env.example .env` (completar `DATABASE_URL` y
-  `MUSICBRAINZ_USER_AGENT`), `npm install`, `npm run db:migrate`, `npm run dev`.
-- `npm run typecheck` — `tsc --noEmit` sobre el proyecto completo, no solo el
+  `MUSICBRAINZ_USER_AGENT`), `pnpm install`, `pnpm run db:migrate`, `pnpm run dev`.
+- `pnpm run typecheck` — `tsc --noEmit` sobre el proyecto completo, no solo el
   archivo tocado: valida contra `.next/types/` y es lo único que detecta firmas
   viejas de rutas dinámicas de Next 15.
-- `npm run lint`, `npm run build`.
-- CI corre, en este orden: `npm ci && typecheck && lint && build`
-  (`.github/workflows/ci.yml`). No corre tests ni migraciones.
-- No hay framework de tests configurado. La verificación manual son los smoke
-  tests en `scripts/` (requieren Postgres real vía `DATABASE_URL`; mockean
+- `pnpm run lint`, `pnpm run build`.
+- CI corre, en este orden: `pnpm install --frozen-lockfile && typecheck && lint && test && build`
+  (`.github/workflows/ci.yml`). No corre migraciones.
+- La verificación de integración manual son los smoke tests en `scripts/`
+  (requieren Postgres real vía `DATABASE_URL`; mockean
   `global.fetch`, no salen a internet real):
 
 ```bash
@@ -29,7 +29,7 @@ necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
 ## Base de datos / migraciones
 
 - Migraciones SQL a mano, numeradas en `/drizzle/`, aplicadas en orden por
-  `npm run db:migrate` y registradas en `_migrations`. **Nunca editar un `.sql`
+  `pnpm run db:migrate` y registradas en `_migrations`. **Nunca editar un `.sql`
   ya aplicado** — un cambio de esquema va en un archivo nuevo.
 - **No usar `drizzle-kit generate`** (ver ADR 0005); `drizzle.config.ts` solo
   sirve para `drizzle-kit studio` / introspección puntual.
@@ -83,7 +83,7 @@ necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
 
 ## Antes de dar un cambio por terminado
 
-- [ ] `npm run typecheck && npm run lint && npm run build` pasan.
+- [ ] `pnpm run typecheck && pnpm run lint && pnpm run build` pasan.
 - [ ] Si se tocó `catalog/` o `musicbrainz/`, se corrió el smoke test relevante
       contra Postgres real.
 - [ ] Si se tocó el esquema, hay un `.sql` nuevo (no editado) + `schema.ts`
