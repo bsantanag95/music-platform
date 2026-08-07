@@ -5,6 +5,7 @@
     "placeholder": "Ej: Pink Floyd",
     "submit": "Buscar",
     "submitting": "Buscando...",
+    "loading": "Consultando el catálogo...",
     "validationEmpty": "Ingresá un nombre para buscar.",
     "loadingHint": "Estamos importando este artista por primera vez. Puede tardar unos segundos...",
     "searchAgain": "Buscar otro artista"

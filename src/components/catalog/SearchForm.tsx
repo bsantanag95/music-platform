@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type SubmitEventHandler } from "react";
+import { useEffect, useRef, useState, type SubmitEventHandler } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { searchCatalog } from "@/lib/api/catalog";
@@ -10,6 +10,12 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 
+// Una primera importación (búsqueda de artista + discografía, con rate limit
+// de MusicBrainz ≥1.1s por request) tarda ~2.5-3s; un artista cacheado en
+// Postgres responde en <100ms. La duración del request es el discriminador
+// para saber si conviene mostrar el aviso de "primera importación".
+const SLOW_REQUEST_THRESHOLD_MS = 3000;
+
 export function SearchForm() {
   const router = useRouter();
   const t = useTranslations("catalog");
@@ -18,11 +24,21 @@ export function SearchForm() {
   const [query, setQuery] = useState("");
   const [validationError, setValidationError] = useState<string | undefined>();
   const [isSearching, setIsSearching] = useState(false);
+  const [slowRequest, setSlowRequest] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [apiError, setApiError] = useState<{
     title: string;
     description: string;
   } | null>(null);
+  const slowRequestTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (slowRequestTimerRef.current) {
+        clearTimeout(slowRequestTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
@@ -37,6 +53,12 @@ export function SearchForm() {
     setNotFound(false);
     setApiError(null);
     setIsSearching(true);
+    setSlowRequest(false);
+
+    slowRequestTimerRef.current = setTimeout(
+      () => setSlowRequest(true),
+      SLOW_REQUEST_THRESHOLD_MS,
+    );
 
     try {
       const result = await searchCatalog(normalized);
@@ -51,6 +73,10 @@ export function SearchForm() {
         });
       }
     } finally {
+      if (slowRequestTimerRef.current) {
+        clearTimeout(slowRequestTimerRef.current);
+        slowRequestTimerRef.current = null;
+      }
       setIsSearching(false);
     }
   };
@@ -100,7 +126,7 @@ export function SearchForm() {
       </Button>
       {isSearching && (
         <p className="text-sm text-paper-muted" role="status">
-          {t("search.loadingHint")}
+          {slowRequest ? t("search.loadingHint") : t("search.loading")}
         </p>
       )}
     </form>

@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { screen, fireEvent, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SearchForm } from "@/components/catalog/SearchForm";
 import * as catalogApi from "@/lib/api/catalog";
@@ -43,6 +43,10 @@ function createMockArtistWithDiscography(
 describe("SearchForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe("búsqueda válida y navegación", () => {
@@ -166,7 +170,7 @@ describe("SearchForm", () => {
       expect(input).toBeInTheDocument();
     });
 
-    it("deshabilita el botón y muestra mensaje contextual durante la carga", async () => {
+    it("deshabilita el botón y muestra mensaje neutro durante la carga", async () => {
       let resolvePromise: (value: ArtistWithDiscography) => void;
       const pendingPromise = new Promise<ArtistWithDiscography>((resolve) => {
         resolvePromise = resolve;
@@ -185,14 +189,130 @@ describe("SearchForm", () => {
 
       expect(button).toBeDisabled();
       expect(
-        screen.getByText(catalogEs.search.loadingHint),
+        screen.getByText(catalogEs.search.loading),
       ).toBeInTheDocument();
+      expect(
+        screen.queryByText(catalogEs.search.loadingHint),
+      ).not.toBeInTheDocument();
 
       resolvePromise!(createMockArtistWithDiscography());
 
       await waitFor(() => {
         expect(button).not.toBeDisabled();
       });
+    });
+
+    it("muestra el aviso de primera importación solo si la solicitud supera el umbral", async () => {
+      vi.useFakeTimers();
+
+      let resolvePromise: (value: ArtistWithDiscography) => void;
+      const pendingPromise = new Promise<ArtistWithDiscography>((resolve) => {
+        resolvePromise = resolve;
+      });
+      vi.mocked(catalogApi.searchCatalog).mockReturnValue(pendingPromise);
+
+      renderWithIntl(<SearchForm />);
+
+      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
+      fireEvent.change(input, { target: { value: "Pink Floyd" } });
+
+      const button = screen.getByRole("button", {
+        name: catalogEs.search.submit,
+      });
+      fireEvent.click(button);
+
+      expect(
+        screen.queryByText(catalogEs.search.loadingHint),
+      ).not.toBeInTheDocument();
+
+      act(() => {
+        vi.advanceTimersByTime(3000);
+      });
+
+      expect(
+        screen.getByText(catalogEs.search.loadingHint),
+      ).toBeInTheDocument();
+
+      resolvePromise!(createMockArtistWithDiscography());
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      vi.useRealTimers();
+    });
+
+    it("no muestra el aviso de primera importación si la solicitud termina antes del umbral", async () => {
+      vi.useFakeTimers();
+
+      let resolvePromise: (value: ArtistWithDiscography) => void;
+      const pendingPromise = new Promise<ArtistWithDiscography>((resolve) => {
+        resolvePromise = resolve;
+      });
+      vi.mocked(catalogApi.searchCatalog).mockReturnValue(pendingPromise);
+
+      renderWithIntl(<SearchForm />);
+
+      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
+      fireEvent.change(input, { target: { value: "Pink Floyd" } });
+
+      const button = screen.getByRole("button", {
+        name: catalogEs.search.submit,
+      });
+      fireEvent.click(button);
+
+      resolvePromise!(createMockArtistWithDiscography());
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      act(() => {
+        vi.advanceTimersByTime(3000);
+      });
+
+      expect(button).not.toBeDisabled();
+      expect(
+        screen.queryByText(catalogEs.search.loadingHint),
+      ).not.toBeInTheDocument();
+
+      vi.useRealTimers();
+    });
+
+    it("limpia el timer al desmontar, sin warnings de act ni setState tras desmontar", async () => {
+      vi.useFakeTimers();
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      let resolvePromise: (value: ArtistWithDiscography) => void;
+      const pendingPromise = new Promise<ArtistWithDiscography>((resolve) => {
+        resolvePromise = resolve;
+      });
+      vi.mocked(catalogApi.searchCatalog).mockReturnValue(pendingPromise);
+
+      const { unmount } = renderWithIntl(<SearchForm />);
+
+      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
+      fireEvent.change(input, { target: { value: "Pink Floyd" } });
+
+      const button = screen.getByRole("button", {
+        name: catalogEs.search.submit,
+      });
+      fireEvent.click(button);
+
+      unmount();
+
+      expect(() => {
+        act(() => {
+          vi.advanceTimersByTime(3000);
+        });
+      }).not.toThrow();
+
+      resolvePromise!(createMockArtistWithDiscography());
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(errorSpy).not.toHaveBeenCalled();
+      errorSpy.mockRestore();
+      vi.useRealTimers();
     });
 
     it("no permite requests duplicados mientras está pendiente", async () => {
