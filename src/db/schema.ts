@@ -78,6 +78,7 @@ export const releaseGroup = pgTable("release_group", {
   mbid: uuid("mbid").unique(),
   title: text("title").notNull(),
   category: text("category").notNull(), // 'studio' | 'single_ep' | 'compilation' | 'live_other'
+  coverThumbUrl: text("cover_thumb_url"), // única fuente escribible de la carátula
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -32,6 +32,8 @@ async function main() {
     await import("../src/app/api/catalog/artist/[id]/route");
   const { GET: releaseGroupGET } =
     await import("../src/app/api/catalog/release-group/[id]/route");
+  const { GET: releaseGroupCoverGET } =
+    await import("../src/app/api/catalog/release-group/[id]/cover/route");
   const { GET: searchGET } =
     await import("../src/app/api/catalog/search/route");
 
@@ -70,6 +72,16 @@ async function main() {
   await printResponse(
     "4) GET /api/catalog/search sin q -> 400 + code",
     await searchGET(new NextRequest("http://localhost/api/catalog/search")),
+  );
+
+  await printResponse(
+    "5) GET /api/catalog/release-group/[id]/cover (cover-only, sin ingesta de tracklist)",
+    await releaseGroupCoverGET(
+      new NextRequest(`http://localhost/api/catalog/release-group/${dsotm.id}/cover`),
+      {
+        params: Promise.resolve({ id: dsotm.id }),
+      },
+    ),
   );
 
   process.exit(0);

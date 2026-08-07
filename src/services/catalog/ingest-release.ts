@@ -3,7 +3,6 @@ import { db } from "@/db";
 import { release, recording, track, type ReleaseRow } from "@/db/schema";
 import { musicbrainz } from "../musicbrainz/client";
 import { normalizeReleaseDate } from "../musicbrainz/mappers";
-import { resolveCoverThumbUrl } from "../cover-art";
 import { ingestCredits } from "./ingest-discography";
 
 /**
@@ -23,23 +22,7 @@ export async function findOrIngestTracklist(
     .where(eq(release.releaseGroupId, releaseGroupId))
     .limit(1);
 
-  // Self-heal: releases cacheadas antes de que se resolviera la carátula (o
-  // portadas que Cover Art Archive agregue después) se re-resuelven y cachean
-  // al primer acceso posterior.
-  if (existing) {
-    if (!existing.coverThumbUrl) {
-      const cover = await resolveCoverThumbUrl(releaseGroupMbid);
-      if (cover) {
-        const [updated] = await db
-          .update(release)
-          .set({ coverThumbUrl: cover })
-          .where(eq(release.id, existing.id))
-          .returning();
-        if (updated) return updated;
-      }
-    }
-    return existing;
-  }
+  if (existing) return existing;
 
   const rgWithReleases = await musicbrainz.getReleaseGroup(releaseGroupMbid);
   const chosen =
@@ -48,8 +31,10 @@ export async function findOrIngestTracklist(
 
   const full = await musicbrainz.getRelease(chosen.id);
   const releaseDate = normalizeReleaseDate(full.date);
-  const coverThumbUrl = await resolveCoverThumbUrl(releaseGroupMbid);
 
+  // La carátula ya no se resuelve acá: vive en `release_group.cover_thumb_url`
+  // (patrón cover-only, ver services/catalog/cover.ts) y `release.cover_thumb_url`
+  // quedó deprecada. El read-model la lee de release_group.
   const insertedReleases = await db
     .insert(release)
     .values({
@@ -57,9 +42,8 @@ export async function findOrIngestTracklist(
       releaseGroupId,
       editionLabel: "original",
       releaseDate,
-      coverThumbUrl,
     })
-    .onConflictDoUpdate({ target: release.mbid, set: { releaseDate, coverThumbUrl } })
+    .onConflictDoUpdate({ target: release.mbid, set: { releaseDate } })
     .returning();
 
   const releaseRow = insertedReleases[0];

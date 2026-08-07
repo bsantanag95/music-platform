@@ -10,6 +10,7 @@ import {
   type ReleaseRow,
 } from "@/db/schema";
 import { findOrIngestTracklist } from "./ingest-release";
+import { findOrResolveCover } from "./cover";
 
 export interface AlbumCredit {
   artistId: string;
@@ -121,12 +122,19 @@ export async function getAlbumDetail(releaseGroupId: string): Promise<AlbumDetai
       })),
   }));
 
+  // La carátula se resuelve a nivel de release-group (cover-only, sin
+  // ingestar tracklist). `release.cover_thumb_url` quedó deprecada como
+  // lectura legada: el fallback solo cubre filas pre-migración (0003), y el
+  // response se normaliza para que `release.coverThumbUrl` y `cover`
+  // coincidan siempre (contrato coherente).
+  const cover = (await findOrResolveCover(rg)) ?? releaseRow.coverThumbUrl;
+
   return {
     kind: "ok",
     detail: {
       releaseGroup: rg,
-      release: releaseRow,
-      cover: releaseRow.coverThumbUrl,
+      release: { ...releaseRow, coverThumbUrl: cover },
+      cover,
       tracks: albumTracks,
       primaryArtist: await resolvePrimaryArtist(rg.id),
     },

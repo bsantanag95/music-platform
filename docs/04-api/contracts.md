@@ -78,10 +78,29 @@ ninguna edición ingerible para ese álbum.
 
 **Nota:** `cover` se resuelve contra Cover Art Archive a nivel de **release-group**
 (`coverartarchive.org/release-group/{mbid}/front-250`, siempre baja resolución, ver
-`03-data/data-licensing.md`) al ingestar la edición y se cachea en `release.cover_thumb_url`.
-Vale `null` cuando el álbum no tiene carátula. Nunca construir esta URL a mano en el frontend.
+`03-data/data-licensing.md`) y se cachea en `release_group.cover_thumb_url` (migración `0003`);
+`release.cover_thumb_url` quedó deprecada como fallback legado para filas pre-migración. Vale
+`null` cuando el álbum no tiene carátula. Nunca construir esta URL a mano en el frontend.
 
 **Créditos por canción:** cada elemento de `tracks` incluye `credits: [{ artistId, name, role, joinPhrase }]`, ordenado por posición. Se arma con un `JOIN` de `credit` + `artist` sobre los `recordingId` de todo el tracklist en una sola query (no una query por canción).
+
+## `GET /api/catalog/release-group/[id]/cover` — ✅ Existe
+
+Trae (o resuelve bajo demanda) únicamente la carátula miniatura de un álbum ya conocido por su
+`id` propio. **No ingesta el tracklist** ni consulta MusicBrainz: la carátula se resuelve con un
+`HEAD` a Cover Art Archive a nivel de release-group (`front-250`, ver `03-data/data-licensing.md`)
+y se cachea en `release_group.cover_thumb_url`. Es lo que consume `LazyCoverImage` en la grilla
+del perfil de artista, de modo que cargar las carátulas de un artista frío no se bloquea detrás de
+la ingesta de cada tracklist (0 llamadas a MusicBrainz por álbum).
+
+**200 OK**
+```json
+{
+  "cover": "string | null"
+}
+```
+
+**404** con `code: ALBUM_NOT_FOUND` si el `id` no corresponde a ningún `release_group`.
 
 ## `GET /api/catalog/artist/[id]` — ✅ Existe
 

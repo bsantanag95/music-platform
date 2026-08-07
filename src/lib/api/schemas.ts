@@ -72,6 +72,12 @@ export const ReleaseWithTracksSchema = z.object({
 });
 export type ReleaseWithTracks = z.infer<typeof ReleaseWithTracksSchema>;
 
+// Endpoint cover-only: solo la carátula del release-group, sin tracklist.
+export const CoverSchema = z.object({
+  cover: z.string().nullable(),
+});
+export type Cover = z.infer<typeof CoverSchema>;
+
 // Catálogo de códigos de docs/04-api/errors.md — mantener sincronizado a mano.
 export const ErrorCodeSchema = z.enum([
   "VALIDATION_ERROR",

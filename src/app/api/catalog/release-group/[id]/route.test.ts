@@ -50,6 +50,7 @@ describe("GET /api/catalog/release-group/[id]", () => {
           mbid: "mbid-rg-1",
           title: "The Dark Side of the Moon",
           category: "studio",
+          coverThumbUrl: null,
           createdAt: new Date(),
         },
         release: {
@@ -101,6 +102,7 @@ describe("GET /api/catalog/release-group/[id]", () => {
           mbid: "mbid-rg-1",
           title: "Album",
           category: "studio",
+          coverThumbUrl: null,
           createdAt: new Date(),
         },
         release: {
@@ -140,6 +142,7 @@ describe("GET /api/catalog/release-group/[id]", () => {
           mbid: "mbid-rg-1",
           title: "Album",
           category: "studio",
+          coverThumbUrl: null,
           createdAt: new Date(),
         },
         release: {
@@ -175,6 +178,7 @@ describe("GET /api/catalog/release-group/[id]", () => {
           mbid: "mbid-rg-1",
           title: "Icon",
           category: "studio",
+          coverThumbUrl: null,
           createdAt: new Date(),
         },
         release: {

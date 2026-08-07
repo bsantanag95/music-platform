@@ -55,6 +55,7 @@ function makeDetail(overrides: Partial<AlbumDetail> = {}): AlbumDetail {
       mbid: "mbid-rg-1",
       title: "The Dark Side of the Moon",
       category: "studio",
+      coverThumbUrl: null,
       createdAt: new Date(),
     },
     release: {

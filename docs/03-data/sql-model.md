@@ -35,16 +35,23 @@ Versión narrada de `schema.sql`. Para cada tabla: propósito, relaciones, restr
 
 **Restricciones:** `category` limitado a `studio`, `single_ep`, `compilation`, `live_other`.
 
+**Carátula (`cover_thumb_url`):** URL de la miniatura de 250px de la portada del álbum, resuelta contra
+Cover Art Archive a nivel de **release-group** (ver `data-licensing.md`). Es la **única fuente escribible**
+de la carátula: se resuelve bajo demanda con un `HEAD` a CAA sin ingestar el tracklist de una edición (patrón
+cover-only, ver `04-api/contracts.md`). Es `null` cuando el álbum no tiene carátula (demos/outtakes). Si el
+valor cacheado es `null`, la resolución se re-intenta en cada acceso posterior por si la portada aparece
+después (self-heal, mismo criterio que aplicaba `release`).
+
 ## `release`
 
 **Propósito:** una edición concreta de un `release_group` (original, edición japonesa, remaster de aniversario). Aquí vive el tracklist real, vía `track`.
 
 **Relaciones:** `release_group_id` obligatorio — toda edición pertenece a exactamente un álbum conceptual.
 
-**Carátula (`cover_thumb_url`):** URL de la miniatura de 250px de la portada del álbum, resuelta contra
-Cover Art Archive a nivel de **release-group** (ver `data-licensing.md`) al ingestar la edición. Es `null`
-cuando el álbum no tiene carátula (demos/outtakes). Si una edición ya cacheada tiene el valor `null`, la
-resolución se re-intenta en el primer acceso posterior por si la portada aparece después.
+**Carátula (`cover_thumb_url`) — DEPRECADA:** columna legada de la resolución de carátula, que pasó a
+`release_group.cover_thumb_url` (migración `0003`). Ya **no se escribe** desde la app; el read-model
+(`album-detail.ts`) la usa solo como fallback de compatibilidad para filas pre-migración
+(`release_group.coverThumbUrl ?? release.coverThumbUrl`). No introducir escrituras nuevas sobre esta columna.
 
 **Fechas y precisión:** `release_date` es `DATE` nullable. MusicBrainz entrega fechas con distinta
 precisión (`YYYY`, `YYYY-MM` o `YYYY-MM-DD`); la ingesta normaliza cada valor con

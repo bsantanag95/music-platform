@@ -5,11 +5,11 @@ import { LazyCoverImage } from "./LazyCoverImage";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import * as catalogApi from "@/lib/api/catalog";
 import catalogEs from "../../../messages/es/catalog.json";
-import type { ReleaseWithTracks } from "@/lib/api/schemas";
+import type { Cover } from "@/lib/api/schemas";
 import type { ReactElement } from "react";
 
 vi.mock("@/lib/api/catalog", () => ({
-  getReleaseGroupDetail: vi.fn(),
+  getReleaseGroupCover: vi.fn(),
 }));
 
 // next/image depende del loader del servidor; en jsdom se reemplaza por un
@@ -29,19 +29,8 @@ function renderWithQuery(ui: ReactElement, locale: "es" | "en" = "es") {
   );
 }
 
-function makeRelease(cover: string | null): ReleaseWithTracks {
-  return {
-    release: {
-      id: "r1",
-      mbid: "release-mbid",
-      releaseGroupId: "g1",
-      editionLabel: "original",
-      releaseDate: null,
-      coverThumbUrl: cover,
-    },
-    cover,
-    tracks: [],
-  };
+function makeCover(cover: string | null): Cover {
+  return { cover };
 }
 
 describe("LazyCoverImage", () => {
@@ -50,7 +39,7 @@ describe("LazyCoverImage", () => {
   });
 
   it("muestra un skeleton accesible mientras carga", () => {
-    vi.mocked(catalogApi.getReleaseGroupDetail).mockReturnValue(new Promise(() => {}));
+    vi.mocked(catalogApi.getReleaseGroupCover).mockReturnValue(new Promise(() => {}));
 
     renderWithQuery(<LazyCoverImage releaseGroupId="g1" coverLabel={catalogEs.artist.albumCoverLabel} />);
 
@@ -59,7 +48,7 @@ describe("LazyCoverImage", () => {
   });
 
   it("reemplaza el skeleton por la carátula disponible", async () => {
-    vi.mocked(catalogApi.getReleaseGroupDetail).mockResolvedValue(makeRelease("https://coverartarchive.org/release-group/x/front-250"));
+    vi.mocked(catalogApi.getReleaseGroupCover).mockResolvedValue(makeCover("https://coverartarchive.org/release-group/x/front-250"));
 
     renderWithQuery(<LazyCoverImage releaseGroupId="g1" coverLabel={catalogEs.artist.albumCoverLabel} />);
 
@@ -70,7 +59,7 @@ describe("LazyCoverImage", () => {
   });
 
   it("muestra el placeholder cuando no hay carátula", async () => {
-    vi.mocked(catalogApi.getReleaseGroupDetail).mockResolvedValue(makeRelease(null));
+    vi.mocked(catalogApi.getReleaseGroupCover).mockResolvedValue(makeCover(null));
 
     renderWithQuery(<LazyCoverImage releaseGroupId="g1" coverLabel={catalogEs.artist.albumCoverLabel} />);
 
@@ -81,7 +70,7 @@ describe("LazyCoverImage", () => {
   });
 
   it("muestra el placeholder ante un fallo recuperable sin romper la tarjeta", async () => {
-    vi.mocked(catalogApi.getReleaseGroupDetail).mockRejectedValue(new Error("network"));
+    vi.mocked(catalogApi.getReleaseGroupCover).mockRejectedValue(new Error("network"));
 
     renderWithQuery(<LazyCoverImage releaseGroupId="g1" coverLabel={catalogEs.artist.albumCoverLabel} />);
 

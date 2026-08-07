@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { getReleaseGroupDetail } from "@/lib/api/catalog";
+import { getReleaseGroupCover } from "@/lib/api/catalog";
 import { queryKeys } from "@/lib/query/keys";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { DiscPlaceholder } from "./DiscPlaceholder";
@@ -15,15 +15,16 @@ interface LazyCoverImageProps {
 }
 
 // Cliente porque resuelve la carátula después del primer render (carga
-// progresiva por álbum, ver Etapa 3.2). Consulta el detalle del
-// release-group vía `src/lib/api/catalog.ts` + TanStack Query y consume
-// la URL `cover` devuelta por el backend con `next/image`, sin construir
-// URLs de Cover Art Archive manualmente.
+// progresiva por álbum, ver Etapa 3.2). Consulta el endpoint cover-only del
+// release-group vía `src/lib/api/catalog.ts` + TanStack Query: resuelve la
+// carátula con un HEAD a Cover Art Archive sin ingestar el tracklist (0
+// llamadas a MusicBrainz), y consume la URL `cover` con `next/image`, sin
+// construir URLs de Cover Art Archive manualmente.
 export function LazyCoverImage({ releaseGroupId, coverLabel, className = "" }: LazyCoverImageProps) {
   const t = useTranslations("catalog.artist");
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.releaseGroup(releaseGroupId),
-    queryFn: () => getReleaseGroupDetail(releaseGroupId),
+    queryKey: queryKeys.releaseGroupCover(releaseGroupId),
+    queryFn: () => getReleaseGroupCover(releaseGroupId),
   });
 
   if (isLoading) {
