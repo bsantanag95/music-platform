@@ -1,4 +1,5 @@
-import type { AlbumTrack } from "@/services/catalog/album-detail";
+import { Link } from "@/i18n/navigation";
+import type { AlbumTrack, AlbumCredit } from "@/services/catalog/album-detail";
 
 interface TrackListProps {
   tracks: AlbumTrack[];
@@ -16,21 +17,14 @@ function formatDuration(seconds: number | null, durationUnknown: string): string
   return `${minutes}:${secs.toString().padStart(2, "0")}`;
 }
 
-function formatCredits(track: AlbumTrack): string | null {
-  const featured = track.credits.filter((c) => c.role === "featured");
-  if (featured.length === 0) return null;
-
-  return featured
-    .map((c, i) => {
-      const joinPhrase = c.joinPhrase ?? (i < featured.length - 1 ? ", " : "");
-      return `${c.name}${joinPhrase}`;
-    })
-    .join("");
+function getFeaturedCredits(track: AlbumTrack): AlbumCredit[] {
+  return track.credits.filter((c) => c.role === "featured");
 }
 
 // Componente de presentación (Server Component): recibe las etiquetas ya
 // traducidas. Los títulos de canciones y nombres de artistas son datos de
-// MusicBrainz y no se traducen.
+// MusicBrainz y no se traducen. Los créditos destacados enlazan al perfil
+// del artista acreditado preservando el locale activo.
 export function TrackList({
   tracks,
   tracklistHeading,
@@ -62,7 +56,7 @@ export function TrackList({
             )}
             <ol className="flex flex-col divide-y divide-ink-border">
               {discTracks.map((track) => {
-                const credits = formatCredits(track);
+                const featured = getFeaturedCredits(track);
                 return (
                   <li
                     key={`${track.discNumber}-${track.position}`}
@@ -73,9 +67,24 @@ export function TrackList({
                     </span>
                     <div className="flex min-w-0 flex-1 flex-col">
                       <span className="truncate font-body text-paper">{track.title}</span>
-                      {credits && (
+                      {featured.length > 0 && (
                         <span className="font-data text-xs text-paper-muted">
-                          {creditsLabel}: {credits}
+                          {creditsLabel}:{" "}
+                          {featured.map((credit, i) => {
+                            const joinPhrase =
+                              credit.joinPhrase ?? (i < featured.length - 1 ? ", " : "");
+                            return (
+                              <span key={credit.artistId}>
+                                <Link
+                                  href={`/artist/${credit.artistId}`}
+                                  className="transition-colors hover:text-paper"
+                                >
+                                  {credit.name}
+                                </Link>
+                                {joinPhrase}
+                              </span>
+                            );
+                          })}
                         </span>
                       )}
                     </div>

@@ -3,6 +3,7 @@ import { Space_Grotesk, Source_Serif_4, IBM_Plex_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { Providers } from "./providers";
+import { Header } from "@/components/layout/Header";
 import "@/app/globals.css";
 
 const display = Space_Grotesk({
@@ -57,6 +58,7 @@ export default async function RootLayout({
     >
       <body>
         <NextIntlClientProvider messages={messages}>
+          <Header />
           <Providers>{children}</Providers>
         </NextIntlClientProvider>
       </body>

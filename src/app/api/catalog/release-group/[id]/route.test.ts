@@ -71,6 +71,7 @@ describe("GET /api/catalog/release-group/[id]", () => {
             credits: [],
           },
         ],
+        primaryArtist: { id: "a1", name: "Pink Floyd" },
       },
     };
 
@@ -112,6 +113,7 @@ describe("GET /api/catalog/release-group/[id]", () => {
         },
         cover: null,
         tracks: [],
+        primaryArtist: null,
       },
     };
 
@@ -127,5 +129,40 @@ describe("GET /api/catalog/release-group/[id]", () => {
     expect(body).toHaveProperty("cover");
     expect(body).toHaveProperty("tracks");
     expect(body).not.toHaveProperty("releaseGroup");
+  });
+
+  it("no expone el artista principal del read-model en la respuesta REST", async () => {
+    const mockDetail: AlbumDetailResult = {
+      kind: "ok",
+      detail: {
+        releaseGroup: {
+          id: "rg-1",
+          mbid: "mbid-rg-1",
+          title: "Album",
+          category: "studio",
+          createdAt: new Date(),
+        },
+        release: {
+          id: "r-1",
+          mbid: "mbid-r-1",
+          releaseGroupId: "rg-1",
+          editionLabel: "original",
+          releaseDate: null,
+          coverThumbUrl: null,
+        },
+        cover: null,
+        tracks: [],
+        primaryArtist: { id: "a1", name: "Pink Floyd" },
+      },
+    };
+
+    vi.mocked(albumDetail.getAlbumDetail).mockResolvedValue(mockDetail);
+
+    const response = await GET(makeRequest("rg-1"), {
+      params: Promise.resolve({ id: "rg-1" }),
+    });
+
+    const body = await response.json();
+    expect(body).not.toHaveProperty("primaryArtist");
   });
 });

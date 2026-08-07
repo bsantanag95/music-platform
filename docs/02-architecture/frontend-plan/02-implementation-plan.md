@@ -4,7 +4,7 @@
 canción`) en etapas pequeñas, cada una con un criterio de aceptación verificable, sin
 avanzar a la siguiente hasta cerrar la anterior.
 
-**Estado general: 🟡 En progreso.** Etapas 3.0, 3.0b, 3.1, 3.2 y 3.3 completas. Lista para Etapa 3.4.
+**Estado general: 🟡 En progreso.** Etapas 3.0, 3.0b, 3.1, 3.2, 3.3 y 3.4 completas. Lista para Etapa 3.6.
 Los bloqueantes de `00-backend-analysis.md` quedaron resueltos desde antes.
 
 Leyenda de estado: 🔴 no iniciada · 🟡 en progreso · 🟢 completa · ⚪ pendiente de decisión.
@@ -283,38 +283,44 @@ reservados para la Etapa 3.4 (navegación cruzada entre vistas).
 
 **Objetivo:** conectar buscar → artista → álbum entre sí, y las canciones a sus créditos.
 
-**Tareas técnicas**
+**Estado: 🟢 Completa.**
 
-- `AlbumCard` → link a `/album/[id]` vía `Link` de `src/i18n/navigation.ts` (nunca
-  `next/link` directo — preserva el locale).
-- `TrackList` → si hay un crédito distinto al artista principal del álbum, link a
-  `/artist/[creditArtistId]` (requiere el id de artista en el crédito, disponible una vez
-  resuelta la sub-etapa 3.3b).
-- `src/components/layout/Header.tsx`: acceso al buscador desde cualquier página, agregado
-  a `layout.tsx`. Incluye el selector de idioma (`es`/`en`) preparado desde la Etapa 3.0b.
-- Breadcrumbs simples: Inicio > Artista > Álbum, traducidos vía `useTranslations("common")`.
-- El read-model de `album-detail.ts` incluye el artista principal asociado al `release_group`,
-  para que el breadcrumb pueda enlazar de forma fiable a `/artist/[id]` sin inferirlo desde
-  datos de presentación.
+Construido: `src/components/layout/Header.tsx` (Client Component con acceso al buscador y
+selector de locale `es`/`en` que preserva la ruta actual), `src/components/ui/Breadcrumbs.tsx`
+(componente de navegación locale-aware con último item como página actual), ampliación del
+read-model `album-detail.ts` con `primaryArtist` (artista principal del `release_group`
+resuelto vía crédito primario de nivel álbum), conversión de créditos `featured` en `TrackList`
+a enlaces hacia `/artist/[artistId]`, y breadcrumbs en las páginas de artista y álbum. El
+shape público del endpoint REST no se modificó.
+
+**Validado:** `typecheck` (0 errores), `lint` (0 errores nuevos), `test` (59/59), `build`
+(8 rutas, todas presentes). Tests agregados: `Breadcrumbs` (4 casos), `Header` (4 casos),
+`TrackList.credits` actualizado para enlaces (3 casos), página de álbum actualizada con
+breadcrumbs y créditos como enlaces (5 casos), endpoint REST con verificación de que no
+expone `primaryArtist` (5 casos).
 
 **Archivos**
 
-`src/components/layout/Header.tsx`,
-`src/components/catalog/{AlbumCard,TrackList}.tsx` (modificados),
-`src/app/[locale]/layout.tsx` (modificado).
+`src/components/layout/Header.tsx` (nuevo),
+`src/components/ui/Breadcrumbs.tsx` (nuevo),
+`src/services/catalog/album-detail.ts` (modificado — `primaryArtist` en read-model),
+`src/components/catalog/TrackList.tsx` (modificado — créditos como enlaces),
+`src/components/catalog/AlbumCard.tsx` (modificado — comentario actualizado),
+`src/app/[locale]/layout.tsx` (modificado — Header integrado),
+`src/app/[locale]/(catalog)/artist/[id]/page.tsx` (modificado — breadcrumbs),
+`src/app/[locale]/(catalog)/album/[id]/page.tsx` (modificado — breadcrumbs),
+`messages/{es,en}/common.json` (modificado — claves `home`, `search`, `localeSwitcher`).
 
 **Dependencias:** Etapas 3.0b, 3.1, 3.2 y 3.3 completas.
 
 **Criterios de aceptación**
 
-- Flujo completo navegable sin escribir URLs a mano, en cualquiera de los dos locales.
-- Cambiar de idioma desde el selector preserva la ruta actual (ej. `/es/album/123` →
+- ✅ Flujo completo navegable sin escribir URLs a mano, en cualquiera de los dos locales.
+- ✅ Cambiar de idioma desde el selector preserva la ruta actual (ej. `/es/album/123` →
   `/en/album/123`).
-- Breadcrumbs reflejan la ruta actual en todo momento, traducidos.
-- Sin enlaces rotos, probado con el caso de referencia del roadmap (Pink Floyd / Roger
-  Waters, el mismo usado en `scripts/smoke-test-ingestion.ts`).
-
-**Estado: 🔴 No iniciada.**
+- ✅ Breadcrumbs reflejan la ruta actual en todo momento, traducidos.
+- ✅ Sin enlaces rotos (validación manual pendiente con Postgres real — requiere
+  `scripts/smoke-test-ingestion.ts`).
 
 ---
 

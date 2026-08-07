@@ -1,10 +1,16 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import { TrackList } from "./TrackList";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
 import catalogEn from "../../../messages/en/catalog.json";
 import type { AlbumTrack } from "@/services/catalog/album-detail";
+
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
+    <a href={href}>{children}</a>
+  ),
+}));
 
 function makeTrack(
   discNumber: number,

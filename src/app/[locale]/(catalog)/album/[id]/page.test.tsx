@@ -4,6 +4,12 @@ import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../../../../messages/es/catalog.json";
 import type { AlbumDetail } from "@/services/catalog/album-detail";
 
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
+    <a href={href}>{children}</a>
+  ),
+}));
+
 vi.mock("next/image", () => ({
   // eslint-disable-next-line @next/next/no-img-element
   default: (props: { src: string; alt: string }) => <img src={props.src} alt={props.alt} />,
@@ -81,6 +87,7 @@ function makeDetail(overrides: Partial<AlbumDetail> = {}): AlbumDetail {
         ],
       },
     ],
+    primaryArtist: { id: "a1", name: "Pink Floyd" },
     ...overrides,
   };
 }
@@ -106,7 +113,7 @@ describe("AlbumPage composición", () => {
       "es",
     );
 
-    expect(screen.getByText("The Dark Side of the Moon")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "The Dark Side of the Moon" })).toBeInTheDocument();
   });
 
   it("muestra las etiquetas de interfaz en español", async () => {
@@ -128,7 +135,7 @@ describe("AlbumPage composición", () => {
     expect(screen.getByRole("heading", { name: catalogEs.album.tracklistHeading })).toBeInTheDocument();
   });
 
-  it("muestra los créditos del track como texto", async () => {
+  it("muestra los créditos destacados como enlaces al perfil del artista", async () => {
     const { default: AlbumPage } = await import(
       "@/app/[locale]/(catalog)/album/[id]/page"
     );
@@ -144,7 +151,51 @@ describe("AlbumPage composición", () => {
       "es",
     );
 
-    expect(screen.getByText(/Roger Waters/)).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /Roger Waters/ })).not.toBeInTheDocument();
+    const creditLink = screen.getByRole("link", { name: "Roger Waters" });
+    expect(creditLink).toBeInTheDocument();
+    expect(creditLink).toHaveAttribute("href", "/artist/a2");
+  });
+
+  it("muestra breadcrumb con artista principal cuando existe", async () => {
+    const { default: AlbumPage } = await import(
+      "@/app/[locale]/(catalog)/album/[id]/page"
+    );
+
+    const { getAlbumDetail } = await import("@/services/catalog/album-detail");
+    vi.mocked(getAlbumDetail).mockResolvedValue({
+      kind: "ok",
+      detail: makeDetail(),
+    });
+
+    renderWithIntl(
+      await AlbumPage({ params: Promise.resolve({ id: "rg-1" }) }),
+      "es",
+    );
+
+    expect(screen.getByRole("link", { name: "home" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Pink Floyd" })).toHaveAttribute(
+      "href",
+      "/artist/a1",
+    );
+  });
+
+  it("muestra breadcrumb parcial cuando no hay artista principal", async () => {
+    const { default: AlbumPage } = await import(
+      "@/app/[locale]/(catalog)/album/[id]/page"
+    );
+
+    const { getAlbumDetail } = await import("@/services/catalog/album-detail");
+    vi.mocked(getAlbumDetail).mockResolvedValue({
+      kind: "ok",
+      detail: makeDetail({ primaryArtist: null }),
+    });
+
+    renderWithIntl(
+      await AlbumPage({ params: Promise.resolve({ id: "rg-1" }) }),
+      "es",
+    );
+
+    expect(screen.getByRole("link", { name: "home" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Pink Floyd" })).not.toBeInTheDocument();
   });
 });

@@ -1,9 +1,15 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import { TrackList } from "./TrackList";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
 import type { AlbumTrack } from "@/services/catalog/album-detail";
+
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
+    <a href={href}>{children}</a>
+  ),
+}));
 
 function makeTrack(
   discNumber: number,
@@ -24,7 +30,7 @@ function makeTrack(
 const discLabelEs = (n: number) => catalogEs.album.discLabel.replace("{number}", String(n));
 
 describe("TrackList créditos", () => {
-  it("muestra créditos destacados como texto sin enlaces", () => {
+  it("muestra créditos destacados como enlaces al perfil del artista", () => {
     const tracks = [
       makeTrack(1, 1, "Breathe", [
         { artistId: "a1", name: "Pink Floyd", role: "primary", joinPhrase: null },
@@ -43,8 +49,9 @@ describe("TrackList créditos", () => {
       />,
     );
 
-    expect(screen.getByText(/Roger Waters/)).toBeInTheDocument();
-    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "Roger Waters" });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/artist/a2");
   });
 
   it("no muestra etiqueta de créditos cuando no hay créditos destacados", () => {
@@ -68,7 +75,7 @@ describe("TrackList créditos", () => {
     expect(screen.queryByText(catalogEs.album.creditsLabel)).not.toBeInTheDocument();
   });
 
-  it("muestra múltiples créditos destacados separados por comas", () => {
+  it("muestra múltiples créditos destacados como enlaces separados", () => {
     const tracks = [
       makeTrack(1, 1, "Colaboración", [
         { artistId: "a1", name: "Artist A", role: "primary", joinPhrase: null },
@@ -88,7 +95,7 @@ describe("TrackList créditos", () => {
       />,
     );
 
-    expect(screen.getByText(/Artist B/)).toBeInTheDocument();
-    expect(screen.getByText(/Artist C/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Artist B" })).toHaveAttribute("href", "/artist/a2");
+    expect(screen.getByRole("link", { name: "Artist C" })).toHaveAttribute("href", "/artist/a3");
   });
 });

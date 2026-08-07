@@ -1,4 +1,4 @@
-import { eq, inArray, asc } from "drizzle-orm";
+import { eq, inArray, asc, and, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import {
   releaseGroup,
@@ -28,11 +28,17 @@ export interface AlbumTrack {
   credits: AlbumCredit[];
 }
 
+export interface PrimaryArtist {
+  id: string;
+  name: string;
+}
+
 export interface AlbumDetail {
   releaseGroup: ReleaseGroupRow;
   release: ReleaseRow;
   cover: string | null;
   tracks: AlbumTrack[];
+  primaryArtist: PrimaryArtist | null;
 }
 
 export type AlbumDetailResult =
@@ -123,6 +129,30 @@ export async function getAlbumDetail(releaseGroupId: string): Promise<AlbumDetai
       release: releaseRow,
       cover: releaseRow.mbid ? coverThumbUrl(releaseRow.mbid) : null,
       tracks: albumTracks,
+      primaryArtist: await resolvePrimaryArtist(rg.id),
     },
   };
+}
+
+async function resolvePrimaryArtist(
+  releaseGroupId: string,
+): Promise<PrimaryArtist | null> {
+  const [row] = await db
+    .select({
+      id: artist.id,
+      name: artist.name,
+    })
+    .from(credit)
+    .innerJoin(artist, eq(artist.id, credit.artistId))
+    .where(
+      and(
+        eq(credit.releaseGroupId, releaseGroupId),
+        eq(credit.role, "primary"),
+        isNull(credit.recordingId),
+      ),
+    )
+    .orderBy(asc(credit.position))
+    .limit(1);
+
+  return row ?? null;
 }

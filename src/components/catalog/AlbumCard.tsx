@@ -9,8 +9,7 @@ interface AlbumCardProps {
 }
 
 // Tarjeta de álbum dentro de la discografía. Usa `Link` de next-intl para
-// preservar el locale activo. El enlace a /album/[id] queda preparado para
-// la Etapa 3.3.
+// preservar el locale activo al navegar al detalle del álbum.
 export function AlbumCard({ releaseGroup, categoryLabel, coverLabel }: AlbumCardProps) {
   return (
     <Link

@@ -6,6 +6,7 @@ import { getArtistById } from "@/services/catalog/ingest-artist";
 import { findOrIngestDiscography } from "@/services/catalog/ingest-discography";
 import { ArtistHeader } from "@/components/catalog/ArtistHeader";
 import { AlbumGrid } from "@/components/catalog/AlbumGrid";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import type { ReleaseGroupRow } from "@/db/schema";
 import type { Artist, ReleaseGroup, ReleaseGroupCategory } from "@/lib/api/schemas";
 
@@ -30,6 +31,7 @@ export async function generateMetadata({ params }: ArtistPageProps): Promise<Met
 export default async function ArtistPage({ params }: ArtistPageProps) {
   const { id } = await params;
   const t = await getTranslations("catalog");
+  const tCommon = await getTranslations("common");
 
   // `getArtistById` enriquece artistas stub (`type='unknown'`) contra
   // MusicBrainz antes de devolverlos; si el id no existe devuelve null.
@@ -59,6 +61,12 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
 
   return (
     <main className="flex min-h-screen flex-col items-start gap-8 px-4 py-12">
+      <Breadcrumbs
+        items={[
+          { label: tCommon("home"), href: "/" },
+          { label: artist.name },
+        ]}
+      />
       <ArtistHeader
         artist={artist}
         typeLabel={typeLabel}

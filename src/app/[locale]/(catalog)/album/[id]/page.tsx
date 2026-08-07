@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { getAlbumDetail } from "@/services/catalog/album-detail";
 import { AlbumCover } from "@/components/catalog/AlbumCover";
 import { TrackList } from "@/components/catalog/TrackList";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 interface AlbumPageProps {
@@ -20,6 +21,7 @@ export async function generateMetadata({ params }: AlbumPageProps): Promise<Meta
 export default async function AlbumPage({ params }: AlbumPageProps) {
   const { id } = await params;
   const t = await getTranslations("catalog");
+  const tCommon = await getTranslations("common");
 
   const result = await getAlbumDetail(id);
 
@@ -40,8 +42,17 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
 
   const { detail } = result;
 
+  const breadcrumbItems = [
+    { label: tCommon("home"), href: "/" },
+    ...(detail.primaryArtist
+      ? [{ label: detail.primaryArtist.name, href: `/artist/${detail.primaryArtist.id}` }]
+      : []),
+    { label: detail.releaseGroup.title },
+  ];
+
   return (
     <main className="flex min-h-screen flex-col items-start gap-8 px-4 py-12">
+      <Breadcrumbs items={breadcrumbItems} />
       <div className="flex flex-col items-start gap-6 sm:flex-row">
         <AlbumCover
           cover={detail.cover}
