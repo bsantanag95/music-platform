@@ -1,4 +1,7 @@
 export {}; // fuerza module scope
+import { assertSmokeAllowed } from "./assert-smoke-allowed";
+
+assertSmokeAllowed();
 
 // Prueba el segundo camino de entrada al mismo problema: alguien navega
 // directo a /artista/[id] de un stub creado desde un feat. (en vez de

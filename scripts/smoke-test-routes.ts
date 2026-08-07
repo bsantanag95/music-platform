@@ -1,4 +1,8 @@
 export {}; // fuerza module scope
+import { assertSmokeAllowed } from "./assert-smoke-allowed";
+
+assertSmokeAllowed();
+
 import { eq } from "drizzle-orm";
 
 // Prueba los route handlers reales (incluyendo withErrorHandling) sin

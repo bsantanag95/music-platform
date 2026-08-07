@@ -167,6 +167,12 @@ real sin necesitar salida a internet real (el entorno de ejecución no tiene acc
 `musicbrainz.org`). Sirven para probar cambios en la lógica de ingesta sin gastar el rate
 limit real, y quedaron como referencia para escribir tests de verdad más adelante.
 
+**Guardia de seguridad:** estos scripts ESCRIBEN fixtures en la BD de `DATABASE_URL`
+(pueden dejar artistas "congelados" con `discography_synced_at` y datos sintéticos — ver
+`AGENTS.md`). Por defecto **abortan** (`scripts/assert-smoke-allowed.ts`); hay que
+correrlos con `ALLOW_SMOKE_ON_REAL_DB=1`, idealmente contra una BD de scratch, y
+resetear los artistas tocados si se usó la BD real.
+
 - **`smoke-test-ingestion.ts`** — el pipeline completo (artista → discografía → tracklist), con los mbid reales de Pink Floyd / Roger Waters.
 - **`smoke-test-unknown-enrichment.ts`** / **`smoke-test-artist-by-id.ts`** — el mismo escenario de stub `unknown` enriquecido, probado por los dos caminos de entrada posibles: búsqueda por nombre (`findOrIngestArtist`) y navegación directa por id (`getArtistById`).
 - **`smoke-test-discography-cache.ts`** — cuenta cuántas veces se llama al endpoint de browse de MusicBrainz y falla si una segunda invocación con el mismo artista lo vuelve a tocar.

@@ -1,4 +1,7 @@
 export {}; // fuerza module scope
+import { assertSmokeAllowed } from "./assert-smoke-allowed";
+
+assertSmokeAllowed();
 
 // Prueba puntual del bug reportado: findOrIngestDiscography no chequeaba
 // cache y volvía a pegarle a MusicBrainz en cada búsqueda, incluso para

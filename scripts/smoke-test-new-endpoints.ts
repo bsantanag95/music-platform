@@ -1,4 +1,7 @@
 export {}; // fuerza module scope
+import { assertSmokeAllowed } from "./assert-smoke-allowed";
+
+assertSmokeAllowed();
 
 // Valida los dos endpoints nuevos sin levantar un servidor Next.js real:
 // llama directo a los mismos servicios/queries que usan las rutas.

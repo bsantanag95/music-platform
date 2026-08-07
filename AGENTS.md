@@ -26,6 +26,24 @@ empezar por `/docs/README.md` antes de tocar código. Código y comentarios en e
 Correr `smoke-test-ingestion.ts` primero: `smoke-test-routes.ts` y otros
 necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
 
+> **⚠️ Los smoke tests ESCRIBEN fixtures en la BD y contaminan el catálogo.**
+> Mockean `global.fetch`, así que ingieren datos sintéticos (mbid falsos, álbumes
+> de prueba) y, en el caso de `smoke-test-ingestion.ts`, marcan el artista con
+> `discography_synced_at` — dejándolo "congelado" con datos falsos y evitando que
+> la app re-ingiera la discografía real desde MusicBrainz (incidente real con
+> Pink Floyd en 2026-08).
+> **Por defecto los smoke tests ABORTAN** (`scripts/assert-smoke-allowed.ts`,
+> fail-closed): hay que habilitarlos explícitamente con `ALLOW_SMOKE_ON_REAL_DB=1`,
+> idealmente contra una **BD de scratch** (otro `DATABASE_URL`). Si se usó la BD
+> real, **resetear** los artistas tocados antes de cerrar:
+> - `UPDATE artist SET discography_synced_at = NULL WHERE name = '<artista>';`
+> - borrar los `release_group` sintéticos creados (mbid `*-0000-4000-8000-*` o
+>   ajenos a la discografía real).
+> - `smoke-test-unknown-enrichment.ts` / `smoke-test-artist-by-id.ts` crean un
+>   stub "Farruko" (`9b90d5a6-8b3f-4e2d-9f11-7e0c0d3a1a01`) y
+>   `smoke-test-discography-cache.ts` un artista de prueba — borrarlos si se
+>   corrió en la BD real.
+
 ## Base de datos / migraciones
 
 - Migraciones SQL a mano, numeradas en `/drizzle/`, aplicadas en orden por
@@ -84,8 +102,11 @@ necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
 ## Antes de dar un cambio por terminado
 
 - [ ] `pnpm run typecheck && pnpm run lint && pnpm run build` pasan.
-- [ ] Si se tocó `catalog/` o `musicbrainz/`, se corrió el smoke test relevante
-      contra Postgres real.
+- [ ] Si se tocó `catalog/` o `musicbrainz/`, se corrieron los smoke tests
+      relevantes contra una **BD de scratch** (`DATABASE_URL` distinto +
+      `ALLOW_SMOKE_ON_REAL_DB=1`); si se usó la BD real, se **resetearon los
+      artistas tocados y se borraron los fixtures** antes de cerrar (ver la
+      sección de smoke tests).
 - [ ] Si se tocó el esquema, hay un `.sql` nuevo (no editado) + `schema.ts`
       sincronizado.
 - [ ] Si se tocó un contrato de `/api/catalog/*`, `docs/04-api/contracts.md` y/o
