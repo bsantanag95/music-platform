@@ -41,6 +41,24 @@ Versión narrada de `schema.sql`. Para cada tabla: propósito, relaciones, restr
 
 **Relaciones:** `release_group_id` obligatorio — toda edición pertenece a exactamente un álbum conceptual.
 
+**Fechas y precisión:** `release_date` es `DATE` nullable. MusicBrainz entrega fechas con distinta
+precisión (`YYYY`, `YYYY-MM` o `YYYY-MM-DD`); la ingesta normaliza cada valor con
+`normalizeReleaseDate` (`src/services/musicbrainz/mappers.ts`):
+- `YYYY-MM-DD` válido (verificando calendario) → se guarda tal cual.
+- `YYYY`, `YYYY-MM`, ausente o inválido → se guarda `null`.
+
+No se convierte una fecha parcial al primer día del año/mes: inventaría una precisión que
+MusicBrainz no proporciona y la UI no debe presentar como exacta.
+
+**Evolución futura (`release_year`):** la página debe poder mostrar al menos el año de
+lanzamiento aunque no exista fecha exacta. Para eso, la siguiente evolución del esquema añadirá
+una columna nullable `release_year` (entero), separada de `release_date`:
+- Fecha completa → se guardan ambos valores.
+- Fecha parcial → se guarda el año conocido en `release_year` y `release_date` queda `null`.
+- La UI mostrará `release_year` como fallback cuando `release_date` sea nulo.
+
+Esa columna **no está implementada todavía**; requiere una migración SQL y un change separado.
+
 ## `recording`
 
 **Propósito:** la grabación única que acumula valoración y comentarios, sin importar en cuántas ediciones aparezca.

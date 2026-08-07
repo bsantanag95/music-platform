@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { release, recording, track, type ReleaseRow } from "@/db/schema";
 import { musicbrainz } from "../musicbrainz/client";
+import { normalizeReleaseDate } from "../musicbrainz/mappers";
 import { ingestCredits } from "./ingest-discography";
 
 /**
@@ -28,6 +29,7 @@ export async function findOrIngestTracklist(
   if (!chosen) return null;
 
   const full = await musicbrainz.getRelease(chosen.id);
+  const releaseDate = normalizeReleaseDate(full.date);
 
   const insertedReleases = await db
     .insert(release)
@@ -35,9 +37,9 @@ export async function findOrIngestTracklist(
       mbid: full.id,
       releaseGroupId,
       editionLabel: "original",
-      releaseDate: full.date ?? null,
+      releaseDate,
     })
-    .onConflictDoUpdate({ target: release.mbid, set: { releaseDate: full.date ?? null } })
+    .onConflictDoUpdate({ target: release.mbid, set: { releaseDate } })
     .returning();
 
   const releaseRow = insertedReleases[0];

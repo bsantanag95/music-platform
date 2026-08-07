@@ -165,4 +165,39 @@ describe("GET /api/catalog/release-group/[id]", () => {
     const body = await response.json();
     expect(body).not.toHaveProperty("primaryArtist");
   });
+
+  it("mantiene null en releaseDate cuando no hay fecha exacta, sin inventar una fecha", async () => {
+    const mockDetail: AlbumDetailResult = {
+      kind: "ok",
+      detail: {
+        releaseGroup: {
+          id: "rg-1",
+          mbid: "mbid-rg-1",
+          title: "Icon",
+          category: "studio",
+          createdAt: new Date(),
+        },
+        release: {
+          id: "r-1",
+          mbid: "mbid-r-1",
+          releaseGroupId: "rg-1",
+          editionLabel: "original",
+          releaseDate: null,
+          coverThumbUrl: null,
+        },
+        cover: null,
+        tracks: [],
+        primaryArtist: null,
+      },
+    };
+
+    vi.mocked(albumDetail.getAlbumDetail).mockResolvedValue(mockDetail);
+
+    const response = await GET(makeRequest("rg-1"), {
+      params: Promise.resolve({ id: "rg-1" }),
+    });
+
+    const body = await response.json();
+    expect(body.release.releaseDate).toBeNull();
+  });
 });

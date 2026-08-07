@@ -14,6 +14,11 @@ const PINK_FLOYD_MBID = "83d91898-7763-47d7-b03b-b92132375c47";
 const ROGER_WATERS_MBID = "27f0d92e-6de2-4d38-b1a7-1c8ffa32ce2c";
 const DSOTM_RG_MBID = "1e5eb684-d7e9-3699-8fed-6e2e5d0e0d16";
 const DSOTM_RELEASE_MBID = "9e185369-0eb6-4013-8f7e-f8cd4be3ff02";
+// Release-group sintético con fecha anual: ejercita la normalización de
+// fechas parciales de MusicBrainz ('1985' no es un DATE válido para
+// PostgreSQL y debe persistirse como null).
+const ICON_RG_MBID = "b0a1b2c3-0000-4000-8000-00000000000d";
+const ICON_RELEASE_MBID = "c0a1b2c3-0000-4000-8000-00000000000e";
 
 const mockResponses: Record<string, unknown> = {
   "/artist?query=Pink+Floyd&fmt=json": {
@@ -30,12 +35,24 @@ const mockResponses: Record<string, unknown> = {
         "secondary-types": [],
         "artist-credit": [{ name: "Pink Floyd", artist: { id: PINK_FLOYD_MBID, name: "Pink Floyd" } }],
       },
+      {
+        id: ICON_RG_MBID,
+        title: "Icon (fecha anual)",
+        "primary-type": "Album",
+        "secondary-types": [],
+        "artist-credit": [{ name: "Pink Floyd", artist: { id: PINK_FLOYD_MBID, name: "Pink Floyd" } }],
+      },
     ],
   },
   [`/release-group/${DSOTM_RG_MBID}?inc=releases&fmt=json`]: {
     id: DSOTM_RG_MBID,
     title: "The Dark Side of the Moon",
     releases: [{ id: DSOTM_RELEASE_MBID, status: "Official", date: "1973-03-01" }],
+  },
+  [`/release-group/${ICON_RG_MBID}?inc=releases&fmt=json`]: {
+    id: ICON_RG_MBID,
+    title: "Icon (fecha anual)",
+    releases: [{ id: ICON_RELEASE_MBID, status: "Official", date: "1985" }],
   },
   [`/release/${DSOTM_RELEASE_MBID}?inc=recordings%2Bartist-credits&fmt=json`]: {
     id: DSOTM_RELEASE_MBID,
@@ -61,6 +78,12 @@ const mockResponses: Record<string, unknown> = {
         ],
       },
     ],
+  },
+  [`/release/${ICON_RELEASE_MBID}?inc=recordings%2Bartist-credits&fmt=json`]: {
+    id: ICON_RELEASE_MBID,
+    title: "Icon (fecha anual)",
+    date: "1985",
+    media: [],
   },
 };
 
@@ -109,6 +132,18 @@ async function main() {
   const release = await findOrIngestTracklist(rg.id, rg.mbid!);
   console.log("   ->", release);
   console.log("   -> carátula (baja resolución):", coverThumbUrl(release!.mbid!));
+
+  console.log("4) Ingiriendo un álbum con fecha anual (1985)...");
+  const annualRg = releaseGroups.find((rg) => rg.title === "Icon (fecha anual)");
+  if (!annualRg) {
+    throw new Error("No se encontró el release-group de fecha anual en la discografía");
+  }
+  const annualRelease = await findOrIngestTracklist(annualRg.id, annualRg.mbid!);
+  console.log("   ->", annualRelease);
+  if (annualRelease?.releaseDate !== null) {
+    throw new Error(`Se esperaba releaseDate null para fecha anual (1985), se obtuvo ${annualRelease?.releaseDate}`);
+  }
+  console.log("   -> releaseDate normalizado a null sin PostgresError");
 
   global.fetch = realFetch;
   process.exit(0);
