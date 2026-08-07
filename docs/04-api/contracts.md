@@ -76,8 +76,10 @@ conocido por su `id` propio (no `mbid`).
 **404** si el `id` no corresponde a ningún `release_group`, o si MusicBrainz no tiene
 ninguna edición ingerible para ese álbum.
 
-**Nota:** `cover` se arma con `coverThumbUrl()` (siempre baja resolución, ver
-`03-data/data-licensing.md`) — nunca construir esta URL a mano en el frontend.
+**Nota:** `cover` se resuelve contra Cover Art Archive a nivel de **release-group**
+(`coverartarchive.org/release-group/{mbid}/front-250`, siempre baja resolución, ver
+`03-data/data-licensing.md`) al ingestar la edición y se cachea en `release.cover_thumb_url`.
+Vale `null` cuando el álbum no tiene carátula. Nunca construir esta URL a mano en el frontend.
 
 **Créditos por canción:** cada elemento de `tracks` incluye `credits: [{ artistId, name, role, joinPhrase }]`, ordenado por posición. Se arma con un `JOIN` de `credit` + `artist` sobre los `recordingId` de todo el tracklist en una sola query (no una query por canción).
 

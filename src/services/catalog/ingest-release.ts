@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { release, recording, track, type ReleaseRow } from "@/db/schema";
 import { musicbrainz } from "../musicbrainz/client";
 import { normalizeReleaseDate } from "../musicbrainz/mappers";
+import { resolveCoverThumbUrl } from "../cover-art";
 import { ingestCredits } from "./ingest-discography";
 
 /**
@@ -21,7 +22,24 @@ export async function findOrIngestTracklist(
     .from(release)
     .where(eq(release.releaseGroupId, releaseGroupId))
     .limit(1);
-  if (existing) return existing;
+
+  // Self-heal: releases cacheadas antes de que se resolviera la carátula (o
+  // portadas que Cover Art Archive agregue después) se re-resuelven y cachean
+  // al primer acceso posterior.
+  if (existing) {
+    if (!existing.coverThumbUrl) {
+      const cover = await resolveCoverThumbUrl(releaseGroupMbid);
+      if (cover) {
+        const [updated] = await db
+          .update(release)
+          .set({ coverThumbUrl: cover })
+          .where(eq(release.id, existing.id))
+          .returning();
+        if (updated) return updated;
+      }
+    }
+    return existing;
+  }
 
   const rgWithReleases = await musicbrainz.getReleaseGroup(releaseGroupMbid);
   const chosen =
@@ -30,6 +48,7 @@ export async function findOrIngestTracklist(
 
   const full = await musicbrainz.getRelease(chosen.id);
   const releaseDate = normalizeReleaseDate(full.date);
+  const coverThumbUrl = await resolveCoverThumbUrl(releaseGroupMbid);
 
   const insertedReleases = await db
     .insert(release)
@@ -38,8 +57,9 @@ export async function findOrIngestTracklist(
       releaseGroupId,
       editionLabel: "original",
       releaseDate,
+      coverThumbUrl,
     })
-    .onConflictDoUpdate({ target: release.mbid, set: { releaseDate } })
+    .onConflictDoUpdate({ target: release.mbid, set: { releaseDate, coverThumbUrl } })
     .returning();
 
   const releaseRow = insertedReleases[0];

@@ -59,7 +59,7 @@ describe("LazyCoverImage", () => {
   });
 
   it("reemplaza el skeleton por la carátula disponible", async () => {
-    vi.mocked(catalogApi.getReleaseGroupDetail).mockResolvedValue(makeRelease("https://coverartarchive.org/release/x/front-250"));
+    vi.mocked(catalogApi.getReleaseGroupDetail).mockResolvedValue(makeRelease("https://coverartarchive.org/release-group/x/front-250"));
 
     renderWithQuery(<LazyCoverImage releaseGroupId="g1" coverLabel={catalogEs.artist.albumCoverLabel} />);
 

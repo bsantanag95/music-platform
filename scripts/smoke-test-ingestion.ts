@@ -87,6 +87,13 @@ const mockResponses: Record<string, unknown> = {
   },
 };
 
+// Cover Art Archive: DSOTM con carátula (200), Icon sin carátula (404).
+// El resolver hace un HEAD, así que el body no importa; solo el status.
+const coverArtStatusByUrl = new Map<string, number>([
+  [`https://coverartarchive.org/release-group/${DSOTM_RG_MBID}/front-250`, 200],
+  [`https://coverartarchive.org/release-group/${ICON_RG_MBID}/front-250`, 404],
+]);
+
 function normalizeKey(pathname: string, params: URLSearchParams): string {
   const sorted = [...params.entries()].sort(([a], [b]) => a.localeCompare(b));
   const qs = sorted.map(([k, v]) => `${k}=${v}`).join("&");
@@ -103,6 +110,12 @@ const mockResponsesByNormalizedKey = new Map(
 const realFetch = global.fetch;
 global.fetch = (async (input: RequestInfo | URL) => {
   const url = new URL(input.toString());
+
+  if (url.hostname === "coverartarchive.org") {
+    const status = coverArtStatusByUrl.get(url.toString()) ?? 404;
+    return new Response("", { status });
+  }
+
   const key = normalizeKey(url.pathname, url.searchParams);
   const body = mockResponsesByNormalizedKey.get(key);
   if (!body) {
@@ -117,7 +130,6 @@ async function main() {
   const { findOrIngestArtist } = await import("../src/services/catalog/ingest-artist");
   const { findOrIngestDiscography } = await import("../src/services/catalog/ingest-discography");
   const { findOrIngestTracklist } = await import("../src/services/catalog/ingest-release");
-  const { coverThumbUrl } = await import("../src/services/cover-art");
 
   console.log("1) Ingiriendo artista...");
   const artist = await findOrIngestArtist("Pink Floyd");
@@ -131,7 +143,7 @@ async function main() {
   const rg = releaseGroups[0]!;
   const release = await findOrIngestTracklist(rg.id, rg.mbid!);
   console.log("   ->", release);
-  console.log("   -> carátula (baja resolución):", coverThumbUrl(release!.mbid!));
+  console.log("   -> carátula (baja resolución):", release!.coverThumbUrl);
 
   console.log("4) Ingiriendo un álbum con fecha anual (1985)...");
   const annualRg = releaseGroups.find((rg) => rg.title === "Icon (fecha anual)");
@@ -144,6 +156,12 @@ async function main() {
     throw new Error(`Se esperaba releaseDate null para fecha anual (1985), se obtuvo ${annualRelease?.releaseDate}`);
   }
   console.log("   -> releaseDate normalizado a null sin PostgresError");
+  if (annualRelease?.coverThumbUrl !== null) {
+    throw new Error(
+      `Se esperaba coverThumbUrl null para un álbum sin carátula, se obtuvo ${annualRelease?.coverThumbUrl}`,
+    );
+  }
+  console.log("   -> coverThumbUrl null sin carátula (404)");
 
   global.fetch = realFetch;
   process.exit(0);

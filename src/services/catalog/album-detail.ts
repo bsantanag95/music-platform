@@ -10,7 +10,6 @@ import {
   type ReleaseRow,
 } from "@/db/schema";
 import { findOrIngestTracklist } from "./ingest-release";
-import { coverThumbUrl } from "../cover-art";
 
 export interface AlbumCredit {
   artistId: string;
@@ -127,7 +126,7 @@ export async function getAlbumDetail(releaseGroupId: string): Promise<AlbumDetai
     detail: {
       releaseGroup: rg,
       release: releaseRow,
-      cover: releaseRow.mbid ? coverThumbUrl(releaseRow.mbid) : null,
+      cover: releaseRow.coverThumbUrl,
       tracks: albumTracks,
       primaryArtist: await resolvePrimaryArtist(rg.id),
     },

@@ -58,9 +58,9 @@ describe("GET /api/catalog/release-group/[id]", () => {
           releaseGroupId: "rg-1",
           editionLabel: "original",
           releaseDate: "1973-03-01",
-          coverThumbUrl: "https://coverartarchive.org/release/mbid-r-1/front-250",
+          coverThumbUrl: "https://coverartarchive.org/release-group/mbid-rg-1/front-250",
         },
-        cover: "https://coverartarchive.org/release/mbid-r-1/front-250",
+        cover: "https://coverartarchive.org/release-group/mbid-rg-1/front-250",
         tracks: [
           {
             recordingId: "rec-1",
@@ -86,7 +86,7 @@ describe("GET /api/catalog/release-group/[id]", () => {
 
     expect(body.release).toBeDefined();
     expect(body.release.id).toBe("r-1");
-    expect(body.cover).toBe("https://coverartarchive.org/release/mbid-r-1/front-250");
+    expect(body.cover).toBe("https://coverartarchive.org/release-group/mbid-rg-1/front-250");
     expect(body.tracks).toHaveLength(1);
     expect(body.tracks[0].recordingId).toBe("rec-1");
     expect(body.tracks[0].title).toBe("Speak to Me");

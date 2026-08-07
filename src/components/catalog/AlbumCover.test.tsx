@@ -13,7 +13,7 @@ describe("AlbumCover", () => {
   it("muestra la carátula cuando está disponible", () => {
     renderWithIntl(
       <AlbumCover
-        cover="https://coverartarchive.org/release/test/front-250"
+        cover="https://coverartarchive.org/release-group/test/front-250"
         coverLabel={catalogEs.album.coverLabel}
         coverPlaceholderAlt={catalogEs.album.coverPlaceholderAlt}
       />,

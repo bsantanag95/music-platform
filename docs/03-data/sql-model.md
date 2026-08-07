@@ -41,6 +41,11 @@ Versión narrada de `schema.sql`. Para cada tabla: propósito, relaciones, restr
 
 **Relaciones:** `release_group_id` obligatorio — toda edición pertenece a exactamente un álbum conceptual.
 
+**Carátula (`cover_thumb_url`):** URL de la miniatura de 250px de la portada del álbum, resuelta contra
+Cover Art Archive a nivel de **release-group** (ver `data-licensing.md`) al ingestar la edición. Es `null`
+cuando el álbum no tiene carátula (demos/outtakes). Si una edición ya cacheada tiene el valor `null`, la
+resolución se re-intenta en el primer acceso posterior por si la portada aparece después.
+
 **Fechas y precisión:** `release_date` es `DATE` nullable. MusicBrainz entrega fechas con distinta
 precisión (`YYYY`, `YYYY-MM` o `YYYY-MM-DD`); la ingesta normaliza cada valor con
 `normalizeReleaseDate` (`src/services/musicbrainz/mappers.ts`):

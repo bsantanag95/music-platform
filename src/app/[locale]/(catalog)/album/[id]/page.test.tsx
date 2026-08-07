@@ -63,9 +63,9 @@ function makeDetail(overrides: Partial<AlbumDetail> = {}): AlbumDetail {
       releaseGroupId: "rg-1",
       editionLabel: "original",
       releaseDate: "1973-03-01",
-      coverThumbUrl: "https://coverartarchive.org/release/mbid-r-1/front-250",
+      coverThumbUrl: "https://coverartarchive.org/release-group/mbid-rg-1/front-250",
     },
-    cover: "https://coverartarchive.org/release/mbid-r-1/front-250",
+    cover: "https://coverartarchive.org/release-group/mbid-rg-1/front-250",
     tracks: [
       {
         recordingId: "rec-1",
