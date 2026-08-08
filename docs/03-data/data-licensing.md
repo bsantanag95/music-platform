@@ -28,6 +28,17 @@ La metadata de qué imágenes existen es abierta, pero **las imágenes en sí so
 
 **Decisión de producto adoptada:** tratarlas como Wikipedia trata las portadas de álbum — uso de baja resolución, con fines de identificación/catalogación del contenido, no como elemento decorativo a resolución completa. Es la práctica estándar de la industria (Discogs, RateYourMusic, Last.fm operan así) y la ruta más defendible sin pagar licencia por portada.
 
+**Evolución futura condicionada (no es una decisión tomada):** la app hotlinkea hoy las
+miniaturas de CAA, que redirige a Archive.org — una dependencia de disponibilidad de terceros
+documentada como riesgo conocido (ver `frontend-plan/04-risks.md`, riesgo 9). Si las métricas
+de la Fase 3 mostraran una degradación relevante, se podrían evaluar cache HTTP/CDN, proxy
+propio, endpoint de imágenes u Object Storage. **Cualquier estrategia que almacene y sirva
+copias propias** de las portadas — aunque sea en baja resolución — debe re-evaluarse primero
+bajo esta política: son material con copyright de las disqueras y parte del arte cargado en CAA
+tiene condiciones de licencia propias. La adopción de una capa propia no está decidida de
+antemano; se elegirá comparando licencia, disponibilidad, latencia, coste y complejidad
+operativa.
+
 ## Gates a revisar antes de monetizar
 
 1. ¿El proyecto necesita plan comercial de API de MusicBrainz, o conviene auto-hospedar el espejo de datos?

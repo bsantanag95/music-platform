@@ -347,6 +347,13 @@ de arrancar Fase 4.
 
 - Diseño responsive mobile-first (coherente con ADR 0001 — PWA).
 - Estados de carga consistentes (skeletons) en las tres vistas.
+- Mitigación de disponibilidad de carátulas (riesgo 9 de `04-risks.md`): en
+  `LazyCoverImage`, reintentos **limitados** ante error de carga con **pequeño backoff**,
+  skeleton/placeholder mientras se reintenta y **fallback definitivo** al agotar los
+  intentos — sin reintentos infinitos ni tráfico excesivo. Es resiliencia de bajo coste
+  dentro de los estados de carga; **no introduce almacenamiento propio** de imágenes. La
+  eventual decisión de desacoplar la disponibilidad de las carátulas de Cover Art
+  Archive queda condicionada a métricas reales (ver `04-risks.md`, riesgo 9).
 - `src/app/[locale]/error.tsx` y `src/app/[locale]/not-found.tsx` (boundaries globales de
   Next.js, ya nacen bajo el segmento `[locale]` desde la Etapa 3.0b — traducidos vía
   `useTranslations`).
@@ -371,5 +378,8 @@ componentes ya creados.
   locales.
 - `pnpm run build` sin warnings de `next/image`.
 - Revisión manual en viewport móvil sin overflow horizontal ni texto cortado, en `es` y `en`.
+- Ante un fallo transitorio de Cover Art Archive, la carátula reintenta (con backoff) y cae a
+  fallback definitivo tras agotar los intentos, sin romper la tarjeta ni repetir el request
+  en loop.
 
 **Estado: 🔴 No iniciada.**
