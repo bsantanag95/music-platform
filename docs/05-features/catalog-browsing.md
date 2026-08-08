@@ -77,6 +77,35 @@ se ingiere y muestra una sola edición por álbum (simplificación documentada e
 `ingest-release.ts` y `sql-model.md`). El selector de edición es una función futura, no
 decidida todavía.
 
+## 4. Navegación por membresías (banda → integrantes) — diferida a Fase 4
+
+**Problema detectado en la Etapa 3.6.** Los créditos del tracklist solo hacen navegables a los
+artistas con rol `featured` (colaboraciones). En un álbum de una banda, los integrantes —p. ej.
+Roger Waters en un álbum de Pink Floyd— **no figuran como `featured`** en MusicBrainz: el
+`artist-credit` de cada canción es únicamente la banda. Por eso no existe un enlace desde el
+álbum hacia el perfil del integrante. Se verificó con datos reales: Roger Waters tiene **0
+créditos `featured`** en toda la base. Además, la discografía del perfil
+(`findOrIngestDiscography`) solo incluye álbumes donde el artista aparece directamente en el
+`artist-credit`, así que tampoco muestra los álbumes de las bandas a las que pertenece la persona.
+Como consecuencia, el caso de referencia del proyecto ("doble discografía solista y de banda") no
+queda completo con los créditos de canción.
+
+**Solución prevista.** Implementar la navegación por membresía usando la tabla `membership`
+(persona ↔ grupo, ver `03-data/sql-model.md`):
+
+- El perfil de un **grupo** muestra a sus integrantes, con enlaces a cada perfil de persona.
+- El perfil de una **persona** muestra su discografía solista **y** la de los grupos a los que
+  pertenece, en la misma pantalla y agrupada por categoría — exactamente lo que define
+  `01-domain/domain-model.md` y el ADR 0004.
+- La consulta de discografía por membresía **completa** a `findOrIngestDiscography`, no lo
+  reemplaza: se conserva el patrón de cacheo bajo demanda y no se añaden llamadas extra a
+  MusicBrainz para resolver la pertenencia (la relación vive en la base propia).
+
+**Fase planificada: Fase 4**, como extensión de catálogo que acompaña el trabajo sobre las vistas
+de artista/álbum/canción (detalle de canción y formularios de valoración). Es solo lectura y no
+depende de autenticación, pero se planifica ahí para no reescribir las mismas pantallas dos
+veces — mismo criterio que la vista de canción (Etapa 3.5).
+
 ## Casos límite conocidos (heredados del modelo de datos)
 
 - **Re-grabación, remix o versión en vivo** de una canción aparecen como una entrada

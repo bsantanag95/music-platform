@@ -4,5 +4,19 @@
   "retry": "Reintentar",
   "home": "Inicio",
   "search": "Buscar",
-  "localeSwitcher": "Idioma"
+  "localeSwitcher": "Idioma",
+  "error": {
+    "title": "Algo salió mal",
+    "description": "No pudimos completar la solicitud. Intentá de nuevo en un momento."
+  },
+  "notFound": {
+    "title": "No encontrado",
+    "description": "La página que buscás no existe o fue movida.",
+    "action": "Volver al inicio"
+  },
+  "loading": {
+    "artist": "Cargando artista...",
+    "album": "Cargando álbum...",
+    "search": "Cargando búsqueda..."
+  }
 }

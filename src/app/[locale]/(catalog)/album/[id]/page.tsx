@@ -6,6 +6,7 @@ import { AlbumCover } from "@/components/catalog/AlbumCover";
 import { TrackList } from "@/components/catalog/TrackList";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { isValidUuid } from "@/lib/validation";
 
 interface AlbumPageProps {
   params: Promise<{ id: string }>;
@@ -13,6 +14,7 @@ interface AlbumPageProps {
 
 export async function generateMetadata({ params }: AlbumPageProps): Promise<Metadata> {
   const { id } = await params;
+  if (!isValidUuid(id)) return {};
   const result = await getAlbumDetail(id);
   if (result.kind !== "ok") return {};
   return { title: result.detail.releaseGroup.title };
@@ -22,6 +24,8 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
   const { id } = await params;
   const t = await getTranslations("catalog");
   const tCommon = await getTranslations("common");
+
+  if (!isValidUuid(id)) notFound();
 
   const result = await getAlbumDetail(id);
 
@@ -58,6 +62,7 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
           cover={detail.cover}
           coverLabel={t("album.coverLabel")}
           coverPlaceholderAlt={t("album.coverPlaceholderAlt")}
+          coverFailed={t("album.coverFailed")}
           className="h-48 w-48 shrink-0 sm:h-64 sm:w-64"
         />
         <div className="min-w-0">

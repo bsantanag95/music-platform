@@ -48,28 +48,31 @@ vi.mock("next-intl/server", () => ({
   }),
 }));
 
+const VALID_UUID = "550e8400-e29b-41d4-a716-446655440000";
+
 function makeDetail(overrides: Partial<AlbumDetail> = {}): AlbumDetail {
   return {
     releaseGroup: {
-      id: "rg-1",
-      mbid: "mbid-rg-1",
+      id: VALID_UUID,
+      mbid: "550e8400-e29b-41d4-a716-446655440001",
       title: "The Dark Side of the Moon",
       category: "studio",
       coverThumbUrl: null,
       createdAt: new Date(),
     },
     release: {
-      id: "r-1",
-      mbid: "mbid-r-1",
-      releaseGroupId: "rg-1",
+      id: "550e8400-e29b-41d4-a716-446655440002",
+      mbid: "550e8400-e29b-41d4-a716-446655440003",
+      releaseGroupId: VALID_UUID,
       editionLabel: "original",
       releaseDate: "1973-03-01",
       coverThumbUrl: "https://coverartarchive.org/release-group/mbid-rg-1/front-250",
+      creditsSyncedAt: new Date(),
     },
     cover: "https://coverartarchive.org/release-group/mbid-rg-1/front-250",
     tracks: [
       {
-        recordingId: "rec-1",
+        recordingId: "550e8400-e29b-41d4-a716-446655440004",
         discNumber: 1,
         position: 1,
         title: "Speak to Me",
@@ -77,18 +80,18 @@ function makeDetail(overrides: Partial<AlbumDetail> = {}): AlbumDetail {
         credits: [],
       },
       {
-        recordingId: "rec-2",
+        recordingId: "550e8400-e29b-41d4-a716-446655440005",
         discNumber: 1,
         position: 2,
         title: "Breathe",
         durationSec: 170,
         credits: [
-          { artistId: "a1", name: "Pink Floyd", role: "primary", joinPhrase: null },
-          { artistId: "a2", name: "Roger Waters", role: "featured", joinPhrase: " feat. " },
+          { artistId: "550e8400-e29b-41d4-a716-446655440006", name: "Pink Floyd", role: "primary", joinPhrase: null },
+          { artistId: "550e8400-e29b-41d4-a716-446655440007", name: "Roger Waters", role: "featured", joinPhrase: " feat. " },
         ],
       },
     ],
-    primaryArtist: { id: "a1", name: "Pink Floyd" },
+    primaryArtist: { id: "550e8400-e29b-41d4-a716-446655440006", name: "Pink Floyd" },
     ...overrides,
   };
 }
@@ -110,7 +113,7 @@ describe("AlbumPage composición", () => {
     });
 
     renderWithIntl(
-      await AlbumPage({ params: Promise.resolve({ id: "rg-1" }) }),
+      await AlbumPage({ params: Promise.resolve({ id: VALID_UUID }) }),
       "es",
     );
 
@@ -129,7 +132,7 @@ describe("AlbumPage composición", () => {
     });
 
     renderWithIntl(
-      await AlbumPage({ params: Promise.resolve({ id: "rg-1" }) }),
+      await AlbumPage({ params: Promise.resolve({ id: VALID_UUID }) }),
       "es",
     );
 
@@ -148,13 +151,13 @@ describe("AlbumPage composición", () => {
     });
 
     renderWithIntl(
-      await AlbumPage({ params: Promise.resolve({ id: "rg-1" }) }),
+      await AlbumPage({ params: Promise.resolve({ id: VALID_UUID }) }),
       "es",
     );
 
     const creditLink = screen.getByRole("link", { name: "Roger Waters" });
     expect(creditLink).toBeInTheDocument();
-    expect(creditLink).toHaveAttribute("href", "/artist/a2");
+    expect(creditLink).toHaveAttribute("href", "/artist/550e8400-e29b-41d4-a716-446655440007");
   });
 
   it("muestra breadcrumb con artista principal cuando existe", async () => {
@@ -169,14 +172,14 @@ describe("AlbumPage composición", () => {
     });
 
     renderWithIntl(
-      await AlbumPage({ params: Promise.resolve({ id: "rg-1" }) }),
+      await AlbumPage({ params: Promise.resolve({ id: VALID_UUID }) }),
       "es",
     );
 
     expect(screen.getByRole("link", { name: "home" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Pink Floyd" })).toHaveAttribute(
       "href",
-      "/artist/a1",
+      "/artist/550e8400-e29b-41d4-a716-446655440006",
     );
   });
 
@@ -192,7 +195,7 @@ describe("AlbumPage composición", () => {
     });
 
     renderWithIntl(
-      await AlbumPage({ params: Promise.resolve({ id: "rg-1" }) }),
+      await AlbumPage({ params: Promise.resolve({ id: VALID_UUID }) }),
       "es",
     );
 

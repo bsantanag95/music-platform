@@ -27,7 +27,8 @@
     "noPhotoAlt": "Sin foto disponible",
     "albumCoverLabel": "Carátula del álbum",
     "coverPlaceholderAlt": "Carátula no disponible",
-    "coverLoading": "Cargando carátula"
+    "coverLoading": "Cargando carátula",
+    "coverFailed": "No se pudo cargar la carátula"
   },
   "album": {
     "tracklistHeading": "Tracklist",
@@ -37,6 +38,7 @@
     "creditsLabel": "Créditos",
     "coverLabel": "Carátula del álbum",
     "coverPlaceholderAlt": "Carátula no disponible",
+    "coverFailed": "No se pudo cargar la carátula",
     "noEditionsTitle": "Sin ediciones disponibles",
     "noEditionsDescription": "No se encontraron ediciones para este álbum."
   }

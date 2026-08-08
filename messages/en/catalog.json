@@ -27,7 +27,8 @@
     "noPhotoAlt": "No photo available",
     "albumCoverLabel": "Album cover",
     "coverPlaceholderAlt": "Cover not available",
-    "coverLoading": "Loading cover"
+    "coverLoading": "Loading cover",
+    "coverFailed": "Could not load cover"
   },
   "album": {
     "tracklistHeading": "Tracklist",
@@ -37,6 +38,7 @@
     "creditsLabel": "Credits",
     "coverLabel": "Album cover",
     "coverPlaceholderAlt": "Cover not available",
+    "coverFailed": "Could not load cover",
     "noEditionsTitle": "No editions available",
     "noEditionsDescription": "No editions were found for this album."
   }

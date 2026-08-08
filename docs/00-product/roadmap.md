@@ -26,6 +26,12 @@ Entregable: buscar → artista → álbum → canción, sin cuentas todavía. El
 
 Entregable: autenticación de usuarios, valoración dual (estrellas + detallada) y comentarios funcionando sobre artista, álbum y canción. Es el núcleo social base y cierra el MVP definido en el PRD.
 
+Junto al trabajo sobre las vistas de artista/álbum/canción, esta fase cierra también la **navegación
+por membresías** diferida en la Etapa 3.6 (caso Pink Floyd / Roger Waters): el perfil de una banda
+debe permitir llegar al perfil de sus integrantes, y el perfil de una persona debe mostrar su
+discografía solista y la de los grupos a los que pertenece. Ver `05-features/catalog-browsing.md`
+(sección 4) para el problema y la solución detallados.
+
 ## Fase 5 — Presencia, favoritos y actividad social
 
 Entregable: la capa de presencia (registro de qué se escuchó, sin exigir opinión) y la capa de criterio ampliada sobre ella — favoritos en los tres niveles (artista, álbum, canción), listas curadas, y la función de actividad tipo "qué estás escuchando". Se deja deliberadamente como el último bloque de producto antes del lanzamiento, porque es la parte más fácil de iterar con feedback real de usuarios y la más difícil de acertar de antemano sin ese feedback.

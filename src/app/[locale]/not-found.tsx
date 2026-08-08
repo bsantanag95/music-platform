@@ -1,15 +1,24 @@
 import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
+import { EmptyState } from "@/components/ui/EmptyState";
 
-// 404 localizado para el segmento [locale]. Reutiliza el mensaje de error
-// de búsqueda de artista; es un estado amigable y traducido, nunca el
-// mensaje crudo del backend.
 export default async function NotFound() {
-  const t = await getTranslations("errors");
+  const t = await getTranslations("common");
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-12 text-center">
-      <h1 className="font-display text-2xl text-paper">{t("ARTIST_NOT_FOUND.title")}</h1>
-      <p className="max-w-sm font-body text-paper-muted">{t("ARTIST_NOT_FOUND.description")}</p>
-    </main>
+    <div className="mx-auto flex min-h-[50vh] max-w-2xl items-center px-4">
+      <EmptyState
+        title={t("notFound.title")}
+        description={t("notFound.description")}
+        action={
+          <Link
+            href="/"
+            className="mt-2 inline-flex items-center gap-2 rounded-md border border-ink-border px-4 py-2 font-display text-sm text-paper transition hover:bg-ink-surface focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            {t("notFound.action")}
+          </Link>
+        }
+      />
+    </div>
   );
 }

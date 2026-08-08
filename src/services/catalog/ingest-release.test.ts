@@ -17,8 +17,13 @@ vi.mock("@/services/musicbrainz/client", () => ({
   },
 }));
 
+vi.mock("./ingest-discography", () => ({
+  ingestCredits: vi.fn(),
+}));
+
 const { db } = await import("@/db");
 const { musicbrainz } = await import("@/services/musicbrainz/client");
+const { ingestCredits } = await import("./ingest-discography");
 
 function makeSelectChain(rows: unknown[] = []) {
   const chain = {
@@ -55,6 +60,7 @@ function makeReleaseRow(overrides: Partial<schema.ReleaseRow> = {}): schema.Rele
     editionLabel: "original",
     releaseDate: null,
     coverThumbUrl: null,
+    creditsSyncedAt: null,
     ...overrides,
   };
 }
@@ -134,12 +140,28 @@ describe("findOrIngestTracklist", () => {
   });
 
   it("devuelve la release existente sin re-resolver la carátula (self-heal en cover.ts)", async () => {
-    const existing = makeReleaseRow({ coverThumbUrl: null });
+    const existing = makeReleaseRow({ coverThumbUrl: null, creditsSyncedAt: new Date() });
     vi.mocked(db.select).mockReturnValue(makeSelectChain([existing]) as never);
 
     const result = await findOrIngestTracklist("rg-1", "mbid-rg-1");
 
     expect(result?.coverThumbUrl).toBeNull();
+    expect(db.update).not.toHaveBeenCalled();
+    expect(db.insert).not.toHaveBeenCalled();
+  });
+
+  it("devuelve la release existente sin llamar a MusicBrainz aunque creditsSyncedAt sea NULL", async () => {
+    // El path de lectura nunca re-sincroniza créditos: una caída de
+    // MusicBrainz no debe romper la vista de álbum. El backfill es el
+    // script scripts/backfill-release-credits.ts.
+    const existing = makeReleaseRow({ creditsSyncedAt: null });
+    vi.mocked(db.select).mockReturnValue(makeSelectChain([existing]) as never);
+
+    const result = await findOrIngestTracklist("rg-1", "mbid-rg-1");
+
+    expect(result).toEqual(existing);
+    expect(musicbrainz.getRelease).not.toHaveBeenCalled();
+    expect(ingestCredits).not.toHaveBeenCalled();
     expect(db.update).not.toHaveBeenCalled();
     expect(db.insert).not.toHaveBeenCalled();
   });

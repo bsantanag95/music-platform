@@ -7,6 +7,7 @@ import { findOrIngestDiscography } from "@/services/catalog/ingest-discography";
 import { ArtistHeader } from "@/components/catalog/ArtistHeader";
 import { AlbumGrid } from "@/components/catalog/AlbumGrid";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { isValidUuid } from "@/lib/validation";
 import type { ReleaseGroupRow } from "@/db/schema";
 import type { Artist, ReleaseGroup, ReleaseGroupCategory } from "@/lib/api/schemas";
 
@@ -24,6 +25,7 @@ const getArtistCached = cache(async (id: string) => getArtistById(id));
 // traduce). El resto de la página usa las etiquetas del namespace `artist`.
 export async function generateMetadata({ params }: ArtistPageProps): Promise<Metadata> {
   const { id } = await params;
+  if (!isValidUuid(id)) return {};
   const artist = await getArtistCached(id);
   return artist ? { title: artist.name } : {};
 }
@@ -32,6 +34,8 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
   const { id } = await params;
   const t = await getTranslations("catalog");
   const tCommon = await getTranslations("common");
+
+  if (!isValidUuid(id)) notFound();
 
   // `getArtistById` enriquece artistas stub (`type='unknown'`) contra
   // MusicBrainz antes de devolverlos; si el id no existe devuelve null.

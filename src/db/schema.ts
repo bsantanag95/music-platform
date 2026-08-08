@@ -93,6 +93,7 @@ export const release = pgTable(
     editionLabel: text("edition_label").notNull().default("original"),
     releaseDate: date("release_date"),
     coverThumbUrl: text("cover_thumb_url"),
+    creditsSyncedAt: timestamp("credits_synced_at", { withTimezone: true }),
   },
   (t) => [index("idx_release_release_group").on(t.releaseGroupId)],
 );

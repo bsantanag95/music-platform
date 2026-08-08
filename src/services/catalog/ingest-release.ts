@@ -11,6 +11,12 @@ import { ingestCredits } from "./ingest-discography";
  * Simplificación de la Fase 2: se ingiere una sola edición por álbum;
  * ingerir ediciones alternativas (japonesa, remaster) queda para cuando
  * el modelo de selección de edición se implemente en el frontend.
+ *
+ * Nota: si el release ya existe se devuelve tal cual, sin llamadas a
+ * MusicBrainz. Los releases cacheados antes de la ingesta de créditos se
+ * re-sincronizan con el script `scripts/backfill-release-credits.ts`,
+ * nunca dentro del path de lectura del álbum (una caída de MusicBrainz
+ * no debe romper la vista de álbum).
  */
 export async function findOrIngestTracklist(
   releaseGroupId: string,
@@ -42,6 +48,7 @@ export async function findOrIngestTracklist(
       releaseGroupId,
       editionLabel: "original",
       releaseDate,
+      creditsSyncedAt: new Date(),
     })
     .onConflictDoUpdate({ target: release.mbid, set: { releaseDate } })
     .returning();
@@ -83,4 +90,39 @@ export async function findOrIngestTracklist(
   }
 
   return releaseRow;
+}
+
+/**
+ * Sincroniza los créditos de un release existente sin re-ingestar el tracklist.
+ * Consulta MusicBrainz para obtener los créditos de cada track y los ingiere
+ * en la base local. Marca el release con creditsSyncedAt al finalizar.
+ */
+export async function syncReleaseCredits(releaseRow: ReleaseRow): Promise<void> {
+  if (!releaseRow.mbid) return;
+
+  const full = await musicbrainz.getRelease(releaseRow.mbid);
+
+  for (const medium of full.media ?? []) {
+    for (const mbTrack of medium.tracks) {
+      if (!mbTrack["artist-credit"]?.length) continue;
+
+      // Buscar el recording correspondiente en la base local
+      const [localRecording] = await db
+        .select()
+        .from(recording)
+        .where(eq(recording.mbid, mbTrack.recording.id))
+        .limit(1);
+
+      if (!localRecording) continue;
+
+      // Ingerir los créditos del track
+      await ingestCredits(mbTrack["artist-credit"], { recordingId: localRecording.id });
+    }
+  }
+
+  // Marcar el release como sincronizado
+  await db
+    .update(release)
+    .set({ creditsSyncedAt: new Date() })
+    .where(eq(release.id, releaseRow.id));
 }

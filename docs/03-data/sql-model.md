@@ -53,6 +53,12 @@ después (self-heal, mismo criterio que aplicaba `release`).
 (`album-detail.ts`) la usa solo como fallback de compatibilidad para filas pre-migración
 (`release_group.coverThumbUrl ?? release.coverThumbUrl`). No introducir escrituras nuevas sobre esta columna.
 
+**Sincronización de créditos (`credits_synced_at`):** marca de tiempo nullable que indica cuándo se
+sincronizaron los créditos de esta edición. Si es `NULL`, los créditos no fueron sincronizados
+(releases cacheados antes de la implementación de créditos). La re-sincronización se hace con el
+script `scripts/backfill-release-credits.ts`, nunca dentro del path de lectura del álbum
+(migración `0004`).
+
 **Fechas y precisión:** `release_date` es `DATE` nullable. MusicBrainz entrega fechas con distinta
 precisión (`YYYY`, `YYYY-MM` o `YYYY-MM-DD`); la ingesta normaliza cada valor con
 `normalizeReleaseDate` (`src/services/musicbrainz/mappers.ts`):

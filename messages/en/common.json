@@ -4,5 +4,19 @@
   "retry": "Retry",
   "home": "Home",
   "search": "Search",
-  "localeSwitcher": "Language"
+  "localeSwitcher": "Language",
+  "error": {
+    "title": "Something went wrong",
+    "description": "We couldn't complete the request. Please try again in a moment."
+  },
+  "notFound": {
+    "title": "Not found",
+    "description": "The page you're looking for doesn't exist or has been moved.",
+    "action": "Back to home"
+  },
+  "loading": {
+    "artist": "Loading artist...",
+    "album": "Loading album...",
+    "search": "Loading search..."
+  }
 }

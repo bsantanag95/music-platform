@@ -382,4 +382,52 @@ componentes ya creados.
   fallback definitivo tras agotar los intentos, sin romper la tarjeta ni repetir el request
   en loop.
 
-**Estado: 🔴 No iniciada.**
+**Estado: 🟢 Completa.**
+
+Construido: boundaries localizados `error.tsx` y `not-found.tsx` bajo `[locale]`, catch-all
+`[...unknown]/page.tsx` bajo `[locale]` para rutas desconocidas, estados `loading.tsx` para
+búsqueda, artista y álbum con skeletons representativos, resiliencia de carátulas en
+`LazyCoverImage` y `AlbumCover` con reintentos limitados (máx 2 con backoff de 250/750 ms) y
+fallback definitivo a `DiscPlaceholder`, configuración de `next/image` ampliada para incluir
+`archive.org` (host redirigido por Cover Art Archive), validación de UUID en páginas de artista
+y álbum para evitar errores de PostgreSQL con IDs malformados, y backfill de créditos para
+releases cacheados antes de la implementación de créditos (migración `0004`, script
+`scripts/backfill-release-credits.ts`). La re-sincronización de créditos vive solo en el
+script de backfill, nunca en el path de lectura del álbum — una caída de MusicBrainz no debe
+romper la vista de álbum. Los componentes
+existentes ya eran responsive y accesibles; se verificó que cumplen con los criterios de
+mobile-first y accesibilidad básica.
+
+**Validado:** `typecheck` (0 errores), `lint` (0 errores nuevos), `test` (97 pasando),
+`build` (sin warnings de `next/image`). Tests agregados: `LazyCoverImage` con reintentos de
+consulta e imagen (3 casos), `AlbumCover` con reintentos de imagen (1 caso), `isValidUuid` (7 casos),
+`findOrIngestTracklist` con devolución de release existente sin llamar a MusicBrainz (1 caso).
+
+**Limitación conocida (diferida a Fase 4):** los créditos del tracklist solo navegan a artistas
+con rol `featured`. Los integrantes de una banda (p. ej. Roger Waters en Pink Floyd) no son
+`featured` en MusicBrainz, así que no hay enlace desde el álbum hacia su perfil. La navegación por
+membresías (tabla `membership`) queda planificada para Fase 4 — ver
+`05-features/catalog-browsing.md`, sección 4.
+
+**Archivos**
+
+`src/app/[locale]/error.tsx` (nuevo), `src/app/[locale]/not-found.tsx` (nuevo),
+`src/app/[locale]/[...unknown]/page.tsx` (nuevo — catch-all para rutas desconocidas),
+`src/app/[locale]/(catalog)/search/loading.tsx` (nuevo),
+`src/app/[locale]/(catalog)/artist/[id]/loading.tsx` (nuevo),
+`src/app/[locale]/(catalog)/album/[id]/loading.tsx` (nuevo),
+`src/lib/validation.ts` (nuevo — helper `isValidUuid`),
+`src/lib/validation.test.ts` (nuevo),
+`scripts/backfill-release-credits.ts` (nuevo — script de backfill),
+`drizzle/0004_release_credits_synced_at.sql` (nuevo — migración),
+`src/components/catalog/LazyCoverImage.tsx` (modificado — resiliencia),
+`src/components/catalog/AlbumCover.tsx` (modificado — resiliencia, convertido a Client Component),
+`src/app/[locale]/(catalog)/artist/[id]/page.tsx` (modificado — validación UUID),
+`src/app/[locale]/(catalog)/album/[id]/page.tsx` (modificado — validación UUID),
+`src/services/catalog/ingest-release.ts` (modificado — sincronización de créditos),
+`src/db/schema.ts` (modificado — columna `creditsSyncedAt`),
+`next.config.mjs` (modificado — remotePatterns con archive.org),
+`messages/{es,en}/common.json` (modificado — claves error, notFound, loading),
+`messages/{es,en}/catalog.json` (modificado — claves coverFailed).
+
+**Dependencias:** Etapas 3.0b, 3.1 a 3.4 completas.
