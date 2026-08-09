@@ -33,11 +33,13 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - Las estrellas van de 0.5 a 5, en pasos de 0.5.
 - La "Valoración detallada" (1 a 100) es opcional, pero si existe debe caer dentro del rango de 10 puntos que corresponde a las estrellas elegidas (0.5★ → 1-10, 1★ → 11-20, 1.5★ → 21-30 ... 5★ → 91-100). Nunca pueden contradecirse entre sí.
 - Una Valoración puede editarse; al editarla, ambas escalas se re-validan juntas.
+- Borrar una Valoración es un borrado físico (`DELETE` real) — no hay historial ni recuperación. Ver ADR 0009.
 
 ## Comentarios
 
 - Un Comentario pertenece a exactamente un objetivo: un Artista, un Álbum, o una Canción.
 - A diferencia de la Valoración, un mismo Usuario puede dejar más de un Comentario sobre el mismo objetivo.
+- Borrar un Comentario es un borrado físico (`DELETE` real) — no hay historial ni recuperación. Ver ADR 0009.
 
 ## Datos y licencias
 
@@ -47,5 +49,5 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 ## Internacionalización
 
 - Los datos del catálogo musical (nombres de artistas, títulos de álbumes, títulos de canciones, biografías) **no se traducen**. Se muestran tal cual llegan de MusicBrainz, independientemente del idioma activo de la interfaz.
-- La internacionalización (i18n) aplica únicamente al *chrome* de la interfaz: etiquetas de UI, botones, mensajes de error, estados de carga, y demás texto no proveniente del dominio musical.
+- La internacionalización (i18n) aplica únicamente al _chrome_ de la interfaz: etiquetas de UI, botones, mensajes de error, estados de carga, y demás texto no proveniente del dominio musical.
 - Ver `02-architecture/i18n.md` para la arquitectura completa del sistema de idiomas.

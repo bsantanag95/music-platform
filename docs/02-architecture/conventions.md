@@ -19,7 +19,19 @@
 
 ## Borrado
 
-- Aún no definido si se usará soft delete (columna `deleted_at`) o borrado físico — pendiente de decidir antes de la Fase 4, cuando el borrado de valoraciones/comentarios sea una funcionalidad real.
+**Decisión confirmada** — ver ADR 0009. `rating` y `comment` usan borrado físico (`DELETE`
+real), no soft-delete. Ningún query ni migración nueva debe agregar una columna `deleted_at`
+a estas tablas sin reabrir el ADR.
+
+## Autenticación
+
+**Decisión confirmada** — ver ADR 0008 y `02-architecture/auth.md` para el detalle completo.
+Resumen normativo:
+
+- Sesiones server-side con token opaco en cookie `httpOnly`/`secure`/`sameSite=lax`, nunca JWT.
+- Contraseñas con Argon2id, nunca un hash débil ni texto plano.
+- `app_user.password_hash` es nullable — deja espacio para OAuth futuro sin migración destructiva.
+- El `user_id` de toda mutación de `rating`/`comment` sale de la sesión, nunca del body/params.
 
 ## Errores HTTP
 
@@ -45,7 +57,7 @@ la arquitectura. Resumen normativo para uso diario:
   `src/i18n/navigation.ts`, nunca directo de `next/navigation` — de lo contrario se pierde el
   prefijo de locale al navegar.
 - **Datos del catálogo musical** (nombre de artista, título de álbum/canción, biografía) nunca
-  se traducen — se muestran tal cual llegan de MusicBrainz. i18n aplica solo al *chrome* de la
+  se traducen — se muestran tal cual llegan de MusicBrainz. i18n aplica solo al _chrome_ de la
   interfaz.
 
 ## Principio general
