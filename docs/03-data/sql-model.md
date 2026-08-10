@@ -76,7 +76,12 @@ vencidas al momento de crearse; la expiración sigue siendo fija porque la aplic
 
 - `person_id <> group_id`: un artista no puede ser miembro de sí mismo.
 - `left_on >= joined_on` (cuando ambos existen): coherencia temporal.
+- `UNIQUE (person_id, group_id)` impide duplicar la misma relación persona/grupo y permite hacer upsert idempotente.
 - **Trigger `trg_membership_types`**: valida que `person_id` apunte a un `artist` con `type='person'` y `group_id` a uno con `type='group'`. No es posible expresar esto con un `CHECK` porque requiere consultar otra tabla.
+
+Antes de crear la unicidad, la migración `0006_membership_sync.sql` consolida cualquier duplicado existente: conserva una fila canónica, combina los roles y conserva el intervalo más amplio representable. La inspección previa a aplicar esta migración en `music_platform_scratch` no encontró duplicados.
+
+`artist.memberships_synced_at` es nullable. `NULL` indica que todavía debe intentarse la ingesta de memberships desde MusicBrainz; una fecha indica que la sincronización terminó correctamente y permite leer las relaciones exclusivamente desde PostgreSQL. La ingesta toma un `pg_advisory_xact_lock` por artista y relee este flag dentro de la transacción para que las solicitudes concurrentes no dupliquen la llamada externa. La misma transacción hace upsert de artistas y memberships, elimina solo las relaciones actuales del artista que ya no aparecen en la respuesta válida y marca el flag al final; cualquier error revierte el conjunto completo.
 
 ## `release_group`
 

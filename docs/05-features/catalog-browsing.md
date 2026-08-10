@@ -90,7 +90,7 @@ créditos `featured`** en toda la base. Además, la discografía del perfil
 Como consecuencia, el caso de referencia del proyecto ("doble discografía solista y de banda") no
 queda completo con los créditos de canción.
 
-**Solución prevista.** Implementar la navegación por membresía usando la tabla `membership`
+**Solución implementada.** Implementar la navegación por membresía usando la tabla `membership`
 (persona ↔ grupo, ver `03-data/sql-model.md`):
 
 - El perfil de un **grupo** muestra a sus integrantes, con enlaces a cada perfil de persona.
@@ -101,10 +101,16 @@ queda completo con los créditos de canción.
   reemplaza: se conserva el patrón de cacheo bajo demanda y no se añaden llamadas extra a
   MusicBrainz para resolver la pertenencia (la relación vive en la base propia).
 
-**Fase planificada: Fase 4**, como extensión de catálogo que acompaña el trabajo sobre las vistas
-de artista/álbum/canción (detalle de canción y formularios de valoración). Es solo lectura y no
-depende de autenticación, pero se planifica ahí para no reescribir las mismas pantallas dos
-veces — mismo criterio que la vista de canción (Etapa 3.5).
+La primera visita a un artista con `memberships_synced_at` nulo solicita sus `artist-rels` una sola
+vez, filtra `member of band`, consolida roles y fechas conocidas, y persiste la relación de forma
+idempotente. La ingesta ocurre antes de leer memberships y antes de componer la discografía. La
+sincronización se ejecuta en una transacción con lock por artista: reconcilia relaciones ausentes sin
+afectar memberships de otros artistas y marca el flag solo al terminar. Si la llamada externa falla,
+la transacción revierte y la marca permanece nula para permitir reintentar; una lectura ya sincronizada
+es exclusivamente local.
+
+Esta extensión pertenece a Fase 4, acompaña el trabajo sobre las vistas de artista/álbum/canción y
+no depende de autenticación.
 
 ## Casos límite conocidos (heredados del modelo de datos)
 

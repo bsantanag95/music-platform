@@ -3,14 +3,29 @@ import { screen, fireEvent } from "@testing-library/react";
 import { Header } from "./Header";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 
-const mockReplace = vi.fn();
+const mocks = vi.hoisted(() => ({
+  replace: vi.fn(),
+  refresh: vi.fn(),
+  apiFetch: vi.fn(),
+}));
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
     <a href={href}>{children}</a>
   ),
   usePathname: () => "/album/rg-1",
-  useRouter: () => ({ replace: mockReplace }),
+  useRouter: () => ({ replace: mocks.replace, refresh: mocks.refresh }),
+}));
+
+vi.mock("@/lib/api/client", () => ({
+  apiFetch: mocks.apiFetch,
+  ApiError: class ApiError extends Error {
+    code: string;
+    constructor(code: string) {
+      super(code);
+      this.code = code;
+    }
+  },
 }));
 
 vi.mock("next-intl", async () => {
@@ -21,12 +36,19 @@ vi.mock("next-intl", async () => {
     useTranslations: () => (key: string) => {
       const map: Record<string, string> = {
         search: "Buscar",
+        login: "Iniciar sesión",
+        register: "Registrarse",
+        logout: "Cerrar sesión",
+        logoutPending: "Cerrando sesión...",
+        signedInAs: "Sesión iniciada como",
         localeSwitcher: "Idioma",
       };
-      return map[key] ?? key;
+        return map[key] ?? key;
     },
   };
 });
+
+vi.mock("@/lib/api/schemas", () => ({ LogoutResponseSchema: {} }));
 
 vi.mock("@/i18n/routing", () => ({
   routing: { locales: ["es", "en"], defaultLocale: "es" },
@@ -37,6 +59,45 @@ describe("Header", () => {
     renderWithIntl(<Header />);
 
     expect(screen.getByRole("link", { name: "Buscar" })).toHaveAttribute("href", "/search");
+  });
+
+  it("muestra login y registro como acciones primarias para visitantes", () => {
+    renderWithIntl(<Header />);
+
+    expect(screen.getByRole("link", { name: "Iniciar sesión" })).toHaveAttribute(
+      "href",
+      "/auth/login",
+    );
+    expect(screen.getByRole("link", { name: "Registrarse" })).toHaveAttribute(
+      "href",
+      "/auth/register",
+    );
+  });
+
+  it("permite cerrar sesión y refresca el estado de la ruta", async () => {
+    mocks.apiFetch.mockResolvedValueOnce({ ok: true });
+    renderWithIntl(
+      <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Cerrar sesión" }));
+
+    expect(await screen.findByRole("link", { name: "Iniciar sesión" })).toBeInTheDocument();
+    expect(mocks.apiFetch).toHaveBeenCalledWith("/api/auth/logout", expect.anything(), {
+      method: "DELETE",
+    });
+    expect(mocks.refresh).toHaveBeenCalled();
+  });
+
+  it("muestra el error localizado sin exponer el mensaje del backend", async () => {
+    mocks.apiFetch.mockRejectedValueOnce({ code: "INTERNAL_ERROR" });
+    renderWithIntl(
+      <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Cerrar sesión" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("INTERNAL_ERROR.description");
   });
 
   it("muestra botones para cada locale", () => {
@@ -61,6 +122,6 @@ describe("Header", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "en" }));
 
-    expect(mockReplace).toHaveBeenCalledWith("/album/rg-1", { locale: "en" });
+    expect(mocks.replace).toHaveBeenCalledWith("/album/rg-1", { locale: "en" });
   });
 });

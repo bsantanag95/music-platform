@@ -7,6 +7,7 @@ import * as discographyService from "@/services/catalog/ingest-discography";
 vi.mock("@/services/catalog/ingest-artist", () => ({
   getArtistById: vi.fn(),
   getArtistMemberships: vi.fn(),
+  ensureArtistMemberships: vi.fn(),
 }));
 
 vi.mock("@/services/catalog/ingest-discography", () => ({
@@ -32,6 +33,7 @@ describe("GET /api/catalog/artist/[id]", () => {
       photoUrl: null,
       createdAt: new Date("2024-01-01T00:00:00.000Z"),
       discographySyncedAt: null,
+      membershipsSyncedAt: null,
     };
     const memberships = [{
       artistId: "22222222-2222-4222-8222-222222222222",
@@ -42,6 +44,7 @@ describe("GET /api/catalog/artist/[id]", () => {
       leftOn: null,
     }];
     vi.mocked(artistService.getArtistById).mockResolvedValue(artist);
+    vi.mocked(artistService.ensureArtistMemberships).mockResolvedValue();
     vi.mocked(artistService.getArtistMemberships).mockResolvedValue(memberships);
     vi.mocked(discographyService.findOrIngestDiscography).mockResolvedValue([]);
 

@@ -31,6 +31,7 @@ vi.mock("next-intl/server", () => ({
 vi.mock("@/services/catalog/ingest-artist", () => ({
   getArtistById: vi.fn(),
   getArtistMemberships: vi.fn().mockResolvedValue([]),
+  ensureArtistMemberships: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/services/catalog/ingest-discography", () => ({
@@ -67,6 +68,7 @@ function makeArtist(overrides: Partial<ArtistRow> = {}): ArtistRow {
     photoUrl: null,
     createdAt: new Date("2024-01-01T00:00:00Z"),
     discographySyncedAt: null,
+    membershipsSyncedAt: null,
     ...overrides,
   };
 }

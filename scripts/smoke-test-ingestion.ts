@@ -29,6 +29,19 @@ const mockResponses: Record<string, unknown> = {
       { id: PINK_FLOYD_MBID, name: "Pink Floyd", type: "Group", disambiguation: "banda británica de rock" },
     ],
   },
+  [`/artist/${PINK_FLOYD_MBID}?inc=artist-rels&fmt=json`]: {
+    id: PINK_FLOYD_MBID,
+    name: "Pink Floyd",
+    type: "Group",
+    relations: [
+      {
+        type: "member of band",
+        direction: "backward",
+        artist: { id: ROGER_WATERS_MBID, name: "Roger Waters", type: "Person" },
+        attributes: ["bass", "vocals"],
+      },
+    ],
+  },
   [`/release-group?artist=${PINK_FLOYD_MBID}&limit=100&inc=artist-credits&fmt=json`]: {
     "release-groups": [
       {
@@ -130,13 +143,15 @@ global.fetch = (async (input: RequestInfo | URL) => {
 }) as typeof fetch;
 
 async function main() {
-  const { findOrIngestArtist } = await import("../src/services/catalog/ingest-artist");
+  const { ensureArtistMemberships, findOrIngestArtist } = await import("../src/services/catalog/ingest-artist");
   const { findOrIngestDiscography } = await import("../src/services/catalog/ingest-discography");
   const { findOrIngestTracklist } = await import("../src/services/catalog/ingest-release");
 
   console.log("1) Ingiriendo artista...");
   const artist = await findOrIngestArtist("Pink Floyd");
   console.log("   ->", artist);
+  console.log("   -> sincronizando memberships...");
+  await ensureArtistMemberships(artist!);
 
   console.log("2) Ingiriendo discografía...");
   const releaseGroups = await findOrIngestDiscography(artist!);

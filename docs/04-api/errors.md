@@ -38,7 +38,7 @@ además del `error` legible:
 | `INVALID_RATING` / `INVALID_COMMENT` | 400 | Entrada social inválida. |
 | `RATING_NOT_FOUND` | 404 | No existe un rating propio para borrar. |
 | `COMMENT_NOT_FOUND` | 404 | No existe el comentario solicitado. |
-| `INTERNAL_ERROR` | 500 | Cualquier error no controlado (ej. MusicBrainz caído, timeout, error de base de datos) — capturado por `withErrorHandling`, que devuelve este shape en vez de un 500 sin body. |
+| `INTERNAL_ERROR` | 500 | Cualquier error no controlado (ej. MusicBrainz caído durante la ingesta fría, timeout, error de base de datos) — capturado por `withErrorHandling`, que devuelve este shape en vez de un 500 sin body. La marca de memberships no se escribe ante este error. |
 
 ### Implementación
 

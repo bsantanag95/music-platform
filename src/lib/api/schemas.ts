@@ -13,6 +13,7 @@ export const ArtistSchema = z.object({
   photoUrl: z.string().nullable(),
   createdAt: z.string(),
   discographySyncedAt: z.string().nullable(),
+  membershipsSyncedAt: z.string().nullable(),
 });
 export type Artist = z.infer<typeof ArtistSchema>;
 
@@ -118,7 +119,12 @@ export const ErrorCodeSchema = z.enum([
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 
 export const RegisterRequestSchema = z.object({
-  username: z.string().trim().min(3).max(32).regex(/^[a-zA-Z0-9_]+$/),
+  username: z
+    .string()
+    .trim()
+    .min(3)
+    .max(32)
+    .regex(/^[a-zA-Z0-9_]+$/),
   email: z.email().transform((value) => value.toLowerCase()),
   password: z.string().min(8).max(128),
 });
@@ -140,6 +146,8 @@ export type AuthUser = z.infer<typeof AuthUserSchema>;
 
 export const AuthResponseSchema = z.object({ user: AuthUserSchema });
 export type AuthResponse = z.infer<typeof AuthResponseSchema>;
+
+export const LogoutResponseSchema = z.object({ ok: z.literal(true) });
 
 export const RecordingSchema = z.object({
   id: z.uuid(),
@@ -165,17 +173,23 @@ export const RecordingDetailSchema = z.object({
   recording: RecordingSchema,
   credits: z.array(RecordingCreditSchema),
   appearances: z.array(RecordingAppearanceSchema),
+  primaryArtist: z.object({ id: z.uuid(), name: z.string() }).nullable(),
 });
 export type RecordingDetailResponse = z.infer<typeof RecordingDetailSchema>;
 
-export const SocialTargetSchema = z.object({
-  artistId: z.uuid().optional(),
-  releaseGroupId: z.uuid().optional(),
-  recordingId: z.uuid().optional(),
-}).refine(
-  (target) => [target.artistId, target.releaseGroupId, target.recordingId].filter(Boolean).length === 1,
-  { message: "Debe indicarse exactamente un objetivo" },
-);
+export const SocialTargetSchema = z
+  .object({
+    artistId: z.uuid().optional(),
+    releaseGroupId: z.uuid().optional(),
+    recordingId: z.uuid().optional(),
+  })
+  .refine(
+    (target) =>
+      [target.artistId, target.releaseGroupId, target.recordingId].filter(
+        Boolean,
+      ).length === 1,
+    { message: "Debe indicarse exactamente un objetivo" },
+  );
 
 export const RatingRequestSchema = SocialTargetSchema.extend({
   stars: z.number().min(0.5).max(5).multipleOf(0.5),
@@ -192,7 +206,11 @@ export const CommentRequestSchema = SocialTargetSchema.extend({
 });
 export type CommentRequest = z.infer<typeof CommentRequestSchema>;
 
-export const SocialTargetTypeSchema = z.enum(["artist", "release-group", "recording"]);
+export const SocialTargetTypeSchema = z.enum([
+  "artist",
+  "release-group",
+  "recording",
+]);
 export type SocialTargetType = z.infer<typeof SocialTargetTypeSchema>;
 
 export const RatingSchema = z.object({
@@ -216,11 +234,17 @@ export type RatingsResponse = z.infer<typeof RatingsResponseSchema>;
 
 export const CommentSchema = z.object({
   id: z.uuid(),
-  user: z.object({ id: z.uuid(), username: z.string(), displayName: z.string().nullable() }),
+  user: z.object({
+    id: z.uuid(),
+    username: z.string(),
+    displayName: z.string().nullable(),
+  }),
   body: z.string(),
   createdAt: z.string(),
 });
-export const CommentMutationResponseSchema = z.object({ comment: CommentSchema });
+export const CommentMutationResponseSchema = z.object({
+  comment: CommentSchema,
+});
 export const CommentsResponseSchema = z.object({
   comments: z.array(CommentSchema),
   page: z.number().int(),

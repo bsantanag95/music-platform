@@ -24,7 +24,11 @@ async function main() {
   function eqName() {
     return eq(artist.name, "Pink Floyd");
   }
-  const [dsotm] = await db.select().from(releaseGroup).limit(1);
+  const [dsotm] = await db
+    .select()
+    .from(releaseGroup)
+    .where(eq(releaseGroup.title, "The Dark Side of the Moon"))
+    .limit(1);
 
   if (!pinkFloyd || !dsotm) {
     throw new Error(

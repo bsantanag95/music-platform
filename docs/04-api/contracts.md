@@ -19,9 +19,10 @@ Busca (o ingiere bajo demanda) un artista por nombre y su discografía completa.
     "type": "person | group | various | unknown",
     "name": "string",
     "bio": "string | null",
-    "photoUrl": "string | null",
-    "createdAt": "ISO 8601",
-    "discographySyncedAt": "ISO 8601 | null"
+      "photoUrl": "string | null",
+      "createdAt": "ISO 8601",
+      "discographySyncedAt": "ISO 8601 | null",
+      "membershipsSyncedAt": "ISO 8601 | null"
   },
   "releaseGroups": [
     {
@@ -108,8 +109,10 @@ Perfil de artista navegable directo por `id` propio. Si el artista es un stub
 (`type='unknown'`), se enriquece contra MusicBrainz por id antes de responder — mismo
 patrón que `findOrIngestArtist` aplica a stubs encontrados por nombre.
 
-**200 OK:** `{ artist, releaseGroups, memberships }`. `memberships` contiene
-`artistId`, `name`, `type`, `role`, `joinedOn` y `leftOn`. Para personas, `releaseGroups`
+**200 OK:** `{ artist, releaseGroups, memberships }`. `artist` incluye `membershipsSyncedAt` además
+de `discographySyncedAt`; `memberships` contiene `artistId`, `name`, `type`, `role`, `joinedOn` y `leftOn`.
+La primera lectura sincroniza `artist-rels` antes de leer memberships; las lecturas posteriores con
+`membershipsSyncedAt` ya establecido no consultan MusicBrainz. Para personas, `releaseGroups`
 combina la discografía propia y la de grupos relacionados, sin duplicados por id.
 
 **404** con `code: ARTIST_NOT_FOUND` si el `id` no corresponde a ningún artista.
@@ -139,7 +142,7 @@ El endpoint comparte el read-model `getRecordingDetail` con las lecturas de serv
 `201 { user }`. `POST /api/auth/login` recibe `{ identifier, password }`, rota la sesión actual o
 crea una nueva y devuelve `200 { user }`. Ambos aplican rate limiting y nunca devuelven el token.
 
-`POST /api/auth/logout` elimina la sesión actual. `DELETE /api/auth/revoke-all` requiere sesión y
+`POST` y `DELETE /api/auth/logout` eliminan la sesión actual. `DELETE /api/auth/revoke-all` requiere sesión y
 elimina todas las sesiones del usuario. `GET /api/auth/me` es un contrato opcional para clientes;
 los Server Components resuelven la sesión directamente, sin fetch interno.
 

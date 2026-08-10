@@ -403,10 +403,10 @@ mobile-first y accesibilidad básica.
 consulta e imagen (3 casos), `AlbumCover` con reintentos de imagen (1 caso), `isValidUuid` (7 casos),
 `findOrIngestTracklist` con devolución de release existente sin llamar a MusicBrainz (1 caso).
 
-**Limitación conocida (diferida a Fase 4):** los créditos del tracklist solo navegan a artistas
-con rol `featured`. Los integrantes de una banda (p. ej. Roger Waters en Pink Floyd) no son
-`featured` en MusicBrainz, así que no hay enlace desde el álbum hacia su perfil. La navegación por
-membresías (tabla `membership`) queda planificada para Fase 4 — ver
+**Resuelto en la extensión posterior de Fase 4:** los créditos del tracklist siguen navegando a
+artistas con rol `featured`, mientras la navegación de integrantes de banda se resuelve mediante
+la tabla `membership`. La ingesta cacheada usa `artist-rels` de MusicBrainz y el perfil de una
+persona combina su discografía propia con la de sus grupos. Ver
 `05-features/catalog-browsing.md`, sección 4.
 
 **Archivos**

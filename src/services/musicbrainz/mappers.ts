@@ -1,6 +1,8 @@
 // Traduce el vocabulario de MusicBrainz a los enums definidos en
 // docs/01-domain/business-rules.md y en el esquema SQL.
 
+import type { MBArtistDetail, MBArtistRelation, MBArtistSummary } from "./types";
+
 export function mapArtistType(mbType: string | undefined): "person" | "group" | "various" {
   if (mbType === "Person") return "person";
   if (mbType === "Group" || mbType === "Orchestra" || mbType === "Choir") return "group";
@@ -8,6 +10,53 @@ export function mapArtistType(mbType: string | undefined): "person" | "group" | 
   // Se trata como 'various' solo en el caso especial de Various Artists;
   // fuera de ese caso, se resuelve en la capa de ingesta (ver ingest-artist.ts).
   return "various";
+}
+
+const GROUP_TYPES = new Set(["Group", "Orchestra", "Choir"]);
+
+export interface MappedArtistMembership {
+  person: MBArtistSummary;
+  group: MBArtistSummary;
+  role: string | null;
+  joinedOn: string | null;
+  leftOn: string | null;
+}
+
+function isPerson(artist: MBArtistSummary | undefined): artist is MBArtistSummary {
+  return artist?.type === "Person";
+}
+
+function isGroup(artist: MBArtistSummary | undefined): artist is MBArtistSummary {
+  return artist !== undefined && GROUP_TYPES.has(artist.type ?? "");
+}
+
+function mapRelation(source: MBArtistDetail, relation: MBArtistRelation): MappedArtistMembership | null {
+  if (relation.type !== "member of band" || !relation.artist) return null;
+
+  const sourceSummary: MBArtistSummary = {
+    id: source.id,
+    name: source.name,
+    type: source.type,
+    disambiguation: source.disambiguation,
+  };
+  const person = isPerson(sourceSummary) ? sourceSummary : isPerson(relation.artist) ? relation.artist : null;
+  const group = isGroup(sourceSummary) ? sourceSummary : isGroup(relation.artist) ? relation.artist : null;
+  if (!person || !group || person.id === group.id) return null;
+
+  const attributes = [...new Set((relation.attributes ?? []).filter(Boolean))];
+  return {
+    person,
+    group,
+    role: attributes.length ? attributes.join(", ") : null,
+    joinedOn: normalizeReleaseDate(relation.begin),
+    leftOn: normalizeReleaseDate(relation.end),
+  };
+}
+
+export function mapArtistMemberships(detail: MBArtistDetail): MappedArtistMembership[] {
+  return (detail.relations ?? [])
+    .map((relation) => mapRelation(detail, relation))
+    .filter((membership): membership is MappedArtistMembership => membership !== null);
 }
 
 export function mapReleaseGroupCategory(

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { getArtistById, getArtistMemberships } from "@/services/catalog/ingest-artist";
+import { ensureArtistMemberships, getArtistById, getArtistMemberships } from "@/services/catalog/ingest-artist";
 import { findOrIngestDiscography } from "@/services/catalog/ingest-discography";
 import { ArtistHeader } from "@/components/catalog/ArtistHeader";
 import { AlbumGrid } from "@/components/catalog/AlbumGrid";
@@ -46,6 +46,7 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
   const artist = await getArtistCached(id);
   if (!artist) notFound();
 
+  await ensureArtistMemberships(artist);
   const [releaseGroups, memberships, session] = await Promise.all([
     findOrIngestDiscography(artist),
     getArtistMemberships(artist),

@@ -42,6 +42,29 @@ describe("Breadcrumbs", () => {
     expect(screen.getByText("Álbum")).toHaveAttribute("aria-current", "page");
   });
 
+  it("conserva la jerarquía completa de artista, álbum y canción", () => {
+    renderWithIntl(
+      <Breadcrumbs
+        items={[
+          { label: "Inicio", href: "/" },
+          { label: "Pink Floyd", href: "/artist/a1" },
+          { label: "The Dark Side of the Moon", href: "/album/b1" },
+          { label: "Breathe (In the Air)" },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Pink Floyd" })).toHaveAttribute(
+      "href",
+      "/artist/a1",
+    );
+    expect(screen.getByRole("link", { name: "The Dark Side of the Moon" })).toHaveAttribute(
+      "href",
+      "/album/b1",
+    );
+    expect(screen.getByText("Breathe (In the Air)")).toHaveAttribute("aria-current", "page");
+  });
+
   it("no renderiza nada con una lista vacía", () => {
     const { container } = renderWithIntl(<Breadcrumbs items={[]} />);
     expect(container.innerHTML).toBe("");

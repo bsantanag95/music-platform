@@ -35,6 +35,7 @@ function createMockArtistSearch(
       photoUrl: overrides?.artist?.photoUrl ?? null,
       createdAt: overrides?.artist?.createdAt ?? new Date().toISOString(),
       discographySyncedAt: overrides?.artist?.discographySyncedAt ?? null,
+      membershipsSyncedAt: overrides?.artist?.membershipsSyncedAt ?? null,
     },
     releaseGroups: overrides?.releaseGroups ?? [],
   };

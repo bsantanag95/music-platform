@@ -6,6 +6,8 @@
   "search": "Search",
   "login": "Log in",
   "register": "Sign up",
+  "logout": "Log out",
+  "logoutPending": "Logging out...",
   "signedInAs": "Signed in as",
   "localeSwitcher": "Language",
   "error": {

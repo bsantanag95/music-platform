@@ -1,9 +1,12 @@
 "use client";
 
 import { useTranslations, useLocale } from "next-intl";
+import { useEffect, useState } from "react";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { AuthUser } from "@/lib/api/schemas";
+import { apiFetch, ApiError } from "@/lib/api/client";
+import { LogoutResponseSchema } from "@/lib/api/schemas";
 
 interface HeaderProps {
   user?: Pick<AuthUser, "id" | "username" | "displayName"> | null;
@@ -14,12 +17,34 @@ interface HeaderProps {
 // la ruta y los parámetros dinámicos al cambiar de locale.
 export function Header({ user = null }: HeaderProps) {
   const t = useTranslations("common");
+  const tErrors = useTranslations("errors");
   const pathname = usePathname();
   const router = useRouter();
   const currentLocale = useLocale();
+  const [currentUser, setCurrentUser] = useState(user);
+  const [logoutPending, setLogoutPending] = useState(false);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCurrentUser(user);
+  }, [user]);
 
   const handleLocaleChange = (newLocale: string) => {
     router.replace(pathname, { locale: newLocale as "es" | "en" });
+  };
+
+  const handleLogout = async () => {
+    setLogoutError(null);
+    setLogoutPending(true);
+    try {
+      await apiFetch("/api/auth/logout", LogoutResponseSchema, { method: "DELETE" });
+      setCurrentUser(null);
+      router.refresh();
+    } catch (error) {
+      setLogoutError(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
+    } finally {
+      setLogoutPending(false);
+    }
   };
 
   return (
@@ -31,16 +56,31 @@ export function Header({ user = null }: HeaderProps) {
         >
           {t("search")}
         </Link>
-        {user ? (
-          <span className="font-data text-xs text-paper" aria-label={t("signedInAs")}>
-            {user.displayName ?? user.username}
-          </span>
+        {currentUser ? (
+          <div className="flex items-center gap-3 font-data text-xs">
+            <span className="text-paper" aria-label={t("signedInAs")}>
+              {currentUser.displayName ?? currentUser.username}
+            </span>
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={logoutPending}
+              className="rounded-md border border-ink-border px-3 py-2 text-paper-muted transition-colors hover:border-paper hover:text-paper disabled:cursor-wait disabled:opacity-60"
+            >
+              {logoutPending ? t("logoutPending") : t("logout")}
+            </button>
+            {logoutError && (
+              <span role="alert" className="text-danger">
+                {tErrors(`${logoutError}.description`)}
+              </span>
+            )}
+          </div>
         ) : (
           <div className="flex items-center gap-3 font-data text-xs">
-            <Link href="/auth/login" className="text-paper-muted hover:text-paper">
+            <Link href="/auth/login" className="rounded-md border border-ink-border px-3 py-2 text-paper transition-colors hover:border-paper">
               {t("login")}
             </Link>
-            <Link href="/auth/register" className="text-accent hover:text-paper">
+            <Link href="/auth/register" className="rounded-md border border-accent bg-accent px-3 py-2 font-medium text-ink shadow-sm transition-colors hover:border-amber-hover hover:bg-amber-hover">
               {t("register")}
             </Link>
           </div>

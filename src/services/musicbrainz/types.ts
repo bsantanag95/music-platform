@@ -14,6 +14,19 @@ export interface MBArtistSummary {
   disambiguation?: string;
 }
 
+export interface MBArtistRelation {
+  type?: string;
+  direction?: string;
+  attributes?: string[];
+  begin?: string;
+  end?: string;
+  artist?: MBArtistSummary;
+}
+
+export interface MBArtistDetail extends MBArtistSummary {
+  relations?: MBArtistRelation[];
+}
+
 export interface MBArtistSearchResponse {
   artists: MBArtistSummary[];
 }

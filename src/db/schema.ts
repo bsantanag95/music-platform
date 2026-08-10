@@ -78,6 +78,7 @@ export const artist = pgTable(
     photoUrl: text("photo_url"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     discographySyncedAt: timestamp("discography_synced_at", { withTimezone: true }),
+    membershipsSyncedAt: timestamp("memberships_synced_at", { withTimezone: true }),
   },
   (t) => [
     index("idx_artist_name").on(t.name),
@@ -102,6 +103,7 @@ export const membership = pgTable(
   (t) => [
     index("idx_membership_person").on(t.personId),
     index("idx_membership_group").on(t.groupId),
+    uniqueIndex("uq_membership_person_group").on(t.personId, t.groupId),
     check("chk_membership_not_self", sql`${t.personId} <> ${t.groupId}`),
     // La validación de que person_id sea type='person' y group_id sea
     // type='group' vive en el trigger trg_membership_types (ver migración),

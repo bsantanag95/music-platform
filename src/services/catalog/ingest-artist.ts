@@ -1,8 +1,8 @@
-import { and, eq, ilike } from "drizzle-orm";
+import { and, eq, ilike, notInArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, membership, type ArtistRow } from "@/db/schema";
 import { musicbrainz } from "../musicbrainz/client";
-import { mapArtistType } from "../musicbrainz/mappers";
+import { mapArtistMemberships, mapArtistType, type MappedArtistMembership } from "../musicbrainz/mappers";
 
 const VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377";
 
@@ -30,6 +30,69 @@ export async function getArtistMemberships(target: ArtistRow): Promise<ArtistMem
         .where(and(eq(membership.personId, target.id), eq(artist.type, "group")));
 
   return rows;
+}
+
+function mergeMemberships(memberships: MappedArtistMembership[]): MappedArtistMembership[] {
+  const merged = new Map<string, MappedArtistMembership>();
+  for (const item of memberships) {
+    const key = `${item.person.id}:${item.group.id}`;
+    const previous = merged.get(key);
+    if (!previous) {
+      merged.set(key, item);
+      continue;
+    }
+
+    const roles = [...new Set([previous.role, item.role].filter((role): role is string => Boolean(role)).flatMap((role) => role.split(", ")))].sort();
+    const joinedOn = previous.joinedOn && item.joinedOn
+      ? (previous.joinedOn < item.joinedOn ? previous.joinedOn : item.joinedOn)
+      : previous.joinedOn ?? item.joinedOn;
+    const leftOn = previous.leftOn && item.leftOn
+      ? (previous.leftOn > item.leftOn ? previous.leftOn : item.leftOn)
+      : previous.leftOn ?? item.leftOn;
+    merged.set(key, {
+      ...previous,
+      role: roles.length ? roles.join(", ") : null,
+      joinedOn,
+      leftOn,
+    });
+  }
+  return [...merged.values()];
+}
+
+/** Ingesta memberships de una sola llamada externa; la lectura permanece en getArtistMemberships. */
+export async function ensureArtistMemberships(target: ArtistRow): Promise<void> {
+  await db.transaction(async (tx) => {
+    // El lock cubre también la llamada externa: la relectura del flag decide
+    // dentro de la misma transacción quién es el único proceso que ingiere.
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${target.id}, 0))`);
+    const [current] = await tx.select().from(artist).where(eq(artist.id, target.id)).limit(1);
+    if (!current || current.membershipsSyncedAt) return;
+
+    const memberships = current.mbid
+      ? mergeMemberships(mapArtistMemberships(await musicbrainz.getArtistWithRelations(current.mbid)))
+      : [];
+    const pairs: Array<{ personId: string; groupId: string }> = [];
+
+    for (const item of memberships) {
+      const person = await upsertArtistFromMb(item.person.id, item.person.name, item.person.type, item.person.disambiguation ?? null, tx);
+      const group = await upsertArtistFromMb(item.group.id, item.group.name, item.group.type, item.group.disambiguation ?? null, tx);
+      pairs.push({ personId: person.id, groupId: group.id });
+      await tx
+        .insert(membership)
+        .values({ personId: person.id, groupId: group.id, role: item.role, joinedOn: item.joinedOn, leftOn: item.leftOn })
+        .onConflictDoUpdate({
+          target: [membership.personId, membership.groupId],
+          set: { role: item.role, joinedOn: item.joinedOn, leftOn: item.leftOn },
+        });
+    }
+
+    const targetColumn = current.type === "group" ? membership.groupId : membership.personId;
+    const relatedColumn = current.type === "group" ? membership.personId : membership.groupId;
+    const relatedIds = pairs.map((pair) => current.type === "group" ? pair.personId : pair.groupId);
+    const scope = eq(targetColumn, current.id);
+    await tx.delete(membership).where(relatedIds.length ? and(scope, notInArray(relatedColumn, relatedIds)) : scope);
+    await tx.update(artist).set({ membershipsSyncedAt: new Date() }).where(eq(artist.id, current.id));
+  });
 }
 
 /**
@@ -103,15 +166,16 @@ export async function upsertArtistFromMb(
   name: string,
   mbType: string | undefined,
   bio: string | null = null,
+  executor: Pick<typeof db, "insert"> = db,
 ): Promise<ArtistRow> {
   const type = mbid === VARIOUS_ARTISTS_MBID ? "various" : mapArtistType(mbType);
 
-  const rows = await db
+  const rows = await executor
     .insert(artist)
     .values({ mbid, name, type, bio })
     .onConflictDoUpdate({
       target: artist.mbid,
-      set: { name, bio },
+      set: { name, type, bio },
     })
     .returning();
 

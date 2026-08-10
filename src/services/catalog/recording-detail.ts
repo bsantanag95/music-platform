@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import {
   artist,
@@ -32,6 +32,7 @@ export interface RecordingDetail {
   recording: RecordingRow;
   credits: RecordingCredit[];
   appearances: RecordingAppearance[];
+  primaryArtist: { id: string; name: string } | null;
 }
 
 export type RecordingDetailResult =
@@ -79,6 +80,21 @@ export async function getRecordingDetail(recordingId: string): Promise<Recording
       .orderBy(asc(releaseGroup.title), asc(track.discNumber), asc(track.position)),
   ]);
 
+  const [primaryArtist] = appearanceRows[0]
+    ? await db
+        .select({ id: artist.id, name: artist.name })
+        .from(credit)
+        .innerJoin(artist, eq(artist.id, credit.artistId))
+        .where(
+          and(
+            eq(credit.releaseGroupId, appearanceRows[0].releaseGroupId),
+            eq(credit.role, "primary"),
+          ),
+        )
+        .orderBy(asc(credit.position))
+        .limit(1)
+    : [];
+
   return {
     kind: "ok",
     detail: {
@@ -90,6 +106,7 @@ export async function getRecordingDetail(recordingId: string): Promise<Recording
         joinPhrase,
       })),
       appearances: appearanceRows,
+      primaryArtist: primaryArtist ? { id: primaryArtist.id, name: primaryArtist.name } : null,
     },
   };
 }

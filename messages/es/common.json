@@ -6,6 +6,8 @@
   "search": "Buscar",
   "login": "Iniciar sesión",
   "register": "Registrarse",
+  "logout": "Cerrar sesión",
+  "logoutPending": "Cerrando sesión...",
   "signedInAs": "Sesión iniciada como",
   "localeSwitcher": "Idioma",
   "error": {

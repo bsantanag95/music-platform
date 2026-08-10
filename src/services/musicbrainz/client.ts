@@ -14,6 +14,7 @@
 
 import type {
   MBArtistSummary,
+  MBArtistDetail,
   MBArtistSearchResponse,
   MBReleaseGroupBrowseResponse,
   MBReleaseGroupWithReleases,
@@ -78,6 +79,10 @@ export const musicbrainz = {
   /** Detalle básico de un artista ya conocido por id — para enriquecer stubs sin arriesgar un match distinto por nombre. */
   getArtist(mbid: string) {
     return mbFetch<MBArtistSummary>(`/artist/${mbid}`, {});
+  },
+
+  getArtistWithRelations(mbid: string) {
+    return mbFetch<MBArtistDetail>(`/artist/${mbid}`, { inc: "artist-rels" });
   },
 
   /** Álbumes/EPs/singles etc. donde este artista aparece como crédito. */

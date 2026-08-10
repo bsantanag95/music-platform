@@ -15,6 +15,7 @@ describe("cliente del catálogo de artistas", () => {
     photoUrl: null,
     createdAt: "2024-01-01T00:00:00.000Z",
     discographySyncedAt: null,
+    membershipsSyncedAt: null,
   };
 
   const releaseGroups: never[] = [];

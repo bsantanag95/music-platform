@@ -32,6 +32,7 @@ export default async function SongPage({ params }: SongPageProps) {
     recording: { ...result.detail.recording, variantType: result.detail.recording.variantType },
     credits: result.detail.credits,
     appearances: result.detail.appearances,
+    primaryArtist: result.detail.primaryArtist,
   });
   const session = await resolveSession();
   const socialTarget = await resolveSocialTarget("recording", detail.recording.id);
@@ -39,5 +40,17 @@ export default async function SongPage({ params }: SongPageProps) {
     getRatings(socialTarget, session?.user.id),
     listComments(socialTarget),
   ]);
-  return <main className="flex min-h-screen flex-col items-start gap-8 px-4 py-12"><Breadcrumbs items={[{ label: common("home"), href: "/" }, { label: detail.recording.title }]} /><header><p className="font-data text-xs uppercase tracking-wider text-paper-muted">{t("song.variant")}: {detail.recording.variantType}</p><h1 className="font-display text-4xl text-paper">{detail.recording.title}</h1><p className="mt-2 font-data text-sm text-paper-muted">{t("song.duration")}: {formatDuration(detail.recording.durationSec, t("song.durationUnknown"))}</p></header><section className="flex w-full flex-col gap-3"><h2 className="font-display text-xl text-paper">{t("song.creditsHeading")}</h2><ul className="flex flex-col gap-2">{detail.credits.map((credit) => <li key={`${credit.artistId}-${credit.role}`} className="font-body text-paper">{credit.role}: <Link href={`/artist/${credit.artistId}`} className="hover:text-accent">{credit.name}</Link>{credit.joinPhrase}</li>)}</ul></section><section className="flex w-full flex-col gap-3"><h2 className="font-display text-xl text-paper">{t("song.appearancesHeading")}</h2><ul className="flex flex-col gap-2">{detail.appearances.map((appearance) => <li key={`${appearance.releaseId}-${appearance.discNumber}-${appearance.position}`} className="font-body text-paper"><Link href={`/album/${appearance.releaseGroupId}`} className="hover:text-accent">{appearance.albumTitle}</Link><span className="ml-3 font-data text-xs text-paper-muted">{t("song.appearancePosition", { disc: appearance.discNumber, position: appearance.position })}</span></li>)}</ul></section><SocialSection target="recording" targetId={detail.recording.id} ratings={ratings} comments={comments} userId={session?.user.id} /></main>;
+  const firstAppearance = detail.appearances[0];
+  const breadcrumbItems = [
+    { label: common("home"), href: "/" },
+    ...(detail.primaryArtist
+      ? [{ label: detail.primaryArtist.name, href: `/artist/${detail.primaryArtist.id}` }]
+      : []),
+    ...(firstAppearance
+      ? [{ label: firstAppearance.albumTitle, href: `/album/${firstAppearance.releaseGroupId}` }]
+      : []),
+    { label: detail.recording.title },
+  ];
+
+  return <main className="flex min-h-screen flex-col items-start gap-8 px-4 py-12"><Breadcrumbs items={breadcrumbItems} /><header><p className="font-data text-xs uppercase tracking-wider text-paper-muted">{t("song.variant")}: {detail.recording.variantType}</p><h1 className="font-display text-4xl text-paper">{detail.recording.title}</h1><p className="mt-2 font-data text-sm text-paper-muted">{t("song.duration")}: {formatDuration(detail.recording.durationSec, t("song.durationUnknown"))}</p></header><section className="flex w-full flex-col gap-3"><h2 className="font-display text-xl text-paper">{t("song.creditsHeading")}</h2><ul className="flex flex-col gap-2">{detail.credits.map((credit) => <li key={`${credit.artistId}-${credit.role}`} className="font-body text-paper">{credit.role}: <Link href={`/artist/${credit.artistId}`} className="hover:text-accent">{credit.name}</Link>{credit.joinPhrase}</li>)}</ul></section><section className="flex w-full flex-col gap-3"><h2 className="font-display text-xl text-paper">{t("song.appearancesHeading")}</h2><ul className="flex flex-col gap-2">{detail.appearances.map((appearance) => <li key={`${appearance.releaseId}-${appearance.discNumber}-${appearance.position}`} className="font-body text-paper"><Link href={`/album/${appearance.releaseGroupId}`} className="hover:text-accent">{appearance.albumTitle}</Link><span className="ml-3 font-data text-xs text-paper-muted">{t("song.appearancePosition", { disc: appearance.discNumber, position: appearance.position })}</span></li>)}</ul></section><SocialSection target="recording" targetId={detail.recording.id} ratings={ratings} comments={comments} userId={session?.user.id} /></main>;
 }
