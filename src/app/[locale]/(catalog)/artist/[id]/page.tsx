@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { getArtistById } from "@/services/catalog/ingest-artist";
+import { getArtistById, getArtistMemberships } from "@/services/catalog/ingest-artist";
 import { findOrIngestDiscography } from "@/services/catalog/ingest-discography";
 import { ArtistHeader } from "@/components/catalog/ArtistHeader";
 import { AlbumGrid } from "@/components/catalog/AlbumGrid";
@@ -10,6 +10,10 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { isValidUuid } from "@/lib/validation";
 import type { ReleaseGroupRow } from "@/db/schema";
 import type { Artist, ReleaseGroup, ReleaseGroupCategory } from "@/lib/api/schemas";
+import { ArtistMemberships } from "@/components/catalog/ArtistMemberships";
+import { SocialSection } from "@/components/social/SocialSection";
+import { resolveSession } from "@/services/auth/sessions";
+import { getRatings, listComments, resolveSocialTarget } from "@/services/social";
 
 interface ArtistPageProps {
   params: Promise<{ id: string }>;
@@ -42,7 +46,16 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
   const artist = await getArtistCached(id);
   if (!artist) notFound();
 
-  const releaseGroups = await findOrIngestDiscography(artist);
+  const [releaseGroups, memberships, session] = await Promise.all([
+    findOrIngestDiscography(artist),
+    getArtistMemberships(artist),
+    resolveSession(),
+  ]);
+  const socialTarget = await resolveSocialTarget("artist", artist.id);
+  const [ratings, comments] = await Promise.all([
+    getRatings(socialTarget, session?.user.id),
+    listComments(socialTarget),
+  ]);
 
   const typeLabel = t(`artist.typeLabels.${artist.type as Artist["type"]}`);
   const categoryLabels = {
@@ -76,12 +89,21 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
         typeLabel={typeLabel}
         noPhotoAlt={t("artist.noPhotoAlt")}
       />
+      <ArtistMemberships
+        memberships={memberships}
+        heading={artist.type === "group" ? t("artist.membersHeading") : t("artist.membershipsHeading")}
+        roleLabel={t("artist.memberRole")}
+        periodLabel={t("artist.memberPeriod")}
+        openPeriod={t("artist.memberPeriodOpen")}
+        unknownPeriod={t("artist.memberPeriodUnknown")}
+      />
       <AlbumGrid
         releaseGroups={albums}
         categoryLabels={categoryLabels}
         discographyHeading={t("artist.discographyHeading")}
         coverLabel={t("artist.albumCoverLabel")}
       />
+      <SocialSection target="artist" targetId={artist.id} ratings={ratings} comments={comments} userId={session?.user.id} />
     </main>
   );
 }

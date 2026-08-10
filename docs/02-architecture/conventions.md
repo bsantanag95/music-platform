@@ -49,7 +49,9 @@ Resumen normativo:
 
 ## Errores HTTP
 
-- Aún no definido en detalle — se documentará en `04-api/errors.md` cuando se escriba la especificación de API en la Fase 1/2.
+- Los route handlers devuelven `{ error, code }` ante errores y los códigos estables se documentan
+  en `docs/04-api/errors.md`. El frontend usa `code` para localizar el mensaje y nunca muestra el
+  texto crudo de `error`.
 
 ## Internacionalización (i18n)
 

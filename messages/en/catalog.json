@@ -28,7 +28,13 @@
     "albumCoverLabel": "Album cover",
     "coverPlaceholderAlt": "Cover not available",
     "coverLoading": "Loading cover",
-    "coverFailed": "Could not load cover"
+    "coverFailed": "Could not load cover",
+    "membersHeading": "Members",
+    "memberRole": "Role",
+    "memberPeriod": "Period",
+    "memberPeriodOpen": "to present",
+    "memberPeriodUnknown": "Period unknown",
+    "membershipsHeading": "Memberships"
   },
   "album": {
     "tracklistHeading": "Tracklist",
@@ -41,5 +47,43 @@
     "coverFailed": "Could not load cover",
     "noEditionsTitle": "No editions available",
     "noEditionsDescription": "No editions were found for this album."
+  },
+  "song": {
+    "creditsHeading": "Credits",
+    "appearancesHeading": "Appears on",
+    "appearancePosition": "Disc {disc}, track {position}",
+    "variant": "Variant",
+    "duration": "Duration",
+    "durationUnknown": "Duration unknown",
+    "notFoundTitle": "Recording not found",
+    "notFoundDescription": "We could not find this recording in the catalog."
+  },
+  "social": {
+    "ratingHeading": "Ratings",
+    "ratingFormLabel": "Rate this content",
+    "starsLabel": "Stars",
+    "detailedLabel": "Detailed score (optional)",
+    "aggregate": "{count, plural, one {# rating} other {# ratings}} · average {stars}",
+    "noRatings": "No ratings yet.",
+    "loginToRate": "Log in to rate",
+    "save": "Save rating",
+    "saving": "Saving...",
+    "delete": "Delete",
+    "deleteRatingConfirm": "Delete your rating permanently? This cannot be undone.",
+    "saved": "Rating saved.",
+    "deleted": "Rating deleted.",
+    "commentsHeading": "Comments",
+    "commentFormLabel": "Write a comment",
+    "commentLabel": "Comment",
+    "commentSubmit": "Post comment",
+    "loginToComment": "Log in to comment",
+    "noComments": "No comments yet.",
+    "edit": "Edit",
+    "deleteCommentConfirm": "Delete this comment permanently? This cannot be undone.",
+    "editCommentLabel": "Edit comment",
+    "cancel": "Cancel",
+    "genericError": "The operation could not be completed.",
+    "loadMore": "Load more comments",
+    "loadingMore": "Loading comments..."
   }
 }

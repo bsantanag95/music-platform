@@ -59,7 +59,7 @@ Un solo helper de URLs: `coverThumbUrl(releaseGroupMbid)` arma la miniatura de 2
 
 Envuelve un route handler en `try/catch` y devuelve `{ error, code: "INTERNAL_ERROR" }`
 con status 500 ante cualquier excepción no controlada (ej. MusicBrainz caído, error de
-base de datos), en vez de que Next.js devuelva un 500 sin body consistente. Los tres route
+base de datos), en vez de que Next.js devuelva un 500 sin body consistente. Los route
 handlers de `catalog/` exportan su `GET` envuelto en este helper.
 
 ## `src/app/[locale]/` — lo que expone la aplicación
@@ -177,6 +177,7 @@ resetear los artistas tocados si se usó la BD real.
 - **`smoke-test-unknown-enrichment.ts`** / **`smoke-test-artist-by-id.ts`** — el mismo escenario de stub `unknown` enriquecido, probado por los dos caminos de entrada posibles: búsqueda por nombre (`findOrIngestArtist`) y navegación directa por id (`getArtistById`).
 - **`smoke-test-discography-cache.ts`** — cuenta cuántas veces se llama al endpoint de browse de MusicBrainz y falla si una segunda invocación con el mismo artista lo vuelve a tocar.
 - **`smoke-test-routes.ts`** — invoca los tres route handlers reales (`GET` exportados de `route.ts`) directamente con un `NextRequest` real, sin necesitar un servidor HTTP levantado. Confirma perfil por id, créditos en tracklist, y los `code` de error (`ARTIST_NOT_FOUND`, `VALIDATION_ERROR`) de punta a punta. No requiere cambios por el retrofit de i18n — ejercita rutas de API, que no llevan locale.
+- **`smoke-test-phase4.ts`** — contra una BD de scratch, crea fixtures aislados y verifica migración funcional de sesiones múltiples, revocación individual/global, identidad externa, membresía, detalle de grabación, rating y comentario; elimina sus fixtures en un bloque `finally`.
 
 ## El flujo completo de una búsqueda
 
@@ -201,6 +202,25 @@ Corriendo esto contra una base real, aparecieron varios casos que el diseño ori
 5. **Tailwind configurado con convenciones de v3** (`tailwind.config.ts`, `@tailwind base/components/utilities`) en un proyecto que en realidad instaló v4. No lo detectó ningún chequeo automático — v4 acepta `tailwind.config.ts` por compatibilidad hacia atrás si se lo carga explícitamente, pero acá ni siquiera se cargaba, así que los tokens custom simplemente no existían y probablemente hubiera compilado con la paleta por defecto sin avisar. Se corrigió tras una revisión manual: `@theme` dentro de `globals.css` reemplaza al archivo de config, `postcss.config.mjs` reemplaza a `postcss.config.js` con el plugin `@tailwindcss/postcss`. Se validó explícitamente que los tokens llegan al CSS compilado (`grep` sobre el output de `next build`), no solo que el build no tirara error.
 6. **i18n decidido después de construir la Etapa 3.1** (Etapa 3.0b) — a diferencia de los puntos anteriores, esto no fue un bug sino una decisión de producto tomada tarde en el orden de ejecución. El costo concreto: `SearchForm.tsx`, `buscar/page.tsx` (renombrada a `search/page.tsx`), `page.tsx` y `SearchForm.test.tsx`, ya escritos y con 12/12 tests pasando, tuvieron que reabrirse para extraer strings a `messages/`, y `useRouter` tuvo que migrarse de `next/navigation` a `src/i18n/navigation.ts` porque de otro modo la navegación perdía el prefijo de locale silenciosamente — un bug que no se manifiesta probando solo en español. Lección para las próximas fases: decisiones de arquitectura transversal (i18n, auth, feature flags) que afectan *todo* componente con texto o navegación se benefician de resolverse antes de la primera vista con UI, no durante — el costo de retrofit es proporcional a cuánto código con texto ya existe.
 7. **`FormEvent` y `FormEventHandler` deprecated en `@types/react`** — con React 19.2+ y `@types/react` actualizado, estos tipos están marcados como `@deprecated` porque no corresponden a un evento real del DOM. React no tiene un "form event" genérico; cada handler tiene su tipo específico: `SubmitEventHandler<HTMLFormElement>` para `onSubmit`, `ChangeEventHandler` para `onChange`, `InputEventHandler` para `onInput`. El código original de `SearchForm.tsx` usaba `FormEvent` (copiado de ejemplos antiguos de React); se corrigió a `SubmitEventHandler<HTMLFormElement>`. Para evitar que vuelva a ocurrir, se agregó una regla `no-restricted-imports` en `eslint.config.mjs` que bloquea estos imports y sugiere las alternativas correctas. Lección: los tipos de eventos en React 19+ son más específicos que en versiones anteriores — siempre verificar contra la firma real del handler en `@types/react`, no contra tutoriales desactualizados.
+
+## Fase 4 — autenticación y capa social
+
+La Fase 4 agrega autenticación local, detalle de grabación, membresías, ratings y comentarios.
+`src/services/auth/` centraliza Argon2id, sesiones server-side, rate limiting y autorización;
+`src/app/api/auth/` expone registro, login, logout, revocación global y resolución de sesión.
+La cookie contiene el token opaco, mientras PostgreSQL guarda únicamente su hash en `session`.
+
+Las mutaciones sociales resuelven el usuario desde la sesión y usan `src/services/social.ts` para
+resolver objetivos `artist`, `release-group` y `recording`, aplicar ownership y delegar la
+integridad de ratings a los constraints SQL. Los route handlers sociales viven bajo
+`src/app/api/catalog/[target]/[id]/` y los componentes reutilizables bajo
+`src/components/social/`. El cliente frontend usa `src/lib/api/social.ts` y `apiFetch`, nunca
+`fetch` directo.
+
+La persistencia de autenticación se introdujo en `drizzle/0005_auth.sql`, con el mirror manual en
+`src/db/schema.ts`. `auth_identity` y `src/services/auth/providers/` dejan preparado Google, pero
+no habilitan OAuth/OIDC en esta fase. La limpieza de sesiones expiradas combina un job periódico
+con limpieza oportunista no bloqueante.
 
 ## Limitación de red del entorno de desarrollo (no del código)
 

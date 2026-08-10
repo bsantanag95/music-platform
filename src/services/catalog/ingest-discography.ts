@@ -1,6 +1,13 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { artist, releaseGroup, credit, type ReleaseGroupRow, type ArtistRow } from "@/db/schema";
+import {
+  artist,
+  membership,
+  releaseGroup,
+  credit,
+  type ReleaseGroupRow,
+  type ArtistRow,
+} from "@/db/schema";
 import { musicbrainz } from "../musicbrainz/client";
 import { mapReleaseGroupCategory } from "../musicbrainz/mappers";
 import { upsertArtistStub } from "./ingest-artist";
@@ -17,6 +24,24 @@ import type { MBArtistCreditItem } from "../musicbrainz/types";
  * de mayor tráfico.
  */
 export async function findOrIngestDiscography(target: ArtistRow): Promise<ReleaseGroupRow[]> {
+  const direct = await findOrIngestOwnDiscography(target);
+
+  if (target.type !== "person") return direct;
+
+  const groupRows = await db
+    .select({ group: artist })
+    .from(membership)
+    .innerJoin(artist, eq(artist.id, membership.groupId))
+    .where(and(eq(membership.personId, target.id), eq(artist.type, "group")));
+
+  const combined = new Map(direct.map((row) => [row.id, row]));
+  for (const { group } of groupRows) {
+    for (const row of await findOrIngestOwnDiscography(group)) combined.set(row.id, row);
+  }
+  return [...combined.values()];
+}
+
+async function findOrIngestOwnDiscography(target: ArtistRow): Promise<ReleaseGroupRow[]> {
   if (target.discographySyncedAt) {
     const rows = await db
       .select({ releaseGroup })

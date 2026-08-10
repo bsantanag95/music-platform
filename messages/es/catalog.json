@@ -28,7 +28,13 @@
     "albumCoverLabel": "Carátula del álbum",
     "coverPlaceholderAlt": "Carátula no disponible",
     "coverLoading": "Cargando carátula",
-    "coverFailed": "No se pudo cargar la carátula"
+    "coverFailed": "No se pudo cargar la carátula",
+    "membersHeading": "Integrantes",
+    "memberRole": "Rol",
+    "memberPeriod": "Período",
+    "memberPeriodOpen": "hasta hoy",
+    "memberPeriodUnknown": "Período desconocido",
+    "membershipsHeading": "Membresías"
   },
   "album": {
     "tracklistHeading": "Tracklist",
@@ -41,5 +47,43 @@
     "coverFailed": "No se pudo cargar la carátula",
     "noEditionsTitle": "Sin ediciones disponibles",
     "noEditionsDescription": "No se encontraron ediciones para este álbum."
+  },
+  "song": {
+    "creditsHeading": "Créditos",
+    "appearancesHeading": "Aparece en",
+    "appearancePosition": "Disco {disc}, pista {position}",
+    "variant": "Variante",
+    "duration": "Duración",
+    "durationUnknown": "Duración desconocida",
+    "notFoundTitle": "Grabación no encontrada",
+    "notFoundDescription": "No encontramos esta grabación en el catálogo."
+  },
+  "social": {
+    "ratingHeading": "Valoraciones",
+    "ratingFormLabel": "Valorar este contenido",
+    "starsLabel": "Estrellas",
+    "detailedLabel": "Puntuación detallada (opcional)",
+    "aggregate": "{count, plural, one {# valoración} other {# valoraciones}} · promedio {stars}",
+    "noRatings": "Todavía no hay valoraciones.",
+    "loginToRate": "Iniciá sesión para valorar",
+    "save": "Guardar valoración",
+    "saving": "Guardando...",
+    "delete": "Borrar",
+    "deleteRatingConfirm": "¿Borrar tu valoración de forma permanente? Esta acción no se puede deshacer.",
+    "saved": "Valoración guardada.",
+    "deleted": "Valoración borrada.",
+    "commentsHeading": "Comentarios",
+    "commentFormLabel": "Escribir un comentario",
+    "commentLabel": "Comentario",
+    "commentSubmit": "Publicar comentario",
+    "loginToComment": "Iniciá sesión para comentar",
+    "noComments": "Todavía no hay comentarios.",
+    "edit": "Editar",
+    "deleteCommentConfirm": "¿Borrar este comentario de forma permanente? Esta acción no se puede deshacer.",
+    "editCommentLabel": "Editar comentario",
+    "cancel": "Cancelar",
+    "genericError": "No se pudo completar la operación.",
+    "loadMore": "Cargar más comentarios",
+    "loadingMore": "Cargando comentarios..."
   }
 }

@@ -4,6 +4,9 @@
   "retry": "Retry",
   "home": "Home",
   "search": "Search",
+  "login": "Log in",
+  "register": "Sign up",
+  "signedInAs": "Signed in as",
   "localeSwitcher": "Language",
   "error": {
     "title": "Something went wrong",
@@ -18,5 +21,6 @@
     "artist": "Loading artist...",
     "album": "Loading album...",
     "search": "Loading search..."
+    ,"song": "Loading song..."
   }
 }

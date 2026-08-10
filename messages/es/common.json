@@ -4,6 +4,9 @@
   "retry": "Reintentar",
   "home": "Inicio",
   "search": "Buscar",
+  "login": "Iniciar sesión",
+  "register": "Registrarse",
+  "signedInAs": "Sesión iniciada como",
   "localeSwitcher": "Idioma",
   "error": {
     "title": "Algo salió mal",
@@ -18,5 +21,6 @@
     "artist": "Cargando artista...",
     "album": "Cargando álbum...",
     "search": "Cargando búsqueda..."
+    ,"song": "Cargando canción..."
   }
 }

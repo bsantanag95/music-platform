@@ -66,7 +66,9 @@ export function TrackList({
                       {track.position}
                     </span>
                     <div className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate font-body text-paper">{track.title}</span>
+                      <Link href={`/song/${track.recordingId}`} className="truncate font-body text-paper hover:text-accent">
+                        {track.title}
+                      </Link>
                       {featured.length > 0 && (
                         <span className="font-data text-xs text-paper-muted">
                           {creditsLabel}:{" "}

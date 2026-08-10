@@ -134,4 +134,9 @@ describe("TrackList", () => {
     expect(screen.getByText(catalogEn.album.durationUnknown)).toBeInTheDocument();
     expect(screen.queryByText(catalogEs.album.durationUnknown)).not.toBeInTheDocument();
   });
+
+  it("enlaza cada título con el detalle de su grabación", () => {
+    renderWithIntl(<TrackList tracks={[makeTrack(1, 1, "Breathe", 170)]} tracklistHeading="Tracklist" discLabel={discLabelEs} durationLabel="Duración" durationUnknown="Desconocida" creditsLabel="Créditos" />);
+    expect(screen.getByRole("link", { name: "Breathe" })).toHaveAttribute("href", "/song/rec-1-1");
+  });
 });

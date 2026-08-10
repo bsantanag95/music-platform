@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { SearchForm } from "@/components/catalog/SearchForm";
 import * as catalogApi from "@/lib/api/catalog";
 import { ApiError } from "@/lib/api/client";
-import type { ArtistWithDiscography } from "@/lib/api/schemas";
+import type { ArtistSearch } from "@/lib/api/schemas";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
 import errorsEs from "../../../messages/es/errors.json";
@@ -22,9 +22,9 @@ vi.mock("@/i18n/navigation", () => ({
   }),
 }));
 
-function createMockArtistWithDiscography(
-  overrides?: Partial<ArtistWithDiscography>,
-): ArtistWithDiscography {
+function createMockArtistSearch(
+  overrides?: Partial<ArtistSearch>,
+): ArtistSearch {
   return {
     artist: {
       id: overrides?.artist?.id ?? "test-artist-id",
@@ -53,7 +53,7 @@ describe("SearchForm", () => {
     it("invoca searchCatalog con el nombre normalizado y navega al artista", async () => {
       const mockSearch = vi
         .mocked(catalogApi.searchCatalog)
-        .mockResolvedValue(createMockArtistWithDiscography());
+        .mockResolvedValue(createMockArtistSearch());
 
       renderWithIntl(<SearchForm />);
 
@@ -171,8 +171,8 @@ describe("SearchForm", () => {
     });
 
     it("deshabilita el botón y muestra mensaje neutro durante la carga", async () => {
-      let resolvePromise: (value: ArtistWithDiscography) => void;
-      const pendingPromise = new Promise<ArtistWithDiscography>((resolve) => {
+      let resolvePromise: (value: ArtistSearch) => void;
+      const pendingPromise = new Promise<ArtistSearch>((resolve) => {
         resolvePromise = resolve;
       });
       vi.mocked(catalogApi.searchCatalog).mockReturnValue(pendingPromise);
@@ -195,7 +195,7 @@ describe("SearchForm", () => {
         screen.queryByText(catalogEs.search.loadingHint),
       ).not.toBeInTheDocument();
 
-      resolvePromise!(createMockArtistWithDiscography());
+      resolvePromise!(createMockArtistSearch());
 
       await waitFor(() => {
         expect(button).not.toBeDisabled();
@@ -205,8 +205,8 @@ describe("SearchForm", () => {
     it("muestra el aviso de primera importación solo si la solicitud supera el umbral", async () => {
       vi.useFakeTimers();
 
-      let resolvePromise: (value: ArtistWithDiscography) => void;
-      const pendingPromise = new Promise<ArtistWithDiscography>((resolve) => {
+      let resolvePromise: (value: ArtistSearch) => void;
+      const pendingPromise = new Promise<ArtistSearch>((resolve) => {
         resolvePromise = resolve;
       });
       vi.mocked(catalogApi.searchCatalog).mockReturnValue(pendingPromise);
@@ -233,7 +233,7 @@ describe("SearchForm", () => {
         screen.getByText(catalogEs.search.loadingHint),
       ).toBeInTheDocument();
 
-      resolvePromise!(createMockArtistWithDiscography());
+      resolvePromise!(createMockArtistSearch());
       await act(async () => {
         await Promise.resolve();
       });
@@ -244,8 +244,8 @@ describe("SearchForm", () => {
     it("no muestra el aviso de primera importación si la solicitud termina antes del umbral", async () => {
       vi.useFakeTimers();
 
-      let resolvePromise: (value: ArtistWithDiscography) => void;
-      const pendingPromise = new Promise<ArtistWithDiscography>((resolve) => {
+      let resolvePromise: (value: ArtistSearch) => void;
+      const pendingPromise = new Promise<ArtistSearch>((resolve) => {
         resolvePromise = resolve;
       });
       vi.mocked(catalogApi.searchCatalog).mockReturnValue(pendingPromise);
@@ -260,7 +260,7 @@ describe("SearchForm", () => {
       });
       fireEvent.click(button);
 
-      resolvePromise!(createMockArtistWithDiscography());
+      resolvePromise!(createMockArtistSearch());
       await act(async () => {
         await Promise.resolve();
       });
@@ -281,8 +281,8 @@ describe("SearchForm", () => {
       vi.useFakeTimers();
       const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-      let resolvePromise: (value: ArtistWithDiscography) => void;
-      const pendingPromise = new Promise<ArtistWithDiscography>((resolve) => {
+      let resolvePromise: (value: ArtistSearch) => void;
+      const pendingPromise = new Promise<ArtistSearch>((resolve) => {
         resolvePromise = resolve;
       });
       vi.mocked(catalogApi.searchCatalog).mockReturnValue(pendingPromise);
@@ -305,7 +305,7 @@ describe("SearchForm", () => {
         });
       }).not.toThrow();
 
-      resolvePromise!(createMockArtistWithDiscography());
+      resolvePromise!(createMockArtistSearch());
       await act(async () => {
         await Promise.resolve();
       });
@@ -318,9 +318,9 @@ describe("SearchForm", () => {
     it("no permite requests duplicados mientras está pendiente", async () => {
       const user = userEvent.setup();
 
-      let resolvePromise: (value: ArtistWithDiscography) => void;
+      let resolvePromise: (value: ArtistSearch) => void;
 
-      const pendingPromise = new Promise<ArtistWithDiscography>((resolve) => {
+      const pendingPromise = new Promise<ArtistSearch>((resolve) => {
         resolvePromise = resolve;
       });
 
@@ -342,7 +342,7 @@ describe("SearchForm", () => {
 
       expect(catalogApi.searchCatalog).toHaveBeenCalledTimes(1);
 
-      resolvePromise!(createMockArtistWithDiscography());
+      resolvePromise!(createMockArtistSearch());
 
       await waitFor(() => {
         expect(button).not.toBeDisabled();

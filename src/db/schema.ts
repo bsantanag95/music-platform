@@ -28,8 +28,44 @@ export const appUser = pgTable("app_user", {
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
   displayName: text("display_name"),
+  passwordHash: text("password_hash"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const session = pgTable(
+  "session",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    uniqueIndex("uq_session_token_hash").on(t.tokenHash),
+    index("idx_session_user").on(t.userId),
+    index("idx_session_expires_at").on(t.expiresAt),
+  ],
+);
+
+export const authIdentity = pgTable(
+  "auth_identity",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    provider: text("provider").notNull(),
+    providerAccountId: text("provider_account_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("uq_auth_identity_provider_account").on(t.provider, t.providerAccountId),
+    index("idx_auth_identity_user").on(t.userId),
+  ],
+);
 
 export const artist = pgTable(
   "artist",
@@ -198,6 +234,9 @@ export const rating = pgTable(
 );
 
 export type ArtistRow = typeof artist.$inferSelect;
+export type AppUserRow = typeof appUser.$inferSelect;
+export type SessionRow = typeof session.$inferSelect;
+export type AuthIdentityRow = typeof authIdentity.$inferSelect;
 export type ReleaseGroupRow = typeof releaseGroup.$inferSelect;
 export type ReleaseRow = typeof release.$inferSelect;
 export type RecordingRow = typeof recording.$inferSelect;

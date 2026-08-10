@@ -9,6 +9,8 @@ Versión narrada de `schema.sql`. Para cada tabla: propósito, relaciones, restr
 **Relaciones:** referenciada por `rating`, `comment`, `session` y `auth_identity`.
 
 `password_hash` es nullable para permitir usuarios autenticados mediante proveedores externos.
+Cuando tiene valor, contiene únicamente el hash Argon2id de la contraseña local; nunca se guarda la
+contraseña en texto plano.
 
 ## `auth_identity`
 
@@ -23,6 +25,7 @@ Google y preparada para futuros proveedores OAuth/OIDC.
 **Restricciones:**
 
 - `FOREIGN KEY (user_id)` referencia `app_user(id)`.
+- `ON DELETE CASCADE` elimina la identidad cuando se elimina su usuario.
 - `UNIQUE (provider, provider_account_id)` garantiza a nivel de PostgreSQL que una identidad
   externa no pueda vincularse a más de un `app_user`.
 - `INDEX (user_id)` permite resolver eficientemente todas las identidades vinculadas a un usuario.
@@ -45,6 +48,13 @@ inmediatamente.
 **Limpieza:** las sesiones expiradas se eliminan mediante un job periódico y mediante limpieza
 oportunista durante operaciones de autenticación o resolución de sesión. La limpieza oportunista
 no debe bloquear la respuesta principal.
+
+**Columnas e índices:** `token_hash` es obligatorio y único para resolver un token opaco sin
+persistir el token real. `idx_session_user` permite revocar las sesiones de un usuario y
+`idx_session_expires_at` permite localizar sesiones vencidas para el job de limpieza. La FK a
+`app_user` usa `ON DELETE CASCADE`. La restricción `expires_at > created_at` impide sesiones ya
+vencidas al momento de crearse; la expiración sigue siendo fija porque la aplicación no modifica
+`expires_at` durante requests normales.
 
 ## `artist`
 

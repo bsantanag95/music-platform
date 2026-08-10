@@ -1,6 +1,6 @@
-# Contrato de API — `/api/catalog/*`
+# Contrato de API — `/api/*`
 
-Documenta el contrato real de los endpoints existentes (Fases 1-2) y las brechas que
+Documenta el contrato real de los endpoints existentes (Fases 1-4) y las brechas que
 `02-architecture/frontend-plan/00-backend-analysis.md` identificó como necesarias para la
 Fase 3. Ver ADR 0006 sobre por qué este contrato es REST y no tRPC.
 
@@ -108,14 +108,70 @@ Perfil de artista navegable directo por `id` propio. Si el artista es un stub
 (`type='unknown'`), se enriquece contra MusicBrainz por id antes de responder — mismo
 patrón que `findOrIngestArtist` aplica a stubs encontrados por nombre.
 
-**200 OK:** mismo shape que `GET /api/catalog/search` — `{ artist, releaseGroups }`.
+**200 OK:** `{ artist, releaseGroups, memberships }`. `memberships` contiene
+`artistId`, `name`, `type`, `role`, `joinedOn` y `leftOn`. Para personas, `releaseGroups`
+combina la discografía propia y la de grupos relacionados, sin duplicados por id.
 
 **404** con `code: ARTIST_NOT_FOUND` si el `id` no corresponde a ningún artista.
 
-## `GET /api/catalog/recording/[id]` — ❌ No existe (diferido a Fase 4)
+## `GET /api/catalog/recording/[id]` — ✅ Existe
 
-**Decisión de producto confirmada:** la Fase 3 cierra el catálogo navegable en el
-tracklist del álbum, sin página propia de canción (Camino A de
-`frontend-plan/02-implementation-plan.md`, Etapa 3.5). Este endpoint se construye recién
-en Fase 4, junto con el formulario de valoración/comentario sobre la misma pantalla —
-evita reescribir la vista dos veces.
+Recibe el UUID interno de una grabación y devuelve únicamente datos cacheados en la base propia.
+La lectura no ingesta desde MusicBrainz ni resuelve carátulas externamente.
+
+**400** con `code: VALIDATION_ERROR` si `id` no es un UUID. **404** con
+`code: RECORDING_NOT_FOUND` si no existe la grabación.
+
+**200 OK**
+```json
+{
+  "recording": { "id": "uuid", "mbid": "uuid | null", "title": "string", "durationSec": "int | null", "variantType": "original | re_recording | remix | live" },
+  "credits": [{ "artistId": "uuid", "name": "string", "role": "primary | featured", "joinPhrase": "string | null" }],
+  "appearances": [{ "releaseId": "uuid", "releaseGroupId": "uuid", "albumTitle": "string", "editionLabel": "string", "releaseDate": "YYYY-MM-DD | null", "coverThumbUrl": "string | null", "discNumber": "int", "position": "int" }]
+}
+```
+
+El endpoint comparte el read-model `getRecordingDetail` con las lecturas de servidor futuras.
+
+## Autenticación local
+
+`POST /api/auth/register` recibe `{ username, email, password }`, crea una cuenta y devuelve
+`201 { user }`. `POST /api/auth/login` recibe `{ identifier, password }`, rota la sesión actual o
+crea una nueva y devuelve `200 { user }`. Ambos aplican rate limiting y nunca devuelven el token.
+
+`POST /api/auth/logout` elimina la sesión actual. `DELETE /api/auth/revoke-all` requiere sesión y
+elimina todas las sesiones del usuario. `GET /api/auth/me` es un contrato opcional para clientes;
+los Server Components resuelven la sesión directamente, sin fetch interno.
+
+Una cookie ausente, inválida o expirada se trata de forma indistinguible y devuelve `AUTH_REQUIRED`
+en operaciones protegidas; no se revela si la sesión existió. Logout solo revoca la sesión actual.
+`revoke-all` revoca todas las sesiones del usuario; no existe listado de dispositivos.
+
+La cookie opaca `music_session` es `httpOnly`, `secure`, `sameSite=lax`, con expiración fija de 30
+días. Los errores posibles están en `docs/04-api/errors.md` y `src/lib/api/schemas.ts`.
+
+## Ratings y comentarios
+
+Los endpoints sociales usan el objetivo `artist`, `release-group` o `recording` y el UUID interno.
+Las lecturas son públicas; `PUT`, `POST`, `PATCH` y `DELETE` requieren sesión. El usuario siempre
+se deriva de la sesión: ningún body acepta `user_id`.
+
+### `GET/PUT/DELETE /api/catalog/{target}/{id}/ratings`
+
+`GET` devuelve `{ own, aggregate }`; `own` es el rating de la sesión o `null` y `aggregate` contiene
+`count`, `averageStars` y `averageDetailedScore`. `PUT` recibe `{ stars, detailedScore? }` y hace
+upsert del rating del usuario; devuelve `200 { rating }`. `DELETE` borra físicamente el rating propio
+y devuelve `204`.
+
+### `GET/POST /api/catalog/{target}/{id}/comments`
+
+`GET` acepta opcionalmente `page` (entero desde 1) y `pageSize` (entero 1-100), devolviendo
+`{ comments, page, pageSize, hasNext }`. Valores no numéricos, `NaN`, no enteros o fuera de esos
+rangos se rechazan con `400 { error, code: "VALIDATION_ERROR" }`; no se normalizan silenciosamente.
+`POST` recibe `{ body }`, permite múltiples comentarios por usuario y devuelve `201 { comment }`.
+
+### `PATCH/DELETE /api/catalog/comments/{commentId}`
+
+`PATCH` recibe `{ body }` y solo permite editar el comentario propio. `DELETE` realiza borrado físico
+solo del comentario propio y devuelve `204`; devuelve `404 { error, code: "COMMENT_NOT_FOUND" }` si
+el comentario no existe y `403 { error, code: "PERMISSION_DENIED" }` si pertenece a otro usuario.

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ApiError } from "@/lib/api/errors";
 
 /**
  * Envuelve un route handler para capturar errores no controlados (ej.
@@ -13,6 +14,12 @@ export function withErrorHandling<Args extends unknown[]>(
     try {
       return await handler(...args);
     } catch (err) {
+      if (err instanceof ApiError) {
+        return NextResponse.json(
+          { error: err.message, code: err.code },
+          { status: err.status },
+        );
+      }
       console.error("Error no controlado en route handler:", err);
       return NextResponse.json(
         { error: "Error interno del servidor", code: "INTERNAL_ERROR" },

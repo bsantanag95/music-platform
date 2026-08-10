@@ -7,10 +7,18 @@ a `02-architecture/i18n.md` para internacionalización o `03-data/sql-model.md` 
 
 ## Estado
 
-**Diseñado, no implementado todavía.** Este documento fija el diseño para que los agentes de
-ejecución (Backend, Datos/Esquema, Seguridad) implementen sin tener que decidir mecanismo por
-su cuenta. La migración concreta, los route handlers y los tests son trabajo de Fase 4, no de
-este documento.
+**Implementado para autenticación local.** Este documento describe el mecanismo que deben seguir
+los agentes de ejecución y conserva la preparación de identidades externas para el cambio posterior
+de Google. La migración, los route handlers y los tests de autenticación local ya forman parte de
+la implementación de Fase 4.
+
+La implementación usa Argon2id con `memoryCost=19456`, `timeCost=2` y `parallelism=1`, centralizados
+en `src/services/auth/password.ts`.
+
+La interfaz común de adaptadores externos ya está preparada en
+`src/services/auth/providers/`, pero no hay ningún proveedor habilitado. Google y cualquier
+flujo OAuth/OIDC, incluidos sus rutas, callbacks, secretos e intercambio de códigos, se
+implementarán en un cambio posterior.
 
 ## Por qué existe este documento aparte del ADR
 
@@ -28,9 +36,9 @@ registrar, y se verifica con la misma función al iniciar sesión. `app_user.pas
 propia, y esa columna nula es justamente lo que permite eso sin migración destructiva (ver
 ADR 0008, consecuencia ya prevista en `architecture.md`).
 
-Los parámetros exactos de Argon2id (costo de memoria, iteraciones, paralelismo) se fijan al
-escribir la migración e implementación reales — este documento no los prescribe en números
-concretos porque son un detalle de tuning, no de arquitectura.
+Los parámetros implementados de Argon2id son `memoryCost=19456`, `timeCost=2` y `parallelism=1`.
+Si el entorno de despliegue requiere modificar el tuning, debe actualizarse esta documentación y
+validarse el impacto antes de cambiar el mecanismo.
 
 ### 2. Sesión — token opaco, no JWT
 
@@ -55,6 +63,12 @@ consultar la validez: la ausencia de la fila invalida el token inmediatamente.
 Las sesiones expiradas se eliminan mediante un job periódico y también mediante limpieza
 oportunista durante operaciones normales de autenticación o resolución de sesión. La limpieza no
 debe bloquear la respuesta principal.
+
+El job periódico se ejecuta en el monolito con `pnpm run db:cleanup-sessions` (requiere
+`DATABASE_URL` en `.env`). El scheduler del entorno de despliegue debe invocarlo con la frecuencia
+operativa elegida, por ejemplo cada hora. El comando es idempotente y comparte
+`cleanupExpiredSessions()` con la limpieza oportunista; esta última conserva su ejecución
+asíncrona y no bloqueante dentro de las requests.
 
 **Por qué esto y no JWT:** ver ADR 0008. La razón corta es que el proyecto es un monolito de
 un proceso — no hay beneficio de "stateless" que cobrar, y sí hay costo real: un JWT robado
@@ -85,7 +99,11 @@ llamadas **entrantes**. Comparte la misma limitación documentada ahí: en un de
 una instancia sirviendo tráfico, dos instancias distintas podrían sumar más intentos que el
 límite nominal entre ambas. Para ese escenario hace falta un limitador distribuido (token
 bucket en Redis, mismo camino ya previsto en `architecture.md` para el rate limit de
-MusicBrainz). Fuera de alcance mientras el proyecto siga siendo de una sola instancia.
+MusicBrainz). La IP del runtime se usa cuando está disponible; `X-Forwarded-For` solo se acepta si
+`AUTH_TRUSTED_PROXY=1` está configurado explícitamente. Sin esa configuración la IP se considera
+desconocida, pero el límite por identificador se conserva. El mapa tiene limpieza de entradas
+expiradas y un máximo de cardinalidad. Fuera de alcance mientras el proyecto siga siendo de una
+sola instancia.
 
 ### 5. Autorización en mutaciones
 
@@ -130,23 +148,13 @@ modelo de usuario.
 
 ## Qué no decide este documento
 
-Deliberadamente fuera de alcance acá, para no anticipar decisiones que corresponden a la
-implementación real o a un ADR propio cuando haga falta:
+Deliberadamente fuera de alcance acá:
 
-- Parámetros exactos de Argon2id (memoria/tiempo/paralelismo).
-- Nombre y columnas exactas de la migración de `session` y `app_user.password_hash` — las
-  define el agente Datos/Esquema al abrir la tarea correspondiente.
-- La migración debe reflejar expiración fija, sesiones múltiples, revocación individual y global,
-  y permitir la limpieza periódica y oportunista de sesiones expiradas.
-- Códigos `ErrorCode` nuevos para fallos de auth (credenciales inválidas, rate limit excedido,
-  sesión expirada) — se agregan a `src/lib/api/schemas.ts` y `04-api/errors.md` cuando el
-  agente Backend implemente los endpoints, siguiendo el mismo patrón que ya usa el resto de la
-  API.
 - Flujo de recuperación de contraseña (reset por email) — no está en el alcance descrito por
   `architecture.md`/PRD para el MVP de Fase 4; se evalúa aparte si se vuelve necesario.
-- El scrobbling con proveedores de streaming sigue siendo Fase 5+ (`architecture.md`). El login
-  social general, empezando por Google, queda preparado como extensión de la autenticación de la
-  Fase 4; `password_hash` nullable garantiza que el esquema no lo bloquea.
+- Google y otros flujos OAuth/OIDC — se implementarán en un cambio posterior usando la interfaz
+  y la persistencia preparadas en esta fase.
+- El scrobbling con proveedores de streaming sigue siendo Fase 5+ (`architecture.md`).
 
 ## Relación con otros documentos
 
@@ -159,5 +167,5 @@ implementación real o a un ADR propio cuando haga falta:
 - **`conventions.md`**: resumen normativo de uso diario, con puntero acá para el detalle.
 - **`01-frontend-architecture.md`**: el patrón de Server Components sin round-trip a la propia
   API, que la resolución de sesión hereda directamente.
-- **`04-api/errors.md`**: recibirá los códigos de error de auth cuando se implementen los
-  endpoints — este documento no los define de antemano.
+- **`04-api/errors.md`**: documenta los códigos de error de autenticación y su forma estable para
+  el cliente.

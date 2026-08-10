@@ -1,22 +1,13 @@
 import type { z } from "zod";
-import { ApiErrorSchema, type ErrorCode } from "./schemas";
+import { ApiError } from "./errors";
+import { ApiErrorSchema } from "./schemas";
 
 /**
  * Error tipado que todo componente puede capturar y mapear a un mensaje
  * propio del frontend usando `.code` — nunca se muestra `.message` directo
  * en la UI (ver docs/02-architecture/frontend-plan/03-best-practices.md).
  */
-export class ApiError extends Error {
-  readonly code: ErrorCode;
-  readonly status: number;
-
-  constructor(code: ErrorCode, status: number, message: string) {
-    super(message);
-    this.name = "ApiError";
-    this.code = code;
-    this.status = status;
-  }
-}
+export { ApiError } from "./errors";
 
 /**
  * Wrapper de fetch tipado. Parsea la respuesta contra el schema zod

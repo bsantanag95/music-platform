@@ -1,19 +1,19 @@
-# Convención de errores — `/api/catalog/*`
+# Convención de errores — `/api/*`
 
-**Estado: ✅ Implementada.** Los tres route handlers devuelven `code` en cada respuesta de
-error, y están envueltos con `withErrorHandling` (`src/lib/with-error-handling.ts`) para
-capturar errores no controlados como `INTERNAL_ERROR` en vez de un 500 sin body.
+**Estado: ✅ Implementada.** Los route handlers de la API devuelven `code` en cada respuesta de
+error y están envueltos con `withErrorHandling` (`src/lib/with-error-handling.ts`) para capturar
+errores no controlados como `INTERNAL_ERROR` en vez de un 500 sin body.
 
 ## Forma actual (hoy)
 
-Todos los errores devuelven `{ "error": "mensaje en español" }` con el status HTTP
-correspondiente. El string de `error` **no** es estable — es un mensaje para debugging
-manual, no un contrato para el frontend (ver `03-best-practices.md`: nunca mostrarlo
-directo en la UI ni hacer *string-matching* sobre él).
+Todos los errores devuelven `{ "error": "mensaje", "code": "CODIGO" }` con el status HTTP
+correspondiente. El string de `error` **no** es estable — es un mensaje para debugging manual, no
+un contrato para el frontend (ver `03-best-practices.md`: nunca mostrarlo directo en la UI ni
+hacer *string-matching* sobre él).
 
 ## Forma implementada
 
-Todo error de los tres route handlers devuelve un campo `code` machine-readable, estable,
+Todo error de los route handlers devuelve un campo `code` machine-readable, estable,
 además del `error` legible:
 
 ```json
@@ -24,15 +24,25 @@ además del `error` legible:
 
 | `code` | Status HTTP | Dónde ocurre |
 |---|---|---|
-| `VALIDATION_ERROR` | 400 | `search`: falta el query param `q`. |
+| `VALIDATION_ERROR` | 400 | `search`: falta el query param `q`; `recording/[id]`: el id no es UUID; comentarios: paginación inválida. |
 | `ARTIST_NOT_FOUND` | 404 | `search` y `artist/[id]`: no se encontró el artista. |
 | `ALBUM_NOT_FOUND` | 404 | `release-group/[id]`: el `id` no corresponde a ningún `release_group`. |
 | `NO_EDITIONS_FOUND` | 404 | `release-group/[id]`: MusicBrainz no tiene ninguna edición ingerible para ese álbum. |
-| `INTERNAL_ERROR` | 500 | Cualquier error no controlado (ej. MusicBrainz caído, timeout, error de base de datos) — capturado por `withErrorHandling`, que envuelve los tres handlers y devuelve este shape en vez de un 500 sin body. |
+| `RECORDING_NOT_FOUND` | 404 | No existe la grabación solicitada. |
+| `AUTH_REQUIRED` | 401 | Falta una sesión válida para una operación protegida. |
+| `INVALID_CREDENTIALS` | 401 | Login fallido; no revela si falló el identificador o la contraseña. |
+| `USERNAME_TAKEN` / `EMAIL_TAKEN` | 409 | El registro duplicaría una cuenta existente. |
+| `RATE_LIMITED` | 429 | Se superó el límite temporal de login o registro. |
+| `PERMISSION_DENIED` | 403 | El usuario no puede modificar el recurso. |
+| `INVALID_TARGET` | 400/404 | Tipo, UUID u objetivo inexistente. |
+| `INVALID_RATING` / `INVALID_COMMENT` | 400 | Entrada social inválida. |
+| `RATING_NOT_FOUND` | 404 | No existe un rating propio para borrar. |
+| `COMMENT_NOT_FOUND` | 404 | No existe el comentario solicitado. |
+| `INTERNAL_ERROR` | 500 | Cualquier error no controlado (ej. MusicBrainz caído, timeout, error de base de datos) — capturado por `withErrorHandling`, que devuelve este shape en vez de un 500 sin body. |
 
 ### Implementación
 
-Cada route handler exporta `GET` envuelto en `withErrorHandling(...)`
+Cada route handler exporta sus métodos HTTP envueltos en `withErrorHandling(...)`
 (`src/lib/with-error-handling.ts`), que hace `try/catch` alrededor de la lógica real y
 devuelve `INTERNAL_ERROR` ante cualquier excepción no manejada explícitamente.
 

@@ -30,10 +30,21 @@ vi.mock("next-intl/server", () => ({
 
 vi.mock("@/services/catalog/ingest-artist", () => ({
   getArtistById: vi.fn(),
+  getArtistMemberships: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("@/services/catalog/ingest-discography", () => ({
   findOrIngestDiscography: vi.fn(),
+}));
+
+vi.mock("@/services/auth/sessions", () => ({
+  resolveSession: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock("@/services/social", () => ({
+  resolveSocialTarget: vi.fn().mockResolvedValue({ type: "artist", id: "artist", column: "artistId" }),
+  getRatings: vi.fn().mockResolvedValue({ own: null, aggregate: { count: 0, averageStars: null, averageDetailedScore: null } }),
+  listComments: vi.fn().mockResolvedValue({ comments: [], page: 1, pageSize: 20, hasNext: false }),
 }));
 
 vi.mock("@/i18n/navigation", () => ({

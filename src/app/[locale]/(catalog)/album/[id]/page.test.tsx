@@ -19,6 +19,16 @@ vi.mock("@/services/catalog/album-detail", () => ({
   getAlbumDetail: vi.fn(),
 }));
 
+vi.mock("@/services/auth/sessions", () => ({
+  resolveSession: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock("@/services/social", () => ({
+  resolveSocialTarget: vi.fn().mockResolvedValue({ type: "release-group", id: "album", column: "releaseGroupId" }),
+  getRatings: vi.fn().mockResolvedValue({ own: null, aggregate: { count: 0, averageStars: null, averageDetailedScore: null } }),
+  listComments: vi.fn().mockResolvedValue({ comments: [], page: 1, pageSize: 20, hasNext: false }),
+}));
+
 vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");

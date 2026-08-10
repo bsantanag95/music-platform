@@ -7,6 +7,9 @@ import { TrackList } from "@/components/catalog/TrackList";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { isValidUuid } from "@/lib/validation";
+import { SocialSection } from "@/components/social/SocialSection";
+import { resolveSession } from "@/services/auth/sessions";
+import { getRatings, listComments, resolveSocialTarget } from "@/services/social";
 
 interface AlbumPageProps {
   params: Promise<{ id: string }>;
@@ -45,6 +48,12 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
   }
 
   const { detail } = result;
+  const session = await resolveSession();
+  const socialTarget = await resolveSocialTarget("release-group", detail.releaseGroup.id);
+  const [ratings, comments] = await Promise.all([
+    getRatings(socialTarget, session?.user.id),
+    listComments(socialTarget),
+  ]);
 
   const breadcrumbItems = [
     { label: tCommon("home"), href: "/" },
@@ -77,6 +86,7 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
         durationUnknown={t("album.durationUnknown")}
         creditsLabel={t("album.creditsLabel")}
       />
+      <SocialSection target="release-group" targetId={detail.releaseGroup.id} ratings={ratings} comments={comments} userId={session?.user.id} />
     </main>
   );
 }

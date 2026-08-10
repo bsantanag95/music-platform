@@ -1,10 +1,36 @@
-import { eq, ilike } from "drizzle-orm";
+import { and, eq, ilike } from "drizzle-orm";
 import { db } from "@/db";
-import { artist, type ArtistRow } from "@/db/schema";
+import { artist, membership, type ArtistRow } from "@/db/schema";
 import { musicbrainz } from "../musicbrainz/client";
 import { mapArtistType } from "../musicbrainz/mappers";
 
 const VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377";
+
+export interface ArtistMembership {
+  artistId: string;
+  name: string;
+  type: string;
+  role: string | null;
+  joinedOn: string | null;
+  leftOn: string | null;
+}
+
+/** Lee relaciones ya persistidas; nunca consulta MusicBrainz. */
+export async function getArtistMemberships(target: ArtistRow): Promise<ArtistMembership[]> {
+  const rows = target.type === "group"
+    ? await db
+        .select({ artistId: artist.id, name: artist.name, type: artist.type, role: membership.role, joinedOn: membership.joinedOn, leftOn: membership.leftOn })
+        .from(membership)
+        .innerJoin(artist, eq(artist.id, membership.personId))
+        .where(and(eq(membership.groupId, target.id), eq(artist.type, "person")))
+    : await db
+        .select({ artistId: artist.id, name: artist.name, type: artist.type, role: membership.role, joinedOn: membership.joinedOn, leftOn: membership.leftOn })
+        .from(membership)
+        .innerJoin(artist, eq(artist.id, membership.groupId))
+        .where(and(eq(membership.personId, target.id), eq(artist.type, "group")));
+
+  return rows;
+}
 
 /**
  * Si el artista es un stub (`type='unknown'`) y ya tiene `mbid`, lo enriquece

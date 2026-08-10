@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getArtistById } from "@/services/catalog/ingest-artist";
+import { getArtistById, getArtistMemberships } from "@/services/catalog/ingest-artist";
 import { findOrIngestDiscography } from "@/services/catalog/ingest-discography";
 import { withErrorHandling } from "@/lib/with-error-handling";
 
@@ -14,8 +14,11 @@ export const GET = withErrorHandling(
       );
     }
 
-    const releaseGroups = await findOrIngestDiscography(artist);
+    const [releaseGroups, memberships] = await Promise.all([
+      findOrIngestDiscography(artist),
+      getArtistMemberships(artist),
+    ]);
 
-    return NextResponse.json({ artist, releaseGroups });
+    return NextResponse.json({ artist, releaseGroups, memberships });
   },
 );

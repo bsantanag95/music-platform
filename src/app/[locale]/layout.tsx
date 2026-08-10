@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { Providers } from "./providers";
 import { Header } from "@/components/layout/Header";
+import { resolveSession } from "@/services/auth/sessions";
 import "@/app/globals.css";
 
 const display = Space_Grotesk({
@@ -50,6 +51,14 @@ export default async function RootLayout({
 }) {
   const { locale } = await params;
   const messages = await getMessages();
+  const session = await resolveSession();
+  const publicUser = session?.user
+      ? {
+         id: session.user.id,
+         username: session.user.username,
+         displayName: session.user.displayName,
+       }
+    : null;
 
   return (
     <html
@@ -58,7 +67,7 @@ export default async function RootLayout({
     >
       <body>
         <NextIntlClientProvider messages={messages}>
-          <Header />
+          <Header user={publicUser} />
           <Providers>{children}</Providers>
         </NextIntlClientProvider>
       </body>

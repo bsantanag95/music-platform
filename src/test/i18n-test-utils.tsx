@@ -8,10 +8,12 @@ import errorsEs from "../../messages/es/errors.json";
 import commonEn from "../../messages/en/common.json";
 import catalogEn from "../../messages/en/catalog.json";
 import errorsEn from "../../messages/en/errors.json";
+import authEs from "../../messages/es/auth.json";
+import authEn from "../../messages/en/auth.json";
 
 const messagesByLocale = {
-  es: { common: commonEs, catalog: catalogEs, errors: errorsEs },
-  en: { common: commonEn, catalog: catalogEn, errors: errorsEn },
+  es: { common: commonEs, catalog: catalogEs, errors: errorsEs, auth: authEs },
+  en: { common: commonEn, catalog: catalogEn, errors: errorsEn, auth: authEn },
 };
 
 export function renderWithIntl(
