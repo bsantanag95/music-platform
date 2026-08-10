@@ -6,6 +6,20 @@ Este documento describe las entidades del negocio y cómo se relacionan entre s�
 
 La persona que usa la aplicación: se registra, valora, comenta, arma listas y sigue la actividad de otros usuarios.
 
+Un Usuario puede tener una contraseña local o una o más identidades externas. La identidad del
+producto no depende del proveedor con el que inició sesión.
+
+## Identidad de autenticación
+
+Una identidad de autenticación vincula un Usuario con un proveedor local o externo. Para
+proveedores OAuth/OIDC se identifica mediante el proveedor y su identificador estable; en OIDC,
+este corresponde al sub asociado al issuer. El email es un atributo de la identidad y no una
+clave de vinculación suficiente.
+
+Un Usuario puede vincular varias identidades externas y todas resuelven al mismo Usuario del
+producto. La vinculación de una identidad externa con un Usuario existente es explícita y no se
+realiza automáticamente por coincidencia de email.
+
 ## Artista
 
 Puede ser una **persona** o un **grupo**. Una persona puede pertenecer a uno o más grupos a la vez, y puede tener también su propia carrera solista — ambas discografías conviven en el mismo perfil de artista sin tratarse como conceptos separados. Un grupo también es un Artista, con su propio perfil y discografía, compuesto por personas que fueron o son sus miembros a lo largo del tiempo.
@@ -29,6 +43,7 @@ Una Canción puede ser una versión distinta de otra: una re-grabación, un remi
 ## Crédito
 
 El **Crédito** conecta un Artista con un Álbum o con una Canción, y resuelve los distintos patrones de autoría de la industria:
+
 - Artista único.
 - Colaboración con billing menor ("feat.").
 - Colaboración a la par (dúo, "Artista A & Artista B").

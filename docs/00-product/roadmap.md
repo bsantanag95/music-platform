@@ -24,7 +24,7 @@ Entregable: buscar → artista → álbum → canción, sin cuentas todavía. El
 
 ## Fase 4 — Auth, ratings y comentarios
 
-Entregable: autenticación de usuarios, valoración dual (estrellas + detallada) y comentarios funcionando sobre artista, álbum y canción. Es el núcleo social base y cierra el MVP definido en el PRD.
+Entregable: autenticación local de usuarios, valoración dual (estrellas + detallada) y comentarios funcionando sobre artista, álbum y canción. Es el núcleo social base y cierra el MVP definido en el PRD. Durante esta fase se prepara la persistencia y las interfaces para identidades externas; Google se implementará inmediatamente después como el primer proveedor externo. El scrobbling de servicios de streaming permanece en la Fase 5.
 
 Junto al trabajo sobre las vistas de artista/álbum/canción, esta fase cierra también la **navegación
 por membresías** diferida en la Etapa 3.6 (caso Pink Floyd / Roger Waters): el perfil de una banda

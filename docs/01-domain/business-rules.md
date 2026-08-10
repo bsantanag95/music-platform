@@ -41,6 +41,21 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - A diferencia de la Valoración, un mismo Usuario puede dejar más de un Comentario sobre el mismo objetivo.
 - Borrar un Comentario es un borrado físico (`DELETE` real) — no hay historial ni recuperación. Ver ADR 0009.
 
+## Autenticación e identidades
+
+- Un Usuario puede autenticarse con contraseña local o mediante una o más identidades externas.
+- Las identidades externas se identifican por proveedor e identificador estable del proveedor; para
+  OIDC, este identificador corresponde al `sub` asociado a un issuer concreto.
+- El email compartido no vincula cuentas automáticamente.
+- Toda autenticación local o externa termina en una sesión server-side común. Ratings y comentarios
+  no distinguen el método de inicio de sesión.
+- La vinculación de una identidad externa con un Usuario existente es una operación explícita y
+  requiere una sesión autenticada y un flujo OAuth/OIDC válido.
+- Las mutaciones de usuario resuelven el Usuario desde la sesión; nunca aceptan `user_id` desde el
+  cliente.
+- Los secretos OAuth solo viven en el servidor y no se persisten tokens del proveedor si no son
+  necesarios para consumir su API.
+
 ## Datos y licencias
 
 - El catálogo se completa bajo demanda (patrón de cacheo): no se precarga el catálogo musical completo desde el día uno.

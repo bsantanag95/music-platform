@@ -2,7 +2,7 @@
 
 Documento narrado de la arquitectura de autenticación del proyecto: qué existe, por qué se
 decidió así, y cómo se extiende a futuro. Complementa, sin repetir, `02-architecture/adr/0008-auth-sesiones-y-hash-contrasena.md`
-(la decisión y sus alternativas). Este documento describe *cómo funciona el sistema*, análogo
+(la decisión y sus alternativas). Este documento describe _cómo funciona el sistema_, análogo
 a `02-architecture/i18n.md` para internacionalización o `03-data/sql-model.md` para el esquema.
 
 ## Estado
@@ -43,6 +43,19 @@ desde JavaScript del cliente.
 En cada request que necesite sesión, el servidor recibe el token de la cookie, lo hashea, y
 busca ese hash en `session`. Si no hay fila o `expires_at` ya pasó, no hay sesión válida.
 
+La sesión utiliza expiración fija, adecuada para el uso como PWA: no se extiende en cada request.
+El token se rota después de autenticarse y después de eventos sensibles, pero no en cada request
+normal. Un usuario puede tener varias sesiones activas en distintos dispositivos.
+
+La revocación puede ser individual, eliminando una sesión concreta, o global, eliminando todas las
+sesiones asociadas al usuario. El cierre de sesión normal elimina la sesión actual; una acción
+global de seguridad elimina todas las sesiones. No se necesita una columna `revoked_at` para
+consultar la validez: la ausencia de la fila invalida el token inmediatamente.
+
+Las sesiones expiradas se eliminan mediante un job periódico y también mediante limpieza
+oportunista durante operaciones normales de autenticación o resolución de sesión. La limpieza no
+debe bloquear la respuesta principal.
+
 **Por qué esto y no JWT:** ver ADR 0008. La razón corta es que el proyecto es un monolito de
 un proceso — no hay beneficio de "stateless" que cobrar, y sí hay costo real: un JWT robado
 sigue siendo válido hasta que expira, salvo que se mantenga una lista de revocación (que es
@@ -82,6 +95,39 @@ Esto no es una preferencia de estilo: es la única forma de que la unicidad de `
 usuario/objetivo (`sql-model.md`) y el borrado físico (ADR 0009) sigan siendo garantías reales
 y no solo convenciones que un cliente malicioso podría sortear.
 
+### 6. Identidades externas — Google y futuros proveedores
+
+La identidad dentro del producto (`app_user`) se separa de la identidad entregada por un
+proveedor OAuth/OIDC. Una tabla `auth_identity` relaciona ambas mediante un `provider` y el
+`provider_account_id` estable que entrega ese proveedor, con unicidad por la pareja. Para
+proveedores OIDC, `provider_account_id` corresponde al claim sub y provider identifica
+inequívocamente al issuer.
+
+Google será el primer proveedor externo previsto. Su flujo vive en el backend de la misma
+aplicación Next.js, con adaptadores bajo `src/services/auth/providers/` y route handlers bajo
+`src/app/api/auth/`. El flujo utiliza Authorization Code con state y PKCE; para OIDC utiliza
+además `nonce`. El authorization code se intercambia exclusivamente en el backend.
+
+Después de validar el callback y la identidad del proveedor, el flujo resuelve una identidad
+externa existente o crea una nueva y desemboca en la misma sesión server-side de token opaco
+definida para la autenticación local. Ratings y comentarios no distinguen el método de inicio de
+sesión.
+
+No se vinculan cuentas automáticamente por email. La vinculación de una identidad externa con un
+`app_user` existente es una operación explícita iniciada desde una sesión autenticada y requiere
+un flujo OAuth/OIDC completo; la coincidencia de email por sí sola no es suficiente.
+
+En el callback OIDC se validan `issuer`, `audience`, firma, expiración y `nonce`, además de
+`state`, PKCE, `redirect_uri` y el authorization code conforme al flujo implementado.
+
+No se almacenan tokens OAuth cuando no sean necesarios para consumir APIs del proveedor. Los
+secretos y credenciales de proveedor viven solo en variables de entorno del servidor.
+
+Durante la Fase 4 se implementará únicamente la autenticación local y se dejará preparada la
+persistencia y la interfaz de proveedores externos. Google se implementará inmediatamente después,
+como el primer incremento posterior de autenticación, sin cambiar el modelo de sesión ni el
+modelo de usuario.
+
 ## Qué no decide este documento
 
 Deliberadamente fuera de alcance acá, para no anticipar decisiones que corresponden a la
@@ -90,19 +136,24 @@ implementación real o a un ADR propio cuando haga falta:
 - Parámetros exactos de Argon2id (memoria/tiempo/paralelismo).
 - Nombre y columnas exactas de la migración de `session` y `app_user.password_hash` — las
   define el agente Datos/Esquema al abrir la tarea correspondiente.
+- La migración debe reflejar expiración fija, sesiones múltiples, revocación individual y global,
+  y permitir la limpieza periódica y oportunista de sesiones expiradas.
 - Códigos `ErrorCode` nuevos para fallos de auth (credenciales inválidas, rate limit excedido,
   sesión expirada) — se agregan a `src/lib/api/schemas.ts` y `04-api/errors.md` cuando el
   agente Backend implemente los endpoints, siguiendo el mismo patrón que ya usa el resto de la
   API.
 - Flujo de recuperación de contraseña (reset por email) — no está en el alcance descrito por
   `architecture.md`/PRD para el MVP de Fase 4; se evalúa aparte si se vuelve necesario.
-- Integración OAuth con proveedores de streaming — sigue siendo Fase 5+ (`architecture.md`),
-  este documento solo garantiza que el esquema no lo bloquea (`password_hash` nullable).
+- El scrobbling con proveedores de streaming sigue siendo Fase 5+ (`architecture.md`). El login
+  social general, empezando por Google, queda preparado como extensión de la autenticación de la
+  Fase 4; `password_hash` nullable garantiza que el esquema no lo bloquea.
 
 ## Relación con otros documentos
 
 - **`adr/0008-auth-sesiones-y-hash-contrasena.md`**: la decisión y sus alternativas. No se
   reescribe si este documento cambia.
+- **`adr/0010-identidades-externas-y-proveedores-oauth.md`**: separación entre usuario e
+  identidad externa y ubicación de los adaptadores OAuth/OIDC.
 - **`adr/0009-borrado-fisico-rating-comment.md`**: decisión relacionada pero independiente —
   borrado de `rating`/`comment`, no de sesión ni de usuario.
 - **`conventions.md`**: resumen normativo de uso diario, con puntero acá para el detalle.

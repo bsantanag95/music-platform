@@ -25,13 +25,27 @@ a estas tablas sin reabrir el ADR.
 
 ## Autenticación
 
-**Decisión confirmada** — ver ADR 0008 y `02-architecture/auth.md` para el detalle completo.
+**Decisión confirmada** — ver ADR 0008, ADR 0010 y `02-architecture/auth.md` para el detalle completo.
 Resumen normativo:
 
 - Sesiones server-side con token opaco en cookie `httpOnly`/`secure`/`sameSite=lax`, nunca JWT.
 - Contraseñas con Argon2id, nunca un hash débil ni texto plano.
 - `app_user.password_hash` es nullable — deja espacio para OAuth futuro sin migración destructiva.
 - El `user_id` de toda mutación de `rating`/`comment` sale de la sesión, nunca del body/params.
+- Las identidades de proveedores OAuth/OIDC viven en `auth_identity`, nunca en columnas específicas
+  de `app_user` como `google_id` o `apple_id`.
+- Para proveedores OIDC, `provider_account_id` representa el sub y provider identifica
+  inequívocamente el issuer. La pareja (`provider`, `provider_account_id`) es única.
+- Los adaptadores de proveedores viven en `src/services/auth/providers/`; los route handlers OAuth
+  viven en `src/app/api/auth/`. El frontend nunca recibe secretos, intercambia authorization codes
+  ni valida tokens del proveedor.
+- Los flujos OAuth/OIDC utilizan Authorization Code con `state` y PKCE; los flujos OIDC utilizan
+  además `nonce`.
+- La vinculación de identidades externas con usuarios existentes es explícita y no se realiza
+  automáticamente por coincidencia de email.
+- La sesión usa expiración fija, permite sesiones múltiples, rota tras autenticación y eventos
+  sensibles, y no rota en cada request normal. La revocación puede ser individual o global.
+- Las sesiones expiradas se limpian mediante job periódico y limpieza oportunista no bloqueante.
 
 ## Errores HTTP
 

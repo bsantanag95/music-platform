@@ -6,7 +6,45 @@ Versión narrada de `schema.sql`. Para cada tabla: propósito, relaciones, restr
 
 **Propósito:** identidad de quien usa la aplicación — base para valorar, comentar y, más adelante, seguir actividad de otros usuarios.
 
-**Relaciones:** referenciada por `rating` y `comment`.
+**Relaciones:** referenciada por `rating`, `comment`, `session` y `auth_identity`.
+
+`password_hash` es nullable para permitir usuarios autenticados mediante proveedores externos.
+
+## `auth_identity`
+
+**Propósito:** vincula un `app_user` con una identidad de autenticación externa, comenzando por
+Google y preparada para futuros proveedores OAuth/OIDC.
+
+**Relaciones:** pertenece a exactamente un `app_user`.
+
+**Identidad externa:** para proveedores OIDC, `provider_account_id` corresponde al claim `sub` y
+`provider` identifica inequívocamente el issuer del proveedor.
+
+**Restricciones:**
+
+- `FOREIGN KEY (user_id)` referencia `app_user(id)`.
+- `UNIQUE (provider, provider_account_id)` garantiza a nivel de PostgreSQL que una identidad
+  externa no pueda vincularse a más de un `app_user`.
+- `INDEX (user_id)` permite resolver eficientemente todas las identidades vinculadas a un usuario.
+- El email del proveedor no sustituye al identificador estable ni produce vinculación automática
+  por sí solo.
+
+## `session`
+
+**Propósito:** sesión server-side asociada a un usuario autenticado.
+
+**Seguridad:** almacena únicamente el hash del token opaco enviado en la cookie; el token real
+nunca se persiste ni se devuelve en JSON. Las sesiones expiradas no son válidas.
+
+**Política:** la expiración es fija y no se prolonga con cada request. El token se rota después
+de autenticarse y ante eventos sensibles, pero no en cada request normal. Un usuario puede tener
+varias sesiones activas. La revocación elimina la fila de sesión, individualmente o para todas las
+sesiones del usuario. No se añade `revoked_at`: la ausencia de la fila invalida el token
+inmediatamente.
+
+**Limpieza:** las sesiones expiradas se eliminan mediante un job periódico y mediante limpieza
+oportunista durante operaciones de autenticación o resolución de sesión. La limpieza oportunista
+no debe bloquear la respuesta principal.
 
 ## `artist`
 
@@ -25,6 +63,7 @@ Versión narrada de `schema.sql`. Para cada tabla: propósito, relaciones, restr
 **Propósito:** resuelve el caso de referencia del proyecto (Roger Waters / Pink Floyd) — una persona puede pertenecer a uno o más grupos, con rol y período.
 
 **Restricciones:**
+
 - `person_id <> group_id`: un artista no puede ser miembro de sí mismo.
 - `left_on >= joined_on` (cuando ambos existen): coherencia temporal.
 - **Trigger `trg_membership_types`**: valida que `person_id` apunte a un `artist` con `type='person'` y `group_id` a uno con `type='group'`. No es posible expresar esto con un `CHECK` porque requiere consultar otra tabla.
@@ -62,6 +101,7 @@ script `scripts/backfill-release-credits.ts`, nunca dentro del path de lectura d
 **Fechas y precisión:** `release_date` es `DATE` nullable. MusicBrainz entrega fechas con distinta
 precisión (`YYYY`, `YYYY-MM` o `YYYY-MM-DD`); la ingesta normaliza cada valor con
 `normalizeReleaseDate` (`src/services/musicbrainz/mappers.ts`):
+
 - `YYYY-MM-DD` válido (verificando calendario) → se guarda tal cual.
 - `YYYY`, `YYYY-MM`, ausente o inválido → se guarda `null`.
 
@@ -71,6 +111,7 @@ MusicBrainz no proporciona y la UI no debe presentar como exacta.
 **Evolución futura (`release_year`):** la página debe poder mostrar al menos el año de
 lanzamiento aunque no exista fecha exacta. Para eso, la siguiente evolución del esquema añadirá
 una columna nullable `release_year` (entero), separada de `release_date`:
+
 - Fecha completa → se guardan ambos valores.
 - Fecha parcial → se guarda el año conocido en `release_year` y `release_date` queda `null`.
 - La UI mostrará `release_year` como fallback cuando `release_date` sea nulo.
@@ -82,6 +123,7 @@ Esa columna **no está implementada todavía**; requiere una migración SQL y un
 **Propósito:** la grabación única que acumula valoración y comentarios, sin importar en cuántas ediciones aparezca.
 
 **Restricciones:**
+
 - `variant_type` limitado a `original`, `re_recording`, `remix`, `live`.
 - `variant_type = 'original' OR variant_of_id IS NOT NULL`: toda versión distinta de la original debe declarar explícitamente a cuál hace referencia.
 - Un remaster de audio **nunca** crea una fila nueva aquí — reutiliza el mismo `id`, tal como se definió en `01-domain/business-rules.md`.
@@ -97,6 +139,7 @@ Esa columna **no está implementada todavía**; requiere una migración SQL y un
 **Propósito:** conecta artistas con álbumes o canciones, resolviendo feat., dúos y compilados sin una FK directa (ver ADR 0004).
 
 **Restricciones:**
+
 - `CHECK (num_nonnulls(release_group_id, recording_id) = 1)`: un crédito pertenece a exactamente un objetivo.
 - Índices únicos parciales (`uq_credit_pos_*`, `uq_credit_artist_*`): garantizan que no haya dos artistas en la misma posición, ni el mismo artista repetido, dentro del mismo objetivo. Son parciales porque un `UNIQUE` normal no detecta duplicados cuando una de las columnas de destino es `NULL` (`NULL <> NULL` en SQL).
 
@@ -107,6 +150,7 @@ Esa columna **no está implementada todavía**; requiere una migración SQL y un
 **Propósito:** la valoración dual (estrellas + valoración detallada) sobre un artista, álbum o canción.
 
 **Restricciones:**
+
 - `CHECK (num_nonnulls(artist_id, release_group_id, recording_id) = 1)`: un objetivo exacto por valoración.
 - `CHECK (stars BETWEEN 0.5 AND 5 AND stars = ROUND(stars*2)/2.0)`: pasos de 0.5.
 - `CHECK` de banda: la valoración detallada, si existe, debe caer dentro del rango de 10 puntos que corresponde a las estrellas elegidas — la regla de coherencia definida en `01-domain/business-rules.md`, aplicada matemáticamente, no solo documentada.
