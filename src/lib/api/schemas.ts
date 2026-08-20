@@ -115,6 +115,12 @@ export const ErrorCodeSchema = z.enum([
   "RATING_NOT_FOUND",
   "COMMENT_NOT_FOUND",
   "INTERNAL_ERROR",
+  "EMAIL_TAKEN_BY_LOCAL",
+  "OAUTH_CONFIG_MISSING",
+  "OAUTH_STATE_INVALID",
+  "OAUTH_CANCELLED",
+  "OAUTH_CALLBACK_INVALID",
+  "OAUTH_TOKEN_INVALID",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 

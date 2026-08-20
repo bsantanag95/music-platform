@@ -146,6 +146,48 @@ persistencia y la interfaz de proveedores externos. Google se implementará inme
 como el primer incremento posterior de autenticación, sin cambiar el modelo de sesión ni el
 modelo de usuario.
 
+**Username para altas nuevas vía Google.** Cuando el flujo crea un `app_user` nuevo a partir de
+una identidad de Google, el username se deriva del local-part del email (la parte antes de `@`),
+saneado al mismo patrón que ya rige el registro local: `^[a-zA-Z0-9_]+$`, entre 3 y 32 caracteres.
+Si el resultado queda por debajo de 3 caracteres se completa; si excede 32 se trunca. Si el
+username saneado ya existe, se agrega un sufijo numérico incremental (`nombre`, `nombre2`,
+`nombre3`, ...) hasta encontrar uno libre. Esta resolución vive en el mismo servicio que ya
+valida `USERNAME_TAKEN` para el registro local (`src/services/auth/users.ts` o equivalente para
+el adaptador de Google), no en el adaptador de proveedor.
+
+**Email de Google que ya pertenece a una cuenta local.** Si el email que entrega Google coincide
+con el de un `app_user` existente que no tiene esa identidad vinculada, el flujo no crea una
+cuenta nueva ni ofrece vinculación implícita — devuelve un error machine-readable indicando que
+ya existe una cuenta con ese email y que debe iniciar sesión con contraseña para, opcionalmente,
+vincular Google después desde una sesión autenticada. No se expone un flujo de merge ni de
+auto-link en este punto.
+
+**Vinculación explícita — fuera de alcance de este incremento.** Aunque ADR 0010 define la
+vinculación como una operación distinta del login y la deja prevista arquitectónicamente, este
+incremento de Google **no implementa** la ruta ni la UI de vinculación desde una cuenta ya
+autenticada. Queda diferida a una fase posterior, condicionada a la existencia de una página de
+perfil/configuración donde tenga sentido ofrecerla. Ningún agente debe agregar rutas ni UI de
+linking como parte de este cambio.
+
+**Retorno post-autenticación.** El destino tras un login o alta exitosa vía Google es fijo:
+`/search`. No se acepta un parámetro `returnTo` dinámico ni ninguna URL de retorno controlada por
+el cliente, para evitar abrir una redirección abierta.
+
+**Dependencia `jose`.** Se aprueba `jose` como dependencia para la validación de ID tokens y JWKS
+del flujo OIDC, en lugar de implementar esa criptografía manualmente. Ver `package.json` /
+`.env.example` para las variables de configuración de Google asociadas.
+
+**`email_verified` no cambia el resultado ante colisión.** La columna `app_user.email` tiene
+restricción `UNIQUE`; un intento de alta con un email que ya pertenece a una cuenta local
+conflictúa a nivel de base de datos sin importar el valor de `email_verified` del ID token —
+no hay forma de crear la cuenta nueva igual sin violar esa restricción. Por lo tanto, ante
+colisión de email con una cuenta local existente, el flujo siempre responde `EMAIL_TAKEN_BY_LOCAL`,
+tenga o no `email_verified=true`. El claim `email_verified` no se usa para decidir el
+comportamiento del alta: se acepta como limitación conocida que alguien con un email ajeno sin
+verificar en su perfil de Google puede inferir, a través del intento de login, si ese email tiene
+cuenta local — el mismo tipo de señal que ya expone el propio registro local (`EMAIL_TAKEN` en
+`POST /api/auth/register`) para credenciales locales, así que no introduce una superficie nueva.
+
 ## Qué no decide este documento
 
 Deliberadamente fuera de alcance acá:

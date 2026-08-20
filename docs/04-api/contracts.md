@@ -11,6 +11,7 @@ Busca (o ingiere bajo demanda) un artista por nombre y su discografía completa.
 **Query params:** `q` (string, requerido).
 
 **200 OK**
+
 ```json
 {
   "artist": {
@@ -19,10 +20,10 @@ Busca (o ingiere bajo demanda) un artista por nombre y su discografía completa.
     "type": "person | group | various | unknown",
     "name": "string",
     "bio": "string | null",
-      "photoUrl": "string | null",
-      "createdAt": "ISO 8601",
-      "discographySyncedAt": "ISO 8601 | null",
-      "membershipsSyncedAt": "ISO 8601 | null"
+    "photoUrl": "string | null",
+    "createdAt": "ISO 8601",
+    "discographySyncedAt": "ISO 8601 | null",
+    "membershipsSyncedAt": "ISO 8601 | null"
   },
   "releaseGroups": [
     {
@@ -48,6 +49,7 @@ Trae (o ingiere bajo demanda) el tracklist de la edición "oficial" de un álbum
 conocido por su `id` propio (no `mbid`).
 
 **200 OK**
+
 ```json
 {
   "release": {
@@ -67,7 +69,12 @@ conocido por su `id` propio (no `mbid`).
       "title": "string",
       "durationSec": "int | null",
       "credits": [
-        { "artistId": "uuid", "name": "string", "role": "primary | featured", "joinPhrase": "string | null" }
+        {
+          "artistId": "uuid",
+          "name": "string",
+          "role": "primary | featured",
+          "joinPhrase": "string | null"
+        }
       ]
     }
   ]
@@ -95,6 +102,7 @@ del perfil de artista, de modo que cargar las carátulas de un artista frío no 
 la ingesta de cada tracklist (0 llamadas a MusicBrainz por álbum).
 
 **200 OK**
+
 ```json
 {
   "cover": "string | null"
@@ -126,11 +134,36 @@ La lectura no ingesta desde MusicBrainz ni resuelve carátulas externamente.
 `code: RECORDING_NOT_FOUND` si no existe la grabación.
 
 **200 OK**
+
 ```json
 {
-  "recording": { "id": "uuid", "mbid": "uuid | null", "title": "string", "durationSec": "int | null", "variantType": "original | re_recording | remix | live" },
-  "credits": [{ "artistId": "uuid", "name": "string", "role": "primary | featured", "joinPhrase": "string | null" }],
-  "appearances": [{ "releaseId": "uuid", "releaseGroupId": "uuid", "albumTitle": "string", "editionLabel": "string", "releaseDate": "YYYY-MM-DD | null", "coverThumbUrl": "string | null", "discNumber": "int", "position": "int" }]
+  "recording": {
+    "id": "uuid",
+    "mbid": "uuid | null",
+    "title": "string",
+    "durationSec": "int | null",
+    "variantType": "original | re_recording | remix | live"
+  },
+  "credits": [
+    {
+      "artistId": "uuid",
+      "name": "string",
+      "role": "primary | featured",
+      "joinPhrase": "string | null"
+    }
+  ],
+  "appearances": [
+    {
+      "releaseId": "uuid",
+      "releaseGroupId": "uuid",
+      "albumTitle": "string",
+      "editionLabel": "string",
+      "releaseDate": "YYYY-MM-DD | null",
+      "coverThumbUrl": "string | null",
+      "discNumber": "int",
+      "position": "int"
+    }
+  ]
 }
 ```
 
@@ -152,6 +185,43 @@ en operaciones protegidas; no se revela si la sesión existió. Logout solo revo
 
 La cookie opaca `music_session` es `httpOnly`, `secure`, `sameSite=lax`, con expiración fija de 30
 días. Los errores posibles están en `docs/04-api/errors.md` y `src/lib/api/schemas.ts`.
+
+## Autenticación externa — Google (OAuth 2.0 + OIDC)
+
+`GET /api/auth/google/start` no recibe parámetros. Genera `state`, `code_verifier`/
+`code_challenge` (PKCE S256) y `nonce`, los persiste en cookies `httpOnly`, `secure`,
+`sameSite=lax` de corta duración (~10 min), y redirige (302) a la authorization URL de Google
+con scopes fijos `openid email profile`.
+
+`GET /api/auth/google/callback` recibe los query params que devuelve Google (`code`, `state` y,
+en caso de cancelación o error, `error`). Valida `state` contra la cookie, intercambia el
+authorization code exclusivamente en el backend (`redirect_uri` siempre el configurado en
+`.env`, nunca uno de la request), y valida el ID token con `jose` (issuer, audience, firma JWKS,
+expiración, `nonce`).
+
+Resuelve la identidad por `(provider='google', provider_account_id=sub)`:
+
+- Si existe, autentica al `app_user` asociado.
+- Si no existe y el email del ID token (con `email_verified=true`) coincide con una cuenta local
+  sin esa identidad vinculada, no crea nada y termina en `EMAIL_TAKEN_BY_LOCAL`.
+- Si no existe y no hay coincidencia (o `email_verified=false`), crea `app_user` + `auth_identity`
+  en una transacción, sin `password_hash`. El username se deriva del local-part del email
+  (`auth.md` sección 6): saneado a `^[a-zA-Z0-9_]+$`, 3–32 caracteres, sufijo numérico
+  incremental en colisión.
+
+En cualquier resultado exitoso (identidad existente o alta nueva), rota o crea la sesión
+(`rotateCurrentSession`/`createSession`), setea la cookie `music_session` con los mismos
+atributos que el login local, y redirige (302) a `/search` de forma fija — no existe un
+parámetro `returnTo` ni ninguna URL de retorno controlada por el cliente.
+
+Ante cualquier error (`state` inválido, cancelación, callback malformado, token inválido o email
+ya tomado localmente), el callback no devuelve JSON: redirige a una página localizada de error
+con el `code` correspondiente como query param, ya que el callback es una navegación del
+navegador y no un `fetch` del cliente. Ver `docs/04-api/errors.md` para el catálogo completo de
+códigos `OAUTH_*` y su excepción de transporte.
+
+No hay ruta de vinculación (linking) de Google con una cuenta local ya autenticada en este
+incremento — queda diferida a una fase posterior (`auth.md` sección 6, ADR 0010).
 
 ## Ratings y comentarios
 

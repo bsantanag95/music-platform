@@ -116,6 +116,10 @@ el almacenamiento y ciclo de vida de esos tokens deberán evaluarse como una dec
   de sesión. Cualquier cambio del mecanismo de sesión seguirá requiriendo revisar ADR 0008.
 - Ningún agente de ejecución debe implementar vinculación por email ni almacenar tokens OAuth sin
   una decisión explícita que reabra este ADR.
+- La vinculación explícita de una identidad externa con un `app_user` autenticado, prevista
+  arquitectónicamente en este ADR, queda diferida como funcionalidad a implementar: el primer
+  incremento de Google (login/registro) no la incluye. Se retoma cuando exista una página de
+  perfil/configuración desde la cual iniciarla.
 
 La autenticación local de la Fase 4 y la preparación de `auth_identity` no habilitan todavía un
 proveedor externo. Google se implementará inmediatamente después de cerrar esa fase, como un

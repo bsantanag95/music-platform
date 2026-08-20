@@ -39,6 +39,12 @@ además del `error` legible:
 | `RATING_NOT_FOUND` | 404 | No existe un rating propio para borrar. |
 | `COMMENT_NOT_FOUND` | 404 | No existe el comentario solicitado. |
 | `INTERNAL_ERROR` | 500 | Cualquier error no controlado (ej. MusicBrainz caído durante la ingesta fría, timeout, error de base de datos) — capturado por `withErrorHandling`, que devuelve este shape en vez de un 500 sin body. La marca de memberships no se escribe ante este error. |
+| `EMAIL_TAKEN_BY_LOCAL` | 409 | Google OAuth: el email del ID token coincide con una cuenta local existente sin esa identidad vinculada, por conflicto de la restricción `UNIQUE(email)` (`auth.md` sección 6). Aplica sin importar `email_verified`. |
+| `OAUTH_CONFIG_MISSING` | 503 | `GET /api/auth/google/start`: faltan variables de entorno de Google al iniciar el flujo (fail-closed). |
+| `OAUTH_STATE_INVALID` | 400 | `GET /api/auth/google/callback`: el `state` del callback no coincide con la cookie, o la cookie expiró/no existe. |
+| `OAUTH_CANCELLED` | 400 | `GET /api/auth/google/callback`: Google devolvió `error=access_denied` u otro `error` indicando que el usuario canceló el consentimiento. |
+| `OAUTH_CALLBACK_INVALID` | 400 | `GET /api/auth/google/callback`: parámetros del callback malformados o el intercambio del authorization code falló. |
+| `OAUTH_TOKEN_INVALID` | 400 | `GET /api/auth/google/callback`: el ID token de Google no pasó validación (issuer, audience, firma JWKS, expiración o `nonce`). |
 
 ### Implementación
 
@@ -51,6 +57,17 @@ devuelve `INTERNAL_ERROR` ante cualquier excepción no manejada explícitamente.
 `src/lib/api/schemas.ts` (Etapa 3.0) define `ApiErrorSchema` con `code` como enum de los
 valores de la tabla de arriba. `src/lib/api/client.ts` parsea toda respuesta no-2xx contra
 ese schema y lanza un `ApiError` tipado con `.code`, nunca el string de `error` crudo.
+
+### Excepción: errores de `GET /api/auth/google/callback`
+
+Los seis códigos `OAUTH_*` y `EMAIL_TAKEN_BY_LOCAL` originados en el callback de Google **no**
+se devuelven como el shape JSON `{ error, code }` de la tabla anterior. El callback es una
+navegación completa del navegador (el usuario llega ahí redirigido por Google, no vía `fetch`),
+así que un body JSON no es visible ni útil. En su lugar, el route handler redirige a una página
+localizada de error (`/{locale}/auth/error?code=OAUTH_STATE_INVALID`, por ejemplo), y esa página
+resuelve el texto contra el mismo namespace `messages/{locale}/errors.json` que usa el resto de
+la app. El `code` sigue siendo el mismo valor estable del enum — cambia el transporte, no el
+catálogo.
 
 ### Mapeo de `code` a texto visible (i18n)
 
