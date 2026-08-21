@@ -7,6 +7,7 @@ implementación.
 
 | Documento | Fase | Estado |
 |---|---|---|
+| [`phase-5-design.md`](./phase-5-design.md) | 5 | 🟡 Diseño maestro en definición |
 | [`catalog-browsing.md`](./catalog-browsing.md) | 3 | ✅ Especificado, backend listo |
 | [`ratings-and-reviews.md`](./ratings-and-reviews.md) | 4 | ✅ Implementado y validado |
 | [`listening-diary-and-ratings.md`](./listening-diary-and-ratings.md) | 4-5 | 🟡 Propuesta de diseño |
