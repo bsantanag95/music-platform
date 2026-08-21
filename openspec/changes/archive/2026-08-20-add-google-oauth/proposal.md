@@ -20,13 +20,20 @@ documentan ADR 0010 (Consecuencias) y `docs/02-architecture/auth.md` sección 6.
   audience, firma (JWKS), expiración y `redirect_uri` usando la dependencia `jose`.
 - Resolver o crear `app_user` + `auth_identity` en una transacción cuando la identidad no
   existe; username derivado del local-part del email (saneado 3–32 chars, relleno si <3,
-  truncado a 32, sufijo numérico incremental en colisión).
+  truncado a 32, sufijo numérico incremental en colisión, reintentando la derivación dentro de
+  la misma operación ante colisiones por carrera).
+- Exigir `email_verified=true` en el ID token para altas nuevas: con `false`/ausente se
+  responde `OAUTH_EMAIL_NOT_VERIFIED` y no se crea nada.
 - Si el email de Google ya pertenece a una cuenta local sin esa identidad vinculada, devolver
   un error machine-readable ("ya existe, iniciá sesión con contraseña") — nunca crear cuenta
   nueva ni vincular implícitamente por email.
-- Redirigir post-autenticación a `/search`, fijo, sin `returnTo` dinámico.
+- Redirigir post-autenticación a `/<locale>/search`, fijo, sin `returnTo` dinámico; el locale
+  se valida contra la whitelist de locales soportados y se persiste en el estado del flujo
+  (evita redirección abierta vía query param controlable).
 - Agregar el botón "Continuar con Google" en las páginas de login y registro, con estados
-  localizados; sin UI de vinculación.
+  localizados y el locale de la página en el enlace; sin UI de vinculación.
+- Rate limiting del flujo por IP con el limitador en memoria existente (`oauth:start:ip:...` y
+  `oauth:callback:ip:...`, con limpieza del contador al completar con éxito).
 - No almacenar access ni refresh tokens de Google; los secretos viven solo en variables de
   entorno.
 - Sin migración SQL: `auth_identity` y `password_hash` nullable ya existen.
@@ -56,7 +63,7 @@ capacidad nueva y no altera las de catálogo/i18n existentes)_
   `es`/`en`, sin flujo OAuth en componentes cliente.
 - **Dependencias**: `jose` (aprobada en `auth.md` sección 6).
 - **Configuración**: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`,
-  `GOOGLE_OAUTH_SCOPES` en `.env` (ya documentadas en `.env.example`).
+  `GOOGLE_OAUTH_SCOPES` en `.env` y `NEXT_PUBLIC_APP_URL` (todo documentado en `.env.example`).
 - **Documentación**: `docs/04-api/contracts.md`, `docs/04-api/errors.md`; verificar
   consistencia de `docs/02-architecture/auth.md` y `docs/02-architecture/adr/0010`.
 - **Pruebas**: unitarias del adaptador y del flujo, route handlers, smoke test con BD scratch.

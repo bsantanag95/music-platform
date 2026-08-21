@@ -1,26 +1,39 @@
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
 import { appUser, authIdentity } from "@/db/schema";
-import { BaseAuthProviderAdapter, type ExternalIdentity } from ".";
+import { BaseAuthProviderAdapter, type ExternalIdentity, type GoogleIdTokenClaims } from ".";
 
-class ProviderDePrueba extends BaseAuthProviderAdapter<{ sub: string; email?: string }> {
+class ProviderDePrueba extends BaseAuthProviderAdapter {
   readonly provider = "https://issuer.example.test";
   readonly protocol = "oidc" as const;
 
-  toIdentity(profile: { sub: string; email?: string }): ExternalIdentity {
+  buildAuthUrl(): string {
+    return "https://issuer.example.test/auth";
+  }
+
+  async exchangeCode(): Promise<{ idToken: string; accessToken: string; tokenType: string; expiresIn: number }> {
+    return { idToken: "id", accessToken: "at", tokenType: "Bearer", expiresIn: 3600 };
+  }
+
+  async validateIdToken(): Promise<GoogleIdTokenClaims> {
+    return { sub: "usuario-123", email: "ana@example.com", emailVerified: true, nonce: "n" };
+  }
+
+  toIdentity(claims: GoogleIdTokenClaims): ExternalIdentity {
     return {
       provider: this.provider,
-      providerAccountId: profile.sub,
-      email: profile.email,
+      providerAccountId: claims.sub,
+      email: claims.email,
     };
   }
 }
 
 describe("adaptadores de proveedores de auth", () => {
-  it("traduce la identidad estable sin implementar el flujo OAuth", () => {
+  it("traduce la identidad estable desde los claims validados", () => {
     const adapter = new ProviderDePrueba();
+    const claims: GoogleIdTokenClaims = { sub: "usuario-123", email: "ana@example.com", emailVerified: true, nonce: "n" };
 
-    expect(adapter.toIdentity({ sub: "usuario-123", email: "ana@example.com" })).toEqual({
+    expect(adapter.toIdentity(claims)).toEqual({
       provider: "https://issuer.example.test",
       providerAccountId: "usuario-123",
       email: "ana@example.com",

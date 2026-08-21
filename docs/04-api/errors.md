@@ -32,7 +32,7 @@ además del `error` legible:
 | `AUTH_REQUIRED` | 401 | Falta una sesión válida para una operación protegida. |
 | `INVALID_CREDENTIALS` | 401 | Login fallido; no revela si falló el identificador o la contraseña. |
 | `USERNAME_TAKEN` / `EMAIL_TAKEN` | 409 | El registro duplicaría una cuenta existente. |
-| `RATE_LIMITED` | 429 | Se superó el límite temporal de login o registro. |
+| `RATE_LIMITED` | 429 | Se superó el límite temporal de login o registro, o del flujo OAuth de Google (`/start` y `/callback` limitan por IP; el callback redirige a la página de error con este código). |
 | `PERMISSION_DENIED` | 403 | El usuario no puede modificar el recurso. |
 | `INVALID_TARGET` | 400/404 | Tipo, UUID u objetivo inexistente. |
 | `INVALID_RATING` / `INVALID_COMMENT` | 400 | Entrada social inválida. |
@@ -44,7 +44,8 @@ además del `error` legible:
 | `OAUTH_STATE_INVALID` | 400 | `GET /api/auth/google/callback`: el `state` del callback no coincide con la cookie, o la cookie expiró/no existe. |
 | `OAUTH_CANCELLED` | 400 | `GET /api/auth/google/callback`: Google devolvió `error=access_denied` u otro `error` indicando que el usuario canceló el consentimiento. |
 | `OAUTH_CALLBACK_INVALID` | 400 | `GET /api/auth/google/callback`: parámetros del callback malformados o el intercambio del authorization code falló. |
-| `OAUTH_TOKEN_INVALID` | 400 | `GET /api/auth/google/callback`: el ID token de Google no pasó validación (issuer, audience, firma JWKS, expiración o `nonce`). |
+| `OAUTH_TOKEN_INVALID` | 400 | `GET /api/auth/google/callback`: el ID token de Google no pasó validación (issuer, audience, firma JWKS RS256, expiración o `nonce`). |
+| `OAUTH_EMAIL_NOT_VERIFIED` | 400 | `GET /api/auth/google/callback`: el ID token trae `email_verified=false`/ausente y no existe identidad vinculada, por lo que no se crea la cuenta nueva (`auth.md` sección 6). |
 
 ### Implementación
 
@@ -60,14 +61,16 @@ ese schema y lanza un `ApiError` tipado con `.code`, nunca el string de `error` 
 
 ### Excepción: errores de `GET /api/auth/google/callback`
 
-Los seis códigos `OAUTH_*` y `EMAIL_TAKEN_BY_LOCAL` originados en el callback de Google **no**
-se devuelven como el shape JSON `{ error, code }` de la tabla anterior. El callback es una
-navegación completa del navegador (el usuario llega ahí redirigido por Google, no vía `fetch`),
-así que un body JSON no es visible ni útil. En su lugar, el route handler redirige a una página
-localizada de error (`/{locale}/auth/error?code=OAUTH_STATE_INVALID`, por ejemplo), y esa página
-resuelve el texto contra el mismo namespace `messages/{locale}/errors.json` que usa el resto de
-la app. El `code` sigue siendo el mismo valor estable del enum — cambia el transporte, no el
-catálogo.
+Los códigos `OAUTH_*`, `EMAIL_TAKEN_BY_LOCAL` y `RATE_LIMITED` originados en el callback de
+Google **no** se devuelven como el shape JSON `{ error, code }` de la tabla anterior. El callback
+es una navegación completa del navegador (el usuario llega ahí redirigido por Google, no vía
+`fetch`), así que un body JSON no es visible ni útil. En su lugar, el route handler redirige a una
+página localizada de error (`/{locale}/auth/error?code=OAUTH_STATE_INVALID`, por ejemplo), y esa
+página resuelve el texto contra el mismo namespace `messages/{locale}/errors.json` que usa el resto
+de la app. El `code` sigue siendo el mismo valor estable del enum — cambia el transporte, no el
+catálogo. `GET /api/auth/google/start` usa el mismo mecanismo de redirect para `RATE_LIMITED` (la
+página de error), mientras que `OAUTH_CONFIG_MISSING` desde `/start` se mantiene como JSON 503 (el
+flujo nunca arranca).
 
 ### Mapeo de `code` a texto visible (i18n)
 

@@ -188,37 +188,44 @@ días. Los errores posibles están en `docs/04-api/errors.md` y `src/lib/api/sch
 
 ## Autenticación externa — Google (OAuth 2.0 + OIDC)
 
-`GET /api/auth/google/start` no recibe parámetros. Genera `state`, `code_verifier`/
-`code_challenge` (PKCE S256) y `nonce`, los persiste en cookies `httpOnly`, `secure`,
-`sameSite=lax` de corta duración (~10 min), y redirige (302) a la authorization URL de Google
-con scopes fijos `openid email profile`.
+`GET /api/auth/google/start` recibe el query param opcional `locale` (validado contra los locales
+soportados, default `es`). Genera `state`, `code_verifier`/`code_challenge` (PKCE S256) y `nonce`,
+los persiste en cookies `httpOnly`, `secure`, `sameSite=lax` de corta duración (~10 min)
+incluyendo el `locale`, y redirige (307) a la authorization URL de Google con scopes fijos
+`openid email profile`.
 
 `GET /api/auth/google/callback` recibe los query params que devuelve Google (`code`, `state` y,
 en caso de cancelación o error, `error`). Valida `state` contra la cookie, intercambia el
 authorization code exclusivamente en el backend (`redirect_uri` siempre el configurado en
-`.env`, nunca uno de la request), y valida el ID token con `jose` (issuer, audience, firma JWKS,
-expiración, `nonce`).
+`.env`, nunca uno de la request), y valida el ID token con `jose` (issuer, audience, firma JWKS
+RS256, expiración, `nonce`). Aplica rate limiting por IP al intercambio; al superarlo redirige a la
+página de error con `RATE_LIMITED`.
 
 Resuelve la identidad por `(provider='google', provider_account_id=sub)`:
 
 - Si existe, autentica al `app_user` asociado.
 - Si no existe y el email del ID token (con `email_verified=true`) coincide con una cuenta local
   sin esa identidad vinculada, no crea nada y termina en `EMAIL_TAKEN_BY_LOCAL`.
-- Si no existe y no hay coincidencia (o `email_verified=false`), crea `app_user` + `auth_identity`
+- Si no existe, `email_verified=false` o `email_verified` ausente, no crea nada y termina en
+  `OAUTH_EMAIL_NOT_VERIFIED` (se exige email verificado para dar de alta cuentas nuevas).
+- Si no existe, no hay coincidencia y `email_verified=true`, crea `app_user` + `auth_identity`
   en una transacción, sin `password_hash`. El username se deriva del local-part del email
   (`auth.md` sección 6): saneado a `^[a-zA-Z0-9_]+$`, 3–32 caracteres, sufijo numérico
-  incremental en colisión.
+  incremental en colisión, reintentando la derivación dentro de la misma operación ante colisiones
+  por carrera.
 
 En cualquier resultado exitoso (identidad existente o alta nueva), rota o crea la sesión
 (`rotateCurrentSession`/`createSession`), setea la cookie `music_session` con los mismos
-atributos que el login local, y redirige (302) a `/search` de forma fija — no existe un
-parámetro `returnTo` ni ninguna URL de retorno controlada por el cliente.
+atributos que el login local, y redirige (307) a `/<locale>/search` de forma fija, usando el
+`locale` persistido en las cookies del flujo — no existe un parámetro `returnTo` ni ninguna URL de
+retorno controlada por el cliente.
 
-Ante cualquier error (`state` inválido, cancelación, callback malformado, token inválido o email
-ya tomado localmente), el callback no devuelve JSON: redirige a una página localizada de error
-con el `code` correspondiente como query param, ya que el callback es una navegación del
-navegador y no un `fetch` del cliente. Ver `docs/04-api/errors.md` para el catálogo completo de
-códigos `OAUTH_*` y su excepción de transporte.
+Ante cualquier error (`state` inválido, cancelación, callback malformado, token inválido, email
+no verificado, email ya tomado localmente o rate limit), el callback no devuelve JSON: redirige a
+una página localizada de error (`/<locale>/auth/error?code=...`) con el `code` correspondiente como
+query param, ya que el callback es una navegación del navegador y no un `fetch` del cliente. Ver
+`docs/04-api/errors.md` para el catálogo completo de códigos `OAUTH_*` y su excepción de
+transporte.
 
 No hay ruta de vinculación (linking) de Google con una cuenta local ya autenticada en este
 incremento — queda diferida a una fase posterior (`auth.md` sección 6, ADR 0010).

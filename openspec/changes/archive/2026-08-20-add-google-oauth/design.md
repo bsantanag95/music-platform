@@ -24,7 +24,8 @@ queda diferida a una fase posterior (página de perfil/configuración), según A
   transacción, con resolución de username para altas nuevas.
 - Desembocar siempre en la sesión server-side existente (cookie `music_session`).
 - No almacenar access/refresh tokens de Google; secretos solo en variables de entorno.
-- Redirigir post-autenticación a `/search` de forma fija.
+- Redirigir post-autenticación a `/<locale>/search` de forma fija (locale validado y persistido
+  en el estado del flujo).
 
 **Non-Goals:**
 
@@ -77,14 +78,18 @@ siempre el configurado en `.env` — nunca uno de la request.
 En el servicio compartido (`src/services/auth/identities.ts`):
 
 - Buscar `auth_identity` por `(provider='google', provider_account_id=sub)`.
-- Si existe → devolver el `app_user` asociado.
-- Si no existe → verificar el email del ID token (con `email_verified`) contra `app_user`:
+- Si existe → devolver el `app_user` asociado (no se vuelve a exigir `email_verified`).
+- Si no existe y `email_verified` no es `true` en el ID token → error `OAUTH_EMAIL_NOT_VERIFIED`
+  (sin crear nada).
+- Si no existe y `email_verified=true` → verificar el email del ID token contra `app_user`:
   - Si ya existe una cuenta local con ese email y sin esa identidad → error
     `EMAIL_TAKEN_BY_LOCAL` (sin crear nada).
   - Si no → insertar `app_user` + `auth_identity` en una transacción. El username se deriva
-    en `src/services/auth/users.ts` (no en el adaptador): local-part del email saneado a
-    `^[a-zA-Z0-9_]+$`, relleno si <3, truncado a 32, sufijo numérico incremental en
-    colisión (`nombre`, `nombre2`, `nombre3`, ...).
+    del local-part del email: local-part saneado a `^[a-zA-Z0-9_]+$`, relleno si <3, truncado
+    a 32, sufijo numérico incremental en colisión (`nombre`, `nombre2`, `nombre3`, ...).
+    Ante una violación de unicidad por carrera (dos altas concurrentes con el mismo username),
+    se reintenta la derivación con el siguiente sufijo dentro de la misma operación; si la
+    colisión es de email, se responde `EMAIL_TAKEN_BY_LOCAL`.
 
 La creación de usuario e identidad comparte la lógica de validación de unicidad existente
 (`users.ts`) para que `USERNAME_TAKEN` no sea un error, sino la señal para probar el
@@ -93,13 +98,19 @@ Google; los repetidos tras éxito no crean duplicados porque la identidad ya res
 
 ### 5. Rutas de la API
 
-- `GET /api/auth/google/start` → genera el estado del flujo y redirige a Google.
-- `GET /api/auth/google/callback` → valida, resuelve/crea usuario, rota o crea la sesión
-  (`rotateCurrentSession`/`createSession`), setea la cookie y redirige a `/search` (301/302
-  sin `returnTo` dinámico).
+- `GET /api/auth/google/start` → acepta `?locale=` (validado contra los locales soportados,
+  default `es`), genera el estado del flujo incluyendo el locale, lo persiste en cookies, aplica
+  rate limiting por IP (`oauth:start:ip:...`) y redirige a Google. Si faltan variables de
+  entorno de Google, falla de forma controlada con `OAUTH_CONFIG_MISSING` (503).
+- `GET /api/auth/google/callback` → aplica rate limiting por IP (`oauth:callback:ip:...`),
+  valida, resuelve/crea usuario (ver sección 4), rota o crea la sesión
+  (`rotateCurrentSession`/`createSession`), setea la cookie, limpia el contador de rate limit y
+  redirige a `/<locale>/search` (fijo, sin `returnTo` dinámico). Los errores se redirigen a la
+  página de error localizada en el locale persistido del flujo.
 - Ambas envueltas en `withErrorHandling`. Los errores del callback se mapean a códigos
-  machine-readable (`errors.md`) y, cuando corresponda, a una página localizada de error
-  (el callback es una navegación del navegador, no una llamada `fetch` del cliente).
+  machine-readable (`errors.md`) y se redirigen a una página localizada de error con el `code`
+  como query param (el callback es una navegación del navegador, no una llamada `fetch` del
+  cliente).
 
 Alternativa descartada: implementar el inicio y callback dentro de `/api/auth/login`.
 Se descarta porque mezcla los dos métodos de autenticación y complica la lectura de
@@ -108,10 +119,13 @@ secretos y el manejo de errores del flujo OAuth.
 ### 6. Frontend
 
 Botón "Continuar con Google" en las páginas de login y registro: es un enlace a
-`/api/auth/google/start` (navegación del navegador, no `fetch`), sin lógica OAuth en
-componentes cliente. Mensajes localizados (`es`/`en`) para el botón y para los estados de
-error del callback (cancelación, sesión expirada del flujo, email ya existente como cuenta
-local). El retorno fijo a `/search` evita redirección abierta.
+`/api/auth/google/start?locale=<locale>` (navegación del navegador, no `fetch`), sin lógica
+OAuth en componentes cliente. Mensajes localizados (`es`/`en`) para el botón y para los estados
+de error del callback (cancelación, sesión expirada del flujo, email no verificado, email ya
+existente como cuenta local y rate limit). El retorno fijo a `/<locale>/search` con el locale
+persistido en el estado del flujo evita redirección abierta: Google no devuelve `locale` en su
+redirect, de modo que persistirlo en `oauth_state` es lo que preserva el idioma desde el que se
+inició el flujo.
 
 ### 7. Configuración
 
@@ -131,6 +145,12 @@ el flujo (fail-closed), igual que el patrón de `MUSICBRAINZ_USER_AGENT`.
   transacción; la unicidad de `app_user.username` queda garantizada por la BD.
 - [Email de Google ya usado por cuenta local] → error machine-readable sin auto-link; sin
   exponer flujo de merge (decisión de producto ya cerrada).
+- [Email del ID token sin verificar] → el alta nueva exige `email_verified=true`; con
+  `false`/ausente se responde `OAUTH_EMAIL_NOT_VERIFIED` y no se crea nada, evitando
+  registrarse reclamando un email que no se controla en la cuenta de Google.
+- [Locale controlable redirige a un dominio externo (open redirect)] → el locale se valida
+  contra la whitelist de locales soportados y se persiste en el estado del flujo; el callback
+  no vuelve a confiar en un query param controlable para construir el redirect de error.
 - [Callback es una navegación del navegador, no un request `fetch`] → los errores no pueden
   devolverse en el shape JSON habitual; se redirige a una página localizada de error de
   autenticación con el `code` correspondiente.
@@ -153,4 +173,4 @@ el flujo (fail-closed), igual que el patrón de `MUSICBRAINZ_USER_AGENT`.
 ## Open Questions
 
 - Ninguna bloqueante: las decisiones de producto (username, email colisionado, retorno fijo
-  `/search`, `jose`) están cerradas y documentadas en `auth.md` sección 6 y ADR 0010.
+  `/<locale>/search`, `jose`) están cerradas y documentadas en `auth.md` sección 6 y ADR 0010.

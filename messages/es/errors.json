@@ -30,5 +30,33 @@
   "INTERNAL_ERROR": {
     "title": "Error inesperado",
     "description": "No pudimos completar la solicitud. Intentá de nuevo en un momento."
+  },
+  "OAUTH_CONFIG_MISSING": {
+    "title": "Inicio de sesión con Google no disponible",
+    "description": "El inicio de sesión con Google no está configurado en este momento."
+  },
+  "OAUTH_STATE_INVALID": {
+    "title": "Sesión de autenticación expirada",
+    "description": "La sesión de inicio de sesión con Google expiró. Intentá de nuevo."
+  },
+  "OAUTH_CANCELLED": {
+    "title": "Inicio de sesión cancelado",
+    "description": "Cancelaste el inicio de sesión con Google. Podés intentarlo de nuevo cuando quieras."
+  },
+  "OAUTH_CALLBACK_INVALID": {
+    "title": "Error en el inicio de sesión",
+    "description": "No pudimos completar el inicio de sesión con Google. Intentá de nuevo."
+  },
+  "OAUTH_TOKEN_INVALID": {
+    "title": "Token de Google inválido",
+    "description": "No pudimos verificar tu identidad con Google. Intentá de nuevo."
+  },
+  "OAUTH_EMAIL_NOT_VERIFIED": {
+    "title": "Email de Google no verificado",
+    "description": "Tu email de Google no está verificado. Verificá tu email en Google e intentá de nuevo."
+  },
+  "EMAIL_TAKEN_BY_LOCAL": {
+    "title": "Ya existe una cuenta con ese email",
+    "description": "Ya tenés una cuenta con ese email. Iniciá sesión con tu contraseña para continuar."
   }
 }

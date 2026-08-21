@@ -1,14 +1,16 @@
-import type { AuthProviderProtocol, ExternalIdentity } from "./types";
+import type {
+  AuthProviderProtocol,
+  ExternalIdentity,
+  GoogleIdTokenClaims,
+  OAuthFlowParams,
+  OAuthTokenResponse,
+} from "./types";
 
-/**
- * Traduce un perfil de proveedor ya validado a la identidad comun de la app.
- *
- * El adaptador no inicia OAuth, no intercambia authorization codes y no crea
- * sesiones: esas responsabilidades pertenecen al flujo de autenticacion
- * compartido que se implementara cuando se habilite un proveedor.
- */
-export interface AuthProviderAdapter<TProfile = unknown> {
+export interface AuthProviderAdapter {
   readonly provider: string;
   readonly protocol: AuthProviderProtocol;
-  toIdentity(profile: TProfile): ExternalIdentity;
+  buildAuthUrl(params: OAuthFlowParams): string;
+  exchangeCode(code: string, codeVerifier: string): Promise<OAuthTokenResponse>;
+  validateIdToken(idToken: string, nonce: string): Promise<GoogleIdTokenClaims>;
+  toIdentity(claims: GoogleIdTokenClaims): ExternalIdentity;
 }

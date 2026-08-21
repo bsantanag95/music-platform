@@ -30,5 +30,33 @@
   "INTERNAL_ERROR": {
     "title": "Unexpected error",
     "description": "We couldn't complete the request. Please try again in a moment."
+  },
+  "OAUTH_CONFIG_MISSING": {
+    "title": "Google sign-in unavailable",
+    "description": "Google sign-in is not configured at this time."
+  },
+  "OAUTH_STATE_INVALID": {
+    "title": "Authentication session expired",
+    "description": "The Google sign-in session expired. Please try again."
+  },
+  "OAUTH_CANCELLED": {
+    "title": "Sign-in cancelled",
+    "description": "You cancelled the Google sign-in. You can try again whenever you want."
+  },
+  "OAUTH_CALLBACK_INVALID": {
+    "title": "Sign-in error",
+    "description": "We couldn't complete the Google sign-in. Please try again."
+  },
+  "OAUTH_TOKEN_INVALID": {
+    "title": "Invalid Google token",
+    "description": "We couldn't verify your identity with Google. Please try again."
+  },
+  "OAUTH_EMAIL_NOT_VERIFIED": {
+    "title": "Google email not verified",
+    "description": "Your Google email is not verified. Verify your email on Google and try again."
+  },
+  "EMAIL_TAKEN_BY_LOCAL": {
+    "title": "An account with that email already exists",
+    "description": "You already have an account with that email. Sign in with your password to continue."
   }
 }

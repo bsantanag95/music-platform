@@ -170,23 +170,50 @@ perfil/configuración donde tenga sentido ofrecerla. Ningún agente debe agregar
 linking como parte de este cambio.
 
 **Retorno post-autenticación.** El destino tras un login o alta exitosa vía Google es fijo:
-`/search`. No se acepta un parámetro `returnTo` dinámico ni ninguna URL de retorno controlada por
-el cliente, para evitar abrir una redirección abierta.
+`/<locale>/search`, usando el locale validado y persistido en el estado del flujo. No se acepta un
+parámetro `returnTo` dinámico ni ninguna URL de retorno controlada por el cliente, para evitar
+abrir una redirección abierta.
 
 **Dependencia `jose`.** Se aprueba `jose` como dependencia para la validación de ID tokens y JWKS
 del flujo OIDC, en lugar de implementar esa criptografía manualmente. Ver `package.json` /
 `.env.example` para las variables de configuración de Google asociadas.
 
-**`email_verified` no cambia el resultado ante colisión.** La columna `app_user.email` tiene
-restricción `UNIQUE`; un intento de alta con un email que ya pertenece a una cuenta local
-conflictúa a nivel de base de datos sin importar el valor de `email_verified` del ID token —
-no hay forma de crear la cuenta nueva igual sin violar esa restricción. Por lo tanto, ante
-colisión de email con una cuenta local existente, el flujo siempre responde `EMAIL_TAKEN_BY_LOCAL`,
-tenga o no `email_verified=true`. El claim `email_verified` no se usa para decidir el
-comportamiento del alta: se acepta como limitación conocida que alguien con un email ajeno sin
-verificar en su perfil de Google puede inferir, a través del intento de login, si ese email tiene
-cuenta local — el mismo tipo de señal que ya expone el propio registro local (`EMAIL_TAKEN` en
-`POST /api/auth/register`) para credenciales locales, así que no introduce una superficie nueva.
+**`email_verified` es requisito para las altas nuevas.** El claim `email_verified` del ID token
+se propaga en la identidad externa y **se exige `true` para crear una cuenta nueva**: si Google
+entrega el token con `email_verified=false`, el flujo no crea la cuenta y responde
+`OAUTH_EMAIL_NOT_VERIFIED`. Esto evita que alguien se registre reclamando un email que no controla
+en su cuenta de Google. Para una identidad ya vinculada (login recurrente) no se vuelve a exigir:
+la identidad existe y autentica al `app_user` asociado sin re-validar el claim.
+
+**Colisión de email con cuenta local.** La columna `app_user.email` tiene restricción `UNIQUE`; un
+intento de alta con un email que ya pertenece a una cuenta local conflictúa a nivel de base de
+datos sin importar el valor de `email_verified` del ID token — no hay forma de crear la cuenta
+nueva igual sin violar esa restricción. Por lo tanto, ante colisión de email con una cuenta local
+existente, el flujo siempre responde `EMAIL_TAKEN_BY_LOCAL`, tenga o no `email_verified=true`. Se
+acepta como limitación conocida que alguien puede inferir, a través del intento de login, si un
+email tiene cuenta local — el mismo tipo de señal que ya expone el propio registro local
+(`EMAIL_TAKEN` en `POST /api/auth/register`) para credenciales locales, así que no introduce una
+superficie nueva.
+
+**Creación de alta nueva transaccional.** El alta crea `app_user` + `auth_identity` dentro de una
+única transacción de base de datos: si el insert de la identidad falla, se revierte el `app_user`
+y no queda un usuario huérfano. Ante una violación de unicidad por carrera (dos altas concurrentes
+con el mismo username derivado), el flujo reintenta la derivación con el siguiente sufijo numérico
+dentro de la misma operación; si la colisión es de email, responde `EMAIL_TAKEN_BY_LOCAL`.
+
+**Rate limiting del flujo OAuth.** El flujo aplica el mismo limitador en memoria que login/registro
+(`src/services/auth/rate-limit.ts`): `GET /api/auth/google/start` limita por IP
+(`oauth:start:ip:...`) y `GET /api/auth/google/callback` limita el intercambio por IP
+(`oauth:callback:ip:...`), limpiando el contador al completar el flujo con éxito. Al superar el
+límite, ambos redirigen a la página de error localizada con `RATE_LIMITED`.
+
+**Locale del flujo.** `GET /api/auth/google/start` acepta el query param `locale` (validado contra
+la lista de locales soportados en `src/i18n/routing.ts`, con default `es`) y lo persiste dentro de
+las cookies del flujo (`oauth_state`). `GET /api/auth/google/callback` usa el `locale` persistido
+para redirigir el éxito a `/<locale>/search` y los errores a la página localizada
+`/<locale>/auth/error?code=...`, sin volver a confiar en un query param controlable. Google no
+incluye `locale` en su redirect al callback, de modo que persistirlo en el estado es lo que
+preserva el idioma desde el que se inició el flujo.
 
 ## Qué no decide este documento
 
@@ -194,8 +221,9 @@ Deliberadamente fuera de alcance acá:
 
 - Flujo de recuperación de contraseña (reset por email) — no está en el alcance descrito por
   `architecture.md`/PRD para el MVP de Fase 4; se evalúa aparte si se vuelve necesario.
-- Google y otros flujos OAuth/OIDC — se implementarán en un cambio posterior usando la interfaz
-  y la persistencia preparadas en esta fase.
+- Otros proveedores OAuth/OIDC distintos de Google y la vinculación explícita de una identidad
+  externa con una cuenta local — se implementarán en cambios posteriores usando la interfaz y la
+  persistencia preparadas en esta fase (ver ADR 0010).
 - El scrobbling con proveedores de streaming sigue siendo Fase 5+ (`architecture.md`).
 
 ## Relación con otros documentos

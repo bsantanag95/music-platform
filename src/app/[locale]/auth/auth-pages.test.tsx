@@ -44,6 +44,22 @@ describe("páginas de autenticación", () => {
     mocks.resolveSession.mockResolvedValueOnce(null);
 
     render(await LoginPage({ params: Promise.resolve({ locale: "es" }) }));
-    expect(screen.getByRole("link")).toHaveAttribute("href", "/auth/register");
+    expect(screen.getByRole("link", { name: "register" })).toHaveAttribute("href", "/auth/register");
+  });
+
+  it("muestra el botón de Continuar con Google en login con el locale", async () => {
+    mocks.resolveSession.mockResolvedValueOnce(null);
+
+    render(await LoginPage({ params: Promise.resolve({ locale: "es" }) }));
+    const googleLink = screen.getByRole("link", { name: /continueWithGoogle/i });
+    expect(googleLink).toHaveAttribute("href", "/api/auth/google/start?locale=es");
+  });
+
+  it("muestra el botón de Continuar con Google en registro con el locale", async () => {
+    mocks.resolveSession.mockResolvedValueOnce(null);
+
+    render(await RegisterPage({ params: Promise.resolve({ locale: "en" }) }));
+    const googleLink = screen.getByRole("link", { name: /continueWithGoogle/i });
+    expect(googleLink).toHaveAttribute("href", "/api/auth/google/start?locale=en");
   });
 });

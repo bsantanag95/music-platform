@@ -121,6 +121,7 @@ export const ErrorCodeSchema = z.enum([
   "OAUTH_CANCELLED",
   "OAUTH_CALLBACK_INVALID",
   "OAUTH_TOKEN_INVALID",
+  "OAUTH_EMAIL_NOT_VERIFIED",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 

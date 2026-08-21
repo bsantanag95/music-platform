@@ -16,6 +16,11 @@ empezar por `/docs/README.md` antes de tocar código. Código y comentarios en e
 - La verificación de integración manual son los smoke tests en `scripts/`
   (requieren Postgres real vía `DATABASE_URL`; mockean
   `global.fetch`, no salen a internet real):
+  `smoke-test-google-oauth.ts` además mockea `next/headers` (cookie jar en
+  memoria) para ejercitar los route handlers reales de OAuth fuera de Next, y
+  setea credenciales de Google falsas en `process.env` — no necesita una app
+  OAuth real; cubre alta nueva, identidad existente, email colisionado,
+  `email_verified=false` y retorno a `/<locale>/search` (ver `auth.md` sección 6).
 
 ```bash
   npx tsx --env-file=.env scripts/smoke-test-*.ts
