@@ -15,7 +15,7 @@ capa social es mínima.
 
 Ver `listening-diary-and-ratings.md`, sección 5, para el detalle completo. Resumen:
 
-- Nueva entrada del diario de escucha (`listen_entry`), con o sin texto/estrellas.
+- Nueva entrada del diario de escucha (`listen_entry`), con o sin texto/reacción.
 - Cambio de valoración vigente (`rating.stars`) respecto al valor anterior.
 - Nuevo comentario.
 

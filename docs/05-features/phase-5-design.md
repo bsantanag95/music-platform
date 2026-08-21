@@ -107,17 +107,19 @@ El flujo principal comienza desde una página de artista, álbum o canción:
 1. El usuario pulsa `Marcar como escuchado`.
 2. La aplicación registra la escucha sin exigir más datos.
 3. De forma opcional, el usuario añade una impresión breve.
-4. De forma opcional, elige contexto y estrellas para esa escucha.
+4. De forma opcional, elige contexto y una reacción emocional para esa escucha.
 5. El usuario elige la audiencia de la actividad.
 6. La aplicación confirma el registro y ofrece continuar con la navegación.
 
-El flujo rápido no abre automáticamente el formulario completo de rating ni exige comentario. Si el
-usuario añade estrellas a la escucha, la aplicación puede ofrecer explícitamente actualizar el
-rating vigente, pero nunca hacerlo de forma automática.
+El flujo rápido no abre automáticamente el formulario completo de rating ni exige comentario. La
+reacción de una escucha (gramática de sensación: `liked`/`loved`/`obsessed`/`neutral`/`disliked`/
+ausencia) es independiente de la valoración vigente y nunca la actualiza, ni automáticamente ni por
+oferta de "actualizar mi valoración": no existe conversión entre sensación y nota numérica.
 
 La entidad conceptual `listen_entry` es append-only: cada registro representa un momento distinto
 y no reemplaza entradas anteriores sobre el mismo objetivo. Sus objetivos iniciales son artista,
-álbum y canción.
+álbum y canción. Cada entrada tiene una audiencia propia (`private`/`followers`/`public`, default
+`followers`).
 
 ## 6. Rating, comentario y favorito
 
@@ -127,8 +129,8 @@ y no reemplaza entradas anteriores sobre el mismo objetivo. Sus objetivos inicia
 - Una nueva valoración reemplaza la anterior.
 - La coherencia entre estrellas y valoración detallada sigue siendo obligatoria.
 - Crear una escucha no crea ni modifica ratings.
-- Desde una escucha se puede iniciar una actualización de rating solo mediante una confirmación
-  explícita.
+- La escucha usa reacción emocional, no estrellas: ninguna entrada del diario puede iniciar ni
+  proponer una actualización del rating.
 
 ### Comentario
 

@@ -1,6 +1,8 @@
 # Diario de escucha y valoraciones — principios de diseño para Fase 4/5
 
-**Estado:** Propuesta (input de diseño, no artefacto OpenSpec todavía)
+**Estado:** Propuesta actualizada por el cambio `add-listen-diary-reactions` (Fase 5.3): la base
+de `listen_entry` con reacción emocional y diario propio queda definida allí; este documento
+conserva el razonamiento de producto de fondo.
 **Fases relacionadas:** Fase 4 (`auth, ratings y comentarios`) y Fase 5 (`presencia, favoritos y actividad social`) del roadmap.
 **Relación con la documentación existente:** extiende `01-domain/business-rules.md` y `03-data/sql-model.md`, no los contradice. No introduce cambios de schema todavía — es el razonamiento previo a escribir la migración correspondiente.
 
@@ -72,26 +74,26 @@ Columnas conceptuales:
 - `user_id`, y exactamente uno de `artist_id` / `release_group_id` / `recording_id` (mismo patrón que `rating` y `comment`).
 - `listen_context`: enum — `first_listen`, `relisten`, `rediscovery`. Resuelve la distinción "primera escucha / después de varias escuchas / álbum al que vuelvo siempre" que pide la filosofía, sin inventar un concepto nuevo de dominio: es metadata de la entrada del diario, no del objetivo.
 - `body`: texto corto, opcional, sin mínimo de extensión — el caso de uso es "este bajo está ridículamente bueno", no una reseña de Pitchfork.
-- `stars`: opcional, mismo rango y pasos que `rating.stars` (0.5–5) si el usuario decide puntuar esa entrada puntual.
+- `reaction`: opcional, ausencia de dato (`NULL`) o una de `liked` (`Me gustó`), `loved` (`Me encantó`), `obsessed` (`Obsesión`), `neutral` (`Neutro`), `disliked` (`No me gustó`). Es la gramática de *sensación* de la escucha, independiente del idioma (los textos se resuelven en i18n). **Reemplaza deliberadamente las estrellas** para no usar la misma gramática visual de `rating` en dos lugares con significados distintos: `rating` expresa valoración numérica vigente; `listen_entry` expresa presencia y sensación.
+- `audience`: `private`, `followers` o `public`, con default `followers`.
 - `created_at`.
 
 A diferencia de `rating`, **no hay índice único parcial por (usuario, objetivo)** — un usuario puede tener tantas `listen_entry` sobre el mismo álbum como escuchas quiera registrar. Esto es justamente lo que permite reconstruir algo como:
 
 ```
 Kid A
-Escucha #1  ★★★☆☆  "No entendí nada."
-Escucha #4  ★★★★☆  "Ahora empiezo a captar la atmósfera."
-Escucha #12 ★★★★★  "Es de mis discos favoritos."
+Escucha #1  (sin reacción)   "No entendí nada."
+Escucha #4  Me gustó         "Ahora empiezo a captar la atmósfera."
+Escucha #12 Obsesión         "Es de mis discos favoritos."
 ```
 
 ### 3.2 Relación entre `listen_entry` y `rating`
 
-`rating` sigue siendo, sin cambios, "la valoración vigente" — la regla de negocio existente (`business-rules.md`: *"Un Usuario solo puede tener una Valoración vigente por objetivo — una nueva valoración reemplaza a la anterior"*) no se toca. Lo que cambia es de dónde puede originarse esa actualización:
+`rating` sigue siendo, sin cambios, "la valoración vigente" — la regla de negocio existente (`business-rules.md`: *"Un Usuario solo puede tener una Valoración vigente por objetivo — una nueva valoración reemplaza a la anterior"*) no se toca.
 
-- Hoy: el usuario edita `rating` directamente.
-- Propuesto: al crear una `listen_entry` con `stars`, la UI puede ofrecer *"¿Actualizar tu valoración a esta?"* como acción explícita y opcional — nunca automática. Si el usuario confirma, se hace el upsert normal sobre `rating` (mismo trigger `trg_rating_touch`, mismo CHECK de coherencia estrellas/detallada si además pone valoración detallada en ese momento).
+`listen_entry` es **totalmente independiente** de `rating`: no lleva nota numérica ni estrellas, y ninguna mutación de una entrada crea, modifica ni elimina la valoración vigente del objetivo. La reacción emocional de una escucha (ej. `loved`) no es una puntuación y nunca se ofrece como "actualizar tu valoración a esta" — no existe una conversión entre la gramática de sensación y la gramática numérica.
 
-Esto preserva la garantía de integridad que ya existe a nivel de base (una valoración vigente, coherente, por objetivo) mientras permite el historial que la filosofía pide, sin que ambas cosas compitan por ser "la fuente de verdad": `rating` responde *"¿qué opina hoy?"*, `listen_entry` responde *"¿cómo llegó a opinar eso?"*.
+Esto preserva la garantía de integridad que ya existe a nivel de base (una valoración vigente, coherente, por objetivo) mientras permite el historial que la filosofía pide, sin que ambas cosas compitan por ser "la fuente de verdad": `rating` responde *"¿qué opina hoy?"*, `listen_entry` responde *"¿qué sintió en ese momento?"*.
 
 ### 3.3 Por qué no extender `rating` en su lugar
 
@@ -109,17 +111,17 @@ Orden de pasos, todos menos el primero opcionales:
 1. **Marcar como escuchado** (crea la `listen_entry`, sin fricción — puede ser un solo tap; ver también sección 2.1, capa de presencia manual).
 2. **Impresión corta** (texto libre, sin mínimo).
 3. **Contexto de escucha** (`first_listen` / `relisten` / `rediscovery` — puede inferirse por defecto si es la primera `listen_entry` del usuario sobre ese objetivo, y el usuario solo lo corrige si quiere).
-4. **Estrellas** (opcional, sobre la entrada puntual).
-5. **¿Actualizar tu valoración vigente?** (solo aparece si puso estrellas, y solo si difiere de `rating.stars` actual).
+4. **Reacción emocional** (opcional, sobre la entrada puntual: `liked` / `loved` / `obsessed` / `neutral` / `disliked`, o ausencia).
+5. **Audiencia** (opcional; por defecto `followers`, editable a `private` o `public`).
 
-Este orden es deliberado: la reseña (paso 2) va antes que la nota (paso 4), invirtiendo el orden habitual del formulario de valoración dual. El formulario completo de estrellas + valoración detallada (`01-domain/business-rules.md`) sigue existiendo tal cual está especificado, pero como una acción explícita separada ("editar mi valoración"), no como parte obligatoria de este flujo rápido.
+Este orden es deliberado: la impresión (paso 2) va antes que la reacción (paso 4), invirtiendo el orden habitual del formulario de valoración dual. El formulario completo de estrellas + valoración detallada (`01-domain/business-rules.md`) sigue existiendo tal cual está especificado, pero como una acción explícita separada ("editar mi valoración"), no como parte de este flujo rápido — una escucha no alimenta ni requiere el rating.
 
 ## 5. Feed de actividad
 
 Depende de las entidades sociales que el roadmap ya deja para Fase 5 (`Actividad`, en `domain-model.md`), pero se puede anticipar qué eventos lo alimentan una vez existan `listen_entry` y el grafo social:
 
-- Nueva `listen_entry` (con o sin texto/estrellas).
-- Cambio de `rating.stars` respecto al valor anterior (el caso "★★★☆☆ → ★★★★★, cinco años después por fin me hizo clic" requiere guardar el valor previo antes del upsert — se resuelve leyendo la última `listen_entry` con estrellas sobre ese objetivo antes de la actualización, sin necesitar una tabla de auditoría aparte).
+- Nueva `listen_entry` (con o sin texto/reacción).
+- Cambio de `rating.stars` respecto al valor anterior (el caso "★★★☆☆ → ★★★★★, cinco años después por fin me hizo clic" requiere guardar el valor previo antes del upsert — se resuelve leyendo el valor vigente de `rating` sobre ese objetivo antes de la actualización, sin necesitar una tabla de auditoría aparte).
 - Nuevo `comment`.
 - Nuevo `favorito` (una vez extendido a álbum y canción según sección 2.1).
 
@@ -129,7 +131,7 @@ El feed no necesita una tabla propia de eventos materializados desde el día uno
 
 La filosofía pide que un perfil responda preguntas ("¿qué álbum te define?", "¿qué artista siempre defendés?"), no que muestre gráficos. Técnicamente esto son **queries agregadas sobre datos existentes**, no columnas nuevas que haya que mantener sincronizadas:
 
-- *Álbum definitorio*: el `release_group` con más `listen_entry` del usuario, o el de mayor `rating.stars` sostenido en el tiempo (varias `listen_entry` con estrellas altas espaciadas en meses).
+- *Álbum definitorio*: el `release_group` con más `listen_entry` del usuario, o el de mayor `rating.stars` sostenido en el tiempo (varias `listen_entry` con reacción `liked`/`loved`/`obsessed` espaciadas en meses).
 - *Artista que siempre defiende*: el `artist_id` con mayor promedio de `rating.stars` entre los créditos con más de N valoraciones del usuario.
 - *Descubrimiento del año*: `artist`/`release_group` con `listen_entry(listen_context = 'first_listen')` dentro del rango de fecha, filtrado por valoración alta.
 - *Obsesión del mes*: objetivo con más `listen_entry` en los últimos 30 días.
@@ -151,6 +153,14 @@ Deliberadamente fuera de alcance aquí (para no anticipar decisiones que corresp
 - Columnas y schema exactos de `favorito` extendido a álbum/canción (sección 2.1) — mismo criterio: es material de entrada para el change de OpenSpec de Fase 5, no una decisión de este documento.
 - Diseño exacto de la integración OAuth con Spotify/Apple Music para la presencia automática (sección 2.1) — no tiene todavía ni ADR ni análisis de rate limits; queda pendiente antes de poder implementarse, aunque no bloquea la presencia manual.
 
+La taxonomía de reacción y las columnas de `listen_entry` **sí están decididas** (Fase 5.3,
+change `add-listen-diary-reactions`): reacción `liked`/`loved`/`obsessed`/`neutral`/`disliked`/ausencia
+con textos i18n, y columna `audience` con default `followers`.
+
 ## 9. Próximo paso sugerido
 
-Este documento es material de entrada para un change de OpenSpec cuando se aborde Fase 4 (el `listen_entry` mínimo, sin feed ni identidad de perfil) y otro más adelante para Fase 5 (capa de presencia completa — manual y automática —, favoritos extendidos, feed, y agregados de perfil). No se recomienda implementar todo junto: `listen_entry` con flujo rápido es el único componente que el MVP de Fase 4 necesita para no perder la filosofía descrita; el resto depende de que exista el grafo social que hoy no existe.
+La base de `listen_entry` (presencia manual + diario propio) es el cambio de Fase 5.3
+(`add-listen-diary-reactions`). Los incrementos posteriores de Fase 5 (capa de presencia automática,
+favoritos extendidos, feed y agregados de perfil) dependen del grafo social ya existente y se
+abordarán como cambios propios. No se recomienda implementar todo junto: `listen_entry` con flujo
+rápido es el único componente que la capa de presencia necesita para no perder la filosofía descrita.

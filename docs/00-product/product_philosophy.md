@@ -43,7 +43,7 @@ Estos son los ejes concretos que dan valor más allá de rating/comentarios gen�
 | **Grafo social independiente del origen del audio** | Centraliza historial y red de gusto sin importar si el usuario usa Spotify, vinilo, Bandcamp o YouTube Music | — |
 | **Rankings y listas curadas por personas** | Contenido navegable sin necesidad de estar escuchando en ese momento (ej. "mejores discos de shoegaze de los 90 según usuarios") | Letterboxd lists |
 | **Reseñas como contenido en sí mismo** | Género de escritura propio; gente entra a leer/comentar reseñas sin consumir la obra en ese momento | Letterboxd reviews |
-| **Completismo de discografía** | Gancho de retención fuerte para oyentes de rock/metal/clásicos ("te faltan 4 discos de Radiohead") | Backloggd |
+| **Recorrido personal por discografía (opcional)** | Herramienta de organización y descubrimiento propio — el usuario elige qué escuchar de un artista, a su ritmo, y puede compartirlo si quiere. No es checklist obligatoria ni comparación social | — |
 | **Capital social del gusto** | Reputación de "buen criterio" o "descubridor temprano" — imposible en un servicio de consumo privado | — |
 | **Rituales anuales con opinión, no solo estadística** | Spotify *muestra* tu año (Wrapped); acá el usuario *construye* y *comenta* su año | — |
 
@@ -83,17 +83,19 @@ Confirmado: el contenido navegable nace de listas creadas por usuarios, no de ag
 - Distinguir visualmente una lista "oficial/editorial" de una lista de usuario común.
 - Definir qué rol/cuenta tiene permiso para publicar como "la plataforma" (a resolver como ADR de permisos/roles cuando se diseñe ese sistema).
 
-### 6.4 Completismo de discografía — descubrimiento opcional, no checklist
+### 6.4 Recorrido de artista (ex "completismo de discografía") — reformulado, sin curaduría editorial
 
-Reformulado explícitamente para evitar el modelo TV Time (checklist de pendientes que genera presión/culpa). Relevante sobre todo en discografías extensas — el caso de referencia es Deep Purple con +30 álbumes.
+Renombrado a propósito: dejó de ser "completismo" (con la connotación de meta que se puede cumplir o no) y pasó a ser una herramienta de organización personal, opcional por artista, sin comparación social ni progreso "correcto".
 
-Decisiones:
-- **Framing de producto:** invitación al descubrimiento, nunca obligación. El diseño visual del progreso debe evitar lenguaje o estética de "deuda pendiente" (nada de barras rojas de "incompleto" ni contadores tipo "te faltan X discos" con tono de tarea sin terminar).
-- **Qué cuenta para el cálculo (4a):** álbumes de estudio oficiales por defecto, **más una selección curada de "álbumes en vivo esenciales" por artista** (ej. *Made in Japan* de Deep Purple). Esta selección es editorial/humana — mismo mecanismo que las listas oficiales de 6.3, no automática ni derivada de metadata de MusicBrainz sin curaduría.
-- **Qué queda fuera del cálculo por defecto:** compilados, EPs y bootlegs. Siguen siendo loggeables/visibles en la plataforma, solo no cuentan para el "% completado".
-- **Qué acción marca progreso (4b):** presencia (marcado como escuchado), no rating. Sin cambios respecto a la propuesta original — coherente con que completismo es métrica de consumo, no de opinión.
+Flujo confirmado:
+- Es opt-in por artista. No todos los artistas que un usuario sigue o escucha necesitan tener un recorrido armado — el usuario decide para cuáles artistas quiere "organizar su escucha de fondo".
+- Al activarlo, la UI muestra **todos los álbumes agrupados por tipo**, usando la clasificación que ya provee MusicBrainz vía `release-group` (`primary-type`/`secondary-type`): Estudio como grupo principal, más En Vivo, EP, Compilación, etc.
+- **Default de selección:** los álbumes de tipo Estudio vienen pre-marcados (menor fricción — es más simple deseleccionar lo que no interesa que ir seleccionando uno por uno). El resto de los grupos (En Vivo, EP, Compilación, etc.) quedan desmarcados por default.
+- El usuario puede editar la selección libremente en cualquier momento, en cualquier dirección — sacar discos de estudio que no le interesan, agregar discos en vivo/EPs/compilados después, revertir decisiones previas. Sin restricciones.
+- **Se descarta la curaduría editorial de "discos esenciales fuera de estudio"** (ej. *Made in Japan*, *Alive*) como excepción marcada por default. Sería valioso, pero el costo de mantenimiento (evaluación artista por artista, sin escalar con el catálogo) no se justifica frente al beneficio, especialmente dado que no hay comparación social que dependa de una vara compartida. Estos discos simplemente aparecen dentro de su grupo de tipo (En Vivo) como cualquier otro, sin tratamiento especial.
+- Sin comparación social ni "estado correcto" de progreso — es organización personal, compartible si el usuario quiere, no una competencia ni un logro medido contra otros usuarios.
 
-**Pendiente:** definir el proceso editorial para decidir qué álbumes en vivo son "esenciales" por artista — comparte mecanismo/rol con 6.3, así que probablemente se resuelvan juntos.
+**Modelo de datos:** se resuelve reutilizando el mecanismo de listas ya definido en 6.3 (mismo tipo de entidad), con un subtipo especializado "recorrido de artista" que se pre-puebla automáticamente desde metadata de MusicBrainz al crearse. No requiere entidad nueva separada de listas/`Favorito`/`listen_entry`, ni ningún proceso editorial — a diferencia de 6.3, este subtipo es 100% self-service, sin intervención humana del equipo.
 
 ### 6.5 Perfil público — confirmado, modelo Letterboxd
 
@@ -103,8 +105,7 @@ Confirmado sin cambios: resumen/stats de identidad arriba (favoritos, discograf�
 
 - [ ] Diseño del algoritmo de afinidad de gusto para descubrimiento (6.1) — depende de densidad de datos, no urgente.
 - [ ] Cálculo robusto de puntuación global anti review-bombing (6.2) — amerita documento/ADR técnico propio.
-- [ ] Rol/permisos para cuentas que publican contenido "oficial de la plataforma" (6.3 y 6.4) — un solo sistema de permisos cubre listas editoriales y curaduría de discos en vivo esenciales.
-- [ ] Proceso editorial concreto: ¿quién decide y con qué criterio qué álbum en vivo es "esencial" por artista? (6.4)
+- [ ] Rol/permisos para cuentas que publican contenido "oficial de la plataforma" (6.3) — exclusivo de listas editoriales; 6.4 ya no depende de este sistema.
 
 ## 8. Relación con la metodología del proyecto
 
