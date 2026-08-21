@@ -23,14 +23,24 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 
-export const appUser = pgTable("app_user", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  username: text("username").notNull().unique(),
-  email: text("email").notNull().unique(),
-  displayName: text("display_name"),
-  passwordHash: text("password_hash"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const appUser = pgTable(
+  "app_user",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    username: text("username").notNull().unique(),
+    email: text("email").notNull().unique(),
+    displayName: text("display_name"),
+    passwordHash: text("password_hash"),
+    profileVisibility: text("profile_visibility").notNull().default("public"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check(
+      "chk_app_user_profile_visibility",
+      sql`${t.profileVisibility} IN ('public','private')`,
+    ),
+  ],
+);
 
 export const session = pgTable(
   "session",
@@ -64,6 +74,47 @@ export const authIdentity = pgTable(
   (t) => [
     uniqueIndex("uq_auth_identity_provider_account").on(t.provider, t.providerAccountId),
     index("idx_auth_identity_user").on(t.userId),
+  ],
+);
+
+export const userFollow = pgTable(
+  "user_follow",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    followerId: uuid("follower_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    followedId: uuid("followed_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    status: text("status").notNull(), // 'pending' | 'accepted'
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("uq_user_follow_pair").on(t.followerId, t.followedId),
+    index("idx_user_follow_followed").on(t.followedId),
+    check("chk_user_follow_not_self", sql`${t.followerId} <> ${t.followedId}`),
+    check("chk_user_follow_status", sql`${t.status} IN ('pending','accepted')`),
+  ],
+);
+
+export const userBlock = pgTable(
+  "user_block",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    blockerId: uuid("blocker_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    blockedId: uuid("blocked_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("uq_user_block_pair").on(t.blockerId, t.blockedId),
+    index("idx_user_block_blocked").on(t.blockedId),
+    check("chk_user_block_not_self", sql`${t.blockerId} <> ${t.blockedId}`),
   ],
 );
 
@@ -239,6 +290,8 @@ export type ArtistRow = typeof artist.$inferSelect;
 export type AppUserRow = typeof appUser.$inferSelect;
 export type SessionRow = typeof session.$inferSelect;
 export type AuthIdentityRow = typeof authIdentity.$inferSelect;
+export type UserFollowRow = typeof userFollow.$inferSelect;
+export type UserBlockRow = typeof userBlock.$inferSelect;
 export type ReleaseGroupRow = typeof releaseGroup.$inferSelect;
 export type ReleaseRow = typeof release.$inferSelect;
 export type RecordingRow = typeof recording.$inferSelect;

@@ -57,8 +57,34 @@ Un Usuario puede valorar un Artista, un Álbum, o una Canción — nunca más de
 
 Igual que la Valoración, un Comentario pertenece a exactamente un Artista, Álbum o Canción — pero, a diferencia de la Valoración, un mismo Usuario puede dejar más de un Comentario sobre el mismo objetivo.
 
-## Entidades sociales (a definir en detalle en `05-features/`, cuando se llegue a la Fase 5)
+## Perfil
 
+Cada Usuario tiene un perfil cuya visibilidad es **pública** o **privada**. Un perfil público
+expone su identidad y sus actividades con audiencia compatible; un perfil privado sigue siendo
+descubrible por nombre, pero requiere aprobación para ser seguido y sus actividades son privadas por
+defecto. La visibilidad de cada actividad puede sobrescribir la del perfil.
+
+## Seguimiento
+
+El seguimiento es **unilateral**, tipo "seguir": un Usuario sigue a otro sin exigir reciprocidad.
+La relación pertenece a la pareja (seguidor, seguido) y puede estar **aceptada** o **pendiente**:
+
+- Seguir un perfil público crea una relación aceptada de inmediato.
+- Seguir un perfil privado crea una solicitud pendiente que el propietario puede aprobar o
+  rechazar; el solicitante puede cancelarla.
+- Dejar de seguir elimina la relación; el propietario puede eliminar a un seguidor propio.
+
+## Bloqueo
+
+Un Usuario puede **bloquear** a otro. El bloqueo impide nuevas relaciones de seguimiento en ambas
+direcciones, elimina las relaciones y solicitudes existentes entre ambos y restringe las acciones
+sociales entre las cuentas. Bloquear no es lo mismo que dejar de seguir: es una restricción
+bidireccional con su propia persistencia.
+
+## Entidades sociales (a definir en detalle en `05-features/`, cuando se llegue a su entrega)
+
+- **Diario de escucha**: registro histórico de escuchas sobre Artista, Álbum o Canción.
 - **Lista**: colección curada de Álbumes/Canciones/Artistas armada por un Usuario.
 - **Favorito**: marca simple de un Usuario sobre un Artista.
-- **Actividad**: registro de lo que un Usuario fue valorando/comentando recientemente, visible para quienes lo siguen — la función inspirada en el "qué estás escuchando" de MSN.
+- **Actividad**: registro de lo que un Usuario fue valorando/comentando recientemente, visible para
+  quienes lo siguen — la función inspirada en el "qué estás escuchando" de MSN.

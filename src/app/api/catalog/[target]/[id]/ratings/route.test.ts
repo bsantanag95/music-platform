@@ -27,7 +27,7 @@ describe("rutas sociales de ratings", () => {
   });
 
   it("no acepta user_id en la mutación y usa el usuario de sesión", async () => {
-    vi.mocked(auth.requireUser).mockResolvedValue({ id, username: "ana", email: "ana@example.com", displayName: null, passwordHash: null, createdAt: new Date() });
+    vi.mocked(auth.requireUser).mockResolvedValue({ id, username: "ana", email: "ana@example.com", displayName: null, passwordHash: null, profileVisibility: "public", createdAt: new Date() });
     vi.mocked(social.resolveSocialTarget).mockResolvedValue(target);
     vi.mocked(social.upsertRating).mockResolvedValue({ id, userId: id, artistId: id, releaseGroupId: null, recordingId: null, stars: 4, detailedScore: 80, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
     const response = await PUT(new NextRequest("http://localhost", { method: "PUT", body: JSON.stringify({ stars: 4, detailedScore: 80, user_id: "attacker" }) }), { params: Promise.resolve({ target: "artist", id }) });

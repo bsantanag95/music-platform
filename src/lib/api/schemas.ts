@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PROFILE_VISIBILITIES, FOLLOW_RELATIONS } from "@/services/social/types";
 
 // Espejo runtime de docs/04-api/contracts.md y docs/04-api/errors.md.
 // Ningún componente debe confiar en ArtistRow/ReleaseGroupRow de db/schema.ts
@@ -122,6 +123,10 @@ export const ErrorCodeSchema = z.enum([
   "OAUTH_CALLBACK_INVALID",
   "OAUTH_TOKEN_INVALID",
   "OAUTH_EMAIL_NOT_VERIFIED",
+  "USER_NOT_FOUND",
+  "RELATION_INVALID",
+  "REQUEST_NOT_FOUND",
+  "BLOCKED",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 
@@ -264,3 +269,83 @@ export const ApiErrorSchema = z.object({
   error: z.string(),
   code: ErrorCodeSchema,
 });
+
+// --- Identidad social (Fase 5: perfil, seguimiento y bloqueo) ---
+
+export const ProfileVisibilitySchema = z.enum(PROFILE_VISIBILITIES);
+export type ProfileVisibility = z.infer<typeof ProfileVisibilitySchema>;
+
+export const FollowRelationSchema = z.enum(FOLLOW_RELATIONS);
+export type FollowRelation = z.infer<typeof FollowRelationSchema>;
+
+export const UserSummarySchema = z.object({
+  id: z.uuid(),
+  username: z.string(),
+  displayName: z.string().nullable(),
+  profileVisibility: ProfileVisibilitySchema,
+});
+export type UserSummary = z.infer<typeof UserSummarySchema>;
+
+export const UserSearchResultSchema = UserSummarySchema.extend({
+  relation: FollowRelationSchema,
+});
+export type UserSearchResult = z.infer<typeof UserSearchResultSchema>;
+
+export const UserListResponseSchema = z.object({
+  users: z.array(UserSummarySchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  hasNext: z.boolean(),
+});
+export type UserListResponse = z.infer<typeof UserListResponseSchema>;
+
+export const UserSearchResponseSchema = z.object({
+  users: z.array(UserSearchResultSchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  hasNext: z.boolean(),
+});
+export type UserSearchResponse = z.infer<typeof UserSearchResponseSchema>;
+
+export const PublicProfileSchema = z.object({
+  id: z.uuid(),
+  username: z.string(),
+  displayName: z.string().nullable(),
+  profileVisibility: ProfileVisibilitySchema,
+  relation: FollowRelationSchema,
+  blockedByMe: z.boolean(),
+  accessible: z.boolean(),
+});
+export type PublicProfile = z.infer<typeof PublicProfileSchema>;
+
+export const PublicProfileResponseSchema = z.object({ user: PublicProfileSchema });
+export type PublicProfileResponse = z.infer<typeof PublicProfileResponseSchema>;
+
+export const OwnProfileSchema = z.object({
+  id: z.uuid(),
+  username: z.string(),
+  displayName: z.string().nullable(),
+  email: z.email(),
+  profileVisibility: ProfileVisibilitySchema,
+});
+export type OwnProfile = z.infer<typeof OwnProfileSchema>;
+
+export const OwnProfileResponseSchema = z.object({ user: OwnProfileSchema });
+export type OwnProfileResponse = z.infer<typeof OwnProfileResponseSchema>;
+
+export const UpdateProfileVisibilityRequestSchema = z.object({
+  profileVisibility: ProfileVisibilitySchema,
+});
+export type UpdateProfileVisibilityRequest = z.infer<typeof UpdateProfileVisibilityRequestSchema>;
+
+export const FollowActionSchema = z.enum(["following", "requested", "none"]);
+export type FollowAction = z.infer<typeof FollowActionSchema>;
+
+export const FollowResponseSchema = z.object({ relation: FollowActionSchema });
+export type FollowResponse = z.infer<typeof FollowResponseSchema>;
+
+// Respuestas 204 sin body (aprovechar, rechazar, eliminar seguidor).
+export const NoContentSchema = z.null();
+
+export const BlockedResponseSchema = z.object({ blocked: z.boolean() });
+export type BlockedResponse = z.infer<typeof BlockedResponseSchema>;

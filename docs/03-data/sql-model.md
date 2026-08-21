@@ -12,6 +12,43 @@ Versión narrada de `schema.sql`. Para cada tabla: propósito, relaciones, restr
 Cuando tiene valor, contiene únicamente el hash Argon2id de la contraseña local; nunca se guarda la
 contraseña en texto plano.
 
+`profile_visibility` (migración `0007`) es `'public'` o `'private'`, con default `'public'`. Define
+la visibilidad predeterminada del perfil; las actividades futuras podrán sobrescribirla con una
+audiencia propia.
+
+## `user_follow`
+
+**Propósito:** relación unilateral de seguimiento entre usuarios, con solicitudes para perfiles
+privados (migración `0007`).
+
+**Relaciones:** `follower_id` y `followed_id` referencian `app_user`.
+
+**Restricciones:**
+
+- `FOREIGN KEY` con `ON DELETE CASCADE` en ambas direcciones.
+- `UNIQUE (follower_id, followed_id)` impide más de una relación por pareja.
+- `CHECK (follower_id <> followed_id)` impide auto-seguimiento.
+- `status` es `'pending'` o `'accepted'`: seguir un perfil público crea `accepted`; seguir un
+  perfil privado crea `pending`. Aprobar cambia a `accepted`; rechazar, cancelar o dejar de seguir
+  elimina la fila.
+- `updated_at` lo mantiene el trigger `trg_user_follow_touch` (reutiliza `fn_touch_updated_at`).
+
+## `user_block`
+
+**Propósito:** bloqueo básico entre cuentas (migración `0007`).
+
+**Relaciones:** `blocker_id` y `blocked_id` referencian `app_user`.
+
+**Restricciones:**
+
+- `FOREIGN KEY` con `ON DELETE CASCADE` en ambas direcciones.
+- `UNIQUE (blocker_id, blocked_id)` impide bloques duplicados.
+- `CHECK (blocker_id <> blocked_id)` impide auto-bloqueo.
+
+Mientras existe un bloqueo, no se pueden crear relaciones de seguimiento en ninguna dirección, se
+eliminan las relaciones y solicitudes existentes entre ambas cuentas, y las acciones sociales
+restringidas quedan bloqueadas en el backend.
+
 ## `auth_identity`
 
 **Propósito:** vincula un `app_user` con una identidad de autenticación externa, comenzando por

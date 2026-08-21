@@ -58,5 +58,21 @@
   "EMAIL_TAKEN_BY_LOCAL": {
     "title": "An account with that email already exists",
     "description": "You already have an account with that email. Sign in with your password to continue."
+  },
+  "USER_NOT_FOUND": {
+    "title": "User not found",
+    "description": "The requested user does not exist or is not available."
+  },
+  "RELATION_INVALID": {
+    "title": "Invalid follow operation",
+    "description": "This operation cannot be performed with your own profile."
+  },
+  "REQUEST_NOT_FOUND": {
+    "title": "Request not found",
+    "description": "The request does not exist or was already resolved."
+  },
+  "BLOCKED": {
+    "title": "Blocked account",
+    "description": "You cannot perform this action with this account."
   }
 }

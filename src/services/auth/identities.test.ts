@@ -97,7 +97,7 @@ describe("resolveOrCreateOAuthUser", () => {
     mocks.findUserByEmail.mockResolvedValueOnce(null);
     mocks.findAvailableUsername.mockResolvedValueOnce("juanperez");
 
-    const newUser = { id: "new-1", username: "juanperez", email: "juan@gmail.com", displayName: null, passwordHash: null, createdAt: new Date() };
+    const newUser = { id: "new-1", username: "juanperez", email: "juan@gmail.com", displayName: null, passwordHash: null, profileVisibility: "public", createdAt: new Date() };
     const chain = mockInsertChain();
     chain.returning.mockResolvedValue([newUser]);
     mockTransaction();

@@ -48,6 +48,9 @@ necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
 >   stub "Farruko" (`9b90d5a6-8b3f-4e2d-9f11-7e0c0d3a1a01`) y
 >   `smoke-test-discography-cache.ts` un artista de prueba — borrarlos si se
 >   corrió en la BD real.
+> - `smoke-test-social.ts` crea tres usuarios `smoke-social-*` (público, privado
+>   y seguidor) y los borra al terminar; si se interrumpió, limpiar con
+>   `DELETE FROM app_user WHERE username LIKE 'smoke-social-%';`.
 
 ## Base de datos / migraciones
 

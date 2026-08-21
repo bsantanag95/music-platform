@@ -58,5 +58,21 @@
   "EMAIL_TAKEN_BY_LOCAL": {
     "title": "Ya existe una cuenta con ese email",
     "description": "Ya tenés una cuenta con ese email. Iniciá sesión con tu contraseña para continuar."
+  },
+  "USER_NOT_FOUND": {
+    "title": "Usuario no encontrado",
+    "description": "El usuario solicitado no existe o no está disponible."
+  },
+  "RELATION_INVALID": {
+    "title": "Operación de seguimiento inválida",
+    "description": "No se puede realizar esta operación con tu propio perfil."
+  },
+  "REQUEST_NOT_FOUND": {
+    "title": "Solicitud no encontrada",
+    "description": "La solicitud no existe o ya fue resuelta."
+  },
+  "BLOCKED": {
+    "title": "Cuenta bloqueada",
+    "description": "No podés realizar esta acción con esta cuenta."
   }
 }

@@ -56,11 +56,21 @@ export function Header({ user = null }: HeaderProps) {
         >
           {t("search")}
         </Link>
+        <Link
+          href="/users"
+          className="font-data text-sm text-paper-muted transition-colors hover:text-paper"
+        >
+          {t("users")}
+        </Link>
         {currentUser ? (
           <div className="flex items-center gap-3 font-data text-xs">
-            <span className="text-paper" aria-label={t("signedInAs")}>
+            <Link
+              href={`/users/${encodeURIComponent(currentUser.username)}`}
+              className="text-paper transition-colors hover:text-amber"
+              aria-label={t("signedInAs")}
+            >
               {currentUser.displayName ?? currentUser.username}
-            </span>
+            </Link>
             <button
               type="button"
               onClick={handleLogout}

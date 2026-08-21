@@ -230,6 +230,104 @@ transporte.
 No hay ruta de vinculación (linking) de Google con una cuenta local ya autenticada en este
 incremento — queda diferida a una fase posterior (`auth.md` sección 6, ADR 0010).
 
+## Identidad social — perfiles, seguimiento y bloqueo
+
+Endpoints de la base social de Fase 5 (cambio `add-social-profile-follow`). Los perfiles se
+identifican por `username`; las mutaciones requieren sesión y derivan el actor de la cookie
+server-side — ningún body acepta `user_id`.
+
+### `GET /api/users?q=<término>&page=&pageSize=`
+
+Busca usuarios por username o displayName (coincidencia parcial). Devuelve tanto perfiles públicos
+como privados, sin email ni datos de autenticación. Si el visitante tiene sesión, cada resultado
+incluye `relation` (`none` | `following` | `requested` | `incoming` | `blocked` | `self`).
+
+**200 OK:** `{ users: [{ id, username, displayName, profileVisibility, relation }], page, pageSize, hasNext }`.
+
+**400** con `VALIDATION_ERROR` si falta `q` o la paginación es inválida. **401** con
+`AUTH_REQUIRED` en operaciones que exijan sesión.
+
+### `GET /api/users/[username]`
+
+Perfil por username. Un perfil público expone su identidad; un perfil privado muestra solo
+identidad mínima para visitantes no autorizados. La respuesta incluye `relation` del visitante y
+`accessible` (si el visitante puede ver contenido no mínimo).
+
+**200 OK:** `{ user: { id, username, displayName, profileVisibility, relation, blockedByMe, accessible } }`.
+**404** con `USER_NOT_FOUND` si el username no existe.
+
+`blockedByMe` es `true` cuando el visitante autenticado es quien bloqueó al dueño del perfil (y por
+lo tanto dispone de la acción de desbloquear); si el visitante fue bloqueado por el dueño,
+`relation` es `blocked` pero `blockedByMe` es `false` y no se ofrece la acción.
+
+### `GET /api/me/profile`
+
+Perfil propio autenticado, incluye `email`.
+
+**200 OK:** `{ user: { id, username, displayName, email, profileVisibility } }`. **401** con
+`AUTH_REQUIRED` si no hay sesión.
+
+### `PATCH /api/me/profile`
+
+Actualiza la visibilidad del perfil propio.
+
+**Body:** `{ profileVisibility: "public" | "private" }`. **200 OK:** `{ user }` con la
+configuración persistida. **400** con `VALIDATION_ERROR` si el valor no es válido.
+
+### `PUT /api/users/[username]/follow`
+
+Sigue a un usuario. Si el perfil es público, la relación queda `accepted`; si es privado, se crea
+una solicitud pendiente. Es idempotente: repetir no duplica la relación.
+
+**200 OK:** `{ relation: "following" | "requested" }`. **404** con `USER_NOT_FOUND`. **403** con
+`BLOCKED` si existe un bloqueo. **400** con `RELATION_INVALID` si se intenta seguir a sí mismo.
+
+### `DELETE /api/users/[username]/follow`
+
+Deja de seguir a un usuario, o cancela una solicitud pendiente enviada. Idempotente.
+
+**200 OK:** `{ relation: "none" }`.
+
+### `GET /api/me/followers` / `GET /api/me/following`
+
+Lista paginada de seguidores aceptados y de cuentas seguidas por el usuario autenticado.
+
+**200 OK:** `{ users: [{ id, username, displayName, profileVisibility }], page, pageSize, hasNext }`.
+
+### `GET /api/me/follow-requests`
+
+Lista paginada de solicitudes pendientes recibidas por el usuario autenticado. Misma forma de
+respuesta que seguidores/seguidos.
+
+### `POST /api/me/follow-requests/[userId]/approve`
+
+Aprueba la solicitud pendiente recibida de `[userId]`. **204**. **404** con `REQUEST_NOT_FOUND` si
+no existe o ya fue resuelta. **403** con `BLOCKED` si hay bloqueo.
+
+### `POST /api/me/follow-requests/[userId]/reject`
+
+Rechaza la solicitud pendiente recibida de `[userId]`. **204**. Mismos errores que approve.
+
+### `DELETE /api/me/followers/[userId]`
+
+Elimina a `[userId]` de los seguidores del usuario autenticado. **204**. Idempotente.
+
+### `PUT /api/users/[username]/block`
+
+Bloquea a un usuario. Crea el bloqueo y elimina en una transacción las relaciones y solicitudes
+entre ambas cuentas. Idempotente. **200 OK:** `{ blocked: true }`. **400** con `RELATION_INVALID`
+si se intenta bloquearse a sí mismo.
+
+### `DELETE /api/users/[username]/block`
+
+Retira el bloqueo del usuario autenticado hacia `[username]`. **200 OK:** `{ blocked: false }`. No
+recrea relaciones eliminadas.
+
+### `GET /api/me/blocks`
+
+Lista paginada de cuentas bloqueadas por el usuario autenticado. Misma forma de respuesta que
+seguidores/seguidos.
+
 ## Ratings y comentarios
 
 Los endpoints sociales usan el objetivo `artist`, `release-group` o `recording` y el UUID interno.

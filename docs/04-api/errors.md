@@ -46,6 +46,10 @@ además del `error` legible:
 | `OAUTH_CALLBACK_INVALID` | 400 | `GET /api/auth/google/callback`: parámetros del callback malformados o el intercambio del authorization code falló. |
 | `OAUTH_TOKEN_INVALID` | 400 | `GET /api/auth/google/callback`: el ID token de Google no pasó validación (issuer, audience, firma JWKS RS256, expiración o `nonce`). |
 | `OAUTH_EMAIL_NOT_VERIFIED` | 400 | `GET /api/auth/google/callback`: el ID token trae `email_verified=false`/ausente y no existe identidad vinculada, por lo que no se crea la cuenta nueva (`auth.md` sección 6). |
+| `USER_NOT_FOUND` | 404 | Perfil, búsqueda o destino de una relación: el username no corresponde a ningún usuario. |
+| `RELATION_INVALID` | 400 | Operación de seguimiento o bloqueo inválida (ej. intentar seguirse o bloquearse a sí mismo). |
+| `REQUEST_NOT_FOUND` | 404 | La solicitud de seguimiento no existe o ya fue resuelta (aprobada, rechazada o cancelada). |
+| `BLOCKED` | 403 | La operación de seguimiento está impedida por un bloqueo existente entre las cuentas. |
 
 ### Implementación
 
