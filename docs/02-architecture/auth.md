@@ -7,18 +7,18 @@ a `02-architecture/i18n.md` para internacionalización o `03-data/sql-model.md` 
 
 ## Estado
 
-**Implementado para autenticación local.** Este documento describe el mecanismo que deben seguir
-los agentes de ejecución y conserva la preparación de identidades externas para el cambio posterior
-de Google. La migración, los route handlers y los tests de autenticación local ya forman parte de
-la implementación de Fase 4.
+**Implementado para autenticación local y Google OAuth/OIDC.** Este documento describe el
+mecanismo que deben seguir los agentes de ejecución. La migración, los route handlers y los tests
+de autenticación local forman parte de la Fase 4; el flujo de Google se implementó como el
+incremento posterior definido por ADR 0010 y fue validado manualmente.
 
 La implementación usa Argon2id con `memoryCost=19456`, `timeCost=2` y `parallelism=1`, centralizados
 en `src/services/auth/password.ts`.
 
-La interfaz común de adaptadores externos ya está preparada en
-`src/services/auth/providers/`, pero no hay ningún proveedor habilitado. Google y cualquier
-flujo OAuth/OIDC, incluidos sus rutas, callbacks, secretos e intercambio de códigos, se
-implementarán en un cambio posterior.
+La interfaz común de adaptadores externos y el adaptador de Google viven en
+`src/services/auth/providers/`. Google está habilitado mediante sus rutas de inicio y callback,
+con secretos únicamente en variables de entorno del servidor. El linking explícito y otros
+proveedores OAuth/OIDC siguen fuera de alcance.
 
 ## Por qué existe este documento aparte del ADR
 
@@ -141,10 +141,10 @@ En el callback OIDC se validan `issuer`, `audience`, firma, expiración y `nonce
 No se almacenan tokens OAuth cuando no sean necesarios para consumir APIs del proveedor. Los
 secretos y credenciales de proveedor viven solo en variables de entorno del servidor.
 
-Durante la Fase 4 se implementará únicamente la autenticación local y se dejará preparada la
-persistencia y la interfaz de proveedores externos. Google se implementará inmediatamente después,
-como el primer incremento posterior de autenticación, sin cambiar el modelo de sesión ni el
-modelo de usuario.
+La Fase 4 implementó la autenticación local y dejó preparada la persistencia y la interfaz de
+proveedores externos. El incremento posterior de Google implementó el login y el alta mediante
+OAuth/OIDC sin cambiar el modelo de sesión ni el modelo de usuario. Su validación manual se
+completó correctamente; el linking explícito continúa diferido.
 
 **Username para altas nuevas vía Google.** Cuando el flujo crea un `app_user` nuevo a partir de
 una identidad de Google, el username se deriva del local-part del email (la parte antes de `@`),

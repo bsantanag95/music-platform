@@ -8,7 +8,7 @@ implementación.
 | Documento | Fase | Estado |
 |---|---|---|
 | [`catalog-browsing.md`](./catalog-browsing.md) | 3 | ✅ Especificado, backend listo |
-| [`ratings-and-reviews.md`](./ratings-and-reviews.md) | 4 | ✅ Reglas cerradas, sin implementar |
+| [`ratings-and-reviews.md`](./ratings-and-reviews.md) | 4 | ✅ Implementado y validado |
 | [`listening-diary-and-ratings.md`](./listening-diary-and-ratings.md) | 4-5 | 🟡 Propuesta de diseño |
 | [`lists-and-favorites.md`](./lists-and-favorites.md) | 5 | ⚪ Conceptual, sin diseñar |
 | [`activity-feed.md`](./activity-feed.md) | 5 | ⚪ Conceptual, sin diseñar |

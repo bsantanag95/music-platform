@@ -1,7 +1,7 @@
 # Valoraciones y comentarios — el núcleo social base
 
-**Fase:** 4 (roadmap). **Estado:** reglas de negocio y schema cerrados
-(`01-domain/business-rules.md`, `03-data/sql-model.md`); sin implementar todavía.
+**Fase:** 4 (roadmap). **Estado:** implementado y validado
+(`01-domain/business-rules.md`, `03-data/sql-model.md`).
 
 Este documento describe el comportamiento del feature base tal como quedó definido en la
 Fase 0. `listening-diary-and-ratings.md` propone una capa adicional sobre esta base (el
@@ -30,16 +30,17 @@ anterior — no hay historial en `rating` (eso es justamente lo que
 
 ## Comentarios
 
-Texto libre, sin mínimo ni máximo de extensión todavía definido. A diferencia de la
-valoración, un mismo usuario puede dejar **más de un** comentario sobre el mismo objetivo
-— no hay reemplazo ni límite de cantidad.
+Texto libre, con un máximo implementado de 5000 caracteres y sin mínimo. A diferencia de la
+valoración, un mismo usuario puede dejar **más de un** comentario sobre el mismo objetivo — no hay
+reemplazo ni límite de cantidad.
 
-## Preguntas abiertas (a resolver al implementar, no antes)
+Los comentarios publicados pueden editarse o borrarse únicamente por su autor. El borrado es
+físico e irreversible, y las mutaciones requieren una sesión válida.
 
-- ¿Se puede editar o borrar un comentario ya publicado? No definido.
+## Fuera de alcance pendiente
+
 - ¿Moderación o reporte de comentarios? Fuera de alcance de este documento — ver
   `04-riesgos.md` si se agrega como riesgo al planificar Fase 4.
-- Longitud máxima de comentario, si la hay.
 
 ## Fuera de alcance de este documento
 

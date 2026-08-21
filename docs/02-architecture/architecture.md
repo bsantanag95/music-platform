@@ -25,11 +25,11 @@ Servicios externos (MusicBrainz, Cover Art Archive, APIs de streaming)
 - _Servicio de ingesta y cache_: implementa el patrón de cacheo bajo demanda contra MusicBrainz y Cover Art Archive (ver Fase 2 del roadmap). Es la única capa que habla con las APIs externas de datos del catálogo — el resto del sistema solo consulta la base propia. Esta exclusividad no aplica al flujo OAuth/OIDC del servicio de autenticación.
 - _Servicio de auth_: registro, login local, sesión, autorización e identidades externas. Vive en
   `src/services/auth/`; los adaptadores OAuth/OIDC viven en `src/services/auth/providers/` y sus
-  route handlers en `src/app/api/auth/`. En Fase 4 se implementa la autenticación local y se deja
-  preparada la extensión de proveedores. Google será el primer proveedor externo implementado
-  inmediatamente después. Los flujos OAuth/OIDC utilizan Authorization Code con state y PKCE, y nonce cuando se utiliza
-  OIDC. El frontend no implementa el flujo OAuth/OIDC ni valida tokens del proveedor. El
-  scrobbling de servicios de streaming sigue siendo una función posterior de Fase 5.
+  route handlers en `src/app/api/auth/`. La autenticación local y el login/alta con Google OAuth/OIDC
+  están implementados y desembocan en la misma sesión server-side. Los flujos OAuth/OIDC utilizan
+  Authorization Code con state y PKCE, y nonce cuando se utiliza OIDC. El frontend no implementa el
+  flujo OAuth/OIDC ni valida tokens del proveedor. El linking explícito y otros proveedores quedan
+  diferidos; el scrobbling de servicios de streaming sigue siendo una función posterior de Fase 5.
 - _Servicio de ratings/comentarios_: aplica las reglas de negocio de `01-domain/business-rules.md` antes de escribir en la base.
 
 **Base de datos (PostgreSQL).** Fuente de verdad del catálogo curado y de los datos generados por usuarios. Las reglas de coherencia más críticas (estrellas/detallada, unicidad por usuario y objetivo) están reforzadas con constraints a nivel de base, no solo en la capa de aplicación — ver `03-data/sql-model.md`.
