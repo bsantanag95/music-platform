@@ -2,7 +2,11 @@ import { and, eq, ilike, or } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, userFollow } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
-import { PROFILE_VISIBILITIES, type FollowRelation, type ProfileVisibility } from "./types";
+import {
+  PROFILE_VISIBILITIES,
+  type FollowRelation,
+  type ProfileVisibility,
+} from "./types";
 import { getRelationBetween, isBlocking, relationsFor } from "./relations";
 
 export interface OwnProfile {
@@ -45,7 +49,11 @@ export async function updateProfileVisibility(
   visibility: ProfileVisibility,
 ): Promise<OwnProfile> {
   if (!PROFILE_VISIBILITIES.includes(visibility)) {
-    throw new ApiError("VALIDATION_ERROR", 400, "La visibilidad de perfil no es válida");
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      400,
+      "La visibilidad de perfil no es válida",
+    );
   }
   const [user] = await db
     .update(appUser)
@@ -82,7 +90,7 @@ export async function getProfileByUsername(
   const relation = await getRelationBetween(viewerId, user.id);
   const blockedByMe = viewerId ? await isBlocking(viewerId, user.id) : false;
   const accessible =
-    visibility === "public" || relation === "self" || relation === "following" || relation === "incoming";
+    visibility === "public" || relation === "self" || relation === "following";
 
   return {
     id: user.id,
@@ -95,9 +103,19 @@ export async function getProfileByUsername(
   };
 }
 
-export async function searchUsers(query: string, viewerId: string | null, page = 1, pageSize = 20) {
+export async function searchUsers(
+  query: string,
+  viewerId: string | null,
+  page = 1,
+  pageSize = 20,
+) {
   const q = query.trim();
-  if (!q) throw new ApiError("VALIDATION_ERROR", 400, "El término de búsqueda es obligatorio");
+  if (!q)
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      400,
+      "El término de búsqueda es obligatorio",
+    );
   if (page < 1 || pageSize < 1 || pageSize > 50) {
     throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
   }
@@ -140,7 +158,10 @@ export async function searchUsers(query: string, viewerId: string | null, page =
   };
 }
 
-export async function isApprovedFollower(ownerId: string, candidateId: string): Promise<boolean> {
+export async function isApprovedFollower(
+  ownerId: string,
+  candidateId: string,
+): Promise<boolean> {
   const [row] = await db
     .select({ id: userFollow.id })
     .from(userFollow)
