@@ -297,6 +297,8 @@ export type ReleaseRow = typeof release.$inferSelect;
 export type RecordingRow = typeof recording.$inferSelect;
 export type TrackRow = typeof track.$inferSelect;
 export type CreditRow = typeof credit.$inferSelect;
+export type CommentRow = typeof comment.$inferSelect;
+export type ListenEntryRow = typeof listenEntry.$inferSelect;
 
 export const comment = pgTable(
   "comment",
@@ -321,5 +323,37 @@ export const comment = pgTable(
       "chk_comment_single_target",
       sql`num_nonnulls(${t.artistId}, ${t.releaseGroupId}, ${t.recordingId}) = 1`,
     ),
+  ],
+);
+
+export const listenEntry = pgTable(
+  "listen_entry",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    artistId: uuid("artist_id").references(() => artist.id, { onDelete: "cascade" }),
+    releaseGroupId: uuid("release_group_id").references(() => releaseGroup.id, {
+      onDelete: "cascade",
+    }),
+    recordingId: uuid("recording_id").references(() => recording.id, { onDelete: "cascade" }),
+    listenContext: text("listen_context").notNull(), // 'first_listen' | 'relisten' | 'rediscovery'
+    body: text("body"),
+    reaction: text("reaction"), // 'liked' | 'loved' | 'obsessed' | 'neutral' | 'disliked'
+    audience: text("audience").notNull().default("followers"), // 'private' | 'followers' | 'public'
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_listen_entry_user_created").on(t.userId, t.createdAt),
+    index("idx_listen_entry_artist").on(t.artistId),
+    index("idx_listen_entry_release_group").on(t.releaseGroupId),
+    index("idx_listen_entry_recording").on(t.recordingId),
+    check(
+      "chk_listen_entry_single_target",
+      sql`num_nonnulls(${t.artistId}, ${t.releaseGroupId}, ${t.recordingId}) = 1`,
+    ),
+    // El CHECK de contexto, reacción, audiencia y límite de body viven en la
+    // migración SQL cruda (fuente única de verdad, mismo criterio que rating).
   ],
 );

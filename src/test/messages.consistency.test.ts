@@ -23,7 +23,7 @@ function loadJson(filePath: string): unknown {
 }
 
 describe("Consistencia de mensajes i18n", () => {
-  const namespaces = ["common", "catalog", "errors", "auth"] as const;
+  const namespaces = ["common", "catalog", "errors", "auth", "users", "diary"] as const;
   const locales = ["es", "en"] as const;
 
   for (const namespace of namespaces) {

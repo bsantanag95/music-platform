@@ -75,8 +75,9 @@ expone escuchas ajenas y `/me` es coherente con el resto de la base social.
 ### D6. Componente `ReactionPicker` y representación "texto + icono opcional"
 Taxonomía con etiquetas i18n es/en y un icono discreto por reacción como refuerzo. El texto siempre
 es visible (accesibilidad: no depender de color/emoji). Se reutiliza en el panel de ampliación y en
-el listado del diario. `null` se muestra como "Sin reacción" (sin icono); `neutral` muestra
-etiqueta "Neutro" con icono propio, distinguiéndose visualmente.
+el listado del diario. `null` (ausencia de dato) no renderiza etiqueta en los listados — la
+ausencia es la señal de que no hubo reacción, distinta de `neutral` (etiqueta "Neutro" con icono
+propio). En el selector, "Sin reacción" es una opción explícita del radio group.
 
 ### D7. Flujo rápido: `POST` inmediato + panel de ampliación
 "Marcar como escuchado" hace `POST` y optimísticamente muestra la entrada en el diario; un panel
@@ -95,6 +96,10 @@ render (aquí `useState` + refetch manual es suficiente).
 - **[Riesgo de que una escucha "contamine" rating]** → D1/D7: `listen_entry` no tiene columna de
   estrellas ni trigger hacia `rating`; la independencia se cubre con tests de integración del
   servicio.
+- **[Doble POST simultáneo en la inferencia de contexto]** → Dos registros concurrentes sobre el
+  mismo objetivo pueden leer `count = 0` y proponer ambos `first_listen`. No viola constraints ni
+  pierde datos; el contexto es corregible por `PATCH`. Mitigación opcional futura: contar tras el
+  insert o transacción.
 - **[Rutas `/me` crecen]** → Agrupación funcional ya existente; se documentan en contracts.md
   junto al resto de la base social.
 

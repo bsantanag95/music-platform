@@ -12,6 +12,7 @@ import type { ReleaseGroupRow } from "@/db/schema";
 import type { Artist, ReleaseGroup, ReleaseGroupCategory } from "@/lib/api/schemas";
 import { ArtistMemberships } from "@/components/catalog/ArtistMemberships";
 import { SocialSection } from "@/components/social/SocialSection";
+import { MarkAsListened } from "@/components/diary/MarkAsListened";
 import { resolveSession } from "@/services/auth/sessions";
 import { getRatings, listComments, resolveSocialTarget } from "@/services/social";
 
@@ -90,6 +91,7 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
         typeLabel={typeLabel}
         noPhotoAlt={t("artist.noPhotoAlt")}
       />
+      <MarkAsListened target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
       <ArtistMemberships
         memberships={memberships}
         heading={artist.type === "group" ? t("artist.membersHeading") : t("artist.membershipsHeading")}

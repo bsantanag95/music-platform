@@ -1,0 +1,44 @@
+{
+  "title": "Mi diario",
+  "emptyTitle": "Todavía no escuchaste nada",
+  "emptyDescription": "Marcá como escuchado un artista, álbum o canción para que aparezca acá.",
+  "markAsListened": "Marcar como escuchado",
+  "signInToListen": "Iniciar sesión para marcar escuchas",
+  "listening": "Registrando...",
+  "marked": "Escucha registrada",
+  "expand": "Ampliar",
+  "collapse": "Cerrar",
+  "bodyLabel": "Impresión (opcional)",
+  "bodyPlaceholder": "Este bajo está ridículamente bueno...",
+  "bodyMax": "Máximo 500 caracteres",
+  "contextLabel": "Contexto",
+  "reactionLabel": "¿Cómo te sentó?",
+  "audienceLabel": "Audiencia",
+  "save": "Guardar",
+  "saving": "Guardando...",
+  "delete": "Eliminar",
+  "deleteConfirm": "¿Borrar esta escucha? Esta acción no se puede deshacer.",
+  "deleting": "Borrando...",
+  "loadMore": "Cargar más",
+  "loadingMore": "Cargando...",
+  "saveError": "No pudimos guardar el cambio. Intentá de nuevo.",
+  "loadError": "No pudimos cargar el diario. Intentá de nuevo.",
+  "context": {
+    "first_listen": "Primera escucha",
+    "relisten": "Repetición",
+    "rediscovery": "Redescubrimiento"
+  },
+  "reaction": {
+    "none": "Sin reacción",
+    "liked": "Me gustó",
+    "loved": "Me encantó",
+    "obsessed": "Obsesión",
+    "neutral": "Neutro",
+    "disliked": "No me gustó"
+  },
+  "audience": {
+    "private": "Privado",
+    "followers": "Seguidores",
+    "public": "Público"
+  }
+}

@@ -50,6 +50,8 @@ además del `error` legible:
 | `RELATION_INVALID` | 400 | Operación de seguimiento o bloqueo inválida (ej. intentar seguirse o bloquearse a sí mismo). |
 | `REQUEST_NOT_FOUND` | 404 | La solicitud de seguimiento no existe o ya fue resuelta (aprobada, rechazada o cancelada). |
 | `BLOCKED` | 403 | La operación de seguimiento está impedida por un bloqueo existente entre las cuentas. |
+| `LISTEN_ENTRY_NOT_FOUND` | 404 | Diario de escucha: la entrada no existe o no pertenece al usuario autenticado (se responde 404 para no revelar existencia de entradas ajenas). |
+| `DIARY_TARGET_INVALID` | 404 | Diario de escucha: el objetivo indicado no existe o no es un artista/álbum/canción válido. |
 
 ### Implementación
 

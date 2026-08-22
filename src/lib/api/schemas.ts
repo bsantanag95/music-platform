@@ -1,5 +1,10 @@
 import { z } from "zod";
 import { PROFILE_VISIBILITIES, FOLLOW_RELATIONS } from "@/services/social/types";
+import {
+  DIARY_AUDIENCES,
+  LISTEN_CONTEXTS,
+  LISTEN_REACTIONS,
+} from "@/services/diary/types";
 
 // Espejo runtime de docs/04-api/contracts.md y docs/04-api/errors.md.
 // Ningún componente debe confiar en ArtistRow/ReleaseGroupRow de db/schema.ts
@@ -127,6 +132,8 @@ export const ErrorCodeSchema = z.enum([
   "RELATION_INVALID",
   "REQUEST_NOT_FOUND",
   "BLOCKED",
+  "LISTEN_ENTRY_NOT_FOUND",
+  "DIARY_TARGET_INVALID",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 
@@ -346,6 +353,73 @@ export type FollowResponse = z.infer<typeof FollowResponseSchema>;
 
 // Respuestas 204 sin body (aprovechar, rechazar, eliminar seguidor).
 export const NoContentSchema = z.null();
+
+// --- Diario de escucha (Fase 5, cambio add-listen-diary-reactions) ---
+
+export const ListenContextSchema = z.enum(LISTEN_CONTEXTS);
+export type ListenContext = z.infer<typeof ListenContextSchema>;
+
+// Taxonomía de reacción emocional. `null` (ausencia de dato) es distinto de
+// `neutral` (elección explícita); los textos viven en i18n.
+export const ListenReactionSchema = z.enum(LISTEN_REACTIONS);
+export type ListenReaction = z.infer<typeof ListenReactionSchema>;
+
+export const DiaryAudienceSchema = z.enum(DIARY_AUDIENCES);
+export type DiaryAudience = z.infer<typeof DiaryAudienceSchema>;
+
+export const ListenTargetSchema = z.object({
+  type: SocialTargetTypeSchema,
+  id: z.uuid(),
+});
+export type ListenTarget = z.infer<typeof ListenTargetSchema>;
+
+export const ListenTargetInfoSchema = z.object({
+  type: SocialTargetTypeSchema,
+  id: z.uuid(),
+  title: z.string(),
+  subtitle: z.string().nullable(),
+  coverThumbUrl: z.string().nullable(),
+});
+export type ListenTargetInfo = z.infer<typeof ListenTargetInfoSchema>;
+
+export const ListenEntrySchema = z.object({
+  id: z.uuid(),
+  listenContext: ListenContextSchema,
+  body: z.string().nullable(),
+  reaction: ListenReactionSchema.nullable(),
+  audience: DiaryAudienceSchema,
+  createdAt: z.string(),
+  target: ListenTargetInfoSchema,
+});
+export type ListenEntry = z.infer<typeof ListenEntrySchema>;
+
+export const CreateListenEntryRequestSchema = z.object({
+  target: ListenTargetSchema,
+});
+export type CreateListenEntryRequest = z.infer<typeof CreateListenEntryRequestSchema>;
+
+export const UpdateListenEntryRequestSchema = z
+  .object({
+    listenContext: ListenContextSchema.optional(),
+    body: z.string().max(500).nullable().optional(),
+    reaction: ListenReactionSchema.nullable().optional(),
+    audience: DiaryAudienceSchema.optional(),
+  })
+  .refine((changes) => Object.keys(changes).length > 0, {
+    message: "Debe indicarse al menos un campo a modificar",
+  });
+export type UpdateListenEntryRequest = z.infer<typeof UpdateListenEntryRequestSchema>;
+
+export const ListenEntryResponseSchema = z.object({ entry: ListenEntrySchema });
+export type ListenEntryResponse = z.infer<typeof ListenEntryResponseSchema>;
+
+export const DiaryListResponseSchema = z.object({
+  entries: z.array(ListenEntrySchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  hasNext: z.boolean(),
+});
+export type DiaryListResponse = z.infer<typeof DiaryListResponseSchema>;
 
 export const BlockedResponseSchema = z.object({ blocked: z.boolean() });
 export type BlockedResponse = z.infer<typeof BlockedResponseSchema>;

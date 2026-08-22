@@ -328,6 +328,70 @@ recrea relaciones eliminadas.
 Lista paginada de cuentas bloqueadas por el usuario autenticado. Misma forma de respuesta que
 seguidores/seguidos.
 
+## Diario de escucha (Fase 5.3, cambio `add-listen-diary-reactions`)
+
+Endpoints del diario de presencia manual. Todas las rutas requieren sesión y el usuario se deriva de
+la cookie server-side — ningún body acepta `user_id`. Las lecturas están limitadas al diario propio;
+no se exponen escuchas ajenas en este incremento (perfil y feed quedan para cambios posteriores).
+
+### `POST /api/me/diary`
+
+Registra una escucha con un solo gesto. El servidor infiere el contexto (`first_listen` en la
+primera escucha del usuario sobre el objetivo, `relisten` en adelante) y aplica la audiencia por
+defecto `followers`. La entrada se crea sin impresión ni reacción; se completan luego con `PATCH`.
+
+**Body:** `{ target: { type: "artist" | "release-group" | "recording", id } }`.
+**201 OK:** `{ entry }` con `{ id, listenContext, body, reaction, audience, createdAt, target }`.
+**400** con `VALIDATION_ERROR` si el body no es válido. **404** con `DIARY_TARGET_INVALID` si el
+objetivo no existe. **401** con `AUTH_REQUIRED` sin sesión.
+
+### `GET /api/me/diary?page=&pageSize=`
+
+Lista paginada del diario propio en orden cronológico descendente. Cada entrada expone su objetivo
+con `{ type, id, title, subtitle, coverThumbUrl }`.
+
+**200 OK:** `{ entries: [ListenEntry], page, pageSize, hasNext }`. **400** con `VALIDATION_ERROR`
+si la paginación es inválida.
+
+### `PATCH /api/me/diary/{id}`
+
+Completa o modifica una entrada propia. Cada campo es opcional pero debe enviarse al menos uno.
+`reaction: null` limpia la reacción; `body` admite hasta 500 caracteres (cadena vacía o `null` la
+limpia). `listenContext` y `audience` usan sus enums.
+
+**Body:** `{ listenContext?, body?, reaction?, audience? }`.
+**200 OK:** `{ entry }`. **400** con `VALIDATION_ERROR` si no hay campos o un valor no es válido.
+**404** con `LISTEN_ENTRY_NOT_FOUND` si la entrada no existe o no pertenece al usuario (no se revela
+la existencia de entradas ajenas).
+
+### `DELETE /api/me/diary/{id}`
+
+Borra físicamente una entrada propia. No afecta al rating del objetivo ni a otras entradas.
+**204.** **404** con `LISTEN_ENTRY_NOT_FOUND` si la entrada no existe o no es del usuario.
+
+### Forma de `entry`
+
+```json
+{
+  "id": "uuid",
+  "listenContext": "first_listen | relisten | rediscovery",
+  "body": "string | null",
+  "reaction": "liked | loved | obsessed | neutral | disliked | null",
+  "audience": "private | followers | public",
+  "createdAt": "ISO 8601",
+  "target": {
+    "type": "artist | release-group | recording",
+    "id": "uuid",
+    "title": "string",
+    "subtitle": "string | null",
+    "coverThumbUrl": "string | null"
+  }
+}
+```
+
+`reaction: null` (ausencia de dato) es distinto de `reaction: "neutral"` (elección explícita); los
+textos de cada reacción viven en i18n, no en la API.
+
 ## Ratings y comentarios
 
 Los endpoints sociales usan el objetivo `artist`, `release-group` o `recording` y el UUID interno.

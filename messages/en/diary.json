@@ -1,0 +1,44 @@
+{
+  "title": "My diary",
+  "emptyTitle": "Nothing listened yet",
+  "emptyDescription": "Mark an artist, album or song as listened and it will show up here.",
+  "markAsListened": "Mark as listened",
+  "signInToListen": "Log in to mark listens",
+  "listening": "Saving...",
+  "marked": "Listen recorded",
+  "expand": "Expand",
+  "collapse": "Close",
+  "bodyLabel": "Note (optional)",
+  "bodyPlaceholder": "That bass is ridiculously good...",
+  "bodyMax": "Up to 500 characters",
+  "contextLabel": "Context",
+  "reactionLabel": "How did it hit you?",
+  "audienceLabel": "Audience",
+  "save": "Save",
+  "saving": "Saving...",
+  "delete": "Delete",
+  "deleteConfirm": "Delete this listen? This can't be undone.",
+  "deleting": "Deleting...",
+  "loadMore": "Load more",
+  "loadingMore": "Loading...",
+  "saveError": "We couldn't save the change. Try again.",
+  "loadError": "We couldn't load your diary. Try again.",
+  "context": {
+    "first_listen": "First listen",
+    "relisten": "Relisten",
+    "rediscovery": "Rediscovery"
+  },
+  "reaction": {
+    "none": "No reaction",
+    "liked": "Like it",
+    "loved": "Loved it",
+    "obsessed": "Obsessed",
+    "neutral": "Neutral",
+    "disliked": "Didn't click"
+  },
+  "audience": {
+    "private": "Private",
+    "followers": "Followers",
+    "public": "Public"
+  }
+}

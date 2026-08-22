@@ -214,3 +214,30 @@ Esa columna **no está implementada todavía**; requiere una migración SQL y un
 **Propósito:** comentarios de texto libre, independientes de la valoración — a diferencia de `rating`, no hay restricción de unicidad por usuario y objetivo.
 
 **Restricciones:** `CHECK (num_nonnulls(artist_id, release_group_id, recording_id) = 1)`, igual que `credit` y `rating`.
+
+## `listen_entry`
+
+**Propósito:** el diario de escucha (Fase 5, cambio `add-listen-diary-reactions`). Registra cada
+momento en que un usuario quiere dejar constancia de que algo sonó. Es **append-only**: no hay
+índice único por usuario/objetivo — un usuario puede tener tantas entradas sobre el mismo álbum
+como escuchas quiera registrar, y una nueva entrada nunca reemplaza una anterior.
+
+**Campos:**
+
+- `user_id` y exactamente uno de `artist_id` / `release_group_id` / `recording_id`
+  (`CHECK (num_nonnulls(...) = 1)`, mismo patrón polimórfico que `rating`/`comment`).
+- `listen_context`: `first_listen`, `relisten` o `rediscovery` (el servidor propone
+  `first_listen` en la primera entrada del usuario sobre el objetivo y `relisten` en las
+  siguientes; el usuario puede corregirlo).
+- `body`: impresión breve opcional, `CHECK (body IS NULL OR length(body) <= 500)`.
+- `reaction`: reacción emocional opcional (`liked`, `loved`, `obsessed`, `neutral`, `disliked`).
+  **`NULL` (ausencia de dato) es distinto de `neutral` (elección explícita).** Esta columna
+  **reemplaza deliberadamente las estrellas**: `listen_entry` no tiene valoración numérica ni
+  ninguna relación con `rating` — la gramática de sensación es independiente de la gramática de
+  valoración (los textos de reacción viven en i18n, no en la base).
+- `audience`: `private`, `followers` o `public`, con `DEFAULT 'followers'`. Se persiste desde el
+  inicio para alimentar el futuro feed y el perfil; en este incremento solo se consulta el diario
+  propio.
+
+**Índices:** `idx_listen_entry_user_created` (diario por usuario, fecha descendente) y uno por
+objetivo (`idx_listen_entry_artist`, `idx_listen_entry_release_group`, `idx_listen_entry_recording`).
