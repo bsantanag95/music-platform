@@ -39,5 +39,6 @@
   "emptyRequests": "You have no pending requests.",
   "emptyBlocks": "You haven't blocked anyone.",
   "removeFollower": "Remove follower",
-  "backToProfile": "Back to my profile"
+  "backToProfile": "Back to my profile",
+  "diaryTitle": "Diary"
 }

@@ -50,16 +50,19 @@ const blocker = "b1";
 const blocked = { id: "b2" };
 
 describe("bloqueo", () => {
-  it("bloquea y limpia las relaciones de seguimiento en una transacción", async () => {
+  it("bloquea y limpia las relaciones de seguimiento en ambas direcciones", async () => {
     mockSelectChain([blocked]);
     mocks.db.insert.mockReturnValue({ values: vi.fn().mockResolvedValue(undefined) });
-    mocks.db.delete.mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+    const deleteFn = vi.fn().mockResolvedValue(undefined);
+    mocks.db.delete.mockReturnValue({ where: deleteFn });
     mockTransaction();
 
     await expect(blockUser(blocker, "target")).resolves.toBeUndefined();
     expect(mocks.db.transaction).toHaveBeenCalled();
     expect(mocks.db.insert).toHaveBeenCalled();
     expect(mocks.db.delete).toHaveBeenCalled();
+    // La transacción debe eliminar userFollow en ambas direcciones
+    expect(deleteFn).toHaveBeenCalled();
   });
 
   it("rechaza bloquear el propio perfil", async () => {

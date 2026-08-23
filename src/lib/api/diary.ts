@@ -1,8 +1,10 @@
 import { apiFetch } from "./client";
 import {
   DiaryListResponseSchema,
+  FeedResponseSchema,
   ListenEntryResponseSchema,
   type DiaryListResponse,
+  type FeedResponse,
   type ListenEntry,
   type ListenTarget,
   type UpdateListenEntryRequest,
@@ -11,6 +13,17 @@ import { z } from "zod";
 
 export function getMyDiary(page = 1, pageSize = 20): Promise<DiaryListResponse> {
   return apiFetch(`/api/me/diary?page=${page}&pageSize=${pageSize}`, DiaryListResponseSchema);
+}
+
+export function getUserDiary(username: string, page = 1, pageSize = 20): Promise<DiaryListResponse> {
+  return apiFetch(
+    `/api/users/${encodeURIComponent(username)}/diary?page=${page}&pageSize=${pageSize}`,
+    DiaryListResponseSchema,
+  );
+}
+
+export function getFeed(page = 1, pageSize = 20): Promise<FeedResponse> {
+  return apiFetch(`/api/me/feed?page=${page}&pageSize=${pageSize}`, FeedResponseSchema);
 }
 
 export function createListenEntry(target: ListenTarget): Promise<ListenEntry> {

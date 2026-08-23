@@ -421,5 +421,25 @@ export const DiaryListResponseSchema = z.object({
 });
 export type DiaryListResponse = z.infer<typeof DiaryListResponseSchema>;
 
+export const AuthorSummarySchema = z.object({
+  id: z.uuid(),
+  username: z.string(),
+  displayName: z.string().nullable(),
+});
+export type AuthorSummary = z.infer<typeof AuthorSummarySchema>;
+
+export const FeedEntrySchema = ListenEntrySchema.extend({
+  author: AuthorSummarySchema,
+});
+export type FeedEntry = z.infer<typeof FeedEntrySchema>;
+
+export const FeedResponseSchema = z.object({
+  entries: z.array(FeedEntrySchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  hasNext: z.boolean(),
+});
+export type FeedResponse = z.infer<typeof FeedResponseSchema>;
+
 export const BlockedResponseSchema = z.object({ blocked: z.boolean() });
 export type BlockedResponse = z.infer<typeof BlockedResponseSchema>;

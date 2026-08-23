@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+﻿import { describe, it, expect } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -23,7 +23,7 @@ function loadJson(filePath: string): unknown {
 }
 
 describe("Consistencia de mensajes i18n", () => {
-  const namespaces = ["common", "catalog", "errors", "auth", "users", "diary"] as const;
+  const namespaces = ["common", "catalog", "errors", "auth", "users", "diary", "feed"] as const;
   const locales = ["es", "en"] as const;
 
   for (const namespace of namespaces) {

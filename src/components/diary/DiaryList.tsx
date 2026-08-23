@@ -11,8 +11,18 @@ import { deleteListenEntry, getMyDiary } from "@/lib/api/diary";
 import { ApiError } from "@/lib/api/client";
 import type { DiaryListResponse, ListenEntry, ListenTargetInfo } from "@/lib/api/schemas";
 
+interface AuthorInfo {
+  id: string;
+  username: string;
+  displayName: string | null;
+}
+
 interface DiaryListProps {
   initial: DiaryListResponse;
+  readOnly?: boolean;
+  showAuthor?: boolean;
+  loadMore?: (page: number, pageSize: number) => Promise<DiaryListResponse>;
+  empty?: { title: string; description: string };
 }
 
 function targetHref(target: ListenTargetInfo): string {
@@ -29,10 +39,9 @@ function formatDate(iso: string, locale: string) {
   });
 }
 
-// Listado paginado del diario propio. Cada entrada permite ampliarse
-// (impresión/contexto/reacción/audiencia) y borrarse con confirmación;
-// solo se listan entradas del usuario autenticado.
-export function DiaryList({ initial }: DiaryListProps) {
+// Listado paginado del diario. Funciona en modo propio (con edición/borrado)
+// y en modo lectura (perfil ajeno, feed) según las props opcionales.
+export function DiaryList({ initial, readOnly, showAuthor, loadMore, empty }: DiaryListProps) {
   const t = useTranslations("diary");
   const locale = useLocale();
   const [entries, setEntries] = useState<ListenEntry[]>(initial.entries);
@@ -44,7 +53,12 @@ export function DiaryList({ initial }: DiaryListProps) {
   const [loadError, setLoadError] = useState(false);
 
   if (entries.length === 0) {
-    return <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />;
+    return (
+      <EmptyState
+        title={empty?.title ?? t("emptyTitle")}
+        description={empty?.description ?? t("emptyDescription")}
+      />
+    );
   }
 
   const handleDelete = async (entry: ListenEntry) => {
@@ -71,7 +85,8 @@ export function DiaryList({ initial }: DiaryListProps) {
     setLoading(true);
     setLoadError(false);
     try {
-      const next = await getMyDiary(page + 1, 20);
+      const fetcher = loadMore ?? getMyDiary;
+      const next = await fetcher(page + 1, 20);
       setEntries((current) => [...current, ...next.entries]);
       setPage(next.page);
       setHasNext(next.hasNext);
@@ -85,10 +100,20 @@ export function DiaryList({ initial }: DiaryListProps) {
   return (
     <div className="flex w-full max-w-3xl flex-col gap-4">
       <ul className="flex flex-col gap-4">
-        {entries.map((entry) => (
+        {entries.map((entry) => {
+          const author = showAuthor ? (entry as ListenEntry & { author?: AuthorInfo }).author : undefined;
+          return (
           <li key={entry.id} className="rounded border border-ink-border bg-ink-surface p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
+                {author && (
+                  <Link
+                    href={`/users/${encodeURIComponent(author.username)}`}
+                    className="font-data text-xs text-paper-muted transition-colors hover:text-paper"
+                  >
+                    {author.displayName ?? `@${author.username}`}
+                  </Link>
+                )}
                 <Link
                   href={targetHref(entry.target)}
                   className="font-display text-lg text-paper transition-colors hover:text-amber"
@@ -98,11 +123,12 @@ export function DiaryList({ initial }: DiaryListProps) {
                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 font-data text-xs text-paper-muted">
                   <span>{t(`context.${entry.listenContext}`)}</span>
                   <ReactionBadge reaction={entry.reaction} />
-                  <span>{t(`audience.${entry.audience}`)}</span>
+                  {!readOnly && <span>{t(`audience.${entry.audience}`)}</span>}
                   <time dateTime={entry.createdAt}>{formatDate(entry.createdAt, locale)}</time>
                 </div>
                 {entry.body ? <p className="mt-2 whitespace-pre-wrap font-body text-paper">{entry.body}</p> : null}
               </div>
+              {!readOnly && (
               <div className="flex shrink-0 flex-col items-end gap-2">
                 <Button variant="ghost" onClick={() => setExpandedId((current) => (current === entry.id ? null : entry.id))}>
                   {expandedId === entry.id ? t("collapse") : t("expand")}
@@ -123,8 +149,9 @@ export function DiaryList({ initial }: DiaryListProps) {
                   </Button>
                 )}
               </div>
+              )}
             </div>
-            {expandedId === entry.id && (
+            {!readOnly && expandedId === entry.id && (
               <div className="mt-3">
                 <ListenEntryForm
                   entryId={entry.id}
@@ -144,7 +171,8 @@ export function DiaryList({ initial }: DiaryListProps) {
               </div>
             )}
           </li>
-        ))}
+          );
+        })}
       </ul>
       {hasNext && (
         <Button variant="secondary" disabled={loading} onClick={() => void handleLoadMore()} className="self-center">

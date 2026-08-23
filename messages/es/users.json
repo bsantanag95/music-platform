@@ -39,5 +39,6 @@
   "emptyRequests": "No tenés solicitudes pendientes.",
   "emptyBlocks": "No bloqueaste a nadie.",
   "removeFollower": "Eliminar seguidor",
-  "backToProfile": "Volver a mi perfil"
+  "backToProfile": "Volver a mi perfil",
+  "diaryTitle": "Diario"
 }

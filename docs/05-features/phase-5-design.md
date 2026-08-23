@@ -308,12 +308,16 @@ implementar diario, listas y feed en un único cambio.
 ## 14. Decisiones pendientes antes de los OpenSpec
 
 - Default de privacidad para perfiles nuevos.
-- Significado exacto de una actividad pública creada por un perfil privado.
+- **Cerrada (add-diary-social-surfaces):** una actividad pública de un perfil privado solo es
+  visible para seguidores aprobados y el dueño. El visitante anónimo o sin relación aprobada no ve
+  ninguna entrada, incluidas las públicas. Fuente: `audiencesForProfile` en
+  `src/services/diary/visibility.ts`.
 - Configuración predeterminada por tipo de actividad.
 - Listas mixtas o de un solo tipo de entidad.
 - Listas colaborativas o propiedad individual únicamente.
 - Bloqueo y reporte en la primera entrega social.
-- Orden, paginación y deduplicación del feed.
+- **Parcialmente cerrada (add-diary-social-surfaces):** el feed v1 usa offset + tiebreaker `id DESC`
+  y se calcula bajo demanda; materialización y deduplicación se evalúan con volumen real.
 - Comportamiento al cambiar la audiencia de una actividad ya publicada.
 - Alcance y filtros del historial del diario.
 - Reglas de privacidad y frecuencia del scrobbling automático.

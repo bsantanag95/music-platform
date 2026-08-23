@@ -5,6 +5,8 @@ import {
   createListenEntry,
   deleteListenEntry,
   listMyDiary,
+  listUserDiary,
+  listFeed,
   resolveDiaryTarget,
   updateListenEntry,
   type DiaryTarget,
@@ -12,9 +14,13 @@ import {
 
 const mocks = vi.hoisted(() => ({
   db: { select: vi.fn(), insert: vi.fn(), update: vi.fn(), delete: vi.fn() },
+  getProfileByUsername: vi.fn(),
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
+vi.mock("@/services/social/profiles", () => ({
+  getProfileByUsername: mocks.getProfileByUsername,
+}));
 
 // select().from().where()  → terminal donde se espera el resultado
 function whereTerminal(rows: unknown[]) {
@@ -213,5 +219,121 @@ describe("servicio del diario", () => {
       .map((part) => part.trim().split(/\s+as\s+/)[0])
       .filter(Boolean);
     expect(identifiers).not.toContain("rating");
+  });
+
+  describe("listUserDiary", () => {
+    const owner = "00000000-0000-4000-8000-000000000010";
+    const viewer = "00000000-0000-4000-8000-000000000011";
+
+    it("devuelve entradas visibles cuando el lector tiene permiso", async () => {
+      mocks.getProfileByUsername.mockResolvedValue({
+        id: owner,
+        username: "testuser",
+        displayName: "Test",
+        profileVisibility: "public",
+        relation: "none",
+        blockedByMe: false,
+      });
+      mocks.db.select.mockReturnValue(joinPaged([entryRow]));
+
+      const result = await listUserDiary("testuser", viewer, 1, 20);
+
+      expect(result.entries).toHaveLength(1);
+      expect(result.hasNext).toBe(false);
+      expect(mocks.getProfileByUsername).toHaveBeenCalledWith("testuser", viewer);
+    });
+
+    it("devuelve lista vacía sin permiso (perfil privado sin seguir)", async () => {
+      mocks.getProfileByUsername.mockResolvedValue({
+        id: owner,
+        username: "private",
+        displayName: "Private",
+        profileVisibility: "private",
+        relation: "none",
+        blockedByMe: false,
+      });
+
+      const result = await listUserDiary("private", viewer, 1, 20);
+
+      expect(result.entries).toEqual([]);
+      expect(result.hasNext).toBe(false);
+      expect(mocks.db.select).not.toHaveBeenCalled();
+    });
+
+    it("devuelve lista vacía cuando hay bloqueo", async () => {
+      mocks.getProfileByUsername.mockResolvedValue({
+        id: owner,
+        username: "blocked",
+        displayName: "Blocked",
+        profileVisibility: "public",
+        relation: "blocked",
+        blockedByMe: true,
+      });
+
+      const result = await listUserDiary("blocked", viewer, 1, 20);
+
+      expect(result.entries).toEqual([]);
+      expect(mocks.db.select).not.toHaveBeenCalled();
+    });
+
+    it("lanza 404 cuando el usuario no existe", async () => {
+      mocks.getProfileByUsername.mockRejectedValue(
+        Object.assign(new Error("USER_NOT_FOUND"), { code: "USER_NOT_FOUND", status: 404 }),
+      );
+
+      await expect(listUserDiary("nonexistent", viewer)).rejects.toMatchObject({
+        code: "USER_NOT_FOUND",
+        status: 404,
+      });
+    });
+
+    it("rechaza paginación inválida", async () => {
+      await expect(listUserDiary("user", viewer, 0)).rejects.toMatchObject({
+        code: "VALIDATION_ERROR",
+        status: 400,
+      });
+    });
+  });
+
+  describe("listFeed", () => {
+    const viewer = "00000000-0000-4000-8000-000000000020";
+
+    it("devuelve entradas de seguidos con autor", async () => {
+      mocks.db.select
+        .mockReturnValueOnce(whereTerminal([{ followedId: "00000000-0000-4000-8000-000000000021" }]))
+        .mockReturnValueOnce(
+          joinPaged([
+            {
+              ...entryRow,
+              authorId: "00000000-0000-4000-8000-000000000021",
+              authorUsername: "seguido",
+              authorDisplayName: "Seguido",
+            },
+          ]),
+        );
+
+      const result = await listFeed(viewer, 1, 20);
+
+      expect(result.entries).toHaveLength(1);
+      const entry = result.entries[0];
+      expect(entry).toHaveProperty("author");
+      expect(entry!.author.username).toBe("seguido");
+    });
+
+    it("devuelve lista vacía cuando no sigue a nadie", async () => {
+      mocks.db.select.mockReturnValueOnce(whereTerminal([]));
+
+      const result = await listFeed(viewer, 1, 20);
+
+      expect(result.entries).toEqual([]);
+      expect(result.hasNext).toBe(false);
+    });
+
+    it("rechaza paginación inválida", async () => {
+      await expect(listFeed(viewer, 0)).rejects.toMatchObject({
+        code: "VALIDATION_ERROR",
+        status: 400,
+      });
+    });
   });
 });

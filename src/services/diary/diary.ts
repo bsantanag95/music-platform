@@ -1,14 +1,16 @@
-import { and, desc, eq, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { artist, listenEntry, recording, releaseGroup } from "@/db/schema";
+import { artist, appUser, listenEntry, recording, releaseGroup, userFollow } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import type { SocialTargetType } from "@/lib/api/schemas";
+import { getProfileByUsername } from "@/services/social/profiles";
 import {
   DIARY_BODY_MAX,
   type DiaryAudience,
   type ListenContext,
   type ListenReaction,
 } from "./types";
+import { audiencesForProfile } from "./visibility";
 
 type TargetColumn = "artistId" | "releaseGroupId" | "recordingId";
 
@@ -158,6 +160,113 @@ export async function listMyDiary(userId: string, page = 1, pageSize = 20) {
   };
 }
 
+/** Entrada del diario con autor (para el feed). */
+export interface FeedEntry extends DiaryEntry {
+  author: { id: string; username: string; displayName: string | null };
+}
+
+/**
+ * Diario de un usuario visible para un lector, con paginación.
+ * Devuelve lista vacía sin permiso (no revela si hay entradas).
+ */
+export async function listUserDiary(
+  username: string,
+  viewerId: string | null,
+  page = 1,
+  pageSize = 20,
+) {
+  if (page < 1 || pageSize < 1 || pageSize > 50) {
+    throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
+  }
+
+  const profile = await getProfileByUsername(username, viewerId);
+  const audiences = audiencesForProfile(profile);
+
+  if (audiences.length === 0) {
+    return { entries: [], page, pageSize, hasNext: false };
+  }
+
+  const rows = await selectEntries()
+    .where(and(eq(listenEntry.userId, profile.id), inArray(listenEntry.audience, audiences)))
+    .orderBy(desc(listenEntry.createdAt), desc(listenEntry.id))
+    .limit(pageSize + 1)
+    .offset((page - 1) * pageSize);
+
+  return {
+    entries: rows.slice(0, pageSize).map(serializeEntry),
+    page,
+    pageSize,
+    hasNext: rows.length > pageSize,
+  };
+}
+
+/**
+ * Feed de escuchas de usuarios seguidos por el lector.
+ * Solo incluye entradas visibles según audiencia y sin bloqueo.
+ */
+export async function listFeed(viewerId: string, page = 1, pageSize = 20) {
+  if (page < 1 || pageSize < 1 || pageSize > 50) {
+    throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
+  }
+
+  const followed = await db
+    .select({ followedId: userFollow.followedId })
+    .from(userFollow)
+    .where(and(eq(userFollow.followerId, viewerId), eq(userFollow.status, "accepted")));
+
+  if (followed.length === 0) {
+    return { entries: [], page, pageSize, hasNext: false };
+  }
+
+  const followedIds = followed.map((r) => r.followedId);
+
+  const rows = await db
+    .select({
+      id: listenEntry.id,
+      listenContext: listenEntry.listenContext,
+      body: listenEntry.body,
+      reaction: listenEntry.reaction,
+      audience: listenEntry.audience,
+      createdAt: listenEntry.createdAt,
+      artistId: listenEntry.artistId,
+      releaseGroupId: listenEntry.releaseGroupId,
+      recordingId: listenEntry.recordingId,
+      artistName: artist.name,
+      releaseTitle: releaseGroup.title,
+      releaseCover: releaseGroup.coverThumbUrl,
+      recordingTitle: recording.title,
+      authorId: listenEntry.userId,
+      authorUsername: appUser.username,
+      authorDisplayName: appUser.displayName,
+    })
+    .from(listenEntry)
+    .leftJoin(artist, eq(listenEntry.artistId, artist.id))
+    .leftJoin(releaseGroup, eq(listenEntry.releaseGroupId, releaseGroup.id))
+    .leftJoin(recording, eq(listenEntry.recordingId, recording.id))
+    .leftJoin(appUser, eq(listenEntry.userId, appUser.id))
+    .where(
+      and(
+        inArray(listenEntry.userId, followedIds),
+        inArray(listenEntry.audience, ["followers", "public"]),
+        sql`NOT EXISTS (
+          SELECT 1 FROM user_block b
+          WHERE (b.blocker_id = ${viewerId} AND b.blocked_id = ${listenEntry.userId})
+             OR (b.blocker_id = ${listenEntry.userId} AND b.blocked_id = ${viewerId})
+        )`,
+      ),
+    )
+    .orderBy(desc(listenEntry.createdAt), desc(listenEntry.id))
+    .limit(pageSize + 1)
+    .offset((page - 1) * pageSize);
+
+  return {
+    entries: rows.slice(0, pageSize).map(serializeFeedEntry),
+    page,
+    pageSize,
+    hasNext: rows.length > pageSize,
+  };
+}
+
 async function getOwnedEntry(id: string, userId: string): Promise<DiaryEntry> {
   const rows = await selectEntries()
     .where(and(eq(listenEntry.id, id), eq(listenEntry.userId, userId)))
@@ -221,6 +330,31 @@ function serializeEntry(row: {
     audience: row.audience as DiaryAudience,
     createdAt: row.createdAt.toISOString(),
     target,
+  };
+}
+
+function serializeFeedEntry(row: {
+  id: string;
+  listenContext: string;
+  body: string | null;
+  reaction: string | null;
+  audience: string;
+  createdAt: Date;
+  artistId: string | null;
+  releaseGroupId: string | null;
+  recordingId: string | null;
+  artistName: string | null;
+  releaseTitle: string | null;
+  releaseCover: string | null;
+  recordingTitle: string | null;
+  authorId: string;
+  authorUsername: string | null;
+  authorDisplayName: string | null;
+}): FeedEntry {
+  const entry = serializeEntry(row);
+  return {
+    ...entry,
+    author: { id: row.authorId, username: row.authorUsername ?? "", displayName: row.authorDisplayName },
   };
 }
 

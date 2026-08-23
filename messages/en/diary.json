@@ -2,6 +2,8 @@
   "title": "My diary",
   "emptyTitle": "Nothing listened yet",
   "emptyDescription": "Mark an artist, album or song as listened and it will show up here.",
+  "profileEmptyTitle": "No diary entries",
+  "profileEmptyDescription": "This user hasn't recorded any visible listens yet.",
   "markAsListened": "Mark as listened",
   "signInToListen": "Log in to mark listens",
   "listening": "Saving...",

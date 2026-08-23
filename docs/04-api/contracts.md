@@ -328,11 +328,12 @@ recrea relaciones eliminadas.
 Lista paginada de cuentas bloqueadas por el usuario autenticado. Misma forma de respuesta que
 seguidores/seguidos.
 
-## Diario de escucha (Fase 5.3, cambio `add-listen-diary-reactions`)
+## Diario de escucha (Fase 5.3–5.4, cambios `add-listen-diary-reactions` y `add-diary-social-surfaces`)
 
-Endpoints del diario de presencia manual. Todas las rutas requieren sesión y el usuario se deriva de
-la cookie server-side — ningún body acepta `user_id`. Las lecturas están limitadas al diario propio;
-no se exponen escuchas ajenas en este incremento (perfil y feed quedan para cambios posteriores).
+Endpoints del diario de presencia manual. Las mutaciones (`POST`, `PATCH`, `DELETE`) requieren
+sesión y el usuario se deriva de la cookie server-side — ningún body acepta `user_id`. Las lecturas
+propias (`GET /api/me/diary`) requieren sesión; las lecturas ajenas y el feed tienen reglas de
+visibilidad propias documentadas más abajo.
 
 ### `POST /api/me/diary`
 
@@ -369,6 +370,26 @@ la existencia de entradas ajenas).
 Borra físicamente una entrada propia. No afecta al rating del objetivo ni a otras entradas.
 **204.** **404** con `LISTEN_ENTRY_NOT_FOUND` si la entrada no existe o no es del usuario.
 
+### `GET /api/users/[username]/diary?page=&pageSize=`
+
+Diario de un usuario visible para un lector. La sesión es opcional: si el visitante tiene sesión se
+usa para calcular la visibilidad; si no, se trata como anónimo. La respuesta aplica la matriz de
+visibilidad: bloqueo en cualquier dirección → lista vacía; perfil privado y no seguidor aprobado →
+lista vacía; seguidor aprobado → entradas `public` y `followers`; resto → solo `public`. Una lista
+vacía NO revela si el usuario tiene entradas.
+
+**200 OK:** `{ entries: [ListenEntry], page, pageSize, hasNext }`. **404** con `USER_NOT_FOUND` si
+el `username` no existe. **400** con `VALIDATION_ERROR` si la paginación es inválida.
+
+### `GET /api/me/feed?page=&pageSize=`
+
+Feed de actividad v1: entradas del diario de los usuarios seguidos (relación `accepted`) que sean
+visibles para el lector. Requiere sesión.
+
+**200 OK:** `{ entries: [FeedEntry], page, pageSize, hasNext }` donde `FeedEntry` es una entrada
+con un campo adicional `author: { id, username, displayName }`. **401** con `AUTH_REQUIRED` sin
+sesión. **400** con `VALIDATION_ERROR` si la paginación es inválida.
+
 ### Forma de `entry`
 
 ```json
@@ -391,6 +412,21 @@ Borra físicamente una entrada propia. No afecta al rating del objetivo ni a otr
 
 `reaction: null` (ausencia de dato) es distinto de `reaction: "neutral"` (elección explícita); los
 textos de cada reacción viven en i18n, no en la API.
+
+### Forma de `FeedEntry`
+
+Extiende `entry` con el autor, para el feed:
+
+```json
+{
+  "...entry",
+  "author": {
+    "id": "uuid",
+    "username": "string",
+    "displayName": "string | null"
+  }
+}
+```
 
 ## Ratings y comentarios
 

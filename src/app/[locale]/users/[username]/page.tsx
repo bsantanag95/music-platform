@@ -5,8 +5,10 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getProfileByUsername } from "@/services/social/profiles";
 import { resolveSession } from "@/services/auth/sessions";
+import { listUserDiary } from "@/services/diary/diary";
 import { FollowButton } from "@/components/social/FollowButton";
 import { BlockButton } from "@/components/social/BlockButton";
+import { DiaryList } from "@/components/diary/DiaryList";
 
 interface UserProfilePageProps {
   params: Promise<{ username: string }>;
@@ -15,6 +17,18 @@ interface UserProfilePageProps {
 const getProfileCached = cache(async (username: string, viewerId: string | null) =>
   getProfileByUsername(username, viewerId),
 );
+
+async function ProfileDiary({ username, viewerId }: { username: string; viewerId: string | null }) {
+  const t = await getTranslations("diary");
+  const initial = await listUserDiary(username, viewerId, 1, 20);
+  return (
+    <DiaryList
+      initial={initial}
+      readOnly
+      empty={{ title: t("profileEmptyTitle"), description: t("profileEmptyDescription") }}
+    />
+  );
+}
 
 export async function generateMetadata({ params }: UserProfilePageProps): Promise<Metadata> {
   const { username } = await params;
@@ -98,6 +112,13 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
           </nav>
         )}
       </section>
+
+      {(profile.accessible || isOwn) && (
+        <section className="flex w-full max-w-2xl flex-col gap-4">
+          <h2 className="font-display text-xl text-paper">{t("diaryTitle")}</h2>
+          <ProfileDiary username={profile.username} viewerId={session?.user.id ?? null} />
+        </section>
+      )}
     </main>
   );
 }

@@ -119,4 +119,59 @@ describe("DiaryList", () => {
     expect(screen.getAllByText("Kid A")).toHaveLength(2);
     expect(screen.queryByRole("button", { name: "Cargar más" })).not.toBeInTheDocument();
   });
+
+  it("modo readOnly oculta controles de edición y audiencia", () => {
+    renderWithIntl(<DiaryList initial={initial} readOnly />);
+    expect(screen.queryByRole("button", { name: "Ampliar" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Eliminar" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Seguidores")).not.toBeInTheDocument();
+    expect(screen.queryByText("Público")).not.toBeInTheDocument();
+  });
+
+  it("modo readOnly muestra contexto, reacción y cuerpo", () => {
+    renderWithIntl(<DiaryList initial={initial} readOnly />);
+    expect(screen.getByText("Primera escucha")).toBeInTheDocument();
+    expect(screen.getByText("Me gustó")).toBeInTheDocument();
+    expect(screen.getByText("El bajo está ridículamente bueno")).toBeInTheDocument();
+  });
+
+  it("showAuthor muestra el autor con enlace al perfil", () => {
+    const withAuthor = {
+      ...liked,
+      author: { id: "u1", username: "seguido", displayName: "Seguido" },
+    };
+    renderWithIntl(
+      <DiaryList
+        initial={{ entries: [withAuthor], page: 1, pageSize: 20, hasNext: false }}
+        readOnly
+        showAuthor
+      />,
+    );
+    expect(screen.getByText("Seguido")).toBeInTheDocument();
+    const link = screen.getByText("Seguido").closest("a") as HTMLAnchorElement;
+    expect(link.href).toContain("/users/seguido");
+  });
+
+  it("muestra textos de estado vacío personalizados con prop empty", () => {
+    renderWithIntl(
+      <DiaryList
+        initial={{ entries: [], page: 1, pageSize: 20, hasNext: false }}
+        empty={{ title: "Sin datos", description: "No hay nada aquí." }}
+      />,
+    );
+    expect(screen.getByText("Sin datos")).toBeInTheDocument();
+    expect(screen.getByText("No hay nada aquí.")).toBeInTheDocument();
+  });
+
+  it("loadMore personalizado reemplaza getMyDiary", async () => {
+    const user = userEvent.setup();
+    const customLoadMore = vi.fn().mockResolvedValue({ entries: [neutral], page: 2, pageSize: 20, hasNext: false });
+    renderWithIntl(
+      <DiaryList initial={initial} loadMore={customLoadMore} readOnly />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Cargar más" }));
+    await waitFor(() => expect(customLoadMore).toHaveBeenCalledWith(2, 20));
+    expect(mocks.getMyDiary).not.toHaveBeenCalled();
+  });
 });

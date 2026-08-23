@@ -2,6 +2,8 @@
   "title": "Mi diario",
   "emptyTitle": "Todavía no escuchaste nada",
   "emptyDescription": "Marcá como escuchado un artista, álbum o canción para que aparezca acá.",
+  "profileEmptyTitle": "Sin entradas en el diario",
+  "profileEmptyDescription": "Este usuario todavía no registró escuchas visibles.",
   "markAsListened": "Marcar como escuchado",
   "signInToListen": "Iniciar sesión para marcar escuchas",
   "listening": "Registrando...",
