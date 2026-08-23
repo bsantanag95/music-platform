@@ -8,7 +8,7 @@ assertSmokeAllowed();
 
 async function main() {
   const { db } = await import("../src/db");
-  const { releaseGroup, release, track, recording, credit, artist } = await import("../src/db/schema");
+  const { release, track, recording, credit, artist } = await import("../src/db/schema");
   const { eq, inArray } = await import("drizzle-orm");
   const { getArtistById } = await import("../src/services/catalog/ingest-artist");
 

@@ -7,7 +7,6 @@ import { assertSmokeAllowed } from "./assert-smoke-allowed";
 
 assertSmokeAllowed();
 
-const SABRINA_MBID = "6b4ae7d0-2e41-436a-8e93-f24a4dc90223";
 const FARRUKO_MBID = "9b90d5a6-8b3f-4e2d-9f11-7e0c0d3a1a01";
 
 const mockResponses: Record<string, unknown> = {
