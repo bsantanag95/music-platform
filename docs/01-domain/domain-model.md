@@ -84,7 +84,11 @@ bidireccional con su propia persistencia.
 ## Entidades sociales (a definir en detalle en `05-features/`, cuando se llegue a su entrega)
 
 - **Diario de escucha**: registro histórico de escuchas sobre Artista, Álbum o Canción.
-- **Lista**: colección curada de Álbumes/Canciones/Artistas armada por un Usuario.
-- **Favorito**: marca simple de un Usuario sobre un Artista.
+- **Lista**: colección curada armada por un Usuario, de **un solo tipo de entidad** (solo
+  Álbumes, solo Canciones o solo Artistas), con orden manual y audiencia propia. En la primera
+  versión cada lista es propiedad de un único usuario (no colaborativa).
+- **Favorito**: marca simple de un Usuario sobre un Artista, Álbum o Canción. Es un toggle
+  idempotente (un usuario tiene a lo sumo un favorito por objetivo), con audiencia propia e
+  independiente de escucha, valoración y comentario.
 - **Actividad**: registro de lo que un Usuario fue valorando/comentando recientemente, visible para
   quienes lo siguen — la función inspirada en el "qué estás escuchando" de MSN.

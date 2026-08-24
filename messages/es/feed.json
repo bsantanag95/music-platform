@@ -1,5 +1,23 @@
 {
   "title": "Feed",
   "emptyTitle": "Nada para ver todavía",
-  "emptyDescription": "Seguí a personas para que sus escuchas aparezcan acá."
+  "emptyDescription": "Seguí a personas para que sus escuchas, favoritos y listas aparezcan acá.",
+  "favoriteLabel": "Marcó como favorito",
+  "list": {
+    "created": "Creó una lista",
+    "updated": "Actualizó una lista"
+  },
+  "loadMore": "Cargar más",
+  "loadingMore": "Cargando...",
+  "loadError": "No pudimos cargar el feed. Intentá de nuevo.",
+  "context": {
+    "first_listen": "Primera escucha",
+    "relisten": "Repetición",
+    "rediscovery": "Redescubrimiento"
+  },
+  "audience": {
+    "private": "Privado",
+    "followers": "Seguidores",
+    "public": "Público"
+  }
 }

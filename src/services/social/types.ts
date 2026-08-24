@@ -28,3 +28,6 @@ export interface UserSummary {
   displayName: string | null;
   profileVisibility: ProfileVisibility;
 }
+
+export const AUDIENCES = ["private", "followers", "public"] as const;
+export type Audience = (typeof AUDIENCES)[number];

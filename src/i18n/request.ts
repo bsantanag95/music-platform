@@ -17,6 +17,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
       users: (await import(`../../messages/${resolvedLocale}/users.json`)).default,
       diary: (await import(`../../messages/${resolvedLocale}/diary.json`)).default,
       feed: (await import(`../../messages/${resolvedLocale}/feed.json`)).default,
+      favorites: (await import(`../../messages/${resolvedLocale}/favorites.json`)).default,
+      lists: (await import(`../../messages/${resolvedLocale}/lists.json`)).default,
     },
   };
 });

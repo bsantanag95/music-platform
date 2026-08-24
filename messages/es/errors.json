@@ -74,5 +74,33 @@
   "BLOCKED": {
     "title": "Cuenta bloqueada",
     "description": "No podés realizar esta acción con esta cuenta."
+  },
+  "LISTEN_ENTRY_NOT_FOUND": {
+    "title": "Escucha no encontrada",
+    "description": "La escucha no existe o ya fue eliminada."
+  },
+  "DIARY_TARGET_INVALID": {
+    "title": "Objetivo inválido",
+    "description": "El artista, álbum o canción indicado no existe."
+  },
+  "FAVORITE_NOT_FOUND": {
+    "title": "Favorito no encontrado",
+    "description": "El favorito no existe o ya fue quitado."
+  },
+  "FAVORITE_TARGET_INVALID": {
+    "title": "Objetivo inválido",
+    "description": "El artista, álbum o canción indicado no existe."
+  },
+  "LIST_NOT_FOUND": {
+    "title": "Lista no encontrada",
+    "description": "La lista no existe o no es visible para vos."
+  },
+  "LIST_TARGET_INVALID": {
+    "title": "Objetivo inválido",
+    "description": "El artista, álbum o canción indicado no existe."
+  },
+  "LIST_ITEM_NOT_FOUND": {
+    "title": "Elemento no encontrado",
+    "description": "El elemento de la lista no existe o ya fue quitado."
   }
 }

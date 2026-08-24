@@ -1,0 +1,20 @@
+{
+  "title": "Favoritos",
+  "emptyTitle": "Todavía no marcaste favoritos",
+  "emptyDescription": "Marcá un artista, álbum o canción como favorito para que aparezca acá.",
+  "profileEmptyTitle": "Sin favoritos",
+  "profileEmptyDescription": "Este usuario todavía no compartió favoritos visibles.",
+  "addFavorite": "Marcar como favorito",
+  "removeFavorite": "Quitar favorito",
+  "signInToFavorite": "Iniciar sesión para marcar favoritos",
+  "saving": "Guardando...",
+  "saveError": "No pudimos guardar el favorito. Intentá de nuevo.",
+  "loadMore": "Cargar más",
+  "loadingMore": "Cargando...",
+  "loadError": "No pudimos cargar los favoritos. Intentá de nuevo.",
+  "audience": {
+    "private": "Privado",
+    "followers": "Seguidores",
+    "public": "Público"
+  }
+}

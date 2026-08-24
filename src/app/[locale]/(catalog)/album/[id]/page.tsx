@@ -9,6 +9,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { isValidUuid } from "@/lib/validation";
 import { SocialSection } from "@/components/social/SocialSection";
 import { MarkAsListened } from "@/components/diary/MarkAsListened";
+import { FavoriteButton } from "@/components/favorites/FavoriteButton";
+import { AddToListButton } from "@/components/lists/AddToListButton";
 import { resolveSession } from "@/services/auth/sessions";
 import { getRatings, listComments, resolveSocialTarget } from "@/services/social";
 
@@ -77,8 +79,16 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
         />
         <div className="min-w-0">
           <h1 className="font-display text-3xl text-paper">{detail.releaseGroup.title}</h1>
-          <div className="mt-4">
+          <div className="mt-4 flex flex-col items-start gap-3">
             <MarkAsListened
+              target={{ type: "release-group", id: detail.releaseGroup.id }}
+              authenticated={Boolean(session?.user.id)}
+            />
+            <FavoriteButton
+              target={{ type: "release-group", id: detail.releaseGroup.id }}
+              authenticated={Boolean(session?.user.id)}
+            />
+            <AddToListButton
               target={{ type: "release-group", id: detail.releaseGroup.id }}
               authenticated={Boolean(session?.user.id)}
             />

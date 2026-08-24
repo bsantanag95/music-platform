@@ -7,6 +7,8 @@
   "users": "People",
   "diary": "My diary",
   "feed": "Feed",
+  "favorites": "Favorites",
+  "lists": "Lists",
   "login": "Log in",
   "register": "Sign up",
   "logout": "Log out",

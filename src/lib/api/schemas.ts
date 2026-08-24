@@ -134,6 +134,11 @@ export const ErrorCodeSchema = z.enum([
   "BLOCKED",
   "LISTEN_ENTRY_NOT_FOUND",
   "DIARY_TARGET_INVALID",
+  "FAVORITE_NOT_FOUND",
+  "FAVORITE_TARGET_INVALID",
+  "LIST_NOT_FOUND",
+  "LIST_TARGET_INVALID",
+  "LIST_ITEM_NOT_FOUND",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 
@@ -428,9 +433,179 @@ export const AuthorSummarySchema = z.object({
 });
 export type AuthorSummary = z.infer<typeof AuthorSummarySchema>;
 
-export const FeedEntrySchema = ListenEntrySchema.extend({
+export const FeedListenEntrySchema = ListenEntrySchema.extend({
+  kind: z.literal("listen"),
   author: AuthorSummarySchema,
 });
+export type FeedListenEntry = z.infer<typeof FeedListenEntrySchema>;
+
+export const BlockedResponseSchema = z.object({ blocked: z.boolean() });
+export type BlockedResponse = z.infer<typeof BlockedResponseSchema>;
+
+// ============================================================
+// Favoritos (Fase 5, add-favorites-and-lists)
+// ============================================================
+
+export const FavoriteTargetSchema = ListenTargetSchema;
+export type FavoriteTarget = z.infer<typeof FavoriteTargetSchema>;
+
+export const FavoriteTargetInfoSchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  coverThumbUrl: z.string().nullable(),
+});
+export type FavoriteTargetInfo = z.infer<typeof FavoriteTargetInfoSchema>;
+
+export const FavoriteSchema = z.object({
+  id: z.uuid(),
+  targetType: SocialTargetTypeSchema,
+  audience: DiaryAudienceSchema,
+  createdAt: z.string(),
+  target: FavoriteTargetInfoSchema,
+});
+export type Favorite = z.infer<typeof FavoriteSchema>;
+
+export const CreateFavoriteRequestSchema = z.object({
+  target: FavoriteTargetSchema,
+  audience: DiaryAudienceSchema.optional(),
+});
+export type CreateFavoriteRequest = z.infer<typeof CreateFavoriteRequestSchema>;
+
+export const RemoveFavoriteRequestSchema = z.object({
+  target: FavoriteTargetSchema,
+});
+export type RemoveFavoriteRequest = z.infer<typeof RemoveFavoriteRequestSchema>;
+
+export const UpdateFavoriteAudienceRequestSchema = z.object({
+  id: z.uuid(),
+  audience: DiaryAudienceSchema,
+});
+export type UpdateFavoriteAudienceRequest = z.infer<typeof UpdateFavoriteAudienceRequestSchema>;
+
+export const FavoriteMutationResponseSchema = z.object({
+  favorite: FavoriteSchema.nullable(),
+});
+export type FavoriteMutationResponse = z.infer<typeof FavoriteMutationResponseSchema>;
+
+export const FavoritesListResponseSchema = z.object({
+  favorites: z.array(FavoriteSchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  hasNext: z.boolean(),
+});
+export type FavoritesListResponse = z.infer<typeof FavoritesListResponseSchema>;
+
+// ============================================================
+// Listas (Fase 5, add-favorites-and-lists)
+// ============================================================
+
+export const ListEntityTypeSchema = z.enum(["artist", "release-group", "recording"]);
+export type ListEntityType = z.infer<typeof ListEntityTypeSchema>;
+
+export const ListTargetSchema = z.object({
+  type: ListEntityTypeSchema,
+  id: z.uuid(),
+});
+export type ListTarget = z.infer<typeof ListTargetSchema>;
+
+export const UserListSummarySchema = z.object({
+  id: z.uuid(),
+  entityType: ListEntityTypeSchema,
+  title: z.string(),
+  description: z.string().nullable(),
+  audience: DiaryAudienceSchema,
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type UserListSummary = z.infer<typeof UserListSummarySchema>;
+
+export const UserListItemSchema = z.object({
+  id: z.uuid(),
+  position: z.number().int(),
+  target: FavoriteTargetInfoSchema,
+});
+export type UserListItem = z.infer<typeof UserListItemSchema>;
+
+export const UserListDetailSchema = UserListSummarySchema.extend({
+  items: z.array(UserListItemSchema),
+});
+export type UserListDetail = z.infer<typeof UserListDetailSchema>;
+
+export const CreateListRequestSchema = z.object({
+  entityType: ListEntityTypeSchema,
+  title: z.string().trim().min(1).max(100),
+  description: z.string().trim().max(500).nullable().optional(),
+  audience: DiaryAudienceSchema.optional(),
+});
+export type CreateListRequest = z.infer<typeof CreateListRequestSchema>;
+
+export const UpdateListRequestSchema = z
+  .object({
+    title: z.string().trim().min(1).max(100).optional(),
+    description: z.string().trim().max(500).nullable().optional(),
+    audience: DiaryAudienceSchema.optional(),
+  })
+  .refine((changes) => Object.keys(changes).length > 0, {
+    message: "Debe indicarse al menos un campo a modificar",
+  });
+export type UpdateListRequest = z.infer<typeof UpdateListRequestSchema>;
+
+export const AddListItemRequestSchema = z.object({
+  target: ListTargetSchema,
+});
+export type AddListItemRequest = z.infer<typeof AddListItemRequestSchema>;
+
+export const ReorderListItemsRequestSchema = z.object({
+  itemIds: z.array(z.uuid()).min(1),
+});
+export type ReorderListItemsRequest = z.infer<typeof ReorderListItemsRequestSchema>;
+
+export const ListMutationResponseSchema = z.object({ list: UserListDetailSchema });
+export type ListMutationResponse = z.infer<typeof ListMutationResponseSchema>;
+
+export const ListsListResponseSchema = z.object({
+  lists: z.array(UserListSummarySchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  hasNext: z.boolean(),
+});
+export type ListsListResponse = z.infer<typeof ListsListResponseSchema>;
+
+// ============================================================
+// Feed (Fase 5, add-favorites-and-lists)
+// ============================================================
+
+export const FeedFavoriteSchema = z.object({
+  kind: z.literal("favorite"),
+  id: z.uuid(),
+  targetType: SocialTargetTypeSchema,
+  audience: DiaryAudienceSchema,
+  createdAt: z.string(),
+  target: FavoriteTargetInfoSchema,
+  author: AuthorSummarySchema,
+});
+export type FeedFavorite = z.infer<typeof FeedFavoriteSchema>;
+
+export const FeedListEventSchema = z.object({
+  kind: z.literal("list"),
+  id: z.uuid(),
+  event: z.enum(["created", "updated"]),
+  audience: DiaryAudienceSchema,
+  createdAt: z.string(),
+  list: z.object({
+    id: z.uuid(),
+    title: z.string(),
+    entityType: ListEntityTypeSchema,
+  }),
+  author: AuthorSummarySchema,
+});
+export type FeedListEvent = z.infer<typeof FeedListEventSchema>;
+
+export const FeedEntrySchema = z.discriminatedUnion("kind", [
+  FeedListenEntrySchema,
+  FeedFavoriteSchema,
+  FeedListEventSchema,
+]);
 export type FeedEntry = z.infer<typeof FeedEntrySchema>;
 
 export const FeedResponseSchema = z.object({
@@ -440,6 +615,3 @@ export const FeedResponseSchema = z.object({
   hasNext: z.boolean(),
 });
 export type FeedResponse = z.infer<typeof FeedResponseSchema>;
-
-export const BlockedResponseSchema = z.object({ blocked: z.boolean() });
-export type BlockedResponse = z.infer<typeof BlockedResponseSchema>;

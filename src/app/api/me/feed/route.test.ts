@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
   requireUser: vi.fn(),
 }));
 
-vi.mock("@/services/diary/diary", () => ({ listFeed: mocks.listFeed }));
+vi.mock("@/services/feed/feed", () => ({ listFeed: mocks.listFeed }));
 vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser }));
 
 const user = { id: "00000000-0000-4000-8000-000000000001" };

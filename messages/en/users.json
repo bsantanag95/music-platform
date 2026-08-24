@@ -40,5 +40,7 @@
   "emptyBlocks": "You haven't blocked anyone.",
   "removeFollower": "Remove follower",
   "backToProfile": "Back to my profile",
-  "diaryTitle": "Diary"
+  "diaryTitle": "Diary",
+  "favoritesTitle": "Favorites",
+  "listsTitle": "Lists"
 }

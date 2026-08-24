@@ -1,0 +1,20 @@
+{
+  "title": "Favorites",
+  "emptyTitle": "No favorites yet",
+  "emptyDescription": "Mark an artist, album or song as a favorite and it will show up here.",
+  "profileEmptyTitle": "No favorites",
+  "profileEmptyDescription": "This user has not shared visible favorites yet.",
+  "addFavorite": "Add to favorites",
+  "removeFavorite": "Remove favorite",
+  "signInToFavorite": "Sign in to add favorites",
+  "saving": "Saving...",
+  "saveError": "We could not save the favorite. Try again.",
+  "loadMore": "Load more",
+  "loadingMore": "Loading...",
+  "loadError": "We could not load favorites. Try again.",
+  "audience": {
+    "private": "Private",
+    "followers": "Followers",
+    "public": "Public"
+  }
+}

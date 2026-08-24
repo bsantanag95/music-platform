@@ -383,12 +383,14 @@ el `username` no existe. **400** con `VALIDATION_ERROR` si la paginación es inv
 
 ### `GET /api/me/feed?page=&pageSize=`
 
-Feed de actividad v1: entradas del diario de los usuarios seguidos (relación `accepted`) que sean
-visibles para el lector. Requiere sesión.
+Feed de actividad v1: escuchas del diario, favoritos y eventos de listas (creación o
+actualización de metadatos) de los usuarios seguidos (relación `accepted`) que sean visibles para
+el lector. Se calcula bajo demanda uniendo las tres fuentes, ordenado por `createdAt` descendente
+con desempate por fuente e id. Requiere sesión.
 
-**200 OK:** `{ entries: [FeedEntry], page, pageSize, hasNext }` donde `FeedEntry` es una entrada
-con un campo adicional `author: { id, username, displayName }`. **401** con `AUTH_REQUIRED` sin
-sesión. **400** con `VALIDATION_ERROR` si la paginación es inválida.
+**200 OK:** `{ entries: [FeedEntry], page, pageSize, hasNext }` donde `FeedEntry` es una unión
+discriminada por `kind: "listen" | "favorite" | "list"`. **401** con `AUTH_REQUIRED` sin sesión.
+**400** con `VALIDATION_ERROR` si la paginación es inválida.
 
 ### Forma de `entry`
 
@@ -415,16 +417,21 @@ textos de cada reacción viven en i18n, no en la API.
 
 ### Forma de `FeedEntry`
 
-Extiende `entry` con el autor, para el feed:
+Unión discriminada por `kind`. Las tres variantes incluyen `author: { id, username, displayName }`:
+
+- **`kind: "listen"`**: los campos de `entry` más `author`.
+- **`kind: "favorite"`**: `{ kind, id, targetType, audience, createdAt, target: { id, title, coverThumbUrl }, author }`.
+- **`kind: "list"`**: `{ kind, id, event: "created" | "updated", audience, createdAt, list: { id, title, entityType }, author }`.
 
 ```json
 {
-  "...entry",
-  "author": {
-    "id": "uuid",
-    "username": "string",
-    "displayName": "string | null"
-  }
+  "kind": "favorite",
+  "id": "uuid",
+  "targetType": "artist | release-group | recording",
+  "audience": "private | followers | public",
+  "createdAt": "ISO 8601",
+  "target": { "id": "uuid", "title": "string", "coverThumbUrl": "string | null" },
+  "author": { "id": "uuid", "username": "string", "displayName": "string | null" }
 }
 ```
 
@@ -453,3 +460,118 @@ rangos se rechazan con `400 { error, code: "VALIDATION_ERROR" }`; no se normaliz
 `PATCH` recibe `{ body }` y solo permite editar el comentario propio. `DELETE` realiza borrado físico
 solo del comentario propio y devuelve `204`; devuelve `404 { error, code: "COMMENT_NOT_FOUND" }` si
 el comentario no existe y `403 { error, code: "PERMISSION_DENIED" }` si pertenece a otro usuario.
+
+## Favoritos (Fase 5.5, cambio `add-favorites-and-lists`)
+
+Señal de interés simple sobre artista, álbum o canción. Toggle idempotente: un usuario tiene a lo
+sumo un favorito por objetivo. Tiene audiencia propia (`private`/`followers`/`public`), independiente
+de escucha, rating y comentario. Las mutaciones requieren sesión y el usuario se deriva de la cookie
+server-side.
+
+### `POST /api/me/favorites`
+
+Marca un favorito (toggle on). Idempotente: si el objetivo ya es favorito, devuelve el existente
+sin duplicar.
+
+**Body:** `{ target: { type: "artist" | "release-group" | "recording", id }, audience? }`.
+**201 OK:** `{ favorite }` si se creó. **200 OK:** `{ favorite }` si ya existía. **404** con
+`FAVORITE_TARGET_INVALID` si el objetivo no existe. **401** con `AUTH_REQUIRED` sin sesión.
+
+### `DELETE /api/me/favorites`
+
+Quita un favorito (toggle off). Idempotente: si no existe, responde `204` igual.
+
+**Body:** `{ target: { type, id } }`. **204.** **401** con `AUTH_REQUIRED` sin sesión.
+
+### `PATCH /api/me/favorites`
+
+Cambia la audiencia de un favorito propio.
+
+**Body:** `{ id, audience }`. **200 OK:** `{ favorite }`. **404** con `FAVORITE_NOT_FOUND` si el
+favorito no existe o no es del usuario.
+
+### `GET /api/me/favorites?page=&pageSize=`
+
+Lista paginada de los favoritos propios en orden cronológico descendente.
+
+**200 OK:** `{ favorites: [{ id, targetType, audience, createdAt, target: { id, title, coverThumbUrl } }], page, pageSize, hasNext }`.
+
+### `GET /api/users/[username]/favorites?page=&pageSize=`
+
+Favoritos de un usuario visibles para un lector. La sesión es opcional. Aplica la matriz de
+visibilidad (bloqueos, perfil privado, relación de seguimiento); sin permiso devuelve lista vacía
+sin revelar si el usuario tiene favoritos.
+
+**200 OK:** `{ favorites: [...], page, pageSize, hasNext }`. **404** con `USER_NOT_FOUND` si el
+username no existe.
+
+## Listas (Fase 5.5, cambio `add-favorites-and-lists`)
+
+Colecciones curadas de un solo tipo de entidad (`artist`/`release-group`/`recording`), propiedad de
+un único usuario. Título obligatorio (≤100), descripción opcional (≤500), audiencia propia,
+orden manual de ítems. Las mutaciones requieren sesión; las lecturas propias requieren sesión y las
+ajenas aplican la matriz de visibilidad.
+
+### `POST /api/me/lists`
+
+Crea una lista vacía. `entityType` queda fijo y no es modificable después.
+
+**Body:** `{ entityType, title, description?, audience? }`.
+**201 OK:** `{ list }` con `{ id, entityType, title, description, audience, createdAt, updatedAt, items: [] }`.
+
+### `GET /api/me/lists?page=&pageSize=`
+
+Lista paginada de las listas propias. No incluye ítems ni conteo inline (el detalle los trae).
+
+**200 OK:** `{ lists: [{ id, entityType, title, description, audience, createdAt, updatedAt }], page, pageSize, hasNext }`.
+
+### `GET /api/me/lists/{listId}`
+
+Detalle de una lista propia, con sus ítems ordenados por posición.
+
+**200 OK:** `{ list }` con `items: [{ id, position, target: { id, title, coverThumbUrl } }]`.
+**404** con `LIST_NOT_FOUND` si no existe o no es del usuario.
+
+### `PATCH /api/me/lists/{listId}`
+
+Modifica título, descripción o audiencia de una lista propia. Al menos un campo obligatorio;
+`entityType` no es modificable.
+
+**Body:** `{ title?, description?, audience? }`. **200 OK:** `{ list }`. **404** con `LIST_NOT_FOUND`.
+
+### `DELETE /api/me/lists/{listId}`
+
+Borra físicamente la lista y sus ítems (cascade). **204.** **404** con `LIST_NOT_FOUND`.
+
+### `POST /api/me/lists/{listId}/items`
+
+Agrega un ítem al final de la lista. Idempotente: un mismo objetivo no se duplica. El tipo del
+ítem debe coincidir con `entityType` de la lista.
+
+**Body:** `{ target: { type, id } }`. **201 OK:** `{ list }`. **400** con `VALIDATION_ERROR` si el
+tipo no coincide. **404** con `LIST_NOT_FOUND` o `LIST_TARGET_INVALID`.
+
+### `DELETE /api/me/lists/{listId}/items/{itemId}`
+
+Quita un ítem de la lista. **200 OK:** `{ list }`. **404** con `LIST_NOT_FOUND` o
+`LIST_ITEM_NOT_FOUND`.
+
+### `PUT /api/me/lists/{listId}/items`
+
+Reordena los ítems de la lista. El array `itemIds` define el nuevo orden completo.
+
+**Body:** `{ itemIds: [uuid] }`. **200 OK:** `{ list }`. **404** con `LIST_NOT_FOUND`.
+
+### `GET /api/users/[username]/lists?page=&pageSize=`
+
+Listas de un usuario visibles para un lector. La sesión es opcional. Aplica la matriz de
+visibilidad; sin permiso devuelve lista vacía.
+
+**200 OK:** `{ lists: [...], page, pageSize, hasNext }`. **404** con `USER_NOT_FOUND`.
+
+### `GET /api/users/[username]/lists/{listId}`
+
+Detalle de una lista ajena visible. Si la lista no es visible para el visitante, se comporta como
+inexistente.
+
+**200 OK:** `{ list }`. **404** con `LIST_NOT_FOUND` o `USER_NOT_FOUND`.

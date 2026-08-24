@@ -241,3 +241,77 @@ como escuchas quiera registrar, y una nueva entrada nunca reemplaza una anterior
 
 **Índices:** `idx_listen_entry_user_created` (diario por usuario, fecha descendente) y uno por
 objetivo (`idx_listen_entry_artist`, `idx_listen_entry_release_group`, `idx_listen_entry_recording`).
+
+## `favorite`
+
+**Propósito:** señal simple de interés (Fase 5, cambio `add-favorites-and-lists`). Marca
+liviana sobre un artista, un álbum o una canción, sin escala numérica. Es un toggle
+idempotente: un usuario tiene a lo sumo un favorito por objetivo.
+
+**Campos:**
+
+- `user_id` y exactamente uno de `artist_id` / `release_group_id` / `recording_id`
+  (`CHECK (num_nonnulls(...) = 1)`, mismo patrón polimórfico que `rating`/`comment`).
+- `audience`: `private`, `followers` o `public`, con `DEFAULT 'followers'`. Independiente de
+  la audiencia de escuchas, ratings y comentarios.
+- `created_at`: fecha de creación.
+
+**Restricciones:**
+
+- `CHECK (num_nonnulls(artist_id, release_group_id, recording_id) = 1)`: un objetivo exacto
+  por favorito.
+- `UNIQUE (user_id, artist_id)`, `UNIQUE (user_id, release_group_id)`,
+  `UNIQUE (user_id, recording_id)`: un usuario tiene a lo sumo un favorito por objetivo.
+  Estos índices únicos son la base del toggle idempotente.
+
+**Índices:** `idx_favorite_user_created` (favoritos propios, fecha descendente) y uno por
+objetivo (`idx_favorite_artist`, `idx_favorite_release_group`, `idx_favorite_recording`).
+
+## `user_list`
+
+**Propósito:** cabecera de una lista curada (Fase 5, cambio `add-favorites-and-lists`).
+Colección con título, descripción opcional y un tipo de entidad fijo. La primera versión es de
+propiedad de un único usuario (no colaborativa) y de un solo tipo de entidad (no mixta).
+
+**Campos:**
+
+- `owner_id`: propietario de la lista.
+- `entity_type`: `'artist'`, `'release-group'` o `'recording'` — fijo al crear, no
+  modificable después. En kebab-case (migración `0011`), igual que el contrato
+  de API (`SocialTargetTypeSchema`).
+- `title`: obligatorio, hasta 100 caracteres.
+- `description`: opcional, hasta 500 caracteres.
+- `audience`: `private`, `followers` o `public`, con `DEFAULT 'followers'`.
+- `created_at`, `updated_at`: `updated_at` lo mantiene el trigger
+  `trg_user_list_updated_at`.
+
+**Índices:** `idx_user_list_owner_created` (listas propias, fecha descendente) y
+`idx_user_list_owner_audience` (listas públicas de un usuario en su perfil).
+
+## `user_list_item`
+
+**Propósito:** elemento individual dentro de una `user_list`. El tipo de entidad del objetivo
+debe coincidir con el `entity_type` de la lista padre (validado por trigger
+`trg_user_list_item_target_type`).
+
+**Campos:**
+
+- `list_id`: referencia a la lista padre, `ON DELETE CASCADE`.
+- Exactamente uno de `artist_id` / `release_group_id` / `recording_id`
+  (`CHECK (num_nonnulls(...) = 1)`).
+- `position`: entero para orden manual. Los ítems se reordenan reescribiendo `position`
+  completo en una transacción (`UNIQUE (list_id, position)`).
+- `created_at`: fecha de creación.
+
+**Restricciones:**
+
+- `UNIQUE (list_id, artist_id)`, `UNIQUE (list_id, release_group_id)`,
+  `UNIQUE (list_id, recording_id)`: un mismo objetivo a lo sumo una vez por lista.
+- `UNIQUE (list_id, position)`: orden determinista. El reordenamiento se hace en una
+  transacción que reescribe las posiciones; la restricción es `DEFERRABLE INITIALLY DEFERRED`
+  (migración `0010`) para permitir las reescrituras intermedias sin violar la unicidad hasta
+  el commit.
+
+**Trigger `trg_user_list_item_target_type`**: valida que el objetivo del ítem coincida con
+`entity_type` de la lista padre. No es posible expresar esto con un `CHECK` porque requiere
+consultar otra tabla (mismo criterio que `trg_membership_types`).

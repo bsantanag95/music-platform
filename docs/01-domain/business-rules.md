@@ -66,3 +66,20 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - Los datos del catálogo musical (nombres de artistas, títulos de álbumes, títulos de canciones, biografías) **no se traducen**. Se muestran tal cual llegan de MusicBrainz, independientemente del idioma activo de la interfaz.
 - La internacionalización (i18n) aplica únicamente al _chrome_ de la interfaz: etiquetas de UI, botones, mensajes de error, estados de carga, y demás texto no proveniente del dominio musical.
 - Ver `02-architecture/i18n.md` para la arquitectura completa del sistema de idiomas.
+
+## Presencia y actividad social (Fase 5)
+
+- Registrar una escucha no obliga a valorar, comentar ni compartir. La escucha usa reacción
+  emocional (`liked`/`loved`/`obsessed`/`neutral`/`disliked`), nunca estrellas; ninguna entrada
+  del diario crea, modifica ni propone la valoración vigente del objetivo.
+- Un Favorito es una marca independiente: marcarlo o quitarlo no crea ni modifica escuchas,
+  valoraciones ni comentarios del mismo objetivo. Un usuario tiene a lo sumo un favorito por
+  objetivo (toggle idempotente).
+- Una Lista es de un solo tipo de entidad (solo artistas, solo álbumes o solo canciones) y su
+  `entityType` no es modificable después de crearla. Un mismo objetivo aparece a lo sumo una
+  vez por lista.
+- Escucha, favorito, valoración, comentario y lista tienen audiencia propia
+  (`private`/`followers`/`public`), independiente entre sí; el usuario puede cambiar la
+  audiencia después de publicar.
+- Un perfil privado no revela contenido no autorizado: las superficies ajenas devuelven lista
+  vacía (o `404` en el detalle) sin indicar si el usuario tiene contenido.

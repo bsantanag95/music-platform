@@ -13,6 +13,8 @@ import type { Artist, ReleaseGroup, ReleaseGroupCategory } from "@/lib/api/schem
 import { ArtistMemberships } from "@/components/catalog/ArtistMemberships";
 import { SocialSection } from "@/components/social/SocialSection";
 import { MarkAsListened } from "@/components/diary/MarkAsListened";
+import { FavoriteButton } from "@/components/favorites/FavoriteButton";
+import { AddToListButton } from "@/components/lists/AddToListButton";
 import { resolveSession } from "@/services/auth/sessions";
 import { getRatings, listComments, resolveSocialTarget } from "@/services/social";
 
@@ -91,7 +93,11 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
         typeLabel={typeLabel}
         noPhotoAlt={t("artist.noPhotoAlt")}
       />
-      <MarkAsListened target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
+      <div className="flex flex-col items-start gap-3">
+        <MarkAsListened target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
+        <FavoriteButton target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
+        <AddToListButton target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
+      </div>
       <ArtistMemberships
         memberships={memberships}
         heading={artist.type === "group" ? t("artist.membersHeading") : t("artist.membershipsHeading")}

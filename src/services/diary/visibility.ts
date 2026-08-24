@@ -1,10 +1,14 @@
-import type { ProfileVisibility } from "@/services/social/types";
-import type { FollowRelation } from "@/services/social/types";
+import type { ProfileVisibility, FollowRelation } from "@/services/social/types";
+import { audiencesForProfile as audiencesForProfileBase } from "@/services/social/visibility";
 import { DIARY_AUDIENCES, type DiaryAudience } from "./types";
 
 /**
  * Resuelve las audiencias permitidas de entradas del diario que un lector
  * puede ver según la relación con el dueño del perfil.
+ *
+ * Wrapper del helper compartido que garantiza que el resultado es un
+ * subconjunto de DIARY_AUDIENCES (mismo conjunto en la práctica, pero
+ * preserva el tipo DiaryAudience para callers existentes).
  *
  * Función pura — no consulta la BD. Se testea directamente con la matriz
  * de visibilidad.
@@ -14,12 +18,8 @@ export function audiencesForProfile(profile: {
   relation: FollowRelation;
   blockedByMe: boolean;
 }): DiaryAudience[] {
-  const { profileVisibility, relation, blockedByMe } = profile;
-
-  if (blockedByMe || relation === "blocked") return [];
-  if (relation === "self") return [...DIARY_AUDIENCES];
-  if (profileVisibility === "private" && relation !== "following") return [];
-  if (relation === "following") return ["followers", "public"];
-
-  return ["public"];
+  const audiences = audiencesForProfileBase(profile);
+  return audiences.filter((a): a is DiaryAudience =>
+    (DIARY_AUDIENCES as readonly string[]).includes(a),
+  );
 }

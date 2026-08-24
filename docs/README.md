@@ -24,7 +24,7 @@ Este directorio es la fuente de verdad técnica y de producto del proyecto. Se p
 | `03-data/data-licensing.md` | Licencias de MusicBrainz y Cover Art Archive, y sus implicancias | ✅ |
 | `04-api/contracts.md` | Contrato real de los endpoints REST de catálogo, auth y funciones sociales | ✅ |
 | `04-api/errors.md` | Convención de errores de la API — código `code` machine-readable | ✅ Implementada |
-| `05-features/` | Especificaciones de producto por feature (catálogo, valoraciones, diario de escucha, listas, feed) — ver su propio índice en `05-features/README.md` | 🟡 Fases 3 y 4 implementadas; Fase 5: social base + diario propio + diario visible en perfiles + feed v1 implementados |
+| `05-features/` | Especificaciones de producto por feature (catálogo, valoraciones, diario de escucha, listas, feed) — ver su propio índice en `05-features/README.md` | 🟡 Fases 3 y 4 implementadas; Fase 5: privacidad, seguimiento, diario, favoritos y listas y feed v1 implementados; scrobbling pendiente |
 
 ## Regla de mantenimiento
 

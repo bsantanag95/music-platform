@@ -43,6 +43,11 @@ Entregable: la capa de presencia (registro de qué se escuchó, sin exigir opini
 
 La capa de presencia se construye en dos entregas dentro de esta misma fase, no repartidas entre fases: primero un registro manual liviano ("marcar como escuchado", sin rating), sin dependencia de ninguna integración externa; y después scrobbling automático vía las Web APIs de Spotify/Apple Music como mejora sobre lo mismo — nunca como la única puerta de entrada. Ver `05-features/listening-diary-and-ratings.md` (sección 2.1) para el razonamiento completo de esta arquitectura de dos capas (presencia vs. criterio).
 
+**Estado: en curso.** Implementados y validados: privacidad/perfil, seguimiento (+bloqueos),
+presencia manual (`listen_entry`), diario propio y visible, favoritos y listas (cambio
+`add-favorites-and-lists`) y feed v1 (escuchas + favoritos + eventos de listas). Pendiente dentro
+de la fase: scrobbling automático (segunda entrega de la capa de presencia).
+
 ## Fase 6 — PWA y beta cerrada
 
 Entregable: manifest, service worker con shell offline, instalabilidad, y lanzamiento a un grupo pequeño y controlado antes de abrir al público. El objetivo de esta beta es encontrar los huecos del modelo de datos que solo aparecen con uso real (ediciones raras, artistas con nombres ambiguos, discografías gigantes), no crecimiento.

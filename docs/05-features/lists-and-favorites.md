@@ -1,31 +1,45 @@
 # Listas y favoritos
 
-**Fase:** 5 (roadmap). **Estado:** ⚪ conceptual solamente — sin diseño detallado, sin
-schema. Este documento existe para no perder lo poco que ya está decidido, no como
-especificación lista para implementar.
+**Fase:** 5 (roadmap). **Estado:** ✅ Implementado (cambio `add-favorites-and-lists`). Este
+documento es la especificación de producto cerrada; el detalle de implementación vive en el
+change de OpenSpec y en `04-api/contracts.md`.
 
-## Lo que ya está definido
+## Favorito
 
-De `01-domain/domain-model.md`:
+- Señal simple de interés, sin escala numérica. Aplica a **artista, álbum (release group) y
+  canción (recording)**.
+- Es un toggle idempotente: un usuario tiene a lo sumo un favorito por objetivo; marcarlo de
+  nuevo no duplica, y quitarlo cuando no existe no produce error.
+- Tiene **audiencia propia** (`private`/`followers`/`public`, default `followers`),
+  independiente de la escucha, la valoración y el comentario del mismo objetivo.
+- No implica rating, comentario ni escucha; marcarlo no crea ni modifica ninguna de esas
+  acciones.
+- Se puede quitar. La audiencia se puede cambiar después de publicar.
 
-- **Lista**: colección curada de álbumes, canciones o artistas armada por un usuario.
-- **Favorito**: marca simple de un usuario sobre un artista (no sobre álbum ni canción).
+## Listas
 
-Del PRD (`00-product/prd.md`), listas y favoritos quedan explícitamente **fuera del MVP**
-— son funciones de Fase 5, posteriores al núcleo social de valoración/comentarios.
+- Colección curada armada por un usuario, de **un solo tipo de entidad** por lista (solo
+  artistas, solo álbumes o solo canciones).
+- Primera versión de **propiedad de un único usuario** (no colaborativa).
+- Campos: título obligatorio (≤100 caracteres), descripción opcional (≤500), `entityType` fijo
+  al crear (no modificable), audiencia propia.
+- Orden manual de elementos; un mismo objetivo aparece a lo sumo una vez por lista (agregar de
+  nuevo es idempotente).
+- El propietario puede agregar/quitar ítems, reordenarlos, editar título/descripción/audiencia
+  y borrar la lista (borrado físico, elimina ítems en cascada).
+- Visibilidad por audiencia; las listas ajenas se filtran por la matriz de visibilidad (bloqueos,
+  perfil privado, relación de seguimiento).
 
-## Preguntas abiertas (ninguna resuelta todavía)
+## Decisiones cerradas (antes del cambio)
 
-- ¿Una lista puede ser colaborativa (varios usuarios editándola)? Mencionado como posible
-  en discusiones previas del proyecto, no decidido.
-- ¿Una lista puede ser privada, o todas son públicas por diseño (coherente con la
-  filosofía de compartir perfil)?
-- ¿Puede una lista mezclar artistas, álbumes y canciones al mismo tiempo, o cada lista es
-  de un solo tipo de entidad?
-- ¿Un favorito admite quitarse, o es una marca de una sola dirección?
+- Favorito en tres niveles (artista/álbum/canción) — contradice la definición anterior del
+  `domain-model.md` ("solo artista"), corregida en el mismo cambio.
+- Listas de un solo tipo de entidad (no mixtas en v1).
+- Listas de propietario único (no colaborativas en v1).
+- El feed incluye favoritos y eventos de listas (creación y actualización de metadatos, no por ítem).
 
-## Próximo paso sugerido
+## Lo que quedó fuera de esta entrega
 
-No planificar tareas de implementación todavía. Cuando se llegue a la Fase 5, este
-documento es el punto de partida para una sesión de diseño dedicada (mismo formato que
-`listening-diary-and-ratings.md`), antes de tocar schema o código.
+- Listas mixtas y colaborativas.
+- "Añadir a lista" dentro del editor como búsqueda de catálogo (la acción contextual en las
+  páginas de artista/álbum/canción agrega el objetivo actual a una lista compatible).

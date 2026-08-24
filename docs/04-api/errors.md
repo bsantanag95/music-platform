@@ -52,6 +52,11 @@ además del `error` legible:
 | `BLOCKED` | 403 | La operación de seguimiento está impedida por un bloqueo existente entre las cuentas. |
 | `LISTEN_ENTRY_NOT_FOUND` | 404 | Diario de escucha: la entrada no existe o no pertenece al usuario autenticado (se responde 404 para no revelar existencia de entradas ajenas). |
 | `DIARY_TARGET_INVALID` | 404 | Diario de escucha: el objetivo indicado no existe o no es un artista/álbum/canción válido. |
+| `FAVORITE_NOT_FOUND` | 404 | Favoritos: el favorito no existe o no pertenece al usuario autenticado. |
+| `FAVORITE_TARGET_INVALID` | 404 | Favoritos: el objetivo indicado no existe o no es un artista/álbum/canción válido. |
+| `LIST_NOT_FOUND` | 404 | Listas: la lista no existe, no pertenece al usuario autenticado o no es visible para el visitante (se responde 404 para no revelar existencia de listas ajenas privadas). |
+| `LIST_TARGET_INVALID` | 404 | Listas: el objetivo del ítem no existe o no es un artista/álbum/canción válido. |
+| `LIST_ITEM_NOT_FOUND` | 404 | Listas: el ítem no existe dentro de la lista indicada. |
 
 ### Implementación
 

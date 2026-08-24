@@ -1,5 +1,23 @@
 {
   "title": "Feed",
   "emptyTitle": "Nothing to see yet",
-  "emptyDescription": "Follow people to see their listens here."
+  "emptyDescription": "Follow people to see their listens, favorites and lists here.",
+  "favoriteLabel": "Added a favorite",
+  "list": {
+    "created": "Created a list",
+    "updated": "Updated a list"
+  },
+  "loadMore": "Load more",
+  "loadingMore": "Loading...",
+  "loadError": "We could not load the feed. Try again.",
+  "context": {
+    "first_listen": "First listen",
+    "relisten": "Relisten",
+    "rediscovery": "Rediscovery"
+  },
+  "audience": {
+    "private": "Private",
+    "followers": "Followers",
+    "public": "Public"
+  }
 }

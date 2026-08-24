@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { parsePagination } from "@/lib/api/pagination";
 import { requireUser } from "@/services/auth/authorization";
-import { listFeed } from "@/services/diary/diary";
+import { listFeed } from "@/services/feed/feed";
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);

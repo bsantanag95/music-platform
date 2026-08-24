@@ -6,9 +6,13 @@ import { Link } from "@/i18n/navigation";
 import { getProfileByUsername } from "@/services/social/profiles";
 import { resolveSession } from "@/services/auth/sessions";
 import { listUserDiary } from "@/services/diary/diary";
+import { listUserFavorites } from "@/services/favorites/favorites";
+import { listUserLists } from "@/services/lists/lists";
 import { FollowButton } from "@/components/social/FollowButton";
 import { BlockButton } from "@/components/social/BlockButton";
 import { DiaryList } from "@/components/diary/DiaryList";
+import { FavoritesList } from "@/components/favorites/FavoritesList";
+import { ListsList } from "@/components/lists/ListsList";
 
 interface UserProfilePageProps {
   params: Promise<{ username: string }>;
@@ -25,6 +29,32 @@ async function ProfileDiary({ username, viewerId }: { username: string; viewerId
     <DiaryList
       initial={initial}
       readOnly
+      empty={{ title: t("profileEmptyTitle"), description: t("profileEmptyDescription") }}
+    />
+  );
+}
+
+async function ProfileFavorites({ username, viewerId }: { username: string; viewerId: string | null }) {
+  const t = await getTranslations("favorites");
+  const initial = await listUserFavorites(username, viewerId, 1, 20);
+  return (
+    <FavoritesList
+      initial={initial}
+      readOnly
+      username={username}
+      empty={{ title: t("profileEmptyTitle"), description: t("profileEmptyDescription") }}
+    />
+  );
+}
+
+async function ProfileLists({ username, viewerId }: { username: string; viewerId: string | null }) {
+  const t = await getTranslations("lists");
+  const initial = await listUserLists(username, viewerId, 1, 20);
+  return (
+    <ListsList
+      initial={initial}
+      readOnly
+      username={username}
       empty={{ title: t("profileEmptyTitle"), description: t("profileEmptyDescription") }}
     />
   );
@@ -117,6 +147,20 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
         <section className="flex w-full max-w-2xl flex-col gap-4">
           <h2 className="font-display text-xl text-paper">{t("diaryTitle")}</h2>
           <ProfileDiary username={profile.username} viewerId={session?.user.id ?? null} />
+        </section>
+      )}
+
+      {(profile.accessible || isOwn) && (
+        <section className="flex w-full max-w-2xl flex-col gap-4">
+          <h2 className="font-display text-xl text-paper">{t("favoritesTitle")}</h2>
+          <ProfileFavorites username={profile.username} viewerId={session?.user.id ?? null} />
+        </section>
+      )}
+
+      {(profile.accessible || isOwn) && (
+        <section className="flex w-full max-w-2xl flex-col gap-4">
+          <h2 className="font-display text-xl text-paper">{t("listsTitle")}</h2>
+          <ProfileLists username={profile.username} viewerId={session?.user.id ?? null} />
         </section>
       )}
     </main>

@@ -1,7 +1,8 @@
 # Feed de actividad — "qué está escuchando" tu círculo
 
-**Fase:** 5 (roadmap). **Estado:** 🟡 Feed v1 implementado (solo entradas del diario). Ratings,
-comentarios, favoritos y listas se agregan en incrementos posteriores.
+**Fase:** 5 (roadmap). **Estado:** 🟡 Feed v1 implementado con escuchas, favoritos y eventos de
+listas (cambio `add-favorites-and-lists`). Ratings y comentarios se agregan en incrementos
+posteriores.
 
 ## Qué es
 
@@ -10,16 +11,28 @@ tiempo casi real lo que las personas que seguís están registrando, valorando o
 comentando. Es la pieza central de la diferenciación frente a Spotify/Apple Music, cuya
 capa social es mínima.
 
-## Feed v1 — Solo diario (add-diary-social-surfaces)
+## Feed v1 — escuchas + favoritos + listas (add-diary-social-surfaces + add-favorites-and-lists)
 
-El feed v1 muestra las entradas del diario (`listen_entry`) de los usuarios seguidos (relación
-`accepted`) que sean visibles para el lector, en orden cronológico descendente con paginación
-offset. Se implementa como `GET /api/me/feed` y se visualiza en `/<locale>/me/feed`.
+El feed v1 muestra las actividades de los usuarios seguidos (relación `accepted`) que sean
+visibles para el lector, en orden cronológico descendente con paginación. Se implementa como
+`GET /api/me/feed` y se visualiza en `/<locale>/me/feed`.
+
+### Tipos de actividad
+
+- **Escucha** (`kind: "listen"`): entrada del diario, con contexto, reacción y audiencia.
+- **Favorito** (`kind: "favorite"`): marca de favorito sobre artista/álbum/canción.
+- **Evento de lista** (`kind: "list"`): creación (`event: "created"`) o actualización de
+  metadatos (`event: "updated"`, con fecha `updated_at`). No se genera un evento por ítem.
+
+La composición se calcula **bajo demanda** uniendo las tres fuentes (no hay tabla de eventos
+materializada), ordenando por `created_at DESC` con desempate por fuente e id. La paginación
+consulta una página ampliada por fuente y la fusiona en memoria; materialización y
+deduplicación se evalúan con volumen real.
 
 ### Reglas de visibilidad
 
-La matriz de visibilidad (`audiencesForProfile` en `src/services/diary/visibility.ts`) determina
-qué entradas ve el lector:
+La matriz de visibilidad (`audiencesForProfile`, ahora compartida en
+`src/services/social/visibility.ts`) determina qué actividades ve el lector:
 - Bloqueo en cualquier dirección → nada.
 - Dueño → todas.
 - Perfil privado y no seguidor aprobado → nada (ni las públicas).
@@ -27,11 +40,11 @@ qué entradas ve el lector:
 - Resto → solo `public`.
 
 El feed aplica esta lógica filtrando `user_id IN (seguidos aceptados)` +
-`audience IN (followers, public)` + `NOT EXISTS` defensivo sobre `user_block`.
+`audience IN (followers, public)` + `NOT EXISTS` defensivo sobre `user_block` para cada fuente.
 
 ### Pendiente para v2+
 
-- Agregar ratings, comentarios, favoritos y listas al feed.
+- Agregar ratings y comentarios al feed.
 - Deduplicación de eventos (un usuario que registra escucha + cambia rating en la misma sesión).
 - Materializar el feed como tabla de eventos si el volumen lo justifica.
 - Keyset pagination en lugar de offset.

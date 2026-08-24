@@ -300,6 +300,87 @@ export type CreditRow = typeof credit.$inferSelect;
 export type CommentRow = typeof comment.$inferSelect;
 export type ListenEntryRow = typeof listenEntry.$inferSelect;
 
+export const favorite = pgTable(
+  "favorite",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    artistId: uuid("artist_id").references(() => artist.id, { onDelete: "cascade" }),
+    releaseGroupId: uuid("release_group_id").references(() => releaseGroup.id, {
+      onDelete: "cascade",
+    }),
+    recordingId: uuid("recording_id").references(() => recording.id, { onDelete: "cascade" }),
+    audience: text("audience").notNull().default("followers"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_favorite_user_created").on(t.userId, t.createdAt),
+    index("idx_favorite_artist").on(t.artistId),
+    index("idx_favorite_release_group").on(t.releaseGroupId),
+    index("idx_favorite_recording").on(t.recordingId),
+    check(
+      "chk_favorite_single_target",
+      sql`num_nonnulls(${t.artistId}, ${t.releaseGroupId}, ${t.recordingId}) = 1`,
+    ),
+  ],
+);
+
+export const userList = pgTable(
+  "user_list",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ownerId: uuid("owner_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    entityType: text("entity_type").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    audience: text("audience").notNull().default("followers"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_user_list_owner_created").on(t.ownerId, t.createdAt),
+    index("idx_user_list_owner_audience").on(t.ownerId, t.audience),
+    check(
+      "chk_user_list_entity_type",
+      sql`${t.entityType} IN ('artist', 'release-group', 'recording')`,
+    ),
+    check("chk_user_list_title", sql`length(${t.title}) <= 100`),
+    check("chk_user_list_description", sql`${t.description} IS NULL OR length(${t.description}) <= 500`),
+  ],
+);
+
+export const userListItem = pgTable(
+  "user_list_item",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    listId: uuid("list_id")
+      .notNull()
+      .references(() => userList.id, { onDelete: "cascade" }),
+    artistId: uuid("artist_id").references(() => artist.id, { onDelete: "cascade" }),
+    releaseGroupId: uuid("release_group_id").references(() => releaseGroup.id, {
+      onDelete: "cascade",
+    }),
+    recordingId: uuid("recording_id").references(() => recording.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_user_list_item_list").on(t.listId, t.position),
+    check(
+      "chk_user_list_item_single_target",
+      sql`num_nonnulls(${t.artistId}, ${t.releaseGroupId}, ${t.recordingId}) = 1`,
+    ),
+  ],
+);
+
+export type FavoriteRow = typeof favorite.$inferSelect;
+export type UserListRow = typeof userList.$inferSelect;
+export type UserListItemRow = typeof userListItem.$inferSelect;
+
 export const comment = pgTable(
   "comment",
   {

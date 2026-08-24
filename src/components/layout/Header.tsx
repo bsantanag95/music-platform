@@ -79,6 +79,22 @@ export function Header({ user = null }: HeaderProps) {
           </Link>
         ) : null}
         {currentUser ? (
+          <Link
+            href="/me/favorites"
+            className="font-data text-sm text-paper-muted transition-colors hover:text-paper"
+          >
+            {t("favorites")}
+          </Link>
+        ) : null}
+        {currentUser ? (
+          <Link
+            href="/me/lists"
+            className="font-data text-sm text-paper-muted transition-colors hover:text-paper"
+          >
+            {t("lists")}
+          </Link>
+        ) : null}
+        {currentUser ? (
           <div className="flex items-center gap-3 font-data text-xs">
             <Link
               href={`/users/${encodeURIComponent(currentUser.username)}`}

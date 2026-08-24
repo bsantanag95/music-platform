@@ -74,5 +74,33 @@
   "BLOCKED": {
     "title": "Blocked account",
     "description": "You cannot perform this action with this account."
+  },
+  "LISTEN_ENTRY_NOT_FOUND": {
+    "title": "Listen entry not found",
+    "description": "The listen entry does not exist or was already deleted."
+  },
+  "DIARY_TARGET_INVALID": {
+    "title": "Invalid target",
+    "description": "The artist, album or song does not exist."
+  },
+  "FAVORITE_NOT_FOUND": {
+    "title": "Favorite not found",
+    "description": "The favorite does not exist or was already removed."
+  },
+  "FAVORITE_TARGET_INVALID": {
+    "title": "Invalid target",
+    "description": "The artist, album or song does not exist."
+  },
+  "LIST_NOT_FOUND": {
+    "title": "List not found",
+    "description": "The list does not exist or is not visible to you."
+  },
+  "LIST_TARGET_INVALID": {
+    "title": "Invalid target",
+    "description": "The artist, album or song does not exist."
+  },
+  "LIST_ITEM_NOT_FOUND": {
+    "title": "Item not found",
+    "description": "The list item does not exist or was already removed."
   }
 }

@@ -294,13 +294,14 @@ calidad o interacción posterior.
 
 La fase se dividirá en cambios verticales, cada uno con su propio OpenSpec:
 
-1. **Privacidad y perfil:** modelo de audiencia, perfil público/privado y configuración.
-2. **Seguimiento:** búsqueda de usuarios, seguir, solicitudes y aprobación.
-3. **Presencia manual:** `listen_entry` para artista, álbum y canción.
-4. **Diario:** historial propio y filtros básicos.
-5. **Favoritos y listas:** señales curatoriales y colecciones personales.
-6. **Feed:** composición, paginación y filtrado por seguimiento y audiencia.
-7. **Scrobbling:** integración opcional con proveedores de streaming.
+1. **Privacidad y perfil:** modelo de audiencia, perfil público/privado y configuración. ✅
+2. **Seguimiento:** búsqueda de usuarios, seguir, solicitudes y aprobación. ✅
+3. **Presencia manual:** `listen_entry` para artista, álbum y canción. ✅
+4. **Diario:** historial propio y filtros básicos. ✅
+5. **Favoritos y listas:** señales curatoriales y colecciones personales. ✅ (cambio `add-favorites-and-lists`)
+6. **Feed:** composición, paginación y filtrado por seguimiento y audiencia. 🟡 v1 implementado
+   (escuchas + favoritos + eventos de listas); materialización y deduplicación se evalúan con volumen.
+7. **Scrobbling:** integración opcional con proveedores de streaming. Pendiente.
 
 El orden puede ajustarse después de resolver las decisiones pendientes, pero no se recomienda
 implementar diario, listas y feed en un único cambio.
@@ -313,11 +314,15 @@ implementar diario, listas y feed en un único cambio.
   ninguna entrada, incluidas las públicas. Fuente: `audiencesForProfile` en
   `src/services/diary/visibility.ts`.
 - Configuración predeterminada por tipo de actividad.
-- Listas mixtas o de un solo tipo de entidad.
-- Listas colaborativas o propiedad individual únicamente.
+- Listas mixtas o de un solo tipo de entidad — **Cerrada (add-favorites-and-lists):** cada lista
+  es de un solo tipo de entidad (`artist`/`release-group`/`recording`), fijo al crear.
+- Listas colaborativas o propiedad individual únicamente — **Cerrada (add-favorites-and-lists):**
+  propiedad de un único usuario en v1.
 - Bloqueo y reporte en la primera entrega social.
 - **Parcialmente cerrada (add-diary-social-surfaces):** el feed v1 usa offset + tiebreaker `id DESC`
   y se calcula bajo demanda; materialización y deduplicación se evalúan con volumen real.
+  **Cerrada (add-favorites-and-lists):** el feed incluye escuchas, favoritos y eventos de listas
+  (creación y actualización de metadatos, no por ítem).
 - Comportamiento al cambiar la audiencia de una actividad ya publicada.
 - Alcance y filtros del historial del diario.
 - Reglas de privacidad y frecuencia del scrobbling automático.
