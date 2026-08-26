@@ -601,10 +601,41 @@ export const FeedListEventSchema = z.object({
 });
 export type FeedListEvent = z.infer<typeof FeedListEventSchema>;
 
+export const FeedTargetInfoSchema = z.object({
+  type: SocialTargetTypeSchema,
+  id: z.uuid(),
+  title: z.string(),
+  coverThumbUrl: z.string().nullable(),
+});
+export type FeedTargetInfo = z.infer<typeof FeedTargetInfoSchema>;
+
+export const FeedRatingSchema = z.object({
+  kind: z.literal("rating"),
+  id: z.uuid(),
+  stars: z.string(),
+  detailedScore: z.number().int().nullable(),
+  createdAt: z.string(),
+  target: FeedTargetInfoSchema,
+  author: AuthorSummarySchema,
+});
+export type FeedRating = z.infer<typeof FeedRatingSchema>;
+
+export const FeedCommentSchema = z.object({
+  kind: z.literal("comment"),
+  id: z.uuid(),
+  body: z.string(),
+  createdAt: z.string(),
+  target: FeedTargetInfoSchema,
+  author: AuthorSummarySchema,
+});
+export type FeedComment = z.infer<typeof FeedCommentSchema>;
+
 export const FeedEntrySchema = z.discriminatedUnion("kind", [
   FeedListenEntrySchema,
   FeedFavoriteSchema,
   FeedListEventSchema,
+  FeedRatingSchema,
+  FeedCommentSchema,
 ]);
 export type FeedEntry = z.infer<typeof FeedEntrySchema>;
 

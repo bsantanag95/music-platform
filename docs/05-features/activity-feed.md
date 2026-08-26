@@ -1,8 +1,8 @@
 # Feed de actividad — "qué está escuchando" tu círculo
 
-**Fase:** 5 (roadmap). **Estado:** 🟡 Feed v1 implementado con escuchas, favoritos y eventos de
-listas (cambio `add-favorites-and-lists`). Ratings y comentarios se agregan en incrementos
-posteriores.
+**Fase:** 5 (roadmap). **Estado:** ✅ Feed implementado con escuchas, favoritos, eventos de
+listas (cambio `add-favorites-and-lists`), ratings vigentes y comentarios (cambio
+`add-ratings-comments-feed`).
 
 ## Qué es
 
@@ -11,9 +11,9 @@ tiempo casi real lo que las personas que seguís están registrando, valorando o
 comentando. Es la pieza central de la diferenciación frente a Spotify/Apple Music, cuya
 capa social es mínima.
 
-## Feed v1 — escuchas + favoritos + listas (add-diary-social-surfaces + add-favorites-and-lists)
+## Feed — cinco fuentes (add-diary-social-surfaces + add-favorites-and-lists + add-ratings-comments-feed)
 
-El feed v1 muestra las actividades de los usuarios seguidos (relación `accepted`) que sean
+El feed muestra las actividades de los usuarios seguidos (relación `accepted`) que sean
 visibles para el lector, en orden cronológico descendente con paginación. Se implementa como
 `GET /api/me/feed` y se visualiza en `/<locale>/me/feed`.
 
@@ -23,8 +23,13 @@ visibles para el lector, en orden cronológico descendente con paginación. Se i
 - **Favorito** (`kind: "favorite"`): marca de favorito sobre artista/álbum/canción.
 - **Evento de lista** (`kind: "list"`): creación (`event: "created"`) o actualización de
   metadatos (`event: "updated"`, con fecha `updated_at`). No se genera un evento por ítem.
+- **Rating** (`kind: "rating"`): valoración **vigente** de un usuario sobre un objetivo. Un
+  cambio de valoración reemplaza la entrada anterior (no se muestra historial); la fecha
+  mostrada es la de `updated_at`.
+- **Comentario** (`kind: "comment"`): cada comentario genera su propia entrada — un usuario
+  puede tener varias entradas de comentario sobre el mismo objetivo.
 
-La composición se calcula **bajo demanda** uniendo las tres fuentes (no hay tabla de eventos
+La composición se calcula **bajo demanda** uniendo las cinco fuentes (no hay tabla de eventos
 materializada), ordenando por `created_at DESC` con desempate por fuente e id. La paginación
 consulta una página ampliada por fuente y la fusiona en memoria; materialización y
 deduplicación se evalúan con volumen real.
@@ -40,16 +45,26 @@ La matriz de visibilidad (`audiencesForProfile`, ahora compartida en
 - Resto → solo `public`.
 
 El feed aplica esta lógica filtrando `user_id IN (seguidos aceptados)` +
-`audience IN (followers, public)` + `NOT EXISTS` defensivo sobre `user_block` para cada fuente.
+`audience IN (followers, public)` + `NOT EXISTS` defensivo sobre `user_block` para cada fuente
+que tiene audiencia propia (escucha, favorito, lista).
+
+`rating` y `comment` **no tienen columna de audiencia** (a diferencia de las otras tres
+fuentes): en la vista de catálogo son siempre públicos. Para el feed se tratan como
+audiencia `public` implícita, filtrados solo por `user_id IN (seguidos aceptados)` +
+bloqueo. Como `audiencesForProfile` siempre incluye `"public"` cuando la relación es
+`following` (aceptada), pertenecer a los seguidos ya equivale a tener permiso para ver esa
+actividad — no hace falta una audiencia explícita. Ver `design.md` del cambio
+`add-ratings-comments-feed`.
 
 ### Pendiente para v2+
 
-- Agregar ratings y comentarios al feed.
 - Deduplicación de eventos (un usuario que registra escucha + cambia rating en la misma sesión).
 - Materializar el feed como tabla de eventos si el volumen lo justifica.
 - Keyset pagination en lugar de offset.
+- Audiencia por actividad para rating/comment (alineado con el diseño maestro de Fase 5,
+  fuera de alcance de `add-ratings-comments-feed` por requerir migración de esquema).
 
-## De dónde sale el contenido del feed (v2+)
+## De dónde sale el contenido del feed
 
 Ver `listening-diary-and-ratings.md`, sección 5, para el detalle completo. Resumen:
 

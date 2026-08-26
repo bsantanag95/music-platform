@@ -50,6 +50,33 @@ describe("feed API (GET /api/me/feed)", () => {
     expect(mocks.listFeed).toHaveBeenCalledWith(user.id, 1, 20);
   });
 
+  it("devuelve entradas de rating y comentario tal como las arma el servicio", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    const ratingEntry = {
+      kind: "rating",
+      id: "00000000-0000-4000-8000-000000000010",
+      stars: "4.5",
+      detailedScore: 90,
+      createdAt: "2026-01-05T00:00:00.000Z",
+      target: { type: "artist", id: "00000000-0000-4000-8000-000000000001", title: "Pink Floyd", coverThumbUrl: null },
+      author: { id: "00000000-0000-4000-8000-000000000002", username: "seguido", displayName: "Seguido" },
+    };
+    const commentEntry = {
+      kind: "comment",
+      id: "00000000-0000-4000-8000-000000000011",
+      body: "Un discazo",
+      createdAt: "2026-01-06T00:00:00.000Z",
+      target: { type: "artist", id: "00000000-0000-4000-8000-000000000001", title: "Pink Floyd", coverThumbUrl: null },
+      author: { id: "00000000-0000-4000-8000-000000000002", username: "seguido", displayName: "Seguido" },
+    };
+    mocks.listFeed.mockResolvedValue({ entries: [commentEntry, ratingEntry], page: 1, pageSize: 20, hasNext: false });
+
+    const response = await GET(new NextRequest("http://localhost/api/me/feed"));
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ entries: [commentEntry, ratingEntry] });
+  });
+
   it("devuelve 401 AUTH_REQUIRED sin sesión", async () => {
     mocks.requireUser.mockRejectedValue(new ApiError("AUTH_REQUIRED", 401, "Sesión requerida"));
 

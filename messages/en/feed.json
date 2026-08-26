@@ -1,8 +1,10 @@
 {
   "title": "Feed",
   "emptyTitle": "Nothing to see yet",
-  "emptyDescription": "Follow people to see their listens, favorites and lists here.",
+  "emptyDescription": "Follow people to see their listens, favorites, lists, ratings and comments here.",
   "favoriteLabel": "Added a favorite",
+  "ratingLabel": "Rated {stars} stars",
+  "commentLabel": "Commented",
   "list": {
     "created": "Created a list",
     "updated": "Updated a list"

@@ -3,8 +3,10 @@ import { db } from "@/db";
 import {
   appUser,
   artist,
+  comment,
   favorite,
   listenEntry,
+  rating,
   recording,
   releaseGroup,
   userFollow,
@@ -53,7 +55,36 @@ export interface FeedListEvent {
   author: FeedAuthor;
 }
 
-export type FeedEntry = FeedListenEntry | FeedFavorite | FeedListEvent;
+export interface FeedRating {
+  kind: "rating";
+  id: string;
+  stars: string;
+  detailedScore: number | null;
+  createdAt: string;
+  target: {
+    type: "artist" | "release-group" | "recording";
+    id: string;
+    title: string;
+    coverThumbUrl: string | null;
+  };
+  author: FeedAuthor;
+}
+
+export interface FeedComment {
+  kind: "comment";
+  id: string;
+  body: string;
+  createdAt: string;
+  target: {
+    type: "artist" | "release-group" | "recording";
+    id: string;
+    title: string;
+    coverThumbUrl: string | null;
+  };
+  author: FeedAuthor;
+}
+
+export type FeedEntry = FeedListenEntry | FeedFavorite | FeedListEvent | FeedRating | FeedComment;
 
 const BLOCKED_SQL = (viewerId: string, authorId: unknown) =>
   sql`NOT EXISTS (
@@ -63,10 +94,13 @@ const BLOCKED_SQL = (viewerId: string, authorId: unknown) =>
   )`;
 
 /**
- * Feed de actividad de usuarios seguidos: escuchas, favoritos y eventos de
- * listas (creación o actualización de metadatos). Se calcula bajo demanda
- * uniendo las tres fuentes y ordenando por created_at DESC con desempate por
- * fuente e id. Solo incluye actividades visibles según audiencia y sin bloqueo.
+ * Feed de actividad de usuarios seguidos: escuchas, favoritos, eventos de
+ * listas (creación o actualización de metadatos), ratings vigentes y
+ * comentarios. Se calcula bajo demanda uniendo las cinco fuentes y ordenando
+ * por created_at DESC con desempate por fuente e id. Solo incluye actividades
+ * visibles según audiencia y sin bloqueo; rating/comment no tienen audiencia
+ * propia y se tratan como "public" implícita (ver design.md de
+ * add-ratings-comments-feed).
  */
 export async function listFeed(viewerId: string, page = 1, pageSize = 20) {
   if (page < 1 || pageSize < 1 || pageSize > 50) {
@@ -90,7 +124,7 @@ export async function listFeed(viewerId: string, page = 1, pageSize = 20) {
   const extra = 1;
   const perSource = pageSize + extra;
 
-  const [listens, favorites, lists] = await Promise.all([
+  const [listens, favorites, lists, ratings, comments] = await Promise.all([
     db
       .select({
         id: listenEntry.id,
@@ -161,6 +195,60 @@ export async function listFeed(viewerId: string, page = 1, pageSize = 20) {
       .where(and(inArray(userList.ownerId, followedIds), inArray(userList.audience, ["followers", "public"]), BLOCKED_SQL(viewerId, userList.ownerId)))
       .orderBy(desc(userList.createdAt), desc(userList.id))
       .limit(perSource),
+
+    // rating/comment no tienen columna de audiencia propia: se tratan como
+    // audiencia "public" implícita, ya cubierta por pertenecer a followedIds
+    // (relación aceptada) — ver design.md de add-ratings-comments-feed.
+    db
+      .select({
+        id: rating.id,
+        stars: rating.stars,
+        detailedScore: rating.detailedScore,
+        updatedAt: rating.updatedAt,
+        artistId: rating.artistId,
+        releaseGroupId: rating.releaseGroupId,
+        recordingId: rating.recordingId,
+        artistName: artist.name,
+        releaseTitle: releaseGroup.title,
+        releaseCover: releaseGroup.coverThumbUrl,
+        recordingTitle: recording.title,
+        authorId: rating.userId,
+        authorUsername: appUser.username,
+        authorDisplayName: appUser.displayName,
+      })
+      .from(rating)
+      .leftJoin(artist, eq(rating.artistId, artist.id))
+      .leftJoin(releaseGroup, eq(rating.releaseGroupId, releaseGroup.id))
+      .leftJoin(recording, eq(rating.recordingId, recording.id))
+      .leftJoin(appUser, eq(rating.userId, appUser.id))
+      .where(and(inArray(rating.userId, followedIds), BLOCKED_SQL(viewerId, rating.userId)))
+      .orderBy(desc(rating.updatedAt), desc(rating.id))
+      .limit(perSource),
+
+    db
+      .select({
+        id: comment.id,
+        body: comment.body,
+        createdAt: comment.createdAt,
+        artistId: comment.artistId,
+        releaseGroupId: comment.releaseGroupId,
+        recordingId: comment.recordingId,
+        artistName: artist.name,
+        releaseTitle: releaseGroup.title,
+        releaseCover: releaseGroup.coverThumbUrl,
+        recordingTitle: recording.title,
+        authorId: comment.userId,
+        authorUsername: appUser.username,
+        authorDisplayName: appUser.displayName,
+      })
+      .from(comment)
+      .leftJoin(artist, eq(comment.artistId, artist.id))
+      .leftJoin(releaseGroup, eq(comment.releaseGroupId, releaseGroup.id))
+      .leftJoin(recording, eq(comment.recordingId, recording.id))
+      .leftJoin(appUser, eq(comment.userId, appUser.id))
+      .where(and(inArray(comment.userId, followedIds), BLOCKED_SQL(viewerId, comment.userId)))
+      .orderBy(desc(comment.createdAt), desc(comment.id))
+      .limit(perSource),
   ]);
 
   const author = (id: string, username: string | null, displayName: string | null): FeedAuthor => ({
@@ -226,7 +314,50 @@ export async function listFeed(viewerId: string, page = 1, pageSize = 20) {
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
   }));
 
-  const merged = [...listenEntries, ...favoriteEntries, ...listEntries]
+  const ratingEntries: FeedEntry[] = ratings.map((row) => {
+    const type: "artist" | "release-group" | "recording" = row.artistId
+      ? "artist"
+      : row.releaseGroupId
+        ? "release-group"
+        : "recording";
+    return {
+      kind: "rating" as const,
+      id: row.id,
+      stars: row.stars,
+      detailedScore: row.detailedScore,
+      createdAt: row.updatedAt.toISOString(),
+      target: {
+        type,
+        id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
+        title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
+        coverThumbUrl: row.releaseCover,
+      },
+      author: author(row.authorId, row.authorUsername, row.authorDisplayName),
+    };
+  });
+
+  const commentEntries: FeedEntry[] = comments.map((row) => {
+    const type: "artist" | "release-group" | "recording" = row.artistId
+      ? "artist"
+      : row.releaseGroupId
+        ? "release-group"
+        : "recording";
+    return {
+      kind: "comment" as const,
+      id: row.id,
+      body: row.body,
+      createdAt: row.createdAt.toISOString(),
+      target: {
+        type,
+        id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
+        title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
+        coverThumbUrl: row.releaseCover,
+      },
+      author: author(row.authorId, row.authorUsername, row.authorDisplayName),
+    };
+  });
+
+  const merged = [...listenEntries, ...favoriteEntries, ...listEntries, ...ratingEntries, ...commentEntries]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice((page - 1) * pageSize, page * pageSize + extra);
 

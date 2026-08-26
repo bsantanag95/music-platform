@@ -28,9 +28,10 @@ function formatDate(iso: string, locale: string) {
   });
 }
 
-// Feed de actividad: escuchas, favoritos y eventos de listas de los usuarios
-// seguidos. Cada tipo de entrada se renderiza según su `kind` con jerarquía
-// visual: las entradas con texto (escucha con impresión) tienen más peso.
+// Feed de actividad: escuchas, favoritos, eventos de listas, ratings y
+// comentarios de los usuarios seguidos. Cada tipo de entrada se renderiza
+// según su `kind` con jerarquía visual: las entradas con texto (escucha con
+// impresión, comentario) tienen más peso.
 export function FeedList({ initial, empty }: FeedListProps) {
   const t = useTranslations("feed");
   const locale = useLocale();
@@ -103,7 +104,7 @@ function FeedBody({
   t,
 }: {
   entry: FeedEntry;
-  t: (key: string) => string;
+  t: (key: string, values?: Record<string, string | number>) => string;
 }) {
   if (entry.kind === "listen") {
     return (
@@ -134,6 +135,37 @@ function FeedBody({
         >
           {entry.target.title}
         </Link>
+      </div>
+    );
+  }
+
+  if (entry.kind === "rating") {
+    return (
+      <div className="flex flex-col gap-1">
+        <span className="mt-1 font-data text-xs text-paper-muted">
+          {t("ratingLabel", { stars: entry.stars })}
+        </span>
+        <Link
+          href={targetHref(entry.target.type, entry.target.id)}
+          className="font-display text-lg text-paper transition-colors hover:text-amber"
+        >
+          {entry.target.title}
+        </Link>
+      </div>
+    );
+  }
+
+  if (entry.kind === "comment") {
+    return (
+      <div className="flex flex-col gap-1">
+        <span className="mt-1 font-data text-xs text-paper-muted">{t("commentLabel")}</span>
+        <Link
+          href={targetHref(entry.target.type, entry.target.id)}
+          className="font-display text-lg text-paper transition-colors hover:text-amber"
+        >
+          {entry.target.title}
+        </Link>
+        <p className="mt-1 whitespace-pre-wrap font-body text-sm text-paper">{entry.body}</p>
       </div>
     );
   }

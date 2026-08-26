@@ -3,8 +3,8 @@
 ## Purpose
 
 Feed de actividad de Fase 5: composición bajo demanda de las actividades visibles de los
-usuarios seguidos — escuchas del diario, favoritos y eventos de listas — ordenadas
-cronológicamente y filtradas por audiencia, perfil y bloqueos.
+usuarios seguidos — escuchas del diario, favoritos, eventos de listas, ratings vigentes y
+comentarios — ordenadas cronológicamente y filtradas por audiencia, perfil y bloqueos.
 
 ## Requirements
 
@@ -47,15 +47,21 @@ responder `401` con código `AUTH_REQUIRED`.
 
 ### Requirement: Alcance del feed v1
 
-El feed v1 SHALL contener escuchas del diario, favoritos y eventos de listas publicadas, y SHALL
-NOT contener ratings ni comentarios en este incremento. Un evento de lista SHALL generarse por
-la creación de una lista o por la actualización de sus metadatos (título, descripción o
-audiencia), no por cada ítem agregado o quitado. Cada entrada SHALL mostrarse con el autor
-(username y displayName), el tipo de actividad, el objetivo y la fecha.
+El feed v1 SHALL contener escuchas del diario, favoritos, eventos de listas publicadas,
+ratings vigentes y comentarios, y SHALL NOT contener un historial de valoraciones pasadas
+por objetivo. Un evento de lista SHALL generarse por la creación de una lista o por la
+actualización de sus metadatos (título, descripción o audiencia), no por cada ítem
+agregado o quitado. Un rating SHALL aparecer en el feed una única vez por usuario y
+objetivo, reflejando siempre el valor vigente y su fecha de última actualización; una
+nueva valoración sobre el mismo objetivo SHALL reemplazar la entrada anterior en el feed en
+lugar de agregar una entrada adicional. Cada comentario SHALL generar su propia entrada de
+feed, sin deduplicar por autor u objetivo. Ratings y comentarios no tienen audiencia
+propia: a efectos del feed SHALL tratarse como audiencia `public`, sujeta igualmente a la
+regla de visibilidad de perfil del autor y de bloqueos. Cada entrada SHALL mostrarse con el
+autor (username y displayName), el tipo de actividad, el objetivo y la fecha.
 
-#### Scenario: Solo escuchas, favoritos y listas
-- **WHEN** un seguido cambia un rating o publica un comentario sin registrar una actividad
-  visible del diario, un favorito o una lista
+#### Scenario: Solo escuchas, favoritos, listas, ratings y comentarios
+- **WHEN** un seguido realiza una actividad de un tipo no contemplado por el feed
 - **THEN** ese evento no genera ninguna entrada en el feed
 
 #### Scenario: Un evento por lista, no por ítem
@@ -74,3 +80,23 @@ audiencia), no por cada ítem agregado o quitado. Cada entrada SHALL mostrarse c
 #### Scenario: Navegación al perfil del autor
 - **WHEN** el lector interactúa con la entrada de un seguido
 - **THEN** puede navegar al perfil del autor de la entrada
+
+#### Scenario: Rating vigente reemplaza al anterior en el feed
+- **WHEN** un seguido cambia su valoración sobre un objetivo que ya había valorado antes
+- **THEN** el feed muestra una única entrada de rating para ese usuario y objetivo, con el
+  valor y la fecha de la valoración vigente, y no conserva la entrada del valor anterior
+
+#### Scenario: Varios comentarios sobre el mismo objetivo
+- **WHEN** un seguido publica más de un comentario sobre el mismo artista, álbum o canción
+- **THEN** el feed muestra una entrada por cada comentario, cada una con su propia fecha
+
+#### Scenario: Rating o comentario de un perfil privado sin relación aprobada
+- **WHEN** un usuario valora o comenta y su perfil es privado, y el lector no tiene una
+  relación de seguimiento aceptada con ese perfil
+- **THEN** esa entrada de rating o comentario no aparece en el feed del lector, aunque en
+  la vista de catálogo siga siendo visible para cualquiera
+
+#### Scenario: Rating o comentario con bloqueo entre autor y lector
+- **WHEN** existe un bloqueo en cualquier dirección entre el lector y el autor de un rating
+  o comentario
+- **THEN** esa entrada no aparece en el feed del lector
