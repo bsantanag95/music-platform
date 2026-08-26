@@ -7,12 +7,13 @@ implementación.
 
 | Documento | Fase | Estado |
 |---|---|---|
-| [`phase-5-design.md`](./phase-5-design.md) | 5 | 🟢 Diseño maestro: pasos 1–5 implementados, feed v1, scrobbling pendiente |
+| [`phase-5-design.md`](./phase-5-design.md) | 5 | 🟢 Diseño maestro: pasos 1–6 implementados, scrobbling pendiente |
 | [`catalog-browsing.md`](./catalog-browsing.md) | 3 | ✅ Especificado, backend listo |
 | [`ratings-and-reviews.md`](./ratings-and-reviews.md) | 4 | ✅ Implementado y validado |
 | [`listening-diary-and-ratings.md`](./listening-diary-and-ratings.md) | 4-5 | 🟡 Propuesta de diseño |
 | [`lists-and-favorites.md`](./lists-and-favorites.md) | 5 | ✅ Implementado (cambio `add-favorites-and-lists`) |
-| [`activity-feed.md`](./activity-feed.md) | 5 | 🟡 Feed v1 (escuchas + favoritos + listas); ratings/comentarios pendientes |
+| [`activity-feed.md`](./activity-feed.md) | 5 | ✅ Implementado (escuchas + favoritos + listas + ratings + comentarios) |
+| [`home.md`](./home.md) | 5 | 🟡 Diseño cerrado, pendiente de implementación |
 
 ## Regla de esta carpeta
 
