@@ -1,7 +1,7 @@
 # Inicio — landing diferenciado por sesión
 
 **Fase:** 5 (roadmap), navegación autenticada definida en `phase-5-design.md` §10.1.
-**Estado:** 🟡 Diseño cerrado (discusión 2026-08-26), pendiente de implementación.
+**Estado:** ✅ Implementado (cambio `add-home-page`).
 
 ## Qué es
 
@@ -50,17 +50,21 @@ bloques muestran contenido de **cualquier usuario público**, no solo de los seg
 - Buscador (ya existe, deja de ser el único contenido de la página).
 - CTA a registro/login.
 
-## Notas técnicas para cuando se implemente
+## Notas técnicas de la implementación
 
-- "Actividad reciente de la comunidad" y "listas públicas recientes" son **fuentes de datos
-  nuevas**, no un filtro sobre `listFeed` (`src/services/feed/feed.ts`): ese servicio está
-  scopeado a usuarios seguidos con relación `accepted`. El patrón de query es el mismo
-  (unión + orden por fecha + paginación en memoria si hace falta), pero sin el filtro
-  `inArray(userId, followedIds)` — filtran únicamente por `audience = public`.
-- El feed compacto de Inicio puede reusar `listFeed` directamente (mismo contrato que
-  `/me/feed`), acotando `pageSize` a un número chico para el preview.
-- No hay necesidad de un rol/permiso nuevo para este cambio — "listas públicas recientes"
-  usa el mismo campo `audience` que ya expone `userList`.
+- "Actividad reciente de la comunidad" y "listas públicas recientes" son fuentes de datos
+  propias (`src/services/home/home.ts`: `listCommunityActivity`, `listPublicLists`), no un
+  filtro sobre `listFeed` (`src/services/feed/feed.ts`): ese servicio está scopeado a
+  usuarios seguidos con relación `accepted`. Filtran por `appUser.profileVisibility =
+  'public'` en el autor (más `audience = 'public'` en el caso de listas) y, si hay sesión,
+  excluyen bloqueos en cualquier dirección — sin paginación, devuelven un top-N fijo para
+  preview.
+- El feed compacto de Inicio (`listFollowingFeedPreview`) es un wrapper fino sobre
+  `listFeed` con `pageSize` chico — mismo contrato que `/me/feed`.
+- El render por tipo de actividad se comparte entre `/me/feed` y los tres bloques de Inicio
+  vía `FeedEntryCard`/`FeedEntryBody` (`src/components/feed/FeedEntryBody.tsx`).
+- No hizo falta ningún rol/permiso nuevo — "listas públicas recientes" usa el mismo campo
+  `audience` que ya expone `userList`.
 
 ## Pendiente
 

@@ -13,7 +13,7 @@ implementación.
 | [`listening-diary-and-ratings.md`](./listening-diary-and-ratings.md) | 4-5 | 🟡 Propuesta de diseño |
 | [`lists-and-favorites.md`](./lists-and-favorites.md) | 5 | ✅ Implementado (cambio `add-favorites-and-lists`) |
 | [`activity-feed.md`](./activity-feed.md) | 5 | ✅ Implementado (escuchas + favoritos + listas + ratings + comentarios) |
-| [`home.md`](./home.md) | 5 | 🟡 Diseño cerrado, pendiente de implementación |
+| [`home.md`](./home.md) | 5 | ✅ Implementado (cambio `add-home-page`) |
 
 ## Regla de esta carpeta
 

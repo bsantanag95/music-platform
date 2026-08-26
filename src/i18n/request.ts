@@ -19,6 +19,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       feed: (await import(`../../messages/${resolvedLocale}/feed.json`)).default,
       favorites: (await import(`../../messages/${resolvedLocale}/favorites.json`)).default,
       lists: (await import(`../../messages/${resolvedLocale}/lists.json`)).default,
+      home: (await import(`../../messages/${resolvedLocale}/home.json`)).default,
     },
   };
 });
