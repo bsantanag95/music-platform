@@ -11,6 +11,7 @@
 | 7 | **PWA diferida a Fase 6 (ADR 0001)**: si el frontend de Fase 3 no se construye mobile-first desde el principio, hay retrabajo visual en Fase 6. | Tailwind + diseño responsive desde la Etapa 3.0/3.6, aunque el manifest/service worker en sí queden fuera de esta fase. |
 | 8 | ~~**Decisión de alcance de "detalle de canción" sin resolver**~~ **✅ Resuelto** — Camino A confirmado, diferido a Fase 4. | — |
 | 9 | **Disponibilidad de Cover Art Archive / Archive.org (carátulas):** la app hotlinkea las miniaturas de CAA (`coverartarchive.org/release-group/{mbid}/front-250`), que redirige a archive.org. Se cachea solo la **URL**, no los bytes de la imagen. Una URL cacheada como "válida" no garantiza que la imagen esté disponible en el momento del GET (ver detalle abajo). | Aceptar como riesgo conocido mientras se valida la Fase 3 — la Fase 3 existe para descubrir estos problemas antes de sumar complejidad. Mitigación inmediata de bajo coste (Etapa 3.6, estados de carga): retry limitado con pequeño backoff, skeleton/placeholder mientras se reintenta y fallback definitivo al agotar intentos — sin reintentos infinitos ni tráfico excesivo. **No introduce almacenamiento propio.** Reevaluar con métricas reales (ver detalle abajo) antes de desacoplar la disponibilidad de las carátulas de CAA. |
+| 10 | **Dogpile sobre MusicBrainz en cache-miss concurrente:** múltiples requests HTTP sobre la misma entidad no cacheada generan llamadas duplicadas a la API de MusicBrainz. La cola serial en proceso las espacia pero no las descarta — ver detalle abajo. | **Riesgo aceptado sin mitigación activa.** Si el tráfico lo justifica, la solución es un rate limitador distribuido (Redis token bucket, previsto en `client.ts:9-13`), no advisory locks. Ver ADR 0011. Revisar cuando la profundidad de cola sostenida o el p95 de latencia en rutas de cache-miss superen un umbral definido (conexión con B.3 de `scalability infrastructure.md`). |
 
 Ningún riesgo de esta lista es, por sí solo, motivo para no empezar — todos tienen una
 mitigación concreta y de bajo costo. El único requisito real antes de escribir código es
@@ -48,3 +49,30 @@ cambian el diseño de las pantallas, no solo su implementación.
   complejidad operativa, escalabilidad, invalidación, comportamiento ante imágenes
   eliminadas/cambiadas y, sobre todo, las implicaciones de copyright/licencia de almacenar y
   servir copias propias. **"Object Storage" no es la respuesta correcta por defecto.**
+
+## Riesgo 10 — Dogpile sobre MusicBrainz en cache-miss concurrente
+
+Cuando múltiples requests HTTP hacen cache-miss de la misma entidad de catálogo simultáneamente, cada una genera su propia llamada a la API de MusicBrainz. La cola serial en proceso (`client.ts`, `MIN_INTERVAL_MS = 1100`) serializa las llamadas HTTP salientes, pero no evita que se generen múltiples llamadas para la misma entidad — solo las espacia.
+
+- **Efecto de segundo orden:** las llamadas duplicadas no solo desperdician trabajo propio
+  (upserts idempotentes que se sobreescriben con los mismos datos) — también ocupan turnos de
+  la cola serial que podrían estar sirviendo cache-misses de _otras_ entidades, no relacionadas
+  con el pico. El costo real durante un pico no es solo cómputo desperdiciado: es **latencia
+  para usuarios que no tienen nada que ver con la entidad que generó el dogpile**.
+- **Por qué no se usan advisory locks:** la única función de ingestión que los necesita es
+  `ensureArtistMemberships` (`ingest-artist.ts:63-96`), porque tiene una operación destructiva
+  (DELETE de relaciones stale) que sí puede corromper datos bajo concurrencia. Las demás
+  funciones de ingestión son puramente aditivas — la peor consecuencia de concurrencia es
+  trabajo desperdiciado, no corrupción. Serializar escrituras aditivas detrás de un lock
+  introduciría latencia innecesaria para prevenir un riesgo que hoy es despreciable.
+  Ver ADR 0011 para la justificación completa de esta decisión.
+- **Impacto actual:** despreciable. A la escala actual (poco tráfico, un solo proceso Node), el
+  escenario de múltiples usuarios solicitando simultáneamente la misma entidad no cacheada es
+  prácticamente imposible.
+- **Trigger de revisión:** en vez de un criterio genérico ("si el tráfico crece"), la señal
+  concreta a monitorear es: profundidad de cola sostenida en `client.ts`, o p95 de latencia en
+  rutas de cache-miss superando un umbral definido. _(Conexión directa con el punto B.3 del
+  checklist de infraestructura — "aclarar primero" qué observabilidad existe hoy antes de fijar
+  el umbral.)_
+- **Mitigación si se activa el trigger:** un rate limitador distribuido (Redis token bucket, ya
+  previsto como componente futuro en `client.ts:9-13`) — no advisory locks por entidad.
