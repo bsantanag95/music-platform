@@ -7,6 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "db:cleanup-sessions": "tsx --env-file=.env scripts/cleanup-expired-sessions.ts",
+    "db:backup": "tsx --env-file=.env scripts/backup-db.ts",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",

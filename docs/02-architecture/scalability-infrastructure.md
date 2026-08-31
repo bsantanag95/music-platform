@@ -10,12 +10,9 @@
 
 Relevante para Fase 4 en curso, o barato de decidir ahora / costoso de corregir después.
 
-### A.1 — Namespacing de esquema (`catalog.*`, `community.*`, `users.*`)
+### A.1 — ~~Namespacing de esquema (`catalog.*`, `community.*`, `users.*`)~~ **Movido al balde C (diferido)**
 
-**De qué se trata:** organizar las tablas de Postgres en schemas lógicos separados desde el diseño, incluso operando sobre una única instancia física.
-**Por qué ahora:** Fase 4 sigue generando tablas activamente (auth, ratings, comments). Introducir namespacing después de que existan decenas de tablas sin agrupar implica una migración de esquema no trivial, con riesgo de romper referencias y foreign keys entre modelos ya en producción.
-**Conexión con lo existente:** no hay ADR que cubra la organización física de schemas todavía. Sería una decisión nueva, de bajo costo de implementación y alto payoff futuro (permite separar físicamente Catalog DB / Community DB más adelante sin rediseñar la aplicación).
-**Acción sugerida:** ADR corta definiendo la convención de naming de schemas antes de que se generen más tablas de Fase 4.
+**Estado: ⏳ Diferido a balde C.** El costo de migrar ahora es comparable al de no hacerlo — ver C.10. 
 
 ### A.2 — Idempotencia + `external_id` (MusicBrainz GID) como clave de reconciliación
 
@@ -29,33 +26,27 @@ Relevante para Fase 4 en curso, o barato de decidir ahora / costoso de corregir 
 
 **Estado: ✅ Resuelto — esquema existente.** Todas las entidades de catálogo ya usan `mbid UUID UNIQUE` como columna de reconciliación (`artist.mbid`, `release_group.mbid`, `release.mbid`, `recording.mbid`). Los IDs internos son `UUID` (no BIGINT, ver ADR 0003). No hay acción pendiente.
 
-### A.4 — BIGINT para IDs internos en entidades comunitarias de alto crecimiento
+### A.4 — ~~BIGINT para IDs internos en entidades comunitarias de alto crecimiento~~ **✅ No aplica — UUID de base**
 
-**De qué se trata:** usar BIGINT (no INT) como tipo de clave primaria interna en tablas como `rating` y `comment`, que por volumen de uso pueden acercarse al límite de INT (2.147B) con el tiempo.
-**Por qué ahora:** migrar de INT a BIGINT sobre una tabla ya poblada y con foreign keys activas es una operación costosa y riesgosa (locks, reindexado, downtime potencial). Decidirlo ahora, con Fase 4 recién generando estas tablas, es prácticamente gratis.
-**Conexión con lo existente:** no hay ADR específica sobre tipos de ID; podría integrarse a `conventions.md` como regla general para tablas de alto volumen esperado, no solo para rating/comment.
-**Acción sugerida:** revisar el schema actual de Drizzle para `rating` y `comment` (y cualquier tabla comunitaria de Fase 4/5) y confirmar el tipo de PK antes de generar migraciones.
+**Estado: ✅ No aplica.** El proyecto nunca usó INT/INT4 como PK: las 18 tablas (incluidas `rating`, `comment`, `user_follow`, `listen_entry`, `favorite`, `user_list_item`) usan `UUID ... DEFAULT gen_random_uuid()` desde la migración fundacional 0000 (las adicionales en 0005/0007/0008/0009 siguieron el mismo patrón). No hay INT32 que migrar a BIGINT. La decisión de tipo de PK ya está tomada y centralizada: ADR 0003 eligió `UUID` (con `BIGSERIAL` descartado) y `conventions.md:12` la norma como regla general para todas las entidades. El límite de 2.147B de INT no aplica a UUID (128-bit).
 
-### A.5 — Agregados derivados de rating (`rating_sum`, `rating_count`, `rating_average`)
+### A.5 — ~~Agregados derivados de rating~~ **Movido al balde C (diferido)**
 
-**De qué se trata:** en vez de calcular `AVG(rating)` en cada lectura, mantener columnas o tabla derivada actualizada por evento/transacción, tratando el agregado como dato reconstruible desde `ratings` (source of truth).
-**Por qué ahora:** Fase 4 está construyendo ratings activamente. Es además el punto de mayor tensión con una decisión ya tomada: ADR 0009 elige eliminación física (no soft-delete) para `rating` precisamente para evitar bugs de "olvidar `deleted_at IS NULL`". Si un rating se borra físicamente, el mecanismo de reconciliación del agregado derivado tiene que estar definido explícitamente — de lo contrario hay una vía clara de datos huérfanos o contadores desincronizados.
-**Conexión con lo existente:** cruza directo con ADR 0009. Debería resolverse en la misma ADR o en una nueva que la referencie explícitamente.
-**Acción sugerida:** este es, junto con A.2, uno de los dos puntos de mayor prioridad — bloquea diseño limpio de la feature de ratings que ya está en marcha.
+**Estado: ⏳ Diferido a balde C — ver Riesgo #11 en `04-risks.md`.** No existe columna materializada (ni trigger que la mantenga): el promedio se calcula en vivo (`social.ts:37-39`) y los índices `idx_rating_*` (`drizzle/0000_initial.sql:222-224`) lo convierten en un index scan por entidad, no un seq scan. Como no hay estado derivado, el borrado físico de ADR 0009 no tiene nada que desincronizar (no-riesgo). Se materializa solo si aparece señal real (p95 de latencia en páginas de entidad o volumen de ratings por entidad superando un umbral); cuando ocurra, la sincronización debe usar triggers de Postgres (argumento estructural de ADR 0009), no lógica de aplicación.
 
 ### A.6 — Marco conceptual: Source of Truth / Derived Data / Ephemeral Data
 
-**De qué se trata:** clasificar explícitamente cada tipo de dato del sistema en una de tres categorías (no se puede perder / se puede reconstruir / se puede perder sin consecuencia), y usar esa clasificación para decisiones de backup, cacheo y prioridad de recuperación.
-**Por qué ahora:** es una taxonomía de documentación, no infraestructura nueva — costo de adopción casi nulo, y da un lenguaje común para todas las decisiones de A.1 a A.5 y de los baldes C y D.
-**Conexión con lo existente:** encaja naturalmente como sección de `04-risks.md` o como documento propio en `02-architecture`.
-**Acción sugerida:** escribirlo como documento corto de referencia; después, revisar retroactivamente si las entradas de `04-risks.md` ya reflejan esta distinción.
+**Estado: ✅ Resuelto — ver `data-classification.md`.** La taxonomía quedó documentada como documento standalone en `02-architecture`, con cuatro categorías: **fuente de verdad propia** (irreproducible), **espejo reconstruible de fuente externa** (regenerable desde MusicBrainz a costo de rate limit), **derivada / computable** (recalculable), y **efímera** (reservada, sin ocupantes hoy — Redis diferido en C.3, `session` es propia vía ADR 0008). La clasificación se definió por *perdibilidad/reconstruibilidad*, no por origen — lo que corrige la premisa del espejo original que trataba el catálogo de MusicBrainz como fuente de verdad al mismo nivel que los datos propios de usuario (el catálogo es reconstruible con costo, no irreemplazable). Complementa ADR 0011 (que clasifica por origen solo para ingestión) sin duplicarlo. Marca la pauta para backups (prioridad: propia > efímera > espejo > derivada).
 
 ### A.7 — Backups con PITR (Point-in-Time Recovery) y prueba real de restore
 
+**Estado: ✅ Resuelto (backup + prueba de restore) — ver `06-operations/backup-restore.md`.** Se implementó backup nocturno automático de la BD principal (`music_platform`) y de la scratch (`music_platform_scratch`, Efímera, por conveniencia) vía `scripts/backup-db.ts` + tarea agendada de Windows diaria + retención de 7 dumps por BD. **Se hizo una prueba de restore real** (requisito central de A.7) el 2026-08-31: dump restaurado a `music_platform_restore_test` en **~782 ms**, con conteos idénticos al vivo (427 artistas, 2184 release_groups, 1 app_user, 1 rating), 5 triggers no internos y 12 migraciones. La política queda **probada**, no solo configurada.
+
+**Alcance honesto:** esto es backup nocturno, **no PITR**. El PITR requiere WAL archiving, que no está activo; la ventana de pérdida posible es de hasta ~1 día. Se difiere por el criterio "deferred by default" mientras la instancia es puramente local con datos de prueba; el runbook documenta el **trigger de criticidad** (cuándo pasa a staging compartido/producción y se debe migrar a un proveedor gestionado con PITR por defecto).
+
 **De qué se trata:** no basta con tener backups automáticos — hay que medir y probar cuánto tarda una restauración real y confirmar que funciona.
 **Por qué ahora:** es una práctica operativa de bajo costo de establecer temprano y catastrófica de omitir. No depende de volumen de datos ni de fase del proyecto — aplica desde el primer dato real en producción.
-**Conexión con lo existente:** no hay mención explícita en `04-risks.md` todavía (a confirmar). Sería una entrada natural de riesgo con mitigación operativa, no arquitectónica.
-**Acción sugerida:** confirmar si ya existe backup automático configurado en el entorno actual; si no, es de las acciones más urgentes de todo este checklist por su asimetría costo/impacto.
+**Acción sugerida (original):** confirmar si ya existe backup automático configurado en el entorno actual; si no, es de las acciones más urgentes de todo este checklist por su asimetría costo/impacto. → **Hecho** (ver resolución arriba); reiterar la prueba de restore cuando cambie el esquema o aparezcan datos reales.
 
 ### A.8 — Regla de propiedad de datos: MusicBrainz vs. comunidad
 
@@ -107,6 +98,9 @@ Riesgos/necesidades reales, pero sin señal de tráfico o escala que los justifi
 - **C.6 — Diseño event-driven explícito** (`ReviewCreated`, consumidores independientes). Es la consecuencia natural de C.5; mismo criterio de diferimiento.
 - **C.7 — Minimizar duplicación del catálogo entre sistemas.** No aplica todavía porque no hay un segundo sistema (search index) que duplique datos del catálogo — se vuelve relevante recién si se implementa C.2.
 - **C.8 — Backpressure vía colas.** Depende de que exista una cola (C.5); no es una decisión independiente.
+- **C.9 — Agregados derivados de rating** (`rating_average`/`rating_sum`/`rating_count`). Ver Riesgo #11 en `04-risks.md`. No hay columna materializada hoy; el `AVG()`/`count(*)` en vivo (`social.ts:37-39`) ya es un index scan por entidad gracias a `idx_rating_*`. Diferir hasta señal real; la sincronización, cuando ocurra, vía triggers de Postgres (patrón de `trg_rating_touch`).
+- **C.10 — Namespacing de esquema** (`catalog.*`, `community.*`, `users.*`). **Antes clasificado en balde A (ex-A.1); recalificado a diferido por costo real.** Las 18 tablas ya viven en el schema `public` por defecto de Postgres con datos poblados (7 de catálogo ingeridas de MusicBrainz, 8 de comunidad, 3 de auth). Drizzle nunca ha usado `pgSchema()` (sería la primera vez), las migraciones SQL crudas no usan `CREATE SCHEMA` ni calificadores, y no hay convención de prefijos de dominio. Migrar a schemas lógicos hoy implicaría: `CREATE SCHEMA` + `ALTER TABLE ... SET SCHEMA` para las 18 tablas, recalibrar FKs cross-domain (ej. `rating.user_id → app_user` cruza `community`→`users`) y los triggers (`fn_check_membership_types`, `fn_touch_updated_at`), reescribir el mirror plano en `schema.ts` envolviendo cada `pgTable` en `pgSchema()` con reorganización de imports, y duplicar todo en el SQL crudo + el mirror (ADRs/0005). Todo esto sin señal real de que haga falta separar físicamente Catalog DB / Community DB. Por el criterio "deferred by default" (igual que cover art, search index, Redis), se difiere. Si en el futuro se mantiene la separación a nivel solo de convención, se documenta en `conventions.md` para tablas nuevas, sin migrar las existentes.
+- **C.11 — Fragmentación de la PK por UUID v4 aleatorio** (trade-off no documentado de ADR 0003). Ver Riesgo #12 en `04-risks.md`. Las PK internas de las tablas comunitarias de alto volumen (`rating`, `comment`, `listen_entry`) usan `gen_random_uuid()` (v4 aleatorio): a alto volumen, fragmentación del índice de PK y más I/O. ADR 0003 eligió UUID por otro eje (colisiones con MusicBrainz, pre-generación, no exponer conteo) y solo reconoció el peso del índice, no la localidad de inserción. Diferido hasta señal de volumen; las PK internas de estas tablas podrían migrar a secuencial/UUID v7 sin fricción de fuente externa (no se sincronizan con MusicBrainz).
 
 ---
 
@@ -132,9 +126,12 @@ No encaja con la escala actual, con el stack decidido, o con el dominio de produ
 ## Resumen de prioridad sugerida
 
 1. ~~**A.2 + A.3** (idempotencia + GID de MusicBrainz)~~ **✅ Resuelto** — ADR 0011 + esquema existente.
-2. **A.5** (agregados de rating) — cruza con ADR 0009, y Fase 4 lo necesita ahora.
+2. ~~**A.5** (agregados de rating)~~ **⏳ Diferido a balde C** — Riesgo #11 en `04-risks.md`.
 3. ~~**B.1** (aclarar patrón real de ingestión)~~ **✅ Resuelto** — patrón "cacheo bajo demanda", no bulk sync.
-4. **A.1** (namespacing de esquema) — barato ahora, cada vez más caro cuanto más tablas genere Fase 4.
-5. Resto del balde A, según disponibilidad.
+4. ~~**A.1** (namespacing de esquema)~~ **⏳ Diferido a balde C** — C.10, costo comparable al beneficio.
+5. ~~**A.4** (BIGINT para IDs internos)~~ **✅ No aplica** — todas las PK son `UUID` (ADR 0003, `conventions.md:12`); nunca hubo INT32 que migrar.
+6. ~~**A.6** (marco Source of Truth / Derived / Ephemeral)~~ **✅ Resuelto** — `data-classification.md`.
+7. ~~**A.7** (backups + prueba de restore)~~ **✅ Resuelto** — backup nocturno automático + prueba de restore real (782 ms) — ver `06-operations/backup-restore.md`. PITR diferido (requiere WAL archiving / proveedor gestionado cuando se dispare el trigger de criticidad).
+8. Resto del balde A, según disponibilidad. _Nota: los ítems pendientes originales de mayor peso (A.5, A.1, A.2, A.3, A.4, A.6, A.7, B.1) quedaron resueltos o diferidos; el trade-off de escala del UUID aleatorio quedó diferido (Riesgo #12 / C.11); los restantes del balde A (A.8, A.9) dependen de decisiones de Fase 4/5 o de señal real._
 
 Puntos 1, 3, 8, 20 y 22 de la respuesta original no se incluyen como filas propias en este checklist: son marco general ya asumido (arquitectura de destino, elección de Postgres, cover art fuera de Postgres, crecimiento por etapas, preferencia por servicios gestionados sobre Kubernetes).

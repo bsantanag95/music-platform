@@ -12,6 +12,8 @@
 | 8 | ~~**Decisión de alcance de "detalle de canción" sin resolver**~~ **✅ Resuelto** — Camino A confirmado, diferido a Fase 4. | — |
 | 9 | **Disponibilidad de Cover Art Archive / Archive.org (carátulas):** la app hotlinkea las miniaturas de CAA (`coverartarchive.org/release-group/{mbid}/front-250`), que redirige a archive.org. Se cachea solo la **URL**, no los bytes de la imagen. Una URL cacheada como "válida" no garantiza que la imagen esté disponible en el momento del GET (ver detalle abajo). | Aceptar como riesgo conocido mientras se valida la Fase 3 — la Fase 3 existe para descubrir estos problemas antes de sumar complejidad. Mitigación inmediata de bajo coste (Etapa 3.6, estados de carga): retry limitado con pequeño backoff, skeleton/placeholder mientras se reintenta y fallback definitivo al agotar intentos — sin reintentos infinitos ni tráfico excesivo. **No introduce almacenamiento propio.** Reevaluar con métricas reales (ver detalle abajo) antes de desacoplar la disponibilidad de las carátulas de CAA. |
 | 10 | **Dogpile sobre MusicBrainz en cache-miss concurrente:** múltiples requests HTTP sobre la misma entidad no cacheada generan llamadas duplicadas a la API de MusicBrainz. La cola serial en proceso las espacia pero no las descarta — ver detalle abajo. | **Riesgo aceptado sin mitigación activa.** Si el tráfico lo justifica, la solución es un rate limitador distribuido (Redis token bucket, previsto en `client.ts:9-13`), no advisory locks. Ver ADR 0011. Revisar cuando la profundidad de cola sostenida o el p95 de latencia en rutas de cache-miss superen un umbral definido (conexión con B.3 de `scalability infrastructure.md`). |
+| 11 | **Costo del agregado de rating en vivo (`AVG()`/`count(*)` por lectura).** El promedio por entidad se calcula al vuelo (`src/services/social.ts:37-39`) y no hay columna materializada (`rating_average`/`rating_sum`/`rating_count`) en ninguna tabla. Hoy está mitigado por los índices de target (`idx_rating_*`, ver detalle abajo), que hacen de la agregación un index scan por entidad, no un seq scan. Diferido: no hay señal de tráfico que justifique materializar todavía. | **No-riesgo con ADR 0009** — como no existe el estado derivado, el borrado físico de `rating` no puede dejar agregados desfasados: no hay nada que sincronizar. **Diferido por falta de señal.** Si se materializa el agregado, la sincronización debe usar triggers de Postgres (mismo argumento estructural de ADR 0009: no depender de que cada código de mutación, escrito por modelos distintos, recuerde actualizar el agregado). Revisar cuando el p95 de latencia en páginas de entidad con conteo alto de ratings, o el volumen de ratings por entidad, superen un umbral definido. |
+| 12 | **Fragmentación del índice de PK por UUID v4 aleatorio en tablas comunitarias de alto volumen** (`rating`, `comment`, `listen_entry`): cada `INSERT` cae en una posición impredecible del B-tree de la PK (a diferencia de un BIGSERIAL o UUID v7 monótonos). A volumen alto: el índice de PK se fragmenta más rápido (peor cache hit ratio, más I/O) y ocupa más espacio en disco (16 bytes vs 8 bytes por entrada, antes del row). **Trade-off no documentado en ADR 0003**, que eligió UUID por otro eje (colisiones con MusicBrainz, pre-generación, no exponer conteo) y solo mencionó el peso del índice, no la localidad de inserción. Ver detalle abajo. | **Diferido sin mitigación activa.** Riesgo de escala, no de corrección — el límite de INT no aplica y no hay bug. Si se activa el trigger, las opciones incluyen indexar por un `BIGSERIAL` de solo-índice, migrar a UUID v7 (monótono, no expone conteo vía leak inferencial bajo, preserva la pre-generación), o particionar las tablas. Preserva el argumento de ADR 0003 para el catálogo (mbid externo). Revisar cuando el volumen de filas en una tabla comunitaria o el tamaño/fragmentación del índice de PK superen un umbral definido. |
 
 Ningún riesgo de esta lista es, por sí solo, motivo para no empezar — todos tienen una
 mitigación concreta y de bajo costo. El único requisito real antes de escribir código es
@@ -76,3 +78,41 @@ Cuando múltiples requests HTTP hacen cache-miss de la misma entidad de catálog
   el umbral.)_
 - **Mitigación si se activa el trigger:** un rate limitador distribuido (Redis token bucket, ya
   previsto como componente futuro en `client.ts:9-13`) — no advisory locks por entidad.
+
+## Riesgo 11 — Costo del agregado de rating en vivo
+
+El promedio de rating por entidad se calcula al vuelo en la capa de servicio (`src/services/social.ts:37-39`) con `AVG(stars)::float`, `AVG(detailedScore)::float` y `count(*)::int`. No existe ninguna columna materializada (`rating_average`, `rating_sum`, `rating_count`) en ninguna tabla, ni trigger que las mantenga — el único trigger sobre `rating` es `trg_rating_touch` para `updated_at`.
+
+- **Por qué no es un problema hoy:** `rating` tiene **dos conjuntos de índices** (`drizzle/0000_initial.sql`):
+  - `uq_rating_user_*` (parciales, `user_id` líder): sirven al upsert por usuario (`social.ts:58-73` codifica contra el `ON CONFLICT` sobre estos índices).
+  - `idx_rating_*` (`artist_id`, `release_group_id`, `recording_id` como líder, espejados en `schema.ts:275-277`): sirven al query del promedio, que filtra por entidad (`WHERE release_group_id = ?`). La agregación es un index scan por entidad, no un seq scan de la tabla completa. No hay gap de índice pendiente.
+- **Cierre no-riesgo con ADR 0009:** como no existe el estado derivado, el borrado físico de `rating` (ADR 0009) no puede dejar agregados desfasados — no hay nada que sincronizar. La intersección que motivaba el ítem A.5 del checklist de infraestructura ("si se borra físicamente, definir el mecanismo de reconciliación del agregado") **no aplica mientras no exista el agregado**.
+- **Cuándo materializar (diferido):** no hay señal de tráfico que justifique materializar el promedio todavía. Si se materializa, la sincronización debe usar **triggers de Postgres** (reutilizando el patrón de `trg_rating_touch`), no lógica de aplicación dentro de cada mutación — mismo argumento estructural que ADR 0009 usa contra soft-delete: no depender de que cada código de mutación, escrito por modelos distintos a lo largo del tiempo, recuerde actualizar el agregado. Un `UPDATE` de un rating existente se sincroniza igual que un `INSERT`/`DELETE` (el trigger debe cubrir las tres operaciones).
+- **Trigger de revisión:** p95 de latencia en páginas de entidad con conteo alto de ratings, o volumen de ratings por entidad superando un umbral definido — no "tráfico" en general. Conexión con B.3 de `scalability infrastructure.md` (qué observabilidad existe hoy).
+
+## Riesgo 12 — Fragmentación del índice de PK por UUID v4 aleatorio
+
+Todas las PK del proyecto son `UUID ... DEFAULT gen_random_uuid()` (v4, aleatorio) — verificado en las 18 tablas (`drizzle/*.sql`) y centralizado en `conventions.md:12` + ADR 0003. En las tablas comunitarias de mayor crecimiento (`rating`, `comment`, `listen_entry`), cada `INSERT` cae en una posición impredecible del B-tree del índice de PK.
+
+- **El trade-off que ADR 0003 no documentó:** la justificación de ADR 0003 elige UUID por tres ejes — evita colisiones con MusicBrainz (cuyos `mbid` también son UUID), permite generar el ID pre-insert sin round-trip a la base, y no expone el conteo/orden de filas vía URL (evita IDs secuenciales enumerables). La única mención de costo es en "Consecuencias": "índices ligeramente más pesados… costo aceptable dado el volumen esperado". Eso habla del **tamaño en bytes del índice**, no de la **localidad de inserción**. No hay mención a fragmentación, a UUID v7 ni a ninguna alternativa monótona en docs ni en el código.
+- **Por qué importa (a volumen alto, no hoy):** un UUID v4 aleatorio, a diferencia de un `BIGSERIAL` o un UUID v7 (monótonos crecientes), produce:
+  - **Fragmentación del índice de PK** — los page-split del B-tree ocurren en posiciones intermedias en vez de al final; peor cache hit ratio y más I/O bajo alta tasa de INSERT.
+  - **Mayor ocupación de disco** — 16 bytes por entrada (vs 8 de un BIGINT), antes de contar el propio row; pero el costo de bytes ya estaba reconocido en ADR 0003, el nuevo es el de localidad.
+- **Por qué no es A.4 de nuevo:** A.4 trataba el límite de ancho (overflow de INT32). Este riesgo es distinto: no hay overflow ni migración forzosa por tipo — es una degradación gradual de performance de escritura en tablas de alto volumen.
+- **Consideración del trade-off para mitigaciones futuras (no decididas):** la razón del catálogo para UUID (mbid externo) **no aplica a las PK internas** de `rating`/`comment`/`listen_entry` — esas no se sincronizan con MusicBrainz, así que están libres para usar una PK interna secuencial o UUID v7 sin fricción de fuente externa. Pero la razón "no exponer conteo" con UUID v7 queda casi intacta (el orden es inferible, no el volumen exacto). No es una decisión a tomar hoy.
+- **Trigger de revisión:** volumen de filas en una tabla comunitaria superando un umbral definido, o tamaño/fragmentación del índice de PK (medible vía `pg_stat_user_indexes`/`pgstattuple`) degradándose — no "tráfico" en general. Conexión con B.3 de `scalability infrastructure.md`.
+
+## Clasificación de datos de los riesgos
+
+Varios riesgos de esta lista tienen su categoría de perdibilidad/reconstruibilidad definida en
+`../data-classification.md` (marco de clasificación de datos, ítem resuelto A.6):
+
+- **Riesgo #10 (dogpile MusicBrainz)** → **Clase B (espejo reconstruible).** El dato en cache-miss es
+  regenerable desde MusicBrainz; el riesgo es de **latencia**, no de pérdida.
+- **Riesgo #11 (agregados de rating no materializados)** → **Clase C (derivada/computable).** Recalculable
+  desde Clase A; hoy virtual, por eso el borrado físico de ADR 0009 no deja nada que desincronizar.
+- **C.10 (namespacing de esquemas, diferido en `scalability-infrastructure.md`)** → **cruza las clases**:
+  los schemas lógicos `catalog.*` (mayormente espejo) vs `community.*`/`users.*` (propios) se alinean
+  conceptualmente con la clasificación.
+
+

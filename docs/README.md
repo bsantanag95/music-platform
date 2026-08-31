@@ -16,7 +16,8 @@ Este directorio es la fuente de verdad técnica y de producto del proyecto. Se p
 | `02-architecture/architecture.md` | Frontend → API → servicios → base de datos → servicios externos | ✅ |
 | `02-architecture/conventions.md` | Convenciones de nombres, formatos, estilo | ✅ |
 | `02-architecture/auth.md` | Diseño operativo de autenticación local, sesiones e identidades externas | ✅ Autenticación local y Google OAuth implementados |
-| `02-architecture/adr/` | Registro de decisiones de arquitectura, una por archivo (0001-pwa-vs-nativa, 0002-postgresql-vs-nosql, 0003-uuid-vs-autoincremental, 0004-modelo-credit-colaboraciones, 0005-orm-drizzle-migraciones-sql, 0006-rest-vs-trpc, 0007-i18n-next-intl, 0008-auth-sesiones-y-hash-contrasena, 0009-borrado-fisico-rating-comment, 0010-identidades-externas-y-proveedores-oauth) | ✅ |
+| `02-architecture/adr/` | Registro de decisiones de arquitectura, una por archivo (0001-pwa-vs-nativa, 0002-postgresql-vs-nosql, 0003-uuid-vs-autoincremental, 0004-modelo-credit-colaboraciones, 0005-orm-drizzle-migraciones-sql, 0006-rest-vs-trpc, 0007-i18n-next-intl, 0008-auth-sesiones-y-hash-contrasena, 0009-borrado-fisico-rating-comment, 0010-identidades-externas-y-proveedores-oauth, 0011-idempotencia-y-concurrencia-en-ingestion-del-catalogo) | ✅ |
+| `02-architecture/data-classification.md` | Clasificación de los datos por perdibilidad/reconstruibilidad: fuente de verdad propia, espejo de MusicBrainz, derivada, efímera | ✅ |
 | `02-architecture/i18n.md` | Arquitectura de internacionalización: next-intl, segmento `[locale]`, catálogos de mensajes, reglas de traducción | ✅ Implementada |
 | `02-architecture/code-walkthrough.md` | Explicación archivo por archivo del código de las Fases 1 y 2, y el flujo de una búsqueda | ✅ |
 | `02-architecture/frontend-plan/` | Plan de implementación del frontend (Fase 3): análisis de backend, arquitectura de frontend, etapas, buenas prácticas y riesgos — ver su propio índice en `frontend-plan/README.md` | 🟢 Fase 3 completa, lista para revisión con usuarios |
@@ -25,6 +26,7 @@ Este directorio es la fuente de verdad técnica y de producto del proyecto. Se p
 | `04-api/contracts.md` | Contrato real de los endpoints REST de catálogo, auth y funciones sociales | ✅ |
 | `04-api/errors.md` | Convención de errores de la API — código `code` machine-readable | ✅ Implementada |
 | `05-features/` | Especificaciones de producto por feature (catálogo, valoraciones, diario de escucha, listas, feed) — ver su propio índice en `05-features/README.md` | 🟡 Fases 3 y 4 implementadas; Fase 5: privacidad, seguimiento, diario, favoritos y listas y feed v1 implementados; scrobbling pendiente |
+| `06-operations/backup-restore.md` | Operación de backup y restore de la base de datos local, con prueba real de restauración (item A.7 del checklist de infraestructura) | ✅ Backup nocturno + prueba de restore real (2026-08-31); PITR diferido |
 
 ## Regla de mantenimiento
 
