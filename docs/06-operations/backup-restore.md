@@ -62,6 +62,12 @@ gestionado (que suele traer PITR por defecto) — ver sección "Migración futur
 | Log | `backups/backup.log` | Salida de cada corrida. |
 | Comando manual | `pnpm run db:backup` | Equivalente a ejecutar el backup a mano. |
 
+> **Sensibilidad de los dumps.** `backups/` contiene datos reales y sensibles: hashes Argon2id de
+> contraseñas y tokens de sesión opacos (hasheados pero material sensible). Hoy es aceptable
+> porque `backups/` es local y está en `.gitignore`. **Advertencia futura:** si estos dumps se
+> sincronizan a un destino remoto (backup externo, bucket, etc.), eso deja de ser trivial y
+> requiere cifrado en tránsito y en reposo — evaluar antes de mover los dumps fuera de la máquina.
+
 ## Hacer un backup manual
 
 ```bash

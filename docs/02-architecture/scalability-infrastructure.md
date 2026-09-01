@@ -50,17 +50,21 @@ Relevante para Fase 4 en curso, o barato de decidir ahora / costoso de corregir 
 
 ### A.8 — Regla de propiedad de datos: MusicBrainz vs. comunidad
 
+**Estado: ✅ Garantizado por construcción hoy — diferido como consecuencia del futuro sistema de roles/permisos.** Verificado en el código: las rutas de entidad de catálogo (`catalog/search`, `catalog/artist/[id]`, `catalog/release-group/[id]`, `catalog/recording/[id]`, `catalog/release-group/[id]/cover`) son **solo `GET`** — no existe ningún endpoint de mutación que escriba sobre `artist`/`release_group`/`recording`. Las únicas escrituras bajo `/api/catalog/*` son comunidad target-scoped (`[target]/[id]/ratings`, `[target]/[id]/comments`), y los campos de catálogo solo se escriben vía ingesta bajo demanda desde MusicBrainz (`ingest-*`, ADR 0011) y el self-heal de carátula. `app_user` no tiene columna de rol (`schema.ts:26-43`): todos los usuarios autenticados tienen exactamente los mismos permisos. **Consecuencia:** la regla se cumple por *ausencia de superficie de edición*, no por una decisión de permisos explícita. La decisión explícita pertenece al sistema de roles/permisos anotado como abierto en `product-philosophy.md:84,108` (cuyo único ocupante previsto son las listas editoriales, §6.3); escribir una regla parcial hoy generaría vocabulario a reconciliar con ese diseño mayor. Revisitar cuando se diseñe ese sistema.
+
 **De qué se trata:** establecer explícitamente que los campos que vienen de MusicBrainz (`artist.name`, `release.date`, etc.) no son editables directamente por usuarios; los usuarios solo pueden generar contenido en el espacio "comunidad" (rating, review, tag, favorito) que se combina con los datos del catálogo para renderizar una página.
 **Por qué ahora:** se conecta directamente con el ítem ya identificado en el horizonte del proyecto: "roles/permissions system for official platform content in the lists feature". Es la misma pregunta de fondo (¿quién puede modificar qué) aplicada al catálogo en general, no solo a listas.
 **Conexión con lo existente:** relacionado con la separación catalog/community de A.1, y con el trabajo pendiente de roles/permisos.
-**Acción sugerida:** documentar como principio en `product-philosophy.md` o en una ADR de modelo de datos; evita conflictos futuros durante sincronizaciones de MusicBrainz si un usuario "corrigió" un campo que en realidad pertenece al catálogo externo.
+**Acción sugerida (original):** documentar como principio en `product-philosophy.md` o en una ADR de modelo de datos; evita conflictos futuros durante sincronizaciones de MusicBrainz si un usuario "corrigió" un campo que en realidad pertenece al catálogo externo. → **No se hace hoy deliberadamente** (ver resolución arriba): el diseño de permisos mayor debe preceder.
 
 ### A.9 — Postura de eventual consistency
+
+**Estado: ⏳ Diferido — sin objeto hoy.** La eventual consistency no tiene componente que la requiera: no existe ningún elemento asíncrono (colas C.5, eventos C.6, search index C.2 — todos diferidos) y toda la arquitectura es síncrona dentro de la request HTTP (ADR 0011). La propiedad *actual* es la inversa — consistencia fuerte por construcción — y ya está documentada en piezas: la sincronía en-request de ADR 0011 y el `AVG()` en vivo del agregado de rating (Riesgo #11 / C.9). No hay invariante sin nombrar ni postura que anticipar sin un caso concreto. **Cuándo revisitar:** junto al primer componente asíncrono real (probablemente search C.2 o un feed/notificaciones), cuando exista un caso concreto contra el cual redactar la postura — como ADR de consistencia — en vez de una declaración en abstracto. Mismo criterio de "no preparar terreno" que C.9/C.10 y C.5/C.6.
 
 **De qué se trata:** declarar explícitamente que no todo el sistema necesita estar fuertemente consistente en tiempo real (ej. una review puede tardar segundos en aparecer en búsqueda o en un feed, sin que eso sea un problema).
 **Por qué ahora:** es una declaración de postura arquitectónica en docs, no requiere infraestructura nueva, pero condiciona cómo se diseñan features futuras (evita sobre-ingeniería prematura buscando consistencia fuerte innecesaria).
 **Conexión con lo existente:** complementa el marco de A.6 y da justificación documentada para diferir los puntos del balde C (colas, eventos, search index) hasta que haya señal real.
-**Acción sugerida:** una o dos frases en `02-architecture`, más como principio rector que como ADR formal.
+**Acción sugerida (original):** una o dos frases en `02-architecture`, más como principio rector que como ADR formal. → **No se hace hoy** (ver resolución arriba): diferido hasta que exista el primer componente asíncrono real.
 
 ---
 
@@ -81,8 +85,22 @@ El plan de acción depende de una pregunta sobre el estado real de la ingestión
 
 ### B.3 — Monitoreo desde el principio (sync lag, connections, cache hit ratio, etc.)
 
+**Estado: ✅ Resuelto como checklist de salida (no se instrumenta hoy).** Los tres únicos triggers que B.3 alimenta — dogpile de MusicBrainz (Riesgo #10), costo del agregado de rating (Riesgo #11) y fragmentación de PK por UUID v4 (Riesgo #12 / C.11) — son triggers de **concurrencia real**, y hoy esa concurrencia no existe: no hay staging ni entorno compartido desplegado (todo vive en la instancia local `localhost:5433` de A.7, un solo proceso y un solo usuario). Por el criterio "deferred by default" (igual que A.9/C.9/C.10), **no se instrumenta observabilidad ahora** — sería medir algo que no puede ocurrir todavía. En cambio, B.3 queda como **checklist de salida**: el conjunto mínimo de métricas, acotado estrictamente a hacer medibles esos tres triggers, que debe instrumentarse **antes del primer despliegue compartido** (staging o producción).
+
+**Observabilidad actual (inventario):** mínima y no apta para producción — solo `console.error`/`console.log` esporádicos; el único "error tracking" es `with-error-handling.ts:23` (imprime el error no controlado en consola). Sin Sentry, sin APM, sin OTel, sin logger. No es un trabajo a cerrar hoy, pero es el punto de partida desde el que se construye el checklist de salida.
+
+**Checklist de métricas mínimas antes del primer despliegue compartido** (acotado a los tres triggers; no es observabilidad general):
+
+| Trigger | Métrica mínima para medirlo |
+|---|---|
+| Riesgo #10 — dogpile MusicBrainz | Profundidad de cola sostenida en la cola serial de `client.ts`; p95 de latencia en rutas de cache-miss (búsqueda/artista/álbum en frío). |
+| Riesgo #11 — agregado de rating | p95 de latencia en páginas de entidad con conteo alto de ratings; volumen de ratings por entidad. |
+| Riesgo #12 / C.11 — fragmentación PK | Volumen de filas en tablas comunitarias (`rating`, `comment`, `listen_entry`); tamaño/fragmentación del índice de PK (`pg_stat_user_indexes`/`pgstattuple`). |
+
+**Trigger general:** los tres "no aplican" hasta que exista tráfico concurrente real; activar el checklist de salida antes del primer despliegue compartido.
+
 **La ambigüedad:** ya existe una entrada relacionada — Riesgo #10 (agotamiento del pool de conexiones de Postgres, "too many clients"), marcada como no bloqueante en la fase actual. Pero no está claro qué subconjunto de las métricas propuestas (p50/p95/p99, WAL growth, replication lag, sync lag de MusicBrainz) ya se está monitoreando versus cuáles son aspiracionales.
-**Acción sugerida:** hacer un inventario rápido de qué observabilidad existe hoy antes de decidir qué agregar; evita documentar como "pendiente" algo que ya está resuelto, o viceversa.
+**Acción sugerida (original):** hacer un inventario rápido de qué observabilidad existe hoy antes de decidir qué agregar; evita documentar como "pendiente" algo que ya está resuelto, o viceversa. → **Hecho** (inventario arriba: solo consola) y resuelto como checklist de salida sin instrumentar.
 
 ---
 
@@ -132,6 +150,9 @@ No encaja con la escala actual, con el stack decidido, o con el dominio de produ
 5. ~~**A.4** (BIGINT para IDs internos)~~ **✅ No aplica** — todas las PK son `UUID` (ADR 0003, `conventions.md:12`); nunca hubo INT32 que migrar.
 6. ~~**A.6** (marco Source of Truth / Derived / Ephemeral)~~ **✅ Resuelto** — `data-classification.md`.
 7. ~~**A.7** (backups + prueba de restore)~~ **✅ Resuelto** — backup nocturno automático + prueba de restore real (782 ms) — ver `06-operations/backup-restore.md`. PITR diferido (requiere WAL archiving / proveedor gestionado cuando se dispare el trigger de criticidad).
-8. Resto del balde A, según disponibilidad. _Nota: los ítems pendientes originales de mayor peso (A.5, A.1, A.2, A.3, A.4, A.6, A.7, B.1) quedaron resueltos o diferidos; el trade-off de escala del UUID aleatorio quedó diferido (Riesgo #12 / C.11); los restantes del balde A (A.8, A.9) dependen de decisiones de Fase 4/5 o de señal real._
+8. ~~**A.8** (regla de propiedad MusicBrainz vs. comunidad)~~ **✅ Garantizado por construcción hoy** — catálogo solo-GET (sin endpoints de mutación sobre entidades de catálogo); sin columna de rol en `app_user`. Diferido como consecuencia del futuro sistema de roles/permisos (`product-philosophy.md:84,108`).
+9. ~~**A.9** (postura de eventual consistency)~~ **⏳ Diferido a balde C** — sin componente asíncrono hoy que lo requiera; se documenta como ADR junto al primer componente asíncrono real (C.2/C.5/C.6).
+10. ~~**B.3** (monitoreo)~~ **✅ Resuelto como checklist de salida** — sin observabilidad que instrumentar hoy (sin despliegue compartido); el set mínimo de métricas acotado a los tres triggers debe existir antes del primer despliegue compartido.
+11. _Nota: los baldes A y B quedaron cerrados (resueltos, garantizados por construcción o diferidos). De A/B: A.2/A.3/A.4/A.6/A.7/A.8/B.1/B.3 cerrados; A.5/A.1/A.9 diferidos a balde C; trade-off del UUID aleatorio diferido (Riesgo #12 / C.11). No queda acción abierta en baldes A ni B._
 
 Puntos 1, 3, 8, 20 y 22 de la respuesta original no se incluyen como filas propias en este checklist: son marco general ya asumido (arquitectura de destino, elección de Postgres, cover art fuera de Postgres, crecimiento por etapas, preferencia por servicios gestionados sobre Kubernetes).
