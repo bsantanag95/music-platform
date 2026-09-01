@@ -51,6 +51,11 @@ function requiredUserAgent(): string {
   return ua;
 }
 
+const REQUEST_TIMEOUT_MS = 10_000;
+const MAX_ATTEMPTS = 3;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 async function mbFetch<T>(path: string, params: Record<string, string> = {}): Promise<T> {
   return schedule(async () => {
     const url = new URL(`${MB_BASE_URL}${path}`);
@@ -59,15 +64,44 @@ async function mbFetch<T>(path: string, params: Record<string, string> = {}): Pr
       url.searchParams.set(key, value);
     }
 
-    const res = await fetch(url, {
-      headers: { "User-Agent": requiredUserAgent() },
-    });
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        const res = await fetch(url, {
+          headers: { "User-Agent": requiredUserAgent() },
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        });
 
-    if (!res.ok) {
-      throw new Error(`MusicBrainz respondió ${res.status} para ${url.pathname}`);
+        // 503 = throttling / servicio temporalmente no disponible: reintentable.
+        if (res.status === 503 && attempt < MAX_ATTEMPTS) {
+          lastError = new Error(`MusicBrainz respondió 503 para ${url.pathname}`);
+          await sleep(attempt * MIN_INTERVAL_MS);
+          continue;
+        }
+
+        if (!res.ok) {
+          throw new Error(`MusicBrainz respondió ${res.status} para ${url.pathname}`);
+        }
+
+        return (await res.json()) as T;
+      } catch (err) {
+        // fetch lanza TypeError ("fetch failed") ante fallos de red / socket
+        // keep-alive muerto tras un rato de inactividad, y TimeoutError si se
+        // agota el tiempo. Ambos son transitorios: reintentamos con backoff.
+        const retryable =
+          err instanceof TypeError ||
+          (err instanceof DOMException && err.name === "TimeoutError");
+        if (!retryable || attempt >= MAX_ATTEMPTS) {
+          throw err;
+        }
+        lastError = err;
+        await sleep(attempt * MIN_INTERVAL_MS);
+      }
     }
 
-    return (await res.json()) as T;
+    throw lastError instanceof Error
+      ? lastError
+      : new Error(`MusicBrainz no respondió tras ${MAX_ATTEMPTS} intentos`);
   });
 }
 
