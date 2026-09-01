@@ -139,6 +139,7 @@ export const ErrorCodeSchema = z.enum([
   "LIST_NOT_FOUND",
   "LIST_TARGET_INVALID",
   "LIST_ITEM_NOT_FOUND",
+  "COLLECTION_ENTRY_NOT_FOUND",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 
@@ -646,3 +647,95 @@ export const FeedResponseSchema = z.object({
   hasNext: z.boolean(),
 });
 export type FeedResponse = z.infer<typeof FeedResponseSchema>;
+
+// ============================================================
+// Colección física (Fase 5, add-physical-collection)
+// ============================================================
+
+// Fuente de valores: src/services/collection/vocabulary.ts (mantener a mano).
+export const CollectionFormatSchema = z.enum(["vinyl", "cd", "cassette", "other"]);
+export type CollectionFormatValue = z.infer<typeof CollectionFormatSchema>;
+
+export const EditionAttributeSchema = z.enum([
+  "limited-edition",
+  "numbered",
+  "first-press",
+  "reissue",
+  "remaster",
+  "anniversary-edition",
+  "deluxe-edition",
+  "colored-vinyl",
+  "picture-disc",
+  "180g",
+  "gatefold",
+  "box-set",
+  "regional-edition",
+  "bonus-tracks",
+  "extra-disc",
+  "signed",
+  "promo",
+]);
+export type EditionAttributeValue = z.infer<typeof EditionAttributeSchema>;
+
+export const COLLECTION_NOTE_MAX = 140;
+
+export const CollectionAlbumSchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  coverThumbUrl: z.string().nullable(),
+  artistId: z.uuid().nullable(),
+  artistName: z.string().nullable(),
+});
+export type CollectionAlbum = z.infer<typeof CollectionAlbumSchema>;
+
+export const CollectionEntrySchema = z.object({
+  id: z.uuid(),
+  format: CollectionFormatSchema,
+  attributes: z.array(EditionAttributeSchema),
+  note: z.string().nullable(),
+  audience: DiaryAudienceSchema,
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  album: CollectionAlbumSchema,
+});
+export type CollectionEntry = z.infer<typeof CollectionEntrySchema>;
+
+export const CreateCollectionEntryRequestSchema = z.object({
+  releaseGroupId: z.uuid(),
+  format: CollectionFormatSchema,
+  attributes: z.array(EditionAttributeSchema).max(EditionAttributeSchema.options.length).optional(),
+  note: z.string().trim().max(COLLECTION_NOTE_MAX).nullable().optional(),
+  audience: DiaryAudienceSchema.optional(),
+});
+export type CreateCollectionEntryRequest = z.infer<typeof CreateCollectionEntryRequestSchema>;
+
+export const UpdateCollectionEntryRequestSchema = z
+  .object({
+    format: CollectionFormatSchema.optional(),
+    attributes: z
+      .array(EditionAttributeSchema)
+      .max(EditionAttributeSchema.options.length)
+      .optional(),
+    note: z.string().trim().max(COLLECTION_NOTE_MAX).nullable().optional(),
+    audience: DiaryAudienceSchema.optional(),
+  })
+  .refine((changes) => Object.keys(changes).length > 0, {
+    message: "Debe indicarse al menos un campo a modificar",
+  });
+export type UpdateCollectionEntryRequest = z.infer<typeof UpdateCollectionEntryRequestSchema>;
+
+export const CollectionEntryResponseSchema = z.object({ entry: CollectionEntrySchema });
+export type CollectionEntryResponse = z.infer<typeof CollectionEntryResponseSchema>;
+
+export const CollectionListResponseSchema = z.object({
+  entries: z.array(CollectionEntrySchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  hasNext: z.boolean(),
+});
+export type CollectionListResponse = z.infer<typeof CollectionListResponseSchema>;
+
+export const CollectionEntriesResponseSchema = z.object({
+  entries: z.array(CollectionEntrySchema),
+});
+export type CollectionEntriesResponse = z.infer<typeof CollectionEntriesResponseSchema>;

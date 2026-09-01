@@ -15,18 +15,54 @@
     "title": "No editions available",
     "description": "No ingestible editions were found for this album."
   },
-  "RECORDING_NOT_FOUND": { "title": "Recording not found", "description": "The requested recording does not exist or is unavailable." },
-  "AUTH_REQUIRED": { "title": "Sign-in required", "description": "Sign in to perform this action." },
-  "INVALID_CREDENTIALS": { "title": "Invalid credentials", "description": "The username, email, or password is incorrect." },
-  "USERNAME_TAKEN": { "title": "Username unavailable", "description": "Choose a different username." },
-  "EMAIL_TAKEN": { "title": "Email already registered", "description": "Use another email or sign in." },
-  "RATE_LIMITED": { "title": "Too many attempts", "description": "Wait a few minutes before trying again." },
-  "PERMISSION_DENIED": { "title": "Action not allowed", "description": "You do not have permission to modify this resource." },
-  "INVALID_TARGET": { "title": "Invalid target", "description": "The selected resource is not valid." },
-  "INVALID_RATING": { "title": "Invalid rating", "description": "Check the rating values." },
-  "INVALID_COMMENT": { "title": "Invalid comment", "description": "Check the comment content." },
-  "RATING_NOT_FOUND": { "title": "Rating not found", "description": "Your rating was not found." },
-  "COMMENT_NOT_FOUND": { "title": "Comment not found", "description": "The comment was not found." },
+  "RECORDING_NOT_FOUND": {
+    "title": "Recording not found",
+    "description": "The requested recording does not exist or is unavailable."
+  },
+  "AUTH_REQUIRED": {
+    "title": "Sign-in required",
+    "description": "Sign in to perform this action."
+  },
+  "INVALID_CREDENTIALS": {
+    "title": "Invalid credentials",
+    "description": "The username, email, or password is incorrect."
+  },
+  "USERNAME_TAKEN": {
+    "title": "Username unavailable",
+    "description": "Choose a different username."
+  },
+  "EMAIL_TAKEN": {
+    "title": "Email already registered",
+    "description": "Use another email or sign in."
+  },
+  "RATE_LIMITED": {
+    "title": "Too many attempts",
+    "description": "Wait a few minutes before trying again."
+  },
+  "PERMISSION_DENIED": {
+    "title": "Action not allowed",
+    "description": "You do not have permission to modify this resource."
+  },
+  "INVALID_TARGET": {
+    "title": "Invalid target",
+    "description": "The selected resource is not valid."
+  },
+  "INVALID_RATING": {
+    "title": "Invalid rating",
+    "description": "Check the rating values."
+  },
+  "INVALID_COMMENT": {
+    "title": "Invalid comment",
+    "description": "Check the comment content."
+  },
+  "RATING_NOT_FOUND": {
+    "title": "Rating not found",
+    "description": "Your rating was not found."
+  },
+  "COMMENT_NOT_FOUND": {
+    "title": "Comment not found",
+    "description": "The comment was not found."
+  },
   "INTERNAL_ERROR": {
     "title": "Unexpected error",
     "description": "We couldn't complete the request. Please try again in a moment."
@@ -102,5 +138,9 @@
   "LIST_ITEM_NOT_FOUND": {
     "title": "Item not found",
     "description": "The list item does not exist or was already removed."
+  },
+  "COLLECTION_ENTRY_NOT_FOUND": {
+    "title": "Collection entry not found",
+    "description": "The entry does not exist or was already removed from the collection."
   }
 }

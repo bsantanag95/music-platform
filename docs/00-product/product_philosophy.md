@@ -101,6 +101,18 @@ Flujo confirmado:
 
 Confirmado sin cambios: resumen/stats de identidad arriba (favoritos, discografías avanzadas, capital social del gusto), actividad reciente abajo. Sin alternativas descartadas que valga la pena registrar aquí.
 
+### 6.6 Colección física — entidad dedicada, grano por copia (cambio `add-physical-collection`, 2026-09-01)
+
+Opción por álbum para declarar y presumir el coleccionismo en soporte físico, mostrada en formato de lista. Señal identitaria para el público objetivo (el coleccionista serio).
+
+**Modelo de datos: entidad dedicada, no reutilizar Listas.** El precedente de 6.4 es un *principio* ("no crear entidad nueva cuando el mecanismo existente encaja sin distorsión"), no una regla de reutilizar listas siempre. Acá **no** encaja sin distorsión: la colección necesita `format`, `attributes` y `note` que sólo aplican a este caso y ensuciarían `user_list_item` (compartido por artista/álbum/canción). Semánticamente es un *estado por álbum con audiencia* (como `Favorito`, botón en cada álbum), no una lista curada con orden manual. Se resuelve con `collection_entry`: FK directa a `release_group` (objetivo fijo, sin el patrón `CHECK num_nonnulls`).
+
+**Grano por álbum + copia.** Se permiten varias entradas para el mismo álbum (mismo o distinto formato). "Tengo el vinilo y el CD" y "dos CDs con portada distinta" son el caso canónico del coleccionismo, no un borde. No es un toggle idempotente.
+
+**Características de la edición: vocabulario cerrado + nota libre, no modelar identidad de release.** Un conjunto curado de ~17 atributos descriptores (`limited-edition`, `colored-vinyl`, `regional-edition`, …) — filtrables y presentables, mantenimiento acotado. Más una nota libre corta (≤140) para el detalle irreducible. **Se descarta** modelar sello/país/número de catálogo/bonus tracks estructurados: es un proyecto de catálogo aparte, contradice la decisión de ingerir una sola edición oficial por álbum, e invita al "¿por qué no hay campo de X?". El formato es 100% dato del usuario porque el catálogo no modela soporte físico.
+
+**Fuera de alcance de v1:** aparición en el feed de actividad (se presume vía perfil y página de álbum; sumarlo al feed es incremento aditivo sin migración), imágenes de portada por entrada, campos de catálogo estructurados.
+
 ## 7. Preguntas abiertas remanentes
 
 - [ ] Diseño del algoritmo de afinidad de gusto para descubrimiento (6.1) — depende de densidad de datos, no urgente.

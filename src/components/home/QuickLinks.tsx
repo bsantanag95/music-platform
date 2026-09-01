@@ -1,8 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 
-// Accesos rápidos de usuario logueado en Inicio: diario, favoritos, listas y
-// buscador. El resto de la navegación completa vive en el Header.
+// Accesos rápidos de usuario logueado en Inicio: diario, favoritos, listas,
+// colección y buscador. El resto de la navegación completa vive en el Header.
 export async function QuickLinks() {
   const t = await getTranslations("common");
 
@@ -10,6 +10,7 @@ export async function QuickLinks() {
     { href: "/me/diary" as const, label: t("diary") },
     { href: "/me/favorites" as const, label: t("favorites") },
     { href: "/me/lists" as const, label: t("lists") },
+    { href: "/me/collection" as const, label: t("collection") },
     { href: "/search" as const, label: t("search") },
   ];
 

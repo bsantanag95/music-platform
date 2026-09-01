@@ -8,11 +8,13 @@ import { resolveSession } from "@/services/auth/sessions";
 import { listUserDiary } from "@/services/diary/diary";
 import { listUserFavorites } from "@/services/favorites/favorites";
 import { listUserLists } from "@/services/lists/lists";
+import { listProfileCollection } from "@/services/collection/collection";
 import { FollowButton } from "@/components/social/FollowButton";
 import { BlockButton } from "@/components/social/BlockButton";
 import { DiaryList } from "@/components/diary/DiaryList";
 import { FavoritesList } from "@/components/favorites/FavoritesList";
 import { ListsList } from "@/components/lists/ListsList";
+import { CollectionList } from "@/components/collection/CollectionList";
 
 interface UserProfilePageProps {
   params: Promise<{ username: string }>;
@@ -39,6 +41,25 @@ async function ProfileFavorites({ username, viewerId }: { username: string; view
   const initial = await listUserFavorites(username, viewerId, 1, 20);
   return (
     <FavoritesList
+      initial={initial}
+      readOnly
+      username={username}
+      empty={{ title: t("profileEmptyTitle"), description: t("profileEmptyDescription") }}
+    />
+  );
+}
+
+async function ProfileCollection({
+  username,
+  viewerId,
+}: {
+  username: string;
+  viewerId: string | null;
+}) {
+  const t = await getTranslations("collection");
+  const initial = await listProfileCollection(username, viewerId, 1, 20);
+  return (
+    <CollectionList
       initial={initial}
       readOnly
       username={username}
@@ -161,6 +182,13 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
         <section className="flex w-full max-w-2xl flex-col gap-4">
           <h2 className="font-display text-xl text-paper">{t("listsTitle")}</h2>
           <ProfileLists username={profile.username} viewerId={session?.user.id ?? null} />
+        </section>
+      )}
+
+      {(profile.accessible || isOwn) && (
+        <section className="flex w-full max-w-2xl flex-col gap-4">
+          <h2 className="font-display text-xl text-paper">{t("collectionTitle")}</h2>
+          <ProfileCollection username={profile.username} viewerId={session?.user.id ?? null} />
         </section>
       )}
     </main>

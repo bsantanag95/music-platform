@@ -29,6 +29,10 @@ vi.mock("@/services/social", () => ({
   listComments: vi.fn().mockResolvedValue({ comments: [], page: 1, pageSize: 20, hasNext: false }),
 }));
 
+vi.mock("@/services/collection/collection", () => ({
+  listOwnEntriesForReleaseGroup: vi.fn().mockResolvedValue([]),
+}));
+
 vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");

@@ -57,6 +57,7 @@ además del `error` legible:
 | `LIST_NOT_FOUND` | 404 | Listas: la lista no existe, no pertenece al usuario autenticado o no es visible para el visitante (se responde 404 para no revelar existencia de listas ajenas privadas). |
 | `LIST_TARGET_INVALID` | 404 | Listas: el objetivo del ítem no existe o no es un artista/álbum/canción válido. |
 | `LIST_ITEM_NOT_FOUND` | 404 | Listas: el ítem no existe dentro de la lista indicada. |
+| `COLLECTION_ENTRY_NOT_FOUND` | 404 | Colección física: la entrada no existe o no pertenece al usuario autenticado (se responde 404 para no revelar existencia de entradas ajenas). |
 
 ### Implementación
 

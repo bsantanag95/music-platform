@@ -14,10 +14,28 @@ import usersEs from "../../messages/es/users.json";
 import usersEn from "../../messages/en/users.json";
 import diaryEs from "../../messages/es/diary.json";
 import diaryEn from "../../messages/en/diary.json";
+import collectionEs from "../../messages/es/collection.json";
+import collectionEn from "../../messages/en/collection.json";
 
 const messagesByLocale = {
-  es: { common: commonEs, catalog: catalogEs, errors: errorsEs, auth: authEs, users: usersEs, diary: diaryEs },
-  en: { common: commonEn, catalog: catalogEn, errors: errorsEn, auth: authEn, users: usersEn, diary: diaryEn },
+  es: {
+    common: commonEs,
+    catalog: catalogEs,
+    errors: errorsEs,
+    auth: authEs,
+    users: usersEs,
+    diary: diaryEs,
+    collection: collectionEs,
+  },
+  en: {
+    common: commonEn,
+    catalog: catalogEn,
+    errors: errorsEn,
+    auth: authEn,
+    users: usersEn,
+    diary: diaryEn,
+    collection: collectionEn,
+  },
 };
 
 export function renderWithIntl(

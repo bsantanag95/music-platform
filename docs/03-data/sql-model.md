@@ -315,3 +315,38 @@ debe coincidir con el `entity_type` de la lista padre (validado por trigger
 **Trigger `trg_user_list_item_target_type`**: valida que el objetivo del ítem coincida con
 `entity_type` de la lista padre. No es posible expresar esto con un `CHECK` porque requiere
 consultar otra tabla (mismo criterio que `trg_membership_types`).
+
+## `collection_entry`
+
+**Propósito:** declaración de coleccionismo físico (Fase 5, cambio `add-physical-collection`).
+Cada fila es una copia física de un álbum que el usuario posee. A diferencia de
+`favorite` / `rating` / `comment`, el objetivo es **fijo (solo álbum)**: FK directa a
+`release_group`, sin el patrón `CHECK (num_nonnulls(...) = 1)`. `format` y `attributes` son
+100% dato del usuario — el catálogo no modela formato físico.
+
+**Campos:**
+
+- `user_id`: dueño de la entrada, `ON DELETE CASCADE`.
+- `release_group_id`: álbum, `NOT NULL`, `ON DELETE CASCADE`.
+- `format`: soporte físico. `CHECK (format IN ('vinyl', 'cd', 'cassette', 'other'))`.
+  Formatos digitales quedan deliberadamente fuera.
+- `attributes`: `TEXT[]` de un vocabulario cerrado y curado de cualidades de edición/copia
+  (`limited-edition`, `numbered`, `first-press`, `reissue`, `remaster`, `anniversary-edition`,
+  `deluxe-edition`, `colored-vinyl`, `picture-disc`, `180g`, `gatefold`, `box-set`,
+  `regional-edition`, `bonus-tracks`, `extra-disc`, `signed`, `promo`). Default `'{}'`.
+  `CHECK (attributes <@ ARRAY[...]::TEXT[])`. El servicio deduplica y ordena antes de persistir.
+- `note`: nota libre opcional para el detalle que el vocabulario no captura.
+  `CHECK (note IS NULL OR length(note) <= 140)`. No se interpreta ni se valida contra catálogo.
+- `audience`: `private` / `followers` / `public`, default `followers` (mismo patrón que
+  `favorite` / `listen_entry`).
+- `created_at` / `updated_at`: `updated_at` lo mantiene el trigger
+  `trg_collection_entry_updated_at` (regla del proyecto: nunca desde la app).
+
+**Restricciones:** ninguna de unicidad. Se permiten **varias entradas por (usuario, álbum)**,
+con el mismo o distinto `format`, para representar copias distinguibles (vinilo + CD, dos
+ediciones del mismo CD). No es un toggle idempotente.
+
+**Índices:** `idx_collection_entry_user_created` (colección propia, fecha descendente),
+`idx_collection_entry_user_release_group` (copias del usuario para un álbum, acción en la
+página de álbum), `idx_collection_entry_release_group` (recuperación por álbum) e
+`idx_collection_entry_attributes` (`GIN` sobre `attributes`, filtro por atributo).

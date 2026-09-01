@@ -381,6 +381,46 @@ export type FavoriteRow = typeof favorite.$inferSelect;
 export type UserListRow = typeof userList.$inferSelect;
 export type UserListItemRow = typeof userListItem.$inferSelect;
 
+// Colección física (Fase 5, add-physical-collection). Objetivo fijo (álbum):
+// FK directa, sin patrón CHECK num_nonnulls. Varias entradas por álbum
+// permitidas (sin índice único). El CHECK del vocabulario de `attributes` y
+// el trigger de `updatedAt` (más el índice GIN sobre `attributes`) viven en
+// la migración SQL cruda.
+export const collectionEntry = pgTable(
+  "collection_entry",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    releaseGroupId: uuid("release_group_id")
+      .notNull()
+      .references(() => releaseGroup.id, { onDelete: "cascade" }),
+    format: text("format").notNull(),
+    attributes: text("attributes")
+      .array()
+      .notNull()
+      .default(sql`'{}'`),
+    note: text("note"),
+    audience: text("audience").notNull().default("followers"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_collection_entry_user_created").on(t.userId, t.createdAt),
+    index("idx_collection_entry_user_release_group").on(t.userId, t.releaseGroupId),
+    index("idx_collection_entry_release_group").on(t.releaseGroupId),
+    check("chk_collection_entry_format", sql`${t.format} IN ('vinyl', 'cd', 'cassette', 'other')`),
+    check(
+      "chk_collection_entry_audience",
+      sql`${t.audience} IN ('private', 'followers', 'public')`,
+    ),
+    check("chk_collection_entry_note", sql`${t.note} IS NULL OR length(${t.note}) <= 140`),
+  ],
+);
+
+export type CollectionEntryRow = typeof collectionEntry.$inferSelect;
+
 export const comment = pgTable(
   "comment",
   {

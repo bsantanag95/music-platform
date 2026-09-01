@@ -45,9 +45,10 @@ La capa de presencia se construye en dos entregas dentro de esta misma fase, no 
 
 **Estado: en curso.** Implementados y validados: privacidad/perfil, seguimiento (+bloqueos),
 presencia manual (`listen_entry`), diario propio y visible, favoritos y listas (cambio
-`add-favorites-and-lists`) y feed (escuchas + favoritos + eventos de listas + ratings +
-comentarios, cambio `add-ratings-comments-feed`). Pendiente dentro de la fase: scrobbling
-automático (segunda entrega de la capa de presencia).
+`add-favorites-and-lists`), feed (escuchas + favoritos + eventos de listas + ratings +
+comentarios, cambio `add-ratings-comments-feed`) y colección física (cambio
+`add-physical-collection`). Pendiente dentro de la fase: scrobbling automático (segunda
+entrega de la capa de presencia).
 
 ## Fase 6 — PWA y beta cerrada
 

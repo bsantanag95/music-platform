@@ -15,18 +15,54 @@
     "title": "Sin ediciones disponibles",
     "description": "No se encontraron ediciones ingeribles para este álbum."
   },
-  "RECORDING_NOT_FOUND": { "title": "No se encontró la canción", "description": "La grabación solicitada no existe o no está disponible." },
-  "AUTH_REQUIRED": { "title": "Inicio de sesión requerido", "description": "Iniciá sesión para realizar esta acción." },
-  "INVALID_CREDENTIALS": { "title": "Credenciales incorrectas", "description": "El usuario, email o contraseña no son correctos." },
-  "USERNAME_TAKEN": { "title": "Usuario no disponible", "description": "Elegí otro nombre de usuario." },
-  "EMAIL_TAKEN": { "title": "Email ya registrado", "description": "Usá otro email o iniciá sesión." },
-  "RATE_LIMITED": { "title": "Demasiados intentos", "description": "Esperá unos minutos antes de volver a intentar." },
-  "PERMISSION_DENIED": { "title": "Acción no permitida", "description": "No tenés permiso para modificar este recurso." },
-  "INVALID_TARGET": { "title": "Objetivo inválido", "description": "El recurso indicado no es válido." },
-  "INVALID_RATING": { "title": "Valoración inválida", "description": "Revisá los valores de la valoración." },
-  "INVALID_COMMENT": { "title": "Comentario inválido", "description": "Revisá el contenido del comentario." },
-  "RATING_NOT_FOUND": { "title": "Valoración no encontrada", "description": "No se encontró tu valoración." },
-  "COMMENT_NOT_FOUND": { "title": "Comentario no encontrado", "description": "No se encontró el comentario." },
+  "RECORDING_NOT_FOUND": {
+    "title": "No se encontró la canción",
+    "description": "La grabación solicitada no existe o no está disponible."
+  },
+  "AUTH_REQUIRED": {
+    "title": "Inicio de sesión requerido",
+    "description": "Iniciá sesión para realizar esta acción."
+  },
+  "INVALID_CREDENTIALS": {
+    "title": "Credenciales incorrectas",
+    "description": "El usuario, email o contraseña no son correctos."
+  },
+  "USERNAME_TAKEN": {
+    "title": "Usuario no disponible",
+    "description": "Elegí otro nombre de usuario."
+  },
+  "EMAIL_TAKEN": {
+    "title": "Email ya registrado",
+    "description": "Usá otro email o iniciá sesión."
+  },
+  "RATE_LIMITED": {
+    "title": "Demasiados intentos",
+    "description": "Esperá unos minutos antes de volver a intentar."
+  },
+  "PERMISSION_DENIED": {
+    "title": "Acción no permitida",
+    "description": "No tenés permiso para modificar este recurso."
+  },
+  "INVALID_TARGET": {
+    "title": "Objetivo inválido",
+    "description": "El recurso indicado no es válido."
+  },
+  "INVALID_RATING": {
+    "title": "Valoración inválida",
+    "description": "Revisá los valores de la valoración."
+  },
+  "INVALID_COMMENT": {
+    "title": "Comentario inválido",
+    "description": "Revisá el contenido del comentario."
+  },
+  "RATING_NOT_FOUND": {
+    "title": "Valoración no encontrada",
+    "description": "No se encontró tu valoración."
+  },
+  "COMMENT_NOT_FOUND": {
+    "title": "Comentario no encontrado",
+    "description": "No se encontró el comentario."
+  },
   "INTERNAL_ERROR": {
     "title": "Error inesperado",
     "description": "No pudimos completar la solicitud. Intentá de nuevo en un momento."
@@ -102,5 +138,9 @@
   "LIST_ITEM_NOT_FOUND": {
     "title": "Elemento no encontrado",
     "description": "El elemento de la lista no existe o ya fue quitado."
+  },
+  "COLLECTION_ENTRY_NOT_FOUND": {
+    "title": "Entrada de colección no encontrada",
+    "description": "La entrada no existe o ya fue quitada de la colección."
   }
 }

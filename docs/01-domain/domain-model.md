@@ -90,5 +90,11 @@ bidireccional con su propia persistencia.
 - **Favorito**: marca simple de un Usuario sobre un Artista, Álbum o Canción. Es un toggle
   idempotente (un usuario tiene a lo sumo un favorito por objetivo), con audiencia propia e
   independiente de escucha, valoración y comentario.
+- **Colección física**: declaración de un Usuario de que posee una copia física de un Álbum,
+  con un formato (`vinyl`/`cd`/`cassette`/`other`), cero o más atributos de edición de un
+  vocabulario cerrado, una nota libre opcional y audiencia propia. A diferencia del Favorito,
+  **no es un toggle**: un Usuario puede tener varias entradas para el mismo Álbum (distintos
+  formatos, o copias distinguibles del mismo formato). Formato y atributos son dato del
+  Usuario — el catálogo no modela soporte físico.
 - **Actividad**: registro de lo que un Usuario fue valorando/comentando recientemente, visible para
   quienes lo siguen — la función inspirada en el "qué estás escuchando" de MSN.

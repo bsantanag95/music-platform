@@ -14,6 +14,7 @@ Si se pierde, se pierde para siempre: no existe ninguna fuente externa de la que
 - `rating`, `comment`, `listen_entry`, `favorite` — contenido y actividad del usuario.
 - `user_follow`, `user_block` — relaciones sociales.
 - `user_list`, `user_list_item` — agregación de contenido por el usuario.
+- `collection_entry` — coleccionismo físico declarado por el usuario (formato, atributos de edición y nota son 100% dato del usuario, no derivables del catálogo).
 
 **Implicación de backup:** máxima prioridad. Sin estos datos, la base de usuarios queda vacía o corrupta sin remedio.
 

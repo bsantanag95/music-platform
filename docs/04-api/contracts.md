@@ -575,3 +575,51 @@ Detalle de una lista ajena visible. Si la lista no es visible para el visitante,
 inexistente.
 
 **200 OK:** `{ list }`. **404** con `LIST_NOT_FOUND` o `USER_NOT_FOUND`.
+
+## Colección física (Fase 5.5, cambio `add-physical-collection`)
+
+Declaración de coleccionismo físico por álbum (`release-group`). Cada entrada tiene un `format`
+(`vinyl`/`cd`/`cassette`/`other`), cero o más `attributes` de un vocabulario cerrado, una `note`
+libre opcional (≤140) y audiencia propia. **No es un toggle idempotente:** `POST` siempre crea una
+entrada nueva y se permiten varias entradas por álbum (mismo o distinto formato). Las mutaciones
+requieren sesión; la lectura propia requiere sesión y la ajena aplica la matriz de visibilidad.
+
+Vocabulario de `attributes`: `limited-edition`, `numbered`, `first-press`, `reissue`, `remaster`,
+`anniversary-edition`, `deluxe-edition`, `colored-vinyl`, `picture-disc`, `180g`, `gatefold`,
+`box-set`, `regional-edition`, `bonus-tracks`, `extra-disc`, `signed`, `promo`.
+
+Forma de `entry`: `{ id, format, attributes: [...], note, audience, createdAt, updatedAt,
+album: { id, title, coverThumbUrl, artistId, artistName } }`.
+
+### `POST /api/me/collection`
+
+Crea una entrada. **Body:** `{ releaseGroupId, format, attributes?, note?, audience? }`.
+**201 OK:** `{ entry }`. **400** con `VALIDATION_ERROR` si el `format` o un `attribute` está fuera
+del vocabulario, o la `note` supera 140. **404** con `ALBUM_NOT_FOUND` si el álbum no existe.
+
+### `GET /api/me/collection?page=&pageSize=&format=&attribute=`
+
+Colección propia paginada, orden cronológico descendente. `format` y `attribute` filtran de forma
+opcional.
+
+**200 OK:** `{ entries: [...], page, pageSize, hasNext }`. **400** con `VALIDATION_ERROR` si la
+paginación o un filtro no son válidos.
+
+### `PATCH /api/me/collection/{entryId}`
+
+Modifica `format`, `attributes`, `note` o `audience` de una entrada propia. Al menos un campo
+obligatorio. `note: null` limpia la nota.
+
+**Body:** `{ format?, attributes?, note?, audience? }`. **200 OK:** `{ entry }`. **404** con
+`COLLECTION_ENTRY_NOT_FOUND` si no existe o no es del usuario.
+
+### `DELETE /api/me/collection/{entryId}`
+
+Borra una entrada propia. **204.** **404** con `COLLECTION_ENTRY_NOT_FOUND`.
+
+### `GET /api/users/[username]/collection?page=&pageSize=&format=&attribute=`
+
+Colección de un usuario visible para un lector. Sesión opcional. Aplica la matriz de visibilidad
+por entrada; sin permiso devuelve lista vacía sin revelar si el usuario tiene colección.
+
+**200 OK:** `{ entries: [...], page, pageSize, hasNext }`. **404** con `USER_NOT_FOUND`.
