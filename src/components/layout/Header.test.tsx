@@ -12,8 +12,10 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
-    <a href={href}>{children}</a>
+  Link: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
   ),
   usePathname: () => "/album/rg-1",
   useRouter: () => ({ replace: mocks.replace, refresh: mocks.refresh, push: mocks.push }),
@@ -41,6 +43,7 @@ vi.mock("next-intl", async () => {
     useLocale: () => "es",
     useTranslations: () => (key: string) => {
       const map: Record<string, string> = {
+        home: "Inicio",
         search: "Buscar",
         "search.fieldLabel": "Buscar artista",
         "search.placeholder": "Ej: Pink Floyd",
@@ -67,6 +70,12 @@ describe("Header", () => {
     renderWithIntl(<Header />);
 
     expect(screen.getByLabelText("Buscar artista")).toBeInTheDocument();
+  });
+
+  it("muestra un logo que enlaza al inicio", () => {
+    renderWithIntl(<Header />);
+
+    expect(screen.getByRole("link", { name: "Inicio" })).toHaveAttribute("href", "/");
   });
 
   it("muestra login y registro como acciones primarias para visitantes", () => {
