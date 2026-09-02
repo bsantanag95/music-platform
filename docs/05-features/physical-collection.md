@@ -72,3 +72,12 @@ propio: `COLLECTION_ENTRY_NOT_FOUND` (`04-api/errors.md`).
 - Filtros booleanos de varios atributos combinados (v1 filtra por un solo atributo).
 - Racha, contadores de completitud o cualquier mecánica de juego sobre la colección.
 - Colección sobre artista o canción: el objetivo es fijo (álbum).
+- **Contador de coleccionistas por álbum** (estilo Discogs "N personas tienen este disco").
+  Idea válida pero diferida — depende de densidad de colecciones y del cálculo robusto
+  anti-sockpuppet de `product_philosophy.md` §6.2. Anotada en `product_philosophy.md` §7 con
+  las decisiones de diseño ya identificadas: contar **`DISTINCT user_id`, nunca entradas**
+  (sin tope de entradas por `(usuario, álbum)`, un `COUNT(*)` lo infla una sola cuenta), solo
+  `audience = 'public'`, suavizar N bajo. Change aparte cuando haya datos.
+- **Tope de entradas por `(usuario, álbum)`.** Hoy no hay ninguno — el grano "varias copias"
+  es deliberado. Un tope blando (ej. máx. 10) queda anotado en §7 como posible endurecimiento
+  a evaluar junto con el contador de coleccionistas.

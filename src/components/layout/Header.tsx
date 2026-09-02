@@ -7,6 +7,7 @@ import { routing } from "@/i18n/routing";
 import type { AuthUser } from "@/lib/api/schemas";
 import { apiFetch, ApiError } from "@/lib/api/client";
 import { LogoutResponseSchema } from "@/lib/api/schemas";
+import { HeaderSearch } from "./HeaderSearch";
 
 interface HeaderProps {
   user?: Pick<AuthUser, "id" | "username" | "displayName"> | null;
@@ -50,12 +51,7 @@ export function Header({ user = null }: HeaderProps) {
   return (
     <header className="flex w-full items-center justify-between border-b border-ink-border px-4 py-3">
       <div className="flex items-center gap-4">
-        <Link
-          href="/search"
-          className="font-data text-sm text-paper-muted transition-colors hover:text-paper"
-        >
-          {t("search")}
-        </Link>
+        <HeaderSearch />
         <Link
           href="/users"
           className="font-data text-sm text-paper-muted transition-colors hover:text-paper"

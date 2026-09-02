@@ -16,12 +16,18 @@ import { ErrorState } from "@/components/ui/ErrorState";
 // para saber si conviene mostrar el aviso de "primera importación".
 const SLOW_REQUEST_THRESHOLD_MS = 3000;
 
-export function SearchForm() {
+interface SearchFormProps {
+  // Valor con el que llega `/search?q=...` (típicamente desde HeaderSearch cuando no pudo
+  // resolver la búsqueda en el propio Header) — se autoejecuta una sola vez al montar.
+  initialQuery?: string;
+}
+
+export function SearchForm({ initialQuery }: SearchFormProps = {}) {
   const router = useRouter();
   const t = useTranslations("catalog");
   const tErrors = useTranslations("errors");
   const tCommon = useTranslations("common");
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery ?? "");
   const [validationError, setValidationError] = useState<string | undefined>();
   const [isSearching, setIsSearching] = useState(false);
   const [slowRequest, setSlowRequest] = useState(false);
@@ -31,6 +37,7 @@ export function SearchForm() {
     description: string;
   } | null>(null);
   const slowRequestTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoRanRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -40,15 +47,7 @@ export function SearchForm() {
     };
   }, []);
 
-  const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
-    const normalized = query.trim();
-
-    if (!normalized) {
-      setValidationError(t("search.validationEmpty"));
-      return;
-    }
-
+  const runSearch = async (normalized: string) => {
     setValidationError(undefined);
     setNotFound(false);
     setApiError(null);
@@ -79,6 +78,28 @@ export function SearchForm() {
       }
       setIsSearching(false);
     }
+  };
+
+  // Autoejecuta una única vez cuando llega con `initialQuery` (típicamente el fallback de
+  // HeaderSearch a /search?q=...) — no vuelve a dispararse en renders posteriores.
+  useEffect(() => {
+    const normalized = initialQuery?.trim();
+    if (!normalized || autoRanRef.current) return;
+    autoRanRef.current = true;
+    void runSearch(normalized);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuery]);
+
+  const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (e) => {
+    e.preventDefault();
+    const normalized = query.trim();
+
+    if (!normalized) {
+      setValidationError(t("search.validationEmpty"));
+      return;
+    }
+
+    await runSearch(normalized);
   };
 
   function handleRetry() {

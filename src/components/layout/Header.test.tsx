@@ -6,7 +6,9 @@ import { renderWithIntl } from "@/test/i18n-test-utils";
 const mocks = vi.hoisted(() => ({
   replace: vi.fn(),
   refresh: vi.fn(),
+  push: vi.fn(),
   apiFetch: vi.fn(),
+  searchCatalog: vi.fn(),
 }));
 
 vi.mock("@/i18n/navigation", () => ({
@@ -14,7 +16,7 @@ vi.mock("@/i18n/navigation", () => ({
     <a href={href}>{children}</a>
   ),
   usePathname: () => "/album/rg-1",
-  useRouter: () => ({ replace: mocks.replace, refresh: mocks.refresh }),
+  useRouter: () => ({ replace: mocks.replace, refresh: mocks.refresh, push: mocks.push }),
 }));
 
 vi.mock("@/lib/api/client", () => ({
@@ -28,6 +30,10 @@ vi.mock("@/lib/api/client", () => ({
   },
 }));
 
+vi.mock("@/lib/api/catalog", () => ({
+  searchCatalog: mocks.searchCatalog,
+}));
+
 vi.mock("next-intl", async () => {
   const actual = await vi.importActual("next-intl");
   return {
@@ -36,6 +42,8 @@ vi.mock("next-intl", async () => {
     useTranslations: () => (key: string) => {
       const map: Record<string, string> = {
         search: "Buscar",
+        "search.fieldLabel": "Buscar artista",
+        "search.placeholder": "Ej: Pink Floyd",
         login: "Iniciar sesión",
         register: "Registrarse",
         logout: "Cerrar sesión",
@@ -55,10 +63,10 @@ vi.mock("@/i18n/routing", () => ({
 }));
 
 describe("Header", () => {
-  it("muestra un enlace al buscador", () => {
+  it("muestra un campo de búsqueda persistente", () => {
     renderWithIntl(<Header />);
 
-    expect(screen.getByRole("link", { name: "Buscar" })).toHaveAttribute("href", "/search");
+    expect(screen.getByLabelText("Buscar artista")).toBeInTheDocument();
   });
 
   it("muestra login y registro como acciones primarias para visitantes", () => {

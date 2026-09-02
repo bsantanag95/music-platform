@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { screen, fireEvent, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { NextIntlClientProvider } from "next-intl";
+import type { ReactElement } from "react";
 import { SearchForm } from "@/components/catalog/SearchForm";
 import * as catalogApi from "@/lib/api/catalog";
 import { ApiError } from "@/lib/api/client";
@@ -11,6 +13,16 @@ import errorsEs from "../../../messages/es/errors.json";
 import commonEs from "../../../messages/es/common.json";
 
 const mockPush = vi.fn();
+
+// rerender() no re-envuelve con el provider de renderWithIntl — hace falta
+// reaplicarlo a mano para no perder el contexto de next-intl entre renders.
+function withIntl(ui: ReactElement): ReactElement {
+  return (
+    <NextIntlClientProvider locale="es" messages={{ common: commonEs, catalog: catalogEs, errors: errorsEs }}>
+      {ui}
+    </NextIntlClientProvider>
+  );
+}
 
 vi.mock("@/lib/api/catalog", () => ({
   searchCatalog: vi.fn(),
@@ -348,6 +360,49 @@ describe("SearchForm", () => {
       await waitFor(() => {
         expect(button).not.toBeDisabled();
       });
+    });
+  });
+
+  describe("autoejecución por initialQuery", () => {
+    it("autoejecuta la búsqueda cuando llega con initialQuery", async () => {
+      const mockSearch = vi
+        .mocked(catalogApi.searchCatalog)
+        .mockResolvedValue(createMockArtistSearch());
+
+      renderWithIntl(<SearchForm initialQuery="Radiohead" />);
+
+      await waitFor(() => {
+        expect(mockSearch).toHaveBeenCalledWith("Radiohead");
+      });
+      expect(mockPush).toHaveBeenCalledWith("/artist/test-artist-id");
+    });
+
+    it("no autoejecuta sin initialQuery", () => {
+      renderWithIntl(<SearchForm />);
+
+      expect(catalogApi.searchCatalog).not.toHaveBeenCalled();
+    });
+
+    it("no autoejecuta con initialQuery vacío o solo espacios", () => {
+      renderWithIntl(<SearchForm initialQuery="   " />);
+
+      expect(catalogApi.searchCatalog).not.toHaveBeenCalled();
+    });
+
+    it("no repite la autoejecución en un re-render", async () => {
+      const mockSearch = vi
+        .mocked(catalogApi.searchCatalog)
+        .mockResolvedValue(createMockArtistSearch());
+
+      const { rerender } = renderWithIntl(<SearchForm initialQuery="Radiohead" />);
+
+      await waitFor(() => {
+        expect(mockSearch).toHaveBeenCalledTimes(1);
+      });
+
+      rerender(withIntl(<SearchForm initialQuery="Radiohead" />));
+
+      expect(mockSearch).toHaveBeenCalledTimes(1);
     });
   });
 });

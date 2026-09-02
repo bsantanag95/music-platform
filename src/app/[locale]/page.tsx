@@ -36,16 +36,18 @@ export default async function Home() {
       <div className="flex flex-col items-center gap-6 text-center">
         <h1 className="font-display text-3xl text-paper">{t("appName")}</h1>
         <p className="font-body text-paper-muted">{t("tagline")}</p>
-        <SearchForm />
         {!user && (
-          <div className="flex flex-wrap justify-center gap-3">
-            <Link href="/auth/register">
-              <Button variant="primary">{t("register")}</Button>
-            </Link>
-            <Link href="/auth/login">
-              <Button variant="secondary">{t("login")}</Button>
-            </Link>
-          </div>
+          <>
+            <SearchForm />
+            <div className="flex flex-wrap justify-center gap-3">
+              <Link href="/auth/register">
+                <Button variant="primary">{t("register")}</Button>
+              </Link>
+              <Link href="/auth/login">
+                <Button variant="secondary">{t("login")}</Button>
+              </Link>
+            </div>
+          </>
         )}
       </div>
 

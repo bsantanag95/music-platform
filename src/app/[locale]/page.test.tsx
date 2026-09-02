@@ -6,6 +6,7 @@ import * as home from "@/services/home/home";
 import { FeedPreview } from "@/components/home/FeedPreview";
 import { OnboardingPrompt } from "@/components/home/OnboardingPrompt";
 import { QuickLinks } from "@/components/home/QuickLinks";
+import { SearchForm } from "@/components/catalog/SearchForm";
 
 type PageModule = { default: () => Promise<ReactElement> };
 let pageModule: PageModule;
@@ -66,6 +67,7 @@ describe("HomePage", () => {
     expect(includesType(element, QuickLinks)).toBe(false);
     expect(includesType(element, FeedPreview)).toBe(false);
     expect(includesType(element, OnboardingPrompt)).toBe(false);
+    expect(includesType(element, SearchForm)).toBe(true);
   });
 
   it("usuario con al menos un seguido: pide el preview de feed y no muestra onboarding", async () => {
@@ -86,6 +88,7 @@ describe("HomePage", () => {
     expect(home.listFollowingFeedPreview).toHaveBeenCalledWith("u1");
     expect(includesType(element, FeedPreview)).toBe(true);
     expect(includesType(element, OnboardingPrompt)).toBe(false);
+    expect(includesType(element, SearchForm)).toBe(false);
   });
 
   it("usuario sin seguidos: muestra onboarding y no pide el preview de feed", async () => {
@@ -106,5 +109,6 @@ describe("HomePage", () => {
     expect(home.listFollowingFeedPreview).not.toHaveBeenCalled();
     expect(includesType(element, OnboardingPrompt)).toBe(true);
     expect(includesType(element, FeedPreview)).toBe(false);
+    expect(includesType(element, SearchForm)).toBe(false);
   });
 });

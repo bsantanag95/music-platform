@@ -118,6 +118,16 @@ Opción por álbum para declarar y presumir el coleccionismo en soporte físico,
 - [ ] Diseño del algoritmo de afinidad de gusto para descubrimiento (6.1) — depende de densidad de datos, no urgente.
 - [ ] Cálculo robusto de puntuación global anti review-bombing (6.2) — amerita documento/ADR técnico propio.
 - [ ] Rol/permisos para cuentas que publican contenido "oficial de la plataforma" (6.3) — exclusivo de listas editoriales; 6.4 ya no depende de este sistema.
+- [ ] **Contador de coleccionistas por álbum** (estilo Discogs "N personas tienen este disco"), en la página de álbum. Encaja con el precedente de 6.2 (agregado con framing descriptivo, no prescriptivo) y refuerza el objetivo de "presumir" de 6.6. **Diferido post-beta:** solo es útil con densidad de colecciones — en beta cerrada diría "0/1 persona" en casi todos los álbumes (mismo problema y misma lógica que 6.1, y que el descarte de "solo ratings de la red" en 6.2).
+
+  Cuando se retome, decisiones ya identificadas:
+  - **Contar `COUNT(DISTINCT user_id)`, nunca entradas.** No es higiene de conteo: es requisito anti-manipulación. `collection_entry` no tiene límite de entradas por `(usuario, álbum)` por diseño (permitir vinilo + CD + copias de portada alternativa), así que un contador por entradas (`COUNT(*)`) lo infla **una sola cuenta** agregando X copias del mismo álbum, sin fricción ni consecuencias. El mecanismo que hace útil la colección para el coleccionista real es exactamente lo que rompe el agregado por-entradas.
+  - **Aun así, `DISTINCT user_id` solo resiste sockpuppets en la medida en que lo haga el cálculo robusto de 6.2** (ponderación por antigüedad/actividad de cuenta, detección de anomalías). El contador debería heredar esa maquinaria cuando exista, no reinventarla. → depende de densidad de datos **y** de que 6.2 esté hecho.
+  - **Solo entradas `audience = 'public'`.** Un `COUNT(*)` sobre todas las audiencias filtraría `private`/`followers` al agregado, y con N chico eso es un leak observable (agregar una copia privada movería el contador público).
+  - Suavizar N bajo (umbral ≥3 o redondeo); framing "N personas de la comunidad tienen este disco".
+  - Change aparte (toca el read path de la página de álbum + índice parcial `(release_group_id) WHERE audience = 'public'`, sin migración de esquema). Pareja natural: drill-down "quiénes" reutilizando la matriz de visibilidad. La otra mitad de Discogs (wantlist "lo quiero") es feature distinta, no parte de esto.
+
+- [ ] **Tope blando de entradas por `(usuario, álbum)` en la colección física** (posible endurecimiento de 6.6, ej. máx. 10). No hace falta hoy — el grano "varias copias" es deliberado y nadie tiene 50 copias reales del mismo disco. Pero acota el daño de cualquier feature futura que agregue sobre `collection_entry` (el contador de coleccionistas es el primer candidato) y es una migración trivial (un `CHECK` o un trigger de conteo). Evaluar junto con, o antes de, el contador.
 
 ## 8. Relación con la metodología del proyecto
 
