@@ -100,6 +100,27 @@ export function Header({ user = null }: HeaderProps) {
             {t("collection")}
           </Link>
         ) : null}
+      </div>
+      {/* Sesión e idioma van juntos al extremo derecho, separados de la navegación de
+          contenido: no son "a dónde ir" sino "quién soy / preferencias de la app" — mismo
+          patrón que Letterboxd, GitHub, etc. (avatar/cuenta al final). */}
+      <div className="flex items-center gap-4">
+        <nav aria-label={t("localeSwitcher")} className="flex items-center gap-2">
+          {routing.locales.map((locale) => (
+            <button
+              key={locale}
+              type="button"
+              onClick={() => handleLocaleChange(locale)}
+              className={`font-data text-xs uppercase transition-colors hover:text-paper ${
+                locale === currentLocale ? "text-paper" : "text-paper-muted"
+              }`}
+              aria-label={locale}
+              aria-current={locale === currentLocale ? "true" : undefined}
+            >
+              {locale}
+            </button>
+          ))}
+        </nav>
         {currentUser ? (
           <div className="flex items-center gap-3 font-data text-xs">
             <Link
@@ -134,22 +155,6 @@ export function Header({ user = null }: HeaderProps) {
           </div>
         )}
       </div>
-      <nav aria-label={t("localeSwitcher")} className="flex items-center gap-2">
-        {routing.locales.map((locale) => (
-          <button
-            key={locale}
-            type="button"
-            onClick={() => handleLocaleChange(locale)}
-            className={`font-data text-xs uppercase transition-colors hover:text-paper ${
-              locale === currentLocale ? "text-paper" : "text-paper-muted"
-            }`}
-            aria-label={locale}
-            aria-current={locale === currentLocale ? "true" : undefined}
-          >
-            {locale}
-          </button>
-        ))}
-      </nav>
     </header>
   );
 }
