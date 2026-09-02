@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-02T00:00:00.000Z",
+  "title": "Design System: Music Platform",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "VU Gold", "canonical": "#e8b84b", "cssVariable": "--color-amber", "tonalRamp": ["#241d0d", "#3a2f17", "#504023", "#675230", "#7d633e", "#93754d", "#a9875d", "#bf996e"] },
+      "primary-hover": { "role": "primary", "displayName": "VU Gold Hover", "canonical": "#f2c866", "cssVariable": "--color-amber-hover", "tonalRamp": ["#281f0f", "#41331a", "#5a4826", "#735d32", "#8c723f", "#a5874d", "#be9c5c", "#d8b26b"] },
+      "secondary": { "role": "secondary", "displayName": "Vintage Teal", "canonical": "#4a7c7c", "cssVariable": "--color-petrol", "tonalRamp": ["#0c1515", "#142525", "#1d3535", "#264545", "#2f5555", "#386666", "#417677", "#4a7c7c"] },
+      "secondary-hover": { "role": "secondary", "displayName": "Vintage Teal Hover", "canonical": "#5b9494", "cssVariable": "--color-petrol-hover", "tonalRamp": ["#0f1818", "#192828", "#233939", "#2d4a4a", "#365b5b", "#406d6d", "#4a7e7e", "#5b9494"] },
+      "danger": { "role": "tertiary", "displayName": "Wax Seal", "canonical": "#d96c5f", "cssVariable": "--color-danger", "tonalRamp": ["#24110e", "#3a1d19", "#502925", "#66342f", "#7c403a", "#924c45", "#a85750", "#d96c5f"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#14120f", "cssVariable": "--color-ink", "tonalRamp": ["#0d0c0a", "#14120f", "#1b1814", "#211e19", "#28241e", "#2f2a23", "#363028", "#3d362d"] },
+      "ink-surface": { "role": "neutral", "displayName": "Vinyl Surface", "canonical": "#1f1b17", "cssVariable": "--color-ink-surface", "tonalRamp": ["#14110e", "#1f1b17", "#292520", "#343029", "#3e3a32", "#49453c", "#544f46", "#5e5a50"] },
+      "ink-border": { "role": "neutral", "displayName": "Groove Line", "canonical": "#2e2a24", "cssVariable": "--color-ink-border", "tonalRamp": ["#1d1a16", "#2e2a24", "#3f3a32", "#504a41", "#615b50", "#726c60", "#837d70", "#948e80"] },
+      "paper": { "role": "neutral", "displayName": "Paper", "canonical": "#f2ede4", "cssVariable": "--color-paper", "tonalRamp": ["#2f2b22", "#4c463a", "#696152", "#867d6b", "#a39884", "#c0b49c", "#ddd0b5", "#f2ede4"] },
+      "paper-muted": { "role": "neutral", "displayName": "Aged Linen", "canonical": "#a89e8e", "cssVariable": "--color-paper-muted", "tonalRamp": ["#221f1a", "#36322c", "#4a453e", "#5e5950", "#726c62", "#867f74", "#9a9286", "#a89e8e"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Headings, page titles, section headings, and interactive buttons only." },
+      "body": { "displayName": "Body", "purpose": "Reading text: comments, descriptions, paragraphs." },
+      "label": { "displayName": "Label / Data", "purpose": "Metadata, breadcrumbs, field labels, timestamps, ratings, locale toggles." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "ease-state", "value": "150ms", "purpose": "Border and background color transitions on interactive chrome." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ],
+    "radii": [
+      { "name": "sm", "value": "4px" },
+      { "name": "md", "value": "6px" },
+      { "name": "lg", "value": "10px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The system's single confident action — a VU Gold slab with ink text.",
+      "html": "<button class=\"ds-btn-primary\">Rate this</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #e8b84b; color: #14120f; font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 14px; font-weight: 500; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; transition: background 0.15s; } .ds-btn-primary:hover { background: #f2c866; } .ds-btn-primary:focus-visible { outline: 2px solid #e8b84b; outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Quiet surfaced action — Vinyl Surface fill with a hairline Groove Border.",
+      "html": "<button class=\"ds-btn-secondary\">Follow</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #1f1b17; color: #f2ede4; font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 14px; font-weight: 500; padding: 8px 16px; border: 1px solid #2e2a24; border-radius: 6px; cursor: pointer; transition: border-color 0.15s; } .ds-btn-secondary:hover { border-color: #e8b84b; } .ds-btn-secondary:focus-visible { outline: 2px solid #e8b84b; outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Link / Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Invisible-level action; Aged Linen text that warms to Paper on hover.",
+      "html": "<button class=\"ds-btn-ghost\">Diary</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; background: transparent; color: #a89e8e; font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 14px; font-weight: 500; padding: 8px 8px; border: none; border-radius: 4px; cursor: pointer; transition: color 0.15s; } .ds-btn-ghost:hover { color: #f2ede4; } .ds-btn-ghost:focus-visible { outline: 2px solid #e8b84b; outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "A surfaced field on the ink ground, with a Groove hairline that turns gold on focus.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-label\" for=\"search\">Search</label><input id=\"search\" class=\"ds-input\" placeholder=\"e.g. Pink Floyd\" /></div>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; } .ds-label { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 14px; color: #a89e8e; } .ds-input { background: #1f1b17; color: #f2ede4; font-family: 'Source Serif 4', Georgia, serif; font-size: 14px; padding: 8px 12px; border: 1px solid #2e2a24; border-radius: 6px; transition: border-color 0.15s; } .ds-input::placeholder { color: #a89e8e; } .ds-input:focus { outline: 2px solid #e8b84b; outline-offset: 2px; border-color: #2e2a24; }"
+    },
+    {
+      "name": "Album Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A content surface for a physical collection object — a square sleeve with a Groove hairline that warms to gold.",
+      "html": "<a class=\"ds-card\" href=\"#\"><img src=\"\" alt=\"Cover\" class=\"ds-cover\" /><div class=\"ds-meta\"><span class=\"ds-title\">The Wall</span><span class=\"ds-cat\">Studio</span></div></a>",
+      "css": ".ds-card { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: #1f1b17; border: 1px solid #2e2a24; border-radius: 10px; transition: border-color 0.15s; } .ds-card:hover { border-color: #e8b84b; } .ds-cover { aspect-ratio: 1 / 1; width: 100%; border-radius: 4px; background: linear-gradient(135deg, #2e2a24 0%, #1f1b17 60%); } .ds-meta { min-width: 0; } .ds-title { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 14px; color: #f2ede4; } .ds-cat { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12px; color: #a89e8e; }"
+    },
+    {
+      "name": "Breadcrumb / Data Nav",
+      "kind": "nav",
+      "refersTo": "nav-breadcrumb",
+      "description": "The typographic division of labor in action: breadcrumb trails set in IBM Plex Mono, aged linen to paper on hover.",
+      "html": "<nav class=\"ds-breadcrumb\" aria-label=\"breadcrumb\"><ol><li><a href=\"#\">Home</a></li><li aria-current=\"page\">Pink Floyd</li></ol></nav>",
+      "css": ".ds-breadcrumb ol { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; list-style: none; padding: 0; margin: 0; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12px; color: #a89e8e; } .ds-breadcrumb a { color: #a89e8e; text-decoration: none; transition: color 0.15s; } .ds-breadcrumb a:hover { color: #f2ede4; } .ds-breadcrumb [aria-current='page'] { color: #f2ede4; } .ds-breadcrumb li + li::before { content: '/'; margin: 0 4px; color: #a89e8e; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Vinyl Listening Room",
+    "overview": "Warm, quiet, deliberate, tactile. The interface treats music as a material culture — something held, studied, and discussed with care. The entire system is a darkened listening room: an ink-warm near-black as the walls, paper-warm text as lamplight, and the amber glow of a VU meter as the single accent that draws the eye when a decision or interaction asks for attention. There is no noise here, no decorative motion, no gratuitous gradient — every element earns its place by helping you read, rate, and discuss a discography with the precision a serious listener expects. Two layers of material character coexist deliberately. The interactive chrome — buttons, inputs, navigation — stays quiet, refined, and minimally visible; it is furniture, not decoration. The content surfaces — album cards, cover art, the disc placeholder, list entries — carry the tactile, object-like quality of the physical collection: a vinyl sleeve held up to the light.",
+    "keyCharacteristics": [
+      "Warm-dark material environment; never pure black, never pure white — always earth-tinted paper and ink",
+      "A single, disciplined amber accent used sparingly across the whole screen (focus rings, primary actions, active states)",
+      "Flat, tonal depth system: surfaces layer by temperature, never by shadow",
+      "Editorial typography triad: a grotesque for display, a serif for reading, a monospace for data",
+      "Interaction furniture is quiet; content surfaces carry the object-like tactility of the physical collection",
+      "Respects prefers-reduced-motion; visible focus outline always on"
+    ],
+    "rules": [
+      { "name": "The Rarity Rule", "body": "VU Gold appears on ≤10% of any given screen. Its power comes from being the only thing that glows in the dark. When everything is amber, nothing is.", "section": "colors" },
+      { "name": "The No-Black Rule", "body": "Never use pure #000, pure #fff, or the default Tailwind palette. Every color here is earth-tinted; the warmth is the identity.", "section": "colors" },
+      { "name": "The Typographic Division of Labor Rule", "body": "Display speaks, body reads, mono measures. Headings and buttons are always Space Grotesk; paragraphs and comments are always Source Serif; any data — dates, ratings, member roles, breadcrumbs, field labels, locale toggles — is always IBM Plex Mono. Do not swap these roles for flourish.", "section": "typography" },
+      { "name": "The No-Shadow Rule", "body": "Elevation is never a box-shadow. If you need to separate a surface, step it one temperature lighter (ink-surface) and draw a ink-border hairline around it — never cast a drop shadow.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep the amber accent rare and disciplined — it is the one light in the room.",
+      "Do express depth by stepping background temperature (ink → Vinyl Surface) and drawing Groove Line hairlines, never with box-shadows.",
+      "Do honor the typographic division of labor: Space Grotesk for display, Source Serif for body, IBM Plex Mono for data and labels.",
+      "Do keep cover art square and surfaces gently curved (4–10px), never pill-shaped.",
+      "Do respect prefers-reduced-motion and always keep the 2px amber focus outline visible."
+    ],
+    "donts": [
+      "Don't use pure #000, pure #fff, or the default Tailwind palette — warmth is the identity.",
+      "Don't add decorative shadows, gradients, or motion that competes with content.",
+      "Don't render audio imagery as empty rectangles — use the disc/record silhouette when art is missing.",
+      "Don't let any secondary color (teal, danger) shout louder than VU Gold; it owns visual emphasis.",
+      "Don't introduce pill-shaped or fully sharp corners; stay in the 4–10px radius language."
+    ]
+  }
+}
