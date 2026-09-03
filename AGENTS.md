@@ -90,6 +90,26 @@ necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
   input a mano; solo `tsc --noEmit`/`next build` lo atrapan (ver
   `docs/02-architecture/code-walkthrough.md`).
 
+## Ramas y commits (trabajo en paralelo)
+
+Varios agentes trabajan a la vez sobre el **mismo working tree**. Para que no se
+pisen:
+
+- **Cada agente crea su propia rama desde `main` al empezar la tarea.** Prefijos
+  estilo gitflow: `feature/<slug>`, `fix/<slug>`, `chore/<slug>`, `docs/<slug>`.
+  Nunca commitear directo a `main`.
+- **Mensajes de commit en inglés**, estilo Conventional Commits
+  (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, ...).
+- **Cada agente es responsable únicamente de sus propios commits.** Ningún agente
+  debe commitear, "rescatar" ni consolidar cambios pendientes que aparezcan en el
+  working tree y no haya generado él — aunque esos cambios sin commitear estén
+  contaminando su rama (se arrastran al hacer `git checkout`). En ese caso: hacer
+  `git stash` (o `git stash -u`) para apartarlos y avisar al usuario; no
+  commitearlos por cuenta propia.
+- **Solo commitear o pushear cuando el usuario lo pide.**
+- Trailer de co-autoría en cada commit redactado por el agente:
+  `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`.
+
 ## Workflow de cambios
 
 - Cambios no triviales se gestionan con OpenSpec: `openspec/` + comandos
