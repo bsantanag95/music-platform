@@ -21,6 +21,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
       lists: (await import(`../../messages/${resolvedLocale}/lists.json`)).default,
       collection: (await import(`../../messages/${resolvedLocale}/collection.json`)).default,
       home: (await import(`../../messages/${resolvedLocale}/home.json`)).default,
+      footer: (await import(`../../messages/${resolvedLocale}/footer.json`)).default,
+      legal: (await import(`../../messages/${resolvedLocale}/legal.json`)).default,
     },
   };
 });

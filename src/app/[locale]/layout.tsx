@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { Providers } from "./providers";
 import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 import { resolveSession } from "@/services/auth/sessions";
 import "@/app/globals.css";
 
@@ -67,8 +68,10 @@ export default async function RootLayout({
     >
       <body>
         <NextIntlClientProvider messages={messages}>
+          <span id="top" aria-hidden="true" />
           <Header user={publicUser} />
           <Providers>{children}</Providers>
+          <Footer user={publicUser} />
         </NextIntlClientProvider>
       </body>
     </html>

@@ -1,0 +1,24 @@
+{
+  "lastUpdated": "Última actualización: pendiente",
+  "placeholderNotice": "Este documento está en preparación y todavía no constituye una política vigente ni un acuerdo vinculante. Se publicará una versión definitiva antes de la apertura al público.",
+  "about": {
+    "title": "Acerca de",
+    "body": "music-platform es un catálogo y una comunidad para registrar y opinar sobre la música que ya escuchaste — un Letterboxd para música. No es un reproductor ni una fuente de audio: se apoya en los datos abiertos de MusicBrainz y en lo que aporta su propia comunidad."
+  },
+  "terms": {
+    "title": "Términos del servicio",
+    "body": "Acá vivirán las condiciones de uso de la plataforma: qué se puede publicar, a quién pertenece el contenido que subís, y en qué casos se puede suspender una cuenta."
+  },
+  "privacy": {
+    "title": "Política de privacidad",
+    "body": "Acá se detallará qué datos personales se recogen, con qué base legal, durante cuánto tiempo se conservan y cómo ejercer tus derechos sobre ellos."
+  },
+  "cookies": {
+    "title": "Política de cookies",
+    "body": "Hoy la aplicación solo usa una cookie de sesión estrictamente necesaria para mantenerte identificado; no requiere consentimiento. Si en el futuro se añade analítica u otras cookies, se explicarán acá y se pedirá tu consentimiento."
+  },
+  "guidelines": {
+    "title": "Directrices de la comunidad",
+    "body": "Acá se describirá qué se espera de las reseñas, comentarios y listas, y qué contenido modera la plataforma."
+  }
+}

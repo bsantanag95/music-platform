@@ -39,6 +39,16 @@ tiene condiciones de licencia propias. La adopción de una capa propia no está 
 antemano; se elegirá comparando licencia, disponibilidad, latencia, coste y complejidad
 operativa.
 
+## Dónde se materializa la atribución
+
+El bloque de atribución del **pie de página global** (`src/components/layout/Footer.tsx`,
+cambio `add-site-footer`) es el punto visible y persistente donde se cumplen A, B y C:
+nombra y enlaza a MusicBrainz (CC0 + parte CC BY-NC-SA 3.0), al Cover Art Archive
+(baja resolución, fines de identificación, copyright de sus titulares) y a la
+MetaBrainz Foundation, más la aclaración de no afiliación. Si cambian las condiciones
+de licencia de MetaBrainz, el texto de ese componente (`messages/{es,en}/footer.json`,
+clave `attribution`) es lo que hay que actualizar.
+
 ## Gates a revisar antes de monetizar
 
 1. ¿El proyecto necesita plan comercial de API de MusicBrainz, o conviene auto-hospedar el espejo de datos?
