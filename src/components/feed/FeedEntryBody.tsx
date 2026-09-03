@@ -1,5 +1,7 @@
+import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { ReactionBadge } from "@/components/diary/ReactionBadge";
+import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import type { FeedEntry } from "@/lib/api/schemas";
 
 function targetHref(type: "artist" | "release-group" | "recording", id: string): string {
@@ -23,14 +25,19 @@ export function FeedEntryCard({
   entry,
   t,
   locale,
+  withCover = false,
 }: {
   entry: FeedEntry;
   t: (key: string, values?: Record<string, string | number>) => string;
   locale: string;
+  // Muestra la carátula cuadrada del target a la izquierda de la tarjeta.
+  // Opt-in: Inicio anónimo lo activa; /me/feed no lo pasa y queda igual.
+  withCover?: boolean;
 }) {
   return (
-    <li className="rounded border border-ink-border bg-ink-surface p-4">
-      <div className="min-w-0">
+    <li className={`rounded border border-ink-border bg-ink-surface p-4 ${withCover ? "flex gap-4" : ""}`}>
+      {withCover ? <FeedEntryThumb entry={entry} /> : null}
+      <div className="min-w-0 flex-1">
         <Link
           href={`/users/${encodeURIComponent(entry.author.username)}`}
           className="font-data text-xs text-paper-muted transition-colors hover:text-paper"
@@ -43,6 +50,25 @@ export function FeedEntryCard({
         </time>
       </div>
     </li>
+  );
+}
+
+// Carátula cuadrada del target de la entrada (56/64px), o el disco de vinilo
+// cuando no hay arte o la entrada no apunta a un álbum (eventos de lista).
+function FeedEntryThumb({ entry }: { entry: FeedEntry }) {
+  const target = "target" in entry ? entry.target : null;
+  const label = target?.title ?? ("list" in entry ? entry.list.title : "");
+  const cover =
+    target && "coverThumbUrl" in target ? target.coverThumbUrl : null;
+
+  if (!cover) {
+    return <DiscPlaceholder alt={label} className="size-14 shrink-0 sm:size-16" />;
+  }
+
+  return (
+    <div className="relative size-14 shrink-0 overflow-hidden rounded sm:size-16">
+      <Image src={cover} alt={label} fill sizes="64px" className="object-cover" />
+    </div>
   );
 }
 

@@ -1,5 +1,6 @@
 {
   "communityActivityTitle": "Actividad de la comunidad",
+  "communityActivitySubtitle": "Reseñas y puntuaciones recientes de toda la comunidad. El descubrimiento acá pasa por personas, no por un algoritmo.",
   "publicListsTitle": "Listas públicas recientes",
   "feedPreviewTitle": "Tu feed",
   "feedPreviewSeeAll": "Ver todo",
@@ -8,5 +9,23 @@
   "onboardingDescription": "Seguí a otras personas para ver acá lo que escuchan, valoran y comentan.",
   "onboardingFindPeople": "Buscar gente",
   "onboardingExploreCatalog": "Explorar catálogo",
-  "noCommunityContentYet": "Todavía no hay actividad pública en la plataforma."
+  "noCommunityContentYet": "Todavía no hay actividad pública en la plataforma.",
+  "anonSubtagline": "Registrá cada escucha sin fricción, puntuala con estrellas y un score si querés, y seguí a otros oyentes para descubrir qué están girando.",
+  "anonSearchPrompt": "O buscá un artista",
+  "heroLine1": "Registrá todo lo que escuchás.",
+  "heroLine2": "Guardá favoritos y armá listas.",
+  "heroLine3": "Seguí a otros oyentes y descubrí.",
+  "heroCta": "Comenzá",
+  "getStartedTitle": "Empezá a registrar tu música",
+  "getStartedCreate": "Crear cuenta",
+  "getStartedLogin": "Ya tengo cuenta",
+  "getStartedClose": "Cerrar",
+  "howItWorksTitle": "Cómo funciona",
+  "howItWorksStep1Title": "Registrá lo que escuchaste",
+  "howItWorksStep1Body": "Cada escucha entra en tu diario sin pedirte una opinión. Puntuar y comentar son capas aparte, siempre opcionales.",
+  "howItWorksStep2Title": "Puntuá a tu manera",
+  "howItWorksStep2Body": "Estrellas de 0,5 a 5 y un score opcional de 1 a 100. Una expresión de identidad, no un promedio objetivo.",
+  "howItWorksStep3Title": "Seguí a otros oyentes",
+  "howItWorksStep3Body": "Elegís a quién seguir y ves qué escucha, valora y comenta. El descubrimiento pasa por personas, nunca por un algoritmo.",
+  "anonClosingTitle": "Tu historial de escucha empieza con una cuenta."
 }

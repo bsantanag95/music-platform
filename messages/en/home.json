@@ -1,5 +1,6 @@
 {
   "communityActivityTitle": "Community activity",
+  "communityActivitySubtitle": "Recent reviews and ratings from across the community. Discovery here happens through people, not an algorithm.",
   "publicListsTitle": "Recent public lists",
   "feedPreviewTitle": "Your feed",
   "feedPreviewSeeAll": "See all",
@@ -8,5 +9,23 @@
   "onboardingDescription": "Follow other people to see what they're listening to, rating, and commenting on here.",
   "onboardingFindPeople": "Find people",
   "onboardingExploreCatalog": "Explore catalog",
-  "noCommunityContentYet": "There's no public activity on the platform yet."
+  "noCommunityContentYet": "There's no public activity on the platform yet.",
+  "anonSubtagline": "Log every listen with zero friction, rate it with stars and a score if you want, and follow other listeners to discover what they're spinning.",
+  "anonSearchPrompt": "Or search for an artist",
+  "heroLine1": "Track everything you listen to.",
+  "heroLine2": "Save favorites and build lists.",
+  "heroLine3": "Follow other listeners and discover.",
+  "heroCta": "Get started",
+  "getStartedTitle": "Start cataloging your music",
+  "getStartedCreate": "Create account",
+  "getStartedLogin": "I already have an account",
+  "getStartedClose": "Close",
+  "howItWorksTitle": "How it works",
+  "howItWorksStep1Title": "Log what you listened to",
+  "howItWorksStep1Body": "Every listen goes into your diary without asking for a verdict. Rating and commenting are separate, always-optional layers.",
+  "howItWorksStep2Title": "Rate it your way",
+  "howItWorksStep2Body": "Half-stars from 0.5 to 5 plus an optional 1 to 100 score. An expression of identity, not an objective average.",
+  "howItWorksStep3Title": "Follow other listeners",
+  "howItWorksStep3Body": "You choose who to follow and see what they listen to, rate, and comment on. Discovery through people, never an algorithm.",
+  "anonClosingTitle": "Your listening history starts with an account."
 }

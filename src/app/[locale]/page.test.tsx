@@ -6,7 +6,9 @@ import * as home from "@/services/home/home";
 import { FeedPreview } from "@/components/home/FeedPreview";
 import { OnboardingPrompt } from "@/components/home/OnboardingPrompt";
 import { QuickLinks } from "@/components/home/QuickLinks";
-import { SearchForm } from "@/components/catalog/SearchForm";
+import { AnonHero } from "@/components/home/AnonHero";
+import { HowItWorks } from "@/components/home/HowItWorks";
+import { AnonCta } from "@/components/home/AnonCta";
 
 type PageModule = { default: () => Promise<ReactElement> };
 let pageModule: PageModule;
@@ -39,6 +41,7 @@ vi.mock("@/services/home/home", () => ({
   listCommunityActivity: vi.fn().mockResolvedValue([]),
   listPublicLists: vi.fn().mockResolvedValue([]),
   listFollowingFeedPreview: vi.fn().mockResolvedValue([]),
+  listRecentCoverArt: vi.fn().mockResolvedValue([]),
 }));
 
 // Los componentes hijos (CommunityActivity, PublicLists, FeedPreview,
@@ -67,7 +70,9 @@ describe("HomePage", () => {
     expect(includesType(element, QuickLinks)).toBe(false);
     expect(includesType(element, FeedPreview)).toBe(false);
     expect(includesType(element, OnboardingPrompt)).toBe(false);
-    expect(includesType(element, SearchForm)).toBe(true);
+    expect(includesType(element, AnonHero)).toBe(true);
+    expect(includesType(element, HowItWorks)).toBe(true);
+    expect(includesType(element, AnonCta)).toBe(true);
   });
 
   it("usuario con al menos un seguido: pide el preview de feed y no muestra onboarding", async () => {
@@ -88,7 +93,8 @@ describe("HomePage", () => {
     expect(home.listFollowingFeedPreview).toHaveBeenCalledWith("u1");
     expect(includesType(element, FeedPreview)).toBe(true);
     expect(includesType(element, OnboardingPrompt)).toBe(false);
-    expect(includesType(element, SearchForm)).toBe(false);
+    expect(includesType(element, AnonHero)).toBe(false);
+    expect(includesType(element, HowItWorks)).toBe(false);
   });
 
   it("usuario sin seguidos: muestra onboarding y no pide el preview de feed", async () => {
@@ -109,6 +115,6 @@ describe("HomePage", () => {
     expect(home.listFollowingFeedPreview).not.toHaveBeenCalled();
     expect(includesType(element, OnboardingPrompt)).toBe(true);
     expect(includesType(element, FeedPreview)).toBe(false);
-    expect(includesType(element, SearchForm)).toBe(false);
+    expect(includesType(element, AnonHero)).toBe(false);
   });
 });

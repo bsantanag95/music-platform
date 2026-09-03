@@ -1,7 +1,9 @@
 # Inicio — landing diferenciado por sesión
 
 **Fase:** 5 (roadmap), navegación autenticada definida en `phase-5-design.md` §10.1.
-**Estado:** ✅ Implementado (cambio `add-home-page`).
+**Estado:** ✅ Estructura de contenido implementada (`add-home-page`). Layout visual del
+visitante anónimo rediseñado en `redesign-frontend` — ver "Hero visual del visitante
+anónimo" más abajo.
 
 ## Qué es
 
@@ -72,10 +74,79 @@ bloques muestran contenido de **cualquier usuario público**, no solo de los seg
   bloque condicional que el CTA de registro/login. La búsqueda persistente para cualquier
   sesión vive ahora en el Header (`HeaderSearch`, ver `openspec/changes/add-header-search`).
 
+## Hero visual del visitante anónimo (`redesign-frontend`)
+
+El rediseño reemplazó el hero plano (tagline + botones sueltos) por una primera impresión
+visual, en la línea de Letterboxd/Musicboard, sin salir de "The Vinyl Listening Room":
+
+- **Banda a sangre completa** (`AnonHero`, `src/components/home/AnonHero.tsx`): rompe el
+  ancho de columna del `main` con `-mx-[calc(50vw-50%)] w-screen` (+ `overflow-x-clip` en el
+  `main`), sin bordes ni esquinas.
+- **Muro de carátulas** (`HeroCoverWall`, `src/components/home/HeroCoverWall.tsx`): cuadrícula
+  de miniaturas reales, `opacity` baja, que se **difumina a transparente** hacia los bordes
+  con una máscara alfa radial (`mask-image`) y un degradado `from-ink via-ink/55 to-ink` de
+  legibilidad encima. Es decorativo: `aria-hidden`, `alt=""`.
+- **Un solo CTA "Comenzá"** que abre `GetStartedModal`
+  (`src/components/home/GetStartedModal.tsx`) con las dos rutas de entrada
+  (`/auth/register`, `/auth/login`). El `SearchForm` queda debajo de la banda como utilidad
+  secundaria.
+
+### Fuente de las carátulas del muro — hoy
+
+`HeroCoverWall` es **agnóstico a la fuente**: recibe `covers: string[]` (URLs) y las cicla
+sobre `TILE_COUNT` celdas con un paso coprimo (`(i * 7) % covers.length`) para que las
+repeticiones no queden pegadas. Hoy `src/app/[locale]/page.tsx` arma ese array así:
+
+- `listRecentCoverArt()` (`src/services/home/home.ts`): `release_group.cover_thumb_url`
+  no nulo, `ORDER BY created_at DESC LIMIT 24`. Solo lee la miniatura pública de 250px, sin
+  datos de usuario — no requiere sesión ni filtra por visibilidad.
+- Unido (dedupe) con los `target.coverThumbUrl` de `listCommunityActivity`.
+
+El valor de `release_group.cover_thumb_url` lo resuelve `findOrResolveCover()`
+(`src/services/catalog/cover.ts`) con un `HEAD` a Cover Art Archive la primera vez que se
+abre cada álbum (patrón cover-only, migración 0003). Es decir: el muro muestra las carátulas
+que ya entraron a la base por uso real, más recientes primero.
+
+### Fuente de las carátulas del muro — implementación futura (24 curadas a mano)
+
+Pensado para cuando exista el **guardado definitivo de imágenes** (storage propio). No es
+trabajo de ahora. Lo que habría que tocar:
+
+1. **Fuente curada.** Encapsular la lógica de selección en una única función
+   `getHeroCovers()` en `src/services/home/home.ts` (curadas primero; `listRecentCoverArt()`
+   como fallback si están vacías; dedupe; cap en N) y que `page.tsx` solo llame a esa —
+   hoy el armado está inline en `page.tsx`. Sobre esa función, elegir origen:
+   - **Config estático**: `src/config/hero-covers.ts` con 24 URLs versionadas en git.
+     Cambiarlas requiere deploy.
+   - **Tabla editorial**: `hero_cover` (o `featured_media` genérica) con `image_url` +
+     `position`. Solo si un admin debe curarlas sin deploy — **depende del sistema de
+     roles/cuentas de plataforma que `product_philosophy.md` §7 deja sin resolver**, el
+     mismo bloqueo que las listas oficiales. Si ese sistema se implementa, la tabla sale
+     de ahí.
+   - **Lista destacada**: sacar las carátulas de los items de una `user_list` marcada como
+     editorial, cuando exista esa marca.
+2. **Hosting + `next.config.mjs`.** Si el storage definitivo sirve desde S3/R2/CDN propio,
+   agregar ese hostname a `images.remotePatterns` (hoy solo `coverartarchive.org` y
+   `*.archive.org`). Si se guardan en `public/`, rutas locales sin cambio de config.
+3. **`HeroCoverWall`.** Bajar `TILE_COUNT` a 24 (o múltiplo). Con 24 covers y 24 celdas,
+   `(i * 7) % 24` es una permutación (7 y 24 coprimos) → cada carátula aparece exactamente
+   una vez, barajada. Evaluar `priority` en las primeras imágenes por LCP.
+4. **Tests.** `src/app/[locale]/page.test.tsx` mockea hoy `listRecentCoverArt`; pasaría a
+   mockear `getHeroCovers` / la fuente curada.
+5. **Licencia — el bloqueo que no es de código.** Si las 24 son carátulas de álbum, siguen
+   siendo copyright de las disqueras: aplica la regla de `03-data/data-licensing.md` /
+   `04-risks.md` #6 (miniatura ≤250px, uso de identificación, nunca full-res). El storage
+   definitivo tiene que respetarla. Si en cambio son imágenes propias (arte comisionado,
+   fotos, texturas de vinilo genéricas), no hay restricción de licencia y queda como puro
+   tema de hosting + config.
+
 ## Pendiente
 
 - Definir el rol/cuenta de plataforma que permita publicar listas editoriales
   (`product_philosophy.md` §7) — cuando se resuelva, este documento debe actualizarse para
-  que "listas públicas recientes" distinga listas oficiales.
+  que "listas públicas recientes" distinga listas oficiales, y habilita la variante "tabla
+  editorial" / "lista destacada" como fuente del muro de carátulas del hero.
+- Muro de carátulas del hero anónimo con **24 carátulas curadas a mano**, cuando el guardado
+  definitivo de imágenes esté implementado — ver "implementación futura" arriba.
 - Copy y diseño visual concreto de cada bloque (fuera del alcance de este documento, que
   cierra la estructura de contenido, no el layout).

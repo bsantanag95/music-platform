@@ -1,25 +1,42 @@
 import { getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
-import { Button } from "@/components/ui/Button";
-import { SearchForm } from "@/components/catalog/SearchForm";
 import { CommunityActivity } from "@/components/home/CommunityActivity";
 import { PublicLists } from "@/components/home/PublicLists";
 import { FeedPreview } from "@/components/home/FeedPreview";
 import { OnboardingPrompt } from "@/components/home/OnboardingPrompt";
 import { QuickLinks } from "@/components/home/QuickLinks";
+import { AnonHero } from "@/components/home/AnonHero";
+import { HowItWorks } from "@/components/home/HowItWorks";
+import { AnonCta } from "@/components/home/AnonCta";
 import { getCurrentUser } from "@/services/auth/authorization";
 import { listFollowing } from "@/services/social/following";
-import { listCommunityActivity, listFollowingFeedPreview, listPublicLists } from "@/services/home/home";
+import {
+  listCommunityActivity,
+  listFollowingFeedPreview,
+  listPublicLists,
+  listRecentCoverArt,
+} from "@/services/home/home";
 
 export default async function Home() {
   const t = await getTranslations("common");
   const tHome = await getTranslations("home");
   const user = await getCurrentUser();
 
-  const [communityActivity, publicLists] = await Promise.all([
+  const [communityActivity, publicLists, recentCoverArt] = await Promise.all([
     listCommunityActivity(user?.id ?? null),
     listPublicLists(user?.id ?? null),
+    user ? Promise.resolve<string[]>([]) : listRecentCoverArt(),
   ]);
+
+  const heroCovers = user
+    ? []
+    : Array.from(
+        new Set([
+          ...recentCoverArt,
+          ...communityActivity
+            .map((entry) => entry.target.coverThumbUrl)
+            .filter((url): url is string => Boolean(url)),
+        ]),
+      );
 
   let hasFollows = false;
   let feedPreviewEntries: Awaited<ReturnType<typeof listFollowingFeedPreview>> = [];
@@ -32,39 +49,38 @@ export default async function Home() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center gap-10 px-4 py-12">
-      <div className="flex flex-col items-center gap-6 text-center">
-        <h1 className="font-display text-3xl text-paper">{t("appName")}</h1>
-        <p className="font-body text-paper-muted">{t("tagline")}</p>
-        {!user && (
-          <>
-            <SearchForm />
-            <div className="flex flex-wrap justify-center gap-3">
-              <Link href="/auth/register">
-                <Button variant="primary">{t("register")}</Button>
-              </Link>
-              <Link href="/auth/login">
-                <Button variant="secondary">{t("login")}</Button>
-              </Link>
-            </div>
-          </>
-        )}
-      </div>
-
-      {user && (
+    <main className="flex min-h-screen flex-col items-center gap-12 overflow-x-clip px-4 py-12">
+      {user ? (
         <>
+          <div className="flex flex-col items-center gap-6 text-center">
+            <h1 className="font-display text-3xl text-paper">{t("appName")}</h1>
+            <p className="font-body text-paper-muted">{t("tagline")}</p>
+          </div>
           <QuickLinks />
           {hasFollows ? <FeedPreview entries={feedPreviewEntries} /> : <OnboardingPrompt />}
         </>
+      ) : (
+        <AnonHero covers={heroCovers} />
       )}
 
-      <CommunityActivity entries={communityActivity} />
-      <PublicLists entries={publicLists} />
+      <CommunityActivity
+        entries={communityActivity}
+        withCover={!user}
+        subtitle={user ? undefined : tHome("communityActivitySubtitle")}
+      />
+      <PublicLists entries={publicLists} withCover={!user} />
 
-      {communityActivity.length === 0 && publicLists.length === 0 && (
+      {user && communityActivity.length === 0 && publicLists.length === 0 && (
         <p className="max-w-md text-center font-body text-sm text-paper-muted">
           {tHome("noCommunityContentYet")}
         </p>
+      )}
+
+      {!user && (
+        <>
+          <HowItWorks />
+          <AnonCta />
+        </>
       )}
     </main>
   );
