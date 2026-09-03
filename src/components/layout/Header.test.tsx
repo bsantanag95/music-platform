@@ -9,6 +9,8 @@ const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   apiFetch: vi.fn(),
   searchCatalog: vi.fn(),
+  pathname: "/album/rg-1",
+  search: "",
 }));
 
 vi.mock("@/i18n/navigation", () => ({
@@ -17,7 +19,8 @@ vi.mock("@/i18n/navigation", () => ({
       {children}
     </a>
   ),
-  usePathname: () => "/album/rg-1",
+  usePathname: () => mocks.pathname,
+  useSearchParams: () => new URLSearchParams(mocks.search),
   useRouter: () => ({ replace: mocks.replace, refresh: mocks.refresh, push: mocks.push }),
 }));
 
@@ -140,5 +143,15 @@ describe("Header", () => {
     fireEvent.click(screen.getByRole("button", { name: "en" }));
 
     expect(mocks.replace).toHaveBeenCalledWith("/album/rg-1", { locale: "en" });
+  });
+
+  it("cambia de locale preservando el query string (ej. ?q= en /search)", () => {
+    mocks.pathname = "/search";
+    mocks.search = "q=Sabrina";
+
+    renderWithIntl(<Header />);
+    fireEvent.click(screen.getByRole("button", { name: "en" }));
+
+    expect(mocks.replace).toHaveBeenCalledWith("/search?q=Sabrina", { locale: "en" });
   });
 });

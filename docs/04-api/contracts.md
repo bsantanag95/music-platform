@@ -4,44 +4,50 @@ Documenta el contrato real de los endpoints existentes (Fases 1-4) y las brechas
 `02-architecture/frontend-plan/00-backend-analysis.md` identificó como necesarias para la
 Fase 3. Ver ADR 0006 sobre por qué este contrato es REST y no tRPC.
 
-## `GET /api/catalog/search?q=<nombre>` — ✅ Existe
+## `GET /api/catalog/search?q=<texto>` — ✅ Existe
 
-Busca (o ingiere bajo demanda) un artista por nombre y su discografía completa.
+Busca **candidatos** (artistas y álbumes) que coinciden con el texto, combinando la base
+local y la búsqueda en vivo de MusicBrainz (`/artist?query=` y `/release-group?query=`,
+una request por tipo como máximo). **No ingiere** discografía, tracklist ni carátula: la
+ingesta pesada ocurre al abrir un resultado (`/api/catalog/artist/[id]`,
+`/api/catalog/release-group/[id]`). Cada candidato de MusicBrainz aún no visto se
+persiste como stub (una operación por tipo) para que todo resultado tenga `id` local.
 
-**Query params:** `q` (string, requerido).
+**Query params:** `q` (string, requerido; vacío o solo espacios tras normalizar → 400).
 
 **200 OK**
 
 ```json
 {
-  "artist": {
-    "id": "uuid",
-    "mbid": "uuid | null",
-    "type": "person | group | various | unknown",
-    "name": "string",
-    "bio": "string | null",
-    "photoUrl": "string | null",
-    "createdAt": "ISO 8601",
-    "discographySyncedAt": "ISO 8601 | null",
-    "membershipsSyncedAt": "ISO 8601 | null"
-  },
-  "releaseGroups": [
+  "results": [
     {
+      "kind": "artist | release-group",
       "id": "uuid",
       "mbid": "uuid | null",
-      "title": "string",
-      "category": "studio | single_ep | compilation | live_other",
-      "createdAt": "ISO 8601"
+      "name": "string",
+      "subtitle": "string | null",
+      "artistType": "person | group | various | unknown | null",
+      "category": "studio | single_ep | compilation | live_other | null",
+      "year": "int | null",
+      "cached": "boolean"
     }
   ]
 }
 ```
 
-**400** si falta `q`. **404** si MusicBrainz no devuelve ningún resultado para ese nombre.
+`subtitle`: disambiguation del artista o artista principal del álbum. `artistType` solo
+en artistas; `category` y `year` solo en álbumes (el año si MusicBrainz lo trae, con
+precisión anual basta). `cached`: la entidad local ya tiene contenido cacheado
+(discografía sincronizada / tracklist ingerido). Sin coincidencias es **200 con
+`{ "results": [] }`**, no 404.
 
-**Nota de latencia:** si el artista no estaba cacheado, esta llamada dispara ingesta
-completa (artista + discografía) contra MusicBrainz — puede tardar varios segundos según
-la cantidad de álbumes. Ver riesgo 1 de `frontend-plan/04-risks.md`.
+Orden determinista: locales cacheados → resto de locales → solo-MusicBrainz (por score),
+con coincidencia exacta de nombre/título al tope de su grupo; "Todo" intercala artistas
+y álbumes preservando el orden relativo.
+
+**400** `VALIDATION_ERROR` si falta `q` o llega vacío. **502** `INTERNAL_ERROR` si
+MusicBrainz falla y no hay ninguna coincidencia local (con datos locales, degrada a 200
+con las coincidencias locales).
 
 ## `GET /api/catalog/release-group/[id]` — ✅ Existe
 

@@ -1,18 +1,18 @@
 import { apiFetch } from "./client";
 import {
-  ArtistSearchSchema,
   ArtistWithDiscographySchema,
+  CatalogSearchResponseSchema,
   CoverSchema,
   ReleaseWithTracksSchema,
-  type ArtistSearch,
   type ArtistWithDiscography,
+  type CatalogSearchResponse,
   type Cover,
   type ReleaseWithTracks,
 } from "./schemas";
 
-export function searchCatalog(query: string): Promise<ArtistSearch> {
+export function searchCatalog(query: string): Promise<CatalogSearchResponse> {
   const params = new URLSearchParams({ q: query });
-  return apiFetch(`/api/catalog/search?${params}`, ArtistSearchSchema);
+  return apiFetch(`/api/catalog/search?${params}`, CatalogSearchResponseSchema);
 }
 
 export function getArtistById(id: string): Promise<ArtistWithDiscography> {

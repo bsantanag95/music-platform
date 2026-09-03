@@ -1,4 +1,4 @@
-import { and, eq, ilike, notInArray, sql } from "drizzle-orm";
+import { and, eq, ilike, inArray, notInArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, membership, type ArtistRow } from "@/db/schema";
 import { musicbrainz } from "../musicbrainz/client";
@@ -203,4 +203,49 @@ export async function upsertArtistStub(mbid: string, name: string): Promise<Arti
   const row = rows[0];
   if (!row) throw new Error(`No se pudo hacer upsert del artista stub ${mbid}`);
   return row;
+}
+
+export interface ArtistSearchStubInput {
+  mbid: string;
+  name: string;
+  /** `type` crudo de MusicBrainz ('Person' | 'Group' | ...); ya viene en la respuesta de búsqueda. */
+  mbType: string | undefined;
+  /** `disambiguation` de MusicBrainz — va a `bio`, mismo criterio que `upsertArtistFromMb`. */
+  disambiguation: string | null;
+}
+
+/**
+ * Stubs de artista creados desde la página de búsqueda, en una sola
+ * operación (INSERT ... ON CONFLICT DO NOTHING) sobre todo el conjunto de
+ * candidatos. A diferencia de `upsertArtistStub` (créditos de feat., donde
+ * el tipo se desconoce), la respuesta de búsqueda de MusicBrainz ya trae
+ * `type` y `disambiguation`: el stub se guarda con su tipo real y la bio,
+ * evitando el enriquecimiento extra (`enrichIfUnknown`) en la primera
+ * visita al perfil. Nunca sobrescribe una fila existente — puede ser un
+ * artista ya enriquecido o con discografía cacheada.
+ */
+export async function upsertArtistStubsFromSearch(
+  stubs: ArtistSearchStubInput[],
+): Promise<ArtistRow[]> {
+  if (stubs.length === 0) return [];
+
+  await db
+    .insert(artist)
+    .values(
+      stubs.map((stub) => ({
+        mbid: stub.mbid,
+        name: stub.name,
+        type:
+          stub.mbid === VARIOUS_ARTISTS_MBID
+            ? ("various" as const)
+            : mapArtistType(stub.mbType),
+        bio: stub.disambiguation,
+      })),
+    )
+    .onConflictDoNothing({ target: artist.mbid });
+
+  return db
+    .select()
+    .from(artist)
+    .where(inArray(artist.mbid, stubs.map((stub) => stub.mbid)));
 }

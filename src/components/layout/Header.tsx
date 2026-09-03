@@ -2,7 +2,7 @@
 
 import { useTranslations, useLocale } from "next-intl";
 import { useEffect, useState } from "react";
-import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { Link, usePathname, useSearchParams, useRouter } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { AuthUser } from "@/lib/api/schemas";
 import { apiFetch, ApiError } from "@/lib/api/client";
@@ -21,6 +21,7 @@ export function Header({ user = null }: HeaderProps) {
   const t = useTranslations("common");
   const tErrors = useTranslations("errors");
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const currentLocale = useLocale();
   const [currentUser, setCurrentUser] = useState(user);
@@ -32,7 +33,11 @@ export function Header({ user = null }: HeaderProps) {
   }, [user]);
 
   const handleLocaleChange = (newLocale: string) => {
-    router.replace(pathname, { locale: newLocale as "es" | "en" });
+    // Preserva el query string (ej. `?q=` en /search): `usePathname` de next-intl
+    // devuelve solo la ruta sin search, y el router no lo añade por sí solo.
+    const search = searchParams.toString();
+    const href = search ? `${pathname}?${search}` : pathname;
+    router.replace(href, { locale: newLocale as "es" | "en" });
   };
 
   const handleLogout = async () => {

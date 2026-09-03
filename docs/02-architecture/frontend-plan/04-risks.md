@@ -78,6 +78,12 @@ Cuando múltiples requests HTTP hacen cache-miss de la misma entidad de catálog
   el umbral.)_
 - **Mitigación si se activa el trigger:** un rate limitador distribuido (Redis token bucket, ya
   previsto como componente futuro en `client.ts:9-13`) — no advisory locks por entidad.
+- **Estado (add-search-results-page):** para las dos búsquedas por texto (`searchArtist`,
+  `searchReleaseGroup`) ya existe mitigación activa parcial: una caché TTL en memoria (10 min)
+  deduplica requests concurrentes idénticos (comparten el promise en vuelo) y sirve la misma
+  consulta repetida sin tocar la cola — cubre el caso más frecuente de dogpile (re-render del
+  servidor de la página de resultados al cambiar de idioma). Esto **no** aplica a `get`/`browse`
+  de ingestas, que siguen siempre a MusicBrainz; el trigger de revisión para esos sigue vigente.
 
 ## Riesgo 11 — Costo del agregado de rating en vivo
 

@@ -1,5 +1,36 @@
 import { describe, it, expect } from "vitest";
-import { mapArtistMemberships, normalizeReleaseDate } from "./mappers";
+import {
+  mapArtistMemberships,
+  mapReleaseGroupCategory,
+  normalizeReleaseDate,
+} from "./mappers";
+import type { MBReleaseGroupSearchItem } from "./types";
+
+describe("mapeo de resultados de búsqueda de release-groups", () => {
+  const item = (overrides: Partial<MBReleaseGroupSearchItem> = {}): MBReleaseGroupSearchItem => ({
+    id: "8f3d5c2a-4d2e-4b8a-9c6f-1f2e3d4c5b6a",
+    title: "Toxicity",
+    "primary-type": "Album",
+    score: 100,
+    ...overrides,
+  });
+
+  it("mapea la categoría a partir de primary-type / secondary-types", () => {
+    expect(mapReleaseGroupCategory(item()["primary-type"], item()["secondary-types"])).toBe("studio");
+    expect(
+      mapReleaseGroupCategory("Single", item()["secondary-types"]),
+    ).toBe("single_ep");
+    expect(mapReleaseGroupCategory("Album", ["Compilation"])).toBe("compilation");
+    expect(mapReleaseGroupCategory("Album", ["Live"])).toBe("live_other");
+    expect(mapReleaseGroupCategory("Other", [])).toBe("live_other");
+  });
+
+  it("conserva el año solo si la fecha viene completa; una fecha parcial no se inventa", () => {
+    expect(normalizeReleaseDate(item({ "first-release-date": "2001-09-18" })["first-release-date"])).toBe("2001-09-18");
+    expect(normalizeReleaseDate(item({ "first-release-date": "2001" })["first-release-date"])).toBeNull();
+    expect(normalizeReleaseDate(item()["first-release-date"])).toBeNull();
+  });
+});
 
 describe("normalizeReleaseDate", () => {
   it("conserva una fecha completa YYYY-MM-DD", () => {

@@ -1,19 +1,26 @@
 {
   "search": {
-    "pageTitle": "Search artist",
-    "fieldLabel": "Search artist",
+    "pageTitle": "Search the catalog",
+    "fieldLabel": "Search the catalog",
     "placeholder": "E.g.: Pink Floyd",
     "submit": "Search",
     "submitting": "Searching...",
     "loading": "Checking the catalog...",
-    "validationEmpty": "Enter a name to search.",
-    "loadingHint": "We're importing this artist for the first time. It may take a few seconds...",
-    "searchAgain": "Search another artist"
+    "validationEmpty": "Enter a text to search.",
+    "searchAgain": "Search another artist",
+    "results": {
+      "tabsLabel": "Result type",
+      "tabAll": "All",
+      "tabArtists": "Artists",
+      "tabAlbums": "Albums",
+      "emptyTitle": "No matches",
+      "emptyDescription": "We couldn't find artists or albums for that search. Try another text."
+    }
   },
   "artist": {
     "discographyHeading": "Discography",
     "typeLabels": {
-      "person": "Person",
+      "person": "Artist",
       "group": "Group",
       "various": "Various artists",
       "unknown": "Unclassified"

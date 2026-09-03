@@ -24,8 +24,8 @@ además del `error` legible:
 
 | `code` | Status HTTP | Dónde ocurre |
 |---|---|---|
-| `VALIDATION_ERROR` | 400 | `search`: falta el query param `q`; `recording/[id]`: el id no es UUID; comentarios: paginación inválida. |
-| `ARTIST_NOT_FOUND` | 404 | `search` y `artist/[id]`: no se encontró el artista. |
+| `VALIDATION_ERROR` | 400 | `search`: falta el query param `q` o llega vacío tras normalizar; `recording/[id]`: el id no es UUID; comentarios: paginación inválida. |
+| `ARTIST_NOT_FOUND` | 404 | `artist/[id]`: no se encontró el artista. (En `search` ya no aplica: una búsqueda sin coincidencias es `200` con lista vacía.) |
 | `ALBUM_NOT_FOUND` | 404 | `release-group/[id]`: el `id` no corresponde a ningún `release_group`. |
 | `NO_EDITIONS_FOUND` | 404 | `release-group/[id]`: MusicBrainz no tiene ninguna edición ingerible para ese álbum. |
 | `RECORDING_NOT_FOUND` | 404 | No existe la grabación solicitada. |
@@ -38,7 +38,7 @@ además del `error` legible:
 | `INVALID_RATING` / `INVALID_COMMENT` | 400 | Entrada social inválida. |
 | `RATING_NOT_FOUND` | 404 | No existe un rating propio para borrar. |
 | `COMMENT_NOT_FOUND` | 404 | No existe el comentario solicitado. |
-| `INTERNAL_ERROR` | 500 | Cualquier error no controlado (ej. MusicBrainz caído durante la ingesta fría, timeout, error de base de datos) — capturado por `withErrorHandling`, que devuelve este shape en vez de un 500 sin body. La marca de memberships no se escribe ante este error. |
+| `INTERNAL_ERROR` | 500/502 | Cualquier error no controlado (ej. MusicBrainz caído durante la ingesta fría, timeout, error de base de datos) — capturado por `withErrorHandling`, que devuelve este shape en vez de un 500 sin body. La marca de memberships no se escribe ante este error. En `search` es **502** solo si MusicBrainz falla y además no hay ninguna coincidencia local (con datos locales degrada a 200). |
 | `EMAIL_TAKEN_BY_LOCAL` | 409 | Google OAuth: el email del ID token coincide con una cuenta local existente sin esa identidad vinculada, por conflicto de la restricción `UNIQUE(email)` (`auth.md` sección 6). Aplica sin importar `email_verified`. |
 | `OAUTH_CONFIG_MISSING` | 503 | `GET /api/auth/google/start`: faltan variables de entorno de Google al iniciar el flujo (fail-closed). |
 | `OAUTH_STATE_INVALID` | 400 | `GET /api/auth/google/callback`: el `state` del callback no coincide con la cookie, o la cookie expiró/no existe. |

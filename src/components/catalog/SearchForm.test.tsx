@@ -1,408 +1,76 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { screen, fireEvent, waitFor, act } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { NextIntlClientProvider } from "next-intl";
-import type { ReactElement } from "react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { screen, fireEvent } from "@testing-library/react";
 import { SearchForm } from "@/components/catalog/SearchForm";
-import * as catalogApi from "@/lib/api/catalog";
-import { ApiError } from "@/lib/api/client";
-import type { ArtistSearch } from "@/lib/api/schemas";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
-import errorsEs from "../../../messages/es/errors.json";
-import commonEs from "../../../messages/es/common.json";
 
 const mockPush = vi.fn();
 
-// rerender() no re-envuelve con el provider de renderWithIntl — hace falta
-// reaplicarlo a mano para no perder el contexto de next-intl entre renders.
-function withIntl(ui: ReactElement): ReactElement {
-  return (
-    <NextIntlClientProvider locale="es" messages={{ common: commonEs, catalog: catalogEs, errors: errorsEs }}>
-      {ui}
-    </NextIntlClientProvider>
-  );
-}
-
-vi.mock("@/lib/api/catalog", () => ({
-  searchCatalog: vi.fn(),
-}));
-
 vi.mock("@/i18n/navigation", () => ({
-  useRouter: () => ({
-    push: mockPush,
-  }),
+  useRouter: () => ({ push: mockPush }),
 }));
-
-function createMockArtistSearch(
-  overrides?: Partial<ArtistSearch>,
-): ArtistSearch {
-  return {
-    artist: {
-      id: overrides?.artist?.id ?? "test-artist-id",
-      mbid: overrides?.artist?.mbid ?? null,
-      type: overrides?.artist?.type ?? "group",
-      name: overrides?.artist?.name ?? "Test Artist",
-      bio: overrides?.artist?.bio ?? null,
-      photoUrl: overrides?.artist?.photoUrl ?? null,
-      createdAt: overrides?.artist?.createdAt ?? new Date().toISOString(),
-      discographySyncedAt: overrides?.artist?.discographySyncedAt ?? null,
-      membershipsSyncedAt: overrides?.artist?.membershipsSyncedAt ?? null,
-    },
-    releaseGroups: overrides?.releaseGroups ?? [],
-  };
-}
 
 describe("SearchForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
+  it("expone un label asociado al campo", () => {
+    renderWithIntl(<SearchForm />);
+    expect(screen.getByLabelText(catalogEs.search.fieldLabel)).toBeInTheDocument();
   });
 
-  describe("búsqueda válida y navegación", () => {
-    it("invoca searchCatalog con el nombre normalizado y navega al artista", async () => {
-      const mockSearch = vi
-        .mocked(catalogApi.searchCatalog)
-        .mockResolvedValue(createMockArtistSearch());
+  it("al enviar navega a /search?q= con el texto normalizado", () => {
+    renderWithIntl(<SearchForm />);
 
-      renderWithIntl(<SearchForm />);
+    const input = screen.getByLabelText(catalogEs.search.fieldLabel);
+    fireEvent.change(input, { target: { value: "  Pink Floyd  " } });
+    fireEvent.click(screen.getByRole("button", { name: catalogEs.search.submit }));
 
-      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
-      fireEvent.change(input, { target: { value: "  Pink Floyd  " } });
-
-      const button = screen.getByRole("button", {
-        name: catalogEs.search.submit,
-      });
-      fireEvent.click(button);
-
-      await waitFor(() => {
-        expect(mockSearch).toHaveBeenCalledWith("Pink Floyd");
-      });
-
-      expect(mockPush).toHaveBeenCalledWith("/artist/test-artist-id");
-    });
+    expect(mockPush).toHaveBeenCalledWith("/search?q=Pink%20Floyd");
   });
 
-  describe("validación de entrada", () => {
-    it("no realiza ninguna solicitud con input vacío", async () => {
-      renderWithIntl(<SearchForm />);
+  it("no navega con entrada vacía y muestra validación local", () => {
+    renderWithIntl(<SearchForm />);
 
-      const button = screen.getByRole("button", {
-        name: catalogEs.search.submit,
-      });
-      fireEvent.click(button);
+    fireEvent.click(screen.getByRole("button", { name: catalogEs.search.submit }));
 
-      expect(
-        screen.getByText(catalogEs.search.validationEmpty),
-      ).toBeInTheDocument();
-      expect(catalogApi.searchCatalog).not.toHaveBeenCalled();
-    });
-
-    it("no realiza ninguna solicitud con solo espacios", async () => {
-      renderWithIntl(<SearchForm />);
-
-      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
-      fireEvent.change(input, { target: { value: "   " } });
-
-      const button = screen.getByRole("button", {
-        name: catalogEs.search.submit,
-      });
-      fireEvent.click(button);
-
-      expect(
-        screen.getByText(catalogEs.search.validationEmpty),
-      ).toBeInTheDocument();
-      expect(catalogApi.searchCatalog).not.toHaveBeenCalled();
-    });
+    expect(
+      screen.getByText(catalogEs.search.validationEmpty),
+    ).toBeInTheDocument();
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
-  describe("estados de error", () => {
-    it("muestra estado vacío ante ARTIST_NOT_FOUND", async () => {
-      vi.mocked(catalogApi.searchCatalog).mockRejectedValue(
-        new ApiError("ARTIST_NOT_FOUND", 404, "No se encontró ningún artista"),
-      );
+  it("no navega con solo espacios", () => {
+    renderWithIntl(<SearchForm />);
 
-      renderWithIntl(<SearchForm />);
-
-      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
-      fireEvent.change(input, { target: { value: "Artista Inexistente" } });
-
-      const button = screen.getByRole("button", {
-        name: catalogEs.search.submit,
-      });
-      fireEvent.click(button);
-
-      await waitFor(() => {
-        expect(
-          screen.getByText(errorsEs.ARTIST_NOT_FOUND.title),
-        ).toBeInTheDocument();
-      });
-
-      expect(
-        screen.queryByRole("button", { name: catalogEs.search.submit }),
-      ).not.toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: catalogEs.search.searchAgain }),
-      ).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(catalogEs.search.fieldLabel), {
+      target: { value: "   " },
     });
+    fireEvent.click(screen.getByRole("button", { name: catalogEs.search.submit }));
 
-    it("muestra error recuperable ante INTERNAL_ERROR", async () => {
-      vi.mocked(catalogApi.searchCatalog).mockRejectedValue(
-        new ApiError("INTERNAL_ERROR", 500, "Error inesperado"),
-      );
-
-      renderWithIntl(<SearchForm />);
-
-      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
-      fireEvent.change(input, { target: { value: "Pink Floyd" } });
-
-      const button = screen.getByRole("button", {
-        name: catalogEs.search.submit,
-      });
-      fireEvent.click(button);
-
-      await waitFor(() => {
-        expect(
-          screen.getByText(errorsEs.INTERNAL_ERROR.title),
-        ).toBeInTheDocument();
-      });
-
-      expect(
-        screen.getByRole("button", { name: commonEs.retry }),
-      ).toBeInTheDocument();
-    });
+    expect(
+      screen.getByText(catalogEs.search.validationEmpty),
+    ).toBeInTheDocument();
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
-  describe("accesibilidad y estados de carga", () => {
-    it("expone label asociado al campo", () => {
-      renderWithIntl(<SearchForm />);
-      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
-      expect(input).toBeInTheDocument();
-    });
+  it("relaciona el mensaje de validación con el campo (aria)", () => {
+    renderWithIntl(<SearchForm />);
 
-    it("deshabilita el botón y muestra mensaje neutro durante la carga", async () => {
-      let resolvePromise: (value: ArtistSearch) => void;
-      const pendingPromise = new Promise<ArtistSearch>((resolve) => {
-        resolvePromise = resolve;
-      });
-      vi.mocked(catalogApi.searchCatalog).mockReturnValue(pendingPromise);
+    const input = screen.getByLabelText(catalogEs.search.fieldLabel);
+    fireEvent.click(screen.getByRole("button", { name: catalogEs.search.submit }));
 
-      renderWithIntl(<SearchForm />);
-
-      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
-      fireEvent.change(input, { target: { value: "Pink Floyd" } });
-
-      const button = screen.getByRole("button", {
-        name: catalogEs.search.submit,
-      });
-      fireEvent.click(button);
-
-      expect(button).toBeDisabled();
-      expect(
-        screen.getByText(catalogEs.search.loading),
-      ).toBeInTheDocument();
-      expect(
-        screen.queryByText(catalogEs.search.loadingHint),
-      ).not.toBeInTheDocument();
-
-      resolvePromise!(createMockArtistSearch());
-
-      await waitFor(() => {
-        expect(button).not.toBeDisabled();
-      });
-    });
-
-    it("muestra el aviso de primera importación solo si la solicitud supera el umbral", async () => {
-      vi.useFakeTimers();
-
-      let resolvePromise: (value: ArtistSearch) => void;
-      const pendingPromise = new Promise<ArtistSearch>((resolve) => {
-        resolvePromise = resolve;
-      });
-      vi.mocked(catalogApi.searchCatalog).mockReturnValue(pendingPromise);
-
-      renderWithIntl(<SearchForm />);
-
-      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
-      fireEvent.change(input, { target: { value: "Pink Floyd" } });
-
-      const button = screen.getByRole("button", {
-        name: catalogEs.search.submit,
-      });
-      fireEvent.click(button);
-
-      expect(
-        screen.queryByText(catalogEs.search.loadingHint),
-      ).not.toBeInTheDocument();
-
-      act(() => {
-        vi.advanceTimersByTime(3000);
-      });
-
-      expect(
-        screen.getByText(catalogEs.search.loadingHint),
-      ).toBeInTheDocument();
-
-      resolvePromise!(createMockArtistSearch());
-      await act(async () => {
-        await Promise.resolve();
-      });
-
-      vi.useRealTimers();
-    });
-
-    it("no muestra el aviso de primera importación si la solicitud termina antes del umbral", async () => {
-      vi.useFakeTimers();
-
-      let resolvePromise: (value: ArtistSearch) => void;
-      const pendingPromise = new Promise<ArtistSearch>((resolve) => {
-        resolvePromise = resolve;
-      });
-      vi.mocked(catalogApi.searchCatalog).mockReturnValue(pendingPromise);
-
-      renderWithIntl(<SearchForm />);
-
-      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
-      fireEvent.change(input, { target: { value: "Pink Floyd" } });
-
-      const button = screen.getByRole("button", {
-        name: catalogEs.search.submit,
-      });
-      fireEvent.click(button);
-
-      resolvePromise!(createMockArtistSearch());
-      await act(async () => {
-        await Promise.resolve();
-      });
-
-      act(() => {
-        vi.advanceTimersByTime(3000);
-      });
-
-      expect(button).not.toBeDisabled();
-      expect(
-        screen.queryByText(catalogEs.search.loadingHint),
-      ).not.toBeInTheDocument();
-
-      vi.useRealTimers();
-    });
-
-    it("limpia el timer al desmontar, sin warnings de act ni setState tras desmontar", async () => {
-      vi.useFakeTimers();
-      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-      let resolvePromise: (value: ArtistSearch) => void;
-      const pendingPromise = new Promise<ArtistSearch>((resolve) => {
-        resolvePromise = resolve;
-      });
-      vi.mocked(catalogApi.searchCatalog).mockReturnValue(pendingPromise);
-
-      const { unmount } = renderWithIntl(<SearchForm />);
-
-      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
-      fireEvent.change(input, { target: { value: "Pink Floyd" } });
-
-      const button = screen.getByRole("button", {
-        name: catalogEs.search.submit,
-      });
-      fireEvent.click(button);
-
-      unmount();
-
-      expect(() => {
-        act(() => {
-          vi.advanceTimersByTime(3000);
-        });
-      }).not.toThrow();
-
-      resolvePromise!(createMockArtistSearch());
-      await act(async () => {
-        await Promise.resolve();
-      });
-
-      expect(errorSpy).not.toHaveBeenCalled();
-      errorSpy.mockRestore();
-      vi.useRealTimers();
-    });
-
-    it("no permite requests duplicados mientras está pendiente", async () => {
-      const user = userEvent.setup();
-
-      let resolvePromise: (value: ArtistSearch) => void;
-
-      const pendingPromise = new Promise<ArtistSearch>((resolve) => {
-        resolvePromise = resolve;
-      });
-
-      vi.mocked(catalogApi.searchCatalog).mockReturnValue(pendingPromise);
-
-      renderWithIntl(<SearchForm />);
-
-      const input = screen.getByLabelText(catalogEs.search.fieldLabel);
-
-      await user.type(input, "Pink Floyd");
-
-      const button = screen.getByRole("button", {
-        name: catalogEs.search.submit,
-      });
-
-      await user.click(button);
-      await user.click(button);
-      await user.click(button);
-
-      expect(catalogApi.searchCatalog).toHaveBeenCalledTimes(1);
-
-      resolvePromise!(createMockArtistSearch());
-
-      await waitFor(() => {
-        expect(button).not.toBeDisabled();
-      });
-    });
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(input).toHaveAttribute("aria-describedby", `${input.id}-error`);
   });
 
-  describe("autoejecución por initialQuery", () => {
-    it("autoejecuta la búsqueda cuando llega con initialQuery", async () => {
-      const mockSearch = vi
-        .mocked(catalogApi.searchCatalog)
-        .mockResolvedValue(createMockArtistSearch());
+  it("prellena el campo con initialQuery sin ejecutar ninguna navegación", () => {
+    renderWithIntl(<SearchForm initialQuery="Radiohead" />);
 
-      renderWithIntl(<SearchForm initialQuery="Radiohead" />);
-
-      await waitFor(() => {
-        expect(mockSearch).toHaveBeenCalledWith("Radiohead");
-      });
-      expect(mockPush).toHaveBeenCalledWith("/artist/test-artist-id");
-    });
-
-    it("no autoejecuta sin initialQuery", () => {
-      renderWithIntl(<SearchForm />);
-
-      expect(catalogApi.searchCatalog).not.toHaveBeenCalled();
-    });
-
-    it("no autoejecuta con initialQuery vacío o solo espacios", () => {
-      renderWithIntl(<SearchForm initialQuery="   " />);
-
-      expect(catalogApi.searchCatalog).not.toHaveBeenCalled();
-    });
-
-    it("no repite la autoejecución en un re-render", async () => {
-      const mockSearch = vi
-        .mocked(catalogApi.searchCatalog)
-        .mockResolvedValue(createMockArtistSearch());
-
-      const { rerender } = renderWithIntl(<SearchForm initialQuery="Radiohead" />);
-
-      await waitFor(() => {
-        expect(mockSearch).toHaveBeenCalledTimes(1);
-      });
-
-      rerender(withIntl(<SearchForm initialQuery="Radiohead" />));
-
-      expect(mockSearch).toHaveBeenCalledTimes(1);
-    });
+    expect(screen.getByLabelText(catalogEs.search.fieldLabel)).toHaveValue(
+      "Radiohead",
+    );
+    expect(mockPush).not.toHaveBeenCalled();
   });
 });

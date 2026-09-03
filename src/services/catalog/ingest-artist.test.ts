@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ArtistRow } from "@/db/schema";
 import type { MBArtistRelation } from "../musicbrainz/types";
-import { ensureArtistMemberships } from "./ingest-artist";
+import { ensureArtistMemberships, upsertArtistStubsFromSearch } from "./ingest-artist";
 
 vi.mock("@/db", () => ({
   db: {
     transaction: vi.fn(),
     insert: vi.fn(),
+    select: vi.fn(),
   },
 }));
 
@@ -159,5 +160,84 @@ describe("ensureArtistMemberships", () => {
 
     expect(musicbrainz.getArtistWithRelations).toHaveBeenCalledTimes(1);
     expect(inserts.length).toBeGreaterThan(0);
+  });
+});
+
+describe("upsertArtistStubsFromSearch", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  function mockSearchDb(existing: ArtistRow[]) {
+    const captured: { values?: unknown } = {};
+    vi.mocked(db.insert).mockImplementation(() => ({
+      values: vi.fn((values: unknown) => {
+        captured.values = values;
+        return {
+          onConflictDoNothing: vi.fn(async () => undefined),
+        };
+      }),
+    }) as never);
+    vi.mocked(db.select).mockImplementation(() => ({
+      from: vi.fn(() => ({
+        where: vi.fn(async () => existing),
+      })),
+    }) as never);
+    return captured;
+  }
+
+  it("no toca la base con el conjunto vacío", async () => {
+    await expect(upsertArtistStubsFromSearch([])).resolves.toEqual([]);
+    expect(db.insert).not.toHaveBeenCalled();
+    expect(db.select).not.toHaveBeenCalled();
+  });
+
+  it("inserta una sola operación DO NOTHING con el type real y la disambiguation como bio", async () => {
+    const captured = mockSearchDb([]);
+
+    await upsertArtistStubsFromSearch([
+      { mbid: "group-mbid", name: "Poison", mbType: "Group", disambiguation: "glam metal band" },
+      { mbid: "person-mbid", name: "Sabrina", mbType: "Person", disambiguation: null },
+    ]);
+
+    expect(db.insert).toHaveBeenCalledTimes(1);
+    expect(captured.values).toEqual([
+      { mbid: "group-mbid", name: "Poison", type: "group", bio: "glam metal band" },
+      { mbid: "person-mbid", name: "Sabrina", type: "person", bio: null },
+    ]);
+  });
+
+  it("usa 'various' para el mbid de Various Artists sin llamar a MusicBrainz", async () => {
+    const captured = mockSearchDb([]);
+
+    await upsertArtistStubsFromSearch([
+      {
+        mbid: "89ad4ac3-39f7-470e-963a-56509c546377",
+        name: "Various Artists",
+        mbType: "Person",
+        disambiguation: null,
+      },
+    ]);
+
+    expect(captured.values).toEqual([
+      {
+        mbid: "89ad4ac3-39f7-470e-963a-56509c546377",
+        name: "Various Artists",
+        type: "various",
+        bio: null,
+      },
+    ]);
+    expect(musicbrainz.getArtistWithRelations).not.toHaveBeenCalled();
+  });
+
+  it("resuelve las filas existentes sin sobrescribirlas (DO NOTHING)", async () => {
+    const enriched = makeArtist({ mbid: "group-mbid", type: "group", name: "Poison", discographySyncedAt: new Date() });
+    mockSearchDb([enriched]);
+
+    const rows = await upsertArtistStubsFromSearch([
+      { mbid: "group-mbid", name: "Other Name", mbType: "Person", disambiguation: null },
+    ]);
+
+    expect(rows).toEqual([enriched]);
   });
 });

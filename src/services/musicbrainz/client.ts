@@ -17,6 +17,7 @@ import type {
   MBArtistDetail,
   MBArtistSearchResponse,
   MBReleaseGroupBrowseResponse,
+  MBReleaseGroupSearchResponse,
   MBReleaseGroupWithReleases,
   MBRelease,
 } from "./types";
@@ -53,6 +54,48 @@ function requiredUserAgent(): string {
 
 const REQUEST_TIMEOUT_MS = 10_000;
 const MAX_ATTEMPTS = 3;
+
+// Caché TTL de RESPUESTAS DE BÚSQUEDA (solo searchArtist/searchReleaseGroup).
+// Cada re-render del servidor de /search (p. ej. cambio de idioma) repetía las
+// dos búsquedas, pagando cada vez la cola de rate limit + red. La misma
+// consulta dentro de la TTL se sirve desde memoria y las llamadas concurrentes
+// idénticas comparten el mismo request en vuelo. Solo búsqueda: los get/browse
+// de ingestas siguen siempre a MusicBrainz porque su respuesta alimenta datos
+// que queremos frescos al abrir una entidad. Mismo supuesto de proceso único
+// que la cola; fallidos no se cachean.
+const SEARCH_CACHE_TTL_MS = 10 * 60_000;
+const SEARCH_CACHE_MAX = 200;
+
+interface SearchCacheEntry {
+  promise: Promise<unknown>;
+  expiresAt: number;
+}
+
+const searchCache = new Map<string, SearchCacheEntry>();
+
+function cachedSearch<T>(key: string, task: () => Promise<T>): Promise<T> {
+  const now = Date.now();
+  const hit = searchCache.get(key);
+  if (hit && hit.expiresAt > now) {
+    return hit.promise as Promise<T>;
+  }
+  if (searchCache.size >= SEARCH_CACHE_MAX) {
+    const oldest = searchCache.keys().next();
+    if (!oldest.done) searchCache.delete(oldest.value);
+  }
+  const promise = task();
+  searchCache.set(key, { promise, expiresAt: now + SEARCH_CACHE_TTL_MS });
+  // Un fallo no debe quedar en la caché: el próximo request reintenta.
+  promise.catch(() => {
+    if (searchCache.get(key)?.promise === promise) searchCache.delete(key);
+  });
+  return promise;
+}
+
+/** Limpia la caché de búsquedas — solo para tests. */
+export function clearMusicBrainzSearchCacheForTests(): void {
+  searchCache.clear();
+}
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -107,7 +150,20 @@ async function mbFetch<T>(path: string, params: Record<string, string> = {}): Pr
 
 export const musicbrainz = {
   searchArtist(query: string) {
-    return mbFetch<MBArtistSearchResponse>("/artist", { query });
+    return cachedSearch(`searchArtist|${query}`, () =>
+      mbFetch<MBArtistSearchResponse>("/artist", { query }),
+    );
+  },
+
+  /** Búsqueda de álbumes/EPs/singles por texto — solo candidatos, sin releases ni tracklist. */
+  searchReleaseGroup(query: string) {
+    return cachedSearch(`searchReleaseGroup|${query}`, () =>
+      mbFetch<MBReleaseGroupSearchResponse>("/release-group", {
+        query,
+        limit: "25",
+        inc: "artist-credits",
+      }),
+    );
   },
 
   /** Detalle básico de un artista ya conocido por id — para enriquecer stubs sin arriesgar un match distinto por nombre. */

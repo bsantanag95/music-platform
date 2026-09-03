@@ -25,6 +25,15 @@ Entregable: buscar → artista → álbum → canción, sin cuentas todavía. El
 **Estado: implementada.** El catálogo navegable, sus estados de carga/error, responsive,
 accesibilidad y navegación por membresías quedaron implementados y validados.
 
+**Diferidos de búsqueda (cambio `add-search-results-page`):** la página de resultados cubre
+artistas y álbumes con orden determinista y primera página de MusicBrainz. Quedan diferidos,
+con motivo y precondición en `openspec/changes/add-search-results-page/design.md` →
+*Trabajo futuro diferido*: autocompletado/sugerencias en vivo (precondición: índice de
+búsqueda propio — full-text o dump de MusicBrainz — y limitador de rate distribuido; se
+apunta a Fase 6), búsqueda de canciones (precondición: `findOrIngestRecording`), paginación
+de resultados y ranking de relevancia sofisticado (precondición: datos de uso reales de la
+beta).
+
 ## Fase 4 — Auth, ratings y comentarios
 
 Entregable: autenticación local de usuarios, valoración dual (estrellas + detallada) y comentarios funcionando sobre artista, álbum y canción. Es el núcleo social base y cierra el MVP definido en el PRD. El incremento posterior de Google OAuth/OIDC también está implementado y validado manualmente. El linking explícito de cuentas y el scrobbling de servicios de streaming permanecen fuera de esta fase.

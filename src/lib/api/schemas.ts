@@ -50,11 +50,25 @@ export const ArtistMembershipSchema = z.object({
 });
 export type ArtistMembership = z.infer<typeof ArtistMembershipSchema>;
 
-export const ArtistSearchSchema = z.object({
-  artist: ArtistSchema,
-  releaseGroups: z.array(ReleaseGroupSchema),
+// Espejo runtime del tipo de dominio `CatalogSearchResult`
+// (src/services/catalog/search-catalog.ts) — contrato de GET /api/catalog/search.
+export const CatalogSearchResultSchema = z.object({
+  kind: z.enum(["artist", "release-group"]),
+  id: z.uuid(),
+  mbid: z.uuid().nullable(),
+  name: z.string(),
+  subtitle: z.string().nullable(),
+  artistType: z.enum(["person", "group", "various", "unknown"]).nullable(),
+  category: ReleaseGroupCategorySchema.nullable(),
+  year: z.number().int().nullable(),
+  cached: z.boolean(),
 });
-export type ArtistSearch = z.infer<typeof ArtistSearchSchema>;
+export type CatalogSearchResult = z.infer<typeof CatalogSearchResultSchema>;
+
+export const CatalogSearchResponseSchema = z.object({
+  results: z.array(CatalogSearchResultSchema),
+});
+export type CatalogSearchResponse = z.infer<typeof CatalogSearchResponseSchema>;
 
 export const ArtistWithDiscographySchema = z.object({
   artist: ArtistSchema,

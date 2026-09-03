@@ -27,8 +27,12 @@ export interface MBArtistDetail extends MBArtistSummary {
   relations?: MBArtistRelation[];
 }
 
+export interface MBArtistSearchItem extends MBArtistSummary {
+  score?: number; // relevancia asignada por MusicBrainz (0-100), ya ordenado por score
+}
+
 export interface MBArtistSearchResponse {
-  artists: MBArtistSummary[];
+  artists: MBArtistSearchItem[];
 }
 
 export interface MBReleaseGroup {
@@ -41,6 +45,20 @@ export interface MBReleaseGroup {
 
 export interface MBReleaseGroupBrowseResponse {
   "release-groups": MBReleaseGroup[];
+}
+
+export interface MBReleaseGroupSearchItem {
+  id: string; // mbid
+  title: string;
+  "primary-type"?: string; // 'Album' | 'Single' | 'EP' | 'Broadcast' | 'Other'
+  "secondary-types"?: string[]; // 'Compilation' | 'Live' | 'Remix' | 'Soundtrack' | ...
+  "first-release-date"?: string; // 'YYYY' | 'YYYY-MM' | 'YYYY-MM-DD' | ausente
+  "artist-credit"?: MBArtistCreditItem[]; // requiere inc=artist-credits en la búsqueda
+  score?: number;
+}
+
+export interface MBReleaseGroupSearchResponse {
+  "release-groups": MBReleaseGroupSearchItem[];
 }
 
 export interface MBReleaseGroupWithReleases extends MBReleaseGroup {

@@ -1,19 +1,26 @@
 {
   "search": {
-    "pageTitle": "Buscar artista",
-    "fieldLabel": "Buscar artista",
+    "pageTitle": "Buscar en el catálogo",
+    "fieldLabel": "Buscar en el catálogo",
     "placeholder": "Ej: Pink Floyd",
     "submit": "Buscar",
     "submitting": "Buscando...",
     "loading": "Consultando el catálogo...",
-    "validationEmpty": "Ingresá un nombre para buscar.",
-    "loadingHint": "Estamos importando este artista por primera vez. Puede tardar unos segundos...",
-    "searchAgain": "Buscar otro artista"
+    "validationEmpty": "Ingresá un texto para buscar.",
+    "searchAgain": "Buscar otro artista",
+    "results": {
+      "tabsLabel": "Tipo de resultado",
+      "tabAll": "Todo",
+      "tabArtists": "Artistas",
+      "tabAlbums": "Álbumes",
+      "emptyTitle": "Sin coincidencias",
+      "emptyDescription": "No encontramos artistas ni álbumes para esa búsqueda. Probá con otro texto."
+    }
   },
   "artist": {
     "discographyHeading": "Discografía",
     "typeLabels": {
-      "person": "Persona",
+      "person": "Artista",
       "group": "Grupo",
       "various": "Varios artistas",
       "unknown": "Sin clasificar"

@@ -13,27 +13,38 @@ contrato técnico exacto vive en `04-api/contracts.md`; las reglas de negocio su
 Solo lectura, sin cuenta de usuario. El flujo completo:
 
 ```
-Buscar artista → Perfil de artista → Álbum (tracklist + créditos)
+Buscar en el catálogo → Resultados → Perfil de artista / Álbum (tracklist + créditos)
 ```
 
 La vista de detalle de canción queda deliberadamente fuera de esta fase (Camino A,
 `02-implementation-plan.md`, Etapa 3.5) — se construye en Fase 4 junto al formulario de
 valoración, para no reescribir la misma pantalla dos veces.
 
-## 1. Buscar artista
+## 1. Buscar en el catálogo
 
-El usuario escribe un nombre y el sistema busca (o ingiere bajo demanda) ese artista.
+El usuario escribe un texto y `/search` muestra **todas** las coincidencias de artistas y
+álbumes (pestañas **Todo / Artistas / Álbumes**); la persona elige cuál abrir. La búsqueda
+no resuelve a un único resultado ni ingiere nada: combina la base local con una sola
+request a MusicBrainz por tipo, persiste los candidatos aún no vistos como stubs y ordena
+de forma determinista (locales cacheados → resto de locales → solo-MusicBrainz por score,
+coincidencia exacta al tope de su grupo). El campo del Header siempre navega a
+`/search?q=<consulta>`.
 
 **Estados:**
-- **Encontrado, ya cacheado** — respuesta casi instantánea.
-- **Encontrado, primera vez** — dispara ingesta completa contra MusicBrainz; puede tardar
-  varios segundos (rate limit de 1 req/seg). El usuario debe ver un estado de carga
-  explícito, nunca un spinner genérico sin contexto — mensaje sugerido: *"Estamos
-  importando este artista por primera vez..."*.
-- **No encontrado** — MusicBrainz no tiene ningún resultado para ese nombre. Estado vacío,
-  no un error.
-- **Error** — fallo de red/servicio (`INTERNAL_ERROR`). Distinto de "no encontrado": acá
-  sí es apropiado ofrecer reintentar.
+- **Resultados** — lista de candidatos; cada fila enlaza directo a `/artist/<id>` o
+  `/album/<id>`. Un artista o álbum todavía no ingerido se trae **en la vista destino**,
+  con su propio estado de carga — la página de resultados nunca habla de "primera
+  importación".
+- **Sin coincidencias** — lista vacía (`200`, no error): estado vacío propio.
+- **Carga** — mientras la página resuelve el `q` de la URL, `loading.tsx` muestra el
+  skeleton de la lista y el formulario queda deshabilitado.
+- **Error** — solo si MusicBrainz falla y no hay ninguna coincidencia local
+  (`INTERNAL_ERROR`): recuperable, con reintento. Distinto de "sin coincidencias".
+
+Los homónimos ("Poison" glam vs. thrash) aparecen como filas separadas con su
+disambiguation — la ambigüedad la resuelve el usuario, no `artists[0]`. Búsqueda de
+canciones, autocompletado y paginación: diferidos (ver el roadmap y
+`openspec/changes/add-search-results-page/design.md` → *Trabajo futuro diferido*).
 
 ## 2. Perfil de artista
 
@@ -47,11 +58,11 @@ distinguir "modo banda" de "modo solista" — es una sola discografía agrupada 
 categoría, el hecho de que algunos álbumes sean con una banda y otros en solitario no
 cambia la estructura de la pantalla. Ver ADR 0004 (modelo `CREDIT`) para el porqué.
 
-**Artista sin discografía todavía cacheada:** primera visita a un artista recién
-encontrado por búsqueda — la discografía se ingiere en el mismo request que resuelve el
-artista (`findOrIngestDiscography`), así que al llegar a esta pantalla ya debería estar
-completa. No hay un estado intermedio de "discografía cargando" distinto del estado de
-carga de la búsqueda.
+**Artista sin discografía todavía cacheada:** la búsqueda ya no ingiere nada — abre un
+artista recién descubierto (stub creado por la búsqueda o por créditos de `feat.`)
+dispara `findOrIngestDiscography` en el request que resuelve esta pantalla, con el estado
+de carga propio del perfil. Desde la página de resultados, el aviso de "primera
+importación" corresponde acá, no a la búsqueda.
 
 **Carátulas:** carga progresiva (lazy) — la grilla de álbumes se renderiza de inmediato
 sin carátula, y cada álbum completa la suya en segundo plano apenas es visible. Decisión
