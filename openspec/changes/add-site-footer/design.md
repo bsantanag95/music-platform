@@ -36,9 +36,11 @@ No existe pie de página ni páginas de políticas (`/terms`, `/privacy`, etc.).
 **Non-Goals:**
 
 - Redacción legal definitiva de las políticas (solo placeholders).
-- Selector de tema, newsletter, redes sociales, badges de tiendas, prensa/empleos.
+- Selector de tema, newsletter, badges de tiendas, prensa/empleos.
+- Crear cuentas de redes sociales o casilla de correo reales: el footer las enlaza
+  como marcadores de posición.
 - Banner de consentimiento de cookies (solo cookie de sesión esencial hoy).
-- Tocar el `Header` o su selector de idioma.
+- Tocar el `Header` o su selector de idioma (el footer no duplica el selector).
 
 ## Decisions
 
@@ -63,12 +65,12 @@ componentes. El resto del footer es idéntico en ambos casos.
 
 ### 3. "Volver arriba" como ancla, no como botón con JS
 
-Se usa un `<a href="#top">` con un `id="top"` (o el `<main>` como destino) en lugar
-de un handler `scrollTo`. Evita convertir el footer en Client Component. El
-`scroll-behavior` suave se deja al CSS y ya está cubierto por el
-`prefers-reduced-motion` global. Si en revisión se decide que el salto de foco
-necesita gestión explícita, se aísla en un subcomponente cliente mínimo; se marca
-como Open Question.
+Se usa un `<a href="#top">` con un `id="top"` en el contenedor que envuelve el
+contenido dentro del layout, en lugar de un handler `scrollTo`. Evita convertir el
+footer en Client Component. El `scroll-behavior` suave se deja al CSS y ya está
+cubierto por el `prefers-reduced-motion` global. Si en revisión se comprueba que el
+salto de foco al destino no funciona en algún navegador objetivo, se añade
+`tabindex="-1"` al destino; no se prevé JS.
 
 - **Alternativa descartada:** botón flotante siempre visible. Rechazada — fuera de
   alcance y de estilo para esta app.
@@ -121,12 +123,30 @@ columna apilada en móvil, con los grupos como listas simples (pocos enlaces, si
 acordeón). El bloque de atribución pasa de línea fluida a párrafo. La barra inferior
 pasa de fila a columna centrada. `overflow-x-clip` como en la home. Sin `sticky`.
 
-### 8. Enlace de contacto
+### 8. Grupo "Conectar": contacto y redes sociales como marcadores de posición
 
-`mailto:` con la dirección visible como texto (no solo "Contacto"). Cumple la
-exigencia de `User-Agent` identificable de MusicBrainz y la identificación del
-responsable de datos. La dirección concreta se toma de una constante/variable de
-entorno existente si la hay; si no, se define una y se documenta.
+El sitio todavía no tiene casilla de correo ni cuentas sociales, pero el footer debe
+mostrar todas las vías de contacto y perfiles que tendrá. Se resuelve con una
+**fuente única de verdad**, `src/lib/site-links.ts`, que exporta:
+
+- `CONTACT_EMAIL` (casilla de rol, p. ej. `hola@<dominio-previsto>`), usada en un
+  `mailto:` con la dirección visible como texto.
+- `SOCIAL_LINKS`: lista ordenada `{ id, label, href }` para X, Instagram, Mastodon,
+  Bluesky, Discord/comunidad y feed RSS. `href` apunta al handle/URL previsto.
+
+Cada entrada lleva un comentario `TODO` y el módulo documenta en su cabecera que son
+placeholders. Cambiar un canal real es editar una línea, sin tocar el componente ni
+las traducciones. Los enlaces sociales se renderizan como lista de iconos/texto con
+`aria-label` por red y `rel="noopener noreferrer me"`, `target="_blank"`.
+
+- **Alternativa descartada:** ocultar el grupo hasta tener cuentas reales. Rechazada
+  — el usuario pidió explícitamente que las vías de contacto/RRSS estén visibles
+  desde ya, aunque sean provisionales.
+- **Alternativa descartada:** `href="#"` en los sociales. Rechazada — un ancla vacía
+  es peor para accesibilidad y lectores de pantalla que un enlace a la URL prevista;
+  además obliga a volver a buscarlas después.
+- **Nota:** al ser placeholders, los `href` externos aún inexistentes pueden dar 404;
+  es aceptable y temporal, y `site-links.ts` es el único punto a corregir.
 
 ## Risks / Trade-offs
 
@@ -134,12 +154,13 @@ entorno existente si la hay; si no, se define una y se documenta.
   es explícito sobre su estado ("en preparación") y las páginas llevan `noindex`
   hasta tener contenido real, para no exponer términos falsos a buscadores.
 - **La dirección de contacto es dato personal/operativo** → Se usa una casilla de
-  rol (p. ej. `hola@` / `soporte@`), nunca un correo personal; se centraliza en una
-  sola constante para cambiarla sin tocar componentes.
-- **Duplicación conceptual del selector de idioma (Header y Footer)** → Se decide
-  **no** incluirlo en el footer en este cambio (Open Question) para no duplicar
-  lógica de `handleLocaleChange`; si se incluye luego, se extrae a un componente
-  compartido.
+  rol (p. ej. `hola@` / `soporte@`), nunca un correo personal; se centraliza en
+  `src/lib/site-links.ts` para cambiarla sin tocar componentes.
+- **Enlaces sociales placeholder que dan 404** → Aceptado como estado temporal
+  explícito; `site-links.ts` documenta que son provisionales y es el único punto de
+  corrección cuando existan las cuentas.
+- **Duplicación del selector de idioma (Header y Footer)** → Resuelto: el footer
+  **no** incluye selector de idioma; se mantiene solo en el `Header`.
 - **El texto de atribución puede quedar desactualizado si cambian las licencias de
   MetaBrainz** → El texto se mantiene deliberadamente general ("en su mayoría CC0",
   "parte bajo CC BY-NC-SA") y remite por enlace a la fuente autoritativa; se añade
@@ -152,9 +173,9 @@ entorno existente si la hay; si no, se define una y se documenta.
 
 Cambio puramente aditivo. Sin migración de base de datos, sin cambios de contrato.
 
-1. Añadir namespaces i18n y registrarlos en `request.ts`.
+1. Añadir namespaces i18n y registrarlos en `request.ts`; crear `src/lib/site-links.ts`.
 2. Crear `Footer.tsx` y sus pruebas.
-3. Montar en el layout.
+3. Montar en el layout (con `id="top"` en el contenedor de contenido).
 4. Crear las cinco páginas de políticas con su namespace y metadata `noindex`.
 5. Actualizar docs.
 
@@ -163,12 +184,10 @@ efecto visible; los namespaces y páginas nuevas quedan inertes.
 
 ## Open Questions
 
-- ¿El footer incluye selector de idioma propio, o se mantiene solo en el `Header`?
-  (Propuesta del diseño: solo Header en este cambio.)
-- ¿Existe ya una casilla de contacto oficial y una constante para ella, o se define
-  en este cambio?
-- ¿"Volver arriba" entra en este cambio o se difiere? (Propuesta: entra, como ancla
-  sin JS.)
-- ¿Las páginas de políticas van en un route group existente
-  (`(catalog)` no corresponde) o en la raíz de `[locale]`? (Propuesta: raíz de
-  `[locale]`, sin group.)
+Todas resueltas por el propietario del producto:
+
+- **Selector de idioma en el footer:** no. Se mantiene solo en el `Header`.
+- **Casilla de contacto oficial:** no existe todavía. Se usa un placeholder en
+  `src/lib/site-links.ts`, junto con enlaces sociales/RRSS también placeholder.
+- **"Volver arriba":** entra en este cambio, como ancla sin JS.
+- **Páginas de políticas:** en la raíz de `src/app/[locale]/`, sin route group.

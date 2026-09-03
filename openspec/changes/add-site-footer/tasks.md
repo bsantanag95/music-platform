@@ -1,17 +1,19 @@
 ## 1. i18n: namespaces nuevos
 
 - [ ] 1.1 Crear `messages/es/footer.json` y `messages/en/footer.json` con: encabezados
-  de grupo (Explorar, Cuenta, Recursos), etiquetas de cada enlace, `aria-label` de
-  cada `<nav>`, frase de misión, textos del bloque de atribución (metadata, carátulas,
-  operador, no afiliación, no reproducción), aviso de copyright y etiquetas de la
-  barra inferior, texto de "volver arriba" y texto accesible "abre en pestaña nueva".
+  de grupo (Explorar, Cuenta, Recursos, Conectar), etiquetas de cada enlace,
+  `aria-label` de cada `<nav>` y de cada enlace social, frase de misión, textos del
+  bloque de atribución (metadata, carátulas, operador, no afiliación, no
+  reproducción), aviso de copyright y etiquetas de la barra inferior, texto de
+  "volver arriba" y texto accesible "abre en pestaña nueva".
 - [ ] 1.2 Crear `messages/es/legal.json` y `messages/en/legal.json` con título y
   cuerpo placeholder para `about`, `terms`, `privacy`, `cookies`, `guidelines`
   (cada uno declara que el documento está en preparación y no es vinculante).
 - [ ] 1.3 Registrar `footer` y `legal` en `src/i18n/request.ts`.
-- [ ] 1.4 Definir la dirección de contacto: reutilizar constante/variable de entorno
-  existente si la hay; si no, crear una única fuente (p. ej. `src/lib/contact.ts` o
-  `NEXT_PUBLIC_CONTACT_EMAIL`) y documentarla.
+- [ ] 1.4 Crear `src/lib/site-links.ts` como fuente única: `CONTACT_EMAIL` (casilla de
+  rol placeholder) y `SOCIAL_LINKS` (`{ id, label, href }` para X, Instagram,
+  Mastodon, Bluesky, Discord/comunidad y feed RSS), con comentario `TODO` por entrada
+  y cabecera que indica que son marcadores de posición.
 
 ## 2. Componente Footer
 
@@ -26,8 +28,10 @@
 - [ ] 2.4 Implementar el grupo "Cuenta" con render condicional por `user`: anónimo →
   `/auth/login`, `/auth/register`; con sesión → `/users/<username>`, `/me/settings`,
   sesiones/accesos.
-- [ ] 2.5 Implementar el grupo "Recursos": `/about`, ayuda y enlace `mailto:` con la
-  dirección visible como texto.
+- [ ] 2.5 Implementar el grupo "Recursos": enlaces a `/about` y ayuda.
+- [ ] 2.5b Implementar el grupo "Conectar": `mailto:` con `CONTACT_EMAIL` visible como
+  texto, y la lista de `SOCIAL_LINKS` como enlaces con `aria-label` por red,
+  `target="_blank"` y `rel="noopener noreferrer me"` (nunca `href="#"`).
 - [ ] 2.6 Implementar el bloque de atribución con `border-t border-ink-border`,
   `font-body text-sm text-paper-muted`, enlaces externos a musicbrainz.org,
   coverartarchive.org y metabrainz.org con `target="_blank"`,
@@ -46,8 +50,8 @@
 
 - [ ] 3.1 En `src/app/[locale]/layout.tsx`, renderizar `<Footer user={publicUser} />`
   después de `<Providers>{children}</Providers>`, reutilizando el `publicUser` ya
-  calculado; envolver el contenido en un contenedor con `id="top"` si hace falta el
-  destino del ancla.
+  calculado; envolver el contenido en un contenedor con `id="top"` como destino del
+  ancla "volver arriba".
 
 ## 4. Páginas de políticas placeholder
 
@@ -74,8 +78,10 @@
   cada grupo es `<nav>` con `aria-label`; variante anónima muestra login/registro y
   no perfil; variante con sesión muestra perfil/ajustes y no login; el bloque de
   atribución contiene los tres nombres dentro de enlaces con los `href` correctos y
-  `rel` seguro; la barra inferior enlaza a `/terms`, `/privacy`, `/cookies`,
-  `/guidelines`; el año del copyright está presente; el `mailto` muestra la dirección.
+  `rel` seguro; el grupo "Conectar" muestra el `mailto` con la dirección visible y un
+  enlace por cada `SOCIAL_LINKS` (con `aria-label` y sin `href="#"`); no hay selector
+  de idioma; la barra inferior enlaza a `/terms`, `/privacy`, `/cookies`,
+  `/guidelines` y muestra el año del copyright; existe el ancla `#top`.
 - [ ] 6.2 Test de humo de las cinco páginas de políticas: renderizan `<h1>` y cuerpo
   en `es` y en `en`, y su metadata declara `noindex`.
 - [ ] 6.3 Ajustar `src/app/[locale]/layout.test.tsx` si verifica la estructura del
@@ -86,6 +92,7 @@
 - [ ] 7.1 `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` en verde.
 - [ ] 7.2 Verificación manual (dev server): el footer aparece en home, catálogo,
   perfil y páginas de error; se ve correcto en `es` y `en`; responsive a 360px sin
-  scroll horizontal; foco de teclado visible; los enlaces de atribución abren las
-  fuentes correctas; las páginas de políticas cargan en ambos locales.
+  scroll horizontal; foco de teclado visible; "volver arriba" salta al inicio; los
+  enlaces de atribución abren las fuentes correctas; los enlaces sociales apuntan a
+  las URLs previstas; las páginas de políticas cargan en ambos locales.
 - [ ] 7.3 `openspec validate add-site-footer --strict` en verde.

@@ -19,7 +19,7 @@ global que hoy solo cubre el `Header`.
 - **Grid de navegación en cuatro grupos**: identidad + tagline, "Explorar" (buscar,
   gente, listas públicas, comunidad, cómo funciona), "Cuenta" (varía según sesión:
   entrar/registro para anónimo; perfil/ajustes/sesiones/salir para logueado) y
-  "Recursos" (acerca de, ayuda, contacto).
+  "Recursos" (acerca de, ayuda).
 - **Bloque de atribución de datos** a ancho completo: metadata por MusicBrainz
   (CC0 + CC BY-NC-SA 3.0), carátulas por Cover Art Archive (baja resolución, fines de
   identificación, copyright de sus titulares), servicio operado por MetaBrainz
@@ -31,10 +31,17 @@ global que hoy solo cubre el `Header`.
   `/cookies`, `/guidelines`), localizadas, con contenido de marcador de posición y
   metadata, para que ningún enlace del footer apunte a un 404. La redacción legal
   definitiva es trabajo aparte (ver Non-Goals).
-- **Enlace de contacto** (`mailto:`) — requisito ya vigente por la política de
-  `User-Agent` de MusicBrainz y por identificación del responsable de datos.
+- **Grupo "Conectar"**: correo de contacto y los perfiles sociales y canales que el
+  sitio podría tener (X, Instagram, Mastodon, Bluesky, Discord/comunidad) más un feed
+  RSS. Ninguno existe todavía: se renderizan como **enlaces de marcador de posición**
+  a los handles previstos, con una única fuente de verdad (`src/lib/site-links.ts`)
+  marcada con `TODO` para intercambiarlos cuando existan. Tener un contacto
+  identificable es además requisito de la política de `User-Agent` de MusicBrainz.
+- **"Volver arriba"**: ancla (`<a href="#top">`) al inicio del contenido, sin
+  JavaScript de cliente.
 - **Nuevo namespace i18n `footer`** (`messages/{es,en}/footer.json`) registrado en
   `src/i18n/request.ts`.
+- El **selector de idioma se mantiene solo en el `Header`**; el footer no lo duplica.
 
 ### Goals
 
@@ -49,8 +56,9 @@ global que hoy solo cubre el `Header`.
 
 - Redactar el texto legal definitivo de términos, privacidad, cookies o directrices
   de la comunidad — este cambio solo crea las páginas con marcador de posición.
-- Newsletter, enlaces a redes sociales, badges de tiendas de apps (PWA es Fase 6),
-  prensa/empleos, o selector de tema.
+- Newsletter, badges de tiendas de apps (PWA es Fase 6), prensa/empleos, o selector
+  de tema. Los perfiles sociales sí se incluyen, pero como enlaces de marcador de
+  posición: este cambio no crea las cuentas ni define handles definitivos.
 - Banner de consentimiento de cookies: hoy solo se usa la cookie de sesión
   `httpOnly` estrictamente necesaria, que no requiere consentimiento.
 - Rediseñar o mover el selector de idioma del `Header`.
@@ -78,8 +86,11 @@ _Ninguna._ El `Header` y la navegación existente no cambian su comportamiento.
     control interactivo (p. ej. "volver arriba"), un subcomponente cliente pequeño.
   - `src/app/[locale]/layout.tsx`: montaje del `Footer` y paso de `user` (ya se
     resuelve la sesión en el layout).
-  - Nuevas páginas `src/app/[locale]/(...)/{about,terms,privacy,cookies,guidelines}/page.tsx`
-    (Server Components estáticos con `generateMetadata`).
+  - Nuevas páginas `src/app/[locale]/{about,terms,privacy,cookies,guidelines}/page.tsx`
+    (Server Components estáticos con `generateMetadata`, en la raíz de `[locale]` sin
+    route group).
+  - Nuevo `src/lib/site-links.ts`: fuente única de correo de contacto, URLs de
+    perfiles sociales y feed RSS, con marcadores `TODO` mientras sean placeholder.
 - **i18n:**
   - `messages/es/footer.json` y `messages/en/footer.json` (etiquetas de navegación,
     encabezados de grupo, textos de atribución, barra inferior, `aria-label`s).

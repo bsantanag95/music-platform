@@ -72,17 +72,49 @@ activa, resuelta en el servidor a partir del mismo usuario que recibe el `Header
   (`/users/<username>`), Ajustes (`/me/settings`) y Sesiones/accesos, y no muestra
   los enlaces de iniciar sesión ni de registro
 
-### Requirement: Navegación "Recursos" y contacto
+### Requirement: Navegación "Recursos"
 
-El footer SHALL incluir un grupo "Recursos" con enlaces a Acerca de (`/about`),
-Ayuda y un enlace de contacto `mailto:` cuya dirección de correo es visible como
-texto.
+El footer SHALL incluir un grupo "Recursos" con enlaces a Acerca de (`/about`) y
+Ayuda, usando el componente `Link` de `src/i18n/navigation.ts`.
+
+#### Scenario: El grupo "Recursos" enlaza a información del producto
+
+- **WHEN** se renderiza el grupo "Recursos"
+- **THEN** existen enlaces a `/about` y a la página de ayuda, cada uno con el prefijo
+  del locale activo
+
+### Requirement: Grupo "Conectar" con contacto y redes sociales
+
+El footer SHALL incluir un grupo "Conectar" con un enlace de contacto `mailto:` cuya
+dirección de correo es visible como texto, y una lista de enlaces a los perfiles
+sociales y canales del sitio (como mínimo X, Instagram, Mastodon, Bluesky,
+Discord/comunidad y un feed RSS). Todos los valores (correo y URLs) SHALL provenir
+de una única fuente `src/lib/site-links.ts`. Mientras esas cuentas no existan, los
+enlaces son marcadores de posición hacia los handles previstos y NO se ocultan.
 
 #### Scenario: El contacto es un mailto con la dirección visible
 
-- **WHEN** se renderiza el grupo "Recursos"
-- **THEN** existe un enlace con esquema `mailto:` y el texto visible del enlace
-  contiene la dirección de correo completa
+- **WHEN** se renderiza el grupo "Conectar"
+- **THEN** existe un enlace con esquema `mailto:` cuyo texto visible contiene la
+  dirección de correo completa, tomada de `src/lib/site-links.ts`
+
+#### Scenario: Los enlaces sociales están presentes aunque las cuentas no existan
+
+- **WHEN** se renderiza el grupo "Conectar" y aún no hay cuentas sociales reales
+- **THEN** se muestran igualmente los enlaces a cada red/canal definido en
+  `src/lib/site-links.ts`, apuntando a la URL prevista (nunca a `#`)
+
+#### Scenario: Cada enlace social es accesible y seguro
+
+- **WHEN** se renderiza cualquier enlace social del grupo "Conectar"
+- **THEN** tiene un `aria-label` que identifica la red, `target="_blank"` y `rel`
+  que incluye `noopener` y `noreferrer`
+
+#### Scenario: Un único punto de configuración
+
+- **WHEN** se necesita cambiar el correo de contacto o una URL social
+- **THEN** basta con editar `src/lib/site-links.ts`, sin tocar el componente `Footer`
+  ni los archivos de traducción
 
 ### Requirement: Bloque de atribución de fuentes de datos
 
@@ -164,6 +196,33 @@ horizontal de la página.
 - **WHEN** se muestra el footer en un viewport de 360px de ancho
 - **THEN** el contenido se apila en una sola columna y el documento no tiene scroll
   horizontal
+
+### Requirement: Enlace "volver arriba"
+
+El footer SHALL incluir un enlace "volver arriba" implementado como ancla
+(`<a href="#top">`) hacia un destino con `id="top"` al inicio del contenido de la
+página, sin depender de JavaScript.
+
+#### Scenario: El ancla lleva al inicio del contenido
+
+- **WHEN** una persona activa "volver arriba" al final de una página larga
+- **THEN** el documento desplaza el foco/scroll al inicio del contenido y la URL
+  recibe el fragmento `#top`
+
+#### Scenario: Funciona sin JavaScript
+
+- **WHEN** se solicita la página con JavaScript deshabilitado
+- **THEN** el enlace "volver arriba" sigue funcionando
+
+### Requirement: El footer no duplica el selector de idioma
+
+El footer SHALL NOT incluir un selector de idioma; el cambio de locale se mantiene
+exclusivamente en el `Header`.
+
+#### Scenario: Sin selector de idioma en el footer
+
+- **WHEN** se renderiza el footer en cualquier locale
+- **THEN** no contiene controles para cambiar de idioma
 
 ### Requirement: Localización del footer
 
