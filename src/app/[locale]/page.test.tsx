@@ -43,6 +43,9 @@ vi.mock("@/services/home/home", () => ({
   listFollowingFeedPreview: vi.fn().mockResolvedValue([]),
   listRecentCoverArt: vi.fn().mockResolvedValue([]),
   listHomeReleases: vi.fn().mockResolvedValue([]),
+  listPopularComments: vi
+    .fn()
+    .mockResolvedValue({ artist: [], "release-group": [], recording: [] }),
 }));
 
 // Los componentes hijos (CommunityActivity, PublicLists, FeedPreview,

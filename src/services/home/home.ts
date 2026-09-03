@@ -131,6 +131,163 @@ export async function listHomeReleases(limit = 10): Promise<HomeRelease[]> {
   });
 }
 
+export interface PopularComment {
+  id: string;
+  body: string;
+  likeCount: number; // MAQUETA — ver listPopularComments
+  authorUsername: string;
+  authorDisplayName: string | null;
+  target: {
+    type: "artist" | "release-group" | "recording";
+    id: string;
+    title: string;
+    coverThumbUrl: string | null;
+  };
+  stars: string | null; // valoración del autor sobre el target, si existe
+}
+
+export type PopularCommentsByType = Record<
+  "artist" | "release-group" | "recording",
+  PopularComment[]
+>;
+
+// MAQUETA: cantidad de likes por comentario. Determinística a partir del id
+// para que sea estable entre renders. El mecanismo real de likes en
+// comentarios (tabla, interacción, endpoint) es de un sprint futuro — ver
+// docs/05-features/home.md, "Comentarios populares".
+function mockLikeCount(id: string): number {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (Math.imul(hash, 31) + id.charCodeAt(i)) | 0;
+  }
+  return 4 + (Math.abs(hash) % 56); // 4..59
+}
+
+/**
+ * "Comentarios populares" de Inicio, agrupados por tipo de entidad (artista /
+ * álbum / canción) para el control segmentado.
+ *
+ * MAQUETA: los comentarios no tienen mecanismo de likes todavía, así que el
+ * ranking se arma con un proxy —comentarios más largos, "escritura más
+ * sustancial"— y a cada uno se le asigna un `likeCount` sintético estable, que
+ * después define el orden mostrado. La versión real (tabla `comment_like`
+ * anónima, decisión de gamificación, hilos de respuestas) es de un sprint
+ * futuro — ver docs/05-features/home.md, "Comentarios populares".
+ *
+ * Filtra por perfil público del autor. No maneja bloqueos (la versión real sí
+ * debería, como `listCommunityActivity`).
+ */
+export async function listPopularComments(perType = 6): Promise<PopularCommentsByType> {
+  const pool = perType * 3;
+  const byLongest = desc(sql<number>`length(${comment.body})`);
+
+  const [artistRows, albumRows, songRows] = await Promise.all([
+    db
+      .select({
+        id: comment.id,
+        body: comment.body,
+        authorUsername: appUser.username,
+        authorDisplayName: appUser.displayName,
+        targetId: comment.artistId,
+        title: artist.name,
+        stars: rating.stars,
+      })
+      .from(comment)
+      .innerJoin(appUser, eq(comment.userId, appUser.id))
+      .innerJoin(artist, eq(comment.artistId, artist.id))
+      .leftJoin(
+        rating,
+        and(eq(rating.userId, comment.userId), eq(rating.artistId, comment.artistId)),
+      )
+      .where(and(isNotNull(comment.artistId), PUBLIC_PROFILE))
+      .orderBy(byLongest)
+      .limit(pool),
+
+    db
+      .select({
+        id: comment.id,
+        body: comment.body,
+        authorUsername: appUser.username,
+        authorDisplayName: appUser.displayName,
+        targetId: comment.releaseGroupId,
+        title: releaseGroup.title,
+        cover: releaseGroup.coverThumbUrl,
+        stars: rating.stars,
+      })
+      .from(comment)
+      .innerJoin(appUser, eq(comment.userId, appUser.id))
+      .innerJoin(releaseGroup, eq(comment.releaseGroupId, releaseGroup.id))
+      .leftJoin(
+        rating,
+        and(
+          eq(rating.userId, comment.userId),
+          eq(rating.releaseGroupId, comment.releaseGroupId),
+        ),
+      )
+      .where(and(isNotNull(comment.releaseGroupId), PUBLIC_PROFILE))
+      .orderBy(byLongest)
+      .limit(pool),
+
+    db
+      .select({
+        id: comment.id,
+        body: comment.body,
+        authorUsername: appUser.username,
+        authorDisplayName: appUser.displayName,
+        targetId: comment.recordingId,
+        title: recording.title,
+        stars: rating.stars,
+      })
+      .from(comment)
+      .innerJoin(appUser, eq(comment.userId, appUser.id))
+      .innerJoin(recording, eq(comment.recordingId, recording.id))
+      .leftJoin(
+        rating,
+        and(eq(rating.userId, comment.userId), eq(rating.recordingId, comment.recordingId)),
+      )
+      .where(and(isNotNull(comment.recordingId), PUBLIC_PROFILE))
+      .orderBy(byLongest)
+      .limit(pool),
+  ]);
+
+  const rank = (
+    rows: {
+      id: string;
+      body: string;
+      authorUsername: string | null;
+      authorDisplayName: string | null;
+      targetId: string | null;
+      title: string | null;
+      cover?: string | null;
+      stars: string | null;
+    }[],
+    type: "artist" | "release-group" | "recording",
+  ): PopularComment[] =>
+    rows
+      .map((row) => ({
+        id: row.id,
+        body: row.body,
+        likeCount: mockLikeCount(row.id),
+        authorUsername: row.authorUsername ?? "",
+        authorDisplayName: row.authorDisplayName,
+        target: {
+          type,
+          id: row.targetId ?? "",
+          title: row.title ?? "",
+          coverThumbUrl: row.cover ?? null,
+        },
+        stars: row.stars,
+      }))
+      .sort((a, b) => b.likeCount - a.likeCount)
+      .slice(0, perType);
+
+  return {
+    artist: rank(artistRows, "artist"),
+    "release-group": rank(albumRows, "release-group"),
+    recording: rank(songRows, "recording"),
+  };
+}
+
 /**
  * Actividad reciente de la comunidad para Inicio: ratings vigentes y
  * comentarios públicos recientes de cualquier usuario con perfil público, sin

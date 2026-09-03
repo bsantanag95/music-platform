@@ -162,6 +162,9 @@ async function main() {
     recording: targets.filter((t) => t.type === "recording"),
   };
   const ratableTargets = [...byType["release-group"], ...byType.recording];
+  // Los comentarios sí van a los tres tipos (artista / álbum / canción) — el
+  // apartado "Comentarios populares" de Inicio los agrupa por tipo.
+  const commentableTargets = [...byType.artist, ...ratableTargets];
   console.log(`  ${targets.length} objetivos disponibles (${byType.artist.length} artistas, ${byType["release-group"].length} álbumes, ${byType.recording.length} canciones)`);
 
   const suffix = randomUUID().slice(0, 6);
@@ -199,10 +202,16 @@ async function main() {
 
     // `comment` no tiene `updated_at` (solo `created_at`, sin trigger) — acá
     // sí se puede backdatear de forma legítima.
-    for (const target of pick(ratableTargets, 2)) {
+    for (const target of pick(commentableTargets, 3)) {
       const resolved = await resolveSocialTarget(target.type, target.id);
       const created = await createComment(resolved, userId, randomOf(COMMENT_SNIPPETS));
       await db.update(comment).set({ createdAt: randomDate(DAYS_BACK) }).where(eq(comment.id, created.id));
+      // A veces el mismo usuario valora el target que comentó — así "Comentarios
+      // populares" muestra la valoración junto al comentario.
+      if (Math.random() < 0.6) {
+        const stars = randomStars();
+        await upsertRating(resolved, userId, stars, detailedScoreFor(stars));
+      }
     }
 
     // Mismo caso que `rating`: `user_list.updated_at` está protegido por

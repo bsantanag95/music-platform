@@ -7,6 +7,7 @@ import { QuickLinks } from "@/components/home/QuickLinks";
 import { AnonHero } from "@/components/home/AnonHero";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { HomeReleases } from "@/components/home/HomeReleases";
+import { PopularComments } from "@/components/home/PopularComments";
 import { AnonCta } from "@/components/home/AnonCta";
 import { getCurrentUser } from "@/services/auth/authorization";
 import { listFollowing } from "@/services/social/following";
@@ -14,6 +15,7 @@ import {
   listCommunityActivity,
   listFollowingFeedPreview,
   listHomeReleases,
+  listPopularComments,
   listPublicLists,
   listRecentCoverArt,
 } from "@/services/home/home";
@@ -27,12 +29,14 @@ export default async function Home() {
   // contenido central: un top-N más corto y en layout compacto (ver
   // docs/05-features/home.md).
   const previewLimit = user ? 10 : 6;
-  const [communityActivity, publicLists, recentCoverArt, homeReleases] = await Promise.all([
-    listCommunityActivity(user?.id ?? null, previewLimit),
-    listPublicLists(user?.id ?? null, previewLimit),
-    user ? Promise.resolve<string[]>([]) : listRecentCoverArt(),
-    listHomeReleases(),
-  ]);
+  const [communityActivity, publicLists, recentCoverArt, homeReleases, popularComments] =
+    await Promise.all([
+      listCommunityActivity(user?.id ?? null, previewLimit),
+      listPublicLists(user?.id ?? null, previewLimit),
+      user ? Promise.resolve<string[]>([]) : listRecentCoverArt(),
+      listHomeReleases(),
+      listPopularComments(),
+    ]);
 
   const heroCovers = user
     ? []
@@ -86,6 +90,8 @@ export default async function Home() {
           <PublicLists entries={publicLists} compact />
         </div>
       )}
+
+      <PopularComments comments={popularComments} />
 
       <HomeReleases releases={homeReleases} />
 
