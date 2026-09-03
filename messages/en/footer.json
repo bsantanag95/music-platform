@@ -1,0 +1,62 @@
+{
+  "mission": "Catalog and review what you've already listened to. Not a streaming service.",
+  "backToTop": "Back to top",
+  "newTab": "opens in a new tab",
+  "explore": {
+    "label": "Explore",
+    "home": "Home",
+    "search": "Search",
+    "people": "People",
+    "howItWorks": "How it works"
+  },
+  "account": {
+    "label": "Your account",
+    "login": "Log in",
+    "register": "Sign up",
+    "profile": "My profile",
+    "diary": "My diary",
+    "settings": "Settings"
+  },
+  "resources": {
+    "label": "Resources",
+    "about": "About",
+    "help": "Help"
+  },
+  "connect": {
+    "label": "Connect",
+    "contact": "Email us",
+    "social": {
+      "x": "X",
+      "instagram": "Instagram",
+      "mastodon": "Mastodon",
+      "bluesky": "Bluesky",
+      "discord": "Discord",
+      "rss": "RSS"
+    }
+  },
+  "attribution": {
+    "label": "Data sources",
+    "metadata": {
+      "before": "Catalog metadata — artists, discographies and credits — comes from",
+      "after": ", mostly in the public domain (CC0) and partly under CC BY-NC-SA 3.0."
+    },
+    "coverArt": {
+      "before": "Cover art comes from the",
+      "after": ": shown at low resolution for identification purposes and owned by their respective rights holders."
+    },
+    "operator": {
+      "before": "Metadata service operated by the",
+      "after": "."
+    },
+    "noAffiliation": "{appName} is not affiliated with or endorsed by the MetaBrainz Foundation.",
+    "noAudio": "{appName} is a catalog and community about music: it does not play or host audio."
+  },
+  "bottom": {
+    "label": "Legal",
+    "copyright": "© {year} {appName}",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "cookies": "Cookies",
+    "guidelines": "Community guidelines"
+  }
+}

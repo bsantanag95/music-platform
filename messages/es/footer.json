@@ -1,0 +1,62 @@
+{
+  "mission": "Catalogá y opiná sobre lo que ya escuchaste. No es un servicio de streaming.",
+  "backToTop": "Volver arriba",
+  "newTab": "abre en una pestaña nueva",
+  "explore": {
+    "label": "Explorar",
+    "home": "Inicio",
+    "search": "Buscar",
+    "people": "Personas",
+    "howItWorks": "Cómo funciona"
+  },
+  "account": {
+    "label": "Tu cuenta",
+    "login": "Iniciar sesión",
+    "register": "Crear cuenta",
+    "profile": "Mi perfil",
+    "diary": "Mi diario",
+    "settings": "Ajustes"
+  },
+  "resources": {
+    "label": "Recursos",
+    "about": "Acerca de",
+    "help": "Ayuda"
+  },
+  "connect": {
+    "label": "Conectar",
+    "contact": "Escribinos",
+    "social": {
+      "x": "X",
+      "instagram": "Instagram",
+      "mastodon": "Mastodon",
+      "bluesky": "Bluesky",
+      "discord": "Discord",
+      "rss": "RSS"
+    }
+  },
+  "attribution": {
+    "label": "Fuentes de datos",
+    "metadata": {
+      "before": "La metadata del catálogo —artistas, discografías y créditos— proviene de",
+      "after": ", en su mayoría bajo dominio público (CC0) y en parte bajo CC BY-NC-SA 3.0."
+    },
+    "coverArt": {
+      "before": "Las carátulas provienen del",
+      "after": ": se muestran en baja resolución con fines de identificación y son propiedad de sus respectivos titulares de derechos."
+    },
+    "operator": {
+      "before": "Servicio de metadata operado por la",
+      "after": "."
+    },
+    "noAffiliation": "{appName} no está afiliada ni respaldada por la MetaBrainz Foundation.",
+    "noAudio": "{appName} es un catálogo y una comunidad sobre música: no reproduce ni aloja audio."
+  },
+  "bottom": {
+    "label": "Legal",
+    "copyright": "© {year} {appName}",
+    "terms": "Términos",
+    "privacy": "Privacidad",
+    "cookies": "Cookies",
+    "guidelines": "Directrices de la comunidad"
+  }
+}

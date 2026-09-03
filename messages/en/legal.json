@@ -1,0 +1,24 @@
+{
+  "lastUpdated": "Last updated: pending",
+  "placeholderNotice": "This document is being prepared and is not yet a binding policy or agreement. A final version will be published before the public launch.",
+  "about": {
+    "title": "About",
+    "body": "music-platform is a catalog and community for logging and reviewing the music you've already listened to — a Letterboxd for music. It is not a player or an audio source: it builds on MusicBrainz's open data and on what its own community contributes."
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "body": "This is where the platform's terms of use will live: what you may post, who owns the content you upload, and when an account may be suspended."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "body": "This is where we'll set out what personal data is collected, on what legal basis, how long it is kept, and how to exercise your rights over it."
+  },
+  "cookies": {
+    "title": "Cookie Policy",
+    "body": "Today the app only uses a strictly necessary session cookie to keep you signed in; it needs no consent. If analytics or other cookies are added later, they'll be explained here and your consent will be requested."
+  },
+  "guidelines": {
+    "title": "Community Guidelines",
+    "body": "This is where we'll describe what's expected of reviews, comments and lists, and what content the platform moderates."
+  }
+}

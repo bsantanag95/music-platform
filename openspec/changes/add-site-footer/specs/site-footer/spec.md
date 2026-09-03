@@ -38,9 +38,11 @@ sobre música y no es un servicio de reproducción.
 
 ### Requirement: Navegación secundaria "Explorar"
 
-El footer SHALL incluir un grupo de navegación "Explorar" con enlaces a Buscar
-(`/search`), Gente (`/users`), Listas públicas, Actividad de la comunidad y "Cómo
-funciona", usando el componente `Link` de `src/i18n/navigation.ts`.
+El footer SHALL incluir un grupo de navegación "Explorar" con enlaces a Inicio
+(`/`), Buscar (`/search`), Personas (`/users`) y "Cómo funciona" (`/about`), usando
+el componente `Link` de `src/i18n/navigation.ts`. Los descubrimientos que hoy solo
+viven en la home (actividad de la comunidad, listas públicas) se alcanzan por el
+enlace a Inicio; el footer no inventa rutas que no existen.
 
 #### Scenario: Los enlaces conservan el prefijo de locale
 
@@ -69,8 +71,8 @@ activa, resuelta en el servidor a partir del mismo usuario que recibe el `Header
 
 - **WHEN** hay sesión activa
 - **THEN** el grupo "Cuenta" muestra enlaces a su perfil
-  (`/users/<username>`), Ajustes (`/me/settings`) y Sesiones/accesos, y no muestra
-  los enlaces de iniciar sesión ni de registro
+  (`/users/<username>`), Mi diario (`/me/diary`) y Ajustes (`/me/settings`), y no
+  muestra los enlaces de iniciar sesión ni de registro
 
 ### Requirement: Navegación "Recursos"
 
