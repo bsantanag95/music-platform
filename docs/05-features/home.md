@@ -93,6 +93,28 @@ visual, en la línea de Letterboxd/Musicboard, sin salir de "The Vinyl Listening
   (`/auth/register`, `/auth/login`). No hay buscador en el hero — la búsqueda vive en el
   Header (`HeaderSearch`) para todos los estados.
 
+### Actividad de la comunidad y listas públicas — layout
+
+Estos bloques son **prueba social** en la landing anónima, no contenido central, así que ahí
+van en un layout denso; con sesión mantienen el layout de tarjeta full-width.
+
+- **Anónimo:** `page.tsx` los envuelve en una grilla `lg:grid-cols-[1.5fr_1fr]` (apilados en
+  < `lg`), con `previewLimit = 6` (en vez de 10). Cada bloque recibe `compact`:
+  - `CommunityActivity` en `compact` renderiza `CompactActivityRow`: carátula 40px + una
+    línea mono `@autor · ★N · fecha` + título del target (display, `truncate`) + cuerpo del
+    comentario con `line-clamp-2`. `<ul>` con `divide-y divide-ink-border`, sin tarjeta.
+  - `PublicLists` en `compact`: título de la lista (display) + `@autor · fecha` (mono),
+    `divide-y`, **sin `DiscPlaceholder`** (el disco por ítem no aportaba información).
+- **Con sesión:** sin cambios — `FeedEntryCard` (tarjeta con borde, `withCover` para la
+  carátula), `previewLimit = 10`.
+- Primitiva nueva `CoverThumb` (`src/components/catalog/CoverThumb.tsx`): miniatura cuadrada
+  con `DiscPlaceholder` de fallback, tamaño vía `className`. `FeedEntryCard` y las filas
+  compactas la comparten. `targetHref` y `formatFeedDate` se exportan desde `FeedEntryBody`.
+- **Futuro (L3, requiere backend):** mini-mosaico 2×2 de carátulas por lista (estilo
+  playlist de Spotify / lista de Letterboxd). Necesita que `listPublicLists` devuelva ~4
+  `coverThumbUrl` por lista. Sube el impacto visual del bloque de listas sin volver a la
+  tarjeta full-width. Ver "Pendiente".
+
 ### Fuente de las carátulas del muro — hoy
 
 `HeroCoverWall` es **agnóstico a la fuente**: recibe `covers: string[]` (URLs) y las cicla
@@ -150,5 +172,8 @@ trabajo de ahora. Lo que habría que tocar:
   editorial" / "lista destacada" como fuente del muro de carátulas del hero.
 - Muro de carátulas del hero anónimo con **24 carátulas curadas a mano**, cuando el guardado
   definitivo de imágenes esté implementado — ver "implementación futura" arriba.
+- Listas públicas en Inicio anónimo con **mini-mosaico de carátulas** (L3) — requiere que
+  `listPublicLists` devuelva ~4 `coverThumbUrl` por lista. Ver "Actividad de la comunidad y
+  listas públicas — layout".
 - Copy y diseño visual concreto de cada bloque (fuera del alcance de este documento, que
   cierra la estructura de contenido, no el layout).

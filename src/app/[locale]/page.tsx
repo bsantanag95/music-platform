@@ -21,9 +21,13 @@ export default async function Home() {
   const tHome = await getTranslations("home");
   const user = await getCurrentUser();
 
+  // El visitante anónimo ve estos bloques como prueba social, no como
+  // contenido central: un top-N más corto y en layout compacto (ver
+  // docs/05-features/home.md).
+  const previewLimit = user ? 10 : 6;
   const [communityActivity, publicLists, recentCoverArt] = await Promise.all([
-    listCommunityActivity(user?.id ?? null),
-    listPublicLists(user?.id ?? null),
+    listCommunityActivity(user?.id ?? null, previewLimit),
+    listPublicLists(user?.id ?? null, previewLimit),
     user ? Promise.resolve<string[]>([]) : listRecentCoverArt(),
   ]);
 
@@ -68,12 +72,17 @@ export default async function Home() {
         <AnonHero covers={heroCovers} />
       )}
 
-      <CommunityActivity
-        entries={communityActivity}
-        withCover={!user}
-        subtitle={user ? undefined : tHome("communityActivitySubtitle")}
-      />
-      <PublicLists entries={publicLists} withCover={!user} />
+      {user ? (
+        <>
+          <CommunityActivity entries={communityActivity} />
+          <PublicLists entries={publicLists} />
+        </>
+      ) : (
+        <div className="grid w-full max-w-3xl gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-start">
+          <CommunityActivity entries={communityActivity} compact />
+          <PublicLists entries={publicLists} compact />
+        </div>
+      )}
 
       {user && communityActivity.length === 0 && publicLists.length === 0 && (
         <p className="max-w-md text-center font-body text-sm text-paper-muted">

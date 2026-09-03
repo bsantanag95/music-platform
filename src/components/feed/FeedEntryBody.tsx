@@ -1,16 +1,20 @@
-import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { ReactionBadge } from "@/components/diary/ReactionBadge";
-import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
+import { CoverThumb } from "@/components/catalog/CoverThumb";
 import type { FeedEntry } from "@/lib/api/schemas";
 
-function targetHref(type: "artist" | "release-group" | "recording", id: string): string {
+// Compartidos con los listados compactos de Inicio (CommunityActivity,
+// PublicLists) — misma forma de `FeedEntry`, mismo destino de navegación.
+export function targetHref(
+  type: "artist" | "release-group" | "recording",
+  id: string,
+): string {
   if (type === "artist") return `/artist/${id}`;
   if (type === "release-group") return `/album/${id}`;
   return `/song/${id}`;
 }
 
-function formatDate(iso: string, locale: string) {
+export function formatFeedDate(iso: string, locale: string) {
   return new Date(iso).toLocaleDateString(locale, {
     year: "numeric",
     month: "short",
@@ -46,7 +50,7 @@ export function FeedEntryCard({
         </Link>
         <FeedEntryBody entry={entry} t={t} />
         <time dateTime={entry.createdAt} className="mt-1 block font-data text-xs text-paper-muted">
-          {formatDate(entry.createdAt, locale)}
+          {formatFeedDate(entry.createdAt, locale)}
         </time>
       </div>
     </li>
@@ -61,15 +65,7 @@ function FeedEntryThumb({ entry }: { entry: FeedEntry }) {
   const cover =
     target && "coverThumbUrl" in target ? target.coverThumbUrl : null;
 
-  if (!cover) {
-    return <DiscPlaceholder alt={label} className="size-14 shrink-0 sm:size-16" />;
-  }
-
-  return (
-    <div className="relative size-14 shrink-0 overflow-hidden rounded sm:size-16">
-      <Image src={cover} alt={label} fill sizes="64px" className="object-cover" />
-    </div>
-  );
+  return <CoverThumb cover={cover} label={label} className="size-14 sm:size-16" />;
 }
 
 // Render por tipo de entrada de `FeedEntry`, compartido entre /me/feed y los
