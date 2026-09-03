@@ -101,7 +101,7 @@
 ## 10. Verificación
 
 - [x] 10.1 `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` en verde.
-- [ ] 10.2 Verificación manual (dev server): "Poison" y "Sabrina" muestran varias opciones;
+- [x] 10.2 Verificación manual (dev server): "Poison" y "Sabrina" muestran varias opciones;
   un artista ya cacheado aparece al tope; abrir un resultado frío dispara la ingesta en la
   vista destino con su estado de carga; búsqueda sin coincidencias muestra estado vacío (no
   error); el campo del Header siempre lleva a `/search?q=`.
