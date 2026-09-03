@@ -1,5 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { listCommunityActivity, listFollowingFeedPreview, listPublicLists } from "./home";
+import {
+  getMostRecentEditedList,
+  listCommunityActivity,
+  listFollowingFeedPreview,
+  listMyRecentActivity,
+  listPublicLists,
+} from "./home";
 
 const mocks = vi.hoisted(() => ({
   db: { select: vi.fn() },
@@ -121,6 +127,131 @@ describe("servicio de datos de Inicio", () => {
           list: { id: "00000000-0000-4000-8000-000000000007", title: "Discos esenciales", entityType: "release-group" },
         }),
       ]);
+    });
+  });
+
+  describe("listMyRecentActivity", () => {
+    const listenRow = (id: string, date: string) => ({
+      id,
+      listenContext: "first_listen",
+      body: null,
+      reaction: null,
+      audience: "private",
+      createdAt: new Date(date),
+      artistId: "00000000-0000-4000-8000-000000000001",
+      releaseGroupId: null,
+      recordingId: null,
+      artistName: "Pink Floyd",
+      releaseTitle: null,
+      releaseCover: null,
+      recordingTitle: null,
+      authorId: author.id,
+      authorUsername: author.username,
+      authorDisplayName: author.displayName,
+    });
+
+    it("fusiona escuchas, ratings y comentarios propios ordenados por fecha desc", async () => {
+      mocks.db.select
+        .mockReturnValueOnce(sourceQuery([listenRow("00000000-0000-4000-8000-00000000000a", "2026-02-01T00:00:00Z")]))
+        .mockReturnValueOnce(sourceQuery([{
+          id: "00000000-0000-4000-8000-00000000000b",
+          stars: "5.0",
+          detailedScore: null,
+          updatedAt: new Date("2026-02-03T00:00:00Z"),
+          artistId: "00000000-0000-4000-8000-000000000001",
+          releaseGroupId: null,
+          recordingId: null,
+          artistName: "Pink Floyd",
+          releaseTitle: null,
+          releaseCover: null,
+          recordingTitle: null,
+          authorId: author.id,
+          authorUsername: author.username,
+          authorDisplayName: author.displayName,
+        }]))
+        .mockReturnValueOnce(sourceQuery([{
+          id: "00000000-0000-4000-8000-00000000000c",
+          body: "Nota mental",
+          createdAt: new Date("2026-02-02T00:00:00Z"),
+          artistId: "00000000-0000-4000-8000-000000000001",
+          releaseGroupId: null,
+          recordingId: null,
+          artistName: "Pink Floyd",
+          releaseTitle: null,
+          releaseCover: null,
+          recordingTitle: null,
+          authorId: author.id,
+          authorUsername: author.username,
+          authorDisplayName: author.displayName,
+        }]));
+
+      const result = await listMyRecentActivity(author.id, 5);
+
+      expect(result.map((entry) => entry.kind)).toEqual(["rating", "comment", "listen"]);
+    });
+
+    it("incluye escuchas con audiencia privada (contenido propio, sin filtro)", async () => {
+      mocks.db.select
+        .mockReturnValueOnce(sourceQuery([listenRow("00000000-0000-4000-8000-00000000000d", "2026-02-05T00:00:00Z")]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]));
+
+      const result = await listMyRecentActivity(author.id, 5);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({ kind: "listen", audience: "private" });
+    });
+
+    it("devuelve lista vacía cuando no hay actividad propia", async () => {
+      mocks.db.select
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]));
+
+      const result = await listMyRecentActivity(author.id, 5);
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("getMostRecentEditedList", () => {
+    // from().leftJoin().where().groupBy().orderBy().limit()
+    function listQuery(rows: unknown[]) {
+      const limit = vi.fn().mockResolvedValue(rows);
+      const orderBy = vi.fn(() => ({ limit }));
+      const groupBy = vi.fn(() => ({ orderBy }));
+      const where = vi.fn(() => ({ groupBy }));
+      const leftJoin = vi.fn(() => ({ where }));
+      return { from: vi.fn(() => ({ leftJoin })) };
+    }
+
+    it("devuelve null cuando el usuario no tiene listas", async () => {
+      mocks.db.select.mockReturnValueOnce(listQuery([]));
+
+      const result = await getMostRecentEditedList(author.id);
+
+      expect(result).toBeNull();
+    });
+
+    it("devuelve la lista y sus carátulas, casteando itemCount a número", async () => {
+      mocks.db.select
+        .mockReturnValueOnce(listQuery([{
+          id: "00000000-0000-4000-8000-00000000000e",
+          title: "Para el auto",
+          entityType: "release-group",
+          itemCount: "3",
+        }]))
+        .mockReturnValueOnce(sourceQuery([{ cover: "https://cover/1.jpg" }, { cover: "https://cover/2.jpg" }]));
+
+      const result = await getMostRecentEditedList(author.id);
+
+      expect(result).toEqual({
+        id: "00000000-0000-4000-8000-00000000000e",
+        title: "Para el auto",
+        entityType: "release-group",
+        itemCount: 3,
+        coverThumbUrls: ["https://cover/1.jpg", "https://cover/2.jpg"],
+      });
     });
   });
 

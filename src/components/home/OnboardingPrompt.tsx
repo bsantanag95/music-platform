@@ -20,6 +20,9 @@ export async function OnboardingPrompt() {
           <Button variant="secondary">{t("onboardingExploreCatalog")}</Button>
         </Link>
       </div>
+      <p className="max-w-sm font-body text-sm text-paper-muted">
+        {t("onboardingLogFirstListen")}
+      </p>
     </section>
   );
 }

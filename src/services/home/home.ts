@@ -1,8 +1,26 @@
 import { and, asc, desc, eq, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { appUser, artist, comment, credit, rating, recording, releaseGroup, userList } from "@/db/schema";
+import {
+  appUser,
+  artist,
+  comment,
+  credit,
+  listenEntry,
+  rating,
+  recording,
+  releaseGroup,
+  userList,
+  userListItem,
+} from "@/db/schema";
 import { listFeed } from "@/services/feed/feed";
-import type { FeedAuthor, FeedComment, FeedEntry, FeedListEvent, FeedRating } from "@/services/feed/feed";
+import type {
+  FeedAuthor,
+  FeedComment,
+  FeedEntry,
+  FeedListEvent,
+  FeedListenEntry,
+  FeedRating,
+} from "@/services/feed/feed";
 import type { Audience } from "@/services/social/types";
 
 const PUBLIC_PROFILE = eq(appUser.profileVisibility, "public");
@@ -32,6 +50,149 @@ function targetType(
 export async function listFollowingFeedPreview(userId: string, limit = 5): Promise<FeedEntry[]> {
   const { entries } = await listFeed(userId, 1, limit);
   return entries;
+}
+
+/**
+ * "Tu rastro reciente" de Inicio: las escuchas, valoraciones y comentarios más
+ * recientes del propio usuario, como recap de presencia. No filtra por
+ * audiencia —es contenido propio, igual que `/me/diary`— ni por bloqueos.
+ * Sin paginación: top-N fijo pensado para un preview.
+ */
+export async function listMyRecentActivity(
+  userId: string,
+  limit = 5,
+): Promise<(FeedListenEntry | FeedRating | FeedComment)[]> {
+  const [listens, ratings, comments] = await Promise.all([
+    db
+      .select({
+        id: listenEntry.id,
+        listenContext: listenEntry.listenContext,
+        body: listenEntry.body,
+        reaction: listenEntry.reaction,
+        audience: listenEntry.audience,
+        createdAt: listenEntry.createdAt,
+        artistId: listenEntry.artistId,
+        releaseGroupId: listenEntry.releaseGroupId,
+        recordingId: listenEntry.recordingId,
+        artistName: artist.name,
+        releaseTitle: releaseGroup.title,
+        releaseCover: releaseGroup.coverThumbUrl,
+        recordingTitle: recording.title,
+        authorId: listenEntry.userId,
+        authorUsername: appUser.username,
+        authorDisplayName: appUser.displayName,
+      })
+      .from(listenEntry)
+      .innerJoin(appUser, eq(listenEntry.userId, appUser.id))
+      .leftJoin(artist, eq(listenEntry.artistId, artist.id))
+      .leftJoin(releaseGroup, eq(listenEntry.releaseGroupId, releaseGroup.id))
+      .leftJoin(recording, eq(listenEntry.recordingId, recording.id))
+      .where(eq(listenEntry.userId, userId))
+      .orderBy(desc(listenEntry.createdAt), desc(listenEntry.id))
+      .limit(limit),
+
+    db
+      .select({
+        id: rating.id,
+        stars: rating.stars,
+        detailedScore: rating.detailedScore,
+        updatedAt: rating.updatedAt,
+        artistId: rating.artistId,
+        releaseGroupId: rating.releaseGroupId,
+        recordingId: rating.recordingId,
+        artistName: artist.name,
+        releaseTitle: releaseGroup.title,
+        releaseCover: releaseGroup.coverThumbUrl,
+        recordingTitle: recording.title,
+        authorId: rating.userId,
+        authorUsername: appUser.username,
+        authorDisplayName: appUser.displayName,
+      })
+      .from(rating)
+      .innerJoin(appUser, eq(rating.userId, appUser.id))
+      .leftJoin(artist, eq(rating.artistId, artist.id))
+      .leftJoin(releaseGroup, eq(rating.releaseGroupId, releaseGroup.id))
+      .leftJoin(recording, eq(rating.recordingId, recording.id))
+      .where(eq(rating.userId, userId))
+      .orderBy(desc(rating.updatedAt), desc(rating.id))
+      .limit(limit),
+
+    db
+      .select({
+        id: comment.id,
+        body: comment.body,
+        createdAt: comment.createdAt,
+        artistId: comment.artistId,
+        releaseGroupId: comment.releaseGroupId,
+        recordingId: comment.recordingId,
+        artistName: artist.name,
+        releaseTitle: releaseGroup.title,
+        releaseCover: releaseGroup.coverThumbUrl,
+        recordingTitle: recording.title,
+        authorId: comment.userId,
+        authorUsername: appUser.username,
+        authorDisplayName: appUser.displayName,
+      })
+      .from(comment)
+      .innerJoin(appUser, eq(comment.userId, appUser.id))
+      .leftJoin(artist, eq(comment.artistId, artist.id))
+      .leftJoin(releaseGroup, eq(comment.releaseGroupId, releaseGroup.id))
+      .leftJoin(recording, eq(comment.recordingId, recording.id))
+      .where(eq(comment.userId, userId))
+      .orderBy(desc(comment.createdAt), desc(comment.id))
+      .limit(limit),
+  ]);
+
+  const listenEntries: FeedListenEntry[] = listens.map((row) => ({
+    kind: "listen" as const,
+    id: row.id,
+    listenContext: row.listenContext as FeedListenEntry["listenContext"],
+    body: row.body,
+    reaction: row.reaction as FeedListenEntry["reaction"],
+    audience: row.audience as FeedListenEntry["audience"],
+    createdAt: row.createdAt.toISOString(),
+    target: {
+      type: targetType(row.artistId, row.releaseGroupId),
+      id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
+      title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
+      subtitle: null,
+      coverThumbUrl: row.releaseCover,
+    },
+    author: author(row.authorId, row.authorUsername, row.authorDisplayName),
+  }));
+
+  const ratingEntries: FeedRating[] = ratings.map((row) => ({
+    kind: "rating" as const,
+    id: row.id,
+    stars: row.stars,
+    detailedScore: row.detailedScore,
+    createdAt: row.updatedAt.toISOString(),
+    target: {
+      type: targetType(row.artistId, row.releaseGroupId),
+      id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
+      title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
+      coverThumbUrl: row.releaseCover,
+    },
+    author: author(row.authorId, row.authorUsername, row.authorDisplayName),
+  }));
+
+  const commentEntries: FeedComment[] = comments.map((row) => ({
+    kind: "comment" as const,
+    id: row.id,
+    body: row.body,
+    createdAt: row.createdAt.toISOString(),
+    target: {
+      type: targetType(row.artistId, row.releaseGroupId),
+      id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
+      title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
+      coverThumbUrl: row.releaseCover,
+    },
+    author: author(row.authorId, row.authorUsername, row.authorDisplayName),
+  }));
+
+  return [...listenEntries, ...ratingEntries, ...commentEntries]
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, limit);
 }
 
 /**
@@ -437,4 +598,62 @@ export async function listPublicLists(viewerId: string | null, limit = 10): Prom
     },
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
   }));
+}
+
+export interface HomeResumeList {
+  id: string;
+  title: string;
+  entityType: "artist" | "release-group" | "recording";
+  itemCount: number;
+  coverThumbUrls: string[];
+}
+
+/**
+ * "Retomá una lista" de Inicio: la lista propia con actividad más reciente,
+ * para seguir agregándole ítems. "Actividad" = el más reciente entre la última
+ * edición de metadatos (`user_list.updated_at`, mantenido por trigger) y el
+ * último ítem agregado (`max(user_list_item.created_at)`) — agregar ítems no
+ * toca `updated_at` (ver drizzle/0009), así que ordenar solo por esa columna
+ * dejaría afuera el caso más común de "seguir armando una lista".
+ * Devuelve `null` si el usuario no tiene ninguna lista.
+ */
+export async function getMostRecentEditedList(userId: string): Promise<HomeResumeList | null> {
+  const lastActivity = sql<string>`greatest(${userList.updatedAt}, coalesce(max(${userListItem.createdAt}), ${userList.updatedAt}))`;
+
+  const [row] = await db
+    .select({
+      id: userList.id,
+      title: userList.title,
+      entityType: userList.entityType,
+      itemCount: sql<number>`count(${userListItem.id})`,
+    })
+    .from(userList)
+    .leftJoin(userListItem, eq(userListItem.listId, userList.id))
+    .where(eq(userList.ownerId, userId))
+    .groupBy(userList.id)
+    .orderBy(desc(lastActivity), desc(userList.id))
+    .limit(1);
+
+  if (!row) return null;
+
+  // Mini-mosaico: hasta 4 carátulas de los ítems, en orden de la lista. Solo
+  // las listas de álbumes tienen carátula por ítem; para artistas y canciones
+  // el arreglo queda vacío y el componente cae en el disco de fallback.
+  const covers = await db
+    .select({ cover: releaseGroup.coverThumbUrl })
+    .from(userListItem)
+    .innerJoin(releaseGroup, eq(userListItem.releaseGroupId, releaseGroup.id))
+    .where(and(eq(userListItem.listId, row.id), isNotNull(releaseGroup.coverThumbUrl)))
+    .orderBy(asc(userListItem.position))
+    .limit(4);
+
+  return {
+    id: row.id,
+    title: row.title,
+    entityType: row.entityType as "artist" | "release-group" | "recording",
+    itemCount: Number(row.itemCount),
+    coverThumbUrls: covers
+      .map((c) => c.cover)
+      .filter((url): url is string => Boolean(url)),
+  };
 }

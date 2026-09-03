@@ -3,7 +3,8 @@
 **Fase:** 5 (roadmap), navegación autenticada definida en `phase-5-design.md` §10.1.
 **Estado:** ✅ Estructura de contenido implementada (`add-home-page`). Layout visual del
 visitante anónimo rediseñado en `redesign-frontend` — ver "Hero visual del visitante
-anónimo" más abajo.
+anónimo" más abajo. Estructura y jerarquía del Inicio **con sesión** cerradas en
+`redesign-home-authenticated` — ver "Inicio con sesión — estructura" más abajo.
 
 ## Qué es
 
@@ -46,6 +47,9 @@ bloques muestran contenido de **cualquier usuario público**, no solo de los seg
   `/me/feed`, pero en Inicio de un usuario nuevo es la peor primera impresión posible.
 - **Accesos rápidos**: diario, favoritos, listas, buscar.
 
+Ver "Inicio con sesión — estructura" para la jerarquía completa y los bloques que agregó
+`redesign-home-authenticated` (saludo, rastro reciente, retomar una lista).
+
 ### Exclusivo de visitante anónimo
 
 - Tagline + propuesta de valor (ya existe).
@@ -75,6 +79,59 @@ bloques muestran contenido de **cualquier usuario público**, no solo de los seg
   `src/app/[locale]/page.tsx`). Con el rediseño, la única entrada de búsqueda es
   `HeaderSearch` en el Header, visible en todos los estados (ver
   `openspec/changes/add-header-search` para el origen del componente).
+
+## Inicio con sesión — estructura (`redesign-home-authenticated`)
+
+El estado anónimo tuvo su rediseño visual en `redesign-frontend`; el estado con sesión
+había quedado como un encabezado `appName` + `tagline` (texto para quien todavía no
+entró) seguido de los mismos bloques de descubrimiento. Este cambio cierra su jerarquía.
+
+### Qué se quitó
+
+- Encabezado visible `appName` + `tagline` — queda solo un `<h1 class="sr-only">` para el
+  landmark del documento.
+- El hero visual (`AnonHero`, `HeroCoverWall`), el carrusel de funcionalidades
+  (`FeatureCarousel`/`HowItWorks`) y el CTA de registro (`AnonCta`) son exclusivos del
+  estado anónimo: `page.tsx` delega en `AnonymousHome` o `AuthenticatedHome` según sesión
+  y ninguno de esos componentes se monta con sesión.
+
+### Jerarquía (de arriba a abajo)
+
+1. **Saludo** (`Greeting`): una línea `Hola, {displayName ?? @username}`. Sin conteos,
+   fechas de alta ni rachas — recibimiento, no panel de progreso (anti-feature "sin
+   gamificación").
+2. **Feed de seguidos** (`FeedPreview`) como bloque principal, o **nudge de onboarding**
+   (`OnboardingPrompt`) si no sigue a nadie. El nudge ahora también invita a registrar la
+   primera escucha, en prosa (no un checklist con tildes).
+3. **Tu rastro reciente** (`RecentSelfActivity`): las últimas escuchas, valoraciones y
+   comentarios del propio usuario, vía `FeedEntryCard`. **No filtra por audiencia** (es
+   contenido propio, igual que `/me/diary`). Se oculta si no hay actividad. Fuente:
+   `listMyRecentActivity` en `src/services/home/home.ts`.
+4. **Retomá una lista** (`ResumeList`): acceso directo a la lista propia con actividad más
+   reciente, con mini-mosaico 2×2 de carátulas de sus ítems. Se oculta si el usuario no
+   tiene listas. Fuente: `getMostRecentEditedList`.
+5. **Accesos rápidos** (`QuickLinks`, sin cambios).
+6. **Descubrimiento**: `CommunityActivity` + `PublicLists` en el **mismo layout compacto
+   que el anónimo** — grilla `lg:grid-cols-[1.5fr_1fr]` (apiladas en < `lg`) con `compact`
+   y `previewLimit = 6`. Son bloques secundarios acá también (van debajo del contenido
+   propio), así que ocupan poco alto. `PopularComments` y `HomeReleases` siguen full-width,
+   más abajo. (Antes eran full-width con `previewLimit = 10`; el `compact` dejó de ser
+   exclusivo del anónimo.)
+
+### Nota técnica — "lista con actividad más reciente"
+
+`user_list.updated_at` lo mantiene un trigger `BEFORE UPDATE ON user_list`
+(`drizzle/0009_favorites_lists.sql`): **agregar o quitar ítems no lo toca** (esos writes
+van a `user_list_item`). Por eso `getMostRecentEditedList` ordena por
+`greatest(user_list.updated_at, coalesce(max(user_list_item.created_at), user_list.updated_at))`
+— así "seguir armando una lista" (el caso más común) también cuenta como actividad.
+
+### Decisiones descartadas
+
+- **Aviso de solicitudes de seguimiento pendientes en Inicio**: se gestionan desde el
+  Header y `/me/follow-requests`; Inicio no las toca.
+- **Favoritos en el rastro reciente**: se excluyen en v1, por simetría con
+  `listCommunityActivity` (los favoritos son señal de baja carga de contenido).
 
 ## Hero visual del visitante anónimo (`redesign-frontend`)
 
@@ -115,18 +172,20 @@ colección física, seguir, catálogo preciso, privacidad.
 
 ### Actividad de la comunidad y listas públicas — layout
 
-Estos bloques son **prueba social** en la landing anónima, no contenido central, así que ahí
-van en un layout denso; con sesión mantienen el layout de tarjeta full-width.
+En **los dos estados** estos bloques son secundarios (prueba social en el anónimo, contenido
+de descubrimiento debajo del contenido propio en el logueado), así que van en el mismo
+layout denso: grilla `lg:grid-cols-[1.5fr_1fr]` (apilados en < `lg`) con `compact` y
+`previewLimit = 6`. Lo arma cada componente de página (`AnonymousHome`, `AuthenticatedHome`),
+no `page.tsx`.
 
-- **Anónimo:** `page.tsx` los envuelve en una grilla `lg:grid-cols-[1.5fr_1fr]` (apilados en
-  < `lg`), con `previewLimit = 6` (en vez de 10). Cada bloque recibe `compact`:
-  - `CommunityActivity` en `compact` renderiza `CompactActivityRow`: carátula 40px + una
-    línea mono `@autor · ★N · fecha` + título del target (display, `truncate`) + cuerpo del
-    comentario con `line-clamp-2`. `<ul>` con `divide-y divide-ink-border`, sin tarjeta.
-  - `PublicLists` en `compact`: título de la lista (display) + `@autor · fecha` (mono),
-    `divide-y`, **sin `DiscPlaceholder`** (el disco por ítem no aportaba información).
-- **Con sesión:** sin cambios — `FeedEntryCard` (tarjeta con borde, `withCover` para la
-  carátula), `previewLimit = 10`.
+- `CommunityActivity` en `compact` renderiza `CompactActivityRow`: carátula 40px + una
+  línea mono `@autor · ★N · fecha` + título del target (display, `truncate`) + cuerpo del
+  comentario con `line-clamp-2`. `<ul>` con `divide-y divide-ink-border`, sin tarjeta.
+- `PublicLists` en `compact`: título de la lista (display) + `@autor · fecha` (mono),
+  `divide-y`, **sin `DiscPlaceholder`** (el disco por ítem no aportaba información).
+- El modo no-`compact` de `CommunityActivity`/`PublicLists` (tarjeta `FeedEntryCard`
+  full-width, `withCover`) sigue existiendo en el prop pero ya no lo usa ningún Inicio.
+  `FeedEntryCard` en sí se sigue usando para `FeedPreview` y `RecentSelfActivity`.
 - Primitiva nueva `CoverThumb` (`src/components/catalog/CoverThumb.tsx`): miniatura cuadrada
   con `DiscPlaceholder` de fallback, tamaño vía `className`. `FeedEntryCard` y las filas
   compactas la comparten. `targetHref` y `formatFeedDate` se exportan desde `FeedEntryBody`.
