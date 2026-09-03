@@ -41,6 +41,7 @@ necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
 > fail-closed): hay que habilitarlos explícitamente con `ALLOW_SMOKE_ON_REAL_DB=1`,
 > idealmente contra una **BD de scratch** (otro `DATABASE_URL`). Si se usó la BD
 > real, **resetear** los artistas tocados antes de cerrar:
+>
 > - `UPDATE artist SET discography_synced_at = NULL WHERE name = '<artista>';`
 > - borrar los `release_group` sintéticos creados (mbid `*-0000-4000-8000-*` o
 >   ajenos a la discografía real).
@@ -90,25 +91,21 @@ necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
   input a mano; solo `tsc --noEmit`/`next build` lo atrapan (ver
   `docs/02-architecture/code-walkthrough.md`).
 
-## Ramas y commits (trabajo en paralelo)
+## Ramas, worktrees y commits (trabajo en paralelo)
 
-Varios agentes trabajan a la vez sobre el **mismo working tree**. Para que no se
-pisen:
+Cuando haya varios agentes trabajando en paralelo:
 
-- **Cada agente crea su propia rama desde `main` al empezar la tarea.** Prefijos
-  estilo gitflow: `feature/<slug>`, `fix/<slug>`, `chore/<slug>`, `docs/<slug>`.
-  Nunca commitear directo a `main`.
-- **Mensajes de commit en inglés**, estilo Conventional Commits
-  (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, ...).
-- **Cada agente es responsable únicamente de sus propios commits.** Ningún agente
-  debe commitear, "rescatar" ni consolidar cambios pendientes que aparezcan en el
-  working tree y no haya generado él — aunque esos cambios sin commitear estén
-  contaminando su rama (se arrastran al hacer `git checkout`). En ese caso: hacer
-  `git stash` (o `git stash -u`) para apartarlos y avisar al usuario; no
-  commitearlos por cuenta propia.
-- **Solo commitear o pushear cuando el usuario lo pide.**
-- Trailer de co-autoría en cada commit redactado por el agente:
-  `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`.
+- Cada agente trabaja en su propio **Git worktree** y en su propia rama creada desde `main`.
+- Prefijos de rama: `feature/<slug>`, `fix/<slug>`, `chore/<slug>`, `docs/<slug>`.
+- Nunca trabajar simultáneamente en el mismo working tree con otro agente.
+- Nunca hacer checkout de otra rama dentro del worktree asignado a otro agente.
+- Nunca commitear directamente a `main`.
+- Cada agente es responsable únicamente de los cambios y commits que él mismo haya generado.
+- Si aparecen cambios sin commitear que no fueron generados por el agente actual, no modificarlos, no commitearlos y no intentar "rescatarlos". Avisar al usuario.
+- Solo crear commits o hacer push cuando el usuario lo solicite explícitamente.
+- Los mensajes de commit deben estar en inglés y seguir Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, etc.).
+- No añadir manualmente trailers de coautoría que atribuyan el trabajo a otro agente, modelo o persona que no haya participado realmente en el commit.
+- La identidad Git (`user.name` / `user.email`) debe permanecer configurada con la identidad del usuario.
 
 ## Workflow de cambios
 
