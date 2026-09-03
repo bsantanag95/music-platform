@@ -41,5 +41,10 @@
   "feature8Body": "Real feats, collaborations, editions and remasters. It tells the person from the band: Pink Floyd ↔ Roger Waters.",
   "feature9Title": "Control your privacy",
   "feature9Body": "Public or private profile, per-item audience, follow requests and blocks. You decide what's shared.",
+  "releasesTitle": "Recent and upcoming releases",
+  "releasesToday": "Today",
+  "releasesUpcomingPrefix": "Out",
+  "releasesPrev": "See previous releases",
+  "releasesNext": "See more releases",
   "anonClosingTitle": "Your listening history starts with an account."
 }

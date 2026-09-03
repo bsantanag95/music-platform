@@ -184,6 +184,83 @@ trabajo de ahora. Lo que habría que tocar:
    fotos, texturas de vinilo genéricas), no hay restricción de licencia y queda como puro
    tema de hosting + config.
 
+## "Lanzamientos recientes" y "Próximos lanzamientos"
+
+Dos apartados nuevos de Inicio: discos publicados hace poco (pasado) y discos anunciados
+todavía sin salir (futuro). La distinción es limpia y no se solapa.
+
+**Estado:** el **diseño/layout está implementado** con datos de maqueta (`redesign-frontend`).
+El **pipeline de datos real es de un sprint futuro** (ver "Lo que falta analizar").
+
+### Diseño: un solo riel en línea de tiempo
+
+En vez de dos rieles de carátulas casi idénticos apilados, **un único riel horizontal
+ordenado por fecha** con un marcador "hoy" en el medio:
+
+```
+‹ … ago 2026  │ HOY │  sep 2026 … ›
+   [recientes]         [próximos]
+```
+
+- Scroll a la izquierda → lo que ya salió; a la derecha → lo que viene. Flechas ‹ ›
+  (mismo patrón/estilo que `FeatureCarousel`), scrollbar nativa oculta.
+- **Marcador "hoy":** una línea vertical fina + label en **VU Gold** — la única veta de
+  ámbar del bloque, usada como una aguja de VU / cabezal de reproducción (dentro de la
+  Regla de Rareza). Solo aparece si hay ítems de los dos lados.
+- Tarjetas "próximas": carátula a `opacity-60` + fecha con prefijo (`Sale` / `Out`). Las
+  "recientes", normales. Sin cuenta regresiva ni "no te lo pierdas" — la anti-feature
+  "sin mecánicas de presión" sigue vigente.
+- Carátula cuadrada con hairline `ink-border` (→ `amber` en `group-hover`, como
+  `AlbumCard`) + título (display, `truncate`) + artista y fecha (mono `text-xs`).
+- Ubicación: debajo de "Actividad de la comunidad" / "Listas públicas". El descubrimiento
+  **social** es la identidad; el calendario es contenido editorial secundario. Se muestra
+  en ambos estados (anónimo y con sesión).
+
+### Datos: maqueta hoy, config manual como paso siguiente
+
+**Hoy (`listHomeReleases()` en `src/services/home/home.ts`):** toma los release-groups con
+carátula más recientes (`created_at DESC`, `credit role='primary'` para el artista, cap de
+3 por artista para que el seed no muestre una sola discografía) y les asigna **fechas
+sintéticas** repartidas alrededor de hoy (mitad pasado / mitad futuro, una por semana).
+Sirve para revisar el layout con carátulas reales de catálogo. Está marcado como maqueta
+en el propio docstring.
+
+**Paso siguiente (sin backend nuevo), config manual:** reemplazar la asignación sintética
+por `src/config/home-releases.ts` — `{ releaseGroupId, releaseDate, section: "recent" |
+"upcoming" }[]` referenciando `release_group.id` **ya ingeridos**. Nunca título/artista/URL
+a mano; la carátula sigue saliendo del pipeline `coverThumbUrl()` (≤250px, `04-risks.md`
+#6). Mismo patrón que las 24 carátulas del hero.
+
+**Componentes:** `HomeReleases` (server, resuelve i18n) → `ReleaseRail`
+(`src/components/home/ReleaseRail.tsx`, client — riel + flechas + marcador). Tipo
+`HomeRelease = { id, title, artist, coverThumbUrl, releaseDate, section }`. Cada tarjeta
+linkea a `/album/{id}`.
+
+### Lo que falta analizar (sprint real)
+
+1. **Fecha de lanzamiento.** Hoy solo existe `release.release_date` (por edición, parcial —
+   solo si se ingirió el tracklist de esa edición) y **no** a nivel `release_group`.
+   MusicBrainz tiene `first-release-date` en el release-group; la ingesta no lo guarda →
+   migración + cambio en `ingest-release.ts` + backfill.
+2. **Release-groups sin tracklist / sin ediciones publicadas** (caso "próximos"): verificar
+   que `ingest-release.ts` y la página `/album/[id]` no rompan con un release-group que no
+   tiene ninguna `release` publicada.
+3. **Estado "aún no salió":** se deriva (`release_date > hoy`), no se guarda flag — pero la
+   UI de `/album/[id]` tiene que manejar "sin tracklist todavía".
+4. **Carátulas pre-release:** Cover Art Archive a veces tiene arte de pre-venta, a veces no
+   → muchos `DiscPlaceholder` en "próximos".
+5. **Tensión con el Principio 4** ("el catálogo crece por uso real, nunca pre-cargado en
+   masa"). Un calendario de lanzamientos es 100% pre-carga de cosas que nadie buscó. Es una
+   decisión de identidad de producto: ¿"un Letterboxd para música" quiere un release
+   calendar editorial? Hay que resolverlo antes de invertir en el sync.
+6. **De dónde sale la lista.** MusicBrainz no tiene un feed de "upcoming" / "new releases"
+   usable (consultar por rango de fechas devuelve el firehose global). Filtrar con calidad =
+   curación editorial → engancha con el sistema de roles/cuentas de plataforma que
+   `product_philosophy.md` §7 deja sin resolver (mismo bloqueo que las listas editoriales y
+   las 24 carátulas del hero).
+7. **Relevancia / localización:** ¿lanzamientos para quién? Sin personalización en fases
+   tempranas (anti-feature declarada). Y la cadencia de refresco / quién cura.
+
 ## Pendiente
 
 - Definir el rol/cuenta de plataforma que permita publicar listas editoriales
@@ -195,5 +272,11 @@ trabajo de ahora. Lo que habría que tocar:
 - Listas públicas en Inicio anónimo con **mini-mosaico de carátulas** (L3) — requiere que
   `listPublicLists` devuelva ~4 `coverThumbUrl` por lista. Ver "Actividad de la comunidad y
   listas públicas — layout".
+- Apartados **"Lanzamientos recientes" / "Próximos lanzamientos"**: el riel (`ReleaseRail`)
+  ya está en Inicio con **datos de maqueta** (fechas sintéticas sobre release-groups reales).
+  Falta: (a) paso intermedio con `src/config/home-releases.ts` (curación manual sin backend),
+  y (b) la versión real — resolver los 7 puntos de "Lo que falta analizar", empezando por la
+  decisión de producto (Principio 4) y la fecha de lanzamiento en `release_group`. Ver
+  "'Lanzamientos recientes' y 'Próximos lanzamientos'".
 - Copy y diseño visual concreto de cada bloque (fuera del alcance de este documento, que
   cierra la estructura de contenido, no el layout).
