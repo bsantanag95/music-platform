@@ -93,6 +93,26 @@ visual, en la línea de Letterboxd/Musicboard, sin salir de "The Vinyl Listening
   (`/auth/register`, `/auth/login`). No hay buscador en el hero — la búsqueda vive en el
   Header (`HeaderSearch`) para todos los estados.
 
+### "Qué podés hacer" — carrusel de funcionalidades
+
+Reemplaza la tira de 3 pasos ("Cómo funciona") por un carrusel horizontal con las 9
+capacidades relevantes del producto: diario, rating dual, reseñas, favoritos, listas,
+colección física, seguir, catálogo preciso, privacidad.
+
+- `HowItWorks` (`src/components/home/HowItWorks.tsx`) sigue siendo el server component: sólo
+  resuelve i18n (`feature{1..9}{Title,Body}`, `featuresTitle`, `featuresPrev/Next`) y delega
+  en `FeatureCarousel`.
+- `FeatureCarousel` (`src/components/home/FeatureCarousel.tsx`, **client**): `<ul>` con
+  `overflow-x-auto` + `snap-x snap-mandatory`, tarjetas de ancho fijo (`w-64`, `shrink-0`) —
+  **no bajan a una fila nueva**, siguen en horizontal. Flechas ‹ › (`scrollBy` de ~0.8 del
+  ancho visible) que sólo aparecen si hay overflow y se deshabilitan en cada extremo; el
+  contenedor también scrollea con trackpad/teclado (`tabIndex={0}`).
+- **Sin animación de scroll** (`scrollBy` directo, sin `behavior: "smooth"`): el sistema de
+  diseño evita el movimiento decorativo y el salto nítido entre grupos encaja mejor; además
+  no hace falta un caso especial para `prefers-reduced-motion`.
+- El estado de las flechas se refresca síncrono tras cada `step()` (no sólo por el evento
+  `scroll`) + un `ResizeObserver` para el caso de resize.
+
 ### Actividad de la comunidad y listas públicas — layout
 
 Estos bloques son **prueba social** en la landing anónima, no contenido central, así que ahí

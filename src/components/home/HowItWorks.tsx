@@ -1,34 +1,27 @@
 import { getTranslations } from "next-intl/server";
+import { FeatureCarousel } from "./FeatureCarousel";
 
-// Tira de tres pasos para el Inicio anónimo: orienta a un visitante nuevo
-// sobre qué es el producto (diario sin fricción, rating dual, grafo social
-// explícito) sin convertir la página en una landing de features.
+// Funcionalidades del producto en el Inicio anónimo. Antes eran 3 pasos
+// ("Cómo funciona"); ahora es un carrusel horizontal con todas las
+// capacidades relevantes (diario, rating dual, reseñas, favoritos, listas,
+// colección física, seguir, catálogo, privacidad). Server component: resuelve
+// i18n y delega el scroll/flechas a FeatureCarousel (client).
+const FEATURE_COUNT = 9;
+
 export async function HowItWorks() {
   const t = await getTranslations("home");
 
-  const steps = [1, 2, 3].map((n) => ({
-    n,
-    title: t(`howItWorksStep${n}Title`),
-    body: t(`howItWorksStep${n}Body`),
+  const features = Array.from({ length: FEATURE_COUNT }, (_, i) => ({
+    title: t(`feature${i + 1}Title`),
+    body: t(`feature${i + 1}Body`),
   }));
 
   return (
-    <section className="flex w-full max-w-3xl flex-col gap-4">
-      <h2 className="font-display text-xl text-paper">{t("howItWorksTitle")}</h2>
-      <ol className="grid gap-4 sm:grid-cols-3">
-        {steps.map((step) => (
-          <li
-            key={step.n}
-            className="flex flex-col gap-2 rounded-lg border border-ink-border bg-ink-surface p-4"
-          >
-            <span className="font-data text-xs text-paper-muted">
-              {String(step.n).padStart(2, "0")}
-            </span>
-            <h3 className="font-display text-base text-paper">{step.title}</h3>
-            <p className="font-body text-sm text-paper-muted">{step.body}</p>
-          </li>
-        ))}
-      </ol>
-    </section>
+    <FeatureCarousel
+      title={t("featuresTitle")}
+      features={features}
+      prevLabel={t("featuresPrev")}
+      nextLabel={t("featuresNext")}
+    />
   );
 }
