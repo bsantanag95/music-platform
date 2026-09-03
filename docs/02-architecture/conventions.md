@@ -76,6 +76,26 @@ la arquitectura. Resumen normativo para uso diario:
   se traducen — se muestran tal cual llegan de MusicBrainz. i18n aplica solo al _chrome_ de la
   interfaz.
 
+## Tailwind — nombres de clases canónicos (v4)
+
+**Decisión confirmada.** Se usan siempre los nombres canónicos de Tailwind v4, no los alias
+de compatibilidad heredados de v3. El editor los marca vía `suggestCanonicalClasses`
+(`tailwindcss(suggestCanonicalClasses)`); esa sugerencia se acepta.
+
+- Caso frecuente: `bg-gradient-to-*` → **`bg-linear-to-*`** (además existen `bg-radial`,
+  `bg-conic`). Es un rename puro: el CSS generado es idéntico, sin riesgo visual.
+- **Cuidado — no todos los renames son inocuos.** Algunas utilidades de v3 se renombraron
+  *y* se recalibraron en v4, así que aplicar la sugerencia a ciegas cambia el resultado:
+  - `shadow-sm` (v3) → `shadow-xs` (v4); `shadow` (v3) → `shadow-sm` (v4).
+  - Ídem para `blur-*`, `rounded-*` en el escalón `sm`, y `outline-none` → `outline-hidden`
+    (el `outline-none` de v4 significa `outline-style: none`, otra cosa).
+  - En estos casos se decide clase por clase revisando el render, no con un reemplazo global.
+- No se folda en trabajo de feature: la migración de nombres va en su propio commit chico.
+- Sin dependencia de lint nueva para esto por ahora (regla de PRODUCT.md: toda dependencia
+  nueva necesita justificación explícita). Si más adelante se quiere enforcement en CI,
+  evaluar `eslint-plugin-better-tailwindcss` (`no-deprecated-classes`) como decisión aparte.
+  Mientras tanto: la pista del editor + corrección oportunista al tocar cada archivo.
+
 ## Principio general
 
 Toda convención nueva que surja durante el desarrollo se agrega a este documento en el momento en que se decide, no después — así ninguna herramienta de IA ni colaborador humano tiene que inferir el estilo del proyecto leyendo código existente.

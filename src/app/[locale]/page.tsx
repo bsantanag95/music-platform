@@ -39,7 +39,8 @@ export default async function Home() {
       );
 
   let hasFollows = false;
-  let feedPreviewEntries: Awaited<ReturnType<typeof listFollowingFeedPreview>> = [];
+  let feedPreviewEntries: Awaited<ReturnType<typeof listFollowingFeedPreview>> =
+    [];
   if (user) {
     const following = await listFollowing(user.id, 1, 1);
     hasFollows = following.users.length > 0;
@@ -57,7 +58,11 @@ export default async function Home() {
             <p className="font-body text-paper-muted">{t("tagline")}</p>
           </div>
           <QuickLinks />
-          {hasFollows ? <FeedPreview entries={feedPreviewEntries} /> : <OnboardingPrompt />}
+          {hasFollows ? (
+            <FeedPreview entries={feedPreviewEntries} />
+          ) : (
+            <OnboardingPrompt />
+          )}
         </>
       ) : (
         <AnonHero covers={heroCovers} />

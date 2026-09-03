@@ -149,7 +149,7 @@ export function Header({ user = null }: HeaderProps) {
             <Link href="/auth/login" className="rounded-md border border-ink-border px-3 py-2 text-paper transition-colors hover:border-paper">
               {t("login")}
             </Link>
-            <Link href="/auth/register" className="rounded-md border border-accent bg-accent px-3 py-2 font-medium text-ink shadow-sm transition-colors hover:border-amber-hover hover:bg-amber-hover">
+            <Link href="/auth/register" className="rounded-md border border-accent bg-accent px-3 py-2 font-medium text-ink transition-colors hover:border-amber-hover hover:bg-amber-hover">
               {t("register")}
             </Link>
           </div>

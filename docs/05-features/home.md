@@ -49,11 +49,12 @@ bloques muestran contenido de **cualquier usuario público**, no solo de los seg
 ### Exclusivo de visitante anónimo
 
 - Tagline + propuesta de valor (ya existe).
-- Buscador (ya existe). **Ajuste (`add-header-search`):** ahora es exclusivo de este estado
-  — un usuario con sesión ya tiene búsqueda persistente en el Header y el acceso rápido
-  "buscar", así que mostrarlo también acá duplicaría la entrada y volvería a instalar el
-  buscador como protagonista de Inicio, justo lo que este diseño evitó.
 - CTA a registro/login.
+- **Búsqueda:** ya no hay buscador propio en Inicio. Nace con `add-header-search` como
+  exclusivo del estado anónimo, pero `redesign-frontend` mueve `HeaderSearch` al Header en
+  **todos** los estados, así que un buscador en el hero anónimo duplicaría la entrada y
+  volvería a instalarlo como protagonista de Inicio — justo lo que este diseño evita. El
+  visitante anónimo busca desde el Header, igual que un usuario con sesión.
 
 ## Notas técnicas de la implementación
 
@@ -70,9 +71,10 @@ bloques muestran contenido de **cualquier usuario público**, no solo de los seg
   vía `FeedEntryCard`/`FeedEntryBody` (`src/components/feed/FeedEntryBody.tsx`).
 - No hizo falta ningún rol/permiso nuevo — "listas públicas recientes" usa el mismo campo
   `audience` que ya expone `userList`.
-- El `SearchForm` del hero (`src/app/[locale]/page.tsx`) está gateado a `!user`, en el mismo
-  bloque condicional que el CTA de registro/login. La búsqueda persistente para cualquier
-  sesión vive ahora en el Header (`HeaderSearch`, ver `openspec/changes/add-header-search`).
+- El hero ya no monta un `SearchForm` propio (lo hacía gateado a `!user` en
+  `src/app/[locale]/page.tsx`). Con el rediseño, la única entrada de búsqueda es
+  `HeaderSearch` en el Header, visible en todos los estados (ver
+  `openspec/changes/add-header-search` para el origen del componente).
 
 ## Hero visual del visitante anónimo (`redesign-frontend`)
 
@@ -88,8 +90,8 @@ visual, en la línea de Letterboxd/Musicboard, sin salir de "The Vinyl Listening
   legibilidad encima. Es decorativo: `aria-hidden`, `alt=""`.
 - **Un solo CTA "Comenzá"** que abre `GetStartedModal`
   (`src/components/home/GetStartedModal.tsx`) con las dos rutas de entrada
-  (`/auth/register`, `/auth/login`). El `SearchForm` queda debajo de la banda como utilidad
-  secundaria.
+  (`/auth/register`, `/auth/login`). No hay buscador en el hero — la búsqueda vive en el
+  Header (`HeaderSearch`) para todos los estados.
 
 ### Fuente de las carátulas del muro — hoy
 

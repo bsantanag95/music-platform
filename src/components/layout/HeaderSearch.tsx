@@ -47,7 +47,7 @@ export function HeaderSearch() {
         onChange={(e) => setQuery(e.target.value)}
         disabled={isSearching}
         placeholder={t("search.placeholder")}
-        className="w-36 rounded border border-ink-border bg-ink-surface py-1.5 pl-2 pr-7 font-data text-xs text-paper placeholder:text-paper-muted focus:w-48 focus:outline-none transition-[width]"
+        className="w-36 rounded border border-ink-border bg-ink-surface py-1.5 pl-2 pr-7 font-data text-xs text-paper placeholder:text-paper-muted transition-[width] focus:w-48"
       />
       <button
         type="submit"
