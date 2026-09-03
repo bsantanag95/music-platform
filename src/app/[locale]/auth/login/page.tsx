@@ -6,7 +6,7 @@ import { resolveSession } from "@/services/auth/sessions";
 
 export default async function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  if (await resolveSession()) redirect({ href: "/search", locale });
+  if (await resolveSession()) redirect({ href: "/", locale });
   const t = await getTranslations("auth");
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center gap-8 px-4 py-12">

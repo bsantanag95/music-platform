@@ -87,7 +87,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     : await createSession(user.id);
 
   const response = NextResponse.redirect(
-    new URL(`/${locale}/search`, process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+    new URL(`/${locale}`, process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   );
   setSessionCookie(response, session.token);
   return response;

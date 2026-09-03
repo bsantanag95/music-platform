@@ -24,19 +24,19 @@ import LoginPage from "./login/page";
 import RegisterPage from "./register/page";
 
 describe("páginas de autenticación", () => {
-  it("redirige login autenticado al buscador conservando locale", async () => {
+  it("redirige login autenticado al home conservando locale", async () => {
     mocks.resolveSession.mockResolvedValueOnce({ user: { id: "u1" } });
 
     await expect(LoginPage({ params: Promise.resolve({ locale: "en" }) })).rejects.toThrow(
-      'REDIRECT:{"href":"/search","locale":"en"}',
+      'REDIRECT:{"href":"/","locale":"en"}',
     );
   });
 
-  it("redirige registro autenticado al buscador conservando locale", async () => {
+  it("redirige registro autenticado al home conservando locale", async () => {
     mocks.resolveSession.mockResolvedValueOnce({ user: { id: "u1" } });
 
     await expect(RegisterPage({ params: Promise.resolve({ locale: "es" }) })).rejects.toThrow(
-      'REDIRECT:{"href":"/search","locale":"es"}',
+      'REDIRECT:{"href":"/","locale":"es"}',
     );
   });
 

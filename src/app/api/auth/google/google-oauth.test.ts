@@ -243,7 +243,7 @@ describe("GET /api/auth/google/callback", () => {
     expect(response.headers.get("location")).toContain("OAUTH_EMAIL_NOT_VERIFIED");
   });
 
-  it("completa el flujo feliz y redirige a /search con el locale del flujo", async () => {
+  it("completa el flujo feliz y redirige al home con el locale del flujo", async () => {
     mocks.consumeOAuthFlowCookies.mockResolvedValue({
       state: "valid-state",
       codeVerifier: "verifier",
@@ -260,7 +260,7 @@ describe("GET /api/auth/google/callback", () => {
     const response = await callbackGet(request);
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toContain("/en/search");
+    expect(response.headers.get("location")).toContain("/en");
     expect(mocks.createSession).toHaveBeenCalledWith("new-user");
   });
 

@@ -47,7 +47,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(parsed.data),
       });
-      router.push("/search");
+      router.push("/");
       router.refresh();
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
