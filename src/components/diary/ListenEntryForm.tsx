@@ -56,7 +56,7 @@ export function ListenEntryForm({ entryId, initial, onSaved, onCancel }: ListenE
   };
 
   return (
-    <div className="flex flex-col gap-3 rounded border border-ink-border bg-ink-surface p-4">
+    <div className="flex flex-col gap-3 rounded-md border border-ink-border bg-ink-surface p-4">
       <div className="flex flex-col gap-1">
         <label className="flex flex-col gap-1">
           <span className="font-data text-sm text-paper">{t("bodyLabel")}</span>
@@ -65,7 +65,7 @@ export function ListenEntryForm({ entryId, initial, onSaved, onCancel }: ListenE
             onChange={(event) => setBody(event.target.value)}
             maxLength={500}
             rows={3}
-            className="rounded border border-ink-border bg-ink px-3 py-2 font-body text-sm text-paper"
+            className="rounded-md border border-ink-border bg-ink px-3 py-2 font-body text-sm text-paper"
           />
         </label>
         <span className="font-data text-xs text-paper-muted">{t("bodyMax")}</span>
@@ -76,7 +76,7 @@ export function ListenEntryForm({ entryId, initial, onSaved, onCancel }: ListenE
         <select
           value={listenContext}
           onChange={(event) => setListenContext(event.target.value as ListenContext)}
-          className="rounded border border-ink-border bg-ink px-3 py-2 font-data text-sm text-paper"
+          className="rounded-md border border-ink-border bg-ink px-3 py-2 font-data text-sm text-paper"
         >
           <option value="first_listen">{t("context.first_listen")}</option>
           <option value="relisten">{t("context.relisten")}</option>
@@ -96,7 +96,7 @@ export function ListenEntryForm({ entryId, initial, onSaved, onCancel }: ListenE
           {(["private", "followers", "public"] as const).map((option) => (
             <label
               key={option}
-              className={`inline-flex cursor-pointer items-center gap-1.5 rounded border px-3 py-1.5 font-data text-xs transition-colors ${
+              className={`inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 font-data text-xs transition-colors ${
                 audience === option
                   ? "border-amber bg-amber/10 text-paper"
                   : "border-ink-border bg-ink text-paper-muted hover:text-paper"
