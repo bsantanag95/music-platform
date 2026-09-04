@@ -48,6 +48,8 @@ La request se modelará con estados locales de búsqueda inicial y carga de pág
 
 `UserCard` añadirá un monograma derivado de `displayName ?? username`, manteniendo nombre y username como contenido principal. El monograma será decorativo o tendrá texto alternativo redundante según el contexto, y no implicará que el sistema tenga una foto de perfil. La zona de acción será flexible: en móvil podrá ocupar una segunda línea para no recortar etiquetas como `Solicitud enviada` o `Iniciar sesión para seguir`.
 
+**Composición de la lista:** los resultados se renderizan como una lista de una sola columna a lo ancho de la página (patrón coherente con los resultados del catálogo en `/search`). La cuadrícula de dos columnas recortaba demasiado el nombre y el `@username` al restarles ancho el monograma y la acción, así que se optó por la lista de ancho completo para priorizar la legibilidad de la identidad de cada usuario.
+
 **Alternativa descartada:** agregar una columna `avatar_url`. No es necesaria para resolver el problema visual y ampliaría el alcance de datos, almacenamiento y privacidad.
 
 ### Semántica y mensajes
