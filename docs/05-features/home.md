@@ -69,12 +69,19 @@ Ver "Inicio con sesión — estructura" para la jerarquía completa y los bloque
   'public'` en el autor (más `audience = 'public'` en el caso de listas) y, si hay sesión,
   excluyen bloqueos en cualquier dirección — sin paginación, devuelven un top-N fijo para
   preview.
-- El feed compacto de Inicio (`listFollowingFeedPreview`) es un wrapper fino sobre
-  `listFeed` con `pageSize` chico — mismo contrato que `/me/feed`.
 - El feed de seguidos (`/me/feed`, `FeedPreview`, `RecentSelfActivity`) usa
   `FeedActivityList`; los bloques compactos (`CommunityActivity`, `PublicLists`) tienen su
   propia fila densa. `FeedEntryBody` se eliminó en `redesign-feed`; `targetHref` vive en
   `src/components/feed/feed-target.ts`.
+- **"Tu feed" y "Tu rastro reciente" cargan y pagan con scroll interno**
+  (`home-scrollable-preview-lists`): el servidor resuelve la primera página (10 entradas —
+  `listFeed`/`listMyRecentActivity` con `pageSize=10`) dentro de un contenedor de altura
+  fija (`ScrollablePreviewList`, cliente); el resto se pagina bajo demanda contra
+  `GET /api/me/feed` / `GET /api/me/recent-activity` al llegar al fondo del contenedor
+  (`IntersectionObserver` sobre un sentinel + `useInfiniteQuery`), con un spinner
+  circular mientras carga. `listMyRecentActivity` ahora pagina igual que `listFeed`
+  (`page`/`pageSize`/`hasNext`, ver `src/services/feed/feed.ts`); `listFollowingFeedPreview`
+  se eliminó — "Tu feed" llama `listFeed` directo, igual que `/me/feed`.
 - No hizo falta ningún rol/permiso nuevo — "listas públicas recientes" usa el mismo campo
   `audience` que ya expone `userList`.
 - El hero ya no monta un `SearchForm` propio (lo hacía gateado a `!user` en
@@ -105,19 +112,23 @@ entró) seguido de los mismos bloques de descubrimiento. Este cambio cierra su j
 1. **Saludo** (`Greeting`): una línea `Hola, {displayName ?? @username}`. Sin conteos,
    fechas de alta ni rachas — recibimiento, no panel de progreso (anti-feature "sin
    gamificación").
-2. **Feed de seguidos** (`FeedPreview`) como bloque principal, o **nudge de onboarding**
+2. **Accesos rápidos** (`QuickLinks`): diario, favoritos, listas, colección, buscador y
+   usuarios. Se ubican justo debajo del saludo, antes del feed, para no quedar relegados
+   tras el contenido de lectura. Conservan los seis enlaces.
+3. **Feed de seguidos** (`FeedPreview`) como bloque principal, o **nudge de onboarding**
    (`OnboardingPrompt`) si no sigue a nadie. El nudge ahora también invita a registrar la
    primera escucha, en prosa (no un checklist con tildes). `FeedPreview` usa
-   `FeedActivityList` (misma presentación que `/me/feed`, `redesign-feed`).
-3. **Tu rastro reciente** (`RecentSelfActivity`): las últimas escuchas, valoraciones y
+   `FeedActivityList` (misma presentación que `/me/feed`, `redesign-feed`), con scroll
+   interno y carga de a 10 (ver "Notas técnicas de la implementación").
+4. **Tu rastro reciente** (`RecentSelfActivity`): las últimas escuchas, valoraciones y
    comentarios del propio usuario. **No filtra por audiencia** (es contenido propio,
    igual que `/me/diary`). Se oculta si no hay actividad. Fuente: `listMyRecentActivity`
-   en `src/services/home/home.ts`. Presentación: `FeedActivityList` (peso por contenido,
-   igual que `/me/feed` — ver `activity-feed.md`, `redesign-feed`).
-4. **Retomá una lista** (`ResumeList`): acceso directo a la lista propia con actividad más
+   en `src/services/home/home.ts` (pagina de a 10). Presentación: `FeedActivityList` (peso
+   por contenido, igual que `/me/feed` — ver `activity-feed.md`, `redesign-feed`), con el
+   mismo contenedor de scroll y carga incremental que "Tu feed".
+5. **Retomá una lista** (`ResumeList`): acceso directo a la lista propia con actividad más
    reciente, con mini-mosaico 2×2 de carátulas de sus ítems. Se oculta si el usuario no
    tiene listas. Fuente: `getMostRecentEditedList`.
-5. **Accesos rápidos** (`QuickLinks`, sin cambios).
 6. **Descubrimiento**: `CommunityActivity` + `PublicLists` en el **mismo layout compacto
    que el anónimo** — grilla `lg:grid-cols-[1.5fr_1fr]` (apiladas en < `lg`) con `compact`
    y `previewLimit = 6`. Son bloques secundarios acá también (van debajo del contenido

@@ -1,18 +1,20 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { FeedActivityList } from "@/components/feed/FeedActivityList";
+import { ScrollablePreviewList } from "@/components/home/ScrollablePreviewList";
 import type { FeedComment, FeedListenEntry, FeedRating } from "@/services/feed/feed";
 
 interface RecentSelfActivityProps {
-  entries: (FeedListenEntry | FeedRating | FeedComment)[];
+  initialEntries: (FeedListenEntry | FeedRating | FeedComment)[];
+  initialHasNext: boolean;
 }
 
 // "Tu rastro reciente": las últimas escuchas, valoraciones y comentarios del
 // propio usuario, como recap de presencia. Misma presentación por peso que
-// /me/feed (ver openspec/changes/redesign-feed). No renderiza nada si no hay
-// actividad — ver docs/05-features/home.md.
-export async function RecentSelfActivity({ entries }: RecentSelfActivityProps) {
-  if (entries.length === 0) return null;
+// /me/feed (ver openspec/changes/archive/*-redesign-feed), con scroll interno
+// y carga incremental (ver home-scrollable-preview-lists). No renderiza nada
+// si no hay actividad — ver docs/05-features/home.md.
+export async function RecentSelfActivity({ initialEntries, initialHasNext }: RecentSelfActivityProps) {
+  if (initialEntries.length === 0) return null;
 
   const t = await getTranslations("home");
 
@@ -27,7 +29,7 @@ export async function RecentSelfActivity({ entries }: RecentSelfActivityProps) {
           {t("recentActivitySeeDiary")}
         </Link>
       </div>
-      <FeedActivityList entries={entries} variant="self" />
+      <ScrollablePreviewList source="self" initialEntries={initialEntries} initialHasNext={initialHasNext} />
     </section>
   );
 }

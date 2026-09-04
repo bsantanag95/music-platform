@@ -1,10 +1,16 @@
 import { describe, it, expect, vi } from "vitest";
 import { screen } from "@testing-library/react";
-import type { AnchorHTMLAttributes, ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { AnchorHTMLAttributes, ReactElement, ReactNode } from "react";
 import { FeedPreview } from "./FeedPreview";
 import { RecentSelfActivity } from "./RecentSelfActivity";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import type { FeedEntry } from "@/services/feed/feed";
+
+function renderWithQuery(ui: ReactElement) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return renderWithIntl(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
 
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn().mockResolvedValue((key: string) => key),
@@ -49,15 +55,15 @@ const favorite: FeedEntry = {
 
 describe("FeedPreview", () => {
   it("usa la presentación por peso: comentario en bloque, favorito en línea", async () => {
-    const ui = await FeedPreview({ entries: [comment, favorite] });
-    renderWithIntl(ui);
+    const ui = await FeedPreview({ initialEntries: [comment, favorite], initialHasNext: false });
+    renderWithQuery(ui);
 
     expect(screen.getByText("Producción impecable de principio a fin.")).toBeInTheDocument();
     expect(screen.getByText("Lonerism")).toBeInTheDocument();
   });
 
   it("muestra el empty state cuando no hay entradas", async () => {
-    const ui = await FeedPreview({ entries: [] });
+    const ui = await FeedPreview({ initialEntries: [], initialHasNext: false });
     renderWithIntl(ui);
 
     expect(screen.getByText("feedPreviewEmpty")).toBeInTheDocument();
@@ -66,13 +72,13 @@ describe("FeedPreview", () => {
 
 describe("RecentSelfActivity", () => {
   it("devuelve null sin entradas", async () => {
-    expect(await RecentSelfActivity({ entries: [] })).toBeNull();
+    expect(await RecentSelfActivity({ initialEntries: [], initialHasNext: false })).toBeNull();
   });
 
   it("renderiza la actividad propia con la presentación por peso", async () => {
-    const ui = await RecentSelfActivity({ entries: [comment] });
+    const ui = await RecentSelfActivity({ initialEntries: [comment], initialHasNext: false });
     if (!ui) throw new Error("RecentSelfActivity debería renderizar con entradas");
-    renderWithIntl(ui);
+    renderWithQuery(ui);
 
     expect(screen.getByText("Producción impecable de principio a fin.")).toBeInTheDocument();
   });

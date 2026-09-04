@@ -8,6 +8,15 @@
         "value": "#000",
         "createdAt": "2026-09-04T06:09:16.312Z",
         "reason": "not a visual color: alpha stops for a CSS mask-image gradient (black=opaque) on the carousel edge fade"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "9999px",
+        "files": [
+          "src/app/globals.css"
+        ],
+        "createdAt": "2026-09-04T17:46:35.250Z",
+        "reason": "thumb de scrollbar de 6px de ancho, pill radius convencional, no forma parte de la escala de radios de tarjetas/botones de DESIGN.md"
       }
     ]
   }

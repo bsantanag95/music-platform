@@ -61,6 +61,32 @@
   }
 }
 
+/* Scrollbar propia para los contenedores con scroll interno de Inicio ("Tu
+   feed", "Tu rastro reciente"): reposo en ink-border, ámbar solo al pasar el
+   mouse — la barra nativa sin estilizar rompe la identidad visual del
+   proyecto. Regla de Rareza: el ámbar no aparece en reposo. */
+.themed-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink-border) transparent;
+}
+
+.themed-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.themed-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.themed-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--color-ink-border);
+  border-radius: 9999px;
+}
+
+.themed-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: var(--color-amber);
+}
+
 @layer base {
   body {
     @apply bg-ink text-paper font-body antialiased;

@@ -10,15 +10,20 @@ import { ResumeList } from "@/components/home/ResumeList";
 import { HomeReleases } from "@/components/home/HomeReleases";
 import { PopularComments } from "@/components/home/PopularComments";
 import { listFollowing } from "@/services/social/following";
+import { listFeed } from "@/services/feed/feed";
 import {
   getMostRecentEditedList,
   listCommunityActivity,
-  listFollowingFeedPreview,
   listHomeReleases,
   listMyRecentActivity,
   listPopularComments,
   listPublicLists,
 } from "@/services/home/home";
+
+// Carga inicial de los bloques con scroll infinito ("Tu feed", "Tu rastro
+// reciente"): página 1 resuelta en el servidor; el resto lo pagina
+// ScrollablePreviewList contra /api/me/feed y /api/me/recent-activity.
+const PREVIEW_PAGE_SIZE = 10;
 
 interface AuthenticatedHomeProps {
   user: { id: string; username: string; displayName: string | null };
@@ -41,7 +46,7 @@ export async function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
   const [following, recentActivity, resumeList, communityActivity, publicLists, popularComments, homeReleases] =
     await Promise.all([
       listFollowing(user.id, 1, 1),
-      listMyRecentActivity(user.id),
+      listMyRecentActivity(user.id, 1, PREVIEW_PAGE_SIZE),
       getMostRecentEditedList(user.id),
       listCommunityActivity(user.id, previewLimit),
       listPublicLists(user.id, previewLimit),
@@ -50,7 +55,9 @@ export async function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
     ]);
 
   const hasFollows = following.users.length > 0;
-  const feedPreviewEntries = hasFollows ? await listFollowingFeedPreview(user.id) : [];
+  const feedPreview = hasFollows
+    ? await listFeed(user.id, 1, PREVIEW_PAGE_SIZE)
+    : { entries: [], hasNext: false };
 
   return (
     <main className="flex min-h-screen flex-col items-center gap-12 overflow-x-clip px-4 py-12">
@@ -58,13 +65,19 @@ export async function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
 
       <div className="flex w-full max-w-3xl flex-col gap-6">
         <Greeting name={user.displayName ?? `@${user.username}`} />
-        {hasFollows ? <FeedPreview entries={feedPreviewEntries} /> : <OnboardingPrompt />}
+        <QuickLinks />
+        {hasFollows ? (
+          <FeedPreview initialEntries={feedPreview.entries} initialHasNext={feedPreview.hasNext} />
+        ) : (
+          <OnboardingPrompt />
+        )}
       </div>
 
-      <RecentSelfActivity entries={recentActivity} />
+      <RecentSelfActivity
+        initialEntries={recentActivity.entries}
+        initialHasNext={recentActivity.hasNext}
+      />
       <ResumeList list={resumeList} />
-
-      <QuickLinks />
 
       <div className="grid w-full max-w-3xl gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-start">
         <CommunityActivity entries={communityActivity} />

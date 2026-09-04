@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { ReactNode } from "react";
 import * as following from "@/services/social/following";
 import * as home from "@/services/home/home";
+import * as feed from "@/services/feed/feed";
 import { AuthenticatedHome } from "./AuthenticatedHome";
 import { FeedPreview } from "./FeedPreview";
 import { OnboardingPrompt } from "./OnboardingPrompt";
@@ -18,9 +19,13 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 
 vi.mock("@/services/social/following", () => ({ listFollowing: vi.fn() }));
+vi.mock("@/services/feed/feed", () => ({
+  listFeed: vi.fn().mockResolvedValue({ entries: [], page: 1, pageSize: 10, hasNext: false }),
+}));
 vi.mock("@/services/home/home", () => ({
-  listFollowingFeedPreview: vi.fn().mockResolvedValue([]),
-  listMyRecentActivity: vi.fn().mockResolvedValue([]),
+  listMyRecentActivity: vi
+    .fn()
+    .mockResolvedValue({ entries: [], page: 1, pageSize: 10, hasNext: false }),
   getMostRecentEditedList: vi.fn().mockResolvedValue(null),
   listCommunityActivity: vi.fn().mockResolvedValue([]),
   listPublicLists: vi.fn().mockResolvedValue([]),
@@ -61,7 +66,7 @@ describe("AuthenticatedHome", () => {
 
     const element = await AuthenticatedHome({ user });
 
-    expect(home.listFollowingFeedPreview).toHaveBeenCalledWith("u1");
+    expect(feed.listFeed).toHaveBeenCalledWith("u1", 1, 10);
     expect(findElement(element, FeedPreview)).not.toBeNull();
     expect(findElement(element, OnboardingPrompt)).toBeNull();
   });
@@ -76,7 +81,7 @@ describe("AuthenticatedHome", () => {
 
     const element = await AuthenticatedHome({ user });
 
-    expect(home.listFollowingFeedPreview).not.toHaveBeenCalled();
+    expect(feed.listFeed).not.toHaveBeenCalled();
     expect(findElement(element, OnboardingPrompt)).not.toBeNull();
     expect(findElement(element, FeedPreview)).toBeNull();
   });
@@ -96,21 +101,24 @@ describe("AuthenticatedHome", () => {
       itemCount: 2,
       coverThumbUrls: [],
     };
-    vi.mocked(home.listMyRecentActivity).mockResolvedValue(
-      activity as Awaited<ReturnType<typeof home.listMyRecentActivity>>,
-    );
+    vi.mocked(home.listMyRecentActivity).mockResolvedValue({
+      entries: activity,
+      page: 1,
+      pageSize: 10,
+      hasNext: false,
+    } as Awaited<ReturnType<typeof home.listMyRecentActivity>>);
     vi.mocked(home.getMostRecentEditedList).mockResolvedValue(resumeList);
 
     const element = await AuthenticatedHome({ user });
 
-    expect(findElement(element, RecentSelfActivity)?.props?.entries).toEqual(activity);
+    expect(findElement(element, RecentSelfActivity)?.props?.initialEntries).toEqual(activity);
     expect(findElement(element, ResumeList)?.props?.list).toEqual(resumeList);
   });
 });
 
 describe("RecentSelfActivity / ResumeList: se ocultan sin datos", () => {
   it("RecentSelfActivity no renderiza nada sin entradas", async () => {
-    expect(await RecentSelfActivity({ entries: [] })).toBeNull();
+    expect(await RecentSelfActivity({ initialEntries: [], initialHasNext: false })).toBeNull();
   });
 
   it("ResumeList no renderiza nada sin lista", async () => {

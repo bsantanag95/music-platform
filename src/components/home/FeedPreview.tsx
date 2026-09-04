@@ -1,16 +1,18 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { FeedActivityList } from "@/components/feed/FeedActivityList";
+import { ScrollablePreviewList } from "@/components/home/ScrollablePreviewList";
 import type { FeedEntry } from "@/services/feed/feed";
 
 interface FeedPreviewProps {
-  entries: FeedEntry[];
+  initialEntries: FeedEntry[];
+  initialHasNext: boolean;
 }
 
-// Preview compacto del feed de seguidos: mismos datos y misma presentación por
-// peso que /me/feed (ver openspec/changes/redesign-feed), sin paginación ni
-// "cargar más" — el feed completo vive en su propia página.
-export async function FeedPreview({ entries }: FeedPreviewProps) {
+// Preview del feed de seguidos: misma presentación por peso que /me/feed (ver
+// openspec/changes/archive/*-redesign-feed), con scroll interno y carga
+// incremental (ver home-scrollable-preview-lists) en vez de "cargar más" — el
+// feed completo con su propio botón vive en /me/feed.
+export async function FeedPreview({ initialEntries, initialHasNext }: FeedPreviewProps) {
   const t = await getTranslations("home");
 
   return (
@@ -24,10 +26,14 @@ export async function FeedPreview({ entries }: FeedPreviewProps) {
           {t("feedPreviewSeeAll")}
         </Link>
       </div>
-      {entries.length === 0 ? (
+      {initialEntries.length === 0 ? (
         <p className="font-body text-sm text-paper-muted">{t("feedPreviewEmpty")}</p>
       ) : (
-        <FeedActivityList entries={entries} />
+        <ScrollablePreviewList
+          source="feed"
+          initialEntries={initialEntries}
+          initialHasNext={initialHasNext}
+        />
       )}
     </section>
   );

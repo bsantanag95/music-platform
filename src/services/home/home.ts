@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db";
+import { ApiError } from "@/lib/api/errors";
 import {
   appUser,
   artist,
@@ -12,11 +13,10 @@ import {
   userList,
   userListItem,
 } from "@/db/schema";
-import { listFeed, PRIMARY_ARTIST_SQL } from "@/services/feed/feed";
+import { PRIMARY_ARTIST_SQL } from "@/services/feed/feed";
 import type {
   FeedAuthor,
   FeedComment,
-  FeedEntry,
   FeedListEvent,
   FeedListenEntry,
   FeedRating,
@@ -44,24 +44,31 @@ function targetType(
 }
 
 /**
- * Preview compacto del feed de seguidos para Inicio: mismo `listFeed` que
- * `/me/feed`, acotado a `limit` entradas, sin paginación.
- */
-export async function listFollowingFeedPreview(userId: string, limit = 5): Promise<FeedEntry[]> {
-  const { entries } = await listFeed(userId, 1, limit);
-  return entries;
-}
-
-/**
  * "Tu rastro reciente" de Inicio: las escuchas, valoraciones y comentarios más
  * recientes del propio usuario, como recap de presencia. No filtra por
  * audiencia —es contenido propio, igual que `/me/diary`— ni por bloqueos.
- * Sin paginación: top-N fijo pensado para un preview.
+ * Pagina igual que `listFeed`: cada fuente se trae ampliada
+ * (`pageSize + extra`), se fusiona en memoria y se recorta por página — la
+ * composición heterogénea no permite paginación SQL única (ver
+ * `openspec/changes/archive/*-redesign-feed/design.md`).
  */
 export async function listMyRecentActivity(
   userId: string,
-  limit = 5,
-): Promise<(FeedListenEntry | FeedRating | FeedComment)[]> {
+  page = 1,
+  pageSize = 5,
+): Promise<{
+  entries: (FeedListenEntry | FeedRating | FeedComment)[];
+  page: number;
+  pageSize: number;
+  hasNext: boolean;
+}> {
+  if (page < 1 || pageSize < 1 || pageSize > 50) {
+    throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
+  }
+
+  const extra = 1;
+  const perSource = pageSize + extra;
+
   const [listens, ratings, comments] = await Promise.all([
     db
       .select({
@@ -90,7 +97,7 @@ export async function listMyRecentActivity(
       .leftJoin(recording, eq(listenEntry.recordingId, recording.id))
       .where(eq(listenEntry.userId, userId))
       .orderBy(desc(listenEntry.createdAt), desc(listenEntry.id))
-      .limit(limit),
+      .limit(perSource),
 
     db
       .select({
@@ -117,7 +124,7 @@ export async function listMyRecentActivity(
       .leftJoin(recording, eq(rating.recordingId, recording.id))
       .where(eq(rating.userId, userId))
       .orderBy(desc(rating.updatedAt), desc(rating.id))
-      .limit(limit),
+      .limit(perSource),
 
     db
       .select({
@@ -143,7 +150,7 @@ export async function listMyRecentActivity(
       .leftJoin(recording, eq(comment.recordingId, recording.id))
       .where(eq(comment.userId, userId))
       .orderBy(desc(comment.createdAt), desc(comment.id))
-      .limit(limit),
+      .limit(perSource),
   ]);
 
   const listenEntries: FeedListenEntry[] = listens.map((row) => ({
@@ -196,9 +203,16 @@ export async function listMyRecentActivity(
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
   }));
 
-  return [...listenEntries, ...ratingEntries, ...commentEntries]
+  const merged = [...listenEntries, ...ratingEntries, ...commentEntries]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, limit);
+    .slice((page - 1) * pageSize, page * pageSize + extra);
+
+  return {
+    entries: merged.slice(0, pageSize),
+    page,
+    pageSize,
+    hasNext: merged.length > pageSize,
+  };
 }
 
 /**

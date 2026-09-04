@@ -671,6 +671,23 @@ export const FeedResponseSchema = z.object({
 });
 export type FeedResponse = z.infer<typeof FeedResponseSchema>;
 
+// "Tu rastro reciente" de Inicio: mismo contrato de paginación que el feed,
+// pero sin favorite ni list (listMyRecentActivity no incluye esas fuentes).
+export const RecentActivityEntrySchema = z.discriminatedUnion("kind", [
+  FeedListenEntrySchema,
+  FeedRatingSchema,
+  FeedCommentSchema,
+]);
+export type RecentActivityEntry = z.infer<typeof RecentActivityEntrySchema>;
+
+export const RecentActivityResponseSchema = z.object({
+  entries: z.array(RecentActivityEntrySchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  hasNext: z.boolean(),
+});
+export type RecentActivityResponse = z.infer<typeof RecentActivityResponseSchema>;
+
 // ============================================================
 // Colección física (Fase 5, add-physical-collection)
 // ============================================================

@@ -2,21 +2,15 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import {
   getMostRecentEditedList,
   listCommunityActivity,
-  listFollowingFeedPreview,
   listMyRecentActivity,
   listPublicLists,
 } from "./home";
 
 const mocks = vi.hoisted(() => ({
   db: { select: vi.fn() },
-  listFeed: vi.fn(),
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
-vi.mock("@/services/feed/feed", async () => {
-  const actual = await vi.importActual<typeof import("@/services/feed/feed")>("@/services/feed/feed");
-  return { ...actual, listFeed: mocks.listFeed };
-});
 
 // innerJoin()/leftJoin()×n.where().orderBy().limit() → terminal de cada query de Inicio
 function sourceQuery(rows: unknown[]) {
@@ -185,9 +179,10 @@ describe("servicio de datos de Inicio", () => {
           authorDisplayName: author.displayName,
         }]));
 
-      const result = await listMyRecentActivity(author.id, 5);
+      const result = await listMyRecentActivity(author.id, 1, 5);
 
-      expect(result.map((entry) => entry.kind)).toEqual(["rating", "comment", "listen"]);
+      expect(result.entries.map((entry) => entry.kind)).toEqual(["rating", "comment", "listen"]);
+      expect(result).toMatchObject({ page: 1, pageSize: 5, hasNext: false });
     });
 
     it("incluye escuchas con audiencia privada (contenido propio, sin filtro)", async () => {
@@ -196,10 +191,10 @@ describe("servicio de datos de Inicio", () => {
         .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]));
 
-      const result = await listMyRecentActivity(author.id, 5);
+      const result = await listMyRecentActivity(author.id, 1, 5);
 
-      expect(result).toHaveLength(1);
-      expect(result[0]).toMatchObject({ kind: "listen", audience: "private" });
+      expect(result.entries).toHaveLength(1);
+      expect(result.entries[0]).toMatchObject({ kind: "listen", audience: "private" });
     });
 
     it("devuelve lista vacía cuando no hay actividad propia", async () => {
@@ -208,9 +203,31 @@ describe("servicio de datos de Inicio", () => {
         .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]));
 
-      const result = await listMyRecentActivity(author.id, 5);
+      const result = await listMyRecentActivity(author.id, 1, 5);
 
-      expect(result).toEqual([]);
+      expect(result.entries).toEqual([]);
+      expect(result.hasNext).toBe(false);
+    });
+
+    it("indica hasNext cuando hay más entradas que pageSize", async () => {
+      mocks.db.select
+        .mockReturnValueOnce(sourceQuery([
+          listenRow("00000000-0000-4000-8000-00000000000f", "2026-02-06T00:00:00Z"),
+          listenRow("00000000-0000-4000-8000-000000000010", "2026-02-05T00:00:00Z"),
+        ]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]));
+
+      const result = await listMyRecentActivity(author.id, 1, 1);
+
+      expect(result.entries).toHaveLength(1);
+      expect(result.hasNext).toBe(true);
+    });
+
+    it("rechaza paginación inválida", async () => {
+      await expect(listMyRecentActivity(author.id, 0)).rejects.toMatchObject({
+        code: "VALIDATION_ERROR",
+      });
     });
   });
 
@@ -252,17 +269,6 @@ describe("servicio de datos de Inicio", () => {
         itemCount: 3,
         coverThumbUrls: ["https://cover/1.jpg", "https://cover/2.jpg"],
       });
-    });
-  });
-
-  describe("listFollowingFeedPreview", () => {
-    it("devuelve solo las entradas de listFeed, sin datos de paginación", async () => {
-      mocks.listFeed.mockResolvedValue({ entries: [{ kind: "listen" }], page: 1, pageSize: 5, hasNext: true });
-
-      const result = await listFollowingFeedPreview(author.id, 5);
-
-      expect(mocks.listFeed).toHaveBeenCalledWith(author.id, 1, 5);
-      expect(result).toEqual([{ kind: "listen" }]);
     });
   });
 });

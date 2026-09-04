@@ -18,14 +18,14 @@ y SHALL NOT mostrar accesos rápidos de usuario, saludo, ni ningún bloque de co
 propio (feed de seguidos, rastro reciente, retomar lista).
 
 Con sesión activa, la página SHALL mostrar, en este orden: un saludo breve al usuario;
-un preview del feed de seguidos como bloque principal o, si el usuario no sigue a nadie,
-un bloque de onboarding en su lugar; un bloque con la actividad reciente del propio
-usuario si existe; un acceso para retomar su lista editada más recientemente si tiene al
-menos una lista; y accesos rápidos a diario, favoritos, listas, colección y buscador. La
-página con sesión SHALL NOT mostrar la tagline de propuesta de valor, el hero visual del
-visitante anónimo, el carrusel de funcionalidades, ninguna llamada a la acción de
-registro o inicio de sesión, ni el buscador del hero (esa entrada queda cubierta por la
-búsqueda persistente del Header y por el acceso rápido "buscar").
+los accesos rápidos a diario, favoritos, listas, colección, buscador y usuarios; un
+preview del feed de seguidos como bloque principal o, si el usuario no sigue a nadie, un
+bloque de onboarding en su lugar; un bloque con la actividad reciente del propio usuario
+si existe; y un acceso para retomar su lista editada más recientemente si tiene al menos
+una lista. La página con sesión SHALL NOT mostrar la tagline de propuesta de valor, el
+hero visual del visitante anónimo, el carrusel de funcionalidades, ninguna llamada a la
+acción de registro o inicio de sesión, ni el buscador del hero (esa entrada queda
+cubierta por la búsqueda persistente del Header y por el acceso rápido "buscar").
 
 El saludo y los bloques de contenido propio SHALL NOT incluir conteos de progreso,
 elementos pendientes de valorar, rachas ni medallas de completitud.
@@ -39,9 +39,9 @@ elementos pendientes de valorar, rachas ni medallas de completitud.
 #### Scenario: Usuario con sesión y al menos un seguido
 - **WHEN** un usuario autenticado que sigue a al menos otra persona con relación aceptada
   abre `/[locale]`
-- **THEN** ve un saludo breve, un preview del feed de seguidos con link a `/me/feed`
-  como bloque principal, y los accesos rápidos, y no ve la tagline de propuesta de
-  valor, el hero anónimo, el carrusel de funcionalidades ni el buscador del hero
+- **THEN** ve un saludo breve, los accesos rápidos, y un preview del feed de seguidos con
+  link a `/me/feed` como bloque principal, y no ve la tagline de propuesta de valor, el
+  hero anónimo, el carrusel de funcionalidades ni el buscador del hero
 
 #### Scenario: Usuario con sesión sin seguidos
 - **WHEN** un usuario autenticado que no sigue a nadie abre `/[locale]`
