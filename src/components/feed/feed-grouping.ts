@@ -3,13 +3,14 @@ import { isFeedEntryWithText } from "./feed-entry-weight";
 
 type AmbientEntry =
   | Extract<FeedEntry, { kind: "listen" }>
-  | Extract<FeedEntry, { kind: "favorite" }>;
+  | Extract<FeedEntry, { kind: "favorite" }>
+  | Extract<FeedEntry, { kind: "rating" }>;
 
 export interface FeedEntryGroup {
   kind: "group";
   // Estable para la `key` de React: tipo + id de la primera entrada.
   id: string;
-  groupedKind: "listen" | "favorite";
+  groupedKind: "listen" | "favorite" | "rating";
   author: FeedEntry["author"];
   // El más reciente de la corrida (las entradas vienen ordenadas desc).
   createdAt: string;
@@ -20,18 +21,21 @@ export type FeedRow = FeedEntry | FeedEntryGroup;
 
 const GROUP_MIN = 3;
 
-// Candidata a colapsar: sola presencia de bajo contenido — escucha sin nota, o
-// favorito. Un comentario o una escucha con nota nunca lo son.
+// Candidata a colapsar: sola presencia de bajo contenido — escucha sin nota,
+// favorito, o rating. Un comentario o una escucha con nota nunca lo son. Los
+// ratings se sumaron tras el critique del 2026-09-04 (hallazgo P1): una
+// racha de valoraciones consecutivas del mismo autor pesaba tanto como
+// entradas con prosa, contradiciendo el propio objetivo de esta función.
 function isAmbient(entry: FeedEntry): entry is AmbientEntry {
   if (isFeedEntryWithText(entry)) return false;
-  return entry.kind === "listen" || entry.kind === "favorite";
+  return entry.kind === "listen" || entry.kind === "favorite" || entry.kind === "rating";
 }
 
 /**
  * Pliega corridas de 3 o más entradas consecutivas de sola presencia del mismo
- * tipo (escuchas sin nota, o favoritos) y del mismo autor en una única fila.
- * Comentarios, ratings, eventos de lista y escuchas con nota cortan la corrida
- * y nunca se colapsan. Ver openspec/changes/redesign-feed, decisión 11.
+ * tipo (escuchas sin nota, favoritos, o ratings) y del mismo autor en una
+ * única fila. Comentarios, eventos de lista y escuchas con nota cortan la
+ * corrida y nunca se colapsan. Ver openspec/changes/redesign-feed, decisión 11.
  */
 export function groupAmbientRuns(entries: FeedEntry[]): FeedRow[] {
   const out: FeedRow[] = [];

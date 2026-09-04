@@ -38,6 +38,19 @@ function favorite(author = ana): FeedEntry {
   };
 }
 
+function rating(author = ana): FeedEntry {
+  seq += 1;
+  return {
+    kind: "rating",
+    id: `r${seq}`,
+    stars: "4.0",
+    detailedScore: null,
+    createdAt: `2026-08-${String(30 - seq).padStart(2, "0")}T00:00:00Z`,
+    target: { type: "release-group", id: `rg${seq}`, title: `Disco ${seq}`, artistName: null, coverThumbUrl: null },
+    author,
+  };
+}
+
 function comment(author = ana): FeedEntry {
   seq += 1;
   return {
@@ -87,6 +100,19 @@ describe("groupAmbientRuns", () => {
     const rows = groupAmbientRuns([listen(), listen(), favorite(), favorite(), favorite()]);
     expect(rows.map((r) => r.kind)).toEqual(["listen", "listen", "group"]);
     expect((rows[2] as FeedEntryGroup).groupedKind).toBe("favorite");
+  });
+
+  it("pliega 3+ valoraciones consecutivas del mismo autor en un grupo", () => {
+    const rows = groupAmbientRuns([rating(), rating(), rating()]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.kind).toBe("group");
+    expect((rows[0] as FeedEntryGroup).groupedKind).toBe("rating");
+    expect((rows[0] as FeedEntryGroup).entries).toHaveLength(3);
+  });
+
+  it("un comentario corta una corrida de valoraciones", () => {
+    const rows = groupAmbientRuns([rating(), rating(), comment(), rating(), rating()]);
+    expect(rows.map((r) => r.kind)).toEqual(["rating", "rating", "comment", "rating", "rating"]);
   });
 
   it("no agrupa entre autores distintos", () => {
