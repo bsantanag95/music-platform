@@ -63,15 +63,16 @@ export async function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
     <main className="flex min-h-screen flex-col items-center gap-12 overflow-x-clip px-4 py-12">
       <h1 className="sr-only">{t("appName")}</h1>
 
-      <div className="flex w-full max-w-3xl flex-col gap-6">
+      <div className="flex w-full max-w-3xl flex-col gap-4">
         <Greeting name={user.displayName ?? `@${user.username}`} />
         <QuickLinks />
-        {hasFollows ? (
-          <FeedPreview initialEntries={feedPreview.entries} initialHasNext={feedPreview.hasNext} />
-        ) : (
-          <OnboardingPrompt />
-        )}
       </div>
+
+      {hasFollows ? (
+        <FeedPreview initialEntries={feedPreview.entries} initialHasNext={feedPreview.hasNext} />
+      ) : (
+        <OnboardingPrompt />
+      )}
 
       <RecentSelfActivity
         initialEntries={recentActivity.entries}
