@@ -2,7 +2,7 @@
   "search": {
     "pageTitle": "Buscar en el catálogo",
     "fieldLabel": "Buscar en el catálogo",
-    "placeholder": "Ej: Pink Floyd",
+    "placeholder": "Ej: Queen",
     "submit": "Buscar",
     "submitting": "Buscando...",
     "loading": "Consultando el catálogo...",

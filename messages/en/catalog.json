@@ -2,7 +2,7 @@
   "search": {
     "pageTitle": "Search the catalog",
     "fieldLabel": "Search the catalog",
-    "placeholder": "E.g.: Pink Floyd",
+    "placeholder": "E.g.: Queen",
     "submit": "Search",
     "submitting": "Searching...",
     "loading": "Checking the catalog...",
