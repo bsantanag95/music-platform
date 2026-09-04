@@ -185,6 +185,30 @@ Los estados de UI mínimos son:
 - `Rechazar`;
 - `Dejar de seguir`.
 
+### 8.1 Superficie de búsqueda de usuarios (`/users`)
+
+La búsqueda de usuarios vive en una superficie dedicada (`/users`), separada del buscador musical
+del Header (`/search`): no se combinan resultados. Su comportamiento:
+
+- El término se busca por username o nombre visible y se persiste en la URL como `?q=`, de modo que
+  una búsqueda es compartible y se restaura al recargar (la página lee `q` y dispara la carga
+  inicial sin duplicar requests).
+- Los resultados aparecen bajo el formulario, con una cabecera que muestra el término buscado y la
+  cantidad cargada. Cuando `hasNext` es verdadero se ofrece una acción explícita **Cargar más
+  usuarios** que agrega la siguiente página sin reemplazar las anteriores (el endpoint expone `page`
+  y `hasNext`; el contrato REST no cambia).
+- Cada resultado es una tarjeta con una identidad visual derivada (monograma determinista sobre el
+  nombre visible o username — no un avatar real, el modelo no expone imágenes) y la acción/estado de
+  seguimiento correspondiente. En móvil la zona de acción pasa a una segunda línea para no recortar
+  etiquetas largas.
+- Estados accesibles: skeletons y `aria-busy` durante la carga inicial, estado vacío localizado
+  cuando no hay coincidencias, y error recuperable que **mantiene el formulario y los resultados ya
+  cargados** permitiendo reintentar sin perder el término. Cualquier excepción no tipada se resuelve
+  como `INTERNAL_ERROR` localizado.
+
+Los cambios de terminología (`Personas` → `Usuarios`) y de ubicación de la entrada (fuera del
+Header, con acceso desde Home y Footer) se documentaron en el cambio `redesign-users-search`.
+
 Bloqueo y reporte no forman todavía parte de una decisión cerrada. Deben resolverse antes de abrir
 la funcionalidad social a usuarios reales, aunque podrían implementarse en un incremento de
 seguridad separado.

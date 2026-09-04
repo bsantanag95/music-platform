@@ -2,9 +2,17 @@ import { getTranslations } from "next-intl/server";
 import { UserSearch } from "@/components/social/UserSearch";
 import { resolveSession } from "@/services/auth/sessions";
 
-export default async function UsersPage() {
+interface UsersPageProps {
+  // `q` llega por URL (`/users?q=...`) para que una búsqueda sea compartible y
+  // se restaure al recargar. La búsqueda sigue siendo cliente (`UserSearch`):
+  // la página solo lee el término para prellenar y disparar la carga inicial.
+  searchParams: Promise<{ q?: string }>;
+}
+
+export default async function UsersPage({ searchParams }: UsersPageProps) {
   const t = await getTranslations("users");
   const session = await resolveSession();
+  const { q } = await searchParams;
 
   return (
     <main className="flex min-h-screen flex-col items-center overflow-x-clip px-4 py-12 sm:py-16">
@@ -20,7 +28,7 @@ export default async function UsersPage() {
             {t("searchDescription")}
           </p>
         </header>
-        <UserSearch authenticated={Boolean(session)} />
+        <UserSearch authenticated={Boolean(session)} initialQuery={q?.trim() ?? ""} />
       </div>
     </main>
   );
