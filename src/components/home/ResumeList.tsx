@@ -5,25 +5,33 @@ import { CoverThumb } from "@/components/catalog/CoverThumb";
 import type { HomeResumeList } from "@/services/home/home";
 
 // "Retomá una lista": acceso directo a la lista propia con actividad más
-// reciente, para seguir agregándole ítems. No renderiza nada si el usuario no
-// tiene listas (ver docs/05-features/home.md).
+// reciente, para seguir agregándole ítems, con link a /me/lists para ver el
+// resto. No renderiza nada si el usuario no tiene listas (ver
+// docs/05-features/home.md). Mismo patrón de sección (h2 + "ver todo" +
+// contenido sobre el fondo, sin card) que FeedPreview/RecentSelfActivity —
+// antes era la única sección de Inicio metida en una card, y quedaba como un
+// elemento suelto entre secciones sin caja.
 export async function ResumeList({ list }: { list: HomeResumeList | null }) {
   if (!list) return null;
 
   const t = await getTranslations("home");
 
   return (
-    <section className="w-full max-w-3xl">
-      <Link
-        href={`/me/lists/${list.id}`}
-        className="group flex items-center gap-4 rounded-lg border border-ink-border bg-ink-surface p-4 transition-colors hover:border-amber"
-      >
+    <section className="flex w-full max-w-3xl flex-col gap-4">
+      <div className="flex items-baseline justify-between">
+        <h2 className="font-display text-xl text-paper">{t("resumeListLabel")}</h2>
+        <Link
+          href="/me/lists"
+          className="font-data text-xs text-paper-muted transition-colors hover:text-paper"
+        >
+          {t("resumeListSeeAll")}
+        </Link>
+      </div>
+
+      <Link href={`/me/lists/${list.id}`} className="group flex items-center gap-4">
         <ListMosaic covers={list.coverThumbUrls} title={list.title} />
         <span className="min-w-0 flex-1">
-          <span className="block font-data text-xs uppercase tracking-wide text-paper-muted">
-            {t("resumeListLabel")}
-          </span>
-          <span className="mt-0.5 block truncate font-display text-lg text-paper transition-colors group-hover:text-amber">
+          <span className="block truncate font-display text-lg text-paper transition-colors group-hover:text-amber">
             {list.title}
           </span>
           <span className="font-data text-xs text-paper-muted">

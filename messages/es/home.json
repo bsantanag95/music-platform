@@ -13,6 +13,7 @@
   "recentActivityTitle": "Tu rastro reciente",
   "recentActivitySeeDiary": "Ver diario",
   "resumeListLabel": "Retomá una lista",
+  "resumeListSeeAll": "Ver todas",
   "resumeListItemCount": "{count, plural, one {# ítem} other {# ítems}}",
   "onboardingLogFirstListen": "¿Todavía no registraste nada? Buscá un artista y marcá tu primera escucha.",
   "feedPreviewTitle": "Tu feed",

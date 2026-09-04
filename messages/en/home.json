@@ -13,6 +13,7 @@
   "recentActivityTitle": "Your recent activity",
   "recentActivitySeeDiary": "See diary",
   "resumeListLabel": "Pick up a list",
+  "resumeListSeeAll": "See all",
   "resumeListItemCount": "{count, plural, one {# item} other {# items}}",
   "onboardingLogFirstListen": "Haven't logged anything yet? Search for an artist and mark your first listen.",
   "feedPreviewTitle": "Your feed",
