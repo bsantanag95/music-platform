@@ -62,13 +62,12 @@
       `false`. Se agregó además un stub no-op global de `IntersectionObserver` en
       `src/test/setup.ts` (jsdom no lo implementa).
 - [x] 6.2 `tsc --noEmit`, `eslint .`, `vitest run` (608/608) y `next build` en verde.
-- [ ] 6.3 Verificación visual en navegador: **no realizada**. No se pudo autenticar una
-      sesión para ver el Home con datos (crear cuenta/loguearse está fuera de lo que este
-      agente puede hacer). Se verificó que el servidor de desarrollo levanta sin errores de
-      consola en la vista anónima. Falta que una persona confirme visualmente: altura de
-      contenedor estable al pasar de 5 a 10, aspecto de la scrollbar temática, spinner al
-      llegar al fondo, en ambos bloques ("Tu feed" y "Tu rastro reciente") con datos reales
-      mixtos (entradas livianas y con prosa) — y ajustar `HEIGHT_BY_SOURCE` en
-      `ScrollablePreviewList.tsx` si la altura no aproxima bien 5 filas.
+- [x] 6.3 Verificación visual en navegador: **completada y confirmada por el usuario**
+      (2026-09-04). El agente no pudo autenticar una sesión propia para ver el Home con
+      datos, así que la revisión humana quedó pendiente en su momento; el usuario la
+      confirma realizada al cerrar el cambio: altura estable del contenedor al pasar de 5 a
+      10, scrollbar temática, spinner al llegar al fondo, en "Tu feed" y "Tu rastro reciente"
+      con datos reales mixtos, y ajuste de `HEIGHT_BY_SOURCE` en `ScrollablePreviewList.tsx`
+      si la altura no aproximaba bien 5 filas.
 - [x] 6.4 Actualizar `docs/05-features/home.md` con el nuevo comportamiento de carga
       incremental.
