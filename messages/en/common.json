@@ -16,6 +16,8 @@
   "logoutPending": "Logging out...",
   "signedInAs": "Signed in as",
   "localeSwitcher": "Language",
+  "openMenu": "Open menu",
+  "closeMenu": "Close menu",
   "error": {
     "title": "Something went wrong",
     "description": "We couldn't complete the request. Please try again in a moment."
