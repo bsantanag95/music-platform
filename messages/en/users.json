@@ -3,7 +3,7 @@
   "searchTitle": "Users",
   "searchDescription": "Discover who is part of the community.",
   "searchFieldLabel": "Search users",
-  "searchPlaceholder": "e.g. ana",
+  "searchPlaceholder": "Search by username",
   "searchSubmit": "Search",
   "searching": "Searching...",
   "searchEmptyTitle": "No results",
