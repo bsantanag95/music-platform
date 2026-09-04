@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-color",
+        "value": "#000",
+        "createdAt": "2026-09-04T06:09:16.312Z",
+        "reason": "not a visual color: alpha stops for a CSS mask-image gradient (black=opaque) on the carousel edge fade"
+      }
+    ]
+  }
+}
