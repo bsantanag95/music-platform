@@ -64,6 +64,7 @@ export async function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
 
       <WelcomePanel
         name={user.displayName ?? `@${user.username}`}
+        username={user.username}
         lastActivity={recentActivity.entries[0] ?? null}
       />
 

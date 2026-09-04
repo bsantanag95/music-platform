@@ -10,6 +10,7 @@ type LastTouch = FeedListenEntry | FeedRating | FeedComment;
 
 interface WelcomePanelProps {
   name: string;
+  username: string;
   lastActivity: LastTouch | null;
   // Inyectable para test; en producción siempre es "ahora".
   now?: Date;
@@ -33,14 +34,21 @@ export function lastTouchKey(kind: LastTouch["kind"]): "lastTouchListen" | "last
 // propio) + accesos rápidos, todo en una sola superficie tonal (misma receta
 // que OnboardingPrompt/ResumeList) en vez del saludo de texto suelto que
 // había antes. Ver docs/05-features/home.md.
-export async function WelcomePanel({ name, lastActivity, now = new Date() }: WelcomePanelProps) {
+export async function WelcomePanel({ name, username, lastActivity, now = new Date() }: WelcomePanelProps) {
   const tHome = await getTranslations("home");
 
   return (
     <section className="grid w-full max-w-3xl gap-6 rounded-lg border border-ink-border bg-ink-surface p-6 lg:grid-cols-[1.4fr_1fr] lg:items-center">
       <div className="flex flex-col gap-4">
         <p className="text-balance font-display text-2xl text-paper">
-          {tHome(greetingKey(now), { name })}
+          <span>{tHome(greetingKey(now))}</span>
+          {", "}
+          <Link
+            href={`/users/${encodeURIComponent(username)}`}
+            className="transition-colors hover:text-amber"
+          >
+            {name}
+          </Link>
         </p>
 
         {lastActivity ? (

@@ -74,7 +74,12 @@ describe("lastTouchKey", () => {
 
 describe("WelcomePanel", () => {
   it("sin actividad: muestra el nudge y no el callout de última vez", async () => {
-    const ui = await WelcomePanel({ name: "Fran", lastActivity: null, now: new Date(2026, 0, 1, 9) });
+    const ui = await WelcomePanel({
+      name: "Fran",
+      username: "fran",
+      lastActivity: null,
+      now: new Date(2026, 0, 1, 9),
+    });
     renderWithIntl(ui);
 
     expect(screen.getByText("greetingMorning")).toBeInTheDocument();
@@ -83,7 +88,12 @@ describe("WelcomePanel", () => {
   });
 
   it("con una valoración reciente: muestra el callout de última vez", async () => {
-    const ui = await WelcomePanel({ name: "Fran", lastActivity: rating, now: new Date(2026, 0, 1, 15) });
+    const ui = await WelcomePanel({
+      name: "Fran",
+      username: "fran",
+      lastActivity: rating,
+      now: new Date(2026, 0, 1, 15),
+    });
     renderWithIntl(ui);
 
     expect(screen.getByText("greetingAfternoon")).toBeInTheDocument();
@@ -92,7 +102,12 @@ describe("WelcomePanel", () => {
   });
 
   it("con un comentario reciente: usa la clave de comentario", async () => {
-    const ui = await WelcomePanel({ name: "Fran", lastActivity: comment, now: new Date(2026, 0, 1, 21) });
+    const ui = await WelcomePanel({
+      name: "Fran",
+      username: "fran",
+      lastActivity: comment,
+      now: new Date(2026, 0, 1, 21),
+    });
     renderWithIntl(ui);
 
     expect(screen.getByText("greetingEvening")).toBeInTheDocument();
@@ -100,9 +115,16 @@ describe("WelcomePanel", () => {
   });
 
   it("siempre incluye los accesos rápidos", async () => {
-    const ui = await WelcomePanel({ name: "Fran", lastActivity: null, now: new Date() });
+    const ui = await WelcomePanel({ name: "Fran", username: "fran", lastActivity: null, now: new Date() });
     renderWithIntl(ui);
 
     expect(screen.getByTestId("quick-links")).toBeInTheDocument();
+  });
+
+  it("el nombre linkea al perfil propio", async () => {
+    const ui = await WelcomePanel({ name: "Fran", username: "fran", lastActivity: null, now: new Date() });
+    renderWithIntl(ui);
+
+    expect(screen.getByRole("link", { name: "Fran" })).toHaveAttribute("href", "/users/fran");
   });
 });
