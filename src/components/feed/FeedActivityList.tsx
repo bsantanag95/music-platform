@@ -45,7 +45,7 @@ export function FeedActivityList({ entries, variant = "feed" }: FeedActivityList
               // Indentada a la columna del título de las filas normales
               // (celda `size-11 sm:size-12` + `gap-3 sm:gap-4`) para que la
               // actividad ambiente se lea subordinada.
-              className={`py-3 first:pt-0 last:pb-0 ${self ? "pl-4" : "pl-14 sm:pl-16"}`}
+              className={`${self ? "py-2 pl-4" : "py-3 pl-14 sm:pl-16"} first:pt-0 last:pb-0`}
             >
               <GroupRow group={row} t={t} hideAuthor={self} />
             </li>
@@ -54,15 +54,39 @@ export function FeedActivityList({ entries, variant = "feed" }: FeedActivityList
 
         const heavy = isFeedEntryWithText(row);
         const body = proseBody(row);
+
+        if (self) {
+          // Ritmo más apretado que "Tu feed": título, artista y reacción
+          // comparten una línea (sin celda ni autor que ya la separan) para
+          // que una entrada de sola presencia quede en dos líneas, no cuatro.
+          return (
+            <li
+              key={`${row.kind}-${row.id}`}
+              className={`${heavy ? "py-3" : "py-2"} first:pt-0 last:pb-0 pl-4`}
+            >
+              <MetaLine entry={row} t={t} hideAuthor />
+              <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                <TargetTitle {...targetLink(row)} layout="inline" />
+                <EntryReaction entry={row} inline />
+              </div>
+              {row.kind === "rating" ? (
+                <FeedRatingMeter
+                  stars={row.stars}
+                  detailedScore={row.detailedScore}
+                  label={ratingMeterLabel(row.stars, row.detailedScore, t)}
+                />
+              ) : null}
+              {heavy && body ? <ProsePanel body={body} /> : null}
+            </li>
+          );
+        }
+
         return (
-          <li
-            key={`${row.kind}-${row.id}`}
-            className={`${heavy ? "py-4" : "py-3"} first:pt-0 last:pb-0 ${self ? "pl-4" : ""}`}
-          >
-            <div className={self ? "" : "flex gap-3 sm:gap-4"}>
-              {self ? null : <FeedCell entry={row} />}
+          <li key={`${row.kind}-${row.id}`} className={`${heavy ? "py-4" : "py-3"} first:pt-0 last:pb-0`}>
+            <div className="flex gap-3 sm:gap-4">
+              <FeedCell entry={row} />
               <div className="min-w-0 flex-1">
-                <MetaLine entry={row} t={t} hideAuthor={self} />
+                <MetaLine entry={row} t={t} hideAuthor={false} />
                 <TargetTitle {...targetLink(row)} />
                 <EntryReaction entry={row} />
                 {row.kind === "rating" ? (
@@ -205,19 +229,42 @@ function FeedCell({ entry }: { entry: FeedEntry }) {
 }
 
 // Título del objetivo — el ancla tipográfica de la fila (Space Grotesk, un
-// tamaño consistente). El artista debajo, para álbumes y canciones.
-function TargetTitle({ href, label, artist }: { href: string; label: string; artist: string | null }) {
+// tamaño consistente). En "Tu feed" el artista va debajo, en su propia línea;
+// en "Tu rastro reciente" (`inline`) comparte línea con el título para
+// mantener el ritmo apretado del riel propio.
+function TargetTitle({
+  href,
+  label,
+  artist,
+  layout = "stacked",
+}: {
+  href: string;
+  label: string;
+  artist: string | null;
+  layout?: "stacked" | "inline";
+}) {
+  const link = (
+    <Link
+      href={href}
+      className="font-display text-base text-paper underline decoration-ink-border decoration-1 underline-offset-4 transition-colors hover:text-amber hover:decoration-amber"
+    >
+      {label}
+    </Link>
+  );
+
+  if (layout === "inline") {
+    return (
+      <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+        {link}
+        {artist ? <span className="font-data text-xs text-paper-muted">· {artist}</span> : null}
+      </span>
+    );
+  }
+
   return (
     <div className="mt-1">
-      <Link
-        href={href}
-        className="font-display text-base text-paper underline decoration-ink-border decoration-1 underline-offset-4 transition-colors hover:text-amber hover:decoration-amber"
-      >
-        {label}
-      </Link>
-      {artist ? (
-        <p className="font-data text-xs text-paper-muted">{artist}</p>
-      ) : null}
+      {link}
+      {artist ? <p className="font-data text-xs text-paper-muted">{artist}</p> : null}
     </div>
   );
 }
@@ -263,10 +310,10 @@ function AuthorLink({ author }: { author: FeedEntry["author"] }) {
   );
 }
 
-function EntryReaction({ entry }: { entry: FeedEntry }) {
+function EntryReaction({ entry, inline = false }: { entry: FeedEntry; inline?: boolean }) {
   if (entry.kind !== "listen" || !entry.reaction) return null;
   return (
-    <span className="mt-1 inline-block font-data text-xs">
+    <span className={inline ? "shrink-0 font-data text-xs" : "mt-1 inline-block font-data text-xs"}>
       <ReactionBadge reaction={entry.reaction} />
     </span>
   );
