@@ -1,6 +1,7 @@
 {
-  "searchTitle": "Find people",
-  "searchDescription": "Find profiles by username or display name.",
+  "communityEyebrow": "Community",
+  "searchTitle": "Users",
+  "searchDescription": "Discover who is part of the community.",
   "searchFieldLabel": "Search users",
   "searchPlaceholder": "e.g. ana",
   "searchSubmit": "Search",

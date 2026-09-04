@@ -1,6 +1,7 @@
 {
-  "searchTitle": "Buscar personas",
-  "searchDescription": "Encontrá perfiles por nombre de usuario o nombre visible.",
+  "communityEyebrow": "Comunidad",
+  "searchTitle": "Usuarios",
+  "searchDescription": "Descubrí quiénes forman parte de la comunidad.",
   "searchFieldLabel": "Buscar usuarios",
   "searchPlaceholder": "ej. ana",
   "searchSubmit": "Buscar",

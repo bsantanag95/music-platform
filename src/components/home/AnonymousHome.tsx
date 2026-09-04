@@ -5,6 +5,8 @@ import { HowItWorks } from "@/components/home/HowItWorks";
 import { HomeReleases } from "@/components/home/HomeReleases";
 import { PopularComments } from "@/components/home/PopularComments";
 import { AnonCta } from "@/components/home/AnonCta";
+import { Link } from "@/i18n/navigation";
+import { getTranslations } from "next-intl/server";
 import {
   listCommunityActivity,
   listHomeReleases,
@@ -17,6 +19,7 @@ import {
 // funcionalidades + CTA de registro, con los bloques de la comunidad como
 // prueba social en layout compacto. Ver docs/05-features/home.md.
 export async function AnonymousHome() {
+  const t = await getTranslations("common");
   // Prueba social, no contenido central: top-N más corto y layout compacto.
   const previewLimit = 6;
 
@@ -46,6 +49,13 @@ export async function AnonymousHome() {
         <CommunityActivity entries={communityActivity} />
         <PublicLists entries={publicLists} />
       </div>
+
+      <Link
+        href="/users"
+        className="rounded-md border border-ink-border px-4 py-2 font-data text-sm text-paper transition-colors hover:border-amber hover:text-amber"
+      >
+        {t("users")}
+      </Link>
 
       <PopularComments comments={popularComments} />
 

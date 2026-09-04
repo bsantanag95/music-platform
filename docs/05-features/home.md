@@ -81,6 +81,9 @@ Ver "Inicio con sesión — estructura" para la jerarquía completa y los bloque
   `src/app/[locale]/page.tsx`). Con el rediseño, la única entrada de búsqueda es
   `HeaderSearch` en el Header, visible en todos los estados (ver
   `openspec/changes/add-header-search` para el origen del componente).
+- La búsqueda de usuarios es una superficie separada en `/users`: no se mezcla con el
+  buscador musical del Header. Inicio ofrece un acceso contextual a Usuarios tanto para
+  visitantes como para usuarios autenticados, y el Footer conserva el enlace permanente.
 
 ## Inicio con sesión — estructura (`redesign-home-authenticated`)
 

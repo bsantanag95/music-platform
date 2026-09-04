@@ -12,6 +12,7 @@ export async function QuickLinks() {
     { href: "/me/lists" as const, label: t("lists") },
     { href: "/me/collection" as const, label: t("collection") },
     { href: "/search" as const, label: t("search") },
+    { href: "/users" as const, label: t("users") },
   ];
 
   return (

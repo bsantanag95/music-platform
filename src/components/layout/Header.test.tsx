@@ -81,6 +81,12 @@ describe("Header", () => {
     expect(screen.getByRole("link", { name: "Inicio" })).toHaveAttribute("href", "/");
   });
 
+  it("no muestra el buscador de usuarios como navegación principal", () => {
+    renderWithIntl(<Header />);
+
+    expect(screen.queryByRole("link", { name: "Usuarios" })).not.toBeInTheDocument();
+  });
+
   it("muestra login y registro como acciones primarias para visitantes", () => {
     renderWithIntl(<Header />);
 

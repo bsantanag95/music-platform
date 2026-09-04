@@ -59,12 +59,6 @@ export function Header({ user = null }: HeaderProps) {
       <div className="flex items-center gap-4">
         <Logo />
         <HeaderSearch />
-        <Link
-          href="/users"
-          className="font-data text-sm text-paper-muted transition-colors hover:text-paper"
-        >
-          {t("users")}
-        </Link>
         {currentUser ? (
           <Link
             href="/me/diary"

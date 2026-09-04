@@ -59,19 +59,32 @@ export function UserSearch({ authenticated }: UserSearchProps) {
   }
 
   return (
-    <div className="flex w-full max-w-xl flex-col gap-6">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Input
-          label={t("searchFieldLabel")}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          error={validationError}
-          disabled={searching}
-          placeholder={t("searchPlaceholder")}
-        />
-        <Button type="submit" variant="primary" disabled={searching} className="self-start">
-          {searching ? t("searching") : t("searchSubmit")}
-        </Button>
+    <div className="flex w-full flex-col gap-8">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-4 rounded-lg border border-ink-border bg-ink-surface/70 p-4 sm:p-5"
+      >
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+          <div className="min-w-0 flex-1">
+            <Input
+              label={t("searchFieldLabel")}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              error={validationError}
+              disabled={searching}
+              placeholder={t("searchPlaceholder")}
+              className="min-h-11 w-full"
+            />
+          </div>
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={searching}
+            className="min-h-11 w-full shrink-0 sm:w-auto"
+          >
+            {searching ? t("searching") : t("searchSubmit")}
+          </Button>
+        </div>
       </form>
 
       {searched && !searching && result && result.users.length === 0 && (
@@ -79,7 +92,10 @@ export function UserSearch({ authenticated }: UserSearchProps) {
       )}
 
       {result && result.users.length > 0 && (
-        <ul className="flex flex-col gap-2" aria-label={t("searchFieldLabel")}>
+        <ul
+          className="grid gap-3 md:grid-cols-2"
+          aria-label={t("searchFieldLabel")}
+        >
           {result.users.map((user) => (
             <UserCard key={user.id} user={user} authenticated={authenticated} />
           ))}
