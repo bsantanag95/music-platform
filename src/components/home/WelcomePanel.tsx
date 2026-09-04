@@ -45,7 +45,7 @@ export async function WelcomePanel({ name, username, lastActivity, now = new Dat
           {", "}
           <Link
             href={`/users/${encodeURIComponent(username)}`}
-            className="transition-colors hover:text-amber"
+            className="underline decoration-ink-border decoration-1 underline-offset-4 transition-colors hover:text-amber hover:decoration-amber"
           >
             {name}
           </Link>
