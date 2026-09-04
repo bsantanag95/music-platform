@@ -3,8 +3,7 @@ import { CommunityActivity } from "@/components/home/CommunityActivity";
 import { PublicLists } from "@/components/home/PublicLists";
 import { FeedPreview } from "@/components/home/FeedPreview";
 import { OnboardingPrompt } from "@/components/home/OnboardingPrompt";
-import { QuickLinks } from "@/components/home/QuickLinks";
-import { Greeting } from "@/components/home/Greeting";
+import { WelcomePanel } from "@/components/home/WelcomePanel";
 import { RecentSelfActivity } from "@/components/home/RecentSelfActivity";
 import { ResumeList } from "@/components/home/ResumeList";
 import { HomeReleases } from "@/components/home/HomeReleases";
@@ -63,10 +62,10 @@ export async function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
     <main className="flex min-h-screen flex-col items-center gap-12 overflow-x-clip px-4 py-12">
       <h1 className="sr-only">{t("appName")}</h1>
 
-      <div className="flex w-full max-w-3xl flex-col gap-4">
-        <Greeting name={user.displayName ?? `@${user.username}`} />
-        <QuickLinks />
-      </div>
+      <WelcomePanel
+        name={user.displayName ?? `@${user.username}`}
+        lastActivity={recentActivity.entries[0] ?? null}
+      />
 
       {hasFollows ? (
         <FeedPreview initialEntries={feedPreview.entries} initialHasNext={feedPreview.hasNext} />
