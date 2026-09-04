@@ -398,6 +398,10 @@ export const ListenTargetInfoSchema = z.object({
   id: z.uuid(),
   title: z.string(),
   subtitle: z.string().nullable(),
+  // Nombre del artista principal cuando el objetivo es un álbum o una canción;
+  // null para objetivos de tipo artista. Opcional: solo lo puebla el feed
+  // (`listFeed`); el diario no lo necesita.
+  artistName: z.string().nullable().optional(),
   coverThumbUrl: z.string().nullable(),
 });
 export type ListenTargetInfo = z.infer<typeof ListenTargetInfoSchema>;
@@ -467,6 +471,8 @@ export type FavoriteTarget = z.infer<typeof FavoriteTargetSchema>;
 export const FavoriteTargetInfoSchema = z.object({
   id: z.uuid(),
   title: z.string(),
+  // Ver ListenTargetInfoSchema.artistName — opcional, solo lo puebla el feed.
+  artistName: z.string().nullable().optional(),
   coverThumbUrl: z.string().nullable(),
 });
 export type FavoriteTargetInfo = z.infer<typeof FavoriteTargetInfoSchema>;
@@ -620,6 +626,9 @@ export const FeedTargetInfoSchema = z.object({
   type: SocialTargetTypeSchema,
   id: z.uuid(),
   title: z.string(),
+  // Nombre del artista principal para objetivos de álbum o canción; null para
+  // artista. Ver ListenTargetInfoSchema.artistName.
+  artistName: z.string().nullable().optional(),
   coverThumbUrl: z.string().nullable(),
 });
 export type FeedTargetInfo = z.infer<typeof FeedTargetInfoSchema>;

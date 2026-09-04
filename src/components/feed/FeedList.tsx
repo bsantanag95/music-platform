@@ -1,10 +1,10 @@
 "use client";
 
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FeedEntryCard } from "./FeedEntryBody";
+import { FeedActivityList } from "./FeedActivityList";
 import { getFeed } from "@/lib/api/diary";
 import type { FeedEntry, FeedResponse } from "@/lib/api/schemas";
 
@@ -19,7 +19,6 @@ interface FeedListProps {
 // impresión, comentario) tienen más peso.
 export function FeedList({ initial, empty }: FeedListProps) {
   const t = useTranslations("feed");
-  const locale = useLocale();
   const [entries, setEntries] = useState<FeedEntry[]>(initial.entries);
   const [page, setPage] = useState(initial.page);
   const [hasNext, setHasNext] = useState(initial.hasNext);
@@ -51,21 +50,22 @@ export function FeedList({ initial, empty }: FeedListProps) {
   };
 
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-4">
-      <ul className="flex flex-col gap-4">
-        {entries.map((entry) => (
-          <FeedEntryCard key={`${entry.kind}-${entry.id}`} entry={entry} t={t} locale={locale} />
-        ))}
-      </ul>
-      {hasNext && (
-        <Button variant="secondary" disabled={loading} onClick={() => void handleLoadMore()} className="self-center">
-          {loading ? t("loadingMore") : t("loadMore")}
-        </Button>
-      )}
+    <div className="flex w-full max-w-2xl flex-col gap-4">
+      <FeedActivityList entries={entries} />
       {loadError && (
         <span role="alert" className="text-center font-data text-xs text-danger">
           {t("loadError")}
         </span>
+      )}
+      {hasNext && (
+        <Button
+          variant="secondary"
+          disabled={loading}
+          onClick={() => void handleLoadMore()}
+          className="self-center"
+        >
+          {loading ? t("loadingMore") : loadError ? t("retry") : t("loadMore")}
+        </Button>
       )}
     </div>
   );

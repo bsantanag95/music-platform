@@ -14,6 +14,8 @@ import usersEs from "../../messages/es/users.json";
 import usersEn from "../../messages/en/users.json";
 import diaryEs from "../../messages/es/diary.json";
 import diaryEn from "../../messages/en/diary.json";
+import feedEs from "../../messages/es/feed.json";
+import feedEn from "../../messages/en/feed.json";
 import collectionEs from "../../messages/es/collection.json";
 import collectionEn from "../../messages/en/collection.json";
 
@@ -25,6 +27,7 @@ const messagesByLocale = {
     auth: authEs,
     users: usersEs,
     diary: diaryEs,
+    feed: feedEs,
     collection: collectionEs,
   },
   en: {
@@ -34,6 +37,7 @@ const messagesByLocale = {
     auth: authEn,
     users: usersEn,
     diary: diaryEn,
+    feed: feedEn,
     collection: collectionEn,
   },
 };

@@ -1,49 +1,4 @@
-# activity-feed Specification
-
-## Purpose
-
-Feed de actividad de Fase 5: composición bajo demanda de las actividades visibles de los
-usuarios seguidos — escuchas del diario, favoritos, eventos de listas, ratings vigentes y
-comentarios — ordenadas cronológicamente y filtradas por audiencia, perfil y bloqueos.
-
-## Requirements
-
-### Requirement: Feed de actividad de usuarios seguidos
-
-El sistema SHALL exponer, para un usuario autenticado, un feed de actividad v1 compuesto por
-las actividades visibles de los usuarios a los que sigue con relación aceptada: escuchas
-(`listen_entry`), favoritos y eventos de listas (creación o actualización de metadatos). El
-feed SHALL ordenar las actividades de la más reciente a la más antigua con paginación
-(`{ entries, page, pageSize, hasNext }`) y SHALL aplicar la misma regla de visibilidad de
-actividades ajenas que el perfil: cada actividad solo aparece si es visible para el lector
-según audiencia, visibilidad del perfil del autor y bloqueos. Sin sesión, la petición SHALL
-responder `401` con código `AUTH_REQUIRED`.
-
-#### Scenario: Feed de un usuario con seguidos
-- **WHEN** un usuario autenticado que sigue a otros con relación aceptada consulta su feed
-- **THEN** ve las escuchas, favoritos y eventos de listas visibles de esos seguidos, ordenados
-  de la más reciente a la más antigua y paginados
-
-#### Scenario: Sin sesión
-- **WHEN** una petición sin sesión consulta el feed
-- **THEN** la API responde `401` con código `AUTH_REQUIRED`
-
-#### Scenario: Seguido sin actividades visibles
-- **WHEN** un seguido solo tiene actividades de audiencia `private` o no visibles para el
-  lector
-- **THEN** ninguna de esas actividades aparece en el feed
-
-#### Scenario: Seguido con perfil privado y relación aprobada
-- **WHEN** el lector sigue con relación aceptada a un perfil privado
-- **THEN** el feed incluye las actividades `public` y `followers` de ese perfil
-
-#### Scenario: Sin seguidos o feed vacío
-- **WHEN** el usuario no sigue a nadie o ninguno de sus seguidos tiene actividades visibles
-- **THEN** recibe una lista vacía con paginación válida, sin error técnico
-
-#### Scenario: Paginación inválida
-- **WHEN** se envía una paginación fuera de rango
-- **THEN** la API responde `400` con código `VALIDATION_ERROR` y no ejecuta la lectura
+## MODIFIED Requirements
 
 ### Requirement: Alcance del feed v1
 
@@ -114,6 +69,8 @@ composición, la deduplicación ni las reglas de visibilidad del feed.
   o comentario
 - **THEN** esa entrada no aparece en el feed del lector
 
+## ADDED Requirements
+
 ### Requirement: Jerarquía de presentación del feed
 
 La presentación de una lista vertical cronológica de entradas de feed SHALL renderizar
@@ -166,76 +123,90 @@ las entradas (reaccionar, responder, editar). La navegación al perfil del autor
 objetivo musical SHALL seguir disponible.
 
 #### Scenario: Comentario se muestra como bloque con texto sobre superficie diferenciada
+
 - **WHEN** el feed incluye un comentario de un seguido
 - **THEN** el cuerpo completo del comentario se muestra sobre una superficie más clara que
   el fondo, con el autor, el objetivo y la fecha relativa, y sin sombra
 
 #### Scenario: Escucha con nota escrita se muestra como bloque con texto
+
 - **WHEN** el feed incluye una escucha cuya nota (`body`) no está vacía
 - **THEN** la entrada se muestra como un bloque con la nota visible, no como una línea
 
 #### Scenario: Favorito se muestra en una sola fila con celda a la izquierda
+
 - **WHEN** el feed incluye un favorito de un seguido en `/me/feed`
 - **THEN** la entrada ocupa una sola fila que abre con la celda de carátula o disco, con
   el título del objetivo como elemento dominante, y el autor y la acción en la línea de
   metadato
 
 #### Scenario: Entrada de objetivo sin carátula usa el disco
+
 - **WHEN** el feed incluye una entrada cuyo objetivo es un artista, una canción o una
   lista (sin carátula disponible)
 - **THEN** la celda izquierda muestra el disco de círculos concéntricos y la fila mantiene
   la misma alineación que una fila con carátula
 
 #### Scenario: El título del objetivo es el elemento dominante
+
 - **WHEN** el lector escanea el feed
 - **THEN** en cada fila el título del objetivo destaca por sobre el autor, el verbo y la
   fecha, y para álbumes y canciones se muestra el nombre del artista junto al título
 
 #### Scenario: Rating se renderiza con marcas de acento y el valor numérico
+
 - **WHEN** el feed incluye un rating (con o sin score detallado)
 - **THEN** la entrada se muestra en una sola fila con una representación visual de la
   valoración en el color de acento y el valor numérico al lado, y el score detallado
   junto a él cuando existe
 
 #### Scenario: Escucha sin nota pero con reacción
+
 - **WHEN** el feed incluye una escucha sin nota escrita pero con una reacción
 - **THEN** la entrada se muestra en una sola fila e incluye la reacción en esa fila
 
 #### Scenario: Corrida de escuchas del mismo autor se colapsa
+
 - **WHEN** un seguido registra 3 o más escuchas sin nota consecutivas antes de cualquier
   otra actividad en el feed
 - **THEN** esas escuchas se muestran plegadas en una única fila que nombra al autor, la
   cantidad y lista los títulos enlazados, con un solo marcador de tiempo
 
 #### Scenario: Un comentario entre medio corta la corrida
+
 - **WHEN** entre dos escuchas sin nota de un mismo autor aparece un comentario de esa
   persona
 - **THEN** la corrida no se colapsa a través del comentario; el comentario se muestra
   siempre como su propia entrada con texto
 
 #### Scenario: El rastro reciente no muestra el nombre del propio usuario
+
 - **WHEN** un usuario con sesión abre `/[locale]` y su bloque de rastro reciente tiene
   varias entradas
 - **THEN** ninguna fila repite su `@username`, el bloque no usa la celda de carátula/disco
   y se distingue del preview de feed de seguidos por un tratamiento de margen izquierdo
 
 #### Scenario: El preview de feed de Inicio usa la misma presentación que /me/feed
+
 - **WHEN** un usuario con sesión abre `/[locale]` y su preview de feed de seguidos tiene
   un comentario y un favorito
 - **THEN** el comentario se muestra como bloque con su texto y el favorito como una fila
   con celda a la izquierda, igual que en `/me/feed`
 
 #### Scenario: Los bloques compactos de Inicio no cambian de layout
+
 - **WHEN** un usuario con sesión abre `/[locale]`
 - **THEN** los bloques de actividad de la comunidad y de listas públicas recientes
   conservan su layout compacto/grilla y no adoptan la presentación por peso
 
 #### Scenario: Fecha relativa con fecha absoluta accesible
+
 - **WHEN** el feed muestra la fecha de una entrada
 - **THEN** el texto visible es relativo ("hace 2 días") y el elemento de tiempo conserva
   la fecha absoluta como su valor `datetime`
 
 #### Scenario: El feed no ofrece acciones sobre las entradas
+
 - **WHEN** el lector ve una entrada en `/me/feed`
 - **THEN** no hay controles para reaccionar, responder ni editar la entrada; solo enlaces
   de navegación al perfil del autor y al objetivo

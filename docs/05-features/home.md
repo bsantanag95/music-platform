@@ -71,8 +71,10 @@ Ver "Inicio con sesión — estructura" para la jerarquía completa y los bloque
   preview.
 - El feed compacto de Inicio (`listFollowingFeedPreview`) es un wrapper fino sobre
   `listFeed` con `pageSize` chico — mismo contrato que `/me/feed`.
-- El render por tipo de actividad se comparte entre `/me/feed` y los tres bloques de Inicio
-  vía `FeedEntryCard`/`FeedEntryBody` (`src/components/feed/FeedEntryBody.tsx`).
+- El feed de seguidos (`/me/feed`, `FeedPreview`, `RecentSelfActivity`) usa
+  `FeedActivityList`; los bloques compactos (`CommunityActivity`, `PublicLists`) tienen su
+  propia fila densa. `FeedEntryBody` se eliminó en `redesign-feed`; `targetHref` vive en
+  `src/components/feed/feed-target.ts`.
 - No hizo falta ningún rol/permiso nuevo — "listas públicas recientes" usa el mismo campo
   `audience` que ya expone `userList`.
 - El hero ya no monta un `SearchForm` propio (lo hacía gateado a `!user` en
@@ -102,11 +104,13 @@ entró) seguido de los mismos bloques de descubrimiento. Este cambio cierra su j
    gamificación").
 2. **Feed de seguidos** (`FeedPreview`) como bloque principal, o **nudge de onboarding**
    (`OnboardingPrompt`) si no sigue a nadie. El nudge ahora también invita a registrar la
-   primera escucha, en prosa (no un checklist con tildes).
+   primera escucha, en prosa (no un checklist con tildes). `FeedPreview` usa
+   `FeedActivityList` (misma presentación que `/me/feed`, `redesign-feed`).
 3. **Tu rastro reciente** (`RecentSelfActivity`): las últimas escuchas, valoraciones y
-   comentarios del propio usuario, vía `FeedEntryCard`. **No filtra por audiencia** (es
-   contenido propio, igual que `/me/diary`). Se oculta si no hay actividad. Fuente:
-   `listMyRecentActivity` en `src/services/home/home.ts`.
+   comentarios del propio usuario. **No filtra por audiencia** (es contenido propio,
+   igual que `/me/diary`). Se oculta si no hay actividad. Fuente: `listMyRecentActivity`
+   en `src/services/home/home.ts`. Presentación: `FeedActivityList` (peso por contenido,
+   igual que `/me/feed` — ver `activity-feed.md`, `redesign-feed`).
 4. **Retomá una lista** (`ResumeList`): acceso directo a la lista propia con actividad más
    reciente, con mini-mosaico 2×2 de carátulas de sus ítems. Se oculta si el usuario no
    tiene listas. Fuente: `getMostRecentEditedList`.
@@ -178,17 +182,19 @@ layout denso: grilla `lg:grid-cols-[1.5fr_1fr]` (apilados en < `lg`) con `compac
 `previewLimit = 6`. Lo arma cada componente de página (`AnonymousHome`, `AuthenticatedHome`),
 no `page.tsx`.
 
-- `CommunityActivity` en `compact` renderiza `CompactActivityRow`: carátula 40px + una
-  línea mono `@autor · ★N · fecha` + título del target (display, `truncate`) + cuerpo del
+- `CommunityActivity` renderiza `CompactActivityRow`: carátula 40px + una línea mono
+  `@autor · ★N · fecha relativa` + título del target (display, `truncate`) + cuerpo del
   comentario con `line-clamp-2`. `<ul>` con `divide-y divide-ink-border`, sin tarjeta.
-- `PublicLists` en `compact`: título de la lista (display) + `@autor · fecha` (mono),
-  `divide-y`, **sin `DiscPlaceholder`** (el disco por ítem no aportaba información).
-- El modo no-`compact` de `CommunityActivity`/`PublicLists` (tarjeta `FeedEntryCard`
-  full-width, `withCover`) sigue existiendo en el prop pero ya no lo usa ningún Inicio.
-  `FeedEntryCard` en sí se sigue usando para `FeedPreview` y `RecentSelfActivity`.
-- Primitiva nueva `CoverThumb` (`src/components/catalog/CoverThumb.tsx`): miniatura cuadrada
-  con `DiscPlaceholder` de fallback, tamaño vía `className`. `FeedEntryCard` y las filas
-  compactas la comparten. `targetHref` y `formatFeedDate` se exportan desde `FeedEntryBody`.
+- `PublicLists` (`CompactListRow`): título de la lista (display) + `@autor · fecha
+  relativa` (mono), `divide-y`, **sin `DiscPlaceholder`** (el disco por ítem no aportaba
+  información).
+- `redesign-feed` eliminó de estos dos la rama no usada que renderizaba `FeedEntryCard`
+  full-width y el prop `withCover`/`compact`; siempre son densos. `FeedPreview` y
+  `RecentSelfActivity` migraron a `FeedActivityList`. `FeedEntryBody` se eliminó;
+  `targetHref` vive en `src/components/feed/feed-target.ts`.
+- Primitiva `CoverThumb` (`src/components/catalog/CoverThumb.tsx`): miniatura cuadrada con
+  `DiscPlaceholder` de fallback, tamaño vía `className`. Compartida por las filas compactas
+  y `FeedActivityList`.
 - **Futuro (L3, requiere backend):** mini-mosaico 2×2 de carátulas por lista (estilo
   playlist de Spotify / lista de Letterboxd). Necesita que `listPublicLists` devuelva ~4
   `coverThumbUrl` por lista. Sube el impacto visual del bloque de listas sin volver a la

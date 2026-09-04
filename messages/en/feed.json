@@ -3,14 +3,20 @@
   "emptyTitle": "Nothing to see yet",
   "emptyDescription": "Follow people to see their listens, favorites, lists, ratings and comments here.",
   "favoriteLabel": "Added a favorite",
-  "ratingLabel": "Rated {stars} stars",
+  "ratingVerb": "Rated",
+  "ratingMeterLabel": "{stars} out of 5 stars",
+  "ratingMeterLabelScore": "{stars} out of 5 stars, {score} out of 100",
   "commentLabel": "Commented",
   "list": {
     "created": "Created a list",
     "updated": "Updated a list"
   },
+  "groupListens": "{count, plural, one {logged # listen} other {logged # listens}}",
+  "groupFavorites": "{count, plural, one {added # favorite} other {added # favorites}}",
+  "groupMore": "and {count} more",
   "loadMore": "Load more",
   "loadingMore": "Loading...",
+  "retry": "Retry",
   "loadError": "We could not load the feed. Try again.",
   "context": {
     "first_listen": "First listen",

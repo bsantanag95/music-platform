@@ -3,7 +3,7 @@
 import { type KeyboardEvent, useId, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
-import { targetHref } from "@/components/feed/FeedEntryBody";
+import { targetHref } from "@/components/feed/feed-target";
 import type { PopularComment, PopularCommentsByType } from "@/services/home/home";
 
 type TabKey = "artist" | "release-group" | "recording";

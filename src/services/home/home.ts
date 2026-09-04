@@ -12,7 +12,7 @@ import {
   userList,
   userListItem,
 } from "@/db/schema";
-import { listFeed } from "@/services/feed/feed";
+import { listFeed, PRIMARY_ARTIST_SQL } from "@/services/feed/feed";
 import type {
   FeedAuthor,
   FeedComment,
@@ -75,6 +75,7 @@ export async function listMyRecentActivity(
         releaseGroupId: listenEntry.releaseGroupId,
         recordingId: listenEntry.recordingId,
         artistName: artist.name,
+        creditedArtist: PRIMARY_ARTIST_SQL(listenEntry.releaseGroupId, listenEntry.recordingId),
         releaseTitle: releaseGroup.title,
         releaseCover: releaseGroup.coverThumbUrl,
         recordingTitle: recording.title,
@@ -101,6 +102,7 @@ export async function listMyRecentActivity(
         releaseGroupId: rating.releaseGroupId,
         recordingId: rating.recordingId,
         artistName: artist.name,
+        creditedArtist: PRIMARY_ARTIST_SQL(rating.releaseGroupId, rating.recordingId),
         releaseTitle: releaseGroup.title,
         releaseCover: releaseGroup.coverThumbUrl,
         recordingTitle: recording.title,
@@ -126,6 +128,7 @@ export async function listMyRecentActivity(
         releaseGroupId: comment.releaseGroupId,
         recordingId: comment.recordingId,
         artistName: artist.name,
+        creditedArtist: PRIMARY_ARTIST_SQL(comment.releaseGroupId, comment.recordingId),
         releaseTitle: releaseGroup.title,
         releaseCover: releaseGroup.coverThumbUrl,
         recordingTitle: recording.title,
@@ -156,6 +159,7 @@ export async function listMyRecentActivity(
       id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
       title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
       subtitle: null,
+      artistName: row.creditedArtist,
       coverThumbUrl: row.releaseCover,
     },
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -171,6 +175,7 @@ export async function listMyRecentActivity(
       type: targetType(row.artistId, row.releaseGroupId),
       id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
       title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
+      artistName: row.creditedArtist,
       coverThumbUrl: row.releaseCover,
     },
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -185,6 +190,7 @@ export async function listMyRecentActivity(
       type: targetType(row.artistId, row.releaseGroupId),
       id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
       title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
+      artistName: row.creditedArtist,
       coverThumbUrl: row.releaseCover,
     },
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -532,6 +538,9 @@ export async function listCommunityActivity(
       type: targetType(row.artistId, row.releaseGroupId),
       id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
       title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
+      // El bloque compacto de Inicio no muestra el artista; el feed sí (vía
+      // listFeed). Aquí queda null a propósito.
+      artistName: null,
       coverThumbUrl: row.releaseCover,
     },
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -546,6 +555,7 @@ export async function listCommunityActivity(
       type: targetType(row.artistId, row.releaseGroupId),
       id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
       title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
+      artistName: null,
       coverThumbUrl: row.releaseCover,
     },
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),

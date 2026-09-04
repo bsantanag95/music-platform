@@ -9,6 +9,10 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
   return {
     locale: resolvedLocale,
+    // Instante de referencia para fechas relativas (`useNow`, `relativeTime`).
+    // Sin esto, next-intl cae a `new Date()` por render y avisa
+    // `ENVIRONMENT_FALLBACK`; fijarlo acá lo hace consistente servidor/cliente.
+    now: new Date(),
     messages: {
       common: (await import(`../../messages/${resolvedLocale}/common.json`)).default,
       catalog: (await import(`../../messages/${resolvedLocale}/catalog.json`)).default,

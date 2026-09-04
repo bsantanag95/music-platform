@@ -67,8 +67,8 @@ export async function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
       <QuickLinks />
 
       <div className="grid w-full max-w-3xl gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-start">
-        <CommunityActivity entries={communityActivity} compact />
-        <PublicLists entries={publicLists} compact />
+        <CommunityActivity entries={communityActivity} />
+        <PublicLists entries={publicLists} />
       </div>
 
       <PopularComments comments={popularComments} />

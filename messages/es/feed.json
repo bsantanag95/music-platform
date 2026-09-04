@@ -3,14 +3,20 @@
   "emptyTitle": "Nada para ver todavía",
   "emptyDescription": "Seguí a personas para que sus escuchas, favoritos, listas, valoraciones y comentarios aparezcan acá.",
   "favoriteLabel": "Marcó como favorito",
-  "ratingLabel": "Valoró con {stars} estrellas",
+  "ratingVerb": "Valoró",
+  "ratingMeterLabel": "{stars} de 5 estrellas",
+  "ratingMeterLabelScore": "{stars} de 5 estrellas, {score} de 100",
   "commentLabel": "Comentó",
   "list": {
     "created": "Creó una lista",
     "updated": "Actualizó una lista"
   },
+  "groupListens": "{count, plural, one {registró # escucha} other {registró # escuchas}}",
+  "groupFavorites": "{count, plural, one {marcó # favorito} other {marcó # favoritos}}",
+  "groupMore": "y {count} más",
   "loadMore": "Cargar más",
   "loadingMore": "Cargando...",
+  "retry": "Reintentar",
   "loadError": "No pudimos cargar el feed. Intentá de nuevo.",
   "context": {
     "first_listen": "Primera escucha",

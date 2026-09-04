@@ -100,6 +100,62 @@ describe("servicio de feed ampliado", () => {
     expect(result.entries[2]!.kind).toBe("listen");
   });
 
+  it("expone el artista principal en el objetivo de un álbum y null en el de un artista", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(followedQuery(["u2"]))
+      .mockReturnValueOnce(sourceQuery([]))  // escuchas
+      .mockReturnValueOnce(sourceQuery([
+        {  // favorito de álbum → artista acreditado
+          id: "00000000-0000-4000-8000-0000000000a1",
+          audience: "public",
+          createdAt: new Date("2026-02-02T00:00:00Z"),
+          artistId: null,
+          releaseGroupId: "00000000-0000-4000-8000-0000000000a2",
+          recordingId: null,
+          artistName: null,
+          creditedArtist: "Tame Impala",
+          releaseTitle: "Currents",
+          releaseCover: null,
+          recordingTitle: null,
+          authorId: author.id,
+          authorUsername: author.username,
+          authorDisplayName: author.displayName,
+        },
+        {  // favorito de artista → sin artista separado
+          id: "00000000-0000-4000-8000-0000000000a3",
+          audience: "public",
+          createdAt: new Date("2026-02-01T00:00:00Z"),
+          artistId: "00000000-0000-4000-8000-0000000000a4",
+          releaseGroupId: null,
+          recordingId: null,
+          artistName: "Radiohead",
+          creditedArtist: null,
+          releaseTitle: null,
+          releaseCover: null,
+          recordingTitle: null,
+          authorId: author.id,
+          authorUsername: author.username,
+          authorDisplayName: author.displayName,
+        },
+      ]))
+      .mockReturnValueOnce(sourceQuery([]))  // listas
+      .mockReturnValueOnce(sourceQuery([]))  // ratings
+      .mockReturnValueOnce(sourceQuery([]));  // comentarios
+
+    const result = await listFeed(author.id, 1, 20);
+
+    const album = result.entries.find((e) => e.id === "00000000-0000-4000-8000-0000000000a1");
+    const artistFav = result.entries.find((e) => e.id === "00000000-0000-4000-8000-0000000000a3");
+    expect(album && "target" in album ? album.target : null).toMatchObject({
+      title: "Currents",
+      artistName: "Tame Impala",
+    });
+    expect(artistFav && "target" in artistFav ? artistFav.target : null).toMatchObject({
+      title: "Radiohead",
+      artistName: null,
+    });
+  });
+
   it("distingue evento de lista actualizada por updatedAt > createdAt", async () => {
     const followed = ["u2"];
     mocks.db.select

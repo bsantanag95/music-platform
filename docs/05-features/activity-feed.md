@@ -2,7 +2,8 @@
 
 **Fase:** 5 (roadmap). **Estado:** ✅ Feed implementado con escuchas, favoritos, eventos de
 listas (cambio `add-favorites-and-lists`), ratings vigentes y comentarios (cambio
-`add-ratings-comments-feed`).
+`add-ratings-comments-feed`). Presentación de `/me/feed` rediseñada por peso de contenido
+en `redesign-feed` — ver "Presentación de `/me/feed`" más abajo.
 
 ## Qué es
 
@@ -63,6 +64,89 @@ actividad — no hace falta una audiencia explícita. Ver `design.md` del cambio
 - Keyset pagination en lugar de offset.
 - Audiencia por actividad para rating/comment (alineado con el diseño maestro de Fase 5,
   fuera de alcance de `add-ratings-comments-feed` por requerir migración de esquema).
+
+## Presentación de `/me/feed` (`redesign-feed`)
+
+El feed dejó de renderizar sus cinco tipos con la misma tarjeta (`FeedEntryCard`). Las
+**listas verticales cronológicas de entradas de feed** —`/me/feed` (`FeedList`), el
+preview de feed de seguidos de Inicio (`FeedPreview`) y el rastro reciente del propio
+usuario (`RecentSelfActivity`)— usan `FeedActivityList`
+(`src/components/feed/FeedActivityList.tsx`).
+
+### Anatomía de fila
+
+De izquierda a derecha: **celda fija ~44px** (carátula del objetivo, o el disco de
+vinilo `DiscPlaceholder` si no hay arte — nunca deja hueco) · **línea de metadato mono**
+`autor · verbo · audiencia` con la fecha relativa a la derecha · **título del objetivo**
+en `font-display` como ancla de la fila (subrayado sutil persistente para leerse como
+enlace sin depender del `:hover`) · **artista** debajo del título (álbum y canción) ·
+la **sustancia** de la fila.
+
+### Peso de contenido
+
+- **Con texto** — comentarios y escuchas con nota escrita no vacía. La prosa se asienta
+  sobre un panel `ink-surface` (`ProsePanel`, un escalón de temperatura sin sombra), en
+  Source Serif. La regla vive en `isFeedEntryWithText`
+  (`src/components/feed/feed-entry-weight.ts`).
+- **De sola presencia** — favoritos, eventos de lista, ratings y escuchas sin nota:
+  una fila de baseline. La reacción de una escucha va inline.
+
+Alinea con `product_philosophy.md`: el Principio 1 (registrar una escucha no requiere
+juicio, bajo contenido) y el Principio 4 (las reseñas son contenido). El panel iluminado
+se lo gana lo que está **escrito**.
+
+### Rating — medidor tipo VU
+
+Un rating se renderiza con `FeedRatingMeter` (`src/components/feed/FeedRatingMeter.tsx`):
+una escalera de 5 marcas crecientes en **ámbar**, encendidas hasta el valor (media marca
+por `.5`), **siempre acompañada del número** (`4.5` o `4.5 · 87` con el score detallado).
+Es el único uso de ámbar en reposo del feed (Regla de Rareza). `role="img"` +
+`aria-label` legible; las marcas son `aria-hidden`.
+
+### Agrupación de actividad ambiente
+
+`groupAmbientRuns` (`src/components/feed/feed-grouping.ts`) pliega **3+ entradas
+consecutivas del mismo tipo de sola presencia** (escuchas sin nota, o favoritos) y del
+mismo autor en una fila: `autor · registró N escuchas` + hasta 4 títulos enlazados +
+"y M más" (→ perfil del autor). Comentarios, notas y ratings nunca se colapsan; una de
+esas corta la corrida. Corre en el cliente sobre el array acumulado, así que también
+colapsa a través de un "Cargar más".
+
+### "Tu rastro reciente" — variante `self`
+
+`FeedActivityList variant="self"` (que usa `RecentSelfActivity`): **sin celda y sin
+columna de autor** (ya sabés que sos vos), con un **hairline izquierdo continuo**
+(`border-l`) y las filas indentadas — un margen bajando por tu propio diario. Mismo
+contenido y misma clasificación de peso que "Tu feed".
+
+### Fechas
+
+Fecha **relativa** ("hace 2 días") en todas las superficies de feed de la misma página
+— `FeedActivityList` vía `useFormatter()` + `useNow()`; los bloques compactos de Inicio
+(`CommunityActivity`, `PublicLists`) vía `relativeFeedDate` (`feed-dates.ts`, server, con
+el `now` global de `getRequestConfig`). La fecha absoluta va siempre en `dateTime`/`title`
+del `<time>`.
+
+### Solo lectura
+
+`/me/feed` no ofrece acciones sobre las entradas (reaccionar, responder, editar); los
+únicos controles son enlaces al perfil del autor y al objetivo. El fallo de "Cargar más"
+muestra un `role="alert"` y el botón pasa a "Reintentar".
+
+### Bloques compactos de Inicio
+
+`CommunityActivity` (ratings + comentarios) y `PublicLists` (eventos de lista) siguen con
+su propia fila compacta densa (`CompactActivityRow` / `CompactListRow`, hairline
+`divide-y`, carátula 40px decorativa). `redesign-feed` les quitó la rama no usada que
+renderizaba `FeedEntryCard` full-width y el prop `withCover`; `FeedEntryBody` se
+eliminó. `targetHref` vive ahora en `src/components/feed/feed-target.ts` (módulo puro,
+Server + Client); la fecha relativa server-side en `feed-dates.ts`.
+
+Carátulas de canciones y artistas: el feed no las **resuelve** (el objetivo `recording`/
+`artist` no trae `coverThumbUrl`); la celda cae al disco. El **nombre del artista** sí
+llega ahora — `FeedTargetInfo`/`ListenTargetInfo` ganaron `artistName` (opcional), que
+`listFeed` puebla con el artista principal acreditado (`PRIMARY_ARTIST_SQL`, subquery
+escalar sobre `credit` con `role='primary'`).
 
 ## De dónde sale el contenido del feed
 

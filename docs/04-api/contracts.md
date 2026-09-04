@@ -413,6 +413,7 @@ discriminada por `kind: "listen" | "favorite" | "list"`. **401** con `AUTH_REQUI
     "id": "uuid",
     "title": "string",
     "subtitle": "string | null",
+    "artistName": "string | null (opcional)",
     "coverThumbUrl": "string | null"
   }
 }
@@ -421,12 +422,16 @@ discriminada por `kind: "listen" | "favorite" | "list"`. **401** con `AUTH_REQUI
 `reaction: null` (ausencia de dato) es distinto de `reaction: "neutral"` (elección explícita); los
 textos de cada reacción viven en i18n, no en la API.
 
+`artistName` (campo aditivo de `redesign-feed`): el nombre del artista principal cuando el objetivo
+es un álbum o una canción; `null` para objetivos de tipo artista. Presente también en el `target`
+de las entradas de `kind: "rating"` y `"comment"`.
+
 ### Forma de `FeedEntry`
 
 Unión discriminada por `kind`. Las tres variantes incluyen `author: { id, username, displayName }`:
 
 - **`kind: "listen"`**: los campos de `entry` más `author`.
-- **`kind: "favorite"`**: `{ kind, id, targetType, audience, createdAt, target: { id, title, coverThumbUrl }, author }`.
+- **`kind: "favorite"`**: `{ kind, id, targetType, audience, createdAt, target: { id, title, artistName, coverThumbUrl }, author }`.
 - **`kind: "list"`**: `{ kind, id, event: "created" | "updated", audience, createdAt, list: { id, title, entityType }, author }`.
 
 ```json

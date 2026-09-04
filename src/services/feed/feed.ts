@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql, type AnyColumn } from "drizzle-orm";
 import { db } from "@/db";
 import {
   appUser,
@@ -30,6 +30,7 @@ export interface FeedListenEntry {
     id: string;
     title: string;
     subtitle: string | null;
+    artistName: string | null;
     coverThumbUrl: string | null;
   };
   author: FeedAuthor;
@@ -41,7 +42,7 @@ export interface FeedFavorite {
   targetType: "artist" | "release-group" | "recording";
   audience: Audience;
   createdAt: string;
-  target: { id: string; title: string; coverThumbUrl: string | null };
+  target: { id: string; title: string; artistName: string | null; coverThumbUrl: string | null };
   author: FeedAuthor;
 }
 
@@ -65,6 +66,7 @@ export interface FeedRating {
     type: "artist" | "release-group" | "recording";
     id: string;
     title: string;
+    artistName: string | null;
     coverThumbUrl: string | null;
   };
   author: FeedAuthor;
@@ -79,6 +81,7 @@ export interface FeedComment {
     type: "artist" | "release-group" | "recording";
     id: string;
     title: string;
+    artistName: string | null;
     coverThumbUrl: string | null;
   };
   author: FeedAuthor;
@@ -91,6 +94,23 @@ const BLOCKED_SQL = (viewerId: string, authorId: unknown) =>
     SELECT 1 FROM user_block b
     WHERE (b.blocker_id = ${viewerId} AND b.blocked_id = ${authorId})
        OR (b.blocker_id = ${authorId} AND b.blocked_id = ${viewerId})
+  )`;
+
+// Nombre del artista principal acreditado de un álbum o canción, para el
+// renglón "título · artista" del feed. Subquery escalar: no multiplica filas
+// aunque el objetivo tenga varios créditos primarios (toma el de menor
+// `position`). Para objetivos de tipo artista ambas columnas son NULL y
+// devuelve NULL (el título ya es el artista).
+export const PRIMARY_ARTIST_SQL = (releaseGroupIdCol: AnyColumn, recordingIdCol: AnyColumn) =>
+  sql<string | null>`(
+    SELECT a.name FROM credit c
+    JOIN artist a ON a.id = c.artist_id
+    WHERE (
+      (${releaseGroupIdCol} IS NOT NULL AND c.release_group_id = ${releaseGroupIdCol})
+      OR (${recordingIdCol} IS NOT NULL AND c.recording_id = ${recordingIdCol})
+    ) AND c.role = 'primary'
+    ORDER BY c.position
+    LIMIT 1
   )`;
 
 /**
@@ -137,6 +157,7 @@ export async function listFeed(viewerId: string, page = 1, pageSize = 20) {
         releaseGroupId: listenEntry.releaseGroupId,
         recordingId: listenEntry.recordingId,
         artistName: artist.name,
+        creditedArtist: PRIMARY_ARTIST_SQL(listenEntry.releaseGroupId, listenEntry.recordingId),
         releaseTitle: releaseGroup.title,
         releaseCover: releaseGroup.coverThumbUrl,
         recordingTitle: recording.title,
@@ -162,6 +183,7 @@ export async function listFeed(viewerId: string, page = 1, pageSize = 20) {
         releaseGroupId: favorite.releaseGroupId,
         recordingId: favorite.recordingId,
         artistName: artist.name,
+        creditedArtist: PRIMARY_ARTIST_SQL(favorite.releaseGroupId, favorite.recordingId),
         releaseTitle: releaseGroup.title,
         releaseCover: releaseGroup.coverThumbUrl,
         recordingTitle: recording.title,
@@ -209,6 +231,7 @@ export async function listFeed(viewerId: string, page = 1, pageSize = 20) {
         releaseGroupId: rating.releaseGroupId,
         recordingId: rating.recordingId,
         artistName: artist.name,
+        creditedArtist: PRIMARY_ARTIST_SQL(rating.releaseGroupId, rating.recordingId),
         releaseTitle: releaseGroup.title,
         releaseCover: releaseGroup.coverThumbUrl,
         recordingTitle: recording.title,
@@ -234,6 +257,7 @@ export async function listFeed(viewerId: string, page = 1, pageSize = 20) {
         releaseGroupId: comment.releaseGroupId,
         recordingId: comment.recordingId,
         artistName: artist.name,
+        creditedArtist: PRIMARY_ARTIST_SQL(comment.releaseGroupId, comment.recordingId),
         releaseTitle: releaseGroup.title,
         releaseCover: releaseGroup.coverThumbUrl,
         recordingTitle: recording.title,
@@ -276,6 +300,7 @@ export async function listFeed(viewerId: string, page = 1, pageSize = 20) {
         id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
         title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
         subtitle: null,
+        artistName: row.creditedArtist,
         coverThumbUrl: row.releaseCover,
       },
       author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -294,6 +319,7 @@ export async function listFeed(viewerId: string, page = 1, pageSize = 20) {
       target: {
         id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
         title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
+        artistName: row.creditedArtist,
         coverThumbUrl: row.releaseCover,
       },
       author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -330,6 +356,7 @@ export async function listFeed(viewerId: string, page = 1, pageSize = 20) {
         type,
         id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
         title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
+        artistName: row.creditedArtist,
         coverThumbUrl: row.releaseCover,
       },
       author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -351,6 +378,7 @@ export async function listFeed(viewerId: string, page = 1, pageSize = 20) {
         type,
         id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
         title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
+        artistName: row.creditedArtist,
         coverThumbUrl: row.releaseCover,
       },
       author: author(row.authorId, row.authorUsername, row.authorDisplayName),
