@@ -3,8 +3,12 @@ import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { targetHref } from "@/components/feed/feed-target";
 import { relativeFeedDate } from "@/components/feed/feed-dates";
+import { Greeting } from "@/components/home/Greeting";
+import { greetingKey } from "@/components/home/greeting-key";
 import { QuickLinks } from "@/components/home/QuickLinks";
 import type { FeedComment, FeedListenEntry, FeedRating } from "@/services/feed/feed";
+
+export { greetingKey } from "@/components/home/greeting-key";
 
 type LastTouch = FeedListenEntry | FeedRating | FeedComment;
 
@@ -14,13 +18,6 @@ interface WelcomePanelProps {
   lastActivity: LastTouch | null;
   // Inyectable para test; en producción siempre es "ahora".
   now?: Date;
-}
-
-export function greetingKey(now: Date): "greetingMorning" | "greetingAfternoon" | "greetingEvening" {
-  const hour = now.getHours();
-  if (hour < 12) return "greetingMorning";
-  if (hour < 19) return "greetingAfternoon";
-  return "greetingEvening";
 }
 
 export function lastTouchKey(kind: LastTouch["kind"]): "lastTouchListen" | "lastTouchRating" | "lastTouchComment" {
@@ -41,7 +38,12 @@ export async function WelcomePanel({ name, username, lastActivity, now = new Dat
     <section className="grid w-full max-w-3xl gap-6 rounded-lg border border-ink-border bg-ink-surface p-6 lg:grid-cols-[1.4fr_1fr] lg:items-center">
       <div className="flex flex-col gap-4">
         <p className="text-balance font-display text-2xl text-paper">
-          <span>{tHome(greetingKey(now))}</span>
+          <Greeting
+            initialKey={greetingKey(now)}
+            morning={tHome("greetingMorning")}
+            afternoon={tHome("greetingAfternoon")}
+            evening={tHome("greetingEvening")}
+          />
           {", "}
           <Link
             href={`/users/${encodeURIComponent(username)}`}

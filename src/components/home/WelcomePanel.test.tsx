@@ -34,6 +34,10 @@ vi.mock("@/components/home/QuickLinks", () => ({
   QuickLinks: () => <nav data-testid="quick-links" />,
 }));
 
+vi.mock("@/components/home/Greeting", () => ({
+  Greeting: ({ initialKey }: { initialKey: string }) => <span>{initialKey}</span>,
+}));
+
 const rating: FeedRating = {
   kind: "rating",
   id: "r1",
