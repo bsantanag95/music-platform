@@ -540,6 +540,8 @@ export const UserListSummarySchema = z.object({
   itemCount: z.number().int(),
   coverThumbs: z.array(z.string()),
   pinned: z.boolean(),
+  saved: z.boolean().optional(),
+  following: z.boolean().optional(),
 });
 export type UserListSummary = z.infer<typeof UserListSummarySchema>;
 

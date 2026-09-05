@@ -35,5 +35,43 @@
     "private": "Private",
     "followers": "Followers",
     "public": "Public"
-  }
+  },
+  "tablistLabel": "List sections",
+  "tabs": {
+    "mine": "My lists",
+    "saved": "Saved",
+    "discover": "Discover"
+  },
+  "searchPlaceholder": "Search your lists",
+  "typeFilterLabel": "Filter by type",
+  "filterAllTypes": "All types",
+  "sortLabel": "Sort",
+  "sort": {
+    "recent": "Recent",
+    "alpha": "Alphabetical"
+  },
+  "clearFilters": "Clear filters",
+  "itemsCount": "{count, plural, =0 {no items} one {# item} other {# items}}",
+  "pinnedBadge": "Pinned",
+  "pin": "Pin",
+  "unpin": "Unpin",
+  "byOwner": "by {name}",
+  "cardMenuLabel": "List actions",
+  "noResultsTitle": "No results",
+  "noResultsDescription": "None of your lists match those filters.",
+  "loadedAnnouncement": "{count, plural, one {# more list loaded} other {# more lists loaded}}",
+  "saveToLibrary": "Save",
+  "savedToLibrary": "Saved",
+  "follow": "Follow",
+  "following": "Following",
+  "saveListError": "We could not save this list. Try again.",
+  "removeSaved": "Remove from saved",
+  "unavailable": "No longer available",
+  "unavailableHint": "The owner made it private or stopped sharing it.",
+  "savedEmptyTitle": "You have not saved any lists yet",
+  "savedEmptyDescription": "When you find someone else's list you want to keep close, save it from its page or from Discover.",
+  "discoverEmptyTitle": "No public lists yet",
+  "discoverEmptyDescription": "When the community publishes lists, they will show up here, newest first.",
+  "discoverHint": "Public lists from the community, newest first.",
+  "deleteShort": "Delete?"
 }

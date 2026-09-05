@@ -74,7 +74,6 @@ async function ProfileLists({ username, viewerId }: { username: string; viewerId
   return (
     <ListsList
       initial={initial}
-      readOnly
       username={username}
       empty={{ title: t("profileEmptyTitle"), description: t("profileEmptyDescription") }}
     />

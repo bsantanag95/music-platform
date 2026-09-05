@@ -103,43 +103,43 @@ toca acá.
 
 ## 9. UI: sección con sub-navegación
 
-- [ ] 9.1 `src/app/[locale]/me/lists/page.tsx`: leer y validar `searchParams.tab`
+- [x] 9.1 `src/app/[locale]/me/lists/page.tsx`: leer y validar `searchParams.tab`
       (`mine`|`saved`|`discover`, fallback `mine`); resolver la primera página del panel
       activo en el servidor; renderizar encabezado + `ListsSection` + panel.
-- [ ] 9.2 `src/components/lists/ListsSection.tsx` (client): tira de pestañas con `<Link>` a
+- [x] 9.2 `src/components/lists/ListsSection.tsx` (client): tira de pestañas con `<Link>` a
       `?tab=`, semántica `tablist`/`tab`/`tabpanel`, navegación por flechas (patrón
       `PopularCommentsTabs`), acción "Nueva lista" persistente.
-- [ ] 9.3 `src/components/lists/ListCoverMosaic.tsx` (server): grilla 2×2 de `CoverThumb`/
+- [x] 9.3 `src/components/lists/ListCoverMosaic.tsx` (server): grilla 2×2 de `CoverThumb`/
       `LazyCoverImage` o `DiscPlaceholder`; sin sombras, separación por hairline; realce de
       borde en hover con `prefers-reduced-motion`; `aria-hidden` (decorativo).
-- [ ] 9.4 `src/components/lists/ListCard.tsx` (server): mosaico + título enlazado + metadatos
+- [x] 9.4 `src/components/lists/ListCard.tsx` (server): mosaico + título enlazado + metadatos
       (tipo, `itemCount`, audiencia o dueño según contexto); usada por las tres pestañas y por
       el perfil ajeno.
 
 ## 10. UI: pestaña "Mis listas"
 
-- [ ] 10.1 `src/components/lists/MyListsTab.tsx` (client): grid de `ListCard` (1-col / 2-col
+- [x] 10.1 `src/components/lists/MyListsTab.tsx` (client): grid de `ListCard` (1-col / 2-col
       ≥md), `useInfiniteQuery` sembrado con `initialData`.
-- [ ] 10.2 Toolbar: buscador con debounce (300ms) + `FilterSelect` de tipo + `FilterSelect`
+- [x] 10.2 Toolbar: buscador con debounce (300ms) + `FilterSelect` de tipo + `FilterSelect`
       de orden + "Limpiar filtros"; misma disposición que `FeedList`/`DiaryActivityList`.
-- [ ] 10.3 Creación inline: "Nueva lista" abre `ListForm` arriba de la pared; al crear, la
+- [x] 10.3 Creación inline: "Nueva lista" abre `ListForm` arriba de la pared; al crear, la
       lista entra al frente (invalidar/optimista) sin cambiar de ruta.
-- [ ] 10.4 Menú por tarjeta: Editar (a `/me/lists/[listId]`), Fijar/Desfijar (optimista),
+- [x] 10.4 Menú por tarjeta: Editar (a `/me/lists/[listId]`), Fijar/Desfijar (optimista),
       Eliminar con confirmación (reusar el patrón actual de `ListsList`).
-- [ ] 10.5 Estados: vacío real (sin listas) con CTA a crear; "sin resultados" (con filtros)
+- [x] 10.5 Estados: vacío real (sin listas) con CTA a crear; "sin resultados" (con filtros)
       distinto; error inline reintentable; `aria-live` al cargar más.
 
 ## 11. UI: pestañas "Guardadas" y "Descubrir"
 
-- [ ] 11.1 `src/components/lists/SaveListButton.tsx` (client): toggle Guardar + toggle Seguir,
+- [x] 11.1 `src/components/lists/SaveListButton.tsx` (client): toggle Guardar + toggle Seguir,
       optimista con rollback (patrón `favorites`), estados de error accesibles.
-- [ ] 11.2 `src/components/lists/SavedListsTab.tsx` (client): grid de `ListCard` con dueño y
+- [x] 11.2 `src/components/lists/SavedListsTab.tsx` (client): grid de `ListCard` con dueño y
       `SaveListButton`; entrada "ya no disponible" (`unavailable`) con opción de quitar;
       `useInfiniteQuery`; vacío localizado que explica cómo guardar listas.
-- [ ] 11.3 `src/components/lists/DiscoverListsTab.tsx` (client): grid de `ListCard` con dueño,
+- [x] 11.3 `src/components/lists/DiscoverListsTab.tsx` (client): grid de `ListCard` con dueño,
       tiempo relativo y `SaveListButton`; `useInfiniteQuery`; vacío ("todavía no hay listas
       públicas").
-- [ ] 11.4 `/users/[username]/lists`: usar `ListCard` (mosaico + conteo) y `SaveListButton`
+- [x] 11.4 `/users/[username]/lists`: usar `ListCard` (mosaico + conteo) y `SaveListButton`
       sobre las listas ajenas (no sobre las propias).
 
 ## 12. UI: pase visual del detalle
@@ -152,7 +152,7 @@ toca acá.
 
 ## 13. i18n
 
-- [ ] 13.1 `messages/{es,en}/lists.json`: claves nuevas (pestañas, toolbar, orden, mosaico
+- [x] 13.1 `messages/{es,en}/lists.json`: claves nuevas (pestañas, toolbar, orden, mosaico
       `aria`, fijar/desfijar, guardar/seguir, "ya no disponible", estados vacíos de Guardadas
       y Descubrir, tiempo relativo si no se reusa uno existente).
 - [ ] 13.2 `messages/{es,en}/feed.json`: etiqueta del origen "lista seguida" si la UI del feed

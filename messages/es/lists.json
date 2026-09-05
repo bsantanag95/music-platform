@@ -35,5 +35,43 @@
     "private": "Privado",
     "followers": "Seguidores",
     "public": "Público"
-  }
+  },
+  "tablistLabel": "Secciones de listas",
+  "tabs": {
+    "mine": "Mis listas",
+    "saved": "Guardadas",
+    "discover": "Descubrir"
+  },
+  "searchPlaceholder": "Buscar en tus listas",
+  "typeFilterLabel": "Filtrar por tipo",
+  "filterAllTypes": "Todos los tipos",
+  "sortLabel": "Ordenar",
+  "sort": {
+    "recent": "Recientes",
+    "alpha": "Alfabético"
+  },
+  "clearFilters": "Limpiar filtros",
+  "itemsCount": "{count, plural, =0 {sin elementos} one {# elemento} other {# elementos}}",
+  "pinnedBadge": "Fijada",
+  "pin": "Fijar",
+  "unpin": "Desfijar",
+  "byOwner": "por {name}",
+  "cardMenuLabel": "Acciones de la lista",
+  "noResultsTitle": "Sin resultados",
+  "noResultsDescription": "Ninguna de tus listas coincide con esos filtros.",
+  "loadedAnnouncement": "{count, plural, one {# lista más cargada} other {# listas más cargadas}}",
+  "saveToLibrary": "Guardar",
+  "savedToLibrary": "Guardada",
+  "follow": "Seguir",
+  "following": "Siguiendo",
+  "saveListError": "No pudimos guardar esta lista. Intentá de nuevo.",
+  "removeSaved": "Quitar de guardadas",
+  "unavailable": "Ya no disponible",
+  "unavailableHint": "Su dueño la hizo privada o dejó de compartirla.",
+  "savedEmptyTitle": "Todavía no guardaste listas",
+  "savedEmptyDescription": "Cuando encuentres una lista de otra persona que quieras tener a mano, guardala desde su página o desde Descubrir.",
+  "discoverEmptyTitle": "Todavía no hay listas públicas",
+  "discoverEmptyDescription": "Cuando la comunidad publique listas, van a aparecer acá, de la más reciente a la más antigua.",
+  "discoverHint": "Listas públicas de la comunidad, de la más reciente a la más antigua.",
+  "deleteShort": "¿Borrar?"
 }

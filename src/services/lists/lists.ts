@@ -47,6 +47,9 @@ export interface UserListSummary {
   coverThumbs: string[];
   /** Fijada por su propietario. Siempre `false` para listas ajenas. */
   pinned: boolean;
+  /** Estado de guardado del lector — solo lo puebla `listUserLists`. */
+  saved?: boolean;
+  following?: boolean;
 }
 
 export interface UserListDetail extends UserListSummary {
@@ -355,10 +358,23 @@ export async function listUserLists(
     .offset((page - 1) * pageSize);
 
   const pageRows = rows.slice(0, pageSize);
-  const enrichment = await enrichLists(pageRows.map((row) => row.id));
+  const pageIds = pageRows.map((row) => row.id);
+  const [enrichment, savedState] = await Promise.all([
+    enrichLists(pageIds),
+    viewerId && pageIds.length > 0
+      ? import("./saved-lists").then((mod) => mod.savedStateFor(viewerId, pageIds))
+      : Promise.resolve(new Map<string, { saved: boolean; following: boolean }>()),
+  ]);
 
   return {
-    lists: pageRows.map((row) => withEnrichment(serializeSummary(row), enrichment)),
+    lists: pageRows.map((row) => {
+      const state = savedState.get(row.id);
+      return {
+        ...withEnrichment(serializeSummary(row), enrichment),
+        saved: state?.saved ?? false,
+        following: state?.following ?? false,
+      };
+    }),
     page,
     pageSize,
     hasNext: rows.length > pageSize,
