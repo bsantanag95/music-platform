@@ -71,6 +71,7 @@ export function SavedListsTab({ initial }: { initial: SavedListsResponse }) {
             }
             action={
               <SaveListButton
+                key={`${list.id}:${list.following}`}
                 listId={list.id}
                 initialSaved
                 initialFollowing={list.following}

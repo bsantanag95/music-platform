@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ApiError } from "@/lib/api/client";
@@ -23,6 +24,7 @@ export function SaveListButton({
   onChange,
 }: SaveListButtonProps) {
   const t = useTranslations("lists");
+  const queryClient = useQueryClient();
   const [saved, setSaved] = useState(initialSaved);
   const [following, setFollowing] = useState(initialFollowing);
   const [busy, setBusy] = useState(false);
@@ -41,6 +43,10 @@ export function SaveListButton({
         await unsaveList(listId);
       }
       onChange?.(next);
+      // Refresca cualquier lista de listas montada o cacheada (Mis listas,
+      // Guardadas, Descubrir): sin esto, volver a una pestaña ya visitada
+      // mostraría el estado de guardado previo hasta recargar la página.
+      void queryClient.invalidateQueries({ queryKey: ["lists"], exact: false });
     } catch (err) {
       setSaved(prev.saved);
       setFollowing(prev.following);

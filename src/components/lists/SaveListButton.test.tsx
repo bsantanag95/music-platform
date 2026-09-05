@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactElement } from "react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { SaveListButton } from "./SaveListButton";
 import { ApiError } from "@/lib/api/client";
@@ -10,12 +12,17 @@ vi.mock("@/lib/api/lists", () => ({ saveList: mocks.saveList, unsaveList: mocks.
 
 const listId = "a1b2c3d4-0000-4000-8000-000000000001";
 
+function render(ui: ReactElement) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return renderWithIntl(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
+}
+
 describe("SaveListButton", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("guarda con following=false y luego muestra Seguir", async () => {
     mocks.saveList.mockResolvedValue({});
-    renderWithIntl(<SaveListButton listId={listId} initialSaved={false} initialFollowing={false} />);
+    render(<SaveListButton listId={listId} initialSaved={false} initialFollowing={false} />);
 
     expect(screen.queryByRole("button", { name: "Seguir" })).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "Guardar" }));
@@ -27,7 +34,7 @@ describe("SaveListButton", () => {
 
   it("alterna Seguir sobre una lista guardada", async () => {
     mocks.saveList.mockResolvedValue({});
-    renderWithIntl(<SaveListButton listId={listId} initialSaved initialFollowing={false} />);
+    render(<SaveListButton listId={listId} initialSaved initialFollowing={false} />);
 
     await userEvent.click(screen.getByRole("button", { name: "Seguir" }));
     expect(mocks.saveList).toHaveBeenCalledWith(listId, true);
@@ -36,7 +43,7 @@ describe("SaveListButton", () => {
 
   it("hace rollback y muestra error si falla el guardado", async () => {
     mocks.saveList.mockRejectedValue(new Error("boom"));
-    renderWithIntl(<SaveListButton listId={listId} initialSaved={false} initialFollowing={false} />);
+    render(<SaveListButton listId={listId} initialSaved={false} initialFollowing={false} />);
 
     await userEvent.click(screen.getByRole("button", { name: "Guardar" }));
     await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
@@ -46,9 +53,7 @@ describe("SaveListButton", () => {
   it("quita el guardado y avisa al padre", async () => {
     mocks.unsaveList.mockResolvedValue(null);
     const onChange = vi.fn();
-    renderWithIntl(
-      <SaveListButton listId={listId} initialSaved initialFollowing onChange={onChange} />,
-    );
+    render(<SaveListButton listId={listId} initialSaved initialFollowing onChange={onChange} />);
 
     await userEvent.click(screen.getByRole("button", { name: "Guardada" }));
     expect(mocks.unsaveList).toHaveBeenCalledWith(listId);
@@ -57,7 +62,7 @@ describe("SaveListButton", () => {
 
   it("no marca error si el guardado ya no existe (LIST_NOT_FOUND)", async () => {
     mocks.saveList.mockRejectedValue(new ApiError("LIST_NOT_FOUND", 404, "x"));
-    renderWithIntl(<SaveListButton listId={listId} initialSaved={false} initialFollowing={false} />);
+    render(<SaveListButton listId={listId} initialSaved={false} initialFollowing={false} />);
 
     await userEvent.click(screen.getByRole("button", { name: "Guardar" }));
     await waitFor(() => expect(mocks.saveList).toHaveBeenCalled());

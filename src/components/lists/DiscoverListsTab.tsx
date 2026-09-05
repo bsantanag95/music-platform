@@ -66,6 +66,7 @@ export function DiscoverListsTab({ initial }: { initial: DiscoverListsResponse }
             }
             action={
               <SaveListButton
+                key={`${list.id}:${list.saved}:${list.following}`}
                 listId={list.id}
                 initialSaved={list.saved}
                 initialFollowing={list.following}

@@ -71,6 +71,7 @@ export function ListsList({ initial, username, empty }: ListsListProps) {
             }
             action={
               <SaveListButton
+                key={`${list.id}:${list.saved ?? false}:${list.following ?? false}`}
                 listId={list.id}
                 initialSaved={list.saved ?? false}
                 initialFollowing={list.following ?? false}
