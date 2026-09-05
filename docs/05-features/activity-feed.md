@@ -3,7 +3,9 @@
 **Fase:** 5 (roadmap). **Estado:** ✅ Feed implementado con escuchas, favoritos, eventos de
 listas (cambio `add-favorites-and-lists`), ratings vigentes y comentarios (cambio
 `add-ratings-comments-feed`). Presentación de `/me/feed` rediseñada por peso de contenido
-en `redesign-feed` — ver "Presentación de `/me/feed`" más abajo.
+en `redesign-feed` — ver "Presentación de `/me/feed`" más abajo. `/me/feed` gana búsqueda
+y filtros combinables (tipo, autor, texto) y la prosa pasa de panel a cita en
+`add-feed-filters`.
 
 ## Qué es
 
@@ -84,16 +86,25 @@ la **sustancia** de la fila.
 
 ### Peso de contenido
 
-- **Con texto** — comentarios y escuchas con nota escrita no vacía. La prosa se asienta
-  sobre un panel `ink-surface` (`ProsePanel`, un escalón de temperatura sin sombra), en
-  Source Serif. La regla vive en `isFeedEntryWithText`
-  (`src/components/feed/feed-entry-weight.ts`).
+- **Con texto** — comentarios y escuchas con nota escrita no vacía. La prosa se muestra
+  como cita (`ProsePanel`, `src/components/feed/feed-row-parts.tsx`): borde izquierdo,
+  sin caja ni escalón de temperatura, en Source Serif — misma familia visual que
+  `ImpressionQuote` de `/me/diary` (de hecho, es el mismo componente: `ProsePanel` con
+  `variant="impression"`). La regla de qué cuenta como "con texto" vive en
+  `isFeedEntryWithText` (`src/components/feed/feed-entry-weight.ts`).
+  - Dentro de esta cita, el **tono** se distingue por tipo de entrada, no por caja: una
+    **nota de escucha** (`variant="impression"`) va en cursiva y entre comillas
+    tipográficas — literalmente la misma voz personal que su equivalente en el diario
+    propio, visto desde otra superficie. Un **comentario** (`variant="comment"`) va en
+    redonda y sin comillas: un comentario del feed suele ser crítica, opinión o humor, no
+    necesariamente una impresión sentida, y forzarlo a leerse como una cita personal no
+    correspondía a ese tono (feedback de usuario, `add-feed-filters`, 2026-09-05).
 - **De sola presencia** — favoritos, eventos de lista, ratings y escuchas sin nota:
   una fila de baseline. La reacción de una escucha va inline.
 
 Alinea con `product_philosophy.md`: el Principio 1 (registrar una escucha no requiere
-juicio, bajo contenido) y el Principio 4 (las reseñas son contenido). El panel iluminado
-se lo gana lo que está **escrito**.
+juicio, bajo contenido) y el Principio 4 (las reseñas son contenido). El tratamiento de
+cita se lo gana lo que está **escrito**.
 
 ### Rating — medidor tipo VU
 
