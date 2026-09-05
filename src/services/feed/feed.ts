@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql, type AnyColumn } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, or, sql, type AnyColumn, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import {
   appUser,
@@ -89,6 +89,19 @@ export interface FeedComment {
 
 export type FeedEntry = FeedListenEntry | FeedFavorite | FeedListEvent | FeedRating | FeedComment;
 
+export const FEED_KINDS = ["listen", "favorite", "list", "rating", "comment"] as const;
+export type FeedKind = (typeof FEED_KINDS)[number];
+
+// Filtros combinables de `listFeed` — cada campo es independiente y opcional.
+// `authorId` SHALL pertenecer a los seguidos aceptados del lector (se valida
+// antes de ejecutar cualquier query); `q` busca por coincidencia parcial sobre
+// el título del objetivo (no sobre el cuerpo de comentarios o notas).
+export interface FeedFilters {
+  kind?: FeedKind;
+  authorId?: string;
+  q?: string;
+}
+
 const BLOCKED_SQL = (viewerId: string, authorId: unknown) =>
   sql`NOT EXISTS (
     SELECT 1 FROM user_block b
@@ -113,6 +126,42 @@ export const PRIMARY_ARTIST_SQL = (releaseGroupIdCol: AnyColumn, recordingIdCol:
     LIMIT 1
   )`;
 
+// Condición de búsqueda por título del objetivo, sobre las mismas columnas de
+// artist/releaseGroup/recording que cada fuente (listen/favorite/rating/
+// comment) ya deja unidas, más el artista principal acreditado (álbumes y
+// canciones) — sin esto último, buscar "Fleetwood Mac" no encontraría sus
+// canciones, solo entradas cuyo objetivo es la artista misma. Mismo criterio
+// que `listMyDiary` (add-diary-filters). Devuelve un array (vacío o de un
+// elemento) para poder spread-earlo directo dentro de `and(...)` sin
+// condicionales sueltos. La fuente de listas no la usa (no tiene esos joins)
+// — filtra por `ilike(userList.title, ...)` directo donde se arma esa query.
+function titleSearchCondition(pattern: string | null, releaseGroupIdCol: AnyColumn, recordingIdCol: AnyColumn): SQL[] {
+  if (!pattern) return [];
+  const condition = or(
+    ilike(artist.name, pattern),
+    ilike(releaseGroup.title, pattern),
+    ilike(recording.title, pattern),
+    sql`${PRIMARY_ARTIST_SQL(releaseGroupIdCol, recordingIdCol)} ILIKE ${pattern}`,
+  );
+  return condition ? [condition] : [];
+}
+
+/**
+ * Personas seguidas (relación aceptada) para poblar el `<select>` de autor del
+ * filtro de feed: sin paginar (a diferencia de `listFollowing`, que topea en
+ * 50 — un `<select>` nativo necesita la lista completa de antemano), orden
+ * alfabético por username.
+ */
+export async function listFeedAuthors(viewerId: string): Promise<FeedAuthor[]> {
+  const rows = await db
+    .select({ id: appUser.id, username: appUser.username, displayName: appUser.displayName })
+    .from(userFollow)
+    .innerJoin(appUser, eq(userFollow.followedId, appUser.id))
+    .where(and(eq(userFollow.followerId, viewerId), eq(userFollow.status, "accepted")))
+    .orderBy(appUser.username);
+  return rows.map((row) => ({ id: row.id, username: row.username ?? "", displayName: row.displayName }));
+}
+
 /**
  * Feed de actividad de usuarios seguidos: escuchas, favoritos, eventos de
  * listas (creación o actualización de metadatos), ratings vigentes y
@@ -122,7 +171,12 @@ export const PRIMARY_ARTIST_SQL = (releaseGroupIdCol: AnyColumn, recordingIdCol:
  * propia y se tratan como "public" implícita (ver design.md de
  * add-ratings-comments-feed).
  */
-export async function listFeed(viewerId: string, page = 1, pageSize = 20) {
+export async function listFeed(
+  viewerId: string,
+  page = 1,
+  pageSize = 20,
+  filters: FeedFilters = {},
+) {
   if (page < 1 || pageSize < 1 || pageSize > 50) {
     throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
   }
@@ -138,6 +192,22 @@ export async function listFeed(viewerId: string, page = 1, pageSize = 20) {
 
   const followedIds = followed.map((r) => r.followedId);
 
+  if (filters.authorId && !followedIds.includes(filters.authorId)) {
+    throw new ApiError("VALIDATION_ERROR", 400, "El autor no pertenece a tus seguidos");
+  }
+
+  // Con `authorId` se acota a ese único seguido; sin él, a todos — sigue
+  // siendo `inArray` en ambos casos para no bifurcar cada query en dos formas.
+  const authorIds = filters.authorId ? [filters.authorId] : followedIds;
+
+  const q = filters.q?.trim();
+  const searchPattern = q ? `%${q}%` : null;
+
+  // Con `kind` presente, se saltea la query de cualquier otra fuente en vez de
+  // traerla y descartarla al fusionar: es a la vez el filtro y una mejora de
+  // rendimiento (ver design.md, decisión 1).
+  const includeKind = (kind: FeedKind) => !filters.kind || filters.kind === kind;
+
   // Se consulta una página ampliada por fuente y se fusiona en memoria: la
   // composición heterogénea no permite paginación SQL única sin una tabla de
   // eventos (se evalúa con volumen real, ver phase-5-design.md §9).
@@ -145,134 +215,177 @@ export async function listFeed(viewerId: string, page = 1, pageSize = 20) {
   const perSource = pageSize + extra;
 
   const [listens, favorites, lists, ratings, comments] = await Promise.all([
-    db
-      .select({
-        id: listenEntry.id,
-        listenContext: listenEntry.listenContext,
-        body: listenEntry.body,
-        reaction: listenEntry.reaction,
-        audience: listenEntry.audience,
-        createdAt: listenEntry.createdAt,
-        artistId: listenEntry.artistId,
-        releaseGroupId: listenEntry.releaseGroupId,
-        recordingId: listenEntry.recordingId,
-        artistName: artist.name,
-        creditedArtist: PRIMARY_ARTIST_SQL(listenEntry.releaseGroupId, listenEntry.recordingId),
-        releaseTitle: releaseGroup.title,
-        releaseCover: releaseGroup.coverThumbUrl,
-        recordingTitle: recording.title,
-        authorId: listenEntry.userId,
-        authorUsername: appUser.username,
-        authorDisplayName: appUser.displayName,
-      })
-      .from(listenEntry)
-      .leftJoin(artist, eq(listenEntry.artistId, artist.id))
-      .leftJoin(releaseGroup, eq(listenEntry.releaseGroupId, releaseGroup.id))
-      .leftJoin(recording, eq(listenEntry.recordingId, recording.id))
-      .leftJoin(appUser, eq(listenEntry.userId, appUser.id))
-      .where(and(inArray(listenEntry.userId, followedIds), inArray(listenEntry.audience, ["followers", "public"]), BLOCKED_SQL(viewerId, listenEntry.userId)))
-      .orderBy(desc(listenEntry.createdAt), desc(listenEntry.id))
-      .limit(perSource),
+    includeKind("listen")
+      ? db
+          .select({
+            id: listenEntry.id,
+            listenContext: listenEntry.listenContext,
+            body: listenEntry.body,
+            reaction: listenEntry.reaction,
+            audience: listenEntry.audience,
+            createdAt: listenEntry.createdAt,
+            artistId: listenEntry.artistId,
+            releaseGroupId: listenEntry.releaseGroupId,
+            recordingId: listenEntry.recordingId,
+            artistName: artist.name,
+            creditedArtist: PRIMARY_ARTIST_SQL(listenEntry.releaseGroupId, listenEntry.recordingId),
+            releaseTitle: releaseGroup.title,
+            releaseCover: releaseGroup.coverThumbUrl,
+            recordingTitle: recording.title,
+            authorId: listenEntry.userId,
+            authorUsername: appUser.username,
+            authorDisplayName: appUser.displayName,
+          })
+          .from(listenEntry)
+          .leftJoin(artist, eq(listenEntry.artistId, artist.id))
+          .leftJoin(releaseGroup, eq(listenEntry.releaseGroupId, releaseGroup.id))
+          .leftJoin(recording, eq(listenEntry.recordingId, recording.id))
+          .leftJoin(appUser, eq(listenEntry.userId, appUser.id))
+          .where(
+            and(
+              inArray(listenEntry.userId, authorIds),
+              inArray(listenEntry.audience, ["followers", "public"]),
+              BLOCKED_SQL(viewerId, listenEntry.userId),
+              ...titleSearchCondition(searchPattern, listenEntry.releaseGroupId, listenEntry.recordingId),
+            ),
+          )
+          .orderBy(desc(listenEntry.createdAt), desc(listenEntry.id))
+          .limit(perSource)
+      : Promise.resolve([]),
 
-    db
-      .select({
-        id: favorite.id,
-        audience: favorite.audience,
-        createdAt: favorite.createdAt,
-        artistId: favorite.artistId,
-        releaseGroupId: favorite.releaseGroupId,
-        recordingId: favorite.recordingId,
-        artistName: artist.name,
-        creditedArtist: PRIMARY_ARTIST_SQL(favorite.releaseGroupId, favorite.recordingId),
-        releaseTitle: releaseGroup.title,
-        releaseCover: releaseGroup.coverThumbUrl,
-        recordingTitle: recording.title,
-        authorId: favorite.userId,
-        authorUsername: appUser.username,
-        authorDisplayName: appUser.displayName,
-      })
-      .from(favorite)
-      .leftJoin(artist, eq(favorite.artistId, artist.id))
-      .leftJoin(releaseGroup, eq(favorite.releaseGroupId, releaseGroup.id))
-      .leftJoin(recording, eq(favorite.recordingId, recording.id))
-      .leftJoin(appUser, eq(favorite.userId, appUser.id))
-      .where(and(inArray(favorite.userId, followedIds), inArray(favorite.audience, ["followers", "public"]), BLOCKED_SQL(viewerId, favorite.userId)))
-      .orderBy(desc(favorite.createdAt), desc(favorite.id))
-      .limit(perSource),
+    includeKind("favorite")
+      ? db
+          .select({
+            id: favorite.id,
+            audience: favorite.audience,
+            createdAt: favorite.createdAt,
+            artistId: favorite.artistId,
+            releaseGroupId: favorite.releaseGroupId,
+            recordingId: favorite.recordingId,
+            artistName: artist.name,
+            creditedArtist: PRIMARY_ARTIST_SQL(favorite.releaseGroupId, favorite.recordingId),
+            releaseTitle: releaseGroup.title,
+            releaseCover: releaseGroup.coverThumbUrl,
+            recordingTitle: recording.title,
+            authorId: favorite.userId,
+            authorUsername: appUser.username,
+            authorDisplayName: appUser.displayName,
+          })
+          .from(favorite)
+          .leftJoin(artist, eq(favorite.artistId, artist.id))
+          .leftJoin(releaseGroup, eq(favorite.releaseGroupId, releaseGroup.id))
+          .leftJoin(recording, eq(favorite.recordingId, recording.id))
+          .leftJoin(appUser, eq(favorite.userId, appUser.id))
+          .where(
+            and(
+              inArray(favorite.userId, authorIds),
+              inArray(favorite.audience, ["followers", "public"]),
+              BLOCKED_SQL(viewerId, favorite.userId),
+              ...titleSearchCondition(searchPattern, favorite.releaseGroupId, favorite.recordingId),
+            ),
+          )
+          .orderBy(desc(favorite.createdAt), desc(favorite.id))
+          .limit(perSource)
+      : Promise.resolve([]),
 
-    db
-      .select({
-        id: userList.id,
-        entityType: userList.entityType,
-        title: userList.title,
-        audience: userList.audience,
-        createdAt: userList.createdAt,
-        updatedAt: userList.updatedAt,
-        authorId: userList.ownerId,
-        authorUsername: appUser.username,
-        authorDisplayName: appUser.displayName,
-      })
-      .from(userList)
-      .leftJoin(appUser, eq(userList.ownerId, appUser.id))
-      .where(and(inArray(userList.ownerId, followedIds), inArray(userList.audience, ["followers", "public"]), BLOCKED_SQL(viewerId, userList.ownerId)))
-      .orderBy(desc(userList.createdAt), desc(userList.id))
-      .limit(perSource),
+    includeKind("list")
+      ? db
+          .select({
+            id: userList.id,
+            entityType: userList.entityType,
+            title: userList.title,
+            audience: userList.audience,
+            createdAt: userList.createdAt,
+            updatedAt: userList.updatedAt,
+            authorId: userList.ownerId,
+            authorUsername: appUser.username,
+            authorDisplayName: appUser.displayName,
+          })
+          .from(userList)
+          .leftJoin(appUser, eq(userList.ownerId, appUser.id))
+          .where(
+            and(
+              inArray(userList.ownerId, authorIds),
+              inArray(userList.audience, ["followers", "public"]),
+              BLOCKED_SQL(viewerId, userList.ownerId),
+              ...(searchPattern ? [ilike(userList.title, searchPattern)] : []),
+            ),
+          )
+          .orderBy(desc(userList.createdAt), desc(userList.id))
+          .limit(perSource)
+      : Promise.resolve([]),
 
     // rating/comment no tienen columna de audiencia propia: se tratan como
     // audiencia "public" implícita, ya cubierta por pertenecer a followedIds
     // (relación aceptada) — ver design.md de add-ratings-comments-feed.
-    db
-      .select({
-        id: rating.id,
-        stars: rating.stars,
-        detailedScore: rating.detailedScore,
-        updatedAt: rating.updatedAt,
-        artistId: rating.artistId,
-        releaseGroupId: rating.releaseGroupId,
-        recordingId: rating.recordingId,
-        artistName: artist.name,
-        creditedArtist: PRIMARY_ARTIST_SQL(rating.releaseGroupId, rating.recordingId),
-        releaseTitle: releaseGroup.title,
-        releaseCover: releaseGroup.coverThumbUrl,
-        recordingTitle: recording.title,
-        authorId: rating.userId,
-        authorUsername: appUser.username,
-        authorDisplayName: appUser.displayName,
-      })
-      .from(rating)
-      .leftJoin(artist, eq(rating.artistId, artist.id))
-      .leftJoin(releaseGroup, eq(rating.releaseGroupId, releaseGroup.id))
-      .leftJoin(recording, eq(rating.recordingId, recording.id))
-      .leftJoin(appUser, eq(rating.userId, appUser.id))
-      .where(and(inArray(rating.userId, followedIds), BLOCKED_SQL(viewerId, rating.userId)))
-      .orderBy(desc(rating.updatedAt), desc(rating.id))
-      .limit(perSource),
+    includeKind("rating")
+      ? db
+          .select({
+            id: rating.id,
+            stars: rating.stars,
+            detailedScore: rating.detailedScore,
+            updatedAt: rating.updatedAt,
+            artistId: rating.artistId,
+            releaseGroupId: rating.releaseGroupId,
+            recordingId: rating.recordingId,
+            artistName: artist.name,
+            creditedArtist: PRIMARY_ARTIST_SQL(rating.releaseGroupId, rating.recordingId),
+            releaseTitle: releaseGroup.title,
+            releaseCover: releaseGroup.coverThumbUrl,
+            recordingTitle: recording.title,
+            authorId: rating.userId,
+            authorUsername: appUser.username,
+            authorDisplayName: appUser.displayName,
+          })
+          .from(rating)
+          .leftJoin(artist, eq(rating.artistId, artist.id))
+          .leftJoin(releaseGroup, eq(rating.releaseGroupId, releaseGroup.id))
+          .leftJoin(recording, eq(rating.recordingId, recording.id))
+          .leftJoin(appUser, eq(rating.userId, appUser.id))
+          .where(
+            and(
+              inArray(rating.userId, authorIds),
+              BLOCKED_SQL(viewerId, rating.userId),
+              ...titleSearchCondition(searchPattern, rating.releaseGroupId, rating.recordingId),
+            ),
+          )
+          .orderBy(desc(rating.updatedAt), desc(rating.id))
+          .limit(perSource)
+      : Promise.resolve([]),
 
-    db
-      .select({
-        id: comment.id,
-        body: comment.body,
-        createdAt: comment.createdAt,
-        artistId: comment.artistId,
-        releaseGroupId: comment.releaseGroupId,
-        recordingId: comment.recordingId,
-        artistName: artist.name,
-        creditedArtist: PRIMARY_ARTIST_SQL(comment.releaseGroupId, comment.recordingId),
-        releaseTitle: releaseGroup.title,
-        releaseCover: releaseGroup.coverThumbUrl,
-        recordingTitle: recording.title,
-        authorId: comment.userId,
-        authorUsername: appUser.username,
-        authorDisplayName: appUser.displayName,
-      })
-      .from(comment)
-      .leftJoin(artist, eq(comment.artistId, artist.id))
-      .leftJoin(releaseGroup, eq(comment.releaseGroupId, releaseGroup.id))
-      .leftJoin(recording, eq(comment.recordingId, recording.id))
-      .leftJoin(appUser, eq(comment.userId, appUser.id))
-      .where(and(inArray(comment.userId, followedIds), BLOCKED_SQL(viewerId, comment.userId)))
-      .orderBy(desc(comment.createdAt), desc(comment.id))
-      .limit(perSource),
+    includeKind("comment")
+      ? db
+          .select({
+            id: comment.id,
+            body: comment.body,
+            createdAt: comment.createdAt,
+            artistId: comment.artistId,
+            releaseGroupId: comment.releaseGroupId,
+            recordingId: comment.recordingId,
+            artistName: artist.name,
+            creditedArtist: PRIMARY_ARTIST_SQL(comment.releaseGroupId, comment.recordingId),
+            releaseTitle: releaseGroup.title,
+            releaseCover: releaseGroup.coverThumbUrl,
+            recordingTitle: recording.title,
+            authorId: comment.userId,
+            authorUsername: appUser.username,
+            authorDisplayName: appUser.displayName,
+          })
+          .from(comment)
+          .leftJoin(artist, eq(comment.artistId, artist.id))
+          .leftJoin(releaseGroup, eq(comment.releaseGroupId, releaseGroup.id))
+          .leftJoin(recording, eq(comment.recordingId, recording.id))
+          .leftJoin(appUser, eq(comment.userId, appUser.id))
+          .where(
+            and(
+              inArray(comment.userId, authorIds),
+              BLOCKED_SQL(viewerId, comment.userId),
+              ...titleSearchCondition(searchPattern, comment.releaseGroupId, comment.recordingId),
+            ),
+          )
+          .orderBy(desc(comment.createdAt), desc(comment.id))
+          .limit(perSource)
+      : Promise.resolve([]),
   ]);
 
   const author = (id: string, username: string | null, displayName: string | null): FeedAuthor => ({

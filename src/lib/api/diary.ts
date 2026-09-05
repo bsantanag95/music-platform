@@ -5,6 +5,7 @@ import {
   ListenEntryResponseSchema,
   type DiaryAudience,
   type DiaryListResponse,
+  type FeedEntry,
   type FeedResponse,
   type ListenContext,
   type ListenEntry,
@@ -45,8 +46,21 @@ export function getUserDiary(username: string, page = 1, pageSize = 20): Promise
   );
 }
 
-export function getFeed(page = 1, pageSize = 20): Promise<FeedResponse> {
-  return apiFetch(`/api/me/feed?page=${page}&pageSize=${pageSize}`, FeedResponseSchema);
+// Filtros combinables de `getFeed` — reflejan `FeedFilters` del servicio
+// (`src/services/feed/feed.ts`), duplicados acá porque el cliente no puede
+// importar código de servidor. Mismo criterio que `DiaryFiltersParams`.
+export interface FeedFiltersParams {
+  kind?: FeedEntry["kind"];
+  authorId?: string;
+  q?: string;
+}
+
+export function getFeed(page = 1, pageSize = 20, filters?: FeedFiltersParams): Promise<FeedResponse> {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  if (filters?.kind) params.set("kind", filters.kind);
+  if (filters?.authorId) params.set("authorId", filters.authorId);
+  if (filters?.q) params.set("q", filters.q);
+  return apiFetch(`/api/me/feed?${params.toString()}`, FeedResponseSchema);
 }
 
 export function createListenEntry(target: ListenTarget): Promise<ListenEntry> {

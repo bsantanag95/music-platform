@@ -8,7 +8,10 @@ const mocks = vi.hoisted(() => ({
   requireUser: vi.fn(),
 }));
 
-vi.mock("@/services/feed/feed", () => ({ listFeed: mocks.listFeed }));
+vi.mock("@/services/feed/feed", () => ({
+  listFeed: mocks.listFeed,
+  FEED_KINDS: ["listen", "favorite", "list", "rating", "comment"],
+}));
 vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser }));
 
 const user = { id: "00000000-0000-4000-8000-000000000001" };
@@ -47,7 +50,11 @@ describe("feed API (GET /api/me/feed)", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ entries: [feedEntry] });
-    expect(mocks.listFeed).toHaveBeenCalledWith(user.id, 1, 20);
+    expect(mocks.listFeed).toHaveBeenCalledWith(user.id, 1, 20, {
+      kind: undefined,
+      authorId: undefined,
+      q: undefined,
+    });
   });
 
   it("devuelve entradas de rating y comentario tal como las arma el servicio", async () => {
@@ -84,5 +91,59 @@ describe("feed API (GET /api/me/feed)", () => {
 
     expect(response.status).toBe(401);
     expect(await response.json()).toMatchObject({ code: "AUTH_REQUIRED" });
+  });
+
+  describe("filtros (add-feed-filters)", () => {
+    it("rechaza un kind fuera del enum cerrado, sin llamar al servicio", async () => {
+      const response = await GET(new NextRequest("http://localhost/api/me/feed?kind=not-a-kind"));
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({ code: "VALIDATION_ERROR" });
+      expect(mocks.listFeed).not.toHaveBeenCalled();
+    });
+
+    it("acepta cada valor del enum de kind y lo pasa al servicio", async () => {
+      mocks.requireUser.mockResolvedValue(user);
+      mocks.listFeed.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
+
+      for (const kind of ["listen", "favorite", "list", "rating", "comment"]) {
+        mocks.listFeed.mockClear();
+        await GET(new NextRequest(`http://localhost/api/me/feed?kind=${kind}`));
+        expect(mocks.listFeed).toHaveBeenCalledWith(user.id, 1, 20, {
+          kind,
+          authorId: undefined,
+          q: undefined,
+        });
+      }
+    });
+
+    it("pasa authorId y q recortado al servicio", async () => {
+      mocks.requireUser.mockResolvedValue(user);
+      mocks.listFeed.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
+
+      await GET(
+        new NextRequest(
+          `http://localhost/api/me/feed?authorId=${encodeURIComponent("u2")}&q=${encodeURIComponent("  radiohead  ")}`,
+        ),
+      );
+
+      expect(mocks.listFeed).toHaveBeenCalledWith(user.id, 1, 20, {
+        kind: undefined,
+        authorId: "u2",
+        q: "radiohead",
+      });
+    });
+
+    it("propaga el VALIDATION_ERROR del servicio (authorId fuera de los seguidos) como 400", async () => {
+      mocks.requireUser.mockResolvedValue(user);
+      mocks.listFeed.mockRejectedValue(
+        new ApiError("VALIDATION_ERROR", 400, "El autor no pertenece a tus seguidos"),
+      );
+
+      const response = await GET(new NextRequest("http://localhost/api/me/feed?authorId=u9"));
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({ code: "VALIDATION_ERROR" });
+    });
   });
 });
