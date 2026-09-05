@@ -61,19 +61,16 @@
       de propias, exclusión por bloqueo, `followers`/`private` nunca aparecen, perfil privado
       con lista pública excluido, estado de guardado reflejado, paginación inválida.
 
-## 6. Servicio: feed de listas seguidas
+## 6. Feed de listas seguidas — fuera de alcance de esta entrega
 
-- [ ] 6.1 `src/services/feed/feed.ts`: helper `listEventKey(event)` compartido para
-      deduplicar eventos de lista por `("list", listId, event, updatedAt)`.
-- [ ] 6.2 Sexta fuente: eventos de actualización de metadatos de listas en `(select list_id
-      from list_save where saver_id = reader and following)`, filtrados por visibilidad del
-      dueño (mismo join perfil + bloqueos que el resto de fuentes).
-- [ ] 6.3 Fusionar con la fuente de "eventos de lista de personas seguidas" y deduplicar con
-      `listEventKey` antes de paginar en memoria; `kind=list` incluye ambas.
-- [ ] 6.4 Tests en `src/services/feed/feed.test.ts`: lista seguida de un no-seguido aparece;
-      lista seguida que pasó a privada / con bloqueo / borrada no aparece; evento visible por
-      los dos caminos aparece una sola vez; `kind=list` cubre ambas fuentes; sin
-      `list_save.following` no aparece.
+La integración al feed (que una lista seguida aparezca en el feed del lector al
+actualizarse) toca la composición bajo demanda de `activity-feed` (sexta fuente +
+deduplicación por clave de evento) y su matriz de visibilidad, y arrastra el churn de ~11
+tests posicionales del feed. Se traslada al cambio de continuación
+**`add-followed-lists-to-feed`**, que modificará `activity-feed`. En esta entrega `following`
+ya se persiste y se expone (`src/services/lists/saved-lists.ts`: `followedListIds`,
+`savedStateFor`), listo para que ese cambio lo consuma. `src/services/feed/feed.ts` no se
+toca acá.
 
 ## 7. API: rutas
 
@@ -177,8 +174,8 @@
 ## 15. Documentación y verificación final
 
 - [ ] 15.1 `docs/05-features/lists-and-favorites.md`: mover la sección del plan de
-      "propuesto" a implementado; `docs/05-features/activity-feed.md`: documentar la fuente de
-      listas seguidas; `docs/05-features/README.md`: actualizar estado.
+      "propuesto" a implementado, dejando la integración al feed marcada como continuación;
+      `docs/05-features/README.md`: actualizar estado.
 - [ ] 15.2 `npm run typecheck`, `npm run lint`, `npm test -- --run`, `npm run build` — los
       cuatro en verde.
 - [ ] 15.3 Verificación manual en navegador (cuenta y datos reales): las tres pestañas,

@@ -36,11 +36,16 @@ gamificación, grafo social explícito, descubrimiento no algorítmico).
     (v1).
 
 - **Guardadas (capacidad nueva):** guardar es un **marcador privado** de una lista ajena
-  visible; seguir además hace que las **actualizaciones de metadatos de esa lista aparezcan en
-  el feed** del que la sigue. Toggles idempotentes con actualización optimista (mismo patrón
-  que favoritos). Una lista guardada que dejó de ser visible (pasó a privada, bloqueo, o fue
-  borrada) se muestra como "ya no disponible" y se puede quitar. Los guardados son privados:
-  **no se expone un contador público** de cuántas personas guardaron una lista.
+  visible; el guardado tiene además el eje **`following`** (seguir la lista). Toggles
+  idempotentes con actualización optimista (mismo patrón que favoritos). Una lista guardada
+  que dejó de ser visible (pasó a privada, bloqueo, o fue borrada) se muestra como "ya no
+  disponible" y se puede quitar. Los guardados son privados: **no se expone un contador
+  público** de cuántas personas guardaron una lista.
+  - **Integración de las listas seguidas al feed** (que una lista seguida aparezca en el feed
+    del lector al actualizarse) se deja para un **cambio de continuación** aparte, sobre
+    `activity-feed`: toca la composición del feed (sexta fuente + deduplicación) y su matriz
+    de visibilidad, y merece su propio ciclo de spec/tests. `following` ya se persiste y se
+    expone en esta entrega, listo para que ese cambio lo consuma.
 
 - **Descubrir (capacidad nueva):** listado paginado de listas **públicas** de la comunidad,
   en orden cronológico descendente (no "para vos", no ranking algorítmico). Cada tarjeta
@@ -69,8 +74,9 @@ gamificación, grafo social explícito, descubrimiento no algorítmico).
 ### New Capabilities
 
 - `list-saves`: guardar (marcador privado) y seguir listas ajenas visibles; superficie
-  "Guardadas" en `/me/lists`; integración de las listas seguidas como fuente del feed de
-  actividad; degradación cuando una lista guardada deja de ser visible.
+  "Guardadas" en `/me/lists`; degradación cuando una lista guardada deja de ser visible. (La
+  integración de las listas seguidas como fuente del feed queda para un cambio de
+  continuación sobre `activity-feed`.)
 - `list-discovery`: superficie "Descubrir" en `/me/lists` con las listas públicas de la
   comunidad, paginada y en orden cronológico, sin recomendación algorítmica.
 
@@ -81,10 +87,8 @@ gamificación, grafo social explícito, descubrimiento no algorítmico).
   mosaico de portadas y conteo de ítems, creación inline y listas fijadas; `Requirement:
   Listas ajenas visibles` expone `itemCount` y `coverThumbs` y ofrece Guardar/Seguir sobre
   las listas visibles.
-- `activity-feed`: `Requirement: Alcance del feed v1` y `Requirement: Feed de actividad de
-  usuarios seguidos` incorporan una fuente adicional —la actualización de metadatos de una
-  lista que el lector **sigue explícitamente**— además de las actividades de las personas
-  seguidas; sujeta a la misma matriz de visibilidad y al mismo filtro por `kind`.
+_(La modificación de `activity-feed` para incorporar las listas seguidas como fuente del feed
+se traslada a un cambio de continuación — ver nota en "What Changes".)_
 
 ## Impact
 
@@ -101,8 +105,8 @@ gamificación, grafo social explícito, descubrimiento no algorítmico).
     `lists/discover`.
 - **Servicios:** `src/services/lists/lists.ts` (conteo + carátulas + búsqueda/orden + pin),
   `src/services/lists/saved-lists.ts` (nuevo), `src/services/lists/discovery.ts` (nuevo),
-  `src/services/feed/feed.ts` (fuente de listas seguidas, respetando `kind`/visibilidad),
-  `src/services/social/visibility.ts` (reutilizado, sin cambios de reglas).
+  `src/services/social/visibility.ts` (reutilizado, sin cambios de reglas). `feed.ts` NO se
+  toca en esta entrega.
 - **Frontend:**
   - `src/app/[locale]/me/lists/page.tsx` (+ manejo de `?tab=`), `.../[listId]/page.tsx` (pase
     visual).
@@ -112,15 +116,13 @@ gamificación, grafo social explícito, descubrimiento no algorítmico).
   - Reutiliza `FilterSelect`, `EmptyState`, `Button`, `CoverThumb`, `DiscPlaceholder`,
     `useInfiniteQuery`, el patrón de tablist de `PopularCommentsTabs`.
 - **i18n:** `messages/{es,en}/lists.json` — claves nuevas (pestañas, toolbar, mosaico, guardar/
-  seguir, estados vacíos y de "ya no disponible", Descubrir). `messages/{es,en}/feed.json` —
-  etiqueta del nuevo origen de evento si aplica.
+  seguir, estados vacíos y de "ya no disponible", Descubrir).
 - **Tests:** servicios (conteo/carátulas/búsqueda/orden/pin, saved-lists idempotente y
-  visibilidad, discovery, feed con listas seguidas), rutas (params nuevos, endpoints nuevos,
-  retrocompatibilidad), componentes (tabs, tarjeta con/sin carátula, toggles optimistas,
-  estados vacíos, "ya no disponible").
+  visibilidad, discovery), rutas (params nuevos, endpoints nuevos, retrocompatibilidad),
+  componentes (tabs, tarjeta con/sin carátula, toggles optimistas, estados vacíos, "ya no
+  disponible").
 - **Docs:** `docs/04-api/contracts.md`, `docs/05-features/lists-and-favorites.md` (mover el
-  plan de "propuesto" a implementado), `docs/05-features/activity-feed.md`,
-  `docs/05-features/README.md`.
+  plan de "propuesto" a implementado), `docs/05-features/README.md`.
 - **Sin dependencias nuevas.** Sin cambios en el `Header` global, en el modelo de ítems de
   lista (tipo único, dueño único, orden manual, borrado físico), en el sistema de doble rating
   ni en la URL/contrato del detalle de lista.

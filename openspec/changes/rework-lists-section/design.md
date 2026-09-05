@@ -104,20 +104,24 @@ API valida antes: la lista existe, es visible para el `saver` (reusa la matriz d
   tiene audiencia propia y semántica social distinta. Una lista guardada es privada y tiene
   el eje extra `following`.
 
-### 5. Feed de listas seguidas: sexta fuente en la composición bajo demanda, con deduplicación por clave de evento
+### 5. Feed de listas seguidas: trasladado a un cambio de continuación
 
-`listFeed` suma una consulta: eventos de actualización de metadatos de listas en
-`(select list_id from list_save where saver_id = :reader and following = true)`, filtradas
-por visibilidad del dueño (join a perfil + bloqueos, igual que el resto de fuentes). Se
-fusiona con la fuente de "eventos de lista de personas seguidas" y se deduplica por la clave
-`("list", list_id, event, updated_at)` antes de paginar en memoria. El filtro `kind=list`
-incluye ambas.
+El plan original sumaba a `listFeed` una sexta fuente (eventos de actualización de listas en
+`list_save where following = true`, filtrados por visibilidad del dueño) fusionada y
+deduplicada con la fuente de "eventos de lista de personas seguidas".
 
-- **Alternativa — tabla de eventos materializada:** descartada; el feed entero es bajo
-  demanda por decisión de `activity-feed` y se evalúa materialización recién con volumen
-  real.
-- **Riesgo:** es la parte más compleja del cambio (ver Risks). Se implementa como última
-  fase y con un helper de clave de evento compartido y testeado.
+**Durante la implementación se decidió sacarlo de esta entrega.** La composición del feed es
+bajo demanda con `Promise.all` sobre 5 fuentes y ~11 tests que mockean `db.select` por
+posición; agregar una sexta fuente rompe esa numeración en cada test y mezcla un cambio de
+`activity-feed` (spec + tests propios) dentro de un cambio ya grande de la sección de listas.
+
+En esta entrega: `following` se persiste en `list_save` y se expone
+(`saved-lists.ts`: `followedListIds(saverId)`, `savedStateFor(...)`). El cambio de
+continuación **`add-followed-lists-to-feed`** modifica `activity-feed` y consume esos
+helpers, con la clave de deduplicación `("list", list_id, event, updated_at)`.
+
+- **Alternativa — tabla de eventos materializada:** sigue descartada; el feed es bajo demanda
+  por decisión de `activity-feed`.
 
 ### 6. Descubrir: listas `public` de perfiles `public`, sin bloqueo, orden `created_at` desc
 
@@ -159,9 +163,8 @@ Funciones cliente nuevas (`getMyLists` con filtros, `pinList`/`unpinList`, `save
 ## Risks / Trade-offs
 
 - **[Deduplicación y visibilidad del feed de listas seguidas es la parte más frágil]** →
-  aislarla en su propia fase, con un helper `listEventKey()` compartido entre las dos fuentes
-  y tests de: lista seguida de un no-seguido aparece; lista seguida que pasó a privada no
-  aparece; evento visible por los dos caminos aparece una sola vez; `kind=list` cubre ambas.
+  resuelto sacándolo de esta entrega (ver Decisión 5); va al cambio
+  `add-followed-lists-to-feed`.
 - **[Coste de la consulta de `coverThumbs`/`itemCount` al escalar]** → acotada a los ≤20
   `list_id` de la página, apoyada en el índice `user_list_item(list_id, position)`; si
   aparece presión real, materializar `item_count` es un cambio posterior aislado.
@@ -189,10 +192,8 @@ Funciones cliente nuevas (`getMyLists` con filtros, `pinList`/`unpinList`, `save
 
 ## Open Questions
 
-- **¿"Seguir" (integración al feed) entra en esta entrega o el wiring del feed es un
-  fast-follow?** Recomendación: entra, como última fase; si el riesgo de la fase se
-  materializa, "Seguir" queda como intención guardada y el feed se conecta en un cambio
-  chico aparte.
+- **~~¿"Seguir" (integración al feed) entra en esta entrega?~~** Resuelto: no. `following` se
+  persiste y se expone; el feed se conecta en `add-followed-lists-to-feed` (ver Decisión 5).
 - **¿El mosaico usa 3 o 4 carátulas?** Recomendación: 4 (grilla 2×2).
 - **¿Se le muestra al dueño algún conteo de guardados de su propia lista?** Recomendación: no
   en v1 (mantener la superficie sin métricas).
