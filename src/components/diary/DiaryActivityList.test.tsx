@@ -30,6 +30,13 @@ vi.mock("@/i18n/navigation", () => ({
     </a>
   ),
 }));
+vi.mock("@/components/catalog/CoverThumb", () => ({
+  CoverThumb: ({ cover, label }: { cover: string | null; label: string }) => (
+    <span data-testid="cover-thumb" data-cover={cover ?? ""}>
+      {label}
+    </span>
+  ),
+}));
 vi.mock("@/lib/api/diary", () => ({
   updateListenEntry: mocks.updateListenEntry,
   deleteListenEntry: mocks.deleteListenEntry,
@@ -53,7 +60,7 @@ const neutral: ListenEntry = {
   reaction: "neutral",
   audience: "public",
   createdAt: "2026-01-02T00:00:00.000Z",
-  target: { type: "release-group", id: "a1b2c3d4-0000-4000-8000-000000000004", title: "Kid A", subtitle: null, coverThumbUrl: null },
+  target: { type: "release-group", id: "a1b2c3d4-0000-4000-8000-000000000004", title: "Kid A", subtitle: null, coverThumbUrl: "https://cover/kid-a.jpg" },
 };
 
 function plainListen(id: string, title: string): ListenEntry {
@@ -78,20 +85,54 @@ describe("DiaryActivityList", () => {
     expect(screen.getByText("Todavía no escuchaste nada")).toBeInTheDocument();
   });
 
-  it("lista las entradas con objetivo, contexto, reacción y sin celda de carátula", () => {
+  it("lista las entradas con objetivo, contexto y reacción", () => {
     renderWithIntl(<DiaryActivityList initial={initial} />);
     expect(screen.getByText("Pink Floyd")).toBeInTheDocument();
     expect(screen.getByText(/Primera escucha/)).toBeInTheDocument();
     expect(screen.getByText("Me gustó")).toBeInTheDocument();
     expect(screen.getByText("Neutro")).toBeInTheDocument();
     expect(screen.getByText("Kid A")).toBeInTheDocument();
-    expect(screen.queryByTestId("cover-thumb")).not.toBeInTheDocument();
   });
 
-  it("una entrada con impresión la muestra sobre un panel; sin impresión, en una línea", () => {
-    const { container } = renderWithIntl(<DiaryActivityList initial={initial} />);
-    expect(screen.getByText("El bajo está ridículamente bueno")).toBeInTheDocument();
-    expect(container.querySelectorAll("p.bg-ink-surface")).toHaveLength(1);
+  it("abre cada fila con la celda de carátula del objetivo, o el disco cuando no tiene", () => {
+    renderWithIntl(<DiaryActivityList initial={initial} />);
+    const cells = screen.getAllByTestId("cover-thumb");
+    expect(cells).toHaveLength(2);
+    expect(cells[0]).toHaveAttribute("data-cover", ""); // artista → disco
+    expect(cells[1]).toHaveAttribute("data-cover", "https://cover/kid-a.jpg"); // álbum → carátula
+  });
+
+  it("una entrada con impresión la muestra como cita entre comillas; sin impresión, no la muestra", () => {
+    renderWithIntl(<DiaryActivityList initial={initial} />);
+    expect(screen.getByText("“El bajo está ridículamente bueno”")).toBeInTheDocument();
+  });
+
+  it("la cita es un párrafo con regla neutra a la izquierda y cursiva, sin caja ni fondo", () => {
+    renderWithIntl(<DiaryActivityList initial={initial} />);
+    const quote = screen.getByText("“El bajo está ridículamente bueno”");
+    expect(quote.tagName).toBe("P");
+    expect(quote.className).toMatch(/border-l/);
+    expect(quote.className).toMatch(/italic/);
+    expect(quote.className).not.toMatch(/bg-ink-surface/);
+    expect(quote.className).not.toMatch(/rounded/);
+  });
+
+  it("la reacción se alinea por baseline junto al contexto, no como texto corrido", () => {
+    renderWithIntl(<DiaryActivityList initial={initial} />);
+    const badge = screen.getByText("Me gustó").closest("span.inline-flex");
+    // flex item bajo `items-baseline`, no texto mezclado: evita que el ícono SVG
+    // desplace el badge respecto a la línea de base del contexto/audiencia vecinos.
+    expect(badge?.parentElement?.className).toMatch(/items-baseline/);
+  });
+
+  it("la audiencia vive junto a la fecha y las acciones, no en el cluster de contexto/reacción", () => {
+    renderWithIntl(<DiaryActivityList initial={initial} />);
+    const audience = screen.getAllByText("Seguidores")[0]!;
+    const editButton = screen.getAllByRole("button", { name: "Editar" })[0]!;
+    // mismo contenedor (cluster derecho): sin ancho fijo, la fila no se estira
+    // más de lo que su propio contenido necesita.
+    expect(audience.closest("span.shrink-0")).toBe(editButton.closest("span.shrink-0"));
+    expect(document.querySelector('[class*="min-w-["]')).toBeNull();
   });
 
   it("la fecha se muestra relativa y conserva el ISO en el elemento de tiempo", () => {
@@ -129,6 +170,25 @@ describe("DiaryActivityList", () => {
     await waitFor(() => expect(mocks.updateListenEntry).toHaveBeenCalled());
   });
 
+  it("al guardar, cierra el formulario solo y confirma con un destello visual + anuncio accesible", async () => {
+    const user = userEvent.setup();
+    mocks.updateListenEntry.mockResolvedValue({ ...liked, reaction: "loved" });
+    renderWithIntl(<DiaryActivityList initial={initial} />);
+
+    const firstRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
+    await user.click(screen.getAllByRole("button", { name: "Editar" })[0]!);
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
+
+    // el formulario se cierra sin acción manual del usuario
+    await waitFor(() => expect(screen.queryByLabelText(/Impresión/)).not.toBeInTheDocument());
+    // destello ámbar en la fila afectada
+    expect(firstRow.className).toMatch(/bg-amber\/10/);
+    // el aviso es solo para lectores de pantalla (`sr-only`), no texto visible
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("Cambios guardados");
+    expect(status.className).toMatch(/sr-only/);
+  });
+
   it("borra una entrada propia tras confirmar", async () => {
     const user = userEvent.setup();
     mocks.deleteListenEntry.mockResolvedValue(null);
@@ -139,6 +199,21 @@ describe("DiaryActivityList", () => {
     await user.click(within(firstRow).getByRole("button", { name: /^Eliminar$/ }));
     await waitFor(() => expect(mocks.deleteListenEntry).toHaveBeenCalledWith(liked.id));
     expect(screen.queryByText("Pink Floyd")).not.toBeInTheDocument();
+  });
+
+  it("el aviso de confirmar borrado vive en su propia línea, no en el cluster angosto de fecha/acciones", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<DiaryActivityList initial={initial} />);
+
+    const firstRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
+    await user.click(within(firstRow).getByRole("button", { name: "Eliminar" }));
+
+    const warning = within(firstRow).getByRole("alert");
+    const dateCluster = screen.getByText("Seguidores").closest("span.shrink-0");
+    // el aviso ya no es hijo del cluster shrink-0 (fecha/editar) — por eso no
+    // se sale del ancho de la fila cuando el texto es largo.
+    expect(dateCluster?.contains(warning)).toBe(false);
+    expect(warning.closest("div")?.className).toMatch(/flex-wrap/);
   });
 
   it("carga más páginas al pulsar el botón", async () => {

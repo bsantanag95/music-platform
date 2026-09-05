@@ -50,7 +50,9 @@ export function TargetTitle({
 
 // La prosa de una entrada pesada sobre un panel iluminado — un escalón de temperatura
 // sobre el fondo, sin sombra (regla No-Shadow). Es lo que hace que un comentario o una
-// impresión escrita "frene" la vista.
+// impresión escrita "frene" la vista. Solo la usa el feed (comentarios y notas entre
+// filas de otros tipos); el diario propio tiene su propio tratamiento de cita, ver
+// `ImpressionQuote` en `DiaryActivityList.tsx`.
 export function ProsePanel({ body }: { body: string }) {
   return (
     <p className="mt-2 max-w-[60ch] whitespace-pre-wrap rounded-md border border-ink-border bg-ink-surface px-3 py-2 font-body text-sm text-paper">
