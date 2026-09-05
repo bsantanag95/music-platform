@@ -13,6 +13,7 @@
   },
   "groupListens": "{count, plural, one {logged # listen} other {logged # listens}}",
   "groupFavorites": "{count, plural, one {added # favorite} other {added # favorites}}",
+  "groupRatings": "{count, plural, one {rated # album} other {rated # albums}}",
   "groupMore": "and {count} more",
   "loadMore": "Load more",
   "loadingMore": "Loading...",

@@ -16,6 +16,8 @@
   "logoutPending": "Cerrando sesión...",
   "signedInAs": "Sesión iniciada como",
   "localeSwitcher": "Idioma",
+  "openMenu": "Abrir menú",
+  "closeMenu": "Cerrar menú",
   "error": {
     "title": "Algo salió mal",
     "description": "No pudimos completar la solicitud. Intentá de nuevo en un momento."

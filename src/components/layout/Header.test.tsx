@@ -56,6 +56,10 @@ vi.mock("next-intl", async () => {
         logoutPending: "Cerrando sesión...",
         signedInAs: "Sesión iniciada como",
         localeSwitcher: "Idioma",
+        diary: "Diario",
+        feed: "Feed",
+        openMenu: "Abrir menú",
+        closeMenu: "Cerrar menú",
       };
         return map[key] ?? key;
     },
@@ -159,5 +163,24 @@ describe("Header", () => {
     fireEvent.click(screen.getByRole("button", { name: "en" }));
 
     expect(mocks.replace).toHaveBeenCalledWith("/search?q=Sabrina", { locale: "en" });
+  });
+
+  it("el botón de menú mobile despliega la navegación, sesión e idioma plegados", () => {
+    renderWithIntl(
+      <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
+    );
+
+    const toggle = screen.getByRole("button", { name: "Abrir menú" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getAllByRole("link", { name: "Diario" })).toHaveLength(1);
+
+    fireEvent.click(toggle);
+
+    expect(screen.getByRole("button", { name: "Cerrar menú" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    // Plegado abierto: ahora hay dos copias (escritorio oculta por CSS + panel mobile).
+    expect(screen.getAllByRole("link", { name: "Diario" })).toHaveLength(2);
   });
 });

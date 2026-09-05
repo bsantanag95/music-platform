@@ -13,6 +13,7 @@
   },
   "groupListens": "{count, plural, one {registró # escucha} other {registró # escuchas}}",
   "groupFavorites": "{count, plural, one {marcó # favorito} other {marcó # favoritos}}",
+  "groupRatings": "{count, plural, one {valoró # disco} other {valoró # discos}}",
   "groupMore": "y {count} más",
   "loadMore": "Cargar más",
   "loadingMore": "Cargando...",

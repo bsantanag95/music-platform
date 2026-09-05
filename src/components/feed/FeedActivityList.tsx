@@ -124,7 +124,9 @@ function GroupRow({
   const verb =
     group.groupedKind === "listen"
       ? t("groupListens", { count: group.entries.length })
-      : t("groupFavorites", { count: group.entries.length });
+      : group.groupedKind === "favorite"
+        ? t("groupFavorites", { count: group.entries.length })
+        : t("groupRatings", { count: group.entries.length });
 
   return (
     <div>
@@ -149,6 +151,9 @@ function GroupRow({
               <Link href={href} className="text-paper transition-colors hover:text-amber">
                 {label}
               </Link>
+              {entry.kind === "rating" ? (
+                <span className="text-amber"> ({ratingGroupValue(entry)})</span>
+              ) : null}
             </span>
           );
         })}
@@ -187,6 +192,13 @@ function ratingMeterLabel(stars: string, score: number | null, t: FeedT): string
   return score != null
     ? t("ratingMeterLabelScore", { stars, score })
     : t("ratingMeterLabel", { stars });
+}
+
+// Valor compacto para una valoración dentro de una fila de grupo plegada
+// (ej. "4.5" o "4.5 · 65") — mismo formato que el numérico de FeedRatingMeter,
+// sin repetir el meter completo por cada entrada de la corrida.
+function ratingGroupValue(entry: Extract<FeedEntry, { kind: "rating" }>): string {
+  return entry.detailedScore != null ? `${entry.stars} · ${entry.detailedScore}` : entry.stars;
 }
 
 function audienceLabel(entry: FeedEntry, t: FeedT): string | null {

@@ -174,6 +174,23 @@ describe("FeedActivityList", () => {
     expect(screen.queryByTestId("cover-thumb")).not.toBeInTheDocument();
   });
 
+  it("colapsa 3 valoraciones seguidas de un autor en una fila con títulos y valores", () => {
+    const runEntries = [
+      rating({ id: "r1", stars: "4.5", detailedScore: 87, target: { type: "release-group", id: "rg1", title: "Uno", artistName: null, coverThumbUrl: null } }),
+      rating({ id: "r2", stars: "3.0", detailedScore: null, target: { type: "release-group", id: "rg2", title: "Dos", artistName: null, coverThumbUrl: null } }),
+      rating({ id: "r3", stars: "5.0", detailedScore: 100, target: { type: "release-group", id: "rg3", title: "Tres", artistName: null, coverThumbUrl: null } }),
+    ];
+    renderWithIntl(<FeedActivityList entries={runEntries} />);
+
+    expect(screen.getByText(/valoró 3 discos/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Uno" })).toBeInTheDocument();
+    expect(screen.getByText("(4.5 · 87)")).toBeInTheDocument();
+    expect(screen.getByText("(3.0)")).toBeInTheDocument();
+    // una sola fila: ningún medidor VU individual, ninguna celda de carátula
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("cover-thumb")).not.toBeInTheDocument();
+  });
+
   it("el rastro propio (variant self) no muestra celda ni autor", () => {
     renderWithIntl(<FeedActivityList entries={[comment(), favorite()]} variant="self" />);
 
