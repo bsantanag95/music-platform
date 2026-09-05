@@ -178,10 +178,10 @@ toca acá.
       `docs/05-features/README.md`: actualizar estado.
 - [x] 15.2 `npm run typecheck`, `npm run lint`, `npm test -- --run`, `npm run build` — los
       cuatro en verde.
-- [ ] 15.3 Verificación manual en navegador (cuenta y datos reales): las tres pestañas,
+- [x] 15.3 Verificación manual en navegador (cuenta y datos reales): las tres pestañas,
       `?tab=` enlazable y tras reload, creación inline, fijar, guardar/seguir una lista ajena
       y verla en el feed, Descubrir, "ya no disponible", detalle con mosaico; mobile 375px sin
       overflow; foco ámbar 2px visible; `prefers-reduced-motion` respetado.
-- [ ] 15.4 Detector de diseño de Impeccable sobre los componentes tocados
+- [x] 15.4 Detector de diseño de Impeccable sobre los componentes tocados
       (`node .claude/skills/impeccable/scripts/detect.mjs --json <archivos>`) — sin hallazgos.
-- [ ] 15.5 `openspec validate rework-lists-section --strict` en verde.
+- [x] 15.5 `openspec validate rework-lists-section --strict` en verde.

@@ -51,7 +51,7 @@ export function SaveListButton({
   };
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex flex-col items-start gap-1">
       <div className="flex items-center gap-1.5">
         {saved ? (
           <button

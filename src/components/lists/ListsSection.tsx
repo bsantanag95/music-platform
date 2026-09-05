@@ -3,13 +3,9 @@
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
+import { LISTS_TABS, type ListsTab } from "./lists-tabs";
 
-export type ListsTab = "mine" | "saved" | "discover";
-export const LISTS_TABS: ListsTab[] = ["mine", "saved", "discover"];
-
-export function parseListsTab(value: string | string[] | undefined): ListsTab {
-  return LISTS_TABS.includes(value as ListsTab) ? (value as ListsTab) : "mine";
-}
+export { parseListsTab, LISTS_TABS, type ListsTab } from "./lists-tabs";
 
 // Sub-navegación de /me/lists. La pestaña activa vive en `?tab=` para ser
 // enlazable y sobrevivir a la recarga; cada cambio de pestaña es una navegación

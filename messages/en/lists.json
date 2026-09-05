@@ -73,5 +73,7 @@
   "discoverEmptyTitle": "No public lists yet",
   "discoverEmptyDescription": "When the community publishes lists, they will show up here, newest first.",
   "discoverHint": "Public lists from the community, newest first.",
-  "deleteShort": "Delete?"
+  "deleteShort": "Delete?",
+  "moveUp": "Move “{title}” up",
+  "moveDown": "Move “{title}” down"
 }

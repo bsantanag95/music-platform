@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { getUserLists } from "@/lib/api/lists";
@@ -96,9 +95,6 @@ export function ListsList({ initial, username, empty }: ListsListProps) {
           {t("loadError")}
         </span>
       ) : null}
-      <Link href="/me/lists" className="sr-only">
-        {t("title")}
-      </Link>
     </div>
   );
 }

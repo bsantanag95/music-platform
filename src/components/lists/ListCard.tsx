@@ -19,9 +19,10 @@ interface ListCardProps {
   pinnedLabel?: string;
 }
 
-// Tarjeta de una lista: mosaico de portadas + título enlazado + metadatos.
-// Compartida por las tres pestañas de /me/lists y por el perfil ajeno. El
-// mosaico es la parte "objeto" (tacto de vinilo); el resto es cromo quieto.
+// Tarjeta de una lista: mosaico de portadas + título enlazado + metadatos, con
+// la acción contextual (menú de la tarjeta o Guardar/Seguir) en su propia fila
+// al pie para que la tarjeta nunca desborde en una columna angosta. El mosaico
+// es la parte "objeto" (tacto de vinilo); el resto es cromo quieto.
 export function ListCard({
   href,
   title,
@@ -40,23 +41,19 @@ export function ListCard({
       }`}
     >
       <Link href={href} className="shrink-0" tabIndex={-1} aria-hidden>
-        <ListCoverMosaic coverThumbs={coverThumbs} className="w-20 sm:w-24" />
+        <ListCoverMosaic coverThumbs={coverThumbs} className="w-20" />
       </Link>
 
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="min-w-0 font-display text-base text-paper">
-            <Link href={href} className="transition-colors hover:text-amber">
-              {title}
-            </Link>
-          </h3>
-          {action ? <div className="shrink-0">{action}</div> : null}
-        </div>
+        <h3 className="truncate font-display text-base text-paper">
+          <Link href={href} className="transition-colors hover:text-amber">
+            {title}
+          </Link>
+        </h3>
 
         <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-data text-xs text-paper-muted">
-          {pinned && pinnedLabel ? (
-            <span className="text-amber">{pinnedLabel}</span>
-          ) : null}
+          {pinned && pinnedLabel ? <span className="text-amber">{pinnedLabel}</span> : null}
+          {pinned && pinnedLabel ? <span aria-hidden>·</span> : null}
           {meta}
         </p>
 
@@ -65,6 +62,8 @@ export function ListCard({
             {description}
           </p>
         ) : null}
+
+        {action ? <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">{action}</div> : null}
       </div>
     </article>
   );

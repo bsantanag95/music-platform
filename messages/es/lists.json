@@ -73,5 +73,7 @@
   "discoverEmptyTitle": "Todavía no hay listas públicas",
   "discoverEmptyDescription": "Cuando la comunidad publique listas, van a aparecer acá, de la más reciente a la más antigua.",
   "discoverHint": "Listas públicas de la comunidad, de la más reciente a la más antigua.",
-  "deleteShort": "¿Borrar?"
+  "deleteShort": "¿Borrar?",
+  "moveUp": "Subir “{title}”",
+  "moveDown": "Bajar “{title}”"
 }

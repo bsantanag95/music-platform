@@ -193,10 +193,20 @@ export function ListDetail({ initial }: ListDetailProps) {
                 </Link>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <Button variant="ghost" disabled={busy || index === 0} aria-label={t("removeItem")} onClick={() => void moveItem(item.id, -1)}>
+                <Button
+                  variant="ghost"
+                  disabled={busy || index === 0}
+                  aria-label={t("moveUp", { title: item.target.title })}
+                  onClick={() => void moveItem(item.id, -1)}
+                >
                   ↑
                 </Button>
-                <Button variant="ghost" disabled={busy || index === list.items.length - 1} aria-label={t("removeItem")} onClick={() => void moveItem(item.id, 1)}>
+                <Button
+                  variant="ghost"
+                  disabled={busy || index === list.items.length - 1}
+                  aria-label={t("moveDown", { title: item.target.title })}
+                  onClick={() => void moveItem(item.id, 1)}
+                >
                   ↓
                 </Button>
                 {pendingRemoveId === item.id ? (
