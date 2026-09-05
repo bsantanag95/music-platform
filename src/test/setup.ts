@@ -19,3 +19,10 @@ class NoopIntersectionObserver implements IntersectionObserver {
 if (typeof globalThis.IntersectionObserver === "undefined") {
   globalThis.IntersectionObserver = NoopIntersectionObserver as unknown as typeof IntersectionObserver;
 }
+
+// jsdom no implementa `scrollIntoView` (usado por `ProsePanel` para corregir
+// la posición del scroll al colapsar una cita larga). Stub no-op global,
+// mismo criterio que IntersectionObserver arriba.
+if (typeof Element.prototype.scrollIntoView !== "function") {
+  Element.prototype.scrollIntoView = function scrollIntoView() {};
+}

@@ -19,6 +19,13 @@ interface FeedActivityListProps {
   // ancla en el autor. "self": tu propio rastro — sin celda ni autor, con un
   // riel izquierdo continuo. Ver openspec/changes/redesign-feed, decisiones 3 y 10.
   variant?: "feed" | "self";
+  // Pliega una cita larga (comentario o nota de escucha) que supera 6 líneas
+  // de alto real, con un botón "Ver más"/"Ver menos". Opt-in: `FeedList`
+  // (`/me/feed`) lo activa; `ScrollablePreviewList` (preview de feed y rastro
+  // reciente de Inicio) NO lo pasa a propósito — ese preview ya está acotado
+  // por su propio contenedor de scroll, plegar ahí encima sería doble tope
+  // (ver openspec/changes/add-feed-filters, Non-Goals).
+  clamp?: boolean;
 }
 
 // Presentación del feed por peso de contenido: las entradas con prosa
@@ -26,7 +33,7 @@ interface FeedActivityListProps {
 // el resto —favoritos, listas, ratings, escuchas sin nota— ocupan una fila de
 // baseline. Superficie de solo lectura: los únicos controles son enlaces de
 // navegación al autor y al objetivo.
-export function FeedActivityList({ entries, variant = "feed" }: FeedActivityListProps) {
+export function FeedActivityList({ entries, variant = "feed", clamp = false }: FeedActivityListProps) {
   const t = useTranslations("feed");
   const self = variant === "self";
 
@@ -77,7 +84,13 @@ export function FeedActivityList({ entries, variant = "feed" }: FeedActivityList
                   label={ratingMeterLabel(row.stars, row.detailedScore, t)}
                 />
               ) : null}
-              {heavy && body ? <ProsePanel body={body} /> : null}
+              {heavy && body ? (
+                <ProsePanel
+                  body={body}
+                  variant={row.kind === "listen" ? "impression" : "comment"}
+                  clamp={clamp}
+                />
+              ) : null}
             </li>
           );
         }
@@ -97,7 +110,13 @@ export function FeedActivityList({ entries, variant = "feed" }: FeedActivityList
                     label={ratingMeterLabel(row.stars, row.detailedScore, t)}
                   />
                 ) : null}
-                {heavy && body ? <ProsePanel body={body} /> : null}
+                {heavy && body ? (
+                  <ProsePanel
+                    body={body}
+                    variant={row.kind === "listen" ? "impression" : "comment"}
+                    clamp={clamp}
+                  />
+                ) : null}
               </div>
             </div>
           </li>
@@ -134,7 +153,7 @@ function GroupRow({
         <span className="min-w-0 font-data text-xs text-paper-muted">
           {hideAuthor ? null : (
             <>
-              <AuthorLink author={group.author} />
+              <AuthorIdentity author={group.author} />
               {" · "}
             </>
           )}
@@ -259,7 +278,7 @@ function MetaLine({
       <span className="min-w-0 font-data text-xs text-paper-muted">
         {hideAuthor ? null : (
           <>
-            <AuthorLink author={entry.author} />
+            <AuthorIdentity author={entry.author} />
             {" · "}
           </>
         )}
@@ -279,6 +298,59 @@ function AuthorLink({ author }: { author: FeedEntry["author"] }) {
     >
       {author.displayName ?? `@${author.username}`}
     </Link>
+  );
+}
+
+// Sin foto de perfil real (no existe todavía en el producto), un círculo de
+// iniciales le da al autor una unidad visual reconocible — mismo patrón que
+// GitHub/Slack/Discord usan como *fallback*, no como maqueta descartable: si
+// algún día se suma una foto real, este círculo sigue siendo exactamente ese
+// fallback. Resuelve el problema de "sin foto no hay sensación de distinción
+// de quién hizo la actividad" (feedback de usuario, 2026-09-05) sin tocar
+// backend. Alcance v1: solo /me/feed (no diario, no Inicio) — ver
+// openspec/changes/add-feed-filters.
+//
+// Paleta: 4 variantes tomadas de tokens YA existentes (petrol, ink-border,
+// paper-muted y sus hover), nunca ámbar — el acento queda reservado para
+// rating y foco, como manda la Regla de Rareza. La variante se elige de forma
+// determinística por `id` (estable), no por username (podría cambiar).
+const AVATAR_VARIANTS = [
+  "bg-petrol text-paper",
+  "bg-ink-border text-paper",
+  "bg-petrol-hover text-ink",
+  "bg-paper-muted text-ink",
+] as const;
+
+function avatarVariant(id: string): (typeof AVATAR_VARIANTS)[number] {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0;
+  return AVATAR_VARIANTS[Math.abs(hash) % AVATAR_VARIANTS.length]!;
+}
+
+function initialFor(author: FeedEntry["author"]): string {
+  const source = author.displayName?.trim() || author.username;
+  return source ? source[0]!.toUpperCase() : "?";
+}
+
+// Decorativo: el nombre ya lo dice `AuthorLink` al lado — repetirlo acá
+// duplicaría el anuncio para lector de pantalla sin agregar información.
+function AuthorAvatar({ author }: { author: FeedEntry["author"] }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`inline-flex size-4 shrink-0 items-center justify-center rounded-full font-data text-[9px] font-medium leading-none ${avatarVariant(author.id)}`}
+    >
+      {initialFor(author)}
+    </span>
+  );
+}
+
+function AuthorIdentity({ author }: { author: FeedEntry["author"] }) {
+  return (
+    <span className="inline-flex items-center gap-1 align-middle">
+      <AuthorAvatar author={author} />
+      <AuthorLink author={author} />
+    </span>
   );
 }
 

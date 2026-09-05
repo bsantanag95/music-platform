@@ -2,12 +2,13 @@
 
 import { keepPreviousData, useInfiniteQuery, useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
-import { RelativeDate, TargetTitle } from "@/components/feed/feed-row-parts";
+import { ProsePanel, RelativeDate, TargetTitle } from "@/components/feed/feed-row-parts";
 import { targetHref } from "@/components/feed/feed-target";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { FilterSelect } from "@/components/ui/FilterSelect";
 import { ListenEntryForm } from "./ListenEntryForm";
 import { ReactionBadge } from "./ReactionBadge";
 import { deleteListenEntry, getMyDiary, type DiaryFiltersParams } from "@/lib/api/diary";
@@ -37,66 +38,6 @@ interface DiaryActivityListProps {
 // (ver openspec/changes/redesign-diary, design.md decisiones 1 y 2).
 function coverForEntry(entry: ListenEntry): string | null {
   return entry.target.type === "release-group" ? entry.target.coverThumbUrl : null;
-}
-
-// Filtro compacto: el buscador es la herramienta principal de la barra, así que
-// estos tres quedan deliberadamente más livianos — sin caja ni fondo propio, mono
-// chico y apagado, apenas una regla inferior. `appearance-none` saca el cromo
-// nativo del `<select>` (en Chrome/Windows dejaba un parche blanco al pasar el
-// mouse, ajeno a la paleta) y dibujamos nuestra propia flecha para no perder la
-// afordancia de "esto despliega opciones".
-function FilterSelect({
-  value,
-  onChange,
-  ariaLabel,
-  widthClassName,
-  children,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  ariaLabel: string;
-  widthClassName: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        aria-label={ariaLabel}
-        className={`diary-filter-select appearance-none rounded border-b border-ink-border bg-transparent py-1.5 pl-0.5 pr-4 font-data text-sm text-paper-muted transition-colors hover:text-paper ${widthClassName}`}
-      >
-        {children}
-      </select>
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        className="pointer-events-none absolute right-0 top-1/2 size-3 -translate-y-1/2 text-paper-muted"
-      >
-        <path d="M6 9l6 6 6-6" />
-      </svg>
-    </div>
-  );
-}
-
-// La impresión escrita como cita, no como card: sin fondo ni caja bordeada — una
-// regla neutra a la izquierda (el mismo `ink-border` que separa todo en este
-// sistema, nunca un color nuevo) y el texto indentado, en Source Serif cursiva
-// con comillas tipográficas. Es lo que distingue "tu voz" de un panel de UI más.
-// `border-l-2` (no el hairline de 1px que usan cards y divisores): acá la regla
-// no separa dos bloques, tiene que leerse como el marcador de una cita — con 1px
-// el indent se sentía un margen accidental, no un gesto editorial deliberado.
-// Tratamiento propio del diario: `ProsePanel` (con caja) sigue siendo el de
-// `/me/feed`, donde una nota compite por peso con ratings y favoritos vecinos.
-function ImpressionQuote({ body }: { body: string }) {
-  return (
-    <p className="mt-3 border-l-2 border-ink-border pl-3 font-body text-sm text-paper italic">
-      “{body}”
-    </p>
-  );
 }
 
 // Estado de filtros de la UI: `""` es "sin filtrar" para los tres `<select>`
@@ -411,7 +352,7 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
                       layout="inline"
                     />
                   </div>
-                  {body ? <ImpressionQuote body={body} /> : null}
+                  {body ? <ProsePanel body={body} variant="impression" /> : null}
                   {expanded && (
                     <div className="mt-3">
                       <ListenEntryForm

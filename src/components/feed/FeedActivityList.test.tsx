@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import type { AnchorHTMLAttributes, ReactNode } from "react";
 import { FeedActivityList } from "./FeedActivityList";
@@ -104,13 +104,32 @@ function listen(overrides: Partial<Extract<FeedEntry, { kind: "listen" }>> = {})
 }
 
 describe("FeedActivityList", () => {
-  it("un comentario asienta el cuerpo completo sobre el panel y abre con su carátula", () => {
+  it("un comentario asienta el cuerpo completo como cita y abre con su carátula", () => {
     renderWithIntl(<FeedActivityList entries={[comment()]} />);
 
-    expect(
-      screen.getByText("Cada vez que lo vuelvo a poner encuentro algo nuevo."),
-    ).toBeInTheDocument();
+    const body = screen.getByText("Cada vez que lo vuelvo a poner encuentro algo nuevo.");
+    expect(body).toBeInTheDocument();
     expect(screen.getByTestId("cover-thumb")).toHaveAttribute("data-cover", "https://cover/1.jpg");
+  });
+
+  it("un comentario se muestra en redonda y sin comillas — crítica u humor, no una impresión sentida", () => {
+    renderWithIntl(<FeedActivityList entries={[comment()]} />);
+
+    const body = screen.getByText("Cada vez que lo vuelvo a poner encuentro algo nuevo.");
+    expect(body.className).toMatch(/border-l/);
+    expect(body.className).not.toMatch(/italic/);
+    expect(body.className).not.toMatch(/bg-ink-surface/);
+    expect(body.textContent).toBe("Cada vez que lo vuelvo a poner encuentro algo nuevo.");
+  });
+
+  it("una nota de escucha se muestra en cursiva y entre comillas — la misma voz que /me/diary", () => {
+    renderWithIntl(<FeedActivityList entries={[listen({ body: "Me voló la cabeza" })]} />);
+
+    const body = screen.getByText(
+      (_, node) => node?.tagName === "P" && node?.textContent === "“Me voló la cabeza”",
+    );
+    expect(body.className).toMatch(/border-l/);
+    expect(body.className).toMatch(/italic/);
   });
 
   it("toda fila abre con la celda izquierda: carátula si hay, disco si no", () => {
@@ -205,5 +224,85 @@ describe("FeedActivityList", () => {
 
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Fran" }).length).toBeGreaterThan(0);
+  });
+
+  describe("avatar de iniciales del autor", () => {
+    it("muestra la inicial del displayName, decorativo (no duplica el nombre para lector de pantalla)", () => {
+      const { container } = renderWithIntl(<FeedActivityList entries={[comment()]} />);
+
+      const avatar = container.querySelector('[aria-hidden="true"].rounded-full');
+      expect(avatar).not.toBeNull();
+      expect(avatar).toHaveTextContent("F"); // "Fran"
+    });
+
+    it("sin displayName, usa la inicial del username", () => {
+      const { container } = renderWithIntl(
+        <FeedActivityList
+          entries={[comment({ author: { id: "u2", username: "eli", displayName: null } })]}
+        />,
+      );
+
+      const avatar = container.querySelector('[aria-hidden="true"].rounded-full');
+      expect(avatar).toHaveTextContent("E");
+    });
+
+    it("el color es determinístico: el mismo autor siempre cae en la misma variante", () => {
+      const { container } = renderWithIntl(<FeedActivityList entries={[comment(), favorite()]} />);
+
+      const avatars = container.querySelectorAll('[aria-hidden="true"].rounded-full');
+      expect(avatars).toHaveLength(2); // mismo autor ("Fran") en ambas entradas
+      expect(avatars[0]!.className).toBe(avatars[1]!.className);
+    });
+
+    it("nunca usa ámbar (reservado por la Regla de Rareza)", () => {
+      const { container } = renderWithIntl(<FeedActivityList entries={[comment(), favorite()]} />);
+
+      const avatar = container.querySelector('[aria-hidden="true"].rounded-full');
+      expect(avatar!.className).not.toMatch(/amber|accent/);
+    });
+
+    it("no aparece en el rastro propio (variant self), donde ya se omite el autor", () => {
+      const { container } = renderWithIntl(<FeedActivityList entries={[comment()]} variant="self" />);
+
+      expect(container.querySelector('[aria-hidden="true"].rounded-full')).toBeNull();
+    });
+  });
+
+  describe("plegado de citas largas (clamp)", () => {
+    const originalScrollHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollHeight");
+
+    afterEach(() => {
+      if (originalScrollHeight) Object.defineProperty(HTMLElement.prototype, "scrollHeight", originalScrollHeight);
+      vi.restoreAllMocks();
+    });
+
+    // jsdom no hace layout real — se simula desborde mockeando `scrollHeight`
+    // (alto real) y `lineHeight` (umbral) para que `ProsePanel` decida plegar.
+    function mockOverflow() {
+      Object.defineProperty(HTMLElement.prototype, "scrollHeight", {
+        configurable: true,
+        get: () => 400,
+      });
+      const original = window.getComputedStyle.bind(window);
+      vi.spyOn(window, "getComputedStyle").mockImplementation((el, pseudo) => {
+        const style = original(el, pseudo);
+        Object.defineProperty(style, "lineHeight", { configurable: true, value: "20px" });
+        return style;
+      });
+    }
+
+    it("con `clamp`, una cita larga muestra el botón de expandir", () => {
+      mockOverflow();
+      renderWithIntl(<FeedActivityList entries={[comment()]} clamp />);
+
+      expect(screen.getByRole("button", { name: "Ver más" })).toBeInTheDocument();
+    });
+
+    it("sin `clamp` (uso de Inicio vía ScrollablePreviewList), nunca muestra el botón — ni con la misma entrada que sí lo mostraría en /me/feed", () => {
+      mockOverflow();
+      renderWithIntl(<FeedActivityList entries={[comment()]} />);
+
+      expect(screen.queryByRole("button", { name: "Ver más" })).not.toBeInTheDocument();
+    });
   });
 });

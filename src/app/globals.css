@@ -91,7 +91,7 @@
    solo respeta background-color/color puestos directamente en <option>. Sin
    esto, `color-scheme: dark` no alcanza y el menú se abre blanco con
    resaltado azul, aunque el control cerrado ya se vea bien. */
-.diary-filter-select option {
+.filter-select option {
   background-color: var(--color-ink-surface);
   color: var(--color-paper);
 }
@@ -103,7 +103,7 @@
    probado en el navegador; no reintentar cubrirlo con más CSS. La única
    forma real de controlarlo es reemplazar el <select> nativo por un listbox
    propio, evaluado y descartado por ahora (ver conversación de diseño). */
-.diary-filter-select option:checked {
+.filter-select option:checked {
   background-color: var(--color-amber);
   color: var(--color-ink);
 }
