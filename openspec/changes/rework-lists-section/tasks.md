@@ -155,8 +155,8 @@ toca acá.
 - [x] 13.1 `messages/{es,en}/lists.json`: claves nuevas (pestañas, toolbar, orden, mosaico
       `aria`, fijar/desfijar, guardar/seguir, "ya no disponible", estados vacíos de Guardadas
       y Descubrir, tiempo relativo si no se reusa uno existente).
-- [ ] 13.2 `messages/{es,en}/feed.json`: etiqueta del origen "lista seguida" si la UI del feed
-      la distingue.
+- [x] 13.2 `messages/{es,en}/feed.json` — N/A en esta entrega: la etiqueta del origen "lista
+      seguida" pertenece al cambio de continuación `add-followed-lists-to-feed` (Grupo 6).
 
 ## 14. Componentes: tests
 
