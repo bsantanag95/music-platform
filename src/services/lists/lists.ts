@@ -200,7 +200,7 @@ export async function deleteList(listId: string, ownerId: string): Promise<void>
   if (!deleted) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
 }
 
-interface ListEnrichment {
+export interface ListEnrichment {
   itemCount: number;
   coverThumbs: string[];
 }
@@ -211,7 +211,7 @@ interface ListEnrichment {
  * toma las primeras carátulas disponibles por lista. Las listas sin carátula
  * (artistas/canciones, o álbumes sin arte) quedan con `coverThumbs` vacío.
  */
-async function enrichLists(listIds: string[]): Promise<Map<string, ListEnrichment>> {
+export async function enrichLists(listIds: string[]): Promise<Map<string, ListEnrichment>> {
   const result = new Map<string, ListEnrichment>();
   if (listIds.length === 0) return result;
   for (const id of listIds) result.set(id, { itemCount: 0, coverThumbs: [] });

@@ -38,26 +38,26 @@
 
 ## 4. Servicio: guardar y seguir listas ajenas
 
-- [ ] 4.1 `src/services/lists/saved-lists.ts` (nuevo): `saveList(saverId, listId, { following
+- [x] 4.1 `src/services/lists/saved-lists.ts` (nuevo): `saveList(saverId, listId, { following
       })` con validación previa (lista existe y es visible para el `saver` vía
       `audiencesForProfile` + bloqueos; no propia → `VALIDATION_ERROR`; no visible →
       `LIST_NOT_FOUND`), upsert `ON CONFLICT (saver_id, list_id) DO UPDATE SET following`.
-- [ ] 4.2 `unsaveList(saverId, listId)` idempotente.
-- [ ] 4.3 `listSavedLists(saverId, page, pageSize)`: listas guardadas con dueño, tipo,
+- [x] 4.2 `unsaveList(saverId, listId)` idempotente.
+- [x] 4.3 `listSavedLists(saverId, page, pageSize)`: listas guardadas con dueño, tipo,
       `itemCount`, `coverThumbs`, `following`; orden por `created_at` desc; marca
       `unavailable: true` cuando la lista dejó de ser visible o fue borrada, sin filtrarla.
-- [ ] 4.4 Tests en `src/services/lists/saved-lists.test.ts`: guardar visible, seguir/dejar de
+- [x] 4.4 Tests en `src/services/lists/saved-lists.test.ts`: guardar visible, seguir/dejar de
       seguir, idempotencia, guardar propia (validación), guardar no visible
       (`LIST_NOT_FOUND`), lista guardada que pasa a privada → `unavailable`, borrado en
       cascada, bloqueo posterior, sin sesión cubierto en la ruta.
 
 ## 5. Servicio: descubrir listas públicas
 
-- [ ] 5.1 `src/services/lists/discovery.ts` (nuevo): `listDiscoverLists(readerId, page,
+- [x] 5.1 `src/services/lists/discovery.ts` (nuevo): `listDiscoverLists(readerId, page,
       pageSize)` — `user_list.audience = 'public'`, perfil del dueño `public`, `owner_id !=
       readerId`, sin bloqueo en ninguna dirección; enriquecer con `itemCount`/`coverThumbs` y
       con `saved`/`following` del lector (`left join list_save`); orden `created_at` desc.
-- [ ] 5.2 Tests en `src/services/lists/discovery.test.ts`: listas públicas recientes, exclusión
+- [x] 5.2 Tests en `src/services/lists/discovery.test.ts`: listas públicas recientes, exclusión
       de propias, exclusión por bloqueo, `followers`/`private` nunca aparecen, perfil privado
       con lista pública excluido, estado de guardado reflejado, paginación inválida.
 
