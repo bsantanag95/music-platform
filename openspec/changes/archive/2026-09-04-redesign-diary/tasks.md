@@ -71,14 +71,11 @@
 
 ## 7. Verificación y cierre
 
-- [ ] 7.1 Revisión visual del usuario en `/me/diary` con sesión: entradas con y sin nota,
-  con y sin reacción, editar una entrada, borrar una entrada, estado vacío, "cargar más".
-  **Bloqueada en esta sesión**: la base Postgres local está saturada de conexiones
-  (`too many clients`) por la actividad concurrente de otras sesiones/worktrees en esta
-  máquina — no es un problema del cambio. Verificación sustituta: 59 tests de
-  `DiaryActivityList`/`FeedActivityList` en verde (incluye edición, borrado, estado
-  vacío, "cargar más" y el caso de no-agrupamiento) + revisión estática del componente.
-  Pendiente una pasada visual real cuando la DB local esté disponible.
+- [x] 7.1 Revisión visual del usuario en `/me/diary` con sesión: completada en rondas de
+  pulido posteriores (una vez que la DB local dejó de estar saturada) — entradas con y
+  sin nota, con y sin reacción, editar, borrar, estado vacío, "cargar más", carátula/disco
+  por fila, cita editorial de la impresión, destello de guardado, confirmación de borrado.
+  Cada ronda se verificó en el navegador contra el servidor real antes de cerrarla.
 - [x] 7.2 `tsc --noEmit`, `eslint` (áreas tocadas) y `next build` en verde.
 - [x] 7.3 `docs/05-features/listening-diary-and-ratings.md` no documenta la presentación
   del listado (es un doc de modelo de datos) — no requiere cambios.
