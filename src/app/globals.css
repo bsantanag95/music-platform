@@ -87,7 +87,36 @@
   background-color: var(--color-amber);
 }
 
+/* El popup nativo de <select> ignora el resto de nuestros tokens — Chromium
+   solo respeta background-color/color puestos directamente en <option>. Sin
+   esto, `color-scheme: dark` no alcanza y el menú se abre blanco con
+   resaltado azul, aunque el control cerrado ya se vea bien. */
+.diary-filter-select option {
+  background-color: var(--color-ink-surface);
+  color: var(--color-paper);
+}
+
+/* La opción ya elegida usa el mismo ámbar del foco visible (:focus-visible
+   más arriba), no el azul de sistema por defecto. El resaltado al pasar el
+   mouse o navegar con flechas es un estado distinto que Chromium NO expone a
+   :hover/:focus/:active en <option> — queda azul de sistema sin excepción,
+   probado en el navegador; no reintentar cubrirlo con más CSS. La única
+   forma real de controlarlo es reemplazar el <select> nativo por un listbox
+   propio, evaluado y descartado por ahora (ver conversación de diseño). */
+.diary-filter-select option:checked {
+  background-color: var(--color-amber);
+  color: var(--color-ink);
+}
+
 @layer base {
+  /* La identidad del proyecto es oscura sin alternativa clara: le decimos al
+     navegador que renderice sus controles nativos (el popup de <select>,
+     entre otros) en modo oscuro, en vez de la chrome blanca por defecto que
+     no encaja con el resto de la interfaz. */
+  :root {
+    color-scheme: dark;
+  }
+
   body {
     @apply bg-ink text-paper font-body antialiased;
   }

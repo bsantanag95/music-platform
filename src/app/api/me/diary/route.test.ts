@@ -51,7 +51,54 @@ describe("diario API (GET/POST)", () => {
     const response = await GET(new NextRequest("http://localhost/api/me/diary?page=2&pageSize=10"));
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ entries: [entry], page: 2 });
-    expect(mocks.listMyDiary).toHaveBeenCalledWith(user.id, 2, 10);
+    expect(mocks.listMyDiary).toHaveBeenCalledWith(user.id, 2, 10, {
+      q: undefined,
+      context: undefined,
+      reaction: undefined,
+      audience: undefined,
+    });
+  });
+
+  it.each([
+    ["context", "invalido"],
+    ["reaction", "invalido"],
+    ["audience", "invalido"],
+  ])("GET rechaza %s=%s con VALIDATION_ERROR", async (parameter, value) => {
+    const request = new NextRequest(`http://localhost/api/me/diary?${parameter}=${value}`);
+    const response = await GET(request);
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mocks.listMyDiary).not.toHaveBeenCalled();
+  });
+
+  it("GET acepta reaction=none como filtro válido", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.listMyDiary.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
+    const response = await GET(new NextRequest("http://localhost/api/me/diary?reaction=none"));
+    expect(response.status).toBe(200);
+    expect(mocks.listMyDiary).toHaveBeenCalledWith(
+      user.id,
+      1,
+      20,
+      expect.objectContaining({ reaction: "none" }),
+    );
+  });
+
+  it("GET combina búsqueda y filtros válidos", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.listMyDiary.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
+    const response = await GET(
+      new NextRequest(
+        "http://localhost/api/me/diary?q=radiohead&context=relisten&reaction=loved&audience=public",
+      ),
+    );
+    expect(response.status).toBe(200);
+    expect(mocks.listMyDiary).toHaveBeenCalledWith(user.id, 1, 20, {
+      q: "radiohead",
+      context: "relisten",
+      reaction: "loved",
+      audience: "public",
+    });
   });
 
   it("GET sin sesión devuelve 401 AUTH_REQUIRED", async () => {

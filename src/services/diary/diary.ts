@@ -1,8 +1,9 @@
-import { and, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, appUser, listenEntry, recording, releaseGroup, userFollow } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import type { SocialTargetType } from "@/lib/api/schemas";
+import { PRIMARY_ARTIST_SQL } from "@/services/feed/feed";
 import { getProfileByUsername } from "@/services/social/profiles";
 import {
   DIARY_BODY_MAX,
@@ -44,6 +45,16 @@ export interface UpdateListenEntryChanges {
   listenContext?: ListenContext;
   body?: string | null;
   reaction?: ListenReaction | null;
+  audience?: DiaryAudience;
+}
+
+// Filtros combinables de `listMyDiary` — cada campo es independiente y opcional.
+// `reaction: "none"` es un valor explícito ("solo sin reacción"), distinto de omitir
+// el filtro por completo (`undefined`, "cualquier reacción o ninguna").
+export interface DiaryFilters {
+  q?: string;
+  context?: ListenContext;
+  reaction?: ListenReaction | "none";
   audience?: DiaryAudience;
 }
 
@@ -142,12 +153,42 @@ export async function deleteListenEntry(id: string, userId: string): Promise<voi
   if (!deleted.length) throw new ApiError("LISTEN_ENTRY_NOT_FOUND", 404, "La escucha no existe");
 }
 
-export async function listMyDiary(userId: string, page = 1, pageSize = 20) {
+export async function listMyDiary(
+  userId: string,
+  page = 1,
+  pageSize = 20,
+  filters?: DiaryFilters,
+) {
   if (page < 1 || pageSize < 1 || pageSize > 50) {
     throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
   }
+
+  const conditions: SQL[] = [eq(listenEntry.userId, userId)];
+  if (filters?.context) conditions.push(eq(listenEntry.listenContext, filters.context));
+  if (filters?.reaction === "none") {
+    conditions.push(isNull(listenEntry.reaction));
+  } else if (filters?.reaction) {
+    conditions.push(eq(listenEntry.reaction, filters.reaction));
+  }
+  if (filters?.audience) conditions.push(eq(listenEntry.audience, filters.audience));
+  const q = filters?.q?.trim();
+  if (q) {
+    const pattern = `%${q}%`;
+    // Además del título propio del objetivo, busca sobre el artista acreditado
+    // de álbumes y canciones (subquery escalar, no join — no multiplica filas)
+    // para que "Sabrina Carpenter" encuentre sus canciones y álbumes, no solo
+    // las entradas cuyo objetivo es la artista misma.
+    const searchCondition = or(
+      ilike(artist.name, pattern),
+      ilike(releaseGroup.title, pattern),
+      ilike(recording.title, pattern),
+      sql`${PRIMARY_ARTIST_SQL(listenEntry.releaseGroupId, listenEntry.recordingId)} ILIKE ${pattern}`,
+    );
+    if (searchCondition) conditions.push(searchCondition);
+  }
+
   const rows = await selectEntries()
-    .where(eq(listenEntry.userId, userId))
+    .where(and(...conditions))
     .orderBy(desc(listenEntry.createdAt), desc(listenEntry.id))
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
@@ -289,6 +330,7 @@ function selectEntries() {
       releaseGroupId: listenEntry.releaseGroupId,
       recordingId: listenEntry.recordingId,
       artistName: artist.name,
+      creditedArtist: PRIMARY_ARTIST_SQL(listenEntry.releaseGroupId, listenEntry.recordingId),
       releaseTitle: releaseGroup.title,
       releaseCover: releaseGroup.coverThumbUrl,
       recordingTitle: recording.title,
@@ -310,6 +352,7 @@ function serializeEntry(row: {
   releaseGroupId: string | null;
   recordingId: string | null;
   artistName: string | null;
+  creditedArtist?: string | null;
   releaseTitle: string | null;
   releaseCover: string | null;
   recordingTitle: string | null;
@@ -318,9 +361,9 @@ function serializeEntry(row: {
   if (row.artistId) {
     target = { type: "artist", id: row.artistId, title: row.artistName ?? "", subtitle: null, coverThumbUrl: null };
   } else if (row.releaseGroupId) {
-    target = { type: "release-group", id: row.releaseGroupId, title: row.releaseTitle ?? "", subtitle: null, coverThumbUrl: row.releaseCover };
+    target = { type: "release-group", id: row.releaseGroupId, title: row.releaseTitle ?? "", subtitle: row.creditedArtist ?? null, coverThumbUrl: row.releaseCover };
   } else {
-    target = { type: "recording", id: row.recordingId ?? "", title: row.recordingTitle ?? "", subtitle: null, coverThumbUrl: null };
+    target = { type: "recording", id: row.recordingId ?? "", title: row.recordingTitle ?? "", subtitle: row.creditedArtist ?? null, coverThumbUrl: null };
   }
   return {
     id: row.id,

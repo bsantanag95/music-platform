@@ -27,6 +27,13 @@
   "loadingMore": "Loading...",
   "saveError": "We couldn't save the change. Try again.",
   "loadError": "We couldn't load your diary. Try again.",
+  "searchPlaceholder": "Search by artist, album or song",
+  "filterAllContext": "Context",
+  "filterAllReaction": "Reaction",
+  "filterAllAudience": "Audience",
+  "clearFilters": "Clear filters",
+  "noResultsTitle": "No results for these filters",
+  "noResultsDescription": "Try a different search or remove one of the filters applied.",
   "context": {
     "first_listen": "First listen",
     "relisten": "Relisten",

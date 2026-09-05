@@ -30,6 +30,20 @@ describe("cliente API del diario", () => {
     expect(fetchMock).toHaveBeenCalledTimes(4);
   });
 
+  it("getMyDiary arma el query string con los filtros presentes, omitiendo los ausentes", async () => {
+    const fetchMock = vi
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response(JSON.stringify({ entries: [], page: 1, pageSize: 20, hasNext: false }), { status: 200 }));
+
+    await getMyDiary(1, 20, { q: "radiohead", reaction: "none" });
+
+    const url = new URL(fetchMock.mock.calls[0]![0] as string, "http://localhost");
+    expect(url.searchParams.get("q")).toBe("radiohead");
+    expect(url.searchParams.get("reaction")).toBe("none");
+    expect(url.searchParams.has("context")).toBe(false);
+    expect(url.searchParams.has("audience")).toBe(false);
+  });
+
   it("rechaza una reacción fuera de la taxonomía al parsear", async () => {
     vi.spyOn(global, "fetch").mockResolvedValue(
       new Response(JSON.stringify({ entry: { ...entry, reaction: "sarcasmo" } }), { status: 200 }),

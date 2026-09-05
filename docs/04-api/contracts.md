@@ -352,13 +352,21 @@ defecto `followers`. La entrada se crea sin impresión ni reacción; se completa
 **400** con `VALIDATION_ERROR` si el body no es válido. **404** con `DIARY_TARGET_INVALID` si el
 objetivo no existe. **401** con `AUTH_REQUIRED` sin sesión.
 
-### `GET /api/me/diary?page=&pageSize=`
+### `GET /api/me/diary?page=&pageSize=&q=&context=&reaction=&audience=`
 
 Lista paginada del diario propio en orden cronológico descendente. Cada entrada expone su objetivo
 con `{ type, id, title, subtitle, coverThumbUrl }`.
 
+Los cuatro últimos params son opcionales, combinables entre sí y aditivos (sin ellos, el
+comportamiento es idéntico al de antes de este cambio): `q` busca coincidencia parcial
+(case-insensitive) sobre el título del objetivo (artista, álbum o canción); `context` filtra por
+`listenContext` (`first_listen` | `relisten` | `rediscovery`); `reaction` filtra por reacción
+(`liked` | `loved` | `obsessed` | `neutral` | `disliked`, o el valor especial `none` para las
+entradas sin reacción); `audience` filtra por audiencia (`private` | `followers` | `public`).
+
 **200 OK:** `{ entries: [ListenEntry], page, pageSize, hasNext }`. **400** con `VALIDATION_ERROR`
-si la paginación es inválida.
+si la paginación es inválida, o si `context`/`reaction`/`audience` traen un valor fuera de su
+vocabulario cerrado.
 
 ### `PATCH /api/me/diary/{id}`
 

@@ -27,6 +27,13 @@
   "loadingMore": "Cargando...",
   "saveError": "No pudimos guardar el cambio. Intentá de nuevo.",
   "loadError": "No pudimos cargar el diario. Intentá de nuevo.",
+  "searchPlaceholder": "Buscar por artista, álbum o canción",
+  "filterAllContext": "Contexto",
+  "filterAllReaction": "Reacción",
+  "filterAllAudience": "Audiencia",
+  "clearFilters": "Limpiar filtros",
+  "noResultsTitle": "Sin resultados para estos filtros",
+  "noResultsDescription": "Probá con otra búsqueda o quitá alguno de los filtros aplicados.",
   "context": {
     "first_listen": "Primera escucha",
     "relisten": "Repetición",

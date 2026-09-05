@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import type { SQL } from "drizzle-orm";
+import { PgDialect } from "drizzle-orm/pg-core";
 import {
   createListenEntry,
   deleteListenEntry,
@@ -11,6 +13,20 @@ import {
   updateListenEntry,
   type DiaryTarget,
 } from "./diary";
+
+// Los filtros de `listMyDiary` arman condiciones reales de drizzle (no están
+// mockeadas, solo `db` lo está) — `PgDialect().sqlToQuery` las renderiza a SQL +
+// parámetros reales para poder verificar qué se filtró sin pegarle a Postgres.
+const dialect = new PgDialect();
+function joinPagedCapturing(rows: unknown[]) {
+  const offset = vi.fn().mockResolvedValue(rows);
+  const limit = vi.fn(() => ({ offset }));
+  const orderBy = vi.fn(() => ({ limit }));
+  const where = vi.fn<(condition: SQL) => { orderBy: typeof orderBy }>(() => ({ orderBy }));
+  const chain = { leftJoin: vi.fn(() => chain), where };
+  const from = vi.fn(() => chain);
+  return { from, where };
+}
 
 const mocks = vi.hoisted(() => ({
   db: { select: vi.fn(), insert: vi.fn(), update: vi.fn(), delete: vi.fn() },
@@ -209,6 +225,107 @@ describe("servicio del diario", () => {
     expect(result.entries).toHaveLength(1);
     expect(result.hasNext).toBe(true);
     expect(result.page).toBe(1);
+  });
+
+  it("álbumes y canciones muestran al artista acreditado como subtítulo; artistas no", async () => {
+    mocks.db.select.mockReturnValue(
+      joinPaged([
+        { ...entryRow, artistId: null, releaseGroupId: "rg1", releaseTitle: "Kid A", creditedArtist: "Radiohead" },
+        { ...entryRow, artistId: null, recordingId: "rec1", recordingTitle: "Idioteque", creditedArtist: "Radiohead" },
+        { ...entryRow, creditedArtist: null },
+      ]),
+    );
+    const result = await listMyDiary(user, 1, 20);
+
+    expect(result.entries[0]?.target).toMatchObject({ type: "release-group", subtitle: "Radiohead" });
+    expect(result.entries[1]?.target).toMatchObject({ type: "recording", subtitle: "Radiohead" });
+    expect(result.entries[2]?.target).toMatchObject({ type: "artist", subtitle: null });
+  });
+
+  describe("filtros de listMyDiary", () => {
+    it("sin filtros, la condición solo tiene el dueño", async () => {
+      const helper = joinPagedCapturing([entryRow]);
+      mocks.db.select.mockReturnValue(helper);
+      await listMyDiary(user, 1, 20);
+
+      const { sql, params } = dialect.sqlToQuery(helper.where.mock.calls[0]![0]);
+      expect(sql).toContain("user_id");
+      expect(params).toEqual([user]);
+    });
+
+    it("filtra por contexto", async () => {
+      const helper = joinPagedCapturing([entryRow]);
+      mocks.db.select.mockReturnValue(helper);
+      await listMyDiary(user, 1, 20, { context: "rediscovery" });
+
+      const { sql, params } = dialect.sqlToQuery(helper.where.mock.calls[0]![0]);
+      expect(sql).toContain("listen_context");
+      expect(params).toContain("rediscovery");
+    });
+
+    it("filtra por audiencia", async () => {
+      const helper = joinPagedCapturing([entryRow]);
+      mocks.db.select.mockReturnValue(helper);
+      await listMyDiary(user, 1, 20, { audience: "private" });
+
+      const { sql, params } = dialect.sqlToQuery(helper.where.mock.calls[0]![0]);
+      expect(sql).toContain("audience");
+      expect(params).toContain("private");
+    });
+
+    it("reaction: 'none' filtra por IS NULL, no por el string 'none'", async () => {
+      const helper = joinPagedCapturing([entryRow]);
+      mocks.db.select.mockReturnValue(helper);
+      await listMyDiary(user, 1, 20, { reaction: "none" });
+
+      const { sql, params } = dialect.sqlToQuery(helper.where.mock.calls[0]![0]);
+      expect(sql).toContain("is null");
+      expect(params).not.toContain("none");
+    });
+
+    it("reaction: 'neutral' filtra por igualdad, distinto de 'none' y de no filtrar", async () => {
+      const helper = joinPagedCapturing([entryRow]);
+      mocks.db.select.mockReturnValue(helper);
+      await listMyDiary(user, 1, 20, { reaction: "neutral" });
+
+      const { sql, params } = dialect.sqlToQuery(helper.where.mock.calls[0]![0]);
+      expect(sql).not.toContain("is null");
+      expect(params).toContain("neutral");
+    });
+
+    it("busca por texto sobre las tres columnas de título y el artista acreditado con ILIKE", async () => {
+      const helper = joinPagedCapturing([entryRow]);
+      mocks.db.select.mockReturnValue(helper);
+      await listMyDiary(user, 1, 20, { q: "  radiohead  " });
+
+      const { sql, params } = dialect.sqlToQuery(helper.where.mock.calls[0]![0]);
+      expect(sql.toLowerCase()).toContain("ilike");
+      // el subquery de artista acreditado (para álbumes/canciones) usa la tabla credit
+      expect(sql.toLowerCase()).toContain("credit");
+      // recortado y con comodines: 3 columnas de título + el artista acreditado
+      expect(params.filter((p) => p === "%radiohead%")).toHaveLength(4);
+    });
+
+    it("q vacío o solo espacios no agrega condición de búsqueda", async () => {
+      const helper = joinPagedCapturing([entryRow]);
+      mocks.db.select.mockReturnValue(helper);
+      await listMyDiary(user, 1, 20, { q: "   " });
+
+      const { sql } = dialect.sqlToQuery(helper.where.mock.calls[0]![0]);
+      expect(sql.toLowerCase()).not.toContain("ilike");
+    });
+
+    it("combina varios filtros a la vez", async () => {
+      const helper = joinPagedCapturing([entryRow]);
+      mocks.db.select.mockReturnValue(helper);
+      await listMyDiary(user, 1, 20, { context: "relisten", reaction: "loved", audience: "public", q: "kid a" });
+
+      const { sql, params } = dialect.sqlToQuery(helper.where.mock.calls[0]![0]);
+      expect(sql).toContain("listen_context");
+      expect(sql).toContain("audience");
+      expect(sql.toLowerCase()).toContain("ilike");
+      expect(params).toEqual(expect.arrayContaining(["relisten", "loved", "public", "%kid a%"]));
+    });
   });
 
   it("no toca la tabla de valoración: no la importa del esquema", () => {

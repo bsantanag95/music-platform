@@ -11,7 +11,7 @@ export default async function DiaryPage() {
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
       <h1 className="font-display text-2xl text-paper">{t("title")}</h1>
-      <div className="w-full max-w-2xl">
+      <div className="mt-2 w-full max-w-2xl">
         <DiaryActivityList initial={initial} />
       </div>
     </main>
