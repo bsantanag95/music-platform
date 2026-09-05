@@ -16,9 +16,11 @@ import {
   integer,
   smallint,
   numeric,
+  boolean,
   timestamp,
   date,
   check,
+  primaryKey,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
@@ -377,9 +379,52 @@ export const userListItem = pgTable(
   ],
 );
 
+// Guardar / seguir listas ajenas (cambio rework-lists-section). Marcador
+// privado por (saver_id, list_id); `following` habilita que las
+// actualizaciones de la lista entren en el feed de quien la sigue.
+export const listSave = pgTable(
+  "list_save",
+  {
+    saverId: uuid("saver_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    listId: uuid("list_id")
+      .notNull()
+      .references(() => userList.id, { onDelete: "cascade" }),
+    following: boolean("following").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.saverId, t.listId] }),
+    index("idx_list_save_saver_created").on(t.saverId, t.createdAt),
+    index("idx_list_save_list").on(t.listId),
+  ],
+);
+
+// Fijar listas propias (cambio rework-lists-section). Tabla aparte para no
+// tocar user_list.updated_at (que dispara eventos de feed).
+export const userListPin = pgTable(
+  "user_list_pin",
+  {
+    ownerId: uuid("owner_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    listId: uuid("list_id")
+      .notNull()
+      .references(() => userList.id, { onDelete: "cascade" }),
+    pinnedAt: timestamp("pinned_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.ownerId, t.listId] }),
+    index("idx_user_list_pin_owner_pinned").on(t.ownerId, t.pinnedAt),
+  ],
+);
+
 export type FavoriteRow = typeof favorite.$inferSelect;
 export type UserListRow = typeof userList.$inferSelect;
 export type UserListItemRow = typeof userListItem.$inferSelect;
+export type ListSaveRow = typeof listSave.$inferSelect;
+export type UserListPinRow = typeof userListPin.$inferSelect;
 
 // Colección física (Fase 5, add-physical-collection). Objetivo fijo (álbum):
 // FK directa, sin patrón CHECK num_nonnulls. Varias entradas por álbum

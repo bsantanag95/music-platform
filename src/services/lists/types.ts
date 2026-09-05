@@ -7,6 +7,12 @@ export { type Audience } from "@/services/social/types";
 export const LIST_ENTITY_TYPES = ["artist", "release-group", "recording"] as const;
 export type ListEntityType = (typeof LIST_ENTITY_TYPES)[number];
 
+// Orden de la superficie propia de listas (cambio rework-lists-section).
+// `recent`: por creación descendente (comportamiento previo).
+// `alpha`: por título, sin distinguir mayúsculas.
+export const LIST_SORTS = ["recent", "alpha"] as const;
+export type ListSort = (typeof LIST_SORTS)[number];
+
 // Decisión cerrada en el cambio: título hasta 100 y descripción hasta 500.
 export const LIST_TITLE_MAX = 100;
 export const LIST_DESCRIPTION_MAX = 500;

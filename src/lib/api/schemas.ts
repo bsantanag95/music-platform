@@ -537,8 +537,14 @@ export const UserListSummarySchema = z.object({
   audience: DiaryAudienceSchema,
   createdAt: z.string(),
   updatedAt: z.string(),
+  itemCount: z.number().int(),
+  coverThumbs: z.array(z.string()),
+  pinned: z.boolean(),
 });
 export type UserListSummary = z.infer<typeof UserListSummarySchema>;
+
+export const ListSortSchema = z.enum(["recent", "alpha"]);
+export type ListSort = z.infer<typeof ListSortSchema>;
 
 export const UserListItemSchema = z.object({
   id: z.uuid(),

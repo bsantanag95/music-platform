@@ -1,18 +1,36 @@
-import { and, asc, desc, eq, inArray, max } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, inArray, max, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { artist, recording, releaseGroup, userList, userListItem } from "@/db/schema";
+import {
+  artist,
+  recording,
+  releaseGroup,
+  userList,
+  userListItem,
+  userListPin,
+} from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { audiencesForProfile } from "@/services/social/visibility";
 import type { Audience } from "@/services/social/types";
 import {
   LIST_DESCRIPTION_MAX,
+  LIST_SORTS,
   LIST_TITLE_MAX,
   type ListEntityType,
+  type ListSort,
 } from "./types";
+
+/** Cantidad máxima de carátulas que se llevan a la tarjeta de una lista. */
+export const LIST_COVER_THUMBS_MAX = 4;
 
 export interface ListTarget {
   type: ListEntityType;
   id: string;
+}
+
+export interface ListFilters {
+  q?: string;
+  entityType?: ListEntityType;
+  sort?: ListSort;
 }
 
 export interface UserListSummary {
@@ -23,6 +41,12 @@ export interface UserListSummary {
   audience: Audience;
   createdAt: string;
   updatedAt: string;
+  /** Cantidad total de ítems de la lista. */
+  itemCount: number;
+  /** Primeras carátulas disponibles de los ítems (para el mosaico). */
+  coverThumbs: string[];
+  /** Fijada por su propietario. Siempre `false` para listas ajenas. */
+  pinned: boolean;
 }
 
 export interface UserListDetail extends UserListSummary {
@@ -134,7 +158,15 @@ export async function getOwnedList(listId: string, ownerId: string): Promise<Use
     .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId)))
     .limit(1);
   if (!listRow) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
-  return serializeDetail(listRow, await listItems(listId));
+  const [items, [pin]] = await Promise.all([
+    listItems(listId),
+    db
+      .select({ listId: userListPin.listId })
+      .from(userListPin)
+      .where(and(eq(userListPin.ownerId, ownerId), eq(userListPin.listId, listId)))
+      .limit(1),
+  ]);
+  return serializeDetail(listRow, items, pin !== undefined);
 }
 
 export async function updateList(
@@ -168,19 +200,131 @@ export async function deleteList(listId: string, ownerId: string): Promise<void>
   if (!deleted) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
 }
 
-export async function listMyLists(ownerId: string, page = 1, pageSize = 20) {
+interface ListEnrichment {
+  itemCount: number;
+  coverThumbs: string[];
+}
+
+/**
+ * Resuelve `itemCount` y `coverThumbs` para un conjunto de listas en dos
+ * consultas acotadas (no N+1): un `count(*)` agrupado y un `row_number()` que
+ * toma las primeras carátulas disponibles por lista. Las listas sin carátula
+ * (artistas/canciones, o álbumes sin arte) quedan con `coverThumbs` vacío.
+ */
+async function enrichLists(listIds: string[]): Promise<Map<string, ListEnrichment>> {
+  const result = new Map<string, ListEnrichment>();
+  if (listIds.length === 0) return result;
+  for (const id of listIds) result.set(id, { itemCount: 0, coverThumbs: [] });
+
+  const counts = await db
+    .select({ listId: userListItem.listId, n: count() })
+    .from(userListItem)
+    .where(inArray(userListItem.listId, listIds))
+    .groupBy(userListItem.listId);
+  for (const row of counts) {
+    const entry = result.get(row.listId);
+    if (entry) entry.itemCount = Number(row.n);
+  }
+
+  const covers = await db
+    .select({
+      listId: userListItem.listId,
+      cover: releaseGroup.coverThumbUrl,
+      rn: sql<number>`row_number() over (partition by ${userListItem.listId} order by ${userListItem.position})`,
+    })
+    .from(userListItem)
+    .innerJoin(releaseGroup, eq(userListItem.releaseGroupId, releaseGroup.id))
+    .where(
+      and(
+        inArray(userListItem.listId, listIds),
+        sql`${releaseGroup.coverThumbUrl} is not null`,
+      ),
+    );
+  const sorted = covers
+    .filter((row) => Number(row.rn) <= LIST_COVER_THUMBS_MAX)
+    .sort((a, b) => Number(a.rn) - Number(b.rn));
+  for (const row of sorted) {
+    const entry = result.get(row.listId);
+    if (entry && row.cover) entry.coverThumbs.push(row.cover);
+  }
+
+  return result;
+}
+
+function withEnrichment(
+  summary: UserListSummary,
+  enrichment: Map<string, ListEnrichment>,
+): UserListSummary {
+  const found = enrichment.get(summary.id);
+  return {
+    ...summary,
+    itemCount: found?.itemCount ?? 0,
+    coverThumbs: found?.coverThumbs ?? [],
+  };
+}
+
+function normalizeListFilters(filters?: ListFilters): Required<Pick<ListFilters, "sort">> &
+  Pick<ListFilters, "q" | "entityType"> {
+  const sort = filters?.sort ?? "recent";
+  if (!LIST_SORTS.includes(sort)) {
+    throw new ApiError("VALIDATION_ERROR", 400, "El orden no es válido");
+  }
+  if (filters?.entityType && !["artist", "release-group", "recording"].includes(filters.entityType)) {
+    throw new ApiError("VALIDATION_ERROR", 400, "El tipo de contenido no es válido");
+  }
+  const q = filters?.q?.trim();
+  return { q: q ? q : undefined, entityType: filters?.entityType, sort };
+}
+
+export async function listMyLists(
+  ownerId: string,
+  page = 1,
+  pageSize = 20,
+  filters?: ListFilters,
+) {
   if (page < 1 || pageSize < 1 || pageSize > 50) {
     throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
   }
+  const { q, entityType, sort } = normalizeListFilters(filters);
+
+  const conditions: SQL[] = [eq(userList.ownerId, ownerId)];
+  if (entityType) conditions.push(eq(userList.entityType, entityType));
+  if (q) conditions.push(ilike(userList.title, `%${q}%`));
+
+  const sortOrder =
+    sort === "alpha"
+      ? [asc(sql`lower(${userList.title})`), asc(userList.id)]
+      : [desc(userList.createdAt), desc(userList.id)];
+
   const rows = await db
-    .select()
+    .select({
+      list: userList,
+      pinnedAt: userListPin.pinnedAt,
+    })
     .from(userList)
-    .where(eq(userList.ownerId, ownerId))
-    .orderBy(desc(userList.createdAt), desc(userList.id))
+    .leftJoin(
+      userListPin,
+      and(eq(userListPin.listId, userList.id), eq(userListPin.ownerId, ownerId)),
+    )
+    .where(and(...conditions))
+    // Fijadas primero (pinned_at no nulo), por fecha de fijado desc; luego el
+    // resto según el orden pedido.
+    .orderBy(
+      asc(sql`${userListPin.pinnedAt} is null`),
+      desc(userListPin.pinnedAt),
+      ...sortOrder,
+    )
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
+
+  const pageRows = rows.slice(0, pageSize);
+  const enrichment = await enrichLists(pageRows.map((row) => row.list.id));
+
   return {
-    lists: rows.slice(0, pageSize).map(serializeSummary),
+    lists: pageRows.map((row) => ({
+      ...withEnrichment(serializeSummary(row.list), enrichment),
+      pinned: row.pinnedAt !== null,
+    })),
     page,
     pageSize,
     hasNext: rows.length > pageSize,
@@ -209,12 +353,43 @@ export async function listUserLists(
     .orderBy(desc(userList.createdAt), desc(userList.id))
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
+
+  const pageRows = rows.slice(0, pageSize);
+  const enrichment = await enrichLists(pageRows.map((row) => row.id));
+
   return {
-    lists: rows.slice(0, pageSize).map(serializeSummary),
+    lists: pageRows.map((row) => withEnrichment(serializeSummary(row), enrichment)),
     page,
     pageSize,
     hasNext: rows.length > pageSize,
   };
+}
+
+/** Fija una lista propia. Idempotente. */
+export async function pinList(listId: string, ownerId: string): Promise<void> {
+  const [listRow] = await db
+    .select({ id: userList.id })
+    .from(userList)
+    .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId)))
+    .limit(1);
+  if (!listRow) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
+  await db
+    .insert(userListPin)
+    .values({ ownerId, listId })
+    .onConflictDoNothing({ target: [userListPin.ownerId, userListPin.listId] });
+}
+
+/** Desfija una lista propia. Idempotente. */
+export async function unpinList(listId: string, ownerId: string): Promise<void> {
+  const [listRow] = await db
+    .select({ id: userList.id })
+    .from(userList)
+    .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId)))
+    .limit(1);
+  if (!listRow) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
+  await db
+    .delete(userListPin)
+    .where(and(eq(userListPin.ownerId, ownerId), eq(userListPin.listId, listId)));
 }
 
 export async function getUserListDetail(
@@ -397,6 +572,11 @@ function serializeSummary(row: {
     audience: row.audience as Audience,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    // Los consumidores que enriquecen (listMyLists / listUserLists) sobrescriben
+    // estos valores; el detalle los deriva de sus propios ítems.
+    itemCount: 0,
+    coverThumbs: [],
+    pinned: false,
   };
 }
 
@@ -411,6 +591,16 @@ function serializeDetail(
     updatedAt: Date;
   },
   items: UserListItemEntry[],
+  pinned = false,
 ): UserListDetail {
-  return { ...serializeSummary(row), items };
+  return {
+    ...serializeSummary(row),
+    itemCount: items.length,
+    coverThumbs: items
+      .map((item) => item.target.coverThumbUrl)
+      .filter((url): url is string => url !== null)
+      .slice(0, LIST_COVER_THUMBS_MAX),
+    pinned,
+    items,
+  };
 }

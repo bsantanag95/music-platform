@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createList,
   deleteList,
@@ -6,6 +6,8 @@ import {
   getUserListDetail,
   listMyLists,
   listUserLists,
+  pinList,
+  unpinList,
   updateList,
   addItemToList,
   removeItemFromList,
@@ -24,35 +26,24 @@ vi.mock("@/services/social/profiles", () => ({
   getProfileByUsername: mocks.getProfileByUsername,
 }));
 
-function whereLimit(rows: unknown[]) {
-  const limit = vi.fn().mockResolvedValue(rows);
-  const where = vi.fn(() => ({ limit }));
-  const from = vi.fn(() => ({ where }));
-  return { from };
-}
-
-// select().from().where() → terminal directo (sin limit), para agregados
-function whereRows(rows: unknown[]) {
-  const where = vi.fn().mockResolvedValue(rows);
-  const from = vi.fn(() => ({ where }));
-  return { from };
-}
-
-function joinAll(rows: unknown[]) {
-  const orderBy = vi.fn().mockResolvedValue(rows);
-  const where = vi.fn(() => ({ orderBy }));
-  const chain = { leftJoin: vi.fn(() => chain), where };
-  const from = vi.fn(() => chain);
-  return { from };
-}
-
-function paged(rows: unknown[]) {
-  const offset = vi.fn().mockResolvedValue(rows);
-  const limit = vi.fn(() => ({ offset }));
-  const orderBy = vi.fn(() => ({ limit }));
-  const where = vi.fn(() => ({ orderBy }));
-  const from = vi.fn(() => ({ where }));
-  return { from };
+// Proxy encadenable: cualquier método (`.from`, `.leftJoin`, `.where`,
+// `.orderBy`, `.limit`, `.offset`, `.groupBy`, `.returning`, ...) devuelve el
+// mismo proxy, y hacer `await` en cualquier punto resuelve `result`. Evita
+// rehacer una cadena de mocks a mano por cada forma de query.
+function chain<T>(result: T): T {
+  const promise = Promise.resolve(result);
+  const proxy: unknown = new Proxy(function () {}, {
+    get(_t, prop) {
+      if (prop === "then") return promise.then.bind(promise);
+      if (prop === "catch") return promise.catch.bind(promise);
+      if (prop === "finally") return promise.finally.bind(promise);
+      return () => proxy;
+    },
+    apply() {
+      return proxy;
+    },
+  });
+  return proxy as T;
 }
 
 const owner = "00000000-0000-4000-8000-000000000001";
@@ -69,17 +60,27 @@ const listRow = {
   updatedAt: new Date("2026-01-01T00:00:00Z"),
 };
 
+const albumListRow = { ...listRow, entityType: "release-group", title: "Discos que me cambiaron" };
+
+/** Prepara los mocks de `select` para un `getOwnedList`: fila + ítems + pin. */
+function mockOwnedList(row: unknown, items: unknown[] = [], pinned = false) {
+  mocks.db.select
+    .mockReturnValueOnce(chain([row]))
+    .mockReturnValueOnce(chain(items))
+    .mockReturnValueOnce(chain(pinned ? [{ listId: (row as { id: string }).id }] : []));
+}
+
 describe("servicio de listas", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("resuelve el objetivo y rechaza uno inexistente con LIST_TARGET_INVALID", async () => {
-    mocks.db.select.mockReturnValue(whereLimit([{ id: target.id }]));
+    mocks.db.select.mockReturnValue(chain([{ id: target.id }]));
     const resolved = await resolveListTarget("artist", target.id);
     expect(resolved.type).toBe("artist");
 
-    mocks.db.select.mockReturnValue(whereLimit([]));
+    mocks.db.select.mockReturnValue(chain([]));
     await expect(resolveListTarget("artist", target.id)).rejects.toMatchObject({
       code: "LIST_TARGET_INVALID",
       status: 404,
@@ -87,18 +88,17 @@ describe("servicio de listas", () => {
   });
 
   it("crea una lista válida y normaliza título y descripción", async () => {
-    mocks.db.insert.mockReturnValue({
-      values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([listRow]) }),
-    });
-    mocks.db.select
-      .mockReturnValueOnce(whereLimit([listRow]))  // getOwnedList
-      .mockReturnValueOnce(joinAll([]));  // listItems
+    mocks.db.insert.mockReturnValue(chain([listRow]));
+    mockOwnedList(listRow);
 
     const result = await createList({ ownerId: owner, entityType: "artist", title: "  Favoritos de los 80  " });
     expect(result.title).toBe("Favoritos de los 80");
     expect(result.entityType).toBe("artist");
     expect(result.audience).toBe("followers");
     expect(result.items).toEqual([]);
+    expect(result.itemCount).toBe(0);
+    expect(result.coverThumbs).toEqual([]);
+    expect(result.pinned).toBe(false);
   });
 
   it("rechaza título vacío", async () => {
@@ -114,11 +114,46 @@ describe("servicio de listas", () => {
   });
 
   it("getOwnedList devuelve 404 para lista ajena", async () => {
-    mocks.db.select.mockReturnValue(whereLimit([]));
+    mocks.db.select.mockReturnValue(chain([]));
     await expect(getOwnedList(listRow.id, "otro")).rejects.toMatchObject({
       code: "LIST_NOT_FOUND",
       status: 404,
     });
+  });
+
+  it("getOwnedList devuelve el detalle con conteo, carátulas y estado de fijado", async () => {
+    mockOwnedList(
+      albumListRow,
+      [
+        {
+          id: "i1",
+          position: 1,
+          artistId: null,
+          releaseGroupId: "rg1",
+          recordingId: null,
+          artistName: null,
+          releaseTitle: "A",
+          releaseCover: "http://c/1",
+          recordingTitle: null,
+        },
+        {
+          id: "i2",
+          position: 2,
+          artistId: null,
+          releaseGroupId: "rg2",
+          recordingId: null,
+          artistName: null,
+          releaseTitle: "B",
+          releaseCover: null,
+          recordingTitle: null,
+        },
+      ],
+      true,
+    );
+    const result = await getOwnedList(albumListRow.id, owner);
+    expect(result.itemCount).toBe(2);
+    expect(result.coverThumbs).toEqual(["http://c/1"]);
+    expect(result.pinned).toBe(true);
   });
 
   it("updateList valida que haya al menos un campo", async () => {
@@ -128,46 +163,69 @@ describe("servicio de listas", () => {
   });
 
   it("updateList actualiza audiencia y rechaza lista ajena", async () => {
-    mocks.db.update.mockReturnValue({
-      set: vi.fn().mockReturnValue({
-        where: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ ...listRow, audience: "public" }]) }),
-      }),
-    });
-    mocks.db.select
-      .mockReturnValueOnce(whereLimit([{ ...listRow, audience: "public" }]))
-      .mockReturnValueOnce(joinAll([]));
+    mocks.db.update.mockReturnValue(chain([{ ...listRow, audience: "public" }]));
+    mockOwnedList({ ...listRow, audience: "public" });
 
     const result = await updateList(listRow.id, owner, { audience: "public" });
     expect(result.audience).toBe("public");
 
-    mocks.db.update.mockReturnValue({
-      set: vi.fn().mockReturnValue({
-        where: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([]) }),
-      }),
-    });
+    mocks.db.update.mockReturnValue(chain([]));
     await expect(updateList(listRow.id, "ajeno", { audience: "public" })).rejects.toMatchObject({
       code: "LIST_NOT_FOUND",
     });
   });
 
   it("deleteList borra solo listas propias", async () => {
-    mocks.db.delete.mockReturnValue({
-      where: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: listRow.id }]) }),
-    });
+    mocks.db.delete.mockReturnValue(chain([{ id: listRow.id }]));
     await expect(deleteList(listRow.id, owner)).resolves.toBeUndefined();
 
-    mocks.db.delete.mockReturnValue({
-      where: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([]) }),
-    });
+    mocks.db.delete.mockReturnValue(chain([]));
     await expect(deleteList(listRow.id, "ajeno")).rejects.toMatchObject({ code: "LIST_NOT_FOUND" });
   });
 
-  it("listMyLists pagina y valida paginación", async () => {
-    mocks.db.select.mockReturnValue(paged([listRow]));
+  it("listMyLists pagina, enriquece y valida paginación", async () => {
+    mocks.db.select
+      // página de listas (join con pin)
+      .mockReturnValueOnce(chain([{ list: albumListRow, pinnedAt: new Date("2026-02-01T00:00:00Z") }]))
+      // enrichLists: conteos
+      .mockReturnValueOnce(chain([{ listId: albumListRow.id, n: 3 }]))
+      // enrichLists: carátulas
+      .mockReturnValueOnce(
+        chain([
+          { listId: albumListRow.id, cover: "http://c/1", rn: 1 },
+          { listId: albumListRow.id, cover: "http://c/2", rn: 2 },
+        ]),
+      );
     const result = await listMyLists(owner);
     expect(result.lists.length).toBe(1);
+    expect(result.lists[0]?.itemCount).toBe(3);
+    expect(result.lists[0]?.coverThumbs).toEqual(["http://c/1", "http://c/2"]);
+    expect(result.lists[0]?.pinned).toBe(true);
 
     await expect(listMyLists(owner, 0)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+  });
+
+  it("listMyLists rechaza sort y entityType inválidos", async () => {
+    await expect(
+      listMyLists(owner, 1, 20, { sort: "loco" as never }),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    await expect(
+      listMyLists(owner, 1, 20, { entityType: "cancion" as never }),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+  });
+
+  it("listMyLists acepta búsqueda, filtro por tipo y orden alfabético", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(chain([{ list: albumListRow, pinnedAt: null }]))
+      .mockReturnValueOnce(chain([]))
+      .mockReturnValueOnce(chain([]));
+    const result = await listMyLists(owner, 1, 20, {
+      q: "  disco ",
+      entityType: "release-group",
+      sort: "alpha",
+    });
+    expect(result.lists[0]?.pinned).toBe(false);
+    expect(result.lists[0]?.itemCount).toBe(0);
   });
 
   it("listUserLists devuelve vacío sin permiso", async () => {
@@ -179,6 +237,23 @@ describe("servicio de listas", () => {
     });
     const result = await listUserLists("usuario", owner);
     expect(result.lists).toEqual([]);
+  });
+
+  it("listUserLists enriquece las listas visibles", async () => {
+    mocks.getProfileByUsername.mockResolvedValue({
+      id: "u1",
+      profileVisibility: "public",
+      relation: "none",
+      blockedByMe: false,
+    });
+    mocks.db.select
+      .mockReturnValueOnce(chain([albumListRow]))
+      .mockReturnValueOnce(chain([{ listId: albumListRow.id, n: 5 }]))
+      .mockReturnValueOnce(chain([{ listId: albumListRow.id, cover: "http://c/1", rn: 1 }]));
+    const result = await listUserLists("usuario", owner);
+    expect(result.lists[0]?.itemCount).toBe(5);
+    expect(result.lists[0]?.coverThumbs).toEqual(["http://c/1"]);
+    expect(result.lists[0]?.pinned).toBe(false);
   });
 
   it("getUserListDetail oculta listas no visibles", async () => {
@@ -193,49 +268,56 @@ describe("servicio de listas", () => {
     });
   });
 
+  it("pinList fija una lista propia y rechaza una ajena", async () => {
+    mocks.db.select.mockReturnValueOnce(chain([{ id: listRow.id }]));
+    mocks.db.insert.mockReturnValue(chain([]));
+    await expect(pinList(listRow.id, owner)).resolves.toBeUndefined();
+
+    mocks.db.select.mockReturnValueOnce(chain([]));
+    await expect(pinList(listRow.id, "ajeno")).rejects.toMatchObject({ code: "LIST_NOT_FOUND" });
+  });
+
+  it("unpinList desfija una lista propia y rechaza una ajena", async () => {
+    mocks.db.select.mockReturnValueOnce(chain([{ id: listRow.id }]));
+    mocks.db.delete.mockReturnValue(chain([]));
+    await expect(unpinList(listRow.id, owner)).resolves.toBeUndefined();
+
+    mocks.db.select.mockReturnValueOnce(chain([]));
+    await expect(unpinList(listRow.id, "ajeno")).rejects.toMatchObject({ code: "LIST_NOT_FOUND" });
+  });
+
   it("addItemToList agrega al final y rechaza tipo distinto", async () => {
     mocks.db.select
-      .mockReturnValueOnce(whereLimit([listRow]))  // validar lista
-      .mockReturnValueOnce(whereLimit([{ id: target.id }]))  // resolveListTarget
-      .mockReturnValueOnce(whereRows([{ max: 2 }]))  // max position
-      .mockReturnValueOnce(whereLimit([listRow]))  // getOwnedList
-      .mockReturnValueOnce(joinAll([]));  // listItems
-    mocks.db.insert.mockReturnValue({
-      values: vi.fn().mockReturnValue({
-        onConflictDoNothing: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: "i1" }]) }),
-      }),
-    });
+      .mockReturnValueOnce(chain([listRow])) // validar lista
+      .mockReturnValueOnce(chain([{ id: target.id }])) // resolveListTarget
+      .mockReturnValueOnce(chain([{ max: 2 }])); // max position
+    mockOwnedList(listRow); // getOwnedList al final
+    mocks.db.insert.mockReturnValue(chain([{ id: "i1" }]));
 
     const result = await addItemToList(listRow.id, owner, target);
     expect(result.id).toBe(listRow.id);
 
     vi.clearAllMocks();
-    mocks.db.select.mockReturnValue(whereLimit([listRow]));
+    mocks.db.select.mockReturnValue(chain([listRow]));
     await expect(addItemToList(listRow.id, owner, { type: "recording", id: target.id })).rejects.toMatchObject({
       code: "VALIDATION_ERROR",
     });
   });
 
   it("removeItemFromList elimina el ítem de una lista propia", async () => {
-    mocks.db.select
-      .mockReturnValueOnce(whereLimit([{ id: listRow.id }]))  // validar lista
-      .mockReturnValueOnce(whereLimit([listRow]))  // getOwnedList
-      .mockReturnValueOnce(joinAll([]));  // listItems
-    mocks.db.delete.mockReturnValue({ where: vi.fn().mockResolvedValue([]) });
+    mocks.db.select.mockReturnValueOnce(chain([{ id: listRow.id }])); // validar lista
+    mockOwnedList(listRow);
+    mocks.db.delete.mockReturnValue(chain([]));
 
     const result = await removeItemFromList(listRow.id, "i1", owner);
     expect(result.id).toBe(listRow.id);
   });
 
   it("reorderListItems reordena dentro de una transacción", async () => {
-    mocks.db.select
-      .mockReturnValueOnce(whereLimit([{ id: listRow.id }]))  // validar lista
-      .mockReturnValueOnce(whereLimit([listRow]))  // getOwnedList
-      .mockReturnValueOnce(joinAll([]));  // listItems
+    mocks.db.select.mockReturnValueOnce(chain([{ id: listRow.id }])); // validar lista
+    mockOwnedList(listRow);
     mocks.db.transaction.mockImplementation(async (cb: (tx: unknown) => Promise<void>) => {
-      mocks.db.update.mockReturnValue({
-        set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }),
-      });
+      mocks.db.update.mockReturnValue(chain([]));
       await cb(mocks.db);
     });
 

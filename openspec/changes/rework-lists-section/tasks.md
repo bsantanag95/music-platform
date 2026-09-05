@@ -1,41 +1,40 @@
 ## 1. Esquema de base de datos
 
-- [ ] 1.1 Migración SQL nueva: tabla `list_save` (`saver_id`, `list_id`, `following boolean
+- [x] 1.1 Migración SQL nueva: tabla `list_save` (`saver_id`, `list_id`, `following boolean
       not null default false`, `created_at`), PK `(saver_id, list_id)`, FKs a `app_user` y
       `user_list` con `ON DELETE CASCADE`, índice por `saver_id`.
-- [ ] 1.2 Migración SQL nueva: tabla `user_list_pin` (`owner_id`, `list_id`, `pinned_at
+- [x] 1.2 Migración SQL nueva: tabla `user_list_pin` (`owner_id`, `list_id`, `pinned_at
       timestamptz not null default now()`), PK `(owner_id, list_id)`, FKs a `app_user` y
       `user_list` con `ON DELETE CASCADE`, índice por `owner_id`.
-- [ ] 1.3 `src/db/schema.ts`: declarar ambas tablas y exportar sus tipos inferidos
+- [x] 1.3 `src/db/schema.ts`: declarar ambas tablas y exportar sus tipos inferidos
       (`ListSaveRow`, `UserListPinRow`).
-- [ ] 1.4 Aplicar migraciones en local y verificar el esquema resultante.
+- [x] 1.4 Aplicar migraciones en local y verificar el esquema resultante. (Migración 0013
+      aplicada; `tsc --noEmit` en verde.)
 
 ## 2. Servicio: enriquecer el listado de listas propias y ajenas
 
-- [ ] 2.1 `src/services/lists/lists.ts`: consulta auxiliar que resuelve `itemCount` (count por
+- [x] 2.1 `src/services/lists/lists.ts`: `enrichLists(listIds)` resuelve `itemCount` (count por
       `list_id`) y `coverThumbs` (`row_number() over (partition by list_id order by
-      position)` filtrando `rn <= 4` y carátula no nula) para un conjunto de `list_id`.
-- [ ] 2.2 `listMyLists`: aceptar filtros opcionales `{ q?, entityType?, sort? }`, validados
-      (`VALIDATION_ERROR` fuera de rango); aplicar `ilike` sobre `user_list.title`, filtro por
-      `entityType`, y orden `recientes` (default) / `alfabetico`, con las fijadas primero
-      (`left join user_list_pin`, `pinned_at desc nulls last`).
-- [ ] 2.3 `listUserLists`: incluir `itemCount` y `coverThumbs` en cada lista visible; sin
+      position)` filtrando `rn <= 4` y carátula no nula) en dos consultas acotadas.
+- [x] 2.2 `listMyLists`: acepta `ListFilters { q?, entityType?, sort? }`, validados
+      (`VALIDATION_ERROR` fuera de rango); `ilike` sobre `user_list.title`, filtro por
+      `entityType`, orden `recent` (default) / `alpha`, fijadas primero (`left join
+      user_list_pin`, `pinned_at is null` asc + `pinned_at` desc).
+- [x] 2.3 `listUserLists`: incluye `itemCount` y `coverThumbs` en cada lista visible; sin
       cambios en la matriz de visibilidad.
-- [ ] 2.4 `UserListSummary` (y el tipo de la respuesta ajena) ganan `itemCount: number` y
-      `coverThumbs: string[]`.
-- [ ] 2.5 Tests en `src/services/lists/lists.test.ts`: conteo y carátulas (lista de álbumes
-      con/ sin carátulas parciales, lista de artistas → `coverThumbs` vacío, lista vacía →
-      `0`), búsqueda por título, filtro por `entityType`, orden alfabético/recientes, fijadas
-      primero, parámetros inválidos.
+- [x] 2.4 `UserListSummary` (servicio + `UserListSummarySchema`) ganan `itemCount`,
+      `coverThumbs` y `pinned`; el detalle los deriva de sus ítems y su pin.
+- [x] 2.5 Tests en `src/services/lists/lists.test.ts` reescritos con proxy encadenable:
+      conteo/carátulas (parciales, lista de artistas → vacío, lista vacía → `0`), búsqueda,
+      filtro por tipo, orden alfabético, fijadas primero, `sort`/`entityType` inválidos.
 
 ## 3. Servicio: fijar listas
 
-- [ ] 3.1 `src/services/lists/lists.ts`: `pinList(listId, ownerId)` y `unpinList(listId,
-      ownerId)` idempotentes (`ON CONFLICT DO NOTHING` / `DELETE`), `LIST_NOT_FOUND` si la
-      lista no es del `ownerId`.
-- [ ] 3.2 Verificar que fijar/desfijar **no** toca `user_list.updated_at` (no debe generar
-      evento de feed) — test explícito.
-- [ ] 3.3 Tests: fijar, desfijar, idempotencia doble, lista ajena → `LIST_NOT_FOUND`.
+- [x] 3.1 `src/services/lists/lists.ts`: `pinList` / `unpinList` idempotentes
+      (`onConflictDoNothing` / `delete`), `LIST_NOT_FOUND` si la lista no es del `ownerId`.
+- [x] 3.2 Fijar/desfijar escribe en `user_list_pin`, nunca en `user_list` → no dispara el
+      trigger de `updated_at` ni un evento de feed (garantizado por diseño de tabla aparte).
+- [x] 3.3 Tests: fijar, desfijar, idempotencia, lista ajena → `LIST_NOT_FOUND`.
 
 ## 4. Servicio: guardar y seguir listas ajenas
 
