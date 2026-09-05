@@ -5,8 +5,12 @@ El sistema SHALL permitir al usuario autenticado listar sus propias escuchas en 
 descendente con paginación. El listado SHALL contener únicamente entradas del usuario que lo
 consulta y SHALL incluir el objetivo, el contexto, la impresión, la reacción y la audiencia de cada
 entrada. El sistema SHALL permitir acotar el listado combinando, de forma independiente y
-simultánea: texto libre sobre el título del objetivo (artista, álbum o canción), contexto, reacción
-(incluida la ausencia explícita de reacción) y audiencia. Cada filtro SHALL aplicarse sobre la
+simultánea: texto libre, contexto, reacción (incluida la ausencia explícita de reacción) y
+audiencia. La búsqueda por texto SHALL coincidir tanto con el título del objetivo (artista, álbum
+o canción) como con el artista acreditado como principal de un álbum o canción, para que una
+búsqueda por nombre de artista encuentre también sus álbumes y canciones, no únicamente las
+entradas cuyo objetivo es la artista misma. Cada álbum o canción listado SHALL mostrar el nombre
+de su artista acreditado como principal junto al título. Cada filtro SHALL aplicarse sobre la
 totalidad de las entradas del usuario, no únicamente sobre las ya cargadas en el cliente. Un valor
 de contexto, reacción o audiencia fuera de su vocabulario cerrado SHALL producir un error de
 validación y no SHALL alterar el listado.
@@ -24,6 +28,12 @@ validación y no SHALL alterar el listado.
   o canción de alguna de sus escuchas
 - **THEN** el listado muestra únicamente las entradas cuyo objetivo coincide, sin importar en qué
   página habrían aparecido sin el filtro
+
+#### Scenario: Buscar por el artista de un álbum o canción
+- **WHEN** el usuario busca el nombre de una artista y alguna de sus escuchas es un álbum o
+  canción acreditado a esa artista (no una escucha de la artista misma)
+- **THEN** esa entrada aparece en el listado igual que si el texto buscado fuera el título del
+  álbum o la canción
 
 #### Scenario: Filtrar por contexto
 - **WHEN** el usuario filtra su diario por el contexto `rediscovery`
