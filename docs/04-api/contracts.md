@@ -538,11 +538,21 @@ Crea una lista vacía. `entityType` queda fijo y no es modificable después.
 **Body:** `{ entityType, title, description?, audience? }`.
 **201 OK:** `{ list }` con `{ id, entityType, title, description, audience, createdAt, updatedAt, items: [] }`.
 
-### `GET /api/me/lists?page=&pageSize=`
+### `GET /api/me/lists?page=&pageSize=&q=&entityType=&sort=`
 
-Lista paginada de las listas propias. No incluye ítems ni conteo inline (el detalle los trae).
+Lista paginada de las listas propias (cambio `rework-lists-section`). Query params opcionales:
+`q` (búsqueda parcial por título), `entityType` (`artist`/`release-group`/`recording`), `sort`
+(`recent` por defecto, o `alpha`). Un `entityType` o `sort` fuera de vocabulario responde `400`
+con `VALIDATION_ERROR`. Las listas **fijadas** aparecen primero. Cada lista incluye `itemCount`,
+`coverThumbs` (hasta 4 carátulas de sus ítems) y `pinned`.
 
-**200 OK:** `{ lists: [{ id, entityType, title, description, audience, createdAt, updatedAt }], page, pageSize, hasNext }`.
+**200 OK:** `{ lists: [{ id, entityType, title, description, audience, createdAt, updatedAt, itemCount, coverThumbs, pinned }], page, pageSize, hasNext }`.
+
+### `POST` / `DELETE /api/me/lists/{listId}/pin`
+
+Fija / desfija una lista propia (cambio `rework-lists-section`). Idempotente. Escribe solo en
+`user_list_pin` — no toca `user_list.updated_at`. **204.** **404** con `LIST_NOT_FOUND` si no es
+del usuario. **401** con `AUTH_REQUIRED` sin sesión.
 
 ### `GET /api/me/lists/{listId}`
 
@@ -584,7 +594,8 @@ Reordena los ítems de la lista. El array `itemIds` define el nuevo orden comple
 ### `GET /api/users/[username]/lists?page=&pageSize=`
 
 Listas de un usuario visibles para un lector. La sesión es opcional. Aplica la matriz de
-visibilidad; sin permiso devuelve lista vacía.
+visibilidad; sin permiso devuelve lista vacía. Desde `rework-lists-section` cada lista incluye
+`itemCount` y `coverThumbs` (igual que la superficie propia; `pinned` siempre `false`).
 
 **200 OK:** `{ lists: [...], page, pageSize, hasNext }`. **404** con `USER_NOT_FOUND`.
 
@@ -594,6 +605,40 @@ Detalle de una lista ajena visible. Si la lista no es visible para el visitante,
 inexistente.
 
 **200 OK:** `{ list }`. **404** con `LIST_NOT_FOUND` o `USER_NOT_FOUND`.
+
+## Guardar / descubrir listas (Fase 5.5, cambio `rework-lists-section`)
+
+Guardar una lista ajena es un marcador privado por `(saver, list)` con un eje `following`.
+Descubrir lista las listas públicas de la comunidad. Ambas superficies requieren sesión.
+
+### `POST /api/me/saved-lists`
+
+Guarda (o actualiza `following` de) una lista ajena visible. Idempotente por `(saver, list)`.
+
+**Body:** `{ listId, following? }` (`following` por defecto `false`).
+**201 OK:** `{ list }` con `{ id, entityType, title, description, createdAt, updatedAt, itemCount, coverThumbs, owner: { id, username, displayName }, following, unavailable }`.
+**400** con `VALIDATION_ERROR` si el body no es válido o la lista es propia.
+**404** con `LIST_NOT_FOUND` si la lista no existe o no es visible.
+**401** con `AUTH_REQUIRED` sin sesión.
+
+### `DELETE /api/me/saved-lists/{listId}`
+
+Quita el guardado. Idempotente. **204.** **400** si el id no es UUID. **401** sin sesión.
+
+### `GET /api/me/saved-lists?page=&pageSize=`
+
+Listas guardadas del usuario, orden por fecha de guardado descendente. Una lista que dejó de ser
+visible se marca `unavailable: true` en vez de filtrarse.
+
+**200 OK:** `{ lists: [SavedListSummary], page, pageSize, hasNext }`. **401** sin sesión.
+
+### `GET /api/lists/discover?page=&pageSize=`
+
+Listas de audiencia `public` de perfiles `public`, excluyendo las propias y cualquier bloqueo,
+en orden cronológico descendente (sin recomendación algorítmica).
+
+**200 OK:** `{ lists: [{ ..., owner, saved, following }], page, pageSize, hasNext }`.
+**400** con `VALIDATION_ERROR` si la paginación es inválida. **401** con `AUTH_REQUIRED` sin sesión.
 
 ## Colección física (Fase 5.5, cambio `add-physical-collection`)
 

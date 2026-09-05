@@ -1,15 +1,19 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-import { POST } from "./route";
+import { GET, POST } from "./route";
 import { ApiError } from "@/lib/api/errors";
 
 const mocks = vi.hoisted(() => ({
   requireUser: vi.fn(),
   createList: vi.fn(),
+  listMyLists: vi.fn(),
 }));
 
 vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser }));
-vi.mock("@/services/lists/lists", () => ({ createList: mocks.createList }));
+vi.mock("@/services/lists/lists", () => ({
+  createList: mocks.createList,
+  listMyLists: mocks.listMyLists,
+}));
 
 const user = { id: "00000000-0000-4000-8000-000000000001" };
 const list = {
@@ -71,5 +75,49 @@ describe("lists API (POST /api/me/lists)", () => {
     );
     expect(response.status).toBe(401);
     expect(await response.json()).toMatchObject({ code: "AUTH_REQUIRED" });
+  });
+});
+
+describe("lists API (GET /api/me/lists)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const page = { lists: [], page: 1, pageSize: 20, hasNext: false };
+
+  it("sin params llama a listMyLists con filtros vacíos (retrocompatible)", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.listMyLists.mockResolvedValue(page);
+    const response = await GET(new NextRequest("http://localhost/api/me/lists"));
+    expect(response.status).toBe(200);
+    expect(mocks.listMyLists).toHaveBeenCalledWith(user.id, 1, 20, {
+      q: undefined,
+      entityType: undefined,
+      sort: undefined,
+    });
+  });
+
+  it("pasa q, entityType y sort al servicio", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.listMyLists.mockResolvedValue(page);
+    await GET(
+      new NextRequest("http://localhost/api/me/lists?q=disco&entityType=release-group&sort=alpha"),
+    );
+    expect(mocks.listMyLists).toHaveBeenCalledWith(user.id, 1, 20, {
+      q: "disco",
+      entityType: "release-group",
+      sort: "alpha",
+    });
+  });
+
+  it("rechaza un sort inválido con VALIDATION_ERROR", async () => {
+    const response = await GET(new NextRequest("http://localhost/api/me/lists?sort=loco"));
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mocks.listMyLists).not.toHaveBeenCalled();
+  });
+
+  it("rechaza un entityType inválido con VALIDATION_ERROR", async () => {
+    const response = await GET(new NextRequest("http://localhost/api/me/lists?entityType=cancion"));
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: "VALIDATION_ERROR" });
   });
 });

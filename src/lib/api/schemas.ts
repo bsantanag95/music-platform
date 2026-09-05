@@ -598,6 +598,69 @@ export const ListsListResponseSchema = z.object({
 });
 export type ListsListResponse = z.infer<typeof ListsListResponseSchema>;
 
+// --- Guardar / seguir listas ajenas (rework-lists-section) ---
+
+const ListOwnerSchema = z.object({
+  id: z.uuid(),
+  username: z.string(),
+  displayName: z.string().nullable(),
+});
+
+export const SaveListRequestSchema = z.object({
+  listId: z.uuid(),
+  following: z.boolean().optional(),
+});
+export type SaveListRequest = z.infer<typeof SaveListRequestSchema>;
+
+export const SavedListSummarySchema = z.object({
+  id: z.uuid(),
+  entityType: ListEntityTypeSchema,
+  title: z.string(),
+  description: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  itemCount: z.number().int(),
+  coverThumbs: z.array(z.string()),
+  owner: ListOwnerSchema,
+  following: z.boolean(),
+  unavailable: z.boolean(),
+});
+export type SavedListSummary = z.infer<typeof SavedListSummarySchema>;
+
+export const SavedListMutationResponseSchema = z.object({ list: SavedListSummarySchema });
+export type SavedListMutationResponse = z.infer<typeof SavedListMutationResponseSchema>;
+
+export const SavedListsResponseSchema = z.object({
+  lists: z.array(SavedListSummarySchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  hasNext: z.boolean(),
+});
+export type SavedListsResponse = z.infer<typeof SavedListsResponseSchema>;
+
+export const DiscoverListSummarySchema = z.object({
+  id: z.uuid(),
+  entityType: ListEntityTypeSchema,
+  title: z.string(),
+  description: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  itemCount: z.number().int(),
+  coverThumbs: z.array(z.string()),
+  owner: ListOwnerSchema,
+  saved: z.boolean(),
+  following: z.boolean(),
+});
+export type DiscoverListSummary = z.infer<typeof DiscoverListSummarySchema>;
+
+export const DiscoverListsResponseSchema = z.object({
+  lists: z.array(DiscoverListSummarySchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  hasNext: z.boolean(),
+});
+export type DiscoverListsResponse = z.infer<typeof DiscoverListsResponseSchema>;
+
 // ============================================================
 // Feed (Fase 5, add-favorites-and-lists)
 // ============================================================

@@ -74,31 +74,31 @@ toca acá.
 
 ## 7. API: rutas
 
-- [ ] 7.1 `GET /api/me/lists`: parsear y validar `q`, `entityType`, `sort` opcionales;
+- [x] 7.1 `GET /api/me/lists`: parsear y validar `q`, `entityType`, `sort` opcionales;
       respuesta con `itemCount`/`coverThumbs`. Actualizar `route.test.ts` (retrocompatible sin
       params).
-- [ ] 7.2 `GET /api/users/[username]/lists`: `itemCount`/`coverThumbs` en la respuesta;
+- [x] 7.2 `GET /api/users/[username]/lists`: `itemCount`/`coverThumbs` en la respuesta;
       `route.test.ts`.
-- [ ] 7.3 `POST` y `DELETE /api/me/lists/{listId}/pin` (o `PATCH` con `{ pinned }` — seguir la
+- [x] 7.3 `POST` y `DELETE /api/me/lists/{listId}/pin` (o `PATCH` con `{ pinned }` — seguir la
       decisión de `design.md`); `with-error-handling`, `AUTH_REQUIRED` sin sesión,
       `LIST_NOT_FOUND` si no es propia. `route.ts` + `route.test.ts`.
-- [ ] 7.4 `POST /api/me/saved-lists` (`{ listId, following }`), `DELETE
+- [x] 7.4 `POST /api/me/saved-lists` (`{ listId, following }`), `DELETE
       /api/me/saved-lists/{listId}`, `GET /api/me/saved-lists?page=&pageSize=`. Validación,
       códigos de error, tests.
-- [ ] 7.5 `GET /api/lists/discover?page=&pageSize=`. Validación, `AUTH_REQUIRED` sin sesión,
+- [x] 7.5 `GET /api/lists/discover?page=&pageSize=`. Validación, `AUTH_REQUIRED` sin sesión,
       tests.
-- [ ] 7.6 `docs/04-api/contracts.md`: documentar los campos nuevos, los query params y los
+- [x] 7.6 `docs/04-api/contracts.md`: documentar los campos nuevos, los query params y los
       endpoints nuevos en la sección "Listas".
 
 ## 8. Capa de acceso cliente
 
-- [ ] 8.1 `src/lib/api/schemas.ts`: esquemas Zod para `ListSummary` con `itemCount`/
+- [x] 8.1 `src/lib/api/schemas.ts`: esquemas Zod para `ListSummary` con `itemCount`/
       `coverThumbs`, `SavedListSummary` (con `following`, `unavailable`), `DiscoverListSummary`
       (con `saved`/`following`), y las respuestas paginadas.
-- [ ] 8.2 `src/lib/api/lists.ts`: `getMyLists(page, pageSize, filters)`, `pinList`/`unpinList`,
+- [x] 8.2 `src/lib/api/lists.ts`: `getMyLists(page, pageSize, filters)`, `pinList`/`unpinList`,
       `saveList`/`unsaveList`/`getSavedLists`, `getDiscoverLists` — todas por `apiFetch` +
       esquema.
-- [ ] 8.3 `src/lib/query/keys.ts`: `queryKeys.myLists(filters)`, `queryKeys.savedLists()`,
+- [x] 8.3 `src/lib/query/keys.ts`: `queryKeys.myLists(filters)`, `queryKeys.savedLists()`,
       `queryKeys.discoverLists()`.
 
 ## 9. UI: sección con sub-navegación
