@@ -144,10 +144,10 @@ toca acá.
 
 ## 12. UI: pase visual del detalle
 
-- [ ] 12.1 `src/components/lists/ListDetail.tsx`: `ListCoverMosaic` en la cabecera; filas de
+- [x] 12.1 `src/components/lists/ListDetail.tsx`: `ListCoverMosaic` en la cabecera; filas de
       ítem con `CoverThumb` + disco de fallback; conservar edición de metadatos, reordenar
       ↑/↓, borrar y la URL.
-- [ ] 12.2 `src/app/[locale]/me/lists/[listId]/page.tsx`: sin cambios de contrato; ajustar
+- [x] 12.2 `src/app/[locale]/me/lists/[listId]/page.tsx`: sin cambios de contrato; ajustar
       solo el layout si hace falta para la cabecera nueva.
 
 ## 13. i18n
@@ -160,23 +160,23 @@ toca acá.
 
 ## 14. Componentes: tests
 
-- [ ] 14.1 `ListsSection` — pestaña activa desde `?tab=`, fallback con valor inválido,
+- [x] 14.1 `ListsSection` — pestaña activa desde `?tab=`, fallback con valor inválido,
       navegación por flechas, "Nueva lista" visible en las tres.
-- [ ] 14.2 `ListCard` / `ListCoverMosaic` — mosaico con carátulas, mosaico de discos (lista de
+- [x] 14.2 `ListCard` / `ListCoverMosaic` — mosaico con carátulas, mosaico de discos (lista de
       artistas), carátulas parciales, lista vacía con conteo `0`, mosaico `aria-hidden`.
-- [ ] 14.3 `MyListsTab` — filtros (búsqueda, tipo, orden, limpiar), creación inline entra al
+- [x] 14.3 `MyListsTab` — filtros (búsqueda, tipo, orden, limpiar), creación inline entra al
       frente, fijar reordena, vacío vs. "sin resultados", `aria-live`.
-- [ ] 14.4 `SaveListButton` — toggle optimista y rollback en error, Guardar y Seguir
+- [x] 14.4 `SaveListButton` — toggle optimista y rollback en error, Guardar y Seguir
       independientes.
-- [ ] 14.5 `SavedListsTab` / `DiscoverListsTab` — render con datos, "ya no disponible" con
+- [x] 14.5 `SavedListsTab` / `DiscoverListsTab` — render con datos, "ya no disponible" con
       quitar, estados vacíos, estado de guardado reflejado en Descubrir.
 
 ## 15. Documentación y verificación final
 
-- [ ] 15.1 `docs/05-features/lists-and-favorites.md`: mover la sección del plan de
+- [x] 15.1 `docs/05-features/lists-and-favorites.md`: mover la sección del plan de
       "propuesto" a implementado, dejando la integración al feed marcada como continuación;
       `docs/05-features/README.md`: actualizar estado.
-- [ ] 15.2 `npm run typecheck`, `npm run lint`, `npm test -- --run`, `npm run build` — los
+- [x] 15.2 `npm run typecheck`, `npm run lint`, `npm test -- --run`, `npm run build` — los
       cuatro en verde.
 - [ ] 15.3 Verificación manual en navegador (cuenta y datos reales): las tres pestañas,
       `?tab=` enlazable y tras reload, creación inline, fijar, guardar/seguir una lista ajena

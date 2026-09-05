@@ -18,6 +18,8 @@ import feedEs from "../../messages/es/feed.json";
 import feedEn from "../../messages/en/feed.json";
 import collectionEs from "../../messages/es/collection.json";
 import collectionEn from "../../messages/en/collection.json";
+import listsEs from "../../messages/es/lists.json";
+import listsEn from "../../messages/en/lists.json";
 
 const messagesByLocale = {
   es: {
@@ -29,6 +31,7 @@ const messagesByLocale = {
     diary: diaryEs,
     feed: feedEs,
     collection: collectionEs,
+    lists: listsEs,
   },
   en: {
     common: commonEn,
@@ -39,6 +42,7 @@ const messagesByLocale = {
     diary: diaryEn,
     feed: feedEn,
     collection: collectionEn,
+    lists: listsEn,
   },
 };
 

@@ -44,15 +44,15 @@ change de OpenSpec y en `04-api/contracts.md`.
 - "Añadir a lista" dentro del editor como búsqueda de catálogo (la acción contextual en las
   páginas de artista/álbum/canción agrega el objetivo actual a una lista compatible).
 
-## Sección `/me/lists` — plan de diseño (propuesto, sin fase asignada)
+## Sección `/me/lists` (cambio `rework-lists-section`)
 
-Origen: plan de diseño de la sección `me/lists` (2026-09-05). `/me/lists` deja de ser "una
-lista de listas" y pasa a ser un **apartado con navegación interna propia**. Nada de esto
-está implementado ni comprometido; es el alcance objetivo y su backlog. Mantiene el mundo
-visual vigente ("The Vinyl Listening Room", `DESIGN.md`) y los principios de producto (sin
-gamificación, grafo social explícito, descubrimiento no algorítmico).
+**Estado:** ✅ Implementado, salvo la integración al feed de las listas seguidas (ver abajo).
+`/me/lists` dejó de ser "una lista de listas" y pasa a ser un **apartado con navegación
+interna propia**. Mantiene el mundo visual vigente ("The Vinyl Listening Room", `DESIGN.md`)
+y los principios de producto (sin gamificación, grafo social explícito, descubrimiento no
+algorítmico).
 
-### Alcance objetivo de la sección
+### Alcance de la sección
 
 - **Sub-navegación** (ARIA tablist, patrón `PopularCommentsTabs`): **Mis listas · Guardadas ·
   Descubrir**. Estado de pestaña en la URL (`?tab=`) para que sea enlazable y sobreviva al
@@ -62,40 +62,39 @@ gamificación, grafo social explícito, descubrimiento no algorítmico).
   y canciones. Toolbar contextual: búsqueda por texto, filtro por tipo de entidad y orden
   (recencia / alfabético). Creación por **compositor inline** arriba de la pared (reusa
   `ListForm`), sin cambiar de ruta.
-- **Guardadas:** listas ajenas visibles que el usuario marcó. "Guardar" es un marcador
-  privado; "Seguir" además hace que la actualización de esa lista aparezca en su feed. Una
-  lista guardada que pasó a privada o quedó tras un bloqueo se muestra como "ya no
-  disponible" y se puede quitar.
-- **Descubrir:** listas públicas de la comunidad, orden cronológico/editorial explícito (no
-  "para vos"). Muestra dueño (avatar + nombre → perfil), tipo, conteo de ítems y tiempo
-  relativo.
-- **Gestión en Mis listas:** menú por tarjeta (Editar · Audiencia · Eliminar), audiencia como
-  pill con menú, y **"Fijar"** para subir listas favoritas propias arriba (más liviano que un
-  orden manual total de listas en v1).
-- **Detalle `/me/lists/[listId]`:** conserva URL y comportamiento; recibe pase visual
-  (mosaico en cabecera, filas con carátula + disco de fallback, reordenamiento operable por
-  teclado).
-- La vista de perfil ajeno `/users/[username]/lists` hereda la tarjeta nueva.
+- **Guardadas:** listas ajenas visibles que el usuario marcó (tabla `list_save`, PK
+  `(saver_id, list_id)`). "Guardar" es un marcador privado; el guardado tiene además el eje
+  `following`. Una lista guardada que pasó a privada o quedó tras un bloqueo se muestra como
+  "ya no disponible" (`unavailable: true`) y se puede quitar, nunca se filtra en silencio.
+- **Descubrir:** listas de audiencia `public` de perfiles `public`, excluyendo las propias y
+  cualquier bloqueo, en orden cronológico descendente (no "para vos"). Muestra dueño (→
+  perfil), tipo, conteo de ítems y tiempo relativo.
+- **Gestión en Mis listas:** por tarjeta, Fijar/Desfijar · Editar (→ detalle) · Eliminar con
+  confirmación. **"Fijar"** sube las listas propias favoritas arriba (tabla aparte
+  `user_list_pin`, para no tocar `user_list.updated_at`); no es un orden manual total en v1.
+- **Detalle `/me/lists/[listId]`:** conserva URL y comportamiento; pase visual (mosaico en
+  cabecera, filas con carátula + disco de fallback, número de posición, reordenamiento ↑/↓
+  por teclado).
+- La vista de perfil ajeno `/users/[username]/lists` hereda la tarjeta nueva (mosaico +
+  conteo) y la acción Guardar/Seguir.
+- **API:** `GET /api/me/lists` gana `q`/`entityType`/`sort`; nuevos `POST|DELETE
+  /api/me/lists/{id}/pin`, `POST|GET /api/me/saved-lists`, `DELETE /api/me/saved-lists/{id}`,
+  `GET /api/lists/discover`. Ver `docs/04-api/contracts.md`.
 
-### Dependencias de backend (requieren su propio change)
+### Continuación pendiente: listas seguidas en el feed
 
-- Tabla `list_save` (`saver_id`, `list_id`, `following` bool, `created_at`) + endpoints +
-  chequeo de visibilidad (lista guardada que se volvió privada o con bloqueo → 404 elegante).
-- Evento de feed para actualización de lista **seguida** (extiende `kind: "list"` o uno
-  nuevo) — coordinar con `add-feed-filters` y la matriz de visibilidad del feed.
-- `listMyLists` / `listUserLists` / query de descubrimiento devuelven `itemCount` y
-  `coverThumbs[]` (primeras 3–4 carátulas) por lista.
-- Query paginada de listas públicas para Descubrir (orden `created_at` desc; orden por
-  cantidad de guardados, diferido).
-- Señal de "lista fijada": booleano / `pinned_at` en `user_list`.
+El efecto de `following` sobre el feed de actividad —que la actualización de una lista
+seguida aparezca en el feed de quien la sigue— se implementa en el cambio de continuación
+**`add-followed-lists-to-feed`**, que modifica `activity-feed` (sexta fuente en la
+composición bajo demanda + deduplicación por clave de evento). `following` ya se persiste y
+se expone (`src/services/lists/saved-lists.ts`: `followedListIds`, `savedStateFor`).
 
 ### Decisiones abiertas
 
-- Si "Duplicar / derivar lista" entra con la primera versión de la sección o después.
+- Si "Duplicar / derivar lista" entra en una iteración posterior de la sección.
 - Si el reordenamiento de ítems suma una dependencia de drag-and-drop (hoy ↑/↓ por teclado).
-- Orden exacto de Descubrir y si alguna vez se expone públicamente el conteo de guardados
-  (por defecto: privado, para no introducir una métrica de competencia).
-- Si "Fijar" se modela en `user_list` o en una tabla aparte.
+- Si alguna vez se expone públicamente el conteo de guardados (por defecto: privado, para no
+  introducir una métrica de competencia).
 
 ### Ideas futuras (backlog, no comprometidas)
 

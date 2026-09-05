@@ -6,6 +6,8 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Input";
+import { CoverThumb } from "@/components/catalog/CoverThumb";
+import { ListCoverMosaic } from "./ListCoverMosaic";
 import { deleteList, removeItemFromList, reorderListItems, updateList } from "@/lib/api/lists";
 import { ApiError } from "@/lib/api/client";
 import type { DiaryAudience, UserListDetail, UserListItem } from "@/lib/api/schemas";
@@ -176,12 +178,20 @@ export function ListDetail({ initial }: ListDetailProps) {
         {list.items.map((item, index) => (
           <li key={item.id} className="rounded border border-ink-border bg-ink-surface p-4">
             <div className="flex items-start justify-between gap-3">
-              <Link
-                href={itemHref(item, list.entityType)}
-                className="font-display text-lg text-paper transition-colors hover:text-amber"
-              >
-                {item.target.title}
-              </Link>
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="font-data text-xs text-paper-muted">{index + 1}</span>
+                <CoverThumb
+                  cover={item.target.coverThumbUrl}
+                  label=""
+                  className="size-11"
+                />
+                <Link
+                  href={itemHref(item, list.entityType)}
+                  className="min-w-0 truncate font-display text-lg text-paper transition-colors hover:text-amber"
+                >
+                  {item.target.title}
+                </Link>
+              </div>
               <div className="flex shrink-0 items-center gap-2">
                 <Button variant="ghost" disabled={busy || index === 0} aria-label={t("removeItem")} onClick={() => void moveItem(item.id, -1)}>
                   ↑
@@ -228,15 +238,30 @@ function ListHeader({
 }) {
   const t = useTranslations("lists");
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-start justify-between gap-3">
-        <h1 className="font-display text-2xl text-paper">{list.title}</h1>
-        <Button variant="secondary" onClick={onEdit}>
-          {t("edit")}
-        </Button>
+    <div className="flex gap-4">
+      <ListCoverMosaic coverThumbs={list.coverThumbs} className="hidden w-28 shrink-0 sm:block" />
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="font-display text-2xl text-paper">{list.title}</h1>
+          <Button variant="secondary" onClick={onEdit}>
+            {t("edit")}
+          </Button>
+        </div>
+        {list.description ? (
+          <p className="whitespace-pre-wrap font-body text-sm text-paper-muted">{list.description}</p>
+        ) : null}
+        <p className="flex flex-wrap items-center gap-x-2 font-data text-xs text-paper-muted">
+          <span>{t(`audience.${list.audience}`)}</span>
+          <span aria-hidden>·</span>
+          <span>{t("itemsCount", { count: list.itemCount })}</span>
+          {list.pinned ? (
+            <>
+              <span aria-hidden>·</span>
+              <span className="text-amber">{t("pinnedBadge")}</span>
+            </>
+          ) : null}
+        </p>
       </div>
-      {list.description ? <p className="whitespace-pre-wrap font-body text-sm text-paper-muted">{list.description}</p> : null}
-      <span className="font-data text-xs text-paper-muted">{t(`audience.${list.audience}`)}</span>
     </div>
   );
 }
