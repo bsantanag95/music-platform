@@ -1,14 +1,58 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, favorite, recording, releaseGroup } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { audiencesForProfile } from "@/services/social/visibility";
 import type { Audience } from "@/services/social/types";
+import { FAVORITE_TARGET_TYPES } from "./types";
 import type { FavoriteTargetType, FavoriteTarget } from "./types";
 
 export type { FavoriteTarget } from "./types";
 
 type TargetColumn = "artistId" | "releaseGroupId" | "recordingId";
+
+export const FAVORITE_SORTS = ["recent", "alpha"] as const;
+export type FavoriteSort = (typeof FAVORITE_SORTS)[number];
+
+const AUDIENCES: Audience[] = ["private", "followers", "public"];
+
+export interface FavoriteFilters {
+  q?: string;
+  type?: FavoriteTargetType;
+  audience?: Audience;
+  sort?: FavoriteSort;
+}
+
+export interface FavoriteCounts {
+  artist: number;
+  "release-group": number;
+  recording: number;
+}
+
+// Título del objetivo, resuelto desde la tabla que corresponda (los otros
+// dos joins quedan en null). Se usa para el buscador `q` y el orden alfabético.
+const TITLE_EXPR = sql`coalesce(${artist.name}, ${releaseGroup.title}, ${recording.title})`;
+
+// Rango fijo de tipo para que el muro agrupe artistas → álbumes → canciones.
+const TYPE_RANK_EXPR = sql`case
+  when ${favorite.artistId} is not null then 0
+  when ${favorite.releaseGroupId} is not null then 1
+  else 2 end`;
+
+function normalizeFavoriteFilters(filters?: FavoriteFilters) {
+  const sort: FavoriteSort = filters?.sort ?? "recent";
+  if (!FAVORITE_SORTS.includes(sort)) {
+    throw new ApiError("VALIDATION_ERROR", 400, "El orden no es válido");
+  }
+  if (filters?.type && !FAVORITE_TARGET_TYPES.includes(filters.type)) {
+    throw new ApiError("VALIDATION_ERROR", 400, "El tipo de contenido no es válido");
+  }
+  if (filters?.audience && !AUDIENCES.includes(filters.audience)) {
+    throw new ApiError("VALIDATION_ERROR", 400, "La audiencia no es válida");
+  }
+  const q = filters?.q?.trim();
+  return { q: q ? q : undefined, type: filters?.type, audience: filters?.audience, sort };
+}
 
 export interface FavoriteEntry {
   id: string;
@@ -117,6 +161,33 @@ export async function updateFavoriteAudience(
   return getOwnedFavorite(updated.id, userId);
 }
 
+/**
+ * Cambia la audiencia de varios favoritos propios a la vez.
+ * Idempotente; los ids ajenos o inexistentes del conjunto se ignoran. Si ningún
+ * id corresponde a un favorito del usuario, lanza `FAVORITE_NOT_FOUND`.
+ * Devuelve los ids efectivamente actualizados.
+ */
+export async function updateFavoritesAudienceBulk(
+  favoriteIds: string[],
+  userId: string,
+  audience: Audience,
+): Promise<string[]> {
+  if (favoriteIds.length === 0 || favoriteIds.length > 50) {
+    throw new ApiError("VALIDATION_ERROR", 400, "La selección de favoritos no es válida");
+  }
+
+  const updated = await db
+    .update(favorite)
+    .set({ audience })
+    .where(and(inArray(favorite.id, favoriteIds), eq(favorite.userId, userId)))
+    .returning({ id: favorite.id });
+
+  if (updated.length === 0) {
+    throw new ApiError("FAVORITE_NOT_FOUND", 404, "Ningún favorito de la selección es tuyo");
+  }
+  return updated.map((row) => row.id);
+}
+
 /** Elimina un favorito propio de forma idempotente. */
 export async function removeFavorite(target: FavoriteTarget, userId: string): Promise<void> {
   await db
@@ -131,39 +202,93 @@ export async function removeFavorite(target: FavoriteTarget, userId: string): Pr
     );
 }
 
-/** Listado propio de favoritos con paginación. */
-export async function listMyFavorites(userId: string, page = 1, pageSize = 20) {
-  if (page < 1 || pageSize < 1 || pageSize > 50) {
-    throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
-  }
+const FAVORITE_ROW_SELECT = {
+  id: favorite.id,
+  audience: favorite.audience,
+  createdAt: favorite.createdAt,
+  artistId: favorite.artistId,
+  releaseGroupId: favorite.releaseGroupId,
+  recordingId: favorite.recordingId,
+  artistName: artist.name,
+  releaseTitle: releaseGroup.title,
+  releaseCover: releaseGroup.coverThumbUrl,
+  recordingTitle: recording.title,
+} as const;
 
-  const rows = await db
+function favoritesFrom() {
+  return db
+    .select(FAVORITE_ROW_SELECT)
+    .from(favorite)
+    .leftJoin(artist, eq(favorite.artistId, artist.id))
+    .leftJoin(releaseGroup, eq(favorite.releaseGroupId, releaseGroup.id))
+    .leftJoin(recording, eq(favorite.recordingId, recording.id));
+}
+
+// Conteo por tipo sobre el conjunto que cumple `scopeConditions` (userId + los
+// filtros `q`/`audience`, nunca el filtro `type`), para el encabezado-retrato.
+async function favoriteCounts(scopeConditions: SQL[]): Promise<FavoriteCounts> {
+  const [row] = await db
     .select({
-      id: favorite.id,
-      audience: favorite.audience,
-      createdAt: favorite.createdAt,
-      artistId: favorite.artistId,
-      releaseGroupId: favorite.releaseGroupId,
-      recordingId: favorite.recordingId,
-      artistName: artist.name,
-      releaseTitle: releaseGroup.title,
-      releaseCover: releaseGroup.coverThumbUrl,
-      recordingTitle: recording.title,
+      artist: sql<number>`count(*) filter (where ${favorite.artistId} is not null)`.mapWith(Number),
+      releaseGroup:
+        sql<number>`count(*) filter (where ${favorite.releaseGroupId} is not null)`.mapWith(Number),
+      recording:
+        sql<number>`count(*) filter (where ${favorite.recordingId} is not null)`.mapWith(Number),
     })
     .from(favorite)
     .leftJoin(artist, eq(favorite.artistId, artist.id))
     .leftJoin(releaseGroup, eq(favorite.releaseGroupId, releaseGroup.id))
     .leftJoin(recording, eq(favorite.recordingId, recording.id))
-    .where(eq(favorite.userId, userId))
-    .orderBy(desc(favorite.createdAt), desc(favorite.id))
+    .where(and(...scopeConditions));
+
+  return {
+    artist: row?.artist ?? 0,
+    "release-group": row?.releaseGroup ?? 0,
+    recording: row?.recording ?? 0,
+  };
+}
+
+function favoriteSortOrder(sort: FavoriteSort) {
+  return sort === "alpha"
+    ? [asc(sql`lower(${TITLE_EXPR})`), asc(favorite.id)]
+    : [desc(favorite.createdAt), desc(favorite.id)];
+}
+
+/** Listado propio de favoritos con paginación, filtros y conteo por tipo. */
+export async function listMyFavorites(
+  userId: string,
+  page = 1,
+  pageSize = 20,
+  filters?: FavoriteFilters,
+) {
+  if (page < 1 || pageSize < 1 || pageSize > 50) {
+    throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
+  }
+  const { q, type, audience, sort } = normalizeFavoriteFilters(filters);
+
+  const scopeConditions: SQL[] = [eq(favorite.userId, userId)];
+  if (audience) scopeConditions.push(eq(favorite.audience, audience));
+  if (q) scopeConditions.push(sql`${TITLE_EXPR} ilike ${`%${q}%`}`);
+
+  const listConditions: SQL[] = [...scopeConditions];
+  if (type === "artist") listConditions.push(isNotNull(favorite.artistId));
+  else if (type === "release-group") listConditions.push(isNotNull(favorite.releaseGroupId));
+  else if (type === "recording") listConditions.push(isNotNull(favorite.recordingId));
+
+  const rows = await favoritesFrom()
+    .where(and(...listConditions))
+    .orderBy(asc(TYPE_RANK_EXPR), ...favoriteSortOrder(sort))
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
+
+  const counts = await favoriteCounts(scopeConditions);
 
   return {
     favorites: rows.slice(0, pageSize).map(serializeFavorite),
     page,
     pageSize,
     hasNext: rows.length > pageSize,
+    counts,
   };
 }
 
@@ -183,37 +308,30 @@ export async function listUserFavorites(
   const profile = await getProfileByUsername(username, viewerId);
   const audiences = audiencesForProfile(profile);
 
+  const emptyCounts: FavoriteCounts = { artist: 0, "release-group": 0, recording: 0 };
   if (audiences.length === 0) {
-    return { favorites: [], page, pageSize, hasNext: false };
+    return { favorites: [], page, pageSize, hasNext: false, counts: emptyCounts };
   }
 
-  const rows = await db
-    .select({
-      id: favorite.id,
-      audience: favorite.audience,
-      createdAt: favorite.createdAt,
-      artistId: favorite.artistId,
-      releaseGroupId: favorite.releaseGroupId,
-      recordingId: favorite.recordingId,
-      artistName: artist.name,
-      releaseTitle: releaseGroup.title,
-      releaseCover: releaseGroup.coverThumbUrl,
-      recordingTitle: recording.title,
-    })
-    .from(favorite)
-    .leftJoin(artist, eq(favorite.artistId, artist.id))
-    .leftJoin(releaseGroup, eq(favorite.releaseGroupId, releaseGroup.id))
-    .leftJoin(recording, eq(favorite.recordingId, recording.id))
-    .where(and(eq(favorite.userId, profile.id), inArray(favorite.audience, audiences)))
-    .orderBy(desc(favorite.createdAt), desc(favorite.id))
+  const scopeConditions: SQL[] = [
+    eq(favorite.userId, profile.id),
+    inArray(favorite.audience, audiences),
+  ];
+
+  const rows = await favoritesFrom()
+    .where(and(...scopeConditions))
+    .orderBy(asc(TYPE_RANK_EXPR), desc(favorite.createdAt), desc(favorite.id))
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
+
+  const counts = await favoriteCounts(scopeConditions);
 
   return {
     favorites: rows.slice(0, pageSize).map(serializeFavorite),
     page,
     pageSize,
     hasNext: rows.length > pageSize,
+    counts,
   };
 }
 

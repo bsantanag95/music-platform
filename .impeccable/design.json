@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-02T00:00:00.000Z",
+  "generatedAt": "2026-09-05T00:00:00.000Z",
   "title": "Design System: Music Platform",
   "extensions": {
     "colorMeta": {
@@ -16,13 +16,15 @@
       "paper-muted": { "role": "neutral", "displayName": "Aged Linen", "canonical": "#a89e8e", "cssVariable": "--color-paper-muted", "tonalRamp": ["#221f1a", "#36322c", "#4a453e", "#5e5950", "#726c62", "#867f74", "#9a9286", "#a89e8e"] }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display", "purpose": "Headings, page titles, section headings, and interactive buttons only." },
-      "body": { "displayName": "Body", "purpose": "Reading text: comments, descriptions, paragraphs." },
-      "label": { "displayName": "Label / Data", "purpose": "Metadata, breadcrumbs, field labels, timestamps, ratings, locale toggles." }
+      "display": { "displayName": "Display", "purpose": "Headings, page titles, section headings, and interactive buttons only. Space Grotesk 500." },
+      "body": { "displayName": "Body", "purpose": "Reading text: comments, descriptions, paragraphs. Source Serif 4 400, ~65ch measure." },
+      "label": { "displayName": "Label / Data", "purpose": "Metadata, breadcrumbs, field labels, timestamps, ratings, member periods, locale toggles, filter controls. IBM Plex Mono 400, text-xs." }
     },
     "shadows": [],
     "motion": [
-      { "name": "ease-state", "value": "150ms", "purpose": "Border and background color transitions on interactive chrome." }
+      { "name": "ease-state", "value": "150ms", "purpose": "Border and background color transitions on interactive chrome (transition-colors). The only motion in the core UI." },
+      { "name": "card-reveal", "value": "@keyframes card-reveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }", "purpose": "Staggered card entrance for the Home carousels only (motion-safe: prefixed, neutralised by prefers-reduced-motion)." },
+      { "name": "groove-turn", "value": "@keyframes groove-turn { to { transform: rotate(360deg); } }", "purpose": "Slow vinyl-groove rotation on hover, Home carousels only (motion-safe: prefixed)." }
     ],
     "breakpoints": [
       { "name": "sm", "value": "640px" },
@@ -48,46 +50,62 @@
       "name": "Secondary Button",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "Quiet surfaced action — Vinyl Surface fill with a hairline Groove Border.",
+      "description": "Quiet surfaced action — Vinyl Surface fill with a hairline Groove Border that warms to gold on hover. Used for follow, reject, load-more, new-list.",
       "html": "<button class=\"ds-btn-secondary\">Follow</button>",
-      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #1f1b17; color: #f2ede4; font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 14px; font-weight: 500; padding: 8px 16px; border: 1px solid #2e2a24; border-radius: 6px; cursor: pointer; transition: border-color 0.15s; } .ds-btn-secondary:hover { border-color: #e8b84b; } .ds-btn-secondary:focus-visible { outline: 2px solid #e8b84b; outline-offset: 2px; }"
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #1f1b17; color: #f2ede4; font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 14px; font-weight: 500; padding: 8px 16px; border: 1px solid #2e2a24; border-radius: 6px; cursor: pointer; transition: border-color 0.15s; } .ds-btn-secondary:hover { border-color: #e8b84b; } .ds-btn-secondary:focus-visible { outline: 2px solid #e8b84b; outline-offset: 2px; } .ds-btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }"
     },
     {
       "name": "Ghost Link / Button",
       "kind": "button",
       "refersTo": "button-ghost",
-      "description": "Invisible-level action; Aged Linen text that warms to Paper on hover.",
+      "description": "Invisible-level action; Aged Linen text that warms to Paper on hover. Navigation links and quiet row actions.",
       "html": "<button class=\"ds-btn-ghost\">Diary</button>",
-      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; background: transparent; color: #a89e8e; font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 14px; font-weight: 500; padding: 8px 8px; border: none; border-radius: 4px; cursor: pointer; transition: color 0.15s; } .ds-btn-ghost:hover { color: #f2ede4; } .ds-btn-ghost:focus-visible { outline: 2px solid #e8b84b; outline-offset: 2px; }"
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: #a89e8e; font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 14px; font-weight: 500; padding: 8px 8px; border: none; border-radius: 4px; cursor: pointer; transition: color 0.15s; } .ds-btn-ghost:hover { color: #f2ede4; } .ds-btn-ghost:focus-visible { outline: 2px solid #e8b84b; outline-offset: 2px; }"
     },
     {
       "name": "Text Input",
       "kind": "input",
       "refersTo": "input",
-      "description": "A surfaced field on the ink ground, with a Groove hairline that turns gold on focus.",
+      "description": "A surfaced field on the ink ground, with a Groove hairline that turns gold on focus. Label above in IBM Plex Mono; search/data inputs set their own text in mono.",
       "html": "<div class=\"ds-field\"><label class=\"ds-label\" for=\"search\">Search</label><input id=\"search\" class=\"ds-input\" placeholder=\"e.g. Pink Floyd\" /></div>",
-      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; } .ds-label { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 14px; color: #a89e8e; } .ds-input { background: #1f1b17; color: #f2ede4; font-family: 'Source Serif 4', Georgia, serif; font-size: 14px; padding: 8px 12px; border: 1px solid #2e2a24; border-radius: 6px; transition: border-color 0.15s; } .ds-input::placeholder { color: #a89e8e; } .ds-input:focus { outline: 2px solid #e8b84b; outline-offset: 2px; border-color: #2e2a24; }"
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; } .ds-label { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 14px; color: #a89e8e; } .ds-input { background: #1f1b17; color: #f2ede4; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 14px; padding: 8px 12px; border: 1px solid #2e2a24; border-radius: 6px; transition: border-color 0.15s; } .ds-input::placeholder { color: #a89e8e; } .ds-input:focus-visible { outline: 2px solid #e8b84b; outline-offset: 2px; border-color: #e8b84b; }"
     },
     {
-      "name": "Album Card",
+      "name": "Filter Select",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Deliberately lighter than the search input beside it: no box, no fill, just a bottom Groove rule, small muted mono, and a hand-drawn chevron. Shared by the toolbars of /me/feed, /me/diary and /me/lists.",
+      "html": "<div class=\"ds-select-wrap\"><select class=\"ds-select\" aria-label=\"Type\"><option>All types</option><option>Albums</option></select><svg class=\"ds-select-chev\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M6 9l6 6 6-6\"/></svg></div>",
+      "css": ".ds-select-wrap { position: relative; display: inline-block; } .ds-select { appearance: none; background: transparent; color: #a89e8e; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 14px; padding: 6px 16px 6px 2px; border: none; border-bottom: 1px solid #2e2a24; border-radius: 4px 4px 0 0; cursor: pointer; transition: color 0.15s; } .ds-select:hover { color: #f2ede4; } .ds-select:focus-visible { outline: 2px solid #e8b84b; outline-offset: 2px; } .ds-select option { background: #1f1b17; color: #f2ede4; } .ds-select option:checked { background: #e8b84b; color: #14120f; } .ds-select-chev { position: absolute; right: 0; top: 50%; width: 12px; height: 12px; transform: translateY(-50%); pointer-events: none; color: #a89e8e; }"
+    },
+    {
+      "name": "Content Card",
       "kind": "card",
       "refersTo": "card",
-      "description": "A content surface for a physical collection object — a square sleeve with a Groove hairline that warms to gold.",
-      "html": "<a class=\"ds-card\" href=\"#\"><img src=\"\" alt=\"Cover\" class=\"ds-cover\" /><div class=\"ds-meta\"><span class=\"ds-title\">The Wall</span><span class=\"ds-cat\">Studio</span></div></a>",
-      "css": ".ds-card { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: #1f1b17; border: 1px solid #2e2a24; border-radius: 10px; transition: border-color 0.15s; } .ds-card:hover { border-color: #e8b84b; } .ds-cover { aspect-ratio: 1 / 1; width: 100%; border-radius: 4px; background: linear-gradient(135deg, #2e2a24 0%, #1f1b17 60%); } .ds-meta { min-width: 0; } .ds-title { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 14px; color: #f2ede4; } .ds-cat { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12px; color: #a89e8e; }"
+      "description": "A content surface for a physical-collection object — Vinyl Surface, gently curved (10px), Groove hairline that warms to gold on hover or when a child holds focus. No shadow, no gradient.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-cover\"></div><div class=\"ds-card-meta\"><a class=\"ds-card-title\" href=\"#\">The Wall</a><span class=\"ds-card-cat\">Album · Pink Floyd</span></div></article>",
+      "css": ".ds-card { display: flex; gap: 16px; padding: 12px; background: #1f1b17; border: 1px solid #2e2a24; border-radius: 10px; transition: border-color 0.15s; } .ds-card:hover, .ds-card:focus-within { border-color: #e8b84b; } .ds-card-cover { flex: none; width: 80px; aspect-ratio: 1 / 1; border-radius: 4px; background: #14120f; border: 1px solid #2e2a24; } .ds-card-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; } .ds-card-title { font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 16px; color: #f2ede4; text-decoration: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; transition: color 0.15s; } .ds-card-title:hover { color: #e8b84b; } .ds-card-cat { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12px; color: #a89e8e; }"
     },
     {
       "name": "Breadcrumb / Data Nav",
       "kind": "nav",
       "refersTo": "nav-breadcrumb",
-      "description": "The typographic division of labor in action: breadcrumb trails set in IBM Plex Mono, aged linen to paper on hover.",
+      "description": "The typographic division of labor in action: breadcrumb trails set in IBM Plex Mono, Aged Linen to Paper on hover, current page in Paper.",
       "html": "<nav class=\"ds-breadcrumb\" aria-label=\"breadcrumb\"><ol><li><a href=\"#\">Home</a></li><li aria-current=\"page\">Pink Floyd</li></ol></nav>",
       "css": ".ds-breadcrumb ol { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; list-style: none; padding: 0; margin: 0; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12px; color: #a89e8e; } .ds-breadcrumb a { color: #a89e8e; text-decoration: none; transition: color 0.15s; } .ds-breadcrumb a:hover { color: #f2ede4; } .ds-breadcrumb [aria-current='page'] { color: #f2ede4; } .ds-breadcrumb li + li::before { content: '/'; margin: 0 4px; color: #a89e8e; }"
+    },
+    {
+      "name": "Disc Placeholder",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "The system's signature recurring object: a vinyl record drawn as concentric hairline rings with a filled centre, shown wherever imagery is missing (artist photos, missing covers, loading states) instead of an empty rectangle. Rings use Aged Linen at low opacity so the disc reads as a quiet engraving at any size, not a boxed frame. Decorative: aria-hidden when a text label sits beside it.",
+      "html": "<div class=\"ds-disc\" role=\"img\" aria-label=\"No cover\"><span class=\"ds-disc-r1\"></span><span class=\"ds-disc-r2\"></span><span class=\"ds-disc-c\"></span></div>",
+      "css": ".ds-disc { position: relative; width: 80px; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 4px; background: #1f1b17; } .ds-disc-r1, .ds-disc-r2, .ds-disc-c { position: absolute; border-radius: 9999px; } .ds-disc-r1 { inset: 15%; border: 1px solid rgba(168, 158, 142, 0.45); } .ds-disc-r2 { inset: 35%; border: 1px solid rgba(168, 158, 142, 0.45); } .ds-disc-c { inset: 48%; background: rgba(168, 158, 142, 0.35); }"
     }
   ],
   "narrative": {
     "northStar": "The Vinyl Listening Room",
-    "overview": "Warm, quiet, deliberate, tactile. The interface treats music as a material culture — something held, studied, and discussed with care. The entire system is a darkened listening room: an ink-warm near-black as the walls, paper-warm text as lamplight, and the amber glow of a VU meter as the single accent that draws the eye when a decision or interaction asks for attention. There is no noise here, no decorative motion, no gratuitous gradient — every element earns its place by helping you read, rate, and discuss a discography with the precision a serious listener expects. Two layers of material character coexist deliberately. The interactive chrome — buttons, inputs, navigation — stays quiet, refined, and minimally visible; it is furniture, not decoration. The content surfaces — album cards, cover art, the disc placeholder, list entries — carry the tactile, object-like quality of the physical collection: a vinyl sleeve held up to the light.",
+    "overview": "Warm, quiet, deliberate, tactile. The interface treats music as a material culture — something held, studied, and discussed with care. The entire system is a darkened listening room: an ink-warm near-black as the walls, paper-warm text as lamplight, and the amber glow of a VU meter as the single accent that draws the eye when a decision or interaction asks for attention. There is no noise here, no decorative motion, no gratuitous gradient — every element earns its place by helping you read, rate, and discuss a discography with the precision a serious listener expects. Two layers of material character coexist deliberately. The interactive chrome — buttons, inputs, navigation — stays quiet, refined, and minimally visible; it is furniture, not decoration. The content surfaces — album cards, cover art, the disc placeholder, list entries — carry the tactile, object-like quality of the physical collection: a vinyl sleeve held up to the light. This separation is what keeps a data-dense cataloging tool from feeling cold, without ever letting the interface compete with the music itself.",
     "keyCharacteristics": [
       "Warm-dark material environment; never pure black, never pure white — always earth-tinted paper and ink",
       "A single, disciplined amber accent used sparingly across the whole screen (focus rings, primary actions, active states)",

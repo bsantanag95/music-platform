@@ -12,7 +12,7 @@ import { listProfileCollection } from "@/services/collection/collection";
 import { FollowButton } from "@/components/social/FollowButton";
 import { BlockButton } from "@/components/social/BlockButton";
 import { DiaryList } from "@/components/diary/DiaryList";
-import { FavoritesList } from "@/components/favorites/FavoritesList";
+import { FavoritesWall } from "@/components/favorites/FavoritesWall";
 import { ListsList } from "@/components/lists/ListsList";
 import { CollectionList } from "@/components/collection/CollectionList";
 
@@ -37,16 +37,8 @@ async function ProfileDiary({ username, viewerId }: { username: string; viewerId
 }
 
 async function ProfileFavorites({ username, viewerId }: { username: string; viewerId: string | null }) {
-  const t = await getTranslations("favorites");
   const initial = await listUserFavorites(username, viewerId, 1, 20);
-  return (
-    <FavoritesList
-      initial={initial}
-      readOnly
-      username={username}
-      empty={{ title: t("profileEmptyTitle"), description: t("profileEmptyDescription") }}
-    />
-  );
+  return <FavoritesWall initial={initial} readOnly username={username} />;
 }
 
 async function ProfileCollection({

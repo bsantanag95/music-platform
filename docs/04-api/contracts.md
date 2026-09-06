@@ -504,25 +504,38 @@ Quita un favorito (toggle off). Idempotente: si no existe, responde `204` igual.
 
 ### `PATCH /api/me/favorites`
 
-Cambia la audiencia de un favorito propio.
+Cambia la audiencia de uno o varios favoritos propios (cambio `rework-favorites-section`).
 
-**Body:** `{ id, audience }`. **200 OK:** `{ favorite }`. **404** con `FAVORITE_NOT_FOUND` si el
-favorito no existe o no es del usuario.
+**Body (individual):** `{ id, audience }` → **200 OK:** `{ favorite }`. **404** con
+`FAVORITE_NOT_FOUND` si el favorito no existe o no es del usuario.
+**Body (en lote):** `{ ids: string[] (1..50), audience }` → **200 OK:** `{ updatedIds }` con los
+ids efectivamente actualizados; los ids ajenos o inexistentes del conjunto se ignoran. **404** con
+`FAVORITE_NOT_FOUND` si ningún id es del usuario. **400** con `VALIDATION_ERROR` si el conjunto
+está vacío, excede 50, o la audiencia es inválida.
+**401** con `AUTH_REQUIRED` sin sesión.
 
-### `GET /api/me/favorites?page=&pageSize=`
+### `GET /api/me/favorites?page=&pageSize=&q=&type=&audience=&sort=`
 
-Lista paginada de los favoritos propios en orden cronológico descendente.
+Lista paginada de los favoritos propios. Orden por rango de tipo (artista → álbum → canción) y,
+dentro de cada tipo, por `sort` (cambio `rework-favorites-section`). Parámetros opcionales,
+combinables, aplicados en el servidor sobre el conjunto completo:
+- `q`: búsqueda parcial sobre el título del objetivo (sin distinguir mayúsculas).
+- `type`: `artist` | `release-group` | `recording`.
+- `audience`: `private` | `followers` | `public`.
+- `sort`: `recent` (default) | `alpha` (alfabético por título del objetivo).
 
-**200 OK:** `{ favorites: [{ id, targetType, audience, createdAt, target: { id, title, coverThumbUrl } }], page, pageSize, hasNext }`.
+**200 OK:** `{ favorites: [{ id, targetType, audience, createdAt, target: { id, title, coverThumbUrl } }], page, pageSize, hasNext, counts: { artist, "release-group", recording } }`.
+`counts` refleja `q`/`audience` pero no `type`. **400** con `VALIDATION_ERROR` si un parámetro es
+inválido.
 
 ### `GET /api/users/[username]/favorites?page=&pageSize=`
 
 Favoritos de un usuario visibles para un lector. La sesión es opcional. Aplica la matriz de
 visibilidad (bloqueos, perfil privado, relación de seguimiento); sin permiso devuelve lista vacía
-sin revelar si el usuario tiene favoritos.
+sin revelar si el usuario tiene favoritos. Mismo orden por rango de tipo que el listado propio.
 
-**200 OK:** `{ favorites: [...], page, pageSize, hasNext }`. **404** con `USER_NOT_FOUND` si el
-username no existe.
+**200 OK:** `{ favorites: [...], page, pageSize, hasNext, counts }`. **404** con `USER_NOT_FOUND`
+si el username no existe.
 
 ## Listas (Fase 5.5, cambio `add-favorites-and-lists`)
 

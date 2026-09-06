@@ -5,6 +5,7 @@ import {
   toggleFavorite,
   removeFavorite,
   updateFavoriteAudience,
+  updateFavoritesAudienceBulk,
   listMyFavorites,
   listUserFavorites,
   resolveFavoriteTarget,
@@ -49,6 +50,24 @@ function joinPaged(rows: unknown[]) {
   return { from };
 }
 
+// select().from().leftJoin()×3.where() → terminal where (agregado de counts)
+function joinWhere(rows: unknown[]) {
+  const where = vi.fn().mockResolvedValue(rows);
+  const chain = { leftJoin: vi.fn(() => chain), where };
+  const from = vi.fn(() => chain);
+  return { from };
+}
+
+const zeroCounts = { artist: 0, releaseGroup: 0, recording: 0 };
+
+// listMyFavorites / listUserFavorites hacen dos selects: primero el paginado,
+// luego el agregado de counts.
+function mockListQueries(rows: unknown[], counts = zeroCounts) {
+  mocks.db.select
+    .mockReturnValueOnce(joinPaged(rows))
+    .mockReturnValueOnce(joinWhere([counts]));
+}
+
 const target: FavoriteTarget = { type: "artist", id: "00000000-0000-4000-8000-000000000001" };
 const user = "00000000-0000-4000-8000-000000000002";
 
@@ -84,9 +103,9 @@ describe("servicio de favoritos", () => {
 
   it("crea un favorito nuevo cuando no existe", async () => {
     mocks.db.select
-      .mockReturnValueOnce(whereLimit([{ id: target.id }]))  // resolveFavoriteTarget - artista existe
-      .mockReturnValueOnce(whereLimit([]))  // buscar existente
-      .mockReturnValueOnce(joinLimit([favoriteRow]));  // getOwnedFavorite
+      .mockReturnValueOnce(whereLimit([{ id: target.id }])) // resolveFavoriteTarget - artista existe
+      .mockReturnValueOnce(whereLimit([])) // buscar existente
+      .mockReturnValueOnce(joinLimit([favoriteRow])); // getOwnedFavorite
     const values = vi.fn().mockReturnValue({
       returning: vi.fn().mockResolvedValue([favoriteRow]),
     });
@@ -99,8 +118,8 @@ describe("servicio de favoritos", () => {
 
   it("elimina un favorito existente (toggle off)", async () => {
     mocks.db.select
-      .mockReturnValueOnce(whereLimit([{ id: target.id }]))  // resolveFavoriteTarget - artista existe
-      .mockReturnValueOnce(whereLimit([{ id: favoriteRow.id }]));  // buscar existente
+      .mockReturnValueOnce(whereLimit([{ id: target.id }])) // resolveFavoriteTarget - artista existe
+      .mockReturnValueOnce(whereLimit([{ id: favoriteRow.id }])); // buscar existente
     mocks.db.delete.mockReturnValue({ where: vi.fn().mockResolvedValue([]) });
 
     const result = await toggleFavorite(target, user);
@@ -108,7 +127,7 @@ describe("servicio de favoritos", () => {
   });
 
   it("rechaza un favorito con objetivo inexistente con FAVORITE_TARGET_INVALID", async () => {
-    mocks.db.select.mockReturnValue(whereLimit([]));  // resolveFavoriteTarget - artista no existe
+    mocks.db.select.mockReturnValue(whereLimit([])); // resolveFavoriteTarget - artista no existe
 
     await expect(
       toggleFavorite({ type: "artist", id: "00000000-0000-4000-8000-000000000099" }, user),
@@ -126,29 +145,60 @@ describe("servicio de favoritos", () => {
     });
   });
 
-  it("listMyFavorites devuelve vacío cuando no hay favoritos", async () => {
-    mocks.db.select.mockReturnValue(joinPaged([]));
+  it("rechaza filtros inválidos con VALIDATION_ERROR", async () => {
+    await expect(
+      listMyFavorites(user, 1, 20, { sort: "chronological" as never }),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    await expect(
+      listMyFavorites(user, 1, 20, { type: "playlist" as never }),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    await expect(
+      listMyFavorites(user, 1, 20, { audience: "everyone" as never }),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+  });
+
+  it("listMyFavorites devuelve vacío y counts en cero cuando no hay favoritos", async () => {
+    mockListQueries([]);
 
     const result = await listMyFavorites(user);
     expect(result.favorites).toEqual([]);
     expect(result.hasNext).toBe(false);
+    expect(result.counts).toEqual({ artist: 0, "release-group": 0, recording: 0 });
   });
 
-  it("listMyFavorites pagina correctamente con hasNext", async () => {
+  it("listMyFavorites pagina correctamente con hasNext y expone counts", async () => {
     const rows = Array.from({ length: 21 }, (_, i) => ({
       ...favoriteRow,
       id: `favorito-${i}`,
       createdAt: new Date(Date.now() - i * 1000),
     }));
 
-    mocks.db.select.mockReturnValue(joinPaged(rows));
+    mockListQueries(rows, { artist: 12, releaseGroup: 7, recording: 2 });
 
     const result = await listMyFavorites(user, 1, 20);
     expect(result.favorites.length).toBe(20);
     expect(result.hasNext).toBe(true);
+    expect(result.counts).toEqual({ artist: 12, "release-group": 7, recording: 2 });
   });
 
-  it("listUserFavorites devuelve vacío cuando no hay permiso (perfil privado sin seguir)", async () => {
+  it("listMyFavorites acepta filtros combinados y separa counts (sin el filtro type) del listado", async () => {
+    const paged = joinPaged([favoriteRow]);
+    const countsChain = joinWhere([{ artist: 3, releaseGroup: 1, recording: 0 }]);
+    mocks.db.select.mockReturnValueOnce(paged).mockReturnValueOnce(countsChain);
+
+    const result = await listMyFavorites(user, 1, 20, {
+      type: "artist",
+      audience: "public",
+      q: "floyd",
+      sort: "alpha",
+    });
+
+    expect(result.favorites.length).toBe(1);
+    // counts refleja el conjunto sin el filtro de tipo: los tres tipos siguen presentes.
+    expect(result.counts).toEqual({ artist: 3, "release-group": 1, recording: 0 });
+  });
+
+  it("listUserFavorites devuelve vacío y counts en cero cuando no hay permiso", async () => {
     mocks.getProfileByUsername.mockResolvedValue({
       id: "otro-usuario",
       profileVisibility: "private",
@@ -158,9 +208,10 @@ describe("servicio de favoritos", () => {
 
     const result = await listUserFavorites("otro-usuario", user);
     expect(result.favorites).toEqual([]);
+    expect(result.counts).toEqual({ artist: 0, "release-group": 0, recording: 0 });
   });
 
-  it("listUserFavorites filtra por audiencia del perfil", async () => {
+  it("listUserFavorites filtra por audiencia del perfil y trae counts", async () => {
     mocks.getProfileByUsername.mockResolvedValue({
       id: "otro-usuario",
       profileVisibility: "public",
@@ -168,10 +219,11 @@ describe("servicio de favoritos", () => {
       blockedByMe: false,
     });
 
-    mocks.db.select.mockReturnValue(joinPaged([favoriteRow]));
+    mockListQueries([favoriteRow], { artist: 1, releaseGroup: 0, recording: 0 });
 
     const result = await listUserFavorites("otro-usuario", user);
     expect(result.favorites.length).toBe(1);
+    expect(result.counts.artist).toBe(1);
   });
 
   it("listUserFavorites devuelve vacío si el perfil es privado y no hay relación aprobada", async () => {
@@ -194,7 +246,7 @@ describe("servicio de favoritos", () => {
       blockedByMe: false,
     });
 
-    mocks.db.select.mockReturnValue(joinPaged([favoriteRow]));
+    mockListQueries([favoriteRow]);
 
     const result = await listUserFavorites("otro-usuario", user);
     expect(result.favorites.length).toBe(1);
@@ -227,6 +279,46 @@ describe("servicio de favoritos", () => {
     ).rejects.toMatchObject({
       code: "FAVORITE_NOT_FOUND",
       status: 404,
+    });
+  });
+
+  describe("updateFavoritesAudienceBulk", () => {
+    function mockUpdateReturning(rows: unknown[]) {
+      const returning = vi.fn().mockResolvedValue(rows);
+      mocks.db.update.mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({ returning }),
+        }),
+      });
+    }
+
+    it("actualiza varios favoritos propios y devuelve sus ids", async () => {
+      mockUpdateReturning([{ id: "a" }, { id: "b" }, { id: "c" }]);
+      const result = await updateFavoritesAudienceBulk(["a", "b", "c"], user, "private");
+      expect(result).toEqual(["a", "b", "c"]);
+    });
+
+    it("ignora ids ajenos del conjunto (solo devuelve los propios actualizados)", async () => {
+      mockUpdateReturning([{ id: "a" }, { id: "b" }]);
+      const result = await updateFavoritesAudienceBulk(["a", "b", "ajeno"], user, "public");
+      expect(result).toEqual(["a", "b"]);
+    });
+
+    it("lanza FAVORITE_NOT_FOUND si ningún id es del usuario", async () => {
+      mockUpdateReturning([]);
+      await expect(
+        updateFavoritesAudienceBulk(["x", "y"], user, "public"),
+      ).rejects.toMatchObject({ code: "FAVORITE_NOT_FOUND", status: 404 });
+    });
+
+    it("rechaza un conjunto vacío o excesivo con VALIDATION_ERROR", async () => {
+      await expect(updateFavoritesAudienceBulk([], user, "public")).rejects.toMatchObject({
+        code: "VALIDATION_ERROR",
+      });
+      const tooMany = Array.from({ length: 51 }, (_, i) => `id-${i}`);
+      await expect(
+        updateFavoritesAudienceBulk(tooMany, user, "public"),
+      ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
     });
   });
 

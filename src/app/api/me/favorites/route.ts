@@ -4,6 +4,7 @@ import { parsePagination } from "@/lib/api/pagination";
 import { ApiError } from "@/lib/api/errors";
 import {
   CreateFavoriteRequestSchema,
+  FavoritesFiltersSchema,
   RemoveFavoriteRequestSchema,
   UpdateFavoriteAudienceRequestSchema,
 } from "@/lib/api/schemas";
@@ -14,13 +15,25 @@ import {
   toggleFavorite,
   removeFavorite,
   updateFavoriteAudience,
+  updateFavoritesAudienceBulk,
 } from "@/services/favorites/favorites";
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const { page, pageSize } = parsePagination(searchParams);
+
+  const parsedFilters = FavoritesFiltersSchema.safeParse({
+    q: searchParams.get("q") || undefined,
+    type: searchParams.get("type") || undefined,
+    audience: searchParams.get("audience") || undefined,
+    sort: searchParams.get("sort") || undefined,
+  });
+  if (!parsedFilters.success) {
+    throw new ApiError("VALIDATION_ERROR", 400, "Los filtros no son válidos");
+  }
+
   const user = await requireUser();
-  return NextResponse.json(await listMyFavorites(user.id, page, pageSize));
+  return NextResponse.json(await listMyFavorites(user.id, page, pageSize, parsedFilters.data));
 });
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
@@ -42,8 +55,17 @@ export const PATCH = withErrorHandling(async (request: NextRequest) => {
     throw new ApiError("VALIDATION_ERROR", 400, "La audiencia no es válida");
   }
   const user = await requireUser();
-  const { id } = parsed.data;
-  const favorite = await updateFavoriteAudience(id, user.id, parsed.data.audience);
+
+  if ("ids" in parsed.data) {
+    const updatedIds = await updateFavoritesAudienceBulk(
+      parsed.data.ids,
+      user.id,
+      parsed.data.audience,
+    );
+    return NextResponse.json({ updatedIds });
+  }
+
+  const favorite = await updateFavoriteAudience(parsed.data.id, user.id, parsed.data.audience);
   return NextResponse.json({ favorite });
 });
 

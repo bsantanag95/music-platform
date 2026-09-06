@@ -497,10 +497,13 @@ export const RemoveFavoriteRequestSchema = z.object({
 });
 export type RemoveFavoriteRequest = z.infer<typeof RemoveFavoriteRequestSchema>;
 
-export const UpdateFavoriteAudienceRequestSchema = z.object({
-  id: z.uuid(),
-  audience: DiaryAudienceSchema,
-});
+// Cambio de audiencia: `{ id }` para un favorito, `{ ids }` para varios a la vez
+// (mismo endpoint PATCH). El tope de 50 acota el tamaño de la request y del
+// rollback optimista del cliente.
+export const UpdateFavoriteAudienceRequestSchema = z.union([
+  z.object({ id: z.uuid(), audience: DiaryAudienceSchema }),
+  z.object({ ids: z.array(z.uuid()).min(1).max(50), audience: DiaryAudienceSchema }),
+]);
 export type UpdateFavoriteAudienceRequest = z.infer<typeof UpdateFavoriteAudienceRequestSchema>;
 
 export const FavoriteMutationResponseSchema = z.object({
@@ -508,11 +511,41 @@ export const FavoriteMutationResponseSchema = z.object({
 });
 export type FavoriteMutationResponse = z.infer<typeof FavoriteMutationResponseSchema>;
 
+// Respuesta del cambio de audiencia en lote: los ids de los favoritos propios
+// efectivamente actualizados (los ajenos o inexistentes del conjunto se ignoran).
+export const FavoritesAudienceBulkResponseSchema = z.object({
+  updatedIds: z.array(z.uuid()),
+});
+export type FavoritesAudienceBulkResponse = z.infer<typeof FavoritesAudienceBulkResponseSchema>;
+
+export const FAVORITE_SORTS = ["recent", "alpha"] as const;
+export const FavoriteSortSchema = z.enum(FAVORITE_SORTS);
+export type FavoriteSort = z.infer<typeof FavoriteSortSchema>;
+
+// Filtros del listado propio de favoritos, todos opcionales y combinables,
+// aplicados en el servidor sobre el conjunto completo (mismo patrón que /me/lists).
+export const FavoritesFiltersSchema = z.object({
+  q: z.string().trim().min(1).max(100).optional(),
+  type: SocialTargetTypeSchema.optional(),
+  audience: DiaryAudienceSchema.optional(),
+  sort: FavoriteSortSchema.optional(),
+});
+export type FavoritesFilters = z.infer<typeof FavoritesFiltersSchema>;
+
+// Conteo de favoritos propios por tipo de entidad, sobre el conjunto completo.
+export const FavoriteCountsSchema = z.object({
+  artist: z.number().int().nonnegative(),
+  "release-group": z.number().int().nonnegative(),
+  recording: z.number().int().nonnegative(),
+});
+export type FavoriteCounts = z.infer<typeof FavoriteCountsSchema>;
+
 export const FavoritesListResponseSchema = z.object({
   favorites: z.array(FavoriteSchema),
   page: z.number().int(),
   pageSize: z.number().int(),
   hasNext: z.boolean(),
+  counts: FavoriteCountsSchema,
 });
 export type FavoritesListResponse = z.infer<typeof FavoritesListResponseSchema>;
 

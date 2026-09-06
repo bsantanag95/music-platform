@@ -16,6 +16,44 @@ change de OpenSpec y en `04-api/contracts.md`.
   acciones.
 - Se puede quitar. La audiencia se puede cambiar después de publicar.
 
+## Sección `/me/favorites` (cambio `rework-favorites-section`)
+
+**Estado:** ✅ Implementado. `/me/favorites` dejó de ser una lista plana de texto y pasa a ser
+el **retrato personal del gusto**: la única vista completa y navegable de todo lo marcado.
+Mantiene el mundo visual vigente ("The Vinyl Listening Room") y los principios de producto
+(señal liviana sin escala, sin gamificación).
+
+### Alcance de la sección
+
+- **Superficie única, sin sub-navegación.** Deliberadamente no hay pestaña social de
+  "favoritos de quienes seguís": ese descubrimiento ya lo cubren el feed y el perfil de cada
+  persona. Favoritos es el espacio personal que contrapesa a la sección de listas.
+- **Encabezado-retrato:** conteo de favoritos por tipo (`counts`) como dato, para orientar
+  sin gamificar.
+- **Muro agrupado por tipo** (artistas · álbumes · canciones), una sola consulta ordenada por
+  rango de tipo y el cliente la parte en secciones. Tres tratamientos de ficha: **álbum** con
+  carátula, **artista** con placa tipográfica (los artistas no exponen carátula), **canción**
+  con la silueta de disco del sistema (las canciones tampoco). Nunca un rectángulo vacío.
+- **Toolbar:** búsqueda por título del objetivo (`q`), filtro por tipo (`type`), filtro por
+  audiencia (`audience`) y orden (`sort`: recencia / alfabético). Todo en servidor, sobre el
+  conjunto completo. Mismo patrón que `/me/lists` y `/me/diary`.
+- **Gestión de audiencia:** selector inline por ficha (usa el `PATCH` existente) y **cambio
+  en lote** — un modo "Seleccionar" con casillas y una barra de acción fija que cambia la
+  audiencia de las N seleccionadas de una vez. Cierra el hueco de que la audiencia solo se
+  fijaba a `followers` al marcar y no se podía revisar desde ninguna parte.
+- **Vista de perfil ajeno `/users/[username]/favorites`** hereda el muro en modo lectura (sin
+  toolbar, sin edición de audiencia, sin selección).
+- **API:** `GET /api/me/favorites` gana `q`/`type`/`audience`/`sort` y `counts`;
+  `PATCH /api/me/favorites` acepta `{ ids: string[], audience }` además de `{ id, audience }`.
+  Sin migraciones. Ver `docs/04-api/contracts.md`.
+
+### Fuera de esta entrega
+
+- Descubrimiento social de favoritos (feed y perfil ya lo cubren).
+- Nota, texto libre, orden manual o "fijar" por favorito — eso es territorio de listas.
+- Rediseño de `FavoriteButton` en las páginas de catálogo.
+- Cualquier contador o insignia de "marcaste favorito pero no valoraste / no escuchaste".
+
 ## Listas
 
 - Colección curada armada por un usuario, de **un solo tipo de entidad** por lista (solo

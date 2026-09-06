@@ -1,62 +1,4 @@
-# favorites Specification
-
-## Purpose
-
-Señal de interés liviana de Fase 5: marca simple (toggle) sobre artista, álbum (release group)
-o canción (recording), sin escala numérica, con audiencia propia e independiente de escucha,
-rating y comentario. Incluye superficie propia, vista pública en perfiles y la acción
-contextual en las páginas de catálogo.
-
-## Requirements
-
-### Requirement: Marcar y desmarcar un favorito
-El sistema SHALL permitir a un usuario autenticado marcar o quitar un favorito sobre un
-artista, un álbum o una canción de forma idempotente. Marcar un objetivo que ya es favorito
-SHALL NOT producir un error ni duplicar la marca; quitar un favorito que no existe SHALL
-también ser idempotente. Un usuario SHALL tener a lo sumo un favorito por objetivo.
-
-#### Scenario: Marcar un favorito
-- **WHEN** un usuario autenticado marca como favorito un artista, álbum o canción válido
-- **THEN** el sistema crea el favorito y lo refleja en la superficie propia
-
-#### Scenario: Marcar un objetivo ya favorito
-- **WHEN** el usuario marca un objetivo que ya tenía como favorito
-- **THEN** la operación es idempotente, no crea duplicados y responde con el favorito existente
-
-#### Scenario: Quitar un favorito
-- **WHEN** el usuario quita el favorito de un objetivo que tenía marcado
-- **THEN** el favorito se elimina y desaparece de la superficie propia
-
-#### Scenario: Quitar un favorito inexistente
-- **WHEN** el usuario quita el favorito de un objetivo que no tenía marcado
-- **THEN** la operación es idempotente y no produce error
-
-#### Scenario: Objetivo inválido o inexistente
-- **WHEN** el sistema recibe un favorito cuyo objetivo no existe o no es uno de los tres tipos
-  permitidos
-- **THEN** la API responde un error de validación y no crea ni modifica ningún favorito
-
-#### Scenario: Sesión requerida
-- **WHEN** una request sin sesión intenta marcar o quitar un favorito
-- **THEN** la API responde `401` con código `AUTH_REQUIRED` y no modifica ningún favorito
-
-### Requirement: Audiencia del favorito
-El sistema SHALL permitir configurar la audiencia de cada favorito entre `private`,
-`followers` y `public`. Un favorito nuevo SHALL usar `followers` por defecto y el usuario
-SHALL poder cambiarla después de publicarlo. Un favorito de `audience` `private` SHALL ser
-visible solo para su dueño.
-
-#### Scenario: Audiencia por defecto
-- **WHEN** un usuario crea un favorito sin especificar audiencia
-- **THEN** el favorito queda con audiencia `followers`
-
-#### Scenario: Cambiar la audiencia de un favorito propio
-- **WHEN** el usuario cambia la audiencia de un favorito propio a `public`
-- **THEN** el favorito queda público y visible en las superficies que lo permitan
-
-#### Scenario: Favorito privado
-- **WHEN** el usuario consulta un favorito de audiencia `private` que no es suyo
-- **THEN** ese favorito no aparece en ninguna superficie ajena
+## MODIFIED Requirements
 
 ### Requirement: Lista de favoritos propios
 El sistema SHALL permitir al usuario autenticado listar sus propios favoritos con paginación,
@@ -136,6 +78,8 @@ sin modo selección y sin acción de quitar.
 - **WHEN** se envía una paginación fuera de rango
 - **THEN** la API responde `400` con código `VALIDATION_ERROR` y no ejecuta la lectura
 
+## ADDED Requirements
+
 ### Requirement: Muro de favoritos agrupado por tipo
 El sistema SHALL presentar `/<locale>/me/favorites` como una **superficie única sin
 sub-navegación**: un encabezado con el conteo de favoritos por tipo y un muro que agrupa los
@@ -213,25 +157,3 @@ afectados.
 #### Scenario: Cambio en lote sin efectos colaterales
 - **WHEN** el usuario cambia en lote la audiencia de favoritos que además valoró y escuchó
 - **THEN** las escuchas, los ratings y los comentarios de esos objetivos no cambian
-
-### Requirement: Acción de favorito en las páginas de catálogo
-El sistema SHALL ofrecer en las páginas de artista, álbum y canción una acción autenticada
-para marcar o quitar el favorito, con estados de carga, éxito, error y sesión requerida, y que
-SHALL NOT bloquear la carga del contenido musical.
-
-#### Scenario: Acción sin sesión
-- **WHEN** un visitante no autenticado pulsa marcar como favorito en una página de catálogo
-- **THEN** se le solicita iniciar sesión y no se crea ningún favorito
-
-#### Scenario: Alternar el favorito
-- **WHEN** un usuario autenticado pulsa el botón de favorito en una página de catálogo
-- **THEN** el favorito se marca o se quita y el estado de la UI se actualiza con confirmación
-  accesible
-
-### Requirement: Independencia del favorito
-El sistema SHALL tratar el favorito como una señal independiente: marcarlo o quitarlo SHALL
-NOT crear, modificar ni eliminar escuchas, ratings ni comentarios del mismo objetivo.
-
-#### Scenario: Favorito sin efectos colaterales
-- **WHEN** un usuario marca como favorito un objetivo que ya valoró y escuchó
-- **THEN** la escucha, el rating y los comentarios existentes no cambian
