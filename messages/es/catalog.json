@@ -14,7 +14,10 @@
       "tabArtists": "Artistas",
       "tabAlbums": "Álbumes",
       "emptyTitle": "Sin coincidencias",
-      "emptyDescription": "No encontramos artistas ni álbumes para esa búsqueda. Probá con otro texto."
+      "emptyDescription": "No encontramos artistas ni álbumes para esa búsqueda. Probá con otro texto.",
+      "songContext": {
+        "title": "Álbumes que contienen «{song}»"
+      }
     }
   },
   "artist": {

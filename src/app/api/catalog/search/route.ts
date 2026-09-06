@@ -15,6 +15,6 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
     );
   }
 
-  const results = await searchCatalog(q);
-  return NextResponse.json({ results });
+  const response = await searchCatalog(q);
+  return NextResponse.json(response);
 });

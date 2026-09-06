@@ -65,6 +65,40 @@ export interface MBReleaseGroupWithReleases extends MBReleaseGroup {
   releases?: { id: string; status?: string; date?: string }[];
 }
 
+export interface MBRecordingSearchItem {
+  id: string; // mbid
+  title: string;
+  disambiguation?: string; // ej. 'live, 1972-06-27: Long Beach Arena'
+  length?: number; // milisegundos
+  "first-release-date"?: string; // 'YYYY' | 'YYYY-MM' | 'YYYY-MM-DD' | ausente
+  "artist-credit"?: MBArtistCreditItem[]; // requiere inc=artist-credits en la búsqueda
+  score?: number;
+}
+
+export interface MBRecordingSearchResponse {
+  recordings: MBRecordingSearchItem[];
+}
+
+/** Release-summary devuelta por el browse `/release?recording=` con `inc=release-groups`. */
+export interface MBReleaseWithReleaseGroup {
+  id: string; // mbid
+  title: string;
+  status?: string;
+  date?: string; // 'YYYY' | 'YYYY-MM' | 'YYYY-MM-DD' | ausente
+  "release-group"?: {
+    id: string; // mbid
+    title: string;
+    "primary-type"?: string;
+    "secondary-types"?: string[];
+  };
+}
+
+export interface MBReleaseBrowseResponse {
+  releases: MBReleaseWithReleaseGroup[];
+  /** Total de releases de la grabación (más allá de la página devuelta). */
+  "release-count"?: number;
+}
+
 export interface MBTrack {
   position: number;
   recording: { id: string; title: string; length?: number };

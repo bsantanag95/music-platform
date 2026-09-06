@@ -20,6 +20,8 @@ import type {
   MBReleaseGroupSearchResponse,
   MBReleaseGroupWithReleases,
   MBRelease,
+  MBRecordingSearchResponse,
+  MBReleaseBrowseResponse,
 } from "./types";
 
 const MB_BASE_URL = "https://musicbrainz.org/ws/2";
@@ -55,14 +57,18 @@ function requiredUserAgent(): string {
 const REQUEST_TIMEOUT_MS = 10_000;
 const MAX_ATTEMPTS = 3;
 
-// Caché TTL de RESPUESTAS DE BÚSQUEDA (solo searchArtist/searchReleaseGroup).
-// Cada re-render del servidor de /search (p. ej. cambio de idioma) repetía las
-// dos búsquedas, pagando cada vez la cola de rate limit + red. La misma
-// consulta dentro de la TTL se sirve desde memoria y las llamadas concurrentes
-// idénticas comparten el mismo request en vuelo. Solo búsqueda: los get/browse
-// de ingestas siguen siempre a MusicBrainz porque su respuesta alimenta datos
-// que queremos frescos al abrir una entidad. Mismo supuesto de proceso único
-// que la cola; fallidos no se cachean.
+// Caché TTL de RESPUESTAS DE BÚSQUEDA (searchArtist/searchReleaseGroup/
+// searchRecording) y del browse de apariciones de una grabación
+// (browseReleasesByRecording). Cada re-render del servidor de /search (p. ej.
+// cambio de idioma) repetía las búsquedas, pagando cada vez la cola de rate
+// limit + red. La misma consulta dentro de la TTL se sirve desde memoria y las
+// llamadas concurrentes idénticas comparten el mismo request en vuelo.
+// browseReleasesByRecording se cachea igual que una búsqueda porque alimenta la
+// sección contextual "álbumes que contienen «canción»" de /search: es dato
+// efímero de contexto, no ingesta. Los get/browse de ingestas siguen siempre a
+// MusicBrainz porque su respuesta alimenta datos que queremos frescos al abrir
+// una entidad. Mismo supuesto de proceso único que la cola; fallidos no se
+// cachean.
 const SEARCH_CACHE_TTL_MS = 10 * 60_000;
 const SEARCH_CACHE_MAX = 200;
 
@@ -162,6 +168,32 @@ export const musicbrainz = {
         query,
         limit: "25",
         inc: "artist-credits",
+      }),
+    );
+  },
+
+  /** Búsqueda de grabaciones por texto — solo candidatos, para resolver "artista + canción" hacia sus álbumes. */
+  searchRecording(query: string) {
+    return cachedSearch(`searchRecording|${query}`, () =>
+      mbFetch<MBRecordingSearchResponse>("/recording", {
+        query,
+        limit: "25",
+        inc: "artist-credits",
+      }),
+    );
+  },
+
+  /**
+   * Ediciones (releases) donde aparece una grabación, con su release-group
+   * embebido. Una sola página de 100: es contexto de búsqueda, no la fuente de
+   * verdad de las apariciones de la canción.
+   */
+  browseReleasesByRecording(recordingMbid: string) {
+    return cachedSearch(`browseReleasesByRecording|${recordingMbid}`, () =>
+      mbFetch<MBReleaseBrowseResponse>("/release", {
+        recording: recordingMbid,
+        limit: "100",
+        inc: "release-groups",
       }),
     );
   },

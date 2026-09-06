@@ -38,7 +38,7 @@ describe("GET /api/catalog/search", () => {
   });
 
   it("devuelve la lista de candidatos con homónimos preservados", async () => {
-    vi.mocked(searchService.searchCatalog).mockResolvedValue([poisonGlam, poisonThrash]);
+    vi.mocked(searchService.searchCatalog).mockResolvedValue({ results: [poisonGlam, poisonThrash] });
 
     const res = await GET(makeRequest("http://localhost/api/catalog/search?q=Poison"));
 
@@ -48,7 +48,7 @@ describe("GET /api/catalog/search", () => {
   });
 
   it("sin coincidencias es 200 con lista vacía, no 404", async () => {
-    vi.mocked(searchService.searchCatalog).mockResolvedValue([]);
+    vi.mocked(searchService.searchCatalog).mockResolvedValue({ results: [] });
 
     const res = await GET(makeRequest("http://localhost/api/catalog/search?q=zzzz"));
 
@@ -70,7 +70,7 @@ describe("GET /api/catalog/search", () => {
   });
 
   it("normaliza el texto antes de buscar", async () => {
-    vi.mocked(searchService.searchCatalog).mockResolvedValue([]);
+    vi.mocked(searchService.searchCatalog).mockResolvedValue({ results: [] });
 
     await GET(makeRequest("http://localhost/api/catalog/search?q=%20Pink%20Floyd%20"));
 
@@ -89,10 +89,40 @@ describe("GET /api/catalog/search", () => {
   });
 
   it("la degradación parcial (hubo resultados locales) es un 200 normal", async () => {
-    vi.mocked(searchService.searchCatalog).mockResolvedValue([poisonGlam]);
+    vi.mocked(searchService.searchCatalog).mockResolvedValue({ results: [poisonGlam] });
 
     const res = await GET(makeRequest("http://localhost/api/catalog/search?q=Poison"));
 
     expect(res.status).toBe(200);
+  });
+
+  it("propaga songContext cuando el servicio lo resuelve y lo omite cuando no", async () => {
+    const songContext = {
+      recordingId: "33333333-3333-4333-8333-333333333333",
+      mbid: "aaaaaaaa-0000-4000-8000-000000000003",
+      title: "Stairway to Heaven",
+      artistName: "Led Zeppelin",
+      albums: [
+        {
+          id: "44444444-4444-4444-8444-444444444444",
+          mbid: null,
+          title: "Led Zeppelin IV",
+          category: "studio" as const,
+          year: 1971,
+        },
+      ],
+    };
+    vi.mocked(searchService.searchCatalog).mockResolvedValueOnce({
+      results: [],
+      songContext,
+    });
+    const conContexto = await GET(
+      makeRequest("http://localhost/api/catalog/search?q=led%20zeppelin%20stairway%20to%20heaven"),
+    );
+    await expect(conContexto.json()).resolves.toEqual({ results: [], songContext });
+
+    vi.mocked(searchService.searchCatalog).mockResolvedValueOnce({ results: [] });
+    const sinContexto = await GET(makeRequest("http://localhost/api/catalog/search?q=Poison"));
+    await expect(sinContexto.json()).resolves.toEqual({ results: [] });
   });
 });

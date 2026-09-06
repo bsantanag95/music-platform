@@ -34,6 +34,13 @@ apunta a Fase 6), búsqueda de canciones (precondición: `findOrIngestRecording`
 de resultados y ranking de relevancia sofisticado (precondición: datos de uso reales de la
 beta).
 
+**Resuelto en parte — `add-recording-album-search`:** existe `findOrIngestRecording` (ingesta
+mínima de una grabación suelta: recording + créditos + stubs de álbumes, nunca tracks
+parciales) y `/search` resuelve "artista + canción" hacia **los álbumes que la contienen**
+como sección contextual (`songContext`); la canción no es resultado navegable. La pestaña
+**Canciones** sigue diferida: falta la decisión de producto sobre qué muestra la página de
+una canción abierta en frío.
+
 ## Fase 4 — Auth, ratings y comentarios
 
 Entregable: autenticación local de usuarios, valoración dual (estrellas + detallada) y comentarios funcionando sobre artista, álbum y canción. Es el núcleo social base y cierra el MVP definido en el PRD. El incremento posterior de Google OAuth/OIDC también está implementado y validado manualmente. El linking explícito de cuentas y el scrobbling de servicios de streaming permanecen fuera de esta fase.

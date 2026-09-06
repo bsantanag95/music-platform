@@ -104,3 +104,15 @@ export function normalizeReleaseDate(date: string | undefined): string | null {
 
   return date;
 }
+
+/**
+ * Año a partir de una fecha de MusicBrainz ('YYYY', 'YYYY-MM' o 'YYYY-MM-DD').
+ * A diferencia de `normalizeReleaseDate` (columna DATE, exige precisión
+ * completa), acá solo interesa el año para mostrarlo.
+ */
+export function yearFromMbDate(date: string | undefined | null): number | null {
+  const match = date
+    ? /^(\d{4})$|^\d{4}-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?$/.exec(date)
+    : null;
+  return match ? Number(date!.slice(0, 4)) : null;
+}

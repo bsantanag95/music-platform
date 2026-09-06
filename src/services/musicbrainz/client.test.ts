@@ -99,3 +99,49 @@ describe("caché de respuestas de búsqueda (client.ts)", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
+
+describe("búsqueda de grabaciones y apariciones (recording)", () => {
+  it("searchRecording pide /recording con query, limit e inc=artist-credits", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ recordings: [] }));
+
+    await musicbrainz.searchRecording("stairway to heaven");
+
+    const url = new URL(String(fetchMock.mock.calls[0]![0]));
+    expect(url.pathname).toBe("/ws/2/recording");
+    expect(url.searchParams.get("query")).toBe("stairway to heaven");
+    expect(url.searchParams.get("limit")).toBe("25");
+    expect(url.searchParams.get("inc")).toBe("artist-credits");
+  });
+
+  it("searchRecording cachea por su propia clave", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ recordings: [] }));
+
+    await musicbrainz.searchRecording("poison");
+    await musicbrainz.searchRecording("poison");
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("browseReleasesByRecording pide /release con recording, limit 100 e inc=release-groups", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ releases: [] }));
+
+    await musicbrainz.browseReleasesByRecording("rec-mbid-1");
+
+    const url = new URL(String(fetchMock.mock.calls[0]![0]));
+    expect(url.pathname).toBe("/ws/2/release");
+    expect(url.searchParams.get("recording")).toBe("rec-mbid-1");
+    expect(url.searchParams.get("limit")).toBe("100");
+    expect(url.searchParams.get("inc")).toBe("release-groups");
+  });
+
+  it("browseReleasesByRecording se cachea por mbid (contexto de búsqueda, no ingesta)", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ releases: [] }));
+
+    await musicbrainz.browseReleasesByRecording("rec-mbid-1");
+    await musicbrainz.browseReleasesByRecording("rec-mbid-1");
+    tickPastQueue();
+    await musicbrainz.browseReleasesByRecording("rec-mbid-2");
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});

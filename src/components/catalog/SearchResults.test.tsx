@@ -4,7 +4,7 @@ import type { AnchorHTMLAttributes, ReactNode } from "react";
 import { SearchResults } from "@/components/catalog/SearchResults";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
-import type { CatalogSearchResult } from "@/lib/api/schemas";
+import type { CatalogSearchResult, CatalogSongContext } from "@/lib/api/schemas";
 
 vi.mock("./LazyCoverImage", () => ({
   LazyCoverImage: ({ releaseGroupId }: { releaseGroupId: string }) => (
@@ -53,6 +53,28 @@ function albumResult(overrides: Partial<CatalogSearchResult> = {}): CatalogSearc
     ...overrides,
   };
 }
+
+function songContext(overrides: Partial<CatalogSongContext> = {}): CatalogSongContext {
+  return {
+    recordingId: "rec-1",
+    mbid: "rec-mbid-1",
+    title: "Stairway to Heaven",
+    artistName: "Led Zeppelin",
+    albums: [
+      {
+        id: "album-rg",
+        mbid: "rg-mbid",
+        title: "Led Zeppelin IV",
+        category: "studio",
+        year: 1971,
+      },
+    ],
+    ...overrides,
+  };
+}
+
+const songContextTitle = (song: string) =>
+  catalogEs.search.results.songContext.title.replace("{song}", song);
 
 describe("SearchResults", () => {
   it("muestra artistas y álbumes en la pestaña Todo", () => {
@@ -127,5 +149,44 @@ describe("SearchResults", () => {
     expect(
       screen.getByText(catalogEs.search.results.emptyTitle),
     ).toBeInTheDocument();
+  });
+
+  describe("contexto de canción (add-recording-album-search)", () => {
+    it("renderiza la sección con el título interpolado y enlaces a los álbumes", () => {
+      renderWithIntl(<SearchResults results={[artistResult()]} songContext={songContext()} />);
+
+      expect(screen.getByText(songContextTitle("Stairway to Heaven"))).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: songContextTitle("Stairway to Heaven") }));
+      const albumLink = screen.getByRole("link", { name: /Led Zeppelin IV/ });
+      expect(albumLink).toHaveAttribute("href", "/album/album-rg");
+      expect(screen.getByText(/1971/)).toBeInTheDocument();
+      expect(screen.getByTestId("cover-album-rg")).toBeInTheDocument();
+    });
+
+    it("no añade pestaña ni enlaza a la canción: la canción no es resultado navegable", () => {
+      renderWithIntl(<SearchResults results={[]} songContext={songContext()} />);
+
+      expect(screen.getAllByRole("tab")).toHaveLength(3);
+      expect(screen.queryByRole("link", { name: /Stairway to Heaven/ })).not.toBeInTheDocument();
+    });
+
+    it("con solo contexto de canción, 'Todo' no muestra el estado vacío", () => {
+      renderWithIntl(<SearchResults results={[]} songContext={songContext()} />);
+
+      expect(
+        screen.queryByText(catalogEs.search.results.emptyTitle),
+      ).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("tab", { name: catalogEs.search.results.tabArtists }));
+      expect(screen.getByText(catalogEs.search.results.emptyTitle)).toBeInTheDocument();
+    });
+
+    it("sin contexto de canción el comportamiento es idéntico al anterior", () => {
+      renderWithIntl(<SearchResults results={[albumResult()]} />);
+
+      expect(
+        screen.queryByText(songContextTitle("Stairway to Heaven")),
+      ).not.toBeInTheDocument();
+    });
   });
 });

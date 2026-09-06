@@ -14,7 +14,10 @@
       "tabArtists": "Artists",
       "tabAlbums": "Albums",
       "emptyTitle": "No matches",
-      "emptyDescription": "We couldn't find artists or albums for that search. Try another text."
+      "emptyDescription": "We couldn't find artists or albums for that search. Try another text.",
+      "songContext": {
+        "title": "Albums that contain “{song}”"
+      }
     }
   },
   "artist": {

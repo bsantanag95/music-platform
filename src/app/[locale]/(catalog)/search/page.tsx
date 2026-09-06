@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { searchCatalog } from "@/services/catalog/search-catalog";
-import type { CatalogSearchResult } from "@/services/catalog/search-catalog";
+import type { CatalogSearchResponse } from "@/services/catalog/search-catalog";
 import { SearchForm } from "@/components/catalog/SearchForm";
 import { SearchResults } from "@/components/catalog/SearchResults";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -13,7 +13,8 @@ interface SearchPageProps {
 // Server Component: la búsqueda es carga inicial de datos a partir de la URL
 // (patrón "cacheo bajo demanda" — ver openspec add-search-results-page). Se
 // resuelve en el servidor vía el mismo servicio del endpoint; la página no
-// ingiere nada, solo lista candidatos.
+// ingiere nada, solo lista candidatos y, si la consulta coincide con una
+// canción, su contexto de álbumes (openspec add-recording-album-search).
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const t = await getTranslations("catalog");
   const tErrors = await getTranslations("errors");
@@ -21,11 +22,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const { q } = await searchParams;
   const query = q?.trim();
 
-  let results: CatalogSearchResult[] | null = null;
+  let response: CatalogSearchResponse | null = null;
   let failed = false;
   if (query) {
     try {
-      results = await searchCatalog(query);
+      response = await searchCatalog(query);
     } catch {
       // Fallo total de MusicBrainz sin datos locales: "no se pudo buscar"
       // (recuperable), distinto de "sin coincidencias" (lista vacía).
@@ -52,7 +53,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             </Link>
           </div>
         ) : (
-          <SearchResults results={results ?? []} />
+          <SearchResults results={response?.results ?? []} songContext={response?.songContext} />
         ))}
     </main>
   );

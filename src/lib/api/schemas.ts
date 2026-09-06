@@ -65,8 +65,30 @@ export const CatalogSearchResultSchema = z.object({
 });
 export type CatalogSearchResult = z.infer<typeof CatalogSearchResultSchema>;
 
+// Espejo runtime del contexto de canción (openspec: add-recording-album-search):
+// clave OPCIONAL de GET /api/catalog/search. Los clientes la tratan como dato
+// adicional no esencial — puede faltar en cualquier momento.
+export const CatalogSongContextAlbumSchema = z.object({
+  id: z.uuid(),
+  mbid: z.uuid().nullable(),
+  title: z.string(),
+  category: ReleaseGroupCategorySchema,
+  year: z.number().int().nullable(),
+});
+export type CatalogSongContextAlbum = z.infer<typeof CatalogSongContextAlbumSchema>;
+
+export const CatalogSongContextSchema = z.object({
+  recordingId: z.uuid(),
+  mbid: z.uuid().nullable(),
+  title: z.string(),
+  artistName: z.string().nullable(),
+  albums: z.array(CatalogSongContextAlbumSchema),
+});
+export type CatalogSongContext = z.infer<typeof CatalogSongContextSchema>;
+
 export const CatalogSearchResponseSchema = z.object({
   results: z.array(CatalogSearchResultSchema),
+  songContext: CatalogSongContextSchema.optional(),
 });
 export type CatalogSearchResponse = z.infer<typeof CatalogSearchResponseSchema>;
 
