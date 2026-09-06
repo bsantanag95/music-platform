@@ -46,6 +46,28 @@ disambiguation — la ambigüedad la resuelve el usuario, no `artists[0]`. Búsq
 canciones, autocompletado y paginación: diferidos (ver el roadmap y
 `openspec/changes/add-search-results-page/design.md` → *Trabajo futuro diferido*).
 
+**Tolerancia a errores de tipeo — limitación conocida (aceptada por ahora).** La base
+local coincide por *substring exacto*, sin distinguir mayúsculas (`ILIKE '%texto%'`): no
+tolera puntuación, apóstrofes ni palabras cambiadas — `Guns and Roses` no encuentra
+`Guns N' Roses` en local, ni `LA Guns` a `L.A. Guns`. Toda la tolerancia a errores viene
+de la búsqueda en vivo de MusicBrainz (índice full-text), que está limitada a 1 req/seg,
+cuyo ranking varía entre llamadas y se cachea 10 minutos por texto exacto (los fallos no se
+cachean). Consecuencias observables:
+
+- Una misma búsqueda mal escrita puede no devolver nada una vez y funcionar al reintentar,
+  según haya respondido MusicBrainz esa vez.
+- Un artista con discografía ya cacheada localmente **no** muestra la marca "en tu catálogo"
+  ni sube en el orden si se llega a él por un nombre mal escrito: entra vía MusicBrainz, en
+  el grupo "solo-MB".
+- Con MusicBrainz caído, el catálogo propio no es buscable por variantes del nombre.
+
+Se acepta a propósito en esta etapa: con catálogo chico el matching difuso local casi no
+dispararía (el artista todavía no está en la base) y el umbral de similitud se calibraría a
+ciegas, sin datos de uso. El camino cuando se decida abordarlo —columna normalizada
+(`unaccent` + minúsculas + sin puntuación) + índice `pg_trgm`, con el score de similitud
+como desempate **dentro** del orden determinista actual, en su propio cambio de OpenSpec—
+se revisa antes de una exposición pública o cuando el catálogo tenga volumen real.
+
 ## 2. Perfil de artista
 
 Foto, nombre, biografía breve (si existe), y discografía agrupada en cuatro categorías
