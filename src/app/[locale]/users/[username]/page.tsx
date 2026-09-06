@@ -14,7 +14,7 @@ import { BlockButton } from "@/components/social/BlockButton";
 import { DiaryList } from "@/components/diary/DiaryList";
 import { FavoritesWall } from "@/components/favorites/FavoritesWall";
 import { ListsList } from "@/components/lists/ListsList";
-import { CollectionList } from "@/components/collection/CollectionList";
+import { CollectionShelf } from "@/components/collection/CollectionShelf";
 
 interface UserProfilePageProps {
   params: Promise<{ username: string }>;
@@ -48,16 +48,8 @@ async function ProfileCollection({
   username: string;
   viewerId: string | null;
 }) {
-  const t = await getTranslations("collection");
   const initial = await listProfileCollection(username, viewerId, 1, 20);
-  return (
-    <CollectionList
-      initial={initial}
-      readOnly
-      username={username}
-      empty={{ title: t("profileEmptyTitle"), description: t("profileEmptyDescription") }}
-    />
-  );
+  return <CollectionShelf initial={initial} readOnly username={username} />;
 }
 
 async function ProfileLists({ username, viewerId }: { username: string; viewerId: string | null }) {

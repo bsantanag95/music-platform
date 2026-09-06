@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   addEntry,
   updateEntry,
+  updateEntriesAudienceBulk,
   removeEntry,
   listOwnCollection,
   listProfileCollection,
@@ -49,6 +50,14 @@ function joinWherePaged(rows: unknown[]) {
   const limit = vi.fn(() => ({ offset }));
   const orderBy = vi.fn(() => ({ limit }));
   const where = vi.fn(() => ({ orderBy }));
+  const chain = { innerJoin: vi.fn(() => chain), where };
+  return { from: vi.fn(() => chain) };
+}
+
+// select().from().innerJoin().where().groupBy()  → conteo por formato
+function joinWhereGroupBy(rows: unknown[]) {
+  const groupBy = vi.fn().mockResolvedValue(rows);
+  const where = vi.fn(() => ({ groupBy }));
   const chain = { innerJoin: vi.fn(() => chain), where };
   return { from: vi.fn(() => chain) };
 }
@@ -184,20 +193,93 @@ describe("servicio de colección física", () => {
     const chain = { innerJoin: vi.fn(() => chain), where };
     mocks.db.select
       .mockReturnValueOnce({ from: vi.fn(() => chain) })
+      .mockReturnValueOnce(joinWhereGroupBy([{ format: "vinyl", count: 21 }]))
       .mockReturnValueOnce(joinWhereOrderBy([]));
 
     const result = await listOwnCollection(userId, 1, 20, { format: "vinyl" });
     expect(result.entries).toHaveLength(20);
     expect(result.hasNext).toBe(true);
+    expect(result.counts.vinyl).toBe(21);
     // El filtro de formato se tradujo a una condición en el where.
     expect(where).toHaveBeenCalled();
   });
 
+  it("listOwnCollection devuelve el conteo por formato aunque el listado esté filtrado", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(joinWherePaged([entryRow]))
+      .mockReturnValueOnce(
+        joinWhereGroupBy([
+          { format: "vinyl", count: 4 },
+          { format: "cd", count: 2 },
+          { format: "mixtape", count: 1 },
+        ]),
+      )
+      .mockReturnValueOnce(joinWhereOrderBy([]));
+
+    const result = await listOwnCollection(userId, 1, 20, { format: "vinyl" });
+    // 'mixtape' cae en 'other'; los formatos sin filas quedan en 0.
+    expect(result.counts).toEqual({ vinyl: 4, cd: 2, cassette: 0, other: 1 });
+  });
+
+  it("listOwnCollection acepta búsqueda y orden", async () => {
+    const paged = joinWherePaged([entryRow]);
+    mocks.db.select
+      .mockReturnValueOnce(paged)
+      .mockReturnValueOnce(joinWhereGroupBy([{ format: "vinyl", count: 1 }]))
+      .mockReturnValueOnce(joinWhereOrderBy([]));
+
+    const result = await listOwnCollection(userId, 1, 20, { q: "moon", sort: "artist" });
+    expect(result.entries).toHaveLength(1);
+  });
+
+  it("listOwnCollection rechaza un orden inválido", async () => {
+    await expect(
+      // @ts-expect-error probamos un valor fuera del enum
+      listOwnCollection(userId, 1, 20, { sort: "cheapest" }),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+  });
+
   it("listOwnCollection vacía no consulta artistas", async () => {
-    mocks.db.select.mockReturnValueOnce(joinWherePaged([]));
+    mocks.db.select
+      .mockReturnValueOnce(joinWherePaged([]))
+      .mockReturnValueOnce(joinWhereGroupBy([]));
     const result = await listOwnCollection(userId);
     expect(result.entries).toEqual([]);
-    expect(mocks.db.select).toHaveBeenCalledTimes(1);
+    expect(result.counts).toEqual({ vinyl: 0, cd: 0, cassette: 0, other: 0 });
+    // paginado + conteo, sin la consulta de artistas.
+    expect(mocks.db.select).toHaveBeenCalledTimes(2);
+  });
+
+  it("updateEntriesAudienceBulk actualiza las entradas propias y devuelve sus ids", async () => {
+    mocks.db.update.mockReturnValue({
+      set: vi.fn(() => ({
+        where: vi.fn(() => ({
+          returning: vi.fn().mockResolvedValue([{ id: "e1" }, { id: "e2" }]),
+        })),
+      })),
+    });
+    await expect(
+      updateEntriesAudienceBulk(userId, ["e1", "e2", "ajena"], "public"),
+    ).resolves.toEqual(["e1", "e2"]);
+  });
+
+  it("updateEntriesAudienceBulk con solo ids ajenos responde COLLECTION_ENTRY_NOT_FOUND", async () => {
+    mocks.db.update.mockReturnValue({
+      set: vi.fn(() => ({ where: vi.fn(() => ({ returning: vi.fn().mockResolvedValue([]) })) })),
+    });
+    await expect(
+      updateEntriesAudienceBulk(userId, ["ajena"], "private"),
+    ).rejects.toMatchObject({ code: "COLLECTION_ENTRY_NOT_FOUND", status: 404 });
+  });
+
+  it("updateEntriesAudienceBulk rechaza un lote vacío o demasiado grande", async () => {
+    await expect(updateEntriesAudienceBulk(userId, [], "public")).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+    });
+    const many = Array.from({ length: 51 }, (_, i) => `id-${i}`);
+    await expect(updateEntriesAudienceBulk(userId, many, "public")).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+    });
   });
 
   it("listProfileCollection devuelve vacío cuando no hay permiso (perfil privado sin relación)", async () => {
@@ -232,6 +314,7 @@ describe("servicio de colección física", () => {
     });
     mocks.db.select
       .mockReturnValueOnce(joinWherePaged([entryRow]))
+      .mockReturnValueOnce(joinWhereGroupBy([{ format: "vinyl", count: 1 }]))
       .mockReturnValueOnce(joinWhereOrderBy([{ releaseGroupId: albumId, position: 0, artistId: "a1", artistName: "Pink Floyd" }]));
 
     const result = await listProfileCollection("otro", userId);
@@ -248,6 +331,7 @@ describe("servicio de colección física", () => {
     });
     mocks.db.select
       .mockReturnValueOnce(joinWherePaged([entryRow]))
+      .mockReturnValueOnce(joinWhereGroupBy([{ format: "vinyl", count: 1 }]))
       .mockReturnValueOnce(joinWhereOrderBy([]));
 
     const result = await listProfileCollection("otro", userId);

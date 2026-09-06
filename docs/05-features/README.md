@@ -12,7 +12,7 @@ implementación.
 | [`ratings-and-reviews.md`](./ratings-and-reviews.md) | 4 | ✅ Implementado y validado |
 | [`listening-diary-and-ratings.md`](./listening-diary-and-ratings.md) | 4-5 | 🟡 Propuesta de diseño |
 | [`lists-and-favorites.md`](./lists-and-favorites.md) | 5 | ✅ Implementado (`add-favorites-and-lists`; sección `/me/lists` en `rework-lists-section`; detalle con 3 modos de vista + gestión interna de ítems + vista de lectura ajena en `rework-list-detail`; sección `/me/favorites` como muro por tipo con filtros y gestión de audiencia en lote en `rework-favorites-section`) · ⏳ listas seguidas en el feed → `add-followed-lists-to-feed` |
-| [`physical-collection.md`](./physical-collection.md) | 5 | ✅ Implementado (cambio `add-physical-collection`) |
+| [`physical-collection.md`](./physical-collection.md) | 5 | ✅ Implementado (`add-physical-collection`; estantería `/me/collection` con 3 modos de vista + toolbar de búsqueda/orden/agrupación + edición en línea + cambio de audiencia en lote + vista de lectura ajena en `rework-collection-section`) |
 | [`activity-feed.md`](./activity-feed.md) | 5 | ✅ Implementado (escuchas + favoritos + listas + ratings + comentarios) |
 | [`home.md`](./home.md) | 5 | ✅ Implementado (cambio `add-home-page`) |
 

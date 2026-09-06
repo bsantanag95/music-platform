@@ -2,10 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { parsePagination } from "@/lib/api/pagination";
 import { ApiError } from "@/lib/api/errors";
-import { CreateCollectionEntryRequestSchema } from "@/lib/api/schemas";
+import {
+  CollectionBulkAudienceRequestSchema,
+  CreateCollectionEntryRequestSchema,
+} from "@/lib/api/schemas";
 import { parseCollectionFilters } from "@/lib/api/collection-filters";
 import { requireUser } from "@/services/auth/authorization";
-import { addEntry, listOwnCollection } from "@/services/collection/collection";
+import {
+  addEntry,
+  listOwnCollection,
+  updateEntriesAudienceBulk,
+} from "@/services/collection/collection";
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -30,4 +37,21 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     audience: parsed.data.audience,
   });
   return NextResponse.json({ entry }, { status: 201 });
+});
+
+// Cambio de audiencia en lote de entradas propias (1..50 ids). El PATCH por
+// entrada individual sigue en /api/me/collection/{entryId}.
+export const PATCH = withErrorHandling(async (request: NextRequest) => {
+  const body: unknown = await request.json().catch(() => null);
+  const parsed = CollectionBulkAudienceRequestSchema.safeParse(body);
+  if (!parsed.success) {
+    throw new ApiError("VALIDATION_ERROR", 400, "La selección de entradas no es válida");
+  }
+  const user = await requireUser();
+  const updatedIds = await updateEntriesAudienceBulk(
+    user.id,
+    parsed.data.ids,
+    parsed.data.audience,
+  );
+  return NextResponse.json({ updatedIds });
 });

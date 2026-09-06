@@ -871,13 +871,52 @@ export type UpdateCollectionEntryRequest = z.infer<typeof UpdateCollectionEntryR
 export const CollectionEntryResponseSchema = z.object({ entry: CollectionEntrySchema });
 export type CollectionEntryResponse = z.infer<typeof CollectionEntryResponseSchema>;
 
+// Orden y agrupación del listado de colección, aplicados en el servidor sobre el
+// conjunto completo (mismo patrón que /me/favorites y /me/lists). `group` solo
+// afecta al ORDER BY: el cliente secciona la lista plana que llega.
+export const COLLECTION_SORTS = ["recent", "alpha", "artist", "format"] as const;
+export const CollectionSortSchema = z.enum(COLLECTION_SORTS);
+export type CollectionSort = z.infer<typeof CollectionSortSchema>;
+
+export const COLLECTION_GROUPINGS = ["none", "format", "artist"] as const;
+export const CollectionGroupingSchema = z.enum(COLLECTION_GROUPINGS);
+export type CollectionGrouping = z.infer<typeof CollectionGroupingSchema>;
+
+// Conteo de entradas propias por formato, para el encabezado-retrato. Se calcula
+// sobre el conjunto tras aplicar `q` y `attribute`, pero ignorando el filtro de
+// formato, de modo que el encabezado muestre siempre la distribución completa.
+export const CollectionCountsSchema = z.object({
+  vinyl: z.number().int().nonnegative(),
+  cd: z.number().int().nonnegative(),
+  cassette: z.number().int().nonnegative(),
+  other: z.number().int().nonnegative(),
+});
+export type CollectionCounts = z.infer<typeof CollectionCountsSchema>;
+
 export const CollectionListResponseSchema = z.object({
   entries: z.array(CollectionEntrySchema),
   page: z.number().int(),
   pageSize: z.number().int(),
   hasNext: z.boolean(),
+  counts: CollectionCountsSchema,
 });
 export type CollectionListResponse = z.infer<typeof CollectionListResponseSchema>;
+
+// Cambio de audiencia en lote: `{ ids }` (1..50) + audiencia destino, sobre el
+// endpoint PATCH /api/me/collection (nivel colección). El tope acota la request
+// y el rollback optimista del cliente.
+export const CollectionBulkAudienceRequestSchema = z.object({
+  ids: z.array(z.uuid()).min(1).max(50),
+  audience: DiaryAudienceSchema,
+});
+export type CollectionBulkAudienceRequest = z.infer<typeof CollectionBulkAudienceRequestSchema>;
+
+// Respuesta del cambio en lote: los ids de las entradas propias efectivamente
+// actualizadas (las ajenas o inexistentes del conjunto se ignoran).
+export const CollectionAudienceBulkResponseSchema = z.object({
+  updatedIds: z.array(z.uuid()),
+});
+export type CollectionAudienceBulkResponse = z.infer<typeof CollectionAudienceBulkResponseSchema>;
 
 export const CollectionEntriesResponseSchema = z.object({
   entries: z.array(CollectionEntrySchema),

@@ -21,9 +21,28 @@ export interface CollectionEntry {
   };
 }
 
+export const COLLECTION_SORTS = ["recent", "alpha", "artist", "format"] as const;
+export type CollectionSort = (typeof COLLECTION_SORTS)[number];
+
+export const COLLECTION_GROUPINGS = ["none", "format", "artist"] as const;
+export type CollectionGrouping = (typeof COLLECTION_GROUPINGS)[number];
+
 export interface CollectionFilters {
   format?: CollectionFormat;
   attribute?: EditionAttribute;
+  /** Búsqueda parcial sobre el título del álbum y el nombre del artista acreditado. */
+  q?: string;
+  /** Orden del listado. Default `recent`. */
+  sort?: CollectionSort;
+  /** Clave de agrupación; solo afecta al ORDER BY. Default `none`. */
+  group?: CollectionGrouping;
+}
+
+export interface CollectionCounts {
+  vinyl: number;
+  cd: number;
+  cassette: number;
+  other: number;
 }
 
 export interface NewCollectionEntry {
@@ -46,4 +65,5 @@ export interface CollectionPage {
   page: number;
   pageSize: number;
   hasNext: boolean;
+  counts: CollectionCounts;
 }

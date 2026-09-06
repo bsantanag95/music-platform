@@ -34,6 +34,23 @@ describe("GET /api/users/[username]/collection", () => {
     expect(mocks.listProfileCollection).toHaveBeenCalledWith("nick", null, 1, 20, {});
   });
 
+  it("propaga búsqueda y orden al servicio", async () => {
+    mocks.resolveSession.mockResolvedValue(null);
+    mocks.listProfileCollection.mockResolvedValue({
+      entries: [],
+      page: 1,
+      pageSize: 20,
+      hasNext: false,
+      counts: { vinyl: 0, cd: 0, cassette: 0, other: 0 },
+    });
+    await GET(req("/api/users/nick/collection?q=moon&sort=artist&group=format"), params("nick"));
+    expect(mocks.listProfileCollection).toHaveBeenCalledWith("nick", null, 1, 20, {
+      q: "moon",
+      sort: "artist",
+      group: "format",
+    });
+  });
+
   it("username inexistente propaga 404 USER_NOT_FOUND", async () => {
     mocks.resolveSession.mockResolvedValue(null);
     mocks.listProfileCollection.mockRejectedValue(new ApiError("USER_NOT_FOUND", 404, "x"));

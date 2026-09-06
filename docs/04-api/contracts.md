@@ -658,7 +658,7 @@ en orden cronológico descendente (sin recomendación algorítmica).
 **200 OK:** `{ lists: [{ ..., owner, saved, following }], page, pageSize, hasNext }`.
 **400** con `VALIDATION_ERROR` si la paginación es inválida. **401** con `AUTH_REQUIRED` sin sesión.
 
-## Colección física (Fase 5.5, cambio `add-physical-collection`)
+## Colección física (Fase 5.5, cambios `add-physical-collection` y `rework-collection-section`)
 
 Declaración de coleccionismo físico por álbum (`release-group`). Cada entrada tiene un `format`
 (`vinyl`/`cd`/`cassette`/`other`), cero o más `attributes` de un vocabulario cerrado, una `note`
@@ -679,13 +679,29 @@ Crea una entrada. **Body:** `{ releaseGroupId, format, attributes?, note?, audie
 **201 OK:** `{ entry }`. **400** con `VALIDATION_ERROR` si el `format` o un `attribute` está fuera
 del vocabulario, o la `note` supera 140. **404** con `ALBUM_NOT_FOUND` si el álbum no existe.
 
-### `GET /api/me/collection?page=&pageSize=&format=&attribute=`
+### `GET /api/me/collection?page=&pageSize=&format=&attribute=&q=&sort=&group=`
 
-Colección propia paginada, orden cronológico descendente. `format` y `attribute` filtran de forma
-opcional.
+Colección propia paginada. Parámetros opcionales, combinables y aplicados en servidor sobre el
+conjunto completo (aditivo en `rework-collection-section`):
 
-**200 OK:** `{ entries: [...], page, pageSize, hasNext }`. **400** con `VALIDATION_ERROR` si la
-paginación o un filtro no son válidos.
+- `format`, `attribute` — filtran por un valor cada uno.
+- `q` — búsqueda parcial sin distinguir mayúsculas sobre el **título del álbum y el nombre del
+  artista acreditado** (a diferencia de listas/favoritos, que solo buscan por título).
+- `sort` — `recent` (default) · `alpha` (título) · `artist` · `format`.
+- `group` — `none` (default) · `format` · `artist`. Solo afecta al orden; el cliente secciona.
+
+**200 OK:** `{ entries: [...], page, pageSize, hasNext, counts: { vinyl, cd, cassette, other } }`.
+`counts` se calcula tras aplicar `q` y `attribute` pero **ignorando** `format`, de modo que el
+encabezado siempre muestre la distribución completa entre formatos. **400** con `VALIDATION_ERROR`
+si la paginación, un filtro, el orden o la agrupación no son válidos.
+
+### `PATCH /api/me/collection`
+
+Cambio de audiencia en lote de entradas propias (aditivo en `rework-collection-section`). **Body:**
+`{ ids: string[] (1..50), audience: "private"|"followers"|"public" }`. Idempotente; los ids ajenos
+o inexistentes del conjunto se ignoran. **200 OK:** `{ updatedIds: [...] }`. **400** con
+`VALIDATION_ERROR` si el lote está vacío o supera 50. **404** con `COLLECTION_ENTRY_NOT_FOUND` si
+ningún id corresponde a una entrada propia.
 
 ### `PATCH /api/me/collection/{entryId}`
 
@@ -699,9 +715,11 @@ obligatorio. `note: null` limpia la nota.
 
 Borra una entrada propia. **204.** **404** con `COLLECTION_ENTRY_NOT_FOUND`.
 
-### `GET /api/users/[username]/collection?page=&pageSize=&format=&attribute=`
+### `GET /api/users/[username]/collection?page=&pageSize=&format=&attribute=&q=&sort=&group=`
 
 Colección de un usuario visible para un lector. Sesión opcional. Aplica la matriz de visibilidad
-por entrada; sin permiso devuelve lista vacía sin revelar si el usuario tiene colección.
+por entrada; sin permiso devuelve lista vacía sin revelar si el usuario tiene colección. Acepta los
+mismos parámetros opcionales que la lectura propia.
 
-**200 OK:** `{ entries: [...], page, pageSize, hasNext }`. **404** con `USER_NOT_FOUND`.
+**200 OK:** `{ entries: [...], page, pageSize, hasNext, counts: { vinyl, cd, cassette, other } }`.
+**404** con `USER_NOT_FOUND`.

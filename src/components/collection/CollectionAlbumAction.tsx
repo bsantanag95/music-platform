@@ -1,14 +1,17 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useId, useState } from "react";
+import { useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { addCollectionEntry, removeCollectionEntry } from "@/lib/api/collection";
 import { ApiError } from "@/lib/api/client";
-import { COLLECTION_FORMATS, EDITION_ATTRIBUTES } from "@/services/collection/vocabulary";
-import { COLLECTION_NOTE_MAX, type CollectionEntry } from "@/lib/api/schemas";
-import type { CollectionFormat, EditionAttribute } from "@/services/collection/vocabulary";
+import { type CollectionEntry } from "@/lib/api/schemas";
+import {
+  CollectionEntryForm,
+  EMPTY_ENTRY_FORM,
+  type CollectionEntryFormValue,
+} from "./CollectionEntryForm";
 
 interface CollectionAlbumActionProps {
   releaseGroupId: string;
@@ -28,13 +31,10 @@ export function CollectionAlbumAction({
   const t = useTranslations("collection");
   const [entries, setEntries] = useState<CollectionEntry[]>(initialEntries);
   const [open, setOpen] = useState(false);
-  const [format, setFormat] = useState<CollectionFormat>("vinyl");
-  const [attributes, setAttributes] = useState<EditionAttribute[]>([]);
-  const [note, setNote] = useState("");
+  const [form, setForm] = useState<CollectionEntryFormValue>(EMPTY_ENTRY_FORM);
   const [busy, setBusy] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
-  const formId = useId();
 
   if (!authenticated) {
     return (
@@ -47,20 +47,6 @@ export function CollectionAlbumAction({
     );
   }
 
-  const toggleAttribute = (attribute: EditionAttribute) => {
-    setAttributes((current) =>
-      current.includes(attribute)
-        ? current.filter((value) => value !== attribute)
-        : [...current, attribute],
-    );
-  };
-
-  const resetForm = () => {
-    setFormat("vinyl");
-    setAttributes([]);
-    setNote("");
-  };
-
   const handleAdd = async () => {
     setBusy(true);
     setErrorCode(null);
@@ -68,13 +54,13 @@ export function CollectionAlbumAction({
     try {
       const entry = await addCollectionEntry({
         releaseGroupId,
-        format,
-        attributes,
-        note: note.trim() === "" ? null : note.trim(),
+        format: form.format,
+        attributes: form.attributes,
+        note: form.note.trim() === "" ? null : form.note.trim(),
       });
       setEntries((current) => [entry, ...current]);
       setStatus(t("added", { format: t(`format.${entry.format}`) }));
-      resetForm();
+      setForm(EMPTY_ENTRY_FORM);
       setOpen(false);
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
@@ -137,58 +123,7 @@ export function CollectionAlbumAction({
 
       {open && (
         <div className="flex w-full flex-col gap-3 rounded border border-ink-border bg-ink-surface p-3">
-          <label className="flex flex-col gap-1 font-data text-xs text-paper-muted">
-            {t("formatLabel")}
-            <select
-              value={format}
-              onChange={(event) => setFormat(event.target.value as CollectionFormat)}
-              className="rounded border border-ink-border bg-ink px-2 py-1.5 font-data text-sm text-paper"
-            >
-              {COLLECTION_FORMATS.map((value) => (
-                <option key={value} value={value}>
-                  {t(`format.${value}`)}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <fieldset className="flex flex-col gap-1">
-            <legend className="font-data text-xs text-paper-muted">{t("attributesLabel")}</legend>
-            <div className="flex flex-wrap gap-1.5">
-              {EDITION_ATTRIBUTES.map((attribute) => (
-                <label
-                  key={attribute}
-                  className={`cursor-pointer rounded border px-2 py-1 font-data text-xs transition-colors ${
-                    attributes.includes(attribute)
-                      ? "border-amber bg-amber/10 text-amber"
-                      : "border-ink-border text-paper-muted hover:text-paper"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    className="sr-only"
-                    checked={attributes.includes(attribute)}
-                    onChange={() => toggleAttribute(attribute)}
-                  />
-                  {t(`attribute.${attribute}`)}
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <label className="flex flex-col gap-1 font-data text-xs text-paper-muted" htmlFor={formId}>
-            {t("noteLabel")}
-            <input
-              id={formId}
-              type="text"
-              value={note}
-              maxLength={COLLECTION_NOTE_MAX}
-              onChange={(event) => setNote(event.target.value)}
-              placeholder={t("notePlaceholder")}
-              className="rounded border border-ink-border bg-ink px-2 py-1.5 font-data text-sm text-paper"
-            />
-          </label>
-
+          <CollectionEntryForm value={form} onChange={setForm} disabled={busy} />
           <Button variant="primary" disabled={busy} onClick={() => void handleAdd()}>
             {busy ? t("saving") : t("confirmAdd")}
           </Button>

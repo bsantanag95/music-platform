@@ -1,22 +1,27 @@
-import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, collectionEntry, credit, releaseGroup } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { audiencesForProfile } from "@/services/social/visibility";
 import type { Audience } from "@/services/social/types";
 import type {
+  CollectionCounts,
   CollectionEntry,
   CollectionEntryChanges,
   CollectionFilters,
+  CollectionGrouping,
   CollectionPage,
+  CollectionSort,
   NewCollectionEntry,
 } from "./types";
+import { COLLECTION_GROUPINGS, COLLECTION_SORTS } from "./types";
 import { normalizeAttributes } from "./vocabulary";
 import type { CollectionFormat, EditionAttribute } from "./vocabulary";
 
 export type { CollectionEntry } from "./types";
 
 const MAX_PAGE_SIZE = 50;
+const MAX_BULK_IDS = 50;
 
 interface EntryRow {
   id: string;
@@ -31,22 +36,97 @@ interface EntryRow {
   albumCover: string | null;
 }
 
+// Nombre del artista principal acreditado del álbum de una entrada. Subquery
+// escalar: no multiplica filas aunque haya varios créditos primarios (toma el de
+// menor `position`). Se usa para el buscador `q` y para ordenar / agrupar por
+// artista. Para la serialización se sigue usando `primaryArtistsFor` (que además
+// resuelve el id del artista para el enlace).
+const PRIMARY_ARTIST_NAME = sql<string | null>`(
+  SELECT a.name FROM credit a_c
+  JOIN artist a ON a.id = a_c.artist_id
+  WHERE a_c.release_group_id = ${collectionEntry.releaseGroupId}
+    AND a_c.role = 'primary'
+    AND a_c.recording_id IS NULL
+  ORDER BY a_c.position
+  LIMIT 1
+)`;
+
+// Rango fijo de formato para ordenar / agrupar: vinyl < cd < cassette < other.
+const FORMAT_RANK = sql`case ${collectionEntry.format}
+  when 'vinyl' then 0 when 'cd' then 1 when 'cassette' then 2 else 3 end`;
+
 function assertPagination(page: number, pageSize: number) {
-  if (!Number.isInteger(page) || page < 1 || !Number.isInteger(pageSize) || pageSize < 1 || pageSize > MAX_PAGE_SIZE) {
+  if (
+    !Number.isInteger(page) ||
+    page < 1 ||
+    !Number.isInteger(pageSize) ||
+    pageSize < 1 ||
+    pageSize > MAX_PAGE_SIZE
+  ) {
     throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
   }
 }
 
-function filterConditions(filters: CollectionFilters) {
-  const conditions = [];
-  if (filters.format) {
-    conditions.push(eq(collectionEntry.format, filters.format));
+function normalizeSortGroup(filters: CollectionFilters): {
+  sort: CollectionSort;
+  group: CollectionGrouping;
+} {
+  const sort = filters.sort ?? "recent";
+  const group = filters.group ?? "none";
+  if (!COLLECTION_SORTS.includes(sort)) {
+    throw new ApiError("VALIDATION_ERROR", 400, "El orden no es válido");
+  }
+  if (!COLLECTION_GROUPINGS.includes(group)) {
+    throw new ApiError("VALIDATION_ERROR", 400, "La agrupación no es válida");
+  }
+  return { sort, group };
+}
+
+/** Condiciones que acotan tanto el listado como el conteo (userId + `q` + atributo). */
+function scopeConditions(userId: string, filters: CollectionFilters): SQL[] {
+  const conditions: SQL[] = [eq(collectionEntry.userId, userId)];
+  const q = filters.q?.trim();
+  if (q) {
+    const pattern = `%${q}%`;
+    conditions.push(
+      sql`(${releaseGroup.title} ilike ${pattern} OR ${PRIMARY_ARTIST_NAME} ilike ${pattern})`,
+    );
   }
   if (filters.attribute) {
-    // Contención de arrays: la entrada tiene el atributo pedido.
     conditions.push(sql`${collectionEntry.attributes} @> ARRAY[${filters.attribute}]::text[]`);
   }
   return conditions;
+}
+
+/** El filtro de formato solo entra en el listado, nunca en el conteo por formato. */
+function formatCondition(filters: CollectionFilters): SQL[] {
+  return filters.format ? [eq(collectionEntry.format, filters.format)] : [];
+}
+
+function orderClauses(sort: CollectionSort, group: CollectionGrouping): SQL[] {
+  const artistOrder = sql`lower(${PRIMARY_ARTIST_NAME})`;
+  const sortOrder: SQL[] = (() => {
+    switch (sort) {
+      case "alpha":
+        return [asc(sql`lower(${releaseGroup.title})`), desc(collectionEntry.id)];
+      case "artist":
+        return [asc(artistOrder), desc(collectionEntry.id)];
+      case "format":
+        return [asc(FORMAT_RANK), desc(collectionEntry.createdAt), desc(collectionEntry.id)];
+      default:
+        return [desc(collectionEntry.createdAt), desc(collectionEntry.id)];
+    }
+  })();
+
+  // Prefijo de agrupación; se omite si el `sort` ya empieza por esa misma clave.
+  const prefix: SQL[] =
+    group === "format" && sort !== "format"
+      ? [asc(FORMAT_RANK)]
+      : group === "artist" && sort !== "artist"
+        ? [asc(artistOrder)]
+        : [];
+
+  return [...prefix, ...sortOrder];
 }
 
 /** Artista principal de cada álbum, en una sola consulta por lote. */
@@ -121,6 +201,31 @@ const entrySelection = {
   albumCover: releaseGroup.coverThumbUrl,
 } as const;
 
+const EMPTY_COUNTS: CollectionCounts = { vinyl: 0, cd: 0, cassette: 0, other: 0 };
+
+/** Conteo de entradas por formato sobre `conditions` (userId + `q` + atributo, nunca formato). */
+async function collectionCounts(conditions: SQL[]): Promise<CollectionCounts> {
+  const rows = await db
+    .select({
+      format: collectionEntry.format,
+      count: sql<number>`count(*)`.mapWith(Number),
+    })
+    .from(collectionEntry)
+    .innerJoin(releaseGroup, eq(collectionEntry.releaseGroupId, releaseGroup.id))
+    .where(and(...conditions))
+    .groupBy(collectionEntry.format);
+
+  const counts: CollectionCounts = { ...EMPTY_COUNTS };
+  for (const row of rows) {
+    if (row.format === "vinyl" || row.format === "cd" || row.format === "cassette") {
+      counts[row.format] = row.count;
+    } else {
+      counts.other += row.count;
+    }
+  }
+  return counts;
+}
+
 /** Valida que el álbum exista antes de crear una entrada. */
 async function assertAlbumExists(releaseGroupId: string) {
   const [row] = await db
@@ -179,6 +284,33 @@ export async function updateEntry(
   return getOwnedEntry(updated.id, userId);
 }
 
+/**
+ * Cambia la audiencia de varias entradas propias a la vez. Idempotente; los ids
+ * ajenos o inexistentes del conjunto se ignoran. Si ningún id corresponde a una
+ * entrada del usuario, lanza `COLLECTION_ENTRY_NOT_FOUND`. Devuelve los ids
+ * efectivamente actualizados.
+ */
+export async function updateEntriesAudienceBulk(
+  userId: string,
+  entryIds: string[],
+  audience: Audience,
+): Promise<string[]> {
+  if (entryIds.length === 0 || entryIds.length > MAX_BULK_IDS) {
+    throw new ApiError("VALIDATION_ERROR", 400, "La selección de entradas no es válida");
+  }
+
+  const updated = await db
+    .update(collectionEntry)
+    .set({ audience })
+    .where(and(inArray(collectionEntry.id, entryIds), eq(collectionEntry.userId, userId)))
+    .returning({ id: collectionEntry.id });
+
+  if (updated.length === 0) {
+    throw new ApiError("COLLECTION_ENTRY_NOT_FOUND", 404, "Ninguna entrada de la selección es tuya");
+  }
+  return updated.map((row) => row.id);
+}
+
 /** Elimina una entrada propia. Devuelve 404 si no existe o no es del usuario. */
 export async function removeEntry(entryId: string, userId: string): Promise<void> {
   const [deleted] = await db
@@ -206,7 +338,7 @@ async function getOwnedEntry(entryId: string, userId: string): Promise<Collectio
   return entry!;
 }
 
-/** Colección propia del usuario, paginada y con filtros opcionales. */
+/** Colección propia del usuario, paginada, con filtros, orden, agrupación y conteo por formato. */
 export async function listOwnCollection(
   userId: string,
   page = 1,
@@ -214,21 +346,27 @@ export async function listOwnCollection(
   filters: CollectionFilters = {},
 ): Promise<CollectionPage> {
   assertPagination(page, pageSize);
+  const { sort, group } = normalizeSortGroup(filters);
+
+  const scope = scopeConditions(userId, filters);
 
   const rows = await db
     .select(entrySelection)
     .from(collectionEntry)
     .innerJoin(releaseGroup, eq(collectionEntry.releaseGroupId, releaseGroup.id))
-    .where(and(eq(collectionEntry.userId, userId), ...filterConditions(filters)))
-    .orderBy(desc(collectionEntry.createdAt), desc(collectionEntry.id))
+    .where(and(...scope, ...formatCondition(filters)))
+    .orderBy(...orderClauses(sort, group))
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
+
+  const counts = await collectionCounts(scope);
 
   return {
     entries: await serializePage(rows.slice(0, pageSize)),
     page,
     pageSize,
     hasNext: rows.length > pageSize,
+    counts,
   };
 }
 
@@ -241,35 +379,38 @@ export async function listProfileCollection(
   filters: CollectionFilters = {},
 ): Promise<CollectionPage> {
   assertPagination(page, pageSize);
+  const { sort, group } = normalizeSortGroup(filters);
 
   const { getProfileByUsername } = await import("@/services/social/profiles");
   const profile = await getProfileByUsername(username, viewerId);
   const audiences = audiencesForProfile(profile);
 
   if (audiences.length === 0) {
-    return { entries: [], page, pageSize, hasNext: false };
+    return { entries: [], page, pageSize, hasNext: false, counts: { ...EMPTY_COUNTS } };
   }
+
+  const scope: SQL[] = [
+    ...scopeConditions(profile.id, filters),
+    inArray(collectionEntry.audience, audiences),
+  ];
 
   const rows = await db
     .select(entrySelection)
     .from(collectionEntry)
     .innerJoin(releaseGroup, eq(collectionEntry.releaseGroupId, releaseGroup.id))
-    .where(
-      and(
-        eq(collectionEntry.userId, profile.id),
-        inArray(collectionEntry.audience, audiences),
-        ...filterConditions(filters),
-      ),
-    )
-    .orderBy(desc(collectionEntry.createdAt), desc(collectionEntry.id))
+    .where(and(...scope, ...formatCondition(filters)))
+    .orderBy(...orderClauses(sort, group))
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
+
+  const counts = await collectionCounts(scope);
 
   return {
     entries: await serializePage(rows.slice(0, pageSize)),
     page,
     pageSize,
     hasNext: rows.length > pageSize,
+    counts,
   };
 }
 

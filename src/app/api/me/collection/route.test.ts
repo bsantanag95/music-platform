@@ -1,18 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-import { GET, POST } from "./route";
+import { GET, PATCH, POST } from "./route";
 import { ApiError } from "@/lib/api/errors";
 
 const mocks = vi.hoisted(() => ({
   requireUser: vi.fn(),
   addEntry: vi.fn(),
   listOwnCollection: vi.fn(),
+  updateEntriesAudienceBulk: vi.fn(),
 }));
 
 vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser }));
 vi.mock("@/services/collection/collection", () => ({
   addEntry: mocks.addEntry,
   listOwnCollection: mocks.listOwnCollection,
+  updateEntriesAudienceBulk: mocks.updateEntriesAudienceBulk,
 }));
 
 const user = { id: "00000000-0000-4000-8000-000000000001" };
@@ -120,14 +122,25 @@ describe("POST /api/me/collection", () => {
 describe("GET /api/me/collection", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("lista la colección propia con filtros", async () => {
+  it("lista la colección propia con filtros, búsqueda y orden", async () => {
     mocks.requireUser.mockResolvedValue(user);
-    mocks.listOwnCollection.mockResolvedValue({ entries: [entry], page: 1, pageSize: 20, hasNext: false });
-    const res = await GET(req("/api/me/collection?format=vinyl&attribute=limited-edition"));
+    mocks.listOwnCollection.mockResolvedValue({
+      entries: [entry],
+      page: 1,
+      pageSize: 20,
+      hasNext: false,
+      counts: { vinyl: 1, cd: 0, cassette: 0, other: 0 },
+    });
+    const res = await GET(
+      req("/api/me/collection?format=vinyl&attribute=limited-edition&q=moon&sort=alpha&group=artist"),
+    );
     expect(res.status).toBe(200);
     expect(mocks.listOwnCollection).toHaveBeenCalledWith(user.id, 1, 20, {
       format: "vinyl",
       attribute: "limited-edition",
+      q: "moon",
+      sort: "alpha",
+      group: "artist",
     });
   });
 
@@ -141,5 +154,62 @@ describe("GET /api/me/collection", () => {
     const res = await GET(req("/api/me/collection?format=betamax"));
     expect(res.status).toBe(400);
     expect(mocks.listOwnCollection).not.toHaveBeenCalled();
+  });
+
+  it("rechaza un orden inválido", async () => {
+    const res = await GET(req("/api/me/collection?sort=cheapest"));
+    expect(res.status).toBe(400);
+    expect(mocks.listOwnCollection).not.toHaveBeenCalled();
+  });
+});
+
+describe("PATCH /api/me/collection (audiencia en lote)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const ids = [
+    "00000000-0000-4000-8000-0000000000e1",
+    "00000000-0000-4000-8000-0000000000e2",
+  ];
+  const patch = (body: unknown) =>
+    req("/api/me/collection", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+  it("cambia la audiencia de varias entradas y devuelve los ids actualizados", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.updateEntriesAudienceBulk.mockResolvedValue(ids);
+    const res = await PATCH(patch({ ids, audience: "public" }));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ updatedIds: ids });
+    expect(mocks.updateEntriesAudienceBulk).toHaveBeenCalledWith(user.id, ids, "public");
+  });
+
+  it("rechaza un lote vacío con VALIDATION_ERROR", async () => {
+    const res = await PATCH(patch({ ids: [], audience: "public" }));
+    expect(res.status).toBe(400);
+    expect(mocks.updateEntriesAudienceBulk).not.toHaveBeenCalled();
+  });
+
+  it("rechaza más de 50 ids", async () => {
+    const many = Array.from({ length: 51 }, () => "00000000-0000-4000-8000-0000000000e1");
+    const res = await PATCH(patch({ ids: many, audience: "public" }));
+    expect(res.status).toBe(400);
+  });
+
+  it("propaga COLLECTION_ENTRY_NOT_FOUND del servicio", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.updateEntriesAudienceBulk.mockRejectedValue(
+      new ApiError("COLLECTION_ENTRY_NOT_FOUND", 404, "x"),
+    );
+    const res = await PATCH(patch({ ids, audience: "private" }));
+    expect(res.status).toBe(404);
+  });
+
+  it("sin sesión devuelve 401", async () => {
+    mocks.requireUser.mockRejectedValue(new ApiError("AUTH_REQUIRED", 401, "x"));
+    const res = await PATCH(patch({ ids, audience: "public" }));
+    expect(res.status).toBe(401);
   });
 });
