@@ -176,6 +176,14 @@ export function ListItemSearch({
             {loading ? t("itemSearchLoading") : t("itemSearchCount", { count: results.length })}
           </span>
 
+          {query.trim().length > 0 && query.trim().length < MIN_QUERY ? (
+            <p className="font-data text-xs text-paper-muted">{t("itemSearchMinChars")}</p>
+          ) : null}
+
+          {loading || albumLoading ? (
+            <p className="font-data text-xs text-paper-muted">{t("itemSearchLoading")}</p>
+          ) : null}
+
           {query.trim().length >= MIN_QUERY && !loading && results.length === 0 && !error ? (
             <p className="font-data text-xs text-paper-muted">{t("itemSearchNoResults")}</p>
           ) : null}
