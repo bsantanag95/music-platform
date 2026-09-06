@@ -5,6 +5,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { pushRecentSearch } from "@/lib/search/recent-searches";
 
 interface SearchFormProps {
   // Valor con el que llega `/search?q=...` — solo prellena el campo. La
@@ -30,6 +31,7 @@ export function SearchForm({ initialQuery = "" }: SearchFormProps) {
     }
 
     setValidationError(undefined);
+    pushRecentSearch(normalized);
     startTransition(() => {
       router.push(`/search?q=${encodeURIComponent(normalized)}`);
     });

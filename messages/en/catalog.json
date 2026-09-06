@@ -1,6 +1,7 @@
 {
   "search": {
     "pageTitle": "Search the catalog",
+    "breadcrumb": "Search",
     "fieldLabel": "Search the catalog",
     "placeholder": "E.g.: Queen",
     "submit": "Search",
@@ -8,15 +9,27 @@
     "loading": "Checking the catalog...",
     "validationEmpty": "Enter a text to search.",
     "searchAgain": "Search another artist",
+    "recent": {
+      "heading": "Recent searches",
+      "clearAll": "Clear all",
+      "removeShort": "Remove",
+      "remove": "Remove “{query}” from recent searches"
+    },
     "results": {
       "tabsLabel": "Result type",
       "tabAll": "All",
       "tabArtists": "Artists",
       "tabAlbums": "Albums",
+      "summary": "Results for “{query}”",
+      "count": "{count, plural, one {# result} other {# results}}",
+      "cachedTag": "in your catalog",
       "emptyTitle": "No matches",
-      "emptyDescription": "We couldn't find artists or albums for that search. Try another text.",
+      "emptyDescription": "We couldn't find artists or albums for that search. Try a different spelling.",
+      "emptyUsersLink": "Looking for a person? See users named “{query}”",
       "songContext": {
-        "title": "Albums that contain “{song}”"
+        "title": "Albums that contain “{song}”",
+        "showMore": "Show {count} more",
+        "showLess": "Show less"
       }
     }
   },

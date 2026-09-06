@@ -3,23 +3,27 @@ import { searchCatalog } from "@/services/catalog/search-catalog";
 import type { CatalogSearchResponse } from "@/services/catalog/search-catalog";
 import { SearchForm } from "@/components/catalog/SearchForm";
 import { SearchResults } from "@/components/catalog/SearchResults";
-import { ErrorState } from "@/components/ui/ErrorState";
-import { Link } from "@/i18n/navigation";
+import { RecentSearches } from "@/components/catalog/RecentSearches";
+import { SearchErrorState } from "@/components/catalog/SearchErrorState";
+import { parseSearchTab } from "@/components/catalog/search-tabs";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 interface SearchPageProps {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; type?: string | string[] }>;
 }
 
 // Server Component: la búsqueda es carga inicial de datos a partir de la URL
 // (patrón "cacheo bajo demanda" — ver openspec add-search-results-page). Se
 // resuelve en el servidor vía el mismo servicio del endpoint; la página no
 // ingiere nada, solo lista candidatos y, si la consulta coincide con una
-// canción, su contexto de álbumes (openspec add-recording-album-search).
+// canción, su contexto de álbumes (openspec add-recording-album-search). La
+// pestaña activa llega en `?type=` solo para la carga inicial; los cambios
+// posteriores los refleja `SearchResults` con la History API, sin re-ejecutar
+// la búsqueda.
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const t = await getTranslations("catalog");
-  const tErrors = await getTranslations("errors");
   const tCommon = await getTranslations("common");
-  const { q } = await searchParams;
+  const { q, type } = await searchParams;
   const query = q?.trim();
 
   let response: CatalogSearchResponse | null = null;
@@ -35,25 +39,26 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col items-center gap-6 px-4 py-12">
+    <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col items-start gap-8 px-4 py-12">
+      <Breadcrumbs
+        items={[
+          { label: tCommon("home"), href: "/" },
+          { label: t("search.breadcrumb") },
+        ]}
+      />
       <h1 className="font-display text-2xl text-paper">{t("search.pageTitle")}</h1>
       <SearchForm initialQuery={query} />
+      {!query && <RecentSearches />}
       {query &&
         (failed ? (
-          <div className="flex w-full flex-col items-center gap-3">
-            <ErrorState
-              title={tErrors("INTERNAL_ERROR.title")}
-              description={tErrors("INTERNAL_ERROR.description")}
-            />
-            <Link
-              href={`/search?q=${encodeURIComponent(query)}`}
-              className="font-body text-sm text-amber hover:underline"
-            >
-              {tCommon("retry")}
-            </Link>
-          </div>
+          <SearchErrorState />
         ) : (
-          <SearchResults results={response?.results ?? []} songContext={response?.songContext} />
+          <SearchResults
+            results={response?.results ?? []}
+            query={query}
+            initialTab={parseSearchTab(type)}
+            songContext={response?.songContext}
+          />
         ))}
     </main>
   );

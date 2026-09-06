@@ -1,6 +1,7 @@
 {
   "search": {
     "pageTitle": "Buscar en el catálogo",
+    "breadcrumb": "Búsqueda",
     "fieldLabel": "Buscar en el catálogo",
     "placeholder": "Ej: Queen",
     "submit": "Buscar",
@@ -8,15 +9,27 @@
     "loading": "Consultando el catálogo...",
     "validationEmpty": "Ingresá un texto para buscar.",
     "searchAgain": "Buscar otro artista",
+    "recent": {
+      "heading": "Búsquedas recientes",
+      "clearAll": "Borrar todo",
+      "removeShort": "Quitar",
+      "remove": "Quitar «{query}» de las búsquedas recientes"
+    },
     "results": {
       "tabsLabel": "Tipo de resultado",
       "tabAll": "Todo",
       "tabArtists": "Artistas",
       "tabAlbums": "Álbumes",
+      "summary": "Resultados para «{query}»",
+      "count": "{count, plural, one {# resultado} other {# resultados}}",
+      "cachedTag": "en tu catálogo",
       "emptyTitle": "Sin coincidencias",
-      "emptyDescription": "No encontramos artistas ni álbumes para esa búsqueda. Probá con otro texto.",
+      "emptyDescription": "No encontramos artistas ni álbumes para esa búsqueda. Probá con otra grafía.",
+      "emptyUsersLink": "¿Buscabas una persona? Ver usuarios llamados «{query}»",
       "songContext": {
-        "title": "Álbumes que contienen «{song}»"
+        "title": "Álbumes que contienen «{song}»",
+        "showMore": "Ver {count} más",
+        "showLess": "Ver menos"
       }
     }
   },
