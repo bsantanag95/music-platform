@@ -1,49 +1,5 @@
 ## MODIFIED Requirements
 
-### Requirement: Agregar y quitar ítems
-El sistema SHALL permitir al propietario agregar ítems al final de la lista y quitarlos. Un
-mismo objetivo SHALL aparecer a lo sumo una vez por lista; agregarlo de nuevo SHALL NOT
-duplicarlo. Quitar un ítem SHALL conservar el orden de los restantes. El propietario SHALL
-poder agregar ítems **desde el propio detalle de la lista**, sin salir de la página, mediante
-una búsqueda de catálogo embebida acotada al `entityType` de la lista: para listas de
-`artist` y de `release_group` la búsqueda SHALL resolver contra el catálogo de artistas y
-álbumes; para listas de `recording` el alta SHALL hacerse eligiendo pistas de la lista de
-canciones de un álbum encontrado. El alta desde el detalle SHALL reutilizar la operación de
-alta existente y SHALL NOT introducir un endpoint nuevo. Los objetivos que ya están en la
-lista SHALL señalarse como tales en los resultados y no duplicarse al pulsarlos.
-
-#### Scenario: Agregar un ítem
-- **WHEN** el propietario agrega un objetivo existente del tipo de la lista
-- **THEN** el ítem queda al final de la lista y se refleja en el detalle
-
-#### Scenario: Agregar un objetivo ya presente
-- **WHEN** el propietario agrega un objetivo que ya está en la lista
-- **THEN** no se duplica el ítem y la operación responde de forma idempotente
-
-#### Scenario: Quitar un ítem
-- **WHEN** el propietario quita un ítem de la lista
-- **THEN** el ítem se elimina y el resto conserva su orden
-
-#### Scenario: Ítem de una lista ajena
-- **WHEN** un usuario intenta agregar o quitar ítems de una lista que no le pertenece
-- **THEN** la API responde `404` con `LIST_NOT_FOUND` y no modifica la lista
-
-#### Scenario: Agregar desde el detalle en una lista de álbumes
-- **WHEN** el propietario abre la búsqueda embebida en el detalle de una lista de álbumes y
-  elige un álbum de los resultados
-- **THEN** el álbum se agrega al final de la lista y el panel de búsqueda permanece abierto
-  para seguir agregando
-
-#### Scenario: Agregar canciones desde el tracklist de un álbum
-- **WHEN** el propietario, en el detalle de una lista de canciones, busca un álbum y elige una
-  o varias pistas de su lista de canciones
-- **THEN** cada canción elegida se agrega al final de la lista sin duplicar las que ya
-  estaban
-
-#### Scenario: Resultado ya presente en la lista
-- **WHEN** la búsqueda embebida devuelve un objetivo que ya está en la lista
-- **THEN** ese resultado se muestra como ya agregado y no puede volver a añadirse
-
 ### Requirement: Orden manual de la lista
 El sistema SHALL permitir al propietario reordenar los ítems de una lista de forma manual,
 persistiendo el nuevo orden en una única operación de reordenamiento. Las afordancias de

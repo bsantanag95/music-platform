@@ -85,7 +85,7 @@
   "removeItemNamed": "Quitar “{title}”",
   "removeItemShort": "¿Quitar?",
   "itemUnavailable": "Elemento no disponible",
-  "emptyItemsHint": "Agregá artistas, álbumes o canciones desde “Agregar elemento” o desde su página de catálogo.",
+  "emptyItemsHint": "Agregá artistas, álbumes o canciones desde su página de catálogo, con la acción “Añadir a lista”.",
   "readEmptyItems": "Esta lista todavía no tiene elementos.",
   "viewModeLabel": "Modo de visualización",
   "viewMode": {
@@ -96,19 +96,5 @@
   "graphicSelect": "Seleccionar “{title}”",
   "graphicSelected": "“{title}” seleccionada",
   "graphicActionsLabel": "Acciones sobre “{title}”",
-  "graphicDone": "Listo",
-  "itemSearchLabel": "Buscar en el catálogo",
-  "itemSearchPlaceholderArtist": "Buscar un artista",
-  "itemSearchPlaceholderAlbum": "Buscar un álbum",
-  "itemSearchPlaceholderSong": "Buscar un álbum para elegir canciones",
-  "itemSearchLoading": "Buscando en el catálogo…",
-  "itemSearchMinChars": "Escribí al menos 2 caracteres.",
-  "itemSearchCount": "{count, plural, =0 {sin resultados} one {# resultado} other {# resultados}}",
-  "itemSearchNoResults": "Sin resultados para esa búsqueda.",
-  "itemSearchAdd": "Agregar",
-  "itemAlreadyInList": "Ya está",
-  "itemSearchOpenAlbum": "Ver canciones",
-  "itemSearchBack": "← Volver a los resultados",
-  "itemSearchTracklistOf": "Canciones de {title}",
-  "itemSearchError": "No pudimos completar la acción. Intentá de nuevo."
+  "graphicDone": "Listo"
 }

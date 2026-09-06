@@ -112,8 +112,8 @@ algorítmico).
   `user_list_pin`, para no tocar `user_list.updated_at`); no es un orden manual total en v1.
 - **Detalle `/me/lists/[listId]`:** en `rework-lists-section` recibió un pase visual (mosaico
   en cabecera, filas con carátula, número de posición, ↑/↓ por teclado). Reelaborado a fondo
-  en `rework-list-detail` (ver la sección de más abajo): tres modos de vista, alta de ítems
-  embebida y vista de lectura de lista ajena.
+  en `rework-list-detail` (ver la sección de más abajo): tres modos de vista, gestión interna
+  de ítems y vista de lectura de lista ajena.
 - La vista de perfil ajeno `/users/[username]/lists` hereda la tarjeta nueva (mosaico +
   conteo) y la acción Guardar/Seguir.
 - **API:** `GET /api/me/lists` gana `q`/`entityType`/`sort`; nuevos `POST|DELETE
@@ -164,9 +164,15 @@ se expone (`src/services/lists/saved-lists.ts`: `followedListIds`, `savedStateFo
 ## Detalle de lista (cambio `rework-list-detail`)
 
 **Estado:** ✅ Implementado. El detalle `/me/lists/[listId]` deja de ser una única
-presentación fija y pasa a ser un apartado de gestión y lectura. Se agrega además la vista
-de lectura de una lista ajena, que no existía como página. Mantiene el mundo visual vigente
-("The Vinyl Listening Room") y los principios de producto.
+presentación fija y pasa a ser un apartado de **gestión interna** de los ítems ya agregados y
+de lectura. Se agrega además la vista de lectura de una lista ajena, que no existía como
+página. Mantiene el mundo visual vigente ("The Vinyl Listening Room") y los principios de
+producto.
+
+El **alta de ítems no se toca**: sigue siendo la acción contextual "Añadir a lista" de las
+páginas de artista/álbum/canción. Se probó un buscador de catálogo embebido en el detalle y
+se descartó (flujo confuso, búsqueda fría de MusicBrainz lenta, rodeo indirecto para
+canciones al no existir búsqueda de `recording`).
 
 ### Alcance entregado
 
@@ -177,12 +183,9 @@ de lectura de una lista ajena, que no existía como página. Mantiene el mundo v
   - **Gráfico:** pared de carátulas donde predomina lo visual.
   - La preferencia de modo es **global por visitante** (`localStorage`, sin tocar servidor
     ni afectar a otros), con `detailed` por defecto.
-- **Gestión de ítems** para el propietario en los tres modos: reordenar (↑/↓ en Detallada e
-  Índice, barra de selección en Gráfico), **mover al principio / al final**, quitar en dos
-  pasos, y **agregar desde el propio detalle**:
-  - Listas de artistas y álbumes: buscador de catálogo embebido (`GET /api/catalog/search`).
-  - Listas de canciones: buscar un álbum y elegir pistas de su tracklist
-    (`GET /api/catalog/release-group/{id}`). No hay búsqueda de canciones en el catálogo.
+- **Gestión interna de ítems** para el propietario en los tres modos: reordenar (↑/↓ en
+  Detallada e Índice, barra de selección en Gráfico), **mover al principio / al final** y
+  quitar en dos pasos.
 - **Gestión de metadatos:** "Editar" y "Eliminar lista" en un grupo discreto de la
   cabecera; `entityType` visible como dato de sólo lectura; línea de metadatos con
   audiencia, tipo, conteo, fecha y "Fijada".
@@ -232,10 +235,11 @@ escala o una necesidad que todavía no se observó.
 - **Drag-and-drop para reordenar:** reemplazaría ↑/↓ y la barra de selección. Suma
   dependencia y un costo alto de accesibilidad (DnD por teclado). Gatillo: quejas repetidas
   sobre ↑/↓ en listas de 30+ ítems. Es el que más conviene diferir.
-- **Endpoint de búsqueda de canciones** (búsqueda + ingesta de `recording` en MusicBrainz):
-  evitaría el rodeo álbum → tracklist. Backend real, cambio propio. Gatillo explícito: que
-  el rodeo resulte molesto en la práctica (abandono al armar listas de canciones o pedidos
-  directos).
+- **Buscador de catálogo embebido en el detalle** (para agregar ítems sin ir a la página de
+  catálogo): se implementó y se retiró por el flujo pobre. Volvería a tener sentido junto con
+  un **endpoint de búsqueda de canciones** (búsqueda + ingesta de `recording` en MusicBrainz),
+  que hoy no existe y obliga al rodeo álbum → tracklist. Backend real, cambio propio. Gatillo:
+  pedidos concretos de agregar desde el editor.
 
 **Regla:** el grupo 1 entra en la próxima iteración; el grupo 2 espera un pedido; el grupo 3
 espera una métrica. Nunca "por las dudas". Y ninguno de estos debía entrar en

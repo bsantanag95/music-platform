@@ -85,7 +85,7 @@
   "removeItemNamed": "Remove “{title}”",
   "removeItemShort": "Remove?",
   "itemUnavailable": "Item unavailable",
-  "emptyItemsHint": "Add artists, albums or songs from “Add item” or from their catalog page.",
+  "emptyItemsHint": "Add artists, albums or songs from their catalog page, with the “Add to list” action.",
   "readEmptyItems": "This list has no items yet.",
   "viewModeLabel": "View mode",
   "viewMode": {
@@ -96,19 +96,5 @@
   "graphicSelect": "Select “{title}”",
   "graphicSelected": "“{title}” selected",
   "graphicActionsLabel": "Actions on “{title}”",
-  "graphicDone": "Done",
-  "itemSearchLabel": "Search the catalog",
-  "itemSearchPlaceholderArtist": "Search for an artist",
-  "itemSearchPlaceholderAlbum": "Search for an album",
-  "itemSearchPlaceholderSong": "Search for an album to pick songs",
-  "itemSearchLoading": "Searching the catalog…",
-  "itemSearchMinChars": "Type at least 2 characters.",
-  "itemSearchCount": "{count, plural, =0 {no results} one {# result} other {# results}}",
-  "itemSearchNoResults": "No results for that search.",
-  "itemSearchAdd": "Add",
-  "itemAlreadyInList": "Already added",
-  "itemSearchOpenAlbum": "View songs",
-  "itemSearchBack": "← Back to results",
-  "itemSearchTracklistOf": "Songs from {title}",
-  "itemSearchError": "We could not complete the action. Try again."
+  "graphicDone": "Done"
 }

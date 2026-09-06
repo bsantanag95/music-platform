@@ -28,18 +28,19 @@ placeholder, tríada tipográfica).
 **Goals:**
 - Tres modos de visualización de ítems (Detallada / Índice / Gráfico) conmutables, con
   preferencia global por visitante.
-- Gestión de ítems completa desde el detalle: reordenar en los tres modos, mover a extremos,
-  y **agregar** con búsqueda de catálogo embebida.
+- Gestión interna de ítems desde el detalle: reordenar en los tres modos, mover a extremos,
+  quitar.
 - Cabecera de gestión de metadatos más clara.
 - Página de lectura de lista ajena que cierra los enlaces muertos.
 - Ítems de canción con carátula representativa.
 - Backlog fuera de alcance documentado con criterio de priorización.
 
 **Non-Goals:**
+- **Alta de ítems desde el detalle.** El alta sigue en las páginas de catálogo
+  (`AddToListButton`). Se evaluó un buscador embebido y se descartó (ver decisión 4).
 - Rating del autor inline por ítem (documentado, iteración siguiente).
 - Nota por ítem, toggle rankeada/sin-orden, portada elegible por el dueño, duplicar lista.
 - Drag-and-drop (se mantiene ↑/↓ + barra de selección; sin librería nueva).
-- Endpoint de búsqueda de canciones (se usa el rodeo álbum → tracklist).
 - Cambios en el modelo de datos, en la sección `/me/lists` o en el feed.
 
 ## Decisions
@@ -86,25 +87,19 @@ no se anima con `prefers-reduced-motion`.
 bien y suma dependencia. Se difiere hasta que la fricción de ↑/↓ en listas largas sea un
 pedido real y medido (ver backlog).
 
-### 4. Agregar ítems desde el detalle
+### 4. Agregar ítems desde el detalle — descartado
 
-Componente `ListItemSearch` (client), panel inline encima de la lista (patrón del compositor
-de `ListForm` en `MyListsTab`, **no modal**).
+Se implementó un buscador de catálogo embebido en el detalle (`ListItemSearch`) y se retiró
+tras probarlo: para álbumes/artistas reusaba `GET /api/catalog/search`; para canciones, como
+el catálogo no busca `recording`, obligaba a buscar un álbum y elegir pistas de su tracklist
+(`getReleaseGroupDetail`). El flujo resultó confuso y poco fiable en la práctica (búsqueda
+fría de MusicBrainz lenta, rodeo indirecto para canciones).
 
-- **Listas `artist` / `release_group`:** input con debounce ~300ms → `searchCatalog(q)`
-  (`GET /api/catalog/search`, ya devuelve `artist` y `release-group`). Resultados filtrados
-  por `kind` según el `entityType`. Cada resultado con carátula/disco + nombre + subtítulo +
-  botón Agregar. Dedupe contra `items` actuales (se marca "Ya está"). Al agregar:
-  `addItemToList(listId, { type, id })` (idempotente), append optimista, panel abierto.
-- **Listas `recording`:** el buscador resuelve **álbumes** (`GET /api/catalog/search`,
-  `kind:"release-group"`); al elegir uno se expande su tracklist con
-  `getReleaseGroupDetail(id)` y se eligen pistas (cada una tiene `recordingId`). Alta por
-  pista con `addItemToList(listId, { type: "recording", id })`.
-
-**Por qué el rodeo para canciones:** `GET /api/catalog/search` no busca `recording` y no hay
-servicio de ingesta de grabaciones por búsqueda. El rodeo no toca backend y coincide con el
-modelo mental ("el tema de *ese* disco"). La alternativa (endpoint nuevo de búsqueda +
-ingesta de recordings) es un cambio propio, gateado a que este rodeo resulte molesto.
+**Decisión:** el detalle sirve sólo para la **gestión interna** de los ítems ya agregados. El
+alta sigue siendo la acción contextual "Añadir a lista" de las páginas de artista/álbum/
+canción (`AddToListButton`), que ya existe y no se toca. Un buscador de catálogo dentro del
+editor —o un endpoint de búsqueda de canciones que lo haría viable— queda como backlog, no
+comprometido.
 
 ### 5. Enriquecimiento de datos en `listItems`
 
@@ -150,8 +145,6 @@ Rareza.
   iteración posterior (no ahora).
 - **Coste de la carátula representativa de canciones** → una consulta agregada por carga de
   detalle, no N; índices existentes sobre la tabla puente.
-- **Rodeo álbum→tracklist para canciones puede sentirse indirecto** → se acepta como v1;
-  documentado el endpoint de búsqueda de canciones como salida si hay fricción real.
 - **Modo Gráfico con listas muy largas (100+ ítems)** → la cuadrícula de carátulas monta
   muchas `<Image>`. Mitigación: `loading="lazy"` (comportamiento de `next/image`), tamaños
   chicos. Ventaneo (virtualización) sólo si se mide un problema — fuera de alcance.
@@ -169,7 +162,8 @@ el commit; no hay estado persistido nuevo salvo la clave de `localStorage`, inoc
 ## Open Questions
 
 Ninguna pendiente. Decisiones de alcance cerradas con el usuario:
-- Canciones: alta vía álbum + tracklist (opción A).
+- Alta de ítems desde el detalle: **fuera de alcance** (se probó el buscador embebido y se
+  retiró; el alta queda en las páginas de catálogo).
 - Rating inline: fuera de v1, documentado.
 - Nota por ítem: backlog.
 - Preferencia de modo: global por visitante.

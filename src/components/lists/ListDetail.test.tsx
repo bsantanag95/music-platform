@@ -11,10 +11,10 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: () => <span /> }));
 vi.mock("@/components/catalog/DiscPlaceholder", () => ({ DiscPlaceholder: () => <span /> }));
-vi.mock("./ListItemSearch", () => ({ ListItemSearch: () => <div data-testid="item-search" /> }));
+const mocks = vi.hoisted(() => ({ reorderListItems: vi.fn(), removeItemFromList: vi.fn() }));
 vi.mock("@/lib/api/lists", () => ({
-  reorderListItems: vi.fn(),
-  removeItemFromList: vi.fn(),
+  reorderListItems: mocks.reorderListItems,
+  removeItemFromList: mocks.removeItemFromList,
   updateList: vi.fn(),
   deleteList: vi.fn(),
 }));
@@ -63,14 +63,27 @@ describe("ListDetail", () => {
     expect(screen.getByRole("link", { name: "Rumours" })).toBeInTheDocument();
   });
 
-  it("abre el panel de alta de ítems", async () => {
-    renderWithIntl(<ListDetail initial={detail()} />);
-    await userEvent.click(screen.getByRole("button", { name: "Agregar elemento" }));
-    expect(screen.getByTestId("item-search")).toBeInTheDocument();
-  });
-
   it("lista vacía muestra el estado vacío", () => {
     renderWithIntl(<ListDetail initial={detail({ items: [], itemCount: 0 })} />);
     expect(screen.getByText("Esta lista todavía no tiene elementos.")).toBeInTheDocument();
+  });
+
+  it("reordenar un ítem llama a reorderListItems con el nuevo orden", async () => {
+    mocks.reorderListItems.mockResolvedValue(detail());
+    const two = detail({
+      itemCount: 2,
+      items: [
+        { id: "i1", position: 1, target: { id: "t1", title: "Rumours", artistName: null, coverThumbUrl: null } },
+        { id: "i2", position: 2, target: { id: "t2", title: "Tusk", artistName: null, coverThumbUrl: null } },
+      ],
+    });
+    renderWithIntl(<ListDetail initial={two} />);
+    await userEvent.click(screen.getByRole("button", { name: 'Bajar “Rumours”' }));
+    expect(mocks.reorderListItems).toHaveBeenCalledWith("l1", ["i2", "i1"]);
+  });
+
+  it("ya no ofrece agregar elementos desde el detalle", () => {
+    renderWithIntl(<ListDetail initial={detail()} />);
+    expect(screen.queryByRole("button", { name: "Agregar elemento" })).toBeNull();
   });
 });

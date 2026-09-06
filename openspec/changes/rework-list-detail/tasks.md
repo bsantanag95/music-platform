@@ -41,21 +41,17 @@
   compone y llama a `onReorder` con el orden completo; controles compartidos en
   `ListItemControls.tsx`.
 
-## 4. Alta de ítems desde el detalle
+## 4. Alta de ítems desde el detalle — DESCARTADO
 
-- [x] 4.1 `ListItemSearch.tsx` (client): panel inline (no modal) sobre la lista, abierto desde
-  un botón "Agregar elemento"; estados carga/vacío/sin-resultados/error; `aria-live` en el
-  conteo de resultados.
-- [x] 4.2 Ramas `artist` / `release-group`: input con debounce ~300ms → `searchCatalog(q)`;
-  resultados filtrados por `kind` según `entityType`; dedupe contra ítems actuales ("Ya
-  está"); alta optimista con `addItemToList`, panel persistente.
-- [x] 4.3 Rama `recording`: el buscador resuelve álbumes; al elegir uno, expandir tracklist
-  con `getReleaseGroupDetail`; selección de pistas → alta por `recordingId` con
-  `addItemToList`; dedupe contra ítems actuales.
-- [x] 4.4 Cablear el alta al estado del detalle (append optimista + rollback ante
-  `ApiError.code`).
-- [x] 4.5 Pruebas de componente: alta de álbum, alta de canciones desde tracklist, resultado
-  ya presente deshabilitado, error con rollback.
+Se implementó `ListItemSearch` y se retiró tras probarlo (flujo confuso, búsqueda fría lenta,
+rodeo indirecto para canciones). El alta de ítems queda en las páginas de catálogo
+(`AddToListButton`). Ver `design.md` §4.
+
+- [x] 4.1 `ListItemSearch.tsx` + su test eliminados; `ListDetail` sin botón "Agregar
+  elemento"; estado vacío reformulado ("Añadir a lista" desde el catálogo).
+- [x] 4.2 Claves i18n del buscador retiradas de `messages/*/lists.json`.
+- [x] 4.3 `addItemToList` / `searchCatalog` / `getReleaseGroupDetail` siguen existiendo para
+  `AddToListButton` y las páginas de catálogo — sin cambios.
 
 ## 5. Cabecera del detalle
 
@@ -74,8 +70,8 @@
   el manejo de errores por `ApiError.code`.
 - [x] 6.2 Migrar/actualizar las pruebas existentes del detalle propio (edición de metadatos,
   quitar, reordenar) al nuevo árbol.
-- [x] 6.3 Estados: lista vacía (propietario, con "Agregar elemento" destacado; visitante, con
-  texto); ítem sin título → "Elemento no disponible" con opción de quitar (propietario).
+- [x] 6.3 Estados: lista vacía (propietario, con la sugerencia de añadir desde el catálogo;
+  visitante, con texto); ítem sin título → "Elemento no disponible".
 
 ## 7. Página de lectura de lista ajena
 
@@ -90,17 +86,17 @@
 
 ## 8. i18n
 
-- [x] 8.1 Agregar claves ES/EN en `messages/*/lists.json`: nombres y etiquetas de los tres
-  modos, "Agregar elemento", placeholders de búsqueda, "Ya está", encabezado de tracklist,
-  acciones de la barra de selección (Subir/Bajar/Al principio/Al final/Listo), "Al principio",
-  "Al final", "Elemento no disponible", atribución/tiempo en vista lectura.
+- [x] 8.1 Claves ES/EN en `messages/*/lists.json`: nombres y etiquetas de los tres modos,
+  acciones de la barra de selección del modo Gráfico (Subir/Bajar/Al principio/Al final/Listo),
+  "mover al principio/al final", "Elemento no disponible", sugerencia del estado vacío. Las
+  claves del buscador embebido se retiraron al descartar esa funcionalidad (§4).
 - [x] 8.2 Verificar `src/test/i18n-test-utils.tsx` cubre las claves nuevas.
 
 ## 9. Documentación de alcance y backlog
 
 - [x] 9.1 En `docs/05-features/lists-and-favorites.md`, agregar sección del cambio
-  `rework-list-detail`: alcance entregado (3 modos, gestión de ítems, alta embebida, vista
-  lectura, carátula de canciones).
+  `rework-list-detail`: alcance entregado (3 modos, gestión interna de ítems, vista lectura,
+  carátula de canciones).
 - [x] 9.2 Documentar el backlog fuera de alcance con el criterio de cuándo abordarlo:
   - *Por cercanía al cambio (pronto, riesgo bajo):* rating del autor inline en Detallada;
     toggle rankeada/sin-orden.
@@ -108,8 +104,8 @@
     elegible por el dueño; duplicar/derivar lista ajena. Batchear los dos primeros (una
     migración).
   - *Por fricción medida (esperar dolor real y repetido):* drag-and-drop para reordenar;
-    endpoint de búsqueda de canciones (gateado a que el rodeo álbum→tracklist resulte
-    molesto).
+    buscador de catálogo embebido en el detalle (se probó y se retiró) + endpoint de búsqueda
+    de canciones que lo haría viable.
 - [x] 9.3 Actualizar el índice `docs/05-features/README.md` si corresponde.
 
 ## 10. Cierre
@@ -120,7 +116,6 @@
 - [x] 10.2 Detector de Impeccable sobre los 10 componentes/página nuevos: `[]` (sin hallazgos).
 - [x] 10.3 Verificación en navegador: 3 modos (propietario y lectura ajena), conmutador con
   preferencia global persistida al recargar, reorden en Detallada y en la barra del modo
-  Gráfico (persiste a BD), alta de álbum y de canción vía tracklist (dedupe "Ya está"),
-  carátula representativa de canción, y la página de lectura ajena resolviendo con atribución
-  + Guardar.
+  Gráfico (persiste a BD), carátula representativa de canción, y la página de lectura ajena
+  resolviendo con atribución + Guardar.
 - [x] 10.4 `openspec validate rework-list-detail --strict`.
