@@ -15,3 +15,10 @@ const ENTITY_KEY: Record<string, "entityTypeArtist" | "entityTypeAlbum" | "entit
 export function entityTypeKey(entityType: string) {
   return ENTITY_KEY[entityType] ?? "entityTypeArtist";
 }
+
+// Ruta de catálogo del objetivo de un ítem de lista, según el tipo de la lista.
+export function listItemHref(targetId: string, entityType: string): string {
+  if (entityType === "artist") return `/artist/${targetId}`;
+  if (entityType === "release-group") return `/album/${targetId}`;
+  return `/song/${targetId}`;
+}

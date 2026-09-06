@@ -156,6 +156,61 @@ describe("servicio de listas", () => {
     expect(result.pinned).toBe(true);
   });
 
+  it("enriquece los ítems con artista acreditado y carátula representativa de canción", async () => {
+    const songListRow = { ...listRow, entityType: "recording", title: "Temas del año" };
+    mockOwnedList(songListRow, [
+      {
+        id: "i1",
+        position: 1,
+        artistId: null,
+        releaseGroupId: "rg1",
+        recordingId: null,
+        artistName: null,
+        releaseTitle: "Rumours",
+        releaseCover: "http://c/rumours",
+        recordingTitle: null,
+        creditedArtist: "Fleetwood Mac",
+        songCover: null,
+      },
+      {
+        id: "i2",
+        position: 2,
+        artistId: null,
+        releaseGroupId: null,
+        recordingId: "rec1",
+        artistName: null,
+        releaseTitle: null,
+        releaseCover: null,
+        recordingTitle: "Dreams",
+        creditedArtist: "Fleetwood Mac",
+        songCover: "http://c/song",
+      },
+      {
+        id: "i3",
+        position: 3,
+        artistId: null,
+        releaseGroupId: null,
+        recordingId: "rec2",
+        artistName: null,
+        releaseTitle: null,
+        releaseCover: null,
+        recordingTitle: "Rara",
+        creditedArtist: null,
+        songCover: null,
+      },
+    ]);
+    const result = await getOwnedList(songListRow.id, owner);
+    expect(result.items[0]?.target.artistName).toBe("Fleetwood Mac");
+    expect(result.items[1]?.target).toMatchObject({
+      title: "Dreams",
+      artistName: "Fleetwood Mac",
+      coverThumbUrl: "http://c/song",
+    });
+    expect(result.items[2]?.target.coverThumbUrl).toBeNull();
+    // coverThumbs del detalle combina la del álbum y la representativa de canción
+    expect(result.coverThumbs).toEqual(["http://c/rumours", "http://c/song"]);
+  });
+
   it("updateList valida que haya al menos un campo", async () => {
     await expect(updateList(listRow.id, owner, {})).rejects.toMatchObject({
       code: "VALIDATION_ERROR",

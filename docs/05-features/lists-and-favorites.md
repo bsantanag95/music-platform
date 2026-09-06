@@ -110,9 +110,10 @@ algorítmico).
 - **Gestión en Mis listas:** por tarjeta, Fijar/Desfijar · Editar (→ detalle) · Eliminar con
   confirmación. **"Fijar"** sube las listas propias favoritas arriba (tabla aparte
   `user_list_pin`, para no tocar `user_list.updated_at`); no es un orden manual total en v1.
-- **Detalle `/me/lists/[listId]`:** conserva URL y comportamiento; pase visual (mosaico en
-  cabecera, filas con carátula + disco de fallback, número de posición, reordenamiento ↑/↓
-  por teclado).
+- **Detalle `/me/lists/[listId]`:** en `rework-lists-section` recibió un pase visual (mosaico
+  en cabecera, filas con carátula, número de posición, ↑/↓ por teclado). Reelaborado a fondo
+  en `rework-list-detail` (ver la sección de más abajo): tres modos de vista, alta de ítems
+  embebida y vista de lectura de lista ajena.
 - La vista de perfil ajeno `/users/[username]/lists` hereda la tarjeta nueva (mosaico +
   conteo) y la acción Guardar/Seguir.
 - **API:** `GET /api/me/lists` gana `q`/`entityType`/`sort`; nuevos `POST|DELETE
@@ -159,3 +160,89 @@ se expone (`src/services/lists/saved-lists.ts`: `followedListIds`, `savedStateFo
   texto plano.
 - **Scrobbling → lista automática:** listas derivadas de la actividad ("lo más escuchado
   este mes"), condicionado a scrobbling automático (Fase 6) y sin caer en gamificación.
+
+## Detalle de lista (cambio `rework-list-detail`)
+
+**Estado:** ✅ Implementado. El detalle `/me/lists/[listId]` deja de ser una única
+presentación fija y pasa a ser un apartado de gestión y lectura. Se agrega además la vista
+de lectura de una lista ajena, que no existía como página. Mantiene el mundo visual vigente
+("The Vinyl Listening Room") y los principios de producto.
+
+### Alcance entregado
+
+- **Tres modos de visualización de los ítems**, conmutables y aplicables por igual a listas
+  de artistas, álbumes o canciones:
+  - **Detallada:** fila con carátula, título, artista y controles de gestión.
+  - **Índice:** filas de texto densas para escanear y reordenar listas largas.
+  - **Gráfico:** pared de carátulas donde predomina lo visual.
+  - La preferencia de modo es **global por visitante** (`localStorage`, sin tocar servidor
+    ni afectar a otros), con `detailed` por defecto.
+- **Gestión de ítems** para el propietario en los tres modos: reordenar (↑/↓ en Detallada e
+  Índice, barra de selección en Gráfico), **mover al principio / al final**, quitar en dos
+  pasos, y **agregar desde el propio detalle**:
+  - Listas de artistas y álbumes: buscador de catálogo embebido (`GET /api/catalog/search`).
+  - Listas de canciones: buscar un álbum y elegir pistas de su tracklist
+    (`GET /api/catalog/release-group/{id}`). No hay búsqueda de canciones en el catálogo.
+- **Gestión de metadatos:** "Editar" y "Eliminar lista" en un grupo discreto de la
+  cabecera; `entityType` visible como dato de sólo lectura; línea de metadatos con
+  audiencia, tipo, conteo, fecha y "Fijada".
+- **Vista de lectura de lista ajena** `/<locale>/users/[username]/lists/[listId]`: mismo
+  cuerpo de tres modos sin controles de gestión, atribución al dueño, tiempo relativo y la
+  acción Guardar/Seguir. Cierra los enlaces que Descubrir, Guardadas, el feed, los perfiles
+  e Inicio ya apuntaban ahí.
+- **Carátula representativa para ítems de canción:** cada `recording` se enriquece con la
+  carátula de un álbum representativo que la contiene, para que el modo Gráfico y el mosaico
+  de la tarjeta no queden siempre como siluetas de disco.
+
+Sin dependencias nuevas. Sin endpoints nuevos. Sin cambios de esquema.
+
+### Fuera de alcance — cuándo conviene abordarlo
+
+El criterio es el principio de producto "crecimiento por uso real": no se construye para una
+escala o una necesidad que todavía no se observó.
+
+**Por cercanía al cambio (pronto, riesgo bajo — completan lo recién entregado):**
+
+- **Rating del autor inline en el modo Detallada:** mostrar la valoración del autor de la
+  lista junto a cada ítem. ~1–1.5 unidades de trabajo, sin migración, reusa `FeedRatingMeter`
+  y una función batch de ratings nueva (hoy `getRatings` es de a uno). Es lo más "Letterboxd"
+  del backlog; buen candidato para la iteración siguiente.
+- **Toggle rankeada / sin orden:** presentación de la lista como ranking numerado o como
+  colección sin jerarquía. Pura presentación (interactúa con el badge de Nº del modo
+  Gráfico). Gatillo: la primera lista sin jerarquía real ("shoegaze esencial", "regalos").
+  Cuidar que no se lea como métrica competitiva.
+
+**Por señal de usuarios (esperar un pedido concreto o evidencia de workaround manual):**
+
+- **Nota por ítem** ("por qué está acá"): campo corto por elemento, visible en el detalle.
+  Requiere columna nueva + API por ítem. Gatillo: descripciones de lista que en realidad
+  hablan de ítems puntuales.
+- **Portada elegible por el dueño:** en vez del mosaico automático, el dueño elige una
+  carátula o un tono. Requiere columna nueva + selector. Gatillo: volumen de listas que haga
+  ver el mosaico automático como genérico o repetido.
+- **Duplicar / derivar una lista ajena** con atribución al autor original. Requiere semántica
+  de copia + campo de procedencia. Gatillo: gente recreando a mano listas que vio en
+  Descubrir; depende de que Descubrir tenga tráfico real.
+
+  Nota: nota-por-ítem y portada-elegible tocan las tablas de listas — conviene una sola
+  migración para los dos, no una cada uno.
+
+**Por fricción medida (esperar dolor real y repetido; traen dependencia o backend grande):**
+
+- **Drag-and-drop para reordenar:** reemplazaría ↑/↓ y la barra de selección. Suma
+  dependencia y un costo alto de accesibilidad (DnD por teclado). Gatillo: quejas repetidas
+  sobre ↑/↓ en listas de 30+ ítems. Es el que más conviene diferir.
+- **Endpoint de búsqueda de canciones** (búsqueda + ingesta de `recording` en MusicBrainz):
+  evitaría el rodeo álbum → tracklist. Backend real, cambio propio. Gatillo explícito: que
+  el rodeo resulte molesto en la práctica (abandono al armar listas de canciones o pedidos
+  directos).
+
+**Regla:** el grupo 1 entra en la próxima iteración; el grupo 2 espera un pedido; el grupo 3
+espera una métrica. Nunca "por las dudas". Y ninguno de estos debía entrar en
+`rework-list-detail`: ya tenía 6 piezas y sumar más subía el riesgo de la entrega sin
+acelerar el aprendizaje.
+
+### Decisiones abiertas heredadas
+
+- Si el reordenamiento suma drag-and-drop (hoy ↑/↓ + barra de selección) — ver arriba.
+- El resto de decisiones abiertas de `rework-lists-section` sigue vigente.

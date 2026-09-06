@@ -62,6 +62,16 @@ export interface UserListItemEntry {
   target: {
     id: string;
     title: string;
+    /**
+     * Artista principal acreditado — para la línea "título · artista" del
+     * detalle. `null` para ítems de tipo artista (el título ya es el artista).
+     */
+    artistName: string | null;
+    /**
+     * Carátula del ítem. Para álbumes, la del release group; para canciones, la
+     * de un álbum representativo que las contenga; `null` para artistas o cuando
+     * no hay arte disponible.
+     */
     coverThumbUrl: string | null;
   };
 }
@@ -79,6 +89,35 @@ function targetValues(type: ListEntityType, id: string) {
     recordingId: type === "recording" ? id : null,
   };
 }
+
+// Artista principal acreditado de un álbum o canción, para la línea
+// "título · artista" del detalle. Subquery escalar: no multiplica filas aunque
+// el objetivo tenga varios créditos primarios (toma el de menor `position`).
+// Para ítems de tipo artista ambas columnas son NULL y devuelve NULL.
+const LIST_ITEM_PRIMARY_ARTIST = sql<string | null>`(
+  SELECT a.name FROM credit c
+  JOIN artist a ON a.id = c.artist_id
+  WHERE (
+    (${userListItem.releaseGroupId} IS NOT NULL AND c.release_group_id = ${userListItem.releaseGroupId})
+    OR (${userListItem.recordingId} IS NOT NULL AND c.recording_id = ${userListItem.recordingId})
+  ) AND c.role = 'primary'
+  ORDER BY c.position
+  LIMIT 1
+)`;
+
+// Carátula de un álbum representativo que contiene la grabación de un ítem de
+// canción, para que el modo Gráfico y el mosaico no queden siempre como
+// siluetas de disco. Determinista por `created_at, id` del release group.
+// NULL si ninguna edición de la grabación tiene arte.
+const LIST_ITEM_SONG_COVER = sql<string | null>`(
+  SELECT rg.cover_thumb_url FROM track t
+  JOIN release r ON r.id = t.release_id
+  JOIN release_group rg ON rg.id = r.release_group_id
+  WHERE t.recording_id = ${userListItem.recordingId}
+    AND rg.cover_thumb_url IS NOT NULL
+  ORDER BY rg.created_at, rg.id
+  LIMIT 1
+)`;
 
 function normalizeTitle(title: string): string {
   const trimmed = title.trim();
@@ -229,20 +268,20 @@ export async function enrichLists(listIds: string[]): Promise<Map<string, ListEn
     if (entry) entry.itemCount = Number(row.n);
   }
 
+  // Carátula por ítem: la del release group para álbumes, la de un álbum
+  // representativo para canciones (`LIST_ITEM_SONG_COVER`), NULL para artistas.
+  // El `row_number()` corre después del WHERE, así que ordena solo las
+  // disponibles: "las primeras N carátulas disponibles", igual que el detalle.
+  const itemCover = sql<string | null>`coalesce(${releaseGroup.coverThumbUrl}, ${LIST_ITEM_SONG_COVER})`;
   const covers = await db
     .select({
       listId: userListItem.listId,
-      cover: releaseGroup.coverThumbUrl,
+      cover: itemCover,
       rn: sql<number>`row_number() over (partition by ${userListItem.listId} order by ${userListItem.position})`,
     })
     .from(userListItem)
-    .innerJoin(releaseGroup, eq(userListItem.releaseGroupId, releaseGroup.id))
-    .where(
-      and(
-        inArray(userListItem.listId, listIds),
-        sql`${releaseGroup.coverThumbUrl} is not null`,
-      ),
-    );
+    .leftJoin(releaseGroup, eq(userListItem.releaseGroupId, releaseGroup.id))
+    .where(and(inArray(userListItem.listId, listIds), sql`${itemCover} is not null`));
   const sorted = covers
     .filter((row) => Number(row.rn) <= LIST_COVER_THUMBS_MAX)
     .sort((a, b) => Number(a.rn) - Number(b.rn));
@@ -540,6 +579,8 @@ async function listItems(listId: string): Promise<UserListItemEntry[]> {
       releaseTitle: releaseGroup.title,
       releaseCover: releaseGroup.coverThumbUrl,
       recordingTitle: recording.title,
+      creditedArtist: LIST_ITEM_PRIMARY_ARTIST,
+      songCover: LIST_ITEM_SONG_COVER,
     })
     .from(userListItem)
     .leftJoin(artist, eq(userListItem.artistId, artist.id))
@@ -551,6 +592,7 @@ async function listItems(listId: string): Promise<UserListItemEntry[]> {
   return rows.map((row) => {
     let id = "";
     let title = "";
+    let artistName: string | null = null;
     let coverThumbUrl: string | null = null;
     if (row.artistId) {
       id = row.artistId;
@@ -558,15 +600,18 @@ async function listItems(listId: string): Promise<UserListItemEntry[]> {
     } else if (row.releaseGroupId) {
       id = row.releaseGroupId;
       title = row.releaseTitle ?? "";
+      artistName = row.creditedArtist ?? null;
       coverThumbUrl = row.releaseCover;
     } else if (row.recordingId) {
       id = row.recordingId ?? "";
       title = row.recordingTitle ?? "";
+      artistName = row.creditedArtist ?? null;
+      coverThumbUrl = row.songCover ?? null;
     }
     return {
       id: row.id,
       position: row.position,
-      target: { id, title, coverThumbUrl },
+      target: { id, title, artistName, coverThumbUrl },
     };
   });
 }

@@ -571,7 +571,10 @@ del usuario. **401** con `AUTH_REQUIRED` sin sesión.
 
 Detalle de una lista propia, con sus ítems ordenados por posición.
 
-**200 OK:** `{ list }` con `items: [{ id, position, target: { id, title, coverThumbUrl } }]`.
+**200 OK:** `{ list }` con `items: [{ id, position, target: { id, title, artistName, coverThumbUrl } }]`.
+`artistName` (campo aditivo de `rework-list-detail`) es el artista principal acreditado de un
+álbum o canción, `null` para ítems de tipo artista. `coverThumbUrl` de un ítem de canción es la
+carátula de un álbum representativo que la contiene, `null` si ninguna edición tiene arte.
 **404** con `LIST_NOT_FOUND` si no existe o no es del usuario.
 
 ### `PATCH /api/me/lists/{listId}`
@@ -614,10 +617,12 @@ visibilidad; sin permiso devuelve lista vacía. Desde `rework-lists-section` cad
 
 ### `GET /api/users/[username]/lists/{listId}`
 
-Detalle de una lista ajena visible. Si la lista no es visible para el visitante, se comporta como
-inexistente.
+Detalle de una lista ajena visible, con sus ítems ordenados por posición. Si la lista no es
+visible para el visitante, se comporta como inexistente. La página
+`/<locale>/users/[username]/lists/[listId]` (cambio `rework-list-detail`) consume este endpoint.
 
-**200 OK:** `{ list }`. **404** con `LIST_NOT_FOUND` o `USER_NOT_FOUND`.
+**200 OK:** `{ list }` con `items: [{ id, position, target: { id, title, artistName, coverThumbUrl } }]`
+(misma forma que el detalle propio). **404** con `LIST_NOT_FOUND` o `USER_NOT_FOUND`.
 
 ## Guardar / descubrir listas (Fase 5.5, cambio `rework-lists-section`)
 
