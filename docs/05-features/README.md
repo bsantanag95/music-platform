@@ -15,6 +15,7 @@ implementación.
 | [`physical-collection.md`](./physical-collection.md) | 5 | ✅ Implementado (`add-physical-collection`; estantería `/me/collection` con 3 modos de vista + toolbar de búsqueda/orden/agrupación + edición en línea + cambio de audiencia en lote + vista de lectura ajena en `rework-collection-section`) |
 | [`activity-feed.md`](./activity-feed.md) | 5 | ✅ Implementado (escuchas + favoritos + listas + ratings + comentarios) |
 | [`home.md`](./home.md) | 5 | ✅ Implementado (cambio `add-home-page`) |
+| [`user-profile.md`](./user-profile.md) | 5 | 🟡 Implementado (cambio `redesign-user-profile`: identidad extendida, huella de gusto, destacados/himno, afinidad, estantes, panel del dueño; revisión visual pendiente) |
 
 ## Regla de esta carpeta
 

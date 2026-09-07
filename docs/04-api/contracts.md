@@ -331,10 +331,57 @@ Perfil propio autenticado, incluye `email`.
 
 ### `PATCH /api/me/profile`
 
-Actualiza la visibilidad del perfil propio.
+Actualiza la visibilidad y/o la identidad extendida del perfil propio (cambio
+`redesign-user-profile`). Todos los campos son opcionales; se requiere al menos uno. Las
+cadenas de texto se recortan; la cadena vacía borra el campo (`null`).
 
-**Body:** `{ profileVisibility: "public" | "private" }`. **200 OK:** `{ user }` con la
-configuración persistida. **400** con `VALIDATION_ERROR` si el valor no es válido.
+**Body:** cualquier subconjunto de
+`{ profileVisibility: "public" | "private", bio (≤200), pronouns (≤40), location (≤80), timezone (≤64) }`.
+**200 OK:** `{ user: { id, username, displayName, email, profileVisibility } }` actualizado.
+**400** con `VALIDATION_ERROR` si un valor no es válido o el body está vacío.
+
+### `PUT` / `DELETE /api/me/profile/links`
+
+Reemplaza el conjunto ordenado de enlaces externos del perfil (0..5). La posición se deriva
+del orden del array. `DELETE` los vacía todos.
+
+**Body (PUT):** `{ links: [{ kind, url }] }` — `kind` ∈ `website · bandcamp · lastfm ·
+discogs · instagram · youtube · soundcloud · other`; `url` `http(s)` válida (≤400).
+**200 OK:** `{ links: [{ id, kind, url, position }] }`. **400** con `VALIDATION_ERROR` si hay
+más de 5, un `kind` fuera del conjunto o una URL inválida.
+
+### `PUT` / `DELETE /api/me/profile/pinned`
+
+Reemplaza los hasta 4 destacados del perfil (tipos mezclados). `DELETE` los vacía.
+
+**Body (PUT):** `{ items: [{ type: "artist"|"release-group"|"recording", id, note? (≤120) }] }`.
+**200 OK:** `{ showcase: { pinned: [{ id, note, position, entity: { type, id, title, artistName, coverThumbUrl } }], anthem } }`.
+**400** con `VALIDATION_ERROR` si hay más de 4, una nota demasiado larga o una entidad
+inexistente.
+
+### `PUT` / `DELETE /api/me/profile/anthem`
+
+Fija (`PUT`) o quita (`DELETE`) el himno del perfil — una canción elegida manualmente.
+
+**Body (PUT):** `{ recordingId }`. **200 OK:** `{ showcase }` (misma forma que arriba).
+**400** con `VALIDATION_ERROR` si el `recordingId` no es válido o no existe.
+
+### `GET /api/users/[username]/fingerprint`
+
+Huella de gusto del perfil, filtrada por lo que el visitante puede ver. La curva de
+valoraciones solo se calcula para el dueño y seguidores aprobados; escuchas, favoritos,
+listas y colección se filtran por audiencia.
+
+**200 OK:** `{ fingerprint: { ratingsVisible, ratingCurve: [{ stars, count }] | null, totalRatings, decades: [{ label, count }], genres: [{ label, count }], genreDataAvailable, split: { ratedArtists, ratedAlbums, ratedSongs, collection, lists } } | null }`.
+`fingerprint` es `null` cuando el visitante no tiene acceso al contenido del perfil.
+
+### `GET /api/users/[username]/affinity`
+
+Coincidencias entre el visitante autenticado y el dueño del perfil.
+
+**200 OK:** `{ affinity: { sharedFavorites: [entity], sharedHighRatings: [entity], mutualFollowers } | null }`.
+`affinity` es `null` sin sesión, para el propio dueño, sin acceso, ante bloqueo, o cuando no
+hay ninguna coincidencia.
 
 ### `PUT /api/users/[username]/follow`
 

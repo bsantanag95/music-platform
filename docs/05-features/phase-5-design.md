@@ -93,10 +93,23 @@ el historial ya registrado, salvo que el usuario lo solicite.
 
 Todavía se debe decidir:
 
-- si el perfil nuevo es público o privado por defecto;
-- si una actividad pública de un perfil privado aparece fuera del perfil, o solo a seguidores
-  aprobados;
+- si el perfil nuevo es público o privado por defecto (por ahora: público);
 - si el usuario puede configurar un valor predeterminado distinto por tipo de actividad.
+
+**Cerrada (`add-diary-social-surfaces`):** una actividad pública de un perfil privado solo la
+ven seguidores aprobados y el dueño.
+
+**Cerrada (`redesign-user-profile`):** un perfil privado consultado por un visitante no
+autorizado expone su **identidad extendida** — bio, enlaces externos y contadores de
+seguidores/seguidos —, no solo identidad mínima. Solo las actividades y los listados sociales
+quedan ocultos.
+
+**Cerrada (`redesign-user-profile`):** el perfil se sirve en la ruta canónica
+`/users/{username}` también para el dueño; no hay una ruta de perfil separada. Las páginas
+`/me/*` siguen siendo el destino de gestión, enlazadas desde el panel del dueño.
+
+**Cerrada (`redesign-user-profile`):** el himno del perfil se elige manualmente; no se deriva
+de la última escucha ni de ninguna actividad.
 
 Estas decisiones no deben impedir modelar las tres audiencias desde el inicio.
 
