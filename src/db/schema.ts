@@ -34,12 +34,29 @@ export const appUser = pgTable(
     displayName: text("display_name"),
     passwordHash: text("password_hash"),
     profileVisibility: text("profile_visibility").notNull().default("public"),
+    // Identidad extendida del perfil (cambio redesign-user-profile). Todas
+    // opcionales. `avatarUrl` existe en el schema pero la UI no lo lee todavía
+    // (la subida de avatares es un cambio posterior); la identidad visual es
+    // el monograma determinista por username.
+    bio: text("bio"),
+    pronouns: text("pronouns"),
+    location: text("location"),
+    timezone: text("timezone"),
+    avatarUrl: text("avatar_url"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     check(
       "chk_app_user_profile_visibility",
       sql`${t.profileVisibility} IN ('public','private')`,
+    ),
+    check("chk_app_user_bio", sql`${t.bio} IS NULL OR length(${t.bio}) <= 200`),
+    check("chk_app_user_pronouns", sql`${t.pronouns} IS NULL OR length(${t.pronouns}) <= 40`),
+    check("chk_app_user_location", sql`${t.location} IS NULL OR length(${t.location}) <= 80`),
+    check("chk_app_user_timezone", sql`${t.timezone} IS NULL OR length(${t.timezone}) <= 64`),
+    check(
+      "chk_app_user_avatar_url",
+      sql`${t.avatarUrl} IS NULL OR length(${t.avatarUrl}) <= 400`,
     ),
   ],
 );
@@ -465,6 +482,97 @@ export const collectionEntry = pgTable(
 );
 
 export type CollectionEntryRow = typeof collectionEntry.$inferSelect;
+
+// Perfil enriquecido (cambio redesign-user-profile).
+//
+// - user_profile_link: enlaces externos, máx. 5 por usuario (validado en el
+//   servicio; un CHECK no cuenta filas), con orden explícito.
+// - user_pinned_item: cuatro destacados, tipos mezclados, patrón triple-FK
+//   nullable + CHECK num_nonnulls igual que rating/favorite/user_list_item.
+// - user_showcase: una fila por usuario, himno elegido manualmente (recording).
+// - release_group_tag: tags de género por álbum para la cresta de géneros de
+//   la huella; sembrados hasta que exista ingesta real desde MusicBrainz.
+export const userProfileLink = pgTable(
+  "user_profile_link",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    url: text("url").notNull(),
+    position: integer("position").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_user_profile_link_user").on(t.userId, t.position),
+    check(
+      "chk_user_profile_link_kind",
+      sql`${t.kind} IN ('website', 'bandcamp', 'lastfm', 'discogs', 'instagram', 'youtube', 'soundcloud', 'other')`,
+    ),
+    check("chk_user_profile_link_url", sql`length(${t.url}) <= 400`),
+  ],
+);
+
+export const userPinnedItem = pgTable(
+  "user_pinned_item",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    artistId: uuid("artist_id").references(() => artist.id, { onDelete: "cascade" }),
+    releaseGroupId: uuid("release_group_id").references(() => releaseGroup.id, {
+      onDelete: "cascade",
+    }),
+    recordingId: uuid("recording_id").references(() => recording.id, { onDelete: "cascade" }),
+    note: text("note"),
+    position: integer("position").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_user_pinned_item_user").on(t.userId, t.position),
+    check("chk_user_pinned_item_note", sql`${t.note} IS NULL OR length(${t.note}) <= 120`),
+    check(
+      "chk_user_pinned_item_single_target",
+      sql`num_nonnulls(${t.artistId}, ${t.releaseGroupId}, ${t.recordingId}) = 1`,
+    ),
+  ],
+);
+
+export const userShowcase = pgTable("user_showcase", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => appUser.id, { onDelete: "cascade" }),
+  anthemRecordingId: uuid("anthem_recording_id").references(() => recording.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const releaseGroupTag = pgTable(
+  "release_group_tag",
+  {
+    releaseGroupId: uuid("release_group_id")
+      .notNull()
+      .references(() => releaseGroup.id, { onDelete: "cascade" }),
+    tag: text("tag").notNull(),
+    count: integer("count").notNull().default(1),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.releaseGroupId, t.tag] }),
+    index("idx_release_group_tag_tag").on(t.tag),
+    check("chk_release_group_tag_tag", sql`length(${t.tag}) <= 80`),
+    check("chk_release_group_tag_count", sql`${t.count} >= 0`),
+  ],
+);
+
+export type UserProfileLinkRow = typeof userProfileLink.$inferSelect;
+export type UserPinnedItemRow = typeof userPinnedItem.$inferSelect;
+export type UserShowcaseRow = typeof userShowcase.$inferSelect;
+export type ReleaseGroupTagRow = typeof releaseGroupTag.$inferSelect;
 
 export const comment = pgTable(
   "comment",
