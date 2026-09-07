@@ -93,9 +93,9 @@
 
 ## 11. Cierre
 
-- [ ] 11.1 Completar claves i18n ES/EN para todas las superficies nuevas; verificar que ningún nombre de catálogo se traduce
-- [ ] 11.2 Actualizar `docs/05-features` (nuevo documento de perfil) y `docs/03-api` con los endpoints nuevos
-- [ ] 11.3 Actualizar `docs/05-features/phase-5-design.md` (decisiones cerradas: identidad extendida en privado, ruta canónica, himno manual)
-- [ ] 11.4 `openspec validate redesign-user-profile --strict`
-- [ ] 11.5 `pnpm typecheck && pnpm lint && pnpm test && pnpm build` en verde
-- [ ] 11.6 Revisión visual final de las tres vistas (móvil + escritorio) y de `prefers-reduced-motion`
+- [x] 11.1 Claves i18n ES/EN completas para todas las superficies nuevas; `messages.consistency`/`messages.keys` en verde (nombres de catálogo nunca se traducen — solo textos de UI)
+- [x] 11.2 `docs/05-features/user-profile.md` nuevo + `docs/04-api/contracts.md` con los endpoints nuevos (`/links`, `/pinned`, `/anthem`, `/fingerprint`, `/affinity`) y el `PATCH /api/me/profile` ampliado
+- [x] 11.3 `docs/05-features/phase-5-design.md` §4.4: decisiones cerradas (identidad extendida en privado, ruta canónica del dueño, himno manual)
+- [x] 11.4 `openspec validate redesign-user-profile --strict` ✅
+- [x] 11.5 `pnpm typecheck` ✅ · `pnpm lint` ✅ · `pnpm test` ✅ (991/991, 155 archivos) · `pnpm build` ✅ (compila, typecheck de build, todas las rutas nuevas generadas)
+- [ ] 11.6 Revisión visual final de las tres vistas (móvil + escritorio) y `prefers-reduced-motion` — pendiente en el entorno del usuario (dev server + BD)
