@@ -1,13 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AffinitySection,
+  AnthemSection,
   DiaryRail,
   FavoritesRail,
   FingerprintSection,
+  PinnedSection,
   ShowcaseSection,
 } from "./sections";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
 import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
+import { AnthemStrip } from "@/components/profiles/AnthemStrip";
 import { TasteFingerprint } from "@/components/profiles/TasteFingerprint";
 import { ProfileAffinity } from "@/components/profiles/ProfileAffinity";
 
@@ -103,6 +106,22 @@ describe("ShowcaseSection / FingerprintSection", () => {
   it("ShowcaseSection renderiza PinnedShowcase cuando hay destacados", async () => {
     svc.getShowcase.mockResolvedValue({ pinned: [{ id: "p1" }], anthem: null });
     expect(findType(await ShowcaseSection({ ownerId: "owner" }), PinnedShowcase)).toBe(true);
+  });
+
+  it("PinnedSection renderiza solo los destacados (null sin ellos)", async () => {
+    svc.getShowcase.mockResolvedValue({ pinned: [], anthem: { id: "r1" } });
+    expect(await PinnedSection({ ownerId: "owner" })).toBeNull();
+    svc.getShowcase.mockResolvedValue({ pinned: [{ id: "p1" }], anthem: null });
+    const tree = (await PinnedSection({ ownerId: "owner" })) as { type?: unknown };
+    expect(tree?.type).toBe(PinnedShowcase);
+  });
+
+  it("AnthemSection renderiza solo el himno (null sin él)", async () => {
+    svc.getShowcase.mockResolvedValue({ pinned: [{ id: "p1" }], anthem: null });
+    expect(await AnthemSection({ ownerId: "owner" })).toBeNull();
+    svc.getShowcase.mockResolvedValue({ pinned: [], anthem: { id: "r1", title: "x" } });
+    const tree = (await AnthemSection({ ownerId: "owner" })) as { type?: unknown };
+    expect(tree?.type).toBe(AnthemStrip);
   });
 
   it("FingerprintSection es null cuando getTasteFingerprint devuelve null", async () => {

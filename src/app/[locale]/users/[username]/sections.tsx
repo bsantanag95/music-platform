@@ -65,6 +65,10 @@ export async function OwnerEditors({ profile }: { profile: ProfileView }) {
   );
 }
 
+// El showcase (destacados + himno) se compone en dos secciones para el layout
+// de dos columnas de la vista pública: los destacados van en la columna
+// principal, el himno en la barra lateral. `getShowcase` está memoizada por
+// request, así que no hay doble consulta.
 export async function ShowcaseSection({ ownerId }: { ownerId: string }) {
   const showcase = await getShowcase(ownerId);
   if (showcase.pinned.length === 0 && !showcase.anthem) return null;
@@ -74,6 +78,16 @@ export async function ShowcaseSection({ ownerId }: { ownerId: string }) {
       {showcase.anthem && <AnthemStrip anthem={showcase.anthem} />}
     </>
   );
+}
+
+export async function PinnedSection({ ownerId }: { ownerId: string }) {
+  const { pinned } = await getShowcase(ownerId);
+  return pinned.length > 0 ? <PinnedShowcase pinned={pinned} /> : null;
+}
+
+export async function AnthemSection({ ownerId }: { ownerId: string }) {
+  const { anthem } = await getShowcase(ownerId);
+  return anthem ? <AnthemStrip anthem={anthem} /> : null;
 }
 
 export async function FingerprintSection({ username, viewerId }: Omit<SectionProps, "isOwn">) {
