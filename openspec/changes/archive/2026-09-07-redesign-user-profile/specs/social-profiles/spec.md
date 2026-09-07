@@ -24,7 +24,7 @@ valorar, rachas ni medallas de completitud.
 - **THEN** ve la identidad extendida, la huella de gusto, los destacados y el contenido
   permitido por la audiencia de cada elemento
 
-#### Scenario: Visitante no autorizado consulta perfil privado
+#### Scenario: Visitante consulta perfil privado
 
 - **WHEN** un visitante que no sigue a un usuario con relación aceptada abre su perfil
   privado
