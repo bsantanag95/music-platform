@@ -17,7 +17,8 @@ function mockUpdateReturning(result: unknown[]) {
 }
 
 function mockLinkTransaction() {
-  const insertValues = vi.fn().mockResolvedValue(undefined);
+  const returning = vi.fn().mockResolvedValue([]);
+  const insertValues = vi.fn().mockReturnValue({ returning });
   const deleteWhere = vi.fn().mockResolvedValue(undefined);
   mocks.db.transaction.mockImplementation(async (cb: (tx: unknown) => unknown) =>
     cb({

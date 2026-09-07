@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import UserProfilePage from "./page";
 import { Placa } from "@/components/profiles/Placa";
 import { PrivateThreshold } from "@/components/profiles/PrivateThreshold";
+import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import type { ProfileView } from "@/services/profiles/profile-view";
 
 vi.mock("next-intl/server", () => ({
@@ -29,6 +30,10 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 vi.mock("@/components/profiles/Placa", () => ({ Placa: () => null }));
 vi.mock("@/components/profiles/PrivateThreshold", () => ({ PrivateThreshold: () => null }));
+vi.mock("@/components/profiles/OwnerIdentityEditor", () => ({
+  OwnerIdentityEditor: () => null,
+}));
+vi.mock("@/components/profiles/OwnerLinksEditor", () => ({ OwnerLinksEditor: () => null }));
 vi.mock("@/components/diary/DiaryList", () => ({ DiaryList: () => null }));
 vi.mock("@/components/favorites/FavoritesWall", () => ({ FavoritesWall: () => null }));
 vi.mock("@/components/lists/ListsList", () => ({ ListsList: () => null }));
@@ -120,6 +125,28 @@ describe("UserProfilePage", () => {
     const tree = await render();
     expect(findElement(tree, PrivateThreshold)).not.toBeNull();
     expect(JSON.stringify(tree)).not.toContain("diaryTitle");
+  });
+
+  it("vista del dueño: monta los editores de identidad, sin umbral", async () => {
+    resolveSession.mockResolvedValue({ user: { id: "owner" } });
+    getProfileView.mockResolvedValue(
+      profile({ relation: "self", isOwner: true, accessible: true, profileVisibility: "private" }),
+    );
+
+    const tree = await render();
+    expect(findElement(tree, OwnerIdentityEditor)).not.toBeNull();
+    expect(findElement(tree, PrivateThreshold)).toBeNull();
+    expect(mutualFollowersHint).not.toHaveBeenCalled();
+  });
+
+  it("visitante que no es el dueño: sin editores de identidad", async () => {
+    resolveSession.mockResolvedValue({ user: { id: "viewer" } });
+    getProfileView.mockResolvedValue(
+      profile({ profileVisibility: "public", relation: "none", accessible: true }),
+    );
+
+    const tree = await render();
+    expect(findElement(tree, OwnerIdentityEditor)).toBeNull();
   });
 
   it("el hint de seguidores en común solo se calcula si el visitante está autenticado y bloqueado fuera", async () => {

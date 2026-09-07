@@ -38,11 +38,11 @@
 
 ## 5. Edición de identidad del dueño
 
-- [ ] 5.1 Endpoint `PATCH /api/me/profile` (bio, pronombres, ubicación, zona horaria) con Zod + `with-error-handling` + test de ruta
-- [ ] 5.2 Endpoint `PUT/DELETE /api/me/profile/links` con Zod + test de ruta
-- [ ] 5.3 Editores inline cliente (bio, pronombres/ubicación/zona, enlaces) vía `src/lib/api/client.ts`; estados carga/éxito/error recuperable; sin recargar
-- [ ] 5.4 Montar los editores solo cuando `relation === "self"`
-- [ ] 5.5 Tests de los editores (guardado, vaciado, error recuperable conserva input, ausencia para visitantes)
+- [x] 5.1 `PATCH /api/me/profile` ampliado (`UpdateOwnProfileRequestSchema`: visibilidad y/o identidad, todo opcional) + `route.test.ts`
+- [x] 5.2 `PUT/DELETE /api/me/profile/links` (`ReplaceProfileLinksRequestSchema`, `replaceLinks` devuelve el conjunto persistido) + `route.test.ts`
+- [x] 5.3 `OwnerIdentityEditor` (bio+pronombres+ubicación+zona) y `OwnerLinksEditor` (filas kind+URL, agregar/quitar, máx 5) vía `apiFetch`; estados saving/saved/error recuperable; sin recargar
+- [x] 5.4 Editores montados en `page.tsx` solo cuando `isOwn`
+- [x] 5.5 Tests: `OwnerIdentityEditor.test.tsx`, `OwnerLinksEditor.test.tsx` (guardado, deshabilitado sin cambios, error conserva input, tope de 5, quitar fila) + `page.test.tsx` (editores solo para el dueño)
 
 ## 6. Huella de gusto
 

@@ -456,6 +456,25 @@ export const ReplaceProfileLinksRequestSchema = z.object({
 });
 export type ReplaceProfileLinksRequest = z.infer<typeof ReplaceProfileLinksRequestSchema>;
 
+export const ProfileLinksResponseSchema = z.object({ links: z.array(ProfileLinkSchema) });
+export type ProfileLinksResponse = z.infer<typeof ProfileLinksResponseSchema>;
+
+// PATCH /api/me/profile acepta un subconjunto: visibilidad y/o campos de
+// identidad. `UpdateProfileVisibilityRequestSchema` se mantiene para los
+// clientes que solo tocan la visibilidad.
+export const UpdateOwnProfileRequestSchema = z
+  .object({
+    profileVisibility: ProfileVisibilitySchema.optional(),
+    bio: identityText(PROFILE_IDENTITY_LIMITS.bio).optional(),
+    pronouns: identityText(PROFILE_IDENTITY_LIMITS.pronouns).optional(),
+    location: identityText(PROFILE_IDENTITY_LIMITS.location).optional(),
+    timezone: identityText(PROFILE_IDENTITY_LIMITS.timezone).optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, {
+    message: "No hay nada para actualizar",
+  });
+export type UpdateOwnProfileRequest = z.infer<typeof UpdateOwnProfileRequestSchema>;
+
 // Respuestas 204 sin body (aprovechar, rechazar, eliminar seguidor).
 export const NoContentSchema = z.null();
 

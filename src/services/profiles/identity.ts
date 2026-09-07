@@ -162,7 +162,7 @@ export async function updateIdentity(
 export async function replaceLinks(
   userId: string,
   links: ProfileLinkInput[],
-): Promise<void> {
+): Promise<ProfileLinkData[]> {
   const parsed = ReplaceProfileLinksRequestSchema.safeParse({ links });
   if (!parsed.success) {
     throw new ApiError("VALIDATION_ERROR", 400, "Los enlaces del perfil no son válidos");
@@ -171,18 +171,35 @@ export async function replaceLinks(
     throw new ApiError("VALIDATION_ERROR", 400, `Máximo ${PROFILE_MAX_LINKS} enlaces`);
   }
 
-  await db.transaction(async (tx) => {
+  const inserted = await db.transaction(async (tx) => {
     await tx.delete(userProfileLink).where(eq(userProfileLink.userId, userId));
-    if (parsed.data.links.length === 0) return;
-    await tx.insert(userProfileLink).values(
-      parsed.data.links.map((link, position) => ({
-        userId,
-        kind: link.kind,
-        url: link.url,
-        position,
-      })),
-    );
+    if (parsed.data.links.length === 0) return [];
+    return tx
+      .insert(userProfileLink)
+      .values(
+        parsed.data.links.map((link, position) => ({
+          userId,
+          kind: link.kind,
+          url: link.url,
+          position,
+        })),
+      )
+      .returning({
+        id: userProfileLink.id,
+        kind: userProfileLink.kind,
+        url: userProfileLink.url,
+        position: userProfileLink.position,
+      });
   });
+
+  return inserted
+    .map((link) => ({
+      id: link.id,
+      kind: link.kind as ProfileLinkKind,
+      url: link.url,
+      position: link.position,
+    }))
+    .sort((a, b) => a.position - b.position);
 }
 
 // Conteo de seguidores/seguidos aceptados de un usuario, en una sola query.

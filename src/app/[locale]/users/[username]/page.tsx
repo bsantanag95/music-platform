@@ -12,6 +12,8 @@ import { listUserLists } from "@/services/lists/lists";
 import { listProfileCollection } from "@/services/collection/collection";
 import { Placa } from "@/components/profiles/Placa";
 import { PrivateThreshold } from "@/components/profiles/PrivateThreshold";
+import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
+import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
 import { DiaryList } from "@/components/diary/DiaryList";
 import { FavoritesWall } from "@/components/favorites/FavoritesWall";
 import { ListsList } from "@/components/lists/ListsList";
@@ -116,6 +118,20 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
             {t("profileVisibilityLabel")}
           </Link>
         </nav>
+      )}
+
+      {isOwn && (
+        <section className="flex w-full max-w-2xl flex-col gap-6 rounded-lg border border-ink-border bg-ink-surface p-6">
+          <OwnerIdentityEditor
+            initial={{
+              bio: profile.bio,
+              pronouns: profile.pronouns,
+              location: profile.location,
+              timezone: profile.timezone,
+            }}
+          />
+          <OwnerLinksEditor initialLinks={profile.links} />
+        </section>
       )}
 
       {lockedOut && (
