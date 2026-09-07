@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-05T00:00:00.000Z",
+  "generatedAt": "2026-09-06T00:00:00.000Z",
   "title": "Design System: Music Platform",
   "extensions": {
     "colorMeta": {
@@ -18,7 +18,7 @@
     "typographyMeta": {
       "display": { "displayName": "Display", "purpose": "Headings, page titles, section headings, and interactive buttons only. Space Grotesk 500." },
       "body": { "displayName": "Body", "purpose": "Reading text: comments, descriptions, paragraphs. Source Serif 4 400, ~65ch measure." },
-      "label": { "displayName": "Label / Data", "purpose": "Metadata, breadcrumbs, field labels, timestamps, ratings, member periods, locale toggles, filter controls. IBM Plex Mono 400, text-xs." }
+      "label": { "displayName": "Label / Data", "purpose": "Metadata, breadcrumbs, field labels, timestamps, member periods, reaction badges, data readouts. IBM Plex Mono 400, text-xs (uppercase on the locale switcher)." }
     },
     "shadows": [],
     "motion": [
@@ -111,14 +111,14 @@
       "A single, disciplined amber accent used sparingly across the whole screen (focus rings, primary actions, active states)",
       "Flat, tonal depth system: surfaces layer by temperature, never by shadow",
       "Editorial typography triad: a grotesque for display, a serif for reading, a monospace for data",
-      "Interaction furniture is quiet; content surfaces carry the object-like tactility of the physical collection",
+      "Chosen interaction furniture begets a \"listening room\" hushed calm",
       "Respects prefers-reduced-motion; visible focus outline always on"
     ],
     "rules": [
       { "name": "The Rarity Rule", "body": "VU Gold appears on ≤10% of any given screen. Its power comes from being the only thing that glows in the dark. When everything is amber, nothing is.", "section": "colors" },
       { "name": "The No-Black Rule", "body": "Never use pure #000, pure #fff, or the default Tailwind palette. Every color here is earth-tinted; the warmth is the identity.", "section": "colors" },
       { "name": "The Typographic Division of Labor Rule", "body": "Display speaks, body reads, mono measures. Headings and buttons are always Space Grotesk; paragraphs and comments are always Source Serif; any data — dates, ratings, member roles, breadcrumbs, field labels, locale toggles — is always IBM Plex Mono. Do not swap these roles for flourish.", "section": "typography" },
-      { "name": "The No-Shadow Rule", "body": "Elevation is never a box-shadow. If you need to separate a surface, step it one temperature lighter (ink-surface) and draw a ink-border hairline around it — never cast a drop shadow.", "section": "elevation" }
+      { "name": "The No-Shadow Rule", "body": "Elevation is never a box-shadow. If you need to separate a surface, step it one temperature lighter (ink-surface) and draw a ink-border hairline around it — never cast a drop shadow. The listening room is lit by lamps, not by false depth.", "section": "elevation" }
     ],
     "dos": [
       "Do keep the amber accent rare and disciplined — it is the one light in the room.",
