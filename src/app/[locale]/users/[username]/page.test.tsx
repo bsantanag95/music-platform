@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 import UserProfilePage from "./page";
 import { Placa } from "@/components/profiles/Placa";
 import { PrivateThreshold } from "@/components/profiles/PrivateThreshold";
-import { OwnerEditors } from "./sections";
+import { ViewAsBanner } from "@/components/profiles/ViewAsBanner";
+import { HubSection, OwnerEditors } from "./sections";
 import type { ProfileView } from "@/services/profiles/profile-view";
 
 vi.mock("next-intl/server", () => ({
@@ -28,8 +29,10 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 vi.mock("@/components/profiles/Placa", () => ({ Placa: () => null }));
 vi.mock("@/components/profiles/PrivateThreshold", () => ({ PrivateThreshold: () => null }));
+vi.mock("@/components/profiles/ViewAsBanner", () => ({ ViewAsBanner: () => null }));
 vi.mock("./sections", () => ({
   OwnerEditors: () => null,
+  HubSection: () => null,
   ShowcaseSection: () => null,
   FingerprintSection: () => null,
   RecencySection: () => null,
@@ -75,7 +78,11 @@ const profile = (over: Partial<ProfileView>): ProfileView => ({
   ...over,
 });
 
-const render = (username = "ana") => UserProfilePage({ params: Promise.resolve({ username }) });
+const render = (username = "ana", preview?: string) =>
+  UserProfilePage({
+    params: Promise.resolve({ username }),
+    searchParams: Promise.resolve(preview ? { preview } : {}),
+  });
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -118,7 +125,7 @@ describe("UserProfilePage", () => {
     expect(findElement(tree, OwnerEditors)).toBeNull();
   });
 
-  it("vista del dueño: monta OwnerEditors, sin umbral, sin hint", async () => {
+  it("vista del dueño: monta OwnerEditors, HubSection y ViewAsBanner, sin umbral", async () => {
     resolveSession.mockResolvedValue({ user: { id: "owner" } });
     getProfileView.mockResolvedValue(
       profile({ relation: "self", isOwner: true, accessible: true }),
@@ -126,8 +133,37 @@ describe("UserProfilePage", () => {
 
     const tree = await render();
     expect(findElement(tree, OwnerEditors)).not.toBeNull();
+    expect(findElement(tree, HubSection)).not.toBeNull();
+    const banner = findElement(tree, ViewAsBanner);
+    expect(banner?.props?.previewing).toBe(false);
     expect(findElement(tree, PrivateThreshold)).toBeNull();
     expect(mutualFollowersHint).not.toHaveBeenCalled();
+  });
+
+  it("dueño con ?preview=1: recompone como anónimo, sin editores ni hub", async () => {
+    resolveSession.mockResolvedValue({ user: { id: "owner" } });
+    getProfileView
+      .mockResolvedValueOnce(profile({ relation: "self", isOwner: true, accessible: true }))
+      .mockResolvedValueOnce(
+        profile({ profileVisibility: "public", relation: "none", accessible: true }),
+      );
+
+    const tree = await render("ana", "1");
+    expect(getProfileView).toHaveBeenNthCalledWith(2, "ana", null);
+    expect(findElement(tree, OwnerEditors)).toBeNull();
+    expect(findElement(tree, HubSection)).toBeNull();
+    expect(findElement(tree, ViewAsBanner)?.props?.previewing).toBe(true);
+  });
+
+  it("visitante que no es el dueño: sin hub ni banner", async () => {
+    resolveSession.mockResolvedValue({ user: { id: "viewer" } });
+    getProfileView.mockResolvedValue(
+      profile({ profileVisibility: "public", relation: "none", accessible: true }),
+    );
+
+    const tree = await render();
+    expect(findElement(tree, HubSection)).toBeNull();
+    expect(findElement(tree, ViewAsBanner)).toBeNull();
   });
 
   it("visitante autenticado bloqueado fuera: calcula el hint y lo pasa al umbral", async () => {

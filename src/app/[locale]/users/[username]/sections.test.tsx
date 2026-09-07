@@ -40,6 +40,7 @@ vi.mock("@/services/profiles/stats", () => ({ getTasteFingerprint: svc.getTasteF
 vi.mock("@/services/profiles/showcase", () => ({ getShowcase: svc.getShowcase }));
 vi.mock("@/services/profiles/recency", () => ({ getProfileRecency: svc.getProfileRecency }));
 vi.mock("@/services/profiles/affinity", () => ({ getProfileAffinity: svc.getProfileAffinity }));
+vi.mock("@/services/social/following", () => ({ countPendingFollowRequests: vi.fn().mockResolvedValue(0) }));
 
 // Stubs de los componentes de lectura para no arrastrar sus imports cliente.
 vi.mock("@/components/diary/DiaryList", () => ({ DiaryList: () => null }));

@@ -84,12 +84,12 @@
 
 ## 10. Panel del dueño y "cómo te ven"
 
-- [ ] 10.1 Componente `OwnerHubPanel`: enlaces y resumen de `/me/diary`, `/me/favorites`, `/me/lists`, `/me/collection`, `/me/followers`, `/me/following`, `/me/follow-requests`, `/me/blocks`, `/me/settings`
-- [ ] 10.2 Indicador de solicitudes pendientes (conteo de 2.5) junto a "Solicitudes", presentado como bandeja de entrada; oculto si es 0
-- [ ] 10.3 Marcado de elementos privados del dueño en huella y estantes ("solo vos ves esto")
-- [ ] 10.4 Toggle cliente "cómo te ven" (público / no-seguidor): re-render forzando la relación sobre datos ya cargados; ocultar bloques cuyos datos no estén disponibles
-- [ ] 10.5 Auditar enlaces a la ruta canónica: Header, `WelcomePanel`, cualquier `/me` residual; confirmar que no hay ruta de perfil separada del dueño
-- [ ] 10.6 Tests: badge con/sin pendientes, previsualización sin controles de edición, marcado de privados
+- [x] 10.1 `src/components/profiles/OwnerHubPanel.tsx` (Server): grid de enlaces a las 9 superficies `/me/*` (`HubSection` en `sections.tsx` hace el fetch bajo `<Suspense>`)
+- [x] 10.2 Badge de solicitudes pendientes (`countPendingFollowRequests`) en "Solicitudes", enmarcado como bandeja (`hub.pendingRequests`); oculto en 0
+- [~] 10.3 Marcado per-ítem de elementos privados en huella/estantes: diferido (requiere hilar un prop nuevo por los 4 componentes de lectura). El previsualizador "cómo te ven" cubre el objetivo por comparación
+- [x] 10.4 `ViewAsBanner.tsx` + `?preview=1` en `page.tsx`: recompone el perfil como visitante anónimo (`getProfileView(username, null)`), sin editores/hub; banner con enlace de vuelta. Navegación por query param, sin estado cliente
+- [x] 10.5 Auditado: Header, Footer, `WelcomePanel`, `CommunityActivity`, `PopularCommentsTabs`, `PublicLists` ya enlazan a `/users/{username}`; no existe ruta de perfil del dueño separada (no hay `page.tsx` en `/me`)
+- [x] 10.6 Tests: `OwnerHubPanel.test.tsx` (enlaces, badge con/sin pendientes), `page.test.tsx` (hub + banner para el dueño, `?preview=1` recompone como anónimo sin editores, ausentes para visitantes)
 
 ## 11. Cierre
 

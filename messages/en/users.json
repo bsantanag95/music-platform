@@ -68,6 +68,15 @@
   },
   "recencyLastSignal": "Last activity {ago}",
   "railEmptyOwn": "Nothing here yet.",
+  "hub": {
+    "heading": "Manage",
+    "pendingRequests": "{count, plural, one {# request} other {# requests}}"
+  },
+  "viewAs": {
+    "enter": "See how others see you",
+    "banner": "You're viewing your profile as the public sees it.",
+    "exit": "Back to your view"
+  },
   "affinity": {
     "heading": "In common",
     "sharedFavorites": "Favorites in common",

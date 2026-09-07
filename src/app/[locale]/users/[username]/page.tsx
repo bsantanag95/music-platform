@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
 import { cache, Suspense, type ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
 import { getProfileView } from "@/services/profiles/profile-view";
 import { mutualFollowersHint } from "@/services/profiles/affinity";
 import { resolveSession } from "@/services/auth/sessions";
 import { Placa } from "@/components/profiles/Placa";
 import { PrivateThreshold } from "@/components/profiles/PrivateThreshold";
+import { ViewAsBanner } from "@/components/profiles/ViewAsBanner";
 import {
   AffinitySection,
   CollectionRail,
   DiaryRail,
   FavoritesRail,
   FingerprintSection,
+  HubSection,
   ListsRail,
   OwnerEditors,
   RecencySection,
@@ -22,6 +22,7 @@ import {
 
 interface UserProfilePageProps {
   params: Promise<{ username: string }>;
+  searchParams: Promise<{ preview?: string }>;
 }
 
 const getProfileViewCached = cache(async (username: string, viewerId: string | null) =>
@@ -47,9 +48,9 @@ export async function generateMetadata({ params }: UserProfilePageProps): Promis
   }
 }
 
-export default async function UserProfilePage({ params }: UserProfilePageProps) {
+export default async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
   const { username } = await params;
-  const t = await getTranslations("users");
+  const { preview } = await searchParams;
   const session = await resolveSession();
   const viewerId = session?.user.id ?? null;
 
@@ -60,48 +61,45 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
     notFound();
   }
 
+  // "Cómo te ven": el dueño recompone su perfil con el visitante anónimo.
+  const realIsOwn = profile.relation === "self";
+  const previewing = realIsOwn && preview === "1";
+  if (previewing) {
+    profile = await getProfileViewCached(username, null);
+  }
+  const effectiveViewerId = previewing ? null : viewerId;
+
   const isOwn = profile.relation === "self";
   const lockedOut = !profile.accessible && !isOwn;
   const visible = profile.accessible || isOwn;
   const mutualFollowers =
-    lockedOut && viewerId ? await mutualFollowersHint(viewerId, profile.id) : 0;
-  const section = { username: profile.username, viewerId, isOwn };
+    lockedOut && effectiveViewerId
+      ? await mutualFollowersHint(effectiveViewerId, profile.id)
+      : 0;
+  const section = { username: profile.username, viewerId: effectiveViewerId, isOwn };
 
   return (
     <main className="flex min-h-screen flex-col items-start gap-8 px-4 py-12">
-      <Placa profile={profile} authenticated={Boolean(session)} />
+      <Placa profile={profile} authenticated={Boolean(session) && !previewing} />
+
+      {realIsOwn && <ViewAsBanner username={profile.username} previewing={previewing} />}
 
       {isOwn && (
-        <nav aria-label={t("ownProfile")} className="flex w-full max-w-2xl flex-wrap gap-2 font-data text-sm">
-          <Link href="/me/followers" className="text-paper-muted transition-colors hover:text-paper">
-            {t("followersTitle")}
-          </Link>
-          <Link href="/me/following" className="text-paper-muted transition-colors hover:text-paper">
-            {t("followingTitle")}
-          </Link>
-          <Link href="/me/follow-requests" className="text-paper-muted transition-colors hover:text-paper">
-            {t("requestsTitle")}
-          </Link>
-          <Link href="/me/blocks" className="text-paper-muted transition-colors hover:text-paper">
-            {t("blocksTitle")}
-          </Link>
-          <Link href="/me/settings" className="text-paper-muted transition-colors hover:text-paper">
-            {t("profileVisibilityLabel")}
-          </Link>
-        </nav>
-      )}
-
-      {isOwn && (
-        <Streamed>
-          <OwnerEditors profile={profile} />
-        </Streamed>
+        <>
+          <Suspense fallback={<SectionFallback />}>
+            <HubSection ownerId={profile.id} />
+          </Suspense>
+          <Streamed>
+            <OwnerEditors profile={profile} />
+          </Streamed>
+        </>
       )}
 
       {lockedOut && (
         <PrivateThreshold
           username={profile.username}
           relation={profile.relation}
-          authenticated={Boolean(session)}
+          authenticated={Boolean(session) && !previewing}
           ownerId={profile.id}
           mutualFollowers={mutualFollowers}
         />
@@ -113,13 +111,13 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
             <ShowcaseSection ownerId={profile.id} />
           </Streamed>
           <Streamed>
-            <FingerprintSection username={section.username} viewerId={viewerId} />
+            <FingerprintSection username={section.username} viewerId={effectiveViewerId} />
           </Streamed>
           <Suspense fallback={null}>
-            <RecencySection username={section.username} viewerId={viewerId} />
+            <RecencySection username={section.username} viewerId={effectiveViewerId} />
           </Suspense>
           <Suspense fallback={null}>
-            <AffinitySection username={section.username} viewerId={viewerId} />
+            <AffinitySection username={section.username} viewerId={effectiveViewerId} />
           </Suspense>
           <Streamed>
             <DiaryRail {...section} />

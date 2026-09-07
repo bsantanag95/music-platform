@@ -68,6 +68,15 @@
   },
   "recencyLastSignal": "Última señal {ago}",
   "railEmptyOwn": "Todavía no hay nada acá.",
+  "hub": {
+    "heading": "Gestión",
+    "pendingRequests": "{count, plural, one {# solicitud} other {# solicitudes}}"
+  },
+  "viewAs": {
+    "enter": "Ver cómo te ven",
+    "banner": "Estás viendo tu perfil como lo ve el público.",
+    "exit": "Volver a tu vista"
+  },
   "affinity": {
     "heading": "Coincidencias",
     "sharedFavorites": "Favoritos en común",

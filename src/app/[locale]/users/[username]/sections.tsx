@@ -7,8 +7,10 @@ import { getTasteFingerprint } from "@/services/profiles/stats";
 import { getShowcase } from "@/services/profiles/showcase";
 import { getProfileRecency } from "@/services/profiles/recency";
 import { getProfileAffinity } from "@/services/profiles/affinity";
+import { countPendingFollowRequests } from "@/services/social/following";
 import type { ProfileView } from "@/services/profiles/profile-view";
 import { ProfileAffinity } from "@/components/profiles/ProfileAffinity";
+import { OwnerHubPanel } from "@/components/profiles/OwnerHubPanel";
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
 import { OwnerShowcaseEditor } from "@/components/profiles/OwnerShowcaseEditor";
@@ -39,6 +41,10 @@ function EmptyRailForOwner({ label, message }: { label: string; message: string 
       <p className="font-body text-sm text-paper-muted">{message}</p>
     </ProfileRail>
   );
+}
+
+export async function HubSection({ ownerId }: { ownerId: string }) {
+  return <OwnerHubPanel pendingRequests={await countPendingFollowRequests(ownerId)} />;
 }
 
 export async function OwnerEditors({ profile }: { profile: ProfileView }) {
