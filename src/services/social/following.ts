@@ -1,4 +1,4 @@
-import { and, eq, type SQL } from "drizzle-orm";
+import { and, eq, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, userFollow } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -182,6 +182,17 @@ export async function listFollowRequests(userId: string, page = 1, pageSize = 20
     pageSize,
     userFollow.followerId,
   );
+}
+
+// Número de solicitudes de seguimiento pendientes dirigidas al usuario, para
+// el badge del panel de su perfil (cambio redesign-user-profile). Solo cuenta
+// solicitudes `pending` recibidas; nunca las enviadas por el usuario.
+export async function countPendingFollowRequests(userId: string): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(userFollow)
+    .where(and(eq(userFollow.followedId, userId), eq(userFollow.status, "pending")));
+  return row?.count ?? 0;
 }
 
 async function listRelatedUsers(

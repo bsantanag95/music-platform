@@ -31,3 +31,32 @@ export interface UserSummary {
 
 export const AUDIENCES = ["private", "followers", "public"] as const;
 export type Audience = (typeof AUDIENCES)[number];
+
+// Tipos de enlace externo del perfil (cambio redesign-user-profile). Conjunto
+// cerrado, espejado en el CHECK de user_profile_link y en el contrato Zod.
+export const PROFILE_LINK_KINDS = [
+  "website",
+  "bandcamp",
+  "lastfm",
+  "discogs",
+  "instagram",
+  "youtube",
+  "soundcloud",
+  "other",
+] as const;
+export type ProfileLinkKind = (typeof PROFILE_LINK_KINDS)[number];
+
+// Límites de longitud de los campos de identidad extendida. Fuente única
+// para el contrato Zod y la validación de dominio del servicio; los CHECK de
+// la migración 0014 los reflejan.
+export const PROFILE_IDENTITY_LIMITS = {
+  bio: 200,
+  pronouns: 40,
+  location: 80,
+  timezone: 64,
+  linkUrl: 400,
+  pinnedNote: 120,
+} as const;
+
+export const PROFILE_MAX_LINKS = 5;
+export const PROFILE_MAX_PINNED = 4;

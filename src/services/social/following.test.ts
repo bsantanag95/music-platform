@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   approveRequest,
   cancelRequest,
+  countPendingFollowRequests,
   followUser,
   listFollowers,
   listFollowRequests,
@@ -166,5 +167,21 @@ describe("seguimiento", () => {
 
     const requests = await listFollowRequests("t1", 1, 20);
     expect(requests.users).toHaveLength(1);
+  });
+
+  it("cuenta las solicitudes de seguimiento pendientes recibidas", async () => {
+    const where = vi.fn().mockResolvedValue([{ count: 3 }]);
+    const from = vi.fn().mockReturnValue({ where });
+    mocks.db.select.mockReturnValue({ from });
+
+    await expect(countPendingFollowRequests("t1")).resolves.toBe(3);
+  });
+
+  it("devuelve 0 cuando no hay solicitudes pendientes", async () => {
+    const where = vi.fn().mockResolvedValue([]);
+    const from = vi.fn().mockReturnValue({ where });
+    mocks.db.select.mockReturnValue({ from });
+
+    await expect(countPendingFollowRequests("t1")).resolves.toBe(0);
   });
 });

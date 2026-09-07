@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { PROFILE_VISIBILITIES, FOLLOW_RELATIONS } from "@/services/social/types";
+import {
+  PROFILE_VISIBILITIES,
+  FOLLOW_RELATIONS,
+  PROFILE_LINK_KINDS,
+  PROFILE_IDENTITY_LIMITS,
+  PROFILE_MAX_LINKS,
+} from "@/services/social/types";
 import {
   DIARY_AUDIENCES,
   LISTEN_CONTEXTS,
@@ -392,6 +398,63 @@ export type FollowAction = z.infer<typeof FollowActionSchema>;
 
 export const FollowResponseSchema = z.object({ relation: FollowActionSchema });
 export type FollowResponse = z.infer<typeof FollowResponseSchema>;
+
+// --- Perfil enriquecido (cambio redesign-user-profile) ---
+
+export const ProfileLinkKindSchema = z.enum(PROFILE_LINK_KINDS);
+export type ProfileLinkKind = z.infer<typeof ProfileLinkKindSchema>;
+
+export const ProfileLinkSchema = z.object({
+  id: z.uuid(),
+  kind: ProfileLinkKindSchema,
+  url: z.url().max(PROFILE_IDENTITY_LIMITS.linkUrl),
+  position: z.number().int().nonnegative(),
+});
+export type ProfileLink = z.infer<typeof ProfileLinkSchema>;
+
+// Identidad extendida visible en las tres vistas del perfil (incluida la
+// privada sin autorización). No incluye email ni datos de autenticación.
+export const ExtendedIdentitySchema = z.object({
+  id: z.uuid(),
+  username: z.string(),
+  displayName: z.string().nullable(),
+  profileVisibility: ProfileVisibilitySchema,
+  bio: z.string().max(PROFILE_IDENTITY_LIMITS.bio).nullable(),
+  pronouns: z.string().max(PROFILE_IDENTITY_LIMITS.pronouns).nullable(),
+  location: z.string().max(PROFILE_IDENTITY_LIMITS.location).nullable(),
+  timezone: z.string().max(PROFILE_IDENTITY_LIMITS.timezone).nullable(),
+  memberSince: z.string(),
+  links: z.array(ProfileLinkSchema),
+  followerCount: z.number().int().nonnegative(),
+  followingCount: z.number().int().nonnegative(),
+});
+export type ExtendedIdentity = z.infer<typeof ExtendedIdentitySchema>;
+
+// Campo de texto opcional de identidad: null o cadena recortada dentro del
+// límite. La cadena vacía se normaliza a null en el servicio.
+const identityText = (max: number) =>
+  z.string().trim().max(max, `El texto supera el máximo de ${max} caracteres`).nullable();
+
+export const UpdateProfileIdentityRequestSchema = z.object({
+  bio: identityText(PROFILE_IDENTITY_LIMITS.bio).optional(),
+  pronouns: identityText(PROFILE_IDENTITY_LIMITS.pronouns).optional(),
+  location: identityText(PROFILE_IDENTITY_LIMITS.location).optional(),
+  timezone: identityText(PROFILE_IDENTITY_LIMITS.timezone).optional(),
+});
+export type UpdateProfileIdentityRequest = z.infer<typeof UpdateProfileIdentityRequestSchema>;
+
+export const ProfileLinkInputSchema = z.object({
+  kind: ProfileLinkKindSchema,
+  url: z
+    .url({ protocol: /^https?$/ })
+    .max(PROFILE_IDENTITY_LIMITS.linkUrl, "La URL supera el máximo de 400 caracteres"),
+});
+export type ProfileLinkInput = z.infer<typeof ProfileLinkInputSchema>;
+
+export const ReplaceProfileLinksRequestSchema = z.object({
+  links: z.array(ProfileLinkInputSchema).max(PROFILE_MAX_LINKS, "Máximo 5 enlaces"),
+});
+export type ReplaceProfileLinksRequest = z.infer<typeof ReplaceProfileLinksRequestSchema>;
 
 // Respuestas 204 sin body (aprovechar, rechazar, eliminar seguidor).
 export const NoContentSchema = z.null();
