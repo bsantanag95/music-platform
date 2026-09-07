@@ -68,12 +68,12 @@
 
 ## 8. Vista autorizada: estantes y recencia
 
-- [ ] 8.1 Componente `ProfileRail` que envuelve `ScrollablePreviewList` con eyebrow mono + conteo + "ver todo" → superficie completa
-- [ ] 8.2 Integrar rieles de diario, favoritos, listas y colección (reusar los modos `readOnly` y endpoints existentes); colapsar rieles vacíos
-- [ ] 8.3 Línea de recencia ("última señal hace…") + microfeed opcional de 3 ítems de actividad visible
-- [ ] 8.4 Componer la vista autorizada en `page.tsx` bajo `Suspense` por sección (nada bloquea la `Placa`)
-- [ ] 8.5 Tests de composición: estante vacío se oculta, orden de secciones, seguidor vs público
-- [ ] 8.6 Revisión visual de la vista pública completa (móvil + escritorio)
+- [x] 8.1 `src/components/profiles/ProfileRail.tsx` — encabezado uniforme (título display + conteo mono). `ScrollablePreviewList` NO era reutilizable (es específico de feed/self); el estante mantiene el componente de lectura existente como cuerpo
+- [x] 8.2 `src/app/[locale]/users/[username]/sections.tsx` — `DiaryRail`/`FavoritesRail`/`ListsRail`/`CollectionRail` reusan los modos `readOnly` y sus endpoints; colapsan a `null` cuando no hay contenido visible y el visitante no es el dueño (el dueño ve un estante vacío)
+- [x] 8.3 `src/services/profiles/recency.ts` → `getProfileRecency` (max timestamp de escuchas/favoritos/listas/colección visibles + valoraciones si aplica) + `ProfileRecency.tsx` ("última señal hace…"); el microfeed de 3 ítems se difiere (no hay endpoint de actividad reciente por-usuario)
+- [x] 8.4 `page.tsx` reescrito: Placa + nav + umbral inmediatos; cada sección (`OwnerEditors`, showcase, huella, recencia, 4 rieles) bajo su propio `<Suspense>`
+- [x] 8.5 `sections.test.tsx` (riel vacío colapsa, dueño ve estante vacío, conteo, showcase/huella null) + `page.test.tsx` reescrito + `recency.test.ts`
+- [ ] 8.6 Revisión visual de la vista pública completa (móvil + escritorio) — pendiente en el entorno del usuario
 
 ## 9. Afinidad
 

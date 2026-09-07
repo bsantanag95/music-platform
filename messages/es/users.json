@@ -66,6 +66,8 @@
     "soundcloud": "SoundCloud",
     "other": "Enlace"
   },
+  "recencyLastSignal": "Última señal {ago}",
+  "railEmptyOwn": "Todavía no hay nada acá.",
   "showcase": {
     "pinnedHeading": "Destacados",
     "anthemHeading": "Himno",

@@ -29,8 +29,7 @@ const pin = (over: Partial<PinnedItem>): PinnedItem => ({
 
 describe("PinnedShowcase", () => {
   it("no renderiza nada sin destacados", async () => {
-    const { container } = renderWithIntl(await PinnedShowcase({ pinned: [] }));
-    expect(container).toBeEmptyDOMElement();
+    expect(await PinnedShowcase({ pinned: [] })).toBeNull();
   });
 
   it("renderiza título, artista, nota y enlace a la entidad", async () => {

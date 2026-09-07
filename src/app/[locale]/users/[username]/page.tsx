@@ -1,29 +1,23 @@
 import type { Metadata } from "next";
-import { cache } from "react";
+import { cache, Suspense, type ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getProfileView } from "@/services/profiles/profile-view";
 import { mutualFollowersHint } from "@/services/profiles/affinity";
 import { resolveSession } from "@/services/auth/sessions";
-import { listUserDiary } from "@/services/diary/diary";
-import { listUserFavorites } from "@/services/favorites/favorites";
-import { listUserLists } from "@/services/lists/lists";
-import { listProfileCollection } from "@/services/collection/collection";
 import { Placa } from "@/components/profiles/Placa";
 import { PrivateThreshold } from "@/components/profiles/PrivateThreshold";
-import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
-import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
-import { TasteFingerprint } from "@/components/profiles/TasteFingerprint";
-import { getTasteFingerprint } from "@/services/profiles/stats";
-import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
-import { AnthemStrip } from "@/components/profiles/AnthemStrip";
-import { OwnerShowcaseEditor } from "@/components/profiles/OwnerShowcaseEditor";
-import { getShowcase } from "@/services/profiles/showcase";
-import { DiaryList } from "@/components/diary/DiaryList";
-import { FavoritesWall } from "@/components/favorites/FavoritesWall";
-import { ListsList } from "@/components/lists/ListsList";
-import { CollectionShelf } from "@/components/collection/CollectionShelf";
+import {
+  CollectionRail,
+  DiaryRail,
+  FavoritesRail,
+  FingerprintSection,
+  ListsRail,
+  OwnerEditors,
+  RecencySection,
+  ShowcaseSection,
+} from "./sections";
 
 interface UserProfilePageProps {
   params: Promise<{ username: string }>;
@@ -33,44 +27,12 @@ const getProfileViewCached = cache(async (username: string, viewerId: string | n
   getProfileView(username, viewerId),
 );
 
-async function ProfileDiary({ username, viewerId }: { username: string; viewerId: string | null }) {
-  const t = await getTranslations("diary");
-  const initial = await listUserDiary(username, viewerId, 1, 20);
-  return (
-    <DiaryList
-      initial={initial}
-      readOnly
-      empty={{ title: t("profileEmptyTitle"), description: t("profileEmptyDescription") }}
-    />
-  );
+function SectionFallback() {
+  return <div className="h-24 w-full max-w-2xl animate-pulse rounded-lg bg-ink-surface" />;
 }
 
-async function ProfileFavorites({ username, viewerId }: { username: string; viewerId: string | null }) {
-  const initial = await listUserFavorites(username, viewerId, 1, 20);
-  return <FavoritesWall initial={initial} readOnly username={username} />;
-}
-
-async function ProfileCollection({
-  username,
-  viewerId,
-}: {
-  username: string;
-  viewerId: string | null;
-}) {
-  const initial = await listProfileCollection(username, viewerId, 1, 20);
-  return <CollectionShelf initial={initial} readOnly username={username} />;
-}
-
-async function ProfileLists({ username, viewerId }: { username: string; viewerId: string | null }) {
-  const t = await getTranslations("lists");
-  const initial = await listUserLists(username, viewerId, 1, 20);
-  return (
-    <ListsList
-      initial={initial}
-      username={username}
-      empty={{ title: t("profileEmptyTitle"), description: t("profileEmptyDescription") }}
-    />
-  );
+function Streamed({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<SectionFallback />}>{children}</Suspense>;
 }
 
 export async function generateMetadata({ params }: UserProfilePageProps): Promise<Metadata> {
@@ -99,11 +61,10 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
 
   const isOwn = profile.relation === "self";
   const lockedOut = !profile.accessible && !isOwn;
+  const visible = profile.accessible || isOwn;
   const mutualFollowers =
     lockedOut && viewerId ? await mutualFollowersHint(viewerId, profile.id) : 0;
-  const visible = profile.accessible || isOwn;
-  const fingerprint = visible ? await getTasteFingerprint(profile.username, viewerId) : null;
-  const showcase = visible ? await getShowcase(profile.id) : null;
+  const section = { username: profile.username, viewerId, isOwn };
 
   return (
     <main className="flex min-h-screen flex-col items-start gap-8 px-4 py-12">
@@ -130,18 +91,9 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
       )}
 
       {isOwn && (
-        <section className="flex w-full max-w-2xl flex-col gap-6 rounded-lg border border-ink-border bg-ink-surface p-6">
-          <OwnerIdentityEditor
-            initial={{
-              bio: profile.bio,
-              pronouns: profile.pronouns,
-              location: profile.location,
-              timezone: profile.timezone,
-            }}
-          />
-          <OwnerLinksEditor initialLinks={profile.links} />
-          {showcase && <OwnerShowcaseEditor initial={showcase} />}
-        </section>
+        <Streamed>
+          <OwnerEditors profile={profile} />
+        </Streamed>
       )}
 
       {lockedOut && (
@@ -154,32 +106,29 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
         />
       )}
 
-      {showcase && showcase.pinned.length > 0 && <PinnedShowcase pinned={showcase.pinned} />}
-      {showcase?.anthem && <AnthemStrip anthem={showcase.anthem} />}
-
-      {fingerprint && <TasteFingerprint fingerprint={fingerprint} />}
-
-      {(profile.accessible || isOwn) && (
+      {visible && (
         <>
-          <section className="flex w-full max-w-2xl flex-col gap-4">
-            <h2 className="font-display text-xl text-paper">{t("diaryTitle")}</h2>
-            <ProfileDiary username={profile.username} viewerId={viewerId} />
-          </section>
-
-          <section className="flex w-full max-w-2xl flex-col gap-4">
-            <h2 className="font-display text-xl text-paper">{t("favoritesTitle")}</h2>
-            <ProfileFavorites username={profile.username} viewerId={viewerId} />
-          </section>
-
-          <section className="flex w-full max-w-2xl flex-col gap-4">
-            <h2 className="font-display text-xl text-paper">{t("listsTitle")}</h2>
-            <ProfileLists username={profile.username} viewerId={viewerId} />
-          </section>
-
-          <section className="flex w-full max-w-2xl flex-col gap-4">
-            <h2 className="font-display text-xl text-paper">{t("collectionTitle")}</h2>
-            <ProfileCollection username={profile.username} viewerId={viewerId} />
-          </section>
+          <Streamed>
+            <ShowcaseSection ownerId={profile.id} />
+          </Streamed>
+          <Streamed>
+            <FingerprintSection username={section.username} viewerId={viewerId} />
+          </Streamed>
+          <Suspense fallback={null}>
+            <RecencySection username={section.username} viewerId={viewerId} />
+          </Suspense>
+          <Streamed>
+            <DiaryRail {...section} />
+          </Streamed>
+          <Streamed>
+            <FavoritesRail {...section} />
+          </Streamed>
+          <Streamed>
+            <ListsRail {...section} />
+          </Streamed>
+          <Streamed>
+            <CollectionRail {...section} />
+          </Streamed>
         </>
       )}
     </main>

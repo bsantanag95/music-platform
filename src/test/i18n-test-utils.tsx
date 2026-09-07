@@ -1,6 +1,6 @@
 import { render, type RenderResult } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import type { ReactElement } from "react";
+import type { ReactNode } from "react";
 
 import commonEs from "../../messages/es/common.json";
 import catalogEs from "../../messages/es/catalog.json";
@@ -51,7 +51,7 @@ const messagesByLocale = {
 };
 
 export function renderWithIntl(
-  ui: ReactElement,
+  ui: ReactNode,
   locale: "es" | "en" = "es",
 ): RenderResult {
   return render(

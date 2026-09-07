@@ -66,6 +66,8 @@
     "soundcloud": "SoundCloud",
     "other": "Link"
   },
+  "recencyLastSignal": "Last activity {ago}",
+  "railEmptyOwn": "Nothing here yet.",
   "showcase": {
     "pinnedHeading": "Highlights",
     "anthemHeading": "Anthem",
