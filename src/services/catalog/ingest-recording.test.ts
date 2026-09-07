@@ -152,6 +152,8 @@ describe("albumsFromMbReleases", () => {
         title: "Led Zeppelin IV",
         category: "studio",
         coverThumbUrl: null,
+        firstReleaseDate: null,
+        firstReleaseYear: null,
         createdAt: new Date(),
       },
     ]);
@@ -162,7 +164,7 @@ describe("albumsFromMbReleases", () => {
     ]);
 
     expect(upsertReleaseGroupStubs).toHaveBeenCalledWith([
-      { mbid: "rg-mbid", title: "Led Zeppelin IV", category: "studio" },
+      { mbid: "rg-mbid", title: "Led Zeppelin IV", category: "studio", firstReleaseYear: 1971 },
     ]);
     expect(albums).toEqual([
       {
@@ -183,6 +185,8 @@ describe("albumsFromMbReleases", () => {
         title: "Título local enriquecido",
         category: "compilation",
         coverThumbUrl: null,
+        firstReleaseDate: null,
+        firstReleaseYear: null,
         createdAt: new Date(),
       },
     ]);

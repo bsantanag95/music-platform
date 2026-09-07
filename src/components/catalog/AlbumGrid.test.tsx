@@ -22,12 +22,15 @@ function makeReleaseGroup(
   id: string,
   title: string,
   category: ReleaseGroupCategory,
+  firstReleaseYear: number | null = null,
 ): ReleaseGroup {
   return {
     id,
     mbid: null,
     title,
     category,
+    firstReleaseDate: null,
+    firstReleaseYear,
     createdAt: "2024-01-01T00:00:00Z",
   };
 }
@@ -103,6 +106,27 @@ describe("AlbumGrid", () => {
 
     expect(screen.getByRole("heading", { name: catalogEn.artist.categories.studio })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: catalogEs.artist.categories.studio })).not.toBeInTheDocument();
+  });
+
+  it("ordena por año canónico dentro de cada categoría y muestra el año", () => {
+    const releaseGroups = [
+      makeReleaseGroup("id-later", "Wish You Were Here", "studio", 1975),
+      makeReleaseGroup("id-earlier", "The Piper at the Gates of Dawn", "studio", 1967),
+      makeReleaseGroup("id-noyear", "Untitled Demos", "studio", null),
+    ];
+
+    renderWithIntl(
+      <AlbumGrid
+        releaseGroups={releaseGroups}
+        categoryLabels={categoryLabelsEs}
+        discographyHeading={catalogEs.artist.discographyHeading}
+        coverLabel={catalogEs.artist.albumCoverLabel}
+      />,
+    );
+
+    const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href"));
+    expect(hrefs).toEqual(["/album/id-earlier", "/album/id-later", "/album/id-noyear"]);
+    expect(screen.getByText(/1967 ·/)).toBeInTheDocument();
   });
 
   it("construye enlaces a /album/[id] por cada tarjeta", () => {

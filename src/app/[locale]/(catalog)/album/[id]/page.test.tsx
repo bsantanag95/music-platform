@@ -72,6 +72,8 @@ function makeDetail(overrides: Partial<AlbumDetail> = {}): AlbumDetail {
       title: "The Dark Side of the Moon",
       category: "studio",
       coverThumbUrl: null,
+      firstReleaseDate: "1973-03-24",
+      firstReleaseYear: 1973,
       createdAt: new Date(),
     },
     release: {
@@ -151,6 +153,45 @@ describe("AlbumPage composición", () => {
     );
 
     expect(screen.getByRole("heading", { name: catalogEs.album.tracklistHeading })).toBeInTheDocument();
+  });
+
+  it("muestra el año canónico del álbum y no muestra badge para estudio", async () => {
+    const { default: AlbumPage } = await import(
+      "@/app/[locale]/(catalog)/album/[id]/page"
+    );
+    const { getAlbumDetail } = await import("@/services/catalog/album-detail");
+    vi.mocked(getAlbumDetail).mockResolvedValue({ kind: "ok", detail: makeDetail() });
+
+    renderWithIntl(await AlbumPage({ params: Promise.resolve({ id: VALID_UUID }) }), "es");
+
+    expect(screen.getByText("1973")).toBeInTheDocument();
+    expect(screen.queryByText(catalogEs.album.workType.compilation)).not.toBeInTheDocument();
+  });
+
+  it("muestra el badge de tipo de obra para una recopilación", async () => {
+    const { default: AlbumPage } = await import(
+      "@/app/[locale]/(catalog)/album/[id]/page"
+    );
+    const { getAlbumDetail } = await import("@/services/catalog/album-detail");
+    vi.mocked(getAlbumDetail).mockResolvedValue({
+      kind: "ok",
+      detail: makeDetail({
+        releaseGroup: {
+          id: VALID_UUID,
+          mbid: "550e8400-e29b-41d4-a716-446655440001",
+          title: "Echoes: The Best of Pink Floyd",
+          category: "compilation",
+          coverThumbUrl: null,
+          firstReleaseDate: null,
+          firstReleaseYear: 2001,
+          createdAt: new Date(),
+        },
+      }),
+    });
+
+    renderWithIntl(await AlbumPage({ params: Promise.resolve({ id: VALID_UUID }) }), "es");
+
+    expect(screen.getByText(catalogEs.album.workType.compilation)).toBeInTheDocument();
   });
 
   it("muestra los créditos destacados como enlaces al perfil del artista", async () => {

@@ -181,14 +181,25 @@ export const membership = pgTable(
   ],
 );
 
-export const releaseGroup = pgTable("release_group", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  mbid: uuid("mbid").unique(),
-  title: text("title").notNull(),
-  category: text("category").notNull(), // 'studio' | 'single_ep' | 'compilation' | 'live_other'
-  coverThumbUrl: text("cover_thumb_url"), // única fuente escribible de la carátula
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const releaseGroup = pgTable(
+  "release_group",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    mbid: uuid("mbid").unique(),
+    title: text("title").notNull(),
+    category: text("category").notNull(), // 'studio' | 'single_ep' | 'compilation' | 'live_other'
+    coverThumbUrl: text("cover_thumb_url"), // única fuente escribible de la carátula
+    // Fecha de lanzamiento canónica del release-group (migración 0016):
+    // derivada de `first-release-date` de MusicBrainz sobre TODAS las
+    // ediciones, no de la edición ingerida. `firstReleaseDate` solo se
+    // puebla con precisión diaria; `firstReleaseYear` con cualquier año
+    // conocido (misma tolerancia que release-date-precision).
+    firstReleaseDate: date("first_release_date"),
+    firstReleaseYear: smallint("first_release_year"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("idx_release_group_first_year").on(t.firstReleaseYear)],
+);
 
 export const release = pgTable(
   "release",

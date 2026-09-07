@@ -4,9 +4,11 @@ import { getTranslations } from "next-intl/server";
 import { getAlbumDetail } from "@/services/catalog/album-detail";
 import { AlbumCover } from "@/components/catalog/AlbumCover";
 import { TrackList } from "@/components/catalog/TrackList";
+import { WorkTypeBadge } from "@/components/catalog/WorkTypeBadge";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { isValidUuid } from "@/lib/validation";
+import type { ReleaseGroupCategory } from "@/lib/api/schemas";
 import { SocialSection } from "@/components/social/SocialSection";
 import { MarkAsListened } from "@/components/diary/MarkAsListened";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
@@ -84,6 +86,21 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
         />
         <div className="min-w-0">
           <h1 className="font-display text-3xl text-paper">{detail.releaseGroup.title}</h1>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {detail.releaseGroup.firstReleaseYear !== null && (
+              <time className="font-data text-sm text-paper-muted" dateTime={detail.releaseGroup.firstReleaseDate ?? String(detail.releaseGroup.firstReleaseYear)}>
+                {detail.releaseGroup.firstReleaseYear}
+              </time>
+            )}
+            <WorkTypeBadge
+              category={detail.releaseGroup.category as ReleaseGroupCategory}
+              labels={{
+                compilation: t("album.workType.compilation"),
+                live_other: t("album.workType.live_other"),
+                single_ep: t("album.workType.single_ep"),
+              }}
+            />
+          </div>
           <div className="mt-4 flex flex-col items-start gap-3">
             <MarkAsListened
               target={{ type: "release-group", id: detail.releaseGroup.id }}

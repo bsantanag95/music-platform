@@ -69,7 +69,12 @@
     "coverPlaceholderAlt": "Carátula no disponible",
     "coverFailed": "No se pudo cargar la carátula",
     "noEditionsTitle": "Sin ediciones disponibles",
-    "noEditionsDescription": "No se encontraron ediciones para este álbum."
+    "noEditionsDescription": "No se encontraron ediciones para este álbum.",
+    "workType": {
+      "compilation": "Recopilación",
+      "live_other": "En vivo",
+      "single_ep": "Single / EP"
+    }
   },
   "song": {
     "creditsHeading": "Créditos",

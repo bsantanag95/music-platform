@@ -34,7 +34,13 @@ export interface PrimaryArtist {
 }
 
 export interface AlbumDetail {
+  // La obra. Lleva `category` (tipo de obra) y la fecha de lanzamiento
+  // canónica (`firstReleaseDate` / `firstReleaseYear`) del release-group.
+  // La fecha del ÁLBUM es esta, no la de la edición ingerida
+  // (openspec: canonicalize-release-group).
   releaseGroup: ReleaseGroupRow;
+  // La edición representativa ingerida. `release.releaseDate` es la fecha de
+  // ESTA edición y puede diferir de la fecha canónica del álbum.
   release: ReleaseRow;
   cover: string | null;
   tracks: AlbumTrack[];

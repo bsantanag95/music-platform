@@ -35,6 +35,8 @@ function makeRg(overrides: Partial<ReleaseGroupRow> = {}): ReleaseGroupRow {
     title: "Album",
     category: "studio",
     coverThumbUrl: null,
+    firstReleaseDate: null,
+    firstReleaseYear: null,
     createdAt: new Date(),
     ...overrides,
   };

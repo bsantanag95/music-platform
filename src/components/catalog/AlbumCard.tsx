@@ -23,7 +23,11 @@ export function AlbumCard({ releaseGroup, categoryLabel, coverLabel }: AlbumCard
       />
       <div className="min-w-0">
         <h3 className="truncate font-display text-sm text-paper">{releaseGroup.title}</h3>
-        <p className="font-data text-xs text-paper-muted">{categoryLabel}</p>
+        <p className="font-data text-xs text-paper-muted">
+          {releaseGroup.firstReleaseYear !== null
+            ? `${releaseGroup.firstReleaseYear} · ${categoryLabel}`
+            : categoryLabel}
+        </p>
       </div>
     </Link>
   );

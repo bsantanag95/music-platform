@@ -51,6 +51,8 @@ describe("GET /api/catalog/release-group/[id]", () => {
           title: "The Dark Side of the Moon",
           category: "studio",
           coverThumbUrl: null,
+          firstReleaseDate: null,
+          firstReleaseYear: null,
           createdAt: new Date(),
         },
         release: {
@@ -94,7 +96,7 @@ describe("GET /api/catalog/release-group/[id]", () => {
     expect(body.tracks[0].title).toBe("Speak to Me");
   });
 
-  it("conserva el shape público del endpoint (release, cover, tracks)", async () => {
+  it("expone el shape público del endpoint (releaseGroup, release, cover, tracks)", async () => {
     const mockDetail: AlbumDetailResult = {
       kind: "ok",
       detail: {
@@ -102,15 +104,17 @@ describe("GET /api/catalog/release-group/[id]", () => {
           id: "rg-1",
           mbid: "mbid-rg-1",
           title: "Album",
-          category: "studio",
+          category: "compilation",
           coverThumbUrl: null,
+          firstReleaseDate: "1994-09-13",
+          firstReleaseYear: 1994,
           createdAt: new Date(),
         },
         release: {
           id: "r-1",
           mbid: "mbid-r-1",
           releaseGroupId: "rg-1",
-          editionLabel: "original",
+          editionLabel: "standard",
           releaseDate: null,
           coverThumbUrl: null,
           creditsSyncedAt: null,
@@ -132,7 +136,51 @@ describe("GET /api/catalog/release-group/[id]", () => {
     expect(body).toHaveProperty("release");
     expect(body).toHaveProperty("cover");
     expect(body).toHaveProperty("tracks");
-    expect(body).not.toHaveProperty("releaseGroup");
+    expect(body.releaseGroup).toMatchObject({
+      category: "compilation",
+      firstReleaseDate: "1994-09-13",
+      firstReleaseYear: 1994,
+    });
+  });
+
+  it("la fecha del álbum es la del release-group, distinta de la fecha de la edición", async () => {
+    const mockDetail: AlbumDetailResult = {
+      kind: "ok",
+      detail: {
+        releaseGroup: {
+          id: "rg-1",
+          mbid: "mbid-rg-1",
+          title: "Album",
+          category: "studio",
+          coverThumbUrl: null,
+          firstReleaseDate: "1994-09-13",
+          firstReleaseYear: 1994,
+          createdAt: new Date(),
+        },
+        release: {
+          id: "r-1",
+          mbid: "mbid-r-1",
+          releaseGroupId: "rg-1",
+          editionLabel: "Remastered",
+          releaseDate: "2011-01-24",
+          coverThumbUrl: null,
+          creditsSyncedAt: null,
+        },
+        cover: null,
+        tracks: [],
+        primaryArtist: null,
+      },
+    };
+
+    vi.mocked(albumDetail.getAlbumDetail).mockResolvedValue(mockDetail);
+
+    const response = await GET(makeRequest("rg-1"), {
+      params: Promise.resolve({ id: "rg-1" }),
+    });
+
+    const body = await response.json();
+    expect(body.releaseGroup.firstReleaseYear).toBe(1994);
+    expect(body.release.releaseDate).toBe("2011-01-24");
   });
 
   it("no expone el artista principal del read-model en la respuesta REST", async () => {
@@ -145,6 +193,8 @@ describe("GET /api/catalog/release-group/[id]", () => {
           title: "Album",
           category: "studio",
           coverThumbUrl: null,
+          firstReleaseDate: null,
+          firstReleaseYear: null,
           createdAt: new Date(),
         },
         release: {
@@ -182,6 +232,8 @@ describe("GET /api/catalog/release-group/[id]", () => {
           title: "Icon",
           category: "studio",
           coverThumbUrl: null,
+          firstReleaseDate: null,
+          firstReleaseYear: null,
           createdAt: new Date(),
         },
         release: {

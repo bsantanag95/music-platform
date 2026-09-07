@@ -217,8 +217,13 @@ export const musicbrainz = {
   },
 
   getReleaseGroup(mbid: string) {
+    // `releases+media`: el ranking de edición representativa
+    // (`pickRepresentativeRelease`) necesita status, fecha, país, packaging,
+    // disambiguation y recuento de pistas de cada edición. `first-release-date`
+    // del release-group viene sin `inc` extra (campo core). Sigue siendo UNA
+    // petición por álbum en la primera visita.
     return mbFetch<MBReleaseGroupWithReleases>(`/release-group/${mbid}`, {
-      inc: "releases",
+      inc: "releases+media",
     });
   },
 

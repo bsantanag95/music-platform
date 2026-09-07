@@ -133,6 +133,9 @@ export async function albumsFromMbReleases(
     mbid,
     title: group.title,
     category: group.category,
+    // Aproximación: año mínimo de las apariciones. La fecha canónica exacta
+    // se puebla cuando alguien abre el álbum (findOrIngestTracklist).
+    ...(group.year !== null ? { firstReleaseYear: group.year } : {}),
   }));
   const rows = await upsertReleaseGroupStubs(stubs);
 

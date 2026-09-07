@@ -1,6 +1,7 @@
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { releaseGroup, type ReleaseGroupRow } from "@/db/schema";
+import { normalizeReleaseDate, yearFromMbDate } from "../musicbrainz/mappers";
 
 export type ReleaseGroupCategoryValue =
   | "studio"
@@ -12,6 +13,37 @@ export interface ReleaseGroupStubInput {
   mbid: string;
   title: string;
   category: ReleaseGroupCategoryValue;
+  /**
+   * `first-release-date` de MusicBrainz cuando la búsqueda la trae. Solo se
+   * usa para poblar la fecha canónica de un stub NUEVO; nunca sobrescribe una
+   * fila ya enriquecida (openspec: canonicalize-release-group).
+   */
+  firstReleaseDate?: string;
+  /**
+   * Año aproximado (mínimo de las fechas de aparición) cuando no hay
+   * `first-release-date` exacta — lo usa la ingesta de grabación suelta.
+   * Se ignora si `firstReleaseDate` ya aporta un año.
+   */
+  firstReleaseYear?: number;
+}
+
+/**
+ * Traduce el `first-release-date` de MusicBrainz (y un año aproximado
+ * opcional) a las columnas `first_release_date` / `first_release_year` de
+ * `release_group`, con la tolerancia a precisión parcial de
+ * `release-date-precision`. Compartido por la ingesta de stubs, la de
+ * discografía y la de tracklist.
+ */
+export function canonicalDateValues(input: {
+  firstReleaseDate?: string;
+  firstReleaseYear?: number;
+}): { firstReleaseDate?: string; firstReleaseYear?: number } {
+  const date = normalizeReleaseDate(input.firstReleaseDate);
+  const year = yearFromMbDate(input.firstReleaseDate) ?? input.firstReleaseYear ?? null;
+  return {
+    ...(date !== null ? { firstReleaseDate: date } : {}),
+    ...(year !== null ? { firstReleaseYear: year } : {}),
+  };
 }
 
 /**
@@ -24,6 +56,7 @@ export async function upsertReleaseGroupStub(
   mbid: string,
   title: string,
   category: ReleaseGroupCategoryValue,
+  firstReleaseDate?: string,
 ): Promise<ReleaseGroupRow> {
   const [existing] = await db
     .select()
@@ -34,7 +67,7 @@ export async function upsertReleaseGroupStub(
 
   const rows = await db
     .insert(releaseGroup)
-    .values({ mbid, title, category })
+    .values({ mbid, title, category, ...canonicalDateValues({ firstReleaseDate }) })
     .onConflictDoNothing({ target: releaseGroup.mbid })
     .returning();
 
@@ -64,7 +97,14 @@ export async function upsertReleaseGroupStubs(
 
   await db
     .insert(releaseGroup)
-    .values(stubs)
+    .values(
+      stubs.map(({ mbid, title, category, firstReleaseDate, firstReleaseYear }) => ({
+        mbid,
+        title,
+        category,
+        ...canonicalDateValues({ firstReleaseDate, firstReleaseYear }),
+      })),
+    )
     .onConflictDoNothing({ target: releaseGroup.mbid });
 
   return db

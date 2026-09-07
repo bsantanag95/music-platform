@@ -40,6 +40,7 @@ export interface MBReleaseGroup {
   title: string;
   "primary-type"?: string; // 'Album' | 'Single' | 'EP' | 'Broadcast' | 'Other'
   "secondary-types"?: string[]; // 'Compilation' | 'Live' | 'Remix' | 'Soundtrack' | ...
+  "first-release-date"?: string; // 'YYYY' | 'YYYY-MM' | 'YYYY-MM-DD' | ausente
   "artist-credit"?: MBArtistCreditItem[];
 }
 
@@ -61,8 +62,29 @@ export interface MBReleaseGroupSearchResponse {
   "release-groups": MBReleaseGroupSearchItem[];
 }
 
+/**
+ * Edición (release) tal como llega embebida en `/release-group/{mbid}?inc=releases+media`.
+ * Solo los campos que consume `pickRepresentativeRelease`.
+ *
+ * Disponibilidad observada en el browse de release-group:
+ * - `status`, `date`, `country`, `disambiguation`, `title`, `packaging`: presentes.
+ * - `media[].track-count`: presente con `inc=media`; si MusicBrainz lo omitiera para
+ *   alguna edición, el criterio de recuento de pistas se degrada a "no aplica"
+ *   (ver design.md D2) en vez de gastar un GET /release/{id} por candidato.
+ */
+export interface MBReleaseSummary {
+  id: string; // mbid
+  title?: string;
+  status?: string; // 'Official' | 'Promotion' | 'Bootleg' | 'Pseudo-Release'
+  date?: string; // 'YYYY' | 'YYYY-MM' | 'YYYY-MM-DD' | ausente
+  country?: string; // 'US' | 'GB' | 'XW' (Worldwide) | 'XE' (Europe) | ...
+  packaging?: string | null; // 'Jewel Case' | 'Box' | 'Digipak' | ...
+  disambiguation?: string;
+  media?: { "track-count"?: number }[];
+}
+
 export interface MBReleaseGroupWithReleases extends MBReleaseGroup {
-  releases?: { id: string; status?: string; date?: string }[];
+  releases?: MBReleaseSummary[];
 }
 
 export interface MBRecordingSearchItem {

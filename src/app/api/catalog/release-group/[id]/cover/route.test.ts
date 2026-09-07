@@ -30,6 +30,8 @@ function makeRg(overrides: Partial<ReleaseGroupRow> = {}): ReleaseGroupRow {
     title: "The Dark Side of the Moon",
     category: "studio",
     coverThumbUrl: null,
+    firstReleaseDate: null,
+    firstReleaseYear: null,
     createdAt: new Date(),
     ...overrides,
   };

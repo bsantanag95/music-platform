@@ -24,6 +24,7 @@ export const GET = withErrorHandling(
     const { detail } = result;
 
     return NextResponse.json({
+      releaseGroup: detail.releaseGroup,
       release: detail.release,
       cover: detail.cover,
       tracks: detail.tracks,

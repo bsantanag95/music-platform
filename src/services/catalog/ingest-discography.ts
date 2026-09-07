@@ -11,6 +11,7 @@ import {
 import { musicbrainz } from "../musicbrainz/client";
 import { mapReleaseGroupCategory } from "../musicbrainz/mappers";
 import { upsertArtistStub } from "./ingest-artist";
+import { canonicalDateValues } from "./ingest-release-group";
 import type { MBArtistCreditItem } from "../musicbrainz/types";
 
 /**
@@ -58,10 +59,13 @@ async function findOrIngestOwnDiscography(target: ArtistRow): Promise<ReleaseGro
 
   for (const rg of browse["release-groups"]) {
     const category = mapReleaseGroupCategory(rg["primary-type"], rg["secondary-types"]);
+    const canonicalDate = canonicalDateValues({ firstReleaseDate: rg["first-release-date"] });
 
     const inserted = await db
       .insert(releaseGroup)
-      .values({ mbid: rg.id, title: rg.title, category })
+      // La fecha canónica solo se escribe al crear el stub: un release_group
+      // ya enriquecido conserva la que resolvió `findOrIngestTracklist`.
+      .values({ mbid: rg.id, title: rg.title, category, ...canonicalDate })
       .onConflictDoUpdate({ target: releaseGroup.mbid, set: { title: rg.title, category } })
       .returning();
 

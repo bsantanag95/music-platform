@@ -1,13 +1,40 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { release, recording, track, type ReleaseRow } from "@/db/schema";
+import { release, recording, track, releaseGroup, type ReleaseRow } from "@/db/schema";
 import { musicbrainz } from "../musicbrainz/client";
-import { normalizeReleaseDate } from "../musicbrainz/mappers";
+import { normalizeReleaseDate, yearFromMbDate } from "../musicbrainz/mappers";
 import { ingestCredits } from "./ingest-discography";
+import { pickRepresentativeRelease, deriveEditionLabel } from "./representative-release";
 
 /**
- * Trae y cachea el tracklist de la edición "oficial" de un release-group
- * (o la primera disponible si no hay ninguna marcada como oficial).
+ * Persiste la fecha de lanzamiento canónica del release-group
+ * (openspec: canonicalize-release-group). Deriva `first_release_date` y
+ * `first_release_year` de `first-release-date` de MusicBrainz —calculada
+ * sobre TODAS las ediciones, no la ingerida— con la misma tolerancia a
+ * precisión parcial que `release-date-precision`. No sobrescribe con nulo
+ * un valor ya presente.
+ */
+export async function persistCanonicalReleaseDate(
+  releaseGroupId: string,
+  firstReleaseDate: string | undefined,
+): Promise<void> {
+  const date = normalizeReleaseDate(firstReleaseDate);
+  const year = yearFromMbDate(firstReleaseDate);
+  if (date === null && year === null) return;
+
+  await db
+    .update(releaseGroup)
+    .set({
+      ...(date !== null ? { firstReleaseDate: date } : {}),
+      ...(year !== null ? { firstReleaseYear: year } : {}),
+    })
+    .where(eq(releaseGroup.id, releaseGroupId));
+}
+
+/**
+ * Trae y cachea el tracklist de la **edición representativa** de un
+ * release-group, elegida de forma determinista por
+ * `pickRepresentativeRelease` (openspec: album-edition-selection).
  * Simplificación de la Fase 2: se ingiere una sola edición por álbum;
  * ingerir ediciones alternativas (japonesa, remaster) queda para cuando
  * el modelo de selección de edición se implemente en el frontend.
@@ -16,7 +43,8 @@ import { ingestCredits } from "./ingest-discography";
  * MusicBrainz. Los releases cacheados antes de la ingesta de créditos se
  * re-sincronizan con el script `scripts/backfill-release-credits.ts`,
  * nunca dentro del path de lectura del álbum (una caída de MusicBrainz
- * no debe romper la vista de álbum).
+ * no debe romper la vista de álbum). Corregir una edición representativa
+ * subóptima ya ingerida es tarea de `scripts/recanonicalize-release-group.ts`.
  */
 export async function findOrIngestTracklist(
   releaseGroupId: string,
@@ -31,12 +59,14 @@ export async function findOrIngestTracklist(
   if (existing) return existing;
 
   const rgWithReleases = await musicbrainz.getReleaseGroup(releaseGroupMbid);
-  const chosen =
-    rgWithReleases.releases?.find((r) => r.status === "Official") ?? rgWithReleases.releases?.[0];
+  await persistCanonicalReleaseDate(releaseGroupId, rgWithReleases["first-release-date"]);
+
+  const chosen = pickRepresentativeRelease(rgWithReleases.releases ?? []);
   if (!chosen) return null;
 
   const full = await musicbrainz.getRelease(chosen.id);
   const releaseDate = normalizeReleaseDate(full.date);
+  const editionLabel = deriveEditionLabel(chosen);
 
   // La carátula ya no se resuelve acá: vive en `release_group.cover_thumb_url`
   // (patrón cover-only, ver services/catalog/cover.ts) y `release.cover_thumb_url`
@@ -46,11 +76,11 @@ export async function findOrIngestTracklist(
     .values({
       mbid: full.id,
       releaseGroupId,
-      editionLabel: "original",
+      editionLabel,
       releaseDate,
       creditsSyncedAt: new Date(),
     })
-    .onConflictDoUpdate({ target: release.mbid, set: { releaseDate } })
+    .onConflictDoUpdate({ target: release.mbid, set: { releaseDate, editionLabel } })
     .returning();
 
   const releaseRow = insertedReleases[0];

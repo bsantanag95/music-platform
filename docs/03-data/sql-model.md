@@ -126,6 +126,16 @@ Antes de crear la unicidad, la migración `0006_membership_sync.sql` consolida c
 
 **Restricciones:** `category` limitado a `studio`, `single_ep`, `compilation`, `live_other`.
 
+**Fecha de lanzamiento canónica (`first_release_date` / `first_release_year`, migración `0016`):**
+la fecha del **álbum**, derivada de `first-release-date` de MusicBrainz (calculada sobre todas las
+ediciones), no de la edición ingerida en `release.release_date`. `first_release_date` (`DATE`
+nullable) solo se puebla con precisión diaria; `first_release_year` (`SMALLINT` nullable) con
+cualquier año conocido — misma tolerancia a precisión parcial que `release.release_date`, nunca se
+inventa mes ni día. La escribe `findOrIngestTracklist` como fuente autoritativa; los stubs de
+búsqueda y discografía la siembran en la creación pero no la sobrescriben. Corregir filas ya
+existentes: `scripts/recanonicalize-release-group.ts`. Índice `idx_release_group_first_year` para
+ordenar la discografía por año.
+
 **Carátula (`cover_thumb_url`):** URL de la miniatura de 250px de la portada del álbum, resuelta contra
 Cover Art Archive a nivel de **release-group** (ver `data-licensing.md`). Es la **única fuente escribible**
 de la carátula: se resuelve bajo demanda con un `HEAD` a CAA sin ingestar el tracklist de una edición (patrón
@@ -138,6 +148,16 @@ después (self-heal, mismo criterio que aplicaba `release`).
 **Propósito:** una edición concreta de un `release_group` (original, edición japonesa, remaster de aniversario). Aquí vive el tracklist real, vía `track`.
 
 **Relaciones:** `release_group_id` obligatorio — toda edición pertenece a exactamente un álbum conceptual.
+
+**Edición representativa (openspec: `canonicalize-release-group`):** se ingiere **una sola** edición
+por álbum, elegida de forma determinista por `pickRepresentativeRelease`
+(`src/services/catalog/representative-release.ts`): `Official` → fecha más temprana → edición estándar
+(sin `deluxe`/`remaster`/… en título o disambiguation) → país primario → packaging estándar →
+recuento de pistas cercano a la mediana → desempate por `mbid`. `edition_label` se deriva de la
+edición elegida (`disambiguation` → sufijo de título → `"standard"`), ya no es siempre `"original"`.
+La invariante "un `release` por `release_group`" se mantiene; corregir una elección subóptima ya
+ingerida reemplaza `release` + `track` sin tocar datos sociales
+(`scripts/recanonicalize-release-group.ts`).
 
 **Carátula (`cover_thumb_url`) — DEPRECADA:** columna legada de la resolución de carátula, que pasó a
 `release_group.cover_thumb_url` (migración `0003`). Ya **no se escribe** desde la app; el read-model

@@ -77,6 +77,8 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
     mbid: rg.mbid,
     title: rg.title,
     category: rg.category as ReleaseGroupCategory,
+    firstReleaseDate: rg.firstReleaseDate,
+    firstReleaseYear: rg.firstReleaseYear,
     createdAt: rg.createdAt.toISOString(),
   }));
 

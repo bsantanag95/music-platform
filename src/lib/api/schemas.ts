@@ -43,6 +43,12 @@ export const ReleaseGroupSchema = z.object({
   mbid: z.uuid().nullable(),
   title: z.string(),
   category: ReleaseGroupCategorySchema,
+  // Fecha de lanzamiento canónica del release-group (openspec:
+  // canonicalize-release-group). `firstReleaseDate` solo con precisión
+  // diaria; `firstReleaseYear` con cualquier año conocido. Es la fecha del
+  // ÁLBUM, distinta de `release.releaseDate` (fecha de la edición ingerida).
+  firstReleaseDate: z.string().nullable(),
+  firstReleaseYear: z.number().int().nullable(),
   createdAt: z.string(),
 });
 export type ReleaseGroup = z.infer<typeof ReleaseGroupSchema>;
@@ -133,6 +139,10 @@ export const TrackSchema = z.object({
 export type Track = z.infer<typeof TrackSchema>;
 
 export const ReleaseWithTracksSchema = z.object({
+  // `releaseGroup` es la obra (openspec: canonicalize-release-group): lleva
+  // la categoría/tipo de obra y la fecha canónica del álbum. `release` sigue
+  // siendo la edición representativa ingerida.
+  releaseGroup: ReleaseGroupSchema,
   release: ReleaseSchema,
   cover: z.string().nullable(),
   tracks: z.array(TrackSchema),

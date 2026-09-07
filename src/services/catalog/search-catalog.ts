@@ -652,6 +652,7 @@ export async function searchCatalog(query: string): Promise<CatalogSearchRespons
           item["primary-type"],
           item["secondary-types"],
         ),
+        firstReleaseDate: item["first-release-date"],
       })),
   );
 

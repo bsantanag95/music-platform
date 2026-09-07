@@ -32,6 +32,20 @@ export function AlbumGrid({
     grouped.set(rg.category, list);
   }
 
+  // Dentro de cada categoría: por año de lanzamiento canónico ascendente.
+  // Los grupos sin año van al final, con orden estable por título
+  // (openspec: canonicalize-release-group).
+  for (const list of grouped.values()) {
+    list.sort((a, b) => {
+      if (a.firstReleaseYear === null && b.firstReleaseYear === null) {
+        return a.title.localeCompare(b.title);
+      }
+      if (a.firstReleaseYear === null) return 1;
+      if (b.firstReleaseYear === null) return -1;
+      return a.firstReleaseYear - b.firstReleaseYear || a.title.localeCompare(b.title);
+    });
+  }
+
   return (
     <section className="flex w-full flex-col gap-8">
       <h2 className="font-display text-xl text-paper">{discographyHeading}</h2>

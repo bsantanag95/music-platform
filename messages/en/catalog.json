@@ -69,7 +69,12 @@
     "coverPlaceholderAlt": "Cover not available",
     "coverFailed": "Could not load cover",
     "noEditionsTitle": "No editions available",
-    "noEditionsDescription": "No editions were found for this album."
+    "noEditionsDescription": "No editions were found for this album.",
+    "workType": {
+      "compilation": "Compilation",
+      "live_other": "Live album",
+      "single_ep": "Single / EP"
+    }
   },
   "song": {
     "creditsHeading": "Credits",

@@ -18,6 +18,8 @@ function makeRow(overrides: Partial<ReleaseGroupRow> = {}): ReleaseGroupRow {
     title: "Toxicity",
     category: "studio",
     coverThumbUrl: null,
+    firstReleaseDate: null,
+    firstReleaseYear: null,
     createdAt: new Date("2026-01-01"),
     ...overrides,
   };

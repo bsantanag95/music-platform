@@ -107,13 +107,24 @@ con las coincidencias locales).
 
 ## `GET /api/catalog/release-group/[id]` — ✅ Existe
 
-Trae (o ingiere bajo demanda) el tracklist de la edición "oficial" de un álbum ya
-conocido por su `id` propio (no `mbid`).
+Trae (o ingiere bajo demanda) el tracklist de la **edición representativa** de un álbum ya
+conocido por su `id` propio (no `mbid`). La edición representativa se elige de forma
+determinista con `pickRepresentativeRelease` (openspec: `album-edition-selection`), no
+"la primera oficial".
 
 **200 OK**
 
 ```json
 {
+  "releaseGroup": {
+    "id": "uuid",
+    "mbid": "uuid | null",
+    "title": "string",
+    "category": "studio | single_ep | compilation | live_other",
+    "firstReleaseDate": "YYYY-MM-DD | null",
+    "firstReleaseYear": "int | null",
+    "createdAt": "ISO-8601"
+  },
   "release": {
     "id": "uuid",
     "mbid": "uuid | null",
@@ -153,6 +164,14 @@ ninguna edición ingerible para ese álbum.
 `null` cuando el álbum no tiene carátula. Nunca construir esta URL a mano en el frontend.
 
 **Créditos por canción:** cada elemento de `tracks` incluye `credits: [{ artistId, name, role, joinPhrase }]`, ordenado por posición. Se arma con un `JOIN` de `credit` + `artist` sobre los `recordingId` de todo el tracklist en una sola query (no una query por canción).
+
+**Obra vs edición (openspec: `canonicalize-release-group`):** `releaseGroup` es la obra —lleva
+`category` (tipo de obra) y la fecha de lanzamiento **canónica** del álbum (`firstReleaseDate` con
+precisión diaria, `firstReleaseYear` con cualquier año conocido, misma tolerancia que
+`release_date`). `release.releaseDate` es la fecha de **esa edición** y puede diferir (una reedición
+de 2015 de un disco de 1994). El frontend muestra `releaseGroup.firstReleaseYear` como año del álbum.
+`release.editionLabel` ya no es siempre `"original"`: se deriva de la edición elegida
+(`disambiguation` → sufijo de título → `"standard"`).
 
 ## `GET /api/catalog/release-group/[id]/cover` — ✅ Existe
 
