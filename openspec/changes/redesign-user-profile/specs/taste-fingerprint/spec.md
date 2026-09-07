@@ -3,17 +3,26 @@
 ### Requirement: Huella de gusto filtrada por audiencia
 
 El sistema SHALL calcular una huella de gusto para cada perfil a partir únicamente de las
-actividades del dueño visibles para el visitante, aplicando las mismas reglas de audiencia
-que el resto de superficies sociales. Un visitante público, un seguidor aprobado y el dueño
-SHALL poder ver huellas distintas del mismo perfil según lo que cada uno tiene permitido
-ver. El cálculo SHALL hacerse bajo demanda, sin tabla materializada.
+actividades del dueño visibles para el visitante, aplicando las mismas reglas de visibilidad
+que el resto de superficies sociales. Las valoraciones —que no tienen audiencia propia—
+SHALL ser visibles solo para el dueño y para seguidores en relación aceptada, igual que en
+el feed. Las escuchas, favoritos, listas y colección SHALL filtrarse por su audiencia
+respecto de la relación del visitante. Un visitante público, un seguidor aprobado y el
+dueño SHALL poder ver huellas distintas del mismo perfil según lo que cada uno tiene
+permitido ver. El cálculo SHALL hacerse bajo demanda, sin tabla materializada.
 
-#### Scenario: El seguidor ve más que el visitante público
+#### Scenario: El seguidor ve la curva de valoraciones y el visitante público no
 
-- **WHEN** un perfil tiene valoraciones con audiencia `followers` y otras con audiencia
+- **WHEN** un perfil público con valoraciones lo abre un seguidor aprobado y, por otro
+  lado, un visitante sin relación
+- **THEN** el seguidor ve la curva de valoraciones y el visitante sin relación no la ve
+
+#### Scenario: El seguidor ve más escuchas que el visitante público
+
+- **WHEN** un perfil tiene escuchas con audiencia `followers` y otras con audiencia
   `public`
-- **THEN** un seguidor aprobado ve la huella calculada con ambos conjuntos y un visitante
-  público solo con las de audiencia `public`
+- **THEN** un seguidor aprobado ve las crestas calculadas con ambos conjuntos y un
+  visitante público solo con las de audiencia `public`
 
 #### Scenario: Perfil privado sin autorización
 
@@ -22,19 +31,21 @@ ver. El cálculo SHALL hacerse bajo demanda, sin tabla materializada.
 
 ### Requirement: Curva de valoraciones
 
-La huella SHALL incluir la distribución de las valoraciones vigentes visibles del dueño por
-número de estrellas (de 0,5 a 5 en pasos de media estrella). La distribución SHALL
-presentarse como la forma del conjunto, no como una puntuación agregada ni como un promedio
-destacado.
+La huella SHALL incluir la distribución de las valoraciones vigentes del dueño por número de
+estrellas (de 0,5 a 5 en pasos de media estrella), cuando el visitante tiene permitido ver
+las valoraciones (dueño o seguidor aprobado). La distribución SHALL presentarse como la
+forma del conjunto, no como una puntuación agregada ni como un promedio destacado.
 
 #### Scenario: Distribución con datos
 
-- **WHEN** el dueño tiene valoraciones visibles repartidas entre 3, 3,5 y 4 estrellas
+- **WHEN** un seguidor aprobado abre un perfil cuyo dueño tiene valoraciones repartidas
+  entre 3, 3,5 y 4 estrellas
 - **THEN** la curva muestra una barra por cada valor de estrella con su cantidad relativa
 
 #### Scenario: Sin valoraciones visibles
 
-- **WHEN** el dueño no tiene valoraciones visibles para el visitante
+- **WHEN** el visitante no tiene permitido ver las valoraciones del dueño, o el dueño no
+  tiene valoraciones
 - **THEN** la curva no se muestra y en su lugar aparece una línea breve indicando que
   todavía no hay datos
 

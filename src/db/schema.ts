@@ -294,6 +294,7 @@ export const rating = pgTable(
     index("idx_rating_recording").on(t.recordingId),
     index("idx_rating_release_group").on(t.releaseGroupId),
     index("idx_rating_artist").on(t.artistId),
+    index("idx_rating_user").on(t.userId),
     check(
       "chk_rating_single_target",
       sql`num_nonnulls(${t.artistId}, ${t.releaseGroupId}, ${t.recordingId}) = 1`,

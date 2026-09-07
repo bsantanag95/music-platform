@@ -14,6 +14,8 @@ import { Placa } from "@/components/profiles/Placa";
 import { PrivateThreshold } from "@/components/profiles/PrivateThreshold";
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
+import { TasteFingerprint } from "@/components/profiles/TasteFingerprint";
+import { getTasteFingerprint } from "@/services/profiles/stats";
 import { DiaryList } from "@/components/diary/DiaryList";
 import { FavoritesWall } from "@/components/favorites/FavoritesWall";
 import { ListsList } from "@/components/lists/ListsList";
@@ -95,6 +97,8 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
   const lockedOut = !profile.accessible && !isOwn;
   const mutualFollowers =
     lockedOut && viewerId ? await mutualFollowersHint(viewerId, profile.id) : 0;
+  const fingerprint =
+    profile.accessible || isOwn ? await getTasteFingerprint(profile.username, viewerId) : null;
 
   return (
     <main className="flex min-h-screen flex-col items-start gap-8 px-4 py-12">
@@ -143,6 +147,8 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
           mutualFollowers={mutualFollowers}
         />
       )}
+
+      {fingerprint && <TasteFingerprint fingerprint={fingerprint} />}
 
       {(profile.accessible || isOwn) && (
         <>

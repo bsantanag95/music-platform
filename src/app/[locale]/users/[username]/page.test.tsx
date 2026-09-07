@@ -25,6 +25,12 @@ vi.mock("@/services/profiles/affinity", () => ({
   mutualFollowersHint: (a: string, b: string) => mutualFollowersHint(a, b),
 }));
 
+const getTasteFingerprint = vi.fn();
+vi.mock("@/services/profiles/stats", () => ({
+  getTasteFingerprint: (u: string, v: string | null) => getTasteFingerprint(u, v),
+}));
+vi.mock("@/components/profiles/TasteFingerprint", () => ({ TasteFingerprint: () => null }));
+
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children }: { children: ReactNode }) => <span>{children}</span>,
 }));
@@ -84,6 +90,7 @@ const render = (username = "ana") =>
 beforeEach(() => {
   vi.clearAllMocks();
   mutualFollowersHint.mockResolvedValue(0);
+  getTasteFingerprint.mockResolvedValue(null);
 });
 
 describe("UserProfilePage", () => {

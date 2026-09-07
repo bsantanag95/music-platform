@@ -66,6 +66,24 @@
     "soundcloud": "SoundCloud",
     "other": "Link"
   },
+  "fingerprint": {
+    "heading": "Taste fingerprint",
+    "ratingCurveLabel": "How they rate",
+    "ratingCurveEmpty": "The fingerprint is still forming.",
+    "decadesLabel": "Decades",
+    "genresLabel": "Genres",
+    "genresEmpty": "No genre data yet.",
+    "splitLabel": "By the numbers",
+    "splitArtists": "{count, plural, one {# artist} other {# artists}}",
+    "splitAlbums": "{count, plural, one {# album} other {# albums}}",
+    "splitSongs": "{count, plural, one {# song} other {# songs}}",
+    "splitCollection": "{count, plural, one {# physical copy} other {# physical copies}}",
+    "splitLists": "{count, plural, one {# list} other {# lists}}",
+    "a11yCurveCaption": "Distribution of {total, plural, one {# rating} other {# ratings}} by stars",
+    "a11yCurveStars": "Stars",
+    "a11yCurveCount": "Count",
+    "a11yRidge": "{label}: {count}"
+  },
   "edit": {
     "identityHeading": "Your identity",
     "bioLabel": "Bio",

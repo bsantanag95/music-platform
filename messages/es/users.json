@@ -66,6 +66,24 @@
     "soundcloud": "SoundCloud",
     "other": "Enlace"
   },
+  "fingerprint": {
+    "heading": "Huella de gusto",
+    "ratingCurveLabel": "Cómo puntúa",
+    "ratingCurveEmpty": "La huella todavía se está formando.",
+    "decadesLabel": "Décadas",
+    "genresLabel": "Géneros",
+    "genresEmpty": "Sin datos de género todavía.",
+    "splitLabel": "En números",
+    "splitArtists": "{count, plural, one {# artista} other {# artistas}}",
+    "splitAlbums": "{count, plural, one {# álbum} other {# álbumes}}",
+    "splitSongs": "{count, plural, one {# canción} other {# canciones}}",
+    "splitCollection": "{count, plural, one {# copia física} other {# copias físicas}}",
+    "splitLists": "{count, plural, one {# lista} other {# listas}}",
+    "a11yCurveCaption": "Distribución de {total, plural, one {# valoración} other {# valoraciones}} por estrellas",
+    "a11yCurveStars": "Estrellas",
+    "a11yCurveCount": "Cantidad",
+    "a11yRidge": "{label}: {count}"
+  },
   "edit": {
     "identityHeading": "Tu identidad",
     "bioLabel": "Bio",

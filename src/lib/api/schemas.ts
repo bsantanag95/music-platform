@@ -462,6 +462,40 @@ export type ProfileLinksResponse = z.infer<typeof ProfileLinksResponseSchema>;
 // PATCH /api/me/profile acepta un subconjunto: visibilidad y/o campos de
 // identidad. `UpdateProfileVisibilityRequestSchema` se mantiene para los
 // clientes que solo tocan la visibilidad.
+// --- Huella de gusto (cambio redesign-user-profile) ---
+
+export const TasteRidgePointSchema = z.object({
+  label: z.string(),
+  count: z.number().int().nonnegative(),
+});
+
+export const RatingCurvePointSchema = z.object({
+  stars: z.number(),
+  count: z.number().int().nonnegative(),
+});
+
+export const TasteFingerprintSchema = z.object({
+  ratingsVisible: z.boolean(),
+  ratingCurve: z.array(RatingCurvePointSchema).nullable(),
+  totalRatings: z.number().int().nonnegative(),
+  decades: z.array(TasteRidgePointSchema),
+  genres: z.array(TasteRidgePointSchema),
+  genreDataAvailable: z.boolean(),
+  split: z.object({
+    ratedArtists: z.number().int().nonnegative(),
+    ratedAlbums: z.number().int().nonnegative(),
+    ratedSongs: z.number().int().nonnegative(),
+    collection: z.number().int().nonnegative(),
+    lists: z.number().int().nonnegative(),
+  }),
+});
+export type TasteFingerprintDto = z.infer<typeof TasteFingerprintSchema>;
+
+export const TasteFingerprintResponseSchema = z.object({
+  fingerprint: TasteFingerprintSchema.nullable(),
+});
+export type TasteFingerprintResponse = z.infer<typeof TasteFingerprintResponseSchema>;
+
 export const UpdateOwnProfileRequestSchema = z
   .object({
     profileVisibility: ProfileVisibilitySchema.optional(),

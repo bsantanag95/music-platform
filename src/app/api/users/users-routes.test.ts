@@ -32,6 +32,7 @@ vi.mock("@/services/social/profiles", () => ({
   getOwnProfile: mocks.getOwnProfile,
   updateProfileVisibility: mocks.updateProfileVisibility,
 }));
+vi.mock("@/services/profiles/identity", () => ({ updateIdentity: vi.fn() }));
 vi.mock("@/services/social/following", () => ({
   followUser: mocks.followUser,
   unfollowUser: mocks.unfollowUser,
@@ -128,9 +129,11 @@ describe("perfil propio", () => {
   });
 
   it("actualiza la visibilidad propia", async () => {
-    mocks.updateProfileVisibility.mockResolvedValue({ id: "u1", username: "ana", displayName: null, email: "ana@example.com", profileVisibility: "private" });
+    mocks.updateProfileVisibility.mockResolvedValue(undefined);
+    mocks.getOwnProfile.mockResolvedValue({ id: "u1", username: "ana", displayName: null, email: "ana@example.com", profileVisibility: "private" });
     const response = await ownPatch(new NextRequest("http://localhost/api/me/profile", { method: "PATCH", body: JSON.stringify({ profileVisibility: "private" }) }));
     expect(response.status).toBe(200);
+    expect(mocks.updateProfileVisibility).toHaveBeenCalledWith("u1", "private");
     expect((await response.json()).user.profileVisibility).toBe("private");
   });
 

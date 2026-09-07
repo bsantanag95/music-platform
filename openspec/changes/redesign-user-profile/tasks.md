@@ -46,16 +46,16 @@
 
 ## 6. Huella de gusto
 
-- [ ] 6.1 `src/services/profiles/stats.ts`: curva de valoraciones (`GROUP BY stars`) filtrada por audiencia reusando los helpers de `src/services/diary/visibility.ts`
-- [ ] 6.2 Cresta de décadas (valoraciones ∪ escuchas visibles → `release.release_date` → década) con degradación por datos escasos
-- [ ] 6.3 Cresta de géneros vía `release_group_tag` con estado "sin datos de género todavía"
-- [ ] 6.4 Reparto por tipo (artistas/álbumes/canciones valorados, colección, listas visibles)
-- [ ] 6.5 Envolver el cálculo en `cache()` por request; añadir índices que falten
-- [ ] 6.6 Componente `TasteFingerprint`: barras de la curva en CSS/SVG (sin librería), crestas, reparto; excepción sancionada a la Regla de Rareza del ámbar
-- [ ] 6.7 Equivalente textual accesible (tabla o resumen `sr-only`) de curva, décadas y géneros
-- [ ] 6.8 Endpoint `GET /api/users/[username]/fingerprint` (para hidratación diferida y previsualización) con Zod
-- [ ] 6.9 Tests: seguidor ve más que visitante público, sin valoraciones oculta la curva, sin género muestra el estado, equivalente textual presente
-- [ ] 6.10 Revisión visual de `TasteFingerprint` (móvil + escritorio) con datos sembrados
+- [x] 6.1 `src/services/profiles/stats.ts` → `computeRatingStats` (`GROUP BY stars`); valoraciones visibles solo para dueño/seguidor aprobado (regla del feed, no tienen audiencia propia — spec revisado); resto filtrado por `audiencesForProfile`
+- [x] 6.2 `computeDecades` (release_group visibles → `min(year)` por álbum → década) con degradación (vacío si no hay fechas)
+- [x] 6.3 `computeGenres` vía `release_group_tag` (top 8); `genreDataAvailable` false cuando no hay filas
+- [x] 6.4 Reparto: artistas/álbumes/canciones valorados + colección + listas (audience-filtered)
+- [x] 6.5 `getTasteFingerprint` envuelto en `cache()`; migración `0015_profile_stats_indexes.sql` (`idx_rating_user`) + mirror
+- [x] 6.6 `src/components/profiles/TasteFingerprint.tsx` (Server): curva en 10 barras CSS ámbar, crestas de décadas/géneros en barras `paper-muted`, reparto mono
+- [x] 6.7 Equivalente textual: `<table class="sr-only">` con caption + filas para la curva, `<ul class="sr-only">` para cada cresta; barras `aria-hidden`
+- [x] 6.8 `GET /api/users/[username]/fingerprint` + `TasteFingerprintResponseSchema` (Zod) — devuelve `{ fingerprint: null }` sin acceso
+- [x] 6.9 Tests: `stats.test.ts` (mock db por tabla: seguidor ve curva, visitante no, sin género, décadas), `TasteFingerprint.test.tsx`, `fingerprint/route.test.ts`
+- [ ] 6.10 Revisión visual de `TasteFingerprint` (móvil + escritorio) con datos sembrados — pendiente en el entorno del usuario
 
 ## 7. Destacados e himno
 
