@@ -3,14 +3,15 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { getProfileByUsername } from "@/services/social/profiles";
+import { getProfileView } from "@/services/profiles/profile-view";
+import { mutualFollowersHint } from "@/services/profiles/affinity";
 import { resolveSession } from "@/services/auth/sessions";
 import { listUserDiary } from "@/services/diary/diary";
 import { listUserFavorites } from "@/services/favorites/favorites";
 import { listUserLists } from "@/services/lists/lists";
 import { listProfileCollection } from "@/services/collection/collection";
-import { FollowButton } from "@/components/social/FollowButton";
-import { BlockButton } from "@/components/social/BlockButton";
+import { Placa } from "@/components/profiles/Placa";
+import { PrivateThreshold } from "@/components/profiles/PrivateThreshold";
 import { DiaryList } from "@/components/diary/DiaryList";
 import { FavoritesWall } from "@/components/favorites/FavoritesWall";
 import { ListsList } from "@/components/lists/ListsList";
@@ -20,8 +21,8 @@ interface UserProfilePageProps {
   params: Promise<{ username: string }>;
 }
 
-const getProfileCached = cache(async (username: string, viewerId: string | null) =>
-  getProfileByUsername(username, viewerId),
+const getProfileViewCached = cache(async (username: string, viewerId: string | null) =>
+  getProfileView(username, viewerId),
 );
 
 async function ProfileDiary({ username, viewerId }: { username: string; viewerId: string | null }) {
@@ -68,7 +69,7 @@ export async function generateMetadata({ params }: UserProfilePageProps): Promis
   const { username } = await params;
   const session = await resolveSession();
   try {
-    const profile = await getProfileCached(username, session?.user.id ?? null);
+    const profile = await getProfileViewCached(username, session?.user.id ?? null);
     return { title: profile.displayName ?? profile.username };
   } catch {
     return {};
@@ -79,100 +80,76 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
   const { username } = await params;
   const t = await getTranslations("users");
   const session = await resolveSession();
+  const viewerId = session?.user.id ?? null;
 
   let profile;
   try {
-    profile = await getProfileCached(username, session?.user.id ?? null);
+    profile = await getProfileViewCached(username, viewerId);
   } catch {
     notFound();
   }
 
   const isOwn = profile.relation === "self";
+  const lockedOut = !profile.accessible && !isOwn;
+  const mutualFollowers =
+    lockedOut && viewerId ? await mutualFollowersHint(viewerId, profile.id) : 0;
 
   return (
     <main className="flex min-h-screen flex-col items-start gap-8 px-4 py-12">
-      <section className="flex w-full max-w-2xl flex-col gap-4">
-        <div className="flex items-center justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="font-display text-2xl text-paper">
-              {profile.displayName ?? profile.username}
-            </h1>
-            <p className="font-data text-sm text-paper-muted">@{profile.username}</p>
-            <p className="mt-1 font-data text-xs text-paper-muted">
-              {profile.profileVisibility === "public"
-                ? t("profilePublicLabel")
-                : t("profilePrivateLabel")}
-            </p>
-          </div>
-          <div className="flex flex-col items-end gap-2">
-            <FollowButton
-              username={profile.username}
-              relation={profile.relation}
-              authenticated={Boolean(session)}
-              requestId={profile.id}
-            />
-            {session && profile.relation !== "self" && !(profile.relation === "blocked" && !profile.blockedByMe) && (
-              <BlockButton
-                username={profile.username}
-                blocked={profile.blockedByMe}
-              />
-            )}
-          </div>
-        </div>
+      <Placa profile={profile} authenticated={Boolean(session)} />
 
-        {profile.profileVisibility === "private" && !profile.accessible && (
-          <p className="font-body text-sm text-paper-muted" role="status">
-            {t("profilePrivateDescription")}
-          </p>
-        )}
+      {isOwn && (
+        <nav aria-label={t("ownProfile")} className="flex w-full max-w-2xl flex-wrap gap-2 font-data text-sm">
+          <Link href="/me/followers" className="text-paper-muted transition-colors hover:text-paper">
+            {t("followersTitle")}
+          </Link>
+          <Link href="/me/following" className="text-paper-muted transition-colors hover:text-paper">
+            {t("followingTitle")}
+          </Link>
+          <Link href="/me/follow-requests" className="text-paper-muted transition-colors hover:text-paper">
+            {t("requestsTitle")}
+          </Link>
+          <Link href="/me/blocks" className="text-paper-muted transition-colors hover:text-paper">
+            {t("blocksTitle")}
+          </Link>
+          <Link href="/me/settings" className="text-paper-muted transition-colors hover:text-paper">
+            {t("profileVisibilityLabel")}
+          </Link>
+        </nav>
+      )}
 
-        {isOwn && (
-          <nav aria-label={t("ownProfile")} className="flex flex-wrap gap-2 font-data text-sm">
-            <Link href="/me/followers" className="text-paper-muted transition-colors hover:text-paper">
-              {t("followersTitle")}
-            </Link>
-            <Link href="/me/following" className="text-paper-muted transition-colors hover:text-paper">
-              {t("followingTitle")}
-            </Link>
-            <Link href="/me/follow-requests" className="text-paper-muted transition-colors hover:text-paper">
-              {t("requestsTitle")}
-            </Link>
-            <Link href="/me/blocks" className="text-paper-muted transition-colors hover:text-paper">
-              {t("blocksTitle")}
-            </Link>
-            <Link href="/me/settings" className="text-paper-muted transition-colors hover:text-paper">
-              {t("profileVisibilityLabel")}
-            </Link>
-          </nav>
-        )}
-      </section>
-
-      {(profile.accessible || isOwn) && (
-        <section className="flex w-full max-w-2xl flex-col gap-4">
-          <h2 className="font-display text-xl text-paper">{t("diaryTitle")}</h2>
-          <ProfileDiary username={profile.username} viewerId={session?.user.id ?? null} />
-        </section>
+      {lockedOut && (
+        <PrivateThreshold
+          username={profile.username}
+          relation={profile.relation}
+          authenticated={Boolean(session)}
+          ownerId={profile.id}
+          mutualFollowers={mutualFollowers}
+        />
       )}
 
       {(profile.accessible || isOwn) && (
-        <section className="flex w-full max-w-2xl flex-col gap-4">
-          <h2 className="font-display text-xl text-paper">{t("favoritesTitle")}</h2>
-          <ProfileFavorites username={profile.username} viewerId={session?.user.id ?? null} />
-        </section>
-      )}
+        <>
+          <section className="flex w-full max-w-2xl flex-col gap-4">
+            <h2 className="font-display text-xl text-paper">{t("diaryTitle")}</h2>
+            <ProfileDiary username={profile.username} viewerId={viewerId} />
+          </section>
 
-      {(profile.accessible || isOwn) && (
-        <section className="flex w-full max-w-2xl flex-col gap-4">
-          <h2 className="font-display text-xl text-paper">{t("listsTitle")}</h2>
-          <ProfileLists username={profile.username} viewerId={session?.user.id ?? null} />
-        </section>
-      )}
+          <section className="flex w-full max-w-2xl flex-col gap-4">
+            <h2 className="font-display text-xl text-paper">{t("favoritesTitle")}</h2>
+            <ProfileFavorites username={profile.username} viewerId={viewerId} />
+          </section>
 
-      {(profile.accessible || isOwn) && (
-        <section className="flex w-full max-w-2xl flex-col gap-4">
-          <h2 className="font-display text-xl text-paper">{t("collectionTitle")}</h2>
-          <ProfileCollection username={profile.username} viewerId={session?.user.id ?? null} />
-        </section>
+          <section className="flex w-full max-w-2xl flex-col gap-4">
+            <h2 className="font-display text-xl text-paper">{t("listsTitle")}</h2>
+            <ProfileLists username={profile.username} viewerId={viewerId} />
+          </section>
+
+          <section className="flex w-full max-w-2xl flex-col gap-4">
+            <h2 className="font-display text-xl text-paper">{t("collectionTitle")}</h2>
+            <ProfileCollection username={profile.username} viewerId={viewerId} />
+          </section>
+        </>
       )}
     </main>
   );
