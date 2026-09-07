@@ -77,10 +77,10 @@
 
 ## 9. Afinidad
 
-- [ ] 9.1 `src/services/profiles/affinity.ts`: favoritos en común, entidades con `stars >= 4` en ambos, seguidores en común; respeta bloqueo y audiencia; solo visitante autenticado ≠ dueño sobre perfil accesible
-- [ ] 9.2 Endpoint `GET /api/users/[username]/affinity` con Zod
-- [ ] 9.3 Componente `ProfileAffinity`; se oculta sin coincidencias, para anónimo y para el dueño
-- [ ] 9.4 Tests: coincidencias mostradas, sin coincidencias oculta, anónimo/dueño no calcula, bloqueo no calcula
+- [x] 9.1 `getProfileAffinity` en `affinity.ts`: intersección de favoritos (owner filtrado por audiencia), entidades con `stars >= 4` en ambos (solo si `relation === "following"`), `mutualFollowersHint`; null para anónimo/dueño/bloqueo/sin-acceso/sin-coincidencias
+- [x] 9.2 `GET /api/users/[username]/affinity` + `ProfileAffinityResponseSchema` (Zod) → `{ affinity: null }` cuando no aplica
+- [x] 9.3 `ProfileAffinity.tsx` (Server): seguidores en común + filas de favoritos/valoraciones en común con enlace a la entidad; la página no lo monta si `getProfileAffinity` devuelve null
+- [x] 9.4 Tests: `affinity.test.ts` (null anónimo/self/bloqueo/sin-coincidencias, favoritos en común resueltos), `affinity/route.test.ts`, `sections.test.tsx` (AffinitySection null/render)
 
 ## 10. Panel del dueño y "cómo te ven"
 

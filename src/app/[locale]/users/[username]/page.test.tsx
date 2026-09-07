@@ -33,6 +33,7 @@ vi.mock("./sections", () => ({
   ShowcaseSection: () => null,
   FingerprintSection: () => null,
   RecencySection: () => null,
+  AffinitySection: () => null,
   DiaryRail: () => null,
   FavoritesRail: () => null,
   ListsRail: () => null,

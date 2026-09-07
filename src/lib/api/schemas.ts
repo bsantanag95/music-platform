@@ -526,6 +526,20 @@ export type ShowcaseDto = z.infer<typeof ShowcaseSchema>;
 export const ShowcaseResponseSchema = z.object({ showcase: ShowcaseSchema });
 export type ShowcaseResponse = z.infer<typeof ShowcaseResponseSchema>;
 
+// --- Afinidad (cambio redesign-user-profile) ---
+
+export const ProfileAffinitySchema = z.object({
+  sharedFavorites: z.array(ShowcaseEntitySchema),
+  sharedHighRatings: z.array(ShowcaseEntitySchema),
+  mutualFollowers: z.number().int().nonnegative(),
+});
+export type ProfileAffinityDto = z.infer<typeof ProfileAffinitySchema>;
+
+export const ProfileAffinityResponseSchema = z.object({
+  affinity: ProfileAffinitySchema.nullable(),
+});
+export type ProfileAffinityResponse = z.infer<typeof ProfileAffinityResponseSchema>;
+
 export const PinnedItemInputSchema = z.object({
   type: ShowcaseEntityTypeSchema,
   id: z.uuid(),

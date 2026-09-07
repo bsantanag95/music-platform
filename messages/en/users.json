@@ -68,6 +68,12 @@
   },
   "recencyLastSignal": "Last activity {ago}",
   "railEmptyOwn": "Nothing here yet.",
+  "affinity": {
+    "heading": "In common",
+    "sharedFavorites": "Favorites in common",
+    "sharedHighRatings": "You both rate highly",
+    "mutualFollowers": "{count, plural, one {# mutual follower} other {# mutual followers}}"
+  },
   "showcase": {
     "pinnedHeading": "Highlights",
     "anthemHeading": "Anthem",

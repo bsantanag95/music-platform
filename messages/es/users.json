@@ -68,6 +68,12 @@
   },
   "recencyLastSignal": "Última señal {ago}",
   "railEmptyOwn": "Todavía no hay nada acá.",
+  "affinity": {
+    "heading": "Coincidencias",
+    "sharedFavorites": "Favoritos en común",
+    "sharedHighRatings": "Ambos puntúan alto",
+    "mutualFollowers": "{count, plural, one {# seguidor en común} other {# seguidores en común}}"
+  },
   "showcase": {
     "pinnedHeading": "Destacados",
     "anthemHeading": "Himno",

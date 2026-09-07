@@ -6,7 +6,9 @@ import { listProfileCollection } from "@/services/collection/collection";
 import { getTasteFingerprint } from "@/services/profiles/stats";
 import { getShowcase } from "@/services/profiles/showcase";
 import { getProfileRecency } from "@/services/profiles/recency";
+import { getProfileAffinity } from "@/services/profiles/affinity";
 import type { ProfileView } from "@/services/profiles/profile-view";
+import { ProfileAffinity } from "@/components/profiles/ProfileAffinity";
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
 import { OwnerShowcaseEditor } from "@/components/profiles/OwnerShowcaseEditor";
@@ -76,6 +78,12 @@ export async function FingerprintSection({ username, viewerId }: Omit<SectionPro
 
 export async function RecencySection({ username, viewerId }: Omit<SectionProps, "isOwn">) {
   return <ProfileRecency at={await getProfileRecency(username, viewerId)} />;
+}
+
+export async function AffinitySection({ username, viewerId }: Omit<SectionProps, "isOwn">) {
+  const affinity = await getProfileAffinity(username, viewerId);
+  if (!affinity) return null;
+  return <ProfileAffinity affinity={affinity} />;
 }
 
 export async function DiaryRail({ username, viewerId, isOwn }: SectionProps) {

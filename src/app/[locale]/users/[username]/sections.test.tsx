@@ -1,8 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { DiaryRail, FavoritesRail, FingerprintSection, ShowcaseSection } from "./sections";
+import {
+  AffinitySection,
+  DiaryRail,
+  FavoritesRail,
+  FingerprintSection,
+  ShowcaseSection,
+} from "./sections";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
 import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
 import { TasteFingerprint } from "@/components/profiles/TasteFingerprint";
+import { ProfileAffinity } from "@/components/profiles/ProfileAffinity";
 
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn().mockResolvedValue((key: string) => key),
@@ -22,6 +29,7 @@ const svc = vi.hoisted(() => ({
   getTasteFingerprint: vi.fn(),
   getShowcase: vi.fn(),
   getProfileRecency: vi.fn(),
+  getProfileAffinity: vi.fn(),
 }));
 
 vi.mock("@/services/diary/diary", () => ({ listUserDiary: svc.listUserDiary }));
@@ -31,6 +39,7 @@ vi.mock("@/services/collection/collection", () => ({ listProfileCollection: svc.
 vi.mock("@/services/profiles/stats", () => ({ getTasteFingerprint: svc.getTasteFingerprint }));
 vi.mock("@/services/profiles/showcase", () => ({ getShowcase: svc.getShowcase }));
 vi.mock("@/services/profiles/recency", () => ({ getProfileRecency: svc.getProfileRecency }));
+vi.mock("@/services/profiles/affinity", () => ({ getProfileAffinity: svc.getProfileAffinity }));
 
 // Stubs de los componentes de lectura para no arrastrar sus imports cliente.
 vi.mock("@/components/diary/DiaryList", () => ({ DiaryList: () => null }));
@@ -106,5 +115,20 @@ describe("ShowcaseSection / FingerprintSection", () => {
       type?: unknown;
     };
     expect(tree?.type).toBe(TasteFingerprint);
+  });
+
+  it("AffinitySection es null cuando no hay afinidad", async () => {
+    svc.getProfileAffinity.mockResolvedValue(null);
+    expect(await AffinitySection({ username: "ana", viewerId: "v" })).toBeNull();
+  });
+
+  it("AffinitySection renderiza ProfileAffinity cuando hay coincidencias", async () => {
+    svc.getProfileAffinity.mockResolvedValue({
+      sharedFavorites: [],
+      sharedHighRatings: [],
+      mutualFollowers: 3,
+    });
+    const tree = (await AffinitySection({ username: "ana", viewerId: "v" })) as { type?: unknown };
+    expect(tree?.type).toBe(ProfileAffinity);
   });
 });

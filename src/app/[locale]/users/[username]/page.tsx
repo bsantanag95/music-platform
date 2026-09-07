@@ -9,6 +9,7 @@ import { resolveSession } from "@/services/auth/sessions";
 import { Placa } from "@/components/profiles/Placa";
 import { PrivateThreshold } from "@/components/profiles/PrivateThreshold";
 import {
+  AffinitySection,
   CollectionRail,
   DiaryRail,
   FavoritesRail,
@@ -116,6 +117,9 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
           </Streamed>
           <Suspense fallback={null}>
             <RecencySection username={section.username} viewerId={viewerId} />
+          </Suspense>
+          <Suspense fallback={null}>
+            <AffinitySection username={section.username} viewerId={viewerId} />
           </Suspense>
           <Streamed>
             <DiaryRail {...section} />
