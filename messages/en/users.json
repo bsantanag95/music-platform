@@ -66,6 +66,27 @@
     "soundcloud": "SoundCloud",
     "other": "Link"
   },
+  "showcase": {
+    "pinnedHeading": "Highlights",
+    "anthemHeading": "Anthem",
+    "anthemNowPlaying": "On repeat",
+    "edit": {
+      "heading": "Highlights & anthem",
+      "pinnedIntro": "Up to 4 entities that represent you. Pick from your favorites.",
+      "addFromFavorites": "Add from favorites",
+      "notePlaceholder": "Note (optional)",
+      "remove": "Remove",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "savePinned": "Save highlights",
+      "maxPinned": "Maximum 4 highlights",
+      "noFavorites": "Favorite things to be able to highlight them.",
+      "anthemIntro": "A song from your favorites.",
+      "currentAnthem": "Current anthem",
+      "clearAnthem": "Clear anthem",
+      "noRecordingFavorites": "Favorite a song to choose an anthem."
+    }
+  },
   "fingerprint": {
     "heading": "Taste fingerprint",
     "ratingCurveLabel": "How they rate",

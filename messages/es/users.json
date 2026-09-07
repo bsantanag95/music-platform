@@ -66,6 +66,27 @@
     "soundcloud": "SoundCloud",
     "other": "Enlace"
   },
+  "showcase": {
+    "pinnedHeading": "Destacados",
+    "anthemHeading": "Himno",
+    "anthemNowPlaying": "Suena en bucle",
+    "edit": {
+      "heading": "Destacados e himno",
+      "pinnedIntro": "Hasta 4 entidades que te representan. Elegí de tus favoritos.",
+      "addFromFavorites": "Agregar de favoritos",
+      "notePlaceholder": "Nota (opcional)",
+      "remove": "Quitar",
+      "moveUp": "Subir",
+      "moveDown": "Bajar",
+      "savePinned": "Guardar destacados",
+      "maxPinned": "Máximo 4 destacados",
+      "noFavorites": "Marcá favoritos para poder destacarlos.",
+      "anthemIntro": "Una canción de tus favoritos.",
+      "currentAnthem": "Himno actual",
+      "clearAnthem": "Quitar himno",
+      "noRecordingFavorites": "Marcá una canción como favorita para elegir un himno."
+    }
+  },
   "fingerprint": {
     "heading": "Huella de gusto",
     "ratingCurveLabel": "Cómo puntúa",

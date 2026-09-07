@@ -5,6 +5,7 @@ import {
   PROFILE_LINK_KINDS,
   PROFILE_IDENTITY_LIMITS,
   PROFILE_MAX_LINKS,
+  PROFILE_MAX_PINNED,
 } from "@/services/social/types";
 import {
   DIARY_AUDIENCES,
@@ -495,6 +496,55 @@ export const TasteFingerprintResponseSchema = z.object({
   fingerprint: TasteFingerprintSchema.nullable(),
 });
 export type TasteFingerprintResponse = z.infer<typeof TasteFingerprintResponseSchema>;
+
+// --- Destacados e himno (cambio redesign-user-profile) ---
+
+export const ShowcaseEntityTypeSchema = SocialTargetTypeSchema;
+
+export const ShowcaseEntitySchema = z.object({
+  type: ShowcaseEntityTypeSchema,
+  id: z.uuid(),
+  title: z.string(),
+  artistName: z.string().nullable(),
+  coverThumbUrl: z.string().nullable(),
+});
+export type ShowcaseEntityDto = z.infer<typeof ShowcaseEntitySchema>;
+
+export const PinnedItemSchema = z.object({
+  id: z.uuid(),
+  note: z.string().max(PROFILE_IDENTITY_LIMITS.pinnedNote).nullable(),
+  position: z.number().int().nonnegative(),
+  entity: ShowcaseEntitySchema,
+});
+
+export const ShowcaseSchema = z.object({
+  pinned: z.array(PinnedItemSchema),
+  anthem: ShowcaseEntitySchema.nullable(),
+});
+export type ShowcaseDto = z.infer<typeof ShowcaseSchema>;
+
+export const ShowcaseResponseSchema = z.object({ showcase: ShowcaseSchema });
+export type ShowcaseResponse = z.infer<typeof ShowcaseResponseSchema>;
+
+export const PinnedItemInputSchema = z.object({
+  type: ShowcaseEntityTypeSchema,
+  id: z.uuid(),
+  note: z
+    .string()
+    .trim()
+    .max(PROFILE_IDENTITY_LIMITS.pinnedNote, "La nota supera el máximo de 120 caracteres")
+    .nullable()
+    .optional(),
+});
+export type PinnedItemInput = z.infer<typeof PinnedItemInputSchema>;
+
+export const ReplacePinnedRequestSchema = z.object({
+  items: z.array(PinnedItemInputSchema).max(PROFILE_MAX_PINNED, "Máximo 4 destacados"),
+});
+export type ReplacePinnedRequest = z.infer<typeof ReplacePinnedRequestSchema>;
+
+export const SetAnthemRequestSchema = z.object({ recordingId: z.uuid() });
+export type SetAnthemRequest = z.infer<typeof SetAnthemRequestSchema>;
 
 export const UpdateOwnProfileRequestSchema = z
   .object({

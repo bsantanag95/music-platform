@@ -16,6 +16,10 @@ import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
 import { TasteFingerprint } from "@/components/profiles/TasteFingerprint";
 import { getTasteFingerprint } from "@/services/profiles/stats";
+import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
+import { AnthemStrip } from "@/components/profiles/AnthemStrip";
+import { OwnerShowcaseEditor } from "@/components/profiles/OwnerShowcaseEditor";
+import { getShowcase } from "@/services/profiles/showcase";
 import { DiaryList } from "@/components/diary/DiaryList";
 import { FavoritesWall } from "@/components/favorites/FavoritesWall";
 import { ListsList } from "@/components/lists/ListsList";
@@ -97,8 +101,9 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
   const lockedOut = !profile.accessible && !isOwn;
   const mutualFollowers =
     lockedOut && viewerId ? await mutualFollowersHint(viewerId, profile.id) : 0;
-  const fingerprint =
-    profile.accessible || isOwn ? await getTasteFingerprint(profile.username, viewerId) : null;
+  const visible = profile.accessible || isOwn;
+  const fingerprint = visible ? await getTasteFingerprint(profile.username, viewerId) : null;
+  const showcase = visible ? await getShowcase(profile.id) : null;
 
   return (
     <main className="flex min-h-screen flex-col items-start gap-8 px-4 py-12">
@@ -135,6 +140,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
             }}
           />
           <OwnerLinksEditor initialLinks={profile.links} />
+          {showcase && <OwnerShowcaseEditor initial={showcase} />}
         </section>
       )}
 
@@ -147,6 +153,9 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
           mutualFollowers={mutualFollowers}
         />
       )}
+
+      {showcase && showcase.pinned.length > 0 && <PinnedShowcase pinned={showcase.pinned} />}
+      {showcase?.anthem && <AnthemStrip anthem={showcase.anthem} />}
 
       {fingerprint && <TasteFingerprint fingerprint={fingerprint} />}
 

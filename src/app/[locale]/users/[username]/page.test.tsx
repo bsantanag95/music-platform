@@ -4,6 +4,7 @@ import UserProfilePage from "./page";
 import { Placa } from "@/components/profiles/Placa";
 import { PrivateThreshold } from "@/components/profiles/PrivateThreshold";
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
+import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
 import type { ProfileView } from "@/services/profiles/profile-view";
 
 vi.mock("next-intl/server", () => ({
@@ -30,6 +31,12 @@ vi.mock("@/services/profiles/stats", () => ({
   getTasteFingerprint: (u: string, v: string | null) => getTasteFingerprint(u, v),
 }));
 vi.mock("@/components/profiles/TasteFingerprint", () => ({ TasteFingerprint: () => null }));
+
+const getShowcase = vi.fn();
+vi.mock("@/services/profiles/showcase", () => ({ getShowcase: (id: string) => getShowcase(id) }));
+vi.mock("@/components/profiles/PinnedShowcase", () => ({ PinnedShowcase: () => null }));
+vi.mock("@/components/profiles/AnthemStrip", () => ({ AnthemStrip: () => null }));
+vi.mock("@/components/profiles/OwnerShowcaseEditor", () => ({ OwnerShowcaseEditor: () => null }));
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children }: { children: ReactNode }) => <span>{children}</span>,
@@ -91,6 +98,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mutualFollowersHint.mockResolvedValue(0);
   getTasteFingerprint.mockResolvedValue(null);
+  getShowcase.mockResolvedValue({ pinned: [], anthem: null });
 });
 
 describe("UserProfilePage", () => {
@@ -123,6 +131,28 @@ describe("UserProfilePage", () => {
     const tree = await render();
     expect(findElement(tree, PrivateThreshold)).toBeNull();
     expect(JSON.stringify(tree)).toContain("diaryTitle");
+  });
+
+  it("perfil bloqueado fuera: no consulta ni muestra destacados", async () => {
+    resolveSession.mockResolvedValue(null);
+    getProfileView.mockResolvedValue(profile({ relation: "none", accessible: false }));
+    getShowcase.mockResolvedValue({ pinned: [{ id: "p1" }], anthem: null });
+
+    const tree = await render();
+    expect(getShowcase).not.toHaveBeenCalled();
+    expect(findElement(tree, PinnedShowcase)).toBeNull();
+  });
+
+  it("perfil accesible con destacados: renderiza PinnedShowcase", async () => {
+    resolveSession.mockResolvedValue(null);
+    getProfileView.mockResolvedValue(
+      profile({ profileVisibility: "public", relation: "none", accessible: true }),
+    );
+    getShowcase.mockResolvedValue({ pinned: [{ id: "p1" }], anthem: null });
+
+    const tree = await render();
+    expect(getShowcase).toHaveBeenCalledWith("owner");
+    expect(findElement(tree, PinnedShowcase)).not.toBeNull();
   });
 
   it("visitante bloqueado por perfil privado: umbral, sin estantes", async () => {

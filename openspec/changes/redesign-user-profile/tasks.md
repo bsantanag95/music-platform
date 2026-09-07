@@ -59,12 +59,12 @@
 
 ## 7. Destacados e himno
 
-- [ ] 7.1 `src/services/profiles/showcase.ts`: lectura de destacados (resolviendo la entidad, omitiendo las inexistentes) e himno
-- [ ] 7.2 `replacePinned(userId, items[])` máximo 4, tipos mezclados, nota ≤ 120; `setAnthem/clearAnthem`
-- [ ] 7.3 Endpoints `PUT/DELETE /api/me/profile/pinned` y `PUT/DELETE /api/me/profile/anthem` con Zod + tests de ruta
-- [ ] 7.4 Componente `PinnedShowcase` (4 carátulas cuadradas + nota) y `AnthemStrip` (tira "suena en bucle")
-- [ ] 7.5 Editores inline de destacados e himno (buscador de entidad reutilizando la búsqueda de catálogo existente); solo vista del dueño
-- [ ] 7.6 Tests: exceder 4, nota larga, entidad eliminada se omite, himno independiente de la última escucha, ausencia en privado sin autorización
+- [x] 7.1 `src/services/profiles/showcase.ts` → `getShowcase` (resuelve entidad por LEFT JOIN + `PRIMARY_ARTIST_SQL`, omite las borradas)
+- [x] 7.2 `replacePinned` (máx 4, tipos mezclados, nota ≤ 120, FK inválida → VALIDATION_ERROR), `setAnthem` (upsert), `clearAnthem`
+- [x] 7.3 `PUT/DELETE /api/me/profile/pinned` y `/anthem` + contrato Zod (`ShowcaseSchema`, `ReplacePinnedRequestSchema`, `SetAnthemRequestSchema`) + `route.test.ts` de ambos
+- [x] 7.4 `PinnedShowcase.tsx` (grid de 4 carátulas cuadradas + artista + nota) y `AnthemStrip.tsx` (tira "suena en bucle")
+- [x] 7.5 `OwnerShowcaseEditor.tsx`: reordenar/quitar/nota + alta **desde los favoritos del usuario** (NO buscador de catálogo embebido — respeta la memoria `list-detail-scope`); himno se elige de favoritos tipo `recording`; solo vista del dueño
+- [x] 7.6 Tests: `showcase.test.ts` (>4, nota larga, FK→VALIDATION_ERROR, entidad borrada omitida, himno no lee escuchas), `pinned/anthem route.test.ts`, `PinnedShowcase.test.tsx`, `page.test.tsx` (ausente si bloqueado fuera)
 
 ## 8. Vista autorizada: estantes y recencia
 
