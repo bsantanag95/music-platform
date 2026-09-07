@@ -13,18 +13,31 @@ interface FollowButtonProps {
   authenticated: boolean;
   /** id del usuario que envió la solicitud; requerido cuando relation es "incoming". */
   requestId?: string;
+  /**
+   * Previsualización "cómo te ven": el dueño ve el botón que vería un visitante,
+   * pero inerte — sin acción ni enlace a login (ver spec social-profiles).
+   */
+  preview?: boolean;
   onChange?: (relation: FollowRelation) => void;
 }
 
 // Botón de seguimiento con los estados definidos en el diseño de Fase 5:
 // Seguir / Solicitud enviada / Siguiendo / Aprobar / Rechazar. Los estados
 // self y blocked se muestran sin acción. En móvil conserva nombres claros.
-export function FollowButton({ username, relation, authenticated, requestId, onChange }: FollowButtonProps) {
+export function FollowButton({ username, relation, authenticated, requestId, preview, onChange }: FollowButtonProps) {
   const t = useTranslations("users");
   const tErrors = useTranslations("errors");
   const [current, setCurrent] = useState<FollowRelation>(relation);
   const [busy, setBusy] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
+
+  if (preview) {
+    return (
+      <Button variant="primary" disabled>
+        {t("follow")}
+      </Button>
+    );
+  }
 
   if (!authenticated) {
     return (

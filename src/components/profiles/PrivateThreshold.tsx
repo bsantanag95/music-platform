@@ -10,6 +10,8 @@ interface PrivateThresholdProps {
   ownerId: string;
   /** Seguidores en común entre el visitante y el dueño (0 = no mostrar). */
   mutualFollowers: number;
+  /** Previsualización "cómo te ven": el CTA de seguir se muestra inerte. */
+  preview?: boolean;
 }
 
 // El aviso de puerta cerrada: lo que ve un visitante no autorizado sobre un
@@ -23,6 +25,7 @@ export async function PrivateThreshold({
   authenticated,
   ownerId,
   mutualFollowers,
+  preview,
 }: PrivateThresholdProps) {
   const t = await getTranslations("users");
 
@@ -61,6 +64,7 @@ export async function PrivateThreshold({
             relation={relation}
             authenticated={authenticated}
             requestId={ownerId}
+            preview={preview}
           />
         </div>
       </div>

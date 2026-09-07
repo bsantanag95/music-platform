@@ -38,6 +38,12 @@ describe("FollowButton", () => {
     );
   });
 
+  it("en previsualización muestra 'Seguir' inerte, sin enlace a login", () => {
+    renderWithIntl(<FollowButton username="pato" relation="none" authenticated preview />);
+    expect(screen.getByRole("button", { name: "Seguir" })).toBeDisabled();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+  });
+
   it("permite seguir un perfil y pasa al estado Siguiendo", async () => {
     const user = userEvent.setup();
     mocks.apiFetch.mockResolvedValue({ relation: "following" });

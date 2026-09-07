@@ -73,7 +73,10 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
 
   const isOwn = profile.relation === "self";
   const lockedOut = !profile.accessible && !isOwn;
-  const authenticated = Boolean(session) && !previewing;
+  // En previsualización la sesión sigue activa (el dueño no dejó de estarlo);
+  // el clúster de acciones se muestra inerte vía `preview`, no fingiendo
+  // ausencia de sesión — eso mostraba un enlace roto a /auth/login.
+  const authenticated = Boolean(session);
   const mutualFollowers =
     lockedOut && effectiveViewerId
       ? await mutualFollowersHint(effectiveViewerId, profile.id)
@@ -93,7 +96,12 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
         )}
         <div className="grid w-full max-w-5xl gap-8 lg:grid-cols-[19rem_minmax(0,1fr)] lg:gap-10">
           <aside className="flex flex-col gap-6 lg:sticky lg:top-8 lg:self-start">
-            <Placa profile={profile} authenticated={authenticated} variant="aside" />
+            <Placa
+              profile={profile}
+              authenticated={authenticated}
+              variant="aside"
+              preview={previewing}
+            />
             <Streamed>
               <AnthemSection ownerId={profile.id} />
             </Streamed>
@@ -134,7 +142,7 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
   return (
     <main className="flex min-h-screen flex-col items-center gap-8 px-4 py-12">
       <div className="flex w-full max-w-2xl flex-col items-start gap-8">
-        <Placa profile={profile} authenticated={authenticated} />
+        <Placa profile={profile} authenticated={authenticated} preview={previewing} />
 
         {realIsOwn && <ViewAsBanner username={profile.username} previewing={previewing} />}
 
@@ -156,6 +164,7 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
             authenticated={authenticated}
             ownerId={profile.id}
             mutualFollowers={mutualFollowers}
+            preview={previewing}
           />
         )}
 

@@ -12,6 +12,8 @@ interface PlacaProps {
    * "aside": siempre en columna, para la barra lateral de la vista pública.
    */
   variant?: "full" | "aside";
+  /** Previsualización "cómo te ven": el clúster de acciones se muestra inerte. */
+  preview?: boolean;
 }
 
 // La Placa: el objeto identidad del perfil, presente en las tres vistas
@@ -19,12 +21,13 @@ interface PlacaProps {
 // una funda de vinilo — monograma, nombre en display, dato en mono, bio en
 // serif, y el clúster "quién soy para vos" (relación + acciones) al extremo.
 // Ver DESIGN.md ("The Vinyl Listening Room") y el spec social-profiles.
-export async function Placa({ profile, authenticated, variant = "full" }: PlacaProps) {
+export async function Placa({ profile, authenticated, variant = "full", preview }: PlacaProps) {
   const t = await getTranslations("users");
   const format = await getFormatter();
   const name = profile.displayName ?? profile.username;
   const showBlock =
     authenticated &&
+    !preview &&
     profile.relation !== "self" &&
     !(profile.relation === "blocked" && !profile.blockedByMe);
   const aside = variant === "aside";
@@ -120,6 +123,7 @@ export async function Placa({ profile, authenticated, variant = "full" }: PlacaP
           relation={profile.relation}
           authenticated={authenticated}
           requestId={profile.id}
+          preview={preview}
         />
         {showBlock && <BlockButton username={profile.username} blocked={profile.blockedByMe} />}
       </div>

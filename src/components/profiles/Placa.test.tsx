@@ -12,8 +12,10 @@ vi.mock("next-intl/server", () => ({
 }));
 
 vi.mock("@/components/social/FollowButton", () => ({
-  FollowButton: ({ relation }: { relation: string }) => (
-    <div data-testid="follow-button">{relation}</div>
+  FollowButton: ({ relation, preview }: { relation: string; preview?: boolean }) => (
+    <div data-testid="follow-button" data-preview={preview ? "true" : undefined}>
+      {relation}
+    </div>
   ),
 }));
 
@@ -96,5 +98,11 @@ describe("Placa", () => {
   it("otro usuario autenticado: muestra el botón de bloqueo", async () => {
     renderWithIntl(await Placa({ profile: base, authenticated: true }));
     expect(screen.getByTestId("block-button")).toBeInTheDocument();
+  });
+
+  it("previsualización: pasa preview al FollowButton y oculta el bloqueo", async () => {
+    renderWithIntl(await Placa({ profile: base, authenticated: true, preview: true }));
+    expect(screen.getByTestId("follow-button")).toHaveAttribute("data-preview", "true");
+    expect(screen.queryByTestId("block-button")).not.toBeInTheDocument();
   });
 });
