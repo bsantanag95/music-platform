@@ -602,6 +602,36 @@ rangos se rechazan con `400 { error, code: "VALIDATION_ERROR" }`; no se normaliz
 solo del comentario propio y devuelve `204`; devuelve `404 { error, code: "COMMENT_NOT_FOUND" }` si
 el comentario no existe y `403 { error, code: "PERMISSION_DENIED" }` si pertenece a otro usuario.
 
+### `GET/POST /api/catalog/{target}/{id}/reviews` (cambio `add-album-review`)
+
+La reseña es la superficie crítica del álbum: texto largo, título opcional, **una vigente por
+(usuario, objetivo)**, editable. Distinta de `comment`. El rating no vive en la reseña — el listado
+lo trae por `LEFT JOIN` con `rating` (refleja el valor **vigente** del autor, o `null` si lo borró).
+
+`GET` es **público** (con o sin sesión), acepta `page` / `pageSize` (entero 1-100) y devuelve
+`{ reviews, page, pageSize, hasNext }`, ordenado por fecha de creación descendente. Cada entrada:
+`{ id, user: { id, username, displayName }, title: string | null, body, rating: { stars, detailedScore } | null, createdAt, updatedAt }`.
+
+`POST` requiere sesión y recibe `{ body, title?, stars?, detailedScore? }`:
+
+- `title` ausente o `""` → se guarda `null`; en otro caso 1–120.
+- `body` obligatorio, 1–10000.
+- Si llegan `stars`, hace upsert del rating del autor (misma validación que el endpoint de rating).
+- Si **no** llegan `stars` y el autor no tiene un rating del objetivo → `400 { code: "REVIEW_REQUIRES_RATING" }`.
+- Crea o **reemplaza** la reseña propia del objetivo (idempotente). Devuelve `201 { review }`.
+- En esta versión solo se aceptan objetivos `release-group`; `artist` y `recording` → `400 { code: "REVIEW_TARGET_NOT_SUPPORTED" }`. El listado responde `200` con lista vacía para esos objetivos.
+
+### `PATCH/DELETE /api/catalog/reviews/{reviewId}` (cambio `add-album-review`)
+
+`PATCH` recibe `{ title?, body?, stars?, detailedScore? }` (al menos un campo); `title: null` o `""`
+borra el título; si llegan `stars`, hace upsert del rating. Solo la reseña propia. `DELETE` borra
+físicamente la reseña propia y devuelve `204`; **no toca el `rating`** del autor. `404
+{ code: "REVIEW_NOT_FOUND" }` si no existe (o el id no es UUID); `403 { code: "PERMISSION_DENIED" }`
+si es de otro usuario.
+
+**Feed:** las reseñas **no** entran todavía en `GET /api/me/feed` — la integración es un cambio
+posterior (Fase 2 de `redefine-content-hierarchy`).
+
 ## Favoritos (Fase 5.5, cambio `add-favorites-and-lists`)
 
 Señal de interés simple sobre artista, álbum o canción. Toggle idempotente: un usuario tiene a lo

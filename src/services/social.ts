@@ -24,8 +24,18 @@ function targetWhere(target: SocialTarget) {
   return eq({ artistId: rating.artistId, releaseGroupId: rating.releaseGroupId, recordingId: rating.recordingId }[target.column], target.id);
 }
 
-function targetValues(target: SocialTarget) {
+export function targetValues(target: SocialTarget) {
   return { artistId: target.type === "artist" ? target.id : null, releaseGroupId: target.type === "release-group" ? target.id : null, recordingId: target.type === "recording" ? target.id : null };
+}
+
+/** Fila `rating` vigente del usuario sobre el objetivo, o `null`. Sin agregados. */
+export async function getOwnRatingRow(target: SocialTarget, userId: string) {
+  const [own] = await db
+    .select()
+    .from(rating)
+    .where(and(targetWhere(target), eq(rating.userId, userId)))
+    .limit(1);
+  return own ?? null;
 }
 
 export async function getRatings(target: SocialTarget, userId?: string) {
@@ -46,7 +56,7 @@ export async function getRatings(target: SocialTarget, userId?: string) {
   };
 }
 
-function validateRating(stars: number, detailedScore?: number) {
+export function validateRating(stars: number, detailedScore?: number) {
   if (stars < 0.5 || stars > 5 || stars * 2 !== Math.round(stars * 2)) {
     throw new ApiError("INVALID_RATING", 400, "Las estrellas deben estar entre 0.5 y 5 en pasos de 0.5");
   }

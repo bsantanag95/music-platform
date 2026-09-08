@@ -63,6 +63,18 @@
     "title": "Comentario no encontrado",
     "description": "No se encontró el comentario."
   },
+  "REVIEW_NOT_FOUND": {
+    "title": "Reseña no encontrada",
+    "description": "No se encontró la reseña."
+  },
+  "REVIEW_REQUIRES_RATING": {
+    "title": "Falta la valoración",
+    "description": "Elegí una valoración para el álbum antes de publicar la reseña."
+  },
+  "REVIEW_TARGET_NOT_SUPPORTED": {
+    "title": "Todavía no disponible",
+    "description": "Por ahora solo se pueden reseñar álbumes. Las reseñas de artista y canción llegan más adelante."
+  },
   "INTERNAL_ERROR": {
     "title": "Error inesperado",
     "description": "No pudimos completar la solicitud. Intentá de nuevo en un momento."

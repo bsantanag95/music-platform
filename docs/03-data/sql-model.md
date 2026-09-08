@@ -235,6 +235,27 @@ Esa columna **no está implementada todavía**; requiere una migración SQL y un
 
 **Restricciones:** `CHECK (num_nonnulls(artist_id, release_group_id, recording_id) = 1)`, igual que `credit` y `rating`.
 
+## `review`
+
+**Propósito:** la reseña como entidad propia (migración `0017`, cambio `add-album-review`) — la
+postura crítica del usuario sobre una obra: texto largo (`body`, 1–10000), `title` opcional, editable.
+Distinta de `comment` (nota conversacional corta, N por objetivo). **El rating no se guarda acá**:
+`rating` es la única fuente de verdad; el listado lo trae por `LEFT JOIN` sobre `(user_id, <target>)`
+y refleja el valor vigente (o `null` si el autor borró su rating). Borrar la reseña **no** toca el
+rating; borrar el rating deja la reseña con rating `null`.
+
+**Restricciones:**
+
+- `CHECK (num_nonnulls(artist_id, release_group_id, recording_id) = 1)`: un objetivo exacto, misma
+  forma que `rating`/`comment` (no polimórfica).
+- `CHECK (title IS NULL OR char_length(title) BETWEEN 1 AND 120)` y `CHECK (char_length(body) BETWEEN 1 AND 10000)`.
+- Índices únicos parciales (`uq_review_user_*`): **una reseña vigente por usuario y objetivo** (como `rating`).
+- **Trigger `trg_review_touch`**: mantiene `updated_at`.
+
+**Restricción de producto (no de esquema):** en esta versión solo se escriben reseñas de álbum
+(`REVIEWABLE_TARGET_TYPES` en `src/services/reviews.ts`). La tabla admite los tres objetivos desde
+ya — habilitar artista/canción no requiere migración.
+
 ## `listen_entry`
 
 **Propósito:** el diario de escucha (Fase 5, cambio `add-listen-diary-reactions`). Registra cada

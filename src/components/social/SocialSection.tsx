@@ -1,7 +1,8 @@
 "use client";
 
-import type { CommentsResponse, RatingsResponse } from "@/lib/api/schemas";
+import type { CommentsResponse, RatingsResponse, ReviewsResponse } from "@/lib/api/schemas";
 import { DualRating } from "./DualRating";
+import { Reviews } from "./Reviews";
 import { Comments } from "./Comments";
 
 interface SocialSectionProps {
@@ -10,8 +11,47 @@ interface SocialSectionProps {
   ratings: RatingsResponse;
   comments: CommentsResponse;
   userId?: string;
+  /**
+   * Reseñas del objetivo. Solo se pasa (y renderiza) en la página de álbum
+   * — la escritura de reseñas está restringida a `release-group` en esta
+   * versión (openspec: add-album-review).
+   */
+  reviews?: ReviewsResponse;
 }
 
-export function SocialSection({ target, targetId, ratings, comments, userId }: SocialSectionProps) {
-  return <section className="flex w-full max-w-3xl flex-col gap-8"><DualRating target={target} targetId={targetId} initial={ratings} authenticated={Boolean(userId)} /><Comments target={target} targetId={targetId} initial={comments} authenticated={Boolean(userId)} userId={userId} /></section>;
+export function SocialSection({
+  target,
+  targetId,
+  ratings,
+  comments,
+  userId,
+  reviews,
+}: SocialSectionProps) {
+  return (
+    <section className="flex w-full max-w-3xl flex-col gap-8">
+      <DualRating
+        target={target}
+        targetId={targetId}
+        initial={ratings}
+        authenticated={Boolean(userId)}
+      />
+      {target === "release-group" && reviews && (
+        <Reviews
+          target={target}
+          targetId={targetId}
+          initial={reviews}
+          authenticated={Boolean(userId)}
+          userId={userId}
+          ownStars={ratings.own?.stars ?? 0}
+        />
+      )}
+      <Comments
+        target={target}
+        targetId={targetId}
+        initial={comments}
+        authenticated={Boolean(userId)}
+        userId={userId}
+      />
+    </section>
+  );
 }

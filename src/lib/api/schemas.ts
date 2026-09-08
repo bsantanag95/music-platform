@@ -173,6 +173,9 @@ export const ErrorCodeSchema = z.enum([
   "INVALID_COMMENT",
   "RATING_NOT_FOUND",
   "COMMENT_NOT_FOUND",
+  "REVIEW_NOT_FOUND",
+  "REVIEW_REQUIRES_RATING",
+  "REVIEW_TARGET_NOT_SUPPORTED",
   "INTERNAL_ERROR",
   "EMAIL_TAKEN_BY_LOCAL",
   "OAUTH_CONFIG_MISSING",
@@ -330,6 +333,72 @@ export const CommentsResponseSchema = z.object({
   hasNext: z.boolean(),
 });
 export type CommentsResponse = z.infer<typeof CommentsResponseSchema>;
+
+// Reseña (openspec: add-album-review). `title` opcional: se acepta ausente o
+// cadena vacía y ambas se persisten como null. `stars`/`detailedScore`
+// opcionales: cuando llegan, el servicio hace upsert del rating del autor
+// (misma validación que el endpoint de rating). El rating no vive en la
+// reseña; el listado lo trae por LEFT JOIN.
+export const ReviewRequestSchema = z.object({
+  // ausente, null o cadena vacía → null; en otro caso, 1–120 tras recortar
+  title: z
+    .string()
+    .trim()
+    .max(120)
+    .nullish()
+    .transform((value) => value || null),
+  body: z.string().trim().min(1).max(10000),
+  stars: z.number().min(0.5).max(5).multipleOf(0.5).optional(),
+  detailedScore: z.number().int().min(1).max(100).optional(),
+});
+export type ReviewRequest = z.infer<typeof ReviewRequestSchema>;
+
+// Para PATCH: todo opcional, con al menos un campo presente. `title` ausente
+// lo deja como está; `title: null` (o cadena vacía) lo borra; un string lo
+// reemplaza.
+export const ReviewUpdateSchema = z
+  .object({
+    title: z
+      .preprocess(
+        (value) => (typeof value === "string" && value.trim() === "" ? null : value),
+        z.union([z.string().trim().min(1).max(120), z.null()]),
+      )
+      .optional(),
+    body: z.string().trim().min(1).max(10000).optional(),
+    stars: z.number().min(0.5).max(5).multipleOf(0.5).optional(),
+    detailedScore: z.number().int().min(1).max(100).optional(),
+  })
+  .refine((value) => Object.values(value).some((field) => field !== undefined), {
+    message: "Debe enviarse al menos un campo",
+  });
+export type ReviewUpdate = z.infer<typeof ReviewUpdateSchema>;
+
+export const ReviewSchema = z.object({
+  id: z.uuid(),
+  user: z.object({
+    id: z.uuid(),
+    username: z.string(),
+    displayName: z.string().nullable(),
+  }),
+  title: z.string().nullable(),
+  body: z.string(),
+  rating: z
+    .object({ stars: z.number(), detailedScore: z.number().int().nullable() })
+    .nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type Review = z.infer<typeof ReviewSchema>;
+
+export const ReviewMutationResponseSchema = z.object({ review: ReviewSchema });
+
+export const ReviewsResponseSchema = z.object({
+  reviews: z.array(ReviewSchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  hasNext: z.boolean(),
+});
+export type ReviewsResponse = z.infer<typeof ReviewsResponseSchema>;
 
 export const ApiErrorSchema = z.object({
   error: z.string(),

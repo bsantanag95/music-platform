@@ -112,6 +112,22 @@
     "cancel": "Cancelar",
     "genericError": "No se pudo completar la operación.",
     "loadMore": "Cargar más comentarios",
-    "loadingMore": "Cargando comentarios..."
+    "loadingMore": "Cargando comentarios...",
+    "reviewsHeading": "Reseñas",
+    "reviewFormLabel": "Escribir una reseña",
+    "reviewBodyLabel": "Tu reseña",
+    "reviewTitleLabel": "Título (opcional)",
+    "reviewTitlePlaceholder": "Un título, si querés ponerle uno",
+    "reviewStarsHint": "Elegí una valoración para publicar la reseña.",
+    "reviewSubmit": "Publicar reseña",
+    "reviewUpdate": "Guardar cambios",
+    "loginToReview": "Iniciá sesión para reseñar",
+    "noReviews": "Todavía no hay reseñas.",
+    "editReviewLabel": "Editar reseña",
+    "deleteReviewConfirm": "¿Borrar tu reseña de forma permanente? Esta acción no se puede deshacer. Tu valoración no se toca.",
+    "reviewLoadMore": "Cargar más reseñas",
+    "reviewByLabel": "Reseña de {name}",
+    "reviewShowMore": "Ver más",
+    "reviewShowLess": "Ver menos"
   }
 }

@@ -643,3 +643,40 @@ export const listenEntry = pgTable(
     // migración SQL cruda (fuente única de verdad, mismo criterio que rating).
   ],
 );
+
+// Reseña como entidad propia (migración 0017, openspec: add-album-review).
+// Misma forma de objetivo que rating/comment/favorite: 3 FK nullable +
+// CHECK num_nonnulls = 1. `title` opcional (nullable; la app normaliza ''
+// a NULL). El rating NO se guarda acá — vive en `rating` (LEFT JOIN en el
+// listado). Una reseña vigente por (usuario, objetivo): índices únicos
+// parciales por columna, definidos en la migración SQL cruda. Los CHECK de
+// longitud de `title`/`body` también viven en la migración.
+export const review = pgTable(
+  "review",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    artistId: uuid("artist_id").references(() => artist.id, { onDelete: "cascade" }),
+    releaseGroupId: uuid("release_group_id").references(() => releaseGroup.id, {
+      onDelete: "cascade",
+    }),
+    recordingId: uuid("recording_id").references(() => recording.id, { onDelete: "cascade" }),
+    title: text("title"),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_review_artist").on(t.artistId),
+    index("idx_review_release_group").on(t.releaseGroupId),
+    index("idx_review_recording").on(t.recordingId),
+    check(
+      "chk_review_single_target",
+      sql`num_nonnulls(${t.artistId}, ${t.releaseGroupId}, ${t.recordingId}) = 1`,
+    ),
+  ],
+);
+
+export type ReviewRow = typeof review.$inferSelect;

@@ -112,6 +112,22 @@
     "cancel": "Cancel",
     "genericError": "The operation could not be completed.",
     "loadMore": "Load more comments",
-    "loadingMore": "Loading comments..."
+    "loadingMore": "Loading comments...",
+    "reviewsHeading": "Reviews",
+    "reviewFormLabel": "Write a review",
+    "reviewBodyLabel": "Your review",
+    "reviewTitleLabel": "Title (optional)",
+    "reviewTitlePlaceholder": "A title, if you want one",
+    "reviewStarsHint": "Pick a rating to publish the review.",
+    "reviewSubmit": "Post review",
+    "reviewUpdate": "Save changes",
+    "loginToReview": "Log in to review",
+    "noReviews": "No reviews yet.",
+    "editReviewLabel": "Edit review",
+    "deleteReviewConfirm": "Delete your review permanently? This cannot be undone. Your rating is left untouched.",
+    "reviewLoadMore": "Load more reviews",
+    "reviewByLabel": "Review by {name}",
+    "reviewShowMore": "Show more",
+    "reviewShowLess": "Show less"
   }
 }

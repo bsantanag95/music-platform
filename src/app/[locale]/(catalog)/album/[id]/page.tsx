@@ -17,6 +17,7 @@ import { CollectionAlbumAction } from "@/components/collection/CollectionAlbumAc
 import { resolveSession } from "@/services/auth/sessions";
 import { listOwnEntriesForReleaseGroup } from "@/services/collection/collection";
 import { getRatings, listComments, resolveSocialTarget } from "@/services/social";
+import { listReviews } from "@/services/reviews";
 
 interface AlbumPageProps {
   params: Promise<{ id: string }>;
@@ -57,9 +58,10 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
   const { detail } = result;
   const session = await resolveSession();
   const socialTarget = await resolveSocialTarget("release-group", detail.releaseGroup.id);
-  const [ratings, comments, collectionEntries] = await Promise.all([
+  const [ratings, comments, reviews, collectionEntries] = await Promise.all([
     getRatings(socialTarget, session?.user.id),
     listComments(socialTarget),
+    listReviews(socialTarget),
     session?.user.id
       ? listOwnEntriesForReleaseGroup(session.user.id, detail.releaseGroup.id)
       : Promise.resolve([]),
@@ -130,7 +132,7 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
         durationUnknown={t("album.durationUnknown")}
         creditsLabel={t("album.creditsLabel")}
       />
-      <SocialSection target="release-group" targetId={detail.releaseGroup.id} ratings={ratings} comments={comments} userId={session?.user.id} />
+      <SocialSection target="release-group" targetId={detail.releaseGroup.id} ratings={ratings} comments={comments} reviews={reviews} userId={session?.user.id} />
     </main>
   );
 }

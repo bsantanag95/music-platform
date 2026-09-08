@@ -63,6 +63,18 @@
     "title": "Comment not found",
     "description": "The comment was not found."
   },
+  "REVIEW_NOT_FOUND": {
+    "title": "Review not found",
+    "description": "The review was not found."
+  },
+  "REVIEW_REQUIRES_RATING": {
+    "title": "Rating needed",
+    "description": "Pick a rating for the album before posting the review."
+  },
+  "REVIEW_TARGET_NOT_SUPPORTED": {
+    "title": "Not available yet",
+    "description": "For now only albums can be reviewed. Artist and song reviews are coming later."
+  },
   "INTERNAL_ERROR": {
     "title": "Unexpected error",
     "description": "We couldn't complete the request. Please try again in a moment."

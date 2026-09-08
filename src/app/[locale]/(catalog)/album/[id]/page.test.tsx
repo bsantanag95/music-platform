@@ -29,6 +29,10 @@ vi.mock("@/services/social", () => ({
   listComments: vi.fn().mockResolvedValue({ comments: [], page: 1, pageSize: 20, hasNext: false }),
 }));
 
+vi.mock("@/services/reviews", () => ({
+  listReviews: vi.fn().mockResolvedValue({ reviews: [], page: 1, pageSize: 20, hasNext: false }),
+}));
+
 vi.mock("@/services/collection/collection", () => ({
   listOwnEntriesForReleaseGroup: vi.fn().mockResolvedValue([]),
 }));
