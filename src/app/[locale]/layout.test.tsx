@@ -37,13 +37,19 @@ describe("RootLayout", () => {
     const layout = await RootLayout({ children: <main>Contenido</main>, params: Promise.resolve({ locale: "es" }) });
     render(layout);
 
-    expect(mocks.header).toHaveBeenCalledWith({ user: { id: "u1", username: "ana", displayName: "Ana" } }, undefined);
+    expect(mocks.header).toHaveBeenCalledWith(
+      expect.objectContaining({ user: { id: "u1", username: "ana", displayName: "Ana" } }),
+      undefined,
+    );
     const headerProps = mocks.header.mock.calls[0]?.[0] as { user: Record<string, unknown> };
     expect(headerProps.user).not.toHaveProperty("passwordHash");
     expect(headerProps.user).not.toHaveProperty("createdAt");
 
     // El Footer recibe el mismo usuario público que el Header.
-    expect(mocks.footer).toHaveBeenCalledWith({ user: { id: "u1", username: "ana", displayName: "Ana" } }, undefined);
+    expect(mocks.footer).toHaveBeenCalledWith(
+      expect.objectContaining({ user: { id: "u1", username: "ana", displayName: "Ana" } }),
+      undefined,
+    );
     expect(screen.getByTestId("footer")).toBeInTheDocument();
   });
 });

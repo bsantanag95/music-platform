@@ -1,4 +1,27 @@
 {
+  "explore": {
+    "navLabel": "Explorar",
+    "pageTitle": "Explorar álbumes",
+    "heading": "Explorar",
+    "intro": "Colecciones, novedades y obras destacadas de la comunidad.",
+    "featuredHeading": "Colecciones destacadas",
+    "newReleasesHeading": "Novedades",
+    "decadesHeading": "Explorar por década",
+    "genresHeading": "Explorar por género",
+    "topRatedHeading": "Mejor valorados",
+    "mostReviewedHeading": "Más reseñados",
+    "decadeChip": "{decade}s",
+    "collectionItems": "{count, plural, one {# álbum} other {# álbumes}}",
+    "albumCoverLabel": "Carátula del álbum",
+    "decadeResultsHeading": "Álbumes de los {decade}s",
+    "genreResultsHeading": "Álbumes de {genre}",
+    "backToExplore": "Volver a Explorar",
+    "prevPage": "Página anterior",
+    "nextPage": "Página siguiente",
+    "emptyFiltered": "No hay álbumes para este corte todavía.",
+    "notFoundTitle": "Corte no encontrado",
+    "notFoundDescription": "Ese filtro de descubrimiento no es válido."
+  },
   "search": {
     "pageTitle": "Buscar en el catálogo",
     "breadcrumb": "Búsqueda",

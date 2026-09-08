@@ -192,6 +192,14 @@ la ingesta de cada tracklist (0 llamadas a MusicBrainz por álbum).
 
 **404** con `code: ALBUM_NOT_FOUND` si el `id` no corresponde a ningún `release_group`.
 
+## Descubrimiento `/explore` (cambio `add-album-discovery`)
+
+**No expone endpoints.** La superficie `/[locale]/explore` y sus listados filtrados
+(`?decada=` / `?genero=` / `?page=`) se resuelven en Server Components llamando directo a
+`src/services/discovery/discovery.ts`. La paginación de los listados filtrados es
+server-side (anterior / siguiente por `?page=`), sin fetch de cliente. Ver
+`docs/05-features/explore.md`.
+
 ## `GET /api/catalog/artist/[id]` — ✅ Existe
 
 Perfil de artista navegable directo por `id` propio. Si el artista es un stub

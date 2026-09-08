@@ -1,4 +1,27 @@
 {
+  "explore": {
+    "navLabel": "Explore",
+    "pageTitle": "Explore albums",
+    "heading": "Explore",
+    "intro": "Collections, new releases and works the community stands behind.",
+    "featuredHeading": "Featured collections",
+    "newReleasesHeading": "New releases",
+    "decadesHeading": "Explore by decade",
+    "genresHeading": "Explore by genre",
+    "topRatedHeading": "Top rated",
+    "mostReviewedHeading": "Most reviewed",
+    "decadeChip": "{decade}s",
+    "collectionItems": "{count, plural, one {# album} other {# albums}}",
+    "albumCoverLabel": "Album cover",
+    "decadeResultsHeading": "Albums from the {decade}s",
+    "genreResultsHeading": "{genre} albums",
+    "backToExplore": "Back to Explore",
+    "prevPage": "Previous page",
+    "nextPage": "Next page",
+    "emptyFiltered": "No albums for this slice yet.",
+    "notFoundTitle": "Slice not found",
+    "notFoundDescription": "That discovery filter is not valid."
+  },
   "search": {
     "pageTitle": "Search the catalog",
     "breadcrumb": "Search",

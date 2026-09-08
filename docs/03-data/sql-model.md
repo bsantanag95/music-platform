@@ -329,6 +329,23 @@ propiedad de un único usuario (no colaborativa) y de un solo tipo de entidad (n
 **Índices:** `idx_user_list_owner_created` (listas propias, fecha descendente) y
 `idx_user_list_owner_audience` (listas públicas de un usuario en su perfil).
 
+## `user_list_featured`
+
+**Propósito:** marca una `user_list` como **colección destacada** del descubrimiento
+`/explore` (migración `0018`, cambio `add-album-discovery`). Presencia de fila = destacada;
+`rank` (SMALLINT, `NOT NULL`, `UNIQUE`, `CHECK > 0`) define el orden ascendente del riel
+editorial. Las filas las escribe `scripts/seed-discovery.ts`, no una acción de usuario.
+
+**Solo señal de distribución:** no cambia visibilidad, permisos, lectura ni comportamiento
+de la lista en ninguna otra superficie. **Tabla aparte a propósito** (mismo motivo que
+`user_list_pin`): `user_list.updated_at` lo bumpea un trigger en cualquier `UPDATE` y el
+feed deriva de ahí los eventos de "lista actualizada" — escribir la marca en `user_list`
+generaría un evento de feed falso al sembrar.
+
+**Cuenta curadora:** las colecciones editoriales son listas públicas de `app_user`
+`exploracion` (`display_name` "Exploración", `password_hash` NULL — no puede iniciar
+sesión, se comporta como una cuenta solo-OAuth). El seed la crea.
+
 ## `user_list_item`
 
 **Propósito:** elemento individual dentro de una `user_list`. El tipo de entidad del objetivo

@@ -7,15 +7,17 @@ import { Logo } from "./Logo";
 
 interface FooterProps {
   user?: Pick<AuthUser, "id" | "username" | "displayName"> | null;
+  exploreEnabled?: boolean;
 }
 
 // Pie de página global. Server Component: no necesita estado ni interactividad
 // (el selector de idioma vive solo en el Header; "volver arriba" es un ancla).
 // La variante logueado/anónimo se resuelve con el mismo `user` que recibe el
 // Header, sin una segunda consulta de sesión.
-export async function Footer({ user = null }: FooterProps) {
+export async function Footer({ user = null, exploreEnabled = false }: FooterProps) {
   const t = await getTranslations("footer");
   const tCommon = await getTranslations("common");
+  const tExplore = await getTranslations("catalog.explore");
   const appName = tCommon("appName");
   const year = String(new Date().getFullYear());
 
@@ -40,6 +42,9 @@ export async function Footer({ user = null }: FooterProps) {
           {/* Explorar */}
           <FooterNav label={t("explore.label")}>
             <FooterLink href="/">{t("explore.home")}</FooterLink>
+            {exploreEnabled ? (
+              <FooterLink href="/explore">{tExplore("navLabel")}</FooterLink>
+            ) : null}
             <FooterLink href="/search">{t("explore.search")}</FooterLink>
             <FooterLink href="/users">{t("explore.people")}</FooterLink>
             <FooterLink href="/about">{t("explore.howItWorks")}</FooterLink>

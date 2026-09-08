@@ -449,11 +449,30 @@ export const userListPin = pgTable(
   ],
 );
 
+// Colecciones destacadas del descubrimiento `/explore` (migración 0018,
+// openspec: add-album-discovery). Tabla aparte —mismo motivo que
+// user_list_pin—: destacar NO debe tocar user_list.updated_at (que dispara
+// eventos de feed). Presencia de fila = destacada; `rank` NOT NULL, UNIQUE,
+// > 0 (el CHECK vive en la migración SQL cruda). Las escribe
+// scripts/seed-discovery.ts, no una acción de usuario.
+export const userListFeatured = pgTable(
+  "user_list_featured",
+  {
+    listId: uuid("list_id")
+      .primaryKey()
+      .references(() => userList.id, { onDelete: "cascade" }),
+    rank: smallint("rank").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("uq_user_list_featured_rank").on(t.rank)],
+);
+
 export type FavoriteRow = typeof favorite.$inferSelect;
 export type UserListRow = typeof userList.$inferSelect;
 export type UserListItemRow = typeof userListItem.$inferSelect;
 export type ListSaveRow = typeof listSave.$inferSelect;
 export type UserListPinRow = typeof userListPin.$inferSelect;
+export type UserListFeaturedRow = typeof userListFeatured.$inferSelect;
 
 // Colección física (Fase 5, add-physical-collection). Objetivo fijo (álbum):
 // FK directa, sin patrón CHECK num_nonnulls. Varias entradas por álbum

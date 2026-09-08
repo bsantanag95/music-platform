@@ -12,6 +12,7 @@ import { Logo } from "./Logo";
 
 interface HeaderProps {
   user?: Pick<AuthUser, "id" | "username" | "displayName"> | null;
+  exploreEnabled?: boolean;
 }
 
 const NAV_ITEMS = [
@@ -25,9 +26,10 @@ const NAV_ITEMS = [
 // Encabezado global del catálogo. Client Component porque el selector de
 // idioma necesita `usePathname` y `useRouter` de next-intl para preservar
 // la ruta y los parámetros dinámicos al cambiar de locale.
-export function Header({ user = null }: HeaderProps) {
+export function Header({ user = null, exploreEnabled = false }: HeaderProps) {
   const t = useTranslations("common");
   const tErrors = useTranslations("errors");
+  const tExplore = useTranslations("catalog.explore");
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -89,19 +91,27 @@ export function Header({ user = null }: HeaderProps) {
           <div className="hidden md:block">
             <HeaderSearch />
           </div>
-          {currentUser ? (
-            <nav className="hidden items-center gap-4 md:flex">
-              {NAV_ITEMS.map(({ href, key }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className="font-data text-sm text-paper-muted transition-colors hover:text-paper"
-                >
-                  {t(key)}
-                </Link>
-              ))}
-            </nav>
-          ) : null}
+          <nav className="hidden items-center gap-4 md:flex">
+            {exploreEnabled ? (
+              <Link
+                href="/explore"
+                className="font-data text-sm text-paper-muted transition-colors hover:text-paper"
+              >
+                {tExplore("navLabel")}
+              </Link>
+            ) : null}
+            {currentUser
+              ? NAV_ITEMS.map(({ href, key }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="font-data text-sm text-paper-muted transition-colors hover:text-paper"
+                  >
+                    {t(key)}
+                  </Link>
+                ))
+              : null}
+          </nav>
         </div>
 
         {/* Sesión e idioma van juntos al extremo derecho, separados de la navegación de
@@ -140,17 +150,27 @@ export function Header({ user = null }: HeaderProps) {
           className="flex flex-col gap-4 border-t border-ink-border px-4 py-4 md:hidden"
         >
           <HeaderSearch />
-          {currentUser ? (
+          {exploreEnabled || currentUser ? (
             <nav className="flex flex-col gap-3">
-              {NAV_ITEMS.map(({ href, key }) => (
+              {exploreEnabled ? (
                 <Link
-                  key={href}
-                  href={href}
+                  href="/explore"
                   className="font-data text-sm text-paper-muted transition-colors hover:text-paper"
                 >
-                  {t(key)}
+                  {tExplore("navLabel")}
                 </Link>
-              ))}
+              ) : null}
+              {currentUser
+                ? NAV_ITEMS.map(({ href, key }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      className="font-data text-sm text-paper-muted transition-colors hover:text-paper"
+                    >
+                      {t(key)}
+                    </Link>
+                  ))
+                : null}
             </nav>
           ) : null}
           <div className="flex flex-wrap items-center justify-between gap-4 border-t border-ink-border pt-4">
