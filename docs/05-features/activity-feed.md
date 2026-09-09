@@ -76,9 +76,10 @@ actividad — no hace falta una audiencia explícita. Ver `design.md` del cambio
 - **Tier 4 en el feed** — eventos ambiente (seguir artista/usuario, colección). El tier
   está definido en `feedEntryTier` pero esas fuentes no se consultan todavía; se
   incorporan en un cambio posterior.
-- `add-network-convergence` — convergencia de red (varias personas de tu red sobre la misma
-  obra en 7 días → una síntesis social única), fuera de alcance de `rework-feed-tiers` y de
-  `add-feed-rotation-peak`. (El pico de rotación personal ya está — ver "Pico de rotación".)
+- Suprimir o colapsar en el listado cronológico las entradas individuales que ya alimentan
+  una convergencia de la red (`add-network-convergence`, OQ2 — hoy el panel es aditivo).
+- Ponderar los tipos de interacción de la convergencia entre sí (reseña > registro) —
+  `add-network-convergence` los cuenta por igual en Fase 1 (D9: "pendiente de afinar").
 - Materializar el feed como tabla de eventos si el volumen lo justifica.
 - Keyset pagination en lugar de offset.
 - Audiencia por actividad para rating/comment (alineado con el diseño maestro de Fase 5,
@@ -171,6 +172,46 @@ Es el hermano a **7 días** de la sección **"En rotación" del perfil** (`profi
 30 días): la del perfil es el cálculo fiel de ventana sobre todo el diario; la del feed es
 la lectura en contexto de una racha evidente en el flujo de actividad. Mismo vocabulario,
 distinta escala.
+
+## Convergencia de la red (`add-network-convergence`)
+
+Un **panel "En tu red esta semana"** en la cabecera de `/me/feed`, encima del listado
+cronológico (`NetworkConvergence.tsx`, Server Component, colapsa si vacío): hasta 5 obras
+con las que **≥ 3 personas distintas de la red del lector** se relacionaron en los últimos
+**7 días**. Es la capa **"relevante"** —en qué coincide la red— distinta de la capa
+**"social"** (el listado cronológico) y del **pico de rotación** (el propio comportamiento
+del lector).
+
+- **Interacción** = entrada de diario, valoración, reseña o favorito de un seguido con
+  relación aceptada, sobre un `release-group` **o** un `recording` (nunca artista, sin
+  roll-up canción→álbum). Los cuatro tipos cuentan **por igual** en Fase 1 (ponderar
+  reseña > registro se difiere, D9). El umbral cuenta **personas distintas**, no
+  interacciones: 5 escuchas de una persona no mueven nada.
+- **Visibilidad** idéntica al feed: audiencia `followers`/`public` para escucha/favorito,
+  rating y reseña públicos implícitos, bloqueo en cualquier dirección excluye a la persona.
+  La actividad del **propio lector no cuenta**.
+- **Síntesis única**: una fila por obra —carátula, título enlazado, artista, hasta 3
+  nombres + "y N más", y la cifra "{N} personas que seguís"—. Nunca una fila por persona ni
+  un desglose de quién escuchó / valoró / reseñó. Tono cultural: sin "tendencia", sin
+  fuego, sin insignia de número, sin ranking global.
+- **Aditivo**: las entradas individuales que alimentan una convergencia siguen apareciendo
+  en el listado cronológico de abajo con su presentación por tier. Suprimirlas o colapsarlas
+  es una refinación posterior (`add-network-convergence`, OQ2).
+- **Cálculo**: `getNetworkConvergence(viewerId)` (`src/services/feed/convergence.ts`),
+  `cache()` por request, sin tabla materializada, sin endpoint ni fetcher (mismo criterio
+  que `taste-fingerprint` / `profile-in-rotation`). Una sentencia SQL: `UNION ALL` de las
+  cuatro fuentes filtradas por seguidos visibles + ventana → `GROUP BY release_group_id,
+  recording_id HAVING COUNT(DISTINCT user_id) >= 3` → catálogo + `json_agg` de la muestra
+  de nombres. Umbrales y ventana como constantes con nombre.
+
+### Las cuatro naturalezas de actividad
+
+| Naturaleza | Pregunta | Dónde vive |
+|---|---|---|
+| **Personal** | ¿Qué hice yo? | diario (`/me/diary`), rastro reciente y "En rotación" del perfil — sin filtro de audiencia para uno mismo |
+| **Social** | ¿Qué hizo cada persona que sigo, en orden? | listado cronológico de `/me/feed` y su preview de Inicio |
+| **Relevante** | ¿En qué coincide mi red ahora? | panel de convergencia en la cabecera de `/me/feed` |
+| **Automática** | Derivada sin acción explícita | tier 4 (seguir artista/usuario, colección) — **todavía no llega al feed** |
 
 ### "Tu rastro reciente" — variante `self`
 

@@ -18,6 +18,11 @@
   "groupRatings": "{count, plural, one {rated # album} other {rated # albums}}",
   "groupSongRatings": "{count, plural, one {rated # song} other {rated # songs}}",
   "rotationPeak": "In rotation · {count, plural, one {# log} other {# logs}} this week",
+  "convergence": {
+    "title": "In your network this week",
+    "people": "{count, plural, one {# person you follow} other {# people you follow}}",
+    "andMore": "and {count} more"
+  },
   "groupMore": "and {count} more",
   "loadMore": "Load more",
   "loadingMore": "Loading...",

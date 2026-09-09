@@ -18,6 +18,11 @@
   "groupRatings": "{count, plural, one {valoró # disco} other {valoró # discos}}",
   "groupSongRatings": "{count, plural, one {valoró # canción} other {valoró # canciones}}",
   "rotationPeak": "En rotación · {count, plural, one {# registro} other {# registros}} esta semana",
+  "convergence": {
+    "title": "En tu red esta semana",
+    "people": "{count, plural, one {# persona que seguís} other {# personas que seguís}}",
+    "andMore": "y {count} más"
+  },
   "groupMore": "y {count} más",
   "loadMore": "Cargar más",
   "loadingMore": "Cargando...",

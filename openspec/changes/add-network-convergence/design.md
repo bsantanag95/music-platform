@@ -185,14 +185,14 @@ hasta que la comunidad tenga densidad.
 
 ## Open Questions
 
-- **OQ1 — ¿Se cuentan objetivos `recording` además de `release-group`, o solo álbumes?**
-  Propuesta: **ambos, por separado**. Una convergencia sobre un single/tema es señal social
+- **OQ1 — ¿Se cuentan objetivos `recording` además de `release-group`, o solo álbumes? →
+  RESUELTA: ambos, por separado.** Una convergencia sobre un single/tema es señal social
   legítima y contar solo álbumes reintroduce el sesgo de género que la dirección evita.
   Sin roll-up canción→álbum (eso es otra heurística).
 - **OQ2 — ¿El panel suprime o colapsa las entradas individuales que lo alimentan en el
-  listado cronológico?** Propuesta: **no en Fase 1** (D4). El panel entrega la síntesis;
+  listado cronológico? → RESUELTA: no en Fase 1** (D4). El panel entrega la síntesis;
   las filas de abajo llevan detalle que la síntesis descarta. Revisar con datos reales si
   la duplicación molesta.
-- **OQ3 — ¿El panel va también en el preview de feed de Inicio?** Propuesta: **no en Fase
-  1**. Esa superficie ya está acotada por su contenedor de scroll; sumar un panel encima
+- **OQ3 — ¿El panel va también en el preview de feed de Inicio? → RESUELTA: no en Fase
+  1.** Esa superficie ya está acotada por su contenedor de scroll; sumar un panel encima
   compite por un espacio escaso. Evaluar después.
