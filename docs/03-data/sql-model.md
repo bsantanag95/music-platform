@@ -221,6 +221,12 @@ Esa columna **no está implementada todavía**; requiere una migración SQL y un
 
 **Propósito:** la valoración dual (estrellas + valoración detallada) sobre un artista, álbum o canción.
 
+**Presentación (cambio `rebalance-catalog-detail-pages`):** el modelo sigue aceptando los
+tres tipos de objetivo, pero las páginas de detalle ya no los exponen igual — el rating de
+**canción** vive detrás de una divulgación secundaria y el de **artista** no se muestra en
+absoluto (la expresión de artista pasa a ser una nota corta). Los ratings de artista/canción
+creados antes del cambio se conservan intactos; solo cambia qué renderiza la UI.
+
 **Restricciones:**
 
 - `CHECK (num_nonnulls(artist_id, release_group_id, recording_id) = 1)`: un objetivo exacto por valoración.

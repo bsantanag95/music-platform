@@ -16,9 +16,9 @@ Solo lectura, sin cuenta de usuario. El flujo completo:
 Buscar en el catálogo → Resultados → Perfil de artista / Álbum (tracklist + créditos)
 ```
 
-La vista de detalle de canción queda deliberadamente fuera de esta fase (Camino A,
-`02-implementation-plan.md`, Etapa 3.5) — se construye en Fase 4 junto al formulario de
-valoración, para no reescribir la misma pantalla dos veces.
+La vista de detalle de canción quedó fuera de esta fase (Camino A,
+`02-implementation-plan.md`, Etapa 3.5); se construyó después, mínima a propósito — ver
+"3b. Detalle de canción" más abajo (cambio `rebalance-catalog-detail-pages`).
 
 ## 1. Buscar en el catálogo
 
@@ -74,6 +74,12 @@ Foto, nombre, biografía breve (si existe), y discografía agrupada en cuatro ca
 fijas: **De estudio**, **Singles/EP**, **Compilados**, **En vivo / Misceláneos** — el
 diseño ya definido en la visión de producto.
 
+**Discografía-forward** (cambio `rebalance-catalog-detail-pages`): la discografía va
+**justo debajo del encabezado**, antes de las acciones de catálogo, las membresías y las
+notas de la comunidad. El artista se lee primero por su obra. El área de comunidad del
+artista **no tiene rating de estrellas**: son notas cortas de contexto ("empezá por
+aquí"), no reseñas.
+
 **Caso Roger Waters / Pink Floyd (referencia del proyecto):** el perfil de un artista
 muestra tanto su discografía como banda como su carrera solista en la misma pantalla, sin
 distinguir "modo banda" de "modo solista" — es una sola discografía agrupada por
@@ -109,6 +115,20 @@ ese `release_group`. Estado vacío claro, no una pantalla en blanco ni un error 
 se ingiere y muestra una sola edición por álbum (simplificación documentada en
 `ingest-release.ts` y `sql-model.md`). El selector de edición es una función futura, no
 decidida todavía.
+
+## 3b. Detalle de canción — página mínima
+
+Fuera del alcance original de Fase 3; añadida y **deliberadamente mínima** por el cambio
+`rebalance-catalog-detail-pages` (Fase 1 de `redefine-content-hierarchy`). La canción sigue
+siendo entidad real, pero su página no es un destino rico: la inversión va al álbum.
+
+La página lidera con **el o los álbumes que contienen la canción** (carátula + título +
+año, enlace al álbum; el más temprano marcado como "aparición principal"). Después: título
+y artista acreditado, acciones de catálogo (registrar escucha, favorito, agregar a lista),
+**tu historial de escuchas** de esa canción (solo con sesión y ≥1 escucha), la **reacción
+agregada pública** de la comunidad, comentarios, la divulgación de estrellas plegada, y por
+último una **ficha técnica** (`<details>` plegado) con los créditos completos y todas las
+ediciones. Sin bloque de reseñas. Ver `ratings-and-reviews.md` para reacción vs. estrellas.
 
 ## 4. Navegación por membresías (banda → integrantes) — diferida a Fase 4
 

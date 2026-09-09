@@ -241,6 +241,13 @@ export const RecordingSchema = z.object({
 export type Recording = z.infer<typeof RecordingSchema>;
 
 export const RecordingCreditSchema = TrackCreditSchema;
+export const ContainingAlbumSchema = z.object({
+  releaseGroupId: z.uuid(),
+  title: z.string(),
+  category: z.string(),
+  coverThumbUrl: z.string().nullable(),
+  firstReleaseYear: z.number().int().nullable(),
+});
 export const RecordingAppearanceSchema = z.object({
   releaseId: z.uuid(),
   releaseGroupId: z.uuid(),
@@ -254,6 +261,7 @@ export const RecordingAppearanceSchema = z.object({
 export const RecordingDetailSchema = z.object({
   recording: RecordingSchema,
   credits: z.array(RecordingCreditSchema),
+  containingAlbums: z.array(ContainingAlbumSchema),
   appearances: z.array(RecordingAppearanceSchema),
   primaryArtist: z.object({ id: z.uuid(), name: z.string() }).nullable(),
 });
@@ -756,6 +764,16 @@ export const CreateListenEntryRequestSchema = z.object({
   target: ListenTargetSchema,
 });
 export type CreateListenEntryRequest = z.infer<typeof CreateListenEntryRequestSchema>;
+
+// Resumen de reacciones públicas de una canción para su página de detalle
+// (cambio rebalance-catalog-detail-pages). Solo lectura, servido en el
+// Server Component — sin endpoint.
+export const RecordingReactionSummarySchema = z.object({
+  total: z.number().int().nonnegative(),
+  byReaction: z.record(ListenReactionSchema, z.number().int().nonnegative()),
+  top: ListenReactionSchema.nullable(),
+});
+export type RecordingReactionSummaryDto = z.infer<typeof RecordingReactionSummarySchema>;
 
 export const UpdateListenEntryRequestSchema = z
   .object({

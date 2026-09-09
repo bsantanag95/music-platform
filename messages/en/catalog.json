@@ -107,7 +107,22 @@
     "duration": "Duration",
     "durationUnknown": "Duration unknown",
     "notFoundTitle": "Recording not found",
-    "notFoundDescription": "We could not find this recording in the catalog."
+    "notFoundDescription": "We could not find this recording in the catalog.",
+    "containingAlbumsHeading": "On these albums",
+    "mainAppearance": "Main appearance",
+    "communityReactionHeading": "The community",
+    "reactionSummary": "{count, plural, one {# person logged it} other {# people logged it}} · mostly {top}",
+    "yourHistoryHeading": "Your history with this song",
+    "yourHistoryLink": "See in your diary",
+    "starsDisclosure": "Add a star rating",
+    "technicalDetailsHeading": "Technical details",
+    "reaction": {
+      "liked": "liked it",
+      "loved": "loved it",
+      "obsessed": "obsessed",
+      "neutral": "neutral",
+      "disliked": "disliked it"
+    }
   },
   "social": {
     "ratingHeading": "Ratings",
@@ -129,6 +144,12 @@
     "commentSubmit": "Post comment",
     "loginToComment": "Log in to comment",
     "noComments": "No comments yet.",
+    "notesHeading": "Community notes",
+    "notesIntro": "Context for anyone arriving at this artist: where to start, what to hear first.",
+    "notesLabel": "Note",
+    "notesSubmit": "Post note",
+    "loginToNote": "Log in to leave a note",
+    "noNotes": "No notes yet.",
     "edit": "Edit",
     "deleteCommentConfirm": "Delete this comment permanently? This cannot be undone.",
     "editCommentLabel": "Edit comment",

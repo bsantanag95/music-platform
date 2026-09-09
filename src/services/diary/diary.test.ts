@@ -7,6 +7,7 @@ import {
   createListenEntry,
   deleteListenEntry,
   listMyDiary,
+  listMyListensForRecording,
   listUserDiary,
   listFeed,
   resolveDiaryTarget,
@@ -62,6 +63,15 @@ function joinLimit(rows: unknown[]) {
   return { from };
 }
 
+// select().from().leftJoin()×3.where().orderBy()  → terminal orderBy
+function joinOrderBy(rows: unknown[]) {
+  const orderBy = vi.fn().mockResolvedValue(rows);
+  const where = vi.fn(() => ({ orderBy }));
+  const chain = { leftJoin: vi.fn(() => chain), where };
+  const from = vi.fn(() => chain);
+  return { from };
+}
+
 // select().from().leftJoin()×3.where().orderBy().limit().offset()  → paginado
 function joinPaged(rows: unknown[]) {
   const offset = vi.fn().mockResolvedValue(rows);
@@ -107,6 +117,37 @@ describe("servicio del diario", () => {
       code: "DIARY_TARGET_INVALID",
       status: 404,
     });
+  });
+
+  it("listMyListensForRecording devuelve las escuchas propias de una canción, más recientes primero", async () => {
+    const recId = "00000000-0000-4000-8000-0000000000aa";
+    mocks.db.select.mockReturnValue(
+      joinOrderBy([
+        {
+          ...entryRow,
+          id: "00000000-0000-4000-8000-0000000000a1",
+          artistId: null,
+          recordingId: recId,
+          recordingTitle: "Song",
+          reaction: "obsessed",
+          createdAt: new Date("2026-03-02T00:00:00Z"),
+        },
+        {
+          ...entryRow,
+          id: "00000000-0000-4000-8000-0000000000a2",
+          artistId: null,
+          recordingId: recId,
+          recordingTitle: "Song",
+          reaction: "liked",
+          createdAt: new Date("2026-03-01T00:00:00Z"),
+        },
+      ]),
+    );
+
+    const rows = await listMyListensForRecording(user, recId);
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({ reaction: "obsessed", target: { type: "recording", id: recId } });
+    expect(rows[1]?.reaction).toBe("liked");
   });
 
   it("infiere first_listen en la primera escucha y persiste audiencia followers", async () => {

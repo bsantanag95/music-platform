@@ -14,11 +14,31 @@ interface CommentsProps {
   initial: CommentsResponse;
   authenticated: boolean;
   userId?: string;
+  /**
+   * `"comments"` (por defecto): "Comentarios". `"notes"`: reencuadra la
+   * sección como "nota / contexto / empezá por aquí" en la página de artista
+   * (openspec: rebalance-catalog-detail-pages) — mismo modelo de datos, copy
+   * distinto.
+   */
+  variant?: "comments" | "notes";
 }
 
-export function Comments({ target, targetId, initial, authenticated, userId }: CommentsProps) {
+export function Comments({
+  target,
+  targetId,
+  initial,
+  authenticated,
+  userId,
+  variant = "comments",
+}: CommentsProps) {
   const t = useTranslations("catalog.social");
   const tErrors = useTranslations("errors");
+  const notes = variant === "notes";
+  const headingKey = notes ? "notesHeading" : "commentsHeading";
+  const emptyKey = notes ? "noNotes" : "noComments";
+  const submitKey = notes ? "notesSubmit" : "commentSubmit";
+  const labelKey = notes ? "notesLabel" : "commentLabel";
+  const loginKey = notes ? "loginToNote" : "loginToComment";
   const [comments, setComments] = useState(initial.comments);
   const [page, setPage] = useState(initial.page);
   const [hasNext, setHasNext] = useState(initial.hasNext);
@@ -90,18 +110,19 @@ export function Comments({ target, targetId, initial, authenticated, userId }: C
 
   return (
     <section aria-labelledby="comments-heading" className="flex w-full flex-col gap-4 border-t border-ink-border pt-6">
-      <h2 id="comments-heading" className="font-display text-xl text-paper">{t("commentsHeading")}</h2>
+      <h2 id="comments-heading" className="font-display text-xl text-paper">{t(headingKey)}</h2>
+      {notes && <p className="font-body text-sm text-paper-muted">{t("notesIntro")}</p>}
       {authenticated ? (
         <form onSubmit={handleCreate} className="flex flex-col gap-3" aria-label={t("commentFormLabel")}>
-          <label htmlFor={`comment-${target}-${targetId}`} className="font-data text-sm text-paper">{t("commentLabel")}</label>
+          <label htmlFor={`comment-${target}-${targetId}`} className="font-data text-sm text-paper">{t(labelKey)}</label>
           <textarea id={`comment-${target}-${targetId}`} value={body} onChange={(event) => setBody(event.target.value)} maxLength={5000} rows={4} className="rounded border border-ink-border bg-ink-surface px-3 py-2" />
-          <button type="submit" disabled={pending || !body.trim()} className="self-start rounded bg-amber px-4 py-2 font-display text-sm text-ink disabled:opacity-50">{pending ? t("saving") : t("commentSubmit")}</button>
+          <button type="submit" disabled={pending || !body.trim()} className="self-start rounded bg-amber px-4 py-2 font-display text-sm text-ink disabled:opacity-50">{pending ? t("saving") : t(submitKey)}</button>
         </form>
       ) : (
-        <p className="font-body text-paper-muted"><Link href="/auth/login" className="text-amber underline">{t("loginToComment")}</Link></p>
+        <p className="font-body text-paper-muted"><Link href="/auth/login" className="text-amber underline">{t(loginKey)}</Link></p>
       )}
       {errorCode && <p role="alert" className="font-data text-sm text-danger">{tErrors(`${errorCode}.description`)}</p>}
-      {comments.length === 0 ? <p className="font-body text-paper-muted">{t("noComments")}</p> : <ul className="flex flex-col gap-4">{comments.map((comment) => <li key={comment.id} className="rounded border border-ink-border bg-ink-surface p-4"><p className="font-data text-xs text-paper-muted">{comment.user.displayName ?? comment.user.username}</p>{editingId === comment.id ? <div className="mt-2 flex flex-col gap-2"><textarea aria-label={t("editCommentLabel")} value={editingBody} onChange={(event) => setEditingBody(event.target.value)} maxLength={5000} rows={3} className="rounded border border-ink-border bg-ink px-3 py-2" /><div className="flex gap-2"><button type="button" disabled={pending} onClick={() => void handleUpdate(comment.id)} className="rounded bg-amber px-3 py-1 font-data text-xs text-ink">{t("save")}</button><button type="button" onClick={() => setEditingId(null)} className="rounded border border-ink-border px-3 py-1 font-data text-xs text-paper">{t("cancel")}</button></div></div> : <p className="mt-2 whitespace-pre-wrap font-body text-paper">{comment.body}</p>}{userId === comment.user.id && editingId !== comment.id && <div className="mt-3 flex gap-3"><button type="button" onClick={() => { setEditingId(comment.id); setEditingBody(comment.body); }} className="font-data text-xs text-amber underline">{t("edit")}</button><button type="button" disabled={pending} onClick={() => void handleDelete(comment.id)} className="font-data text-xs text-danger underline">{t("delete")}</button></div>}</li>)}</ul>}
+      {comments.length === 0 ? <p className="font-body text-paper-muted">{t(emptyKey)}</p> : <ul className="flex flex-col gap-4">{comments.map((comment) => <li key={comment.id} className="rounded border border-ink-border bg-ink-surface p-4"><p className="font-data text-xs text-paper-muted">{comment.user.displayName ?? comment.user.username}</p>{editingId === comment.id ? <div className="mt-2 flex flex-col gap-2"><textarea aria-label={t("editCommentLabel")} value={editingBody} onChange={(event) => setEditingBody(event.target.value)} maxLength={5000} rows={3} className="rounded border border-ink-border bg-ink px-3 py-2" /><div className="flex gap-2"><button type="button" disabled={pending} onClick={() => void handleUpdate(comment.id)} className="rounded bg-amber px-3 py-1 font-data text-xs text-ink">{t("save")}</button><button type="button" onClick={() => setEditingId(null)} className="rounded border border-ink-border px-3 py-1 font-data text-xs text-paper">{t("cancel")}</button></div></div> : <p className="mt-2 whitespace-pre-wrap font-body text-paper">{comment.body}</p>}{userId === comment.user.id && editingId !== comment.id && <div className="mt-3 flex gap-3"><button type="button" onClick={() => { setEditingId(comment.id); setEditingBody(comment.body); }} className="font-data text-xs text-amber underline">{t("edit")}</button><button type="button" disabled={pending} onClick={() => void handleDelete(comment.id)} className="font-data text-xs text-danger underline">{t("delete")}</button></div>}</li>)}</ul>}
       {hasNext && <button type="button" disabled={pending} onClick={() => void handleLoadMore()} className="self-start rounded border border-ink-border px-4 py-2 font-display text-sm text-paper disabled:opacity-50">{pending ? t("loadingMore") : t("loadMore")}</button>}
     </section>
   );

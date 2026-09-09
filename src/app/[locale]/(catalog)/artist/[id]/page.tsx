@@ -11,12 +11,12 @@ import { isValidUuid } from "@/lib/validation";
 import type { ReleaseGroupRow } from "@/db/schema";
 import type { Artist, ReleaseGroup, ReleaseGroupCategory } from "@/lib/api/schemas";
 import { ArtistMemberships } from "@/components/catalog/ArtistMemberships";
-import { SocialSection } from "@/components/social/SocialSection";
+import { Comments } from "@/components/social/Comments";
 import { MarkAsListened } from "@/components/diary/MarkAsListened";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { AddToListButton } from "@/components/lists/AddToListButton";
 import { resolveSession } from "@/services/auth/sessions";
-import { getRatings, listComments, resolveSocialTarget } from "@/services/social";
+import { listComments, resolveSocialTarget } from "@/services/social";
 
 interface ArtistPageProps {
   params: Promise<{ id: string }>;
@@ -55,11 +55,11 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
     getArtistMemberships(artist),
     resolveSession(),
   ]);
+  // La página de artista ya no expone rating de estrellas (openspec:
+  // rebalance-catalog-detail-pages, D7): solo se cargan las notas de la
+  // comunidad. El modelo sigue aceptando ratings de artista; la página no.
   const socialTarget = await resolveSocialTarget("artist", artist.id);
-  const [ratings, comments] = await Promise.all([
-    getRatings(socialTarget, session?.user.id),
-    listComments(socialTarget),
-  ]);
+  const comments = await listComments(socialTarget);
 
   const typeLabel = t(`artist.typeLabels.${artist.type as Artist["type"]}`);
   const categoryLabels = {
@@ -95,6 +95,14 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
         typeLabel={typeLabel}
         noPhotoAlt={t("artist.noPhotoAlt")}
       />
+      {/* Discografía-forward (openspec: rebalance-catalog-detail-pages, D6):
+          la obra es lo primero, antes de acciones, membresías y notas. */}
+      <AlbumGrid
+        releaseGroups={albums}
+        categoryLabels={categoryLabels}
+        discographyHeading={t("artist.discographyHeading")}
+        coverLabel={t("artist.albumCoverLabel")}
+      />
       <div className="flex flex-col items-start gap-3">
         <MarkAsListened target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
         <FavoriteButton target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
@@ -108,13 +116,16 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
         openPeriod={t("artist.memberPeriodOpen")}
         unknownPeriod={t("artist.memberPeriodUnknown")}
       />
-      <AlbumGrid
-        releaseGroups={albums}
-        categoryLabels={categoryLabels}
-        discographyHeading={t("artist.discographyHeading")}
-        coverLabel={t("artist.albumCoverLabel")}
-      />
-      <SocialSection target="artist" targetId={artist.id} ratings={ratings} comments={comments} userId={session?.user.id} />
+      <div className="w-full max-w-3xl">
+        <Comments
+          target="artist"
+          targetId={artist.id}
+          initial={comments}
+          authenticated={Boolean(session?.user.id)}
+          userId={session?.user.id}
+          variant="notes"
+        />
+      </div>
     </main>
   );
 }

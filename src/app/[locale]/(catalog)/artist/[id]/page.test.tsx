@@ -1,7 +1,26 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 import * as artistService from "@/services/catalog/ingest-artist";
 import * as discographyService from "@/services/catalog/ingest-discography";
+import { AlbumGrid } from "@/components/catalog/AlbumGrid";
+import { ArtistMemberships } from "@/components/catalog/ArtistMemberships";
+import { Comments } from "@/components/social/Comments";
+import { DualRating } from "@/components/social/DualRating";
 import type { ArtistRow, ReleaseGroupRow } from "@/db/schema";
+
+// Aplana el árbol y devuelve el orden de aparición de ciertos tipos de
+// componente (para verificar el reordenamiento discografía-forward).
+function typeOrder(node: unknown, types: unknown[]): unknown[] {
+  const out: unknown[] = [];
+  const walk = (n: unknown) => {
+    if (n == null || typeof n !== "object") return;
+    if (Array.isArray(n)) return n.forEach(walk);
+    const el = n as { type?: unknown; props?: { children?: unknown } };
+    if (types.includes(el.type)) out.push(el.type);
+    walk(el.props?.children);
+  };
+  walk(node);
+  return out;
+}
 
 type PageModule = {
   default: (props: { params: Promise<{ id: string }> }) => Promise<unknown>;
@@ -115,6 +134,40 @@ describe("ArtistPage", () => {
 
     expect(artistService.getArtistById).toHaveBeenCalledWith(stub.id);
     expect(discographyService.findOrIngestDiscography).toHaveBeenCalledWith(stub);
+  });
+
+  it("renderiza la discografía antes que membresías y notas, y sin rating de estrellas", async () => {
+    const artist = makeArtist();
+    vi.mocked(artistService.getArtistById).mockResolvedValue(artist);
+    vi.mocked(discographyService.findOrIngestDiscography).mockResolvedValue([makeReleaseGroup()]);
+
+    const tree = await pageModule.default({ params: Promise.resolve({ id: artist.id }) });
+    const order = typeOrder(tree, [AlbumGrid, ArtistMemberships, Comments, DualRating]);
+
+    expect(order.indexOf(AlbumGrid)).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf(AlbumGrid)).toBeLessThan(order.indexOf(ArtistMemberships));
+    expect(order.indexOf(AlbumGrid)).toBeLessThan(order.indexOf(Comments));
+    expect(order).not.toContain(DualRating);
+  });
+
+  it("las notas de artista usan la variante notes", async () => {
+    const artist = makeArtist();
+    vi.mocked(artistService.getArtistById).mockResolvedValue(artist);
+    vi.mocked(discographyService.findOrIngestDiscography).mockResolvedValue([]);
+
+    const tree = await pageModule.default({ params: Promise.resolve({ id: artist.id }) });
+    let found: { props?: Record<string, unknown> } | null = null;
+    const walk = (n: unknown) => {
+      if (found || n == null || typeof n !== "object") return;
+      if (Array.isArray(n)) return n.forEach(walk);
+      const el = n as { type?: unknown; props?: { children?: unknown } };
+      if (el.type === Comments) found = el as { props?: Record<string, unknown> };
+      else walk(el.props?.children);
+    };
+    walk(tree);
+    expect(found).not.toBeNull();
+    expect(found!.props?.variant).toBe("notes");
+    expect(found!.props?.target).toBe("artist");
   });
 
   it("genera metadatos con el nombre del artista", async () => {

@@ -13,9 +13,23 @@ interface DualRatingProps {
   targetId: string;
   initial: RatingsResponse;
   authenticated: boolean;
+  /**
+   * `"full"` (por defecto): encabezado, agregado y campo de puntaje detallado
+   * — la valoración como acción de primer nivel (álbum).
+   * `"starsOnly"`: solo las estrellas + guardar/borrar, sin encabezado ni
+   * agregado — para la divulgación secundaria de la página de canción
+   * (openspec: rebalance-catalog-detail-pages).
+   */
+  variant?: "full" | "starsOnly";
 }
 
-export function DualRating({ target, targetId, initial, authenticated }: DualRatingProps) {
+export function DualRating({
+  target,
+  targetId,
+  initial,
+  authenticated,
+  variant = "full",
+}: DualRatingProps) {
   const t = useTranslations("catalog.social");
   const tErrors = useTranslations("errors");
   const [ratings, setRatings] = useState(initial);
@@ -63,14 +77,26 @@ export function DualRating({ target, targetId, initial, authenticated }: DualRat
     }
   }
 
+  const starsOnly = variant === "starsOnly";
+
   return (
-    <section aria-labelledby="rating-heading" className="flex flex-col gap-4 border-t border-ink-border pt-6">
-      <div>
-        <h2 id="rating-heading" className="font-display text-xl text-paper">{t("ratingHeading")}</h2>
-        <p className="font-data text-sm text-paper-muted">
-          {ratings.aggregate.count ? t("aggregate", { count: ratings.aggregate.count, stars: ratings.aggregate.averageStars?.toFixed(1) ?? "-" }) : t("noRatings")}
-        </p>
-      </div>
+    <section
+      aria-labelledby={starsOnly ? undefined : "rating-heading"}
+      aria-label={starsOnly ? t("starsLabel") : undefined}
+      className={
+        starsOnly
+          ? "flex flex-col gap-4"
+          : "flex flex-col gap-4 border-t border-ink-border pt-6"
+      }
+    >
+      {!starsOnly && (
+        <div>
+          <h2 id="rating-heading" className="font-display text-xl text-paper">{t("ratingHeading")}</h2>
+          <p className="font-data text-sm text-paper-muted">
+            {ratings.aggregate.count ? t("aggregate", { count: ratings.aggregate.count, stars: ratings.aggregate.averageStars?.toFixed(1) ?? "-" }) : t("noRatings")}
+          </p>
+        </div>
+      )}
       {authenticated ? (
         <form onSubmit={handleSave} className="flex max-w-xl flex-col gap-4" aria-label={t("ratingFormLabel")}>
           <fieldset>
@@ -91,10 +117,12 @@ export function DualRating({ target, targetId, initial, authenticated }: DualRat
               ))}
             </div>
           </fieldset>
-          <label className="flex max-w-40 flex-col gap-2 font-data text-sm text-paper">
-            {t("detailedLabel")}
-            <input type="number" min="1" max="100" value={detailedScore} onChange={(event) => setDetailedScore(event.target.value)} className="rounded border border-ink-border bg-ink-surface px-3 py-2" />
-          </label>
+          {!starsOnly && (
+            <label className="flex max-w-40 flex-col gap-2 font-data text-sm text-paper">
+              {t("detailedLabel")}
+              <input type="number" min="1" max="100" value={detailedScore} onChange={(event) => setDetailedScore(event.target.value)} className="rounded border border-ink-border bg-ink-surface px-3 py-2" />
+            </label>
+          )}
           <div className="flex flex-wrap gap-3">
             <button type="submit" disabled={pending || !stars} className="rounded bg-amber px-4 py-2 font-display text-sm text-ink disabled:opacity-50">{pending ? t("saving") : t("save")}</button>
             {ratings.own && <button type="button" disabled={pending} onClick={handleDelete} className="rounded border border-danger px-4 py-2 font-display text-sm text-danger disabled:opacity-50">{t("delete")}</button>}

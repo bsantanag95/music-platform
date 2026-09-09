@@ -28,9 +28,19 @@ export interface RecordingAppearance {
   position: number;
 }
 
+export interface ContainingAlbum {
+  releaseGroupId: string;
+  title: string;
+  category: string;
+  coverThumbUrl: string | null;
+  firstReleaseYear: number | null;
+}
+
 export interface RecordingDetail {
   recording: RecordingRow;
   credits: RecordingCredit[];
+  /** Release-groups distintos que contienen la canción, del más temprano al más tardío. */
+  containingAlbums: ContainingAlbum[];
   appearances: RecordingAppearance[];
   primaryArtist: { id: string; name: string } | null;
 }
@@ -49,7 +59,7 @@ export async function getRecordingDetail(recordingId: string): Promise<Recording
 
   if (!recordingRow) return { kind: "not_found" };
 
-  const [creditRows, appearanceRows] = await Promise.all([
+  const [creditRows, appearanceRows, containingAlbumRows] = await Promise.all([
     db
       .select({
         artistId: artist.id,
@@ -78,7 +88,35 @@ export async function getRecordingDetail(recordingId: string): Promise<Recording
       .innerJoin(releaseGroup, eq(releaseGroup.id, release.releaseGroupId))
       .where(eq(track.recordingId, recordingId))
       .orderBy(asc(releaseGroup.title), asc(track.discNumber), asc(track.position)),
+    db
+      .selectDistinct({
+        releaseGroupId: releaseGroup.id,
+        title: releaseGroup.title,
+        category: releaseGroup.category,
+        coverThumbUrl: releaseGroup.coverThumbUrl,
+        firstReleaseDate: releaseGroup.firstReleaseDate,
+        firstReleaseYear: releaseGroup.firstReleaseYear,
+      })
+      .from(track)
+      .innerJoin(release, eq(release.id, track.releaseId))
+      .innerJoin(releaseGroup, eq(releaseGroup.id, release.releaseGroupId))
+      .where(eq(track.recordingId, recordingId)),
   ]);
+
+  // Álbumes contenedores ordenados por primer lanzamiento (nulls al final).
+  const containingAlbums = [...containingAlbumRows]
+    .sort((a, b) => {
+      const ka = a.firstReleaseDate ?? `${String(a.firstReleaseYear ?? 9999).padStart(4, "0")}-99-99`;
+      const kb = b.firstReleaseDate ?? `${String(b.firstReleaseYear ?? 9999).padStart(4, "0")}-99-99`;
+      return ka.localeCompare(kb) || a.releaseGroupId.localeCompare(b.releaseGroupId);
+    })
+    .map(({ releaseGroupId, title, category, coverThumbUrl, firstReleaseYear }) => ({
+      releaseGroupId,
+      title,
+      category,
+      coverThumbUrl,
+      firstReleaseYear,
+    }));
 
   const [primaryArtist] = appearanceRows[0]
     ? await db
@@ -105,6 +143,7 @@ export async function getRecordingDetail(recordingId: string): Promise<Recording
         role: role as "primary" | "featured",
         joinPhrase,
       })),
+      containingAlbums,
       appearances: appearanceRows,
       primaryArtist: primaryArtist ? { id: primaryArtist.id, name: primaryArtist.name } : null,
     },

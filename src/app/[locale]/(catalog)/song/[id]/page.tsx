@@ -3,10 +3,19 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getRecordingDetail } from "@/services/catalog/recording-detail";
+import { getRecordingReactionSummary } from "@/services/catalog/recording-reactions";
+import { listMyListensForRecording } from "@/services/diary/diary";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { isValidUuid } from "@/lib/validation";
 import { RecordingDetailSchema } from "@/lib/api/schemas";
-import { SocialSection } from "@/components/social/SocialSection";
+import {
+  SongAlbums,
+  SongListenHistory,
+  SongReactionSummary,
+  SongTechnicalDetails,
+} from "@/components/catalog/SongSections";
+import { SongStarDisclosure } from "@/components/social/SongStarDisclosure";
+import { Comments } from "@/components/social/Comments";
 import { MarkAsListened } from "@/components/diary/MarkAsListened";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { AddToListButton } from "@/components/lists/AddToListButton";
@@ -22,38 +31,96 @@ export async function generateMetadata({ params }: SongPageProps): Promise<Metad
   return result.kind === "ok" ? { title: result.detail.recording.title } : {};
 }
 
-function formatDuration(seconds: number | null, unknown: string) { if (seconds === null) return unknown; return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`; }
-
+// Página de canción MÍNIMA (openspec: rebalance-catalog-detail-pages, D2/D6):
+// lidera con el/los álbum(es) que la contienen; la reacción cualitativa
+// (registrada desde el diario) es la expresión primaria; las estrellas quedan
+// detrás de una divulgación; créditos y ediciones van en la ficha técnica
+// plegada. No hay bloque de reseñas.
 export default async function SongPage({ params }: SongPageProps) {
   const { id } = await params;
   const t = await getTranslations("catalog");
   const common = await getTranslations("common");
   if (!isValidUuid(id)) notFound();
+
   const result = await getRecordingDetail(id);
   if (result.kind === "not_found") notFound();
+
   const detail = RecordingDetailSchema.parse({
-    recording: { ...result.detail.recording, variantType: result.detail.recording.variantType },
+    recording: result.detail.recording,
     credits: result.detail.credits,
+    containingAlbums: result.detail.containingAlbums,
     appearances: result.detail.appearances,
     primaryArtist: result.detail.primaryArtist,
   });
+
   const session = await resolveSession();
+  const userId = session?.user.id;
   const socialTarget = await resolveSocialTarget("recording", detail.recording.id);
-  const [ratings, comments] = await Promise.all([
-    getRatings(socialTarget, session?.user.id),
+  const [ratings, comments, reactionSummary, listenHistory] = await Promise.all([
+    getRatings(socialTarget, userId),
     listComments(socialTarget),
+    getRecordingReactionSummary(detail.recording.id),
+    userId ? listMyListensForRecording(userId, detail.recording.id) : Promise.resolve([]),
   ]);
-  const firstAppearance = detail.appearances[0];
+
+  const mainAlbum = detail.containingAlbums[0];
   const breadcrumbItems = [
     { label: common("home"), href: "/" },
     ...(detail.primaryArtist
       ? [{ label: detail.primaryArtist.name, href: `/artist/${detail.primaryArtist.id}` }]
       : []),
-    ...(firstAppearance
-      ? [{ label: firstAppearance.albumTitle, href: `/album/${firstAppearance.releaseGroupId}` }]
+    ...(mainAlbum
+      ? [{ label: mainAlbum.title, href: `/album/${mainAlbum.releaseGroupId}` }]
       : []),
     { label: detail.recording.title },
   ];
 
-  return <main className="flex min-h-screen flex-col items-start gap-8 px-4 py-12"><Breadcrumbs items={breadcrumbItems} /><header><p className="font-data text-xs uppercase tracking-wider text-paper-muted">{t("song.variant")}: {detail.recording.variantType}</p><h1 className="font-display text-4xl text-paper">{detail.recording.title}</h1><p className="mt-2 font-data text-sm text-paper-muted">{t("song.duration")}: {formatDuration(detail.recording.durationSec, t("song.durationUnknown"))}</p></header><div className="flex flex-col items-start gap-3"><MarkAsListened target={{ type: "recording", id: detail.recording.id }} authenticated={Boolean(session?.user.id)} /><FavoriteButton target={{ type: "recording", id: detail.recording.id }} authenticated={Boolean(session?.user.id)} /><AddToListButton target={{ type: "recording", id: detail.recording.id }} authenticated={Boolean(session?.user.id)} /></div><section className="flex w-full flex-col gap-3"><h2 className="font-display text-xl text-paper">{t("song.creditsHeading")}</h2><ul className="flex flex-col gap-2">{detail.credits.map((credit) => <li key={`${credit.artistId}-${credit.role}`} className="font-body text-paper">{credit.role}: <Link href={`/artist/${credit.artistId}`} className="hover:text-accent">{credit.name}</Link>{credit.joinPhrase}</li>)}</ul></section><section className="flex w-full flex-col gap-3"><h2 className="font-display text-xl text-paper">{t("song.appearancesHeading")}</h2><ul className="flex flex-col gap-2">{detail.appearances.map((appearance) => <li key={`${appearance.releaseId}-${appearance.discNumber}-${appearance.position}`} className="font-body text-paper"><Link href={`/album/${appearance.releaseGroupId}`} className="hover:text-accent">{appearance.albumTitle}</Link><span className="ml-3 font-data text-xs text-paper-muted">{t("song.appearancePosition", { disc: appearance.discNumber, position: appearance.position })}</span></li>)}</ul></section><SocialSection target="recording" targetId={detail.recording.id} ratings={ratings} comments={comments} userId={session?.user.id} /></main>;
+  return (
+    <main className="flex min-h-screen flex-col items-start gap-8 px-4 py-12">
+      <Breadcrumbs items={breadcrumbItems} />
+
+      <header className="flex flex-col gap-2">
+        <h1 className="font-display text-4xl text-paper">{detail.recording.title}</h1>
+        {detail.primaryArtist && (
+          <p className="font-body text-lg text-paper-muted">
+            <Link href={`/artist/${detail.primaryArtist.id}`} className="hover:text-amber">
+              {detail.primaryArtist.name}
+            </Link>
+          </p>
+        )}
+        {detail.recording.variantType !== "original" && (
+          <p className="font-data text-xs uppercase tracking-wider text-paper-muted">
+            {t("song.variant")}: {detail.recording.variantType}
+          </p>
+        )}
+      </header>
+
+      <SongAlbums albums={detail.containingAlbums} />
+
+      <div className="flex flex-col items-start gap-3">
+        <MarkAsListened target={{ type: "recording", id: detail.recording.id }} authenticated={Boolean(userId)} />
+        <FavoriteButton target={{ type: "recording", id: detail.recording.id }} authenticated={Boolean(userId)} />
+        <AddToListButton target={{ type: "recording", id: detail.recording.id }} authenticated={Boolean(userId)} />
+      </div>
+
+      <SongListenHistory entries={listenHistory} />
+      <SongReactionSummary summary={reactionSummary} />
+
+      <Comments
+        target="recording"
+        targetId={detail.recording.id}
+        initial={comments}
+        authenticated={Boolean(userId)}
+        userId={userId}
+      />
+
+      <SongStarDisclosure
+        targetId={detail.recording.id}
+        initial={ratings}
+        authenticated={Boolean(userId)}
+      />
+
+      <SongTechnicalDetails credits={detail.credits} appearances={detail.appearances} />
+    </main>
+  );
 }

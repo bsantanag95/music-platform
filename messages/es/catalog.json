@@ -107,7 +107,22 @@
     "duration": "Duración",
     "durationUnknown": "Duración desconocida",
     "notFoundTitle": "Grabación no encontrada",
-    "notFoundDescription": "No encontramos esta grabación en el catálogo."
+    "notFoundDescription": "No encontramos esta grabación en el catálogo.",
+    "containingAlbumsHeading": "En estos álbumes",
+    "mainAppearance": "Aparición principal",
+    "communityReactionHeading": "La comunidad",
+    "reactionSummary": "{count, plural, one {# persona la registró} other {# personas la registraron}} · sobre todo {top}",
+    "yourHistoryHeading": "Tu historial con esta canción",
+    "yourHistoryLink": "Ver en tu diario",
+    "starsDisclosure": "Añadir una valoración de estrellas",
+    "technicalDetailsHeading": "Ficha técnica",
+    "reaction": {
+      "liked": "les gustó",
+      "loved": "la aman",
+      "obsessed": "están obsesionados",
+      "neutral": "neutral",
+      "disliked": "no les gustó"
+    }
   },
   "social": {
     "ratingHeading": "Valoraciones",
@@ -129,6 +144,12 @@
     "commentSubmit": "Publicar comentario",
     "loginToComment": "Iniciá sesión para comentar",
     "noComments": "Todavía no hay comentarios.",
+    "notesHeading": "Notas de la comunidad",
+    "notesIntro": "Contexto para quien llega a este artista: por dónde empezar, qué escuchar primero.",
+    "notesLabel": "Nota",
+    "notesSubmit": "Publicar nota",
+    "loginToNote": "Iniciá sesión para dejar una nota",
+    "noNotes": "Todavía no hay notas.",
     "edit": "Editar",
     "deleteCommentConfirm": "¿Borrar este comentario de forma permanente? Esta acción no se puede deshacer.",
     "editCommentLabel": "Editar comentario",

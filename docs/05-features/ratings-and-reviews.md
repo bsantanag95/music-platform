@@ -11,9 +11,21 @@ reemplazo de lo que sigue.
 ## Qué se puede valorar y comentar
 
 Tres niveles, cada uno independiente: **artista**, **álbum** (concepto, no edición), y
-**canción** (grabación única, sin importar en cuántos discos aparece). Un artista, álbum o
-canción se comenta y valora exactamente igual, misma UI, mismo componente — no hay
-tratamiento especial por nivel.
+**canción** (grabación única, sin importar en cuántos discos aparece). El modelo de datos
+(`rating`, `comment`) acepta los tres por igual.
+
+**La presentación ya no es igual en los tres** (cambio `rebalance-catalog-detail-pages`,
+Fase 1 de `redefine-content-hierarchy`), porque el álbum es la unidad cultural central:
+
+- **Álbum**: estrellas + reseña primarias (ver también `ratings-and-comments` / reseñas).
+- **Canción**: la expresión primaria es la **reacción cualitativa** del diario
+  (`liked` / `loved` / `obsessed` / `neutral` / `disliked`); las **estrellas** siguen
+  disponibles pero detrás de una divulgación ("más") colapsada por defecto (abierta si el
+  usuario ya valoró). La página muestra además una **reacción agregada pública** de la
+  comunidad. Sin bloque de reseñas.
+- **Artista**: **sin estrellas** ni promedio de estrellas en la página. Solo notas cortas
+  de la comunidad ("nota / contexto / empezá por aquí"). Un rating de artista creado antes
+  del cambio se conserva en la base, inerte en la UI.
 
 ## Valoración dual
 

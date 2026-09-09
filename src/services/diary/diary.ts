@@ -201,6 +201,21 @@ export async function listMyDiary(
   };
 }
 
+/**
+ * Escuchas propias registradas de una canción concreta, para "tu historial"
+ * en la página de detalle de canción (openspec: rebalance-catalog-detail-pages).
+ * Orden cronológico inverso, sin paginación (una canción tiene pocas entradas).
+ */
+export async function listMyListensForRecording(
+  userId: string,
+  recordingId: string,
+): Promise<DiaryEntry[]> {
+  const rows = await selectEntries()
+    .where(and(eq(listenEntry.userId, userId), eq(listenEntry.recordingId, recordingId)))
+    .orderBy(desc(listenEntry.createdAt), desc(listenEntry.id));
+  return rows.map(serializeEntry);
+}
+
 /** Entrada del diario con autor (para el feed). */
 export interface FeedEntry extends DiaryEntry {
   author: { id: string; username: string; displayName: string | null };

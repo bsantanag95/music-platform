@@ -176,10 +176,10 @@ Rollback = revertir el commit. Los ratings de artista/canción existentes no se 
 
 ## Open Questions
 
-- **OQ1 — ¿La "ficha técnica" (créditos + apariciones completas) de la canción va plegada
-  (`<details>`) o como sección secundaria siempre visible al final?** Propuesta: plegada
-  por defecto; el 90% de las visitas quiere "¿de qué álbum es y qué opina la gente?", no la
-  lista de 14 ediciones. A confirmar en `/opsx:apply`.
-- **OQ2 — ¿El artista conserva `MarkAsListened` / `FavoriteButton`?** Propuesta: sí — son
-  acciones de catálogo (registrar/marcar), no "opinión". Solo se retira el rating de
-  estrellas. Confirmar.
+- **OQ1 — Ficha técnica de la canción → RESUELTA: plegada (`<details>`) por defecto.**
+  Créditos completos + todas las ediciones dentro de un `<details>` colapsado al final de
+  la página. Mantiene el foco en el álbum y la comunidad; los datos técnicos quedan
+  accesibles para quien los busca.
+- **OQ2 — Acciones del artista → RESUELTA: se conservan `MarkAsListened` y
+  `FavoriteButton`** (y `AddToListButton`). Son acciones de catálogo/diario, no de opinión.
+  Solo se retira el control de estrellas del artista y su agregado.
