@@ -109,7 +109,8 @@ describe("servicio de feed ampliado", () => {
         authorDisplayName: author.displayName,
       }]))
       .mockReturnValueOnce(sourceQuery([]))  // ratings
-      .mockReturnValueOnce(sourceQuery([]));  // comentarios
+      .mockReturnValueOnce(sourceQuery([]))  // comentarios
+      .mockReturnValueOnce(sourceQuery([]));  // reseñas
 
     const result = await listFeed(author.id, 1, 20);
 
@@ -159,7 +160,8 @@ describe("servicio de feed ampliado", () => {
       ]))
       .mockReturnValueOnce(sourceQuery([]))  // listas
       .mockReturnValueOnce(sourceQuery([]))  // ratings
-      .mockReturnValueOnce(sourceQuery([]));  // comentarios
+      .mockReturnValueOnce(sourceQuery([]))  // comentarios
+      .mockReturnValueOnce(sourceQuery([]));  // reseñas
 
     const result = await listFeed(author.id, 1, 20);
 
@@ -193,6 +195,7 @@ describe("servicio de feed ampliado", () => {
         authorDisplayName: author.displayName,
       }]))
       .mockReturnValueOnce(sourceQuery([]))
+      .mockReturnValueOnce(sourceQuery([]))
       .mockReturnValueOnce(sourceQuery([]));
 
     const result = await listFeed(author.id, 1, 20);
@@ -223,7 +226,8 @@ describe("servicio de feed ampliado", () => {
         authorUsername: author.username,
         authorDisplayName: author.displayName,
       }]))
-      .mockReturnValueOnce(sourceQuery([]));  // comentarios
+      .mockReturnValueOnce(sourceQuery([]))  // comentarios
+      .mockReturnValueOnce(sourceQuery([]));  // reseñas
 
     const result = await listFeed(author.id, 1, 20);
 
@@ -258,7 +262,8 @@ describe("servicio de feed ampliado", () => {
       .mockReturnValueOnce(sourceQuery([
         commentRow("00000000-0000-4000-8000-000000000009", "2026-01-06T00:00:00Z"),
         commentRow("00000000-0000-4000-8000-00000000000a", "2026-01-05T00:00:00Z"),
-      ]));
+      ]))
+      .mockReturnValueOnce(sourceQuery([]));  // reseñas
 
     const result = await listFeed(author.id, 1, 20);
 
@@ -267,7 +272,7 @@ describe("servicio de feed ampliado", () => {
     expect(result.entries[0]!.id).toBe("00000000-0000-4000-8000-000000000009");
   });
 
-  it("ordena cronológicamente entre las cinco fuentes", async () => {
+  it("ordena cronológicamente entre las seis fuentes", async () => {
     const followed = ["u2"];
     mocks.db.select
       .mockReturnValueOnce(followedQuery(followed))
@@ -304,11 +309,122 @@ describe("servicio de feed ampliado", () => {
         authorId: author.id,
         authorUsername: author.username,
         authorDisplayName: author.displayName,
+      }]))
+      .mockReturnValueOnce(sourceQuery([{  // reseña: 2026-01-04
+        id: "00000000-0000-4000-8000-00000000000e",
+        title: "Un disco total",
+        body: "Reseña larga sobre el disco.",
+        updatedAt: new Date("2026-01-04T00:00:00Z"),
+        artistId: null,
+        releaseGroupId: "00000000-0000-4000-8000-000000000010",
+        recordingId: null,
+        artistName: null,
+        creditedArtist: "Pink Floyd",
+        releaseTitle: "The Wall",
+        releaseCover: null,
+        recordingTitle: null,
+        authorId: author.id,
+        authorUsername: author.username,
+        authorDisplayName: author.displayName,
       }]));
 
     const result = await listFeed(author.id, 1, 20);
 
-    expect(result.entries.map((entry) => entry.kind)).toEqual(["rating", "comment", "listen"]);
+    expect(result.entries.map((entry) => entry.kind)).toEqual(["rating", "review", "comment", "listen"]);
+  });
+
+  describe("reseñas en el feed (rework-feed-tiers)", () => {
+    const reviewRow = (over: Record<string, unknown> = {}) => ({
+      id: "00000000-0000-4000-8000-0000000000f0",
+      title: "Una escucha total",
+      body: "Cuerpo largo de la reseña, con varias frases sobre el disco.",
+      updatedAt: new Date("2026-03-10T00:00:00Z"),
+      artistId: null,
+      releaseGroupId: "00000000-0000-4000-8000-0000000000f1",
+      recordingId: null,
+      artistName: null,
+      creditedArtist: "Radiohead",
+      releaseTitle: "In Rainbows",
+      releaseCover: null,
+      recordingTitle: null,
+      authorId: author.id,
+      authorUsername: author.username,
+      authorDisplayName: author.displayName,
+      ...over,
+    });
+
+    it("expone la reseña como entrada con su updatedAt, título y cuerpo", async () => {
+      mocks.db.select
+        .mockReturnValueOnce(followedQuery(["u2"]))
+        .mockReturnValueOnce(sourceQuery([]))  // escuchas
+        .mockReturnValueOnce(sourceQuery([]))  // favoritos
+        .mockReturnValueOnce(sourceQuery([]))  // listas
+        .mockReturnValueOnce(sourceQuery([]))  // ratings
+        .mockReturnValueOnce(sourceQuery([]))  // comentarios
+        .mockReturnValueOnce(sourceQuery([reviewRow()]));  // reseñas
+
+      const result = await listFeed(author.id, 1, 20);
+
+      expect(result.entries).toHaveLength(1);
+      expect(result.entries[0]).toMatchObject({
+        kind: "review",
+        title: "Una escucha total",
+        body: "Cuerpo largo de la reseña, con varias frases sobre el disco.",
+        createdAt: "2026-03-10T00:00:00.000Z",
+        target: { type: "release-group", title: "In Rainbows", artistName: "Radiohead" },
+      });
+    });
+
+    it("una reseña editada sigue siendo una sola entrada, fechada por su última edición", async () => {
+      mocks.db.select
+        .mockReturnValueOnce(followedQuery(["u2"]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([reviewRow({ updatedAt: new Date("2026-04-01T12:00:00Z") })]));
+
+      const result = await listFeed(author.id, 1, 20);
+
+      expect(result.entries).toHaveLength(1);
+      expect(result.entries[0]!.createdAt).toBe("2026-04-01T12:00:00.000Z");
+    });
+
+    it("kind=review solo consulta la fuente de reseñas", async () => {
+      mocks.db.select
+        .mockReturnValueOnce(followedQuery(["u2"]))
+        .mockReturnValueOnce(sourceQuery([reviewRow()]));
+
+      const result = await listFeed(author.id, 1, 20, { kind: "review" });
+
+      expect(result.entries).toHaveLength(1);
+      expect(result.entries[0]!.kind).toBe("review");
+      expect(mocks.db.select).toHaveBeenCalledTimes(2);
+    });
+
+    it("mantiene el filtro de bloqueo sobre la fuente de reseñas", async () => {
+      const capturing = sourceQueryCapturing([]);
+      mocks.db.select.mockReturnValueOnce(followedQuery(["u2"])).mockReturnValueOnce(capturing);
+
+      await listFeed(author.id, 1, 20, { kind: "review" });
+
+      const { sql } = dialect.sqlToQuery(capturing.where.mock.calls[0]![0]);
+      expect(sql.toLowerCase()).toContain("block");
+    });
+
+    it("q sobre reseñas filtra por el título del álbum, no por el cuerpo de la reseña", async () => {
+      const capturing = sourceQueryCapturing([]);
+      mocks.db.select.mockReturnValueOnce(followedQuery(["u2"])).mockReturnValueOnce(capturing);
+
+      await listFeed(author.id, 1, 20, { kind: "review", q: "rainbows" });
+
+      const { sql, params } = dialect.sqlToQuery(capturing.where.mock.calls[0]![0]);
+      expect(sql.toLowerCase()).toContain("ilike");
+      expect(sql.toLowerCase()).not.toContain("body");
+      // 3 columnas de título + el artista acreditado, nunca el cuerpo de la reseña
+      expect(params.filter((p) => p === "%rainbows%")).toHaveLength(4);
+    });
   });
 
   describe("filtros de listFeed (add-feed-filters)", () => {

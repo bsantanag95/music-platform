@@ -13,7 +13,7 @@ import { queryKeys } from "@/lib/query/keys";
 import type { AuthorSummary, FeedEntry, FeedResponse } from "@/lib/api/schemas";
 
 const PAGE_SIZE = 20;
-const FEED_KINDS = ["listen", "favorite", "list", "rating", "comment"] as const;
+const FEED_KINDS = ["listen", "favorite", "list", "rating", "comment", "review"] as const;
 
 interface FeedListProps {
   initial: FeedResponse;

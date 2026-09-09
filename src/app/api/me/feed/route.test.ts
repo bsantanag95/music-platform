@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/services/feed/feed", () => ({
   listFeed: mocks.listFeed,
-  FEED_KINDS: ["listen", "favorite", "list", "rating", "comment"],
+  FEED_KINDS: ["listen", "favorite", "list", "rating", "comment", "review"],
 }));
 vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser }));
 
@@ -106,7 +106,7 @@ describe("feed API (GET /api/me/feed)", () => {
       mocks.requireUser.mockResolvedValue(user);
       mocks.listFeed.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
 
-      for (const kind of ["listen", "favorite", "list", "rating", "comment"]) {
+      for (const kind of ["listen", "favorite", "list", "rating", "comment", "review"]) {
         mocks.listFeed.mockClear();
         await GET(new NextRequest(`http://localhost/api/me/feed?kind=${kind}`));
         expect(mocks.listFeed).toHaveBeenCalledWith(user.id, 1, 20, {

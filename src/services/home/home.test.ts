@@ -177,7 +177,8 @@ describe("servicio de datos de Inicio", () => {
           authorId: author.id,
           authorUsername: author.username,
           authorDisplayName: author.displayName,
-        }]));
+        }]))
+        .mockReturnValueOnce(sourceQuery([]));  // reseñas
 
       const result = await listMyRecentActivity(author.id, 1, 5);
 
@@ -185,9 +186,44 @@ describe("servicio de datos de Inicio", () => {
       expect(result).toMatchObject({ page: 1, pageSize: 5, hasNext: false });
     });
 
+    it("incluye las reseñas propias, fechadas por su última edición", async () => {
+      mocks.db.select
+        .mockReturnValueOnce(sourceQuery([listenRow("00000000-0000-4000-8000-000000000020", "2026-02-01T00:00:00Z")]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([{
+          id: "00000000-0000-4000-8000-000000000021",
+          title: "Mi reseña",
+          body: "Cuerpo de la reseña.",
+          updatedAt: new Date("2026-02-10T00:00:00Z"),
+          artistId: null,
+          releaseGroupId: "00000000-0000-4000-8000-000000000022",
+          recordingId: null,
+          artistName: null,
+          creditedArtist: "Pink Floyd",
+          releaseTitle: "The Wall",
+          releaseCover: null,
+          recordingTitle: null,
+          authorId: author.id,
+          authorUsername: author.username,
+          authorDisplayName: author.displayName,
+        }]));
+
+      const result = await listMyRecentActivity(author.id, 1, 5);
+
+      expect(result.entries.map((entry) => entry.kind)).toEqual(["review", "listen"]);
+      expect(result.entries[0]).toMatchObject({
+        kind: "review",
+        title: "Mi reseña",
+        body: "Cuerpo de la reseña.",
+        createdAt: "2026-02-10T00:00:00.000Z",
+      });
+    });
+
     it("incluye escuchas con audiencia privada (contenido propio, sin filtro)", async () => {
       mocks.db.select
         .mockReturnValueOnce(sourceQuery([listenRow("00000000-0000-4000-8000-00000000000d", "2026-02-05T00:00:00Z")]))
+        .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]));
 
@@ -199,6 +235,7 @@ describe("servicio de datos de Inicio", () => {
 
     it("devuelve lista vacía cuando no hay actividad propia", async () => {
       mocks.db.select
+        .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]));
@@ -215,6 +252,7 @@ describe("servicio de datos de Inicio", () => {
           listenRow("00000000-0000-4000-8000-00000000000f", "2026-02-06T00:00:00Z"),
           listenRow("00000000-0000-4000-8000-000000000010", "2026-02-05T00:00:00Z"),
         ]))
+        .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]));
 

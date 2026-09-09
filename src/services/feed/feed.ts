@@ -9,6 +9,7 @@ import {
   rating,
   recording,
   releaseGroup,
+  review,
   userFollow,
   userList,
 } from "@/db/schema";
@@ -87,9 +88,35 @@ export interface FeedComment {
   author: FeedAuthor;
 }
 
-export type FeedEntry = FeedListenEntry | FeedFavorite | FeedListEvent | FeedRating | FeedComment;
+// Reseña de álbum como entrada de feed (openspec: rework-feed-tiers). Acto
+// expresivo tier 1, misma forma que un comentario más el `title` opcional.
+// Una sola entrada por (usuario, álbum): `review` tiene índice único parcial
+// por objetivo. `createdAt` refleja `updated_at` (la edición vigente).
+export interface FeedReview {
+  kind: "review";
+  id: string;
+  title: string | null;
+  body: string;
+  createdAt: string;
+  target: {
+    type: "artist" | "release-group" | "recording";
+    id: string;
+    title: string;
+    artistName: string | null;
+    coverThumbUrl: string | null;
+  };
+  author: FeedAuthor;
+}
 
-export const FEED_KINDS = ["listen", "favorite", "list", "rating", "comment"] as const;
+export type FeedEntry =
+  | FeedListenEntry
+  | FeedFavorite
+  | FeedListEvent
+  | FeedRating
+  | FeedComment
+  | FeedReview;
+
+export const FEED_KINDS = ["listen", "favorite", "list", "rating", "comment", "review"] as const;
 export type FeedKind = (typeof FEED_KINDS)[number];
 
 // Filtros combinables de `listFeed` — cada campo es independiente y opcional.
@@ -214,7 +241,7 @@ export async function listFeed(
   const extra = 1;
   const perSource = pageSize + extra;
 
-  const [listens, favorites, lists, ratings, comments] = await Promise.all([
+  const [listens, favorites, lists, ratings, comments, reviews] = await Promise.all([
     includeKind("listen")
       ? db
           .select({
@@ -386,6 +413,41 @@ export async function listFeed(
           .orderBy(desc(comment.createdAt), desc(comment.id))
           .limit(perSource)
       : Promise.resolve([]),
+
+    includeKind("review")
+      ? db
+          .select({
+            id: review.id,
+            title: review.title,
+            body: review.body,
+            updatedAt: review.updatedAt,
+            artistId: review.artistId,
+            releaseGroupId: review.releaseGroupId,
+            recordingId: review.recordingId,
+            artistName: artist.name,
+            creditedArtist: PRIMARY_ARTIST_SQL(review.releaseGroupId, review.recordingId),
+            releaseTitle: releaseGroup.title,
+            releaseCover: releaseGroup.coverThumbUrl,
+            recordingTitle: recording.title,
+            authorId: review.userId,
+            authorUsername: appUser.username,
+            authorDisplayName: appUser.displayName,
+          })
+          .from(review)
+          .leftJoin(artist, eq(review.artistId, artist.id))
+          .leftJoin(releaseGroup, eq(review.releaseGroupId, releaseGroup.id))
+          .leftJoin(recording, eq(review.recordingId, recording.id))
+          .leftJoin(appUser, eq(review.userId, appUser.id))
+          .where(
+            and(
+              inArray(review.userId, authorIds),
+              BLOCKED_SQL(viewerId, review.userId),
+              ...titleSearchCondition(searchPattern, review.releaseGroupId, review.recordingId),
+            ),
+          )
+          .orderBy(desc(review.updatedAt), desc(review.id))
+          .limit(perSource)
+      : Promise.resolve([]),
   ]);
 
   const author = (id: string, username: string | null, displayName: string | null): FeedAuthor => ({
@@ -498,7 +560,37 @@ export async function listFeed(
     };
   });
 
-  const merged = [...listenEntries, ...favoriteEntries, ...listEntries, ...ratingEntries, ...commentEntries]
+  const reviewEntries: FeedEntry[] = reviews.map((row) => {
+    const type: "artist" | "release-group" | "recording" = row.artistId
+      ? "artist"
+      : row.releaseGroupId
+        ? "release-group"
+        : "recording";
+    return {
+      kind: "review" as const,
+      id: row.id,
+      title: row.title,
+      body: row.body,
+      createdAt: row.updatedAt.toISOString(),
+      target: {
+        type,
+        id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
+        title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
+        artistName: row.creditedArtist,
+        coverThumbUrl: row.releaseCover,
+      },
+      author: author(row.authorId, row.authorUsername, row.authorDisplayName),
+    };
+  });
+
+  const merged = [
+    ...listenEntries,
+    ...favoriteEntries,
+    ...listEntries,
+    ...ratingEntries,
+    ...commentEntries,
+    ...reviewEntries,
+  ]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice((page - 1) * pageSize, page * pageSize + extra);
 

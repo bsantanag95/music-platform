@@ -81,6 +81,25 @@ function rating(overrides: Partial<Extract<FeedEntry, { kind: "rating" }>> = {})
   };
 }
 
+function review(overrides: Partial<Extract<FeedEntry, { kind: "review" }>> = {}): FeedEntry {
+  return {
+    kind: "review",
+    id: "rev1",
+    title: "Un disco para volver",
+    body: "La producción respira y cada tema encuentra su lugar sin apuro.",
+    createdAt: "2026-08-05T00:00:00Z",
+    target: {
+      type: "release-group",
+      id: "rg7",
+      title: "A Moon Shaped Pool",
+      artistName: "Radiohead",
+      coverThumbUrl: "https://cover/7.jpg",
+    },
+    author,
+    ...overrides,
+  };
+}
+
 function listen(overrides: Partial<Extract<FeedEntry, { kind: "listen" }>> = {}): FeedEntry {
   return {
     kind: "listen",
@@ -208,6 +227,60 @@ describe("FeedActivityList", () => {
     // una sola fila: ningún medidor VU individual, ninguna celda de carátula
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
     expect(screen.queryByTestId("cover-thumb")).not.toBeInTheDocument();
+  });
+
+  it("una reseña abre con el verbo y el título entre comillas, y asienta el cuerpo como cita en redonda", () => {
+    renderWithIntl(<FeedActivityList entries={[review()]} />);
+
+    expect(screen.getByText(/Reseñó · «Un disco para volver»/)).toBeInTheDocument();
+    const body = screen.getByText(
+      "La producción respira y cada tema encuentra su lugar sin apuro.",
+    );
+    expect(body.className).toMatch(/border-l/);
+    expect(body.className).not.toMatch(/italic/);
+    expect(screen.getByTestId("cover-thumb")).toHaveAttribute("data-cover", "https://cover/7.jpg");
+  });
+
+  it("una reseña sin título usa solo el verbo", () => {
+    renderWithIntl(<FeedActivityList entries={[review({ title: null })]} />);
+
+    expect(screen.getByText(/Reseñó/)).toBeInTheDocument();
+    expect(screen.queryByText(/«/)).not.toBeInTheDocument();
+  });
+
+  it("una reseña corta la corrida de valoraciones y no se pliega con ellas", () => {
+    renderWithIntl(
+      <FeedActivityList
+        entries={[
+          rating({ id: "r1", target: { type: "release-group", id: "rg1", title: "Uno", artistName: null, coverThumbUrl: null } }),
+          rating({ id: "r2", target: { type: "release-group", id: "rg2", title: "Dos", artistName: null, coverThumbUrl: null } }),
+          review({ id: "rev9" }),
+          rating({ id: "r3", target: { type: "release-group", id: "rg3", title: "Tres", artistName: null, coverThumbUrl: null } }),
+        ]}
+      />,
+    );
+
+    // 2 + 1 + 1 entradas sueltas: ninguna corrida llega a 3, no hay fila de grupo
+    expect(screen.queryByText(/valoró 3/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Reseñó · «Un disco para volver»/)).toBeInTheDocument();
+  });
+
+  it("colapsa 3 valoraciones de canción en una fila con el verbo de canciones (tier 3), distinto del de álbumes", () => {
+    const songRating = (id: string, title: string): FeedEntry => ({
+      kind: "rating",
+      id,
+      stars: "4.0",
+      detailedScore: null,
+      createdAt: "2026-08-04T00:00:00Z",
+      target: { type: "recording", id: `rec-${id}`, title, artistName: null, coverThumbUrl: null },
+      author,
+    });
+    renderWithIntl(
+      <FeedActivityList entries={[songRating("s1", "Uno"), songRating("s2", "Dos"), songRating("s3", "Tres")]} />,
+    );
+
+    expect(screen.getByText(/valoró 3 canciones/)).toBeInTheDocument();
+    expect(screen.queryByText(/valoró 3 discos/)).not.toBeInTheDocument();
   });
 
   it("el rastro propio (variant self) no muestra celda ni autor", () => {

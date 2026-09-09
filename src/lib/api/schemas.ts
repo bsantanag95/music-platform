@@ -1146,12 +1146,26 @@ export const FeedCommentSchema = z.object({
 });
 export type FeedComment = z.infer<typeof FeedCommentSchema>;
 
+// Reseña de álbum como entrada de feed (cambio rework-feed-tiers). Acto
+// expresivo tier 1; `title` opcional como metadato secundario.
+export const FeedReviewSchema = z.object({
+  kind: z.literal("review"),
+  id: z.uuid(),
+  title: z.string().nullable(),
+  body: z.string(),
+  createdAt: z.string(),
+  target: FeedTargetInfoSchema,
+  author: AuthorSummarySchema,
+});
+export type FeedReview = z.infer<typeof FeedReviewSchema>;
+
 export const FeedEntrySchema = z.discriminatedUnion("kind", [
   FeedListenEntrySchema,
   FeedFavoriteSchema,
   FeedListEventSchema,
   FeedRatingSchema,
   FeedCommentSchema,
+  FeedReviewSchema,
 ]);
 export type FeedEntry = z.infer<typeof FeedEntrySchema>;
 
@@ -1169,6 +1183,7 @@ export const RecentActivityEntrySchema = z.discriminatedUnion("kind", [
   FeedListenEntrySchema,
   FeedRatingSchema,
   FeedCommentSchema,
+  FeedReviewSchema,
 ]);
 export type RecentActivityEntry = z.infer<typeof RecentActivityEntrySchema>;
 

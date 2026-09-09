@@ -6,8 +6,8 @@ import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { ReactionBadge } from "@/components/diary/ReactionBadge";
 import { targetHref } from "./feed-target";
 import { FeedRatingMeter } from "./FeedRatingMeter";
-import { isFeedEntryWithText } from "./feed-entry-weight";
-import { groupAmbientRuns, type FeedEntryGroup } from "./feed-grouping";
+import { isFeedEntryQuote } from "./feed-entry-tier";
+import { groupFeedRuns, type FeedEntryGroup } from "./feed-grouping";
 import { ProsePanel, RelativeDate, TargetTitle } from "./feed-row-parts";
 import type { FeedEntry } from "@/lib/api/schemas";
 
@@ -45,7 +45,7 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
           : "divide-y divide-ink-border"
       }
     >
-      {groupAmbientRuns(entries).map((row) => {
+      {groupFeedRuns(entries).map((row) => {
         if (row.kind === "group") {
           return (
             <li
@@ -60,7 +60,7 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
           );
         }
 
-        const heavy = isFeedEntryWithText(row);
+        const heavy = isFeedEntryQuote(row);
         const body = proseBody(row);
 
         if (self) {
@@ -145,7 +145,7 @@ function GroupRow({
       ? t("groupListens", { count: group.entries.length })
       : group.groupedKind === "favorite"
         ? t("groupFavorites", { count: group.entries.length })
-        : t("groupRatings", { count: group.entries.length });
+        : t(group.tier === 2 ? "groupRatings" : "groupSongRatings", { count: group.entries.length });
 
   return (
     <div>
@@ -202,6 +202,8 @@ function actionLabel(entry: FeedEntry, t: FeedT): string {
       return t("ratingVerb");
     case "comment":
       return t("commentLabel");
+    case "review":
+      return entry.title ? t("reviewVerbTitled", { title: entry.title }) : t("reviewVerb");
     case "list":
       return t(`list.${entry.event}`);
   }
@@ -228,6 +230,7 @@ function audienceLabel(entry: FeedEntry, t: FeedT): string | null {
 
 function proseBody(entry: FeedEntry): string | null {
   if (entry.kind === "comment") return entry.body;
+  if (entry.kind === "review") return entry.body;
   if (entry.kind === "listen") return entry.body;
   return null;
 }

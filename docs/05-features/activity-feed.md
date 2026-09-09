@@ -5,7 +5,9 @@ listas (cambio `add-favorites-and-lists`), ratings vigentes y comentarios (cambi
 `add-ratings-comments-feed`). Presentación de `/me/feed` rediseñada por peso de contenido
 en `redesign-feed` — ver "Presentación de `/me/feed`" más abajo. `/me/feed` gana búsqueda
 y filtros combinables (tipo, autor, texto) y la prosa pasa de panel a cita en
-`add-feed-filters`.
+`add-feed-filters`. `rework-feed-tiers` reemplaza el criterio binario "con texto / sola
+presencia" por una **jerarquía de 4 tiers** y suma las **reseñas de álbum** como sexta
+fuente (acción expresiva de nivel 1) — ver "Jerarquía de presentación" más abajo.
 
 ## Qué es
 
@@ -14,7 +16,7 @@ tiempo casi real lo que las personas que seguís están registrando, valorando o
 comentando. Es la pieza central de la diferenciación frente a Spotify/Apple Music, cuya
 capa social es mínima.
 
-## Feed — cinco fuentes (add-diary-social-surfaces + add-favorites-and-lists + add-ratings-comments-feed)
+## Feed — seis fuentes (add-diary-social-surfaces + add-favorites-and-lists + add-ratings-comments-feed + rework-feed-tiers)
 
 El feed muestra las actividades de los usuarios seguidos (relación `accepted`) que sean
 visibles para el lector, en orden cronológico descendente con paginación. Se implementa como
@@ -31,8 +33,13 @@ visibles para el lector, en orden cronológico descendente con paginación. Se i
   mostrada es la de `updated_at`.
 - **Comentario** (`kind: "comment"`): cada comentario genera su propia entrada — un usuario
   puede tener varias entradas de comentario sobre el mismo objetivo.
+- **Reseña** (`kind: "review"`): reseña de álbum (`add-album-review` — una por usuario y
+  álbum, editable en el lugar). Espeja a `comment`: sin columna de audiencia (pública en
+  catálogo, filtrada por visibilidad de perfil), ordenada por `updated_at` y con esa fecha
+  en la entrada. Trae `title` (opcional) además del `body`. Una edición no genera una
+  segunda entrada — la misma fila se refecha.
 
-La composición se calcula **bajo demanda** uniendo las cinco fuentes (no hay tabla de eventos
+La composición se calcula **bajo demanda** uniendo las seis fuentes (no hay tabla de eventos
 materializada), ordenando por `created_at DESC` con desempate por fuente e id. La paginación
 consulta una página ampliada por fuente y la fusiona en memoria; materialización y
 deduplicación se evalúan con volumen real.
@@ -51,10 +58,11 @@ El feed aplica esta lógica filtrando `user_id IN (seguidos aceptados)` +
 `audience IN (followers, public)` + `NOT EXISTS` defensivo sobre `user_block` para cada fuente
 que tiene audiencia propia (escucha, favorito, lista).
 
-`rating` y `comment` **no tienen columna de audiencia** (a diferencia de las otras tres
-fuentes): en la vista de catálogo son siempre públicos. Para el feed se tratan como
+`rating`, `comment` y `review` **no tienen columna de audiencia** (a diferencia de las otras
+tres fuentes): en la vista de catálogo son siempre públicos. Para el feed se tratan como
 audiencia `public` implícita, filtrados solo por `user_id IN (seguidos aceptados)` +
-bloqueo. Como `audiencesForProfile` siempre incluye `"public"` cuando la relación es
+bloqueo. Un perfil privado sin relación aceptada no aparece en `authorIds`, así que sus
+reseñas nunca entran al feed. Como `audiencesForProfile` siempre incluye `"public"` cuando la relación es
 `following` (aceptada), pertenecer a los seguidos ya equivale a tener permiso para ver esa
 actividad — no hace falta una audiencia explícita. Ver `design.md` del cambio
 `add-ratings-comments-feed`.
@@ -62,6 +70,14 @@ actividad — no hace falta una audiencia explícita. Ver `design.md` del cambio
 ### Pendiente para v2+
 
 - Deduplicación de eventos (un usuario que registra escucha + cambia rating en la misma sesión).
+  Caso concreto ya identificado (`rework-feed-tiers`, OQ2): cuando existe una reseña y una
+  valoración del mismo usuario y álbum, una futura refinación podrá ocultar o suprimir la
+  fila de valoración; por ahora se muestran ambos eventos.
+- **Tier 4 en el feed** — eventos ambiente (seguir artista/usuario, colección). El tier
+  está definido en `feedEntryTier` pero esas fuentes no se consultan todavía; se
+  incorporan en un cambio posterior.
+- `add-feed-rotation-peak` y `add-network-convergence` — señales derivadas sobre el feed
+  (picos de rotación, convergencia de red), fuera de alcance de `rework-feed-tiers`.
 - Materializar el feed como tabla de eventos si el volumen lo justifica.
 - Keyset pagination en lugar de offset.
 - Audiencia por actividad para rating/comment (alineado con el diseño maestro de Fase 5,
@@ -84,23 +100,27 @@ en `font-display` como ancla de la fila (subrayado sutil persistente para leerse
 enlace sin depender del `:hover`) · **artista** debajo del título (álbum y canción) ·
 la **sustancia** de la fila.
 
-### Peso de contenido
+### Jerarquía de presentación — 4 tiers (`rework-feed-tiers`)
 
-- **Con texto** — comentarios y escuchas con nota escrita no vacía. La prosa se muestra
-  como cita (`ProsePanel`, `src/components/feed/feed-row-parts.tsx`): borde izquierdo,
-  sin caja ni escalón de temperatura, en Source Serif — misma familia visual que
-  `ImpressionQuote` de `/me/diary` (de hecho, es el mismo componente: `ProsePanel` con
-  `variant="impression"`). La regla de qué cuenta como "con texto" vive en
-  `isFeedEntryWithText` (`src/components/feed/feed-entry-weight.ts`).
-  - Dentro de esta cita, el **tono** se distingue por tipo de entrada, no por caja: una
-    **nota de escucha** (`variant="impression"`) va en cursiva y entre comillas
-    tipográficas — literalmente la misma voz personal que su equivalente en el diario
-    propio, visto desde otra superficie. Un **comentario** (`variant="comment"`) va en
-    redonda y sin comillas: un comentario del feed suele ser crítica, opinión o humor, no
-    necesariamente una impresión sentida, y forzarlo a leerse como una cita personal no
-    correspondía a ese tono (feedback de usuario, `add-feed-filters`, 2026-09-05).
-- **De sola presencia** — favoritos, eventos de lista, ratings y escuchas sin nota:
-  una fila de baseline. La reacción de una escucha va inline.
+`feedEntryTier(entry): 1 | 2 | 3 | 4` (`src/components/feed/feed-entry-tier.ts`) reemplaza
+el criterio binario anterior. El tier depende del **tipo y del objetivo** — el mismo rating
+pesa distinto sobre un álbum que sobre una canción:
+
+| Tier | Qué | Tratamiento |
+|---|---|---|
+| **1 Expresivo** | comentario · reseña · escucha con nota · evento de lista | cita (`ProsePanel`) para las tres con prosa; fila de título para el evento de lista. Nunca se colapsa; corta cualquier corrida. |
+| **2 Señal de opinión** | rating de **álbum** · favorito de **álbum** | fila con carátula + marca de opinión; se colapsa en corridas de 3+. |
+| **3 Presencia cotidiana** | rating de canción · favorito de canción/artista · escucha sin nota · reacción | fila mínima de baseline; se colapsa en corridas de 3+. |
+| **4 Ambiente** | seguir artista/usuario · colección | **reservado — todavía NO llega al feed** (se incorpora en un cambio posterior). |
+
+- La regla de qué se renderiza como cita vive en `isFeedEntryQuote` (mismo módulo): tier 1
+  con prosa (comentario, reseña, escucha con nota).
+- Dentro de la cita, el **tono** se distingue por tipo, no por caja: una **nota de escucha**
+  (`variant="impression"`) va en cursiva y entre comillas — la misma voz personal que su
+  equivalente en el diario. Un **comentario** y una **reseña** (`variant="comment"`) van en
+  redonda y sin comillas: crítica, opinión o contenido en sí mismo, no una impresión
+  sentida. La reseña añade su `title` (cuando existe) en la línea de metadato:
+  `Reseñó · «{título}»`.
 
 Alinea con `product_philosophy.md`: el Principio 1 (registrar una escucha no requiere
 juicio, bajo contenido) y el Principio 4 (las reseñas son contenido). El tratamiento de
@@ -114,14 +134,17 @@ por `.5`), **siempre acompañada del número** (`4.5` o `4.5 · 87` con el score
 Es el único uso de ámbar en reposo del feed (Regla de Rareza). `role="img"` +
 `aria-label` legible; las marcas son `aria-hidden`.
 
-### Agrupación de actividad ambiente
+### Agrupación por tier
 
-`groupAmbientRuns` (`src/components/feed/feed-grouping.ts`) pliega **3+ entradas
-consecutivas del mismo tipo de sola presencia** (escuchas sin nota, o favoritos) y del
-mismo autor en una fila: `autor · registró N escuchas` + hasta 4 títulos enlazados +
-"y M más" (→ perfil del autor). Comentarios, notas y ratings nunca se colapsan; una de
-esas corta la corrida. Corre en el cliente sobre el array acumulado, así que también
-colapsa a través de un "Cargar más".
+`groupFeedRuns` (`src/components/feed/feed-grouping.ts`) pliega **3+ entradas consecutivas
+del mismo tier (2 o 3), del mismo `kind` y del mismo autor** en una fila: `autor · valoró N
+discos` (o `registró N escuchas`, `marcó N favoritos`, `valoró N canciones`) + hasta 4
+títulos enlazados + "y M más" (→ perfil del autor). El `FeedEntryGroup` lleva `tier: 2 | 3`
+para que el render distinga el grupo de señal de opinión (tier 2, verbo de álbumes) del de
+presencia cotidiana (tier 3, verbo de canciones). Una racha de ratings de canción (tier 3)
+y ratings de álbum (tier 2) **no se fusionan** aunque sean consecutivas. Toda entrada tier 1
+(comentario, reseña, nota de escucha, evento de lista) corta la corrida. Corre en el
+cliente sobre el array acumulado, así que también colapsa a través de un "Cargar más".
 
 ### "Tu rastro reciente" — variante `self`
 
@@ -166,6 +189,7 @@ Ver `listening-diary-and-ratings.md`, sección 5, para el detalle completo. Resu
 - Nueva entrada del diario de escucha (`listen_entry`), con o sin texto/reacción.
 - Cambio de valoración vigente (`rating.stars`) respecto al valor anterior.
 - Nuevo comentario.
+- Nueva reseña de álbum, o edición de una existente (refecha la entrada, no la duplica).
 
 No se materializa una tabla de eventos aparte desde el día uno — se computa como una unión
 ordenada por fecha de las fuentes, filtrada por a quién sigue el usuario.

@@ -9,6 +9,7 @@
   "lastTouchListen": "You listened to {title}",
   "lastTouchRating": "You rated {title}",
   "lastTouchComment": "You commented on {title}",
+  "lastTouchReview": "You reviewed {title}",
   "lastTouchEmpty": "Search for an artist and log your first listen to start your trail.",
   "recentActivityTitle": "Your recent activity",
   "recentActivitySeeDiary": "See diary",

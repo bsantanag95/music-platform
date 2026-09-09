@@ -10,6 +10,7 @@ import {
   rating,
   recording,
   releaseGroup,
+  review,
   userList,
   userListItem,
 } from "@/db/schema";
@@ -20,6 +21,7 @@ import type {
   FeedListEvent,
   FeedListenEntry,
   FeedRating,
+  FeedReview,
 } from "@/services/feed/feed";
 import type { Audience } from "@/services/social/types";
 
@@ -57,7 +59,7 @@ export async function listMyRecentActivity(
   page = 1,
   pageSize = 5,
 ): Promise<{
-  entries: (FeedListenEntry | FeedRating | FeedComment)[];
+  entries: (FeedListenEntry | FeedRating | FeedComment | FeedReview)[];
   page: number;
   pageSize: number;
   hasNext: boolean;
@@ -69,7 +71,7 @@ export async function listMyRecentActivity(
   const extra = 1;
   const perSource = pageSize + extra;
 
-  const [listens, ratings, comments] = await Promise.all([
+  const [listens, ratings, comments, reviews] = await Promise.all([
     db
       .select({
         id: listenEntry.id,
@@ -151,6 +153,33 @@ export async function listMyRecentActivity(
       .where(eq(comment.userId, userId))
       .orderBy(desc(comment.createdAt), desc(comment.id))
       .limit(perSource),
+
+    db
+      .select({
+        id: review.id,
+        title: review.title,
+        body: review.body,
+        updatedAt: review.updatedAt,
+        artistId: review.artistId,
+        releaseGroupId: review.releaseGroupId,
+        recordingId: review.recordingId,
+        artistName: artist.name,
+        creditedArtist: PRIMARY_ARTIST_SQL(review.releaseGroupId, review.recordingId),
+        releaseTitle: releaseGroup.title,
+        releaseCover: releaseGroup.coverThumbUrl,
+        recordingTitle: recording.title,
+        authorId: review.userId,
+        authorUsername: appUser.username,
+        authorDisplayName: appUser.displayName,
+      })
+      .from(review)
+      .innerJoin(appUser, eq(review.userId, appUser.id))
+      .leftJoin(artist, eq(review.artistId, artist.id))
+      .leftJoin(releaseGroup, eq(review.releaseGroupId, releaseGroup.id))
+      .leftJoin(recording, eq(review.recordingId, recording.id))
+      .where(eq(review.userId, userId))
+      .orderBy(desc(review.updatedAt), desc(review.id))
+      .limit(perSource),
   ]);
 
   const listenEntries: FeedListenEntry[] = listens.map((row) => ({
@@ -203,7 +232,23 @@ export async function listMyRecentActivity(
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
   }));
 
-  const merged = [...listenEntries, ...ratingEntries, ...commentEntries]
+  const reviewEntries: FeedReview[] = reviews.map((row) => ({
+    kind: "review" as const,
+    id: row.id,
+    title: row.title,
+    body: row.body,
+    createdAt: row.updatedAt.toISOString(),
+    target: {
+      type: targetType(row.artistId, row.releaseGroupId),
+      id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
+      title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
+      artistName: row.creditedArtist,
+      coverThumbUrl: row.releaseCover,
+    },
+    author: author(row.authorId, row.authorUsername, row.authorDisplayName),
+  }));
+
+  const merged = [...listenEntries, ...ratingEntries, ...commentEntries, ...reviewEntries]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice((page - 1) * pageSize, page * pageSize + extra);
 

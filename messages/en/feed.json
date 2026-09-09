@@ -7,6 +7,8 @@
   "ratingMeterLabel": "{stars} out of 5 stars",
   "ratingMeterLabelScore": "{stars} out of 5 stars, {score} out of 100",
   "commentLabel": "Commented",
+  "reviewVerb": "Reviewed",
+  "reviewVerbTitled": "Reviewed · “{title}”",
   "list": {
     "created": "Created a list",
     "updated": "Updated a list"
@@ -14,6 +16,7 @@
   "groupListens": "{count, plural, one {logged # listen} other {logged # listens}}",
   "groupFavorites": "{count, plural, one {added # favorite} other {added # favorites}}",
   "groupRatings": "{count, plural, one {rated # album} other {rated # albums}}",
+  "groupSongRatings": "{count, plural, one {rated # song} other {rated # songs}}",
   "groupMore": "and {count} more",
   "loadMore": "Load more",
   "loadingMore": "Loading...",
@@ -37,7 +40,8 @@
     "favorite": "Favorite",
     "list": "List",
     "rating": "Rating",
-    "comment": "Comment"
+    "comment": "Comment",
+    "review": "Review"
   },
   "context": {
     "first_listen": "First listen",

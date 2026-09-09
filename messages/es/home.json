@@ -9,6 +9,7 @@
   "lastTouchListen": "Escuchaste {title}",
   "lastTouchRating": "Valoraste {title}",
   "lastTouchComment": "Comentaste en {title}",
+  "lastTouchReview": "Reseñaste {title}",
   "lastTouchEmpty": "Buscá un artista y marcá tu primera escucha para arrancar tu rastro.",
   "recentActivityTitle": "Tu rastro reciente",
   "recentActivitySeeDiary": "Ver diario",

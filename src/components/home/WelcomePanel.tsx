@@ -6,11 +6,11 @@ import { relativeFeedDate } from "@/components/feed/feed-dates";
 import { Greeting } from "@/components/home/Greeting";
 import { greetingKey } from "@/components/home/greeting-key";
 import { QuickLinks } from "@/components/home/QuickLinks";
-import type { FeedComment, FeedListenEntry, FeedRating } from "@/services/feed/feed";
+import type { FeedComment, FeedListenEntry, FeedRating, FeedReview } from "@/services/feed/feed";
 
 export { greetingKey } from "@/components/home/greeting-key";
 
-type LastTouch = FeedListenEntry | FeedRating | FeedComment;
+type LastTouch = FeedListenEntry | FeedRating | FeedComment | FeedReview;
 
 interface WelcomePanelProps {
   name: string;
@@ -20,9 +20,12 @@ interface WelcomePanelProps {
   now?: Date;
 }
 
-export function lastTouchKey(kind: LastTouch["kind"]): "lastTouchListen" | "lastTouchRating" | "lastTouchComment" {
+export function lastTouchKey(
+  kind: LastTouch["kind"],
+): "lastTouchListen" | "lastTouchRating" | "lastTouchComment" | "lastTouchReview" {
   if (kind === "rating") return "lastTouchRating";
   if (kind === "comment") return "lastTouchComment";
+  if (kind === "review") return "lastTouchReview";
   return "lastTouchListen";
 }
 

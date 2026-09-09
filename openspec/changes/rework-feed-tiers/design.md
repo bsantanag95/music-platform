@@ -163,9 +163,14 @@ otra fuente (mismo comportamiento actual). Rollback = revertir el commit.
 
 ## Open Questions
 
-- **OQ1 — ¿La reseña entra al feed en este cambio, o se difiere a un cambio propio junto
-  con los eventos tier 4?** Propuesta: **entra ahora**. Es el acto expresivo tier 1 que hoy
-  falta y su fuente es idéntica a `comment` (bajo riesgo). Los tier 4 sí se difieren.
-- **OQ2 — ¿Se deduplica "reseñó ★4" + "valoró ★4" del mismo autor/álbum en el feed?**
-  Propuesta: **no en Fase 2**. Se muestran ambas. A futuro, suprimir la fila de rating
-  cuando hay reseña del mismo autor/álbum.
+- **OQ1 — ¿La reseña entra al feed ahora? → RESUELTA: sí, en esta fase, como acción
+  expresiva tier 1.** No depende conceptualmente de los eventos tier 4 (señales ambiente).
+  `review` ya existe, tiene relación clara con usuario/álbum, se ordena por `updatedAt` y su
+  presentación es similar a un comentario — fuente de bajo riesgo. Los eventos tier 4 se
+  incorporan después.
+- **OQ2 — ¿Se deduplica "reseñó ★4" + "valoró ★4" del mismo autor/álbum? → RESUELTA: no en
+  Fase 2.** Se muestran ambos eventos. Deduplicar bien requiere definir reglas
+  (¿la reseña siempre reemplaza al rating? ¿solo con el mismo valor? ¿qué pasa si el rating
+  cambia después, o si la reseña se edita o borra?). La jerarquía ya mitiga: la reseña
+  (tier 1) recibe más protagonismo que el rating. Suprimir la fila de rating cuando existe
+  reseña del mismo autor/álbum queda como refinación posterior, con datos reales.
