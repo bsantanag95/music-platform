@@ -35,4 +35,4 @@
 - [x] 6.1 `openspec validate add-feed-rotation-peak --strict` pasa
 - [x] 6.2 `typecheck`, `lint`, `test` (1167 pasan), `build` en verde
 - [x] 6.3 Verificación: cubierta por los tests de `feed-grouping.test.ts` y `FeedActivityList.test.tsx` (una corrida del mismo tema → "En rotación"; títulos distintos → grupo genérico; sin emoji/racha). Walk autenticado en navegador no factible en este entorno (creación de cuenta prohibida)
-- [ ] 6.4 Archivar el cambio y sincronizar specs cuando esté implementado y aprobado
+- [x] 6.4 Archivar el cambio y sincronizar specs
