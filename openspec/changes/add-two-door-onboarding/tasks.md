@@ -48,4 +48,4 @@
 
 - [x] 8.1 `openspec validate add-two-door-onboarding --strict` pasa
 - [x] 8.2 `typecheck`, `lint`, `test`, `build` en verde
-- [ ] 8.3 Archivar el cambio y sincronizar specs cuando esté implementado y aprobado
+- [x] 8.3 Archivar el cambio y sincronizar specs cuando esté implementado y aprobado
