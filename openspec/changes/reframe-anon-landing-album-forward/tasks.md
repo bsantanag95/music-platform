@@ -28,4 +28,4 @@
 - [x] 5.1 `openspec validate reframe-anon-landing-album-forward --strict` pasa
 - [x] 5.2 `typecheck`, `lint`, `test` (1213 pasan), `build` en verde
 - [x] 5.3 Verificación cubierta por `AnonymousHome.test.tsx` (bloque presente con datos + flag on; sin consulta de colecciones con flag off; colapso sin datos; resto del Inicio intacto) y `AuthenticatedHome.test.tsx` (bloque ausente con sesión, test estructural). Walk autenticado/seed en navegador no factible en este entorno
-- [ ] 5.4 Archivar el cambio y sincronizar specs cuando esté implementado y aprobado
+- [x] 5.4 Archivar el cambio y sincronizar specs
