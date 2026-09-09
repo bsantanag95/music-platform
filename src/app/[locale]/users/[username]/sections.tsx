@@ -9,6 +9,7 @@ import {
   getAlbumFavorites,
   getProfileAlbumFavorites,
 } from "@/services/profiles/album-favorites";
+import { getProfileInRotation } from "@/services/profiles/in-rotation";
 import { getProfileRecency } from "@/services/profiles/recency";
 import { getProfileAffinity } from "@/services/profiles/affinity";
 import { countPendingFollowRequests } from "@/services/social/following";
@@ -21,6 +22,7 @@ import { OwnerShowcaseEditor } from "@/components/profiles/OwnerShowcaseEditor";
 import { OwnerAlbumFavoritesEditor } from "@/components/profiles/OwnerAlbumFavoritesEditor";
 import { TasteFingerprint } from "@/components/profiles/TasteFingerprint";
 import { AlbumFavorites } from "@/components/profiles/AlbumFavorites";
+import { InRotation } from "@/components/profiles/InRotation";
 import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
 import { AnthemStrip } from "@/components/profiles/AnthemStrip";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
@@ -84,6 +86,18 @@ export async function AlbumFavoritesSection({
   viewerId,
 }: Omit<SectionProps, "isOwn">) {
   return <AlbumFavorites albums={await getProfileAlbumFavorites(username, viewerId)} />;
+}
+
+// "En rotación": qué está sonando últimamente, derivado del diario. Se rinde
+// en los niveles autorizado y dueño, entre los destacados y la huella de
+// gusto. `getProfileInRotation` devuelve null (y la sección no aparece) sin
+// acceso o sin actividad que alcance el umbral (spec profile-in-rotation).
+export async function InRotationSection({
+  username,
+  viewerId,
+}: Omit<SectionProps, "isOwn">) {
+  const data = await getProfileInRotation(username, viewerId);
+  return data ? <InRotation data={data} /> : null;
 }
 
 // El showcase (destacados + himno) se compone en dos secciones para el layout

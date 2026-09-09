@@ -16,6 +16,7 @@ import {
   FavoritesRail,
   FingerprintSection,
   HubSection,
+  InRotationSection,
   ListsRail,
   OwnerEditors,
   PinnedSection,
@@ -125,6 +126,12 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
               <PinnedSection ownerId={profile.id} />
             </Streamed>
             <Streamed>
+              <InRotationSection
+                username={section.username}
+                viewerId={effectiveViewerId}
+              />
+            </Streamed>
+            <Streamed>
               <FingerprintSection username={section.username} viewerId={effectiveViewerId} />
             </Streamed>
             <Streamed>
@@ -185,6 +192,12 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
             </Streamed>
             <Streamed>
               <ShowcaseSection ownerId={profile.id} />
+            </Streamed>
+            <Streamed>
+              <InRotationSection
+                username={section.username}
+                viewerId={effectiveViewerId}
+              />
             </Streamed>
             <Streamed>
               <FingerprintSection username={section.username} viewerId={effectiveViewerId} />

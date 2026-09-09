@@ -119,6 +119,11 @@
       "noFavorites": "Favorite some albums to be able to feature them here."
     }
   },
+  "inRotation": {
+    "heading": "In rotation",
+    "songsHeading": "Songs",
+    "albumsHeading": "Albums"
+  },
   "fingerprint": {
     "heading": "Taste fingerprint",
     "ratingCurveLabel": "How they rate",

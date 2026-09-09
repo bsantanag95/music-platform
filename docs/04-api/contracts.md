@@ -415,6 +415,17 @@ listas y colección se filtran por audiencia.
 **200 OK:** `{ fingerprint: { ratingsVisible, ratingCurve: [{ stars, count }] | null, totalRatings, decades: [{ label, count }], genres: [{ label, count }], genreDataAvailable, split: { ratedArtists, ratedAlbums, ratedSongs, collection, lists } } | null }`.
 `fingerprint` es `null` cuando el visitante no tiene acceso al contenido del perfil.
 
+### `GET /api/users/[username]/in-rotation`
+
+Sección "En rotación" del perfil (cambio `add-profile-in-rotation`): canciones y álbumes
+con más presencia en el **diario** del dueño en los últimos 30 días, filtrados por lo que el
+solicitante puede ver. Score de recencia + frecuencia calculado bajo demanda; no expone
+métricas.
+
+**200 OK:** `{ inRotation: { songs: [{ id, title, artistName }], albums: [{ id, title, artistName, coverThumbUrl }] } | null }`.
+`inRotation` es `null` cuando el solicitante no tiene acceso al perfil **o** ninguna
+actividad visible alcanza el umbral. **404** con `USER_NOT_FOUND` si el usuario no existe.
+
 ### `GET /api/users/[username]/affinity`
 
 Coincidencias entre el visitante autenticado y el dueño del perfil.

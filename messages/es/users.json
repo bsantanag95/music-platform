@@ -119,6 +119,11 @@
       "noFavorites": "Marcá álbumes como favoritos para poder ponerlos acá."
     }
   },
+  "inRotation": {
+    "heading": "En rotación",
+    "songsHeading": "Canciones",
+    "albumsHeading": "Álbumes"
+  },
   "fingerprint": {
     "heading": "Huella de gusto",
     "ratingCurveLabel": "Cómo puntúa",

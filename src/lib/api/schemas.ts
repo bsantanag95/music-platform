@@ -577,6 +577,32 @@ export const TasteFingerprintResponseSchema = z.object({
 });
 export type TasteFingerprintResponse = z.infer<typeof TasteFingerprintResponseSchema>;
 
+// --- En rotación (cambio add-profile-in-rotation) ---
+
+export const InRotationSongSchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  artistName: z.string().nullable(),
+});
+
+export const InRotationAlbumSchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  artistName: z.string().nullable(),
+  coverThumbUrl: z.string().nullable(),
+});
+
+export const InRotationSchema = z.object({
+  songs: z.array(InRotationSongSchema),
+  albums: z.array(InRotationAlbumSchema),
+});
+export type InRotationDto = z.infer<typeof InRotationSchema>;
+
+export const InRotationResponseSchema = z.object({
+  inRotation: InRotationSchema.nullable(),
+});
+export type InRotationResponse = z.infer<typeof InRotationResponseSchema>;
+
 // --- Destacados e himno (cambio redesign-user-profile) ---
 
 export const ShowcaseEntityTypeSchema = SocialTargetTypeSchema;

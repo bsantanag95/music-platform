@@ -39,18 +39,20 @@ vacíos, la sección completa SHALL NOT renderizarse.
 
 ### Requirement: Score de recencia y frecuencia
 
-El estado "en rotación" de una entidad SHALL derivarse de un **score** calculado como la
-suma de pesos discretos de recencia sobre sus entradas de diario dentro de la ventana:
-entradas de los últimos **7 días** SHALL pesar más que las de **8–21 días**, y estas más
-que las de **22–30 días**. Un registro **explícito de álbum** SHALL pesar más que un
-registro de canción suelta. Una entidad SHALL entrar en "En rotación" solo si su score
-alcanza o supera un umbral configurable. La ventana, los pesos y el umbral SHALL vivir como
-constantes nombradas del servicio, ajustables sin migración de datos ni cambio de esta
-especificación.
+El estado "en rotación" de una entidad SHALL derivarse de un **score** basado en pesos
+discretos de recencia sobre sus entradas de diario dentro de la ventana: entradas de los
+últimos **7 días** SHALL pesar más que las de **8–21 días**, y estas más que las de **22–30
+días**. Una entidad SHALL entrar en "En rotación" solo si su score alcanza o supera un
+umbral configurable. La ventana, los pesos y el umbral SHALL vivir como constantes
+nombradas del servicio, ajustables sin migración de datos ni cambio de esta especificación.
 
-Repetir muchas veces **la misma canción** SHALL NOT, por sí solo, meter el **álbum** de esa
-canción en rotación: el aporte de una canción al score de su álbum (vía roll-up) SHALL
-contarse una sola vez por canción distinta, no una vez por escucha.
+El **score de una canción** SHALL sumar el peso de recencia de todas sus escuchas (repetir
+sube el score de la canción). El **score de un álbum** SHALL sumar (a) el peso de recencia
+de cada registro **explícito de álbum**, con un multiplicador que lo hace pesar más que una
+escucha de canción, y (b) por el roll-up, un aporte **plano por canción distinta** del
+álbum escuchada en la ventana — independiente de cuántas veces se repitió esa canción y de
+su score de canción. En consecuencia, repetir muchas veces **la misma canción** SHALL NOT,
+por sí solo, meter el **álbum** de esa canción en rotación.
 
 #### Scenario: Recencia domina sobre volumen antiguo
 

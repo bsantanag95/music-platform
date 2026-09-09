@@ -89,6 +89,35 @@ El editor del dueño reordena / quita / anota los destacados y elige el himno **
 favoritos** — no hay buscador de catálogo embebido (mismo criterio que el detalle de lista,
 ver la memoria `list-detail-scope`).
 
+## En rotación
+
+La contraparte **viva** de los álbumes favoritos (identidad estable): qué ha estado
+escuchando esta persona últimamente. Se ubica entre los destacados y la huella de gusto, en
+los niveles autorizado y dueño (cambio `add-profile-in-rotation`,
+`src/services/profiles/in-rotation.ts`).
+
+- **Solo desde el diario.** Se deriva exclusivamente de `listen_entry` de los últimos **30
+  días**. Nunca de valoraciones, favoritos ni reseñas — una reacción dice "me gusta", no
+  "lo estoy escuchando ahora". El módulo no importa esas tablas (test estructural).
+- **`señales → score → estado`.** El cálculo es un puntaje sobre eventos crudos de escucha,
+  no un umbral hard-codeado: pesos discretos de recencia (`3` a 0–7 d, `2` a 8–21 d, `1` a
+  22–30 d), `×2` para un registro explícito de álbum, umbral de aparición `3`, máx `8` por
+  bloque. Todos son **constantes nombradas** del servicio, calibrables con datos reales sin
+  migración. Cálculo bajo demanda con `cache()`, sin tabla materializada (igual que la
+  huella).
+- **Canciones = señal primaria; álbumes = agrupación contextual.** Dos bloques; uno vacío
+  no se renderiza, ambos vacíos → la sección desaparece.
+- **Heurística experimental de álbum en rotación.** El bloque de álbumes se puebla de (a)
+  registros explícitos de álbum y (b) un roll-up canción→álbum: cada canción se atribuye a
+  su primer release-group de **estudio** (fecha de primer lanzamiento más temprana), y cada
+  canción distinta aporta un peso **plano** — repetir una sola pista nunca eleva su álbum.
+- **Respeta la audiencia del diario.** Se calcula solo sobre las entradas que el lector
+  puede ver; la sección puede quedar distinta para un seguidor y para un visitante público,
+  o desaparecer para quien no ve nada.
+- **Tono cultural.** Sin score, sin número de escuchas, sin fechas relativas, sin rachas,
+  sin numeración. `GET /api/users/[username]/in-rotation` para hidratación diferida y el
+  previsualizador "cómo te ven".
+
 ## Afinidad
 
 Al ver el perfil de otra persona con sesión iniciada, un bloque de coincidencias
@@ -121,7 +150,8 @@ Cada sección de contenido carga bajo su propio `<Suspense>`, así que nada bloq
 
 Ninguna vista incluye rachas, elementos pendientes de valorar, medallas de completitud ni
 porcentajes de progreso. El reparto de la huella y los conteos de los estantes se presentan
-como retrato, no como avance hacia una meta.
+como retrato, no como avance hacia una meta. "En rotación" tampoco muestra su score ni
+cuántas veces se escuchó algo — es "qué está sonando", no una métrica.
 
 ## Modelo de datos
 
@@ -129,6 +159,7 @@ como retrato, no como avance hacia una meta.
 |---|---|
 | `app_user.{bio, pronouns, location, timezone, avatar_url}` | Identidad extendida (migración 0014) |
 | `user_profile_link` | Enlaces externos ordenados, máx. 5 app-side |
+| `listen_entry` (lectura) | Fuente única de "En rotación" — escuchas de canción/álbum de los últimos 30 días, filtradas por audiencia. Sin tabla ni columna nueva |
 | `user_pinned_item` | Cuatro destacados, triple-FK nullable + CHECK `num_nonnulls = 1` |
 | `user_showcase` | Una fila por usuario; `anthem_recording_id` (`ON DELETE SET NULL`) |
 | `user_album_pin` | Hasta 6 álbumes favoritos; FK a `favorite` (`ON DELETE CASCADE`), `position` 1–6 única por usuario (migración 0019) |

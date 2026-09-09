@@ -6,12 +6,14 @@ import {
   DiaryRail,
   FavoritesRail,
   FingerprintSection,
+  InRotationSection,
   PinnedSection,
   ShowcaseSection,
 } from "./sections";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
 import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
 import { AlbumFavorites } from "@/components/profiles/AlbumFavorites";
+import { InRotation } from "@/components/profiles/InRotation";
 import { AnthemStrip } from "@/components/profiles/AnthemStrip";
 import { TasteFingerprint } from "@/components/profiles/TasteFingerprint";
 import { ProfileAffinity } from "@/components/profiles/ProfileAffinity";
@@ -35,6 +37,7 @@ const svc = vi.hoisted(() => ({
   getShowcase: vi.fn(),
   getAlbumFavorites: vi.fn(),
   getProfileAlbumFavorites: vi.fn(),
+  getProfileInRotation: vi.fn(),
   getProfileRecency: vi.fn(),
   getProfileAffinity: vi.fn(),
 }));
@@ -48,6 +51,9 @@ vi.mock("@/services/profiles/showcase", () => ({ getShowcase: svc.getShowcase })
 vi.mock("@/services/profiles/album-favorites", () => ({
   getAlbumFavorites: svc.getAlbumFavorites,
   getProfileAlbumFavorites: svc.getProfileAlbumFavorites,
+}));
+vi.mock("@/services/profiles/in-rotation", () => ({
+  getProfileInRotation: svc.getProfileInRotation,
 }));
 vi.mock("@/services/profiles/recency", () => ({ getProfileRecency: svc.getProfileRecency }));
 vi.mock("@/services/profiles/affinity", () => ({ getProfileAffinity: svc.getProfileAffinity }));
@@ -154,6 +160,25 @@ describe("ShowcaseSection / FingerprintSection", () => {
       props?: { albums?: unknown[] };
     };
     expect(tree?.props?.albums).toEqual([]);
+  });
+
+  it("InRotationSection renderiza InRotation con los datos resueltos", async () => {
+    svc.getProfileInRotation.mockResolvedValue({
+      songs: [{ id: "s1", title: "S1", artistName: "A" }],
+      albums: [],
+    });
+    const tree = (await InRotationSection({ username: "ana", viewerId: "v" })) as {
+      type?: unknown;
+      props?: { data?: { songs?: unknown[] } };
+    };
+    expect(svc.getProfileInRotation).toHaveBeenCalledWith("ana", "v");
+    expect(tree?.type).toBe(InRotation);
+    expect(tree?.props?.data?.songs).toHaveLength(1);
+  });
+
+  it("InRotationSection es null cuando getProfileInRotation devuelve null", async () => {
+    svc.getProfileInRotation.mockResolvedValue(null);
+    expect(await InRotationSection({ username: "ana", viewerId: null })).toBeNull();
   });
 
   it("FingerprintSection es null cuando getTasteFingerprint devuelve null", async () => {

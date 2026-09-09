@@ -63,20 +63,30 @@ pasos para que los umbrales cambien sin tocar la arquitectura ni migrar:
    `created_at >= now() - 30 días`. Cada fila es `{ createdAt, target (song|album), kind }`
    donde `kind ∈ { song_listen, album_listen }` (una fila con `artist_id` se ignora — el
    artista es demasiado grueso para "en rotación").
-2. **Score** por entidad: `Σ pesoRecencia(createdAt)`, con pesos discretos por tramo:
+2. **Score** — `pesoRecencia(createdAt)` con pesos discretos por tramo:
    - `0–7 días`: **3** (actividad actual)
    - `8–21 días`: **2** (reciente)
    - `22–30 días`: **1** (residual)
    - `> 30 días`: fuera de la ventana → no contribuye
-   Un `album_listen` explícito cuenta **×2** frente a un `song_listen` (intención del
-   usuario = señal fuerte; IQ1).
-3. **Estado "en rotación"**: la entidad entra si su score `>= UMBRAL_EN_ROTACION` (Fase 1:
-   `3` — equivale a una escucha en la última semana, dos hace dos semanas, o tres residuales).
-   Se muestran hasta **8** entidades por tipo, ordenadas por score desc, `createdAt` del
-   evento más reciente desc como desempate.
+
+   - **Score de canción** (bloque Canciones): `Σ pesoRecencia(createdAt)` sobre **todas**
+     las escuchas de esa canción (la repetición sí sube el score de la canción).
+   - **Score de álbum** (bloque Álbumes): `Σ` de dos fuentes —
+     (a) cada `album_listen` explícito: `pesoRecencia(createdAt) × ALBUM_LISTEN_MULTIPLIER`
+         (Fase 1: **×2** — intención del usuario = señal fuerte; IQ1), y
+     (b) roll-up: por cada **canción distinta** del álbum escuchada en la ventana, un aporte
+         **plano** `ROLLUP_SONG_WEIGHT` (Fase 1: **1**), **independiente** de cuántas veces
+         se repitió esa canción y de su score de canción. Así 3 canciones distintas suman
+         3; repetir una canción 6× suma 1.
+3. **Estado "en rotación"**: la entidad entra si su score `>= ROTATION_SCORE_THRESHOLD`
+   (Fase 1: `3` — una canción: una escucha esta semana, o dos hace dos semanas, o tres
+   residuales; un álbum: 3 canciones distintas, o un `album_listen` de la última semana, o
+   dos `album_listen` residuales). Se muestran hasta `ROTATION_MAX_PER_TYPE` (Fase 1: **8**)
+   entidades por bloque, ordenadas por score desc, `createdAt` del evento más reciente desc
+   como desempate.
 
 Todos los pesos y umbrales viven como **constantes nombradas** en el módulo del servicio
-(`ROTATION_WINDOW_DAYS`, `RECENCY_WEIGHTS`, `ALBUM_LISTEN_MULTIPLIER`,
+(`ROTATION_WINDOW_DAYS`, `RECENCY_WEIGHTS`, `ALBUM_LISTEN_MULTIPLIER`, `ROLLUP_SONG_WEIGHT`,
 `ROTATION_SCORE_THRESHOLD`, `ROTATION_MAX_PER_TYPE`), no dispersos en el SQL.
 
 ### D3 — Canciones = señal primaria; álbumes = agrupación contextual
@@ -95,11 +105,11 @@ lo están.
     release_group`), el de `first_release_date` más temprano (nulls al final,
     `first_release_year` como segundo criterio, `id` como tercero). Una canción sin
     release-group `studio` **no** aporta al bloque Álbumes (sí al bloque Canciones).
-    El roll-up usa peso `song_listen` (no `album_listen`).
-  - **Anti-repetición**: repetir 5× la misma canción **no** mete su álbum en rotación por
-    volumen. Se logra contando, para el roll-up derivado, **canciones distintas** del
-    álbum (cada canción del álbum aporta como máximo su propio score de canción una vez al
-    score del álbum), no cada escucha. Un `album_listen` explícito sí cuenta cada vez.
+  - **Anti-repetición**: el roll-up aporta un peso **plano** por **canción distinta** del
+    álbum (`ROLLUP_SONG_WEIGHT`, no el score de la canción ni el número de escuchas), así
+    repetir una sola pista nunca eleva su álbum. "Dos escuchas completas de un álbum de 10
+    temas" (2 `album_listen` → `≥ 2 × pesoRecencia × 2`) es señal más fuerte que "3
+    canciones distintas una vez" (`3 × 1`), como pide la exploración.
 
 *Alternativa descartada para el roll-up:* atribuir la canción a **todos** sus
 release-groups. Infla compilados y "greatest hits". La regla de "studio + más temprano"
