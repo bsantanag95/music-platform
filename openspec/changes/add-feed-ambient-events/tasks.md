@@ -39,4 +39,4 @@
 - [x] 6.1 `openspec validate add-feed-ambient-events --strict` pasa
 - [x] 6.2 `typecheck`, `lint` en verde; verificado contra la BD de desarrollo que las tres consultas ejecutan sin error (`home_qa_test` devuelve grupos reales); `test` + `build` abajo
 - [x] 6.3 Verificación cubierta por `ambient.test.ts` (5 casos) y `FeedAmbientStrip.test.tsx` (4 casos) + comprobación contra la BD de desarrollo. Walk autenticado en navegador no factible en este entorno
-- [ ] 6.4 Archivar el cambio y sincronizar specs cuando esté implementado y aprobado
+- [x] 6.4 Archivar el cambio y sincronizar specs
