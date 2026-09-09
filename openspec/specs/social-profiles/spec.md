@@ -161,9 +161,10 @@ determinados por la relación del visitante: no autorizado, autorizado (público
 aprobado) y dueño. La identidad extendida SHALL renderizarse en los tres niveles. El aviso
 de perfil privado y su llamada a la acción de seguir SHALL renderizarse solo en el nivel no
 autorizado sobre un perfil privado. La huella, la sección "Álbumes favoritos", la sección
-"En rotación", los destacados, el himno y los estantes de contenido SHALL renderizarse solo
-en los niveles autorizado y dueño. La sección "En rotación" SHALL ubicarse después de los
-destacados y antes de la huella de gusto.
+"En rotación", la sección "Exploración" (artistas seguidos), los destacados, el himno y los
+estantes de contenido SHALL renderizarse solo en los niveles autorizado y dueño. La sección
+"En rotación" SHALL ubicarse después de los destacados y antes de la huella de gusto; la
+sección "Exploración" SHALL ubicarse después de la huella de gusto y antes de los estantes.
 
 #### Scenario: Perfil privado sin autorización
 
@@ -191,11 +192,17 @@ destacados y antes de la huella de gusto.
 - **THEN** ve la sección "En rotación" entre los destacados y la huella de gusto; un
   visitante no autorizado de un perfil privado no la ve
 
+#### Scenario: "Exploración" en el nivel autorizado
+
+- **WHEN** un visitante autorizado abre un perfil cuyo dueño sigue a al menos un artista
+- **THEN** ve la sección "Exploración" con esos artistas, después de la huella de gusto; un
+  visitante no autorizado de un perfil privado no la ve
+
 #### Scenario: Estado bloqueado
 
 - **WHEN** el visitante y el dueño del perfil tienen una relación de bloqueo
 - **THEN** el perfil muestra el estado de bloqueo y su acción correspondiente, sin huella,
-  álbumes favoritos, "En rotación", destacados ni estantes
+  álbumes favoritos, "En rotación", "Exploración", destacados ni estantes
 
 ### Requirement: Panel del dueño
 

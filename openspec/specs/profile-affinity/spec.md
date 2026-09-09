@@ -7,14 +7,21 @@ Coincidencias entre el visitante autenticado y el dueño del perfil: favoritos e
 
 El sistema SHALL calcular, para un visitante autenticado que no es el dueño y que puede
 acceder al contenido del perfil, un bloque de coincidencias con el dueño: favoritos en
-común, entidades que ambos valoran con 4 estrellas o más, y seguidores en común. El cálculo
-SHALL respetar el bloqueo y la audiencia de cada elemento, y SHALL hacerse bajo demanda.
+común, entidades que ambos valoran con 4 estrellas o más, **artistas que ambos siguen**, y
+seguidores en común. El cálculo SHALL respetar el bloqueo y la audiencia de cada elemento,
+y SHALL hacerse bajo demanda. El bloque SHALL ocultarse solo cuando **todos** esos términos
+están vacíos.
 
 #### Scenario: Favoritos y valoraciones en común
 
 - **WHEN** un visitante autenticado abre el perfil accesible de otra persona con la que
   comparte 3 favoritos y 2 entidades valoradas con 4+ estrellas
 - **THEN** el bloque de afinidad muestra esos favoritos y esas valoraciones en común
+
+#### Scenario: Artistas que ambos siguen
+
+- **WHEN** el visitante y el dueño siguen a los mismos 2 artistas
+- **THEN** el bloque de afinidad muestra esos artistas como coincidencia
 
 #### Scenario: Seguidores en común
 
@@ -23,7 +30,8 @@ SHALL respetar el bloqueo y la audiencia de cada elemento, y SHALL hacerse bajo 
 
 #### Scenario: Sin coincidencias
 
-- **WHEN** un visitante autenticado abre un perfil accesible con el que no comparte nada
+- **WHEN** un visitante autenticado abre un perfil accesible con el que no comparte
+  favoritos, valoraciones altas, artistas seguidos ni seguidores
 - **THEN** el bloque de afinidad no se muestra
 
 #### Scenario: Visitante anónimo o dueño
