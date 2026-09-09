@@ -12,7 +12,7 @@ Oyentes activos que quieren llevar un registro curado y personal de su historial
 
 - Frente a **RateYourMusic / Discogs**: esas plataformas son exhaustivas pero frías — catalogación sin la capa social ni el "encanto" de Letterboxd.
 - Frente a **Spotify / Apple Music**: son plataformas de reproducción, no de opinión. Su capa social es mínima y no está pensada para el descubrimiento pasivo de lo que escuchan otros.
-- La apuesta de music-platform: valoración e interacción en **tres niveles** (artista, álbum, canción), con un modelo de datos que respeta cómo realmente funciona la industria musical (colaboraciones, ediciones múltiples, re-grabaciones) en vez de forzar todo a "una canción, un disco, un artista".
+- La apuesta de music-platform: **el álbum como unidad cultural central** —la obra sobre la que gira la crítica y lo social—, con un modelo de datos que respeta cómo realmente funciona la industria musical (colaboraciones, ediciones múltiples, re-grabaciones) en vez de forzar todo a "una canción, un disco, un artista". Las tres entidades (artista, álbum, canción) siguen existiendo y **todas las interacciones están disponibles sobre las tres**; lo que cambia es qué modo de relación —opinar sobre la obra, o registrar el consumo— presenta la UI como primario en cada una. Ver [`content-hierarchy.md`](./content-hierarchy.md) para el modelo completo (dirección `redefine-content-hierarchy`).
 
 ## Principios del producto
 

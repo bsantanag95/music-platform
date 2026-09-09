@@ -66,6 +66,31 @@ comentarios, cambio `add-ratings-comments-feed`) y colección física (cambio
 `add-physical-collection`). Pendiente dentro de la fase: scrobbling automático (segunda
 entrega de la capa de presencia).
 
+## Fase 5.5 — Jerarquía de contenido (`redefine-content-hierarchy`)
+
+Replanteo transversal posterior a la Fase 5, no una fase nueva del núcleo: la Fase 5 dejó
+un sistema social completo pero **conceptualmente plano** (artista, álbum y canción con el
+mismo peso). Esta dirección fija el **álbum como unidad cultural central** sin restringir
+el catálogo ni las interacciones — el rol se asigna a la acción, no a la entidad. Ver
+[`content-hierarchy.md`](./content-hierarchy.md) para el modelo y `openspec/changes/
+redefine-content-hierarchy/` para la exploración.
+
+Corrió con su propia numeración interna de fases:
+
+- **Fase 0 — precondiciones:** canonicalización de `release-group`, contenido semilla del
+  descubrimiento, `review` como entidad propia.
+- **Fase 1 — identidad álbum-led:** `/explore`, rebalanceo de páginas de detalle, sección
+  "Álbumes favoritos" del perfil (orden vertical Q7), "En rotación" del perfil, onboarding
+  de dos puertas.
+- **Fase 2 — feed:** seguir artista, jerarquía de 4 tiers, pico de rotación personal,
+  convergencia de red, franja de eventos ambiente.
+- **Fase 3 — diario:** audiencia por intención, vocabulario ("Registrar escucha"), vista
+  de cronología por mes.
+
+**Estado: implementada por completo** (16 cambios OpenSpec archivados, más
+`add-profile-featured-reviews` y `reframe-anon-landing-album-forward` como remates). El
+detalle de cada superficie vive en `05-features/`.
+
 ## Fase 6 — PWA y beta cerrada
 
 Entregable: manifest, service worker con shell offline, instalabilidad, y lanzamiento a un grupo pequeño y controlado antes de abrir al público. El objetivo de esta beta es encontrar los huecos del modelo de datos que solo aparecen con uso real (ediciones raras, artistas con nombres ambiguos, discografías gigantes), no crecimiento.

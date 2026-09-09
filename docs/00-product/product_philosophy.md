@@ -56,6 +56,8 @@ Estos principios deberían guiar decisiones de UX concretas más adelante (y can
 3. **El desacuerdo es contenido, no ruido.** Diseñar para que sea visible y valioso cuando el rating de un usuario se aleja del promedio o del de sus amigos — eso es justamente la señal identitaria.
 4. **Optimizar por afinidad de gusto, no por popularidad genérica.** El follow/red social debería poder basarse en "gente cuyo criterio se parece al mío", no solo en follows arbitrarios.
 5. **Priorizar profundidad de catálogo por sobre polish de descubrimiento algorítmico.** No competir con el algoritmo de Spotify; competir en completismo, historial y curaduría humana.
+6. **El rol se asigna a la acción, no a la entidad.** El álbum es la unidad cultural central del producto, pero eso no restringe el catálogo ni las interacciones: sobre artista, álbum y canción se puede valorar, reseñar y registrar por igual. Lo que la jerarquía define es *qué modo de relación —opinar sobre la obra, o registrar el consumo— empuja la UI como primario en cada entidad*. Ver [`content-hierarchy.md`](./content-hierarchy.md).
+7. **No convertir cada señal de usuario en una interacción social nueva.** Preferencia, identidad, consumo, crítica, actividad y "pico temporal" son seis relaciones distintas; la UI las *revela* con su propia frase y superficie en vez de tratarlas como equivalentes. Las seis separaciones que no deben colapsar están en `content-hierarchy.md` §4.
 
 ## 6. Decisiones de UX resueltas (2026-08-20)
 
@@ -112,6 +114,19 @@ Opción por álbum para declarar y presumir el coleccionismo en soporte físico,
 **Características de la edición: vocabulario cerrado + nota libre, no modelar identidad de release.** Un conjunto curado de ~17 atributos descriptores (`limited-edition`, `colored-vinyl`, `regional-edition`, …) — filtrables y presentables, mantenimiento acotado. Más una nota libre corta (≤140) para el detalle irreducible. **Se descarta** modelar sello/país/número de catálogo/bonus tracks estructurados: es un proyecto de catálogo aparte, contradice la decisión de ingerir una sola edición oficial por álbum, e invita al "¿por qué no hay campo de X?". El formato es 100% dato del usuario porque el catálogo no modela soporte físico.
 
 **Fuera de alcance de v1:** aparición en el feed de actividad (se presume vía perfil y página de álbum; sumarlo al feed es incremento aditivo sin migración), imágenes de portada por entrada, campos de catálogo estructurados.
+
+### 6.7 Jerarquía de contenido — el álbum como unidad cultural (dirección `redefine-content-hierarchy`, 2026-09)
+
+Replanteo transversal posterior a la Fase 5: la comparación con Letterboxd falló porque
+Letterboxd tiene **una** unidad y en música hay tres. Se descartó tanto el modelo simétrico
+(`artista = álbum = canción`, produce identidad difusa) como el álbum-céntrico estricto
+(`álbum > canción > artista`, sesga géneros de singles y se siente elitista). La decisión
+—**Modelo C: el rol se asigna a la acción, no a la entidad**— y todo su desarrollo
+(dos modos de relación obra/consumo, el modelo de cuatro capas, las seis separaciones que
+no deben colapsar, las decisiones Q1–Q7, la secuencia de fases) están en
+[`content-hierarchy.md`](./content-hierarchy.md). Estado: implementada por completo (16
+cambios OpenSpec + dos remates). Los feature specs de `05-features/` derivan de ese
+documento.
 
 ## 7. Preguntas abiertas remanentes
 

@@ -9,8 +9,10 @@ Este directorio es la fuente de verdad técnica y de producto del proyecto. Se p
 | Documento | Responde a | Estado |
 |---|---|---|
 | `00-product/vision.md` | Filosofía, público objetivo, diferenciación, qué NO hará el producto | ✅ |
+| `00-product/product_philosophy.md` | Tesis central (el rating como identidad, no veredicto), pilares y principios de diseño, decisiones de UX resueltas | ✅ |
+| `00-product/content-hierarchy.md` | El álbum como unidad cultural central: Modelo C (el rol se asigna a la acción, no a la entidad), modelo de cuatro capas, separación obra ↔ consumo, decisiones Q1–Q7 | ✅ Implementada (dirección `redefine-content-hierarchy`) |
 | `00-product/prd.md` | Problema, propuesta de valor, MVP, métricas de éxito | ✅ |
-| `00-product/roadmap.md` | Fases de construcción, de la 0 a la 6 | ✅ |
+| `00-product/roadmap.md` | Fases de construcción, de la 0 a la 6, más el replanteo transversal `redefine-content-hierarchy` (Fase 5.5) | ✅ |
 | `01-domain/domain-model.md` | Entidades del negocio y sus relaciones (sin SQL) | ✅ |
 | `01-domain/business-rules.md` | Reglas de negocio explícitas (remaster, rating dual, etc.) | ✅ |
 | `02-architecture/architecture.md` | Frontend → API → servicios → base de datos → servicios externos | ✅ |

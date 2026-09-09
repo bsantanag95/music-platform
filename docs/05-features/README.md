@@ -5,18 +5,23 @@ tiene. Distinto de `02-architecture/frontend-plan/`, que documenta *cómo* se co
 un feature concreto (la Fase 3 hoy) — acá vive el *qué*, independiente de la
 implementación.
 
+> El modelo conceptual del que derivan varios de estos specs (el álbum como unidad
+> cultural, el modelo de cuatro capas, la separación obra ↔ consumo) vive en
+> [`../00-product/content-hierarchy.md`](../00-product/content-hierarchy.md).
+
 | Documento | Fase | Estado |
 |---|---|---|
 | [`phase-5-design.md`](./phase-5-design.md) | 5 | 🟢 Diseño maestro: pasos 1–6 implementados, scrobbling pendiente |
 | [`catalog-browsing.md`](./catalog-browsing.md) | 3 | ✅ Especificado, backend listo |
 | [`ratings-and-reviews.md`](./ratings-and-reviews.md) | 4 | ✅ Implementado y validado |
-| [`listening-diary-and-ratings.md`](./listening-diary-and-ratings.md) | 4-5 | 🟡 Propuesta de diseño |
+| [`listening-diary-and-ratings.md`](./listening-diary-and-ratings.md) | 4-5 (redefine-content-hierarchy Fase 3) | ✅ Implementado (`deepen-listening-diary`: audiencia por intención, "Registrar escucha", cronología por mes) |
+| [`explore.md`](./explore.md) | redefine-content-hierarchy Fase 1 | ✅ Implementado (`add-album-discovery`: `/explore` con colecciones editoriales, novedades, décadas, géneros, mejor valorados, más reseñados; feature flag `EXPLORE_ENABLED`) |
 | [`lists-and-favorites.md`](./lists-and-favorites.md) | 5 | ✅ Implementado (`add-favorites-and-lists`; sección `/me/lists` en `rework-lists-section`; detalle con 3 modos de vista + gestión interna de ítems + vista de lectura ajena en `rework-list-detail`; sección `/me/favorites` como muro por tipo con filtros y gestión de audiencia en lote en `rework-favorites-section`) · ⏳ listas seguidas en el feed → `add-followed-lists-to-feed` |
 | [`physical-collection.md`](./physical-collection.md) | 5 | ✅ Implementado (`add-physical-collection`; estantería `/me/collection` con 3 modos de vista + toolbar de búsqueda/orden/agrupación + edición en línea + cambio de audiencia en lote + vista de lectura ajena en `rework-collection-section`) |
-| [`activity-feed.md`](./activity-feed.md) | 5 | ✅ Implementado (escuchas + favoritos + listas + ratings + comentarios) |
-| [`home.md`](./home.md) | 5 | ✅ Implementado (cambio `add-home-page`) |
-| [`onboarding.md`](./onboarding.md) | 1 (redefine-content-hierarchy) | ✅ Implementado (cambio `add-two-door-onboarding`: `/welcome` con dos puertas — álbumes favoritos + primera escucha) |
-| [`user-profile.md`](./user-profile.md) | 5 | 🟡 Implementado (cambio `redesign-user-profile`: identidad extendida, huella de gusto, destacados/himno, afinidad, estantes, panel del dueño; revisión visual pendiente) |
+| [`activity-feed.md`](./activity-feed.md) | 5 · redefine-content-hierarchy Fase 2 | ✅ Implementado (6 fuentes + jerarquía de 4 tiers, pico de rotación, convergencia de red, franja de eventos ambiente) |
+| [`home.md`](./home.md) | 5 · redefine-content-hierarchy | ✅ Implementado (`add-home-page`; reencuadre álbum-forward del landing anónimo en `reframe-anon-landing-album-forward`) |
+| [`onboarding.md`](./onboarding.md) | redefine-content-hierarchy Fase 1 | ✅ Implementado (cambio `add-two-door-onboarding`: `/welcome` con dos puertas — álbumes favoritos + primera escucha) |
+| [`user-profile.md`](./user-profile.md) | 5 · redefine-content-hierarchy Fase 1 | ✅ Implementado (identidad extendida, huella de gusto, álbumes favoritos + destacados/himno, "En rotación", "Reseñas", afinidad, exploración, estantes; orden vertical Q7) |
 
 ## Regla de esta carpeta
 
