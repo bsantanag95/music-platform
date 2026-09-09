@@ -34,11 +34,11 @@ describe("OwnerHubPanel", () => {
 
   it("muestra el badge de solicitudes pendientes cuando hay > 0", async () => {
     renderWithIntl(await OwnerHubPanel({ pendingRequests: 3 }));
-    expect(screen.getByText("hub.pendingRequests:3")).toBeInTheDocument();
+    expect(screen.getByText("pendingFollowRequests:3")).toBeInTheDocument();
   });
 
   it("no muestra badge cuando no hay solicitudes pendientes", async () => {
     renderWithIntl(await OwnerHubPanel({ pendingRequests: 0 }));
-    expect(screen.queryByText(/hub.pendingRequests/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/pendingFollowRequests/)).not.toBeInTheDocument();
   });
 });

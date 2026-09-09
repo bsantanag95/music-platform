@@ -9,26 +9,28 @@ import { apiFetch, ApiError } from "@/lib/api/client";
 import { LogoutResponseSchema } from "@/lib/api/schemas";
 import { HeaderSearch } from "./HeaderSearch";
 import { Logo } from "./Logo";
+import { UserMenu, UserMenuList } from "./UserMenu";
 
 interface HeaderProps {
   user?: Pick<AuthUser, "id" | "username" | "displayName"> | null;
   exploreEnabled?: boolean;
+  /** Solicitudes de seguimiento pendientes, para el badge del menú de usuario. */
+  pendingFollowRequests?: number;
 }
-
-const NAV_ITEMS = [
-  { href: "/me/diary", key: "diary" },
-  { href: "/me/feed", key: "feed" },
-  { href: "/me/favorites", key: "favorites" },
-  { href: "/me/lists", key: "lists" },
-  { href: "/me/collection", key: "collection" },
-] as const;
 
 // Encabezado global del catálogo. Client Component porque el selector de
 // idioma necesita `usePathname` y `useRouter` de next-intl para preservar
 // la ruta y los parámetros dinámicos al cambiar de locale.
-export function Header({ user = null, exploreEnabled = false }: HeaderProps) {
+//
+// Dos zonas separadas (ver spec cross-view-navigation): la **barra general** de
+// navegación de contenido (buscador, Explorar) y, cuando hay sesión, el **menú
+// de usuario** anclado al nombre visible que agrupa las superficies personales.
+export function Header({
+  user = null,
+  exploreEnabled = false,
+  pendingFollowRequests = 0,
+}: HeaderProps) {
   const t = useTranslations("common");
-  const tErrors = useTranslations("errors");
   const tExplore = useTranslations("catalog.explore");
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -37,8 +39,7 @@ export function Header({ user = null, exploreEnabled = false }: HeaderProps) {
   const [currentUser, setCurrentUser] = useState(user);
   const [logoutPending, setLogoutPending] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
-  // Debajo de `md` el buscador, la navegación de "me/*" y el clúster de sesión
-  // no entran en una fila (5 links + buscador + selector de idioma + auth):
+  // Debajo de `md` la barra general y la zona de usuario no entran en una fila:
   // se pliegan en este panel. Ver critique 2026-09-04, hallazgo P1.
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -83,6 +84,15 @@ export function Header({ user = null, exploreEnabled = false }: HeaderProps) {
     }
   };
 
+  const exploreLink = exploreEnabled ? (
+    <Link
+      href="/explore"
+      className="font-data text-sm text-paper-muted transition-colors hover:text-paper"
+    >
+      {tExplore("navLabel")}
+    </Link>
+  ) : null;
+
   return (
     <header className="relative border-b border-ink-border">
       <div className="flex w-full items-center justify-between px-4 py-3">
@@ -91,47 +101,33 @@ export function Header({ user = null, exploreEnabled = false }: HeaderProps) {
           <div className="hidden md:block">
             <HeaderSearch />
           </div>
-          <nav className="hidden items-center gap-4 md:flex">
-            {exploreEnabled ? (
-              <Link
-                href="/explore"
-                className="font-data text-sm text-paper-muted transition-colors hover:text-paper"
-              >
-                {tExplore("navLabel")}
-              </Link>
-            ) : null}
-            {currentUser
-              ? NAV_ITEMS.map(({ href, key }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className="font-data text-sm text-paper-muted transition-colors hover:text-paper"
-                  >
-                    {t(key)}
-                  </Link>
-                ))
-              : null}
-          </nav>
+          {/* Barra general: solo navegación de contenido que ofrece el sitio a
+              cualquiera. Las superficies personales viven en el menú de usuario. */}
+          <nav className="hidden items-center gap-4 md:flex">{exploreLink}</nav>
         </div>
 
-        {/* Sesión e idioma van juntos al extremo derecho, separados de la navegación de
-            contenido: no son "a dónde ir" sino "quién soy / preferencias de la app" — mismo
-            patrón que Letterboxd, GitHub, etc. (avatar/cuenta al final). */}
+        {/* Sesión e idioma van juntos al extremo derecho, separados de la navegación
+            de contenido: no son "a dónde ir" sino "quién soy / preferencias de la
+            app" — mismo patrón que Letterboxd, GitHub, etc. */}
         <div className="hidden items-center gap-4 md:flex">
           <LocaleSwitcher t={t} currentLocale={currentLocale} onChange={handleLocaleChange} />
-          <SessionCluster
-            t={t}
-            tErrors={tErrors}
-            currentUser={currentUser}
-            logoutPending={logoutPending}
-            logoutError={logoutError}
-            onLogout={handleLogout}
-          />
+          {currentUser ? (
+            <UserMenu
+              username={currentUser.username}
+              displayName={currentUser.displayName ?? currentUser.username}
+              pendingFollowRequests={pendingFollowRequests}
+              logoutPending={logoutPending}
+              logoutError={logoutError}
+              onLogout={handleLogout}
+            />
+          ) : (
+            <AuthActions t={t} />
+          )}
         </div>
 
         {/* Debajo de `md`, la fila de arriba se reduce a logo + este botón: el
-            buscador, la navegación y el clúster de sesión se pliegan en el panel
-            de abajo en vez de desbordar (o de recortar "Registrarse") a 375px. */}
+            buscador, la navegación y la zona de usuario se pliegan en el panel
+            de abajo en vez de desbordar a 375px. */}
         <button
           type="button"
           className="flex size-9 shrink-0 items-center justify-center text-paper-muted transition-colors hover:text-paper md:hidden"
@@ -149,40 +145,32 @@ export function Header({ user = null, exploreEnabled = false }: HeaderProps) {
           id="header-mobile-menu"
           className="flex flex-col gap-4 border-t border-ink-border px-4 py-4 md:hidden"
         >
+          {/* Bloque 1 — barra general. */}
           <HeaderSearch />
-          {exploreEnabled || currentUser ? (
-            <nav className="flex flex-col gap-3">
-              {exploreEnabled ? (
-                <Link
-                  href="/explore"
-                  className="font-data text-sm text-paper-muted transition-colors hover:text-paper"
-                >
-                  {tExplore("navLabel")}
-                </Link>
-              ) : null}
-              {currentUser
-                ? NAV_ITEMS.map(({ href, key }) => (
-                    <Link
-                      key={href}
-                      href={href}
-                      className="font-data text-sm text-paper-muted transition-colors hover:text-paper"
-                    >
-                      {t(key)}
-                    </Link>
-                  ))
-                : null}
+          {exploreLink ? (
+            <nav aria-label={t("generalNav")} className="flex flex-col gap-3">
+              {exploreLink}
             </nav>
           ) : null}
-          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-ink-border pt-4">
-            <LocaleSwitcher t={t} currentLocale={currentLocale} onChange={handleLocaleChange} />
-            <SessionCluster
-              t={t}
-              tErrors={tErrors}
-              currentUser={currentUser}
-              logoutPending={logoutPending}
-              logoutError={logoutError}
-              onLogout={handleLogout}
-            />
+
+          {/* Bloque 2 — zona de usuario. */}
+          <div className="flex flex-col gap-4 border-t border-ink-border pt-4">
+            {currentUser ? (
+              <UserMenuList
+                username={currentUser.username}
+                pendingFollowRequests={pendingFollowRequests}
+                surface="panel"
+                onNavigate={() => setMenuOpen(false)}
+                logoutPending={logoutPending}
+                logoutError={logoutError}
+                onLogout={handleLogout}
+              />
+            ) : (
+              <AuthActions t={t} />
+            )}
+            <div className="border-t border-ink-border pt-4">
+              <LocaleSwitcher t={t} currentLocale={currentLocale} onChange={handleLocaleChange} />
+            </div>
           </div>
         </div>
       ) : null}
@@ -221,48 +209,7 @@ function LocaleSwitcher({
   );
 }
 
-function SessionCluster({
-  t,
-  tErrors,
-  currentUser,
-  logoutPending,
-  logoutError,
-  onLogout,
-}: {
-  t: HeaderT;
-  tErrors: HeaderT;
-  currentUser: Pick<AuthUser, "id" | "username" | "displayName"> | null;
-  logoutPending: boolean;
-  logoutError: string | null;
-  onLogout: () => void;
-}) {
-  if (currentUser) {
-    return (
-      <div className="flex items-center gap-3 font-data text-xs">
-        <Link
-          href={`/users/${encodeURIComponent(currentUser.username)}`}
-          className="text-paper transition-colors hover:text-amber"
-          aria-label={t("signedInAs")}
-        >
-          {currentUser.displayName ?? currentUser.username}
-        </Link>
-        <button
-          type="button"
-          onClick={onLogout}
-          disabled={logoutPending}
-          className="rounded-md border border-ink-border px-3 py-2 text-paper-muted transition-colors hover:border-paper hover:text-paper disabled:cursor-wait disabled:opacity-60"
-        >
-          {logoutPending ? t("logoutPending") : t("logout")}
-        </button>
-        {logoutError && (
-          <span role="alert" className="text-danger">
-            {tErrors(`${logoutError}.description`)}
-          </span>
-        )}
-      </div>
-    );
-  }
-
+function AuthActions({ t }: { t: HeaderT }) {
   return (
     <div className="flex items-center gap-3 font-data text-xs">
       <Link

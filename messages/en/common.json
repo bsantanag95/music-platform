@@ -10,6 +10,13 @@
   "favorites": "Favorites",
   "lists": "Lists",
   "collection": "Collection",
+  "profile": "My profile",
+  "artists": "Artists you follow",
+  "followers": "Followers",
+  "following": "Following",
+  "followRequests": "Requests",
+  "blocks": "Blocked accounts",
+  "settings": "Settings",
   "login": "Log in",
   "register": "Sign up",
   "logout": "Log out",
@@ -18,6 +25,9 @@
   "localeSwitcher": "Language",
   "openMenu": "Open menu",
   "closeMenu": "Close menu",
+  "userMenu": "User menu",
+  "generalNav": "General navigation",
+  "pendingFollowRequests": "{count, plural, one {# request} other {# requests}}",
   "error": {
     "title": "Something went wrong",
     "description": "We couldn't complete the request. Please try again in a moment."
