@@ -104,6 +104,21 @@
       "noRecordingFavorites": "Favorite a song to choose an anthem."
     }
   },
+  "albumFavorites": {
+    "heading": "Favorite albums",
+    "edit": {
+      "heading": "Favorite albums",
+      "intro": "Up to 6 albums that define you. Pick from your album favorites.",
+      "pick": "Pick from your favorites",
+      "selected": "Selected ({count}/6)",
+      "remove": "Remove",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "save": "Save favorite albums",
+      "max": "Maximum 6 favorite albums",
+      "noFavorites": "Favorite some albums to be able to feature them here."
+    }
+  },
   "fingerprint": {
     "heading": "Taste fingerprint",
     "ratingCurveLabel": "How they rate",

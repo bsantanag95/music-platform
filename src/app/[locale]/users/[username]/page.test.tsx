@@ -4,7 +4,14 @@ import UserProfilePage from "./page";
 import { Placa } from "@/components/profiles/Placa";
 import { PrivateThreshold } from "@/components/profiles/PrivateThreshold";
 import { ViewAsBanner } from "@/components/profiles/ViewAsBanner";
-import { AnthemSection, HubSection, OwnerEditors, PinnedSection, ShowcaseSection } from "./sections";
+import {
+  AlbumFavoritesSection,
+  AnthemSection,
+  HubSection,
+  OwnerEditors,
+  PinnedSection,
+  ShowcaseSection,
+} from "./sections";
 import type { ProfileView } from "@/services/profiles/profile-view";
 
 vi.mock("next-intl/server", () => ({
@@ -34,6 +41,7 @@ vi.mock("./sections", () => ({
   OwnerEditors: () => null,
   HubSection: () => null,
   ShowcaseSection: () => null,
+  AlbumFavoritesSection: () => null,
   PinnedSection: () => null,
   AnthemSection: () => null,
   FingerprintSection: () => null,
@@ -177,8 +185,20 @@ describe("UserProfilePage", () => {
     const tree = await render();
     expect(findElement(tree, AnthemSection)).not.toBeNull();
     expect(findElement(tree, PinnedSection)).not.toBeNull();
+    expect(findElement(tree, AlbumFavoritesSection)).not.toBeNull();
     expect(findElement(tree, ShowcaseSection)).toBeNull();
     expect(findElement(tree, HubSection)).toBeNull();
+  });
+
+  it("vista del dueño: monta AlbumFavoritesSection junto con ShowcaseSection", async () => {
+    resolveSession.mockResolvedValue({ user: { id: "owner" } });
+    getProfileView.mockResolvedValue(
+      profile({ relation: "self", isOwner: true, accessible: true }),
+    );
+
+    const tree = await render();
+    expect(findElement(tree, AlbumFavoritesSection)).not.toBeNull();
+    expect(findElement(tree, ShowcaseSection)).not.toBeNull();
   });
 
   it("visitante autenticado bloqueado fuera: calcula el hint y lo pasa al umbral", async () => {

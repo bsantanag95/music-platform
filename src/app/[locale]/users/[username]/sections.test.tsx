@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AffinitySection,
+  AlbumFavoritesSection,
   AnthemSection,
   DiaryRail,
   FavoritesRail,
@@ -10,6 +11,7 @@ import {
 } from "./sections";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
 import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
+import { AlbumFavorites } from "@/components/profiles/AlbumFavorites";
 import { AnthemStrip } from "@/components/profiles/AnthemStrip";
 import { TasteFingerprint } from "@/components/profiles/TasteFingerprint";
 import { ProfileAffinity } from "@/components/profiles/ProfileAffinity";
@@ -31,6 +33,8 @@ const svc = vi.hoisted(() => ({
   listProfileCollection: vi.fn(),
   getTasteFingerprint: vi.fn(),
   getShowcase: vi.fn(),
+  getAlbumFavorites: vi.fn(),
+  getProfileAlbumFavorites: vi.fn(),
   getProfileRecency: vi.fn(),
   getProfileAffinity: vi.fn(),
 }));
@@ -41,6 +45,10 @@ vi.mock("@/services/lists/lists", () => ({ listUserLists: svc.listUserLists }));
 vi.mock("@/services/collection/collection", () => ({ listProfileCollection: svc.listProfileCollection }));
 vi.mock("@/services/profiles/stats", () => ({ getTasteFingerprint: svc.getTasteFingerprint }));
 vi.mock("@/services/profiles/showcase", () => ({ getShowcase: svc.getShowcase }));
+vi.mock("@/services/profiles/album-favorites", () => ({
+  getAlbumFavorites: svc.getAlbumFavorites,
+  getProfileAlbumFavorites: svc.getProfileAlbumFavorites,
+}));
 vi.mock("@/services/profiles/recency", () => ({ getProfileRecency: svc.getProfileRecency }));
 vi.mock("@/services/profiles/affinity", () => ({ getProfileAffinity: svc.getProfileAffinity }));
 vi.mock("@/services/social/following", () => ({ countPendingFollowRequests: vi.fn().mockResolvedValue(0) }));
@@ -53,6 +61,9 @@ vi.mock("@/components/collection/CollectionShelf", () => ({ CollectionShelf: () 
 vi.mock("@/components/profiles/OwnerIdentityEditor", () => ({ OwnerIdentityEditor: () => null }));
 vi.mock("@/components/profiles/OwnerLinksEditor", () => ({ OwnerLinksEditor: () => null }));
 vi.mock("@/components/profiles/OwnerShowcaseEditor", () => ({ OwnerShowcaseEditor: () => null }));
+vi.mock("@/components/profiles/OwnerAlbumFavoritesEditor", () => ({
+  OwnerAlbumFavoritesEditor: () => null,
+}));
 vi.mock("@/components/profiles/AnthemStrip", () => ({ AnthemStrip: () => null }));
 vi.mock("@/components/profiles/ProfileRecency", () => ({ ProfileRecency: () => null }));
 
@@ -122,6 +133,27 @@ describe("ShowcaseSection / FingerprintSection", () => {
     svc.getShowcase.mockResolvedValue({ pinned: [], anthem: { id: "r1", title: "x" } });
     const tree = (await AnthemSection({ ownerId: "owner" })) as { type?: unknown };
     expect(tree?.type).toBe(AnthemStrip);
+  });
+
+  it("AlbumFavoritesSection pasa los álbumes resueltos a AlbumFavorites", async () => {
+    svc.getProfileAlbumFavorites.mockResolvedValue([
+      { id: "pin1", favoriteId: "f1", position: 1, target: { id: "rg1", title: "A", artistName: null, coverThumbUrl: null } },
+    ]);
+    const tree = (await AlbumFavoritesSection({ username: "ana", viewerId: "v" })) as {
+      type?: unknown;
+      props?: { albums?: unknown[] };
+    };
+    expect(svc.getProfileAlbumFavorites).toHaveBeenCalledWith("ana", "v");
+    expect(tree?.type).toBe(AlbumFavorites);
+    expect(tree?.props?.albums).toHaveLength(1);
+  });
+
+  it("AlbumFavoritesSection pasa una lista vacía cuando no hay nada visible", async () => {
+    svc.getProfileAlbumFavorites.mockResolvedValue([]);
+    const tree = (await AlbumFavoritesSection({ username: "ana", viewerId: null })) as {
+      props?: { albums?: unknown[] };
+    };
+    expect(tree?.props?.albums).toEqual([]);
   });
 
   it("FingerprintSection es null cuando getTasteFingerprint devuelve null", async () => {

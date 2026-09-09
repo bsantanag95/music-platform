@@ -6,6 +6,7 @@ import {
   PROFILE_IDENTITY_LIMITS,
   PROFILE_MAX_LINKS,
   PROFILE_MAX_PINNED,
+  PROFILE_MAX_ALBUM_FAVORITES,
 } from "@/services/social/types";
 import {
   DIARY_AUDIENCES,
@@ -604,6 +605,33 @@ export type ShowcaseDto = z.infer<typeof ShowcaseSchema>;
 
 export const ShowcaseResponseSchema = z.object({ showcase: ShowcaseSchema });
 export type ShowcaseResponse = z.infer<typeof ShowcaseResponseSchema>;
+
+// --- Álbumes favoritos del perfil (cambio redesign-profile-album-identity) ---
+
+export const AlbumFavoriteSchema = z.object({
+  id: z.uuid(),
+  favoriteId: z.uuid(),
+  position: z.number().int().positive(),
+  target: z.object({
+    id: z.uuid(),
+    title: z.string(),
+    artistName: z.string().nullable(),
+    coverThumbUrl: z.string().nullable(),
+  }),
+});
+export type AlbumFavoriteDto = z.infer<typeof AlbumFavoriteSchema>;
+
+export const AlbumFavoritesResponseSchema = z.object({
+  albumFavorites: z.array(AlbumFavoriteSchema),
+});
+export type AlbumFavoritesResponse = z.infer<typeof AlbumFavoritesResponseSchema>;
+
+export const ReplaceAlbumFavoritesRequestSchema = z.object({
+  favoriteIds: z
+    .array(z.uuid())
+    .max(PROFILE_MAX_ALBUM_FAVORITES, `Máximo ${PROFILE_MAX_ALBUM_FAVORITES} álbumes favoritos`),
+});
+export type ReplaceAlbumFavoritesRequest = z.infer<typeof ReplaceAlbumFavoritesRequestSchema>;
 
 // --- Afinidad (cambio redesign-user-profile) ---
 

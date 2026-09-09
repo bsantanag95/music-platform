@@ -9,6 +9,7 @@ import { PrivateThreshold } from "@/components/profiles/PrivateThreshold";
 import { ViewAsBanner } from "@/components/profiles/ViewAsBanner";
 import {
   AffinitySection,
+  AlbumFavoritesSection,
   AnthemSection,
   CollectionRail,
   DiaryRail,
@@ -115,6 +116,12 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
 
           <div className="flex min-w-0 flex-col gap-8">
             <Streamed>
+              <AlbumFavoritesSection
+                username={section.username}
+                viewerId={effectiveViewerId}
+              />
+            </Streamed>
+            <Streamed>
               <PinnedSection ownerId={profile.id} />
             </Streamed>
             <Streamed>
@@ -170,6 +177,12 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
 
         {isOwn && (
           <>
+            <Streamed>
+              <AlbumFavoritesSection
+                username={section.username}
+                viewerId={effectiveViewerId}
+              />
+            </Streamed>
             <Streamed>
               <ShowcaseSection ownerId={profile.id} />
             </Streamed>

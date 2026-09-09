@@ -393,6 +393,19 @@ Fija (`PUT`) o quita (`DELETE`) el himno del perfil — una canción elegida man
 **Body (PUT):** `{ recordingId }`. **200 OK:** `{ showcase }` (misma forma que arriba).
 **400** con `VALIDATION_ERROR` si el `recordingId` no es válido o no existe.
 
+### `PUT` / `DELETE /api/me/profile/album-favorites`
+
+Reemplaza el conjunto ordenado de **álbumes favoritos** del perfil (0..6) — la sección de
+identidad cultural que va arriba de los destacados (cambio
+`redesign-profile-album-identity`). La posición se deriva del orden del array. `DELETE` los
+vacía.
+
+**Body (PUT):** `{ favoriteIds: [uuid] }` — cada id SHALL ser un `favorite` propio con
+objetivo de álbum (`release_group`).
+**200 OK:** `{ albumFavorites: [{ id, favoriteId, position, target: { id, title, artistName, coverThumbUrl } }] }`.
+**400** con `VALIDATION_ERROR` si hay más de 6, ids duplicados, o algún id no es un
+favorito de álbum propio. **401** con `AUTH_REQUIRED` si no hay sesión.
+
 ### `GET /api/users/[username]/fingerprint`
 
 Huella de gusto del perfil, filtrada por lo que el visitante puede ver. La curva de

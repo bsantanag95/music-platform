@@ -60,3 +60,5 @@ export const PROFILE_IDENTITY_LIMITS = {
 
 export const PROFILE_MAX_LINKS = 5;
 export const PROFILE_MAX_PINNED = 4;
+// Sección "Álbumes favoritos" del perfil (openspec: redesign-profile-album-identity).
+export const PROFILE_MAX_ALBUM_FAVORITES = 6;

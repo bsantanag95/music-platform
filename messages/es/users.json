@@ -104,6 +104,21 @@
       "noRecordingFavorites": "Marcá una canción como favorita para elegir un himno."
     }
   },
+  "albumFavorites": {
+    "heading": "Álbumes favoritos",
+    "edit": {
+      "heading": "Álbumes favoritos",
+      "intro": "Hasta 6 álbumes que te definen. Elegí de tus favoritos de álbum.",
+      "pick": "Elegí de tus favoritos",
+      "selected": "Seleccionados ({count}/6)",
+      "remove": "Quitar",
+      "moveUp": "Subir",
+      "moveDown": "Bajar",
+      "save": "Guardar álbumes favoritos",
+      "max": "Máximo 6 álbumes favoritos",
+      "noFavorites": "Marcá álbumes como favoritos para poder ponerlos acá."
+    }
+  },
   "fingerprint": {
     "heading": "Huella de gusto",
     "ratingCurveLabel": "Cómo puntúa",

@@ -308,6 +308,35 @@ idempotente: un usuario tiene a lo sumo un favorito por objetivo.
 **Índices:** `idx_favorite_user_created` (favoritos propios, fecha descendente) y uno por
 objetivo (`idx_favorite_artist`, `idx_favorite_release_group`, `idx_favorite_recording`).
 
+## `user_album_pin`
+
+**Propósito:** el conjunto ordenado de **álbumes favoritos** que encabeza la identidad
+cultural del perfil (migración `0019`, cambio `redesign-profile-album-identity`). Hasta 6
+álbumes elegidos entre los favoritos de álbum del propio dueño; es una declaración, no un
+ranking (sin notas ni estrellas).
+
+**Campos:**
+
+- `user_id`: dueño del perfil, `ON DELETE CASCADE`.
+- `favorite_id`: FK a `favorite` (no a `release_group`), `ON DELETE CASCADE`. Fijar un
+  álbum favorito es **fijar un `favorite`**: `favorite` sigue siendo la única fuente de
+  verdad y quitar el favorito lo desfija en cascada gratis.
+- `position`: `SMALLINT NOT NULL CHECK (position BETWEEN 1 AND 6)`. El orden se reescribe
+  completo en una transacción (borrar las filas del usuario, reinsertar con `position =
+  índice + 1`), mismo patrón que `user_list_item`.
+- `created_at`: fecha de creación.
+
+**Restricciones:**
+
+- `uq_user_album_pin_favorite` (`UNIQUE (user_id, favorite_id)`): un favorito a lo sumo
+  una vez.
+- `uq_user_album_pin_position` (`UNIQUE (user_id, position)`): orden determinista por
+  usuario.
+
+**Audiencia:** la sección respeta la audiencia del `favorite` subyacente — un favorito
+privado fijado solo lo ve el dueño (OQ1 de la Fase 1). El filtrado ocurre en la consulta
+de lectura (`JOIN favorite` + `favorite.audience IN (audiencias visibles)`).
+
 ## `user_list`
 
 **Propósito:** cabecera de una lista curada (Fase 5, cambio `add-favorites-and-lists`).

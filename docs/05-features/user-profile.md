@@ -16,11 +16,12 @@ visitante:
 | Nivel | Quién | Qué ve |
 |---|---|---|
 | **No autorizado** | Anónimo, sin relación aceptada, o solicitud pendiente sobre un perfil privado | Identidad extendida + aviso de perfil privado + CTA de seguir. Nada más. |
-| **Autorizado** | Cuenta pública, o seguidor aprobado de una privada | Identidad + huella de gusto + destacados + himno + afinidad + estantes (diario / favoritos / listas / colección) + recencia. |
-| **Dueño** | La persona | Lo mismo que "autorizado" + editores inline de identidad/enlaces/destacados/himno + panel de gestión + previsualizador "cómo te ven". |
+| **Autorizado** | Cuenta pública, o seguidor aprobado de una privada | Identidad + huella de gusto + álbumes favoritos + destacados + himno + afinidad + estantes (diario / favoritos / listas / colección) + recencia. |
+| **Dueño** | La persona | Lo mismo que "autorizado" + editores inline de identidad/enlaces/álbumes favoritos/destacados/himno + panel de gestión + previsualizador "cómo te ven". |
 
-Un perfil **privado** solo expone su huella, destacados y estantes a seguidores aprobados y
-al dueño; un visitante no autorizado ve únicamente la identidad extendida.
+Un perfil **privado** solo expone su huella, álbumes favoritos, destacados y estantes a
+seguidores aprobados y al dueño; un visitante no autorizado ve únicamente la identidad
+extendida.
 
 ## Identidad
 
@@ -56,6 +57,25 @@ Retrato de gusto calculado bajo demanda (`src/services/profiles/stats.ts`, envue
 La huella expone un equivalente textual (`<table>`/`<ul>` `sr-only`) — su información no
 depende del gráfico ni del color. Es la única superficie donde el ámbar se usa con
 generosidad (excepción sancionada a la Regla de Rareza de `DESIGN.md`).
+
+## Álbumes favoritos
+
+La cabeza del bloque de identidad cultural, arriba de los destacados mixtos: hasta **6
+álbumes** que definen a esta persona, en una rejilla de carátulas + título + artista, con
+enlace al álbum. Es una **declaración, no un ranking** — sin números de posición ni
+estrellas (cambio `redesign-profile-album-identity`).
+
+- **Fijar un álbum favorito es fijar un `favorite`.** `user_album_pin.favorite_id` tiene FK
+  a `favorite` con `ON DELETE CASCADE`: `favorite` sigue siendo la única fuente de verdad y
+  quitar el favorito lo desfija en cascada, sin código extra.
+- **Se eligen desde los favoritos de álbum del propio dueño** — igual que el editor de
+  destacados, no hay buscador de catálogo embebido (memoria `list-detail-scope`). Si el
+  dueño no tiene favoritos de álbum, el editor invita a marcarlos primero.
+- **Audiencia:** la sección respeta la audiencia del `favorite` subyacente. Un favorito
+  privado fijado solo lo ve el dueño; uno de "seguidores", solo seguidores aprobados y el
+  dueño.
+- El orden se reescribe completo al guardar (`PUT /api/me/profile/album-favorites`), mismo
+  patrón transaccional que los ítems de lista.
 
 ## Destacados e himno
 
@@ -111,5 +131,6 @@ como retrato, no como avance hacia una meta.
 | `user_profile_link` | Enlaces externos ordenados, máx. 5 app-side |
 | `user_pinned_item` | Cuatro destacados, triple-FK nullable + CHECK `num_nonnulls = 1` |
 | `user_showcase` | Una fila por usuario; `anthem_recording_id` (`ON DELETE SET NULL`) |
+| `user_album_pin` | Hasta 6 álbumes favoritos; FK a `favorite` (`ON DELETE CASCADE`), `position` 1–6 única por usuario (migración 0019) |
 | `release_group_tag` | Tags de género por álbum, sembrados |
 | `idx_rating_user` | Índice para la curva de valoraciones (migración 0015) |

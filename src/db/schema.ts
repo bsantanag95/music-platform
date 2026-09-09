@@ -600,10 +600,35 @@ export const releaseGroupTag = pgTable(
   ],
 );
 
+// Sección "Álbumes favoritos" del perfil (migración 0019, openspec:
+// redesign-profile-album-identity). Opción B: la fila es un PIN DE UN
+// FAVORITO — `favoriteId` referencia un favorito de álbum propio. Cascade
+// desde `favorite`: quitar el favorito desfija el álbum. Máx 6 (CHECK en la
+// migración + validación de servicio); `position` 1..6, única por usuario.
+export const userAlbumPin = pgTable(
+  "user_album_pin",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    favoriteId: uuid("favorite_id")
+      .notNull()
+      .references(() => favorite.id, { onDelete: "cascade" }),
+    position: smallint("position").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("uq_user_album_pin_favorite").on(t.userId, t.favoriteId),
+    uniqueIndex("uq_user_album_pin_position").on(t.userId, t.position),
+  ],
+);
+
 export type UserProfileLinkRow = typeof userProfileLink.$inferSelect;
 export type UserPinnedItemRow = typeof userPinnedItem.$inferSelect;
 export type UserShowcaseRow = typeof userShowcase.$inferSelect;
 export type ReleaseGroupTagRow = typeof releaseGroupTag.$inferSelect;
+export type UserAlbumPinRow = typeof userAlbumPin.$inferSelect;
 
 export const comment = pgTable(
   "comment",

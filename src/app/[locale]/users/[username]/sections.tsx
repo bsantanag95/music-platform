@@ -5,6 +5,10 @@ import { listUserLists } from "@/services/lists/lists";
 import { listProfileCollection } from "@/services/collection/collection";
 import { getTasteFingerprint } from "@/services/profiles/stats";
 import { getShowcase } from "@/services/profiles/showcase";
+import {
+  getAlbumFavorites,
+  getProfileAlbumFavorites,
+} from "@/services/profiles/album-favorites";
 import { getProfileRecency } from "@/services/profiles/recency";
 import { getProfileAffinity } from "@/services/profiles/affinity";
 import { countPendingFollowRequests } from "@/services/social/following";
@@ -14,7 +18,9 @@ import { OwnerHubPanel } from "@/components/profiles/OwnerHubPanel";
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
 import { OwnerShowcaseEditor } from "@/components/profiles/OwnerShowcaseEditor";
+import { OwnerAlbumFavoritesEditor } from "@/components/profiles/OwnerAlbumFavoritesEditor";
 import { TasteFingerprint } from "@/components/profiles/TasteFingerprint";
+import { AlbumFavorites } from "@/components/profiles/AlbumFavorites";
 import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
 import { AnthemStrip } from "@/components/profiles/AnthemStrip";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
@@ -48,7 +54,10 @@ export async function HubSection({ ownerId }: { ownerId: string }) {
 }
 
 export async function OwnerEditors({ profile }: { profile: ProfileView }) {
-  const showcase = await getShowcase(profile.id);
+  const [showcase, albumFavorites] = await Promise.all([
+    getShowcase(profile.id),
+    getAlbumFavorites(profile.id, ["private", "followers", "public"]),
+  ]);
   return (
     <section className="flex w-full max-w-2xl flex-col gap-6 rounded-lg border border-ink-border bg-ink-surface p-6">
       <OwnerIdentityEditor
@@ -61,8 +70,20 @@ export async function OwnerEditors({ profile }: { profile: ProfileView }) {
       />
       <OwnerLinksEditor initialLinks={profile.links} />
       <OwnerShowcaseEditor initial={showcase} />
+      <OwnerAlbumFavoritesEditor initial={albumFavorites} />
     </section>
   );
+}
+
+// La sección de identidad cultural: los álbumes que definen a esta persona,
+// arriba de los destacados. Se rinde en los niveles autorizado y dueño; el
+// componente colapsa si el conjunto visible está vacío
+// (spec profile-album-identity).
+export async function AlbumFavoritesSection({
+  username,
+  viewerId,
+}: Omit<SectionProps, "isOwn">) {
+  return <AlbumFavorites albums={await getProfileAlbumFavorites(username, viewerId)} />;
 }
 
 // El showcase (destacados + himno) se compone en dos secciones para el layout
