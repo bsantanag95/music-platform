@@ -179,11 +179,14 @@ tiene su propio boundary). Rollback = revertir el commit.
 
 ## Open Questions
 
-- **OQ1 — ¿El roll-up canción→álbum entra en Fase 1 o se difiere?** Propuesta: **entra**,
-  con la regla de desambiguación de D3, porque sin él el bloque Álbumes queda casi siempre
-  vacío (los registros explícitos de álbum son raros). Si se prefiere mínimo, Fase 1 podría
-  shippear sólo el bloque Canciones + álbumes por señal directa y diferir el roll-up. A
-  confirmar en `/opsx:apply`.
-- **OQ2 — ¿Umbral y ventana exactos?** Propuesta: ventana 30 d, pesos 3/2/1, multiplicador
-  de álbum ×2, umbral de score 3, máx 8 por tipo. Son constantes; se pueden calibrar con
-  datos reales sin cambio de spec.
+- **OQ1 — ¿El roll-up canción→álbum entra en Fase 1 o se difiere? → RESUELTA: entra.**
+  Con la regla de desambiguación de D3 (canción → primer release-group de estudio; el álbum
+  acumula señal de **canciones distintas**, no de reproducciones de una misma pista). Sin
+  el roll-up el bloque Álbumes quedaría casi siempre vacío. Es heurística experimental,
+  ajustable.
+- **OQ2 — ¿Umbral y ventana exactos? → RESUELTA: se mantienen los valores propuestos.**
+  Ventana 30 d; pesos de recencia 3 (0–7 d) / 2 (8–21 d) / 1 (22–30 d); señal explícita de
+  álbum ×2; umbral de aparición 3; máx 8 por bloque. Constantes con nombre, deliberadamente
+  simples — la prioridad de la primera versión es validar que la sección produzca una
+  representación reconocible de "lo que esta persona está escuchando últimamente", no
+  optimizar la fórmula. Se calibran después con datos reales, sin cambio de spec.
