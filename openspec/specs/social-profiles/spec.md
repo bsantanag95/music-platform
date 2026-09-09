@@ -161,10 +161,12 @@ determinados por la relación del visitante: no autorizado, autorizado (público
 aprobado) y dueño. La identidad extendida SHALL renderizarse en los tres niveles. El aviso
 de perfil privado y su llamada a la acción de seguir SHALL renderizarse solo en el nivel no
 autorizado sobre un perfil privado. La huella, la sección "Álbumes favoritos", la sección
-"En rotación", la sección "Exploración" (artistas seguidos), los destacados, el himno y los
-estantes de contenido SHALL renderizarse solo en los niveles autorizado y dueño. La sección
-"En rotación" SHALL ubicarse después de los destacados y antes de la huella de gusto; la
-sección "Exploración" SHALL ubicarse después de la huella de gusto y antes de los estantes.
+"Reseñas", la sección "En rotación", la sección "Exploración" (artistas seguidos), los
+destacados, el himno y los estantes de contenido SHALL renderizarse solo en los niveles
+autorizado y dueño. La sección "Reseñas" SHALL ubicarse después de los destacados y antes
+de la sección "En rotación". La sección "En rotación" SHALL ubicarse después de los
+destacados y antes de la huella de gusto; la sección "Exploración" SHALL ubicarse después
+de la huella de gusto y antes de los estantes.
 
 #### Scenario: Perfil privado sin autorización
 
@@ -185,6 +187,13 @@ sección "Exploración" SHALL ubicarse después de la huella de gusto y antes de
 - **THEN** ve la sección "Álbumes favoritos"; un visitante no autorizado de un perfil
   privado no la ve
 
+#### Scenario: "Reseñas" en el nivel autorizado
+
+- **WHEN** un visitante autorizado abre un perfil cuyo dueño ha escrito al menos una reseña
+  de álbum
+- **THEN** ve la sección "Reseñas" entre los destacados y la sección "En rotación"; un
+  visitante no autorizado de un perfil privado no la ve
+
 #### Scenario: "En rotación" en el nivel autorizado
 
 - **WHEN** un visitante autorizado abre un perfil cuyo dueño tiene actividad de diario
@@ -202,7 +211,7 @@ sección "Exploración" SHALL ubicarse después de la huella de gusto y antes de
 
 - **WHEN** el visitante y el dueño del perfil tienen una relación de bloqueo
 - **THEN** el perfil muestra el estado de bloqueo y su acción correspondiente, sin huella,
-  álbumes favoritos, "En rotación", "Exploración", destacados ni estantes
+  álbumes favoritos, "Reseñas", "En rotación", "Exploración", destacados ni estantes
 
 ### Requirement: Panel del dueño
 
