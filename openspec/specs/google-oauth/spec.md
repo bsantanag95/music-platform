@@ -13,9 +13,7 @@ Permitir iniciar sesión y crear cuentas con Google sin manejar contraseñas: el
 termina en la misma sesión opaca server-side que la autenticación local. La redirección
 post-autenticación es fija (sin `returnTo` del cliente) y depende del estado de onboarding
 del usuario.
-
 ## Requirements
-
 ### Requirement: Inicio del flujo OAuth
 El endpoint `GET /api/auth/google/start` SHALL generar un `state` aleatorio, un PKCE
 `code_verifier`/`code_challenge` (S256) y un `nonce`, guardarlos en cookies `httpOnly`,
@@ -122,17 +120,23 @@ merge o auto-link.
 
 ### Requirement: Sesión común y retorno fijo
 El flujo SHALL finalizar siempre en la sesión server-side común (cookie `music_session`
-`httpOnly`, `secure`, `sameSite=lax`) y SHALL redirigir post-autenticación a `/<locale>/search`
-de forma fija, usando el locale validado y persistido en el estado del flujo. SHALL NOT aceptar
-un parámetro `returnTo` ni ninguna URL de retorno controlada por el cliente.
+`httpOnly`, `secure`, `sameSite=lax`). SHALL NOT aceptar un parámetro `returnTo` ni ninguna
+URL de retorno controlada por el cliente. La redirección post-autenticación SHALL usar el
+locale validado y persistido en el estado del flujo, y SHALL decidirse según el estado de
+onboarding del usuario: si `onboarded_at` es nula SHALL redirigir a `/<locale>/welcome`; en
+caso contrario SHALL redirigir a `/<locale>/search` de forma fija.
 
 #### Scenario: Redirección post-login
-- **WHEN** el flujo de Google completa con éxito
+- **WHEN** el flujo de Google completa con éxito para un usuario cuyo `onboarded_at` no es nula
 - **THEN** el navegador es redirigido a `/<locale>/search` y la cookie de sesión queda establecida
+
+#### Scenario: Redirección post-alta de un usuario nuevo
+- **WHEN** el flujo de Google completa con éxito y crea un usuario nuevo (o resuelve uno con `onboarded_at` nula)
+- **THEN** el navegador es redirigido a `/<locale>/welcome` y la cookie de sesión queda establecida
 
 #### Scenario: Sin retorno dinámico
 - **WHEN** una persona agrega un parámetro de retorno arbitrario al callback
-- **THEN** la redirección posterior es siempre `/<locale>/search`, sin usar el parámetro
+- **THEN** la redirección posterior ignora ese parámetro y usa solo el destino que corresponde al estado de onboarding del usuario
 
 ### Requirement: No almacenamiento de tokens OAuth
 El flujo SHALL NOT persistir access tokens ni refresh tokens de Google. Los secretos y
@@ -183,3 +187,4 @@ con página de perfil/configuración.
 #### Scenario: Sin rutas de linking
 - **WHEN** se navega a una ruta de vinculación de identidad externa
 - **THEN** la ruta no existe y el usuario no encuentra ningún flujo de merge en esta fase
+
