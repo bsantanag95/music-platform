@@ -35,4 +35,4 @@
 - [x] 6.1 `openspec validate add-network-convergence --strict` pasa
 - [x] 6.2 `typecheck`, `lint`, `test` (1178 pasan), `build` en verde
 - [x] 6.3 Verificación cubierta por `convergence.test.ts` (7 casos: umbral, personas distintas, bloqueo, lector excluido, orden, muestra) y `NetworkConvergence.test.tsx` (síntesis única, "y N más", canción, panel colapsado). Walk autenticado con datos sembrados no factible en este entorno
-- [ ] 6.4 Archivar el cambio y sincronizar specs cuando esté implementado y aprobado
+- [x] 6.4 Archivar el cambio y sincronizar specs
