@@ -138,13 +138,12 @@ mientras tanto quedan `private` (el usuario puede recompartirlas).
 ## Open Questions
 
 - **OQ1 — ¿El registro rápido nace `private`, o `followers` y solo baja a `private` si el
-  usuario cierra el form sin agregar nada?** Propuesta: **nace `private`** (D1). Más
-  simple, más conservador con la privacidad, y no depende de detectar "cerró sin
-  completar".
+  usuario cierra el form sin agregar nada? → RESUELTA: nace `private`** (D1). Más simple,
+  más conservador con la privacidad, y no depende de detectar "cerró sin completar".
 - **OQ2 — ¿El modo Cronología se recuerda entre visitas (localStorage) o arranca siempre
-  en Lista?** Propuesta: **siempre Lista** en Fase 1 (`useState`), sin persistir. Ajustable
-  si se pide.
+  en Lista? → RESUELTA: siempre Lista** en Fase 1 (`useState`), sin persistir. Ajustable si
+  se pide.
 - **OQ3 — ¿"Registrar escucha" o "Anotar en el diario" como rótulo principal de la acción
-  de catálogo?** Propuesta: **"Registrar escucha"** como principal (más directo junto a los
+  de catálogo? → RESUELTA: "Registrar escucha"** como principal (más directo junto a los
   otros controles de catálogo); "Anotar en el diario" disponible para el onboarding y
   superficies narrativas.

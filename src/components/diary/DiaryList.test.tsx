@@ -65,7 +65,7 @@ describe("DiaryList", () => {
 
   it("muestra el estado vacío cuando no hay escuchas", () => {
     renderWithIntl(<DiaryList initial={{ entries: [], page: 1, pageSize: 20, hasNext: false }} />);
-    expect(screen.getByText("Todavía no escuchaste nada")).toBeInTheDocument();
+    expect(screen.getByText("Todavía no registraste nada")).toBeInTheDocument();
   });
 
   it("lista las entradas con objetivo, contexto, impresión y reacción", () => {

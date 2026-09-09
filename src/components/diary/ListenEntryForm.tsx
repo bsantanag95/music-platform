@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ReactionPicker } from "./ReactionPicker";
 import { updateListenEntry } from "@/lib/api/diary";
@@ -36,6 +36,26 @@ export function ListenEntryForm({ entryId, initial, onSaved, onCancel }: ListenE
   const [audience, setAudience] = useState<DiaryAudience>(initial.audience);
   const [busy, setBusy] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
+
+  // La audiencia sigue a la intención (openspec: deepen-listening-diary, D2):
+  // una entrada que nace `private` (registro rápido) sube a `followers` en
+  // cuanto gana una impresión o una reacción, y vuelve a `private` si se
+  // quedan vacías — mientras el usuario no elija una audiencia a mano. En
+  // cuanto la toca, `audienceTouched` congela la sugerencia. Las entradas que
+  // ya venían con otra audiencia (viejas, o elegidas antes) no se tocan solas.
+  const startedPrivate = useRef(initial.audience === "private").current;
+  const [audienceTouched, setAudienceTouched] = useState(false);
+
+  const chooseAudience = (next: DiaryAudience) => {
+    setAudienceTouched(true);
+    setAudience(next);
+  };
+
+  const hasIntent = body.trim() !== "" || reaction !== null;
+  useEffect(() => {
+    if (!startedPrivate || audienceTouched) return;
+    setAudience(hasIntent ? "followers" : "private");
+  }, [hasIntent, startedPrivate, audienceTouched]);
 
   const handleSubmit = async () => {
     setBusy(true);
@@ -107,7 +127,7 @@ export function ListenEntryForm({ entryId, initial, onSaved, onCancel }: ListenE
                 name={`audience-${entryId}`}
                 className="sr-only"
                 checked={audience === option}
-                onChange={() => setAudience(option)}
+                onChange={() => chooseAudience(option)}
               />
               {t(`audience.${option}`)}
             </label>

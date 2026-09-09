@@ -54,7 +54,7 @@ describe("MarkAsListened", () => {
 
   it("ofrece iniciar sesión a visitantes anónimos", () => {
     renderWithIntl(<MarkAsListened target={target} authenticated={false} />);
-    expect(screen.getByRole("link", { name: "Iniciar sesión para marcar escuchas" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Iniciar sesión para registrar escuchas" })).toHaveAttribute(
       "href",
       "/auth/login",
     );
@@ -65,7 +65,7 @@ describe("MarkAsListened", () => {
     mocks.createListenEntry.mockResolvedValue(entry);
     renderWithIntl(<MarkAsListened target={target} authenticated />);
 
-    await user.click(screen.getByRole("button", { name: "Marcar como escuchado" }));
+    await user.click(screen.getByRole("button", { name: "Registrar escucha" }));
     await waitFor(() => expect(mocks.createListenEntry).toHaveBeenCalledWith(target));
     expect(screen.getByText(/Escucha registrada/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Impresión/)).toBeInTheDocument();
@@ -76,7 +76,7 @@ describe("MarkAsListened", () => {
     mocks.createListenEntry.mockRejectedValue(new mocks.ApiError("DIARY_TARGET_INVALID", 404, "x"));
     renderWithIntl(<MarkAsListened target={target} authenticated />);
 
-    await user.click(screen.getByRole("button", { name: "Marcar como escuchado" }));
+    await user.click(screen.getByRole("button", { name: "Registrar escucha" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "No pudimos guardar el cambio. Intentá de nuevo.",
     );

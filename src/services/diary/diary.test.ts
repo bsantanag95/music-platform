@@ -150,18 +150,19 @@ describe("servicio del diario", () => {
     expect(rows[1]?.reaction).toBe("liked");
   });
 
-  it("infiere first_listen en la primera escucha y persiste audiencia followers", async () => {
+  it("infiere first_listen en la primera escucha y registra la entrada como privada", async () => {
     mocks.db.select
       .mockReturnValueOnce(whereTerminal([{ count: 0 }]))
-      .mockReturnValueOnce(joinLimit([{ ...entryRow, listenContext: "first_listen" }]));
-    mocks.db.insert.mockReturnValue({
-      values: vi.fn(() => ({ returning: vi.fn().mockResolvedValue([{ id: entryRow.id }]) })),
-    });
+      .mockReturnValueOnce(joinLimit([{ ...entryRow, listenContext: "first_listen", audience: "private" }]));
+    const values = vi.fn(() => ({ returning: vi.fn().mockResolvedValue([{ id: entryRow.id }]) }));
+    mocks.db.insert.mockReturnValue({ values });
 
     const entry = await createListenEntry(target, user);
 
     expect(entry.listenContext).toBe("first_listen");
-    expect(entry.audience).toBe("followers");
+    // Un registro rápido nace privado (deepen-listening-diary, D1).
+    expect(values).toHaveBeenCalledWith(expect.objectContaining({ audience: "private" }));
+    expect(entry.audience).toBe("private");
     expect(entry.target).toMatchObject({ type: "artist", id: target.id, title: "Pink Floyd" });
   });
 

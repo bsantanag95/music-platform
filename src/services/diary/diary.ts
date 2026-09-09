@@ -94,9 +94,14 @@ export async function createListenEntry(target: DiaryTarget, userId: string): Pr
     .where(and(eq(listenEntry.userId, userId), targetWhereFor(target.column, target.id)));
   const context: ListenContext = (existing?.count ?? 0) === 0 ? "first_listen" : "relisten";
 
+  // Un registro rápido no expresa intención de compartir: nace `private`
+  // (openspec: deepen-listening-diary, D1). Sube a `followers` cuando gana una
+  // impresión o una reacción, salvo elección explícita — eso lo decide el
+  // formulario de ampliar. La columna conserva su default para no acoplar el
+  // criterio de producto al esquema.
   const [created] = await db
     .insert(listenEntry)
-    .values({ ...targetValues(target), userId, listenContext: context })
+    .values({ ...targetValues(target), userId, listenContext: context, audience: "private" })
     .returning();
   if (!created) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo registrar la escucha");
   return getOwnedEntry(created.id, userId);

@@ -91,7 +91,7 @@ describe("DiaryActivityList", () => {
 
   it("muestra el estado vacío cuando no hay escuchas", () => {
     renderWithQuery(<DiaryActivityList initial={{ entries: [], page: 1, pageSize: 20, hasNext: false }} />);
-    expect(screen.getByText("Todavía no escuchaste nada")).toBeInTheDocument();
+    expect(screen.getByText("Todavía no registraste nada")).toBeInTheDocument();
   });
 
   it("lista las entradas con objetivo, contexto y reacción, sin pedir datos al servidor", () => {
@@ -314,7 +314,7 @@ describe("DiaryActivityList", () => {
       await user.selectOptions(screen.getByLabelText("Audiencia"), "private");
 
       await waitFor(() => expect(screen.getByText("Sin resultados para estos filtros")).toBeInTheDocument());
-      expect(screen.queryByText("Todavía no escuchaste nada")).not.toBeInTheDocument();
+      expect(screen.queryByText("Todavía no registraste nada")).not.toBeInTheDocument();
     });
 
     it("limpiar filtros vuelve a traer todo", async () => {
@@ -329,6 +329,64 @@ describe("DiaryActivityList", () => {
 
       expect(screen.getByText("Pink Floyd")).toBeInTheDocument();
       expect(screen.queryByText("Limpiar filtros")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("vista de cronología (deepen-listening-diary)", () => {
+    const enero: ListenEntry = { ...liked, id: "m-ene", createdAt: "2026-01-20T00:00:00.000Z" };
+    const febA: ListenEntry = {
+      ...neutral,
+      id: "m-feb-a",
+      createdAt: "2026-02-10T00:00:00.000Z",
+      target: { ...neutral.target, id: "t-feb-a", title: "Disco Feb A" },
+    };
+    const febB: ListenEntry = {
+      ...neutral,
+      id: "m-feb-b",
+      createdAt: "2026-02-02T00:00:00.000Z",
+      target: { ...neutral.target, id: "t-feb-b", title: "Disco Feb B" },
+    };
+    const multiMonth: DiaryListResponse = {
+      entries: [febA, febB, enero],
+      page: 1,
+      pageSize: 20,
+      hasNext: false,
+    };
+
+    it("el conmutador cambia a Cronología y agrupa las entradas por mes", async () => {
+      const user = userEvent.setup();
+      renderWithQuery(<DiaryActivityList initial={multiMonth} />);
+
+      await user.click(screen.getByRole("button", { name: "Cronología" }));
+
+      const febHeading = screen.getByRole("heading", { name: /febrero de 2026/i });
+      const eneHeading = screen.getByRole("heading", { name: /enero de 2026/i });
+      expect(febHeading).toBeInTheDocument();
+      expect(eneHeading).toBeInTheDocument();
+      // dos listas: una por mes
+      expect(screen.getAllByRole("list")).toHaveLength(2);
+    });
+
+    it("la cronología no muestra conteos ni totales por mes", async () => {
+      const user = userEvent.setup();
+      renderWithQuery(<DiaryActivityList initial={multiMonth} />);
+
+      await user.click(screen.getByRole("button", { name: "Cronología" }));
+
+      const febHeading = screen.getByRole("heading", { name: /febrero de 2026/i });
+      // el encabezado es solo mes + año, sin "(2)" ni "2 escuchas"
+      expect(febHeading.textContent).not.toMatch(/\(\d|\d\s*(escuchas?|entradas?)/i);
+    });
+
+    it("editar una entrada sigue disponible en la cronología", async () => {
+      const user = userEvent.setup();
+      renderWithQuery(<DiaryActivityList initial={multiMonth} />);
+
+      await user.click(screen.getByRole("button", { name: "Cronología" }));
+      const editButtons = screen.getAllByRole("button", { name: "Editar" });
+      await user.click(editButtons[0]!);
+
+      expect(screen.getByRole("button", { name: "Guardar" })).toBeInTheDocument();
     });
   });
 });

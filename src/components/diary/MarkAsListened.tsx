@@ -14,9 +14,10 @@ interface MarkAsListenedProps {
   authenticated: boolean;
 }
 
-// Acción "Marcar como escuchado": crea la entrada al instante (registro
-// rápido) y ofrece un panel para ampliarla con impresión, contexto,
-// reacción y audiencia. Sin sesión, redirige al login.
+// Acción "Registrar escucha": crea la entrada al instante (registro rápido,
+// nace privada) y ofrece un panel para ampliarla con impresión, contexto,
+// reacción y audiencia. Sin sesión, redirige al login. El diario es un
+// registro intencional, no un checklist — ver openspec: deepen-listening-diary.
 export function MarkAsListened({ target, authenticated }: MarkAsListenedProps) {
   const t = useTranslations("diary");
   const [busy, setBusy] = useState(false);
@@ -53,7 +54,7 @@ export function MarkAsListened({ target, authenticated }: MarkAsListenedProps) {
     <div className="flex flex-col items-start gap-3">
       {!entry ? (
         <Button variant="secondary" disabled={busy} onClick={() => void handleMark()}>
-          {busy ? t("listening") : t("markAsListened")}
+          {busy ? t("listening") : t("registerListen")}
         </Button>
       ) : (
         <div className="flex flex-col items-start gap-2">

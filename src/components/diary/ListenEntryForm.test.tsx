@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -50,6 +52,11 @@ const saved = {
 
 describe("ListenEntryForm", () => {
   beforeEach(() => vi.clearAllMocks());
+
+  it("no ofrece opinión: no importa las APIs de rating ni de reseña", () => {
+    const source = readFileSync(join(__dirname, "ListenEntryForm.tsx"), "utf8");
+    expect(source).not.toMatch(/api\/ratings|api\/reviews|@\/lib\/api\/rating/);
+  });
 
   it("muestra los campos con los valores iniciales", () => {
     renderWithIntl(<ListenEntryForm entryId={entryId} initial={initial} />);
@@ -108,6 +115,68 @@ describe("ListenEntryForm", () => {
         expect.objectContaining({ reaction: null }),
       ),
     );
+  });
+
+  describe("la audiencia sigue a la intención (deepen-listening-diary)", () => {
+    const privateEmpty = {
+      listenContext: "first_listen" as const,
+      body: null,
+      reaction: null,
+      audience: "private" as const,
+    };
+
+    it("una entrada que nace privada sube a Seguidores al escribir una impresión, y vuelve a Privado al borrarla", async () => {
+      const user = userEvent.setup();
+      renderWithIntl(<ListenEntryForm entryId={entryId} initial={privateEmpty} />);
+
+      expect(screen.getByRole("radio", { name: "Privado" })).toBeChecked();
+
+      await user.type(screen.getByLabelText(/Impresión/), "qué disco");
+      await waitFor(() => expect(screen.getByRole("radio", { name: "Seguidores" })).toBeChecked());
+
+      await user.clear(screen.getByLabelText(/Impresión/));
+      await waitFor(() => expect(screen.getByRole("radio", { name: "Privado" })).toBeChecked());
+    });
+
+    it("una reacción también sube la audiencia a Seguidores", async () => {
+      const user = userEvent.setup();
+      renderWithIntl(<ListenEntryForm entryId={entryId} initial={privateEmpty} />);
+
+      await user.click(screen.getByRole("radio", { name: "Me encantó" }));
+      await waitFor(() => expect(screen.getByRole("radio", { name: "Seguidores" })).toBeChecked());
+    });
+
+    it("elegir una audiencia a mano congela la sugerencia", async () => {
+      const user = userEvent.setup();
+      mocks.updateListenEntry.mockResolvedValue(saved);
+      renderWithIntl(<ListenEntryForm entryId={entryId} initial={privateEmpty} />);
+
+      await user.click(screen.getByRole("radio", { name: "Público" }));
+      await user.type(screen.getByLabelText(/Impresión/), "algo");
+
+      // no vuelve a "Seguidores": la elección explícita manda
+      await waitFor(() => expect(screen.getByRole("radio", { name: "Público" })).toBeChecked());
+      await user.click(screen.getByRole("button", { name: "Guardar" }));
+      await waitFor(() =>
+        expect(mocks.updateListenEntry).toHaveBeenCalledWith(
+          entryId,
+          expect.objectContaining({ audience: "public" }),
+        ),
+      );
+    });
+
+    it("una entrada que ya venía con Seguidores no cambia sola al escribir", async () => {
+      const user = userEvent.setup();
+      renderWithIntl(
+        <ListenEntryForm entryId={entryId} initial={{ ...privateEmpty, audience: "followers" }} />,
+      );
+
+      await user.type(screen.getByLabelText(/Impresión/), "nota");
+      expect(screen.getByRole("radio", { name: "Seguidores" })).toBeChecked();
+      // y tampoco baja a Privado al vaciarla
+      await user.clear(screen.getByLabelText(/Impresión/));
+      expect(screen.getByRole("radio", { name: "Seguidores" })).toBeChecked();
+    });
   });
 
   it("muestra error localizado si el guardado falla", async () => {

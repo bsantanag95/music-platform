@@ -108,11 +108,11 @@ Dos tablas con responsabilidades distintas es más simple que una tabla con dos 
 
 Orden de pasos, todos menos el primero opcionales:
 
-1. **Marcar como escuchado** (crea la `listen_entry`, sin fricción — puede ser un solo tap; ver también sección 2.1, capa de presencia manual).
+1. **Registrar escucha** (crea la `listen_entry`, sin fricción — puede ser un solo tap; ver también sección 2.1, capa de presencia manual). El rótulo es "Registrar escucha" / "Anotar en el diario", nunca "marcar como escuchado" (ver sección 10).
 2. **Impresión corta** (texto libre, sin mínimo).
 3. **Contexto de escucha** (`first_listen` / `relisten` / `rediscovery` — puede inferirse por defecto si es la primera `listen_entry` del usuario sobre ese objetivo, y el usuario solo lo corrige si quiere).
 4. **Reacción emocional** (opcional, sobre la entrada puntual: `liked` / `loved` / `obsessed` / `neutral` / `disliked`, o ausencia).
-5. **Audiencia** (opcional; por defecto `followers`, editable a `private` o `public`).
+5. **Audiencia** (ver sección 10: un registro rápido nace `private`; sube a `followers` en cuanto gana impresión o reacción, salvo elección explícita).
 
 Este orden es deliberado: la impresión (paso 2) va antes que la reacción (paso 4), invirtiendo el orden habitual del formulario de valoración dual. El formulario completo de estrellas + valoración detallada (`01-domain/business-rules.md`) sigue existiendo tal cual está especificado, pero como una acción explícita separada ("editar mi valoración"), no como parte de este flujo rápido — una escucha no alimenta ni requiere el rating.
 
@@ -164,3 +164,42 @@ La base de `listen_entry` (presencia manual + diario propio) es el cambio de Fas
 favoritos extendidos, feed y agregados de perfil) dependen del grafo social ya existente y se
 abordarán como cambios propios. No se recomienda implementar todo junto: `listen_entry` con flujo
 rápido es el único componente que la capa de presencia necesita para no perder la filosofía descrita.
+
+## 10. Fase 3 — el diario como capa de consumo pura (`deepen-listening-diary`)
+
+`redefine-content-hierarchy` D11 profundiza el diario. Refinamientos implementados:
+
+### Audiencia por intención
+
+- Un registro rápido **sin impresión ni reacción nace `private`** — es para vos. (La columna
+  `listen_entry.audience` conserva su default `followers` a nivel de esquema; el valor `private` lo
+  pasa `createListenEntry` explícitamente, para no acoplar el criterio de producto a cualquier
+  `INSERT` futuro.)
+- Cuando esa entrada **gana una impresión o una reacción** y el usuario **no eligió una audiencia a
+  mano**, su audiencia por defecto pasa a **`followers`** (y vuelve a `private` si se vacían). El
+  chip de audiencia se mueve a la vista y es reversible; en cuanto el usuario elige una audiencia,
+  esa elección se congela y nunca se revierte sola.
+- **Solo aplica a entradas nuevas.** Las creadas antes de este cambio conservan su `followers` y no
+  se tocan salvo que el usuario las edite a mano. Sin backfill.
+- Consecuencia: el feed recibe solo escuchas con intención (nota/reacción) o con audiencia elegida —
+  sin cambiar el filtro del feed, que ya excluye `private`. La lógica de "seguir la intención" vive
+  en `ListenEntryForm` (`initialAudience` + flag `audienceTouched`).
+
+### Vocabulario y encuadre
+
+- La acción de catálogo pasa de **"Marcar como escuchado"** a **"Registrar escucha"** (o "Anotar en
+  el diario" en superficies narrativas). Nada de lenguaje de casilla o de completitud.
+- El diario es *tu registro personal e intencional de experiencias musicales*, no un historial
+  automático de reproducción. Sin rachas, medallas ni contadores de "escuchas totales".
+- La **intensidad** (registro breve vs experiencia) se **infiere** de tipo de objetivo × presencia
+  de impresión/reacción × contexto; no se le pide al usuario que la clasifique. La jerarquía del
+  feed (`rework-feed-tiers`) ya trata la escucha con nota como tier 1 y sin nota como tier 3.
+
+### Vista de cronología
+
+`/me/diary` ofrece un conmutador **Lista / Cronología**. La cronología agrupa las mismas filas por
+**mes calendario** (`Intl.DateTimeFormat`, encabezado por mes), en el mismo orden cronológico
+descendente, con edición y borrado disponibles igual que en la lista. **No** muestra conteos por
+mes, totales ni rachas — es la misma información reordenada para que se lea como historial y no como
+log plano. Agrupa en el cliente sobre el array acumulado, así que también agrupa lo que llega al
+pedir más. El modo arranca siempre en Lista (no se persiste en Fase 3).
