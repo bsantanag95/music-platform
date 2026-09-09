@@ -54,4 +54,4 @@
 
 - [x] 9.1 `openspec validate add-artist-following --strict` pasa
 - [x] 9.2 `typecheck`, `lint`, `test`, `build` en verde
-- [ ] 9.3 Archivar el cambio y sincronizar specs cuando esté implementado y aprobado
+- [x] 9.3 Archivar el cambio y sincronizar specs cuando esté implementado y aprobado
