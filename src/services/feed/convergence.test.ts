@@ -155,8 +155,8 @@ describe("getNetworkConvergence", () => {
     expect(params).not.toContain("f2");
     expect(params).toContain(CONVERGENCE_MIN_PEOPLE);
     expect(params).toContain(CONVERGENCE_MAX_ITEMS);
-    // una fecha de corte (Date) entre los parámetros
-    expect(params.some((p) => p instanceof Date)).toBe(true);
+    // la fecha de corte va como ISO string (el driver serializa mal un Date crudo)
+    expect(params.some((p) => typeof p === "string" && /^\d{4}-\d{2}-\d{2}T/.test(p))).toBe(true);
     expect(text.toLowerCase()).toContain("count(distinct user_id)");
   });
 });

@@ -84,7 +84,10 @@ export const getNetworkConvergence = cache(
     const followeeIds = followRows.map((row) => row.id).filter((id) => !blocked.has(id));
     if (followeeIds.length === 0) return { items: [] };
 
-    const cutoff = new Date(Date.now() - CONVERGENCE_WINDOW_DAYS * DAY_MS);
+    // ISO string, no `Date`: el driver `postgres` serializa mal un `Date`
+    // pasado como parámetro de una sentencia `execute` cruda ("Received an
+    // instance of Date"). El cast explícito deja que Postgres lo parsee.
+    const cutoff = new Date(Date.now() - CONVERGENCE_WINDOW_DAYS * DAY_MS).toISOString();
     const followeeValues = sql.join(
       followeeIds.map((id) => sql`(${id}::uuid)`),
       sql`, `,
@@ -102,26 +105,26 @@ export const getNetworkConvergence = cache(
         FROM listen_entry
         WHERE user_id IN (SELECT id FROM followees)
           AND audience IN ('followers', 'public')
-          AND created_at >= ${cutoff}
+          AND created_at >= ${cutoff}::timestamptz
           AND (release_group_id IS NOT NULL OR recording_id IS NOT NULL)
         UNION ALL
         SELECT user_id, release_group_id, recording_id, created_at AS at
         FROM favorite
         WHERE user_id IN (SELECT id FROM followees)
           AND audience IN ('followers', 'public')
-          AND created_at >= ${cutoff}
+          AND created_at >= ${cutoff}::timestamptz
           AND (release_group_id IS NOT NULL OR recording_id IS NOT NULL)
         UNION ALL
         SELECT user_id, release_group_id, recording_id, updated_at AS at
         FROM rating
         WHERE user_id IN (SELECT id FROM followees)
-          AND updated_at >= ${cutoff}
+          AND updated_at >= ${cutoff}::timestamptz
           AND (release_group_id IS NOT NULL OR recording_id IS NOT NULL)
         UNION ALL
         SELECT user_id, release_group_id, recording_id, updated_at AS at
         FROM review
         WHERE user_id IN (SELECT id FROM followees)
-          AND updated_at >= ${cutoff}
+          AND updated_at >= ${cutoff}::timestamptz
           AND (release_group_id IS NOT NULL OR recording_id IS NOT NULL)
       ),
       converged AS (
