@@ -8,7 +8,7 @@ locale validado y persistido en el estado del flujo, y SHALL decidirse según el
 onboarding del usuario: si `onboarded_at` es nula SHALL redirigir a `/<locale>/welcome`; en
 caso contrario SHALL redirigir a `/<locale>/search` de forma fija.
 
-#### Scenario: Redirección post-login de un usuario ya onboardeado
+#### Scenario: Redirección post-login
 - **WHEN** el flujo de Google completa con éxito para un usuario cuyo `onboarded_at` no es nula
 - **THEN** el navegador es redirigido a `/<locale>/search` y la cookie de sesión queda establecida
 
@@ -18,4 +18,4 @@ caso contrario SHALL redirigir a `/<locale>/search` de forma fija.
 
 #### Scenario: Sin retorno dinámico
 - **WHEN** una persona agrega un parámetro de retorno arbitrario al callback
-- **THEN** la redirección posterior ignora ese parámetro y usa solo el destino que corresponde al estado de onboarding
+- **THEN** la redirección posterior ignora ese parámetro y usa solo el destino que corresponde al estado de onboarding del usuario
