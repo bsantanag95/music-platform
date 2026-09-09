@@ -40,7 +40,7 @@
 
 - [x] 6.1 Ajustar `FeedActivityList.test.tsx` / `feed-grouping.test.ts` / `feed-entry-tier.test.ts` / `feed.test.ts` / `home.test.ts` / `route.test.ts` para el modelo de tiers y la fuente de reseñas
 - [x] 6.2 Confirmar sin regresión: el preview de feed de Inicio y el rastro reciente siguen renderizando; `q` / `authorId` / paginación intactos; `redesign-feed` (cita, anatomía de fila, fecha, solo lectura) se conserva — suites `src/components/feed`, `src/components/home`, `src/services/feed`, `src/services/home`, `src/app/api/me/feed` en verde
-- [ ] 6.3 Verificación en el navegador: feed con una reseña (cita en redonda + título como metadato), racha de ratings de canción colapsada, racha de favoritos de álbum colapsada como tier 2, un comentario/reseña cortando una corrida; `kind=review` en `/me/feed`; consola sin errores
+- [x] 6.3 Verificación en el navegador: feed con una reseña (cita en redonda + título como metadato), racha de ratings de canción colapsada, racha de favoritos de álbum colapsada como tier 2, un comentario/reseña cortando una corrida; `kind=review` en `/me/feed`; consola sin errores
 
 ## 7. Docs
 
