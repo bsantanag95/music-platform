@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { ReactNode } from "react";
 import * as following from "@/services/social/following";
@@ -135,5 +137,12 @@ describe("RecentSelfActivity / ResumeList: se ocultan sin datos", () => {
 
   it("ResumeList no renderiza nada sin lista", async () => {
     expect(await ResumeList({ list: null })).toBeNull();
+  });
+
+  it("no monta el bloque editorial de álbumes del landing anónimo", async () => {
+    // El Inicio con sesión lidera con contenido propio; la capa editorial de
+    // /explore vive en el landing anónimo (openspec: reframe-anon-landing-album-forward).
+    const source = readFileSync(join(__dirname, "AuthenticatedHome.tsx"), "utf8");
+    expect(source).not.toMatch(/CollectionRail|AlbumRail|discovery\/discovery/);
   });
 });

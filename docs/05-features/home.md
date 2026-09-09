@@ -52,8 +52,11 @@ Ver "Inicio con sesión — estructura" para la jerarquía completa y los bloque
 
 ### Exclusivo de visitante anónimo
 
-- Tagline + propuesta de valor (ya existe).
+- Tagline + propuesta de valor (ya existe), **reencuadrada hacia el álbum como obra** —
+  valorarla, reseñarla, volver a ella; descubrimiento por personas, no por algoritmo (ver
+  "Reencuadre album-forward del landing" más abajo).
 - CTA a registro/login.
+- **Bloque editorial de álbumes** debajo del hero (ver más abajo).
 - **Búsqueda:** ya no hay buscador propio en Inicio. Nace con `add-header-search` como
   exclusivo del estado anónimo, pero `redesign-frontend` mueve `HeaderSearch` al Header en
   **todos** los estados, así que un buscador en el hero anónimo duplicaría la entrada y
@@ -167,6 +170,26 @@ visual, en la línea de Letterboxd/Musicboard, sin salir de "The Vinyl Listening
   (`src/components/home/GetStartedModal.tsx`) con las dos rutas de entrada
   (`/auth/register`, `/auth/login`). No hay buscador en el hero — la búsqueda vive en el
   Header (`HeaderSearch`) para todos los estados.
+
+## Reencuadre album-forward del landing (`reframe-anon-landing-album-forward`)
+
+La dirección `redefine-content-hierarchy` fija el álbum como unidad cultural central. El
+landing anónimo lo refleja en dos piezas:
+
+- **Copy del hero** (`heroLine1-3`, `anonSubtagline`): de "registrá / guardá favoritos /
+  seguí" a *"El álbum es una obra · Valorala, reseñala, volvé a ella · Descubrí música por
+  personas, no por un algoritmo"*. La `anonSubtagline` mantiene "registrar" (la capa de
+  baja fricción sigue presente). Estructura del hero y CTA sin cambios.
+- **Bloque editorial de álbumes** en `AnonymousHome`, **debajo del hero y encima de los
+  bloques de la comunidad** — la obra primero, la prueba social después. Reutiliza
+  `CollectionRail` y `AlbumRail` de `/explore` **verbatim**:
+  - `CollectionRail` con `listFeaturedCollections()` — **solo si `isExploreEnabled()`**
+    (con el flag apagado, sus listas enlazarían a rutas que redirigen a Inicio).
+  - `AlbumRail` con `listTopRated()` ("Mejor valorados por la comunidad") — sin gate;
+    `listTopRated` ya devuelve `[]` bajo el umbral de álbumes elegibles.
+  - Cada riel colapsa por su cuenta; si ambos vienen vacíos, no se renderiza el contenedor.
+- **El Inicio con sesión no cambia**: lidera con contenido propio; el bloque editorial es
+  exclusivo del landing anónimo (test estructural en `AuthenticatedHome.test.tsx`).
 
 ### "Qué podés hacer" — carrusel de funcionalidades
 

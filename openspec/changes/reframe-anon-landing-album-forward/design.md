@@ -113,13 +113,13 @@ ya respetan `isExploreEnabled()`.
 ## Open Questions
 
 - **OQ1 — ¿El bloque editorial va solo en el Inicio anónimo, o también en una sección de
-  descubrimiento del Inicio autenticado? → propuesta: solo anónimo.** El Inicio con sesión
+  descubrimiento del Inicio autenticado? → RESUELTA: solo anónimo.** El Inicio con sesión
   lidera con contenido propio a propósito; sumar una capa editorial ahí es otra iteración.
 - **OQ2 — ¿Qué rieles? ¿Solo colecciones + mejor valorados, o también novedades / más
-  reseñados / décadas? → propuesta: colecciones + mejor valorados.** El landing muestra una
+  reseñados / décadas? → RESUELTA: colecciones + mejor valorados.** El landing muestra una
   muestra que invita a `/explore`, no una segunda portada.
-- **OQ3 — ¿Cuánto empujar el copy del hero? → propuesta: reencuadre moderado** — álbum como
+- **OQ3 — ¿Cuánto empujar el copy del hero? → RESUELTA: reencuadre moderado** — álbum como
   obra + relación consciente + descubrimiento por personas, en las mismas 3 líneas + la
   subtagline. Sin tocar estructura ni CTA.
 - **OQ4 — ¿Reordenar el carrusel de funcionalidades para liderar con rating/reseñas? →
-  propuesta: no.** Registrar una escucha es la entrada de baja fricción (Q1).
+  RESUELTA: no.** Registrar una escucha es la entrada de baja fricción (Q1).
