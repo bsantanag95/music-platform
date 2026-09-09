@@ -506,6 +506,20 @@ defecto `followers`. La entrada se crea sin impresión ni reacción; se completa
 **400** con `VALIDATION_ERROR` si el body no es válido. **404** con `DIARY_TARGET_INVALID` si el
 objetivo no existe. **401** con `AUTH_REQUIRED` sin sesión.
 
+### `POST /api/me/onboarding`
+
+Cierra el onboarding de dos puertas (cambio `add-two-door-onboarding`): siembra los Álbumes
+favoritos de la Puerta 1 y fija `app_user.onboarded_at`. La Puerta 2 (registrar una escucha)
+usa `POST /api/me/diary`, no este endpoint.
+
+**Body:** `{ albumReleaseGroupIds: [uuid] }` (0..6). Cada id se convierte en un `favorite` de
+álbum (si no existe) y se fija como Álbum favorito, en el orden del array. **No** crea
+`rating` ni `listen_entry`.
+**200 OK:** `{ albumFavorites: [{ id, favoriteId, position, target: { id, title, artistName, coverThumbUrl } }], onboardedAt }`.
+**400** con `VALIDATION_ERROR` si hay más de 6 ids, ids duplicados o algún álbum no existe.
+**401** con `AUTH_REQUIRED` sin sesión. Idempotente: si el usuario ya está onboardeado,
+responde `200` con el estado vigente sin re-sembrar.
+
 ### `GET /api/me/diary?page=&pageSize=&q=&context=&reaction=&audience=`
 
 Lista paginada del diario propio en orden cronológico descendente. Cada entrada expone su objetivo

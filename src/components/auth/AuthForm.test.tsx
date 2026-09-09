@@ -6,6 +6,7 @@ import { AuthForm } from "./AuthForm";
 
 const mocks = vi.hoisted(() => ({
   apiFetch: vi.fn(),
+  push: vi.fn(),
   ApiError: class ApiError extends Error {
     code: string;
     constructor(code: string) {
@@ -15,10 +16,24 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("@/i18n/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
+vi.mock("@/i18n/navigation", () => ({
+  useRouter: () => ({ push: mocks.push, refresh: vi.fn() }),
+}));
 vi.mock("@/lib/api/client", () => ({ apiFetch: mocks.apiFetch, ApiError: mocks.ApiError }));
 
 describe("AuthForm", () => {
+  it("un alta exitosa lleva a /welcome (onboarding de dos puertas)", async () => {
+    const user = userEvent.setup();
+    mocks.push.mockClear();
+    mocks.apiFetch.mockResolvedValueOnce({ user: { id: "u1", username: "ana", email: "a@b.c", displayName: null } });
+    renderWithIntl(<AuthForm mode="register" />);
+    await user.type(screen.getByLabelText("Nombre de usuario"), "ana");
+    await user.type(screen.getByLabelText("Email"), "ana@example.com");
+    await user.type(screen.getByLabelText("Contraseña"), "unaClaveLarga1");
+    await user.click(screen.getByRole("button", { name: "Crear cuenta" }));
+    expect(mocks.push).toHaveBeenCalledWith("/welcome");
+  });
+
   it("mapea el código de autenticación al namespace normativo de errores", async () => {
     const user = userEvent.setup();
     mocks.apiFetch.mockRejectedValueOnce(new mocks.ApiError("INVALID_CREDENTIALS"));

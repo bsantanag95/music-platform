@@ -1,0 +1,36 @@
+{
+  "pageTitle": "Te damos la bienvenida",
+  "heading": "Contá quién sos musicalmente",
+  "intro": "Dos formas de empezar. Ninguna es obligatoria y podés hacerlas en el orden que quieras.",
+  "door1": {
+    "heading": "Álbumes que te definen",
+    "intro": "Elegí entre 3 y 5 álbumes que te representan. Quedan como tus álbumes favoritos del perfil.",
+    "searchLabel": "Buscar álbumes",
+    "searchPlaceholder": "Ej: In Rainbows",
+    "searching": "Buscando...",
+    "noResults": "Sin resultados.",
+    "selected": "Elegiste {count, plural, one {# álbum} other {# álbumes}}",
+    "suggestion": "Sugerimos entre 3 y 5.",
+    "remove": "Quitar",
+    "max": "Llegaste al máximo de 6.",
+    "save": "Guardar y continuar"
+  },
+  "door2": {
+    "heading": "¿Qué estás escuchando ahora?",
+    "intro": "Elegí un álbum o una canción y queda registrado en tu diario. Podés agregar tu impresión más tarde.",
+    "searchLabel": "Buscar álbum o canción",
+    "searchPlaceholder": "Ej: Sabrina Carpenter",
+    "searching": "Buscando...",
+    "noResults": "Sin resultados.",
+    "logged": "Registrado: {title}",
+    "logAnother": "Registrar otra"
+  },
+  "finish": {
+    "done": "Ir a Inicio",
+    "skip": "Saltar por ahora",
+    "saving": "Guardando..."
+  },
+  "error": "No pudimos completar el paso. Probá de nuevo.",
+  "homeLink": "Completá tu perfil musical",
+  "homeLinkCta": "Empezar"
+}

@@ -243,7 +243,7 @@ describe("GET /api/auth/google/callback", () => {
     expect(response.headers.get("location")).toContain("OAUTH_EMAIL_NOT_VERIFIED");
   });
 
-  it("completa el flujo feliz y redirige al home con el locale del flujo", async () => {
+  it("completa el flujo feliz de un usuario NUEVO y lo redirige a /welcome con el locale del flujo", async () => {
     mocks.consumeOAuthFlowCookies.mockResolvedValue({
       state: "valid-state",
       codeVerifier: "verifier",
@@ -253,15 +253,35 @@ describe("GET /api/auth/google/callback", () => {
     mocks.exchangeCode.mockResolvedValue({ idToken: "id-token", accessToken: "at", tokenType: "Bearer", expiresIn: 3600 });
     mocks.validateIdToken.mockResolvedValue({ sub: "sub-123", email: "new@gmail.com", emailVerified: true, nonce: "nonce" });
     mocks.toIdentity.mockReturnValue({ provider: "google", providerAccountId: "sub-123", email: "new@gmail.com", emailVerified: true });
-    mocks.resolveOrCreateOAuthUser.mockResolvedValue({ id: "new-user", username: "new", email: "new@gmail.com", displayName: null });
+    // Usuario recién creado: onboardedAt nulo.
+    mocks.resolveOrCreateOAuthUser.mockResolvedValue({ id: "new-user", username: "new", email: "new@gmail.com", displayName: null, onboardedAt: null });
 
     const url = "http://localhost:3000/api/auth/google/callback?code=auth-code&state=valid-state&locale=es";
     const request = new NextRequest(url);
     const response = await callbackGet(request);
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toContain("/en");
+    expect(response.headers.get("location")).toContain("/en/welcome");
     expect(mocks.createSession).toHaveBeenCalledWith("new-user");
+  });
+
+  it("un usuario YA onboardeado no pasa por /welcome", async () => {
+    mocks.consumeOAuthFlowCookies.mockResolvedValue({
+      state: "valid-state",
+      codeVerifier: "verifier",
+      nonce: "nonce",
+      locale: "en",
+    });
+    mocks.exchangeCode.mockResolvedValue({ idToken: "id-token", accessToken: "at", tokenType: "Bearer", expiresIn: 3600 });
+    mocks.validateIdToken.mockResolvedValue({ sub: "sub-123", email: "old@gmail.com", emailVerified: true, nonce: "nonce" });
+    mocks.toIdentity.mockReturnValue({ provider: "google", providerAccountId: "sub-123", email: "old@gmail.com", emailVerified: true });
+    mocks.resolveOrCreateOAuthUser.mockResolvedValue({ id: "old-user", username: "old", email: "old@gmail.com", displayName: null, onboardedAt: new Date("2026-01-01") });
+
+    const url = "http://localhost:3000/api/auth/google/callback?code=auth-code&state=valid-state&locale=es";
+    const response = await callbackGet(new NextRequest(url));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).not.toContain("/welcome");
   });
 
   it("rota la sesión existente si ya hay una", async () => {
@@ -274,7 +294,7 @@ describe("GET /api/auth/google/callback", () => {
     mocks.exchangeCode.mockResolvedValue({ idToken: "id-token", accessToken: "at", tokenType: "Bearer", expiresIn: 3600 });
     mocks.validateIdToken.mockResolvedValue({ sub: "sub-123", email: "new@gmail.com", emailVerified: true, nonce: "nonce" });
     mocks.toIdentity.mockReturnValue({ provider: "google", providerAccountId: "sub-123", email: "new@gmail.com", emailVerified: true });
-    mocks.resolveOrCreateOAuthUser.mockResolvedValue({ id: "new-user", username: "new", email: "new@gmail.com", displayName: null });
+    mocks.resolveOrCreateOAuthUser.mockResolvedValue({ id: "new-user", username: "new", email: "new@gmail.com", displayName: null, onboardedAt: null });
     mocks.resolveSession.mockResolvedValue({ id: "s1" });
     mocks.rotateCurrentSession.mockResolvedValue({ token: "rotated-token", expiresAt: new Date() });
 

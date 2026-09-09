@@ -6,6 +6,7 @@ import * as feed from "@/services/feed/feed";
 import { AuthenticatedHome } from "./AuthenticatedHome";
 import { FeedPreview } from "./FeedPreview";
 import { OnboardingPrompt } from "./OnboardingPrompt";
+import { WelcomeLink } from "./WelcomeLink";
 import { RecentSelfActivity } from "./RecentSelfActivity";
 import { ResumeList } from "./ResumeList";
 
@@ -84,6 +85,17 @@ describe("AuthenticatedHome", () => {
     expect(feed.listFeed).not.toHaveBeenCalled();
     expect(findElement(element, OnboardingPrompt)).not.toBeNull();
     expect(findElement(element, FeedPreview)).toBeNull();
+  });
+
+  it("muestra el enlace a /welcome cuando el onboarding está pendiente", async () => {
+    vi.mocked(following.listFollowing).mockResolvedValue({
+      users: [], page: 1, pageSize: 1, hasNext: false,
+    });
+    const withLink = await AuthenticatedHome({ user, onboardingPending: true });
+    expect(findElement(withLink, WelcomeLink)).not.toBeNull();
+
+    const withoutLink = await AuthenticatedHome({ user, onboardingPending: false });
+    expect(findElement(withoutLink, WelcomeLink)).toBeNull();
   });
 
   it("pasa la actividad propia y la lista reciente a sus bloques", async () => {

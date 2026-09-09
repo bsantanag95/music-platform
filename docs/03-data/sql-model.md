@@ -16,6 +16,12 @@ contraseña en texto plano.
 la visibilidad predeterminada del perfil; las actividades futuras podrán sobrescribirla con una
 audiencia propia.
 
+`onboarded_at` (`TIMESTAMPTZ` nullable, migración `0020`, cambio `add-two-door-onboarding`):
+nulo = el onboarding de dos puertas (`/welcome`) está pendiente. Se fija al completar o
+saltar el flujo. Mientras sea nulo, la redirección post-alta lleva a `/welcome` e Inicio
+muestra un enlace pasivo. La migración hace `UPDATE app_user SET onboarded_at = created_at`
+— todos los usuarios preexistentes quedan onboardeados y nunca ven `/welcome`.
+
 ## `user_follow`
 
 **Propósito:** relación unilateral de seguimiento entre usuarios, con solicitudes para perfiles

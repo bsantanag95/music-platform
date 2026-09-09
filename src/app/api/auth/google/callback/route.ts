@@ -86,8 +86,12 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     ? await rotateCurrentSession(user.id)
     : await createSession(user.id);
 
+  // Un usuario sin onboarding completado (alta nueva, o preexistente sin la
+  // marca) entra por /welcome; el resto, al destino habitual
+  // (cambio add-two-door-onboarding).
+  const destination = user.onboardedAt ? `/${locale}` : `/${locale}/welcome`;
   const response = NextResponse.redirect(
-    new URL(`/${locale}`, process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+    new URL(destination, process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   );
   setSessionCookie(response, session.token);
   return response;

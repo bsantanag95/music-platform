@@ -3,6 +3,7 @@ import { CommunityActivity } from "@/components/home/CommunityActivity";
 import { PublicLists } from "@/components/home/PublicLists";
 import { FeedPreview } from "@/components/home/FeedPreview";
 import { OnboardingPrompt } from "@/components/home/OnboardingPrompt";
+import { WelcomeLink } from "@/components/home/WelcomeLink";
 import { WelcomePanel } from "@/components/home/WelcomePanel";
 import { RecentSelfActivity } from "@/components/home/RecentSelfActivity";
 import { ResumeList } from "@/components/home/ResumeList";
@@ -26,13 +27,15 @@ const PREVIEW_PAGE_SIZE = 10;
 
 interface AuthenticatedHomeProps {
   user: { id: string; username: string; displayName: string | null };
+  /** El onboarding de dos puertas (`/welcome`) está pendiente para este usuario. */
+  onboardingPending?: boolean;
 }
 
 // Inicio del usuario con sesión: saludo + contenido propio (feed de seguidos u
 // onboarding, rastro reciente, retomar lista) arriba, y los bloques de
 // descubrimiento (actividad de la comunidad, listas públicas, comentarios
 // populares, lanzamientos) debajo. Ver docs/05-features/home.md.
-export async function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
+export async function AuthenticatedHome({ user, onboardingPending }: AuthenticatedHomeProps) {
   const [t, tHome] = await Promise.all([
     getTranslations("common"),
     getTranslations("home"),
@@ -67,6 +70,8 @@ export async function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
         username={user.username}
         lastActivity={recentActivity.entries[0] ?? null}
       />
+
+      {onboardingPending && <WelcomeLink />}
 
       {hasFollows ? (
         <FeedPreview initialEntries={feedPreview.entries} initialHasNext={feedPreview.hasNext} />

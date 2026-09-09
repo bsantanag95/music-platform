@@ -47,7 +47,9 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(parsed.data),
       });
-      router.push("/");
+      // Un alta nueva va al onboarding de dos puertas (cambio
+      // add-two-door-onboarding); el login entra directo a Inicio.
+      router.push(mode === "register" ? "/welcome" : "/");
       router.refresh();
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");

@@ -660,6 +660,19 @@ export const AlbumFavoritesResponseSchema = z.object({
 });
 export type AlbumFavoritesResponse = z.infer<typeof AlbumFavoritesResponseSchema>;
 
+// --- Onboarding de dos puertas (cambio add-two-door-onboarding) ---
+
+export const OnboardingRequestSchema = z.object({
+  albumReleaseGroupIds: z.array(z.uuid()).max(PROFILE_MAX_ALBUM_FAVORITES),
+});
+export type OnboardingRequest = z.infer<typeof OnboardingRequestSchema>;
+
+export const OnboardingResponseSchema = z.object({
+  albumFavorites: z.array(AlbumFavoriteSchema),
+  onboardedAt: z.string(),
+});
+export type OnboardingResponse = z.infer<typeof OnboardingResponseSchema>;
+
 export const ReplaceAlbumFavoritesRequestSchema = z.object({
   favoriteIds: z
     .array(z.uuid())

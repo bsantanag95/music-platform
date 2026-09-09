@@ -43,6 +43,10 @@ export const appUser = pgTable(
     location: text("location"),
     timezone: text("timezone"),
     avatarUrl: text("avatar_url"),
+    // Onboarding de dos puertas (migración 0020, cambio add-two-door-onboarding).
+    // Nulo = pendiente; se fija al completar o saltar /welcome. Los usuarios
+    // previos a la migración quedan con onboarded_at = created_at.
+    onboardedAt: timestamp("onboarded_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

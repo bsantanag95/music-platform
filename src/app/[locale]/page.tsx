@@ -7,5 +7,9 @@ import { getCurrentUser } from "@/services/auth/authorization";
 export default async function Home() {
   const user = await getCurrentUser();
 
-  return user ? <AuthenticatedHome user={user} /> : <AnonymousHome />;
+  return user ? (
+    <AuthenticatedHome user={user} onboardingPending={user.onboardedAt === null} />
+  ) : (
+    <AnonymousHome />
+  );
 }

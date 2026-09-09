@@ -171,9 +171,11 @@ Rollback: revertir el commit; la columna `onboarded_at` es inerte sin el código
 
 ## Open Questions
 
-- **OQ1 — ¿La Puerta 2 permite elegir la reacción (`obsessed`, etc.) inline, o solo
-  registra la escucha "pelada"?** Propuesta: solo registra (contexto inferido, audiencia
-  por defecto); la reacción se agrega después desde el diario. Mantiene el onboarding
-  liviano. A confirmar en `/opsx:apply`.
-- **OQ2 — ¿El namespace i18n es nuevo (`onboarding`) o un bloque dentro de `home`?**
-  Propuesta: namespace nuevo `onboarding` (la ruta es `/welcome`, no Inicio). Confirmar.
+- **OQ1 — ¿La Puerta 2 permite elegir la reacción inline? → RESUELTA: no, solo registra la
+  escucha.** Contexto inferido, audiencia por defecto, sin pedir reacción. "¿Qué
+  escuchaste?" alcanza para generar la primera señal de actividad; la reacción se agrega
+  después desde el diario cuando el usuario quiera expresar algo más.
+- **OQ2 — ¿Namespace i18n nuevo o bloque en `home`? → RESUELTA: namespace nuevo
+  `onboarding`.** `messages/{locale}/onboarding.json`. La experiencia vive en su ruta y
+  capacidad propias (`/welcome`); mantener los textos separados de `home` evita que `home`
+  acumule copy que no le pertenece y deja lugar para futuros pasos de onboarding.

@@ -1,0 +1,36 @@
+{
+  "pageTitle": "Welcome",
+  "heading": "Tell us who you are musically",
+  "intro": "Two ways to start. Neither is required, and you can do them in any order.",
+  "door1": {
+    "heading": "Albums that define you",
+    "intro": "Pick 3 to 5 albums that represent you. They become your profile's favorite albums.",
+    "searchLabel": "Search albums",
+    "searchPlaceholder": "e.g. In Rainbows",
+    "searching": "Searching...",
+    "noResults": "No results.",
+    "selected": "You picked {count, plural, one {# album} other {# albums}}",
+    "suggestion": "We suggest 3 to 5.",
+    "remove": "Remove",
+    "max": "You've reached the maximum of 6.",
+    "save": "Save and continue"
+  },
+  "door2": {
+    "heading": "What are you listening to right now?",
+    "intro": "Pick an album or a song and it's logged in your diary. You can add your impression later.",
+    "searchLabel": "Search album or song",
+    "searchPlaceholder": "e.g. Sabrina Carpenter",
+    "searching": "Searching...",
+    "noResults": "No results.",
+    "logged": "Logged: {title}",
+    "logAnother": "Log another"
+  },
+  "finish": {
+    "done": "Go to Home",
+    "skip": "Skip for now",
+    "saving": "Saving..."
+  },
+  "error": "We couldn't complete the step. Try again.",
+  "homeLink": "Complete your music profile",
+  "homeLinkCta": "Start"
+}
