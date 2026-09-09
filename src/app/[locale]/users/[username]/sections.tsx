@@ -10,6 +10,7 @@ import {
   getProfileAlbumFavorites,
 } from "@/services/profiles/album-favorites";
 import { getProfileInRotation } from "@/services/profiles/in-rotation";
+import { getProfileReviews } from "@/services/profiles/reviews";
 import { listProfileFollowedArtists } from "@/services/profiles/exploration";
 import { getProfileRecency } from "@/services/profiles/recency";
 import { getProfileAffinity } from "@/services/profiles/affinity";
@@ -23,6 +24,7 @@ import { OwnerShowcaseEditor } from "@/components/profiles/OwnerShowcaseEditor";
 import { OwnerAlbumFavoritesEditor } from "@/components/profiles/OwnerAlbumFavoritesEditor";
 import { TasteFingerprint } from "@/components/profiles/TasteFingerprint";
 import { AlbumFavorites } from "@/components/profiles/AlbumFavorites";
+import { ProfileReviews } from "@/components/profiles/ProfileReviews";
 import { InRotation } from "@/components/profiles/InRotation";
 import { ExploreSection } from "@/components/profiles/ExploreSection";
 import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
@@ -88,6 +90,18 @@ export async function AlbumFavoritesSection({
   viewerId,
 }: Omit<SectionProps, "isOwn">) {
   return <AlbumFavorites albums={await getProfileAlbumFavorites(username, viewerId)} />;
+}
+
+// "Reseñas": las reseñas de álbum más recientes del dueño. Clúster de
+// identidad cultural — se rinde en los niveles autorizado y dueño, después de
+// los destacados y antes de "En rotación". Automática, no curada.
+// `getProfileReviews` devuelve null (y la sección no aparece) sin acceso o sin
+// reseñas (spec profile-reviews).
+export async function FeaturedReviewsSection({
+  username,
+  viewerId,
+}: Omit<SectionProps, "isOwn">) {
+  return <ProfileReviews data={await getProfileReviews(username, viewerId)} />;
 }
 
 // "En rotación": qué está sonando últimamente, derivado del diario. Se rinde

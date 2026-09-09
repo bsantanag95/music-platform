@@ -89,6 +89,29 @@ El editor del dueño reordena / quita / anota los destacados y elige el himno **
 favoritos** — no hay buscador de catálogo embebido (mismo criterio que el detalle de lista,
 ver la memoria `list-detail-scope`).
 
+## Reseñas
+
+La postura crítica de la persona sobre las obras — el acto más expresivo del producto
+(Principio 4 de `product_philosophy.md`). Cierra el clúster de identidad cultural: se ubica
+**después de los destacados y antes de "En rotación"** (orden vertical Q7), en los niveles
+autorizado y dueño (cambio `add-profile-featured-reviews`,
+`src/services/profiles/reviews.ts`).
+
+- **Automática, no curada.** Se muestran las **últimas 4** reseñas de álbum del dueño
+  ordenadas por fecha de última edición. No hay editor de "fijar reseñas": sumar un cuarto
+  mecanismo de fijado (además de álbumes favoritos, destacados e himno) es el riesgo que
+  D10 pide evitar. Si hay más reseñas, "y N más" — sin enlace dedicado.
+- **Tarjeta**: carátula + álbum enlazado + artista + el rating que la reseña lleva
+  incorporada (`add-album-review`: la reseña siempre lleva rating) + título opcional +
+  cuerpo recortado a 4 líneas. El enlace al álbum lleva a la reseña completa y al resto de
+  reseñas de esa obra; no hay botón de "ver más" en la tarjeta.
+- **Visibilidad por accesibilidad del perfil.** La reseña es contenido público (visible en
+  la página del álbum), así que la sección solo se gatea por `profile.accessible` + bloqueo
+  — no además por relación de seguimiento como los ratings sueltos. Un perfil privado sin
+  relación aceptada no la muestra. Colapsa si el dueño no tiene reseñas.
+- Cálculo bajo demanda con `cache()`, sin tabla materializada, sin endpoint (nada cliente
+  lo consume). Constantes nombradas (`PROFILE_REVIEWS_MAX`).
+
 ## En rotación
 
 La contraparte **viva** de los álbumes favoritos (identidad estable): qué ha estado
@@ -177,6 +200,7 @@ cuántas veces se escuchó algo — es "qué está sonando", no una métrica.
 | `app_user.{bio, pronouns, location, timezone, avatar_url}` | Identidad extendida (migración 0014) |
 | `user_profile_link` | Enlaces externos ordenados, máx. 5 app-side |
 | `listen_entry` (lectura) | Fuente única de "En rotación" — escuchas de canción/álbum de los últimos 30 días, filtradas por audiencia. Sin tabla ni columna nueva |
+| `review` + `rating` (lectura) | Sección "Reseñas" — hasta 4 reseñas de álbum del dueño con su rating asociado, orden por `updated_at`. Sin tabla ni columna nueva |
 | `artist_follow` | Sección "Exploración" — artistas que el dueño sigue; también alimenta la afinidad (migración 0021, sin `status`) |
 | `user_pinned_item` | Cuatro destacados, triple-FK nullable + CHECK `num_nonnulls = 1` |
 | `user_showcase` | Una fila por usuario; `anthem_recording_id` (`ON DELETE SET NULL`) |

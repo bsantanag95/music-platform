@@ -15,6 +15,7 @@ import {
   DiaryRail,
   ExplorationSection,
   FavoritesRail,
+  FeaturedReviewsSection,
   FingerprintSection,
   HubSection,
   InRotationSection,
@@ -127,6 +128,12 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
               <PinnedSection ownerId={profile.id} />
             </Streamed>
             <Streamed>
+              <FeaturedReviewsSection
+                username={section.username}
+                viewerId={effectiveViewerId}
+              />
+            </Streamed>
+            <Streamed>
               <InRotationSection
                 username={section.username}
                 viewerId={effectiveViewerId}
@@ -199,6 +206,12 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
             </Streamed>
             <Streamed>
               <ShowcaseSection ownerId={profile.id} />
+            </Streamed>
+            <Streamed>
+              <FeaturedReviewsSection
+                username={section.username}
+                viewerId={effectiveViewerId}
+              />
             </Streamed>
             <Streamed>
               <InRotationSection

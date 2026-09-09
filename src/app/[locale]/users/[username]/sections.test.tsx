@@ -6,6 +6,7 @@ import {
   DiaryRail,
   ExplorationSection,
   FavoritesRail,
+  FeaturedReviewsSection,
   FingerprintSection,
   InRotationSection,
   PinnedSection,
@@ -15,6 +16,7 @@ import { ProfileRail } from "@/components/profiles/ProfileRail";
 import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
 import { AlbumFavorites } from "@/components/profiles/AlbumFavorites";
 import { InRotation } from "@/components/profiles/InRotation";
+import { ProfileReviews } from "@/components/profiles/ProfileReviews";
 import { ExploreSection } from "@/components/profiles/ExploreSection";
 import { AnthemStrip } from "@/components/profiles/AnthemStrip";
 import { TasteFingerprint } from "@/components/profiles/TasteFingerprint";
@@ -40,6 +42,7 @@ const svc = vi.hoisted(() => ({
   getAlbumFavorites: vi.fn(),
   getProfileAlbumFavorites: vi.fn(),
   getProfileInRotation: vi.fn(),
+  getProfileReviews: vi.fn(),
   listProfileFollowedArtists: vi.fn(),
   getProfileRecency: vi.fn(),
   getProfileAffinity: vi.fn(),
@@ -57,6 +60,9 @@ vi.mock("@/services/profiles/album-favorites", () => ({
 }));
 vi.mock("@/services/profiles/in-rotation", () => ({
   getProfileInRotation: svc.getProfileInRotation,
+}));
+vi.mock("@/services/profiles/reviews", () => ({
+  getProfileReviews: svc.getProfileReviews,
 }));
 vi.mock("@/services/profiles/exploration", () => ({
   listProfileFollowedArtists: svc.listProfileFollowedArtists,
@@ -185,6 +191,38 @@ describe("ShowcaseSection / FingerprintSection", () => {
   it("InRotationSection es null cuando getProfileInRotation devuelve null", async () => {
     svc.getProfileInRotation.mockResolvedValue(null);
     expect(await InRotationSection({ username: "ana", viewerId: null })).toBeNull();
+  });
+
+  it("FeaturedReviewsSection pasa las reseñas resueltas a ProfileReviews", async () => {
+    svc.getProfileReviews.mockResolvedValue({
+      reviews: [
+        {
+          id: "rv1",
+          title: null,
+          body: "x",
+          stars: "4.0",
+          detailedScore: null,
+          updatedAt: "2026-09-08T00:00:00.000Z",
+          album: { id: "rg1", title: "A", artistName: null, coverThumbUrl: null },
+        },
+      ],
+      total: 1,
+    });
+    const tree = (await FeaturedReviewsSection({ username: "ana", viewerId: "v" })) as {
+      type?: unknown;
+      props?: { data?: { total?: number } };
+    };
+    expect(svc.getProfileReviews).toHaveBeenCalledWith("ana", "v");
+    expect(tree?.type).toBe(ProfileReviews);
+    expect(tree?.props?.data?.total).toBe(1);
+  });
+
+  it("FeaturedReviewsSection pasa null cuando no hay reseñas", async () => {
+    svc.getProfileReviews.mockResolvedValue(null);
+    const tree = (await FeaturedReviewsSection({ username: "ana", viewerId: null })) as {
+      props?: { data?: unknown };
+    };
+    expect(tree?.props?.data).toBeNull();
   });
 
   it("ExplorationSection pasa los artistas seguidos a ExploreSection", async () => {

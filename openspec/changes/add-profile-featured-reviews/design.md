@@ -146,12 +146,12 @@ Sin migración. Servicio y componente aditivos; si `getProfileReviews` fallara, 
 
 ## Open Questions
 
-- **OQ1 — ¿Automática (últimas N) o curada (el dueño elige)? → propuesta: automática**
+- **OQ1 — ¿Automática (últimas N) o curada (el dueño elige)? → RESUELTA: automática**
   (D2). Curada suma un cuarto mecanismo de fijado, el riesgo que D10 pide evitar; y la
   señal "qué escribe esta persona sobre álbumes" no necesita curación para leerse.
-- **OQ2 — ¿Tope 4? → propuesta: 4.** Muestra, no archivo. Ajustable como constante.
+- **OQ2 — ¿Tope 4? → RESUELTA: 4.** Muestra, no archivo. Ajustable como constante.
 - **OQ3 — ¿Endpoint `GET /api/users/[username]/reviews` para paridad con fingerprint /
-  in-rotation? → propuesta: no.** Nada cliente lo consume; los endpoints espejo de esas
+  in-rotation? → RESUELTA: no.** Nada cliente lo consume; los endpoints espejo de esas
   secciones tampoco se usan. Si algún día una vista cliente lo necesita, se agrega ahí.
-- **OQ4 — ¿La sección necesita una página "todas las reseñas de X"? → propuesta: no en
+- **OQ4 — ¿La sección necesita una página "todas las reseñas de X"? → RESUELTA: no en
   Fase 1.** Las tarjetas enlazan al álbum; "y N más" es solo informativo.

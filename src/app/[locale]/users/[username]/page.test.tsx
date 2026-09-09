@@ -8,6 +8,7 @@ import {
   AlbumFavoritesSection,
   AnthemSection,
   ExplorationSection,
+  FeaturedReviewsSection,
   HubSection,
   InRotationSection,
   OwnerEditors,
@@ -44,6 +45,7 @@ vi.mock("./sections", () => ({
   HubSection: () => null,
   ShowcaseSection: () => null,
   AlbumFavoritesSection: () => null,
+  FeaturedReviewsSection: () => null,
   InRotationSection: () => null,
   ExplorationSection: () => null,
   PinnedSection: () => null,
@@ -69,6 +71,24 @@ function findElement(node: unknown, type: unknown): { props?: Record<string, unk
   const element = node as { type?: unknown; props?: { children?: unknown } };
   if (element.type === type) return element as { props?: Record<string, unknown> };
   return findElement((element.props as { children?: ReactNode } | undefined)?.children, type);
+}
+
+// Recorre el árbol en orden y devuelve la secuencia de `type` de los elementos
+// cuyo `type` está en `types` — para verificar el orden vertical del perfil.
+function orderOf(node: unknown, types: unknown[]): unknown[] {
+  const out: unknown[] = [];
+  const walk = (n: unknown) => {
+    if (n == null || typeof n !== "object") return;
+    if (Array.isArray(n)) {
+      n.forEach(walk);
+      return;
+    }
+    const el = n as { type?: unknown; props?: { children?: unknown } };
+    if (types.includes(el.type)) out.push(el.type);
+    walk(el.props?.children);
+  };
+  walk(node);
+  return out;
 }
 
 const profile = (over: Partial<ProfileView>): ProfileView => ({
@@ -204,9 +224,34 @@ describe("UserProfilePage", () => {
 
     const tree = await render();
     expect(findElement(tree, AlbumFavoritesSection)).not.toBeNull();
+    expect(findElement(tree, FeaturedReviewsSection)).not.toBeNull();
     expect(findElement(tree, InRotationSection)).not.toBeNull();
     expect(findElement(tree, ExplorationSection)).not.toBeNull();
     expect(findElement(tree, ShowcaseSection)).not.toBeNull();
+  });
+
+  it("vista del dueño: 'Reseñas' va después de los destacados y antes de 'En rotación'", async () => {
+    resolveSession.mockResolvedValue({ user: { id: "owner" } });
+    getProfileView.mockResolvedValue(
+      profile({ relation: "self", isOwner: true, accessible: true }),
+    );
+
+    const tree = await render();
+    expect(
+      orderOf(tree, [ShowcaseSection, FeaturedReviewsSection, InRotationSection]),
+    ).toEqual([ShowcaseSection, FeaturedReviewsSection, InRotationSection]);
+  });
+
+  it("vista pública: 'Reseñas' va después de los destacados y antes de 'En rotación'", async () => {
+    resolveSession.mockResolvedValue({ user: { id: "viewer" } });
+    getProfileView.mockResolvedValue(
+      profile({ relation: "following", accessible: true, profileVisibility: "public" }),
+    );
+
+    const tree = await render();
+    expect(
+      orderOf(tree, [PinnedSection, FeaturedReviewsSection, InRotationSection]),
+    ).toEqual([PinnedSection, FeaturedReviewsSection, InRotationSection]);
   });
 
   it("visitante autenticado bloqueado fuera: calcula el hint y lo pasa al umbral", async () => {

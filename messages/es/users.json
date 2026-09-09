@@ -128,6 +128,12 @@
     "songsHeading": "Canciones",
     "albumsHeading": "Álbumes"
   },
+  "reviews": {
+    "title": "Reseñas",
+    "andMore": "y {count, plural, one {# reseña más} other {# reseñas más}}",
+    "ratingLabel": "{stars} de 5 estrellas",
+    "ratingLabelScore": "{stars} de 5 estrellas, {score} de 100"
+  },
   "fingerprint": {
     "heading": "Huella de gusto",
     "ratingCurveLabel": "Cómo puntúa",

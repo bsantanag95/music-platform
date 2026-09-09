@@ -128,6 +128,12 @@
     "songsHeading": "Songs",
     "albumsHeading": "Albums"
   },
+  "reviews": {
+    "title": "Reviews",
+    "andMore": "and {count, plural, one {# more review} other {# more reviews}}",
+    "ratingLabel": "{stars} out of 5 stars",
+    "ratingLabelScore": "{stars} out of 5 stars, {score} out of 100"
+  },
   "fingerprint": {
     "heading": "Taste fingerprint",
     "ratingCurveLabel": "How they rate",
