@@ -23,6 +23,13 @@
     "people": "{count, plural, one {# persona que seguís} other {# personas que seguís}}",
     "andMore": "y {count} más"
   },
+  "ambient": {
+    "title": "También en tu red",
+    "followArtistVerb": "siguió a",
+    "followUserVerb": "empezó a seguir a",
+    "collectionVerb": "sumó a su colección:",
+    "andMore": "y {count} más"
+  },
   "groupMore": "y {count} más",
   "loadMore": "Cargar más",
   "loadingMore": "Cargando...",

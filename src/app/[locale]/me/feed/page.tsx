@@ -2,16 +2,19 @@ import { getTranslations } from "next-intl/server";
 import { requirePageUser } from "@/services/auth/page-auth";
 import { listFeed, listFeedAuthors } from "@/services/feed/feed";
 import { getNetworkConvergence } from "@/services/feed/convergence";
+import { getFeedAmbientEvents } from "@/services/feed/ambient";
 import { FeedList } from "@/components/feed/FeedList";
 import { NetworkConvergence } from "@/components/feed/NetworkConvergence";
+import { FeedAmbientStrip } from "@/components/feed/FeedAmbientStrip";
 
 export default async function FeedPage() {
   const t = await getTranslations("feed");
   const user = await requirePageUser();
-  const [initial, authors, convergence] = await Promise.all([
+  const [initial, authors, convergence, ambient] = await Promise.all([
     listFeed(user.id, 1, 20),
     listFeedAuthors(user.id),
     getNetworkConvergence(user.id),
+    getFeedAmbientEvents(user.id),
   ]);
 
   return (
@@ -25,6 +28,9 @@ export default async function FeedPage() {
         authors={authors}
         empty={{ title: t("emptyTitle"), description: t("emptyDescription") }}
       />
+      {/* Capa "automática" (tier 4): seguir/colección, agrupada y minimizada,
+          como coda al pie. Colapsa si no hay eventos. */}
+      <FeedAmbientStrip groups={ambient.groups} />
     </main>
   );
 }

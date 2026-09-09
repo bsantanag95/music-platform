@@ -73,9 +73,9 @@ actividad — no hace falta una audiencia explícita. Ver `design.md` del cambio
   Caso concreto ya identificado (`rework-feed-tiers`, OQ2): cuando existe una reseña y una
   valoración del mismo usuario y álbum, una futura refinación podrá ocultar o suprimir la
   fila de valoración; por ahora se muestran ambos eventos.
-- **Tier 4 en el feed** — eventos ambiente (seguir artista/usuario, colección). El tier
-  está definido en `feedEntryTier` pero esas fuentes no se consultan todavía; se
-  incorporan en un cambio posterior.
+- Notificaciones "Ana te empezó a seguir" — la franja de eventos ambiente
+  (`add-feed-ambient-events`) omite a propósito los follows cuyo objetivo es el propio
+  lector; ese caso es materia de una superficie de notificación, todavía inexistente.
 - Suprimir o colapsar en el listado cronológico las entradas individuales que ya alimentan
   una convergencia de la red (`add-network-convergence`, OQ2 — hoy el panel es aditivo).
 - Ponderar los tipos de interacción de la convergencia entre sí (reseña > registro) —
@@ -211,7 +211,37 @@ del lector).
 | **Personal** | ¿Qué hice yo? | diario (`/me/diary`), rastro reciente y "En rotación" del perfil — sin filtro de audiencia para uno mismo |
 | **Social** | ¿Qué hizo cada persona que sigo, en orden? | listado cronológico de `/me/feed` y su preview de Inicio |
 | **Relevante** | ¿En qué coincide mi red ahora? | panel de convergencia en la cabecera de `/me/feed` |
-| **Automática** | Derivada sin acción explícita | tier 4 (seguir artista/usuario, colección) — **todavía no llega al feed** |
+| **Automática** | Derivada sin acción explícita | franja "También en tu red" al pie de `/me/feed` (tier 4: seguir artista/usuario, colección) |
+
+## Franja de eventos ambiente (`add-feed-ambient-events`)
+
+El tratamiento "minimizado" del **tier 4**: una franja compacta **"También en tu red"** al
+**pie de `/me/feed`**, debajo del listado cronológico (`FeedAmbientStrip.tsx`, Server
+Component, colapsa si vacío). Posición de coda —encabezado chico, texto `font-data` muted,
+sin carátula—: la actividad ambiente se alcanza tras el feed, no compite por la atención.
+
+- **Tres fuentes**, dentro de una ventana de **14 días** (los follows y las altas de
+  colección son escasos): `artist_follow`, `user_follow` (relación aceptada) y
+  `collection_entry`.
+- **Agrupación por autor y tipo**: una persona que siguió a 5 artistas produce **una**
+  línea ("Ana siguió a Radiohead, Pink Floyd y 3 más"), no 5. Cada grupo lleva hasta 3
+  ítems enlazados + "y N más", ordenados por fecha desc. Máximo 8 grupos, ordenados por el
+  ítem más reciente.
+- **Visibilidad por fuente**:
+  - `artist_follow` — público implícito (mismo criterio que "Exploración" del perfil).
+  - `collection_entry` — audiencia propia (`followers`/`public`).
+  - `user_follow` — el evento "Ana empezó a seguir a Beto" aparece solo si **Beto tiene
+    perfil público** o el lector ya sigue a Beto con relación aceptada; Beto no es el
+    propio lector (eso es notificación, no franja); y no hay bloqueo lector↔Beto.
+  - En las tres: seguido con relación aceptada + sin bloqueo con el autor; la actividad
+    del **propio lector nunca aparece**.
+- **Cálculo**: `getFeedAmbientEvents(viewerId)` (`src/services/feed/ambient.ts`), `cache()`
+  por request, tres consultas con el query builder (no SQL crudo), agrupadas en memoria.
+  Sin tabla materializada, sin endpoint, sin fetcher. Constantes con nombre
+  (`AMBIENT_WINDOW_DAYS`, `AMBIENT_SAMPLE`, `AMBIENT_MAX_GROUPS`).
+- **Independiente del listado cronológico**: `feedEntryTier`, `groupFeedRuns`, `FeedEntry`,
+  `FEED_KINDS` y `/api/me/feed` no cambian. La rama `4` de `feedEntryTier` sigue sin fuente
+  en el stream; la franja es la realización del tier 4 como superficie aparte.
 
 ### "Tu rastro reciente" — variante `self`
 

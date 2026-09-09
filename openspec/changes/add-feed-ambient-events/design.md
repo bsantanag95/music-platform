@@ -162,11 +162,11 @@ la franja solo aparece con eventos recientes de la red.
 
 ## Open Questions
 
-- **OQ1 — ¿Ventana de 14 días, o alinear con la convergencia/pico en 7?** Propuesta: **14**.
+- **OQ1 — ¿Ventana de 14 días, o alinear con la convergencia/pico en 7? → RESUELTA: 14.**
   Los eventos de seguimiento y colección son mucho más escasos que las escuchas; 7 días
   dejaría la franja casi siempre vacía. Constante ajustable.
-- **OQ2 — ¿La franja va al pie (debajo de `FeedList`) o como bloque colapsable arriba?**
-  Propuesta: **al pie** (D1). Es la posición de de-énfasis que corresponde al tier 4.
-- **OQ3 — ¿La entrada de colección muestra el formato (vinilo/CD/cassette)?** Propuesta:
-  **no en la línea agrupada** (mantenerla corta); el formato está en la página de la
-  colección del autor. Revisable.
+- **OQ2 — ¿La franja va al pie (debajo de `FeedList`) o como bloque colapsable arriba? →
+  RESUELTA: al pie** (D1). Es la posición de de-énfasis que corresponde al tier 4.
+- **OQ3 — ¿La entrada de colección muestra el formato (vinilo/CD/cassette)? → RESUELTA: no
+  en la línea agrupada** (mantenerla corta); el formato está en la página de la colección
+  del autor. Revisable.
