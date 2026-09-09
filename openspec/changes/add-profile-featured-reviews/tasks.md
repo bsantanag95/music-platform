@@ -33,4 +33,4 @@
 - [x] 5.1 `openspec validate add-profile-featured-reviews --strict` pasa
 - [x] 5.2 `typecheck`, `lint`, `test` (1209 pasan), `build` en verde (una corrida de `next build` falló transitoriamente en `collect page data`, sin relación con el cambio — patrón flaky ya visto; re-corrida limpia); `getProfileReviews` verificado contra la BD de desarrollo
 - [x] 5.3 Verificación cubierta por `reviews.test.ts` (5), `ProfileReviews.test.tsx` (5), `sections.test.tsx` (FeaturedReviewsSection) y `page.test.tsx` (orden: Reseñas entre destacados y En rotación, dueño y público) + comprobación contra la BD de desarrollo. Walk autenticado no factible en este entorno
-- [ ] 5.4 Archivar el cambio y sincronizar specs cuando esté implementado y aprobado
+- [x] 5.4 Archivar el cambio y sincronizar specs
