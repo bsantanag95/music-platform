@@ -161,9 +161,10 @@ Rollback: revertir el commit; la tabla queda inerte sin el código.
 
 ## Open Questions
 
-- **OQ1 — ¿La sección "Exploración" del perfil de un visitante enlaza a algún lado el "ver
-  todos"?** Propuesta: no en Fase 2 — se muestran hasta 12 artistas seguidos sin "ver
-  todos" para visitantes; el dueño sí tiene el enlace a `/me/artists`. Una ruta pública
-  "artistas de @usuario" se puede agregar después. A confirmar en `/opsx:apply`.
-- **OQ2 — ¿El botón de la página de artista muestra un conteo de seguidores?** Propuesta:
-  no en esta fase (evita una consulta por render y no aporta hasta que haya masa). Confirmar.
+- **OQ1 — "ver todos" en la sección "Exploración" del perfil ajeno → RESUELTA: no en Fase
+  2.** Se muestran hasta 12 artistas seguidos, sin "ver todos" para visitantes; el dueño
+  tiene el enlace a `/me/artists`. Una ruta pública "artistas de @usuario" se puede agregar
+  después si hace falta.
+- **OQ2 — conteo de seguidores en el botón de la página de artista → RESUELTA: no en esta
+  fase.** Evita una consulta por render y no aporta hasta que haya masa. Se puede sumar
+  después.

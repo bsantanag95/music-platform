@@ -14,9 +14,11 @@ import { ArtistMemberships } from "@/components/catalog/ArtistMemberships";
 import { Comments } from "@/components/social/Comments";
 import { MarkAsListened } from "@/components/diary/MarkAsListened";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
+import { FollowArtistButton } from "@/components/catalog/FollowArtistButton";
 import { AddToListButton } from "@/components/lists/AddToListButton";
 import { resolveSession } from "@/services/auth/sessions";
 import { listComments, resolveSocialTarget } from "@/services/social";
+import { isFollowingArtist } from "@/services/social/artist-following";
 
 interface ArtistPageProps {
   params: Promise<{ id: string }>;
@@ -50,10 +52,11 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
   if (!artist) notFound();
 
   await ensureArtistMemberships(artist);
-  const [releaseGroups, memberships, session] = await Promise.all([
+  const session = await resolveSession();
+  const [releaseGroups, memberships, following] = await Promise.all([
     findOrIngestDiscography(artist),
     getArtistMemberships(artist),
-    resolveSession(),
+    session ? isFollowingArtist(session.user.id, artist.id) : Promise.resolve(false),
   ]);
   // La página de artista ya no expone rating de estrellas (openspec:
   // rebalance-catalog-detail-pages, D7): solo se cargan las notas de la
@@ -104,6 +107,11 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
         coverLabel={t("artist.albumCoverLabel")}
       />
       <div className="flex flex-col items-start gap-3">
+        <FollowArtistButton
+          artistId={artist.id}
+          authenticated={Boolean(session?.user.id)}
+          initialFollowing={following}
+        />
         <MarkAsListened target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
         <FavoriteButton target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
         <AddToListButton target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />

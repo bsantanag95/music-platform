@@ -1,9 +1,11 @@
 import { apiFetch } from "./client";
 import {
+  ArtistFollowResponseSchema,
   ArtistWithDiscographySchema,
   CatalogSearchResponseSchema,
   CoverSchema,
   ReleaseWithTracksSchema,
+  type ArtistFollowResponse,
   type ArtistWithDiscography,
   type CatalogSearchResponse,
   type Cover,
@@ -25,4 +27,14 @@ export function getReleaseGroupDetail(id: string): Promise<ReleaseWithTracks> {
 
 export function getReleaseGroupCover(id: string): Promise<Cover> {
   return apiFetch(`/api/catalog/release-group/${id}/cover`, CoverSchema);
+}
+
+// Seguir / dejar de seguir un artista (openspec: add-artist-following).
+// Ambos idempotentes en el servidor.
+export function followArtist(id: string): Promise<ArtistFollowResponse> {
+  return apiFetch(`/api/artists/${id}/follow`, ArtistFollowResponseSchema, { method: "PUT" });
+}
+
+export function unfollowArtist(id: string): Promise<ArtistFollowResponse> {
+  return apiFetch(`/api/artists/${id}/follow`, ArtistFollowResponseSchema, { method: "DELETE" });
 }

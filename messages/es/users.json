@@ -40,6 +40,9 @@
   "profileMetaFollowing": "Siguiendo",
   "followersTitle": "Mis seguidores",
   "followingTitle": "Personas que sigo",
+  "artistsFollowedTitle": "Artistas que sigo",
+  "artistsFollowedEmpty": "Todavía no seguís a ningún artista.",
+  "explorationHeading": "Exploración",
   "requestsTitle": "Solicitudes de seguimiento",
   "blocksTitle": "Cuentas bloqueadas",
   "emptyFollowers": "Todavía no tenés seguidores.",
@@ -81,6 +84,7 @@
     "heading": "Coincidencias",
     "sharedFavorites": "Favoritos en común",
     "sharedHighRatings": "Ambos puntúan alto",
+    "sharedFollowedArtists": "Artistas que ambos siguen",
     "mutualFollowers": "{count, plural, one {# seguidor en común} other {# seguidores en común}}"
   },
   "showcase": {

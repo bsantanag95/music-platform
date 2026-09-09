@@ -448,6 +448,15 @@ Deja de seguir a un usuario, o cancela una solicitud pendiente enviada. Idempote
 
 **200 OK:** `{ relation: "none" }`.
 
+### `PUT` / `DELETE /api/artists/[id]/follow`
+
+Sigue / deja de seguir a un artista (cambio `add-artist-following`). Relación unilateral, sin
+aprobación, **idempotente** en ambos sentidos (repetir no falla ni duplica). Seguir no crea
+un favorito ni una valoración.
+
+**200 OK:** `{ following: boolean }`. **404** con `ARTIST_NOT_FOUND` si el id no existe o no
+es un UUID. **401** con `AUTH_REQUIRED` sin sesión.
+
 ### `GET /api/me/followers` / `GET /api/me/following`
 
 Lista paginada de seguidores aceptados y de cuentas seguidas por el usuario autenticado.

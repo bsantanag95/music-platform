@@ -7,6 +7,7 @@ import { ViewAsBanner } from "@/components/profiles/ViewAsBanner";
 import {
   AlbumFavoritesSection,
   AnthemSection,
+  ExplorationSection,
   HubSection,
   InRotationSection,
   OwnerEditors,
@@ -44,6 +45,7 @@ vi.mock("./sections", () => ({
   ShowcaseSection: () => null,
   AlbumFavoritesSection: () => null,
   InRotationSection: () => null,
+  ExplorationSection: () => null,
   PinnedSection: () => null,
   AnthemSection: () => null,
   FingerprintSection: () => null,
@@ -189,11 +191,12 @@ describe("UserProfilePage", () => {
     expect(findElement(tree, PinnedSection)).not.toBeNull();
     expect(findElement(tree, AlbumFavoritesSection)).not.toBeNull();
     expect(findElement(tree, InRotationSection)).not.toBeNull();
+    expect(findElement(tree, ExplorationSection)).not.toBeNull();
     expect(findElement(tree, ShowcaseSection)).toBeNull();
     expect(findElement(tree, HubSection)).toBeNull();
   });
 
-  it("vista del dueño: monta AlbumFavoritesSection, InRotationSection y ShowcaseSection", async () => {
+  it("vista del dueño: monta AlbumFavoritesSection, InRotationSection, ExplorationSection y ShowcaseSection", async () => {
     resolveSession.mockResolvedValue({ user: { id: "owner" } });
     getProfileView.mockResolvedValue(
       profile({ relation: "self", isOwner: true, accessible: true }),
@@ -202,6 +205,7 @@ describe("UserProfilePage", () => {
     const tree = await render();
     expect(findElement(tree, AlbumFavoritesSection)).not.toBeNull();
     expect(findElement(tree, InRotationSection)).not.toBeNull();
+    expect(findElement(tree, ExplorationSection)).not.toBeNull();
     expect(findElement(tree, ShowcaseSection)).not.toBeNull();
   });
 

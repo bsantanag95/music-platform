@@ -4,6 +4,7 @@ import {
   AlbumFavoritesSection,
   AnthemSection,
   DiaryRail,
+  ExplorationSection,
   FavoritesRail,
   FingerprintSection,
   InRotationSection,
@@ -14,6 +15,7 @@ import { ProfileRail } from "@/components/profiles/ProfileRail";
 import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
 import { AlbumFavorites } from "@/components/profiles/AlbumFavorites";
 import { InRotation } from "@/components/profiles/InRotation";
+import { ExploreSection } from "@/components/profiles/ExploreSection";
 import { AnthemStrip } from "@/components/profiles/AnthemStrip";
 import { TasteFingerprint } from "@/components/profiles/TasteFingerprint";
 import { ProfileAffinity } from "@/components/profiles/ProfileAffinity";
@@ -38,6 +40,7 @@ const svc = vi.hoisted(() => ({
   getAlbumFavorites: vi.fn(),
   getProfileAlbumFavorites: vi.fn(),
   getProfileInRotation: vi.fn(),
+  listProfileFollowedArtists: vi.fn(),
   getProfileRecency: vi.fn(),
   getProfileAffinity: vi.fn(),
 }));
@@ -54,6 +57,9 @@ vi.mock("@/services/profiles/album-favorites", () => ({
 }));
 vi.mock("@/services/profiles/in-rotation", () => ({
   getProfileInRotation: svc.getProfileInRotation,
+}));
+vi.mock("@/services/profiles/exploration", () => ({
+  listProfileFollowedArtists: svc.listProfileFollowedArtists,
 }));
 vi.mock("@/services/profiles/recency", () => ({ getProfileRecency: svc.getProfileRecency }));
 vi.mock("@/services/profiles/affinity", () => ({ getProfileAffinity: svc.getProfileAffinity }));
@@ -179,6 +185,19 @@ describe("ShowcaseSection / FingerprintSection", () => {
   it("InRotationSection es null cuando getProfileInRotation devuelve null", async () => {
     svc.getProfileInRotation.mockResolvedValue(null);
     expect(await InRotationSection({ username: "ana", viewerId: null })).toBeNull();
+  });
+
+  it("ExplorationSection pasa los artistas seguidos a ExploreSection", async () => {
+    svc.listProfileFollowedArtists.mockResolvedValue([
+      { id: "a1", name: "Radiohead", type: "group", photoUrl: null },
+    ]);
+    const tree = (await ExplorationSection({ username: "ana", viewerId: "v" })) as {
+      type?: unknown;
+      props?: { artists?: unknown[] };
+    };
+    expect(svc.listProfileFollowedArtists).toHaveBeenCalledWith("ana", "v");
+    expect(tree?.type).toBe(ExploreSection);
+    expect(tree?.props?.artists).toHaveLength(1);
   });
 
   it("FingerprintSection es null cuando getTasteFingerprint devuelve null", async () => {

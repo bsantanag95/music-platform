@@ -10,6 +10,7 @@ import {
   getProfileAlbumFavorites,
 } from "@/services/profiles/album-favorites";
 import { getProfileInRotation } from "@/services/profiles/in-rotation";
+import { listProfileFollowedArtists } from "@/services/profiles/exploration";
 import { getProfileRecency } from "@/services/profiles/recency";
 import { getProfileAffinity } from "@/services/profiles/affinity";
 import { countPendingFollowRequests } from "@/services/social/following";
@@ -23,6 +24,7 @@ import { OwnerAlbumFavoritesEditor } from "@/components/profiles/OwnerAlbumFavor
 import { TasteFingerprint } from "@/components/profiles/TasteFingerprint";
 import { AlbumFavorites } from "@/components/profiles/AlbumFavorites";
 import { InRotation } from "@/components/profiles/InRotation";
+import { ExploreSection } from "@/components/profiles/ExploreSection";
 import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
 import { AnthemStrip } from "@/components/profiles/AnthemStrip";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
@@ -98,6 +100,16 @@ export async function InRotationSection({
 }: Omit<SectionProps, "isOwn">) {
   const data = await getProfileInRotation(username, viewerId);
   return data ? <InRotation data={data} /> : null;
+}
+
+// "Exploración": los artistas que el dueño sigue. Se rinde en los niveles
+// autorizado y dueño, después de la huella de gusto. No aparece si el dueño no
+// sigue a ningún artista (spec artist-following).
+export async function ExplorationSection({
+  username,
+  viewerId,
+}: Omit<SectionProps, "isOwn">) {
+  return <ExploreSection artists={await listProfileFollowedArtists(username, viewerId)} />;
 }
 
 // El showcase (destacados + himno) se compone en dos secciones para el layout

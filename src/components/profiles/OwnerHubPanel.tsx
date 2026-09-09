@@ -16,6 +16,7 @@ export async function OwnerHubPanel({ pendingRequests }: OwnerHubPanelProps) {
   const links: { href: string; label: string; badge?: number }[] = [
     { href: "/me/diary", label: t("diaryTitle") },
     { href: "/me/favorites", label: t("favoritesTitle") },
+    { href: "/me/artists", label: t("artistsFollowedTitle") },
     { href: "/me/lists", label: t("listsTitle") },
     { href: "/me/collection", label: t("collectionTitle") },
     { href: "/me/followers", label: t("followersTitle") },

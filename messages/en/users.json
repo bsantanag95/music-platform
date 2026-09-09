@@ -40,6 +40,9 @@
   "profileMetaFollowing": "Following",
   "followersTitle": "My followers",
   "followingTitle": "People I follow",
+  "artistsFollowedTitle": "Artists I follow",
+  "artistsFollowedEmpty": "You don't follow any artists yet.",
+  "explorationHeading": "Exploration",
   "requestsTitle": "Follow requests",
   "blocksTitle": "Blocked accounts",
   "emptyFollowers": "You don't have followers yet.",
@@ -81,6 +84,7 @@
     "heading": "In common",
     "sharedFavorites": "Favorites in common",
     "sharedHighRatings": "You both rate highly",
+    "sharedFollowedArtists": "Artists you both follow",
     "mutualFollowers": "{count, plural, one {# mutual follower} other {# mutual followers}}"
   },
   "showcase": {

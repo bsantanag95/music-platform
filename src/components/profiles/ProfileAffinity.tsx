@@ -15,7 +15,7 @@ interface ProfileAffinityProps {
 // null si no hay nada). Server Component. Ver spec profile-affinity.
 export async function ProfileAffinity({ affinity }: ProfileAffinityProps) {
   const t = await getTranslations("users");
-  const { sharedFavorites, sharedHighRatings, mutualFollowers } = affinity;
+  const { sharedFavorites, sharedHighRatings, sharedFollowedArtists, mutualFollowers } = affinity;
 
   return (
     <section className="flex w-full max-w-2xl flex-col gap-4">
@@ -32,6 +32,9 @@ export async function ProfileAffinity({ affinity }: ProfileAffinityProps) {
       )}
       {sharedHighRatings.length > 0 && (
         <EntityRow label={t("affinity.sharedHighRatings")} entities={sharedHighRatings} />
+      )}
+      {sharedFollowedArtists.length > 0 && (
+        <EntityRow label={t("affinity.sharedFollowedArtists")} entities={sharedFollowedArtists} />
       )}
     </section>
   );

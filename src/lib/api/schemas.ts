@@ -488,6 +488,27 @@ export type FollowAction = z.infer<typeof FollowActionSchema>;
 export const FollowResponseSchema = z.object({ relation: FollowActionSchema });
 export type FollowResponse = z.infer<typeof FollowResponseSchema>;
 
+// --- Seguir artista (cambio add-artist-following) ---
+
+export const ArtistFollowResponseSchema = z.object({ following: z.boolean() });
+export type ArtistFollowResponse = z.infer<typeof ArtistFollowResponseSchema>;
+
+export const FollowedArtistSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  type: z.string(),
+  photoUrl: z.string().nullable(),
+});
+export type FollowedArtistDto = z.infer<typeof FollowedArtistSchema>;
+
+export const FollowedArtistsResponseSchema = z.object({
+  artists: z.array(FollowedArtistSchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  hasNext: z.boolean(),
+});
+export type FollowedArtistsResponse = z.infer<typeof FollowedArtistsResponseSchema>;
+
 // --- Perfil enriquecido (cambio redesign-user-profile) ---
 
 export const ProfileLinkKindSchema = z.enum(PROFILE_LINK_KINDS);
@@ -685,6 +706,7 @@ export type ReplaceAlbumFavoritesRequest = z.infer<typeof ReplaceAlbumFavoritesR
 export const ProfileAffinitySchema = z.object({
   sharedFavorites: z.array(ShowcaseEntitySchema),
   sharedHighRatings: z.array(ShowcaseEntitySchema),
+  sharedFollowedArtists: z.array(ShowcaseEntitySchema),
   mutualFollowers: z.number().int().nonnegative(),
 });
 export type ProfileAffinityDto = z.infer<typeof ProfileAffinitySchema>;

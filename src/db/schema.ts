@@ -628,11 +628,34 @@ export const userAlbumPin = pgTable(
   ],
 );
 
+// Seguir artista — relación unilateral usuario → artista (migración 0021,
+// cambio add-artist-following). Sin `status`: seguir es inmediato, un artista
+// no aprueba solicitudes. Distinta de `favorite` con objetivo artista (gusto
+// declarado) y de `user_follow` (usuario → usuario).
+export const artistFollow = pgTable(
+  "artist_follow",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    artistId: uuid("artist_id")
+      .notNull()
+      .references(() => artist.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("uq_artist_follow_pair").on(t.userId, t.artistId),
+    index("idx_artist_follow_artist").on(t.artistId),
+  ],
+);
+
 export type UserProfileLinkRow = typeof userProfileLink.$inferSelect;
 export type UserPinnedItemRow = typeof userPinnedItem.$inferSelect;
 export type UserShowcaseRow = typeof userShowcase.$inferSelect;
 export type ReleaseGroupTagRow = typeof releaseGroupTag.$inferSelect;
 export type UserAlbumPinRow = typeof userAlbumPin.$inferSelect;
+export type ArtistFollowRow = typeof artistFollow.$inferSelect;
 
 export const comment = pgTable(
   "comment",

@@ -80,7 +80,11 @@
     "memberPeriod": "Período",
     "memberPeriodOpen": "hasta hoy",
     "memberPeriodUnknown": "Período desconocido",
-    "membershipsHeading": "Membresías"
+    "membershipsHeading": "Membresías",
+    "follow": "Seguir",
+    "following": "Siguiendo",
+    "signInToFollow": "Iniciá sesión para seguir",
+    "followError": "No se pudo completar la acción."
   },
   "album": {
     "tracklistHeading": "Tracklist",

@@ -118,13 +118,30 @@ los niveles autorizado y dueño (cambio `add-profile-in-rotation`,
   sin numeración. `GET /api/users/[username]/in-rotation` para hidratación diferida y el
   previsualizador "cómo te ven".
 
+## Exploración
+
+Los **artistas que el dueño sigue** (`artist_follow`, cambio `add-artist-following`),
+rejilla de foto/monograma + nombre con enlace a cada artista. Se ubica **después de la
+huella de gusto y antes de los estantes** (orden vertical Q7). Se muestra en los niveles
+autorizado y dueño; no aparece si el dueño no sigue a ningún artista.
+
+- **Seguir artista ≠ favorito de artista.** Seguir es intención de seguimiento (contexto de
+  perfil, afinidad, descubrimiento futuro); el favorito de artista es gusto declarado
+  (aparece en la huella y en "favoritos en común"). El modelo los mantiene separados.
+- **Sin control de audiencia:** `artist_follow` no tiene audiencia — es información de bajo
+  riesgo, del mismo tenor que la lista de seguidos de usuario.
+- El dueño gestiona sus artistas seguidos en `/me/artists` (enlace en el panel del dueño).
+- En Fase 2 la sección muestra hasta 12 artistas sin "ver todos" para visitantes. El evento
+  "seguir artista" en el feed llega con `rework-feed-tiers`.
+
 ## Afinidad
 
 Al ver el perfil de otra persona con sesión iniciada, un bloque de coincidencias
 (`src/services/profiles/affinity.ts`): favoritos en común, entidades que ambos puntúan con
-4+ estrellas (solo si el visitante puede ver las valoraciones del dueño), y seguidores en
-común. Se oculta sin sesión, para el propio dueño, ante bloqueo, o si no hay ninguna
-coincidencia. El hint de seguidores en común aparece también en el aviso de perfil privado.
+4+ estrellas (solo si el visitante puede ver las valoraciones del dueño), **artistas que
+ambos siguen**, y seguidores en común. Se oculta sin sesión, para el propio dueño, ante
+bloqueo, o si no hay ninguna coincidencia. El hint de seguidores en común aparece también
+en el aviso de perfil privado.
 
 ## Estantes y recencia
 
@@ -160,6 +177,7 @@ cuántas veces se escuchó algo — es "qué está sonando", no una métrica.
 | `app_user.{bio, pronouns, location, timezone, avatar_url}` | Identidad extendida (migración 0014) |
 | `user_profile_link` | Enlaces externos ordenados, máx. 5 app-side |
 | `listen_entry` (lectura) | Fuente única de "En rotación" — escuchas de canción/álbum de los últimos 30 días, filtradas por audiencia. Sin tabla ni columna nueva |
+| `artist_follow` | Sección "Exploración" — artistas que el dueño sigue; también alimenta la afinidad (migración 0021, sin `status`) |
 | `user_pinned_item` | Cuatro destacados, triple-FK nullable + CHECK `num_nonnulls = 1` |
 | `user_showcase` | Una fila por usuario; `anthem_recording_id` (`ON DELETE SET NULL`) |
 | `user_album_pin` | Hasta 6 álbumes favoritos; FK a `favorite` (`ON DELETE CASCADE`), `position` 1–6 única por usuario (migración 0019) |

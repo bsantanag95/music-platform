@@ -1,6 +1,6 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { artist, favorite, rating, recording, releaseGroup, userFollow } from "@/db/schema";
+import { artist, artistFollow, favorite, rating, recording, releaseGroup, userFollow } from "@/db/schema";
 import { PRIMARY_ARTIST_SQL } from "@/services/feed/feed";
 import { audiencesForProfile } from "@/services/social/visibility";
 import type { Audience } from "@/services/social/types";
@@ -45,6 +45,7 @@ const AFFINITY_LIMIT = 8;
 export interface ProfileAffinity {
   sharedFavorites: ShowcaseEntity[];
   sharedHighRatings: ShowcaseEntity[];
+  sharedFollowedArtists: ShowcaseEntity[];
   mutualFollowers: number;
 }
 
@@ -76,6 +77,16 @@ async function favoriteRefs(userId: string, audiences: Audience[] | null): Promi
         : eq(favorite.userId, userId),
     );
   return rows.map(refFromRow).filter((ref): ref is EntityRef => ref !== null);
+}
+
+// Artistas que el usuario sigue (`artist_follow`, sin audiencia). Para la
+// coincidencia "artistas que ambos siguen" (cambio add-artist-following).
+async function followedArtistRefs(userId: string): Promise<EntityRef[]> {
+  const rows = await db
+    .select({ id: artistFollow.artistId })
+    .from(artistFollow)
+    .where(eq(artistFollow.userId, userId));
+  return rows.map((r) => ({ type: "artist" as ShowcaseEntityType, id: r.id }));
 }
 
 async function highRatingRefs(userId: string): Promise<EntityRef[]> {
@@ -187,22 +198,31 @@ export async function getProfileAffinity(
   const audiences = audiencesForProfile(profile) as Audience[];
   const ratingsVisible = profile.relation === "following";
 
-  const [ownerFavs, viewerFavs, ownerHigh, viewerHigh, mutual] = await Promise.all([
-    favoriteRefs(profile.id, audiences),
-    favoriteRefs(viewerId, null),
-    ratingsVisible ? highRatingRefs(profile.id) : Promise.resolve([]),
-    ratingsVisible ? highRatingRefs(viewerId) : Promise.resolve([]),
-    mutualFollowersHint(viewerId, profile.id),
-  ]);
+  const [ownerFavs, viewerFavs, ownerHigh, viewerHigh, ownerFollows, viewerFollows, mutual] =
+    await Promise.all([
+      favoriteRefs(profile.id, audiences),
+      favoriteRefs(viewerId, null),
+      ratingsVisible ? highRatingRefs(profile.id) : Promise.resolve([]),
+      ratingsVisible ? highRatingRefs(viewerId) : Promise.resolve([]),
+      followedArtistRefs(profile.id),
+      followedArtistRefs(viewerId),
+      mutualFollowersHint(viewerId, profile.id),
+    ]);
 
-  const [sharedFavorites, sharedHighRatings] = await Promise.all([
+  const [sharedFavorites, sharedHighRatings, sharedFollowedArtists] = await Promise.all([
     resolveEntities(intersect(viewerFavs, ownerFavs)),
     resolveEntities(intersect(viewerHigh, ownerHigh)),
+    resolveEntities(intersect(viewerFollows, ownerFollows)),
   ]);
 
-  if (sharedFavorites.length === 0 && sharedHighRatings.length === 0 && mutual === 0) {
+  if (
+    sharedFavorites.length === 0 &&
+    sharedHighRatings.length === 0 &&
+    sharedFollowedArtists.length === 0 &&
+    mutual === 0
+  ) {
     return null;
   }
 
-  return { sharedFavorites, sharedHighRatings, mutualFollowers: mutual };
+  return { sharedFavorites, sharedHighRatings, sharedFollowedArtists, mutualFollowers: mutual };
 }

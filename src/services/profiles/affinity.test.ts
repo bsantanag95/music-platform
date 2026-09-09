@@ -111,4 +111,20 @@ describe("getProfileAffinity", () => {
       { type: "release-group", id: "rg1", title: "Souvlaki", artistName: "Slowdive", coverThumbUrl: null },
     ]);
   });
+
+  it("muestra la afinidad cuando solo coinciden los artistas seguidos", async () => {
+    mocks.getProfileByUsername.mockResolvedValue(accessible);
+    rowsByTable.favorite = [];
+    rowsByTable.rating = [];
+    followQueue = [[]]; // sin seguidores en común
+    // Ambos lados consultan `artist_follow` con el mock keyed por tabla →
+    // mismas filas → intersección = esos artistas.
+    rowsByTable.artist_follow = [{ id: "a1" }];
+    rowsByTable.artist = [{ id: "a1", name: "Radiohead" }];
+
+    const affinity = await getProfileAffinity("ana", "viewer");
+    expect(affinity?.sharedFollowedArtists).toEqual([
+      { type: "artist", id: "a1", title: "Radiohead", artistName: null, coverThumbUrl: null },
+    ]);
+  });
 });

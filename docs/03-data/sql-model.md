@@ -39,6 +39,28 @@ privados (migración `0007`).
   elimina la fila.
 - `updated_at` lo mantiene el trigger `trg_user_follow_touch` (reutiliza `fn_touch_updated_at`).
 
+## `artist_follow`
+
+**Propósito:** relación unilateral **usuario → artista** (migración `0021`, cambio
+`add-artist-following`, Fase 2 de `redefine-content-hierarchy`). Señal de afinidad,
+descubrimiento y organización personal. Distinta de `favorite` con objetivo artista (gusto
+declarado) y de `user_follow` (usuario → usuario).
+
+**Relaciones:** `user_id` referencia `app_user`, `artist_id` referencia `artist`; ambas con
+`ON DELETE CASCADE`.
+
+**Restricciones:**
+
+- **Sin `status`**: un artista no aprueba solicitudes. Seguir = insertar la fila; dejar de
+  seguir = borrarla. Toggle idempotente.
+- `UNIQUE (user_id, artist_id)` (`uq_artist_follow_pair`): un usuario sigue a un artista a
+  lo sumo una vez.
+- Índice `idx_artist_follow_artist` para recuperación por artista.
+
+**Espacio para el futuro:** las notificaciones de lanzamiento (fuera de alcance en Fase 2)
+se agregarían de forma aditiva — una tabla `artist_release_seen` o una columna `notify` —
+sin migrar esta relación.
+
 ## `user_block`
 
 **Propósito:** bloqueo básico entre cuentas (migración `0007`).

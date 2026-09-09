@@ -13,6 +13,7 @@ import {
   AnthemSection,
   CollectionRail,
   DiaryRail,
+  ExplorationSection,
   FavoritesRail,
   FingerprintSection,
   HubSection,
@@ -135,6 +136,12 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
               <FingerprintSection username={section.username} viewerId={effectiveViewerId} />
             </Streamed>
             <Streamed>
+              <ExplorationSection
+                username={section.username}
+                viewerId={effectiveViewerId}
+              />
+            </Streamed>
+            <Streamed>
               <DiaryRail {...section} />
             </Streamed>
             <Streamed>
@@ -201,6 +208,12 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
             </Streamed>
             <Streamed>
               <FingerprintSection username={section.username} viewerId={effectiveViewerId} />
+            </Streamed>
+            <Streamed>
+              <ExplorationSection
+                username={section.username}
+                viewerId={effectiveViewerId}
+              />
             </Streamed>
             <Suspense fallback={null}>
               <RecencySection username={section.username} viewerId={effectiveViewerId} />
