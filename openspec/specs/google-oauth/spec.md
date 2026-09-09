@@ -5,6 +5,15 @@ gestionado exclusivamente en el backend de la aplicación Next.js, con desemboqu
 server-side común definida para la autenticación local. No incluye vinculación de identidades
 con cuentas locales existentes.
 
+## Purpose
+
+Permitir iniciar sesión y crear cuentas con Google sin manejar contraseñas: el flujo OAuth
+2.0 (Authorization Code + PKCE + OIDC) vive entero en el backend, valida `state` / `nonce` /
+`id_token`, exige email verificado para altas nuevas, no persiste tokens del proveedor, y
+termina en la misma sesión opaca server-side que la autenticación local. La redirección
+post-autenticación es fija (sin `returnTo` del cliente) y depende del estado de onboarding
+del usuario.
+
 ## Requirements
 
 ### Requirement: Inicio del flujo OAuth
