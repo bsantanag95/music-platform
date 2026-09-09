@@ -178,10 +178,12 @@ Cada sección de contenido carga bajo su propio `<Suspense>`, así que nada bloq
 
 ## Panel del dueño y "cómo te ven"
 
-- **`OwnerHubPanel`** — enlaza las nueve superficies `/me/*` (diario, favoritos, listas,
-  colección, seguidores, seguidos, solicitudes, bloqueos, ajustes). "Solicitudes" muestra un
-  badge con el conteo de solicitudes pendientes recibidas cuando es > 0 (bandeja de entrada,
-  no métrica de logro).
+- **`OwnerHubPanel`** — enlaza las superficies `/me/*` (diario, favoritos, listas, colección,
+  artistas seguidos, seguidores, seguidos, solicitudes, bloqueos, ajustes). "Solicitudes"
+  muestra un badge con el conteo de solicitudes pendientes recibidas cuando es > 0 (bandeja
+  de entrada, no métrica de logro). Los destinos salen de
+  `src/components/layout/user-menu-items.ts` (superficie `panel`), la misma fuente que el
+  menú de usuario del Header — ambos no pueden divergir (spec `cross-view-navigation`).
 - **`?preview=1`** — el dueño recompone su perfil tal como lo ve un visitante anónimo
   (`getProfileView(username, null)`), con los editores y el panel ocultos y un banner para
   volver. Es navegación por query param, sin estado cliente.

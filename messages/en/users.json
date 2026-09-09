@@ -72,8 +72,7 @@
   "recencyLastSignal": "Last activity {ago}",
   "railEmptyOwn": "Nothing here yet.",
   "hub": {
-    "heading": "Manage",
-    "pendingRequests": "{count, plural, one {# request} other {# requests}}"
+    "heading": "Manage"
   },
   "viewAs": {
     "enter": "See how others see you",

@@ -250,20 +250,23 @@ actualización cuando una actividad cambia de audiencia.
 
 ### 10.1 Navegación autenticada
 
-El shell autenticado debe ofrecer acceso a:
+El Header separa dos zonas (cambio `regroup-authenticated-header`, spec
+`cross-view-navigation`):
 
-- inicio o feed;
-- búsqueda global;
-- mi perfil;
-- diario;
-- favoritos;
-- listas;
-- seguidores y seguidos;
-- configuración.
+- **Barra general** — solo lo que el sitio ofrece a cualquiera: buscador del catálogo y, con
+  el catálogo editorial habilitado, Explorar. No lleva enlaces `/me/*` en el nivel superior.
+- **Menú de usuario** — desplegable anclado al nombre visible (se abre al posar el cursor en
+  escritorio, con cheurón hacia abajo; clic/teclado como alternativa) que agrupa todo lo que
+  identifica a la persona: mi perfil, diario, favoritos, listas, colección, artistas
+  seguidos, feed de actividad, seguidores, seguidos, solicitudes (con badge de pendientes),
+  ajustes y cierre de sesión.
 
-En móvil no se deben convertir todas estas opciones en botones permanentes del header. La
-navegación primaria debe ser reducida y el resto debe vivir en un menú de cuenta o navegación
-secundaria.
+Los destinos del menú y los del panel del dueño (`OwnerHubPanel`) salen de una única fuente
+(`src/components/layout/user-menu-items.ts`). En móvil el Header colapsa en un panel con la
+misma división: bloque de barra general y bloque de usuario.
+
+Fuera de alcance de ese cambio, para un sprint posterior: un acceso global `+ Registrar` en
+el Header y las Listas públicas / Miembros con enfoque de exploración en la barra general.
 
 ### 10.2 Páginas existentes
 

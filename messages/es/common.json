@@ -10,6 +10,13 @@
   "favorites": "Favoritos",
   "lists": "Listas",
   "collection": "Colección",
+  "profile": "Mi perfil",
+  "artists": "Artistas seguidos",
+  "followers": "Seguidores",
+  "following": "Seguidos",
+  "followRequests": "Solicitudes",
+  "blocks": "Cuentas bloqueadas",
+  "settings": "Ajustes",
   "login": "Iniciar sesión",
   "register": "Registrarse",
   "logout": "Cerrar sesión",
@@ -18,6 +25,9 @@
   "localeSwitcher": "Idioma",
   "openMenu": "Abrir menú",
   "closeMenu": "Cerrar menú",
+  "userMenu": "Menú de usuario",
+  "generalNav": "Navegación general",
+  "pendingFollowRequests": "{count, plural, one {# solicitud} other {# solicitudes}}",
   "error": {
     "title": "Algo salió mal",
     "description": "No pudimos completar la solicitud. Intentá de nuevo en un momento."

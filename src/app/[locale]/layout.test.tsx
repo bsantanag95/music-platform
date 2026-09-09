@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   header: vi.fn((props: { user: Record<string, unknown> | null }) => <div data-testid="header" data-user={JSON.stringify(props.user)} />),
   footer: vi.fn((props: { user: Record<string, unknown> | null }) => <div data-testid="footer" data-user={JSON.stringify(props.user)} />),
   resolveSession: vi.fn(),
+  countPendingFollowRequests: vi.fn().mockResolvedValue(0),
 }));
 
 vi.mock("next/font/google", () => ({
@@ -15,6 +16,7 @@ vi.mock("next/font/google", () => ({
 vi.mock("next-intl/server", () => ({ getMessages: vi.fn().mockResolvedValue({ common: { appName: "App", tagline: "Tagline" } }) }));
 vi.mock("next-intl", () => ({ NextIntlClientProvider: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: mocks.resolveSession }));
+vi.mock("@/services/social/following", () => ({ countPendingFollowRequests: mocks.countPendingFollowRequests }));
 vi.mock("@/components/layout/Header", () => ({ Header: mocks.header }));
 vi.mock("@/components/layout/Footer", () => ({ Footer: mocks.footer }));
 vi.mock("./providers", () => ({ Providers: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
@@ -41,9 +43,14 @@ describe("RootLayout", () => {
       expect.objectContaining({ user: { id: "u1", username: "ana", displayName: "Ana" } }),
       undefined,
     );
-    const headerProps = mocks.header.mock.calls[0]?.[0] as { user: Record<string, unknown> };
+    const headerProps = mocks.header.mock.calls[0]?.[0] as {
+      user: Record<string, unknown>;
+      pendingFollowRequests: number;
+    };
     expect(headerProps.user).not.toHaveProperty("passwordHash");
     expect(headerProps.user).not.toHaveProperty("createdAt");
+    expect(headerProps.pendingFollowRequests).toBe(0);
+    expect(mocks.countPendingFollowRequests).toHaveBeenCalledWith("u1");
 
     // El Footer recibe el mismo usuario público que el Header.
     expect(mocks.footer).toHaveBeenCalledWith(

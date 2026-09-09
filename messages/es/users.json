@@ -72,8 +72,7 @@
   "recencyLastSignal": "Última señal {ago}",
   "railEmptyOwn": "Todavía no hay nada acá.",
   "hub": {
-    "heading": "Gestión",
-    "pendingRequests": "{count, plural, one {# solicitud} other {# solicitudes}}"
+    "heading": "Gestión"
   },
   "viewAs": {
     "enter": "Ver cómo te ven",

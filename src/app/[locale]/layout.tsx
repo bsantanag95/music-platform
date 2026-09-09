@@ -6,6 +6,7 @@ import { Providers } from "./providers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { resolveSession } from "@/services/auth/sessions";
+import { countPendingFollowRequests } from "@/services/social/following";
 import { isExploreEnabled } from "@/lib/config/discovery";
 import "@/app/globals.css";
 
@@ -62,6 +63,10 @@ export default async function RootLayout({
          displayName: session.user.displayName,
        }
     : null;
+  // Badge del menú de usuario: solicitudes de seguimiento pendientes recibidas.
+  const pendingFollowRequests = session?.user
+    ? await countPendingFollowRequests(session.user.id)
+    : 0;
 
   return (
     <html
@@ -71,7 +76,11 @@ export default async function RootLayout({
       <body>
         <NextIntlClientProvider messages={messages}>
           <span id="top" aria-hidden="true" />
-          <Header user={publicUser} exploreEnabled={exploreEnabled} />
+          <Header
+            user={publicUser}
+            exploreEnabled={exploreEnabled}
+            pendingFollowRequests={pendingFollowRequests}
+          />
           <Providers>{children}</Providers>
           <Footer user={publicUser} exploreEnabled={exploreEnabled} />
         </NextIntlClientProvider>

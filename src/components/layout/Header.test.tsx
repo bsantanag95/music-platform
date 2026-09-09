@@ -44,7 +44,7 @@ vi.mock("next-intl", async () => {
   return {
     ...actual,
     useLocale: () => "es",
-    useTranslations: () => (key: string) => {
+    useTranslations: () => (key: string, values?: Record<string, unknown>) => {
       const map: Record<string, string> = {
         home: "Inicio",
         search: "Buscar",
@@ -58,10 +58,24 @@ vi.mock("next-intl", async () => {
         localeSwitcher: "Idioma",
         diary: "Diario",
         feed: "Feed",
+        favorites: "Favoritos",
+        lists: "Listas",
+        collection: "Colección",
+        profile: "Mi perfil",
+        artists: "Artistas seguidos",
+        followers: "Seguidores",
+        following: "Seguidos",
+        followRequests: "Solicitudes",
+        blocks: "Cuentas bloqueadas",
+        settings: "Ajustes",
+        userMenu: "Menú de usuario",
+        generalNav: "Navegación general",
         openMenu: "Abrir menú",
         closeMenu: "Cerrar menú",
       };
-        return map[key] ?? key;
+      if (map[key]) return map[key];
+      if (values && "count" in values) return `${key}:${values.count}`;
+      return key;
     },
   };
 });
@@ -110,6 +124,7 @@ describe("Header", () => {
       <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "Ana" }));
     fireEvent.click(screen.getByRole("button", { name: "Cerrar sesión" }));
 
     expect(await screen.findByRole("link", { name: "Iniciar sesión" })).toBeInTheDocument();
@@ -125,6 +140,7 @@ describe("Header", () => {
       <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "Ana" }));
     fireEvent.click(screen.getByRole("button", { name: "Cerrar sesión" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("INTERNAL_ERROR.description");
@@ -165,14 +181,16 @@ describe("Header", () => {
     expect(mocks.replace).toHaveBeenCalledWith("/search?q=Sabrina", { locale: "en" });
   });
 
-  it("el botón de menú mobile despliega la navegación, sesión e idioma plegados", () => {
+  it("el botón de menú mobile pliega la barra general y la zona de usuario", () => {
     renderWithIntl(
       <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
     );
 
     const toggle = screen.getByRole("button", { name: "Abrir menú" });
     expect(toggle).toHaveAttribute("aria-expanded", "false");
-    expect(screen.getAllByRole("link", { name: "Diario" })).toHaveLength(1);
+    // Con el panel cerrado, las superficies personales no están en el DOM: el
+    // menú de escritorio está plegado y el panel mobile no se ha abierto.
+    expect(screen.queryByRole("link", { name: "Diario" })).not.toBeInTheDocument();
 
     fireEvent.click(toggle);
 
@@ -180,7 +198,78 @@ describe("Header", () => {
       "aria-expanded",
       "true",
     );
-    // Plegado abierto: ahora hay dos copias (escritorio oculta por CSS + panel mobile).
-    expect(screen.getAllByRole("link", { name: "Diario" })).toHaveLength(2);
+    expect(screen.getByRole("link", { name: "Diario" })).toBeInTheDocument();
+  });
+
+  it("la barra general de escritorio no muestra enlaces a superficies personales", () => {
+    renderWithIntl(
+      <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
+    );
+
+    for (const label of ["Diario", "Feed", "Favoritos", "Listas", "Colección"]) {
+      expect(screen.queryByRole("link", { name: label })).not.toBeInTheDocument();
+    }
+  });
+
+  it("despliega el menú de usuario al posar el cursor, sin clic", () => {
+    renderWithIntl(
+      <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Ana" });
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("link", { name: "Diario" })).not.toBeInTheDocument();
+
+    fireEvent.mouseEnter(trigger.parentElement as HTMLElement);
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("link", { name: "Diario" })).toBeInTheDocument();
+
+    fireEvent.mouseLeave(trigger.parentElement as HTMLElement);
+    expect(screen.queryByRole("link", { name: "Diario" })).not.toBeInTheDocument();
+  });
+
+  it("el menú de usuario agrupa las superficies personales, con Feed dentro", () => {
+    renderWithIntl(
+      <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Ana" }));
+
+    expect(screen.getByRole("link", { name: "Mi perfil" })).toHaveAttribute(
+      "href",
+      "/users/ana",
+    );
+    expect(screen.getByRole("link", { name: "Feed" })).toHaveAttribute("href", "/me/feed");
+    expect(screen.getByRole("link", { name: "Diario" })).toHaveAttribute("href", "/me/diary");
+  });
+
+  it("cierra el menú de usuario con Escape y devuelve el foco al disparador", () => {
+    renderWithIntl(
+      <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Ana" });
+    fireEvent.click(trigger);
+    expect(screen.getByRole("link", { name: "Diario" })).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "Escape" });
+
+    expect(screen.queryByRole("link", { name: "Diario" })).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
+  it("muestra el número de solicitudes de seguimiento pendientes en el menú", () => {
+    renderWithIntl(
+      <Header
+        user={{ id: "u1", username: "ana", displayName: "Ana" }}
+        pendingFollowRequests={3}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Ana" }));
+
+    const requests = screen.getByRole("link", { name: /Solicitudes/ });
+    expect(requests).toHaveAttribute("href", "/me/follow-requests");
+    expect(requests).toHaveTextContent("3");
   });
 });
