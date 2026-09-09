@@ -31,4 +31,4 @@
 - [x] 5.1 `openspec validate deepen-listening-diary --strict` pasa
 - [x] 5.2 `typecheck`, `lint`, `test` (1195 pasan), `build` en verde (una corrida de `next build` falló de forma transitoria en `collect page data` de `/search`, sin relación con el cambio; la re-corrida pasa limpia)
 - [x] 5.3 Verificación cubierta por `diary.test.ts`, `ListenEntryForm.test.tsx` (audiencia sigue la intención, congelamiento, entrada vieja intacta) y `DiaryActivityList.test.tsx` (conmutador, agrupado por mes sin métricas, edición). Walk autenticado en navegador no factible en este entorno
-- [ ] 5.4 Archivar el cambio y sincronizar specs cuando esté implementado y aprobado
+- [x] 5.4 Archivar el cambio y sincronizar specs
