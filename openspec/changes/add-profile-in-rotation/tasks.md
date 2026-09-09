@@ -46,4 +46,4 @@
 
 - [x] 7.1 `openspec validate add-profile-in-rotation --strict` pasa
 - [x] 7.2 `typecheck`, `lint`, `test`, `build` en verde
-- [ ] 7.3 Archivar el cambio y sincronizar specs cuando esté implementado y aprobado
+- [x] 7.3 Archivar el cambio y sincronizar specs cuando esté implementado y aprobado
