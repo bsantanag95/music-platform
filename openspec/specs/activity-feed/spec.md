@@ -3,17 +3,19 @@
 ## Purpose
 
 Feed de actividad de Fase 5: composición bajo demanda de las actividades visibles de los
-usuarios seguidos — escuchas del diario, favoritos, eventos de listas, ratings vigentes y
-comentarios — ordenadas cronológicamente y filtradas por audiencia, perfil y bloqueos.
+usuarios seguidos — escuchas del diario, favoritos, eventos de listas, ratings vigentes,
+comentarios y reseñas de álbum — ordenadas cronológicamente y filtradas por audiencia,
+perfil y bloqueos, y presentadas según una jerarquía de 4 tiers (expresivo, señal de
+opinión, presencia cotidiana, ambiente).
 
 ## Requirements
-
 ### Requirement: Feed de actividad de usuarios seguidos
 
 El sistema SHALL exponer, para un usuario autenticado, un feed de actividad v1 compuesto por
 las actividades visibles de los usuarios a los que sigue con relación aceptada: escuchas
-(`listen_entry`), favoritos y eventos de listas (creación o actualización de metadatos). El
-feed SHALL ordenar las actividades de la más reciente a la más antigua con paginación
+(`listen_entry`), favoritos, eventos de listas (creación o actualización de metadatos),
+ratings vigentes, comentarios y **reseñas de álbum vigentes**. El feed SHALL ordenar las
+actividades de la más reciente a la más antigua con paginación
 (`{ entries, page, pageSize, hasNext }`) y SHALL aplicar la misma regla de visibilidad de
 actividades ajenas que el perfil: cada actividad solo aparece si es visible para el lector
 según audiencia, visibilidad del perfil del autor y bloqueos. Sin sesión, la petición SHALL
@@ -21,19 +23,20 @@ responder `401` con código `AUTH_REQUIRED`.
 
 El sistema SHALL aceptar tres parámetros de filtro opcionales, combinables entre sí y
 aplicados sobre la composición completa (no solo sobre la página ya cargada): `kind`
-(acotar a un único tipo de actividad entre `listen`, `favorite`, `list`, `rating` o
-`comment`), `authorId` (acotar a un único autor, que SHALL pertenecer a los seguidos con
-relación aceptada del lector), y `q` (coincidencia parcial, sin distinguir mayúsculas ni
-acentos exactos, sobre el título del objetivo de cada entrada — nombre de artista, álbum o
-canción; el texto de comentarios y notas de escucha NO SHALL considerarse en la búsqueda).
-Sin ninguno de estos parámetros, el comportamiento SHALL ser idéntico al de una consulta
-sin filtros. Un `kind` fuera del enum cerrado, o un `authorId` que no pertenezca a los
-seguidos aceptados del lector, SHALL responder `400` con código `VALIDATION_ERROR`.
+(acotar a un único tipo de actividad entre `listen`, `favorite`, `list`, `rating`,
+`comment` o `review`), `authorId` (acotar a un único autor, que SHALL pertenecer a los
+seguidos con relación aceptada del lector), y `q` (coincidencia parcial, sin distinguir
+mayúsculas ni acentos exactos, sobre el título del objetivo de cada entrada — nombre de
+artista, álbum o canción; el texto de comentarios, notas de escucha y cuerpo de reseñas NO
+SHALL considerarse en la búsqueda). Sin ninguno de estos parámetros, el comportamiento
+SHALL ser idéntico al de una consulta sin filtros. Un `kind` fuera del enum cerrado, o un
+`authorId` que no pertenezca a los seguidos aceptados del lector, SHALL responder `400` con
+código `VALIDATION_ERROR`.
 
 #### Scenario: Feed de un usuario con seguidos
 - **WHEN** un usuario autenticado que sigue a otros con relación aceptada consulta su feed
-- **THEN** ve las escuchas, favoritos y eventos de listas visibles de esos seguidos, ordenados
-  de la más reciente a la más antigua y paginados
+- **THEN** ve las escuchas, favoritos, eventos de listas, ratings, comentarios y reseñas
+  visibles de esos seguidos, ordenados de la más reciente a la más antigua y paginados
 
 #### Scenario: Sin sesión
 - **WHEN** una petición sin sesión consulta el feed
@@ -61,6 +64,11 @@ seguidos aceptados del lector, SHALL responder `400` con código `VALIDATION_ERR
 - **THEN** solo aparecen entradas de valoración de sus seguidos, con la misma paginación y
   reglas de visibilidad que el feed sin filtrar
 
+#### Scenario: Filtro por tipo reseña
+- **WHEN** el lector consulta su feed con `kind=review`
+- **THEN** solo aparecen entradas de reseña de sus seguidos, con la misma paginación y
+  reglas de visibilidad que el feed sin filtrar
+
 #### Scenario: Tipo de actividad inválido
 - **WHEN** el lector consulta su feed con un valor de `kind` que no pertenece al enum
   cerrado de tipos de actividad
@@ -85,7 +93,8 @@ seguidos aceptados del lector, SHALL responder `400` con código `VALIDATION_ERR
 
 #### Scenario: La búsqueda no alcanza el cuerpo de comentarios o notas
 - **WHEN** el lector consulta su feed con `q` coincidiendo con texto que solo aparece en el
-  cuerpo de un comentario o de una nota de escucha, no en el título del objetivo
+  cuerpo de un comentario, de una nota de escucha o de una reseña, no en el título del
+  objetivo
 - **THEN** esa entrada no aparece en el resultado
 
 #### Scenario: Filtros combinados
@@ -101,25 +110,33 @@ seguidos aceptados del lector, SHALL responder `400` con código `VALIDATION_ERR
 ### Requirement: Alcance del feed v1
 
 El feed v1 SHALL contener escuchas del diario, favoritos, eventos de listas publicadas,
-ratings vigentes y comentarios, y SHALL NOT contener un historial de valoraciones pasadas
-por objetivo. Un evento de lista SHALL generarse por la creación de una lista o por la
-actualización de sus metadatos (título, descripción o audiencia), no por cada ítem
-agregado o quitado. Un rating SHALL aparecer en el feed una única vez por usuario y
-objetivo, reflejando siempre el valor vigente y su fecha de última actualización; una
-nueva valoración sobre el mismo objetivo SHALL reemplazar la entrada anterior en el feed en
-lugar de agregar una entrada adicional. Cada comentario SHALL generar su propia entrada de
-feed, sin deduplicar por autor u objetivo. Ratings y comentarios no tienen audiencia
-propia: a efectos del feed SHALL tratarse como audiencia `public`, sujeta igualmente a la
-regla de visibilidad de perfil del autor y de bloqueos. Cada entrada SHALL mostrarse con el
-autor (username y displayName), el tipo de actividad, la fecha y el objetivo. El objetivo
-SHALL exponerse con su título y, cuando es un álbum o una canción, con el nombre de su
-artista principal; para objetivos de tipo artista o lista el nombre de artista SHALL ser
-nulo. Este campo de artista es una ampliación aditiva del payload y no altera la
-composición, la deduplicación ni las reglas de visibilidad del feed.
+ratings vigentes, comentarios y reseñas de álbum vigentes, y SHALL NOT contener un
+historial de valoraciones ni de reseñas pasadas por objetivo. Un evento de lista SHALL
+generarse por la creación de una lista o por la actualización de sus metadatos (título,
+descripción o audiencia), no por cada ítem agregado o quitado. Un rating SHALL aparecer en
+el feed una única vez por usuario y objetivo, reflejando siempre el valor vigente y su
+fecha de última actualización; una nueva valoración sobre el mismo objetivo SHALL
+reemplazar la entrada anterior en el feed en lugar de agregar una entrada adicional. Una
+reseña SHALL aparecer en el feed una única vez por usuario y álbum, reflejando el título y
+el cuerpo vigentes y su fecha de última edición; editar la reseña SHALL actualizar esa
+entrada, no agregar otra. Cada comentario SHALL generar su propia entrada de feed, sin
+deduplicar por autor u objetivo. Ratings, comentarios y reseñas no tienen audiencia propia:
+a efectos del feed SHALL tratarse como audiencia `public`, sujeta igualmente a la regla de
+visibilidad de perfil del autor y de bloqueos. Cada entrada SHALL mostrarse con el autor
+(username y displayName), el tipo de actividad, la fecha y el objetivo. El objetivo SHALL
+exponerse con su título y, cuando es un álbum o una canción, con el nombre de su artista
+principal; para objetivos de tipo artista o lista el nombre de artista SHALL ser nulo. Este
+campo de artista es una ampliación aditiva del payload y no altera la composición, la
+deduplicación ni las reglas de visibilidad del feed.
 
 #### Scenario: Solo escuchas, favoritos, listas, ratings y comentarios
 - **WHEN** un seguido realiza una actividad de un tipo no contemplado por el feed
 - **THEN** ese evento no genera ninguna entrada en el feed
+
+#### Scenario: La reseña de álbum genera una entrada de feed
+- **WHEN** un seguido publica una reseña de un álbum
+- **THEN** el feed muestra una entrada de reseña con el autor, el álbum, el título opcional,
+  el cuerpo y la fecha de última edición
 
 #### Scenario: Un evento por lista, no por ítem
 - **WHEN** un seguido crea una lista y luego le agrega varios ítems
@@ -152,50 +169,70 @@ composición, la deduplicación ni las reglas de visibilidad del feed.
 - **THEN** el feed muestra una única entrada de rating para ese usuario y objetivo, con el
   valor y la fecha de la valoración vigente, y no conserva la entrada del valor anterior
 
+#### Scenario: Reseña vigente reemplaza a la edición anterior en el feed
+- **WHEN** un seguido edita el cuerpo o el título de una reseña que ya había publicado
+- **THEN** el feed muestra una única entrada de reseña para ese usuario y álbum, con el
+  contenido vigente y la fecha de última edición, y no una entrada por cada edición
+
 #### Scenario: Varios comentarios sobre el mismo objetivo
 - **WHEN** un seguido publica más de un comentario sobre el mismo artista, álbum o canción
 - **THEN** el feed muestra una entrada por cada comentario, cada una con su propia fecha
 
 #### Scenario: Rating o comentario de un perfil privado sin relación aprobada
-- **WHEN** un usuario valora o comenta y su perfil es privado, y el lector no tiene una
-  relación de seguimiento aceptada con ese perfil
-- **THEN** esa entrada de rating o comentario no aparece en el feed del lector, aunque en
-  la vista de catálogo siga siendo visible para cualquiera
+- **WHEN** un usuario valora, comenta o reseña y su perfil es privado, y el lector no tiene
+  una relación de seguimiento aceptada con ese perfil
+- **THEN** esa entrada de rating, comentario o reseña no aparece en el feed del lector,
+  aunque en la vista de catálogo siga siendo visible para cualquiera
 
 #### Scenario: Rating o comentario con bloqueo entre autor y lector
-- **WHEN** existe un bloqueo en cualquier dirección entre el lector y el autor de un rating
-  o comentario
+- **WHEN** existe un bloqueo en cualquier dirección entre el lector y el autor de un
+  rating, comentario o reseña
 - **THEN** esa entrada no aparece en el feed del lector
 
 ### Requirement: Jerarquía de presentación del feed
 
 La presentación de una lista vertical cronológica de entradas de feed SHALL renderizar
-cada entrada según su peso de contenido, no con un formato único. Esta presentación
+cada entrada según su **tier de intención**, no con un formato único. Esta presentación
 SHALL usarse en `/me/feed`, en el preview del feed de seguidos de Inicio y en el bloque
 de rastro reciente del propio usuario. Los bloques de descubrimiento de Inicio que usan
 un layout compacto o de grilla (actividad de la comunidad, listas públicas recientes) NO
 están cubiertos por este requirement y conservan su presentación propia.
 
-**Peso de entrada.** Una entrada SHALL considerarse **con texto** cuando es un comentario,
-o una escucha con nota escrita no vacía; el resto (favorito, evento de lista, rating, y
-escucha sin nota) SHALL considerarse **de sola presencia**. Una entrada con texto SHALL
-mostrarse como una cita — un borde izquierdo de acento neutro con el texto indentado,
-NUNCA como una caja o panel con fondo propio ni escalón de temperatura. Dentro de esta
-presentación de cita, el tono SHALL distinguirse por tipo de entrada, no por caja: una
-nota de escucha SHALL mostrarse en cursiva y entre comillas tipográficas — la misma voz
-personal que su equivalente en el diario propio (`/me/diary`), porque es literalmente el
-mismo campo visto desde otra superficie; un comentario SHALL mostrarse en redonda y sin
-comillas, porque un comentario en el feed no es necesariamente una impresión sentida —
-suele ser crítica, opinión o humor, y forzarlo a leerse como una cita personal no
-corresponde a ese tono. En `/me/feed` (no en el preview de Inicio ni en `/me/diary`),
-cuando una cita supera 6 líneas de alto real SHALL plegarse y SHALL exponer un control
-"Ver más" que la expande a su altura completa y "Ver menos" que vuelve a plegarla; la
-detección de si corresponde plegar SHALL basarse en la altura real renderizada, no en la
-cantidad de caracteres. Al colapsar con "Ver menos", la posición del scroll del viewport
-SHALL ajustarse para que la fila colapsada siga siendo visible, sin dejar al lector
-mirando contenido que quedó fuera de lugar. Una entrada de sola presencia SHALL ocupar
-una sola fila de baseline. Si una escucha de sola presencia tiene reacción, la reacción
-SHALL mostrarse en esa misma fila.
+**Tiers de intención.** Cada entrada SHALL clasificarse en uno de cuatro tiers según su
+tipo y su objetivo:
+
+- **Tier 1 — Expresivo:** comentario · escucha con nota escrita no vacía · **reseña de
+  álbum** · evento de lista. Comentario, nota de escucha y reseña SHALL mostrarse como una
+  **cita** — un borde izquierdo de acento neutro con el texto indentado, NUNCA como una
+  caja o panel con fondo propio ni escalón de temperatura. El evento de lista es tier 1
+  pero SHALL mostrarse como fila de título, no como cita. Dentro de la cita, el tono SHALL
+  distinguirse por tipo de entrada, no por caja: una **nota de escucha** SHALL mostrarse en
+  cursiva y entre comillas tipográficas — la misma voz personal que su equivalente en el
+  diario propio (`/me/diary`), porque es literalmente el mismo campo visto desde otra
+  superficie; un **comentario** y una **reseña** SHALL mostrarse en redonda y sin comillas,
+  porque no son necesariamente una impresión sentida — suelen ser crítica, opinión o humor.
+  El **título de la reseña**, cuando existe, SHALL mostrarse como metadato secundario junto
+  al autor, no como encabezado. Una entrada tier 1 NUNCA SHALL colapsarse ni agruparse, y
+  SHALL cortar cualquier corrida de tiers inferiores.
+- **Tier 2 — Señal de opinión:** rating de **álbum** sin texto · favorito de **álbum**.
+  SHALL ocupar una sola fila que abre con la celda de carátula del álbum, con la marca de
+  la señal (meter de rating o marca de favorito) visible. Corridas de 3 o más entradas
+  consecutivas del mismo tipo y autor SHALL colapsarse en una única fila.
+- **Tier 3 — Presencia cotidiana:** rating de **canción** · favorito de **canción o
+  artista** · escucha sin nota · reacción. SHALL ocupar una sola fila mínima de baseline;
+  si una escucha tiene reacción, la reacción SHALL mostrarse en esa misma fila. Corridas de
+  3 o más entradas consecutivas del mismo tipo y autor SHALL colapsarse en una única fila.
+- **Tier 4 — Ambiente:** seguir artista · seguir usuario · entrada de colección física.
+  Estos eventos SHALL clasificarse como tier 4 y SHALL recibir agrupación agresiva o quedar
+  fuera del feed principal. **En esta versión el feed principal NO los incluye**; el tier se
+  define para que un cambio posterior solo tenga que activarlos.
+
+En `/me/feed` (no en el preview de Inicio ni en `/me/diary`), cuando una cita supera 6
+líneas de alto real SHALL plegarse y SHALL exponer un control "Ver más" que la expande a su
+altura completa y "Ver menos" que vuelve a plegarla; la detección SHALL basarse en la
+altura real renderizada, no en la cantidad de caracteres. Al colapsar con "Ver menos", la
+posición del scroll del viewport SHALL ajustarse para que la fila colapsada siga siendo
+visible.
 
 **Anatomía de fila.** En `/me/feed` y en el preview de feed de seguidos, cada fila SHALL
 abrir con una celda cuadrada fija a la izquierda que muestra la carátula del objetivo
@@ -218,11 +255,12 @@ acento SHALL usarse en reposo únicamente para esta representación del rating.
 la fecha absoluta como valor accesible del elemento de tiempo. Dentro de una misma
 página, los bloques de actividad de feed NO SHALL mezclar fecha relativa y absoluta.
 
-**Agrupación de actividad ambiente.** Cuando 3 o más entradas consecutivas del mismo tipo
-de sola presencia (escuchas sin nota, o favoritos) y del mismo autor aparecen seguidas,
-SHALL plegarse en una única fila que nombra al autor, la cantidad y lista los títulos
-enlazados. Los comentarios y las escuchas con nota NUNCA SHALL colapsarse. La fila
-agrupada SHALL llevar un único marcador de tiempo.
+**Agrupación de actividad.** Una corrida es una secuencia de entradas consecutivas del
+mismo tier (2 o 3), del mismo `kind` y del mismo autor. Cuando una corrida alcanza 3 o más
+entradas, SHALL plegarse en una única fila que nombra al autor, la cantidad y lista los
+títulos enlazados, con un único marcador de tiempo. Las entradas tier 1 (comentarios,
+notas de escucha, reseñas, eventos de lista) NUNCA SHALL colapsarse y SHALL cortar la
+corrida.
 
 **Rastro reciente del propio usuario.** El bloque de rastro reciente SHALL diferenciarse
 visualmente del preview de feed de seguidos por composición: SHALL NOT repetir el nombre
@@ -240,14 +278,20 @@ objetivo musical SHALL seguir disponible.
   caja ni fondo propio) en tipografía redonda y sin comillas, con el autor, el objetivo y
   la fecha relativa
 
+#### Scenario: Reseña de álbum se muestra como cita en redonda con el título como metadato
+- **WHEN** el feed incluye una reseña de álbum de un seguido, con título
+- **THEN** el cuerpo se muestra como cita en redonda y sin comillas (mismo tratamiento que
+  un comentario), y el título de la reseña aparece como metadato secundario junto al autor,
+  no como encabezado
+
 #### Scenario: Escucha con nota escrita se muestra como cita en cursiva y entre comillas
 - **WHEN** el feed incluye una escucha cuya nota (`body`) no está vacía
 - **THEN** la entrada se muestra como cita en cursiva y entre comillas tipográficas, no
   como una línea ni en redonda
 
 #### Scenario: Cita larga se pliega con control para expandir
-- **WHEN** el feed incluye una cita (comentario o nota de escucha) cuya altura renderizada
-  supera 6 líneas
+- **WHEN** el feed incluye una cita (comentario, nota de escucha o reseña) cuya altura
+  renderizada supera 6 líneas
 - **THEN** la cita se muestra plegada con un botón "Ver más"; al hacer click, se expande a
   su altura completa y el botón pasa a decir "Ver menos"
 
@@ -300,6 +344,12 @@ objetivo musical SHALL seguir disponible.
 - **WHEN** el feed incluye una escucha sin nota escrita pero con una reacción
 - **THEN** la entrada se muestra en una sola fila e incluye la reacción en esa fila
 
+#### Scenario: Corrida de ratings de canción se colapsa pero una corta de ratings de álbum no
+- **WHEN** un seguido registra 3 o más ratings de canción consecutivos, y por separado 2
+  ratings de álbum consecutivos, antes de cualquier otra actividad
+- **THEN** los 3 ratings de canción (tier 3) se pliegan en una única fila; los 2 ratings
+  de álbum (tier 2) se muestran como dos filas separadas por no alcanzar la corrida mínima
+
 #### Scenario: Corrida de escuchas del mismo autor se colapsa
 - **WHEN** un seguido registra 3 o más escuchas sin nota consecutivas antes de cualquier
   otra actividad en el feed
@@ -311,6 +361,16 @@ objetivo musical SHALL seguir disponible.
   persona
 - **THEN** la corrida no se colapsa a través del comentario; el comentario se muestra
   siempre como su propia entrada con texto
+
+#### Scenario: Una reseña entre medio corta la corrida
+- **WHEN** entre dos favoritos de álbum de un mismo autor aparece una reseña de esa persona
+- **THEN** la corrida no se colapsa a través de la reseña; la reseña se muestra como su
+  propia cita
+
+#### Scenario: Los eventos ambiente (tier 4) no aparecen en el feed en esta versión
+- **WHEN** un seguido empieza a seguir a un artista o a otro usuario, o agrega una entrada
+  a su colección física
+- **THEN** ese evento no genera ninguna fila en el feed principal
 
 #### Scenario: El rastro reciente no muestra el nombre del propio usuario
 - **WHEN** un usuario con sesión abre `/[locale]` y su bloque de rastro reciente tiene
@@ -347,3 +407,4 @@ objetivo musical SHALL seguir disponible.
 - **WHEN** el lector ve una entrada en `/me/feed`
 - **THEN** no hay controles para reaccionar, responder ni editar la entrada; solo enlaces
   de navegación al perfil del autor y al objetivo
+
