@@ -19,6 +19,7 @@ import { AddToListButton } from "@/components/lists/AddToListButton";
 import { resolveSession } from "@/services/auth/sessions";
 import { listComments, resolveSocialTarget } from "@/services/social";
 import { isFollowingArtist } from "@/services/social/artist-following";
+import { isFavorited } from "@/services/favorites/favorites";
 
 interface ArtistPageProps {
   params: Promise<{ id: string }>;
@@ -53,10 +54,11 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
 
   await ensureArtistMemberships(artist);
   const session = await resolveSession();
-  const [releaseGroups, memberships, following] = await Promise.all([
+  const [releaseGroups, memberships, following, favorited] = await Promise.all([
     findOrIngestDiscography(artist),
     getArtistMemberships(artist),
     session ? isFollowingArtist(session.user.id, artist.id) : Promise.resolve(false),
+    session ? isFavorited({ type: "artist", id: artist.id }, session.user.id) : Promise.resolve(false),
   ]);
   // La página de artista ya no expone rating de estrellas (openspec:
   // rebalance-catalog-detail-pages, D7): solo se cargan las notas de la
@@ -113,7 +115,7 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
           initialFollowing={following}
         />
         <MarkAsListened target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
-        <FavoriteButton target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
+        <FavoriteButton target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} initialActive={favorited} />
         <AddToListButton target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
       </div>
       <ArtistMemberships

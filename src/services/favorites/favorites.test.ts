@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   toggleFavorite,
   removeFavorite,
+  isFavorited,
   updateFavoriteAudience,
   updateFavoritesAudienceBulk,
   listMyFavorites,
@@ -99,6 +100,14 @@ describe("servicio de favoritos", () => {
       code: "FAVORITE_TARGET_INVALID",
       status: 404,
     });
+  });
+
+  it("isFavorited devuelve true cuando existe la fila y false cuando no", async () => {
+    mocks.db.select.mockReturnValue(whereLimit([{ id: "fav1" }]));
+    await expect(isFavorited(target, "user1")).resolves.toBe(true);
+
+    mocks.db.select.mockReturnValue(whereLimit([]));
+    await expect(isFavorited(target, "user1")).resolves.toBe(false);
   });
 
   it("crea un favorito nuevo cuando no existe", async () => {

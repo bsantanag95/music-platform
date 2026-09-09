@@ -145,6 +145,28 @@ export async function toggleFavorite(
   return getOwnedFavorite(created.id, userId);
 }
 
+/**
+ * ¿El usuario tiene marcado como favorito este objetivo? Para hidratar el
+ * estado inicial del botón de favorito en las páginas de catálogo — sin esto
+ * el botón siempre arranca "no marcado" y el primer clic hace un toggle contra
+ * un estado real distinto (borra en vez de crear).
+ */
+export async function isFavorited(target: FavoriteTarget, userId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: favorite.id })
+    .from(favorite)
+    .where(
+      and(
+        eq(favorite.userId, userId),
+        ...Object.entries(targetValues(target.type, target.id))
+          .filter(([, v]) => v !== null)
+          .map(([k, v]) => eq(favorite[k as TargetColumn], v as string)),
+      ),
+    )
+    .limit(1);
+  return Boolean(row);
+}
+
 /** Actualiza la audiencia de un favorito propio. */
 export async function updateFavoriteAudience(
   favoriteId: string,

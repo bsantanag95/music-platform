@@ -15,6 +15,7 @@ import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { AddToListButton } from "@/components/lists/AddToListButton";
 import { CollectionAlbumAction } from "@/components/collection/CollectionAlbumAction";
 import { resolveSession } from "@/services/auth/sessions";
+import { isFavorited } from "@/services/favorites/favorites";
 import { listOwnEntriesForReleaseGroup } from "@/services/collection/collection";
 import { getRatings, listComments, resolveSocialTarget } from "@/services/social";
 import { listReviews } from "@/services/reviews";
@@ -58,13 +59,16 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
   const { detail } = result;
   const session = await resolveSession();
   const socialTarget = await resolveSocialTarget("release-group", detail.releaseGroup.id);
-  const [ratings, comments, reviews, collectionEntries] = await Promise.all([
+  const [ratings, comments, reviews, collectionEntries, favorited] = await Promise.all([
     getRatings(socialTarget, session?.user.id),
     listComments(socialTarget),
     listReviews(socialTarget),
     session?.user.id
       ? listOwnEntriesForReleaseGroup(session.user.id, detail.releaseGroup.id)
       : Promise.resolve([]),
+    session?.user.id
+      ? isFavorited({ type: "release-group", id: detail.releaseGroup.id }, session.user.id)
+      : Promise.resolve(false),
   ]);
 
   const breadcrumbItems = [
@@ -111,6 +115,7 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
             <FavoriteButton
               target={{ type: "release-group", id: detail.releaseGroup.id }}
               authenticated={Boolean(session?.user.id)}
+              initialActive={favorited}
             />
             <AddToListButton
               target={{ type: "release-group", id: detail.releaseGroup.id }}

@@ -21,6 +21,7 @@ import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { AddToListButton } from "@/components/lists/AddToListButton";
 import { resolveSession } from "@/services/auth/sessions";
 import { getRatings, listComments, resolveSocialTarget } from "@/services/social";
+import { isFavorited } from "@/services/favorites/favorites";
 
 interface SongPageProps { params: Promise<{ id: string }> }
 
@@ -56,11 +57,14 @@ export default async function SongPage({ params }: SongPageProps) {
   const session = await resolveSession();
   const userId = session?.user.id;
   const socialTarget = await resolveSocialTarget("recording", detail.recording.id);
-  const [ratings, comments, reactionSummary, listenHistory] = await Promise.all([
+  const [ratings, comments, reactionSummary, listenHistory, favorited] = await Promise.all([
     getRatings(socialTarget, userId),
     listComments(socialTarget),
     getRecordingReactionSummary(detail.recording.id),
     userId ? listMyListensForRecording(userId, detail.recording.id) : Promise.resolve([]),
+    userId
+      ? isFavorited({ type: "recording", id: detail.recording.id }, userId)
+      : Promise.resolve(false),
   ]);
 
   const mainAlbum = detail.containingAlbums[0];
@@ -99,7 +103,7 @@ export default async function SongPage({ params }: SongPageProps) {
 
       <div className="flex flex-col items-start gap-3">
         <MarkAsListened target={{ type: "recording", id: detail.recording.id }} authenticated={Boolean(userId)} />
-        <FavoriteButton target={{ type: "recording", id: detail.recording.id }} authenticated={Boolean(userId)} />
+        <FavoriteButton target={{ type: "recording", id: detail.recording.id }} authenticated={Boolean(userId)} initialActive={favorited} />
         <AddToListButton target={{ type: "recording", id: detail.recording.id }} authenticated={Boolean(userId)} />
       </div>
 

@@ -37,6 +37,7 @@ vi.mock("@/services/social", () => ({
 vi.mock("@/services/catalog/recording-detail", () => ({ getRecordingDetail: vi.fn() }));
 vi.mock("@/services/catalog/recording-reactions", () => ({ getRecordingReactionSummary: vi.fn() }));
 vi.mock("@/services/diary/diary", () => ({ listMyListensForRecording: vi.fn() }));
+vi.mock("@/services/favorites/favorites", () => ({ isFavorited: vi.fn().mockResolvedValue(false) }));
 
 const RID = "a1b2c3d4-0000-4000-8000-000000000abc";
 const RG_ID = "a1b2c3d4-0000-4000-8000-0000000000b1";

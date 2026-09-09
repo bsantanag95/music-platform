@@ -71,6 +71,10 @@ vi.mock("@/services/social/artist-following", () => ({
   isFollowingArtist: vi.fn().mockResolvedValue(false),
 }));
 
+vi.mock("@/services/favorites/favorites", () => ({
+  isFavorited: vi.fn().mockResolvedValue(false),
+}));
+
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
     <a href={href}>{children}</a>

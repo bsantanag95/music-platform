@@ -37,6 +37,10 @@ vi.mock("@/services/collection/collection", () => ({
   listOwnEntriesForReleaseGroup: vi.fn().mockResolvedValue([]),
 }));
 
+vi.mock("@/services/favorites/favorites", () => ({
+  isFavorited: vi.fn().mockResolvedValue(false),
+}));
+
 vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
