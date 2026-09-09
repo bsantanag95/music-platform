@@ -17,6 +17,7 @@
   "groupFavorites": "{count, plural, one {added # favorite} other {added # favorites}}",
   "groupRatings": "{count, plural, one {rated # album} other {rated # albums}}",
   "groupSongRatings": "{count, plural, one {rated # song} other {rated # songs}}",
+  "rotationPeak": "In rotation · {count, plural, one {# log} other {# logs}} this week",
   "groupMore": "and {count} more",
   "loadMore": "Load more",
   "loadingMore": "Loading...",

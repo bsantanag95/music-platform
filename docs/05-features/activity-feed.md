@@ -76,8 +76,9 @@ actividad — no hace falta una audiencia explícita. Ver `design.md` del cambio
 - **Tier 4 en el feed** — eventos ambiente (seguir artista/usuario, colección). El tier
   está definido en `feedEntryTier` pero esas fuentes no se consultan todavía; se
   incorporan en un cambio posterior.
-- `add-feed-rotation-peak` y `add-network-convergence` — señales derivadas sobre el feed
-  (picos de rotación, convergencia de red), fuera de alcance de `rework-feed-tiers`.
+- `add-network-convergence` — convergencia de red (varias personas de tu red sobre la misma
+  obra en 7 días → una síntesis social única), fuera de alcance de `rework-feed-tiers` y de
+  `add-feed-rotation-peak`. (El pico de rotación personal ya está — ver "Pico de rotación".)
 - Materializar el feed como tabla de eventos si el volumen lo justifica.
 - Keyset pagination en lugar de offset.
 - Audiencia por actividad para rating/comment (alineado con el diseño maestro de Fase 5,
@@ -145,6 +146,31 @@ presencia cotidiana (tier 3, verbo de canciones). Una racha de ratings de canci�
 y ratings de álbum (tier 2) **no se fusionan** aunque sean consecutivas. Toda entrada tier 1
 (comentario, reseña, nota de escucha, evento de lista) corta la corrida. Corre en el
 cliente sobre el array acumulado, así que también colapsa a través de un "Cargar más".
+
+### Pico de rotación (`add-feed-rotation-peak`)
+
+Cuando una corrida colapsada de **escuchas sin nota es toda del mismo objetivo**, y ese
+objetivo acumula suficientes registros en los **últimos 7 días**, la fila plegada se
+presenta como un **pico de rotación** —`autor · En rotación · N registros esta semana`, con
+el título enlazado debajo— en vez de la fila genérica "registró N escuchas" con la lista de
+títulos (todos iguales). `groupFeedRuns` recibe un `now` (el `useNow()` estable del
+componente) y, tras aislar la corrida, emite un `FeedRotationPeak` si:
+
+- el objetivo común es una **canción** con **≥ 3** registros en ventana, o
+- el objetivo común es un **álbum** con **≥ 2** registros en ventana — un pico de álbum
+  puede formarse a partir de una corrida de solo 2 entradas, por debajo del mínimo de
+  plegado genérico (repetir un disco completo dos veces en una semana ya es la señal).
+
+Un objetivo **artista** nunca produce pico (demasiado grueso para "en rotación", igual
+criterio que `profile-in-rotation`). El pico respeta las mismas reglas de corte que una
+corrida (tier 1, otro objetivo u otro autor la cortan) y solo lee entradas consecutivas de
+la página cargada — puede *subestimar* la rotación real. Tono cultural: sin fuego, sin
+"racha", sin "¡N veces!"; la única métrica es la cuenta de la semana.
+
+Es el hermano a **7 días** de la sección **"En rotación" del perfil** (`profile-in-rotation`,
+30 días): la del perfil es el cálculo fiel de ventana sobre todo el diario; la del feed es
+la lectura en contexto de una racha evidente en el flujo de actividad. Mismo vocabulario,
+distinta escala.
 
 ### "Tu rastro reciente" — variante `self`
 

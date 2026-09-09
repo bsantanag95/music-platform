@@ -125,21 +125,23 @@ export type FeedRow = FeedEntry | FeedEntryGroup | FeedRotationPeak;
 `FeedActivityList` añade una rama `row.kind === "rotation-peak"` en el `.map`, antes de la
 rama `"group"`.
 
-### D5 — Presentación: fila subordinada, tono cultural, sin métricas de más
+### D5 — Presentación: fila subordinada con la misma anatomía que `GroupRow`
 
 - Misma ubicación visual que `GroupRow`: fila **indentada a la columna del título**, **sin
   celda** de carátula, subordinada (la actividad de rotación se lee como contexto, no como
   evento destacado).
-- Contenido: `[autor ·] «En rotación» · {título enlazado} · {N} registros esta semana`, con
-  el marcador de tiempo relativo a la derecha (`RelativeDate`, `createdAt`). En `self` se
-  omite el `[autor ·]`.
-- El título enlaza a `/song/{id}` o `/album/{id}` (`targetHref`). Se muestra el artista
-  acreditado junto al título si existe.
+- **Línea de metadato** (mismo patrón que `GroupRow`): `[avatar + autor ·] En rotación · {N}
+  registros esta semana`, con el marcador de tiempo relativo a la derecha (`RelativeDate`,
+  `createdAt`). En `self` se omite el `[autor ·]`.
+- **Debajo**, el **título del objetivo enlazado** a `/song/{id}` o `/album/{id}`
+  (`targetHref`) con el artista acreditado al lado si existe — igual que `GroupRow` pone sus
+  títulos en un `<p>` bajo la línea de metadato, solo que acá es un único título.
 - **No se muestra**: el algoritmo, un porcentaje, "hace X días por registro", ni ninguna
   barra de progreso. Sin emoji de fuego, sin "racha", sin exclamaciones.
-- Una sola clave i18n con `plural` sobre `count`:
-  - es: `"En rotación · {title} · {count, plural, one {# registro} other {# registros}} esta semana"`
-  - en: `"In rotation · {title} · {count, plural, one {# log} other {# logs}} this week"`
+- Clave i18n `rotationPeak`, **sin el título dentro** (el título es un enlace aparte),
+  `plural` sobre `count`:
+  - es: `"En rotación · {count, plural, one {# registro} other {# registros}} esta semana"`
+  - en: `"In rotation · {count, plural, one {# log} other {# logs}} this week"`
 
 ### D6 — Ventana temporal: `now` inyectable, `useNow()` en producción
 
@@ -191,9 +193,10 @@ aísla el fallo a esa lista. Rollback = revertir el commit.
 ## Open Questions
 
 - **OQ1 — ¿El pico de álbum se forma con una corrida de solo 2 escuchas (por debajo de
-  `GROUP_MIN`), o exige 3+ como el grupo genérico?** Propuesta: **con 2** (D2). Repetir un
+  `GROUP_MIN`), o exige 3+ como el grupo genérico? → RESUELTA: con 2** (D2). Repetir un
   álbum completo dos veces en una semana es la señal; forzarlo a 3 lo haría casi
-  inalcanzable. Es un umbral en constante, ajustable.
-- **OQ2 — ¿La cuenta mostrada es la de la ventana de 7 días o el total de la corrida?**
-  Propuesta: **la de la ventana** (D3), coherente con "esta semana". Diferencia solo cuando
-  la corrida tiene entradas de más de 7 días, un caso de borde.
+  inalcanzable. Es un umbral en constante, ajustable sin cambio de spec.
+- **OQ2 — ¿La cuenta mostrada es la de la ventana de 7 días o el total de la corrida? →
+  RESUELTA: la de la ventana** (D3), coherente con "esta semana". Diferencia solo cuando la
+  corrida tiene entradas de más de 7 días, un caso de borde; esas entradas viejas se
+  absorben en la fila del pico igual (mismo tema, la fila describe el patrón).

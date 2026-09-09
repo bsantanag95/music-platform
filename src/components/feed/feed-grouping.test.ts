@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { groupFeedRuns, type FeedEntryGroup } from "./feed-grouping";
+import { groupFeedRuns, type FeedEntryGroup, type FeedRotationPeak } from "./feed-grouping";
 import type { FeedEntry } from "@/lib/api/schemas";
 
 const ana = { id: "ana", username: "ana", displayName: "Ana" };
@@ -7,6 +7,55 @@ const beto = { id: "beto", username: "beto", displayName: "Beto" };
 
 let seq = 0;
 const iso = () => `2026-08-${String(30 - (seq % 28)).padStart(2, "0")}T00:00:00Z`;
+
+// Para los tests de pico de rotación: `now` fijo y fechas controladas dentro
+// o fuera de la ventana de 7 días.
+const NOW = new Date("2026-09-10T00:00:00Z");
+const dayBefore = (n: number) =>
+  new Date(NOW.getTime() - n * 24 * 60 * 60 * 1000).toISOString();
+
+function targetListen(
+  target: Extract<FeedEntry, { kind: "listen" }>["target"],
+  createdAt: string,
+  author = ana,
+): FeedEntry {
+  seq += 1;
+  return {
+    kind: "listen",
+    id: `l${seq}`,
+    listenContext: "relisten",
+    body: null,
+    reaction: null,
+    audience: "public",
+    createdAt,
+    target,
+    author,
+  };
+}
+const song = (id: string): Extract<FeedEntry, { kind: "listen" }>["target"] => ({
+  type: "recording",
+  id,
+  title: `Tema ${id}`,
+  subtitle: null,
+  artistName: "Artista",
+  coverThumbUrl: null,
+});
+const album = (id: string): Extract<FeedEntry, { kind: "listen" }>["target"] => ({
+  type: "release-group",
+  id,
+  title: `Disco ${id}`,
+  subtitle: null,
+  artistName: "Artista",
+  coverThumbUrl: null,
+});
+const artistTarget = (id: string): Extract<FeedEntry, { kind: "listen" }>["target"] => ({
+  type: "artist",
+  id,
+  title: `Artista ${id}`,
+  subtitle: null,
+  artistName: null,
+  coverThumbUrl: null,
+});
 
 function listen(author = ana, overrides: Partial<Extract<FeedEntry, { kind: "listen" }>> = {}): FeedEntry {
   seq += 1;
@@ -112,5 +161,110 @@ describe("groupFeedRuns", () => {
     const first = listen();
     const rows = groupFeedRuns([first, listen(), listen()]);
     expect((rows[0] as FeedEntryGroup).createdAt).toBe(first.createdAt);
+  });
+
+  describe("pico de rotación (add-feed-rotation-peak)", () => {
+    it("3 escuchas del mismo tema en la ventana se sintetizan como pico de canción", () => {
+      const rows = groupFeedRuns(
+        [
+          targetListen(song("rec-x"), dayBefore(1)),
+          targetListen(song("rec-x"), dayBefore(3)),
+          targetListen(song("rec-x"), dayBefore(5)),
+        ],
+        NOW,
+      );
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.kind).toBe("rotation-peak");
+      const peak = rows[0] as FeedRotationPeak;
+      expect(peak.target).toMatchObject({ type: "recording", id: "rec-x", title: "Tema rec-x" });
+      expect(peak.count).toBe(3);
+      expect(peak.createdAt).toBe(dayBefore(1)); // el más reciente de la corrida
+    });
+
+    it("2 escuchas del mismo álbum en la ventana forman pico, aunque no alcancen GROUP_MIN", () => {
+      const rows = groupFeedRuns(
+        [targetListen(album("rg-y"), dayBefore(2)), targetListen(album("rg-y"), dayBefore(6))],
+        NOW,
+      );
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.kind).toBe("rotation-peak");
+      expect((rows[0] as FeedRotationPeak).count).toBe(2);
+      expect((rows[0] as FeedRotationPeak).target.type).toBe("release-group");
+    });
+
+    it("2 escuchas del mismo tema no forman pico (umbral de canción es 3)", () => {
+      const rows = groupFeedRuns(
+        [targetListen(song("rec-x"), dayBefore(1)), targetListen(song("rec-x"), dayBefore(2))],
+        NOW,
+      );
+      expect(rows.map((r) => r.kind)).toEqual(["listen", "listen"]);
+    });
+
+    it("corrida del mismo tema con solo 1 registro en la ventana cae al grupo genérico", () => {
+      const rows = groupFeedRuns(
+        [
+          targetListen(song("rec-x"), dayBefore(2)),
+          targetListen(song("rec-x"), dayBefore(20)),
+          targetListen(song("rec-x"), dayBefore(25)),
+        ],
+        NOW,
+      );
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.kind).toBe("group");
+    });
+
+    it("corrida de temas distintos sigue siendo grupo genérico, no pico", () => {
+      const rows = groupFeedRuns(
+        [
+          targetListen(song("rec-a"), dayBefore(1)),
+          targetListen(song("rec-b"), dayBefore(2)),
+          targetListen(song("rec-c"), dayBefore(3)),
+        ],
+        NOW,
+      );
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.kind).toBe("group");
+    });
+
+    it("corrida del mismo artista nunca produce pico", () => {
+      const rows = groupFeedRuns(
+        [
+          targetListen(artistTarget("art-1"), dayBefore(1)),
+          targetListen(artistTarget("art-1"), dayBefore(2)),
+          targetListen(artistTarget("art-1"), dayBefore(3)),
+        ],
+        NOW,
+      );
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.kind).toBe("group");
+    });
+
+    it("una entrada con texto entre medio corta el pico", () => {
+      const rows = groupFeedRuns(
+        [
+          targetListen(song("rec-x"), dayBefore(1)),
+          targetListen(song("rec-x"), dayBefore(2)),
+          comment(),
+          targetListen(song("rec-x"), dayBefore(3)),
+        ],
+        NOW,
+      );
+      expect(rows.map((r) => r.kind)).toEqual(["listen", "listen", "comment", "listen"]);
+    });
+
+    it("el rastro reciente (self) también sintetiza el pico", () => {
+      // `groupFeedRuns` es agnóstico a la variante; la omisión del autor la
+      // decide el render. Acá solo verificamos que el pico se forma igual.
+      const rows = groupFeedRuns(
+        [
+          targetListen(song("rec-x"), dayBefore(1), beto),
+          targetListen(song("rec-x"), dayBefore(2), beto),
+          targetListen(song("rec-x"), dayBefore(4), beto),
+        ],
+        NOW,
+      );
+      expect(rows[0]!.kind).toBe("rotation-peak");
+      expect((rows[0] as FeedRotationPeak).author.id).toBe("beto");
+    });
   });
 });

@@ -1,13 +1,13 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useNow, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { ReactionBadge } from "@/components/diary/ReactionBadge";
 import { targetHref } from "./feed-target";
 import { FeedRatingMeter } from "./FeedRatingMeter";
 import { isFeedEntryQuote } from "./feed-entry-tier";
-import { groupFeedRuns, type FeedEntryGroup } from "./feed-grouping";
+import { groupFeedRuns, type FeedEntryGroup, type FeedRotationPeak } from "./feed-grouping";
 import { ProsePanel, RelativeDate, TargetTitle } from "./feed-row-parts";
 import type { FeedEntry } from "@/lib/api/schemas";
 
@@ -36,6 +36,9 @@ interface FeedActivityListProps {
 export function FeedActivityList({ entries, variant = "feed", clamp = false }: FeedActivityListProps) {
   const t = useTranslations("feed");
   const self = variant === "self";
+  // `now` estable dentro del request (mismo valor que las fechas relativas):
+  // `groupFeedRuns` lo usa para la ventana de 7 días del pico de rotación.
+  const now = useNow();
 
   return (
     <ul
@@ -45,16 +48,24 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
           : "divide-y divide-ink-border"
       }
     >
-      {groupFeedRuns(entries).map((row) => {
+      {groupFeedRuns(entries, now).map((row) => {
+        // Fila subordinada, indentada a la columna del título de las filas
+        // normales (celda `size-11 sm:size-12` + `gap-3 sm:gap-4`), sin celda:
+        // tanto el grupo colapsado como el pico de rotación se leen como
+        // contexto, no como evento destacado.
+        const subordinateClass = `${self ? "py-2 pl-4" : "py-3 pl-14 sm:pl-16"} first:pt-0 last:pb-0`;
+
+        if (row.kind === "rotation-peak") {
+          return (
+            <li key={row.id} className={subordinateClass}>
+              <RotationPeakRow peak={row} t={t} hideAuthor={self} />
+            </li>
+          );
+        }
+
         if (row.kind === "group") {
           return (
-            <li
-              key={row.id}
-              // Indentada a la columna del título de las filas normales
-              // (celda `size-11 sm:size-12` + `gap-3 sm:gap-4`) para que la
-              // actividad ambiente se lea subordinada.
-              className={`${self ? "py-2 pl-4" : "py-3 pl-14 sm:pl-16"} first:pt-0 last:pb-0`}
-            >
+            <li key={row.id} className={subordinateClass}>
               <GroupRow group={row} t={t} hideAuthor={self} />
             </li>
           );
@@ -187,6 +198,47 @@ function GroupRow({
             </Link>
           </>
         ) : null}
+      </p>
+    </div>
+  );
+}
+
+// Pico de rotación (openspec: add-feed-rotation-peak): una corrida de escuchas
+// del mismo objetivo en 7 días se sintetiza como "En rotación", no como una
+// lista de títulos repetidos. Misma anatomía subordinada que `GroupRow` —
+// línea de metadato + el objetivo enlazado debajo. Tono cultural: la única
+// métrica es la cuenta de la semana, sin racha, sin fuego, sin exclamaciones.
+function RotationPeakRow({
+  peak,
+  t,
+  hideAuthor,
+}: {
+  peak: FeedRotationPeak;
+  t: FeedT;
+  hideAuthor: boolean;
+}) {
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="min-w-0 font-data text-xs text-paper-muted">
+          {hideAuthor ? null : (
+            <>
+              <AuthorIdentity author={peak.author} />
+              {" · "}
+            </>
+          )}
+          {t("rotationPeak", { count: peak.count })}
+        </span>
+        <RelativeDate iso={peak.createdAt} />
+      </div>
+      <p className="mt-1 font-data text-xs text-paper-muted">
+        <Link
+          href={targetHref(peak.target.type, peak.target.id)}
+          className="text-paper transition-colors hover:text-amber"
+        >
+          {peak.target.title}
+        </Link>
+        {peak.target.artistName ? ` · ${peak.target.artistName}` : null}
       </p>
     </div>
   );

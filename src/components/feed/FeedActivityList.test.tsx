@@ -212,6 +212,50 @@ describe("FeedActivityList", () => {
     expect(screen.queryByTestId("cover-thumb")).not.toBeInTheDocument();
   });
 
+  describe("pico de rotación (add-feed-rotation-peak)", () => {
+    const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
+    const sameSong = (createdAt: string): FeedEntry =>
+      listen({
+        id: `sp-${createdAt}`,
+        createdAt,
+        target: { type: "recording", id: "rec-rot", title: "Otra vez", subtitle: null, artistName: "Tortoise", coverThumbUrl: null },
+      });
+
+    it("una corrida de escuchas del mismo tema se muestra como 'En rotación', no como lista de títulos", () => {
+      renderWithIntl(
+        <FeedActivityList entries={[sameSong(daysAgo(1)), sameSong(daysAgo(3)), sameSong(daysAgo(5))]} />,
+      );
+
+      expect(screen.getByText(/En rotación · 3 registros esta semana/)).toBeInTheDocument();
+      // el título del objetivo, enlazado, una sola vez
+      expect(screen.getByRole("link", { name: "Otra vez" })).toHaveAttribute("href", "/song/rec-rot");
+      expect(screen.queryByText(/registró 3 escuchas/)).not.toBeInTheDocument();
+      // fila subordinada: sin celda de carátula
+      expect(screen.queryByTestId("cover-thumb")).not.toBeInTheDocument();
+    });
+
+    it("no muestra métricas de gamificación", () => {
+      const { container } = renderWithIntl(
+        <FeedActivityList entries={[sameSong(daysAgo(1)), sameSong(daysAgo(2)), sameSong(daysAgo(4))]} />,
+      );
+
+      expect(container.textContent).not.toMatch(/🔥|racha|veces/i);
+      expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+    });
+
+    it("en el rastro reciente (self) el pico no repite el nombre del propio usuario", () => {
+      renderWithIntl(
+        <FeedActivityList
+          variant="self"
+          entries={[sameSong(daysAgo(1)), sameSong(daysAgo(2)), sameSong(daysAgo(3))]}
+        />,
+      );
+
+      expect(screen.getByText(/En rotación · 3 registros esta semana/)).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: "Fran" })).not.toBeInTheDocument();
+    });
+  });
+
   it("colapsa 3 valoraciones seguidas de un autor en una fila con títulos y valores", () => {
     const runEntries = [
       rating({ id: "r1", stars: "4.5", detailedScore: 87, target: { type: "release-group", id: "rg1", title: "Uno", artistName: null, coverThumbUrl: null } }),
