@@ -72,6 +72,7 @@ vi.mock("next-intl", async () => {
         generalNav: "Navegación general",
         openMenu: "Abrir menú",
         closeMenu: "Cerrar menú",
+        "global.trigger": "Registrar",
       };
       if (map[key]) return map[key];
       if (values && "count" in values) return `${key}:${values.count}`;
@@ -216,6 +217,29 @@ describe("Header", () => {
 
     const listsLink = screen.getByRole("link", { name: "Listas" });
     expect(listsLink).toHaveAttribute("href", "/lists");
+  });
+
+  it("el control 'Registrar' no aparece sin sesión", () => {
+    renderWithIntl(<Header />);
+    expect(screen.queryByRole("button", { name: /Registrar/ })).not.toBeInTheDocument();
+  });
+
+  it("el control 'Registrar' aparece con sesión en la barra general", () => {
+    renderWithIntl(
+      <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
+    );
+    // Uno en la barra de escritorio; el panel móvil está cerrado.
+    expect(screen.getByRole("button", { name: /Registrar/ })).toBeInTheDocument();
+  });
+
+  it("abre el modal de registro sin QueryClientProvider (el Header vive fuera de Providers)", () => {
+    renderWithIntl(
+      <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Registrar/ }));
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
   it("despliega el menú de usuario al posar el cursor, sin clic", () => {
