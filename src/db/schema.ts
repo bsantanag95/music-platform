@@ -65,6 +65,107 @@ export const appUser = pgTable(
   ],
 );
 
+export const userRole = pgTable(
+  "user_role",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    grantedBy: uuid("granted_by").references(() => appUser.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("uq_user_role_user_role").on(t.userId, t.role),
+    index("idx_user_role_user").on(t.userId),
+    check("chk_user_role_role", sql`${t.role} IN ('moderator', 'admin')`),
+  ],
+);
+
+export const userRestriction = pgTable(
+  "user_restriction",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    scope: text("scope").notNull(),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    reason: text("reason").notNull(),
+    createdBy: uuid("created_by").references(() => appUser.id, { onDelete: "set null" }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    revokedBy: uuid("revoked_by").references(() => appUser.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_user_restriction_active").on(t.userId, t.scope, t.startsAt, t.expiresAt),
+    check("chk_user_restriction_scope", sql`${t.scope} IN ('social_activity')`),
+  ],
+);
+
+export const contentReport = pgTable(
+  "content_report",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    reporterId: uuid("reporter_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    commentId: uuid("comment_id"),
+    reviewId: uuid("review_id"),
+    reason: text("reason").notNull(),
+    status: text("status").notNull().default("pending"),
+    resolvedBy: uuid("resolved_by").references(() => appUser.id, { onDelete: "set null" }),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_content_report_status_created").on(t.status, t.createdAt),
+    check("chk_content_report_status", sql`${t.status} IN ('pending', 'resolved', 'dismissed')`),
+    check("chk_content_report_target", sql`num_nonnulls(${t.commentId}, ${t.reviewId}) = 1`),
+  ],
+);
+
+export const moderationAction = pgTable(
+  "moderation_action",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    actorId: uuid("actor_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "restrict" }),
+    action: text("action").notNull(),
+    commentId: uuid("comment_id"),
+    reviewId: uuid("review_id"),
+    listId: uuid("list_id"),
+    restrictionId: uuid("restriction_id"),
+    reason: text("reason").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("idx_moderation_action_created").on(t.createdAt)],
+);
+
+export const userRoleAction = pgTable(
+  "user_role_action",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    actorId: uuid("actor_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "restrict" }),
+    targetId: uuid("target_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    action: text("action").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_user_role_action_target").on(t.targetId, t.createdAt),
+    check("chk_user_role_action_role", sql`${t.role} IN ('moderator', 'admin')`),
+    check("chk_user_role_action_action", sql`${t.action} IN ('grant', 'revoke')`),
+  ],
+);
+
 export const session = pgTable(
   "session",
   {
@@ -323,6 +424,11 @@ export const rating = pgTable(
 
 export type ArtistRow = typeof artist.$inferSelect;
 export type AppUserRow = typeof appUser.$inferSelect;
+export type UserRoleRow = typeof userRole.$inferSelect;
+export type UserRestrictionRow = typeof userRestriction.$inferSelect;
+export type ContentReportRow = typeof contentReport.$inferSelect;
+export type ModerationActionRow = typeof moderationAction.$inferSelect;
+export type UserRoleActionRow = typeof userRoleAction.$inferSelect;
 export type SessionRow = typeof session.$inferSelect;
 export type AuthIdentityRow = typeof authIdentity.$inferSelect;
 export type UserFollowRow = typeof userFollow.$inferSelect;
@@ -373,6 +479,13 @@ export const userList = pgTable(
     title: text("title").notNull(),
     description: text("description"),
     audience: text("audience").notNull().default("followers"),
+    moderationStatus: text("moderation_status").notNull().default("visible"),
+    moderatedBy: uuid("moderated_by").references(() => appUser.id, { onDelete: "set null" }),
+    moderatedAt: timestamp("moderated_at", { withTimezone: true }),
+    moderationReason: text("moderation_reason"),
+    isOfficial: boolean("is_official").notNull().default(false),
+    officialPublishedBy: uuid("official_published_by").references(() => appUser.id, { onDelete: "set null" }),
+    officialPublishedAt: timestamp("official_published_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -385,6 +498,7 @@ export const userList = pgTable(
     ),
     check("chk_user_list_title", sql`length(${t.title}) <= 100`),
     check("chk_user_list_description", sql`${t.description} IS NULL OR length(${t.description}) <= 500`),
+    check("chk_user_list_moderation_status", sql`${t.moderationStatus} IN ('visible', 'hidden')`),
   ],
 );
 
@@ -670,6 +784,10 @@ export const comment = pgTable(
     }),
     recordingId: uuid("recording_id").references(() => recording.id, { onDelete: "cascade" }),
     body: text("body").notNull(),
+    moderationStatus: text("moderation_status").notNull().default("visible"),
+    moderatedBy: uuid("moderated_by").references(() => appUser.id, { onDelete: "set null" }),
+    moderatedAt: timestamp("moderated_at", { withTimezone: true }),
+    moderationReason: text("moderation_reason"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -680,6 +798,7 @@ export const comment = pgTable(
       "chk_comment_single_target",
       sql`num_nonnulls(${t.artistId}, ${t.releaseGroupId}, ${t.recordingId}) = 1`,
     ),
+    check("chk_comment_moderation_status", sql`${t.moderationStatus} IN ('visible', 'hidden')`),
   ],
 );
 
@@ -738,6 +857,10 @@ export const review = pgTable(
     body: text("body").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    moderationStatus: text("moderation_status").notNull().default("visible"),
+    moderatedBy: uuid("moderated_by").references(() => appUser.id, { onDelete: "set null" }),
+    moderatedAt: timestamp("moderated_at", { withTimezone: true }),
+    moderationReason: text("moderation_reason"),
   },
   (t) => [
     index("idx_review_artist").on(t.artistId),
@@ -747,6 +870,7 @@ export const review = pgTable(
       "chk_review_single_target",
       sql`num_nonnulls(${t.artistId}, ${t.releaseGroupId}, ${t.recordingId}) = 1`,
     ),
+    check("chk_review_moderation_status", sql`${t.moderationStatus} IN ('visible', 'hidden')`),
   ],
 );
 

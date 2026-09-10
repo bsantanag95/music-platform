@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
   listSavedLists: vi.fn(),
 }));
 
-vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser }));
+vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser, requireSocialActivityAllowed: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@/services/lists/saved-lists", () => ({
   saveList: mocks.saveList,
   listSavedLists: mocks.listSavedLists,

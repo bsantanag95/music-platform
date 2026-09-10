@@ -9,6 +9,14 @@ La persona que usa la aplicación: se registra, valora, comenta, arma listas y s
 Un Usuario puede tener una contraseña local o una o más identidades externas. La identidad del
 producto no depende del proveedor con el que inició sesión.
 
+Un Usuario puede tener varios roles de plataforma (`moderator` y/o `admin`). También puede tener
+una restricción temporal de alcance `social_activity`, que conserva su acceso personal y de lectura
+pero impide nuevas acciones públicas o sociales.
+
+Una acción de moderación puede ocultar y restaurar comentarios, reseñas o listas sin equivaler al
+borrado físico realizado por su autor. Las acciones de moderación y de roles se auditan con actor,
+motivo y fecha.
+
 ## Identidad de autenticación
 
 Una identidad de autenticación vincula un Usuario con un proveedor local o externo. Para

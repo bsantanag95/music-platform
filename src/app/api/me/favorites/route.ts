@@ -8,7 +8,7 @@ import {
   RemoveFavoriteRequestSchema,
   UpdateFavoriteAudienceRequestSchema,
 } from "@/lib/api/schemas";
-import { requireUser } from "@/services/auth/authorization";
+import { requireSocialActivityAllowed, requireUser } from "@/services/auth/authorization";
 import {
   listMyFavorites,
   resolveFavoriteTarget,
@@ -43,6 +43,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     throw new ApiError("VALIDATION_ERROR", 400, "El favorito no es válido");
   }
   const user = await requireUser();
+  await requireSocialActivityAllowed(user.id);
   const target = await resolveFavoriteTarget(parsed.data.target.type, parsed.data.target.id);
   const favorite = await toggleFavorite(target, user.id, parsed.data.audience);
   return NextResponse.json({ favorite }, { status: favorite ? 201 : 200 });
@@ -55,6 +56,7 @@ export const PATCH = withErrorHandling(async (request: NextRequest) => {
     throw new ApiError("VALIDATION_ERROR", 400, "La audiencia no es válida");
   }
   const user = await requireUser();
+  if (parsed.data.audience !== "private") await requireSocialActivityAllowed(user.id);
 
   if ("ids" in parsed.data) {
     const updatedIds = await updateFavoritesAudienceBulk(

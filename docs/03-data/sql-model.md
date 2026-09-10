@@ -8,6 +8,35 @@ Versión narrada de `schema.sql`. Para cada tabla: propósito, relaciones, restr
 
 **Relaciones:** referenciada por `rating`, `comment`, `session` y `auth_identity`.
 
+También puede tener roles de plataforma en `user_role`, restricciones temporales en
+`user_restriction`, y ser actor de auditoría de acciones de roles o moderación.
+
+## `user_role`
+
+**Propósito:** asignaciones acumulables de roles de plataforma (`moderator`/`admin`). La ausencia
+de filas representa a un usuario común. `UNIQUE (user_id, role)` impide duplicar una asignación.
+
+La asignación inicial se realiza mediante operaciones internas y conserva `granted_by` y
+`created_at`; `user_role_action` mantiene el historial de concesiones y revocaciones.
+
+## `user_restriction`
+
+**Propósito:** restricciones temporales con alcance. La primera versión admite `social_activity`:
+bloquea nuevas acciones públicas/sociales, pero no el login ni la lectura del contenido propio o
+público. La restricción es activa cuando comenzó, no fue revocada y no expiró.
+
+Conserva motivo, actor, fechas de inicio/expiración y revocación. No elimina contenido existente.
+
+## `content_report` y `moderation_action`
+
+`content_report` recibe reportes de comentarios o reseñas y evita reportes pendientes duplicados
+por autor y objetivo. `moderation_action` registra ocultaciones/restauraciones y otras acciones
+reversibles de moderación con su actor, objetivo, motivo y fecha.
+
+Comentarios, reseñas y listas tienen `moderation_status` (`visible`/`hidden`) para separar la
+moderación reversible del borrado físico del autor. `user_list` agrega además `is_official` y el
+actor/fecha de publicación editorial; solo una cuenta con permiso administrativo puede establecerlo.
+
 `password_hash` es nullable para permitir usuarios autenticados mediante proveedores externos.
 Cuando tiene valor, contiene únicamente el hash Argon2id de la contraseña local; nunca se guarda la
 contraseña en texto plano.

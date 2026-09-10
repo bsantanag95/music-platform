@@ -197,6 +197,9 @@ export const ErrorCodeSchema = z.enum([
   "LIST_TARGET_INVALID",
   "LIST_ITEM_NOT_FOUND",
   "COLLECTION_ENTRY_NOT_FOUND",
+  "MODERATION_REPORT_NOT_FOUND",
+  "SOCIAL_SUSPENSION_ACTIVE",
+  "ROLE_REQUIRED",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 
@@ -217,6 +220,13 @@ export const LoginRequestSchema = z.object({
   password: z.string().min(1).max(128),
 });
 export type LoginRequest = z.infer<typeof LoginRequestSchema>;
+
+export const ReportContentRequestSchema = z.object({
+  targetType: z.enum(["comment", "review"]),
+  targetId: z.uuid(),
+  reason: z.string().trim().min(1).max(1000),
+});
+export type ReportContentRequest = z.infer<typeof ReportContentRequestSchema>;
 
 export const AuthUserSchema = z.object({
   id: z.uuid(),

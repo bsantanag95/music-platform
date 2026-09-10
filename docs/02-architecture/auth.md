@@ -215,6 +215,24 @@ para redirigir el éxito a `/<locale>/search` y los errores a la página localiz
 incluye `locale` en su redirect al callback, de modo que persistirlo en el estado es lo que
 preserva el idioma desde el que se inició el flujo.
 
+### 7. Autorización de plataforma y suspensión social
+
+La autenticación y la autorización son capas separadas. `app_user` puede tener varias asignaciones
+en `user_role`; los roles iniciales son `moderator` y `admin`, y la ausencia de asignaciones deja al
+usuario con sus permisos normales. Los permisos se derivan en backend y no se guardan en la cookie
+ni en la sesión persistida, para que una revocación tenga efecto en la siguiente operación sensible.
+
+`moderator` puede revisar reportes, ocultar/restaurar comentarios, reseñas y listas, y aplicar una
+restricción temporal `social_activity`. `admin` hereda esos permisos y además puede gestionar roles
+mediante operaciones internas y publicar contenido editorial oficial. Ninguno de estos roles edita
+el catálogo de MusicBrainz.
+
+Una restricción social activa bloquea nuevas mutaciones públicas o sociales (comentarios, reseñas,
+ratings, actividad compartible, seguimientos, favoritos/guardados y listas visibles), pero permite
+login, lectura, perfil propio, diario privado, colección y privatización/borrado propio cuando la
+superficie ya lo permite. No oculta ni borra automáticamente contenido previo; la moderación de ese
+contenido es una acción separada y auditable. Ver ADR 0012.
+
 ## Qué no decide este documento
 
 Deliberadamente fuera de alcance acá:

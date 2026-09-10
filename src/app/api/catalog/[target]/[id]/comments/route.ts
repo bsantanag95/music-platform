@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { ApiError } from "@/lib/api/errors";
 import { CommentRequestSchema, SocialTargetTypeSchema } from "@/lib/api/schemas";
-import { requireUser } from "@/services/auth/authorization";
+import { requireSocialActivityAllowed, requireUser } from "@/services/auth/authorization";
 import { createComment, listComments, resolveSocialTarget } from "@/services/social";
 import { z } from "zod";
 
@@ -29,6 +29,7 @@ export const GET = withErrorHandling(async (request: NextRequest, context: { par
 export const POST = withErrorHandling(async (request: NextRequest, context: { params: Promise<{ target: string; id: string }> }) => {
   const resolved = await target(context.params);
   const user = await requireUser();
+  await requireSocialActivityAllowed(user.id);
   const parsed = CommentRequestSchema.shape.body.safeParse((await request.json().catch(() => null))?.body);
   if (!parsed.success) throw new ApiError("INVALID_COMMENT", 400, "El comentario no es válido");
   return NextResponse.json({ comment: await createComment(resolved, user.id, parsed.data) }, { status: 201 });

@@ -13,7 +13,7 @@ vi.mock("@/services/diary/diary", () => ({
   updateListenEntry: mocks.updateListenEntry,
   deleteListenEntry: mocks.deleteListenEntry,
 }));
-vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser }));
+vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser, requireSocialActivityAllowed: vi.fn().mockResolvedValue(undefined) }));
 
 const user = { id: "00000000-0000-4000-8000-000000000001" };
 const entryId = "00000000-0000-4000-8000-000000000003";

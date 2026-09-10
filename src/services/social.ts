@@ -88,7 +88,7 @@ export async function deleteRating(target: SocialTarget, userId: string) {
 }
 
 export async function listComments(target: SocialTarget, page = 1, pageSize = 20) {
-  const rows = await db.select({ id: comment.id, body: comment.body, createdAt: comment.createdAt, user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName } }).from(comment).innerJoin(appUser, eq(comment.userId, appUser.id)).where(commentTargetWhere(target)).orderBy(desc(comment.createdAt), desc(comment.id)).limit(pageSize + 1).offset((page - 1) * pageSize);
+  const rows = await db.select({ id: comment.id, body: comment.body, createdAt: comment.createdAt, user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName } }).from(comment).innerJoin(appUser, eq(comment.userId, appUser.id)).where(and(commentTargetWhere(target), eq(comment.moderationStatus, "visible"))).orderBy(desc(comment.createdAt), desc(comment.id)).limit(pageSize + 1).offset((page - 1) * pageSize);
   return { comments: rows.slice(0, pageSize).map(serializeComment), page, pageSize, hasNext: rows.length > pageSize };
 }
 
@@ -105,7 +105,7 @@ export async function createComment(target: SocialTarget, userId: string, body: 
 }
 
 async function getComment(id: string) {
-  const [row] = await db.select({ id: comment.id, body: comment.body, createdAt: comment.createdAt, user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName } }).from(comment).innerJoin(appUser, eq(comment.userId, appUser.id)).where(eq(comment.id, id)).limit(1);
+  const [row] = await db.select({ id: comment.id, body: comment.body, createdAt: comment.createdAt, user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName } }).from(comment).innerJoin(appUser, eq(comment.userId, appUser.id)).where(and(eq(comment.id, id), eq(comment.moderationStatus, "visible"))).limit(1);
   if (!row) throw new ApiError("COMMENT_NOT_FOUND", 404, "Comentario no encontrado");
   return serializeComment(row);
 }

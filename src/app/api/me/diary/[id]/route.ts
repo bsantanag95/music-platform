@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { ApiError } from "@/lib/api/errors";
 import { UpdateListenEntryRequestSchema } from "@/lib/api/schemas";
-import { requireUser } from "@/services/auth/authorization";
+import { requireSocialActivityAllowed, requireUser } from "@/services/auth/authorization";
 import { deleteListenEntry, updateListenEntry } from "@/services/diary/diary";
 import { z } from "zod";
 
@@ -21,7 +21,9 @@ export const PATCH = withErrorHandling(
     if (!parsed.success) {
       throw new ApiError("VALIDATION_ERROR", 400, "La modificación de la escucha no es válida");
     }
-    const entry = await updateListenEntry(id, (await requireUser()).id, parsed.data);
+    const user = await requireUser();
+    await requireSocialActivityAllowed(user.id);
+    const entry = await updateListenEntry(id, user.id, parsed.data);
     return NextResponse.json({ entry });
   },
 );

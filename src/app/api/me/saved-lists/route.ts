@@ -3,7 +3,7 @@ import { withErrorHandling } from "@/lib/with-error-handling";
 import { parsePagination } from "@/lib/api/pagination";
 import { ApiError } from "@/lib/api/errors";
 import { SaveListRequestSchema } from "@/lib/api/schemas";
-import { requireUser } from "@/services/auth/authorization";
+import { requireSocialActivityAllowed, requireUser } from "@/services/auth/authorization";
 import { listSavedLists, saveList } from "@/services/lists/saved-lists";
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
@@ -20,6 +20,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     throw new ApiError("VALIDATION_ERROR", 400, "El guardado no es válido");
   }
   const user = await requireUser();
+  await requireSocialActivityAllowed(user.id);
   const list = await saveList(user.id, parsed.data.listId, parsed.data.following ?? false);
   return NextResponse.json({ list }, { status: 201 });
 });

@@ -67,7 +67,7 @@ export const getProfileReviews = cache(
         rating,
         and(eq(rating.userId, review.userId), eq(rating.releaseGroupId, review.releaseGroupId)),
       )
-      .where(and(eq(review.userId, profile.id), isNotNull(review.releaseGroupId)))
+      .where(and(eq(review.userId, profile.id), isNotNull(review.releaseGroupId), eq(review.moderationStatus, "visible")))
       .orderBy(desc(review.updatedAt), desc(review.id))
       .limit(PROFILE_REVIEWS_MAX);
 

@@ -43,6 +43,18 @@
     "title": "Action not allowed",
     "description": "You do not have permission to modify this resource."
   },
+  "ROLE_REQUIRED": {
+    "title": "Platform permission required",
+    "description": "Your account does not have the permission required for this action."
+  },
+  "SOCIAL_SUSPENSION_ACTIVE": {
+    "title": "Social activity suspended",
+    "description": "You cannot publish or create new social activity while the suspension is active."
+  },
+  "MODERATION_REPORT_NOT_FOUND": {
+    "title": "Report not found",
+    "description": "The moderation report does not exist or is no longer available."
+  },
   "INVALID_TARGET": {
     "title": "Invalid target",
     "description": "The selected resource is not valid."

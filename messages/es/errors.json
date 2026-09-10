@@ -43,6 +43,18 @@
     "title": "Acción no permitida",
     "description": "No tenés permiso para modificar este recurso."
   },
+  "ROLE_REQUIRED": {
+    "title": "Permiso de plataforma requerido",
+    "description": "Tu cuenta no tiene el permiso necesario para realizar esta acción."
+  },
+  "SOCIAL_SUSPENSION_ACTIVE": {
+    "title": "Actividad social suspendida",
+    "description": "No podés publicar ni generar nueva actividad social mientras dure la suspensión."
+  },
+  "MODERATION_REPORT_NOT_FOUND": {
+    "title": "Reporte no encontrado",
+    "description": "El reporte de moderación no existe o ya no está disponible."
+  },
   "INVALID_TARGET": {
     "title": "Objetivo inválido",
     "description": "El recurso indicado no es válido."

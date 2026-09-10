@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { ApiError } from "@/lib/api/errors";
 import { RatingMutationSchema, SocialTargetTypeSchema } from "@/lib/api/schemas";
-import { requireUser, getCurrentUser } from "@/services/auth/authorization";
+import { requireSocialActivityAllowed, requireUser, getCurrentUser } from "@/services/auth/authorization";
 import { deleteRating, getRatings, resolveSocialTarget, upsertRating } from "@/services/social";
 import { z } from "zod";
 
@@ -21,6 +21,7 @@ export const GET = withErrorHandling(async (_request: NextRequest, context: { pa
 export const PUT = withErrorHandling(async (request: NextRequest, context: { params: Promise<{ target: string; id: string }> }) => {
   const resolved = await target(context.params);
   const user = await requireUser();
+  await requireSocialActivityAllowed(user.id);
   const parsed = RatingMutationSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) throw new ApiError("INVALID_RATING", 400, "El rating no es válido");
   return NextResponse.json({ rating: await upsertRating(resolved, user.id, parsed.data.stars, parsed.data.detailedScore) });

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { ApiError } from "@/lib/api/errors";
 import { ReviewRequestSchema, SocialTargetTypeSchema } from "@/lib/api/schemas";
-import { requireUser } from "@/services/auth/authorization";
+import { requireSocialActivityAllowed, requireUser } from "@/services/auth/authorization";
 import { createOrReplaceReview, listReviews, resolveSocialTarget } from "@/services/reviews";
 
 const ReviewsPaginationSchema = z.object({
@@ -41,6 +41,7 @@ export const POST = withErrorHandling(
   async (request: NextRequest, context: { params: Promise<{ target: string; id: string }> }) => {
     const resolved = await target(context.params);
     const user = await requireUser();
+    await requireSocialActivityAllowed(user.id);
     const parsed = ReviewRequestSchema.safeParse(await request.json().catch(() => null));
     if (!parsed.success) {
       throw new ApiError("VALIDATION_ERROR", 400, "La reseña no es válida");

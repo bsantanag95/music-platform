@@ -56,6 +56,19 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - Los secretos OAuth solo viven en el servidor y no se persisten tokens del proveedor si no son
   necesarios para consumir su API.
 
+## Roles, moderación y suspensión social
+
+- Los roles de plataforma son acumulables: `moderator` y `admin`. La ausencia de roles representa
+  al usuario común.
+- La autorización se aplica en backend mediante permisos derivados del rol; ocultar controles en la
+  interfaz no constituye una protección.
+- Un moderador puede ocultar/restaurar contenido social y aplicar una restricción temporal
+  `social_activity`, pero no administrar credenciales, identidades, email, username, roles ni cuentas.
+- Una suspensión social bloquea nuevas acciones públicas o sociales, pero conserva login, lectura,
+  perfil propio, diario privado y colección.
+- Una suspensión social no borra ni oculta automáticamente el contenido anterior. Ocultar contenido
+  existente requiere una acción de moderación separada y auditable.
+
 ## Datos y licencias
 
 - El catálogo se completa bajo demanda (patrón de cacheo): no se precarga el catálogo musical completo desde el día uno.

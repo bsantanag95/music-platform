@@ -8,10 +8,11 @@ const mocks = vi.hoisted(() => ({
   createOrReplaceReview: vi.fn(),
   resolveSocialTarget: vi.fn(),
   requireUser: vi.fn(),
+  requireSocialActivityAllowed: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/services/reviews", () => mocks);
-vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser }));
+vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser, requireSocialActivityAllowed: mocks.requireSocialActivityAllowed }));
 
 const ID = "00000000-0000-4000-8000-000000000001";
 const params = (target = "release-group") => ({ params: Promise.resolve({ target, id: ID }) });

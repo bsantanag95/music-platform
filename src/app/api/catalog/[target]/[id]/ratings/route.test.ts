@@ -4,7 +4,7 @@ import { GET, PUT } from "./route";
 import * as auth from "@/services/auth/authorization";
 import * as social from "@/services/social";
 
-vi.mock("@/services/auth/authorization", () => ({ getCurrentUser: vi.fn(), requireUser: vi.fn() }));
+vi.mock("@/services/auth/authorization", () => ({ getCurrentUser: vi.fn(), requireUser: vi.fn(), requireSocialActivityAllowed: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@/services/social", () => ({ resolveSocialTarget: vi.fn(), getRatings: vi.fn(), upsertRating: vi.fn(), deleteRating: vi.fn() }));
 
 const id = "00000000-0000-4000-8000-000000000001";

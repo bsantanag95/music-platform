@@ -26,7 +26,7 @@ export async function listFeaturedLists(readerId: string | null) {
     .from(userListFeatured)
     .innerJoin(userList, eq(userList.id, userListFeatured.listId))
     .innerJoin(appUser, eq(userList.ownerId, appUser.id))
-    .where(eq(userList.audience, "public"))
+  .where(and(eq(userList.audience, "public"), eq(userList.moderationStatus, "visible")))
     .orderBy(userListFeatured.rank);
 
   return { lists: await enrichPublicLists(rows, readerId) };
@@ -53,6 +53,7 @@ export async function listPopularLists(
     .where(
       and(
         eq(userList.audience, "public"),
+        eq(userList.moderationStatus, "visible"),
         eq(appUser.profileVisibility, "public"),
         readerId ? ne(userList.ownerId, readerId) : undefined,
         notBlockedByReader(readerId),
@@ -98,6 +99,7 @@ export async function listsFromFollowing(readerId: string, page = 1, pageSize = 
     .where(
       and(
         inArray(userList.audience, ["public", "followers"]),
+        eq(userList.moderationStatus, "visible"),
         ne(userList.ownerId, readerId),
         notBlockedByReader(readerId),
       ),

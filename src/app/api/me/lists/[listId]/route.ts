@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { ApiError } from "@/lib/api/errors";
 import { UpdateListRequestSchema } from "@/lib/api/schemas";
-import { requireUser } from "@/services/auth/authorization";
+import { requireSocialActivityAllowed, requireUser } from "@/services/auth/authorization";
 import { deleteList, getOwnedList, updateList } from "@/services/lists/lists";
 import { z } from "zod";
 
@@ -30,7 +30,9 @@ export const PATCH = withErrorHandling(
     if (!parsed.success) {
       throw new ApiError("VALIDATION_ERROR", 400, "La modificación de la lista no es válida");
     }
-    const list = await updateList(listId, (await requireUser()).id, parsed.data);
+    const user = await requireUser();
+    if (parsed.data.audience !== "private") await requireSocialActivityAllowed(user.id);
+    const list = await updateList(listId, user.id, parsed.data);
     return NextResponse.json({ list });
   },
 );

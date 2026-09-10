@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
   unfollowArtist: vi.fn(),
 }));
 
-vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser }));
+vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser, requireSocialActivityAllowed: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@/services/social/artist-following", () => ({
   followArtist: mocks.followArtist,
   unfollowArtist: mocks.unfollowArtist,

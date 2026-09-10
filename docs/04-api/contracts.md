@@ -951,3 +951,17 @@ mismos parámetros opcionales que la lectura propia.
 
 **200 OK:** `{ entries: [...], page, pageSize, hasNext, counts: { vinyl, cd, cassette, other } }`.
 **404** con `USER_NOT_FOUND`.
+
+## Moderación
+
+### `POST /api/moderation/reports`
+
+Requiere sesión. Crea un reporte pendiente sobre un comentario o una reseña visible.
+
+**Body:** `{ targetType: "comment" | "review", targetId, reason }`.
+**201:** `{ report }` cuando se crea un reporte nuevo. **200:** `{ report: null }` cuando ya existe
+un reporte pendiente del mismo usuario sobre el mismo objetivo. **400** con `VALIDATION_ERROR` para
+un body inválido y **401** con `AUTH_REQUIRED` sin sesión.
+
+Las acciones de ocultar/restaurar contenido, aplicar restricciones sociales y asignar roles son
+operaciones internas en esta versión; no existe todavía una UI administrativa pública.

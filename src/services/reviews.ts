@@ -90,7 +90,7 @@ export async function listReviews(target: SocialTarget, page = 1, pageSize = 20)
       rating,
       and(eq(rating.userId, review.userId), eq(rating[targetColumn], target.id)),
     )
-    .where(reviewTargetWhere(target))
+    .where(and(reviewTargetWhere(target), eq(review.moderationStatus, "visible")))
     .orderBy(desc(review.createdAt), desc(review.id))
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);

@@ -3,7 +3,7 @@ import { withErrorHandling } from "@/lib/with-error-handling";
 import { parsePagination } from "@/lib/api/pagination";
 import { ApiError } from "@/lib/api/errors";
 import { CreateListenEntryRequestSchema } from "@/lib/api/schemas";
-import { requireUser } from "@/services/auth/authorization";
+import { requireSocialActivityAllowed, requireUser } from "@/services/auth/authorization";
 import { createListenEntry, listMyDiary, resolveDiaryTarget, type DiaryFilters } from "@/services/diary/diary";
 import { DIARY_AUDIENCES, LISTEN_CONTEXTS, LISTEN_REACTIONS } from "@/services/diary/types";
 
@@ -50,6 +50,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     throw new ApiError("VALIDATION_ERROR", 400, "La escucha no es válida");
   }
   const user = await requireUser();
+  await requireSocialActivityAllowed(user.id);
   const target = await resolveDiaryTarget(parsed.data.target.type, parsed.data.target.id);
   const entry = await createListenEntry(target, user.id);
   return NextResponse.json({ entry }, { status: 201 });

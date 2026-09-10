@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/api/errors";
 const mocks = vi.hoisted(() => ({
   requireUser: vi.fn(),
   getCurrentUser: vi.fn(),
+  requireSocialActivityAllowed: vi.fn().mockResolvedValue(undefined),
   searchUsers: vi.fn(),
   getProfileByUsername: vi.fn(),
   getOwnProfile: vi.fn(),
@@ -25,6 +26,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/services/auth/authorization", () => ({
   requireUser: mocks.requireUser,
   getCurrentUser: mocks.getCurrentUser,
+  requireSocialActivityAllowed: mocks.requireSocialActivityAllowed,
 }));
 vi.mock("@/services/social/profiles", () => ({
   searchUsers: mocks.searchUsers,

@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
   removeFavorite: vi.fn(),
 }));
 
-vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser }));
+vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser, requireSocialActivityAllowed: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@/services/favorites/favorites", () => ({
   listMyFavorites: mocks.listMyFavorites,
   updateFavoriteAudience: mocks.updateFavoriteAudience,

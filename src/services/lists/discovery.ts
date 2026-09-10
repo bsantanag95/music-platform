@@ -24,6 +24,7 @@ export interface DiscoverListSummary {
   itemCount: number;
   coverThumbs: string[];
   owner: { id: string; username: string; displayName: string | null };
+  isOfficial: boolean;
   saved: boolean;
   following: boolean;
   /** Conteo agregado de guardados. Solo lo puebla "Populares". */
@@ -41,6 +42,7 @@ export const PUBLIC_LIST_COLUMNS = {
   ownerId: appUser.id,
   ownerUsername: appUser.username,
   ownerDisplayName: appUser.displayName,
+  isOfficial: userList.isOfficial,
 } as const;
 
 export interface PublicListRow {
@@ -53,6 +55,7 @@ export interface PublicListRow {
   ownerId: string;
   ownerUsername: string;
   ownerDisplayName: string | null;
+  isOfficial: boolean;
 }
 
 /**
@@ -106,6 +109,7 @@ export async function enrichPublicLists(
         username: row.ownerUsername,
         displayName: row.ownerDisplayName,
       },
+      isOfficial: row.isOfficial,
       saved: state?.saved ?? false,
       following: state?.following ?? false,
       ...(options.withSaveCount ? { saveCount: saveCounts.get(row.id) ?? 0 } : {}),
@@ -138,6 +142,7 @@ export async function listDiscoverLists(
     .where(
       and(
         eq(userList.audience, "public"),
+        eq(userList.moderationStatus, "visible"),
         eq(appUser.profileVisibility, "public"),
         readerId ? ne(userList.ownerId, readerId) : undefined,
         notBlockedByReader(readerId),

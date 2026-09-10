@@ -7,10 +7,11 @@ const mocks = vi.hoisted(() => ({
   createComment: vi.fn(),
   resolveSocialTarget: vi.fn(),
   requireUser: vi.fn(),
+  requireSocialActivityAllowed: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/services/social", () => mocks);
-vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser }));
+vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser, requireSocialActivityAllowed: mocks.requireSocialActivityAllowed }));
 
 describe("GET comentarios", () => {
   it.each([
