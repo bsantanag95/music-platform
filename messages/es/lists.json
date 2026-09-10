@@ -73,6 +73,18 @@
   "discoverEmptyTitle": "Todavía no hay listas públicas",
   "discoverEmptyDescription": "Cuando la comunidad publique listas, van a aparecer acá, de la más reciente a la más antigua.",
   "discoverHint": "Listas públicas de la comunidad, de la más reciente a la más antigua.",
+  "savesCount": "{count, plural, one {# guardado} other {# guardados}}",
+  "community": {
+    "pageTitle": "Listas de la comunidad",
+    "heading": "Listas",
+    "intro": "Curaduría de la comunidad: colecciones destacadas, las más guardadas, las de la gente que seguís y las más recientes.",
+    "featuredHeading": "Destacadas",
+    "popularHeading": "Populares",
+    "followingHeading": "De la gente que seguís",
+    "recentHeading": "Recientes",
+    "emptyTitle": "Todavía no hay listas para descubrir",
+    "emptyDescription": "Cuando la comunidad publique listas públicas, van a aparecer acá."
+  },
   "deleteShort": "¿Borrar?",
   "moveUp": "Subir “{title}”",
   "moveDown": "Bajar “{title}”",

@@ -128,12 +128,40 @@ seguida aparezca en el feed de quien la sigue— se implementa en el cambio de c
 composición bajo demanda + deduplicación por clave de evento). `following` ya se persiste y
 se expone (`src/services/lists/saved-lists.ts`: `followedListIds`, `savedStateFor`).
 
+### Superficie pública `/lists` (cambio `add-community-lists-surface`)
+
+Descubrimiento de listas de la comunidad en ruta propia `/[locale]/lists`, enlazada desde la
+barra general del Header junto a Explorar. Accesible con y sin sesión. Compone, omitiendo las
+secciones vacías:
+
+1. **Destacadas** — listas con fila en `user_list_featured` (curaduría editorial), sin
+   filtrar por tipo de entidad. Rail sin paginación.
+2. **Populares** — listas públicas ordenadas por conteo agregado de guardados. Vitrina, no
+   ranking: "N guardados" en la tarjeta, sin posiciones. `GET /api/lists/popular`.
+3. **De la gente que seguís** — listas visibles (`public` o `followers`) de usuarios que el
+   lector sigue, recientes primero. Solo con sesión; `GET /api/lists/from-following` responde
+   `401 AUTH_REQUIRED` sin ella.
+4. **Recientes** — el descubrimiento cronológico de `list-discovery`, ahora accesible sin
+   sesión (`GET /api/lists/discover` pasó a público). La pestaña "Descubrir" de `/me/lists`
+   se conserva y comparte servicio.
+
+Servicios en `src/services/lists/community.ts` (Destacadas / Populares / De seguidos) y
+`discovery.ts` (Recientes). El conteo agregado de guardados (`saveCountsFor`) se apoya en
+`idx_list_save_list`, sin migración.
+
+**Conteo de guardados — decisión revisada.** El **número agregado** de guardados de una
+lista de audiencia `public` es dato público: se muestra en las tarjetas de `/lists` y en el
+detalle de lista (propio y ajeno). La **identidad** de quién guardó sigue siendo privada —el
+guardado individual es un marcador privado por `(saver, list)`—. El conteo de listas
+`followers` / `private` no se muestra salvo a su dueño. "Populares" ordena por ese conteo
+pero sin posiciones numeradas ni distintivos de "top": es una vitrina, no un leaderboard.
+
 ### Decisiones abiertas
 
 - Si "Duplicar / derivar lista" entra en una iteración posterior de la sección.
 - Si el reordenamiento de ítems suma una dependencia de drag-and-drop (hoy ↑/↓ por teclado).
-- Si alguna vez se expone públicamente el conteo de guardados (por defecto: privado, para no
-  introducir una métrica de competencia).
+- Si la pestaña "Descubrir" de `/me/lists` se reduce a un deep-link a `/lists` una vez que
+  la superficie pública tenga tráfico.
 
 ### Ideas futuras (backlog, no comprometidas)
 

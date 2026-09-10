@@ -79,6 +79,23 @@ export function getDiscoverLists(page = 1, pageSize = 20): Promise<DiscoverLists
   );
 }
 
+export function getPopularLists(page = 1, pageSize = 20): Promise<DiscoverListsResponse> {
+  return apiFetch(
+    `/api/lists/popular?page=${page}&pageSize=${pageSize}`,
+    DiscoverListsResponseSchema,
+  );
+}
+
+export function getListsFromFollowing(
+  page = 1,
+  pageSize = 20,
+): Promise<DiscoverListsResponse> {
+  return apiFetch(
+    `/api/lists/from-following?page=${page}&pageSize=${pageSize}`,
+    DiscoverListsResponseSchema,
+  );
+}
+
 export function getUserLists(
   username: string,
   page = 1,

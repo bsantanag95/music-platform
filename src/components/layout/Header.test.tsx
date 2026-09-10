@@ -206,9 +206,16 @@ describe("Header", () => {
       <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
     );
 
-    for (const label of ["Diario", "Feed", "Favoritos", "Listas", "Colección"]) {
+    for (const label of ["Diario", "Feed", "Favoritos", "Colección"]) {
       expect(screen.queryByRole("link", { name: label })).not.toBeInTheDocument();
     }
+  });
+
+  it("la barra general muestra 'Listas' hacia la superficie pública /lists", () => {
+    renderWithIntl(<Header />);
+
+    const listsLink = screen.getByRole("link", { name: "Listas" });
+    expect(listsLink).toHaveAttribute("href", "/lists");
   });
 
   it("despliega el menú de usuario al posar el cursor, sin clic", () => {

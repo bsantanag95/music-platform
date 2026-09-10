@@ -2,15 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { parsePagination } from "@/lib/api/pagination";
 import { getCurrentUser } from "@/services/auth/authorization";
-import { listDiscoverLists } from "@/services/lists/discovery";
+import { listPopularLists } from "@/services/lists/community";
 
-// Descubrir listas públicas de la comunidad en orden cronológico. Público: con
-// sesión excluye las listas propias y refleja el estado de guardado; sin sesión
-// devuelve las mismas listas sin ese estado. Alimenta la pestaña "Descubrir" de
-// `/me/lists` y la sección "Recientes" de `/lists`.
+// Sección "Populares" de `/lists`: listas públicas ordenadas por conteo agregado
+// de guardados. Pública; con sesión excluye las listas propias.
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const { page, pageSize } = parsePagination(searchParams);
   const user = await getCurrentUser();
-  return NextResponse.json(await listDiscoverLists(user?.id ?? null, page, pageSize));
+  return NextResponse.json(await listPopularLists(user?.id ?? null, page, pageSize));
 });

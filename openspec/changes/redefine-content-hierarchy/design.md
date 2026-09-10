@@ -201,6 +201,13 @@ Elegir `/explore` desde el principio evita una arquitectura de navegación fragm
 superficie de álbumes: novedades, populares, por género, por década, mejor valorados,
 emergentes, destacados de la comunidad, curaduría editorial.
 
+> **Revisión (cambio `add-community-lists-surface`).** El descubrimiento de **listas** se
+> sacó de este contenedor y vive en ruta propia **`/[locale]/lists`**, enlazada aparte en la
+> barra general del Header. Motivo: las listas son curaduría humana con identidad de
+> navegación propia (patrón "Lists" de Letterboxd), no una faceta del catálogo. `/explore`
+> sigue siendo el contenedor de álbumes/artistas/canciones/géneros/décadas; la spec
+> `album-discovery` no cambia (nunca tuvo pestaña de listas).
+
 **Arranque en frío (Q4 resuelta).** Las secciones de señal social ("mejor valorados",
 "populares") requieren masa crítica. El día 1 la superficie se llena con tres fuentes:
 
