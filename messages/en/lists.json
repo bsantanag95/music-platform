@@ -73,6 +73,18 @@
   "discoverEmptyTitle": "No public lists yet",
   "discoverEmptyDescription": "When the community publishes lists, they will show up here, newest first.",
   "discoverHint": "Public lists from the community, newest first.",
+  "savesCount": "{count, plural, one {# save} other {# saves}}",
+  "community": {
+    "pageTitle": "Community lists",
+    "heading": "Lists",
+    "intro": "Curated by the community: featured collections, the most saved, lists from people you follow, and the newest.",
+    "featuredHeading": "Featured",
+    "popularHeading": "Popular",
+    "followingHeading": "From people you follow",
+    "recentHeading": "Recent",
+    "emptyTitle": "No lists to discover yet",
+    "emptyDescription": "Once the community publishes public lists, they will show up here."
+  },
   "deleteShort": "Delete?",
   "moveUp": "Move “{title}” up",
   "moveDown": "Move “{title}” down",

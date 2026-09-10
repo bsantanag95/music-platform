@@ -1073,6 +1073,8 @@ export const DiscoverListSummarySchema = z.object({
   owner: ListOwnerSchema,
   saved: z.boolean(),
   following: z.boolean(),
+  /** Conteo agregado de guardados. Presente en la sección "Populares" de /lists. */
+  saveCount: z.number().int().optional(),
 });
 export type DiscoverListSummary = z.infer<typeof DiscoverListSummarySchema>;
 
@@ -1083,6 +1085,12 @@ export const DiscoverListsResponseSchema = z.object({
   hasNext: z.boolean(),
 });
 export type DiscoverListsResponse = z.infer<typeof DiscoverListsResponseSchema>;
+
+/** Sección "Destacadas" de /lists: rail acotado, sin paginación. */
+export const FeaturedListsResponseSchema = z.object({
+  lists: z.array(DiscoverListSummarySchema),
+});
+export type FeaturedListsResponse = z.infer<typeof FeaturedListsResponseSchema>;
 
 // ============================================================
 // Feed (Fase 5, add-favorites-and-lists)

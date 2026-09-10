@@ -10,6 +10,8 @@ import type { UserListDetail } from "@/lib/api/schemas";
 
 interface ListDetailProps {
   initial: UserListDetail;
+  /** Conteo agregado de guardados de la lista (dato público si es `public`). */
+  saveCount?: number;
 }
 
 // Detalle de una lista propia: edición de metadatos y gestión interna de los
@@ -17,7 +19,7 @@ interface ListDetailProps {
 // alta de ítems se hace desde las páginas de catálogo (artista/álbum/canción),
 // no desde acá. El estado vive local — no hay caché de React Query para el
 // detalle, así que no hay que invalidar nada.
-export function ListDetail({ initial }: ListDetailProps) {
+export function ListDetail({ initial, saveCount }: ListDetailProps) {
   const t = useTranslations("lists");
   const [list, setList] = useState<UserListDetail>(initial);
   const [busy, setBusy] = useState(false);
@@ -49,7 +51,7 @@ export function ListDetail({ initial }: ListDetailProps) {
 
   return (
     <div className="flex w-full max-w-3xl flex-col gap-6">
-      <ListDetailHeader list={list} canManage onUpdated={setList} />
+      <ListDetailHeader list={list} canManage saveCount={saveCount} onUpdated={setList} />
 
       {list.items.length === 0 ? (
         <EmptyState title={t("noItems")} description={t("emptyItemsHint")} />

@@ -859,8 +859,29 @@ visible se marca `unavailable: true` en vez de filtrarse.
 
 ### `GET /api/lists/discover?page=&pageSize=`
 
-Listas de audiencia `public` de perfiles `public`, excluyendo las propias y cualquier bloqueo,
-en orden cronológico descendente (sin recomendación algorítmica).
+Listas de audiencia `public` de perfiles `public`, excluyendo cualquier bloqueo y —con
+sesión— las propias, en orden cronológico descendente (sin recomendación algorítmica).
+**Público** (cambio `add-community-lists-surface`): alimenta la pestaña "Descubrir" de
+`/me/lists` y la sección "Recientes" de `/lists`.
+
+**200 OK:** `{ lists: [{ ..., owner, saved, following }], page, pageSize, hasNext }`. Sin
+sesión, `saved`/`following` son `false`.
+**400** con `VALIDATION_ERROR` si la paginación es inválida.
+
+### `GET /api/lists/popular?page=&pageSize=` (cambio `add-community-lists-surface`)
+
+Sección "Populares" de `/lists`: listas públicas de perfiles públicos con al menos un
+guardado, ordenadas por conteo agregado de guardados descendente (a igualdad, por fecha de
+creación). **Público**; con sesión excluye las listas propias.
+
+**200 OK:** `{ lists: [{ ..., owner, saved, following, saveCount }], page, pageSize, hasNext }`.
+**400** con `VALIDATION_ERROR` si la paginación es inválida.
+
+### `GET /api/lists/from-following?page=&pageSize=` (cambio `add-community-lists-surface`)
+
+Sección "De la gente que seguís" de `/lists`: listas de audiencia `public` o `followers` de
+usuarios que el lector sigue con relación aceptada, orden cronológico descendente, excluyendo
+bloqueos y las listas propias.
 
 **200 OK:** `{ lists: [{ ..., owner, saved, following }], page, pageSize, hasNext }`.
 **400** con `VALIDATION_ERROR` si la paginación es inválida. **401** con `AUTH_REQUIRED` sin sesión.

@@ -26,6 +26,8 @@ interface ListDetailHeaderProps {
   following?: boolean;
   /** Modo lectura: hay sesión, así que se ofrece Guardar/Seguir. */
   canSave?: boolean;
+  /** Conteo agregado de guardados. Solo se muestra en listas `public`. */
+  saveCount?: number;
   /** Modo gestión: la lista quedó actualizada / borrada. */
   onUpdated?: (list: UserListDetail) => void;
   onDeleted?: () => void;
@@ -40,6 +42,7 @@ export function ListDetailHeader({
   saved = false,
   following = false,
   canSave = false,
+  saveCount,
   onUpdated,
   onDeleted,
 }: ListDetailHeaderProps) {
@@ -160,6 +163,12 @@ export function ListDetailHeader({
             <span>{t("itemsCount", { count: list.itemCount })}</span>
             <span aria-hidden>·</span>
             <span>{t(`audience.${list.audience}`)}</span>
+            {list.audience === "public" && typeof saveCount === "number" && saveCount > 0 ? (
+              <>
+                <span aria-hidden>·</span>
+                <span>{t("savesCount", { count: saveCount })}</span>
+              </>
+            ) : null}
             <span aria-hidden>·</span>
             <RelativeDate iso={list.createdAt} />
             {list.pinned ? (

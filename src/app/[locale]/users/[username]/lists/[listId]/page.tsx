@@ -4,7 +4,7 @@ import { z } from "zod";
 import { resolveSession } from "@/services/auth/sessions";
 import { getProfileByUsername } from "@/services/social/profiles";
 import { getUserListDetail } from "@/services/lists/lists";
-import { savedStateFor } from "@/services/lists/saved-lists";
+import { saveCountsFor, savedStateFor } from "@/services/lists/saved-lists";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListDetailHeader } from "@/components/lists/ListDetailHeader";
 import { ListItemsView } from "@/components/lists/ListItemsView";
@@ -46,6 +46,11 @@ export default async function UserListDetailPage({ params }: PageProps) {
   const savedState = viewerId
     ? (await savedStateFor(viewerId, [listId])).get(listId)
     : undefined;
+  // Conteo agregado de guardados: dato público para listas `public`.
+  const saveCount =
+    list.audience === "public"
+      ? ((await saveCountsFor([listId])).get(listId) ?? 0)
+      : undefined;
 
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
@@ -57,6 +62,7 @@ export default async function UserListDetailPage({ params }: PageProps) {
           saved={savedState?.saved ?? false}
           following={savedState?.following ?? false}
           canSave={Boolean(viewerId)}
+          saveCount={saveCount}
         />
 
         {list.items.length === 0 ? (

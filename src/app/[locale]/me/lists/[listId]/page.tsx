@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { requirePageUser } from "@/services/auth/page-auth";
 import { getOwnedList } from "@/services/lists/lists";
+import { saveCountsFor } from "@/services/lists/saved-lists";
 import { ListDetail } from "@/components/lists/ListDetail";
 import { notFound } from "next/navigation";
 import { z } from "zod";
@@ -17,9 +18,12 @@ export default async function ListDetailPage({ params }: { params: Promise<{ lis
     notFound();
   }
 
+  const saveCount =
+    list.audience === "public" ? ((await saveCountsFor([listId])).get(listId) ?? 0) : undefined;
+
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
-      <ListDetail initial={list} />
+      <ListDetail initial={list} saveCount={saveCount} />
       <span className="sr-only">{t("title")}</span>
     </main>
   );

@@ -84,14 +84,21 @@ export function Header({
     }
   };
 
-  const exploreLink = exploreEnabled ? (
-    <Link
-      href="/explore"
-      className="font-data text-sm text-paper-muted transition-colors hover:text-paper"
-    >
-      {tExplore("navLabel")}
-    </Link>
-  ) : null;
+  const generalNavClass = "font-data text-sm text-paper-muted transition-colors hover:text-paper";
+  // Barra general: navegación de contenido que el sitio ofrece a cualquiera.
+  // "Listas" es la superficie pública `/lists`, distinta de `/me/lists`.
+  const generalLinks = (
+    <>
+      {exploreEnabled ? (
+        <Link href="/explore" className={generalNavClass}>
+          {tExplore("navLabel")}
+        </Link>
+      ) : null}
+      <Link href="/lists" className={generalNavClass}>
+        {t("lists")}
+      </Link>
+    </>
+  );
 
   return (
     <header className="relative border-b border-ink-border">
@@ -103,7 +110,9 @@ export function Header({
           </div>
           {/* Barra general: solo navegación de contenido que ofrece el sitio a
               cualquiera. Las superficies personales viven en el menú de usuario. */}
-          <nav className="hidden items-center gap-4 md:flex">{exploreLink}</nav>
+          <nav aria-label={t("generalNav")} className="hidden items-center gap-4 md:flex">
+            {generalLinks}
+          </nav>
         </div>
 
         {/* Sesión e idioma van juntos al extremo derecho, separados de la navegación
@@ -147,11 +156,9 @@ export function Header({
         >
           {/* Bloque 1 — barra general. */}
           <HeaderSearch />
-          {exploreLink ? (
-            <nav aria-label={t("generalNav")} className="flex flex-col gap-3">
-              {exploreLink}
-            </nav>
-          ) : null}
+          <nav aria-label={t("generalNav")} className="flex flex-col gap-3">
+            {generalLinks}
+          </nav>
 
           {/* Bloque 2 — zona de usuario. */}
           <div className="flex flex-col gap-4 border-t border-ink-border pt-4">

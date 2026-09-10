@@ -4,7 +4,7 @@
 // extra: cuando es TRUE, las actualizaciones de metadatos de esa lista entran en
 // el feed de quien la sigue (ver src/services/feed/feed.ts).
 
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, count, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, listSave, userList } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -222,6 +222,23 @@ export async function followedListIds(saverId: string): Promise<string[]> {
     .from(listSave)
     .where(and(eq(listSave.saverId, saverId), eq(listSave.following, true)));
   return rows.map((row) => row.listId);
+}
+
+/**
+ * Conteo total de guardados por lista. Dato público del agregado —nunca expone
+ * quién guardó—, para la sección "Populares" y el detalle de una lista pública
+ * (cambio add-community-lists-surface). Se apoya en `idx_list_save_list`.
+ */
+export async function saveCountsFor(listIds: string[]): Promise<Map<string, number>> {
+  const result = new Map<string, number>();
+  if (listIds.length === 0) return result;
+  const rows = await db
+    .select({ listId: listSave.listId, n: count() })
+    .from(listSave)
+    .where(inArray(listSave.listId, listIds))
+    .groupBy(listSave.listId);
+  for (const row of rows) result.set(row.listId, Number(row.n));
+  return result;
 }
 
 /** Estado de guardado del lector para un conjunto de listas (para Descubrir). */
