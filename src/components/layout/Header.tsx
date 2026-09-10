@@ -10,6 +10,7 @@ import { LogoutResponseSchema } from "@/lib/api/schemas";
 import { HeaderSearch } from "./HeaderSearch";
 import { Logo } from "./Logo";
 import { UserMenu, UserMenuList } from "./UserMenu";
+import { RegisterListenButton } from "@/components/diary/RegisterListenButton";
 
 interface HeaderProps {
   user?: Pick<AuthUser, "id" | "username" | "displayName"> | null;
@@ -112,6 +113,7 @@ export function Header({
               cualquiera. Las superficies personales viven en el menú de usuario. */}
           <nav aria-label={t("generalNav")} className="hidden items-center gap-4 md:flex">
             {generalLinks}
+            {currentUser ? <RegisterListenButton /> : null}
           </nav>
         </div>
 
@@ -156,8 +158,9 @@ export function Header({
         >
           {/* Bloque 1 — barra general. */}
           <HeaderSearch />
-          <nav aria-label={t("generalNav")} className="flex flex-col gap-3">
+          <nav aria-label={t("generalNav")} className="flex flex-col items-start gap-3">
             {generalLinks}
+            {currentUser ? <RegisterListenButton /> : null}
           </nav>
 
           {/* Bloque 2 — zona de usuario. */}
