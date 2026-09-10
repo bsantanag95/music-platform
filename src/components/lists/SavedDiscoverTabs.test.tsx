@@ -78,6 +78,7 @@ describe("DiscoverListsTab", () => {
           itemCount: 10,
           coverThumbs: [],
           owner,
+          isOfficial: false,
           saved: false,
           following: false,
         },

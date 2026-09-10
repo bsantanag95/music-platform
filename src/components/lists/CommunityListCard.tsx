@@ -30,6 +30,7 @@ export function CommunityListCard({
       description={list.description}
       meta={
         <>
+          {list.isOfficial ? <span className="rounded bg-amber px-1.5 py-0.5 font-data text-[10px] text-ink">{t("officialBadge")}</span> : null}
           <span>{t(entityTypeKey(list.entityType))}</span>
           <span aria-hidden>·</span>
           <span>{t("itemsCount", { count: list.itemCount })}</span>

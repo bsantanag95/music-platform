@@ -51,9 +51,13 @@
     "title": "Actividad social suspendida",
     "description": "No podés publicar ni generar nueva actividad social mientras dure la suspensión."
   },
-  "MODERATION_REPORT_NOT_FOUND": {
+"MODERATION_REPORT_NOT_FOUND": {
     "title": "Reporte no encontrado",
     "description": "El reporte de moderación no existe o ya no está disponible."
+  },
+  "RESTRICTION_NOT_FOUND": {
+    "title": "Restricción no encontrada",
+    "description": "La restricción no existe o ya fue revocada."
   },
   "INVALID_TARGET": {
     "title": "Objetivo inválido",

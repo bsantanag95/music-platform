@@ -17,6 +17,8 @@ interface SocialSectionProps {
    * versión (openspec: add-album-review).
    */
   reviews?: ReviewsResponse;
+  /** El visitante tiene `moderation.suspend_social`. */
+  canModerate?: boolean;
 }
 
 export function SocialSection({
@@ -26,6 +28,7 @@ export function SocialSection({
   comments,
   userId,
   reviews,
+  canModerate = false,
 }: SocialSectionProps) {
   return (
     <section className="flex w-full max-w-3xl flex-col gap-8">
@@ -43,6 +46,7 @@ export function SocialSection({
           authenticated={Boolean(userId)}
           userId={userId}
           ownStars={ratings.own?.stars ?? 0}
+          canModerate={canModerate}
         />
       )}
       <Comments
@@ -51,6 +55,7 @@ export function SocialSection({
         initial={comments}
         authenticated={Boolean(userId)}
         userId={userId}
+        canModerate={canModerate}
       />
     </section>
   );

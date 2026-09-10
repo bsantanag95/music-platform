@@ -24,6 +24,11 @@ vi.mock("next-intl/server", () => ({
 const resolveSession = vi.fn();
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: () => resolveSession() }));
 
+const getUserPermissions = vi.fn();
+vi.mock("@/services/auth/authorization", () => ({
+  getUserPermissions: () => getUserPermissions(),
+}));
+
 const getProfileView = vi.fn();
 vi.mock("@/services/profiles/profile-view", () => ({
   getProfileView: (username: string, viewerId: string | null) => getProfileView(username, viewerId),
@@ -121,6 +126,7 @@ const render = (username = "ana", preview?: string) =>
 beforeEach(() => {
   vi.clearAllMocks();
   mutualFollowersHint.mockResolvedValue(0);
+  getUserPermissions.mockResolvedValue([]);
 });
 
 describe("UserProfilePage", () => {

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Link, usePathname, useSearchParams, useRouter } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { AuthUser } from "@/lib/api/schemas";
+import type { Permission } from "@/services/auth/authorization";
 import { apiFetch, ApiError } from "@/lib/api/client";
 import { LogoutResponseSchema } from "@/lib/api/schemas";
 import { HeaderSearch } from "./HeaderSearch";
@@ -17,6 +18,7 @@ interface HeaderProps {
   exploreEnabled?: boolean;
   /** Solicitudes de seguimiento pendientes, para el badge del menú de usuario. */
   pendingFollowRequests?: number;
+  platformPermissions?: Permission[];
 }
 
 // Encabezado global del catálogo. Client Component porque el selector de
@@ -30,6 +32,7 @@ export function Header({
   user = null,
   exploreEnabled = false,
   pendingFollowRequests = 0,
+  platformPermissions = [],
 }: HeaderProps) {
   const t = useTranslations("common");
   const tExplore = useTranslations("catalog.explore");
@@ -98,6 +101,16 @@ export function Header({
       <Link href="/lists" className={generalNavClass}>
         {t("lists")}
       </Link>
+      {platformPermissions.includes("moderation.review_content") || platformPermissions.includes("moderation.suspend_social") ? (
+        <Link href="/moderation" className={generalNavClass}>
+          {t("moderation")}
+        </Link>
+      ) : null}
+      {platformPermissions.includes("editorial.publish") ? (
+        <Link href="/admin" className={generalNavClass}>
+          {t("administration")}
+        </Link>
+      ) : null}
     </>
   );
 

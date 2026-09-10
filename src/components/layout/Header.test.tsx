@@ -70,6 +70,8 @@ vi.mock("next-intl", async () => {
         settings: "Ajustes",
         userMenu: "Menú de usuario",
         generalNav: "Navegación general",
+        moderation: "Moderación",
+        administration: "Administración",
         openMenu: "Abrir menú",
         closeMenu: "Cerrar menú",
         "global.trigger": "Registrar",
@@ -302,5 +304,39 @@ describe("Header", () => {
     const requests = screen.getByRole("link", { name: /Solicitudes/ });
     expect(requests).toHaveAttribute("href", "/me/follow-requests");
     expect(requests).toHaveTextContent("3");
+  });
+
+  it("un usuario normal no ve enlaces a moderación ni administración", () => {
+    renderWithIntl(
+      <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
+    );
+
+    expect(screen.queryByRole("link", { name: "Moderación" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Administración" })).not.toBeInTheDocument();
+  });
+
+  it("un moderador ve el enlace a moderación pero no a administración", () => {
+    renderWithIntl(
+      <Header
+        user={{ id: "u1", username: "ana", displayName: "Ana" }}
+        platformPermissions={["moderation.review_content"]}
+      />,
+    );
+
+    const moderation = screen.getByRole("link", { name: "Moderación" });
+    expect(moderation).toHaveAttribute("href", "/moderation");
+    expect(screen.queryByRole("link", { name: "Administración" })).not.toBeInTheDocument();
+  });
+
+  it("un administrador ve administración y moderación en la barra general", () => {
+    renderWithIntl(
+      <Header
+        user={{ id: "u1", username: "ana", displayName: "Ana" }}
+        platformPermissions={["moderation.review_content", "moderation.suspend_social", "editorial.publish", "platform.manage_roles"]}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Administración" })).toHaveAttribute("href", "/admin");
+    expect(screen.getByRole("link", { name: "Moderación" })).toHaveAttribute("href", "/moderation");
   });
 });

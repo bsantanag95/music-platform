@@ -30,6 +30,11 @@ export async function userHasPermission(userId: string, permission: Permission):
   return getPermissionsForRoles(roles).includes(permission);
 }
 
+export async function getUserPermissions(userId: string): Promise<Permission[]> {
+  const roles = await getUserRoles(userId);
+  return getPermissionsForRoles(roles);
+}
+
 export async function requirePermission(permission: Permission) {
   const user = await requireUser();
   await requirePermissionForUser(user.id, permission);

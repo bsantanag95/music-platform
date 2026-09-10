@@ -29,13 +29,21 @@ Conserva motivo, actor, fechas de inicio/expiración y revocación. No elimina c
 
 ## `content_report` y `moderation_action`
 
-`content_report` recibe reportes de comentarios o reseñas y evita reportes pendientes duplicados
-por autor y objetivo. `moderation_action` registra ocultaciones/restauraciones y otras acciones
-reversibles de moderación con su actor, objetivo, motivo y fecha.
+`content_report` recibe reportes de comentarios, reseñas o perfiles de usuario (`comment_id`,
+`review_id` o `user_id`, exactamente uno — migración `0024`) y evita reportes pendientes duplicados
+por autor y objetivo. `moderation_action` registra ocultaciones/restauraciones, resoluciones y
+descartes de reportes y suspensiones/revocaciones sociales con su actor, objetivo (comentario,
+reseña, lista, restricción o usuario), motivo y fecha; el `CHECK` de `action` admite `hide`,
+`restore`, `report_resolve`, `report_dismiss`, `suspend_social` y `revoke_social` (migración `0023`).
 
 Comentarios, reseñas y listas tienen `moderation_status` (`visible`/`hidden`) para separar la
-moderación reversible del borrado físico del autor. `user_list` agrega además `is_official` y el
-actor/fecha de publicación editorial; solo una cuenta con permiso administrativo puede establecerlo.
+moderación reversible del borrado físico del autor. `user_list` agrega además `is_official`,
+`official_published_by`, `official_published_at` y `official_withdrawn_at` (migración `0023`) para
+la publicación editorial; solo una cuenta con permiso administrativo puede establecerlo, y solo
+sobre listas de la cuenta curadora `@exploracion` (las listas generales de `/explore`), nunca sobre
+listas personales de otros usuarios. Una lista editorial "retirada" conserva `is_official = false`
+con `official_withdrawn_at` poblado, lo que la distingue de una lista curadora que nunca fue oficial
+y la excluye del descubrimiento público mientras siga retirada.
 
 `password_hash` es nullable para permitir usuarios autenticados mediante proveedores externos.
 Cuando tiene valor, contiene únicamente el hash Argon2id de la contraseña local; nunca se guarda la

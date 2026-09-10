@@ -197,7 +197,8 @@ export const ErrorCodeSchema = z.enum([
   "LIST_TARGET_INVALID",
   "LIST_ITEM_NOT_FOUND",
   "COLLECTION_ENTRY_NOT_FOUND",
-  "MODERATION_REPORT_NOT_FOUND",
+"MODERATION_REPORT_NOT_FOUND",
+  "RESTRICTION_NOT_FOUND",
   "SOCIAL_SUSPENSION_ACTIVE",
   "ROLE_REQUIRED",
 ]);
@@ -222,11 +223,90 @@ export const LoginRequestSchema = z.object({
 export type LoginRequest = z.infer<typeof LoginRequestSchema>;
 
 export const ReportContentRequestSchema = z.object({
-  targetType: z.enum(["comment", "review"]),
+  targetType: z.enum(["comment", "review", "user"]),
   targetId: z.uuid(),
   reason: z.string().trim().min(1).max(1000),
 });
 export type ReportContentRequest = z.infer<typeof ReportContentRequestSchema>;
+
+export const ReportContentResponseSchema = z.object({
+  report: z.object({ id: z.uuid() }).nullable(),
+});
+
+export const ModerationStatusSchema = z.enum(["pending", "resolved", "dismissed"]);
+export const ModerationTargetTypeSchema = z.enum(["comment", "review", "list"]);
+export const ModerationReportQuerySchema = z.object({
+  status: ModerationStatusSchema.default("pending"),
+  targetType: z.enum(["comment", "review", "user"]).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(50).default(20),
+});
+export const ModerationActionRequestSchema = z.object({
+  action: z.enum(["hide", "restore"]),
+  reason: z.string().trim().min(1).max(1000),
+});
+export const ModerationReportStatusSchema = z.object({
+  status: z.enum(["resolved", "dismissed"]),
+});
+export const SocialSuspensionRequestSchema = z
+  .object({
+    userId: z.uuid().optional(),
+    identifier: z.string().trim().min(1).max(320).optional(),
+    reason: z.string().trim().min(1).max(1000),
+    expiresAt: z.coerce.date().refine((date) => date.getTime() > Date.now(), "La expiración debe ser futura"),
+  })
+  .refine((data) => Boolean(data.userId) !== Boolean(data.identifier), {
+    message: "Se requiere userId o identifier",
+    path: ["identifier"],
+  });
+export const EditorialListMutationResponseSchema = z.object({ ok: z.literal(true) });
+export const ModerationActionResponseSchema = z.object({ ok: z.literal(true) });
+export const ModerationReportSchema = z.object({
+  id: z.uuid(),
+  reason: z.string(),
+  status: ModerationStatusSchema,
+  createdAt: z.string(),
+  targetType: z.enum(["comment", "review", "user"]),
+  reporter: z.object({ id: z.uuid(), username: z.string(), displayName: z.string().nullable() }),
+  comment: z.object({ id: z.uuid().nullable(), body: z.string().nullable(), moderationStatus: z.string().nullable() }).nullable(),
+  review: z.object({ id: z.uuid().nullable(), title: z.string().nullable(), body: z.string().nullable(), moderationStatus: z.string().nullable() }).nullable(),
+  user: z.object({ id: z.uuid().nullable(), username: z.string().nullable(), displayName: z.string().nullable() }).nullable(),
+});
+export const ModerationReportsResponseSchema = z.object({
+  reports: z.array(ModerationReportSchema),
+  status: ModerationStatusSchema,
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  hasNext: z.boolean(),
+});
+export const EditorialListSchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  description: z.string().nullable(),
+  audience: z.string(),
+  moderationStatus: z.string(),
+  isOfficial: z.boolean(),
+  officialPublishedAt: z.string().nullable(),
+  officialWithdrawnAt: z.string().nullable(),
+  createdAt: z.string(),
+  owner: z.object({ id: z.uuid(), username: z.string(), displayName: z.string().nullable() }),
+});
+export const EditorialListsResponseSchema = z.object({ lists: z.array(EditorialListSchema) });
+export const SocialRestrictionSchema = z.object({
+  id: z.uuid(),
+  userId: z.uuid(),
+  scope: z.literal("social_activity"),
+  startsAt: z.string(),
+  expiresAt: z.string().nullable(),
+  reason: z.string(),
+  revokedAt: z.string().nullable(),
+  createdAt: z.string(),
+  user: z.object({ username: z.string(), displayName: z.string().nullable() }),
+});
+export const SocialRestrictionsResponseSchema = z.object({ restrictions: z.array(SocialRestrictionSchema) });
+export const SocialRestrictionMutationResponseSchema = z.object({
+  restriction: z.object({ id: z.uuid() }),
+});
 
 export const AuthUserSchema = z.object({
   id: z.uuid(),
@@ -1081,6 +1161,7 @@ export const DiscoverListSummarySchema = z.object({
   itemCount: z.number().int(),
   coverThumbs: z.array(z.string()),
   owner: ListOwnerSchema,
+  isOfficial: z.boolean(),
   saved: z.boolean(),
   following: z.boolean(),
   /** Conteo agregado de guardados. Presente en la sección "Populares" de /lists. */

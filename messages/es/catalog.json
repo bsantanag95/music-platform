@@ -176,6 +176,20 @@
     "reviewLoadMore": "Cargar más reseñas",
     "reviewByLabel": "Reseña de {name}",
     "reviewShowMore": "Ver más",
-    "reviewShowLess": "Ver menos"
+    "reviewShowLess": "Ver menos",
+    "report": "Reportar",
+    "reportReasonLabel": "Motivo del reporte",
+    "reportReasonPlaceholder": "Contanos por qué lo reportás",
+    "reportSubmit": "Enviar reporte",
+    "reportSent": "Reporte enviado. Gracias.",
+    "blockAuthor": "Bloquear a @{username}",
+    "blockAuthorConfirm": "¿Bloquear a @{username}? Ya no podrán interactuar.",
+    "suspendAuthor": "Suspender a @{username}",
+    "suspendAuthorConfirm": "¿Suspender la actividad social de @{username}? No podrá publicar mientras dure la suspensión.",
+    "suspendReasonLabel": "Motivo de la suspensión",
+    "suspendReasonPlaceholder": "Motivo de la suspensión",
+    "suspendExpires": "Expira",
+    "suspendSubmit": "Suspender",
+    "suspendDone": "Suspensión aplicada."
   }
 }

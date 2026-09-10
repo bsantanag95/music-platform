@@ -1,6 +1,7 @@
 import { getFormatter, getTranslations } from "next-intl/server";
 import { FollowButton } from "@/components/social/FollowButton";
 import { BlockButton } from "@/components/social/BlockButton";
+import { ProfileModerationActions } from "@/components/profiles/ProfileModerationActions";
 import { monogramLetter, monogramStyle } from "@/components/social/monogram";
 import type { ProfileView } from "@/services/profiles/profile-view";
 
@@ -14,6 +15,8 @@ interface PlacaProps {
   variant?: "full" | "aside";
   /** Previsualización "cómo te ven": el clúster de acciones se muestra inerte. */
   preview?: boolean;
+  /** El visitante tiene `moderation.suspend_social`: habilita suspender desde el perfil. */
+  canModerate?: boolean;
 }
 
 // La Placa: el objeto identidad del perfil, presente en las tres vistas
@@ -21,7 +24,7 @@ interface PlacaProps {
 // una funda de vinilo — monograma, nombre en display, dato en mono, bio en
 // serif, y el clúster "quién soy para vos" (relación + acciones) al extremo.
 // Ver DESIGN.md ("The Vinyl Listening Room") y el spec social-profiles.
-export async function Placa({ profile, authenticated, variant = "full", preview }: PlacaProps) {
+export async function Placa({ profile, authenticated, variant = "full", preview, canModerate = false }: PlacaProps) {
   const t = await getTranslations("users");
   const format = await getFormatter();
   const name = profile.displayName ?? profile.username;
@@ -126,6 +129,13 @@ export async function Placa({ profile, authenticated, variant = "full", preview 
           preview={preview}
         />
         {showBlock && <BlockButton username={profile.username} blocked={profile.blockedByMe} />}
+        {showBlock && !preview && (
+          <ProfileModerationActions
+            userId={profile.id}
+            username={profile.username}
+            canModerate={canModerate}
+          />
+        )}
       </div>
     </section>
   );

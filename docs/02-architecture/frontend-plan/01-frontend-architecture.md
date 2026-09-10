@@ -107,3 +107,11 @@ Sin test runner configurado hoy (`package.json` no tiene `test` script, CI no co
 tests). Se propone Vitest + Testing Library para unit/componentes, con un test e2e de
 Playwright cubriendo el flujo de referencia del roadmap (Pink Floyd / Roger Waters) más
 adelante. Detalle en `03-best-practices.md`.
+
+## Superficies protegidas de moderación
+
+Las rutas localizadas `/[locale]/moderation` y `/[locale]/admin` son superficies separadas de la
+navegación personal. La carga inicial se realiza en Server Components después de resolver la sesión y
+el permiso efectivo; las acciones posteriores usan `src/lib/api/client.ts` y validan las respuestas
+con Zod. La navegación oculta enlaces sin permiso, pero las páginas y route handlers repiten la
+autorización server-side. No se implementa una UI para asignar o revocar roles.

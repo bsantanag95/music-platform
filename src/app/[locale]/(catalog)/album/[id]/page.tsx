@@ -15,6 +15,7 @@ import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { AddToListButton } from "@/components/lists/AddToListButton";
 import { CollectionAlbumAction } from "@/components/collection/CollectionAlbumAction";
 import { resolveSession } from "@/services/auth/sessions";
+import { getUserPermissions } from "@/services/auth/authorization";
 import { isFavorited } from "@/services/favorites/favorites";
 import { listOwnEntriesForReleaseGroup } from "@/services/collection/collection";
 import { getRatings, listComments, resolveSocialTarget } from "@/services/social";
@@ -58,6 +59,9 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
 
   const { detail } = result;
   const session = await resolveSession();
+  const canModerate = session?.user
+    ? (await getUserPermissions(session.user.id)).includes("moderation.suspend_social")
+    : false;
   const socialTarget = await resolveSocialTarget("release-group", detail.releaseGroup.id);
   const [ratings, comments, reviews, collectionEntries, favorited] = await Promise.all([
     getRatings(socialTarget, session?.user.id),
@@ -137,7 +141,7 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
         durationUnknown={t("album.durationUnknown")}
         creditsLabel={t("album.creditsLabel")}
       />
-      <SocialSection target="release-group" targetId={detail.releaseGroup.id} ratings={ratings} comments={comments} reviews={reviews} userId={session?.user.id} />
+      <SocialSection target="release-group" targetId={detail.releaseGroup.id} ratings={ratings} comments={comments} reviews={reviews} userId={session?.user.id} canModerate={canModerate} />
     </main>
   );
 }

@@ -17,6 +17,7 @@ import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { FollowArtistButton } from "@/components/catalog/FollowArtistButton";
 import { AddToListButton } from "@/components/lists/AddToListButton";
 import { resolveSession } from "@/services/auth/sessions";
+import { getUserPermissions } from "@/services/auth/authorization";
 import { listComments, resolveSocialTarget } from "@/services/social";
 import { isFollowingArtist } from "@/services/social/artist-following";
 import { isFavorited } from "@/services/favorites/favorites";
@@ -54,6 +55,9 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
 
   await ensureArtistMemberships(artist);
   const session = await resolveSession();
+  const canModerate = session?.user
+    ? (await getUserPermissions(session.user.id)).includes("moderation.suspend_social")
+    : false;
   const [releaseGroups, memberships, following, favorited] = await Promise.all([
     findOrIngestDiscography(artist),
     getArtistMemberships(artist),
@@ -133,6 +137,7 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
           initial={comments}
           authenticated={Boolean(session?.user.id)}
           userId={session?.user.id}
+          canModerate={canModerate}
           variant="notes"
         />
       </div>

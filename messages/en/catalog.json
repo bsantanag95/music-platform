@@ -176,6 +176,20 @@
     "reviewLoadMore": "Load more reviews",
     "reviewByLabel": "Review by {name}",
     "reviewShowMore": "Show more",
-    "reviewShowLess": "Show less"
+    "reviewShowLess": "Show less",
+    "report": "Report",
+    "reportReasonLabel": "Report reason",
+    "reportReasonPlaceholder": "Tell us why you are reporting this",
+    "reportSubmit": "Submit report",
+    "reportSent": "Report submitted. Thank you.",
+    "blockAuthor": "Block @{username}",
+    "blockAuthorConfirm": "Block @{username}? You will no longer interact.",
+    "suspendAuthor": "Suspend @{username}",
+    "suspendAuthorConfirm": "Suspend @{username}'s social activity? They won't be able to post while the suspension lasts.",
+    "suspendReasonLabel": "Suspension reason",
+    "suspendReasonPlaceholder": "Reason for the suspension",
+    "suspendExpires": "Expires",
+    "suspendSubmit": "Suspend",
+    "suspendDone": "Suspension applied."
   }
 }

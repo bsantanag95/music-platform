@@ -114,6 +114,7 @@ export const contentReport = pgTable(
       .references(() => appUser.id, { onDelete: "cascade" }),
     commentId: uuid("comment_id"),
     reviewId: uuid("review_id"),
+    userId: uuid("user_id").references(() => appUser.id, { onDelete: "cascade" }),
     reason: text("reason").notNull(),
     status: text("status").notNull().default("pending"),
     resolvedBy: uuid("resolved_by").references(() => appUser.id, { onDelete: "set null" }),
@@ -123,7 +124,7 @@ export const contentReport = pgTable(
   (t) => [
     index("idx_content_report_status_created").on(t.status, t.createdAt),
     check("chk_content_report_status", sql`${t.status} IN ('pending', 'resolved', 'dismissed')`),
-    check("chk_content_report_target", sql`num_nonnulls(${t.commentId}, ${t.reviewId}) = 1`),
+    check("chk_content_report_target", sql`num_nonnulls(${t.commentId}, ${t.reviewId}, ${t.userId}) = 1`),
   ],
 );
 
@@ -139,10 +140,21 @@ export const moderationAction = pgTable(
     reviewId: uuid("review_id"),
     listId: uuid("list_id"),
     restrictionId: uuid("restriction_id"),
+    userId: uuid("user_id"),
     reason: text("reason").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("idx_moderation_action_created").on(t.createdAt)],
+  (t) => [
+    index("idx_moderation_action_created").on(t.createdAt),
+    check(
+      "chk_moderation_action_action",
+      sql`${t.action} IN ('hide', 'restore', 'report_resolve', 'report_dismiss', 'suspend_social', 'revoke_social')`,
+    ),
+    check(
+      "chk_moderation_action_target",
+      sql`num_nonnulls(${t.commentId}, ${t.reviewId}, ${t.listId}, ${t.restrictionId}, ${t.userId}) = 1`,
+    ),
+  ],
 );
 
 export const userRoleAction = pgTable(
@@ -483,9 +495,10 @@ export const userList = pgTable(
     moderatedBy: uuid("moderated_by").references(() => appUser.id, { onDelete: "set null" }),
     moderatedAt: timestamp("moderated_at", { withTimezone: true }),
     moderationReason: text("moderation_reason"),
-    isOfficial: boolean("is_official").notNull().default(false),
+isOfficial: boolean("is_official").notNull().default(false),
     officialPublishedBy: uuid("official_published_by").references(() => appUser.id, { onDelete: "set null" }),
     officialPublishedAt: timestamp("official_published_at", { withTimezone: true }),
+    officialWithdrawnAt: timestamp("official_withdrawn_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

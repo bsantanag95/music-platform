@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   footer: vi.fn((props: { user: Record<string, unknown> | null }) => <div data-testid="footer" data-user={JSON.stringify(props.user)} />),
   resolveSession: vi.fn(),
   countPendingFollowRequests: vi.fn().mockResolvedValue(0),
+  getUserPermissions: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("next/font/google", () => ({
@@ -16,6 +17,7 @@ vi.mock("next/font/google", () => ({
 vi.mock("next-intl/server", () => ({ getMessages: vi.fn().mockResolvedValue({ common: { appName: "App", tagline: "Tagline" } }) }));
 vi.mock("next-intl", () => ({ NextIntlClientProvider: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: mocks.resolveSession }));
+vi.mock("@/services/auth/authorization", () => ({ getUserPermissions: mocks.getUserPermissions }));
 vi.mock("@/services/social/following", () => ({ countPendingFollowRequests: mocks.countPendingFollowRequests }));
 vi.mock("@/components/layout/Header", () => ({ Header: mocks.header }));
 vi.mock("@/components/layout/Footer", () => ({ Footer: mocks.footer }));

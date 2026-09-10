@@ -7,6 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api/client";
 import { deleteReview, getReviews, saveReview, updateReview } from "@/lib/api/social";
 import type { Review, ReviewsResponse } from "@/lib/api/schemas";
+import { ContentActions } from "./ContentActions";
 
 interface ReviewsProps {
   target: "artist" | "release-group" | "recording";
@@ -16,6 +17,8 @@ interface ReviewsProps {
   userId?: string;
   /** Estrellas vigentes del usuario sobre este objetivo (0 si no valoró). */
   ownStars: number;
+  /** El visitante tiene `moderation.suspend_social`. */
+  canModerate?: boolean;
 }
 
 const STAR_VALUES = Array.from({ length: 10 }, (_, index) => (index + 1) / 2);
@@ -37,6 +40,7 @@ export function Reviews({
   authenticated,
   userId,
   ownStars,
+  canModerate = false,
 }: ReviewsProps) {
   const t = useTranslations("catalog.social");
   const tErrors = useTranslations("errors");
@@ -331,6 +335,17 @@ export function Reviews({
                     </button>
                   </div>
                 )}
+
+                {authenticated && userId !== review.user.id && editingId !== review.id ? (
+                  <ContentActions
+                    targetType="review"
+                    targetId={review.id}
+                    authorUsername={review.user.username}
+                    authorId={review.user.id}
+                    canModerate={canModerate}
+                    onBlocked={() => setReviews((current) => current.filter((r) => r.user.id !== review.user.id))}
+                  />
+                ) : null}
               </li>
             );
           })}

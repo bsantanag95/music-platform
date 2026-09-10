@@ -956,12 +956,68 @@ mismos parámetros opcionales que la lectura propia.
 
 ### `POST /api/moderation/reports`
 
-Requiere sesión. Crea un reporte pendiente sobre un comentario o una reseña visible.
+Requiere sesión. Crea un reporte pendiente sobre un comentario, una reseña o el perfil de un usuario.
 
-**Body:** `{ targetType: "comment" | "review", targetId, reason }`.
+**Body:** `{ targetType: "comment" | "review" | "user", targetId, reason }`.
 **201:** `{ report }` cuando se crea un reporte nuevo. **200:** `{ report: null }` cuando ya existe
 un reporte pendiente del mismo usuario sobre el mismo objetivo. **400** con `VALIDATION_ERROR` para
-un body inválido y **401** con `AUTH_REQUIRED` sin sesión.
+un body inválido (o un auto-reporte de perfil), **404** con `COMMENT_NOT_FOUND`/`REVIEW_NOT_FOUND`/
+`USER_NOT_FOUND` si el objetivo no existe y **401** con `AUTH_REQUIRED` sin sesión.
 
-Las acciones de ocultar/restaurar contenido, aplicar restricciones sociales y asignar roles son
-operaciones internas en esta versión; no existe todavía una UI administrativa pública.
+La asignación y revocación de roles continúa siendo una operación interna; las acciones de
+ocultar/restaurar contenido, aplicar restricciones sociales y gestionar listas editoriales se
+exponen en las superficies protegidas descritas abajo.
+## Moderación y administración editorial
+
+### `GET /api/moderation/reports`
+
+Requiere `moderation.review_content`. Devuelve reportes paginados; acepta `status` (`pending` |
+`resolved` | `dismissed`, default `pending`), `targetType` (`comment` | `review` | `user`), `page`
+y `pageSize` (máx. 50). La respuesta contiene `reports`, `status`, `page`, `pageSize` y `hasNext`.
+Un `reportId`, `targetId` o `userId` no-UUID devuelve `400 VALIDATION_ERROR` (o `INVALID_TARGET`
+en el endpoint de contenido).
+
+### `PATCH /api/moderation/reports/[reportId]`
+
+Requiere `moderation.review_content`. Recibe `{ "status": "resolved" | "dismissed" }` y actualiza
+el actor y la fecha de resolución. Solo puede resolver/descartar un reporte `pending` (uno ya
+resuelto o descartado devuelve `404 MODERATION_REPORT_NOT_FOUND`). Cada resolución o descarte
+registra una fila de auditoría `moderation_action` (`report_resolve` / `report_dismiss`).
+
+### `PATCH /api/moderation/content/[targetType]/[targetId]`
+
+Requiere `moderation.review_content`. `targetType` es `comment`, `review` o `list`; recibe
+`{ "action": "hide" | "restore", "reason": "string" }`. El objetivo inexistente devuelve
+`404 COMMENT_NOT_FOUND` / `REVIEW_NOT_FOUND` / `LIST_NOT_FOUND`.
+
+### `GET|POST /api/moderation/restrictions`
+
+Requiere `moderation.suspend_social`. `GET` lista restricciones y acepta `userId` (no-UUID →
+`400 VALIDATION_ERROR`). `POST` recibe `{ "userId": "uuid" }` **o** `{ "identifier":
+"username|email" }` (se resuelve server-side), más `{ "reason": "string", "expiresAt": "ISO-8601"
+}`. Usuario inexistente → `404 USER_NOT_FOUND`. Si faltan ambos `userId` e `identifier`, o llegan
+los dos, la respuesta es `400 VALIDATION_ERROR`.
+
+### `DELETE /api/moderation/restrictions/[restrictionId]`
+
+Requiere `moderation.suspend_social` y revoca una restricción social activa. Si la restricción no
+existe o ya fue revocada devuelve `404 RESTRICTION_NOT_FOUND`.
+
+### `GET /api/admin/editorial/lists`
+
+Requiere `editorial.publish`. Devuelve listas administrables de la **cuenta curadora `@exploracion`**
+(las listas generales de `/explore`); las listas personales de otros usuarios no aparecen ni pueden
+publicarse. Acepta `status=published|withdrawn`. `published` filtra `isOfficial = true`; `withdrawn`
+filtra listas con `officialWithdrawnAt` poblado (retiradas por un administrador), distinto de una
+lista curadora que nunca fue oficial.
+
+### `PATCH|DELETE /api/admin/editorial/lists/[listId]`
+
+Requiere `editorial.publish`. `PATCH` publica una lista oficial y `DELETE` la retira (deja de
+aparecer como contenido editorial y queda marcada como retirada). Ambas operaciones solo afectan a
+listas de la cuenta curadora `@exploracion`; publicar una lista personal de otro usuario devuelve
+`404 LIST_NOT_FOUND`. Ninguna de las dos borra la lista subyacente. Un `listId` no-UUID devuelve
+`404 LIST_NOT_FOUND`.
+
+Todos estos endpoints devuelven el formato uniforme `{ error, code }` ante errores y no exponen
+credenciales, roles internos ni datos privados innecesarios.

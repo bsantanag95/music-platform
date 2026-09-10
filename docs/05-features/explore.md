@@ -61,6 +61,14 @@ local con un aviso.
 
 Limpieza: `DELETE FROM app_user WHERE username = 'exploracion';` (cascade).
 
+### Administración editorial
+
+La superficie `/[locale]/admin` (permiso `editorial.publish`) opera **solo** sobre las listas de
+`@exploracion`: lista las colecciones de la cuenta curadora y permite publicarlas como contenido
+oficial (`is_official`) o retirarlas (`official_withdrawn_at`). Las listas de otros usuarios no
+aparecen en esa consola y rechazan la publicación oficial. La "destacada" del riel editorial
+(`user_list_featured`) es independiente de la marca oficial.
+
 ## No incluido en Fase 1
 
 Feed de reseñas, personalización/afinidad, pestañas no-álbum, UI de administración de

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getProfileView } from "@/services/profiles/profile-view";
 import { mutualFollowersHint } from "@/services/profiles/affinity";
 import { resolveSession } from "@/services/auth/sessions";
+import { getUserPermissions } from "@/services/auth/authorization";
 import { Placa } from "@/components/profiles/Placa";
 import { PrivateThreshold } from "@/components/profiles/PrivateThreshold";
 import { ViewAsBanner } from "@/components/profiles/ViewAsBanner";
@@ -81,6 +82,8 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
   // el clúster de acciones se muestra inerte vía `preview`, no fingiendo
   // ausencia de sesión — eso mostraba un enlace roto a /auth/login.
   const authenticated = Boolean(session);
+  const platformPermissions = session?.user ? await getUserPermissions(session.user.id) : [];
+  const canModerate = platformPermissions.includes("moderation.suspend_social");
   const mutualFollowers =
     lockedOut && effectiveViewerId
       ? await mutualFollowersHint(effectiveViewerId, profile.id)
@@ -105,6 +108,7 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
               authenticated={authenticated}
               variant="aside"
               preview={previewing}
+              canModerate={canModerate}
             />
             <Streamed>
               <AnthemSection ownerId={profile.id} />
@@ -170,7 +174,7 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
   return (
     <main className="flex min-h-screen flex-col items-center gap-8 px-4 py-12">
       <div className="flex w-full max-w-2xl flex-col items-start gap-8">
-        <Placa profile={profile} authenticated={authenticated} preview={previewing} />
+        <Placa profile={profile} authenticated={authenticated} preview={previewing} canModerate={canModerate} />
 
         {realIsOwn && <ViewAsBanner username={profile.username} previewing={previewing} />}
 

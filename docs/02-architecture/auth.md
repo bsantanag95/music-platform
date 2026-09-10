@@ -223,7 +223,9 @@ usuario con sus permisos normales. Los permisos se derivan en backend y no se gu
 ni en la sesión persistida, para que una revocación tenga efecto en la siguiente operación sensible.
 
 `moderator` puede revisar reportes, ocultar/restaurar comentarios, reseñas y listas, y aplicar una
-restricción temporal `social_activity`. `admin` hereda esos permisos y además puede gestionar roles
+restricción temporal `social_activity`. La suspensión se puede ejecutar desde la consola de
+moderación, desde el perfil del usuario o desde un comentario/reseña ajeno (acción visible solo con
+el permiso `moderation.suspend_social`). `admin` hereda esos permisos y además puede gestionar roles
 mediante operaciones internas y publicar contenido editorial oficial. Ninguno de estos roles edita
 el catálogo de MusicBrainz.
 
@@ -232,6 +234,14 @@ ratings, actividad compartible, seguimientos, favoritos/guardados y listas visib
 login, lectura, perfil propio, diario privado, colección y privatización/borrado propio cuando la
 superficie ya lo permite. No oculta ni borra automáticamente contenido previo; la moderación de ese
 contenido es una acción separada y auditable. Ver ADR 0012.
+
+Las superficies web protegidas viven fuera de `OwnerHubPanel`: `/[locale]/moderation` requiere
+`moderation.review_content` para la cola y usa `moderation.suspend_social` para restricciones;
+`/[locale]/admin` requiere `editorial.publish`. La navegación solo muestra esos enlaces cuando el
+permiso efectivo está presente, pero cada página y endpoint vuelve a comprobarlo server-side. La
+asignación y revocación de roles sigue siendo interna y no existe una UI para editar roles. La
+superficie administrativa opera únicamente sobre las listas de la cuenta curadora `@exploracion`
+(`/explore`), no sobre listas personales de usuarios comunes.
 
 ## Qué no decide este documento
 

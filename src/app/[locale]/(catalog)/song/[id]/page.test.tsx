@@ -29,6 +29,9 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 vi.mock("@/components/catalog/LazyCoverImage", () => ({ LazyCoverImage: () => <div /> }));
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: vi.fn() }));
+vi.mock("@/services/auth/authorization", () => ({
+  getUserPermissions: vi.fn().mockResolvedValue([]),
+}));
 vi.mock("@/services/social", () => ({
   resolveSocialTarget: vi.fn().mockResolvedValue({ type: "recording", id: "r1", column: "recordingId" }),
   getRatings: vi.fn().mockResolvedValue({ own: null, aggregate: { count: 0, averageStars: null, averageDetailedScore: null } }),

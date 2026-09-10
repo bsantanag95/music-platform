@@ -7,6 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api/client";
 import { createComment, deleteComment, getComments, updateComment } from "@/lib/api/social";
 import type { CommentsResponse } from "@/lib/api/schemas";
+import { ContentActions } from "./ContentActions";
 
 interface CommentsProps {
   target: "artist" | "release-group" | "recording";
@@ -21,6 +22,8 @@ interface CommentsProps {
    * distinto.
    */
   variant?: "comments" | "notes";
+  /** El visitante tiene `moderation.suspend_social`. */
+  canModerate?: boolean;
 }
 
 export function Comments({
@@ -30,6 +33,7 @@ export function Comments({
   authenticated,
   userId,
   variant = "comments",
+  canModerate = false,
 }: CommentsProps) {
   const t = useTranslations("catalog.social");
   const tErrors = useTranslations("errors");
@@ -122,7 +126,7 @@ export function Comments({
         <p className="font-body text-paper-muted"><Link href="/auth/login" className="text-amber underline">{t(loginKey)}</Link></p>
       )}
       {errorCode && <p role="alert" className="font-data text-sm text-danger">{tErrors(`${errorCode}.description`)}</p>}
-      {comments.length === 0 ? <p className="font-body text-paper-muted">{t(emptyKey)}</p> : <ul className="flex flex-col gap-4">{comments.map((comment) => <li key={comment.id} className="rounded border border-ink-border bg-ink-surface p-4"><p className="font-data text-xs text-paper-muted">{comment.user.displayName ?? comment.user.username}</p>{editingId === comment.id ? <div className="mt-2 flex flex-col gap-2"><textarea aria-label={t("editCommentLabel")} value={editingBody} onChange={(event) => setEditingBody(event.target.value)} maxLength={5000} rows={3} className="rounded border border-ink-border bg-ink px-3 py-2" /><div className="flex gap-2"><button type="button" disabled={pending} onClick={() => void handleUpdate(comment.id)} className="rounded bg-amber px-3 py-1 font-data text-xs text-ink">{t("save")}</button><button type="button" onClick={() => setEditingId(null)} className="rounded border border-ink-border px-3 py-1 font-data text-xs text-paper">{t("cancel")}</button></div></div> : <p className="mt-2 whitespace-pre-wrap font-body text-paper">{comment.body}</p>}{userId === comment.user.id && editingId !== comment.id && <div className="mt-3 flex gap-3"><button type="button" onClick={() => { setEditingId(comment.id); setEditingBody(comment.body); }} className="font-data text-xs text-amber underline">{t("edit")}</button><button type="button" disabled={pending} onClick={() => void handleDelete(comment.id)} className="font-data text-xs text-danger underline">{t("delete")}</button></div>}</li>)}</ul>}
+      {comments.length === 0 ? <p className="font-body text-paper-muted">{t(emptyKey)}</p> : <ul className="flex flex-col gap-4">{comments.map((comment) => <li key={comment.id} className="rounded border border-ink-border bg-ink-surface p-4"><p className="font-data text-xs text-paper-muted">{comment.user.displayName ?? comment.user.username}</p>{editingId === comment.id ? <div className="mt-2 flex flex-col gap-2"><textarea aria-label={t("editCommentLabel")} value={editingBody} onChange={(event) => setEditingBody(event.target.value)} maxLength={5000} rows={3} className="rounded border border-ink-border bg-ink px-3 py-2" /><div className="flex gap-2"><button type="button" disabled={pending} onClick={() => void handleUpdate(comment.id)} className="rounded bg-amber px-3 py-1 font-data text-xs text-ink">{t("save")}</button><button type="button" onClick={() => setEditingId(null)} className="rounded border border-ink-border px-3 py-1 font-data text-xs text-paper">{t("cancel")}</button></div></div> : <p className="mt-2 whitespace-pre-wrap font-body text-paper">{comment.body}</p>}{userId === comment.user.id && editingId !== comment.id && <div className="mt-3 flex gap-3"><button type="button" onClick={() => { setEditingId(comment.id); setEditingBody(comment.body); }} className="font-data text-xs text-amber underline">{t("edit")}</button><button type="button" disabled={pending} onClick={() => void handleDelete(comment.id)} className="font-data text-xs text-danger underline">{t("delete")}</button></div>}{authenticated && userId !== comment.user.id && editingId !== comment.id ? <ContentActions targetType="comment" targetId={comment.id} authorUsername={comment.user.username} authorId={comment.user.id} canModerate={canModerate} onBlocked={() => setComments((current) => current.filter((item) => item.user.id !== comment.user.id))} /> : null}</li>)}</ul>}
       {hasNext && <button type="button" disabled={pending} onClick={() => void handleLoadMore()} className="self-start rounded border border-ink-border px-4 py-2 font-display text-sm text-paper disabled:opacity-50">{pending ? t("loadingMore") : t("loadMore")}</button>}
     </section>
   );

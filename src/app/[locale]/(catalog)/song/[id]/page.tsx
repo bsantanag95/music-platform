@@ -20,6 +20,7 @@ import { MarkAsListened } from "@/components/diary/MarkAsListened";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { AddToListButton } from "@/components/lists/AddToListButton";
 import { resolveSession } from "@/services/auth/sessions";
+import { getUserPermissions } from "@/services/auth/authorization";
 import { getRatings, listComments, resolveSocialTarget } from "@/services/social";
 import { isFavorited } from "@/services/favorites/favorites";
 
@@ -56,6 +57,9 @@ export default async function SongPage({ params }: SongPageProps) {
 
   const session = await resolveSession();
   const userId = session?.user.id;
+  const canModerate = session?.user
+    ? (await getUserPermissions(session.user.id)).includes("moderation.suspend_social")
+    : false;
   const socialTarget = await resolveSocialTarget("recording", detail.recording.id);
   const [ratings, comments, reactionSummary, listenHistory, favorited] = await Promise.all([
     getRatings(socialTarget, userId),
@@ -116,6 +120,7 @@ export default async function SongPage({ params }: SongPageProps) {
         initial={comments}
         authenticated={Boolean(userId)}
         userId={userId}
+        canModerate={canModerate}
       />
 
       <SongStarDisclosure

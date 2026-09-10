@@ -6,7 +6,7 @@
 // Sin recomendación algorítmica: orden estricto por fecha de creación
 // descendente. Accesible con y sin sesión (la sección "Recientes" de `/lists`).
 
-import { and, desc, eq, ne, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, isNull, ne, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, userBlock, userList } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -140,10 +140,14 @@ export async function listDiscoverLists(
     .from(userList)
     .innerJoin(appUser, eq(userList.ownerId, appUser.id))
     .where(
-      and(
+and(
         eq(userList.audience, "public"),
         eq(userList.moderationStatus, "visible"),
         eq(appUser.profileVisibility, "public"),
+        // Listas retiradas por un administrador no reaparecen en el
+        // descubrimiento público mientras permanezcan retiradas (spec
+        // official-editorial-content).
+        isNull(userList.officialWithdrawnAt),
         readerId ? ne(userList.ownerId, readerId) : undefined,
         notBlockedByReader(readerId),
       ),

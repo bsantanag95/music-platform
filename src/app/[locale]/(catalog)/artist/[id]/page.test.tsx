@@ -61,6 +61,10 @@ vi.mock("@/services/auth/sessions", () => ({
   resolveSession: vi.fn().mockResolvedValue(null),
 }));
 
+vi.mock("@/services/auth/authorization", () => ({
+  getUserPermissions: vi.fn().mockResolvedValue([]),
+}));
+
 vi.mock("@/services/social", () => ({
   resolveSocialTarget: vi.fn().mockResolvedValue({ type: "artist", id: "artist", column: "artistId" }),
   getRatings: vi.fn().mockResolvedValue({ own: null, aggregate: { count: 0, averageStars: null, averageDetailedScore: null } }),
