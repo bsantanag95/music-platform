@@ -69,3 +69,19 @@ acción manual de desbloqueo. Una revocación interna SHALL producir el mismo ef
 #### Scenario: Suspensión revocada
 - **WHEN** una operación interna revoca una restricción antes de su expiración
 - **THEN** las siguientes mutaciones ya no son bloqueadas por esa restricción
+
+### Requirement: Aplicar una suspensión social desde el posteo o el perfil
+
+Un visitante con `moderation.suspend_social` SHALL poder suspender la actividad social de un
+usuario desde un comentario o reseña ajena o desde su perfil, confirmando una expiración futura y
+un motivo, y SHALL crear la restricción `social_activity` mediante el endpoint de restricciones.
+
+#### Scenario: Moderador suspende desde el posteo
+- **WHEN** un visitante con `moderation.suspend_social` confirma una suspensión con expiración futura
+  y motivo desde un comentario o reseña ajena
+- **THEN** se crea la restricción `social_activity` mediante el endpoint de restricciones
+
+#### Scenario: Moderador suspende desde el perfil
+- **WHEN** un visitante con `moderation.suspend_social` confirma una suspensión con expiración futura
+  y motivo desde el perfil
+- **THEN** se crea la restricción `social_activity` mediante el endpoint de restricciones

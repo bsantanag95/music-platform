@@ -55,4 +55,4 @@
 - [x] 8.2 Ejecutar `pnpm run lint`.
 - [x] 8.3 Ejecutar `pnpm run test`.
 - [x] 8.4 Ejecutar `pnpm run build`.
-- [ ] 8.5 Verificar manualmente con usuario normal, moderator y admin en desktop y móvil.
+- [x] 8.5 Verificar manualmente con usuario normal, moderator y admin en desktop y móvil.

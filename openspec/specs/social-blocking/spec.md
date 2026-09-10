@@ -22,6 +22,14 @@ acciones sociales entre ambas cuentas.
 - **WHEN** un usuario intenta bloquear su propio perfil
 - **THEN** la API rechaza la operación con un error de validación y no crea un bloqueo
 
+#### Scenario: Usuario bloquea al autor desde el posteo
+- **WHEN** un usuario autenticado confirma bloquear al autor de un comentario o reseña
+- **THEN** el autor queda bloqueado y su contenido se retira de la vista actual
+
+#### Scenario: Bloquear desde el perfil
+- **WHEN** un usuario autenticado confirma bloquear al dueño del perfil
+- **THEN** el bloqueo se aplica mediante el endpoint existente de bloqueo
+
 ### Requirement: Restricciones durante un bloqueo
 Mientras exista un bloqueo entre dos usuarios, ninguna de las cuentas SHALL poder seguir a la otra,
 aprobar una solicitud de la otra ni consultar listados sociales restringidos de la otra. Las reglas
