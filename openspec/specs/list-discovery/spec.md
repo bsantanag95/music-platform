@@ -9,17 +9,20 @@ cronológico descendente, sin recomendación algorítmica ni personalización po
 ### Requirement: Descubrir listas públicas de la comunidad
 
 El sistema SHALL exponer un listado paginado de listas de audiencia `public` de otros
-usuarios, en **orden cronológico descendente por fecha de creación**, en dos superficies: la
-pestaña "Descubrir" de `/me/lists` (con sesión) y la sección "Recientes" de la superficie
-pública `/lists` (con y **sin** sesión). El listado SHALL NOT usar recomendación algorítmica
-ni personalización por afinidad: es un descubrimiento editorial/cronológico. El listado
+usuarios, en **orden cronológico descendente por fecha de creación por defecto**, en dos
+superficies: la pestaña "Descubrir" de `/me/lists` (con sesión) y la superficie pública
+`/lists` (con y **sin** sesión). El listado SHALL aceptar filtros opcionales por texto (`q`, sobre
+título y descripción), por tipo de entidad (`entityType`) y un orden alternativo por conteo agregado
+de guardados descendente (`sort=popular`); sin estos parámetros el comportamiento SHALL ser el
+cronológico descrito. El listado SHALL NOT usar recomendación algorítmica ni personalización por
+afinidad: es un descubrimiento editorial, cronológico o por señal social agregada. El listado
 SHALL excluir las listas de usuarios que bloquearon al lector o a los que el lector bloqueó,
 y las de perfiles que dejaron de ser visibles; cuando hay sesión SHALL excluir además las
 listas del propio lector. Cada entrada SHALL mostrar título, dueño (con enlace al perfil),
 tipo de entidad, conteo de ítems, carátulas disponibles y tiempo relativo de creación; con
 sesión SHALL mostrar además si el lector ya la guardó o la sigue. Para un lector anónimo el
 listado SHALL devolver las mismas listas sin estado de guardado. Una paginación fuera de
-rango SHALL responder `400` con código `VALIDATION_ERROR`.
+rango o un valor de filtro inválido SHALL responder `400` con código `VALIDATION_ERROR`.
 
 #### Scenario: Ver listas públicas recientes
 
@@ -62,8 +65,19 @@ rango SHALL responder `400` con código `VALIDATION_ERROR`.
 - **THEN** recibe una lista vacía con paginación válida y un estado vacío localizado, no un
   error técnico
 
-#### Scenario: Paginación inválida
+#### Scenario: Filtro por texto y tipo
 
-- **WHEN** se envía una paginación fuera de rango
+- **WHEN** se consulta el listado con `q` y/o `entityType`
+- **THEN** devuelve solo las listas públicas visibles que coinciden, manteniendo la paginación
+
+#### Scenario: Orden por guardados
+
+- **WHEN** se consulta el listado con `sort=popular`
+- **THEN** ordena por conteo agregado de guardados descendente y, a igualdad, por fecha de
+  creación descendente, incluyendo las listas sin guardados al final
+
+#### Scenario: Paginación o filtro inválido
+
+- **WHEN** se envía una paginación fuera de rango o un valor de `entityType`/`sort` no soportado
 - **THEN** la API responde `400` con código `VALIDATION_ERROR` y no ejecuta la lectura
 

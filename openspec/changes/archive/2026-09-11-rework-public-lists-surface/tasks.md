@@ -36,4 +36,4 @@
 - [x] 6.2 Ejecutar `pnpm run lint`.
 - [x] 6.3 Ejecutar `pnpm run test` (206 archivos / 1359 tests).
 - [x] 6.4 Ejecutar `pnpm run build`.
-- [ ] 6.5 Verificar manualmente: vitrina, filtro por texto y tipo, orden Populares/Recientes, estado sin resultados, limpiar filtros, con y sin sesión, y que una lista editorial oficial publicada aparezca en Destacadas.
+- [x] 6.5 Verificar manualmente: vitrina, filtro por texto y tipo, orden Populares/Recientes, estado sin resultados, limpiar filtros, con y sin sesión, y que una lista editorial oficial publicada aparezca en Destacadas.
