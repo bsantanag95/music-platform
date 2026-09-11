@@ -119,7 +119,7 @@ const LIST_ITEM_SONG_COVER = sql<string | null>`(
   LIMIT 1
 )`;
 
-function normalizeTitle(title: string): string {
+export function normalizeTitle(title: string): string {
   const trimmed = title.trim();
   if (trimmed.length === 0 || trimmed.length > LIST_TITLE_MAX) {
     throw new ApiError(
@@ -131,7 +131,7 @@ function normalizeTitle(title: string): string {
   return trimmed;
 }
 
-function normalizeDescription(value: string | null): string | null {
+export function normalizeDescription(value: string | null): string | null {
   if (value === null) return null;
   const trimmed = value.trim();
   if (trimmed.length > LIST_DESCRIPTION_MAX) {

@@ -58,12 +58,16 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 
 ## Roles, moderación y suspensión social
 
-- Los roles de plataforma son acumulables: `moderator` y `admin`. La ausencia de roles representa
-  al usuario común.
+- Los roles de plataforma son acumulables: `moderator`, `admin` y `editorial_curator`. La ausencia
+  de roles representa al usuario común.
 - La autorización se aplica en backend mediante permisos derivados del rol; ocultar controles en la
   interfaz no constituye una protección.
 - Un moderador puede ocultar/restaurar contenido social y aplicar una restricción temporal
   `social_activity`, pero no administrar credenciales, identidades, email, username, roles ni cuentas.
+- Un curador editorial (`editorial_curator`, permiso `editorial.author`) crea, edita y propone listas
+  editoriales en borrador; no puede publicarlas ni retirarlas. Publicar y retirar requiere
+  `editorial.publish` (administrador). La autoría de la persona no reemplaza la identidad pública
+  `@exploracion`.
 - Una suspensión social bloquea nuevas acciones públicas o sociales, pero conserva login, lectura,
   perfil propio, diario privado y colección.
 - Una suspensión social no borra ni oculta automáticamente el contenido anterior. Ocultar contenido

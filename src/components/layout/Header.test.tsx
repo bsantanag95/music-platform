@@ -332,11 +332,23 @@ describe("Header", () => {
     renderWithIntl(
       <Header
         user={{ id: "u1", username: "ana", displayName: "Ana" }}
-        platformPermissions={["moderation.review_content", "moderation.suspend_social", "editorial.publish", "platform.manage_roles"]}
+        platformPermissions={["moderation.review_content", "moderation.suspend_social", "editorial.author", "editorial.publish", "platform.manage_roles"]}
       />,
     );
 
     expect(screen.getByRole("link", { name: "Administración" })).toHaveAttribute("href", "/admin");
     expect(screen.getByRole("link", { name: "Moderación" })).toHaveAttribute("href", "/moderation");
+  });
+
+  it("un curador con editorial.author ve administración sin permisos de moderación", () => {
+    renderWithIntl(
+      <Header
+        user={{ id: "u1", username: "ana", displayName: "Ana" }}
+        platformPermissions={["editorial.author"]}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Administración" })).toHaveAttribute("href", "/admin");
+    expect(screen.queryByRole("link", { name: "Moderación" })).not.toBeInTheDocument();
   });
 });

@@ -15,8 +15,21 @@ describe("permisos de plataforma", () => {
     expect(getPermissionsForRoles(["moderator", "admin"])).toEqual([
       "moderation.review_content",
       "moderation.suspend_social",
+      "editorial.author",
       "editorial.publish",
       "platform.manage_roles",
+    ]);
+  });
+
+  it("el curador editorial autor pero no publica", () => {
+    expect(getPermissionsForRoles(["editorial_curator"])).toEqual(["editorial.author"]);
+  });
+
+  it("acumula curador y moderador sin degradar ninguno", () => {
+    expect(getPermissionsForRoles(["editorial_curator", "moderator"])).toEqual([
+      "editorial.author",
+      "moderation.review_content",
+      "moderation.suspend_social",
     ]);
   });
 

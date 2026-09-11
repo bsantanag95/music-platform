@@ -13,8 +13,9 @@ También puede tener roles de plataforma en `user_role`, restricciones temporale
 
 ## `user_role`
 
-**Propósito:** asignaciones acumulables de roles de plataforma (`moderator`/`admin`). La ausencia
-de filas representa a un usuario común. `UNIQUE (user_id, role)` impide duplicar una asignación.
+**Propósito:** asignaciones acumulables de roles de plataforma (`moderator`/`admin`/
+`editorial_curator`). La ausencia de filas representa a un usuario común. `UNIQUE (user_id, role)`
+impide duplicar una asignación.
 
 La asignación inicial se realiza mediante operaciones internas y conserva `granted_by` y
 `created_at`; `user_role_action` mantiene el historial de concesiones y revocaciones.
@@ -44,6 +45,24 @@ sobre listas de la cuenta curadora `@exploracion` (las listas generales de `/exp
 listas personales de otros usuarios. Una lista editorial "retirada" conserva `is_official = false`
 con `official_withdrawn_at` poblado, lo que la distingue de una lista curadora que nunca fue oficial
 y la excluye del descubrimiento público mientras siga retirada.
+
+La migración `0025` (cambio `add-editorial-curator-role`) agrega a `user_list`
+`editorial_author_id` (la persona que creó el borrador; el `owner_id` sigue siendo `@exploracion`,
+que no puede iniciar sesión), `editorial_submitted_at` y `editorial_submitted_by` (propuesta para
+publicación). El estado editorial se deriva por presencia de estas columnas más `is_official` y
+`official_withdrawn_at`: **borrador** (`is_official = false`, `official_withdrawn_at IS NULL`,
+`editorial_author_id` poblado, `editorial_submitted_at` nulo), **propuesta** (igual, con
+`editorial_submitted_at` poblado), **publicada** (`is_official = true`) y **retirada**
+(`is_official = false`, `editorial_author_id` poblado, `official_withdrawn_at` poblado). El rol
+`editorial_curator` autoriza crear/editar/proponer (`editorial.author`) pero no publicar ni retirar
+(`editorial.publish`).
+
+`editorial_action` (migración `0025`) audita las acciones de autoría editorial —creación, edición,
+propuesta, publicación y retirada— con `actor_id`, `list_id` y `created_at`, siguiendo el patrón de
+`user_role_action` y `moderation_action`. El FK a `user_list` es `ON DELETE CASCADE`: al borrar un
+borrador nunca publicado desaparece su historial, que no tiene nada público que auditar. Los
+borradores nunca publicados (`is_official = false` y `official_withdrawn_at IS NULL`) pueden
+borrarse; las listas publicadas o retiradas no.
 
 `password_hash` es nullable para permitir usuarios autenticados mediante proveedores externos.
 Cuando tiene valor, contiene únicamente el hash Argon2id de la contraseña local; nunca se guarda la

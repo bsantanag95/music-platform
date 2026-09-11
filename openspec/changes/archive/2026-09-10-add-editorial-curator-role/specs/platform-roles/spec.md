@@ -1,10 +1,4 @@
-# Platform Roles
-
-## Purpose
-
-Gestión de roles acumulables (`moderator`, `admin`) y autorización backend basada en permisos derivados de roles.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Roles acumulables de plataforma
 
@@ -24,32 +18,6 @@ normales. La misma pareja usuario/rol SHALL ser única.
 - **WHEN** un usuario tiene asignados `editorial_curator` y `moderator`
 - **THEN** sus permisos efectivos incluyen autoría editorial y moderación, y ninguno de los dos roles
   se degrada por la convivencia
-
-### Requirement: Autorización backend por permiso
-
-Las operaciones protegidas SHALL comprobar un permiso derivado de los roles en el backend. Ocultar
-un enlace o control en la interfaz SHALL no considerarse autorización suficiente.
-
-#### Scenario: Usuario normal intenta moderar
-- **WHEN** un usuario sin permiso de moderación llama a una operación de moderación
-- **THEN** la API responde `403` con un código machine-readable de permiso insuficiente
-
-#### Scenario: Retiro de rol efectivo
-- **WHEN** se retira un rol a un usuario
-- **THEN** sus siguientes operaciones protegidas dejan de reconocer los permisos de ese rol
-
-### Requirement: Asignación interna de roles
-
-La primera versión SHALL permitir asignar y revocar roles únicamente mediante operaciones internas
-del servidor. Cada cambio SHALL registrar el actor, el usuario afectado, el rol y la fecha.
-
-#### Scenario: Asignación interna válida
-- **WHEN** una operación interna autorizada asigna `moderator` a un usuario
-- **THEN** el usuario obtiene el permiso correspondiente y queda un registro auditable
-
-#### Scenario: Usuario normal no puede autoasignarse
-- **WHEN** un usuario intenta modificar directamente sus roles o los de otro usuario
-- **THEN** la operación es rechazada y no cambia ninguna asignación
 
 ### Requirement: Navegación administrativa condicionada por permisos
 
@@ -73,18 +41,7 @@ usuario autenticado. La navegación personal SHALL permanecer separada de esas s
 - **WHEN** un usuario sin permisos de plataforma carga la navegación
 - **THEN** no se renderizan enlaces a moderación ni administración
 
-### Requirement: Protección de páginas por permiso
-
-Las páginas de moderación y administración SHALL comprobar permisos en el servidor antes de cargar
-datos o renderizar acciones protegidas.
-
-#### Scenario: Usuario sin permiso accede por URL
-- **WHEN** un usuario normal solicita directamente una ruta de moderación o administración
-- **THEN** la página no carga datos protegidos y responde con la política localizada de acceso denegado
-
-#### Scenario: Permiso retirado
-- **WHEN** se revoca el rol que concedía acceso y el usuario solicita de nuevo la página
-- **THEN** la página deja de ser accesible sin depender de cerrar sesión o renovar una cookie
+## ADDED Requirements
 
 ### Requirement: Permisos editoriales por rol
 

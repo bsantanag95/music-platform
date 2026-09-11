@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { userRole, userRoleAction } from "@/db/schema";
 import { requirePermissionForUser } from "./authorization";
 
-export type PlatformRole = "moderator" | "admin";
+export type PlatformRole = "moderator" | "admin" | "editorial_curator";
 
 export async function grantRole(actorId: string, targetId: string, role: PlatformRole): Promise<void> {
   await requirePermissionForUser(actorId, "platform.manage_roles");

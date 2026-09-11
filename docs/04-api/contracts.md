@@ -1005,19 +1005,49 @@ existe o ya fue revocada devuelve `404 RESTRICTION_NOT_FOUND`.
 
 ### `GET /api/admin/editorial/lists`
 
-Requiere `editorial.publish`. Devuelve listas administrables de la **cuenta curadora `@exploracion`**
-(las listas generales de `/explore`); las listas personales de otros usuarios no aparecen ni pueden
-publicarse. Acepta `status=published|withdrawn`. `published` filtra `isOfficial = true`; `withdrawn`
-filtra listas con `officialWithdrawnAt` poblado (retiradas por un administrador), distinto de una
-lista curadora que nunca fue oficial.
+Requiere `editorial.author`. Devuelve las listas administrables de la **cuenta curadora
+`@exploracion`** (las listas generales de `/explore`); las listas personales de otros usuarios no
+aparecen ni pueden publicarse. Cada lista incluye `author` (la persona que la creó, o `null` para
+listas legadas) y `state` (`draft` | `submitted` | `published` | `withdrawn` | `personal`). Acepta
+`status=draft|submitted|published|withdrawn`: `draft` filtra borradores nunca publicados sin
+propuesta, `submitted` los propuestos para revisión, `published` las oficiales y `withdrawn` las
+retiradas por un administrador.
 
-### `PATCH|DELETE /api/admin/editorial/lists/[listId]`
+### `POST /api/admin/editorial/lists`
 
-Requiere `editorial.publish`. `PATCH` publica una lista oficial y `DELETE` la retira (deja de
-aparecer como contenido editorial y queda marcada como retirada). Ambas operaciones solo afectan a
-listas de la cuenta curadora `@exploracion`; publicar una lista personal de otro usuario devuelve
-`404 LIST_NOT_FOUND`. Ninguna de las dos borra la lista subyacente. Un `listId` no-UUID devuelve
-`404 LIST_NOT_FOUND`.
+Requiere `editorial.author`. Recibe `{ entityType, title, description? }` y crea un **borrador**
+propiedad de `@exploracion`, con audiencia `public` y autoría registrada. Devuelve `{ list }` con
+`201`.
+
+### `PATCH /api/admin/editorial/lists/[listId]`
+
+Requiere `editorial.author`. Recibe `{ title?, description? }` y edita un borrador nunca publicado
+(la audiencia se fuerza a `public`). Devuelve `{ list }`. Una lista personal, publicada o retirada
+responde `404 LIST_NOT_FOUND`.
+
+### `DELETE /api/admin/editorial/lists/[listId]`
+
+Requiere `editorial.author`. Borra un borrador que nunca fue publicado ni retirado (responde `204`).
+Una lista personal, publicada o retirada responde `404 LIST_NOT_FOUND`. Sin permiso, `403`.
+
+### `POST /api/admin/editorial/lists/[listId]/submit`
+
+Requiere `editorial.author`. Propone un borrador para publicación (registra actor y fecha); no lo
+publica. Responde `{ ok: true }`.
+
+### `POST /api/admin/editorial/lists/[listId]/publish` · `POST /api/admin/editorial/lists/[listId]/withdraw`
+
+Requieren `editorial.publish`. Publican o retiran una lista oficial de `@exploracion` (retirar deja
+de mostrarla como contenido editorial, sin borrarla). Responden `{ ok: true }`. Publicar una lista
+personal de otro usuario responde `404 LIST_NOT_FOUND`; sin `editorial.publish`, `403`.
+
+### `POST|PUT /api/admin/editorial/lists/[listId]/items` · `DELETE /api/admin/editorial/lists/[listId]/items/[itemId]`
+
+Requieren `editorial.author`. `POST` agrega un `{ target: { type, id } }` a un borrador, `PUT`
+recibe `{ itemIds }` y reordena, `DELETE` quita un ítem. Devuelven `{ list }` (el detalle actualizado).
+
+Ninguno de estos endpoints borra la lista subyacente salvo el `DELETE` de un borrador nunca
+publicado. Un `listId` o `itemId` no-UUID devuelve `404`.
 
 Todos estos endpoints devuelven el formato uniforme `{ error, code }` ante errores y no exponen
 credenciales, roles internos ni datos privados innecesarios.

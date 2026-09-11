@@ -106,7 +106,7 @@ export function Header({
           {t("moderation")}
         </Link>
       ) : null}
-      {platformPermissions.includes("editorial.publish") ? (
+      {platformPermissions.includes("editorial.author") ? (
         <Link href="/admin" className={generalNavClass}>
           {t("administration")}
         </Link>

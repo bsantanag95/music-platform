@@ -79,7 +79,7 @@ export const userRole = pgTable(
   (t) => [
     uniqueIndex("uq_user_role_user_role").on(t.userId, t.role),
     index("idx_user_role_user").on(t.userId),
-    check("chk_user_role_role", sql`${t.role} IN ('moderator', 'admin')`),
+    check("chk_user_role_role", sql`${t.role} IN ('moderator', 'admin', 'editorial_curator')`),
   ],
 );
 
@@ -173,8 +173,34 @@ export const userRoleAction = pgTable(
   },
   (t) => [
     index("idx_user_role_action_target").on(t.targetId, t.createdAt),
-    check("chk_user_role_action_role", sql`${t.role} IN ('moderator', 'admin')`),
+    check("chk_user_role_action_role", sql`${t.role} IN ('moderator', 'admin', 'editorial_curator')`),
     check("chk_user_role_action_action", sql`${t.action} IN ('grant', 'revoke')`),
+  ],
+);
+
+// Auditoría de autoría editorial (migración 0025, cambio
+// add-editorial-curator-role). Registra cada acción del flujo editorial;
+// el FK cascade a user_list es deliberado (borrar un borrador nunca
+// publicado elimina su historial, que no tiene nada público que auditar).
+export const editorialAction = pgTable(
+  "editorial_action",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    listId: uuid("list_id")
+      .notNull()
+      .references(() => userList.id, { onDelete: "cascade" }),
+    actorId: uuid("actor_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "restrict" }),
+    action: text("action").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_editorial_action_list").on(t.listId, t.createdAt),
+    check(
+      "chk_editorial_action_action",
+      sql`${t.action} IN ('create', 'edit', 'submit', 'publish', 'withdraw')`,
+    ),
   ],
 );
 
@@ -441,6 +467,7 @@ export type UserRestrictionRow = typeof userRestriction.$inferSelect;
 export type ContentReportRow = typeof contentReport.$inferSelect;
 export type ModerationActionRow = typeof moderationAction.$inferSelect;
 export type UserRoleActionRow = typeof userRoleAction.$inferSelect;
+export type EditorialActionRow = typeof editorialAction.$inferSelect;
 export type SessionRow = typeof session.$inferSelect;
 export type AuthIdentityRow = typeof authIdentity.$inferSelect;
 export type UserFollowRow = typeof userFollow.$inferSelect;
@@ -499,6 +526,16 @@ isOfficial: boolean("is_official").notNull().default(false),
     officialPublishedBy: uuid("official_published_by").references(() => appUser.id, { onDelete: "set null" }),
     officialPublishedAt: timestamp("official_published_at", { withTimezone: true }),
     officialWithdrawnAt: timestamp("official_withdrawn_at", { withTimezone: true }),
+    // Autoría editorial (migración 0025, cambio add-editorial-curator-role).
+    // El owner de una lista editorial sigue siendo @exploracion; estas columnas
+    // registran qué persona la creó y quién/cuándo la propuso para publicación.
+    editorialAuthorId: uuid("editorial_author_id").references(() => appUser.id, {
+      onDelete: "set null",
+    }),
+    editorialSubmittedAt: timestamp("editorial_submitted_at", { withTimezone: true }),
+    editorialSubmittedBy: uuid("editorial_submitted_by").references(() => appUser.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

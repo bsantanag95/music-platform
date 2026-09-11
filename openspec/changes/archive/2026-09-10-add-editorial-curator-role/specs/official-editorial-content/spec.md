@@ -1,10 +1,4 @@
-# Official Editorial Content
-
-## Purpose
-
-Publicación editorial oficial de listas y distinción visual en superficies de descubrimiento.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Publicación editorial oficial
 
@@ -37,24 +31,6 @@ ello altere la identidad pública `@exploracion`.
 - **WHEN** un usuario con `editorial.author` pero sin `editorial.publish` intenta publicar o retirar una lista oficial
 - **THEN** la API responde `403` y la lista conserva su estado
 
-### Requirement: Descubrimiento editorial distingue el origen
-
-Las superficies públicas que muestran listas editoriales SHALL distinguir visualmente el contenido
-oficial del contenido de usuarios y SHALL excluir listas ocultas por moderación o retiradas por un
-administrador.
-
-#### Scenario: Lista oficial visible
-- **WHEN** una persona visita el descubrimiento público con una lista editorial publicada
-- **THEN** ve la lista con una indicación localizada de contenido oficial
-
-#### Scenario: Lista editorial moderada
-- **WHEN** una lista oficial está oculta por moderación
-- **THEN** no aparece en el descubrimiento público hasta ser restaurada
-
-#### Scenario: Lista editorial retirada
-- **WHEN** un administrador retira una lista oficial
-- **THEN** no aparece en el descubrimiento público mientras permanezca retirada
-
 ### Requirement: Gestión editorial desde administración
 
 La superficie administrativa SHALL permitir a un administrador publicar y retirar listas editoriales
@@ -84,16 +60,3 @@ publicarlos o retirarlos según el permiso `editorial.publish`.
 #### Scenario: Moderador intenta publicar contenido editorial
 - **WHEN** un usuario sin `editorial.publish` llama al endpoint editorial
 - **THEN** la API responde `403` y no cambia el origen de la lista
-
-### Requirement: Edición editorial con estados visibles
-
-La interfaz SHALL distinguir listas oficiales publicadas, retiradas y ocultas por moderación, y SHALL
-mostrar estados vacíos y errores localizados.
-
-#### Scenario: Lista ocultada por moderación
-- **WHEN** una lista oficial tiene `moderation_status = hidden`
-- **THEN** no se ofrece como publicada en la cola editorial ni en el descubrimiento público
-
-#### Scenario: No hay listas editoriales
-- **WHEN** un administrador autorizado abre la superficie sin listas publicadas
-- **THEN** ve un estado vacío localizado en vez de una tabla rota o una respuesta de error

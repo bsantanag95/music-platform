@@ -9,13 +9,18 @@ La persona que usa la aplicación: se registra, valora, comenta, arma listas y s
 Un Usuario puede tener una contraseña local o una o más identidades externas. La identidad del
 producto no depende del proveedor con el que inició sesión.
 
-Un Usuario puede tener varios roles de plataforma (`moderator` y/o `admin`). También puede tener
-una restricción temporal de alcance `social_activity`, que conserva su acceso personal y de lectura
-pero impide nuevas acciones públicas o sociales.
+Un Usuario puede tener varios roles de plataforma (`moderator`, `admin` y/o `editorial_curator`).
+También puede tener una restricción temporal de alcance `social_activity`, que conserva su acceso
+personal y de lectura pero impide nuevas acciones públicas o sociales.
+
+Un Usuario con rol `editorial_curator` puede autorar listas editoriales (crear, editar, proponer) en
+nombre de la cuenta curadora `@exploracion`, pero solo un administrador (`editorial.publish`) puede
+publicarlas o retirarlas. La autoría de la persona queda auditada y no altera la identidad pública de
+la lista.
 
 Una acción de moderación puede ocultar y restaurar comentarios, reseñas o listas sin equivaler al
-borrado físico realizado por su autor. Las acciones de moderación y de roles se auditan con actor,
-motivo y fecha.
+borrado físico realizado por su autor. Las acciones de moderación, de roles y de autoría editorial se
+auditan con actor, motivo y fecha.
 
 ## Identidad de autenticación
 

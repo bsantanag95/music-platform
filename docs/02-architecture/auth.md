@@ -218,16 +218,25 @@ preserva el idioma desde el que se inició el flujo.
 ### 7. Autorización de plataforma y suspensión social
 
 La autenticación y la autorización son capas separadas. `app_user` puede tener varias asignaciones
-en `user_role`; los roles iniciales son `moderator` y `admin`, y la ausencia de asignaciones deja al
-usuario con sus permisos normales. Los permisos se derivan en backend y no se guardan en la cookie
-ni en la sesión persistida, para que una revocación tenga efecto en la siguiente operación sensible.
+en `user_role`; los roles son `moderator`, `admin` y `editorial_curator`, y la ausencia de
+asignaciones deja al usuario con sus permisos normales. Los permisos se derivan en backend y no se
+guardan en la cookie ni en la sesión persistida, para que una revocación tenga efecto en la
+siguiente operación sensible.
 
 `moderator` puede revisar reportes, ocultar/restaurar comentarios, reseñas y listas, y aplicar una
 restricción temporal `social_activity`. La suspensión se puede ejecutar desde la consola de
 moderación, desde el perfil del usuario o desde un comentario/reseña ajeno (acción visible solo con
-el permiso `moderation.suspend_social`). `admin` hereda esos permisos y además puede gestionar roles
-mediante operaciones internas y publicar contenido editorial oficial. Ninguno de estos roles edita
-el catálogo de MusicBrainz.
+el permiso `moderation.suspend_social`). `editorial_curator` autoriza contenido editorial: con el
+permiso `editorial.author` crea, edita y propone listas editoriales, pero no puede publicarlas ni
+retirarlas. `admin` hereda los permisos de moderación, tiene los dos permisos editoriales
+(`editorial.author` y `editorial.publish`) y además gestiona roles mediante operaciones internas.
+Ninguno de estos roles edita el catálogo de MusicBrainz.
+
+`editorial_curator` es el rol de las **personas** que autoran contenido; no debe confundirse con la
+**cuenta curadora** `@exploracion` (la identidad pública de las listas oficiales, sin
+`password_hash`, que no inicia sesión). Las listas editoriales siguen siendo propiedad de
+`@exploracion`; `user_list.editorial_author_id` registra a la persona que las creó y las acciones
+del flujo (crear/editar/proponer/publicar/retirar) quedan en `editorial_action`. Ver ADR 0013.
 
 Una restricción social activa bloquea nuevas mutaciones públicas o sociales (comentarios, reseñas,
 ratings, actividad compartible, seguimientos, favoritos/guardados y listas visibles), pero permite
@@ -237,11 +246,12 @@ contenido es una acción separada y auditable. Ver ADR 0012.
 
 Las superficies web protegidas viven fuera de `OwnerHubPanel`: `/[locale]/moderation` requiere
 `moderation.review_content` para la cola y usa `moderation.suspend_social` para restricciones;
-`/[locale]/admin` requiere `editorial.publish`. La navegación solo muestra esos enlaces cuando el
-permiso efectivo está presente, pero cada página y endpoint vuelve a comprobarlo server-side. La
-asignación y revocación de roles sigue siendo interna y no existe una UI para editar roles. La
-superficie administrativa opera únicamente sobre las listas de la cuenta curadora `@exploracion`
-(`/explore`), no sobre listas personales de usuarios comunes.
+`/[locale]/admin` requiere `editorial.author` y muestra los controles de publicar/retirar solo con
+`editorial.publish` (una sola superficie permission-aware, sin página paralela para curadores). La
+navegación solo muestra esos enlaces cuando el permiso efectivo está presente, pero cada página y
+endpoint vuelve a comprobarlo server-side. La asignación y revocación de roles sigue siendo interna
+y no existe una UI para editar roles. La superficie administrativa opera únicamente sobre las listas
+de la cuenta curadora `@exploracion` (`/explore`), no sobre listas personales de usuarios comunes.
 
 ## Qué no decide este documento
 

@@ -260,6 +260,8 @@ export const SocialSuspensionRequestSchema = z
     path: ["identifier"],
   });
 export const EditorialListMutationResponseSchema = z.object({ ok: z.literal(true) });
+/** Respuesta vacía de un `DELETE` con 204 (cuerpo nulo). */
+export const NoContentResponseSchema = z.null();
 export const ModerationActionResponseSchema = z.object({ ok: z.literal(true) });
 export const ModerationReportSchema = z.object({
   id: z.uuid(),
@@ -279,6 +281,15 @@ export const ModerationReportsResponseSchema = z.object({
   pageSize: z.number().int(),
   hasNext: z.boolean(),
 });
+export const EditorialListStateSchema = z.enum([
+  "draft",
+  "submitted",
+  "published",
+  "withdrawn",
+  "personal",
+]);
+export type EditorialListState = z.infer<typeof EditorialListStateSchema>;
+
 export const EditorialListSchema = z.object({
   id: z.uuid(),
   title: z.string(),
@@ -288,8 +299,13 @@ export const EditorialListSchema = z.object({
   isOfficial: z.boolean(),
   officialPublishedAt: z.string().nullable(),
   officialWithdrawnAt: z.string().nullable(),
+  editorialSubmittedAt: z.string().nullable(),
   createdAt: z.string(),
   owner: z.object({ id: z.uuid(), username: z.string(), displayName: z.string().nullable() }),
+  author: z
+    .object({ id: z.uuid(), username: z.string(), displayName: z.string().nullable() })
+    .nullable(),
+  state: EditorialListStateSchema,
 });
 export const EditorialListsResponseSchema = z.object({ lists: z.array(EditorialListSchema) });
 export const SocialRestrictionSchema = z.object({
@@ -1099,6 +1115,23 @@ export const ReorderListItemsRequestSchema = z.object({
   itemIds: z.array(z.uuid()).min(1),
 });
 export type ReorderListItemsRequest = z.infer<typeof ReorderListItemsRequestSchema>;
+
+export const CreateEditorialDraftRequestSchema = z.object({
+  entityType: ListEntityTypeSchema,
+  title: z.string().trim().min(1).max(100),
+  description: z.string().trim().max(500).nullable().optional(),
+});
+export type CreateEditorialDraftRequest = z.infer<typeof CreateEditorialDraftRequestSchema>;
+
+export const UpdateEditorialDraftRequestSchema = z
+  .object({
+    title: z.string().trim().min(1).max(100).optional(),
+    description: z.string().trim().max(500).nullable().optional(),
+  })
+  .refine((changes) => Object.keys(changes).length > 0, {
+    message: "No hay campos para actualizar",
+  });
+export type UpdateEditorialDraftRequest = z.infer<typeof UpdateEditorialDraftRequestSchema>;
 
 export const ListMutationResponseSchema = z.object({ list: UserListDetailSchema });
 export type ListMutationResponse = z.infer<typeof ListMutationResponseSchema>;

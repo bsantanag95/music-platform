@@ -83,7 +83,9 @@ Confirmado: el contenido navegable nace de listas creadas por usuarios, no de ag
 
 **Excepción:** la plataforma (curaduría humana del equipo, nunca IA ni proceso automático) puede publicar sus propias listas editoriales para la comunidad. Esto introduce dos necesidades de diseño pendientes:
 - Distinguir visualmente una lista "oficial/editorial" de una lista de usuario común.
-- Definir qué rol/cuenta tiene permiso para publicar como "la plataforma" (a resolver como ADR de permisos/roles cuando se diseñe ese sistema).
+- Definir qué rol/cuenta tiene permiso para publicar como "la plataforma".
+
+**Resuelto (ADR 0013):** las listas oficiales siguen viviendo en la cuenta curadora `@exploracion` (identidad pública). El rol `editorial_curator` (`editorial.author`) crea, edita y propone borradores; solo `admin` (`editorial.publish`) publica o retira. Se separa así quién crea el contenido de quién tiene autoridad para publicarlo como la plataforma, y la autoría de la persona queda auditada sin exponerse públicamente. El ítem del checklist de "roles/permisos para contenido oficial" queda cerrado.
 
 ### 6.4 Recorrido de artista (ex "completismo de discografía") — reformulado, sin curaduría editorial
 
@@ -132,7 +134,7 @@ documento.
 
 - [ ] Diseño del algoritmo de afinidad de gusto para descubrimiento (6.1) — depende de densidad de datos, no urgente.
 - [ ] Cálculo robusto de puntuación global anti review-bombing (6.2) — amerita documento/ADR técnico propio.
-- [ ] Rol/permisos para cuentas que publican contenido "oficial de la plataforma" (6.3) — exclusivo de listas editoriales; 6.4 ya no depende de este sistema.
+- [x] Rol/permisos para cuentas que publican contenido "oficial de la plataforma" (6.3) — resuelto con `editorial_curator` (`editorial.author`) y `editorial.publish`; 6.4 ya no depende de este sistema.
 - [ ] **Contador de coleccionistas por álbum** (estilo Discogs "N personas tienen este disco"), en la página de álbum. Encaja con el precedente de 6.2 (agregado con framing descriptivo, no prescriptivo) y refuerza el objetivo de "presumir" de 6.6. **Diferido post-beta:** solo es útil con densidad de colecciones — en beta cerrada diría "0/1 persona" en casi todos los álbumes (mismo problema y misma lógica que 6.1, y que el descarte de "solo ratings de la red" en 6.2).
 
   Cuando se retome, decisiones ya identificadas:
