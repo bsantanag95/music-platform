@@ -63,9 +63,9 @@ export function CommunityExploreGrid({ initial, filters, canSave }: CommunityExp
         {t("community.resultsCount", { count: lists.length })}
       </p>
 
-      <ListsGrid>
+      <ListsGrid cols={3}>
         {lists.map((list) => (
-          <CommunityListCard key={list.id} list={list} canSave={canSave} />
+          <CommunityListCard key={list.id} list={list} canSave={canSave} dense />
         ))}
       </ListsGrid>
 

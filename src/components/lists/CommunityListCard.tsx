@@ -14,10 +14,14 @@ import { entityTypeKey } from "./lists-shared";
 export function CommunityListCard({
   list,
   canSave,
+  dense = false,
 }: {
   list: DiscoverListSummary;
   /** Hay sesión: se ofrece la acción Guardar/Seguir. */
   canSave: boolean;
+  /** Variante compacta para las secciones de navegación (no Destacadas): recorta
+   * guardados y antigüedad del meta para que la línea entre en una card angosta. */
+  dense?: boolean;
 }) {
   const t = useTranslations("lists");
   const ownerName = list.owner.displayName ?? `@${list.owner.username}`;
@@ -28,6 +32,7 @@ export function CommunityListCard({
       title={list.title}
       coverThumbs={list.coverThumbs}
       description={list.description}
+      dense={dense}
       meta={
         <>
           {list.isOfficial ? <span className="rounded bg-amber px-1.5 py-0.5 font-data text-[10px] text-ink">{t("officialBadge")}</span> : null}
@@ -41,14 +46,18 @@ export function CommunityListCard({
           >
             {t("byOwner", { name: ownerName })}
           </Link>
-          {typeof list.saveCount === "number" && list.saveCount > 0 ? (
+          {!dense && typeof list.saveCount === "number" && list.saveCount > 0 ? (
             <>
               <span aria-hidden>·</span>
               <span>{t("savesCount", { count: list.saveCount })}</span>
             </>
           ) : null}
-          <span aria-hidden>·</span>
-          <RelativeDate iso={list.createdAt} />
+          {!dense ? (
+            <>
+              <span aria-hidden>·</span>
+              <RelativeDate iso={list.createdAt} />
+            </>
+          ) : null}
         </>
       }
       action={

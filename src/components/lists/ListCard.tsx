@@ -17,6 +17,9 @@ interface ListCardProps {
   /** Indicador "ya no disponible" para una lista guardada que dejó de verse. */
   unavailable?: boolean;
   pinnedLabel?: string;
+  /** Variante compacta: mosaico chico, sin descripción. Para grillas/listas de
+   * navegación (Populares, Recientes, De seguidos) donde se escanea, no se lee. */
+  dense?: boolean;
 }
 
 // Tarjeta de una lista: mosaico de portadas + título enlazado + metadatos, con
@@ -33,19 +36,20 @@ export function ListCard({
   action,
   unavailable,
   pinnedLabel,
+  dense = false,
 }: ListCardProps) {
   return (
     <article
-      className={`group flex gap-4 rounded-lg border border-ink-border bg-ink-surface p-3 transition-colors focus-within:border-amber hover:border-amber ${
-        unavailable ? "opacity-60" : ""
-      }`}
+      className={`group flex gap-3 rounded-lg border border-ink-border bg-ink-surface transition-colors focus-within:border-amber hover:border-amber ${
+        dense ? "p-2" : "gap-4 p-3"
+      } ${unavailable ? "opacity-60" : ""}`}
     >
       <Link href={href} className="shrink-0" tabIndex={-1} aria-hidden>
-        <ListCoverMosaic coverThumbs={coverThumbs} className="w-20" />
+        <ListCoverMosaic coverThumbs={coverThumbs} className={dense ? "w-12" : "w-20"} />
       </Link>
 
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <h3 className="truncate font-display text-base text-paper">
+        <h3 className={`truncate font-display text-paper ${dense ? "text-sm" : "text-base"}`}>
           <Link href={href} className="transition-colors hover:text-amber">
             {title}
           </Link>
@@ -57,7 +61,7 @@ export function ListCard({
           {meta}
         </p>
 
-        {description ? (
+        {description && !dense ? (
           <p className="line-clamp-2 whitespace-pre-wrap font-body text-sm text-paper-muted">
             {description}
           </p>

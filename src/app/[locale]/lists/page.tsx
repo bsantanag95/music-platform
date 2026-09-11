@@ -63,8 +63,13 @@ export default async function CommunityListsPage({
         ) : null}
 
         {featured.lists.length > 0 ? (
-          <section className="flex w-full flex-col gap-4">
-            <h2 className="font-display text-xl text-paper">{t("community.featuredHeading")}</h2>
+          <section className="flex w-full flex-col gap-4 rounded-lg border border-ink-border bg-ink-surface p-6">
+            <div className="flex flex-col gap-1">
+              <p className="font-data text-xs uppercase tracking-wide text-amber">
+                {t("community.featuredEyebrow")}
+              </p>
+              <h2 className="font-display text-xl text-paper">{t("community.featuredHeading")}</h2>
+            </div>
             <ListsGrid>
               {featured.lists.map((list) => (
                 <CommunityListCard key={list.id} list={list} canSave={canSave} />
@@ -79,6 +84,8 @@ export default async function CommunityListsPage({
             headingKey="community.popularHeading"
             initial={popular}
             canSave={canSave}
+            cols={3}
+            dense
           />
         ) : null}
 
@@ -88,6 +95,8 @@ export default async function CommunityListsPage({
             headingKey="community.followingHeading"
             initial={fromFollowing}
             canSave={canSave}
+            cols={1}
+            dense
           />
         ) : null}
 
@@ -97,6 +106,8 @@ export default async function CommunityListsPage({
             headingKey="community.recentHeading"
             initial={recent}
             canSave={canSave}
+            cols={3}
+            dense
           />
         ) : null}
       </>
@@ -104,7 +115,7 @@ export default async function CommunityListsPage({
   }
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-start gap-8 px-4 py-12">
+    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col items-start gap-8 px-4 py-12">
       <Breadcrumbs items={[{ label: tCommon("home"), href: "/" }, { label: t("community.heading") }]} />
       <div className="flex flex-col gap-1">
         <h1 className="font-display text-3xl text-paper">{t("community.heading")}</h1>
