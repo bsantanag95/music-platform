@@ -8,16 +8,25 @@ import { createList } from "@/lib/api/lists";
 import { ApiError } from "@/lib/api/client";
 import type { DiaryAudience, ListEntityType, UserListDetail } from "@/lib/api/schemas";
 
+function entityTypeLabelKey(entityType: ListEntityType): "entityTypeArtist" | "entityTypeAlbum" | "entityTypeSong" {
+  if (entityType === "artist") return "entityTypeArtist";
+  if (entityType === "release-group") return "entityTypeAlbum";
+  return "entityTypeSong";
+}
+
 interface ListFormProps {
   onCreated?: (list: UserListDetail) => void;
   onCancel?: () => void;
+  // Cuando se crea desde "Añadir a lista" en una página de catálogo, el tipo
+  // de contenido queda fijado al del objetivo y no se muestra el selector.
+  fixedEntityType?: ListEntityType;
 }
 
 // Formulario de creación de lista: título obligatorio, descripción opcional,
-// tipo de entidad fijo (artistas, álbumes o canciones) y audiencia.
-export function ListForm({ onCreated, onCancel }: ListFormProps) {
+// tipo de entidad (artistas, álbumes o canciones) y audiencia.
+export function ListForm({ onCreated, onCancel, fixedEntityType }: ListFormProps) {
   const t = useTranslations("lists");
-  const [entityType, setEntityType] = useState<ListEntityType>("artist");
+  const [entityType, setEntityType] = useState<ListEntityType>(fixedEntityType ?? "artist");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [audience, setAudience] = useState<DiaryAudience>("followers");
@@ -44,18 +53,24 @@ export function ListForm({ onCreated, onCancel }: ListFormProps) {
 
   return (
     <div className="flex w-full flex-col gap-3 rounded border border-ink-border bg-ink-surface p-4">
-      <label className="flex flex-col gap-1">
-        <span className="font-data text-sm text-paper">{t("entityTypeLabel")}</span>
-        <select
-          value={entityType}
-          onChange={(event) => setEntityType(event.target.value as ListEntityType)}
-          className="rounded border border-ink-border bg-ink px-3 py-2 font-data text-sm text-paper"
-        >
-          <option value="artist">{t("entityTypeArtist")}</option>
-          <option value="release-group">{t("entityTypeAlbum")}</option>
-          <option value="recording">{t("entityTypeSong")}</option>
-        </select>
-      </label>
+      {fixedEntityType ? (
+        <p className="font-data text-sm text-paper-muted">
+          {t("entityTypeLabel")}: {t(entityTypeLabelKey(fixedEntityType))}
+        </p>
+      ) : (
+        <label className="flex flex-col gap-1">
+          <span className="font-data text-sm text-paper">{t("entityTypeLabel")}</span>
+          <select
+            value={entityType}
+            onChange={(event) => setEntityType(event.target.value as ListEntityType)}
+            className="rounded border border-ink-border bg-ink px-3 py-2 font-data text-sm text-paper"
+          >
+            <option value="artist">{t("entityTypeArtist")}</option>
+            <option value="release-group">{t("entityTypeAlbum")}</option>
+            <option value="recording">{t("entityTypeSong")}</option>
+          </select>
+        </label>
+      )}
 
       <Input
         label={t("titleLabel")}

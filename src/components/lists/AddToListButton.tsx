@@ -4,9 +4,10 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
-import { getMyLists, addItemToList, createList } from "@/lib/api/lists";
+import { getMyLists, addItemToList } from "@/lib/api/lists";
 import { ApiError } from "@/lib/api/client";
 import type { ListTarget, UserListDetail, UserListSummary } from "@/lib/api/schemas";
+import { ListForm } from "./ListForm";
 
 interface AddToListButtonProps {
   target: ListTarget;
@@ -18,8 +19,8 @@ function isCompatible(list: UserListSummary, targetType: string): boolean {
 }
 
 // Acción "Agregar a lista" contextual en páginas de catálogo: ofrece las
-// listas propias compatibles con el tipo del objetivo y crea una nueva
-// si todavía no hay ninguna.
+// listas propias compatibles con el tipo del objetivo, y permite crear una
+// lista nueva con el mismo formulario que "Listas -> Nueva lista" (me/lists).
 export function AddToListButton({ target, authenticated }: AddToListButtonProps) {
   const t = useTranslations("lists");
   const [open, setOpen] = useState(false);
@@ -27,6 +28,7 @@ export function AddToListButton({ target, authenticated }: AddToListButtonProps)
   const [busy, setBusy] = useState(false);
   const [addedListId, setAddedListId] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   if (!authenticated) {
     return (
@@ -70,17 +72,12 @@ export function AddToListButton({ target, authenticated }: AddToListButtonProps)
     }
   };
 
-  const handleCreateAndAdd = async () => {
+  const handleListCreated = async (created: UserListDetail) => {
+    setShowCreateForm(false);
+    setLists((current) => [created, ...(current ?? [])]);
     setBusy(true);
     setErrorCode(null);
     try {
-      const title =
-        target.type === "artist"
-          ? t("entityTypeArtist")
-          : target.type === "release-group"
-            ? t("entityTypeAlbum")
-            : t("entityTypeSong");
-      const created: UserListDetail = await createList({ entityType: target.type, title });
       await addItemToList(created.id, target);
       setAddedListId(created.id);
     } catch (error) {
@@ -122,9 +119,17 @@ export function AddToListButton({ target, authenticated }: AddToListButtonProps)
               ))}
             </ul>
           )}
-          <Button variant="ghost" disabled={busy} onClick={() => void handleCreateAndAdd()}>
-            {t("newList")}
-          </Button>
+          {showCreateForm ? (
+            <ListForm
+              fixedEntityType={target.type}
+              onCreated={(created) => void handleListCreated(created)}
+              onCancel={() => setShowCreateForm(false)}
+            />
+          ) : (
+            <Button variant="ghost" disabled={busy} onClick={() => setShowCreateForm(true)}>
+              {t("newList")}
+            </Button>
+          )}
           {errorCode && (
             <span role="alert" className="font-data text-xs text-danger">
               {t("saveError")}
