@@ -857,16 +857,28 @@ visible se marca `unavailable: true` en vez de filtrarse.
 
 **200 OK:** `{ lists: [SavedListSummary], page, pageSize, hasNext }`. **401** sin sesión.
 
-### `GET /api/lists/discover?page=&pageSize=`
+### `GET /api/lists/discover?page=&pageSize=&q=&entityType=&sort=` (cambio `rework-public-lists-surface`)
 
 Listas de audiencia `public` de perfiles `public`, excluyendo cualquier bloqueo y —con
 sesión— las propias, en orden cronológico descendente (sin recomendación algorítmica).
 **Público** (cambio `add-community-lists-surface`): alimenta la pestaña "Descubrir" de
-`/me/lists` y la sección "Recientes" de `/lists`.
+`/me/lists`, la sección "Recientes" de `/lists` y el modo explorar de `/lists`.
 
-**200 OK:** `{ lists: [{ ..., owner, saved, following }], page, pageSize, hasNext }`. Sin
+Parámetros opcionales (cambio `rework-public-lists-surface`):
+
+- `q` — texto libre; coincide con título **y** descripción de la lista.
+- `entityType` — `artist` | `release-group` | `recording`.
+- `sort` — `recent` (default, cronológico) | `popular`.
+
+Sin filtros, el contrato y la respuesta no cambian. Con `sort=popular` se ordena por conteo
+agregado de guardados descendente (a igualdad, por creación) e **incluye** las listas sin
+guardados al final; esto difiere de la sección "Populares" (`/api/lists/popular`), que exige
+al menos un guardado. En ese orden, cada entrada incluye `saveCount`.
+
+**200 OK:** `{ lists: [{ ..., owner, saved, following, saveCount? }], page, pageSize, hasNext }`. Sin
 sesión, `saved`/`following` son `false`.
-**400** con `VALIDATION_ERROR` si la paginación es inválida.
+**400** con `VALIDATION_ERROR` si la paginación es inválida o si `entityType`/`sort` no están
+soportados.
 
 ### `GET /api/lists/popular?page=&pageSize=` (cambio `add-community-lists-surface`)
 

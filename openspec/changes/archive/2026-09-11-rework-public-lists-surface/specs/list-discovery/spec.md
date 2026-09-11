@@ -1,11 +1,5 @@
-# list-discovery Specification
+## MODIFIED Requirements
 
-## Purpose
-
-Descubrir listas públicas de la comunidad (Fase 5, cambio `rework-lists-section`). La pestaña
-"Descubrir" de `/me/lists` lista las listas de audiencia `public` de otros usuarios en orden
-cronológico descendente, sin recomendación algorítmica ni personalización por afinidad.
-## Requirements
 ### Requirement: Descubrir listas públicas de la comunidad
 
 El sistema SHALL exponer un listado paginado de listas de audiencia `public` de otros
@@ -80,4 +74,3 @@ rango o un valor de filtro inválido SHALL responder `400` con código `VALIDATI
 
 - **WHEN** se envía una paginación fuera de rango o un valor de `entityType`/`sort` no soportado
 - **THEN** la API responde `400` con código `VALIDATION_ERROR` y no ejecuta la lectura
-

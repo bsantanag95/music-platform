@@ -13,6 +13,12 @@ export type ListEntityType = (typeof LIST_ENTITY_TYPES)[number];
 export const LIST_SORTS = ["recent", "alpha"] as const;
 export type ListSort = (typeof LIST_SORTS)[number];
 
+// Orden de la exploración pública de listas (cambio rework-public-lists-surface).
+// `recent`: cronológico descendente (default, igual que list-discovery).
+// `popular`: por conteo agregado de guardados, con las listas sin guardados al final.
+export const PUBLIC_LIST_SORTS = ["recent", "popular"] as const;
+export type PublicListSort = (typeof PUBLIC_LIST_SORTS)[number];
+
 // Decisión cerrada en el cambio: título hasta 100 y descripción hasta 500.
 export const LIST_TITLE_MAX = 100;
 export const LIST_DESCRIPTION_MAX = 500;

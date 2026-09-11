@@ -27,7 +27,7 @@ export function FilterSelect({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         aria-label={ariaLabel}
-        className={`filter-select appearance-none rounded border-b border-ink-border bg-transparent py-1.5 pl-0.5 pr-4 font-data text-sm text-paper-muted transition-colors hover:text-paper ${widthClassName}`}
+        className={`filter-select appearance-none overflow-hidden text-ellipsis whitespace-nowrap rounded border-b border-ink-border bg-transparent py-1.5 pl-0.5 pr-4 font-data text-sm text-paper-muted transition-colors hover:text-paper ${widthClassName}`}
       >
         {children}
       </select>

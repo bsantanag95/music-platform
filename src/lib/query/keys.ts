@@ -1,5 +1,5 @@
 import type { DiaryFiltersParams, FeedFiltersParams } from "@/lib/api/diary";
-import type { ListFiltersParams } from "@/lib/api/lists";
+import type { DiscoverListFiltersParams, ListFiltersParams } from "@/lib/api/lists";
 import type { FavoritesFiltersParams } from "@/lib/api/favorites";
 import type { CollectionQuery } from "@/lib/api/collection";
 
@@ -20,6 +20,10 @@ export const queryKeys = {
   myLists: (filters: ListFiltersParams) => ["lists", "mine", filters] as const,
   savedLists: () => ["lists", "saved"] as const,
   discoverLists: () => ["lists", "discover"] as const,
+  // Modo explorar de /lists: namespace propio para no colisionar con la serie
+  // sin filtrar de "Recientes". Los filtros son parte de la key.
+  communityExplore: (filters: DiscoverListFiltersParams) =>
+    ["lists", "community", "explore", filters] as const,
   popularLists: () => ["lists", "popular"] as const,
   listsFromFollowing: () => ["lists", "fromFollowing"] as const,
   myFavorites: (filters: FavoritesFiltersParams) => ["favorites", "mine", filters] as const,

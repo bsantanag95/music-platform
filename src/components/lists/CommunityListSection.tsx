@@ -28,6 +28,11 @@ interface CommunityListSectionProps {
   headingKey: string;
   initial: DiscoverListsResponse;
   canSave: boolean;
+  /** Columnas de la grilla: 1 para un rail compacto (De seguidos), 3 para
+   * densidad de navegación (Populares, Recientes). Por defecto 2. */
+  cols?: 1 | 2 | 3;
+  /** Card compacta a juego con `cols`; ver `ListCard`/`CommunityListCard`. */
+  dense?: boolean;
 }
 
 // Una sección paginada de `/lists` (Populares, De seguidos, Recientes). La
@@ -39,6 +44,8 @@ export function CommunityListSection({
   headingKey,
   initial,
   canSave,
+  cols = 2,
+  dense = false,
 }: CommunityListSectionProps) {
   const t = useTranslations("lists");
   const { fetch, queryKey } = SOURCES[source];
@@ -58,9 +65,9 @@ export function CommunityListSection({
   return (
     <section className="flex w-full flex-col gap-4">
       <h2 className="font-display text-xl text-paper">{t(headingKey)}</h2>
-      <ListsGrid>
+      <ListsGrid cols={cols}>
         {lists.map((list) => (
-          <CommunityListCard key={list.id} list={list} canSave={canSave} />
+          <CommunityListCard key={list.id} list={list} canSave={canSave} dense={dense} />
         ))}
       </ListsGrid>
 

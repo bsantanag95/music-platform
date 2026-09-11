@@ -5,7 +5,7 @@
 // agregado de guardados), De usuarios seguidos (solo con sesión) y Recientes
 // (cronológico — vive en discovery.ts). Sin recomendación algorítmica.
 
-import { and, count, desc, eq, inArray, ne } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, listSave, userFollow, userList, userListFeatured } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -14,22 +14,50 @@ import {
   enrichPublicLists,
   notBlockedByReader,
   PUBLIC_LIST_COLUMNS,
+  type PublicListRow,
 } from "./discovery";
 
 /**
- * Sección "Destacadas": listas con fila en `user_list_featured`, orden `rank`
- * ascendente, sin filtrar por tipo de entidad. Rail acotado, sin paginación.
+ * Sección "Destacadas": primero las listas editoriales oficiales publicadas de
+ * `@exploracion`, luego las listas con fila en `user_list_featured` por `rank`
+ * ascendente, sin duplicar una lista presente en ambos conjuntos ni filtrar por
+ * tipo de entidad. Rail acotado, sin paginación (cambio
+ * rework-public-lists-surface).
  */
 export async function listFeaturedLists(readerId: string | null) {
-  const rows = await db
-    .select(PUBLIC_LIST_COLUMNS)
-    .from(userListFeatured)
-    .innerJoin(userList, eq(userList.id, userListFeatured.listId))
-    .innerJoin(appUser, eq(userList.ownerId, appUser.id))
-  .where(and(eq(userList.audience, "public"), eq(userList.moderationStatus, "visible")))
-    .orderBy(userListFeatured.rank);
+  const [officialRows, featuredRows] = await Promise.all([
+    db
+      .select(PUBLIC_LIST_COLUMNS)
+      .from(userList)
+      .innerJoin(appUser, eq(userList.ownerId, appUser.id))
+      .where(
+        and(
+          eq(userList.isOfficial, true),
+          eq(userList.audience, "public"),
+          eq(userList.moderationStatus, "visible"),
+          eq(appUser.profileVisibility, "public"),
+          isNull(userList.officialWithdrawnAt),
+        ),
+      )
+      .orderBy(desc(userList.officialPublishedAt)),
+    db
+      .select(PUBLIC_LIST_COLUMNS)
+      .from(userListFeatured)
+      .innerJoin(userList, eq(userList.id, userListFeatured.listId))
+      .innerJoin(appUser, eq(userList.ownerId, appUser.id))
+      .where(and(eq(userList.audience, "public"), eq(userList.moderationStatus, "visible")))
+      .orderBy(userListFeatured.rank),
+  ]);
 
-  return { lists: await enrichPublicLists(rows, readerId) };
+  const seen = new Set<string>();
+  const merged: PublicListRow[] = [];
+  for (const row of [...officialRows, ...featuredRows]) {
+    if (seen.has(row.id)) continue;
+    seen.add(row.id);
+    merged.push(row);
+  }
+
+  return { lists: await enrichPublicLists(merged, readerId) };
 }
 
 /**

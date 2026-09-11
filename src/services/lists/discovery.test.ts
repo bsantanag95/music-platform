@@ -5,11 +5,15 @@ const mocks = vi.hoisted(() => ({
   db: { select: vi.fn() },
   enrichLists: vi.fn(),
   savedStateFor: vi.fn(),
+  saveCountsFor: vi.fn(),
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
 vi.mock("./lists", () => ({ enrichLists: mocks.enrichLists }));
-vi.mock("./saved-lists", () => ({ savedStateFor: mocks.savedStateFor }));
+vi.mock("./saved-lists", () => ({
+  savedStateFor: mocks.savedStateFor,
+  saveCountsFor: mocks.saveCountsFor,
+}));
 
 function chain<T>(result: T): T {
   const promise = Promise.resolve(result);
@@ -40,6 +44,7 @@ const discoverRow = {
   ownerId: "00000000-0000-4000-8000-000000000002",
   ownerUsername: "curador",
   ownerDisplayName: null,
+  isOfficial: false,
 };
 
 describe("servicio de descubrir listas", () => {
@@ -47,6 +52,7 @@ describe("servicio de descubrir listas", () => {
     vi.clearAllMocks();
     mocks.enrichLists.mockResolvedValue(new Map([[listId, { itemCount: 12, coverThumbs: ["a", "b"] }]]));
     mocks.savedStateFor.mockResolvedValue(new Map());
+    mocks.saveCountsFor.mockResolvedValue(new Map([[listId, 7]]));
   });
 
   it("devuelve listas públicas recientes con enriquecimiento", async () => {
@@ -86,5 +92,31 @@ describe("servicio de descubrir listas", () => {
     const result = await listDiscoverLists(reader);
     expect(result.lists).toEqual([]);
     expect(result.hasNext).toBe(false);
+  });
+
+  it("aplica filtros de texto y tipo sin romper la respuesta", async () => {
+    mocks.db.select.mockReturnValueOnce(chain([discoverRow]));
+    const result = await listDiscoverLists(reader, 1, 20, {
+      q: "  lo mejor  ",
+      entityType: "release-group",
+    });
+    expect(result.lists).toHaveLength(1);
+    expect(result.lists[0]?.saveCount).toBeUndefined();
+  });
+
+  it("con sort=popular incluye el conteo de guardados", async () => {
+    mocks.db.select.mockReturnValueOnce(chain([{ ...discoverRow, saves: 7 }]));
+    const result = await listDiscoverLists(reader, 1, 20, { sort: "popular" });
+    expect(mocks.saveCountsFor).toHaveBeenCalled();
+    expect(result.lists[0]?.saveCount).toBe(7);
+  });
+
+  it("rechaza filtros inválidos", async () => {
+    await expect(
+      listDiscoverLists(reader, 1, 20, { entityType: "album" as never }),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    await expect(
+      listDiscoverLists(reader, 1, 20, { sort: "alpha" as never }),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
   });
 });
