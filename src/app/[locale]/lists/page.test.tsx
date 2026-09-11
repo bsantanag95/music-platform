@@ -31,12 +31,18 @@ vi.mock("@/components/lists/CommunityListSection", () => ({
 vi.mock("@/components/lists/CommunityListCard", () => ({
   CommunityListCard: () => <div data-testid="featured-card" />,
 }));
+vi.mock("@/components/lists/CommunityListsToolbar", () => ({
+  CommunityListsToolbar: () => <div data-testid="toolbar" />,
+}));
+vi.mock("@/components/lists/CommunityExploreGrid", () => ({
+  CommunityExploreGrid: () => <div data-testid="explore-grid" />,
+}));
 
 const list = { id: "l1" };
 const page = (lists: unknown[]) => ({ lists, page: 1, pageSize: 20, hasNext: false });
 
-async function renderPage() {
-  render(await CommunityListsPage());
+async function renderPage(searchParams: Record<string, string> = {}) {
+  render(await CommunityListsPage({ searchParams: Promise.resolve(searchParams) }));
 }
 
 describe("/lists", () => {
@@ -58,6 +64,7 @@ describe("/lists", () => {
     await renderPage();
 
     expect(screen.getByTestId("featured-card")).toBeInTheDocument();
+    expect(screen.getByTestId("toolbar")).toBeInTheDocument();
     const headings = screen.getAllByTestId("section").map((n) => n.textContent);
     expect(headings).toEqual([
       "community.popularHeading",
@@ -95,5 +102,33 @@ describe("/lists", () => {
 
     expect(screen.getByText("community.emptyTitle")).toBeInTheDocument();
     expect(screen.queryByTestId("section")).not.toBeInTheDocument();
+  });
+
+  it("con filtros muestra el modo explorar y no compone las secciones", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "u1" } });
+    mocks.listDiscoverLists.mockResolvedValue(page([list]));
+
+    await renderPage({ q: "pink", type: "release-group", sort: "popular" });
+
+    expect(screen.getByTestId("explore-grid")).toBeInTheDocument();
+    expect(screen.getByTestId("toolbar")).toBeInTheDocument();
+    expect(screen.queryByTestId("section")).not.toBeInTheDocument();
+    expect(mocks.listFeaturedLists).not.toHaveBeenCalled();
+    expect(mocks.listPopularLists).not.toHaveBeenCalled();
+    expect(mocks.listsFromFollowing).not.toHaveBeenCalled();
+    expect(mocks.listDiscoverLists).toHaveBeenCalledWith("u1", 1, 20, {
+      q: "pink",
+      entityType: "release-group",
+      sort: "popular",
+    });
+  });
+
+  it("ignora valores de filtro inválidos y mantiene la vitrina", async () => {
+    mocks.resolveSession.mockResolvedValue(null);
+
+    await renderPage({ type: "album", sort: "alpha" });
+
+    expect(screen.queryByTestId("explore-grid")).not.toBeInTheDocument();
+    expect(screen.getByText("community.emptyTitle")).toBeInTheDocument();
   });
 });

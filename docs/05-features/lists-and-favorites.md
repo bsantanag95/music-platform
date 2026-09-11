@@ -128,14 +128,24 @@ seguida aparezca en el feed de quien la sigue— se implementa en el cambio de c
 composición bajo demanda + deduplicación por clave de evento). `following` ya se persiste y
 se expone (`src/services/lists/saved-lists.ts`: `followedListIds`, `savedStateFor`).
 
-### Superficie pública `/lists` (cambio `add-community-lists-surface`)
+### Superficie pública `/lists` (cambios `add-community-lists-surface`, `rework-public-lists-surface`)
 
 Descubrimiento de listas de la comunidad en ruta propia `/[locale]/lists`, enlazada desde la
-barra general del Header junto a Explorar. Accesible con y sin sesión. Compone, omitiendo las
-secciones vacías:
+barra general del Header junto a Explorar. Accesible con y sin sesión.
 
-1. **Destacadas** — listas con fila en `user_list_featured` (curaduría editorial), sin
-   filtrar por tipo de entidad. Rail sin paginación.
+La superficie tiene **dos estados** derivados de la URL (`?q=&type=&sort=`), con un **toolbar de
+exploración siempre visible** (búsqueda por texto, filtro por tipo y orden Populares/Recientes):
+
+- **Vitrina** (sin filtros): compone las secciones de abajo, omitiendo las vacías.
+- **Explorar** (con algún filtro): reemplaza la composición por una única grilla paginada de
+  resultados (filtrados y ordenados en el servidor), con conteo, estado "sin resultados" y
+  "Limpiar filtros". El orden `popular` incluye las listas sin guardados al final.
+
+En vitrina, secciones:
+
+1. **Destacadas** — primero las listas **editoriales oficiales publicadas** de `@exploracion`
+   (visibles, no retiradas), luego las listas con fila en `user_list_featured` (curaduría
+   editorial), sin filtrar por tipo de entidad y sin duplicar. Rail sin paginación.
 2. **Populares** — listas públicas ordenadas por conteo agregado de guardados. Vitrina, no
    ranking: "N guardados" en la tarjeta, sin posiciones. `GET /api/lists/popular`.
 3. **De la gente que seguís** — listas visibles (`public` o `followers`) de usuarios que el

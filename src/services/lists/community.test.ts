@@ -44,6 +44,15 @@ const row = {
   ownerId: "00000000-0000-4000-8000-000000000002",
   ownerUsername: "curador",
   ownerDisplayName: null,
+  isOfficial: false,
+};
+
+const officialRow = {
+  ...row,
+  id: "00000000-0000-4000-8000-0000000000ff",
+  title: "Editorial oficial",
+  ownerUsername: "exploracion",
+  isOfficial: true,
 };
 
 describe("servicio de listas de la comunidad", () => {
@@ -57,11 +66,30 @@ describe("servicio de listas de la comunidad", () => {
   });
 
   it("Destacadas: enriquece sin paginar", async () => {
-    mocks.db.select.mockReturnValueOnce(chain([row]));
+    mocks.db.select.mockReturnValueOnce(chain([])).mockReturnValueOnce(chain([row]));
     const result = await listFeaturedLists(reader);
     expect(result.lists).toHaveLength(1);
     expect(result.lists[0]?.itemCount).toBe(5);
     expect(result.lists[0]?.saveCount).toBeUndefined();
+  });
+
+  it("Destacadas: pone las editoriales oficiales primero", async () => {
+    mocks.enrichLists.mockResolvedValue(new Map());
+    mocks.db.select
+      .mockReturnValueOnce(chain([officialRow]))
+      .mockReturnValueOnce(chain([row]));
+    const result = await listFeaturedLists(reader);
+    expect(result.lists.map((l) => l.id)).toEqual([officialRow.id, row.id]);
+    expect(result.lists[0]?.isOfficial).toBe(true);
+  });
+
+  it("Destacadas: deduplica una lista oficial que también está destacada", async () => {
+    mocks.enrichLists.mockResolvedValue(new Map());
+    mocks.db.select
+      .mockReturnValueOnce(chain([officialRow]))
+      .mockReturnValueOnce(chain([officialRow, row]));
+    const result = await listFeaturedLists(reader);
+    expect(result.lists.map((l) => l.id)).toEqual([officialRow.id, row.id]);
   });
 
   it("Populares: adjunta el conteo agregado de guardados", async () => {

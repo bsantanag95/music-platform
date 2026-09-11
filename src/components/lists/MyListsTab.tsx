@@ -131,7 +131,7 @@ export function MyListsTab({ initial }: { initial: ListsListResponse }) {
           value={filters.entityType}
           onChange={(v) => setFilters((c) => ({ ...c, entityType: v as ListEntityType | "" }))}
           ariaLabel={t("typeFilterLabel")}
-          widthClassName="w-[15ch]"
+          widthClassName="w-[20ch]"
         >
           <option value="">{t("filterAllTypes")}</option>
           {ENTITY_TYPES.map((type) => (

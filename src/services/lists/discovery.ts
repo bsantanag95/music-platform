@@ -6,13 +6,27 @@
 // Sin recomendación algorítmica: orden estricto por fecha de creación
 // descendente. Accesible con y sin sesión (la sección "Recientes" de `/lists`).
 
-import { and, desc, eq, isNull, ne, sql, type SQL } from "drizzle-orm";
+import { and, count, desc, eq, ilike, isNull, ne, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { appUser, userBlock, userList } from "@/db/schema";
+import { appUser, listSave, userBlock, userList } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { enrichLists } from "./lists";
 import { saveCountsFor, savedStateFor } from "./saved-lists";
-import type { ListEntityType } from "./types";
+import {
+  LIST_ENTITY_TYPES,
+  PUBLIC_LIST_SORTS,
+  type ListEntityType,
+  type PublicListSort,
+} from "./types";
+
+/** Filtros opcionales del listado público (cambio rework-public-lists-surface). */
+export interface DiscoverListFilters {
+  /** Búsqueda por texto sobre título y descripción. */
+  q?: string;
+  entityType?: ListEntityType;
+  /** `recent` (default) o `popular` (conteo agregado de guardados). */
+  sort?: PublicListSort;
+}
 
 export interface DiscoverListSummary {
   id: string;
@@ -123,35 +137,84 @@ export function assertPagination(page: number, pageSize: number): void {
   }
 }
 
+function normalizeDiscoverFilters(filters?: DiscoverListFilters): {
+  q: string | undefined;
+  entityType: ListEntityType | undefined;
+  sort: PublicListSort;
+} {
+  const q = filters?.q?.trim();
+  if (filters?.entityType && !LIST_ENTITY_TYPES.includes(filters.entityType)) {
+    throw new ApiError("VALIDATION_ERROR", 400, "El tipo de contenido no es válido");
+  }
+  const sort = filters?.sort ?? "recent";
+  if (!PUBLIC_LIST_SORTS.includes(sort)) {
+    throw new ApiError("VALIDATION_ERROR", 400, "El orden no es válido");
+  }
+  return { q: q ? q : undefined, entityType: filters?.entityType, sort };
+}
+
 /**
- * Listas públicas de otros usuarios en orden cronológico descendente.
- * `readerId` nulo = lector anónimo: sin exclusión de listas propias y sin
- * estado de guardado.
+ * Listas públicas de otros usuarios. Por defecto en orden cronológico
+ * descendente; con `filters` se acota por texto/tipo y se puede ordenar por
+ * guardados (`sort=popular`, listas sin guardados al final). `readerId` nulo =
+ * lector anónimo: sin exclusión de listas propias y sin estado de guardado.
  */
 export async function listDiscoverLists(
   readerId: string | null,
   page = 1,
   pageSize = 20,
+  filters?: DiscoverListFilters,
 ) {
   assertPagination(page, pageSize);
+  const { q, entityType, sort } = normalizeDiscoverFilters(filters);
+
+  const conditions: (SQL | undefined)[] = [
+    eq(userList.audience, "public"),
+    eq(userList.moderationStatus, "visible"),
+    eq(appUser.profileVisibility, "public"),
+    // Listas retiradas por un administrador no reaparecen en el descubrimiento
+    // público mientras permanezcan retiradas (spec official-editorial-content).
+    isNull(userList.officialWithdrawnAt),
+    readerId ? ne(userList.ownerId, readerId) : undefined,
+    notBlockedByReader(readerId),
+  ];
+  if (entityType) conditions.push(eq(userList.entityType, entityType));
+  if (q) {
+    conditions.push(
+      or(ilike(userList.title, `%${q}%`), ilike(userList.description, `%${q}%`)),
+    );
+  }
+
+  // Orden por guardados: TODO parte de la misma visibilidad, con las listas sin
+  // guardados al final (LEFT JOIN + conteo 0), a diferencia de la sección
+  // "Populares" que exige al menos un guardado.
+  if (sort === "popular") {
+    const saves = count(listSave.saverId);
+    const rows = await db
+      .select({ ...PUBLIC_LIST_COLUMNS, saves })
+      .from(userList)
+      .innerJoin(appUser, eq(userList.ownerId, appUser.id))
+      .leftJoin(listSave, eq(listSave.listId, userList.id))
+      .where(and(...conditions))
+      .groupBy(userList.id, appUser.id)
+      .orderBy(desc(saves), desc(userList.createdAt), desc(userList.id))
+      .limit(pageSize + 1)
+      .offset((page - 1) * pageSize);
+
+    const pageRows = rows.slice(0, pageSize);
+    return {
+      lists: await enrichPublicLists(pageRows, readerId, { withSaveCount: true }),
+      page,
+      pageSize,
+      hasNext: rows.length > pageSize,
+    };
+  }
 
   const rows = await db
     .select(PUBLIC_LIST_COLUMNS)
     .from(userList)
     .innerJoin(appUser, eq(userList.ownerId, appUser.id))
-    .where(
-and(
-        eq(userList.audience, "public"),
-        eq(userList.moderationStatus, "visible"),
-        eq(appUser.profileVisibility, "public"),
-        // Listas retiradas por un administrador no reaparecen en el
-        // descubrimiento público mientras permanezcan retiradas (spec
-        // official-editorial-content).
-        isNull(userList.officialWithdrawnAt),
-        readerId ? ne(userList.ownerId, readerId) : undefined,
-        notBlockedByReader(readerId),
-      ),
-    )
+    .where(and(...conditions))
     .orderBy(desc(userList.createdAt), desc(userList.id))
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);

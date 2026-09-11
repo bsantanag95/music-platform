@@ -72,9 +72,29 @@ export function unsaveList(listId: string): Promise<null> {
   return apiFetch(`/api/me/saved-lists/${listId}`, z.null(), { method: "DELETE" });
 }
 
-export function getDiscoverLists(page = 1, pageSize = 20): Promise<DiscoverListsResponse> {
+/** Filtros del listado público de exploración (cambio rework-public-lists-surface). */
+export interface DiscoverListFiltersParams {
+  q?: string;
+  entityType?: ListEntityType;
+  sort?: "recent" | "popular";
+}
+
+function discoverFiltersQuery(filters: DiscoverListFiltersParams = {}): string {
+  const params = new URLSearchParams();
+  if (filters.q) params.set("q", filters.q);
+  if (filters.entityType) params.set("entityType", filters.entityType);
+  if (filters.sort) params.set("sort", filters.sort);
+  const query = params.toString();
+  return query ? `&${query}` : "";
+}
+
+export function getDiscoverLists(
+  page = 1,
+  pageSize = 20,
+  filters: DiscoverListFiltersParams = {},
+): Promise<DiscoverListsResponse> {
   return apiFetch(
-    `/api/lists/discover?page=${page}&pageSize=${pageSize}`,
+    `/api/lists/discover?page=${page}&pageSize=${pageSize}${discoverFiltersQuery(filters)}`,
     DiscoverListsResponseSchema,
   );
 }
