@@ -1,10 +1,12 @@
 import { apiFetch } from "./client";
 import {
   DiaryListResponseSchema,
+  DiaryMonthsResponseSchema,
   FeedResponseSchema,
   ListenEntryResponseSchema,
   type DiaryAudience,
   type DiaryListResponse,
+  type DiaryMonthsResponse,
   type FeedEntry,
   type FeedResponse,
   type ListenContext,
@@ -18,12 +20,15 @@ import { z } from "zod";
 // Filtros combinables de `getMyDiary` — reflejan `DiaryFilters` del servicio
 // (`src/services/diary/diary.ts`), duplicados acá porque el cliente no puede
 // importar código de servidor. `reaction: "none"` es "sin reacción", distinto de
-// omitir el filtro (cualquier reacción o ninguna).
+// omitir el filtro (cualquier reacción o ninguna). `month` sin `year` no se
+// envía (ver `DiaryActivityList`, que deshabilita Mes hasta elegir un Año).
 export interface DiaryFiltersParams {
   q?: string;
   context?: ListenContext;
   reaction?: ListenReaction | "none";
   audience?: DiaryAudience;
+  year?: number;
+  month?: number;
 }
 
 export function getMyDiary(
@@ -36,7 +41,15 @@ export function getMyDiary(
   if (filters?.context) params.set("context", filters.context);
   if (filters?.reaction) params.set("reaction", filters.reaction);
   if (filters?.audience) params.set("audience", filters.audience);
+  if (filters?.year) params.set("year", String(filters.year));
+  if (filters?.month) params.set("month", String(filters.month));
   return apiFetch(`/api/me/diary?${params.toString()}`, DiaryListResponseSchema);
+}
+
+// Pares año/mes con al menos una escucha, para poblar los filtros de Año/Mes
+// (openspec: add-diary-date-navigation).
+export function getMyDiaryMonths(): Promise<DiaryMonthsResponse> {
+  return apiFetch("/api/me/diary/months", DiaryMonthsResponseSchema);
 }
 
 export function getUserDiary(username: string, page = 1, pageSize = 20): Promise<DiaryListResponse> {

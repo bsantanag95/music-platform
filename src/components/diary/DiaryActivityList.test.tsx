@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => {
     updateListenEntry: vi.fn(),
     deleteListenEntry: vi.fn(),
     getMyDiary: vi.fn(),
+    getMyDiaryMonths: vi.fn(),
     createListenEntry: vi.fn(),
     getMyLists: vi.fn(),
     addItemToList: vi.fn(),
@@ -46,6 +47,7 @@ vi.mock("@/lib/api/diary", () => ({
   updateListenEntry: mocks.updateListenEntry,
   deleteListenEntry: mocks.deleteListenEntry,
   getMyDiary: mocks.getMyDiary,
+  getMyDiaryMonths: mocks.getMyDiaryMonths,
   createListenEntry: mocks.createListenEntry,
 }));
 vi.mock("@/lib/api/lists", () => ({
@@ -116,7 +118,11 @@ async function openRowMenu(user: ReturnType<typeof userEvent.setup>, row: HTMLEl
 }
 
 describe("DiaryActivityList", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Por defecto, sin meses disponibles — los tests de año/mes lo sobrescriben.
+    mocks.getMyDiaryMonths.mockResolvedValue({ months: [] });
+  });
 
   it("muestra el estado vacío cuando no hay escuchas", () => {
     renderWithQuery(<DiaryActivityList initial={{ entries: [], page: 1, pageSize: 20, hasNext: false }} />);
@@ -483,6 +489,96 @@ describe("DiaryActivityList", () => {
     });
   });
 
+  describe("filtro de año y mes (add-diary-date-navigation)", () => {
+    beforeEach(() => {
+      mocks.getMyDiaryMonths.mockResolvedValue({
+        months: [
+          { year: 2026, month: 9 },
+          { year: 2026, month: 1 },
+          { year: 2025, month: 12 },
+        ],
+      });
+    });
+
+    it("el selector de Año solo ofrece años con registros", async () => {
+      renderWithQuery(<DiaryActivityList initial={initial} />);
+      await waitFor(() => expect(mocks.getMyDiaryMonths).toHaveBeenCalled());
+
+      const yearSelect = (await screen.findByLabelText("Año")) as HTMLSelectElement;
+      const optionValues = Array.from(yearSelect.options).map((o) => o.value).filter(Boolean);
+      expect(optionValues.sort()).toEqual(["2025", "2026"]);
+    });
+
+    it("el selector de Mes está vacío hasta elegir un Año, y luego solo ofrece meses de ese año", async () => {
+      const user = userEvent.setup();
+      renderWithQuery(<DiaryActivityList initial={initial} />);
+      await waitFor(() => expect(mocks.getMyDiaryMonths).toHaveBeenCalled());
+
+      const monthSelect = (await screen.findByLabelText("Mes")) as HTMLSelectElement;
+      expect(Array.from(monthSelect.options).map((o) => o.value).filter(Boolean)).toHaveLength(0);
+
+      await user.selectOptions(screen.getByLabelText("Año"), "2026");
+      const monthValues = Array.from(monthSelect.options).map((o) => o.value).filter(Boolean);
+      expect(monthValues.sort()).toEqual(["1", "9"]);
+    });
+
+    it("elegir un año filtra el diario por ese año", async () => {
+      const user = userEvent.setup();
+      mocks.getMyDiary.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
+      renderWithQuery(<DiaryActivityList initial={initial} />);
+      await waitFor(() => expect(mocks.getMyDiaryMonths).toHaveBeenCalled());
+
+      await user.selectOptions(await screen.findByLabelText("Año"), "2025");
+
+      await waitFor(() =>
+        expect(mocks.getMyDiary).toHaveBeenLastCalledWith(
+          1,
+          20,
+          expect.objectContaining({ year: 2025, month: undefined }),
+        ),
+      );
+    });
+
+    it("elegir año y mes filtra ambos a la vez", async () => {
+      const user = userEvent.setup();
+      mocks.getMyDiary.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
+      renderWithQuery(<DiaryActivityList initial={initial} />);
+      await waitFor(() => expect(mocks.getMyDiaryMonths).toHaveBeenCalled());
+
+      await user.selectOptions(await screen.findByLabelText("Año"), "2026");
+      await user.selectOptions(screen.getByLabelText("Mes"), "9");
+
+      await waitFor(() =>
+        expect(mocks.getMyDiary).toHaveBeenLastCalledWith(
+          1,
+          20,
+          expect.objectContaining({ year: 2026, month: 9 }),
+        ),
+      );
+    });
+
+    it("cambiar de año limpia un mes que ya no pertenece al año nuevo", async () => {
+      const user = userEvent.setup();
+      mocks.getMyDiary.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
+      renderWithQuery(<DiaryActivityList initial={initial} />);
+      await waitFor(() => expect(mocks.getMyDiaryMonths).toHaveBeenCalled());
+
+      await user.selectOptions(await screen.findByLabelText("Año"), "2026");
+      await user.selectOptions(screen.getByLabelText("Mes"), "9");
+      await user.selectOptions(screen.getByLabelText("Año"), "2025");
+
+      const monthSelect = screen.getByLabelText("Mes") as HTMLSelectElement;
+      expect(monthSelect.value).toBe("");
+      await waitFor(() =>
+        expect(mocks.getMyDiary).toHaveBeenLastCalledWith(
+          1,
+          20,
+          expect.objectContaining({ year: 2025, month: undefined }),
+        ),
+      );
+    });
+  });
+
   describe("agrupado por mes (deepen-listening-diary / redesign-diary-row)", () => {
     const enero: ListenEntry = { ...liked, id: "m-ene", createdAt: "2026-01-20T00:00:00.000Z" };
     const febA: ListenEntry = {
@@ -531,6 +627,62 @@ describe("DiaryActivityList", () => {
       await user.click(editButtons[0]!);
 
       expect(screen.getByRole("button", { name: "Guardar" })).toBeInTheDocument();
+    });
+
+    describe("colapsar/expandir por mes (add-diary-date-navigation)", () => {
+      it("todos los meses arrancan expandidos", () => {
+        renderWithQuery(<DiaryActivityList initial={multiMonth} />);
+        expect(screen.getAllByRole("list")).toHaveLength(2);
+        expect(screen.getByText("Disco Feb A")).toBeInTheDocument();
+        expect(screen.getByText("Pink Floyd")).toBeInTheDocument();
+      });
+
+      it("colapsar un mes oculta solo sus filas; los demás meses no se ven afectados", async () => {
+        const user = userEvent.setup();
+        renderWithQuery(<DiaryActivityList initial={multiMonth} />);
+
+        const febHeading = screen.getByRole("heading", { name: /febrero de 2026/i });
+        const febToggle = within(febHeading.parentElement as HTMLElement).getByRole("button");
+        await user.click(febToggle);
+
+        expect(screen.queryByText("Disco Feb A")).not.toBeInTheDocument();
+        expect(screen.queryByText("Disco Feb B")).not.toBeInTheDocument();
+        // enero sigue expandido
+        expect(screen.getByText("Pink Floyd")).toBeInTheDocument();
+        expect(screen.getAllByRole("list")).toHaveLength(1);
+      });
+
+      it("expandir un mes colapsado vuelve a mostrar sus filas, en el mismo orden", async () => {
+        const user = userEvent.setup();
+        renderWithQuery(<DiaryActivityList initial={multiMonth} />);
+
+        const febHeading = screen.getByRole("heading", { name: /febrero de 2026/i });
+        const febToggle = within(febHeading.parentElement as HTMLElement).getByRole("button");
+        await user.click(febToggle);
+        await user.click(febToggle);
+
+        const febList = febHeading.parentElement!.nextElementSibling as HTMLElement;
+        const titles = within(febList).getAllByRole("link").map((link) => link.textContent);
+        expect(titles).toEqual(["Disco Feb A", "Disco Feb B"]);
+      });
+
+      it("el encabezado nunca muestra un conteo de filas ocultas al colapsar", async () => {
+        const user = userEvent.setup();
+        renderWithQuery(<DiaryActivityList initial={multiMonth} />);
+
+        const febHeading = screen.getByRole("heading", { name: /febrero de 2026/i });
+        const febToggle = within(febHeading.parentElement as HTMLElement).getByRole("button");
+        await user.click(febToggle);
+
+        expect(febHeading.textContent).not.toMatch(/\(\d|\d\s*(escuchas?|entradas?)/i);
+      });
+
+      it("no hay ningún control para colapsar o expandir todos los meses a la vez", () => {
+        renderWithQuery(<DiaryActivityList initial={multiMonth} />);
+        // dos meses, un botón de flecha por encabezado — sin un tercer control "global"
+        const toggles = screen.getAllByRole("button", { name: /colapsar|expandir/i });
+        expect(toggles).toHaveLength(2);
+      });
     });
   });
 });

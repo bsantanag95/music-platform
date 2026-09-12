@@ -948,6 +948,18 @@ export const DiaryListResponseSchema = z.object({
 });
 export type DiaryListResponse = z.infer<typeof DiaryListResponseSchema>;
 
+// Pares año/mes con al menos una escucha, para poblar los filtros de Año/Mes
+// del diario (openspec: add-diary-date-navigation) — sin conteo, la
+// Cronología tiene prohibido mostrar cuántas escuchas hay por mes.
+export const DiaryMonthSchema = z.object({
+  year: z.number().int(),
+  month: z.number().int().min(1).max(12),
+});
+export type DiaryMonth = z.infer<typeof DiaryMonthSchema>;
+
+export const DiaryMonthsResponseSchema = z.object({ months: z.array(DiaryMonthSchema) });
+export type DiaryMonthsResponse = z.infer<typeof DiaryMonthsResponseSchema>;
+
 export const AuthorSummarySchema = z.object({
   id: z.uuid(),
   username: z.string(),
