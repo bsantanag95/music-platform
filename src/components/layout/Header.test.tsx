@@ -60,6 +60,7 @@ vi.mock("next-intl", async () => {
         feed: "Feed",
         favorites: "Favoritos",
         lists: "Listas",
+        activity: "Actividad",
         collection: "Colección",
         profile: "Mi perfil",
         artists: "Artistas seguidos",
@@ -219,6 +220,14 @@ describe("Header", () => {
 
     const listsLink = screen.getByRole("link", { name: "Listas" });
     expect(listsLink).toHaveAttribute("href", "/lists");
+  });
+
+  it("la barra general muestra 'Actividad' hacia la superficie pública /activity, con y sin sesión", () => {
+    renderWithIntl(<Header />);
+    expect(screen.getByRole("link", { name: "Actividad" })).toHaveAttribute("href", "/activity");
+
+    renderWithIntl(<Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />);
+    expect(screen.getAllByRole("link", { name: "Actividad" })[0]).toHaveAttribute("href", "/activity");
   });
 
   it("el control 'Registrar' no aparece sin sesión", () => {

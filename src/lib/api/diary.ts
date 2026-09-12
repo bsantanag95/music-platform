@@ -63,6 +63,16 @@ export function getFeed(page = 1, pageSize = 20, filters?: FeedFiltersParams): P
   return apiFetch(`/api/me/feed?${params.toString()}`, FeedResponseSchema);
 }
 
+// Sección "Recientes" de `/activity` (cambio add-community-activity-surface):
+// ratings + comentarios + reseñas públicos, sin requerir seguimiento. Mismo
+// shape de respuesta que `getFeed`, así que reusa `FeedResponseSchema`.
+// Nombrada `getCommunityActivity`, no `getRecentActivity`: ese nombre ya lo
+// usa `@/lib/api/home.ts` para "Tu rastro reciente" (actividad propia,
+// `/api/me/recent-activity`) — mismo shape de página, concepto distinto.
+export function getCommunityActivity(page = 1, pageSize = 10): Promise<FeedResponse> {
+  return apiFetch(`/api/activity/recent?page=${page}&pageSize=${pageSize}`, FeedResponseSchema);
+}
+
 export function createListenEntry(target: ListenTarget): Promise<ListenEntry> {
   return apiFetch("/api/me/diary", ListenEntryResponseSchema, {
     method: "POST",
