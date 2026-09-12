@@ -26,10 +26,11 @@
     "registerAnother": "Log another",
     "viewDiary": "View my diary"
   },
-  "viewList": "List",
-  "viewTimeline": "Timeline",
   "expand": "Expand",
   "edit": "Edit",
+  "moreActions": "More actions",
+  "logAnother": "Log another listen",
+  "addToList": "Add to list",
   "collapse": "Close",
   "bodyLabel": "Note (optional)",
   "bodyPlaceholder": "That bass is ridiculously good...",

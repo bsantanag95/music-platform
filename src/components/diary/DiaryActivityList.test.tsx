@@ -21,6 +21,9 @@ const mocks = vi.hoisted(() => {
     updateListenEntry: vi.fn(),
     deleteListenEntry: vi.fn(),
     getMyDiary: vi.fn(),
+    createListenEntry: vi.fn(),
+    getMyLists: vi.fn(),
+    addItemToList: vi.fn(),
     ApiError,
   };
 });
@@ -43,6 +46,11 @@ vi.mock("@/lib/api/diary", () => ({
   updateListenEntry: mocks.updateListenEntry,
   deleteListenEntry: mocks.deleteListenEntry,
   getMyDiary: mocks.getMyDiary,
+  createListenEntry: mocks.createListenEntry,
+}));
+vi.mock("@/lib/api/lists", () => ({
+  getMyLists: mocks.getMyLists,
+  addItemToList: mocks.addItemToList,
 }));
 vi.mock("@/lib/api/client", () => ({ ApiError: mocks.ApiError }));
 
@@ -59,7 +67,7 @@ const liked: ListenEntry = {
   body: "El bajo está ridículamente bueno",
   reaction: "liked",
   audience: "followers",
-  createdAt: "2026-01-01T00:00:00.000Z",
+  createdAt: "2026-01-15T12:00:00.000Z",
   target: { type: "artist", id: "a1b2c3d4-0000-4000-8000-000000000002", title: "Pink Floyd", subtitle: null, coverThumbUrl: null },
 };
 const neutral: ListenEntry = {
@@ -68,23 +76,44 @@ const neutral: ListenEntry = {
   body: null,
   reaction: "neutral",
   audience: "public",
-  createdAt: "2026-01-02T00:00:00.000Z",
+  createdAt: "2026-01-20T12:00:00.000Z",
   target: { type: "release-group", id: "a1b2c3d4-0000-4000-8000-000000000004", title: "Kid A", subtitle: null, coverThumbUrl: "https://cover/kid-a.jpg" },
 };
 
-function plainListen(id: string, title: string): ListenEntry {
+function plainListen(id: string, title: string, createdAt = "2026-01-25T12:00:00.000Z"): ListenEntry {
   return {
     id,
     listenContext: "relisten",
     body: null,
     reaction: null,
     audience: "public",
-    createdAt: "2026-01-03T00:00:00.000Z",
+    createdAt,
     target: { type: "recording", id: `target-${id}`, title, subtitle: null, coverThumbUrl: null },
   };
 }
 
+const albumWithCreditedArtist: ListenEntry = {
+  id: "a1b2c3d4-0000-4000-8000-000000000005",
+  listenContext: "first_listen",
+  body: null,
+  reaction: null,
+  audience: "public",
+  createdAt: "2026-01-22T12:00:00.000Z",
+  target: {
+    type: "release-group",
+    id: "a1b2c3d4-0000-4000-8000-000000000006",
+    title: "In Rainbows",
+    subtitle: "Radiohead",
+    artistId: "a1b2c3d4-0000-4000-8000-000000000007",
+    coverThumbUrl: null,
+  },
+};
+
 const initial: DiaryListResponse = { entries: [liked, neutral], page: 1, pageSize: 20, hasNext: true };
+
+async function openRowMenu(user: ReturnType<typeof userEvent.setup>, row: HTMLElement) {
+  await user.click(within(row).getByRole("button", { name: "Más acciones" }));
+}
 
 describe("DiaryActivityList", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -94,13 +123,14 @@ describe("DiaryActivityList", () => {
     expect(screen.getByText("Todavía no registraste nada")).toBeInTheDocument();
   });
 
-  it("lista las entradas con objetivo, contexto y reacción, sin pedir datos al servidor", () => {
+  it("agrupa las entradas por mes con un encabezado, sin conmutador de vista", () => {
     renderWithQuery(<DiaryActivityList initial={initial} />);
+    expect(screen.getByRole("heading", { name: /enero de 2026/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Lista" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Cronología" })).not.toBeInTheDocument();
     const list = within(screen.getByRole("list"));
     expect(list.getByText("Pink Floyd")).toBeInTheDocument();
     expect(list.getByText(/Primera escucha/)).toBeInTheDocument();
-    expect(list.getByText("Me gustó")).toBeInTheDocument();
-    expect(list.getByText("Neutro")).toBeInTheDocument();
     expect(list.getByText("Kid A")).toBeInTheDocument();
     expect(mocks.getMyDiary).not.toHaveBeenCalled();
   });
@@ -111,6 +141,23 @@ describe("DiaryActivityList", () => {
     expect(cells).toHaveLength(2);
     expect(cells[0]).toHaveAttribute("data-cover", ""); // artista → disco
     expect(cells[1]).toHaveAttribute("data-cover", "https://cover/kid-a.jpg"); // álbum → carátula
+  });
+
+  it("un álbum o canción con artista acreditado enlaza el nombre del artista a su página, como en el feed", () => {
+    renderWithQuery(
+      <DiaryActivityList initial={{ entries: [albumWithCreditedArtist], page: 1, pageSize: 20, hasNext: false }} />,
+    );
+    const artistLink = screen.getByRole("link", { name: "Radiohead" });
+    expect(artistLink).toHaveAttribute("href", "/artist/a1b2c3d4-0000-4000-8000-000000000007");
+  });
+
+  it("sin artista acreditado, el nombre del artista se muestra como texto plano", () => {
+    renderWithQuery(<DiaryActivityList initial={initial} />);
+    // "Kid A" (release-group) no trae artistId en este fixture — sin subtitle
+    // tampoco hay nombre de artista que mostrar, así que no hay ningún enlace
+    // de artista en la fila
+    const kidARow = screen.getByText("Kid A").closest("li") as HTMLElement;
+    expect(within(kidARow).queryAllByRole("link")).toHaveLength(1); // solo el título
   });
 
   it("una entrada con impresión la muestra como cita entre comillas; sin impresión, no la muestra", () => {
@@ -128,35 +175,87 @@ describe("DiaryActivityList", () => {
     expect(quote.className).not.toMatch(/rounded/);
   });
 
-  it("la reacción se alinea por baseline junto al contexto, no como texto corrido", () => {
+  it("la reacción se muestra como ícono en el cluster de acciones, junto a audiencia, con el nombre accesible", () => {
     renderWithQuery(<DiaryActivityList initial={initial} />);
-    const badge = within(screen.getByRole("list")).getByText("Me gustó").closest("span.inline-flex");
-    // flex item bajo `items-baseline`, no texto mezclado: evita que el ícono SVG
-    // desplace el badge respecto a la línea de base del contexto/audiencia vecinos.
-    expect(badge?.parentElement?.className).toMatch(/items-baseline/);
+    const likedRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
+    const glyph = within(likedRow).getByRole("img", { name: "Me gustó" });
+    expect(glyph).toBeInTheDocument();
+    // vive en el mismo cluster que audiencia/editar/menú, no junto al título
+    const actionsCluster = within(likedRow).getByText("Seguidores").closest("span.shrink-0");
+    expect(actionsCluster?.contains(glyph)).toBe(true);
   });
 
-  it("la audiencia vive junto a la fecha y las acciones, no en el cluster de contexto/reacción", () => {
-    renderWithQuery(<DiaryActivityList initial={initial} />);
-    const listEl = screen.getByRole("list");
-    const list = within(listEl);
-    const audience = list.getAllByText("Seguidores")[0]!;
-    const editButton = list.getAllByRole("button", { name: "Editar" })[0]!;
-    // mismo contenedor (cluster derecho): sin ancho fijo, la fila no se estira
-    // más de lo que su propio contenido necesita.
-    expect(audience.closest("span.shrink-0")).toBe(editButton.closest("span.shrink-0"));
-    expect(listEl.querySelector('[class*="min-w-["]')).toBeNull();
+  it("sin reacción, el slot se reserva igual — no desaparece, solo queda vacío y decorativo", () => {
+    const withReaction = { ...liked, id: "r1" };
+    const withoutReaction = plainListen("l1", "Sin reacción");
+    const { container } = renderWithQuery(
+      <DiaryActivityList initial={{ entries: [withReaction, withoutReaction], page: 1, pageSize: 20, hasNext: false }} />,
+    );
+
+    // un slot de ancho fijo por fila, exista o no la reacción
+    const slots = container.querySelectorAll('span[class*="w-5"][class*="shrink-0"]');
+    expect(slots).toHaveLength(2);
+
+    const rowWithout = screen.getByRole("link", { name: "Sin reacción" }).closest("li") as HTMLElement;
+    expect(within(rowWithout).queryByRole("img")).toBeNull();
+    const emptySlot = rowWithout.querySelector('span[class*="w-5"][class*="shrink-0"]');
+    expect(emptySlot).not.toBeNull();
+    expect(emptySlot).toHaveAttribute("aria-hidden", "true");
+    expect(emptySlot?.textContent).toBe("");
   });
 
-  it("la fecha se muestra relativa y conserva el ISO en el elemento de tiempo", () => {
+  it("editar es un ícono siempre visible con nombre accesible 'Editar'", () => {
+    renderWithQuery(<DiaryActivityList initial={initial} />);
+    expect(screen.getAllByRole("button", { name: "Editar" })).toHaveLength(2);
+  });
+
+  it("el resto de acciones vive detrás del menú '···', no como enlaces de texto sueltos", () => {
+    renderWithQuery(<DiaryActivityList initial={initial} />);
+    expect(screen.queryByRole("button", { name: "Eliminar" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Más acciones" })).toHaveLength(2);
+  });
+
+  it("la fecha conserva el ISO y expone fecha absoluta + relativa como valor accesible", () => {
     const { container } = renderWithQuery(<DiaryActivityList initial={initial} />);
     const time = container.querySelector("time");
-    expect(time).toHaveAttribute("dateTime", "2026-01-01T00:00:00.000Z");
-    expect(time?.textContent).not.toBe("2026-01-01T00:00:00.000Z");
+    expect(time).toHaveAttribute("dateTime", liked.createdAt);
+    expect(time).toHaveAttribute("aria-label");
+    expect(time?.getAttribute("aria-label")).toMatch(/·/);
+    expect(time?.getAttribute("title")).not.toBe("");
+  });
+
+  it("no repite el día en escuchas consecutivas del mismo día — solo lo muestra en la primera", () => {
+    const sameDay = [
+      { ...liked, id: "d1", createdAt: "2026-04-08T09:00:00.000Z" },
+      { ...neutral, id: "d2", createdAt: "2026-04-08T20:00:00.000Z" },
+    ];
+    renderWithQuery(<DiaryActivityList initial={{ entries: sameDay, page: 1, pageSize: 20, hasNext: false }} />);
+    // el número "8" aparece una sola vez como día visible
+    expect(screen.getAllByText("8")).toHaveLength(1);
+  });
+
+  it("dos filas de días distintos muestran cada una su propio número de día", () => {
+    const differentDays = [
+      { ...liked, id: "d1", createdAt: "2026-04-08T09:00:00.000Z" },
+      { ...neutral, id: "d2", createdAt: "2026-04-05T09:00:00.000Z" },
+    ];
+    renderWithQuery(<DiaryActivityList initial={{ entries: differentDays, page: 1, pageSize: 20, hasNext: false }} />);
+    expect(screen.getByText("8")).toBeInTheDocument();
+    expect(screen.getByText("5")).toBeInTheDocument();
+  });
+
+  it("nunca muestra el mes dentro de una fila — solo en el encabezado del grupo", () => {
+    renderWithQuery(<DiaryActivityList initial={initial} />);
+    const list = screen.getByRole("list");
+    expect(within(list).queryByText(/ENE/i)).not.toBeInTheDocument();
   });
 
   it("3 o más escuchas sin nota consecutivas nunca se agrupan: cada una es su propia fila editable", () => {
-    const run = [plainListen("l1", "Uno"), plainListen("l2", "Dos"), plainListen("l3", "Tres")];
+    const run = [
+      plainListen("l1", "Uno", "2026-01-25T09:00:00.000Z"),
+      plainListen("l2", "Dos", "2026-01-25T10:00:00.000Z"),
+      plainListen("l3", "Tres", "2026-01-25T11:00:00.000Z"),
+    ];
     const { container } = renderWithQuery(
       <DiaryActivityList initial={{ entries: run, page: 1, pageSize: 20, hasNext: false }} />,
     );
@@ -165,9 +264,9 @@ describe("DiaryActivityList", () => {
     expect(screen.getByRole("link", { name: "Uno" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Dos" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Tres" })).toBeInTheDocument();
-    // cada fila tiene sus propias acciones de editar/borrar
+    // cada fila tiene sus propias acciones de editar/menú
     expect(screen.getAllByRole("button", { name: "Editar" })).toHaveLength(3);
-    expect(screen.getAllByRole("button", { name: "Eliminar" })).toHaveLength(3);
+    expect(screen.getAllByRole("button", { name: "Más acciones" })).toHaveLength(3);
   });
 
   it("edita una entrada con el formulario y guarda los cambios", async () => {
@@ -202,13 +301,14 @@ describe("DiaryActivityList", () => {
     expect(status.className).toMatch(/sr-only/);
   });
 
-  it("borra una entrada propia tras confirmar", async () => {
+  it("borra una entrada propia tras confirmar desde el menú", async () => {
     const user = userEvent.setup();
     mocks.deleteListenEntry.mockResolvedValue(null);
     renderWithQuery(<DiaryActivityList initial={initial} />);
 
     const firstRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
-    await user.click(within(firstRow).getByRole("button", { name: "Eliminar" }));
+    await openRowMenu(user, firstRow);
+    await user.click(screen.getByRole("menuitem", { name: "Eliminar" }));
     await user.click(within(firstRow).getByRole("button", { name: /^Eliminar$/ }));
     await waitFor(() => expect(mocks.deleteListenEntry).toHaveBeenCalledWith(liked.id));
     expect(screen.queryByText("Pink Floyd")).not.toBeInTheDocument();
@@ -219,14 +319,65 @@ describe("DiaryActivityList", () => {
     renderWithQuery(<DiaryActivityList initial={initial} />);
 
     const firstRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
-    await user.click(within(firstRow).getByRole("button", { name: "Eliminar" }));
+    await openRowMenu(user, firstRow);
+    await user.click(screen.getByRole("menuitem", { name: "Eliminar" }));
 
     const warning = within(firstRow).getByRole("alert");
     const dateCluster = within(firstRow).getByText("Seguidores").closest("span.shrink-0");
-    // el aviso ya no es hijo del cluster shrink-0 (fecha/editar) — por eso no
-    // se sale del ancho de la fila cuando el texto es largo.
+    // el aviso ya no es hijo del cluster shrink-0 (audiencia/editar/menú) — por
+    // eso no se sale del ancho de la fila cuando el texto es largo.
     expect(dateCluster?.contains(warning)).toBe(false);
     expect(warning.closest("div")?.className).toMatch(/flex-wrap/);
+  });
+
+  it("registrar otra escucha desde el menú crea una entrada y la muestra al frente con el formulario abierto", async () => {
+    const user = userEvent.setup();
+    const created: ListenEntry = {
+      id: "a1b2c3d4-0000-4000-8000-000000000099",
+      listenContext: "relisten",
+      body: null,
+      reaction: null,
+      audience: "private",
+      createdAt: "2026-01-26T00:00:00.000Z",
+      target: liked.target,
+    };
+    mocks.createListenEntry.mockResolvedValue(created);
+    renderWithQuery(<DiaryActivityList initial={initial} />);
+
+    const firstRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
+    await openRowMenu(user, firstRow);
+    await user.click(screen.getByRole("menuitem", { name: "Registrar otra escucha" }));
+
+    await waitFor(() =>
+      expect(mocks.createListenEntry).toHaveBeenCalledWith({ type: "artist", id: liked.target.id }),
+    );
+    // dos filas con el mismo objetivo ahora (la nueva + la original)
+    await waitFor(() => expect(screen.getAllByText("Pink Floyd")).toHaveLength(2));
+    // el formulario de ampliación de la nueva entrada ya está abierto
+    expect(screen.getByLabelText(/Impresión/)).toBeInTheDocument();
+  });
+
+  it("agregar a lista desde el menú abre el panel de listas para el objetivo de la fila", async () => {
+    const user = userEvent.setup();
+    mocks.getMyLists.mockResolvedValue({
+      lists: [{ id: "list-1", entityType: "artist", title: "Rock clásico" }],
+      page: 1,
+      pageSize: 50,
+      hasNext: false,
+    });
+    mocks.addItemToList.mockResolvedValue({});
+    renderWithQuery(<DiaryActivityList initial={initial} />);
+
+    const firstRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
+    await openRowMenu(user, firstRow);
+    await user.click(screen.getByRole("menuitem", { name: "Agregar a lista" }));
+
+    const listButton = await within(firstRow).findByRole("button", { name: "Rock clásico" });
+    await user.click(listButton);
+
+    await waitFor(() =>
+      expect(mocks.addItemToList).toHaveBeenCalledWith("list-1", { type: "artist", id: liked.target.id }),
+    );
   });
 
   it("carga más páginas al pulsar el botón", async () => {
@@ -332,7 +483,7 @@ describe("DiaryActivityList", () => {
     });
   });
 
-  describe("vista de cronología (deepen-listening-diary)", () => {
+  describe("agrupado por mes (deepen-listening-diary / redesign-diary-row)", () => {
     const enero: ListenEntry = { ...liked, id: "m-ene", createdAt: "2026-01-20T00:00:00.000Z" };
     const febA: ListenEntry = {
       ...neutral,
@@ -353,11 +504,8 @@ describe("DiaryActivityList", () => {
       hasNext: false,
     };
 
-    it("el conmutador cambia a Cronología y agrupa las entradas por mes", async () => {
-      const user = userEvent.setup();
+    it("agrupa las entradas por mes, siempre, sin necesidad de elegir una vista", () => {
       renderWithQuery(<DiaryActivityList initial={multiMonth} />);
-
-      await user.click(screen.getByRole("button", { name: "Cronología" }));
 
       const febHeading = screen.getByRole("heading", { name: /febrero de 2026/i });
       const eneHeading = screen.getByRole("heading", { name: /enero de 2026/i });
@@ -367,22 +515,18 @@ describe("DiaryActivityList", () => {
       expect(screen.getAllByRole("list")).toHaveLength(2);
     });
 
-    it("la cronología no muestra conteos ni totales por mes", async () => {
-      const user = userEvent.setup();
+    it("no muestra conteos ni totales por mes", () => {
       renderWithQuery(<DiaryActivityList initial={multiMonth} />);
-
-      await user.click(screen.getByRole("button", { name: "Cronología" }));
 
       const febHeading = screen.getByRole("heading", { name: /febrero de 2026/i });
       // el encabezado es solo mes + año, sin "(2)" ni "2 escuchas"
       expect(febHeading.textContent).not.toMatch(/\(\d|\d\s*(escuchas?|entradas?)/i);
     });
 
-    it("editar una entrada sigue disponible en la cronología", async () => {
+    it("editar una entrada sigue disponible", async () => {
       const user = userEvent.setup();
       renderWithQuery(<DiaryActivityList initial={multiMonth} />);
 
-      await user.click(screen.getByRole("button", { name: "Cronología" }));
       const editButtons = screen.getAllByRole("button", { name: "Editar" });
       await user.click(editButtons[0]!);
 

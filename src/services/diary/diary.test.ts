@@ -284,6 +284,45 @@ describe("servicio del diario", () => {
     expect(result.entries[2]?.target).toMatchObject({ type: "artist", subtitle: null });
   });
 
+  it("álbumes y canciones enlazan al artista acreditado (artistId), como en el feed; artistas no", async () => {
+    const artistId = "00000000-0000-4000-8000-0000000000c1";
+    mocks.db.select.mockReturnValue(
+      joinPaged([
+        {
+          ...entryRow,
+          artistId: null,
+          releaseGroupId: "rg1",
+          releaseTitle: "Kid A",
+          creditedArtist: "Radiohead",
+          creditedArtistId: artistId,
+        },
+        {
+          ...entryRow,
+          artistId: null,
+          recordingId: "rec1",
+          recordingTitle: "Idioteque",
+          creditedArtist: "Radiohead",
+          creditedArtistId: artistId,
+        },
+        { ...entryRow, creditedArtist: null, creditedArtistId: null },
+        {
+          ...entryRow,
+          artistId: null,
+          releaseGroupId: "rg2",
+          releaseTitle: "Sin artista acreditado",
+          creditedArtist: null,
+          creditedArtistId: null,
+        },
+      ]),
+    );
+    const result = await listMyDiary(user, 1, 20);
+
+    expect(result.entries[0]?.target).toMatchObject({ type: "release-group", artistId });
+    expect(result.entries[1]?.target).toMatchObject({ type: "recording", artistId });
+    expect(result.entries[2]?.target).toMatchObject({ type: "artist", artistId: null });
+    expect(result.entries[3]?.target).toMatchObject({ type: "release-group", artistId: null });
+  });
+
   describe("filtros de listMyDiary", () => {
     it("sin filtros, la condición solo tiene el dueño", async () => {
       const helper = joinPagedCapturing([entryRow]);

@@ -183,3 +183,48 @@ export function RelativeDate({ iso }: { iso: string }) {
     </time>
   );
 }
+
+// Clave de mes calendario (`${año}-${mes}`), usada por `groupByMonth` para los
+// encabezados de mes de la vista de Cronología del diario propio (única vista
+// del diario — openspec: redesign-diary-row).
+export function monthKey(date: Date): string {
+  return `${date.getFullYear()}-${date.getMonth()}`;
+}
+
+// Clave de día calendario (`${año}-${mes}-${día}`), usada por `DiaryDateBlock`
+// para no repetir el número de día en escuchas consecutivas del mismo día
+// (openspec: redesign-diary-row) — el encabezado de mes ya agrupa por mes, así
+// que el día es lo único que puede repetirse fila a fila.
+export function dayKey(date: Date): string {
+  return `${monthKey(date)}-${date.getDate()}`;
+}
+
+// Bloque de fecha del diario propio (openspec: redesign-diary-row): reemplaza
+// `RelativeDate` únicamente en la fila del diario — el feed y el resto de
+// consumidores de `RelativeDate` no cambian. Vive dentro de la vista de
+// Cronología, que ya agrupa por mes con un encabezado propio, así que el
+// bloque nunca repite mes — solo el día, y ni siquiera eso cuando coincide con
+// la fila anterior (`showDay=false`): la celda sigue reservando su ancho para
+// no correr el resto de la fila, pero queda visualmente en blanco. La fecha
+// completa y la relativa están siempre disponibles como valor accesible
+// (`aria-label`) y como texto al pasar el mouse (`title`), en cada fila,
+// aunque el día no se muestre.
+export function DiaryDateBlock({ iso, showDay }: { iso: string; showDay: boolean }) {
+  const format = useFormatter();
+  const locale = useLocale();
+  const now = useNow();
+  const date = new Date(iso);
+  const relativeLabel = format.relativeTime(date, now);
+  const absoluteLabel = date.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+
+  return (
+    <time
+      dateTime={iso}
+      title={relativeLabel}
+      aria-label={`${absoluteLabel} · ${relativeLabel}`}
+      className="flex w-6 shrink-0 items-start justify-center font-display text-base text-paper"
+    >
+      {showDay ? date.getDate() : null}
+    </time>
+  );
+}
