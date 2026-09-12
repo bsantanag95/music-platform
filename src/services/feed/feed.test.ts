@@ -111,7 +111,8 @@ describe("servicio de feed ampliado", () => {
       .mockReturnValueOnce(sourceQuery([]))  // ratings
       .mockReturnValueOnce(sourceQuery([]))  // comentarios
       .mockReturnValueOnce(sourceQuery([]))  // reseñas
-      .mockReturnValueOnce(sourceQuery([]));  // follows
+      .mockReturnValueOnce(sourceQuery([]))  // follows
+      .mockReturnValueOnce(sourceQuery([]));  // follow-artist
 
     const result = await listFeed(author.id, 1, 20);
 
@@ -135,6 +136,7 @@ describe("servicio de feed ampliado", () => {
           recordingId: null,
           artistName: null,
           creditedArtist: "Tame Impala",
+          creditedArtistId: "00000000-0000-4000-8000-0000000000a5",
           releaseTitle: "Currents",
           releaseCover: null,
           recordingTitle: null,
@@ -151,6 +153,7 @@ describe("servicio de feed ampliado", () => {
           recordingId: null,
           artistName: "Radiohead",
           creditedArtist: null,
+          creditedArtistId: null,
           releaseTitle: null,
           releaseCover: null,
           recordingTitle: null,
@@ -163,7 +166,8 @@ describe("servicio de feed ampliado", () => {
       .mockReturnValueOnce(sourceQuery([]))  // ratings
       .mockReturnValueOnce(sourceQuery([]))  // comentarios
       .mockReturnValueOnce(sourceQuery([]))  // reseñas
-      .mockReturnValueOnce(sourceQuery([]));  // follows
+      .mockReturnValueOnce(sourceQuery([]))  // follows
+      .mockReturnValueOnce(sourceQuery([]));  // follow-artist
 
     const result = await listFeed(author.id, 1, 20);
 
@@ -172,10 +176,12 @@ describe("servicio de feed ampliado", () => {
     expect(album && "target" in album ? album.target : null).toMatchObject({
       title: "Currents",
       artistName: "Tame Impala",
+      artistId: "00000000-0000-4000-8000-0000000000a5",
     });
     expect(artistFav && "target" in artistFav ? artistFav.target : null).toMatchObject({
       title: "Radiohead",
       artistName: null,
+      artistId: null,
     });
   });
 
@@ -199,7 +205,8 @@ describe("servicio de feed ampliado", () => {
       .mockReturnValueOnce(sourceQuery([]))
       .mockReturnValueOnce(sourceQuery([]))
       .mockReturnValueOnce(sourceQuery([]))
-      .mockReturnValueOnce(sourceQuery([]));  // follows
+      .mockReturnValueOnce(sourceQuery([]))  // follows
+      .mockReturnValueOnce(sourceQuery([]));  // follow-artist
 
     const result = await listFeed(author.id, 1, 20);
     expect(result.entries[0]!.kind).toBe("list");
@@ -231,12 +238,119 @@ describe("servicio de feed ampliado", () => {
       }]))
       .mockReturnValueOnce(sourceQuery([]))  // comentarios
       .mockReturnValueOnce(sourceQuery([]))  // reseñas
-      .mockReturnValueOnce(sourceQuery([]));  // follows
+      .mockReturnValueOnce(sourceQuery([]))  // follows
+      .mockReturnValueOnce(sourceQuery([]));  // follow-artist
 
     const result = await listFeed(author.id, 1, 20);
 
     expect(result.entries.length).toBe(1);
     expect(result.entries[0]).toMatchObject({ kind: "rating", stars: "4.5", detailedScore: 90 });
+  });
+
+  it("expone el álbum que contiene la canción valorada, para la detección de barrido (add-feed-album-sweep)", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(followedQuery(["u2"]))
+      .mockReturnValueOnce(sourceQuery([])) // escuchas
+      .mockReturnValueOnce(sourceQuery([])) // favoritos
+      .mockReturnValueOnce(sourceQuery([])) // listas
+      .mockReturnValueOnce(sourceQuery([
+        { // rating de canción → álbum resuelto
+          id: "00000000-0000-4000-8000-0000000000b1",
+          stars: "4.0",
+          detailedScore: null,
+          updatedAt: new Date("2026-03-01T00:00:00Z"),
+          artistId: null,
+          releaseGroupId: null,
+          recordingId: "00000000-0000-4000-8000-0000000000b2",
+          artistName: null,
+          creditedArtist: "Sabrina Carpenter",
+          creditedArtistId: "00000000-0000-4000-8000-0000000000b3",
+          recordingAlbumId: "00000000-0000-4000-8000-0000000000b4",
+          recordingAlbumTitle: "Man's Best Friend",
+          releaseTitle: null,
+          releaseCover: null,
+          recordingTitle: "Tears",
+          authorId: author.id,
+          authorUsername: author.username,
+          authorDisplayName: author.displayName,
+        },
+        { // rating de artista → sin álbum
+          id: "00000000-0000-4000-8000-0000000000b5",
+          stars: "5.0",
+          detailedScore: null,
+          updatedAt: new Date("2026-03-02T00:00:00Z"),
+          artistId: "00000000-0000-4000-8000-0000000000b6",
+          releaseGroupId: null,
+          recordingId: null,
+          artistName: "Radiohead",
+          creditedArtist: null,
+          creditedArtistId: null,
+          recordingAlbumId: null,
+          recordingAlbumTitle: null,
+          releaseTitle: null,
+          releaseCover: null,
+          recordingTitle: null,
+          authorId: author.id,
+          authorUsername: author.username,
+          authorDisplayName: author.displayName,
+        },
+      ]))
+      .mockReturnValueOnce(sourceQuery([])) // comentarios
+      .mockReturnValueOnce(sourceQuery([])) // reseñas
+      .mockReturnValueOnce(sourceQuery([])) // follows
+      .mockReturnValueOnce(sourceQuery([])); // follow-artist
+
+    const result = await listFeed(author.id, 1, 20);
+
+    const song = result.entries.find((e) => e.id === "00000000-0000-4000-8000-0000000000b1");
+    const artistRating = result.entries.find((e) => e.id === "00000000-0000-4000-8000-0000000000b5");
+    expect(song && "target" in song ? song.target : null).toMatchObject({
+      albumId: "00000000-0000-4000-8000-0000000000b4",
+      albumTitle: "Man's Best Friend",
+    });
+    expect(artistRating && "target" in artistRating ? artistRating.target : null).toMatchObject({
+      albumId: null,
+      albumTitle: null,
+    });
+  });
+
+  it("expone el álbum también para un favorito de canción, así un favorito de paso no rompe el barrido", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(followedQuery(["u2"]))
+      .mockReturnValueOnce(sourceQuery([])) // escuchas
+      .mockReturnValueOnce(sourceQuery([{
+        id: "00000000-0000-4000-8000-0000000000c1",
+        audience: "public",
+        createdAt: new Date("2026-03-03T00:00:00Z"),
+        artistId: null,
+        releaseGroupId: null,
+        recordingId: "00000000-0000-4000-8000-0000000000c2",
+        artistName: null,
+        creditedArtist: "Sabrina Carpenter",
+        creditedArtistId: "00000000-0000-4000-8000-0000000000c3",
+        recordingAlbumId: "00000000-0000-4000-8000-0000000000c4",
+        recordingAlbumTitle: "Man's Best Friend",
+        releaseTitle: null,
+        releaseCover: null,
+        recordingTitle: "Bear",
+        authorId: author.id,
+        authorUsername: author.username,
+        authorDisplayName: author.displayName,
+      }])) // favoritos
+      .mockReturnValueOnce(sourceQuery([])) // listas
+      .mockReturnValueOnce(sourceQuery([])) // ratings
+      .mockReturnValueOnce(sourceQuery([])) // comentarios
+      .mockReturnValueOnce(sourceQuery([])) // reseñas
+      .mockReturnValueOnce(sourceQuery([])) // follows
+      .mockReturnValueOnce(sourceQuery([])); // follow-artist
+
+    const result = await listFeed(author.id, 1, 20);
+
+    const fav = result.entries.find((e) => e.id === "00000000-0000-4000-8000-0000000000c1");
+    expect(fav && "target" in fav ? fav.target : null).toMatchObject({
+      albumId: "00000000-0000-4000-8000-0000000000c4",
+      albumTitle: "Man's Best Friend",
+    });
   });
 
   it("muestra una entrada por cada comentario del mismo objetivo", async () => {
@@ -268,7 +382,8 @@ describe("servicio de feed ampliado", () => {
         commentRow("00000000-0000-4000-8000-00000000000a", "2026-01-05T00:00:00Z"),
       ]))
       .mockReturnValueOnce(sourceQuery([]))  // reseñas
-      .mockReturnValueOnce(sourceQuery([]));  // follows
+      .mockReturnValueOnce(sourceQuery([]))  // follows
+      .mockReturnValueOnce(sourceQuery([]));  // follow-artist
 
     const result = await listFeed(author.id, 1, 20);
 
@@ -332,7 +447,8 @@ describe("servicio de feed ampliado", () => {
         authorUsername: author.username,
         authorDisplayName: author.displayName,
       }]))
-      .mockReturnValueOnce(sourceQuery([]));  // follows
+      .mockReturnValueOnce(sourceQuery([]))  // follows
+      .mockReturnValueOnce(sourceQuery([]));  // follow-artist
 
     const result = await listFeed(author.id, 1, 20);
 
@@ -368,7 +484,8 @@ describe("servicio de feed ampliado", () => {
         .mockReturnValueOnce(sourceQuery([]))  // ratings
         .mockReturnValueOnce(sourceQuery([]))  // comentarios
         .mockReturnValueOnce(sourceQuery([reviewRow()]))  // reseñas
-        .mockReturnValueOnce(sourceQuery([]));  // follows
+        .mockReturnValueOnce(sourceQuery([]))  // follows
+        .mockReturnValueOnce(sourceQuery([]));  // follow-artist
 
       const result = await listFeed(author.id, 1, 20);
 
@@ -391,7 +508,8 @@ describe("servicio de feed ampliado", () => {
         .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([reviewRow({ updatedAt: new Date("2026-04-01T12:00:00Z") })]))
-        .mockReturnValueOnce(sourceQuery([]));  // follows
+        .mockReturnValueOnce(sourceQuery([]))  // follows
+        .mockReturnValueOnce(sourceQuery([]));  // follow-artist
 
       const result = await listFeed(author.id, 1, 20);
 
@@ -457,7 +575,8 @@ describe("servicio de feed ampliado", () => {
         .mockReturnValueOnce(sourceQuery([])) // ratings
         .mockReturnValueOnce(sourceQuery([])) // comentarios
         .mockReturnValueOnce(sourceQuery([])) // reseñas
-        .mockReturnValueOnce(sourceQuery([followRow()])); // follows
+        .mockReturnValueOnce(sourceQuery([followRow()])) // follows
+        .mockReturnValueOnce(sourceQuery([])); // follow-artist
 
       const result = await listFeed(author.id, 1, 20);
 
@@ -479,7 +598,8 @@ describe("servicio de feed ampliado", () => {
         .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]))
-        .mockReturnValueOnce(capturing);
+        .mockReturnValueOnce(capturing)
+        .mockReturnValueOnce(sourceQuery([])); // follow-artist
 
       await listFeed(author.id, 1, 20);
 
@@ -498,6 +618,72 @@ describe("servicio de feed ampliado", () => {
       // Solo seguidos + la única fuente pedida (comment): la fuente de
       // seguir a un usuario no tiene título que buscar, así que se saltea
       // directo con cualquier filtro de texto o de tipo.
+      expect(mocks.db.select).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("seguir a un artista (add-artist-follow-feed-entry)", () => {
+    const followArtistRow = (over: Record<string, unknown> = {}) => ({
+      id: "00000000-0000-4000-8000-000000000f10",
+      createdAt: new Date("2026-05-02T00:00:00Z"),
+      authorId: author.id,
+      authorUsername: author.username,
+      authorDisplayName: author.displayName,
+      artistId: "00000000-0000-4000-8000-000000000f11",
+      artistName: "Radiohead",
+      ...over,
+    });
+
+    it("expone una entrada de seguir a un artista con autor y artista seguido", async () => {
+      mocks.db.select
+        .mockReturnValueOnce(followedQuery(["u2"]))
+        .mockReturnValueOnce(sourceQuery([])) // escuchas
+        .mockReturnValueOnce(sourceQuery([])) // favoritos
+        .mockReturnValueOnce(sourceQuery([])) // listas
+        .mockReturnValueOnce(sourceQuery([])) // ratings
+        .mockReturnValueOnce(sourceQuery([])) // comentarios
+        .mockReturnValueOnce(sourceQuery([])) // reseñas
+        .mockReturnValueOnce(sourceQuery([])) // follows
+        .mockReturnValueOnce(sourceQuery([followArtistRow()])); // follow-artist
+
+      const result = await listFeed(author.id, 1, 20);
+
+      expect(result.entries).toHaveLength(1);
+      expect(result.entries[0]).toMatchObject({
+        kind: "follow-artist",
+        author: { id: author.id, username: author.username },
+        artist: { id: "00000000-0000-4000-8000-000000000f11", name: "Radiohead" },
+      });
+    });
+
+    it("la condición solo excluye por bloqueo, sin regla de visibilidad de perfil", async () => {
+      const capturing = sourceQueryCapturing([]);
+      mocks.db.select
+        .mockReturnValueOnce(followedQuery(["u2"]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(capturing);
+
+      await listFeed(author.id, 1, 20);
+
+      const { sql } = dialect.sqlToQuery(capturing.where.mock.calls[0]![0]);
+      const lower = sql.toLowerCase();
+      expect(lower).toContain("block");
+      expect(lower).not.toContain("profile_visibility");
+    });
+
+    it("con `q` o `kind` de otro tipo, no consulta la fuente de seguir a un artista", async () => {
+      mocks.db.select.mockReturnValueOnce(followedQuery(["u2"])).mockReturnValueOnce(sourceQuery([]));
+
+      await listFeed(author.id, 1, 20, { kind: "comment", q: "algo" });
+
+      // Solo seguidos + la única fuente pedida (comment): mismo criterio que
+      // "follow", no tiene título que buscar.
       expect(mocks.db.select).toHaveBeenCalledTimes(2);
     });
   });

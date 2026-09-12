@@ -1,10 +1,17 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { ScrollablePreviewList } from "@/components/home/ScrollablePreviewList";
-import type { FeedComment, FeedFollow, FeedListenEntry, FeedRating, FeedReview } from "@/services/feed/feed";
+import type {
+  FeedComment,
+  FeedFollow,
+  FeedFollowArtist,
+  FeedListenEntry,
+  FeedRating,
+  FeedReview,
+} from "@/services/feed/feed";
 
 interface RecentSelfActivityProps {
-  initialEntries: (FeedListenEntry | FeedRating | FeedComment | FeedReview | FeedFollow)[];
+  initialEntries: (FeedListenEntry | FeedRating | FeedComment | FeedReview | FeedFollow | FeedFollowArtist)[];
   initialHasNext: boolean;
 }
 

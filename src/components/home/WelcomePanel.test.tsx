@@ -44,7 +44,16 @@ const rating: FeedRating = {
   stars: "4.5",
   detailedScore: null,
   createdAt: "2026-08-01T00:00:00Z",
-  target: { type: "release-group", id: "rg1", title: "Currents", artistName: "Tame Impala", coverThumbUrl: null },
+  target: {
+    type: "release-group",
+    id: "rg1",
+    title: "Currents",
+    artistName: "Tame Impala",
+    artistId: "a1",
+    albumId: null,
+    albumTitle: null,
+    coverThumbUrl: null,
+  },
   author: { id: "u1", username: "yo", displayName: null },
 };
 
@@ -53,7 +62,7 @@ const comment: FeedComment = {
   id: "c1",
   body: "Producción impecable.",
   createdAt: "2026-08-01T00:00:00Z",
-  target: { type: "artist", id: "a1", title: "Tame Impala", artistName: null, coverThumbUrl: null },
+  target: { type: "artist", id: "a1", title: "Tame Impala", artistName: null, artistId: null, coverThumbUrl: null },
   author: { id: "u1", username: "yo", displayName: null },
 };
 

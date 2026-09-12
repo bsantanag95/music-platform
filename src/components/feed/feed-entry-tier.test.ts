@@ -39,6 +39,12 @@ function follow(): FeedEntry {
     followedUser: { id: "u2", username: "ana", displayName: "Ana" },
   };
 }
+function followArtist(): FeedEntry {
+  return {
+    kind: "follow-artist", id: "fa1", createdAt: "2026-08-01T00:00:00Z", author,
+    artist: { id: "art1", name: "Radiohead" },
+  };
+}
 
 describe("feedEntryTier", () => {
   it("comentario, reseña, evento de lista y escucha con nota → tier 1", () => {
@@ -61,8 +67,9 @@ describe("feedEntryTier", () => {
     expect(feedEntryTier(listen("   "))).toBe(3);
   });
 
-  it("seguir a un usuario → tier 4", () => {
+  it("seguir a un usuario y seguir a un artista → tier 4", () => {
     expect(feedEntryTier(follow())).toBe(4);
+    expect(feedEntryTier(followArtist())).toBe(4);
   });
 });
 
@@ -72,11 +79,12 @@ describe("isFeedEntryQuote", () => {
     expect(isFeedEntryQuote(review())).toBe(true);
     expect(isFeedEntryQuote(listen("nota"))).toBe(true);
   });
-  it("false para evento de lista, escucha sin nota, rating, favorito y seguir a un usuario", () => {
+  it("false para evento de lista, escucha sin nota, rating, favorito y los dos tipos de seguimiento", () => {
     expect(isFeedEntryQuote(listEvent())).toBe(false);
     expect(isFeedEntryQuote(listen(null))).toBe(false);
     expect(isFeedEntryQuote(rating(album))).toBe(false);
     expect(isFeedEntryQuote(favorite("release-group"))).toBe(false);
     expect(isFeedEntryQuote(follow())).toBe(false);
+    expect(isFeedEntryQuote(followArtist())).toBe(false);
   });
 });

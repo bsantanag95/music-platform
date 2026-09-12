@@ -2,13 +2,13 @@
 
 ## Purpose
 
-El tratamiento "minimizado" del tier 4 de la jerarquía de intención para las fuentes sin
-fila propia en el feed principal: una franja compacta al pie de `/me/feed` que resume los
-eventos ambiente recientes de la red del lector —seguir artista, sumar a la colección
-física—, agrupados por autor y separados del listado cronológico de actividad expresiva.
-"Seguir a un usuario" tuvo su fila agrupada acá hasta `add-feed-kind-differentiation`, que
-la activó inline en la línea de tiempo principal de `activity-feed` y la retiró de esta
-franja.
+El tratamiento "minimizado" del tier 4 de la jerarquía de intención para la única fuente sin
+fila propia en el feed principal: una franja compacta al pie de `/me/feed` que resume las
+altas recientes a la colección física de la red del lector, agrupadas por autor y separadas
+del listado cronológico de actividad expresiva. "Seguir a un usuario" tuvo su fila agrupada
+acá hasta `add-feed-kind-differentiation`, y "seguir a un artista" hasta
+`add-artist-follow-feed-entry` — ambas se activaron inline en la línea de tiempo principal
+de `activity-feed` y se retiraron de esta franja.
 ## Requirements
 ### Requirement: Composición de eventos ambiente de la red
 
@@ -18,30 +18,26 @@ cualquier dirección—. Los eventos ambiente corresponden al **tier 4** de la j
 intención. El cálculo SHALL ser bajo demanda, sin tabla materializada, y SHALL memoizarse
 dentro del request.
 
-**Fuentes.** SHALL considerar dos tipos de evento, dentro de una ventana reciente:
+**Fuente.** SHALL considerar un único tipo de evento, dentro de una ventana reciente:
 
-- **Seguir artista**: una persona empezó a seguir a un artista. No tiene audiencia propia;
-  se trata como público implícito (mismo criterio que la sección de artistas seguidos del
-  perfil).
 - **Colección física**: una persona agregó un disco a su colección. Tiene audiencia propia;
   SHALL contar solo cuando la audiencia es `followers` o `public`.
 
-"Seguir a un usuario" SHALL NOT ser fuente de este cálculo: tiene su propia fila tier 4,
-inline y con agrupación agresiva, en la línea de tiempo principal de `activity-feed`
-(`listFeed`/`listMyRecentActivity`) — mostrarlo también acá duplicaría el mismo hecho en
-`/me/feed`.
+"Seguir a un usuario" y "seguir a un artista" SHALL NOT ser fuente de este cálculo: ambas
+tienen su propia fila tier 4, inline y con agrupación agresiva, en la línea de tiempo
+principal de `activity-feed` (`listFeed`/`listMyRecentActivity`) — mostrarlas también acá
+duplicaría el mismo hecho en `/me/feed`.
 
 **Exclusiones.** La actividad del **propio lector** NUNCA SHALL aparecer. Los eventos de
-"dejar de seguir" o "quitar de la colección" NO SHALL generarse (solo altas).
+"quitar de la colección" NO SHALL generarse (solo altas).
 
-**Agrupación.** Los eventos SHALL agruparse **por autor y por tipo**: una persona que
-siguió a cinco artistas en la ventana produce **un** grupo, no cinco entradas. Cada grupo
-SHALL exponer el autor, el recuento total de ítems, una **muestra acotada** de ítems
-(nombres de artista o títulos de álbum, cada uno enlazable) ordenada por fecha descendente,
-y la fecha del ítem más reciente. Los grupos SHALL ordenarse por fecha del ítem más
-reciente descendente y limitarse a un máximo acotado. La ventana, el tamaño de la muestra y
-el máximo de grupos SHALL ser constantes con nombre, calibrables sin cambio de esta
-especificación.
+**Agrupación.** Los eventos SHALL agruparse **por autor**: una persona que agregó varios
+discos a su colección en la ventana produce **un** grupo, no una entrada por disco. Cada
+grupo SHALL exponer el autor, el recuento total de ítems, una **muestra acotada** de ítems
+(títulos de álbum, cada uno enlazable) ordenada por fecha descendente, y la fecha del ítem
+más reciente. Los grupos SHALL ordenarse por fecha del ítem más reciente descendente y
+limitarse a un máximo acotado. La ventana, el tamaño de la muestra y el máximo de grupos
+SHALL ser constantes con nombre, calibrables sin cambio de esta especificación.
 
 **Independencia del listado cronológico.** Este cálculo NO SHALL alterar la composición, la
 paginación, el filtrado ni la presentación del listado cronológico de actividad
@@ -49,10 +45,10 @@ paginación, el filtrado ni la presentación del listado cronológico de activid
 
 #### Scenario: Una persona que siguió varios artistas produce un solo grupo
 
-- **WHEN** una persona que el lector sigue con relación aceptada empezó a seguir a 4
-  artistas dentro de la ventana
-- **THEN** el resumen contiene un único grupo de tipo "seguir artista" para esa persona,
-  con recuento 4 y una muestra acotada de nombres de artista
+- **WHEN** una persona que el lector sigue con relación aceptada agregó 4 discos a su
+  colección dentro de la ventana
+- **THEN** el resumen contiene un único grupo de tipo "colección" para esa persona, con
+  recuento 4 y una muestra acotada de títulos de álbum
 
 #### Scenario: Colección física respeta su audiencia
 
@@ -81,7 +77,7 @@ paginación, el filtrado ni la presentación del listado cronológico de activid
 
 #### Scenario: La actividad ambiente del propio lector no aparece
 
-- **WHEN** el propio lector sigue a un artista o agrega un disco a su colección
+- **WHEN** el propio lector agrega un disco a su colección
 - **THEN** eso no aparece en su propio resumen de eventos ambiente
 
 #### Scenario: Bloqueo excluye a la persona
@@ -99,33 +95,39 @@ paginación, el filtrado ni la presentación del listado cronológico de activid
 - **WHEN** ninguna persona de la red del lector tuvo eventos ambiente en la ventana
 - **THEN** el cálculo devuelve un resumen vacío
 
+#### Scenario: Seguir a un artista no es fuente de este resumen
+
+- **WHEN** una persona que el lector sigue empieza a seguir a un artista
+- **THEN** ese evento no aparece en este resumen — aparece como fila propia en la línea de
+  tiempo principal de `activity-feed`
+
 ### Requirement: Presentación de la franja de eventos ambiente
 
 `/me/feed` SHALL mostrar los eventos ambiente como una **franja compacta al pie de la
 página**, debajo del listado cronológico y visualmente de-enfatizada respecto de él
 (encabezado menor, texto secundario, sin celda de carátula). La franja representa el
-tratamiento "minimizado" de las dos fuentes de tier 4 que no tienen fila propia en la línea
-de tiempo principal: seguir artista y colección física.
+tratamiento "minimizado" de la única fuente de tier 4 que no tiene fila propia en la línea
+de tiempo principal: colección física.
 
 Cada grupo SHALL mostrarse como **una sola línea**: el autor enlazado a su perfil, un verbo
-según el tipo de evento, y la muestra de ítems enlazados (nombres de artista o títulos de
-álbum) con "y N más" cuando el recuento supera la muestra. La franja NUNCA SHALL mostrar una
-línea por evento individual, ni carátulas grandes, ni un contador destacado, ni insignias.
+según el tipo de evento, y la muestra de ítems enlazados (títulos de álbum) con "y N más"
+cuando el recuento supera la muestra. La franja NUNCA SHALL mostrar una línea por evento
+individual, ni carátulas grandes, ni un contador destacado, ni insignias.
 
 Cuando no hay ningún grupo, la franja NO SHALL renderizarse (sin encabezado ni hueco). El
 listado cronológico SHALL permanecer sin cambios.
 
 #### Scenario: Franja con grupos de tipos distintos
 
-- **WHEN** el lector abre `/me/feed` y su red tuvo, en la ventana, follows de artista y
-  altas de colección
-- **THEN** ve, al pie de la página, una franja con una línea por grupo (autor + verbo +
+- **WHEN** el lector abre `/me/feed` y su red tuvo, en la ventana, altas de colección
+  física de dos personas distintas
+- **THEN** ve, al pie de la página, una franja con una línea por autor (autor + verbo +
   muestra de ítems enlazados), debajo del listado cronológico
 
 #### Scenario: Una línea por grupo, no por evento
 
-- **WHEN** una persona siguió a 5 artistas en la ventana
-- **THEN** la franja muestra una única línea para esa persona ("siguió a … y N más"), no
+- **WHEN** una persona agregó 5 discos a su colección en la ventana
+- **THEN** la franja muestra una única línea para esa persona ("agregó … y N más"), no
   cinco líneas
 
 #### Scenario: Sin eventos ambiente no hay franja

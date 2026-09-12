@@ -63,11 +63,13 @@ export async function AuthenticatedHome({ user, onboardingPending }: Authenticat
     : { entries: [], hasNext: false };
 
   // "Última vez" necesita un objetivo de catálogo enlazable (carátula +
-  // título): "seguir a un usuario" no tiene uno, así que se lo salta para
-  // este recorte puntual sin afectar "Tu rastro reciente" (que sí lo muestra).
+  // título): ni "seguir a un usuario" ni "seguir a un artista" tienen uno, así
+  // que se los salta para este recorte puntual sin afectar "Tu rastro
+  // reciente" (que sí los muestra).
   const lastTouch =
     recentActivity.entries.find(
-      (entry): entry is FeedListenEntry | FeedRating | FeedComment | FeedReview => entry.kind !== "follow",
+      (entry): entry is FeedListenEntry | FeedRating | FeedComment | FeedReview =>
+        entry.kind !== "follow" && entry.kind !== "follow-artist",
     ) ?? null;
 
   return (

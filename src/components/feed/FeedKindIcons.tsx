@@ -68,5 +68,9 @@ export const FEED_KIND_ICONS: Partial<Record<FeedEntry["kind"], ReactNode>> = {
   list: <ListIcon />,
   comment: <CommentIcon />,
   review: <ReviewIcon />,
+  // Mismo glifo para los dos tipos de seguimiento (openspec:
+  // add-artist-follow-feed-entry): es la misma acción "empezar a seguir",
+  // distinta solo en el objetivo y el verbo.
   follow: <FollowIcon />,
+  "follow-artist": <FollowIcon />,
 };

@@ -148,6 +148,11 @@ export async function listCommunityActivity(
       // El bloque compacto de Inicio no muestra el artista; el feed sí (vía
       // listFeed). Acá queda null a propósito, igual que antes de generalizar.
       artistName: null,
+      artistId: null,
+      // Esta fuente no alimenta la detección de "barrido de álbum" (solo
+      // `listFeed`/`listMyRecentActivity` la usan) — null a propósito.
+      albumId: null,
+      albumTitle: null,
       coverThumbUrl: row.releaseCover,
     },
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -163,6 +168,7 @@ export async function listCommunityActivity(
       id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
       title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
       artistName: null,
+      artistId: null,
       coverThumbUrl: row.releaseCover,
     },
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -179,6 +185,7 @@ export async function listCommunityActivity(
       id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
       title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
       artistName: null,
+      artistId: null,
       coverThumbUrl: row.releaseCover,
     },
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),

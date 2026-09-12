@@ -80,6 +80,14 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
           );
         }
 
+        if (row.kind === "follow-artist") {
+          return (
+            <li key={`follow-artist-${row.id}`} className={subordinateClass}>
+              <FollowArtistRow entry={row} t={t} hideAuthor={self} />
+            </li>
+          );
+        }
+
         const heavy = isFeedEntryQuote(row);
         const body = proseBody(row);
 
@@ -171,7 +179,9 @@ function GroupRow({
         ? t("groupFavorites", { count: group.entries.length })
         : group.groupedKind === "follow"
           ? t("groupFollows", { count: group.entries.length })
-          : t(group.tier === 2 ? "groupRatings" : "groupSongRatings", { count: group.entries.length });
+          : group.groupedKind === "follow-artist"
+            ? t("groupFollowArtists", { count: group.entries.length })
+            : t(group.tier === 2 ? "groupRatings" : "groupSongRatings", { count: group.entries.length });
 
   return (
     <div>
@@ -298,6 +308,40 @@ function FollowRow({
   );
 }
 
+// Tier 4 activo (openspec: add-artist-follow-feed-entry), misma anatomía que
+// `FollowRow` — la única diferencia es el objetivo (artista, no persona) y que
+// no hay noción de perfil privado sobre el objetivo.
+function FollowArtistRow({
+  entry,
+  t,
+  hideAuthor,
+}: {
+  entry: Extract<FeedEntry, { kind: "follow-artist" }>;
+  t: FeedT;
+  hideAuthor: boolean;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <span className="min-w-0 font-data text-xs text-paper-muted">
+        <span aria-hidden="true" className="mr-1 inline-flex translate-y-px align-middle">
+          {FEED_KIND_ICONS["follow-artist"]}
+        </span>
+        {hideAuthor ? null : (
+          <>
+            <AuthorIdentity author={entry.author} />
+            {" "}
+          </>
+        )}
+        {t("followArtistVerb")}{" "}
+        <Link href={targetHref("artist", entry.artist.id)} className="text-paper transition-colors hover:text-amber">
+          {entry.artist.name}
+        </Link>
+      </span>
+      <RelativeDate iso={entry.createdAt} />
+    </div>
+  );
+}
+
 // Rótulo "Reseña" en el segundo acento del sistema (petróleo) + el título
 // propio de la reseña como titular, cuando existe — antes vivía como sufijo
 // del verbo ("Reseñó · «título»"); acá gana su propio espacio visual en vez de
@@ -331,6 +375,8 @@ function actionLabel(entry: FeedEntry, t: FeedT): string {
       return t(`list.${entry.event}`);
     case "follow":
       return t("followVerb");
+    case "follow-artist":
+      return t("followArtistVerb");
   }
 }
 
@@ -360,12 +406,15 @@ function proseBody(entry: FeedEntry): string | null {
   return null;
 }
 
-function targetLink(entry: FeedEntry): { href: string; label: string; artist: string | null } {
+function targetLink(
+  entry: FeedEntry,
+): { href: string; label: string; artist: string | null; artistHref: string | null } {
   if (entry.kind === "list") {
     return {
       href: `/users/${encodeURIComponent(entry.author.username)}/lists/${entry.list.id}`,
       label: entry.list.title,
       artist: null,
+      artistHref: null,
     };
   }
   if (entry.kind === "follow") {
@@ -373,6 +422,15 @@ function targetLink(entry: FeedEntry): { href: string; label: string; artist: st
       href: `/users/${encodeURIComponent(entry.followedUser.username)}`,
       label: entry.followedUser.displayName ?? `@${entry.followedUser.username}`,
       artist: null,
+      artistHref: null,
+    };
+  }
+  if (entry.kind === "follow-artist") {
+    return {
+      href: targetHref("artist", entry.artist.id),
+      label: entry.artist.name,
+      artist: null,
+      artistHref: null,
     };
   }
   const type = entry.kind === "favorite" ? entry.targetType : entry.target.type;
@@ -380,11 +438,16 @@ function targetLink(entry: FeedEntry): { href: string; label: string; artist: st
     href: targetHref(type, entry.target.id),
     label: entry.target.title,
     artist: entry.target.artistName ?? null,
+    // Enlaza el nombre del artista a su página cuando el objetivo es un álbum
+    // o una canción con artista acreditado (openspec: add-feed-artist-link) —
+    // `artistId` viene nulo cuando el objetivo ya es el artista (el título ya
+    // enlaza ahí) o cuando no hay artista acreditado.
+    artistHref: entry.target.artistId ? targetHref("artist", entry.target.artistId) : null,
   };
 }
 
 function coverForEntry(entry: FeedEntry): string | null {
-  if (entry.kind === "list" || entry.kind === "follow") return null;
+  if (entry.kind === "list" || entry.kind === "follow" || entry.kind === "follow-artist") return null;
   const type = entry.kind === "favorite" ? entry.targetType : entry.target.type;
   return type === "release-group" ? entry.target.coverThumbUrl : null;
 }

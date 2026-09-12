@@ -39,7 +39,14 @@ const comment = {
   id: "c1",
   body: "Producción impecable de principio a fin.",
   createdAt: "2026-08-01T00:00:00Z",
-  target: { type: "release-group", id: "rg1", title: "Currents", artistName: "Tame Impala", coverThumbUrl: null },
+  target: {
+    type: "release-group",
+    id: "rg1",
+    title: "Currents",
+    artistName: "Tame Impala",
+    artistId: "a1",
+    coverThumbUrl: null,
+  },
   author,
 } satisfies FeedEntry;
 
@@ -49,7 +56,15 @@ const favorite: FeedEntry = {
   targetType: "release-group",
   audience: "public",
   createdAt: "2026-08-02T00:00:00Z",
-  target: { id: "rg2", title: "Lonerism", artistName: "Tame Impala", coverThumbUrl: null },
+  target: {
+    id: "rg2",
+    title: "Lonerism",
+    artistName: "Tame Impala",
+    artistId: "a1",
+    albumId: null,
+    albumTitle: null,
+    coverThumbUrl: null,
+  },
   author,
 };
 

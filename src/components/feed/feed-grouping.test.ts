@@ -87,6 +87,40 @@ function ratingSong(author = ana): FeedEntry {
     target: { type: "recording", id: `rec${seq}`, title: `Tema ${seq}`, artistName: null, coverThumbUrl: null }, author,
   };
 }
+function albumSongListen(albumId: string, songId: string, author = ana): FeedEntry {
+  seq += 1;
+  return {
+    kind: "listen", id: `als${seq}`, listenContext: "first_listen", body: null, reaction: null,
+    audience: "public", createdAt: iso(),
+    target: {
+      type: "recording", id: songId, title: `Tema ${songId}`, subtitle: null,
+      artistName: "Artista del álbum", albumId, albumTitle: "Álbum de prueba", coverThumbUrl: null,
+    },
+    author,
+  };
+}
+function albumSongRating(albumId: string, songId: string, author = ana): FeedEntry {
+  seq += 1;
+  return {
+    kind: "rating", id: `ars${seq}`, stars: "4.0", detailedScore: null, createdAt: iso(),
+    target: {
+      type: "recording", id: songId, title: `Tema ${songId}`,
+      artistName: "Artista del álbum", albumId, albumTitle: "Álbum de prueba", coverThumbUrl: null,
+    },
+    author,
+  };
+}
+function albumSongFavorite(albumId: string, songId: string, author = ana): FeedEntry {
+  seq += 1;
+  return {
+    kind: "favorite", id: `afv${seq}`, targetType: "recording", audience: "public", createdAt: iso(),
+    target: {
+      id: songId, title: `Tema ${songId}`,
+      artistName: "Artista del álbum", albumId, albumTitle: "Álbum de prueba", coverThumbUrl: null,
+    },
+    author,
+  };
+}
 function comment(author = ana): FeedEntry {
   seq += 1;
   return {
@@ -106,6 +140,13 @@ function follow(author = ana): FeedEntry {
   return {
     kind: "follow", id: `fo${seq}`, createdAt: iso(), author,
     followedUser: { id: `u${seq}`, username: `user${seq}`, displayName: `User ${seq}` },
+  };
+}
+function followArtist(author = ana): FeedEntry {
+  seq += 1;
+  return {
+    kind: "follow-artist", id: `fa${seq}`, createdAt: iso(), author,
+    artist: { id: `art${seq}`, name: `Artista ${seq}` },
   };
 }
 
@@ -182,10 +223,163 @@ describe("groupFeedRuns", () => {
     expect((rows[2] as FeedEntryGroup).groupedKind).toBe("listen");
   });
 
+  it("pliega 3+ 'seguir a un artista' consecutivos del mismo autor como grupo tier 4 (add-artist-follow-feed-entry)", () => {
+    const rows = groupFeedRuns([followArtist(), followArtist(), followArtist()]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.kind).toBe("group");
+    expect((rows[0] as FeedEntryGroup).groupedKind).toBe("follow-artist");
+    expect((rows[0] as FeedEntryGroup).tier).toBe(4);
+  });
+
+  it("no pliega solo 2 'seguir a un artista'", () => {
+    expect(groupFeedRuns([followArtist(), followArtist()]).map((r) => r.kind)).toEqual([
+      "follow-artist",
+      "follow-artist",
+    ]);
+  });
+
+  it("no mezcla 'seguir a un usuario' y 'seguir a un artista' en una misma corrida", () => {
+    const rows = groupFeedRuns([follow(), follow(), follow(), followArtist(), followArtist(), followArtist()]);
+    expect(rows.map((r) => r.kind)).toEqual(["group", "group"]);
+    expect((rows[0] as FeedEntryGroup).groupedKind).toBe("follow");
+    expect((rows[1] as FeedEntryGroup).groupedKind).toBe("follow-artist");
+  });
+
   it("la fecha del grupo es la de la entrada más reciente (la primera)", () => {
     const first = listen();
     const rows = groupFeedRuns([first, listen(), listen()]);
     expect((rows[0] as FeedEntryGroup).createdAt).toBe(first.createdAt);
+  });
+
+  describe("tramo de álbum: agrupación por tipo no contigua (add-feed-album-sweep)", () => {
+    it("3 canciones valoradas del mismo álbum, seguidas, se agrupan (caso ya cubierto por la agrupación contigua)", () => {
+      const rows = groupFeedRuns([
+        albumSongRating("alb1", "s1"),
+        albumSongRating("alb1", "s2"),
+        albumSongRating("alb1", "s3"),
+      ]);
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.kind).toBe("group");
+      expect((rows[0] as FeedEntryGroup).groupedKind).toBe("rating");
+      expect((rows[0] as FeedEntryGroup).entries).toHaveLength(3);
+    });
+
+    it("escucha + rating intercalados por canción se agrupan por tipo, cada uno por separado", () => {
+      const rows = groupFeedRuns([
+        albumSongListen("alb1", "s1"),
+        albumSongRating("alb1", "s1"),
+        albumSongListen("alb1", "s2"),
+        albumSongRating("alb1", "s2"),
+        albumSongListen("alb1", "s3"),
+        albumSongRating("alb1", "s3"),
+      ]);
+
+      // dos grupos: 3 ratings + 3 escuchas, aunque nunca hubo dos seguidas del mismo kind
+      const groups = rows.filter((r): r is FeedEntryGroup => r.kind === "group");
+      expect(groups).toHaveLength(2);
+      expect(groups.map((g) => g.groupedKind).sort()).toEqual(["listen", "rating"]);
+      expect(groups.every((g) => g.entries.length === 3)).toBe(true);
+    });
+
+    it("solo 2 canciones valoradas no alcanza el umbral: se muestran sueltas", () => {
+      const rows = groupFeedRuns([albumSongRating("alb1", "s1"), albumSongRating("alb1", "s2")]);
+
+      expect(rows.every((r) => r.kind !== "group")).toBe(true);
+      expect(rows).toHaveLength(2);
+    });
+
+    it("no mezcla canciones de álbumes distintos en un mismo grupo", () => {
+      const rows = groupFeedRuns([
+        albumSongRating("alb1", "s1"),
+        albumSongRating("alb1", "s2"),
+        albumSongRating("alb2", "s3"),
+        albumSongRating("alb2", "s4"),
+        albumSongRating("alb2", "s5"),
+      ]);
+
+      // el segundo álbum sí alcanza el umbral (3); el primero no (2 sueltas)
+      const groups = rows.filter((r): r is FeedEntryGroup => r.kind === "group");
+      expect(groups).toHaveLength(1);
+      expect(groups[0]!.entries.map((e) => (e.kind === "rating" ? e.target.id : null))).toEqual(["s3", "s4", "s5"]);
+      expect(rows.filter((r) => r.kind === "rating")).toHaveLength(2);
+    });
+
+    it("no mezcla entre autores distintos", () => {
+      const rows = groupFeedRuns([
+        albumSongRating("alb1", "s1", ana),
+        albumSongRating("alb1", "s2", ana),
+        albumSongRating("alb1", "s3", beto),
+      ]);
+
+      expect(rows.every((r) => r.kind !== "group")).toBe(true);
+      expect(rows).toHaveLength(3);
+    });
+
+    it("un comentario entre medio corta el tramo", () => {
+      const rows = groupFeedRuns([
+        albumSongRating("alb1", "s1"),
+        albumSongRating("alb1", "s2"),
+        comment(),
+        albumSongRating("alb1", "s3"),
+      ]);
+
+      expect(rows.every((r) => r.kind !== "group")).toBe(true);
+      expect(rows.map((r) => r.kind)).toEqual(["rating", "rating", "comment", "rating"]);
+    });
+
+    it("una entrada sin álbum resuelto después del tramo queda afuera, sin romper el grupo ya formado", () => {
+      const rows = groupFeedRuns([
+        albumSongRating("alb1", "s1"),
+        albumSongRating("alb1", "s2"),
+        albumSongRating("alb1", "s3"),
+        ratingSong(), // sin albumId — corta el tramo, se evalúa aparte
+      ]);
+
+      expect(rows[0]!.kind).toBe("group");
+      expect((rows[0] as FeedEntryGroup).entries).toHaveLength(3);
+      expect(rows[1]!.kind).toBe("rating");
+    });
+
+    it("3 canciones marcadas como favorito (sin rating) también se agrupan", () => {
+      const rows = groupFeedRuns([
+        albumSongFavorite("alb1", "s1"),
+        albumSongFavorite("alb1", "s2"),
+        albumSongFavorite("alb1", "s3"),
+      ]);
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.kind).toBe("group");
+      expect((rows[0] as FeedEntryGroup).groupedKind).toBe("favorite");
+      expect((rows[0] as FeedEntryGroup).entries).toHaveLength(3);
+    });
+
+    it("un favorito de paso (agregado y quitado) no le quita a un grupo de ratings la chance de alcanzar el umbral", () => {
+      const rows = groupFeedRuns([
+        albumSongRating("alb1", "s1"),
+        albumSongFavorite("alb1", "s2"), // favorito de paso, entre medio
+        albumSongRating("alb1", "s2"),
+        albumSongRating("alb1", "s3"),
+      ]);
+
+      const ratingGroup = rows.find((r): r is FeedEntryGroup => r.kind === "group" && r.groupedKind === "rating");
+      expect(ratingGroup?.entries).toHaveLength(3);
+      // el favorito de paso queda como su propia fila suelta, no rompe el grupo de ratings
+      expect(rows.some((r) => r.kind === "favorite")).toBe(true);
+    });
+
+    it("favorito y rating no se fusionan: cada uno necesita sus propias 3 canciones", () => {
+      const rows = groupFeedRuns([
+        albumSongFavorite("alb1", "s1"),
+        albumSongRating("alb1", "s1"),
+        albumSongFavorite("alb1", "s2"),
+        albumSongRating("alb1", "s2"),
+      ]);
+
+      // 2 favoritos y 2 ratings — ninguno de los dos buckets alcanza el umbral
+      expect(rows.every((r) => r.kind !== "group")).toBe(true);
+      expect(rows).toHaveLength(4);
+    });
   });
 
   describe("pico de rotación (add-feed-rotation-peak)", () => {
