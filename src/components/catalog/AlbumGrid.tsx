@@ -15,6 +15,8 @@ interface AlbumGridProps {
   categoryLabels: Record<ReleaseGroupCategory, string>;
   discographyHeading: string;
   coverLabel: string;
+  /** Hay sesión: habilita Guardar/Seguir en "Mostrar en listas" de cada tarjeta. */
+  authenticated?: boolean;
 }
 
 // Agrupa la discografía por categoría y solo renderiza secciones que
@@ -24,6 +26,7 @@ export function AlbumGrid({
   categoryLabels,
   discographyHeading,
   coverLabel,
+  authenticated = false,
 }: AlbumGridProps) {
   const grouped = new Map<ReleaseGroupCategory, ReleaseGroup[]>();
   for (const rg of releaseGroups) {
@@ -64,6 +67,7 @@ export function AlbumGrid({
                     releaseGroup={rg}
                     categoryLabel={categoryLabels[category]}
                     coverLabel={coverLabel}
+                    authenticated={authenticated}
                   />
                 </li>
               ))}

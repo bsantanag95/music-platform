@@ -1223,6 +1223,10 @@ export const DiscoverListSummarySchema = z.object({
   isOfficial: z.boolean(),
   saved: z.boolean(),
   following: z.boolean(),
+  /** El lector es el dueño de esta lista. Siempre `false` en /lists (que ya
+   * excluye las listas propias del lector); relevante en "Mostrar en listas",
+   * donde sí pueden aparecer, para ocultar la acción Guardar sobre ellas. */
+  isOwn: z.boolean(),
   /** Conteo agregado de guardados. Presente en la sección "Populares" de /lists. */
   saveCount: z.number().int().optional(),
 });

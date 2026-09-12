@@ -116,6 +116,19 @@ export function getListsFromFollowing(
   );
 }
 
+/** Listas públicas que contienen un ítem puntual — acción "Mostrar en listas". */
+export function getListsContainingItem(
+  target: ListTarget,
+  page = 1,
+  pageSize = 20,
+  sort: "recent" | "popular" = "popular",
+): Promise<DiscoverListsResponse> {
+  return apiFetch(
+    `/api/catalog/${target.type}/${target.id}/lists?page=${page}&pageSize=${pageSize}&sort=${sort}`,
+    DiscoverListsResponseSchema,
+  );
+}
+
 export function getUserLists(
   username: string,
   page = 1,

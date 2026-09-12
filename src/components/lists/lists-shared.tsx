@@ -30,3 +30,11 @@ export function listItemHref(targetId: string, entityType: string): string {
   if (entityType === "release-group") return `/album/${targetId}`;
   return `/song/${targetId}`;
 }
+
+// Página dedicada de "Mostrar en listas" de un ítem puntual (openspec:
+// show-item-in-lists) — a la que enlaza el "Ver más" del panel acotado a 4
+// resultados. Mismo mapeo de tipo a ruta que `listItemHref`, con el
+// sub-segmento fijo `/lists`.
+export function itemListsHref(target: { type: string; id: string }): string {
+  return `${listItemHref(target.id, target.type)}/lists`;
+}

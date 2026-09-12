@@ -19,6 +19,8 @@ import { Comments } from "@/components/social/Comments";
 import { MarkAsListened } from "@/components/diary/MarkAsListened";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { AddToListButton } from "@/components/lists/AddToListButton";
+import { ShowInListsButton } from "@/components/lists/ShowInListsButton";
+import { ViewAllListsLink } from "@/components/lists/ViewAllListsLink";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
 import { getRatings, listComments, resolveSocialTarget } from "@/services/social";
@@ -109,6 +111,8 @@ export default async function SongPage({ params }: SongPageProps) {
         <MarkAsListened target={{ type: "recording", id: detail.recording.id }} authenticated={Boolean(userId)} />
         <FavoriteButton target={{ type: "recording", id: detail.recording.id }} authenticated={Boolean(userId)} initialActive={favorited} />
         <AddToListButton target={{ type: "recording", id: detail.recording.id }} authenticated={Boolean(userId)} />
+        <ShowInListsButton target={{ type: "recording", id: detail.recording.id }} authenticated={Boolean(userId)} />
+        <ViewAllListsLink target={{ type: "recording", id: detail.recording.id }} />
       </div>
 
       <SongListenHistory entries={listenHistory} />

@@ -2,6 +2,7 @@ import type { DiaryFiltersParams, FeedFiltersParams } from "@/lib/api/diary";
 import type { DiscoverListFiltersParams, ListFiltersParams } from "@/lib/api/lists";
 import type { FavoritesFiltersParams } from "@/lib/api/favorites";
 import type { CollectionQuery } from "@/lib/api/collection";
+import type { ListTarget } from "@/lib/api/schemas";
 
 // Query keys centralizadas — evita strings mágicos repetidos en cada
 // componente que use useQuery/useMutation con TanStack Query.
@@ -27,6 +28,7 @@ export const queryKeys = {
     ["lists", "community", "explore", filters] as const,
   popularLists: () => ["lists", "popular"] as const,
   listsFromFollowing: () => ["lists", "fromFollowing"] as const,
+  listsContainingItem: (target: ListTarget) => ["lists", "containing", target.type, target.id] as const,
   activityRecent: () => ["activity", "recent"] as const,
   activityOwn: () => ["activity", "own"] as const,
   myFavorites: (filters: FavoritesFiltersParams) => ["favorites", "mine", filters] as const,
