@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, inArray, isNull, lt, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, appUser, listenEntry, recording, releaseGroup, userFollow } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -55,12 +55,21 @@ export interface UpdateListenEntryChanges {
 
 // Filtros combinables de `listMyDiary` — cada campo es independiente y opcional.
 // `reaction: "none"` es un valor explícito ("solo sin reacción"), distinto de omitir
-// el filtro por completo (`undefined`, "cualquier reacción o ninguna").
+// el filtro por completo (`undefined`, "cualquier reacción o ninguna"). `month` sin
+// `year` no tiene un objetivo único ("¿de qué año?") — `listMyDiary` lo rechaza
+// (openspec: add-diary-date-navigation).
 export interface DiaryFilters {
   q?: string;
   context?: ListenContext;
   reaction?: ListenReaction | "none";
   audience?: DiaryAudience;
+  year?: number;
+  month?: number;
+}
+
+export interface DiaryMonthBucket {
+  year: number;
+  month: number; // 1-12
 }
 
 function targetWhereFor(column: TargetColumn, id: string): SQL {
@@ -172,6 +181,9 @@ export async function listMyDiary(
   if (page < 1 || pageSize < 1 || pageSize > 50) {
     throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
   }
+  if (filters?.month && !filters?.year) {
+    throw new ApiError("VALIDATION_ERROR", 400, "El filtro de mes requiere un año");
+  }
 
   const conditions: SQL[] = [eq(listenEntry.userId, userId)];
   if (filters?.context) conditions.push(eq(listenEntry.listenContext, filters.context));
@@ -181,6 +193,19 @@ export async function listMyDiary(
     conditions.push(eq(listenEntry.reaction, filters.reaction));
   }
   if (filters?.audience) conditions.push(eq(listenEntry.audience, filters.audience));
+  if (filters?.year) {
+    // Rango [inicio, fin) en UTC: todo el año, o solo el mes elegido dentro de
+    // él (con acarreo de año en diciembre) — mismo criterio de "rango
+    // semiabierto" que ya usa la paginación por fecha en otras partes del
+    // servicio.
+    const startMonth = filters.month ? filters.month - 1 : 0;
+    const start = new Date(Date.UTC(filters.year, startMonth, 1));
+    const end = filters.month
+      ? new Date(Date.UTC(filters.year, filters.month, 1))
+      : new Date(Date.UTC(filters.year + 1, 0, 1));
+    conditions.push(gte(listenEntry.createdAt, start));
+    conditions.push(lt(listenEntry.createdAt, end));
+  }
   const q = filters?.q?.trim();
   if (q) {
     const pattern = `%${q}%`;
@@ -209,6 +234,31 @@ export async function listMyDiary(
     pageSize,
     hasNext: rows.length > pageSize,
   };
+}
+
+/**
+ * Pares año/mes calendario donde el usuario tiene al menos una escucha, del
+ * más reciente al más antiguo — para poblar los filtros de Año/Mes del
+ * diario con únicamente combinaciones que existen (openspec:
+ * add-diary-date-navigation). Sin conteo: la Cronología tiene prohibido
+ * mostrar cuántas escuchas hay por mes, y exponerlo acá invitaría a usarlo
+ * tarde o temprano. Mismo patrón de "bucket vía SQL + groupBy" que
+ * `listDecades` (`src/services/discovery/discovery.ts`), con
+ * `extract(year/month from created_at)` en vez de un floor de década.
+ */
+export async function listMyDiaryMonths(userId: string): Promise<DiaryMonthBucket[]> {
+  const yearExpr = sql`extract(year from ${listenEntry.createdAt})`;
+  const monthExpr = sql`extract(month from ${listenEntry.createdAt})`;
+  const rows = await db
+    .select({
+      year: sql<number>`${yearExpr}::int`,
+      month: sql<number>`${monthExpr}::int`,
+    })
+    .from(listenEntry)
+    .where(eq(listenEntry.userId, userId))
+    .groupBy(yearExpr, monthExpr)
+    .orderBy(sql`${yearExpr} desc`, sql`${monthExpr} desc`);
+  return rows.map((row) => ({ year: Number(row.year), month: Number(row.month) }));
 }
 
 /**

@@ -7,6 +7,7 @@ import {
   createListenEntry,
   deleteListenEntry,
   listMyDiary,
+  listMyDiaryMonths,
   listMyListensForRecording,
   listUserDiary,
   listFeed,
@@ -406,6 +407,72 @@ describe("servicio del diario", () => {
       expect(sql).toContain("audience");
       expect(sql.toLowerCase()).toContain("ilike");
       expect(params).toEqual(expect.arrayContaining(["relisten", "loved", "public", "%kid a%"]));
+    });
+
+    it("filtra por año: rango de todo el año calendario", async () => {
+      const helper = joinPagedCapturing([entryRow]);
+      mocks.db.select.mockReturnValue(helper);
+      await listMyDiary(user, 1, 20, { year: 2026 });
+
+      const { sql, params } = dialect.sqlToQuery(helper.where.mock.calls[0]![0]);
+      expect(sql).toContain("created_at");
+      expect(params).toContainEqual(new Date(Date.UTC(2026, 0, 1)).toISOString());
+      expect(params).toContainEqual(new Date(Date.UTC(2027, 0, 1)).toISOString());
+    });
+
+    it("filtra por año y mes: rango acotado a ese mes calendario", async () => {
+      const helper = joinPagedCapturing([entryRow]);
+      mocks.db.select.mockReturnValue(helper);
+      await listMyDiary(user, 1, 20, { year: 2026, month: 9 });
+
+      const { params } = dialect.sqlToQuery(helper.where.mock.calls[0]![0]);
+      expect(params).toContainEqual(new Date(Date.UTC(2026, 8, 1)).toISOString());
+      expect(params).toContainEqual(new Date(Date.UTC(2026, 9, 1)).toISOString());
+    });
+
+    it("diciembre acarrea el año siguiente como límite superior del rango", async () => {
+      const helper = joinPagedCapturing([entryRow]);
+      mocks.db.select.mockReturnValue(helper);
+      await listMyDiary(user, 1, 20, { year: 2026, month: 12 });
+
+      const { params } = dialect.sqlToQuery(helper.where.mock.calls[0]![0]);
+      expect(params).toContainEqual(new Date(Date.UTC(2026, 11, 1)).toISOString());
+      expect(params).toContainEqual(new Date(Date.UTC(2027, 0, 1)).toISOString());
+    });
+
+    it("un mes sin año lanza VALIDATION_ERROR y no llega a construir la query", async () => {
+      await expect(listMyDiary(user, 1, 20, { month: 9 })).rejects.toMatchObject({
+        code: "VALIDATION_ERROR",
+        status: 400,
+      });
+      expect(mocks.db.select).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("listMyDiaryMonths", () => {
+    it("agrupa por año/mes calendario, descendente, sin ningún campo de conteo", async () => {
+      const groupBy = vi.fn().mockReturnValue({
+        orderBy: vi.fn().mockResolvedValue([
+          { year: 2026, month: 9 },
+          { year: 2026, month: 1 },
+          { year: 2025, month: 12 },
+        ]),
+      });
+      const where = vi.fn(() => ({ groupBy }));
+      const from = vi.fn(() => ({ where }));
+      mocks.db.select.mockReturnValue({ from });
+
+      const result = await listMyDiaryMonths(user);
+
+      expect(result).toEqual([
+        { year: 2026, month: 9 },
+        { year: 2026, month: 1 },
+        { year: 2025, month: 12 },
+      ]);
+      // ningún bucket trae un campo de conteo
+      for (const bucket of result) {
+        expect(Object.keys(bucket).sort()).toEqual(["month", "year"]);
+      }
     });
   });
 

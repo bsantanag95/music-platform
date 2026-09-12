@@ -25,6 +25,23 @@ function parseEnumParam<T extends string>(
   return value as T;
 }
 
+// Valida un query param numérico opcional dentro de un rango — mismo criterio
+// de "400 en vez de dejar pasar algo que no filtraría lo esperado" que
+// `parseEnumParam`.
+function parseIntParam(
+  searchParams: URLSearchParams,
+  key: string,
+  { min, max }: { min?: number; max?: number } = {},
+): number | undefined {
+  const value = searchParams.get(key);
+  if (value === null) return undefined;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || (min !== undefined && parsed < min) || (max !== undefined && parsed > max)) {
+    throw new ApiError("VALIDATION_ERROR", 400, `El valor de "${key}" no es válido`);
+  }
+  return parsed;
+}
+
 function parseDiaryFilters(searchParams: URLSearchParams): DiaryFilters {
   const q = searchParams.get("q")?.trim();
   return {
@@ -32,6 +49,8 @@ function parseDiaryFilters(searchParams: URLSearchParams): DiaryFilters {
     context: parseEnumParam(searchParams, "context", LISTEN_CONTEXTS),
     reaction: parseEnumParam(searchParams, "reaction", REACTION_FILTER_VALUES),
     audience: parseEnumParam(searchParams, "audience", DIARY_AUDIENCES),
+    year: parseIntParam(searchParams, "year", { min: 1900, max: 9999 }),
+    month: parseIntParam(searchParams, "month", { min: 1, max: 12 }),
   };
 }
 

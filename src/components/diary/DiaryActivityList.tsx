@@ -1,6 +1,6 @@
 "use client";
 
-import { keepPreviousData, useInfiniteQuery, useQueryClient, type InfiniteData } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery, useQuery, useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
@@ -13,7 +13,13 @@ import { FilterSelect } from "@/components/ui/FilterSelect";
 import { RowMenu, RowMenuItem } from "@/components/ui/RowMenu";
 import { ListenEntryForm } from "./ListenEntryForm";
 import { ReactionGlyph } from "./ReactionBadge";
-import { createListenEntry, deleteListenEntry, getMyDiary, type DiaryFiltersParams } from "@/lib/api/diary";
+import {
+  createListenEntry,
+  deleteListenEntry,
+  getMyDiary,
+  getMyDiaryMonths,
+  type DiaryFiltersParams,
+} from "@/lib/api/diary";
 import { ApiError } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
 import type {
@@ -55,18 +61,68 @@ function PencilIcon() {
   );
 }
 
+// Flecha de colapsar/expandir por mes (openspec: add-diary-date-navigation):
+// apunta hacia abajo expandida, hacia la derecha colapsada — mismo lenguaje
+// visual que un `<details>` nativo, sin serlo (acá el estado es propio, no
+// hay conteo de filas ocultas que mostrar en el resumen).
+function ChevronIcon({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+      className={`transition-transform ${expanded ? "" : "-rotate-90"}`}
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
+
+// Etiqueta de un mes 1-12 para las opciones del filtro de Mes — mismo
+// mecanismo (`Intl.DateTimeFormat`) que ya usan los encabezados de
+// `groupByMonth`, sin agregar 12 claves de traducción nuevas. El año es
+// arbitrario (2000): solo se usa para construir una fecha válida, `month`
+// no depende de qué año se elija.
+function monthOptionLabel(month: number, locale: string): string {
+  const date = new Date(Date.UTC(2000, month - 1, 1));
+  // `timeZone: "UTC"` es obligatorio acá: la fecha es un vehículo sintético
+  // para extraer "el nombre local del mes N", sin significado horario propio
+  // — formatearla en la zona horaria del navegador puede correr el mes un
+  // día para atrás en usuarios al oeste de UTC (medianoche UTC del día 1 cae
+  // en el último día del mes anterior en su hora local).
+  const label = new Intl.DateTimeFormat(locale, { month: "long", timeZone: "UTC" }).format(date);
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
 // Estado de filtros de la UI: `""` es "sin filtrar" para los tres `<select>`
 // (más simple que `undefined` para el valor controlado de un elemento nativo).
 // `q` es el valor tal cual lo tipea el usuario, sin debounce — `useDiaryFilters`
 // (más abajo) es quien lo recorta a la versión que efectivamente viaja al servidor.
+// `year`/`month` viven como string (valor nativo de un `<select>` controlado),
+// igual que el resto — `month` solo viaja a la API si `year` también está
+// elegido (openspec: add-diary-date-navigation; el selector de Mes ni
+// siquiera ofrece opciones hasta elegir un Año, ver `filterBar`).
 interface DiaryFiltersState {
   q: string;
   context: ListenContext | "";
   reaction: ListenReaction | "none" | "";
   audience: DiaryAudience | "";
+  year: string;
+  month: string;
 }
 
-const EMPTY_FILTERS: DiaryFiltersState = { q: "", context: "", reaction: "", audience: "" };
+const EMPTY_FILTERS: DiaryFiltersState = {
+  q: "",
+  context: "",
+  reaction: "",
+  audience: "",
+  year: "",
+  month: "",
+};
 
 function toApiFilters(filters: DiaryFiltersState): DiaryFiltersParams {
   const q = filters.q.trim();
@@ -75,11 +131,15 @@ function toApiFilters(filters: DiaryFiltersState): DiaryFiltersParams {
     context: filters.context || undefined,
     reaction: filters.reaction || undefined,
     audience: filters.audience || undefined,
+    year: filters.year ? Number(filters.year) : undefined,
+    month: filters.year && filters.month ? Number(filters.month) : undefined,
   };
 }
 
 function hasActiveFilters(filters: DiaryFiltersState): boolean {
-  return Boolean(filters.q.trim() || filters.context || filters.reaction || filters.audience);
+  return Boolean(
+    filters.q.trim() || filters.context || filters.reaction || filters.audience || filters.year,
+  );
 }
 
 type DiaryPages = InfiniteData<DiaryListResponse, number>;
@@ -116,6 +176,10 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [addToListEntryId, setAddToListEntryId] = useState<string | null>(null);
   const [actionError, setActionError] = useState(false);
+  // Meses colapsados en la Cronología (clave = `monthKey`, la misma que ya usa
+  // `groupByMonth`) — puramente en memoria, no persiste ni toca el backend
+  // (openspec: add-diary-date-navigation). Todo mes arranca expandido.
+  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
   // Confirmación de guardado: sin texto ("Guardado"), un destello ámbar que se
   // apaga solo — el cierre automático del formulario ya dice "esto se guardó";
   // el destello es el refuerzo visual para quien no estaba mirando el botón.
@@ -155,6 +219,39 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
     // llegan los nuevos en vez de vaciar la lista por un instante.
     placeholderData: keepPreviousData,
   });
+
+  // Meses con al menos una escucha, para poblar los filtros de Año y Mes —
+  // nunca ofrecen una combinación garantizada vacía (openspec:
+  // add-diary-date-navigation). Se pide una sola vez; no depende de los
+  // filtros activos (los años/meses disponibles no cambian según lo que el
+  // usuario esté filtrando en este momento).
+  const { data: monthsData } = useQuery({
+    queryKey: queryKeys.myDiaryMonths(),
+    queryFn: getMyDiaryMonths,
+    staleTime: 60_000,
+  });
+  const months = useMemo(() => monthsData?.months ?? [], [monthsData]);
+  const availableYears = useMemo(
+    () => Array.from(new Set(months.map((m) => m.year))).sort((a, b) => b - a),
+    [months],
+  );
+  const availableMonthsForYear = useMemo(() => {
+    if (!filters.year) return [];
+    const year = Number(filters.year);
+    return months
+      .filter((m) => m.year === year)
+      .map((m) => m.month)
+      .sort((a, b) => b - a);
+  }, [months, filters.year]);
+
+  const toggleMonthCollapsed = (key: string) => {
+    setCollapsedMonths((current) => {
+      const next = new Set(current);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
 
   const entries = data?.pages.flatMap((page) => page.entries) ?? initial.entries;
   const monthGroups = useMemo(() => groupByMonth(entries, locale), [entries, locale]);
@@ -426,6 +523,38 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
           <option value="followers">{t("audience.followers")}</option>
           <option value="public">{t("audience.public")}</option>
         </FilterSelect>
+        <FilterSelect
+          value={filters.year}
+          onChange={(value) =>
+            setFilters((current) => {
+              const monthsForYear = months.filter((m) => String(m.year) === value).map((m) => m.month);
+              const monthStillValid = current.month !== "" && monthsForYear.includes(Number(current.month));
+              return { ...current, year: value, month: monthStillValid ? current.month : "" };
+            })
+          }
+          ariaLabel={t("yearLabel")}
+          widthClassName="w-[9ch]"
+        >
+          <option value="">{t("filterAllYear")}</option>
+          {availableYears.map((year) => (
+            <option key={year} value={String(year)}>
+              {year}
+            </option>
+          ))}
+        </FilterSelect>
+        <FilterSelect
+          value={filters.month}
+          onChange={(value) => setFilters((current) => ({ ...current, month: value }))}
+          ariaLabel={t("monthLabel")}
+          widthClassName="w-[11ch]"
+        >
+          <option value="">{t("filterAllMonth")}</option>
+          {availableMonthsForYear.map((month) => (
+            <option key={month} value={String(month)}>
+              {monthOptionLabel(month, locale)}
+            </option>
+          ))}
+        </FilterSelect>
         {isFiltered && (
           <button
             type="button"
@@ -458,16 +587,32 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
         {savedId ? t("savedAnnouncement") : null}
       </span>
       <div className="flex flex-col gap-6">
-        {monthGroups.map((group) => (
-          <div key={group.key} className="flex flex-col gap-2">
-            <h3 className="font-data text-xs uppercase tracking-wide text-paper-muted [&::first-letter]:uppercase">
-              {group.label}
-            </h3>
-            <ul className="divide-y divide-ink-border">
-              {group.entries.map((entry) => renderEntry(entry, showDayById.get(entry.id) ?? true))}
-            </ul>
-          </div>
-        ))}
+        {monthGroups.map((group) => {
+          const collapsed = collapsedMonths.has(group.key);
+          return (
+            <div key={group.key} className="flex flex-col gap-2">
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  aria-expanded={!collapsed}
+                  aria-label={collapsed ? t("expandMonth", { month: group.label }) : t("collapseMonth", { month: group.label })}
+                  onClick={() => toggleMonthCollapsed(group.key)}
+                  className="flex size-5 items-center justify-center rounded text-paper-muted transition-colors hover:text-paper"
+                >
+                  <ChevronIcon expanded={!collapsed} />
+                </button>
+                <h3 className="font-data text-xs uppercase tracking-wide text-paper-muted [&::first-letter]:uppercase">
+                  {group.label}
+                </h3>
+              </div>
+              {!collapsed && (
+                <ul className="divide-y divide-ink-border">
+                  {group.entries.map((entry) => renderEntry(entry, showDayById.get(entry.id) ?? true))}
+                </ul>
+              )}
+            </div>
+          );
+        })}
       </div>
       {hasNextPage && (
         <Button

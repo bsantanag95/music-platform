@@ -101,6 +101,44 @@ describe("diario API (GET/POST)", () => {
     });
   });
 
+  it.each([
+    ["year", "abc"],
+    ["year", "1899"],
+    ["year", "10000"],
+    ["month", "0"],
+    ["month", "13"],
+    ["month", "abc"],
+  ])("GET rechaza %s=%s con VALIDATION_ERROR", async (parameter, value) => {
+    const request = new NextRequest(`http://localhost/api/me/diary?${parameter}=${value}`);
+    const response = await GET(request);
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mocks.listMyDiary).not.toHaveBeenCalled();
+  });
+
+  it("GET filtra por año y mes", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.listMyDiary.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
+    const response = await GET(new NextRequest("http://localhost/api/me/diary?year=2026&month=9"));
+    expect(response.status).toBe(200);
+    expect(mocks.listMyDiary).toHaveBeenCalledWith(
+      user.id,
+      1,
+      20,
+      expect.objectContaining({ year: 2026, month: 9 }),
+    );
+  });
+
+  it("GET propaga el VALIDATION_ERROR del servicio cuando el mes llega sin año", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.listMyDiary.mockRejectedValue(
+      new ApiError("VALIDATION_ERROR", 400, "El filtro de mes requiere un año"),
+    );
+    const response = await GET(new NextRequest("http://localhost/api/me/diary?month=9"));
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: "VALIDATION_ERROR" });
+  });
+
   it("GET sin sesión devuelve 401 AUTH_REQUIRED", async () => {
     mocks.requireUser.mockRejectedValue(new ApiError("AUTH_REQUIRED", 401, "Sesión requerida"));
     const response = await GET(new NextRequest("http://localhost/api/me/diary"));
