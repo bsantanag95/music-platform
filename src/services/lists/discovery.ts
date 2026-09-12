@@ -8,7 +8,7 @@
 
 import { and, count, desc, eq, ilike, isNull, ne, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { appUser, listSave, userBlock, userList } from "@/db/schema";
+import { appUser, listSave, userBlock, userList, userListItem } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { enrichLists } from "./lists";
 import { saveCountsFor, savedStateFor } from "./saved-lists";
@@ -41,6 +41,8 @@ export interface DiscoverListSummary {
   isOfficial: boolean;
   saved: boolean;
   following: boolean;
+  /** El lector es el dueño de esta lista (ver `DiscoverListSummarySchema`). */
+  isOwn: boolean;
   /** Conteo agregado de guardados. Solo lo puebla "Populares". */
   saveCount?: number;
 }
@@ -126,6 +128,7 @@ export async function enrichPublicLists(
       isOfficial: row.isOfficial,
       saved: state?.saved ?? false,
       following: state?.following ?? false,
+      isOwn: readerId !== null && readerId === row.ownerId,
       ...(options.withSaveCount ? { saveCount: saveCounts.get(row.id) ?? 0 } : {}),
     };
   });
@@ -188,6 +191,89 @@ export async function listDiscoverLists(
   // Orden por guardados: TODO parte de la misma visibilidad, con las listas sin
   // guardados al final (LEFT JOIN + conteo 0), a diferencia de la sección
   // "Populares" que exige al menos un guardado.
+  if (sort === "popular") {
+    const saves = count(listSave.saverId);
+    const rows = await db
+      .select({ ...PUBLIC_LIST_COLUMNS, saves })
+      .from(userList)
+      .innerJoin(appUser, eq(userList.ownerId, appUser.id))
+      .leftJoin(listSave, eq(listSave.listId, userList.id))
+      .where(and(...conditions))
+      .groupBy(userList.id, appUser.id)
+      .orderBy(desc(saves), desc(userList.createdAt), desc(userList.id))
+      .limit(pageSize + 1)
+      .offset((page - 1) * pageSize);
+
+    const pageRows = rows.slice(0, pageSize);
+    return {
+      lists: await enrichPublicLists(pageRows, readerId, { withSaveCount: true }),
+      page,
+      pageSize,
+      hasNext: rows.length > pageSize,
+    };
+  }
+
+  const rows = await db
+    .select(PUBLIC_LIST_COLUMNS)
+    .from(userList)
+    .innerJoin(appUser, eq(userList.ownerId, appUser.id))
+    .where(and(...conditions))
+    .orderBy(desc(userList.createdAt), desc(userList.id))
+    .limit(pageSize + 1)
+    .offset((page - 1) * pageSize);
+
+  const pageRows = rows.slice(0, pageSize);
+  return {
+    lists: await enrichPublicLists(pageRows, readerId),
+    page,
+    pageSize,
+    hasNext: rows.length > pageSize,
+  };
+}
+
+function itemColumnFor(type: ListEntityType) {
+  if (type === "artist") return userListItem.artistId;
+  if (type === "release-group") return userListItem.releaseGroupId;
+  return userListItem.recordingId;
+}
+
+/**
+ * Listas públicas (de cualquier usuario, incluido el propio lector) que
+ * contienen un artista, álbum o canción puntual — acción "Mostrar en listas"
+ * (openspec: show-item-in-lists). A diferencia de `listDiscoverLists`, no
+ * excluye las listas del propio lector: acá la pregunta es "¿en qué listas
+ * públicas aparece esto?", no "qué hay nuevo para descubrir", así que las
+ * listas propias sí deben aparecer. Mismo filtro de bloqueos y visibilidad de
+ * perfil, más el filtro por ítem vía `EXISTS` sobre `user_list_item` (sin
+ * JOIN, para no duplicar filas si el ítem apareciera más de una vez en la
+ * misma lista). Por defecto ordena por popularidad (guardados) — mismo
+ * criterio que "Populares" en `listDiscoverLists` — porque tanto el panel
+ * acotado a 4 resultados como la página dedicada quieren mostrar primero las
+ * listas más relevantes de la comunidad, no las más nuevas.
+ */
+export async function listPublicListsContainingItem(
+  readerId: string | null,
+  target: { type: ListEntityType; id: string },
+  page = 1,
+  pageSize = 20,
+  sort: PublicListSort = "popular",
+) {
+  assertPagination(page, pageSize);
+  const itemColumn = itemColumnFor(target.type);
+
+  const conditions: (SQL | undefined)[] = [
+    eq(userList.audience, "public"),
+    eq(userList.moderationStatus, "visible"),
+    eq(appUser.profileVisibility, "public"),
+    isNull(userList.officialWithdrawnAt),
+    eq(userList.entityType, target.type),
+    sql`exists (
+      select 1 from ${userListItem}
+      where ${userListItem.listId} = ${userList.id} and ${itemColumn} = ${target.id}
+    )`,
+    notBlockedByReader(readerId),
+  ];
+
   if (sort === "popular") {
     const saves = count(listSave.saverId);
     const rows = await db

@@ -29,6 +29,12 @@ function makeTrack(
 
 const discLabelEs = (n: number) => catalogEs.album.discLabel.replace("{number}", String(n));
 
+function discLabelsFor(tracks: AlbumTrack[], labelFor: (n: number) => string): Record<number, string> {
+  return Object.fromEntries(
+    Array.from(new Set(tracks.map((track) => track.discNumber))).map((n) => [n, labelFor(n)]),
+  );
+}
+
 describe("TrackList créditos", () => {
   it("muestra créditos destacados como enlaces al perfil del artista", () => {
     const tracks = [
@@ -42,7 +48,7 @@ describe("TrackList créditos", () => {
       <TrackList
         tracks={tracks}
         tracklistHeading={catalogEs.album.tracklistHeading}
-        discLabel={discLabelEs}
+        discLabels={discLabelsFor(tracks, discLabelEs)}
         durationLabel={catalogEs.album.durationLabel}
         durationUnknown={catalogEs.album.durationUnknown}
         creditsLabel={catalogEs.album.creditsLabel}
@@ -65,7 +71,7 @@ describe("TrackList créditos", () => {
       <TrackList
         tracks={tracks}
         tracklistHeading={catalogEs.album.tracklistHeading}
-        discLabel={discLabelEs}
+        discLabels={discLabelsFor(tracks, discLabelEs)}
         durationLabel={catalogEs.album.durationLabel}
         durationUnknown={catalogEs.album.durationUnknown}
         creditsLabel={catalogEs.album.creditsLabel}
@@ -88,7 +94,7 @@ describe("TrackList créditos", () => {
       <TrackList
         tracks={tracks}
         tracklistHeading={catalogEs.album.tracklistHeading}
-        discLabel={discLabelEs}
+        discLabels={discLabelsFor(tracks, discLabelEs)}
         durationLabel={catalogEs.album.durationLabel}
         durationUnknown={catalogEs.album.durationUnknown}
         creditsLabel={catalogEs.album.creditsLabel}

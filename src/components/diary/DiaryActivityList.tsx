@@ -7,6 +7,7 @@ import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { DiaryDateBlock, ProsePanel, TargetTitle, dayKey, monthKey } from "@/components/feed/feed-row-parts";
 import { targetHref } from "@/components/feed/feed-target";
 import { AddToListPanel } from "@/components/lists/AddToListPanel";
+import { ListsContainingItemPanel } from "@/components/lists/ListsContainingItemPanel";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterSelect } from "@/components/ui/FilterSelect";
@@ -175,6 +176,7 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [addToListEntryId, setAddToListEntryId] = useState<string | null>(null);
+  const [showInListsEntryId, setShowInListsEntryId] = useState<string | null>(null);
   const [actionError, setActionError] = useState(false);
   // Meses colapsados en la Cronología (clave = `monthKey`, la misma que ya usa
   // `groupByMonth`) — puramente en memoria, no persiste ni toca el backend
@@ -361,6 +363,7 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
     const pendingDelete = pendingDeleteId === entry.id;
     const deleting = deletingId === entry.id;
     const addingToList = addToListEntryId === entry.id;
+    const showingInLists = showInListsEntryId === entry.id;
 
     return (
       <li
@@ -394,6 +397,9 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
                   <RowMenuItem onSelect={() => void handleLogAnother(entry)}>{t("logAnother")}</RowMenuItem>
                   <RowMenuItem onSelect={() => setAddToListEntryId((current) => (current === entry.id ? null : entry.id))}>
                     {t("addToList")}
+                  </RowMenuItem>
+                  <RowMenuItem onSelect={() => setShowInListsEntryId((current) => (current === entry.id ? null : entry.id))}>
+                    {t("showInLists")}
                   </RowMenuItem>
                   <RowMenuItem danger onSelect={() => setPendingDeleteId(entry.id)}>
                     {t("delete")}
@@ -442,6 +448,15 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
                 <AddToListPanel
                   target={{ type: entry.target.type, id: entry.target.id }}
                   onClose={() => setAddToListEntryId(null)}
+                />
+              </div>
+            )}
+            {showingInLists && (
+              <div className="mt-3">
+                <ListsContainingItemPanel
+                  target={{ type: entry.target.type, id: entry.target.id }}
+                  canSave
+                  onClose={() => setShowInListsEntryId(null)}
                 />
               </div>
             )}

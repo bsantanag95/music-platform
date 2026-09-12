@@ -36,6 +36,7 @@ function list(id: string, title: string): DiscoverListSummary {
     isOfficial: false,
     saved: false,
     following: false,
+    isOwn: false,
   };
 }
 

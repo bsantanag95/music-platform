@@ -81,6 +81,7 @@ describe("DiscoverListsTab", () => {
           isOfficial: false,
           saved: false,
           following: false,
+          isOwn: false,
         },
       ],
       page: 1,

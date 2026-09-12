@@ -32,6 +32,12 @@ function makeTrack(
 const discLabelEs = (n: number) => catalogEs.album.discLabel.replace("{number}", String(n));
 const discLabelEn = (n: number) => catalogEn.album.discLabel.replace("{number}", String(n));
 
+function discLabelsFor(tracks: AlbumTrack[], labelFor: (n: number) => string): Record<number, string> {
+  return Object.fromEntries(
+    Array.from(new Set(tracks.map((track) => track.discNumber))).map((n) => [n, labelFor(n)]),
+  );
+}
+
 describe("TrackList", () => {
   it("renderiza un tracklist de un solo disco con posición, título y duración", () => {
     const tracks = [
@@ -43,7 +49,7 @@ describe("TrackList", () => {
       <TrackList
         tracks={tracks}
         tracklistHeading={catalogEs.album.tracklistHeading}
-        discLabel={discLabelEs}
+        discLabels={discLabelsFor(tracks, discLabelEs)}
         durationLabel={catalogEs.album.durationLabel}
         durationUnknown={catalogEs.album.durationUnknown}
         creditsLabel={catalogEs.album.creditsLabel}
@@ -69,7 +75,7 @@ describe("TrackList", () => {
       <TrackList
         tracks={tracks}
         tracklistHeading={catalogEs.album.tracklistHeading}
-        discLabel={discLabelEs}
+        discLabels={discLabelsFor(tracks, discLabelEs)}
         durationLabel={catalogEs.album.durationLabel}
         durationUnknown={catalogEs.album.durationUnknown}
         creditsLabel={catalogEs.album.creditsLabel}
@@ -89,7 +95,7 @@ describe("TrackList", () => {
       <TrackList
         tracks={tracks}
         tracklistHeading={catalogEs.album.tracklistHeading}
-        discLabel={discLabelEs}
+        discLabels={discLabelsFor(tracks, discLabelEs)}
         durationLabel={catalogEs.album.durationLabel}
         durationUnknown={catalogEs.album.durationUnknown}
         creditsLabel={catalogEs.album.creditsLabel}
@@ -106,7 +112,7 @@ describe("TrackList", () => {
       <TrackList
         tracks={tracks}
         tracklistHeading={catalogEs.album.tracklistHeading}
-        discLabel={discLabelEs}
+        discLabels={discLabelsFor(tracks, discLabelEs)}
         durationLabel={catalogEs.album.durationLabel}
         durationUnknown={catalogEs.album.durationUnknown}
         creditsLabel={catalogEs.album.creditsLabel}
@@ -123,7 +129,7 @@ describe("TrackList", () => {
       <TrackList
         tracks={tracks}
         tracklistHeading={catalogEn.album.tracklistHeading}
-        discLabel={discLabelEn}
+        discLabels={discLabelsFor(tracks, discLabelEn)}
         durationLabel={catalogEn.album.durationLabel}
         durationUnknown={catalogEn.album.durationUnknown}
         creditsLabel={catalogEn.album.creditsLabel}
@@ -136,7 +142,17 @@ describe("TrackList", () => {
   });
 
   it("enlaza cada título con el detalle de su grabación", () => {
-    renderWithIntl(<TrackList tracks={[makeTrack(1, 1, "Breathe", 170)]} tracklistHeading="Tracklist" discLabel={discLabelEs} durationLabel="Duración" durationUnknown="Desconocida" creditsLabel="Créditos" />);
+    const tracks = [makeTrack(1, 1, "Breathe", 170)];
+    renderWithIntl(
+      <TrackList
+        tracks={tracks}
+        tracklistHeading="Tracklist"
+        discLabels={discLabelsFor(tracks, discLabelEs)}
+        durationLabel="Duración"
+        durationUnknown="Desconocida"
+        creditsLabel="Créditos"
+      />,
+    );
     expect(screen.getByRole("link", { name: "Breathe" })).toHaveAttribute("href", "/song/rec-1-1");
   });
 });

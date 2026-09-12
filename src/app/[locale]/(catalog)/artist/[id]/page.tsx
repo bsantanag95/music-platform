@@ -16,6 +16,8 @@ import { MarkAsListened } from "@/components/diary/MarkAsListened";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { FollowArtistButton } from "@/components/catalog/FollowArtistButton";
 import { AddToListButton } from "@/components/lists/AddToListButton";
+import { ShowInListsButton } from "@/components/lists/ShowInListsButton";
+import { ViewAllListsLink } from "@/components/lists/ViewAllListsLink";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
 import { listComments, resolveSocialTarget } from "@/services/social";
@@ -111,6 +113,7 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
         categoryLabels={categoryLabels}
         discographyHeading={t("artist.discographyHeading")}
         coverLabel={t("artist.albumCoverLabel")}
+        authenticated={Boolean(session?.user.id)}
       />
       <div className="flex flex-col items-start gap-3">
         <FollowArtistButton
@@ -121,6 +124,8 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
         <MarkAsListened target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
         <FavoriteButton target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} initialActive={favorited} />
         <AddToListButton target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
+        <ShowInListsButton target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
+        <ViewAllListsLink target={{ type: "artist", id: artist.id }} />
       </div>
       <ArtistMemberships
         memberships={memberships}

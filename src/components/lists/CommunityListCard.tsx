@@ -61,7 +61,7 @@ export function CommunityListCard({
         </>
       }
       action={
-        canSave ? (
+        canSave && !list.isOwn ? (
           <SaveListButton
             key={`${list.id}:${list.saved}:${list.following}`}
             listId={list.id}

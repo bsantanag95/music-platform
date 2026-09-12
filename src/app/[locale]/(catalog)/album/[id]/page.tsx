@@ -13,6 +13,8 @@ import { SocialSection } from "@/components/social/SocialSection";
 import { MarkAsListened } from "@/components/diary/MarkAsListened";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { AddToListButton } from "@/components/lists/AddToListButton";
+import { ShowInListsButton } from "@/components/lists/ShowInListsButton";
+import { ViewAllListsLink } from "@/components/lists/ViewAllListsLink";
 import { CollectionAlbumAction } from "@/components/collection/CollectionAlbumAction";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
@@ -125,6 +127,11 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
               target={{ type: "release-group", id: detail.releaseGroup.id }}
               authenticated={Boolean(session?.user.id)}
             />
+            <ShowInListsButton
+              target={{ type: "release-group", id: detail.releaseGroup.id }}
+              authenticated={Boolean(session?.user.id)}
+            />
+            <ViewAllListsLink target={{ type: "release-group", id: detail.releaseGroup.id }} />
             <CollectionAlbumAction
               releaseGroupId={detail.releaseGroup.id}
               authenticated={Boolean(session?.user.id)}
@@ -136,10 +143,16 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
       <TrackList
         tracks={detail.tracks}
         tracklistHeading={t("album.tracklistHeading")}
-        discLabel={(n) => t("album.discLabel", { number: n })}
+        discLabels={Object.fromEntries(
+          Array.from(new Set(detail.tracks.map((track) => track.discNumber))).map((n) => [
+            n,
+            t("album.discLabel", { number: n }),
+          ]),
+        )}
         durationLabel={t("album.durationLabel")}
         durationUnknown={t("album.durationUnknown")}
         creditsLabel={t("album.creditsLabel")}
+        authenticated={Boolean(session?.user.id)}
       />
       <SocialSection target="release-group" targetId={detail.releaseGroup.id} ratings={ratings} comments={comments} reviews={reviews} userId={session?.user.id} canModerate={canModerate} />
     </main>
