@@ -4,14 +4,16 @@ import { keepPreviousData, useInfiniteQuery, useQueryClient, type InfiniteData }
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
-import { ProsePanel, RelativeDate, TargetTitle } from "@/components/feed/feed-row-parts";
+import { DiaryDateBlock, ProsePanel, TargetTitle, dayKey, monthKey } from "@/components/feed/feed-row-parts";
 import { targetHref } from "@/components/feed/feed-target";
+import { AddToListPanel } from "@/components/lists/AddToListPanel";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterSelect } from "@/components/ui/FilterSelect";
+import { RowMenu, RowMenuItem } from "@/components/ui/RowMenu";
 import { ListenEntryForm } from "./ListenEntryForm";
-import { ReactionBadge } from "./ReactionBadge";
-import { deleteListenEntry, getMyDiary, type DiaryFiltersParams } from "@/lib/api/diary";
+import { ReactionGlyph } from "./ReactionBadge";
+import { createListenEntry, deleteListenEntry, getMyDiary, type DiaryFiltersParams } from "@/lib/api/diary";
 import { ApiError } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
 import type {
@@ -29,15 +31,28 @@ interface DiaryActivityListProps {
   empty?: { title: string; description: string };
 }
 
-// Presentación en fila del diario propio: la misma anatomía que /me/feed (celda
-// de carátula/disco, título como ancla, fecha relativa) — no la variante compacta
-// "self" sin celda, pensada para un aside dentro de Inicio, no para la página
-// dedicada. Editable, a diferencia de `FeedActivityList`, que es de solo lectura
-// en sus tres superficies. Cada entrada es siempre su propia fila: nunca se
-// agrupan escuchas, porque acá hay que poder editar o borrar una entrada puntual
-// (ver openspec/changes/redesign-diary, design.md decisiones 1 y 2).
+// Presentación en fila del diario propio (openspec: redesign-diary-row):
+// carátula/disco, día deduplicado dentro de su mes, título como ancla con la
+// reacción a su derecha (no en una columna fija propia — así su ausencia no
+// corre el resto de la fila), y acciones como íconos: lápiz (editar, siempre
+// visible) + menú "···" (Eliminar, Registrar otra escucha, Agregar a lista).
+// Única vista: Cronología (agrupada por mes) — la vista de Lista plana se
+// retiró tras el primer pase de este cambio, ver design.md. Editable, a
+// diferencia de `FeedActivityList`, que es de solo lectura en sus tres
+// superficies. Cada entrada es siempre su propia fila: nunca se agrupan
+// escuchas, porque acá hay que poder editar o borrar una entrada puntual (ver
+// openspec/changes/archive/redesign-diary, design.md decisiones 1 y 2).
 function coverForEntry(entry: ListenEntry): string | null {
   return entry.target.type === "release-group" ? entry.target.coverThumbUrl : null;
+}
+
+function PencilIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
 }
 
 // Estado de filtros de la UI: `""` es "sin filtrar" para los tres `<select>`
@@ -78,7 +93,7 @@ function groupByMonth(entries: ListenEntry[], locale: string) {
   const groups: { key: string; label: string; entries: ListenEntry[] }[] = [];
   for (const entry of entries) {
     const date = new Date(entry.createdAt);
-    const key = `${date.getFullYear()}-${date.getMonth()}`;
+    const key = monthKey(date);
     const last = groups[groups.length - 1];
     if (!last || last.key !== key) {
       groups.push({ key, label: formatter.format(date), entries: [entry] });
@@ -93,13 +108,13 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
   const t = useTranslations("diary");
   const locale = useLocale();
   const queryClient = useQueryClient();
-  const [view, setView] = useState<"list" | "timeline">("list");
 
   const [filters, setFilters] = useState<DiaryFiltersState>(EMPTY_FILTERS);
   const [searchInput, setSearchInput] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [addToListEntryId, setAddToListEntryId] = useState<string | null>(null);
   const [actionError, setActionError] = useState(false);
   // Confirmación de guardado: sin texto ("Guardado"), un destello ámbar que se
   // apaga solo — el cierre automático del formulario ya dice "esto se guardó";
@@ -142,10 +157,21 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
   });
 
   const entries = data?.pages.flatMap((page) => page.entries) ?? initial.entries;
-  const monthGroups = useMemo(
-    () => (view === "timeline" ? groupByMonth(entries, locale) : []),
-    [view, entries, locale],
-  );
+  const monthGroups = useMemo(() => groupByMonth(entries, locale), [entries, locale]);
+  // Día a mostrar por fila: solo cuando cambia respecto a la fila anterior
+  // *del mismo grupo de mes* (openspec: redesign-diary-row) — dos escuchas
+  // consecutivas del mismo día muestran el número una sola vez.
+  const showDayById = useMemo(() => {
+    const map = new Map<string, boolean>();
+    for (const group of monthGroups) {
+      group.entries.forEach((entry, index) => {
+        const previous = group.entries[index - 1];
+        const showDay = index === 0 || dayKey(new Date(entry.createdAt)) !== dayKey(new Date(previous!.createdAt));
+        map.set(entry.id, showDay);
+      });
+    }
+    return map;
+  }, [monthGroups]);
 
   const updateCachedEntry = (updated: ListenEntry) => {
     queryClient.setQueryData<DiaryPages>(queryKey, (old) =>
@@ -175,6 +201,21 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
     );
   };
 
+  // Agrega una entrada nueva al principio de la primera página cargada (openspec:
+  // redesign-diary-row, "Registrar otra escucha" desde la fila) — la entrada
+  // recién creada es siempre la más reciente, así que va al frente sin romper
+  // el orden cronológico descendente.
+  const addCachedEntry = (created: ListenEntry) => {
+    queryClient.setQueryData<DiaryPages>(queryKey, (old) => {
+      if (!old || old.pages.length === 0) return old;
+      const [firstPage, ...rest] = old.pages;
+      return {
+        ...old,
+        pages: [{ ...firstPage!, entries: [created, ...firstPage!.entries] }, ...rest],
+      };
+    });
+  };
+
   const handleDelete = async (entry: ListenEntry) => {
     setDeletingId(entry.id);
     setActionError(false);
@@ -195,6 +236,17 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
     }
   };
 
+  const handleLogAnother = async (entry: ListenEntry) => {
+    setActionError(false);
+    try {
+      const created = await createListenEntry({ type: entry.target.type, id: entry.target.id });
+      addCachedEntry(created);
+      setExpandedId(created.id);
+    } catch {
+      setActionError(true);
+    }
+  };
+
   const handleLoadMore = () => {
     setActionError(false);
     fetchNextPage().catch(() => setActionError(true));
@@ -205,13 +257,13 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
     setFilters(EMPTY_FILTERS);
   };
 
-  // Una fila del diario, compartida por la vista de lista y la de cronología
-  // (la cronología solo la reagrupa bajo encabezados de mes).
-  const renderEntry = (entry: ListenEntry) => {
+  // Una fila del diario, dentro de un grupo de mes de la vista de Cronología.
+  const renderEntry = (entry: ListenEntry, showDay: boolean) => {
     const body = entry.body != null && entry.body.trim() !== "" ? entry.body : null;
     const expanded = expandedId === entry.id;
     const pendingDelete = pendingDeleteId === entry.id;
     const deleting = deletingId === entry.id;
+    const addingToList = addToListEntryId === entry.id;
 
     return (
       <li
@@ -221,44 +273,35 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
         }`}
       >
         <div className="flex gap-3 sm:gap-4">
+          <DiaryDateBlock iso={entry.createdAt} showDay={showDay} />
           <CoverThumb cover={coverForEntry(entry)} label="" className="size-11 sm:size-12" />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
               <span className="flex min-w-0 items-baseline gap-1 font-data text-xs text-paper-muted">
                 <span>{t(`context.${entry.listenContext}`)}</span>
-                {entry.reaction ? (
-                  <>
-                    <span aria-hidden="true">·</span>
-                    <ReactionBadge reaction={entry.reaction} />
-                  </>
-                ) : null}
               </span>
               <span className="flex shrink-0 items-center gap-2">
                 <span className="font-data text-xs text-paper-muted">
                   {t(`audience.${entry.audience}`)}
                 </span>
-                <span aria-hidden="true">·</span>
-                <RelativeDate iso={entry.createdAt} />
-                <span aria-hidden="true">·</span>
+                <ReactionGlyph reaction={entry.reaction} />
                 <button
                   type="button"
-                  className="font-data text-xs text-paper-muted underline decoration-dotted underline-offset-2 transition-colors hover:text-paper"
+                  aria-label={t("edit")}
+                  className="flex size-6 items-center justify-center rounded text-paper-muted transition-colors hover:text-paper"
                   onClick={() => setExpandedId((current) => (current === entry.id ? null : entry.id))}
                 >
-                  {expanded ? t("collapse") : t("edit")}
+                  <PencilIcon />
                 </button>
-                {!pendingDelete && (
-                  <>
-                    <span aria-hidden="true">·</span>
-                    <button
-                      type="button"
-                      className="font-data text-xs text-paper-muted underline decoration-dotted underline-offset-2 transition-colors hover:text-danger"
-                      onClick={() => setPendingDeleteId(entry.id)}
-                    >
-                      {t("delete")}
-                    </button>
-                  </>
-                )}
+                <RowMenu label={t("moreActions")}>
+                  <RowMenuItem onSelect={() => void handleLogAnother(entry)}>{t("logAnother")}</RowMenuItem>
+                  <RowMenuItem onSelect={() => setAddToListEntryId((current) => (current === entry.id ? null : entry.id))}>
+                    {t("addToList")}
+                  </RowMenuItem>
+                  <RowMenuItem danger onSelect={() => setPendingDeleteId(entry.id)}>
+                    {t("delete")}
+                  </RowMenuItem>
+                </RowMenu>
               </span>
             </div>
             {pendingDelete && (
@@ -292,10 +335,19 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
                 href={targetHref(entry.target.type, entry.target.id)}
                 label={entry.target.title}
                 artist={entry.target.subtitle}
+                artistHref={entry.target.artistId ? targetHref("artist", entry.target.artistId) : null}
                 layout="inline"
               />
             </div>
             {body ? <ProsePanel body={body} variant="impression" /> : null}
+            {addingToList && (
+              <div className="mt-3">
+                <AddToListPanel
+                  target={{ type: entry.target.type, id: entry.target.id }}
+                  onClose={() => setAddToListEntryId(null)}
+                />
+              </div>
+            )}
             {expanded && (
               <div className="mt-3">
                 <ListenEntryForm
@@ -383,23 +435,6 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
             {t("clearFilters")}
           </button>
         )}
-        {/* Conmutador Lista / Cronología: la cronología agrupa las mismas filas
-            por mes, no es un resumen (openspec: deepen-listening-diary, D4). */}
-        <span className="ml-auto inline-flex overflow-hidden rounded-md border border-ink-border font-data text-xs">
-          {(["list", "timeline"] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              aria-pressed={view === mode}
-              onClick={() => setView(mode)}
-              className={`px-2.5 py-1 transition-colors ${
-                view === mode ? "bg-amber/10 text-paper" : "text-paper-muted hover:text-paper"
-              }`}
-            >
-              {mode === "list" ? t("viewList") : t("viewTimeline")}
-            </button>
-          ))}
-        </span>
       </div>
     </div>
   );
@@ -422,20 +457,18 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
       <span role="status" aria-live="polite" className="sr-only">
         {savedId ? t("savedAnnouncement") : null}
       </span>
-      {view === "list" ? (
-        <ul className="divide-y divide-ink-border">{entries.map(renderEntry)}</ul>
-      ) : (
-        <div className="flex flex-col gap-6">
-          {monthGroups.map((group) => (
-            <div key={group.key} className="flex flex-col gap-2">
-              <h3 className="font-data text-xs uppercase tracking-wide text-paper-muted [&::first-letter]:uppercase">
-                {group.label}
-              </h3>
-              <ul className="divide-y divide-ink-border">{group.entries.map(renderEntry)}</ul>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="flex flex-col gap-6">
+        {monthGroups.map((group) => (
+          <div key={group.key} className="flex flex-col gap-2">
+            <h3 className="font-data text-xs uppercase tracking-wide text-paper-muted [&::first-letter]:uppercase">
+              {group.label}
+            </h3>
+            <ul className="divide-y divide-ink-border">
+              {group.entries.map((entry) => renderEntry(entry, showDayById.get(entry.id) ?? true))}
+            </ul>
+          </div>
+        ))}
+      </div>
       {hasNextPage && (
         <Button
           variant="secondary"

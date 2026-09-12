@@ -26,10 +26,11 @@
     "registerAnother": "Registrar otra",
     "viewDiary": "Ver mi diario"
   },
-  "viewList": "Lista",
-  "viewTimeline": "Cronología",
   "expand": "Ampliar",
   "edit": "Editar",
+  "moreActions": "Más acciones",
+  "logAnother": "Registrar otra escucha",
+  "addToList": "Agregar a lista",
   "collapse": "Cerrar",
   "bodyLabel": "Impresión (opcional)",
   "bodyPlaceholder": "Este bajo está ridículamente bueno...",

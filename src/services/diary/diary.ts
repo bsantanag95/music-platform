@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { artist, appUser, listenEntry, recording, releaseGroup, userFollow } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import type { SocialTargetType } from "@/lib/api/schemas";
-import { PRIMARY_ARTIST_SQL } from "@/services/feed/feed";
+import { PRIMARY_ARTIST_ID_SQL, PRIMARY_ARTIST_SQL } from "@/services/feed/feed";
 import { getProfileByUsername } from "@/services/social/profiles";
 import {
   DIARY_BODY_MAX,
@@ -28,6 +28,11 @@ export interface DiaryTargetInfo {
   id: string;
   title: string;
   subtitle: string | null;
+  // Id del artista acreditado como principal, para enlazar `subtitle` a su
+  // página (openspec: redesign-diary-row, extendiendo add-feed-artist-link al
+  // diario propio) — null para objetivos de tipo artista (el título ya
+  // enlaza ahí) o cuando no hay artista acreditado.
+  artistId: string | null;
   coverThumbUrl: string | null;
 }
 
@@ -351,6 +356,7 @@ function selectEntries() {
       recordingId: listenEntry.recordingId,
       artistName: artist.name,
       creditedArtist: PRIMARY_ARTIST_SQL(listenEntry.releaseGroupId, listenEntry.recordingId),
+      creditedArtistId: PRIMARY_ARTIST_ID_SQL(listenEntry.releaseGroupId, listenEntry.recordingId),
       releaseTitle: releaseGroup.title,
       releaseCover: releaseGroup.coverThumbUrl,
       recordingTitle: recording.title,
@@ -373,17 +379,18 @@ function serializeEntry(row: {
   recordingId: string | null;
   artistName: string | null;
   creditedArtist?: string | null;
+  creditedArtistId?: string | null;
   releaseTitle: string | null;
   releaseCover: string | null;
   recordingTitle: string | null;
 }): DiaryEntry {
   let target: DiaryTargetInfo;
   if (row.artistId) {
-    target = { type: "artist", id: row.artistId, title: row.artistName ?? "", subtitle: null, coverThumbUrl: null };
+    target = { type: "artist", id: row.artistId, title: row.artistName ?? "", subtitle: null, artistId: null, coverThumbUrl: null };
   } else if (row.releaseGroupId) {
-    target = { type: "release-group", id: row.releaseGroupId, title: row.releaseTitle ?? "", subtitle: row.creditedArtist ?? null, coverThumbUrl: row.releaseCover };
+    target = { type: "release-group", id: row.releaseGroupId, title: row.releaseTitle ?? "", subtitle: row.creditedArtist ?? null, artistId: row.creditedArtistId ?? null, coverThumbUrl: row.releaseCover };
   } else {
-    target = { type: "recording", id: row.recordingId ?? "", title: row.recordingTitle ?? "", subtitle: row.creditedArtist ?? null, coverThumbUrl: null };
+    target = { type: "recording", id: row.recordingId ?? "", title: row.recordingTitle ?? "", subtitle: row.creditedArtist ?? null, artistId: row.creditedArtistId ?? null, coverThumbUrl: null };
   }
   return {
     id: row.id,
