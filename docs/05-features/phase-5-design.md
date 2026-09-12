@@ -253,8 +253,12 @@ actualización cuando una actividad cambia de audiencia.
 El Header separa dos zonas (cambio `regroup-authenticated-header`, spec
 `cross-view-navigation`):
 
-- **Barra general** — solo lo que el sitio ofrece a cualquiera: buscador del catálogo y, con
-  el catálogo editorial habilitado, Explorar. No lleva enlaces `/me/*` en el nivel superior.
+- **Barra general** — solo lo que el sitio ofrece a cualquiera: buscador del catálogo,
+  Listas (`/lists`, pública, distinta de `/me/lists`), Actividad (`/activity`, pública,
+  distinta de `/me/feed`), el control **"+ Registrar"** (solo con sesión, abre el modal de
+  registro de escucha — `add-global-listen-logging`) y, con el catálogo editorial
+  habilitado, Explorar. Con permisos de moderación o edición editorial, suma Moderación y/o
+  Administración. No lleva enlaces `/me/*` en el nivel superior.
 - **Menú de usuario** — desplegable anclado al nombre visible (se abre al posar el cursor en
   escritorio, con cheurón hacia abajo; clic/teclado como alternativa) que agrupa todo lo que
   identifica a la persona: mi perfil, diario, favoritos, listas, colección, artistas
@@ -265,8 +269,10 @@ Los destinos del menú y los del panel del dueño (`OwnerHubPanel`) salen de una
 (`src/components/layout/user-menu-items.ts`). En móvil el Header colapsa en un panel con la
 misma división: bloque de barra general y bloque de usuario.
 
-Fuera de alcance de ese cambio, para un sprint posterior: un acceso global `+ Registrar` en
-el Header y las Listas públicas / Miembros con enfoque de exploración en la barra general.
+La búsqueda de usuarios ("Miembros") quedó deliberadamente fuera de la barra general —
+decisión de `redesign-users-search`, con acceso desde Home y Footer en su lugar (ver
+sección 8 más arriba). Con "+ Registrar" y las Listas públicas ya en el Header, no queda
+ningún pendiente de este apartado.
 
 ### 10.2 Páginas existentes
 
