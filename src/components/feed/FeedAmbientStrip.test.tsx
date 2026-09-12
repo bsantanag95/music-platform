@@ -24,17 +24,6 @@ vi.mock("@/i18n/navigation", () => ({
   ),
 }));
 
-const artistGroup: AmbientGroup = {
-  kind: "follow-artist",
-  author: { username: "ana", displayName: "Ana" },
-  count: 2,
-  sample: [
-    { label: "Radiohead", href: "/artist/a1" },
-    { label: "Pink Floyd", href: "/artist/a2" },
-  ],
-  lastAt: "2026-09-08T00:00:00Z",
-};
-
 const collectionGroup: AmbientGroup = {
   kind: "collection",
   author: { username: "leo", displayName: null },
@@ -47,6 +36,14 @@ const collectionGroup: AmbientGroup = {
   lastAt: "2026-09-06T00:00:00Z",
 };
 
+const otherCollectionGroup: AmbientGroup = {
+  kind: "collection",
+  author: { username: "ana", displayName: "Ana" },
+  count: 1,
+  sample: [{ label: "In Rainbows", href: "/album/rg4" }],
+  lastAt: "2026-09-08T00:00:00Z",
+};
+
 describe("FeedAmbientStrip", () => {
   it("no renderiza nada cuando no hay grupos", async () => {
     const { container } = renderWithIntl(await FeedAmbientStrip({ groups: [] }));
@@ -54,12 +51,11 @@ describe("FeedAmbientStrip", () => {
   });
 
   it("una línea por grupo: autor enlazado, verbo del tipo e ítems enlazados", async () => {
-    renderWithIntl(await FeedAmbientStrip({ groups: [artistGroup] }));
+    renderWithIntl(await FeedAmbientStrip({ groups: [otherCollectionGroup] }));
 
     expect(screen.getByRole("link", { name: "Ana" })).toHaveAttribute("href", "/users/ana");
-    expect(screen.getByText("ambient.followArtistVerb")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Radiohead" })).toHaveAttribute("href", "/artist/a1");
-    expect(screen.getByRole("link", { name: "Pink Floyd" })).toHaveAttribute("href", "/artist/a2");
+    expect(screen.getByText("ambient.collectionVerb")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "In Rainbows" })).toHaveAttribute("href", "/album/rg4");
     // sin "y N más": count == sample.length
     expect(screen.queryByText(/ambient\.andMore/)).not.toBeInTheDocument();
   });
@@ -73,12 +69,13 @@ describe("FeedAmbientStrip", () => {
     expect(screen.getByText(/@leo/)).toBeInTheDocument();
   });
 
-  it("renderiza los dos verbos según el tipo de grupo (seguir usuario ya no es fuente acá)", async () => {
+  it("renderiza una línea por autor, sin mezclar (seguir artista ya no es fuente acá)", async () => {
     const { container } = renderWithIntl(
-      await FeedAmbientStrip({ groups: [artistGroup, collectionGroup] }),
+      await FeedAmbientStrip({ groups: [collectionGroup, otherCollectionGroup] }),
     );
 
-    expect(container.textContent).toContain("ambient.followArtistVerb");
-    expect(container.textContent).toContain("ambient.collectionVerb");
+    expect(screen.getByRole("link", { name: "Ana" })).toBeInTheDocument();
+    expect(screen.getByText(/@leo/)).toBeInTheDocument();
+    expect(container.textContent?.match(/ambient\.collectionVerb/g)).toHaveLength(2);
   });
 });

@@ -7,16 +7,16 @@ interface FeedAmbientStripProps {
 }
 
 const VERB_KEY: Record<AmbientGroup["kind"], string> = {
-  "follow-artist": "ambient.followArtistVerb",
   collection: "ambient.collectionVerb",
 };
 
 // Franja "También en tu red" al pie de `/me/feed` (openspec:
 // add-feed-ambient-events; "seguir usuario" se retiró de acá en
-// add-feed-kind-differentiation): el tratamiento minimizado del tier 4 —seguir
-// artista, sumar a la colección—, agrupado por autor, una línea por grupo.
-// De-enfatizada respecto del listado cronológico: encabezado chico, texto
-// `font-data` muted, sin carátula. Colapsa entera si no hay eventos.
+// add-feed-kind-differentiation, "seguir artista" en
+// add-artist-follow-feed-entry): el tratamiento minimizado del tier 4 —sumar a
+// la colección—, agrupado por autor, una línea por grupo. De-enfatizada
+// respecto del listado cronológico: encabezado chico, texto `font-data`
+// muted, sin carátula. Colapsa entera si no hay eventos.
 export async function FeedAmbientStrip({ groups }: FeedAmbientStripProps) {
   if (groups.length === 0) return null;
 

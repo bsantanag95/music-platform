@@ -107,7 +107,8 @@ describe("servicio de datos de Inicio", () => {
           authorDisplayName: author.displayName,
         }]))
         .mockReturnValueOnce(sourceQuery([]))  // reseñas
-        .mockReturnValueOnce(sourceQuery([]));  // follows
+        .mockReturnValueOnce(sourceQuery([]))  // follows
+        .mockReturnValueOnce(sourceQuery([]));  // follow-artist
 
       const result = await listMyRecentActivity(author.id, 1, 5);
 
@@ -137,7 +138,8 @@ describe("servicio de datos de Inicio", () => {
           authorUsername: author.username,
           authorDisplayName: author.displayName,
         }]))
-        .mockReturnValueOnce(sourceQuery([])); // follows
+        .mockReturnValueOnce(sourceQuery([])) // follows
+        .mockReturnValueOnce(sourceQuery([])); // follow-artist
 
       const result = await listMyRecentActivity(author.id, 1, 5);
 
@@ -156,12 +158,37 @@ describe("servicio de datos de Inicio", () => {
         .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]));
 
       const result = await listMyRecentActivity(author.id, 1, 5);
 
       expect(result.entries).toHaveLength(1);
       expect(result.entries[0]).toMatchObject({ kind: "listen", audience: "private" });
+    });
+
+    it("expone el álbum de una escucha propia, para la detección de barrido (add-feed-album-sweep)", async () => {
+      mocks.db.select
+        .mockReturnValueOnce(sourceQuery([{
+          ...listenRow("00000000-0000-4000-8000-00000000000e", "2026-02-05T00:00:00Z"),
+          artistId: null,
+          recordingAlbumId: "00000000-0000-4000-8000-00000000000f",
+          recordingAlbumTitle: "Man's Best Friend",
+        }]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]));
+
+      const result = await listMyRecentActivity(author.id, 1, 5);
+
+      expect(result.entries).toHaveLength(1);
+      const entry = result.entries[0]!;
+      expect("target" in entry ? entry.target : null).toMatchObject({
+        albumId: "00000000-0000-4000-8000-00000000000f",
+        albumTitle: "Man's Best Friend",
+      });
     });
 
     it("incluye los seguimientos propios, sin regla de visibilidad (es la propia actividad)", async () => {
@@ -178,7 +205,8 @@ describe("servicio de datos de Inicio", () => {
           followedId: "00000000-0000-4000-8000-000000000031",
           followedUsername: "ana",
           followedDisplayName: "Ana",
-        }]));
+        }]))
+        .mockReturnValueOnce(sourceQuery([])); // follow-artist
 
       const result = await listMyRecentActivity(author.id, 1, 5);
 
@@ -189,8 +217,34 @@ describe("servicio de datos de Inicio", () => {
       });
     });
 
+    it("incluye los seguimientos de artista propios, sin regla de visibilidad", async () => {
+      mocks.db.select
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([])) // follows
+        .mockReturnValueOnce(sourceQuery([{
+          id: "00000000-0000-4000-8000-000000000032",
+          createdAt: new Date("2026-02-09T00:00:00Z"),
+          authorUsername: author.username,
+          authorDisplayName: author.displayName,
+          artistId: "00000000-0000-4000-8000-000000000033",
+          artistName: "Radiohead",
+        }])); // follow-artist
+
+      const result = await listMyRecentActivity(author.id, 1, 5);
+
+      expect(result.entries).toHaveLength(1);
+      expect(result.entries[0]).toMatchObject({
+        kind: "follow-artist",
+        artist: { id: "00000000-0000-4000-8000-000000000033", name: "Radiohead" },
+      });
+    });
+
     it("devuelve lista vacía cuando no hay actividad propia", async () => {
       mocks.db.select
+        .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]))
@@ -209,6 +263,7 @@ describe("servicio de datos de Inicio", () => {
           listenRow("00000000-0000-4000-8000-00000000000f", "2026-02-06T00:00:00Z"),
           listenRow("00000000-0000-4000-8000-000000000010", "2026-02-05T00:00:00Z"),
         ]))
+        .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]))

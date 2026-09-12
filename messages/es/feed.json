@@ -22,6 +22,7 @@
   "reviewVerb": "Reseñó",
   "reviewVerbTitled": "Reseñó · «{title}»",
   "followVerb": "siguió a",
+  "followArtistVerb": "empezó a seguir a",
   "list": {
     "created": "Creó una lista",
     "updated": "Actualizó una lista"
@@ -31,6 +32,7 @@
   "groupRatings": "{count, plural, one {valoró # disco} other {valoró # discos}}",
   "groupSongRatings": "{count, plural, one {valoró # canción} other {valoró # canciones}}",
   "groupFollows": "{count, plural, one {siguió a # persona} other {siguió a # personas}}",
+  "groupFollowArtists": "{count, plural, one {empezó a seguir a # artista} other {empezó a seguir a # artistas}}",
   "rotationPeak": "En rotación · {count, plural, one {# registro} other {# registros}} esta semana",
   "convergence": {
     "title": "En tu red esta semana",
@@ -39,7 +41,6 @@
   },
   "ambient": {
     "title": "También en tu red",
-    "followArtistVerb": "siguió a",
     "collectionVerb": "sumó a su colección:",
     "andMore": "y {count} más"
   },

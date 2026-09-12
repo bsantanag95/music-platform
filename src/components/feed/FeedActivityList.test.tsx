@@ -56,6 +56,7 @@ function favorite(): FeedEntry {
       id: "rg2",
       title: "Appetite for Destruction",
       artistName: "Guns N' Roses",
+      artistId: "art-gnr",
       coverThumbUrl: "https://cover/2.jpg",
     },
     author,
@@ -111,6 +112,17 @@ function follow(overrides: Partial<Extract<FeedEntry, { kind: "follow" }>> = {})
   };
 }
 
+function followArtist(overrides: Partial<Extract<FeedEntry, { kind: "follow-artist" }>> = {}): FeedEntry {
+  return {
+    kind: "follow-artist",
+    id: "fa1",
+    createdAt: "2026-08-07T00:00:00Z",
+    author,
+    artist: { id: "art9", name: "Radiohead" },
+    ...overrides,
+  };
+}
+
 function listen(overrides: Partial<Extract<FeedEntry, { kind: "listen" }>> = {}): FeedEntry {
   return {
     kind: "listen",
@@ -126,6 +138,47 @@ function listen(overrides: Partial<Extract<FeedEntry, { kind: "listen" }>> = {})
       title: "Fear of the Dark",
       subtitle: null,
       artistName: "Iron Maiden",
+      coverThumbUrl: null,
+    },
+    author,
+    ...overrides,
+  };
+}
+
+function albumSongRating(songId: string, overrides: Partial<Extract<FeedEntry, { kind: "rating" }>> = {}): FeedEntry {
+  return {
+    kind: "rating",
+    id: `sweep-${songId}`,
+    stars: "4.0",
+    detailedScore: null,
+    createdAt: "2026-08-09T00:00:00Z",
+    target: {
+      type: "recording",
+      id: songId,
+      title: `Tema ${songId}`,
+      artistName: "Sabrina Carpenter",
+      albumId: "alb-9",
+      albumTitle: "Man's Best Friend",
+      coverThumbUrl: null,
+    },
+    author,
+    ...overrides,
+  };
+}
+
+function albumSongFavorite(songId: string, overrides: Partial<Extract<FeedEntry, { kind: "favorite" }>> = {}): FeedEntry {
+  return {
+    kind: "favorite",
+    id: `sweep-fav-${songId}`,
+    targetType: "recording",
+    audience: "public",
+    createdAt: "2026-08-09T00:00:00Z",
+    target: {
+      id: songId,
+      title: `Tema ${songId}`,
+      artistName: "Sabrina Carpenter",
+      albumId: "alb-9",
+      albumTitle: "Man's Best Friend",
       coverThumbUrl: null,
     },
     author,
@@ -180,6 +233,47 @@ describe("FeedActivityList", () => {
     expect(screen.getByText("Guns N' Roses")).toBeInTheDocument();
   });
 
+  describe("enlace al artista acreditado (add-feed-artist-link)", () => {
+    it("el nombre del artista es un enlace a su página cuando el objetivo es un álbum o canción", () => {
+      renderWithIntl(<FeedActivityList entries={[favorite()]} />);
+
+      expect(screen.getByRole("link", { name: "Guns N' Roses" })).toHaveAttribute(
+        "href",
+        "/artist/art-gnr",
+      );
+    });
+
+    it("sin artistId (fuente que no lo puebla), el nombre del artista se muestra como texto plano", () => {
+      renderWithIntl(
+        <FeedActivityList
+          entries={[
+            rating({
+              target: { type: "release-group", id: "rgx", title: "Disco", artistName: "Sin id", coverThumbUrl: null },
+            }),
+          ]}
+        />,
+      );
+
+      expect(screen.getByText("Sin id")).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: "Sin id" })).not.toBeInTheDocument();
+    });
+
+    it("un objetivo de tipo artista no duplica el enlace (el título ya enlaza ahí)", () => {
+      renderWithIntl(
+        <FeedActivityList
+          entries={[
+            comment({
+              target: { type: "artist", id: "art9", title: "Radiohead", artistName: null, coverThumbUrl: null },
+            }),
+          ]}
+        />,
+      );
+
+      // un solo enlace "Radiohead": el del título, no uno adicional de artista
+      expect(screen.getAllByRole("link", { name: "Radiohead" })).toHaveLength(1);
+    });
+  });
+
   it("un rating se muestra con el medidor VU y el valor numérico (estrellas + score)", () => {
     renderWithIntl(<FeedActivityList entries={[rating()]} />);
 
@@ -221,6 +315,90 @@ describe("FeedActivityList", () => {
     expect(screen.getByRole("link", { name: "Tres" })).toBeInTheDocument();
     // una sola fila: ninguna celda de carátula
     expect(screen.queryByTestId("cover-thumb")).not.toBeInTheDocument();
+  });
+
+  describe("tramo de álbum: agrupación por tipo no contigua (add-feed-album-sweep)", () => {
+    it("3 canciones valoradas del mismo álbum se agrupan con la fila genérica ya existente", () => {
+      renderWithIntl(
+        <FeedActivityList
+          entries={[
+            albumSongRating("s1"),
+            albumSongRating("s2"),
+            albumSongRating("s3"),
+          ]}
+        />,
+      );
+
+      expect(screen.getByText(/valoró 3 canciones/)).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Tema s1" })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Tema s3" })).toBeInTheDocument();
+    });
+
+    it("escucha + rating por canción se agrupan por tipo, aunque nunca hay dos seguidas del mismo kind", () => {
+      renderWithIntl(
+        <FeedActivityList
+          entries={[
+            listen({ id: "ls1", target: { type: "recording", id: "s1", title: "Tema s1", subtitle: null, artistName: "Sabrina Carpenter", albumId: "alb-9", albumTitle: "Man's Best Friend", coverThumbUrl: null } }),
+            albumSongRating("s1"),
+            listen({ id: "ls2", target: { type: "recording", id: "s2", title: "Tema s2", subtitle: null, artistName: "Sabrina Carpenter", albumId: "alb-9", albumTitle: "Man's Best Friend", coverThumbUrl: null } }),
+            albumSongRating("s2"),
+            listen({ id: "ls3", target: { type: "recording", id: "s3", title: "Tema s3", subtitle: null, artistName: "Sabrina Carpenter", albumId: "alb-9", albumTitle: "Man's Best Friend", coverThumbUrl: null } }),
+            albumSongRating("s3"),
+          ]}
+        />,
+      );
+
+      // dos filas de grupo: 3 ratings + 3 escuchas
+      expect(screen.getByText(/valoró 3 canciones/)).toBeInTheDocument();
+      expect(screen.getByText(/registró 3 escuchas/)).toBeInTheDocument();
+    });
+
+    it("solo 2 canciones valoradas no alcanza el umbral: se muestran como filas normales", () => {
+      renderWithIntl(<FeedActivityList entries={[albumSongRating("s1"), albumSongRating("s2")]} />);
+
+      expect(screen.queryByText(/valoró 2 canciones/)).not.toBeInTheDocument();
+      expect(screen.getByText("Tema s1")).toBeInTheDocument();
+      expect(screen.getByText("Tema s2")).toBeInTheDocument();
+    });
+
+    it("en variant self omite el autor pero conserva las canciones enlazadas", () => {
+      renderWithIntl(
+        <FeedActivityList
+          variant="self"
+          entries={[albumSongRating("s1"), albumSongRating("s2"), albumSongRating("s3")]}
+        />,
+      );
+
+      expect(screen.queryByRole("link", { name: "Fran" })).not.toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Tema s1" })).toBeInTheDocument();
+    });
+
+    it("marcar 3 canciones como favorito (sin rating) también se agrupa", () => {
+      renderWithIntl(
+        <FeedActivityList
+          entries={[albumSongFavorite("s1"), albumSongFavorite("s2"), albumSongFavorite("s3")]}
+        />,
+      );
+
+      expect(screen.getByText(/marcó 3 favoritos/)).toBeInTheDocument();
+    });
+
+    it("un favorito agregado y quitado entre ratings no le quita al grupo de ratings la chance de formarse", () => {
+      renderWithIntl(
+        <FeedActivityList
+          entries={[
+            albumSongRating("s1"),
+            albumSongFavorite("s2"),
+            albumSongRating("s2"),
+            albumSongRating("s3"),
+          ]}
+        />,
+      );
+
+      expect(screen.getByText(/valoró 3 canciones/)).toBeInTheDocument();
+      // el favorito de paso sigue mostrándose, como su propia fila suelta
+      expect(screen.getByText(/Marcó como favorito/)).toBeInTheDocument();
+    });
   });
 
   describe("pico de rotación (add-feed-rotation-peak)", () => {
@@ -382,6 +560,51 @@ describe("FeedActivityList", () => {
       expect(screen.getByText(/siguió a 3 personas/)).toBeInTheDocument();
       expect(screen.getByRole("link", { name: "Uno" })).toBeInTheDocument();
       expect(screen.getByRole("link", { name: "Tres" })).toBeInTheDocument();
+    });
+  });
+
+  describe("seguir a un artista (tier 4, add-artist-follow-feed-entry)", () => {
+    it("una entrada suelta se muestra en una sola línea, sin celda de carátula", () => {
+      renderWithIntl(<FeedActivityList entries={[followArtist()]} />);
+
+      expect(screen.getByText(/empezó a seguir a/)).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Radiohead" })).toHaveAttribute("href", "/artist/art9");
+      expect(screen.queryByTestId("cover-thumb")).not.toBeInTheDocument();
+    });
+
+    it("en variant self omite el autor pero conserva al artista seguido", () => {
+      renderWithIntl(<FeedActivityList entries={[followArtist()]} variant="self" />);
+
+      expect(screen.queryByRole("link", { name: "Fran" })).not.toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Radiohead" })).toBeInTheDocument();
+    });
+
+    it("una corrida de 3 o más seguidas del mismo autor se pliega en una fila", () => {
+      const runEntries = [
+        followArtist({ id: "fa1", artist: { id: "a1", name: "Uno" } }),
+        followArtist({ id: "fa2", artist: { id: "a2", name: "Dos" } }),
+        followArtist({ id: "fa3", artist: { id: "a3", name: "Tres" } }),
+      ];
+      renderWithIntl(<FeedActivityList entries={runEntries} />);
+
+      expect(screen.getByText(/empezó a seguir a 3 artistas/)).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Uno" })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Tres" })).toBeInTheDocument();
+    });
+
+    it("no se mezcla con una corrida de 'seguir a un usuario' del mismo autor", () => {
+      const runEntries = [
+        follow({ id: "fo1", followedUser: { id: "u1", username: "uno", displayName: "Uno" } }),
+        follow({ id: "fo2", followedUser: { id: "u2", username: "dos", displayName: "Dos" } }),
+        follow({ id: "fo3", followedUser: { id: "u3", username: "tres", displayName: "Tres" } }),
+        followArtist({ id: "fa1", artist: { id: "a1", name: "Cuatro" } }),
+        followArtist({ id: "fa2", artist: { id: "a2", name: "Cinco" } }),
+        followArtist({ id: "fa3", artist: { id: "a3", name: "Seis" } }),
+      ];
+      renderWithIntl(<FeedActivityList entries={runEntries} />);
+
+      expect(screen.getByText(/siguió a 3 personas/)).toBeInTheDocument();
+      expect(screen.getByText(/empezó a seguir a 3 artistas/)).toBeInTheDocument();
     });
   });
 

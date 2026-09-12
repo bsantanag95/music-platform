@@ -22,6 +22,7 @@
   "reviewVerb": "Reviewed",
   "reviewVerbTitled": "Reviewed · “{title}”",
   "followVerb": "followed",
+  "followArtistVerb": "started following",
   "list": {
     "created": "Created a list",
     "updated": "Updated a list"
@@ -31,6 +32,7 @@
   "groupRatings": "{count, plural, one {rated # album} other {rated # albums}}",
   "groupSongRatings": "{count, plural, one {rated # song} other {rated # songs}}",
   "groupFollows": "{count, plural, one {followed # person} other {followed # people}}",
+  "groupFollowArtists": "{count, plural, one {started following # artist} other {started following # artists}}",
   "rotationPeak": "In rotation · {count, plural, one {# log} other {# logs}} this week",
   "convergence": {
     "title": "In your network this week",
@@ -39,7 +41,6 @@
   },
   "ambient": {
     "title": "Also in your network",
-    "followArtistVerb": "followed",
     "collectionVerb": "added to their collection:",
     "andMore": "and {count} more"
   },

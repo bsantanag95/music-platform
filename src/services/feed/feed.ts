@@ -4,6 +4,7 @@ import { db } from "@/db";
 import {
   appUser,
   artist,
+  artistFollow,
   comment,
   favorite,
   listenEntry,
@@ -33,6 +34,13 @@ export interface FeedListenEntry {
     title: string;
     subtitle: string | null;
     artistName: string | null;
+    artistId: string | null;
+    // Álbum que contiene esta grabación, cuando el objetivo es una canción
+    // (openspec: add-feed-album-sweep) — null para objetivos de artista o
+    // álbum. Solo alimenta la detección de "barrido de álbum" en
+    // `feed-grouping.ts`; no se muestra en la fila individual.
+    albumId: string | null;
+    albumTitle: string | null;
     coverThumbUrl: string | null;
   };
   author: FeedAuthor;
@@ -44,7 +52,17 @@ export interface FeedFavorite {
   targetType: "artist" | "release-group" | "recording";
   audience: Audience;
   createdAt: string;
-  target: { id: string; title: string; artistName: string | null; coverThumbUrl: string | null };
+  target: {
+    id: string;
+    title: string;
+    artistName: string | null;
+    artistId: string | null;
+    // Ver FeedListenEntry.target.albumId (openspec: add-feed-album-sweep) —
+    // marcar como favorito también cuenta como señal de "álbum completo".
+    albumId: string | null;
+    albumTitle: string | null;
+    coverThumbUrl: string | null;
+  };
   author: FeedAuthor;
 }
 
@@ -69,6 +87,10 @@ export interface FeedRating {
     id: string;
     title: string;
     artistName: string | null;
+    artistId: string | null;
+    // Ver FeedListenEntry.target.albumId (openspec: add-feed-album-sweep).
+    albumId: string | null;
+    albumTitle: string | null;
     coverThumbUrl: string | null;
   };
   author: FeedAuthor;
@@ -84,6 +106,7 @@ export interface FeedComment {
     id: string;
     title: string;
     artistName: string | null;
+    artistId: string | null;
     coverThumbUrl: string | null;
   };
   author: FeedAuthor;
@@ -104,6 +127,7 @@ export interface FeedReview {
     id: string;
     title: string;
     artistName: string | null;
+    artistId: string | null;
     coverThumbUrl: string | null;
   };
   author: FeedAuthor;
@@ -121,6 +145,18 @@ export interface FeedFollow {
   author: FeedAuthor;
 }
 
+// Tier 4, misma activación que FeedFollow (openspec:
+// add-artist-follow-feed-entry): sin objetivo de catálogo, el "objetivo" es
+// el artista seguido. A diferencia de FeedFollow, no hay regla de
+// visibilidad de perfil — un artista no tiene perfil privado.
+export interface FeedFollowArtist {
+  kind: "follow-artist";
+  id: string;
+  createdAt: string;
+  artist: { id: string; name: string };
+  author: FeedAuthor;
+}
+
 export type FeedEntry =
   | FeedListenEntry
   | FeedFavorite
@@ -128,7 +164,8 @@ export type FeedEntry =
   | FeedRating
   | FeedComment
   | FeedReview
-  | FeedFollow;
+  | FeedFollow
+  | FeedFollowArtist;
 
 export const FEED_KINDS = ["listen", "favorite", "list", "rating", "comment", "review"] as const;
 export type FeedKind = (typeof FEED_KINDS)[number];
@@ -164,6 +201,48 @@ export const PRIMARY_ARTIST_SQL = (releaseGroupIdCol: AnyColumn, recordingIdCol:
       OR (${recordingIdCol} IS NOT NULL AND c.recording_id = ${recordingIdCol})
     ) AND c.role = 'primary'
     ORDER BY c.position
+    LIMIT 1
+  )`;
+
+// Id del mismo artista principal acreditado que `PRIMARY_ARTIST_SQL`, para
+// poder enlazar el renglón "· artista" a su página (openspec:
+// add-feed-artist-link). Subquery hermana, misma condición — se piden por
+// separado (no como fila compuesta) porque el resto del archivo ya trae cada
+// columna de un `SELECT` plano.
+export const PRIMARY_ARTIST_ID_SQL = (releaseGroupIdCol: AnyColumn, recordingIdCol: AnyColumn) =>
+  sql<string | null>`(
+    SELECT a.id FROM credit c
+    JOIN artist a ON a.id = c.artist_id
+    WHERE (
+      (${releaseGroupIdCol} IS NOT NULL AND c.release_group_id = ${releaseGroupIdCol})
+      OR (${recordingIdCol} IS NOT NULL AND c.recording_id = ${recordingIdCol})
+    ) AND c.role = 'primary'
+    ORDER BY c.position
+    LIMIT 1
+  )`;
+
+// Álbum (release-group) que contiene una grabación, vía su edición ingerida
+// (openspec: add-feed-album-sweep): una grabación normalmente pertenece a una
+// sola release ingerida (la representativa de su álbum, ver
+// `representative-release.ts`), así que el `LIMIT 1` no descarta ediciones
+// reales en el caso común. Subqueries escalares hermanas (id/título), mismo
+// patrón que `PRIMARY_ARTIST_SQL`/`PRIMARY_ARTIST_ID_SQL` — alimentan
+// exclusivamente la detección de "barrido de álbum" en `feed-grouping.ts`, no
+// se muestran en la fila individual.
+export const RECORDING_ALBUM_ID_SQL = (recordingIdCol: AnyColumn) =>
+  sql<string | null>`(
+    SELECT rel.release_group_id FROM track t
+    JOIN release rel ON rel.id = t.release_id
+    WHERE t.recording_id = ${recordingIdCol}
+    LIMIT 1
+  )`;
+
+export const RECORDING_ALBUM_TITLE_SQL = (recordingIdCol: AnyColumn) =>
+  sql<string | null>`(
+    SELECT rg.title FROM track t
+    JOIN release rel ON rel.id = t.release_id
+    JOIN release_group rg ON rg.id = rel.release_group_id
+    WHERE t.recording_id = ${recordingIdCol}
     LIMIT 1
   )`;
 
@@ -252,6 +331,8 @@ export async function listFeed(
   // buscar): se saltea directamente si hay cualquier filtro de kind o de
   // texto, en vez de sumarlo a `includeKind`.
   const includeFollow = !filters.kind && !searchPattern;
+  // Mismo criterio que "follow": no es un `FeedKind` filtrable ni buscable.
+  const includeFollowArtist = !filters.kind && !searchPattern;
   const followedUser = alias(appUser, "followed_user");
 
   // Se consulta una página ampliada por fuente y se fusiona en memoria: la
@@ -260,7 +341,7 @@ export async function listFeed(
   const extra = 1;
   const perSource = pageSize + extra;
 
-  const [listens, favorites, lists, ratings, comments, reviews, follows] = await Promise.all([
+  const [listens, favorites, lists, ratings, comments, reviews, follows, followArtists] = await Promise.all([
     includeKind("listen")
       ? db
           .select({
@@ -275,6 +356,9 @@ export async function listFeed(
             recordingId: listenEntry.recordingId,
             artistName: artist.name,
             creditedArtist: PRIMARY_ARTIST_SQL(listenEntry.releaseGroupId, listenEntry.recordingId),
+            creditedArtistId: PRIMARY_ARTIST_ID_SQL(listenEntry.releaseGroupId, listenEntry.recordingId),
+            recordingAlbumId: RECORDING_ALBUM_ID_SQL(listenEntry.recordingId),
+            recordingAlbumTitle: RECORDING_ALBUM_TITLE_SQL(listenEntry.recordingId),
             releaseTitle: releaseGroup.title,
             releaseCover: releaseGroup.coverThumbUrl,
             recordingTitle: recording.title,
@@ -310,6 +394,9 @@ export async function listFeed(
             recordingId: favorite.recordingId,
             artistName: artist.name,
             creditedArtist: PRIMARY_ARTIST_SQL(favorite.releaseGroupId, favorite.recordingId),
+            creditedArtistId: PRIMARY_ARTIST_ID_SQL(favorite.releaseGroupId, favorite.recordingId),
+            recordingAlbumId: RECORDING_ALBUM_ID_SQL(favorite.recordingId),
+            recordingAlbumTitle: RECORDING_ALBUM_TITLE_SQL(favorite.recordingId),
             releaseTitle: releaseGroup.title,
             releaseCover: releaseGroup.coverThumbUrl,
             recordingTitle: recording.title,
@@ -376,6 +463,9 @@ export async function listFeed(
             recordingId: rating.recordingId,
             artistName: artist.name,
             creditedArtist: PRIMARY_ARTIST_SQL(rating.releaseGroupId, rating.recordingId),
+            creditedArtistId: PRIMARY_ARTIST_ID_SQL(rating.releaseGroupId, rating.recordingId),
+            recordingAlbumId: RECORDING_ALBUM_ID_SQL(rating.recordingId),
+            recordingAlbumTitle: RECORDING_ALBUM_TITLE_SQL(rating.recordingId),
             releaseTitle: releaseGroup.title,
             releaseCover: releaseGroup.coverThumbUrl,
             recordingTitle: recording.title,
@@ -410,6 +500,7 @@ export async function listFeed(
             recordingId: comment.recordingId,
             artistName: artist.name,
             creditedArtist: PRIMARY_ARTIST_SQL(comment.releaseGroupId, comment.recordingId),
+            creditedArtistId: PRIMARY_ARTIST_ID_SQL(comment.releaseGroupId, comment.recordingId),
             releaseTitle: releaseGroup.title,
             releaseCover: releaseGroup.coverThumbUrl,
             recordingTitle: recording.title,
@@ -445,6 +536,7 @@ export async function listFeed(
             recordingId: review.recordingId,
             artistName: artist.name,
             creditedArtist: PRIMARY_ARTIST_SQL(review.releaseGroupId, review.recordingId),
+            creditedArtistId: PRIMARY_ARTIST_ID_SQL(review.releaseGroupId, review.recordingId),
             releaseTitle: releaseGroup.title,
             releaseCover: releaseGroup.coverThumbUrl,
             recordingTitle: recording.title,
@@ -502,6 +594,28 @@ export async function listFeed(
           .orderBy(desc(userFollow.updatedAt), desc(userFollow.id))
           .limit(perSource)
       : Promise.resolve([]),
+
+    // Sin regla de visibilidad adicional: un artista no tiene perfil privado,
+    // a diferencia del objetivo de "seguir a un usuario" (openspec:
+    // add-artist-follow-feed-entry). Solo se excluye por bloqueo autor↔lector.
+    includeFollowArtist
+      ? db
+          .select({
+            id: artistFollow.id,
+            createdAt: artistFollow.createdAt,
+            authorId: artistFollow.userId,
+            authorUsername: appUser.username,
+            authorDisplayName: appUser.displayName,
+            artistId: artistFollow.artistId,
+            artistName: artist.name,
+          })
+          .from(artistFollow)
+          .leftJoin(appUser, eq(appUser.id, artistFollow.userId))
+          .leftJoin(artist, eq(artist.id, artistFollow.artistId))
+          .where(and(inArray(artistFollow.userId, authorIds), BLOCKED_SQL(viewerId, artistFollow.userId)))
+          .orderBy(desc(artistFollow.createdAt), desc(artistFollow.id))
+          .limit(perSource)
+      : Promise.resolve([]),
   ]);
 
   const author = (id: string, username: string | null, displayName: string | null): FeedAuthor => ({
@@ -530,6 +644,9 @@ export async function listFeed(
         title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
         subtitle: null,
         artistName: row.creditedArtist,
+        artistId: row.creditedArtistId,
+        albumId: row.recordingAlbumId,
+        albumTitle: row.recordingAlbumTitle,
         coverThumbUrl: row.releaseCover,
       },
       author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -549,6 +666,9 @@ export async function listFeed(
         id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
         title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
         artistName: row.creditedArtist,
+        artistId: row.creditedArtistId,
+        albumId: row.recordingAlbumId,
+        albumTitle: row.recordingAlbumTitle,
         coverThumbUrl: row.releaseCover,
       },
       author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -586,6 +706,9 @@ export async function listFeed(
         id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
         title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
         artistName: row.creditedArtist,
+        artistId: row.creditedArtistId,
+        albumId: row.recordingAlbumId,
+        albumTitle: row.recordingAlbumTitle,
         coverThumbUrl: row.releaseCover,
       },
       author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -608,6 +731,7 @@ export async function listFeed(
         id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
         title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
         artistName: row.creditedArtist,
+        artistId: row.creditedArtistId,
         coverThumbUrl: row.releaseCover,
       },
       author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -631,6 +755,7 @@ export async function listFeed(
         id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
         title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
         artistName: row.creditedArtist,
+        artistId: row.creditedArtistId,
         coverThumbUrl: row.releaseCover,
       },
       author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -645,6 +770,14 @@ export async function listFeed(
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
   }));
 
+  const followArtistEntries: FeedEntry[] = followArtists.map((row) => ({
+    kind: "follow-artist" as const,
+    id: row.id,
+    createdAt: row.createdAt.toISOString(),
+    artist: { id: row.artistId, name: row.artistName ?? "" },
+    author: author(row.authorId, row.authorUsername, row.authorDisplayName),
+  }));
+
   const merged = [
     ...listenEntries,
     ...favoriteEntries,
@@ -653,6 +786,7 @@ export async function listFeed(
     ...commentEntries,
     ...reviewEntries,
     ...followEntries,
+    ...followArtistEntries,
   ]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice((page - 1) * pageSize, page * pageSize + extra);

@@ -886,6 +886,15 @@ export const ListenTargetInfoSchema = z.object({
   // null para objetivos de tipo artista. Opcional: solo lo puebla el feed
   // (`listFeed`); el diario no lo necesita.
   artistName: z.string().nullable().optional(),
+  // Id del artista acreditado, para enlazar `artistName` a su página (openspec:
+  // add-feed-artist-link). Mismo criterio de opcionalidad que `artistName`.
+  artistId: z.uuid().nullable().optional(),
+  // Álbum que contiene esta grabación, cuando el objetivo es una canción
+  // (openspec: add-feed-album-sweep) — alimenta la detección de "barrido de
+  // álbum" en el cliente; no se muestra en la fila individual. Mismo criterio
+  // de opcionalidad que `artistName`: solo lo puebla el feed.
+  albumId: z.uuid().nullable().optional(),
+  albumTitle: z.string().nullable().optional(),
   coverThumbUrl: z.string().nullable(),
 });
 export type ListenTargetInfo = z.infer<typeof ListenTargetInfoSchema>;
@@ -967,6 +976,11 @@ export const FavoriteTargetInfoSchema = z.object({
   title: z.string(),
   // Ver ListenTargetInfoSchema.artistName — opcional, solo lo puebla el feed.
   artistName: z.string().nullable().optional(),
+  // Ver ListenTargetInfoSchema.artistId.
+  artistId: z.uuid().nullable().optional(),
+  // Ver ListenTargetInfoSchema.albumId — solo lo puebla `listFeed`.
+  albumId: z.uuid().nullable().optional(),
+  albumTitle: z.string().nullable().optional(),
   coverThumbUrl: z.string().nullable(),
 });
 export type FavoriteTargetInfo = z.infer<typeof FavoriteTargetInfoSchema>;
@@ -1253,6 +1267,12 @@ export const FeedTargetInfoSchema = z.object({
   // Nombre del artista principal para objetivos de álbum o canción; null para
   // artista. Ver ListenTargetInfoSchema.artistName.
   artistName: z.string().nullable().optional(),
+  // Ver ListenTargetInfoSchema.artistId.
+  artistId: z.uuid().nullable().optional(),
+  // Ver ListenTargetInfoSchema.albumId — solo lo puebla `rating` (feed.ts);
+  // `comment`/`review` (que también usan este schema) no lo computan.
+  albumId: z.uuid().nullable().optional(),
+  albumTitle: z.string().nullable().optional(),
   coverThumbUrl: z.string().nullable(),
 });
 export type FeedTargetInfo = z.infer<typeof FeedTargetInfoSchema>;
@@ -1303,6 +1323,19 @@ export const FeedFollowSchema = z.object({
 });
 export type FeedFollow = z.infer<typeof FeedFollowSchema>;
 
+// Tier 4, misma activación que FeedFollowSchema (openspec:
+// add-artist-follow-feed-entry): sin objetivo de catálogo, el "objetivo" es
+// el artista seguido. A diferencia de seguir a un usuario, no hay regla de
+// visibilidad de perfil — un artista no tiene perfil privado.
+export const FeedFollowArtistSchema = z.object({
+  kind: z.literal("follow-artist"),
+  id: z.uuid(),
+  createdAt: z.string(),
+  artist: z.object({ id: z.uuid(), name: z.string() }),
+  author: AuthorSummarySchema,
+});
+export type FeedFollowArtist = z.infer<typeof FeedFollowArtistSchema>;
+
 export const FeedEntrySchema = z.discriminatedUnion("kind", [
   FeedListenEntrySchema,
   FeedFavoriteSchema,
@@ -1311,6 +1344,7 @@ export const FeedEntrySchema = z.discriminatedUnion("kind", [
   FeedCommentSchema,
   FeedReviewSchema,
   FeedFollowSchema,
+  FeedFollowArtistSchema,
 ]);
 export type FeedEntry = z.infer<typeof FeedEntrySchema>;
 
@@ -1330,6 +1364,7 @@ export const RecentActivityEntrySchema = z.discriminatedUnion("kind", [
   FeedCommentSchema,
   FeedReviewSchema,
   FeedFollowSchema,
+  FeedFollowArtistSchema,
 ]);
 export type RecentActivityEntry = z.infer<typeof RecentActivityEntrySchema>;
 

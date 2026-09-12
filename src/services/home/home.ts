@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/api/errors";
 import {
   appUser,
   artist,
+  artistFollow,
   comment,
   credit,
   listenEntry,
@@ -16,11 +17,17 @@ import {
   userList,
   userListItem,
 } from "@/db/schema";
-import { PRIMARY_ARTIST_SQL } from "@/services/feed/feed";
+import {
+  PRIMARY_ARTIST_ID_SQL,
+  PRIMARY_ARTIST_SQL,
+  RECORDING_ALBUM_ID_SQL,
+  RECORDING_ALBUM_TITLE_SQL,
+} from "@/services/feed/feed";
 import type {
   FeedAuthor,
   FeedComment,
   FeedFollow,
+  FeedFollowArtist,
   FeedListEvent,
   FeedListenEntry,
   FeedRating,
@@ -62,7 +69,7 @@ export async function listMyRecentActivity(
   page = 1,
   pageSize = 5,
 ): Promise<{
-  entries: (FeedListenEntry | FeedRating | FeedComment | FeedReview | FeedFollow)[];
+  entries: (FeedListenEntry | FeedRating | FeedComment | FeedReview | FeedFollow | FeedFollowArtist)[];
   page: number;
   pageSize: number;
   hasNext: boolean;
@@ -75,7 +82,7 @@ export async function listMyRecentActivity(
   const perSource = pageSize + extra;
   const followedUser = alias(appUser, "followed_user");
 
-  const [listens, ratings, comments, reviews, follows] = await Promise.all([
+  const [listens, ratings, comments, reviews, follows, followArtists] = await Promise.all([
     db
       .select({
         id: listenEntry.id,
@@ -89,6 +96,9 @@ export async function listMyRecentActivity(
         recordingId: listenEntry.recordingId,
         artistName: artist.name,
         creditedArtist: PRIMARY_ARTIST_SQL(listenEntry.releaseGroupId, listenEntry.recordingId),
+        creditedArtistId: PRIMARY_ARTIST_ID_SQL(listenEntry.releaseGroupId, listenEntry.recordingId),
+        recordingAlbumId: RECORDING_ALBUM_ID_SQL(listenEntry.recordingId),
+        recordingAlbumTitle: RECORDING_ALBUM_TITLE_SQL(listenEntry.recordingId),
         releaseTitle: releaseGroup.title,
         releaseCover: releaseGroup.coverThumbUrl,
         recordingTitle: recording.title,
@@ -116,6 +126,9 @@ export async function listMyRecentActivity(
         recordingId: rating.recordingId,
         artistName: artist.name,
         creditedArtist: PRIMARY_ARTIST_SQL(rating.releaseGroupId, rating.recordingId),
+        creditedArtistId: PRIMARY_ARTIST_ID_SQL(rating.releaseGroupId, rating.recordingId),
+        recordingAlbumId: RECORDING_ALBUM_ID_SQL(rating.recordingId),
+        recordingAlbumTitle: RECORDING_ALBUM_TITLE_SQL(rating.recordingId),
         releaseTitle: releaseGroup.title,
         releaseCover: releaseGroup.coverThumbUrl,
         recordingTitle: recording.title,
@@ -142,6 +155,7 @@ export async function listMyRecentActivity(
         recordingId: comment.recordingId,
         artistName: artist.name,
         creditedArtist: PRIMARY_ARTIST_SQL(comment.releaseGroupId, comment.recordingId),
+        creditedArtistId: PRIMARY_ARTIST_ID_SQL(comment.releaseGroupId, comment.recordingId),
         releaseTitle: releaseGroup.title,
         releaseCover: releaseGroup.coverThumbUrl,
         recordingTitle: recording.title,
@@ -169,6 +183,7 @@ export async function listMyRecentActivity(
         recordingId: review.recordingId,
         artistName: artist.name,
         creditedArtist: PRIMARY_ARTIST_SQL(review.releaseGroupId, review.recordingId),
+        creditedArtistId: PRIMARY_ARTIST_ID_SQL(review.releaseGroupId, review.recordingId),
         releaseTitle: releaseGroup.title,
         releaseCover: releaseGroup.coverThumbUrl,
         recordingTitle: recording.title,
@@ -203,6 +218,24 @@ export async function listMyRecentActivity(
       .where(and(eq(userFollow.followerId, userId), eq(userFollow.status, "accepted")))
       .orderBy(desc(userFollow.updatedAt), desc(userFollow.id))
       .limit(perSource),
+
+    // Actividad propia: sin regla de visibilidad (un artista no tiene perfil
+    // privado, y es la actividad del propio lector).
+    db
+      .select({
+        id: artistFollow.id,
+        createdAt: artistFollow.createdAt,
+        authorUsername: appUser.username,
+        authorDisplayName: appUser.displayName,
+        artistId: artistFollow.artistId,
+        artistName: artist.name,
+      })
+      .from(artistFollow)
+      .innerJoin(appUser, eq(appUser.id, artistFollow.userId))
+      .innerJoin(artist, eq(artist.id, artistFollow.artistId))
+      .where(eq(artistFollow.userId, userId))
+      .orderBy(desc(artistFollow.createdAt), desc(artistFollow.id))
+      .limit(perSource),
   ]);
 
   const listenEntries: FeedListenEntry[] = listens.map((row) => ({
@@ -219,6 +252,9 @@ export async function listMyRecentActivity(
       title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
       subtitle: null,
       artistName: row.creditedArtist,
+      artistId: row.creditedArtistId,
+      albumId: row.recordingAlbumId,
+      albumTitle: row.recordingAlbumTitle,
       coverThumbUrl: row.releaseCover,
     },
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -235,6 +271,9 @@ export async function listMyRecentActivity(
       id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
       title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
       artistName: row.creditedArtist,
+      artistId: row.creditedArtistId,
+      albumId: row.recordingAlbumId,
+      albumTitle: row.recordingAlbumTitle,
       coverThumbUrl: row.releaseCover,
     },
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -250,6 +289,7 @@ export async function listMyRecentActivity(
       id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
       title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
       artistName: row.creditedArtist,
+      artistId: row.creditedArtistId,
       coverThumbUrl: row.releaseCover,
     },
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -266,6 +306,7 @@ export async function listMyRecentActivity(
       id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
       title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
       artistName: row.creditedArtist,
+      artistId: row.creditedArtistId,
       coverThumbUrl: row.releaseCover,
     },
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -279,12 +320,21 @@ export async function listMyRecentActivity(
     author: author(userId, row.authorUsername, row.authorDisplayName),
   }));
 
+  const followArtistEntries: FeedFollowArtist[] = followArtists.map((row) => ({
+    kind: "follow-artist" as const,
+    id: row.id,
+    createdAt: row.createdAt.toISOString(),
+    artist: { id: row.artistId, name: row.artistName },
+    author: author(userId, row.authorUsername, row.authorDisplayName),
+  }));
+
   const merged = [
     ...listenEntries,
     ...ratingEntries,
     ...commentEntries,
     ...reviewEntries,
     ...followEntries,
+    ...followArtistEntries,
   ]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice((page - 1) * pageSize, page * pageSize + extra);

@@ -12,15 +12,20 @@ import { Link } from "@/i18n/navigation";
 // Título del objetivo — el ancla tipográfica de la fila (Space Grotesk, un tamaño
 // consistente). `stacked` pone el artista debajo en su propia línea; `inline` lo
 // comparte con el título para un ritmo más apretado (rastro propio, diario propio).
+// `artistHref`, cuando existe, enlaza el nombre del artista a su página
+// (openspec: add-feed-artist-link) — opcional para que el diario propio (que no
+// trae el id del artista acreditado) siga mostrándolo como texto plano.
 export function TargetTitle({
   href,
   label,
   artist,
+  artistHref = null,
   layout = "stacked",
 }: {
   href: string;
   label: string;
   artist: string | null;
+  artistHref?: string | null;
   layout?: "stacked" | "inline";
 }) {
   const link = (
@@ -32,11 +37,21 @@ export function TargetTitle({
     </Link>
   );
 
+  const artistNode = artist
+    ? artistHref
+      ? (
+          <Link href={artistHref} className="transition-colors hover:text-paper">
+            {artist}
+          </Link>
+        )
+      : artist
+    : null;
+
   if (layout === "inline") {
     return (
       <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
         {link}
-        {artist ? <span className="font-data text-xs text-paper-muted">· {artist}</span> : null}
+        {artistNode ? <span className="font-data text-xs text-paper-muted">· {artistNode}</span> : null}
       </span>
     );
   }
@@ -44,7 +59,7 @@ export function TargetTitle({
   return (
     <div className="mt-1">
       {link}
-      {artist ? <p className="font-data text-xs text-paper-muted">{artist}</p> : null}
+      {artistNode ? <p className="font-data text-xs text-paper-muted">{artistNode}</p> : null}
     </div>
   );
 }
