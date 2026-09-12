@@ -85,10 +85,15 @@ export function ProsePanel({
   body,
   variant,
   clamp = false,
+  accent = "neutral",
 }: {
   body: string;
   variant: "impression" | "comment";
   clamp?: boolean;
+  // "review": borde izquierdo en el segundo acento del sistema (petróleo) en
+  // vez del hairline neutro — único caso en reposo fuera del rating (openspec:
+  // add-feed-kind-differentiation, ver DESIGN.md Regla de Rareza).
+  accent?: "neutral" | "review";
 }) {
   const t = useTranslations("feed");
   const impression = variant === "impression";
@@ -128,7 +133,7 @@ export function ProsePanel({
     <div ref={containerRef} className="mt-2 max-w-[60ch]">
       <p
         ref={ref}
-        className={`whitespace-pre-wrap border-l-2 border-ink-border pl-3 font-body text-sm text-paper${
+        className={`whitespace-pre-wrap border-l-2 ${accent === "review" ? "border-petrol" : "border-ink-border"} pl-3 font-body text-sm text-paper${
           impression ? " italic" : ""
         }${collapsed ? " line-clamp-6" : ""}`}
       >

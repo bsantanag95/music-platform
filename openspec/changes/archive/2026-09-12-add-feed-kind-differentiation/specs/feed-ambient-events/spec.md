@@ -1,15 +1,5 @@
-# feed-ambient-events Specification
+## MODIFIED Requirements
 
-## Purpose
-
-El tratamiento "minimizado" del tier 4 de la jerarquía de intención para las fuentes sin
-fila propia en el feed principal: una franja compacta al pie de `/me/feed` que resume los
-eventos ambiente recientes de la red del lector —seguir artista, sumar a la colección
-física—, agrupados por autor y separados del listado cronológico de actividad expresiva.
-"Seguir a un usuario" tuvo su fila agrupada acá hasta `add-feed-kind-differentiation`, que
-la activó inline en la línea de tiempo principal de `activity-feed` y la retiró de esta
-franja.
-## Requirements
 ### Requirement: Composición de eventos ambiente de la red
 
 El sistema SHALL calcular, para un usuario autenticado, un resumen de los **eventos
@@ -140,4 +130,3 @@ listado cronológico SHALL permanecer sin cambios.
 - **THEN** el listado cronológico de `/me/feed` conserva su composición, su paginación
   incremental, sus filtros y su presentación por tier, sin ninguna fila de evento ambiente
   intercalada
-

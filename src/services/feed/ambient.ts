@@ -1,6 +1,5 @@
 import { cache } from "react";
 import { and, eq, gte, inArray, or } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import {
   appUser,
@@ -12,8 +11,10 @@ import {
   userFollow,
 } from "@/db/schema";
 
-// Franja de eventos ambiente (openspec: add-feed-ambient-events): el tratamiento
-// "minimizado" del tier 4 —seguir artista, seguir usuario, sumar a la colección—
+// Franja de eventos ambiente (openspec: add-feed-ambient-events; el evento
+// "seguir usuario" se retiró de acá en add-feed-kind-differentiation, ahora
+// vive inline en la línea de tiempo principal de `activity-feed`): el
+// tratamiento "minimizado" de tier 4 —seguir artista, sumar a la colección—
 // como un resumen agrupado por autor al pie de `/me/feed`, separado del listado
 // cronológico. Cálculo bajo demanda, sin tabla materializada, memoizado por
 // request (mismo patrón que `network-convergence` / `taste-fingerprint`).
@@ -33,7 +34,7 @@ export interface AmbientItem {
 }
 
 export interface AmbientGroup {
-  kind: "follow-artist" | "follow-user" | "collection";
+  kind: "follow-artist" | "collection";
   author: { username: string; displayName: string | null };
   /** Total de ítems de ese autor y tipo (puede superar la muestra). */
   count: number;
@@ -71,9 +72,8 @@ function group(rows: RawRow[], kind: AmbientGroup["kind"]): AmbientGroup[] {
 
 /**
  * Resumen de eventos ambiente recientes de la red del lector (seguidos con
- * relación aceptada, sin bloqueo). Tres fuentes agrupadas por autor y tipo:
- * seguir artista, seguir usuario (relación aceptada; objetivo visible para el
- * lector y distinto de él), y alta en la colección física (audiencia
+ * relación aceptada, sin bloqueo). Dos fuentes agrupadas por autor y tipo:
+ * seguir artista, y alta en la colección física (audiencia
  * `followers`/`public`). La actividad del propio lector no aparece. Devuelve
  * `{ groups: [] }` cuando no hay eventos.
  */
@@ -101,9 +101,8 @@ export const getFeedAmbientEvents = cache(
     if (followeeIds.length === 0) return { groups: [] };
 
     const cutoff = new Date(Date.now() - AMBIENT_WINDOW_DAYS * DAY_MS);
-    const followedUser = alias(appUser, "followed_user");
 
-    const [artistRows, userRows, collectionRows] = await Promise.all([
+    const [artistRows, collectionRows] = await Promise.all([
       db
         .select({
           authorId: artistFollow.userId,
@@ -117,28 +116,6 @@ export const getFeedAmbientEvents = cache(
         .innerJoin(appUser, eq(appUser.id, artistFollow.userId))
         .innerJoin(artist, eq(artist.id, artistFollow.artistId))
         .where(and(inArray(artistFollow.userId, followeeIds), gte(artistFollow.createdAt, cutoff))),
-
-      db
-        .select({
-          authorId: userFollow.followerId,
-          authorUsername: appUser.username,
-          authorDisplayName: appUser.displayName,
-          followedId: followedUser.id,
-          followedUsername: followedUser.username,
-          followedDisplayName: followedUser.displayName,
-          followedVisibility: followedUser.profileVisibility,
-          at: userFollow.updatedAt,
-        })
-        .from(userFollow)
-        .innerJoin(appUser, eq(appUser.id, userFollow.followerId))
-        .innerJoin(followedUser, eq(followedUser.id, userFollow.followedId))
-        .where(
-          and(
-            inArray(userFollow.followerId, followeeIds),
-            eq(userFollow.status, "accepted"),
-            gte(userFollow.updatedAt, cutoff),
-          ),
-        ),
 
       db
         .select({
@@ -172,29 +149,6 @@ export const getFeedAmbientEvents = cache(
       "follow-artist",
     );
 
-    // Objetivo visible para el lector: perfil público, o el lector ya lo sigue
-    // (está en `followeeSet`). Nunca el propio lector; nunca con bloqueo.
-    const userGroups = group(
-      userRows
-        .filter(
-          (row) =>
-            row.followedId !== viewerId &&
-            !blocked.has(row.followedId) &&
-            (row.followedVisibility === "public" || followeeSet.has(row.followedId)),
-        )
-        .map((row) => ({
-          authorId: row.authorId,
-          authorUsername: row.authorUsername,
-          authorDisplayName: row.authorDisplayName,
-          item: {
-            label: row.followedDisplayName ?? `@${row.followedUsername}`,
-            href: `/users/${encodeURIComponent(row.followedUsername)}`,
-          },
-          at: row.at,
-        })),
-      "follow-user",
-    );
-
     const collectionGroups = group(
       collectionRows.map((row) => ({
         authorId: row.authorId,
@@ -206,7 +160,7 @@ export const getFeedAmbientEvents = cache(
       "collection",
     );
 
-    const groups = [...artistGroups, ...userGroups, ...collectionGroups]
+    const groups = [...artistGroups, ...collectionGroups]
       .sort((a, b) => b.lastAt.localeCompare(a.lastAt))
       .slice(0, AMBIENT_MAX_GROUPS);
 

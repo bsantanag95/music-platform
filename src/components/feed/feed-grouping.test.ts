@@ -101,6 +101,13 @@ function review(author = ana): FeedEntry {
     target: { type: "release-group", id: `rg${seq}`, title: `Disco ${seq}`, artistName: null, coverThumbUrl: null }, author,
   };
 }
+function follow(author = ana): FeedEntry {
+  seq += 1;
+  return {
+    kind: "follow", id: `fo${seq}`, createdAt: iso(), author,
+    followedUser: { id: `u${seq}`, username: `user${seq}`, displayName: `User ${seq}` },
+  };
+}
 
 describe("groupFeedRuns", () => {
   it("pliega 3+ escuchas consecutivas del mismo autor (tier 3)", () => {
@@ -155,6 +162,24 @@ describe("groupFeedRuns", () => {
   it("no agrupa entre autores distintos", () => {
     const rows = groupFeedRuns([listen(ana), listen(ana), listen(beto), listen(beto)]);
     expect(rows.map((r) => r.kind)).toEqual(["listen", "listen", "listen", "listen"]);
+  });
+
+  it("pliega 3+ 'seguir a un usuario' consecutivos del mismo autor como grupo tier 4 (add-feed-kind-differentiation)", () => {
+    const rows = groupFeedRuns([follow(), follow(), follow()]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.kind).toBe("group");
+    expect((rows[0] as FeedEntryGroup).groupedKind).toBe("follow");
+    expect((rows[0] as FeedEntryGroup).tier).toBe(4);
+  });
+
+  it("no pliega solo 2 'seguir a un usuario'", () => {
+    expect(groupFeedRuns([follow(), follow()]).map((r) => r.kind)).toEqual(["follow", "follow"]);
+  });
+
+  it("no mezcla 'seguir a un usuario' con escuchas en un mismo grupo", () => {
+    const rows = groupFeedRuns([follow(), follow(), listen(), listen(), listen()]);
+    expect(rows.map((r) => r.kind)).toEqual(["follow", "follow", "group"]);
+    expect((rows[2] as FeedEntryGroup).groupedKind).toBe("listen");
   });
 
   it("la fecha del grupo es la de la entrada más reciente (la primera)", () => {

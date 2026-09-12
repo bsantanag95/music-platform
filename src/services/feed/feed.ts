@@ -1,4 +1,5 @@
-import { and, desc, eq, ilike, inArray, or, sql, type AnyColumn, type SQL } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, ne, or, sql, type AnyColumn, type SQL } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import {
   appUser,
@@ -108,13 +109,26 @@ export interface FeedReview {
   author: FeedAuthor;
 }
 
+// Tier 4 activado en la línea de tiempo principal (openspec:
+// add-feed-kind-differentiation): sin objetivo de catálogo, el "objetivo" es
+// la persona seguida. Antes solo vivía como resumen agrupado en
+// `feed-ambient-events`; ahora es una fila propia acá y se retiró de ahí.
+export interface FeedFollow {
+  kind: "follow";
+  id: string;
+  createdAt: string;
+  followedUser: FeedAuthor;
+  author: FeedAuthor;
+}
+
 export type FeedEntry =
   | FeedListenEntry
   | FeedFavorite
   | FeedListEvent
   | FeedRating
   | FeedComment
-  | FeedReview;
+  | FeedReview
+  | FeedFollow;
 
 export const FEED_KINDS = ["listen", "favorite", "list", "rating", "comment", "review"] as const;
 export type FeedKind = (typeof FEED_KINDS)[number];
@@ -234,6 +248,11 @@ export async function listFeed(
   // traerla y descartarla al fusionar: es a la vez el filtro y una mejora de
   // rendimiento (ver design.md, decisión 1).
   const includeKind = (kind: FeedKind) => !filters.kind || filters.kind === kind;
+  // "follow" no es un `FeedKind` filtrable (no tiene título de objetivo que
+  // buscar): se saltea directamente si hay cualquier filtro de kind o de
+  // texto, en vez de sumarlo a `includeKind`.
+  const includeFollow = !filters.kind && !searchPattern;
+  const followedUser = alias(appUser, "followed_user");
 
   // Se consulta una página ampliada por fuente y se fusiona en memoria: la
   // composición heterogénea no permite paginación SQL única sin una tabla de
@@ -241,7 +260,7 @@ export async function listFeed(
   const extra = 1;
   const perSource = pageSize + extra;
 
-  const [listens, favorites, lists, ratings, comments, reviews] = await Promise.all([
+  const [listens, favorites, lists, ratings, comments, reviews, follows] = await Promise.all([
     includeKind("listen")
       ? db
           .select({
@@ -448,6 +467,41 @@ export async function listFeed(
           .orderBy(desc(review.updatedAt), desc(review.id))
           .limit(perSource)
       : Promise.resolve([]),
+
+    // Visible para el lector cuando el objetivo del seguimiento tiene perfil
+    // público, o el lector ya lo sigue con relación aceptada (está en
+    // `followedIds`) — misma regla que usaba `feed-ambient-events` para este
+    // mismo evento, ahora movida acá (openspec: add-feed-kind-differentiation).
+    // Nunca el propio lector como objetivo; nunca con bloqueo en cualquier
+    // dirección entre lector y autor, o lector y objetivo.
+    includeFollow
+      ? db
+          .select({
+            id: userFollow.id,
+            createdAt: userFollow.updatedAt,
+            authorId: userFollow.followerId,
+            authorUsername: appUser.username,
+            authorDisplayName: appUser.displayName,
+            followedId: userFollow.followedId,
+            followedUsername: followedUser.username,
+            followedDisplayName: followedUser.displayName,
+          })
+          .from(userFollow)
+          .leftJoin(appUser, eq(appUser.id, userFollow.followerId))
+          .leftJoin(followedUser, eq(followedUser.id, userFollow.followedId))
+          .where(
+            and(
+              inArray(userFollow.followerId, authorIds),
+              eq(userFollow.status, "accepted"),
+              ne(followedUser.id, viewerId),
+              or(eq(followedUser.profileVisibility, "public"), inArray(followedUser.id, followedIds)),
+              BLOCKED_SQL(viewerId, userFollow.followerId),
+              BLOCKED_SQL(viewerId, followedUser.id),
+            ),
+          )
+          .orderBy(desc(userFollow.updatedAt), desc(userFollow.id))
+          .limit(perSource)
+      : Promise.resolve([]),
   ]);
 
   const author = (id: string, username: string | null, displayName: string | null): FeedAuthor => ({
@@ -583,6 +637,14 @@ export async function listFeed(
     };
   });
 
+  const followEntries: FeedEntry[] = follows.map((row) => ({
+    kind: "follow" as const,
+    id: row.id,
+    createdAt: row.createdAt.toISOString(),
+    followedUser: author(row.followedId, row.followedUsername, row.followedDisplayName),
+    author: author(row.authorId, row.authorUsername, row.authorDisplayName),
+  }));
+
   const merged = [
     ...listenEntries,
     ...favoriteEntries,
@@ -590,6 +652,7 @@ export async function listFeed(
     ...ratingEntries,
     ...commentEntries,
     ...reviewEntries,
+    ...followEntries,
   ]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice((page - 1) * pageSize, page * pageSize + extra);

@@ -110,7 +110,8 @@ describe("servicio de feed ampliado", () => {
       }]))
       .mockReturnValueOnce(sourceQuery([]))  // ratings
       .mockReturnValueOnce(sourceQuery([]))  // comentarios
-      .mockReturnValueOnce(sourceQuery([]));  // reseñas
+      .mockReturnValueOnce(sourceQuery([]))  // reseñas
+      .mockReturnValueOnce(sourceQuery([]));  // follows
 
     const result = await listFeed(author.id, 1, 20);
 
@@ -161,7 +162,8 @@ describe("servicio de feed ampliado", () => {
       .mockReturnValueOnce(sourceQuery([]))  // listas
       .mockReturnValueOnce(sourceQuery([]))  // ratings
       .mockReturnValueOnce(sourceQuery([]))  // comentarios
-      .mockReturnValueOnce(sourceQuery([]));  // reseñas
+      .mockReturnValueOnce(sourceQuery([]))  // reseñas
+      .mockReturnValueOnce(sourceQuery([]));  // follows
 
     const result = await listFeed(author.id, 1, 20);
 
@@ -196,7 +198,8 @@ describe("servicio de feed ampliado", () => {
       }]))
       .mockReturnValueOnce(sourceQuery([]))
       .mockReturnValueOnce(sourceQuery([]))
-      .mockReturnValueOnce(sourceQuery([]));
+      .mockReturnValueOnce(sourceQuery([]))
+      .mockReturnValueOnce(sourceQuery([]));  // follows
 
     const result = await listFeed(author.id, 1, 20);
     expect(result.entries[0]!.kind).toBe("list");
@@ -227,7 +230,8 @@ describe("servicio de feed ampliado", () => {
         authorDisplayName: author.displayName,
       }]))
       .mockReturnValueOnce(sourceQuery([]))  // comentarios
-      .mockReturnValueOnce(sourceQuery([]));  // reseñas
+      .mockReturnValueOnce(sourceQuery([]))  // reseñas
+      .mockReturnValueOnce(sourceQuery([]));  // follows
 
     const result = await listFeed(author.id, 1, 20);
 
@@ -263,7 +267,8 @@ describe("servicio de feed ampliado", () => {
         commentRow("00000000-0000-4000-8000-000000000009", "2026-01-06T00:00:00Z"),
         commentRow("00000000-0000-4000-8000-00000000000a", "2026-01-05T00:00:00Z"),
       ]))
-      .mockReturnValueOnce(sourceQuery([]));  // reseñas
+      .mockReturnValueOnce(sourceQuery([]))  // reseñas
+      .mockReturnValueOnce(sourceQuery([]));  // follows
 
     const result = await listFeed(author.id, 1, 20);
 
@@ -272,7 +277,7 @@ describe("servicio de feed ampliado", () => {
     expect(result.entries[0]!.id).toBe("00000000-0000-4000-8000-000000000009");
   });
 
-  it("ordena cronológicamente entre las seis fuentes", async () => {
+  it("ordena cronológicamente entre las fuentes", async () => {
     const followed = ["u2"];
     mocks.db.select
       .mockReturnValueOnce(followedQuery(followed))
@@ -326,7 +331,8 @@ describe("servicio de feed ampliado", () => {
         authorId: author.id,
         authorUsername: author.username,
         authorDisplayName: author.displayName,
-      }]));
+      }]))
+      .mockReturnValueOnce(sourceQuery([]));  // follows
 
     const result = await listFeed(author.id, 1, 20);
 
@@ -361,7 +367,8 @@ describe("servicio de feed ampliado", () => {
         .mockReturnValueOnce(sourceQuery([]))  // listas
         .mockReturnValueOnce(sourceQuery([]))  // ratings
         .mockReturnValueOnce(sourceQuery([]))  // comentarios
-        .mockReturnValueOnce(sourceQuery([reviewRow()]));  // reseñas
+        .mockReturnValueOnce(sourceQuery([reviewRow()]))  // reseñas
+        .mockReturnValueOnce(sourceQuery([]));  // follows
 
       const result = await listFeed(author.id, 1, 20);
 
@@ -383,7 +390,8 @@ describe("servicio de feed ampliado", () => {
         .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]))
         .mockReturnValueOnce(sourceQuery([]))
-        .mockReturnValueOnce(sourceQuery([reviewRow({ updatedAt: new Date("2026-04-01T12:00:00Z") })]));
+        .mockReturnValueOnce(sourceQuery([reviewRow({ updatedAt: new Date("2026-04-01T12:00:00Z") })]))
+        .mockReturnValueOnce(sourceQuery([]));  // follows
 
       const result = await listFeed(author.id, 1, 20);
 
@@ -424,6 +432,73 @@ describe("servicio de feed ampliado", () => {
       expect(sql.toLowerCase()).not.toContain("body");
       // 3 columnas de título + el artista acreditado, nunca el cuerpo de la reseña
       expect(params.filter((p) => p === "%rainbows%")).toHaveLength(4);
+    });
+  });
+
+  describe("seguir a un usuario (add-feed-kind-differentiation)", () => {
+    const followRow = (over: Record<string, unknown> = {}) => ({
+      id: "00000000-0000-4000-8000-000000000f00",
+      createdAt: new Date("2026-05-01T00:00:00Z"),
+      authorId: author.id,
+      authorUsername: author.username,
+      authorDisplayName: author.displayName,
+      followedId: "00000000-0000-4000-8000-000000000f01",
+      followedUsername: "ana",
+      followedDisplayName: "Ana",
+      ...over,
+    });
+
+    it("expone una entrada de seguir a un usuario con autor y persona seguida", async () => {
+      mocks.db.select
+        .mockReturnValueOnce(followedQuery(["u2"]))
+        .mockReturnValueOnce(sourceQuery([])) // escuchas
+        .mockReturnValueOnce(sourceQuery([])) // favoritos
+        .mockReturnValueOnce(sourceQuery([])) // listas
+        .mockReturnValueOnce(sourceQuery([])) // ratings
+        .mockReturnValueOnce(sourceQuery([])) // comentarios
+        .mockReturnValueOnce(sourceQuery([])) // reseñas
+        .mockReturnValueOnce(sourceQuery([followRow()])); // follows
+
+      const result = await listFeed(author.id, 1, 20);
+
+      expect(result.entries).toHaveLength(1);
+      expect(result.entries[0]).toMatchObject({
+        kind: "follow",
+        author: { id: author.id, username: author.username },
+        followedUser: { id: "00000000-0000-4000-8000-000000000f01", username: "ana", displayName: "Ana" },
+      });
+    });
+
+    it("la condición incluye perfil público o ya seguido, exclusión del propio lector y bloqueo", async () => {
+      const capturing = sourceQueryCapturing([]);
+      mocks.db.select
+        .mockReturnValueOnce(followedQuery(["u2"]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(capturing);
+
+      await listFeed(author.id, 1, 20);
+
+      const { sql, params } = dialect.sqlToQuery(capturing.where.mock.calls[0]![0]);
+      const lower = sql.toLowerCase();
+      expect(lower).toContain("profile_visibility");
+      expect(lower).toContain("block");
+      expect(params).toContain("accepted");
+    });
+
+    it("con `q` o `kind` de otro tipo, no consulta la fuente de seguir a un usuario", async () => {
+      mocks.db.select.mockReturnValueOnce(followedQuery(["u2"])).mockReturnValueOnce(sourceQuery([]));
+
+      await listFeed(author.id, 1, 20, { kind: "comment", q: "algo" });
+
+      // Solo seguidos + la única fuente pedida (comment): la fuente de
+      // seguir a un usuario no tiene título que buscar, así que se saltea
+      // directo con cualquier filtro de texto o de tipo.
+      expect(mocks.db.select).toHaveBeenCalledTimes(2);
     });
   });
 

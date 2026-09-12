@@ -100,6 +100,17 @@ function review(overrides: Partial<Extract<FeedEntry, { kind: "review" }>> = {})
   };
 }
 
+function follow(overrides: Partial<Extract<FeedEntry, { kind: "follow" }>> = {}): FeedEntry {
+  return {
+    kind: "follow",
+    id: "fo1",
+    createdAt: "2026-08-06T00:00:00Z",
+    author,
+    followedUser: { id: "u9", username: "ana", displayName: "Ana" },
+    ...overrides,
+  };
+}
+
 function listen(overrides: Partial<Extract<FeedEntry, { kind: "listen" }>> = {}): FeedEntry {
   return {
     kind: "listen",
@@ -273,23 +284,24 @@ describe("FeedActivityList", () => {
     expect(screen.queryByTestId("cover-thumb")).not.toBeInTheDocument();
   });
 
-  it("una reseña abre con el verbo y el título entre comillas, y asienta el cuerpo como cita en redonda", () => {
+  it("una reseña abre con el verbo, muestra el título como titular y asienta el cuerpo como cita en redonda con borde propio", () => {
     renderWithIntl(<FeedActivityList entries={[review()]} />);
 
-    expect(screen.getByText(/Reseñó · «Un disco para volver»/)).toBeInTheDocument();
+    expect(screen.getByText(/Reseñó/)).toBeInTheDocument();
+    expect(screen.getByText("Un disco para volver")).toBeInTheDocument();
     const body = screen.getByText(
       "La producción respira y cada tema encuentra su lugar sin apuro.",
     );
-    expect(body.className).toMatch(/border-l/);
+    expect(body.className).toMatch(/border-petrol/);
     expect(body.className).not.toMatch(/italic/);
     expect(screen.getByTestId("cover-thumb")).toHaveAttribute("data-cover", "https://cover/7.jpg");
   });
 
-  it("una reseña sin título usa solo el verbo", () => {
+  it("una reseña sin título usa solo el verbo y el rótulo, sin titular", () => {
     renderWithIntl(<FeedActivityList entries={[review({ title: null })]} />);
 
     expect(screen.getByText(/Reseñó/)).toBeInTheDocument();
-    expect(screen.queryByText(/«/)).not.toBeInTheDocument();
+    expect(screen.getByText("Reseña")).toBeInTheDocument();
   });
 
   it("una reseña corta la corrida de valoraciones y no se pliega con ellas", () => {
@@ -306,7 +318,7 @@ describe("FeedActivityList", () => {
 
     // 2 + 1 + 1 entradas sueltas: ninguna corrida llega a 3, no hay fila de grupo
     expect(screen.queryByText(/valoró 3/)).not.toBeInTheDocument();
-    expect(screen.getByText(/Reseñó · «Un disco para volver»/)).toBeInTheDocument();
+    expect(screen.getByText("Un disco para volver")).toBeInTheDocument();
   });
 
   it("colapsa 3 valoraciones de canción en una fila con el verbo de canciones (tier 3), distinto del de álbumes", () => {
@@ -341,6 +353,54 @@ describe("FeedActivityList", () => {
 
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Fran" }).length).toBeGreaterThan(0);
+  });
+
+  describe("seguir a un usuario (tier 4, add-feed-kind-differentiation)", () => {
+    it("una entrada suelta se muestra en una sola línea, sin celda de carátula", () => {
+      renderWithIntl(<FeedActivityList entries={[follow()]} />);
+
+      expect(screen.getByText(/siguió a/)).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Ana" })).toHaveAttribute("href", "/users/ana");
+      expect(screen.queryByTestId("cover-thumb")).not.toBeInTheDocument();
+    });
+
+    it("en variant self omite el autor pero conserva a la persona seguida", () => {
+      renderWithIntl(<FeedActivityList entries={[follow()]} variant="self" />);
+
+      expect(screen.queryByRole("link", { name: "Fran" })).not.toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Ana" })).toBeInTheDocument();
+    });
+
+    it("una corrida de 3 o más seguidas del mismo autor se pliega en una fila", () => {
+      const runEntries = [
+        follow({ id: "fo1", followedUser: { id: "u1", username: "uno", displayName: "Uno" } }),
+        follow({ id: "fo2", followedUser: { id: "u2", username: "dos", displayName: "Dos" } }),
+        follow({ id: "fo3", followedUser: { id: "u3", username: "tres", displayName: "Tres" } }),
+      ];
+      renderWithIntl(<FeedActivityList entries={runEntries} />);
+
+      expect(screen.getByText(/siguió a 3 personas/)).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Uno" })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Tres" })).toBeInTheDocument();
+    });
+  });
+
+  describe("glifo por tipo (add-feed-kind-differentiation)", () => {
+    it("cada tipo de entrada, salvo rating, muestra un ícono junto al verbo", () => {
+      const { container } = renderWithIntl(
+        <FeedActivityList entries={[comment(), favorite(), review({ title: null })]} />,
+      );
+
+      // 3 filas, 3 glifos (uno por MetaLine) — el de reseña se suma al de su rótulo.
+      expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEqual(3);
+    });
+
+    it("el rating no suma un glifo propio: su medidor VU ya cumple ese rol", () => {
+      const { container } = renderWithIntl(<FeedActivityList entries={[rating()]} />);
+
+      // Único SVG en la fila de rating: ninguno (el medidor VU no es un <svg>).
+      expect(container.querySelector("svg")).toBeNull();
+    });
   });
 
   describe("avatar de iniciales del autor", () => {

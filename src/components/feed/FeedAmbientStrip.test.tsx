@@ -73,19 +73,12 @@ describe("FeedAmbientStrip", () => {
     expect(screen.getByText(/@leo/)).toBeInTheDocument();
   });
 
-  it("renderiza los tres verbos según el tipo de grupo", async () => {
+  it("renderiza los dos verbos según el tipo de grupo (seguir usuario ya no es fuente acá)", async () => {
     const { container } = renderWithIntl(
-      await FeedAmbientStrip({
-        groups: [
-          artistGroup,
-          { ...collectionGroup, kind: "follow-user", sample: [{ label: "@beto", href: "/users/beto" }], count: 1 },
-          collectionGroup,
-        ],
-      }),
+      await FeedAmbientStrip({ groups: [artistGroup, collectionGroup] }),
     );
 
     expect(container.textContent).toContain("ambient.followArtistVerb");
-    expect(container.textContent).toContain("ambient.followUserVerb");
     expect(container.textContent).toContain("ambient.collectionVerb");
   });
 });

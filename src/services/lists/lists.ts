@@ -508,7 +508,7 @@ export async function addItemToList(
         ? [userListItem.listId, userListItem.releaseGroupId]
         : [userListItem.listId, userListItem.recordingId];
 
-  await db
+  const inserted = await db
     .insert(userListItem)
     .values({
       listId,
@@ -517,6 +517,14 @@ export async function addItemToList(
     })
     .onConflictDoNothing({ target: conflictTarget })
     .returning();
+
+  // Solo si insertó de verdad (no un reintento idempotente sobre un ítem ya
+  // presente): agregar un ítem cuenta como actualizar la lista, para que
+  // vuelva a aparecer en el feed — hoy `updated_at` solo lo tocaba editar
+  // metadatos (openspec: add-feed-kind-differentiation).
+  if (inserted.length > 0) {
+    await db.update(userList).set({ updatedAt: new Date() }).where(eq(userList.id, listId));
+  }
 
   return getOwnedList(listId, ownerId);
 }
