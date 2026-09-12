@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-09-11
+goal: "Distinguish activity kinds in the feed (per-kind glyphs, review's own
+  identity) and add two new sources: list item-add updates and follow events"

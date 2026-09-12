@@ -1291,6 +1291,18 @@ export const FeedReviewSchema = z.object({
 });
 export type FeedReview = z.infer<typeof FeedReviewSchema>;
 
+// Tier 4 activado en la línea de tiempo principal (openspec:
+// add-feed-kind-differentiation): sin objetivo de catálogo, el "objetivo" es
+// la persona seguida.
+export const FeedFollowSchema = z.object({
+  kind: z.literal("follow"),
+  id: z.uuid(),
+  createdAt: z.string(),
+  followedUser: AuthorSummarySchema,
+  author: AuthorSummarySchema,
+});
+export type FeedFollow = z.infer<typeof FeedFollowSchema>;
+
 export const FeedEntrySchema = z.discriminatedUnion("kind", [
   FeedListenEntrySchema,
   FeedFavoriteSchema,
@@ -1298,6 +1310,7 @@ export const FeedEntrySchema = z.discriminatedUnion("kind", [
   FeedRatingSchema,
   FeedCommentSchema,
   FeedReviewSchema,
+  FeedFollowSchema,
 ]);
 export type FeedEntry = z.infer<typeof FeedEntrySchema>;
 
@@ -1316,6 +1329,7 @@ export const RecentActivityEntrySchema = z.discriminatedUnion("kind", [
   FeedRatingSchema,
   FeedCommentSchema,
   FeedReviewSchema,
+  FeedFollowSchema,
 ]);
 export type RecentActivityEntry = z.infer<typeof RecentActivityEntrySchema>;
 

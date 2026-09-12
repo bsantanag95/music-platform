@@ -4,7 +4,8 @@ import { feedEntryTier } from "./feed-entry-tier";
 type GroupableEntry =
   | Extract<FeedEntry, { kind: "listen" }>
   | Extract<FeedEntry, { kind: "favorite" }>
-  | Extract<FeedEntry, { kind: "rating" }>;
+  | Extract<FeedEntry, { kind: "rating" }>
+  | Extract<FeedEntry, { kind: "follow" }>;
 
 type ListenEntry = Extract<FeedEntry, { kind: "listen" }>;
 
@@ -12,10 +13,11 @@ export interface FeedEntryGroup {
   kind: "group";
   // Estable para la `key` de React: tipo + id de la primera entrada.
   id: string;
-  groupedKind: "listen" | "favorite" | "rating";
+  groupedKind: "listen" | "favorite" | "rating" | "follow";
   // Tier de la corrida (2 = señal de opinión sobre álbum, 3 = presencia
-  // cotidiana). El render puede darle un poco más de peso al grupo tier 2.
-  tier: 2 | 3;
+  // cotidiana, 4 = ambiente/seguir a un usuario). El render puede darle un
+  // poco más de peso al grupo tier 2.
+  tier: 2 | 3 | 4;
   author: FeedEntry["author"];
   // El más reciente de la corrida (las entradas vienen ordenadas desc).
   createdAt: string;
@@ -52,13 +54,19 @@ const ROTATION_PEAK_WINDOW_DAYS = 7;
 const ROTATION_PEAK_MIN_SONG = 3;
 const ROTATION_PEAK_MIN_ALBUM = 2;
 
-// Candidata a colapsar: tier 2 o 3 (rating, favorito, escucha sin nota). Los
-// tier 1 (comentario, nota de escucha, reseña, evento de lista) nunca lo son y
-// cortan cualquier corrida.
+// Candidata a colapsar: tier 2, 3 (rating, favorito, escucha sin nota) o 4
+// (seguir a un usuario, openspec: add-feed-kind-differentiation). Los tier 1
+// (comentario, nota de escucha, reseña, evento de lista) nunca lo son y cortan
+// cualquier corrida.
 function isGroupable(entry: FeedEntry): entry is GroupableEntry {
   const tier = feedEntryTier(entry);
-  if (tier !== 2 && tier !== 3) return false;
-  return entry.kind === "listen" || entry.kind === "favorite" || entry.kind === "rating";
+  if (tier !== 2 && tier !== 3 && tier !== 4) return false;
+  return (
+    entry.kind === "listen" ||
+    entry.kind === "favorite" ||
+    entry.kind === "rating" ||
+    entry.kind === "follow"
+  );
 }
 
 // Evalúa si una corrida de escuchas es un pico de rotación: todas del mismo
@@ -116,7 +124,7 @@ export function groupFeedRuns(entries: FeedEntry[], now: Date = new Date()): Fee
     const entry = entries[i]!;
 
     if (isGroupable(entry)) {
-      const tier = feedEntryTier(entry) as 2 | 3;
+      const tier = feedEntryTier(entry) as 2 | 3 | 4;
       let j = i + 1;
       while (
         j < entries.length &&

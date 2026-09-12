@@ -31,20 +31,6 @@ function artistRow(over: Record<string, unknown> = {}) {
   };
 }
 
-function userRow(over: Record<string, unknown> = {}) {
-  return {
-    authorId: "f1",
-    authorUsername: "ana",
-    authorDisplayName: "Ana",
-    followedId: "t1",
-    followedUsername: "beto",
-    followedDisplayName: "Beto",
-    followedVisibility: "public",
-    at: new Date("2026-09-07T00:00:00Z"),
-    ...over,
-  };
-}
-
 function collectionRow(over: Record<string, unknown> = {}) {
   return {
     authorId: "f2",
@@ -57,12 +43,12 @@ function collectionRow(over: Record<string, unknown> = {}) {
   };
 }
 
-// followRows, blockRows, luego artistRows, userRows, collectionRows (Promise.all).
+// followRows, blockRows, luego artistRows, collectionRows (Promise.all). "Seguir
+// usuario" ya no es fuente de este cálculo (openspec: add-feed-kind-differentiation).
 function primeDb(opts: {
   follows: string[];
   blocks?: { blockerId: string; blockedId: string }[];
   artists?: unknown[];
-  users?: unknown[];
   collection?: unknown[];
 }) {
   mocks.db.select.mockReturnValueOnce(q(opts.follows.map((id) => ({ id }))));
@@ -70,7 +56,6 @@ function primeDb(opts: {
   mocks.db.select.mockReturnValueOnce(q(opts.blocks ?? []));
   mocks.db.select
     .mockReturnValueOnce(q(opts.artists ?? []))
-    .mockReturnValueOnce(q(opts.users ?? []))
     .mockReturnValueOnce(q(opts.collection ?? []));
 }
 
@@ -102,31 +87,6 @@ describe("getFeedAmbientEvents", () => {
     expect(groups[0]!.sample[0]!.href).toBe("/artist/a1");
   });
 
-  it("incluye un follow a perfil público y excluye uno a perfil privado no seguido, el propio lector y los bloqueados", async () => {
-    primeDb({
-      follows: ["f1", "seguido-privado"],
-      blocks: [{ blockerId: viewer, blockedId: "bloqueado" }],
-      users: [
-        userRow({ followedId: "publico", followedUsername: "pub", followedDisplayName: null, followedVisibility: "public" }),
-        userRow({ followedId: "priv", followedUsername: "priv", followedDisplayName: null, followedVisibility: "private" }),
-        userRow({ followedId: "seguido-privado", followedUsername: "sp", followedDisplayName: null, followedVisibility: "private" }),
-        userRow({ followedId: viewer, followedUsername: "yo", followedDisplayName: null, followedVisibility: "public" }),
-        userRow({ followedId: "bloqueado", followedUsername: "blk", followedDisplayName: null, followedVisibility: "public" }),
-      ],
-    });
-
-    const { groups } = await getFeedAmbientEvents(viewer);
-
-    const labels = groups[0]!.sample.map((i) => i.label);
-    // "pub" (público) y "sp" (privado pero el lector lo sigue) sí; "priv", el
-    // propio lector y "blk" no.
-    expect(groups[0]!.count).toBe(2);
-    expect(labels).toEqual(expect.arrayContaining(["@pub", "@sp"]));
-    expect(labels).not.toContain("@priv");
-    expect(labels).not.toContain("@yo");
-    expect(labels).not.toContain("@blk");
-  });
-
   it("ordena los grupos por fecha del ítem más reciente y corta a AMBIENT_MAX_GROUPS", async () => {
     const many = Array.from({ length: AMBIENT_MAX_GROUPS + 3 }, (_, i) =>
       collectionRow({
@@ -146,16 +106,15 @@ describe("getFeedAmbientEvents", () => {
     expect(groups[0]!.sample[0]!.label).toBe(`Disco ${AMBIENT_MAX_GROUPS + 2}`);
   });
 
-  it("mezcla los tres tipos, un grupo por autor y tipo", async () => {
+  it("mezcla los dos tipos, un grupo por autor y tipo", async () => {
     primeDb({
       follows: ["f1", "f2"],
       artists: [artistRow()],
-      users: [userRow()],
       collection: [collectionRow()],
     });
 
     const { groups } = await getFeedAmbientEvents(viewer);
 
-    expect(groups.map((g) => g.kind).sort()).toEqual(["collection", "follow-artist", "follow-user"]);
+    expect(groups.map((g) => g.kind).sort()).toEqual(["collection", "follow-artist"]);
   });
 });

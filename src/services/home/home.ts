@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, isNotNull, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import { ApiError } from "@/lib/api/errors";
 import {
@@ -11,6 +12,7 @@ import {
   recording,
   releaseGroup,
   review,
+  userFollow,
   userList,
   userListItem,
 } from "@/db/schema";
@@ -18,6 +20,7 @@ import { PRIMARY_ARTIST_SQL } from "@/services/feed/feed";
 import type {
   FeedAuthor,
   FeedComment,
+  FeedFollow,
   FeedListEvent,
   FeedListenEntry,
   FeedRating,
@@ -59,7 +62,7 @@ export async function listMyRecentActivity(
   page = 1,
   pageSize = 5,
 ): Promise<{
-  entries: (FeedListenEntry | FeedRating | FeedComment | FeedReview)[];
+  entries: (FeedListenEntry | FeedRating | FeedComment | FeedReview | FeedFollow)[];
   page: number;
   pageSize: number;
   hasNext: boolean;
@@ -70,8 +73,9 @@ export async function listMyRecentActivity(
 
   const extra = 1;
   const perSource = pageSize + extra;
+  const followedUser = alias(appUser, "followed_user");
 
-  const [listens, ratings, comments, reviews] = await Promise.all([
+  const [listens, ratings, comments, reviews, follows] = await Promise.all([
     db
       .select({
         id: listenEntry.id,
@@ -180,6 +184,25 @@ export async function listMyRecentActivity(
       .where(eq(review.userId, userId))
       .orderBy(desc(review.updatedAt), desc(review.id))
       .limit(perSource),
+
+    // Actividad propia: sin regla de visibilidad (siempre visible para el
+    // propio lector), a diferencia de la misma fuente en `listFeed`.
+    db
+      .select({
+        id: userFollow.id,
+        createdAt: userFollow.updatedAt,
+        authorUsername: appUser.username,
+        authorDisplayName: appUser.displayName,
+        followedId: followedUser.id,
+        followedUsername: followedUser.username,
+        followedDisplayName: followedUser.displayName,
+      })
+      .from(userFollow)
+      .innerJoin(appUser, eq(appUser.id, userFollow.followerId))
+      .innerJoin(followedUser, eq(followedUser.id, userFollow.followedId))
+      .where(and(eq(userFollow.followerId, userId), eq(userFollow.status, "accepted")))
+      .orderBy(desc(userFollow.updatedAt), desc(userFollow.id))
+      .limit(perSource),
   ]);
 
   const listenEntries: FeedListenEntry[] = listens.map((row) => ({
@@ -248,7 +271,21 @@ export async function listMyRecentActivity(
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
   }));
 
-  const merged = [...listenEntries, ...ratingEntries, ...commentEntries, ...reviewEntries]
+  const followEntries: FeedFollow[] = follows.map((row) => ({
+    kind: "follow" as const,
+    id: row.id,
+    createdAt: row.createdAt.toISOString(),
+    followedUser: author(row.followedId, row.followedUsername, row.followedDisplayName),
+    author: author(userId, row.authorUsername, row.authorDisplayName),
+  }));
+
+  const merged = [
+    ...listenEntries,
+    ...ratingEntries,
+    ...commentEntries,
+    ...reviewEntries,
+    ...followEntries,
+  ]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice((page - 1) * pageSize, page * pageSize + extra);
 
@@ -512,117 +549,6 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
     "release-group": rank(albumRows, "release-group"),
     recording: rank(songRows, "recording"),
   };
-}
-
-/**
- * Actividad reciente de la comunidad para Inicio: ratings vigentes y
- * comentarios públicos recientes de cualquier usuario con perfil público, sin
- * requerir relación de seguimiento. Si hay `viewerId`, excluye autores
- * bloqueados en cualquier dirección. Sin paginación — pensado para un preview
- * de tamaño fijo, no para una vista completa (ver design.md de
- * add-home-page).
- */
-export async function listCommunityActivity(
-  viewerId: string | null,
-  limit = 10,
-): Promise<(FeedRating | FeedComment)[]> {
-  const [ratings, comments] = await Promise.all([
-    db
-      .select({
-        id: rating.id,
-        stars: rating.stars,
-        detailedScore: rating.detailedScore,
-        updatedAt: rating.updatedAt,
-        artistId: rating.artistId,
-        releaseGroupId: rating.releaseGroupId,
-        recordingId: rating.recordingId,
-        artistName: artist.name,
-        releaseTitle: releaseGroup.title,
-        releaseCover: releaseGroup.coverThumbUrl,
-        recordingTitle: recording.title,
-        authorId: rating.userId,
-        authorUsername: appUser.username,
-        authorDisplayName: appUser.displayName,
-      })
-      .from(rating)
-      .innerJoin(appUser, eq(rating.userId, appUser.id))
-      .leftJoin(artist, eq(rating.artistId, artist.id))
-      .leftJoin(releaseGroup, eq(rating.releaseGroupId, releaseGroup.id))
-      .leftJoin(recording, eq(rating.recordingId, recording.id))
-      .where(
-        viewerId
-          ? and(PUBLIC_PROFILE, NOT_BLOCKED_SQL(viewerId, rating.userId))
-          : PUBLIC_PROFILE,
-      )
-      .orderBy(desc(rating.updatedAt), desc(rating.id))
-      .limit(limit),
-
-    db
-      .select({
-        id: comment.id,
-        body: comment.body,
-        createdAt: comment.createdAt,
-        artistId: comment.artistId,
-        releaseGroupId: comment.releaseGroupId,
-        recordingId: comment.recordingId,
-        artistName: artist.name,
-        releaseTitle: releaseGroup.title,
-        releaseCover: releaseGroup.coverThumbUrl,
-        recordingTitle: recording.title,
-        authorId: comment.userId,
-        authorUsername: appUser.username,
-        authorDisplayName: appUser.displayName,
-      })
-      .from(comment)
-      .innerJoin(appUser, eq(comment.userId, appUser.id))
-      .leftJoin(artist, eq(comment.artistId, artist.id))
-      .leftJoin(releaseGroup, eq(comment.releaseGroupId, releaseGroup.id))
-      .leftJoin(recording, eq(comment.recordingId, recording.id))
-      .where(
-        viewerId
-          ? and(PUBLIC_PROFILE, NOT_BLOCKED_SQL(viewerId, comment.userId))
-          : PUBLIC_PROFILE,
-      )
-      .orderBy(desc(comment.createdAt), desc(comment.id))
-      .limit(limit),
-  ]);
-
-  const ratingEntries: FeedRating[] = ratings.map((row) => ({
-    kind: "rating" as const,
-    id: row.id,
-    stars: row.stars,
-    detailedScore: row.detailedScore,
-    createdAt: row.updatedAt.toISOString(),
-    target: {
-      type: targetType(row.artistId, row.releaseGroupId),
-      id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
-      title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
-      // El bloque compacto de Inicio no muestra el artista; el feed sí (vía
-      // listFeed). Aquí queda null a propósito.
-      artistName: null,
-      coverThumbUrl: row.releaseCover,
-    },
-    author: author(row.authorId, row.authorUsername, row.authorDisplayName),
-  }));
-
-  const commentEntries: FeedComment[] = comments.map((row) => ({
-    kind: "comment" as const,
-    id: row.id,
-    body: row.body,
-    createdAt: row.createdAt.toISOString(),
-    target: {
-      type: targetType(row.artistId, row.releaseGroupId),
-      id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
-      title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
-      artistName: null,
-      coverThumbUrl: row.releaseCover,
-    },
-    author: author(row.authorId, row.authorUsername, row.authorDisplayName),
-  }));
-
-  return [...ratingEntries, ...commentEntries]
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, limit);
 }
 
 /**

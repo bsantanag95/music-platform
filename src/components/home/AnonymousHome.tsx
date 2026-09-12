@@ -10,12 +10,12 @@ import { AlbumRail } from "@/components/discovery/AlbumRail";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import {
-  listCommunityActivity,
   listHomeReleases,
   listPopularComments,
   listPublicLists,
   listRecentCoverArt,
 } from "@/services/home/home";
+import { listCommunityActivity } from "@/services/activity/community-activity";
 import { listFeaturedCollections, listTopRated } from "@/services/discovery/discovery";
 import { CURATOR_USERNAME } from "@/services/discovery/constants";
 import { isExploreEnabled } from "@/lib/config/discovery";
@@ -44,7 +44,7 @@ export async function AnonymousHome() {
     topRated,
     featuredCollections,
   ] = await Promise.all([
-    listCommunityActivity(null, previewLimit),
+    listCommunityActivity(null, 1, previewLimit).then((page) => page.entries),
     listPublicLists(null, previewLimit),
     listRecentCoverArt(),
     listPopularComments(),

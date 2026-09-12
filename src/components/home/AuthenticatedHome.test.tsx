@@ -30,12 +30,14 @@ vi.mock("@/services/home/home", () => ({
     .fn()
     .mockResolvedValue({ entries: [], page: 1, pageSize: 10, hasNext: false }),
   getMostRecentEditedList: vi.fn().mockResolvedValue(null),
-  listCommunityActivity: vi.fn().mockResolvedValue([]),
   listPublicLists: vi.fn().mockResolvedValue([]),
   listPopularComments: vi
     .fn()
     .mockResolvedValue({ artist: [], "release-group": [], recording: [] }),
   listHomeReleases: vi.fn().mockResolvedValue([]),
+}));
+vi.mock("@/services/activity/community-activity", () => ({
+  listCommunityActivity: vi.fn().mockResolvedValue({ entries: [], page: 1, pageSize: 6, hasNext: false }),
 }));
 
 const user = { id: "u1", username: "yo", displayName: null };

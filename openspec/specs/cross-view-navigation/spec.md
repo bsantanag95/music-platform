@@ -70,11 +70,14 @@ navegación de contenido y un **menú de usuario** anclado al nombre visible, cu
 SHALL mostrar un indicador de despliegue (cheurón hacia abajo) junto al nombre.
 
 La barra general SHALL contener el acceso al buscador del catálogo, el enlace a la
-superficie pública de Listas de la comunidad (`/lists`) y, cuando el catálogo editorial
-esté habilitado, el enlace a Explorar. El enlace "Listas" de la barra general SHALL apuntar
-a la superficie pública `/lists`, distinta de la gestión personal en `/me/lists`. La barra
-general SHALL NOT mostrar en su nivel superior enlaces a las superficies personales del
-usuario (`/me/diary`, `/me/feed`, `/me/favorites`, `/me/lists`, `/me/collection`).
+superficie pública de Listas de la comunidad (`/lists`), el enlace a la superficie pública
+de Actividad de la comunidad (`/activity`) y, cuando el catálogo editorial esté habilitado,
+el enlace a Explorar. El enlace "Listas" de la barra general SHALL apuntar a la superficie
+pública `/lists`, distinta de la gestión personal en `/me/lists`. El enlace "Actividad"
+SHALL apuntar a la superficie pública `/activity`, distinta del feed de seguidos en
+`/me/feed`. La barra general SHALL NOT mostrar en su nivel superior enlaces a las
+superficies personales del usuario (`/me/diary`, `/me/feed`, `/me/favorites`, `/me/lists`,
+`/me/collection`).
 
 La barra general SHALL incluir además un control **"Registrar"** —solo cuando hay sesión—
 que **no es un enlace de navegación** sino el disparador de un modal para registrar una
@@ -100,16 +103,17 @@ devolviendo el foco al control, y el control SHALL exponer su estado mediante
 `aria-expanded` y `aria-controls`. El menú SHALL cerrarse al navegar a una ruta nueva.
 
 En viewports por debajo del punto de corte `md`, el Header SHALL colapsar en un panel único
-que conserve la misma división: un bloque de barra general (buscador, Listas, Explorar y el
-control "Registrar") y un bloque de usuario con los mismos accesos del menú, el selector de
-locale y el cierre de sesión.
+que conserve la misma división: un bloque de barra general (buscador, Listas, Actividad,
+Explorar y el control "Registrar") y un bloque de usuario con los mismos accesos del menú,
+el selector de locale y el cierre de sesión.
 
 #### Scenario: Barra general sin superficies personales
 
 - **WHEN** un usuario con sesión abre cualquier página con el Header en un viewport de
   escritorio
-- **THEN** la barra general muestra el buscador, el enlace a `/lists`, el control
-  "Registrar" y, si el catálogo editorial está habilitado, el enlace a Explorar
+- **THEN** la barra general muestra el buscador, el enlace a `/lists`, el enlace a
+  `/activity`, el control "Registrar" y, si el catálogo editorial está habilitado, el
+  enlace a Explorar
 - **AND** no muestra enlaces de nivel superior a diario, feed, favoritos, `/me/lists` ni
   colección
 
@@ -118,6 +122,12 @@ locale y el cierre de sesión.
 - **WHEN** el usuario activa el enlace "Listas" de la barra general
 - **THEN** llega a `/lists` (descubrimiento de listas de la comunidad) y no a `/me/lists`
   (gestión de sus propias listas)
+
+#### Scenario: El enlace de Actividad apunta a la superficie pública
+
+- **WHEN** el usuario activa el enlace "Actividad" de la barra general
+- **THEN** llega a `/activity` (actividad de la comunidad) y no a `/me/feed` (su feed de
+  seguidos)
 
 #### Scenario: El control "Registrar" solo con sesión
 
@@ -174,7 +184,7 @@ locale y el cierre de sesión.
 #### Scenario: Panel colapsado en viewport móvil
 
 - **WHEN** un usuario con sesión abre el panel del Header en un viewport por debajo de `md`
-- **THEN** ve un bloque de barra general con el buscador, el enlace a `/lists`, Explorar y el
-  control "Registrar", y un bloque de usuario con los mismos accesos del menú más el
-  selector de locale y el cierre de sesión
+- **THEN** ve un bloque de barra general con el buscador, el enlace a `/lists`, el enlace a
+  `/activity`, Explorar y el control "Registrar", y un bloque de usuario con los mismos
+  accesos del menú más el selector de locale y el cierre de sesión
 

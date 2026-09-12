@@ -33,6 +33,12 @@ function listEvent(): FeedEntry {
     list: { id: "list1", title: "Best of", entityType: "release-group" }, author,
   };
 }
+function follow(): FeedEntry {
+  return {
+    kind: "follow", id: "fo1", createdAt: "2026-08-01T00:00:00Z", author,
+    followedUser: { id: "u2", username: "ana", displayName: "Ana" },
+  };
+}
 
 describe("feedEntryTier", () => {
   it("comentario, reseña, evento de lista y escucha con nota → tier 1", () => {
@@ -54,6 +60,10 @@ describe("feedEntryTier", () => {
     expect(feedEntryTier(listen(null))).toBe(3);
     expect(feedEntryTier(listen("   "))).toBe(3);
   });
+
+  it("seguir a un usuario → tier 4", () => {
+    expect(feedEntryTier(follow())).toBe(4);
+  });
 });
 
 describe("isFeedEntryQuote", () => {
@@ -62,10 +72,11 @@ describe("isFeedEntryQuote", () => {
     expect(isFeedEntryQuote(review())).toBe(true);
     expect(isFeedEntryQuote(listen("nota"))).toBe(true);
   });
-  it("false para evento de lista, escucha sin nota, rating y favorito", () => {
+  it("false para evento de lista, escucha sin nota, rating, favorito y seguir a un usuario", () => {
     expect(isFeedEntryQuote(listEvent())).toBe(false);
     expect(isFeedEntryQuote(listen(null))).toBe(false);
     expect(isFeedEntryQuote(rating(album))).toBe(false);
     expect(isFeedEntryQuote(favorite("release-group"))).toBe(false);
+    expect(isFeedEntryQuote(follow())).toBe(false);
   });
 });

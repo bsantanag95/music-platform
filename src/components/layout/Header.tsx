@@ -91,6 +91,7 @@ export function Header({
   const generalNavClass = "font-data text-sm text-paper-muted transition-colors hover:text-paper";
   // Barra general: navegación de contenido que el sitio ofrece a cualquiera.
   // "Listas" es la superficie pública `/lists`, distinta de `/me/lists`.
+  // "Actividad" es `/activity`, distinta del feed de seguidos en `/me/feed`.
   const generalLinks = (
     <>
       {exploreEnabled ? (
@@ -100,6 +101,9 @@ export function Header({
       ) : null}
       <Link href="/lists" className={generalNavClass}>
         {t("lists")}
+      </Link>
+      <Link href="/activity" className={generalNavClass}>
+        {t("activity")}
       </Link>
       {platformPermissions.includes("moderation.review_content") || platformPermissions.includes("moderation.suspend_social") ? (
         <Link href="/moderation" className={generalNavClass}>

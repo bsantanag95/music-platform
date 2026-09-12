@@ -9,6 +9,7 @@ import { FeedRatingMeter } from "./FeedRatingMeter";
 import { isFeedEntryQuote } from "./feed-entry-tier";
 import { groupFeedRuns, type FeedEntryGroup, type FeedRotationPeak } from "./feed-grouping";
 import { ProsePanel, RelativeDate, TargetTitle } from "./feed-row-parts";
+import { FEED_KIND_ICONS } from "./FeedKindIcons";
 import type { FeedEntry } from "@/lib/api/schemas";
 
 type FeedT = (key: string, values?: Record<string, string | number>) => string;
@@ -71,6 +72,14 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
           );
         }
 
+        if (row.kind === "follow") {
+          return (
+            <li key={`follow-${row.id}`} className={subordinateClass}>
+              <FollowRow entry={row} t={t} hideAuthor={self} />
+            </li>
+          );
+        }
+
         const heavy = isFeedEntryQuote(row);
         const body = proseBody(row);
 
@@ -95,11 +104,13 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
                   label={ratingMeterLabel(row.stars, row.detailedScore, t)}
                 />
               ) : null}
+              {row.kind === "review" ? <ReviewKicker t={t} title={row.title} /> : null}
               {heavy && body ? (
                 <ProsePanel
                   body={body}
                   variant={row.kind === "listen" ? "impression" : "comment"}
                   clamp={clamp}
+                  accent={row.kind === "review" ? "review" : undefined}
                 />
               ) : null}
             </li>
@@ -121,11 +132,13 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
                     label={ratingMeterLabel(row.stars, row.detailedScore, t)}
                   />
                 ) : null}
+                {row.kind === "review" ? <ReviewKicker t={t} title={row.title} /> : null}
                 {heavy && body ? (
                   <ProsePanel
                     body={body}
                     variant={row.kind === "listen" ? "impression" : "comment"}
                     clamp={clamp}
+                    accent={row.kind === "review" ? "review" : undefined}
                   />
                 ) : null}
               </div>
@@ -156,7 +169,9 @@ function GroupRow({
       ? t("groupListens", { count: group.entries.length })
       : group.groupedKind === "favorite"
         ? t("groupFavorites", { count: group.entries.length })
-        : t(group.tier === 2 ? "groupRatings" : "groupSongRatings", { count: group.entries.length });
+        : group.groupedKind === "follow"
+          ? t("groupFollows", { count: group.entries.length })
+          : t(group.tier === 2 ? "groupRatings" : "groupSongRatings", { count: group.entries.length });
 
   return (
     <div>
@@ -244,6 +259,61 @@ function RotationPeakRow({
   );
 }
 
+// Tier 4 activo (openspec: add-feed-kind-differentiation): la fila más
+// callada del sistema — sin celda, sin objetivo de catálogo, una sola línea.
+// Misma anatomía subordinada que `GroupRow`/`RotationPeakRow`, pero sin la
+// segunda línea de objetivo (el "objetivo" es la persona seguida, ya enlazada
+// en la propia línea de metadato).
+function FollowRow({
+  entry,
+  t,
+  hideAuthor,
+}: {
+  entry: Extract<FeedEntry, { kind: "follow" }>;
+  t: FeedT;
+  hideAuthor: boolean;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <span className="min-w-0 font-data text-xs text-paper-muted">
+        <span aria-hidden="true" className="mr-1 inline-flex translate-y-px align-middle">
+          {FEED_KIND_ICONS.follow}
+        </span>
+        {hideAuthor ? null : (
+          <>
+            <AuthorIdentity author={entry.author} />
+            {" "}
+          </>
+        )}
+        {t("followVerb")}{" "}
+        <Link
+          href={`/users/${encodeURIComponent(entry.followedUser.username)}`}
+          className="text-paper transition-colors hover:text-amber"
+        >
+          {entry.followedUser.displayName ?? `@${entry.followedUser.username}`}
+        </Link>
+      </span>
+      <RelativeDate iso={entry.createdAt} />
+    </div>
+  );
+}
+
+// Rótulo "Reseña" en el segundo acento del sistema (petróleo) + el título
+// propio de la reseña como titular, cuando existe — antes vivía como sufijo
+// del verbo ("Reseñó · «título»"); acá gana su propio espacio visual en vez de
+// competir con el resto del metadato (openspec: add-feed-kind-differentiation).
+function ReviewKicker({ t, title }: { t: FeedT; title: string | null }) {
+  return (
+    <div className="mt-1.5 flex flex-col gap-0.5">
+      <span className="inline-flex w-fit items-center gap-1 rounded border border-petrol px-1.5 py-0.5 font-data text-[10px] uppercase tracking-wide text-petrol">
+        {FEED_KIND_ICONS.review}
+        {t("kind.review")}
+      </span>
+      {title ? <p className="font-display text-sm text-paper">{title}</p> : null}
+    </div>
+  );
+}
+
 function actionLabel(entry: FeedEntry, t: FeedT): string {
   switch (entry.kind) {
     case "listen":
@@ -255,9 +325,12 @@ function actionLabel(entry: FeedEntry, t: FeedT): string {
     case "comment":
       return t("commentLabel");
     case "review":
-      return entry.title ? t("reviewVerbTitled", { title: entry.title }) : t("reviewVerb");
+      // El título ya no va acá: pasa a ser su propio titular (ver `ReviewKicker`).
+      return t("reviewVerb");
     case "list":
       return t(`list.${entry.event}`);
+    case "follow":
+      return t("followVerb");
   }
 }
 
@@ -295,6 +368,13 @@ function targetLink(entry: FeedEntry): { href: string; label: string; artist: st
       artist: null,
     };
   }
+  if (entry.kind === "follow") {
+    return {
+      href: `/users/${encodeURIComponent(entry.followedUser.username)}`,
+      label: entry.followedUser.displayName ?? `@${entry.followedUser.username}`,
+      artist: null,
+    };
+  }
   const type = entry.kind === "favorite" ? entry.targetType : entry.target.type;
   return {
     href: targetHref(type, entry.target.id),
@@ -304,7 +384,7 @@ function targetLink(entry: FeedEntry): { href: string; label: string; artist: st
 }
 
 function coverForEntry(entry: FeedEntry): string | null {
-  if (entry.kind === "list") return null;
+  if (entry.kind === "list" || entry.kind === "follow") return null;
   const type = entry.kind === "favorite" ? entry.targetType : entry.target.type;
   return type === "release-group" ? entry.target.coverThumbUrl : null;
 }
@@ -328,6 +408,7 @@ function MetaLine({
   hideAuthor: boolean;
 }) {
   const audience = audienceLabel(entry, t);
+  const icon = FEED_KIND_ICONS[entry.kind];
   return (
     <div className="flex items-baseline justify-between gap-3">
       <span className="min-w-0 font-data text-xs text-paper-muted">
@@ -337,6 +418,11 @@ function MetaLine({
             {" · "}
           </>
         )}
+        {icon ? (
+          <span aria-hidden="true" className="mr-1 inline-flex translate-y-px align-middle">
+            {icon}
+          </span>
+        ) : null}
         {actionLabel(entry, t)}
         {audience ? ` · ${audience}` : null}
       </span>

@@ -8,6 +8,10 @@ y filtros combinables (tipo, autor, texto) y la prosa pasa de panel a cita en
 `add-feed-filters`. `rework-feed-tiers` reemplaza el criterio binario "con texto / sola
 presencia" por una **jerarquía de 4 tiers** y suma las **reseñas de álbum** como sexta
 fuente (acción expresiva de nivel 1) — ver "Jerarquía de presentación" más abajo.
+`add-feed-kind-differentiation` suma un glifo por tipo, un tratamiento propio para la
+reseña, activa "seguir a un usuario" (tier 4) como séptima fuente —retirándolo de la franja
+de eventos ambiente— y hace que agregar un ítem a una lista existente cuente como
+actualización de esa lista.
 
 ## Qué es
 
@@ -16,7 +20,7 @@ tiempo casi real lo que las personas que seguís están registrando, valorando o
 comentando. Es la pieza central de la diferenciación frente a Spotify/Apple Music, cuya
 capa social es mínima.
 
-## Feed — seis fuentes (add-diary-social-surfaces + add-favorites-and-lists + add-ratings-comments-feed + rework-feed-tiers)
+## Feed — siete fuentes (add-diary-social-surfaces + add-favorites-and-lists + add-ratings-comments-feed + rework-feed-tiers + add-feed-kind-differentiation)
 
 El feed muestra las actividades de los usuarios seguidos (relación `accepted`) que sean
 visibles para el lector, en orden cronológico descendente con paginación. Se implementa como
@@ -26,8 +30,12 @@ visibles para el lector, en orden cronológico descendente con paginación. Se i
 
 - **Escucha** (`kind: "listen"`): entrada del diario, con contexto, reacción y audiencia.
 - **Favorito** (`kind: "favorite"`): marca de favorito sobre artista/álbum/canción.
-- **Evento de lista** (`kind: "list"`): creación (`event: "created"`) o actualización de
-  metadatos (`event: "updated"`, con fecha `updated_at`). No se genera un evento por ítem.
+- **Evento de lista** (`kind: "list"`): creación (`event: "created"`) o actualización —de
+  metadatos (título, descripción, audiencia) **o de agregar un ítem** a una lista existente
+  (`add-feed-kind-differentiation`; `addItemToList` toca `updated_at` cuando insertó de
+  verdad)— (`event: "updated"`, con fecha `updated_at`). Nunca un evento por ítem: agregar
+  varios seguidos sigue refrescando la misma entrada vigente. Quitar un ítem no genera
+  evento.
 - **Rating** (`kind: "rating"`): valoración **vigente** de un usuario sobre un objetivo. Un
   cambio de valoración reemplaza la entrada anterior (no se muestra historial); la fecha
   mostrada es la de `updated_at`.
@@ -38,8 +46,17 @@ visibles para el lector, en orden cronológico descendente con paginación. Se i
   catálogo, filtrada por visibilidad de perfil), ordenada por `updated_at` y con esa fecha
   en la entrada. Trae `title` (opcional) además del `body`. Una edición no genera una
   segunda entrada — la misma fila se refecha.
+- **Seguir a un usuario** (`kind: "follow"`, `add-feed-kind-differentiation`): **tier 4**,
+  activo en la línea de tiempo principal — antes solo existía como resumen agrupado en la
+  franja de eventos ambiente (ver más abajo), de donde se retiró para no mostrar el mismo
+  hecho dos veces en `/me/feed`. Sin objetivo de catálogo: el payload trae `followedUser`
+  (la persona seguida) en vez de `target`. Visible solo si esa persona tiene perfil público
+  o el lector ya la sigue con relación aceptada; nunca si el objetivo es el propio lector;
+  sujeto a bloqueo en cualquier dirección entre lector↔autor y lector↔objetivo. Fecha =
+  `updated_at` de la relación (momento de aceptación, no de la solicitud). Sin concepto de
+  edición: si la relación deja de existir, la entrada desaparece.
 
-La composición se calcula **bajo demanda** uniendo las seis fuentes (no hay tabla de eventos
+La composición se calcula **bajo demanda** uniendo las siete fuentes (no hay tabla de eventos
 materializada), ordenando por `created_at DESC` con desempate por fuente e id. La paginación
 consulta una página ampliada por fuente y la fusiona en memoria; materialización y
 deduplicación se evalúan con volumen real.
@@ -73,9 +90,10 @@ actividad — no hace falta una audiencia explícita. Ver `design.md` del cambio
   Caso concreto ya identificado (`rework-feed-tiers`, OQ2): cuando existe una reseña y una
   valoración del mismo usuario y álbum, una futura refinación podrá ocultar o suprimir la
   fila de valoración; por ahora se muestran ambos eventos.
-- Notificaciones "Ana te empezó a seguir" — la franja de eventos ambiente
-  (`add-feed-ambient-events`) omite a propósito los follows cuyo objetivo es el propio
-  lector; ese caso es materia de una superficie de notificación, todavía inexistente.
+- Notificaciones "Ana te empezó a seguir" — tanto la fuente "seguir a un usuario" del feed
+  principal como (para seguir artista/colección) la franja de eventos ambiente omiten a
+  propósito los eventos cuyo objetivo es el propio lector; ese caso es materia de una
+  superficie de notificación, todavía inexistente.
 - Suprimir o colapsar en el listado cronológico las entradas individuales que ya alimentan
   una convergencia de la red (`add-network-convergence`, OQ2 — hoy el panel es aditivo).
 - Ponderar los tipos de interacción de la convergencia entre sí (reseña > registro) —
@@ -113,7 +131,7 @@ pesa distinto sobre un álbum que sobre una canción:
 | **1 Expresivo** | comentario · reseña · escucha con nota · evento de lista | cita (`ProsePanel`) para las tres con prosa; fila de título para el evento de lista. Nunca se colapsa; corta cualquier corrida. |
 | **2 Señal de opinión** | rating de **álbum** · favorito de **álbum** | fila con carátula + marca de opinión; se colapsa en corridas de 3+. |
 | **3 Presencia cotidiana** | rating de canción · favorito de canción/artista · escucha sin nota · reacción | fila mínima de baseline; se colapsa en corridas de 3+. |
-| **4 Ambiente** | seguir artista/usuario · colección | **reservado — todavía NO llega al feed** (se incorpora en un cambio posterior). |
+| **4 Ambiente** | **seguir usuario** (activo) · seguir artista/colección (reservados) | seguir usuario: fila mínima sin celda ni objetivo de catálogo, se colapsa en corridas de 3+ igual que tier 2/3. Seguir artista y colección siguen **sin fila propia en el feed principal** — viven en la franja de eventos ambiente. |
 
 - La regla de qué se renderiza como cita vive en `isFeedEntryQuote` (mismo módulo): tier 1
   con prosa (comentario, reseña, escucha con nota).
@@ -121,8 +139,17 @@ pesa distinto sobre un álbum que sobre una canción:
   (`variant="impression"`) va en cursiva y entre comillas — la misma voz personal que su
   equivalente en el diario. Un **comentario** y una **reseña** (`variant="comment"`) van en
   redonda y sin comillas: crítica, opinión o contenido en sí mismo, no una impresión
-  sentida. La reseña añade su `title` (cuando existe) en la línea de metadato:
-  `Reseñó · «{título}»`.
+  sentida.
+- **Glifo por tipo** (`add-feed-kind-differentiation`): cada `kind` muestra un ícono mono de
+  14px junto al verbo de la línea de metadato (`FeedKindIcons.tsx`, misma familia visual que
+  los íconos de reacción de escucha) — siempre acompañado del texto, nunca la única señal.
+  El rating queda exento: su medidor VU ya cumple ese rol.
+- **La reseña gana identidad propia**: ya no lleva su `title` como sufijo del verbo
+  (`Reseñó · «título»`); en cambio muestra un rótulo "Reseña" en **petróleo** (segundo
+  acento del sistema, antes sin usar en el feed), su `title` (cuando existe) como titular
+  en `font-display`, y un borde izquierdo en petróleo en vez del hairline neutro de una cita
+  común — mismo trato editorial que ya recibía una lista oficial en `/lists`. Es el primer
+  uso reservado de petróleo en el feed; no se suma a otros tipos sin una decisión explícita.
 
 Alinea con `product_philosophy.md`: el Principio 1 (registrar una escucha no requiere
 juicio, bajo contenido) y el Principio 4 (las reseñas son contenido). El tratamiento de
@@ -139,12 +166,14 @@ Es el único uso de ámbar en reposo del feed (Regla de Rareza). `role="img"` +
 ### Agrupación por tier
 
 `groupFeedRuns` (`src/components/feed/feed-grouping.ts`) pliega **3+ entradas consecutivas
-del mismo tier (2 o 3), del mismo `kind` y del mismo autor** en una fila: `autor · valoró N
-discos` (o `registró N escuchas`, `marcó N favoritos`, `valoró N canciones`) + hasta 4
-títulos enlazados + "y M más" (→ perfil del autor). El `FeedEntryGroup` lleva `tier: 2 | 3`
-para que el render distinga el grupo de señal de opinión (tier 2, verbo de álbumes) del de
-presencia cotidiana (tier 3, verbo de canciones). Una racha de ratings de canción (tier 3)
-y ratings de álbum (tier 2) **no se fusionan** aunque sean consecutivas. Toda entrada tier 1
+del mismo tier (2, 3 o 4), del mismo `kind` y del mismo autor** en una fila: `autor · valoró N
+discos` (o `registró N escuchas`, `marcó N favoritos`, `valoró N canciones`, o `siguió a N
+personas` desde `add-feed-kind-differentiation`) + hasta 4 títulos o personas enlazadas +
+"y M más" (→ perfil del autor). El `FeedEntryGroup` lleva `tier: 2 | 3 | 4` para que el
+render distinga el grupo de señal de opinión (tier 2, verbo de álbumes) del de presencia
+cotidiana (tier 3, verbo de canciones) del de ambiente (tier 4, seguir usuario). Una racha
+de ratings de canción (tier 3) y ratings de álbum (tier 2) **no se fusionan** aunque sean
+consecutivas — ni con una racha de "seguir usuario" (tier 4). Toda entrada tier 1
 (comentario, reseña, nota de escucha, evento de lista) corta la corrida. Corre en el
 cliente sobre el array acumulado, así que también colapsa a través de un "Cargar más".
 
@@ -211,18 +240,21 @@ del lector).
 | **Personal** | ¿Qué hice yo? | diario (`/me/diary`), rastro reciente y "En rotación" del perfil — sin filtro de audiencia para uno mismo |
 | **Social** | ¿Qué hizo cada persona que sigo, en orden? | listado cronológico de `/me/feed` y su preview de Inicio |
 | **Relevante** | ¿En qué coincide mi red ahora? | panel de convergencia en la cabecera de `/me/feed` |
-| **Automática** | Derivada sin acción explícita | franja "También en tu red" al pie de `/me/feed` (tier 4: seguir artista/usuario, colección) |
+| **Automática** | Derivada sin acción explícita | franja "También en tu red" al pie de `/me/feed` (tier 4: seguir artista, colección) — "seguir usuario" pasó a la capa **Social** (`add-feed-kind-differentiation`) |
 
-## Franja de eventos ambiente (`add-feed-ambient-events`)
+## Franja de eventos ambiente (`add-feed-ambient-events`; ajustada en `add-feed-kind-differentiation`)
 
-El tratamiento "minimizado" del **tier 4**: una franja compacta **"También en tu red"** al
-**pie de `/me/feed`**, debajo del listado cronológico (`FeedAmbientStrip.tsx`, Server
-Component, colapsa si vacío). Posición de coda —encabezado chico, texto `font-data` muted,
-sin carátula—: la actividad ambiente se alcanza tras el feed, no compite por la atención.
+El tratamiento "minimizado" del **tier 4** para las fuentes que no tienen fila propia en el
+feed principal: una franja compacta **"También en tu red"** al **pie de `/me/feed`**, debajo
+del listado cronológico (`FeedAmbientStrip.tsx`, Server Component, colapsa si vacío).
+Posición de coda —encabezado chico, texto `font-data` muted, sin carátula—: la actividad
+ambiente se alcanza tras el feed, no compite por la atención.
 
-- **Tres fuentes**, dentro de una ventana de **14 días** (los follows y las altas de
-  colección son escasos): `artist_follow`, `user_follow` (relación aceptada) y
-  `collection_entry`.
+- **Dos fuentes**, dentro de una ventana de **14 días** (son escasas): `artist_follow` y
+  `collection_entry`. **"Seguir a un usuario" ya no es fuente de este cálculo** — desde
+  `add-feed-kind-differentiation` tiene su propia fila tier 4 inline en la línea de tiempo
+  principal (ver "Feed — siete fuentes" más arriba), retirada de acá para no mostrar el
+  mismo hecho dos veces en la misma página.
 - **Agrupación por autor y tipo**: una persona que siguió a 5 artistas produce **una**
   línea ("Ana siguió a Radiohead, Pink Floyd y 3 más"), no 5. Cada grupo lleva hasta 3
   ítems enlazados + "y N más", ordenados por fecha desc. Máximo 8 grupos, ordenados por el
@@ -230,18 +262,15 @@ sin carátula—: la actividad ambiente se alcanza tras el feed, no compite por 
 - **Visibilidad por fuente**:
   - `artist_follow` — público implícito (mismo criterio que "Exploración" del perfil).
   - `collection_entry` — audiencia propia (`followers`/`public`).
-  - `user_follow` — el evento "Ana empezó a seguir a Beto" aparece solo si **Beto tiene
-    perfil público** o el lector ya sigue a Beto con relación aceptada; Beto no es el
-    propio lector (eso es notificación, no franja); y no hay bloqueo lector↔Beto.
-  - En las tres: seguido con relación aceptada + sin bloqueo con el autor; la actividad
+  - En ambas: seguido con relación aceptada + sin bloqueo con el autor; la actividad
     del **propio lector nunca aparece**.
 - **Cálculo**: `getFeedAmbientEvents(viewerId)` (`src/services/feed/ambient.ts`), `cache()`
-  por request, tres consultas con el query builder (no SQL crudo), agrupadas en memoria.
+  por request, dos consultas con el query builder (no SQL crudo), agrupadas en memoria.
   Sin tabla materializada, sin endpoint, sin fetcher. Constantes con nombre
   (`AMBIENT_WINDOW_DAYS`, `AMBIENT_SAMPLE`, `AMBIENT_MAX_GROUPS`).
-- **Independiente del listado cronológico**: `feedEntryTier`, `groupFeedRuns`, `FeedEntry`,
-  `FEED_KINDS` y `/api/me/feed` no cambian. La rama `4` de `feedEntryTier` sigue sin fuente
-  en el stream; la franja es la realización del tier 4 como superficie aparte.
+- **Independiente del listado cronológico**: la composición, paginación y filtros de
+  `/api/me/feed` no cambian por esta franja — sigue siendo una superficie aparte, ahora
+  acotada a las dos fuentes que de verdad no tienen fila propia en el feed principal.
 
 ### "Tu rastro reciente" — variante `self`
 
@@ -278,6 +307,48 @@ Carátulas de canciones y artistas: el feed no las **resuelve** (el objetivo `re
 llega ahora — `FeedTargetInfo`/`ListenTargetInfo` ganaron `artistName` (opcional), que
 `listFeed` puebla con el artista principal acreditado (`PRIMARY_ARTIST_SQL`, subquery
 escalar sobre `credit` con `role='primary'`).
+
+## Superficie pública `/activity` (`add-community-activity-surface`)
+
+Vitrina pública de actividad de la comunidad, enlazada desde la barra general del Header
+junto a Buscador · Explorar · Listas · Registrar. Accesible con y sin sesión.
+
+Sin sesión, la página muestra una única sección sin pestañas:
+
+- **Recientes** — ratings vigentes, comentarios y **reseñas de álbum** de cualquier usuario
+  con perfil `public`, sin requerir seguimiento, en orden cronológico paginado. Sin
+  recomendación ni señal de popularidad fabricada.
+
+Con sesión, se suman dos fuentes más y las tres pasan a mostrarse como pestañas
+(`ActivityTabs`) en vez de apiladas verticalmente — con las tres secciones completas una
+debajo de otra, la página se volvía demasiado vertical para llegar a la última:
+
+- **De la gente que seguís** — es **el mismo `listFeed`** que alimenta `/me/feed` (las seis
+  fuentes, misma presentación con `FeedActivityList`, `variant="feed"`), sin filtros propios.
+- **Tu actividad** — es **el mismo `listMyRecentActivity`** que alimenta "Tu rastro
+  reciente" de Inicio (`FeedActivityList` con `variant="self"`).
+
+Cada pestaña es una `CommunityActivitySection` independiente con su propia paginación
+(`useInfiniteQuery`); solo se monta la pestaña activa, y el caché de React Query evita
+volver a pedir la página 1 al regresar a una pestaña ya visitada. Si una pestaña no tiene
+contenido (p. ej. un usuario que no sigue a nadie todavía) muestra un mensaje corto en vez de
+desaparecer — a diferencia de la versión sin pestañas, acá ocultar la pestaña sería más
+disruptivo que un panel vacío. La página entera solo cae al `EmptyState` global cuando
+ninguna de las fuentes disponibles tiene contenido.
+
+El servicio que alimenta "Recientes" —`listCommunityActivity` (antes en
+`src/services/home/home.ts`, solo ratings + comentarios, sin paginar)— se generalizó a
+`src/services/activity/community-activity.ts`: suma reseñas y pagina de verdad
+(`page`/`pageSize`/`hasNext`) con el mismo criterio de "fusión en memoria por fuente" que ya
+usa `listFeed` (`pageSize + 1` por fuente, sin offset propio, merge + sort + slice — se
+degrada en páginas profundas con volumen alto, aceptado igual que en `listFeed`). El bloque
+compacto de Inicio (`CommunityActivity`, `AnonymousHome`/`AuthenticatedHome`) pasa a
+consumir esta versión pidiendo una sola página chica; su composición visual no cambia, salvo
+que ahora también puede mostrar una reseña reciente.
+
+`GET /api/activity/recent` (público) alimenta la sección "Recientes"; "De la gente que
+seguís" reusa `GET /api/me/feed` y "Tu actividad" reusa `GET /api/me/recent-activity`, ambos
+sin cambios en su contrato.
 
 ## De dónde sale el contenido del feed
 

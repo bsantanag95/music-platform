@@ -2,6 +2,18 @@
   "title": "Feed",
   "emptyTitle": "Nothing to see yet",
   "emptyDescription": "Follow people to see their listens, favorites, lists, ratings and comments here.",
+  "community": {
+    "pageTitle": "Community activity",
+    "heading": "Activity",
+    "intro": "Recent ratings, comments and reviews from the community, and activity from the people you follow.",
+    "recentHeading": "Recent",
+    "followingHeading": "From people you follow",
+    "ownHeading": "Your activity",
+    "tablistLabel": "Activity sections",
+    "tabEmpty": "No activity here yet.",
+    "emptyTitle": "No activity to show yet",
+    "emptyDescription": "Once the community rates, comments or reviews something, it will show up here."
+  },
   "favoriteLabel": "Added a favorite",
   "ratingVerb": "Rated",
   "ratingMeterLabel": "{stars} out of 5 stars",
@@ -9,6 +21,7 @@
   "commentLabel": "Commented",
   "reviewVerb": "Reviewed",
   "reviewVerbTitled": "Reviewed · “{title}”",
+  "followVerb": "followed",
   "list": {
     "created": "Created a list",
     "updated": "Updated a list"
@@ -17,6 +30,7 @@
   "groupFavorites": "{count, plural, one {added # favorite} other {added # favorites}}",
   "groupRatings": "{count, plural, one {rated # album} other {rated # albums}}",
   "groupSongRatings": "{count, plural, one {rated # song} other {rated # songs}}",
+  "groupFollows": "{count, plural, one {followed # person} other {followed # people}}",
   "rotationPeak": "In rotation · {count, plural, one {# log} other {# logs}} this week",
   "convergence": {
     "title": "In your network this week",
@@ -26,7 +40,6 @@
   "ambient": {
     "title": "Also in your network",
     "followArtistVerb": "followed",
-    "followUserVerb": "started following",
     "collectionVerb": "added to their collection:",
     "andMore": "and {count} more"
   },

@@ -13,12 +13,13 @@ import { listFollowing } from "@/services/social/following";
 import { listFeed } from "@/services/feed/feed";
 import {
   getMostRecentEditedList,
-  listCommunityActivity,
   listHomeReleases,
   listMyRecentActivity,
   listPopularComments,
   listPublicLists,
 } from "@/services/home/home";
+import { listCommunityActivity } from "@/services/activity/community-activity";
+import type { FeedComment, FeedListenEntry, FeedRating, FeedReview } from "@/services/feed/feed";
 
 // Carga inicial de los bloques con scroll infinito ("Tu feed", "Tu rastro
 // reciente"): página 1 resuelta en el servidor; el resto lo pagina
@@ -50,7 +51,7 @@ export async function AuthenticatedHome({ user, onboardingPending }: Authenticat
       listFollowing(user.id, 1, 1),
       listMyRecentActivity(user.id, 1, PREVIEW_PAGE_SIZE),
       getMostRecentEditedList(user.id),
-      listCommunityActivity(user.id, previewLimit),
+      listCommunityActivity(user.id, 1, previewLimit).then((page) => page.entries),
       listPublicLists(user.id, previewLimit),
       listPopularComments(),
       listHomeReleases(),
@@ -61,6 +62,14 @@ export async function AuthenticatedHome({ user, onboardingPending }: Authenticat
     ? await listFeed(user.id, 1, PREVIEW_PAGE_SIZE)
     : { entries: [], hasNext: false };
 
+  // "Última vez" necesita un objetivo de catálogo enlazable (carátula +
+  // título): "seguir a un usuario" no tiene uno, así que se lo salta para
+  // este recorte puntual sin afectar "Tu rastro reciente" (que sí lo muestra).
+  const lastTouch =
+    recentActivity.entries.find(
+      (entry): entry is FeedListenEntry | FeedRating | FeedComment | FeedReview => entry.kind !== "follow",
+    ) ?? null;
+
   return (
     <main className="flex min-h-screen flex-col items-center gap-12 overflow-x-clip px-4 py-12">
       <h1 className="sr-only">{t("appName")}</h1>
@@ -68,7 +77,7 @@ export async function AuthenticatedHome({ user, onboardingPending }: Authenticat
       <WelcomePanel
         name={user.displayName ?? `@${user.username}`}
         username={user.username}
-        lastActivity={recentActivity.entries[0] ?? null}
+        lastActivity={lastTouch}
       />
 
       {onboardingPending && <WelcomeLink />}

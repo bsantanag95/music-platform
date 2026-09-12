@@ -7,7 +7,10 @@ import type { FeedEntry } from "@/lib/api/schemas";
  *   1 Expresivo         — comentario · escucha con nota · reseña · evento de lista
  *   2 Señal de opinión  — rating de ÁLBUM · favorito de ÁLBUM
  *   3 Presencia cotidiana — rating de canción · favorito de canción/artista · escucha sin nota
- *   4 Ambiente          — seguir artista/usuario · colección (todavía NO llega al feed)
+ *   4 Ambiente          — seguir usuario (activo en el feed, openspec:
+ *                         add-feed-kind-differentiation) · seguir artista ·
+ *                         colección (estos dos últimos todavía NO llegan al
+ *                         feed principal, ver `feed-ambient-events`)
  *
  * El tier depende del tipo Y del objetivo: el mismo rating pesa distinto sobre
  * un álbum que sobre una canción.
@@ -24,6 +27,8 @@ export function feedEntryTier(entry: FeedEntry): 1 | 2 | 3 | 4 {
       return entry.target.type === "release-group" ? 2 : 3;
     case "favorite":
       return entry.targetType === "release-group" ? 2 : 3;
+    case "follow":
+      return 4;
   }
 }
 

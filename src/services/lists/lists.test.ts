@@ -348,15 +348,30 @@ describe("servicio de listas", () => {
       .mockReturnValueOnce(chain([{ max: 2 }])); // max position
     mockOwnedList(listRow); // getOwnedList al final
     mocks.db.insert.mockReturnValue(chain([{ id: "i1" }]));
+    mocks.db.update.mockReturnValue(chain([]));
 
     const result = await addItemToList(listRow.id, owner, target);
     expect(result.id).toBe(listRow.id);
+    expect(mocks.db.update).toHaveBeenCalledTimes(1);
 
     vi.clearAllMocks();
     mocks.db.select.mockReturnValue(chain([listRow]));
     await expect(addItemToList(listRow.id, owner, { type: "recording", id: target.id })).rejects.toMatchObject({
       code: "VALIDATION_ERROR",
     });
+  });
+
+  it("addItemToList no toca updated_at cuando el ítem ya estaba (onConflictDoNothing sin efecto)", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(chain([listRow])) // validar lista
+      .mockReturnValueOnce(chain([{ id: target.id }])) // resolveListTarget
+      .mockReturnValueOnce(chain([{ max: 2 }])); // max position
+    mockOwnedList(listRow); // getOwnedList al final
+    mocks.db.insert.mockReturnValue(chain([])); // onConflictDoNothing: nada insertado
+
+    const result = await addItemToList(listRow.id, owner, target);
+    expect(result.id).toBe(listRow.id);
+    expect(mocks.db.update).not.toHaveBeenCalled();
   });
 
   it("removeItemFromList elimina el ítem de una lista propia", async () => {

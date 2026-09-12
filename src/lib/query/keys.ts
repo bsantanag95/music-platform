@@ -26,6 +26,8 @@ export const queryKeys = {
     ["lists", "community", "explore", filters] as const,
   popularLists: () => ["lists", "popular"] as const,
   listsFromFollowing: () => ["lists", "fromFollowing"] as const,
+  activityRecent: () => ["activity", "recent"] as const,
+  activityOwn: () => ["activity", "own"] as const,
   myFavorites: (filters: FavoritesFiltersParams) => ["favorites", "mine", filters] as const,
   myCollection: (filters: Omit<CollectionQuery, "page" | "pageSize">) =>
     ["collection", "mine", filters] as const,

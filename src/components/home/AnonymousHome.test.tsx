@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { ReactNode } from "react";
 import * as home from "@/services/home/home";
+import * as communityActivity from "@/services/activity/community-activity";
 import * as discovery from "@/services/discovery/discovery";
 import * as discoveryConfig from "@/lib/config/discovery";
 import { AnonymousHome } from "./AnonymousHome";
@@ -22,13 +23,16 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 
 vi.mock("@/services/home/home", () => ({
-  listCommunityActivity: vi.fn().mockResolvedValue([]),
   listPublicLists: vi.fn().mockResolvedValue([]),
   listRecentCoverArt: vi.fn().mockResolvedValue([]),
   listPopularComments: vi
     .fn()
     .mockResolvedValue({ artist: [], "release-group": [], recording: [] }),
   listHomeReleases: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("@/services/activity/community-activity", () => ({
+  listCommunityActivity: vi.fn().mockResolvedValue({ entries: [], page: 1, pageSize: 6, hasNext: false }),
 }));
 
 vi.mock("@/services/discovery/discovery", () => ({
@@ -75,7 +79,7 @@ describe("AnonymousHome", () => {
     await AnonymousHome();
 
     expect(home.listRecentCoverArt).toHaveBeenCalled();
-    expect(home.listCommunityActivity).toHaveBeenCalledWith(null, 6);
+    expect(communityActivity.listCommunityActivity).toHaveBeenCalledWith(null, 1, 6);
   });
 
   const album = {

@@ -2,6 +2,18 @@
   "title": "Feed",
   "emptyTitle": "Nada para ver todavía",
   "emptyDescription": "Seguí a personas para que sus escuchas, favoritos, listas, valoraciones y comentarios aparezcan acá.",
+  "community": {
+    "pageTitle": "Actividad de la comunidad",
+    "heading": "Actividad",
+    "intro": "Valoraciones, comentarios y reseñas recientes de la comunidad, y la actividad de la gente que seguís.",
+    "recentHeading": "Recientes",
+    "followingHeading": "De la gente que seguís",
+    "ownHeading": "Tu actividad",
+    "tablistLabel": "Secciones de actividad",
+    "tabEmpty": "Todavía no hay actividad acá.",
+    "emptyTitle": "Todavía no hay actividad para mostrar",
+    "emptyDescription": "Cuando la comunidad valore, comente o reseñe algo, va a aparecer acá."
+  },
   "favoriteLabel": "Marcó como favorito",
   "ratingVerb": "Valoró",
   "ratingMeterLabel": "{stars} de 5 estrellas",
@@ -9,6 +21,7 @@
   "commentLabel": "Comentó",
   "reviewVerb": "Reseñó",
   "reviewVerbTitled": "Reseñó · «{title}»",
+  "followVerb": "siguió a",
   "list": {
     "created": "Creó una lista",
     "updated": "Actualizó una lista"
@@ -17,6 +30,7 @@
   "groupFavorites": "{count, plural, one {marcó # favorito} other {marcó # favoritos}}",
   "groupRatings": "{count, plural, one {valoró # disco} other {valoró # discos}}",
   "groupSongRatings": "{count, plural, one {valoró # canción} other {valoró # canciones}}",
+  "groupFollows": "{count, plural, one {siguió a # persona} other {siguió a # personas}}",
   "rotationPeak": "En rotación · {count, plural, one {# registro} other {# registros}} esta semana",
   "convergence": {
     "title": "En tu red esta semana",
@@ -26,7 +40,6 @@
   "ambient": {
     "title": "También en tu red",
     "followArtistVerb": "siguió a",
-    "followUserVerb": "empezó a seguir a",
     "collectionVerb": "sumó a su colección:",
     "andMore": "y {count} más"
   },
