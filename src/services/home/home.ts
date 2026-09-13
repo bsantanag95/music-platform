@@ -674,7 +674,7 @@ export async function getMostRecentEditedList(userId: string): Promise<HomeResum
     })
     .from(userList)
     .leftJoin(userListItem, eq(userListItem.listId, userList.id))
-    .where(eq(userList.ownerId, userId))
+    .where(and(eq(userList.ownerId, userId), eq(userList.kind, "standard")))
     .groupBy(userList.id)
     .orderBy(desc(lastActivity), desc(userList.id))
     .limit(1);

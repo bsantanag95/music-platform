@@ -173,6 +173,7 @@ export async function listDiscoverLists(
 
   const conditions: (SQL | undefined)[] = [
     eq(userList.audience, "public"),
+    eq(userList.kind, "standard"),
     eq(userList.moderationStatus, "visible"),
     eq(appUser.profileVisibility, "public"),
     // Listas retiradas por un administrador no reaparecen en el descubrimiento
@@ -263,6 +264,7 @@ export async function listPublicListsContainingItem(
 
   const conditions: (SQL | undefined)[] = [
     eq(userList.audience, "public"),
+    eq(userList.kind, "standard"),
     eq(userList.moderationStatus, "visible"),
     eq(appUser.profileVisibility, "public"),
     isNull(userList.officialWithdrawnAt),

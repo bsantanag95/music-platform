@@ -56,6 +56,8 @@
   "artistsFollowedTitle": "Artists I follow",
   "artistsFollowedEmpty": "You don't follow any artists yet.",
   "explorationHeading": "Exploration",
+  "journeyStateInProgress": "Journey in progress",
+  "journeyStateComplete": "Journey complete",
   "requestsTitle": "Follow requests",
   "blocksTitle": "Blocked accounts",
   "emptyFollowers": "You don't have followers yet.",

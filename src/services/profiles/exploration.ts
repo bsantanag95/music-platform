@@ -2,6 +2,7 @@ import { cache } from "react";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, artistFollow } from "@/db/schema";
+import { journeyStatesForArtists } from "@/services/artist-journeys/artist-journeys";
 import type { FollowedArtist } from "@/services/social/artist-following";
 
 // Sección "Exploración" del perfil (openspec: add-artist-following): los
@@ -21,7 +22,7 @@ export const listProfileFollowedArtists = cache(
     const profile = await getProfileByUsername(username, viewerId);
     if (!profile.accessible) return [];
 
-    return db
+    const rows = await db
       .select({
         id: artist.id,
         name: artist.name,
@@ -33,5 +34,14 @@ export const listProfileFollowedArtists = cache(
       .where(eq(artistFollow.userId, profile.id))
       .orderBy(desc(artistFollow.createdAt), desc(artistFollow.id))
       .limit(limit);
+
+    // Faceta de recorrido (openspec: add-artist-journey, D6 de design.md):
+    // una sola consulta agregada para todos los artistas de la página, nunca
+    // una por artista. Solo del dueño del perfil — nunca del visitante.
+    const journeyStates = await journeyStatesForArtists(
+      profile.id,
+      rows.map((r) => r.id),
+    );
+    return rows.map((row) => ({ ...row, journeyState: journeyStates.get(row.id) }));
   },
 );

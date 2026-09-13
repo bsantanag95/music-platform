@@ -566,12 +566,26 @@ isOfficial: boolean("is_official").notNull().default(false),
     editorialSubmittedBy: uuid("editorial_submitted_by").references(() => appUser.id, {
       onDelete: "set null",
     }),
+    // Subtipo "recorrido de artista" (migración 0027, cambio add-artist-journey).
+    // `kind = 'artist_journey'` reutiliza esta misma tabla/ítems para la
+    // selección personal de discografía; `journeyArtistId`/`journeyArchivedAt`
+    // solo se usan en ese subtipo. El estado "completo"/"en curso" NO se
+    // persiste — se deriva en el momento de lectura contra `listen_entry`
+    // (ver src/services/artist-journeys/artist-journeys.ts), así nunca queda
+    // desincronizado al agregar o quitar un ítem.
+    kind: text("kind").notNull().default("standard"),
+    journeyArtistId: uuid("journey_artist_id").references(() => artist.id, { onDelete: "cascade" }),
+    journeyArchivedAt: timestamp("journey_archived_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     index("idx_user_list_owner_created").on(t.ownerId, t.createdAt),
     index("idx_user_list_owner_audience").on(t.ownerId, t.audience),
+    // Índice único parcial (owner_id, journey_artist_id) WHERE kind =
+    // 'artist_journey' definido en la migración SQL cruda — Drizzle no expresa
+    // bien índices parciales (mismo criterio que uq_credit_pos_*).
+    index("idx_user_list_journey_artist").on(t.journeyArtistId),
     check(
       "chk_user_list_entity_type",
       sql`${t.entityType} IN ('artist', 'release-group', 'recording')`,
@@ -579,6 +593,7 @@ isOfficial: boolean("is_official").notNull().default(false),
     check("chk_user_list_title", sql`length(${t.title}) <= 100`),
     check("chk_user_list_description", sql`${t.description} IS NULL OR length(${t.description}) <= 500`),
     check("chk_user_list_moderation_status", sql`${t.moderationStatus} IN ('visible', 'hidden')`),
+    check("chk_user_list_kind", sql`${t.kind} IN ('standard', 'artist_journey')`),
   ],
 );
 

@@ -56,6 +56,8 @@
   "artistsFollowedTitle": "Artistas que sigo",
   "artistsFollowedEmpty": "Todavía no seguís a ningún artista.",
   "explorationHeading": "Exploración",
+  "journeyStateInProgress": "Recorrido en curso",
+  "journeyStateComplete": "Recorrido completo",
   "requestsTitle": "Solicitudes de seguimiento",
   "blocksTitle": "Cuentas bloqueadas",
   "emptyFollowers": "Todavía no tenés seguidores.",

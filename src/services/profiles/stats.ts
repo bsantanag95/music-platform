@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import {
   collectionEntry,
@@ -168,12 +168,13 @@ async function countByAudience(
   audienceColumn: typeof collectionEntry.audience | typeof userList.audience,
   ownerId: string,
   audiences: Audience[],
+  extra?: SQL,
 ): Promise<number> {
   if (audiences.length === 0) return 0;
   const [row] = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(table)
-    .where(and(eq(ownerColumn, ownerId), inArray(audienceColumn, audiences)));
+    .where(and(eq(ownerColumn, ownerId), inArray(audienceColumn, audiences), extra));
   return row?.n ?? 0;
 }
 
@@ -202,7 +203,16 @@ export const getTasteFingerprint = cache(
         profile.id,
         audiences,
       ),
-      countByAudience(userList, userList.ownerId, userList.audience, profile.id, audiences),
+      // Un recorrido de artista nunca cuenta como "lista" en el reparto de la
+      // huella de gusto (openspec: add-artist-journey, D4 de design.md).
+      countByAudience(
+        userList,
+        userList.ownerId,
+        userList.audience,
+        profile.id,
+        audiences,
+        eq(userList.kind, "standard"),
+      ),
     ]);
 
     const [decades, genres] = await Promise.all([

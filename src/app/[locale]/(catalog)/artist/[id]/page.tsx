@@ -19,12 +19,14 @@ import { FollowArtistButton } from "@/components/catalog/FollowArtistButton";
 import { AddToListButton } from "@/components/lists/AddToListButton";
 import { ShowInListsButton } from "@/components/lists/ShowInListsButton";
 import { ViewAllListsLink } from "@/components/lists/ViewAllListsLink";
+import { ArtistJourneySection } from "@/components/artist-journey/ArtistJourneySection";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
 import { listComments, resolveSocialTarget } from "@/services/social";
 import { isFollowingArtist } from "@/services/social/artist-following";
 import { isFavorited } from "@/services/favorites/favorites";
 import { isWantToListen } from "@/services/want-to-listen/want-to-listen";
+import { getArtistJourneyDetail } from "@/services/artist-journeys/artist-journeys";
 
 interface ArtistPageProps {
   params: Promise<{ id: string }>;
@@ -62,15 +64,19 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
   const canModerate = session?.user
     ? (await getUserPermissions(session.user.id)).includes("moderation.suspend_social")
     : false;
-  const [releaseGroups, memberships, following, favorited, wantToListen] = await Promise.all([
-    findOrIngestDiscography(artist),
-    getArtistMemberships(artist),
-    session ? isFollowingArtist(session.user.id, artist.id) : Promise.resolve(false),
-    session ? isFavorited({ type: "artist", id: artist.id }, session.user.id) : Promise.resolve(false),
-    session
-      ? isWantToListen({ type: "artist", id: artist.id }, session.user.id)
-      : Promise.resolve(false),
-  ]);
+  const [releaseGroups, memberships, following, favorited, wantToListen, artistJourney] =
+    await Promise.all([
+      findOrIngestDiscography(artist),
+      getArtistMemberships(artist),
+      session ? isFollowingArtist(session.user.id, artist.id) : Promise.resolve(false),
+      session ? isFavorited({ type: "artist", id: artist.id }, session.user.id) : Promise.resolve(false),
+      session
+        ? isWantToListen({ type: "artist", id: artist.id }, session.user.id)
+        : Promise.resolve(false),
+      session
+        ? getArtistJourneyDetail(session.user.id, artist.id)
+        : Promise.resolve(null),
+    ]);
   // La página de artista ya no expone rating de estrellas (openspec:
   // rebalance-catalog-detail-pages, D7): solo se cargan las notas de la
   // comunidad. El modelo sigue aceptando ratings de artista; la página no.
@@ -133,6 +139,13 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
         <ShowInListsButton target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
         <ViewAllListsLink target={{ type: "artist", id: artist.id }} />
       </div>
+      <ArtistJourneySection
+        artistId={artist.id}
+        artistName={artist.name}
+        authenticated={Boolean(session?.user.id)}
+        initialJourney={artistJourney}
+        categoryLabels={categoryLabels}
+      />
       <ArtistMemberships
         memberships={memberships}
         heading={artist.type === "group" ? t("artist.membersHeading") : t("artist.membershipsHeading")}

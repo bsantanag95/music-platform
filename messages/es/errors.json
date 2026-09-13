@@ -167,6 +167,10 @@
     "title": "Elemento no encontrado",
     "description": "El elemento de la lista no existe o ya fue quitado."
   },
+  "ARTIST_JOURNEY_NOT_FOUND": {
+    "title": "Recorrido no encontrado",
+    "description": "El recorrido no existe o ya fue eliminado."
+  },
   "COLLECTION_ENTRY_NOT_FOUND": {
     "title": "Entrada de colección no encontrada",
     "description": "La entrada no existe o ya fue quitada de la colección."

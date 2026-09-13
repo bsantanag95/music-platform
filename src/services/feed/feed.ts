@@ -440,6 +440,7 @@ export async function listFeed(
             and(
               inArray(userList.ownerId, authorIds),
               inArray(userList.audience, ["followers", "public"]),
+              eq(userList.kind, "standard"),
               BLOCKED_SQL(viewerId, userList.ownerId),
               ...(searchPattern ? [ilike(userList.title, searchPattern)] : []),
             ),

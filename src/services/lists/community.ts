@@ -37,6 +37,7 @@ export async function listFeaturedLists(readerId: string | null) {
           eq(userList.moderationStatus, "visible"),
           eq(appUser.profileVisibility, "public"),
           isNull(userList.officialWithdrawnAt),
+          eq(userList.kind, "standard"),
         ),
       )
       .orderBy(desc(userList.officialPublishedAt)),
@@ -45,7 +46,13 @@ export async function listFeaturedLists(readerId: string | null) {
       .from(userListFeatured)
       .innerJoin(userList, eq(userList.id, userListFeatured.listId))
       .innerJoin(appUser, eq(userList.ownerId, appUser.id))
-      .where(and(eq(userList.audience, "public"), eq(userList.moderationStatus, "visible")))
+      .where(
+        and(
+          eq(userList.audience, "public"),
+          eq(userList.moderationStatus, "visible"),
+          eq(userList.kind, "standard"),
+        ),
+      )
       .orderBy(userListFeatured.rank),
   ]);
 
@@ -85,6 +92,7 @@ export async function listPopularLists(
         eq(appUser.profileVisibility, "public"),
         readerId ? ne(userList.ownerId, readerId) : undefined,
         notBlockedByReader(readerId),
+        eq(userList.kind, "standard"),
       ),
     )
     .groupBy(userList.id, appUser.id)
@@ -130,6 +138,7 @@ export async function listsFromFollowing(readerId: string, page = 1, pageSize = 
         eq(userList.moderationStatus, "visible"),
         ne(userList.ownerId, readerId),
         notBlockedByReader(readerId),
+        eq(userList.kind, "standard"),
       ),
     )
     .orderBy(desc(userList.createdAt), desc(userList.id))
