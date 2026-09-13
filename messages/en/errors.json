@@ -167,6 +167,10 @@
     "title": "Item not found",
     "description": "The list item does not exist or was already removed."
   },
+  "ARTIST_JOURNEY_NOT_FOUND": {
+    "title": "Journey not found",
+    "description": "The journey does not exist or was already removed."
+  },
   "COLLECTION_ENTRY_NOT_FOUND": {
     "title": "Collection entry not found",
     "description": "The entry does not exist or was already removed from the collection."

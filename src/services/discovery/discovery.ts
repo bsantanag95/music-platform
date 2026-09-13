@@ -102,7 +102,7 @@ export async function listFeaturedCollections(): Promise<FeaturedCollection[]> {
     .select({ id: userList.id, title: userList.title, rank: userListFeatured.rank })
     .from(userListFeatured)
     .innerJoin(userList, eq(userList.id, userListFeatured.listId))
-    .where(eq(userList.audience, "public"))
+    .where(and(eq(userList.audience, "public"), eq(userList.kind, "standard")))
     .orderBy(asc(userListFeatured.rank));
 
   const enrichment = await enrichLists(rows.map((row) => row.id));

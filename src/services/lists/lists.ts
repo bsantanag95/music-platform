@@ -197,7 +197,7 @@ export async function getOwnedList(listId: string, ownerId: string): Promise<Use
   const [listRow] = await db
     .select()
     .from(userList)
-    .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId)))
+    .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId), eq(userList.kind, "standard")))
     .limit(1);
   if (!listRow) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
   const [items, [pin]] = await Promise.all([
@@ -228,7 +228,7 @@ export async function updateList(
   const [updated] = await db
     .update(userList)
     .set(set)
-    .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId)))
+    .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId), eq(userList.kind, "standard")))
     .returning();
   if (!updated) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
   return getOwnedList(updated.id, ownerId);
@@ -237,7 +237,7 @@ export async function updateList(
 export async function deleteList(listId: string, ownerId: string): Promise<void> {
   const [deleted] = await db
     .delete(userList)
-    .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId)))
+    .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId), eq(userList.kind, "standard")))
     .returning({ id: userList.id });
   if (!deleted) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
 }
@@ -329,7 +329,7 @@ export async function listMyLists(
   }
   const { q, entityType, sort } = normalizeListFilters(filters);
 
-  const conditions: SQL[] = [eq(userList.ownerId, ownerId)];
+  const conditions: SQL[] = [eq(userList.ownerId, ownerId), eq(userList.kind, "standard")];
   if (entityType) conditions.push(eq(userList.entityType, entityType));
   if (q) conditions.push(ilike(userList.title, `%${q}%`));
 
@@ -391,7 +391,13 @@ export async function listUserLists(
   const rows = await db
     .select()
     .from(userList)
-    .where(and(eq(userList.ownerId, profile.id), inArray(userList.audience, audiences)))
+    .where(
+      and(
+        eq(userList.ownerId, profile.id),
+        inArray(userList.audience, audiences),
+        eq(userList.kind, "standard"),
+      ),
+    )
     .orderBy(desc(userList.createdAt), desc(userList.id))
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
@@ -425,7 +431,7 @@ export async function pinList(listId: string, ownerId: string): Promise<void> {
   const [listRow] = await db
     .select({ id: userList.id })
     .from(userList)
-    .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId)))
+    .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId), eq(userList.kind, "standard")))
     .limit(1);
   if (!listRow) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
   await db
@@ -439,7 +445,7 @@ export async function unpinList(listId: string, ownerId: string): Promise<void> 
   const [listRow] = await db
     .select({ id: userList.id })
     .from(userList)
-    .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId)))
+    .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId), eq(userList.kind, "standard")))
     .limit(1);
   if (!listRow) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
   await db
@@ -466,6 +472,7 @@ export async function getUserListDetail(
         eq(userList.id, listId),
         eq(userList.ownerId, profile.id),
         inArray(userList.audience, audiences),
+        eq(userList.kind, "standard"),
       ),
     )
     .limit(1);
@@ -482,7 +489,7 @@ export async function addItemToList(
   const [listRow] = await db
     .select()
     .from(userList)
-    .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId)))
+    .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId), eq(userList.kind, "standard")))
     .limit(1);
   if (!listRow) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
 
@@ -537,7 +544,7 @@ export async function removeItemFromList(
   const [listRow] = await db
     .select({ id: userList.id })
     .from(userList)
-    .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId)))
+    .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId), eq(userList.kind, "standard")))
     .limit(1);
   if (!listRow) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
 
@@ -557,7 +564,7 @@ export async function reorderListItems(
   const [listRow] = await db
     .select({ id: userList.id })
     .from(userList)
-    .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId)))
+    .where(and(eq(userList.id, listId), eq(userList.ownerId, ownerId), eq(userList.kind, "standard")))
     .limit(1);
   if (!listRow) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
 

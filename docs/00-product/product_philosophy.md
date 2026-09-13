@@ -89,17 +89,51 @@ Confirmado: el contenido navegable nace de listas creadas por usuarios, no de ag
 
 ### 6.4 Recorrido de artista (ex "completismo de discografía") — reformulado, sin curaduría editorial
 
+**Estado: ✅ implementado** (cambio `add-artist-journey`, 2026-09-13). Ver
+`openspec/specs/artist-journey/spec.md` para el contrato completo de requisitos y
+`openspec/changes/add-artist-journey/design.md` para las decisiones técnicas (reutilización de
+`user_list`, estado derivado en lectura, exclusión de las superficies genéricas de listas).
+
 Renombrado a propósito: dejó de ser "completismo" (con la connotación de meta que se puede cumplir o no) y pasó a ser una herramienta de organización personal, opcional por artista, sin comparación social ni progreso "correcto".
 
 Flujo confirmado:
 - Es opt-in por artista. No todos los artistas que un usuario sigue o escucha necesitan tener un recorrido armado — el usuario decide para cuáles artistas quiere "organizar su escucha de fondo".
-- Al activarlo, la UI muestra **todos los álbumes agrupados por tipo**, usando la clasificación que ya provee MusicBrainz vía `release-group` (`primary-type`/`secondary-type`): Estudio como grupo principal, más En Vivo, EP, Compilación, etc.
-- **Default de selección:** los álbumes de tipo Estudio vienen pre-marcados (menor fricción — es más simple deseleccionar lo que no interesa que ir seleccionando uno por uno). El resto de los grupos (En Vivo, EP, Compilación, etc.) quedan desmarcados por default.
+- Al activarlo, la UI muestra **todos los álbumes agrupados por categoría** — la clasificación real que ya usa el catálogo, `release_group.category` (`studio`/`single_ep`/`compilation`/`live_other`; corrección de alcance detectada al implementar: el catálogo no expone el `primary-type`/`secondary-type` crudo de MusicBrainz por álbum, ya normaliza a estas cuatro).
+- **Default de selección:** los álbumes de categoría `studio` vienen pre-marcados (menor fricción — es más simple deseleccionar lo que no interesa que ir seleccionando uno por uno). El resto de las categorías (`single_ep`, `compilation`, `live_other`) quedan desmarcadas por default.
 - El usuario puede editar la selección libremente en cualquier momento, en cualquier dirección — sacar discos de estudio que no le interesan, agregar discos en vivo/EPs/compilados después, revertir decisiones previas. Sin restricciones.
 - **Se descarta la curaduría editorial de "discos esenciales fuera de estudio"** (ej. *Made in Japan*, *Alive*) como excepción marcada por default. Sería valioso, pero el costo de mantenimiento (evaluación artista por artista, sin escalar con el catálogo) no se justifica frente al beneficio, especialmente dado que no hay comparación social que dependa de una vara compartida. Estos discos simplemente aparecen dentro de su grupo de tipo (En Vivo) como cualquier otro, sin tratamiento especial.
 - Sin comparación social ni "estado correcto" de progreso — es organización personal, compartible si el usuario quiere, no una competencia ni un logro medido contra otros usuarios.
 
 **Modelo de datos:** se resuelve reutilizando el mecanismo de listas ya definido en 6.3 (mismo tipo de entidad), con un subtipo especializado "recorrido de artista" que se pre-puebla automáticamente desde metadata de MusicBrainz al crearse. No requiere entidad nueva separada de listas/`Favorito`/`listen_entry`, ni ningún proceso editorial — a diferencia de 6.3, este subtipo es 100% self-service, sin intervención humana del equipo.
+
+**Nombre confirmado (2026-09-13):** se mantiene "Recorrido de artista". Se evaluaron alternativas ("discografía personal", "selección personal", "completismo dinámico") y se descartaron por reintroducir directa o indirectamente el campo semántico de meta/logro que motivó el renombre original, o por perder la referencia a un artista concreto. Ningún texto de UI de este feature debe usar "completismo" ni variantes de "completar X discos" — ver framing en 6.4.1.
+
+#### 6.4.1 Estados y visibilidad en perfil (retomado y extendido, 2026-09-13)
+
+Un recorrido de artista tiene exactamente **tres estados**, sin un cuarto estado de "pendiente":
+
+- **En curso:** hay un recorrido armado (selección definida) y no está al 100% de esa selección.
+- **Completo:** el usuario alcanzó el 100% de su propia selección. Es el único punto del feature con tratamiento visual afirmativo (color de éxito, confirmación sobria) — ver framing abajo.
+- **Archivado:** el usuario decide dejar de perseguir activamente un recorrido sin completarlo ni borrar el progreso hecho. Acción manual y reversible (desarchivar en cualquier momento), con tratamiento visual neutro — nunca negativo. Se agrupa junto a Fijar/Editar/Eliminar en la gestión de la lista subyacente (mismo patrón que 6.3). Equivale al "dejar para después" de videojuegos/series: abandonar sin culpa, no un fracaso.
+
+Un artista sin recorrido armado **no es un estado del feature** — es simplemente la ausencia de uno, igual que un álbum nunca escuchado no está "pendiente" en el diario. Se descarta explícitamente cualquier estado tipo "pendiente de completar": por más discreto que sea el tratamiento visual, la palabra por sí sola transmite obligación y contradice el principio 5.1.
+
+**Framing de "Completo":** constatación, no celebración de tercero. Texto de referencia: "Tu recorrido por Deep Purple está completo" — nunca "¡Lograste completar a Deep Purple!" ni lenguaje de insignia/logro.
+
+**Visibilidad en perfil — solo faceta, nunca sección de logros:** los recorridos (en curso / completos / archivados) se muestran integrados como una faceta más de cada artista dentro de la sección de discografías/artistas del perfil (6.5) — nunca como una pared o sección aparte de "completados", que se leería como vitrina de trofeos independientemente de la intención. **No habrá ningún conteo agregado en el perfil** (ej. "N discografías completadas" como número suelto de cabecera): un conteo agregado, aunque sea puramente descriptivo, es el primer paso hacia comparación implícita entre usuarios. Esto es más estricto que el tratamiento de favoritos en 6.5, precisamente porque "completado" ya carga connotación de logro que "favorito" no tiene.
+
+#### 6.4.2 Distinción respecto a Want to Listen
+
+Recorrido de artista y Want to Listen (ver `docs/05-features/lists-and-favorites.md` y spec `want-to-listen`) no colisionan ni deben fusionarse, pese a operar sobre el mismo tipo de objetivo (artista/álbum) — cumplen el principio 5.7 (no colapsar señales distintas):
+
+- **Want to Listen** es intención liviana y sin compromiso: "me recomendaron esto, no tengo tiempo ahora, lo anoto para más adelante". Un álbum suelto, sin gestión, sin seguimiento de progreso.
+- **Recorrido de artista** es decisión activa de trabajar una discografía completa según criterio propio, con selección gestionada y progreso propio. Presupone convicción, no una recomendación pendiente de evaluar.
+
+Marcar un álbum dentro de un recorrido **no** crea ni quita una entrada de Want to Listen, y viceversa — son independientes, igual que Want to Listen ya lo es de favoritos/listas/rating.
+
+#### 6.4.3 Decisión cerrada: sin agregado ni ranking comunitario (2026-09-13)
+
+A diferencia de otras preguntas abiertas del documento (ej. el contador de coleccionistas en 6.6, diferido pero no descartado), esta queda **cerrada, no diferida**: no habrá, en ninguna fase futura, agregado comunitario ni ranking de recorridos de artista — ni framing descriptivo tipo "N personas completaron esta discografía", ni "artistas más completados de la comunidad", ni comparación de cantidad de recorridos entre usuarios. La razón estructural (a diferencia del caso de colección física) es que la definición de "completo" es distinta para cada usuario por diseño — cualquier agregado entre selecciones no comparables mentiría sobre lo que mide, además de reintroducir la comparación social que el feature existe para evitar.
 
 ### 6.5 Perfil público — confirmado, modelo Letterboxd
 

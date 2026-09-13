@@ -55,7 +55,13 @@ export async function getProfileRecency(
         ? db
             .select({ t: sql<Date | null>`max(${userList.updatedAt})` })
             .from(userList)
-            .where(and(eq(userList.ownerId, profile.id), inArray(userList.audience, audiences)))
+            .where(
+              and(
+                eq(userList.ownerId, profile.id),
+                inArray(userList.audience, audiences),
+                eq(userList.kind, "standard"),
+              ),
+            )
         : null,
     ),
     maxTimestamp(

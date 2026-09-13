@@ -22,16 +22,38 @@ export async function ExploreSection({ artists }: ExploreSectionProps) {
         {artists.map((artist) => (
           <li key={artist.id}>
             <Link href={`/artist/${artist.id}`} className="group flex flex-col items-center gap-2 text-center">
-              {artist.photoUrl ? (
-                <div className="relative size-16 overflow-hidden rounded-full border border-ink-border transition-colors group-hover:border-amber">
-                  <Image src={artist.photoUrl} alt="" fill sizes="4rem" className="object-cover" />
-                </div>
-              ) : (
-                <DiscPlaceholder
-                  alt=""
-                  className="size-16 rounded-full border border-ink-border transition-colors group-hover:border-amber"
-                />
-              )}
+              <div className="relative">
+                {artist.photoUrl ? (
+                  <div className="relative size-16 overflow-hidden rounded-full border border-ink-border transition-colors group-hover:border-amber">
+                    <Image src={artist.photoUrl} alt="" fill sizes="4rem" className="object-cover" />
+                  </div>
+                ) : (
+                  <DiscPlaceholder
+                    alt=""
+                    className="size-16 rounded-full border border-ink-border transition-colors group-hover:border-amber"
+                  />
+                )}
+                {/* Faceta de recorrido de artista (openspec: add-artist-journey):
+                    solo un punto discreto para en-curso/completo — nunca un
+                    número ni un badge de "pendiente" (§6.4.1). */}
+                {artist.journeyState && (
+                  <span
+                    aria-label={t(
+                      artist.journeyState === "complete"
+                        ? "journeyStateComplete"
+                        : "journeyStateInProgress",
+                    )}
+                    title={t(
+                      artist.journeyState === "complete"
+                        ? "journeyStateComplete"
+                        : "journeyStateInProgress",
+                    )}
+                    className={`absolute -right-0.5 -top-0.5 size-3 rounded-full border-2 border-ink-surface ${
+                      artist.journeyState === "complete" ? "bg-petrol" : "bg-paper-muted"
+                    }`}
+                  />
+                )}
+              </div>
               <span className="line-clamp-2 font-data text-xs text-paper transition-colors group-hover:text-amber">
                 {artist.name}
               </span>

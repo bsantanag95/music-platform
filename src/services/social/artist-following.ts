@@ -14,6 +14,14 @@ export interface FollowedArtist {
   name: string;
   type: string;
   photoUrl: string | null;
+  /**
+   * Faceta de recorrido de artista (openspec: add-artist-journey), solo en la
+   * sección "Exploración" del perfil (`listProfileFollowedArtists`). `undefined`
+   * cuando el artista no tiene un recorrido propio del dueño, o está
+   * archivado — ninguno de los dos casos se representa como "pendiente"
+   * (docs/00-product/product_philosophy.md §6.4.1).
+   */
+  journeyState?: "in_progress" | "complete";
 }
 
 async function assertArtistExists(artistId: string): Promise<void> {

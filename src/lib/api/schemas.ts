@@ -197,6 +197,7 @@ export const ErrorCodeSchema = z.enum([
   "LIST_NOT_FOUND",
   "LIST_TARGET_INVALID",
   "LIST_ITEM_NOT_FOUND",
+  "ARTIST_JOURNEY_NOT_FOUND",
   "COLLECTION_ENTRY_NOT_FOUND",
 "MODERATION_REPORT_NOT_FOUND",
   "RESTRICTION_NOT_FOUND",
@@ -1300,6 +1301,58 @@ export const FeaturedListsResponseSchema = z.object({
   lists: z.array(DiscoverListSummarySchema),
 });
 export type FeaturedListsResponse = z.infer<typeof FeaturedListsResponseSchema>;
+
+// ============================================================
+// Recorrido de artista (openspec: add-artist-journey)
+// ============================================================
+
+// Exactamente tres estados, derivados en el servidor — sin un cuarto estado
+// "pendiente" (docs/00-product/product_philosophy.md §6.4.1).
+export const ArtistJourneyStateSchema = z.enum(["in_progress", "complete", "archived"]);
+export type ArtistJourneyState = z.infer<typeof ArtistJourneyStateSchema>;
+
+export const ArtistJourneyAlbumSchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  category: ReleaseGroupCategorySchema,
+  firstReleaseYear: z.number().int().nullable(),
+  coverThumbUrl: z.string().nullable(),
+  selected: z.boolean(),
+});
+export type ArtistJourneyAlbum = z.infer<typeof ArtistJourneyAlbumSchema>;
+
+export const ArtistJourneyDetailSchema = z.object({
+  artistId: z.uuid(),
+  state: ArtistJourneyStateSchema,
+  activatedAt: z.string(),
+  progress: z.object({
+    selectedCount: z.number().int().nonnegative(),
+    listenedCount: z.number().int().nonnegative(),
+  }),
+  albums: z.array(ArtistJourneyAlbumSchema),
+});
+export type ArtistJourneyDetail = z.infer<typeof ArtistJourneyDetailSchema>;
+
+export const ArtistJourneyDetailResponseSchema = z.object({
+  journey: ArtistJourneyDetailSchema.nullable(),
+});
+export type ArtistJourneyDetailResponse = z.infer<typeof ArtistJourneyDetailResponseSchema>;
+
+// El modal de gestión edita un borrador local (sin llamar al servidor por
+// cada casillero) y "Guardar" envía de una vez el conjunto final completo de
+// álbumes seleccionados (rediseño de modal — guardado en lote, 2026-09).
+export const SetArtistJourneySelectionRequestSchema = z.object({
+  releaseGroupIds: z.array(z.uuid()),
+});
+export type SetArtistJourneySelectionRequest = z.infer<typeof SetArtistJourneySelectionRequestSchema>;
+
+export const ArtistJourneySummarySchema = z.object({
+  artistId: z.uuid(),
+  artistName: z.string(),
+  artistPhotoUrl: z.string().nullable(),
+  state: ArtistJourneyStateSchema,
+});
+export type ArtistJourneySummary = z.infer<typeof ArtistJourneySummarySchema>;
 
 // ============================================================
 // Feed (Fase 5, add-favorites-and-lists)
