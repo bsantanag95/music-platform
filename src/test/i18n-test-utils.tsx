@@ -22,6 +22,8 @@ import listsEs from "../../messages/es/lists.json";
 import listsEn from "../../messages/en/lists.json";
 import favoritesEs from "../../messages/es/favorites.json";
 import favoritesEn from "../../messages/en/favorites.json";
+import wantToListenEs from "../../messages/es/wantToListen.json";
+import wantToListenEn from "../../messages/en/wantToListen.json";
 
 const messagesByLocale = {
   es: {
@@ -35,6 +37,7 @@ const messagesByLocale = {
     collection: collectionEs,
     lists: listsEs,
     favorites: favoritesEs,
+    wantToListen: wantToListenEs,
   },
   en: {
     common: commonEn,
@@ -47,6 +50,7 @@ const messagesByLocale = {
     collection: collectionEn,
     lists: listsEn,
     favorites: favoritesEn,
+    wantToListen: wantToListenEn,
   },
 };
 

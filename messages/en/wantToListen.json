@@ -1,0 +1,26 @@
+{
+  "title": "Want to Listen",
+  "emptyTitle": "Nothing here yet",
+  "emptyDescription": "Mark an artist or album as \"want to listen\" and it will show up here.",
+  "emptyCta": "Search the catalog",
+  "add": "Want to listen",
+  "remove": "Remove from list",
+  "signInToAdd": "Sign in to add",
+  "saving": "Saving...",
+  "saveError": "We could not save the change. Try again.",
+  "loadMore": "Load more",
+  "loadingMore": "Loading...",
+  "loadError": "We could not load the list. Try again.",
+  "sectionArtists": "Artists",
+  "sectionAlbums": "Albums",
+  "viewModeLabel": "Display mode",
+  "viewMode": {
+    "detailed": "Detailed",
+    "index": "Index",
+    "graphic": "Graphic"
+  },
+  "removeItem": "Remove",
+  "removeItemShort": "Remove?",
+  "removeItemNamed": "Remove {title} from the list",
+  "removeItemConfirm": "Confirm removal"
+}

@@ -14,6 +14,7 @@ import { ArtistMemberships } from "@/components/catalog/ArtistMemberships";
 import { Comments } from "@/components/social/Comments";
 import { MarkAsListened } from "@/components/diary/MarkAsListened";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
+import { WantToListenButton } from "@/components/want-to-listen/WantToListenButton";
 import { FollowArtistButton } from "@/components/catalog/FollowArtistButton";
 import { AddToListButton } from "@/components/lists/AddToListButton";
 import { ShowInListsButton } from "@/components/lists/ShowInListsButton";
@@ -23,6 +24,7 @@ import { getUserPermissions } from "@/services/auth/authorization";
 import { listComments, resolveSocialTarget } from "@/services/social";
 import { isFollowingArtist } from "@/services/social/artist-following";
 import { isFavorited } from "@/services/favorites/favorites";
+import { isWantToListen } from "@/services/want-to-listen/want-to-listen";
 
 interface ArtistPageProps {
   params: Promise<{ id: string }>;
@@ -60,11 +62,14 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
   const canModerate = session?.user
     ? (await getUserPermissions(session.user.id)).includes("moderation.suspend_social")
     : false;
-  const [releaseGroups, memberships, following, favorited] = await Promise.all([
+  const [releaseGroups, memberships, following, favorited, wantToListen] = await Promise.all([
     findOrIngestDiscography(artist),
     getArtistMemberships(artist),
     session ? isFollowingArtist(session.user.id, artist.id) : Promise.resolve(false),
     session ? isFavorited({ type: "artist", id: artist.id }, session.user.id) : Promise.resolve(false),
+    session
+      ? isWantToListen({ type: "artist", id: artist.id }, session.user.id)
+      : Promise.resolve(false),
   ]);
   // La página de artista ya no expone rating de estrellas (openspec:
   // rebalance-catalog-detail-pages, D7): solo se cargan las notas de la
@@ -123,6 +128,7 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
         />
         <MarkAsListened target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
         <FavoriteButton target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} initialActive={favorited} />
+        <WantToListenButton target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} initialActive={wantToListen} />
         <AddToListButton target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
         <ShowInListsButton target={{ type: "artist", id: artist.id }} authenticated={Boolean(session?.user.id)} />
         <ViewAllListsLink target={{ type: "artist", id: artist.id }} />
