@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/api/errors";
 import type { SocialTargetType } from "@/lib/api/schemas";
 import { PRIMARY_ARTIST_ID_SQL, PRIMARY_ARTIST_SQL } from "@/services/feed/feed";
 import { getProfileByUsername } from "@/services/social/profiles";
+import { removeWantToListenEntryForTarget } from "@/services/want-to-listen/want-to-listen";
 import {
   DIARY_BODY_MAX,
   type DiaryAudience,
@@ -118,6 +119,11 @@ export async function createListenEntry(target: DiaryTarget, userId: string): Pr
     .values({ ...targetValues(target), userId, listenContext: context, audience: "private" })
     .returning();
   if (!created) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo registrar la escucha");
+
+  // La intención de Want to Listen ya se cumplió: registrar la escucha retira
+  // la entrada correspondiente, si existe (openspec: add-want-to-listen).
+  await removeWantToListenEntryForTarget(target, userId);
+
   return getOwnedEntry(created.id, userId);
 }
 

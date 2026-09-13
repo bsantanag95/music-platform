@@ -12,6 +12,7 @@ import type { ReleaseGroupCategory } from "@/lib/api/schemas";
 import { SocialSection } from "@/components/social/SocialSection";
 import { MarkAsListened } from "@/components/diary/MarkAsListened";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
+import { WantToListenButton } from "@/components/want-to-listen/WantToListenButton";
 import { AddToListButton } from "@/components/lists/AddToListButton";
 import { ShowInListsButton } from "@/components/lists/ShowInListsButton";
 import { ViewAllListsLink } from "@/components/lists/ViewAllListsLink";
@@ -19,6 +20,7 @@ import { CollectionAlbumAction } from "@/components/collection/CollectionAlbumAc
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
 import { isFavorited } from "@/services/favorites/favorites";
+import { isWantToListen } from "@/services/want-to-listen/want-to-listen";
 import { listOwnEntriesForReleaseGroup } from "@/services/collection/collection";
 import { getRatings, listComments, resolveSocialTarget } from "@/services/social";
 import { listReviews } from "@/services/reviews";
@@ -65,7 +67,7 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
     ? (await getUserPermissions(session.user.id)).includes("moderation.suspend_social")
     : false;
   const socialTarget = await resolveSocialTarget("release-group", detail.releaseGroup.id);
-  const [ratings, comments, reviews, collectionEntries, favorited] = await Promise.all([
+  const [ratings, comments, reviews, collectionEntries, favorited, wantToListen] = await Promise.all([
     getRatings(socialTarget, session?.user.id),
     listComments(socialTarget),
     listReviews(socialTarget),
@@ -74,6 +76,9 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
       : Promise.resolve([]),
     session?.user.id
       ? isFavorited({ type: "release-group", id: detail.releaseGroup.id }, session.user.id)
+      : Promise.resolve(false),
+    session?.user.id
+      ? isWantToListen({ type: "release-group", id: detail.releaseGroup.id }, session.user.id)
       : Promise.resolve(false),
   ]);
 
@@ -122,6 +127,11 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
               target={{ type: "release-group", id: detail.releaseGroup.id }}
               authenticated={Boolean(session?.user.id)}
               initialActive={favorited}
+            />
+            <WantToListenButton
+              target={{ type: "release-group", id: detail.releaseGroup.id }}
+              authenticated={Boolean(session?.user.id)}
+              initialActive={wantToListen}
             />
             <AddToListButton
               target={{ type: "release-group", id: detail.releaseGroup.id }}

@@ -157,6 +157,7 @@ describe("servicio del diario", () => {
       .mockReturnValueOnce(joinLimit([{ ...entryRow, listenContext: "first_listen", audience: "private" }]));
     const values = vi.fn(() => ({ returning: vi.fn().mockResolvedValue([{ id: entryRow.id }]) }));
     mocks.db.insert.mockReturnValue({ values });
+    mocks.db.delete.mockReturnValue({ where: vi.fn().mockResolvedValue([]) });
 
     const entry = await createListenEntry(target, user);
 
@@ -174,9 +175,41 @@ describe("servicio del diario", () => {
     mocks.db.insert.mockReturnValue({
       values: vi.fn(() => ({ returning: vi.fn().mockResolvedValue([{ id: entryRow.id }]) })),
     });
+    mocks.db.delete.mockReturnValue({ where: vi.fn().mockResolvedValue([]) });
 
     const entry = await createListenEntry(target, user);
     expect(entry.listenContext).toBe("relisten");
+  });
+
+  it("registrar una escucha retira la entrada de Want to Listen del mismo objetivo (auto-remoción)", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(whereTerminal([{ count: 0 }]))
+      .mockReturnValueOnce(joinLimit([entryRow]));
+    mocks.db.insert.mockReturnValue({
+      values: vi.fn(() => ({ returning: vi.fn().mockResolvedValue([{ id: entryRow.id }]) })),
+    });
+    const deleteWhere = vi.fn().mockResolvedValue([]);
+    mocks.db.delete.mockReturnValue({ where: deleteWhere });
+
+    await createListenEntry(target, user);
+
+    expect(mocks.db.delete).toHaveBeenCalled();
+    expect(deleteWhere).toHaveBeenCalled();
+  });
+
+  it("registrar una escucha de canción no toca Want to Listen (no admite canciones)", async () => {
+    const songTarget: DiaryTarget = { type: "recording", id: "00000000-0000-4000-8000-0000000000ff", column: "recordingId" };
+    mocks.db.select
+      .mockReturnValueOnce(whereTerminal([{ count: 0 }]))
+      .mockReturnValueOnce(joinLimit([{ ...entryRow, artistId: null, recordingId: songTarget.id, recordingTitle: "Song" }]));
+    mocks.db.insert.mockReturnValue({
+      values: vi.fn(() => ({ returning: vi.fn().mockResolvedValue([{ id: entryRow.id }]) })),
+    });
+
+    await createListenEntry(songTarget, user);
+
+    // Sin entrada de Want to Listen que limpiar, no debe llamarse a delete.
+    expect(mocks.db.delete).not.toHaveBeenCalled();
   });
 
   it("rechaza modificar una entrada que no existe o no es del dueño con 404", async () => {

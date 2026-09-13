@@ -45,6 +45,10 @@ vi.mock("@/services/favorites/favorites", () => ({
   isFavorited: vi.fn().mockResolvedValue(false),
 }));
 
+vi.mock("@/services/want-to-listen/want-to-listen", () => ({
+  isWantToListen: vi.fn().mockResolvedValue(false),
+}));
+
 vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");

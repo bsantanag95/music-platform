@@ -744,6 +744,37 @@ sin revelar si el usuario tiene favoritos. Mismo orden por rango de tipo que el 
 **200 OK:** `{ favorites: [...], page, pageSize, hasNext, counts }`. **404** con `USER_NOT_FOUND`
 si el username no existe.
 
+## Want to Listen (cambio `add-want-to-listen`)
+
+Señal prospectiva "quiero escuchar" sobre artista o álbum — **nunca canción**. Toggle
+idempotente: un usuario tiene a lo sumo una entrada por objetivo. Sin audiencia ni superficie
+pública: es una lista de gestión personal. Registrar una escucha (`POST /api/me/diary`) del
+mismo objetivo retira automáticamente la entrada correspondiente, si existe. Las mutaciones y
+lecturas requieren sesión.
+
+### `POST /api/me/want-to-listen`
+
+Marca un objetivo (toggle on). Idempotente: si ya está en la lista, devuelve la entrada existente
+sin duplicar.
+
+**Body:** `{ target: { type: "artist" | "release-group", id } }`.
+**201 OK:** `{ entry }` si se creó. **200 OK:** `{ entry }` si ya existía. **400** con
+`VALIDATION_ERROR` si `type` es `recording` u otro valor inválido. **404** con
+`WANT_TO_LISTEN_TARGET_INVALID` si el objetivo no existe. **401** con `AUTH_REQUIRED` sin sesión.
+
+### `DELETE /api/me/want-to-listen`
+
+Quita una entrada (toggle off). Idempotente: si no existe, responde `204` igual.
+
+**Body:** `{ target: { type, id } }`. **204.** **401** con `AUTH_REQUIRED` sin sesión.
+
+### `GET /api/me/want-to-listen?page=&pageSize=`
+
+Lista paginada de la lista propia, orden cronológico descendente.
+
+**200 OK:** `{ items: [{ id, targetType, createdAt, target: { id, title, coverThumbUrl } }], page, pageSize, hasNext }`.
+**401** con `AUTH_REQUIRED` sin sesión.
+
 ## Listas (Fase 5.5, cambio `add-favorites-and-lists`)
 
 Colecciones curadas de un solo tipo de entidad (`artist`/`release-group`/`recording`), propiedad de

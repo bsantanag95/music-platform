@@ -507,6 +507,36 @@ export const favorite = pgTable(
   ],
 );
 
+// Señal prospectiva "quiero escuchar" (openspec: add-want-to-listen). Mismo
+// patrón de objetivo que `favorite`, pero sin `recordingId`: acotada a
+// artista y álbum por decisión de producto. Se retira desde la app (no por
+// trigger) cuando el usuario registra una escucha del mismo objetivo — ver
+// `createListenEntry` en `src/services/diary/diary.ts`.
+export const wantToListenEntry = pgTable(
+  "want_to_listen_entry",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    artistId: uuid("artist_id").references(() => artist.id, { onDelete: "cascade" }),
+    releaseGroupId: uuid("release_group_id").references(() => releaseGroup.id, {
+      onDelete: "cascade",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_want_to_listen_entry_user_created").on(t.userId, t.createdAt),
+    index("idx_want_to_listen_entry_artist").on(t.artistId),
+    index("idx_want_to_listen_entry_release_group").on(t.releaseGroupId),
+    check(
+      "chk_want_to_listen_entry_single_target",
+      sql`num_nonnulls(${t.artistId}, ${t.releaseGroupId}) = 1`,
+    ),
+  ],
+);
+export type WantToListenEntryRow = typeof wantToListenEntry.$inferSelect;
+
 export const userList = pgTable(
   "user_list",
   {

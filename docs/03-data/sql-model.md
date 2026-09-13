@@ -398,6 +398,30 @@ idempotente: un usuario tiene a lo sumo un favorito por objetivo.
 **Índices:** `idx_favorite_user_created` (favoritos propios, fecha descendente) y uno por
 objetivo (`idx_favorite_artist`, `idx_favorite_release_group`, `idx_favorite_recording`).
 
+## `want_to_listen_entry`
+
+**Propósito:** señal prospectiva "quiero escuchar esto" (cambio `add-want-to-listen`).
+Mismo patrón de objetivo polimórfico que `favorite`, pero **acotada a artista y álbum**: sin
+`recording_id`, las canciones quedan fuera por decisión de producto. Se retira desde la app
+(no por trigger) cuando el usuario registra una escucha del mismo objetivo — ver
+`createListenEntry` en `src/services/diary/diary.ts`.
+
+**Campos:**
+
+- `user_id` y exactamente uno de `artist_id` / `release_group_id`
+  (`CHECK (num_nonnulls(...) = 1)`, dos columnas en vez de tres).
+- `created_at`: fecha de creación. Sin `audience`: es una lista de gestión personal, sin
+  superficie pública ni de terceros (a diferencia de `favorite`).
+
+**Restricciones:**
+
+- `CHECK (num_nonnulls(artist_id, release_group_id) = 1)`: un objetivo exacto por entrada.
+- `UNIQUE (user_id, artist_id)`, `UNIQUE (user_id, release_group_id)`: un usuario tiene a lo
+  sumo una entrada por objetivo. Base del toggle idempotente.
+
+**Índices:** `idx_want_to_listen_entry_user_created` (listado propio, fecha descendente) y
+uno por objetivo (`idx_want_to_listen_entry_artist`, `idx_want_to_listen_entry_release_group`).
+
 ## `user_album_pin`
 
 **Propósito:** el conjunto ordenado de **álbumes favoritos** que encabeza la identidad

@@ -37,6 +37,7 @@ export const USER_MENU_ITEMS: readonly UserMenuItemDef[] = [
 
   { id: "diary", href: "/me/diary", labelKey: "diary", group: "library", surfaces: BOTH },
   { id: "favorites", href: "/me/favorites", labelKey: "favorites", group: "library", surfaces: BOTH },
+  { id: "wantToListen", href: "/me/want-to-listen", labelKey: "wantToListen", group: "library", surfaces: BOTH },
   { id: "lists", href: "/me/lists", labelKey: "lists", group: "library", surfaces: BOTH },
   { id: "collection", href: "/me/collection", labelKey: "collection", group: "library", surfaces: BOTH },
   { id: "artists", href: "/me/artists", labelKey: "artists", group: "library", surfaces: BOTH },

@@ -1,0 +1,26 @@
+{
+  "title": "Quiero escuchar",
+  "emptyTitle": "Todavía no agregaste nada",
+  "emptyDescription": "Marcá un artista o álbum como \"quiero escuchar\" para que aparezca acá.",
+  "emptyCta": "Buscar en el catálogo",
+  "add": "Quiero escuchar",
+  "remove": "Quitar de la lista",
+  "signInToAdd": "Iniciar sesión para agregar",
+  "saving": "Guardando...",
+  "saveError": "No pudimos guardar el cambio. Intentá de nuevo.",
+  "loadMore": "Cargar más",
+  "loadingMore": "Cargando...",
+  "loadError": "No pudimos cargar la lista. Intentá de nuevo.",
+  "sectionArtists": "Artistas",
+  "sectionAlbums": "Álbumes",
+  "viewModeLabel": "Modo de visualización",
+  "viewMode": {
+    "detailed": "Detallada",
+    "index": "Índice",
+    "graphic": "Gráfico"
+  },
+  "removeItem": "Quitar",
+  "removeItemShort": "¿Quitar?",
+  "removeItemNamed": "Quitar {title} de la lista",
+  "removeItemConfirm": "Confirmar remoción"
+}

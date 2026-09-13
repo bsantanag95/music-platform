@@ -193,6 +193,7 @@ export const ErrorCodeSchema = z.enum([
   "DIARY_TARGET_INVALID",
   "FAVORITE_NOT_FOUND",
   "FAVORITE_TARGET_INVALID",
+  "WANT_TO_LISTEN_TARGET_INVALID",
   "LIST_NOT_FOUND",
   "LIST_TARGET_INVALID",
   "LIST_ITEM_NOT_FOUND",
@@ -1016,6 +1017,60 @@ export const RemoveFavoriteRequestSchema = z.object({
   target: FavoriteTargetSchema,
 });
 export type RemoveFavoriteRequest = z.infer<typeof RemoveFavoriteRequestSchema>;
+
+// ============================================================
+// Want to Listen (openspec: add-want-to-listen)
+// ============================================================
+
+// Acotado a artista y álbum — las canciones quedan fuera por decisión de
+// producto (a diferencia de SocialTargetTypeSchema, que también admite
+// "recording").
+export const WantToListenTargetTypeSchema = z.enum(["artist", "release-group"]);
+export type WantToListenTargetType = z.infer<typeof WantToListenTargetTypeSchema>;
+
+export const WantToListenTargetSchema = z.object({
+  type: WantToListenTargetTypeSchema,
+  id: z.uuid(),
+});
+export type WantToListenTarget = z.infer<typeof WantToListenTargetSchema>;
+
+export const WantToListenTargetInfoSchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  coverThumbUrl: z.string().nullable(),
+});
+export type WantToListenTargetInfo = z.infer<typeof WantToListenTargetInfoSchema>;
+
+export const WantToListenEntrySchema = z.object({
+  id: z.uuid(),
+  targetType: WantToListenTargetTypeSchema,
+  createdAt: z.string(),
+  target: WantToListenTargetInfoSchema,
+});
+export type WantToListenEntry = z.infer<typeof WantToListenEntrySchema>;
+
+export const CreateWantToListenRequestSchema = z.object({
+  target: WantToListenTargetSchema,
+});
+export type CreateWantToListenRequest = z.infer<typeof CreateWantToListenRequestSchema>;
+
+export const RemoveWantToListenRequestSchema = z.object({
+  target: WantToListenTargetSchema,
+});
+export type RemoveWantToListenRequest = z.infer<typeof RemoveWantToListenRequestSchema>;
+
+export const WantToListenMutationResponseSchema = z.object({
+  entry: WantToListenEntrySchema.nullable(),
+});
+export type WantToListenMutationResponse = z.infer<typeof WantToListenMutationResponseSchema>;
+
+export const WantToListenListResponseSchema = z.object({
+  items: z.array(WantToListenEntrySchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  hasNext: z.boolean(),
+});
+export type WantToListenListResponse = z.infer<typeof WantToListenListResponseSchema>;
 
 // Cambio de audiencia: `{ id }` para un favorito, `{ ids }` para varios a la vez
 // (mismo endpoint PATCH). El tope de 50 acota el tamaño de la request y del
