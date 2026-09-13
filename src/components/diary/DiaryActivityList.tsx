@@ -21,6 +21,7 @@ import {
   getMyDiaryMonths,
   type DiaryFiltersParams,
 } from "@/lib/api/diary";
+import { toggleWantToListen } from "@/lib/api/want-to-listen";
 import { ApiError } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
 import type {
@@ -187,6 +188,11 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
   // el destello es el refuerzo visual para quien no estaba mirando el botón.
   // Anuncio accesible aparte (`sr-only`) para quien usa lector de pantalla.
   const [savedId, setSavedId] = useState<string | null>(null);
+  // Destello + anuncio del toggle de Want to Listen desde el menú de la fila
+  // (openspec: add-diary-relisten-action) — mismo mecanismo que `savedId`,
+  // separado porque el resultado (agregado/quitado) depende de la respuesta
+  // del toggle, no es siempre "guardado".
+  const [wantToListenResult, setWantToListenResult] = useState<{ id: string; added: boolean } | null>(null);
 
   // Debounce del buscador: espera a que el usuario deje de tipear antes de
   // disparar la query — evita una request por tecla.
@@ -202,6 +208,12 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
     const timeout = window.setTimeout(() => setSavedId(null), 1500);
     return () => window.clearTimeout(timeout);
   }, [savedId]);
+
+  useEffect(() => {
+    if (!wantToListenResult) return;
+    const timeout = window.setTimeout(() => setWantToListenResult(null), 1500);
+    return () => window.clearTimeout(timeout);
+  }, [wantToListenResult]);
 
   const isFiltered = hasActiveFilters(filters);
   const apiFilters = toApiFilters(filters);
@@ -346,6 +358,23 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
     }
   };
 
+  // "Quiero volver a escuchar" desde el menú de la fila (openspec:
+  // add-diary-relisten-action): reutiliza el mismo toggle que el botón de
+  // catálogo. Como el toggle puede tanto agregar como quitar según el estado
+  // previo (y el menú no refleja el estado actual), el resultado se anuncia
+  // explícitamente para que nunca sea una sorpresa silenciosa. No disponible
+  // para canciones — Want to Listen no las admite.
+  const handleToggleWantToListen = async (entry: ListenEntry) => {
+    if (entry.target.type === "recording") return;
+    setActionError(false);
+    try {
+      const result = await toggleWantToListen({ type: entry.target.type, id: entry.target.id });
+      setWantToListenResult({ id: entry.id, added: result !== null });
+    } catch {
+      setActionError(true);
+    }
+  };
+
   const handleLoadMore = () => {
     setActionError(false);
     fetchNextPage().catch(() => setActionError(true));
@@ -369,7 +398,7 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
       <li
         key={entry.id}
         className={`${body ? "py-4" : "py-3"} first:pt-0 last:pb-0 transition-colors duration-1000 ${
-          savedId === entry.id ? "bg-amber/10" : "bg-transparent"
+          savedId === entry.id || wantToListenResult?.id === entry.id ? "bg-amber/10" : "bg-transparent"
         }`}
       >
         <div className="flex gap-3 sm:gap-4">
@@ -401,6 +430,11 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
                   <RowMenuItem onSelect={() => setShowInListsEntryId((current) => (current === entry.id ? null : entry.id))}>
                     {t("showInLists")}
                   </RowMenuItem>
+                  {entry.target.type !== "recording" && (
+                    <RowMenuItem onSelect={() => void handleToggleWantToListen(entry)}>
+                      {t("wantToListen")}
+                    </RowMenuItem>
+                  )}
                   <RowMenuItem danger onSelect={() => setPendingDeleteId(entry.id)}>
                     {t("delete")}
                   </RowMenuItem>
@@ -599,7 +633,11 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
     <div className="flex w-full flex-col gap-4">
       {filterBar}
       <span role="status" aria-live="polite" className="sr-only">
-        {savedId ? t("savedAnnouncement") : null}
+        {savedId
+          ? t("savedAnnouncement")
+          : wantToListenResult
+            ? t(wantToListenResult.added ? "wantToListenAdded" : "wantToListenRemoved")
+            : null}
       </span>
       <div className="flex flex-col gap-6">
         {monthGroups.map((group) => {

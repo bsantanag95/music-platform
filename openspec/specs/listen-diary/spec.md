@@ -567,8 +567,10 @@ encabezado sigue siendo la única presentación del diario.
 ### Requirement: Acciones rápidas desde la fila del diario
 
 El sistema SHALL permitir, desde el menú de una fila del diario propio, registrar una escucha
-adicional sobre el mismo objetivo de esa fila y agregar ese objetivo a una lista propia compatible,
-sin salir de `/me/diary`.
+adicional sobre el mismo objetivo de esa fila, agregar ese objetivo a una lista propia
+compatible, y marcar el objetivo en Want to Listen ("Quiero volver a escuchar") cuando el
+objetivo es un artista o un álbum — nunca una canción, mismo alcance que la capability
+`want-to-listen` —, todo sin salir de `/me/diary`.
 
 #### Scenario: Registrar otra escucha desde la fila
 
@@ -588,6 +590,19 @@ sin salir de `/me/diary`.
 - **WHEN** el usuario abre "Agregar a lista" desde una fila y no tiene ninguna lista propia
   compatible con el tipo del objetivo
 - **THEN** el sistema ofrece crear una lista nueva del tipo correspondiente sin salir del diario
+
+#### Scenario: Quiero volver a escuchar desde la fila
+
+- **WHEN** el usuario elige "Quiero volver a escuchar" en el menú de una fila cuyo objetivo es
+  un artista o un álbum
+- **THEN** el sistema alterna la entrada de Want to Listen del objetivo (la crea si no existía,
+  la quita si ya existía) y anuncia el resultado efectivo ("se agregó" o "se quitó") de forma
+  accesible, con una confirmación visual momentánea sobre la fila
+
+#### Scenario: Sin acción de Want to Listen para canciones
+
+- **WHEN** el usuario abre el menú de una fila cuyo objetivo es una canción
+- **THEN** no encuentra ninguna opción de "Quiero volver a escuchar" en ese menú
 
 ### Requirement: Meses disponibles para filtrar el diario
 

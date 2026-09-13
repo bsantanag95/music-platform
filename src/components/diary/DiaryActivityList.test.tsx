@@ -25,6 +25,7 @@ const mocks = vi.hoisted(() => {
     createListenEntry: vi.fn(),
     getMyLists: vi.fn(),
     addItemToList: vi.fn(),
+    toggleWantToListen: vi.fn(),
     ApiError,
   };
 });
@@ -53,6 +54,9 @@ vi.mock("@/lib/api/diary", () => ({
 vi.mock("@/lib/api/lists", () => ({
   getMyLists: mocks.getMyLists,
   addItemToList: mocks.addItemToList,
+}));
+vi.mock("@/lib/api/want-to-listen", () => ({
+  toggleWantToListen: mocks.toggleWantToListen,
 }));
 vi.mock("@/lib/api/client", () => ({ ApiError: mocks.ApiError }));
 
@@ -384,6 +388,52 @@ describe("DiaryActivityList", () => {
     await waitFor(() =>
       expect(mocks.addItemToList).toHaveBeenCalledWith("list-1", { type: "artist", id: liked.target.id }),
     );
+  });
+
+  it("quiero volver a escuchar desde el menú agrega el objetivo a Want to Listen", async () => {
+    const user = userEvent.setup();
+    mocks.toggleWantToListen.mockResolvedValue({
+      id: "wtl-1",
+      targetType: "artist",
+      createdAt: "2026-01-26T00:00:00.000Z",
+      target: { id: liked.target.id, title: "Pink Floyd", coverThumbUrl: null },
+    });
+    renderWithQuery(<DiaryActivityList initial={initial} />);
+
+    const firstRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
+    await openRowMenu(user, firstRow);
+    await user.click(screen.getByRole("menuitem", { name: "Quiero volver a escuchar" }));
+
+    await waitFor(() =>
+      expect(mocks.toggleWantToListen).toHaveBeenCalledWith({ type: "artist", id: liked.target.id }),
+    );
+    expect(firstRow.className).toMatch(/bg-amber\/10/);
+    expect(screen.getByRole("status")).toHaveTextContent("Se agregó a tu lista Quiero escuchar");
+  });
+
+  it("quiero volver a escuchar anuncia la remoción cuando el objetivo ya estaba en la lista", async () => {
+    const user = userEvent.setup();
+    mocks.toggleWantToListen.mockResolvedValue(null);
+    renderWithQuery(<DiaryActivityList initial={initial} />);
+
+    const firstRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
+    await openRowMenu(user, firstRow);
+    await user.click(screen.getByRole("menuitem", { name: "Quiero volver a escuchar" }));
+
+    await waitFor(() => expect(mocks.toggleWantToListen).toHaveBeenCalled());
+    expect(screen.getByRole("status")).toHaveTextContent("Se quitó de tu lista Quiero escuchar");
+  });
+
+  it("no ofrece quiero volver a escuchar para una canción", async () => {
+    const user = userEvent.setup();
+    const song = plainListen("song-1", "Vogue (version 2)");
+    renderWithQuery(
+      <DiaryActivityList initial={{ entries: [song], page: 1, pageSize: 20, hasNext: false }} />,
+    );
+
+    const row = screen.getByText("Vogue (version 2)").closest("li") as HTMLElement;
+    await openRowMenu(user, row);
+    expect(screen.queryByRole("menuitem", { name: "Quiero volver a escuchar" })).not.toBeInTheDocument();
   });
 
   it("carga más páginas al pulsar el botón", async () => {
