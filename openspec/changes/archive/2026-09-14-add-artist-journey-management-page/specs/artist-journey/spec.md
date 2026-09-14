@@ -1,46 +1,6 @@
-# artist-journey Specification
+## MODIFIED Requirements
 
-## Purpose
-
-Herramienta de organización personal, opcional por artista: el usuario define qué álbumes
-forman parte de su propio "recorrido completo" para ese artista, sin que la plataforma imponga
-una definición externa. Reutiliza el mecanismo de listas (`user_list`/`user_list_item`) con un
-subtipo especializado, pre-poblado desde la clasificación por categoría del catálogo. Sin
-curaduría editorial, sin comparación social, sin agregado ni ranking comunitario en ninguna
-fase — ver `docs/00-product/product_philosophy.md` §6.4.
-## Requirements
-### Requirement: Activar un recorrido de artista
-El sistema SHALL permitir a un usuario autenticado activar, a lo sumo un recorrido por artista,
-de forma idempotente: activar un recorrido ya existente para ese artista SHALL devolver el
-existente sin crear uno nuevo ni modificar su selección o estado. Al activarse por primera vez,
-el sistema SHALL pre-poblar la selección con todos los álbumes de categoría `studio` del
-artista, dejando el resto de categorías (`single_ep`, `compilation`, `live_other`) fuera de la
-selección inicial. Esta activación es la operación de servidor subyacente; el flujo de interfaz
-que la dispara — el modal de inicio — está definido en el Requirement "Modal de inicio: crear un
-recorrido con una selección elegida".
-
-#### Scenario: Activar un recorrido por primera vez
-- **WHEN** un usuario autenticado activa un recorrido sobre un artista que no tenía uno
-- **THEN** el sistema crea el recorrido con todos los álbumes de estudio del artista
-  pre-seleccionados y el resto de tipos sin seleccionar
-
-#### Scenario: Activar un recorrido ya existente
-- **WHEN** un usuario activa un recorrido sobre un artista para el que ya tenía uno
-- **THEN** el sistema devuelve el recorrido existente sin alterar su selección ni su estado
-
-#### Scenario: Artista sin álbumes de estudio
-- **WHEN** un usuario activa un recorrido sobre un artista sin ningún álbum de tipo Estudio
-- **THEN** el recorrido se crea con la selección vacía, sin error
-
-#### Scenario: Sesión requerida
-- **WHEN** una request sin sesión intenta activar un recorrido
-- **THEN** la API responde `401` con código `AUTH_REQUIRED` y no crea ningún recorrido
-
-#### Scenario: Artista inexistente
-- **WHEN** un usuario intenta activar un recorrido sobre un artista cuyo id no existe
-- **THEN** la API responde `404` y no crea ningún recorrido
-
-### Requirement: Vista de gestión agrupada por tipo, en una página dedicada
+### Requirement: Vista de gestión agrupada por tipo, en un modal colapsable
 El sistema SHALL presentar la selección de un recorrido en una página dedicada
 (`/me/artist-journeys/[artistId]`, no en un modal ni inline en la página del artista), agrupando
 **todos** los álbumes del artista por su categoría (`release_group.category`: `studio`,
@@ -159,33 +119,6 @@ que la página quedó trabada.
   artista
 - **THEN** la API responde `400` con un error de validación y no modifica la selección
 
-### Requirement: Estados derivados del recorrido
-El sistema SHALL exponer exactamente tres estados por recorrido, derivados en el momento de la
-lectura y SHALL NOT persistir un cuarto estado de "pendiente": **archivado** cuando el
-propietario lo archivó explícitamente; en caso contrario, **completo** cuando la selección
-tiene al menos un álbum y todos sus álbumes tienen una escucha propia registrada en el diario;
-en cualquier otro caso, **en curso**. Un artista sin recorrido activado SHALL NOT representarse
-como un estado de esta capacidad.
-
-#### Scenario: Recorrido con toda la selección escuchada
-- **WHEN** el propietario tiene registrada en su diario una escucha de cada álbum de su
-  selección
-- **THEN** el recorrido se muestra en estado completo
-
-#### Scenario: Agregar un álbum a un recorrido completo
-- **WHEN** el propietario agrega a la selección de un recorrido completo un álbum que no ha
-  escuchado
-- **THEN** el recorrido pasa a mostrarse en curso, sin acción manual adicional sobre el estado
-
-#### Scenario: Selección vacía
-- **WHEN** un recorrido no tiene ningún álbum seleccionado
-- **THEN** se muestra en curso, nunca completo
-
-#### Scenario: Sin estado "pendiente"
-- **WHEN** un usuario no ha activado ningún recorrido sobre un artista
-- **THEN** ninguna superficie del sistema representa a ese artista como "pendiente de
-  completar" o equivalente
-
 ### Requirement: Archivar y desarchivar un recorrido
 El sistema SHALL permitir al propietario archivar un recorrido, en cualquier estado, sin
 perder su selección ni el progreso ya registrado en el diario, y desarchivarlo después de
@@ -246,57 +179,6 @@ indiquen una cantidad de álbumes restantes fuera de la página de gestión.
 - **WHEN** el propietario navega el catálogo o su perfil con recorridos en curso
 - **THEN** ninguna superficie fuera de la gestión del recorrido muestra cuántos álbumes le
   faltan
-
-### Requirement: Exclusión de toda superficie que lea listas genéricamente
-El sistema SHALL excluir los recorridos de artista de **toda** lectura de `user_list` que no
-pertenezca a esta capacidad, sin importar en qué capacidad viva esa lectura: listado propio de
-listas (`/me/lists`), Guardadas, Descubrir, colecciones destacadas, conteos de listas (incluido
-el "reparto" de la huella de gusto del perfil), el widget "Retomá una lista" de Inicio, los
-eventos de lista del feed de actividad, el cálculo de "última señal" de recencia del perfil, y
-la acción "añadir a lista" de las páginas de catálogo. Un recorrido SHALL NOT ser accesible ni
-modificable a través de los endpoints de `lists`.
-
-#### Scenario: Recorrido ausente de "Mis listas"
-- **WHEN** un usuario con recorridos activos abre `/me/lists`
-- **THEN** no ve ninguno de sus recorridos entre sus listas
-
-#### Scenario: Recorrido ausente de Descubrir
-- **WHEN** un recorrido tiene la misma audiencia que tendría una lista pública
-- **THEN** igual no aparece en la pestaña Descubrir ni en el conteo de listas de nadie
-
-#### Scenario: Recorrido ausente del widget "Retomá una lista" de Inicio
-- **WHEN** el recorrido activo de un usuario es, por fecha, su `user_list` más reciente
-- **THEN** Inicio no lo ofrece como "Retomá una lista"; si no tiene ninguna lista genérica, el
-  widget no se renderiza
-
-#### Scenario: Un recorrido no infla el conteo de listas de la huella de gusto
-- **WHEN** un usuario tiene recorridos activos pero ninguna lista genérica
-- **THEN** el "reparto" de su huella de gusto muestra `0` listas
-
-#### Scenario: Archivar o desarchivar un recorrido no genera un evento de feed
-- **WHEN** el propietario archiva o desarchiva un recorrido, lo que actualiza `updated_at` de la
-  fila subyacente
-- **THEN** el feed de actividad de quienes lo siguen no recibe un evento de "lista actualizada"
-
-### Requirement: Independencia respecto de Want to Listen
-El sistema SHALL tratar los recorridos de artista como independientes de Want to Listen:
-agregar o quitar un álbum de la selección de un recorrido SHALL NOT crear, modificar ni
-eliminar ninguna entrada de Want to Listen del mismo objetivo, y viceversa.
-
-#### Scenario: Seleccionar un álbum que está en Want to Listen
-- **WHEN** el propietario agrega a su recorrido un álbum que tiene marcado en Want to Listen
-- **THEN** la entrada de Want to Listen de ese álbum no se modifica
-
-### Requirement: Sin agregado ni ranking comunitario
-El sistema SHALL NOT exponer, en ninguna superficie, un agregado o ranking de recorridos entre
-usuarios — ni un conteo de personas que completaron la discografía de un artista, ni un listado
-de artistas más completados de la comunidad, ni ninguna comparación de cantidad o velocidad de
-recorridos entre usuarios distintos, presente o futura.
-
-#### Scenario: Página de artista sin agregado de recorridos
-- **WHEN** cualquier usuario abre la página de un artista con muchos recorridos activos de
-  distintas personas
-- **THEN** la página no muestra ningún conteo ni comparación de recorridos entre usuarios
 
 ### Requirement: Listado propio de recorridos
 El sistema SHALL exponer una ruta `/me/artist-journeys` que liste todos los recorridos del
@@ -393,18 +275,38 @@ su densidad visual y su secuencia.
   más tarde en el mismo navegador
 - **THEN** el listado se abre en el modo elegido la vez anterior
 
-### Requirement: Acceso desde el menú de usuario
-El sistema SHALL incluir un acceso a `/me/artist-journeys` en el menú de usuario del Header y en
-el panel de gestión del perfil propio, con el mismo tratamiento visual que el resto de los
-accesos de esas superficies (ver spec `cross-view-navigation`).
+### Requirement: Activar un recorrido de artista
+El sistema SHALL permitir a un usuario autenticado activar, a lo sumo un recorrido por artista,
+de forma idempotente: activar un recorrido ya existente para ese artista SHALL devolver el
+existente sin crear uno nuevo ni modificar su selección o estado. Al activarse por primera vez,
+el sistema SHALL pre-poblar la selección con todos los álbumes de categoría `studio` del
+artista, dejando el resto de categorías (`single_ep`, `compilation`, `live_other`) fuera de la
+selección inicial. Esta activación es la operación de servidor subyacente; el flujo de interfaz
+que la dispara — el modal de inicio — está definido en el Requirement "Modal de inicio: crear un
+recorrido con una selección elegida".
 
-#### Scenario: Acceso visible en el menú de usuario
-- **WHEN** un usuario autenticado abre el menú de usuario del Header
-- **THEN** encuentra un acceso a sus recorridos junto al resto de los accesos de gestión
+#### Scenario: Activar un recorrido por primera vez
+- **WHEN** un usuario autenticado activa un recorrido sobre un artista que no tenía uno
+- **THEN** el sistema crea el recorrido con todos los álbumes de estudio del artista
+  pre-seleccionados y el resto de tipos sin seleccionar
 
-#### Scenario: Acceso visible en el panel de gestión del perfil
-- **WHEN** el dueño de un perfil abre el panel de gestión de su propio perfil
-- **THEN** encuentra el mismo acceso a sus recorridos
+#### Scenario: Activar un recorrido ya existente
+- **WHEN** un usuario activa un recorrido sobre un artista para el que ya tenía uno
+- **THEN** el sistema devuelve el recorrido existente sin alterar su selección ni su estado
+
+#### Scenario: Artista sin álbumes de estudio
+- **WHEN** un usuario activa un recorrido sobre un artista sin ningún álbum de tipo Estudio
+- **THEN** el recorrido se crea con la selección vacía, sin error
+
+#### Scenario: Sesión requerida
+- **WHEN** una request sin sesión intenta activar un recorrido
+- **THEN** la API responde `401` con código `AUTH_REQUIRED` y no crea ningún recorrido
+
+#### Scenario: Artista inexistente
+- **WHEN** un usuario intenta activar un recorrido sobre un artista cuyo id no existe
+- **THEN** la API responde `404` y no crea ningún recorrido
+
+## ADDED Requirements
 
 ### Requirement: Eliminar un recorrido desde el listado propio
 El sistema SHALL permitir al propietario eliminar un recorrido propio directamente desde
@@ -541,4 +443,3 @@ abierto con un aviso, sin navegar.
 - **WHEN** la activación o el guardado de la selección fallan
 - **THEN** el modal permanece abierto con un aviso de error, y el propietario no es llevado a la
   página de gestión
-

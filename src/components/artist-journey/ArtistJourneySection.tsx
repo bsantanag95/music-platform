@@ -3,119 +3,72 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Button } from "@/components/ui/Button";
-import { ApiError } from "@/lib/api/client";
-import {
-  activateArtistJourney,
-  archiveArtistJourney,
-  deleteArtistJourney,
-  unarchiveArtistJourney,
-} from "@/lib/api/artist-journeys";
-import type { ArtistJourneyDetail, ReleaseGroupCategory } from "@/lib/api/schemas";
-import { ArtistJourneyModal } from "./ArtistJourneyModal";
+import type { ArtistJourneyDetail, ReleaseGroup, ReleaseGroupCategory } from "@/lib/api/schemas";
+import { ArtistJourneyStartModal } from "./ArtistJourneyStartModal";
 
 interface ArtistJourneySectionProps {
   artistId: string;
   artistName: string;
   authenticated: boolean;
   initialJourney: ArtistJourneyDetail | null;
+  albums: ReleaseGroup[];
   categoryLabels: Record<ReleaseGroupCategory, string>;
 }
+
+const linkButtonClass =
+  "inline-flex items-center justify-center gap-2 rounded border border-ink-border bg-ink-surface px-4 py-2 font-display text-sm text-paper transition-colors hover:border-amber";
 
 // "Recorrido de artista" (openspec: add-artist-journey,
 // docs/00-product/product_philosophy.md §6.4): selección personal de álbumes
 // que el usuario define como su propia versión de "discografía completa" de
-// este artista. Sin curaduría editorial, sin comparación social. El estado
-// "completo" es la única señal con tratamiento visual afirmativo (petrol) —
-// constatación sobria, nunca lenguaje de logro. Fuera de esta tarjeta no se
-// muestra ninguna fracción ni mensaje de "álbumes restantes" (§6.4.1).
+// este artista. Sin curaduría editorial, sin comparación social.
 //
-// La selección de álbumes vive en un modal aparte (`ArtistJourneyModal`,
-// rediseño 2026-09): esta tarjeta solo resume estado/progreso y las acciones
-// de archivar/eliminar, integrada al lenguaje visual del resto de acciones de
-// la página en vez de embeber el checklist completo inline.
+// Rediseño (openspec: add-artist-journey-management-page): esta tarjeta es
+// un resumen de solo lectura — estado y progreso discreto, sin fracción
+// numérica (§6.4.1). "Armar recorrido" abre `ArtistJourneyStartModal` en vez
+// de activar de inmediato: crear el recorrido y elegir la selección inicial
+// es una sola acción explícita del usuario ("Guardar" en el modal), no un
+// efecto secundario de un clic que podría ser accidental. Con un recorrido
+// ya activo, el único punto de entrada es el enlace a la página de gestión,
+// donde ocurre toda edición posterior (selección, archivar, borrar).
 export function ArtistJourneySection({
   artistId,
   artistName,
   authenticated,
   initialJourney,
+  albums,
   categoryLabels,
 }: ArtistJourneySectionProps) {
   const t = useTranslations("artistJourney");
-  const [journey, setJourney] = useState(initialJourney);
-  const [busy, setBusy] = useState(false);
-  const [pendingDelete, setPendingDelete] = useState(false);
+  const [journey] = useState(initialJourney);
   const [modalOpen, setModalOpen] = useState(false);
-  const [errorCode, setErrorCode] = useState<string | null>(null);
 
   if (!authenticated) {
     return (
-      <Link
-        href="/auth/login"
-        className="inline-flex items-center justify-center gap-2 rounded border border-ink-border bg-ink-surface px-4 py-2 font-display text-sm text-paper transition-colors hover:border-amber"
-      >
+      <Link href="/auth/login" className={linkButtonClass}>
         {t("signInToStart")}
       </Link>
     );
   }
 
-  async function activate() {
-    setBusy(true);
-    setErrorCode(null);
-    try {
-      setJourney(await activateArtistJourney(artistId));
-    } catch (error) {
-      setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   if (!journey) {
     return (
       <div className="flex flex-col items-start gap-2">
-        <Button variant="secondary" disabled={busy} onClick={() => void activate()}>
-          {busy ? t("activating") : t("start")}
-        </Button>
+        <button type="button" onClick={() => setModalOpen(true)} className={linkButtonClass}>
+          {t("start")}
+        </button>
         <p className="max-w-md font-body text-xs text-paper-muted">{t("startHint")}</p>
-        {errorCode && (
-          <span role="alert" className="font-data text-xs text-danger">
-            {t("genericError")}
-          </span>
+        {modalOpen && (
+          <ArtistJourneyStartModal
+            artistId={artistId}
+            artistName={artistName}
+            albums={albums}
+            categoryLabels={categoryLabels}
+            onClose={() => setModalOpen(false)}
+          />
         )}
       </div>
     );
-  }
-
-  async function toggleArchive() {
-    if (!journey) return;
-    setBusy(true);
-    setErrorCode(null);
-    try {
-      setJourney(
-        journey.state === "archived"
-          ? await unarchiveArtistJourney(artistId)
-          : await archiveArtistJourney(artistId),
-      );
-    } catch (error) {
-      setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function remove() {
-    setBusy(true);
-    setErrorCode(null);
-    try {
-      await deleteArtistJourney(artistId);
-      setJourney(null);
-      setPendingDelete(false);
-    } catch (error) {
-      setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
-    } finally {
-      setBusy(false);
-    }
   }
 
   const { selectedCount, listenedCount } = journey.progress;
@@ -128,83 +81,21 @@ export function ArtistJourneySection({
           <h2 className="font-display text-lg text-paper">{t("heading")}</h2>
           <StateBadge state={journey.state} t={t} />
         </div>
-        <div className="flex items-center gap-3 font-data text-xs">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void toggleArchive()}
-            className="text-paper-muted underline decoration-dotted transition-colors hover:text-paper disabled:opacity-50"
-          >
-            {journey.state === "archived" ? t("unarchive") : t("archive")}
-          </button>
-          {pendingDelete ? (
-            <>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void remove()}
-                className="text-danger underline decoration-dotted transition-colors hover:text-paper disabled:opacity-50"
-              >
-                {busy ? t("deleting") : t("confirmDelete")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setPendingDelete(false)}
-                className="text-paper-muted transition-colors hover:text-paper"
-              >
-                {t("cancel")}
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setPendingDelete(true)}
-              className="text-paper-muted underline decoration-dotted transition-colors hover:text-danger"
-            >
-              {t("delete")}
-            </button>
-          )}
-        </div>
+        <Link href={`/me/artist-journeys/${artistId}`} className={linkButtonClass}>
+          {t("manage")}
+        </Link>
       </div>
 
-      {/* Progreso informativo y discreto (§6.4.1): sin fracción numérica
-          fuera de esta tarjeta ni del modal de selección. */}
       {selectedCount > 0 && (
-        <div className="flex flex-col gap-1">
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-ink-border">
-            <div
-              className="h-full rounded-full bg-petrol transition-[width]"
-              style={{ width: `${Math.round(progressRatio * 100)}%` }}
-            />
-          </div>
-          <p className="font-data text-xs text-paper-muted">
-            {t("progress", { listened: listenedCount, total: selectedCount })}
-          </p>
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-ink-border">
+          <div
+            className="h-full rounded-full bg-petrol transition-[width]"
+            style={{ width: `${Math.round(progressRatio * 100)}%` }}
+          />
         </div>
       )}
       {selectedCount === 0 && (
         <p className="font-body text-xs text-paper-muted">{t("emptySelection")}</p>
-      )}
-
-      <Button variant="secondary" className="self-start" onClick={() => setModalOpen(true)}>
-        {t("editSelection")}
-      </Button>
-
-      {errorCode && (
-        <span role="alert" className="font-data text-xs text-danger">
-          {t("genericError")}
-        </span>
-      )}
-
-      {modalOpen && (
-        <ArtistJourneyModal
-          artistId={artistId}
-          artistName={artistName}
-          journey={journey}
-          categoryLabels={categoryLabels}
-          onSaved={setJourney}
-          onClose={() => setModalOpen(false)}
-        />
       )}
     </section>
   );

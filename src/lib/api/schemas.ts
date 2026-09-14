@@ -1351,6 +1351,14 @@ export const ArtistJourneySummarySchema = z.object({
   artistName: z.string(),
   artistPhotoUrl: z.string().nullable(),
   state: ArtistJourneyStateSchema,
+  // Progreso (selección vs. escuchados): se usa para una barra discreta sin
+  // fracción numérica visible — nunca como texto "X de Y" fuera de la
+  // página de gestión (§6.4.1, product_philosophy.md).
+  progress: z.object({
+    selectedCount: z.number().int().nonnegative(),
+    listenedCount: z.number().int().nonnegative(),
+  }),
+  updatedAt: z.string(),
 });
 export type ArtistJourneySummary = z.infer<typeof ArtistJourneySummarySchema>;
 
