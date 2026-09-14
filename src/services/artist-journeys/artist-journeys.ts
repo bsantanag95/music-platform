@@ -270,6 +270,14 @@ export async function setJourneySelection(
           )
           .onConflictDoNothing({ target: [userListItem.listId, userListItem.releaseGroupId] });
       }
+      // Guardar la selección solo toca `user_list_item`, no la fila de
+      // `user_list` — sin este touch, "última actualización" del listado
+      // propio (§6.4.1: dato temporal, no fracción) nunca reflejaría una
+      // edición de selección. `updated_at` lo estampa el trigger de la
+      // migración 0009 (regla del proyecto: nunca desde la app), así que
+      // esto solo dispara ese trigger con una actualización real, no un
+      // valor puesto a mano.
+      await tx.update(userList).set({ title: listRow.title }).where(eq(userList.id, listRow.id));
     });
   }
 
@@ -398,13 +406,19 @@ export interface ArtistJourneySummary {
   artistName: string;
   artistPhotoUrl: string | null;
   state: ArtistJourneyState;
+  // Progreso crudo: el listado (`/me/artist-journeys`) lo usa solo para una
+  // barra discreta sin texto de fracción — nunca como "X de Y" visible, ese
+  // tratamiento sigue reservado a la página de gestión (§6.4.1).
+  progress: { selectedCount: number; listenedCount: number };
+  updatedAt: string;
 }
 
 /**
  * Listado propio de todos los recorridos del usuario (en curso, completos y
  * archivados), para la superficie de acceso `/me/artist-journeys` — punto de
- * entrada desde el menú de usuario. Sin progreso ni fracciones (mismo criterio
- * que la faceta de perfil): solo estado, orden por activación descendente.
+ * entrada desde el menú de usuario. Sin fracciones numéricas visibles (mismo
+ * criterio que la faceta de perfil): el progreso viaja como dato crudo para
+ * una barra discreta, nunca como texto. Orden por activación descendente.
  */
 export async function listMyArtistJourneys(ownerId: string): Promise<ArtistJourneySummary[]> {
   const rows = await db
@@ -415,6 +429,7 @@ export async function listMyArtistJourneys(ownerId: string): Promise<ArtistJourn
       artistPhotoUrl: artist.photoUrl,
       journeyArchivedAt: userList.journeyArchivedAt,
       createdAt: userList.createdAt,
+      updatedAt: userList.updatedAt,
     })
     .from(userList)
     .innerJoin(artist, eq(artist.id, userList.journeyArtistId))
@@ -428,16 +443,16 @@ export async function listMyArtistJourneys(ownerId: string): Promise<ArtistJourn
 
   return rows.map((row) => {
     const count = countsByList.get(row.listId);
-    const state = deriveJourneyState(
-      row.journeyArchivedAt,
-      count?.selected ?? 0,
-      count?.listened ?? 0,
-    );
+    const selectedCount = count?.selected ?? 0;
+    const listenedCount = count?.listened ?? 0;
+    const state = deriveJourneyState(row.journeyArchivedAt, selectedCount, listenedCount);
     return {
       artistId: row.artistId as string,
       artistName: row.artistName,
       artistPhotoUrl: row.artistPhotoUrl,
       state,
+      progress: { selectedCount, listenedCount },
+      updatedAt: row.updatedAt.toISOString(),
     };
   });
 }

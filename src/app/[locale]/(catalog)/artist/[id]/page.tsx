@@ -144,6 +144,7 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
         artistName={artist.name}
         authenticated={Boolean(session?.user.id)}
         initialJourney={artistJourney}
+        albums={albums}
         categoryLabels={categoryLabels}
       />
       <ArtistMemberships

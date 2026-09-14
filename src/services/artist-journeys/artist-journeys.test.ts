@@ -243,12 +243,14 @@ describe("servicio de artist-journeys", () => {
     let insertedItems: unknown;
     mocks.db.delete.mockReturnValueOnce(chain(undefined));
     mocks.db.insert.mockReturnValueOnce(chain([], (v) => (insertedItems = v)));
+    mocks.db.update.mockReturnValueOnce(chain(undefined)); // touch de user_list para el trigger de updated_at
 
     // Pide quedarse solo con sg2: sg1 (actual) se quita, sg2 se agrega.
     const detail = await setJourneySelection(ownerId, artistId, [sg2]);
 
     expect(mocks.db.transaction).toHaveBeenCalledTimes(1);
     expect(mocks.db.delete).toHaveBeenCalledTimes(1);
+    expect(mocks.db.update).toHaveBeenCalledTimes(1);
     expect(insertedItems).toEqual([{ listId, releaseGroupId: sg2, position: 1 }]);
     expect(detail.albums.find((a) => a.id === sg1)?.selected).toBe(false);
     expect(detail.albums.find((a) => a.id === sg2)?.selected).toBe(true);
@@ -263,6 +265,7 @@ describe("servicio de artist-journeys", () => {
       .mockReturnValueOnce(chain([])) // selectedReleaseGroupIds (buildDetail): vacío
       .mockReturnValueOnce(chain([{ n: 0 }])); // countListened
     mocks.db.delete.mockReturnValueOnce(chain(undefined));
+    mocks.db.update.mockReturnValueOnce(chain(undefined)); // touch de user_list para el trigger de updated_at
 
     const detail = await setJourneySelection(ownerId, artistId, []);
 
@@ -289,6 +292,7 @@ describe("servicio de artist-journeys", () => {
         artistPhotoUrl: null,
         journeyArchivedAt: null as Date | null,
         createdAt: new Date("2026-01-01T00:00:00Z"),
+        updatedAt: new Date("2026-01-03T00:00:00Z"),
       },
       {
         listId: "00000000-0000-4000-8000-000000000099",
@@ -297,6 +301,7 @@ describe("servicio de artist-journeys", () => {
         artistPhotoUrl: null,
         journeyArchivedAt: new Date("2026-02-01T00:00:00Z"),
         createdAt: new Date("2026-01-02T00:00:00Z"),
+        updatedAt: new Date("2026-02-01T00:00:00Z"),
       },
     ];
 
@@ -312,12 +317,21 @@ describe("servicio de artist-journeys", () => {
     const journeys = await listMyArtistJourneys(ownerId);
 
     expect(journeys).toEqual([
-      { artistId, artistName: "Deep Purple", artistPhotoUrl: null, state: "complete" },
+      {
+        artistId,
+        artistName: "Deep Purple",
+        artistPhotoUrl: null,
+        state: "complete",
+        progress: { selectedCount: 2, listenedCount: 2 },
+        updatedAt: "2026-01-03T00:00:00.000Z",
+      },
       {
         artistId: "00000000-0000-4000-8000-000000000098",
         artistName: "Iron Maiden",
         artistPhotoUrl: null,
         state: "archived",
+        progress: { selectedCount: 3, listenedCount: 1 },
+        updatedAt: "2026-02-01T00:00:00.000Z",
       },
     ]);
   });
