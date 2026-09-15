@@ -74,6 +74,7 @@ export function MarkAsListened({ target, authenticated }: MarkAsListenedProps) {
       {entry && showForm && (
         <ListenEntryForm
           entryId={entry.id}
+          target={entry.target}
           initial={{
             listenContext: entry.listenContext,
             body: entry.body,

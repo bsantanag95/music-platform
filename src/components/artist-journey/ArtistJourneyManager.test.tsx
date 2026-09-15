@@ -411,7 +411,7 @@ describe("ArtistJourneyManager", () => {
       });
 
       await user.click(screen.getByRole("button", { name: "Registrar escucha de Studio One" }));
-      const studioOneRow = (await screen.findByText("Studio One")).closest("li")!;
+      const studioOneRow = (await screen.findByRole("link", { name: "Studio One" })).closest("li")!;
       expect(within(studioOneRow).getByLabelText(/Impresión/)).toBeInTheDocument();
 
       await user.click(screen.getByRole("button", { name: "Registrar escucha de Studio Two" }));

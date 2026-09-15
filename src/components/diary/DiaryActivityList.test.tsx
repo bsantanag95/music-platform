@@ -361,8 +361,9 @@ describe("DiaryActivityList", () => {
     await waitFor(() =>
       expect(mocks.createListenEntry).toHaveBeenCalledWith({ type: "artist", id: liked.target.id }),
     );
-    // dos filas con el mismo objetivo ahora (la nueva + la original)
-    await waitFor(() => expect(screen.getAllByText("Pink Floyd")).toHaveLength(2));
+    // dos filas con el mismo objetivo ahora (la nueva + la original), más la
+    // etiqueta de contexto del panel de ampliación recién abierto
+    await waitFor(() => expect(screen.getAllByText("Pink Floyd")).toHaveLength(3));
     // el formulario de ampliación de la nueva entrada ya está abierto
     expect(screen.getByLabelText(/Impresión/)).toBeInTheDocument();
   });
