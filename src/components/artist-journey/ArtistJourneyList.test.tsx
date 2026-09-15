@@ -38,6 +38,22 @@ vi.mock("@/lib/api/artist-journeys", () => ({
   unarchiveArtistJourney: mocks.unarchiveArtistJourney,
 }));
 
+// El modo de visualización persiste en `localStorage` (useArtistJourneyViewMode);
+// sin una instancia fresca por test, un test que cambia a Gráfico deja esa
+// preferencia para los que corren después y esperan el modo Detallada por defecto.
+function installStorage() {
+  const map = new Map<string, string>();
+  Object.defineProperty(window, "localStorage", {
+    configurable: true,
+    value: {
+      getItem: (k: string) => map.get(k) ?? null,
+      setItem: (k: string, v: string) => void map.set(k, v),
+      removeItem: (k: string) => void map.delete(k),
+      clear: () => map.clear(),
+    },
+  });
+}
+
 function summary(over: Partial<ArtistJourneySummary> = {}): ArtistJourneySummary {
   return {
     artistId: "artist-1",
@@ -52,6 +68,7 @@ function summary(over: Partial<ArtistJourneySummary> = {}): ArtistJourneySummary
 
 describe("ArtistJourneyList", () => {
   beforeEach(() => {
+    installStorage();
     vi.clearAllMocks();
   });
 

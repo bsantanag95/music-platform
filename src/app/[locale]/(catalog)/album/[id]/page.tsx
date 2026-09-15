@@ -70,6 +70,9 @@ export default async function AlbumPage({ params, searchParams }: AlbumPageProps
   }
 
   const { detail } = result;
+  const viewAllListsLink = await ViewAllListsLink({
+    target: { type: "release-group", id: detail.releaseGroup.id },
+  });
   const session = await resolveSession();
   const canModerate = session?.user
     ? (await getUserPermissions(session.user.id)).includes("moderation.suspend_social")
@@ -153,7 +156,7 @@ export default async function AlbumPage({ params, searchParams }: AlbumPageProps
               target={{ type: "release-group", id: detail.releaseGroup.id }}
               authenticated={Boolean(session?.user.id)}
             />
-            <ViewAllListsLink target={{ type: "release-group", id: detail.releaseGroup.id }} />
+            {viewAllListsLink}
             <CollectionAlbumAction
               releaseGroupId={detail.releaseGroup.id}
               authenticated={Boolean(session?.user.id)}
