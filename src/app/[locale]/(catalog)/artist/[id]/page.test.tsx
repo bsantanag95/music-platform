@@ -83,6 +83,12 @@ vi.mock("@/services/want-to-listen/want-to-listen", () => ({
   isWantToListen: vi.fn().mockResolvedValue(false),
 }));
 
+// Evita importar el módulo real, que arrastra `src/db/index.ts` y explota en
+// el import (no en el uso) si falta `DATABASE_URL` en el entorno de test.
+vi.mock("@/services/artist-journeys/artist-journeys", () => ({
+  getArtistJourneyDetail: vi.fn().mockResolvedValue(null),
+}));
+
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
     <a href={href}>{children}</a>
