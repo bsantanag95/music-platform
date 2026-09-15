@@ -21,6 +21,7 @@ export interface ArtistJourneyAlbum {
   firstReleaseYear: number | null;
   coverThumbUrl: string | null;
   selected: boolean;
+  listened: boolean;
 }
 
 export interface ArtistJourneyDetail {
@@ -67,19 +68,26 @@ async function selectedReleaseGroupIds(listId: string): Promise<Set<string>> {
 }
 
 /**
- * Cantidad de ítems de `releaseGroupIds` que el propio dueño tiene registrados
- * en su diario (cualquier escucha, sin filtro de audiencia — es lectura del
- * dueño sobre su propio progreso, D3 de design.md).
+ * Ids de `releaseGroupIds` que el propio dueño tiene registrados en su
+ * diario (cualquier escucha, sin filtro de audiencia — es lectura del dueño
+ * sobre su propio progreso). Sobre toda la discografía, no solo la
+ * selección, para que cada álbum pueda exponer si ya se escuchó (openspec:
+ * add-artist-journey-mark-listened, D2 de design.md) — `listenedCount` del
+ * progreso agregado sale de intersecar este set con la selección.
  */
-async function countListened(ownerId: string, releaseGroupIds: string[]): Promise<number> {
-  if (releaseGroupIds.length === 0) return 0;
-  const [row] = await db
-    .select({ n: sql<number>`count(distinct ${listenEntry.releaseGroupId})::int` })
+async function listenedReleaseGroupIds(
+  ownerId: string,
+  releaseGroupIds: string[],
+): Promise<Set<string>> {
+  if (releaseGroupIds.length === 0) return new Set();
+  const rows = await db
+    .select({ releaseGroupId: listenEntry.releaseGroupId })
     .from(listenEntry)
     .where(
       and(eq(listenEntry.userId, ownerId), inArray(listenEntry.releaseGroupId, releaseGroupIds)),
-    );
-  return row?.n ?? 0;
+    )
+    .groupBy(listenEntry.releaseGroupId);
+  return new Set(rows.map((r) => r.releaseGroupId).filter((id): id is string => id !== null));
 }
 
 /** Estado derivado — nunca persistido (D3 de design.md). */
@@ -120,7 +128,11 @@ async function buildDetail(
   discography: ReleaseGroupRow[],
 ): Promise<ArtistJourneyDetail> {
   const selectedIds = await selectedReleaseGroupIds(listRow.id);
-  const listenedCount = await countListened(ownerId, [...selectedIds]);
+  const listenedIds = await listenedReleaseGroupIds(
+    ownerId,
+    discography.map((rg) => rg.id),
+  );
+  const listenedCount = [...selectedIds].filter((id) => listenedIds.has(id)).length;
   const state = deriveJourneyState(listRow.journeyArchivedAt, selectedIds.size, listenedCount);
 
   return {
@@ -135,6 +147,7 @@ async function buildDetail(
       firstReleaseYear: rg.firstReleaseYear,
       coverThumbUrl: rg.coverThumbUrl,
       selected: selectedIds.has(rg.id),
+      listened: listenedIds.has(rg.id),
     })),
   };
 }

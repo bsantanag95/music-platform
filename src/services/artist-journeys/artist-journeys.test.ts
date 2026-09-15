@@ -125,8 +125,9 @@ describe("servicio de artist-journeys", () => {
   beforeEach(() => {
     // `resetAllMocks` (no `clearAllMocks`): también vacía la cola de
     // `mockReturnValueOnce` entre tests — si no, un mock no consumido en un
-    // test (ej. countListened con selección vacía, que corta antes) se
-    // arrastra al siguiente y desalinea sus propias respuestas encoladas.
+    // test (ej. listenedReleaseGroupIds con discografía vacía, que corta
+    // antes) se arrastra al siguiente y desalinea sus propias respuestas
+    // encoladas.
     vi.resetAllMocks();
     mocks.getArtistById.mockResolvedValue(artistRow);
     mocks.findOrIngestDiscography.mockResolvedValue(discography);
@@ -143,7 +144,7 @@ describe("servicio de artist-journeys", () => {
     mocks.db.select
       .mockReturnValueOnce(chain([])) // getJourneyRow: no existe
       .mockReturnValueOnce(chain([{ releaseGroupId: sg1 }])) // selectedReleaseGroupIds
-      .mockReturnValueOnce(chain([{ n: 0 }])); // countListened
+      .mockReturnValueOnce(chain([])); // listenedReleaseGroupIds
     let insertedItems: unknown;
     mocks.db.insert
       .mockReturnValueOnce(chain([journeyRow])) // insert userList
@@ -154,6 +155,7 @@ describe("servicio de artist-journeys", () => {
     expect(detail.state).toBe("in_progress");
     expect(detail.progress).toEqual({ selectedCount: 1, listenedCount: 0 });
     expect(detail.albums.find((a) => a.id === sg1)?.selected).toBe(true);
+    expect(detail.albums.find((a) => a.id === sg1)?.listened).toBe(false);
     expect(detail.albums.find((a) => a.id === sg2)?.selected).toBe(false);
 
     // El insert de ítems de pre-población solo debe recibir el álbum de
@@ -167,12 +169,14 @@ describe("servicio de artist-journeys", () => {
     mocks.db.select
       .mockReturnValueOnce(chain([journeyRow])) // getJourneyRow: ya existe
       .mockReturnValueOnce(chain([{ releaseGroupId: sg1 }])) // selectedReleaseGroupIds
-      .mockReturnValueOnce(chain([{ n: 1 }])); // countListened
+      .mockReturnValueOnce(chain([{ releaseGroupId: sg1 }])); // listenedReleaseGroupIds
 
     const detail = await activateArtistJourney(ownerId, artistId);
 
     expect(mocks.db.insert).not.toHaveBeenCalled();
     expect(detail.state).toBe("complete");
+    expect(detail.albums.find((a) => a.id === sg1)?.listened).toBe(true);
+    expect(detail.albums.find((a) => a.id === sg2)?.listened).toBe(false);
   });
 
   it("el detalle devuelve los álbumes ordenados por año, sin importar el orden del catálogo", async () => {
@@ -188,11 +192,27 @@ describe("servicio de artist-journeys", () => {
     mocks.db.select
       .mockReturnValueOnce(chain([journeyRow]))
       .mockReturnValueOnce(chain([{ releaseGroupId: sg1 }]))
-      .mockReturnValueOnce(chain([{ n: 0 }]));
+      .mockReturnValueOnce(chain([]));
 
     const detail = await activateArtistJourney(ownerId, artistId);
 
     expect(detail.albums.map((a) => a.id)).toEqual([sg1, sg2, "id-sin-anio"]);
+  });
+
+  it("listened se calcula sobre toda la discografía, no solo la selección", async () => {
+    const { activateArtistJourney } = await import("./artist-journeys");
+
+    mocks.db.select
+      .mockReturnValueOnce(chain([journeyRow])) // getJourneyRow: ya existe
+      .mockReturnValueOnce(chain([{ releaseGroupId: sg1 }])) // selectedReleaseGroupIds: solo sg1
+      .mockReturnValueOnce(chain([{ releaseGroupId: sg2 }])); // listenedReleaseGroupIds: solo sg2 (no seleccionado)
+
+    const detail = await activateArtistJourney(ownerId, artistId);
+
+    expect(detail.albums.find((a) => a.id === sg1)).toMatchObject({ selected: true, listened: false });
+    expect(detail.albums.find((a) => a.id === sg2)).toMatchObject({ selected: false, listened: true });
+    // sg2 no está seleccionado, así que no cuenta para el progreso agregado.
+    expect(detail.progress).toEqual({ selectedCount: 1, listenedCount: 0 });
   });
 
   it("setJourneySelection rechaza con VALIDATION_ERROR si algún id no pertenece al artista", async () => {
@@ -223,7 +243,7 @@ describe("servicio de artist-journeys", () => {
       .mockReturnValueOnce(chain([journeyRow])) // requireOwnedJourney
       .mockReturnValueOnce(chain([{ releaseGroupId: sg1 }])) // selectedReleaseGroupIds (actual)
       .mockReturnValueOnce(chain([{ releaseGroupId: sg1 }])) // selectedReleaseGroupIds (buildDetail)
-      .mockReturnValueOnce(chain([{ n: 0 }])); // countListened
+      .mockReturnValueOnce(chain([])); // listenedReleaseGroupIds
 
     const detail = await setJourneySelection(ownerId, artistId, [sg1]);
 
@@ -239,7 +259,7 @@ describe("servicio de artist-journeys", () => {
       .mockReturnValueOnce(chain([{ releaseGroupId: sg1 }])) // selectedReleaseGroupIds (actual: sg1)
       .mockReturnValueOnce(chain([{ max: 0 }])) // max(position) dentro de la transacción
       .mockReturnValueOnce(chain([{ releaseGroupId: sg2 }])) // selectedReleaseGroupIds (buildDetail)
-      .mockReturnValueOnce(chain([{ n: 0 }])); // countListened
+      .mockReturnValueOnce(chain([])); // listenedReleaseGroupIds
     let insertedItems: unknown;
     mocks.db.delete.mockReturnValueOnce(chain(undefined));
     mocks.db.insert.mockReturnValueOnce(chain([], (v) => (insertedItems = v)));
@@ -263,7 +283,7 @@ describe("servicio de artist-journeys", () => {
       .mockReturnValueOnce(chain([journeyRow])) // requireOwnedJourney
       .mockReturnValueOnce(chain([{ releaseGroupId: sg1 }])) // selectedReleaseGroupIds (actual)
       .mockReturnValueOnce(chain([])) // selectedReleaseGroupIds (buildDetail): vacío
-      .mockReturnValueOnce(chain([{ n: 0 }])); // countListened
+      .mockReturnValueOnce(chain([])); // listenedReleaseGroupIds
     mocks.db.delete.mockReturnValueOnce(chain(undefined));
     mocks.db.update.mockReturnValueOnce(chain(undefined)); // touch de user_list para el trigger de updated_at
 

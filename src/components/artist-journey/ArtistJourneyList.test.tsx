@@ -209,6 +209,50 @@ describe("ArtistJourneyList", () => {
     expect(names()).toEqual(["Sabrina Carpenter", "Deep Purple"]);
   });
 
+  it("el filtro de estado muestra solo los recorridos en ese estado", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(
+      <ArtistJourneyList
+        journeys={[
+          summary({ artistId: "a1", artistName: "Archivado Artist", state: "archived" }),
+          summary({ artistId: "a2", artistName: "Completo Artist", state: "complete" }),
+          summary({ artistId: "a3", artistName: "Curso Artist", state: "in_progress" }),
+        ]}
+      />,
+    );
+    await user.selectOptions(screen.getByRole("combobox", { name: "Estado" }), "archived");
+    expect(names()).toEqual(["Archivado Artist"]);
+  });
+
+  it("el filtro de estado en 'Todo' (por defecto) muestra los tres estados", () => {
+    renderWithIntl(
+      <ArtistJourneyList
+        journeys={[
+          summary({ artistId: "a1", artistName: "Archivado Artist", state: "archived" }),
+          summary({ artistId: "a2", artistName: "Completo Artist", state: "complete" }),
+          summary({ artistId: "a3", artistName: "Curso Artist", state: "in_progress" }),
+        ]}
+      />,
+    );
+    expect(names()).toHaveLength(3);
+  });
+
+  it("el filtro de estado se combina con la búsqueda y el orden", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(
+      <ArtistJourneyList
+        journeys={[
+          summary({ artistId: "a1", artistName: "Sabrina Carpenter", state: "in_progress" }),
+          summary({ artistId: "a2", artistName: "Deep Purple", state: "in_progress" }),
+          summary({ artistId: "a3", artistName: "Iron Maiden", state: "archived" }),
+        ]}
+      />,
+    );
+    await user.selectOptions(screen.getByRole("combobox", { name: "Estado" }), "in_progress");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Ordenar" }), "alpha");
+    expect(names()).toEqual(["Deep Purple", "Sabrina Carpenter"]);
+  });
+
   async function openCardMenu(user: ReturnType<typeof userEvent.setup>, artist = "Deep Purple") {
     await user.click(screen.getByRole("button", { name: `Más acciones para ${artist}` }));
   }
@@ -228,13 +272,13 @@ describe("ArtistJourneyList", () => {
     await openCardMenu(user);
     await user.click(screen.getByRole("menuitem", { name: "Archivar" }));
     expect(mocks.archiveArtistJourney).toHaveBeenCalledWith("artist-1");
-    expect(await screen.findByText("Archivado")).toBeInTheDocument();
+    expect(await screen.findByText("Archivado", { selector: "span" })).toBeInTheDocument();
 
     mocks.unarchiveArtistJourney.mockResolvedValueOnce({ state: "in_progress" });
     await openCardMenu(user);
     await user.click(screen.getByRole("menuitem", { name: "Desarchivar" }));
     expect(mocks.unarchiveArtistJourney).toHaveBeenCalledWith("artist-1");
-    expect(await screen.findByText("En curso")).toBeInTheDocument();
+    expect(await screen.findByText("En curso", { selector: "span" })).toBeInTheDocument();
   });
 
   it("eliminar desde el menú pide confirmación en la entrada antes de borrar, y la quita de la vista", async () => {

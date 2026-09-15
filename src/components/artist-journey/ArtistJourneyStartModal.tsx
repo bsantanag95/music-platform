@@ -13,6 +13,7 @@ import {
   type ReleaseGroupCategory,
 } from "@/lib/api/schemas";
 import { ArtistJourneyAlbumGroups } from "./ArtistJourneyAlbumGroups";
+import { sortByYear } from "./artist-journey-sort";
 
 interface ArtistJourneyStartModalProps {
   artistId: string;
@@ -23,21 +24,6 @@ interface ArtistJourneyStartModalProps {
 }
 
 const CATEGORY_ORDER = ReleaseGroupCategorySchema.options;
-
-// Mismo criterio de orden que `AlbumGrid` y que `sortDiscographyByYear` del
-// servicio: año ascendente, sin año al final, alfabético de desempate. Copia
-// local porque el servicio vive en un módulo server-only (importa `db`) y
-// este componente es de cliente — mismo trade-off que ya acepta `AlbumGrid`.
-function sortByYear<T extends { title: string; firstReleaseYear: number | null }>(albums: T[]): T[] {
-  return [...albums].sort((a, b) => {
-    if (a.firstReleaseYear === null && b.firstReleaseYear === null) {
-      return a.title.localeCompare(b.title);
-    }
-    if (a.firstReleaseYear === null) return 1;
-    if (b.firstReleaseYear === null) return -1;
-    return a.firstReleaseYear - b.firstReleaseYear || a.title.localeCompare(b.title);
-  });
-}
 
 // Modal de inicio (openspec: add-artist-journey-management-page, revisión
 // "armar recorrido"): único punto donde se crea un recorrido. Antes, "Armar
