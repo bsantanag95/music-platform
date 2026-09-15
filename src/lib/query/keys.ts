@@ -2,6 +2,7 @@ import type { DiaryFiltersParams, FeedFiltersParams } from "@/lib/api/diary";
 import type { DiscoverListFiltersParams, ListFiltersParams } from "@/lib/api/lists";
 import type { FavoritesFiltersParams } from "@/lib/api/favorites";
 import type { CollectionQuery } from "@/lib/api/collection";
+import type { WantedQuery } from "@/lib/api/wanted";
 import type { ListTarget } from "@/lib/api/schemas";
 
 // Query keys centralizadas — evita strings mágicos repetidos en cada
@@ -34,4 +35,6 @@ export const queryKeys = {
   myFavorites: (filters: FavoritesFiltersParams) => ["favorites", "mine", filters] as const,
   myCollection: (filters: Omit<CollectionQuery, "page" | "pageSize">) =>
     ["collection", "mine", filters] as const,
+  myWanted: (filters: Omit<WantedQuery, "page" | "pageSize">) =>
+    ["collection", "wanted", "mine", filters] as const,
 };

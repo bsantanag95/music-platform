@@ -199,6 +199,7 @@ export const ErrorCodeSchema = z.enum([
   "LIST_ITEM_NOT_FOUND",
   "ARTIST_JOURNEY_NOT_FOUND",
   "COLLECTION_ENTRY_NOT_FOUND",
+  "WANTED_ENTRY_NOT_FOUND",
 "MODERATION_REPORT_NOT_FOUND",
   "RESTRICTION_NOT_FOUND",
   "SOCIAL_SUSPENSION_ACTIVE",
@@ -1639,3 +1640,70 @@ export const CollectionEntriesResponseSchema = z.object({
   entries: z.array(CollectionEntrySchema),
 });
 export type CollectionEntriesResponse = z.infer<typeof CollectionEntriesResponseSchema>;
+
+// ============================================================
+// Wishlist de colección (Fase 5, add-collection-wishlist)
+// ============================================================
+
+// A diferencia de CollectionEntry, format es opcional ("cualquier formato")
+// y no hay audiencia: la wishlist es privada del dueño.
+export const WantedEntrySchema = z.object({
+  id: z.uuid(),
+  format: CollectionFormatSchema.nullable(),
+  attributes: z.array(EditionAttributeSchema),
+  note: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  album: CollectionAlbumSchema,
+});
+export type WantedEntry = z.infer<typeof WantedEntrySchema>;
+
+const WantedVariantSchema = z.object({
+  format: CollectionFormatSchema.nullable().optional(),
+  attributes: z.array(EditionAttributeSchema).max(EditionAttributeSchema.options.length).optional(),
+  note: z.string().trim().max(COLLECTION_NOTE_MAX).nullable().optional(),
+});
+
+// Alta en lote: 1 a 10 variantes deseadas para un mismo álbum, en una sola
+// transacción (todo o nada si alguna variante es inválida).
+export const AddWantedEntriesRequestSchema = z.object({
+  releaseGroupId: z.uuid(),
+  entries: z.array(WantedVariantSchema).min(1).max(10),
+});
+export type AddWantedEntriesRequest = z.infer<typeof AddWantedEntriesRequestSchema>;
+
+export const WantedEntriesResponseSchema = z.object({
+  entries: z.array(WantedEntrySchema),
+});
+export type WantedEntriesResponse = z.infer<typeof WantedEntriesResponseSchema>;
+
+// Edición: al menos un campo. `format: null` vuelve la entrada a "cualquier
+// formato" (a diferencia de la colección, donde format nunca es null).
+export const UpdateWantedEntryRequestSchema = z
+  .object({
+    format: CollectionFormatSchema.nullable().optional(),
+    attributes: z
+      .array(EditionAttributeSchema)
+      .max(EditionAttributeSchema.options.length)
+      .optional(),
+    note: z.string().trim().max(COLLECTION_NOTE_MAX).nullable().optional(),
+  })
+  .refine((changes) => Object.keys(changes).length > 0, {
+    message: "Debe indicarse al menos un campo a modificar",
+  });
+export type UpdateWantedEntryRequest = z.infer<typeof UpdateWantedEntryRequestSchema>;
+
+export const WantedEntryResponseSchema = z.object({ entry: WantedEntrySchema });
+export type WantedEntryResponse = z.infer<typeof WantedEntryResponseSchema>;
+
+export const WANTED_SORTS = ["recent", "alpha"] as const;
+export const WantedSortSchema = z.enum(WANTED_SORTS);
+export type WantedSort = z.infer<typeof WantedSortSchema>;
+
+export const WantedListResponseSchema = z.object({
+  entries: z.array(WantedEntrySchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  hasNext: z.boolean(),
+});
+export type WantedListResponse = z.infer<typeof WantedListResponseSchema>;

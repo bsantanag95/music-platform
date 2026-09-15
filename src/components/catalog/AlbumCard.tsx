@@ -2,10 +2,11 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { RowMenu, RowMenuItem } from "@/components/ui/RowMenu";
 import { ListsContainingItemPanel } from "@/components/lists/ListsContainingItemPanel";
 import { LazyCoverImage } from "./LazyCoverImage";
+import { addWantedEntries } from "@/lib/api/wanted";
 import type { ReleaseGroup } from "@/lib/api/schemas";
 
 interface AlbumCardProps {
@@ -24,7 +25,42 @@ interface AlbumCardProps {
 // tarjeta y no dentro del enlace.
 export function AlbumCard({ releaseGroup, categoryLabel, coverLabel, authenticated = false }: AlbumCardProps) {
   const t = useTranslations("lists");
+  const tCollection = useTranslations("collection");
+  const router = useRouter();
   const [showingInLists, setShowingInLists] = useState(false);
+  const [wantedBusy, setWantedBusy] = useState(false);
+  const [wantedAdded, setWantedAdded] = useState(false);
+  const [wantedError, setWantedError] = useState(false);
+
+  // Alta rápida a la wishlist desde el menú "···": una sola variante sin
+  // formato ni atributos, sin abrir ningún formulario (openspec:
+  // add-collection-wishlist).
+  const handleWantIt = async () => {
+    if (!authenticated) {
+      router.push("/auth/login");
+      return;
+    }
+    if (wantedBusy) return;
+    setWantedBusy(true);
+    setWantedError(false);
+    try {
+      await addWantedEntries({ releaseGroupId: releaseGroup.id, entries: [{}] });
+      setWantedAdded(true);
+    } catch {
+      setWantedError(true);
+    } finally {
+      setWantedBusy(false);
+    }
+  };
+
+  // Lleva al flujo de "La tengo" en la página de álbum, ya abierto.
+  const handleHaveIt = () => {
+    if (!authenticated) {
+      router.push("/auth/login");
+      return;
+    }
+    router.push(`/album/${releaseGroup.id}?collection=have`);
+  };
 
   return (
     <div className="group relative flex w-full flex-col gap-2 rounded-lg border border-ink-border bg-ink-surface p-3 transition-colors hover:border-amber">
@@ -48,6 +84,8 @@ export function AlbumCard({ releaseGroup, categoryLabel, coverLabel, authenticat
           <RowMenuItem onSelect={() => setShowingInLists((current) => !current)}>
             {t("showInLists")}
           </RowMenuItem>
+          <RowMenuItem onSelect={() => void handleWantIt()}>{tCollection("menuWantIt")}</RowMenuItem>
+          <RowMenuItem onSelect={handleHaveIt}>{tCollection("menuHaveIt")}</RowMenuItem>
         </RowMenu>
       </div>
       {showingInLists && (
@@ -56,6 +94,11 @@ export function AlbumCard({ releaseGroup, categoryLabel, coverLabel, authenticat
           canSave={authenticated}
           onClose={() => setShowingInLists(false)}
         />
+      )}
+      {(wantedAdded || wantedError) && (
+        <span role="status" aria-live="polite" className="font-data text-xs text-paper-muted">
+          {wantedError ? tCollection("saveError") : tCollection("quickWantedAdded")}
+        </span>
       )}
     </div>
   );

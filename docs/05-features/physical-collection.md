@@ -1,6 +1,7 @@
 # Colección física
 
-**Fase 5 · cambios `add-physical-collection` y `rework-collection-section` · Estado: ✅ implementado**
+**Fase 5 · cambios `add-physical-collection`, `rework-collection-section` y
+`add-collection-wishlist` · Estado: ✅ implementado**
 
 Opción por álbum para declarar y presumir el coleccionismo en soporte físico. En la página propia
 `/me/collection` es **la estantería personal** (tres modos de vista, toolbar de búsqueda / orden /
@@ -77,6 +78,50 @@ lote (`{ ids, audience }`); los dos `GET` aceptan `q` / `sort` / `group` y devue
 formato. Detalle en `04-api/contracts.md`. Código de error propio: `COLLECTION_ENTRY_NOT_FOUND`
 (`04-api/errors.md`).
 
+## Wishlist (deseados) — `add-collection-wishlist`
+
+Señal prospectiva paralela ("quiero conseguir este álbum, no lo tengo"), en tabla propia
+`wanted_entry` — no un flag en `collection_entry` — porque el grano difiere: una entrada de
+colección es una copia real con formato **obligatorio**; una entrada de deseo es una variante
+querida con formato **opcional** (`null` = "cualquier formato"). Mismo vocabulario cerrado de
+formato/atributos que la colección, y misma nota libre opcional (≤140 caracteres). A diferencia
+de la colección física, la wishlist **no tiene audiencia**: es privada del dueño, sin
+lectura por `username` ni superficie en el perfil — mismo criterio que Want to Listen. Tener un
+álbum en la colección y quererlo en la wishlist no son mutuamente excluyentes: ninguna operación
+bloquea ni deduplica contra la otra.
+
+- **Página de álbum**: el botón único "Agregar a la colección" bifurca en un selector "La tengo" /
+  "La quiero" antes de mostrar el formulario correspondiente — no dos botones separados. "La
+  quiero" permite declarar una o varias variantes deseadas (formato + atributos) en una sola
+  operación en lote (1 a 10, transacción atómica).
+- **Menú "···" de una ficha de álbum** (`AlbumCard`): alta rápida "Lo quiero" (una entrada sin
+  formato, un click, sin formulario) y "Ya la tengo" (deep-link `?collection=have` que abre la
+  página de álbum ya en el flujo de "La tengo").
+- **`/me/collection`**: segunda pestaña "Quiero" (`?tab=wanted`) junto a la existente. A
+  diferencia de "Tengo", es una lista simple con búsqueda y orden (recencia/alfabético), sin los
+  tres modos de visualización, filtro por formato/atributo, agrupación ni cambio de audiencia en
+  lote — ver `openspec/changes/add-collection-wishlist/design.md` (decisión D5) para el porqué de
+  no replicar esa superficie completa en la v1. Es también la única vía para **editar** una
+  entrada de deseo ya creada (formato, atributos, nota) — en particular las creadas sin formato
+  desde el alta rápida del menú "···" — ya que ni la página de álbum ni ese menú ofrecen edición,
+  solo alta y baja (mismo criterio que la colección: la edición vive en `/me/collection`).
+
+### API de la wishlist
+
+`POST/GET /api/me/collection/wanted`, `PATCH/DELETE /api/me/collection/wanted/{entryId}`. El
+`POST` acepta un lote de 1 a 10 variantes por álbum en una sola operación atómica; el `PATCH`
+edita formato (`null` = "cualquier formato"), atributos o nota de una entrada existente, desde la
+pestaña "Quiero". Detalle en `04-api/contracts.md`. Código de error propio:
+`WANTED_ENTRY_NOT_FOUND` (`04-api/errors.md`).
+
+### Fuera de alcance de la wishlist (v1)
+
+- Audiencia / visibilidad social y superficie en el perfil ajeno — incremento aditivo posterior
+  si el uso lo pide (columna `audience`, análoga a `collection_entry`).
+- Mover una entrada de la wishlist a la colección con un click ("ya la conseguí").
+- Contador social ("cuántas personas quieren este disco") y notificaciones de disponibilidad.
+- Paridad completa de vistas/filtros/agrupación con la pestaña "Tengo".
+
 ## Fuera de alcance
 
 ### De la v1 (`add-physical-collection`) — todavía vigentes
@@ -112,9 +157,6 @@ formato. Detalle en `04-api/contracts.md`. Código de error propio: `COLLECTION_
 - **Buscador de catálogo embebido / alta desde `/me/collection`.** Se descartó en el detalle de
   lista (`rework-list-detail`) y se mantiene el criterio: el alta es desde la página del álbum.
   Reabrir solo ante pedido concreto del usuario (ver memoria `list-detail-scope`).
-- **Wishlist / lista de deseados** (discos que se buscan, no que se tienen). Requiere un modelo
-  de datos nuevo (`wanted_entry` o similar) y su propia superficie. Change aparte si el uso lo
-  pide; hoy la colección modela solo posesión.
 - **Contador "N personas tienen este disco"** — sin cambios respecto de la v1: sigue diferido
   por depender del cálculo anti-sockpuppet.
 - **`group=artist` con conteo exacto por sección.** La agrupación por artista secciona sobre lo

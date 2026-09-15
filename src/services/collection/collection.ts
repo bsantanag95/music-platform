@@ -226,8 +226,8 @@ async function collectionCounts(conditions: SQL[]): Promise<CollectionCounts> {
   return counts;
 }
 
-/** Valida que el álbum exista antes de crear una entrada. */
-async function assertAlbumExists(releaseGroupId: string) {
+/** Valida que el álbum exista antes de crear una entrada. Compartida con la wishlist. */
+export async function assertAlbumExists(releaseGroupId: string) {
   const [row] = await db
     .select({ id: releaseGroup.id })
     .from(releaseGroup)

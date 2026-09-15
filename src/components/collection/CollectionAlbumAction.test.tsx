@@ -17,6 +17,8 @@ const mocks = vi.hoisted(() => {
   return {
     addCollectionEntry: vi.fn(),
     removeCollectionEntry: vi.fn(),
+    addWantedEntries: vi.fn(),
+    removeWantedEntry: vi.fn(),
     ApiError,
   };
 });
@@ -29,6 +31,10 @@ vi.mock("@/i18n/navigation", () => ({
 vi.mock("@/lib/api/collection", () => ({
   addCollectionEntry: mocks.addCollectionEntry,
   removeCollectionEntry: mocks.removeCollectionEntry,
+}));
+vi.mock("@/lib/api/wanted", () => ({
+  addWantedEntries: mocks.addWantedEntries,
+  removeWantedEntry: mocks.removeWantedEntry,
 }));
 vi.mock("@/lib/api/client", () => ({ ApiError: mocks.ApiError }));
 
@@ -49,28 +55,56 @@ const entry = {
     artistName: null,
   },
 };
+const wantedEntry = {
+  id: "00000000-0000-4000-8000-0000000000w1",
+  format: null,
+  attributes: [],
+  note: null,
+  createdAt: "2026-02-01T00:00:00.000Z",
+  updatedAt: "2026-02-01T00:00:00.000Z",
+  album: entry.album,
+};
+
+function renderAction(props: Partial<React.ComponentProps<typeof CollectionAlbumAction>> = {}) {
+  return renderWithIntl(
+    <CollectionAlbumAction
+      releaseGroupId={releaseGroupId}
+      authenticated
+      initialEntries={[]}
+      initialWantedEntries={[]}
+      {...props}
+    />,
+  );
+}
 
 describe("CollectionAlbumAction", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("ofrece iniciar sesión a visitantes anónimos", () => {
-    renderWithIntl(
-      <CollectionAlbumAction releaseGroupId={releaseGroupId} authenticated={false} initialEntries={[]} />,
-    );
+    renderAction({ authenticated: false });
     expect(screen.getByRole("link", { name: "Iniciar sesión para coleccionar" })).toHaveAttribute(
       "href",
       "/auth/login",
     );
   });
 
-  it("agrega una copia con el formato elegido", async () => {
+  it("al abrir muestra el selector 'La tengo' / 'La quiero' antes de cualquier formulario", async () => {
     const user = userEvent.setup();
-    mocks.addCollectionEntry.mockResolvedValue({ ...entry, format: "cd", attributes: [], note: null });
-    renderWithIntl(
-      <CollectionAlbumAction releaseGroupId={releaseGroupId} authenticated initialEntries={[]} />,
-    );
+    renderAction();
 
     await user.click(screen.getByRole("button", { name: "Agregar a la colección" }));
+    expect(screen.getByRole("radio", { name: "La tengo" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "La quiero" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Formato")).not.toBeInTheDocument();
+  });
+
+  it("agrega una copia con el formato elegido tras elegir 'La tengo'", async () => {
+    const user = userEvent.setup();
+    mocks.addCollectionEntry.mockResolvedValue({ ...entry, format: "cd", attributes: [], note: null });
+    renderAction();
+
+    await user.click(screen.getByRole("button", { name: "Agregar a la colección" }));
+    await user.click(screen.getByRole("radio", { name: "La tengo" }));
     await user.selectOptions(screen.getByLabelText("Formato"), "cd");
     await user.click(screen.getByRole("button", { name: "Agregar copia" }));
 
@@ -85,11 +119,10 @@ describe("CollectionAlbumAction", () => {
   it("agrega una copia con atributos y nota", async () => {
     const user = userEvent.setup();
     mocks.addCollectionEntry.mockResolvedValue(entry);
-    renderWithIntl(
-      <CollectionAlbumAction releaseGroupId={releaseGroupId} authenticated initialEntries={[]} />,
-    );
+    renderAction();
 
     await user.click(screen.getByRole("button", { name: "Agregar a la colección" }));
+    await user.click(screen.getByRole("radio", { name: "La tengo" }));
     await user.click(screen.getByText("Edición limitada"));
     await user.type(screen.getByLabelText("Nota"), "portada alternativa");
     await user.click(screen.getByRole("button", { name: "Agregar copia" }));
@@ -107,9 +140,7 @@ describe("CollectionAlbumAction", () => {
   it("quita una copia existente", async () => {
     const user = userEvent.setup();
     mocks.removeCollectionEntry.mockResolvedValue(null);
-    renderWithIntl(
-      <CollectionAlbumAction releaseGroupId={releaseGroupId} authenticated initialEntries={[entry]} />,
-    );
+    renderAction({ initialEntries: [entry] });
 
     await user.click(screen.getByRole("button", { name: "Quitar" }));
     await waitFor(() => expect(mocks.removeCollectionEntry).toHaveBeenCalledWith(entry.id));
@@ -119,15 +150,77 @@ describe("CollectionAlbumAction", () => {
   it("muestra el error localizado cuando el alta falla", async () => {
     const user = userEvent.setup();
     mocks.addCollectionEntry.mockRejectedValue(new mocks.ApiError("INTERNAL_ERROR", 500, "x"));
-    renderWithIntl(
-      <CollectionAlbumAction releaseGroupId={releaseGroupId} authenticated initialEntries={[]} />,
-    );
+    renderAction();
 
     await user.click(screen.getByRole("button", { name: "Agregar a la colección" }));
+    await user.click(screen.getByRole("radio", { name: "La tengo" }));
     await user.click(screen.getByRole("button", { name: "Agregar copia" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "No pudimos guardar el cambio. Intentá de nuevo.",
     );
+  });
+
+  it("agrega una sola variante deseada tras elegir 'La quiero'", async () => {
+    const user = userEvent.setup();
+    mocks.addWantedEntries.mockResolvedValue([wantedEntry]);
+    renderAction();
+
+    await user.click(screen.getByRole("button", { name: "Agregar a la colección" }));
+    await user.click(screen.getByRole("radio", { name: "La quiero" }));
+    await user.click(screen.getByRole("button", { name: "Agregar a mi lista de deseados" }));
+
+    await waitFor(() =>
+      expect(mocks.addWantedEntries).toHaveBeenCalledWith({
+        releaseGroupId,
+        entries: [{ format: null, attributes: [], note: null }],
+      }),
+    );
+  });
+
+  it("agrega varias variantes deseadas en un solo envío", async () => {
+    const user = userEvent.setup();
+    mocks.addWantedEntries.mockResolvedValue([wantedEntry, { ...wantedEntry, id: "w2" }]);
+    renderAction();
+
+    await user.click(screen.getByRole("button", { name: "Agregar a la colección" }));
+    await user.click(screen.getByRole("radio", { name: "La quiero" }));
+    await user.click(screen.getByRole("button", { name: "Agregar otra variante" }));
+
+    const vinylOptions = screen.getAllByRole("radio", { name: "Vinilo" });
+    await user.click(vinylOptions[0]!);
+
+    await user.click(screen.getByRole("button", { name: "Agregar a mi lista de deseados" }));
+
+    await waitFor(() =>
+      expect(mocks.addWantedEntries).toHaveBeenCalledWith({
+        releaseGroupId,
+        entries: [
+          { format: "vinyl", attributes: [], note: null },
+          { format: null, attributes: [], note: null },
+        ],
+      }),
+    );
+  });
+
+  it("quita una entrada de deseo existente", async () => {
+    const user = userEvent.setup();
+    mocks.removeWantedEntry.mockResolvedValue(null);
+    renderAction({ initialWantedEntries: [wantedEntry] });
+
+    await user.click(screen.getByRole("button", { name: "Quitar" }));
+    await waitFor(() => expect(mocks.removeWantedEntry).toHaveBeenCalledWith(wantedEntry.id));
+  });
+
+  it("no bloquea agregar a la wishlist un álbum que ya está en la colección", async () => {
+    const user = userEvent.setup();
+    mocks.addWantedEntries.mockResolvedValue([wantedEntry]);
+    renderAction({ initialEntries: [entry] });
+
+    await user.click(screen.getByRole("button", { name: "Agregar a la colección" }));
+    await user.click(screen.getByRole("radio", { name: "La quiero" }));
+    await user.click(screen.getByRole("button", { name: "Agregar a mi lista de deseados" }));
+
+    await waitFor(() => expect(mocks.addWantedEntries).toHaveBeenCalled());
   });
 });

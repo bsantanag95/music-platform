@@ -41,6 +41,10 @@ vi.mock("@/services/collection/collection", () => ({
   listOwnEntriesForReleaseGroup: vi.fn().mockResolvedValue([]),
 }));
 
+vi.mock("@/services/collection/wanted", () => ({
+  listOwnWantedForReleaseGroup: vi.fn().mockResolvedValue([]),
+}));
+
 vi.mock("@/services/favorites/favorites", () => ({
   isFavorited: vi.fn().mockResolvedValue(false),
 }));
