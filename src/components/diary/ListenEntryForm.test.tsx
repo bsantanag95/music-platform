@@ -34,6 +34,7 @@ vi.mock("@/lib/api/diary", () => ({
 vi.mock("@/lib/api/client", () => ({ ApiError: mocks.ApiError }));
 
 const entryId = "a1b2c3d4-0000-4000-8000-000000000001";
+const target = { type: "release-group" as const, title: "OK Computer", subtitle: "Radiohead" };
 const initial = {
   listenContext: "first_listen" as const,
   body: "Genial",
@@ -59,18 +60,41 @@ describe("ListenEntryForm", () => {
   });
 
   it("muestra los campos con los valores iniciales", () => {
-    renderWithIntl(<ListenEntryForm entryId={entryId} initial={initial} />);
+    renderWithIntl(<ListenEntryForm entryId={entryId} target={target} initial={initial} />);
     expect(screen.getByLabelText(/Impresión/)).toHaveValue("Genial");
     expect(screen.getByLabelText("Contexto")).toHaveValue("first_listen");
     expect(screen.getByRole("radio", { name: "Me encantó" })).toBeChecked();
     expect(screen.getByRole("radio", { name: "Seguidores" })).toBeChecked();
   });
 
+  it("muestra Artista - Álbum/Canción como contexto, y solo el nombre para un artista", () => {
+    renderWithIntl(<ListenEntryForm entryId={entryId} target={target} initial={initial} />);
+    expect(screen.getByText("Radiohead - OK Computer")).toBeInTheDocument();
+
+    renderWithIntl(
+      <ListenEntryForm
+        entryId={entryId}
+        target={{ type: "artist", title: "Radiohead", subtitle: null }}
+        initial={initial}
+      />,
+    );
+    expect(screen.getAllByText("Radiohead")).toHaveLength(1);
+  });
+
+  it("avisa el éxito del guardado", async () => {
+    const user = userEvent.setup();
+    mocks.updateListenEntry.mockResolvedValue(saved);
+    renderWithIntl(<ListenEntryForm entryId={entryId} target={target} initial={initial} />);
+
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("Cambios guardados");
+  });
+
   it("guarda los cambios mediante PATCH y avisa al padre", async () => {
     const user = userEvent.setup();
     const onSaved = vi.fn();
     mocks.updateListenEntry.mockResolvedValue(saved);
-    renderWithIntl(<ListenEntryForm entryId={entryId} initial={initial} onSaved={onSaved} />);
+    renderWithIntl(<ListenEntryForm entryId={entryId} target={target} initial={initial} onSaved={onSaved} />);
 
     await user.selectOptions(screen.getByLabelText("Contexto"), "relisten");
     await user.click(screen.getByRole("radio", { name: "Privado" }));
@@ -90,7 +114,7 @@ describe("ListenEntryForm", () => {
   it("envía body null cuando la impresión queda vacía", async () => {
     const user = userEvent.setup();
     mocks.updateListenEntry.mockResolvedValue(saved);
-    renderWithIntl(<ListenEntryForm entryId={entryId} initial={{ ...initial, body: null }} />);
+    renderWithIntl(<ListenEntryForm entryId={entryId} target={target} initial={{ ...initial, body: null }} />);
 
     await user.type(screen.getByLabelText(/Impresión/), "   ");
     await user.click(screen.getByRole("button", { name: "Guardar" }));
@@ -105,7 +129,7 @@ describe("ListenEntryForm", () => {
   it("envía reaction null al elegir Sin reacción", async () => {
     const user = userEvent.setup();
     mocks.updateListenEntry.mockResolvedValue({ ...saved, reaction: null });
-    renderWithIntl(<ListenEntryForm entryId={entryId} initial={initial} />);
+    renderWithIntl(<ListenEntryForm entryId={entryId} target={target} initial={initial} />);
 
     await user.click(screen.getByRole("radio", { name: "Sin reacción" }));
     await user.click(screen.getByRole("button", { name: "Guardar" }));
@@ -127,7 +151,7 @@ describe("ListenEntryForm", () => {
 
     it("una entrada que nace privada sube a Seguidores al escribir una impresión, y vuelve a Privado al borrarla", async () => {
       const user = userEvent.setup();
-      renderWithIntl(<ListenEntryForm entryId={entryId} initial={privateEmpty} />);
+      renderWithIntl(<ListenEntryForm entryId={entryId} target={target} initial={privateEmpty} />);
 
       expect(screen.getByRole("radio", { name: "Privado" })).toBeChecked();
 
@@ -140,7 +164,7 @@ describe("ListenEntryForm", () => {
 
     it("una reacción también sube la audiencia a Seguidores", async () => {
       const user = userEvent.setup();
-      renderWithIntl(<ListenEntryForm entryId={entryId} initial={privateEmpty} />);
+      renderWithIntl(<ListenEntryForm entryId={entryId} target={target} initial={privateEmpty} />);
 
       await user.click(screen.getByRole("radio", { name: "Me encantó" }));
       await waitFor(() => expect(screen.getByRole("radio", { name: "Seguidores" })).toBeChecked());
@@ -149,7 +173,7 @@ describe("ListenEntryForm", () => {
     it("elegir una audiencia a mano congela la sugerencia", async () => {
       const user = userEvent.setup();
       mocks.updateListenEntry.mockResolvedValue(saved);
-      renderWithIntl(<ListenEntryForm entryId={entryId} initial={privateEmpty} />);
+      renderWithIntl(<ListenEntryForm entryId={entryId} target={target} initial={privateEmpty} />);
 
       await user.click(screen.getByRole("radio", { name: "Público" }));
       await user.type(screen.getByLabelText(/Impresión/), "algo");
@@ -168,7 +192,7 @@ describe("ListenEntryForm", () => {
     it("una entrada que ya venía con Seguidores no cambia sola al escribir", async () => {
       const user = userEvent.setup();
       renderWithIntl(
-        <ListenEntryForm entryId={entryId} initial={{ ...privateEmpty, audience: "followers" }} />,
+        <ListenEntryForm entryId={entryId} target={target} initial={{ ...privateEmpty, audience: "followers" }} />,
       );
 
       await user.type(screen.getByLabelText(/Impresión/), "nota");
@@ -182,7 +206,7 @@ describe("ListenEntryForm", () => {
   it("muestra error localizado si el guardado falla", async () => {
     const user = userEvent.setup();
     mocks.updateListenEntry.mockRejectedValue(new mocks.ApiError("VALIDATION_ERROR", 400, "x"));
-    renderWithIntl(<ListenEntryForm entryId={entryId} initial={initial} />);
+    renderWithIntl(<ListenEntryForm entryId={entryId} target={target} initial={initial} />);
 
     await user.click(screen.getByRole("button", { name: "Guardar" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(

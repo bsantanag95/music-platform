@@ -11,10 +11,23 @@ import type {
   ListenContext,
   ListenEntry,
   ListenReaction,
+  SocialTargetType,
 } from "@/lib/api/schemas";
+
+interface ListenEntryFormTarget {
+  type: SocialTargetType;
+  title: string;
+  subtitle: string | null;
+}
 
 interface ListenEntryFormProps {
   entryId: string;
+  // Este panel se reutiliza en vistas donde no queda claro a qué escucha
+  // apunta (p. ej. Recorrido, con varios álbumes elegibles a la vista) —
+  // muestra "Artista - Álbum/Canción" (o solo el nombre para un artista) como
+  // recordatorio de contexto (revisión: "no hay información visual sobre qué
+  // álbum está apuntando el panel").
+  target: ListenEntryFormTarget;
   initial: {
     listenContext: ListenContext;
     body: string | null;
@@ -25,10 +38,15 @@ interface ListenEntryFormProps {
   onCancel?: () => void;
 }
 
+function formatTargetLabel(target: ListenEntryFormTarget): string {
+  if (target.type === "artist" || !target.subtitle) return target.title;
+  return `${target.subtitle} - ${target.title}`;
+}
+
 // Panel para ampliar o modificar una entrada del diario: impresión (≤500),
 // contexto, reacción emocional y audiencia. Solo muta la entrada propia;
 // nunca toca la valoración vigente del objetivo.
-export function ListenEntryForm({ entryId, initial, onSaved, onCancel }: ListenEntryFormProps) {
+export function ListenEntryForm({ entryId, target, initial, onSaved, onCancel }: ListenEntryFormProps) {
   const t = useTranslations("diary");
   const [listenContext, setListenContext] = useState<ListenContext>(initial.listenContext);
   const [body, setBody] = useState(initial.body ?? "");
@@ -36,6 +54,18 @@ export function ListenEntryForm({ entryId, initial, onSaved, onCancel }: ListenE
   const [audience, setAudience] = useState<DiaryAudience>(initial.audience);
   const [busy, setBusy] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
+  // Confirmación visible de guardado: a diferencia de `DiaryActivityList`
+  // (que cierra el panel al guardar y ya avisa con un destello propio), acá
+  // el panel se queda abierto en el resto de los usos (Registrar global,
+  // Recorrido, diario propio) y no había ninguna señal de éxito (revisión:
+  // "el botón Guardar no despliega ningún mensaje de éxito").
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!saved) return;
+    const timeout = window.setTimeout(() => setSaved(false), 2000);
+    return () => window.clearTimeout(timeout);
+  }, [saved]);
 
   // La audiencia sigue a la intención (openspec: deepen-listening-diary, D2):
   // una entrada que nace `private` (registro rápido) sube a `followers` en
@@ -60,6 +90,7 @@ export function ListenEntryForm({ entryId, initial, onSaved, onCancel }: ListenE
   const handleSubmit = async () => {
     setBusy(true);
     setErrorCode(null);
+    setSaved(false);
     try {
       const entry = await updateListenEntry(entryId, {
         listenContext,
@@ -68,6 +99,7 @@ export function ListenEntryForm({ entryId, initial, onSaved, onCancel }: ListenE
         audience,
       });
       onSaved?.(entry);
+      setSaved(true);
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
     } finally {
@@ -77,6 +109,9 @@ export function ListenEntryForm({ entryId, initial, onSaved, onCancel }: ListenE
 
   return (
     <div className="flex flex-col gap-3 rounded-md border border-ink-border bg-ink-surface p-4">
+      <p className="truncate font-data text-xs uppercase tracking-wide text-paper-muted">
+        {formatTargetLabel(target)}
+      </p>
       <div className="flex flex-col gap-1">
         <label className="flex flex-col gap-1">
           <span className="font-data text-sm text-paper">{t("bodyLabel")}</span>
@@ -147,6 +182,11 @@ export function ListenEntryForm({ entryId, initial, onSaved, onCancel }: ListenE
         {errorCode && (
           <span role="alert" className="font-data text-xs text-danger">
             {t("saveError")}
+          </span>
+        )}
+        {saved && !errorCode && (
+          <span role="status" className="font-data text-xs text-petrol">
+            {t("savedAnnouncement")}
           </span>
         )}
       </div>

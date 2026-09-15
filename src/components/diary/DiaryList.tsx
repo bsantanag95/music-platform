@@ -155,6 +155,7 @@ export function DiaryList({ initial, readOnly, showAuthor, loadMore, empty }: Di
               <div className="mt-3">
                 <ListenEntryForm
                   entryId={entry.id}
+                  target={entry.target}
                   initial={{
                     listenContext: entry.listenContext,
                     body: entry.body,
