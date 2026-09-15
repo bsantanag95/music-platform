@@ -22,11 +22,18 @@ import { getUserPermissions } from "@/services/auth/authorization";
 import { isFavorited } from "@/services/favorites/favorites";
 import { isWantToListen } from "@/services/want-to-listen/want-to-listen";
 import { listOwnEntriesForReleaseGroup } from "@/services/collection/collection";
+import { listOwnWantedForReleaseGroup } from "@/services/collection/wanted";
 import { getRatings, listComments, resolveSocialTarget } from "@/services/social";
 import { listReviews } from "@/services/reviews";
 
 interface AlbumPageProps {
   params: Promise<{ id: string }>;
+  /** `?collection=have|want` — deep-link desde el menú "···" de `AlbumCard`. */
+  searchParams?: Promise<{ collection?: string }>;
+}
+
+function parseCollectionChoice(value: string | undefined): "have" | "want" | undefined {
+  return value === "have" || value === "want" ? value : undefined;
 }
 
 export async function generateMetadata({ params }: AlbumPageProps): Promise<Metadata> {
@@ -37,8 +44,9 @@ export async function generateMetadata({ params }: AlbumPageProps): Promise<Meta
   return { title: result.detail.releaseGroup.title };
 }
 
-export default async function AlbumPage({ params }: AlbumPageProps) {
+export default async function AlbumPage({ params, searchParams }: AlbumPageProps) {
   const { id } = await params;
+  const initialChoice = parseCollectionChoice((await searchParams)?.collection);
   const t = await getTranslations("catalog");
   const tCommon = await getTranslations("common");
 
@@ -67,20 +75,24 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
     ? (await getUserPermissions(session.user.id)).includes("moderation.suspend_social")
     : false;
   const socialTarget = await resolveSocialTarget("release-group", detail.releaseGroup.id);
-  const [ratings, comments, reviews, collectionEntries, favorited, wantToListen] = await Promise.all([
-    getRatings(socialTarget, session?.user.id),
-    listComments(socialTarget),
-    listReviews(socialTarget),
-    session?.user.id
-      ? listOwnEntriesForReleaseGroup(session.user.id, detail.releaseGroup.id)
-      : Promise.resolve([]),
-    session?.user.id
-      ? isFavorited({ type: "release-group", id: detail.releaseGroup.id }, session.user.id)
-      : Promise.resolve(false),
-    session?.user.id
-      ? isWantToListen({ type: "release-group", id: detail.releaseGroup.id }, session.user.id)
-      : Promise.resolve(false),
-  ]);
+  const [ratings, comments, reviews, collectionEntries, wantedEntries, favorited, wantToListen] =
+    await Promise.all([
+      getRatings(socialTarget, session?.user.id),
+      listComments(socialTarget),
+      listReviews(socialTarget),
+      session?.user.id
+        ? listOwnEntriesForReleaseGroup(session.user.id, detail.releaseGroup.id)
+        : Promise.resolve([]),
+      session?.user.id
+        ? listOwnWantedForReleaseGroup(session.user.id, detail.releaseGroup.id)
+        : Promise.resolve([]),
+      session?.user.id
+        ? isFavorited({ type: "release-group", id: detail.releaseGroup.id }, session.user.id)
+        : Promise.resolve(false),
+      session?.user.id
+        ? isWantToListen({ type: "release-group", id: detail.releaseGroup.id }, session.user.id)
+        : Promise.resolve(false),
+    ]);
 
   const breadcrumbItems = [
     { label: tCommon("home"), href: "/" },
@@ -146,6 +158,8 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
               releaseGroupId={detail.releaseGroup.id}
               authenticated={Boolean(session?.user.id)}
               initialEntries={collectionEntries}
+              initialWantedEntries={wantedEntries}
+              initialChoice={initialChoice}
             />
           </div>
         </div>

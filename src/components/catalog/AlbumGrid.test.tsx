@@ -16,6 +16,11 @@ vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
     <a href={href}>{children}</a>
   ),
+  useRouter: () => ({ push: vi.fn() }),
+}));
+
+vi.mock("@/lib/api/wanted", () => ({
+  addWantedEntries: vi.fn(),
 }));
 
 function makeReleaseGroup(

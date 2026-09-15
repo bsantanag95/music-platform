@@ -995,6 +995,46 @@ mismos parámetros opcionales que la lectura propia.
 **200 OK:** `{ entries: [...], page, pageSize, hasNext, counts: { vinyl, cd, cassette, other } }`.
 **404** con `USER_NOT_FOUND`.
 
+## Wishlist de colección (`add-collection-wishlist`)
+
+Señal prospectiva ("quiero conseguir este álbum"), independiente de la colección física
+(`collection_entry`): tener una entrada en una no impide tener el álbum en la otra, y viceversa.
+A diferencia de `collection_entry`, `format` es **opcional** (`null` = "cualquier formato") y no
+hay `audience` — la wishlist es privada del dueño, sin lectura por `username`. Mismo vocabulario
+cerrado de `format`/`attributes` que la colección física. **No es un toggle idempotente:** `POST`
+siempre crea entradas nuevas, y se permiten varias entradas por álbum sin deduplicar.
+
+Forma de `entry`: `{ id, format, attributes: [...], note, createdAt, updatedAt,
+album: { id, title, coverThumbUrl, artistId, artistName } }`.
+
+### `POST /api/me/collection/wanted`
+
+Crea una o varias entradas de deseo para un mismo álbum en una sola operación (transacción
+atómica). **Body:** `{ releaseGroupId, entries: [{ format?, attributes?, note? }] (1..10) }`.
+**201 OK:** `{ entries: [...] }`. **400** con `VALIDATION_ERROR` si el lote está vacío, supera 10
+variantes, o alguna variante tiene un `format`/`attribute` fuera del vocabulario o una `note` de
+más de 140 caracteres (ninguna entrada del lote se crea). **404** con `ALBUM_NOT_FOUND` si el
+álbum no existe.
+
+### `GET /api/me/collection/wanted?page=&pageSize=&q=&sort=`
+
+Wishlist propia paginada. `q` busca parcialmente sobre el título del álbum y el artista
+acreditado; `sort` es `recent` (default) o `alpha`. **200 OK:**
+`{ entries: [...], page, pageSize, hasNext }`. **400** con `VALIDATION_ERROR` si la paginación o
+el orden no son válidos.
+
+### `PATCH /api/me/collection/wanted/{entryId}`
+
+Modifica `format`, `attributes` o `note` de una entrada de deseo propia. Al menos un campo
+obligatorio. `format: null` vuelve la entrada a "cualquier formato"; `note: null` limpia la nota.
+
+**Body:** `{ format?, attributes?, note? }`. **200 OK:** `{ entry }`. **404** con
+`WANTED_ENTRY_NOT_FOUND` si no existe o no es del usuario.
+
+### `DELETE /api/me/collection/wanted/{entryId}`
+
+Borra una entrada de deseo propia. **204.** **404** con `WANTED_ENTRY_NOT_FOUND`.
+
 ## Moderación
 
 ### `POST /api/moderation/reports`

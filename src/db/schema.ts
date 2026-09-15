@@ -727,6 +727,40 @@ export const collectionEntry = pgTable(
 
 export type CollectionEntryRow = typeof collectionEntry.$inferSelect;
 
+// Wishlist de colección (Fase 5, add-collection-wishlist). A diferencia de
+// collectionEntry, format es nullable ("cualquier formato") y no hay
+// audiencia: es privada del dueño, sin vista pública (mismo criterio que
+// want_to_listen). Varias entradas por álbum permitidas, sin índice único.
+export const wantedEntry = pgTable(
+  "wanted_entry",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    releaseGroupId: uuid("release_group_id")
+      .notNull()
+      .references(() => releaseGroup.id, { onDelete: "cascade" }),
+    format: text("format"),
+    attributes: text("attributes")
+      .array()
+      .notNull()
+      .default(sql`'{}'`),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_wanted_entry_user_created").on(t.userId, t.createdAt),
+    index("idx_wanted_entry_user_release_group").on(t.userId, t.releaseGroupId),
+    index("idx_wanted_entry_release_group").on(t.releaseGroupId),
+    check("chk_wanted_entry_format", sql`${t.format} IS NULL OR ${t.format} IN ('vinyl', 'cd', 'cassette', 'other')`),
+    check("chk_wanted_entry_note", sql`${t.note} IS NULL OR length(${t.note}) <= 140`),
+  ],
+);
+
+export type WantedEntryRow = typeof wantedEntry.$inferSelect;
+
 // Perfil enriquecido (cambio redesign-user-profile).
 //
 // - user_profile_link: enlaces externos, máx. 5 por usuario (validado en el
