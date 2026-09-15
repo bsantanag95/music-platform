@@ -51,9 +51,12 @@ de lanzamiento ascendente; los álbumes sin año conocido SHALL ubicarse al fina
 ordenados alfabéticamente entre sí — mismo criterio que ya usa la discografía de la página de
 artista (`AlbumGrid`), para no presentar un orden distinto al que el usuario ya vio ahí. Cada
 grupo SHALL poder colapsarse y expandirse de forma independiente; por defecto, el grupo `studio`
-SHALL estar expandido y el resto de los grupos SHALL estar colapsados. La página SHALL requerir
-sesión y SHALL responder con un recorrido inexistente (404) si el usuario autenticado no tiene un
-recorrido activo sobre el artista de la URL.
+SHALL estar expandido y el resto de los grupos SHALL estar colapsados. Esta vista agrupada de
+casilleros (el editor de la selección) SHALL permanecer oculta por defecto detrás de una acción
+explícita que la despliegue, salvo cuando la selección del recorrido está vacía, caso en el que
+SHALL aparecer ya desplegada — no hay nada más que mostrar en la página en ese caso. La página
+SHALL requerir sesión y SHALL responder con un recorrido inexistente (404) si el usuario
+autenticado no tiene un recorrido activo sobre el artista de la URL.
 
 #### Scenario: Vista agrupada de un artista con varias categorías de lanzamiento
 - **WHEN** el propietario abre la página de gestión de su recorrido sobre un artista con álbumes
@@ -94,6 +97,15 @@ recorrido activo sobre el artista de la URL.
 - **WHEN** un usuario autenticado abre la página de gestión de un artista sobre el que nunca
   activó un recorrido
 - **THEN** la página responde 404
+
+#### Scenario: El editor está oculto por defecto
+- **WHEN** el propietario abre la página de gestión de un recorrido con al menos un álbum
+  seleccionado
+- **THEN** no ve la grilla de casilleros de inmediato, sino una acción explícita para desplegarla
+
+#### Scenario: El editor se abre automáticamente cuando la selección está vacía
+- **WHEN** el propietario abre la página de gestión de un recorrido sin ningún álbum seleccionado
+- **THEN** ve la grilla de casilleros ya desplegada, sin necesidad de un clic adicional
 
 ### Requirement: Editar un borrador local y guardar en una sola operación
 El sistema SHALL editar la selección de un recorrido como un **borrador local** dentro de la
@@ -316,14 +328,16 @@ mayúsculas de minúsculas ni diacríticos (una búsqueda sin tilde SHALL encont
 tilde, y viceversa), un control de
 orden con tres opciones — por orden de agregado (activación más reciente primero, el orden en que
 ya llega el listado del servidor), alfabético por nombre de artista, o por estado (en curso,
-luego completo, luego archivado — mismo orden canónico que el resto de la aplicación) — y un
-conmutador de modo de visualización con las mismas tres opciones excluyentes que el resto de la
-aplicación (Detallada/Índice/Gráfico — ver `/me/lists/[id]` y Want to Listen), aplicado por igual
-a todo el listado. La preferencia de modo SHALL persistir entre visitas para el mismo navegador;
-el orden y la búsqueda no persisten, y vuelven a su valor por defecto en cada visita, igual que
-los filtros de `/me/lists`. Ninguna de las opciones de orden ni de modo SHALL alterar qué acción
-ofrece cada entrada (gestión como enlace principal, menú de tarjeta con el resto, estado) — solo
-su densidad visual y su secuencia.
+luego completo, luego archivado — mismo orden canónico que el resto de la aplicación) —, un
+control de filtro por estado con cuatro opciones excluyentes — todo (por defecto), en curso,
+completo, archivado — que acota las entradas visibles al estado elegido sin alterar el buscador ni
+el orden, y un conmutador de modo de visualización con las mismas tres opciones excluyentes que el
+resto de la aplicación (Detallada/Índice/Gráfico — ver `/me/lists/[id]` y Want to Listen), aplicado
+por igual a todo el listado. La preferencia de modo SHALL persistir entre visitas para el mismo
+navegador; el orden, la búsqueda y el filtro de estado no persisten, y vuelven a su valor por
+defecto en cada visita, igual que los filtros de `/me/lists`. Ninguna de las opciones de orden, de
+filtro de estado ni de modo SHALL alterar qué acción ofrece cada entrada (gestión como enlace
+principal, menú de tarjeta con el resto, estado) — solo su densidad visual y su secuencia.
 
 #### Scenario: Listado con recorridos en distintos estados
 - **WHEN** un usuario autenticado con recorridos en curso, completos y archivados abre
@@ -340,8 +354,8 @@ su densidad visual y su secuencia.
 
 #### Scenario: Listado vacío
 - **WHEN** un usuario sin ningún recorrido abre `/me/artist-journeys`
-- **THEN** ve un estado vacío localizado, sin error, sin buscador, sin control de orden ni
-  conmutador de modo
+- **THEN** ve un estado vacío localizado, sin error, sin buscador, sin control de orden, sin
+  filtro de estado ni conmutador de modo
 
 #### Scenario: Sin sesión
 - **WHEN** una persona sin sesión abre `/me/artist-journeys`
@@ -392,6 +406,25 @@ su densidad visual y su secuencia.
 - **WHEN** el propietario elige un modo de visualización y vuelve a abrir `/me/artist-journeys`
   más tarde en el mismo navegador
 - **THEN** el listado se abre en el modo elegido la vez anterior
+
+#### Scenario: Filtrar por un solo estado
+- **WHEN** el propietario elige "Archivado" (o "En curso", o "Completo") en el filtro de estado
+- **THEN** el listado muestra únicamente los recorridos en ese estado
+
+#### Scenario: El filtro "Todo" muestra los tres estados
+- **WHEN** el propietario abre el listado sin haber cambiado el filtro de estado, o lo vuelve a
+  poner en "Todo"
+- **THEN** ve recorridos de cualquier estado, igual que antes de que existiera el filtro
+
+#### Scenario: El filtro de estado se combina con la búsqueda y el orden
+- **WHEN** el propietario tiene un filtro de estado activo y además busca por nombre o cambia el
+  orden
+- **THEN** ve el subconjunto que cumple el estado elegido y la búsqueda, en el orden seleccionado
+
+#### Scenario: El filtro de estado no persiste entre visitas
+- **WHEN** el propietario elige un estado en el filtro y vuelve a abrir `/me/artist-journeys` más
+  tarde
+- **THEN** el filtro de estado vuelve a "Todo", igual que el buscador y el orden
 
 ### Requirement: Acceso desde el menú de usuario
 El sistema SHALL incluir un acceso a `/me/artist-journeys` en el menú de usuario del Header y en
@@ -541,4 +574,238 @@ abierto con un aviso, sin navegar.
 - **WHEN** la activación o el guardado de la selección fallan
 - **THEN** el modal permanece abierto con un aviso de error, y el propietario no es llevado a la
   página de gestión
+
+### Requirement: Vista de la selección actual con carátulas, orden y enlaces
+El sistema SHALL mostrar, como contenido principal de la página de gestión, la selección actual
+del recorrido — no la discografía completa del artista — agrupada por categoría con el mismo
+criterio de agrupación y de orden por año que el editor (Requirement "Vista de gestión agrupada
+por tipo, en una página dedicada"), incluyendo la carátula de cada álbum. El sistema SHALL ofrecer,
+además del orden por año de lanzamiento, un orden alfabético por título, aplicado dentro de cada
+grupo y seleccionable por el propietario. El sistema SHALL ofrecer dos modos de visualización
+mutuamente excluyentes para esta vista — lista (carátula, título y año) y gráfico (pared de
+carátulas) —, aplicados por igual a toda la vista; a diferencia del modo de `/me/artist-journeys`,
+el modo de esta vista SHALL NOT persistir entre visitas. El título de cada álbum SHALL enlazar a
+su propia página de catálogo. Cada álbum de esta vista SHALL ofrecer una acción de quitarlo
+directamente, que SHALL modificar el mismo borrador local del Requirement "Editar un borrador
+local y guardar en una sola operación" — sin llamar al servidor hasta que el propietario active
+"Guardar". Cuando la selección del recorrido está vacía, esta vista SHALL NOT mostrarse.
+
+#### Scenario: Selección agrupada con carátulas como contenido principal
+- **WHEN** el propietario abre la página de gestión de un recorrido con álbumes seleccionados de
+  más de una categoría
+- **THEN** ve esos álbumes agrupados por categoría, cada uno con su carátula, sin ver los álbumes
+  no seleccionados
+
+#### Scenario: Orden alfabético de la selección
+- **WHEN** el propietario elige el orden alfabético en la vista de selección
+- **THEN** los álbumes de cada grupo se reordenan por título, sin distinguir mayúsculas
+
+#### Scenario: Cambiar a modo gráfico
+- **WHEN** el propietario cambia la vista de selección a modo gráfico
+- **THEN** ve una pared de carátulas de los álbumes seleccionados, agrupados por categoría, en vez
+  de la lista
+
+#### Scenario: Enlace desde el título de un álbum
+- **WHEN** el propietario hace clic en el título de un álbum de la selección
+- **THEN** llega a la página de ese álbum
+
+#### Scenario: Quitar un álbum desde la vista de selección
+- **WHEN** el propietario activa la acción de quitar sobre un álbum de la vista de selección
+- **THEN** ese álbum desaparece de la vista y el botón "Guardar" pasa a estar habilitado, sin que
+  la selección persistida cambie hasta que el propietario confirme
+
+#### Scenario: Selección vacía no muestra esta vista
+- **WHEN** la selección del recorrido está vacía
+- **THEN** la página no muestra esta vista, y el editor aparece ya desplegado en su lugar
+
+### Requirement: Foto del artista en el encabezado de gestión
+El sistema SHALL mostrar la foto del artista en el encabezado de la página de gestión del
+recorrido cuando el catálogo tiene una foto registrada para ese artista, y un reemplazo neutro —
+mismo tratamiento que el resto del catálogo — cuando no la tiene. El nombre del artista en ese
+mismo encabezado SHALL enlazar a la página de ese artista.
+
+#### Scenario: Foto disponible
+- **WHEN** el artista del recorrido tiene una foto registrada en el catálogo
+- **THEN** el encabezado de la página de gestión la muestra
+
+#### Scenario: Sin foto registrada
+- **WHEN** el artista del recorrido no tiene ninguna foto registrada
+- **THEN** el encabezado muestra el mismo reemplazo neutro que usa el resto del catálogo para
+  artistas sin foto
+
+#### Scenario: Enlace desde el nombre del artista
+- **WHEN** el propietario hace clic en el nombre del artista en el encabezado de la página de
+  gestión
+- **THEN** llega a la página de ese artista
+
+### Requirement: Registrar una escucha de un álbum desde la vista de selección
+El sistema SHALL permitir al propietario registrar una escucha de cualquier álbum de su selección
+directamente desde la vista de selección de la página de gestión, sin salir de la página. Registrar
+una escucha SHALL crear una entrada de diario privada para ese álbum, con la misma semántica de
+registro rápido que el resto del catálogo. Inmediatamente después de crearla, el sistema SHALL
+desplegar, sobre esa misma entrada y sin salir de la página, el mismo panel de ampliación
+(impresión, contexto, reacción y audiencia) que ya ofrece el registro rápido en el resto del
+catálogo, desplazándolo a la vista si hiciera falta — salvo que ya haya otro panel de ampliación
+abierto, caso en el que el sistema SHALL NOT reemplazarlo automáticamente: registrar otro álbum
+mientras un panel está abierto SHALL marcarlo como escuchado igual, sin abrirle panel ni descartar
+lo que el propietario esté completando en el que ya tenía abierto. El propietario SHALL poder
+ocultar el panel abierto y volver a desplegarlo después, o desplegar el de otro álbum ya
+registrado, mediante un control "Ampliar"/"Cerrar", sin que volver a desplegarlo cree una nueva
+entrada. Cada álbum de la selección SHALL indicar si el propietario ya tiene al menos una escucha
+registrada para él. El progreso del recorrido (selección escuchada) y su estado derivado (en
+curso/completo) SHALL reflejar la escucha recién registrada de inmediato, sin recargar la página.
+Un error al registrar SHALL dejar el estado del álbum como estaba, con un aviso, sin descartar el
+borrador de selección en curso.
+
+#### Scenario: Registrar una escucha marca el álbum como escuchado
+- **WHEN** el propietario activa "Registrar escucha" sobre un álbum de la vista de selección que no
+  tenía ninguna escucha registrada
+- **THEN** ese álbum pasa a indicarse como escuchado, sin salir de la página de gestión
+
+#### Scenario: El progreso se actualiza al instante
+- **WHEN** el propietario registra una escucha de un álbum de su selección
+- **THEN** la señal de progreso de la página de gestión refleja la nueva cantidad de álbumes
+  escuchados sin recargar la página
+
+#### Scenario: El recorrido pasa a completo al registrar la última escucha pendiente
+- **WHEN** el propietario registra la escucha del único álbum de su selección que le faltaba
+- **THEN** el recorrido pasa a mostrarse en estado completo, sin acción manual adicional sobre el
+  estado
+
+#### Scenario: El panel de ampliación se abre solo tras registrar
+- **WHEN** el propietario registra una escucha de un álbum desde la vista de selección, sin tener
+  ya otro panel de ampliación abierto
+- **THEN** el sistema despliega, debajo de ese álbum, el panel para completar impresión, contexto,
+  reacción y audiencia de la entrada recién creada, desplazándolo a la vista si hiciera falta, sin
+  ninguna acción adicional
+
+#### Scenario: Registrar otro álbum no reemplaza un panel ya abierto
+- **WHEN** el propietario registra una escucha de un álbum mientras ya tiene abierto el panel de
+  ampliación de otro álbum
+- **THEN** el álbum recién registrado se marca como escuchado, pero el panel abierto sigue siendo
+  el mismo, con lo que el propietario haya completado ahí intacto
+
+#### Scenario: Cerrar y volver a abrir el panel no crea otra entrada
+- **WHEN** el propietario oculta el panel de ampliación con "Cerrar" y luego lo vuelve a desplegar
+  con "Ampliar"
+- **THEN** el sistema muestra la misma entrada ya creada, sin registrar una escucha nueva
+
+#### Scenario: Un error al registrar no descarta el borrador de selección
+- **WHEN** registrar una escucha falla mientras el propietario tiene cambios sin guardar en el
+  borrador de selección
+- **THEN** el sistema muestra un aviso de error y el borrador de selección sin guardar no se pierde
+
+#### Scenario: El editor de selección no ofrece esta acción
+- **WHEN** el propietario tiene abierto el editor de selección (grilla de casilleros)
+- **THEN** no encuentra ahí ninguna acción de registrar escucha — solo en la vista de selección
+
+### Requirement: Quitar el registro de una escucha creada desde la vista de selección
+El sistema SHALL ofrecer, junto a la marca de "escuchado" de un álbum, una acción "Quitar
+registro" cuando la entrada de diario que lo marcó fue creada por el propietario en la misma
+sesión de edición de esta página, que SHALL eliminar esa entrada de forma permanente y revertir la
+marca de "escuchado" del álbum si no le queda ninguna otra escucha registrada. Activar "Registrar
+escucha" o "Quitar registro" repetidamente sobre el mismo álbum SHALL NOT crear entradas de diario
+adicionales: cada álbum SHALL exponer como máximo una de las dos acciones a la vez, nunca ambas, y
+nunca una acción de "registrar de nuevo" mientras ya está marcado como escuchado. Un álbum marcado
+como escuchado por una entrada que el propietario ya tenía antes de abrir esta sesión de edición
+(creada desde el diario o desde la página del álbum) SHALL NOT ofrecer ninguna de las dos acciones
+— el sistema no elige por su cuenta cuál de las escuchas existentes de ese álbum eliminar; gestionar
+esas entradas sigue siendo una acción del diario propio. Un error al quitar un registro SHALL dejar
+el estado del álbum como estaba, con un aviso, sin descartar el borrador de selección en curso. Si
+el álbum quitado tenía su panel de ampliación abierto, el sistema SHALL cerrarlo.
+
+#### Scenario: Quitar el registro revierte la marca de escuchado
+- **WHEN** el propietario activa "Quitar registro" sobre un álbum cuya única escucha registrada la
+  creó en esta misma sesión de edición
+- **THEN** la entrada de diario se elimina y el álbum deja de indicarse como escuchado, sin salir
+  de la página de gestión
+
+#### Scenario: Un álbum solo ofrece una de las dos acciones a la vez
+- **WHEN** el propietario ve un álbum de la vista de selección, esté o no marcado como escuchado
+- **THEN** encuentra "Registrar escucha" o "Quitar registro", nunca ambas ni ninguna acción de
+  "registrar de nuevo" sobre un álbum ya marcado
+
+#### Scenario: Un álbum ya escuchado antes de esta sesión no ofrece ninguna de las dos acciones
+- **WHEN** el propietario ve un álbum que ya estaba marcado como escuchado al abrir la página de
+  gestión, sin haber registrado ni quitado ninguna escucha de él en esta sesión
+- **THEN** el álbum se indica como escuchado sin ofrecer "Registrar escucha" ni "Quitar registro"
+
+#### Scenario: Quitar el registro cierra su panel de ampliación
+- **WHEN** el propietario quita el registro de un álbum cuyo panel de ampliación está abierto
+- **THEN** el panel se cierra junto con la eliminación de la entrada
+
+#### Scenario: Un error al quitar el registro no descarta el borrador de selección
+- **WHEN** quitar un registro falla mientras el propietario tiene cambios sin guardar en el
+  borrador de selección
+- **THEN** el sistema muestra un aviso de error, el álbum sigue marcado como escuchado, y el
+  borrador de selección sin guardar no se pierde
+
+### Requirement: Indicador de escuchado con contraste suficiente en modo gráfico
+En el modo gráfico de la vista de selección, el control de escuchado sobre cada carátula SHALL
+distinguirse por forma además de color entre marcado y sin marcar — no solo por una diferencia de
+tono que pueda perderse contra la propia carátula —, y SHALL permanecer perceptible como marcado
+incluso cuando no ofrece ninguna acción (Requirement "Quitar el registro de una escucha creada
+desde la vista de selección").
+
+#### Scenario: El estado marcado se distingue por forma, no solo por color
+- **WHEN** el propietario ve la grilla de carátulas del modo gráfico con álbumes marcados y sin
+  marcar como escuchados
+- **THEN** puede distinguir unos de otros por la forma del control (relleno sólido vs. hueco), sin
+  depender únicamente de percibir la diferencia de color
+
+#### Scenario: Un álbum escuchado sin acción disponible sigue marcado visualmente
+- **WHEN** un álbum ya escuchado antes de esta sesión no ofrece "Registrar escucha" ni "Quitar
+  registro" (Requirement "Quitar el registro de una escucha creada desde la vista de selección")
+- **THEN** su control sigue mostrándose con el mismo relleno sólido que un álbum marcado con acción
+  disponible, sin verse atenuado
+
+### Requirement: Buscador en la selección de álbumes de una discografía
+El sistema SHALL ofrecer un buscador por título dentro de la vista agrupada de selección de
+álbumes de una discografía — tanto en el editor de la página de gestión como en el modal de
+inicio, que comparten esa misma vista —, sin distinguir mayúsculas de minúsculas ni diacríticos
+(una búsqueda sin tilde SHALL encontrar un título con tilde, y viceversa), filtrando localmente
+sin ida y vuelta al servidor. Mientras el buscador tiene texto, cualquier grupo de categoría con
+al menos un álbum coincidente SHALL mostrarse expandido, sin importar su estado de colapso
+previo; los grupos sin ningún álbum coincidente SHALL NOT mostrarse. Al vaciar el buscador, el
+estado de colapso previo a la búsqueda SHALL regir de nuevo. Si ningún álbum de la discografía
+coincide con el texto buscado, el sistema SHALL mostrar un estado vacío localizado. El buscador
+SHALL NOT alterar la selección ya hecha, ni el alcance de "Seleccionar todo"/"Deseleccionar todo"
+de un grupo, que SHALL seguir aplicando al grupo completo, no solo a los álbumes visibles por la
+búsqueda.
+
+#### Scenario: Buscar filtra por título de álbum
+- **WHEN** el propietario escribe en el buscador un texto que coincide con el título de algunos
+  álbumes de la discografía
+- **THEN** la vista muestra solo los álbumes cuyo título coincide, sin llamar al servidor
+
+#### Scenario: Buscar sin distinguir diacríticos
+- **WHEN** el propietario escribe el título de un álbum con tildes u otros diacríticos sin
+  incluirlos, o a la inversa
+- **THEN** el sistema encuentra el álbum correspondiente sin exigir que los diacríticos coincidan
+  exactamente
+
+#### Scenario: Un grupo con coincidencias se muestra expandido durante la búsqueda
+- **WHEN** el propietario busca un título que pertenece a un grupo de categoría que estaba
+  colapsado
+- **THEN** ese grupo se muestra expandido mientras dure la búsqueda, sin necesidad de expandirlo
+  a mano
+
+#### Scenario: Un grupo sin coincidencias no se muestra durante la búsqueda
+- **WHEN** ningún álbum de un grupo de categoría coincide con el texto buscado
+- **THEN** ese grupo no se muestra mientras dure la búsqueda
+
+#### Scenario: Vaciar la búsqueda restaura el colapso previo
+- **WHEN** el propietario vacía el buscador después de haber expandido un grupo solo por efecto
+  de la búsqueda
+- **THEN** ese grupo vuelve a mostrarse colapsado si así estaba antes de buscar
+
+#### Scenario: Búsqueda sin coincidencias
+- **WHEN** el texto buscado no coincide con ningún álbum de la discografía
+- **THEN** el sistema muestra un estado vacío localizado de "sin resultados"
+
+#### Scenario: Buscar no altera la selección ni "Seleccionar todo"
+- **WHEN** el propietario activa "Seleccionar todo" de un grupo mientras el buscador está
+  filtrando solo algunos de sus álbumes
+- **THEN** el sistema marca todos los álbumes del grupo completo, no solo los visibles por la
+  búsqueda
 

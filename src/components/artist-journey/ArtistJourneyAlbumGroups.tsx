@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ReleaseGroupCategorySchema, type ReleaseGroupCategory } from "@/lib/api/schemas";
+import { normalizeForSearch } from "./artist-journey-list-shared";
 
 export interface ArtistJourneyGroupableAlbum {
   id: string;
@@ -80,7 +81,9 @@ function GroupSelectAllCheckbox({
 // (`ArtistJourneyStartModal`): misma UI, dos orígenes de datos distintos
 // (`ArtistJourneyAlbum` con `selected` propio en un caso, `ReleaseGroup` de
 // la discografía completa en el otro — de ahí el genérico, ambos comparten
-// el subconjunto de campos que esta vista necesita).
+// el subconjunto de campos que esta vista necesita). El buscador (openspec:
+// add-artist-journey-album-search) es estado interno del componente — no
+// escapa a los dos consumidores, ni se persiste entre aperturas.
 export function ArtistJourneyAlbumGroups<T extends ArtistJourneyGroupableAlbum>({
   albums,
   selected,
@@ -91,6 +94,9 @@ export function ArtistJourneyAlbumGroups<T extends ArtistJourneyGroupableAlbum>(
   onToggleCollapsed,
 }: ArtistJourneyAlbumGroupsProps<T>) {
   const t = useTranslations("artistJourney");
+  const [query, setQuery] = useState("");
+  const normalizedQuery = normalizeForSearch(query.trim());
+  const searching = normalizedQuery !== "";
 
   const grouped = new Map<ReleaseGroupCategory, T[]>();
   for (const album of albums) {
@@ -99,12 +105,36 @@ export function ArtistJourneyAlbumGroups<T extends ArtistJourneyGroupableAlbum>(
     grouped.set(album.category, list);
   }
 
+  const hasAnyMatch =
+    !searching || albums.some((a) => normalizeForSearch(a.title).includes(normalizedQuery));
+
   return (
     <div className="flex flex-col gap-4">
+      <input
+        type="search"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder={t("albumSearch.placeholder")}
+        aria-label={t("albumSearch.placeholder")}
+        className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted"
+      />
+
+      {searching && !hasAnyMatch && (
+        <p className="font-body text-xs text-paper-muted">{t("albumSearch.noResults")}</p>
+      )}
+
       {CATEGORY_ORDER.map((category) => {
         const groupAlbums = grouped.get(category);
         if (!groupAlbums?.length) return null;
-        const isCollapsed = collapsed.has(category);
+        const visibleAlbums = searching
+          ? groupAlbums.filter((a) => normalizeForSearch(a.title).includes(normalizedQuery))
+          : groupAlbums;
+        if (searching && visibleAlbums.length === 0) return null;
+        // Mientras se busca, la visibilidad la decide la búsqueda, no el
+        // colapso guardado — se ignora `collapsed` sin mutarlo, para que al
+        // vaciar la búsqueda el estado previo vuelva tal cual estaba (D1 de
+        // design.md).
+        const isCollapsed = searching ? false : collapsed.has(category);
         const selectedInGroup = groupAlbums.filter((a) => selected.has(a.id)).length;
         const allSelected = selectedInGroup === groupAlbums.length;
         const someSelected = selectedInGroup > 0 && !allSelected;
@@ -114,9 +144,10 @@ export function ArtistJourneyAlbumGroups<T extends ArtistJourneyGroupableAlbum>(
             <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
+                disabled={searching}
                 aria-expanded={!isCollapsed}
                 onClick={() => onToggleCollapsed(category)}
-                className="flex min-w-0 items-center gap-1.5 text-paper-muted transition-colors hover:text-paper"
+                className="flex min-w-0 items-center gap-1.5 text-paper-muted transition-colors hover:text-paper disabled:cursor-default disabled:opacity-60 disabled:hover:text-paper-muted"
               >
                 <ChevronIcon expanded={!isCollapsed} />
                 <span className="truncate font-data text-xs uppercase tracking-wider">
@@ -143,7 +174,7 @@ export function ArtistJourneyAlbumGroups<T extends ArtistJourneyGroupableAlbum>(
 
             {!isCollapsed && (
               <ul className="flex flex-col divide-y divide-ink-border border-t border-ink-border">
-                {groupAlbums.map((album) => (
+                {visibleAlbums.map((album) => (
                   <li key={album.id} className="flex items-center gap-3 py-1.5">
                     <input
                       type="checkbox"

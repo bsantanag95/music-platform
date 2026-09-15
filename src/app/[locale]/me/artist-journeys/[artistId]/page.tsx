@@ -39,17 +39,20 @@ export default async function ArtistJourneyManagePage({ params }: ArtistJourneyM
   } satisfies Record<ReleaseGroupCategory, string>;
 
   return (
-    <main className="flex min-h-screen flex-col items-start gap-6 px-4 py-12">
-      <Breadcrumbs
-        items={[
-          { label: tCommon("home"), href: "/" },
-          { label: t("myJourneysTitle"), href: "/me/artist-journeys" },
-          { label: artistRow.name },
-        ]}
-      />
+    <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
+      <div className="w-full max-w-3xl">
+        <Breadcrumbs
+          items={[
+            { label: tCommon("home"), href: "/" },
+            { label: t("myJourneysTitle"), href: "/me/artist-journeys" },
+            { label: artistRow.name },
+          ]}
+        />
+      </div>
       <ArtistJourneyManager
         artistId={artistId}
         artistName={artistRow.name}
+        artistPhotoUrl={artistRow.photoUrl}
         initialJourney={journey}
         categoryLabels={categoryLabels}
       />

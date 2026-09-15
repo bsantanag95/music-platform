@@ -1318,6 +1318,7 @@ export const ArtistJourneyAlbumSchema = z.object({
   firstReleaseYear: z.number().int().nullable(),
   coverThumbUrl: z.string().nullable(),
   selected: z.boolean(),
+  listened: z.boolean(),
 });
 export type ArtistJourneyAlbum = z.infer<typeof ArtistJourneyAlbumSchema>;
 

@@ -19,6 +19,7 @@ interface ArtistJourneyListProps {
 }
 
 type ArtistJourneySort = "recent" | "alpha" | "state";
+type ArtistJourneyStateFilter = "all" | ArtistJourneySummary["state"];
 
 // Orden entre estados al ordenar "Por estado": en curso primero (lo activo),
 // completo después, archivado al final — mismo orden canónico que
@@ -41,8 +42,9 @@ const RENDERERS = {
 // recorrido, con enlaces secundarios a la página del artista y a eliminarlo
 // directamente desde acá (sin pasar por la gestión), sin progreso ni
 // fracciones — mismo criterio que la faceta de perfil (§6.4.1): solo el
-// estado. Buscador y orden (por agregado, alfabético o por estado) resueltos
-// en el cliente, sin llamada al servidor — el listado completo ya llegó del
+// estado. Buscador, orden (por agregado, alfabético o por estado) y filtro
+// por estado (openspec: add-artist-journey-state-filter) resueltos en el
+// cliente, sin llamada al servidor — el listado completo ya llegó del
 // servidor en orden de activación descendente — y los mismos tres modos de
 // visualización que Want to Listen y el detalle de listas
 // (Detallada/Índice/Gráfico).
@@ -51,6 +53,7 @@ export function ArtistJourneyList({ journeys }: ArtistJourneyListProps) {
   const [mode, setMode] = useArtistJourneyViewMode();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<ArtistJourneySort>("recent");
+  const [stateFilter, setStateFilter] = useState<ArtistJourneyStateFilter>("all");
   const [items, setItems] = useState(journeys);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState(false);
@@ -58,9 +61,10 @@ export function ArtistJourneyList({ journeys }: ArtistJourneyListProps) {
 
   const visible = useMemo(() => {
     const q = normalizeForSearch(query.trim());
+    const byState = stateFilter === "all" ? items : items.filter((journey) => journey.state === stateFilter);
     const filtered = q
-      ? items.filter((journey) => normalizeForSearch(journey.artistName).includes(q))
-      : items;
+      ? byState.filter((journey) => normalizeForSearch(journey.artistName).includes(q))
+      : byState;
     // `items` ya llega del servidor en orden de agregado descendente
     // (más reciente primero) — "recent" no necesita reordenar.
     if (sort === "recent") return filtered;
@@ -70,7 +74,7 @@ export function ArtistJourneyList({ journeys }: ArtistJourneyListProps) {
       return [...filtered].sort((a, b) => STATE_ORDER[a.state] - STATE_ORDER[b.state]);
     }
     return [...filtered].sort((a, b) => a.artistName.localeCompare(b.artistName));
-  }, [items, query, sort]);
+  }, [items, query, sort, stateFilter]);
 
   async function handleDelete(artistId: string) {
     setBusyId(artistId);
@@ -141,6 +145,17 @@ export function ArtistJourneyList({ journeys }: ArtistJourneyListProps) {
             <option value="recent">{t("sort.recent")}</option>
             <option value="alpha">{t("sort.alpha")}</option>
             <option value="state">{t("sort.state")}</option>
+          </FilterSelect>
+          <FilterSelect
+            value={stateFilter}
+            onChange={(value) => setStateFilter(value as ArtistJourneyStateFilter)}
+            ariaLabel={t("stateFilterLabel")}
+            widthClassName="w-[13ch]"
+          >
+            <option value="all">{t("stateFilterAll")}</option>
+            <option value="in_progress">{t("stateInProgress")}</option>
+            <option value="complete">{t("stateComplete")}</option>
+            <option value="archived">{t("stateArchived")}</option>
           </FilterSelect>
         </div>
         <ArtistJourneyModeSwitcher mode={mode} onChange={setMode} />
