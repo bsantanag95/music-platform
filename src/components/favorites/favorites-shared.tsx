@@ -11,6 +11,11 @@ export function favoriteTargetHref(favorite: Favorite): string {
   return `/song/${favorite.target.id}`;
 }
 
+/** Enlace al artista acreditado de un álbum/canción favoritos; `null` si no se conoce. */
+export function favoriteArtistHref(favorite: Favorite): string | null {
+  return favorite.target.artistId ? `/artist/${favorite.target.artistId}` : null;
+}
+
 export function typeLabelKey(type: SocialTargetType): "typeArtist" | "typeAlbum" | "typeSong" {
   if (type === "artist") return "typeArtist";
   if (type === "release-group") return "typeAlbum";

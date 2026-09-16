@@ -9,6 +9,8 @@
   "profileEmptyDescription": "Este usuario todavía no compartió favoritos visibles.",
   "addFavorite": "Marcar como favorito",
   "removeFavorite": "Quitar favorito",
+  "quickAdded": "Agregado a favoritos",
+  "quickRemoved": "Quitado de favoritos",
   "signInToFavorite": "Iniciar sesión para marcar favoritos",
   "saving": "Guardando...",
   "saveError": "No pudimos guardar el cambio. Intentá de nuevo.",
@@ -40,6 +42,12 @@
   "selectedCount": "{count, plural, one {# seleccionado} other {# seleccionados}}",
   "changeAudience": "Cambiar audiencia a",
   "audienceLabel": "Audiencia",
+  "viewModeLabel": "Modo de visualización",
+  "viewMode": {
+    "detailed": "Detallada",
+    "index": "Índice",
+    "graphic": "Gráfico"
+  },
   "audience": {
     "private": "Privado",
     "followers": "Seguidores",
