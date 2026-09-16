@@ -1098,7 +1098,7 @@ export const FavoritesAudienceBulkResponseSchema = z.object({
 });
 export type FavoritesAudienceBulkResponse = z.infer<typeof FavoritesAudienceBulkResponseSchema>;
 
-export const FAVORITE_SORTS = ["recent", "alpha"] as const;
+export const FAVORITE_SORTS = ["recent", "alpha", "artist"] as const;
 export const FavoriteSortSchema = z.enum(FAVORITE_SORTS);
 export type FavoriteSort = z.infer<typeof FavoriteSortSchema>;
 

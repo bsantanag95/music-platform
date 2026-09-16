@@ -12,7 +12,7 @@ export type { FavoriteTarget } from "./types";
 
 type TargetColumn = "artistId" | "releaseGroupId" | "recordingId";
 
-export const FAVORITE_SORTS = ["recent", "alpha"] as const;
+export const FAVORITE_SORTS = ["recent", "alpha", "artist"] as const;
 export type FavoriteSort = (typeof FAVORITE_SORTS)[number];
 
 const AUDIENCES: Audience[] = ["private", "followers", "public"];
@@ -33,6 +33,14 @@ export interface FavoriteCounts {
 // Título del objetivo, resuelto desde la tabla que corresponda (los otros
 // dos joins quedan en null). Se usa para el buscador `q` y el orden alfabético.
 const TITLE_EXPR = sql`coalesce(${artist.name}, ${releaseGroup.title}, ${recording.title})`;
+
+// Orden "por artista": el artista principal acreditado del álbum/canción
+// (mismo subquery que puebla `creditedArtist` en `FAVORITE_ROW_SELECT`), con
+// `coalesce` al propio título para los favoritos de artista — ahí no hay
+// crédito que resolver porque el target YA es el artista, así que caen al
+// mismo orden que "Alfabético" (ver serializeFavorite: incluso mostrar el
+// nombre sería redundante, por eso ese caso no lo popula).
+const ARTIST_SORT_EXPR = sql`lower(coalesce(${PRIMARY_ARTIST_SQL(favorite.releaseGroupId, favorite.recordingId)}, ${TITLE_EXPR}))`;
 
 // Rango fijo de tipo para que el muro agrupe artistas → álbumes → canciones.
 const TYPE_RANK_EXPR = sql`case
@@ -279,9 +287,9 @@ async function favoriteCounts(scopeConditions: SQL[]): Promise<FavoriteCounts> {
 }
 
 function favoriteSortOrder(sort: FavoriteSort) {
-  return sort === "alpha"
-    ? [asc(sql`lower(${TITLE_EXPR})`), asc(favorite.id)]
-    : [desc(favorite.createdAt), desc(favorite.id)];
+  if (sort === "alpha") return [asc(sql`lower(${TITLE_EXPR})`), asc(favorite.id)];
+  if (sort === "artist") return [asc(ARTIST_SORT_EXPR), asc(favorite.id)];
+  return [desc(favorite.createdAt), desc(favorite.id)];
 }
 
 /** Listado propio de favoritos con paginación, filtros y conteo por tipo. */
