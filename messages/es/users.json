@@ -55,6 +55,24 @@
   "followingTitle": "Personas que sigo",
   "artistsFollowedTitle": "Artistas que sigo",
   "artistsFollowedEmpty": "Todavía no seguís a ningún artista.",
+  "artistsFollowed": {
+    "searchPlaceholder": "Buscar en tus artistas",
+    "sortLabel": "Ordenar",
+    "sort": {
+      "recent": "Recientes",
+      "alpha": "Alfabético"
+    },
+    "viewModeLabel": "Modo de visualización",
+    "viewMode": {
+      "index": "Índice",
+      "graphic": "Gráfico"
+    },
+    "emptyTitle": "Todavía no seguís a ningún artista",
+    "emptyDescription": "Seguí artistas desde su página para armar tu radar personal y encontrarlos acá.",
+    "emptyCta": "Buscar en el catálogo",
+    "noResultsTitle": "Sin resultados",
+    "noResultsDescription": "Ningún artista seguido coincide con la búsqueda."
+  },
   "explorationHeading": "Exploración",
   "journeyStateInProgress": "Recorrido en curso",
   "journeyStateComplete": "Recorrido completo",

@@ -55,6 +55,24 @@
   "followingTitle": "People I follow",
   "artistsFollowedTitle": "Artists I follow",
   "artistsFollowedEmpty": "You don't follow any artists yet.",
+  "artistsFollowed": {
+    "searchPlaceholder": "Search your artists",
+    "sortLabel": "Sort",
+    "sort": {
+      "recent": "Recent",
+      "alpha": "Alphabetical"
+    },
+    "viewModeLabel": "View mode",
+    "viewMode": {
+      "index": "Index",
+      "graphic": "Graphic"
+    },
+    "emptyTitle": "You don't follow any artists yet",
+    "emptyDescription": "Follow artists from their page to build your personal radar and find them here.",
+    "emptyCta": "Browse the catalog",
+    "noResultsTitle": "No results",
+    "noResultsDescription": "No followed artist matches the search."
+  },
   "explorationHeading": "Exploration",
   "journeyStateInProgress": "Journey in progress",
   "journeyStateComplete": "Journey complete",
