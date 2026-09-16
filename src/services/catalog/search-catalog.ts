@@ -6,6 +6,7 @@ import { musicbrainz } from "../musicbrainz/client";
 import { mapReleaseGroupCategory, yearFromMbDate } from "../musicbrainz/mappers";
 import type { MBArtistCreditItem, MBRecordingSearchItem } from "../musicbrainz/types";
 import { upsertArtistStubsFromSearch } from "./ingest-artist";
+import { ingestCredits } from "./ingest-discography";
 import { upsertReleaseGroupStubs } from "./ingest-release-group";
 import type { ReleaseGroupCategoryValue } from "./ingest-release-group";
 import {
@@ -658,6 +659,20 @@ export async function searchCatalog(query: string): Promise<CatalogSearchRespons
 
   const artistByMbid = new Map(stubbedArtists.map((row) => [row.mbid, row]));
   const albumByMbid = new Map(stubbedAlbums.map((row) => [row.mbid, row]));
+
+  // A diferencia de la ingesta de discografía (`ingest-discography.ts`), los
+  // stubs de búsqueda nunca traían el crédito de release-group: un álbum
+  // agregado desde acá (favorito, lista, etc.) sin pasar antes por su propia
+  // página quedaba sin artista principal en el breadcrumb y en los listados
+  // (favoritos, quiero escuchar). Se ingiere acá porque la búsqueda ya trae
+  // `artist-credit` sin costo adicional de red.
+  for (const item of mbAlbums) {
+    if (knownAlbumMbids.has(item.id)) continue;
+    const row = albumByMbid.get(item.id);
+    if (row && item["artist-credit"]?.length) {
+      await ingestCredits(item["artist-credit"], { releaseGroupId: row.id });
+    }
+  }
 
   // Señales de "ya cacheado" para lo local: artista con discografía sincronizada;
   // álbum con al menos un release ingerido (tracklist de una visita previa).
