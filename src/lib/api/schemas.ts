@@ -1040,6 +1040,9 @@ export const WantToListenTargetInfoSchema = z.object({
   id: z.uuid(),
   title: z.string(),
   coverThumbUrl: z.string().nullable(),
+  // Artista principal acreditado del álbum; `null` para entradas de artista.
+  artistName: z.string().nullable().optional(),
+  artistId: z.uuid().nullable().optional(),
 });
 export type WantToListenTargetInfo = z.infer<typeof WantToListenTargetInfoSchema>;
 
@@ -1596,7 +1599,7 @@ export const COLLECTION_SORTS = ["recent", "alpha", "artist", "format"] as const
 export const CollectionSortSchema = z.enum(COLLECTION_SORTS);
 export type CollectionSort = z.infer<typeof CollectionSortSchema>;
 
-export const COLLECTION_GROUPINGS = ["none", "format", "artist"] as const;
+export const COLLECTION_GROUPINGS = ["artist", "format", "date"] as const;
 export const CollectionGroupingSchema = z.enum(COLLECTION_GROUPINGS);
 export type CollectionGrouping = z.infer<typeof CollectionGroupingSchema>;
 
