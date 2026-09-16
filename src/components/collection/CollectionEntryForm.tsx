@@ -2,7 +2,7 @@
 
 import { useId } from "react";
 import { useTranslations } from "next-intl";
-import { COLLECTION_FORMATS, EDITION_ATTRIBUTES } from "@/services/collection/vocabulary";
+import { COLLECTION_FORMATS, attributesForFormat } from "@/services/collection/vocabulary";
 import { COLLECTION_NOTE_MAX } from "@/lib/api/schemas";
 import type { CollectionFormat, EditionAttribute } from "@/services/collection/vocabulary";
 import type { DiaryAudience } from "@/lib/api/schemas";
@@ -51,6 +51,13 @@ export function CollectionEntryForm({
     onChange({ ...value, attributes: next });
   };
 
+  const changeFormat = (format: CollectionFormat) => {
+    const allowed = new Set(attributesForFormat(format));
+    onChange({ ...value, format, attributes: value.attributes.filter((item) => allowed.has(item)) });
+  };
+
+  const availableAttributes = attributesForFormat(value.format);
+
   return (
     <div className="flex w-full flex-col gap-3">
       <label className="flex flex-col gap-1 font-data text-xs text-paper-muted">
@@ -58,9 +65,7 @@ export function CollectionEntryForm({
         <select
           value={value.format}
           disabled={disabled}
-          onChange={(event) =>
-            onChange({ ...value, format: event.target.value as CollectionFormat })
-          }
+          onChange={(event) => changeFormat(event.target.value as CollectionFormat)}
           className="rounded border border-ink-border bg-ink px-2 py-1.5 font-data text-sm text-paper disabled:opacity-50"
         >
           {COLLECTION_FORMATS.map((format) => (
@@ -74,7 +79,7 @@ export function CollectionEntryForm({
       <fieldset className="flex flex-col gap-1" disabled={disabled}>
         <legend className="font-data text-xs text-paper-muted">{t("attributesLabel")}</legend>
         <div className="flex flex-wrap gap-1.5">
-          {EDITION_ATTRIBUTES.map((attribute) => {
+          {availableAttributes.map((attribute) => {
             const active = value.attributes.includes(attribute);
             return (
               <label

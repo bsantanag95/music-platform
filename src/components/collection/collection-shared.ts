@@ -67,9 +67,27 @@ export function groupEntries(
   grouping: CollectionGrouping,
   formatLabel: (format: string) => string,
   unknownArtistLabel: string,
+  monthLabel: (iso: string) => string,
 ): CollectionGroup[] {
-  if (grouping === "none" || entries.length === 0) {
-    return [{ key: "all", heading: null, count: null, entries }];
+  if (entries.length === 0) {
+    return [];
+  }
+
+  if (grouping === "date") {
+    // Secciones contiguas por mes-año de alta, en el orden de llegada (el
+    // servidor ya entrega el mes más reciente primero).
+    const groups: CollectionGroup[] = [];
+    for (const entry of entries) {
+      const key = entry.createdAt.slice(0, 7);
+      const last = groups[groups.length - 1];
+      if (last && last.key === key) {
+        last.entries.push(entry);
+        last.count = last.entries.length;
+      } else {
+        groups.push({ key, heading: monthLabel(entry.createdAt), count: 1, entries: [entry] });
+      }
+    }
+    return groups;
   }
 
   if (grouping === "format") {

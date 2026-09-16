@@ -47,6 +47,25 @@ export function isEditionAttribute(value: string): value is EditionAttribute {
   return EDITION_ATTRIBUTE_SET.has(value);
 }
 
+// Atributos de soporte/prensado exclusivos de vinilo: no tiene sentido
+// ofrecerlos con Formato = CD/Cassette/Otro.
+const VINYL_ONLY_ATTRIBUTES = new Set<EditionAttribute>([
+  "colored-vinyl",
+  "picture-disc",
+  "180g",
+  "gatefold",
+]);
+
+/**
+ * Atributos de edición aplicables a un formato. Con formato `null`
+ * ("cualquier formato", solo en la lista de deseados) se muestra el
+ * vocabulario completo, porque todavía no se sabe cuál será el soporte.
+ */
+export function attributesForFormat(format: CollectionFormat | null): EditionAttribute[] {
+  if (format === "vinyl" || format === null) return [...EDITION_ATTRIBUTES];
+  return EDITION_ATTRIBUTES.filter((attribute) => !VINYL_ONLY_ATTRIBUTES.has(attribute));
+}
+
 /**
  * Deduplica y ordena los atributos según el orden canónico de
  * `EDITION_ATTRIBUTES`, para persistir siempre la misma representación.

@@ -23,6 +23,7 @@
   "addVariant": "Add another variant",
   "removeVariant": "Remove this variant",
   "anyFormat": "Any format",
+  "anyEdition": "Any edition",
   "wantedAdded": "{count, plural, one {You added one variant to your wishlist} other {You added # variants to your wishlist}}",
   "wantedRemoved": "You removed the album from your wishlist",
   "menuWantIt": "I want it",
@@ -62,9 +63,9 @@
   },
   "groupLabel": "Group",
   "group": {
-    "none": "No grouping",
+    "artist": "By artist",
     "format": "By format",
-    "artist": "By artist"
+    "date": "By date added"
   },
   "viewModeLabel": "View mode",
   "viewMode": {
