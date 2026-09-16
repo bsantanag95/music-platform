@@ -85,6 +85,7 @@ export function FavoritesToolbar({
         >
           <option value="recent">{t("sortRecent")}</option>
           <option value="alpha">{t("sortAlpha")}</option>
+          <option value="artist">{t("sortArtist")}</option>
         </FilterSelect>
         {isFiltered ? (
           <button
