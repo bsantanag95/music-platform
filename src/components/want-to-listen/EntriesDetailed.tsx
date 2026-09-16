@@ -4,7 +4,8 @@ import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { ArtistPlate } from "./ArtistPlate";
 import { RemoveEntryButton } from "./RemoveEntryButton";
-import { wantToListenHref } from "./want-to-listen-shared";
+import { WantToListenArtistJourneyAction } from "./WantToListenArtistJourneyAction";
+import { wantToListenArtistHref, wantToListenHref } from "./want-to-listen-shared";
 import type { WantToListenRendererProps } from "./want-to-listen-items-view";
 
 // Modo Detallada: una fila-tarjeta por entrada con carátula/placa y título.
@@ -14,6 +15,7 @@ export function EntriesDetailed({ entries, actions }: WantToListenRendererProps)
     <ul className="flex flex-col gap-2">
       {entries.map((entry) => {
         const href = wantToListenHref(entry);
+        const artistHref = wantToListenArtistHref(entry);
         const media =
           entry.targetType === "release-group" ? (
             <CoverThumb cover={entry.target.coverThumbUrl} label="" className="size-14 sm:size-16" />
@@ -30,17 +32,35 @@ export function EntriesDetailed({ entries, actions }: WantToListenRendererProps)
               {media}
             </Link>
             <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
-              <Link
-                href={href}
-                className="truncate font-display text-base text-paper transition-colors hover:text-amber"
-              >
-                {entry.target.title}
-              </Link>
-              <RemoveEntryButton
-                title={entry.target.title}
-                busy={actions.busy}
-                onRemove={() => actions.remove(entry.id)}
-              />
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <Link
+                  href={href}
+                  className="truncate font-display text-base text-paper transition-colors hover:text-amber"
+                >
+                  {entry.target.title}
+                </Link>
+                {entry.target.artistName ? (
+                  <p className="truncate font-data text-xs text-paper-muted">
+                    {artistHref ? (
+                      <Link href={artistHref} className="transition-colors hover:text-amber">
+                        {entry.target.artistName}
+                      </Link>
+                    ) : (
+                      entry.target.artistName
+                    )}
+                  </p>
+                ) : null}
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                {entry.targetType === "artist" ? (
+                  <WantToListenArtistJourneyAction artistId={entry.target.id} />
+                ) : null}
+                <RemoveEntryButton
+                  title={entry.target.title}
+                  busy={actions.busy}
+                  onRemove={() => actions.remove(entry.id)}
+                />
+              </div>
             </div>
           </li>
         );

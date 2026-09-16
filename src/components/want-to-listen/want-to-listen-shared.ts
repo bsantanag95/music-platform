@@ -7,6 +7,11 @@ export function wantToListenHref(entry: WantToListenEntry): string {
   return entry.targetType === "artist" ? `/artist/${entry.target.id}` : `/album/${entry.target.id}`;
 }
 
+/** Enlace al artista acreditado de un álbum; `null` si no se conoce. */
+export function wantToListenArtistHref(entry: WantToListenEntry): string | null {
+  return entry.target.artistId ? `/artist/${entry.target.artistId}` : null;
+}
+
 export function sectionTitleKey(type: WantToListenTargetType): "sectionArtists" | "sectionAlbums" {
   return type === "artist" ? "sectionArtists" : "sectionAlbums";
 }
