@@ -20,6 +20,13 @@ export function HeaderSearch() {
     if (!normalized) return;
 
     router.push(`/search?q=${encodeURIComponent(normalized)}`);
+    // El Header persiste entre navegaciones (vive en el layout, no se
+    // desmonta), así que sin esto el texto de la última búsqueda quedaba
+    // pegado en el campo para siempre, aunque el visitante ya hubiera
+    // navegado a otra sección — la página /search tiene su propio campo
+    // (`SearchForm`, inicializado desde `?q=`), así que este solo dispara la
+    // navegación y puede volver a quedar vacío de inmediato.
+    setQuery("");
   };
 
   return (

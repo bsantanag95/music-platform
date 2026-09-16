@@ -60,4 +60,14 @@ describe("HeaderSearch", () => {
 
     expect(mockPush).not.toHaveBeenCalled();
   });
+
+  it("vacía el campo tras buscar, para no arrastrar el texto a otras secciones", () => {
+    renderWithIntl(<HeaderSearch />);
+
+    const input = screen.getByLabelText(catalogEs.search.fieldLabel) as HTMLInputElement;
+    fireEvent.change(input, { target: { value: "Poison" } });
+    fireEvent.submit(input.closest("form")!);
+
+    expect(input.value).toBe("");
+  });
 });
