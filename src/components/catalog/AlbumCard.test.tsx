@@ -8,12 +8,22 @@ import type { ReleaseGroup } from "@/lib/api/schemas";
 const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   addWantedEntries: vi.fn(),
+  toggleFavorite: vi.fn(),
+  toggleWantToListen: vi.fn(),
+  createListenEntry: vi.fn(),
 }));
 
 // LazyCoverImage resuelve la carátula en el cliente vía TanStack Query; se
 // aísla igual que en AlbumGrid.test.tsx para no necesitar un QueryClient acá.
 vi.mock("./LazyCoverImage", () => ({
   LazyCoverImage: () => <div data-testid="mock-cover" />,
+}));
+
+// AddToListPanel carga las listas propias al montar (efecto con llamada a la
+// API); se aísla para no tener que mockear `@/lib/api/lists` acá — su
+// comportamiento propio ya está cubierto por AddToListPanel.test.tsx.
+vi.mock("@/components/lists/AddToListPanel", () => ({
+  AddToListPanel: () => <div data-testid="mock-add-to-list-panel" />,
 }));
 
 vi.mock("@/i18n/navigation", () => ({
@@ -25,6 +35,18 @@ vi.mock("@/i18n/navigation", () => ({
 
 vi.mock("@/lib/api/wanted", () => ({
   addWantedEntries: mocks.addWantedEntries,
+}));
+
+vi.mock("@/lib/api/favorites", () => ({
+  toggleFavorite: mocks.toggleFavorite,
+}));
+
+vi.mock("@/lib/api/want-to-listen", () => ({
+  toggleWantToListen: mocks.toggleWantToListen,
+}));
+
+vi.mock("@/lib/api/diary", () => ({
+  createListenEntry: mocks.createListenEntry,
 }));
 
 const releaseGroup: ReleaseGroup = {
@@ -104,5 +126,91 @@ describe("AlbumCard", () => {
     await user.click(screen.getByRole("menuitem", { name: "Ya la tengo" }));
 
     expect(mocks.push).toHaveBeenCalledWith("/auth/login");
+  });
+
+  it("marca como favorito con un solo click en 'Marcar como favorito'", async () => {
+    const user = userEvent.setup();
+    mocks.toggleFavorite.mockResolvedValue({ id: "fav-1" });
+    renderWithIntl(
+      <AlbumCard releaseGroup={releaseGroup} categoryLabel="Estudio" coverLabel="Carátula" authenticated />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Más acciones" }));
+    await user.click(screen.getByRole("menuitem", { name: "Marcar como favorito" }));
+
+    await waitFor(() =>
+      expect(mocks.toggleFavorite).toHaveBeenCalledWith({ type: "release-group", id: releaseGroup.id }),
+    );
+    expect(await screen.findByRole("status")).toHaveTextContent("Agregado a favoritos");
+  });
+
+  it("redirige a login al elegir 'Marcar como favorito' sin sesión", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(
+      <AlbumCard releaseGroup={releaseGroup} categoryLabel="Estudio" coverLabel="Carátula" />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Más acciones" }));
+    await user.click(screen.getByRole("menuitem", { name: "Marcar como favorito" }));
+
+    expect(mocks.push).toHaveBeenCalledWith("/auth/login");
+    expect(mocks.toggleFavorite).not.toHaveBeenCalled();
+  });
+
+  it("agrega a Quiero escuchar con un solo click", async () => {
+    const user = userEvent.setup();
+    mocks.toggleWantToListen.mockResolvedValue({ id: "wtl-1" });
+    renderWithIntl(
+      <AlbumCard releaseGroup={releaseGroup} categoryLabel="Estudio" coverLabel="Carátula" authenticated />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Más acciones" }));
+    await user.click(screen.getByRole("menuitem", { name: "Quiero escuchar" }));
+
+    await waitFor(() =>
+      expect(mocks.toggleWantToListen).toHaveBeenCalledWith({ type: "release-group", id: releaseGroup.id }),
+    );
+    expect(await screen.findByRole("status")).toHaveTextContent("Agregado a Quiero escuchar");
+  });
+
+  it("registra una escucha con un solo click en 'Registrar escucha'", async () => {
+    const user = userEvent.setup();
+    mocks.createListenEntry.mockResolvedValue({ id: "listen-1" });
+    renderWithIntl(
+      <AlbumCard releaseGroup={releaseGroup} categoryLabel="Estudio" coverLabel="Carátula" authenticated />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Más acciones" }));
+    await user.click(screen.getByRole("menuitem", { name: "Registrar escucha" }));
+
+    await waitFor(() =>
+      expect(mocks.createListenEntry).toHaveBeenCalledWith({ type: "release-group", id: releaseGroup.id }),
+    );
+    expect(await screen.findByRole("status")).toHaveTextContent("Escucha registrada");
+  });
+
+  it("abre el panel de 'Agregar a lista' al elegirlo con sesión", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(
+      <AlbumCard releaseGroup={releaseGroup} categoryLabel="Estudio" coverLabel="Carátula" authenticated />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Más acciones" }));
+    await user.click(screen.getByRole("menuitem", { name: "Agregar elemento" }));
+
+    expect(screen.getByTestId("mock-add-to-list-panel")).toBeInTheDocument();
+  });
+
+  it("redirige a login al elegir 'Agregar a lista' sin sesión", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(
+      <AlbumCard releaseGroup={releaseGroup} categoryLabel="Estudio" coverLabel="Carátula" />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Más acciones" }));
+    await user.click(screen.getByRole("menuitem", { name: "Agregar elemento" }));
+
+    expect(mocks.push).toHaveBeenCalledWith("/auth/login");
+    expect(screen.queryByTestId("mock-add-to-list-panel")).not.toBeInTheDocument();
   });
 });
