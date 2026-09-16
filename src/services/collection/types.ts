@@ -24,7 +24,7 @@ export interface CollectionEntry {
 export const COLLECTION_SORTS = ["recent", "alpha", "artist", "format"] as const;
 export type CollectionSort = (typeof COLLECTION_SORTS)[number];
 
-export const COLLECTION_GROUPINGS = ["none", "format", "artist"] as const;
+export const COLLECTION_GROUPINGS = ["artist", "format", "date"] as const;
 export type CollectionGrouping = (typeof COLLECTION_GROUPINGS)[number];
 
 export interface CollectionFilters {

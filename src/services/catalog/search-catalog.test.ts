@@ -25,6 +25,7 @@ vi.mock("@/services/musicbrainz/client", () => ({
 
 vi.mock("./ingest-artist", () => ({ upsertArtistStubsFromSearch: vi.fn() }));
 vi.mock("./ingest-release-group", () => ({ upsertReleaseGroupStubs: vi.fn() }));
+vi.mock("./ingest-discography", () => ({ ingestCredits: vi.fn() }));
 vi.mock("./ingest-recording", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./ingest-recording")>();
   return {
@@ -40,6 +41,7 @@ const { db } = await import("@/db");
 const { musicbrainz } = await import("@/services/musicbrainz/client");
 const { upsertArtistStubsFromSearch } = await import("./ingest-artist");
 const { upsertReleaseGroupStubs } = await import("./ingest-release-group");
+const { ingestCredits } = await import("./ingest-discography");
 const ingestRecording = await import("./ingest-recording");
 
 function makeArtistRow(overrides: Partial<ArtistRow> = {}): ArtistRow {
@@ -262,6 +264,17 @@ describe("searchCatalog", () => {
     const albums = results.filter((r) => r.kind === "release-group");
     expect(albums[0]).toMatchObject({ year: 2001, subtitle: "System of a Down", category: "studio" });
     expect(albums[1]).toMatchObject({ year: 1985, subtitle: null });
+
+    // Autocuración de origen (bugfix): un stub de búsqueda con `artist-credit`
+    // ingiere su crédito de release-group de una — sin esto, el álbum solo
+    // gana artista principal si alguien visita la discografía de System of a
+    // Down antes que su propia página. "Alive" no trae `artist-credit`, así
+    // que no debería intentar ingerir nada para ese stub.
+    expect(ingestCredits).toHaveBeenCalledTimes(1);
+    expect(ingestCredits).toHaveBeenCalledWith(
+      [{ name: "System of a Down", joinphrase: "", artist: { id: "soad", name: "System of a Down" } }],
+      { releaseGroupId: "stub-1" },
+    );
   });
 
   it("marca cached un álbum local ya ingerido y usa su crédito primario como subtítulo", async () => {

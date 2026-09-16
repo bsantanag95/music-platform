@@ -5,7 +5,8 @@ import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import type { DiaryAudience, Favorite } from "@/lib/api/schemas";
-import { favoriteTargetHref, formatFavoriteDate, typeLabelKey } from "./favorites-shared";
+import { ArtistPlate } from "./ArtistPlate";
+import { favoriteArtistHref, favoriteTargetHref, formatFavoriteDate, typeLabelKey } from "./favorites-shared";
 
 const AUDIENCES: DiaryAudience[] = ["private", "followers", "public"];
 
@@ -18,21 +19,6 @@ interface FavoriteTileProps {
   onToggleSelect?: (id: string) => void;
   onAudienceChange?: (favorite: Favorite, audience: DiaryAudience) => void;
   onRemove?: (favorite: Favorite) => void;
-}
-
-// Placa tipográfica del artista: sin imagen (los artistas no exponen carátula),
-// la inicial en la tipografía de display sobre Vinyl Surface — se lee como el
-// lomo de una funda, no como un recuadro vacío.
-function ArtistPlate({ title }: { title: string }) {
-  const initial = title.trim().charAt(0).toUpperCase() || "?";
-  return (
-    <span
-      aria-hidden
-      className="flex size-16 shrink-0 items-center justify-center rounded border border-ink-border bg-ink-surface font-display text-2xl text-paper-muted"
-    >
-      {initial}
-    </span>
-  );
 }
 
 // Ficha de un favorito en el muro. Tres tratamientos según el tipo: álbum con
@@ -84,6 +70,18 @@ export function FavoriteTile({
             {favorite.target.title}
           </Link>
         </h3>
+
+        {favorite.target.artistName ? (
+          <p className="truncate font-data text-xs text-paper-muted">
+            {favoriteArtistHref(favorite) ? (
+              <Link href={favoriteArtistHref(favorite)!} className="transition-colors hover:text-amber">
+                {favorite.target.artistName}
+              </Link>
+            ) : (
+              favorite.target.artistName
+            )}
+          </p>
+        ) : null}
 
         <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-data text-xs text-paper-muted">
           <span>{t(typeLabelKey(favorite.targetType))}</span>

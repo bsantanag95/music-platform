@@ -5,6 +5,8 @@
   "emptyCta": "Buscar en el catálogo",
   "add": "Quiero escuchar",
   "remove": "Quitar de la lista",
+  "quickAdded": "Agregado a Quiero escuchar",
+  "quickRemoved": "Quitado de Quiero escuchar",
   "signInToAdd": "Iniciar sesión para agregar",
   "saving": "Guardando...",
   "saveError": "No pudimos guardar el cambio. Intentá de nuevo.",
@@ -22,5 +24,8 @@
   "removeItem": "Quitar",
   "removeItemShort": "¿Quitar?",
   "removeItemNamed": "Quitar {title} de la lista",
-  "removeItemConfirm": "Confirmar remoción"
+  "removeItemConfirm": "Confirmar remoción",
+  "journeyAdd": "Agregar al Recorrido",
+  "journeyAdding": "Agregando...",
+  "journeyAlreadyAdded": "Ya está en tu Recorrido"
 }

@@ -72,7 +72,7 @@ function normalizeSortGroup(filters: CollectionFilters): {
   group: CollectionGrouping;
 } {
   const sort = filters.sort ?? "recent";
-  const group = filters.group ?? "none";
+  const group = filters.group ?? "artist";
   if (!COLLECTION_SORTS.includes(sort)) {
     throw new ApiError("VALIDATION_ERROR", 400, "El orden no es válido");
   }
@@ -103,6 +103,11 @@ function formatCondition(filters: CollectionFilters): SQL[] {
   return filters.format ? [eq(collectionEntry.format, filters.format)] : [];
 }
 
+// Mes-año de alta, truncado para que las entradas del mismo mes queden
+// contiguas al agrupar. Se ordena descendente (mes más reciente primero),
+// igual que el orden `recent` del que es prefijo.
+const CREATED_MONTH = sql`date_trunc('month', ${collectionEntry.createdAt})`;
+
 function orderClauses(sort: CollectionSort, group: CollectionGrouping): SQL[] {
   const artistOrder = sql`lower(${PRIMARY_ARTIST_NAME})`;
   const sortOrder: SQL[] = (() => {
@@ -118,13 +123,16 @@ function orderClauses(sort: CollectionSort, group: CollectionGrouping): SQL[] {
     }
   })();
 
-  // Prefijo de agrupación; se omite si el `sort` ya empieza por esa misma clave.
+  // Prefijo de agrupación; se omite si el `sort` ya empieza por esa misma clave
+  // (el orden `recent` por fecha completa ya deja los meses contiguos).
   const prefix: SQL[] =
     group === "format" && sort !== "format"
       ? [asc(FORMAT_RANK)]
       : group === "artist" && sort !== "artist"
         ? [asc(artistOrder)]
-        : [];
+        : group === "date" && sort !== "recent"
+          ? [desc(CREATED_MONTH)]
+          : [];
 
   return [...prefix, ...sortOrder];
 }

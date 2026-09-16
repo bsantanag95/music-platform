@@ -2,6 +2,7 @@
 
 import { Link } from "@/i18n/navigation";
 import { RemoveEntryButton } from "./RemoveEntryButton";
+import { WantToListenArtistJourneyAction } from "./WantToListenArtistJourneyAction";
 import { wantToListenHref } from "./want-to-listen-shared";
 import type { WantToListenRendererProps } from "./want-to-listen-items-view";
 
@@ -23,8 +24,14 @@ export function EntriesIndex({ entries, actions }: WantToListenRendererProps) {
             className="min-w-0 flex-1 truncate font-display text-sm text-paper transition-colors hover:text-amber"
           >
             {entry.target.title}
+            {entry.target.artistName ? (
+              <span className="ml-1.5 font-data text-xs text-paper-muted">{entry.target.artistName}</span>
+            ) : null}
           </Link>
-          <div className="flex shrink-0 items-center opacity-100 transition-opacity focus-within:opacity-100 sm:opacity-40 sm:group-hover:opacity-100">
+          <div className="flex shrink-0 items-center gap-3 opacity-100 transition-opacity focus-within:opacity-100 sm:opacity-40 sm:group-hover:opacity-100">
+            {entry.targetType === "artist" ? (
+              <WantToListenArtistJourneyAction artistId={entry.target.id} />
+            ) : null}
             <RemoveEntryButton
               title={entry.target.title}
               busy={actions.busy}

@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { ArtistPlate } from "./ArtistPlate";
 import { RemoveEntryButton } from "./RemoveEntryButton";
+import { WantToListenArtistJourneyAction } from "./WantToListenArtistJourneyAction";
 import { wantToListenHref } from "./want-to-listen-shared";
 import type { WantToListenRendererProps } from "./want-to-listen-items-view";
 
@@ -35,11 +36,21 @@ export function EntriesGraphic({ entries, actions }: WantToListenRendererProps) 
             >
               {entry.target.title}
             </Link>
-            <RemoveEntryButton
-              title={entry.target.title}
-              busy={actions.busy}
-              onRemove={() => actions.remove(entry.id)}
-            />
+            {entry.target.artistName ? (
+              <span className="truncate font-data text-[0.65rem] text-paper-muted/80">
+                {entry.target.artistName}
+              </span>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-2">
+              {entry.targetType === "artist" ? (
+                <WantToListenArtistJourneyAction artistId={entry.target.id} />
+              ) : null}
+              <RemoveEntryButton
+                title={entry.target.title}
+                busy={actions.busy}
+                onRemove={() => actions.remove(entry.id)}
+              />
+            </div>
           </li>
         );
       })}

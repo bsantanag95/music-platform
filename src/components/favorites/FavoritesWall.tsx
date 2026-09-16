@@ -28,8 +28,13 @@ import {
   favoriteFiltersActive,
   type FavoritesFiltersState,
 } from "./FavoritesToolbar";
-import { FavoriteTile } from "./FavoriteTile";
 import { groupFavoritesByType, sectionTitleKey } from "./favorites-shared";
+import { useFavoriteViewMode } from "./use-favorite-view-mode";
+import { FavoritesModeSwitcher } from "./FavoritesModeSwitcher";
+import { FavoritesDetailed } from "./FavoritesDetailed";
+import { FavoritesIndex } from "./FavoritesIndex";
+import { FavoritesGraphic } from "./FavoritesGraphic";
+import type { FavoritesRowActions } from "./favorites-items-view";
 
 const PAGE_SIZE = 20;
 const AUDIENCES: DiaryAudience[] = ["private", "followers", "public"];
@@ -70,6 +75,7 @@ function sameFilters(a: FavoritesFiltersState, b: FavoritesFiltersState): boolea
 export function FavoritesWall({ initial, readOnly, username, initialFilters }: FavoritesWallProps) {
   const t = useTranslations("favorites");
   const queryClient = useQueryClient();
+  const [mode, setMode] = useFavoriteViewMode();
 
   const seededState = useMemo(() => toFiltersState(initialFilters), [initialFilters]);
   const [filters, setFilters] = useState<FavoritesFiltersState>(seededState);
@@ -294,14 +300,19 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
         />
       ) : null}
 
-      {!readOnly && favorites.length > 0 ? (
+      {favorites.length > 0 ? (
         <div className="flex items-center justify-between gap-3">
-          <Button
-            variant="secondary"
-            onClick={() => (selectionMode ? exitSelection() : setSelectionMode(true))}
-          >
-            {selectionMode ? t("selectionDone") : t("selectMode")}
-          </Button>
+          {!readOnly ? (
+            <Button
+              variant="secondary"
+              onClick={() => (selectionMode ? exitSelection() : setSelectionMode(true))}
+            >
+              {selectionMode ? t("selectionDone") : t("selectMode")}
+            </Button>
+          ) : (
+            <span />
+          )}
+          <FavoritesModeSwitcher mode={mode} onChange={setMode} />
         </div>
       ) : null}
 
@@ -313,29 +324,29 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
         emptyBlock
       ) : (
         <div className="flex flex-col gap-8">
-          {groups.map((group) => (
-            <section key={group.type} className="flex flex-col gap-3">
-              <h2 className="flex items-baseline gap-2 font-display text-lg text-paper">
-                {t(sectionTitleKey(group.type))}
-                <span className="font-data text-xs text-paper-muted">{counts[group.type]}</span>
-              </h2>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {group.favorites.map((favorite) => (
-                  <FavoriteTile
-                    key={favorite.id}
-                    favorite={favorite}
-                    readOnly={readOnly}
-                    selectionMode={selectionMode}
-                    selected={selectedIds.has(favorite.id)}
-                    busy={rowBusyId === favorite.id || bulkBusy}
-                    onToggleSelect={toggleSelect}
-                    onAudienceChange={handleAudienceChange}
-                    onRemove={handleRemove}
-                  />
-                ))}
-              </div>
-            </section>
-          ))}
+          {groups.map((group) => {
+            const rowActions: FavoritesRowActions = {
+              readOnly,
+              selectionMode,
+              selectedIds,
+              busyId: rowBusyId,
+              bulkBusy,
+              onToggleSelect: toggleSelect,
+              onAudienceChange: handleAudienceChange,
+              onRemove: handleRemove,
+            };
+            const Renderer =
+              mode === "detailed" ? FavoritesDetailed : mode === "index" ? FavoritesIndex : FavoritesGraphic;
+            return (
+              <section key={group.type} className="flex flex-col gap-3">
+                <h2 className="flex items-baseline gap-2 font-display text-lg text-paper">
+                  {t(sectionTitleKey(group.type))}
+                  <span className="font-data text-xs text-paper-muted">{counts[group.type]}</span>
+                </h2>
+                <Renderer favorites={group.favorites} actions={rowActions} />
+              </section>
+            );
+          })}
         </div>
       )}
 

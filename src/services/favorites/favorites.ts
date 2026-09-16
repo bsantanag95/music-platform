@@ -2,6 +2,7 @@ import { and, asc, desc, eq, inArray, isNotNull, sql, type SQL } from "drizzle-o
 import { db } from "@/db";
 import { artist, favorite, recording, releaseGroup } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
+import { PRIMARY_ARTIST_ID_SQL, PRIMARY_ARTIST_SQL } from "@/services/feed/feed";
 import { audiencesForProfile } from "@/services/social/visibility";
 import type { Audience } from "@/services/social/types";
 import { FAVORITE_TARGET_TYPES } from "./types";
@@ -63,6 +64,9 @@ export interface FavoriteEntry {
     id: string;
     title: string;
     coverThumbUrl: string | null;
+    /** Artista principal acreditado; `null` para favoritos de artista (el target ya lo es). */
+    artistName: string | null;
+    artistId: string | null;
   };
 }
 
@@ -232,6 +236,10 @@ const FAVORITE_ROW_SELECT = {
   releaseGroupId: favorite.releaseGroupId,
   recordingId: favorite.recordingId,
   artistName: artist.name,
+  // Artista principal acreditado del álbum/canción favoritos (no aplica a
+  // favoritos de artista, donde `artistName` de arriba ya es el título).
+  creditedArtist: PRIMARY_ARTIST_SQL(favorite.releaseGroupId, favorite.recordingId),
+  creditedArtistId: PRIMARY_ARTIST_ID_SQL(favorite.releaseGroupId, favorite.recordingId),
   releaseTitle: releaseGroup.title,
   releaseCover: releaseGroup.coverThumbUrl,
   recordingTitle: recording.title,
@@ -358,23 +366,7 @@ export async function listUserFavorites(
 }
 
 async function getOwnedFavorite(id: string, userId: string): Promise<FavoriteEntry> {
-  const [row] = await db
-    .select({
-      id: favorite.id,
-      audience: favorite.audience,
-      createdAt: favorite.createdAt,
-      artistId: favorite.artistId,
-      releaseGroupId: favorite.releaseGroupId,
-      recordingId: favorite.recordingId,
-      artistName: artist.name,
-      releaseTitle: releaseGroup.title,
-      releaseCover: releaseGroup.coverThumbUrl,
-      recordingTitle: recording.title,
-    })
-    .from(favorite)
-    .leftJoin(artist, eq(favorite.artistId, artist.id))
-    .leftJoin(releaseGroup, eq(favorite.releaseGroupId, releaseGroup.id))
-    .leftJoin(recording, eq(favorite.recordingId, recording.id))
+  const [row] = await favoritesFrom()
     .where(and(eq(favorite.id, id), eq(favorite.userId, userId)))
     .limit(1);
 
@@ -390,6 +382,8 @@ function serializeFavorite(row: {
   releaseGroupId: string | null;
   recordingId: string | null;
   artistName: string | null;
+  creditedArtist: string | null;
+  creditedArtistId: string | null;
   releaseTitle: string | null;
   releaseCover: string | null;
   recordingTitle: string | null;
@@ -398,6 +392,8 @@ function serializeFavorite(row: {
   let targetId = "";
   let title = "";
   let coverThumbUrl: string | null = null;
+  let artistName: string | null = null;
+  let artistId: string | null = null;
 
   if (row.artistId) {
     targetId = row.artistId;
@@ -406,9 +402,13 @@ function serializeFavorite(row: {
     targetId = row.releaseGroupId;
     title = row.releaseTitle ?? "";
     coverThumbUrl = row.releaseCover;
+    artistName = row.creditedArtist;
+    artistId = row.creditedArtistId;
   } else if (row.recordingId) {
     targetId = row.recordingId;
     title = row.recordingTitle ?? "";
+    artistName = row.creditedArtist;
+    artistId = row.creditedArtistId;
   }
 
   return {
@@ -416,6 +416,6 @@ function serializeFavorite(row: {
     targetType,
     audience: row.audience as Audience,
     createdAt: row.createdAt.toISOString(),
-    target: { id: targetId, title, coverThumbUrl },
+    target: { id: targetId, title, coverThumbUrl, artistName, artistId },
   };
 }

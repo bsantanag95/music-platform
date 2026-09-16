@@ -23,6 +23,7 @@
   "addVariant": "Agregar otra variante",
   "removeVariant": "Quitar esta variante",
   "anyFormat": "Cualquier formato",
+  "anyEdition": "Cualquier edición",
   "wantedAdded": "{count, plural, one {Agregaste una variante a tu lista de deseados} other {Agregaste # variantes a tu lista de deseados}}",
   "wantedRemoved": "Quitaste el álbum de tu lista de deseados",
   "menuWantIt": "Lo quiero",
@@ -62,9 +63,9 @@
   },
   "groupLabel": "Agrupar",
   "group": {
-    "none": "Sin agrupar",
+    "artist": "Por artista",
     "format": "Por formato",
-    "artist": "Por artista"
+    "date": "Por fecha de agregado"
   },
   "viewModeLabel": "Modo de visualización",
   "viewMode": {

@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, releaseGroup, wantToListenEntry } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -17,8 +17,32 @@ export interface WantToListenEntryDTO {
     id: string;
     title: string;
     coverThumbUrl: string | null;
+    /** Artista principal acreditado del álbum; `null` para entradas de artista. */
+    artistName: string | null;
+    artistId: string | null;
   };
 }
+
+// Artista principal acreditado del álbum, para mostrarlo bajo el título en
+// Quiero Escuchar. Mismo patrón que `PRIMARY_ARTIST_NAME` de
+// `services/collection/collection.ts`; no aplica a entradas de tipo "artist"
+// (el target ya lo es), así que solo se correlaciona por `releaseGroupId`.
+const PRIMARY_ARTIST_NAME = sql<string | null>`(
+  SELECT a.name FROM credit c
+  JOIN artist a ON a.id = c.artist_id
+  WHERE c.release_group_id = ${wantToListenEntry.releaseGroupId}
+    AND c.role = 'primary'
+  ORDER BY c.position
+  LIMIT 1
+)`;
+
+const PRIMARY_ARTIST_ID = sql<string | null>`(
+  SELECT c.artist_id FROM credit c
+  WHERE c.release_group_id = ${wantToListenEntry.releaseGroupId}
+    AND c.role = 'primary'
+  ORDER BY c.position
+  LIMIT 1
+)`;
 
 function targetValues(type: WantToListenTargetType, id: string) {
   return {
@@ -164,6 +188,8 @@ const ENTRY_ROW_SELECT = {
   artistId: wantToListenEntry.artistId,
   releaseGroupId: wantToListenEntry.releaseGroupId,
   artistName: artist.name,
+  creditedArtist: PRIMARY_ARTIST_NAME,
+  creditedArtistId: PRIMARY_ARTIST_ID,
   releaseTitle: releaseGroup.title,
   releaseCover: releaseGroup.coverThumbUrl,
 } as const;
@@ -191,6 +217,8 @@ function serializeEntry(row: {
   artistId: string | null;
   releaseGroupId: string | null;
   artistName: string | null;
+  creditedArtist: string | null;
+  creditedArtistId: string | null;
   releaseTitle: string | null;
   releaseCover: string | null;
 }): WantToListenEntryDTO {
@@ -203,6 +231,12 @@ function serializeEntry(row: {
     id: row.id,
     targetType,
     createdAt: row.createdAt.toISOString(),
-    target: { id: targetId, title, coverThumbUrl },
+    target: {
+      id: targetId,
+      title,
+      coverThumbUrl,
+      artistName: row.artistId ? null : row.creditedArtist,
+      artistId: row.artistId ? null : row.creditedArtistId,
+    },
   };
 }

@@ -6,7 +6,7 @@ import {
   useQueryClient,
   type InfiniteData,
 } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
@@ -60,7 +60,7 @@ function toFiltersState(params?: CollectionQuery): CollectionFiltersState {
     format: (params?.format as CollectionFiltersState["format"]) ?? "",
     attribute: (params?.attribute as CollectionFiltersState["attribute"]) ?? "",
     sort: params?.sort ?? "recent",
-    group: (params?.group as CollectionFiltersState["group"]) ?? "none",
+    group: (params?.group as CollectionFiltersState["group"]) ?? "artist",
   };
 }
 
@@ -70,7 +70,7 @@ function toApiFilters(filters: CollectionFiltersState): Omit<CollectionQuery, "p
     format: filters.format || undefined,
     attribute: filters.attribute || undefined,
     sort: filters.sort === "recent" ? undefined : filters.sort,
-    group: filters.group === "none" ? undefined : filters.group,
+    group: filters.group === "artist" ? undefined : filters.group,
   };
 }
 
@@ -91,6 +91,7 @@ export function CollectionShelf({
   initialFilters,
 }: CollectionShelfProps) {
   const t = useTranslations("collection");
+  const locale = useLocale();
   const queryClient = useQueryClient();
   const [mode, setMode] = useCollectionViewMode();
 
@@ -146,8 +147,9 @@ export function CollectionShelf({
         filters.group,
         (format) => t(`format.${format}`),
         t("unknownArtist"),
+        (iso) => new Date(iso).toLocaleDateString(locale, { month: "long", year: "numeric" }),
       ),
-    [entries, filters.group, t],
+    [entries, filters.group, t, locale],
   );
 
   const invalidateMine = useCallback(

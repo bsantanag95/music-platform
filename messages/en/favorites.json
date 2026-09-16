@@ -9,6 +9,8 @@
   "profileEmptyDescription": "This user has not shared visible favorites yet.",
   "addFavorite": "Add to favorites",
   "removeFavorite": "Remove favorite",
+  "quickAdded": "Added to favorites",
+  "quickRemoved": "Removed from favorites",
   "signInToFavorite": "Sign in to add favorites",
   "saving": "Saving...",
   "saveError": "We could not save the change. Try again.",
@@ -40,6 +42,12 @@
   "selectedCount": "{count, plural, one {# selected} other {# selected}}",
   "changeAudience": "Change audience to",
   "audienceLabel": "Audience",
+  "viewModeLabel": "View mode",
+  "viewMode": {
+    "detailed": "Detailed",
+    "index": "Index",
+    "graphic": "Graphic"
+  },
   "audience": {
     "private": "Private",
     "followers": "Followers",

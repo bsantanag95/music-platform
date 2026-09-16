@@ -142,7 +142,8 @@ export async function getAlbumDetail(releaseGroupId: string): Promise<AlbumDetai
       release: { ...releaseRow, coverThumbUrl: cover },
       cover,
       tracks: albumTracks,
-      primaryArtist: await resolvePrimaryArtist(rg.id),
+      primaryArtist:
+        (await resolvePrimaryArtist(rg.id)) ?? (await backfillPrimaryArtistFromTracks(rg.id, albumTracks)),
     },
   };
 }
@@ -168,4 +169,48 @@ async function resolvePrimaryArtist(
     .limit(1);
 
   return row ?? null;
+}
+
+/**
+ * Autocuración: un release-group llegado como stub de búsqueda (a diferencia
+ * de la ingesta de discografía en `ingest-discography.ts`) puede no tener su
+ * propio crédito de artista, aunque sus pistas sí lo tengan (`findOrIngestTracklist`
+ * ingiere créditos por grabación siempre). Si `resolvePrimaryArtist` no
+ * encuentra nada, se deriva el artista principal del crédito "primary" más
+ * frecuente entre las pistas ya ingeridas y se persiste como crédito de
+ * release-group — así el breadcrumb y los listados que dependen de él
+ * (favoritos, quiero escuchar) dejan de omitir al artista en visitas futuras,
+ * sin esperar a que alguien visite la discografía del artista.
+ */
+async function backfillPrimaryArtistFromTracks(
+  releaseGroupId: string,
+  tracks: AlbumTrack[],
+): Promise<PrimaryArtist | null> {
+  const counts = new Map<string, { name: string; count: number }>();
+  for (const t of tracks) {
+    const primary = t.credits.find((c) => c.role === "primary");
+    if (!primary) continue;
+    const entry = counts.get(primary.artistId);
+    if (entry) entry.count += 1;
+    else counts.set(primary.artistId, { name: primary.name, count: 1 });
+  }
+
+  let best: { id: string; name: string; count: number } | null = null;
+  for (const [id, { name, count }] of counts) {
+    if (!best || count > best.count) best = { id, name, count };
+  }
+  if (!best) return null;
+
+  await db
+    .insert(credit)
+    .values({
+      artistId: best.id,
+      releaseGroupId,
+      recordingId: null,
+      position: 0,
+      role: "primary",
+    })
+    .onConflictDoNothing();
+
+  return { id: best.id, name: best.name };
 }
