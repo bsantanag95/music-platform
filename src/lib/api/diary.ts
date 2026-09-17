@@ -108,3 +108,17 @@ export function updateListenEntry(
 export function deleteListenEntry(id: string): Promise<null> {
   return apiFetch(`/api/me/diary/${id}`, z.null(), { method: "DELETE" });
 }
+
+// Destacar/quitar una entrada propia del diario (openspec: rework-user-profile,
+// spec `listen-diary` "Destacar una entrada del diario").
+export function highlightListenEntry(id: string): Promise<ListenEntry> {
+  return apiFetch(`/api/me/diary/${id}/highlight`, ListenEntryResponseSchema, { method: "PUT" }).then(
+    (response) => response.entry,
+  );
+}
+
+export function unhighlightListenEntry(id: string): Promise<ListenEntry> {
+  return apiFetch(`/api/me/diary/${id}/highlight`, ListenEntryResponseSchema, { method: "DELETE" }).then(
+    (response) => response.entry,
+  );
+}

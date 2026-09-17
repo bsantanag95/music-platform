@@ -8,7 +8,7 @@ import { apiFetch, ApiError } from "@/lib/api/client";
 import { getMyFavorites } from "@/lib/api/favorites";
 import { ShowcaseResponseSchema, type Favorite } from "@/lib/api/schemas";
 import { PROFILE_IDENTITY_LIMITS, PROFILE_MAX_PINNED } from "@/services/social/types";
-import type { Showcase, ShowcaseEntity } from "@/services/profiles/showcase";
+import type { IdentityCard, Showcase, ShowcaseEntity } from "@/services/profiles/showcase";
 
 interface OwnerShowcaseEditorProps {
   initial: Showcase;
@@ -40,6 +40,8 @@ export function OwnerShowcaseEditor({ initial }: OwnerShowcaseEditorProps) {
   const [pins, setPins] = useState<PinRow[]>(
     initial.pinned.map((item) => ({ entity: item.entity, note: item.note ?? "" })),
   );
+  const [identityCard, setIdentityCard] = useState<IdentityCard>(initial.identityCard);
+  const [definingErrorCode, setDefiningErrorCode] = useState<string | null>(null);
   const [anthem, setAnthem] = useState<ShowcaseEntity | null>(initial.anthem);
   const [favorites, setFavorites] = useState<Favorite[] | null>(null);
   const [recordingFavorites, setRecordingFavorites] = useState<Favorite[] | null>(null);
@@ -83,7 +85,7 @@ export function OwnerShowcaseEditor({ initial }: OwnerShowcaseEditorProps) {
     setPinStatus("saving");
     setErrorCode(null);
     try {
-      await apiFetch("/api/me/profile/pinned", ShowcaseResponseSchema, {
+      const data = await apiFetch("/api/me/profile/pinned", ShowcaseResponseSchema, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -94,10 +96,32 @@ export function OwnerShowcaseEditor({ initial }: OwnerShowcaseEditorProps) {
           })),
         }),
       });
+      setPins(data.showcase.pinned.map((item) => ({ entity: item.entity, note: item.note ?? "" })));
       setPinStatus("saved");
     } catch (error) {
       setPinStatus("idle");
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
+    }
+  }
+
+  function isDefiningEntity(entity: ShowcaseEntity): boolean {
+    if (entity.type === "artist") return identityCard.artist?.id === entity.id;
+    if (entity.type === "release-group") return identityCard.album?.id === entity.id;
+    return false;
+  }
+
+  async function setDefining(entity: ShowcaseEntity, defining: boolean) {
+    if (entity.type === "recording") return;
+    setDefiningErrorCode(null);
+    try {
+      const data = await apiFetch("/api/me/profile/pinned/defining", ShowcaseResponseSchema, {
+        method: defining ? "PUT" : "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: entity.type, id: entity.id }),
+      });
+      setIdentityCard(data.showcase.identityCard);
+    } catch (error) {
+      setDefiningErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
     }
   }
 
@@ -161,6 +185,18 @@ export function OwnerShowcaseEditor({ initial }: OwnerShowcaseEditorProps) {
                 />
               </span>
               <span className="flex gap-1">
+                {row.entity.type !== "recording" && (
+                  <Button
+                    type="button"
+                    variant={isDefiningEntity(row.entity) ? "primary" : "ghost"}
+                    aria-label={t(
+                      isDefiningEntity(row.entity) ? "identityCard.unmarkDefining" : "identityCard.markDefining",
+                    )}
+                    onClick={() => void setDefining(row.entity, !isDefiningEntity(row.entity))}
+                  >
+                    {isDefiningEntity(row.entity) ? "★" : "☆"}
+                  </Button>
+                )}
                 <Button
                   type="button"
                   variant="ghost"
@@ -213,10 +249,7 @@ export function OwnerShowcaseEditor({ initial }: OwnerShowcaseEditorProps) {
                     <button
                       type="button"
                       onClick={() => {
-                        setPins((prev) => [
-                          ...prev,
-                          { entity: favoriteToEntity(favorite), note: "" },
-                        ]);
+                        setPins((prev) => [...prev, { entity: favoriteToEntity(favorite), note: "" }]);
                         setPinStatus("idle");
                       }}
                       className="flex w-full items-center gap-2 rounded border border-ink-border bg-ink-surface px-2 py-1.5 text-left transition-colors hover:border-amber"
@@ -248,6 +281,11 @@ export function OwnerShowcaseEditor({ initial }: OwnerShowcaseEditorProps) {
             </span>
           )}
         </div>
+        {definingErrorCode && (
+          <span role="alert" className="font-data text-xs text-danger">
+            {tErrors(`${definingErrorCode}.description`)}
+          </span>
+        )}
       </section>
 
       {/* Himno */}

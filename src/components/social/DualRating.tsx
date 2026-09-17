@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { SubmitEventHandler } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { deleteRating, getRatings, saveRating } from "@/lib/api/social";
+import { deleteRating, getRatings, highlightRating, saveRating, unhighlightRating } from "@/lib/api/social";
 import { ApiError } from "@/lib/api/client";
 import type { RatingsResponse } from "@/lib/api/schemas";
 
@@ -38,6 +38,7 @@ export function DualRating({
   const [pending, setPending] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [highlightPending, setHighlightPending] = useState(false);
 
   const handleSave: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
@@ -74,6 +75,24 @@ export function DualRating({
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
     } finally {
       setPending(false);
+    }
+  }
+
+  async function toggleHighlight() {
+    const own = ratings.own;
+    if (!own) return;
+    const next = !own.isHighlighted;
+    setHighlightPending(true);
+    setErrorCode(null);
+    setNotice(null);
+    try {
+      await (next ? highlightRating(own.id) : unhighlightRating(own.id));
+      setRatings((prev) => (prev.own ? { ...prev, own: { ...prev.own, isHighlighted: next } } : prev));
+      setNotice(next ? "ratingHighlighted" : "ratingUnhighlighted");
+    } catch (error) {
+      setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
+    } finally {
+      setHighlightPending(false);
     }
   }
 
@@ -125,6 +144,17 @@ export function DualRating({
           )}
           <div className="flex flex-wrap gap-3">
             <button type="submit" disabled={pending || !stars} className="rounded bg-amber px-4 py-2 font-display text-sm text-ink disabled:opacity-50">{pending ? t("saving") : t("save")}</button>
+            {ratings.own && (
+              <button
+                type="button"
+                disabled={highlightPending}
+                onClick={() => void toggleHighlight()}
+                aria-pressed={ratings.own.isHighlighted ?? false}
+                className="rounded border border-ink-border px-4 py-2 font-display text-sm text-paper aria-pressed:border-amber aria-pressed:text-amber disabled:opacity-50"
+              >
+                {ratings.own.isHighlighted ? t("unhighlightRating") : t("highlightRating")}
+              </button>
+            )}
             {ratings.own && <button type="button" disabled={pending} onClick={handleDelete} className="rounded border border-danger px-4 py-2 font-display text-sm text-danger disabled:opacity-50">{t("delete")}</button>}
           </div>
           {notice && <p role="status" className="font-data text-sm text-petrol-hover">{t(notice)}</p>}

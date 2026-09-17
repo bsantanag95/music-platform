@@ -2,25 +2,30 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import type { AlbumFavorite } from "@/services/profiles/album-favorites";
+import type { IdentityCard } from "@/services/profiles/showcase";
 
 interface AlbumFavoritesProps {
   albums: AlbumFavorite[];
+  identityCard: IdentityCard;
 }
 
 // Sección "Álbumes favoritos": la cabeza del bloque de identidad cultural del
 // perfil. Rejilla 3×2 de carátulas — las obras que definen a esta persona.
 // Sin números de posición ni estrellas: es una declaración, no un ranking
 // (openspec: redesign-profile-album-identity). Server Component. No renderiza
-// nada si el conjunto visible está vacío.
-export async function AlbumFavorites({ albums }: AlbumFavoritesProps) {
+// nada si el conjunto visible está vacío. Excluye el álbum definitorio
+// (openspec: rework-user-profile): vive en la Tarjeta de Identidad, con
+// tratamiento propio — no se repite acá.
+export async function AlbumFavorites({ albums, identityCard }: AlbumFavoritesProps) {
   const t = await getTranslations("users");
-  if (albums.length === 0) return null;
+  const general = albums.filter((album) => album.target.id !== identityCard.album?.id);
+  if (general.length === 0) return null;
 
   return (
     <section className="flex w-full max-w-2xl flex-col gap-4">
       <h2 className="font-display text-xl text-paper">{t("albumFavorites.heading")}</h2>
       <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        {albums.map((album) => (
+        {general.map((album) => (
           <li key={album.id}>
             <Link href={`/album/${album.target.id}`} className="group flex flex-col gap-2">
               <CoverThumb

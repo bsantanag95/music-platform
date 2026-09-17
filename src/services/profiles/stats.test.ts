@@ -112,4 +112,48 @@ describe("getTasteFingerprint", () => {
       { label: "1990s", count: 1 },
     ]);
   });
+
+  describe("summary (spec taste-fingerprint, 'Resumen cualitativo para los niveles 1 y 2')", () => {
+    it("sin datos suficientes, el resumen queda vacío", async () => {
+      mocks.getProfileByUsername.mockResolvedValue(followerProfile);
+      const fp = await getTasteFingerprint("ana", "viewer");
+      expect(fp?.summary).toEqual([]);
+    });
+
+    it("deriva hasta 3 frases (década, género, patrón de calificación) de los mismos datos ya calculados", async () => {
+      mocks.getProfileByUsername.mockResolvedValue(followerProfile);
+      rowsByTable.rating = [{ id: "rg1", stars: "5", n: 4, artists: 0, albums: 1, songs: 0 }];
+      rowsByTable.release = [{ decade: 2010 }, { decade: 2010 }];
+      rowsByTable.release_group_tag = [{ tag: "pop", total: 3 }];
+
+      const fp = await getTasteFingerprint("ana", "viewer");
+      expect(fp?.summary).toHaveLength(3);
+      expect(fp?.summary).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining("2010s"),
+          expect.stringContaining("pop"),
+        ]),
+      );
+    });
+
+    it("nunca expone el promedio numérico de estrellas, solo un patrón cualitativo", async () => {
+      mocks.getProfileByUsername.mockResolvedValue(followerProfile);
+      rowsByTable.rating = [{ stars: "5", n: 4, artists: 0, albums: 1, songs: 0 }];
+
+      const fp = await getTasteFingerprint("ana", "viewer");
+      const ratingPhrase = fp?.summary.find((s) => !s.includes("década") && !s.includes("género"));
+      expect(ratingPhrase).toBeDefined();
+      expect(ratingPhrase).not.toMatch(/\d/);
+    });
+
+    it("sin valoraciones visibles para el visitante, no hay frase de patrón de calificación", async () => {
+      mocks.getProfileByUsername.mockResolvedValue({ ...followerProfile, relation: "none" });
+      rowsByTable.rating = [{ stars: "5", n: 4 }]; // no visible: relation "none", se ignora
+      rowsByTable.favorite = [{ id: "rg1" }]; // sí visible (audience pública): alimenta décadas
+      rowsByTable.release = [{ decade: 1990 }];
+
+      const fp = await getTasteFingerprint("ana", null);
+      expect(fp?.summary).toEqual(["Escucha sobre todo música de los 1990s"]);
+    });
+  });
 });

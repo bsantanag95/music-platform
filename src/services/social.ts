@@ -1,6 +1,6 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { appUser, artist, comment, rating, recording, releaseGroup } from "@/db/schema";
+import { appUser, artist, comment, rating, ratingHighlight, recording, releaseGroup } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import type { SocialTargetType } from "@/lib/api/schemas";
 
@@ -50,8 +50,17 @@ export async function getRatings(target: SocialTarget, userId?: string) {
     })
     .from(rating)
     .where(targetWhere(target));
+  let isHighlighted = false;
+  if (own) {
+    const [highlighted] = await db
+      .select({ ratingId: ratingHighlight.ratingId })
+      .from(ratingHighlight)
+      .where(and(eq(ratingHighlight.userId, own.userId), eq(ratingHighlight.ratingId, own.id)))
+      .limit(1);
+    isHighlighted = Boolean(highlighted);
+  }
   return {
-    own: own ? serializeRating(own) : null,
+    own: own ? { ...serializeRating(own), isHighlighted } : null,
     aggregate: aggregate ?? { count: 0, averageStars: null, averageDetailedScore: null },
   };
 }

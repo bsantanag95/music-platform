@@ -19,6 +19,8 @@ import {
   deleteListenEntry,
   getMyDiary,
   getMyDiaryMonths,
+  highlightListenEntry,
+  unhighlightListenEntry,
   type DiaryFiltersParams,
 } from "@/lib/api/diary";
 import { toggleWantToListen } from "@/lib/api/want-to-listen";
@@ -193,6 +195,10 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
   // separado porque el resultado (agregado/quitado) depende de la respuesta
   // del toggle, no es siempre "guardado".
   const [wantToListenResult, setWantToListenResult] = useState<{ id: string; added: boolean } | null>(null);
+  // Destello del toggle de destacado desde el menú de la fila (openspec:
+  // rework-user-profile, `listen-diary` "Destacar una entrada del diario") —
+  // mismo mecanismo que `wantToListenResult`.
+  const [highlightResult, setHighlightResult] = useState<{ id: string; highlighted: boolean } | null>(null);
 
   // Debounce del buscador: espera a que el usuario deje de tipear antes de
   // disparar la query — evita una request por tecla.
@@ -214,6 +220,12 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
     const timeout = window.setTimeout(() => setWantToListenResult(null), 1500);
     return () => window.clearTimeout(timeout);
   }, [wantToListenResult]);
+
+  useEffect(() => {
+    if (!highlightResult) return;
+    const timeout = window.setTimeout(() => setHighlightResult(null), 1500);
+    return () => window.clearTimeout(timeout);
+  }, [highlightResult]);
 
   const isFiltered = hasActiveFilters(filters);
   const apiFilters = toApiFilters(filters);
@@ -375,6 +387,22 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
     }
   };
 
+  // "Destacar"/"Quitar destacado" desde el menú de la fila (openspec:
+  // rework-user-profile, spec `listen-diary`): la entrada destacada se vuelve
+  // visible en el perfil más allá de su audiencia normal, sin modificarla.
+  const handleToggleHighlight = async (entry: ListenEntry) => {
+    setActionError(false);
+    try {
+      const updated = entry.isHighlighted
+        ? await unhighlightListenEntry(entry.id)
+        : await highlightListenEntry(entry.id);
+      updateCachedEntry(updated);
+      setHighlightResult({ id: entry.id, highlighted: updated.isHighlighted ?? false });
+    } catch {
+      setActionError(true);
+    }
+  };
+
   const handleLoadMore = () => {
     setActionError(false);
     fetchNextPage().catch(() => setActionError(true));
@@ -398,7 +426,9 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
       <li
         key={entry.id}
         className={`${body ? "py-4" : "py-3"} first:pt-0 last:pb-0 transition-colors duration-1000 ${
-          savedId === entry.id || wantToListenResult?.id === entry.id ? "bg-amber/10" : "bg-transparent"
+          savedId === entry.id || wantToListenResult?.id === entry.id || highlightResult?.id === entry.id
+            ? "bg-amber/10"
+            : "bg-transparent"
         }`}
       >
         <div className="flex gap-3 sm:gap-4">
@@ -435,6 +465,9 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
                       {t("wantToListen")}
                     </RowMenuItem>
                   )}
+                  <RowMenuItem onSelect={() => void handleToggleHighlight(entry)}>
+                    {t(entry.isHighlighted ? "unhighlight" : "highlight")}
+                  </RowMenuItem>
                   <RowMenuItem danger onSelect={() => setPendingDeleteId(entry.id)}>
                     {t("delete")}
                   </RowMenuItem>
@@ -638,7 +671,9 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
           ? t("savedAnnouncement")
           : wantToListenResult
             ? t(wantToListenResult.added ? "wantToListenAdded" : "wantToListenRemoved")
-            : null}
+            : highlightResult
+              ? t(highlightResult.highlighted ? "highlighted" : "unhighlighted")
+              : null}
       </span>
       <div className="flex flex-col gap-6">
         {monthGroups.map((group) => {

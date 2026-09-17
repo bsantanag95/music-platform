@@ -125,6 +125,21 @@ describe("servicio de favoritos", () => {
     expect(result?.id).toBe(favoriteRow.id);
   });
 
+  it("un favorito nuevo sin audiencia explícita nace `public` (openspec: rework-user-profile, antes `followers`)", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(whereLimit([{ id: target.id }]))
+      .mockReturnValueOnce(whereLimit([]))
+      .mockReturnValueOnce(joinLimit([favoriteRow]));
+    const values = vi.fn().mockReturnValue({
+      returning: vi.fn().mockResolvedValue([favoriteRow]),
+    });
+    mocks.db.insert.mockReturnValue({ values });
+
+    await toggleFavorite(target, user);
+
+    expect(values).toHaveBeenCalledWith(expect.objectContaining({ audience: "public" }));
+  });
+
   it("elimina un favorito existente (toggle off)", async () => {
     mocks.db.select
       .mockReturnValueOnce(whereLimit([{ id: target.id }])) // resolveFavoriteTarget - artista existe

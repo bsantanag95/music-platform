@@ -74,6 +74,7 @@
     "noResultsDescription": "No followed artist matches the search."
   },
   "explorationHeading": "Exploration",
+  "explorationMutualBadge": "You too",
   "journeyStateInProgress": "Journey in progress",
   "journeyStateComplete": "Journey complete",
   "requestsTitle": "Follow requests",
@@ -140,6 +141,15 @@
       "noRecordingFavorites": "Favorite a song to choose an anthem."
     }
   },
+  "identityCard": {
+    "artistHeading": "Artist that defines me",
+    "albumHeading": "Album that defines me",
+    "markDefining": "Mark as defining",
+    "unmarkDefining": "Remove from Identity Card"
+  },
+  "ratingHighlights": {
+    "heading": "Featured ratings"
+  },
   "albumFavorites": {
     "heading": "Favorite albums",
     "edit": {
@@ -205,5 +215,13 @@
   "diaryTitle": "Diary",
   "favoritesTitle": "Favorites",
   "listsTitle": "Lists",
-  "collectionTitle": "Collection"
+  "collectionTitle": "Collection",
+  "level3": {
+    "navLabel": "Explore more of the profile",
+    "diary": "Full diary",
+    "favorites": "All favorites",
+    "lists": "All lists",
+    "collection": "Full collection",
+    "fingerprint": "Full taste fingerprint"
+  }
 }

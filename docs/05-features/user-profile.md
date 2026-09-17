@@ -1,12 +1,32 @@
 # Perfil de usuario
 
-**Fase 5 · cambio `redesign-user-profile` · Estado: 🟡 implementado (revisión visual pendiente)**
+**Fase 5 · cambio `rework-user-profile` · Estado: 🟢 implementado**
 
 El perfil vive en la ruta canónica `/users/{username}` para **todos**, incluido el dueño —
 no hay una ruta de perfil separada para uno mismo. Es el centro de la experiencia social:
 identidad, retrato de gusto, curaduría y actividad de una persona, más el panel desde el que
-el dueño gestiona sus áreas. Dirección de diseño en la sesión `impeccable`/`shape` previa y
-en `openspec/changes/redesign-user-profile/`.
+el dueño gestiona sus áreas. Reorganizado en `openspec/changes/rework-user-profile/` alrededor
+de una jerarquía de profundidad; la dirección visual original sigue en
+`openspec/changes/redesign-user-profile/`.
+
+## Tres niveles de profundidad
+
+Pregunta guía del rediseño: *si alguien descubre el perfil de una persona que no conoce,
+¿puede entender rápidamente quién es musicalmente y, a la vez, sentir curiosidad por seguir
+explorando?* Este es un eje distinto (y ortogonal) del de acceso de abajo: todo visitante con
+acceso al perfil recorre los mismos tres niveles de profundidad, cada uno con menos gente
+llegando que el anterior.
+
+| Nivel | Responde | Tiempo | Contenido |
+|---|---|---|---|
+| **1 — Identidad** | ¿Quién es, musicalmente? | Segundos | Placa + **Tarjeta de Identidad** (artista, álbum y canción definitorios) + resumen cualitativo de la huella de gusto |
+| **2 — Exploración** | ¿Qué más hay para ver? | Minutos | Álbumes favoritos, destacados generales, valoraciones destacadas, reseñas, en rotación, afinidad, estantes (diario/favoritos/listas/colección) |
+| **3 — Inmersión** | Quiero el detalle completo | Bajo demanda | Huella de gusto completa (`/users/{username}/fingerprint`), cada estante en su propia vista |
+
+Los niveles 1 y 2 son la misma página (`page.tsx`), compuesta de arriba hacia abajo en ese
+orden, con el mismo árbol para dueño y visitante (solo cambian los editores inline). El nivel
+3 son enlaces explícitos al final (`ProfileLevel3Links`), sin duplicar contenido — anclas a
+los estantes ya visibles más el enlace real a la huella completa.
 
 ## Tres niveles de acceso
 
@@ -16,8 +36,8 @@ visitante:
 | Nivel | Quién | Qué ve |
 |---|---|---|
 | **No autorizado** | Anónimo, sin relación aceptada, o solicitud pendiente sobre un perfil privado | Identidad extendida + aviso de perfil privado + CTA de seguir. Nada más. |
-| **Autorizado** | Cuenta pública, o seguidor aprobado de una privada | Identidad + huella de gusto + álbumes favoritos + destacados + himno + afinidad + estantes (diario / favoritos / listas / colección) + recencia. |
-| **Dueño** | La persona | Lo mismo que "autorizado" + editores inline de identidad/enlaces/álbumes favoritos/destacados/himno + panel de gestión + previsualizador "cómo te ven". |
+| **Autorizado** | Cuenta pública, o seguidor aprobado de una privada | Identidad + Tarjeta de Identidad + resumen de huella + álbumes favoritos + destacados + valoraciones destacadas + reseñas + en rotación + huella completa (nivel 3) + afinidad + estantes (diario / favoritos / listas / colección) + recencia. |
+| **Dueño** | La persona | Lo mismo que "autorizado" + editores inline de identidad/enlaces/álbumes favoritos/destacados/marcador "me define"/himno + acción de destacar valoraciones y entradas de diario + panel de gestión + previsualizador "cómo te ven". |
 
 Un perfil **privado** solo expone su huella, álbumes favoritos, destacados y estantes a
 seguidores aprobados y al dueño; un visitante no autorizado ve únicamente la identidad
@@ -37,33 +57,45 @@ conjunto cerrado (`website`, `bandcamp`, `lastfm`, `discogs`, `instagram`, `yout
 que no es información lo bastante sensible como para ocultarla, y da razones reales para
 seguir. Solo las actividades y los listados sociales quedan ocultos.
 
-## Huella de gusto
+## Tarjeta de Identidad
 
-Retrato de gusto calculado bajo demanda (`src/services/profiles/stats.ts`, envuelto en
-`cache()` por request), filtrado por lo que el visitante puede ver:
+Primer bloque del Nivel 1, justo bajo la Placa (`IdentityCard.tsx`): hasta **3 elementos
+definitorios** — un artista, un álbum y una canción (el himno) — en tiras divididas por
+hairlines, cada una con carátula/monograma + etiqueta de rol + título enlazado a su página de
+catálogo. Reemplaza al antiguo bloque único de "Himno": tres decisiones conscientes en vez de
+una sola.
 
-- **Curva de valoraciones** — distribución por estrellas (0,5–5). Las valoraciones **no
-  tienen audiencia propia**, así que —igual que en el feed— solo son visibles para el dueño
-  y seguidores aprobados. Un visitante público no ve la curva.
-- **Cresta de décadas** — la década de la edición más temprana de cada álbum de la actividad
-  visible. Degrada a vacío si no hay fechas.
-- **Cresta de géneros** — top de `release_group_tag`. Esta tabla se **siembra** con
-  `scripts/seed-release-group-tags.ts` hasta que exista ingesta real de tags desde
-  MusicBrainz (cambio posterior); mientras tanto el componente muestra "sin datos de género
-  todavía" cuando no hay filas.
-- **Reparto** — conteos por tipo: artistas/álbumes/canciones valorados, colección física,
-  listas visibles.
-
-La huella expone un equivalente textual (`<table>`/`<ul>` `sr-only`) — su información no
-depende del gráfico ni del color. Es la única superficie donde el ámbar se usa con
-generosidad (excepción sancionada a la Regla de Rareza de `DESIGN.md`).
+- **Artista y álbum definitorios son referencias directas en `user_showcase`**
+  (`defining_artist_id`, `defining_release_group_id`), mismo criterio que ya usaba
+  `anthem_recording_id`: cualquier entidad válida del catálogo, sin requerir que sea además
+  un destacado o un álbum favorito. Exclusividad por tipo trivial (una sola columna nullable
+  por usuario) — marcar uno nuevo desmarca automáticamente el anterior del mismo tipo.
+  **Revisión de diseño**: la primera versión guardaba esto como un booleano sobre los
+  Destacados (`user_pinned_item.is_defining`), lo que dejaba "Álbumes favoritos" sin ninguna
+  vía para marcar un álbum definitorio salvo duplicándolo como destacado aparte — el gap que
+  motivó moverlo a una referencia directa (migración 0030).
+- **Se marca desde donde ya vive la entidad**: el editor de Destacados
+  (`OwnerShowcaseEditor`) ofrece el marcador ★/☆ para sus filas de tipo artista o álbum, y el
+  editor de Álbumes favoritos (`OwnerAlbumFavoritesEditor`) lo ofrece también para las suyas
+  — ambos llaman al mismo endpoint (`PUT/DELETE /api/me/profile/pinned/defining` con
+  `{type, id}` del artista o álbum, no de una fila de destacado). Un destacado o álbum
+  favorito recién agregado en el borrador (sin guardar todavía) ya puede marcarse: el
+  marcador no depende de que la entidad tenga una fila propia guardada en el servidor.
+- **Una canción nunca puede ser "definitoria"** de esta forma — el slot de canción de la
+  Tarjeta de Identidad es, exclusivamente, el **Himno** (`user_showcase.anthem_recording_id`),
+  elegido a mano, nunca derivado de actividad.
+- **Composición incompleta, nunca con huecos.** Si falta un elemento, ese slot simplemente no
+  se renderiza — no hay placeholders vacíos ni "todavía sin definir". Si los tres faltan, la
+  Tarjeta de Identidad entera desaparece.
+- Un destacado o álbum favorito marcado como definitorio **desaparece de su muro general**
+  (`PinnedShowcase` excluye por coincidencia de tipo+id con la Tarjeta de Identidad, no por un
+  campo propio de la fila) para no mostrar la misma entidad dos veces en la página.
 
 ## Álbumes favoritos
 
-La cabeza del bloque de identidad cultural, arriba de los destacados mixtos: hasta **6
-álbumes** que definen a esta persona, en una rejilla de carátulas + título + artista, con
-enlace al álbum. Es una **declaración, no un ranking** — sin números de posición ni
-estrellas (cambio `redesign-profile-album-identity`).
+Hasta **6 álbumes** que definen a esta persona, en una rejilla de carátulas + título +
+artista, con enlace al álbum. Es una **declaración, no un ranking** — sin números de posición
+ni estrellas (cambio `redesign-profile-album-identity`).
 
 - **Fijar un álbum favorito es fijar un `favorite`.** `user_album_pin.favorite_id` tiene FK
   a `favorite` con `ON DELETE CASCADE`: `favorite` sigue siendo la única fuente de verdad y
@@ -76,31 +108,60 @@ estrellas (cambio `redesign-profile-album-identity`).
   dueño.
 - El orden se reescribe completo al guardar (`PUT /api/me/profile/album-favorites`), mismo
   patrón transaccional que los ítems de lista.
+- **Puede marcarse "me define" desde acá mismo** (openspec: rework-user-profile,
+  `OwnerAlbumFavoritesEditor`), sin duplicar el álbum como destacado — ver "Tarjeta de
+  Identidad". El álbum marcado desaparece de esta rejilla mientras sea el definitorio
+  (`AlbumFavorites` excluye por id contra `identityCard.album`), igual criterio que los
+  Destacados.
 
-## Destacados e himno
+## Destacados
 
-- **Cuatro destacados** (`user_pinned_item`, patrón triple-FK como `rating`): hasta 4
-  entidades fijadas, tipos mezclados, nota opcional (≤120). Se resuelven al leer, omitiendo
-  las que el catálogo ya no tiene.
-- **Himno** (`user_showcase.anthem_recording_id`): una canción elegida **manualmente**.
-  Nunca se deriva de la última escucha ni de ninguna actividad.
+**Cuatro destacados** (`user_pinned_item`, patrón triple-FK como `rating`): hasta 4 entidades
+fijadas, tipos mezclados, nota opcional (≤120). Se resuelven al leer, omitiendo las que el
+catálogo ya no tiene.
 
-El editor del dueño reordena / quita / anota los destacados y elige el himno **desde sus
-favoritos** — no hay buscador de catálogo embebido (mismo criterio que el detalle de lista,
-ver la memoria `list-detail-scope`).
+- **Excluyen lo que ya vive en la Tarjeta de Identidad.** Un destacado cuya entidad coincide
+  con el artista o álbum definitorio desaparece de esta lista general — la Tarjeta de
+  Identidad es su única superficie, para no mostrar la misma entidad dos veces en la misma
+  página (`PinnedShowcase` filtra por coincidencia de tipo+id contra `identityCard`, no por
+  un campo propio del destacado — el marcador ya no vive ahí, ver "Tarjeta de Identidad").
+- El editor del dueño reordena / quita / anota los destacados **desde sus favoritos** — no
+  hay buscador de catálogo embebido (mismo criterio que el detalle de lista, ver la memoria
+  `list-detail-scope`).
+
+## Valoraciones destacadas
+
+Excepción curada y explícita a una regla de privacidad por lo demás estricta. La tabla
+`rating` **no tiene columna de audiencia propia**: una valoración es visible solo para el
+dueño y sus seguidores aprobados, nunca para un desconocido (ver "Huella de gusto"). El dueño
+puede, sin embargo, **destacar hasta 6 valoraciones propias** (`rating_highlight`,
+spec `rating-highlights`) para que se vuelvan visibles a **cualquier** visitante con acceso al
+perfil, sin importar la relación de seguimiento.
+
+- **Curaduría consciente, no un cambio de la regla general.** Solo lo que el dueño elige
+  explícitamente cruza la barrera de privacidad; el resto de sus valoraciones sigue
+  invisible para quien no lo sigue.
+- **Se activa desde la propia valoración**, en la página de artista/álbum/canción
+  (`DualRating.tsx`), no desde el perfil — un botón junto a "Borrar" que alterna
+  "Destacar en el perfil" / "Quitar de destacadas".
+- `getProfileRatingHighlights` **no filtra por audiencia**: estar en `rating_highlight` ya es
+  la señal de "quiero que esto se vea". Sí sigue gateado por accesibilidad del perfil
+  (bloqueo, perfil privado sin relación) — un perfil inaccesible no expone nada, ni siquiera
+  esto.
+- Tarjeta: carátula + título + artista + el mismo medidor visual de valoración que usa el
+  feed (`FeedRatingMeter`). Tope de 6, paridad con Álbumes favoritos (sin relación funcional
+  entre ambos).
 
 ## Reseñas
 
 La postura crítica de la persona sobre las obras — el acto más expresivo del producto
-(Principio 4 de `product_philosophy.md`). Cierra el clúster de identidad cultural: se ubica
-**después de los destacados y antes de "En rotación"** (orden vertical Q7), en los niveles
-autorizado y dueño (cambio `add-profile-featured-reviews`,
-`src/services/profiles/reviews.ts`).
+(Principio 4 de `product_philosophy.md`). Se muestra en los niveles autorizado y dueño
+(cambio `add-profile-featured-reviews`, `src/services/profiles/reviews.ts`).
 
 - **Automática, no curada.** Se muestran las **últimas 4** reseñas de álbum del dueño
-  ordenadas por fecha de última edición. No hay editor de "fijar reseñas": sumar un cuarto
-  mecanismo de fijado (además de álbumes favoritos, destacados e himno) es el riesgo que
-  D10 pide evitar. Si hay más reseñas, "y N más" — sin enlace dedicado.
+  ordenadas por fecha de última edición. No hay editor de "fijar reseñas": sumar un mecanismo
+  de fijado más (además de álbumes favoritos, destacados, himno y valoraciones destacadas) es
+  el riesgo que D10 pide evitar. Si hay más reseñas, "y N más" — sin enlace dedicado.
 - **Tarjeta**: carátula + álbum enlazado + artista + el rating que la reseña lleva
   incorporada (`add-album-review`: la reseña siempre lleva rating) + título opcional +
   cuerpo recortado a 4 líneas. El enlace al álbum lleva a la reseña completa y al resto de
@@ -115,9 +176,8 @@ autorizado y dueño (cambio `add-profile-featured-reviews`,
 ## En rotación
 
 La contraparte **viva** de los álbumes favoritos (identidad estable): qué ha estado
-escuchando esta persona últimamente. Se ubica entre los destacados y la huella de gusto, en
-los niveles autorizado y dueño (cambio `add-profile-in-rotation`,
-`src/services/profiles/in-rotation.ts`).
+escuchando esta persona últimamente. Se muestra en los niveles autorizado y dueño (cambio
+`add-profile-in-rotation`, `src/services/profiles/in-rotation.ts`).
 
 - **Solo desde el diario.** Se deriva exclusivamente de `listen_entry` de los últimos **30
   días**. Nunca de valoraciones, favoritos ni reseñas — una reacción dice "me gusta", no
@@ -141,11 +201,38 @@ los niveles autorizado y dueño (cambio `add-profile-in-rotation`,
   sin numeración. `GET /api/users/[username]/in-rotation` para hidratación diferida y el
   previsualizador "cómo te ven".
 
+## Huella de gusto
+
+Retrato de gusto calculado bajo demanda (`src/services/profiles/stats.ts`, envuelto en
+`cache()` por request), filtrado por lo que el visitante puede ver. Se expone en dos
+profundidades distintas:
+
+- **Niveles 1–2 (esta página): resumen cualitativo.** Hasta **3 frases** derivadas de los
+  mismos datos ya calculados — década dominante, género dominante, patrón de calificación —
+  sin gráficos ni cifras (`FingerprintSummary.tsx`). **Nunca expone el promedio numérico de
+  estrellas**, solo una lectura cualitativa ("es un calificador exigente", no "3.2★ de
+  promedio"). Queda vacío, sin renderizarse, si no hay datos suficientes.
+- **Nivel 3 (`/users/{username}/fingerprint`): el detalle completo.**
+  - **Curva de valoraciones** — distribución por estrellas (0,5–5). Las valoraciones **no
+    tienen audiencia propia**, así que solo son visibles para el dueño y seguidores
+    aprobados; un visitante público no ve la curva (ver "Valoraciones destacadas" para la
+    única excepción, puntual y curada).
+  - **Cresta de décadas** — la década de la edición más temprana de cada álbum de la
+    actividad visible. Degrada a vacío si no hay fechas.
+  - **Cresta de géneros** — top de `release_group_tag`. Esta tabla se **siembra** con
+    `scripts/seed-release-group-tags.ts` hasta que exista ingesta real de tags desde
+    MusicBrainz (cambio posterior); mientras tanto el componente muestra "sin datos de
+    género todavía" cuando no hay filas.
+  - **Reparto** — conteos por tipo: artistas/álbumes/canciones valorados, colección física,
+    listas visibles.
+  - La huella expone un equivalente textual (`<table>`/`<ul>` `sr-only`) — su información no
+    depende del gráfico ni del color. Es la única superficie donde el ámbar se usa con
+    generosidad (excepción sancionada a la Regla de Rareza de `DESIGN.md`).
+
 ## Exploración
 
 Los **artistas que el dueño sigue** (`artist_follow`, cambio `add-artist-following`),
-rejilla de foto/monograma + nombre con enlace a cada artista. Se ubica **después de la
-huella de gusto y antes de los estantes** (orden vertical Q7). Se muestra en los niveles
+rejilla de foto/monograma + nombre con enlace a cada artista. Se muestra en los niveles
 autorizado y dueño; no aparece si el dueño no sigue a ningún artista.
 
 - **Seguir artista ≠ favorito de artista.** Seguir es intención de seguimiento (contexto de
@@ -153,28 +240,39 @@ autorizado y dueño; no aparece si el dueño no sigue a ningún artista.
   (aparece en la huella y en "favoritos en común"). El modelo los mantiene separados.
 - **Sin control de audiencia:** `artist_follow` no tiene audiencia — es información de bajo
   riesgo, del mismo tenor que la lista de seguidos de usuario.
+- **Insignia "tú también"** — con sesión iniciada, un artista que también sigue el visitante
+  lleva una insignia puntual (sin conteo agregado ni "3 en común"), alimentada por
+  `getProfileAffinity`. Ausente para el propio dueño o sin sesión.
 - El dueño gestiona sus artistas seguidos en `/me/artists` (enlace en el panel del dueño).
-- En Fase 2 la sección muestra hasta 12 artistas sin "ver todos" para visitantes. El evento
-  "seguir artista" en el feed llega con `rework-feed-tiers`.
+- La sección muestra hasta 12 artistas sin "ver todos" para visitantes. El evento "seguir
+  artista" en el feed llega con `rework-feed-tiers`.
 
 ## Afinidad
 
 Al ver el perfil de otra persona con sesión iniciada, un bloque de coincidencias
-(`src/services/profiles/affinity.ts`): favoritos en común, entidades que ambos puntúan con
-4+ estrellas (solo si el visitante puede ver las valoraciones del dueño), **artistas que
-ambos siguen**, y seguidores en común. Se oculta sin sesión, para el propio dueño, ante
-bloqueo, o si no hay ninguna coincidencia. El hint de seguidores en común aparece también
-en el aviso de perfil privado.
+(`src/services/profiles/affinity.ts`, envuelto en `cache()` por request): favoritos en común,
+entidades que ambos puntúan con 4+ estrellas (solo si el visitante puede ver las valoraciones
+del dueño), **artistas que ambos siguen**, y seguidores en común. Se oculta sin sesión, para
+el propio dueño, ante bloqueo, o si no hay ninguna coincidencia. El hint de seguidores en
+común aparece también en el aviso de perfil privado, y los artistas en común alimentan además
+la insignia "tú también" de Exploración.
 
 ## Estantes y recencia
 
 Diario, favoritos, listas y colección se muestran con los componentes de lectura existentes
-(`readOnly`), bajo un encabezado uniforme (`ProfileRail`: título + conteo). **Un estante sin
-contenido visible no se renderiza** para un visitante; el dueño ve el estante vacío para
-poder agregar. Una línea "última señal hace…" resume la actividad visible más reciente.
+(`readOnly`), bajo un encabezado uniforme (`ProfileRail`: título + conteo, con ancla propia
+para los enlaces de Nivel 3). **Un estante sin contenido visible no se renderiza** para un
+visitante; el dueño ve el estante vacío para poder agregar. Una línea "última señal hace…"
+resume la actividad visible más reciente.
 
-Cada sección de contenido carga bajo su propio `<Suspense>`, así que nada bloquea la Placa
-(la cabecera de identidad).
+- **Una entrada de diario puede destacarse** (`listen_entry_highlight`, spec `listen-diary`
+  "Destacar una entrada del diario"), tope de 6 por usuario, acción disponible desde el menú
+  "···" de `/me/diary`. Una entrada destacada **anula la matriz de visibilidad** para esa
+  fila puntual: se vuelve visible más allá de su audiencia normal, sin modificar la entrada
+  en sí. El bloqueo entre usuarios sigue ocultando todo igual — el destacado nunca lo
+  atraviesa.
+- Cada sección de contenido carga bajo su propio `<Suspense>`, así que nada bloquea la Placa
+  (la cabecera de identidad).
 
 ## Panel del dueño y "cómo te ven"
 
@@ -202,10 +300,13 @@ cuántas veces se escuchó algo — es "qué está sonando", no una métrica.
 | `app_user.{bio, pronouns, location, timezone, avatar_url}` | Identidad extendida (migración 0014) |
 | `user_profile_link` | Enlaces externos ordenados, máx. 5 app-side |
 | `listen_entry` (lectura) | Fuente única de "En rotación" — escuchas de canción/álbum de los últimos 30 días, filtradas por audiencia. Sin tabla ni columna nueva |
+| `listen_entry_highlight` | Hasta 6 entradas de diario destacadas por usuario; anulan la matriz de visibilidad solo para esa entrada (migración 0029) |
 | `review` + `rating` (lectura) | Sección "Reseñas" — hasta 4 reseñas de álbum del dueño con su rating asociado, orden por `updated_at`. Sin tabla ni columna nueva |
-| `artist_follow` | Sección "Exploración" — artistas que el dueño sigue; también alimenta la afinidad (migración 0021, sin `status`) |
+| `rating_highlight` | Hasta 6 valoraciones destacadas por usuario, visibles sin filtro de audiencia (migración 0029) |
+| `artist_follow` | Sección "Exploración" — artistas que el dueño sigue; también alimenta la afinidad y la insignia "tú también" (migración 0021, sin `status`) |
 | `user_pinned_item` | Cuatro destacados, triple-FK nullable + CHECK `num_nonnulls = 1` |
-| `user_showcase` | Una fila por usuario; `anthem_recording_id` (`ON DELETE SET NULL`) |
+| `user_showcase` | Una fila por usuario; `anthem_recording_id` (`ON DELETE SET NULL`, la canción de la Tarjeta de Identidad); `defining_artist_id`/`defining_release_group_id` (`ON DELETE SET NULL`, el artista/álbum definitorios — migración 0030, revisa el `is_defining` sobre `user_pinned_item` de 0029) |
 | `user_album_pin` | Hasta 6 álbumes favoritos; FK a `favorite` (`ON DELETE CASCADE`), `position` 1–6 única por usuario (migración 0019) |
+| `favorite.audience` (default) | `public` para favoritos nuevos (antes `followers`); cambio a nivel de aplicación, no de columna — no retroactivo sobre filas existentes |
 | `release_group_tag` | Tags de género por álbum, sembrados |
 | `idx_rating_user` | Índice para la curva de valoraciones (migración 0015) |

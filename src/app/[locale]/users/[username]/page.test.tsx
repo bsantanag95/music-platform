@@ -6,14 +6,14 @@ import { PrivateThreshold } from "@/components/profiles/PrivateThreshold";
 import { ViewAsBanner } from "@/components/profiles/ViewAsBanner";
 import {
   AlbumFavoritesSection,
-  AnthemSection,
   ExplorationSection,
   FeaturedReviewsSection,
   HubSection,
+  IdentityCardSection,
   InRotationSection,
   OwnerEditors,
   PinnedSection,
-  ShowcaseSection,
+  RatingHighlightsSection,
 } from "./sections";
 import type { ProfileView } from "@/services/profiles/profile-view";
 
@@ -48,20 +48,21 @@ vi.mock("@/components/profiles/ViewAsBanner", () => ({ ViewAsBanner: () => null 
 vi.mock("./sections", () => ({
   OwnerEditors: () => null,
   HubSection: () => null,
-  ShowcaseSection: () => null,
+  IdentityCardSection: () => null,
   AlbumFavoritesSection: () => null,
+  RatingHighlightsSection: () => null,
   FeaturedReviewsSection: () => null,
   InRotationSection: () => null,
   ExplorationSection: () => null,
   PinnedSection: () => null,
-  AnthemSection: () => null,
-  FingerprintSection: () => null,
+  FingerprintSummarySection: () => null,
   RecencySection: () => null,
   AffinitySection: () => null,
   DiaryRail: () => null,
   FavoritesRail: () => null,
   ListsRail: () => null,
   CollectionRail: () => null,
+  Level3LinksSection: () => null,
 }));
 
 function findElement(node: unknown, type: unknown): { props?: Record<string, unknown> } | null {
@@ -206,34 +207,37 @@ describe("UserProfilePage", () => {
     expect(findElement(tree, ViewAsBanner)).toBeNull();
   });
 
-  it("vista pública: layout de dos columnas — himno y destacados por separado, sin ShowcaseSection", async () => {
+  it("vista pública: layout de dos columnas — Tarjeta de Identidad, destacados generales y valoraciones destacadas", async () => {
     resolveSession.mockResolvedValue({ user: { id: "viewer" } });
     getProfileView.mockResolvedValue(
       profile({ profileVisibility: "public", relation: "following", accessible: true }),
     );
 
     const tree = await render();
-    expect(findElement(tree, AnthemSection)).not.toBeNull();
+    expect(findElement(tree, IdentityCardSection)).not.toBeNull();
     expect(findElement(tree, PinnedSection)).not.toBeNull();
+    expect(findElement(tree, RatingHighlightsSection)).not.toBeNull();
     expect(findElement(tree, AlbumFavoritesSection)).not.toBeNull();
     expect(findElement(tree, InRotationSection)).not.toBeNull();
     expect(findElement(tree, ExplorationSection)).not.toBeNull();
-    expect(findElement(tree, ShowcaseSection)).toBeNull();
     expect(findElement(tree, HubSection)).toBeNull();
   });
 
-  it("vista del dueño: monta AlbumFavoritesSection, InRotationSection, ExplorationSection y ShowcaseSection", async () => {
+  it("vista del dueño: monta la misma composición que la vista pública (spec social-profiles, 'Composición visual única')", async () => {
     resolveSession.mockResolvedValue({ user: { id: "owner" } });
     getProfileView.mockResolvedValue(
       profile({ relation: "self", isOwner: true, accessible: true }),
     );
 
     const tree = await render();
+    expect(findElement(tree, IdentityCardSection)).not.toBeNull();
     expect(findElement(tree, AlbumFavoritesSection)).not.toBeNull();
+    expect(findElement(tree, RatingHighlightsSection)).not.toBeNull();
     expect(findElement(tree, FeaturedReviewsSection)).not.toBeNull();
     expect(findElement(tree, InRotationSection)).not.toBeNull();
     expect(findElement(tree, ExplorationSection)).not.toBeNull();
-    expect(findElement(tree, ShowcaseSection)).not.toBeNull();
+    // Las capas del dueño se superponen a la misma estructura, no la reemplazan.
+    expect(findElement(tree, OwnerEditors)).not.toBeNull();
   });
 
   it("vista del dueño: 'Reseñas' va después de los destacados y antes de 'En rotación'", async () => {
@@ -244,8 +248,8 @@ describe("UserProfilePage", () => {
 
     const tree = await render();
     expect(
-      orderOf(tree, [ShowcaseSection, FeaturedReviewsSection, InRotationSection]),
-    ).toEqual([ShowcaseSection, FeaturedReviewsSection, InRotationSection]);
+      orderOf(tree, [PinnedSection, FeaturedReviewsSection, InRotationSection]),
+    ).toEqual([PinnedSection, FeaturedReviewsSection, InRotationSection]);
   });
 
   it("vista pública: 'Reseñas' va después de los destacados y antes de 'En rotación'", async () => {
@@ -258,6 +262,19 @@ describe("UserProfilePage", () => {
     expect(
       orderOf(tree, [PinnedSection, FeaturedReviewsSection, InRotationSection]),
     ).toEqual([PinnedSection, FeaturedReviewsSection, InRotationSection]);
+  });
+
+  it("Tarjeta de Identidad va antes de Álbumes favoritos (Nivel 1 antes de Nivel 2)", async () => {
+    resolveSession.mockResolvedValue({ user: { id: "viewer" } });
+    getProfileView.mockResolvedValue(
+      profile({ profileVisibility: "public", relation: "following", accessible: true }),
+    );
+
+    const tree = await render();
+    expect(orderOf(tree, [IdentityCardSection, AlbumFavoritesSection])).toEqual([
+      IdentityCardSection,
+      AlbumFavoritesSection,
+    ]);
   });
 
   it("visitante autenticado bloqueado fuera: calcula el hint y lo pasa al umbral", async () => {

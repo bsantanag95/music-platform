@@ -23,6 +23,8 @@ const mocks = vi.hoisted(() => {
     getMyDiary: vi.fn(),
     getMyDiaryMonths: vi.fn(),
     createListenEntry: vi.fn(),
+    highlightListenEntry: vi.fn(),
+    unhighlightListenEntry: vi.fn(),
     getMyLists: vi.fn(),
     addItemToList: vi.fn(),
     toggleWantToListen: vi.fn(),
@@ -50,6 +52,8 @@ vi.mock("@/lib/api/diary", () => ({
   getMyDiary: mocks.getMyDiary,
   getMyDiaryMonths: mocks.getMyDiaryMonths,
   createListenEntry: mocks.createListenEntry,
+  highlightListenEntry: mocks.highlightListenEntry,
+  unhighlightListenEntry: mocks.unhighlightListenEntry,
 }));
 vi.mock("@/lib/api/lists", () => ({
   getMyLists: mocks.getMyLists,
@@ -435,6 +439,38 @@ describe("DiaryActivityList", () => {
     const row = screen.getByText("Vogue (version 2)").closest("li") as HTMLElement;
     await openRowMenu(user, row);
     expect(screen.queryByRole("menuitem", { name: "Quiero volver a escuchar" })).not.toBeInTheDocument();
+  });
+
+  it("destacar una entrada desde el menú la marca y ofrece 'Quitar destacado' luego", async () => {
+    const user = userEvent.setup();
+    mocks.highlightListenEntry.mockResolvedValue({ ...liked, isHighlighted: true });
+    renderWithQuery(<DiaryActivityList initial={initial} />);
+
+    const firstRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
+    await openRowMenu(user, firstRow);
+    await user.click(screen.getByRole("menuitem", { name: "Destacar en el perfil" }));
+
+    await waitFor(() => expect(mocks.highlightListenEntry).toHaveBeenCalledWith(liked.id));
+    expect(firstRow.className).toMatch(/bg-amber\/10/);
+    expect(screen.getByRole("status")).toHaveTextContent("Se destacó esta entrada en tu perfil.");
+
+    await openRowMenu(user, firstRow);
+    expect(screen.getByRole("menuitem", { name: "Quitar destacado" })).toBeInTheDocument();
+  });
+
+  it("quitar el destacado de una entrada ya destacada la revierte", async () => {
+    const user = userEvent.setup();
+    mocks.unhighlightListenEntry.mockResolvedValue({ ...liked, isHighlighted: false });
+    renderWithQuery(
+      <DiaryActivityList initial={{ entries: [{ ...liked, isHighlighted: true }, neutral], page: 1, pageSize: 20, hasNext: true }} />,
+    );
+
+    const firstRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
+    await openRowMenu(user, firstRow);
+    await user.click(screen.getByRole("menuitem", { name: "Quitar destacado" }));
+
+    await waitFor(() => expect(mocks.unhighlightListenEntry).toHaveBeenCalledWith(liked.id));
+    expect(screen.getByRole("status")).toHaveTextContent("Se quitó el destacado de esta entrada.");
   });
 
   it("carga más páginas al pulsar el botón", async () => {

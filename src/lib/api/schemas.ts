@@ -418,6 +418,10 @@ export const RatingSchema = z.object({
   detailedScore: z.number().int().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  // Solo poblado por `getRatings` (lectura); ausente en las respuestas de
+  // mutación (`upsertRating`), igual que los campos diary-only de
+  // `ListenEntrySchema`.
+  isHighlighted: z.boolean().optional(),
 });
 export const RatingMutationResponseSchema = z.object({ rating: RatingSchema });
 export const RatingAggregateSchema = z.object({
@@ -761,14 +765,34 @@ export const PinnedItemSchema = z.object({
   entity: ShowcaseEntitySchema,
 });
 
+// Tarjeta de Identidad (openspec: rework-user-profile): proyección de
+// artista/álbum definitorios + himno, ver `services/profiles/showcase.ts`.
+export const IdentityCardSchema = z.object({
+  artist: ShowcaseEntitySchema.nullable(),
+  album: ShowcaseEntitySchema.nullable(),
+  anthem: ShowcaseEntitySchema.nullable(),
+});
+export type IdentityCardDto = z.infer<typeof IdentityCardSchema>;
+
 export const ShowcaseSchema = z.object({
   pinned: z.array(PinnedItemSchema),
   anthem: ShowcaseEntitySchema.nullable(),
+  identityCard: IdentityCardSchema,
 });
 export type ShowcaseDto = z.infer<typeof ShowcaseSchema>;
 
 export const ShowcaseResponseSchema = z.object({ showcase: ShowcaseSchema });
 export type ShowcaseResponse = z.infer<typeof ShowcaseResponseSchema>;
+
+// Marcar/desmarcar un destacado como "me define" (openspec: rework-user-profile)
+// opera sobre la entidad, no sobre el id de la fila de destacado — así el
+// editor puede marcar un destacado recién agregado al borrador. Nunca una
+// canción: esa función la cumple el himno.
+export const DefiningTargetRequestSchema = z.object({
+  type: z.enum(["artist", "release-group"]),
+  id: z.uuid(),
+});
+export type DefiningTargetRequest = z.infer<typeof DefiningTargetRequestSchema>;
 
 // --- Álbumes favoritos del perfil (cambio redesign-profile-album-identity) ---
 
@@ -809,6 +833,21 @@ export const ReplaceAlbumFavoritesRequestSchema = z.object({
     .max(PROFILE_MAX_ALBUM_FAVORITES, `Máximo ${PROFILE_MAX_ALBUM_FAVORITES} álbumes favoritos`),
 });
 export type ReplaceAlbumFavoritesRequest = z.infer<typeof ReplaceAlbumFavoritesRequestSchema>;
+
+// --- Valoraciones destacadas (openspec: rework-user-profile) ---
+
+export const RatingHighlightSchema = z.object({
+  id: z.uuid(),
+  stars: z.string(),
+  detailedScore: z.number().int().nullable(),
+  entity: ShowcaseEntitySchema,
+});
+export type RatingHighlightDto = z.infer<typeof RatingHighlightSchema>;
+
+export const RatingHighlightsResponseSchema = z.object({
+  highlights: z.array(RatingHighlightSchema),
+});
+export type RatingHighlightsResponse = z.infer<typeof RatingHighlightsResponseSchema>;
 
 // --- Afinidad (cambio redesign-user-profile) ---
 
@@ -910,6 +949,11 @@ export const ListenEntrySchema = z.object({
   audience: DiaryAudienceSchema,
   createdAt: z.string(),
   target: ListenTargetInfoSchema,
+  // Destacada (openspec: rework-user-profile) — visible más allá de la
+  // audiencia de la entrada, ver spec `listen-diary`. Opcional: solo lo
+  // puebla el diario (mismo criterio que `artistName`/`albumId` más arriba,
+  // que solo puebla el feed) — el feed no participa de este concepto.
+  isHighlighted: z.boolean().optional(),
 });
 export type ListenEntry = z.infer<typeof ListenEntrySchema>;
 
