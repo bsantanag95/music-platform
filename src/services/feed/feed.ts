@@ -246,6 +246,22 @@ export const RECORDING_ALBUM_TITLE_SQL = (recordingIdCol: AnyColumn) =>
     LIMIT 1
   )`;
 
+// Carátula de un álbum representativo que contenga una grabación: el primero,
+// por fecha de alta, entre los que sí tienen carátula — mismo criterio que
+// `LIST_ITEM_SONG_COVER` en `services/lists/lists.ts` (duplicado ahí por ahora;
+// unificar si aparece un tercer consumidor). Usado por el himno del perfil
+// (openspec: rework-user-profile), que antes no mostraba carátula real.
+export const RECORDING_COVER_SQL = (recordingIdCol: AnyColumn) =>
+  sql<string | null>`(
+    SELECT rg.cover_thumb_url FROM track t
+    JOIN release r ON r.id = t.release_id
+    JOIN release_group rg ON rg.id = r.release_group_id
+    WHERE t.recording_id = ${recordingIdCol}
+      AND rg.cover_thumb_url IS NOT NULL
+    ORDER BY rg.created_at, rg.id
+    LIMIT 1
+  )`;
+
 // Condición de búsqueda por título del objetivo, sobre las mismas columnas de
 // artist/releaseGroup/recording que cada fuente (listen/favorite/rating/
 // comment) ya deja unidas, más el artista principal acreditado (álbumes y

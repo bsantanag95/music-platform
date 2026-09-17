@@ -121,11 +121,15 @@ export async function resolveFavoriteTarget(type: FavoriteTargetType, id: string
  * Si el favorito ya existe lo elimina (retorna null).
  * Si no existe lo crea.
  * Ambas operaciones son idempotentes.
+ *
+ * Default de audiencia `public` (openspec: rework-user-profile — antes
+ * `followers`). Solo afecta favoritos nuevos: uno ya existente conserva la
+ * audiencia que tenía, esta función no la toca en el camino de "ya existe".
  */
 export async function toggleFavorite(
   target: FavoriteTarget,
   userId: string,
-  audience: Audience = "followers",
+  audience: Audience = "public",
 ): Promise<FavoriteEntry | null> {
   // Validar que el objetivo exista antes de intentar crear el favorito.
   await resolveFavoriteTarget(target.type, target.id);

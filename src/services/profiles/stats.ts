@@ -46,6 +46,13 @@ export interface TasteFingerprint {
     collection: number;
     lists: number;
   };
+  /**
+   * Resumen cualitativo de hasta 3 frases para los niveles 1-2 del perfil
+   * (spec `taste-fingerprint`, "Resumen cualitativo para los niveles 1 y 2").
+   * Sin gráficos ni cifras — se deriva de los mismos datos ya filtrados por
+   * audiencia, nunca de una fuente nueva. Vacío cuando no hay datos suficientes.
+   */
+  summary: string[];
 }
 
 async function computeRatingStats(userId: string) {
@@ -178,6 +185,40 @@ async function countByAudience(
   return row?.n ?? 0;
 }
 
+// Promedio simple de estrellas sobre la curva ya filtrada por audiencia. Solo
+// se usa para clasificar el patrón de calificación en el resumen cualitativo
+// (generoso/exigente/parejo) — nunca se expone el número en sí, para respetar
+// "sin gráficos ni cifras" del resumen de niveles 1-2.
+function averageStars(curve: RatingCurvePoint[]): number | null {
+  const total = curve.reduce((sum, point) => sum + point.count, 0);
+  if (total === 0) return null;
+  const weighted = curve.reduce((sum, point) => sum + point.stars * point.count, 0);
+  return weighted / total;
+}
+
+function deriveSummary(params: {
+  decades: RidgePoint[];
+  genres: RidgePoint[];
+  ratingCurve: RatingCurvePoint[] | null;
+}): string[] {
+  const phrases: string[] = [];
+
+  const topDecade = [...params.decades].sort((a, b) => b.count - a.count)[0];
+  if (topDecade) phrases.push(`Escucha sobre todo música de los ${topDecade.label}`);
+
+  const topGenre = [...params.genres].sort((a, b) => b.count - a.count)[0];
+  if (topGenre) phrases.push(`Su género más presente es ${topGenre.label}`);
+
+  const avg = params.ratingCurve ? averageStars(params.ratingCurve) : null;
+  if (avg !== null) {
+    if (avg >= 4) phrases.push("Suele calificar con generosidad");
+    else if (avg <= 2.5) phrases.push("Es un calificador exigente");
+    else phrases.push("Sus calificaciones son parejas");
+  }
+
+  return phrases.slice(0, 3);
+}
+
 // Huella de gusto del perfil, filtrada por lo que el visitante puede ver.
 // Cálculo bajo demanda; `cache()` deduplica dentro del mismo request (la
 // página y el endpoint comparten el resultado). Devuelve null cuando el
@@ -221,10 +262,11 @@ export const getTasteFingerprint = cache(
     ]);
 
     const hasCurve = ratingStats !== null && ratingStats.total > 0;
+    const ratingCurve = hasCurve ? ratingStats.curve : null;
 
     return {
       ratingsVisible,
-      ratingCurve: hasCurve ? ratingStats.curve : null,
+      ratingCurve,
       totalRatings: ratingStats?.total ?? 0,
       decades,
       genres,
@@ -236,6 +278,7 @@ export const getTasteFingerprint = cache(
         collection: collectionCount,
         lists: listCount,
       },
+      summary: deriveSummary({ decades, genres, ratingCurve }),
     };
   },
 );

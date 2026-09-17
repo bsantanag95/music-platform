@@ -825,6 +825,17 @@ export const userShowcase = pgTable("user_showcase", {
   anthemRecordingId: uuid("anthem_recording_id").references(() => recording.id, {
     onDelete: "set null",
   }),
+  // Artista/álbum "me define" (openspec: rework-user-profile, migración
+  // 0030) — referencias directas, igual criterio que anthemRecordingId:
+  // cualquier entidad válida del catálogo, sin requerir que además sea un
+  // destacado o un favorito (antes vivía en user_pinned_item.is_defining,
+  // lo que dejaba "Álbumes favoritos" sin forma de marcar un definitorio).
+  definingArtistId: uuid("defining_artist_id").references(() => artist.id, {
+    onDelete: "set null",
+  }),
+  definingReleaseGroupId: uuid("defining_release_group_id").references(() => releaseGroup.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -899,6 +910,53 @@ export type UserShowcaseRow = typeof userShowcase.$inferSelect;
 export type ReleaseGroupTagRow = typeof releaseGroupTag.$inferSelect;
 export type UserAlbumPinRow = typeof userAlbumPin.$inferSelect;
 export type ArtistFollowRow = typeof artistFollow.$inferSelect;
+
+// Valoraciones destacadas del perfil (openspec: rework-user-profile). Tabla
+// de señal aparte — mismo motivo que user_list_pin/user_list_featured: no
+// tocar rating.updated_at, para no disparar eventos de feed. Presencia de
+// fila = destacada; una valoración destacada se vuelve visible para
+// cualquier visitante con acceso al perfil, sin importar la relación de
+// seguimiento (ver spec `rating-highlights`).
+export const ratingHighlight = pgTable(
+  "rating_highlight",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    ratingId: uuid("rating_id")
+      .notNull()
+      .references(() => rating.id, { onDelete: "cascade" }),
+    highlightedAt: timestamp("highlighted_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.ratingId] }),
+    index("idx_rating_highlight_user_highlighted").on(t.userId, t.highlightedAt),
+  ],
+);
+
+// Entradas de diario destacadas del perfil (openspec: rework-user-profile).
+// Misma razón de tabla aparte que rating_highlight: no tocar
+// listen_entry.updated_at. Una entrada destacada anula la matriz de
+// visibilidad general del diario (ver spec `diary-visibility`).
+export const listenEntryHighlight = pgTable(
+  "listen_entry_highlight",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    listenEntryId: uuid("listen_entry_id")
+      .notNull()
+      .references(() => listenEntry.id, { onDelete: "cascade" }),
+    highlightedAt: timestamp("highlighted_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.listenEntryId] }),
+    index("idx_listen_entry_highlight_user_highlighted").on(t.userId, t.highlightedAt),
+  ],
+);
+
+export type RatingHighlightRow = typeof ratingHighlight.$inferSelect;
+export type ListenEntryHighlightRow = typeof listenEntryHighlight.$inferSelect;
 
 export const comment = pgTable(
   "comment",

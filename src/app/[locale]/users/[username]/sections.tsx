@@ -14,6 +14,7 @@ import { getProfileReviews } from "@/services/profiles/reviews";
 import { listProfileFollowedArtists } from "@/services/profiles/exploration";
 import { getProfileRecency } from "@/services/profiles/recency";
 import { getProfileAffinity } from "@/services/profiles/affinity";
+import { getProfileRatingHighlights } from "@/services/rating-highlights/rating-highlights";
 import { countPendingFollowRequests } from "@/services/social/following";
 import type { ProfileView } from "@/services/profiles/profile-view";
 import { ProfileAffinity } from "@/components/profiles/ProfileAffinity";
@@ -22,13 +23,15 @@ import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
 import { OwnerShowcaseEditor } from "@/components/profiles/OwnerShowcaseEditor";
 import { OwnerAlbumFavoritesEditor } from "@/components/profiles/OwnerAlbumFavoritesEditor";
-import { TasteFingerprint } from "@/components/profiles/TasteFingerprint";
+import { FingerprintSummary } from "@/components/profiles/FingerprintSummary";
 import { AlbumFavorites } from "@/components/profiles/AlbumFavorites";
 import { ProfileReviews } from "@/components/profiles/ProfileReviews";
+import { RatingHighlights } from "@/components/profiles/RatingHighlights";
 import { InRotation } from "@/components/profiles/InRotation";
 import { ExploreSection } from "@/components/profiles/ExploreSection";
 import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
-import { AnthemStrip } from "@/components/profiles/AnthemStrip";
+import { IdentityCard } from "@/components/profiles/IdentityCard";
+import { ProfileLevel3Links } from "@/components/profiles/ProfileLevel3Links";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
 import { ProfileRecency } from "@/components/profiles/ProfileRecency";
 import { DiaryList } from "@/components/diary/DiaryList";
@@ -76,7 +79,7 @@ export async function OwnerEditors({ profile }: { profile: ProfileView }) {
       />
       <OwnerLinksEditor initialLinks={profile.links} />
       <OwnerShowcaseEditor initial={showcase} />
-      <OwnerAlbumFavoritesEditor initial={albumFavorites} />
+      <OwnerAlbumFavoritesEditor initial={albumFavorites} identityCard={showcase.identityCard} />
     </section>
   );
 }
@@ -84,12 +87,19 @@ export async function OwnerEditors({ profile }: { profile: ProfileView }) {
 // La sección de identidad cultural: los álbumes que definen a esta persona,
 // arriba de los destacados. Se rinde en los niveles autorizado y dueño; el
 // componente colapsa si el conjunto visible está vacío
-// (spec profile-album-identity).
+// (spec profile-album-identity). Recibe `ownerId` además de username/viewerId
+// para poder excluir el álbum definitorio (openspec: rework-user-profile) —
+// ese vive en la Tarjeta de Identidad, no se repite acá.
 export async function AlbumFavoritesSection({
   username,
   viewerId,
-}: Omit<SectionProps, "isOwn">) {
-  return <AlbumFavorites albums={await getProfileAlbumFavorites(username, viewerId)} />;
+  ownerId,
+}: Omit<SectionProps, "isOwn"> & { ownerId: string }) {
+  const [albums, { identityCard }] = await Promise.all([
+    getProfileAlbumFavorites(username, viewerId),
+    getShowcase(ownerId),
+  ]);
+  return <AlbumFavorites albums={albums} identityCard={identityCard} />;
 }
 
 // "Reseñas": las reseñas de álbum más recientes del dueño. Clúster de
@@ -116,45 +126,60 @@ export async function InRotationSection({
   return data ? <InRotation data={data} /> : null;
 }
 
-// "Exploración": los artistas que el dueño sigue. Se rinde en los niveles
-// autorizado y dueño, después de la huella de gusto. No aparece si el dueño no
-// sigue a ningún artista (spec artist-following).
+// "Exploración": los artistas que el dueño sigue, en el Nivel 2. Único
+// momento visualmente "alto" del perfil (openspec: rework-user-profile) — de
+// ahí que además reciba el subconjunto de artistas seguidos en común con el
+// visitante (ya calculado por el bloque de afinidad, `cache()` evita la
+// doble consulta) para marcarlos con la insignia "tú también". No aparece si
+// el dueño no sigue a ningún artista (spec artist-following).
 export async function ExplorationSection({
   username,
   viewerId,
 }: Omit<SectionProps, "isOwn">) {
-  return <ExploreSection artists={await listProfileFollowedArtists(username, viewerId)} />;
+  const [artists, affinity] = await Promise.all([
+    listProfileFollowedArtists(username, viewerId),
+    getProfileAffinity(username, viewerId),
+  ]);
+  const sharedArtistIds = affinity
+    ? new Set(affinity.sharedFollowedArtists.map((entity) => entity.id))
+    : undefined;
+  return <ExploreSection artists={artists} sharedArtistIds={sharedArtistIds} />;
 }
 
-// El showcase (destacados + himno) se compone en dos secciones para el layout
-// de dos columnas de la vista pública: los destacados van en la columna
-// principal, el himno en la barra lateral. `getShowcase` está memoizada por
-// request, así que no hay doble consulta.
-export async function ShowcaseSection({ ownerId }: { ownerId: string }) {
-  const showcase = await getShowcase(ownerId);
-  if (showcase.pinned.length === 0 && !showcase.anthem) return null;
-  return (
-    <>
-      {showcase.pinned.length > 0 && <PinnedShowcase pinned={showcase.pinned} />}
-      {showcase.anthem && <AnthemStrip anthem={showcase.anthem} />}
-    </>
-  );
+// Tarjeta de Identidad — Nivel 1 (openspec: rework-user-profile): el artista y
+// el álbum marcados "me define" entre los destacados, más el himno. Sustituye
+// al antiguo `AnthemSection` en la barra lateral: el himno solo ya no alcanza
+// para representar "quién es esta persona" en el primer vistazo.
+export async function IdentityCardSection({ ownerId }: { ownerId: string }) {
+  const { identityCard } = await getShowcase(ownerId);
+  return <IdentityCard identityCard={identityCard} />;
 }
 
 export async function PinnedSection({ ownerId }: { ownerId: string }) {
-  const { pinned } = await getShowcase(ownerId);
-  return pinned.length > 0 ? <PinnedShowcase pinned={pinned} /> : null;
+  const { pinned, identityCard } = await getShowcase(ownerId);
+  return pinned.length > 0 ? <PinnedShowcase pinned={pinned} identityCard={identityCard} /> : null;
 }
 
-export async function AnthemSection({ ownerId }: { ownerId: string }) {
-  const { anthem } = await getShowcase(ownerId);
-  return anthem ? <AnthemStrip anthem={anthem} /> : null;
+// "Valoraciones destacadas" — Nivel 2 (spec `rating-highlights`): curaduría
+// consciente, visible más allá de la relación de seguimiento del visitante.
+export async function RatingHighlightsSection({
+  username,
+  viewerId,
+}: Omit<SectionProps, "isOwn">) {
+  const highlights = await getProfileRatingHighlights(username, viewerId);
+  return <RatingHighlights highlights={highlights} />;
 }
 
-export async function FingerprintSection({ username, viewerId }: Omit<SectionProps, "isOwn">) {
+// Resumen cualitativo de la huella de gusto — Nivel 1-2 (spec
+// `taste-fingerprint`, "Resumen cualitativo"): hasta 3 frases, sin gráficos.
+// La huella completa (curvas, crestas) vive en /users/[username]/fingerprint.
+export async function FingerprintSummarySection({
+  username,
+  viewerId,
+}: Omit<SectionProps, "isOwn">) {
   const fingerprint = await getTasteFingerprint(username, viewerId);
   if (!fingerprint) return null;
-  return <TasteFingerprint fingerprint={fingerprint} />;
+  return <FingerprintSummary summary={fingerprint.summary} />;
 }
 
 export async function RecencySection({ username, viewerId }: Omit<SectionProps, "isOwn">) {
@@ -175,7 +200,7 @@ export async function DiaryRail({ username, viewerId, isOwn }: SectionProps) {
     return isOwn ? <EmptyRailForOwner label={t("diaryTitle")} message={t("railEmptyOwn")} /> : null;
   }
   return (
-    <ProfileRail label={t("diaryTitle")} count={initial.entries.length}>
+    <ProfileRail id="diario" label={t("diaryTitle")} count={initial.entries.length}>
       <DiaryList
         initial={initial}
         readOnly
@@ -194,7 +219,7 @@ export async function FavoritesRail({ username, viewerId, isOwn }: SectionProps)
     ) : null;
   }
   return (
-    <ProfileRail label={t("favoritesTitle")} count={initial.favorites.length}>
+    <ProfileRail id="favoritos" label={t("favoritesTitle")} count={initial.favorites.length}>
       <FavoritesWall initial={initial} readOnly username={username} />
     </ProfileRail>
   );
@@ -208,7 +233,7 @@ export async function ListsRail({ username, viewerId, isOwn }: SectionProps) {
     return isOwn ? <EmptyRailForOwner label={t("listsTitle")} message={t("railEmptyOwn")} /> : null;
   }
   return (
-    <ProfileRail label={t("listsTitle")} count={initial.lists.length}>
+    <ProfileRail id="listas" label={t("listsTitle")} count={initial.lists.length}>
       <ListsList
         initial={initial}
         username={username}
@@ -227,8 +252,35 @@ export async function CollectionRail({ username, viewerId, isOwn }: SectionProps
     ) : null;
   }
   return (
-    <ProfileRail label={t("collectionTitle")} count={initial.entries.length}>
+    <ProfileRail id="coleccion" label={t("collectionTitle")} count={initial.entries.length}>
       <CollectionShelf initial={initial} readOnly username={username} />
     </ProfileRail>
+  );
+}
+
+// Puertas al Nivel 3 (spec `social-profiles`): comprueba livianamente qué
+// estantes tienen contenido para no enlazar a un ancla vacía. Independiente
+// y con su propio <Suspense> en `page.tsx`, igual que el resto de las
+// secciones — no bloquea ni depende de los estantes que referencia.
+export async function Level3LinksSection({ username, viewerId }: Omit<SectionProps, "isOwn">) {
+  const [diary, favorites, lists, collection, fingerprint] = await Promise.all([
+    listUserDiary(username, viewerId, 1, 1),
+    listUserFavorites(username, viewerId, 1, 1),
+    listUserLists(username, viewerId, 1, 1),
+    listProfileCollection(username, viewerId, 1, 1),
+    getTasteFingerprint(username, viewerId),
+  ]);
+
+  return (
+    <ProfileLevel3Links
+      username={username}
+      has={{
+        diary: diary.entries.length > 0,
+        favorites: favorites.favorites.length > 0,
+        lists: lists.lists.length > 0,
+        collection: collection.entries.length > 0,
+      }}
+      hasFingerprint={Boolean(fingerprint)}
+    />
   );
 }

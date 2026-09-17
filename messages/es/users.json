@@ -74,6 +74,7 @@
     "noResultsDescription": "Ningún artista seguido coincide con la búsqueda."
   },
   "explorationHeading": "Exploración",
+  "explorationMutualBadge": "Tú también",
   "journeyStateInProgress": "Recorrido en curso",
   "journeyStateComplete": "Recorrido completo",
   "requestsTitle": "Solicitudes de seguimiento",
@@ -140,6 +141,15 @@
       "noRecordingFavorites": "Marcá una canción como favorita para elegir un himno."
     }
   },
+  "identityCard": {
+    "artistHeading": "Artista que me define",
+    "albumHeading": "Álbum que me define",
+    "markDefining": "Marcar como definitorio",
+    "unmarkDefining": "Quitar de la Tarjeta de Identidad"
+  },
+  "ratingHighlights": {
+    "heading": "Valoraciones destacadas"
+  },
   "albumFavorites": {
     "heading": "Álbumes favoritos",
     "edit": {
@@ -205,5 +215,13 @@
   "diaryTitle": "Diario",
   "favoritesTitle": "Favoritos",
   "listsTitle": "Listas",
-  "collectionTitle": "Colección"
+  "collectionTitle": "Colección",
+  "level3": {
+    "navLabel": "Explorar más del perfil",
+    "diary": "Diario completo",
+    "favorites": "Todos los favoritos",
+    "lists": "Todas las listas",
+    "collection": "Colección completa",
+    "fingerprint": "Huella de gusto completa"
+  }
 }

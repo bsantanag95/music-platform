@@ -18,6 +18,7 @@ const base: TasteFingerprintData = {
   genres: [],
   genreDataAvailable: false,
   split: { ratedArtists: 0, ratedAlbums: 0, ratedSongs: 0, collection: 0, lists: 0 },
+  summary: [],
 };
 
 describe("TasteFingerprint", () => {

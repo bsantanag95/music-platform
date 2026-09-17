@@ -1,6 +1,14 @@
 import { and, desc, eq, gte, ilike, inArray, isNull, lt, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { artist, appUser, listenEntry, recording, releaseGroup, userFollow } from "@/db/schema";
+import {
+  artist,
+  appUser,
+  listenEntry,
+  listenEntryHighlight,
+  recording,
+  releaseGroup,
+  userFollow,
+} from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import type { SocialTargetType } from "@/lib/api/schemas";
 import { PRIMARY_ARTIST_ID_SQL, PRIMARY_ARTIST_SQL } from "@/services/feed/feed";
@@ -13,6 +21,11 @@ import {
   type ListenReaction,
 } from "./types";
 import { audiencesForProfile } from "./visibility";
+
+// Tope de entradas de diario destacadas por usuario (spec `listen-diary`,
+// "Destacar una entrada del diario"). Paridad con `RATING_HIGHLIGHT_MAX` y
+// `PROFILE_MAX_ALBUM_FAVORITES` — 6, sin relación funcional entre ellas.
+const LISTEN_ENTRY_HIGHLIGHT_MAX = 6;
 
 type TargetColumn = "artistId" | "releaseGroupId" | "recordingId";
 
@@ -45,6 +58,10 @@ export interface DiaryEntry {
   audience: DiaryAudience;
   createdAt: string;
   target: DiaryTargetInfo;
+  /** Destacada (spec `listen-diary`, "Destacar una entrada del diario") — visible
+   * más allá de su audiencia normal. `false` cuando la fila no trae el join
+   * (p. ej. el feed, que no participa de este concepto). */
+  isHighlighted: boolean;
 }
 
 export interface UpdateListenEntryChanges {
@@ -304,12 +321,25 @@ export async function listUserDiary(
   const profile = await getProfileByUsername(username, viewerId);
   const audiences = audiencesForProfile(profile);
 
+  // Sin acceso al perfil (privado sin autorización, o bloqueo): nada, ni
+  // siquiera las entradas destacadas — la excepción de "destacada" aplica
+  // sobre la matriz de audiencia, no sobre el requisito de acceso al perfil
+  // (spec `diary-visibility`, "Perfil privado sin relación aprobada").
   if (audiences.length === 0) {
     return { entries: [], page, pageSize, hasNext: false };
   }
 
+  // Una entrada destacada es visible más allá de su audiencia normal (spec
+  // `diary-visibility`, "Las entradas destacadas anulan la matriz de
+  // visibilidad") — de ahí el OR contra `isHighlighted` además del filtro de
+  // audiencia habitual.
   const rows = await selectEntries()
-    .where(and(eq(listenEntry.userId, profile.id), inArray(listenEntry.audience, audiences)))
+    .where(
+      and(
+        eq(listenEntry.userId, profile.id),
+        or(inArray(listenEntry.audience, audiences), eq(listenEntryHighlight.userId, profile.id)),
+      ),
+    )
     .orderBy(desc(listenEntry.createdAt), desc(listenEntry.id))
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
@@ -320,6 +350,53 @@ export async function listUserDiary(
     pageSize,
     hasNext: rows.length > pageSize,
   };
+}
+
+/**
+ * Destaca una entrada propia del diario, sin tocar su audiencia. Idempotente;
+ * rechaza una séptima con `VALIDATION_ERROR` (spec `listen-diary`, "Destacar
+ * una entrada del diario").
+ */
+export async function highlightListenEntry(userId: string, entryId: string): Promise<DiaryEntry> {
+  const [existing] = await db
+    .select({ id: listenEntry.id, userId: listenEntry.userId })
+    .from(listenEntry)
+    .where(eq(listenEntry.id, entryId))
+    .limit(1);
+  if (!existing || existing.userId !== userId) {
+    throw new ApiError("LISTEN_ENTRY_NOT_FOUND", 404, "La escucha no existe");
+  }
+
+  const [alreadyHighlighted] = await db
+    .select({ listenEntryId: listenEntryHighlight.listenEntryId })
+    .from(listenEntryHighlight)
+    .where(and(eq(listenEntryHighlight.userId, userId), eq(listenEntryHighlight.listenEntryId, entryId)))
+    .limit(1);
+
+  if (!alreadyHighlighted) {
+    const [countRow] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(listenEntryHighlight)
+      .where(eq(listenEntryHighlight.userId, userId));
+    if ((countRow?.n ?? 0) >= LISTEN_ENTRY_HIGHLIGHT_MAX) {
+      throw new ApiError(
+        "VALIDATION_ERROR",
+        400,
+        `Máximo ${LISTEN_ENTRY_HIGHLIGHT_MAX} entradas destacadas`,
+      );
+    }
+    await db.insert(listenEntryHighlight).values({ userId, listenEntryId: entryId });
+  }
+
+  return getOwnedEntry(entryId, userId);
+}
+
+/** Quita el destacado de una entrada propia del diario. Idempotente. */
+export async function unhighlightListenEntry(userId: string, entryId: string): Promise<DiaryEntry> {
+  await db
+    .delete(listenEntryHighlight)
+    .where(and(eq(listenEntryHighlight.userId, userId), eq(listenEntryHighlight.listenEntryId, entryId)));
+  return getOwnedEntry(entryId, userId);
 }
 
 /**
@@ -416,11 +493,19 @@ function selectEntries() {
       releaseTitle: releaseGroup.title,
       releaseCover: releaseGroup.coverThumbUrl,
       recordingTitle: recording.title,
+      isHighlighted: sql<boolean>`${listenEntryHighlight.userId} IS NOT NULL`,
     })
     .from(listenEntry)
     .leftJoin(artist, eq(listenEntry.artistId, artist.id))
     .leftJoin(releaseGroup, eq(listenEntry.releaseGroupId, releaseGroup.id))
-    .leftJoin(recording, eq(listenEntry.recordingId, recording.id));
+    .leftJoin(recording, eq(listenEntry.recordingId, recording.id))
+    .leftJoin(
+      listenEntryHighlight,
+      and(
+        eq(listenEntryHighlight.listenEntryId, listenEntry.id),
+        eq(listenEntryHighlight.userId, listenEntry.userId),
+      ),
+    );
 }
 
 function serializeEntry(row: {
@@ -439,6 +524,7 @@ function serializeEntry(row: {
   releaseTitle: string | null;
   releaseCover: string | null;
   recordingTitle: string | null;
+  isHighlighted?: boolean;
 }): DiaryEntry {
   let target: DiaryTargetInfo;
   if (row.artistId) {
@@ -456,6 +542,7 @@ function serializeEntry(row: {
     audience: row.audience as DiaryAudience,
     createdAt: row.createdAt.toISOString(),
     target,
+    isHighlighted: row.isHighlighted ?? false,
   };
 }
 

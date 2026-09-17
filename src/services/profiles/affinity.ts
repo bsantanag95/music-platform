@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, artistFollow, favorite, rating, recording, releaseGroup, userFollow } from "@/db/schema";
@@ -178,7 +179,11 @@ async function resolveEntities(refs: EntityRef[]): Promise<ShowcaseEntity[]> {
 // null cuando no aplica: sin sesión, el propio dueño, perfil no accesible, o
 // relación de bloqueo. `sharedHighRatings` solo se calcula si el visitante
 // tiene permitido ver las valoraciones del dueño (dueño o seguidor aprobado).
-export async function getProfileAffinity(
+//
+// `cache()` deduplica dentro del mismo request (openspec: rework-user-profile
+// — el bloque de afinidad y la insignia "tú también" de Exploración leen el
+// mismo cálculo), mismo criterio que `getTasteFingerprint`.
+export const getProfileAffinity = cache(async function getProfileAffinity(
   username: string,
   viewerId: string | null,
 ): Promise<ProfileAffinity | null> {
@@ -225,4 +230,4 @@ export async function getProfileAffinity(
   }
 
   return { sharedFavorites, sharedHighRatings, sharedFollowedArtists, mutualFollowers: mutual };
-}
+});

@@ -6,12 +6,14 @@ import { PgDialect } from "drizzle-orm/pg-core";
 import {
   createListenEntry,
   deleteListenEntry,
+  highlightListenEntry,
   listMyDiary,
   listMyDiaryMonths,
   listMyListensForRecording,
   listUserDiary,
   listFeed,
   resolveDiaryTarget,
+  unhighlightListenEntry,
   updateListenEntry,
   type DiaryTarget,
 } from "./diary";
@@ -294,6 +296,62 @@ describe("servicio del diario", () => {
     });
   });
 
+  it("highlightListenEntry destaca una entrada propia y devuelve la entrada ampliada", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(whereLimit([{ id: entryRow.id, userId: user }])) // dueño
+      .mockReturnValueOnce(whereLimit([])) // no estaba destacada
+      .mockReturnValueOnce(whereTerminal([{ n: 1 }])) // conteo bajo el tope
+      .mockReturnValueOnce(joinLimit([{ ...entryRow, isHighlighted: true }])); // getOwnedEntry
+    mocks.db.insert.mockReturnValue({ values: vi.fn().mockResolvedValue(undefined) });
+
+    const updated = await highlightListenEntry(user, entryRow.id);
+
+    expect(mocks.db.insert).toHaveBeenCalled();
+    expect(updated.isHighlighted).toBe(true);
+  });
+
+  it("highlightListenEntry es idempotente: ya destacada, no vuelve a insertar", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(whereLimit([{ id: entryRow.id, userId: user }]))
+      .mockReturnValueOnce(whereLimit([{ listenEntryId: entryRow.id }])) // ya destacada
+      .mockReturnValueOnce(joinLimit([{ ...entryRow, isHighlighted: true }]));
+
+    await highlightListenEntry(user, entryRow.id);
+
+    expect(mocks.db.insert).not.toHaveBeenCalled();
+  });
+
+  it("highlightListenEntry rechaza una séptima entrada destacada con VALIDATION_ERROR", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(whereLimit([{ id: entryRow.id, userId: user }]))
+      .mockReturnValueOnce(whereLimit([]))
+      .mockReturnValueOnce(whereTerminal([{ n: 6 }])); // ya en el tope
+
+    await expect(highlightListenEntry(user, entryRow.id)).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+      status: 400,
+    });
+    expect(mocks.db.insert).not.toHaveBeenCalled();
+  });
+
+  it("highlightListenEntry rechaza una entrada ajena o inexistente con LISTEN_ENTRY_NOT_FOUND", async () => {
+    mocks.db.select.mockReturnValueOnce(whereLimit([]));
+    await expect(highlightListenEntry(user, entryRow.id)).rejects.toMatchObject({
+      code: "LISTEN_ENTRY_NOT_FOUND",
+      status: 404,
+    });
+  });
+
+  it("unhighlightListenEntry quita el destacado de forma idempotente", async () => {
+    mocks.db.delete.mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+    mocks.db.select.mockReturnValueOnce(joinLimit([{ ...entryRow, isHighlighted: false }]));
+
+    const updated = await unhighlightListenEntry(user, entryRow.id);
+
+    expect(mocks.db.delete).toHaveBeenCalled();
+    expect(updated.isHighlighted).toBe(false);
+  });
+
   it("lista el diario paginado con hasNext y orden descendente", async () => {
     mocks.db.select.mockReturnValue(joinPaged([entryRow, entryRow]));
     const result = await listMyDiary(user, 1, 1);
@@ -539,6 +597,27 @@ describe("servicio del diario", () => {
       expect(result.entries).toHaveLength(1);
       expect(result.hasNext).toBe(false);
       expect(mocks.getProfileByUsername).toHaveBeenCalledWith("testuser", viewer);
+    });
+
+    it("una entrada destacada anula la matriz de audiencia (spec diary-visibility)", async () => {
+      mocks.getProfileByUsername.mockResolvedValue({
+        id: owner,
+        username: "testuser",
+        displayName: "Test",
+        profileVisibility: "public",
+        relation: "none",
+        blockedByMe: false,
+      });
+      const helper = joinPagedCapturing([entryRow]);
+      mocks.db.select.mockReturnValue(helper);
+
+      await listUserDiary("testuser", viewer, 1, 20);
+
+      const { sql } = dialect.sqlToQuery(helper.where.mock.calls[0]![0]);
+      // El OR contra la tabla de destacados es lo que permite ver una entrada
+      // fuera de su audiencia normal — sin esto, un visitante sin relación
+      // solo vería `public`, nunca una entrada `private`/`followers` destacada.
+      expect(sql).toContain("listen_entry_highlight");
     });
 
     it("devuelve lista vacía sin permiso (perfil privado sin seguir)", async () => {

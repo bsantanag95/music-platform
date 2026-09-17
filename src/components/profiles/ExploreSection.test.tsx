@@ -62,3 +62,26 @@ describe("ExploreSection — faceta de recorrido de artista", () => {
     expect(screen.queryByText(/\d+ recorrido/i)).not.toBeInTheDocument();
   });
 });
+
+describe("ExploreSection — insignia de afinidad 'tú también' (openspec: rework-user-profile)", () => {
+  it("marca solo los artistas presentes en sharedArtistIds", async () => {
+    render(
+      await ExploreSection({
+        artists: [artist({ id: "a1", name: "Radiohead" }), artist({ id: "a2", name: "Boygenius" })],
+        sharedArtistIds: new Set(["a1"]),
+      }),
+    );
+    const badges = screen.getAllByText("explorationMutualBadge");
+    expect(badges).toHaveLength(1);
+  });
+
+  it("sin sharedArtistIds (dueño propio o visitante sin sesión) no muestra ninguna insignia", async () => {
+    render(await ExploreSection({ artists: [artist({ id: "a1" })] }));
+    expect(screen.queryByText("explorationMutualBadge")).not.toBeInTheDocument();
+  });
+
+  it("con sharedArtistIds vacío tampoco muestra ninguna insignia", async () => {
+    render(await ExploreSection({ artists: [artist({ id: "a1" })], sharedArtistIds: new Set() }));
+    expect(screen.queryByText("explorationMutualBadge")).not.toBeInTheDocument();
+  });
+});

@@ -6,16 +6,19 @@ import { Button } from "@/components/ui/Button";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { apiFetch, ApiError } from "@/lib/api/client";
 import { getMyFavorites } from "@/lib/api/favorites";
-import { AlbumFavoritesResponseSchema, type Favorite } from "@/lib/api/schemas";
+import { AlbumFavoritesResponseSchema, ShowcaseResponseSchema, type Favorite } from "@/lib/api/schemas";
 import { PROFILE_MAX_ALBUM_FAVORITES } from "@/services/social/types";
 import type { AlbumFavorite } from "@/services/profiles/album-favorites";
+import type { IdentityCard } from "@/services/profiles/showcase";
 
 interface OwnerAlbumFavoritesEditorProps {
   initial: AlbumFavorite[];
+  identityCard: IdentityCard;
 }
 
 interface Row {
   favoriteId: string;
+  releaseGroupId: string;
   title: string;
   artistName: string | null;
   coverThumbUrl: string | null;
@@ -24,6 +27,7 @@ interface Row {
 function favoriteToRow(favorite: Favorite): Row {
   return {
     favoriteId: favorite.id,
+    releaseGroupId: favorite.target.id,
     title: favorite.target.title,
     artistName: favorite.target.artistName ?? null,
     coverThumbUrl: favorite.target.coverThumbUrl,
@@ -34,19 +38,25 @@ function favoriteToRow(favorite: Favorite): Row {
 // destacados (memoria list-detail-scope) NO hay buscador de catálogo: se elige
 // de los favoritos de álbum ya marcados. Hasta 6, ordenables. Es una
 // declaración, no un ranking: sin notas ni estrellas
-// (openspec: redesign-profile-album-identity).
-export function OwnerAlbumFavoritesEditor({ initial }: OwnerAlbumFavoritesEditorProps) {
+// (openspec: redesign-profile-album-identity). El marcador "me define"
+// (openspec: rework-user-profile) vive acá también, no solo en Destacados —
+// el álbum definitorio es una referencia directa en user_showcase, así que
+// no hace falta duplicar el álbum como destacado aparte para marcarlo.
+export function OwnerAlbumFavoritesEditor({ initial, identityCard: initialIdentityCard }: OwnerAlbumFavoritesEditorProps) {
   const t = useTranslations("users");
   const tErrors = useTranslations("errors");
 
   const [rows, setRows] = useState<Row[]>(
     initial.map((album) => ({
       favoriteId: album.favoriteId,
+      releaseGroupId: album.target.id,
       title: album.target.title,
       artistName: album.target.artistName,
       coverThumbUrl: album.target.coverThumbUrl,
     })),
   );
+  const [identityCard, setIdentityCard] = useState<IdentityCard>(initialIdentityCard);
+  const [definingErrorCode, setDefiningErrorCode] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<Favorite[] | null>(null);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -90,6 +100,20 @@ export function OwnerAlbumFavoritesEditor({ initial }: OwnerAlbumFavoritesEditor
     }
   }
 
+  async function setDefiningAlbum(releaseGroupId: string, defining: boolean) {
+    setDefiningErrorCode(null);
+    try {
+      const data = await apiFetch("/api/me/profile/pinned/defining", ShowcaseResponseSchema, {
+        method: defining ? "PUT" : "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "release-group", id: releaseGroupId }),
+      });
+      setIdentityCard(data.showcase.identityCard);
+    } catch (error) {
+      setDefiningErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
+    }
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <h3 className="font-display text-sm text-paper-muted">{t("albumFavorites.edit.heading")}</h3>
@@ -111,6 +135,18 @@ export function OwnerAlbumFavoritesEditor({ initial }: OwnerAlbumFavoritesEditor
               )}
             </span>
             <span className="flex gap-1">
+              <Button
+                type="button"
+                variant={identityCard.album?.id === row.releaseGroupId ? "primary" : "ghost"}
+                aria-label={t(
+                  identityCard.album?.id === row.releaseGroupId
+                    ? "identityCard.unmarkDefining"
+                    : "identityCard.markDefining",
+                )}
+                onClick={() => void setDefiningAlbum(row.releaseGroupId, identityCard.album?.id !== row.releaseGroupId)}
+              >
+                {identityCard.album?.id === row.releaseGroupId ? "★" : "☆"}
+              </Button>
               <Button
                 type="button"
                 variant="ghost"
@@ -191,6 +227,11 @@ export function OwnerAlbumFavoritesEditor({ initial }: OwnerAlbumFavoritesEditor
           </span>
         )}
       </div>
+      {definingErrorCode && (
+        <span role="alert" className="font-data text-xs text-danger">
+          {tErrors(`${definingErrorCode}.description`)}
+        </span>
+      )}
 
       {errorCode && (
         <span role="alert" className="font-data text-xs text-danger">
