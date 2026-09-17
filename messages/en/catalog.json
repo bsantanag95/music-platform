@@ -178,7 +178,7 @@
     "editReviewLabel": "Edit review",
     "deleteReviewConfirm": "Delete your review permanently? This cannot be undone. Your rating is left untouched.",
     "reviewLoadMore": "Load more reviews",
-    "reviewByLabel": "Review by {name}",
+    "reviewByPrefix": "Review by",
     "reviewShowMore": "Show more",
     "reviewShowLess": "Show less",
     "report": "Report",

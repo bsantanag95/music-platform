@@ -145,6 +145,8 @@
     "artistHeading": "Artista que me define",
     "albumHeading": "Álbum que me define",
     "songHeading": "Canción que me define",
+    "artistLabel": "Artista",
+    "albumLabel": "Álbum",
     "markDefining": "Marcar como definitorio",
     "unmarkDefining": "Quitar de la Tarjeta de Identidad",
     "editor": {
@@ -160,6 +162,11 @@
       "noAlbumFavorites": "Marcá un álbum como favorito para poder elegirlo.",
       "noSongFavorites": "Marcá una canción como favorita para poder elegirla."
     }
+  },
+  "hoverCard": {
+    "loading": "Cargando...",
+    "error": "No se pudo cargar.",
+    "noIdentity": "Todavía no eligió su identidad musical."
   },
   "ratingHighlights": {
     "heading": "Valoraciones destacadas"

@@ -145,6 +145,8 @@
     "artistHeading": "Artist that defines me",
     "albumHeading": "Album that defines me",
     "songHeading": "Song that defines me",
+    "artistLabel": "Artist",
+    "albumLabel": "Album",
     "markDefining": "Mark as defining",
     "unmarkDefining": "Remove from Identity Card",
     "editor": {
@@ -160,6 +162,11 @@
       "noAlbumFavorites": "Favorite an album to be able to choose it here.",
       "noSongFavorites": "Favorite a song to be able to choose it here."
     }
+  },
+  "hoverCard": {
+    "loading": "Loading...",
+    "error": "Couldn't load.",
+    "noIdentity": "Hasn't chosen their musical identity yet."
   },
   "ratingHighlights": {
     "heading": "Featured ratings"

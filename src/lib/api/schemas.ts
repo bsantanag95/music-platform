@@ -784,6 +784,20 @@ export type ShowcaseDto = z.infer<typeof ShowcaseSchema>;
 export const ShowcaseResponseSchema = z.object({ showcase: ShowcaseSchema });
 export type ShowcaseResponse = z.infer<typeof ShowcaseResponseSchema>;
 
+// Previsualización de la Tarjeta de Identidad al pasar el cursor sobre un
+// username (openspec: rework-user-profile, hover card). `identityCard` es
+// `null` cuando `accessible` es `false` — perfil privado sin relación.
+export const IdentityCardPreviewSchema = z.object({
+  username: z.string(),
+  displayName: z.string().nullable(),
+  accessible: z.boolean(),
+  identityCard: IdentityCardSchema.nullable(),
+});
+export type IdentityCardPreviewDto = z.infer<typeof IdentityCardPreviewSchema>;
+
+export const IdentityCardPreviewResponseSchema = z.object({ preview: IdentityCardPreviewSchema });
+export type IdentityCardPreviewResponse = z.infer<typeof IdentityCardPreviewResponseSchema>;
+
 // Marcar/desmarcar un destacado como "me define" (openspec: rework-user-profile)
 // opera sobre la entidad, no sobre el id de la fila de destacado — así el
 // editor puede marcar un destacado recién agregado al borrador. Nunca una

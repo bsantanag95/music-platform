@@ -8,6 +8,7 @@ import { ApiError } from "@/lib/api/client";
 import { deleteReview, getReviews, saveReview, updateReview } from "@/lib/api/social";
 import type { Review, ReviewsResponse } from "@/lib/api/schemas";
 import { ContentActions } from "./ContentActions";
+import { UserHoverCard } from "@/components/profiles/UserHoverCard";
 
 interface ReviewsProps {
   target: "artist" | "release-group" | "recording";
@@ -237,8 +238,15 @@ export function Reviews({
             const isExpanded = expanded.has(review.id);
             return (
               <li key={review.id} className="flex flex-col gap-2">
-                <p className="flex flex-wrap items-baseline gap-x-2 font-data text-xs text-paper-muted">
-                  <span>{t("reviewByLabel", { name: authorName })}</span>
+                <div className="flex flex-wrap items-baseline gap-x-2 font-data text-xs text-paper-muted">
+                  <span>
+                    {t("reviewByPrefix")}{" "}
+                    <UserHoverCard username={review.user.username}>
+                      <Link href={`/users/${review.user.username}`} className="hover:text-paper hover:underline">
+                        {authorName}
+                      </Link>
+                    </UserHoverCard>
+                  </span>
                   {review.rating && (
                     <span>
                       <StarValue value={review.rating.stars} />
@@ -246,7 +254,7 @@ export function Reviews({
                     </span>
                   )}
                   {review.title && <span className="text-paper">· {review.title}</span>}
-                </p>
+                </div>
 
                 {editingId === review.id ? (
                   <div className="flex flex-col gap-2">

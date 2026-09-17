@@ -14,6 +14,12 @@ interface IdentityCardProps {
 // que debería hacer falta ver para reconocer quién es musicalmente esta
 // persona. No se renderiza si los tres elementos están ausentes (spec
 // `profile-showcase`, "Ningún elemento de identidad"). Server Component.
+//
+// Diseño (revisión 2026-09-17, "Opción A" de los mockups): circular como los
+// avatares de "Exploración" — no una tira con divisores. Etiqueta de rol
+// corta (Artista/Álbum/Himno) arriba, sin la frase completa del editor
+// ("Artista que me define"), porque acá es una leyenda visual repetida bajo
+// cada círculo, no la etiqueta de un campo de formulario.
 export async function IdentityCard({ identityCard }: IdentityCardProps) {
   const t = await getTranslations("users");
   const { artist, album, anthem } = identityCard;
@@ -21,23 +27,29 @@ export async function IdentityCard({ identityCard }: IdentityCardProps) {
   if (!artist && !album && !anthem) return null;
 
   const slots = [
-    artist && { key: "artist", label: t("identityCard.artistHeading"), entity: artist },
-    album && { key: "album", label: t("identityCard.albumHeading"), entity: album },
+    artist && { key: "artist", label: t("identityCard.artistLabel"), entity: artist },
+    album && { key: "album", label: t("identityCard.albumLabel"), entity: album },
     anthem && { key: "anthem", label: t("showcase.anthemHeading"), entity: anthem },
   ].filter((slot): slot is { key: string; label: string; entity: NonNullable<typeof artist> } => Boolean(slot));
 
   return (
-    <section className="flex w-full max-w-2xl flex-col divide-y divide-ink-border border-y border-ink-border sm:flex-row sm:divide-x sm:divide-y-0">
+    <section className="flex w-full max-w-2xl items-start gap-4 sm:gap-8">
       {slots.map((slot) => (
         <Link
           key={slot.key}
           href={targetHref(slot.entity.type, slot.entity.id)}
-          className="group flex flex-1 items-start gap-3 py-4 transition-colors first:pt-0 last:pb-0 sm:px-4 sm:py-2 sm:first:pl-0 sm:last:pr-0"
+          className="group flex flex-1 flex-col items-center gap-2 text-center"
         >
-          <CoverThumb cover={slot.entity.coverThumbUrl} label="" className="size-16 shrink-0 rounded" />
+          <CoverThumb
+            cover={slot.entity.coverThumbUrl}
+            label=""
+            className="size-16 shrink-0 rounded-full border border-ink-border transition-colors group-hover:border-amber sm:size-20"
+          />
           <span className="min-w-0">
-            <span className="block font-data text-xs text-paper-muted">{slot.label}</span>
-            <span className="mt-1.5 block truncate font-display text-lg text-paper transition-colors group-hover:text-amber">
+            <span className="block font-data text-[0.65rem] uppercase tracking-wide text-paper-muted">
+              {slot.label}
+            </span>
+            <span className="mt-1 block truncate font-display text-sm text-paper transition-colors group-hover:text-amber">
               {slot.entity.title}
             </span>
             {slot.entity.artistName && (
