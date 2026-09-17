@@ -786,10 +786,15 @@ export type ShowcaseResponse = z.infer<typeof ShowcaseResponseSchema>;
 
 // Previsualización de la Tarjeta de Identidad al pasar el cursor sobre un
 // username (openspec: rework-user-profile, hover card). `identityCard` es
-// `null` cuando `accessible` es `false` — perfil privado sin relación.
+// `null` cuando `accessible` es `false` — perfil privado sin relación. `bio`
+// se expone siempre (identidad extendida, misma regla que `Placa`).
 export const IdentityCardPreviewSchema = z.object({
+  id: z.uuid(),
   username: z.string(),
   displayName: z.string().nullable(),
+  bio: z.string().nullable(),
+  relation: FollowRelationSchema,
+  viewerAuthenticated: z.boolean(),
   accessible: z.boolean(),
   identityCard: IdentityCardSchema.nullable(),
 });

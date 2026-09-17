@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { RelativeDate } from "@/components/feed/feed-row-parts";
+import { UserHoverCard } from "@/components/profiles/UserHoverCard";
 import { getDiscoverLists } from "@/lib/api/lists";
 import { queryKeys } from "@/lib/query/keys";
 import type { DiscoverListsResponse } from "@/lib/api/schemas";
@@ -54,12 +55,14 @@ export function DiscoverListsTab({ initial }: { initial: DiscoverListsResponse }
                 <span aria-hidden>·</span>
                 <span>{t("itemsCount", { count: list.itemCount })}</span>
                 <span aria-hidden>·</span>
-                <Link
-                  href={`/users/${encodeURIComponent(list.owner.username)}`}
-                  className="transition-colors hover:text-paper"
-                >
-                  {t("byOwner", { name: list.owner.displayName ?? `@${list.owner.username}` })}
-                </Link>
+                <UserHoverCard username={list.owner.username}>
+                  <Link
+                    href={`/users/${encodeURIComponent(list.owner.username)}`}
+                    className="transition-colors hover:text-paper"
+                  >
+                    {t("byOwner", { name: list.owner.displayName ?? `@${list.owner.username}` })}
+                  </Link>
+                </UserHoverCard>
                 <span aria-hidden>·</span>
                 <RelativeDate iso={list.createdAt} />
               </>

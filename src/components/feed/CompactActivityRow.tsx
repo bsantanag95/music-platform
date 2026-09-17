@@ -7,6 +7,7 @@ import { targetHref } from "./feed-target";
 import { RelativeDate } from "./feed-row-parts";
 import { FEED_KIND_ICONS } from "./FeedKindIcons";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
+import { UserHoverCard } from "@/components/profiles/UserHoverCard";
 // Tipos del cliente (inferidos de Zod, `artistName` opcional) en vez de los del
 // servicio: esta fila la consumen tanto un Server Component con datos crudos
 // del servicio (`CommunityActivity`, más estrictos) como un Client Component
@@ -105,12 +106,14 @@ export function CompactActivityRow({ entry }: { entry: CompactActivityEntry }) {
       <CoverThumb cover={entry.target.coverThumbUrl} label="" className="size-10" />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 font-data text-xs text-paper-muted">
-          <Link
-            href={`/users/${encodeURIComponent(username)}`}
-            className="transition-colors hover:text-amber"
-          >
-            {authorLabel}
-          </Link>
+          <UserHoverCard username={username}>
+            <Link
+              href={`/users/${encodeURIComponent(username)}`}
+              className="transition-colors hover:text-amber"
+            >
+              {authorLabel}
+            </Link>
+          </UserHoverCard>
           {icon ? (
             <span aria-hidden="true" className={`inline-flex ${isReview ? "text-petrol" : ""}`}>
               {icon}

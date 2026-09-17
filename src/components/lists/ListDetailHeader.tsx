@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { ListCoverMosaic } from "./ListCoverMosaic";
 import { SaveListButton } from "./SaveListButton";
 import { RelativeDate } from "@/components/feed/feed-row-parts";
+import { UserHoverCard } from "@/components/profiles/UserHoverCard";
 import { entityTypeKey } from "./lists-shared";
 import { deleteList, updateList } from "@/lib/api/lists";
 import type { DiaryAudience, UserListDetail } from "@/lib/api/schemas";
@@ -146,15 +147,17 @@ export function ListDetailHeader({
             </p>
           ) : null}
 
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-data text-xs text-paper-muted">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-data text-xs text-paper-muted">
             {owner ? (
               <>
-                <Link
-                  href={`/users/${encodeURIComponent(owner.username)}`}
-                  className="transition-colors hover:text-amber"
-                >
-                  {t("byOwner", { name: owner.displayName ?? owner.username })}
-                </Link>
+                <UserHoverCard username={owner.username}>
+                  <Link
+                    href={`/users/${encodeURIComponent(owner.username)}`}
+                    className="transition-colors hover:text-amber"
+                  >
+                    {t("byOwner", { name: owner.displayName ?? owner.username })}
+                  </Link>
+                </UserHoverCard>
                 <span aria-hidden>·</span>
               </>
             ) : null}
@@ -177,7 +180,7 @@ export function ListDetailHeader({
                 <span className="text-amber">{t("pinnedBadge")}</span>
               </>
             ) : null}
-          </p>
+          </div>
 
           {owner && canSave ? (
             <SaveListButton

@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { RelativeDate } from "@/components/feed/feed-row-parts";
+import { UserHoverCard } from "@/components/profiles/UserHoverCard";
 import type { DiscoverListSummary } from "@/lib/api/schemas";
 import { ListCard } from "./ListCard";
 import { SaveListButton } from "./SaveListButton";
@@ -40,12 +41,14 @@ export function CommunityListCard({
           <span aria-hidden>·</span>
           <span>{t("itemsCount", { count: list.itemCount })}</span>
           <span aria-hidden>·</span>
-          <Link
-            href={`/users/${encodeURIComponent(list.owner.username)}`}
-            className="transition-colors hover:text-paper"
-          >
-            {t("byOwner", { name: ownerName })}
-          </Link>
+          <UserHoverCard username={list.owner.username}>
+            <Link
+              href={`/users/${encodeURIComponent(list.owner.username)}`}
+              className="transition-colors hover:text-paper"
+            >
+              {t("byOwner", { name: ownerName })}
+            </Link>
+          </UserHoverCard>
           {!dense && typeof list.saveCount === "number" && list.saveCount > 0 ? (
             <>
               <span aria-hidden>·</span>

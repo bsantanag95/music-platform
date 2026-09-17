@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { Spinner } from "@/components/ui/Spinner";
+import { FollowButton } from "@/components/social/FollowButton";
+import { monogramLetter, monogramStyle } from "@/components/social/monogram";
 import { apiFetch } from "@/lib/api/client";
 import { targetHref } from "@/components/feed/feed-target";
 import { IdentityCardPreviewResponseSchema, type IdentityCardPreviewDto } from "@/lib/api/schemas";
@@ -37,14 +39,17 @@ interface UserHoverCardProps {
   children: ReactNode;
 }
 
-// Vista rápida de la Tarjeta de Identidad al pasar el cursor (o enfocar por
-// teclado) un username — en comentarios, reseñas, y cualquier otro lugar que
-// enlace a un perfil (openspec: rework-user-profile). Reutiliza los mismos
-// datos que la página de perfil ("Opción D" de los mockups: una sola tarjeta
-// contenedora, letra grande) escalados para un popover, no un componente
-// nuevo de diseño. Sin librería de posicionamiento — mismo patrón `relative`
-// + `absolute` sin portal que `RowMenu`, suficiente porque el trigger nunca
-// vive cerca del borde de un contenedor con overflow recortado.
+// Vista rápida del perfil al pasar el cursor (o enfocar por teclado) un
+// username — en comentarios, reseñas, feed, listas, y cualquier otro lugar
+// que enlace a un perfil (openspec: rework-user-profile). Contenido "Nivel 2"
+// de los mockups comparados con el usuario: monograma + nombre/@username +
+// botón Seguir (reutiliza `FollowButton` tal cual, misma lógica que `Placa`)
+// + bio, más la Tarjeta de Identidad compacta (círculos, "Opción A") debajo
+// de una línea divisoria. Sin contadores de seguidores/miembro desde — se
+// descartaron por competir visualmente con la Tarjeta de Identidad, que es
+// el contenido protagonista. Sin librería de posicionamiento — mismo patrón
+// `relative` + `absolute` sin portal que `RowMenu`, suficiente porque el
+// trigger nunca vive cerca del borde de un contenedor con overflow recortado.
 export function UserHoverCard({ username, children }: UserHoverCardProps) {
   const t = useTranslations("users");
   const [open, setOpen] = useState(false);
@@ -96,7 +101,7 @@ export function UserHoverCard({ username, children }: UserHoverCardProps) {
       {open && (
         <div
           role="tooltip"
-          className="absolute left-0 top-full z-30 mt-2 w-72 rounded-lg border border-ink-border bg-ink-surface p-4"
+          className="absolute left-0 top-full z-30 mt-2 w-72 overflow-hidden rounded-lg border border-ink-border bg-ink-surface p-4"
         >
           {state?.status === "loading" && (
             <div className="flex items-center justify-center py-4">
@@ -119,15 +124,6 @@ function HoverCardBody({ preview }: { preview: IdentityCardPreviewDto }) {
   const t = useTranslations("users");
   const name = preview.displayName ?? preview.username;
 
-  if (!preview.accessible) {
-    return (
-      <div>
-        <p className="font-display text-sm text-paper">{name}</p>
-        <p className="mt-1 font-body text-xs text-paper-muted">{t("privateNoticeTitle")}</p>
-      </div>
-    );
-  }
-
   const { identityCard } = preview;
   const slots = identityCard
     ? [
@@ -141,36 +137,62 @@ function HoverCardBody({ preview }: { preview: IdentityCardPreviewDto }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <Link href={`/users/${preview.username}`} className="font-display text-sm text-paper hover:text-amber">
-        {name}
-      </Link>
-      {slots.length > 0 ? (
-        <div className="flex gap-3">
-          {slots.map((slot) => (
-            <Link
-              key={slot.key}
-              href={targetHref(slot.entity.type, slot.entity.id)}
-              className="group flex flex-1 flex-col items-center gap-1.5 text-center"
-            >
-              <CoverThumb
-                cover={slot.entity.coverThumbUrl}
-                label=""
-                className="size-12 shrink-0 rounded-full border border-ink-border transition-colors group-hover:border-amber"
-              />
-              <span className="min-w-0">
-                <span className="block font-data text-[0.6rem] uppercase tracking-wide text-paper-muted">
-                  {slot.label}
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden="true"
+          className={`flex size-11 shrink-0 items-center justify-center rounded-lg border font-display text-lg ${monogramStyle(
+            preview.username,
+          )}`}
+        >
+          {monogramLetter(name)}
+        </span>
+        <Link href={`/users/${preview.username}`} className="min-w-0 flex-1">
+          <span className="block truncate font-display text-sm text-paper hover:text-amber">{name}</span>
+          <span className="block truncate font-data text-xs text-paper-muted">@{preview.username}</span>
+        </Link>
+        <FollowButton
+          username={preview.username}
+          relation={preview.relation}
+          authenticated={preview.viewerAuthenticated}
+          requestId={preview.id}
+        />
+      </div>
+
+      {/* La bio permite hasta 200 caracteres (spec social-profiles) — se
+          recorta a 2 líneas para que un texto largo no infle el popover. */}
+      {preview.bio && <p className="line-clamp-2 font-body text-xs text-paper">{preview.bio}</p>}
+
+      <div className="border-t border-ink-border pt-3">
+        {!preview.accessible ? (
+          <p className="font-body text-xs text-paper-muted">{t("privateNoticeTitle")}</p>
+        ) : slots.length > 0 ? (
+          <div className="flex gap-3">
+            {slots.map((slot) => (
+              <Link
+                key={slot.key}
+                href={targetHref(slot.entity.type, slot.entity.id)}
+                className="group flex min-w-0 flex-1 flex-col items-center gap-1.5 text-center"
+              >
+                <CoverThumb
+                  cover={slot.entity.coverThumbUrl}
+                  label=""
+                  className="size-12 shrink-0 rounded-full border border-ink-border transition-colors group-hover:border-amber"
+                />
+                <span className="w-full min-w-0">
+                  <span className="block truncate font-data text-[0.6rem] uppercase tracking-wide text-paper-muted">
+                    {slot.label}
+                  </span>
+                  <span className="block truncate font-display text-xs text-paper transition-colors group-hover:text-amber">
+                    {slot.entity.title}
+                  </span>
                 </span>
-                <span className="block truncate font-display text-xs text-paper transition-colors group-hover:text-amber">
-                  {slot.entity.title}
-                </span>
-              </span>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <p className="font-body text-xs text-paper-muted">{t("hoverCard.noIdentity")}</p>
-      )}
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="font-body text-xs text-paper-muted">{t("hoverCard.noIdentity")}</p>
+        )}
+      </div>
     </div>
   );
 }

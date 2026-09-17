@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { UserHoverCard } from "@/components/profiles/UserHoverCard";
 import { getSavedLists } from "@/lib/api/lists";
 import { queryKeys } from "@/lib/query/keys";
 import type { SavedListsResponse } from "@/lib/api/schemas";
@@ -55,12 +56,14 @@ export function SavedListsTab({ initial }: { initial: SavedListsResponse }) {
                 <span aria-hidden>·</span>
                 <span>{t("itemsCount", { count: list.itemCount })}</span>
                 <span aria-hidden>·</span>
-                <Link
-                  href={`/users/${encodeURIComponent(list.owner.username)}`}
-                  className="transition-colors hover:text-paper"
-                >
-                  {t("byOwner", { name: list.owner.displayName ?? `@${list.owner.username}` })}
-                </Link>
+                <UserHoverCard username={list.owner.username}>
+                  <Link
+                    href={`/users/${encodeURIComponent(list.owner.username)}`}
+                    className="transition-colors hover:text-paper"
+                  >
+                    {t("byOwner", { name: list.owner.displayName ?? `@${list.owner.username}` })}
+                  </Link>
+                </UserHoverCard>
                 {list.unavailable ? (
                   <>
                     <span aria-hidden>·</span>

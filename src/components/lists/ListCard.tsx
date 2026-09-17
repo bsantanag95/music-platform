@@ -55,11 +55,11 @@ export function ListCard({
           </Link>
         </h3>
 
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-data text-xs text-paper-muted">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-data text-xs text-paper-muted">
           {pinned && pinnedLabel ? <span className="text-amber">{pinnedLabel}</span> : null}
           {pinned && pinnedLabel ? <span aria-hidden>·</span> : null}
           {meta}
-        </p>
+        </div>
 
         {description && !dense ? (
           <p className="line-clamp-2 whitespace-pre-wrap font-body text-sm text-paper-muted">

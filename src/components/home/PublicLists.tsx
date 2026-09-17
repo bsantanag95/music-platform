@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { relativeFeedDate } from "@/components/feed/feed-dates";
+import { UserHoverCard } from "@/components/profiles/UserHoverCard";
 import type { FeedListEvent } from "@/services/feed/feed";
 
 interface PublicListsProps {
@@ -42,12 +43,14 @@ async function CompactListRow({ entry }: { entry: FeedListEvent }) {
         {entry.list.title}
       </Link>
       <div className="flex flex-wrap items-baseline gap-x-2 font-data text-xs text-paper-muted">
-        <Link
-          href={`/users/${encodeURIComponent(username)}`}
-          className="transition-colors hover:text-amber"
-        >
-          {authorLabel}
-        </Link>
+        <UserHoverCard username={username}>
+          <Link
+            href={`/users/${encodeURIComponent(username)}`}
+            className="transition-colors hover:text-amber"
+          >
+            {authorLabel}
+          </Link>
+        </UserHoverCard>
         <time dateTime={entry.createdAt}>{await relativeFeedDate(entry.createdAt)}</time>
       </div>
     </li>
