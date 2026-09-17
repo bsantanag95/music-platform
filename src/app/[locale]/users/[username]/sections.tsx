@@ -23,6 +23,7 @@ import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
 import { OwnerShowcaseEditor } from "@/components/profiles/OwnerShowcaseEditor";
 import { OwnerAlbumFavoritesEditor } from "@/components/profiles/OwnerAlbumFavoritesEditor";
+import { OwnerIdentityCardEditor } from "@/components/profiles/OwnerIdentityCardEditor";
 import { FingerprintSummary } from "@/components/profiles/FingerprintSummary";
 import { AlbumFavorites } from "@/components/profiles/AlbumFavorites";
 import { ProfileReviews } from "@/components/profiles/ProfileReviews";
@@ -69,6 +70,7 @@ export async function OwnerEditors({ profile }: { profile: ProfileView }) {
   ]);
   return (
     <section className="flex w-full max-w-2xl flex-col gap-6 rounded-lg border border-ink-border bg-ink-surface p-6">
+      <OwnerIdentityCardEditor initial={showcase.identityCard} />
       <OwnerIdentityEditor
         initial={{
           bio: profile.bio,
