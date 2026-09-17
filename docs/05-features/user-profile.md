@@ -60,10 +60,20 @@ seguir. Solo las actividades y los listados sociales quedan ocultos.
 ## Tarjeta de Identidad
 
 Primer bloque del Nivel 1, justo bajo la Placa (`IdentityCard.tsx`): hasta **3 elementos
-definitorios** — un artista, un álbum y una canción (el himno) — en tiras divididas por
-hairlines, cada una con carátula/monograma + etiqueta de rol + título enlazado a su página de
-catálogo. Reemplaza al antiguo bloque único de "Himno": tres decisiones conscientes en vez de
-una sola.
+definitorios** — un artista, un álbum y una canción (el himno). Reemplaza al antiguo bloque
+único de "Himno": tres decisiones conscientes en vez de una sola.
+
+- **Diseño circular (revisión 2026-09-17, "Opción A" de los mockups comparados con el
+  usuario)**: carátula/foto circular por elemento (mismo tratamiento que los avatares de
+  "Exploración"), etiqueta de rol corta arriba (Artista/Álbum/Himno,
+  `identityCard.artistLabel`/`albumLabel`/`showcase.anthemHeading` — distintas de las
+  etiquetas largas del editor, "Artista que me define" etc., pensadas para un campo de
+  formulario, no para repetirse bajo un círculo chico) y título centrado debajo, sin
+  contenedor propio (sin borde ni tira con hairlines, a diferencia del diseño anterior) para
+  no competir visualmente con el resto del perfil. Circular vía `CoverThumb`/`DiscPlaceholder`
+  + `rounded-full` en el `className` del caller — el "rounded" propio de esos componentes
+  queda sobrescrito por el orden de utilidades de Tailwind, mismo patrón ya probado en
+  `ExploreSection`.
 
 - **Artista y álbum definitorios son referencias directas en `user_showcase`**
   (`defining_artist_id`, `defining_release_group_id`), mismo criterio que ya usaba
@@ -97,6 +107,33 @@ una sola.
 - Un destacado o álbum favorito marcado como definitorio **desaparece de su muro general**
   (`PinnedShowcase` excluye por coincidencia de tipo+id con la Tarjeta de Identidad, no por un
   campo propio de la fila) para no mostrar la misma entidad dos veces en la página.
+
+### Vista rápida al pasar el cursor (hover card)
+
+Añadido 2026-09-17: pasar el cursor (o enfocar por teclado) un username en cualquier lugar
+que enlace a un perfil muestra un popover con su Tarjeta de Identidad — reutiliza el mismo
+dato, en una versión compacta de la "Opción D" de los mockups (una sola tarjeta que envuelve
+los 3 elementos). `UserHoverCard.tsx` es el componente reutilizable; hoy envuelve el username
+del autor en Comentarios (`Comments.tsx`) y Reseñas (`Reviews.tsx`) — antes esos usernames
+eran texto plano, sin enlace al perfil ni forma de ver quién comentó sin salir de la página.
+
+- **Endpoint nuevo, público**: `GET /api/users/[username]/identity-card-preview`
+  (`getIdentityCardPreview`, `src/services/profiles/identity-preview.ts`) — misma regla de
+  acceso que la página de perfil (`getProfileByUsername().accessible`): perfil privado sin
+  relación de "sigue" devuelve `identityCard: null`, el popover muestra solo el aviso de
+  perfil privado.
+- **Fetch perezoso con demora de apertura** (300ms) para no disparar una petición por cada
+  username que el cursor solo atraviesa de paso; 150ms de gracia al salir para poder mover el
+  mouse hacia el popover sin que se cierre. Cache en memoria por username a nivel de módulo
+  (vive mientras dure la pestaña) — varios comentarios de la misma persona en una página no
+  repiten el fetch.
+- Sin librería de posicionamiento: mismo patrón `relative` + `absolute` sin portal que
+  `RowMenu.tsx` — suficiente porque el trigger (un username en una lista) no vive cerca de un
+  borde con overflow recortado. En mobile/touch no hay hover: el username sigue siendo un
+  link normal a `/users/{username}`.
+- Extensible a otros lugares que enlacen a un perfil (feed de actividad, listas, etc.)
+  envolviendo el trigger existente en `<UserHoverCard username={...}>` — no requiere tocar el
+  endpoint ni el componente.
 
 ## Álbumes favoritos
 
