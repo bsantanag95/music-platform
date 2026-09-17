@@ -144,8 +144,22 @@
   "identityCard": {
     "artistHeading": "Artist that defines me",
     "albumHeading": "Album that defines me",
+    "songHeading": "Song that defines me",
     "markDefining": "Mark as defining",
-    "unmarkDefining": "Remove from Identity Card"
+    "unmarkDefining": "Remove from Identity Card",
+    "editor": {
+      "heading": "Identity Card",
+      "intro": "The artist, album, and song that define you. It's the first thing anyone visiting your profile sees.",
+      "choose": "Choose",
+      "change": "Change",
+      "remove": "Remove",
+      "emptyArtist": "You haven't chosen an artist yet.",
+      "emptyAlbum": "You haven't chosen an album yet.",
+      "emptySong": "You haven't chosen a song yet.",
+      "noArtistFavorites": "Favorite an artist to be able to choose it here.",
+      "noAlbumFavorites": "Favorite an album to be able to choose it here.",
+      "noSongFavorites": "Favorite a song to be able to choose it here."
+    }
   },
   "ratingHighlights": {
     "heading": "Featured ratings"

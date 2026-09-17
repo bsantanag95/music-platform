@@ -74,13 +74,20 @@ una sola.
   Destacados (`user_pinned_item.is_defining`), lo que dejaba "Álbumes favoritos" sin ninguna
   vía para marcar un álbum definitorio salvo duplicándolo como destacado aparte — el gap que
   motivó moverlo a una referencia directa (migración 0030).
-- **Se marca desde donde ya vive la entidad**: el editor de Destacados
-  (`OwnerShowcaseEditor`) ofrece el marcador ★/☆ para sus filas de tipo artista o álbum, y el
-  editor de Álbumes favoritos (`OwnerAlbumFavoritesEditor`) lo ofrece también para las suyas
-  — ambos llaman al mismo endpoint (`PUT/DELETE /api/me/profile/pinned/defining` con
-  `{type, id}` del artista o álbum, no de una fila de destacado). Un destacado o álbum
-  favorito recién agregado en el borrador (sin guardar todavía) ya puede marcarse: el
-  marcador no depende de que la entidad tenga una fila propia guardada en el servidor.
+- **Editor unificado en Gestión** (`OwnerIdentityCardEditor`, arriba de todo el panel): los 3
+  slots juntos, cada uno con su propio selector sobre los favoritos del dueño (artista, álbum,
+  canción) y una acción "Quitar". **Revisión de diseño (2026-09-17)**: antes de este editor,
+  el artista y la canción se marcaban desde "Destacados"/"Himno" y el álbum solo desde
+  "Álbumes favoritos" — una sección aparte, sin relación visual con las otras dos — lo que
+  hacía que completar el álbum de la Tarjeta de Identidad no fuera descubrible. Los
+  marcadores ★/☆ de `OwnerShowcaseEditor` (Destacados, solo artista/álbum) y
+  `OwnerAlbumFavoritesEditor` (Álbumes favoritos) siguen funcionando igual — son atajos
+  adicionales sobre la misma entidad ya visible en esas listas, no reemplazados por el editor
+  unificado. Los tres llaman al mismo endpoint (`PUT/DELETE /api/me/profile/pinned/defining`
+  con `{type, id}` del artista o álbum, no de una fila de destacado; el himno usa
+  `PUT/DELETE /api/me/profile/anthem`). Un destacado o álbum favorito recién agregado en el
+  borrador (sin guardar todavía) ya puede marcarse: el marcador no depende de que la entidad
+  tenga una fila propia guardada en el servidor.
 - **Una canción nunca puede ser "definitoria"** de esta forma — el slot de canción de la
   Tarjeta de Identidad es, exclusivamente, el **Himno** (`user_showcase.anthem_recording_id`),
   elegido a mano, nunca derivado de actividad.
