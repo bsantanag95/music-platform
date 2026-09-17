@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { UserHoverCard } from "@/components/profiles/UserHoverCard";
 import type { AmbientGroup } from "@/services/feed/ambient";
 
 interface FeedAmbientStripProps {
@@ -35,12 +36,14 @@ export async function FeedAmbientStrip({ groups }: FeedAmbientStripProps) {
               key={`${groupItem.kind}-${groupItem.author.username}-${index}`}
               className="font-data text-xs text-paper-muted"
             >
-              <Link
-                href={`/users/${encodeURIComponent(groupItem.author.username)}`}
-                className="text-paper transition-colors hover:text-amber"
-              >
-                {groupItem.author.displayName ?? `@${groupItem.author.username}`}
-              </Link>{" "}
+              <UserHoverCard username={groupItem.author.username}>
+                <Link
+                  href={`/users/${encodeURIComponent(groupItem.author.username)}`}
+                  className="text-paper transition-colors hover:text-amber"
+                >
+                  {groupItem.author.displayName ?? `@${groupItem.author.username}`}
+                </Link>
+              </UserHoverCard>{" "}
               {t(VERB_KEY[groupItem.kind])}{" "}
               {groupItem.sample.map((item, itemIndex) => (
                 <span key={itemIndex}>

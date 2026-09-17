@@ -111,29 +111,70 @@ definitorios** — un artista, un álbum y una canción (el himno). Reemplaza al
 ### Vista rápida al pasar el cursor (hover card)
 
 Añadido 2026-09-17: pasar el cursor (o enfocar por teclado) un username en cualquier lugar
-que enlace a un perfil muestra un popover con su Tarjeta de Identidad — reutiliza el mismo
-dato, en una versión compacta de la "Opción D" de los mockups (una sola tarjeta que envuelve
-los 3 elementos). `UserHoverCard.tsx` es el componente reutilizable; hoy envuelve el username
-del autor en Comentarios (`Comments.tsx`) y Reseñas (`Reviews.tsx`) — antes esos usernames
-eran texto plano, sin enlace al perfil ni forma de ver quién comentó sin salir de la página.
+que enlace a un perfil muestra un popover — mockeado en 2 rondas con el usuario antes de
+escribir código (misma dinámica que la Tarjeta de Identidad: HTML estático servido con
+`python -m http.server`, `SendUserFile`, el usuario elige).
 
-- **Endpoint nuevo, público**: `GET /api/users/[username]/identity-card-preview`
-  (`getIdentityCardPreview`, `src/services/profiles/identity-preview.ts`) — misma regla de
-  acceso que la página de perfil (`getProfileByUsername().accessible`): perfil privado sin
-  relación de "sigue" devuelve `identityCard: null`, el popover muestra solo el aviso de
-  perfil privado.
+**Contenido — "Nivel 2" de 3 opciones comparadas** (estilo Twitter, pero acotado): monograma +
+nombre/@username + botón Seguir (`FollowButton` real, misma lógica que `Placa`) + una línea de
+bio, línea divisoria, y la Tarjeta de Identidad compacta (círculos, "Opción A") debajo. Se
+descartaron los contadores de seguidores/seguidos y "miembro desde" (Nivel 3 de los mockups)
+por competir visualmente con la Tarjeta de Identidad, que es el contenido protagonista del
+popover.
+
+- **Endpoint público**: `GET /api/users/[username]/identity-card-preview`
+  (`getIdentityCardPreview`, `src/services/profiles/identity-preview.ts`) — devuelve `id`,
+  `username`, `displayName`, `bio`, `relation` (`FollowRelation`) y `viewerAuthenticated`
+  siempre (identidad extendida, pública incluso en un perfil privado — mismo criterio que
+  `Placa`), más `identityCard` solo si `accessible` es `true` (misma regla que la página de
+  perfil, vía `getProfileByUsername().accessible`).
+- **La bio se recorta a 2 líneas** (`line-clamp-2`) — el campo admite hasta 200 caracteres
+  (spec `social-profiles`) y sin el recorte una bio larga infla el popover.
 - **Fetch perezoso con demora de apertura** (300ms) para no disparar una petición por cada
   username que el cursor solo atraviesa de paso; 150ms de gracia al salir para poder mover el
   mouse hacia el popover sin que se cierre. Cache en memoria por username a nivel de módulo
   (vive mientras dure la pestaña) — varios comentarios de la misma persona en una página no
-  repiten el fetch.
+  repiten el fetch. Sin mockear el timing en sí — es una sensación táctil, no algo que se
+  compare en una imagen estática.
 - Sin librería de posicionamiento: mismo patrón `relative` + `absolute` sin portal que
   `RowMenu.tsx` — suficiente porque el trigger (un username en una lista) no vive cerca de un
   borde con overflow recortado. En mobile/touch no hay hover: el username sigue siendo un
   link normal a `/users/{username}`.
-- Extensible a otros lugares que enlacen a un perfil (feed de actividad, listas, etc.)
-  envolviendo el trigger existente en `<UserHoverCard username={...}>` — no requiere tocar el
-  endpoint ni el componente.
+- **Dónde está envuelto** (`<UserHoverCard username={...}>` alrededor del `Link` existente):
+  Comentarios (`Comments.tsx`), Reseñas (`Reviews.tsx`) — sus usernames eran texto plano antes
+  de este cambio, sin enlace al perfil —, feed de actividad (`CompactActivityRow.tsx`,
+  `FeedActivityList.tsx` vía `AuthorLink`, `FeedAmbientStrip.tsx`), autoría de listas
+  (`CommunityListCard.tsx`, `DiscoverListsTab.tsx`, `SavedListsTab.tsx`,
+  `ListDetailHeader.tsx`, `PublicLists.tsx` en Inicio) y diario compartido (`DiaryList.tsx`).
+  **Deliberadamente afuera**: `UserCard.tsx` y `UserList.tsx` (búsqueda de usuarios,
+  seguidores/seguidos/bloqueados) — esas filas ya muestran monograma + nombre + acción social
+  en línea, sin nada oculto que un hover revele, y agregar el botón Seguir del popover
+  encima del botón contextual de la fila (dejar de seguir, aprobar, etc.) sería redundante;
+  paneles de admin/moderación (`ModerationConsole.tsx`, `EditorialConsole.tsx`) — herramienta
+  interna, no vista social. También quedó afuera el link "+N más" de una fila agrupada de
+  feed (`FeedActivityList.tsx`, `targetLink` para `kind: "follow"`) y los nombres de
+  `NetworkConvergence.tsx`: ambos viven dentro de un `<p>` sin refactorizar y el primero
+  además no muestra el username como texto visible (dice "y 3 más").
+- **Gotcha real encontrado en producción**: el popover renderiza un `<div role="tooltip">` —
+  envolverlo dentro de un `<p>` existente (el byline de Comentarios/Reseñas, o `meta` de
+  `ListCard.tsx`) rompe el HTML ("`<div>` cannot be a descendant of `<p>`", hydration
+  warning; el navegador autocierra el `<p>`). `ListCard.tsx`, `Comments.tsx` y `Reviews.tsx`
+  pasaron ese contenedor de `<p>` a `<div>` — mismas clases, sin cambio visual. Si se agrega
+  el hover card a un lugar nuevo, revisar que el ancestro inmediato no sea un `<p>`.
+- **Segundo gotcha real, mismo componente**: la fila de 3 slots (`flex gap-3`, cada slot
+  `flex-1`) con títulos largos ("Still Got the Blues") se desbordaba del popover, y después
+  de un primer fix seguía "chocando" con las columnas vecinas. Dos bugs de flexbox
+  encadenados, mismo síntoma: (1) el `<Link>` de cada slot necesita `min-w-0` él mismo (no
+  alcanza con ponerlo en un descendiente) para poder encogerse por debajo del ancho de su
+  texto `truncate`; (2) como ese `<Link>` es `flex-col items-center` (alineación por
+  contenido, no `stretch`), el `<span>` que envuelve el título necesita además `w-full`
+  explícito — si no, se dimensiona por su propio contenido sin importar cuánto se haya
+  encogido el `<Link>` padre, y `truncate` no tiene ancho real contra el cual recortar.
+  Verificado con `getBoundingClientRect()` vía `javascript_tool` (los screenshots del Browser
+  pane no siempre renderizan en esta sesión) — las 3 columnas quedan en 77px exactas, sin
+  overlap. Al armar cualquier fila de columnas de ancho igual con texto truncado, revisar
+  ambos: `min-w-0` en el flex item + `w-full` en el descendiente con `truncate` si el
+  contenedor no usa `items-stretch`.
 
 ## Álbumes favoritos
 

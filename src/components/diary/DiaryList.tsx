@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListenEntryForm } from "./ListenEntryForm";
 import { ReactionBadge } from "./ReactionBadge";
+import { UserHoverCard } from "@/components/profiles/UserHoverCard";
 import { deleteListenEntry, getMyDiary } from "@/lib/api/diary";
 import { ApiError } from "@/lib/api/client";
 import type { DiaryListResponse, ListenEntry, ListenTargetInfo } from "@/lib/api/schemas";
@@ -107,12 +108,14 @@ export function DiaryList({ initial, readOnly, showAuthor, loadMore, empty }: Di
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 {author && (
-                  <Link
-                    href={`/users/${encodeURIComponent(author.username)}`}
-                    className="font-data text-xs text-paper-muted transition-colors hover:text-paper"
-                  >
-                    {author.displayName ?? `@${author.username}`}
-                  </Link>
+                  <UserHoverCard username={author.username}>
+                    <Link
+                      href={`/users/${encodeURIComponent(author.username)}`}
+                      className="font-data text-xs text-paper-muted transition-colors hover:text-paper"
+                    >
+                      {author.displayName ?? `@${author.username}`}
+                    </Link>
+                  </UserHoverCard>
                 )}
                 <Link
                   href={targetHref(entry.target)}

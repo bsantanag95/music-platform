@@ -10,6 +10,7 @@ import { isFeedEntryQuote } from "./feed-entry-tier";
 import { groupFeedRuns, type FeedEntryGroup, type FeedRotationPeak } from "./feed-grouping";
 import { ProsePanel, RelativeDate, TargetTitle } from "./feed-row-parts";
 import { FEED_KIND_ICONS } from "./FeedKindIcons";
+import { UserHoverCard } from "@/components/profiles/UserHoverCard";
 import type { FeedEntry } from "@/lib/api/schemas";
 
 type FeedT = (key: string, values?: Record<string, string | number>) => string;
@@ -296,12 +297,14 @@ function FollowRow({
           </>
         )}
         {t("followVerb")}{" "}
-        <Link
-          href={`/users/${encodeURIComponent(entry.followedUser.username)}`}
-          className="text-paper transition-colors hover:text-amber"
-        >
-          {entry.followedUser.displayName ?? `@${entry.followedUser.username}`}
-        </Link>
+        <UserHoverCard username={entry.followedUser.username}>
+          <Link
+            href={`/users/${encodeURIComponent(entry.followedUser.username)}`}
+            className="text-paper transition-colors hover:text-amber"
+          >
+            {entry.followedUser.displayName ?? `@${entry.followedUser.username}`}
+          </Link>
+        </UserHoverCard>
       </span>
       <RelativeDate iso={entry.createdAt} />
     </div>
@@ -496,12 +499,14 @@ function MetaLine({
 
 function AuthorLink({ author }: { author: FeedEntry["author"] }) {
   return (
-    <Link
-      href={`/users/${encodeURIComponent(author.username)}`}
-      className="text-paper transition-colors hover:text-amber"
-    >
-      {author.displayName ?? `@${author.username}`}
-    </Link>
+    <UserHoverCard username={author.username}>
+      <Link
+        href={`/users/${encodeURIComponent(author.username)}`}
+        className="text-paper transition-colors hover:text-amber"
+      >
+        {author.displayName ?? `@${author.username}`}
+      </Link>
+    </UserHoverCard>
   );
 }
 
