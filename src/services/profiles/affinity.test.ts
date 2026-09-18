@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTableName } from "drizzle-orm";
-import { getProfileAffinity, mutualFollowersHint } from "./affinity";
+import {
+  getMutualFollowersPreview,
+  getProfileAffinity,
+  listMutualFollowers,
+  listMutualFollowing,
+  mutualFollowersHint,
+} from "./affinity";
 
 const rowsByTable: Record<string, unknown[]> = {};
 const mocks = vi.hoisted(() => ({ select: vi.fn(), getProfileByUsername: vi.fn() }));
@@ -61,6 +67,98 @@ describe("mutualFollowersHint", () => {
   it("devuelve 0 cuando el visitante es el propio dueño", async () => {
     await expect(mutualFollowersHint("same", "same")).resolves.toBe(0);
     expect(mocks.select).not.toHaveBeenCalled();
+  });
+});
+
+describe("listMutualFollowers", () => {
+  it("devuelve las cuentas que el visitante sigue y que también siguen al dueño", async () => {
+    followQueue = [
+      [{ id: "a" }, { id: "b" }], // cuentas que sigue el visitante
+      [{ user: { id: "a", username: "ana", displayName: "Ana", profileVisibility: "public" } }], // página
+      [{ count: 1 }], // total
+    ];
+    const page = await listMutualFollowers("viewer", "owner", 1, 20);
+    expect(page).toEqual({
+      users: [{ id: "a", username: "ana", displayName: "Ana", profileVisibility: "public" }],
+      totalCount: 1,
+      page: 1,
+      pageSize: 20,
+      hasNext: false,
+    });
+  });
+
+  it("vacío sin consultar la DB cuando el visitante es el propio dueño", async () => {
+    const page = await listMutualFollowers("same", "same", 1, 20);
+    expect(page).toEqual({ users: [], totalCount: 0, page: 1, pageSize: 20, hasNext: false });
+    expect(mocks.select).not.toHaveBeenCalled();
+  });
+
+  it("vacío sin segunda consulta cuando el visitante no sigue a nadie", async () => {
+    followQueue = [[]];
+    const page = await listMutualFollowers("viewer", "owner", 1, 20);
+    expect(page).toEqual({ users: [], totalCount: 0, page: 1, pageSize: 20, hasNext: false });
+  });
+
+  it("pageSize inválido lanza VALIDATION_ERROR", async () => {
+    await expect(listMutualFollowers("viewer", "owner", 1, 51)).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+    });
+  });
+});
+
+describe("listMutualFollowing", () => {
+  it("devuelve las cuentas que ambos siguen", async () => {
+    followQueue = [
+      [{ id: "a" }],
+      [{ user: { id: "a", username: "ana", displayName: "Ana", profileVisibility: "public" } }],
+      [{ count: 1 }],
+    ];
+    const page = await listMutualFollowing("viewer", "owner", 1, 20);
+    expect(page.users).toEqual([{ id: "a", username: "ana", displayName: "Ana", profileVisibility: "public" }]);
+    expect(page.totalCount).toBe(1);
+  });
+});
+
+describe("getMutualFollowersPreview", () => {
+  const accessible = {
+    id: "owner",
+    profileVisibility: "public",
+    relation: "following",
+    blockedByMe: false,
+    accessible: true,
+  };
+
+  it("null sin sesión", async () => {
+    await expect(getMutualFollowersPreview("ana", null)).resolves.toBeNull();
+  });
+
+  it("null para el propio dueño", async () => {
+    mocks.getProfileByUsername.mockResolvedValue({ ...accessible, relation: "self" });
+    await expect(getMutualFollowersPreview("ana", "viewer")).resolves.toBeNull();
+  });
+
+  it("null cuando el perfil no es accesible", async () => {
+    mocks.getProfileByUsername.mockResolvedValue({ ...accessible, accessible: false });
+    await expect(getMutualFollowersPreview("ana-inaccesible", "viewer")).resolves.toBeNull();
+  });
+
+  it("null cuando no hay seguidores en común", async () => {
+    mocks.getProfileByUsername.mockResolvedValue({ ...accessible, id: "owner-sin-mutuos" });
+    followQueue = [[]];
+    await expect(getMutualFollowersPreview("ana-sin-mutuos", "viewer")).resolves.toBeNull();
+  });
+
+  it("devuelve el primer seguidor en común y el total", async () => {
+    mocks.getProfileByUsername.mockResolvedValue({ ...accessible, id: "owner-con-mutuos" });
+    followQueue = [
+      [{ id: "a" }, { id: "b" }],
+      [{ user: { id: "a", username: "ana", displayName: "Ana", profileVisibility: "public" } }],
+      [{ count: 2 }],
+    ];
+    await expect(getMutualFollowersPreview("ana-con-mutuos", "viewer")).resolves.toEqual({
+      total: 2,
+      first: { id: "a", username: "ana", displayName: "Ana", profileVisibility: "public" },
+    });
   });
 });
 

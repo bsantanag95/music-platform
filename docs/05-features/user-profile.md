@@ -57,6 +57,65 @@ conjunto cerrado (`website`, `bandcamp`, `lastfm`, `discogs`, `instagram`, `yout
 que no es información lo bastante sensible como para ocultarla, y da razones reales para
 seguir. Solo las actividades y los listados sociales quedan ocultos.
 
+## Diseño de la Placa
+
+`Placa.tsx` es una card con borde (`border-ink-border` / `bg-ink-surface`, `rounded-lg`), no un
+bloque suelto: monograma **circular** (mismo lenguaje visual que la Tarjeta de Identidad y el
+hover card), contadores de seguidores/seguidos como **pills** con borde redondeado, y el
+clúster de acciones (botón Seguir + bloqueo/moderación) separado del resto por un divisor
+horizontal cuando queda apilado debajo del contenido — siempre en la variante `aside` (barra
+lateral, columna fija), y solo en viewport móvil para la variante `full` (vista de perfil
+privado sin acceso), que en escritorio pone las acciones a la derecha en una fila sin divisor
+(`sm:border-t-0`). Elegido entre 4 mockups estáticos ("Opción B: Tarjeta contenida") comparados
+con el usuario junto a un refresco mínimo sin card, una versión centrada tipo carta de
+identidad, y contadores como bloques de estadística en vez de pills.
+
+## Seguidores en común y listados de conexiones
+
+Dos capacidades agregadas sobre la Placa (no formaban parte del rediseño original,
+decisión de producto posterior — ver memoria `profile-redesign`, actualización
+2026-09-17 "seguidores en común y listados de conexiones"):
+
+**Seguidores en común** (`MutualFollowersRow.tsx`, debajo de la bio en la Placa): "Fulano
+y otros N siguen a este usuario", con el monograma del primer seguidor en común. Mismo
+criterio que ya usaba el aviso de perfil privado (`mutualFollowersHint`): cuentas que el
+**visitante** sigue y que **también siguen al dueño** del perfil — no "personas que
+siguen a ambos" (ese es un conjunto distinto, ver más abajo). Solo se muestra con sesión
+iniciada, en perfil ajeno accesible, y si el total es mayor a 0 — `getMutualFollowersPreview`
+(`src/services/profiles/affinity.ts`) resuelve el primer usuario + el total server-side,
+sin round-trip extra. El número es clickeable y abre un modal (`role="dialog"`, portal,
+Escape, bloqueo de scroll — mismo patrón que `ConfirmDialog`) con el listado completo,
+cargado bajo demanda vía `GET /api/users/[username]/mutual-followers`.
+
+**Listados de conexiones** (`/users/{username}/connections/{following|followers|mutual}`,
+estilo Letterboxd): los contadores "Seguidores"/"Siguiendo" de la Placa ahora son enlaces.
+Antes de esto **no existía ninguna página que mostrara el listado de seguidores/seguidos de
+un perfil ajeno** — solo `/me/followers`/`/me/following` (autogestión, `UserList.tsx`, con
+acciones de mutar la propia relación). Decisión de acceso (consultada con el usuario, sin
+precedente en los specs): el listado se rige por **la misma regla que el resto del
+perfil** — visible si `profile.accessible` (público, o privado con seguidor aprobado/dueño),
+oculto si no (mismo criterio en las 3 pestañas). Reutiliza `listFollowers`/`listFollowing`
+(ya existían, genéricos por `userId`, sin cambios) — la novedad es exponerlos a un visitante
+en vez de solo al propio dueño. Cada fila usa `UserCard` (búsqueda de usuarios) con la
+relación del **visitante** hacia esa persona listada (`relationsFor`), no la relación hacia
+el dueño del perfil — permite seguir directamente desde el listado.
+
+La tercera pestaña, "Seguidos en común", muestra **dos listados separados** (decisión
+explícita del usuario: "ambas" ante la pregunta de cuál de las dos nociones de "en común"
+debía llevar) porque son conjuntos distintos:
+- `listMutualFollowing(viewerId, ownerId)`: cuentas que **ambos** siguen (intersección
+  simétrica de los dos "seguidos").
+- `listMutualFollowers(viewerId, ownerId)`: el mismo cálculo que la fila de la Placa
+  (cuentas que el visitante sigue, que también siguen al dueño), con paginación.
+
+Sin sesión, o viendo el propio perfil, la pestaña no aparece en la navegación
+(`ProfileConnectionsHeader`) y la página muestra un aviso en vez de listar nada — no hay
+concepto de "en común" sin dos personas distintas y un visitante identificado.
+
+Solo se pagina hasta 50 resultados (página 1), sin controles de paginación en la UI —
+mismo límite que ya tenían `/me/followers`/`/me/following`; no se construyó "cargar más"
+para esta primera versión.
+
 ## Tarjeta de Identidad
 
 Primer bloque del Nivel 1, justo bajo la Placa (`IdentityCard.tsx`): hasta **3 elementos

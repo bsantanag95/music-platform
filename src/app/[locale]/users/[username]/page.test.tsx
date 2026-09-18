@@ -35,8 +35,11 @@ vi.mock("@/services/profiles/profile-view", () => ({
 }));
 
 const mutualFollowersHint = vi.fn();
+const getMutualFollowersPreview = vi.fn();
 vi.mock("@/services/profiles/affinity", () => ({
   mutualFollowersHint: (a: string, b: string) => mutualFollowersHint(a, b),
+  getMutualFollowersPreview: (username: string, viewerId: string | null) =>
+    getMutualFollowersPreview(username, viewerId),
 }));
 
 vi.mock("@/i18n/navigation", () => ({
@@ -127,6 +130,7 @@ const render = (username = "ana", preview?: string) =>
 beforeEach(() => {
   vi.clearAllMocks();
   mutualFollowersHint.mockResolvedValue(0);
+  getMutualFollowersPreview.mockResolvedValue(null);
   getUserPermissions.mockResolvedValue([]);
 });
 

@@ -1,8 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { Placa } from "./Placa";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import type { ProfileView } from "@/services/profiles/profile-view";
+
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ href, children }: { href: string; children: ReactNode }) => <a href={href}>{children}</a>,
+}));
+
+vi.mock("@/components/profiles/MutualFollowersRow", () => ({
+  MutualFollowersRow: ({ username }: { username: string }) => (
+    <div data-testid="mutual-followers-row">{username}</div>
+  ),
+}));
 
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn().mockResolvedValue((key: string, vars?: Record<string, unknown>) =>
@@ -104,5 +115,36 @@ describe("Placa", () => {
     renderWithIntl(await Placa({ profile: base, authenticated: true, preview: true }));
     expect(screen.getByTestId("follow-button")).toHaveAttribute("data-preview", "true");
     expect(screen.queryByTestId("block-button")).not.toBeInTheDocument();
+  });
+
+  it("los contadores enlazan a las vistas de conexiones", async () => {
+    renderWithIntl(await Placa({ profile: base, authenticated: true }));
+    expect(screen.getByText("12").closest("a")).toHaveAttribute(
+      "href",
+      "/users/ana/connections/followers",
+    );
+    expect(screen.getByText("8").closest("a")).toHaveAttribute(
+      "href",
+      "/users/ana/connections/following",
+    );
+  });
+
+  it("sin seguidores en común: no renderiza la fila", async () => {
+    renderWithIntl(await Placa({ profile: base, authenticated: true }));
+    expect(screen.queryByTestId("mutual-followers-row")).not.toBeInTheDocument();
+  });
+
+  it("con seguidores en común: renderiza la fila", async () => {
+    renderWithIntl(
+      await Placa({
+        profile: base,
+        authenticated: true,
+        mutualFollowers: {
+          total: 3,
+          first: { id: "u2", username: "leo", displayName: "Leo", profileVisibility: "public" },
+        },
+      }),
+    );
+    expect(screen.getByTestId("mutual-followers-row")).toHaveTextContent("ana");
   });
 });
