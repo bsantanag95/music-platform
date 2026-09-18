@@ -7,6 +7,7 @@
   "noResultsDescription": "Ningún favorito coincide con los filtros. Probá quitar alguno.",
   "profileEmptyTitle": "Sin favoritos",
   "profileEmptyDescription": "Este usuario todavía no compartió favoritos visibles.",
+  "profileMoreButton": "Ver más favoritos",
   "addFavorite": "Marcar como favorito",
   "removeFavorite": "Quitar favorito",
   "quickAdded": "Agregado a favoritos",

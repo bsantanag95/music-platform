@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { listUserDiary } from "@/services/diary/diary";
-import { listUserFavorites } from "@/services/favorites/favorites";
+import { getFavoritesPreview, listUserFavorites } from "@/services/favorites/favorites";
 import { listUserLists } from "@/services/lists/lists";
 import { listProfileCollection } from "@/services/collection/collection";
 import { getTasteFingerprint } from "@/services/profiles/stats";
@@ -36,7 +36,7 @@ import { ProfileLevel3Links } from "@/components/profiles/ProfileLevel3Links";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
 import { ProfileRecency } from "@/components/profiles/ProfileRecency";
 import { DiaryList } from "@/components/diary/DiaryList";
-import { FavoritesWall } from "@/components/favorites/FavoritesWall";
+import { FavoritesPreview } from "@/components/favorites/FavoritesPreview";
 import { ListsList } from "@/components/lists/ListsList";
 import { CollectionShelf } from "@/components/collection/CollectionShelf";
 
@@ -216,15 +216,16 @@ export async function DiaryRail({ username, viewerId, isOwn }: SectionProps) {
 
 export async function FavoritesRail({ username, viewerId, isOwn }: SectionProps) {
   const t = await getTranslations("users");
-  const initial = await listUserFavorites(username, viewerId, 1, 20);
-  if (initial.favorites.length === 0) {
+  const preview = await getFavoritesPreview(username, viewerId);
+  const total = preview.counts.artist + preview.counts["release-group"] + preview.counts.recording;
+  if (total === 0) {
     return isOwn ? (
       <EmptyRailForOwner label={t("favoritesTitle")} message={t("railEmptyOwn")} />
     ) : null;
   }
   return (
-    <ProfileRail id="favoritos" label={t("favoritesTitle")} count={initial.favorites.length}>
-      <FavoritesWall initial={initial} readOnly username={username} />
+    <ProfileRail id="favoritos" label={t("favoritesTitle")} count={total}>
+      <FavoritesPreview username={username} preview={preview} />
     </ProfileRail>
   );
 }

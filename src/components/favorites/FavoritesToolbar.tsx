@@ -29,10 +29,17 @@ interface FavoritesToolbarProps {
   searchInput: string;
   onSearchInput: (value: string) => void;
   onClear: () => void;
+  /**
+   * El filtro de audiencia solo tiene sentido para el propio dueño filtrando
+   * sus favoritos por visibilidad — en modo lectura (perfil de un tercero) no
+   * se muestra: el visitante nunca puede ver "privado" de otra persona, y
+   * "seguidores"/"público" ya son la totalidad de lo que le llega.
+   */
+  showAudienceFilter?: boolean;
 }
 
 // Barra de herramientas del muro: buscador (con debounce en el orquestador) más
-// tres <select> livianos de filtro/orden. Misma disposición que /me/lists y
+// hasta tres <select> livianos de filtro/orden. Misma disposición que /me/lists y
 // /me/diary.
 export function FavoritesToolbar({
   filters,
@@ -40,6 +47,7 @@ export function FavoritesToolbar({
   searchInput,
   onSearchInput,
   onClear,
+  showAudienceFilter = true,
 }: FavoritesToolbarProps) {
   const t = useTranslations("favorites");
   const isFiltered = favoriteFiltersActive(filters);
@@ -66,17 +74,19 @@ export function FavoritesToolbar({
           <option value="release-group">{t("typeAlbum")}</option>
           <option value="recording">{t("typeSong")}</option>
         </FilterSelect>
-        <FilterSelect
-          value={filters.audience}
-          onChange={(value) => onChange({ ...filters, audience: value as DiaryAudience | "" })}
-          ariaLabel={t("audienceFilterLabel")}
-          widthClassName="w-[16ch]"
-        >
-          <option value="">{t("filterAllAudiences")}</option>
-          <option value="private">{t("audience.private")}</option>
-          <option value="followers">{t("audience.followers")}</option>
-          <option value="public">{t("audience.public")}</option>
-        </FilterSelect>
+        {showAudienceFilter && (
+          <FilterSelect
+            value={filters.audience}
+            onChange={(value) => onChange({ ...filters, audience: value as DiaryAudience | "" })}
+            ariaLabel={t("audienceFilterLabel")}
+            widthClassName="w-[16ch]"
+          >
+            <option value="">{t("filterAllAudiences")}</option>
+            <option value="private">{t("audience.private")}</option>
+            <option value="followers">{t("audience.followers")}</option>
+            <option value="public">{t("audience.public")}</option>
+          </FilterSelect>
+        )}
         <FilterSelect
           value={filters.sort}
           onChange={(value) => onChange({ ...filters, sort: value as FavoriteSort })}

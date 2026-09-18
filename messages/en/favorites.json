@@ -7,6 +7,7 @@
   "noResultsDescription": "No favorite matches the filters. Try removing one.",
   "profileEmptyTitle": "No favorites",
   "profileEmptyDescription": "This user has not shared visible favorites yet.",
+  "profileMoreButton": "See more favorites",
   "addFavorite": "Add to favorites",
   "removeFavorite": "Remove favorite",
   "quickAdded": "Added to favorites",

@@ -144,9 +144,45 @@ describe("FavoritesWall", () => {
     );
   });
 
-  it("modo lectura: sin toolbar ni encabezado de conteos, usa el vacío de perfil", () => {
+  it("modo lectura: muestra toolbar y encabezado de conteos, pero no el modo selección ni el filtro de audiencia", () => {
+    const counts = { artist: 1, "release-group": 0, recording: 0 };
+    renderWall(response([fav({ targetType: "artist" })], { counts }), {
+      readOnly: true,
+      username: "ana",
+    });
+    expect(screen.getByPlaceholderText("Buscar en tus favoritos")).toBeInTheDocument();
+    expect(screen.getByText("1 artista", { exact: false })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Seleccionar" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Filtrar por audiencia")).not.toBeInTheDocument();
+  });
+
+  it("modo propio: sí muestra el filtro de audiencia", () => {
+    const counts = { artist: 1, "release-group": 0, recording: 0 };
+    renderWall(response([fav({ targetType: "artist" })], { counts }));
+    expect(screen.getByLabelText("Filtrar por audiencia")).toBeInTheDocument();
+  });
+
+  it("modo lectura sin favoritos: usa el vacío de perfil, no el CTA de autogestión", () => {
     renderWall(response([]), { readOnly: true, username: "ana" });
-    expect(screen.queryByPlaceholderText("Buscar en tus favoritos")).not.toBeInTheDocument();
     expect(screen.getByText("Sin favoritos")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Buscar en el catálogo" })).not.toBeInTheDocument();
+  });
+
+  it("modo lectura: buscar reconsulta con getUserFavorites y el filtro aplicado", async () => {
+    const counts = { artist: 1, "release-group": 0, recording: 0 };
+    mocks.getUserFavorites.mockResolvedValue(
+      response([fav({ targetType: "artist", target: { id: "t9", title: "Radiohead", coverThumbUrl: null } })], {
+        counts,
+      }),
+    );
+    renderWall(response([fav({ targetType: "artist" })], { counts }), {
+      readOnly: true,
+      username: "ana",
+    });
+
+    await userEvent.type(screen.getByPlaceholderText("Buscar en tus favoritos"), "radio");
+    await waitFor(() =>
+      expect(mocks.getUserFavorites).toHaveBeenCalledWith("ana", 1, 20, { q: "radio" }),
+    );
   });
 });
