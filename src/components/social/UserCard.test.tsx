@@ -8,6 +8,7 @@ vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
     <a href={href} {...props}>{children}</a>
   ),
+  useRouter: () => ({ refresh: vi.fn() }),
 }));
 vi.mock("@/lib/api/client", () => ({
   apiFetch: vi.fn(),

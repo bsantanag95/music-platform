@@ -11,6 +11,7 @@ vi.mock("@/i18n/navigation", () => ({
       {children}
     </a>
   ),
+  useRouter: () => ({ refresh: vi.fn() }),
 }));
 vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: () => <span data-testid="cover" /> }));
 

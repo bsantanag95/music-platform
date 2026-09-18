@@ -151,6 +151,7 @@ export async function Placa({
           authenticated={authenticated}
           requestId={profile.id}
           preview={preview}
+          refreshProfileOnFollow
         />
         {showBlock && <BlockButton username={profile.username} blocked={profile.blockedByMe} />}
         {showBlock && !preview && (
