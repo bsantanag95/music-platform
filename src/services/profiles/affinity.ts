@@ -1,10 +1,11 @@
 import { cache } from "react";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { artist, artistFollow, favorite, rating, recording, releaseGroup, userFollow } from "@/db/schema";
+import { appUser, artist, artistFollow, favorite, rating, recording, releaseGroup, userFollow } from "@/db/schema";
+import { ApiError } from "@/lib/api/errors";
 import { PRIMARY_ARTIST_SQL } from "@/services/feed/feed";
 import { audiencesForProfile } from "@/services/social/visibility";
-import type { Audience } from "@/services/social/types";
+import type { Audience, ProfileVisibility, UserSummary } from "@/services/social/types";
 import type { ShowcaseEntity, ShowcaseEntityType } from "./showcase";
 
 // Cuántos de los seguidores aprobados del dueño son personas que el visitante
@@ -38,6 +39,135 @@ export async function mutualFollowersHint(
 
   return row?.count ?? 0;
 }
+
+export interface MutualUsersPage {
+  users: UserSummary[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  hasNext: boolean;
+}
+
+// Núcleo compartido de `listMutualFollowers`/`listMutualFollowing`: pagina
+// las filas de `user_follow` cuyo lado libre (`userColumn`) está en
+// `candidateIds` — el conjunto de cuentas que el visitante sigue, calculado
+// aparte porque es el mismo para ambos listados. `ownerWhere` fija cuál lado
+// de la relación es el dueño del perfil (quién sigue a quién).
+async function pagedMutualUsers(
+  candidateIds: string[],
+  ownerWhere: SQL,
+  userColumn: typeof userFollow.followerId | typeof userFollow.followedId,
+  page: number,
+  pageSize: number,
+): Promise<MutualUsersPage> {
+  if (page < 1 || pageSize < 1 || pageSize > 50) {
+    throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
+  }
+  if (candidateIds.length === 0) {
+    return { users: [], totalCount: 0, page, pageSize, hasNext: false };
+  }
+
+  const where = and(ownerWhere, eq(userFollow.status, "accepted"), inArray(userColumn, candidateIds));
+  const [rows, [countRow]] = await Promise.all([
+    db
+      .select({
+        user: {
+          id: appUser.id,
+          username: appUser.username,
+          displayName: appUser.displayName,
+          profileVisibility: appUser.profileVisibility,
+        },
+      })
+      .from(userFollow)
+      .innerJoin(appUser, eq(userColumn, appUser.id))
+      .where(where)
+      .orderBy(appUser.username)
+      .limit(pageSize + 1)
+      .offset((page - 1) * pageSize),
+    db.select({ count: sql<number>`count(*)::int` }).from(userFollow).where(where),
+  ]);
+
+  return {
+    users: rows.slice(0, pageSize).map((row) => ({
+      ...row.user,
+      profileVisibility: row.user.profileVisibility as ProfileVisibility,
+    })),
+    totalCount: countRow?.count ?? 0,
+    page,
+    pageSize,
+    hasNext: rows.length > pageSize,
+  };
+}
+
+async function viewerFollowingIds(viewerId: string): Promise<string[]> {
+  const rows = await db
+    .select({ id: userFollow.followedId })
+    .from(userFollow)
+    .where(and(eq(userFollow.followerId, viewerId), eq(userFollow.status, "accepted")));
+  return rows.map((row) => row.id);
+}
+
+// "Seguidores en común": cuentas que el visitante sigue y que también siguen
+// al dueño del perfil — el mismo criterio que `mutualFollowersHint`, pero con
+// identidad en vez de solo el conteo (spec: nueva capacidad, ver
+// docs/05-features/user-profile.md). A diferencia del hint del perfil
+// privado, esta lista SÍ expone identidades — solo se usa en perfiles
+// accesibles (ver `getMutualFollowersPreview`).
+export async function listMutualFollowers(
+  viewerId: string,
+  ownerId: string,
+  page = 1,
+  pageSize = 20,
+): Promise<MutualUsersPage> {
+  if (viewerId === ownerId) return { users: [], totalCount: 0, page, pageSize, hasNext: false };
+  const candidateIds = await viewerFollowingIds(viewerId);
+  return pagedMutualUsers(candidateIds, eq(userFollow.followedId, ownerId), userFollow.followerId, page, pageSize);
+}
+
+// "Seguidos en común": cuentas que tanto el visitante como el dueño del
+// perfil siguen — intersección simétrica de ambos listados de "seguidos".
+export async function listMutualFollowing(
+  viewerId: string,
+  ownerId: string,
+  page = 1,
+  pageSize = 20,
+): Promise<MutualUsersPage> {
+  if (viewerId === ownerId) return { users: [], totalCount: 0, page, pageSize, hasNext: false };
+  const candidateIds = await viewerFollowingIds(viewerId);
+  return pagedMutualUsers(candidateIds, eq(userFollow.followerId, ownerId), userFollow.followedId, page, pageSize);
+}
+
+export interface MutualFollowersPreview {
+  total: number;
+  first: UserSummary;
+}
+
+// Previsualización para la Placa: primer seguidor en común (para el
+// monograma) + el total. Devuelve `null` cuando no aplica — mismo criterio
+// de acceso que `getProfileAffinity` (sin sesión, el propio dueño, bloqueo,
+// o perfil no accesible) para no revelar identidades donde no corresponde.
+export const getMutualFollowersPreview = cache(async function getMutualFollowersPreview(
+  username: string,
+  viewerId: string | null,
+): Promise<MutualFollowersPreview | null> {
+  if (!viewerId) return null;
+
+  const { getProfileByUsername } = await import("@/services/social/profiles");
+  const profile = await getProfileByUsername(username, viewerId);
+  if (
+    profile.relation === "self" ||
+    profile.relation === "blocked" ||
+    profile.blockedByMe ||
+    !profile.accessible
+  ) {
+    return null;
+  }
+
+  const { users, totalCount } = await listMutualFollowers(viewerId, profile.id, 1, 1);
+  const first = users[0];
+  if (!first || totalCount === 0) return null;
+  return { total: totalCount, first };
+});
 
 // --- Afinidad completa entre visitante y dueño (spec profile-affinity) ---
 

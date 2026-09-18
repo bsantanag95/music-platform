@@ -562,6 +562,15 @@ export const UserSearchResponseSchema = z.object({
   pageSize: z.number().int(),
   hasNext: z.boolean(),
 });
+
+export const MutualFollowersResponseSchema = z.object({
+  users: z.array(UserSummarySchema),
+  totalCount: z.number().int(),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  hasNext: z.boolean(),
+});
+export type MutualFollowersResponse = z.infer<typeof MutualFollowersResponseSchema>;
 export type UserSearchResponse = z.infer<typeof UserSearchResponseSchema>;
 
 export const PublicProfileSchema = z.object({

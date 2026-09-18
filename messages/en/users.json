@@ -168,6 +168,25 @@
     "error": "Couldn't load.",
     "noIdentity": "Hasn't chosen their musical identity yet."
   },
+  "mutualFollowersRow": {
+    "andOthers": "and",
+    "followThisAccountPlural": "others follow this account",
+    "followThisAccountSingular": "follows this account",
+    "modalClose": "Close",
+    "modalLoading": "Loading…"
+  },
+  "connections": {
+    "followingTab": "Following",
+    "followersTab": "Followers",
+    "mutualTab": "Followed in common",
+    "mutualFollowingHeading": "Accounts you both follow",
+    "mutualFollowersHeading": "Mutual followers",
+    "mutualEmpty": "No matches yet.",
+    "mutualSignInHint": "Sign in to see what you have in common with this account.",
+    "emptyFollowing": "Not following anyone yet.",
+    "emptyFollowers": "No followers yet.",
+    "privateNotice": "This profile is private."
+  },
   "ratingHighlights": {
     "heading": "Featured ratings"
   },

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cache, Suspense, type ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { getProfileView } from "@/services/profiles/profile-view";
-import { mutualFollowersHint } from "@/services/profiles/affinity";
+import { getMutualFollowersPreview, mutualFollowersHint } from "@/services/profiles/affinity";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
 import { Placa } from "@/components/profiles/Placa";
@@ -85,7 +85,7 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
   const authenticated = Boolean(session);
   const platformPermissions = session?.user ? await getUserPermissions(session.user.id) : [];
   const canModerate = platformPermissions.includes("moderation.suspend_social");
-  const mutualFollowers =
+  const mutualFollowersCount =
     lockedOut && effectiveViewerId
       ? await mutualFollowersHint(effectiveViewerId, profile.id)
       : 0;
@@ -103,7 +103,7 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
             relation={profile.relation}
             authenticated={authenticated}
             ownerId={profile.id}
-            mutualFollowers={mutualFollowers}
+            mutualFollowers={mutualFollowersCount}
             preview={previewing}
           />
         </div>
@@ -118,6 +118,10 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
   // principal con la Tarjeta de Identidad y el resto en 3 niveles de
   // profundidad. Las capas propias del dueño (panel de gestión, editores
   // inline) se superponen a esa misma estructura, no la reemplazan.
+  const mutualFollowers = effectiveViewerId
+    ? await getMutualFollowersPreview(profile.username, effectiveViewerId)
+    : null;
+
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
       {realIsOwn && (
@@ -133,6 +137,7 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
             variant="aside"
             preview={previewing}
             canModerate={canModerate}
+            mutualFollowers={mutualFollowers}
           />
           {isOwn && (
             <Suspense fallback={<SectionFallback />}>

@@ -168,6 +168,25 @@
     "error": "No se pudo cargar.",
     "noIdentity": "Todavía no eligió su identidad musical."
   },
+  "mutualFollowersRow": {
+    "andOthers": "y otros",
+    "followThisAccountPlural": "siguen a este usuario",
+    "followThisAccountSingular": "sigue a este usuario",
+    "modalClose": "Cerrar",
+    "modalLoading": "Cargando…"
+  },
+  "connections": {
+    "followingTab": "Seguidos",
+    "followersTab": "Seguidores",
+    "mutualTab": "Seguidos en común",
+    "mutualFollowingHeading": "Cuentas que ambos siguen",
+    "mutualFollowersHeading": "Seguidores en común",
+    "mutualEmpty": "Sin coincidencias todavía.",
+    "mutualSignInHint": "Iniciá sesión para ver las coincidencias con esta cuenta.",
+    "emptyFollowing": "No sigue a nadie todavía.",
+    "emptyFollowers": "Sin seguidores todavía.",
+    "privateNotice": "Este perfil es privado."
+  },
   "ratingHighlights": {
     "heading": "Valoraciones destacadas"
   },
