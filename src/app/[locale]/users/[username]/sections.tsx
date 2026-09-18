@@ -138,14 +138,16 @@ export async function ExplorationSection({
   username,
   viewerId,
 }: Omit<SectionProps, "isOwn">) {
-  const [artists, affinity] = await Promise.all([
+  const [{ artists, totalCount }, affinity] = await Promise.all([
     listProfileFollowedArtists(username, viewerId),
     getProfileAffinity(username, viewerId),
   ]);
   const sharedArtistIds = affinity
     ? new Set(affinity.sharedFollowedArtists.map((entity) => entity.id))
     : undefined;
-  return <ExploreSection artists={artists} sharedArtistIds={sharedArtistIds} />;
+  return (
+    <ExploreSection username={username} artists={artists} totalCount={totalCount} sharedArtistIds={sharedArtistIds} />
+  );
 }
 
 // Tarjeta de Identidad — Nivel 1 (openspec: rework-user-profile): el artista y

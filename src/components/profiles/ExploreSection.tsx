@@ -1,11 +1,14 @@
-import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
+import { ArtistTile } from "@/components/profiles/ArtistTile";
 import type { FollowedArtist } from "@/services/social/artist-following";
 
 interface ExploreSectionProps {
+  username: string;
+  /** Página 1 del listado, hasta `EXPLORATION_PREVIEW_PAGE_SIZE` (8) artistas. */
   artists: FollowedArtist[];
+  /** Total de artistas seguidos por el dueño — determina si hace falta la celda "+N". */
+  totalCount: number;
   /**
    * Ids de artistas que el visitante también sigue (spec `profile-affinity`,
    * "Indicadores de afinidad en 'Exploración'") — reutiliza el cálculo del
@@ -23,63 +26,44 @@ interface ExploreSectionProps {
 // (Regla de Rareza, DESIGN.md): la insignia "tú también" de un artista en
 // común. Server Component; no renderiza si está vacía. Se muestra en
 // autorizado + dueño.
-export async function ExploreSection({ artists, sharedArtistIds }: ExploreSectionProps) {
+//
+// Tope de 8 celdas (2×4 en escritorio): si `totalCount` supera lo que trae
+// esta página, la 8ª celda deja de ser un artista y pasa a ser el link
+// "+N" al listado completo (`/users/[username]/artists`) — elegida entre 4
+// mockups de cómo truncar (ver memoria profile-redesign). Nunca se agregó una
+// 9ª celda: siempre son 7 artistas + el link, u 8 artistas sin link.
+export async function ExploreSection({ username, artists, totalCount, sharedArtistIds }: ExploreSectionProps) {
   const t = await getTranslations("users");
   if (artists.length === 0) return null;
+
+  const overflow = totalCount > artists.length;
+  const visibleArtists = overflow ? artists.slice(0, 7) : artists;
+  const moreCount = totalCount - visibleArtists.length;
 
   return (
     <section className="flex w-full max-w-2xl flex-col gap-5">
       <h2 className="font-display text-xl text-paper">{t("explorationHeading")}</h2>
       <ul className="grid grid-cols-3 gap-5 sm:grid-cols-4">
-        {artists.map((artist) => {
-          const shared = sharedArtistIds?.has(artist.id) ?? false;
-          return (
-            <li key={artist.id}>
-              <Link href={`/artist/${artist.id}`} className="group flex flex-col items-center gap-2 text-center">
-                <div className="relative">
-                  {artist.photoUrl ? (
-                    <div className="relative size-20 overflow-hidden rounded-full border border-ink-border transition-colors group-hover:border-amber">
-                      <Image src={artist.photoUrl} alt="" fill sizes="5rem" className="object-cover" />
-                    </div>
-                  ) : (
-                    <DiscPlaceholder
-                      alt=""
-                      className="size-20 rounded-full border border-ink-border transition-colors group-hover:border-amber"
-                    />
-                  )}
-                  {/* Faceta de recorrido de artista (openspec: add-artist-journey):
-                      solo un punto discreto para en-curso/completo — nunca un
-                      número ni un badge de "pendiente" (§6.4.1). */}
-                  {artist.journeyState && (
-                    <span
-                      aria-label={t(
-                        artist.journeyState === "complete"
-                          ? "journeyStateComplete"
-                          : "journeyStateInProgress",
-                      )}
-                      title={t(
-                        artist.journeyState === "complete"
-                          ? "journeyStateComplete"
-                          : "journeyStateInProgress",
-                      )}
-                      className={`absolute -right-0.5 -top-0.5 size-3 rounded-full border-2 border-ink-surface ${
-                        artist.journeyState === "complete" ? "bg-petrol" : "bg-paper-muted"
-                      }`}
-                    />
-                  )}
-                </div>
-                <span className="line-clamp-2 font-data text-xs text-paper transition-colors group-hover:text-amber">
-                  {artist.name}
-                </span>
-                {shared && (
-                  <span className="rounded bg-amber px-1.5 py-0.5 font-data text-[0.625rem] text-ink">
-                    {t("explorationMutualBadge")}
-                  </span>
-                )}
-              </Link>
-            </li>
-          );
-        })}
+        {visibleArtists.map((artist) => (
+          <li key={artist.id}>
+            <ArtistTile artist={artist} shared={sharedArtistIds?.has(artist.id) ?? false} t={t} />
+          </li>
+        ))}
+        {overflow && (
+          <li>
+            <Link
+              href={`/users/${username}/artists`}
+              className="group flex flex-col items-center gap-2 text-center"
+            >
+              <span className="flex size-20 shrink-0 items-center justify-center rounded-full border border-ink-border font-display text-lg text-amber transition-colors group-hover:border-amber">
+                +{moreCount}
+              </span>
+              <span className="font-data text-xs text-paper-muted transition-colors group-hover:text-paper">
+                {t("explorationMoreLabel")}
+              </span>
+            </Link>
+          </li>
+        )}
       </ul>
     </section>
   );

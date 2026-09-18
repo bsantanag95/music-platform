@@ -397,9 +397,19 @@ autorizado y dueño; no aparece si el dueño no sigue a ningún artista.
 - **Insignia "tú también"** — con sesión iniciada, un artista que también sigue el visitante
   lleva una insignia puntual (sin conteo agregado ni "3 en común"), alimentada por
   `getProfileAffinity`. Ausente para el propio dueño o sin sesión.
-- El dueño gestiona sus artistas seguidos en `/me/artists` (enlace en el panel del dueño).
-- La sección muestra hasta 12 artistas sin "ver todos" para visitantes. El evento "seguir
-  artista" en el feed llega con `rework-feed-tiers`.
+- El dueño gestiona sus artistas seguidos en `/me/artists` (buscador + orden + modo de
+  vista, `FollowedArtistList`) — autogestión, no sirve para ver la lista de un tercero.
+- **Tope de 8 celdas (2×4), con "+N" como link a la lista completa** (2026-09-17, elegida
+  entre 4 mockups — antes no había tope visual: se pedían hasta 12 y se mostraban todos sin
+  aviso de que hubiera más). Si el dueño sigue más de 8 artistas, la 8ª celda deja de ser un
+  artista y pasa a ser el link "+N" (7 artistas + 1 celda de link, nunca 9 celdas) hacia
+  `/users/{username}/artists` — vista de solo lectura nueva, paginada a 50 sin controles
+  (mismo límite que el resto de listados de este estilo), distinta de `/me/artists`.
+  `listProfileFollowedArtists` (`src/services/profiles/exploration.ts`) pasó a devolver
+  `{ artists, totalCount, page, pageSize, hasNext }` en vez de un array simple, para poder
+  calcular el "+N" exacto. La celda de artista (avatar + punto de recorrido + insignia "tú
+  también") se extrajo a `ArtistTile.tsx`, reutilizada por ambas vistas.
+  El evento "seguir artista" en el feed llega con `rework-feed-tiers`.
 
 ## Afinidad
 
