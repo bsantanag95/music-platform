@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { FollowRelation, UserSummary } from "@/lib/api/schemas";
@@ -11,13 +12,15 @@ interface UserCardProps {
   authenticated: boolean;
   showFollow?: boolean;
   onRelationChange?: (username: string, relation: FollowRelation) => void;
+  /** Acción adicional junto al `FollowButton` (p. ej. "Quitar seguidor" en las vistas de conexiones del propio dueño). */
+  extra?: ReactNode;
 }
 
 // Tarjeta de usuario reutilizable en la búsqueda social. Separa identidad
 // (monograma + nombre + username) de la acción social, y en móvil la acción
 // pasa a una segunda línea para no recortar etiquetas largas. El nombre es dato
 // de usuario (no se traduce); las etiquetas de estado sí vienen de i18n.
-export function UserCard({ user, authenticated, showFollow = true, onRelationChange }: UserCardProps) {
+export function UserCard({ user, authenticated, showFollow = true, onRelationChange, extra }: UserCardProps) {
   const t = useTranslations("users");
   const name = user.displayName ?? user.username;
   const monogramClass = monogramStyle(user.username);
@@ -43,19 +46,21 @@ export function UserCard({ user, authenticated, showFollow = true, onRelationCha
           </span>
         </span>
       </Link>
-      {showFollow && (user.relation || authenticated) && (
+      {((showFollow && (user.relation || authenticated)) || extra) && (
         <div className="flex shrink-0 flex-wrap items-center justify-start gap-2 sm:justify-end">
-          {user.relation ? (
-            <FollowButton
-              username={user.username}
-              relation={user.relation}
-              authenticated={authenticated}
-              requestId={user.id}
-              onChange={(next) => onRelationChange?.(user.username, next)}
-            />
-          ) : (
-            <span className="font-data text-xs text-paper-muted">{t("following")}</span>
-          )}
+          {showFollow &&
+            (user.relation ? (
+              <FollowButton
+                username={user.username}
+                relation={user.relation}
+                authenticated={authenticated}
+                requestId={user.id}
+                onChange={(next) => onRelationChange?.(user.username, next)}
+              />
+            ) : authenticated ? (
+              <span className="font-data text-xs text-paper-muted">{t("following")}</span>
+            ) : null)}
+          {extra}
         </div>
       )}
     </li>

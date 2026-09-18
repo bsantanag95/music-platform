@@ -116,6 +116,16 @@ Solo se pagina hasta 50 resultados (página 1), sin controles de paginación en 
 mismo límite que ya tenían `/me/followers`/`/me/following`; no se construyó "cargar más"
 para esta primera versión.
 
+**Unificado con la autogestión** (2026-09-17, segunda iteración): `/me/followers` y
+`/me/following` se eliminaron — el menú de usuario (`user-menu-items.ts`, ambas superficies,
+header y panel de Gestión) apunta directo a `/users/:username/connections/{followers,following}`.
+Cuando el visitante es el propio dueño, `ConnectionsUserList` suma la acción "Quitar
+seguidor" (solo en la pestaña Seguidores) junto al `FollowButton` normal — "dejar de
+seguir" en Seguidos no necesita caso especial: la relación del dueño hacia cada persona de
+su propia lista de seguidos ya es "following" por definición, así que el `FollowButton`
+existente la resuelve sola. `UserList.tsx` (con sus acciones de mutación) se redujo a
+"requests"/"blocks", únicas variantes sin equivalente de solo-lectura.
+
 ## Tarjeta de Identidad
 
 Primer bloque del Nivel 1, justo bajo la Placa (`IdentityCard.tsx`): hasta **3 elementos

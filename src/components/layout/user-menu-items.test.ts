@@ -32,10 +32,18 @@ describe("user-menu-items", () => {
     expect(ids).toContain("blocks");
   });
 
-  it("sustituye :username solo en el enlace al perfil propio", () => {
+  it("sustituye :username en perfil, seguidos y seguidores; el resto no lo necesita", () => {
     const items = buildUserMenuItems({ username: "an a", surface: "header" });
     expect(items.find((i) => i.id === "profile")?.href).toBe("/users/an%20a");
+    expect(items.find((i) => i.id === "followers")?.href).toBe("/users/an%20a/connections/followers");
+    expect(items.find((i) => i.id === "following")?.href).toBe("/users/an%20a/connections/following");
     expect(items.find((i) => i.id === "diary")?.href).toBe("/me/diary");
+  });
+
+  it("la superficie panel también sustituye :username en seguidos y seguidores", () => {
+    const items = buildUserMenuItems({ username: "ana", surface: "panel" });
+    expect(items.find((i) => i.id === "followers")?.href).toBe("/users/ana/connections/followers");
+    expect(items.find((i) => i.id === "following")?.href).toBe("/users/ana/connections/following");
   });
 
   it("adjunta el conteo al ítem con badge solo cuando es > 0", () => {

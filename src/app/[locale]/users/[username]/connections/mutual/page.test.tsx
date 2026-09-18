@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   getProfileByUsername: vi.fn(),
   listMutualFollowers: vi.fn(),
   listMutualFollowing: vi.fn(),
+  relationsFor: vi.fn(),
 }));
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: () => mocks.resolveSession() }));
 vi.mock("@/services/social/profiles", () => ({
@@ -24,6 +25,9 @@ vi.mock("@/services/social/profiles", () => ({
 vi.mock("@/services/profiles/affinity", () => ({
   listMutualFollowers: (...a: unknown[]) => mocks.listMutualFollowers(...a),
   listMutualFollowing: (...a: unknown[]) => mocks.listMutualFollowing(...a),
+}));
+vi.mock("@/services/social/relations", () => ({
+  relationsFor: (...a: unknown[]) => mocks.relationsFor(...a),
 }));
 vi.mock("@/components/profiles/ProfileConnectionsHeader", () => ({
   ProfileConnectionsHeader: ({ showMutualTab }: { showMutualTab: boolean }) => (
@@ -54,6 +58,7 @@ function run(username = "ana") {
 describe("ProfileMutualConnectionsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.relationsFor.mockResolvedValue(new Map());
   });
 
   it("perfil inexistente → notFound", async () => {

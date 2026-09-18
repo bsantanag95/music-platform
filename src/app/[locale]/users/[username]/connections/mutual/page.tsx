@@ -3,8 +3,10 @@ import { getTranslations } from "next-intl/server";
 import { resolveSession } from "@/services/auth/sessions";
 import { getProfileByUsername } from "@/services/social/profiles";
 import { listMutualFollowers, listMutualFollowing } from "@/services/profiles/affinity";
+import { relationsFor } from "@/services/social/relations";
 import { ProfileConnectionsHeader } from "@/components/profiles/ProfileConnectionsHeader";
 import { ConnectionsSection, ConnectionsUserList } from "@/components/profiles/ConnectionsUserList";
+import type { UserSummary } from "@/lib/api/schemas";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -32,6 +34,15 @@ export default async function ProfileMutualConnectionsPage({ params }: PageProps
   }
 
   const applicable = viewerId !== null && profile.relation !== "self";
+  const [following, followers] = applicable && profile.accessible
+    ? await Promise.all([
+        listMutualFollowing(viewerId, profile.id, 1, 50),
+        listMutualFollowers(viewerId, profile.id, 1, 50),
+      ])
+    : [{ users: [] as UserSummary[] }, { users: [] as UserSummary[] }];
+  const relations = await relationsFor(viewerId, [...following.users, ...followers.users].map((user) => user.id));
+  const withRelation = (users: UserSummary[]) =>
+    users.map((user) => ({ ...user, relation: relations.get(user.id) }));
 
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
@@ -45,16 +56,14 @@ export default async function ProfileMutualConnectionsPage({ params }: PageProps
           <>
             <ConnectionsSection heading={t("connections.mutualFollowingHeading")}>
               <ConnectionsUserList
-                users={(await listMutualFollowing(viewerId, profile.id, 1, 50)).users}
-                viewerId={viewerId}
+                users={withRelation(following.users)}
                 authenticated={Boolean(session)}
                 emptyMessage={t("connections.mutualEmpty")}
               />
             </ConnectionsSection>
             <ConnectionsSection heading={t("connections.mutualFollowersHeading")}>
               <ConnectionsUserList
-                users={(await listMutualFollowers(viewerId, profile.id, 1, 50)).users}
-                viewerId={viewerId}
+                users={withRelation(followers.users)}
                 authenticated={Boolean(session)}
                 emptyMessage={t("connections.mutualEmpty")}
               />

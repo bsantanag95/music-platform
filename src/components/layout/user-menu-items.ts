@@ -17,7 +17,8 @@ export interface UserMenuItemDef {
   id: string;
   /**
    * Ruta destino. `:username` se sustituye por el username del usuario en
-   * `buildUserMenuItems`.
+   * `buildUserMenuItems` — lo necesitan "profile", "followers" y "following",
+   * en ambas superficies (la del panel debe pasar `username` explícitamente).
    */
   href: string;
   /** Clave del namespace `common` de i18n con la etiqueta corta del ítem. */
@@ -50,8 +51,20 @@ export const USER_MENU_ITEMS: readonly UserMenuItemDef[] = [
   },
   { id: "feed", href: "/me/feed", labelKey: "feed", group: "library", surfaces: ["header"] },
 
-  { id: "followers", href: "/me/followers", labelKey: "followers", group: "network", surfaces: BOTH },
-  { id: "following", href: "/me/following", labelKey: "following", group: "network", surfaces: BOTH },
+  {
+    id: "followers",
+    href: "/users/:username/connections/followers",
+    labelKey: "followers",
+    group: "network",
+    surfaces: BOTH,
+  },
+  {
+    id: "following",
+    href: "/users/:username/connections/following",
+    labelKey: "following",
+    group: "network",
+    surfaces: BOTH,
+  },
   {
     id: "followRequests",
     href: "/me/follow-requests",
@@ -77,8 +90,8 @@ export interface ResolvedUserMenuItem {
 
 interface BuildUserMenuItemsOptions {
   /**
-   * Username del usuario, para resolver el enlace a su propio perfil. Solo lo
-   * necesita la superficie `header` (el único destino con `:username`).
+   * Username del usuario, para resolver los destinos con `:username`
+   * ("profile", "followers", "following"). Ambas superficies lo necesitan.
    */
   username?: string;
   /** Solicitudes de seguimiento pendientes recibidas. */

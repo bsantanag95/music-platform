@@ -14,8 +14,8 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 
 describe("OwnerHubPanel", () => {
-  it("enlaza las superficies de gestión de /me/*", async () => {
-    renderWithIntl(await OwnerHubPanel({ pendingRequests: 0 }));
+  it("enlaza las superficies de gestión de /me/* y de conexiones del propio perfil", async () => {
+    renderWithIntl(await OwnerHubPanel({ username: "ana", pendingRequests: 0 }));
     const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href"));
     expect(hrefs).toEqual(
       expect.arrayContaining([
@@ -23,8 +23,8 @@ describe("OwnerHubPanel", () => {
         "/me/favorites",
         "/me/lists",
         "/me/collection",
-        "/me/followers",
-        "/me/following",
+        "/users/ana/connections/followers",
+        "/users/ana/connections/following",
         "/me/follow-requests",
         "/me/blocks",
         "/me/settings",
@@ -33,12 +33,12 @@ describe("OwnerHubPanel", () => {
   });
 
   it("muestra el badge de solicitudes pendientes cuando hay > 0", async () => {
-    renderWithIntl(await OwnerHubPanel({ pendingRequests: 3 }));
+    renderWithIntl(await OwnerHubPanel({ username: "ana", pendingRequests: 3 }));
     expect(screen.getByText("pendingFollowRequests:3")).toBeInTheDocument();
   });
 
   it("no muestra badge cuando no hay solicitudes pendientes", async () => {
-    renderWithIntl(await OwnerHubPanel({ pendingRequests: 0 }));
+    renderWithIntl(await OwnerHubPanel({ username: "ana", pendingRequests: 0 }));
     expect(screen.queryByText(/pendingFollowRequests/)).not.toBeInTheDocument();
   });
 });
