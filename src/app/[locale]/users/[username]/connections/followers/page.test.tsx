@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   resolveSession: vi.fn(),
   getProfileByUsername: vi.fn(),
   listFollowers: vi.fn(),
+  relationsFor: vi.fn(),
 }));
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: () => mocks.resolveSession() }));
 vi.mock("@/services/social/profiles", () => ({
@@ -23,11 +24,18 @@ vi.mock("@/services/social/profiles", () => ({
 vi.mock("@/services/social/following", () => ({
   listFollowers: (...a: unknown[]) => mocks.listFollowers(...a),
 }));
+vi.mock("@/services/social/relations", () => ({
+  relationsFor: (...a: unknown[]) => mocks.relationsFor(...a),
+}));
 vi.mock("@/components/profiles/ProfileConnectionsHeader", () => ({
   ProfileConnectionsHeader: () => <div data-testid="header" />,
 }));
 vi.mock("@/components/profiles/ConnectionsUserList", () => ({
-  ConnectionsUserList: ({ users }: { users: unknown[] }) => <div data-testid="list">{users.length}</div>,
+  ConnectionsUserList: ({ users, ownRemovableFollowers }: { users: unknown[]; ownRemovableFollowers?: boolean }) => (
+    <div data-testid="list" data-own={ownRemovableFollowers ? "true" : "false"}>
+      {users.length}
+    </div>
+  ),
 }));
 
 const accessibleProfile = {
@@ -48,6 +56,7 @@ describe("ProfileFollowersPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.resolveSession.mockResolvedValue({ user: { id: "viewer" } });
+    mocks.relationsFor.mockResolvedValue(new Map());
   });
 
   it("perfil inexistente → notFound", async () => {
@@ -60,8 +69,11 @@ describe("ProfileFollowersPage", () => {
     mocks.listFollowers.mockResolvedValue({ users: [{ id: "u1" }], page: 1, pageSize: 50, hasNext: false });
 
     const { findByTestId } = render(await run());
-    expect((await findByTestId("list")).textContent).toBe("1");
+    const list = await findByTestId("list");
+    expect(list.textContent).toBe("1");
+    expect(list).toHaveAttribute("data-own", "false");
     expect(mocks.listFollowers).toHaveBeenCalledWith("owner", 1, 50);
+    expect(mocks.relationsFor).toHaveBeenCalledWith("viewer", ["u1"]);
   });
 
   it("perfil privado sin acceso: no consulta el listado", async () => {
@@ -70,5 +82,14 @@ describe("ProfileFollowersPage", () => {
     const { queryByTestId } = render(await run());
     expect(queryByTestId("list")).toBeNull();
     expect(mocks.listFollowers).not.toHaveBeenCalled();
+  });
+
+  it("el propio dueño ve la lista con acción de gestión (ownRemovableFollowers)", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "owner" } });
+    mocks.getProfileByUsername.mockResolvedValue({ ...accessibleProfile, relation: "self" });
+    mocks.listFollowers.mockResolvedValue({ users: [{ id: "u1" }], page: 1, pageSize: 50, hasNext: false });
+
+    const { findByTestId } = render(await run());
+    expect(await findByTestId("list")).toHaveAttribute("data-own", "true");
   });
 });

@@ -51,8 +51,6 @@
   "privacySaveError": "We couldn't save the setting. Please try again.",
   "profileMetaFollowers": "Followers",
   "profileMetaFollowing": "Following",
-  "followersTitle": "My followers",
-  "followingTitle": "People I follow",
   "artistsFollowedTitle": "Artists I follow",
   "artistsFollowedEmpty": "You don't follow any artists yet.",
   "artistsFollowed": {
@@ -79,8 +77,6 @@
   "journeyStateComplete": "Journey complete",
   "requestsTitle": "Follow requests",
   "blocksTitle": "Blocked accounts",
-  "emptyFollowers": "You don't have followers yet.",
-  "emptyFollowing": "You don't follow anyone yet.",
   "emptyRequests": "You have no pending requests.",
   "emptyBlocks": "You haven't blocked anyone.",
   "removeFollower": "Remove follower",

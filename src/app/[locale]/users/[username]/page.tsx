@@ -141,7 +141,7 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
           />
           {isOwn && (
             <Suspense fallback={<SectionFallback />}>
-              <HubSection ownerId={profile.id} />
+              <HubSection ownerId={profile.id} username={profile.username} />
             </Suspense>
           )}
           <Suspense fallback={null}>

@@ -3,6 +3,8 @@ import { Link } from "@/i18n/navigation";
 import { buildUserMenuItems } from "@/components/layout/user-menu-items";
 
 interface OwnerHubPanelProps {
+  /** Username del dueño, para resolver "Seguidos"/"Seguidores" (`/users/:username/connections/...`). */
+  username: string;
   /** Solicitudes de seguimiento pendientes recibidas (badge de bandeja). */
   pendingRequests: number;
 }
@@ -14,10 +16,10 @@ interface OwnerHubPanelProps {
 //
 // Los destinos salen de `user-menu-items.ts` (superficie `panel`), misma fuente
 // que el menú de usuario del Header, para que ambos no puedan divergir.
-export async function OwnerHubPanel({ pendingRequests }: OwnerHubPanelProps) {
+export async function OwnerHubPanel({ username, pendingRequests }: OwnerHubPanelProps) {
   const t = await getTranslations("common");
   const tHub = await getTranslations("users");
-  const items = buildUserMenuItems({ pendingFollowRequests: pendingRequests, surface: "panel" });
+  const items = buildUserMenuItems({ username, pendingFollowRequests: pendingRequests, surface: "panel" });
 
   return (
     <section className="flex w-full max-w-2xl flex-col gap-3" aria-label={tHub("hub.heading")}>

@@ -4,25 +4,23 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { apiFetch, ApiError } from "@/lib/api/client";
-import {
-  BlockedResponseSchema,
-  FollowResponseSchema,
-  NoContentSchema,
-  type UserSummary,
-} from "@/lib/api/schemas";
+import { BlockedResponseSchema, type UserSummary } from "@/lib/api/schemas";
 import { Button } from "@/components/ui/Button";
 import { FollowButton } from "./FollowButton";
 
-type ListVariant = "followers" | "following" | "requests" | "blocks";
+type ListVariant = "requests" | "blocks";
 
 interface UserListProps {
   users: UserSummary[];
   variant: ListVariant;
 }
 
-// Listado propio con acciones: eliminar seguidor, dejar de seguir, aprobar o
-// rechazar solicitud y desbloquear. Recibe los datos iniciales del Server
-// Component y actualiza su estado local tras cada mutación.
+// Listado propio con acciones: aprobar o rechazar solicitud, y desbloquear.
+// "Seguidos"/"Seguidores" se unificaron con la vista de conexiones de
+// cualquier perfil (`/users/:username/connections/{following,followers}`,
+// `ConnectionsUserList.tsx`) — ver memoria profile-redesign. Recibe los datos
+// iniciales del Server Component y actualiza su estado local tras cada
+// mutación.
 export function UserList({ users, variant }: UserListProps) {
   const t = useTranslations("users");
   const tErrors = useTranslations("errors");
@@ -45,12 +43,6 @@ export function UserList({ users, variant }: UserListProps) {
 
   function requestFor(user: UserSummary): Promise<unknown> | null {
     switch (variant) {
-      case "followers":
-        return apiFetch(`/api/me/followers/${user.id}`, NoContentSchema, { method: "DELETE" });
-      case "following":
-        return apiFetch(`/api/users/${encodeURIComponent(user.username)}/follow`, FollowResponseSchema, {
-          method: "DELETE",
-        });
       case "blocks":
         return apiFetch(`/api/users/${encodeURIComponent(user.username)}/block`, BlockedResponseSchema, { method: "DELETE" });
       case "requests":
@@ -116,10 +108,6 @@ function capitalize(value: string): string {
 
 function actionLabel(variant: ListVariant): string {
   switch (variant) {
-    case "followers":
-      return "removeFollower";
-    case "following":
-      return "unfollow";
     case "blocks":
       return "unblock";
     case "requests":

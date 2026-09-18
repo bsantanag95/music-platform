@@ -76,4 +76,29 @@ describe("UserCard", () => {
     );
     expect(screen.getByText("Siguiendo")).toBeInTheDocument();
   });
+
+  it("renderiza `extra` junto al FollowButton", () => {
+    renderWithIntl(
+      <UserCard
+        user={user({ id: "u1", username: "ana", relation: "none" })}
+        authenticated
+        extra={<button type="button">Quitar seguidor</button>}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Seguir" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Quitar seguidor" })).toBeInTheDocument();
+  });
+
+  it("renderiza `extra` aunque showFollow sea false", () => {
+    renderWithIntl(
+      <UserCard
+        user={user({ id: "u1", username: "ana", relation: "none" })}
+        authenticated
+        showFollow={false}
+        extra={<button type="button">Quitar seguidor</button>}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Seguir" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Quitar seguidor" })).toBeInTheDocument();
+  });
 });

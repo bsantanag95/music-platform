@@ -59,8 +59,8 @@ function EmptyRailForOwner({ label, message }: { label: string; message: string 
   );
 }
 
-export async function HubSection({ ownerId }: { ownerId: string }) {
-  return <OwnerHubPanel pendingRequests={await countPendingFollowRequests(ownerId)} />;
+export async function HubSection({ ownerId, username }: { ownerId: string; username: string }) {
+  return <OwnerHubPanel username={username} pendingRequests={await countPendingFollowRequests(ownerId)} />;
 }
 
 export async function OwnerEditors({ profile }: { profile: ProfileView }) {

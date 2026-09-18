@@ -40,40 +40,6 @@ const users: UserSummary[] = [
 describe("UserList", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("elimina un seguidor propio y quita la fila", async () => {
-    const user = userEvent.setup();
-    mocks.apiFetch.mockResolvedValue(null);
-    renderWithIntl(<UserList users={users} variant="followers" />);
-
-    expect(screen.getByText("@ana")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Eliminar seguidor" }));
-
-    await waitFor(() =>
-      expect(mocks.apiFetch).toHaveBeenCalledWith(
-        "/api/me/followers/00000000-0000-4000-8000-000000000001",
-        expect.anything(),
-        { method: "DELETE" },
-      ),
-    );
-    expect(screen.queryByText("@ana")).not.toBeInTheDocument();
-  });
-
-  it("deja de seguir desde la lista de seguidos", async () => {
-    const user = userEvent.setup();
-    mocks.apiFetch.mockResolvedValue({ relation: "none" });
-    renderWithIntl(<UserList users={users} variant="following" />);
-
-    await user.click(screen.getByRole("button", { name: "Dejar de seguir" }));
-    await waitFor(() =>
-      expect(mocks.apiFetch).toHaveBeenCalledWith(
-        "/api/users/ana/follow",
-        expect.anything(),
-        { method: "DELETE" },
-      ),
-    );
-    expect(screen.queryByText("@ana")).not.toBeInTheDocument();
-  });
-
   it("desbloquea desde la lista de bloqueados", async () => {
     const user = userEvent.setup();
     mocks.apiFetch.mockResolvedValue({ blocked: false });
