@@ -262,25 +262,35 @@ describe("IdentityCardSection / FingerprintSummarySection", () => {
     expect(tree?.props?.data).toBeNull();
   });
 
-  it("ExplorationSection pasa los artistas seguidos a ExploreSection", async () => {
-    svc.listProfileFollowedArtists.mockResolvedValue([
-      { id: "a1", name: "Radiohead", type: "group", photoUrl: null },
-    ]);
+  it("ExplorationSection pasa los artistas seguidos y el total a ExploreSection", async () => {
+    svc.listProfileFollowedArtists.mockResolvedValue({
+      artists: [{ id: "a1", name: "Radiohead", type: "group", photoUrl: null }],
+      totalCount: 1,
+      page: 1,
+      pageSize: 8,
+      hasNext: false,
+    });
     svc.getProfileAffinity.mockResolvedValue(null);
     const tree = (await ExplorationSection({ username: "ana", viewerId: "v" })) as {
       type?: unknown;
-      props?: { artists?: unknown[]; sharedArtistIds?: Set<string> };
+      props?: { username?: string; artists?: unknown[]; totalCount?: number; sharedArtistIds?: Set<string> };
     };
     expect(svc.listProfileFollowedArtists).toHaveBeenCalledWith("ana", "v");
     expect(tree?.type).toBe(ExploreSection);
+    expect(tree?.props?.username).toBe("ana");
     expect(tree?.props?.artists).toHaveLength(1);
+    expect(tree?.props?.totalCount).toBe(1);
     expect(tree?.props?.sharedArtistIds).toBeUndefined();
   });
 
   it("ExplorationSection marca los artistas seguidos en común vía la afinidad", async () => {
-    svc.listProfileFollowedArtists.mockResolvedValue([
-      { id: "a1", name: "Radiohead", type: "group", photoUrl: null },
-    ]);
+    svc.listProfileFollowedArtists.mockResolvedValue({
+      artists: [{ id: "a1", name: "Radiohead", type: "group", photoUrl: null }],
+      totalCount: 1,
+      page: 1,
+      pageSize: 8,
+      hasNext: false,
+    });
     svc.getProfileAffinity.mockResolvedValue({
       sharedFavorites: [],
       sharedHighRatings: [],
