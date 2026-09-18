@@ -89,7 +89,7 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
     lockedOut && effectiveViewerId
       ? await mutualFollowersHint(effectiveViewerId, profile.id)
       : 0;
-  const section = { username: profile.username, viewerId: effectiveViewerId, isOwn };
+  const section = { username: profile.username, viewerId: effectiveViewerId, isOwn, previewing };
 
   // Perfil privado sin acceso: identidad extendida + aviso, nada más — no hay
   // contenido rico que componer para este nivel de acceso.

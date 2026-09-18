@@ -6,11 +6,15 @@ import { ApiError } from "@/lib/api/errors";
 const mocks = vi.hoisted(() => ({
   resolveSession: vi.fn(),
   listProfileCollection: vi.fn(),
+  getProfileByUsername: vi.fn(),
 }));
 
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: mocks.resolveSession }));
 vi.mock("@/services/collection/collection", () => ({
   listProfileCollection: mocks.listProfileCollection,
+}));
+vi.mock("@/services/social/profiles", () => ({
+  getProfileByUsername: mocks.getProfileByUsername,
 }));
 
 const params = (username: string) => ({ params: Promise.resolve({ username }) });
@@ -49,6 +53,23 @@ describe("GET /api/users/[username]/collection", () => {
       sort: "artist",
       group: "format",
     });
+  });
+
+  it("preview=1 del propio dueño pagina como anónimo (viewerId null)", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "owner" } });
+    mocks.getProfileByUsername.mockResolvedValue({ relation: "self" });
+    mocks.listProfileCollection.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
+    await GET(req("/api/users/nick/collection?preview=1"), params("nick"));
+    expect(mocks.getProfileByUsername).toHaveBeenCalledWith("nick", "owner");
+    expect(mocks.listProfileCollection).toHaveBeenCalledWith("nick", null, 1, 20, {});
+  });
+
+  it("preview=1 de un visitante que no es el dueño se ignora", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "viewer" } });
+    mocks.getProfileByUsername.mockResolvedValue({ relation: "following" });
+    mocks.listProfileCollection.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
+    await GET(req("/api/users/nick/collection?preview=1"), params("nick"));
+    expect(mocks.listProfileCollection).toHaveBeenCalledWith("nick", "viewer", 1, 20, {});
   });
 
   it("username inexistente propaga 404 USER_NOT_FOUND", async () => {

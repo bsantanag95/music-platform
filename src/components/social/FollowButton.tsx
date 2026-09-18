@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { apiFetch, ApiError } from "@/lib/api/client";
 import { FollowResponseSchema, NoContentSchema, type FollowRelation } from "@/lib/api/schemas";
@@ -18,15 +18,33 @@ interface FollowButtonProps {
    * pero inerte — sin acción ni enlace a login (ver spec social-profiles).
    */
   preview?: boolean;
+  /**
+   * Al pasar a "following" o dejarlo (audiencia efectiva del perfil según
+   * `audiencesForProfile`), refresca la página para que las secciones del
+   * perfil dejen de mostrar el contenido de "antes de seguir" sin que el
+   * visitante tenga que recargar a mano. Solo tiene sentido en la página de
+   * perfil misma — el resto de los usos de este botón (buscador, listas de
+   * conexiones, feed) no deberían recargar nada ajeno por un follow.
+   */
+  refreshProfileOnFollow?: boolean;
   onChange?: (relation: FollowRelation) => void;
 }
 
 // Botón de seguimiento con los estados definidos en el diseño de Fase 5:
 // Seguir / Solicitud enviada / Siguiendo / Aprobar / Rechazar. Los estados
 // self y blocked se muestran sin acción. En móvil conserva nombres claros.
-export function FollowButton({ username, relation, authenticated, requestId, preview, onChange }: FollowButtonProps) {
+export function FollowButton({
+  username,
+  relation,
+  authenticated,
+  requestId,
+  preview,
+  refreshProfileOnFollow,
+  onChange,
+}: FollowButtonProps) {
   const t = useTranslations("users");
   const tErrors = useTranslations("errors");
+  const router = useRouter();
   const [current, setCurrent] = useState<FollowRelation>(relation);
   const [busy, setBusy] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -148,14 +166,21 @@ export function FollowButton({ username, relation, authenticated, requestId, pre
   }
 
   async function follow(method: "PUT" | "DELETE") {
+    const previous = current;
     setBusy(true);
     setErrorCode(null);
     try {
       const result = await apiFetch(`/api/users/${encodeURIComponent(username)}/follow`, FollowResponseSchema, {
         method,
       });
-      setCurrent(method === "PUT" ? result.relation : "none");
-      onChange?.(method === "PUT" ? result.relation : "none");
+      const next = method === "PUT" ? result.relation : "none";
+      setCurrent(next);
+      onChange?.(next);
+      // Solo importa cruzar el límite de "following": es lo único que mueve
+      // `audiencesForProfile` (visitante "requested" ve lo mismo que "none").
+      if (refreshProfileOnFollow && (previous === "following") !== (next === "following")) {
+        router.refresh();
+      }
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
     } finally {

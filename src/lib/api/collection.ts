@@ -22,6 +22,8 @@ export interface CollectionQuery {
   q?: string;
   sort?: CollectionSort;
   group?: string;
+  /** "Cómo te ven": pide al perfil ajeno que se pagine como visitante anónimo. */
+  preview?: boolean;
 }
 
 function queryString({
@@ -32,6 +34,7 @@ function queryString({
   q,
   sort,
   group,
+  preview,
 }: CollectionQuery): string {
   const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
   if (format) params.set("format", format);
@@ -39,6 +42,7 @@ function queryString({
   if (q) params.set("q", q);
   if (sort) params.set("sort", sort);
   if (group) params.set("group", group);
+  if (preview) params.set("preview", "1");
   return params.toString();
 }
 

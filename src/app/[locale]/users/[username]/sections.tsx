@@ -49,6 +49,8 @@ export interface SectionProps {
   username: string;
   viewerId: string | null;
   isOwn: boolean;
+  /** "Cómo te ven": el dueño está previsualizando su perfil como anónimo. */
+  previewing?: boolean;
 }
 
 function EmptyRailForOwner({ label, message }: { label: string; message: string }) {
@@ -248,7 +250,7 @@ export async function ListsRail({ username, viewerId, isOwn }: SectionProps) {
   );
 }
 
-export async function CollectionRail({ username, viewerId, isOwn }: SectionProps) {
+export async function CollectionRail({ username, viewerId, isOwn, previewing }: SectionProps) {
   const t = await getTranslations("users");
   const initial = await listProfileCollection(username, viewerId, 1, 20);
   if (initial.entries.length === 0) {
@@ -258,7 +260,7 @@ export async function CollectionRail({ username, viewerId, isOwn }: SectionProps
   }
   return (
     <ProfileRail id="coleccion" label={t("collectionTitle")} count={initial.entries.length}>
-      <CollectionShelf initial={initial} readOnly username={username} />
+      <CollectionShelf initial={initial} readOnly username={username} preview={Boolean(previewing)} />
     </ProfileRail>
   );
 }

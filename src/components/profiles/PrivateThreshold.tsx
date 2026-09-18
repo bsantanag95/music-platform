@@ -65,6 +65,7 @@ export async function PrivateThreshold({
             authenticated={authenticated}
             requestId={ownerId}
             preview={preview}
+            refreshProfileOnFollow
           />
         </div>
       </div>

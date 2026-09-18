@@ -14,13 +14,14 @@ const mocks = vi.hoisted(() => {
       this.status = status;
     }
   }
-  return { apiFetch: vi.fn(), ApiError };
+  return { apiFetch: vi.fn(), ApiError, refresh: vi.fn() };
 });
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
     <a href={href} {...props}>{children}</a>
   ),
+  useRouter: () => ({ refresh: mocks.refresh }),
 }));
 vi.mock("@/lib/api/client", () => ({
   apiFetch: mocks.apiFetch,
@@ -59,6 +60,41 @@ describe("FollowButton", () => {
     );
     expect(await screen.findByText("Siguiendo")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Dejar de seguir" })).toBeInTheDocument();
+    expect(mocks.refresh).not.toHaveBeenCalled();
+  });
+
+  it("con refreshProfileOnFollow, seguir refresca la página (desbloquea audiencia)", async () => {
+    const user = userEvent.setup();
+    mocks.apiFetch.mockResolvedValue({ relation: "following" });
+    renderWithIntl(
+      <FollowButton username="pato" relation="none" authenticated refreshProfileOnFollow />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Seguir" }));
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledTimes(1));
+  });
+
+  it("con refreshProfileOnFollow, una solicitud pendiente no refresca (no cambia audiencia)", async () => {
+    const user = userEvent.setup();
+    mocks.apiFetch.mockResolvedValue({ relation: "requested" });
+    renderWithIntl(
+      <FollowButton username="pato" relation="none" authenticated refreshProfileOnFollow />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Seguir" }));
+    await screen.findByText("Solicitud enviada");
+    expect(mocks.refresh).not.toHaveBeenCalled();
+  });
+
+  it("con refreshProfileOnFollow, dejar de seguir refresca la página (bloquea audiencia)", async () => {
+    const user = userEvent.setup();
+    mocks.apiFetch.mockResolvedValue({ relation: "none" });
+    renderWithIntl(
+      <FollowButton username="pato" relation="following" authenticated refreshProfileOnFollow />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Dejar de seguir" }));
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledTimes(1));
   });
 
   it("muestra solicitud enviada y permite cancelarla", async () => {

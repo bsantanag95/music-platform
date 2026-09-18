@@ -52,6 +52,14 @@ interface CollectionShelfProps {
   /** Requerido en modo lectura para paginar la colección del perfil. */
   username?: string;
   initialFilters?: CollectionQuery;
+  /**
+   * "Cómo te ven": el dueño previsualiza su perfil como visitante anónimo.
+   * Sin esto, un refetch en cliente (p. ej. al recuperar el foco de la
+   * pestaña tras el staleTime) pagina con `/api/users/[username]/collection`,
+   * que resuelve la sesión real del dueño y desbloquea lo de audiencia
+   * "seguidores" que la carga inicial anónima había ocultado.
+   */
+  preview?: boolean;
 }
 
 function toFiltersState(params?: CollectionQuery): CollectionFiltersState {
@@ -89,6 +97,7 @@ export function CollectionShelf({
   readOnly,
   username,
   initialFilters,
+  preview,
 }: CollectionShelfProps) {
   const t = useTranslations("collection");
   const locale = useLocale();
@@ -117,7 +126,7 @@ export function CollectionShelf({
   const isFiltered = collectionFiltersActive(filters);
   const apiFilters = useMemo(() => toApiFilters(filters), [filters]);
   const mineQueryKey = queryKeys.myCollection(apiFilters);
-  const queryKey = readOnly ? (["collection", "user", username] as const) : mineQueryKey;
+  const queryKey = readOnly ? (["collection", "user", username, preview] as const) : mineQueryKey;
   const seeded = readOnly || sameFilters(filters, seededState);
 
   const { data, hasNextPage, isFetchingNextPage, fetchNextPage, isError, isPending } =
@@ -125,7 +134,7 @@ export function CollectionShelf({
       queryKey,
       queryFn: ({ pageParam }) =>
         readOnly && username
-          ? getUserCollection(username, { page: pageParam, pageSize: PAGE_SIZE })
+          ? getUserCollection(username, { page: pageParam, pageSize: PAGE_SIZE, preview })
           : getMyCollection({ page: pageParam, pageSize: PAGE_SIZE, ...apiFilters }),
       initialPageParam: 1,
       getNextPageParam: (last) => (last?.hasNext ? last.page + 1 : undefined),

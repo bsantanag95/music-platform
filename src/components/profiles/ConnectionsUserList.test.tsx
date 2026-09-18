@@ -11,6 +11,7 @@ vi.mock("@/i18n/navigation", () => ({
       {children}
     </a>
   ),
+  useRouter: () => ({ refresh: vi.fn() }),
 }));
 
 const mocks = vi.hoisted(() => {
