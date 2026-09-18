@@ -44,9 +44,10 @@ export function getUserFavorites(
   username: string,
   page = 1,
   pageSize = 20,
+  filters: FavoritesFiltersParams = {},
 ): Promise<FavoritesListResponse> {
   return apiFetch(
-    `/api/users/${encodeURIComponent(username)}/favorites?page=${page}&pageSize=${pageSize}`,
+    `/api/users/${encodeURIComponent(username)}/favorites?page=${page}&pageSize=${pageSize}${favoritesFiltersQuery(filters)}`,
     FavoritesListResponseSchema,
   );
 }

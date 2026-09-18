@@ -36,6 +36,7 @@ vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: () => null }));
 const svc = vi.hoisted(() => ({
   listUserDiary: vi.fn(),
   listUserFavorites: vi.fn(),
+  getFavoritesPreview: vi.fn(),
   listUserLists: vi.fn(),
   listProfileCollection: vi.fn(),
   getTasteFingerprint: vi.fn(),
@@ -51,7 +52,10 @@ const svc = vi.hoisted(() => ({
 }));
 
 vi.mock("@/services/diary/diary", () => ({ listUserDiary: svc.listUserDiary }));
-vi.mock("@/services/favorites/favorites", () => ({ listUserFavorites: svc.listUserFavorites }));
+vi.mock("@/services/favorites/favorites", () => ({
+  listUserFavorites: svc.listUserFavorites,
+  getFavoritesPreview: svc.getFavoritesPreview,
+}));
 vi.mock("@/services/lists/lists", () => ({ listUserLists: svc.listUserLists }));
 vi.mock("@/services/collection/collection", () => ({ listProfileCollection: svc.listProfileCollection }));
 vi.mock("@/services/profiles/stats", () => ({ getTasteFingerprint: svc.getTasteFingerprint }));
@@ -78,7 +82,7 @@ vi.mock("@/services/social/following", () => ({ countPendingFollowRequests: vi.f
 
 // Stubs de los componentes de lectura para no arrastrar sus imports cliente.
 vi.mock("@/components/diary/DiaryList", () => ({ DiaryList: () => null }));
-vi.mock("@/components/favorites/FavoritesWall", () => ({ FavoritesWall: () => null }));
+vi.mock("@/components/favorites/FavoritesPreview", () => ({ FavoritesPreview: () => null }));
 vi.mock("@/components/lists/ListsList", () => ({ ListsList: () => null }));
 vi.mock("@/components/collection/CollectionShelf", () => ({ CollectionShelf: () => null }));
 vi.mock("@/components/profiles/OwnerIdentityEditor", () => ({ OwnerIdentityEditor: () => null }));
@@ -117,8 +121,25 @@ describe("estantes vacíos", () => {
   });
 
   it("FavoritesRail colapsa sin favoritos visibles para un visitante", async () => {
-    svc.listUserFavorites.mockResolvedValue({ favorites: [], counts: {}, page: 1, hasNext: false });
+    svc.getFavoritesPreview.mockResolvedValue({
+      artists: [],
+      albums: [],
+      songs: [],
+      counts: { artist: 0, "release-group": 0, recording: 0 },
+    });
     expect(await FavoritesRail(section)).toBeNull();
+  });
+
+  it("FavoritesRail renderiza el estante con el total real entre los 3 tipos", async () => {
+    svc.getFavoritesPreview.mockResolvedValue({
+      artists: [{ id: "f1" }],
+      albums: [{ id: "f2" }, { id: "f3" }],
+      songs: [],
+      counts: { artist: 1, "release-group": 2, recording: 0 },
+    });
+    const tree = (await FavoritesRail(section)) as { type?: unknown; props?: Record<string, unknown> };
+    expect(tree?.type).toBe(ProfileRail);
+    expect(tree?.props?.count).toBe(3);
   });
 });
 

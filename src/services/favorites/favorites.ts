@@ -334,35 +334,53 @@ export async function listMyFavorites(
   };
 }
 
-/** Listado de favoritos de un usuario visible para un lector. */
+/**
+ * Listado de favoritos de un usuario visible para un lector — mismo buscador
+ * + filtros + orden que `listMyFavorites` (la vista de gestión), pero el
+ * filtro de audiencia nunca puede ampliar lo que `audiencesForProfile` ya
+ * permite: si se pide una audiencia a la que el visitante no tiene acceso
+ * (p. ej. "privado" en el perfil de otra persona), el resultado es vacío en
+ * vez de ignorar el filtro y mostrar igual las demás audiencias.
+ */
 export async function listUserFavorites(
   username: string,
   viewerId: string | null,
   page = 1,
   pageSize = 20,
+  filters?: FavoriteFilters,
 ) {
   if (page < 1 || pageSize < 1 || pageSize > 50) {
     throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
   }
+  const { q, type, audience, sort } = normalizeFavoriteFilters(filters);
 
   // Importar getProfileByUsername aquí para evitar dependencia circular
   const { getProfileByUsername } = await import("@/services/social/profiles");
   const profile = await getProfileByUsername(username, viewerId);
-  const audiences = audiencesForProfile(profile);
+  const permittedAudiences = audiencesForProfile(profile);
 
   const emptyCounts: FavoriteCounts = { artist: 0, "release-group": 0, recording: 0 };
-  if (audiences.length === 0) {
+  const effectiveAudiences = audience
+    ? permittedAudiences.filter((permitted) => permitted === audience)
+    : permittedAudiences;
+  if (effectiveAudiences.length === 0) {
     return { favorites: [], page, pageSize, hasNext: false, counts: emptyCounts };
   }
 
   const scopeConditions: SQL[] = [
     eq(favorite.userId, profile.id),
-    inArray(favorite.audience, audiences),
+    inArray(favorite.audience, effectiveAudiences),
   ];
+  if (q) scopeConditions.push(sql`${TITLE_EXPR} ilike ${`%${q}%`}`);
+
+  const listConditions: SQL[] = [...scopeConditions];
+  if (type === "artist") listConditions.push(isNotNull(favorite.artistId));
+  else if (type === "release-group") listConditions.push(isNotNull(favorite.releaseGroupId));
+  else if (type === "recording") listConditions.push(isNotNull(favorite.recordingId));
 
   const rows = await favoritesFrom()
-    .where(and(...scopeConditions))
-    .orderBy(asc(TYPE_RANK_EXPR), desc(favorite.createdAt), desc(favorite.id))
+    .where(and(...listConditions))
+    .orderBy(asc(TYPE_RANK_EXPR), ...favoriteSortOrder(sort))
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
 
@@ -373,6 +391,70 @@ export async function listUserFavorites(
     page,
     pageSize,
     hasNext: rows.length > pageSize,
+    counts,
+  };
+}
+
+const FAVORITES_PREVIEW_LIMIT = 5;
+
+export interface FavoritesPreview {
+  artists: FavoriteEntry[];
+  albums: FavoriteEntry[];
+  songs: FavoriteEntry[];
+  counts: FavoriteCounts;
+}
+
+/**
+ * Previsualización de "Favoritos" en el Nivel 2 del perfil: hasta 5 más
+ * recientes de cada tipo (Opción B elegida entre mockups — ver memoria
+ * profile-redesign), no una porción de la lista mezclada. Antes no había
+ * tope: se embebía el muro completo (hasta 20 favoritos mezclados, con
+ * "cargar más" infinito) directo en el flujo del perfil. Tres consultas en
+ * paralelo en vez de una sola con `limit` — filtrar por tipo garantiza que
+ * un tipo con pocos favoritos no se quede sin representación cuando otro
+ * tipo tiene muchos más (el orden de la lista mezclada es artista → álbum →
+ * canción, así que un `limit` simple sobre esa lista podría agotarse antes
+ * de llegar a canciones).
+ */
+export async function getFavoritesPreview(
+  username: string,
+  viewerId: string | null,
+): Promise<FavoritesPreview> {
+  const { getProfileByUsername } = await import("@/services/social/profiles");
+  const profile = await getProfileByUsername(username, viewerId);
+  const audiences = audiencesForProfile(profile);
+
+  const emptyCounts: FavoriteCounts = { artist: 0, "release-group": 0, recording: 0 };
+  if (audiences.length === 0) {
+    return { artists: [], albums: [], songs: [], counts: emptyCounts };
+  }
+
+  const scopeConditions: SQL[] = [
+    eq(favorite.userId, profile.id),
+    inArray(favorite.audience, audiences),
+  ];
+  const recentFirst = [desc(favorite.createdAt), desc(favorite.id)];
+
+  const [artistRows, albumRows, songRows, counts] = await Promise.all([
+    favoritesFrom()
+      .where(and(...scopeConditions, isNotNull(favorite.artistId)))
+      .orderBy(...recentFirst)
+      .limit(FAVORITES_PREVIEW_LIMIT),
+    favoritesFrom()
+      .where(and(...scopeConditions, isNotNull(favorite.releaseGroupId)))
+      .orderBy(...recentFirst)
+      .limit(FAVORITES_PREVIEW_LIMIT),
+    favoritesFrom()
+      .where(and(...scopeConditions, isNotNull(favorite.recordingId)))
+      .orderBy(...recentFirst)
+      .limit(FAVORITES_PREVIEW_LIMIT),
+    favoriteCounts(scopeConditions),
+  ]);
+
+  return {
+    artists: artistRows.map(serializeFavorite),
+    albums: albumRows.map(serializeFavorite),
+    songs: songRows.map(serializeFavorite),
     counts,
   };
 }

@@ -9,6 +9,7 @@ import {
   updateFavoritesAudienceBulk,
   listMyFavorites,
   listUserFavorites,
+  getFavoritesPreview,
   resolveFavoriteTarget,
   type FavoriteTarget,
 } from "./favorites";
@@ -66,6 +67,33 @@ const zeroCounts = { artist: 0, releaseGroup: 0, recording: 0 };
 function mockListQueries(rows: unknown[], counts = zeroCounts) {
   mocks.db.select
     .mockReturnValueOnce(joinPaged(rows))
+    .mockReturnValueOnce(joinWhere([counts]));
+}
+
+// select().from().leftJoin()×3.where().orderBy().limit() → sin offset, cada
+// una de las 3 consultas por tipo de `getFavoritesPreview`.
+function joinOrderedLimit(rows: unknown[]) {
+  const limit = vi.fn().mockResolvedValue(rows);
+  const orderBy = vi.fn(() => ({ limit }));
+  const where = vi.fn(() => ({ orderBy }));
+  const chain = { leftJoin: vi.fn(() => chain), where };
+  const from = vi.fn(() => chain);
+  return { from };
+}
+
+// getFavoritesPreview hace 4 selects en paralelo (Promise.all): artistas,
+// álbumes, canciones, counts — en ese orden sintáctico, así que
+// `mockReturnValueOnce` los consume en el mismo orden.
+function mockPreviewQueries(
+  artistRows: unknown[],
+  albumRows: unknown[],
+  songRows: unknown[],
+  counts = zeroCounts,
+) {
+  mocks.db.select
+    .mockReturnValueOnce(joinOrderedLimit(artistRows))
+    .mockReturnValueOnce(joinOrderedLimit(albumRows))
+    .mockReturnValueOnce(joinOrderedLimit(songRows))
     .mockReturnValueOnce(joinWhere([counts]));
 }
 
@@ -274,6 +302,67 @@ describe("servicio de favoritos", () => {
 
     const result = await listUserFavorites("otro-usuario", user);
     expect(result.favorites.length).toBe(1);
+  });
+
+  describe("getFavoritesPreview", () => {
+    it("devuelve vacío y counts en cero cuando no hay permiso", async () => {
+      mocks.getProfileByUsername.mockResolvedValue({
+        id: "otro-usuario",
+        profileVisibility: "private",
+        relation: "none",
+        blockedByMe: false,
+      });
+
+      const result = await getFavoritesPreview("otro-usuario", user);
+      expect(result).toEqual({
+        artists: [],
+        albums: [],
+        songs: [],
+        counts: { artist: 0, "release-group": 0, recording: 0 },
+      });
+      expect(mocks.db.select).not.toHaveBeenCalled();
+    });
+
+    it("trae hasta 5 de cada tipo por separado, con el conteo real", async () => {
+      mocks.getProfileByUsername.mockResolvedValue({
+        id: "otro-usuario",
+        profileVisibility: "public",
+        relation: "none",
+        blockedByMe: false,
+      });
+      const albumRow = { ...favoriteRow, artistId: null, releaseGroupId: "rg1", releaseTitle: "Blonde" };
+      const songRow = { ...favoriteRow, artistId: null, recordingId: "rec1", recordingTitle: "Idioteque" };
+      // El total real (counts) puede superar lo que trae cada consulta —
+      // p. ej. 40 álbumes en total, esta consulta solo trae 5.
+      mockPreviewQueries([favoriteRow], [albumRow], [songRow], {
+        artist: 3,
+        releaseGroup: 40,
+        recording: 12,
+      });
+
+      const result = await getFavoritesPreview("otro-usuario", user);
+      expect(result.artists).toHaveLength(1);
+      expect(result.albums).toHaveLength(1);
+      expect(result.songs).toHaveLength(1);
+      expect(result.albums[0]?.target.title).toBe("Blonde");
+      expect(result.songs[0]?.target.title).toBe("Idioteque");
+      expect(result.counts).toEqual({ artist: 3, "release-group": 40, recording: 12 });
+    });
+
+    it("un tipo sin favoritos no rompe los otros dos", async () => {
+      mocks.getProfileByUsername.mockResolvedValue({
+        id: "otro-usuario",
+        profileVisibility: "public",
+        relation: "none",
+        blockedByMe: false,
+      });
+      mockPreviewQueries([favoriteRow], [], [], { artist: 1, releaseGroup: 0, recording: 0 });
+
+      const result = await getFavoritesPreview("otro-usuario", user);
+      expect(result.artists).toHaveLength(1);
+      expect(result.albums).toEqual([]);
+      expect(result.songs).toEqual([]);
+    });
   });
 
   it("updateFavoriteAudience actualiza la audiencia de un favorito propio", async () => {

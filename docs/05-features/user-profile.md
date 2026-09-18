@@ -245,6 +245,51 @@ popover.
   ambos: `min-w-0` en el flex item + `w-full` en el descendiente con `truncate` si el
   contenedor no usa `items-stretch`.
 
+## Favoritos (muro general)
+
+El **muro de favoritos** (`favorite`, todos los tipos: artista/álbum/canción, la señal
+"marqué esto como favorito" de todo el catálogo — no confundir con "Álbumes favoritos" de
+abajo, que es una selección curada aparte con FK a `favorite`) tiene, desde 2026-09-18,
+tope en el Nivel 2 y una vista completa aparte (mismo procedimiento de mockups que el resto
+de las piezas del perfil — ver memoria `profile-redesign`; antes no había tope: el muro
+completo, con sus 3 modos de vista y "cargar más" infinito, vivía embebido sin límite en el
+flujo del perfil — se veía bien con pocos favoritos, pero con 100 habría sido scroll
+interminable antes de llegar al resto de la página).
+
+- **Previsualización (`FavoritesPreview.tsx`)**: hasta **5 favoritos recientes de cada
+  tipo** (Artistas/Álbumes/Canciones), cada sección con su conteo real. Mismo criterio
+  visual que ya usan "En rotación" y "Álbumes favoritos" en esta misma página — elegido
+  explícitamente por el usuario entre 3 mockups: álbumes en grilla de carátulas, **canciones
+  como lista de filas** (no grilla — un disco genérico repetido 5 veces no distingue nada
+  entre canciones distintas), artistas en grilla de placas tipográficas.
+  `getFavoritesPreview` (`src/services/favorites/favorites.ts`) hace **3 consultas en
+  paralelo, una por tipo** — no una sola consulta con `limit` sobre la lista mezclada: el
+  orden de esa lista es artista → álbum → canción (`TYPE_RANK_EXPR`), así que un tipo con
+  pocos favoritos quedaría sin representación si otro tipo anterior ya agotó el límite antes
+  de llegar a él.
+- **Vista completa (`/users/[username]/favorites`)**: el muro de siempre
+  (`FavoritesWall` en modo `readOnly`), que antes vivía embebido en el perfil — ahora en su
+  propia ruta, con sus 3 modos de vista intactos (Detallada/Índice/Gráfico). Distinta de
+  `/me/favorites`: esa sigue siendo la vista de **gestión** del propio dueño (selección
+  múltiple, cambiar audiencia en lote) — no se puede reusar tal cual para ver los favoritos
+  de un tercero sin exponerle controles que no le corresponden.
+  `ProfileLevel3Links`'s "Todos los favoritos" pasó de ser un ancla en la misma página
+  (`#favoritos`) a un link real a esta ruta nueva.
+- **El encabezado de conteos y el buscador/filtros SÍ se muestran en modo lectura**
+  (pedido explícito del usuario tras ver la vista completa: "exactamente lo mismo que
+  `/me/favorites`") — a diferencia del modo selección/cambio de audiencia en lote, que sigue
+  oculto (es una acción de mutación, no tiene sentido sobre los favoritos de otra persona).
+  `listUserFavorites` ganó soporte de filtros (`q`/`type`/`audience`/`sort`), igual que
+  `listMyFavorites`, con una diferencia deliberada: si se pide un `audience` al que el
+  visitante no tiene acceso (p. ej. "privado" en el perfil de otra persona), el resultado es
+  vacío — el filtro nunca puede ampliar lo que `audiencesForProfile` ya permite, se
+  intersecta con lo permitido en vez de reemplazarlo. `GET /api/users/[username]/favorites`
+  ahora parsea y reenvía esos mismos filtros (antes solo aceptaba `page`/`pageSize`).
+- El conteo del encabezado (`ProfileRail count`) ahora es el **total real** entre los 3
+  tipos (`counts.artist + counts["release-group"] + counts.recording`) — antes mostraba
+  `initial.favorites.length`, la cantidad de la primera página fetcheada (tope 20), no el
+  total real.
+
 ## Álbumes favoritos
 
 Hasta **6 álbumes** que definen a esta persona, en una rejilla de carátulas + título +

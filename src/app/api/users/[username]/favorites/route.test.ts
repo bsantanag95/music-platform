@@ -31,7 +31,34 @@ describe("GET /api/users/[username]/favorites", () => {
     });
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(result);
-    expect(mocks.listUserFavorites).toHaveBeenCalledWith("ana", null, 1, 20);
+    expect(mocks.listUserFavorites).toHaveBeenCalledWith("ana", null, 1, 20, {});
+  });
+
+  it("parsea q/type/audience/sort y los reenvía", async () => {
+    mocks.resolveSession.mockResolvedValue(null);
+    mocks.listUserFavorites.mockResolvedValue(result);
+    await GET(
+      new NextRequest(
+        "http://localhost/api/users/ana/favorites?q=wall&type=release-group&audience=public&sort=alpha",
+      ),
+      { params: Promise.resolve({ username: "ana" }) },
+    );
+    expect(mocks.listUserFavorites).toHaveBeenCalledWith("ana", null, 1, 20, {
+      q: "wall",
+      type: "release-group",
+      audience: "public",
+      sort: "alpha",
+    });
+  });
+
+  it("rechaza un filtro inválido con VALIDATION_ERROR", async () => {
+    const response = await GET(
+      new NextRequest("http://localhost/api/users/ana/favorites?sort=chronological"),
+      { params: Promise.resolve({ username: "ana" }) },
+    );
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mocks.listUserFavorites).not.toHaveBeenCalled();
   });
 
   it("rechaza una paginación inválida con VALIDATION_ERROR", async () => {

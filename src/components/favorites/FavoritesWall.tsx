@@ -98,16 +98,16 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
   const isFiltered = favoriteFiltersActive(filters);
   const apiFilters = useMemo(() => toApiFilters(filters), [filters]);
   const mineQueryKey = queryKeys.myFavorites(apiFilters);
-  const queryKey = readOnly ? (["favorites", "user", username] as const) : mineQueryKey;
+  const queryKey = readOnly ? (["favorites", "user", username, apiFilters] as const) : mineQueryKey;
 
-  const seeded = readOnly || sameFilters(filters, seededState);
+  const seeded = sameFilters(filters, seededState);
 
   const { data, hasNextPage, isFetchingNextPage, fetchNextPage, isError, isPending } =
     useInfiniteQuery<FavoritesListResponse, ApiError, FavoritesPages, typeof queryKey, number>({
       queryKey,
       queryFn: ({ pageParam }) =>
         readOnly && username
-          ? getUserFavorites(username, pageParam, PAGE_SIZE)
+          ? getUserFavorites(username, pageParam, PAGE_SIZE, apiFilters)
           : getMyFavorites(pageParam, PAGE_SIZE, apiFilters),
       initialPageParam: 1,
       getNextPageParam: (last) => (last?.hasNext ? last.page + 1 : undefined),
@@ -259,10 +259,10 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
     });
   };
 
-  const emptyBlock = readOnly ? (
-    <EmptyState title={t("profileEmptyTitle")} description={t("profileEmptyDescription")} />
-  ) : isFiltered ? (
+  const emptyBlock = isFiltered ? (
     <EmptyState title={t("noResultsTitle")} description={t("noResultsDescription")} />
+  ) : readOnly ? (
+    <EmptyState title={t("profileEmptyTitle")} description={t("profileEmptyDescription")} />
   ) : (
     <EmptyState
       title={t("emptyTitle")}
@@ -280,25 +280,22 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
 
   return (
     <div className="flex w-full max-w-3xl flex-col gap-5">
-      {!readOnly ? (
-        <p className="font-data text-xs text-paper-muted">
-          {t("countArtists", { count: counts.artist })}
-          <span aria-hidden> · </span>
-          {t("countAlbums", { count: counts["release-group"] })}
-          <span aria-hidden> · </span>
-          {t("countSongs", { count: counts.recording })}
-        </p>
-      ) : null}
+      <p className="font-data text-xs text-paper-muted">
+        {t("countArtists", { count: counts.artist })}
+        <span aria-hidden> · </span>
+        {t("countAlbums", { count: counts["release-group"] })}
+        <span aria-hidden> · </span>
+        {t("countSongs", { count: counts.recording })}
+      </p>
 
-      {!readOnly ? (
-        <FavoritesToolbar
-          filters={filters}
-          onChange={setFilters}
-          searchInput={searchInput}
-          onSearchInput={setSearchInput}
-          onClear={clearFilters}
-        />
-      ) : null}
+      <FavoritesToolbar
+        filters={filters}
+        onChange={setFilters}
+        searchInput={searchInput}
+        onSearchInput={setSearchInput}
+        onClear={clearFilters}
+        showAudienceFilter={!readOnly}
+      />
 
       {favorites.length > 0 ? (
         <div className="flex items-center justify-between gap-3">
