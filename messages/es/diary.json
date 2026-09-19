@@ -4,6 +4,8 @@
   "emptyDescription": "Registrá una escucha de un artista, álbum o canción para que aparezca acá.",
   "profileEmptyTitle": "Sin entradas en el diario",
   "profileEmptyDescription": "Este usuario todavía no registró escuchas visibles.",
+  "profileViewFull": "Ver diario completo",
+  "scrollRegionLabel": "Entradas del diario",
   "registerListen": "Registrar escucha",
   "logInDiary": "Anotar en el diario",
   "signInToListen": "Iniciar sesión para registrar escuchas",

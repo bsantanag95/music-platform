@@ -214,7 +214,7 @@ popover.
   de este cambio, sin enlace al perfil —, feed de actividad (`CompactActivityRow.tsx`,
   `FeedActivityList.tsx` vía `AuthorLink`, `FeedAmbientStrip.tsx`), autoría de listas
   (`CommunityListCard.tsx`, `DiscoverListsTab.tsx`, `SavedListsTab.tsx`,
-  `ListDetailHeader.tsx`, `PublicLists.tsx` en Inicio) y diario compartido (`DiaryList.tsx`).
+  `ListDetailHeader.tsx`, `PublicLists.tsx` en Inicio) (el diario del perfil ya no usa `DiaryList.tsx` — ver "Diario" — ese componente se eliminó al quedar sin uso).
   **Deliberadamente afuera**: `UserCard.tsx` y `UserList.tsx` (búsqueda de usuarios,
   seguidores/seguidos/bloqueados) — esas filas ya muestran monograma + nombre + acción social
   en línea, sin nada oculto que un hover revele, y agregar el botón Seguir del popover
@@ -465,6 +465,35 @@ del dueño), **artistas que ambos siguen**, y seguidores en común. Se oculta si
 el propio dueño, ante bloqueo, o si no hay ninguna coincidencia. El hint de seguidores en
 común aparece también en el aviso de perfil privado, y los artistas en común alimentan además
 la insignia "tú también" de Exploración.
+
+## Diario
+
+Igual que Exploración y Favoritos, el diario del perfil dejó de mostrar todo sin tope (antes
+`DiaryRail` embebía el listado completo, con un "Cargar más" ilimitado, directo en el flujo
+del Nivel 2). Elegido entre mockups (dos rondas — ver memoria `profile-redesign`):
+
+- **Estante con caja de scroll interno** (`DiaryReadList.tsx`, `scrollable`): altura fija
+  (`max-h-[21rem]`), scroll adentro de la caja, "Cargar más" al final de la caja. Región
+  enfocable por teclado (`role="region"` + `tabindex=0`, para poder scrollearla sin mouse).
+- **Filas compactas al estilo de `/me/diary`** en vez de las cards con borde de antes: sin
+  caja por entrada (solo una línea fina entre filas), carátula chica, título · artista en
+  una línea, nota como cita con borde izquierdo (`ProsePanel`, con `clamp`). Sin las acciones
+  de gestión (lápiz, menú "···", audiencia). Fecha corta a la derecha junto al ícono de
+  reacción, en lista plana — se descartaron el bloque de día + encabezados de mes de
+  `/me/diary` (el scroll interno ya da orientación con la fecha en cada fila) y la variante
+  de una sola línea sin carátula (dejaba de parecerse a `/me/diary`).
+- **"Ver diario completo"** → `/users/[username]/diary`: mismas filas, fluyendo con la página
+  (sin caja), de solo lectura, con el mismo criterio de acceso que el resto del perfil.
+  Distinta de `/me/diary` (gestión del propio dueño: buscador, filtros, edición, borrado).
+  Sin filtros por ahora — es una lista cronológica con "Cargar más". El enlace de Nivel 3
+  "Diario completo" también apunta acá (antes era un ancla `#diario`).
+- **Bug real corregido de paso**: el "Cargar más" anterior no le pasaba `loadMore` a
+  `DiaryList`, que por defecto usaba `getMyDiary` — en el perfil de OTRA persona habría
+  traído las entradas del visitante (o un 401 sin sesión), no las del dueño del perfil.
+  `DiaryReadList` pide siempre `getUserDiary(username, …)`.
+- El conteo del encabezado (`ProfileRail count`) es ahora el **total real** visible
+  (`listUserDiary` devuelve `totalCount`, una consulta `count(*)` con el mismo filtro de
+  audiencia/destacados), no `entries.length` de la primera página fetcheada.
 
 ## Estantes y recencia
 

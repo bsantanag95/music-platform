@@ -81,7 +81,7 @@ vi.mock("@/services/rating-highlights/rating-highlights", () => ({
 vi.mock("@/services/social/following", () => ({ countPendingFollowRequests: vi.fn().mockResolvedValue(0) }));
 
 // Stubs de los componentes de lectura para no arrastrar sus imports cliente.
-vi.mock("@/components/diary/DiaryList", () => ({ DiaryList: () => null }));
+vi.mock("@/components/diary/DiaryReadList", () => ({ DiaryReadList: () => null }));
 vi.mock("@/components/favorites/FavoritesPreview", () => ({ FavoritesPreview: () => null }));
 vi.mock("@/components/lists/ListsList", () => ({ ListsList: () => null }));
 vi.mock("@/components/collection/CollectionShelf", () => ({ CollectionShelf: () => null }));
@@ -110,14 +110,17 @@ describe("estantes vacíos", () => {
   });
 
   it("DiaryRail renderiza el estante con el conteo cuando hay entradas", async () => {
+    // El conteo del encabezado es el total real (57), no lo traído en la
+    // primera página (2) — con tope de scroll + "Cargar más" ya no son lo mismo.
     svc.listUserDiary.mockResolvedValue({
       entries: [{ id: "e1" }, { id: "e2" }],
       page: 1,
-      hasNext: false,
+      hasNext: true,
+      totalCount: 57,
     });
     const tree = (await DiaryRail(section)) as { type?: unknown; props?: Record<string, unknown> };
     expect(tree?.type).toBe(ProfileRail);
-    expect(tree?.props?.count).toBe(2);
+    expect(tree?.props?.count).toBe(57);
   });
 
   it("FavoritesRail colapsa sin favoritos visibles para un visitante", async () => {

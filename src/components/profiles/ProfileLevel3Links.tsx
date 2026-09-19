@@ -10,19 +10,20 @@ interface ProfileLevel3LinksProps {
 }
 
 // Puertas al Nivel 3 del perfil (openspec: rework-user-profile): enlaces
-// discretos a la inmersión bajo demanda, nunca precargada. "Diario completo" y
+// discretos a la inmersión bajo demanda, nunca precargada. "Lista" y
 // "Colección" son anclas a los estantes que ya viven más abajo en esta misma
-// página (no se duplica esa lectura); "Favoritos" y "Huella de gusto
-// completa" navegan a una vista aparte — "Favoritos" desde que el Nivel 2 solo
-// muestra una previsualización de 5 por tipo (`FavoritesPreview`), el muro
-// completo con sus 3 modos de vista se mudó a `/users/[username]/favorites`.
-// No hay enlace a "todas las valoraciones": esa superficie no existe todavía
-// en el producto. No se renderiza si no hay ninguna puerta disponible.
+// página (no se duplica esa lectura); "Diario", "Favoritos" y "Huella de gusto
+// completa" navegan a una vista aparte — el diario y los favoritos desde que
+// el Nivel 2 solo muestra una previsualización con tope (`DiaryReadList` en
+// caja con scroll, `FavoritesPreview`), y la huella porque sus gráficos
+// dejaron de vivir en el flujo principal. No hay enlace a "todas las
+// valoraciones": esa superficie no existe todavía en el producto. No se
+// renderiza si no hay ninguna puerta disponible.
 export async function ProfileLevel3Links({ username, has, hasFingerprint }: ProfileLevel3LinksProps) {
   const t = await getTranslations("users");
 
   const links = [
-    has.diary && { href: "#diario", label: t("level3.diary") },
+    has.diary && { href: `/users/${username}/diary`, label: t("level3.diary") },
     has.favorites && { href: `/users/${username}/favorites`, label: t("level3.favorites") },
     has.lists && { href: "#listas", label: t("level3.lists") },
     has.collection && { href: "#coleccion", label: t("level3.collection") },

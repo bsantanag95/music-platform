@@ -11,7 +11,7 @@ interface ProfileRailProps {
 
 // Encabezado uniforme de cada estante del perfil (diario, favoritos, listas,
 // colección): título en display + conteo en mono. El cuerpo lo aporta el
-// componente de lectura existente (`DiaryList`, `FavoritesWall`, ...). Un
+// componente de lectura existente (`DiaryReadList`, `FavoritesPreview`, ...). Un
 // estante vacío no se renderiza: esa decisión vive en cada sección de la
 // página, no acá.
 export function ProfileRail({ label, count, id, children }: ProfileRailProps) {
