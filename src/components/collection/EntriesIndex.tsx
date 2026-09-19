@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CollectionEntryControls } from "./CollectionEntryControls";
+import { CollectionGroupHeading } from "./CollectionGroupHeading";
 import {
   collectionAlbumHref,
   type CollectionGroup,
@@ -26,14 +27,7 @@ export function EntriesIndex({ groups, actions, selection }: EntriesIndexProps) 
     <div className="flex flex-col gap-6">
       {groups.map((group) => (
         <section key={group.key} className="flex flex-col">
-          {group.heading ? (
-            <h3 className="mb-1 flex items-baseline gap-2 font-display text-base text-paper">
-              {group.heading}
-              {group.count !== null ? (
-                <span className="font-data text-xs text-paper-muted">{group.count}</span>
-              ) : null}
-            </h3>
-          ) : null}
+          <CollectionGroupHeading group={group} className="mb-1" />
           <ol className="flex flex-col">
             {group.entries.map((entry) => {
               counter += 1;

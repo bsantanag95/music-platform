@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AffinitySection,
   AlbumFavoritesSection,
+  CollectionRail,
   DiaryRail,
   ExplorationSection,
   FavoritesRail,
@@ -15,6 +16,7 @@ import {
 } from "./sections";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
 import { ListsCarousel } from "@/components/lists/ListsCarousel";
+import { CollectionPreview } from "@/components/collection/CollectionPreview";
 import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
 import { AlbumFavorites } from "@/components/profiles/AlbumFavorites";
 import { InRotation } from "@/components/profiles/InRotation";
@@ -41,6 +43,7 @@ const svc = vi.hoisted(() => ({
   getFavoritesPreview: vi.fn(),
   listUserLists: vi.fn(),
   listProfileCollection: vi.fn(),
+  getCollectionPreview: vi.fn(),
   getTasteFingerprint: vi.fn(),
   getShowcase: vi.fn(),
   getAlbumFavorites: vi.fn(),
@@ -59,7 +62,10 @@ vi.mock("@/services/favorites/favorites", () => ({
   getFavoritesPreview: svc.getFavoritesPreview,
 }));
 vi.mock("@/services/lists/lists", () => ({ listUserLists: svc.listUserLists }));
-vi.mock("@/services/collection/collection", () => ({ listProfileCollection: svc.listProfileCollection }));
+vi.mock("@/services/collection/collection", () => ({
+  listProfileCollection: svc.listProfileCollection,
+  getCollectionPreview: svc.getCollectionPreview,
+}));
 vi.mock("@/services/profiles/stats", () => ({ getTasteFingerprint: svc.getTasteFingerprint }));
 vi.mock("@/services/profiles/showcase", () => ({ getShowcase: svc.getShowcase }));
 vi.mock("@/services/profiles/album-favorites", () => ({
@@ -86,7 +92,7 @@ vi.mock("@/services/social/following", () => ({ countPendingFollowRequests: vi.f
 vi.mock("@/components/diary/DiaryReadList", () => ({ DiaryReadList: () => null }));
 vi.mock("@/components/favorites/FavoritesPreview", () => ({ FavoritesPreview: () => null }));
 vi.mock("@/components/lists/ListsCarousel", () => ({ ListsCarousel: () => null }));
-vi.mock("@/components/collection/CollectionShelf", () => ({ CollectionShelf: () => null }));
+vi.mock("@/components/collection/CollectionPreview", () => ({ CollectionPreview: () => null }));
 vi.mock("@/components/profiles/OwnerIdentityEditor", () => ({ OwnerIdentityEditor: () => null }));
 vi.mock("@/components/profiles/OwnerLinksEditor", () => ({ OwnerLinksEditor: () => null }));
 vi.mock("@/components/profiles/OwnerShowcaseEditor", () => ({ OwnerShowcaseEditor: () => null }));
@@ -171,6 +177,32 @@ describe("estantes vacíos", () => {
     expect(carousel?.type).toBe(ListsCarousel);
     expect(carousel?.props).toMatchObject({ username: "ana", totalCount: 23 });
     expect(carousel?.props?.lists).toHaveLength(10);
+  });
+
+  it("CollectionRail colapsa (null) sin copias visibles para un visitante, pero no para el dueño", async () => {
+    svc.getCollectionPreview.mockResolvedValue({ artists: [], totalEntries: 0, totalArtists: 0 });
+    expect(await CollectionRail(section)).toBeNull();
+    expect(await CollectionRail({ ...section, isOwn: true })).not.toBeNull();
+  });
+
+  it("CollectionRail usa el total real de copias en el encabezado y le pasa la previsualización", async () => {
+    // 87 copias visibles pero el estante trae solo 5 artistas x 4: el "87" sale
+    // de `totalEntries`, no de lo traído.
+    const artists = [{ name: "Queen", total: 12, entries: [{ id: "e1" }] }];
+    svc.getCollectionPreview.mockResolvedValue({ artists, totalEntries: 87, totalArtists: 31 });
+
+    const tree = (await CollectionRail(section)) as {
+      type?: unknown;
+      props?: { id?: string; count?: number; children?: { type?: unknown; props?: Record<string, unknown> } };
+    };
+
+    expect(svc.getCollectionPreview).toHaveBeenCalledWith("ana", null);
+    expect(tree?.type).toBe(ProfileRail);
+    expect(tree?.props?.id).toBe("coleccion");
+    expect(tree?.props?.count).toBe(87);
+    const preview = tree?.props?.children;
+    expect(preview?.type).toBe(CollectionPreview);
+    expect(preview?.props).toMatchObject({ username: "ana", totalEntries: 87, artists });
   });
 });
 

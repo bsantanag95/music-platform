@@ -529,6 +529,47 @@ primero"):
   compartido con `/api/me/lists`). El conteo del encabezado del estante es el total real, no
   `lists.length` (que se topaba en el tamaño de página).
 
+## Colección
+
+La colección del perfil (copias físicas: vinilo, CD, cassette, otro) siguió agrupada por
+artista con sus tres modos de visualización (Estantería / Lista detallada / Índice) — el
+diseño se mantuvo tal cual, solo se acotó lo que muestra el Nivel 2. Antes `CollectionRail`
+embebía `CollectionShelf` con un "Cargar más" ilimitado, y el agrupado por artista se hacía en
+el cliente sobre una página plana de 20 copias (un tope por artista no se puede aplicar ahí).
+Elegido entre mockups (tres criterios de qué artistas mostrar):
+
+- **Tope de 5 artistas × 4 copias por artista** (`COLLECTION_PREVIEW_ARTISTS` /
+  `COLLECTION_PREVIEW_PER_ARTIST`, `services/collection/types.ts`): 4 es una fila completa de
+  la grilla de 4 columnas de la Estantería, así que máximo 20 copias en el perfil.
+- **Los artistas de los que más copias tiene** (opción B): ranking por cantidad de copias,
+  desempata por actividad más reciente y luego por nombre (corte estable). Se descartaron
+  "más recientes primero" y "alfabético" (el orden anterior: con el corte mostraría siempre a
+  los de la "A"). Dentro de cada artista, lo último agregado primero.
+- **`getCollectionPreview(username, viewerId)`** devuelve `{ artists: [{ name, total, entries }],
+  totalEntries, totalArtists }`, con los totales reales. Una consulta de ranking sobre una
+  tabla derivada (`artist_name` por copia) + una consulta de copias por artista + un lote para
+  resolver los artistas. Mismo filtro de audiencia que `listProfileCollection`. El artista es
+  el principal acreditado (mismo criterio que el buscador y el orden); las copias de álbumes
+  sin artista forman el grupo "Sin artista".
+- **`CollectionPreview`** (client): renderiza los grupos con los mismos `ShelfGrid` /
+  `EntriesDetailed` / `EntriesIndex` (solo lectura). Cada artista muestra su **total real** y,
+  si hay más copias de las que se ven, **"Ver los N"** en el encabezado
+  (`CollectionGroupHeading`, compartido por los tres modos) hacia
+  `/users/[username]/collection?q=<artista>`. Al pie, **"Ver toda la colección (N)"**. Sin
+  enlace ni botón cuando se ve todo. El conteo del encabezado del estante es el total real de
+  copias (antes `entries.length` de la primera página).
+- **`/users/[username]/collection`** (nueva, de solo lectura): `CollectionShelf` en modo
+  `readOnly`, que ahora muestra los mismos conteos por formato, buscador y filtros (formato,
+  atributo, agrupar, ordenar) que `/me/collection` y el conmutador de modo, sin
+  edición/selección/audiencia. Los filtros viajan en la URL (`parseCollectionFilters`; un valor
+  inválido se ignora en vez de romper una página enlazada desde afuera), que es lo que usa el
+  "Ver los N" de cada artista. Distinta de `/me/collection` (gestión del dueño + lista de
+  deseados). El enlace de Nivel 3 "Colección completa" apunta acá (antes ancla `#coleccion`).
+  Nota: `q` busca por texto parcial, así que "Queen" también trae "Queens of the Stone Age".
+- **Latentes de `readOnly` corregidos** en `CollectionShelf` (mismo patrón que `FavoritesWall`):
+  la carga inicial se daba siempre por sembrada, la query key no llevaba los filtros y el vacío
+  ignoraba si había filtros activos.
+
 ## Estantes y recencia
 
 Diario, favoritos, listas y colección se muestran con los componentes de lectura existentes

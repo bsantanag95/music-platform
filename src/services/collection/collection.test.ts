@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { sql } from "drizzle-orm";
 import { describe, expect, it, vi } from "vitest";
 import {
   addEntry,
@@ -9,7 +10,9 @@ import {
   listOwnCollection,
   listProfileCollection,
   listOwnEntriesForReleaseGroup,
+  getCollectionPreview,
 } from "./collection";
+import { COLLECTION_PREVIEW_ARTISTS, COLLECTION_PREVIEW_PER_ARTIST } from "./types";
 
 const mocks = vi.hoisted(() => ({
   db: { select: vi.fn(), insert: vi.fn(), update: vi.fn(), delete: vi.fn() },
@@ -351,5 +354,121 @@ describe("servicio de colección física", () => {
     const content = readFileSync(join(import.meta.dirname, "collection.ts"), "utf-8");
     expect(content).not.toMatch(/schema.*import.*\b(favorite|rating|comment|listenEntry|userList)\b/);
     expect(content).not.toMatch(/from "@\/services\/(favorites|social\/rating|diary|lists)"/);
+  });
+});
+
+describe("getCollectionPreview", () => {
+  const publicProfile = { id: "otro", profileVisibility: "public", relation: "none", blockedByMe: false };
+
+  // Tabla derivada `scoped`: select().from().innerJoin().where().as()
+  function scopedTable() {
+    const derived = { name: sql`artist_name`, createdAt: sql`created_at` };
+    const chain = {
+      from: vi.fn(() => chain),
+      innerJoin: vi.fn(() => chain),
+      where: vi.fn(() => chain),
+      as: vi.fn(() => derived),
+    };
+    return chain;
+  }
+  // select().from(scoped).groupBy().orderBy().limit() → ranking de artistas
+  function ranking(rows: unknown[]) {
+    const limit = vi.fn().mockResolvedValue(rows);
+    const orderBy = vi.fn(() => ({ limit }));
+    const groupBy = vi.fn(() => ({ orderBy }));
+    return { chain: { from: vi.fn(() => ({ groupBy })) }, limit };
+  }
+  // select().from(scoped) → totales
+  function totals(row: { entries: number; artists: number }) {
+    return { from: vi.fn().mockResolvedValue([row]) };
+  }
+  // select().from().innerJoin().where().orderBy().limit() → copias de un artista
+  function artistEntries(rows: unknown[]) {
+    const limit = vi.fn().mockResolvedValue(rows);
+    const orderBy = vi.fn(() => ({ limit }));
+    const where = vi.fn(() => ({ orderBy }));
+    const chain = { innerJoin: vi.fn(() => chain), where };
+    return { chain: { from: vi.fn(() => chain) }, limit };
+  }
+
+  it("devuelve vacío sin permiso (perfil privado sin relación) y no consulta la base", async () => {
+    mocks.getProfileByUsername.mockResolvedValue({ ...publicProfile, profileVisibility: "private" });
+    mocks.db.select.mockClear();
+    const result = await getCollectionPreview("otro", userId);
+    expect(result).toEqual({ artists: [], totalEntries: 0, totalArtists: 0 });
+    expect(mocks.db.select).not.toHaveBeenCalled();
+  });
+
+  it("devuelve vacío ante bloqueo", async () => {
+    mocks.getProfileByUsername.mockResolvedValue({ ...publicProfile, blockedByMe: true });
+    const result = await getCollectionPreview("otro", userId);
+    expect(result.artists).toEqual([]);
+  });
+
+  it("arma un grupo por artista con su total real y sus copias, y los totales del perfil", async () => {
+    mocks.getProfileByUsername.mockResolvedValue(publicProfile);
+    const queenRows = [
+      { ...entryRow, id: "q1", releaseGroupId: "rg-q1", albumTitle: "A Night at the Opera" },
+      { ...entryRow, id: "q2", releaseGroupId: "rg-q2", albumTitle: "Jazz" },
+    ];
+    const orphanRows = [{ ...entryRow, id: "o1", releaseGroupId: "rg-o1", albumTitle: "Sin crédito" }];
+    const rank = ranking([
+      { name: "Queen", total: 12, latest: new Date("2026-03-01T00:00:00Z") },
+      { name: null, total: 1, latest: new Date("2026-02-01T00:00:00Z") },
+    ]);
+    mocks.db.select
+      .mockReturnValueOnce(scopedTable())
+      .mockReturnValueOnce(rank.chain)
+      .mockReturnValueOnce(totals({ entries: 87, artists: 31 }))
+      .mockReturnValueOnce(artistEntries(queenRows).chain)
+      .mockReturnValueOnce(artistEntries(orphanRows).chain)
+      .mockReturnValueOnce(
+        joinWhereOrderBy([
+          { releaseGroupId: "rg-q1", position: 0, artistId: "a-queen", artistName: "Queen" },
+          { releaseGroupId: "rg-q2", position: 0, artistId: "a-queen", artistName: "Queen" },
+        ]),
+      );
+
+    const result = await getCollectionPreview("otro", userId);
+
+    expect(result.totalEntries).toBe(87);
+    expect(result.totalArtists).toBe(31);
+    expect(result.artists.map((a) => [a.name, a.total, a.entries.length])).toEqual([
+      ["Queen", 12, 2],
+      [null, 1, 1],
+    ]);
+    // Cada grupo recibe SUS copias, en el orden en que se pidieron.
+    expect(result.artists[0]!.entries.map((e) => e.id)).toEqual(["q1", "q2"]);
+    expect(result.artists[0]!.entries[0]!.album.artistName).toBe("Queen");
+    expect(result.artists[1]!.entries.map((e) => e.id)).toEqual(["o1"]);
+    expect(result.artists[1]!.entries[0]!.album.artistName).toBeNull();
+  });
+
+  it("aplica el tope: N artistas en el ranking y M copias por artista", async () => {
+    mocks.getProfileByUsername.mockResolvedValue(publicProfile);
+    const rank = ranking([{ name: "Queen", total: 12, latest: new Date() }]);
+    const queen = artistEntries([]);
+    mocks.db.select
+      .mockReturnValueOnce(scopedTable())
+      .mockReturnValueOnce(rank.chain)
+      .mockReturnValueOnce(totals({ entries: 12, artists: 1 }))
+      .mockReturnValueOnce(queen.chain);
+
+    await getCollectionPreview("otro", userId);
+
+    expect(rank.limit).toHaveBeenCalledWith(COLLECTION_PREVIEW_ARTISTS);
+    expect(queen.limit).toHaveBeenCalledWith(COLLECTION_PREVIEW_PER_ARTIST);
+    expect(COLLECTION_PREVIEW_ARTISTS).toBe(5);
+    expect(COLLECTION_PREVIEW_PER_ARTIST).toBe(4);
+  });
+
+  it("perfil sin copias visibles: sin grupos y totales en cero", async () => {
+    mocks.getProfileByUsername.mockResolvedValue(publicProfile);
+    mocks.db.select
+      .mockReturnValueOnce(scopedTable())
+      .mockReturnValueOnce(ranking([]).chain)
+      .mockReturnValueOnce(totals({ entries: 0, artists: 0 }));
+    const result = await getCollectionPreview("otro", userId);
+    expect(result).toEqual({ artists: [], totalEntries: 0, totalArtists: 0 });
   });
 });

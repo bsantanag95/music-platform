@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import type { CollectionEntry } from "@/lib/api/schemas";
 import { CollectionEntryControls } from "./CollectionEntryControls";
+import { CollectionGroupHeading } from "./CollectionGroupHeading";
 import {
   collectionAlbumHref,
   collectionArtistHref,
@@ -27,14 +28,7 @@ export function ShelfGrid({ groups, actions, selection }: ShelfGridProps) {
     <div className="flex flex-col gap-8">
       {groups.map((group) => (
         <section key={group.key} className="flex flex-col gap-3">
-          {group.heading ? (
-            <h3 className="flex items-baseline gap-2 font-display text-base text-paper">
-              {group.heading}
-              {group.count !== null ? (
-                <span className="font-data text-xs text-paper-muted">{group.count}</span>
-              ) : null}
-            </h3>
-          ) : null}
+          <CollectionGroupHeading group={group} />
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {group.entries.map((entry) => (
               <Fragment key={entry.id}>

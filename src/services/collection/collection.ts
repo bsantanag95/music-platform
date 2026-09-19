@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNull, max, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, collectionEntry, credit, releaseGroup } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -11,10 +11,16 @@ import type {
   CollectionFilters,
   CollectionGrouping,
   CollectionPage,
+  CollectionPreview,
   CollectionSort,
   NewCollectionEntry,
 } from "./types";
-import { COLLECTION_GROUPINGS, COLLECTION_SORTS } from "./types";
+import {
+  COLLECTION_GROUPINGS,
+  COLLECTION_PREVIEW_ARTISTS,
+  COLLECTION_PREVIEW_PER_ARTIST,
+  COLLECTION_SORTS,
+} from "./types";
 import { normalizeAttributes } from "./vocabulary";
 import type { CollectionFormat, EditionAttribute } from "./vocabulary";
 
@@ -419,6 +425,91 @@ export async function listProfileCollection(
     pageSize,
     hasNext: rows.length > pageSize,
     counts,
+  };
+}
+
+// Previsualización de la colección de un perfil para el estante del Nivel 2:
+// los `COLLECTION_PREVIEW_ARTISTS` artistas de los que más copias tiene (empata
+// por actividad más reciente, luego por nombre, para que el corte sea estable) y,
+// de cada uno, sus `COLLECTION_PREVIEW_PER_ARTIST` copias más recientes. Los
+// totales (por artista y del perfil) son reales, no el largo de lo traído. Mismo
+// filtro de audiencia que `listProfileCollection`; el agrupado se hace acá y no en
+// el cliente porque un tope por artista no se puede aplicar sobre una página plana.
+export async function getCollectionPreview(
+  username: string,
+  viewerId: string | null,
+): Promise<CollectionPreview> {
+  const { getProfileByUsername } = await import("@/services/social/profiles");
+  const profile = await getProfileByUsername(username, viewerId);
+  const audiences = audiencesForProfile(profile);
+  if (audiences.length === 0) return { artists: [], totalEntries: 0, totalArtists: 0 };
+
+  const scope: SQL[] = [
+    ...scopeConditions(profile.id, {}),
+    inArray(collectionEntry.audience, audiences),
+  ];
+
+  // Tabla derivada con el artista principal de cada copia: agrupar por la
+  // subconsulta escalar directamente dependería de que Postgres empareje la
+  // expresión del SELECT con la del GROUP BY.
+  const scoped = db
+    .select({
+      name: PRIMARY_ARTIST_NAME.as("artist_name"),
+      createdAt: collectionEntry.createdAt,
+    })
+    .from(collectionEntry)
+    .innerJoin(releaseGroup, eq(collectionEntry.releaseGroupId, releaseGroup.id))
+    .where(and(...scope))
+    .as("scoped");
+
+  const [ranking, [totals]] = await Promise.all([
+    db
+      .select({ name: scoped.name, total: count(), latest: max(scoped.createdAt) })
+      .from(scoped)
+      .groupBy(scoped.name)
+      .orderBy(desc(count()), desc(max(scoped.createdAt)), asc(sql`lower(${scoped.name})`))
+      .limit(COLLECTION_PREVIEW_ARTISTS),
+    db
+      .select({
+        entries: count(),
+        artists: sql<number>`count(distinct coalesce(${scoped.name}, ''))`.mapWith(Number),
+      })
+      .from(scoped),
+  ]);
+
+  const perArtist = await Promise.all(
+    ranking.map((artistRow) =>
+      db
+        .select(entrySelection)
+        .from(collectionEntry)
+        .innerJoin(releaseGroup, eq(collectionEntry.releaseGroupId, releaseGroup.id))
+        .where(
+          and(
+            ...scope,
+            artistRow.name === null
+              ? sql`${PRIMARY_ARTIST_NAME} is null`
+              : sql`${PRIMARY_ARTIST_NAME} = ${artistRow.name}`,
+          ),
+        )
+        .orderBy(desc(collectionEntry.createdAt), desc(collectionEntry.id))
+        .limit(COLLECTION_PREVIEW_PER_ARTIST),
+    ),
+  );
+
+  // Un solo lote para resolver los artistas de todas las copias traídas.
+  const serialized = await serializePage(perArtist.flat());
+  let offset = 0;
+  const artists = ranking.map((artistRow, index) => {
+    const size = perArtist[index]!.length;
+    const entries = serialized.slice(offset, offset + size);
+    offset += size;
+    return { name: artistRow.name, total: Number(artistRow.total), entries };
+  });
+
+  return {
+    artists,
+    totalEntries: Number(totals?.entries ?? 0),
+    totalArtists: totals?.artists ?? 0,
   };
 }
 
