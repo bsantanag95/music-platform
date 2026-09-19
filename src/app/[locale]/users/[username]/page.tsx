@@ -6,7 +6,7 @@ import { getMutualFollowersPreview, mutualFollowersHint } from "@/services/profi
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
 import { Placa } from "@/components/profiles/Placa";
-import { PrivateThreshold } from "@/components/profiles/PrivateThreshold";
+import { PrivateProfileCard } from "@/components/profiles/PrivateProfileCard";
 import { ViewAsBanner } from "@/components/profiles/ViewAsBanner";
 import {
   AffinitySection,
@@ -91,20 +91,23 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
       : 0;
   const section = { username: profile.username, viewerId: effectiveViewerId, isOwn };
 
-  // Perfil privado sin acceso: identidad extendida + aviso, nada más — no hay
-  // contenido rico que componer para este nivel de acceso.
+  // Perfil privado sin acceso: una sola tarjeta con la identidad extendida y el
+  // estado exacto del visitante (`PrivateProfileCard`), nada más — no hay
+  // contenido rico que componer para este nivel de acceso. Un dueño que
+  // previsualiza su perfil privado ("cómo te ven") cae acá con la sesión
+  // activa: necesita el banner para volver a su vista, igual que en la vista
+  // accesible.
   if (lockedOut) {
     return (
       <main className="flex min-h-screen flex-col items-center gap-8 px-4 py-12">
-        <div className="flex w-full max-w-2xl flex-col items-start gap-8">
-          <Placa profile={profile} authenticated={authenticated} preview={previewing} canModerate={canModerate} />
-          <PrivateThreshold
-            username={profile.username}
-            relation={profile.relation}
+        <div className="flex w-full max-w-2xl flex-col items-start gap-4">
+          {previewing && <ViewAsBanner username={profile.username} previewing />}
+          <PrivateProfileCard
+            profile={profile}
             authenticated={authenticated}
-            ownerId={profile.id}
             mutualFollowers={mutualFollowersCount}
             preview={previewing}
+            canModerate={canModerate}
           />
         </div>
       </main>
@@ -134,7 +137,6 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
           <Placa
             profile={profile}
             authenticated={authenticated}
-            variant="aside"
             preview={previewing}
             canModerate={canModerate}
             mutualFollowers={mutualFollowers}

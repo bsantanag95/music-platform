@@ -14,8 +14,12 @@ const mocks = vi.hoisted(() => {
       this.status = status;
     }
   }
-  return { apiFetch: vi.fn(), ApiError };
+  return { apiFetch: vi.fn(), ApiError, refresh: vi.fn() };
 });
+
+vi.mock("@/i18n/navigation", () => ({
+  useRouter: () => ({ refresh: mocks.refresh }),
+}));
 
 vi.mock("@/lib/api/client", () => ({
   apiFetch: mocks.apiFetch,
@@ -78,5 +82,36 @@ describe("BlockButton", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "No se puede realizar esta operación con tu propio perfil.",
     );
+  });
+
+  it("con refreshOnChange, bloquear y desbloquear refrescan la página", async () => {
+    const user = userEvent.setup();
+    mocks.apiFetch.mockResolvedValueOnce({ blocked: true }).mockResolvedValueOnce({ blocked: false });
+    renderWithIntl(<BlockButton username="pato" blocked={false} refreshOnChange />);
+
+    await user.click(screen.getByRole("button", { name: "Bloquear" }));
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledTimes(1));
+    await user.click(await screen.findByRole("button", { name: "Desbloquear" }));
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledTimes(2));
+  });
+
+  it("sin refreshOnChange no refresca (búsqueda, listados)", async () => {
+    const user = userEvent.setup();
+    mocks.apiFetch.mockResolvedValue({ blocked: true });
+    renderWithIntl(<BlockButton username="pato" blocked={false} />);
+
+    await user.click(screen.getByRole("button", { name: "Bloquear" }));
+    await screen.findByRole("button", { name: "Desbloquear" });
+    expect(mocks.refresh).not.toHaveBeenCalled();
+  });
+
+  it("si la acción falla no refresca", async () => {
+    const user = userEvent.setup();
+    mocks.apiFetch.mockRejectedValue(new mocks.ApiError("INTERNAL_ERROR", 500, "boom"));
+    renderWithIntl(<BlockButton username="pato" blocked={false} refreshOnChange />);
+
+    await user.click(screen.getByRole("button", { name: "Bloquear" }));
+    await screen.findByRole("alert");
+    expect(mocks.refresh).not.toHaveBeenCalled();
   });
 });

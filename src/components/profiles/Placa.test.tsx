@@ -65,7 +65,7 @@ describe("Placa", () => {
     expect(screen.getByTestId("follow-button")).toHaveTextContent("none");
   });
 
-  it("vista privada sin autorización: sigue mostrando bio, enlaces y contadores", async () => {
+  it("muestra la identidad extendida: bio, pronombres, ubicación, enlaces y contadores", async () => {
     renderWithIntl(
       await Placa({
         profile: {

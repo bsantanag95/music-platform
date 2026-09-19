@@ -86,8 +86,26 @@
   "backToProfile": "Back to my profile",
   "privateNoticeEyebrow": "Private profile",
   "privateNoticeTitle": "This profile is private",
-  "privateNoticeBody": "Follow @{username} to see their diary, favorites, lists and collection.",
   "privateNoticeMutual": "{count, plural, one {One person you follow also follows this account.} other {# people you follow also follow this account.}}",
+  "requestFollow": "Request to follow",
+  "createAccount": "Create account",
+  "privateProfile": {
+    "chipPrivate": "Private",
+    "chipBlocked": "Blocked",
+    "eyebrowBlocked": "Blocked account",
+    "titleBlockedByMe": "You blocked this account",
+    "titleBlockedByThem": "You can't view this profile",
+    "opensOnFollow": "Opens when you follow",
+    "body": {
+      "anonymous": "Sign in and ask to follow @{username} to see their diary, favorites, lists and collection.",
+      "none": "Ask to follow @{username} to see their diary, favorites, lists and collection. They have to approve your request.",
+      "requested": "Your request is sent. @{username} has to approve it before you can see their content.",
+      "incoming": "@{username} sent you a request to follow you. Their content stays private; you can answer the request from here.",
+      "blockedByMe": "You blocked this account. Unblock it to see its profile again or follow it.",
+      "blockedByThem": "You can't view or follow this account.",
+      "preview": "Ask to follow @{username} to see their diary, favorites, lists and collection. They have to approve your request."
+    }
+  },
   "memberSince": "Member since {date}",
   "profileLinksLabel": "Profile links",
   "profileFollowerCount": "{count, plural, one {# follower} other {# followers}}",

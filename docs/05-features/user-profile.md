@@ -35,7 +35,7 @@ visitante:
 
 | Nivel | Quién | Qué ve |
 |---|---|---|
-| **No autorizado** | Anónimo, sin relación aceptada, o solicitud pendiente sobre un perfil privado | Identidad extendida + aviso de perfil privado + CTA de seguir. Nada más. |
+| **No autorizado** | Anónimo, sin relación aceptada, o solicitud pendiente sobre un perfil privado | Una sola tarjeta (`PrivateProfileCard`): identidad extendida + estado exacto del visitante + una acción. Nada más. Ver "Perfil privado". |
 | **Autorizado** | Cuenta pública, o seguidor aprobado de una privada | Identidad + Tarjeta de Identidad + resumen de huella + álbumes favoritos + destacados + valoraciones destacadas + reseñas + en rotación + huella completa (nivel 3) + afinidad + estantes (diario / favoritos / listas / colección) + recencia. |
 | **Dueño** | La persona | Lo mismo que "autorizado" + editores inline de identidad/enlaces/álbumes favoritos/destacados/marcador "me define"/himno + acción de destacar valoraciones y entradas de diario + panel de gestión + previsualizador "cómo te ven". |
 
@@ -59,16 +59,52 @@ seguir. Solo las actividades y los listados sociales quedan ocultos.
 
 ## Diseño de la Placa
 
-`Placa.tsx` es una card con borde (`border-ink-border` / `bg-ink-surface`, `rounded-lg`), no un
-bloque suelto: monograma **circular** (mismo lenguaje visual que la Tarjeta de Identidad y el
-hover card), contadores de seguidores/seguidos como **pills** con borde redondeado, y el
-clúster de acciones (botón Seguir + bloqueo/moderación) separado del resto por un divisor
-horizontal cuando queda apilado debajo del contenido — siempre en la variante `aside` (barra
-lateral, columna fija), y solo en viewport móvil para la variante `full` (vista de perfil
-privado sin acceso), que en escritorio pone las acciones a la derecha en una fila sin divisor
-(`sm:border-t-0`). Elegido entre 4 mockups estáticos ("Opción B: Tarjeta contenida") comparados
-con el usuario junto a un refresco mínimo sin card, una versión centrada tipo carta de
-identidad, y contadores como bloques de estadística en vez de pills.
+`Placa.tsx` es la identidad de un perfil **accesible** (público, seguidor aprobado o dueño),
+siempre en la barra lateral: una card con borde (`border-ink-border` / `bg-ink-surface`,
+`rounded-lg`), no un bloque suelto — la identidad (`ProfileIdentity`: monograma **circular**,
+mismo lenguaje que la Tarjeta de Identidad y el hover card, contadores de seguidores/seguidos
+como **pills** con borde redondeado, alta, bio y enlaces) y, separado por un divisor, el clúster
+de acciones (botón Seguir + bloqueo/moderación). Elegido entre 4 mockups estáticos ("Opción B:
+Tarjeta contenida") comparados con un refresco mínimo sin card, una versión centrada tipo carta
+de identidad, y contadores como bloques de estadística en vez de pills. Antes tenía además una
+variante `full` para la vista de perfil privado; esa vista ahora tiene su propia tarjeta y la
+variante se eliminó.
+
+## Perfil privado
+
+Lo que ve quien no tiene acceso. Antes eran dos tarjetas apiladas (la Placa + el aviso "Este
+perfil es privado") sobre una pantalla vacía, con el botón de seguir repetido. Elegido entre 3
+mockups ("Opción A: una sola tarjeta"; se descartaron una página de dos columnas con estantes
+fantasma y una carta centrada mínima):
+
+- **`PrivateProfileCard`**: una sola tarjeta. Arriba la identidad extendida
+  (`ProfileIdentity`, compartida con la Placa) con un chip de candado "Privado"; debajo de un
+  divisor, el estado del visitante, "Se abre al seguir" (los 4 estantes como huecos con candado,
+  **sin cifras de contenido** — mostrarían actividad de una cuenta privada) y **una** acción.
+  Mantiene el disco de vinilo como marca de agua. La identidad extendida sigue siendo visible
+  por decisión de producto (bio, enlaces, contadores: dan razones reales para seguir).
+- **Los contadores no son enlaces** en esta vista: los listados de conexiones de un perfil
+  privado solo mostraban "es privado" (callejón sin salida).
+- **Estados** (`privateState`): anónimo (Iniciar sesión para seguir + Crear cuenta), sin relación
+  (**"Solicitar seguir"** — `FollowButton requestApproval` — con aviso de que hay que esperar la
+  aprobación), solicitud enviada (Cancelar solicitud), te envió una solicitud (mensaje propio +
+  Aprobar/Rechazar, sin vitrina de estantes), bloqueaste a la cuenta (**Desbloquear** como acción
+  principal, ya no dice "Seguí a…"), te bloqueó y "cómo te ven" (dueño; acción inerte).
+- **Te bloqueó**: solo nombre y usuario — sin pronombres, contadores, bio, enlaces ni acciones
+  (`minimal`). Antes se mostraba la identidad completa a quien había sido bloqueado. Es una
+  decisión de presentación: `GET /api/users/[username]` no devuelve esos campos de todas
+  formas (solo la relación).
+- **"Cómo te ven" con perfil privado** (bug corregido): la rama privada no montaba `ViewAsBanner`,
+  así que un dueño con perfil privado que probaba "Ver cómo te ven" quedaba sin botón para
+  volver a su vista. Ahora el banner se monta cuando `previewing`.
+- **También la ven los bloqueados de un perfil público**: `getProfileByUsername` marca
+  `accessible: false` para la relación `blocked`, así que quien bloqueó (o fue bloqueado por) una
+  cuenta pública cae en esta misma tarjeta, con los estados "bloqueaste"/"te bloqueó" (por eso
+  el mensaje de "bloqueaste" no habla solo de "pedir seguir").
+- **Refresco**: `FollowButton refreshOnAnyChange` y `BlockButton refreshOnChange` refrescan la
+  página tras cualquier cambio de relación/bloqueo, porque el mensaje del servidor depende del
+  estado exacto y sin refresco quedaba desactualizado junto al botón nuevo. Se conservan Bloquear
+  y las acciones de moderación en una fila discreta al pie de la tarjeta.
 
 ## Seguidores en común y listados de conexiones
 
