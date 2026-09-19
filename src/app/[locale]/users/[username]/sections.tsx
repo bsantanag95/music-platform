@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { listUserDiary } from "@/services/diary/diary";
 import { getFavoritesPreview, listUserFavorites } from "@/services/favorites/favorites";
 import { listUserLists } from "@/services/lists/lists";
@@ -35,7 +36,7 @@ import { IdentityCard } from "@/components/profiles/IdentityCard";
 import { ProfileLevel3Links } from "@/components/profiles/ProfileLevel3Links";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
 import { ProfileRecency } from "@/components/profiles/ProfileRecency";
-import { DiaryList } from "@/components/diary/DiaryList";
+import { DiaryReadList } from "@/components/diary/DiaryReadList";
 import { FavoritesPreview } from "@/components/favorites/FavoritesPreview";
 import { ListsList } from "@/components/lists/ListsList";
 import { CollectionShelf } from "@/components/collection/CollectionShelf";
@@ -206,12 +207,16 @@ export async function DiaryRail({ username, viewerId, isOwn }: SectionProps) {
     return isOwn ? <EmptyRailForOwner label={t("diaryTitle")} message={t("railEmptyOwn")} /> : null;
   }
   return (
-    <ProfileRail id="diario" label={t("diaryTitle")} count={initial.entries.length}>
-      <DiaryList
-        initial={initial}
-        readOnly
-        empty={{ title: tDiary("profileEmptyTitle"), description: tDiary("profileEmptyDescription") }}
-      />
+    <ProfileRail id="diario" label={t("diaryTitle")} count={initial.totalCount}>
+      <div className="flex w-full flex-col gap-3">
+        <DiaryReadList initial={initial} username={username} scrollable />
+        <Link
+          href={`/users/${username}/diary`}
+          className="self-start font-data text-xs text-paper-muted underline decoration-dotted underline-offset-2 transition-colors hover:text-paper"
+        >
+          {tDiary("profileViewFull")}
+        </Link>
+      </div>
     </ProfileRail>
   );
 }

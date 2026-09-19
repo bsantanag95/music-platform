@@ -326,29 +326,46 @@ export async function listUserDiary(
   // sobre la matriz de audiencia, no sobre el requisito de acceso al perfil
   // (spec `diary-visibility`, "Perfil privado sin relación aprobada").
   if (audiences.length === 0) {
-    return { entries: [], page, pageSize, hasNext: false };
+    return { entries: [], page, pageSize, hasNext: false, totalCount: 0 };
   }
 
   // Una entrada destacada es visible más allá de su audiencia normal (spec
   // `diary-visibility`, "Las entradas destacadas anulan la matriz de
   // visibilidad") — de ahí el OR contra `isHighlighted` además del filtro de
   // audiencia habitual.
-  const rows = await selectEntries()
-    .where(
-      and(
-        eq(listenEntry.userId, profile.id),
-        or(inArray(listenEntry.audience, audiences), eq(listenEntryHighlight.userId, profile.id)),
-      ),
-    )
-    .orderBy(desc(listenEntry.createdAt), desc(listenEntry.id))
-    .limit(pageSize + 1)
-    .offset((page - 1) * pageSize);
+  const visibleTo = and(
+    eq(listenEntry.userId, profile.id),
+    or(inArray(listenEntry.audience, audiences), eq(listenEntryHighlight.userId, profile.id)),
+  );
+
+  const [rows, [countRow]] = await Promise.all([
+    selectEntries()
+      .where(visibleTo)
+      .orderBy(desc(listenEntry.createdAt), desc(listenEntry.id))
+      .limit(pageSize + 1)
+      .offset((page - 1) * pageSize),
+    // Total visible para el encabezado del estante del perfil — mismo join
+    // con los destacados que `selectEntries`, porque el filtro de arriba
+    // referencia `listenEntryHighlight`.
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(listenEntry)
+      .leftJoin(
+        listenEntryHighlight,
+        and(
+          eq(listenEntryHighlight.listenEntryId, listenEntry.id),
+          eq(listenEntryHighlight.userId, listenEntry.userId),
+        ),
+      )
+      .where(visibleTo),
+  ]);
 
   return {
     entries: rows.slice(0, pageSize).map(serializeEntry),
     page,
     pageSize,
     hasNext: rows.length > pageSize,
+    totalCount: countRow?.count ?? 0,
   };
 }
 

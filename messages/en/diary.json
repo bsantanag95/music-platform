@@ -4,6 +4,8 @@
   "emptyDescription": "Log a listen of an artist, album or song and it will show up here.",
   "profileEmptyTitle": "No diary entries",
   "profileEmptyDescription": "This user hasn't recorded any visible listens yet.",
+  "profileViewFull": "See full diary",
+  "scrollRegionLabel": "Diary entries",
   "registerListen": "Log a listen",
   "logInDiary": "Add to diary",
   "signInToListen": "Log in to record listens",

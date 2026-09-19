@@ -86,6 +86,14 @@ function joinPaged(rows: unknown[]) {
   return { from };
 }
 
+// select().from().leftJoin().where() → terminal where (agregado de total)
+function joinCount(count: number) {
+  const where = vi.fn().mockResolvedValue([{ count }]);
+  const chain = { leftJoin: vi.fn(() => chain), where };
+  const from = vi.fn(() => chain);
+  return { from };
+}
+
 const target: DiaryTarget = { type: "artist", id: "00000000-0000-4000-8000-000000000001", column: "artistId" };
 const user = "00000000-0000-4000-8000-000000000002";
 
@@ -590,12 +598,17 @@ describe("servicio del diario", () => {
         relation: "none",
         blockedByMe: false,
       });
-      mocks.db.select.mockReturnValue(joinPaged([entryRow]));
+      // Dos selects en paralelo: filas paginadas + total visible.
+      mocks.db.select
+        .mockReturnValueOnce(joinPaged([entryRow]))
+        .mockReturnValueOnce(joinCount(37));
 
       const result = await listUserDiary("testuser", viewer, 1, 20);
 
       expect(result.entries).toHaveLength(1);
       expect(result.hasNext).toBe(false);
+      // El total es el real (37), no la cantidad de la página traída (1).
+      expect(result.totalCount).toBe(37);
       expect(mocks.getProfileByUsername).toHaveBeenCalledWith("testuser", viewer);
     });
 
@@ -609,7 +622,7 @@ describe("servicio del diario", () => {
         blockedByMe: false,
       });
       const helper = joinPagedCapturing([entryRow]);
-      mocks.db.select.mockReturnValue(helper);
+      mocks.db.select.mockReturnValueOnce(helper).mockReturnValueOnce(joinCount(1));
 
       await listUserDiary("testuser", viewer, 1, 20);
 
@@ -634,6 +647,7 @@ describe("servicio del diario", () => {
 
       expect(result.entries).toEqual([]);
       expect(result.hasNext).toBe(false);
+      expect(result.totalCount).toBe(0);
       expect(mocks.db.select).not.toHaveBeenCalled();
     });
 
