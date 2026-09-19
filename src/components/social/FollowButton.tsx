@@ -27,6 +27,19 @@ interface FollowButtonProps {
    * conexiones, feed) no deberían recargar nada ajeno por un follow.
    */
   refreshProfileOnFollow?: boolean;
+  /**
+   * Refresca la página ante CUALQUIER cambio de relación (seguir, solicitar,
+   * cancelar, aprobar, rechazar), no solo al cruzar "following". Lo usa el
+   * umbral de un perfil privado, cuyo mensaje depende del estado exacto
+   * ("pedile seguir" → "tu solicitud está enviada"): sin refresco el botón
+   * cambiaría y el texto de al lado quedaría desactualizado.
+   */
+  refreshOnAnyChange?: boolean;
+  /**
+   * El perfil es privado: seguir es *pedir* seguir y la otra persona debe
+   * aprobarlo, así que la acción se rotula "Solicitar seguir" en vez de "Seguir".
+   */
+  requestApproval?: boolean;
   onChange?: (relation: FollowRelation) => void;
 }
 
@@ -40,6 +53,8 @@ export function FollowButton({
   requestId,
   preview,
   refreshProfileOnFollow,
+  refreshOnAnyChange,
+  requestApproval,
   onChange,
 }: FollowButtonProps) {
   const t = useTranslations("users");
@@ -49,12 +64,25 @@ export function FollowButton({
   const [busy, setBusy] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
 
+  const followLabel = requestApproval ? t("requestFollow") : t("follow");
+
   if (preview) {
     return (
       <Button variant="primary" disabled>
-        {t("follow")}
+        {followLabel}
       </Button>
     );
+  }
+
+  // Aprobar/rechazar/seguir/cancelar terminan acá: actualiza el estado local y,
+  // si el llamador lo pidió, refresca la página para que el texto del servidor
+  // acompañe al botón.
+  function settle(previous: FollowRelation, next: FollowRelation) {
+    setCurrent(next);
+    onChange?.(next);
+    if (refreshOnAnyChange ? previous !== next : refreshProfileOnFollow && (previous === "following") !== (next === "following")) {
+      router.refresh();
+    }
   }
 
   if (!authenticated) {
@@ -99,8 +127,7 @@ export function FollowButton({
                 await apiFetch(`/api/me/follow-requests/${encodeURIComponent(targetId)}/approve`, NoContentSchema, {
                   method: "POST",
                 });
-                setCurrent("none");
-                onChange?.("none");
+                settle("incoming", "none");
               } catch (error) {
                 setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
               } finally {
@@ -120,8 +147,7 @@ export function FollowButton({
                 await apiFetch(`/api/me/follow-requests/${encodeURIComponent(targetId)}/reject`, NoContentSchema, {
                   method: "POST",
                 });
-                setCurrent("none");
-                onChange?.("none");
+                settle("incoming", "none");
               } catch (error) {
                 setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
               } finally {
@@ -174,13 +200,10 @@ export function FollowButton({
         method,
       });
       const next = method === "PUT" ? result.relation : "none";
-      setCurrent(next);
-      onChange?.(next);
-      // Solo importa cruzar el límite de "following": es lo único que mueve
-      // `audiencesForProfile` (visitante "requested" ve lo mismo que "none").
-      if (refreshProfileOnFollow && (previous === "following") !== (next === "following")) {
-        router.refresh();
-      }
+      // Con `refreshProfileOnFollow` solo importa cruzar el límite de
+      // "following": es lo único que mueve `audiencesForProfile` (visitante
+      // "requested" ve lo mismo que "none").
+      settle(previous, next);
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
     } finally {
@@ -191,7 +214,7 @@ export function FollowButton({
   return (
     <div className="flex flex-col items-start gap-1">
       <Button variant="primary" disabled={busy} onClick={() => void follow("PUT")}>
-        {busy ? t("searching") : t("follow")}
+        {busy ? t("searching") : followLabel}
       </Button>
       {errorCode && <FollowError code={errorCode} tErrors={tErrors} />}
     </div>

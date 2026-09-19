@@ -86,8 +86,26 @@
   "backToProfile": "Volver a mi perfil",
   "privateNoticeEyebrow": "Perfil privado",
   "privateNoticeTitle": "Este perfil es privado",
-  "privateNoticeBody": "Seguí a @{username} para ver su diario, sus favoritos, sus listas y su colección.",
   "privateNoticeMutual": "{count, plural, one {Una persona que seguís también sigue esta cuenta.} other {# personas que seguís también siguen esta cuenta.}}",
+  "requestFollow": "Solicitar seguir",
+  "createAccount": "Crear cuenta",
+  "privateProfile": {
+    "chipPrivate": "Privado",
+    "chipBlocked": "Bloqueada",
+    "eyebrowBlocked": "Cuenta bloqueada",
+    "titleBlockedByMe": "Bloqueaste a esta cuenta",
+    "titleBlockedByThem": "No podés ver este perfil",
+    "opensOnFollow": "Se abre al seguir",
+    "body": {
+      "anonymous": "Iniciá sesión y pedí seguir a @{username} para ver su diario, sus favoritos, sus listas y su colección.",
+      "none": "Pedile seguir a @{username} para ver su diario, sus favoritos, sus listas y su colección. Tiene que aprobar tu solicitud.",
+      "requested": "Tu solicitud está enviada. @{username} tiene que aprobarla antes de que puedas ver su contenido.",
+      "incoming": "@{username} te envió una solicitud para seguirte. Su contenido sigue privado; podés responder la solicitud desde acá.",
+      "blockedByMe": "Bloqueaste a esta cuenta. Desbloqueala para volver a ver su perfil o seguirla.",
+      "blockedByThem": "No podés ver ni seguir a esta cuenta.",
+      "preview": "Pedile seguir a @{username} para ver su diario, sus favoritos, sus listas y su colección. Tiene que aprobar tu solicitud."
+    }
+  },
   "memberSince": "Miembro desde {date}",
   "profileLinksLabel": "Enlaces del perfil",
   "profileFollowerCount": "{count, plural, one {# seguidor} other {# seguidores}}",

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 import UserProfilePage from "./page";
 import { Placa } from "@/components/profiles/Placa";
-import { PrivateThreshold } from "@/components/profiles/PrivateThreshold";
+import { PrivateProfileCard } from "@/components/profiles/PrivateProfileCard";
 import { ViewAsBanner } from "@/components/profiles/ViewAsBanner";
 import {
   AlbumFavoritesSection,
@@ -46,7 +46,7 @@ vi.mock("@/i18n/navigation", () => ({
   Link: ({ children }: { children: ReactNode }) => <span>{children}</span>,
 }));
 vi.mock("@/components/profiles/Placa", () => ({ Placa: () => null }));
-vi.mock("@/components/profiles/PrivateThreshold", () => ({ PrivateThreshold: () => null }));
+vi.mock("@/components/profiles/PrivateProfileCard", () => ({ PrivateProfileCard: () => null }));
 vi.mock("@/components/profiles/ViewAsBanner", () => ({ ViewAsBanner: () => null }));
 vi.mock("./sections", () => ({
   OwnerEditors: () => null,
@@ -135,22 +135,49 @@ beforeEach(() => {
 });
 
 describe("UserProfilePage", () => {
-  it("perfil privado, visitante anónimo: umbral privado, sin contenido", async () => {
+  it("perfil privado, visitante anónimo: una sola tarjeta privada, sin Placa ni contenido", async () => {
     resolveSession.mockResolvedValue(null);
     getProfileView.mockResolvedValue(profile({ relation: "none", accessible: false }));
 
     const tree = await render();
-    expect(findElement(tree, Placa)).not.toBeNull();
-    expect(findElement(tree, PrivateThreshold)).not.toBeNull();
+    const card = findElement(tree, PrivateProfileCard);
+    expect(card).not.toBeNull();
+    expect(card?.props?.authenticated).toBe(false);
+    // La identidad vive en la propia tarjeta: la Placa no se apila encima.
+    expect(findElement(tree, Placa)).toBeNull();
     expect(findElement(tree, OwnerEditors)).toBeNull();
   });
 
-  it("perfil privado con solicitud pendiente: umbral con relation 'requested'", async () => {
+  it("perfil privado con solicitud pendiente: la tarjeta recibe el perfil con relation 'requested'", async () => {
     resolveSession.mockResolvedValue({ user: { id: "viewer" } });
     getProfileView.mockResolvedValue(profile({ relation: "requested", accessible: false }));
 
-    const threshold = findElement(await render(), PrivateThreshold);
-    expect(threshold?.props?.relation).toBe("requested");
+    const card = findElement(await render(), PrivateProfileCard);
+    expect((card?.props?.profile as ProfileView).relation).toBe("requested");
+    expect(card?.props?.authenticated).toBe(true);
+  });
+
+  it("perfil privado, visitante común: sin banner de 'cómo te ven'", async () => {
+    resolveSession.mockResolvedValue({ user: { id: "viewer" } });
+    getProfileView.mockResolvedValue(profile({ relation: "none", accessible: false }));
+
+    expect(findElement(await render(), ViewAsBanner)).toBeNull();
+  });
+
+  it("dueño con perfil privado y ?preview=1: muestra la tarjeta inerte Y el banner para volver", async () => {
+    // Antes la rama privada no montaba el banner: el dueño que probaba "cómo
+    // te ven" quedaba sin salida salvo el botón "atrás" del navegador.
+    resolveSession.mockResolvedValue({ user: { id: "owner" } });
+    getProfileView
+      .mockResolvedValueOnce(profile({ relation: "self", isOwner: true, accessible: true }))
+      .mockResolvedValueOnce(profile({ relation: "none", accessible: false }));
+
+    const tree = await render("ana", "1");
+    expect(getProfileView).toHaveBeenNthCalledWith(2, "ana", null);
+    expect(findElement(tree, ViewAsBanner)?.props?.previewing).toBe(true);
+    expect(findElement(tree, PrivateProfileCard)?.props?.preview).toBe(true);
+    expect(findElement(tree, OwnerEditors)).toBeNull();
+    expect(findElement(tree, HubSection)).toBeNull();
   });
 
   it("perfil accesible: sin umbral", async () => {
@@ -158,7 +185,7 @@ describe("UserProfilePage", () => {
     getProfileView.mockResolvedValue(
       profile({ profileVisibility: "public", relation: "none", accessible: true }),
     );
-    expect(findElement(await render(), PrivateThreshold)).toBeNull();
+    expect(findElement(await render(), PrivateProfileCard)).toBeNull();
   });
 
   it("visitante bloqueado por perfil privado: umbral, sin editores", async () => {
@@ -166,7 +193,7 @@ describe("UserProfilePage", () => {
     getProfileView.mockResolvedValue(profile({ relation: "blocked", accessible: false }));
 
     const tree = await render();
-    expect(findElement(tree, PrivateThreshold)).not.toBeNull();
+    expect(findElement(tree, PrivateProfileCard)).not.toBeNull();
     expect(findElement(tree, OwnerEditors)).toBeNull();
   });
 
@@ -181,7 +208,7 @@ describe("UserProfilePage", () => {
     expect(findElement(tree, HubSection)).not.toBeNull();
     const banner = findElement(tree, ViewAsBanner);
     expect(banner?.props?.previewing).toBe(false);
-    expect(findElement(tree, PrivateThreshold)).toBeNull();
+    expect(findElement(tree, PrivateProfileCard)).toBeNull();
     expect(mutualFollowersHint).not.toHaveBeenCalled();
   });
 
@@ -288,6 +315,6 @@ describe("UserProfilePage", () => {
 
     const tree = await render();
     expect(mutualFollowersHint).toHaveBeenCalledWith("viewer", "owner");
-    expect(findElement(tree, PrivateThreshold)?.props?.mutualFollowers).toBe(2);
+    expect(findElement(tree, PrivateProfileCard)?.props?.mutualFollowers).toBe(2);
   });
 });

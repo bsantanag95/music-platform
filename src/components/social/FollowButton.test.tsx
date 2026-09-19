@@ -170,4 +170,58 @@ describe("FollowButton", () => {
     expect(screen.getByText("Bloqueado")).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
+
+  it("con requestApproval (perfil privado) el botón dice 'Solicitar seguir' y en previsualización queda inerte", async () => {
+    const { unmount } = renderWithIntl(
+      <FollowButton username="pato" relation="none" authenticated requestApproval />,
+    );
+    expect(screen.getByRole("button", { name: "Solicitar seguir" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "Seguir" })).not.toBeInTheDocument();
+    unmount();
+
+    renderWithIntl(<FollowButton username="pato" relation="none" authenticated preview requestApproval />);
+    expect(screen.getByRole("button", { name: "Solicitar seguir" })).toBeDisabled();
+  });
+
+  it("con refreshOnAnyChange, pedir seguir refresca la página (el mensaje del servidor cambia)", async () => {
+    const user = userEvent.setup();
+    mocks.apiFetch.mockResolvedValue({ relation: "requested" });
+    renderWithIntl(
+      <FollowButton username="pato" relation="none" authenticated requestApproval refreshOnAnyChange />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Solicitar seguir" }));
+    await screen.findByText("Solicitud enviada");
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledTimes(1));
+  });
+
+  it("con refreshOnAnyChange, cancelar la solicitud también refresca", async () => {
+    const user = userEvent.setup();
+    mocks.apiFetch.mockResolvedValue({ relation: "none" });
+    renderWithIntl(<FollowButton username="pato" relation="requested" authenticated refreshOnAnyChange />);
+
+    await user.click(screen.getByRole("button", { name: "Cancelar solicitud" }));
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledTimes(1));
+  });
+
+  it("con refreshOnAnyChange, aprobar o rechazar una solicitud entrante refresca la página", async () => {
+    const user = userEvent.setup();
+    mocks.apiFetch.mockResolvedValue(null);
+    renderWithIntl(
+      <FollowButton username="pato" relation="incoming" authenticated requestId="u9" refreshOnAnyChange />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Rechazar" }));
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledTimes(1));
+  });
+
+  it("sin refreshOnAnyChange, aprobar una solicitud entrante no refresca (comportamiento previo)", async () => {
+    const user = userEvent.setup();
+    mocks.apiFetch.mockResolvedValue(null);
+    renderWithIntl(<FollowButton username="pato" relation="incoming" authenticated requestId="u9" />);
+
+    await user.click(screen.getByRole("button", { name: "Aprobar" }));
+    await screen.findByRole("button", { name: "Seguir" });
+    expect(mocks.refresh).not.toHaveBeenCalled();
+  });
 });
