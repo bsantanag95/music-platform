@@ -4,7 +4,7 @@ import { listUserDiary } from "@/services/diary/diary";
 import { getFavoritesPreview, listUserFavorites } from "@/services/favorites/favorites";
 import { listUserLists } from "@/services/lists/lists";
 import { LISTS_PREVIEW_LIMIT } from "@/services/lists/types";
-import { listProfileCollection } from "@/services/collection/collection";
+import { getCollectionPreview, listProfileCollection } from "@/services/collection/collection";
 import { getTasteFingerprint } from "@/services/profiles/stats";
 import { getShowcase } from "@/services/profiles/showcase";
 import {
@@ -40,7 +40,7 @@ import { ProfileRecency } from "@/components/profiles/ProfileRecency";
 import { DiaryReadList } from "@/components/diary/DiaryReadList";
 import { FavoritesPreview } from "@/components/favorites/FavoritesPreview";
 import { ListsCarousel } from "@/components/lists/ListsCarousel";
-import { CollectionShelf } from "@/components/collection/CollectionShelf";
+import { CollectionPreview } from "@/components/collection/CollectionPreview";
 
 // Secciones asíncronas del perfil, cada una envuelta por su propio <Suspense>
 // en `page.tsx` para que nada bloquee la Placa. Un estante colapsa cuando no
@@ -51,8 +51,6 @@ export interface SectionProps {
   username: string;
   viewerId: string | null;
   isOwn: boolean;
-  /** "Cómo te ven": el dueño está previsualizando su perfil como anónimo. */
-  previewing?: boolean;
 }
 
 function EmptyRailForOwner({ label, message }: { label: string; message: string }) {
@@ -251,17 +249,24 @@ export async function ListsRail({ username, viewerId, isOwn }: SectionProps) {
   );
 }
 
-export async function CollectionRail({ username, viewerId, isOwn, previewing }: SectionProps) {
+// Estante "Colección": una previsualización con tope (5 artistas × 4 copias, los
+// de los que más copias tiene) y la puerta a `/users/[username]/collection`. El
+// conteo del encabezado es el total real de copias, no lo traído.
+export async function CollectionRail({ username, viewerId, isOwn }: SectionProps) {
   const t = await getTranslations("users");
-  const initial = await listProfileCollection(username, viewerId, 1, 20);
-  if (initial.entries.length === 0) {
+  const preview = await getCollectionPreview(username, viewerId);
+  if (preview.totalEntries === 0) {
     return isOwn ? (
       <EmptyRailForOwner label={t("collectionTitle")} message={t("railEmptyOwn")} />
     ) : null;
   }
   return (
-    <ProfileRail id="coleccion" label={t("collectionTitle")} count={initial.entries.length}>
-      <CollectionShelf initial={initial} readOnly username={username} preview={Boolean(previewing)} />
+    <ProfileRail id="coleccion" label={t("collectionTitle")} count={preview.totalEntries}>
+      <CollectionPreview
+        artists={preview.artists}
+        totalEntries={preview.totalEntries}
+        username={username}
+      />
     </ProfileRail>
   );
 }

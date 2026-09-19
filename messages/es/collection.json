@@ -75,6 +75,8 @@
   },
   "albumUnavailable": "Álbum no disponible",
   "unknownArtist": "Sin artista",
+  "viewAllOfGroup": "Ver los {count}",
+  "viewFullCollection": "Ver toda la colección ({count})",
   "selectMode": "Seleccionar",
   "selectionDone": "Listo",
   "selectEntry": "Seleccionar {title}",

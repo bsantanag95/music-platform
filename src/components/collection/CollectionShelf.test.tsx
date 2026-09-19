@@ -171,14 +171,48 @@ describe("CollectionShelf", () => {
     );
   });
 
-  it("en modo lectura no muestra toolbar, selección ni editar", () => {
-    mocks.getUserCollection.mockResolvedValue(response([entry()]));
+  it("en modo lectura: conteos, buscador y filtros sí; selección, edición y audiencia no", () => {
     renderShelf(response([entry()]), { readOnly: true, username: "nick" });
-    expect(screen.queryByLabelText("Formato")).not.toBeInTheDocument();
+    expect(screen.getByText(/1 vinilo/)).toBeInTheDocument();
+    expect(screen.getByRole("searchbox", { name: "Buscar por álbum o artista" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Filtrar por formato")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Seleccionar" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Editar" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Seguidores", { selector: "span" })).not.toBeInTheDocument();
     // el conmutador de modos sí está disponible para el visitante
     expect(screen.getByRole("radiogroup", { name: "Modo de visualización" })).toBeInTheDocument();
+  });
+
+  it("en modo lectura, filtrar pide la colección DEL PERFIL con el filtro (no la del visitante)", async () => {
+    const user = userEvent.setup();
+    mocks.getUserCollection.mockResolvedValue(response([]));
+    renderShelf(response([entry()]), { readOnly: true, username: "nick" });
+
+    await user.selectOptions(screen.getByLabelText("Filtrar por formato"), "cd");
+
+    await waitFor(() =>
+      expect(mocks.getUserCollection).toHaveBeenCalledWith(
+        "nick",
+        expect.objectContaining({ page: 1, format: "cd" }),
+      ),
+    );
+    expect(mocks.getMyCollection).not.toHaveBeenCalled();
+    // con un filtro activo el vacío es "sin resultados", no "este usuario no compartió nada"
+    expect(await screen.findByText("Sin resultados")).toBeInTheDocument();
+    expect(screen.queryByText("Sin colección")).not.toBeInTheDocument();
+  });
+
+  it("en modo lectura, los filtros de la URL siembran el buscador y la primera carga", () => {
+    renderShelf(response([entry()]), { readOnly: true, username: "nick", initialFilters: { q: "Queen" } });
+    expect(screen.getByRole("searchbox", { name: "Buscar por álbum o artista" })).toHaveValue("Queen");
+    // La carga inicial ya vino filtrada del servidor: no hay refetch.
+    expect(mocks.getUserCollection).not.toHaveBeenCalled();
+    expect(screen.getByRole("link", { name: "Álbum 1" })).toBeInTheDocument();
+  });
+
+  it("en modo lectura sin copias ni filtros: estado vacío del perfil", () => {
+    renderShelf(response([]), { readOnly: true, username: "nick" });
+    expect(screen.getByText("Sin colección")).toBeInTheDocument();
   });
 
   it("agrupa por formato en secciones tituladas", () => {

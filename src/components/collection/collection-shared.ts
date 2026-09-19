@@ -52,6 +52,12 @@ export interface CollectionGroup {
   /** Conteo mostrado junto al título; `null` si no se conoce con exactitud. */
   count: number | null;
   entries: CollectionEntry[];
+  /**
+   * Destino de "Ver los N" en el encabezado cuando el grupo muestra solo una
+   * parte de sus copias (la previsualización del perfil). `null`/ausente: el
+   * grupo está completo.
+   */
+  moreHref?: string | null;
 }
 
 const FORMAT_ORDER = ["vinyl", "cd", "cassette", "other"] as const;

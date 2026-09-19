@@ -47,9 +47,12 @@ type CollectionPages = InfiniteData<CollectionListResponse, number>;
 
 interface CollectionShelfProps {
   initial: CollectionListResponse;
-  /** Modo lectura (perfil ajeno): sin toolbar, sin edición, sin selección. */
+  /**
+   * Modo lectura (`/users/[username]/collection`): mismos conteos, buscador y
+   * filtros que la colección propia, pero sin edición ni selección. Requiere
+   * `username` para paginar la colección del perfil.
+   */
   readOnly?: boolean;
-  /** Requerido en modo lectura para paginar la colección del perfil. */
   username?: string;
   initialFilters?: CollectionQuery;
   /**
@@ -126,15 +129,17 @@ export function CollectionShelf({
   const isFiltered = collectionFiltersActive(filters);
   const apiFilters = useMemo(() => toApiFilters(filters), [filters]);
   const mineQueryKey = queryKeys.myCollection(apiFilters);
-  const queryKey = readOnly ? (["collection", "user", username, preview] as const) : mineQueryKey;
-  const seeded = readOnly || sameFilters(filters, seededState);
+  const queryKey = readOnly
+    ? (["collection", "user", username, preview, apiFilters] as const)
+    : mineQueryKey;
+  const seeded = sameFilters(filters, seededState);
 
   const { data, hasNextPage, isFetchingNextPage, fetchNextPage, isError, isPending } =
     useInfiniteQuery<CollectionListResponse, ApiError, CollectionPages, typeof queryKey, number>({
       queryKey,
       queryFn: ({ pageParam }) =>
         readOnly && username
-          ? getUserCollection(username, { page: pageParam, pageSize: PAGE_SIZE, preview })
+          ? getUserCollection(username, { page: pageParam, pageSize: PAGE_SIZE, preview, ...apiFilters })
           : getMyCollection({ page: pageParam, pageSize: PAGE_SIZE, ...apiFilters }),
       initialPageParam: 1,
       getNextPageParam: (last) => (last?.hasNext ? last.page + 1 : undefined),
@@ -355,10 +360,10 @@ export function CollectionShelf({
 
   const Renderer = mode === "detailed" ? EntriesDetailed : mode === "index" ? EntriesIndex : ShelfGrid;
 
-  const emptyBlock = readOnly ? (
-    <EmptyState title={t("profileEmptyTitle")} description={t("profileEmptyDescription")} />
-  ) : isFiltered ? (
+  const emptyBlock = isFiltered ? (
     <EmptyState title={t("noResultsTitle")} description={t("noResultsDescription")} />
+  ) : readOnly ? (
+    <EmptyState title={t("profileEmptyTitle")} description={t("profileEmptyDescription")} />
   ) : (
     <EmptyState
       title={t("emptyTitle")}
@@ -376,17 +381,15 @@ export function CollectionShelf({
 
   return (
     <div className="flex w-full max-w-3xl flex-col gap-5">
-      {!readOnly ? (
-        <p className="font-data text-xs text-paper-muted">
-          {t("countVinyl", { count: counts.vinyl })}
-          <span aria-hidden> · </span>
-          {t("countCd", { count: counts.cd })}
-          <span aria-hidden> · </span>
-          {t("countCassette", { count: counts.cassette })}
-          <span aria-hidden> · </span>
-          {t("countOther", { count: counts.other })}
-        </p>
-      ) : null}
+      <p className="font-data text-xs text-paper-muted">
+        {t("countVinyl", { count: counts.vinyl })}
+        <span aria-hidden> · </span>
+        {t("countCd", { count: counts.cd })}
+        <span aria-hidden> · </span>
+        {t("countCassette", { count: counts.cassette })}
+        <span aria-hidden> · </span>
+        {t("countOther", { count: counts.other })}
+      </p>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         {!readOnly && entries.length > 0 ? (
@@ -402,15 +405,13 @@ export function CollectionShelf({
         <CollectionModeSwitcher mode={mode} onChange={setMode} />
       </div>
 
-      {!readOnly ? (
-        <CollectionToolbar
-          filters={filters}
-          onChange={setFilters}
-          searchInput={searchInput}
-          onSearchInput={setSearchInput}
-          onClear={clearFilters}
-        />
-      ) : null}
+      <CollectionToolbar
+        filters={filters}
+        onChange={setFilters}
+        searchInput={searchInput}
+        onSearchInput={setSearchInput}
+        onClear={clearFilters}
+      />
 
       <span role="status" aria-live="polite" className="sr-only">
         {announce}

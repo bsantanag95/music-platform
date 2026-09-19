@@ -10,13 +10,12 @@ interface ProfileLevel3LinksProps {
 }
 
 // Puertas al Nivel 3 del perfil (openspec: rework-user-profile): enlaces
-// discretos a la inmersión bajo demanda, nunca precargada. "Colección" es un
-// ancla al estante que ya vive más abajo en esta misma página (no se duplica
-// esa lectura); "Diario", "Favoritos", "Listas" y "Huella de gusto completa"
-// navegan a una vista aparte — el diario, los favoritos y las listas desde que
-// el Nivel 2 solo muestra una previsualización con tope (`DiaryReadList` en
-// caja con scroll, `FavoritesPreview`, `ListsCarousel`), y la huella porque sus
-// gráficos dejaron de vivir en el flujo principal. No hay enlace a "todas las
+// discretos a la inmersión bajo demanda, nunca precargada. "Diario",
+// "Favoritos", "Listas", "Colección" y "Huella de gusto completa" navegan a una
+// vista aparte — los cuatro estantes desde que el Nivel 2 solo muestra una
+// previsualización con tope (`DiaryReadList` en caja con scroll,
+// `FavoritesPreview`, `ListsCarousel`, `CollectionPreview`), y la huella porque
+// sus gráficos dejaron de vivir en el flujo principal. No hay enlace a "todas las
 // valoraciones": esa superficie no existe todavía en el producto. No se
 // renderiza si no hay ninguna puerta disponible.
 export async function ProfileLevel3Links({ username, has, hasFingerprint }: ProfileLevel3LinksProps) {
@@ -26,7 +25,7 @@ export async function ProfileLevel3Links({ username, has, hasFingerprint }: Prof
     has.diary && { href: `/users/${username}/diary`, label: t("level3.diary") },
     has.favorites && { href: `/users/${username}/favorites`, label: t("level3.favorites") },
     has.lists && { href: `/users/${username}/lists`, label: t("level3.lists") },
-    has.collection && { href: "#coleccion", label: t("level3.collection") },
+    has.collection && { href: `/users/${username}/collection`, label: t("level3.collection") },
     hasFingerprint && { href: `/users/${username}/fingerprint`, label: t("level3.fingerprint") },
   ].filter((link): link is { href: string; label: string } => Boolean(link));
 

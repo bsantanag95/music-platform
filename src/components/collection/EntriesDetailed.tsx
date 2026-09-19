@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { CollectionEntryControls } from "./CollectionEntryControls";
+import { CollectionGroupHeading } from "./CollectionGroupHeading";
 import {
   collectionAlbumHref,
   collectionArtistHref,
@@ -29,14 +30,7 @@ export function EntriesDetailed({ groups, actions, selection }: EntriesDetailedP
     <div className="flex flex-col gap-8">
       {groups.map((group) => (
         <section key={group.key} className="flex flex-col gap-3">
-          {group.heading ? (
-            <h3 className="flex items-baseline gap-2 font-display text-base text-paper">
-              {group.heading}
-              {group.count !== null ? (
-                <span className="font-data text-xs text-paper-muted">{group.count}</span>
-              ) : null}
-            </h3>
-          ) : null}
+          <CollectionGroupHeading group={group} />
           <ul className="flex flex-col gap-4">
             {group.entries.map((entry) => (
               <li
