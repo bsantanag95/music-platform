@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { listUserDiary } from "@/services/diary/diary";
 import { getFavoritesPreview, listUserFavorites } from "@/services/favorites/favorites";
 import { listUserLists } from "@/services/lists/lists";
+import { LISTS_PREVIEW_LIMIT } from "@/services/lists/types";
 import { listProfileCollection } from "@/services/collection/collection";
 import { getTasteFingerprint } from "@/services/profiles/stats";
 import { getShowcase } from "@/services/profiles/showcase";
@@ -38,7 +39,7 @@ import { ProfileRail } from "@/components/profiles/ProfileRail";
 import { ProfileRecency } from "@/components/profiles/ProfileRecency";
 import { DiaryReadList } from "@/components/diary/DiaryReadList";
 import { FavoritesPreview } from "@/components/favorites/FavoritesPreview";
-import { ListsList } from "@/components/lists/ListsList";
+import { ListsCarousel } from "@/components/lists/ListsCarousel";
 import { CollectionShelf } from "@/components/collection/CollectionShelf";
 
 // Secciones asíncronas del perfil, cada una envuelta por su propio <Suspense>
@@ -239,18 +240,13 @@ export async function FavoritesRail({ username, viewerId, isOwn }: SectionProps)
 
 export async function ListsRail({ username, viewerId, isOwn }: SectionProps) {
   const t = await getTranslations("users");
-  const tLists = await getTranslations("lists");
-  const initial = await listUserLists(username, viewerId, 1, 20);
+  const initial = await listUserLists(username, viewerId, 1, LISTS_PREVIEW_LIMIT);
   if (initial.lists.length === 0) {
     return isOwn ? <EmptyRailForOwner label={t("listsTitle")} message={t("railEmptyOwn")} /> : null;
   }
   return (
-    <ProfileRail id="listas" label={t("listsTitle")} count={initial.lists.length}>
-      <ListsList
-        initial={initial}
-        username={username}
-        empty={{ title: tLists("profileEmptyTitle"), description: tLists("profileEmptyDescription") }}
-      />
+    <ProfileRail id="listas" label={t("listsTitle")} count={initial.totalCount}>
+      <ListsCarousel lists={initial.lists} username={username} totalCount={initial.totalCount} />
     </ProfileRail>
   );
 }

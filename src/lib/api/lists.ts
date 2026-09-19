@@ -5,11 +5,13 @@ import {
   ListsListResponseSchema,
   SavedListMutationResponseSchema,
   SavedListsResponseSchema,
+  UserListsResponseSchema,
   type DiscoverListsResponse,
   type ListsListResponse,
   type ListSort,
   type SavedListSummary,
   type SavedListsResponse,
+  type UserListsResponse,
   type UserListDetail,
   type UserListSummary,
   type ListEntityType,
@@ -133,10 +135,11 @@ export function getUserLists(
   username: string,
   page = 1,
   pageSize = 20,
-): Promise<ListsListResponse> {
+  filters: ListFiltersParams = {},
+): Promise<UserListsResponse> {
   return apiFetch(
-    `/api/users/${encodeURIComponent(username)}/lists?page=${page}&pageSize=${pageSize}`,
-    ListsListResponseSchema,
+    `/api/users/${encodeURIComponent(username)}/lists?page=${page}&pageSize=${pageSize}${listFiltersQuery(filters)}`,
+    UserListsResponseSchema,
   );
 }
 

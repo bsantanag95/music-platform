@@ -9,10 +9,12 @@ import {
   FingerprintSummarySection,
   IdentityCardSection,
   InRotationSection,
+  ListsRail,
   PinnedSection,
   RatingHighlightsSection,
 } from "./sections";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
+import { ListsCarousel } from "@/components/lists/ListsCarousel";
 import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
 import { AlbumFavorites } from "@/components/profiles/AlbumFavorites";
 import { InRotation } from "@/components/profiles/InRotation";
@@ -83,7 +85,7 @@ vi.mock("@/services/social/following", () => ({ countPendingFollowRequests: vi.f
 // Stubs de los componentes de lectura para no arrastrar sus imports cliente.
 vi.mock("@/components/diary/DiaryReadList", () => ({ DiaryReadList: () => null }));
 vi.mock("@/components/favorites/FavoritesPreview", () => ({ FavoritesPreview: () => null }));
-vi.mock("@/components/lists/ListsList", () => ({ ListsList: () => null }));
+vi.mock("@/components/lists/ListsCarousel", () => ({ ListsCarousel: () => null }));
 vi.mock("@/components/collection/CollectionShelf", () => ({ CollectionShelf: () => null }));
 vi.mock("@/components/profiles/OwnerIdentityEditor", () => ({ OwnerIdentityEditor: () => null }));
 vi.mock("@/components/profiles/OwnerLinksEditor", () => ({ OwnerLinksEditor: () => null }));
@@ -143,6 +145,32 @@ describe("estantes vacíos", () => {
     const tree = (await FavoritesRail(section)) as { type?: unknown; props?: Record<string, unknown> };
     expect(tree?.type).toBe(ProfileRail);
     expect(tree?.props?.count).toBe(3);
+  });
+
+  it("ListsRail colapsa (null) sin listas visibles para un visitante, pero no para el dueño", async () => {
+    svc.listUserLists.mockResolvedValue({ lists: [], page: 1, pageSize: 10, hasNext: false, totalCount: 0 });
+    expect(await ListsRail(section)).toBeNull();
+    expect(await ListsRail({ ...section, isOwn: true })).not.toBeNull();
+  });
+
+  it("ListsRail pide solo las primeras 10 y usa el total real en el encabezado", async () => {
+    // 23 listas visibles pero el riel trae 10: el "23" del encabezado y el
+    // "+13" de la tarjeta-puerta salen de `totalCount`, no de `lists.length`.
+    const lists = Array.from({ length: 10 }, (_, i) => ({ id: `l${i}` }));
+    svc.listUserLists.mockResolvedValue({ lists, page: 1, pageSize: 10, hasNext: true, totalCount: 23 });
+
+    const tree = (await ListsRail(section)) as {
+      type?: unknown;
+      props?: { count?: number; children?: { type?: unknown; props?: Record<string, unknown> } };
+    };
+
+    expect(svc.listUserLists).toHaveBeenCalledWith("ana", null, 1, 10);
+    expect(tree?.type).toBe(ProfileRail);
+    expect(tree?.props?.count).toBe(23);
+    const carousel = tree?.props?.children;
+    expect(carousel?.type).toBe(ListsCarousel);
+    expect(carousel?.props).toMatchObject({ username: "ana", totalCount: 23 });
+    expect(carousel?.props?.lists).toHaveLength(10);
   });
 });
 

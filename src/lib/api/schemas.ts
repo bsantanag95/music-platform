@@ -1302,6 +1302,14 @@ export const ListsListResponseSchema = z.object({
 });
 export type ListsListResponse = z.infer<typeof ListsListResponseSchema>;
 
+// Listado de las listas visibles de un perfil: además de la página trae el
+// total real bajo los mismos filtros (el estante del perfil muestra solo las
+// primeras y necesita saber cuántas quedan).
+export const UserListsResponseSchema = ListsListResponseSchema.extend({
+  totalCount: z.number().int(),
+});
+export type UserListsResponse = z.infer<typeof UserListsResponseSchema>;
+
 // --- Guardar / seguir listas ajenas (rework-lists-section) ---
 
 const ListOwnerSchema = z.object({

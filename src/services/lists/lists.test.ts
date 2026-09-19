@@ -292,23 +292,81 @@ describe("servicio de listas", () => {
     });
     const result = await listUserLists("usuario", owner);
     expect(result.lists).toEqual([]);
+    expect(result.totalCount).toBe(0);
+    expect(mocks.db.select).not.toHaveBeenCalled();
   });
 
-  it("listUserLists enriquece las listas visibles", async () => {
-    mocks.getProfileByUsername.mockResolvedValue({
-      id: "u1",
-      profileVisibility: "public",
-      relation: "none",
-      blockedByMe: false,
-    });
+  const publicProfile = {
+    id: "u1",
+    profileVisibility: "public",
+    relation: "none",
+    blockedByMe: false,
+  };
+
+  it("listUserLists enriquece las listas visibles y trae el total real", async () => {
+    mocks.getProfileByUsername.mockResolvedValue(publicProfile);
+    // Orden de las consultas: filas y total en paralelo, luego conteos y carátulas.
     mocks.db.select
-      .mockReturnValueOnce(chain([albumListRow]))
+      .mockReturnValueOnce(chain([{ list: albumListRow, pinnedAt: null }]))
+      .mockReturnValueOnce(chain([{ n: 23 }]))
       .mockReturnValueOnce(chain([{ listId: albumListRow.id, n: 5 }]))
       .mockReturnValueOnce(chain([{ listId: albumListRow.id, cover: "http://c/1", rn: 1 }]));
     const result = await listUserLists("usuario", owner);
     expect(result.lists[0]?.itemCount).toBe(5);
     expect(result.lists[0]?.coverThumbs).toEqual(["http://c/1"]);
     expect(result.lists[0]?.pinned).toBe(false);
+    // El total no es el tamaño de la página: el estante del perfil lo necesita
+    // para saber cuántas listas quedan fuera del riel.
+    expect(result.totalCount).toBe(23);
+    expect(result.hasNext).toBe(false);
+  });
+
+  it("listUserLists marca como fijadas las que el dueño fijó", async () => {
+    mocks.getProfileByUsername.mockResolvedValue(publicProfile);
+    mocks.db.select
+      .mockReturnValueOnce(
+        chain([
+          { list: albumListRow, pinnedAt: new Date("2026-02-01T00:00:00Z") },
+          { list: { ...listRow, id: "00000000-0000-4000-8000-000000000009" }, pinnedAt: null },
+        ]),
+      )
+      .mockReturnValueOnce(chain([{ n: 2 }]))
+      .mockReturnValueOnce(chain([]))
+      .mockReturnValueOnce(chain([]));
+    const result = await listUserLists("usuario", owner);
+    expect(result.lists.map((list) => list.pinned)).toEqual([true, false]);
+  });
+
+  it("listUserLists pagina con pageSize+1 filas y acepta búsqueda, tipo y orden", async () => {
+    mocks.getProfileByUsername.mockResolvedValue(publicProfile);
+    const extra = { ...listRow, id: "00000000-0000-4000-8000-00000000000a" };
+    mocks.db.select
+      .mockReturnValueOnce(
+        chain([
+          { list: albumListRow, pinnedAt: null },
+          { list: extra, pinnedAt: null },
+        ]),
+      )
+      .mockReturnValueOnce(chain([{ n: 2 }]))
+      .mockReturnValueOnce(chain([]))
+      .mockReturnValueOnce(chain([]));
+    const result = await listUserLists("usuario", owner, 1, 1, {
+      q: "  disco ",
+      entityType: "release-group",
+      sort: "alpha",
+    });
+    expect(result.lists).toHaveLength(1);
+    expect(result.hasNext).toBe(true);
+  });
+
+  it("listUserLists rechaza un orden o tipo inválido", async () => {
+    mocks.getProfileByUsername.mockResolvedValue(publicProfile);
+    await expect(
+      listUserLists("usuario", owner, 1, 20, { sort: "popular" as unknown as "recent" }),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    await expect(
+      listUserLists("usuario", owner, 1, 20, { entityType: "playlist" as unknown as "artist" }),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
   });
 
   it("getUserListDetail oculta listas no visibles", async () => {
