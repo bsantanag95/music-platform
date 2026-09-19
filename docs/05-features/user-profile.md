@@ -495,6 +495,40 @@ del Nivel 2). Elegido entre mockups (dos rondas — ver memoria `profile-redesig
   (`listUserDiary` devuelve `totalCount`, una consulta `count(*)` con el mismo filtro de
   audiencia/destacados), no `entries.length` de la primera página fetcheada.
 
+## Listas
+
+Igual que Exploración, Favoritos y Diario, el estante de listas dejó de apilar todas las
+tarjetas hacia abajo (antes `ListsList` mostraba la grilla completa con un "Cargar más"
+ilimitado en el flujo del Nivel 2). Elegido entre mockups (opción A de tres, con "fijadas
+primero"):
+
+- **Riel horizontal** (`ListsCarousel.tsx` sobre `HorizontalRail.tsx`): las **tarjetas de
+  lista de siempre** (mosaico + tipo · conteo + descripción + Guardar/Seguir), sin
+  rediseñarlas, ahora deslizándose. Flechas ‹ › montadas sobre los bordes, degradado de
+  desvanecido y scroll suave — la misma mecánica que "Lanzamientos recientes y próximos" del
+  Inicio (`ReleaseRail`), extraída sin su línea de tiempo. Las flechas aparecen solo si hay
+  overflow; la lista es enfocable por teclado; con `prefers-reduced-motion` el desplazamiento
+  es un salto.
+- **Tope de 10** (`LISTS_PREVIEW_LIMIT`). Si hay más, el riel cierra con una **tarjeta-puerta
+  "+N · Ver las N listas"** (borde punteado, como el "+N" de Exploración) hacia la página
+  dedicada. Con 10 o menos no hay puerta.
+- **Fijadas primero**: las listas que el dueño fijó (`user_list_pin`, hasta ahora solo visible
+  para él en `/me/lists`) van al frente con la marca "Fijada", el resto por fecha de
+  creación. Es la vitrina del dueño: con el tope, sin esto sus mejores listas podían quedar
+  fuera del riel. Solo cuentan las listas que el visitante puede ver (la audiencia sigue
+  filtrando); una lista fijada pero privada nunca aparece.
+- **`/users/[username]/lists`** (nueva, de solo lectura): conteo, buscador + tipo + orden
+  (los mismos de `/me/lists`, vía `ListsToolbar`/`useListFilters` compartidos), grilla de dos
+  columnas con las mismas tarjetas y "Cargar más". Sin "Nueva lista", Fijar, Editar,
+  Eliminar ni audiencia. Distinta de `/me/lists` (gestión del propio dueño). Mismo criterio
+  de acceso que el resto del perfil (`profile.accessible` + matriz de audiencia). El enlace
+  de Nivel 3 "Listas" apunta acá (antes era el ancla `#listas`).
+- **`listUserLists` devuelve `totalCount`** (`count(*)` en paralelo, mismo filtro de
+  audiencia/tipo/búsqueda) y acepta `{ q, entityType, sort }`; la ruta
+  `/api/users/[username]/lists` los parsea con `parseListFilters` (`src/lib/api/list-filters.ts`,
+  compartido con `/api/me/lists`). El conteo del encabezado del estante es el total real, no
+  `lists.length` (que se topaba en el tamaño de página).
+
 ## Estantes y recencia
 
 Diario, favoritos, listas y colección se muestran con los componentes de lectura existentes

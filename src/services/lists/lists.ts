@@ -45,7 +45,7 @@ export interface UserListSummary {
   itemCount: number;
   /** Primeras carátulas disponibles de los ítems (para el mosaico). */
   coverThumbs: string[];
-  /** Fijada por su propietario. Siempre `false` para listas ajenas. */
+  /** Fijada por su propietario (también en el listado de un perfil ajeno). */
   pinned: boolean;
   /** Estado de guardado del lector — solo lo puebla `listUserLists`. */
   saved?: boolean;
@@ -318,6 +318,20 @@ function normalizeListFilters(filters?: ListFilters): Required<Pick<ListFilters,
   return { q: q ? q : undefined, entityType: filters?.entityType, sort };
 }
 
+/** Condiciones de tipo y búsqueda por título, compartidas por los listados propio y ajeno. */
+function listFilterConditions({ q, entityType }: Pick<ListFilters, "q" | "entityType">): SQL[] {
+  const conditions: SQL[] = [];
+  if (entityType) conditions.push(eq(userList.entityType, entityType));
+  if (q) conditions.push(ilike(userList.title, `%${q}%`));
+  return conditions;
+}
+
+function listSortOrder(sort: ListSort): SQL[] {
+  return sort === "alpha"
+    ? [asc(sql`lower(${userList.title})`), asc(userList.id)]
+    : [desc(userList.createdAt), desc(userList.id)];
+}
+
 export async function listMyLists(
   ownerId: string,
   page = 1,
@@ -329,14 +343,12 @@ export async function listMyLists(
   }
   const { q, entityType, sort } = normalizeListFilters(filters);
 
-  const conditions: SQL[] = [eq(userList.ownerId, ownerId), eq(userList.kind, "standard")];
-  if (entityType) conditions.push(eq(userList.entityType, entityType));
-  if (q) conditions.push(ilike(userList.title, `%${q}%`));
-
-  const sortOrder =
-    sort === "alpha"
-      ? [asc(sql`lower(${userList.title})`), asc(userList.id)]
-      : [desc(userList.createdAt), desc(userList.id)];
+  const conditions: SQL[] = [
+    eq(userList.ownerId, ownerId),
+    eq(userList.kind, "standard"),
+    ...listFilterConditions({ q, entityType }),
+  ];
+  const sortOrder = listSortOrder(sort);
 
   const rows = await db
     .select({
@@ -373,37 +385,55 @@ export async function listMyLists(
   };
 }
 
+// Listas de un perfil ajeno visibles para el lector. Las fijadas por el dueño
+// van primero (su vitrina: el estante del perfil solo muestra las primeras) y
+// el resto según `sort`; `totalCount` es el total real bajo los mismos filtros,
+// no el tamaño de la página, para que el encabezado del estante no se tope en
+// `pageSize`.
 export async function listUserLists(
   username: string,
   viewerId: string | null,
   page = 1,
   pageSize = 20,
+  filters?: ListFilters,
 ) {
   if (page < 1 || pageSize < 1 || pageSize > 50) {
     throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
   }
+  const { q, entityType, sort } = normalizeListFilters(filters);
   const { getProfileByUsername } = await import("@/services/social/profiles");
   const profile = await getProfileByUsername(username, viewerId);
   const audiences = audiencesForProfile(profile);
   if (audiences.length === 0) {
-    return { lists: [], page, pageSize, hasNext: false };
+    return { lists: [], page, pageSize, hasNext: false, totalCount: 0 };
   }
-  const rows = await db
-    .select()
-    .from(userList)
-    .where(
-      and(
-        eq(userList.ownerId, profile.id),
-        inArray(userList.audience, audiences),
-        eq(userList.kind, "standard"),
-      ),
-    )
-    .orderBy(desc(userList.createdAt), desc(userList.id))
-    .limit(pageSize + 1)
-    .offset((page - 1) * pageSize);
+  const visible = and(
+    eq(userList.ownerId, profile.id),
+    inArray(userList.audience, audiences),
+    eq(userList.kind, "standard"),
+    ...listFilterConditions({ q, entityType }),
+  );
+  const [rows, [totalRow]] = await Promise.all([
+    db
+      .select({ list: userList, pinnedAt: userListPin.pinnedAt })
+      .from(userList)
+      .leftJoin(
+        userListPin,
+        and(eq(userListPin.listId, userList.id), eq(userListPin.ownerId, profile.id)),
+      )
+      .where(visible)
+      .orderBy(
+        asc(sql`${userListPin.pinnedAt} is null`),
+        desc(userListPin.pinnedAt),
+        ...listSortOrder(sort),
+      )
+      .limit(pageSize + 1)
+      .offset((page - 1) * pageSize),
+    db.select({ n: count() }).from(userList).where(visible),
+  ]);
 
   const pageRows = rows.slice(0, pageSize);
-  const pageIds = pageRows.map((row) => row.id);
+  const pageIds = pageRows.map((row) => row.list.id);
   const [enrichment, savedState] = await Promise.all([
     enrichLists(pageIds),
     viewerId && pageIds.length > 0
@@ -413,9 +443,10 @@ export async function listUserLists(
 
   return {
     lists: pageRows.map((row) => {
-      const state = savedState.get(row.id);
+      const state = savedState.get(row.list.id);
       return {
-        ...withEnrichment(serializeSummary(row), enrichment),
+        ...withEnrichment(serializeSummary(row.list), enrichment),
+        pinned: row.pinnedAt !== null,
         saved: state?.saved ?? false,
         following: state?.following ?? false,
       };
@@ -423,6 +454,7 @@ export async function listUserLists(
     page,
     pageSize,
     hasNext: rows.length > pageSize,
+    totalCount: Number(totalRow?.n ?? 0),
   };
 }
 

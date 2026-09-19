@@ -22,3 +22,8 @@ export type PublicListSort = (typeof PUBLIC_LIST_SORTS)[number];
 // Decisión cerrada en el cambio: título hasta 100 y descripción hasta 500.
 export const LIST_TITLE_MAX = 100;
 export const LIST_DESCRIPTION_MAX = 500;
+
+// Cuántas listas muestra el estante "Listas" del perfil antes de la puerta a la
+// página dedicada `/users/[username]/lists` (mismo criterio de tope que
+// `FAVORITES_PREVIEW_LIMIT` y `EXPLORATION_PREVIEW_PAGE_SIZE`).
+export const LISTS_PREVIEW_LIMIT = 10;

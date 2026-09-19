@@ -20,6 +20,8 @@ interface ListCardProps {
   /** Variante compacta: mosaico chico, sin descripción. Para grillas/listas de
    * navegación (Populares, Recientes, De seguidos) donde se escanea, no se lee. */
   dense?: boolean;
+  /** Clases extra para la tarjeta (p. ej. ancho fijo dentro de un riel). */
+  className?: string;
 }
 
 // Tarjeta de una lista: mosaico de portadas + título enlazado + metadatos, con
@@ -37,12 +39,13 @@ export function ListCard({
   unavailable,
   pinnedLabel,
   dense = false,
+  className = "",
 }: ListCardProps) {
   return (
     <article
       className={`group flex gap-3 rounded-lg border border-ink-border bg-ink-surface transition-colors focus-within:border-amber hover:border-amber ${
         dense ? "p-2" : "gap-4 p-3"
-      } ${unavailable ? "opacity-60" : ""}`}
+      } ${unavailable ? "opacity-60" : ""} ${className}`}
     >
       <Link href={href} className="shrink-0" tabIndex={-1} aria-hidden>
         <ListCoverMosaic coverThumbs={coverThumbs} className={dense ? "w-12" : "w-20"} />

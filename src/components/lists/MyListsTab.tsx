@@ -6,65 +6,38 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FilterSelect } from "@/components/ui/FilterSelect";
 import {
   deleteList,
   getMyLists,
   pinList,
   unpinList,
-  type ListFiltersParams,
 } from "@/lib/api/lists";
 import { ApiError } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
-import type { ListEntityType, ListSort, ListsListResponse } from "@/lib/api/schemas";
+import type { ListsListResponse } from "@/lib/api/schemas";
 import { ListForm } from "./ListForm";
 import { ListCard } from "./ListCard";
 import { ListsGrid, entityTypeKey } from "./lists-shared";
+import { ListsToolbar } from "./ListsToolbar";
+import { useListFilters } from "./use-list-filters";
 
 const PAGE_SIZE = 20;
-const ENTITY_TYPES: ListEntityType[] = ["artist", "release-group", "recording"];
-const SORTS: ListSort[] = ["recent", "alpha"];
-
-interface FiltersState {
-  q: string;
-  entityType: ListEntityType | "";
-  sort: ListSort;
-}
-
-const EMPTY: FiltersState = { q: "", entityType: "", sort: "recent" };
-
-function toParams(filters: FiltersState): ListFiltersParams {
-  return {
-    q: filters.q.trim() || undefined,
-    entityType: filters.entityType || undefined,
-    sort: filters.sort === "recent" ? undefined : filters.sort,
-  };
-}
 
 export function MyListsTab({ initial }: { initial: ListsListResponse }) {
   const t = useTranslations("lists");
   const queryClient = useQueryClient();
 
-  const [filters, setFilters] = useState<FiltersState>(EMPTY);
-  const [searchInput, setSearchInput] = useState("");
+  const { filters, setFilters, searchInput, setSearchInput, isFiltered, params, clear } =
+    useListFilters();
   const [showForm, setShowForm] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [rowBusyId, setRowBusyId] = useState<string | null>(null);
   const [announce, setAnnounce] = useState("");
 
-  useEffect(() => {
-    const id = window.setTimeout(() => {
-      setFilters((cur) => (cur.q === searchInput ? cur : { ...cur, q: searchInput }));
-    }, 300);
-    return () => window.clearTimeout(id);
-  }, [searchInput]);
-
-  const isFiltered = Boolean(filters.q.trim() || filters.entityType || filters.sort !== "recent");
-  const params = useMemo(() => toParams(filters), [filters]);
   const queryKey = queryKeys.myLists(params);
 
   const { data, hasNextPage, isFetchingNextPage, fetchNextPage, isError, isPending } =
@@ -111,58 +84,16 @@ export function MyListsTab({ initial }: { initial: ListsListResponse }) {
     }
   };
 
-  const clearFilters = () => {
-    setSearchInput("");
-    setFilters(EMPTY);
-  };
-
   const toolbar = (
-    <div className="flex flex-col gap-2">
-      <input
-        type="search"
-        value={searchInput}
-        onChange={(e) => setSearchInput(e.target.value)}
-        placeholder={t("searchPlaceholder")}
-        aria-label={t("searchPlaceholder")}
-        className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted"
-      />
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <FilterSelect
-          value={filters.entityType}
-          onChange={(v) => setFilters((c) => ({ ...c, entityType: v as ListEntityType | "" }))}
-          ariaLabel={t("typeFilterLabel")}
-          widthClassName="w-[20ch]"
-        >
-          <option value="">{t("filterAllTypes")}</option>
-          {ENTITY_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {t(entityTypeKey(type))}
-            </option>
-          ))}
-        </FilterSelect>
-        <FilterSelect
-          value={filters.sort}
-          onChange={(v) => setFilters((c) => ({ ...c, sort: v as ListSort }))}
-          ariaLabel={t("sortLabel")}
-          widthClassName="w-[13ch]"
-        >
-          {SORTS.map((sort) => (
-            <option key={sort} value={sort}>
-              {t(`sort.${sort}`)}
-            </option>
-          ))}
-        </FilterSelect>
-        {isFiltered ? (
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="font-data text-xs text-paper-muted transition-colors hover:text-paper"
-          >
-            {t("clearFilters")}
-          </button>
-        ) : null}
-      </div>
-    </div>
+    <ListsToolbar
+      filters={filters}
+      onChange={setFilters}
+      searchInput={searchInput}
+      onSearchInput={setSearchInput}
+      isFiltered={isFiltered}
+      onClear={clear}
+      searchPlaceholder={t("searchPlaceholder")}
+    />
   );
 
   return (
