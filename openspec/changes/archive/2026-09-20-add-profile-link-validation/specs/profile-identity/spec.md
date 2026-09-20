@@ -1,31 +1,4 @@
-# profile-identity Specification
-
-## Purpose
-Identidad extendida del perfil (bio, pronombres, ubicación, zona horaria, enlaces externos tipados, monograma) y su edición inline por el dueño. Fase 5, cambio redesign-user-profile.
-## Requirements
-### Requirement: Campos de identidad extendida
-
-El sistema SHALL permitir que un usuario autenticado registre una bio (máximo 200
-caracteres), pronombres (máximo 40), una ubicación en texto libre (máximo 80) y una zona
-horaria. Todos los campos SHALL ser opcionales y SHALL poder vaciarse. El sistema SHALL
-recortar espacios sobrantes y SHALL rechazar valores que excedan sus límites con un error
-de validación localizado, sin modificar los datos.
-
-#### Scenario: Guardar bio y pronombres
-
-- **WHEN** el dueño guarda una bio de 120 caracteres y los pronombres "elle"
-- **THEN** el perfil persiste ambos valores y los muestra en la identidad extendida en las
-  tres vistas
-
-#### Scenario: Vaciar un campo
-
-- **WHEN** el dueño guarda una bio vacía sobre una bio existente
-- **THEN** el perfil deja de mostrar la bio y no muestra un hueco
-
-#### Scenario: Valor demasiado largo
-
-- **WHEN** el dueño envía una bio de 201 caracteres
-- **THEN** la API responde con un error de validación y la bio anterior no cambia
+## MODIFIED Requirements
 
 ### Requirement: Enlaces externos del perfil
 
@@ -62,43 +35,7 @@ valor inválido para su tipo con un error de validación localizado.
 - **THEN** esos enlaces pasan al tipo Enlace conservando su URL y su posición, y el tipo "Sitio web"
   deja de existir
 
-### Requirement: Imagen de identidad por monograma
-
-El sistema SHALL representar la identidad visual de cada usuario mediante un monograma
-determinista derivado de su username, estable entre renders y sin almacenamiento. El
-sistema SHALL NOT ofrecer en esta capacidad una superficie para subir una imagen de avatar.
-
-#### Scenario: Monograma estable
-
-- **WHEN** se renderiza el mismo usuario en el perfil, en la búsqueda y en un destacado
-- **THEN** el monograma (letra y color) es idéntico en las tres superficies
-
-### Requirement: Edición de identidad desde el perfil
-
-El dueño SHALL poder editar bio, pronombres, ubicación, zona horaria, enlaces, destacados e
-himno desde su propio perfil, sin salir de la página, activando el modo edición (ver
-`profile-edit-mode`), y SHALL poder editar la misma información desde el área de ajustes (ver
-`owner-settings`). Ambas vías SHALL usar los mismos editores. Cada editor SHALL tener estados de
-carga, éxito y error recuperable, y SHALL confirmar los cambios sin recargar toda la aplicación.
-Los editores SHALL renderizarse únicamente en vistas del dueño: su perfil con el modo edición
-activo y su área de ajustes.
-
-#### Scenario: Editar bio inline
-
-- **WHEN** el dueño activa el modo edición, abre el editor de la Placa desde su perfil, cambia
-  el texto y confirma
-- **THEN** el perfil refleja la nueva bio sin recargar la página
-
-#### Scenario: Error recuperable al guardar
-
-- **WHEN** una petición de guardado falla
-- **THEN** el editor muestra un error localizado, conserva el texto introducido y permite
-  reintentar
-
-#### Scenario: Un visitante no ve los editores
-
-- **WHEN** un visitante que no es el dueño abre el perfil
-- **THEN** no ve ningún control de edición de identidad
+## ADDED Requirements
 
 ### Requirement: Enlaces de red social por nombre de usuario
 
@@ -157,6 +94,7 @@ la portada del sitio o una publicación) o cuando el usuario no cumpla las regla
 
 - **WHEN** el dueño elige Instagram y escribe un usuario con espacios o caracteres no permitidos
 - **THEN** el sistema rechaza el valor con un error de validación
+
 ### Requirement: Enlace con esquema implícito
 
 Para el tipo Enlace (`other`), el valor SHALL aceptarse sin esquema: si no trae `http://` ni
@@ -189,6 +127,7 @@ sistema SHALL NOT ofrecer un tipo "Sitio web" separado: Enlace cubre cualquier d
 
 - **WHEN** el dueño escribe "hola"
 - **THEN** el sistema rechaza el valor con un error de validación
+
 ### Requirement: Enlaces guardados que no coinciden con su tipo
 
 El sistema SHALL NOT modificar ni eliminar los enlaces ya guardados que no coincidan con su tipo
@@ -213,6 +152,7 @@ persona lo corrija o lo quite.
 
 - **WHEN** el dueño quita esa fila y guarda
 - **THEN** el conjunto se guarda con los demás enlaces
+
 ### Requirement: Enlaces como íconos en el perfil
 
 El perfil SHALL mostrar cada enlace externo como el ícono de su sitio, sin el nombre como texto
@@ -238,6 +178,7 @@ que el nombre accesible sea el único anunciado.
 
 - **WHEN** el perfil tiene un enlace de un tipo por usuario cuya URL no coincide con el sitio
 - **THEN** muestra el ícono genérico de enlace en lugar del de la marca
+
 ### Requirement: Validación en el editor de enlaces
 
 El editor de enlaces SHALL validar cada fila con las mismas reglas que el servidor y mostrar el error
