@@ -1,4 +1,10 @@
-## ADDED Requirements
+# i18n-ui-components
+
+## Purpose
+
+How UI components stay i18n-agnostic: text arrives through props, domain components resolve translations before passing them down, and component tests render real text inside NextIntlClientProvider and mock the i18n navigation wrapper.
+
+## Requirements
 
 ### Requirement: UI components are i18n-agnostic
 No component in `src/components/ui/` SHALL import `useTranslations` or access the active locale. All text SHALL be received via required props with no hardcoded defaults.

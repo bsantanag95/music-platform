@@ -1,5 +1,7 @@
 # catalog-recording-ingestion
 
+## Purpose
+
 Ingesta bajo demanda de una grabación suelta (`recording`) descubierta desde la búsqueda: lo
 mínimo necesario para responder "¿en qué álbumes aparece esta canción?", sin tocar el tracklist
 de ningún álbum.

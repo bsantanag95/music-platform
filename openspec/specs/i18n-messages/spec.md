@@ -1,4 +1,10 @@
-## ADDED Requirements
+# i18n-messages
+
+## Purpose
+
+Organization and rules of the message catalogs: namespaces per locale and domain, key completeness across locales, the error catalog indexed by ErrorCode, and the boundary that musical catalog data is not translated.
+
+## Requirements
 
 ### Requirement: Message catalogs by locale and domain
 Message files SHALL be organized as `messages/{locale}/{namespace}.json` with three namespaces: `common` (app identity, generic actions), `catalog` (catalog browsing flows by sub-namespace), and `errors` (indexed by ErrorCode).

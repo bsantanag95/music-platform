@@ -1,4 +1,10 @@
-## ADDED Requirements
+# i18n-routing
+
+## Purpose
+
+Locale-based routing with next-intl: the `[locale]` URL segment, default locale redirect, Accept-Language detection, API routes excluded from the prefix, the locale-aware navigation wrapper, neutral English slugs and the `lang` attribute.
+
+## Requirements
 
 ### Requirement: Locale segment in URL
 All page routes SHALL be nested under a dynamic `[locale]` segment in the Next.js App Router. The URL structure SHALL be `/{locale}/...` where `locale` is one of the supported locale codes.

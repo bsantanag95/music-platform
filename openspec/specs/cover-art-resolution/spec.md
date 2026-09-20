@@ -1,5 +1,7 @@
 # cover-art-resolution
 
+## Purpose
+
 Resolución y cacheo de la carátula miniatura de un álbum contra Cover Art Archive a nivel de release-group.
 
 ## Requirements
