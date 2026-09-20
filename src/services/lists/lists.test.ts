@@ -22,6 +22,17 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
+// El helper de precedencia tiene sus propios tests (default-audience.test.ts);
+// aquí se mockea para no añadir una consulta al encadenado de `db.select` y se
+// comprueba solo el cableado: qué tipo y qué valor explícito recibe.
+const audience = vi.hoisted(() => ({
+  resolve: vi.fn(
+    async (_userId: string, type: string, explicit?: string | null) =>
+      explicit ?? ({ favorite: "public", diary: "private", list: "followers", collection: "followers" } as Record<string, string>)[type],
+  ),
+}));
+vi.mock("@/services/social/default-audience", () => ({ resolveNewContentAudience: audience.resolve }));
+
 vi.mock("@/services/social/profiles", () => ({
   getProfileByUsername: mocks.getProfileByUsername,
 }));
@@ -452,5 +463,42 @@ describe("servicio de listas", () => {
     const result = await reorderListItems(listRow.id, owner, ["i2", "i1"]);
     expect(result.id).toBe(listRow.id);
     expect(mocks.db.transaction).toHaveBeenCalled();
+  });
+});
+
+describe("createList — audiencia del contenido nuevo (spec default-audience)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  function arrangeCreate() {
+    const values = vi.fn(() => ({ returning: vi.fn().mockResolvedValue([listRow]) }));
+    mocks.db.insert.mockReturnValue({ values });
+    mockOwnedList(listRow);
+    return values;
+  }
+
+  it("guarda la audiencia que resuelve la preferencia del usuario", async () => {
+    const values = arrangeCreate();
+    audience.resolve.mockResolvedValueOnce("public");
+
+    await createList({ ownerId: owner, entityType: "artist", title: "Mi lista" });
+
+    expect(audience.resolve).toHaveBeenCalledWith(owner, "list", undefined);
+    expect(values).toHaveBeenCalledWith(expect.objectContaining({ audience: "public" }));
+  });
+
+  it("le pasa al resolvedor la audiencia explícita de la petición", async () => {
+    arrangeCreate();
+
+    await createList({ ownerId: owner, entityType: "artist", title: "Mi lista", audience: "private" });
+
+    expect(audience.resolve).toHaveBeenCalledWith(owner, "list", "private");
+  });
+
+  it("sin preferencia ni valor explícito nace con el default de listas (`followers`)", async () => {
+    const values = arrangeCreate();
+
+    await createList({ ownerId: owner, entityType: "artist", title: "Mi lista" });
+
+    expect(values).toHaveBeenCalledWith(expect.objectContaining({ audience: "followers" }));
   });
 });

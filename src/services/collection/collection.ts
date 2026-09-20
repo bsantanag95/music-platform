@@ -23,6 +23,7 @@ import {
 } from "./types";
 import { normalizeAttributes } from "./vocabulary";
 import type { CollectionFormat, EditionAttribute } from "./vocabulary";
+import { resolveNewContentAudience } from "@/services/social/default-audience";
 
 export type { CollectionEntry } from "./types";
 
@@ -266,7 +267,7 @@ export async function addEntry(userId: string, input: NewCollectionEntry): Promi
       format: input.format,
       attributes: normalizeAttributes(input.attributes ?? []),
       note: input.note ?? null,
-      audience: input.audience ?? "followers",
+      audience: await resolveNewContentAudience(userId, "collection", input.audience),
     })
     .returning({ id: collectionEntry.id });
 

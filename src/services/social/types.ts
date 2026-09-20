@@ -50,6 +50,8 @@ export type ProfileLinkKind = (typeof PROFILE_LINK_KINDS)[number];
 // para el contrato Zod y la validación de dominio del servicio; los CHECK de
 // la migración 0014 los reflejan.
 export const PROFILE_IDENTITY_LIMITS = {
+  /** Nombre visible (`app_user.display_name`); sin CHECK en BD, se valida en la capa de contrato. */
+  displayName: 50,
   bio: 200,
   pronouns: 40,
   location: 80,

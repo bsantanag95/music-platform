@@ -113,8 +113,8 @@ function resolveEntity(row: PinnedRow): ShowcaseEntity | null {
 }
 
 // `cache()` por request: `getShowcase` se llama por separado desde
-// `IdentityCardSection`, `PinnedSection` y `OwnerEditors` en la misma
-// carga de página.
+// `IdentityCardSection`, `PinnedSection`, `AlbumFavoritesSection` y las
+// pantallas Perfil y Curaduría de `/me/settings` en la misma carga de página.
 export const getShowcase = cache(async function getShowcase(userId: string): Promise<Showcase> {
   const [pinnedRows, [showcaseRow]] = await Promise.all([
     db

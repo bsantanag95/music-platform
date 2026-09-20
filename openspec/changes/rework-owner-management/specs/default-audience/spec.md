@@ -19,6 +19,25 @@ requisito. Los usuarios nuevos y los existentes SHALL comenzar sin valor.
 - **WHEN** se despliega este cambio sobre una base con usuarios existentes
 - **THEN** ningún usuario tiene audiencia por defecto y ningún contenido cambia de audiencia
 
+### Requirement: Alcance de la preferencia
+
+La preferencia SHALL aplicarse únicamente a los cuatro tipos de contenido de biblioteca
+(favoritos, entradas de diario, listas y copias de colección). NO SHALL aplicarse a las
+reseñas ni a los comentarios: no tienen audiencia propia y son contenido público visible en
+la página del álbum o la canción (ver `profile-reviews`). Una reseña SHALL seguir mostrándose
+en el perfil accesible del dueño con independencia de su audiencia por defecto.
+
+#### Scenario: Las reseñas siguen siendo públicas
+
+- **WHEN** un usuario con audiencia por defecto `private` publica una reseña de álbum
+- **THEN** la reseña es pública como siempre y aparece en la sección "Reseñas" de su perfil
+  accesible y en la página del álbum
+
+#### Scenario: Una reseña no consulta la preferencia
+
+- **WHEN** se crea una reseña o un comentario
+- **THEN** no se lee ni se aplica la audiencia por defecto del usuario
+
 ### Requirement: Precedencia al crear contenido
 
 Al crear favoritos, entradas de diario, listas o copias de colección, la audiencia resultante
@@ -56,7 +75,8 @@ ya creado, ni de forma inmediata ni diferida.
 
 La pantalla Privacidad y audiencia SHALL ofrecer cuatro opciones para la audiencia por defecto:
 "Según el tipo" (sin valor), "Privado", "Seguidores" y "Público", indicando en el propio control
-que solo afecta al contenido nuevo y que cada elemento se puede ajustar por separado. La
+que solo afecta al contenido nuevo, que cada elemento se puede ajustar por separado y que las
+reseñas y los comentarios no dependen de la preferencia por ser públicos. La
 preferencia SHALL persistirse mediante `PATCH /api/me/profile`. Una petición sin sesión SHALL
 responder `401` con código `AUTH_REQUIRED`, y un valor fuera del conjunto permitido SHALL
 responder `400` con código `VALIDATION_ERROR`, sin modificar datos.
@@ -66,6 +86,12 @@ responder `400` con código `VALIDATION_ERROR`, sin modificar datos.
 - **WHEN** el usuario elige "Seguidores" en el control
 - **THEN** la preferencia se persiste y el texto del control aclara que solo aplica al contenido
   nuevo
+
+#### Scenario: El control aclara qué no cubre
+
+- **WHEN** el usuario abre el control de audiencia por defecto
+- **THEN** el texto del control indica que las reseñas y los comentarios no dependen de esta
+  preferencia porque son públicos
 
 #### Scenario: Volver a "Según el tipo"
 

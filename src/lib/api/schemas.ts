@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  AUDIENCES,
   PROFILE_VISIBILITIES,
   FOLLOW_RELATIONS,
   PROFILE_LINK_KINDS,
@@ -623,12 +624,18 @@ export type PublicProfile = z.infer<typeof PublicProfileSchema>;
 export const PublicProfileResponseSchema = z.object({ user: PublicProfileSchema });
 export type PublicProfileResponse = z.infer<typeof PublicProfileResponseSchema>;
 
+// Audiencia por defecto del contenido nuevo (spec default-audience): `null` =
+// "según el tipo". Mismo conjunto cerrado que la audiencia de cada contenido.
+export const DefaultAudienceSchema = z.enum(AUDIENCES);
+export type DefaultAudience = z.infer<typeof DefaultAudienceSchema>;
+
 export const OwnProfileSchema = z.object({
   id: z.uuid(),
   username: z.string(),
   displayName: z.string().nullable(),
   email: z.email(),
   profileVisibility: ProfileVisibilitySchema,
+  defaultAudience: DefaultAudienceSchema.nullable(),
 });
 export type OwnProfile = z.infer<typeof OwnProfileSchema>;
 
@@ -951,6 +958,8 @@ export type SetAnthemRequest = z.infer<typeof SetAnthemRequestSchema>;
 export const UpdateOwnProfileRequestSchema = z
   .object({
     profileVisibility: ProfileVisibilitySchema.optional(),
+    displayName: identityText(PROFILE_IDENTITY_LIMITS.displayName).optional(),
+    defaultAudience: DefaultAudienceSchema.nullable().optional(),
     bio: identityText(PROFILE_IDENTITY_LIMITS.bio).optional(),
     pronouns: identityText(PROFILE_IDENTITY_LIMITS.pronouns).optional(),
     location: identityText(PROFILE_IDENTITY_LIMITS.location).optional(),

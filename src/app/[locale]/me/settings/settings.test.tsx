@@ -9,9 +9,13 @@ import ProfileSettingsPage from "./profile/page";
 import CurationSettingsPage from "./curation/page";
 import PrivacySettingsPage from "./privacy/page";
 import NetworkSettingsPage from "./network/page";
+import AccountSettingsPage from "./account/page";
 import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 import { SettingsNav } from "@/components/settings/SettingsNav";
 import { PrivacySettings } from "@/components/social/PrivacySettings";
+import { DefaultAudienceSettings } from "@/components/settings/DefaultAudienceSettings";
+import { DisplayNameForm } from "@/components/settings/DisplayNameForm";
+import { RevokeSessionsButton } from "@/components/settings/RevokeSessionsButton";
 import { OwnerIdentityCardEditor } from "@/components/profiles/OwnerIdentityCardEditor";
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
@@ -25,6 +29,7 @@ const m = vi.hoisted(() => ({
   getShowcase: vi.fn(),
   getAlbumFavorites: vi.fn(),
   getCurationSummary: vi.fn(),
+  getAccessMethod: vi.fn(),
   redirect: vi.fn(),
   refresh: vi.fn(),
 }));
@@ -54,11 +59,15 @@ vi.mock("@/services/profiles/identity", () => ({ getExtendedIdentity: m.getExten
 vi.mock("@/services/profiles/showcase", () => ({ getShowcase: m.getShowcase }));
 vi.mock("@/services/profiles/album-favorites", () => ({ getAlbumFavorites: m.getAlbumFavorites }));
 vi.mock("@/services/profiles/curation", () => ({ getCurationSummary: m.getCurationSummary }));
+vi.mock("@/services/profiles/account-settings", () => ({ getAccessMethod: m.getAccessMethod }));
 // El módulo real abre la conexión a la BD al importarse; solo se usa su tope.
 vi.mock("@/services/rating-highlights/rating-highlights", () => ({ RATING_HIGHLIGHT_MAX: 6 }));
 // Los editores reales hablan con la API: aquí solo importa que se monten con su `initial`.
 vi.mock("@/components/auth/EmailVerificationNotice", () => ({ EmailVerificationNotice: () => null }));
 vi.mock("@/components/social/PrivacySettings", () => ({ PrivacySettings: () => null }));
+vi.mock("@/components/settings/DefaultAudienceSettings", () => ({ DefaultAudienceSettings: () => null }));
+vi.mock("@/components/settings/DisplayNameForm", () => ({ DisplayNameForm: () => null }));
+vi.mock("@/components/settings/RevokeSessionsButton", () => ({ RevokeSessionsButton: () => null }));
 vi.mock("@/components/profiles/OwnerIdentityCardEditor", () => ({ OwnerIdentityCardEditor: () => null }));
 vi.mock("@/components/profiles/OwnerIdentityEditor", () => ({ OwnerIdentityEditor: () => null }));
 vi.mock("@/components/profiles/OwnerLinksEditor", () => ({ OwnerLinksEditor: () => null }));
@@ -167,12 +176,69 @@ describe("pantalla Perfil", () => {
 
 describe("pantalla Privacidad y audiencia", () => {
   it("monta el selector de visibilidad con el valor actual", async () => {
-    m.getOwnProfile.mockResolvedValue({ profileVisibility: "private" });
+    m.getOwnProfile.mockResolvedValue({ profileVisibility: "private", defaultAudience: null });
 
     const tree = await PrivacySettingsPage();
 
     expect(m.getOwnProfile).toHaveBeenCalledWith("u1");
     expect(findElement(tree, PrivacySettings)?.props?.initialVisibility).toBe("private");
+  });
+
+  it("monta el control de audiencia por defecto con la preferencia guardada", async () => {
+    m.getOwnProfile.mockResolvedValue({ profileVisibility: "public", defaultAudience: "followers" });
+    const tree = await PrivacySettingsPage();
+    expect(findElement(tree, DefaultAudienceSettings)?.props?.initialAudience).toBe("followers");
+  });
+
+  it("sin preferencia el control recibe null ('según el tipo')", async () => {
+    m.getOwnProfile.mockResolvedValue({ profileVisibility: "public", defaultAudience: null });
+    const tree = await PrivacySettingsPage();
+    expect(findElement(tree, DefaultAudienceSettings)?.props?.initialAudience).toBeNull();
+  });
+});
+
+describe("pantalla Cuenta y seguridad", () => {
+  beforeEach(() => {
+    m.getOwnProfile.mockResolvedValue({ username: "ana", displayName: "Ana" });
+    m.getAccessMethod.mockResolvedValue({ hasPassword: true, providers: [] });
+  });
+
+  it("monta el formulario del nombre visible con el nombre y el usuario actuales", async () => {
+    const tree = await AccountSettingsPage();
+
+    expect(m.getOwnProfile).toHaveBeenCalledWith("u1");
+    expect(findElement(tree, DisplayNameForm)?.props).toMatchObject({
+      initialDisplayName: "Ana",
+      username: "ana",
+    });
+  });
+
+  it("ofrece cerrar todas las sesiones", async () => {
+    expect(findElement(await AccountSettingsPage(), RevokeSessionsButton)).not.toBeNull();
+  });
+
+  it("una cuenta con contraseña muestra 'correo y contraseña' como método", async () => {
+    renderWithIntl(await AccountSettingsPage());
+    expect(screen.getByText("settings.account.access.password")).toBeInTheDocument();
+  });
+
+  it("una cuenta de Google sin contraseña no muestra la opción de contraseña", async () => {
+    m.getAccessMethod.mockResolvedValue({ hasPassword: false, providers: ["google"] });
+    renderWithIntl(await AccountSettingsPage());
+
+    expect(screen.queryByText("settings.account.access.password")).not.toBeInTheDocument();
+    expect(screen.getByText("Google")).toBeInTheDocument();
+  });
+
+  it("sin ningún método vinculado lo dice en vez de dejar la lista vacía", async () => {
+    m.getAccessMethod.mockResolvedValue({ hasPassword: false, providers: [] });
+    renderWithIntl(await AccountSettingsPage());
+    expect(screen.getByText("settings.account.access.none")).toBeInTheDocument();
+  });
+
+  it("no ofrece controles de funciones que no existen (email, contraseña, eliminar cuenta)", async () => {
+    renderWithIntl(await AccountSettingsPage());
+    expect(screen.queryByText(/eliminar|delete|email|correo/i)).not.toBeInTheDocument();
   });
 });
 

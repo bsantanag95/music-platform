@@ -306,7 +306,8 @@
       "profile": "Perfil",
       "curation": "Curaduría",
       "privacy": "Privacidad y audiencia",
-      "network": "Red"
+      "network": "Red",
+      "account": "Cuenta y seguridad"
     },
     "profile": {
       "title": "Perfil",
@@ -348,7 +349,30 @@
     },
     "privacy": {
       "title": "Privacidad y audiencia",
-      "intro": "Quién puede ver tu perfil."
+      "intro": "Quién puede ver tu perfil y con qué audiencia nace lo que agregues.",
+      "audience": {
+        "title": "Audiencia por defecto del contenido nuevo",
+        "intro": "Aplica a los favoritos, entradas de diario, listas y copias de colección que agregues desde ahora. No cambia lo que ya tenés, y podés ajustar cada elemento por separado.",
+        "options": {
+          "auto": {
+            "title": "Según el tipo (recomendado)",
+            "description": "Cada tipo conserva su valor habitual: favoritos públicos, listas y colección para seguidores, diario privado."
+          },
+          "private": {
+            "title": "Privado",
+            "description": "Lo nuevo nace visible solo para vos."
+          },
+          "followers": {
+            "title": "Seguidores",
+            "description": "Lo nuevo nace visible para quienes te siguen."
+          },
+          "public": {
+            "title": "Público",
+            "description": "Lo nuevo nace visible para cualquier persona con acceso a tu perfil."
+          }
+        },
+        "excluded": "Las reseñas y los comentarios no dependen de esta preferencia: son públicos y se muestran en la página de cada álbum o canción."
+      }
     },
     "network": {
       "title": "Red",
@@ -358,6 +382,30 @@
         "following": "Las cuentas que seguís.",
         "followRequests": "Bandeja de entrada: quién quiere seguirte.",
         "blocks": "Las cuentas que bloqueaste."
+      }
+    },
+    "account": {
+      "title": "Cuenta y seguridad",
+      "intro": "Nada de esto se muestra a otras personas.",
+      "displayName": {
+        "title": "Nombre visible",
+        "label": "Nombre visible",
+        "help": "Cómo aparecés junto a tu @{username}. Si lo dejás vacío se muestra tu usuario."
+      },
+      "access": {
+        "title": "Método de acceso",
+        "hint": "Cómo iniciás sesión en tu cuenta.",
+        "password": "Correo y contraseña",
+        "none": "No hay ningún método de acceso vinculado."
+      },
+      "sessions": {
+        "title": "Sesiones",
+        "hint": "Cierra la sesión en todos tus dispositivos, incluido este.",
+        "button": "Cerrar todas las sesiones",
+        "confirmTitle": "¿Cerrar todas las sesiones?",
+        "confirmMessage": "Se cerrará tu sesión en todos los dispositivos, también en este, y tendrás que iniciar sesión de nuevo.",
+        "confirm": "Cerrar sesiones",
+        "cancel": "Cancelar"
       }
     }
   }

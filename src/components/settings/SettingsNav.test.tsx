@@ -25,8 +25,14 @@ describe("settings-screens", () => {
     expect(SETTINGS_DEFAULT_HREF).toBe("/me/settings/profile");
   });
 
-  it("Cuenta no se lista hasta que ofrezca algún control (Fase 2)", () => {
-    expect(SETTINGS_SCREENS.map((screen) => screen.id)).toEqual(["profile", "curation", "privacy", "network"]);
+  it("lista las cinco pantallas de ajustes, con Cuenta y seguridad al final", () => {
+    expect(SETTINGS_SCREENS.map((screen) => screen.id)).toEqual([
+      "profile",
+      "curation",
+      "privacy",
+      "network",
+      "account",
+    ]);
   });
 });
 
@@ -40,12 +46,14 @@ describe("SettingsNav", () => {
       "/me/settings/curation",
       "/me/settings/privacy",
       "/me/settings/network",
+      "/me/settings/account",
     ]);
     expect(links.map((link) => link.textContent)).toEqual([
       "Perfil",
       "Curaduría",
       "Privacidad y audiencia",
       "Red",
+      "Cuenta y seguridad",
     ]);
   });
 

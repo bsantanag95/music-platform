@@ -306,7 +306,8 @@
       "profile": "Profile",
       "curation": "Curation",
       "privacy": "Privacy and audience",
-      "network": "Network"
+      "network": "Network",
+      "account": "Account and security"
     },
     "profile": {
       "title": "Profile",
@@ -348,7 +349,30 @@
     },
     "privacy": {
       "title": "Privacy and audience",
-      "intro": "Who can see your profile."
+      "intro": "Who can see your profile and the audience new content is created with.",
+      "audience": {
+        "title": "Default audience for new content",
+        "intro": "Applies to the favorites, diary entries, lists and collection copies you add from now on. It does not change what you already have, and you can adjust each item separately.",
+        "options": {
+          "auto": {
+            "title": "By type (recommended)",
+            "description": "Each type keeps its usual value: public favorites, lists and collection for followers, private diary."
+          },
+          "private": {
+            "title": "Private",
+            "description": "New content is visible only to you."
+          },
+          "followers": {
+            "title": "Followers",
+            "description": "New content is visible to the people who follow you."
+          },
+          "public": {
+            "title": "Public",
+            "description": "New content is visible to anyone with access to your profile."
+          }
+        },
+        "excluded": "Reviews and comments do not depend on this preference: they are public and appear on each album or song page."
+      }
     },
     "network": {
       "title": "Network",
@@ -358,6 +382,30 @@
         "following": "The accounts you follow.",
         "followRequests": "Inbox: who wants to follow you.",
         "blocks": "The accounts you have blocked."
+      }
+    },
+    "account": {
+      "title": "Account and security",
+      "intro": "None of this is shown to other people.",
+      "displayName": {
+        "title": "Display name",
+        "label": "Display name",
+        "help": "How you appear next to your @{username}. If you leave it empty, your username is shown."
+      },
+      "access": {
+        "title": "Sign-in method",
+        "hint": "How you sign in to your account.",
+        "password": "Email and password",
+        "none": "No sign-in method is linked."
+      },
+      "sessions": {
+        "title": "Sessions",
+        "hint": "Sign out on all your devices, including this one.",
+        "button": "Sign out everywhere",
+        "confirmTitle": "Sign out everywhere?",
+        "confirmMessage": "You will be signed out on all devices, including this one, and will need to sign in again.",
+        "confirm": "Sign out",
+        "cancel": "Cancel"
       }
     }
   }

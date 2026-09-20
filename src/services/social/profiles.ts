@@ -4,6 +4,7 @@ import { appUser, userFollow } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import {
   PROFILE_VISIBILITIES,
+  type Audience,
   type FollowRelation,
   type ProfileVisibility,
 } from "./types";
@@ -15,6 +16,8 @@ export interface OwnProfile {
   displayName: string | null;
   email: string;
   profileVisibility: ProfileVisibility;
+  /** Audiencia por defecto del contenido nuevo; `null` = según el tipo. */
+  defaultAudience: Audience | null;
 }
 
 export interface PublicProfile {
@@ -36,6 +39,7 @@ export async function getOwnProfile(userId: string): Promise<OwnProfile> {
       displayName: appUser.displayName,
       email: appUser.email,
       profileVisibility: appUser.profileVisibility,
+      defaultAudience: appUser.defaultAudience,
     })
     .from(appUser)
     .where(eq(appUser.id, userId))
@@ -65,6 +69,7 @@ export async function updateProfileVisibility(
       displayName: appUser.displayName,
       email: appUser.email,
       profileVisibility: appUser.profileVisibility,
+      defaultAudience: appUser.defaultAudience,
     });
   if (!user) throw new ApiError("USER_NOT_FOUND", 404, "Usuario no encontrado");
   return serializeOwnProfile(user);
@@ -182,6 +187,7 @@ function serializeOwnProfile(user: {
   displayName: string | null;
   email: string;
   profileVisibility: string;
+  defaultAudience: string | null;
 }): OwnProfile {
   return {
     id: user.id,
@@ -189,5 +195,6 @@ function serializeOwnProfile(user: {
     displayName: user.displayName,
     email: user.email,
     profileVisibility: user.profileVisibility as ProfileVisibility,
+    defaultAudience: user.defaultAudience as Audience | null,
   };
 }

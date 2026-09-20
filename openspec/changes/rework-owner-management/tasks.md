@@ -67,53 +67,53 @@
 ## 4. Verificación de la Fase 1
 
 - [x] 4.1 `pnpm typecheck`, `pnpm lint`, `pnpm test` y `pnpm build` en verde
-- [ ] 4.2 En el navegador con una cuenta real (pedir al usuario que inicie sesión en el panel del
+- [x] 4.2 En el navegador con una cuenta real (pedir al usuario que inicie sesión en el panel del
       navegador): activar/desactivar el modo edición, editar bio y ver el cambio detrás del panel,
       cerrar con cambios sin guardar, `Escape` y foco de retorno, previsualización sin controles,
       recorrer las pantallas de Ajustes y comprobar el aviso de email sin verificar
-- [ ] 4.3 Comprobar el panel como hoja inferior en viewport móvil y el menú lateral como pestañas
-- [ ] 4.4 Comprobar que ningún enlace previo a `/me/settings` se rompió (menú de usuario,
+- [x] 4.3 Comprobar el panel como hoja inferior en viewport móvil y el menú lateral como pestañas
+- [x] 4.4 Comprobar que ningún enlace previo a `/me/settings` se rompió (menú de usuario,
       `EmailVerificationNotice`, páginas de verificación)
 
 ## 5. Fase 2 — datos y contratos
 
-- [ ] 5.1 Verificar el siguiente número de migración libre (hoy `0033` es la última) y escribir la
+- [x] 5.1 Verificar el siguiente número de migración libre (hoy `0033` es la última) y escribir la
       migración SQL: `app_user.default_audience text NULL` con `CHECK` en
       (`private`,`followers`,`public`), sin backfill; espejo en `src/db/schema.ts`;
       `docs/03-data/sql-model.md`
-- [ ] 5.2 Esquemas Zod y ruta `PATCH /api/me/profile`: aceptar `displayName` (recortado, vacío →
+- [x] 5.2 Esquemas Zod y ruta `PATCH /api/me/profile`: aceptar `displayName` (recortado, vacío →
       `NULL`, longitud máxima según la pregunta abierta de `design.md`) y `defaultAudience`
       (`private`/`followers`/`public`/`null`); `VALIDATION_ERROR` y `AUTH_REQUIRED` según
       `default-audience`; actualizar `docs/04-api/contracts.md`; tests de la ruta
-- [ ] 5.3 Helper `resolveNewContentAudience(userId, tipo, explícita?)` con la precedencia
+- [x] 5.3 Helper `resolveNewContentAudience(userId, tipo, explícita?)` con la precedencia
       explícita > preferencia > default del tipo, y tests unitarios de las tres ramas
-- [ ] 5.4 Cablear el helper en los cuatro puntos de creación: favoritos (`toggleFavorite`,
+- [x] 5.4 Cablear el helper en los cuatro puntos de creación: favoritos (`toggleFavorite`,
       default `public`), diario (`createEntry`, hoy `private` fijo), listas (`?? "followers"`) y
       colección (`?? "followers"`); un test por punto que fije la precedencia y demuestre que sin
       preferencia el comportamiento previo se conserva
-- [ ] 5.5 Test de no retroactividad: cambiar la preferencia no toca filas existentes
-- [ ] 5.6 Helper de servidor `getAccessMethod(userId)` → `{ hasPassword, providers }` (nunca el
+- [x] 5.5 Test de no retroactividad: cambiar la preferencia no toca filas existentes
+- [x] 5.6 Helper de servidor `getAccessMethod(userId)` → `{ hasPassword, providers }` (nunca el
       hash) y test
 
 ## 6. Fase 2 — pantallas
 
-- [ ] 6.1 Pantalla Cuenta y seguridad (`account/page.tsx`): formulario de nombre visible, método de
+- [x] 6.1 Pantalla Cuenta y seguridad (`account/page.tsx`): formulario de nombre visible, método de
       acceso en solo lectura y "Cerrar todas las sesiones" con `ConfirmDialog` y redirección al
       inicio de sesión tras `DELETE /api/auth/revoke-all`; sin controles de funciones no
       disponibles; añadir la entrada al menú lateral solo desde esta tarea
-- [ ] 6.2 Privacidad: control de audiencia por defecto con las cuatro opciones y el texto de "solo
+- [x] 6.2 Privacidad: control de audiencia por defecto con las cuatro opciones y el texto de "solo
       contenido nuevo"
-- [ ] 6.3 Mensajes `es`/`en` y tests de las dos pantallas (guardado, error recuperable, vaciar
+- [x] 6.3 Mensajes `es`/`en` y tests de las dos pantallas (guardado, error recuperable, vaciar
       nombre, cuenta Google sin opción de contraseña, cancelar cierre de sesiones)
-- [ ] 6.4 Verificación en navegador de la Fase 2: cambiar nombre visible y verlo en el perfil,
+- [x] 6.4 Verificación en navegador de la Fase 2: cambiar nombre visible y verlo en el perfil,
       elegir una audiencia por defecto y crear contenido nuevo de cada tipo, cerrar todas las
       sesiones
 
 ## 7. Documentación y cierre
 
-- [ ] 7.1 Actualizar `docs/05-features/user-profile.md` (modo edición, panel lateral, área de
+- [x] 7.1 Actualizar `docs/05-features/user-profile.md` (modo edición, panel lateral, área de
       ajustes, audiencia por defecto) y cualquier referencia al panel de gestión o a `OwnerEditors`
-- [ ] 7.2 `openspec validate rework-owner-management --strict` y revisar que las specs modificadas
+- [x] 7.2 `openspec validate rework-owner-management --strict` y revisar que las specs modificadas
       conservan todos sus escenarios (ver la memoria `openspec-archive-gotchas`)
-- [ ] 7.3 Actualizar la memoria `profile-management-section` con el resultado y los hallazgos de
+- [x] 7.3 Actualizar la memoria `profile-management-section` con el resultado y los hallazgos de
       la implementación
