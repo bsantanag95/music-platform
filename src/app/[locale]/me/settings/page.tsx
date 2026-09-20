@@ -1,7 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import { requirePageUser } from "@/services/auth/page-auth";
+import { isEmailVerified } from "@/services/auth/email-verification";
 import { getOwnProfile } from "@/services/social/profiles";
 import { PrivacySettings } from "@/components/social/PrivacySettings";
+import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 
 export default async function PrivacySettingsPage() {
   const t = await getTranslations("users");
@@ -11,6 +13,7 @@ export default async function PrivacySettingsPage() {
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
       <h1 className="font-display text-2xl text-paper">{t("profileVisibilityLabel")}</h1>
+      <EmailVerificationNotice verified={isEmailVerified(user)} />
       <PrivacySettings initialVisibility={profile.profileVisibility} />
     </main>
   );

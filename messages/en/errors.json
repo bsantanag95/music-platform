@@ -131,6 +131,14 @@
     "title": "Use a different password",
     "description": "Your new password must be different from the previous one."
   },
+  "INVALID_VERIFICATION_TOKEN": {
+    "title": "Invalid verification link",
+    "description": "The link to verify your email isn't valid or has expired. Request a new one."
+  },
+  "EMAIL_ALREADY_VERIFIED": {
+    "title": "Email already verified",
+    "description": "Your email is already verified."
+  },
   "EMAIL_CONFIG_MISSING": {
     "title": "Email delivery unavailable",
     "description": "Email delivery isn't configured. Please try again later."

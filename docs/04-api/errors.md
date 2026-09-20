@@ -55,7 +55,9 @@ además del `error` legible:
 | `OAUTH_EMAIL_NOT_VERIFIED` | 400 | `GET /api/auth/google/callback`: el ID token trae `email_verified=false`/ausente y no existe identidad vinculada, por lo que no se crea la cuenta nueva (`auth.md` sección 6). |
 | `INVALID_RESET_TOKEN` | 400 | `POST /api/auth/password/reset`: el token de restablecimiento no existe, expiró o ya fue usado. No distingue entre esos casos. |
 | `PASSWORD_REUSED` | 400 | `POST /api/auth/password/reset`: la contraseña nueva es igual a la actual. El token **no** se consume, así que el usuario puede reintentar con el mismo link. |
-| `EMAIL_CONFIG_MISSING` | 503 | `POST /api/auth/password/forgot`: no hay un transporte de email real configurado en producción (fail-closed); el flujo no genera token ni envía correo. |
+| `INVALID_VERIFICATION_TOKEN` | 400 | `POST /api/auth/email/verify`: el token de verificación de email no existe, expiró o ya fue usado. No distingue entre esos casos. |
+| `EMAIL_ALREADY_VERIFIED` | 409 | `POST /api/auth/email/verify/resend`: la cuenta ya tiene el email verificado. |
+| `EMAIL_CONFIG_MISSING` | 503 | `POST /api/auth/password/forgot` y `POST /api/auth/email/verify/resend`: no hay un transporte de email real configurado en producción (fail-closed); el flujo no genera token ni envía correo. |
 | `USER_NOT_FOUND` | 404 | Perfil, búsqueda o destino de una relación: el username no corresponde a ningún usuario. |
 | `RELATION_INVALID` | 400 | Operación de seguimiento o bloqueo inválida (ej. intentar seguirse o bloquearse a sí mismo). |
 | `REQUEST_NOT_FOUND` | 404 | La solicitud de seguimiento no existe o ya fue resuelta (aprobada, rechazada o cancelada). |

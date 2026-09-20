@@ -138,9 +138,9 @@
       → corrido con `ALLOW_SMOKE_ON_REAL_DB=1` contra la BD de `DATABASE_URL` (dev local, sin scratch
       configurada); el script borra sus propios usuarios `smoke-reset-*` y el cascade limpia tokens y
       sesiones.
-- [ ] 10.3 Probar manualmente en el navegador: pedir reset, obtener el link por el
+- [x] 10.3 Probar manualmente en el navegador: pedir reset, obtener el link por el
       adaptador `console`, definir contraseña, comprobar que las sesiones previas quedaron invalidas
-      y que el login funciona con la contraseña nueva. **Pendiente: requiere verificación humana.**
+      y que el login funciona con la contraseña nueva. → verificado manualmente por el usuario.
 - [x] 10.4 Pedir auditoría al subagente **seguridad** (solo reporte) sobre anti-enumeración,
       manejo del token, rate limiting y exposición del link. → reporte sin hallazgos críticos/altos;
       los 2 medios se resolvieron en el grupo 11.

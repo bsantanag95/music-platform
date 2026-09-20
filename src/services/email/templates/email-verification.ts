@@ -11,37 +11,36 @@ type EmailCopy = {
   ignore: string;
 };
 
-// La copy vive en `messages/{locale}/auth.json` (misma fuente que la UI y
-// cubierta por el test de consistencia de claves). El correo no pasa por
-// next-intl porque se renderiza fuera del request scope de las páginas.
+// Misma fuente de copy que la UI (`messages/{locale}/auth.json`), fuera del
+// request scope de next-intl, igual que la plantilla de reset.
 const COPY = {
   es: {
-    subject: esAuth.resetEmailSubject,
-    intro: esAuth.resetEmailIntro,
-    cta: esAuth.resetEmailCta,
-    expiry: esAuth.resetEmailExpiry,
-    ignore: esAuth.resetEmailIgnore,
+    subject: esAuth.verifyEmailSubject,
+    intro: esAuth.verifyEmailIntro,
+    cta: esAuth.verifyEmailCta,
+    expiry: esAuth.verifyEmailExpiry,
+    ignore: esAuth.verifyEmailIgnore,
   },
   en: {
-    subject: enAuth.resetEmailSubject,
-    intro: enAuth.resetEmailIntro,
-    cta: enAuth.resetEmailCta,
-    expiry: enAuth.resetEmailExpiry,
-    ignore: enAuth.resetEmailIgnore,
+    subject: enAuth.verifyEmailSubject,
+    intro: enAuth.verifyEmailIntro,
+    cta: enAuth.verifyEmailCta,
+    expiry: enAuth.verifyEmailExpiry,
+    ignore: enAuth.verifyEmailIgnore,
   },
 } satisfies Record<"es" | "en", EmailCopy>;
 
-export type PasswordResetEmailInput = {
+export type EmailVerificationEmailInput = {
   to: string;
   locale: string;
   token: string;
   appUrl: string;
 };
 
-export function buildPasswordResetEmail(input: PasswordResetEmailInput): EmailMessage {
+export function buildEmailVerificationEmail(input: EmailVerificationEmailInput): EmailMessage {
   const resolvedLocale = input.locale === "en" ? "en" : "es";
   const copy = resolvedLocale === "en" ? COPY.en : COPY.es;
-  const link = `${input.appUrl}/${resolvedLocale}/auth/reset-password?token=${encodeURIComponent(
+  const link = `${input.appUrl}/${resolvedLocale}/auth/verify-email?token=${encodeURIComponent(
     input.token,
   )}`;
 

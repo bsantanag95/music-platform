@@ -4,6 +4,8 @@ import { withErrorHandling } from "@/lib/with-error-handling";
 import { createSession, setSessionCookie } from "@/services/auth/sessions";
 import { getAuthClientIp, consumeAuthAttempt } from "@/services/auth/rate-limit";
 import { registerUser } from "@/services/auth/users";
+import { resolveLocale } from "@/services/auth/oauth-flow";
+import { requestEmailVerification } from "@/services/auth/email-verification";
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
   const body = RegisterRequestSchema.safeParse(await request.json().catch(() => null));
@@ -20,6 +22,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     const user = await registerUser(body.data);
     if (!user) throw new Error("No se pudo crear el usuario");
     const session = await createSession(user.id);
+    // La verificación es best-effort: nunca bloquea ni hace fallar el alta.
+    void requestEmailVerification(user.id, resolveLocale(body.data.locale)).catch((error) => {
+      console.error("No se pudo enviar la verificación de email tras el registro:", error);
+    });
     const response = NextResponse.json({ user: publicUser(user) }, { status: 201 });
     setSessionCookie(response, session.token);
     return response;

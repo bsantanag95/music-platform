@@ -21,10 +21,11 @@ function mockSelectChain(result: unknown[]): void {
   mocks.db.select.mockReturnValue({ from });
 }
 
-function mockInsertChain(): { returning: ReturnType<typeof vi.fn> } {
+function mockInsertChain(): { values: ReturnType<typeof vi.fn>; returning: ReturnType<typeof vi.fn> } {
   const returning = vi.fn();
-  mocks.db.insert.mockReturnValue({ values: vi.fn().mockReturnValue({ returning }) });
-  return { returning };
+  const values = vi.fn().mockReturnValue({ returning });
+  mocks.db.insert.mockReturnValue({ values });
+  return { values, returning };
 }
 
 function mockTransaction(): void {
@@ -113,5 +114,6 @@ describe("resolveOrCreateOAuthUser", () => {
     expect(mocks.findAvailableUsername).toHaveBeenCalledWith("juan");
     expect(mocks.db.transaction).toHaveBeenCalled();
     expect(mocks.db.insert).toHaveBeenCalledTimes(2);
+    expect(chain.values.mock.calls[0]?.[0]).toMatchObject({ emailVerifiedAt: expect.any(Date) });
   });
 });

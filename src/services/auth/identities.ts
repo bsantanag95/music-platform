@@ -60,6 +60,8 @@ export async function resolveOrCreateOAuthUser(identity: ExternalIdentity): Prom
             email,
             displayName: identity.displayName ?? null,
             passwordHash: null,
+            // El flujo ya exigió email_verified=true para crear la cuenta.
+            emailVerifiedAt: new Date(),
           })
           .returning();
 

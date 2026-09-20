@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { SubmitEventHandler } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { apiFetch, ApiError } from "@/lib/api/client";
 import {
@@ -22,6 +22,7 @@ const localizedErrorCodes = new Set([
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const t = useTranslations("auth");
   const tErrors = useTranslations("errors");
+  const locale = useLocale();
   const router = useRouter();
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState(false);
@@ -31,7 +32,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     event.preventDefault();
     setErrorCode(null);
     setFieldError(false);
-    const data = Object.fromEntries(new FormData(event.currentTarget));
+    const fields = Object.fromEntries(new FormData(event.currentTarget));
+    const data = mode === "register" ? { ...fields, locale } : fields;
     const parsed =
       mode === "login"
         ? LoginRequestSchema.safeParse(data)

@@ -131,6 +131,14 @@
     "title": "Usá una contraseña distinta",
     "description": "La contraseña nueva tiene que ser distinta de la anterior."
   },
+  "INVALID_VERIFICATION_TOKEN": {
+    "title": "Link de verificación inválido",
+    "description": "El link para verificar tu email no es válido o ya expiró. Pedí uno nuevo."
+  },
+  "EMAIL_ALREADY_VERIFIED": {
+    "title": "Email ya verificado",
+    "description": "Tu email ya está verificado."
+  },
   "EMAIL_CONFIG_MISSING": {
     "title": "Envío de email no disponible",
     "description": "El envío de emails no está configurado. Intentá más tarde."

@@ -7,11 +7,12 @@ a `02-architecture/i18n.md` para internacionalización o `03-data/sql-model.md` 
 
 ## Estado
 
-**Implementado para autenticación local, Google OAuth/OIDC y recuperación de contraseña.** Este
-documento describe el mecanismo que deben seguir los agentes de ejecución. La migración, los route
-handlers y los tests de autenticación local forman parte de la Fase 4; el flujo de Google se
-implementó como el incremento posterior definido por ADR 0010 y fue validado manualmente; el reset
-de contraseña quedó definido por ADR 0014 y se implementó con transporte de email desacoplado.
+**Implementado para autenticación local, Google OAuth/OIDC, recuperación de contraseña y
+verificación de email.** Este documento describe el mecanismo que deben seguir los agentes de
+ejecución. La migración, los route handlers y los tests de autenticación local forman parte de la
+Fase 4; el flujo de Google se implementó como el incremento posterior definido por ADR 0010 y fue
+validado manualmente; el reset de contraseña quedó definido por ADR 0014 y se implementó con
+transporte de email desacoplado; la verificación de email quedó definida por ADR 0015 en modo soft.
 
 La implementación usa Argon2id con `memoryCost=19456`, `timeCost=2` y `parallelism=1`, centralizados
 en `src/services/auth/password.ts`.
@@ -284,6 +285,30 @@ el envío es sincrónico al pedido. La página `/<locale>/auth/reset-password` p
 consumirlo y aplica `Referrer-Policy: no-referrer` para no filtrarlo por `Referer`. Los tokens
 vencidos se limpian con el mismo job que las sesiones (`pnpm run db:cleanup-sessions`).
 
+### 9. Verificación de email
+
+Implementada por ADR 0015. `app_user.email_verified_at` registra si el email está verificado. La
+migración de este cambio hizo backfill de las cuentas preexistentes (`email_verified_at =
+created_at`) y las altas de Google se marcan al crearse (el flujo ya exige `email_verified=true`);
+las altas locales nuevas quedan nulas hasta consumir un token.
+
+Al registrarse con email local, el alta dispara en **best-effort** el envío de un correo con un token
+de un solo uso (hash SHA-256 en `email_verification_token`, TTL de 24 h, único por usuario): si el
+envío falla o no hay transporte configurado, la cuenta y la sesión se crean igual y solo se registra
+el fallo. `POST /api/auth/email/verify` consume el token y fija `email_verified_at`; la página
+`/<locale>/auth/verify-email` pre-valida el token sin consumirlo (el consumo ocurre al presionar el
+botón, para que un escáner de correo no verifique solo) y evita la fuga del token por `Referer`
+mediante el metadata `referrer: "no-referrer"` (renderiza `<meta name="referrer">`).
+`POST /api/auth/email/verify/resend` requiere sesión y reenvía solo al email de la cuenta autenticada;
+cada reenvío cuenta contra el rate limit (no se limpia al enviar).
+
+La verificación funciona en **modo soft**: no bloquea login ni acciones; se muestra un aviso con
+reenvío en `/<locale>/me/settings` mientras `email_verified_at` sea nulo. Consecuencia deliberada: el
+modo soft **no** impide que alguien reserve un email ajeno (`EMAIL_TAKEN` sigue aplicando) — solo
+registra el estado y avisa; el cierre real de ese caso llega con el enforcement duro, que se activa
+cambiando el helper centralizado `isEmailVerified`. El email verificado no habilita por sí solo la
+vinculación automática por email (ADR 0010).
+
 ## Qué no decide este documento
 
 Deliberadamente fuera de alcance acá:
@@ -303,6 +328,8 @@ Deliberadamente fuera de alcance acá:
   borrado de `rating`/`comment`, no de sesión ni de usuario.
 - **`adr/0014-recuperacion-contrasena-y-transporte-email.md`**: token de un solo uso, anti-enumeración
   y transporte de email desacoplado del flujo de restablecimiento.
+- **`adr/0015-verificacion-de-email.md`**: estado de verificación del email, token de un solo uso y
+  modo soft sin bloqueo.
 - **`conventions.md`**: resumen normativo de uso diario, con puntero acá para el detalle.
 - **`01-frontend-architecture.md`**: el patrón de Server Components sin round-trip a la propia
   API, que la resolución de sesión hereda directamente.

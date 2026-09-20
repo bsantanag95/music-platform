@@ -201,6 +201,29 @@ contraseña. Al completarse el reset se eliminan todos los tokens del usuario y 
 (sin autologin). Las cuentas sin `password_hash` (Google) no pueden generar ni consumir tokens
 (ADR 0014).
 
+## `email_verification_token`
+
+**Propósito:** token de un solo uso para verificar el email de una cuenta local. Lo genera el
+registro (`POST /api/auth/register`) o el reenvío autenticado, y lo consume
+`POST /api/auth/email/verify` (change `add-email-verification`).
+
+**Seguridad:** igual que `password_reset_token`, guarda solo el hash SHA-256; el token en claro
+viaja únicamente en el link del correo. TTL de 24 h, un solo uso por borrado atómico y un solo token
+vigente por usuario (`uq_email_verification_token_user` + `INSERT ... ON CONFLICT`). Pedir un reenvío
+reemplaza el token anterior.
+
+**Relaciones:** pertenece a un `app_user`; `ON DELETE CASCADE`.
+
+**Estado asociado:** `app_user.email_verified_at` (TIMESTAMPTZ nullable) registra si el email está
+verificado. La migración `0033` hizo backfill de las cuentas preexistentes
+(`email_verified_at = created_at`) y las altas de Google se marcan al crearse. La verificación
+funciona en modo soft: no bloquea login ni acciones (ADR 0015).
+
+**Índices:** `uq_email_verification_token_hash` único para resolver el token;
+`uq_email_verification_token_user` único para un token por usuario;
+`idx_email_verification_token_expires_at` para la limpieza. `CHECK (expires_at > created_at)` impide
+tokens ya vencidos al crearse.
+
 ## `artist`
 
 **Propósito:** representa tanto a una persona como a una banda, o al artista especial "Various Artists" usado en compilados. Un único `type` (`person` | `group` | `various`) evita duplicar la estructura entre ambos casos.

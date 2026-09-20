@@ -43,13 +43,16 @@ Capa de datos descartable de corta vida, sin garantías de persistencia:
 - `password_reset_token` — tokens de restablecimiento de contraseña, de un solo uso y con TTL de 30
   minutos (ADR 0014). Su pérdida no tiene consecuencia: el link deja de ser válido y el usuario pide
   uno nuevo. No se respalda.
+- `email_verification_token` — tokens de verificación de email, de un solo uso y con TTL de 24 horas
+  (ADR 0015). Se pierden sin consecuencia: el usuario reenvía el correo. No se respalda.
 - El proyecto no tiene caché de datos propia: **Redis está diferido** (C.3 del checklist de
   infraestructura) y la capa de "cover art cache" solo cachea la **URL**, no los bytes
   (`data-licensing.md`, Riesgo #9).
 - `session` **no** es efímera: es fuente de verdad propia vía Postgres (ADR 0008), no caché en
   memoria ni JWT. Pertenece a Clase A.
 
-La categoría ya no está reservada: `password_reset_token` es su primer ocupante.
+La categoría ya no está reservada: `password_reset_token` y `email_verification_token` son sus
+ocupantes.
 
 ## Prioridad de recuperación / backup
 

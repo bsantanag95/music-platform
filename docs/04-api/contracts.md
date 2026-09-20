@@ -260,9 +260,11 @@ El endpoint comparte el read-model `getRecordingDetail` con las lecturas de serv
 
 ## Autenticación local
 
-`POST /api/auth/register` recibe `{ username, email, password }`, crea una cuenta y devuelve
-`201 { user }`. `POST /api/auth/login` recibe `{ identifier, password }`, rota la sesión actual o
-crea una nueva y devuelve `200 { user }`. Ambos aplican rate limiting y nunca devuelven el token.
+`POST /api/auth/register` recibe `{ username, email, password, locale? }`, crea una cuenta y devuelve
+`201 { user }`. Dispara en best-effort el correo de verificación de email (ver sección siguiente);
+un fallo de envío no afecta el alta. `POST /api/auth/login` recibe `{ identifier, password }`, rota la
+sesión actual o crea una nueva y devuelve `200 { user }`. Ambos aplican rate limiting y nunca
+devuelven el token.
 
 `POST` y `DELETE /api/auth/logout` eliminan la sesión actual. `DELETE /api/auth/revoke-all` requiere sesión y
 elimina todas las sesiones del usuario. `GET /api/auth/me` es un contrato opcional para clientes;
@@ -294,6 +296,21 @@ restablecimiento y todas las sesiones de la cuenta (sin autologin), y responde `
 reintentar con el mismo link); **400** con `VALIDATION_ERROR` si la contraseña no cumple la política
 (`min(8).max(128)`) —en ese caso el token tampoco se consume—; **429** con `RATE_LIMITED` por IP.
 
+## Verificación de email
+
+`app_user.email_verified_at` registra si el email está verificado. Las cuentas preexistentes quedaron
+verificadas por backfill y las altas de Google se marcan al crearse; las altas locales nuevas quedan
+sin verificar. La verificación es **soft**: no bloquea login ni acciones (ADR 0015).
+
+`POST /api/auth/email/verify` recibe `{ token }` y consume el token de un solo uso (TTL 24 h);
+responde `200 { ok: true }` o `400 INVALID_VERIFICATION_TOKEN` si no existe, expiró o ya fue usado;
+`400 VALIDATION_ERROR` si el body no es válido; `429 RATE_LIMITED` por IP.
+
+`POST /api/auth/email/verify/resend` requiere sesión (`401 AUTH_REQUIRED`), recibe `{ locale? }` y
+reenvía el correo al email de la cuenta autenticada: `200 { ok: true }` si lo envió, `409
+EMAIL_ALREADY_VERIFIED` si ya estaba verificado, `503 EMAIL_CONFIG_MISSING` si no hay transporte de
+correo configurado y `429 RATE_LIMITED` (por usuario e IP). El reenvío nunca opera sobre otra cuenta.
+
 ## Autenticación externa — Google (OAuth 2.0 + OIDC)
 
 `GET /api/auth/google/start` recibe el query param opcional `locale` (validado contra los locales
@@ -317,7 +334,8 @@ Resuelve la identidad por `(provider='google', provider_account_id=sub)`:
 - Si no existe, `email_verified=false` o `email_verified` ausente, no crea nada y termina en
   `OAUTH_EMAIL_NOT_VERIFIED` (se exige email verificado para dar de alta cuentas nuevas).
 - Si no existe, no hay coincidencia y `email_verified=true`, crea `app_user` + `auth_identity`
-  en una transacción, sin `password_hash`. El username se deriva del local-part del email
+  en una transacción, sin `password_hash` y con `email_verified_at` poblado. El username se deriva
+  del local-part del email
   (`auth.md` sección 6): saneado a `^[a-zA-Z0-9_]+$`, 3–32 caracteres, sufijo numérico
   incremental en colisión, reintentando la derivación dentro de la misma operación ante colisiones
   por carrera.

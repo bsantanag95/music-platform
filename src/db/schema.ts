@@ -47,6 +47,9 @@ export const appUser = pgTable(
     // Nulo = pendiente; se fija al completar o saltar /welcome. Los usuarios
     // previos a la migración quedan con onboarded_at = created_at.
     onboardedAt: timestamp("onboarded_at", { withTimezone: true }),
+    // Verificación de email (migración 0033, change add-email-verification).
+    // Nulo = sin verificar; el backfill marca verificadas las cuentas previas.
+    emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -258,6 +261,28 @@ export const passwordResetToken = pgTable(
     uniqueIndex("uq_password_reset_token_hash").on(t.tokenHash),
     uniqueIndex("uq_password_reset_token_user").on(t.userId),
     index("idx_password_reset_token_expires_at").on(t.expiresAt),
+  ],
+);
+
+// Token de verificación de email (migración 0033, change
+// add-email-verification). Misma mecánica que `password_reset_token`: hash del
+// token opaco, single-use por borrado físico y un solo token vigente por
+// usuario (`uq_email_verification_token_user` + INSERT ... ON CONFLICT).
+export const emailVerificationToken = pgTable(
+  "email_verification_token",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    uniqueIndex("uq_email_verification_token_hash").on(t.tokenHash),
+    uniqueIndex("uq_email_verification_token_user").on(t.userId),
+    index("idx_email_verification_token_expires_at").on(t.expiresAt),
   ],
 );
 
@@ -493,6 +518,7 @@ export type EditorialActionRow = typeof editorialAction.$inferSelect;
 export type SessionRow = typeof session.$inferSelect;
 export type AuthIdentityRow = typeof authIdentity.$inferSelect;
 export type PasswordResetTokenRow = typeof passwordResetToken.$inferSelect;
+export type EmailVerificationTokenRow = typeof emailVerificationToken.$inferSelect;
 export type UserFollowRow = typeof userFollow.$inferSelect;
 export type UserBlockRow = typeof userBlock.$inferSelect;
 export type ReleaseGroupRow = typeof releaseGroup.$inferSelect;

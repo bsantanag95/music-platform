@@ -1,15 +1,18 @@
 import { cleanupExpiredSessions } from "@/services/auth/sessions";
 import { cleanupExpiredResetTokens } from "@/services/auth/password-reset";
+import { cleanupExpiredVerificationTokens } from "@/services/auth/email-verification";
 
 /**
  * Job de mantenimiento para ejecutar periódicamente fuera del tráfico web.
- * Limpia sesiones expiradas y tokens de restablecimiento de contraseña vencidos.
+ * Limpia sesiones expiradas y tokens vencidos de restablecimiento de contraseña
+ * y de verificación de email.
  * Uso: pnpm run db:cleanup-sessions
  */
 async function main(): Promise<void> {
   await cleanupExpiredSessions();
   await cleanupExpiredResetTokens();
-  console.log("Limpieza de sesiones y tokens de restablecimiento completada.");
+  await cleanupExpiredVerificationTokens();
+  console.log("Limpieza de sesiones y tokens expirados completada.");
 }
 
 main()

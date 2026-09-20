@@ -188,6 +188,8 @@ export const ErrorCodeSchema = z.enum([
   "INVALID_RESET_TOKEN",
   "PASSWORD_REUSED",
   "EMAIL_CONFIG_MISSING",
+  "INVALID_VERIFICATION_TOKEN",
+  "EMAIL_ALREADY_VERIFIED",
   "USER_NOT_FOUND",
   "RELATION_INVALID",
   "REQUEST_NOT_FOUND",
@@ -219,6 +221,8 @@ export const RegisterRequestSchema = z.object({
     .regex(/^[a-zA-Z0-9_]+$/),
   email: z.email().transform((value) => value.toLowerCase()),
   password: z.string().min(8).max(128),
+  // Locale para el correo de verificación (change add-email-verification).
+  locale: z.string().trim().max(10).optional(),
 });
 export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
 
@@ -242,6 +246,17 @@ export const ResetPasswordRequestSchema = z.object({
   password: z.string().min(8).max(128),
 });
 export type ResetPasswordRequest = z.infer<typeof ResetPasswordRequestSchema>;
+
+// Verificación de email (change add-email-verification).
+export const VerifyEmailRequestSchema = z.object({
+  token: z.string().trim().min(1).max(512),
+});
+export type VerifyEmailRequest = z.infer<typeof VerifyEmailRequestSchema>;
+
+export const ResendEmailRequestSchema = z.object({
+  locale: z.string().trim().max(10).optional(),
+});
+export type ResendEmailRequest = z.infer<typeof ResendEmailRequestSchema>;
 
 export const OkResponseSchema = z.object({ ok: z.literal(true) });
 export type OkResponse = z.infer<typeof OkResponseSchema>;

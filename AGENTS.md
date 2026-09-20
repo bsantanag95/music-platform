@@ -58,6 +58,11 @@ necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
 >   `DELETE FROM app_user WHERE username LIKE 'smoke-reset-%';`. Mockea el
 >   transporte de email capturando el token del adaptador `console`; no envía
 >   correo real.
+> - `smoke-test-email-verification.ts` crea usuarios `smoke_verify_*` y los
+>   borra al terminar (el `ON DELETE CASCADE` limpia tokens y sesiones). Si se
+>   interrumpió, limpiar con
+>   `DELETE FROM app_user WHERE username LIKE 'smoke_verify_%';`. Captura el
+>   token de verificación del adaptador `console`; no envía correo real.
 
 ## Base de datos / migraciones
 
