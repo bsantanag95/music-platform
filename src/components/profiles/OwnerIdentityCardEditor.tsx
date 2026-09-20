@@ -8,8 +8,10 @@ import { apiFetch, ApiError } from "@/lib/api/client";
 import { getMyFavorites } from "@/lib/api/favorites";
 import { ShowcaseResponseSchema, type Favorite, type SocialTargetType } from "@/lib/api/schemas";
 import type { IdentityCard, ShowcaseEntity } from "@/services/profiles/showcase";
+import { useNotifySaved, type EditorHostCallbacks } from "./editor-host";
 
-interface OwnerIdentityCardEditorProps {
+// Aplica cada cambio al instante (no hay borrador), así que solo usa `onSaved`.
+interface OwnerIdentityCardEditorProps extends Pick<EditorHostCallbacks, "onSaved"> {
   initial: IdentityCard;
 }
 
@@ -44,9 +46,10 @@ function favoriteToEntity(favorite: Favorite): ShowcaseEntity {
 // el álbum definitorio no fuera descubrible desde donde se arma el resto de
 // la identidad. Este editor es un atajo directo sobre la misma API; los
 // marcadores ★ de los otros dos editores siguen funcionando igual.
-export function OwnerIdentityCardEditor({ initial }: OwnerIdentityCardEditorProps) {
+export function OwnerIdentityCardEditor({ initial, onSaved }: OwnerIdentityCardEditorProps) {
   const t = useTranslations("users");
   const tErrors = useTranslations("errors");
+  const notifySaved = useNotifySaved(onSaved);
 
   const [identityCard, setIdentityCard] = useState<IdentityCard>(initial);
   const [favorites, setFavorites] = useState<Partial<Record<SocialTargetType, Favorite[]>>>({});
@@ -73,6 +76,7 @@ export function OwnerIdentityCardEditor({ initial }: OwnerIdentityCardEditorProp
         body: JSON.stringify({ type, id: entity.id }),
       });
       setIdentityCard(data.showcase.identityCard);
+      notifySaved();
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
     } finally {
@@ -90,6 +94,7 @@ export function OwnerIdentityCardEditor({ initial }: OwnerIdentityCardEditorProp
         body: JSON.stringify({ type, id: entity.id }),
       });
       setIdentityCard(data.showcase.identityCard);
+      notifySaved();
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
     } finally {
@@ -107,6 +112,7 @@ export function OwnerIdentityCardEditor({ initial }: OwnerIdentityCardEditorProp
         body: JSON.stringify({ recordingId: entity.id }),
       });
       setIdentityCard(data.showcase.identityCard);
+      notifySaved();
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
     } finally {
@@ -120,6 +126,7 @@ export function OwnerIdentityCardEditor({ initial }: OwnerIdentityCardEditorProp
     try {
       const data = await apiFetch("/api/me/profile/anthem", ShowcaseResponseSchema, { method: "DELETE" });
       setIdentityCard(data.showcase.identityCard);
+      notifySaved();
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
     } finally {

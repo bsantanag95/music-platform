@@ -8,6 +8,8 @@ import { getUserPermissions } from "@/services/auth/authorization";
 import { Placa } from "@/components/profiles/Placa";
 import { PrivateProfileCard } from "@/components/profiles/PrivateProfileCard";
 import { ViewAsBanner } from "@/components/profiles/ViewAsBanner";
+import { OwnerEditProvider } from "@/components/profiles/OwnerEditProvider";
+import { OwnerProfileBar } from "@/components/profiles/OwnerProfileBar";
 import {
   AffinitySection,
   AlbumFavoritesSection,
@@ -16,16 +18,16 @@ import {
   ExplorationSection,
   FavoritesRail,
   FeaturedReviewsSection,
+  EditablePlaca,
   FingerprintSummarySection,
-  HubSection,
   IdentityCardSection,
   InRotationSection,
   Level3LinksSection,
   ListsRail,
-  OwnerEditors,
   PinnedSection,
   RatingHighlightsSection,
   RecencySection,
+  SettingsCardSection,
 } from "./sections";
 
 interface UserProfilePageProps {
@@ -101,7 +103,7 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
     return (
       <main className="flex min-h-screen flex-col items-center gap-8 px-4 py-12">
         <div className="flex w-full max-w-2xl flex-col items-start gap-4">
-          {previewing && <ViewAsBanner username={profile.username} previewing />}
+          {previewing && <ViewAsBanner username={profile.username} />}
           <PrivateProfileCard
             profile={profile}
             authenticated={authenticated}
@@ -119,101 +121,117 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
   // visitante autorizado"): dos columnas en escritorio, barra lateral
   // pegajosa con la identidad y las señales "quién es esta persona", columna
   // principal con la Tarjeta de Identidad y el resto en 3 niveles de
-  // profundidad. Las capas propias del dueño (panel de gestión, editores
-  // inline) se superponen a esa misma estructura, no la reemplazan.
+  // profundidad. Las capas propias del dueño (barra con el interruptor
+  // "Editar perfil", tarjeta de Ajustes y lápices por bloque) se superponen a
+  // esa misma estructura, no la reemplazan: hasta que el dueño activa el modo
+  // edición, su perfil se ve igual que el de un visitante (spec
+  // `profile-edit-mode`).
   const mutualFollowers = effectiveViewerId
     ? await getMutualFollowersPreview(profile.username, effectiveViewerId)
     : null;
 
+  const placa = (
+    <Placa
+      profile={profile}
+      authenticated={authenticated}
+      preview={previewing}
+      canModerate={canModerate}
+      mutualFollowers={mutualFollowers}
+    />
+  );
+
+  const content = (
+    <div className="grid w-full max-w-5xl gap-8 lg:grid-cols-[19rem_minmax(0,1fr)] lg:gap-10">
+      <aside className="flex flex-col gap-6 lg:sticky lg:top-8 lg:self-start">
+        {isOwn ? <EditablePlaca profile={profile}>{placa}</EditablePlaca> : placa}
+        {isOwn && (
+          <Suspense fallback={<SectionFallback />}>
+            <SettingsCardSection ownerId={profile.id} />
+          </Suspense>
+        )}
+        <Suspense fallback={null}>
+          <AffinitySection username={section.username} viewerId={effectiveViewerId} />
+        </Suspense>
+        <Suspense fallback={null}>
+          <RecencySection username={section.username} viewerId={effectiveViewerId} />
+        </Suspense>
+      </aside>
+
+      <div className="flex min-w-0 flex-col gap-8">
+        {/* Nivel 1: la Tarjeta de Identidad — lo único que hace falta ver
+            para reconocer quién es esta persona musicalmente. */}
+        <Streamed>
+          <IdentityCardSection ownerId={profile.id} isOwn={isOwn} />
+        </Streamed>
+
+        {/* Nivel 2: exploración curada, resumida — puertas de entrada, no
+            el contenido completo. */}
+        <Streamed>
+          <AlbumFavoritesSection
+            username={section.username}
+            viewerId={effectiveViewerId}
+            ownerId={profile.id}
+            isOwn={isOwn}
+          />
+        </Streamed>
+        <Streamed>
+          <PinnedSection ownerId={profile.id} isOwn={isOwn} />
+        </Streamed>
+        <Streamed>
+          <RatingHighlightsSection username={section.username} viewerId={effectiveViewerId} />
+        </Streamed>
+        <Streamed>
+          <FeaturedReviewsSection username={section.username} viewerId={effectiveViewerId} />
+        </Streamed>
+        <Streamed>
+          <InRotationSection username={section.username} viewerId={effectiveViewerId} />
+        </Streamed>
+        <Suspense fallback={null}>
+          <FingerprintSummarySection username={section.username} viewerId={effectiveViewerId} />
+        </Suspense>
+        <Streamed>
+          <ExplorationSection username={section.username} viewerId={effectiveViewerId} />
+        </Streamed>
+
+        {/* Nivel 3: inmersión bajo demanda — estantes completos y el
+            enlace a la huella de gusto completa. */}
+        <Streamed>
+          <DiaryRail {...section} />
+        </Streamed>
+        <Streamed>
+          <FavoritesRail {...section} />
+        </Streamed>
+        <Streamed>
+          <ListsRail {...section} />
+        </Streamed>
+        <Streamed>
+          <CollectionRail {...section} />
+        </Streamed>
+        <Suspense fallback={null}>
+          <Level3LinksSection username={section.username} viewerId={effectiveViewerId} />
+        </Suspense>
+      </div>
+    </div>
+  );
+
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
-      {realIsOwn && (
+      {previewing && (
         <div className="w-full max-w-5xl">
-          <ViewAsBanner username={profile.username} previewing={previewing} />
+          <ViewAsBanner username={profile.username} />
         </div>
       )}
-      <div className="grid w-full max-w-5xl gap-8 lg:grid-cols-[19rem_minmax(0,1fr)] lg:gap-10">
-        <aside className="flex flex-col gap-6 lg:sticky lg:top-8 lg:self-start">
-          <Placa
-            profile={profile}
-            authenticated={authenticated}
-            preview={previewing}
-            canModerate={canModerate}
-            mutualFollowers={mutualFollowers}
-          />
-          {isOwn && (
-            <Suspense fallback={<SectionFallback />}>
-              <HubSection ownerId={profile.id} username={profile.username} />
-            </Suspense>
-          )}
-          <Suspense fallback={null}>
-            <AffinitySection username={section.username} viewerId={effectiveViewerId} />
-          </Suspense>
-          <Suspense fallback={null}>
-            <RecencySection username={section.username} viewerId={effectiveViewerId} />
-          </Suspense>
-        </aside>
-
-        <div className="flex min-w-0 flex-col gap-8">
-          {isOwn && (
-            <Streamed>
-              <OwnerEditors profile={profile} />
-            </Streamed>
-          )}
-
-          {/* Nivel 1: la Tarjeta de Identidad — lo único que hace falta ver
-              para reconocer quién es esta persona musicalmente. */}
-          <Streamed>
-            <IdentityCardSection ownerId={profile.id} />
-          </Streamed>
-
-          {/* Nivel 2: exploración curada, resumida — puertas de entrada, no
-              el contenido completo. */}
-          <Streamed>
-            <AlbumFavoritesSection
-              username={section.username}
-              viewerId={effectiveViewerId}
-              ownerId={profile.id}
-            />
-          </Streamed>
-          <Streamed>
-            <PinnedSection ownerId={profile.id} />
-          </Streamed>
-          <Streamed>
-            <RatingHighlightsSection username={section.username} viewerId={effectiveViewerId} />
-          </Streamed>
-          <Streamed>
-            <FeaturedReviewsSection username={section.username} viewerId={effectiveViewerId} />
-          </Streamed>
-          <Streamed>
-            <InRotationSection username={section.username} viewerId={effectiveViewerId} />
-          </Streamed>
-          <Suspense fallback={null}>
-            <FingerprintSummarySection username={section.username} viewerId={effectiveViewerId} />
-          </Suspense>
-          <Streamed>
-            <ExplorationSection username={section.username} viewerId={effectiveViewerId} />
-          </Streamed>
-
-          {/* Nivel 3: inmersión bajo demanda — estantes completos y el
-              enlace a la huella de gusto completa. */}
-          <Streamed>
-            <DiaryRail {...section} />
-          </Streamed>
-          <Streamed>
-            <FavoritesRail {...section} />
-          </Streamed>
-          <Streamed>
-            <ListsRail {...section} />
-          </Streamed>
-          <Streamed>
-            <CollectionRail {...section} />
-          </Streamed>
-          <Suspense fallback={null}>
-            <Level3LinksSection username={section.username} viewerId={effectiveViewerId} />
-          </Suspense>
-        </div>
-      </div>
+      {isOwn ? (
+        // Solo el dueño real (no en previsualización) recibe el modo edición.
+        <OwnerEditProvider>
+          <div className="w-full max-w-5xl">
+            <OwnerProfileBar username={profile.username} visibility={profile.profileVisibility} />
+          </div>
+          {content}
+        </OwnerEditProvider>
+      ) : (
+        content
+      )}
     </main>
   );
 }

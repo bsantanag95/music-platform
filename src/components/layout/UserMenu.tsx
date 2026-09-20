@@ -27,7 +27,7 @@ interface UserMenuListProps extends LogoutControls {
 
 // Lista de destinos del usuario, agrupada con divisores. Compartida por el
 // desplegable de escritorio y el panel móvil del Header — el contenido sale de
-// `user-menu-items.ts`, única fuente junto con `OwnerHubPanel`.
+// `user-menu-items.ts`, única fuente junto con la pantalla Red de ajustes.
 export function UserMenuList({
   username,
   pendingFollowRequests,

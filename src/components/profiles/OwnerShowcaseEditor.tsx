@@ -9,8 +9,9 @@ import { getMyFavorites } from "@/lib/api/favorites";
 import { ShowcaseResponseSchema, type Favorite } from "@/lib/api/schemas";
 import { PROFILE_IDENTITY_LIMITS, PROFILE_MAX_PINNED } from "@/services/social/types";
 import type { IdentityCard, Showcase, ShowcaseEntity } from "@/services/profiles/showcase";
+import { useNotifySaved, useReportDirty, type EditorHostCallbacks } from "./editor-host";
 
-interface OwnerShowcaseEditorProps {
+interface OwnerShowcaseEditorProps extends EditorHostCallbacks {
   initial: Showcase;
 }
 
@@ -33,9 +34,16 @@ function favoriteToEntity(favorite: Favorite): ShowcaseEntity {
 // detalle de lista (memoria list-detail-scope), NO hay buscador de catálogo
 // embebido: se elige de los favoritos del usuario (entidades ya ingeridas,
 // canciones incluidas). Montado solo en la vista del propio perfil.
-export function OwnerShowcaseEditor({ initial }: OwnerShowcaseEditorProps) {
+// Firma de los destacados guardables (orden + nota); el himno y el marcador
+// "me define" se aplican al instante y no forman parte del borrador.
+function pinSignature(rows: PinRow[]): string {
+  return JSON.stringify(rows.map((row) => [row.entity.type, row.entity.id, row.note.trim()]));
+}
+
+export function OwnerShowcaseEditor({ initial, onSaved, onDirtyChange }: OwnerShowcaseEditorProps) {
   const t = useTranslations("users");
   const tErrors = useTranslations("errors");
+  const notifySaved = useNotifySaved(onSaved);
 
   const [pins, setPins] = useState<PinRow[]>(
     initial.pinned.map((item) => ({ entity: item.entity, note: item.note ?? "" })),
@@ -47,6 +55,10 @@ export function OwnerShowcaseEditor({ initial }: OwnerShowcaseEditorProps) {
   const [recordingFavorites, setRecordingFavorites] = useState<Favorite[] | null>(null);
   const [pinStatus, setPinStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [baseline, setBaseline] = useState(() =>
+    pinSignature(initial.pinned.map((item) => ({ entity: item.entity, note: item.note ?? "" }))),
+  );
+  useReportDirty(pinSignature(pins) !== baseline, onDirtyChange);
 
   const pinnedIds = new Set(pins.map((row) => row.entity.id));
 
@@ -96,8 +108,11 @@ export function OwnerShowcaseEditor({ initial }: OwnerShowcaseEditorProps) {
           })),
         }),
       });
-      setPins(data.showcase.pinned.map((item) => ({ entity: item.entity, note: item.note ?? "" })));
+      const saved = data.showcase.pinned.map((item) => ({ entity: item.entity, note: item.note ?? "" }));
+      setPins(saved);
+      setBaseline(pinSignature(saved));
       setPinStatus("saved");
+      notifySaved();
     } catch (error) {
       setPinStatus("idle");
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
@@ -120,6 +135,7 @@ export function OwnerShowcaseEditor({ initial }: OwnerShowcaseEditorProps) {
         body: JSON.stringify({ type: entity.type, id: entity.id }),
       });
       setIdentityCard(data.showcase.identityCard);
+      notifySaved();
     } catch (error) {
       setDefiningErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
     }
@@ -134,6 +150,7 @@ export function OwnerShowcaseEditor({ initial }: OwnerShowcaseEditorProps) {
         body: JSON.stringify({ recordingId: entity.id }),
       });
       setAnthem(data.showcase.anthem);
+      notifySaved();
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
     }
@@ -146,6 +163,7 @@ export function OwnerShowcaseEditor({ initial }: OwnerShowcaseEditorProps) {
         method: "DELETE",
       });
       setAnthem(data.showcase.anthem);
+      notifySaved();
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
     }

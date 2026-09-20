@@ -122,9 +122,6 @@
   },
   "recencyLastSignal": "Last activity {ago}",
   "railEmptyOwn": "Nothing here yet.",
-  "hub": {
-    "heading": "Manage"
-  },
   "viewAs": {
     "enter": "See how others see you",
     "banner": "You're viewing your profile as the public sees it.",
@@ -280,5 +277,88 @@
     "lists": "All lists",
     "collection": "Full collection",
     "fingerprint": "Full taste fingerprint"
+  },
+  "editPanel": {
+    "close": "Close",
+    "discardTitle": "Discard changes?",
+    "discardMessage": "You have unsaved changes in this editor. If you close it, they will be lost.",
+    "discardConfirm": "Discard",
+    "discardCancel": "Keep editing"
+  },
+  "editMode": {
+    "edit": "Edit",
+    "editBlock": "Edit {block}",
+    "toggle": "Edit profile",
+    "placa": "Your profile",
+    "emptyBlock": "{block}: nothing here yet. Edit to add something."
+  },
+  "ownerBar": {
+    "label": "Your profile options",
+    "public": "Public profile",
+    "private": "Private profile",
+    "settings": "Settings",
+    "settingsHint": "Profile, privacy and network"
+  },
+  "settings": {
+    "title": "Settings",
+    "nav": {
+      "label": "Settings sections",
+      "profile": "Profile",
+      "curation": "Curation",
+      "privacy": "Privacy and audience",
+      "network": "Network"
+    },
+    "profile": {
+      "title": "Profile",
+      "intro": "What anyone sees as “who you are”: your identity card, your bio and your links."
+    },
+    "curation": {
+      "title": "Curation",
+      "intro": "What you choose to show on your profile.",
+      "edit": "Edit",
+      "editRow": "Edit {name}",
+      "outOf": "{count} of {max}",
+      "pinned": {
+        "title": "Pinned",
+        "hint": "Up to {max} entities that represent you, each with a note."
+      },
+      "anthem": {
+        "title": "Anthem",
+        "hint": "A song from your favorites.",
+        "empty": "Not chosen"
+      },
+      "albumFavorites": {
+        "title": "Favorite albums",
+        "hint": "Up to {max} albums, chosen from your favorites."
+      },
+      "pinnedLists": {
+        "title": "Pinned lists",
+        "hint": "Pinned from each list.",
+        "link": "View my lists"
+      },
+      "ratingHighlights": {
+        "title": "Highlighted ratings",
+        "hint": "Up to {max}. Highlighted from your rating of each album or song."
+      },
+      "diaryHighlights": {
+        "title": "Highlighted diary entries",
+        "hint": "Highlighted from your diary.",
+        "link": "View my diary"
+      }
+    },
+    "privacy": {
+      "title": "Privacy and audience",
+      "intro": "Who can see your profile."
+    },
+    "network": {
+      "title": "Network",
+      "intro": "The people around your profile.",
+      "hint": {
+        "followers": "Who follows you. You can remove someone from your list.",
+        "following": "The accounts you follow.",
+        "followRequests": "Inbox: who wants to follow you.",
+        "blocks": "The accounts you have blocked."
+      }
+    }
   }
 }

@@ -53,4 +53,29 @@ describe("user-menu-items", () => {
     const none = buildUserMenuItems({ surface: "panel", pendingFollowRequests: 0 });
     expect(none.find((i) => i.id === "followRequests")?.badgeCount).toBeUndefined();
   });
+
+  it("la superficie settings reúne solo los destinos de red y los bloqueos", () => {
+    const ids = buildUserMenuItems({ username: "ana", surface: "settings" }).map((i) => i.id);
+    expect(ids).toEqual(["followers", "following", "followRequests", "blocks"]);
+  });
+
+  it("la superficie settings sustituye :username y adjunta el conteo de solicitudes", () => {
+    const items = buildUserMenuItems({ username: "ana", surface: "settings", pendingFollowRequests: 3 });
+    expect(items.find((i) => i.id === "followers")?.href).toBe("/users/ana/connections/followers");
+    expect(items.find((i) => i.id === "followRequests")?.badgeCount).toBe(3);
+  });
+
+  it("los destinos de biblioteca y ajustes no aparecen en la superficie settings", () => {
+    const ids = buildUserMenuItems({ username: "ana", surface: "settings" }).map((i) => i.id);
+    for (const id of ["diary", "favorites", "lists", "collection", "settings", "profile", "feed"]) {
+      expect(ids).not.toContain(id);
+    }
+  });
+
+  it("las superficies header y panel conservan los mismos destinos de red", () => {
+    for (const surface of ["header", "panel"] as const) {
+      const ids = buildUserMenuItems({ username: "ana", surface }).map((i) => i.id);
+      expect(ids).toEqual(expect.arrayContaining(["followers", "following", "followRequests"]));
+    }
+  });
 });

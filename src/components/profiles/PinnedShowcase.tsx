@@ -13,6 +13,16 @@ function matches(entity: ShowcaseEntity, target: ShowcaseEntity | null): boolean
   return target != null && target.type === entity.type && target.id === entity.id;
 }
 
+/**
+ * Los destacados que realmente se dibujan: excluye lo que ya vive en la Tarjeta
+ * de Identidad. La sección lo usa para saber si el bloque está vacío.
+ */
+export function generalPinned(pinned: PinnedItem[], identityCard: IdentityCard): PinnedItem[] {
+  return pinned.filter(
+    (item) => !matches(item.entity, identityCard.artist) && !matches(item.entity, identityCard.album),
+  );
+}
+
 // Los cuatro destacados: hasta cuatro carátulas cuadradas grandes "apoyadas
 // contra la pared" — lo que esta persona te pondría primero. Server Component.
 // Ver spec profile-showcase. Excluye lo que ya vive en la Tarjeta de
@@ -21,9 +31,7 @@ function matches(entity: ShowcaseEntity, target: ShowcaseEntity | null): boolean
 // elemento dos veces en el perfil.
 export async function PinnedShowcase({ pinned, identityCard }: PinnedShowcaseProps) {
   const t = await getTranslations("users");
-  const general = pinned.filter(
-    (item) => !matches(item.entity, identityCard.artist) && !matches(item.entity, identityCard.album),
-  );
+  const general = generalPinned(pinned, identityCard);
   if (general.length === 0) return null;
 
   return (

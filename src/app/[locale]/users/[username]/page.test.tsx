@@ -4,16 +4,18 @@ import UserProfilePage from "./page";
 import { Placa } from "@/components/profiles/Placa";
 import { PrivateProfileCard } from "@/components/profiles/PrivateProfileCard";
 import { ViewAsBanner } from "@/components/profiles/ViewAsBanner";
+import { OwnerEditProvider } from "@/components/profiles/OwnerEditProvider";
+import { OwnerProfileBar } from "@/components/profiles/OwnerProfileBar";
 import {
   AlbumFavoritesSection,
+  EditablePlaca,
   ExplorationSection,
   FeaturedReviewsSection,
-  HubSection,
   IdentityCardSection,
   InRotationSection,
-  OwnerEditors,
   PinnedSection,
   RatingHighlightsSection,
+  SettingsCardSection,
 } from "./sections";
 import type { ProfileView } from "@/services/profiles/profile-view";
 
@@ -48,9 +50,11 @@ vi.mock("@/i18n/navigation", () => ({
 vi.mock("@/components/profiles/Placa", () => ({ Placa: () => null }));
 vi.mock("@/components/profiles/PrivateProfileCard", () => ({ PrivateProfileCard: () => null }));
 vi.mock("@/components/profiles/ViewAsBanner", () => ({ ViewAsBanner: () => null }));
+vi.mock("@/components/profiles/OwnerEditProvider", () => ({ OwnerEditProvider: () => null }));
+vi.mock("@/components/profiles/OwnerProfileBar", () => ({ OwnerProfileBar: () => null }));
 vi.mock("./sections", () => ({
-  OwnerEditors: () => null,
-  HubSection: () => null,
+  EditablePlaca: () => null,
+  SettingsCardSection: () => null,
   IdentityCardSection: () => null,
   AlbumFavoritesSection: () => null,
   RatingHighlightsSection: () => null,
@@ -145,7 +149,7 @@ describe("UserProfilePage", () => {
     expect(card?.props?.authenticated).toBe(false);
     // La identidad vive en la propia tarjeta: la Placa no se apila encima.
     expect(findElement(tree, Placa)).toBeNull();
-    expect(findElement(tree, OwnerEditors)).toBeNull();
+    expect(findElement(tree, OwnerEditProvider)).toBeNull();
   });
 
   it("perfil privado con solicitud pendiente: la tarjeta recibe el perfil con relation 'requested'", async () => {
@@ -174,10 +178,10 @@ describe("UserProfilePage", () => {
 
     const tree = await render("ana", "1");
     expect(getProfileView).toHaveBeenNthCalledWith(2, "ana", null);
-    expect(findElement(tree, ViewAsBanner)?.props?.previewing).toBe(true);
+    expect(findElement(tree, ViewAsBanner)).not.toBeNull();
     expect(findElement(tree, PrivateProfileCard)?.props?.preview).toBe(true);
-    expect(findElement(tree, OwnerEditors)).toBeNull();
-    expect(findElement(tree, HubSection)).toBeNull();
+    expect(findElement(tree, OwnerEditProvider)).toBeNull();
+    expect(findElement(tree, SettingsCardSection)).toBeNull();
   });
 
   it("perfil accesible: sin umbral", async () => {
@@ -194,25 +198,44 @@ describe("UserProfilePage", () => {
 
     const tree = await render();
     expect(findElement(tree, PrivateProfileCard)).not.toBeNull();
-    expect(findElement(tree, OwnerEditors)).toBeNull();
+    expect(findElement(tree, OwnerEditProvider)).toBeNull();
   });
 
-  it("vista del dueño: monta OwnerEditors, HubSection y ViewAsBanner, sin umbral", async () => {
+  it("vista del dueño: monta el modo edición, la barra, la Placa editable y la tarjeta de Ajustes, sin umbral", async () => {
+    resolveSession.mockResolvedValue({ user: { id: "owner" } });
+    getProfileView.mockResolvedValue(
+      profile({ profileVisibility: "public", relation: "self", isOwner: true, accessible: true }),
+    );
+
+    const tree = await render();
+    expect(findElement(tree, OwnerEditProvider)).not.toBeNull();
+    expect(findElement(tree, OwnerProfileBar)?.props?.visibility).toBe("public");
+    expect(findElement(tree, OwnerProfileBar)?.props?.username).toBe("ana");
+    expect(findElement(tree, SettingsCardSection)).not.toBeNull();
+    // La Placa va dentro del bloque editable.
+    expect(findElement(findElement(tree, EditablePlaca), Placa)).not.toBeNull();
+    // Sin previsualización no hay banner de salida.
+    expect(findElement(tree, ViewAsBanner)).toBeNull();
+    expect(findElement(tree, PrivateProfileCard)).toBeNull();
+    expect(mutualFollowersHint).not.toHaveBeenCalled();
+  });
+
+  it("vista del dueño: le pasa isOwn a los bloques editables y al resto de secciones no", async () => {
     resolveSession.mockResolvedValue({ user: { id: "owner" } });
     getProfileView.mockResolvedValue(
       profile({ relation: "self", isOwner: true, accessible: true }),
     );
 
     const tree = await render();
-    expect(findElement(tree, OwnerEditors)).not.toBeNull();
-    expect(findElement(tree, HubSection)).not.toBeNull();
-    const banner = findElement(tree, ViewAsBanner);
-    expect(banner?.props?.previewing).toBe(false);
-    expect(findElement(tree, PrivateProfileCard)).toBeNull();
-    expect(mutualFollowersHint).not.toHaveBeenCalled();
+    expect(findElement(tree, IdentityCardSection)?.props?.isOwn).toBe(true);
+    expect(findElement(tree, PinnedSection)?.props?.isOwn).toBe(true);
+    expect(findElement(tree, AlbumFavoritesSection)?.props?.isOwn).toBe(true);
+    // Los estantes sin editor propio no reciben lápiz (spec: "Bloque sin editor").
+    expect(findElement(tree, RatingHighlightsSection)?.props?.isOwn).toBeUndefined();
+    expect(findElement(tree, InRotationSection)?.props?.isOwn).toBeUndefined();
   });
 
-  it("dueño con ?preview=1: recompone como anónimo, sin editores ni hub", async () => {
+  it("dueño con ?preview=1: recompone como anónimo, sin modo edición ni tarjeta de Ajustes", async () => {
     resolveSession.mockResolvedValue({ user: { id: "owner" } });
     getProfileView
       .mockResolvedValueOnce(profile({ relation: "self", isOwner: true, accessible: true }))
@@ -222,20 +245,29 @@ describe("UserProfilePage", () => {
 
     const tree = await render("ana", "1");
     expect(getProfileView).toHaveBeenNthCalledWith(2, "ana", null);
-    expect(findElement(tree, OwnerEditors)).toBeNull();
-    expect(findElement(tree, HubSection)).toBeNull();
-    expect(findElement(tree, ViewAsBanner)?.props?.previewing).toBe(true);
+    expect(findElement(tree, OwnerEditProvider)).toBeNull();
+    expect(findElement(tree, OwnerProfileBar)).toBeNull();
+    expect(findElement(tree, EditablePlaca)).toBeNull();
+    expect(findElement(tree, SettingsCardSection)).toBeNull();
+    expect(findElement(tree, ViewAsBanner)).not.toBeNull();
+    // Las secciones editables tampoco reciben isOwn: el visitante simulado no edita.
+    expect(findElement(tree, IdentityCardSection)?.props?.isOwn).toBe(false);
+    expect(findElement(tree, PinnedSection)?.props?.isOwn).toBe(false);
   });
 
-  it("visitante que no es el dueño: sin hub ni banner", async () => {
+  it("visitante que no es el dueño: sin modo edición, sin Ajustes ni banner", async () => {
     resolveSession.mockResolvedValue({ user: { id: "viewer" } });
     getProfileView.mockResolvedValue(
       profile({ profileVisibility: "public", relation: "none", accessible: true }),
     );
 
     const tree = await render();
-    expect(findElement(tree, HubSection)).toBeNull();
+    expect(findElement(tree, OwnerEditProvider)).toBeNull();
+    expect(findElement(tree, OwnerProfileBar)).toBeNull();
+    expect(findElement(tree, EditablePlaca)).toBeNull();
+    expect(findElement(tree, SettingsCardSection)).toBeNull();
     expect(findElement(tree, ViewAsBanner)).toBeNull();
+    expect(findElement(tree, IdentityCardSection)?.props?.isOwn).toBe(false);
   });
 
   it("vista pública: layout de dos columnas — Tarjeta de Identidad, destacados generales y valoraciones destacadas", async () => {
@@ -251,7 +283,7 @@ describe("UserProfilePage", () => {
     expect(findElement(tree, AlbumFavoritesSection)).not.toBeNull();
     expect(findElement(tree, InRotationSection)).not.toBeNull();
     expect(findElement(tree, ExplorationSection)).not.toBeNull();
-    expect(findElement(tree, HubSection)).toBeNull();
+    expect(findElement(tree, SettingsCardSection)).toBeNull();
   });
 
   it("vista del dueño: monta la misma composición que la vista pública (spec social-profiles, 'Composición visual única')", async () => {
@@ -268,7 +300,7 @@ describe("UserProfilePage", () => {
     expect(findElement(tree, InRotationSection)).not.toBeNull();
     expect(findElement(tree, ExplorationSection)).not.toBeNull();
     // Las capas del dueño se superponen a la misma estructura, no la reemplazan.
-    expect(findElement(tree, OwnerEditors)).not.toBeNull();
+    expect(findElement(tree, OwnerEditProvider)).not.toBeNull();
   });
 
   it("vista del dueño: 'Reseñas' va después de los destacados y antes de 'En rotación'", async () => {

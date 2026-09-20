@@ -1,13 +1,18 @@
 // Fuente única de los destinos de gestión del usuario autenticado. La consumen
-// el menú de usuario del Header (`UserMenu`) y el panel del dueño en el perfil
-// (`OwnerHubPanel`), de modo que ambos no puedan divergir. Ver spec
-// cross-view-navigation ("Estructura del Header para el usuario autenticado") y
-// social-profiles ("Panel del dueño").
+// el menú de usuario del Header (`UserMenu`), el panel móvil del Header y la
+// pantalla Red del área de ajustes (`/me/settings/network`), de modo que no
+// puedan divergir. Ver spec cross-view-navigation ("Estructura del Header para
+// el usuario autenticado"), social-profiles ("Panel del dueño") y
+// owner-settings ("Pantalla Red").
 //
 // Sin JSX ni dependencias de React: son datos. Cada consumidor aporta su marcado.
 
-/** Superficie donde aparece un destino. */
-export type UserMenuSurface = "header" | "panel";
+/**
+ * Superficie donde aparece un destino: `header` (desplegable de escritorio),
+ * `panel` (bloque de usuario del panel móvil del Header) y `settings`
+ * (pantalla Red del área de ajustes).
+ */
+export type UserMenuSurface = "header" | "panel" | "settings";
 
 /** Bloque visual dentro del menú / panel; separa grupos con un divisor. */
 export type UserMenuGroup = "identity" | "library" | "network" | "account";
@@ -24,13 +29,14 @@ export interface UserMenuItemDef {
   /** Clave del namespace `common` de i18n con la etiqueta corta del ítem. */
   labelKey: string;
   group: UserMenuGroup;
-  /** Superficies donde se muestra. Por defecto, ambas. */
+  /** Superficies donde se muestra. */
   surfaces: readonly UserMenuSurface[];
   /** Si está presente, el ítem recibe un contador (bandeja de entrada). */
   badge?: "pendingFollowRequests";
 }
 
 const BOTH: readonly UserMenuSurface[] = ["header", "panel"];
+const NETWORK: readonly UserMenuSurface[] = ["header", "panel", "settings"];
 
 // El orden del array es el orden de presentación.
 export const USER_MENU_ITEMS: readonly UserMenuItemDef[] = [
@@ -56,25 +62,31 @@ export const USER_MENU_ITEMS: readonly UserMenuItemDef[] = [
     href: "/users/:username/connections/followers",
     labelKey: "followers",
     group: "network",
-    surfaces: BOTH,
+    surfaces: NETWORK,
   },
   {
     id: "following",
     href: "/users/:username/connections/following",
     labelKey: "following",
     group: "network",
-    surfaces: BOTH,
+    surfaces: NETWORK,
   },
   {
     id: "followRequests",
     href: "/me/follow-requests",
     labelKey: "followRequests",
     group: "network",
-    surfaces: BOTH,
+    surfaces: NETWORK,
     badge: "pendingFollowRequests",
   },
 
-  { id: "blocks", href: "/me/blocks", labelKey: "blocks", group: "account", surfaces: ["panel"] },
+  {
+    id: "blocks",
+    href: "/me/blocks",
+    labelKey: "blocks",
+    group: "account",
+    surfaces: ["panel", "settings"],
+  },
   { id: "settings", href: "/me/settings", labelKey: "settings", group: "account", surfaces: BOTH },
 ] as const;
 

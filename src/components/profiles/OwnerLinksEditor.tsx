@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/Button";
 import { apiFetch, ApiError } from "@/lib/api/client";
 import { ProfileLinksResponseSchema, type ProfileLink } from "@/lib/api/schemas";
 import { PROFILE_LINK_KINDS, PROFILE_MAX_LINKS, type ProfileLinkKind } from "@/services/social/types";
+import { useNotifySaved, useReportDirty, type EditorHostCallbacks } from "./editor-host";
 
-interface OwnerLinksEditorProps {
+interface OwnerLinksEditorProps extends EditorHostCallbacks {
   initialLinks: ProfileLink[];
 }
 
@@ -19,12 +20,25 @@ interface Row {
 // Editor inline de los enlaces externos del dueño. Reemplaza el conjunto
 // completo vía PUT /api/me/profile/links; el orden de las filas es el orden
 // persistido. Ver spec profile-identity.
-export function OwnerLinksEditor({ initialLinks }: OwnerLinksEditorProps) {
+// Firma del conjunto guardable: las filas sin URL no se persisten, así que no
+// cuentan como cambio.
+function signature(rows: Row[]): string {
+  return JSON.stringify(
+    rows.map((row) => ({ kind: row.kind, url: row.url.trim() })).filter((row) => row.url.length > 0),
+  );
+}
+
+export function OwnerLinksEditor({ initialLinks, onSaved, onDirtyChange }: OwnerLinksEditorProps) {
   const t = useTranslations("users");
   const tErrors = useTranslations("errors");
+  const notifySaved = useNotifySaved(onSaved);
   const [rows, setRows] = useState<Row[]>(
     initialLinks.map((link) => ({ kind: link.kind, url: link.url })),
   );
+  const [baseline, setBaseline] = useState(() =>
+    signature(initialLinks.map((link) => ({ kind: link.kind, url: link.url }))),
+  );
+  useReportDirty(signature(rows) !== baseline, onDirtyChange);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [errorCode, setErrorCode] = useState<string | null>(null);
 
@@ -45,8 +59,11 @@ export function OwnerLinksEditor({ initialLinks }: OwnerLinksEditorProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ links }),
       });
-      setRows(data.links.map((link) => ({ kind: link.kind, url: link.url })));
+      const saved = data.links.map((link) => ({ kind: link.kind, url: link.url }));
+      setRows(saved);
+      setBaseline(signature(saved));
       setStatus("saved");
+      notifySaved();
     } catch (error) {
       setStatus("idle");
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");

@@ -122,9 +122,6 @@
   },
   "recencyLastSignal": "Última señal {ago}",
   "railEmptyOwn": "Todavía no hay nada acá.",
-  "hub": {
-    "heading": "Gestión"
-  },
   "viewAs": {
     "enter": "Ver cómo te ven",
     "banner": "Estás viendo tu perfil como lo ve el público.",
@@ -280,5 +277,88 @@
     "lists": "Todas las listas",
     "collection": "Colección completa",
     "fingerprint": "Huella de gusto completa"
+  },
+  "editPanel": {
+    "close": "Cerrar",
+    "discardTitle": "¿Descartar los cambios?",
+    "discardMessage": "Tenés cambios sin guardar en este editor. Si cerrás, se pierden.",
+    "discardConfirm": "Descartar",
+    "discardCancel": "Seguir editando"
+  },
+  "editMode": {
+    "edit": "Editar",
+    "editBlock": "Editar {block}",
+    "toggle": "Editar perfil",
+    "placa": "Tu perfil",
+    "emptyBlock": "{block}: todavía no hay nada acá. Editá para agregar."
+  },
+  "ownerBar": {
+    "label": "Opciones de tu perfil",
+    "public": "Perfil público",
+    "private": "Perfil privado",
+    "settings": "Ajustes",
+    "settingsHint": "Perfil, privacidad y red"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "nav": {
+      "label": "Secciones de ajustes",
+      "profile": "Perfil",
+      "curation": "Curaduría",
+      "privacy": "Privacidad y audiencia",
+      "network": "Red"
+    },
+    "profile": {
+      "title": "Perfil",
+      "intro": "Lo que cualquiera ve como “quién sos”: tu tarjeta de identidad, tu bio y tus enlaces."
+    },
+    "curation": {
+      "title": "Curaduría",
+      "intro": "Lo que elegís mostrar en tu perfil.",
+      "edit": "Editar",
+      "editRow": "Editar {name}",
+      "outOf": "{count} de {max}",
+      "pinned": {
+        "title": "Destacados",
+        "hint": "Hasta {max} entidades que te representan, con una nota."
+      },
+      "anthem": {
+        "title": "Himno",
+        "hint": "Una canción de tus favoritos.",
+        "empty": "Sin elegir"
+      },
+      "albumFavorites": {
+        "title": "Álbumes favoritos",
+        "hint": "Hasta {max} álbumes, elegidos de tus favoritos."
+      },
+      "pinnedLists": {
+        "title": "Listas fijadas",
+        "hint": "Se fijan desde cada lista.",
+        "link": "Ver mis listas"
+      },
+      "ratingHighlights": {
+        "title": "Valoraciones destacadas",
+        "hint": "Hasta {max}. Se destacan desde tu valoración de cada álbum o canción."
+      },
+      "diaryHighlights": {
+        "title": "Entradas de diario destacadas",
+        "hint": "Se destacan desde tu diario.",
+        "link": "Ver mi diario"
+      }
+    },
+    "privacy": {
+      "title": "Privacidad y audiencia",
+      "intro": "Quién puede ver tu perfil."
+    },
+    "network": {
+      "title": "Red",
+      "intro": "Las personas alrededor de tu perfil.",
+      "hint": {
+        "followers": "Quién te sigue. Podés quitar a alguien de tu lista.",
+        "following": "Las cuentas que seguís.",
+        "followRequests": "Bandeja de entrada: quién quiere seguirte.",
+        "blocks": "Las cuentas que bloqueaste."
+      }
+    }
   }
 }

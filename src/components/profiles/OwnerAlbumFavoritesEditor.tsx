@@ -10,8 +10,9 @@ import { AlbumFavoritesResponseSchema, ShowcaseResponseSchema, type Favorite } f
 import { PROFILE_MAX_ALBUM_FAVORITES } from "@/services/social/types";
 import type { AlbumFavorite } from "@/services/profiles/album-favorites";
 import type { IdentityCard } from "@/services/profiles/showcase";
+import { useNotifySaved, useReportDirty, type EditorHostCallbacks } from "./editor-host";
 
-interface OwnerAlbumFavoritesEditorProps {
+interface OwnerAlbumFavoritesEditorProps extends EditorHostCallbacks {
   initial: AlbumFavorite[];
   identityCard: IdentityCard;
 }
@@ -42,9 +43,15 @@ function favoriteToRow(favorite: Favorite): Row {
 // (openspec: rework-user-profile) vive acá también, no solo en Destacados —
 // el álbum definitorio es una referencia directa en user_showcase, así que
 // no hace falta duplicar el álbum como destacado aparte para marcarlo.
-export function OwnerAlbumFavoritesEditor({ initial, identityCard: initialIdentityCard }: OwnerAlbumFavoritesEditorProps) {
+export function OwnerAlbumFavoritesEditor({
+  initial,
+  identityCard: initialIdentityCard,
+  onSaved,
+  onDirtyChange,
+}: OwnerAlbumFavoritesEditorProps) {
   const t = useTranslations("users");
   const tErrors = useTranslations("errors");
+  const notifySaved = useNotifySaved(onSaved);
 
   const [rows, setRows] = useState<Row[]>(
     initial.map((album) => ({
@@ -60,6 +67,9 @@ export function OwnerAlbumFavoritesEditor({ initial, identityCard: initialIdenti
   const [favorites, setFavorites] = useState<Favorite[] | null>(null);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [errorCode, setErrorCode] = useState<string | null>(null);
+  // Lo último persistido (orden de favoritos elegidos); se actualiza al guardar.
+  const [baseline, setBaseline] = useState(() => JSON.stringify(initial.map((album) => album.favoriteId)));
+  useReportDirty(JSON.stringify(rows.map((row) => row.favoriteId)) !== baseline, onDirtyChange);
 
   const selectedIds = new Set(rows.map((row) => row.favoriteId));
 
@@ -93,7 +103,9 @@ export function OwnerAlbumFavoritesEditor({ initial, identityCard: initialIdenti
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ favoriteIds: rows.map((row) => row.favoriteId) }),
       });
+      setBaseline(JSON.stringify(rows.map((row) => row.favoriteId)));
       setStatus("saved");
+      notifySaved();
     } catch (error) {
       setStatus("idle");
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
@@ -109,6 +121,7 @@ export function OwnerAlbumFavoritesEditor({ initial, identityCard: initialIdenti
         body: JSON.stringify({ type: "release-group", id: releaseGroupId }),
       });
       setIdentityCard(data.showcase.identityCard);
+      notifySaved();
     } catch (error) {
       setDefiningErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
     }
