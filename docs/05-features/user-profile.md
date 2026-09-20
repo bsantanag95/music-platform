@@ -49,9 +49,43 @@ Además de nombre visible y username, `app_user` guarda (todo opcional): **bio**
 **pronombres** (≤40), **ubicación** (≤80), **zona horaria** (≤64) y **avatar_url** (reservado,
 sin lectura en UI — la identidad visual es el monograma determinista por username).
 
-Los **enlaces externos** viven en `user_profile_link` (máx. 5, orden explícito): `kind` de un
-conjunto cerrado (`website`, `bandcamp`, `lastfm`, `discogs`, `instagram`, `youtube`,
-`soundcloud`, `other`) + URL `http(s)` (≤400).
+### Enlaces externos
+
+Viven en `user_profile_link` (máx. 5, orden explícito): `kind` de un conjunto cerrado (`bandcamp`,
+`lastfm`, `discogs`, `instagram`, `youtube`, `soundcloud`, `x`, `tiktok`, `spotify` y `other`,
+mostrado como "Enlace") + URL `http(s)` (≤400). Desde `add-profile-link-validation` el servidor **valida y normaliza
+según el tipo** con las reglas de `src/lib/profile-links.ts` (TypeScript puro, las usan el esquema
+Zod, el editor y la vista):
+
+- **Tipos por usuario** (todos salvo `other`): la persona escribe su **usuario** (con o
+  sin `@`) y el sistema guarda la URL canónica del perfil (`https://www.instagram.com/ana`). Si pega
+  el enlace completo **del sitio correcto** se extrae el usuario (con alias como `twitter.com` → X y
+  sin parámetros ni fragmento); un enlace de otro sitio, o uno sin usuario (la portada, una
+  publicación) se rechaza con un mensaje por fila. Cada sitio tiene sus reglas de usuario y sus
+  rutas reservadas. YouTube pide el `@handle` (los enlaces `/channel/…` no lo permiten); Bandcamp es
+  un subdominio (`ana.bandcamp.com`); Discogs, Last.fm y Spotify son perfiles de usuario, no páginas
+  de artista, sello o playlist.
+- **`other` (Enlace)**: la dirección se acepta sin esquema y se guarda con `https://`; se respeta un `http://`
+  explícito; se rechazan esquemas no web (`javascript:`, `mailto:`…), valores sin dominio válido y
+  con espacios. Un valor `host:puerto` no se confunde con un esquema.
+- **Editor** (`OwnerLinksEditor`): campo por tipo con vista previa del enlace resultante y errores
+  por fila (con `aria-invalid`/`aria-describedby`); el campo **no es `type="url"`** — la validación
+  nativa del navegador rechazaba `www.link.com` sin `https://` con un aviso incomprensible.
+- **Enlaces anteriores a la validación** que no coinciden con su tipo (p. ej. un Instagram que
+  apuntaba a la portada) **no se migran**: se conservan, el perfil los muestra con el ícono genérico
+  y el editor los avisa y bloquea el guardado hasta que se corrijan o se quiten.
+- **Vista del perfil**: cada enlace es **el ícono de su sitio, sin texto visible** (`LinkKindIcon`),
+  con `aria-label`/`title` "Instagram: @ana" (o el dominio para Enlace) y `rel="noopener
+  noreferrer nofollow"`. Los íconos de marca son SVG incrustados de simple-icons (CC0), sin
+  dependencia nueva; Enlace es una cadena dibujada a mano.
+- Contrato: `PUT /api/me/profile/links` recibe `{ kind, value }` (antes `{ kind, url }`), ver
+  `docs/04-api/contracts.md`. La migración `0035` amplía el `CHECK` de `kind` con `x`, `tiktok` y
+  `spotify`.
+- **"Sitio web" y "Enlace" se unificaron** (eran idénticos salvo la etiqueta y el ícono): la migración
+  `0036` pasó las filas `website` a `other` conservando URL y posición; "Enlace" es también el tipo
+  por defecto de una fila nueva del editor.
+- **No** se comprueba que el usuario exista realmente en el sitio (sin peticiones externas): solo
+  que el valor tenga la forma correcta para ese sitio.
 
 **La vista privada expone bio, enlaces y contadores de seguidores/seguidos** — se consideró
 que no es información lo bastante sensible como para ocultarla, y da razones reales para
@@ -710,7 +744,7 @@ cuántas veces se escuchó algo — es "qué está sonando", no una métrica.
 | `app_user.{bio, pronouns, location, timezone, avatar_url}` | Identidad extendida (migración 0014) |
 | `app_user.display_name` | Nombre visible; editable desde `/me/settings/account` (≤50, vacío = `NULL`, el sitio muestra el username) |
 | `app_user.default_audience` | Audiencia por defecto del contenido nuevo (nullable, `CHECK`, migración 0034). `NULL` = "según el tipo". Nunca reescribe contenido existente |
-| `user_profile_link` | Enlaces externos ordenados, máx. 5 app-side |
+| `user_profile_link` | Enlaces externos ordenados, máx. 5 app-side; `kind` con `CHECK` de 10 tipos (`x`, `tiktok` y `spotify` en la migración 0035; `website` unificado en `other` en la 0036); `url` canónica ≤400, sin columna `handle` |
 | `listen_entry` (lectura) | Fuente única de "En rotación" — escuchas de canción/álbum de los últimos 30 días, filtradas por audiencia. Sin tabla ni columna nueva |
 | `listen_entry_highlight` | Hasta 6 entradas de diario destacadas por usuario; anulan la matriz de visibilidad solo para esa entrada (migración 0029) |
 | `review` + `rating` (lectura) | Sección "Reseñas" — hasta 4 reseñas de álbum del dueño con su rating asociado, orden por `updated_at`. Sin tabla ni columna nueva |

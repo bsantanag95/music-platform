@@ -548,7 +548,7 @@ describe("secciones editables del dueño", () => {
       pronouns: "él",
       location: "Quilpué",
       timezone: "America/Santiago",
-      links: [{ id: "l1", kind: "website", url: "https://ana.example", position: 0 }],
+      links: [{ id: "l1", kind: "other", url: "https://ana.example", position: 0 }],
     } as unknown as ProfileView;
 
     const tree = (await EditablePlaca({ profile, children: "placa" })) as Wrapped;

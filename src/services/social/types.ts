@@ -34,15 +34,19 @@ export type Audience = (typeof AUDIENCES)[number];
 
 // Tipos de enlace externo del perfil (cambio redesign-user-profile). Conjunto
 // cerrado, espejado en el CHECK de user_profile_link y en el contrato Zod.
+// `other` es el enlace genérico (mostrado como "Enlace"); antes existía además
+// `website`, idéntico salvo la etiqueta, y se unificó en `other` (migración 0036).
 export const PROFILE_LINK_KINDS = [
-  "website",
+  "other",
   "bandcamp",
   "lastfm",
   "discogs",
   "instagram",
   "youtube",
   "soundcloud",
-  "other",
+  "x",
+  "tiktok",
+  "spotify",
 ] as const;
 export type ProfileLinkKind = (typeof PROFILE_LINK_KINDS)[number];
 

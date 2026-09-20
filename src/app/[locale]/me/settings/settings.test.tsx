@@ -144,7 +144,7 @@ describe("/me/settings", () => {
 describe("pantalla Perfil", () => {
   it("monta los mismos editores con los valores actuales del dueño", async () => {
     const identityCard = { artist: null, album: null, anthem: null };
-    const links = [{ id: "l1", kind: "website", url: "https://ana.example", position: 0 }];
+    const links = [{ id: "l1", kind: "other", url: "https://ana.example", position: 0 }];
     m.getExtendedIdentity.mockResolvedValue({
       bio: "hola",
       pronouns: "ella",

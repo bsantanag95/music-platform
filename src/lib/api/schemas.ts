@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeLinkInput } from "@/lib/profile-links";
 import {
   AUDIENCES,
   PROFILE_VISIBILITIES,
@@ -718,12 +719,26 @@ export const UpdateProfileIdentityRequestSchema = z.object({
 });
 export type UpdateProfileIdentityRequest = z.infer<typeof UpdateProfileIdentityRequestSchema>;
 
-export const ProfileLinkInputSchema = z.object({
-  kind: ProfileLinkKindSchema,
-  url: z
-    .url({ protocol: /^https?$/ })
-    .max(PROFILE_IDENTITY_LIMITS.linkUrl, "La URL supera el máximo de 400 caracteres"),
-});
+// Un enlace del perfil tal como lo envía el cliente: el tipo y lo que la persona
+// escribió (`value`). Para los tipos por usuario es el usuario o un enlace del
+// sitio; para sitio web/enlace, una URL con o sin esquema. El servidor lo
+// normaliza a la `url` canónica con las reglas de `src/lib/profile-links.ts`
+// (spec profile-identity, "Enlaces de red social por nombre de usuario" y
+// "Enlace con esquema implícito"). Aquí solo se valida, sin
+// transformar, para que el tipo de entrada y el de salida coincidan.
+export const ProfileLinkInputSchema = z
+  .object({
+    kind: ProfileLinkKindSchema,
+    value: z.string().max(PROFILE_IDENTITY_LIMITS.linkUrl, "El valor supera el máximo de 400 caracteres"),
+  })
+  .superRefine((link, ctx) => {
+    const result = normalizeLinkInput(link.kind, link.value);
+    if (!result.ok) {
+      ctx.addIssue({ code: "custom", path: ["value"], message: result.reason });
+    } else if (result.url.length > PROFILE_IDENTITY_LIMITS.linkUrl) {
+      ctx.addIssue({ code: "custom", path: ["value"], message: "La URL supera el máximo de 400 caracteres" });
+    }
+  });
 export type ProfileLinkInput = z.infer<typeof ProfileLinkInputSchema>;
 
 export const ReplaceProfileLinksRequestSchema = z.object({

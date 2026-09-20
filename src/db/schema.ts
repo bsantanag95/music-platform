@@ -843,7 +843,7 @@ export const userProfileLink = pgTable(
     index("idx_user_profile_link_user").on(t.userId, t.position),
     check(
       "chk_user_profile_link_kind",
-      sql`${t.kind} IN ('website', 'bandcamp', 'lastfm', 'discogs', 'instagram', 'youtube', 'soundcloud', 'other')`,
+      sql`${t.kind} IN ('bandcamp', 'lastfm', 'discogs', 'instagram', 'youtube', 'soundcloud', 'x', 'tiktok', 'spotify', 'other')`,
     ),
     check("chk_user_profile_link_url", sql`length(${t.url}) <= 400`),
   ],

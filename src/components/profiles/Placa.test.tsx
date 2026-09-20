@@ -83,7 +83,7 @@ describe("Placa", () => {
     expect(screen.getByText("Colecciono ediciones japonesas.")).toBeInTheDocument();
     expect(screen.getByText("elle")).toBeInTheDocument();
     expect(screen.getByText("Rosario")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "linkKind.bandcamp" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "linkAria" })).toHaveAttribute(
       "href",
       "https://ana.bandcamp.com",
     );

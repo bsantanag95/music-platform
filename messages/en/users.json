@@ -111,14 +111,16 @@
   "profileFollowerCount": "{count, plural, one {# follower} other {# followers}}",
   "profileFollowingCount": "{count, plural, one {# following} other {# following}}",
   "linkKind": {
-    "website": "Website",
     "bandcamp": "Bandcamp",
     "lastfm": "Last.fm",
     "discogs": "Discogs",
     "instagram": "Instagram",
     "youtube": "YouTube",
     "soundcloud": "SoundCloud",
-    "other": "Link"
+    "other": "Link",
+    "x": "X",
+    "tiktok": "TikTok",
+    "spotify": "Spotify"
   },
   "recencyLastSignal": "Last activity {ago}",
   "railEmptyOwn": "Nothing here yet.",
@@ -256,15 +258,46 @@
     "locationLabel": "Location",
     "timezoneLabel": "Time zone",
     "linksHeading": "Links",
-    "linkUrlLabel": "URL",
-    "linkUrlPlaceholder": "https://",
     "linkKindLabel": "Type",
     "addLink": "Add link",
     "removeLink": "Remove link",
     "save": "Save",
     "saving": "Saving…",
     "saved": "Saved",
-    "maxLinksReached": "You've reached the maximum of 5 links"
+    "maxLinksReached": "You've reached the maximum of 5 links",
+    "linkValueLabelHandle": "Username or link",
+    "linkValueLabelWeb": "Web address",
+    "linkHandleHelp": "Enter just your username. If you paste your profile link, we extract it for you.",
+    "linkWebHelp": "You can leave out https://.",
+    "linkPreview": "Will be saved as {url}",
+    "linkLegacyWarning": "This link does not match {site}. Enter your {site} username, or remove it to be able to save.",
+    "linkPlaceholder": {
+      "instagram": "@username",
+      "x": "@username",
+      "tiktok": "@username",
+      "youtube": "@mychannel",
+      "soundcloud": "username",
+      "bandcamp": "your-band-name",
+      "lastfm": "username",
+      "discogs": "username",
+      "spotify": "user-id",
+      "other": "example.com/page"
+    },
+    "linkKindHelp": {
+      "youtube": "Your YouTube @username, not the channel link.",
+      "bandcamp": "Your page name: yourname.bandcamp.com. If you have your own domain, use Link.",
+      "discogs": "Your user profile, not an artist or label page.",
+      "spotify": "Your user profile identifier, not an artist or a playlist."
+    },
+    "linkErrors": {
+      "empty": "Enter a value or remove this row.",
+      "wrong_site": "That link is not from {site}. Enter just your {site} username.",
+      "missing_handle": "Your {site} username is missing: the home page or a post is not enough.",
+      "invalid_handle": "That does not look like a valid {site} username. Check for spaces or characters that are not allowed.",
+      "youtube_format": "Enter your YouTube @username (for example @mychannel); /channel links do not work.",
+      "invalid_url": "Enter a valid web address, for example example.com.",
+      "unsafe_scheme": "Only web addresses (http or https) are accepted."
+    }
   },
   "diaryTitle": "Diary",
   "favoritesTitle": "Favorites",
@@ -408,5 +441,6 @@
         "cancel": "Cancel"
       }
     }
-  }
+  },
+  "linkAria": "{site}: {detail}"
 }

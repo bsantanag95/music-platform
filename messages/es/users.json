@@ -111,14 +111,16 @@
   "profileFollowerCount": "{count, plural, one {# seguidor} other {# seguidores}}",
   "profileFollowingCount": "{count, plural, one {# seguido} other {# seguidos}}",
   "linkKind": {
-    "website": "Sitio web",
     "bandcamp": "Bandcamp",
     "lastfm": "Last.fm",
     "discogs": "Discogs",
     "instagram": "Instagram",
     "youtube": "YouTube",
     "soundcloud": "SoundCloud",
-    "other": "Enlace"
+    "other": "Enlace",
+    "x": "X",
+    "tiktok": "TikTok",
+    "spotify": "Spotify"
   },
   "recencyLastSignal": "Última señal {ago}",
   "railEmptyOwn": "Todavía no hay nada acá.",
@@ -256,15 +258,46 @@
     "locationLabel": "Ubicación",
     "timezoneLabel": "Zona horaria",
     "linksHeading": "Enlaces",
-    "linkUrlLabel": "URL",
-    "linkUrlPlaceholder": "https://",
     "linkKindLabel": "Tipo",
     "addLink": "Agregar enlace",
     "removeLink": "Quitar enlace",
     "save": "Guardar",
     "saving": "Guardando…",
     "saved": "Guardado",
-    "maxLinksReached": "Llegaste al máximo de 5 enlaces"
+    "maxLinksReached": "Llegaste al máximo de 5 enlaces",
+    "linkValueLabelHandle": "Usuario o enlace",
+    "linkValueLabelWeb": "Dirección web",
+    "linkHandleHelp": "Escribí solo tu usuario. Si pegás el enlace de tu perfil, lo extraemos por vos.",
+    "linkWebHelp": "Podés escribirla sin https://.",
+    "linkPreview": "Se guardará como {url}",
+    "linkLegacyWarning": "Este enlace no coincide con {site}. Escribí tu usuario de {site}, o quitalo para poder guardar.",
+    "linkPlaceholder": {
+      "instagram": "@usuario",
+      "x": "@usuario",
+      "tiktok": "@usuario",
+      "youtube": "@micanal",
+      "soundcloud": "usuario",
+      "bandcamp": "nombre-de-tu-banda",
+      "lastfm": "usuario",
+      "discogs": "usuario",
+      "spotify": "id-de-usuario",
+      "other": "ejemplo.com/pagina"
+    },
+    "linkKindHelp": {
+      "youtube": "Tu @usuario de YouTube, no el enlace del canal.",
+      "bandcamp": "El nombre de tu página: tunombre.bandcamp.com. Si tenés dominio propio, usá Enlace.",
+      "discogs": "Tu perfil de usuario, no una página de artista o de sello.",
+      "spotify": "El identificador de tu perfil de usuario, no un artista ni una playlist."
+    },
+    "linkErrors": {
+      "empty": "Escribí un valor o quitá esta fila.",
+      "wrong_site": "Ese enlace no es de {site}. Escribí solo tu usuario de {site}.",
+      "missing_handle": "Falta tu usuario de {site}: no alcanza con la página principal ni con una publicación.",
+      "invalid_handle": "Ese no parece un usuario válido de {site}. Revisá que no tenga espacios ni símbolos no permitidos.",
+      "youtube_format": "Escribí tu @usuario de YouTube (por ejemplo @micanal); los enlaces de canal con /channel no sirven.",
+      "invalid_url": "Escribí una dirección web válida, por ejemplo ejemplo.com.",
+      "unsafe_scheme": "Solo se aceptan direcciones web (http o https)."
+    }
   },
   "diaryTitle": "Diario",
   "favoritesTitle": "Favoritos",
@@ -408,5 +441,6 @@
         "cancel": "Cancelar"
       }
     }
-  }
+  },
+  "linkAria": "{site}: {detail}"
 }

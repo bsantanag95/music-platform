@@ -2,6 +2,7 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, userFollow, userProfileLink } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
+import { normalizeLinkInput } from "@/lib/profile-links";
 import {
   ReplaceProfileLinksRequestSchema,
   UpdateProfileIdentityRequestSchema,
@@ -156,6 +157,17 @@ export async function updateIdentity(
   }
 }
 
+// URL canónica de un enlace ya validado por el esquema (que usa las mismas
+// reglas): el usuario de una red social se convierte en la URL de su perfil y a
+// un sitio web sin esquema se le antepone `https://`.
+function canonicalUrl(link: ProfileLinkInput): string {
+  const result = normalizeLinkInput(link.kind, link.value);
+  if (!result.ok) {
+    throw new ApiError("VALIDATION_ERROR", 400, "Los enlaces del perfil no son válidos");
+  }
+  return result.url;
+}
+
 // Reemplaza el conjunto ordenado de enlaces externos del usuario. La posición
 // se deriva del orden del array. Máximo 5 (también en el CHECK del contrato,
 // pero el servicio lo garantiza para las llamadas directas y los tests).
@@ -180,7 +192,7 @@ export async function replaceLinks(
         parsed.data.links.map((link, position) => ({
           userId,
           kind: link.kind,
-          url: link.url,
+          url: canonicalUrl(link),
           position,
         })),
       )

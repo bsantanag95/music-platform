@@ -85,6 +85,24 @@ saltar el flujo. Mientras sea nulo, la redirección post-alta lleva a `/welcome`
 muestra un enlace pasivo. La migración hace `UPDATE app_user SET onboarded_at = created_at`
 — todos los usuarios preexistentes quedan onboardeados y nunca ven `/welcome`.
 
+## `user_profile_link`
+
+**Propósito:** enlaces externos del perfil (migración `0014`, hasta 5 por usuario validados en el
+servicio), con orden explícito (`position`).
+
+**Restricciones:** `kind` es un conjunto cerrado con `CHECK` `chk_user_profile_link_kind`:
+`bandcamp`, `lastfm`, `discogs`, `instagram`, `youtube`, `soundcloud`, `x`, `tiktok`, `spotify` y
+`other` (Enlace). `x`, `tiktok` y `spotify` se añadieron en la migración `0035` (cambio
+`add-profile-link-validation`; el `CHECK` original de `0014` era anónimo y esa migración lo
+reemplaza) y `website`, idéntico a `other` salvo la etiqueta, se unificó en `other` en la `0036`
+(las filas se convirtieron conservando URL y posición). `url` ≤ 400 caracteres.
+
+Solo se guarda la `url` canónica. Para los tipos por usuario (todos salvo `other`) la
+URL se construye a partir del usuario que escribió la persona (`https://www.instagram.com/ana`) y el
+usuario se vuelve a derivar de la URL cuando hace falta (`src/lib/profile-links.ts`); no hay columna
+`handle`. Los enlaces anteriores a esa validación que no coinciden con su tipo se conservan y se
+validan al editarlos.
+
 ## `user_follow`
 
 **Propósito:** relación unilateral de seguimiento entre usuarios, con solicitudes para perfiles

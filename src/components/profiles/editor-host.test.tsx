@@ -94,14 +94,14 @@ describe("editores — contrato con el anfitrión", () => {
       const onDirtyChange = vi.fn();
       const onSaved = vi.fn();
       mocks.apiFetch.mockResolvedValue({
-        links: [{ id: "l1", kind: "website", url: "https://ana.example", position: 0 }],
+        links: [{ id: "l1", kind: "other", url: "https://ana.example", position: 0 }],
       });
       renderWithIntl(<OwnerLinksEditor initialLinks={[]} onSaved={onSaved} onDirtyChange={onDirtyChange} />);
 
       await user.click(screen.getByRole("button", { name: "Agregar enlace" }));
       expect(onDirtyChange).toHaveBeenLastCalledWith(false);
 
-      await user.type(screen.getByLabelText("URL"), "https://ana.example");
+      await user.type(screen.getByLabelText("Dirección web"), "https://ana.example");
       expect(onDirtyChange).toHaveBeenLastCalledWith(true);
 
       await user.click(screen.getByRole("button", { name: "Guardar" }));

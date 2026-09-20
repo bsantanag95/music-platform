@@ -177,7 +177,7 @@ describe("EditableBlock", () => {
 
     // Editor de enlaces: cambia y NO guarda.
     await user.click(screen.getByRole("button", { name: "Agregar enlace" }));
-    await user.type(screen.getByLabelText("URL"), "https://ana.example");
+    await user.type(screen.getByLabelText("Dirección web"), "https://ana.example");
 
     await user.keyboard("{Escape}");
 
