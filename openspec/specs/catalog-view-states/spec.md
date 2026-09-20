@@ -1,5 +1,7 @@
 # catalog-view-states
 
+## Purpose
+
 Estados de carga, boundaries de error y not-found, tolerancia a fallos parciales, accesibilidad
 básica y adaptación al viewport móvil de las vistas públicas del catálogo.
 

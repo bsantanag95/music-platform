@@ -1,5 +1,7 @@
 # catalog-search
 
+## Purpose
+
 Búsqueda pública de artistas y álbumes en el catálogo navegable.
 
 ## Requirements
