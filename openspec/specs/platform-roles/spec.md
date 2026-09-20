@@ -58,7 +58,7 @@ usuario autenticado. La navegación personal SHALL permanecer separada de esas s
 
 #### Scenario: Moderador ve moderación
 - **WHEN** un usuario con `moderation.review_content` o `moderation.suspend_social` carga la navegación
-- **THEN** ve un enlace localizado a la superficie de moderación y no necesita pasar por `OwnerHubPanel`
+- **THEN** ve un enlace localizado a la superficie de moderación y no necesita pasar por una pantalla intermedia
 
 #### Scenario: Administrador ve administración editorial
 - **WHEN** un usuario con `editorial.publish` carga la navegación
