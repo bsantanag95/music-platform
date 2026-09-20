@@ -69,14 +69,17 @@ sistema SHALL NOT ofrecer en esta capacidad una superficie para subir una imagen
 ### Requirement: Edición de identidad desde el perfil
 
 El dueño SHALL poder editar bio, pronombres, ubicación, zona horaria, enlaces, destacados e
-himno desde su propio perfil, sin navegar a una superficie de configuración separada. Cada
-editor SHALL tener estados de carga, éxito y error recuperable, y SHALL confirmar los
-cambios sin recargar toda la aplicación. Los editores SHALL renderizarse únicamente en la
-vista del dueño.
+himno desde su propio perfil, sin salir de la página, activando el modo edición (ver
+`profile-edit-mode`), y SHALL poder editar la misma información desde el área de ajustes (ver
+`owner-settings`). Ambas vías SHALL usar los mismos editores. Cada editor SHALL tener estados de
+carga, éxito y error recuperable, y SHALL confirmar los cambios sin recargar toda la aplicación.
+Los editores SHALL renderizarse únicamente en vistas del dueño: su perfil con el modo edición
+activo y su área de ajustes.
 
 #### Scenario: Editar bio inline
 
-- **WHEN** el dueño abre el editor de bio desde su perfil, cambia el texto y confirma
+- **WHEN** el dueño activa el modo edición, abre el editor de la Placa desde su perfil, cambia
+  el texto y confirma
 - **THEN** el perfil refleja la nueva bio sin recargar la página
 
 #### Scenario: Error recuperable al guardar
