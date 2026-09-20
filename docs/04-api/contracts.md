@@ -390,29 +390,55 @@ lo tanto dispone de la acción de desbloquear); si el visitante fue bloqueado po
 
 Perfil propio autenticado, incluye `email`.
 
-**200 OK:** `{ user: { id, username, displayName, email, profileVisibility } }`. **401** con
-`AUTH_REQUIRED` si no hay sesión.
+**200 OK:** `{ user: { id, username, displayName, email, profileVisibility, defaultAudience } }`, con
+`defaultAudience` en `"private" | "followers" | "public" | null` (`null` = "según el tipo", ver
+`PATCH`). **401** con `AUTH_REQUIRED` si no hay sesión.
 
 ### `PATCH /api/me/profile`
 
-Actualiza la visibilidad y/o la identidad extendida del perfil propio (cambio
-`redesign-user-profile`). Todos los campos son opcionales; se requiere al menos uno. Las
-cadenas de texto se recortan; la cadena vacía borra el campo (`null`).
+Actualiza la visibilidad, el nombre visible, la audiencia por defecto y/o la identidad extendida
+del perfil propio (cambios `redesign-user-profile` y `rework-owner-management`). Todos los campos
+son opcionales; se requiere al menos uno. Las cadenas de texto se recortan; la cadena vacía borra
+el campo (`null`; en `displayName` el sitio vuelve a mostrar el username).
 
 **Body:** cualquier subconjunto de
-`{ profileVisibility: "public" | "private", bio (≤200), pronouns (≤40), location (≤80), timezone (≤64) }`.
-**200 OK:** `{ user: { id, username, displayName, email, profileVisibility } }` actualizado.
-**400** con `VALIDATION_ERROR` si un valor no es válido o el body está vacío.
+`{ profileVisibility: "public" | "private", displayName (≤50), defaultAudience: "private" | "followers" | "public" | null, bio (≤200), pronouns (≤40), location (≤80), timezone (≤64) }`.
+
+`defaultAudience` es la audiencia con la que nace el contenido **nuevo** de biblioteca (favoritos,
+diario, listas y colección). `null` la quita: cada tipo vuelve a su default (favoritos `public`,
+listas y colección `followers`, diario `private`). Precedencia al crear: audiencia explícita de la
+petición > `defaultAudience` > default del tipo. Nunca modifica contenido ya creado.
+
+**200 OK:** `{ user: { id, username, displayName, email, profileVisibility, defaultAudience } }`
+actualizado.
+**400** con `VALIDATION_ERROR` si un valor no es válido (p. ej. una audiencia fuera del conjunto
+permitido o un nombre de más de 50 caracteres) o el body está vacío. **401** con `AUTH_REQUIRED` si
+no hay sesión; no se modifica ningún dato.
 
 ### `PUT` / `DELETE /api/me/profile/links`
 
 Reemplaza el conjunto ordenado de enlaces externos del perfil (0..5). La posición se deriva
 del orden del array. `DELETE` los vacía todos.
 
-**Body (PUT):** `{ links: [{ kind, url }] }` — `kind` ∈ `website · bandcamp · lastfm ·
-discogs · instagram · youtube · soundcloud · other`; `url` `http(s)` válida (≤400).
-**200 OK:** `{ links: [{ id, kind, url, position }] }`. **400** con `VALIDATION_ERROR` si hay
-más de 5, un `kind` fuera del conjunto o una URL inválida.
+**Body (PUT):** `{ links: [{ kind, value }] }` — `kind` ∈ `bandcamp · lastfm · discogs · instagram ·
+youtube · soundcloud · x · tiktok · spotify · other` (`other` se muestra como "Enlace"); `value` es lo
+que la persona escribió (≤400) y el servidor lo valida y normaliza según el `kind` (cambio
+`add-profile-link-validation`; antes el campo era `url`, ahora `{ kind, url }` se rechaza; el tipo
+`website` se unificó en `other` y ya se rechaza):
+
+| Tipo | `value` aceptado | URL guardada |
+|---|---|---|
+| `instagram`, `x`, `tiktok`, `youtube`, `soundcloud`, `bandcamp`, `lastfm`, `discogs`, `spotify` | El **usuario** (con o sin `@`) o un enlace de ese sitio, del que se extrae el usuario | La URL canónica del perfil (`https://www.instagram.com/ana`, `https://x.com/ana`, `https://www.tiktok.com/@ana`, `https://www.youtube.com/@ana`, `https://soundcloud.com/ana`, `https://ana.bandcamp.com`, `https://www.last.fm/user/ana`, `https://www.discogs.com/user/ana`, `https://open.spotify.com/user/ana`) |
+| `other` (Enlace) | Una URL con o sin esquema (`www.link.com`) | La misma URL; si no trae `http(s)://` se antepone `https://` |
+
+Se rechaza un enlace de otro sitio, uno sin usuario (la portada, una publicación), un usuario que no
+cumple las reglas del sitio, un esquema que no sea `http`/`https` (`javascript:`, `mailto:`…) y, en
+Enlace, un valor sin dominio. Las reglas viven en `src/lib/profile-links.ts` y las usan el
+servidor y el editor.
+
+**200 OK:** `{ links: [{ id, kind, url, position }] }` con la `url` canónica. **400** con
+`VALIDATION_ERROR` si hay más de 5, un `kind` fuera del conjunto o un `value` inválido para su tipo.
+**401** con `AUTH_REQUIRED` sin sesión.
 
 ### `PUT` / `DELETE /api/me/profile/pinned`
 

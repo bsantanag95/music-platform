@@ -246,7 +246,7 @@ login, lectura, perfil propio, diario privado, colección y privatización/borra
 superficie ya lo permite. No oculta ni borra automáticamente contenido previo; la moderación de ese
 contenido es una acción separada y auditable. Ver ADR 0012.
 
-Las superficies web protegidas viven fuera de `OwnerHubPanel`: `/[locale]/moderation` requiere
+Las superficies web protegidas viven fuera del área de ajustes del dueño (`/me/settings`): `/[locale]/moderation` requiere
 `moderation.review_content` para la cola y usa `moderation.suspend_social` para restricciones;
 `/[locale]/admin` requiere `editorial.author` y muestra los controles de publicar/retirar solo con
 `editorial.publish` (una sola superficie permission-aware, sin página paralela para curadores). La

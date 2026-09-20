@@ -9,6 +9,14 @@ interface AlbumFavoritesProps {
   identityCard: IdentityCard;
 }
 
+/**
+ * Los álbumes que realmente se dibujan: excluye el álbum definitorio, que vive
+ * en la Tarjeta de Identidad. La sección lo usa para saber si el bloque está vacío.
+ */
+export function generalAlbums(albums: AlbumFavorite[], identityCard: IdentityCard): AlbumFavorite[] {
+  return albums.filter((album) => album.target.id !== identityCard.album?.id);
+}
+
 // Sección "Álbumes favoritos": la cabeza del bloque de identidad cultural del
 // perfil. Rejilla 3×2 de carátulas — las obras que definen a esta persona.
 // Sin números de posición ni estrellas: es una declaración, no un ranking
@@ -18,7 +26,7 @@ interface AlbumFavoritesProps {
 // tratamiento propio — no se repite acá.
 export async function AlbumFavorites({ albums, identityCard }: AlbumFavoritesProps) {
   const t = await getTranslations("users");
-  const general = albums.filter((album) => album.target.id !== identityCard.album?.id);
+  const general = generalAlbums(albums, identityCard);
   if (general.length === 0) return null;
 
   return (

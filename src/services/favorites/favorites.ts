@@ -7,6 +7,7 @@ import { audiencesForProfile } from "@/services/social/visibility";
 import type { Audience } from "@/services/social/types";
 import { FAVORITE_TARGET_TYPES } from "./types";
 import type { FavoriteTargetType, FavoriteTarget } from "./types";
+import { resolveNewContentAudience } from "@/services/social/default-audience";
 
 export type { FavoriteTarget } from "./types";
 
@@ -122,14 +123,16 @@ export async function resolveFavoriteTarget(type: FavoriteTargetType, id: string
  * Si no existe lo crea.
  * Ambas operaciones son idempotentes.
  *
- * Default de audiencia `public` (openspec: rework-user-profile — antes
- * `followers`). Solo afecta favoritos nuevos: uno ya existente conserva la
- * audiencia que tenía, esta función no la toca en el camino de "ya existe".
+ * Audiencia de un favorito nuevo: la de la petición, luego la audiencia por
+ * defecto del usuario (spec default-audience) y, sin ella, `public`
+ * (openspec: rework-user-profile — antes `followers`). Solo afecta favoritos
+ * nuevos: uno ya existente conserva la audiencia que tenía, esta función no la
+ * toca en el camino de "ya existe".
  */
 export async function toggleFavorite(
   target: FavoriteTarget,
   userId: string,
-  audience: Audience = "public",
+  audience?: Audience,
 ): Promise<FavoriteEntry | null> {
   // Validar que el objetivo exista antes de intentar crear el favorito.
   await resolveFavoriteTarget(target.type, target.id);
@@ -154,7 +157,11 @@ export async function toggleFavorite(
 
   const [created] = await db
     .insert(favorite)
-    .values({ ...targetValues(target.type, target.id), userId, audience })
+    .values({
+      ...targetValues(target.type, target.id),
+      userId,
+      audience: await resolveNewContentAudience(userId, "favorite", audience),
+    })
     .returning();
 
   if (!created) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo crear el favorito");

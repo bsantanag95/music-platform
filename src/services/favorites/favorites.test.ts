@@ -20,6 +20,17 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
+// El helper de precedencia tiene sus propios tests (default-audience.test.ts);
+// aquí se mockea para no añadir una consulta al encadenado de `db.select` y se
+// comprueba solo el cableado: qué tipo y qué valor explícito recibe.
+const audience = vi.hoisted(() => ({
+  resolve: vi.fn(
+    async (_userId: string, type: string, explicit?: string | null) =>
+      explicit ?? ({ favorite: "public", diary: "private", list: "followers", collection: "followers" } as Record<string, string>)[type],
+  ),
+}));
+vi.mock("@/services/social/default-audience", () => ({ resolveNewContentAudience: audience.resolve }));
+
 vi.mock("@/services/social/profiles", () => ({
   getProfileByUsername: mocks.getProfileByUsername,
 }));
@@ -447,5 +458,48 @@ describe("servicio de favoritos", () => {
     );
     expect(content).not.toMatch(/from.*schema.*import.*\brating\b/);
     expect(content).not.toMatch(/require.*rating/);
+  });
+});
+
+describe("toggleFavorite — audiencia del contenido nuevo (spec default-audience)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  function arrangeCreate() {
+    mocks.db.select
+      .mockReturnValueOnce(whereLimit([{ id: target.id }]))
+      .mockReturnValueOnce(whereLimit([]))
+      .mockReturnValueOnce(joinLimit([favoriteRow]));
+    const values = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([favoriteRow]) });
+    mocks.db.insert.mockReturnValue({ values });
+    return values;
+  }
+
+  it("guarda la audiencia que resuelve la preferencia del usuario", async () => {
+    const values = arrangeCreate();
+    audience.resolve.mockResolvedValueOnce("followers");
+
+    await toggleFavorite(target, user);
+
+    expect(audience.resolve).toHaveBeenCalledWith(user, "favorite", undefined);
+    expect(values).toHaveBeenCalledWith(expect.objectContaining({ audience: "followers" }));
+  });
+
+  it("le pasa al resolvedor la audiencia explícita de la petición", async () => {
+    arrangeCreate();
+
+    await toggleFavorite(target, user, "private");
+
+    expect(audience.resolve).toHaveBeenCalledWith(user, "favorite", "private");
+  });
+
+  it("al quitar un favorito existente no resuelve ninguna audiencia", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(whereLimit([{ id: target.id }]))
+      .mockReturnValueOnce(whereLimit([{ id: favoriteRow.id }]));
+    mocks.db.delete.mockReturnValue({ where: vi.fn().mockResolvedValue([]) });
+
+    await toggleFavorite(target, user);
+
+    expect(audience.resolve).not.toHaveBeenCalled();
   });
 });

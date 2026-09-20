@@ -21,6 +21,7 @@ import {
   type ListenReaction,
 } from "./types";
 import { audiencesForProfile } from "./visibility";
+import { resolveNewContentAudience } from "@/services/social/default-audience";
 
 // Tope de entradas de diario destacadas por usuario (spec `listen-diary`,
 // "Destacar una entrada del diario"). Paridad con `RATING_HIGHLIGHT_MAX` y
@@ -126,14 +127,21 @@ export async function createListenEntry(target: DiaryTarget, userId: string): Pr
     .where(and(eq(listenEntry.userId, userId), targetWhereFor(target.column, target.id)));
   const context: ListenContext = (existing?.count ?? 0) === 0 ? "first_listen" : "relisten";
 
-  // Un registro rápido no expresa intención de compartir: nace `private`
-  // (openspec: deepen-listening-diary, D1). Sube a `followers` cuando gana una
-  // impresión o una reacción, salvo elección explícita — eso lo decide el
-  // formulario de ampliar. La columna conserva su default para no acoplar el
+  // Un registro rápido no expresa intención de compartir: sin preferencia del
+  // usuario nace `private` (openspec: deepen-listening-diary, D1). Sube a
+  // `followers` cuando gana una impresión o una reacción, salvo elección
+  // explícita — eso lo decide el formulario de ampliar. Si el usuario eligió una
+  // audiencia por defecto para el contenido nuevo, esa elección explícita manda
+  // (spec default-audience). La columna conserva su default para no acoplar el
   // criterio de producto al esquema.
   const [created] = await db
     .insert(listenEntry)
-    .values({ ...targetValues(target), userId, listenContext: context, audience: "private" })
+    .values({
+      ...targetValues(target),
+      userId,
+      listenContext: context,
+      audience: await resolveNewContentAudience(userId, "diary"),
+    })
     .returning();
   if (!created) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo registrar la escucha");
 

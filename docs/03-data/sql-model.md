@@ -11,6 +11,13 @@ Versión narrada de `schema.sql`. Para cada tabla: propósito, relaciones, restr
 También puede tener roles de plataforma en `user_role`, restricciones temporales en
 `user_restriction`, y ser actor de auditoría de acciones de roles o moderación.
 
+**Audiencia por defecto:** `default_audience` (TEXT nullable, migración `0034`, `CHECK` en
+`private` / `followers` / `public`) es una preferencia opcional para el contenido **nuevo** de
+biblioteca (favoritos, diario, listas, colección). `NULL` significa "según el tipo": cada tipo
+conserva su default (favoritos `public`, listas y colección `followers`, diario `private`), por eso
+no hay `DEFAULT` de columna ni backfill. Se aplica solo al crear; nunca reescribe filas existentes.
+Precedencia al crear: valor explícito de la petición > `default_audience` > default del tipo.
+
 ## `user_role`
 
 **Propósito:** asignaciones acumulables de roles de plataforma (`moderator`/`admin`/
@@ -77,6 +84,24 @@ nulo = el onboarding de dos puertas (`/welcome`) está pendiente. Se fija al com
 saltar el flujo. Mientras sea nulo, la redirección post-alta lleva a `/welcome` e Inicio
 muestra un enlace pasivo. La migración hace `UPDATE app_user SET onboarded_at = created_at`
 — todos los usuarios preexistentes quedan onboardeados y nunca ven `/welcome`.
+
+## `user_profile_link`
+
+**Propósito:** enlaces externos del perfil (migración `0014`, hasta 5 por usuario validados en el
+servicio), con orden explícito (`position`).
+
+**Restricciones:** `kind` es un conjunto cerrado con `CHECK` `chk_user_profile_link_kind`:
+`bandcamp`, `lastfm`, `discogs`, `instagram`, `youtube`, `soundcloud`, `x`, `tiktok`, `spotify` y
+`other` (Enlace). `x`, `tiktok` y `spotify` se añadieron en la migración `0035` (cambio
+`add-profile-link-validation`; el `CHECK` original de `0014` era anónimo y esa migración lo
+reemplaza) y `website`, idéntico a `other` salvo la etiqueta, se unificó en `other` en la `0036`
+(las filas se convirtieron conservando URL y posición). `url` ≤ 400 caracteres.
+
+Solo se guarda la `url` canónica. Para los tipos por usuario (todos salvo `other`) la
+URL se construye a partir del usuario que escribió la persona (`https://www.instagram.com/ana`) y el
+usuario se vuelve a derivar de la URL cuando hace falta (`src/lib/profile-links.ts`); no hay columna
+`handle`. Los enlaces anteriores a esa validación que no coinciden con su tipo se conservan y se
+validan al editarlos.
 
 ## `user_follow`
 

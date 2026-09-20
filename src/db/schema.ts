@@ -50,12 +50,20 @@ export const appUser = pgTable(
     // Verificación de email (migración 0033, change add-email-verification).
     // Nulo = sin verificar; el backfill marca verificadas las cuentas previas.
     emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
+    // Audiencia por defecto del contenido nuevo (migración 0034, cambio
+    // rework-owner-management). Nulo = "según el tipo": cada tipo conserva su
+    // propio default. Nunca se aplica a contenido ya creado.
+    defaultAudience: text("default_audience"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     check(
       "chk_app_user_profile_visibility",
       sql`${t.profileVisibility} IN ('public','private')`,
+    ),
+    check(
+      "chk_app_user_default_audience",
+      sql`${t.defaultAudience} IS NULL OR ${t.defaultAudience} IN ('private','followers','public')`,
     ),
     check("chk_app_user_bio", sql`${t.bio} IS NULL OR length(${t.bio}) <= 200`),
     check("chk_app_user_pronouns", sql`${t.pronouns} IS NULL OR length(${t.pronouns}) <= 40`),
@@ -835,7 +843,7 @@ export const userProfileLink = pgTable(
     index("idx_user_profile_link_user").on(t.userId, t.position),
     check(
       "chk_user_profile_link_kind",
-      sql`${t.kind} IN ('website', 'bandcamp', 'lastfm', 'discogs', 'instagram', 'youtube', 'soundcloud', 'other')`,
+      sql`${t.kind} IN ('bandcamp', 'lastfm', 'discogs', 'instagram', 'youtube', 'soundcloud', 'x', 'tiktok', 'spotify', 'other')`,
     ),
     check("chk_user_profile_link_url", sql`length(${t.url}) <= 400`),
   ],

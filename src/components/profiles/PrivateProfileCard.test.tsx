@@ -107,7 +107,7 @@ describe("PrivateProfileCard", () => {
     expect(screen.getByText("elle")).toBeInTheDocument();
     expect(screen.getByText("12")).toBeInTheDocument();
     expect(screen.getByText("Colecciono ediciones japonesas.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "linkKind.bandcamp" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "linkAria" })).toHaveAttribute(
       "href",
       "https://ana.bandcamp.com",
     );
@@ -190,7 +190,7 @@ describe("PrivateProfileCard", () => {
     expect(screen.queryByText("elle")).not.toBeInTheDocument();
     expect(screen.queryByText("Rosario")).not.toBeInTheDocument();
     expect(screen.queryByText("12")).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "linkKind.bandcamp" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "linkAria" })).not.toBeInTheDocument();
     expect(screen.queryByTestId("follow-button")).not.toBeInTheDocument();
     expect(screen.queryByTestId("block-button")).not.toBeInTheDocument();
     expect(screen.queryByTestId("moderation-actions")).not.toBeInTheDocument();

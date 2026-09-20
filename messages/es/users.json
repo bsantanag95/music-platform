@@ -111,20 +111,19 @@
   "profileFollowerCount": "{count, plural, one {# seguidor} other {# seguidores}}",
   "profileFollowingCount": "{count, plural, one {# seguido} other {# seguidos}}",
   "linkKind": {
-    "website": "Sitio web",
     "bandcamp": "Bandcamp",
     "lastfm": "Last.fm",
     "discogs": "Discogs",
     "instagram": "Instagram",
     "youtube": "YouTube",
     "soundcloud": "SoundCloud",
-    "other": "Enlace"
+    "other": "Enlace",
+    "x": "X",
+    "tiktok": "TikTok",
+    "spotify": "Spotify"
   },
   "recencyLastSignal": "Última señal {ago}",
   "railEmptyOwn": "Todavía no hay nada acá.",
-  "hub": {
-    "heading": "Gestión"
-  },
   "viewAs": {
     "enter": "Ver cómo te ven",
     "banner": "Estás viendo tu perfil como lo ve el público.",
@@ -259,15 +258,46 @@
     "locationLabel": "Ubicación",
     "timezoneLabel": "Zona horaria",
     "linksHeading": "Enlaces",
-    "linkUrlLabel": "URL",
-    "linkUrlPlaceholder": "https://",
     "linkKindLabel": "Tipo",
     "addLink": "Agregar enlace",
     "removeLink": "Quitar enlace",
     "save": "Guardar",
     "saving": "Guardando…",
     "saved": "Guardado",
-    "maxLinksReached": "Llegaste al máximo de 5 enlaces"
+    "maxLinksReached": "Llegaste al máximo de 5 enlaces",
+    "linkValueLabelHandle": "Usuario o enlace",
+    "linkValueLabelWeb": "Dirección web",
+    "linkHandleHelp": "Escribí solo tu usuario. Si pegás el enlace de tu perfil, lo extraemos por vos.",
+    "linkWebHelp": "Podés escribirla sin https://.",
+    "linkPreview": "Se guardará como {url}",
+    "linkLegacyWarning": "Este enlace no coincide con {site}. Escribí tu usuario de {site}, o quitalo para poder guardar.",
+    "linkPlaceholder": {
+      "instagram": "@usuario",
+      "x": "@usuario",
+      "tiktok": "@usuario",
+      "youtube": "@micanal",
+      "soundcloud": "usuario",
+      "bandcamp": "nombre-de-tu-banda",
+      "lastfm": "usuario",
+      "discogs": "usuario",
+      "spotify": "id-de-usuario",
+      "other": "ejemplo.com/pagina"
+    },
+    "linkKindHelp": {
+      "youtube": "Tu @usuario de YouTube, no el enlace del canal.",
+      "bandcamp": "El nombre de tu página: tunombre.bandcamp.com. Si tenés dominio propio, usá Enlace.",
+      "discogs": "Tu perfil de usuario, no una página de artista o de sello.",
+      "spotify": "El identificador de tu perfil de usuario, no un artista ni una playlist."
+    },
+    "linkErrors": {
+      "empty": "Escribí un valor o quitá esta fila.",
+      "wrong_site": "Ese enlace no es de {site}. Escribí solo tu usuario de {site}.",
+      "missing_handle": "Falta tu usuario de {site}: no alcanza con la página principal ni con una publicación.",
+      "invalid_handle": "Ese no parece un usuario válido de {site}. Revisá que no tenga espacios ni símbolos no permitidos.",
+      "youtube_format": "Escribí tu @usuario de YouTube (por ejemplo @micanal); los enlaces de canal con /channel no sirven.",
+      "invalid_url": "Escribí una dirección web válida, por ejemplo ejemplo.com.",
+      "unsafe_scheme": "Solo se aceptan direcciones web (http o https)."
+    }
   },
   "diaryTitle": "Diario",
   "favoritesTitle": "Favoritos",
@@ -280,5 +310,137 @@
     "lists": "Todas las listas",
     "collection": "Colección completa",
     "fingerprint": "Huella de gusto completa"
-  }
+  },
+  "editPanel": {
+    "close": "Cerrar",
+    "discardTitle": "¿Descartar los cambios?",
+    "discardMessage": "Tenés cambios sin guardar en este editor. Si cerrás, se pierden.",
+    "discardConfirm": "Descartar",
+    "discardCancel": "Seguir editando"
+  },
+  "editMode": {
+    "edit": "Editar",
+    "editBlock": "Editar {block}",
+    "toggle": "Editar perfil",
+    "placa": "Tu perfil",
+    "emptyBlock": "{block}: todavía no hay nada acá. Editá para agregar."
+  },
+  "ownerBar": {
+    "label": "Opciones de tu perfil",
+    "public": "Perfil público",
+    "private": "Perfil privado",
+    "settings": "Ajustes",
+    "settingsHint": "Perfil, privacidad y red"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "nav": {
+      "label": "Secciones de ajustes",
+      "profile": "Perfil",
+      "curation": "Curaduría",
+      "privacy": "Privacidad y audiencia",
+      "network": "Red",
+      "account": "Cuenta y seguridad"
+    },
+    "profile": {
+      "title": "Perfil",
+      "intro": "Lo que cualquiera ve como “quién sos”: tu tarjeta de identidad, tu bio y tus enlaces."
+    },
+    "curation": {
+      "title": "Curaduría",
+      "intro": "Lo que elegís mostrar en tu perfil.",
+      "edit": "Editar",
+      "editRow": "Editar {name}",
+      "outOf": "{count} de {max}",
+      "pinned": {
+        "title": "Destacados",
+        "hint": "Hasta {max} entidades que te representan, con una nota."
+      },
+      "anthem": {
+        "title": "Himno",
+        "hint": "Una canción de tus favoritos.",
+        "empty": "Sin elegir"
+      },
+      "albumFavorites": {
+        "title": "Álbumes favoritos",
+        "hint": "Hasta {max} álbumes, elegidos de tus favoritos."
+      },
+      "pinnedLists": {
+        "title": "Listas fijadas",
+        "hint": "Se fijan desde cada lista.",
+        "link": "Ver mis listas"
+      },
+      "ratingHighlights": {
+        "title": "Valoraciones destacadas",
+        "hint": "Hasta {max}. Se destacan desde tu valoración de cada álbum o canción."
+      },
+      "diaryHighlights": {
+        "title": "Entradas de diario destacadas",
+        "hint": "Se destacan desde tu diario.",
+        "link": "Ver mi diario"
+      }
+    },
+    "privacy": {
+      "title": "Privacidad y audiencia",
+      "intro": "Quién puede ver tu perfil y con qué audiencia nace lo que agregues.",
+      "audience": {
+        "title": "Audiencia por defecto del contenido nuevo",
+        "intro": "Aplica a los favoritos, entradas de diario, listas y copias de colección que agregues desde ahora. No cambia lo que ya tenés, y podés ajustar cada elemento por separado.",
+        "options": {
+          "auto": {
+            "title": "Según el tipo (recomendado)",
+            "description": "Cada tipo conserva su valor habitual: favoritos públicos, listas y colección para seguidores, diario privado."
+          },
+          "private": {
+            "title": "Privado",
+            "description": "Lo nuevo nace visible solo para vos."
+          },
+          "followers": {
+            "title": "Seguidores",
+            "description": "Lo nuevo nace visible para quienes te siguen."
+          },
+          "public": {
+            "title": "Público",
+            "description": "Lo nuevo nace visible para cualquier persona con acceso a tu perfil."
+          }
+        },
+        "excluded": "Las reseñas y los comentarios no dependen de esta preferencia: son públicos y se muestran en la página de cada álbum o canción."
+      }
+    },
+    "network": {
+      "title": "Red",
+      "intro": "Las personas alrededor de tu perfil.",
+      "hint": {
+        "followers": "Quién te sigue. Podés quitar a alguien de tu lista.",
+        "following": "Las cuentas que seguís.",
+        "followRequests": "Bandeja de entrada: quién quiere seguirte.",
+        "blocks": "Las cuentas que bloqueaste."
+      }
+    },
+    "account": {
+      "title": "Cuenta y seguridad",
+      "intro": "Nada de esto se muestra a otras personas.",
+      "displayName": {
+        "title": "Nombre visible",
+        "label": "Nombre visible",
+        "help": "Cómo aparecés junto a tu @{username}. Si lo dejás vacío se muestra tu usuario."
+      },
+      "access": {
+        "title": "Método de acceso",
+        "hint": "Cómo iniciás sesión en tu cuenta.",
+        "password": "Correo y contraseña",
+        "none": "No hay ningún método de acceso vinculado."
+      },
+      "sessions": {
+        "title": "Sesiones",
+        "hint": "Cierra la sesión en todos tus dispositivos, incluido este.",
+        "button": "Cerrar todas las sesiones",
+        "confirmTitle": "¿Cerrar todas las sesiones?",
+        "confirmMessage": "Se cerrará tu sesión en todos los dispositivos, también en este, y tendrás que iniciar sesión de nuevo.",
+        "confirm": "Cerrar sesiones",
+        "cancel": "Cancelar"
+      }
+    }
+  },
+  "linkAria": "{site}: {detail}"
 }

@@ -18,6 +18,7 @@ import {
   type ListEntityType,
   type ListSort,
 } from "./types";
+import { resolveNewContentAudience } from "@/services/social/default-audience";
 
 /** Cantidad máxima de carátulas que se llevan a la tarjeta de una lista. */
 export const LIST_COVER_THUMBS_MAX = 4;
@@ -186,7 +187,7 @@ export async function createList(params: {
       entityType: params.entityType,
       title: normalizeTitle(params.title),
       description: normalizeDescription(params.description ?? null),
-      audience: params.audience ?? "followers",
+      audience: await resolveNewContentAudience(params.ownerId, "list", params.audience),
     })
     .returning();
   if (!created) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo crear la lista");

@@ -68,12 +68,12 @@ ya no es favorito".
 
 ### Requirement: Edición de los álbumes favoritos desde el propio perfil
 
-El editor de "Álbumes favoritos" SHALL montarse únicamente en la vista del propio perfil.
-SHALL listar los favoritos de álbum del dueño y permitir marcar hasta 6 y ordenarlos, y
-SHALL guardar el conjunto ordenado completo en una sola operación (reemplazo, no mutaciones
-por ítem). El editor SHALL NOT incluir un buscador de catálogo embebido: se elige de los
-favoritos ya existentes. Si el dueño no tiene favoritos de álbum, el editor SHALL invitarlo
-a marcar álbumes como favoritos antes.
+El editor de "Álbumes favoritos" SHALL montarse únicamente en vistas del propio dueño: su
+perfil con el modo edición activo y su área de ajustes. SHALL listar los favoritos de álbum del
+dueño y permitir marcar hasta 6 y ordenarlos, y SHALL guardar el conjunto ordenado completo en
+una sola operación (reemplazo, no mutaciones por ítem). El editor SHALL NOT incluir un buscador
+de catálogo embebido: se elige de los favoritos ya existentes. Si el dueño no tiene favoritos de
+álbum, el editor SHALL invitarlo a marcar álbumes como favoritos antes.
 
 #### Scenario: Reemplazo del conjunto
 

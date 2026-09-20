@@ -20,6 +20,17 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
+// El helper de precedencia tiene sus propios tests (default-audience.test.ts);
+// aquí se mockea para no añadir una consulta al encadenado de `db.select` y se
+// comprueba solo el cableado: qué tipo y qué valor explícito recibe.
+const audience = vi.hoisted(() => ({
+  resolve: vi.fn(
+    async (_userId: string, type: string, explicit?: string | null) =>
+      explicit ?? ({ favorite: "public", diary: "private", list: "followers", collection: "followers" } as Record<string, string>)[type],
+  ),
+}));
+vi.mock("@/services/social/default-audience", () => ({ resolveNewContentAudience: audience.resolve }));
+
 vi.mock("@/services/social/profiles", () => ({
   getProfileByUsername: mocks.getProfileByUsername,
 }));
@@ -470,5 +481,45 @@ describe("getCollectionPreview", () => {
       .mockReturnValueOnce(totals({ entries: 0, artists: 0 }));
     const result = await getCollectionPreview("otro", userId);
     expect(result).toEqual({ artists: [], totalEntries: 0, totalArtists: 0 });
+  });
+});
+
+describe("addEntry — audiencia del contenido nuevo (spec default-audience)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  function arrangeCreate() {
+    const values = vi.fn(() => ({ returning: vi.fn().mockResolvedValue([{ id: entryRow.id }]) }));
+    mocks.db.select
+      .mockReturnValueOnce(whereLimit([{ id: albumId }]))
+      .mockReturnValueOnce(joinWhereLimit([entryRow]))
+      .mockReturnValueOnce(joinWhereOrderBy([]));
+    mocks.db.insert.mockReturnValue({ values });
+    return values;
+  }
+
+  it("guarda la audiencia que resuelve la preferencia del usuario", async () => {
+    const values = arrangeCreate();
+    audience.resolve.mockResolvedValueOnce("public");
+
+    await addEntry(userId, { releaseGroupId: albumId, format: "vinyl" });
+
+    expect(audience.resolve).toHaveBeenCalledWith(userId, "collection", undefined);
+    expect(values).toHaveBeenCalledWith(expect.objectContaining({ audience: "public" }));
+  });
+
+  it("le pasa al resolvedor la audiencia explícita de la petición", async () => {
+    arrangeCreate();
+
+    await addEntry(userId, { releaseGroupId: albumId, format: "vinyl", audience: "private" });
+
+    expect(audience.resolve).toHaveBeenCalledWith(userId, "collection", "private");
+  });
+
+  it("sin preferencia ni valor explícito nace con el default de colección (`followers`)", async () => {
+    const values = arrangeCreate();
+
+    await addEntry(userId, { releaseGroupId: albumId, format: "vinyl" });
+
+    expect(values).toHaveBeenCalledWith(expect.objectContaining({ audience: "followers" }));
   });
 });

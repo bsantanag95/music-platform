@@ -77,17 +77,17 @@ describe("updateIdentity", () => {
 });
 
 describe("replaceLinks", () => {
-  const link = (kind: ProfileLinkInput["kind"], url: string): ProfileLinkInput => ({ kind, url });
+  const link = (kind: ProfileLinkInput["kind"], value: string): ProfileLinkInput => ({ kind, value });
 
   it("reemplaza el conjunto y asigna posición por orden", async () => {
     const { insertValues, deleteWhere } = mockLinkTransaction();
     await replaceLinks("u1", [
-      link("website", "https://ana.example"),
+      link("other", "https://ana.example"),
       link("bandcamp", "https://ana.bandcamp.com"),
     ]);
     expect(deleteWhere).toHaveBeenCalled();
     expect(insertValues).toHaveBeenCalledWith([
-      { userId: "u1", kind: "website", url: "https://ana.example", position: 0 },
+      { userId: "u1", kind: "other", url: "https://ana.example", position: 0 },
       { userId: "u1", kind: "bandcamp", url: "https://ana.bandcamp.com", position: 1 },
     ]);
   });
@@ -106,16 +106,53 @@ describe("replaceLinks", () => {
   });
 
   it("rechaza una URL que no es http(s)", async () => {
-    await expectCode(
-      replaceLinks("u1", [{ kind: "website", url: "javascript:alert(1)" } as ProfileLinkInput]),
-      "VALIDATION_ERROR",
-    );
+    await expectCode(replaceLinks("u1", [link("other", "javascript:alert(1)")]), "VALIDATION_ERROR");
+    expect(mocks.db.transaction).not.toHaveBeenCalled();
   });
 
   it("rechaza un tipo fuera del conjunto cerrado", async () => {
     await expectCode(
-      replaceLinks("u1", [{ kind: "myspace", url: "https://a.example" } as unknown as ProfileLinkInput]),
+      replaceLinks("u1", [{ kind: "myspace", value: "https://a.example" } as unknown as ProfileLinkInput]),
       "VALIDATION_ERROR",
     );
+  });
+
+  it("persiste la URL canónica: el usuario de una red social se convierte en la URL de su perfil", async () => {
+    const { insertValues } = mockLinkTransaction();
+    await replaceLinks("u1", [
+      link("instagram", "@ana"),
+      link("x", "https://twitter.com/ana_99?lang=es"),
+      link("bandcamp", "MiBanda"),
+      link("tiktok", "ana"),
+    ]);
+    expect(insertValues).toHaveBeenCalledWith([
+      { userId: "u1", kind: "instagram", url: "https://www.instagram.com/ana", position: 0 },
+      { userId: "u1", kind: "x", url: "https://x.com/ana_99", position: 1 },
+      { userId: "u1", kind: "bandcamp", url: "https://mibanda.bandcamp.com", position: 2 },
+      { userId: "u1", kind: "tiktok", url: "https://www.tiktok.com/@ana", position: 3 },
+    ]);
+  });
+
+  it("un enlace sin esquema se guarda con https://", async () => {
+    const { insertValues } = mockLinkTransaction();
+    await replaceLinks("u1", [link("other", "www.link.com"), link("other", "otro.example/pagina")]);
+    expect(insertValues).toHaveBeenCalledWith([
+      { userId: "u1", kind: "other", url: "https://www.link.com", position: 0 },
+      { userId: "u1", kind: "other", url: "https://otro.example/pagina", position: 1 },
+    ]);
+  });
+
+  it("rechaza un enlace de otro sitio o sin usuario sin tocar la base", async () => {
+    await expectCode(replaceLinks("u1", [link("instagram", "https://tiktok.com/@ana")]), "VALIDATION_ERROR");
+    await expectCode(replaceLinks("u1", [link("instagram", "http://instagram.com")]), "VALIDATION_ERROR");
+    expect(mocks.db.transaction).not.toHaveBeenCalled();
+  });
+
+  it("un solo enlace inválido impide guardar el conjunto completo", async () => {
+    await expectCode(
+      replaceLinks("u1", [link("other", "ana.example"), link("instagram", "no valido!")]),
+      "VALIDATION_ERROR",
+    );
+    expect(mocks.db.transaction).not.toHaveBeenCalled();
   });
 });

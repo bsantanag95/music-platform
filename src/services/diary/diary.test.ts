@@ -38,6 +38,17 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
+// El helper de precedencia tiene sus propios tests (default-audience.test.ts);
+// aquí se mockea para no añadir una consulta al encadenado de `db.select` y se
+// comprueba solo el cableado: qué tipo y qué valor explícito recibe.
+const audience = vi.hoisted(() => ({
+  resolve: vi.fn(
+    async (_userId: string, type: string, explicit?: string | null) =>
+      explicit ?? ({ favorite: "public", diary: "private", list: "followers", collection: "followers" } as Record<string, string>)[type],
+  ),
+}));
+vi.mock("@/services/social/default-audience", () => ({ resolveNewContentAudience: audience.resolve }));
+
 vi.mock("@/services/social/profiles", () => ({
   getProfileByUsername: mocks.getProfileByUsername,
 }));
@@ -726,5 +737,37 @@ describe("servicio del diario", () => {
         status: 400,
       });
     });
+  });
+});
+
+describe("createListenEntry — audiencia del contenido nuevo (spec default-audience)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  function arrangeCreate(audienceOfRow: string) {
+    mocks.db.select
+      .mockReturnValueOnce(whereTerminal([{ count: 0 }]))
+      .mockReturnValueOnce(joinLimit([{ ...entryRow, listenContext: "first_listen", audience: audienceOfRow }]));
+    const values = vi.fn(() => ({ returning: vi.fn().mockResolvedValue([{ id: entryRow.id }]) }));
+    mocks.db.insert.mockReturnValue({ values });
+    mocks.db.delete.mockReturnValue({ where: vi.fn().mockResolvedValue([]) });
+    return values;
+  }
+
+  it("con una preferencia del usuario la entrada nace con esa audiencia, no `private`", async () => {
+    const values = arrangeCreate("public");
+    audience.resolve.mockResolvedValueOnce("public");
+
+    await createListenEntry(target, user);
+
+    expect(audience.resolve).toHaveBeenCalledWith(user, "diary");
+    expect(values).toHaveBeenCalledWith(expect.objectContaining({ audience: "public" }));
+  });
+
+  it("sin preferencia el registro rápido sigue naciendo `private`", async () => {
+    const values = arrangeCreate("private");
+
+    await createListenEntry(target, user);
+
+    expect(values).toHaveBeenCalledWith(expect.objectContaining({ audience: "private" }));
   });
 });

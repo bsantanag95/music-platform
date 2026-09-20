@@ -111,20 +111,19 @@
   "profileFollowerCount": "{count, plural, one {# follower} other {# followers}}",
   "profileFollowingCount": "{count, plural, one {# following} other {# following}}",
   "linkKind": {
-    "website": "Website",
     "bandcamp": "Bandcamp",
     "lastfm": "Last.fm",
     "discogs": "Discogs",
     "instagram": "Instagram",
     "youtube": "YouTube",
     "soundcloud": "SoundCloud",
-    "other": "Link"
+    "other": "Link",
+    "x": "X",
+    "tiktok": "TikTok",
+    "spotify": "Spotify"
   },
   "recencyLastSignal": "Last activity {ago}",
   "railEmptyOwn": "Nothing here yet.",
-  "hub": {
-    "heading": "Manage"
-  },
   "viewAs": {
     "enter": "See how others see you",
     "banner": "You're viewing your profile as the public sees it.",
@@ -259,15 +258,46 @@
     "locationLabel": "Location",
     "timezoneLabel": "Time zone",
     "linksHeading": "Links",
-    "linkUrlLabel": "URL",
-    "linkUrlPlaceholder": "https://",
     "linkKindLabel": "Type",
     "addLink": "Add link",
     "removeLink": "Remove link",
     "save": "Save",
     "saving": "Saving…",
     "saved": "Saved",
-    "maxLinksReached": "You've reached the maximum of 5 links"
+    "maxLinksReached": "You've reached the maximum of 5 links",
+    "linkValueLabelHandle": "Username or link",
+    "linkValueLabelWeb": "Web address",
+    "linkHandleHelp": "Enter just your username. If you paste your profile link, we extract it for you.",
+    "linkWebHelp": "You can leave out https://.",
+    "linkPreview": "Will be saved as {url}",
+    "linkLegacyWarning": "This link does not match {site}. Enter your {site} username, or remove it to be able to save.",
+    "linkPlaceholder": {
+      "instagram": "@username",
+      "x": "@username",
+      "tiktok": "@username",
+      "youtube": "@mychannel",
+      "soundcloud": "username",
+      "bandcamp": "your-band-name",
+      "lastfm": "username",
+      "discogs": "username",
+      "spotify": "user-id",
+      "other": "example.com/page"
+    },
+    "linkKindHelp": {
+      "youtube": "Your YouTube @username, not the channel link.",
+      "bandcamp": "Your page name: yourname.bandcamp.com. If you have your own domain, use Link.",
+      "discogs": "Your user profile, not an artist or label page.",
+      "spotify": "Your user profile identifier, not an artist or a playlist."
+    },
+    "linkErrors": {
+      "empty": "Enter a value or remove this row.",
+      "wrong_site": "That link is not from {site}. Enter just your {site} username.",
+      "missing_handle": "Your {site} username is missing: the home page or a post is not enough.",
+      "invalid_handle": "That does not look like a valid {site} username. Check for spaces or characters that are not allowed.",
+      "youtube_format": "Enter your YouTube @username (for example @mychannel); /channel links do not work.",
+      "invalid_url": "Enter a valid web address, for example example.com.",
+      "unsafe_scheme": "Only web addresses (http or https) are accepted."
+    }
   },
   "diaryTitle": "Diary",
   "favoritesTitle": "Favorites",
@@ -280,5 +310,137 @@
     "lists": "All lists",
     "collection": "Full collection",
     "fingerprint": "Full taste fingerprint"
-  }
+  },
+  "editPanel": {
+    "close": "Close",
+    "discardTitle": "Discard changes?",
+    "discardMessage": "You have unsaved changes in this editor. If you close it, they will be lost.",
+    "discardConfirm": "Discard",
+    "discardCancel": "Keep editing"
+  },
+  "editMode": {
+    "edit": "Edit",
+    "editBlock": "Edit {block}",
+    "toggle": "Edit profile",
+    "placa": "Your profile",
+    "emptyBlock": "{block}: nothing here yet. Edit to add something."
+  },
+  "ownerBar": {
+    "label": "Your profile options",
+    "public": "Public profile",
+    "private": "Private profile",
+    "settings": "Settings",
+    "settingsHint": "Profile, privacy and network"
+  },
+  "settings": {
+    "title": "Settings",
+    "nav": {
+      "label": "Settings sections",
+      "profile": "Profile",
+      "curation": "Curation",
+      "privacy": "Privacy and audience",
+      "network": "Network",
+      "account": "Account and security"
+    },
+    "profile": {
+      "title": "Profile",
+      "intro": "What anyone sees as “who you are”: your identity card, your bio and your links."
+    },
+    "curation": {
+      "title": "Curation",
+      "intro": "What you choose to show on your profile.",
+      "edit": "Edit",
+      "editRow": "Edit {name}",
+      "outOf": "{count} of {max}",
+      "pinned": {
+        "title": "Pinned",
+        "hint": "Up to {max} entities that represent you, each with a note."
+      },
+      "anthem": {
+        "title": "Anthem",
+        "hint": "A song from your favorites.",
+        "empty": "Not chosen"
+      },
+      "albumFavorites": {
+        "title": "Favorite albums",
+        "hint": "Up to {max} albums, chosen from your favorites."
+      },
+      "pinnedLists": {
+        "title": "Pinned lists",
+        "hint": "Pinned from each list.",
+        "link": "View my lists"
+      },
+      "ratingHighlights": {
+        "title": "Highlighted ratings",
+        "hint": "Up to {max}. Highlighted from your rating of each album or song."
+      },
+      "diaryHighlights": {
+        "title": "Highlighted diary entries",
+        "hint": "Highlighted from your diary.",
+        "link": "View my diary"
+      }
+    },
+    "privacy": {
+      "title": "Privacy and audience",
+      "intro": "Who can see your profile and the audience new content is created with.",
+      "audience": {
+        "title": "Default audience for new content",
+        "intro": "Applies to the favorites, diary entries, lists and collection copies you add from now on. It does not change what you already have, and you can adjust each item separately.",
+        "options": {
+          "auto": {
+            "title": "By type (recommended)",
+            "description": "Each type keeps its usual value: public favorites, lists and collection for followers, private diary."
+          },
+          "private": {
+            "title": "Private",
+            "description": "New content is visible only to you."
+          },
+          "followers": {
+            "title": "Followers",
+            "description": "New content is visible to the people who follow you."
+          },
+          "public": {
+            "title": "Public",
+            "description": "New content is visible to anyone with access to your profile."
+          }
+        },
+        "excluded": "Reviews and comments do not depend on this preference: they are public and appear on each album or song page."
+      }
+    },
+    "network": {
+      "title": "Network",
+      "intro": "The people around your profile.",
+      "hint": {
+        "followers": "Who follows you. You can remove someone from your list.",
+        "following": "The accounts you follow.",
+        "followRequests": "Inbox: who wants to follow you.",
+        "blocks": "The accounts you have blocked."
+      }
+    },
+    "account": {
+      "title": "Account and security",
+      "intro": "None of this is shown to other people.",
+      "displayName": {
+        "title": "Display name",
+        "label": "Display name",
+        "help": "How you appear next to your @{username}. If you leave it empty, your username is shown."
+      },
+      "access": {
+        "title": "Sign-in method",
+        "hint": "How you sign in to your account.",
+        "password": "Email and password",
+        "none": "No sign-in method is linked."
+      },
+      "sessions": {
+        "title": "Sessions",
+        "hint": "Sign out on all your devices, including this one.",
+        "button": "Sign out everywhere",
+        "confirmTitle": "Sign out everywhere?",
+        "confirmMessage": "You will be signed out on all devices, including this one, and will need to sign in again.",
+        "confirm": "Sign out",
+        "cancel": "Cancel"
+      }
+    }
+  },
+  "linkAria": "{site}: {detail}"
 }

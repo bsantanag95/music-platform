@@ -35,6 +35,7 @@ vi.mock("@/services/social/profiles", () => ({
   updateProfileVisibility: mocks.updateProfileVisibility,
 }));
 vi.mock("@/services/profiles/identity", () => ({ updateIdentity: vi.fn() }));
+vi.mock("@/services/profiles/account-settings", () => ({ updateAccountPreferences: vi.fn() }));
 vi.mock("@/services/social/following", () => ({
   followUser: mocks.followUser,
   unfollowUser: mocks.unfollowUser,

@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/Input";
 import { apiFetch, ApiError } from "@/lib/api/client";
 import { OwnProfileResponseSchema } from "@/lib/api/schemas";
 import { PROFILE_IDENTITY_LIMITS } from "@/services/social/types";
+import { useNotifySaved, useReportDirty, type EditorHostCallbacks } from "./editor-host";
 
 type Field = "bio" | "pronouns" | "location" | "timezone";
 
-interface OwnerIdentityEditorProps {
+interface OwnerIdentityEditorProps extends EditorHostCallbacks {
   initial: Record<Field, string | null>;
 }
 
@@ -19,10 +20,19 @@ const FIELDS: Field[] = ["bio", "pronouns", "location", "timezone"];
 // Editor inline de la identidad del dueño (bio, pronombres, ubicación, zona
 // horaria), montado solo en la vista del propio perfil. Persiste vía
 // PATCH /api/me/profile sin recargar. Ver spec profile-identity.
-export function OwnerIdentityEditor({ initial }: OwnerIdentityEditorProps) {
+export function OwnerIdentityEditor({ initial, onSaved, onDirtyChange }: OwnerIdentityEditorProps) {
   const t = useTranslations("users");
   const tErrors = useTranslations("errors");
+  const notifySaved = useNotifySaved(onSaved);
   const [values, setValues] = useState<Record<Field, string>>({
+    bio: initial.bio ?? "",
+    pronouns: initial.pronouns ?? "",
+    location: initial.location ?? "",
+    timezone: initial.timezone ?? "",
+  });
+  // Lo último persistido: arranca en `initial` y se actualiza al guardar, para
+  // que tras guardar el editor deje de contar como "con cambios sin guardar".
+  const [baseline, setBaseline] = useState<Record<Field, string>>({
     bio: initial.bio ?? "",
     pronouns: initial.pronouns ?? "",
     location: initial.location ?? "",
@@ -31,20 +41,24 @@ export function OwnerIdentityEditor({ initial }: OwnerIdentityEditorProps) {
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [errorCode, setErrorCode] = useState<string | null>(null);
 
-  const dirty = FIELDS.some((field) => values[field].trim() !== (initial[field] ?? ""));
+  const dirty = FIELDS.some((field) => values[field].trim() !== baseline[field]);
+  useReportDirty(dirty, onDirtyChange);
 
   async function save() {
     setStatus("saving");
     setErrorCode(null);
     try {
+      const trimmed = Object.fromEntries(
+        FIELDS.map((field) => [field, values[field].trim()]),
+      ) as Record<Field, string>;
       await apiFetch("/api/me/profile", OwnProfileResponseSchema, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          Object.fromEntries(FIELDS.map((field) => [field, values[field].trim()])),
-        ),
+        body: JSON.stringify(trimmed),
       });
+      setBaseline(trimmed);
       setStatus("saved");
+      notifySaved();
     } catch (error) {
       setStatus("idle");
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");

@@ -5,15 +5,18 @@ import { UpdateOwnProfileRequestSchema } from "@/lib/api/schemas";
 import { requireUser } from "@/services/auth/authorization";
 import { getOwnProfile, updateProfileVisibility } from "@/services/social/profiles";
 import { updateIdentity } from "@/services/profiles/identity";
+import { updateAccountPreferences } from "@/services/profiles/account-settings";
 
 export const GET = withErrorHandling(async () => {
   const user = await requireUser();
   return NextResponse.json({ user: await getOwnProfile(user.id) });
 });
 
-// PATCH acepta un subconjunto de { profileVisibility, bio, pronouns, location,
-// timezone }. La visibilidad y la identidad extendida se persisten por
-// separado; la respuesta devuelve el perfil propio actualizado.
+// PATCH acepta un subconjunto de { profileVisibility, displayName,
+// defaultAudience, bio, pronouns, location, timezone }. La visibilidad, las
+// preferencias de cuenta (nombre visible y audiencia por defecto) y la
+// identidad extendida se persisten por separado; la respuesta devuelve el
+// perfil propio actualizado.
 export const PATCH = withErrorHandling(async (request: NextRequest) => {
   const user = await requireUser();
   const parsed = UpdateOwnProfileRequestSchema.safeParse(
@@ -23,9 +26,12 @@ export const PATCH = withErrorHandling(async (request: NextRequest) => {
     throw new ApiError("VALIDATION_ERROR", 400, "Los datos del perfil no son válidos");
   }
 
-  const { profileVisibility, ...identity } = parsed.data;
+  const { profileVisibility, displayName, defaultAudience, ...identity } = parsed.data;
   if (profileVisibility) {
     await updateProfileVisibility(user.id, profileVisibility);
+  }
+  if (displayName !== undefined || defaultAudience !== undefined) {
+    await updateAccountPreferences(user.id, { displayName, defaultAudience });
   }
   if (Object.keys(identity).length > 0) {
     await updateIdentity(user.id, identity);

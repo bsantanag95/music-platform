@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { listUserDiary } from "@/services/diary/diary";
@@ -20,19 +21,20 @@ import { getProfileRatingHighlights } from "@/services/rating-highlights/rating-
 import { countPendingFollowRequests } from "@/services/social/following";
 import type { ProfileView } from "@/services/profiles/profile-view";
 import { ProfileAffinity } from "@/components/profiles/ProfileAffinity";
-import { OwnerHubPanel } from "@/components/profiles/OwnerHubPanel";
+import { OwnerSettingsCard } from "@/components/profiles/OwnerSettingsCard";
+import { EditableBlock } from "@/components/profiles/EditableBlock";
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
 import { OwnerShowcaseEditor } from "@/components/profiles/OwnerShowcaseEditor";
 import { OwnerAlbumFavoritesEditor } from "@/components/profiles/OwnerAlbumFavoritesEditor";
 import { OwnerIdentityCardEditor } from "@/components/profiles/OwnerIdentityCardEditor";
 import { FingerprintSummary } from "@/components/profiles/FingerprintSummary";
-import { AlbumFavorites } from "@/components/profiles/AlbumFavorites";
+import { AlbumFavorites, generalAlbums } from "@/components/profiles/AlbumFavorites";
 import { ProfileReviews } from "@/components/profiles/ProfileReviews";
 import { RatingHighlights } from "@/components/profiles/RatingHighlights";
 import { InRotation } from "@/components/profiles/InRotation";
 import { ExploreSection } from "@/components/profiles/ExploreSection";
-import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
+import { PinnedShowcase, generalPinned } from "@/components/profiles/PinnedShowcase";
 import { IdentityCard } from "@/components/profiles/IdentityCard";
 import { ProfileLevel3Links } from "@/components/profiles/ProfileLevel3Links";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
@@ -61,30 +63,40 @@ function EmptyRailForOwner({ label, message }: { label: string; message: string 
   );
 }
 
-export async function HubSection({ ownerId, username }: { ownerId: string; username: string }) {
-  return <OwnerHubPanel username={username} pendingRequests={await countPendingFollowRequests(ownerId)} />;
+// Tarjeta de acceso al área de ajustes (reemplaza al panel de atajos).
+export async function SettingsCardSection({ ownerId }: { ownerId: string }) {
+  return <OwnerSettingsCard pendingRequests={await countPendingFollowRequests(ownerId)} />;
 }
 
-export async function OwnerEditors({ profile }: { profile: ProfileView }) {
-  const [showcase, albumFavorites] = await Promise.all([
-    getShowcase(profile.id),
-    getAlbumFavorites(profile.id, ["private", "followers", "public"]),
-  ]);
+// Los bloques visibles del perfil que el dueño puede editar sobre el propio
+// perfil se envuelven en `EditableBlock` solo cuando `isOwn` (el dueño real, no
+// en previsualización): el lápiz y el panel lateral pertenecen al modo edición
+// (spec profile-edit-mode). Para el resto de visitantes la sección es la de
+// siempre. El `editor` se construye acá, en el servidor, con su `initial`.
+
+// La Placa: bio, pronombres, ubicación, zona horaria y enlaces — todo lo que
+// dibuja la Placa se edita en un mismo panel.
+export async function EditablePlaca({ profile, children }: { profile: ProfileView; children: ReactNode }) {
+  const t = await getTranslations("users");
   return (
-    <section className="flex w-full max-w-2xl flex-col gap-6 rounded-lg border border-ink-border bg-ink-surface p-6">
-      <OwnerIdentityCardEditor initial={showcase.identityCard} />
-      <OwnerIdentityEditor
-        initial={{
-          bio: profile.bio,
-          pronouns: profile.pronouns,
-          location: profile.location,
-          timezone: profile.timezone,
-        }}
-      />
-      <OwnerLinksEditor initialLinks={profile.links} />
-      <OwnerShowcaseEditor initial={showcase} />
-      <OwnerAlbumFavoritesEditor initial={albumFavorites} identityCard={showcase.identityCard} />
-    </section>
+    <EditableBlock
+      label={t("editMode.placa")}
+      editor={
+        <div className="flex flex-col gap-6">
+          <OwnerIdentityEditor
+            initial={{
+              bio: profile.bio,
+              pronouns: profile.pronouns,
+              location: profile.location,
+              timezone: profile.timezone,
+            }}
+          />
+          <OwnerLinksEditor initialLinks={profile.links} />
+        </div>
+      }
+    >
+      {children}
+    </EditableBlock>
   );
 }
 
@@ -98,12 +110,30 @@ export async function AlbumFavoritesSection({
   username,
   viewerId,
   ownerId,
-}: Omit<SectionProps, "isOwn"> & { ownerId: string }) {
+  isOwn = false,
+}: Omit<SectionProps, "isOwn"> & { ownerId: string; isOwn?: boolean }) {
   const [albums, { identityCard }] = await Promise.all([
     getProfileAlbumFavorites(username, viewerId),
     getShowcase(ownerId),
   ]);
-  return <AlbumFavorites albums={albums} identityCard={identityCard} />;
+  const view = <AlbumFavorites albums={albums} identityCard={identityCard} />;
+  if (!isOwn) return view;
+
+  // El editor lista los favoritos con las tres audiencias (el dueño edita también
+  // los que no se ven en la vista pública).
+  const [t, editable] = await Promise.all([
+    getTranslations("users"),
+    getAlbumFavorites(ownerId, ["private", "followers", "public"]),
+  ]);
+  return (
+    <EditableBlock
+      label={t("albumFavorites.edit.heading")}
+      empty={generalAlbums(albums, identityCard).length === 0}
+      editor={<OwnerAlbumFavoritesEditor initial={editable} identityCard={identityCard} />}
+    >
+      {view}
+    </EditableBlock>
+  );
 }
 
 // "Reseñas": las reseñas de álbum más recientes del dueño. Clúster de
@@ -156,14 +186,39 @@ export async function ExplorationSection({
 // el álbum marcados "me define" entre los destacados, más el himno. Sustituye
 // al antiguo `AnthemSection` en la barra lateral: el himno solo ya no alcanza
 // para representar "quién es esta persona" en el primer vistazo.
-export async function IdentityCardSection({ ownerId }: { ownerId: string }) {
+export async function IdentityCardSection({ ownerId, isOwn = false }: { ownerId: string; isOwn?: boolean }) {
   const { identityCard } = await getShowcase(ownerId);
-  return <IdentityCard identityCard={identityCard} />;
+  const view = <IdentityCard identityCard={identityCard} />;
+  if (!isOwn) return view;
+
+  const t = await getTranslations("users");
+  return (
+    <EditableBlock
+      label={t("identityCard.editor.heading")}
+      empty={!identityCard.artist && !identityCard.album && !identityCard.anthem}
+      editor={<OwnerIdentityCardEditor initial={identityCard} />}
+    >
+      {view}
+    </EditableBlock>
+  );
 }
 
-export async function PinnedSection({ ownerId }: { ownerId: string }) {
-  const { pinned, identityCard } = await getShowcase(ownerId);
-  return pinned.length > 0 ? <PinnedShowcase pinned={pinned} identityCard={identityCard} /> : null;
+export async function PinnedSection({ ownerId, isOwn = false }: { ownerId: string; isOwn?: boolean }) {
+  const showcase = await getShowcase(ownerId);
+  const { pinned, identityCard } = showcase;
+  const view = pinned.length > 0 ? <PinnedShowcase pinned={pinned} identityCard={identityCard} /> : null;
+  if (!isOwn) return view;
+
+  const t = await getTranslations("users");
+  return (
+    <EditableBlock
+      label={t("showcase.edit.heading")}
+      empty={generalPinned(pinned, identityCard).length === 0}
+      editor={<OwnerShowcaseEditor initial={showcase} />}
+    >
+      {view}
+    </EditableBlock>
+  );
 }
 
 // "Valoraciones destacadas" — Nivel 2 (spec `rating-highlights`): curaduría

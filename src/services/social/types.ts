@@ -34,15 +34,19 @@ export type Audience = (typeof AUDIENCES)[number];
 
 // Tipos de enlace externo del perfil (cambio redesign-user-profile). Conjunto
 // cerrado, espejado en el CHECK de user_profile_link y en el contrato Zod.
+// `other` es el enlace genérico (mostrado como "Enlace"); antes existía además
+// `website`, idéntico salvo la etiqueta, y se unificó en `other` (migración 0036).
 export const PROFILE_LINK_KINDS = [
-  "website",
+  "other",
   "bandcamp",
   "lastfm",
   "discogs",
   "instagram",
   "youtube",
   "soundcloud",
-  "other",
+  "x",
+  "tiktok",
+  "spotify",
 ] as const;
 export type ProfileLinkKind = (typeof PROFILE_LINK_KINDS)[number];
 
@@ -50,6 +54,8 @@ export type ProfileLinkKind = (typeof PROFILE_LINK_KINDS)[number];
 // para el contrato Zod y la validación de dominio del servicio; los CHECK de
 // la migración 0014 los reflejan.
 export const PROFILE_IDENTITY_LIMITS = {
+  /** Nombre visible (`app_user.display_name`); sin CHECK en BD, se valida en la capa de contrato. */
+  displayName: 50,
   bio: 200,
   pronouns: 40,
   location: 80,

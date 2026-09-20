@@ -1,20 +1,11 @@
-import { getTranslations } from "next-intl/server";
-import { requirePageUser } from "@/services/auth/page-auth";
-import { isEmailVerified } from "@/services/auth/email-verification";
-import { getOwnProfile } from "@/services/social/profiles";
-import { PrivacySettings } from "@/components/social/PrivacySettings";
-import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
+import { getLocale } from "next-intl/server";
+import { redirect } from "@/i18n/navigation";
+import { SETTINGS_DEFAULT_HREF } from "@/components/settings/settings-screens";
 
-export default async function PrivacySettingsPage() {
-  const t = await getTranslations("users");
-  const user = await requirePageUser();
-  const profile = await getOwnProfile(user.id);
-
-  return (
-    <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
-      <h1 className="font-display text-2xl text-paper">{t("profileVisibilityLabel")}</h1>
-      <EmailVerificationNotice verified={isEmailVerified(user)} />
-      <PrivacySettings initialVisibility={profile.profileVisibility} />
-    </main>
-  );
+// `/me/settings` es solo la puerta del área: aterriza en la pantalla Perfil.
+// Así el "Ajustes" del menú de usuario y cualquier enlace anterior a esta ruta
+// siguen funcionando (spec owner-settings). La guarda de sesión la hace el
+// layout y cada pantalla.
+export default async function SettingsIndexPage() {
+  redirect({ href: SETTINGS_DEFAULT_HREF, locale: await getLocale() });
 }
