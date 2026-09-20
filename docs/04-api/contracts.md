@@ -390,19 +390,30 @@ lo tanto dispone de la acción de desbloquear); si el visitante fue bloqueado po
 
 Perfil propio autenticado, incluye `email`.
 
-**200 OK:** `{ user: { id, username, displayName, email, profileVisibility } }`. **401** con
-`AUTH_REQUIRED` si no hay sesión.
+**200 OK:** `{ user: { id, username, displayName, email, profileVisibility, defaultAudience } }`, con
+`defaultAudience` en `"private" | "followers" | "public" | null` (`null` = "según el tipo", ver
+`PATCH`). **401** con `AUTH_REQUIRED` si no hay sesión.
 
 ### `PATCH /api/me/profile`
 
-Actualiza la visibilidad y/o la identidad extendida del perfil propio (cambio
-`redesign-user-profile`). Todos los campos son opcionales; se requiere al menos uno. Las
-cadenas de texto se recortan; la cadena vacía borra el campo (`null`).
+Actualiza la visibilidad, el nombre visible, la audiencia por defecto y/o la identidad extendida
+del perfil propio (cambios `redesign-user-profile` y `rework-owner-management`). Todos los campos
+son opcionales; se requiere al menos uno. Las cadenas de texto se recortan; la cadena vacía borra
+el campo (`null`; en `displayName` el sitio vuelve a mostrar el username).
 
 **Body:** cualquier subconjunto de
-`{ profileVisibility: "public" | "private", bio (≤200), pronouns (≤40), location (≤80), timezone (≤64) }`.
-**200 OK:** `{ user: { id, username, displayName, email, profileVisibility } }` actualizado.
-**400** con `VALIDATION_ERROR` si un valor no es válido o el body está vacío.
+`{ profileVisibility: "public" | "private", displayName (≤50), defaultAudience: "private" | "followers" | "public" | null, bio (≤200), pronouns (≤40), location (≤80), timezone (≤64) }`.
+
+`defaultAudience` es la audiencia con la que nace el contenido **nuevo** de biblioteca (favoritos,
+diario, listas y colección). `null` la quita: cada tipo vuelve a su default (favoritos `public`,
+listas y colección `followers`, diario `private`). Precedencia al crear: audiencia explícita de la
+petición > `defaultAudience` > default del tipo. Nunca modifica contenido ya creado.
+
+**200 OK:** `{ user: { id, username, displayName, email, profileVisibility, defaultAudience } }`
+actualizado.
+**400** con `VALIDATION_ERROR` si un valor no es válido (p. ej. una audiencia fuera del conjunto
+permitido o un nombre de más de 50 caracteres) o el body está vacío. **401** con `AUTH_REQUIRED` si
+no hay sesión; no se modifica ningún dato.
 
 ### `PUT` / `DELETE /api/me/profile/links`
 

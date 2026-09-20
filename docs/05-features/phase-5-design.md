@@ -265,8 +265,10 @@ El Header separa dos zonas (cambio `regroup-authenticated-header`, spec
   seguidos, feed de actividad, seguidores, seguidos, solicitudes (con badge de pendientes),
   ajustes y cierre de sesión.
 
-Los destinos del menú y los del panel del dueño (`OwnerHubPanel`) salen de una única fuente
-(`src/components/layout/user-menu-items.ts`). En móvil el Header colapsa en un panel con la
+Los destinos del menú, del panel móvil del Header y de la pantalla Red del área de ajustes
+(`/me/settings/network`) salen de una única fuente (`src/components/layout/user-menu-items.ts`,
+superficies `header`, `panel` y `settings`). El panel de atajos del dueño (`OwnerHubPanel`) se
+reemplazó por una tarjeta de acceso a Ajustes (`rework-owner-management`). En móvil el Header colapsa en un panel con la
 misma división: bloque de barra general y bloque de usuario.
 
 La búsqueda de usuarios ("Miembros") quedó deliberadamente fuera de la barra general —

@@ -37,7 +37,7 @@ visitante:
 |---|---|---|
 | **No autorizado** | Anónimo, sin relación aceptada, o solicitud pendiente sobre un perfil privado | Una sola tarjeta (`PrivateProfileCard`): identidad extendida + estado exacto del visitante + una acción. Nada más. Ver "Perfil privado". |
 | **Autorizado** | Cuenta pública, o seguidor aprobado de una privada | Identidad + Tarjeta de Identidad + resumen de huella + álbumes favoritos + destacados + valoraciones destacadas + reseñas + en rotación + huella completa (nivel 3) + afinidad + estantes (diario / favoritos / listas / colección) + recencia. |
-| **Dueño** | La persona | Lo mismo que "autorizado" + editores inline de identidad/enlaces/álbumes favoritos/destacados/marcador "me define"/himno + acción de destacar valoraciones y entradas de diario + panel de gestión + previsualizador "cómo te ven". |
+| **Dueño** | La persona | Lo mismo que "autorizado" + modo edición ("Editar perfil": lápiz por bloque y panel lateral con los editores de identidad/enlaces/álbumes favoritos/destacados/marcador "me define"/himno) + acción de destacar valoraciones y entradas de diario + tarjeta de Ajustes + previsualizador "cómo te ven". Ver "Gestión del propio perfil". |
 
 Un perfil **privado** solo expone su huella, álbumes favoritos, destacados y estantes a
 seguidores aprobados y al dueño; un visitante no autorizado ve únicamente la identidad
@@ -154,7 +154,7 @@ para esta primera versión.
 
 **Unificado con la autogestión** (2026-09-17, segunda iteración): `/me/followers` y
 `/me/following` se eliminaron — el menú de usuario (`user-menu-items.ts`, ambas superficies,
-header y panel de Gestión) apunta directo a `/users/:username/connections/{followers,following}`.
+header, panel móvil y pantalla Red de ajustes) apunta directo a `/users/:username/connections/{followers,following}`.
 Cuando el visitante es el propio dueño, `ConnectionsUserList` suma la acción "Quitar
 seguidor" (solo en la pestaña Seguidores) junto al `FollowButton` normal — "dejar de
 seguir" en Seguidos no necesita caso especial: la relación del dueño hacia cada persona de
@@ -189,7 +189,9 @@ definitorios** — un artista, un álbum y una canción (el himno). Reemplaza al
   Destacados (`user_pinned_item.is_defining`), lo que dejaba "Álbumes favoritos" sin ninguna
   vía para marcar un álbum definitorio salvo duplicándolo como destacado aparte — el gap que
   motivó moverlo a una referencia directa (migración 0030).
-- **Editor unificado en Gestión** (`OwnerIdentityCardEditor`, arriba de todo el panel): los 3
+- **Editor unificado de la Tarjeta** (`OwnerIdentityCardEditor`; hoy se abre desde el lápiz de la
+  Tarjeta en el modo edición y desde `/me/settings/profile`, antes vivía arriba de la card de
+  editores apilados): los 3
   slots juntos, cada uno con su propio selector sobre los favoritos del dueño (artista, álbum,
   canción) y una acción "Quitar". **Revisión de diseño (2026-09-17)**: antes de este editor,
   el artista y la canción se marcaban desde "Destacados"/"Himno" y el álbum solo desde
@@ -623,17 +625,76 @@ resume la actividad visible más reciente.
 - Cada sección de contenido carga bajo su propio `<Suspense>`, así que nada bloquea la Placa
   (la cabecera de identidad).
 
-## Panel del dueño y "cómo te ven"
+## Gestión del propio perfil (modo edición y ajustes)
 
-- **`OwnerHubPanel`** — enlaza las superficies `/me/*` (diario, favoritos, listas, colección,
-  artistas seguidos, seguidores, seguidos, solicitudes, bloqueos, ajustes). "Solicitudes"
-  muestra un badge con el conteo de solicitudes pendientes recibidas cuando es > 0 (bandeja
-  de entrada, no métrica de logro). Los destinos salen de
-  `src/components/layout/user-menu-items.ts` (superficie `panel`), la misma fuente que el
-  menú de usuario del Header — ambos no pueden divergir (spec `cross-view-navigation`).
+Dos vías complementarias sobre **los mismos editores** (`Owner*Editor`), decididas en
+`rework-owner-management`. Hacer clic en el propio username lleva al perfil, no a una pantalla de
+gestión; el dueño ve el mismo perfil que un visitante hasta que activa el modo edición.
+
+### Edición rápida sobre el perfil (modo edición)
+
+- **`OwnerProfileBar`** — barra superior del perfil, solo para el dueño real (`isOwn` y no
+  previsualización): chip de estado "Perfil público/privado · Ajustes →" (enlaza a
+  `/me/settings/privacy`, no cambia nada por sí mismo), el acceso a "Ver cómo te ven" y el
+  interruptor **"Editar perfil"** (`role="switch"`). El estado es local (`useState`) y no persiste
+  al navegar.
+- **`OwnerEditProvider`** (cliente) guarda `editing` y renderiza **una sola vez** el panel lateral.
+  **`EditableBlock`** envuelve cada bloque con editor: Placa (identidad + enlaces en un mismo
+  panel), Tarjeta de Identidad, Destacados/Himno y Álbumes favoritos. Con `editing` muestra un
+  lápiz ("Editar {bloque}") que abre el editor en el panel. Los bloques sin editor propio (listas
+  fijadas, valoraciones y diario destacados, el resto de estantes) no llevan lápiz: se fijan donde
+  viven. Un bloque **vacío** (que hoy colapsa) muestra un marco solo en modo edición, para poder
+  añadir el primer elemento; sin modo edición el perfil sigue idéntico al de un visitante.
+- **`EditorPanel`** — diálogo modal (portal, `role="dialog"`, foco atrapado y devuelto al lápiz,
+  `Escape`, clic en el fondo, bloqueo de scroll); panel lateral desde `md`, hoja inferior por
+  debajo. **No añade su propio "Guardar"**: cada editor ya tiene el suyo o aplica al instante. Al
+  cerrar tras haber guardado algo hace `router.refresh()`; con cambios sin guardar pide confirmar el
+  descarte (`ConfirmDialog`).
+- **Contrato editor ↔ anfitrión** (`editor-host.ts`): los editores llegan como elementos ya
+  construidos por el servidor, así que no se les inyectan props; reportan al anfitrión por
+  **contexto** (`EditorHostContext`). El estado "sucio" se identifica **por editor** (la Placa aloja
+  dos) y cada editor conserva una **línea base** que se actualiza al guardar (antes `dirty` se
+  comparaba contra `initial` y un editor ya guardado seguía "sucio"). Las props opcionales
+  `onSaved`/`onDirtyChange` siguen disponibles para un anfitrión directo.
+- **`OwnerSettingsCard`** — en la barra lateral, un único enlace a `/me/settings` con la bandeja de
+  solicitudes pendientes (bandeja de entrada, no métrica). Sustituye al panel de 11 atajos
+  (`OwnerHubPanel`, retirado): la biblioteca (diario, favoritos, listas, colección, artistas,
+  recorridos, feed) queda solo en el menú de usuario.
 - **`?preview=1`** — el dueño recompone su perfil tal como lo ve un visitante anónimo
-  (`getProfileView(username, null)`), con los editores y el panel ocultos y un banner para
-  volver. Es navegación por query param, sin estado cliente.
+  (`getProfileView(username, null)`), sin proveedor de edición, barra ni tarjeta de Ajustes, y con
+  `ViewAsBanner` para volver. Es navegación por query param, sin estado cliente.
+
+### Área de ajustes (`/me/settings`)
+
+Layout compartido (`layout.tsx`) con menú lateral (pestañas horizontales bajo `md`) y el aviso de
+email sin verificar en **todas** las pantallas (así `email-verification` no cambia); `/me/settings`
+redirige a `/me/settings/profile`. Cada pantalla vuelve a exigir sesión.
+
+| Pantalla | Contenido |
+|---|---|
+| `profile` | Tarjeta de Identidad, identidad (bio, pronombres, ubicación, zona horaria) y enlaces — los mismos editores que abre el modo edición |
+| `curation` | Filas con conteo: Destacados, Himno y Álbumes favoritos (abren su editor en el panel lateral); listas fijadas, valoraciones destacadas y diario destacado (solo conteo y enlace/pista a donde se fijan; las valoraciones se destacan desde la valoración de cada álbum o canción). `getCurationSummary` aporta esos tres conteos |
+| `privacy` | Visibilidad público/privado y **audiencia por defecto del contenido nuevo** |
+| `network` | Enlaces a solicitudes (con bandeja), seguidores, seguidos y bloqueadas, desde la superficie `settings` de `user-menu-items.ts` (la superficie `panel` sigue existiendo: la usa el panel móvil del Header) |
+| `account` | Nombre visible (`displayName`, ≤50, vacío = se muestra el username), método de acceso en solo lectura (contraseña / proveedores, nunca el hash) y "Cerrar todas las sesiones" (`DELETE /api/auth/revoke-all`, con confirmación y redirección a login) |
+
+Cuenta y seguridad no ofrece controles de funciones inexistentes (cambiar email, usuario o
+contraseña con sesión, foto de perfil, eliminar cuenta).
+
+### Audiencia por defecto del contenido nuevo
+
+`app_user.default_audience` (nullable, migración 0034). Es un **valor por defecto**, no una regla
+global: cada favorito, entrada de diario, lista o copia de colección sigue siendo editable por
+separado y **nada existente cambia**. `NULL` = "según el tipo", porque los defaults por tipo no son
+uniformes (favoritos `public`, listas y colección `followers`, diario `private`); un default único
+degradaría favoritos o el diario. Precedencia al crear (`resolveNewContentAudience`): valor
+explícito de la petición > preferencia > default del tipo. Se resuelve en el servidor y solo cuando
+la petición no trae audiencia.
+
+Alcance: **no** cubre las reseñas ni los comentarios — no tienen audiencia propia y son públicos en
+la página del álbum o la canción, por lo que la sección "Reseñas" del perfil se muestra igual con
+cualquier preferencia (el control lo aclara). Tampoco se aplica a lo que crea el sistema
+(recorridos de artista `private`, borradores editoriales, favoritos sembrados por el onboarding).
 
 ## Sin gamificación
 
@@ -647,6 +708,8 @@ cuántas veces se escuchó algo — es "qué está sonando", no una métrica.
 | Tabla / columna | Qué |
 |---|---|
 | `app_user.{bio, pronouns, location, timezone, avatar_url}` | Identidad extendida (migración 0014) |
+| `app_user.display_name` | Nombre visible; editable desde `/me/settings/account` (≤50, vacío = `NULL`, el sitio muestra el username) |
+| `app_user.default_audience` | Audiencia por defecto del contenido nuevo (nullable, `CHECK`, migración 0034). `NULL` = "según el tipo". Nunca reescribe contenido existente |
 | `user_profile_link` | Enlaces externos ordenados, máx. 5 app-side |
 | `listen_entry` (lectura) | Fuente única de "En rotación" — escuchas de canción/álbum de los últimos 30 días, filtradas por audiencia. Sin tabla ni columna nueva |
 | `listen_entry_highlight` | Hasta 6 entradas de diario destacadas por usuario; anulan la matriz de visibilidad solo para esa entrada (migración 0029) |

@@ -11,6 +11,13 @@ Versión narrada de `schema.sql`. Para cada tabla: propósito, relaciones, restr
 También puede tener roles de plataforma en `user_role`, restricciones temporales en
 `user_restriction`, y ser actor de auditoría de acciones de roles o moderación.
 
+**Audiencia por defecto:** `default_audience` (TEXT nullable, migración `0034`, `CHECK` en
+`private` / `followers` / `public`) es una preferencia opcional para el contenido **nuevo** de
+biblioteca (favoritos, diario, listas, colección). `NULL` significa "según el tipo": cada tipo
+conserva su default (favoritos `public`, listas y colección `followers`, diario `private`), por eso
+no hay `DEFAULT` de columna ni backfill. Se aplica solo al crear; nunca reescribe filas existentes.
+Precedencia al crear: valor explícito de la petición > `default_audience` > default del tipo.
+
 ## `user_role`
 
 **Propósito:** asignaciones acumulables de roles de plataforma (`moderator`/`admin`/
