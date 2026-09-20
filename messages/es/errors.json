@@ -123,6 +123,18 @@
     "title": "Ya existe una cuenta con ese email",
     "description": "Ya tenés una cuenta con ese email. Iniciá sesión con tu contraseña para continuar."
   },
+  "INVALID_RESET_TOKEN": {
+    "title": "Link inválido o expirado",
+    "description": "El link para restablecer tu contraseña no es válido o ya expiró. Pedí uno nuevo."
+  },
+  "PASSWORD_REUSED": {
+    "title": "Usá una contraseña distinta",
+    "description": "La contraseña nueva tiene que ser distinta de la anterior."
+  },
+  "EMAIL_CONFIG_MISSING": {
+    "title": "Envío de email no disponible",
+    "description": "El envío de emails no está configurado. Intentá más tarde."
+  },
   "USER_NOT_FOUND": {
     "title": "Usuario no encontrado",
     "description": "El usuario solicitado no existe o no está disponible."

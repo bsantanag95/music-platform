@@ -93,3 +93,13 @@ export async function findUserByEmail(email: string) {
     .limit(1);
   return user ?? null;
 }
+
+export async function findUserWithPasswordByEmail(email: string) {
+  const normalized = email.toLowerCase();
+  const [user] = await db
+    .select({ id: appUser.id, passwordHash: appUser.passwordHash })
+    .from(appUser)
+    .where(eq(appUser.email, normalized))
+    .limit(1);
+  return user ?? null;
+}

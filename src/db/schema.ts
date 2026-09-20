@@ -239,6 +239,28 @@ export const authIdentity = pgTable(
   ],
 );
 
+// Token de restablecimiento de contraseña (migración 0031, change
+// add-password-reset). Igual que `session`, guarda solo el hash del token
+// opaco; el token en claro únicamente viaja en el link del correo. El single-use
+// se garantiza con borrado físico: no hay columna `used_at`.
+export const passwordResetToken = pgTable(
+  "password_reset_token",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    uniqueIndex("uq_password_reset_token_hash").on(t.tokenHash),
+    uniqueIndex("uq_password_reset_token_user").on(t.userId),
+    index("idx_password_reset_token_expires_at").on(t.expiresAt),
+  ],
+);
+
 export const userFollow = pgTable(
   "user_follow",
   {
@@ -470,6 +492,7 @@ export type UserRoleActionRow = typeof userRoleAction.$inferSelect;
 export type EditorialActionRow = typeof editorialAction.$inferSelect;
 export type SessionRow = typeof session.$inferSelect;
 export type AuthIdentityRow = typeof authIdentity.$inferSelect;
+export type PasswordResetTokenRow = typeof passwordResetToken.$inferSelect;
 export type UserFollowRow = typeof userFollow.$inferSelect;
 export type UserBlockRow = typeof userBlock.$inferSelect;
 export type ReleaseGroupRow = typeof releaseGroup.$inferSelect;

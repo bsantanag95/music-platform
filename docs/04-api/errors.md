@@ -32,7 +32,7 @@ además del `error` legible:
 | `AUTH_REQUIRED` | 401 | Falta una sesión válida para una operación protegida. |
 | `INVALID_CREDENTIALS` | 401 | Login fallido; no revela si falló el identificador o la contraseña. |
 | `USERNAME_TAKEN` / `EMAIL_TAKEN` | 409 | El registro duplicaría una cuenta existente. |
-| `RATE_LIMITED` | 429 | Se superó el límite temporal de login o registro, o del flujo OAuth de Google (`/start` y `/callback` limitan por IP; el callback redirige a la página de error con este código). |
+| `RATE_LIMITED` | 429 | Se superó el límite temporal de login o registro, del flujo OAuth de Google (`/start` y `/callback` limitan por IP; el callback redirige a la página de error con este código) o de los endpoints de recuperación de contraseña (`/password/forgot` limita por IP y email; `/password/reset` por IP). |
 | `PERMISSION_DENIED` | 403 | El usuario no puede modificar el recurso. |
 | `INVALID_TARGET` | 400/404 | Tipo, UUID u objetivo inexistente. |
 | `INVALID_RATING` / `INVALID_COMMENT` | 400 | Entrada social inválida. |
@@ -53,6 +53,9 @@ además del `error` legible:
 | `OAUTH_CALLBACK_INVALID` | 400 | `GET /api/auth/google/callback`: parámetros del callback malformados o el intercambio del authorization code falló. |
 | `OAUTH_TOKEN_INVALID` | 400 | `GET /api/auth/google/callback`: el ID token de Google no pasó validación (issuer, audience, firma JWKS RS256, expiración o `nonce`). |
 | `OAUTH_EMAIL_NOT_VERIFIED` | 400 | `GET /api/auth/google/callback`: el ID token trae `email_verified=false`/ausente y no existe identidad vinculada, por lo que no se crea la cuenta nueva (`auth.md` sección 6). |
+| `INVALID_RESET_TOKEN` | 400 | `POST /api/auth/password/reset`: el token de restablecimiento no existe, expiró o ya fue usado. No distingue entre esos casos. |
+| `PASSWORD_REUSED` | 400 | `POST /api/auth/password/reset`: la contraseña nueva es igual a la actual. El token **no** se consume, así que el usuario puede reintentar con el mismo link. |
+| `EMAIL_CONFIG_MISSING` | 503 | `POST /api/auth/password/forgot`: no hay un transporte de email real configurado en producción (fail-closed); el flujo no genera token ni envía correo. |
 | `USER_NOT_FOUND` | 404 | Perfil, búsqueda o destino de una relación: el username no corresponde a ningún usuario. |
 | `RELATION_INVALID` | 400 | Operación de seguimiento o bloqueo inválida (ej. intentar seguirse o bloquearse a sí mismo). |
 | `REQUEST_NOT_FOUND` | 404 | La solicitud de seguimiento no existe o ya fue resuelta (aprobada, rechazada o cancelada). |

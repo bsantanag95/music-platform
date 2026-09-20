@@ -52,6 +52,12 @@ necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
 > - `smoke-test-social.ts` crea tres usuarios `smoke-social-*` (público, privado
 >   y seguidor) y los borra al terminar; si se interrumpió, limpiar con
 >   `DELETE FROM app_user WHERE username LIKE 'smoke-social-%';`.
+> - `smoke-test-password-reset.ts` crea dos usuarios `smoke-reset-*` (con
+>   contraseña local y solo-Google) y los borra al terminar; el `ON DELETE
+>   CASCADE` limpia sus tokens y sesiones. Si se interrumpió, limpiar con
+>   `DELETE FROM app_user WHERE username LIKE 'smoke-reset-%';`. Mockea el
+>   transporte de email capturando el token del adaptador `console`; no envía
+>   correo real.
 
 ## Base de datos / migraciones
 

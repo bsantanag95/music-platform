@@ -4,9 +4,16 @@ import { redirect } from "@/i18n/navigation";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { resolveSession } from "@/services/auth/sessions";
 
-export default async function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function LoginPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams?: Promise<{ reset?: string }>;
+}) {
   const { locale } = await params;
   if (await resolveSession()) redirect({ href: "/", locale });
+  const { reset } = (await searchParams) ?? {};
   const t = await getTranslations("auth");
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center gap-8 px-4 py-12">
@@ -14,6 +21,11 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
         <h1 className="font-display text-3xl text-paper">{t("loginTitle")}</h1>
         <p className="mt-2 font-body text-paper-muted">{t("loginDescription")}</p>
       </div>
+      {reset === "1" && (
+        <p role="status" className="rounded-md border border-ink-border bg-ink-surface px-3 py-2 font-data text-sm text-paper">
+          {t("resetSuccess")}
+        </p>
+      )}
       <a
         href={`/api/auth/google/start?locale=${locale}`}
         className="flex w-full max-w-md items-center justify-center gap-3 rounded-md border border-ink-border bg-ink-surface px-4 py-3 font-display text-sm text-paper hover:bg-ink-surface/80"
@@ -32,6 +44,11 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
         <div className="h-px flex-1 bg-ink-border" />
       </div>
       <AuthForm mode="login" />
+      <p className="font-data text-sm text-paper-muted">
+        <Link href="/auth/forgot-password" className="text-accent hover:text-paper">
+          {t("forgotPassword")}
+        </Link>
+      </p>
       <p className="font-data text-sm text-paper-muted">
         {t("noAccount")}{" "}
         <Link href="/auth/register" className="text-accent hover:text-paper">

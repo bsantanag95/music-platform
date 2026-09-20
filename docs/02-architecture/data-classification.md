@@ -36,12 +36,20 @@ Se recalcula trivialmente desde las categorías anteriores; no requiere backup p
 
 **Implicación:** al no existir estado derivado, el borrado físico de la Clase A no deja nada que desincronizar (argumento estructural de ADR 0009 / Riesgo #11). Si algún día se materializa el agregado, pasa a ser Clase C *materializada*: sigue siendo recalculable desde Clase A, y la sincronización debe usar triggers de Postgres, no lógica de aplicación.
 
-### Clase D — Efímera (reservada, sin ocupantes hoy)
+### Clase D — Efímera
 
-Capa de datos descartable / cache de corta vida, sin garantías de persistencia. **Reservada** para no tener que insertar la categoría retroactivamente; hoy no hay ocupantes:
+Capa de datos descartable de corta vida, sin garantías de persistencia:
 
-- El proyecto no tiene caché de datos propia: **Redis está diferido** (C.3 del checklist de infraestructura) y la capa de "cover art cache" solo cachea la **URL**, no los bytes (`data-licensing.md`, Riesgo #9).
-- `session` **no** es efímera: es fuente de verdad propia vía Postgres (ADR 0008), no caché en memoria ni JWT.
+- `password_reset_token` — tokens de restablecimiento de contraseña, de un solo uso y con TTL de 30
+  minutos (ADR 0014). Su pérdida no tiene consecuencia: el link deja de ser válido y el usuario pide
+  uno nuevo. No se respalda.
+- El proyecto no tiene caché de datos propia: **Redis está diferido** (C.3 del checklist de
+  infraestructura) y la capa de "cover art cache" solo cachea la **URL**, no los bytes
+  (`data-licensing.md`, Riesgo #9).
+- `session` **no** es efímera: es fuente de verdad propia vía Postgres (ADR 0008), no caché en
+  memoria ni JWT. Pertenece a Clase A.
+
+La categoría ya no está reservada: `password_reset_token` es su primer ocupante.
 
 ## Prioridad de recuperación / backup
 

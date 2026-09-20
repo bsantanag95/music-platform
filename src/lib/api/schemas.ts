@@ -185,6 +185,9 @@ export const ErrorCodeSchema = z.enum([
   "OAUTH_CALLBACK_INVALID",
   "OAUTH_TOKEN_INVALID",
   "OAUTH_EMAIL_NOT_VERIFIED",
+  "INVALID_RESET_TOKEN",
+  "PASSWORD_REUSED",
+  "EMAIL_CONFIG_MISSING",
   "USER_NOT_FOUND",
   "RELATION_INVALID",
   "REQUEST_NOT_FOUND",
@@ -224,6 +227,24 @@ export const LoginRequestSchema = z.object({
   password: z.string().min(1).max(128),
 });
 export type LoginRequest = z.infer<typeof LoginRequestSchema>;
+
+// Recuperación de contraseña (change add-password-reset). El locale se valida
+// de nuevo en el servidor contra los locales soportados; acá solo viaja como
+// string opcional desde el formulario.
+export const ForgotPasswordRequestSchema = z.object({
+  email: z.email().max(320).transform((value) => value.toLowerCase()),
+  locale: z.string().trim().max(10).optional(),
+});
+export type ForgotPasswordRequest = z.infer<typeof ForgotPasswordRequestSchema>;
+
+export const ResetPasswordRequestSchema = z.object({
+  token: z.string().trim().min(1).max(512),
+  password: z.string().min(8).max(128),
+});
+export type ResetPasswordRequest = z.infer<typeof ResetPasswordRequestSchema>;
+
+export const OkResponseSchema = z.object({ ok: z.literal(true) });
+export type OkResponse = z.infer<typeof OkResponseSchema>;
 
 export const ReportContentRequestSchema = z.object({
   targetType: z.enum(["comment", "review", "user"]),

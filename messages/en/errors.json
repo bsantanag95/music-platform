@@ -123,6 +123,18 @@
     "title": "An account with that email already exists",
     "description": "You already have an account with that email. Sign in with your password to continue."
   },
+  "INVALID_RESET_TOKEN": {
+    "title": "Invalid or expired link",
+    "description": "The link to reset your password isn't valid or has expired. Request a new one."
+  },
+  "PASSWORD_REUSED": {
+    "title": "Use a different password",
+    "description": "Your new password must be different from the previous one."
+  },
+  "EMAIL_CONFIG_MISSING": {
+    "title": "Email delivery unavailable",
+    "description": "Email delivery isn't configured. Please try again later."
+  },
   "USER_NOT_FOUND": {
     "title": "User not found",
     "description": "The requested user does not exist or is not available."

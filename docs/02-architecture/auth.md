@@ -7,10 +7,11 @@ a `02-architecture/i18n.md` para internacionalización o `03-data/sql-model.md` 
 
 ## Estado
 
-**Implementado para autenticación local y Google OAuth/OIDC.** Este documento describe el
-mecanismo que deben seguir los agentes de ejecución. La migración, los route handlers y los tests
-de autenticación local forman parte de la Fase 4; el flujo de Google se implementó como el
-incremento posterior definido por ADR 0010 y fue validado manualmente.
+**Implementado para autenticación local, Google OAuth/OIDC y recuperación de contraseña.** Este
+documento describe el mecanismo que deben seguir los agentes de ejecución. La migración, los route
+handlers y los tests de autenticación local forman parte de la Fase 4; el flujo de Google se
+implementó como el incremento posterior definido por ADR 0010 y fue validado manualmente; el reset
+de contraseña quedó definido por ADR 0014 y se implementó con transporte de email desacoplado.
 
 La implementación usa Argon2id con `memoryCost=19456`, `timeCost=2` y `parallelism=1`, centralizados
 en `src/services/auth/password.ts`.
@@ -253,12 +254,40 @@ endpoint vuelve a comprobarlo server-side. La asignación y revocación de roles
 y no existe una UI para editar roles. La superficie administrativa opera únicamente sobre las listas
 de la cuenta curadora `@exploracion` (`/explore`), no sobre listas personales de usuarios comunes.
 
+### 8. Recuperación de contraseña
+
+Implementada por ADR 0014. Un usuario con contraseña local puede pedir un link de restablecimiento y
+definir una contraseña nueva sin intervención manual.
+
+`POST /api/auth/password/forgot` recibe `{ email, locale? }` y responde **siempre `202`** para un
+email bien formado —exista o no la cuenta y sea local o solo-Google— para no permitir enumerar
+cuentas. Solo cuando existe un `app_user` con `password_hash` no nulo genera un token opaco de 32
+bytes, guarda su hash SHA-256 en `password_reset_token` (nunca el token en claro), invalida los
+tokens previos de esa cuenta y envía un correo con el link
+`/<locale>/auth/reset-password?token=...` (TTL de 30 minutos). Las cuentas creadas con Google no
+tienen contraseña local y **no** pueden restablecer por esta vía: la coincidencia de email no basta
+para vincular (ADR 0010), así que no se crea contraseña local alguna.
+
+`POST /api/auth/password/reset` recibe `{ token, password }`. Consume el token de forma atómica
+(`DELETE ... RETURNING`), aplica la misma política de contraseña que el registro (Argon2id,
+`min(8).max(128)`) y, si es válido, actualiza `app_user.password_hash`, borra todos los tokens de
+restablecimiento y **todas las sesiones** del usuario (sin autologin: se exige login explícito). Un
+token inexistente, expirado o ya usado responde `400 INVALID_RESET_TOKEN` sin distinguir el caso.
+
+El envío de correo pasa por una interfaz de transporte (`src/services/email/`). Hoy solo está
+implementado el adaptador `console` (desarrollo); en producción, sin un proveedor real configurado,
+el flujo falla cerrado con `503 EMAIL_CONFIG_MISSING` para no exponer un flujo que no entrega correo
+ni filtrar el token por logs. Los tests mockean el transporte; nunca se envía correo real.
+
+El locale del correo se valida contra `src/i18n/routing.ts` (default `es`) y no se persiste, porque
+el envío es sincrónico al pedido. La página `/<locale>/auth/reset-password` pre-valida el token sin
+consumirlo y aplica `Referrer-Policy: no-referrer` para no filtrarlo por `Referer`. Los tokens
+vencidos se limpian con el mismo job que las sesiones (`pnpm run db:cleanup-sessions`).
+
 ## Qué no decide este documento
 
 Deliberadamente fuera de alcance acá:
 
-- Flujo de recuperación de contraseña (reset por email) — no está en el alcance descrito por
-  `architecture.md`/PRD para el MVP de Fase 4; se evalúa aparte si se vuelve necesario.
 - Otros proveedores OAuth/OIDC distintos de Google y la vinculación explícita de una identidad
   externa con una cuenta local — se implementarán en cambios posteriores usando la interfaz y la
   persistencia preparadas en esta fase (ver ADR 0010).
@@ -272,6 +301,8 @@ Deliberadamente fuera de alcance acá:
   identidad externa y ubicación de los adaptadores OAuth/OIDC.
 - **`adr/0009-borrado-fisico-rating-comment.md`**: decisión relacionada pero independiente —
   borrado de `rating`/`comment`, no de sesión ni de usuario.
+- **`adr/0014-recuperacion-contrasena-y-transporte-email.md`**: token de un solo uso, anti-enumeración
+  y transporte de email desacoplado del flujo de restablecimiento.
 - **`conventions.md`**: resumen normativo de uso diario, con puntero acá para el detalle.
 - **`01-frontend-architecture.md`**: el patrón de Server Components sin round-trip a la propia
   API, que la resolución de sesión hereda directamente.

@@ -177,6 +177,30 @@ persistir el token real. `idx_session_user` permite revocar las sesiones de un u
 vencidas al momento de crearse; la expiración sigue siendo fija porque la aplicación no modifica
 `expires_at` durante requests normales.
 
+## `password_reset_token`
+
+**Propósito:** token de un solo uso para restablecer la contraseña de una cuenta con contraseña
+local. Lo genera `POST /api/auth/password/forgot` y lo consume `POST /api/auth/password/reset`.
+
+**Seguridad:** igual que `session`, guarda únicamente el hash SHA-256 del token opaco; el token en
+claro solo viaja en el link del correo. La expiración es de 30 minutos y el token es de un solo uso:
+el consumo se implementa con un borrado atómico (`DELETE ... WHERE token_hash = ... AND
+expires_at > now() RETURNING user_id`), sin columna `used_at`. Pedir un token nuevo elimina los
+tokens previos del usuario, de modo que solo el último link emitido es válido.
+
+**Relaciones:** pertenece a exactamente un `app_user`; `ON DELETE CASCADE`.
+
+**Índices:** `uq_password_reset_token_hash` único para resolver el token sin persistirlo;
+`uq_password_reset_token_user` único sobre `user_id`, que garantiza a nivel de PostgreSQL un solo
+token vigente por usuario (un pedido nuevo reemplaza el anterior con `INSERT ... ON CONFLICT`);
+`idx_password_reset_token_expires_at` permite localizar los vencidos para la limpieza. La
+restricción `expires_at > created_at` impide tokens ya vencidos al crearse.
+
+**Diferencias con `session`:** una sesión autentica; un token de reset solo autoriza un cambio de
+contraseña. Al completarse el reset se eliminan todos los tokens del usuario y todas sus sesiones
+(sin autologin). Las cuentas sin `password_hash` (Google) no pueden generar ni consumir tokens
+(ADR 0014).
+
 ## `artist`
 
 **Propósito:** representa tanto a una persona como a una banda, o al artista especial "Various Artists" usado en compilados. Un único `type` (`person` | `group` | `various`) evita duplicar la estructura entre ambos casos.

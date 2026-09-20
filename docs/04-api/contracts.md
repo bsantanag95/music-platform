@@ -275,6 +275,25 @@ en operaciones protegidas; no se revela si la sesión existió. Logout solo revo
 La cookie opaca `music_session` es `httpOnly`, `secure`, `sameSite=lax`, con expiración fija de 30
 días. Los errores posibles están en `docs/04-api/errors.md` y `src/lib/api/schemas.ts`.
 
+## Recuperación de contraseña
+
+`POST /api/auth/password/forgot` recibe `{ email, locale? }` (el `locale` se valida contra los
+locales soportados, default `es`). Responde **siempre `202 { ok: true }`** para todo email bien
+formado —exista o no la cuenta y sea local o solo-Google— para no permitir enumerar cuentas. Solo
+cuando existe un `app_user` con `password_hash` no nulo genera un token de un solo uso (30 minutos,
+guardado hasheado), invalida los tokens previos de esa cuenta y envía un correo con el link
+`/<locale>/auth/reset-password?token=...`. El envío no bloquea la respuesta. Si en producción no hay
+un transporte de email real configurado, responde `503 EMAIL_CONFIG_MISSING` (fail-closed). **400**
+con `VALIDATION_ERROR` si el email no es válido; **429** con `RATE_LIMITED` (por IP y por email).
+
+`POST /api/auth/password/reset` recibe `{ token, password }`. Consume el token de forma atómica, y
+si es válido y no expiró actualiza la contraseña con Argon2id, elimina todos los tokens de
+restablecimiento y todas las sesiones de la cuenta (sin autologin), y responde `200 { ok: true }`.
+**400** con `INVALID_RESET_TOKEN` si el token no existe, expiró o ya fue usado; **400** con
+`PASSWORD_REUSED` si la contraseña nueva es igual a la actual (el token no se consume, para permitir
+reintentar con el mismo link); **400** con `VALIDATION_ERROR` si la contraseña no cumple la política
+(`min(8).max(128)`) —en ese caso el token tampoco se consume—; **429** con `RATE_LIMITED` por IP.
+
 ## Autenticación externa — Google (OAuth 2.0 + OIDC)
 
 `GET /api/auth/google/start` recibe el query param opcional `locale` (validado contra los locales
