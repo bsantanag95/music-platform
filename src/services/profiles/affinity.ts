@@ -261,7 +261,9 @@ async function resolveEntities(refs: EntityRef[]): Promise<ShowcaseEntity[]> {
             id: releaseGroup.id,
             title: releaseGroup.title,
             cover: releaseGroup.coverThumbUrl,
-            credited: PRIMARY_ARTIST_SQL(releaseGroup.id, releaseGroup.id),
+            // Select de una sola tabla: la correlación va con la tabla escrita
+            // (ver el comentario de `PRIMARY_ARTIST_SQL`), no con `${releaseGroup.id}`.
+            credited: PRIMARY_ARTIST_SQL(sql.raw('"release_group"."id"'), sql.raw('"release_group"."id"')),
           })
           .from(releaseGroup)
           .where(inArray(releaseGroup.id, rgIds))
@@ -271,7 +273,7 @@ async function resolveEntities(refs: EntityRef[]): Promise<ShowcaseEntity[]> {
           .select({
             id: recording.id,
             title: recording.title,
-            credited: PRIMARY_ARTIST_SQL(recording.id, recording.id),
+            credited: PRIMARY_ARTIST_SQL(sql.raw('"recording"."id"'), sql.raw('"recording"."id"')),
           })
           .from(recording)
           .where(inArray(recording.id, recIds))

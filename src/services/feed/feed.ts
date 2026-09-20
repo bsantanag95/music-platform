@@ -192,7 +192,13 @@ const BLOCKED_SQL = (viewerId: string, authorId: unknown) =>
 // aunque el objetivo tenga varios créditos primarios (toma el de menor
 // `position`). Para objetivos de tipo artista ambas columnas son NULL y
 // devuelve NULL (el título ya es el artista).
-export const PRIMARY_ARTIST_SQL = (releaseGroupIdCol: AnyColumn, recordingIdCol: AnyColumn) =>
+//
+// Los parámetros también aceptan un fragmento `SQL`: en un `SELECT` de una sola
+// tabla (sin joins) Drizzle renderiza `${tabla.id}` como un `"id"` sin
+// calificar, que dentro de esta subconsulta (`credit` + `artist`) es ambiguo
+// (error 42702). En ese caso hay que pasar la correlación con la tabla
+// escrita: `sql.raw('"release_group"."id"')`. Ver la memoria raw-sql-gotchas.
+export const PRIMARY_ARTIST_SQL = (releaseGroupIdCol: AnyColumn | SQL, recordingIdCol: AnyColumn | SQL) =>
   sql<string | null>`(
     SELECT a.name FROM credit c
     JOIN artist a ON a.id = c.artist_id
