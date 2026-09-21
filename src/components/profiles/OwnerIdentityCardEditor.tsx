@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
+import { ArtistPlate } from "@/components/favorites/ArtistPlate";
 import { apiFetch, ApiError } from "@/lib/api/client";
 import { ShowcaseResponseSchema, type Favorite, type SocialTargetType } from "@/lib/api/schemas";
 import type { IdentityCard, ShowcaseEntity } from "@/services/profiles/showcase";
@@ -160,25 +161,39 @@ export function OwnerIdentityCardEditor({ initial, onSaved }: OwnerIdentityCardE
         <p className="mt-1 font-body text-xs text-paper-muted">{t("identityCard.editor.intro")}</p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      {/* Un slot por fila: en tres columnas el panel lateral (~28 rem) dejaba ~9 rem
+          por slot y los títulos se cortaban a tres letras (openspec: improve-favorites-picker). */}
+      <div className="flex flex-col gap-3">
         {slots.map((slot) => (
-          <div key={slot.key} className="flex flex-col gap-2 rounded border border-ink-border bg-ink p-3">
-            <span className="font-data text-xs text-paper-muted">{slot.heading}</span>
+          <div key={slot.key} className="flex flex-col gap-3 rounded border border-ink-border bg-ink p-4">
+            <span className="font-data text-sm text-paper-muted">{slot.heading}</span>
 
             {slot.entity ? (
-              <div className="flex items-center gap-2">
-                <CoverThumb cover={slot.entity.coverThumbUrl} label="" className="size-12 shrink-0" />
+              <div className="flex items-center gap-3">
+                {slot.key === "artist" ? (
+                  <ArtistPlate title={slot.entity.title} className="size-14" textClassName="text-xl" />
+                ) : (
+                  <CoverThumb cover={slot.entity.coverThumbUrl} label="" className="size-14 shrink-0" />
+                )}
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-display text-sm text-paper">{slot.entity.title}</span>
+                  <span className="line-clamp-2 font-display text-base text-paper">{slot.entity.title}</span>
                   {slot.entity.artistName && (
-                    <span className="block truncate font-data text-xs text-paper-muted">
+                    <span className="block truncate font-data text-sm text-paper-muted">
                       {slot.entity.artistName}
                     </span>
                   )}
                 </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={pendingSlot === slot.key}
+                  onClick={slot.onClear}
+                >
+                  {t("identityCard.editor.remove")}
+                </Button>
               </div>
             ) : (
-              <p className="font-body text-xs text-paper-muted">{slot.emptyLabel}</p>
+              <p className="font-body text-sm text-paper-muted">{slot.emptyLabel}</p>
             )}
 
             <FavoritePicker
@@ -189,17 +204,6 @@ export function OwnerIdentityCardEditor({ initial, onSaved }: OwnerIdentityCardE
               disabled={pendingSlot === slot.key}
               onPick={(favorite) => slot.onChoose(favoriteToEntity(favorite))}
             />
-
-            {slot.entity && (
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={pendingSlot === slot.key}
-                onClick={slot.onClear}
-              >
-                {t("identityCard.editor.remove")}
-              </Button>
-            )}
           </div>
         ))}
       </div>
