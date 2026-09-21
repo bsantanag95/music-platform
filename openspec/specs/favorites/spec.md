@@ -6,9 +6,7 @@ Señal de interés liviana de Fase 5: marca simple (toggle) sobre artista, álbu
 o canción (recording), sin escala numérica, con audiencia propia e independiente de escucha,
 rating y comentario. Incluye superficie propia, vista pública en perfiles y la acción
 contextual en las páginas de catálogo.
-
 ## Requirements
-
 ### Requirement: Marcar y desmarcar un favorito
 El sistema SHALL permitir a un usuario autenticado marcar o quitar un favorito sobre un
 artista, un álbum o una canción de forma idempotente. Marcar un objetivo que ya es favorito
@@ -77,7 +75,8 @@ favoritos de álbum— la carátula del álbum (`target.coverThumbUrl`); los fav
 y de canción no exponen carátula. La respuesta SHALL incluir el **conteo de favoritos propios
 por tipo de entidad (`counts`)**, calculado sobre el conjunto completo y no solo sobre la
 página cargada. La respuesta SHALL aceptar, combinables, los parámetros opcionales de
-**búsqueda por texto sobre el título del objetivo (`q`)**, **filtro por tipo de entidad
+**búsqueda por texto (`q`) sobre el título del objetivo y sobre el nombre del artista
+acreditado de los álbumes y canciones**, **filtro por tipo de entidad
 (`type`)**, **filtro por audiencia (`audience`)** y **orden (`sort`, entre recencia y
 alfabético por título del objetivo)**, aplicados en el servidor sobre el conjunto completo de
 favoritos propios. Sin ningún parámetro, el orden SHALL ser cronológico descendente y el
@@ -97,6 +96,12 @@ comportamiento SHALL ser equivalente al listado paginado previo, ampliado con `c
 - **WHEN** el usuario filtra con `q` coincidiendo parcialmente con el título de algún objetivo
 - **THEN** solo aparecen sus favoritos cuyo título del objetivo coincide, sin distinguir
   mayúsculas, con paginación válida
+
+#### Scenario: Buscar por el artista de un álbum o canción
+- **WHEN** el usuario filtra con `q` coincidiendo parcialmente con el nombre del artista
+  acreditado de sus favoritos de álbum y de canción, cuyos títulos no contienen ese texto
+- **THEN** aparecen esos álbumes y canciones junto con el favorito del propio artista, si lo
+  tiene, sin distinguir mayúsculas; y `counts` refleja solo lo que coincide
 
 #### Scenario: Filtrar por tipo y por audiencia y ordenar
 - **WHEN** el usuario filtra por `type=release-group`, `audience=public` y pide `sort=alpha`
@@ -247,3 +252,4 @@ NOT crear, modificar ni eliminar escuchas, ratings ni comentarios del mismo obje
 #### Scenario: Favorito sin efectos colaterales
 - **WHEN** un usuario marca como favorito un objetivo que ya valoró y escuchó
 - **THEN** la escucha, el rating y los comentarios existentes no cambian
+
