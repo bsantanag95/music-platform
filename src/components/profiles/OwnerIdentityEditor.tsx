@@ -9,6 +9,7 @@ import { OwnProfileResponseSchema } from "@/lib/api/schemas";
 import { TIMEZONES } from "@/lib/music-identity";
 import { PROFILE_IDENTITY_LIMITS } from "@/services/social/types";
 import { useNotifySaved, useReportDirty, type EditorHostCallbacks } from "./editor-host";
+import { TimezonePicker } from "./TimezonePicker";
 
 type Field = "bio" | "pronouns" | "location" | "timezone";
 
@@ -19,17 +20,6 @@ interface OwnerIdentityEditorProps extends EditorHostCallbacks {
   };
 }
 
-// Las zonas agrupadas por región (`America`, `Europe`…) para el selector: una lista
-// plana de ~400 zonas no se puede recorrer. `UTC` no tiene región y va sola.
-const TIMEZONE_GROUPS: Array<[string, string[]]> = (() => {
-  const groups = new Map<string, string[]>();
-  for (const zone of TIMEZONES) {
-    const region = zone.includes("/") ? zone.slice(0, zone.indexOf("/")) : zone;
-    groups.set(region, [...(groups.get(region) ?? []), zone]);
-  }
-  return [...groups.entries()];
-})();
-
 // Una zona guardada que no está en la lista (dato anterior a la validación) se
 // trata como "sin zona": el selector no puede mostrarla y al guardar se descarta.
 const validZone = (zone: string) => (TIMEZONES.includes(zone) ? zone : "");
@@ -39,7 +29,7 @@ const FIELDS: Field[] = ["bio", "pronouns", "location", "timezone"];
 // Editor inline de la identidad del dueño (bio, pronombres, ubicación, zona
 // horaria y si se muestra la hora local), montado solo en la vista del propio
 // perfil. Persiste vía PATCH /api/me/profile sin recargar. La zona horaria es un
-// selector de identificadores IANA, no texto libre. Ver spec profile-identity.
+// selector con buscador de identificadores IANA, no texto libre. Ver spec profile-identity.
 export function OwnerIdentityEditor({ initial, onSaved, onDirtyChange }: OwnerIdentityEditorProps) {
   const t = useTranslations("users");
   const tErrors = useTranslations("errors");
@@ -144,34 +134,17 @@ export function OwnerIdentityEditor({ initial, onSaved, onDirtyChange }: OwnerId
       </div>
 
       <div className="flex flex-col gap-2">
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="edit-timezone" className="font-display text-sm text-paper-muted">
-            {t("edit.timezoneLabel")}
-          </label>
-          <select
-            id="edit-timezone"
-            value={values.timezone}
-            onChange={(event) => {
-              const timezone = event.target.value;
-              setValues((prev) => ({ ...prev, timezone }));
-              // Sin zona la hora local no significa nada: la opción se apaga sola.
-              if (timezone === "") setShowLocalTime(false);
-              setStatus("idle");
-            }}
-            className="filter-select rounded border border-ink-border bg-ink-surface px-3 py-2 font-body text-paper"
-          >
-            <option value="">{t("edit.timezoneNone")}</option>
-            {TIMEZONE_GROUPS.map(([region, zones]) => (
-              <optgroup key={region} label={region}>
-                {zones.map((zone) => (
-                  <option key={zone} value={zone}>
-                    {zone}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-        </div>
+        <TimezonePicker
+          id="edit-timezone"
+          label={t("edit.timezoneLabel")}
+          value={values.timezone}
+          onChange={(timezone) => {
+            setValues((prev) => ({ ...prev, timezone }));
+            // Sin zona la hora local no significa nada: la opción se apaga sola.
+            if (timezone === "") setShowLocalTime(false);
+            setStatus("idle");
+          }}
+        />
         <label
           className={`flex items-center gap-2 font-body text-sm ${hasZone ? "text-paper-muted" : "text-paper-muted/50"}`}
         >

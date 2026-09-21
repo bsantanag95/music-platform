@@ -70,7 +70,7 @@
 ## 10. Fase 2 — Editores y Placa B
 
 - [x] 10.1 `OwnerMusicIdentityEditor` (roles, géneros y formatos como chips con contador y tope) y `OwnerPromptsEditor` (selector de pregunta, respuesta con contador, agregar y quitar); mismos contrato `editor-host` y estados que los editores existentes; pruebas
-- [x] 10.2 Reemplazar el campo de zona horaria de `OwnerIdentityEditor` por un selector agrupado por región y añadir el interruptor "mostrar mi hora local"; pruebas
+- [x] 10.2 Reemplazar el campo de zona horaria de `OwnerIdentityEditor` por un selector **con buscador** (`TimezonePicker`, combobox ARIA con la lista en línea, filtro sin tildes ni mayúsculas y teclado) y añadir el interruptor "mostrar mi hora local"; pruebas
 - [x] 10.3 Montar los editores en la pantalla Perfil de Ajustes y en el panel lateral del modo edición (bloque de la ficha con `EditableBlock` y marco vacío solo en modo edición); pruebas
 - [x] 10.4 `ProfileFicha` (síncrono, `<dl>` con etiquetas en mono, filas y bloque omitidos si están vacíos) dentro de `Placa` y la hora local junto a la ubicación; nunca en `PrivateProfileCard`; pruebas de perfil completo, parcial, vacío y privado
 - [x] 10.5 Claves `messages/es|en/users.json` (roles, géneros, formatos, preguntas con etiqueta larga y corta, hora local)

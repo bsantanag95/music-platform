@@ -125,8 +125,16 @@ transacción); una pregunta no puede repetirse, la respuesta no admite saltos de
 impide una cuarta (`position` 0..2 único por usuario).
 
 **Zona horaria y hora local.** La zona pasa de texto libre (que ninguna vista mostraba) a un selector
-de zonas IANA (`Intl.supportedValuesOf("timeZone")` + `UTC`, agrupadas por región; validación
-sensible a mayúsculas en el servidor). `show_local_time` (por defecto `false`) hace que la Placa
+de zonas IANA (`Intl.supportedValuesOf("timeZone")` + `UTC`, ~420; validación sensible a
+mayúsculas en el servidor). Como son tantas, el editor usa **`TimezonePicker`**, un combobox ARIA con
+buscador: la lista va **en línea** (no flotante, para que el scroll del panel lateral no la recorte), se
+filtra al escribir sin distinguir mayúsculas ni tildes y con `_` y `/` como espacios ("buenos aires"
+encuentra `America/Buenos_Aires`; cada palabra debe aparecer, así que "america santiago" acota), pone
+primero las zonas cuya ciudad empieza por lo escrito, agrupa por región, anuncia cuántas coinciden y
+avisa si no hay ninguna. Flechas/Home/End/Enter/Escape; **Escape cierra solo la lista** —con
+`stopImmediatePropagation`: en Next la raíz de React es `document`, el mismo nodo donde escucha el panel,
+así que `stopPropagation` no bastaba—. Los nombres son los canónicos del motor (p. ej. Buenos Aires es
+`America/Buenos_Aires`, sin `Argentina/`), no los de otras bases de datos. `show_local_time` (por defecto `false`) hace que la Placa
 muestre "14:32 hora local" junto a la ubicación; se calcula **al renderizar** en el servidor (una
 pista de contexto, no un reloj). Sin zona la opción no significa nada: se apaga sola al vaciar la zona,
 el servicio rechaza activarla sin zona y un `CHECK` de la base lo impide. La migración `0040` deja en

@@ -293,7 +293,10 @@
     },
     "timezoneNone": "No time zone",
     "showLocalTime": "Show my local time on my profile",
-    "showLocalTimeNeedsZone": "Pick a time zone to be able to show your local time."
+    "showLocalTimeNeedsZone": "Pick a time zone to be able to show your local time.",
+    "timezoneSearch": "Search a zone (e.g. Santiago)",
+    "timezoneNoResults": "No zone matches “{query}”.",
+    "timezoneResults": "{count, plural, one {# zone} other {# zones}}"
   },
   "diaryTitle": "Diary",
   "favoritesTitle": "Favorites",
