@@ -1,5 +1,22 @@
 import { z } from "zod";
+import { routing } from "@/i18n/routing";
+import {
+  GENRES,
+  isSingleLine,
+  isValidTimezone,
+  LISTENING_FORMATS,
+  MUSIC_IDENTITY_LIMITS,
+  PROMPT_KEYS,
+  SELF_ROLES,
+} from "@/lib/music-identity";
 import { normalizeLinkInput } from "@/lib/profile-links";
+import {
+  PASSWORD_MAX,
+  PASSWORD_MIN,
+  USERNAME_MAX,
+  USERNAME_MIN,
+  USERNAME_REGEX,
+} from "@/services/auth/account-rules";
 import {
   AUDIENCES,
   PROFILE_VISIBILITIES,
@@ -211,6 +228,13 @@ export const ErrorCodeSchema = z.enum([
   "RESTRICTION_NOT_FOUND",
   "SOCIAL_SUSPENSION_ACTIVE",
   "ROLE_REQUIRED",
+  "REAUTH_REQUIRED",
+  "USERNAME_CHANGE_COOLDOWN",
+  "LAST_ACCESS_METHOD",
+  "OAUTH_IDENTITY_TAKEN",
+  "OAUTH_IDENTITY_MISMATCH",
+  "SESSION_NOT_FOUND",
+  "ACCOUNT_DELETION_BLOCKED",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 
@@ -218,11 +242,11 @@ export const RegisterRequestSchema = z.object({
   username: z
     .string()
     .trim()
-    .min(3)
-    .max(32)
-    .regex(/^[a-zA-Z0-9_]+$/),
+    .min(USERNAME_MIN)
+    .max(USERNAME_MAX)
+    .regex(USERNAME_REGEX),
   email: z.email().transform((value) => value.toLowerCase()),
-  password: z.string().min(8).max(128),
+  password: z.string().min(PASSWORD_MIN).max(PASSWORD_MAX),
   // Locale para el correo de verificación (change add-email-verification).
   locale: z.string().trim().max(10).optional(),
 });
@@ -370,6 +394,9 @@ export const AuthUserSchema = z.object({
   username: z.string(),
   email: z.email(),
   displayName: z.string().nullable(),
+  // Idioma preferido guardado en la cuenta (spec account-preferences); el login
+  // lo usa para llevar a la persona a su idioma. Ausente/nulo = sin preferencia.
+  locale: z.enum(routing.locales).nullable().optional(),
 });
 export type AuthUser = z.infer<typeof AuthUserSchema>;
 
@@ -479,6 +506,9 @@ export const CommentSchema = z.object({
     id: z.uuid(),
     username: z.string(),
     displayName: z.string().nullable(),
+    // Autoría de una cuenta desactivada (spec account-lifecycle): `username` viene vacío
+    // y `displayName` nulo; la interfaz muestra «Cuenta desactivada», sin enlace.
+    deactivated: z.boolean().optional(),
   }),
   body: z.string(),
   createdAt: z.string(),
@@ -539,6 +569,8 @@ export const ReviewSchema = z.object({
     id: z.uuid(),
     username: z.string(),
     displayName: z.string().nullable(),
+    // Ver `CommentSchema`: cuenta desactivada → sin nombre ni enlace.
+    deactivated: z.boolean().optional(),
   }),
   title: z.string().nullable(),
   body: z.string(),
@@ -736,11 +768,20 @@ export type ExtendedIdentity = z.infer<typeof ExtendedIdentitySchema>;
 const identityText = (max: number) =>
   z.string().trim().max(max, `El texto supera el máximo de ${max} caracteres`).nullable();
 
+// La zona horaria es un identificador IANA de la lista (spec profile-identity,
+// "Campos de identidad extendida"); vacía o `null` la borra.
+const timezoneField = identityText(PROFILE_IDENTITY_LIMITS.timezone).refine(
+  (value) => value === null || value === "" || isValidTimezone(value),
+  "La zona horaria no es válida",
+);
+
 export const UpdateProfileIdentityRequestSchema = z.object({
   bio: identityText(PROFILE_IDENTITY_LIMITS.bio).optional(),
   pronouns: identityText(PROFILE_IDENTITY_LIMITS.pronouns).optional(),
   location: identityText(PROFILE_IDENTITY_LIMITS.location).optional(),
-  timezone: identityText(PROFILE_IDENTITY_LIMITS.timezone).optional(),
+  timezone: timezoneField.optional(),
+  // Mostrar la hora local en la Placa; el servicio exige que haya zona.
+  showLocalTime: z.boolean().optional(),
 });
 export type UpdateProfileIdentityRequest = z.infer<typeof UpdateProfileIdentityRequestSchema>;
 
@@ -974,7 +1015,8 @@ export const UpdateOwnProfileRequestSchema = z
     bio: identityText(PROFILE_IDENTITY_LIMITS.bio).optional(),
     pronouns: identityText(PROFILE_IDENTITY_LIMITS.pronouns).optional(),
     location: identityText(PROFILE_IDENTITY_LIMITS.location).optional(),
-    timezone: identityText(PROFILE_IDENTITY_LIMITS.timezone).optional(),
+    timezone: timezoneField.optional(),
+    showLocalTime: z.boolean().optional(),
   })
   .refine((value) => Object.keys(value).length > 0, {
     message: "No hay nada para actualizar",
@@ -1846,3 +1888,160 @@ export const WantedListResponseSchema = z.object({
   hasNext: z.boolean(),
 });
 export type WantedListResponse = z.infer<typeof WantedListResponseSchema>;
+
+// --- Cuenta y seguridad (change rework-account-settings, Fase 1) ---
+
+// Sesión propia listada en Ajustes. Sin token ni hash; `deviceLabel` nulo se
+// muestra como "Dispositivo desconocido".
+export const SessionSummarySchema = z.object({
+  id: z.uuid(),
+  deviceLabel: z.string().nullable(),
+  createdAt: z.string(),
+  lastSeenAt: z.string().nullable(),
+  current: z.boolean(),
+});
+export type SessionSummaryDto = z.infer<typeof SessionSummarySchema>;
+
+export const SessionsResponseSchema = z.object({ sessions: z.array(SessionSummarySchema) });
+export type SessionsResponse = z.infer<typeof SessionsResponseSchema>;
+
+export const SessionIdParamSchema = z.uuid();
+
+// Cambio de usuario (spec account-username). El formato lo valida el servicio
+// con las mismas reglas del registro; el esquema solo acota el tamaño.
+export const ChangeUsernameRequestSchema = z.object({ username: z.string().trim().min(1).max(64) });
+export type ChangeUsernameRequest = z.infer<typeof ChangeUsernameRequestSchema>;
+
+export const ChangeUsernameResponseSchema = z.object({
+  username: z.string(),
+  // Cuándo se puede volver a cambiar (ISO).
+  nextChangeAt: z.string(),
+});
+export type ChangeUsernameResponse = z.infer<typeof ChangeUsernameResponseSchema>;
+
+export const UsernameAvailabilityResponseSchema = z.object({
+  valid: z.boolean(),
+  available: z.boolean(),
+  reason: z.enum(["too_short", "too_long", "invalid_chars", "current", "taken"]).nullable(),
+});
+export type UsernameAvailabilityResponse = z.infer<typeof UsernameAvailabilityResponseSchema>;
+
+// Cambio de email (spec account-credentials): la contraseña es obligatoria en
+// cuentas con contraseña (el servidor decide); en cuentas de Google no se envía.
+export const RequestEmailChangeRequestSchema = z.object({
+  newEmail: z.email().max(320),
+  password: z.string().min(1).max(PASSWORD_MAX).optional(),
+  locale: z.string().trim().max(10).optional(),
+});
+export type RequestEmailChangeRequest = z.infer<typeof RequestEmailChangeRequestSchema>;
+
+export const PendingEmailChangeResponseSchema = z.object({
+  pending: z.object({ newEmail: z.string(), expiresAt: z.string() }).nullable(),
+});
+export type PendingEmailChangeResponse = z.infer<typeof PendingEmailChangeResponseSchema>;
+
+export const ConfirmEmailChangeRequestSchema = z.object({
+  token: z.string().trim().min(1).max(512),
+  locale: z.string().trim().max(10).optional(),
+});
+export type ConfirmEmailChangeRequest = z.infer<typeof ConfirmEmailChangeRequestSchema>;
+
+// Contraseña (spec account-credentials). Mismas reglas de longitud del registro.
+export const ChangePasswordRequestSchema = z.object({
+  currentPassword: z.string().min(1).max(PASSWORD_MAX),
+  newPassword: z.string().min(PASSWORD_MIN).max(PASSWORD_MAX),
+  revokeOtherSessions: z.boolean().default(false),
+  locale: z.string().trim().max(10).optional(),
+});
+export type ChangePasswordRequest = z.input<typeof ChangePasswordRequestSchema>;
+
+export const CreatePasswordRequestSchema = z.object({
+  newPassword: z.string().min(PASSWORD_MIN).max(PASSWORD_MAX),
+  locale: z.string().trim().max(10).optional(),
+});
+export type CreatePasswordRequest = z.infer<typeof CreatePasswordRequestSchema>;
+
+// Preferencias de la cuenta (spec account-preferences): hoy solo el idioma.
+export const UpdatePreferencesRequestSchema = z.object({ locale: z.enum(routing.locales) });
+export type UpdatePreferencesRequest = z.infer<typeof UpdatePreferencesRequestSchema>;
+
+export const PreferencesResponseSchema = z.object({ locale: z.enum(routing.locales) });
+export type PreferencesResponse = z.infer<typeof PreferencesResponseSchema>;
+
+// --- Identidad musical (change rework-account-settings, Fase 2) ---
+
+// Lista cerrada, con tope y sin repetidos (spec profile-music-identity).
+const closedList = <T extends readonly [string, ...string[]]>(values: T, max: number) =>
+  z
+    .array(z.enum(values))
+    .max(max, `Máximo ${max}`)
+    .refine((items) => new Set(items).size === items.length, "Sin repetidos");
+
+export const SelfRoleSchema = z.enum(SELF_ROLES);
+export const GenreSchema = z.enum(GENRES);
+export const ListeningFormatSchema = z.enum(LISTENING_FORMATS);
+export const PromptKeySchema = z.enum(PROMPT_KEYS);
+
+// PUT /api/me/profile/music-identity: cualquier subconjunto de los tres campos; lo
+// que se envía reemplaza al valor anterior (`[]` lo vacía).
+export const UpdateMusicIdentityRequestSchema = z
+  .object({
+    selfRoles: closedList(SELF_ROLES, MUSIC_IDENTITY_LIMITS.selfRoles).optional(),
+    genres: closedList(GENRES, MUSIC_IDENTITY_LIMITS.genres).optional(),
+    listeningFormats: closedList(LISTENING_FORMATS, MUSIC_IDENTITY_LIMITS.listeningFormats).optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, { message: "No hay nada para actualizar" });
+export type UpdateMusicIdentityRequest = z.infer<typeof UpdateMusicIdentityRequestSchema>;
+
+export const MusicIdentityResponseSchema = z.object({
+  selfRoles: z.array(SelfRoleSchema),
+  genres: z.array(GenreSchema),
+  listeningFormats: z.array(ListeningFormatSchema),
+});
+export type MusicIdentityResponse = z.infer<typeof MusicIdentityResponseSchema>;
+
+// Respuesta de una pregunta del perfil: una línea, sin saltos, de 1 a 100 caracteres.
+export const ProfilePromptInputSchema = z.object({
+  promptKey: PromptKeySchema,
+  answer: z
+    .string()
+    .trim()
+    .min(1, "La respuesta no puede estar vacía")
+    .max(MUSIC_IDENTITY_LIMITS.promptAnswer, `Máximo ${MUSIC_IDENTITY_LIMITS.promptAnswer} caracteres`)
+    .refine(isSingleLine, "La respuesta es de una sola línea"),
+});
+export type ProfilePromptInput = z.infer<typeof ProfilePromptInputSchema>;
+
+// PUT /api/me/profile/prompts reemplaza el conjunto completo, en el orden del array.
+export const ReplacePromptsRequestSchema = z.object({
+  prompts: z
+    .array(ProfilePromptInputSchema)
+    .max(MUSIC_IDENTITY_LIMITS.prompts, `Máximo ${MUSIC_IDENTITY_LIMITS.prompts} preguntas`)
+    .refine((items) => new Set(items.map((item) => item.promptKey)).size === items.length, "Una pregunta no puede responderse dos veces"),
+});
+export type ReplacePromptsRequest = z.infer<typeof ReplacePromptsRequestSchema>;
+
+export const ProfilePromptSchema = z.object({
+  promptKey: PromptKeySchema,
+  answer: z.string(),
+  position: z.number().int(),
+});
+export const PromptsResponseSchema = z.object({ prompts: z.array(ProfilePromptSchema) });
+export type PromptsResponse = z.infer<typeof PromptsResponseSchema>;
+
+// --- Ciclo de vida de la cuenta (change rework-account-settings, Fase 3) ---
+
+// Desactivar: la contraseña es el factor en cuentas con contraseña; en cuentas de
+// Google no se envía (sesión reciente o `REAUTH_REQUIRED`).
+export const DeactivateAccountRequestSchema = z.object({
+  password: z.string().min(1).max(PASSWORD_MAX).optional(),
+});
+export type DeactivateAccountRequest = z.infer<typeof DeactivateAccountRequestSchema>;
+
+// Eliminar: el usuario como confirmación, más el factor de identidad.
+export const DeleteAccountRequestSchema = z.object({
+  username: z.string().trim().min(1).max(64),
+  password: z.string().min(1).max(PASSWORD_MAX).optional(),
+});
+export type DeleteAccountRequest = z.infer<typeof DeleteAccountRequestSchema>;
+

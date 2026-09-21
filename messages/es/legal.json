@@ -11,7 +11,45 @@
   },
   "privacy": {
     "title": "Política de privacidad",
-    "body": "Acá se detallará qué datos personales se recogen, con qué base legal, durante cuánto tiempo se conservan y cómo ejercer tus derechos sobre ellos."
+    "body": "Acá se detallará qué datos personales se recogen, con qué base legal, durante cuánto tiempo se conservan y cómo ejercer tus derechos sobre ellos.",
+    "intro": "Esta es la parte de la política que ya describe lo que la aplicación hace hoy con tu cuenta y tus datos. El resto del documento está en preparación.",
+    "sections": {
+      "deactivate": {
+        "title": "Desactivar tu cuenta",
+        "body": "Desde Ajustes → Cuenta y seguridad podés desactivar tu cuenta para tomarte una pausa. Tu perfil deja de ser visible para las demás personas: no aparece en búsquedas, seguidores, seguidos, feed, actividad de la comunidad ni listas, y nadie puede seguirte ni bloquearte. Cerramos todas tus sesiones. Para hacerlo te pedimos confirmar tu identidad.",
+        "body2": "Desactivar no borra nada: conservamos tus valoraciones, reseñas, comentarios, listas, favoritos, diario y seguimientos. Tus valoraciones siguen contando en los promedios, y tus reseñas y comentarios siguen visibles con la autoría «Cuenta desactivada», sin tu usuario, sin tu nombre y sin enlace a tu perfil."
+      },
+      "reactivate": {
+        "title": "Reactivar tu cuenta",
+        "body": "Iniciar sesión, con tu contraseña o con Google, reactiva tu cuenta de inmediato y todo vuelve a verse como estaba. No hay un paso de confirmación adicional: si no querés que tu perfil vuelva a ser visible, no inicies sesión."
+      },
+      "delete": {
+        "title": "Eliminar tu cuenta",
+        "body": "También desde Cuenta y seguridad podés eliminar tu cuenta. Borramos la cuenta y todo lo que creaste: perfil, enlaces y preguntas, valoraciones, reseñas, comentarios, listas, favoritos, diario, colección, seguimientos, bloqueos, reportes que hiciste y sesiones. Los datos de otras personas no se ven afectados.",
+        "body2": "Eliminar es inmediato e irreversible: hoy no hay período de gracia. Para confirmarlo te pedimos escribir tu usuario y confirmar tu identidad. Si solo querés una pausa, desactivá la cuenta."
+      },
+      "export": {
+        "title": "Descargar tus datos",
+        "body": "En el mismo lugar podés descargar un archivo JSON con tus datos: cuenta, perfil, biblioteca (incluidas las notas privadas del diario), actividad, listas y red. De quienes te siguen o seguís solo figura el usuario público. El archivo nunca incluye tu contraseña, tokens ni sesiones. Se permite una descarga por minuto."
+      },
+      "limits": {
+        "title": "Lo que hoy no se puede eliminar",
+        "body": "Una cuenta con historial de moderación o editorial no se puede eliminar, porque conservamos el registro de esas acciones (quién las hizo y cuándo). En ese caso se puede desactivar. Una cuenta desactivada conserva sus datos hasta que la reactives o la elimines."
+      },
+      "pending": {
+        "title": "Por definir antes de la apertura al público",
+        "body": "Estos puntos todavía no están resueltos y esta política no los promete:",
+        "items": [
+          "Período de recuperación: evaluamos que eliminar deje la cuenta desactivada y recuperable entre 14 y 30 días antes de la purga definitiva, para cubrir errores o accesos indebidos. Hoy la eliminación es inmediata.",
+          "Copias de seguridad y registros técnicos: definir en cuánto tiempo desaparecen ahí los datos de una cuenta eliminada.",
+          "Cuentas desactivadas: definir cuánto tiempo se conservan sin actividad (hoy, sin límite).",
+          "Registros de moderación: anonimizar a la persona en esos registros para poder eliminar cuentas con historial, en vez de bloquearlo.",
+          "Datos que haya que conservar por obligación legal (fraude, requerimientos legales): definir cuáles, por cuánto tiempo y aislados del resto.",
+          "Derecho de supresión: confirmar los plazos y la base legal según la jurisdicción (por ejemplo, el art. 17 del RGPD exige borrar sin demora injustificada, en general dentro de un mes).",
+          "Reactivación: hoy basta iniciar sesión, sin confirmar ni avisar. Revisarlo si hay quejas de reactivaciones involuntarias."
+        ]
+      }
+    }
   },
   "cookies": {
     "title": "Política de cookies",

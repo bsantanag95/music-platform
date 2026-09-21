@@ -127,4 +127,26 @@ describe("SocialSection", () => {
     expect(socialMocks.getComments).toHaveBeenCalledWith("artist", "a1b2c3d4-0000-4000-8000-000000000001", 2, 1);
     expect(screen.queryByRole("button", { name: "Cargar más comentarios" })).not.toBeInTheDocument();
   });
+
+  it("un comentario de una cuenta desactivada se conserva con «Cuenta desactivada», sin enlace al perfil", () => {
+    renderWithIntl(
+      <SocialSection
+        target="artist"
+        targetId="a1b2c3d4-0000-4000-8000-000000000001"
+        ratings={ratings}
+        comments={{
+          ...comments,
+          comments: [
+            { id: "c9", user: { id: "u9", username: "", displayName: null, deactivated: true }, body: "Sigue visible", createdAt: "2026-01-02" },
+          ],
+        }}
+        userId="viewer"
+      />,
+    );
+
+    expect(screen.getByText("Sigue visible")).toBeInTheDocument();
+    expect(screen.getByText("Cuenta desactivada")).toBeInTheDocument();
+    expect(document.body.innerHTML).not.toContain('href="/users/');
+    expect(screen.queryByRole("button", { name: /Bloquear a/ })).not.toBeInTheDocument();
+  });
 });

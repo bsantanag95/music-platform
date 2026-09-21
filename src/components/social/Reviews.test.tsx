@@ -148,4 +148,35 @@ describe("Reviews", () => {
     });
     expect(await screen.findByText("· Mi título")).toBeInTheDocument();
   });
+
+  it("una reseña de una cuenta desactivada se conserva, con «Cuenta desactivada», sin enlace ni vista rápida", () => {
+    renderWithIntl(
+      <Reviews
+        target="release-group"
+        targetId={TARGET_ID}
+        authenticated
+        userId="viewer"
+        ownStars={0}
+        initial={response([
+          {
+            id: "rv9",
+            user: { id: "u9", username: "", displayName: null, deactivated: true },
+            title: "Sigue acá",
+            body: "La reseña se conserva.",
+            rating: { stars: 4, detailedScore: null },
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
+          },
+        ])}
+      />,
+    );
+
+    expect(screen.getByText("La reseña se conserva.")).toBeInTheDocument();
+    expect(screen.getByText("Cuenta desactivada")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Cuenta desactivada/ })).not.toBeInTheDocument();
+    expect(document.body.innerHTML).not.toContain('href="/users/');
+    // Se puede reportar, pero no bloquear a una cuenta que no existe para los demás.
+    expect(screen.getByRole("button", { name: "Reportar" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Bloquear a/ })).not.toBeInTheDocument();
+  });
 });

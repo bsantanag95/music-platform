@@ -7,10 +7,12 @@ const mocks = vi.hoisted(() => ({
   setSessionCookie: vi.fn(),
   consumeAuthAttempt: vi.fn(() => true),
   clearAuthAttempts: vi.fn(),
+  reactivateAccount: vi.fn(),
 }));
 const { authenticateUser, rotateCurrentSession, setSessionCookie, consumeAuthAttempt } = mocks;
 
 vi.mock("@/services/auth/users", () => ({ authenticateUser: mocks.authenticateUser }));
+vi.mock("@/services/auth/account-lifecycle", () => ({ reactivateAccount: mocks.reactivateAccount }));
 vi.mock("@/services/auth/sessions", () => ({ rotateCurrentSession: mocks.rotateCurrentSession, setSessionCookie: mocks.setSessionCookie }));
 vi.mock("@/services/auth/rate-limit", () => ({
   consumeAuthAttempt: mocks.consumeAuthAttempt,
@@ -39,6 +41,42 @@ describe("POST /api/auth/login", () => {
     const response = await POST(request({ identifier: "ana", password: "incorrecta" }));
     expect(response.status).toBe(401);
     expect(await response.json()).toMatchObject({ code: "INVALID_CREDENTIALS" });
+  });
+
+  it("iniciar sesión en una cuenta desactivada la reactiva antes de crear la sesión", async () => {
+    mocks.authenticateUser.mockResolvedValue({
+      id: "00000000-0000-0000-0000-000000000001",
+      username: "ana",
+      email: "ana@example.com",
+      displayName: null,
+      deactivatedAt: new Date("2026-09-01T00:00:00Z"),
+    });
+    rotateCurrentSession.mockResolvedValue({ token: "opaque", expiresAt: new Date() });
+
+    const response = await POST(request({ identifier: "ana", password: "correcta" }));
+
+    expect(response.status).toBe(200);
+    expect(mocks.reactivateAccount).toHaveBeenCalledWith("00000000-0000-0000-0000-000000000001");
+    expect(mocks.reactivateAccount.mock.invocationCallOrder[0]!).toBeLessThan(rotateCurrentSession.mock.invocationCallOrder[0]!);
+  });
+
+  it("una cuenta activa no se toca al iniciar sesión", async () => {
+    mocks.authenticateUser.mockResolvedValue({
+      id: "00000000-0000-0000-0000-000000000001",
+      username: "ana",
+      email: "ana@example.com",
+      displayName: null,
+      deactivatedAt: null,
+    });
+    rotateCurrentSession.mockResolvedValue({ token: "opaque", expiresAt: new Date() });
+    await POST(request({ identifier: "ana", password: "correcta" }));
+    expect(mocks.reactivateAccount).not.toHaveBeenCalled();
+  });
+
+  it("credenciales inválidas no reactivan nada", async () => {
+    mocks.authenticateUser.mockResolvedValue(null);
+    await POST(request({ identifier: "ana", password: "mala" }));
+    expect(mocks.reactivateAccount).not.toHaveBeenCalled();
   });
 
   it("rota la sesión tras un login válido", async () => {

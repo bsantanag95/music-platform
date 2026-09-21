@@ -6,6 +6,7 @@ import { getProfileByUsername } from "@/services/social/profiles";
 import { listProfileFollowedArtists } from "@/services/profiles/exploration";
 import { getProfileAffinity } from "@/services/profiles/affinity";
 import { ArtistTile } from "@/components/profiles/ArtistTile";
+import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -28,6 +29,7 @@ export default async function ProfileArtistsPage({ params }: PageProps) {
   try {
     profile = await getProfileByUsername(username, viewerId);
   } catch {
+    await redirectIfRenamed(username, "/artists");
     notFound();
   }
 

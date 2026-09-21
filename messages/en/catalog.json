@@ -194,6 +194,7 @@
     "suspendReasonPlaceholder": "Reason for the suspension",
     "suspendExpires": "Expires",
     "suspendSubmit": "Suspend",
-    "suspendDone": "Suspension applied."
+    "suspendDone": "Suspension applied.",
+    "deactivatedAccount": "Deactivated account"
   }
 }

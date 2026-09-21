@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/i18n-test-utils";
@@ -14,13 +14,25 @@ const mocks = vi.hoisted(() => {
       this.status = status;
     }
   }
-  return { apiFetch: vi.fn(), ApiError, push: vi.fn(), refresh: vi.fn() };
+  return { apiFetch: vi.fn(), ApiError, assign: vi.fn() };
 });
 
 vi.mock("@/lib/api/client", () => ({ apiFetch: mocks.apiFetch, ApiError: mocks.ApiError }));
-vi.mock("@/i18n/navigation", () => ({ useRouter: () => ({ push: mocks.push, refresh: mocks.refresh }) }));
 
-beforeEach(() => vi.clearAllMocks());
+const originalLocation = window.location;
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  // jsdom no implementa la navegación: se reemplaza `location` para observar la recarga completa.
+  Object.defineProperty(window, "location", {
+    configurable: true,
+    value: { ...originalLocation, assign: mocks.assign },
+  });
+});
+
+afterEach(() => {
+  Object.defineProperty(window, "location", { configurable: true, value: originalLocation });
+});
 
 describe("RevokeSessionsButton", () => {
   it("pulsar el botón pide confirmación y no cierra nada todavía", async () => {
@@ -42,10 +54,10 @@ describe("RevokeSessionsButton", () => {
 
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(mocks.apiFetch).not.toHaveBeenCalled();
-    expect(mocks.push).not.toHaveBeenCalled();
+    expect(mocks.assign).not.toHaveBeenCalled();
   });
 
-  it("confirmar llama a DELETE /api/auth/revoke-all y dirige al inicio de sesión", async () => {
+  it("confirmar llama a DELETE /api/auth/revoke-all y recarga la página en el inicio de sesión", async () => {
     const user = userEvent.setup();
     mocks.apiFetch.mockResolvedValue({ ok: true });
     renderWithIntl(<RevokeSessionsButton />);
@@ -57,8 +69,19 @@ describe("RevokeSessionsButton", () => {
     const [url, , init] = mocks.apiFetch.mock.calls[0]!;
     expect(url).toBe("/api/auth/revoke-all");
     expect((init as RequestInit).method).toBe("DELETE");
-    await waitFor(() => expect(mocks.push).toHaveBeenCalledWith("/auth/login"));
-    expect(mocks.refresh).toHaveBeenCalled();
+    // Recarga COMPLETA (no router.push + refresh, que dejaba la pantalla tal cual).
+    await waitFor(() => expect(mocks.assign).toHaveBeenCalledWith("/es/auth/login"));
+  });
+
+  it("la recarga conserva el idioma de la pantalla", async () => {
+    const user = userEvent.setup();
+    mocks.apiFetch.mockResolvedValue({ ok: true });
+    renderWithIntl(<RevokeSessionsButton />, "en");
+    await user.click(screen.getByRole("button", { name: "Sign out everywhere" }));
+
+    await user.click(await screen.findByRole("button", { name: "Sign out" }));
+
+    await waitFor(() => expect(mocks.assign).toHaveBeenCalledWith("/en/auth/login"));
   });
 
   it("ante un error muestra la alerta y no navega", async () => {
@@ -70,6 +93,6 @@ describe("RevokeSessionsButton", () => {
     await user.click(await screen.findByRole("button", { name: "Cerrar sesiones" }));
 
     expect(await screen.findByRole("alert")).toBeInTheDocument();
-    expect(mocks.push).not.toHaveBeenCalled();
+    expect(mocks.assign).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { createOrReplaceReview, deleteReview, updateReview } from "./reviews";
+import { createOrReplaceReview, deleteReview, listReviews, updateReview } from "./reviews";
 
 const mocks = vi.hoisted(() => ({
   db: { insert: vi.fn(), select: vi.fn(), delete: vi.fn(), update: vi.fn(), transaction: vi.fn() },
@@ -107,3 +107,42 @@ describe("deleteReview", () => {
     expect(mocks.db.delete).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("listReviews: autoría de cuentas desactivadas", () => {
+  function listing(rows: unknown[]) {
+    const target: unknown = new Proxy(function () {}, {
+      get(_t, prop) {
+        if (prop === "then") {
+          const result = Promise.resolve(rows);
+          return result.then.bind(result);
+        }
+        return () => target;
+      },
+    });
+    mocks.db.select.mockReturnValue(target);
+  }
+  const base = {
+    title: null,
+    body: "x",
+    createdAt: new Date("2026-01-01"),
+    updatedAt: new Date("2026-01-01"),
+    stars: "4",
+    detailedScore: null,
+  };
+
+  it("una reseña de una cuenta desactivada no entrega su usuario ni su nombre", async () => {
+    listing([
+      { ...base, id: "r1", user: { id: "u1", username: "ana", displayName: "Ana", deactivatedAt: new Date("2026-09-01") } },
+      { ...base, id: "r2", user: { id: "u2", username: "fran", displayName: "Fran", deactivatedAt: null } },
+    ]);
+
+    const { reviews } = await listReviews(ALBUM, 1, 20);
+
+    expect(reviews[0]!.user).toEqual({ id: "u1", username: "", displayName: null, deactivated: true });
+    expect(JSON.stringify(reviews[0])).not.toMatch(/ana|Ana/);
+    expect(reviews[1]!.user).toEqual({ id: "u2", username: "fran", displayName: "Fran", deactivated: false });
+    // La reseña y su valoración se conservan.
+    expect(reviews[0]).toMatchObject({ body: "x", rating: { stars: 4 } });
+  });
+});
+

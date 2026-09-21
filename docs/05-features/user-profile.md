@@ -46,8 +46,9 @@ extendida.
 ## Identidad
 
 Además de nombre visible y username, `app_user` guarda (todo opcional): **bio** (≤200),
-**pronombres** (≤40), **ubicación** (≤80), **zona horaria** (≤64) y **avatar_url** (reservado,
-sin lectura en UI — la identidad visual es el monograma determinista por username).
+**pronombres** (≤40), **ubicación** (≤80), **zona horaria** (un identificador IANA de una lista, no
+texto libre — ver "Identidad musical") y **avatar_url** (reservado, sin lectura en UI — la identidad
+visual es el monograma determinista por username; el avatar irá en una spec de imágenes aparte).
 
 ### Enlaces externos
 
@@ -103,6 +104,61 @@ Tarjeta contenida") comparados con un refresco mínimo sin card, una versión ce
 de identidad, y contadores como bloques de estadística en vez de pills. Antes tenía además una
 variante `full` para la vista de perfil privado; esa vista ahora tiene su propia tarjeta y la
 variante se eliminó.
+
+## Identidad musical (`rework-account-settings`, Fase 2)
+
+Lo que la persona dice de su relación con la música, para dar ganas de visitar un perfil ajeno
+sin convertirlo en un panel de métricas. Todo es opcional, vaciable y de **listas cerradas** (claves
+estables en `src/lib/music-identity.ts`, nombres en `messages/*/users.json`: agregar un género es
+cambiar código, no una migración):
+
+| Campo | Valores | Tope |
+|---|---|---|
+| **Me defino como** (`self_roles`) | `listener`, `collector`, `musician`, `dj`, `critic`, `radio-host` | 3 |
+| **Géneros que me mueven** (`genres`) | 20: `rock`, `punk`, `post-punk`, `indie`, `shoegaze`, `metal`, `hip-hop`, `electronic`, `ambient`, `jazz`, `soul-funk`, `folk`, `blues`, `classical`, `pop`, `latin`, `reggae`, `experimental`, `country`, `bossa-nova` | 5 |
+| **Cómo escucho** (`listening_formats`) | `vinyl`, `cd`, `cassette`, `streaming`, `digital` | 5 |
+| **Preguntas del perfil** (`user_profile_prompt`) | 8: `first-record`, `sunday-record`, `defended-song`, `guilty-pleasure`, `first-concert`, `desert-island-record`, `sad-day-record`, `road-trip-record` — cada una con su pregunta larga (editor) y una etiqueta corta (Placa) | 3, respuesta de una línea ≤100 |
+
+Los roles describen cómo se relaciona la persona con la música: **no otorgan permisos, insignias
+ni métricas**. Las preguntas se guardan como **conjunto completo** (`PUT /api/me/profile/prompts`,
+transacción); una pregunta no puede repetirse, la respuesta no admite saltos de línea y la base
+impide una cuarta (`position` 0..2 único por usuario).
+
+**Zona horaria y hora local.** La zona pasa de texto libre (que ninguna vista mostraba) a un selector
+de zonas IANA (`Intl.supportedValuesOf("timeZone")` + `UTC`, ~420; validación sensible a
+mayúsculas en el servidor). Como son tantas, el editor usa **`TimezonePicker`**, un combobox ARIA con
+buscador: la lista va **en línea** (no flotante, para que el scroll del panel lateral no la recorte), se
+filtra al escribir sin distinguir mayúsculas ni tildes y con `_` y `/` como espacios ("buenos aires"
+encuentra `America/Buenos_Aires`; cada palabra debe aparecer, así que "america santiago" acota), pone
+primero las zonas cuya ciudad empieza por lo escrito, agrupa por región, anuncia cuántas coinciden y
+avisa si no hay ninguna. Flechas/Home/End/Enter/Escape; **Escape cierra solo la lista** —con
+`stopImmediatePropagation`: en Next la raíz de React es `document`, el mismo nodo donde escucha el panel,
+así que `stopPropagation` no bastaba—. Los nombres son los canónicos del motor (p. ej. Buenos Aires es
+`America/Buenos_Aires`, sin `Argentina/`), no los de otras bases de datos. `show_local_time` (por defecto `false`) hace que la Placa
+muestre "14:32 hora local" junto a la ubicación; se calcula **al renderizar** en el servidor (una
+pista de contexto, no un reloj). Sin zona la opción no significa nada: se apaga sola al vaciar la zona,
+el servicio rechaza activarla sin zona y un `CHECK` de la base lo impide. La migración `0040` deja en
+`NULL` las zonas previas que no sean una zona real (`pg_timezone_names`).
+
+**Ficha de la Placa (mockup B, "ficha de disco").** `ProfileFicha` (síncrono, recibe `t`) se dibuja
+dentro de `Placa`, después de los enlaces y separada por un divisor: un `<dl>` con etiquetas en
+tipografía de datos (`Soy`, `Géneros`, `Escucho en` y las etiquetas cortas de las preguntas, con la
+pregunta completa de tooltip) y sus valores a la derecha. Cada fila se omite si está vacía y el bloque
+—con su divisor— si no hay nada: un perfil sin completar se ve igual que antes.
+
+**Privacidad.** Es identidad de "quién soy", no de "cómo me encuentro": solo la dibuja la Placa de un
+perfil **accesible**. `getProfileView` **vacía** roles, géneros, formatos, preguntas y hora local para
+quien no tiene acceso a un perfil privado (además de que `PrivateProfileCard` no los dibuja), de modo que
+ni siquiera viajan en el HTML de producción — verificado contra un build de producción con un perfil
+privado sembrado. (En **desarrollo**, React incluye en el payload información de depuración con filas
+crudas de las consultas; es solo de dev y no existe en producción.)
+
+**Edición.** Los editores (`OwnerMusicIdentityEditor` con chips y contador sobre el máximo,
+`OwnerPromptsEditor`, y `OwnerIdentityEditor` con el selector de zona y "mostrar mi hora local")
+se montan en la pantalla **Perfil** de Ajustes y en el panel lateral de la Placa del modo edición —el
+mismo panel que ya alojaba identidad y enlaces—, con el contrato `editor-host` de siempre. Endpoints:
+`PUT /api/me/profile/music-identity`, `PUT` y `DELETE /api/me/profile/prompts` y
+`PATCH /api/me/profile` (`timezone`, `showLocalTime`); ver `docs/04-api/contracts.md`.
 
 ## Perfil privado
 
@@ -718,14 +774,112 @@ redirige a `/me/settings/profile`. Cada pantalla vuelve a exigir sesión.
 
 | Pantalla | Contenido |
 |---|---|
-| `profile` | Tarjeta de Identidad, identidad (bio, pronombres, ubicación, zona horaria) y enlaces — los mismos editores que abre el modo edición |
+| `profile` | Tarjeta de Identidad, identidad (bio, pronombres, ubicación, zona horaria y hora local), **identidad musical** (roles, géneros, formatos), **preguntas del perfil** y enlaces — los mismos editores que abre el modo edición |
 | `curation` | Filas con conteo: Empieza por aquí (abre su editor en el panel lateral; el himno se elige desde la Tarjeta de Identidad, en `profile`); listas fijadas, valoraciones destacadas y diario destacado (solo conteo y enlace/pista a donde se fijan; las valoraciones se destacan desde la valoración de cada álbum o canción). `getCurationSummary` aporta esos tres conteos |
 | `privacy` | Visibilidad público/privado y **audiencia por defecto del contenido nuevo**, con la acción aparte "Aplicar a lo existente" |
 | `network` | Enlaces a solicitudes (con bandeja), seguidores, seguidos y bloqueadas, desde la superficie `settings` de `user-menu-items.ts` (la superficie `panel` sigue existiendo: la usa el panel móvil del Header) |
-| `account` | Nombre visible (`displayName`, ≤50, vacío = se muestra el username), método de acceso en solo lectura (contraseña / proveedores, nunca el hash) y "Cerrar todas las sesiones" (`DELETE /api/auth/revoke-all`, con confirmación y redirección a login) |
+| `account` | **Cuenta y seguridad** (ver la sección siguiente): datos de la cuenta (nombre visible, usuario, email), cómo se inicia sesión (contraseña, Google), sesiones por dispositivo e idioma de la interfaz |
 
-Cuenta y seguridad no ofrece controles de funciones inexistentes (cambiar email, usuario o
-contraseña con sesión, foto de perfil, eliminar cuenta).
+### Cuenta y seguridad (`/me/settings/account`, cambio `rework-account-settings`, Fase 1)
+
+Nada de esta pantalla se muestra a otras personas. Tarjetas y flujos:
+
+| Tarjeta | Qué hace | Reglas que conviene saber |
+|---|---|---|
+| **Datos de la cuenta** | Nombre visible (editor existente), **usuario** y **email** con su estado de verificación | Cada acción sensible abre un diálogo (`components/ui/Dialog.tsx`, portal + foco atrapado) con validación en línea |
+| **Cómo iniciás sesión** | **Contraseña** (cambiar, o crear si la cuenta es de Google) y **Google** (vincular / desvincular) | Desvincular Google queda deshabilitado, con la explicación, si es el único método de acceso |
+| **Sesiones activas** | Un dispositivo por fila (`Chrome · Windows`), "Esta sesión" marcada, "Cerrar" por fila y "Cerrar todas" | Solo se guarda una **etiqueta** del dispositivo (nunca el User-Agent ni la IP); `last_seen_at` se escribe como mucho cada 10 minutos |
+| **Preferencias** | Idioma de la interfaz | Se guarda en `app_user.locale`; solo este control lo persiste, el selector del Header no |
+
+**Cambiar el usuario** (`account-username`): entre 3 y 32 caracteres, `[a-zA-Z0-9_]` (las mismas
+reglas del registro, `services/auth/account-rules.ts`). Un cambio cada 30 días
+(`username_changed_at`). El usuario anterior queda **reservado 30 días** en `username_alias` y
+`/users/<anterior>` redirige (307) a la misma subruta con el usuario nuevo
+(`redirectIfRenamed`, usado en las 11 páginas bajo `users/[username]/`); `GET /api/users/[username]`
+**no** redirige. La disponibilidad compara con `lower()` — `app_user.username` distingue mayúsculas por
+historia (existen `Ana` y `ana`) pero un cambio nuevo no puede suplantar a alguien por una mayúscula.
+El registro y el alta con Google también respetan la reserva. El monograma cambia de color porque se
+calcula desde el usuario.
+
+**Cambiar el email** (`account-credentials`): pide el factor de identidad, manda un correo al email
+**nuevo** con un enlace de un solo uso (24 h, `email_change_token`, solo el hash) y **no cambia nada
+hasta confirmar** (`/[locale]/auth/change-email?token=`, con botón de confirmar: un GET nunca cambia el
+email). Al confirmar se revalida que siga libre, se marca verificado y se avisa al email anterior. Un
+pedido nuevo reemplaza al pendiente y la pantalla lo avisa mientras esté vigente.
+
+**Autenticación reciente** (`services/auth/recent-auth.ts`): cambiar email, crear contraseña (y, en la
+Fase 3, desactivar y eliminar) exigen un factor fresco. Con contraseña: se envía y se verifica (límite
+de 10 intentos por 15 minutos por usuario). Sin contraseña (alta con Google): la sesión debe tener menos
+de **10 minutos**; si no, la API responde `REAUTH_REQUIRED` y el diálogo ofrece "Confirmar con Google".
+Cambiar la contraseña exige siempre la actual.
+
+**Google desde Ajustes**: el flujo OAuth gana una *intención* cerrada (`login` | `link` | `reauth`).
+`link` vincula la identidad **por el id de la cuenta de Google, no por el email** (el email de Google no
+tiene que coincidir con el de la cuenta); `reauth` confirma la identidad y rota la sesión. Ambas exigen
+sesión, guardan quién inició el flujo, y vuelven siempre a `/<locale>/me/settings/account?google=…` (un
+destino **fijo**: sigue sin haber `returnTo` controlado por el cliente). Un error del flujo vuelve con
+`?google=error&code=OAUTH_IDENTITY_TAKEN|OAUTH_IDENTITY_MISMATCH`, un conjunto cerrado que la pantalla
+localiza.
+
+**Idioma**: con preferencia guardada, iniciar sesión (contraseña o Google) lleva a ese idioma.
+
+### Desactivar, exportar y eliminar la cuenta (Fase 3)
+
+Dos tarjetas al final de Cuenta y seguridad: **Pausar o salir** (desactivar y descargar tus datos) y,
+aparte y en zona de peligro, **Eliminar cuenta**. La foto de perfil queda para una spec de imágenes
+aparte.
+
+| Acción | Efecto | Reversible |
+|---|---|---|
+| **Desactivar** | Oculta a la persona y **conserva todo lo que hizo**. Cierra todas sus sesiones. | Sí: iniciar sesión (contraseña o Google) la reactiva |
+| **Eliminar** | Borra la cuenta y **todo lo que creó** (`DELETE FROM app_user` en cascada). | No |
+| **Descargar mis datos** | Un JSON con lo propio. No cambia nada. | — |
+
+**Desactivar** (`app_user.deactivated_at`, migración `0041`). Exige el factor de identidad (mismo
+mecanismo de la autenticación reciente). Una cuenta desactivada **no existe para los demás**: su perfil
+y sus 9 subpáginas responden como un usuario inexistente, no aparece en búsqueda, seguidores/seguidos/
+mutuos ni en sus contadores, ni en solicitudes de seguimiento, vista rápida, afinidad, feed, feed
+ambiente, actividad de la comunidad, Home, ni en listas descubiertas, guardadas o de la comunidad; y no
+se la puede seguir ni bloquear. Todo eso sale de **un único criterio**
+(`activeUserCondition()` en `services/auth/account-status.ts`), así que una superficie nueva lo hereda
+en una línea.
+
+Lo que **se conserva**: valoraciones (siguen contando en los promedios), reseñas, comentarios, listas,
+favoritos, diario y seguimientos. Las reseñas y comentarios se siguen mostrando pero con la autoría
+**«Cuenta desactivada»**, sin enlace ni vista rápida (`maskAuthor()`: la API nunca entrega el usuario ni
+el nombre reales de la autora; solo `user.deactivated: true`). Sobre ese contenido se puede **reportar**,
+pero no bloquear a la autora ni, desde moderación, suspenderla (las consultas de moderación conservan la
+identidad real).
+
+**Reactivar** no tiene botón: iniciar sesión (`POST /api/auth/login` o el callback de Google) limpia
+`deactivated_at` antes de crear la sesión. Restablecer la contraseña de una cuenta desactivada también
+funciona (la encuentra) y el siguiente inicio de sesión la reactiva. Todo vuelve como estaba.
+
+**Eliminar** pide, además del factor de identidad, **escribir el usuario exacto** (solo se ignoran los
+espacios de los bordes). El diálogo lista lo que se borra, avisa que no se deshace y ofrece
+"Desactivá la cuenta" como alternativa. Una cuenta con historial de moderación o editorial (las filas de
+auditoría referencian a la persona con `RESTRICT`) **no se puede eliminar**: la base rechaza el borrado
+(`23001`, o `23503` con `NO ACTION`), la API responde `ACCOUNT_DELETION_BLOCKED` sin cambiar nada y el
+diálogo sugiere desactivar. Tras borrar, la página recarga hacia el inicio.
+
+**Descargar mis datos** (`GET /api/me/export`, una por minuto): archivo JSON
+`music-platform-<usuario>-<fecha>.json` con la cuenta (sin hash de contraseña), el perfil (enlaces,
+fijados, vitrina, preguntas), la biblioteca (diario con las notas privadas, favoritos, para escuchar,
+colección, buscados, artistas seguidos), la actividad (valoraciones, reseñas, comentarios), las listas
+(propias con sus ítems, guardadas y fijadas), los destacados y la red (seguidores, seguidos y bloqueados
+**solo por usuario público**, nunca su email ni sus datos privados). Los ítems del catálogo van como id y
+un mapa de nombres. Es síncrono, sin trabajos en segundo plano ni almacenamiento; nunca incluye tokens,
+sesiones ni columnas de moderación.
+
+**Política de privacidad (`/privacy`).** Todo lo anterior está descrito para las personas usuarias en
+`messages/{es,en}/legal.json` (`privacy.sections.*`, renderizado por `LegalPageView`), junto con una
+sección final **«Por definir antes de la apertura al público»** que es el registro de lo que quedó
+abierto: período de recuperación de 14–30 días tras eliminar, plazo de las copias de seguridad y
+registros técnicos, cuánto se conserva una cuenta desactivada sin actividad (hoy sin límite),
+anonimizar a la persona en los registros de moderación (hoy bloquean la eliminación), datos a conservar
+por obligación legal, plazos del derecho de supresión según jurisdicción y la reactivación sin
+confirmar ni avisar. **Si cambia el comportamiento de desactivar, reactivar, eliminar o exportar, hay
+que actualizar ese texto** (la página sigue siendo un borrador `noindex`, no una política vigente).
 
 ### Audiencia por defecto del contenido nuevo
 
@@ -776,6 +930,13 @@ cuántas veces se escuchó algo — es "qué está sonando", no una métrica.
 |---|---|
 | `app_user.{bio, pronouns, location, timezone, avatar_url}` | Identidad extendida (migración 0014) |
 | `app_user.display_name` | Nombre visible; editable desde `/me/settings/account` (≤50, vacío = `NULL`, el sitio muestra el username) |
+| `app_user.{self_roles, genres, listening_formats}` | Identidad musical: `TEXT[] NOT NULL DEFAULT '{}'`, claves de listas cerradas validadas en la aplicación; la base solo limita la cardinalidad (≤3, ≤5, ≤5) — migración 0040 |
+| `app_user.show_local_time` | Mostrar la hora local en la Placa (`BOOLEAN`, por defecto `false`); `CHECK (NOT show_local_time OR timezone IS NOT NULL)` — migración 0040 |
+| `user_profile_prompt` | Hasta 3 preguntas por usuario: `prompt_key` de lista cerrada (app), `answer` 1..100 sin saltos de línea, `position` 0..2; `UNIQUE (user_id, prompt_key)` y `UNIQUE (user_id, position)`; `ON DELETE CASCADE` — migración 0040 |
+| `app_user.username_changed_at` / `app_user.locale` | Fecha del último cambio de usuario (nulo = nunca; base del enfriamiento de 30 días) e idioma preferido (`es`/`en`, nullable) — migración 0039 |
+| `username_alias` | Usuario anterior reservado 30 días tras un cambio: `UNIQUE (lower(username))`, `expires_at`; los vencidos no se consultan y se borran al renombrar (migración 0039) |
+| `email_change_token` | Cambio de email pendiente: `user_id` único, `new_email`, solo el hash del token, 24 h (migración 0039) |
+| `session.device_label` / `session.last_seen_at` | Etiqueta legible del dispositivo (≤80) y última actividad; nulos en las sesiones previas (migración 0039) |
 | `app_user.default_audience` | Audiencia por defecto del contenido nuevo (nullable, `CHECK`, migración 0034). `NULL` = "según el tipo". Nunca reescribe contenido existente |
 | `user_profile_link` | Enlaces externos ordenados, máx. 5 app-side; `kind` con `CHECK` de 10 tipos (`x`, `tiktok` y `spotify` en la migración 0035; `website` unificado en `other` en la 0036); `url` canónica ≤400, sin columna `handle` |
 | `listen_entry` (lectura) | Fuente única de "En rotación" — escuchas de canción/álbum de los últimos 30 días, filtradas por audiencia. Sin tabla ni columna nueva |

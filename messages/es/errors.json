@@ -51,7 +51,7 @@
     "title": "Actividad social suspendida",
     "description": "No podés publicar ni generar nueva actividad social mientras dure la suspensión."
   },
-"MODERATION_REPORT_NOT_FOUND": {
+  "MODERATION_REPORT_NOT_FOUND": {
     "title": "Reporte no encontrado",
     "description": "El reporte de moderación no existe o ya no está disponible."
   },
@@ -194,5 +194,33 @@
   "COLLECTION_ENTRY_NOT_FOUND": {
     "title": "Entrada de colección no encontrada",
     "description": "La entrada no existe o ya fue quitada de la colección."
+  },
+  "REAUTH_REQUIRED": {
+    "title": "Confirmá tu identidad",
+    "description": "Por seguridad, confirmá que sos vos antes de continuar."
+  },
+  "USERNAME_CHANGE_COOLDOWN": {
+    "title": "Cambio de usuario no disponible todavía",
+    "description": "Solo podés cambiar tu usuario una vez cada 30 días."
+  },
+  "LAST_ACCESS_METHOD": {
+    "title": "Es tu único método de acceso",
+    "description": "Creá una contraseña antes de desvincular Google, o te quedarías sin forma de entrar."
+  },
+  "OAUTH_IDENTITY_TAKEN": {
+    "title": "Esa cuenta de Google ya está en uso",
+    "description": "Esa cuenta de Google ya está vinculada a otra cuenta. Probá con otra."
+  },
+  "OAUTH_IDENTITY_MISMATCH": {
+    "title": "No es la cuenta vinculada",
+    "description": "Elegiste una cuenta de Google distinta de la que tenés vinculada."
+  },
+  "SESSION_NOT_FOUND": {
+    "title": "Sesión no encontrada",
+    "description": "Esa sesión ya no existe."
+  },
+  "ACCOUNT_DELETION_BLOCKED": {
+    "title": "No se puede eliminar esta cuenta",
+    "description": "Esta cuenta tiene historial de moderación o editorial y no puede eliminarse. Podés desactivarla en su lugar."
   }
 }

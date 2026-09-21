@@ -6,7 +6,16 @@ const MAX_KEYS = 10_000;
 const attempts = new Map<string, Attempt[]>();
 let operationsSincePrune = 0;
 
-export function consumeAuthAttempt(keys: string[], now = Date.now()): boolean {
+export interface AttemptLimitOptions {
+  /** Intentos permitidos por ventana (por defecto 10). */
+  max?: number;
+  /** Duración de la ventana en milisegundos (por defecto 15 minutos). */
+  windowMs?: number;
+}
+
+export function consumeAuthAttempt(keys: string[], now = Date.now(), options: AttemptLimitOptions = {}): boolean {
+  const max = options.max ?? MAX_ATTEMPTS;
+  const windowMs = options.windowMs ?? WINDOW_MS;
   operationsSincePrune++;
   if (operationsSincePrune >= 100) {
     operationsSincePrune = 0;
@@ -14,11 +23,11 @@ export function consumeAuthAttempt(keys: string[], now = Date.now()): boolean {
   }
 
   const primaryKey = keys[0];
-  if (primaryKey && !consumeKey(primaryKey, now)) return false;
+  if (primaryKey && !consumeKey(primaryKey, now, max, windowMs)) return false;
 
   let allowed = true;
   for (const key of keys.slice(1)) {
-    if (!consumeKey(key, now)) allowed = false;
+    if (!consumeKey(key, now, max, windowMs)) allowed = false;
   }
   return allowed;
 }
@@ -52,9 +61,9 @@ function pruneAttempts(now: number): void {
   }
 }
 
-function consumeKey(key: string, now: number): boolean {
-  const recent = (attempts.get(key) ?? []).filter((item) => now - item.at < WINDOW_MS);
-  if (recent.length >= MAX_ATTEMPTS) {
+function consumeKey(key: string, now: number, max: number, windowMs: number): boolean {
+  const recent = (attempts.get(key) ?? []).filter((item) => now - item.at < windowMs);
+  if (recent.length >= max) {
     attempts.set(key, recent);
     return false;
   }

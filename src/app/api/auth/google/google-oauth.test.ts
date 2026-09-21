@@ -20,6 +20,9 @@ const mocks = vi.hoisted(() => {
     setOAuthFlowCookies: vi.fn(),
     consumeOAuthFlowCookies: vi.fn(),
     resolveOrCreateOAuthUser: vi.fn(),
+    findIdentityByProvider: vi.fn(),
+    linkIdentityToUser: vi.fn(),
+    reactivateAccount: vi.fn(),
     createSession: vi.fn(),
     rotateCurrentSession: vi.fn(),
     resolveSession: vi.fn(),
@@ -42,10 +45,15 @@ vi.mock("@/services/auth/oauth-flow", () => ({
   setOAuthFlowCookies: mocks.setOAuthFlowCookies,
   consumeOAuthFlowCookies: mocks.consumeOAuthFlowCookies,
   resolveLocale: (value: string | null | undefined) => (value === "es" || value === "en" ? value : "es"),
+  resolveIntent: (value: string | null | undefined) => (value === "link" || value === "reauth" ? value : "login"),
+  isAccountIntent: (intent: string | undefined) => intent === "link" || intent === "reauth",
 }));
 vi.mock("@/services/auth/identities", () => ({
   resolveOrCreateOAuthUser: mocks.resolveOrCreateOAuthUser,
+  findIdentityByProvider: mocks.findIdentityByProvider,
+  linkIdentityToUser: mocks.linkIdentityToUser,
 }));
+vi.mock("@/services/auth/account-lifecycle", () => ({ reactivateAccount: mocks.reactivateAccount }));
 vi.mock("@/services/auth/sessions", () => ({
   createSession: mocks.createSession,
   rotateCurrentSession: mocks.rotateCurrentSession,
@@ -70,8 +78,9 @@ function mockConfig(): void {
   });
 }
 
-function startRequest(locale = "es"): NextRequest {
-  return new NextRequest(`http://localhost:3000/api/auth/google/start?locale=${locale}`);
+function startRequest(locale = "es", intent?: string): NextRequest {
+  const query = intent ? `?locale=${locale}&intent=${intent}` : `?locale=${locale}`;
+  return new NextRequest(`http://localhost:3000/api/auth/google/start${query}`);
 }
 
 describe("GET /api/auth/google/start", () => {
@@ -108,7 +117,42 @@ describe("GET /api/auth/google/start", () => {
   it("persiste el locale del query en el estado del flujo", async () => {
     await startGet(startRequest("en"));
 
-    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("en");
+    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("en", undefined);
+  });
+
+  it("para vincular guarda la intención y la sesión que inició el flujo", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "u1" } });
+
+    const response = await startGet(startRequest("es", "link"));
+
+    expect(response.status).toBe(307);
+    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", { intent: "link", userId: "u1" });
+  });
+
+  it("para confirmar la identidad guarda la intención reauth", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "u1" } });
+    await startGet(startRequest("es", "reauth"));
+    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", { intent: "reauth", userId: "u1" });
+  });
+
+  it("vincular sin sesión se rechaza sin redirigir a Google", async () => {
+    mocks.resolveSession.mockResolvedValue(null);
+
+    const response = await startGet(startRequest("es", "link"));
+
+    expect(response.status).toBe(401);
+    expect((await response.json()).code).toBe("AUTH_REQUIRED");
+    expect(mocks.setOAuthFlowCookies).not.toHaveBeenCalled();
+    expect(mocks.buildAuthUrl).not.toHaveBeenCalled();
+  });
+
+  it("una intención desconocida se trata como login, sin exigir sesión", async () => {
+    mocks.resolveSession.mockResolvedValue(null);
+
+    const response = await startGet(startRequest("es", "admin"));
+
+    expect(response.status).toBe(307);
+    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", undefined);
   });
 
   it("falla si la configuración de Google está ausente", async () => {
@@ -306,3 +350,176 @@ describe("GET /api/auth/google/callback", () => {
     expect(mocks.rotateCurrentSession).toHaveBeenCalledWith("new-user");
   });
 });
+
+describe("GET /api/auth/google/callback con intención de cuenta", () => {
+  const callbackUrl = "http://localhost:3000/api/auth/google/callback?code=auth-code&state=valid-state";
+  const identity = { provider: "google", providerAccountId: "sub-999", email: "otra@gmail.com", emailVerified: true };
+
+  function flow(intent: "link" | "reauth", userId = "u1") {
+    mocks.consumeOAuthFlowCookies.mockResolvedValue({
+      state: "valid-state",
+      codeVerifier: "verifier",
+      nonce: "nonce",
+      locale: "en",
+      intent,
+      userId,
+    });
+    mocks.exchangeCode.mockResolvedValue({ idToken: "t", accessToken: "a", tokenType: "Bearer", expiresIn: 3600 });
+    mocks.validateIdToken.mockResolvedValue({ sub: "sub-999", nonce: "nonce" });
+    mocks.toIdentity.mockReturnValue(identity);
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.consumeAuthAttempt.mockReturnValue(true);
+    mockConfig();
+    mocks.resolveSession.mockResolvedValue({ user: { id: "u1" } });
+    mocks.linkIdentityToUser.mockResolvedValue(undefined);
+  });
+
+  it("vincula la identidad a la cuenta de la sesión y vuelve a Ajustes, sin tocar la sesión", async () => {
+    flow("link");
+
+    const response = await callbackGet(new NextRequest(callbackUrl));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toContain("/en/me/settings/account?google=linked");
+    expect(mocks.linkIdentityToUser).toHaveBeenCalledWith("u1", identity);
+    expect(mocks.resolveOrCreateOAuthUser).not.toHaveBeenCalled();
+    expect(mocks.createSession).not.toHaveBeenCalled();
+    expect(mocks.rotateCurrentSession).not.toHaveBeenCalled();
+  });
+
+  it("no acepta un retorno controlado por el cliente", async () => {
+    flow("link");
+
+    const response = await callbackGet(new NextRequest(`${callbackUrl}&returnTo=https://evil.com&next=/admin`));
+
+    const location = new URL(response.headers.get("location")!);
+    expect(location.origin).toBe("http://localhost:3000");
+    expect(location.pathname).toBe("/en/me/settings/account");
+  });
+
+  it("una cuenta de Google ya vinculada a otra cuenta vuelve a Ajustes con OAUTH_IDENTITY_TAKEN", async () => {
+    flow("link");
+    mocks.linkIdentityToUser.mockRejectedValue(new Error("OAUTH_IDENTITY_TAKEN"));
+
+    const response = await callbackGet(new NextRequest(callbackUrl));
+
+    expect(response.headers.get("location")).toContain("google=error&code=OAUTH_IDENTITY_TAKEN");
+  });
+
+  it("rechaza si la sesión ya no es la que inició el flujo", async () => {
+    flow("link", "otra-persona");
+
+    const response = await callbackGet(new NextRequest(callbackUrl));
+
+    expect(response.headers.get("location")).toContain("auth/error?code=OAUTH_STATE_INVALID");
+    expect(mocks.linkIdentityToUser).not.toHaveBeenCalled();
+  });
+
+  it("rechaza si no hay sesión al volver de Google", async () => {
+    flow("reauth");
+    mocks.resolveSession.mockResolvedValue(null);
+
+    const response = await callbackGet(new NextRequest(callbackUrl));
+
+    expect(response.headers.get("location")).toContain("OAUTH_STATE_INVALID");
+    expect(mocks.rotateCurrentSession).not.toHaveBeenCalled();
+  });
+
+  it("reauth con la cuenta vinculada rota la sesión y vuelve a Ajustes", async () => {
+    flow("reauth");
+    mocks.findIdentityByProvider.mockResolvedValue({ user: { id: "u1" } });
+    mocks.rotateCurrentSession.mockResolvedValue({ token: "rotated", expiresAt: new Date() });
+
+    const response = await callbackGet(new NextRequest(callbackUrl));
+
+    expect(response.headers.get("location")).toContain("/en/me/settings/account?google=confirmed");
+    expect(mocks.rotateCurrentSession).toHaveBeenCalledWith("u1");
+  });
+
+  it("reauth con una cuenta de Google distinta responde OAUTH_IDENTITY_MISMATCH sin rotar", async () => {
+    flow("reauth");
+    mocks.findIdentityByProvider.mockResolvedValue({ user: { id: "otra-cuenta" } });
+
+    const response = await callbackGet(new NextRequest(callbackUrl));
+
+    expect(response.headers.get("location")).toContain("google=error&code=OAUTH_IDENTITY_MISMATCH");
+    expect(mocks.rotateCurrentSession).not.toHaveBeenCalled();
+  });
+
+  it("reauth con una identidad que no está vinculada a nadie también es MISMATCH", async () => {
+    flow("reauth");
+    mocks.findIdentityByProvider.mockResolvedValue(null);
+
+    const response = await callbackGet(new NextRequest(callbackUrl));
+
+    expect(response.headers.get("location")).toContain("OAUTH_IDENTITY_MISMATCH");
+  });
+});
+
+describe("GET /api/auth/google/callback: idioma preferido de la cuenta", () => {
+  it("un usuario con idioma guardado va a ese idioma aunque haya iniciado el flujo en otro", async () => {
+    vi.clearAllMocks();
+    mocks.consumeAuthAttempt.mockReturnValue(true);
+    mockConfig();
+    mocks.resolveSession.mockResolvedValue(null);
+    mocks.createSession.mockResolvedValue({ token: "t", expiresAt: new Date() });
+    mocks.consumeOAuthFlowCookies.mockResolvedValue({
+      state: "valid-state",
+      codeVerifier: "verifier",
+      nonce: "nonce",
+      locale: "es",
+      intent: "login",
+    });
+    mocks.exchangeCode.mockResolvedValue({ idToken: "t", accessToken: "a", tokenType: "Bearer", expiresIn: 3600 });
+    mocks.validateIdToken.mockResolvedValue({ sub: "s", nonce: "nonce" });
+    mocks.toIdentity.mockReturnValue({ provider: "google", providerAccountId: "s", email: "a@b.com", emailVerified: true });
+    mocks.resolveOrCreateOAuthUser.mockResolvedValue({ id: "u1", locale: "en", onboardedAt: new Date("2026-01-01") });
+
+    const response = await callbackGet(
+      new NextRequest("http://localhost:3000/api/auth/google/callback?code=c&state=valid-state"),
+    );
+
+    expect(new URL(response.headers.get("location")!).pathname).toBe("/en");
+  });
+});
+
+describe("GET /api/auth/google/callback: cuenta desactivada", () => {
+  function loginFlow(user: Record<string, unknown>) {
+    vi.clearAllMocks();
+    mocks.consumeAuthAttempt.mockReturnValue(true);
+    mockConfig();
+    mocks.resolveSession.mockResolvedValue(null);
+    mocks.createSession.mockResolvedValue({ token: "t", expiresAt: new Date() });
+    mocks.consumeOAuthFlowCookies.mockResolvedValue({
+      state: "valid-state",
+      codeVerifier: "verifier",
+      nonce: "nonce",
+      locale: "es",
+      intent: "login",
+    });
+    mocks.exchangeCode.mockResolvedValue({ idToken: "t", accessToken: "a", tokenType: "Bearer", expiresIn: 3600 });
+    mocks.validateIdToken.mockResolvedValue({ sub: "s", nonce: "nonce" });
+    mocks.toIdentity.mockReturnValue({ provider: "google", providerAccountId: "s", email: "a@b.com", emailVerified: true });
+    mocks.resolveOrCreateOAuthUser.mockResolvedValue({ id: "u1", locale: null, onboardedAt: new Date("2026-01-01"), ...user });
+  }
+  const callback = () =>
+    callbackGet(new NextRequest("http://localhost:3000/api/auth/google/callback?code=c&state=valid-state"));
+
+  it("iniciar sesión con Google en una cuenta desactivada la reactiva y crea la sesión", async () => {
+    loginFlow({ deactivatedAt: new Date("2026-09-01T00:00:00Z") });
+    const response = await callback();
+    expect(response.status).toBe(307);
+    expect(mocks.reactivateAccount).toHaveBeenCalledWith("u1");
+    expect(mocks.createSession).toHaveBeenCalledWith("u1");
+  });
+
+  it("una cuenta activa no se toca", async () => {
+    loginFlow({ deactivatedAt: null });
+    await callback();
+    expect(mocks.reactivateAccount).not.toHaveBeenCalled();
+  });
+});
+

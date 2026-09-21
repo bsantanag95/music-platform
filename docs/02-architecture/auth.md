@@ -19,8 +19,8 @@ en `src/services/auth/password.ts`.
 
 La interfaz común de adaptadores externos y el adaptador de Google viven en
 `src/services/auth/providers/`. Google está habilitado mediante sus rutas de inicio y callback,
-con secretos únicamente en variables de entorno del servidor. El linking explícito y otros
-proveedores OAuth/OIDC siguen fuera de alcance.
+con secretos únicamente en variables de entorno del servidor. El linking explícito se implementó
+después desde `/me/settings/account` (ADR 0016); otros proveedores OAuth/OIDC siguen fuera de alcance.
 
 ## Por qué existe este documento aparte del ADR
 
@@ -146,7 +146,7 @@ secretos y credenciales de proveedor viven solo en variables de entorno del serv
 La Fase 4 implementó la autenticación local y dejó preparada la persistencia y la interfaz de
 proveedores externos. El incremento posterior de Google implementó el login y el alta mediante
 OAuth/OIDC sin cambiar el modelo de sesión ni el modelo de usuario. Su validación manual se
-completó correctamente; el linking explícito continúa diferido.
+completó correctamente; el linking explícito se agregó después desde Ajustes (ADR 0016).
 
 **Username para altas nuevas vía Google.** Cuando el flujo crea un `app_user` nuevo a partir de
 una identidad de Google, el username se deriva del local-part del email (la parte antes de `@`),
@@ -164,12 +164,13 @@ ya existe una cuenta con ese email y que debe iniciar sesión con contraseña pa
 vincular Google después desde una sesión autenticada. No se expone un flujo de merge ni de
 auto-link en este punto.
 
-**Vinculación explícita — fuera de alcance de este incremento.** Aunque ADR 0010 define la
-vinculación como una operación distinta del login y la deja prevista arquitectónicamente, este
-incremento de Google **no implementa** la ruta ni la UI de vinculación desde una cuenta ya
-autenticada. Queda diferida a una fase posterior, condicionada a la existencia de una página de
-perfil/configuración donde tenga sentido ofrecerla. Ningún agente debe agregar rutas ni UI de
-linking como parte de este cambio.
+**Vinculación explícita — implementada después (ADR 0016).** El incremento inicial de Google no
+implementó la vinculación desde una cuenta autenticada, prevista por ADR 0010. Con el área de ajustes
+(`/me/settings/account`, change `rework-account-settings`) se agregó: el flujo OAuth gana las
+intenciones `link` y `reauth` (exigen sesión, retorno **fijo** a Ajustes, sin `returnTo`), la
+vinculación enlaza por el identificador de la cuenta de Google y no por el email, y desvincular exige
+que la cuenta conserve otro método de acceso. La vinculación **implícita** por coincidencia de email
+sigue prohibida.
 
 **Retorno post-autenticación.** El destino tras un login o alta exitosa vía Google es fijo:
 `/<locale>/search`, usando el locale validado y persistido en el estado del flujo. No se acepta un

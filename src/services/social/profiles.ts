@@ -9,6 +9,7 @@ import {
   type ProfileVisibility,
 } from "./types";
 import { getRelationBetween, isBlocking, relationsFor } from "./relations";
+import { activeUserCondition } from "@/services/auth/account-status";
 
 export interface OwnProfile {
   id: string;
@@ -87,7 +88,7 @@ export async function getProfileByUsername(
       profileVisibility: appUser.profileVisibility,
     })
     .from(appUser)
-    .where(eq(appUser.username, username))
+    .where(and(eq(appUser.username, username), activeUserCondition()))
     .limit(1);
   if (!user) throw new ApiError("USER_NOT_FOUND", 404, "Usuario no encontrado");
 
@@ -134,9 +135,12 @@ export async function searchUsers(
     })
     .from(appUser)
     .where(
-      or(
-        ilike(appUser.username, `%${q}%`),
-        ilike(appUser.displayName, `%${q}%`),
+      and(
+        or(
+          ilike(appUser.username, `%${q}%`),
+          ilike(appUser.displayName, `%${q}%`),
+        ),
+        activeUserCondition(),
       ),
     )
     .orderBy(appUser.username)

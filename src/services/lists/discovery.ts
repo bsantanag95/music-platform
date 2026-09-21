@@ -18,6 +18,7 @@ import {
   type ListEntityType,
   type PublicListSort,
 } from "./types";
+import { activeUserCondition } from "@/services/auth/account-status";
 
 /** Filtros opcionales del listado público (cambio rework-public-lists-surface). */
 export interface DiscoverListFilters {
@@ -176,6 +177,7 @@ export async function listDiscoverLists(
     eq(userList.kind, "standard"),
     eq(userList.moderationStatus, "visible"),
     eq(appUser.profileVisibility, "public"),
+    activeUserCondition(),
     // Listas retiradas por un administrador no reaparecen en el descubrimiento
     // público mientras permanezcan retiradas (spec official-editorial-content).
     isNull(userList.officialWithdrawnAt),
@@ -267,6 +269,7 @@ export async function listPublicListsContainingItem(
     eq(userList.kind, "standard"),
     eq(userList.moderationStatus, "visible"),
     eq(appUser.profileVisibility, "public"),
+    activeUserCondition(),
     isNull(userList.officialWithdrawnAt),
     eq(userList.entityType, target.type),
     sql`exists (

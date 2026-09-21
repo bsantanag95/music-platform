@@ -21,6 +21,7 @@ import {
   date,
   check,
   primaryKey,
+  unique,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
@@ -54,9 +55,31 @@ export const appUser = pgTable(
     // rework-owner-management). Nulo = "según el tipo": cada tipo conserva su
     // propio default. Nunca se aplica a contenido ya creado.
     defaultAudience: text("default_audience"),
+    // Cambio de usuario (migración 0039, change rework-account-settings): fecha
+    // del último cambio (nulo = nunca), base del enfriamiento de 30 días.
+    usernameChangedAt: timestamp("username_changed_at", { withTimezone: true }),
+    // Idioma preferido de la interfaz (migración 0039). Nulo = sin preferencia.
+    locale: text("locale"),
+    // Identidad musical (migración 0040, change rework-account-settings): listas
+    // cerradas guardadas como claves estables y validadas en la aplicación
+    // (src/lib/music-identity.ts). La base solo garantiza los topes.
+    selfRoles: text("self_roles").array().notNull().default(sql`'{}'::text[]`),
+    genres: text("genres").array().notNull().default(sql`'{}'::text[]`),
+    listeningFormats: text("listening_formats").array().notNull().default(sql`'{}'::text[]`),
+    // Mostrar la hora local en la Placa; exige `timezone`.
+    showLocalTime: boolean("show_local_time").notNull().default(false),
+    // Cuenta desactivada (migración 0041, capability account-lifecycle). Nulo =
+    // activa. Una cuenta desactivada no tiene sesiones y desaparece para las demás
+    // personas, pero conserva su contenido; se reactiva al iniciar sesión.
+    deactivatedAt: timestamp("deactivated_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
+    check("chk_app_user_locale", sql`${t.locale} IS NULL OR ${t.locale} IN ('es','en')`),
+    check("chk_app_user_self_roles", sql`cardinality(${t.selfRoles}) <= 3`),
+    check("chk_app_user_genres", sql`cardinality(${t.genres}) <= 5`),
+    check("chk_app_user_listening_formats", sql`cardinality(${t.listeningFormats}) <= 5`),
+    check("chk_app_user_local_time", sql`NOT ${t.showLocalTime} OR ${t.timezone} IS NOT NULL`),
     check(
       "chk_app_user_profile_visibility",
       sql`${t.profileVisibility} IN ('public','private')`,
@@ -225,8 +248,14 @@ export const session = pgTable(
     tokenHash: text("token_hash").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    // Etiqueta legible del dispositivo ("Chrome · Windows") y última actividad
+    // (migración 0039, change rework-account-settings). Nunca se guarda el
+    // User-Agent completo ni la IP. Nulos en las sesiones previas.
+    deviceLabel: text("device_label"),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
   },
   (t) => [
+    check("chk_session_device_label", sql`${t.deviceLabel} IS NULL OR length(${t.deviceLabel}) <= 80`),
     uniqueIndex("uq_session_token_hash").on(t.tokenHash),
     index("idx_session_user").on(t.userId),
     index("idx_session_expires_at").on(t.expiresAt),
@@ -291,6 +320,76 @@ export const emailVerificationToken = pgTable(
     uniqueIndex("uq_email_verification_token_hash").on(t.tokenHash),
     uniqueIndex("uq_email_verification_token_user").on(t.userId),
     index("idx_email_verification_token_expires_at").on(t.expiresAt),
+  ],
+);
+
+// Usuario anterior reservado 30 días tras un cambio de usuario (migración 0039,
+// capability account-username). El índice único es sobre lower(username): la
+// disponibilidad no distingue mayúsculas. Los alias vencidos no se consultan.
+export const usernameAlias = pgTable(
+  "username_alias",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    username: text("username").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    uniqueIndex("uq_username_alias_lower").on(sql`lower(${t.username})`),
+    index("idx_username_alias_user").on(t.userId),
+    index("idx_username_alias_expires_at").on(t.expiresAt),
+  ],
+);
+
+// Cambio de email pendiente de confirmar (migración 0039, capability
+// account-credentials). Igual que `email_verification_token`: solo el hash del
+// token, un cambio vigente por usuario y borrado físico al confirmar.
+export const emailChangeToken = pgTable(
+  "email_change_token",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    newEmail: text("new_email").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    uniqueIndex("uq_email_change_token_hash").on(t.tokenHash),
+    uniqueIndex("uq_email_change_token_user").on(t.userId),
+    index("idx_email_change_token_expires_at").on(t.expiresAt),
+  ],
+);
+
+// Preguntas del perfil (migración 0040, capability profile-music-identity): hasta
+// 3 por usuario, una línea cada una. `position` 0..2 único por usuario hace que
+// la base impida una cuarta; `prompt_key` es de una lista cerrada validada en la
+// aplicación. El conjunto se reemplaza completo al guardar.
+export const userProfilePrompt = pgTable(
+  "user_profile_prompt",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    promptKey: text("prompt_key").notNull(),
+    answer: text("answer").notNull(),
+    position: smallint("position").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("chk_user_profile_prompt_position", sql`${t.position} BETWEEN 0 AND 2`),
+    check(
+      "chk_user_profile_prompt_answer",
+      sql`char_length(${t.answer}) BETWEEN 1 AND 100 AND ${t.answer} !~ E'[\r\n]'`,
+    ),
+    unique("uq_user_profile_prompt_key").on(t.userId, t.promptKey),
+    unique("uq_user_profile_prompt_position").on(t.userId, t.position),
   ],
 );
 

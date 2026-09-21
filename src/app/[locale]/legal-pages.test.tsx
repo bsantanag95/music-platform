@@ -74,4 +74,37 @@ describe("páginas de políticas placeholder", () => {
     const { container } = render(await (await importPage("about")).default());
     expect(container).not.toHaveTextContent(legalEs.placeholderNotice);
   });
+
+  for (const locale of ["es", "en"] as const) {
+    it(`/${locale}/privacy describe desactivar, reactivar, eliminar y exportar, y lo que falta definir`, async () => {
+      activeLocale = locale;
+      render(await (await importPage("privacy")).default());
+
+      const { sections, intro } = byLocale[locale].legal.privacy;
+      expect(screen.getByText(intro)).toBeInTheDocument();
+      // Una sección (h2) por tema, en orden; la política sigue marcada como no vinculante.
+      expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual([
+        sections.deactivate.title,
+        sections.reactivate.title,
+        sections.delete.title,
+        sections.export.title,
+        sections.limits.title,
+        sections.pending.title,
+      ]);
+      expect(screen.getByText(sections.deactivate.body2)).toBeInTheDocument();
+      expect(screen.getByText(sections.delete.body2)).toBeInTheDocument();
+      // Los puntos por definir salen todos, uno por ítem de lista.
+      const items = screen.getAllByRole("listitem").map((li) => li.textContent);
+      expect(items).toEqual(sections.pending.items);
+      expect(items).toHaveLength(7);
+      expect(screen.getByText(byLocale[locale].legal.placeholderNotice)).toBeInTheDocument();
+    });
+  }
+
+  it("las demás políticas no muestran secciones de cuenta y datos", async () => {
+    activeLocale = "es";
+    render(await (await importPage("terms")).default());
+    expect(screen.queryAllByRole("heading", { level: 2 })).toHaveLength(0);
+  });
 });
+

@@ -14,14 +14,23 @@ import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNoti
 import { SettingsNav } from "@/components/settings/SettingsNav";
 import { PrivacySettings } from "@/components/social/PrivacySettings";
 import { DefaultAudienceSettings } from "@/components/settings/DefaultAudienceSettings";
-import { DisplayNameForm } from "@/components/settings/DisplayNameForm";
-import { RevokeSessionsButton } from "@/components/settings/RevokeSessionsButton";
+import { AccountDataCard } from "@/components/settings/account/AccountDataCard";
+import { LanguagePreference } from "@/components/settings/account/LanguagePreference";
+import { LifecycleCards } from "@/components/settings/account/LifecycleCards";
+import { SessionsCard } from "@/components/settings/account/SessionsCard";
+import { SignInCard } from "@/components/settings/account/SignInCard";
 import { OwnerIdentityCardEditor } from "@/components/profiles/OwnerIdentityCardEditor";
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
+import { OwnerMusicIdentityEditor } from "@/components/profiles/OwnerMusicIdentityEditor";
+import { OwnerPromptsEditor } from "@/components/profiles/OwnerPromptsEditor";
 
 const m = vi.hoisted(() => ({
   requirePageUser: vi.fn(),
+  requirePageSession: vi.fn(),
+  listMySessions: vi.fn(),
+  getUsernameChangeStatus: vi.fn(),
+  getPendingEmailChange: vi.fn(),
   isEmailVerified: vi.fn(),
   countPendingFollowRequests: vi.fn(),
   getOwnProfile: vi.fn(),
@@ -50,7 +59,13 @@ vi.mock("@/i18n/navigation", () => ({
     </a>
   ),
 }));
-vi.mock("@/services/auth/page-auth", () => ({ requirePageUser: m.requirePageUser }));
+vi.mock("@/services/auth/page-auth", () => ({
+  requirePageUser: m.requirePageUser,
+  requirePageSession: m.requirePageSession,
+}));
+vi.mock("@/services/auth/session-list", () => ({ listMySessions: m.listMySessions }));
+vi.mock("@/services/auth/username", () => ({ getUsernameChangeStatus: m.getUsernameChangeStatus }));
+vi.mock("@/services/auth/email-change", () => ({ getPendingEmailChange: m.getPendingEmailChange }));
 vi.mock("@/services/auth/email-verification", () => ({ isEmailVerified: m.isEmailVerified }));
 vi.mock("@/services/social/following", () => ({ countPendingFollowRequests: m.countPendingFollowRequests }));
 vi.mock("@/services/social/profiles", () => ({ getOwnProfile: m.getOwnProfile }));
@@ -64,11 +79,16 @@ vi.mock("@/services/rating-highlights/rating-highlights", () => ({ RATING_HIGHLI
 vi.mock("@/components/auth/EmailVerificationNotice", () => ({ EmailVerificationNotice: () => null }));
 vi.mock("@/components/social/PrivacySettings", () => ({ PrivacySettings: () => null }));
 vi.mock("@/components/settings/DefaultAudienceSettings", () => ({ DefaultAudienceSettings: () => null }));
-vi.mock("@/components/settings/DisplayNameForm", () => ({ DisplayNameForm: () => null }));
-vi.mock("@/components/settings/RevokeSessionsButton", () => ({ RevokeSessionsButton: () => null }));
+vi.mock("@/components/settings/account/AccountDataCard", () => ({ AccountDataCard: () => null }));
+vi.mock("@/components/settings/account/SignInCard", () => ({ SignInCard: () => null }));
+vi.mock("@/components/settings/account/SessionsCard", () => ({ SessionsCard: () => null }));
+vi.mock("@/components/settings/account/LanguagePreference", () => ({ LanguagePreference: () => null }));
+vi.mock("@/components/settings/account/LifecycleCards", () => ({ LifecycleCards: () => null }));
 vi.mock("@/components/profiles/OwnerIdentityCardEditor", () => ({ OwnerIdentityCardEditor: () => null }));
 vi.mock("@/components/profiles/OwnerIdentityEditor", () => ({ OwnerIdentityEditor: () => null }));
 vi.mock("@/components/profiles/OwnerLinksEditor", () => ({ OwnerLinksEditor: () => null }));
+vi.mock("@/components/profiles/OwnerMusicIdentityEditor", () => ({ OwnerMusicIdentityEditor: () => null }));
+vi.mock("@/components/profiles/OwnerPromptsEditor", () => ({ OwnerPromptsEditor: () => null }));
 vi.mock("@/components/profiles/OwnerShowcaseEditor", () => ({
   OwnerShowcaseEditor: () => <div>editor de destacados</div>,
 }));
@@ -140,11 +160,17 @@ describe("pantalla Perfil", () => {
   it("monta los mismos editores con los valores actuales del dueño", async () => {
     const identityCard = { artist: null, album: null, anthem: null };
     const links = [{ id: "l1", kind: "other", url: "https://ana.example", position: 0 }];
+    const prompts = [{ promptKey: "first-record", answer: "Un casete", position: 0 }];
     m.getExtendedIdentity.mockResolvedValue({
       bio: "hola",
       pronouns: "ella",
       location: "Quilpué",
       timezone: "America/Santiago",
+      showLocalTime: true,
+      selfRoles: ["collector"],
+      genres: ["jazz", "shoegaze"],
+      listeningFormats: ["vinyl"],
+      prompts,
       links,
     });
     m.getShowcase.mockResolvedValue({ pinned: [], identityCard });
@@ -158,7 +184,14 @@ describe("pantalla Perfil", () => {
       pronouns: "ella",
       location: "Quilpué",
       timezone: "America/Santiago",
+      showLocalTime: true,
     });
+    expect(findElement(tree, OwnerMusicIdentityEditor)?.props?.initial).toEqual({
+      selfRoles: ["collector"],
+      genres: ["jazz", "shoegaze"],
+      listeningFormats: ["vinyl"],
+    });
+    expect(findElement(tree, OwnerPromptsEditor)?.props?.initial).toBe(prompts);
     expect(findElement(tree, OwnerLinksEditor)?.props?.initialLinks).toBe(links);
   });
 
@@ -193,47 +226,130 @@ describe("pantalla Privacidad y audiencia", () => {
 });
 
 describe("pantalla Cuenta y seguridad", () => {
+  const now = new Date("2026-09-21T10:00:00Z");
+  const renderAccount = () => AccountSettingsPage({ searchParams: Promise.resolve({}) });
+
   beforeEach(() => {
+    m.requirePageSession.mockResolvedValue({
+      sessionId: "s1",
+      sessionCreatedAt: now,
+      user: { id: "u1", email: "ana@example.com", username: "ana" },
+    });
     m.getOwnProfile.mockResolvedValue({ username: "ana", displayName: "Ana" });
     m.getAccessMethod.mockResolvedValue({ hasPassword: true, providers: [] });
+    m.getUsernameChangeStatus.mockResolvedValue({ username: "ana", nextChangeAt: null });
+    m.getPendingEmailChange.mockResolvedValue(null);
+    m.listMySessions.mockResolvedValue([]);
   });
 
-  it("monta el formulario del nombre visible con el nombre y el usuario actuales", async () => {
-    const tree = await AccountSettingsPage();
+  it("exige la sesión completa (necesita saber cuál es 'esta sesión')", async () => {
+    await renderAccount();
+    expect(m.requirePageSession).toHaveBeenCalled();
+    expect(m.listMySessions).toHaveBeenCalledWith("u1", "s1");
+  });
+
+  it("monta los datos de la cuenta con nombre, usuario y email", async () => {
+    m.isEmailVerified.mockReturnValue(true);
+    const tree = await renderAccount();
 
     expect(m.getOwnProfile).toHaveBeenCalledWith("u1");
-    expect(findElement(tree, DisplayNameForm)?.props).toMatchObject({
-      initialDisplayName: "Ana",
+    expect(findElement(tree, AccountDataCard)?.props).toMatchObject({
       username: "ana",
+      displayName: "Ana",
+      email: "ana@example.com",
+      emailVerified: true,
+      pendingEmail: null,
+      usernameNextChangeAt: null,
+      hasPassword: true,
     });
   });
 
-  it("ofrece cerrar todas las sesiones", async () => {
-    expect(findElement(await AccountSettingsPage(), RevokeSessionsButton)).not.toBeNull();
+  it("pasa la fecha en que se puede volver a cambiar el usuario y el cambio de email pendiente", async () => {
+    const next = new Date("2026-10-21T12:00:00Z");
+    m.getUsernameChangeStatus.mockResolvedValue({ username: "ana", nextChangeAt: next });
+    m.getPendingEmailChange.mockResolvedValue({ newEmail: "nuevo@ejemplo.com", expiresAt: new Date() });
+
+    const props = findElement(await renderAccount(), AccountDataCard)?.props;
+
+    expect(props).toMatchObject({ usernameNextChangeAt: next.toISOString(), pendingEmail: "nuevo@ejemplo.com" });
   });
 
-  it("una cuenta con contraseña muestra 'correo y contraseña' como método", async () => {
-    renderWithIntl(await AccountSettingsPage());
-    expect(screen.getByText("settings.account.access.password")).toBeInTheDocument();
+  it("una cuenta con contraseña y sin Google", async () => {
+    const props = findElement(await renderAccount(), SignInCard)?.props;
+    expect(props).toMatchObject({ hasPassword: true, googleLinked: false, flash: null });
   });
 
-  it("una cuenta de Google sin contraseña no muestra la opción de contraseña", async () => {
+  it("una cuenta de Google sin contraseña se lo comunica a la tarjeta de acceso", async () => {
     m.getAccessMethod.mockResolvedValue({ hasPassword: false, providers: ["google"] });
-    renderWithIntl(await AccountSettingsPage());
-
-    expect(screen.queryByText("settings.account.access.password")).not.toBeInTheDocument();
-    expect(screen.getByText("Google")).toBeInTheDocument();
+    const tree = await renderAccount();
+    expect(findElement(tree, SignInCard)?.props).toMatchObject({ hasPassword: false, googleLinked: true });
+    expect(findElement(tree, AccountDataCard)?.props?.hasPassword).toBe(false);
   });
 
-  it("sin ningún método vinculado lo dice en vez de dejar la lista vacía", async () => {
-    m.getAccessMethod.mockResolvedValue({ hasPassword: false, providers: [] });
-    renderWithIntl(await AccountSettingsPage());
-    expect(screen.getByText("settings.account.access.none")).toBeInTheDocument();
+  it("nunca pasa el hash de la contraseña ni el token de las sesiones a los componentes", async () => {
+    m.listMySessions.mockResolvedValue([
+      { id: "s1", deviceLabel: "Chrome · Windows", createdAt: now, lastSeenAt: null, current: true },
+    ]);
+    const serialized = JSON.stringify(await renderAccount());
+    expect(serialized).not.toMatch(/passwordHash|tokenHash/);
   });
 
-  it("no ofrece controles de funciones que no existen (email, contraseña, eliminar cuenta)", async () => {
-    renderWithIntl(await AccountSettingsPage());
-    expect(screen.queryByText(/eliminar|delete|email|correo/i)).not.toBeInTheDocument();
+  it("pasa las sesiones serializadas, con la actual marcada", async () => {
+    m.listMySessions.mockResolvedValue([
+      { id: "s1", deviceLabel: "Chrome · Windows", createdAt: now, lastSeenAt: now, current: true },
+      { id: "s2", deviceLabel: null, createdAt: now, lastSeenAt: null, current: false },
+    ]);
+
+    const props = findElement(await renderAccount(), SessionsCard)?.props;
+
+    expect(props?.sessions).toEqual([
+      { id: "s1", deviceLabel: "Chrome · Windows", createdAt: now.toISOString(), lastSeenAt: now.toISOString(), current: true },
+      { id: "s2", deviceLabel: null, createdAt: now.toISOString(), lastSeenAt: null, current: false },
+    ]);
+  });
+
+  it("ofrece desactivar, exportar y eliminar con el usuario y el método de acceso de la cuenta", async () => {
+    const props = findElement(await renderAccount(), LifecycleCards)?.props;
+    expect(props).toMatchObject({ username: "ana", hasPassword: true });
+
+    m.getAccessMethod.mockResolvedValue({ hasPassword: false, providers: ["google"] });
+    expect(findElement(await renderAccount(), LifecycleCards)?.props?.hasPassword).toBe(false);
+  });
+
+  it("ofrece el idioma de la interfaz", async () => {
+    expect(findElement(await renderAccount(), LanguagePreference)).not.toBeNull();
+  });
+
+  describe("resultado del flujo de Google (query ?google=)", () => {
+    const flash = async (query: { google?: string; code?: string }) =>
+      findElement(await AccountSettingsPage({ searchParams: Promise.resolve(query) }), SignInCard)?.props?.flash;
+
+    it("google=linked y google=confirmed", async () => {
+      m.getAccessMethod.mockResolvedValue({ hasPassword: true, providers: ["google"] });
+      expect(await flash({ google: "linked" })).toEqual({ kind: "linked" });
+      expect(await flash({ google: "confirmed" })).toEqual({ kind: "confirmed" });
+    });
+
+    it("google=linked de una URL vieja NO se afirma si Google ya no está vinculada", async () => {
+      m.getAccessMethod.mockResolvedValue({ hasPassword: true, providers: [] });
+      expect(await flash({ google: "linked" })).toBeNull();
+    });
+
+    it("google=error con un código conocido", async () => {
+      expect(await flash({ google: "error", code: "OAUTH_IDENTITY_TAKEN" })).toEqual({
+        kind: "error",
+        code: "OAUTH_IDENTITY_TAKEN",
+      });
+    });
+
+    it("un código desconocido o manipulado se reemplaza por un error genérico", async () => {
+      expect(await flash({ google: "error", code: "<script>" })).toEqual({ kind: "error", code: "INTERNAL_ERROR" });
+      expect(await flash({ google: "error" })).toEqual({ kind: "error", code: "INTERNAL_ERROR" });
+    });
+
+    it("un valor desconocido no muestra nada", async () => {
+      expect(await flash({ google: "hack" })).toBeNull();
+    });
   });
 });
 

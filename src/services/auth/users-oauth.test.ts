@@ -1,10 +1,12 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { findAvailableUsername, sanitizeUsernameFromEmail } from "./users";
 
 const mocks = vi.hoisted(() => ({
   db: { insert: vi.fn(), select: vi.fn() },
+  isUsernameReserved: vi.fn(),
 }));
 vi.mock("@/db", () => ({ db: mocks.db }));
+vi.mock("./username", () => ({ isUsernameReserved: mocks.isUsernameReserved }));
 vi.mock("./password", () => ({ hashPassword: vi.fn(), verifyPassword: vi.fn() }));
 
 describe("sanitizeUsernameFromEmail", () => {
@@ -30,6 +32,17 @@ describe("sanitizeUsernameFromEmail", () => {
 });
 
 describe("findAvailableUsername", () => {
+  beforeEach(() => mocks.isUsernameReserved.mockResolvedValue(false));
+
+  it("salta un usuario reservado por otra persona y usa el siguiente sufijo", async () => {
+    mocks.isUsernameReserved.mockResolvedValueOnce(true).mockResolvedValue(false);
+    mocks.db.select.mockReturnValue({
+      from: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ limit: vi.fn().mockResolvedValue([]) }) }),
+    });
+
+    expect(await findAvailableUsername("juan.perez")).toBe("juanperez2");
+  });
+
   it("devuelve el username base si está libre", async () => {
     const limit = vi.fn().mockResolvedValueOnce([]);
     mocks.db.select.mockReturnValue({

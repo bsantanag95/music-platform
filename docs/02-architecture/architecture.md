@@ -28,8 +28,8 @@ Servicios externos (MusicBrainz, Cover Art Archive, APIs de streaming)
   route handlers en `src/app/api/auth/`. La autenticación local y el login/alta con Google OAuth/OIDC
   están implementados y desembocan en la misma sesión server-side. Los flujos OAuth/OIDC utilizan
   Authorization Code con state y PKCE, y nonce cuando se utiliza OIDC. El frontend no implementa el
-  flujo OAuth/OIDC ni valida tokens del proveedor. El linking explícito y otros proveedores quedan
-  diferidos; el scrobbling de servicios de streaming sigue siendo una función posterior de Fase 5.
+  flujo OAuth/OIDC ni valida tokens del proveedor. El linking explícito se agregó desde Ajustes (ADR 0016); otros
+  proveedores quedan diferidos; el scrobbling de servicios de streaming sigue siendo una función posterior de Fase 5.
 - _Servicio de ratings/comentarios_: aplica las reglas de negocio de `01-domain/business-rules.md` antes de escribir en la base.
 
 **Base de datos (PostgreSQL).** Fuente de verdad del catálogo curado y de los datos generados por usuarios. Las reglas de coherencia más críticas (estrellas/detallada, unicidad por usuario y objetivo) están reforzadas con constraints a nivel de base, no solo en la capa de aplicación — ver `03-data/sql-model.md`.

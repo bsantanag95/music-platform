@@ -1,6 +1,7 @@
 import { ApiError } from "@/lib/api/errors";
 import { getProfileByUsername } from "@/services/social/profiles";
 import type { FollowRelation } from "@/services/social/types";
+import { EMPTY_MUSIC_IDENTITY } from "@/lib/music-identity";
 import { getExtendedIdentityByUsername, type ExtendedIdentityData } from "./identity";
 
 // Vista compuesta del perfil para la ruta `/users/{username}`: la relación
@@ -30,8 +31,14 @@ export async function getProfileView(
     throw new ApiError("USER_NOT_FOUND", 404, "Usuario no encontrado");
   }
 
+  // La identidad musical y la hora local son de la Placa de un perfil ACCESIBLE
+  // (spec profile-music-identity, "Ficha de la Placa"): a quien no tiene acceso a
+  // un perfil privado no se le entregan, aunque la tarjeta del perfil privado no
+  // las dibuje.
+  const hidden = !relationInfo.accessible && relationInfo.relation !== "self";
   return {
     ...identity,
+    ...(hidden ? { ...EMPTY_MUSIC_IDENTITY, showLocalTime: false } : {}),
     relation: relationInfo.relation,
     accessible: relationInfo.accessible,
     blockedByMe: relationInfo.blockedByMe,

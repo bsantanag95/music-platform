@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, authIdentity, type AppUserRow } from "@/db/schema";
+import { ApiError } from "@/lib/api/errors";
 import type { ExternalIdentity } from "./providers";
 import { findAvailableUsername, findUserByEmail } from "./users";
 
@@ -91,3 +92,58 @@ export async function resolveOrCreateOAuthUser(identity: ExternalIdentity): Prom
 
   throw new Error("USERNAME_TAKEN");
 }
+
+/**
+ * Vincula una identidad externa a una cuenta ya autenticada (spec
+ * account-credentials, "Vincular Google a la cuenta"). La identidad se enlaza
+ * por el identificador de la cuenta externa, NUNCA por el email: el email de
+ * Google no tiene que coincidir con el de la cuenta y no concede nada al dueño
+ * de ese email. Una identidad ya vinculada a OTRA cuenta se rechaza; volver a
+ * vincular la propia es inocuo.
+ */
+export async function linkIdentityToUser(userId: string, identity: ExternalIdentity): Promise<void> {
+  const existing = await findIdentityByProvider(identity.provider, identity.providerAccountId);
+  if (existing) {
+    if (existing.user.id === userId) return;
+    throw new Error("OAUTH_IDENTITY_TAKEN");
+  }
+
+  try {
+    await db.insert(authIdentity).values({
+      userId,
+      provider: identity.provider,
+      providerAccountId: identity.providerAccountId,
+    });
+  } catch (error) {
+    if (isUniqueViolation(error)) throw new Error("OAUTH_IDENTITY_TAKEN");
+    throw error;
+  }
+}
+
+/** Quita las identidades de un proveedor de la cuenta (desvincular). Devuelve cuántas borró. */
+export async function unlinkProvider(userId: string, provider: string): Promise<number> {
+  const deleted = await db
+    .delete(authIdentity)
+    .where(and(eq(authIdentity.userId, userId), eq(authIdentity.provider, provider)))
+    .returning({ id: authIdentity.id });
+  return deleted.length;
+}
+
+/**
+ * Desvincula Google de la cuenta (spec account-credentials, "Desvincular Google
+ * sin perder el acceso"). Solo si la cuenta tiene contraseña local: si Google es
+ * su único método de acceso se rechaza con `LAST_ACCESS_METHOD` y no cambia nada.
+ */
+export async function unlinkGoogle(userId: string): Promise<void> {
+  const [user] = await db
+    .select({ passwordHash: appUser.passwordHash })
+    .from(appUser)
+    .where(eq(appUser.id, userId))
+    .limit(1);
+  if (!user) throw new ApiError("USER_NOT_FOUND", 404, "Usuario no encontrado");
+  if (user.passwordHash === null) {
+    throw new ApiError("LAST_ACCESS_METHOD", 409, "Google es tu único método de acceso");
+  }
+  await unlinkProvider(userId, "google");
+}
+

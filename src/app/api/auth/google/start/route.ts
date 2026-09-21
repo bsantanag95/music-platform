@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { ApiError } from "@/lib/api/errors";
 import { GoogleOAuthAdapter, getGoogleOAuthConfig } from "@/services/auth/providers";
-import { generateOAuthFlowState, resolveLocale, setOAuthFlowCookies } from "@/services/auth/oauth-flow";
+import {
+  generateOAuthFlowState,
+  isAccountIntent,
+  resolveIntent,
+  resolveLocale,
+  setOAuthFlowCookies,
+} from "@/services/auth/oauth-flow";
+import { resolveSession } from "@/services/auth/sessions";
 import { consumeAuthAttempt, getAuthClientIp } from "@/services/auth/rate-limit";
 
 function errorRedirect(locale: string, code: string): NextResponse {
@@ -18,6 +25,17 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return errorRedirect(locale, "RATE_LIMITED");
   }
 
+  // `link` y `reauth` operan sobre la cuenta de una sesión iniciada: sin sesión el
+  // flujo se rechaza ANTES de redirigir a Google (spec google-oauth, "Intenciones
+  // del flujo con retorno fijo"). Cualquier otra intención cae en `login`.
+  const intent = resolveIntent(url.searchParams.get("intent"));
+  let account: { intent: typeof intent; userId: string } | undefined;
+  if (isAccountIntent(intent)) {
+    const current = await resolveSession();
+    if (!current) throw new ApiError("AUTH_REQUIRED", 401, "Se requiere una sesión activa");
+    account = { intent, userId: current.user.id };
+  }
+
   let config;
   try {
     config = getGoogleOAuthConfig();
@@ -26,7 +44,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   }
 
   const adapter = new GoogleOAuthAdapter();
-  const flowState = generateOAuthFlowState(locale);
+  const flowState = generateOAuthFlowState(locale, account);
   await setOAuthFlowCookies(flowState);
 
   const authUrl = adapter.buildAuthUrl({

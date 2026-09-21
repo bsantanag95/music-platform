@@ -12,6 +12,8 @@ interface ContentActionsProps {
   targetId: string;
   authorUsername: string;
   authorId: string;
+  /** La autora es una cuenta desactivada: se puede reportar el contenido, pero no bloquearla ni suspenderla desde acá. */
+  authorDeactivated?: boolean;
   /** El visitante tiene `moderation.suspend_social`: habilita suspender al autor. */
   canModerate?: boolean;
   /** Se llama tras bloquear al autor para retirar su contenido de la vista. */
@@ -22,7 +24,7 @@ interface ContentActionsProps {
 // con motivo y bloquear al autor. Si el visitante es moderador, además puede
 // suspender la actividad social del autor. La ocultación/restauración sigue
 // viviendo en la consola de moderación.
-export function ContentActions({ targetType, targetId, authorUsername, authorId, canModerate = false, onBlocked }: ContentActionsProps) {
+export function ContentActions({ targetType, targetId, authorUsername, authorId, authorDeactivated = false, canModerate = false, onBlocked }: ContentActionsProps) {
   const t = useTranslations("catalog.social");
   const tCommon = useTranslations("common");
   const tErrors = useTranslations("errors");
@@ -114,7 +116,7 @@ export function ContentActions({ targetType, targetId, authorUsername, authorId,
             {t("report")}
           </button>
         )}
-        {canModerate ? (
+        {canModerate && !authorDeactivated ? (
           suspended ? (
             <span className="text-paper-muted">{t("suspendDone")}</span>
           ) : (
@@ -127,14 +129,16 @@ export function ContentActions({ targetType, targetId, authorUsername, authorId,
             </button>
           )
         ) : null}
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => void block()}
-          className="text-paper-muted underline decoration-dotted underline-offset-2 transition-colors hover:text-paper disabled:opacity-50"
-        >
-          {t("blockAuthor", { username: authorUsername })}
-        </button>
+        {!authorDeactivated && (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => void block()}
+            className="text-paper-muted underline decoration-dotted underline-offset-2 transition-colors hover:text-paper disabled:opacity-50"
+          >
+            {t("blockAuthor", { username: authorUsername })}
+          </button>
+        )}
       </div>
 
       {open === "report" ? (

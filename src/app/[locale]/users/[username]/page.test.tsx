@@ -17,6 +17,7 @@ import {
   SettingsCardSection,
 } from "./sections";
 import type { ProfileView } from "@/services/profiles/profile-view";
+vi.mock("@/services/profiles/renamed-redirect", () => ({ redirectIfRenamed: vi.fn().mockResolvedValue(undefined) }));
 
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn().mockResolvedValue((key: string) => key),
@@ -111,6 +112,11 @@ const profile = (over: Partial<ProfileView>): ProfileView => ({
   pronouns: null,
   location: null,
   timezone: null,
+  showLocalTime: false,
+  selfRoles: [],
+  genres: [],
+  listeningFormats: [],
+  prompts: [],
   avatarUrl: null,
   memberSince: new Date("2025-01-01T00:00:00Z"),
   links: [],

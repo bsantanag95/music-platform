@@ -1,8 +1,9 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { appUser, userFollow, userProfileLink } from "@/db/schema";
+import { appUser, userFollow, userProfileLink, userProfilePrompt } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { normalizeLinkInput } from "@/lib/profile-links";
+import type { Genre, ListeningFormat, ProfilePromptData, PromptKey, SelfRole } from "@/lib/music-identity";
 import {
   ReplaceProfileLinksRequestSchema,
   UpdateProfileIdentityRequestSchema,
@@ -11,6 +12,7 @@ import {
 } from "@/lib/api/schemas";
 import type { ProfileLinkKind, ProfileVisibility } from "@/services/social/types";
 import { PROFILE_MAX_LINKS } from "@/services/social/types";
+import { activeUserCondition } from "@/services/auth/account-status";
 
 export interface ProfileLinkData {
   id: string;
@@ -32,9 +34,17 @@ export interface ExtendedIdentityData {
   pronouns: string | null;
   location: string | null;
   timezone: string | null;
+  /** Mostrar la hora local en la Placa (exige `timezone`). */
+  showLocalTime: boolean;
   avatarUrl: string | null;
   memberSince: Date;
   links: ProfileLinkData[];
+  // Identidad musical (spec profile-music-identity). Solo la muestra la Placa de
+  // un perfil accesible; `getProfileView` la vacía para quien no tiene acceso.
+  selfRoles: SelfRole[];
+  genres: Genre[];
+  listeningFormats: ListeningFormat[];
+  prompts: ProfilePromptData[];
   followerCount: number;
   followingCount: number;
 }
@@ -48,6 +58,10 @@ const IDENTITY_COLUMNS = {
   pronouns: appUser.pronouns,
   location: appUser.location,
   timezone: appUser.timezone,
+  showLocalTime: appUser.showLocalTime,
+  selfRoles: appUser.selfRoles,
+  genres: appUser.genres,
+  listeningFormats: appUser.listeningFormats,
   avatarUrl: appUser.avatarUrl,
   createdAt: appUser.createdAt,
 } as const;
@@ -61,12 +75,16 @@ type IdentityRow = {
   pronouns: string | null;
   location: string | null;
   timezone: string | null;
+  showLocalTime: boolean;
+  selfRoles: string[];
+  genres: string[];
+  listeningFormats: string[];
   avatarUrl: string | null;
   createdAt: Date;
 };
 
 async function hydrate(user: IdentityRow): Promise<ExtendedIdentityData> {
-  const [links, counts] = await Promise.all([
+  const [links, counts, prompts] = await Promise.all([
     db
       .select({
         id: userProfileLink.id,
@@ -78,6 +96,15 @@ async function hydrate(user: IdentityRow): Promise<ExtendedIdentityData> {
       .where(eq(userProfileLink.userId, user.id))
       .orderBy(asc(userProfileLink.position)),
     countFollows(user.id),
+    db
+      .select({
+        promptKey: userProfilePrompt.promptKey,
+        answer: userProfilePrompt.answer,
+        position: userProfilePrompt.position,
+      })
+      .from(userProfilePrompt)
+      .where(eq(userProfilePrompt.userId, user.id))
+      .orderBy(asc(userProfilePrompt.position)),
   ]);
 
   return {
@@ -89,6 +116,15 @@ async function hydrate(user: IdentityRow): Promise<ExtendedIdentityData> {
     pronouns: user.pronouns,
     location: user.location,
     timezone: user.timezone,
+    showLocalTime: user.showLocalTime,
+    selfRoles: user.selfRoles as SelfRole[],
+    genres: user.genres as Genre[],
+    listeningFormats: user.listeningFormats as ListeningFormat[],
+    prompts: prompts.map((prompt) => ({
+      promptKey: prompt.promptKey as PromptKey,
+      answer: prompt.answer,
+      position: prompt.position,
+    })),
     avatarUrl: user.avatarUrl,
     memberSince: user.createdAt,
     links: links.map((link) => ({
@@ -117,7 +153,7 @@ export async function getExtendedIdentityByUsername(
   const [user] = await db
     .select(IDENTITY_COLUMNS)
     .from(appUser)
-    .where(eq(appUser.username, username))
+    .where(and(eq(appUser.username, username), activeUserCondition()))
     .limit(1);
   return user ? hydrate(user) : null;
 }
@@ -140,10 +176,28 @@ export async function updateIdentity(
     throw new ApiError("VALIDATION_ERROR", 400, "Los datos de identidad no son válidos");
   }
 
-  const patch: Partial<Record<"bio" | "pronouns" | "location" | "timezone", string | null>> = {};
+  const patch: Partial<Record<"bio" | "pronouns" | "location" | "timezone", string | null>> & {
+    showLocalTime?: boolean;
+  } = {};
   for (const key of ["bio", "pronouns", "location", "timezone"] as const) {
     const next = normalizeText(parsed.data[key]);
     if (next !== undefined) patch[key] = next;
+  }
+
+  // Mostrar la hora local exige tener zona (`CHECK chk_app_user_local_time`): sin
+  // zona la opción se apaga sola y no se puede activar. La zona efectiva es la
+  // que llega o, si no llega, la guardada.
+  if (parsed.data.showLocalTime !== undefined) patch.showLocalTime = parsed.data.showLocalTime;
+  if (patch.timezone === null) patch.showLocalTime = false;
+  if (patch.showLocalTime === true && patch.timezone === undefined) {
+    const [current] = await db
+      .select({ timezone: appUser.timezone })
+      .from(appUser)
+      .where(eq(appUser.id, userId))
+      .limit(1);
+    if (current && current.timezone === null) {
+      throw new ApiError("VALIDATION_ERROR", 400, "Elegí una zona horaria para mostrar tu hora local");
+    }
   }
   if (Object.keys(patch).length === 0) return;
 
@@ -214,21 +268,23 @@ export async function replaceLinks(
     .sort((a, b) => a.position - b.position);
 }
 
-// Conteo de seguidores/seguidos aceptados de un usuario, en una sola query.
+// Conteo de seguidores/seguidos aceptados de un usuario. Cuenta solo a las
+// personas con cuenta ACTIVA: una cuenta desactivada deja de contarse mientras
+// dure la desactivación (spec account-lifecycle) y vuelve al reactivarse.
 export async function countFollows(
   userId: string,
 ): Promise<{ followerCount: number; followingCount: number }> {
-  const [row] = await db
-    .select({
-      followers: sql<number>`count(*) filter (where ${userFollow.followedId} = ${userId})::int`,
-      following: sql<number>`count(*) filter (where ${userFollow.followerId} = ${userId})::int`,
-    })
-    .from(userFollow)
-    .where(
-      and(
-        eq(userFollow.status, "accepted"),
-        sql`${userFollow.followedId} = ${userId} OR ${userFollow.followerId} = ${userId}`,
-      ),
-    );
-  return { followerCount: row?.followers ?? 0, followingCount: row?.following ?? 0 };
+  const [[followers], [following]] = await Promise.all([
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(userFollow)
+      .innerJoin(appUser, eq(userFollow.followerId, appUser.id))
+      .where(and(eq(userFollow.followedId, userId), eq(userFollow.status, "accepted"), activeUserCondition())),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(userFollow)
+      .innerJoin(appUser, eq(userFollow.followedId, appUser.id))
+      .where(and(eq(userFollow.followerId, userId), eq(userFollow.status, "accepted"), activeUserCondition())),
+  ]);
+  return { followerCount: followers?.count ?? 0, followingCount: following?.count ?? 0 };
 }

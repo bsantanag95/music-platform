@@ -290,7 +290,13 @@
       "youtube_format": "Enter your YouTube @username (for example @mychannel); /channel links do not work.",
       "invalid_url": "Enter a valid web address, for example example.com.",
       "unsafe_scheme": "Only web addresses (http or https) are accepted."
-    }
+    },
+    "timezoneNone": "No time zone",
+    "showLocalTime": "Show my local time on my profile",
+    "showLocalTimeNeedsZone": "Pick a time zone to be able to show your local time.",
+    "timezoneSearch": "Search a zone (e.g. Santiago)",
+    "timezoneNoResults": "No zone matches “{query}”.",
+    "timezoneResults": "{count, plural, one {# zone} other {# zones}}"
   },
   "diaryTitle": "Diary",
   "favoritesTitle": "Favorites",
@@ -448,14 +454,269 @@
       },
       "sessions": {
         "title": "Sessions",
-        "hint": "Sign out on all your devices, including this one.",
+        "hint": "Every device with an open session. Close the ones you do not recognize.",
         "button": "Sign out everywhere",
         "confirmTitle": "Sign out everywhere?",
         "confirmMessage": "You will be signed out on all devices, including this one, and will need to sign in again.",
         "confirm": "Sign out",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "current": "This session",
+        "unknownDevice": "Unknown device",
+        "startedOn": "Started on {date}",
+        "activeNow": "Active now",
+        "lastSeen": "Active {when}",
+        "close": "Close",
+        "closeLabel": "Close the session on {device}",
+        "closedError": "The session could not be closed."
+      },
+      "data": {
+        "title": "Account details"
+      },
+      "username": {
+        "title": "Username",
+        "link": "Your profile link: /users/{username}",
+        "change": "Change",
+        "dialogTitle": "Change username",
+        "intro": "Your username is part of your profile link. Use letters, numbers and underscores, 3 to 32 characters.",
+        "label": "New username",
+        "checking": "Checking…",
+        "available": "Available",
+        "preview": "Your new link: /users/{username}",
+        "reason": {
+          "too_short": "At least 3 characters",
+          "too_long": "At most 32 characters",
+          "invalid_chars": "Only letters, numbers and underscores (no dots or spaces)",
+          "current": "That is already your username",
+          "taken": "That username is not available"
+        },
+        "note1": "You can change it once every 30 days.",
+        "note2": "For 30 days /users/{old} redirects to your new profile and nobody else can take that username.",
+        "note3": "Your monogram color changes, because it is derived from the username.",
+        "cooldown": "You changed your username recently. You can change it again on {date}.",
+        "submit": "Change username",
+        "saving": "Changing…",
+        "done": "Done. Your username is now @{username}. You can change it again on {date}."
+      },
+      "email": {
+        "title": "Email",
+        "verified": "Verified",
+        "unverified": "Unverified",
+        "change": "Change",
+        "pending": "Pending change to {email}. Your current email stays in effect until you confirm it.",
+        "dialogTitle": "Change email",
+        "intro": "We send an email to the new address. Until you confirm it, you keep signing in with the current one.",
+        "label": "New email",
+        "placeholder": "new@example.com",
+        "invalid": "Enter a valid email",
+        "note1": "The confirmation link expires after 24 hours.",
+        "note2": "We also notify the current email, in case it was not you.",
+        "submit": "Send confirmation",
+        "sending": "Sending…",
+        "done": "We sent an email to {email}. Your email stays {current} until you confirm."
+      },
+      "identity": {
+        "passwordLabel": "Your current password",
+        "googleHint": "Your account uses Google: confirm your identity with Google to continue.",
+        "googleButton": "Confirm with Google"
+      },
+      "signIn": {
+        "title": "How you sign in",
+        "password": {
+          "title": "Password",
+          "set": "Set",
+          "none": "No password: you sign in with Google only",
+          "change": "Change password",
+          "create": "Create password"
+        },
+        "google": {
+          "title": "Google",
+          "linked": "Linked",
+          "notLinked": "Not linked",
+          "link": "Link",
+          "unlink": "Unlink",
+          "lastMethod": "It is your only sign-in method, so it cannot be unlinked. Create a password first.",
+          "linkedNotice": "Google is now linked to your account.",
+          "confirmedNotice": "Identity confirmed. You can repeat the action now.",
+          "unlinkTitle": "Unlink Google",
+          "unlinkMessage": "You will keep signing in with your email and password. You can link Google again any time.",
+          "unlinkConfirm": "Unlink",
+          "unlinked": "Google unlinked."
+        }
+      },
+      "password": {
+        "changeTitle": "Change password",
+        "createTitle": "Create password",
+        "createIntro": "This way you can sign in with your email and password, as well as with Google.",
+        "new": "New password",
+        "repeat": "Repeat the new password",
+        "help": "8 to 128 characters.",
+        "tooShort": "At least 8 characters",
+        "mismatch": "The passwords do not match",
+        "revokeOthers": "Sign out my other sessions (recommended)",
+        "submitChange": "Change password",
+        "submitCreate": "Create password",
+        "saving": "Saving…",
+        "doneChange": "Password updated.",
+        "doneChangeRevoked": "Password updated. We signed out your other sessions.",
+        "doneCreate": "Done. You can now sign in with email and password."
+      },
+      "preferences": {
+        "title": "Preferences",
+        "languageLabel": "Interface language",
+        "languageHint": "It is remembered in your account.",
+        "language": {
+          "es": "Español",
+          "en": "English"
+        }
+      },
+      "dialog": {
+        "cancel": "Cancel",
+        "close": "Close"
+      },
+      "lifecycle": {
+        "pause": {
+          "title": "Pause or leave"
+        },
+        "deactivate": {
+          "title": "Deactivate account",
+          "hint": "Your profile stops being visible, but all your activity is kept. Come back any time by signing in.",
+          "button": "Deactivate…",
+          "dialogTitle": "Deactivate account",
+          "hidesTitle": "Hidden",
+          "hides1": "Your profile (anyone opening it sees “not available”)",
+          "hides2": "Your appearance in search, the feed and follower lists",
+          "hides3": "Your public lists",
+          "keepsTitle": "Kept",
+          "keeps1": "Diary, favorites, lists and collection",
+          "keeps2": "Ratings, reviews and comments",
+          "keeps3": "Who follows you and who you follow",
+          "note": "On reviews and comments you already published, your name becomes “Deactivated account”, with no link to your profile.",
+          "reactivate": "To reactivate it, sign in. Nothing is lost.",
+          "submit": "Deactivate my account",
+          "saving": "Deactivating…"
+        },
+        "export": {
+          "title": "Export my data",
+          "hint": "A file with your profile, diary, favorites, lists, collection, ratings and comments. It is generated instantly.",
+          "button": "Download my data",
+          "working": "Preparing…",
+          "done": "Done: you downloaded your data."
+        },
+        "delete": {
+          "title": "Delete account",
+          "hint": "Permanently deletes your profile and everything you created. It cannot be undone. If you only want a break, use “Deactivate”.",
+          "button": "Delete my account…",
+          "dialogTitle": "Delete account",
+          "warning": "This cannot be undone.",
+          "item1": "Your profile, diary, favorites, lists, collection and want-to-listen are deleted",
+          "item2": "Your ratings, reviews and comments are deleted",
+          "item3": "You stop following and being followed, and all your sessions are closed",
+          "alternativePrefix": "Just want a break?",
+          "alternativeLink": "Deactivate the account",
+          "alternativeSuffix": "and keep everything.",
+          "confirmLabel": "Type your username ({username}) to confirm",
+          "submit": "Delete forever",
+          "saving": "Deleting…"
+        }
       }
     }
   },
-  "linkAria": "{site}: {detail}"
+  "linkAria": "{site}: {detail}",
+  "musicIdentity": {
+    "roles": {
+      "listener": "Listener",
+      "collector": "Collector",
+      "musician": "Musician",
+      "dj": "DJ",
+      "critic": "Critic",
+      "radio-host": "Radio host"
+    },
+    "genres": {
+      "rock": "Rock",
+      "punk": "Punk",
+      "post-punk": "Post-punk",
+      "indie": "Indie",
+      "shoegaze": "Shoegaze",
+      "metal": "Metal",
+      "hip-hop": "Hip hop",
+      "electronic": "Electronic",
+      "ambient": "Ambient",
+      "jazz": "Jazz",
+      "soul-funk": "Soul & funk",
+      "folk": "Folk",
+      "blues": "Blues",
+      "classical": "Classical",
+      "pop": "Pop",
+      "latin": "Latin",
+      "reggae": "Reggae",
+      "experimental": "Experimental",
+      "country": "Country",
+      "bossa-nova": "Bossa nova"
+    },
+    "formats": {
+      "vinyl": "Vinyl",
+      "cd": "CD",
+      "cassette": "Cassette",
+      "streaming": "Streaming",
+      "digital": "Digital files"
+    },
+    "prompts": {
+      "first-record": {
+        "question": "The first record I bought",
+        "short": "1st record"
+      },
+      "sunday-record": {
+        "question": "What I put on on a Sunday",
+        "short": "Sunday"
+      },
+      "defended-song": {
+        "question": "A song I defend",
+        "short": "Defend"
+      },
+      "guilty-pleasure": {
+        "question": "My guilty pleasure",
+        "short": "Guilty"
+      },
+      "first-concert": {
+        "question": "My first concert",
+        "short": "1st gig"
+      },
+      "desert-island-record": {
+        "question": "A record for a desert island",
+        "short": "Island"
+      },
+      "sad-day-record": {
+        "question": "What I put on when I am sad",
+        "short": "Sad day"
+      },
+      "road-trip-record": {
+        "question": "A record for a road trip",
+        "short": "Road trip"
+      }
+    },
+    "ficha": {
+      "aria": "Music profile card",
+      "roles": "I am",
+      "genres": "Genres",
+      "formats": "I listen on"
+    },
+    "editor": {
+      "rolesTitle": "I define myself as",
+      "rolesHint": "Up to {max}. It shows on your profile and tells how you relate to music.",
+      "genresTitle": "Genres that move me",
+      "genresHint": "Up to {max}, from a closed list.",
+      "formatsTitle": "How I listen",
+      "formatsHint": "The formats you use.",
+      "counter": "{count} of {max}",
+      "promptsTitle": "Profile questions",
+      "promptsHint": "Up to {max}, each with a one-line answer (at most {chars} characters).",
+      "questionLabel": "Question",
+      "answerLabel": "Answer",
+      "answerPlaceholder": "One line",
+      "addPrompt": "Add a question",
+      "removePrompt": "Remove the question “{question}”",
+      "emptyAnswer": "Write an answer or remove the question."
+    }
+  },
+  "profileLocalTime": "{time} local time"
 }

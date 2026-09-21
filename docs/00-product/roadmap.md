@@ -43,7 +43,7 @@ una canción abierta en frío.
 
 ## Fase 4 — Auth, ratings y comentarios
 
-Entregable: autenticación local de usuarios, valoración dual (estrellas + detallada) y comentarios funcionando sobre artista, álbum y canción. Es el núcleo social base y cierra el MVP definido en el PRD. El incremento posterior de Google OAuth/OIDC también está implementado y validado manualmente. El linking explícito de cuentas y el scrobbling de servicios de streaming permanecen fuera de esta fase.
+Entregable: autenticación local de usuarios, valoración dual (estrellas + detallada) y comentarios funcionando sobre artista, álbum y canción. Es el núcleo social base y cierra el MVP definido en el PRD. El incremento posterior de Google OAuth/OIDC también está implementado y validado manualmente. El linking explícito de cuentas se agregó después desde Ajustes (ADR 0016); el scrobbling de servicios de streaming permanece fuera de esta fase.
 
 **Estado: implementada y validada.**
 

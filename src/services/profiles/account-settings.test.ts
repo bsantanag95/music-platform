@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTableName } from "drizzle-orm";
-import { getAccessMethod, updateAccountPreferences } from "./account-settings";
+import { getAccessMethod, setLocalePreference, updateAccountPreferences } from "./account-settings";
 
 const mocks = vi.hoisted(() => ({ select: vi.fn(), update: vi.fn() }));
 vi.mock("@/db", () => ({ db: { select: mocks.select, update: mocks.update } }));
@@ -140,3 +140,21 @@ describe("getAccessMethod", () => {
     await expect(getAccessMethod("ghost")).rejects.toMatchObject({ code: "USER_NOT_FOUND", status: 404 });
   });
 });
+
+describe("setLocalePreference", () => {
+  it("guarda un idioma soportado", async () => {
+    await setLocalePreference("u1", "en");
+    expect(set).toHaveBeenCalledWith({ locale: "en" });
+  });
+
+  it("rechaza un idioma no soportado sin escribir", async () => {
+    await expect(setLocalePreference("u1", "fr")).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(set).not.toHaveBeenCalled();
+  });
+
+  it("responde USER_NOT_FOUND si la cuenta no existe", async () => {
+    updatedRows = [];
+    await expect(setLocalePreference("u1", "es")).rejects.toMatchObject({ code: "USER_NOT_FOUND" });
+  });
+});
+

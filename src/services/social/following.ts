@@ -4,6 +4,7 @@ import { appUser, userFollow } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import type { ProfileVisibility, UserSummary } from "./types";
 import { isBlockedBetween } from "./relations";
+import { activeUserCondition } from "@/services/auth/account-status";
 
 function isUniqueViolation(error: unknown): error is { code: "23505" } {
   return typeof error === "object" && error !== null && "code" in error && error.code === "23505";
@@ -13,7 +14,7 @@ async function resolveTargetByUsername(username: string) {
   const [user] = await db
     .select({ id: appUser.id, profileVisibility: appUser.profileVisibility })
     .from(appUser)
-    .where(eq(appUser.username, username))
+    .where(and(eq(appUser.username, username), activeUserCondition()))
     .limit(1);
   if (!user) throw new ApiError("USER_NOT_FOUND", 404, "Usuario no encontrado");
   return user;
@@ -191,7 +192,8 @@ export async function countPendingFollowRequests(userId: string): Promise<number
   const [row] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(userFollow)
-    .where(and(eq(userFollow.followedId, userId), eq(userFollow.status, "pending")));
+    .innerJoin(appUser, eq(userFollow.followerId, appUser.id))
+    .where(and(eq(userFollow.followedId, userId), eq(userFollow.status, "pending"), activeUserCondition()));
   return row?.count ?? 0;
 }
 
@@ -209,7 +211,7 @@ async function listRelatedUsers(
     .select({ user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName, profileVisibility: appUser.profileVisibility } })
     .from(userFollow)
     .innerJoin(appUser, eq(userColumn, appUser.id))
-    .where(and(ownerWhere, statusWhere))
+    .where(and(ownerWhere, statusWhere, activeUserCondition()))
     .orderBy(appUser.username)
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);

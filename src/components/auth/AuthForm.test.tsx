@@ -34,6 +34,33 @@ describe("AuthForm", () => {
     expect(mocks.push).toHaveBeenCalledWith("/welcome");
   });
 
+  async function submitLogin(user: ReturnType<typeof userEvent.setup>) {
+    renderWithIntl(<AuthForm mode="login" />);
+    await user.type(screen.getByLabelText("Email o nombre de usuario"), "ana");
+    await user.type(screen.getByLabelText("Contraseña"), "unaClaveLarga1");
+    await user.click(screen.getByRole("button", { name: "Iniciar sesión" }));
+  }
+
+  it("un login con idioma preferido distinto lleva a Inicio en ese idioma", async () => {
+    const user = userEvent.setup();
+    mocks.push.mockClear();
+    mocks.apiFetch.mockResolvedValueOnce({
+      user: { id: "u1", username: "ana", email: "a@b.c", displayName: null, locale: "en" },
+    });
+    await submitLogin(user);
+    expect(mocks.push).toHaveBeenCalledWith("/", { locale: "en" });
+  });
+
+  it("un login con el mismo idioma o sin preferencia se queda en el idioma actual", async () => {
+    const user = userEvent.setup();
+    mocks.push.mockClear();
+    mocks.apiFetch.mockResolvedValueOnce({
+      user: { id: "u1", username: "ana", email: "a@b.c", displayName: null, locale: null },
+    });
+    await submitLogin(user);
+    expect(mocks.push).toHaveBeenCalledWith("/");
+  });
+
   it("mapea el código de autenticación al namespace normativo de errores", async () => {
     const user = userEvent.setup();
     mocks.apiFetch.mockRejectedValueOnce(new mocks.ApiError("INVALID_CREDENTIALS"));

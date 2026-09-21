@@ -5,6 +5,7 @@ import { resolveSession } from "@/services/auth/sessions";
 import { getProfileByUsername } from "@/services/social/profiles";
 import { listUserDiary } from "@/services/diary/diary";
 import { DiaryReadList } from "@/components/diary/DiaryReadList";
+import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -30,6 +31,7 @@ export default async function ProfileDiaryPage({ params }: PageProps) {
   try {
     profile = await getProfileByUsername(username, viewerId);
   } catch {
+    await redirectIfRenamed(username, "/diary");
     notFound();
   }
 

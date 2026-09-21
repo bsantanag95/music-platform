@@ -98,4 +98,14 @@ describe("ContentActions", () => {
     expect(new Date(parsed.expiresAt).getTime()).toBeGreaterThan(Date.now());
     expect(await screen.findByText("Suspensión aplicada.")).toBeInTheDocument();
   });
+
+  it("con la autora desactivada se puede reportar el contenido, pero no bloquearla ni suspenderla", () => {
+    renderWithIntl(
+      <ContentActions targetType="review" targetId="rv1" authorUsername="" authorId="u1" authorDeactivated canModerate />,
+    );
+
+    expect(screen.getByRole("button", { name: "Reportar" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Bloquear a/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Suspender/ })).not.toBeInTheDocument();
+  });
 });

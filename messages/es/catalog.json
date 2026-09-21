@@ -194,6 +194,7 @@
     "suspendReasonPlaceholder": "Motivo de la suspensión",
     "suspendExpires": "Expira",
     "suspendSubmit": "Suspender",
-    "suspendDone": "Suspensión aplicada."
+    "suspendDone": "Suspensión aplicada.",
+    "deactivatedAccount": "Cuenta desactivada"
   }
 }

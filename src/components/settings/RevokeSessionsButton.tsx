@@ -1,21 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { apiFetch, ApiError } from "@/lib/api/client";
 import { OkResponseSchema } from "@/lib/api/schemas";
-import { useRouter } from "@/i18n/navigation";
 
 // "Cerrar todas las sesiones" (spec owner-settings, "Pantalla Cuenta y
 // seguridad"): pide confirmación, llama a `DELETE /api/auth/revoke-all` y, como
-// esa ruta también borra la cookie de la sesión actual, dirige a la persona al
+// esa ruta también borra la cookie de la sesión actual, recarga la página en el
 // inicio de sesión. Cancelar no cierra ninguna sesión.
 export function RevokeSessionsButton() {
   const t = useTranslations("users");
   const tErrors = useTranslations("errors");
-  const router = useRouter();
+  const locale = useLocale();
   const [confirming, setConfirming] = useState(false);
   const [pending, setPending] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -26,8 +25,11 @@ export function RevokeSessionsButton() {
     try {
       await apiFetch("/api/auth/revoke-all", OkResponseSchema, { method: "DELETE" });
       setConfirming(false);
-      router.push("/auth/login");
-      router.refresh();
+      // Recarga COMPLETA hacia el inicio de sesión: la sesión actual ya no existe y
+      // cualquier estado del cliente o caché del router (la lista de sesiones, el
+      // Header con el usuario) quedaría desactualizado. `router.push` + `refresh`
+      // seguidos dejaban la pantalla tal cual.
+      window.location.assign(`/${locale}/auth/login`);
     } catch (error) {
       setConfirming(false);
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");

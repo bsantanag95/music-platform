@@ -7,6 +7,7 @@ import { PRIMARY_ARTIST_SQL } from "@/services/feed/feed";
 import { audiencesForProfile } from "@/services/social/visibility";
 import type { Audience, ProfileVisibility, UserSummary } from "@/services/social/types";
 import type { ShowcaseEntity, ShowcaseEntityType } from "./showcase";
+import { activeUserCondition } from "@/services/auth/account-status";
 
 // Cuántos de los seguidores aprobados del dueño son personas que el visitante
 // también sigue (relación aceptada). Señal para el aviso de perfil privado:
@@ -18,12 +19,7 @@ export async function mutualFollowersHint(
 ): Promise<number> {
   if (viewerId === ownerId) return 0;
 
-  const viewerFollowing = await db
-    .select({ id: userFollow.followedId })
-    .from(userFollow)
-    .where(and(eq(userFollow.followerId, viewerId), eq(userFollow.status, "accepted")));
-
-  const ids = viewerFollowing.map((row) => row.id);
+  const ids = await viewerFollowingIds(viewerId);
   if (ids.length === 0) return 0;
 
   const [row] = await db
@@ -99,11 +95,14 @@ async function pagedMutualUsers(
   };
 }
 
+// Las cuentas que el visitante sigue y que están ACTIVAS: los candidatos de "en
+// común" nunca incluyen a una cuenta desactivada (spec account-lifecycle).
 async function viewerFollowingIds(viewerId: string): Promise<string[]> {
   const rows = await db
     .select({ id: userFollow.followedId })
     .from(userFollow)
-    .where(and(eq(userFollow.followerId, viewerId), eq(userFollow.status, "accepted")));
+    .innerJoin(appUser, eq(userFollow.followedId, appUser.id))
+    .where(and(eq(userFollow.followerId, viewerId), eq(userFollow.status, "accepted"), activeUserCondition()));
   return rows.map((row) => row.id);
 }
 

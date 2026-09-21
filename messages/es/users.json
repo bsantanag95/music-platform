@@ -290,7 +290,13 @@
       "youtube_format": "Escribí tu @usuario de YouTube (por ejemplo @micanal); los enlaces de canal con /channel no sirven.",
       "invalid_url": "Escribí una dirección web válida, por ejemplo ejemplo.com.",
       "unsafe_scheme": "Solo se aceptan direcciones web (http o https)."
-    }
+    },
+    "timezoneNone": "Sin zona horaria",
+    "showLocalTime": "Mostrar mi hora local en el perfil",
+    "showLocalTimeNeedsZone": "Elegí una zona horaria para poder mostrar tu hora local.",
+    "timezoneSearch": "Buscar zona (ej. Santiago)",
+    "timezoneNoResults": "Ninguna zona coincide con «{query}».",
+    "timezoneResults": "{count, plural, one {# zona} other {# zonas}}"
   },
   "diaryTitle": "Diario",
   "favoritesTitle": "Favoritos",
@@ -448,14 +454,269 @@
       },
       "sessions": {
         "title": "Sesiones",
-        "hint": "Cierra la sesión en todos tus dispositivos, incluido este.",
+        "hint": "Cada dispositivo con una sesión abierta. Cerrá la que no reconozcas.",
         "button": "Cerrar todas las sesiones",
         "confirmTitle": "¿Cerrar todas las sesiones?",
         "confirmMessage": "Se cerrará tu sesión en todos los dispositivos, también en este, y tendrás que iniciar sesión de nuevo.",
         "confirm": "Cerrar sesiones",
-        "cancel": "Cancelar"
+        "cancel": "Cancelar",
+        "current": "Esta sesión",
+        "unknownDevice": "Dispositivo desconocido",
+        "startedOn": "Iniciada el {date}",
+        "activeNow": "Activa ahora",
+        "lastSeen": "Activa {when}",
+        "close": "Cerrar",
+        "closeLabel": "Cerrar la sesión de {device}",
+        "closedError": "No se pudo cerrar la sesión."
+      },
+      "data": {
+        "title": "Datos de la cuenta"
+      },
+      "username": {
+        "title": "Usuario",
+        "link": "Tu enlace de perfil: /users/{username}",
+        "change": "Cambiar",
+        "dialogTitle": "Cambiar usuario",
+        "intro": "Tu usuario es parte del enlace de tu perfil. Usá letras, números y guion bajo, de 3 a 32 caracteres.",
+        "label": "Usuario nuevo",
+        "checking": "Comprobando…",
+        "available": "Disponible",
+        "preview": "Tu enlace nuevo: /users/{username}",
+        "reason": {
+          "too_short": "Mínimo 3 caracteres",
+          "too_long": "Máximo 32 caracteres",
+          "invalid_chars": "Solo letras, números y guion bajo (sin puntos ni espacios)",
+          "current": "Ese ya es tu usuario",
+          "taken": "Ese usuario no está disponible"
+        },
+        "note1": "Podés cambiarlo una vez cada 30 días.",
+        "note2": "Durante 30 días /users/{old} redirige a tu perfil nuevo y nadie más puede tomar ese usuario.",
+        "note3": "El color de tu monograma cambia, porque se calcula desde el usuario.",
+        "cooldown": "Ya cambiaste tu usuario hace poco. Podés volver a cambiarlo el {date}.",
+        "submit": "Cambiar usuario",
+        "saving": "Cambiando…",
+        "done": "Listo. Tu usuario ahora es @{username}. Podés volver a cambiarlo el {date}."
+      },
+      "email": {
+        "title": "Email",
+        "verified": "Verificado",
+        "unverified": "Sin verificar",
+        "change": "Cambiar",
+        "pending": "Cambio pendiente a {email}. Tu email actual sigue vigente hasta que lo confirmes.",
+        "dialogTitle": "Cambiar email",
+        "intro": "Te mandamos un correo al email nuevo. Hasta que lo confirmes, seguís entrando con el actual.",
+        "label": "Email nuevo",
+        "placeholder": "nuevo@ejemplo.com",
+        "invalid": "Escribí un email válido",
+        "note1": "El enlace de confirmación vence a las 24 horas.",
+        "note2": "También avisamos al email actual, por si no fuiste vos.",
+        "submit": "Enviar confirmación",
+        "sending": "Enviando…",
+        "done": "Enviamos un correo a {email}. Tu email sigue siendo {current} hasta que confirmes."
+      },
+      "identity": {
+        "passwordLabel": "Tu contraseña actual",
+        "googleHint": "Tu cuenta usa Google: confirmá tu identidad con Google para continuar.",
+        "googleButton": "Confirmar con Google"
+      },
+      "signIn": {
+        "title": "Cómo iniciás sesión",
+        "password": {
+          "title": "Contraseña",
+          "set": "Definida",
+          "none": "Sin contraseña: accedés solo con Google",
+          "change": "Cambiar contraseña",
+          "create": "Crear contraseña"
+        },
+        "google": {
+          "title": "Google",
+          "linked": "Vinculada",
+          "notLinked": "No vinculada",
+          "link": "Vincular",
+          "unlink": "Desvincular",
+          "lastMethod": "Es tu único método de acceso, por eso no se puede desvincular. Creá una contraseña primero.",
+          "linkedNotice": "Google quedó vinculada a tu cuenta.",
+          "confirmedNotice": "Identidad confirmada. Ya podés repetir la acción.",
+          "unlinkTitle": "Desvincular Google",
+          "unlinkMessage": "Vas a seguir entrando con tu email y contraseña. Podés volver a vincular Google cuando quieras.",
+          "unlinkConfirm": "Desvincular",
+          "unlinked": "Google desvinculada."
+        }
+      },
+      "password": {
+        "changeTitle": "Cambiar contraseña",
+        "createTitle": "Crear contraseña",
+        "createIntro": "Así vas a poder entrar con tu email y contraseña, además de con Google.",
+        "new": "Contraseña nueva",
+        "repeat": "Repetí la contraseña nueva",
+        "help": "De 8 a 128 caracteres.",
+        "tooShort": "Mínimo 8 caracteres",
+        "mismatch": "Las contraseñas no coinciden",
+        "revokeOthers": "Cerrar mis otras sesiones (recomendado)",
+        "submitChange": "Cambiar contraseña",
+        "submitCreate": "Crear contraseña",
+        "saving": "Guardando…",
+        "doneChange": "Contraseña actualizada.",
+        "doneChangeRevoked": "Contraseña actualizada. Cerramos tus otras sesiones.",
+        "doneCreate": "Listo. Ahora podés entrar con email y contraseña."
+      },
+      "preferences": {
+        "title": "Preferencias",
+        "languageLabel": "Idioma de la interfaz",
+        "languageHint": "Se recuerda en tu cuenta.",
+        "language": {
+          "es": "Español",
+          "en": "English"
+        }
+      },
+      "dialog": {
+        "cancel": "Cancelar",
+        "close": "Cerrar"
+      },
+      "lifecycle": {
+        "pause": {
+          "title": "Pausar o salir"
+        },
+        "deactivate": {
+          "title": "Desactivar cuenta",
+          "hint": "Tu perfil deja de verse, pero se conserva toda tu actividad. Volvés cuando quieras iniciando sesión.",
+          "button": "Desactivar…",
+          "dialogTitle": "Desactivar cuenta",
+          "hidesTitle": "Se oculta",
+          "hides1": "Tu perfil (quien lo abra ve «no disponible»)",
+          "hides2": "Tu aparición en búsquedas, feed y listados de seguidores",
+          "hides3": "Tus listas públicas",
+          "keepsTitle": "Se conserva",
+          "keeps1": "Diario, favoritos, listas y colección",
+          "keeps2": "Valoraciones, reseñas y comentarios",
+          "keeps3": "Quién te sigue y a quién seguís",
+          "note": "En las reseñas y comentarios que ya publicaste, tu nombre pasa a «Cuenta desactivada», sin enlace a tu perfil.",
+          "reactivate": "Para reactivarla, iniciá sesión. No se pierde nada.",
+          "submit": "Desactivar mi cuenta",
+          "saving": "Desactivando…"
+        },
+        "export": {
+          "title": "Exportar mis datos",
+          "hint": "Un archivo con tu perfil, diario, favoritos, listas, colección, valoraciones y comentarios. Se genera al instante.",
+          "button": "Descargar mis datos",
+          "working": "Preparando…",
+          "done": "Listo: descargaste tus datos."
+        },
+        "delete": {
+          "title": "Eliminar cuenta",
+          "hint": "Borra para siempre tu perfil y todo lo que creaste. No se puede deshacer. Si solo querés una pausa, usá «Desactivar».",
+          "button": "Eliminar mi cuenta…",
+          "dialogTitle": "Eliminar cuenta",
+          "warning": "Esto no se puede deshacer.",
+          "item1": "Se borran tu perfil, diario, favoritos, listas, colección y por escuchar",
+          "item2": "Se borran tus valoraciones, reseñas y comentarios",
+          "item3": "Dejás de seguir y de ser seguido, y se cierran todas tus sesiones",
+          "alternativePrefix": "¿Solo querés una pausa?",
+          "alternativeLink": "Desactivá la cuenta",
+          "alternativeSuffix": "y conservás todo.",
+          "confirmLabel": "Escribí tu usuario ({username}) para confirmar",
+          "submit": "Eliminar para siempre",
+          "saving": "Eliminando…"
+        }
       }
     }
   },
-  "linkAria": "{site}: {detail}"
+  "linkAria": "{site}: {detail}",
+  "musicIdentity": {
+    "roles": {
+      "listener": "Oyente",
+      "collector": "Coleccionista",
+      "musician": "Músico",
+      "dj": "DJ",
+      "critic": "Crítico",
+      "radio-host": "Selector de radio"
+    },
+    "genres": {
+      "rock": "Rock",
+      "punk": "Punk",
+      "post-punk": "Post-punk",
+      "indie": "Indie",
+      "shoegaze": "Shoegaze",
+      "metal": "Metal",
+      "hip-hop": "Hip hop",
+      "electronic": "Electrónica",
+      "ambient": "Ambient",
+      "jazz": "Jazz",
+      "soul-funk": "Soul y funk",
+      "folk": "Folk",
+      "blues": "Blues",
+      "classical": "Clásica",
+      "pop": "Pop",
+      "latin": "Latina",
+      "reggae": "Reggae",
+      "experimental": "Experimental",
+      "country": "Country",
+      "bossa-nova": "Bossa nova"
+    },
+    "formats": {
+      "vinyl": "Vinilo",
+      "cd": "CD",
+      "cassette": "Casete",
+      "streaming": "Streaming",
+      "digital": "Archivos digitales"
+    },
+    "prompts": {
+      "first-record": {
+        "question": "El primer disco que compré",
+        "short": "1.er disco"
+      },
+      "sunday-record": {
+        "question": "Lo que pongo un domingo",
+        "short": "Domingo"
+      },
+      "defended-song": {
+        "question": "Una canción que defiendo",
+        "short": "Defiendo"
+      },
+      "guilty-pleasure": {
+        "question": "Mi placer culposo",
+        "short": "Culposo"
+      },
+      "first-concert": {
+        "question": "Mi primer concierto",
+        "short": "1.er show"
+      },
+      "desert-island-record": {
+        "question": "Un disco para una isla desierta",
+        "short": "Isla"
+      },
+      "sad-day-record": {
+        "question": "Lo que pongo cuando estoy triste",
+        "short": "Tristeza"
+      },
+      "road-trip-record": {
+        "question": "Un disco para un viaje",
+        "short": "Viaje"
+      }
+    },
+    "ficha": {
+      "aria": "Ficha musical",
+      "roles": "Soy",
+      "genres": "Géneros",
+      "formats": "Escucho en"
+    },
+    "editor": {
+      "rolesTitle": "Me defino como",
+      "rolesHint": "Hasta {max}. Aparece en tu perfil y cuenta cómo te relacionás con la música.",
+      "genresTitle": "Géneros que me mueven",
+      "genresHint": "Hasta {max}, de una lista cerrada.",
+      "formatsTitle": "Cómo escucho",
+      "formatsHint": "Los formatos que usás.",
+      "counter": "{count} de {max}",
+      "promptsTitle": "Preguntas del perfil",
+      "promptsHint": "Hasta {max}, con una respuesta de una línea (máximo {chars} caracteres).",
+      "questionLabel": "Pregunta",
+      "answerLabel": "Respuesta",
+      "answerPlaceholder": "Una línea",
+      "addPrompt": "Agregar pregunta",
+      "removePrompt": "Quitar la pregunta «{question}»",
+      "emptyAnswer": "Escribí una respuesta o quitá la pregunta."
+    }
+  },
+  "profileLocalTime": "{time} hora local"
 }

@@ -7,6 +7,7 @@ import { relationsFor } from "@/services/social/relations";
 import { ProfileConnectionsHeader } from "@/components/profiles/ProfileConnectionsHeader";
 import { ConnectionsSection, ConnectionsUserList } from "@/components/profiles/ConnectionsUserList";
 import type { UserSummary } from "@/lib/api/schemas";
+import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -30,6 +31,7 @@ export default async function ProfileMutualConnectionsPage({ params }: PageProps
   try {
     profile = await getProfileByUsername(username, viewerId);
   } catch {
+    await redirectIfRenamed(username, "/connections/mutual");
     notFound();
   }
 

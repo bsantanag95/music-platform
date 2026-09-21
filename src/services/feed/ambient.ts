@@ -2,6 +2,7 @@ import { cache } from "react";
 import { and, eq, gte, inArray, or } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, collectionEntry, releaseGroup, userBlock, userFollow } from "@/db/schema";
+import { activeUserCondition } from "@/services/auth/account-status";
 
 // Franja de eventos ambiente (openspec: add-feed-ambient-events; los eventos
 // "seguir usuario" y "seguir artista" se retiraron de acá en
@@ -112,6 +113,7 @@ export const getFeedAmbientEvents = cache(
           inArray(collectionEntry.userId, followeeIds),
           inArray(collectionEntry.audience, ["followers", "public"]),
           gte(collectionEntry.createdAt, cutoff),
+          activeUserCondition(),
         ),
       );
 

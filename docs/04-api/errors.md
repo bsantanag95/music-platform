@@ -58,6 +58,13 @@ además del `error` legible:
 | `INVALID_VERIFICATION_TOKEN` | 400 | `POST /api/auth/email/verify`: el token de verificación de email no existe, expiró o ya fue usado. No distingue entre esos casos. |
 | `EMAIL_ALREADY_VERIFIED` | 409 | `POST /api/auth/email/verify/resend`: la cuenta ya tiene el email verificado. |
 | `EMAIL_CONFIG_MISSING` | 503 | `POST /api/auth/password/forgot` y `POST /api/auth/email/verify/resend`: no hay un transporte de email real configurado en producción (fail-closed); el flujo no genera token ni envía correo. |
+| `REAUTH_REQUIRED` | 403 | Acción sensible en una cuenta **sin contraseña** con la sesión de más de 10 minutos: hay que confirmar la identidad con Google (`GET /api/auth/google/start?intent=reauth`). No se ejecutó nada. |
+| `USERNAME_CHANGE_COOLDOWN` | 409 | `PUT /api/me/account/username`: ya se cambió el usuario hace menos de 30 días. El mensaje incluye la fecha (ISO) en que vuelve a estar permitido. |
+| `LAST_ACCESS_METHOD` | 409 | `DELETE /api/me/account/identities/google`: Google es el único método de acceso (la cuenta no tiene contraseña); crear una contraseña primero. |
+| `OAUTH_IDENTITY_TAKEN` | — | Flujo `link` de Google: esa cuenta de Google ya está vinculada a otra cuenta. Llega como `?google=error&code=…` a `/me/settings/account` (no es una respuesta JSON). |
+| `OAUTH_IDENTITY_MISMATCH` | — | Flujo `reauth` de Google: se eligió una cuenta de Google distinta de la vinculada. Igual que el anterior, vuelve por query a Ajustes. |
+| `ACCOUNT_DELETION_BLOCKED` | 409 | `DELETE /api/me/account`: la cuenta tiene historial de moderación o editorial (filas de auditoría con `ON DELETE RESTRICT`) y no se puede eliminar. No cambia nada; la pantalla sugiere desactivar. |
+| `SESSION_NOT_FOUND` | 404 | `DELETE /api/me/sessions/{id}`: la sesión no existe, el id no es UUID o pertenece a otra persona. |
 | `USER_NOT_FOUND` | 404 | Perfil, búsqueda o destino de una relación: el username no corresponde a ningún usuario. |
 | `RELATION_INVALID` | 400 | Operación de seguimiento o bloqueo inválida (ej. intentar seguirse o bloquearse a sí mismo). |
 | `REQUEST_NOT_FOUND` | 404 | La solicitud de seguimiento no existe o ya fue resuelta (aprobada, rechazada o cancelada). |

@@ -353,8 +353,50 @@ query param, ya que el callback es una navegación del navegador y no un `fetch`
 `docs/04-api/errors.md` para el catálogo completo de códigos `OAUTH_*` y su excepción de
 transporte.
 
-No hay ruta de vinculación (linking) de Google con una cuenta local ya autenticada en este
-incremento — queda diferida a una fase posterior (`auth.md` sección 6, ADR 0010).
+**Intenciones del flujo (cambio `rework-account-settings`).** `GET /api/auth/google/start` acepta
+además `intent` (`login` por defecto | `link` | `reauth`; cualquier otro valor se trata como `login`).
+`link` y `reauth` exigen sesión (`401 AUTH_REQUIRED` sin redirigir a Google) y guardan en las cookies
+del flujo la intención y quién lo inició; el callback exige que sea la misma sesión. `link` crea la
+identidad de Google para la cuenta de la sesión (por el id de Google, no por email); `reauth` exige que
+la identidad sea la vinculada a esa cuenta y rota la sesión. Ambas terminan siempre en
+`/<locale>/me/settings/account?google=linked|confirmed|error[&code=OAUTH_IDENTITY_TAKEN|OAUTH_IDENTITY_MISMATCH]`
+— un destino **fijo**; sigue sin existir un `returnTo` controlado por el cliente. Con `login`, el
+callback usa el idioma preferido de la cuenta (`app_user.locale`) si lo tiene.
+
+La vinculación implícita sigue prohibida: un email de Google que coincide con una cuenta local se
+rechaza (`EMAIL_TAKEN_BY_LOCAL`); solo se vincula desde una sesión iniciada y con `intent=link`.
+
+## Cuenta y seguridad (cambio `rework-account-settings`, Fase 1)
+
+Todas exigen sesión (`401 AUTH_REQUIRED`). Las acciones sensibles piden el factor de identidad
+descrito en `docs/05-features/user-profile.md` ("Autenticación reciente"): la contraseña actual en el
+cuerpo (`403 INVALID_CREDENTIALS` si no es correcta, `429 RATE_LIMITED` al superar 10 intentos) o, en
+una cuenta sin contraseña, una sesión de menos de 10 minutos (`403 REAUTH_REQUIRED`).
+
+| Endpoint | Cuerpo / respuesta |
+|---|---|
+| `GET /api/me/account/username/availability?q=` | `200 { valid, available, reason }`; `reason`: `too_short` \| `too_long` \| `invalid_chars` \| `current` \| `taken` \| `null`. Nunca dice quién lo tiene. Límite de 120 consultas por 15 min |
+| `PUT /api/me/account/username` | `{ username }` → `200 { username, nextChangeAt }`. `409 USERNAME_TAKEN` (sin distinguir mayúsculas, incluye reservas ajenas), `409 USERNAME_CHANGE_COOLDOWN` (un cambio cada 30 días), `400 VALIDATION_ERROR` |
+| `GET /api/me/account/email` | `200 { pending: { newEmail, expiresAt } \| null }` |
+| `POST /api/me/account/email` | `{ newEmail, password?, locale? }` → `200 { ok: true }`; manda el enlace al email **nuevo**, el actual no cambia. `409 EMAIL_TAKEN`, `503 EMAIL_CONFIG_MISSING`, `429 RATE_LIMITED`. Si el envío falla no queda token |
+| `POST /api/auth/email/change/confirm` | `{ token, locale? }` (sin sesión: el token es el factor) → `200 { ok: true, email }`; `400 INVALID_VERIFICATION_TOKEN` (inexistente, vencido o usado), `409 EMAIL_TAKEN` (otra cuenta lo tomó entretanto) |
+| `PUT /api/me/account/password` | `{ currentPassword, newPassword, revokeOtherSessions?, locale? }` (8–128) → `200 { ok: true }`. `400 PASSWORD_REUSED` si es igual a la actual; con `revokeOtherSessions` borra las demás sesiones y conserva la actual; invalida los tokens de reset; avisa por correo |
+| `POST /api/me/account/password` | `{ newPassword, locale? }` — solo cuentas **sin** contraseña; exige sesión reciente (`REAUTH_REQUIRED`). `400 VALIDATION_ERROR` si ya tiene |
+| `DELETE /api/me/account/identities/google` | `204`. `409 LAST_ACCESS_METHOD` si la cuenta no tiene contraseña |
+| `GET /api/me/sessions` | `200 { sessions: [{ id, deviceLabel, createdAt, lastSeenAt, current }] }`, la actual primero; `deviceLabel: null` = "Dispositivo desconocido". Sin token ni hash |
+| `DELETE /api/me/sessions/{id}` | `204`. `404 SESSION_NOT_FOUND` (inexistente, no UUID o de otra persona), `400 VALIDATION_ERROR` si es la sesión actual (para eso está cerrar sesión) |
+| `PATCH /api/me/preferences` | `{ locale: "es" \| "en" }` → `200 { locale }`. `400 VALIDATION_ERROR` con otro valor |
+| `POST /api/me/account/deactivate` | `{ password? }` → `200 { ok: true }`. Marca `deactivated_at`, borra **todas** las sesiones de la persona y limpia la cookie. `401 INVALID_CREDENTIALS`, `429 RATE_LIMITED`, `REAUTH_REQUIRED` (cuenta de Google con sesión de más de 10 min). No borra contenido |
+| `DELETE /api/me/account` | `{ username, password? }` → `200 { ok: true }`. `username` debe ser igual al de la cuenta (`400 VALIDATION_ERROR` si no). Borra la cuenta y todo lo suyo, y limpia la cookie. `409 ACCOUNT_DELETION_BLOCKED` si tiene historial de moderación o editorial (no cambia nada). Mismos errores de identidad que desactivar |
+| `GET /api/me/export` | `200` con el JSON de la persona (`Content-Disposition: attachment; filename="music-platform-<usuario>-<fecha>.json"`, `Cache-Control: no-store`). Forma: `{ version, exportedAt, account, profile, library, activity, lists, highlights, social, catalog }`. Sin hash de contraseña, tokens ni sesiones. `429 RATE_LIMITED`: una exportación por minuto por persona |
+
+**Autoría desactivada.** En reseñas y comentarios, `user` gana `deactivated?: boolean`. Cuando es `true`,
+`username` es `""` y `displayName` es `null` (la API no entrega la identidad real de una cuenta
+desactivada); el cliente muestra «Cuenta desactivada» sin enlace. Iniciar sesión con una cuenta
+desactivada la **reactiva**: `POST /api/auth/login` y el callback de Google limpian la marca.
+
+`POST /api/auth/login` incluye ahora `user.locale` (preferencia guardada o `null`): `AuthForm` lleva a
+la persona a ese idioma si difiere del actual.
 
 ## Identidad social — perfiles, seguimiento y bloqueo
 
@@ -402,7 +444,13 @@ son opcionales; se requiere al menos uno. Las cadenas de texto se recortan; la c
 el campo (`null`; en `displayName` el sitio vuelve a mostrar el username).
 
 **Body:** cualquier subconjunto de
-`{ profileVisibility: "public" | "private", displayName (≤50), defaultAudience: "private" | "followers" | "public" | null, bio (≤200), pronouns (≤40), location (≤80), timezone (≤64) }`.
+`{ profileVisibility: "public" | "private", displayName (≤50), defaultAudience: "private" | "followers" | "public" | null, bio (≤200), pronouns (≤40), location (≤80), timezone, showLocalTime: boolean }`.
+
+`timezone` es un **identificador IANA de la lista** (`America/Santiago`, `UTC`…; sensible a
+mayúsculas); la cadena vacía o `null` la borra y cualquier otro valor responde `400
+VALIDATION_ERROR`. `showLocalTime` muestra la hora local en la Placa y **exige zona**: vaciar la zona
+lo apaga solo y activarlo sin zona (guardada o enviada en la misma petición) responde `400
+VALIDATION_ERROR`.
 
 `defaultAudience` es la audiencia con la que nace el contenido **nuevo** de biblioteca (favoritos,
 diario, listas y colección). `null` la quita: cada tipo vuelve a su default (favoritos `public`,
@@ -415,6 +463,25 @@ actualizado.
 **400** con `VALIDATION_ERROR` si un valor no es válido (p. ej. una audiencia fuera del conjunto
 permitido o un nombre de más de 50 caracteres) o el body está vacío. **401** con `AUTH_REQUIRED` si
 no hay sesión; no se modifica ningún dato.
+
+### `PUT /api/me/profile/music-identity`
+
+Reemplaza "Me defino como", géneros y/o formatos de escucha (cambio `rework-account-settings`,
+Fase 2). **Body:** cualquier subconjunto no vacío de
+`{ selfRoles: SelfRole[] (≤3), genres: Genre[] (≤5), listeningFormats: ListeningFormat[] (≤5) }`,
+de las listas cerradas de `src/lib/music-identity.ts`, sin repetidos. Lo enviado sustituye al valor
+anterior (`[]` lo vacía); lo no enviado no se toca. **200 OK:** `{ selfRoles, genres, listeningFormats }`
+guardados. **400 `VALIDATION_ERROR`** con un valor fuera de la lista, un cuarto rol, un sexto género,
+repetidos o un cuerpo vacío (no cambia nada). **401** `AUTH_REQUIRED`.
+
+### `PUT` / `DELETE /api/me/profile/prompts`
+
+`PUT` reemplaza el conjunto **completo** de preguntas del perfil, en el orden del array.
+**Body:** `{ prompts: [{ promptKey, answer }] }` (0..3; `promptKey` de las 8 preguntas cerradas; `answer`
+de 1 a 100 caracteres, recortada, de una sola línea). **200 OK:** `{ prompts: [{ promptKey, answer,
+position }] }`. **400 `VALIDATION_ERROR`** con una pregunta desconocida o repetida, una respuesta
+vacía, de más de 100 caracteres o con saltos de línea, o una cuarta pregunta; el conjunto anterior no
+cambia (transacción). `DELETE` las quita todas (equivale a `PUT` con `[]`). **401** `AUTH_REQUIRED`.
 
 ### `GET /api/me/default-audience/apply?audience=`
 
