@@ -34,7 +34,7 @@ Mantiene el mundo visual vigente ("The Vinyl Listening Room") y los principios d
   rango de tipo y el cliente la parte en secciones. Tres tratamientos de ficha: **álbum** con
   carátula, **artista** con placa tipográfica (los artistas no exponen carátula), **canción**
   con la silueta de disco del sistema (las canciones tampoco). Nunca un rectángulo vacío.
-- **Toolbar:** búsqueda por título del objetivo (`q`), filtro por tipo (`type`), filtro por
+- **Toolbar:** búsqueda por título del objetivo o artista acreditado (`q`), filtro por tipo (`type`), filtro por
   audiencia (`audience`) y orden (`sort`: recencia / alfabético). Todo en servidor, sobre el
   conjunto completo. Mismo patrón que `/me/lists` y `/me/diary`.
 - **Gestión de audiencia:** selector inline por ficha (usa el `PATCH` existente) y **cambio

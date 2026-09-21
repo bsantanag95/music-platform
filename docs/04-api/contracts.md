@@ -815,7 +815,9 @@ está vacío, excede 50, o la audiencia es inválida.
 Lista paginada de los favoritos propios. Orden por rango de tipo (artista → álbum → canción) y,
 dentro de cada tipo, por `sort` (cambio `rework-favorites-section`). Parámetros opcionales,
 combinables, aplicados en el servidor sobre el conjunto completo:
-- `q`: búsqueda parcial sobre el título del objetivo (sin distinguir mayúsculas).
+- `q`: búsqueda parcial (sin distinguir mayúsculas) sobre el título del objetivo **o el nombre del
+  artista principal acreditado** de álbumes y canciones (cambio `improve-favorites-picker`); los
+  favoritos de artista coinciden por su nombre. También aplica a `GET /api/users/[username]/favorites`.
 - `type`: `artist` | `release-group` | `recording`.
 - `audience`: `private` | `followers` | `public`.
 - `sort`: `recent` (default) | `alpha` (alfabético por título del objetivo).

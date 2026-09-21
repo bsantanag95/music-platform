@@ -398,11 +398,17 @@ búsqueda de catálogo: el buscador solo ayuda a encontrar uno cuando hay muchos
 - **Consulta al abrir, no al montar** (el editor de la Tarjeta tiene tres selectores y no debe traer
   tres listas al cargar). Pide `GET /api/me/favorites?pageSize=50` (más `type` si aplica); si hay más
   de 50, avisa "Mostrando los primeros 50" para invitar a buscar.
-- **El filtro lo hace el servidor** (`q` sobre el título del favorito, sin distinguir mayúsculas: el
-  nombre en artistas, el título en álbumes y canciones), con debounce de 300 ms; vaciar el buscador
+- **El filtro lo hace el servidor** (`q`, sin distinguir mayúsculas, sobre el título del favorito —el
+  nombre en artistas— **o el nombre del artista principal acreditado** de álbumes y canciones: buscar
+  "sabrina" en el slot de álbum trae sus álbumes, y en el de canción sus canciones; cambio
+  `improve-favorites-picker`), con debounce de 300 ms; vaciar el buscador
   vuelve a pedir la lista sin `q` al instante. Una respuesta vieja que llega tarde se descarta
   (`runId`).
 - No ofrece lo ya elegido (`excludeIds`: el slot actual de la Tarjeta, o los ítems ya fijados).
+- **Legibilidad:** el editor de la Tarjeta apila un slot por fila (en tres columnas el panel lateral
+  dejaba ~9 rem por slot y los títulos se cortaban a tres letras), con "Quitar" junto al elemento
+  elegido y el título en hasta dos líneas; el selector usa texto de lectura (`text-sm`/`text-xs`) y
+  miniaturas de 40 px.
 - Estados: buscando, sin coincidencias («Ningún favorito coincide con «…»»), sin favoritos elegibles
   (el aviso propio de cada editor) y error localizado.
 
