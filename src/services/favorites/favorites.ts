@@ -297,6 +297,16 @@ async function favoriteCounts(scopeConditions: SQL[]): Promise<FavoriteCounts> {
   };
 }
 
+// Búsqueda de texto (`q`): coincide con el título del objetivo o, para álbumes y
+// canciones, con el nombre del artista principal acreditado (mismo criterio que la
+// búsqueda de la colección). Los favoritos de artista coinciden por su nombre, que
+// ya es `TITLE_EXPR`. Se usa en el alcance de las dos lecturas, así `counts` también
+// respeta la búsqueda (openspec: improve-favorites-picker).
+function favoriteTextMatch(q: string): SQL {
+  const pattern = `%${q}%`;
+  return sql`(${TITLE_EXPR} ilike ${pattern} or ${PRIMARY_ARTIST_SQL(favorite.releaseGroupId, favorite.recordingId)} ilike ${pattern})`;
+}
+
 function favoriteSortOrder(sort: FavoriteSort) {
   if (sort === "alpha") return [asc(sql`lower(${TITLE_EXPR})`), asc(favorite.id)];
   if (sort === "artist") return [asc(ARTIST_SORT_EXPR), asc(favorite.id)];
@@ -317,7 +327,7 @@ export async function listMyFavorites(
 
   const scopeConditions: SQL[] = [eq(favorite.userId, userId)];
   if (audience) scopeConditions.push(eq(favorite.audience, audience));
-  if (q) scopeConditions.push(sql`${TITLE_EXPR} ilike ${`%${q}%`}`);
+  if (q) scopeConditions.push(favoriteTextMatch(q));
 
   const listConditions: SQL[] = [...scopeConditions];
   if (type === "artist") listConditions.push(isNotNull(favorite.artistId));
@@ -378,7 +388,7 @@ export async function listUserFavorites(
     eq(favorite.userId, profile.id),
     inArray(favorite.audience, effectiveAudiences),
   ];
-  if (q) scopeConditions.push(sql`${TITLE_EXPR} ilike ${`%${q}%`}`);
+  if (q) scopeConditions.push(favoriteTextMatch(q));
 
   const listConditions: SQL[] = [...scopeConditions];
   if (type === "artist") listConditions.push(isNotNull(favorite.artistId));
