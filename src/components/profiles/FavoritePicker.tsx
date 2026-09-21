@@ -94,7 +94,7 @@ export function FavoritePicker({
         if (event.currentTarget.open) setOpened(true);
       }}
     >
-      <summary className="cursor-pointer font-data text-xs text-paper-muted hover:text-paper">{summary}</summary>
+      <summary className="cursor-pointer font-data text-sm text-paper-muted hover:text-paper">{summary}</summary>
       {opened && (
         <div className="mt-2 flex flex-col gap-2">
           <input
@@ -104,39 +104,39 @@ export function FavoritePicker({
             aria-label={t("favoritePicker.searchLabel")}
             placeholder={t("favoritePicker.searchPlaceholder")}
             maxLength={100}
-            className="w-full rounded border border-ink-border bg-ink-surface px-2 py-1.5 font-body text-xs text-paper placeholder:text-paper-muted focus:border-amber focus:outline-none"
+            className="w-full rounded border border-ink-border bg-ink-surface px-3 py-2 font-body text-sm text-paper placeholder:text-paper-muted focus:border-amber focus:outline-none"
           />
 
           {errorCode && (
-            <span role="alert" className="font-data text-xs text-danger">
+            <span role="alert" className="font-data text-sm text-danger">
               {tErrors(`${errorCode}.description`)}
             </span>
           )}
           {status && (
-            <p role="status" className="font-body text-xs text-paper-muted">
+            <p role="status" className="font-body text-sm text-paper-muted">
               {status}
             </p>
           )}
 
           {visible.length > 0 && (
-            <ul className="flex max-h-56 flex-col gap-1 overflow-y-auto">
+            <ul className="flex max-h-72 flex-col gap-1.5 overflow-y-auto">
               {visible.map((favorite) => (
                 <li key={favorite.id}>
                   <button
                     type="button"
                     disabled={disabled}
                     onClick={() => onPick(favorite)}
-                    className="flex w-full items-center gap-2 rounded border border-ink-border bg-ink-surface px-2 py-1.5 text-left transition-colors hover:border-amber disabled:opacity-50"
+                    className="flex w-full items-center gap-3 rounded border border-ink-border bg-ink-surface px-3 py-2 text-left transition-colors hover:border-amber disabled:opacity-50"
                   >
                     {favorite.targetType === "artist" ? (
-                      <ArtistPlate title={favorite.target.title} className="size-8" textClassName="text-sm" />
+                      <ArtistPlate title={favorite.target.title} className="size-10" textClassName="text-base" />
                     ) : (
-                      <CoverThumb cover={favorite.target.coverThumbUrl} label="" className="size-8" />
+                      <CoverThumb cover={favorite.target.coverThumbUrl} label="" className="size-10" />
                     )}
                     <span className="min-w-0">
-                      <span className="block truncate font-body text-xs text-paper">{favorite.target.title}</span>
+                      <span className="block truncate font-display text-sm text-paper">{favorite.target.title}</span>
                       {favorite.target.artistName && (
-                        <span className="block truncate font-data text-[11px] text-paper-muted">
+                        <span className="block truncate font-data text-xs text-paper-muted">
                           {favorite.target.artistName}
                         </span>
                       )}
@@ -148,7 +148,7 @@ export function FavoritePicker({
           )}
 
           {hasNext && !trimmedQuery && (
-            <p className="font-body text-xs text-paper-muted">{t("favoritePicker.moreHint", { count: PAGE_SIZE })}</p>
+            <p className="font-body text-sm text-paper-muted">{t("favoritePicker.moreHint", { count: PAGE_SIZE })}</p>
           )}
         </div>
       )}

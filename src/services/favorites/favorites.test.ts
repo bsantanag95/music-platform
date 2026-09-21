@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import { PgDialect } from "drizzle-orm/pg-core";
+import type { SQL } from "drizzle-orm";
 import {
   toggleFavorite,
   removeFavorite,
@@ -458,6 +460,71 @@ describe("servicio de favoritos", () => {
     );
     expect(content).not.toMatch(/from.*schema.*import.*\brating\b/);
     expect(content).not.toMatch(/require.*rating/);
+  });
+});
+
+// El servicio se prueba con la base mockeada, así que estas pruebas leen el SQL que se
+// le pasa a `where` en las dos consultas (listado y `counts`). La coincidencia real
+// contra datos se comprueba aparte contra la base local.
+describe("búsqueda de texto (`q`) — título o artista acreditado (openspec: improve-favorites-picker)", () => {
+  const dialect = new PgDialect();
+
+  function pagedAndCountsCapturingWhere(rows: unknown[]) {
+    const pagedWhere = vi.fn(() => ({ orderBy: vi.fn(() => ({ limit: vi.fn(() => ({ offset: vi.fn().mockResolvedValue(rows) })) })) }));
+    const pagedChain = { leftJoin: vi.fn(() => pagedChain), where: pagedWhere };
+    const countsWhere = vi.fn().mockResolvedValue([zeroCounts]);
+    const countsChain = { leftJoin: vi.fn(() => countsChain), where: countsWhere };
+    mocks.db.select
+      .mockReturnValueOnce({ from: vi.fn(() => pagedChain) })
+      .mockReturnValueOnce({ from: vi.fn(() => countsChain) });
+    return { pagedWhere, countsWhere };
+  }
+
+  function compiled(fn: ReturnType<typeof vi.fn>) {
+    return dialect.sqlToQuery((fn.mock.calls[0] as unknown as [SQL])[0]);
+  }
+
+  function expectTitleOrArtistMatch(query: { sql: string; params: unknown[] }, q: string) {
+    // Dos `ilike` con el mismo patrón: el título del objetivo y el artista principal.
+    expect(query.sql.match(/ilike/g)).toHaveLength(2);
+    expect(query.params.filter((param) => param === `%${q}%`)).toHaveLength(2);
+    // El artista sale de los créditos `primary` del álbum o la canción.
+    expect(query.sql).toContain("credit c");
+    expect(query.sql).toContain("c.role = 'primary'");
+  }
+
+  it("listMyFavorites aplica el mismo criterio al listado y a counts", async () => {
+    const { pagedWhere, countsWhere } = pagedAndCountsCapturingWhere([]);
+
+    await listMyFavorites(user, 1, 20, { q: "sabrina", type: "release-group" });
+
+    expectTitleOrArtistMatch(compiled(pagedWhere), "sabrina");
+    expectTitleOrArtistMatch(compiled(countsWhere), "sabrina");
+  });
+
+  it("listUserFavorites aplica el mismo criterio al listado y a counts", async () => {
+    mocks.getProfileByUsername.mockResolvedValue({
+      id: "otro-usuario",
+      profileVisibility: "public",
+      relation: "none",
+      blockedByMe: false,
+    });
+    const { pagedWhere, countsWhere } = pagedAndCountsCapturingWhere([]);
+
+    await listUserFavorites("otro-usuario", user, 1, 20, { q: "sabrina" });
+
+    expectTitleOrArtistMatch(compiled(pagedWhere), "sabrina");
+    expectTitleOrArtistMatch(compiled(countsWhere), "sabrina");
+  });
+
+  it("sin `q` no agrega ninguna condición de texto", async () => {
+    const { pagedWhere } = pagedAndCountsCapturingWhere([]);
+
+    await listMyFavorites(user, 1, 20, { type: "artist" });
+
+    const query = compiled(pagedWhere);
+    expect(query.sql).not.toContain("ilike");
+    expect(query.sql).not.toContain("credit c");
   });
 });
 
