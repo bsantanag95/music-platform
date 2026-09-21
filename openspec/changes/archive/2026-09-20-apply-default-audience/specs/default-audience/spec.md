@@ -1,71 +1,4 @@
-# default-audience
-
-## Purpose
-
-Preferencia opcional de audiencia por defecto del contenido nuevo de biblioteca (favoritos, entradas de diario, listas y copias de colección): su precedencia al crear, su carácter no retroactivo, su alcance (no cubre reseñas ni comentarios, que son públicos), su control en la pantalla Privacidad y audiencia de los ajustes y la acción explícita "Aplicar a lo existente", que lleva la audiencia elegida a todo el contenido ya creado.
-
-## Requirements
-
-### Requirement: Audiencia por defecto opcional del contenido nuevo
-
-El sistema SHALL permitir a cada usuario configurar, de forma opcional, una audiencia por
-defecto (`private`, `followers` o `public`) para el contenido nuevo de biblioteca: favoritos,
-entradas de diario, listas y copias de colección. La ausencia de valor (`NULL`) SHALL significar
-"según el tipo" y SHALL conservar los defaults de cada tipo vigentes cuando se aprobó este
-requisito. Los usuarios nuevos y los existentes SHALL comenzar sin valor.
-
-#### Scenario: Usuario sin preferencia
-
-- **WHEN** un usuario sin audiencia por defecto crea un favorito, una entrada de diario, una
-  lista y una copia de colección sin indicar audiencia
-- **THEN** cada uno nace con el default de su tipo, igual que antes de este cambio
-
-#### Scenario: Usuarios existentes
-
-- **WHEN** se despliega este cambio sobre una base con usuarios existentes
-- **THEN** ningún usuario tiene audiencia por defecto y ningún contenido cambia de audiencia
-
-### Requirement: Alcance de la preferencia
-
-La preferencia SHALL aplicarse únicamente a los cuatro tipos de contenido de biblioteca
-(favoritos, entradas de diario, listas y copias de colección). NO SHALL aplicarse a las
-reseñas ni a los comentarios: no tienen audiencia propia y son contenido público visible en
-la página del álbum o la canción (ver `profile-reviews`). Una reseña SHALL seguir mostrándose
-en el perfil accesible del dueño con independencia de su audiencia por defecto.
-
-#### Scenario: Las reseñas siguen siendo públicas
-
-- **WHEN** un usuario con audiencia por defecto `private` publica una reseña de álbum
-- **THEN** la reseña es pública como siempre y aparece en la sección "Reseñas" de su perfil
-  accesible y en la página del álbum
-
-#### Scenario: Una reseña no consulta la preferencia
-
-- **WHEN** se crea una reseña o un comentario
-- **THEN** no se lee ni se aplica la audiencia por defecto del usuario
-
-### Requirement: Precedencia al crear contenido
-
-Al crear favoritos, entradas de diario, listas o copias de colección, la audiencia resultante
-SHALL resolverse con esta precedencia: el valor explícito de la petición, luego la audiencia por
-defecto del usuario y, si no la tiene, el default del tipo. La preferencia SHALL aplicarse en el
-servidor, no en el cliente.
-
-#### Scenario: La petición indica audiencia
-
-- **WHEN** un usuario con audiencia por defecto `public` crea una lista indicando `private`
-- **THEN** la lista se crea `private`
-
-#### Scenario: La preferencia sustituye al default del tipo
-
-- **WHEN** un usuario con audiencia por defecto `public` registra una entrada de diario sin
-  indicar audiencia
-- **THEN** la entrada nace `public` y no `private`
-
-#### Scenario: Sin valor explícito ni preferencia
-
-- **WHEN** un usuario sin preferencia crea una copia de colección sin indicar audiencia
-- **THEN** la copia nace con el default de colección
+## MODIFIED Requirements
 
 ### Requirement: La preferencia no es retroactiva
 
@@ -121,6 +54,8 @@ mediante `PATCH /api/me/profile`. Una petición sin sesión SHALL responder `401
 
 - **WHEN** una petición sin sesión intenta cambiar la audiencia por defecto
 - **THEN** la API responde `401` con `AUTH_REQUIRED` y no modifica datos
+
+## ADDED Requirements
 
 ### Requirement: Aplicar la audiencia a todo lo existente
 
