@@ -51,7 +51,7 @@
     "title": "Social activity suspended",
     "description": "You cannot publish or create new social activity while the suspension is active."
   },
-"MODERATION_REPORT_NOT_FOUND": {
+  "MODERATION_REPORT_NOT_FOUND": {
     "title": "Report not found",
     "description": "The moderation report does not exist or is no longer available."
   },
@@ -194,5 +194,29 @@
   "COLLECTION_ENTRY_NOT_FOUND": {
     "title": "Collection entry not found",
     "description": "The entry does not exist or was already removed from the collection."
+  },
+  "REAUTH_REQUIRED": {
+    "title": "Confirm your identity",
+    "description": "For your security, confirm it is you before continuing."
+  },
+  "USERNAME_CHANGE_COOLDOWN": {
+    "title": "Username change not available yet",
+    "description": "You can only change your username once every 30 days."
+  },
+  "LAST_ACCESS_METHOD": {
+    "title": "This is your only sign-in method",
+    "description": "Create a password before unlinking Google, or you would be left with no way to sign in."
+  },
+  "OAUTH_IDENTITY_TAKEN": {
+    "title": "That Google account is already in use",
+    "description": "That Google account is already linked to another account. Try a different one."
+  },
+  "OAUTH_IDENTITY_MISMATCH": {
+    "title": "Not the linked account",
+    "description": "You chose a Google account different from the one linked to your account."
+  },
+  "SESSION_NOT_FOUND": {
+    "title": "Session not found",
+    "description": "That session no longer exists."
   }
 }

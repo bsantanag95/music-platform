@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "@testing-library/react";
 import ProfileFavoritesPage from "./page";
+import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
+vi.mock("@/services/profiles/renamed-redirect", () => ({ redirectIfRenamed: vi.fn().mockResolvedValue(undefined) }));
 
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn().mockResolvedValue((key: string) => key),
@@ -55,6 +57,12 @@ describe("ProfileFavoritesPage", () => {
   it("perfil inexistente → notFound", async () => {
     mocks.getProfileByUsername.mockRejectedValue(new Error("USER_NOT_FOUND"));
     await expect(run()).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  it("perfil inexistente: antes de notFound consulta si es el usuario anterior de alguien", async () => {
+    mocks.getProfileByUsername.mockRejectedValue(new Error("USER_NOT_FOUND"));
+    await expect(run("besantanag95")).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(redirectIfRenamed).toHaveBeenCalledWith("besantanag95", "/favorites");
   });
 
   it("perfil accesible: pide página 1 de hasta 20 y renderiza el muro completo", async () => {

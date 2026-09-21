@@ -353,8 +353,42 @@ query param, ya que el callback es una navegación del navegador y no un `fetch`
 `docs/04-api/errors.md` para el catálogo completo de códigos `OAUTH_*` y su excepción de
 transporte.
 
-No hay ruta de vinculación (linking) de Google con una cuenta local ya autenticada en este
-incremento — queda diferida a una fase posterior (`auth.md` sección 6, ADR 0010).
+**Intenciones del flujo (cambio `rework-account-settings`).** `GET /api/auth/google/start` acepta
+además `intent` (`login` por defecto | `link` | `reauth`; cualquier otro valor se trata como `login`).
+`link` y `reauth` exigen sesión (`401 AUTH_REQUIRED` sin redirigir a Google) y guardan en las cookies
+del flujo la intención y quién lo inició; el callback exige que sea la misma sesión. `link` crea la
+identidad de Google para la cuenta de la sesión (por el id de Google, no por email); `reauth` exige que
+la identidad sea la vinculada a esa cuenta y rota la sesión. Ambas terminan siempre en
+`/<locale>/me/settings/account?google=linked|confirmed|error[&code=OAUTH_IDENTITY_TAKEN|OAUTH_IDENTITY_MISMATCH]`
+— un destino **fijo**; sigue sin existir un `returnTo` controlado por el cliente. Con `login`, el
+callback usa el idioma preferido de la cuenta (`app_user.locale`) si lo tiene.
+
+La vinculación implícita sigue prohibida: un email de Google que coincide con una cuenta local se
+rechaza (`EMAIL_TAKEN_BY_LOCAL`); solo se vincula desde una sesión iniciada y con `intent=link`.
+
+## Cuenta y seguridad (cambio `rework-account-settings`, Fase 1)
+
+Todas exigen sesión (`401 AUTH_REQUIRED`). Las acciones sensibles piden el factor de identidad
+descrito en `docs/05-features/user-profile.md` ("Autenticación reciente"): la contraseña actual en el
+cuerpo (`403 INVALID_CREDENTIALS` si no es correcta, `429 RATE_LIMITED` al superar 10 intentos) o, en
+una cuenta sin contraseña, una sesión de menos de 10 minutos (`403 REAUTH_REQUIRED`).
+
+| Endpoint | Cuerpo / respuesta |
+|---|---|
+| `GET /api/me/account/username/availability?q=` | `200 { valid, available, reason }`; `reason`: `too_short` \| `too_long` \| `invalid_chars` \| `current` \| `taken` \| `null`. Nunca dice quién lo tiene. Límite de 120 consultas por 15 min |
+| `PUT /api/me/account/username` | `{ username }` → `200 { username, nextChangeAt }`. `409 USERNAME_TAKEN` (sin distinguir mayúsculas, incluye reservas ajenas), `409 USERNAME_CHANGE_COOLDOWN` (un cambio cada 30 días), `400 VALIDATION_ERROR` |
+| `GET /api/me/account/email` | `200 { pending: { newEmail, expiresAt } \| null }` |
+| `POST /api/me/account/email` | `{ newEmail, password?, locale? }` → `200 { ok: true }`; manda el enlace al email **nuevo**, el actual no cambia. `409 EMAIL_TAKEN`, `503 EMAIL_CONFIG_MISSING`, `429 RATE_LIMITED`. Si el envío falla no queda token |
+| `POST /api/auth/email/change/confirm` | `{ token, locale? }` (sin sesión: el token es el factor) → `200 { ok: true, email }`; `400 INVALID_VERIFICATION_TOKEN` (inexistente, vencido o usado), `409 EMAIL_TAKEN` (otra cuenta lo tomó entretanto) |
+| `PUT /api/me/account/password` | `{ currentPassword, newPassword, revokeOtherSessions?, locale? }` (8–128) → `200 { ok: true }`. `400 PASSWORD_REUSED` si es igual a la actual; con `revokeOtherSessions` borra las demás sesiones y conserva la actual; invalida los tokens de reset; avisa por correo |
+| `POST /api/me/account/password` | `{ newPassword, locale? }` — solo cuentas **sin** contraseña; exige sesión reciente (`REAUTH_REQUIRED`). `400 VALIDATION_ERROR` si ya tiene |
+| `DELETE /api/me/account/identities/google` | `204`. `409 LAST_ACCESS_METHOD` si la cuenta no tiene contraseña |
+| `GET /api/me/sessions` | `200 { sessions: [{ id, deviceLabel, createdAt, lastSeenAt, current }] }`, la actual primero; `deviceLabel: null` = "Dispositivo desconocido". Sin token ni hash |
+| `DELETE /api/me/sessions/{id}` | `204`. `404 SESSION_NOT_FOUND` (inexistente, no UUID o de otra persona), `400 VALIDATION_ERROR` si es la sesión actual (para eso está cerrar sesión) |
+| `PATCH /api/me/preferences` | `{ locale: "es" \| "en" }` → `200 { locale }`. `400 VALIDATION_ERROR` con otro valor |
+
+`POST /api/auth/login` incluye ahora `user.locale` (preferencia guardada o `null`): `AuthForm` lleva a
+la persona a ese idioma si difiere del actual.
 
 ## Identidad social — perfiles, seguimiento y bloqueo
 

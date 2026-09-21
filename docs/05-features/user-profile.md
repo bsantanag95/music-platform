@@ -722,10 +722,53 @@ redirige a `/me/settings/profile`. Cada pantalla vuelve a exigir sesión.
 | `curation` | Filas con conteo: Empieza por aquí (abre su editor en el panel lateral; el himno se elige desde la Tarjeta de Identidad, en `profile`); listas fijadas, valoraciones destacadas y diario destacado (solo conteo y enlace/pista a donde se fijan; las valoraciones se destacan desde la valoración de cada álbum o canción). `getCurationSummary` aporta esos tres conteos |
 | `privacy` | Visibilidad público/privado y **audiencia por defecto del contenido nuevo**, con la acción aparte "Aplicar a lo existente" |
 | `network` | Enlaces a solicitudes (con bandeja), seguidores, seguidos y bloqueadas, desde la superficie `settings` de `user-menu-items.ts` (la superficie `panel` sigue existiendo: la usa el panel móvil del Header) |
-| `account` | Nombre visible (`displayName`, ≤50, vacío = se muestra el username), método de acceso en solo lectura (contraseña / proveedores, nunca el hash) y "Cerrar todas las sesiones" (`DELETE /api/auth/revoke-all`, con confirmación y redirección a login) |
+| `account` | **Cuenta y seguridad** (ver la sección siguiente): datos de la cuenta (nombre visible, usuario, email), cómo se inicia sesión (contraseña, Google), sesiones por dispositivo e idioma de la interfaz |
 
-Cuenta y seguridad no ofrece controles de funciones inexistentes (cambiar email, usuario o
-contraseña con sesión, foto de perfil, eliminar cuenta).
+### Cuenta y seguridad (`/me/settings/account`, cambio `rework-account-settings`, Fase 1)
+
+Nada de esta pantalla se muestra a otras personas. Tarjetas y flujos:
+
+| Tarjeta | Qué hace | Reglas que conviene saber |
+|---|---|---|
+| **Datos de la cuenta** | Nombre visible (editor existente), **usuario** y **email** con su estado de verificación | Cada acción sensible abre un diálogo (`components/ui/Dialog.tsx`, portal + foco atrapado) con validación en línea |
+| **Cómo iniciás sesión** | **Contraseña** (cambiar, o crear si la cuenta es de Google) y **Google** (vincular / desvincular) | Desvincular Google queda deshabilitado, con la explicación, si es el único método de acceso |
+| **Sesiones activas** | Un dispositivo por fila (`Chrome · Windows`), "Esta sesión" marcada, "Cerrar" por fila y "Cerrar todas" | Solo se guarda una **etiqueta** del dispositivo (nunca el User-Agent ni la IP); `last_seen_at` se escribe como mucho cada 10 minutos |
+| **Preferencias** | Idioma de la interfaz | Se guarda en `app_user.locale`; solo este control lo persiste, el selector del Header no |
+
+**Cambiar el usuario** (`account-username`): entre 3 y 32 caracteres, `[a-zA-Z0-9_]` (las mismas
+reglas del registro, `services/auth/account-rules.ts`). Un cambio cada 30 días
+(`username_changed_at`). El usuario anterior queda **reservado 30 días** en `username_alias` y
+`/users/<anterior>` redirige (307) a la misma subruta con el usuario nuevo
+(`redirectIfRenamed`, usado en las 11 páginas bajo `users/[username]/`); `GET /api/users/[username]`
+**no** redirige. La disponibilidad compara con `lower()` — `app_user.username` distingue mayúsculas por
+historia (existen `Ana` y `ana`) pero un cambio nuevo no puede suplantar a alguien por una mayúscula.
+El registro y el alta con Google también respetan la reserva. El monograma cambia de color porque se
+calcula desde el usuario.
+
+**Cambiar el email** (`account-credentials`): pide el factor de identidad, manda un correo al email
+**nuevo** con un enlace de un solo uso (24 h, `email_change_token`, solo el hash) y **no cambia nada
+hasta confirmar** (`/[locale]/auth/change-email?token=`, con botón de confirmar: un GET nunca cambia el
+email). Al confirmar se revalida que siga libre, se marca verificado y se avisa al email anterior. Un
+pedido nuevo reemplaza al pendiente y la pantalla lo avisa mientras esté vigente.
+
+**Autenticación reciente** (`services/auth/recent-auth.ts`): cambiar email, crear contraseña (y, en la
+Fase 3, desactivar y eliminar) exigen un factor fresco. Con contraseña: se envía y se verifica (límite
+de 10 intentos por 15 minutos por usuario). Sin contraseña (alta con Google): la sesión debe tener menos
+de **10 minutos**; si no, la API responde `REAUTH_REQUIRED` y el diálogo ofrece "Confirmar con Google".
+Cambiar la contraseña exige siempre la actual.
+
+**Google desde Ajustes**: el flujo OAuth gana una *intención* cerrada (`login` | `link` | `reauth`).
+`link` vincula la identidad **por el id de la cuenta de Google, no por el email** (el email de Google no
+tiene que coincidir con el de la cuenta); `reauth` confirma la identidad y rota la sesión. Ambas exigen
+sesión, guardan quién inició el flujo, y vuelven siempre a `/<locale>/me/settings/account?google=…` (un
+destino **fijo**: sigue sin haber `returnTo` controlado por el cliente). Un error del flujo vuelve con
+`?google=error&code=OAUTH_IDENTITY_TAKEN|OAUTH_IDENTITY_MISMATCH`, un conjunto cerrado que la pantalla
+localiza.
+
+**Idioma**: con preferencia guardada, iniciar sesión (contraseña o Google) lleva a ese idioma.
+
+Aún no ofrece (Fases 2 y 3 del cambio): desactivar, exportar y eliminar la cuenta. La foto de perfil
+queda para una spec de imágenes aparte.
 
 ### Audiencia por defecto del contenido nuevo
 
@@ -776,6 +819,10 @@ cuántas veces se escuchó algo — es "qué está sonando", no una métrica.
 |---|---|
 | `app_user.{bio, pronouns, location, timezone, avatar_url}` | Identidad extendida (migración 0014) |
 | `app_user.display_name` | Nombre visible; editable desde `/me/settings/account` (≤50, vacío = `NULL`, el sitio muestra el username) |
+| `app_user.username_changed_at` / `app_user.locale` | Fecha del último cambio de usuario (nulo = nunca; base del enfriamiento de 30 días) e idioma preferido (`es`/`en`, nullable) — migración 0039 |
+| `username_alias` | Usuario anterior reservado 30 días tras un cambio: `UNIQUE (lower(username))`, `expires_at`; los vencidos no se consultan y se borran al renombrar (migración 0039) |
+| `email_change_token` | Cambio de email pendiente: `user_id` único, `new_email`, solo el hash del token, 24 h (migración 0039) |
+| `session.device_label` / `session.last_seen_at` | Etiqueta legible del dispositivo (≤80) y última actividad; nulos en las sesiones previas (migración 0039) |
 | `app_user.default_audience` | Audiencia por defecto del contenido nuevo (nullable, `CHECK`, migración 0034). `NULL` = "según el tipo". Nunca reescribe contenido existente |
 | `user_profile_link` | Enlaces externos ordenados, máx. 5 app-side; `kind` con `CHECK` de 10 tipos (`x`, `tiktok` y `spotify` en la migración 0035; `website` unificado en `other` en la 0036); `url` canónica ≤400, sin columna `handle` |
 | `listen_entry` (lectura) | Fuente única de "En rotación" — escuchas de canción/álbum de los últimos 30 días, filtradas por audiencia. Sin tabla ni columna nueva |

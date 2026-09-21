@@ -44,14 +44,19 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     }
     setPending(true);
     try {
-      await apiFetch(`/api/auth/${mode}`, AuthResponseSchema, {
+      const { user } = await apiFetch(`/api/auth/${mode}`, AuthResponseSchema, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(parsed.data),
       });
       // Un alta nueva va al onboarding de dos puertas (cambio
       // add-two-door-onboarding); el login entra directo a Inicio.
-      router.push(mode === "register" ? "/welcome" : "/");
+      const destination = mode === "register" ? "/welcome" : "/";
+      // Al iniciar sesión, la preferencia de idioma guardada en la cuenta manda
+      // sobre el idioma desde el que se entró (spec account-preferences).
+      const preferred = mode === "login" ? user.locale : null;
+      if (preferred && preferred !== locale) router.push(destination, { locale: preferred });
+      else router.push(destination);
       router.refresh();
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");

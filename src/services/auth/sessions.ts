@@ -1,20 +1,39 @@
-import { and, eq, lt } from "drizzle-orm";
-import { cookies } from "next/headers";
+import { and, eq, isNull, lt, ne, or } from "drizzle-orm";
+import { cookies, headers } from "next/headers";
 import { randomBytes, createHash } from "node:crypto";
 import { db } from "@/db";
 import { appUser, session, type AppUserRow } from "@/db/schema";
+import { deviceLabelFromUserAgent } from "@/lib/device-label";
 
 export const SESSION_COOKIE = "music_session";
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+/** La última actividad de una sesión se escribe como mucho una vez por ventana. */
+export const LAST_SEEN_THROTTLE_MS = 10 * 60 * 1000;
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
+// Etiqueta del dispositivo desde el User-Agent de la petición en curso. Fuera de
+// una petición (scripts, tests) no hay encabezados: la sesión queda sin etiqueta.
+async function currentDeviceLabel(): Promise<string | null> {
+  try {
+    return deviceLabelFromUserAgent((await headers()).get("user-agent"));
+  } catch {
+    return null;
+  }
+}
+
 export async function createSession(userId: string): Promise<{ token: string; expiresAt: Date }> {
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
-  await db.insert(session).values({ userId, tokenHash: hashToken(token), expiresAt });
+  await db.insert(session).values({
+    userId,
+    tokenHash: hashToken(token),
+    expiresAt,
+    deviceLabel: await currentDeviceLabel(),
+    lastSeenAt: new Date(),
+  });
   return { token, expiresAt };
 }
 
@@ -27,13 +46,31 @@ export async function deleteAllSessions(userId: string): Promise<void> {
   await db.delete(session).where(eq(session.userId, userId));
 }
 
-export async function resolveSession(): Promise<{ sessionId: string; user: AppUserRow } | null> {
+/** Cierra todas las sesiones de la persona salvo la indicada (la actual). */
+export async function deleteOtherSessions(userId: string, keepSessionId: string): Promise<void> {
+  await db.delete(session).where(and(eq(session.userId, userId), ne(session.id, keepSessionId)));
+}
+
+export interface ResolvedSession {
+  sessionId: string;
+  /** Cuándo se inició esta sesión: base de la "autenticación reciente". */
+  sessionCreatedAt: Date;
+  user: AppUserRow;
+}
+
+export async function resolveSession(): Promise<ResolvedSession | null> {
   scheduleSessionCleanup();
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
 
   const [row] = await db
-    .select({ sessionId: session.id, expiresAt: session.expiresAt, user: appUser })
+    .select({
+      sessionId: session.id,
+      sessionCreatedAt: session.createdAt,
+      lastSeenAt: session.lastSeenAt,
+      expiresAt: session.expiresAt,
+      user: appUser,
+    })
     .from(session)
     .innerJoin(appUser, eq(session.userId, appUser.id))
     .where(eq(session.tokenHash, hashToken(token)))
@@ -46,7 +83,24 @@ export async function resolveSession(): Promise<{ sessionId: string; user: AppUs
     });
     return null;
   }
-  return { sessionId: row.sessionId, user: row.user };
+  touchLastSeen(row.sessionId, row.lastSeenAt);
+  return { sessionId: row.sessionId, sessionCreatedAt: row.sessionCreatedAt, user: row.user };
+}
+
+// Última actividad de la sesión, escrita como mucho una vez por ventana para no
+// convertir cada petición en una escritura. El WHERE repite el umbral para que
+// dos peticiones simultáneas no escriban dos veces. No bloquea la respuesta.
+function touchLastSeen(sessionId: string, lastSeenAt: Date | null): void {
+  const now = Date.now();
+  if (lastSeenAt && now - lastSeenAt.getTime() < LAST_SEEN_THROTTLE_MS) return;
+  const threshold = new Date(now - LAST_SEEN_THROTTLE_MS);
+  void db
+    .update(session)
+    .set({ lastSeenAt: new Date(now) })
+    .where(and(eq(session.id, sessionId), or(isNull(session.lastSeenAt), lt(session.lastSeenAt, threshold))))
+    .catch((error) => {
+      console.error("No se pudo registrar la última actividad de la sesión:", error);
+    });
 }
 
 async function deleteExpiredSession(sessionId: string): Promise<void> {

@@ -13,6 +13,15 @@ export async function requirePageUser() {
   redirect(`/${locale}/auth/login`);
 }
 
+// Como `requirePageUser`, pero devuelve también la sesión (id y fecha de inicio):
+// las pantallas de cuenta necesitan saber cuál de las sesiones es "esta".
+export async function requirePageSession() {
+  const session = await resolveSession();
+  if (session) return session;
+  const locale = await getLocale();
+  redirect(`/${locale}/auth/login`);
+}
+
 export async function requirePagePermission(permission: Permission) {
   const user = await requirePageUser();
   try {

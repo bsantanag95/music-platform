@@ -5,6 +5,7 @@ import { resolveSession } from "@/services/auth/sessions";
 import { getProfileByUsername } from "@/services/social/profiles";
 import { listUserLists } from "@/services/lists/lists";
 import { ListsList } from "@/components/lists/ListsList";
+import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -30,6 +31,7 @@ export default async function ProfileListsPage({ params }: PageProps) {
   try {
     profile = await getProfileByUsername(username, viewerId);
   } catch {
+    await redirectIfRenamed(username, "/lists");
     notFound();
   }
 

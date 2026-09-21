@@ -448,12 +448,124 @@
       },
       "sessions": {
         "title": "Sessions",
-        "hint": "Sign out on all your devices, including this one.",
+        "hint": "Every device with an open session. Close the ones you do not recognize.",
         "button": "Sign out everywhere",
         "confirmTitle": "Sign out everywhere?",
         "confirmMessage": "You will be signed out on all devices, including this one, and will need to sign in again.",
         "confirm": "Sign out",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "current": "This session",
+        "unknownDevice": "Unknown device",
+        "startedOn": "Started on {date}",
+        "activeNow": "Active now",
+        "lastSeen": "Active {when}",
+        "close": "Close",
+        "closeLabel": "Close the session on {device}",
+        "closedError": "The session could not be closed."
+      },
+      "data": {
+        "title": "Account details"
+      },
+      "username": {
+        "title": "Username",
+        "link": "Your profile link: /users/{username}",
+        "change": "Change",
+        "dialogTitle": "Change username",
+        "intro": "Your username is part of your profile link. Use letters, numbers and underscores, 3 to 32 characters.",
+        "label": "New username",
+        "checking": "Checking…",
+        "available": "Available",
+        "preview": "Your new link: /users/{username}",
+        "reason": {
+          "too_short": "At least 3 characters",
+          "too_long": "At most 32 characters",
+          "invalid_chars": "Only letters, numbers and underscores (no dots or spaces)",
+          "current": "That is already your username",
+          "taken": "That username is not available"
+        },
+        "note1": "You can change it once every 30 days.",
+        "note2": "For 30 days /users/{old} redirects to your new profile and nobody else can take that username.",
+        "note3": "Your monogram color changes, because it is derived from the username.",
+        "cooldown": "You changed your username recently. You can change it again on {date}.",
+        "submit": "Change username",
+        "saving": "Changing…",
+        "done": "Done. Your username is now @{username}. You can change it again on {date}."
+      },
+      "email": {
+        "title": "Email",
+        "verified": "Verified",
+        "unverified": "Unverified",
+        "change": "Change",
+        "pending": "Pending change to {email}. Your current email stays in effect until you confirm it.",
+        "dialogTitle": "Change email",
+        "intro": "We send an email to the new address. Until you confirm it, you keep signing in with the current one.",
+        "label": "New email",
+        "placeholder": "new@example.com",
+        "invalid": "Enter a valid email",
+        "note1": "The confirmation link expires after 24 hours.",
+        "note2": "We also notify the current email, in case it was not you.",
+        "submit": "Send confirmation",
+        "sending": "Sending…",
+        "done": "We sent an email to {email}. Your email stays {current} until you confirm."
+      },
+      "identity": {
+        "passwordLabel": "Your current password",
+        "googleHint": "Your account uses Google: confirm your identity with Google to continue.",
+        "googleButton": "Confirm with Google"
+      },
+      "signIn": {
+        "title": "How you sign in",
+        "password": {
+          "title": "Password",
+          "set": "Set",
+          "none": "No password: you sign in with Google only",
+          "change": "Change password",
+          "create": "Create password"
+        },
+        "google": {
+          "title": "Google",
+          "linked": "Linked",
+          "notLinked": "Not linked",
+          "link": "Link",
+          "unlink": "Unlink",
+          "lastMethod": "It is your only sign-in method, so it cannot be unlinked. Create a password first.",
+          "linkedNotice": "Google is now linked to your account.",
+          "confirmedNotice": "Identity confirmed. You can repeat the action now.",
+          "unlinkTitle": "Unlink Google",
+          "unlinkMessage": "You will keep signing in with your email and password. You can link Google again any time.",
+          "unlinkConfirm": "Unlink",
+          "unlinked": "Google unlinked."
+        }
+      },
+      "password": {
+        "changeTitle": "Change password",
+        "createTitle": "Create password",
+        "createIntro": "This way you can sign in with your email and password, as well as with Google.",
+        "new": "New password",
+        "repeat": "Repeat the new password",
+        "help": "8 to 128 characters.",
+        "tooShort": "At least 8 characters",
+        "mismatch": "The passwords do not match",
+        "revokeOthers": "Sign out my other sessions (recommended)",
+        "submitChange": "Change password",
+        "submitCreate": "Create password",
+        "saving": "Saving…",
+        "doneChange": "Password updated.",
+        "doneChangeRevoked": "Password updated. We signed out your other sessions.",
+        "doneCreate": "Done. You can now sign in with email and password."
+      },
+      "preferences": {
+        "title": "Preferences",
+        "languageLabel": "Interface language",
+        "languageHint": "It is remembered in your account.",
+        "language": {
+          "es": "Español",
+          "en": "English"
+        }
+      },
+      "dialog": {
+        "cancel": "Cancel",
+        "close": "Close"
       }
     }
   },

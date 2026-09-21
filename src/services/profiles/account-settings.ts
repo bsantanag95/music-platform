@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, authIdentity } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
+import { routing } from "@/i18n/routing";
 import { AUDIENCES, PROFILE_IDENTITY_LIMITS, type Audience } from "@/services/social/types";
 
 export interface AccountPreferencesInput {
@@ -75,3 +76,21 @@ export async function getAccessMethod(userId: string): Promise<AccessMethod> {
     providers: [...new Set(identities.map((row) => row.provider))].sort(),
   };
 }
+
+/**
+ * Guarda el idioma preferido de la interfaz (spec account-preferences). Rechaza
+ * un idioma no soportado. Solo lo escribe el control de Ajustes: el selector del
+ * Header no persiste la preferencia.
+ */
+export async function setLocalePreference(userId: string, locale: string): Promise<void> {
+  if (!routing.locales.includes(locale as (typeof routing.locales)[number])) {
+    throw new ApiError("VALIDATION_ERROR", 400, "El idioma no está soportado");
+  }
+  const updated = await db
+    .update(appUser)
+    .set({ locale })
+    .where(eq(appUser.id, userId))
+    .returning({ id: appUser.id });
+  if (updated.length === 0) throw new ApiError("USER_NOT_FOUND", 404, "Usuario no encontrado");
+}
+

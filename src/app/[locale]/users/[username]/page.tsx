@@ -28,6 +28,7 @@ import {
   RecencySection,
   SettingsCardSection,
 } from "./sections";
+import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
 
 interface UserProfilePageProps {
   params: Promise<{ username: string }>;
@@ -67,6 +68,7 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
   try {
     profile = await getProfileViewCached(username, viewerId);
   } catch {
+    await redirectIfRenamed(username, "");
     notFound();
   }
 

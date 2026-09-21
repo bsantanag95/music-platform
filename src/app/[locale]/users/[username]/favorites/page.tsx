@@ -5,6 +5,7 @@ import { resolveSession } from "@/services/auth/sessions";
 import { getProfileByUsername } from "@/services/social/profiles";
 import { listUserFavorites } from "@/services/favorites/favorites";
 import { FavoritesWall } from "@/components/favorites/FavoritesWall";
+import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -30,6 +31,7 @@ export default async function ProfileFavoritesPage({ params }: PageProps) {
   try {
     profile = await getProfileByUsername(username, viewerId);
   } catch {
+    await redirectIfRenamed(username, "/favorites");
     notFound();
   }
 

@@ -8,6 +8,7 @@ import { saveCountsFor, savedStateFor } from "@/services/lists/saved-lists";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListDetailHeader } from "@/components/lists/ListDetailHeader";
 import { ListItemsView } from "@/components/lists/ListItemsView";
+import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
 
 interface PageProps {
   params: Promise<{ username: string; listId: string }>;
@@ -28,6 +29,7 @@ export default async function UserListDetailPage({ params }: PageProps) {
   try {
     profile = await getProfileByUsername(username, viewerId);
   } catch {
+    await redirectIfRenamed(username, `/lists/${listId}`);
     notFound();
   }
 

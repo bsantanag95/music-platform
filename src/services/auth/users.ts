@@ -3,12 +3,17 @@ import { db } from "@/db";
 import { appUser } from "@/db/schema";
 import { hashPassword, verifyPassword } from "./password";
 import type { RegisterRequest } from "@/lib/api/schemas";
+import { USERNAME_MAX, USERNAME_MIN, USERNAME_REGEX } from "./account-rules";
+import { isUsernameReserved } from "./username";
 
 function isUniqueViolation(error: unknown): error is { code: "23505" } {
   return typeof error === "object" && error !== null && "code" in error && error.code === "23505";
 }
 
 export async function registerUser(input: RegisterRequest) {
+  // Un usuario que alguien acaba de dejar sigue reservado para esa persona
+  // durante 30 días (spec account-username, "Reserva del usuario anterior").
+  if (await isUsernameReserved(input.username)) throw new Error("USERNAME_TAKEN");
   try {
     const [user] = await db
       .insert(appUser)
@@ -40,9 +45,6 @@ export async function authenticateUser(identifier: string, password: string) {
   return user;
 }
 
-const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
-const USERNAME_MIN = 3;
-const USERNAME_MAX = 32;
 
 export function sanitizeUsernameFromEmail(localPart: string): string {
   let sanitized = localPart.replace(/[^a-zA-Z0-9_]/g, "");
@@ -68,7 +70,7 @@ export async function findAvailableUsername(base: string): Promise<string> {
     .where(eq(appUser.username, candidate))
     .limit(1);
 
-  if (!existing) return candidate;
+  if (!existing && !(await isUsernameReserved(candidate))) return candidate;
 
   for (let suffix = 2; suffix <= 1000; suffix++) {
     const withSuffix = `${candidate}${suffix}`;
@@ -78,7 +80,7 @@ export async function findAvailableUsername(base: string): Promise<string> {
       .from(appUser)
       .where(eq(appUser.username, withSuffix))
       .limit(1);
-    if (!taken) return withSuffix;
+    if (!taken && !(await isUsernameReserved(withSuffix))) return withSuffix;
   }
 
   throw new Error("USERNAME_TAKEN");

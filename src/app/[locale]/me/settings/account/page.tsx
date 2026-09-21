@@ -1,61 +1,81 @@
 import { getTranslations } from "next-intl/server";
-import { requirePageUser } from "@/services/auth/page-auth";
+import { requirePageSession } from "@/services/auth/page-auth";
+import { isEmailVerified } from "@/services/auth/email-verification";
+import { getPendingEmailChange } from "@/services/auth/email-change";
+import { listMySessions } from "@/services/auth/session-list";
+import { getUsernameChangeStatus } from "@/services/auth/username";
 import { getOwnProfile } from "@/services/social/profiles";
 import { getAccessMethod } from "@/services/profiles/account-settings";
-import { DisplayNameForm } from "@/components/settings/DisplayNameForm";
-import { RevokeSessionsButton } from "@/components/settings/RevokeSessionsButton";
-import { SettingsCard, SettingsSection } from "@/components/settings/SettingsSection";
+import { AccountDataCard } from "@/components/settings/account/AccountDataCard";
+import { LanguagePreference } from "@/components/settings/account/LanguagePreference";
+import { SessionsCard } from "@/components/settings/account/SessionsCard";
+import { SignInCard, type GoogleFlash } from "@/components/settings/account/SignInCard";
+import { SettingsSection } from "@/components/settings/SettingsSection";
 
-// Nombres propios de los proveedores de acceso; uno desconocido se muestra tal cual.
-const PROVIDER_NAMES: Record<string, string> = { google: "Google" };
+// Códigos de error del flujo de Google que Ajustes sabe mostrar (conjunto
+// cerrado: el query lo puede escribir cualquiera, así que nunca se usa tal cual).
+const GOOGLE_FLASH_ERRORS = new Set(["OAUTH_IDENTITY_TAKEN", "OAUTH_IDENTITY_MISMATCH"]);
 
-// Pantalla Cuenta y seguridad (spec owner-settings): nombre visible, método de
-// acceso en solo lectura y cierre de todas las sesiones. Nada de esto se
-// muestra a otras personas. No ofrece controles de funciones que todavía no
-// existen (cambiar email, usuario o contraseña, foto, eliminar cuenta).
-export default async function AccountSettingsPage() {
+function parseGoogleFlash(google: string | undefined, code: string | undefined, googleLinked: boolean): GoogleFlash {
+  // "Quedó vinculada" solo se afirma si lo está: el query puede ser viejo (una URL
+  // guardada o una recarga anterior) y contradiría lo que muestra la tarjeta.
+  if (google === "linked") return googleLinked ? { kind: "linked" } : null;
+  if (google === "confirmed") return { kind: "confirmed" };
+  if (google === "error") {
+    return { kind: "error", code: code && GOOGLE_FLASH_ERRORS.has(code) ? code : "INTERNAL_ERROR" };
+  }
+  return null;
+}
+
+// Pantalla Cuenta y seguridad (specs owner-settings, account-username,
+// account-credentials, session-management y account-preferences): datos de la
+// cuenta, cómo se inicia sesión, sesiones por dispositivo y preferencias. Nada de
+// esto se muestra a otras personas. Las acciones de las Fases 2 y 3 de
+// `rework-account-settings` (desactivar, exportar, eliminar) llegan después.
+export default async function AccountSettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ google?: string; code?: string }>;
+}) {
   const t = await getTranslations("users");
-  const user = await requirePageUser();
-  const [profile, access] = await Promise.all([getOwnProfile(user.id), getAccessMethod(user.id)]);
+  const current = await requirePageSession();
+  const { user } = current;
+  const query = await searchParams;
 
-  // El método de acceso nunca incluye el hash: solo si hay contraseña local y
-  // qué proveedores externos hay vinculados.
-  const methods = [
-    ...(access.hasPassword ? [t("settings.account.access.password")] : []),
-    ...access.providers.map((provider) => PROVIDER_NAMES[provider] ?? provider),
-  ];
+  const [profile, access, sessions, usernameStatus, pendingEmail] = await Promise.all([
+    getOwnProfile(user.id),
+    getAccessMethod(user.id),
+    listMySessions(user.id, current.sessionId),
+    getUsernameChangeStatus(user.id),
+    getPendingEmailChange(user.id),
+  ]);
 
   return (
     <SettingsSection title={t("settings.account.title")} intro={t("settings.account.intro")}>
-      <SettingsCard>
-        <h3 className="mb-4 font-display text-sm text-paper-muted">{t("settings.account.displayName.title")}</h3>
-        <DisplayNameForm initialDisplayName={profile.displayName} username={profile.username} />
-      </SettingsCard>
-
-      <SettingsCard>
-        <h3 className="mb-1 font-display text-sm text-paper-muted">{t("settings.account.access.title")}</h3>
-        <p className="mb-3 font-body text-xs text-paper-muted">{t("settings.account.access.hint")}</p>
-        {methods.length > 0 ? (
-          <ul className="flex flex-wrap gap-2">
-            {methods.map((method) => (
-              <li
-                key={method}
-                className="rounded-full border border-ink-border px-3 py-1 font-display text-sm text-paper"
-              >
-                {method}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="font-body text-sm text-paper-muted">{t("settings.account.access.none")}</p>
-        )}
-      </SettingsCard>
-
-      <SettingsCard>
-        <h3 className="mb-1 font-display text-sm text-paper-muted">{t("settings.account.sessions.title")}</h3>
-        <p className="mb-4 font-body text-xs text-paper-muted">{t("settings.account.sessions.hint")}</p>
-        <RevokeSessionsButton />
-      </SettingsCard>
+      <AccountDataCard
+        username={profile.username}
+        displayName={profile.displayName}
+        usernameNextChangeAt={usernameStatus.nextChangeAt ? usernameStatus.nextChangeAt.toISOString() : null}
+        email={user.email}
+        emailVerified={isEmailVerified(user)}
+        pendingEmail={pendingEmail?.newEmail ?? null}
+        hasPassword={access.hasPassword}
+      />
+      <SignInCard
+        hasPassword={access.hasPassword}
+        googleLinked={access.providers.includes("google")}
+        flash={parseGoogleFlash(query.google, query.code, access.providers.includes("google"))}
+      />
+      <SessionsCard
+        sessions={sessions.map((item) => ({
+          id: item.id,
+          deviceLabel: item.deviceLabel,
+          createdAt: item.createdAt.toISOString(),
+          lastSeenAt: item.lastSeenAt ? item.lastSeenAt.toISOString() : null,
+          current: item.current,
+        }))}
+      />
+      <LanguagePreference />
     </SettingsSection>
   );
 }

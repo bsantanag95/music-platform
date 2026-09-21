@@ -1,5 +1,5 @@
 import { and, eq, isNull, lte, or, gt } from "drizzle-orm";
-import { resolveSession } from "./sessions";
+import { resolveSession, type ResolvedSession } from "./sessions";
 import { ApiError } from "@/lib/api/errors";
 import { db } from "@/db";
 import { userRestriction, userRole } from "@/db/schema";
@@ -11,6 +11,13 @@ export async function requireUser() {
   const current = await resolveSession();
   if (!current) throw new ApiError("AUTH_REQUIRED", 401, "Se requiere una sesión activa");
   return current.user;
+}
+
+/** Como `requireUser`, pero con la sesión (id y fecha de inicio) para las acciones sensibles. */
+export async function requireSession(): Promise<ResolvedSession> {
+  const current = await resolveSession();
+  if (!current) throw new ApiError("AUTH_REQUIRED", 401, "Se requiere una sesión activa");
+  return current;
 }
 
 export async function getCurrentUser() {

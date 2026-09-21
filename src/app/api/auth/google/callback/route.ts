@@ -1,13 +1,64 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { GoogleOAuthAdapter, getGoogleOAuthConfig } from "@/services/auth/providers";
-import { consumeOAuthFlowCookies, resolveLocale } from "@/services/auth/oauth-flow";
-import { resolveOrCreateOAuthUser } from "@/services/auth/identities";
+import { consumeOAuthFlowCookies, isAccountIntent, resolveLocale, type OAuthFlowState } from "@/services/auth/oauth-flow";
+import {
+  findIdentityByProvider,
+  linkIdentityToUser,
+  resolveOrCreateOAuthUser,
+} from "@/services/auth/identities";
+import type { ExternalIdentity } from "@/services/auth/providers";
 import { createSession, resolveSession, rotateCurrentSession, setSessionCookie } from "@/services/auth/sessions";
 import { clearAuthAttempts, consumeAuthAttempt, getAuthClientIp } from "@/services/auth/rate-limit";
 
 function errorRedirect(locale: string, code: string): NextResponse {
   return NextResponse.redirect(new URL(`/${locale}/auth/error?code=${code}`, process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"));
+}
+
+// Destino FIJO de las intenciones `link` y `reauth` (spec google-oauth): no
+// depende de ningún parámetro de la petición. El resultado viaja en el query
+// para que Ajustes muestre el aviso; los códigos de error son un conjunto
+// cerrado que la pantalla localiza.
+function settingsRedirect(locale: string, query: string): NextResponse {
+  return NextResponse.redirect(
+    new URL(`/${locale}/me/settings/account?${query}`, process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  );
+}
+
+// Vincular Google a la cuenta de la sesión, o confirmar que la persona sigue
+// siendo quien dice ser (autenticación reciente). Exige que la sesión sea la
+// misma que inició el flujo.
+async function completeAccountIntent(
+  flowState: OAuthFlowState,
+  identity: ExternalIdentity,
+  locale: string,
+): Promise<NextResponse> {
+  const current = await resolveSession();
+  if (!current || current.user.id !== flowState.userId) {
+    return errorRedirect(locale, "OAUTH_STATE_INVALID");
+  }
+
+  if (flowState.intent === "link") {
+    try {
+      await linkIdentityToUser(current.user.id, identity);
+    } catch (error) {
+      if (error instanceof Error && error.message === "OAUTH_IDENTITY_TAKEN") {
+        return settingsRedirect(locale, "google=error&code=OAUTH_IDENTITY_TAKEN");
+      }
+      throw error;
+    }
+    return settingsRedirect(locale, "google=linked");
+  }
+
+  // reauth: la identidad de Google tiene que ser la vinculada a ESTA cuenta.
+  const existing = await findIdentityByProvider(identity.provider, identity.providerAccountId);
+  if (!existing || existing.user.id !== current.user.id) {
+    return settingsRedirect(locale, "google=error&code=OAUTH_IDENTITY_MISMATCH");
+  }
+  const session = await rotateCurrentSession(current.user.id);
+  const response = settingsRedirect(locale, "google=confirmed");
+  setSessionCookie(response, session.token);
+  return response;
 }
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
@@ -66,6 +117,11 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   const identity = adapter.toIdentity(claims);
 
+  if (isAccountIntent(flowState.intent)) {
+    clearAuthAttempts(rateLimitKeys);
+    return completeAccountIntent(flowState, identity, locale);
+  }
+
   let user;
   try {
     user = await resolveOrCreateOAuthUser(identity);
@@ -89,7 +145,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   // Un usuario sin onboarding completado (alta nueva, o preexistente sin la
   // marca) entra por /welcome; el resto, al destino habitual
   // (cambio add-two-door-onboarding).
-  const destination = user.onboardedAt ? `/${locale}` : `/${locale}/welcome`;
+  // La preferencia de idioma guardada en la cuenta manda sobre el idioma desde el
+  // que se inició el flujo (spec account-preferences).
+  const destinationLocale = resolveLocale(user.locale ?? locale);
+  const destination = user.onboardedAt ? `/${destinationLocale}` : `/${destinationLocale}/welcome`;
   const response = NextResponse.redirect(
     new URL(destination, process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   );

@@ -1,5 +1,13 @@
 import { z } from "zod";
+import { routing } from "@/i18n/routing";
 import { normalizeLinkInput } from "@/lib/profile-links";
+import {
+  PASSWORD_MAX,
+  PASSWORD_MIN,
+  USERNAME_MAX,
+  USERNAME_MIN,
+  USERNAME_REGEX,
+} from "@/services/auth/account-rules";
 import {
   AUDIENCES,
   PROFILE_VISIBILITIES,
@@ -211,6 +219,12 @@ export const ErrorCodeSchema = z.enum([
   "RESTRICTION_NOT_FOUND",
   "SOCIAL_SUSPENSION_ACTIVE",
   "ROLE_REQUIRED",
+  "REAUTH_REQUIRED",
+  "USERNAME_CHANGE_COOLDOWN",
+  "LAST_ACCESS_METHOD",
+  "OAUTH_IDENTITY_TAKEN",
+  "OAUTH_IDENTITY_MISMATCH",
+  "SESSION_NOT_FOUND",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 
@@ -218,11 +232,11 @@ export const RegisterRequestSchema = z.object({
   username: z
     .string()
     .trim()
-    .min(3)
-    .max(32)
-    .regex(/^[a-zA-Z0-9_]+$/),
+    .min(USERNAME_MIN)
+    .max(USERNAME_MAX)
+    .regex(USERNAME_REGEX),
   email: z.email().transform((value) => value.toLowerCase()),
-  password: z.string().min(8).max(128),
+  password: z.string().min(PASSWORD_MIN).max(PASSWORD_MAX),
   // Locale para el correo de verificación (change add-email-verification).
   locale: z.string().trim().max(10).optional(),
 });
@@ -370,6 +384,9 @@ export const AuthUserSchema = z.object({
   username: z.string(),
   email: z.email(),
   displayName: z.string().nullable(),
+  // Idioma preferido guardado en la cuenta (spec account-preferences); el login
+  // lo usa para llevar a la persona a su idioma. Ausente/nulo = sin preferencia.
+  locale: z.enum(routing.locales).nullable().optional(),
 });
 export type AuthUser = z.infer<typeof AuthUserSchema>;
 
@@ -1846,3 +1863,83 @@ export const WantedListResponseSchema = z.object({
   hasNext: z.boolean(),
 });
 export type WantedListResponse = z.infer<typeof WantedListResponseSchema>;
+
+// --- Cuenta y seguridad (change rework-account-settings, Fase 1) ---
+
+// Sesión propia listada en Ajustes. Sin token ni hash; `deviceLabel` nulo se
+// muestra como "Dispositivo desconocido".
+export const SessionSummarySchema = z.object({
+  id: z.uuid(),
+  deviceLabel: z.string().nullable(),
+  createdAt: z.string(),
+  lastSeenAt: z.string().nullable(),
+  current: z.boolean(),
+});
+export type SessionSummaryDto = z.infer<typeof SessionSummarySchema>;
+
+export const SessionsResponseSchema = z.object({ sessions: z.array(SessionSummarySchema) });
+export type SessionsResponse = z.infer<typeof SessionsResponseSchema>;
+
+export const SessionIdParamSchema = z.uuid();
+
+// Cambio de usuario (spec account-username). El formato lo valida el servicio
+// con las mismas reglas del registro; el esquema solo acota el tamaño.
+export const ChangeUsernameRequestSchema = z.object({ username: z.string().trim().min(1).max(64) });
+export type ChangeUsernameRequest = z.infer<typeof ChangeUsernameRequestSchema>;
+
+export const ChangeUsernameResponseSchema = z.object({
+  username: z.string(),
+  // Cuándo se puede volver a cambiar (ISO).
+  nextChangeAt: z.string(),
+});
+export type ChangeUsernameResponse = z.infer<typeof ChangeUsernameResponseSchema>;
+
+export const UsernameAvailabilityResponseSchema = z.object({
+  valid: z.boolean(),
+  available: z.boolean(),
+  reason: z.enum(["too_short", "too_long", "invalid_chars", "current", "taken"]).nullable(),
+});
+export type UsernameAvailabilityResponse = z.infer<typeof UsernameAvailabilityResponseSchema>;
+
+// Cambio de email (spec account-credentials): la contraseña es obligatoria en
+// cuentas con contraseña (el servidor decide); en cuentas de Google no se envía.
+export const RequestEmailChangeRequestSchema = z.object({
+  newEmail: z.email().max(320),
+  password: z.string().min(1).max(PASSWORD_MAX).optional(),
+  locale: z.string().trim().max(10).optional(),
+});
+export type RequestEmailChangeRequest = z.infer<typeof RequestEmailChangeRequestSchema>;
+
+export const PendingEmailChangeResponseSchema = z.object({
+  pending: z.object({ newEmail: z.string(), expiresAt: z.string() }).nullable(),
+});
+export type PendingEmailChangeResponse = z.infer<typeof PendingEmailChangeResponseSchema>;
+
+export const ConfirmEmailChangeRequestSchema = z.object({
+  token: z.string().trim().min(1).max(512),
+  locale: z.string().trim().max(10).optional(),
+});
+export type ConfirmEmailChangeRequest = z.infer<typeof ConfirmEmailChangeRequestSchema>;
+
+// Contraseña (spec account-credentials). Mismas reglas de longitud del registro.
+export const ChangePasswordRequestSchema = z.object({
+  currentPassword: z.string().min(1).max(PASSWORD_MAX),
+  newPassword: z.string().min(PASSWORD_MIN).max(PASSWORD_MAX),
+  revokeOtherSessions: z.boolean().default(false),
+  locale: z.string().trim().max(10).optional(),
+});
+export type ChangePasswordRequest = z.input<typeof ChangePasswordRequestSchema>;
+
+export const CreatePasswordRequestSchema = z.object({
+  newPassword: z.string().min(PASSWORD_MIN).max(PASSWORD_MAX),
+  locale: z.string().trim().max(10).optional(),
+});
+export type CreatePasswordRequest = z.infer<typeof CreatePasswordRequestSchema>;
+
+// Preferencias de la cuenta (spec account-preferences): hoy solo el idioma.
+export const UpdatePreferencesRequestSchema = z.object({ locale: z.enum(routing.locales) });
+export type UpdatePreferencesRequest = z.infer<typeof UpdatePreferencesRequestSchema>;
+
+export const PreferencesResponseSchema = z.object({ locale: z.enum(routing.locales) });
+export type PreferencesResponse = z.infer<typeof PreferencesResponseSchema>;
+

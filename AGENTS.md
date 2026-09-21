@@ -58,6 +58,10 @@ necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
 >   `DELETE FROM app_user WHERE username LIKE 'smoke-reset-%';`. Mockea el
 >   transporte de email capturando el token del adaptador `console`; no envía
 >   correo real.
+> - `smoke-test-account-settings.ts` crea usuarios `smoke_acct_*` y los borra al terminar (el `ON
+>   DELETE CASCADE` limpia alias, tokens y sesiones). Si se interrumpió, limpiar con
+>   `DELETE FROM app_user WHERE username LIKE 'smoke_acct_%';`. Ejecuta contra Postgres real el SQL que
+>   las pruebas unitarias mockean (cambio de usuario, cambio de email, contraseña, Google, sesiones).
 > - `smoke-test-email-verification.ts` crea usuarios `smoke_verify_*` y los
 >   borra al terminar (el `ON DELETE CASCADE` limpia tokens y sesiones). Si se
 >   interrumpió, limpiar con

@@ -18,6 +18,35 @@ conserva su default (favoritos `public`, listas y colección `followers`, diario
 no hay `DEFAULT` de columna ni backfill. Se aplica solo al crear; nunca reescribe filas existentes.
 Precedencia al crear: valor explícito de la petición > `default_audience` > default del tipo.
 
+**Cuenta y seguridad (migración `0039`, cambio `rework-account-settings`):** `username_changed_at`
+(TIMESTAMPTZ nullable; nulo = nunca cambió el usuario; base del enfriamiento de 30 días) y `locale`
+(TEXT nullable, `CHECK IN ('es','en')`; nulo = sin preferencia, se conserva el idioma de la ruta).
+`username` sigue siendo `UNIQUE` sensible a mayúsculas por historia; la disponibilidad de un cambio
+nuevo compara con `lower()` (ver `username_alias`).
+
+## `username_alias`
+
+**Propósito:** reserva del usuario anterior durante 30 días tras un cambio de usuario (capability
+`account-username`). Mientras dura, nadie más puede registrarse, darse de alta con Google ni cambiarse a
+ese usuario, y `/users/<anterior>` redirige al usuario actual.
+
+**Columnas e índices:** `user_id` (FK a `app_user`, `ON DELETE CASCADE`), `username`, `created_at`,
+`expires_at` (`CHECK expires_at > created_at`). `uq_username_alias_lower` es único sobre
+`lower(username)`; `idx_username_alias_user` y `idx_username_alias_expires_at` sirven a la limpieza. Los
+alias vencidos **no se consultan** (todas las lecturas filtran `expires_at > now()`) y se borran al
+renombrar; no hay job.
+
+## `email_change_token`
+
+**Propósito:** cambio de email pendiente de confirmar (capability `account-credentials`). El email de
+`app_user` **no cambia** hasta consumir el token.
+
+**Seguridad:** igual que `email_verification_token`: solo el hash SHA-256 del token opaco (el token en
+claro viaja únicamente en el enlace del correo al email **nuevo**), TTL de 24 horas, un solo token
+vigente por usuario (`uq_email_change_token_user`; un pedido nuevo lo reemplaza con `INSERT … ON
+CONFLICT`) y borrado físico al confirmar (`DELETE … RETURNING` dentro de la transacción que actualiza el
+email). Guarda `new_email` (ya en minúsculas). `ON DELETE CASCADE`.
+
 ## `user_role`
 
 **Propósito:** asignaciones acumulables de roles de plataforma (`moderator`/`admin`/
@@ -190,6 +219,11 @@ de autenticarse y ante eventos sensibles, pero no en cada request normal. Un usu
 varias sesiones activas. La revocación elimina la fila de sesión, individualmente o para todas las
 sesiones del usuario. No se añade `revoked_at`: la ausencia de la fila invalida el token
 inmediatamente.
+
+**Dispositivo y actividad (migración `0039`):** `device_label` (TEXT nullable, `CHECK length <= 80`) es
+una etiqueta legible derivada del User-Agent al crear la sesión (`Chrome · Windows`); **nunca** se
+guarda el User-Agent completo ni la IP. `last_seen_at` se actualiza como mucho una vez cada 10 minutos.
+Ambas son nulas en las sesiones anteriores, que siguen siendo válidas ("Dispositivo desconocido").
 
 **Limpieza:** las sesiones expiradas se eliminan mediante un job periódico y mediante limpieza
 oportunista durante operaciones de autenticación o resolución de sesión. La limpieza oportunista

@@ -16,8 +16,10 @@ import {
   computeCodeChallenge,
   consumeOAuthFlowCookies,
   generateOAuthFlowState,
+  isAccountIntent,
   OAUTH_STATE_COOKIE,
   OAUTH_STATE_TTL_MS,
+  resolveIntent,
   resolveLocale,
   setOAuthFlowCookies,
 } from "./oauth-flow";
@@ -121,3 +123,62 @@ describe("utilidades del flujo OAuth", () => {
     expect(consumed).toBeNull();
   });
 });
+
+describe("intenciones del flujo", () => {
+  it("resolveIntent acepta solo el conjunto cerrado y cae en login", () => {
+    expect(resolveIntent("login")).toBe("login");
+    expect(resolveIntent("link")).toBe("link");
+    expect(resolveIntent("reauth")).toBe("reauth");
+    expect(resolveIntent("admin")).toBe("login");
+    expect(resolveIntent("")).toBe("login");
+    expect(resolveIntent(null)).toBe("login");
+    expect(resolveIntent(undefined)).toBe("login");
+  });
+
+  it("isAccountIntent distingue las intenciones que operan sobre una sesión", () => {
+    expect(isAccountIntent("link")).toBe(true);
+    expect(isAccountIntent("reauth")).toBe(true);
+    expect(isAccountIntent("login")).toBe(false);
+  });
+
+  it("el flujo por defecto es login y no lleva usuario", () => {
+    const flow = generateOAuthFlowState("es");
+    expect(flow.intent).toBe("login");
+    expect(flow).not.toHaveProperty("userId");
+  });
+
+  it("un flujo de vincular o confirmar guarda la intención y quién lo inició", () => {
+    expect(generateOAuthFlowState("en", { intent: "link", userId: "u1" })).toMatchObject({
+      intent: "link",
+      userId: "u1",
+      locale: "en",
+    });
+    expect(generateOAuthFlowState("es", { intent: "reauth", userId: "u2" })).toMatchObject({
+      intent: "reauth",
+      userId: "u2",
+    });
+  });
+
+  it("una cookie anterior a las intenciones se consume como login", async () => {
+    mocks.cookieGet.mockReturnValue({
+      value: JSON.stringify({ state: "s", codeVerifier: "v", nonce: "n", locale: "es" }),
+    });
+    const flow = await consumeOAuthFlowCookies();
+    expect(flow?.intent).toBe("login");
+  });
+
+  it("una intención manipulada en la cookie se trata como login", async () => {
+    mocks.cookieGet.mockReturnValue({
+      value: JSON.stringify({ state: "s", codeVerifier: "v", nonce: "n", locale: "es", intent: "admin" }),
+    });
+    expect((await consumeOAuthFlowCookies())?.intent).toBe("login");
+  });
+
+  it("conserva la intención y el usuario de una cookie válida", async () => {
+    mocks.cookieGet.mockReturnValue({
+      value: JSON.stringify({ state: "s", codeVerifier: "v", nonce: "n", locale: "en", intent: "link", userId: "u1" }),
+    });
+    expect(await consumeOAuthFlowCookies()).toMatchObject({ intent: "link", userId: "u1" });
+  });
+});
+

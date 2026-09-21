@@ -54,9 +54,15 @@ export const appUser = pgTable(
     // rework-owner-management). Nulo = "según el tipo": cada tipo conserva su
     // propio default. Nunca se aplica a contenido ya creado.
     defaultAudience: text("default_audience"),
+    // Cambio de usuario (migración 0039, change rework-account-settings): fecha
+    // del último cambio (nulo = nunca), base del enfriamiento de 30 días.
+    usernameChangedAt: timestamp("username_changed_at", { withTimezone: true }),
+    // Idioma preferido de la interfaz (migración 0039). Nulo = sin preferencia.
+    locale: text("locale"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
+    check("chk_app_user_locale", sql`${t.locale} IS NULL OR ${t.locale} IN ('es','en')`),
     check(
       "chk_app_user_profile_visibility",
       sql`${t.profileVisibility} IN ('public','private')`,
@@ -225,8 +231,14 @@ export const session = pgTable(
     tokenHash: text("token_hash").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    // Etiqueta legible del dispositivo ("Chrome · Windows") y última actividad
+    // (migración 0039, change rework-account-settings). Nunca se guarda el
+    // User-Agent completo ni la IP. Nulos en las sesiones previas.
+    deviceLabel: text("device_label"),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
   },
   (t) => [
+    check("chk_session_device_label", sql`${t.deviceLabel} IS NULL OR length(${t.deviceLabel}) <= 80`),
     uniqueIndex("uq_session_token_hash").on(t.tokenHash),
     index("idx_session_user").on(t.userId),
     index("idx_session_expires_at").on(t.expiresAt),
@@ -291,6 +303,49 @@ export const emailVerificationToken = pgTable(
     uniqueIndex("uq_email_verification_token_hash").on(t.tokenHash),
     uniqueIndex("uq_email_verification_token_user").on(t.userId),
     index("idx_email_verification_token_expires_at").on(t.expiresAt),
+  ],
+);
+
+// Usuario anterior reservado 30 días tras un cambio de usuario (migración 0039,
+// capability account-username). El índice único es sobre lower(username): la
+// disponibilidad no distingue mayúsculas. Los alias vencidos no se consultan.
+export const usernameAlias = pgTable(
+  "username_alias",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    username: text("username").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    uniqueIndex("uq_username_alias_lower").on(sql`lower(${t.username})`),
+    index("idx_username_alias_user").on(t.userId),
+    index("idx_username_alias_expires_at").on(t.expiresAt),
+  ],
+);
+
+// Cambio de email pendiente de confirmar (migración 0039, capability
+// account-credentials). Igual que `email_verification_token`: solo el hash del
+// token, un cambio vigente por usuario y borrado físico al confirmar.
+export const emailChangeToken = pgTable(
+  "email_change_token",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    newEmail: text("new_email").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    uniqueIndex("uq_email_change_token_hash").on(t.tokenHash),
+    uniqueIndex("uq_email_change_token_user").on(t.userId),
+    index("idx_email_change_token_expires_at").on(t.expiresAt),
   ],
 );
 

@@ -6,6 +6,7 @@ import { listFollowing } from "@/services/social/following";
 import { relationsFor } from "@/services/social/relations";
 import { ProfileConnectionsHeader } from "@/components/profiles/ProfileConnectionsHeader";
 import { ConnectionsUserList } from "@/components/profiles/ConnectionsUserList";
+import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -30,6 +31,7 @@ export default async function ProfileFollowingPage({ params }: PageProps) {
   try {
     profile = await getProfileByUsername(username, viewerId);
   } catch {
+    await redirectIfRenamed(username, "/connections/following");
     notFound();
   }
 

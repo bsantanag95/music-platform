@@ -7,6 +7,7 @@ import { getProfileByUsername } from "@/services/social/profiles";
 import { listProfileCollection } from "@/services/collection/collection";
 import type { CollectionFilters } from "@/services/collection/types";
 import { CollectionShelf } from "@/components/collection/CollectionShelf";
+import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -51,6 +52,7 @@ export default async function ProfileCollectionPage({ params, searchParams }: Pa
   try {
     profile = await getProfileByUsername(username, viewerId);
   } catch {
+    await redirectIfRenamed(username, "/collection");
     notFound();
   }
 

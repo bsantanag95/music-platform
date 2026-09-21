@@ -29,6 +29,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   return response;
 });
 
-function publicUser(user: { id: string; username: string; email: string; displayName: string | null }) {
-  return { id: user.id, username: user.username, email: user.email, displayName: user.displayName };
+function publicUser(user: { id: string; username: string; email: string; displayName: string | null; locale?: string | null }) {
+  // `locale` es la preferencia guardada: el cliente lleva a la persona a su idioma.
+  return { id: user.id, username: user.username, email: user.email, displayName: user.displayName, locale: user.locale ?? null };
 }
