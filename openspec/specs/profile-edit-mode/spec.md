@@ -3,9 +3,7 @@
 ## Purpose
 
 La edición rápida sobre el propio perfil: el interruptor "Editar perfil", el lápiz por bloque con editor, el panel lateral modal (con descarte de cambios sin guardar) y la barra del dueño con el estado de visibilidad y el acceso a Ajustes. Hasta que el dueño activa el modo edición, su perfil se ve igual que el de un visitante.
-
 ## Requirements
-
 ### Requirement: Interruptor "Editar perfil"
 
 La vista del dueño SHALL incluir, en una barra superior del perfil, un interruptor "Editar perfil"
@@ -43,10 +41,10 @@ previsualización "cómo te ven" ni a ningún visitante que no sea el dueño.
 
 Con el modo edición activo, SHALL mostrar un control de edición cada bloque visible que tenga un
 editor existente: la Placa (bio, pronombres, ubicación, zona horaria y enlaces), la Tarjeta de
-Identidad, los Destacados con el Himno y los Álbumes favoritos. Los bloques sin editor propio
-(listas fijadas, valoraciones destacadas, entradas de diario destacadas y el resto de estantes)
-SHALL NOT mostrar control de edición. Cada control SHALL ser un botón con nombre accesible que
-identifique el bloque que edita.
+Identidad (artista, álbum e himno) y "Empieza por aquí". Los bloques sin editor propio (listas
+fijadas, valoraciones destacadas, entradas de diario destacadas y el resto de estantes) SHALL NOT
+mostrar control de edición. Cada control SHALL ser un botón con nombre accesible que identifique
+el bloque que edita.
 
 #### Scenario: Lápiz en un bloque con editor
 
@@ -57,6 +55,12 @@ identifique el bloque que edita.
 
 - **WHEN** el modo edición está activo
 - **THEN** el estante de listas del perfil no muestra ningún control de edición
+
+#### Scenario: Lápiz en "Empieza por aquí"
+
+- **WHEN** el modo edición está activo
+- **THEN** "Empieza por aquí" muestra un botón accesible "Editar" con el nombre del bloque, y
+  el perfil no muestra ningún control de edición de álbumes favoritos
 
 ### Requirement: Panel lateral de edición
 
@@ -117,3 +121,4 @@ ven" y el interruptor "Editar perfil".
 
 - **WHEN** el dueño pulsa "Ver cómo te ven"
 - **THEN** llega a la previsualización de su perfil como lo ve un visitante público
+

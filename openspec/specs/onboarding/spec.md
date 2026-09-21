@@ -5,12 +5,11 @@
 Define el **onboarding de dos puertas** de `/[locale]/welcome` (cambio
 `add-two-door-onboarding`, Fase 1 de `redefine-content-hierarchy`): una superficie que se
 muestra **una sola vez** por usuario y ofrece dos entradas complementarias y salteables —
-**Puerta 1** "álbumes que te definen" (que se convierten en Álbumes favoritos del perfil,
-sin rating ni entrada de diario, IQ5) y **Puerta 2** "qué estás escuchando ahora" (que crea
+**Puerta 1** "álbumes que te definen" (que se guardan como favoritos de álbum del usuario,
+sin fijarlos ni ordenarlos, sin rating ni entrada de diario, IQ5) y **Puerta 2** "qué estás escuchando ahora" (que crea
 una entrada de diario, sin favorito ni rating). La marca `app_user.onboarded_at` controla
 la redirección post-alta y el enlace pasivo de Inicio; una vez fijada, `/welcome` redirige
 a Inicio. Distinto del bloque de onboarding social de Inicio.
-
 ## Requirements
 ### Requirement: Ruta de bienvenida con onboarding de dos puertas
 
@@ -55,33 +54,6 @@ capacidad SHALL considerarse onboardeados (no ven `/welcome`).
 - **WHEN** un usuario creado antes de esta capacidad inicia sesión
 - **THEN** no es enviado a `/welcome` en ningún momento
 
-### Requirement: Puerta 1 — los álbumes elegidos son los Álbumes favoritos
-
-En la Puerta 1 el usuario SHALL buscar álbumes y seleccionar hasta **6** (la UI SHALL
-sugerir entre 3 y 5). Al guardar, cada álbum seleccionado SHALL convertirse en un **Álbum
-favorito** del perfil: el sistema SHALL crear el `favorite` de álbum correspondiente (si no
-existe) con la audiencia por defecto de un favorito nuevo, y fijarlo en la sección "Álbumes
-favoritos". La Puerta 1 SHALL NOT crear ninguna valoración ("esto me representa" no es "5
-estrellas") ni ninguna entrada de diario. Guardar con cero álbumes SHALL ser válido
-(equivale a saltar la puerta). Intentar guardar más de 6, o un álbum inexistente, SHALL
-responder `400` con código `VALIDATION_ERROR`.
-
-#### Scenario: Elegir álbumes que te definen
-
-- **WHEN** el usuario selecciona cuatro álbumes en la Puerta 1 y guarda
-- **THEN** esos cuatro aparecen como sus Álbumes favoritos del perfil, en el orden elegido,
-  sin valoración ni entrada de diario asociada
-
-#### Scenario: Saltar la Puerta 1
-
-- **WHEN** el usuario termina el onboarding sin elegir ningún álbum
-- **THEN** no se crea ningún Álbum favorito y el onboarding queda cerrado igual
-
-#### Scenario: Exceder el máximo
-
-- **WHEN** el usuario intenta guardar siete álbumes
-- **THEN** la API responde `400` con código `VALIDATION_ERROR` y no se fija nada
-
 ### Requirement: Puerta 2 — registrar lo que estás escuchando
 
 En la Puerta 2 el usuario SHALL buscar un álbum o una canción y, al elegirlo, el sistema
@@ -104,14 +76,15 @@ por sí sola SHALL NOT cerrar el onboarding.
 ### Requirement: Cierre del onboarding
 
 El onboarding SHALL cerrarse mediante una única operación `POST /api/me/onboarding` que
-recibe los ids de álbum de la Puerta 1 (posiblemente vacíos), siembra los Álbumes favoritos
-y fija `onboarded_at`. La operación SHALL ser idempotente: invocarla cuando el usuario ya
-está onboardeado SHALL responder `200` sin volver a sembrar ni re-marcar.
+recibe los ids de álbum de la Puerta 1 (posiblemente vacíos), crea los favoritos de álbum que
+falten y fija `onboarded_at`. La respuesta SHALL informar `onboardedAt`. La operación SHALL ser
+idempotente: invocarla cuando el usuario ya está onboardeado SHALL responder `200` sin volver a
+crear favoritos ni re-marcar.
 
 #### Scenario: Terminar el onboarding
 
 - **WHEN** el usuario toca "Ir a Inicio" tras elegir álbumes
-- **THEN** se siembran esos Álbumes favoritos, se fija `onboarded_at`, y el usuario llega a
+- **THEN** se crean esos favoritos de álbum, se fija `onboarded_at`, y el usuario llega a
   Inicio
 
 #### Scenario: Llamada repetida
@@ -136,4 +109,31 @@ el enlace SHALL desaparecer.
 
 - **WHEN** un usuario que ya completó o saltó el onboarding abre Inicio
 - **THEN** no ve el enlace a `/welcome`
+
+### Requirement: Puerta 1 — los álbumes elegidos se guardan como favoritos
+
+En la Puerta 1 el usuario SHALL buscar álbumes y seleccionar hasta **6** (la UI SHALL
+sugerir entre 3 y 5). Al guardar, cada álbum seleccionado SHALL convertirse en un **favorito de
+álbum** del usuario: el sistema SHALL crear el `favorite` de álbum correspondiente (si no
+existe) con la audiencia por defecto de un favorito nuevo. La Puerta 1 SHALL NOT fijar ni
+ordenar los álbumes, y SHALL NOT crear ninguna valoración ("esto me representa" no es "5
+estrellas") ni ninguna entrada de diario. Guardar con cero álbumes SHALL ser válido
+(equivale a saltar la puerta). Intentar guardar más de 6, o un álbum inexistente, SHALL
+responder `400` con código `VALIDATION_ERROR`.
+
+#### Scenario: Elegir álbumes que te definen
+
+- **WHEN** el usuario selecciona cuatro álbumes en la Puerta 1 y guarda
+- **THEN** esos cuatro son favoritos de álbum del usuario y aparecen en su sección Favoritos
+  del perfil, sin valoración ni entrada de diario asociada
+
+#### Scenario: Saltar la Puerta 1
+
+- **WHEN** el usuario termina el onboarding sin elegir ningún álbum
+- **THEN** no se crea ningún favorito y el onboarding queda cerrado igual
+
+#### Scenario: Exceder el máximo
+
+- **WHEN** el usuario intenta guardar siete álbumes
+- **THEN** la API responde `400` con código `VALIDATION_ERROR` y no se crea nada
 

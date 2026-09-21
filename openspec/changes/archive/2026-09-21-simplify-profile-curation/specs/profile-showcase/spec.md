@@ -1,46 +1,9 @@
-# profile-showcase Specification
+## RENAMED Requirements
 
-## Purpose
-Sección "Empieza por aquí" (antes "Destacados"): hasta 4 recomendaciones fijables (artista/álbum/canción, tipos mezclados, orden manual, nota opcional a la vista), más la Tarjeta de Identidad (artista definitorio, álbum definitorio e himno), que se elige solo desde su propio editor. Fase 5, cambio redesign-user-profile; reformulado en simplify-profile-curation.
-## Requirements
-### Requirement: Himno del usuario
+- FROM: `### Requirement: Cuatro destacados`
+- TO: `### Requirement: Sección "Empieza por aquí"`
 
-El sistema SHALL permitir que un usuario elija manualmente una canción (recording) del
-catálogo como su himno. El himno SHALL ser opcional y SHALL poder quitarse. El sistema
-SHALL NOT derivar el himno automáticamente de la última escucha ni de ninguna otra
-actividad.
-
-#### Scenario: Elegir un himno
-
-- **WHEN** el dueño elige una canción como himno
-- **THEN** el perfil muestra esa canción como himno en las vistas autorizada y de dueño
-
-#### Scenario: Quitar el himno
-
-- **WHEN** el dueño quita su himno
-- **THEN** el perfil deja de mostrar la sección de himno
-
-#### Scenario: El himno es independiente de la última escucha
-
-- **WHEN** el dueño registra una escucha de una canción distinta a su himno
-- **THEN** el himno del perfil no cambia
-
-### Requirement: Carátula del himno
-
-El himno SHALL mostrar la carátula real de la canción cuando el catálogo la tenga
-disponible, con la misma resolución de carátulas que el resto del catálogo (ver
-`cover-art-resolution`), y SHALL mostrar la silueta de disco del sistema únicamente cuando
-no exista carátula disponible.
-
-#### Scenario: Himno con carátula disponible
-
-- **WHEN** la canción elegida como himno tiene una carátula disponible en el catálogo
-- **THEN** el perfil muestra esa carátula junto al himno, no un disco genérico
-
-#### Scenario: Himno sin carátula disponible
-
-- **WHEN** la canción elegida como himno no tiene carátula disponible
-- **THEN** el perfil muestra la silueta de disco del sistema
+## MODIFIED Requirements
 
 ### Requirement: Sección "Empieza por aquí"
 
@@ -93,6 +56,21 @@ no tiene ningún ítem.
 - **WHEN** un visitante no autorizado abre un perfil privado con ítems en "Empieza por aquí"
 - **THEN** no ve la sección
 
+## REMOVED Requirements
+
+### Requirement: Marcar un artista o álbum como definitorio
+
+**Reason**: El marcador ★ "me define" de los editores de Destacados y de Álbumes favoritos
+duplicaba al editor de la Tarjeta de Identidad y ocultaba del muro el ítem marcado. Con la
+sección Álbumes favoritos retirada y el marcador fuera de Destacados, el artista y el álbum
+definitorios se eligen solo desde la Tarjeta.
+
+**Migration**: Sustituido por el requisito "Tarjeta de Identidad del perfil". Los datos no
+cambian: el artista y el álbum definitorios siguen guardados como referencias directas en
+`user_showcase`.
+
+## ADDED Requirements
+
 ### Requirement: Tarjeta de Identidad del perfil
 
 La Tarjeta de Identidad del perfil SHALL componerse, cuando existan, del **artista
@@ -142,4 +120,3 @@ SHALL renderizarse cuando el dueño no tiene ninguno de los tres.
 
 - **WHEN** el dueño no tiene himno, artista ni álbum definitorios
 - **THEN** la Tarjeta de Identidad no se renderiza
-

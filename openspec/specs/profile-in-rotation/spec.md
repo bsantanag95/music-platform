@@ -9,8 +9,8 @@ nunca de valoraciones, favoritos ni reseñas. El cálculo se modela como
 umbral y máximos como constantes ajustables), con una heurística **experimental** de álbum
 en rotación (roll-up canción→álbum de estudio, peso plano por canción distinta). Respeta la
 audiencia del diario y se presenta con tono cultural: sin score, sin contadores, sin
-fechas, sin numeración. Es la contraparte dinámica de "Álbumes favoritos" (identidad
-estable) y se ubica entre los destacados y la huella de gusto.
+fechas, sin numeración. Es la contraparte dinámica de la Tarjeta de Identidad y de
+"Empieza por aquí" (identidad estable) y se ubica entre "Empieza por aquí" y la huella de gusto.
 
 ## Requirements
 ### Requirement: Sección "En rotación" derivada del diario

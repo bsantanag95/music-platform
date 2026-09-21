@@ -3,7 +3,7 @@
 ## Purpose
 
 La sección "Reseñas" del perfil: las reseñas de álbum más recientes del dueño, en el clúster
-de identidad cultural (después de los destacados, antes de "En rotación"). Automática (las
+de identidad cultural (después de "Empieza por aquí", antes de "En rotación"). Automática (las
 últimas N por fecha de edición, sin curación), gateada por la accesibilidad del perfil, con
 cada tarjeta enlazada al álbum donde vive la reseña completa.
 

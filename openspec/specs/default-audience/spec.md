@@ -3,9 +3,7 @@
 ## Purpose
 
 Preferencia opcional de audiencia por defecto del contenido nuevo de biblioteca (favoritos, entradas de diario, listas y copias de colección): su precedencia al crear, su carácter no retroactivo, su alcance (no cubre reseñas ni comentarios, que son públicos), su control en la pantalla Privacidad y audiencia de los ajustes y la acción explícita "Aplicar a lo existente", que lleva la audiencia elegida a todo el contenido ya creado.
-
 ## Requirements
-
 ### Requirement: Audiencia por defecto opcional del contenido nuevo
 
 El sistema SHALL permitir a cada usuario configurar, de forma opcional, una audiencia por
@@ -131,7 +129,7 @@ acción SHALL actualizar únicamente la audiencia de los elementos del propio us
 audiencia difiera de la indicada, dentro de una única transacción, de modo que o se aplica a
 todos o a ninguno. SHALL ser idempotente: repetirla, o aplicar una audiencia que todo ya tiene,
 SHALL responder con éxito y conteos en cero. SHALL incluir los elementos fijados o destacados
-(listas fijadas, álbumes favoritos fijados y entradas de diario destacadas). NO SHALL modificar
+(listas fijadas y entradas de diario destacadas). NO SHALL modificar
 la audiencia por defecto guardada, los pines ni los destacados, ni crear, modificar o eliminar
 valoraciones, escuchas, comentarios, reseñas ni la wishlist, ni la fecha de actualización de las
 listas y las copias de colección (por lo que no genera eventos de "lista actualizada" en el
@@ -147,8 +145,9 @@ actualizaron de cada tipo.
 
 #### Scenario: Se incluyen los elementos fijados y destacados
 
-- **WHEN** un usuario aplica `private` teniendo una lista fijada y un álbum favorito fijado
-- **THEN** ambos pasan a `private` y conservan su pin
+- **WHEN** un usuario aplica `private` teniendo una lista fijada y una entrada de diario
+  destacada
+- **THEN** ambas pasan a `private` y conservan su pin y su destacado
 
 #### Scenario: Solo cambia la audiencia
 
@@ -197,8 +196,8 @@ actualizaron de cada tipo.
 
 El sistema SHALL ofrecer una vista previa de solo lectura de la acción anterior mediante
 `GET /api/me/default-audience/apply?audience=`, que responda cuántos elementos de cada tipo
-cambiarían (los que hoy tienen una audiencia distinta) y, de ellos, cuántos son listas fijadas,
-álbumes favoritos fijados y entradas de diario destacadas. La vista previa NO SHALL modificar
+cambiarían (los que hoy tienen una audiencia distinta) y, de ellos, cuántos son listas fijadas
+y entradas de diario destacadas. La vista previa NO SHALL modificar
 ningún dato y SHALL exigir sesión y una audiencia válida con los mismos errores que la acción.
 
 #### Scenario: Conteos de lo que cambiaría
@@ -260,3 +259,4 @@ Los errores SHALL mostrarse de forma accesible sin modificar el estado.
 
 - **WHEN** la vista previa o la aplicación fallan
 - **THEN** la interfaz muestra el error en un aviso accesible y no informa de éxito
+

@@ -3,9 +3,7 @@
 ## Purpose
 
 El área de ajustes del dueño (`/me/settings`): una pantalla por tipo de ajuste (Perfil, Curaduría, Privacidad y audiencia, Red, Cuenta y seguridad), con menú lateral compartido, el aviso de email sin verificar en todas las pantallas y el contenido de cada una. Es la casa completa de la gestión del propio perfil; la edición rápida sobre el perfil vive en `profile-edit-mode`.
-
 ## Requirements
-
 ### Requirement: Área de ajustes con una pantalla por tipo de ajuste
 
 El sistema SHALL ofrecer a todo usuario autenticado un área de ajustes bajo `/me/settings` con
@@ -75,12 +73,13 @@ de carga, éxito y error recuperable, sin duplicar su lógica.
 
 ### Requirement: Pantalla Curaduría
 
-La pantalla **Curaduría** SHALL resumir lo que el dueño elige mostrar: Destacados (con conteo
-sobre el máximo de 4), Himno, Álbumes favoritos (con conteo sobre el máximo de 6), listas
-fijadas, valoraciones destacadas y entradas de diario destacadas. Destacados, Himno y Álbumes
-favoritos SHALL abrir su editor en el panel lateral de edición. Listas fijadas, valoraciones
-destacadas y entradas de diario destacadas SHALL mostrar su conteo y un enlace al lugar donde se
-fijan o destacan, sin duplicar esa acción en la pantalla.
+La pantalla **Curaduría** SHALL resumir lo que el dueño elige mostrar: "Empieza por aquí" (con
+conteo sobre el máximo de 4), listas fijadas, valoraciones destacadas y entradas de diario
+destacadas. "Empieza por aquí" SHALL abrir su editor en el panel lateral de edición. La
+pantalla SHALL NOT listar el himno ni los álbumes favoritos: el himno se elige desde la Tarjeta
+de Identidad (pantalla Perfil) y los álbumes favoritos ya no son una sección del perfil. Listas
+fijadas, valoraciones destacadas y entradas de diario destacadas SHALL mostrar su conteo y un
+enlace al lugar donde se fijan o destacan, sin duplicar esa acción en la pantalla.
 
 #### Scenario: Ver el resumen de curaduría
 
@@ -90,8 +89,13 @@ fijan o destacan, sin duplicar esa acción en la pantalla.
 
 #### Scenario: Editar los destacados desde Curaduría
 
-- **WHEN** el dueño pulsa "Editar" en Destacados
-- **THEN** el editor de destacados se abre en el panel lateral de edición sin salir de la pantalla
+- **WHEN** el dueño pulsa "Editar" en "Empieza por aquí"
+- **THEN** el editor se abre en el panel lateral de edición sin salir de la pantalla
+
+#### Scenario: Sin Himno ni Álbumes favoritos
+
+- **WHEN** el dueño abre la pantalla Curaduría
+- **THEN** no ve filas de Himno ni de Álbumes favoritos
 
 ### Requirement: Pantalla Privacidad y audiencia
 
@@ -169,3 +173,4 @@ contraseña, foto de perfil, eliminar cuenta).
 
 - **WHEN** el usuario cancela la confirmación
 - **THEN** ninguna sesión se cierra
+

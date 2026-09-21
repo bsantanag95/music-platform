@@ -75,10 +75,12 @@ sistema SHALL NOT ofrecer en esta capacidad una superficie para subir una imagen
 
 ### Requirement: Edición de identidad desde el perfil
 
-El dueño SHALL poder editar bio, pronombres, ubicación, zona horaria, enlaces, destacados e
-himno desde su propio perfil, sin salir de la página, activando el modo edición (ver
-`profile-edit-mode`), y SHALL poder editar la misma información desde el área de ajustes (ver
-`owner-settings`). Ambas vías SHALL usar los mismos editores. Cada editor SHALL tener estados de
+El dueño SHALL poder editar bio, pronombres, ubicación, zona horaria, enlaces, la Tarjeta de
+Identidad (artista, álbum e himno) y "Empieza por aquí" desde su propio perfil, sin salir de la
+página, activando el modo edición (ver `profile-edit-mode`), y SHALL poder editar la misma
+información desde el área de ajustes (ver `owner-settings`). Ambas vías SHALL usar los mismos
+editores, y cada dato SHALL tener un único editor: el himno, el artista y el álbum definitorios
+se editan solo en el editor de la Tarjeta de Identidad. Cada editor SHALL tener estados de
 carga, éxito y error recuperable, y SHALL confirmar los cambios sin recargar toda la aplicación.
 Los editores SHALL renderizarse únicamente en vistas del dueño: su perfil con el modo edición
 activo y su área de ajustes.
@@ -99,6 +101,12 @@ activo y su área de ajustes.
 
 - **WHEN** un visitante que no es el dueño abre el perfil
 - **THEN** no ve ningún control de edición de identidad
+
+#### Scenario: Un único editor para el himno
+
+- **WHEN** el dueño quiere cambiar su himno
+- **THEN** lo hace en el editor de la Tarjeta de Identidad; el editor de "Empieza por aquí" no
+  ofrece elegirlo
 
 ### Requirement: Enlaces de red social por nombre de usuario
 
@@ -157,6 +165,7 @@ la portada del sitio o una publicación) o cuando el usuario no cumpla las regla
 
 - **WHEN** el dueño elige Instagram y escribe un usuario con espacios o caracteres no permitidos
 - **THEN** el sistema rechaza el valor con un error de validación
+
 ### Requirement: Enlace con esquema implícito
 
 Para el tipo Enlace (`other`), el valor SHALL aceptarse sin esquema: si no trae `http://` ni
@@ -189,6 +198,7 @@ sistema SHALL NOT ofrecer un tipo "Sitio web" separado: Enlace cubre cualquier d
 
 - **WHEN** el dueño escribe "hola"
 - **THEN** el sistema rechaza el valor con un error de validación
+
 ### Requirement: Enlaces guardados que no coinciden con su tipo
 
 El sistema SHALL NOT modificar ni eliminar los enlaces ya guardados que no coincidan con su tipo
@@ -213,6 +223,7 @@ persona lo corrija o lo quite.
 
 - **WHEN** el dueño quita esa fila y guarda
 - **THEN** el conjunto se guarda con los demás enlaces
+
 ### Requirement: Enlaces como íconos en el perfil
 
 El perfil SHALL mostrar cada enlace externo como el ícono de su sitio, sin el nombre como texto
@@ -238,6 +249,7 @@ que el nombre accesible sea el único anunciado.
 
 - **WHEN** el perfil tiene un enlace de un tipo por usuario cuya URL no coincide con el sitio
 - **THEN** muestra el ícono genérico de enlace en lugar del de la marca
+
 ### Requirement: Validación en el editor de enlaces
 
 El editor de enlaces SHALL validar cada fila con las mismas reglas que el servidor y mostrar el error
@@ -267,3 +279,4 @@ escrito y revalidarlo.
 
 - **WHEN** el dueño cambia una fila de Instagram a TikTok con "ana" escrito
 - **THEN** el texto "ana" se conserva y la vista previa pasa a `tiktok.com/@ana`
+
