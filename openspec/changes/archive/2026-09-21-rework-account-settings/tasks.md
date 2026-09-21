@@ -78,7 +78,7 @@
 ## 11. Fase 2 — Verificación y documentación
 
 - [x] 11.1 `pnpm typecheck`, `pnpm lint`, `pnpm test` y `pnpm build` en verde
-- [ ] 11.2 Probar en el navegador con una cuenta de prueba: completar cada campo, ver la ficha en la Placa, editar desde el modo edición, perfil vacío sin hueco, perfil privado sin ficha y hora local con zona
+- [ ] 11.2 Probar en el navegador con una cuenta de prueba: completar cada campo, ver la ficha en la Placa, editar desde el modo edición, perfil vacío sin hueco, perfil privado sin ficha y hora local con zona — _Sin ejecutar al archivar (2026-09-21): requiere una sesión iniciada por la persona; la ficha y sus editores están cubiertos por pruebas de componente y el smoke contra Postgres._
 - [x] 11.3 Documentar la Fase 2 en `docs/05-features/user-profile.md`
 
 ## 12. Fase 3 — Desactivar: columna, criterio único y superficies
@@ -102,6 +102,6 @@
 ## 14. Fase 3 — Verificación, documentación y cierre
 
 - [x] 14.1 `pnpm typecheck`, `pnpm lint`, `pnpm test` y `pnpm build` en verde
-- [ ] 14.2 Probar en el navegador: desactivar y comprobar que el perfil, la búsqueda y el feed la ocultan y que una reseña muestra «Cuenta desactivada»; volver a entrar y ver todo restaurado; exportar; eliminar una cuenta de prueba
+- [ ] 14.2 Probar en el navegador: desactivar y comprobar que el perfil, la búsqueda y el feed la ocultan y que una reseña muestra «Cuenta desactivada»; volver a entrar y ver todo restaurado; exportar; eliminar una cuenta de prueba — _Sin ejecutar al archivar (2026-09-21): requiere una sesión iniciada por la persona y una cuenta de prueba; el recorrido de desactivar, reactivar, exportar y eliminar está cubierto por pruebas de componente y el smoke contra Postgres._
 - [x] 14.3 Documentar la Fase 3 en `docs/05-features/user-profile.md` y `docs/04-api`; actualizar `AGENTS.md` si algún procedimiento cambia
-- [ ] 14.4 `openspec validate rework-account-settings --strict` y archivar (`## Purpose` en los specs que se toquen; ver las notas de archivo)
+- [x] 14.4 `openspec validate rework-account-settings --strict` y archivar (`## Purpose` en los specs que se toquen; ver las notas de archivo)
