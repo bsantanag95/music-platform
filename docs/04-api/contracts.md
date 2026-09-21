@@ -424,7 +424,7 @@ de ellos, cuántos están fijados o destacados. No modifica nada. `audience` ∈
 public`; `null` y "según el tipo" no son válidos (no hay un valor único que aplicar).
 
 **200 OK:** `{ audience, favorites, diary, lists, collection, highlighted: { pinnedLists,
-pinnedAlbumFavorites, highlightedDiary } }`, todos enteros ≥ 0. Las listas cuentan solo las
+highlightedDiary } }`, todos enteros ≥ 0. Las listas cuentan solo las
 estándar propias (`kind = 'standard'`); los recorridos de artista no.
 **400** con `VALIDATION_ERROR` si `audience` falta o no es válida. **401** con `AUTH_REQUIRED` si no
 hay sesión.
@@ -477,10 +477,13 @@ servidor y el editor.
 
 ### `PUT` / `DELETE /api/me/profile/pinned`
 
-Reemplaza los hasta 4 destacados del perfil (tipos mezclados). `DELETE` los vacía.
+Reemplaza los hasta 4 ítems de **"Empieza por aquí"** del perfil (antes "Destacados"; tipos
+mezclados, con orden y nota). `DELETE` los vacía. El nombre de la ruta no cambió.
 
 **Body (PUT):** `{ items: [{ type: "artist"|"release-group"|"recording", id, note? (≤120) }] }`.
-**200 OK:** `{ showcase: { pinned: [{ id, note, position, entity: { type, id, title, artistName, coverThumbUrl } }], anthem } }`.
+**200 OK:** `{ showcase: { pinned: [{ id, note, position, entity: { type, id, title, artistName, coverThumbUrl } }], identityCard: { artist, album, anthem } } }`.
+El himno solo viaja dentro de `identityCard.anthem` (el campo `showcase.anthem` de primer nivel
+se retiró en el cambio `simplify-profile-curation`).
 **400** con `VALIDATION_ERROR` si hay más de 4, una nota demasiado larga o una entidad
 inexistente.
 
@@ -490,19 +493,6 @@ Fija (`PUT`) o quita (`DELETE`) el himno del perfil — una canción elegida man
 
 **Body (PUT):** `{ recordingId }`. **200 OK:** `{ showcase }` (misma forma que arriba).
 **400** con `VALIDATION_ERROR` si el `recordingId` no es válido o no existe.
-
-### `PUT` / `DELETE /api/me/profile/album-favorites`
-
-Reemplaza el conjunto ordenado de **álbumes favoritos** del perfil (0..6) — la sección de
-identidad cultural que va arriba de los destacados (cambio
-`redesign-profile-album-identity`). La posición se deriva del orden del array. `DELETE` los
-vacía.
-
-**Body (PUT):** `{ favoriteIds: [uuid] }` — cada id SHALL ser un `favorite` propio con
-objetivo de álbum (`release_group`).
-**200 OK:** `{ albumFavorites: [{ id, favoriteId, position, target: { id, title, artistName, coverThumbUrl } }] }`.
-**400** con `VALIDATION_ERROR` si hay más de 6, ids duplicados, o algún id no es un
-favorito de álbum propio. **401** con `AUTH_REQUIRED` si no hay sesión.
 
 ### `GET /api/users/[username]/fingerprint`
 
@@ -615,17 +605,18 @@ objetivo no existe. **401** con `AUTH_REQUIRED` sin sesión.
 
 ### `POST /api/me/onboarding`
 
-Cierra el onboarding de dos puertas (cambio `add-two-door-onboarding`): siembra los Álbumes
-favoritos de la Puerta 1 y fija `app_user.onboarded_at`. La Puerta 2 (registrar una escucha)
+Cierra el onboarding de dos puertas (cambio `add-two-door-onboarding`): crea los favoritos de
+álbum de la Puerta 1 y fija `app_user.onboarded_at`. La Puerta 2 (registrar una escucha)
 usa `POST /api/me/diary`, no este endpoint.
 
 **Body:** `{ albumReleaseGroupIds: [uuid] }` (0..6). Cada id se convierte en un `favorite` de
-álbum (si no existe) y se fija como Álbum favorito, en el orden del array. **No** crea
-`rating` ni `listen_entry`.
-**200 OK:** `{ albumFavorites: [{ id, favoriteId, position, target: { id, title, artistName, coverThumbUrl } }], onboardedAt }`.
+álbum (si no existe), con la audiencia por defecto; no se fija ni se ordena (el cambio
+`simplify-profile-curation` retiró la sección "Álbumes favoritos"). **No** crea `rating` ni
+`listen_entry`.
+**200 OK:** `{ onboardedAt }`.
 **400** con `VALIDATION_ERROR` si hay más de 6 ids, ids duplicados o algún álbum no existe.
 **401** con `AUTH_REQUIRED` sin sesión. Idempotente: si el usuario ya está onboardeado,
-responde `200` con el estado vigente sin re-sembrar.
+responde `200` con el estado vigente sin volver a crear favoritos.
 
 ### `GET /api/me/diary?page=&pageSize=&q=&context=&reaction=&audience=`
 

@@ -10,19 +10,20 @@ complementarias, ninguna obligatoria, cualquier orden. Responde dos preguntas di
 - **Puerta 2 — "¿Qué estás escuchando ahora?"** (presente): *"¿qué está pasando con vos
   ahora?"*
 
-## Puerta 1 — los álbumes elegidos SON los Álbumes favoritos
+## Puerta 1 — los álbumes elegidos se guardan como favoritos
 
 "¿Qué álbumes te definen?" y "¿cuáles son tus álbumes favoritos?" son la misma pregunta
 (IQ5): no hay colección temporal aparte. El usuario busca álbumes y elige entre 3 y 5
 (tope 6). Al guardar:
 
-- se crea el `favorite` de álbum de cada uno (audiencia por defecto de un favorito nuevo);
-- se fijan como Álbumes favoritos del perfil (`user_album_pin`), en el orden de elección;
+- se crea el `favorite` de álbum de cada uno que falte (audiencia por defecto de un favorito
+  nuevo); no se fijan ni se ordenan: se ven en la sección Favoritos del perfil (el cambio
+  `simplify-profile-curation` retiró la sección "Álbumes favoritos" y la tabla `user_album_pin`);
 - **no** se crea ningún `rating` ("esto me representa" ≠ "5 estrellas");
 - **no** se crea ninguna entrada de diario (el onboarding construye identidad, no registra
   consumo).
 
-El sexto espacio de Álbumes favoritos se completa después desde el perfil.
+Los álbumes que definen al usuario se eligen después desde la Tarjeta de Identidad del perfil.
 
 ## Puerta 2 — registrar el presente
 
@@ -57,12 +58,12 @@ primera escucha. Ese bloque se conserva y es otra preocupación:
 |---|---|---|
 | Pregunta | "¿quién sos musicalmente?" | "¿con quién te conectás?" |
 | Se muestra | una vez, tras el alta | mientras no sigas a nadie |
-| Escribe | Álbumes favoritos / entrada de diario | nada (solo enlaces) |
+| Escribe | Favoritos de álbum / entrada de diario | nada (solo enlaces) |
 
 ## Modelo de datos
 
 | Tabla / columna | Qué |
 |---|---|
 | `app_user.onboarded_at` | `TIMESTAMPTZ` nullable (migración 0020). Nulo = onboarding pendiente. Se fija al completar o saltar `/welcome`. |
-| `favorite` / `user_album_pin` | Escritos por la Puerta 1 (reusa `replaceAlbumFavorites`). Sin cambios de esquema. |
+| `favorite` | Escrito por la Puerta 1 (`seedFavoriteAlbums`, solo crea los que faltan). Sin cambios de esquema. |
 | `listen_entry` | Escrito por la Puerta 2 (reusa `createListenEntry`). Sin cambios de esquema. |

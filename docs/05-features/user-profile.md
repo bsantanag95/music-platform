@@ -20,7 +20,7 @@ llegando que el anterior.
 | Nivel | Responde | Tiempo | Contenido |
 |---|---|---|---|
 | **1 — Identidad** | ¿Quién es, musicalmente? | Segundos | Placa + **Tarjeta de Identidad** (artista, álbum y canción definitorios) + resumen cualitativo de la huella de gusto |
-| **2 — Exploración** | ¿Qué más hay para ver? | Minutos | Álbumes favoritos, destacados generales, valoraciones destacadas, reseñas, en rotación, afinidad, estantes (diario/favoritos/listas/colección) |
+| **2 — Exploración** | ¿Qué más hay para ver? | Minutos | **Empieza por aquí**, valoraciones destacadas, reseñas, en rotación, afinidad, estantes (diario/favoritos/listas/colección) |
 | **3 — Inmersión** | Quiero el detalle completo | Bajo demanda | Huella de gusto completa (`/users/{username}/fingerprint`), cada estante en su propia vista |
 
 Los niveles 1 y 2 son la misma página (`page.tsx`), compuesta de arriba hacia abajo en ese
@@ -36,10 +36,10 @@ visitante:
 | Nivel | Quién | Qué ve |
 |---|---|---|
 | **No autorizado** | Anónimo, sin relación aceptada, o solicitud pendiente sobre un perfil privado | Una sola tarjeta (`PrivateProfileCard`): identidad extendida + estado exacto del visitante + una acción. Nada más. Ver "Perfil privado". |
-| **Autorizado** | Cuenta pública, o seguidor aprobado de una privada | Identidad + Tarjeta de Identidad + resumen de huella + álbumes favoritos + destacados + valoraciones destacadas + reseñas + en rotación + huella completa (nivel 3) + afinidad + estantes (diario / favoritos / listas / colección) + recencia. |
-| **Dueño** | La persona | Lo mismo que "autorizado" + modo edición ("Editar perfil": lápiz por bloque y panel lateral con los editores de identidad/enlaces/álbumes favoritos/destacados/marcador "me define"/himno) + acción de destacar valoraciones y entradas de diario + tarjeta de Ajustes + previsualizador "cómo te ven". Ver "Gestión del propio perfil". |
+| **Autorizado** | Cuenta pública, o seguidor aprobado de una privada | Identidad + Tarjeta de Identidad + resumen de huella + Empieza por aquí + valoraciones destacadas + reseñas + en rotación + huella completa (nivel 3) + afinidad + estantes (diario / favoritos / listas / colección) + recencia. |
+| **Dueño** | La persona | Lo mismo que "autorizado" + modo edición ("Editar perfil": lápiz por bloque y panel lateral con los editores de identidad/enlaces, de la Tarjeta de Identidad —artista, álbum e himno— y de Empieza por aquí) + acción de destacar valoraciones y entradas de diario + tarjeta de Ajustes + previsualizador "cómo te ven". Ver "Gestión del propio perfil". |
 
-Un perfil **privado** solo expone su huella, álbumes favoritos, destacados y estantes a
+Un perfil **privado** solo expone su huella, Empieza por aquí y estantes a
 seguidores aprobados y al dueño; un visitante no autorizado ve únicamente la identidad
 extendida.
 
@@ -223,31 +223,24 @@ definitorios** — un artista, un álbum y una canción (el himno). Reemplaza al
   Destacados (`user_pinned_item.is_defining`), lo que dejaba "Álbumes favoritos" sin ninguna
   vía para marcar un álbum definitorio salvo duplicándolo como destacado aparte — el gap que
   motivó moverlo a una referencia directa (migración 0030).
-- **Editor unificado de la Tarjeta** (`OwnerIdentityCardEditor`; hoy se abre desde el lápiz de la
-  Tarjeta en el modo edición y desde `/me/settings/profile`, antes vivía arriba de la card de
-  editores apilados): los 3
-  slots juntos, cada uno con su propio selector sobre los favoritos del dueño (artista, álbum,
-  canción) y una acción "Quitar". **Revisión de diseño (2026-09-17)**: antes de este editor,
-  el artista y la canción se marcaban desde "Destacados"/"Himno" y el álbum solo desde
-  "Álbumes favoritos" — una sección aparte, sin relación visual con las otras dos — lo que
-  hacía que completar el álbum de la Tarjeta de Identidad no fuera descubrible. Los
-  marcadores ★/☆ de `OwnerShowcaseEditor` (Destacados, solo artista/álbum) y
-  `OwnerAlbumFavoritesEditor` (Álbumes favoritos) siguen funcionando igual — son atajos
-  adicionales sobre la misma entidad ya visible en esas listas, no reemplazados por el editor
-  unificado. Los tres llaman al mismo endpoint (`PUT/DELETE /api/me/profile/pinned/defining`
-  con `{type, id}` del artista o álbum, no de una fila de destacado; el himno usa
-  `PUT/DELETE /api/me/profile/anthem`). Un destacado o álbum favorito recién agregado en el
-  borrador (sin guardar todavía) ya puede marcarse: el marcador no depende de que la entidad
-  tenga una fila propia guardada en el servidor.
+- **Editor único de la Tarjeta** (`OwnerIdentityCardEditor`; se abre desde el lápiz de la Tarjeta
+  en el modo edición y desde `/me/settings/profile`): los 3 slots juntos, cada uno con su propio
+  selector sobre los favoritos del dueño (artista, álbum, canción) y una acción "Quitar". Es el
+  **único** lugar donde se eligen: el cambio `simplify-profile-curation` (2026-09-21) retiró los
+  marcadores ★/☆ de los editores de Destacados y de Álbumes favoritos, y la sección "Himno" que
+  vivía dentro del editor de Destacados — eran atajos sobre el mismo dato y el ítem marcado
+  desaparecía del muro, lo que sorprendía. Los tres llaman a los mismos endpoints
+  (`PUT/DELETE /api/me/profile/pinned/defining` con `{type, id}` del artista o álbum; el himno usa
+  `PUT/DELETE /api/me/profile/anthem`).
 - **Una canción nunca puede ser "definitoria"** de esta forma — el slot de canción de la
   Tarjeta de Identidad es, exclusivamente, el **Himno** (`user_showcase.anthem_recording_id`),
   elegido a mano, nunca derivado de actividad.
 - **Composición incompleta, nunca con huecos.** Si falta un elemento, ese slot simplemente no
   se renderiza — no hay placeholders vacíos ni "todavía sin definir". Si los tres faltan, la
   Tarjeta de Identidad entera desaparece.
-- Un destacado o álbum favorito marcado como definitorio **desaparece de su muro general**
-  (`PinnedShowcase` excluye por coincidencia de tipo+id con la Tarjeta de Identidad, no por un
-  campo propio de la fila) para no mostrar la misma entidad dos veces en la página.
+- **No se excluye nada entre secciones.** Fijar un ítem en "Empieza por aquí" y definir la
+  identidad son decisiones independientes: si el mismo álbum está en ambos sitios, se muestra en
+  ambos (antes `PinnedShowcase` ocultaba lo que coincidía con la Tarjeta).
 
 ### Vista rápida al pasar el cursor (hover card)
 
@@ -362,43 +355,37 @@ interminable antes de llegar al resto de la página).
   `initial.favorites.length`, la cantidad de la primera página fetcheada (tope 20), no el
   total real.
 
-## Álbumes favoritos
+## Empieza por aquí (antes «Destacados»)
 
-Hasta **6 álbumes** que definen a esta persona, en una rejilla de carátulas + título +
-artista, con enlace al álbum. Es una **declaración, no un ranking** — sin números de posición
-ni estrellas (cambio `redesign-profile-album-identity`).
+Hasta **4 recomendaciones** dirigidas a quien visita el perfil (`user_pinned_item`, patrón
+triple-FK como `rating`): entidades de tipos mezclados (artista, álbum o canción), con orden y una
+**nota** opcional (≤120). Se resuelven al leer, omitiendo las que el catálogo ya no tiene. Es lo
+único que ninguna otra sección ofrece: la voz del dueño sobre algo que quiere que el visitante
+conozca. Distinta de Favoritos ("lo que amo") y de la Tarjeta de Identidad ("lo que me define").
 
-- **Fijar un álbum favorito es fijar un `favorite`.** `user_album_pin.favorite_id` tiene FK
-  a `favorite` con `ON DELETE CASCADE`: `favorite` sigue siendo la única fuente de verdad y
-  quitar el favorito lo desfija en cascada, sin código extra.
-- **Se eligen desde los favoritos de álbum del propio dueño** — igual que el editor de
-  destacados, no hay buscador de catálogo embebido (memoria `list-detail-scope`). Si el
-  dueño no tiene favoritos de álbum, el editor invita a marcarlos primero.
-- **Audiencia:** la sección respeta la audiencia del `favorite` subyacente. Un favorito
-  privado fijado solo lo ve el dueño; uno de "seguidores", solo seguidores aprobados y el
-  dueño.
-- El orden se reescribe completo al guardar (`PUT /api/me/profile/album-favorites`), mismo
-  patrón transaccional que los ítems de lista.
-- **Puede marcarse "me define" desde acá mismo** (openspec: rework-user-profile,
-  `OwnerAlbumFavoritesEditor`), sin duplicar el álbum como destacado — ver "Tarjeta de
-  Identidad". El álbum marcado desaparece de esta rejilla mientras sea el definitorio
-  (`AlbumFavorites` excluye por id contra `identityCard.album`), igual criterio que los
-  Destacados.
+- **Presentación (`PinnedShowcase`, variante B de los mockups, cambio `simplify-profile-curation`):**
+  un ítem por fila, sin cajas, separados por hairlines; miniatura de 88 px (64 px en móvil), etiqueta
+  de tipo (mono, `text-petrol`), título, artista y, si la hay, la **nota completa como cita**
+  (`font-body` cursiva con filete ámbar de 2 px, sin recorte). Los artistas usan `ArtistPlate` y las
+  canciones el `CoverThumb` de respaldo (disco de vinilo). Todo el ítem enlaza a la entidad. Solo el
+  encabezado, sin subtítulo. Sin ítems, la sección colapsa (el dueño la ve enmarcada en modo edición).
+- **La nota es opcional.** Hacerla obligatoria invalidaría los destacados que ya existían sin
+  nota; un ítem sin nota se dibuja igual, sin línea vacía. El editor (`OwnerShowcaseEditor`) la pone
+  en primer plano: campo con la etiqueta "¿Por qué empezar por aquí?", contador `n/120` y los saltos
+  de línea aplanados a un espacio.
+- El editor del dueño reordena / quita / anota los ítems **desde sus favoritos** — no hay buscador
+  de catálogo embebido (mismo criterio que el detalle de lista, ver la memoria `list-detail-scope`).
+  Un único `PUT /api/me/profile/pinned` reemplaza el conjunto. Ya no aloja el himno ni marcadores
+  "me define": eso vive solo en el editor de la Tarjeta de Identidad.
+- **Sin audiencia propia** (a diferencia de los favoritos): un ítem es visible para cualquiera con
+  acceso al perfil, y la API no exige que la entidad sea un favorito.
 
-## Destacados
-
-**Cuatro destacados** (`user_pinned_item`, patrón triple-FK como `rating`): hasta 4 entidades
-fijadas, tipos mezclados, nota opcional (≤120). Se resuelven al leer, omitiendo las que el
-catálogo ya no tiene.
-
-- **Excluyen lo que ya vive en la Tarjeta de Identidad.** Un destacado cuya entidad coincide
-  con el artista o álbum definitorio desaparece de esta lista general — la Tarjeta de
-  Identidad es su única superficie, para no mostrar la misma entidad dos veces en la misma
-  página (`PinnedShowcase` filtra por coincidencia de tipo+id contra `identityCard`, no por
-  un campo propio del destacado — el marcador ya no vive ahí, ver "Tarjeta de Identidad").
-- El editor del dueño reordena / quita / anota los destacados **desde sus favoritos** — no
-  hay buscador de catálogo embebido (mismo criterio que el detalle de lista, ver la memoria
-  `list-detail-scope`).
+**Historia (2026-09-21).** La sección se llamaba "Destacados" y convivía con "Álbumes favoritos"
+(hasta 6 pines *sobre `favorite`* con orden manual, tabla `user_album_pin`, migración `0019`). Ese
+segundo muro repetía las carátulas de la fila de álbumes de Favoritos, así que se **retiró** con
+la migración `0038` (`DROP TABLE user_album_pin`): se perdió solo el orden manual, los `favorite` de
+álbum y su audiencia no cambiaron. Onboarding, "Aplicar a lo existente" y la pantalla Curaduría
+dejaron de mencionarlo.
 
 ## Valoraciones destacadas
 
@@ -431,7 +418,7 @@ La postura crítica de la persona sobre las obras — el acto más expresivo del
 
 - **Automática, no curada.** Se muestran las **últimas 4** reseñas de álbum del dueño
   ordenadas por fecha de última edición. No hay editor de "fijar reseñas": sumar un mecanismo
-  de fijado más (además de álbumes favoritos, destacados, himno y valoraciones destacadas) es
+  de fijado más (además de Empieza por aquí, la Tarjeta de Identidad y las valoraciones destacadas) es
   el riesgo que D10 pide evitar. Si hay más reseñas, "y N más" — sin enlace dedicado.
 - **Tarjeta**: carátula + álbum enlazado + artista + el rating que la reseña lleva
   incorporada (`add-album-review`: la reseña siempre lleva rating) + título opcional +
@@ -446,7 +433,7 @@ La postura crítica de la persona sobre las obras — el acto más expresivo del
 
 ## En rotación
 
-La contraparte **viva** de los álbumes favoritos (identidad estable): qué ha estado
+La contraparte **viva** de la Tarjeta de Identidad y de Empieza por aquí (identidad estable): qué ha estado
 escuchando esta persona últimamente. Se muestra en los niveles autorizado y dueño (cambio
 `add-profile-in-rotation`, `src/services/profiles/in-rotation.ts`).
 
@@ -674,7 +661,7 @@ gestión; el dueño ve el mismo perfil que un visitante hasta que activa el modo
   al navegar.
 - **`OwnerEditProvider`** (cliente) guarda `editing` y renderiza **una sola vez** el panel lateral.
   **`EditableBlock`** envuelve cada bloque con editor: Placa (identidad + enlaces en un mismo
-  panel), Tarjeta de Identidad, Destacados/Himno y Álbumes favoritos. Con `editing` muestra un
+  panel), Tarjeta de Identidad y Empieza por aquí. Con `editing` muestra un
   lápiz ("Editar {bloque}") que abre el editor en el panel. Los bloques sin editor propio (listas
   fijadas, valoraciones y diario destacados, el resto de estantes) no llevan lápiz: se fijan donde
   viven. Un bloque **vacío** (que hoy colapsa) muestra un marco solo en modo edición, para poder
@@ -707,7 +694,7 @@ redirige a `/me/settings/profile`. Cada pantalla vuelve a exigir sesión.
 | Pantalla | Contenido |
 |---|---|
 | `profile` | Tarjeta de Identidad, identidad (bio, pronombres, ubicación, zona horaria) y enlaces — los mismos editores que abre el modo edición |
-| `curation` | Filas con conteo: Destacados, Himno y Álbumes favoritos (abren su editor en el panel lateral); listas fijadas, valoraciones destacadas y diario destacado (solo conteo y enlace/pista a donde se fijan; las valoraciones se destacan desde la valoración de cada álbum o canción). `getCurationSummary` aporta esos tres conteos |
+| `curation` | Filas con conteo: Empieza por aquí (abre su editor en el panel lateral; el himno se elige desde la Tarjeta de Identidad, en `profile`); listas fijadas, valoraciones destacadas y diario destacado (solo conteo y enlace/pista a donde se fijan; las valoraciones se destacan desde la valoración de cada álbum o canción). `getCurationSummary` aporta esos tres conteos |
 | `privacy` | Visibilidad público/privado y **audiencia por defecto del contenido nuevo**, con la acción aparte "Aplicar a lo existente" |
 | `network` | Enlaces a solicitudes (con bandeja), seguidores, seguidos y bloqueadas, desde la superficie `settings` de `user-menu-items.ts` (la superficie `panel` sigue existiendo: la usa el panel móvil del Header) |
 | `account` | Nombre visible (`displayName`, ≤50, vacío = se muestra el username), método de acceso en solo lectura (contraseña / proveedores, nunca el hash) y "Cerrar todas las sesiones" (`DELETE /api/auth/revoke-all`, con confirmación y redirección a login) |
@@ -736,8 +723,8 @@ dice y no pide confirmar. Tras confirmar (`POST`) muestra el resultado y refresc
 - **Alcance:** favoritos, entradas de diario, listas estándar propias y copias de colección. No cubre
   reseñas ni comentarios, ni la wishlist (siempre privada), ni los recorridos de artista (no tienen
   control de audiencia).
-- **Fijados y destacados se incluyen**, y la confirmación avisa. Una lista o un álbum favorito
-  fijado que pase a una audiencia más cerrada deja de verse para quien quede fuera; las entradas de
+- **Fijados y destacados se incluyen**, y la confirmación avisa. Una lista
+  fijada que pase a una audiencia más cerrada deja de verse para quien quede fuera; las entradas de
   diario destacadas siguen visibles para cualquiera (`diary-visibility`).
 - **Atómica e idempotente:** una transacción, solo actualiza las filas que difieren. Solo escribe la
   columna `audience`; no toca pines, destacados ni la preferencia guardada. No se puede deshacer
@@ -771,9 +758,9 @@ cuántas veces se escuchó algo — es "qué está sonando", no una métrica.
 | `review` + `rating` (lectura) | Sección "Reseñas" — hasta 4 reseñas de álbum del dueño con su rating asociado, orden por `updated_at`. Sin tabla ni columna nueva |
 | `rating_highlight` | Hasta 6 valoraciones destacadas por usuario, visibles sin filtro de audiencia (migración 0029) |
 | `artist_follow` | Sección "Exploración" — artistas que el dueño sigue; también alimenta la afinidad y la insignia "tú también" (migración 0021, sin `status`) |
-| `user_pinned_item` | Cuatro destacados, triple-FK nullable + CHECK `num_nonnulls = 1` |
+| `user_pinned_item` | Los 4 ítems de "Empieza por aquí" (antes Destacados), triple-FK nullable + CHECK `num_nonnulls = 1` |
 | `user_showcase` | Una fila por usuario; `anthem_recording_id` (`ON DELETE SET NULL`, la canción de la Tarjeta de Identidad); `defining_artist_id`/`defining_release_group_id` (`ON DELETE SET NULL`, el artista/álbum definitorios — migración 0030, revisa el `is_defining` sobre `user_pinned_item` de 0029) |
-| `user_album_pin` | Hasta 6 álbumes favoritos; FK a `favorite` (`ON DELETE CASCADE`), `position` 1–6 única por usuario (migración 0019) |
+| ~~`user_album_pin`~~ | Retirada en la migración `0038` (ver "Empieza por aquí", historia) |
 | `favorite.audience` (default) | `public` para favoritos nuevos (antes `followers`); cambio a nivel de aplicación, no de columna — no retroactivo sobre filas existentes |
 | `release_group_tag` | Tags de género por álbum, sembrados |
 | `idx_rating_user` | Índice para la curva de valoraciones (migración 0015) |
