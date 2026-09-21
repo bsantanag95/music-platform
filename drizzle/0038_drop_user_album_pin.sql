@@ -1,0 +1,21 @@
+-- =====================================================================
+-- Migracion 0038 - eliminar user_album_pin (seccion "Albumes favoritos")
+-- =====================================================================
+-- Cambio simplify-profile-curation. La seccion "Albumes favoritos" del perfil
+-- (migracion 0019) se retira: repetia en el perfil las mismas caratulas que la
+-- fila de albumes de Favoritos, y su editor y las estrellas "me define"
+-- duplicaban al editor de la Tarjeta de Identidad. Sin lectores ni escritores,
+-- la tabla se elimina.
+--
+-- user_album_pin era un PIN de un favorito (favorite_id, ON DELETE CASCADE):
+-- solo guardaba el ORDEN MANUAL de hasta 6 albumes. Los favoritos de album
+-- (favorite) y su audiencia no se tocan; el album definitorio de la Tarjeta de
+-- Identidad es una referencia directa en user_showcase (migracion 0030) y
+-- tampoco depende de esta tabla.
+--
+-- Rollback (documentado, no se ejecuta): recrear la tabla con la definicion de
+-- la migracion 0019 la deja vacia; el orden manual perdido no se puede
+-- reconstruir.
+-- =====================================================================
+
+DROP TABLE IF EXISTS user_album_pin;
