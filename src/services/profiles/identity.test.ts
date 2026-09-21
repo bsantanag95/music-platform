@@ -3,7 +3,7 @@ import { replaceLinks, updateIdentity } from "./identity";
 import type { ProfileLinkInput } from "@/lib/api/schemas";
 
 const mocks = vi.hoisted(() => ({
-  db: { update: vi.fn(), transaction: vi.fn(), insert: vi.fn(), delete: vi.fn() },
+  db: { update: vi.fn(), transaction: vi.fn(), insert: vi.fn(), delete: vi.fn(), select: vi.fn() },
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
@@ -73,6 +73,57 @@ describe("updateIdentity", () => {
   it("USER_NOT_FOUND si el update no afecta filas", async () => {
     mockUpdateReturning([]);
     await expectCode(updateIdentity("desconocido", { bio: "hola" }), "USER_NOT_FOUND");
+  });
+});
+
+describe("updateIdentity: zona horaria y hora local", () => {
+  function mockCurrentTimezone(timezone: string | null) {
+    const limit = vi.fn().mockResolvedValue([{ timezone }]);
+    mocks.db.select.mockReturnValue({ from: () => ({ where: () => ({ limit }) }) });
+  }
+
+  it("guarda una zona IANA válida tal cual", async () => {
+    const { set } = mockUpdateReturning([{ id: "u1" }]);
+    await updateIdentity("u1", { timezone: "America/Santiago" });
+    expect(set).toHaveBeenCalledWith({ timezone: "America/Santiago" });
+  });
+
+  it.each(["hora de mi casa", "Mars/Olympus", "america/santiago"])("rechaza la zona %s sin tocar la base", async (timezone) => {
+    await expectCode(updateIdentity("u1", { timezone }), "VALIDATION_ERROR");
+    expect(mocks.db.update).not.toHaveBeenCalled();
+  });
+
+  it("vaciar la zona apaga la hora local (no puede quedar activada sin zona)", async () => {
+    const { set } = mockUpdateReturning([{ id: "u1" }]);
+    await updateIdentity("u1", { timezone: "" });
+    expect(set).toHaveBeenCalledWith({ timezone: null, showLocalTime: false });
+  });
+
+  it("guarda la zona y la hora local a la vez sin consultar la base", async () => {
+    const { set } = mockUpdateReturning([{ id: "u1" }]);
+    await updateIdentity("u1", { timezone: "Europe/Madrid", showLocalTime: true });
+    expect(set).toHaveBeenCalledWith({ timezone: "Europe/Madrid", showLocalTime: true });
+    expect(mocks.db.select).not.toHaveBeenCalled();
+  });
+
+  it("activar la hora local con una zona ya guardada funciona", async () => {
+    mockCurrentTimezone("America/Santiago");
+    const { set } = mockUpdateReturning([{ id: "u1" }]);
+    await updateIdentity("u1", { showLocalTime: true });
+    expect(set).toHaveBeenCalledWith({ showLocalTime: true });
+  });
+
+  it("activar la hora local sin ninguna zona se rechaza y no escribe", async () => {
+    mockCurrentTimezone(null);
+    await expectCode(updateIdentity("u1", { showLocalTime: true }), "VALIDATION_ERROR");
+    expect(mocks.db.update).not.toHaveBeenCalled();
+  });
+
+  it("desactivar la hora local no necesita zona", async () => {
+    const { set } = mockUpdateReturning([{ id: "u1" }]);
+    await updateIdentity("u1", { showLocalTime: false });
+    expect(set).toHaveBeenCalledWith({ showLocalTime: false });
+    expect(mocks.db.select).not.toHaveBeenCalled();
   });
 });
 

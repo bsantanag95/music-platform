@@ -436,7 +436,13 @@ son opcionales; se requiere al menos uno. Las cadenas de texto se recortan; la c
 el campo (`null`; en `displayName` el sitio vuelve a mostrar el username).
 
 **Body:** cualquier subconjunto de
-`{ profileVisibility: "public" | "private", displayName (≤50), defaultAudience: "private" | "followers" | "public" | null, bio (≤200), pronouns (≤40), location (≤80), timezone (≤64) }`.
+`{ profileVisibility: "public" | "private", displayName (≤50), defaultAudience: "private" | "followers" | "public" | null, bio (≤200), pronouns (≤40), location (≤80), timezone, showLocalTime: boolean }`.
+
+`timezone` es un **identificador IANA de la lista** (`America/Santiago`, `UTC`…; sensible a
+mayúsculas); la cadena vacía o `null` la borra y cualquier otro valor responde `400
+VALIDATION_ERROR`. `showLocalTime` muestra la hora local en la Placa y **exige zona**: vaciar la zona
+lo apaga solo y activarlo sin zona (guardada o enviada en la misma petición) responde `400
+VALIDATION_ERROR`.
 
 `defaultAudience` es la audiencia con la que nace el contenido **nuevo** de biblioteca (favoritos,
 diario, listas y colección). `null` la quita: cada tipo vuelve a su default (favoritos `public`,
@@ -449,6 +455,25 @@ actualizado.
 **400** con `VALIDATION_ERROR` si un valor no es válido (p. ej. una audiencia fuera del conjunto
 permitido o un nombre de más de 50 caracteres) o el body está vacío. **401** con `AUTH_REQUIRED` si
 no hay sesión; no se modifica ningún dato.
+
+### `PUT /api/me/profile/music-identity`
+
+Reemplaza "Me defino como", géneros y/o formatos de escucha (cambio `rework-account-settings`,
+Fase 2). **Body:** cualquier subconjunto no vacío de
+`{ selfRoles: SelfRole[] (≤3), genres: Genre[] (≤5), listeningFormats: ListeningFormat[] (≤5) }`,
+de las listas cerradas de `src/lib/music-identity.ts`, sin repetidos. Lo enviado sustituye al valor
+anterior (`[]` lo vacía); lo no enviado no se toca. **200 OK:** `{ selfRoles, genres, listeningFormats }`
+guardados. **400 `VALIDATION_ERROR`** con un valor fuera de la lista, un cuarto rol, un sexto género,
+repetidos o un cuerpo vacío (no cambia nada). **401** `AUTH_REQUIRED`.
+
+### `PUT` / `DELETE /api/me/profile/prompts`
+
+`PUT` reemplaza el conjunto **completo** de preguntas del perfil, en el orden del array.
+**Body:** `{ prompts: [{ promptKey, answer }] }` (0..3; `promptKey` de las 8 preguntas cerradas; `answer`
+de 1 a 100 caracteres, recortada, de una sola línea). **200 OK:** `{ prompts: [{ promptKey, answer,
+position }] }`. **400 `VALIDATION_ERROR`** con una pregunta desconocida o repetida, una respuesta
+vacía, de más de 100 caracteres o con saltos de línea, o una cuarta pregunta; el conjunto anterior no
+cambia (transacción). `DELETE` las quita todas (equivale a `PUT` con `[]`). **401** `AUTH_REQUIRED`.
 
 ### `GET /api/me/default-audience/apply?audience=`
 

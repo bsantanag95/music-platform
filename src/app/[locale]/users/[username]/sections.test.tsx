@@ -31,6 +31,8 @@ import { OwnerSettingsCard } from "@/components/profiles/OwnerSettingsCard";
 import { OwnerIdentityCardEditor } from "@/components/profiles/OwnerIdentityCardEditor";
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
+import { OwnerMusicIdentityEditor } from "@/components/profiles/OwnerMusicIdentityEditor";
+import { OwnerPromptsEditor } from "@/components/profiles/OwnerPromptsEditor";
 import { OwnerShowcaseEditor } from "@/components/profiles/OwnerShowcaseEditor";
 import type { ProfileView } from "@/services/profiles/profile-view";
 
@@ -98,6 +100,8 @@ vi.mock("@/components/collection/CollectionPreview", () => ({ CollectionPreview:
 vi.mock("@/components/profiles/OwnerIdentityCardEditor", () => ({ OwnerIdentityCardEditor: () => null }));
 vi.mock("@/components/profiles/OwnerIdentityEditor", () => ({ OwnerIdentityEditor: () => null }));
 vi.mock("@/components/profiles/OwnerLinksEditor", () => ({ OwnerLinksEditor: () => null }));
+vi.mock("@/components/profiles/OwnerMusicIdentityEditor", () => ({ OwnerMusicIdentityEditor: () => null }));
+vi.mock("@/components/profiles/OwnerPromptsEditor", () => ({ OwnerPromptsEditor: () => null }));
 vi.mock("@/components/profiles/OwnerShowcaseEditor", () => ({ OwnerShowcaseEditor: () => null }));
 vi.mock("@/components/profiles/ProfileRecency", () => ({ ProfileRecency: () => null }));
 
@@ -466,12 +470,18 @@ describe("secciones editables del dueño", () => {
     expect(card.type).toBe(IdentityCard);
   });
 
-  it("EditablePlaca: aloja identidad y enlaces en un mismo editor, con los valores del perfil", async () => {
+  it("EditablePlaca: aloja identidad, identidad musical, preguntas y enlaces en un mismo editor, con los valores del perfil", async () => {
+    const prompts = [{ promptKey: "first-record", answer: "Un casete", position: 0 }];
     const profile = {
       bio: "Colecciono casetes",
       pronouns: "él",
       location: "Quilpué",
       timezone: "America/Santiago",
+      showLocalTime: true,
+      selfRoles: ["collector"],
+      genres: ["jazz"],
+      listeningFormats: ["vinyl"],
+      prompts,
       links: [{ id: "l1", kind: "other", url: "https://ana.example", position: 0 }],
     } as unknown as ProfileView;
 
@@ -486,9 +496,18 @@ describe("secciones editables del dueño", () => {
       pronouns: "él",
       location: "Quilpué",
       timezone: "America/Santiago",
+      showLocalTime: true,
     });
-    expect(inner?.[1]?.type).toBe(OwnerLinksEditor);
-    expect(inner?.[1]?.props?.initialLinks).toBe(profile.links);
+    expect(inner?.[1]?.type).toBe(OwnerMusicIdentityEditor);
+    expect(inner?.[1]?.props?.initial).toEqual({
+      selfRoles: ["collector"],
+      genres: ["jazz"],
+      listeningFormats: ["vinyl"],
+    });
+    expect(inner?.[2]?.type).toBe(OwnerPromptsEditor);
+    expect(inner?.[2]?.props?.initial).toBe(prompts);
+    expect(inner?.[3]?.type).toBe(OwnerLinksEditor);
+    expect(inner?.[3]?.props?.initialLinks).toBe(profile.links);
   });
 
   it("SettingsCardSection: cuenta las solicitudes pendientes del dueño y las pasa a la tarjeta", async () => {

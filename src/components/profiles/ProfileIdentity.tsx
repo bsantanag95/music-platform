@@ -23,6 +23,8 @@ interface ProfileIdentityProps {
   minimal?: boolean;
   /** Elemento junto al nombre (p. ej. el chip "Privado"). */
   badge?: ReactNode;
+  /** Hora actual del perfil ya formateada ("14:32"), si su dueño eligió mostrarla. */
+  localTime?: string | null;
 }
 
 const PILL =
@@ -42,6 +44,7 @@ export function ProfileIdentity({
   counters = "links",
   minimal = false,
   badge,
+  localTime = null,
 }: ProfileIdentityProps) {
   const name = profile.displayName ?? profile.username;
   const compact = size === "sm";
@@ -113,6 +116,12 @@ export function ProfileIdentity({
               <>
                 <span aria-hidden="true"> · </span>
                 <span>{profile.location}</span>
+              </>
+            )}
+            {localTime && (
+              <>
+                <span aria-hidden="true"> · </span>
+                <span>{t("profileLocalTime", { time: localTime })}</span>
               </>
             )}
           </p>

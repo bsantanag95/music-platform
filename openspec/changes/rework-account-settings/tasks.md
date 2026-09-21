@@ -61,25 +61,25 @@
 
 ## 9. Fase 2 — Identidad musical: datos y servicio
 
-- [ ] 9.1 Verificar el siguiente número libre y crear la migración de la Fase 2: `app_user.self_roles`, `genres`, `listening_formats` (`text[] NOT NULL DEFAULT '{}'` con `CHECK (cardinality(...) <= N)`), `show_local_time boolean NOT NULL DEFAULT false`, tabla `user_profile_prompt` (único `(user_id, prompt_key)`, `answer` ≤100), y la limpieza de `timezone` con valores fuera de `pg_timezone_names`; actualizar `schema.ts`
-- [ ] 9.2 Crear `services/profiles/music-identity.ts` con las listas cerradas (roles, géneros, formatos, preguntas), sus límites y los esquemas Zod, más `getMusicIdentity` y `replaceMusicIdentity`/`replacePrompts` (reemplazo atómico); pruebas de máximos, repetidos, valores fuera de la lista y respuestas de una línea
-- [ ] 9.3 Validar `timezone` contra `Intl.supportedValuesOf("timeZone")` con lista de respaldo y `showLocalTime` (exige zona); extender `PATCH /api/me/profile`, el servicio de identidad y `OwnProfileResponseSchema`; pruebas
-- [ ] 9.4 Rutas `PUT /api/me/profile/music-identity` y `PUT /api/me/profile/prompts` con Zod y pruebas de ruta
-- [ ] 9.5 Incluir la identidad musical, las preguntas y la hora local en `getProfileView`/`ProfileView` solo para perfiles accesibles; pruebas
+- [x] 9.1 Verificar el siguiente número libre y crear la migración de la Fase 2: `app_user.self_roles`, `genres`, `listening_formats` (`text[] NOT NULL DEFAULT '{}'` con `CHECK (cardinality(...) <= N)`), `show_local_time boolean NOT NULL DEFAULT false`, tabla `user_profile_prompt` (único `(user_id, prompt_key)`, `answer` ≤100), y la limpieza de `timezone` con valores fuera de `pg_timezone_names`; actualizar `schema.ts`
+- [x] 9.2 Crear `services/profiles/music-identity.ts` con las listas cerradas (roles, géneros, formatos, preguntas), sus límites y los esquemas Zod, más `getMusicIdentity` y `replaceMusicIdentity`/`replacePrompts` (reemplazo atómico); pruebas de máximos, repetidos, valores fuera de la lista y respuestas de una línea
+- [x] 9.3 Validar `timezone` contra `Intl.supportedValuesOf("timeZone")` con lista de respaldo y `showLocalTime` (exige zona); extender `PATCH /api/me/profile`, el servicio de identidad y `OwnProfileResponseSchema`; pruebas
+- [x] 9.4 Rutas `PUT /api/me/profile/music-identity` y `PUT /api/me/profile/prompts` con Zod y pruebas de ruta
+- [x] 9.5 Incluir la identidad musical, las preguntas y la hora local en `getProfileView`/`ProfileView` solo para perfiles accesibles; pruebas
 
 ## 10. Fase 2 — Editores y Placa B
 
-- [ ] 10.1 `OwnerMusicIdentityEditor` (roles, géneros y formatos como chips con contador y tope) y `OwnerPromptsEditor` (selector de pregunta, respuesta con contador, agregar y quitar); mismos contrato `editor-host` y estados que los editores existentes; pruebas
-- [ ] 10.2 Reemplazar el campo de zona horaria de `OwnerIdentityEditor` por un selector agrupado por región y añadir el interruptor "mostrar mi hora local"; pruebas
-- [ ] 10.3 Montar los editores en la pantalla Perfil de Ajustes y en el panel lateral del modo edición (bloque de la ficha con `EditableBlock` y marco vacío solo en modo edición); pruebas
-- [ ] 10.4 `ProfileFicha` (síncrono, `<dl>` con etiquetas en mono, filas y bloque omitidos si están vacíos) dentro de `Placa` y la hora local junto a la ubicación; nunca en `PrivateProfileCard`; pruebas de perfil completo, parcial, vacío y privado
-- [ ] 10.5 Claves `messages/es|en/users.json` (roles, géneros, formatos, preguntas con etiqueta larga y corta, hora local)
+- [x] 10.1 `OwnerMusicIdentityEditor` (roles, géneros y formatos como chips con contador y tope) y `OwnerPromptsEditor` (selector de pregunta, respuesta con contador, agregar y quitar); mismos contrato `editor-host` y estados que los editores existentes; pruebas
+- [x] 10.2 Reemplazar el campo de zona horaria de `OwnerIdentityEditor` por un selector agrupado por región y añadir el interruptor "mostrar mi hora local"; pruebas
+- [x] 10.3 Montar los editores en la pantalla Perfil de Ajustes y en el panel lateral del modo edición (bloque de la ficha con `EditableBlock` y marco vacío solo en modo edición); pruebas
+- [x] 10.4 `ProfileFicha` (síncrono, `<dl>` con etiquetas en mono, filas y bloque omitidos si están vacíos) dentro de `Placa` y la hora local junto a la ubicación; nunca en `PrivateProfileCard`; pruebas de perfil completo, parcial, vacío y privado
+- [x] 10.5 Claves `messages/es|en/users.json` (roles, géneros, formatos, preguntas con etiqueta larga y corta, hora local)
 
 ## 11. Fase 2 — Verificación y documentación
 
-- [ ] 11.1 `pnpm typecheck`, `pnpm lint`, `pnpm test` y `pnpm build` en verde
+- [x] 11.1 `pnpm typecheck`, `pnpm lint`, `pnpm test` y `pnpm build` en verde
 - [ ] 11.2 Probar en el navegador con una cuenta de prueba: completar cada campo, ver la ficha en la Placa, editar desde el modo edición, perfil vacío sin hueco, perfil privado sin ficha y hora local con zona
-- [ ] 11.3 Documentar la Fase 2 en `docs/05-features/user-profile.md`
+- [x] 11.3 Documentar la Fase 2 en `docs/05-features/user-profile.md`
 
 ## 12. Fase 3 — Desactivar: columna, criterio único y superficies
 

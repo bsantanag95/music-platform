@@ -59,6 +59,11 @@ const base: ProfileView = {
   pronouns: "elle",
   location: "Rosario",
   timezone: null,
+  showLocalTime: false,
+  selfRoles: [],
+  genres: [],
+  listeningFormats: [],
+  prompts: [],
   avatarUrl: null,
   memberSince: new Date("2025-09-15T00:00:00Z"),
   links: [{ id: "l1", kind: "bandcamp", url: "https://ana.bandcamp.com", position: 0 }],
@@ -69,6 +74,19 @@ const base: ProfileView = {
   blockedByMe: false,
   isOwner: false,
 };
+
+describe("PrivateProfileCard: ficha musical", () => {
+  it("nunca dibuja la ficha ni la hora local, aunque el objeto traiga datos", async () => {
+    await renderCard({
+      genres: ["jazz"],
+      selfRoles: ["dj"],
+      showLocalTime: true,
+      timezone: "America/Santiago",
+    } as Partial<ProfileView>);
+    expect(document.body.textContent).not.toMatch(/musicIdentity|profileLocalTime/);
+    expect(document.body.querySelector("dl")).toBeNull();
+  });
+});
 
 async function renderCard(
   over: Partial<ProfileView> = {},

@@ -21,6 +21,8 @@ import { OwnerSettingsCard } from "@/components/profiles/OwnerSettingsCard";
 import { EditableBlock } from "@/components/profiles/EditableBlock";
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
+import { OwnerMusicIdentityEditor } from "@/components/profiles/OwnerMusicIdentityEditor";
+import { OwnerPromptsEditor } from "@/components/profiles/OwnerPromptsEditor";
 import { OwnerShowcaseEditor } from "@/components/profiles/OwnerShowcaseEditor";
 import { OwnerIdentityCardEditor } from "@/components/profiles/OwnerIdentityCardEditor";
 import { FingerprintSummary } from "@/components/profiles/FingerprintSummary";
@@ -68,8 +70,9 @@ export async function SettingsCardSection({ ownerId }: { ownerId: string }) {
 // (spec profile-edit-mode). Para el resto de visitantes la sección es la de
 // siempre. El `editor` se construye acá, en el servidor, con su `initial`.
 
-// La Placa: bio, pronombres, ubicación, zona horaria y enlaces — todo lo que
-// dibuja la Placa se edita en un mismo panel.
+// La Placa: bio, pronombres, ubicación, zona horaria, enlaces y la ficha musical
+// (roles, géneros, formatos y preguntas) — todo lo que dibuja la Placa se edita en
+// un mismo panel.
 export async function EditablePlaca({ profile, children }: { profile: ProfileView; children: ReactNode }) {
   const t = await getTranslations("users");
   return (
@@ -83,8 +86,17 @@ export async function EditablePlaca({ profile, children }: { profile: ProfileVie
               pronouns: profile.pronouns,
               location: profile.location,
               timezone: profile.timezone,
+              showLocalTime: profile.showLocalTime,
             }}
           />
+          <OwnerMusicIdentityEditor
+            initial={{
+              selfRoles: profile.selfRoles,
+              genres: profile.genres,
+              listeningFormats: profile.listeningFormats,
+            }}
+          />
+          <OwnerPromptsEditor initial={profile.prompts} />
           <OwnerLinksEditor initialLinks={profile.links} />
         </div>
       }

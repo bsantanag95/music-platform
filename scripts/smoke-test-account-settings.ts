@@ -1,6 +1,7 @@
 export {};
 
-// Smoke test del cambio rework-account-settings (Fase 1: cuenta y seguridad).
+// Smoke test del cambio rework-account-settings (Fase 1: cuenta y seguridad; Fase 2:
+// identidad musical, preguntas, zona horaria y hora local).
 // Ejecuta contra Postgres REAL el SQL que las pruebas unitarias mockean:
 // cambio de usuario (enfriamiento, reserva sin distinguir mayúsculas, alias,
 // recuperación), cambio de email con confirmación, cambio y creación de
@@ -15,7 +16,7 @@ import { createRequire } from "node:module";
 import { and, eq } from "drizzle-orm";
 import { assertSmokeAllowed } from "./assert-smoke-allowed";
 import { db } from "../src/db";
-import { appUser, authIdentity, emailChangeToken, session, usernameAlias } from "../src/db/schema";
+import { appUser, authIdentity, emailChangeToken, session, userProfilePrompt, usernameAlias } from "../src/db/schema";
 import { clearAuthAttempts } from "../src/services/auth/rate-limit";
 
 assertSmokeAllowed();
@@ -91,7 +92,7 @@ async function loadServices() {
     return originalLoad.call(this, request, parent, isMain);
   };
 
-  const [users, username, emailChange, passwordChange, sessions, sessionList, identities, accountSettings] =
+  const [users, username, emailChange, passwordChange, sessions, sessionList, identities, accountSettings, musicIdentity, identity, profileView] =
     await Promise.all([
       import("../src/services/auth/users"),
       import("../src/services/auth/username"),
@@ -101,8 +102,11 @@ async function loadServices() {
       import("../src/services/auth/session-list"),
       import("../src/services/auth/identities"),
       import("../src/services/profiles/account-settings"),
+      import("../src/services/profiles/music-identity"),
+      import("../src/services/profiles/identity"),
+      import("../src/services/profiles/profile-view"),
     ]);
-  return { users, username, emailChange, passwordChange, sessions, sessionList, identities, accountSettings };
+  return { users, username, emailChange, passwordChange, sessions, sessionList, identities, accountSettings, musicIdentity, identity, profileView };
 }
 
 async function main() {
@@ -258,7 +262,74 @@ async function main() {
     check(withLocale?.locale === "en", "el idioma preferido se guarda en la cuenta");
     check((await codeOf(() => s.accountSettings.setLocalePreference(a.id, "fr"))) === "VALIDATION_ERROR", "un idioma no soportado se rechaza");
 
-    console.log("\n✅ smoke de cuenta y seguridad OK");
+
+    console.log("\n7) Identidad musical, preguntas, zona horaria y hora local (Fase 2)");
+    const m = await newUser("m");
+    const saved = await s.musicIdentity.updateMusicIdentity(m.id, { selfRoles: ["collector", "dj"], genres: ["post-punk", "jazz"], listeningFormats: ["vinyl"] });
+    check(saved.selfRoles.join() === "collector,dj" && saved.genres.join() === "post-punk,jazz", "roles, géneros y formatos se guardan y conservan su orden");
+    await s.musicIdentity.updateMusicIdentity(m.id, { genres: [] });
+    const [afterGenres] = await db.select({ genres: appUser.genres, selfRoles: appUser.selfRoles }).from(appUser).where(eq(appUser.id, m.id));
+    check(afterGenres?.genres.length === 0 && afterGenres.selfRoles.length === 2, "vaciar un campo no toca los demás");
+    check((await codeOf(() => s.musicIdentity.updateMusicIdentity(m.id, { selfRoles: ["listener", "collector", "musician", "dj"] }))) === "VALIDATION_ERROR", "un cuarto rol se rechaza en el servicio");
+
+    // La base también impide pasarse de los topes (defensa aunque el servicio falle).
+    const tooMany = await codeOf(() => db.update(appUser).set({ selfRoles: ["listener", "collector", "musician", "dj"] }).where(eq(appUser.id, m.id)));
+    check(tooMany !== null && String(tooMany).includes("chk_app_user_self_roles") || tooMany === "23514", "el CHECK de la base rechaza un cuarto rol aunque se salte el servicio");
+
+    console.log("  · preguntas");
+    const prompts = await s.musicIdentity.replacePrompts(m.id, [
+      { promptKey: "first-record", answer: "  Un casete de Los Prisioneros  " },
+      { promptKey: "sunday-record", answer: "Kind of Blue, sin apuro" },
+    ]);
+    check(prompts.length === 2 && prompts[0]?.answer === "Un casete de Los Prisioneros" && prompts[1]?.position === 1, "las preguntas se guardan recortadas y en orden");
+    const replaced = await s.musicIdentity.replacePrompts(m.id, [{ promptKey: "defended-song", answer: "una sola" }]);
+    check(replaced.length === 1 && (await s.musicIdentity.listPrompts(m.id)).length === 1, "guardar reemplaza el conjunto completo");
+    check((await codeOf(() => s.musicIdentity.replacePrompts(m.id, [{ promptKey: "first-record", answer: "x".repeat(101) }]))) === "VALIDATION_ERROR", "una respuesta de 101 caracteres se rechaza");
+    check((await s.musicIdentity.listPrompts(m.id)).length === 1, "un guardado inválido no cambia el conjunto anterior");
+    const rawFourth = await codeOf(async () => {
+      await db.insert(userProfilePrompt).values([
+        { userId: m.id, promptKey: "first-record", answer: "a", position: 1 },
+        { userId: m.id, promptKey: "sunday-record", answer: "b", position: 2 },
+        { userId: m.id, promptKey: "guilty-pleasure", answer: "c", position: 3 },
+      ]);
+    });
+    check(rawFourth !== null, "la base rechaza una cuarta pregunta (position 0..2)");
+    const rawMultiline = await codeOf(() => db.insert(userProfilePrompt).values({ userId: m.id, promptKey: "first-concert", answer: "una\ndos", position: 2 }));
+    check(rawMultiline !== null, "la base rechaza una respuesta con salto de línea");
+    check((await s.musicIdentity.listPrompts(m.id)).length === 1, "los rechazos de la base no dejan filas a medias");
+
+    console.log("  · zona horaria y hora local");
+    await s.identity.updateIdentity(m.id, { timezone: "America/Santiago", showLocalTime: true });
+    const [tz] = await db.select({ timezone: appUser.timezone, show: appUser.showLocalTime }).from(appUser).where(eq(appUser.id, m.id));
+    check(tz?.timezone === "America/Santiago" && tz.show === true, "una zona válida y la hora local se guardan");
+    check((await codeOf(() => s.identity.updateIdentity(m.id, { timezone: "Mars/Olympus" }))) === "VALIDATION_ERROR", "una zona inventada se rechaza");
+    await s.identity.updateIdentity(m.id, { timezone: "" });
+    const [cleared] = await db.select({ timezone: appUser.timezone, show: appUser.showLocalTime }).from(appUser).where(eq(appUser.id, m.id));
+    check(cleared?.timezone === null && cleared.show === false, "vaciar la zona apaga la hora local");
+    check((await codeOf(() => s.identity.updateIdentity(m.id, { showLocalTime: true }))) === "VALIDATION_ERROR", "activar la hora sin zona se rechaza");
+    const rawLocalTime = await codeOf(() => db.update(appUser).set({ showLocalTime: true }).where(eq(appUser.id, m.id)));
+    check(rawLocalTime !== null, "el CHECK de la base impide la hora local sin zona");
+
+    console.log("  · privacidad de la ficha");
+    await s.identity.updateIdentity(m.id, { timezone: "America/Santiago", showLocalTime: true });
+    await db.update(appUser).set({ profileVisibility: "private" }).where(eq(appUser.id, m.id));
+    const anon = await s.profileView.getProfileView(m.username, null);
+    check(anon.accessible === false && anon.selfRoles.length === 0 && anon.prompts.length === 0 && anon.showLocalTime === false, "un perfil privado no entrega la ficha a un anónimo");
+    check(anon.bio === null || typeof anon.bio === "string", "la identidad pública de siempre sigue entregándose");
+    const stranger = await s.profileView.getProfileView(m.username, a.id);
+    check(stranger.selfRoles.length === 0 && stranger.prompts.length === 0, "un usuario sin acceso tampoco la recibe");
+    const owner = await s.profileView.getProfileView(m.username, m.id);
+    check(owner.selfRoles.join() === "collector,dj" && owner.prompts.length === 1 && owner.showLocalTime === true, "el dueño siempre ve la suya");
+    await db.update(appUser).set({ profileVisibility: "public" }).where(eq(appUser.id, m.id));
+    const publicView = await s.profileView.getProfileView(m.username, null);
+    check(publicView.selfRoles.length === 2 && publicView.prompts.length === 1, "un perfil público la entrega a cualquiera");
+
+    const promptRows = async () => (await db.select().from(userProfilePrompt).where(eq(userProfilePrompt.userId, m.id))).length;
+    check((await promptRows()) === 1, "hay preguntas antes de borrar la cuenta");
+    await db.delete(appUser).where(eq(appUser.id, m.id));
+    check((await promptRows()) === 0, "borrar la cuenta borra sus preguntas (ON DELETE CASCADE)");
+
+    console.log("\n✅ smoke de cuenta y seguridad e identidad musical OK");
   } finally {
     for (const id of createdUserIds) {
       await db.delete(appUser).where(eq(appUser.id, id)).catch(() => undefined);

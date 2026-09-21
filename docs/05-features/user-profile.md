@@ -46,8 +46,9 @@ extendida.
 ## Identidad
 
 Además de nombre visible y username, `app_user` guarda (todo opcional): **bio** (≤200),
-**pronombres** (≤40), **ubicación** (≤80), **zona horaria** (≤64) y **avatar_url** (reservado,
-sin lectura en UI — la identidad visual es el monograma determinista por username).
+**pronombres** (≤40), **ubicación** (≤80), **zona horaria** (un identificador IANA de una lista, no
+texto libre — ver "Identidad musical") y **avatar_url** (reservado, sin lectura en UI — la identidad
+visual es el monograma determinista por username; el avatar irá en una spec de imágenes aparte).
 
 ### Enlaces externos
 
@@ -103,6 +104,53 @@ Tarjeta contenida") comparados con un refresco mínimo sin card, una versión ce
 de identidad, y contadores como bloques de estadística en vez de pills. Antes tenía además una
 variante `full` para la vista de perfil privado; esa vista ahora tiene su propia tarjeta y la
 variante se eliminó.
+
+## Identidad musical (`rework-account-settings`, Fase 2)
+
+Lo que la persona dice de su relación con la música, para dar ganas de visitar un perfil ajeno
+sin convertirlo en un panel de métricas. Todo es opcional, vaciable y de **listas cerradas** (claves
+estables en `src/lib/music-identity.ts`, nombres en `messages/*/users.json`: agregar un género es
+cambiar código, no una migración):
+
+| Campo | Valores | Tope |
+|---|---|---|
+| **Me defino como** (`self_roles`) | `listener`, `collector`, `musician`, `dj`, `critic`, `radio-host` | 3 |
+| **Géneros que me mueven** (`genres`) | 20: `rock`, `punk`, `post-punk`, `indie`, `shoegaze`, `metal`, `hip-hop`, `electronic`, `ambient`, `jazz`, `soul-funk`, `folk`, `blues`, `classical`, `pop`, `latin`, `reggae`, `experimental`, `country`, `bossa-nova` | 5 |
+| **Cómo escucho** (`listening_formats`) | `vinyl`, `cd`, `cassette`, `streaming`, `digital` | 5 |
+| **Preguntas del perfil** (`user_profile_prompt`) | 8: `first-record`, `sunday-record`, `defended-song`, `guilty-pleasure`, `first-concert`, `desert-island-record`, `sad-day-record`, `road-trip-record` — cada una con su pregunta larga (editor) y una etiqueta corta (Placa) | 3, respuesta de una línea ≤100 |
+
+Los roles describen cómo se relaciona la persona con la música: **no otorgan permisos, insignias
+ni métricas**. Las preguntas se guardan como **conjunto completo** (`PUT /api/me/profile/prompts`,
+transacción); una pregunta no puede repetirse, la respuesta no admite saltos de línea y la base
+impide una cuarta (`position` 0..2 único por usuario).
+
+**Zona horaria y hora local.** La zona pasa de texto libre (que ninguna vista mostraba) a un selector
+de zonas IANA (`Intl.supportedValuesOf("timeZone")` + `UTC`, agrupadas por región; validación
+sensible a mayúsculas en el servidor). `show_local_time` (por defecto `false`) hace que la Placa
+muestre "14:32 hora local" junto a la ubicación; se calcula **al renderizar** en el servidor (una
+pista de contexto, no un reloj). Sin zona la opción no significa nada: se apaga sola al vaciar la zona,
+el servicio rechaza activarla sin zona y un `CHECK` de la base lo impide. La migración `0040` deja en
+`NULL` las zonas previas que no sean una zona real (`pg_timezone_names`).
+
+**Ficha de la Placa (mockup B, "ficha de disco").** `ProfileFicha` (síncrono, recibe `t`) se dibuja
+dentro de `Placa`, después de los enlaces y separada por un divisor: un `<dl>` con etiquetas en
+tipografía de datos (`Soy`, `Géneros`, `Escucho en` y las etiquetas cortas de las preguntas, con la
+pregunta completa de tooltip) y sus valores a la derecha. Cada fila se omite si está vacía y el bloque
+—con su divisor— si no hay nada: un perfil sin completar se ve igual que antes.
+
+**Privacidad.** Es identidad de "quién soy", no de "cómo me encuentro": solo la dibuja la Placa de un
+perfil **accesible**. `getProfileView` **vacía** roles, géneros, formatos, preguntas y hora local para
+quien no tiene acceso a un perfil privado (además de que `PrivateProfileCard` no los dibuja), de modo que
+ni siquiera viajan en el HTML de producción — verificado contra un build de producción con un perfil
+privado sembrado. (En **desarrollo**, React incluye en el payload información de depuración con filas
+crudas de las consultas; es solo de dev y no existe en producción.)
+
+**Edición.** Los editores (`OwnerMusicIdentityEditor` con chips y contador sobre el máximo,
+`OwnerPromptsEditor`, y `OwnerIdentityEditor` con el selector de zona y "mostrar mi hora local")
+se montan en la pantalla **Perfil** de Ajustes y en el panel lateral de la Placa del modo edición —el
+mismo panel que ya alojaba identidad y enlaces—, con el contrato `editor-host` de siempre. Endpoints:
+`PUT /api/me/profile/music-identity`, `PUT` y `DELETE /api/me/profile/prompts` y
+`PATCH /api/me/profile` (`timezone`, `showLocalTime`); ver `docs/04-api/contracts.md`.
 
 ## Perfil privado
 
@@ -718,7 +766,7 @@ redirige a `/me/settings/profile`. Cada pantalla vuelve a exigir sesión.
 
 | Pantalla | Contenido |
 |---|---|
-| `profile` | Tarjeta de Identidad, identidad (bio, pronombres, ubicación, zona horaria) y enlaces — los mismos editores que abre el modo edición |
+| `profile` | Tarjeta de Identidad, identidad (bio, pronombres, ubicación, zona horaria y hora local), **identidad musical** (roles, géneros, formatos), **preguntas del perfil** y enlaces — los mismos editores que abre el modo edición |
 | `curation` | Filas con conteo: Empieza por aquí (abre su editor en el panel lateral; el himno se elige desde la Tarjeta de Identidad, en `profile`); listas fijadas, valoraciones destacadas y diario destacado (solo conteo y enlace/pista a donde se fijan; las valoraciones se destacan desde la valoración de cada álbum o canción). `getCurationSummary` aporta esos tres conteos |
 | `privacy` | Visibilidad público/privado y **audiencia por defecto del contenido nuevo**, con la acción aparte "Aplicar a lo existente" |
 | `network` | Enlaces a solicitudes (con bandeja), seguidores, seguidos y bloqueadas, desde la superficie `settings` de `user-menu-items.ts` (la superficie `panel` sigue existiendo: la usa el panel móvil del Header) |
@@ -819,6 +867,9 @@ cuántas veces se escuchó algo — es "qué está sonando", no una métrica.
 |---|---|
 | `app_user.{bio, pronouns, location, timezone, avatar_url}` | Identidad extendida (migración 0014) |
 | `app_user.display_name` | Nombre visible; editable desde `/me/settings/account` (≤50, vacío = `NULL`, el sitio muestra el username) |
+| `app_user.{self_roles, genres, listening_formats}` | Identidad musical: `TEXT[] NOT NULL DEFAULT '{}'`, claves de listas cerradas validadas en la aplicación; la base solo limita la cardinalidad (≤3, ≤5, ≤5) — migración 0040 |
+| `app_user.show_local_time` | Mostrar la hora local en la Placa (`BOOLEAN`, por defecto `false`); `CHECK (NOT show_local_time OR timezone IS NOT NULL)` — migración 0040 |
+| `user_profile_prompt` | Hasta 3 preguntas por usuario: `prompt_key` de lista cerrada (app), `answer` 1..100 sin saltos de línea, `position` 0..2; `UNIQUE (user_id, prompt_key)` y `UNIQUE (user_id, position)`; `ON DELETE CASCADE` — migración 0040 |
 | `app_user.username_changed_at` / `app_user.locale` | Fecha del último cambio de usuario (nulo = nunca; base del enfriamiento de 30 días) e idioma preferido (`es`/`en`, nullable) — migración 0039 |
 | `username_alias` | Usuario anterior reservado 30 días tras un cambio: `UNIQUE (lower(username))`, `expires_at`; los vencidos no se consultan y se borran al renombrar (migración 0039) |
 | `email_change_token` | Cambio de email pendiente: `user_id` único, `new_email`, solo el hash del token, 24 h (migración 0039) |

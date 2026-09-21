@@ -290,7 +290,10 @@
       "youtube_format": "Enter your YouTube @username (for example @mychannel); /channel links do not work.",
       "invalid_url": "Enter a valid web address, for example example.com.",
       "unsafe_scheme": "Only web addresses (http or https) are accepted."
-    }
+    },
+    "timezoneNone": "No time zone",
+    "showLocalTime": "Show my local time on my profile",
+    "showLocalTimeNeedsZone": "Pick a time zone to be able to show your local time."
   },
   "diaryTitle": "Diary",
   "favoritesTitle": "Favorites",
@@ -569,5 +572,102 @@
       }
     }
   },
-  "linkAria": "{site}: {detail}"
+  "linkAria": "{site}: {detail}",
+  "musicIdentity": {
+    "roles": {
+      "listener": "Listener",
+      "collector": "Collector",
+      "musician": "Musician",
+      "dj": "DJ",
+      "critic": "Critic",
+      "radio-host": "Radio host"
+    },
+    "genres": {
+      "rock": "Rock",
+      "punk": "Punk",
+      "post-punk": "Post-punk",
+      "indie": "Indie",
+      "shoegaze": "Shoegaze",
+      "metal": "Metal",
+      "hip-hop": "Hip hop",
+      "electronic": "Electronic",
+      "ambient": "Ambient",
+      "jazz": "Jazz",
+      "soul-funk": "Soul & funk",
+      "folk": "Folk",
+      "blues": "Blues",
+      "classical": "Classical",
+      "pop": "Pop",
+      "latin": "Latin",
+      "reggae": "Reggae",
+      "experimental": "Experimental",
+      "country": "Country",
+      "bossa-nova": "Bossa nova"
+    },
+    "formats": {
+      "vinyl": "Vinyl",
+      "cd": "CD",
+      "cassette": "Cassette",
+      "streaming": "Streaming",
+      "digital": "Digital files"
+    },
+    "prompts": {
+      "first-record": {
+        "question": "The first record I bought",
+        "short": "1st record"
+      },
+      "sunday-record": {
+        "question": "What I put on on a Sunday",
+        "short": "Sunday"
+      },
+      "defended-song": {
+        "question": "A song I defend",
+        "short": "Defend"
+      },
+      "guilty-pleasure": {
+        "question": "My guilty pleasure",
+        "short": "Guilty"
+      },
+      "first-concert": {
+        "question": "My first concert",
+        "short": "1st gig"
+      },
+      "desert-island-record": {
+        "question": "A record for a desert island",
+        "short": "Island"
+      },
+      "sad-day-record": {
+        "question": "What I put on when I am sad",
+        "short": "Sad day"
+      },
+      "road-trip-record": {
+        "question": "A record for a road trip",
+        "short": "Road trip"
+      }
+    },
+    "ficha": {
+      "aria": "Music profile card",
+      "roles": "I am",
+      "genres": "Genres",
+      "formats": "I listen on"
+    },
+    "editor": {
+      "rolesTitle": "I define myself as",
+      "rolesHint": "Up to {max}. It shows on your profile and tells how you relate to music.",
+      "genresTitle": "Genres that move me",
+      "genresHint": "Up to {max}, from a closed list.",
+      "formatsTitle": "How I listen",
+      "formatsHint": "The formats you use.",
+      "counter": "{count} of {max}",
+      "promptsTitle": "Profile questions",
+      "promptsHint": "Up to {max}, each with a one-line answer (at most {chars} characters).",
+      "questionLabel": "Question",
+      "answerLabel": "Answer",
+      "answerPlaceholder": "One line",
+      "addPrompt": "Add a question",
+      "removePrompt": "Remove the question “{question}”",
+      "emptyAnswer": "Write an answer or remove the question."
+    }
+  },
+  "profileLocalTime": "{time} local time"
 }

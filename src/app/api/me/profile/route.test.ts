@@ -153,3 +153,24 @@ describe("PATCH /api/me/profile", () => {
     });
   });
 });
+
+describe("PATCH /api/me/profile: zona horaria y hora local", () => {
+  it("acepta una zona válida y la opción de mostrar la hora local", async () => {
+    const res = await PATCH(req({ timezone: "America/Santiago", showLocalTime: true }));
+    expect(res.status).toBe(200);
+    expect(mocks.updateIdentity).toHaveBeenCalledWith(user.id, { timezone: "America/Santiago", showLocalTime: true });
+  });
+
+  it("vaciar la zona con cadena vacía es válido", async () => {
+    const res = await PATCH(req({ timezone: "" }));
+    expect(res.status).toBe(200);
+    expect(mocks.updateIdentity).toHaveBeenCalledWith(user.id, { timezone: "" });
+  });
+
+  it.each(["hora de mi casa", "Mars/Olympus"])("rechaza la zona %s con un error de validación", async (timezone) => {
+    const res = await PATCH(req({ timezone }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).code).toBe("VALIDATION_ERROR");
+    expect(mocks.updateIdentity).not.toHaveBeenCalled();
+  });
+});

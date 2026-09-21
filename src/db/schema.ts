@@ -21,6 +21,7 @@ import {
   date,
   check,
   primaryKey,
+  unique,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
@@ -59,10 +60,22 @@ export const appUser = pgTable(
     usernameChangedAt: timestamp("username_changed_at", { withTimezone: true }),
     // Idioma preferido de la interfaz (migración 0039). Nulo = sin preferencia.
     locale: text("locale"),
+    // Identidad musical (migración 0040, change rework-account-settings): listas
+    // cerradas guardadas como claves estables y validadas en la aplicación
+    // (src/lib/music-identity.ts). La base solo garantiza los topes.
+    selfRoles: text("self_roles").array().notNull().default(sql`'{}'::text[]`),
+    genres: text("genres").array().notNull().default(sql`'{}'::text[]`),
+    listeningFormats: text("listening_formats").array().notNull().default(sql`'{}'::text[]`),
+    // Mostrar la hora local en la Placa; exige `timezone`.
+    showLocalTime: boolean("show_local_time").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     check("chk_app_user_locale", sql`${t.locale} IS NULL OR ${t.locale} IN ('es','en')`),
+    check("chk_app_user_self_roles", sql`cardinality(${t.selfRoles}) <= 3`),
+    check("chk_app_user_genres", sql`cardinality(${t.genres}) <= 5`),
+    check("chk_app_user_listening_formats", sql`cardinality(${t.listeningFormats}) <= 5`),
+    check("chk_app_user_local_time", sql`NOT ${t.showLocalTime} OR ${t.timezone} IS NOT NULL`),
     check(
       "chk_app_user_profile_visibility",
       sql`${t.profileVisibility} IN ('public','private')`,
@@ -346,6 +359,33 @@ export const emailChangeToken = pgTable(
     uniqueIndex("uq_email_change_token_hash").on(t.tokenHash),
     uniqueIndex("uq_email_change_token_user").on(t.userId),
     index("idx_email_change_token_expires_at").on(t.expiresAt),
+  ],
+);
+
+// Preguntas del perfil (migración 0040, capability profile-music-identity): hasta
+// 3 por usuario, una línea cada una. `position` 0..2 único por usuario hace que
+// la base impida una cuarta; `prompt_key` es de una lista cerrada validada en la
+// aplicación. El conjunto se reemplaza completo al guardar.
+export const userProfilePrompt = pgTable(
+  "user_profile_prompt",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    promptKey: text("prompt_key").notNull(),
+    answer: text("answer").notNull(),
+    position: smallint("position").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("chk_user_profile_prompt_position", sql`${t.position} BETWEEN 0 AND 2`),
+    check(
+      "chk_user_profile_prompt_answer",
+      sql`char_length(${t.answer}) BETWEEN 1 AND 100 AND ${t.answer} !~ E'[\r\n]'`,
+    ),
+    unique("uq_user_profile_prompt_key").on(t.userId, t.promptKey),
+    unique("uq_user_profile_prompt_position").on(t.userId, t.position),
   ],
 );
 

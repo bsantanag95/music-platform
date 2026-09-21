@@ -1,5 +1,14 @@
 import { z } from "zod";
 import { routing } from "@/i18n/routing";
+import {
+  GENRES,
+  isSingleLine,
+  isValidTimezone,
+  LISTENING_FORMATS,
+  MUSIC_IDENTITY_LIMITS,
+  PROMPT_KEYS,
+  SELF_ROLES,
+} from "@/lib/music-identity";
 import { normalizeLinkInput } from "@/lib/profile-links";
 import {
   PASSWORD_MAX,
@@ -753,11 +762,20 @@ export type ExtendedIdentity = z.infer<typeof ExtendedIdentitySchema>;
 const identityText = (max: number) =>
   z.string().trim().max(max, `El texto supera el máximo de ${max} caracteres`).nullable();
 
+// La zona horaria es un identificador IANA de la lista (spec profile-identity,
+// "Campos de identidad extendida"); vacía o `null` la borra.
+const timezoneField = identityText(PROFILE_IDENTITY_LIMITS.timezone).refine(
+  (value) => value === null || value === "" || isValidTimezone(value),
+  "La zona horaria no es válida",
+);
+
 export const UpdateProfileIdentityRequestSchema = z.object({
   bio: identityText(PROFILE_IDENTITY_LIMITS.bio).optional(),
   pronouns: identityText(PROFILE_IDENTITY_LIMITS.pronouns).optional(),
   location: identityText(PROFILE_IDENTITY_LIMITS.location).optional(),
-  timezone: identityText(PROFILE_IDENTITY_LIMITS.timezone).optional(),
+  timezone: timezoneField.optional(),
+  // Mostrar la hora local en la Placa; el servicio exige que haya zona.
+  showLocalTime: z.boolean().optional(),
 });
 export type UpdateProfileIdentityRequest = z.infer<typeof UpdateProfileIdentityRequestSchema>;
 
@@ -991,7 +1009,8 @@ export const UpdateOwnProfileRequestSchema = z
     bio: identityText(PROFILE_IDENTITY_LIMITS.bio).optional(),
     pronouns: identityText(PROFILE_IDENTITY_LIMITS.pronouns).optional(),
     location: identityText(PROFILE_IDENTITY_LIMITS.location).optional(),
-    timezone: identityText(PROFILE_IDENTITY_LIMITS.timezone).optional(),
+    timezone: timezoneField.optional(),
+    showLocalTime: z.boolean().optional(),
   })
   .refine((value) => Object.keys(value).length > 0, {
     message: "No hay nada para actualizar",
@@ -1942,4 +1961,65 @@ export type UpdatePreferencesRequest = z.infer<typeof UpdatePreferencesRequestSc
 
 export const PreferencesResponseSchema = z.object({ locale: z.enum(routing.locales) });
 export type PreferencesResponse = z.infer<typeof PreferencesResponseSchema>;
+
+// --- Identidad musical (change rework-account-settings, Fase 2) ---
+
+// Lista cerrada, con tope y sin repetidos (spec profile-music-identity).
+const closedList = <T extends readonly [string, ...string[]]>(values: T, max: number) =>
+  z
+    .array(z.enum(values))
+    .max(max, `Máximo ${max}`)
+    .refine((items) => new Set(items).size === items.length, "Sin repetidos");
+
+export const SelfRoleSchema = z.enum(SELF_ROLES);
+export const GenreSchema = z.enum(GENRES);
+export const ListeningFormatSchema = z.enum(LISTENING_FORMATS);
+export const PromptKeySchema = z.enum(PROMPT_KEYS);
+
+// PUT /api/me/profile/music-identity: cualquier subconjunto de los tres campos; lo
+// que se envía reemplaza al valor anterior (`[]` lo vacía).
+export const UpdateMusicIdentityRequestSchema = z
+  .object({
+    selfRoles: closedList(SELF_ROLES, MUSIC_IDENTITY_LIMITS.selfRoles).optional(),
+    genres: closedList(GENRES, MUSIC_IDENTITY_LIMITS.genres).optional(),
+    listeningFormats: closedList(LISTENING_FORMATS, MUSIC_IDENTITY_LIMITS.listeningFormats).optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, { message: "No hay nada para actualizar" });
+export type UpdateMusicIdentityRequest = z.infer<typeof UpdateMusicIdentityRequestSchema>;
+
+export const MusicIdentityResponseSchema = z.object({
+  selfRoles: z.array(SelfRoleSchema),
+  genres: z.array(GenreSchema),
+  listeningFormats: z.array(ListeningFormatSchema),
+});
+export type MusicIdentityResponse = z.infer<typeof MusicIdentityResponseSchema>;
+
+// Respuesta de una pregunta del perfil: una línea, sin saltos, de 1 a 100 caracteres.
+export const ProfilePromptInputSchema = z.object({
+  promptKey: PromptKeySchema,
+  answer: z
+    .string()
+    .trim()
+    .min(1, "La respuesta no puede estar vacía")
+    .max(MUSIC_IDENTITY_LIMITS.promptAnswer, `Máximo ${MUSIC_IDENTITY_LIMITS.promptAnswer} caracteres`)
+    .refine(isSingleLine, "La respuesta es de una sola línea"),
+});
+export type ProfilePromptInput = z.infer<typeof ProfilePromptInputSchema>;
+
+// PUT /api/me/profile/prompts reemplaza el conjunto completo, en el orden del array.
+export const ReplacePromptsRequestSchema = z.object({
+  prompts: z
+    .array(ProfilePromptInputSchema)
+    .max(MUSIC_IDENTITY_LIMITS.prompts, `Máximo ${MUSIC_IDENTITY_LIMITS.prompts} preguntas`)
+    .refine((items) => new Set(items.map((item) => item.promptKey)).size === items.length, "Una pregunta no puede responderse dos veces"),
+});
+export type ReplacePromptsRequest = z.infer<typeof ReplacePromptsRequestSchema>;
+
+export const ProfilePromptSchema = z.object({
+  promptKey: PromptKeySchema,
+  answer: z.string(),
+  position: z.number().int(),
+});
+export const PromptsResponseSchema = z.object({ prompts: z.array(ProfilePromptSchema) });
+export type PromptsResponse = z.infer<typeof PromptsResponseSchema>;
 

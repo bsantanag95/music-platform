@@ -21,6 +21,8 @@ import { SignInCard } from "@/components/settings/account/SignInCard";
 import { OwnerIdentityCardEditor } from "@/components/profiles/OwnerIdentityCardEditor";
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
+import { OwnerMusicIdentityEditor } from "@/components/profiles/OwnerMusicIdentityEditor";
+import { OwnerPromptsEditor } from "@/components/profiles/OwnerPromptsEditor";
 
 const m = vi.hoisted(() => ({
   requirePageUser: vi.fn(),
@@ -83,6 +85,8 @@ vi.mock("@/components/settings/account/LanguagePreference", () => ({ LanguagePre
 vi.mock("@/components/profiles/OwnerIdentityCardEditor", () => ({ OwnerIdentityCardEditor: () => null }));
 vi.mock("@/components/profiles/OwnerIdentityEditor", () => ({ OwnerIdentityEditor: () => null }));
 vi.mock("@/components/profiles/OwnerLinksEditor", () => ({ OwnerLinksEditor: () => null }));
+vi.mock("@/components/profiles/OwnerMusicIdentityEditor", () => ({ OwnerMusicIdentityEditor: () => null }));
+vi.mock("@/components/profiles/OwnerPromptsEditor", () => ({ OwnerPromptsEditor: () => null }));
 vi.mock("@/components/profiles/OwnerShowcaseEditor", () => ({
   OwnerShowcaseEditor: () => <div>editor de destacados</div>,
 }));
@@ -154,11 +158,17 @@ describe("pantalla Perfil", () => {
   it("monta los mismos editores con los valores actuales del dueño", async () => {
     const identityCard = { artist: null, album: null, anthem: null };
     const links = [{ id: "l1", kind: "other", url: "https://ana.example", position: 0 }];
+    const prompts = [{ promptKey: "first-record", answer: "Un casete", position: 0 }];
     m.getExtendedIdentity.mockResolvedValue({
       bio: "hola",
       pronouns: "ella",
       location: "Quilpué",
       timezone: "America/Santiago",
+      showLocalTime: true,
+      selfRoles: ["collector"],
+      genres: ["jazz", "shoegaze"],
+      listeningFormats: ["vinyl"],
+      prompts,
       links,
     });
     m.getShowcase.mockResolvedValue({ pinned: [], identityCard });
@@ -172,7 +182,14 @@ describe("pantalla Perfil", () => {
       pronouns: "ella",
       location: "Quilpué",
       timezone: "America/Santiago",
+      showLocalTime: true,
     });
+    expect(findElement(tree, OwnerMusicIdentityEditor)?.props?.initial).toEqual({
+      selfRoles: ["collector"],
+      genres: ["jazz", "shoegaze"],
+      listeningFormats: ["vinyl"],
+    });
+    expect(findElement(tree, OwnerPromptsEditor)?.props?.initial).toBe(prompts);
     expect(findElement(tree, OwnerLinksEditor)?.props?.initialLinks).toBe(links);
   });
 

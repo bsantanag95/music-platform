@@ -24,6 +24,24 @@ Precedencia al crear: valor explícito de la petición > `default_audience` > de
 `username` sigue siendo `UNIQUE` sensible a mayúsculas por historia; la disponibilidad de un cambio
 nuevo compara con `lower()` (ver `username_alias`).
 
+**Identidad musical (migración `0040`, `rework-account-settings` Fase 2):** `self_roles`, `genres` y
+`listening_formats` son `TEXT[] NOT NULL DEFAULT '{}'` con `CHECK (cardinality(...) <= N)` (3, 5, 5).
+Los valores permitidos **no** se validan en la base (lista cerrada en `src/lib/music-identity.ts`):
+agregar un género es cambiar código, no una migración. `show_local_time` (`BOOLEAN NOT NULL DEFAULT
+false`) exige `timezone` (`chk_app_user_local_time`). La migración también deja en `NULL` las
+`timezone` previas que no existan en `pg_timezone_names` (eran texto libre que ninguna vista mostraba).
+
+## `user_profile_prompt`
+
+**Propósito:** las preguntas del perfil de una persona (capability `profile-music-identity`): hasta 3,
+una línea cada una, que la Placa muestra en su ficha.
+
+**Columnas y restricciones:** `user_id` (FK a `app_user`, `ON DELETE CASCADE`), `prompt_key` (de una
+lista cerrada validada en la aplicación), `answer` (`CHECK char_length BETWEEN 1 AND 100` y sin `\r`/`\n`),
+`position` (`SMALLINT`, `CHECK BETWEEN 0 AND 2`). `UNIQUE (user_id, prompt_key)` impide responder dos
+veces la misma pregunta y `UNIQUE (user_id, position)` con `position` 0..2 hace que la base impida una
+cuarta. El conjunto se reemplaza completo al guardar (borrado + inserción en una transacción).
+
 ## `username_alias`
 
 **Propósito:** reserva del usuario anterior durante 30 días tras un cambio de usuario (capability
