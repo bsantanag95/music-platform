@@ -36,7 +36,6 @@ export interface IdentityCard {
 
 export interface Showcase {
   pinned: PinnedItem[];
-  anthem: ShowcaseEntity | null;
   identityCard: IdentityCard;
 }
 
@@ -113,7 +112,7 @@ function resolveEntity(row: PinnedRow): ShowcaseEntity | null {
 }
 
 // `cache()` por request: `getShowcase` se llama por separado desde
-// `IdentityCardSection`, `PinnedSection`, `AlbumFavoritesSection` y las
+// `IdentityCardSection`, `PinnedSection` y las
 // pantallas Perfil y Curaduría de `/me/settings` en la misma carga de página.
 export const getShowcase = cache(async function getShowcase(userId: string): Promise<Showcase> {
   const [pinnedRows, [showcaseRow]] = await Promise.all([
@@ -243,7 +242,7 @@ export const getShowcase = cache(async function getShowcase(userId: string): Pro
 
   const identityCard: IdentityCard = { artist: definingArtist, album: definingAlbum, anthem };
 
-  return { pinned, anthem, identityCard };
+  return { pinned, identityCard };
 });
 
 function toColumns(item: PinnedInput, position: number) {

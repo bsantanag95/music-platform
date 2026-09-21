@@ -8,10 +8,6 @@ import { LISTS_PREVIEW_LIMIT } from "@/services/lists/types";
 import { getCollectionPreview, listProfileCollection } from "@/services/collection/collection";
 import { getTasteFingerprint } from "@/services/profiles/stats";
 import { getShowcase } from "@/services/profiles/showcase";
-import {
-  getAlbumFavorites,
-  getProfileAlbumFavorites,
-} from "@/services/profiles/album-favorites";
 import { getProfileInRotation } from "@/services/profiles/in-rotation";
 import { getProfileReviews } from "@/services/profiles/reviews";
 import { listProfileFollowedArtists } from "@/services/profiles/exploration";
@@ -26,15 +22,13 @@ import { EditableBlock } from "@/components/profiles/EditableBlock";
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
 import { OwnerShowcaseEditor } from "@/components/profiles/OwnerShowcaseEditor";
-import { OwnerAlbumFavoritesEditor } from "@/components/profiles/OwnerAlbumFavoritesEditor";
 import { OwnerIdentityCardEditor } from "@/components/profiles/OwnerIdentityCardEditor";
 import { FingerprintSummary } from "@/components/profiles/FingerprintSummary";
-import { AlbumFavorites, generalAlbums } from "@/components/profiles/AlbumFavorites";
 import { ProfileReviews } from "@/components/profiles/ProfileReviews";
 import { RatingHighlights } from "@/components/profiles/RatingHighlights";
 import { InRotation } from "@/components/profiles/InRotation";
 import { ExploreSection } from "@/components/profiles/ExploreSection";
-import { PinnedShowcase, generalPinned } from "@/components/profiles/PinnedShowcase";
+import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
 import { IdentityCard } from "@/components/profiles/IdentityCard";
 import { ProfileLevel3Links } from "@/components/profiles/ProfileLevel3Links";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
@@ -100,45 +94,9 @@ export async function EditablePlaca({ profile, children }: { profile: ProfileVie
   );
 }
 
-// La sección de identidad cultural: los álbumes que definen a esta persona,
-// arriba de los destacados. Se rinde en los niveles autorizado y dueño; el
-// componente colapsa si el conjunto visible está vacío
-// (spec profile-album-identity). Recibe `ownerId` además de username/viewerId
-// para poder excluir el álbum definitorio (openspec: rework-user-profile) —
-// ese vive en la Tarjeta de Identidad, no se repite acá.
-export async function AlbumFavoritesSection({
-  username,
-  viewerId,
-  ownerId,
-  isOwn = false,
-}: Omit<SectionProps, "isOwn"> & { ownerId: string; isOwn?: boolean }) {
-  const [albums, { identityCard }] = await Promise.all([
-    getProfileAlbumFavorites(username, viewerId),
-    getShowcase(ownerId),
-  ]);
-  const view = <AlbumFavorites albums={albums} identityCard={identityCard} />;
-  if (!isOwn) return view;
-
-  // El editor lista los favoritos con las tres audiencias (el dueño edita también
-  // los que no se ven en la vista pública).
-  const [t, editable] = await Promise.all([
-    getTranslations("users"),
-    getAlbumFavorites(ownerId, ["private", "followers", "public"]),
-  ]);
-  return (
-    <EditableBlock
-      label={t("albumFavorites.edit.heading")}
-      empty={generalAlbums(albums, identityCard).length === 0}
-      editor={<OwnerAlbumFavoritesEditor initial={editable} identityCard={identityCard} />}
-    >
-      {view}
-    </EditableBlock>
-  );
-}
-
 // "Reseñas": las reseñas de álbum más recientes del dueño. Clúster de
 // identidad cultural — se rinde en los niveles autorizado y dueño, después de
-// los destacados y antes de "En rotación". Automática, no curada.
+// "Empieza por aquí" y antes de "En rotación". Automática, no curada.
 // `getProfileReviews` devuelve null (y la sección no aparece) sin acceso o sin
 // reseñas (spec profile-reviews).
 export async function FeaturedReviewsSection({
@@ -149,7 +107,7 @@ export async function FeaturedReviewsSection({
 }
 
 // "En rotación": qué está sonando últimamente, derivado del diario. Se rinde
-// en los niveles autorizado y dueño, entre los destacados y la huella de
+// en los niveles autorizado y dueño, entre "Empieza por aquí" y la huella de
 // gusto. `getProfileInRotation` devuelve null (y la sección no aparece) sin
 // acceso o sin actividad que alcance el umbral (spec profile-in-rotation).
 export async function InRotationSection({
@@ -183,7 +141,7 @@ export async function ExplorationSection({
 }
 
 // Tarjeta de Identidad — Nivel 1 (openspec: rework-user-profile): el artista y
-// el álbum marcados "me define" entre los destacados, más el himno. Sustituye
+// el álbum definitorios, más el himno, elegidos solo desde su propio editor. Sustituye
 // al antiguo `AnthemSection` en la barra lateral: el himno solo ya no alcanza
 // para representar "quién es esta persona" en el primer vistazo.
 export async function IdentityCardSection({ ownerId, isOwn = false }: { ownerId: string; isOwn?: boolean }) {
@@ -203,17 +161,19 @@ export async function IdentityCardSection({ ownerId, isOwn = false }: { ownerId:
   );
 }
 
+// "Empieza por aquí" — Nivel 2 (spec profile-showcase): hasta 4 recomendaciones
+// con nota. Sin ítems, el bloque colapsa salvo para el dueño en modo edición.
 export async function PinnedSection({ ownerId, isOwn = false }: { ownerId: string; isOwn?: boolean }) {
   const showcase = await getShowcase(ownerId);
-  const { pinned, identityCard } = showcase;
-  const view = pinned.length > 0 ? <PinnedShowcase pinned={pinned} identityCard={identityCard} /> : null;
+  const { pinned } = showcase;
+  const view = pinned.length > 0 ? <PinnedShowcase pinned={pinned} /> : null;
   if (!isOwn) return view;
 
   const t = await getTranslations("users");
   return (
     <EditableBlock
       label={t("showcase.edit.heading")}
-      empty={generalPinned(pinned, identityCard).length === 0}
+      empty={pinned.length === 0}
       editor={<OwnerShowcaseEditor initial={showcase} />}
     >
       {view}

@@ -4,7 +4,7 @@
   "intro": "Two ways to start. Neither is required, and you can do them in any order.",
   "door1": {
     "heading": "Albums that define you",
-    "intro": "Pick 3 to 5 albums that represent you. They become your profile's favorite albums.",
+    "intro": "Pick 3 to 5 albums that represent you. They're saved to your favorites.",
     "searchLabel": "Search albums",
     "searchPlaceholder": "e.g. In Rainbows",
     "searching": "Searching...",

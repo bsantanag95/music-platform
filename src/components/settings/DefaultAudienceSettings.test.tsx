@@ -116,7 +116,7 @@ function previewOf(overrides: Record<string, unknown> = {}) {
     diary: 5,
     lists: 2,
     collection: 0,
-    highlighted: { pinnedLists: 0, pinnedAlbumFavorites: 0, highlightedDiary: 0 },
+    highlighted: { pinnedLists: 0, highlightedDiary: 0 },
     ...overrides,
   };
 }
@@ -174,13 +174,13 @@ describe("DefaultAudienceSettings · aplicar a lo existente", () => {
 
   it("avisa cuántos elementos fijados o destacados cambian, y que el diario destacado sigue visible", async () => {
     const user = userEvent.setup();
-    mockApply(previewOf({ highlighted: { pinnedLists: 1, pinnedAlbumFavorites: 2, highlightedDiary: 3 } }));
+    mockApply(previewOf({ highlighted: { pinnedLists: 1, highlightedDiary: 3 } }));
     renderWithIntl(<DefaultAudienceSettings initialAudience="private" />);
 
     await user.click(applyButton());
 
     const dialog = await screen.findByRole("dialog");
-    expect(dialog).toHaveTextContent("1 lista fijada, 2 álbumes favoritos fijados, 3 entradas de diario destacadas");
+    expect(dialog).toHaveTextContent("1 lista fijada, 3 entradas de diario destacadas");
     expect(dialog).toHaveTextContent("Las entradas de diario destacadas siguen visibles para cualquiera");
     expect(dialog).toHaveTextContent("dejarán de verse para quien quede fuera");
   });
@@ -199,7 +199,7 @@ describe("DefaultAudienceSettings · aplicar a lo existente", () => {
   it("al pasar a Público no avisa de que los fijados dejarán de verse", async () => {
     const user = userEvent.setup();
     mockApply(
-      previewOf({ audience: "public", highlighted: { pinnedLists: 2, pinnedAlbumFavorites: 0, highlightedDiary: 0 } }),
+      previewOf({ audience: "public", highlighted: { pinnedLists: 2, highlightedDiary: 0 } }),
     );
     renderWithIntl(<DefaultAudienceSettings initialAudience="public" />);
 

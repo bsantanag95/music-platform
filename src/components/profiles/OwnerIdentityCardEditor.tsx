@@ -40,12 +40,9 @@ function favoriteToEntity(favorite: Favorite): ShowcaseEntity {
 
 // Editor unificado de la Tarjeta de Identidad (openspec: rework-user-profile):
 // un solo bloque, arriba de Gestión, con los 3 slots que definen al dueño
-// (artista, álbum, canción). Antes solo se podían elegir por separado —
-// artista y canción en "Destacados"/"Himno" (OwnerShowcaseEditor), álbum en
-// "Álbumes favoritos" (OwnerAlbumFavoritesEditor) — lo que hacía que marcar
-// el álbum definitorio no fuera descubrible desde donde se arma el resto de
-// la identidad. Este editor es un atajo directo sobre la misma API; los
-// marcadores ★ de los otros dos editores siguen funcionando igual.
+// (artista, álbum, canción). Es el ÚNICO editor de estos tres datos
+// (openspec: simplify-profile-curation): los marcadores ★ y la sección "Himno"
+// de los editores de "Empieza por aquí" y de Álbumes favoritos se retiraron.
 export function OwnerIdentityCardEditor({ initial, onSaved }: OwnerIdentityCardEditorProps) {
   const t = useTranslations("users");
   const tErrors = useTranslations("errors");

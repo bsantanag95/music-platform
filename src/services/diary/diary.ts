@@ -24,8 +24,8 @@ import { audiencesForProfile } from "./visibility";
 import { resolveNewContentAudience } from "@/services/social/default-audience";
 
 // Tope de entradas de diario destacadas por usuario (spec `listen-diary`,
-// "Destacar una entrada del diario"). Paridad con `RATING_HIGHLIGHT_MAX` y
-// `PROFILE_MAX_ALBUM_FAVORITES` — 6, sin relación funcional entre ellas.
+// "Destacar una entrada del diario"). Paridad con `RATING_HIGHLIGHT_MAX` — 6,
+// sin relación funcional entre ellos.
 const LISTEN_ENTRY_HIGHLIGHT_MAX = 6;
 
 type TargetColumn = "artistId" | "releaseGroupId" | "recordingId";

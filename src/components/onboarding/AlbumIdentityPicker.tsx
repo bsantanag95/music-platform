@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { LazyCoverImage } from "@/components/catalog/LazyCoverImage";
-import { PROFILE_MAX_ALBUM_FAVORITES } from "@/services/social/types";
+import { ONBOARDING_MAX_ALBUMS } from "@/services/social/types";
 import { useCatalogSearch } from "./useCatalogSearch";
 
 export interface PickedAlbum {
@@ -18,14 +18,14 @@ interface AlbumIdentityPickerProps {
 }
 
 // Puerta 1 del onboarding: elegir hasta 6 álbumes (sugerencia 3–5) que se
-// convertirán en Álbumes favoritos del perfil. Solo mantiene la selección en
+// convertirán en favoritos de álbum del usuario. Solo mantiene la selección en
 // estado; el guardado lo dispara `TwoDoorOnboarding`.
 export function AlbumIdentityPicker({ picked, onChange }: AlbumIdentityPickerProps) {
   const t = useTranslations("onboarding");
   const { query, setQuery, response, loading } = useCatalogSearch();
 
   const pickedIds = new Set(picked.map((a) => a.id));
-  const atMax = picked.length >= PROFILE_MAX_ALBUM_FAVORITES;
+  const atMax = picked.length >= ONBOARDING_MAX_ALBUMS;
   const albums = (response?.results ?? []).filter(
     (r) => r.kind === "release-group" && !pickedIds.has(r.id),
   );

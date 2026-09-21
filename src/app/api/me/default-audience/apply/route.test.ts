@@ -23,7 +23,7 @@ const preview = {
   diary: 5,
   lists: 2,
   collection: 1,
-  highlighted: { pinnedLists: 1, pinnedAlbumFavorites: 0, highlightedDiary: 2 },
+  highlighted: { pinnedLists: 1, highlightedDiary: 2 },
 };
 const result = { audience: "private", favorites: 3, diary: 5, lists: 2, collection: 1 };
 

@@ -137,24 +137,27 @@
     "mutualFollowers": "{count, plural, one {# seguidor en común} other {# seguidores en común}}"
   },
   "showcase": {
-    "pinnedHeading": "Destacados",
+    "pinnedHeading": "Empieza por aquí",
+    "kind": {
+      "artist": "Artista",
+      "album": "Álbum",
+      "song": "Canción"
+    },
     "anthemHeading": "Himno",
     "anthemNowPlaying": "Suena en bucle",
     "edit": {
-      "heading": "Destacados e himno",
-      "pinnedIntro": "Hasta 4 entidades que te representan. Elegí de tus favoritos.",
+      "heading": "Empieza por aquí",
+      "pinnedIntro": "Hasta 4 recomendaciones para quien visite tu perfil. Elegí de tus favoritos y contá por qué.",
       "addFromFavorites": "Agregar de favoritos",
-      "notePlaceholder": "Nota (opcional)",
+      "noteLabel": "¿Por qué empezar por aquí?",
+      "notePlaceholder": "Una frase para quien te visita…",
+      "noteHint": "La nota es opcional: un ítem sin nota se guarda igual.",
       "remove": "Quitar",
       "moveUp": "Subir",
       "moveDown": "Bajar",
-      "savePinned": "Guardar destacados",
-      "maxPinned": "Máximo 4 destacados",
-      "noFavorites": "Marcá favoritos para poder destacarlos.",
-      "anthemIntro": "Una canción de tus favoritos.",
-      "currentAnthem": "Himno actual",
-      "clearAnthem": "Quitar himno",
-      "noRecordingFavorites": "Marcá una canción como favorita para elegir un himno."
+      "savePinned": "Guardar recomendaciones",
+      "maxPinned": "Máximo 4 recomendaciones",
+      "noFavorites": "Marcá favoritos para poder recomendarlos."
     }
   },
   "identityCard": {
@@ -163,8 +166,6 @@
     "songHeading": "Canción que me define",
     "artistLabel": "Artista",
     "albumLabel": "Álbum",
-    "markDefining": "Marcar como definitorio",
-    "unmarkDefining": "Quitar de la Tarjeta de Identidad",
     "editor": {
       "heading": "Tarjeta de Identidad",
       "intro": "El artista, el álbum y la canción que te definen. Es lo primero que ve cualquiera que visite tu perfil.",
@@ -205,21 +206,6 @@
   },
   "ratingHighlights": {
     "heading": "Valoraciones destacadas"
-  },
-  "albumFavorites": {
-    "heading": "Álbumes favoritos",
-    "edit": {
-      "heading": "Álbumes favoritos",
-      "intro": "Hasta 6 álbumes que te definen. Elegí de tus favoritos de álbum.",
-      "pick": "Elegí de tus favoritos",
-      "selected": "Seleccionados ({count}/6)",
-      "remove": "Quitar",
-      "moveUp": "Subir",
-      "moveDown": "Bajar",
-      "save": "Guardar álbumes favoritos",
-      "max": "Máximo 6 álbumes favoritos",
-      "noFavorites": "Marcá álbumes como favoritos para poder ponerlos acá."
-    }
   },
   "inRotation": {
     "heading": "En rotación",
@@ -353,17 +339,8 @@
       "editRow": "Editar {name}",
       "outOf": "{count} de {max}",
       "pinned": {
-        "title": "Destacados",
-        "hint": "Hasta {max} entidades que te representan, con una nota."
-      },
-      "anthem": {
-        "title": "Himno",
-        "hint": "Una canción de tus favoritos.",
-        "empty": "Sin elegir"
-      },
-      "albumFavorites": {
-        "title": "Álbumes favoritos",
-        "hint": "Hasta {max} álbumes, elegidos de tus favoritos."
+        "title": "Empieza por aquí",
+        "hint": "Hasta {max} recomendaciones para quien visite tu perfil, cada una con su nota."
       },
       "pinnedLists": {
         "title": "Listas fijadas",
@@ -423,7 +400,6 @@
             "lists": "{count, plural, one {# lista} other {# listas}}",
             "collection": "{count, plural, one {# copia de colección} other {# copias de colección}}",
             "pinnedLists": "{count, plural, one {# lista fijada} other {# listas fijadas}}",
-            "pinnedAlbumFavorites": "{count, plural, one {# álbum favorito fijado} other {# álbumes favoritos fijados}}",
             "highlightedDiary": "{count, plural, one {# entrada de diario destacada} other {# entradas de diario destacadas}}"
           },
           "confirm": {
@@ -431,7 +407,7 @@
             "summary": "Va a cambiar la audiencia de {items} a «{audience}». No se puede deshacer, aunque después podés volver a aplicar otra.",
             "highlighted": "Entre ellos hay elementos fijados o destacados de tu perfil: {items}.",
             "diaryHighlightedVisible": "Las entradas de diario destacadas siguen visibles para cualquiera.",
-            "pinnedHidden": "Las listas y los álbumes fijados que pasen a una audiencia más cerrada dejarán de verse para quien quede fuera.",
+            "pinnedHidden": "Las listas fijadas que pasen a una audiencia más cerrada dejarán de verse para quien quede fuera.",
             "confirm": "Aplicar",
             "cancel": "Cancelar"
           },

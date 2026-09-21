@@ -66,5 +66,5 @@ export const PROFILE_IDENTITY_LIMITS = {
 
 export const PROFILE_MAX_LINKS = 5;
 export const PROFILE_MAX_PINNED = 4;
-// Sección "Álbumes favoritos" del perfil (openspec: redesign-profile-album-identity).
-export const PROFILE_MAX_ALBUM_FAVORITES = 6;
+// Tope de álbumes que se eligen en la Puerta 1 del onboarding (spec `onboarding`).
+export const ONBOARDING_MAX_ALBUMS = 6;

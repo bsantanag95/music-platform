@@ -2,41 +2,27 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, favorite, releaseGroup } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
-import {
-  PROFILE_MAX_ALBUM_FAVORITES,
-  replaceAlbumFavorites,
-  type AlbumFavorite,
-} from "@/services/profiles/album-favorites";
+import { ONBOARDING_MAX_ALBUMS } from "@/services/social/types";
 
 // Onboarding de dos puertas (openspec: add-two-door-onboarding).
-// Puerta 1 → Álbumes favoritos del perfil, SIN rating ni entrada de diario.
+// Puerta 1 → favoritos de álbum del usuario, SIN rating ni entrada de diario.
 // Puerta 2 (registrar escucha) usa el flujo de diario existente, no este módulo.
 // Este módulo NO importa `rating` a propósito: la Puerta 1 no crea veredictos.
 
 export interface OnboardingState {
-  albumFavorites: AlbumFavorite[];
   onboardedAt: string;
 }
 
 /**
- * Convierte los álbumes elegidos en la Puerta 1 en Álbumes favoritos del
- * perfil: crea el `favorite` de álbum que falte (audiencia por defecto) y fija
- * el conjunto ordenado con `replaceAlbumFavorites`. No crea `rating` ni
- * `listen_entry`.
+ * Convierte los álbumes elegidos en la Puerta 1 en favoritos de álbum del
+ * usuario: crea el `favorite` que falte (audiencia por defecto de un favorito
+ * nuevo) y deja intacto el que ya existía. No fija ni ordena nada (openspec:
+ * simplify-profile-curation) y no crea `rating` ni `listen_entry`.
  */
-export async function seedAlbumFavorites(
-  userId: string,
-  releaseGroupIds: string[],
-): Promise<AlbumFavorite[]> {
-  if (releaseGroupIds.length === 0) {
-    return replaceAlbumFavorites(userId, []);
-  }
-  if (releaseGroupIds.length > PROFILE_MAX_ALBUM_FAVORITES) {
-    throw new ApiError(
-      "VALIDATION_ERROR",
-      400,
-      `Máximo ${PROFILE_MAX_ALBUM_FAVORITES} álbumes`,
-    );
+export async function seedFavoriteAlbums(userId: string, releaseGroupIds: string[]): Promise<void> {
+  if (releaseGroupIds.length === 0) return;
+  if (releaseGroupIds.length > ONBOARDING_MAX_ALBUMS) {
+    throw new ApiError("VALIDATION_ERROR", 400, `Máximo ${ONBOARDING_MAX_ALBUMS} álbumes`);
   }
   if (new Set(releaseGroupIds).size !== releaseGroupIds.length) {
     throw new ApiError("VALIDATION_ERROR", 400, "No se puede elegir el mismo álbum dos veces");
@@ -52,31 +38,15 @@ export async function seedAlbumFavorites(
 
   // Favoritos de álbum propios ya existentes para estos release-groups.
   const owned = await db
-    .select({ id: favorite.id, releaseGroupId: favorite.releaseGroupId })
+    .select({ releaseGroupId: favorite.releaseGroupId })
     .from(favorite)
-    .where(
-      and(eq(favorite.userId, userId), inArray(favorite.releaseGroupId, releaseGroupIds)),
-    );
-  const favoriteIdByRg = new Map<string, string>(
-    owned
-      .filter((row): row is { id: string; releaseGroupId: string } => row.releaseGroupId !== null)
-      .map((row) => [row.releaseGroupId, row.id]),
-  );
+    .where(and(eq(favorite.userId, userId), inArray(favorite.releaseGroupId, releaseGroupIds)));
+  const alreadyFavorite = new Set(owned.map((row) => row.releaseGroupId));
 
-  const missing = releaseGroupIds.filter((rgId) => !favoriteIdByRg.has(rgId));
+  const missing = releaseGroupIds.filter((rgId) => !alreadyFavorite.has(rgId));
   if (missing.length > 0) {
-    const created = await db
-      .insert(favorite)
-      .values(missing.map((releaseGroupId) => ({ userId, releaseGroupId })))
-      .returning({ id: favorite.id, releaseGroupId: favorite.releaseGroupId });
-    for (const row of created) {
-      if (row.releaseGroupId) favoriteIdByRg.set(row.releaseGroupId, row.id);
-    }
+    await db.insert(favorite).values(missing.map((releaseGroupId) => ({ userId, releaseGroupId })));
   }
-
-  // Orden = orden de elección del usuario.
-  const favoriteIds = releaseGroupIds.map((rgId) => favoriteIdByRg.get(rgId)!);
-  return replaceAlbumFavorites(userId, favoriteIds);
 }
 
 /** Fija `onboarded_at` si estaba nulo. Idempotente. */
@@ -87,22 +57,19 @@ export async function markOnboarded(userId: string): Promise<void> {
     .where(and(eq(appUser.id, userId), isNull(appUser.onboardedAt)));
 }
 
-async function readState(userId: string, albumFavorites: AlbumFavorite[]): Promise<OnboardingState> {
+async function readState(userId: string): Promise<OnboardingState> {
   const [row] = await db
     .select({ onboardedAt: appUser.onboardedAt })
     .from(appUser)
     .where(eq(appUser.id, userId))
     .limit(1);
-  return {
-    albumFavorites,
-    onboardedAt: (row?.onboardedAt ?? new Date()).toISOString(),
-  };
+  return { onboardedAt: (row?.onboardedAt ?? new Date()).toISOString() };
 }
 
 /**
- * Cierra el onboarding: siembra los Álbumes favoritos de la Puerta 1 y marca
- * `onboarded_at`. Si el usuario ya estaba onboardeado, no re-siembra ni
- * re-marca — devuelve el estado vigente (idempotente).
+ * Cierra el onboarding: crea los favoritos de álbum de la Puerta 1 y marca
+ * `onboarded_at`. Si el usuario ya estaba onboardeado, no vuelve a crear ni a
+ * marcar — devuelve el estado vigente (idempotente).
  */
 export async function completeOnboarding(
   userId: string,
@@ -115,13 +82,9 @@ export async function completeOnboarding(
     .limit(1);
   if (!user) throw new ApiError("USER_NOT_FOUND", 404, "Usuario no encontrado");
 
-  if (user.onboardedAt) {
-    const { getAlbumFavorites } = await import("@/services/profiles/album-favorites");
-    const current = await getAlbumFavorites(userId, ["private", "followers", "public"]);
-    return readState(userId, current);
-  }
+  if (user.onboardedAt) return readState(userId);
 
-  const albumFavorites = await seedAlbumFavorites(userId, releaseGroupIds);
+  await seedFavoriteAlbums(userId, releaseGroupIds);
   await markOnboarded(userId);
-  return readState(userId, albumFavorites);
+  return readState(userId);
 }

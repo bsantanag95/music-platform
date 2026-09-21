@@ -12,7 +12,6 @@ import { OwnerEditProvider } from "@/components/profiles/OwnerEditProvider";
 import { OwnerProfileBar } from "@/components/profiles/OwnerProfileBar";
 import {
   AffinitySection,
-  AlbumFavoritesSection,
   CollectionRail,
   DiaryRail,
   ExplorationSection,
@@ -166,14 +165,6 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
 
         {/* Nivel 2: exploración curada, resumida — puertas de entrada, no
             el contenido completo. */}
-        <Streamed>
-          <AlbumFavoritesSection
-            username={section.username}
-            viewerId={effectiveViewerId}
-            ownerId={profile.id}
-            isOwn={isOwn}
-          />
-        </Streamed>
         <Streamed>
           <PinnedSection ownerId={profile.id} isOwn={isOwn} />
         </Streamed>

@@ -137,24 +137,27 @@
     "mutualFollowers": "{count, plural, one {# mutual follower} other {# mutual followers}}"
   },
   "showcase": {
-    "pinnedHeading": "Highlights",
+    "pinnedHeading": "Start here",
+    "kind": {
+      "artist": "Artist",
+      "album": "Album",
+      "song": "Song"
+    },
     "anthemHeading": "Anthem",
     "anthemNowPlaying": "On repeat",
     "edit": {
-      "heading": "Highlights & anthem",
-      "pinnedIntro": "Up to 4 entities that represent you. Pick from your favorites.",
+      "heading": "Start here",
+      "pinnedIntro": "Up to 4 recommendations for anyone visiting your profile. Pick from your favorites and say why.",
       "addFromFavorites": "Add from favorites",
-      "notePlaceholder": "Note (optional)",
+      "noteLabel": "Why start here?",
+      "notePlaceholder": "One line for whoever visits you…",
+      "noteHint": "The note is optional: an item without one saves fine.",
       "remove": "Remove",
       "moveUp": "Move up",
       "moveDown": "Move down",
-      "savePinned": "Save highlights",
-      "maxPinned": "Maximum 4 highlights",
-      "noFavorites": "Favorite things to be able to highlight them.",
-      "anthemIntro": "A song from your favorites.",
-      "currentAnthem": "Current anthem",
-      "clearAnthem": "Clear anthem",
-      "noRecordingFavorites": "Favorite a song to choose an anthem."
+      "savePinned": "Save recommendations",
+      "maxPinned": "Maximum 4 recommendations",
+      "noFavorites": "Favorite things to be able to recommend them."
     }
   },
   "identityCard": {
@@ -163,8 +166,6 @@
     "songHeading": "Song that defines me",
     "artistLabel": "Artist",
     "albumLabel": "Album",
-    "markDefining": "Mark as defining",
-    "unmarkDefining": "Remove from Identity Card",
     "editor": {
       "heading": "Identity Card",
       "intro": "The artist, album, and song that define you. It's the first thing anyone visiting your profile sees.",
@@ -205,21 +206,6 @@
   },
   "ratingHighlights": {
     "heading": "Featured ratings"
-  },
-  "albumFavorites": {
-    "heading": "Favorite albums",
-    "edit": {
-      "heading": "Favorite albums",
-      "intro": "Up to 6 albums that define you. Pick from your album favorites.",
-      "pick": "Pick from your favorites",
-      "selected": "Selected ({count}/6)",
-      "remove": "Remove",
-      "moveUp": "Move up",
-      "moveDown": "Move down",
-      "save": "Save favorite albums",
-      "max": "Maximum 6 favorite albums",
-      "noFavorites": "Favorite some albums to be able to feature them here."
-    }
   },
   "inRotation": {
     "heading": "In rotation",
@@ -353,17 +339,8 @@
       "editRow": "Edit {name}",
       "outOf": "{count} of {max}",
       "pinned": {
-        "title": "Pinned",
-        "hint": "Up to {max} entities that represent you, each with a note."
-      },
-      "anthem": {
-        "title": "Anthem",
-        "hint": "A song from your favorites.",
-        "empty": "Not chosen"
-      },
-      "albumFavorites": {
-        "title": "Favorite albums",
-        "hint": "Up to {max} albums, chosen from your favorites."
+        "title": "Start here",
+        "hint": "Up to {max} recommendations for anyone visiting your profile, each with a note."
       },
       "pinnedLists": {
         "title": "Pinned lists",
@@ -423,7 +400,6 @@
             "lists": "{count, plural, one {# list} other {# lists}}",
             "collection": "{count, plural, one {# collection copy} other {# collection copies}}",
             "pinnedLists": "{count, plural, one {# pinned list} other {# pinned lists}}",
-            "pinnedAlbumFavorites": "{count, plural, one {# pinned favorite album} other {# pinned favorite albums}}",
             "highlightedDiary": "{count, plural, one {# highlighted diary entry} other {# highlighted diary entries}}"
           },
           "confirm": {
@@ -431,7 +407,7 @@
             "summary": "This will change the audience of {items} to \"{audience}\". It cannot be undone, though you can apply another audience afterwards.",
             "highlighted": "They include pinned or highlighted items on your profile: {items}.",
             "diaryHighlightedVisible": "Highlighted diary entries stay visible to everyone.",
-            "pinnedHidden": "Pinned lists and albums that move to a narrower audience will stop being visible to anyone left out.",
+            "pinnedHidden": "Pinned lists that move to a narrower audience will stop being visible to anyone left out.",
             "confirm": "Apply",
             "cancel": "Cancel"
           },

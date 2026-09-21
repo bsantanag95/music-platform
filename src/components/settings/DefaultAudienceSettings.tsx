@@ -26,7 +26,7 @@ type Phase = "idle" | "checking" | "confirming" | "applying";
 
 // Tipos de contenido que cambian y, de ellos, los fijados o destacados que se avisan.
 const TYPE_KEYS = ["favorites", "diary", "lists", "collection"] as const;
-const HIGHLIGHT_KEYS = ["pinnedLists", "pinnedAlbumFavorites", "highlightedDiary"] as const;
+const HIGHLIGHT_KEYS = ["pinnedLists", "highlightedDiary"] as const;
 type CountKey = (typeof TYPE_KEYS)[number] | (typeof HIGHLIGHT_KEYS)[number];
 
 // Audiencia por defecto del contenido nuevo (spec default-audience, "Control de
@@ -150,7 +150,7 @@ export function DefaultAudienceSettings({ initialAudience }: DefaultAudienceSett
       if (data.highlighted.highlightedDiary > 0) {
         paragraphs.push(t("settings.privacy.audience.apply.confirm.diaryHighlightedVisible"));
       }
-      if (data.audience !== "public" && data.highlighted.pinnedLists + data.highlighted.pinnedAlbumFavorites > 0) {
+      if (data.audience !== "public" && data.highlighted.pinnedLists > 0) {
         paragraphs.push(t("settings.privacy.audience.apply.confirm.pinnedHidden"));
       }
     }

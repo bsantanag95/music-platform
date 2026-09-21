@@ -181,7 +181,7 @@ describe("getShowcase", () => {
     const showcase = await getShowcase("u1");
     expect(showcase.pinned).toHaveLength(1);
     expect(showcase.pinned[0]!.entity.title).toBe("Slowdive");
-    expect(showcase.anthem).toBeNull();
+    expect(showcase.identityCard.anthem).toBeNull();
   });
 
   it("resuelve el artista definitorio como referencia directa de user_showcase, no como un destacado", async () => {

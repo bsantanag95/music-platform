@@ -6,8 +6,8 @@ import { PRIMARY_ARTIST_SQL, RECORDING_COVER_SQL } from "@/services/feed/feed";
 import type { ShowcaseEntity } from "@/services/profiles/showcase";
 
 // Tope de valoraciones destacadas por usuario (spec `rating-highlights`,
-// "Fijar una valoración como destacada"). Paridad con "Álbumes favoritos"
-// (PROFILE_MAX_ALBUM_FAVORITES) — ambos son 6, sin relación funcional entre sí.
+// "Fijar una valoración como destacada"). Mismo tope (6) que las
+// entradas de diario destacadas, sin relación funcional entre sí.
 export const RATING_HIGHLIGHT_MAX = 6;
 
 export interface RatingHighlightEntry {
@@ -138,8 +138,7 @@ export async function unhighlightRating(userId: string, ratingId: string): Promi
  * filtro de audiencia ni de relación de seguimiento (spec `rating-highlights`,
  * "Sección 'Valoraciones destacadas' del perfil") — el único filtro es el
  * acceso al perfil en sí (bloqueo, perfil privado sin autorización), igual
- * que el resto de las secciones (mismo criterio que
- * `getProfileAlbumFavorites`).
+ * que el resto de las secciones.
  */
 export async function getProfileRatingHighlights(
   username: string,

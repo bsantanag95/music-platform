@@ -6,9 +6,7 @@ import { OwnerIdentityEditor } from "./OwnerIdentityEditor";
 import { OwnerLinksEditor } from "./OwnerLinksEditor";
 import { OwnerIdentityCardEditor } from "./OwnerIdentityCardEditor";
 import { OwnerShowcaseEditor } from "./OwnerShowcaseEditor";
-import { OwnerAlbumFavoritesEditor } from "./OwnerAlbumFavoritesEditor";
 import type { IdentityCard, Showcase } from "@/services/profiles/showcase";
-import type { AlbumFavorite } from "@/services/profiles/album-favorites";
 
 const mocks = vi.hoisted(() => {
   class ApiError extends Error {
@@ -137,9 +135,9 @@ describe("editores — contrato con el anfitrión", () => {
       position: 0,
       entity: { type: "artist" as const, id: "ar1", title: "Radiohead", artistName: null, coverThumbUrl: null },
     };
-    const showcase: Showcase = { pinned: [pinned], anthem: null, identityCard: emptyCard };
+    const showcase: Showcase = { pinned: [pinned], identityCard: emptyCard };
 
-    it("editar una nota marca sucio y guardar los destacados lo limpia y avisa", async () => {
+    it("editar una nota marca sucio y guardar las recomendaciones lo limpia y avisa", async () => {
       const user = userEvent.setup();
       const onDirtyChange = vi.fn();
       const onSaved = vi.fn();
@@ -149,56 +147,10 @@ describe("editores — contrato con el anfitrión", () => {
       renderWithIntl(<OwnerShowcaseEditor initial={showcase} onSaved={onSaved} onDirtyChange={onDirtyChange} />);
       expect(onDirtyChange).toHaveBeenLastCalledWith(false);
 
-      await user.type(screen.getByPlaceholderText("Nota (opcional)"), "mi puerta de entrada");
+      await user.type(screen.getByLabelText(/¿Por qué empezar por aquí/), "mi puerta de entrada");
       expect(onDirtyChange).toHaveBeenLastCalledWith(true);
 
-      await user.click(screen.getByRole("button", { name: "Guardar destacados" }));
-      await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
-      expect(onDirtyChange).toHaveBeenLastCalledWith(false);
-    });
-
-    it("marcar 'me define' (aplicación inmediata) avisa el guardado sin marcar sucio", async () => {
-      const user = userEvent.setup();
-      const onDirtyChange = vi.fn();
-      const onSaved = vi.fn();
-      mocks.apiFetch.mockResolvedValue({
-        showcase: { ...showcase, identityCard: { ...emptyCard, artist: pinned.entity } },
-      });
-      renderWithIntl(<OwnerShowcaseEditor initial={showcase} onSaved={onSaved} onDirtyChange={onDirtyChange} />);
-
-      await user.click(screen.getByRole("button", { name: "Marcar como definitorio" }));
-      await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
-      expect(onDirtyChange).not.toHaveBeenCalledWith(true);
-    });
-  });
-
-  describe("OwnerAlbumFavoritesEditor", () => {
-    const album: AlbumFavorite = {
-      id: "pin1",
-      favoriteId: "f1",
-      position: 1,
-      target: { id: "rg1", title: "Norman Fucking Rockwell!", artistName: "Lana Del Rey", coverThumbUrl: null },
-    };
-
-    it("quitar un álbum marca sucio y guardar lo limpia y avisa", async () => {
-      const user = userEvent.setup();
-      const onDirtyChange = vi.fn();
-      const onSaved = vi.fn();
-      mocks.apiFetch.mockResolvedValue({});
-      renderWithIntl(
-        <OwnerAlbumFavoritesEditor
-          initial={[album]}
-          identityCard={emptyCard}
-          onSaved={onSaved}
-          onDirtyChange={onDirtyChange}
-        />,
-      );
-      expect(onDirtyChange).toHaveBeenLastCalledWith(false);
-
-      await user.click(screen.getByRole("button", { name: "Quitar" }));
-      expect(onDirtyChange).toHaveBeenLastCalledWith(true);
-
-      await user.click(screen.getByRole("button", { name: "Guardar álbumes favoritos" }));
+      await user.click(screen.getByRole("button", { name: "Guardar recomendaciones" }));
       await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
       expect(onDirtyChange).toHaveBeenLastCalledWith(false);
     });

@@ -40,9 +40,8 @@ const filledIdentityCard: IdentityCard = {
 };
 
 // Editor unificado de la Tarjeta de Identidad (openspec: rework-user-profile):
-// un solo bloque con los 3 slots (artista/álbum/canción), reemplaza tener que
-// buscar el marcador de álbum en "Álbumes favoritos", lejos de "Destacados"
-// e "Himno".
+// un solo bloque con los 3 slots (artista/álbum/canción); es el único lugar donde
+// se eligen (openspec: simplify-profile-curation).
 describe("OwnerIdentityCardEditor", () => {
   it("muestra un estado vacío por slot cuando no hay nada elegido", () => {
     renderWithIntl(<OwnerIdentityCardEditor initial={emptyIdentityCard} />);

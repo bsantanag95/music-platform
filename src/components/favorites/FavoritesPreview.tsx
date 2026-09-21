@@ -12,8 +12,8 @@ interface FavoritesPreviewProps {
 
 // Previsualización de "Favoritos" en el Nivel 2 del perfil (Opción B elegida
 // entre mockups estáticos — ver memoria profile-redesign): hasta 5 ejemplos
-// recientes de cada tipo, mismo criterio visual que ya usan "En rotación" y
-// "Álbumes favoritos" en esta misma página — álbumes en grilla de carátulas,
+// recientes de cada tipo, mismo criterio visual que ya usa "En rotación" en
+// esta misma página — álbumes en grilla de carátulas,
 // canciones como lista de filas (un disco genérico repetido 5 veces no
 // distingue nada entre canciones), artistas en grilla de placas tipográficas.
 // Reemplaza al muro completo (`FavoritesWall`) que antes vivía embebido acá

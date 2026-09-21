@@ -27,7 +27,6 @@ const m = vi.hoisted(() => ({
   getOwnProfile: vi.fn(),
   getExtendedIdentity: vi.fn(),
   getShowcase: vi.fn(),
-  getAlbumFavorites: vi.fn(),
   getCurationSummary: vi.fn(),
   getAccessMethod: vi.fn(),
   redirect: vi.fn(),
@@ -57,7 +56,6 @@ vi.mock("@/services/social/following", () => ({ countPendingFollowRequests: m.co
 vi.mock("@/services/social/profiles", () => ({ getOwnProfile: m.getOwnProfile }));
 vi.mock("@/services/profiles/identity", () => ({ getExtendedIdentity: m.getExtendedIdentity }));
 vi.mock("@/services/profiles/showcase", () => ({ getShowcase: m.getShowcase }));
-vi.mock("@/services/profiles/album-favorites", () => ({ getAlbumFavorites: m.getAlbumFavorites }));
 vi.mock("@/services/profiles/curation", () => ({ getCurationSummary: m.getCurationSummary }));
 vi.mock("@/services/profiles/account-settings", () => ({ getAccessMethod: m.getAccessMethod }));
 // El módulo real abre la conexión a la BD al importarse; solo se usa su tope.
@@ -73,9 +71,6 @@ vi.mock("@/components/profiles/OwnerIdentityEditor", () => ({ OwnerIdentityEdito
 vi.mock("@/components/profiles/OwnerLinksEditor", () => ({ OwnerLinksEditor: () => null }));
 vi.mock("@/components/profiles/OwnerShowcaseEditor", () => ({
   OwnerShowcaseEditor: () => <div>editor de destacados</div>,
-}));
-vi.mock("@/components/profiles/OwnerAlbumFavoritesEditor", () => ({
-  OwnerAlbumFavoritesEditor: () => <div>editor de álbumes</div>,
 }));
 
 type El = { type?: unknown; props?: Record<string, unknown> };
@@ -152,7 +147,7 @@ describe("pantalla Perfil", () => {
       timezone: "America/Santiago",
       links,
     });
-    m.getShowcase.mockResolvedValue({ pinned: [], anthem: null, identityCard });
+    m.getShowcase.mockResolvedValue({ pinned: [], identityCard });
 
     const tree = await ProfileSettingsPage();
 
@@ -169,7 +164,7 @@ describe("pantalla Perfil", () => {
 
   it("si el perfil ya no existe no renderiza nada", async () => {
     m.getExtendedIdentity.mockResolvedValue(null);
-    m.getShowcase.mockResolvedValue({ pinned: [], anthem: null, identityCard: {} });
+    m.getShowcase.mockResolvedValue({ pinned: [], identityCard: {} });
     expect(await ProfileSettingsPage()).toBeNull();
   });
 });
@@ -270,29 +265,25 @@ describe("pantalla Red", () => {
 describe("pantalla Curaduría", () => {
   const showcase = {
     pinned: [{ id: "p1" }, { id: "p2" }, { id: "p3" }],
-    anthem: { title: "Mountains" },
     identityCard: { artist: null, album: null, anthem: null },
   };
 
   beforeEach(() => {
     m.getShowcase.mockResolvedValue(showcase);
-    m.getAlbumFavorites.mockResolvedValue([{ id: "a1" }, { id: "a2" }]);
     m.getCurationSummary.mockResolvedValue({ pinnedLists: 2, ratingHighlights: 4, diaryHighlights: 1 });
   });
 
-  it("carga los álbumes favoritos con las tres audiencias y los conteos de curaduría", async () => {
+  it("carga los destacados y los conteos de curaduría del dueño", async () => {
     await CurationSettingsPage();
 
-    expect(m.getAlbumFavorites).toHaveBeenCalledWith("u1", ["private", "followers", "public"]);
+    expect(m.getShowcase).toHaveBeenCalledWith("u1");
     expect(m.getCurationSummary).toHaveBeenCalledWith("u1");
   });
 
   it("muestra cada tipo de curaduría con su conteo real", async () => {
     renderWithIntl(await CurationSettingsPage());
 
-    expect(screen.getByText("settings.curation.outOf:3/4")).toBeInTheDocument(); // destacados
-    expect(screen.getByText("Mountains")).toBeInTheDocument(); // himno
-    expect(screen.getByText("settings.curation.outOf:2/6")).toBeInTheDocument(); // álbumes
+    expect(screen.getByText("settings.curation.outOf:3/4")).toBeInTheDocument(); // empieza por aquí
     expect(screen.getByText("settings.curation.outOf:4/6")).toBeInTheDocument(); // valoraciones
     expect(screen.getByText("2")).toBeInTheDocument(); // listas fijadas
     expect(screen.getByText("1")).toBeInTheDocument(); // diario destacado
@@ -305,7 +296,7 @@ describe("pantalla Curaduría", () => {
     expect(hrefs).toEqual(["/me/lists", "/me/diary"]);
   });
 
-  it("Destacados abre su editor en el panel lateral, sin salir de la pantalla", async () => {
+  it("Empieza por aquí abre su editor en el panel lateral, sin salir de la pantalla", async () => {
     const user = userEvent.setup();
     renderWithIntl(await CurationSettingsPage());
 
@@ -315,13 +306,13 @@ describe("pantalla Curaduría", () => {
     expect(dialog).toHaveTextContent("editor de destacados");
   });
 
-  it("Álbumes favoritos abre su propio editor", async () => {
-    const user = userEvent.setup();
+  it("no lista el himno ni los álbumes favoritos (el himno se elige desde la Tarjeta de Identidad)", async () => {
     renderWithIntl(await CurationSettingsPage());
 
-    await user.click(screen.getByRole("button", { name: "Editar settings.curation.albumFavorites.title" }));
-
-    expect(await screen.findByText("editor de álbumes")).toBeInTheDocument();
+    expect(screen.queryByText("settings.curation.anthem.title")).not.toBeInTheDocument();
+    expect(screen.queryByText("settings.curation.albumFavorites.title")).not.toBeInTheDocument();
+    // Solo "Empieza por aquí" es editable desde aquí.
+    expect(screen.getAllByRole("button", { name: /^Editar / })).toHaveLength(1);
   });
 
   it("cerrar el panel devuelve el foco a su botón", async () => {

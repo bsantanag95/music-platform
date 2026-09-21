@@ -5,9 +5,9 @@ import { OnboardingRequestSchema } from "@/lib/api/schemas";
 import { requireUser } from "@/services/auth/authorization";
 import { completeOnboarding } from "@/services/onboarding/onboarding";
 
-// POST cierra el onboarding de dos puertas: siembra los Álbumes favoritos de
-// la Puerta 1 (posiblemente vacíos) y fija `onboarded_at`. Idempotente: si el
-// usuario ya está onboardeado, devuelve el estado vigente sin re-sembrar
+// POST cierra el onboarding de dos puertas: crea los favoritos de álbum
+// de la Puerta 1 (posiblemente vacíos) y fija `onboarded_at`. Idempotente: si el
+// usuario ya está onboardeado, devuelve el estado vigente sin volver a crear
 // (openspec: add-two-door-onboarding). La Puerta 2 usa POST /api/me/diary.
 export const POST = withErrorHandling(async (request: NextRequest) => {
   const user = await requireUser();

@@ -5,7 +5,6 @@ import {
   favorite,
   listenEntry,
   listenEntryHighlight,
-  userAlbumPin,
   userList,
   userListPin,
 } from "@/db/schema";
@@ -23,12 +22,11 @@ export interface AudienceChangeCounts {
 /**
  * De los elementos que cambiarían, cuántos están fijados o destacados en el
  * perfil. Las entradas de diario destacadas siguen visibles con cualquier
- * audiencia (spec diary-visibility); las listas y los álbumes favoritos
- * fijados dejan de verse para los demás si pasan a una audiencia más cerrada.
+ * audiencia (spec diary-visibility); las listas fijadas dejan de verse
+ * para los demás si pasan a una audiencia más cerrada.
  */
 export interface HighlightedCounts {
   pinnedLists: number;
-  pinnedAlbumFavorites: number;
   highlightedDiary: number;
 }
 
@@ -64,7 +62,7 @@ export async function previewApplyAudience(
 ): Promise<ApplyAudiencePreview> {
   assertAudience(audience);
 
-  const [[fav], [diary], [lists], [collection], [pinnedLists], [pinnedAlbums], [highlightedDiary]] =
+  const [[fav], [diary], [lists], [collection], [pinnedLists], [highlightedDiary]] =
     await Promise.all([
       db
         .select({ n: count() })
@@ -91,11 +89,6 @@ export async function previewApplyAudience(
         ),
       db
         .select({ n: count() })
-        .from(userAlbumPin)
-        .innerJoin(favorite, eq(favorite.id, userAlbumPin.favoriteId))
-        .where(and(eq(userAlbumPin.userId, userId), ne(favorite.audience, audience))),
-      db
-        .select({ n: count() })
         .from(listenEntryHighlight)
         .innerJoin(listenEntry, eq(listenEntry.id, listenEntryHighlight.listenEntryId))
         .where(and(eq(listenEntryHighlight.userId, userId), ne(listenEntry.audience, audience))),
@@ -109,7 +102,6 @@ export async function previewApplyAudience(
     collection: collection?.n ?? 0,
     highlighted: {
       pinnedLists: pinnedLists?.n ?? 0,
-      pinnedAlbumFavorites: pinnedAlbums?.n ?? 0,
       highlightedDiary: highlightedDiary?.n ?? 0,
     },
   };

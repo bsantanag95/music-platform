@@ -22,7 +22,7 @@ const recId = "00000000-0000-4000-8000-0000000000c1";
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.requireUser.mockResolvedValue(user);
-  mocks.getShowcase.mockResolvedValue({ pinned: [], anthem: null });
+  mocks.getShowcase.mockResolvedValue({ pinned: [], identityCard: { artist: null, album: null, anthem: null } });
 });
 
 describe("/api/me/profile/anthem", () => {

@@ -2,7 +2,7 @@ import { apiFetch } from "./client";
 import { OnboardingResponseSchema, type OnboardingResponse } from "./schemas";
 
 /**
- * Cierra el onboarding de dos puertas: siembra los Álbumes favoritos de la
+ * Cierra el onboarding de dos puertas: crea los favoritos de álbum de la
  * Puerta 1 (posiblemente vacíos) y marca al usuario como onboardeado.
  * Idempotente en el servidor.
  */

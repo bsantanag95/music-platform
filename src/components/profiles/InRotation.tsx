@@ -8,8 +8,8 @@ interface InRotationProps {
 }
 
 // Sección "En rotación": lo que esta persona ha estado escuchando últimamente,
-// derivado del diario. Contraparte viva de "Álbumes favoritos" (identidad
-// estable). Canciones = señal primaria (arriba), álbumes = agrupación
+// derivado del diario. Contraparte viva de la Tarjeta de Identidad y de "Empieza por
+// aquí" (identidad estable). Canciones = señal primaria (arriba), álbumes = agrupación
 // contextual (abajo). Tono cultural: sin score, sin contadores, sin fechas,
 // sin numeración (openspec: add-profile-in-rotation, D5). Server Component;
 // un bloque vacío no se renderiza.

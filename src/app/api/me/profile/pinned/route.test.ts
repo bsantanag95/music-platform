@@ -28,7 +28,7 @@ function put(body: unknown) {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.requireUser.mockResolvedValue(user);
-  mocks.getShowcase.mockResolvedValue({ pinned: [], anthem: null });
+  mocks.getShowcase.mockResolvedValue({ pinned: [], identityCard: { artist: null, album: null, anthem: null } });
 });
 
 describe("PUT /api/me/profile/pinned", () => {
@@ -37,7 +37,7 @@ describe("PUT /api/me/profile/pinned", () => {
       put({ items: [{ type: "release-group", id: albumId, note: "puerta de entrada" }] }),
     );
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ showcase: { pinned: [], anthem: null } });
+    expect(await res.json()).toEqual({ showcase: { pinned: [], identityCard: { artist: null, album: null, anthem: null } } });
     expect(mocks.replacePinned).toHaveBeenCalledWith(user.id, [
       { type: "release-group", id: albumId, note: "puerta de entrada" },
     ]);

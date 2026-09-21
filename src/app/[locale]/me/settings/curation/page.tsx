@@ -3,13 +3,11 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { requirePageUser } from "@/services/auth/page-auth";
 import { getShowcase } from "@/services/profiles/showcase";
-import { getAlbumFavorites } from "@/services/profiles/album-favorites";
 import { getCurationSummary } from "@/services/profiles/curation";
 import { RATING_HIGHLIGHT_MAX } from "@/services/rating-highlights/rating-highlights";
-import { PROFILE_MAX_ALBUM_FAVORITES, PROFILE_MAX_PINNED } from "@/services/social/types";
+import { PROFILE_MAX_PINNED } from "@/services/social/types";
 import { OwnerEditProvider } from "@/components/profiles/OwnerEditProvider";
 import { OwnerShowcaseEditor } from "@/components/profiles/OwnerShowcaseEditor";
-import { OwnerAlbumFavoritesEditor } from "@/components/profiles/OwnerAlbumFavoritesEditor";
 import { OpenEditorButton } from "@/components/settings/OpenEditorButton";
 import { SettingsSection } from "@/components/settings/SettingsSection";
 
@@ -39,19 +37,16 @@ const linkClass =
   "rounded border border-ink-border px-3 py-1.5 font-display text-sm text-paper transition-colors hover:border-amber";
 
 // Pantalla Curaduría (spec owner-settings): lo que el dueño elige mostrar.
-// Destacados, Himno y Álbumes favoritos abren su editor en el panel lateral;
-// listas fijadas, valoraciones y diario destacados se fijan donde viven, así
-// que aquí solo se cuentan y se enlaza a su origen (no se duplica la acción).
+// "Empieza por aquí" abre su editor en el panel lateral; listas fijadas,
+// valoraciones y diario destacados se fijan donde viven, así que aquí solo se
+// cuentan y se enlaza a su origen (no se duplica la acción). El himno no está
+// acá: se elige desde la Tarjeta de Identidad (pantalla Perfil).
 // Las valoraciones se destacan desde la valoración de cada álbum o canción, sin
 // una superficie única a la que enlazar: solo llevan conteo y una pista.
 export default async function CurationSettingsPage() {
   const t = await getTranslations("users");
   const user = await requirePageUser();
-  const [showcase, albumFavorites, summary] = await Promise.all([
-    getShowcase(user.id),
-    getAlbumFavorites(user.id, ["private", "followers", "public"]),
-    getCurationSummary(user.id),
-  ]);
+  const [showcase, summary] = await Promise.all([getShowcase(user.id), getCurationSummary(user.id)]);
 
   const showcaseEditor = <OwnerShowcaseEditor initial={showcase} />;
   const outOf = (count: number, max: number) => t("settings.curation.outOf", { count, max });
@@ -65,23 +60,6 @@ export default async function CurationSettingsPage() {
             hint={t("settings.curation.pinned.hint", { max: PROFILE_MAX_PINNED })}
             status={outOf(showcase.pinned.length, PROFILE_MAX_PINNED)}
             action={<OpenEditorButton label={t("settings.curation.pinned.title")} editor={showcaseEditor} />}
-          />
-          <Row
-            title={t("settings.curation.anthem.title")}
-            hint={t("settings.curation.anthem.hint")}
-            status={showcase.anthem?.title ?? t("settings.curation.anthem.empty")}
-            action={<OpenEditorButton label={t("settings.curation.anthem.title")} editor={showcaseEditor} />}
-          />
-          <Row
-            title={t("settings.curation.albumFavorites.title")}
-            hint={t("settings.curation.albumFavorites.hint", { max: PROFILE_MAX_ALBUM_FAVORITES })}
-            status={outOf(albumFavorites.length, PROFILE_MAX_ALBUM_FAVORITES)}
-            action={
-              <OpenEditorButton
-                label={t("settings.curation.albumFavorites.title")}
-                editor={<OwnerAlbumFavoritesEditor initial={albumFavorites} identityCard={showcase.identityCard} />}
-              />
-            }
           />
           <Row
             title={t("settings.curation.pinnedLists.title")}

@@ -8,7 +8,7 @@ import {
   PROFILE_IDENTITY_LIMITS,
   PROFILE_MAX_LINKS,
   PROFILE_MAX_PINNED,
-  PROFILE_MAX_ALBUM_FAVORITES,
+  ONBOARDING_MAX_ALBUMS,
 } from "@/services/social/types";
 import {
   DIARY_AUDIENCES,
@@ -650,7 +650,6 @@ export type ApplyAudienceResult = z.infer<typeof ApplyAudienceResultSchema>;
 export const ApplyAudiencePreviewSchema = ApplyAudienceResultSchema.extend({
   highlighted: z.object({
     pinnedLists: ChangeCountSchema,
-    pinnedAlbumFavorites: ChangeCountSchema,
     highlightedDiary: ChangeCountSchema,
   }),
 });
@@ -869,7 +868,6 @@ export type IdentityCardDto = z.infer<typeof IdentityCardSchema>;
 
 export const ShowcaseSchema = z.object({
   pinned: z.array(PinnedItemSchema),
-  anthem: ShowcaseEntitySchema.nullable(),
   identityCard: IdentityCardSchema,
 });
 export type ShowcaseDto = z.infer<typeof ShowcaseSchema>;
@@ -906,45 +904,17 @@ export const DefiningTargetRequestSchema = z.object({
 });
 export type DefiningTargetRequest = z.infer<typeof DefiningTargetRequestSchema>;
 
-// --- Álbumes favoritos del perfil (cambio redesign-profile-album-identity) ---
-
-export const AlbumFavoriteSchema = z.object({
-  id: z.uuid(),
-  favoriteId: z.uuid(),
-  position: z.number().int().positive(),
-  target: z.object({
-    id: z.uuid(),
-    title: z.string(),
-    artistName: z.string().nullable(),
-    coverThumbUrl: z.string().nullable(),
-  }),
-});
-export type AlbumFavoriteDto = z.infer<typeof AlbumFavoriteSchema>;
-
-export const AlbumFavoritesResponseSchema = z.object({
-  albumFavorites: z.array(AlbumFavoriteSchema),
-});
-export type AlbumFavoritesResponse = z.infer<typeof AlbumFavoritesResponseSchema>;
-
 // --- Onboarding de dos puertas (cambio add-two-door-onboarding) ---
 
 export const OnboardingRequestSchema = z.object({
-  albumReleaseGroupIds: z.array(z.uuid()).max(PROFILE_MAX_ALBUM_FAVORITES),
+  albumReleaseGroupIds: z.array(z.uuid()).max(ONBOARDING_MAX_ALBUMS),
 });
 export type OnboardingRequest = z.infer<typeof OnboardingRequestSchema>;
 
 export const OnboardingResponseSchema = z.object({
-  albumFavorites: z.array(AlbumFavoriteSchema),
   onboardedAt: z.string(),
 });
 export type OnboardingResponse = z.infer<typeof OnboardingResponseSchema>;
-
-export const ReplaceAlbumFavoritesRequestSchema = z.object({
-  favoriteIds: z
-    .array(z.uuid())
-    .max(PROFILE_MAX_ALBUM_FAVORITES, `Máximo ${PROFILE_MAX_ALBUM_FAVORITES} álbumes favoritos`),
-});
-export type ReplaceAlbumFavoritesRequest = z.infer<typeof ReplaceAlbumFavoritesRequestSchema>;
 
 // --- Valoraciones destacadas (openspec: rework-user-profile) ---
 

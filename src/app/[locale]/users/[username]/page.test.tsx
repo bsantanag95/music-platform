@@ -7,7 +7,6 @@ import { ViewAsBanner } from "@/components/profiles/ViewAsBanner";
 import { OwnerEditProvider } from "@/components/profiles/OwnerEditProvider";
 import { OwnerProfileBar } from "@/components/profiles/OwnerProfileBar";
 import {
-  AlbumFavoritesSection,
   EditablePlaca,
   ExplorationSection,
   FeaturedReviewsSection,
@@ -56,7 +55,6 @@ vi.mock("./sections", () => ({
   EditablePlaca: () => null,
   SettingsCardSection: () => null,
   IdentityCardSection: () => null,
-  AlbumFavoritesSection: () => null,
   RatingHighlightsSection: () => null,
   FeaturedReviewsSection: () => null,
   InRotationSection: () => null,
@@ -229,7 +227,6 @@ describe("UserProfilePage", () => {
     const tree = await render();
     expect(findElement(tree, IdentityCardSection)?.props?.isOwn).toBe(true);
     expect(findElement(tree, PinnedSection)?.props?.isOwn).toBe(true);
-    expect(findElement(tree, AlbumFavoritesSection)?.props?.isOwn).toBe(true);
     // Los estantes sin editor propio no reciben lápiz (spec: "Bloque sin editor").
     expect(findElement(tree, RatingHighlightsSection)?.props?.isOwn).toBeUndefined();
     expect(findElement(tree, InRotationSection)?.props?.isOwn).toBeUndefined();
@@ -280,7 +277,6 @@ describe("UserProfilePage", () => {
     expect(findElement(tree, IdentityCardSection)).not.toBeNull();
     expect(findElement(tree, PinnedSection)).not.toBeNull();
     expect(findElement(tree, RatingHighlightsSection)).not.toBeNull();
-    expect(findElement(tree, AlbumFavoritesSection)).not.toBeNull();
     expect(findElement(tree, InRotationSection)).not.toBeNull();
     expect(findElement(tree, ExplorationSection)).not.toBeNull();
     expect(findElement(tree, SettingsCardSection)).toBeNull();
@@ -294,7 +290,6 @@ describe("UserProfilePage", () => {
 
     const tree = await render();
     expect(findElement(tree, IdentityCardSection)).not.toBeNull();
-    expect(findElement(tree, AlbumFavoritesSection)).not.toBeNull();
     expect(findElement(tree, RatingHighlightsSection)).not.toBeNull();
     expect(findElement(tree, FeaturedReviewsSection)).not.toBeNull();
     expect(findElement(tree, InRotationSection)).not.toBeNull();
@@ -327,16 +322,17 @@ describe("UserProfilePage", () => {
     ).toEqual([PinnedSection, FeaturedReviewsSection, InRotationSection]);
   });
 
-  it("Tarjeta de Identidad va antes de Álbumes favoritos (Nivel 1 antes de Nivel 2)", async () => {
+  it("Tarjeta de Identidad va antes de Empieza por aquí, que abre el Nivel 2 antes de Valoraciones destacadas", async () => {
     resolveSession.mockResolvedValue({ user: { id: "viewer" } });
     getProfileView.mockResolvedValue(
       profile({ profileVisibility: "public", relation: "following", accessible: true }),
     );
 
     const tree = await render();
-    expect(orderOf(tree, [IdentityCardSection, AlbumFavoritesSection])).toEqual([
+    expect(orderOf(tree, [IdentityCardSection, PinnedSection, RatingHighlightsSection])).toEqual([
       IdentityCardSection,
-      AlbumFavoritesSection,
+      PinnedSection,
+      RatingHighlightsSection,
     ]);
   });
 

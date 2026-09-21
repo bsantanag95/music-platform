@@ -71,8 +71,8 @@ beforeEach(() => {
 
 describe("previewApplyAudience", () => {
   it("devuelve cuántos elementos cambiarían por tipo y cuántos son destacados", async () => {
-    // Orden: favoritos, diario, listas, colección, listas fijadas, álbumes fijados, diario destacado.
-    queueCounts(3, 5, 2, 1, 1, 2, 4);
+    // Orden: favoritos, diario, listas, colección, listas fijadas, diario destacado.
+    queueCounts(3, 5, 2, 1, 1, 4);
 
     await expect(previewApplyAudience("u1", "private")).resolves.toEqual({
       audience: "private",
@@ -80,12 +80,12 @@ describe("previewApplyAudience", () => {
       diary: 5,
       lists: 2,
       collection: 1,
-      highlighted: { pinnedLists: 1, pinnedAlbumFavorites: 2, highlightedDiary: 4 },
+      highlighted: { pinnedLists: 1, highlightedDiary: 4 },
     });
   });
 
   it("devuelve ceros cuando todo ya tiene esa audiencia", async () => {
-    queueCounts(0, 0, 0, 0, 0, 0, 0);
+    queueCounts(0, 0, 0, 0, 0, 0);
 
     await expect(previewApplyAudience("u1", "public")).resolves.toEqual({
       audience: "public",
@@ -93,12 +93,12 @@ describe("previewApplyAudience", () => {
       diary: 0,
       lists: 0,
       collection: 0,
-      highlighted: { pinnedLists: 0, pinnedAlbumFavorites: 0, highlightedDiary: 0 },
+      highlighted: { pinnedLists: 0, highlightedDiary: 0 },
     });
   });
 
   it("solo lee: no abre transacción ni actualiza nada", async () => {
-    queueCounts(1, 1, 1, 1, 0, 0, 0);
+    queueCounts(1, 1, 1, 1, 0, 0);
     await previewApplyAudience("u1", "followers");
 
     expect(mocks.transaction).not.toHaveBeenCalled();

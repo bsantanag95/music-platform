@@ -27,55 +27,103 @@ beforeEach(() => vi.clearAllMocks());
 
 const showcase = (over: Partial<Showcase>): Showcase => ({
   pinned: [],
-  anthem: null,
   identityCard: { artist: null, album: null, anthem: null },
   ...over,
 });
 
-describe("OwnerShowcaseEditor — marcador 'me define'", () => {
-  it("ofrece el marcador para destacados de tipo artista o álbum, nunca canción", () => {
+const radiohead = { type: "artist" as const, id: "ar1", title: "Radiohead", artistName: null, coverThumbUrl: null };
+const idioteque = {
+  type: "recording" as const,
+  id: "rec1",
+  title: "Idioteque",
+  artistName: "Radiohead",
+  coverThumbUrl: null,
+};
+const withPins = (pinned: Showcase["pinned"]) => showcase({ pinned });
+
+describe("OwnerShowcaseEditor — Empieza por aquí", () => {
+  it("no ofrece el himno ni el marcador 'me define' (viven solo en el editor de la Tarjeta)", () => {
     renderWithIntl(
       <OwnerShowcaseEditor
-        initial={showcase({
-          pinned: [
-            { id: "p1", note: null, position: 0, entity: { type: "artist", id: "ar1", title: "Radiohead", artistName: null, coverThumbUrl: null } },
-            { id: "p2", note: null, position: 1, entity: { type: "recording", id: "rec1", title: "Idioteque", artistName: "Radiohead", coverThumbUrl: null } },
-          ],
-        })}
+        initial={withPins([
+          { id: "p1", note: null, position: 0, entity: radiohead },
+          { id: "p2", note: null, position: 1, entity: idioteque },
+        ])}
       />,
     );
-    // Un marcador (★/☆) por destacado elegible; la canción no ofrece ninguno.
-    expect(screen.getAllByRole("button", { name: "Marcar como definitorio" })).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: /definitorio|Tarjeta de Identidad/ })).not.toBeInTheDocument();
+    expect(screen.queryByText("★")).not.toBeInTheDocument();
+    expect(screen.queryByText(/himno/i)).not.toBeInTheDocument();
   });
 
-  it("marca un destacado como definitorio (PUT con type+id) y refleja el resultado desde identityCard", async () => {
+  it("cada ítem muestra un campo de nota con etiqueta y contador", () => {
+    renderWithIntl(
+      <OwnerShowcaseEditor
+        initial={withPins([{ id: "p1", note: "mi puerta de entrada al jazz", position: 0, entity: radiohead }])}
+      />,
+    );
+    const note = screen.getByLabelText(/¿Por qué empezar por aquí\?/);
+    expect(note).toHaveValue("mi puerta de entrada al jazz");
+    expect(note).toHaveAttribute("maxlength", "120");
+    expect(screen.getByText("28/120")).toBeInTheDocument();
+  });
+
+  it("escribir la nota actualiza el contador y aplana los saltos de línea", async () => {
     const user = userEvent.setup();
-    const radiohead = { type: "artist" as const, id: "ar1", title: "Radiohead", artistName: null, coverThumbUrl: null };
+    renderWithIntl(
+      <OwnerShowcaseEditor initial={withPins([{ id: "p1", note: null, position: 0, entity: radiohead }])} />,
+    );
+    const note = screen.getByLabelText(/¿Por qué empezar por aquí\?/);
+    expect(screen.getByText("0/120")).toBeInTheDocument();
+
+    await user.type(note, "hola{enter}mundo");
+
+    expect(note).toHaveValue("hola mundo");
+    expect(screen.getByText("10/120")).toBeInTheDocument();
+  });
+
+  it("guarda el orden y la nota de cada ítem con un único PUT a /api/me/profile/pinned", async () => {
+    const user = userEvent.setup();
     mocks.apiFetch.mockResolvedValue({
-      showcase: showcase({
-        pinned: [{ id: "p1", note: null, position: 0, entity: radiohead }],
-        identityCard: { artist: radiohead, album: null, anthem: null },
-      }),
+      showcase: withPins([{ id: "p1", note: "nota", position: 0, entity: radiohead }]),
     });
     renderWithIntl(
-      <OwnerShowcaseEditor
-        initial={showcase({
-          pinned: [{ id: "p1", note: null, position: 0, entity: radiohead }],
-        })}
-      />,
+      <OwnerShowcaseEditor initial={withPins([{ id: "p1", note: null, position: 0, entity: radiohead }])} />,
     );
 
-    await user.click(screen.getByRole("button", { name: "Marcar como definitorio" }));
+    await user.type(screen.getByLabelText(/¿Por qué empezar por aquí\?/), "nota");
+    await user.click(screen.getByRole("button", { name: "Guardar recomendaciones" }));
 
-    await waitFor(() => expect(mocks.apiFetch).toHaveBeenCalled());
+    await waitFor(() => expect(mocks.apiFetch).toHaveBeenCalledTimes(1));
     const [url, , init] = mocks.apiFetch.mock.calls[0]!;
-    expect(url).toBe("/api/me/profile/pinned/defining");
+    expect(url).toBe("/api/me/profile/pinned");
     expect((init as RequestInit).method).toBe("PUT");
-    expect(JSON.parse((init as RequestInit).body as string)).toEqual({ type: "artist", id: "ar1" });
-    expect(await screen.findByRole("button", { name: "Quitar de la Tarjeta de Identidad" })).toBeInTheDocument();
+    expect(JSON.parse((init as RequestInit).body as string)).toEqual({
+      items: [{ type: "artist", id: "ar1", note: "nota" }],
+    });
+    expect(await screen.findByText("Guardado")).toBeInTheDocument();
   });
 
-  it("un destacado recién agregado (sin guardar todavía) ya ofrece el marcador — 'me define' es una referencia directa, no depende de la fila de destacado", async () => {
+  it("un ítem sin nota se guarda con nota null (la nota es opcional)", async () => {
+    const user = userEvent.setup();
+    mocks.apiFetch.mockResolvedValue({
+      showcase: withPins([{ id: "p1", note: null, position: 0, entity: radiohead }]),
+    });
+    renderWithIntl(
+      <OwnerShowcaseEditor initial={withPins([{ id: "p1", note: "vieja", position: 0, entity: radiohead }])} />,
+    );
+
+    await user.clear(screen.getByLabelText(/¿Por qué empezar por aquí\?/));
+    await user.click(screen.getByRole("button", { name: "Guardar recomendaciones" }));
+
+    await waitFor(() => expect(mocks.apiFetch).toHaveBeenCalled());
+    const [, , init] = mocks.apiFetch.mock.calls[0]!;
+    expect(JSON.parse((init as RequestInit).body as string)).toEqual({
+      items: [{ type: "artist", id: "ar1", note: null }],
+    });
+  });
+
+  it("agrega un favorito como ítem nuevo con la nota vacía", async () => {
     const user = userEvent.setup();
     getMyFavorites.mockResolvedValue({
       favorites: [
@@ -88,10 +136,25 @@ describe("OwnerShowcaseEditor — marcador 'me define'", () => {
     });
     renderWithIntl(<OwnerShowcaseEditor initial={showcase({})} />);
 
-    await user.click(screen.getAllByText("Agregar de favoritos")[0]!);
+    await user.click(screen.getByText("Agregar de favoritos"));
     await user.click(await screen.findByText("boygenius"));
 
-    expect(screen.getByText("boygenius")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Marcar como definitorio" })).toBeInTheDocument();
+    expect(screen.getByLabelText(/¿Por qué empezar por aquí\?/)).toHaveValue("");
+    expect(screen.getByText("0/120")).toBeInTheDocument();
+    // Nunca llama a los endpoints de identidad.
+    expect(mocks.apiFetch).not.toHaveBeenCalled();
+  });
+
+  it("con 4 ítems oculta el selector y avisa del máximo", () => {
+    const four = ["a", "b", "c", "d"].map((id, position) => ({
+      id: `p${id}`,
+      note: null,
+      position,
+      entity: { ...radiohead, id: `ar-${id}`, title: `Artista ${id}` },
+    }));
+    renderWithIntl(<OwnerShowcaseEditor initial={withPins(four)} />);
+
+    expect(screen.queryByText("Agregar de favoritos")).not.toBeInTheDocument();
+    expect(screen.getByText("Máximo 4 recomendaciones")).toBeInTheDocument();
   });
 });

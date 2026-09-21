@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AffinitySection,
-  AlbumFavoritesSection,
   CollectionRail,
   DiaryRail,
   EditablePlaca,
@@ -20,7 +19,6 @@ import { ProfileRail } from "@/components/profiles/ProfileRail";
 import { ListsCarousel } from "@/components/lists/ListsCarousel";
 import { CollectionPreview } from "@/components/collection/CollectionPreview";
 import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
-import { AlbumFavorites } from "@/components/profiles/AlbumFavorites";
 import { InRotation } from "@/components/profiles/InRotation";
 import { ProfileReviews } from "@/components/profiles/ProfileReviews";
 import { RatingHighlights } from "@/components/profiles/RatingHighlights";
@@ -34,7 +32,6 @@ import { OwnerIdentityCardEditor } from "@/components/profiles/OwnerIdentityCard
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
 import { OwnerShowcaseEditor } from "@/components/profiles/OwnerShowcaseEditor";
-import { OwnerAlbumFavoritesEditor } from "@/components/profiles/OwnerAlbumFavoritesEditor";
 import type { ProfileView } from "@/services/profiles/profile-view";
 
 vi.mock("next-intl/server", () => ({
@@ -56,8 +53,6 @@ const svc = vi.hoisted(() => ({
   getCollectionPreview: vi.fn(),
   getTasteFingerprint: vi.fn(),
   getShowcase: vi.fn(),
-  getAlbumFavorites: vi.fn(),
-  getProfileAlbumFavorites: vi.fn(),
   getProfileInRotation: vi.fn(),
   getProfileReviews: vi.fn(),
   listProfileFollowedArtists: vi.fn(),
@@ -79,10 +74,6 @@ vi.mock("@/services/collection/collection", () => ({
 }));
 vi.mock("@/services/profiles/stats", () => ({ getTasteFingerprint: svc.getTasteFingerprint }));
 vi.mock("@/services/profiles/showcase", () => ({ getShowcase: svc.getShowcase }));
-vi.mock("@/services/profiles/album-favorites", () => ({
-  getAlbumFavorites: svc.getAlbumFavorites,
-  getProfileAlbumFavorites: svc.getProfileAlbumFavorites,
-}));
 vi.mock("@/services/profiles/in-rotation", () => ({
   getProfileInRotation: svc.getProfileInRotation,
 }));
@@ -108,9 +99,6 @@ vi.mock("@/components/profiles/OwnerIdentityCardEditor", () => ({ OwnerIdentityC
 vi.mock("@/components/profiles/OwnerIdentityEditor", () => ({ OwnerIdentityEditor: () => null }));
 vi.mock("@/components/profiles/OwnerLinksEditor", () => ({ OwnerLinksEditor: () => null }));
 vi.mock("@/components/profiles/OwnerShowcaseEditor", () => ({ OwnerShowcaseEditor: () => null }));
-vi.mock("@/components/profiles/OwnerAlbumFavoritesEditor", () => ({
-  OwnerAlbumFavoritesEditor: () => null,
-}));
 vi.mock("@/components/profiles/ProfileRecency", () => ({ ProfileRecency: () => null }));
 
 const section = { username: "ana", viewerId: null, isOwn: false };
@@ -219,31 +207,29 @@ describe("estantes vacíos", () => {
 });
 
 describe("IdentityCardSection / FingerprintSummarySection", () => {
-  it("PinnedSection renderiza solo los destacados (null sin ellos)", async () => {
+  it("PinnedSection renderiza solo los ítems de Empieza por aquí (null sin ellos)", async () => {
     svc.getShowcase.mockResolvedValue({
       pinned: [],
-      anthem: { id: "r1" },
       identityCard: { artist: null, album: null, anthem: { id: "r1" } },
     });
     expect(await PinnedSection({ ownerId: "owner" })).toBeNull();
-    const identityCard = { artist: null, album: null, anthem: null };
+    const pinned = [{ id: "p1" }];
     svc.getShowcase.mockResolvedValue({
-      pinned: [{ id: "p1" }],
-      anthem: null,
-      identityCard,
+      pinned,
+      identityCard: { artist: null, album: null, anthem: null },
     });
     const tree = (await PinnedSection({ ownerId: "owner" })) as {
       type?: unknown;
       props?: Record<string, unknown>;
     };
     expect(tree?.type).toBe(PinnedShowcase);
-    expect(tree?.props?.identityCard).toBe(identityCard);
+    expect(tree?.props?.pinned).toBe(pinned);
+    expect(tree?.props).not.toHaveProperty("identityCard");
   });
 
   it("IdentityCardSection pasa la identityCard resuelta a IdentityCard (vacía o no la resuelve el componente)", async () => {
     svc.getShowcase.mockResolvedValue({
       pinned: [],
-      anthem: null,
       identityCard: { artist: null, album: null, anthem: null },
     });
     const tree = (await IdentityCardSection({ ownerId: "owner" })) as {
@@ -257,7 +243,6 @@ describe("IdentityCardSection / FingerprintSummarySection", () => {
   it("IdentityCardSection renderiza IdentityCard cuando hay al menos un elemento", async () => {
     svc.getShowcase.mockResolvedValue({
       pinned: [],
-      anthem: { id: "r1", type: "recording", title: "x", artistName: null, coverThumbUrl: null },
       identityCard: {
         artist: null,
         album: null,
@@ -279,32 +264,6 @@ describe("IdentityCardSection / FingerprintSummarySection", () => {
     expect(svc.getProfileRatingHighlights).toHaveBeenCalledWith("ana", "v");
     expect(tree?.type).toBe(RatingHighlights);
     expect(tree?.props?.highlights).toHaveLength(1);
-  });
-
-  it("AlbumFavoritesSection pasa los álbumes resueltos y la identityCard a AlbumFavorites", async () => {
-    svc.getProfileAlbumFavorites.mockResolvedValue([
-      { id: "pin1", favoriteId: "f1", position: 1, target: { id: "rg1", title: "A", artistName: null, coverThumbUrl: null } },
-    ]);
-    const identityCard = { artist: null, album: null, anthem: null };
-    svc.getShowcase.mockResolvedValue({ pinned: [], anthem: null, identityCard });
-    const tree = (await AlbumFavoritesSection({ username: "ana", viewerId: "v", ownerId: "owner" })) as {
-      type?: unknown;
-      props?: { albums?: unknown[]; identityCard?: unknown };
-    };
-    expect(svc.getProfileAlbumFavorites).toHaveBeenCalledWith("ana", "v");
-    expect(svc.getShowcase).toHaveBeenCalledWith("owner");
-    expect(tree?.type).toBe(AlbumFavorites);
-    expect(tree?.props?.albums).toHaveLength(1);
-    expect(tree?.props?.identityCard).toBe(identityCard);
-  });
-
-  it("AlbumFavoritesSection pasa una lista vacía cuando no hay nada visible", async () => {
-    svc.getProfileAlbumFavorites.mockResolvedValue([]);
-    svc.getShowcase.mockResolvedValue({ pinned: [], anthem: null, identityCard: { artist: null, album: null, anthem: null } });
-    const tree = (await AlbumFavoritesSection({ username: "ana", viewerId: null, ownerId: "owner" })) as {
-      props?: { albums?: unknown[] };
-    };
-    expect(tree?.props?.albums).toEqual([]);
   });
 
   it("InRotationSection renderiza InRotation con los datos resueltos", async () => {
@@ -450,7 +409,7 @@ const album = { type: "release-group", id: "rg1", title: "Souvlaki", artistName:
 describe("secciones editables del dueño", () => {
   it("IdentityCardSection: el dueño recibe EditableBlock con el editor de la tarjeta y la vista dentro", async () => {
     const identityCard = { ...emptyCard, artist };
-    svc.getShowcase.mockResolvedValue({ pinned: [], anthem: null, identityCard });
+    svc.getShowcase.mockResolvedValue({ pinned: [], identityCard });
 
     const tree = (await IdentityCardSection({ ownerId: "owner", isOwn: true })) as Wrapped;
 
@@ -463,7 +422,7 @@ describe("secciones editables del dueño", () => {
   });
 
   it("IdentityCardSection: una tarjeta sin ningún elemento es un bloque vacío", async () => {
-    svc.getShowcase.mockResolvedValue({ pinned: [], anthem: null, identityCard: emptyCard });
+    svc.getShowcase.mockResolvedValue({ pinned: [], identityCard: emptyCard });
     const tree = (await IdentityCardSection({ ownerId: "owner", isOwn: true })) as Wrapped;
     expect(tree.props?.empty).toBe(true);
   });
@@ -471,7 +430,6 @@ describe("secciones editables del dueño", () => {
   it("PinnedSection: el dueño recibe EditableBlock con el editor de destacados", async () => {
     const showcase = {
       pinned: [{ id: "p1", note: null, position: 0, entity: album }],
-      anthem: null,
       identityCard: emptyCard,
     };
     svc.getShowcase.mockResolvedValue(showcase);
@@ -486,60 +444,26 @@ describe("secciones editables del dueño", () => {
     expect(tree.props?.children?.type).toBe(PinnedShowcase);
   });
 
-  it("PinnedSection: sin destacados, o con todos ya en la Tarjeta de Identidad, el bloque está vacío", async () => {
-    svc.getShowcase.mockResolvedValue({ pinned: [], anthem: null, identityCard: emptyCard });
+  it("PinnedSection: sin ítems el bloque está vacío; con ítems que coinciden con la Tarjeta, no lo está", async () => {
+    svc.getShowcase.mockResolvedValue({ pinned: [], identityCard: emptyCard });
     expect(((await PinnedSection({ ownerId: "owner", isOwn: true })) as Wrapped).props?.empty).toBe(true);
 
-    // Lo definitorio no se repite entre los destacados: nada visible que editar.
+    // Fijar un ítem y definir la identidad son decisiones independientes: nada se oculta.
     svc.getShowcase.mockResolvedValue({
       pinned: [{ id: "p1", note: null, position: 0, entity: album }],
-      anthem: null,
       identityCard: { ...emptyCard, album },
     });
-    expect(((await PinnedSection({ ownerId: "owner", isOwn: true })) as Wrapped).props?.empty).toBe(true);
+    expect(((await PinnedSection({ ownerId: "owner", isOwn: true })) as Wrapped).props?.empty).toBe(false);
   });
 
-  it("AlbumFavoritesSection: el dueño carga sus favoritos con las tres audiencias para el editor", async () => {
-    const shown = [{ id: "pin1", favoriteId: "f1", position: 1, target: { id: "rg1", title: "A", artistName: null, coverThumbUrl: null } }];
-    const editable = [...shown, { id: "pin2", favoriteId: "f2", position: 2, target: { id: "rg2", title: "B", artistName: null, coverThumbUrl: null } }];
-    const identityCard = { ...emptyCard };
-    svc.getProfileAlbumFavorites.mockResolvedValue(shown);
-    svc.getAlbumFavorites.mockResolvedValue(editable);
-    svc.getShowcase.mockResolvedValue({ pinned: [], anthem: null, identityCard });
+  it("un visitante no recibe envoltorio de edición", async () => {
+    svc.getShowcase.mockResolvedValue({ pinned: [{ id: "p1" }], identityCard: emptyCard });
 
-    const tree = (await AlbumFavoritesSection({ username: "ana", viewerId: "owner", ownerId: "owner", isOwn: true })) as Wrapped;
-
-    expect(svc.getAlbumFavorites).toHaveBeenCalledWith("owner", ["private", "followers", "public"]);
-    expect(tree.type).toBe(EditableBlock);
-    expect(tree.props?.label).toBe("albumFavorites.edit.heading");
-    expect(tree.props?.empty).toBe(false);
-    expect(tree.props?.editor?.type).toBe(OwnerAlbumFavoritesEditor);
-    expect(tree.props?.editor?.props).toMatchObject({ initial: editable, identityCard });
-    expect(tree.props?.children?.type).toBe(AlbumFavorites);
-  });
-
-  it("AlbumFavoritesSection: si el único álbum es el definitorio, el bloque está vacío", async () => {
-    const only = { id: "pin1", favoriteId: "f1", position: 1, target: { id: "rg1", title: "A", artistName: null, coverThumbUrl: null } };
-    svc.getProfileAlbumFavorites.mockResolvedValue([only]);
-    svc.getAlbumFavorites.mockResolvedValue([only]);
-    svc.getShowcase.mockResolvedValue({ pinned: [], anthem: null, identityCard: { ...emptyCard, album } });
-
-    const tree = (await AlbumFavoritesSection({ username: "ana", viewerId: "owner", ownerId: "owner", isOwn: true })) as Wrapped;
-    expect(tree.props?.empty).toBe(true);
-  });
-
-  it("un visitante no paga la consulta del editor ni recibe envoltorio", async () => {
-    svc.getProfileAlbumFavorites.mockResolvedValue([]);
-    svc.getShowcase.mockResolvedValue({ pinned: [{ id: "p1" }], anthem: null, identityCard: emptyCard });
-
-    const albums = (await AlbumFavoritesSection({ username: "ana", viewerId: "v", ownerId: "owner" })) as Wrapped;
     const pinned = (await PinnedSection({ ownerId: "owner" })) as Wrapped;
     const card = (await IdentityCardSection({ ownerId: "owner" })) as Wrapped;
 
-    expect(albums.type).toBe(AlbumFavorites);
     expect(pinned.type).toBe(PinnedShowcase);
     expect(card.type).toBe(IdentityCard);
-    expect(svc.getAlbumFavorites).not.toHaveBeenCalled();
   });
 
   it("EditablePlaca: aloja identidad y enlaces en un mismo editor, con los valores del perfil", async () => {

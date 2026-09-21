@@ -26,21 +26,15 @@ function post(body: unknown) {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.requireUser.mockResolvedValue(user);
-  mocks.completeOnboarding.mockResolvedValue({ albumFavorites: [], onboardedAt: "2026-09-09T00:00:00.000Z" });
+  mocks.completeOnboarding.mockResolvedValue({ onboardedAt: "2026-09-09T00:00:00.000Z" });
 });
 
 describe("POST /api/me/onboarding", () => {
   it("cierra el onboarding y devuelve el estado", async () => {
-    mocks.completeOnboarding.mockResolvedValue({
-      albumFavorites: [
-        { id: "p1", favoriteId: "f1", position: 1, target: { id: rg(1), title: "A", artistName: null, coverThumbUrl: null } },
-      ],
-      onboardedAt: "2026-09-09T00:00:00.000Z",
-    });
     const res = await POST(post({ albumReleaseGroupIds: [rg(1)] }));
     expect(res.status).toBe(200);
     expect(mocks.completeOnboarding).toHaveBeenCalledWith(user.id, [rg(1)]);
-    expect((await res.json()).albumFavorites).toHaveLength(1);
+    expect(await res.json()).toEqual({ onboardedAt: "2026-09-09T00:00:00.000Z" });
   });
 
   it("acepta lista vacía (saltar)", async () => {

@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
+import { ArtistPlate } from "@/components/favorites/ArtistPlate";
 import { apiFetch, ApiError } from "@/lib/api/client";
 import { getMyFavorites } from "@/lib/api/favorites";
 import { ShowcaseResponseSchema, type Favorite } from "@/lib/api/schemas";
 import { PROFILE_IDENTITY_LIMITS, PROFILE_MAX_PINNED } from "@/services/social/types";
-import type { IdentityCard, Showcase, ShowcaseEntity } from "@/services/profiles/showcase";
+import type { Showcase, ShowcaseEntity } from "@/services/profiles/showcase";
 import { useNotifySaved, useReportDirty, type EditorHostCallbacks } from "./editor-host";
 
 interface OwnerShowcaseEditorProps extends EditorHostCallbacks {
@@ -30,12 +31,15 @@ function favoriteToEntity(favorite: Favorite): ShowcaseEntity {
   };
 }
 
-// Editor inline de destacados e himno del dueño. Siguiendo el precedente del
-// detalle de lista (memoria list-detail-scope), NO hay buscador de catálogo
-// embebido: se elige de los favoritos del usuario (entidades ya ingeridas,
-// canciones incluidas). Montado solo en la vista del propio perfil.
-// Firma de los destacados guardables (orden + nota); el himno y el marcador
-// "me define" se aplican al instante y no forman parte del borrador.
+// Editor de "Empieza por aquí" del dueño (openspec: simplify-profile-curation):
+// hasta 4 recomendaciones con orden y nota. Siguiendo el precedente del detalle
+// de lista (memoria list-detail-scope), NO hay buscador de catálogo embebido: se
+// elige de los favoritos del usuario (entidades ya ingeridas, canciones
+// incluidas). El himno y el artista/álbum definitorios NO se editan acá: viven
+// solo en el editor de la Tarjeta de Identidad. Montado solo en vistas del dueño.
+
+// Firma de los ítems guardables (orden + nota): es el borrador que compara el
+// indicador de cambios sin guardar.
 function pinSignature(rows: PinRow[]): string {
   return JSON.stringify(rows.map((row) => [row.entity.type, row.entity.id, row.note.trim()]));
 }
@@ -44,15 +48,12 @@ export function OwnerShowcaseEditor({ initial, onSaved, onDirtyChange }: OwnerSh
   const t = useTranslations("users");
   const tErrors = useTranslations("errors");
   const notifySaved = useNotifySaved(onSaved);
+  const idPrefix = useId();
 
   const [pins, setPins] = useState<PinRow[]>(
     initial.pinned.map((item) => ({ entity: item.entity, note: item.note ?? "" })),
   );
-  const [identityCard, setIdentityCard] = useState<IdentityCard>(initial.identityCard);
-  const [definingErrorCode, setDefiningErrorCode] = useState<string | null>(null);
-  const [anthem, setAnthem] = useState<ShowcaseEntity | null>(initial.anthem);
   const [favorites, setFavorites] = useState<Favorite[] | null>(null);
-  const [recordingFavorites, setRecordingFavorites] = useState<Favorite[] | null>(null);
   const [pinStatus, setPinStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [baseline, setBaseline] = useState(() =>
@@ -67,16 +68,6 @@ export function OwnerShowcaseEditor({ initial, onSaved, onDirtyChange }: OwnerSh
     try {
       const result = await getMyFavorites(1, 50);
       setFavorites(result.favorites);
-    } catch (error) {
-      setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
-    }
-  }
-
-  async function loadRecordingFavorites() {
-    if (recordingFavorites) return;
-    try {
-      const result = await getMyFavorites(1, 50, { type: "recording" });
-      setRecordingFavorites(result.favorites);
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
     }
@@ -119,102 +110,58 @@ export function OwnerShowcaseEditor({ initial, onSaved, onDirtyChange }: OwnerSh
     }
   }
 
-  function isDefiningEntity(entity: ShowcaseEntity): boolean {
-    if (entity.type === "artist") return identityCard.artist?.id === entity.id;
-    if (entity.type === "release-group") return identityCard.album?.id === entity.id;
-    return false;
-  }
-
-  async function setDefining(entity: ShowcaseEntity, defining: boolean) {
-    if (entity.type === "recording") return;
-    setDefiningErrorCode(null);
-    try {
-      const data = await apiFetch("/api/me/profile/pinned/defining", ShowcaseResponseSchema, {
-        method: defining ? "PUT" : "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: entity.type, id: entity.id }),
-      });
-      setIdentityCard(data.showcase.identityCard);
-      notifySaved();
-    } catch (error) {
-      setDefiningErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
-    }
-  }
-
-  async function chooseAnthem(entity: ShowcaseEntity) {
-    setErrorCode(null);
-    try {
-      const data = await apiFetch("/api/me/profile/anthem", ShowcaseResponseSchema, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recordingId: entity.id }),
-      });
-      setAnthem(data.showcase.anthem);
-      notifySaved();
-    } catch (error) {
-      setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
-    }
-  }
-
-  async function clearAnthem() {
-    setErrorCode(null);
-    try {
-      const data = await apiFetch("/api/me/profile/anthem", ShowcaseResponseSchema, {
-        method: "DELETE",
-      });
-      setAnthem(data.showcase.anthem);
-      notifySaved();
-    } catch (error) {
-      setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
-    }
-  }
-
   return (
-    <div className="flex flex-col gap-6">
-      <h3 className="font-display text-sm text-paper-muted">{t("showcase.edit.heading")}</h3>
+    <div className="flex flex-col gap-4">
+      <div>
+        <h3 className="font-display text-sm text-paper-muted">{t("showcase.edit.heading")}</h3>
+        <p className="mt-1 font-body text-xs text-paper-muted">{t("showcase.edit.pinnedIntro")}</p>
+      </div>
 
-      {/* Destacados */}
-      <section className="flex flex-col gap-3">
-        <p className="font-body text-xs text-paper-muted">{t("showcase.edit.pinnedIntro")}</p>
-
-        <ul className="flex flex-col gap-2">
-          {pins.map((row, index) => (
+      <ul className="flex flex-col gap-2">
+        {pins.map((row, index) => {
+          const noteId = `${idPrefix}-note-${row.entity.id}`;
+          return (
             <li
               key={row.entity.id}
-              className="flex flex-wrap items-center gap-2 rounded border border-ink-border bg-ink p-2"
+              className="flex flex-wrap items-start gap-2 rounded border border-ink-border bg-ink p-2"
             >
-              <CoverThumb cover={row.entity.coverThumbUrl} label="" className="size-10" />
-              <span className="min-w-0 flex-1">
+              {row.entity.type === "artist" ? (
+                <ArtistPlate title={row.entity.title} className="size-10" textClassName="text-base" />
+              ) : (
+                <CoverThumb cover={row.entity.coverThumbUrl} label="" className="size-10" />
+              )}
+              <span className="flex min-w-0 flex-1 flex-col gap-1.5">
                 <span className="block truncate font-display text-sm text-paper">
                   {row.entity.title}
+                  {row.entity.artistName && (
+                    <span className="font-data text-xs text-paper-muted"> · {row.entity.artistName}</span>
+                  )}
                 </span>
-                <input
+                <label
+                  htmlFor={noteId}
+                  className="flex justify-between font-data text-xs text-paper-muted"
+                >
+                  <span>{t("showcase.edit.noteLabel")}</span>
+                  <span aria-hidden>
+                    {row.note.length}/{PROFILE_IDENTITY_LIMITS.pinnedNote}
+                  </span>
+                </label>
+                <textarea
+                  id={noteId}
+                  rows={2}
                   value={row.note}
                   maxLength={PROFILE_IDENTITY_LIMITS.pinnedNote}
                   placeholder={t("showcase.edit.notePlaceholder")}
                   onChange={(event) => {
-                    const note = event.target.value;
-                    setPins((prev) =>
-                      prev.map((item, i) => (i === index ? { ...item, note } : item)),
-                    );
+                    // La nota es una sola frase: los saltos de línea se aplanan.
+                    const note = event.target.value.replace(/\s*\n\s*/g, " ");
+                    setPins((prev) => prev.map((item, i) => (i === index ? { ...item, note } : item)));
                     setPinStatus("idle");
                   }}
-                  className="mt-1 w-full rounded border border-ink-border bg-ink-surface px-2 py-1 font-body text-xs text-paper placeholder:text-paper-muted"
+                  className="w-full resize-none rounded border border-ink-border bg-ink-surface px-2.5 py-2 font-body text-sm text-paper placeholder:italic placeholder:text-paper-muted focus:border-amber focus:outline-none"
                 />
               </span>
               <span className="flex gap-1">
-                {row.entity.type !== "recording" && (
-                  <Button
-                    type="button"
-                    variant={isDefiningEntity(row.entity) ? "primary" : "ghost"}
-                    aria-label={t(
-                      isDefiningEntity(row.entity) ? "identityCard.unmarkDefining" : "identityCard.markDefining",
-                    )}
-                    onClick={() => void setDefining(row.entity, !isDefiningEntity(row.entity))}
-                  >
-                    {isDefiningEntity(row.entity) ? "★" : "☆"}
-                  </Button>
-                )}
                 <Button
                   type="button"
                   variant="ghost"
@@ -246,110 +193,56 @@ export function OwnerShowcaseEditor({ initial, onSaved, onDirtyChange }: OwnerSh
                 </Button>
               </span>
             </li>
-          ))}
-        </ul>
+          );
+        })}
+      </ul>
 
-        {pins.length < PROFILE_MAX_PINNED ? (
-          <details onToggle={() => void loadFavorites()}>
-            <summary className="cursor-pointer font-data text-xs text-paper-muted hover:text-paper">
-              {t("showcase.edit.addFromFavorites")}
-            </summary>
-            <ul className="mt-2 flex max-h-64 flex-col gap-1 overflow-y-auto">
-              {favorites?.length === 0 && (
-                <li className="font-body text-xs text-paper-muted">
-                  {t("showcase.edit.noFavorites")}
-                </li>
-              )}
-              {favorites
-                ?.filter((favorite) => !pinnedIds.has(favorite.target.id))
-                .map((favorite) => (
-                  <li key={favorite.id}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPins((prev) => [...prev, { entity: favoriteToEntity(favorite), note: "" }]);
-                        setPinStatus("idle");
-                      }}
-                      className="flex w-full items-center gap-2 rounded border border-ink-border bg-ink-surface px-2 py-1.5 text-left transition-colors hover:border-amber"
-                    >
-                      <CoverThumb
-                        cover={favorite.target.coverThumbUrl}
-                        label=""
-                        className="size-8"
-                      />
-                      <span className="truncate font-body text-xs text-paper">
-                        {favorite.target.title}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-            </ul>
-          </details>
-        ) : (
-          <p className="font-data text-xs text-paper-muted">{t("showcase.edit.maxPinned")}</p>
-        )}
+      {pins.length > 0 && (
+        <p className="font-body text-xs text-paper-muted">{t("showcase.edit.noteHint")}</p>
+      )}
 
-        <div className="flex items-center gap-3">
-          <Button type="button" onClick={() => void savePins()} disabled={pinStatus === "saving"}>
-            {pinStatus === "saving" ? t("edit.saving") : t("showcase.edit.savePinned")}
-          </Button>
-          {pinStatus === "saved" && (
-            <span role="status" className="font-data text-xs text-petrol-hover">
-              {t("edit.saved")}
-            </span>
-          )}
-        </div>
-        {definingErrorCode && (
-          <span role="alert" className="font-data text-xs text-danger">
-            {tErrors(`${definingErrorCode}.description`)}
-          </span>
-        )}
-      </section>
-
-      {/* Himno */}
-      <section className="flex flex-col gap-3">
-        <p className="font-body text-xs text-paper-muted">{t("showcase.edit.anthemIntro")}</p>
-
-        {anthem && (
-          <div className="flex items-center gap-3 rounded border border-ink-border bg-ink p-2">
-            <span className="min-w-0 flex-1">
-              <span className="block font-data text-xs text-paper-muted">
-                {t("showcase.edit.currentAnthem")}
-              </span>
-              <span className="block truncate font-display text-sm text-paper">{anthem.title}</span>
-            </span>
-            <Button type="button" variant="ghost" onClick={() => void clearAnthem()}>
-              {t("showcase.edit.clearAnthem")}
-            </Button>
-          </div>
-        )}
-
-        <details onToggle={() => void loadRecordingFavorites()}>
+      {pins.length < PROFILE_MAX_PINNED ? (
+        <details onToggle={() => void loadFavorites()}>
           <summary className="cursor-pointer font-data text-xs text-paper-muted hover:text-paper">
             {t("showcase.edit.addFromFavorites")}
           </summary>
           <ul className="mt-2 flex max-h-64 flex-col gap-1 overflow-y-auto">
-            {recordingFavorites?.length === 0 && (
-              <li className="font-body text-xs text-paper-muted">
-                {t("showcase.edit.noRecordingFavorites")}
-              </li>
+            {favorites?.length === 0 && (
+              <li className="font-body text-xs text-paper-muted">{t("showcase.edit.noFavorites")}</li>
             )}
-            {recordingFavorites?.map((favorite) => (
-              <li key={favorite.id}>
-                <button
-                  type="button"
-                  onClick={() => void chooseAnthem(favoriteToEntity(favorite))}
-                  className="flex w-full items-center gap-2 rounded border border-ink-border bg-ink-surface px-2 py-1.5 text-left transition-colors hover:border-amber"
-                >
-                  <span className="truncate font-body text-xs text-paper">
-                    {favorite.target.title}
-                  </span>
-                </button>
-              </li>
-            ))}
+            {favorites
+              ?.filter((favorite) => !pinnedIds.has(favorite.target.id))
+              .map((favorite) => (
+                <li key={favorite.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPins((prev) => [...prev, { entity: favoriteToEntity(favorite), note: "" }]);
+                      setPinStatus("idle");
+                    }}
+                    className="flex w-full items-center gap-2 rounded border border-ink-border bg-ink-surface px-2 py-1.5 text-left transition-colors hover:border-amber"
+                  >
+                    <CoverThumb cover={favorite.target.coverThumbUrl} label="" className="size-8" />
+                    <span className="truncate font-body text-xs text-paper">{favorite.target.title}</span>
+                  </button>
+                </li>
+              ))}
           </ul>
         </details>
-      </section>
+      ) : (
+        <p className="font-data text-xs text-paper-muted">{t("showcase.edit.maxPinned")}</p>
+      )}
+
+      <div className="flex items-center gap-3">
+        <Button type="button" onClick={() => void savePins()} disabled={pinStatus === "saving"}>
+          {pinStatus === "saving" ? t("edit.saving") : t("showcase.edit.savePinned")}
+        </Button>
+        {pinStatus === "saved" && (
+          <span role="status" className="font-data text-xs text-petrol-hover">
+            {t("edit.saved")}
+          </span>
+        )}
+      </div>
 
       {errorCode && (
         <span role="alert" className="font-data text-xs text-danger">
