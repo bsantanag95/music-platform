@@ -1,7 +1,8 @@
 export {};
 
 // Smoke test del cambio rework-account-settings (Fase 1: cuenta y seguridad; Fase 2:
-// identidad musical, preguntas, zona horaria y hora local).
+// identidad musical, preguntas, zona horaria y hora local; Fase 3: cuenta desactivada,
+// reactivación, eliminación en cascada y exportación).
 // Ejecuta contra Postgres REAL el SQL que las pruebas unitarias mockean:
 // cambio de usuario (enfriamiento, reserva sin distinguir mayúsculas, alias,
 // recuperación), cambio de email con confirmación, cambio y creación de
@@ -16,7 +17,23 @@ import { createRequire } from "node:module";
 import { and, eq } from "drizzle-orm";
 import { assertSmokeAllowed } from "./assert-smoke-allowed";
 import { db } from "../src/db";
-import { appUser, authIdentity, emailChangeToken, session, userProfilePrompt, usernameAlias } from "../src/db/schema";
+import {
+  appUser,
+  authIdentity,
+  comment,
+  favorite,
+  listenEntry,
+  rating,
+  releaseGroup,
+  review,
+  session,
+  userFollow,
+  userList,
+  userProfilePrompt,
+  userRoleAction,
+  usernameAlias,
+  emailChangeToken,
+} from "../src/db/schema";
 import { clearAuthAttempts } from "../src/services/auth/rate-limit";
 
 assertSmokeAllowed();
@@ -92,7 +109,7 @@ async function loadServices() {
     return originalLoad.call(this, request, parent, isMain);
   };
 
-  const [users, username, emailChange, passwordChange, sessions, sessionList, identities, accountSettings, musicIdentity, identity, profileView] =
+  const [users, username, emailChange, passwordChange, sessions, sessionList, identities, accountSettings, musicIdentity, identity, profileView, lifecycle, following, blocking, profilesSvc, feedSvc, homeSvc, communitySvc, discovery, listsSvc, savedLists, reviewsSvc, socialSvc, dataExport] =
     await Promise.all([
       import("../src/services/auth/users"),
       import("../src/services/auth/username"),
@@ -105,8 +122,21 @@ async function loadServices() {
       import("../src/services/profiles/music-identity"),
       import("../src/services/profiles/identity"),
       import("../src/services/profiles/profile-view"),
+      import("../src/services/auth/account-lifecycle"),
+      import("../src/services/social/following"),
+      import("../src/services/social/blocking"),
+      import("../src/services/social/profiles"),
+      import("../src/services/feed/feed"),
+      import("../src/services/home/home"),
+      import("../src/services/activity/community-activity"),
+      import("../src/services/lists/discovery"),
+      import("../src/services/lists/lists"),
+      import("../src/services/lists/saved-lists"),
+      import("../src/services/reviews"),
+      import("../src/services/social"),
+      import("../src/services/profiles/data-export"),
     ]);
-  return { users, username, emailChange, passwordChange, sessions, sessionList, identities, accountSettings, musicIdentity, identity, profileView };
+  return { users, username, emailChange, passwordChange, sessions, sessionList, identities, accountSettings, musicIdentity, identity, profileView, lifecycle, following, blocking, profilesSvc, feedSvc, homeSvc, communitySvc, discovery, listsSvc, savedLists, reviewsSvc, socialSvc, dataExport };
 }
 
 async function main() {
@@ -329,8 +359,163 @@ async function main() {
     await db.delete(appUser).where(eq(appUser.id, m.id));
     check((await promptRows()) === 0, "borrar la cuenta borra sus preguntas (ON DELETE CASCADE)");
 
-    console.log("\n✅ smoke de cuenta y seguridad e identidad musical OK");
+
+    console.log("\n8) Cuenta desactivada (Fase 3): superficies, autoría conservada, reactivación");
+    const [album] = await db.select({ id: releaseGroup.id }).from(releaseGroup).limit(1);
+    if (!album) throw new Error("La BD de scratch no tiene ningún álbum: ingestá uno antes de correr este smoke");
+    const target = await s.socialSvc.resolveSocialTarget("release-group", album.id);
+
+    const v = await newUser("v");
+    const t = await newUser("t");
+    await s.following.followUser(v.id, t.username);
+    await s.following.followUser(t.id, v.username);
+    const list = await s.listsSvc.createList({ ownerId: t.id, entityType: "release-group", title: "Lista ZZ smoke", audience: "public" });
+    await s.savedLists.saveList(v.id, list.id);
+    await s.socialSvc.upsertRating(target, t.id, 4, 80);
+    await s.reviewsSvc.createOrReplaceReview(target, t.id, { title: "Reseña ZZ", body: "cuerpo zz smoke" } as never);
+    await s.socialSvc.createComment(target, t.id, "comentario zz smoke");
+    await db.insert(favorite).values({ userId: t.id, releaseGroupId: album.id, audience: "public" });
+
+    const has = (value: unknown, needle: string) => JSON.stringify(value).includes(needle);
+    const followingOf = async () => (await s.following.listFollowing(v.id)).users.map((u) => u.username);
+    const followersOf = async () => (await s.following.listFollowers(v.id)).users.map((u) => u.username);
+    const authorsOf = async () => (await s.feedSvc.listFeedAuthors(v.id)).map((a) => a.username);
+
+    check((await s.profilesSvc.getProfileByUsername(t.username, v.id)).username === t.username, "antes: el perfil de la persona se ve");
+    check((await s.profilesSvc.searchUsers(t.username, v.id)).users.some((u) => u.username === t.username), "antes: aparece en la búsqueda");
+    check((await followingOf()).includes(t.username) && (await followersOf()).includes(t.username), "antes: aparece entre seguidos y seguidores");
+    const before = await s.identity.countFollows(v.id);
+    check(before.followerCount === 1 && before.followingCount === 1, "antes: los contadores la cuentan");
+    check((await authorsOf()).includes(t.username), "antes: es un autor filtrable del feed");
+    check(has(await s.feedSvc.listFeed(v.id), t.username), "antes: sus eventos están en el feed");
+    check(has(await s.discovery.listDiscoverLists(null), list.id), "antes: su lista pública figura en el descubrimiento");
+    check(has(await s.savedLists.listSavedLists(v.id), list.id), "antes: su lista está entre las guardadas");
+    check(has(await s.communitySvc.listCommunityActivity(v.id), t.username), "antes: figura en la actividad de la comunidad");
+    const ratingsBefore = await s.socialSvc.getRatings(target);
+
+    console.log("  · desactivar");
+    const tSession = (await sessionOf(t.id)).resolved;
+    check((await codeOf(() => s.lifecycle.deactivateAccount(tSession, "mala"))) === "INVALID_CREDENTIALS", "desactivar exige la contraseña");
+    clearAuthAttempts();
+    await s.lifecycle.deactivateAccount(tSession, password);
+    const [deact] = await db.select({ at: appUser.deactivatedAt }).from(appUser).where(eq(appUser.id, t.id));
+    check(deact?.at !== null, "queda registrada la fecha de desactivación");
+    check((await db.select().from(session).where(eq(session.userId, t.id))).length === 0, "se cierran TODAS sus sesiones");
+
+    check((await codeOf(() => s.profilesSvc.getProfileByUsername(t.username, v.id))) === "USER_NOT_FOUND", "el perfil responde como inexistente");
+    check((await codeOf(() => s.profileView.getProfileView(t.username, null))) === "USER_NOT_FOUND", "la vista de perfil también (sin sesión)");
+    check(!(await s.profilesSvc.searchUsers(t.username, v.id)).users.some((u) => u.username === t.username), "desaparece de la búsqueda");
+    check(!(await followingOf()).includes(t.username) && !(await followersOf()).includes(t.username), "desaparece de seguidos y seguidores");
+    const during = await s.identity.countFollows(v.id);
+    check(during.followerCount === 0 && during.followingCount === 0, "deja de contarse en los contadores");
+    check(!(await authorsOf()).includes(t.username), "deja de ser autor filtrable del feed");
+    check(!has(await s.feedSvc.listFeed(v.id), t.username), "sus eventos desaparecen del feed");
+    check(!has(await s.discovery.listDiscoverLists(null), list.id), "su lista sale del descubrimiento");
+    check(!has(await s.savedLists.listSavedLists(v.id), list.id), "su lista sale de las guardadas");
+    check(!has(await s.communitySvc.listCommunityActivity(v.id), t.username), "sale de la actividad de la comunidad");
+    check(!has(await s.homeSvc.listPublicLists(v.id, 50), list.id), "su lista sale de Home");
+    check(!has(await s.homeSvc.listPopularComments(50), "comentario zz smoke"), "su comentario sale de los populares de Home");
+    check((await codeOf(() => s.following.followUser(v.id, t.username))) === "USER_NOT_FOUND", "no se la puede seguir");
+    check((await codeOf(() => s.blocking.blockUser(v.id, t.username))) === "USER_NOT_FOUND", "no se la puede bloquear");
+    check((await followingOf()).length === 0, "V sigue viendo su propia red sin ella (sin errores)");
+
+    console.log("  · autoría conservada");
+    const reviews = (await s.reviewsSvc.listReviews(target, 1, 50)).reviews;
+    const mine = reviews.find((r) => r.body === "cuerpo zz smoke");
+    check(mine !== undefined && mine.user.deactivated === true && mine.user.username === "" && mine.user.displayName === null, "la reseña se conserva con autoría «desactivada», sin usuario ni nombre");
+    check(!has(mine, t.username), "el usuario real no aparece en la reseña");
+    const comments = (await s.socialSvc.listComments(target, 1, 50)).comments;
+    const myComment = comments.find((c) => c.body === "comentario zz smoke");
+    check(myComment !== undefined && myComment.user.deactivated === true && myComment.user.username === "", "el comentario se conserva con autoría «desactivada»");
+    const ratingsDuring = await s.socialSvc.getRatings(target);
+    check(ratingsDuring.aggregate.count === ratingsBefore.aggregate.count, "las valoraciones siguen contando en los agregados");
+    const [stillThere] = await db.select({ n: userList.id }).from(userList).where(eq(userList.id, list.id));
+    check(stillThere !== undefined, "la lista sigue existiendo");
+    check((await db.select().from(userFollow).where(eq(userFollow.followedId, t.id))).length === 1, "los seguimientos se conservan");
+    check((await db.select().from(favorite).where(eq(favorite.userId, t.id))).length === 1, "los favoritos se conservan");
+
+    console.log("  · reactivar");
+    const found = await s.users.authenticateUser(t.username, password);
+    check(found !== null && found.deactivatedAt !== null, "iniciar sesión encuentra a la cuenta aunque esté desactivada");
+    check((await s.users.findUserWithPasswordByEmail(t.email)) !== null, "restablecer la contraseña también la encuentra");
+    check((await s.lifecycle.reactivateAccount(t.id)) === true, "reactivar borra la marca");
+    check((await s.lifecycle.reactivateAccount(t.id)) === false, "reactivar una cuenta activa no hace nada");
+    check((await s.profilesSvc.getProfileByUsername(t.username, v.id)).username === t.username, "vuelve el perfil");
+    check((await followingOf()).includes(t.username) && (await followersOf()).includes(t.username), "vuelven los seguidos y seguidores");
+    const after = await s.identity.countFollows(v.id);
+    check(after.followerCount === 1 && after.followingCount === 1, "vuelven los contadores");
+    check(has(await s.feedSvc.listFeed(v.id), t.username), "vuelven sus eventos al feed");
+    check(has(await s.savedLists.listSavedLists(v.id), list.id), "vuelve su lista guardada");
+    const back = (await s.reviewsSvc.listReviews(target, 1, 50)).reviews.find((r) => r.body === "cuerpo zz smoke");
+    check(back?.user.deactivated === false && back.user.username === t.username, "la reseña vuelve a mostrar su autoría real");
+
+    console.log("\n9) Eliminar cuenta (Fase 3)");
+    const d = await newUser("d");
+    await s.following.followUser(d.id, v.username);
+    await s.following.followUser(v.id, d.username);
+    await s.listsSvc.createList({ ownerId: d.id, entityType: "release-group", title: "Lista D", audience: "public" });
+    await s.socialSvc.upsertRating(target, d.id, 3, 60);
+    await s.reviewsSvc.createOrReplaceReview(target, d.id, { title: null, body: "reseña de D" } as never);
+    await s.socialSvc.createComment(target, d.id, "comentario de D");
+    await db.insert(favorite).values({ userId: d.id, releaseGroupId: album.id, audience: "public" });
+    await db.insert(listenEntry).values({ userId: d.id, releaseGroupId: album.id, listenContext: "first_listen", audience: "private", body: "nota privada de D" });
+    await s.musicIdentity.replacePrompts(d.id, [{ promptKey: "first-record", answer: "algo" }]);
+    await s.identities.linkIdentityToUser(d.id, { provider: "google", providerAccountId: `smoke-sub-${suffix}-d`, email: null, emailVerified: true } as never);
+    const dSession = (await sessionOf(d.id)).resolved;
+
+    // Exportar ANTES de borrar: el archivo trae lo propio y nada secreto.
+    const exported = await s.dataExport.buildDataExport(d.id);
+    const exportText = JSON.stringify(exported);
+    check(exported.library.diary.length === 1 && exportText.includes("nota privada de D"), "la exportación incluye el diario con la nota privada");
+    check(exported.activity.reviews.length === 1 && exported.activity.comments.length === 1 && exported.activity.ratings.length === 1, "la exportación incluye reseñas, comentarios y valoraciones");
+    check(exported.catalog.releaseGroups[album.id] !== undefined, "la exportación acompaña los ids del catálogo con sus nombres");
+    const [dRow] = await db.select().from(appUser).where(eq(appUser.id, d.id));
+    check(!exportText.includes(dRow!.passwordHash ?? "__none__") && !/passwordHash|tokenHash|token_hash|session/i.test(exportText), "la exportación NO incluye el hash de la contraseña, tokens ni sesiones");
+    check(exported.social.following.some((f) => f.username === v.username) && exported.social.followers.some((f) => f.username === v.username), "la exportación lista seguidores y seguidos como usuarios públicos");
+    check(!exportText.includes(v.email), "la exportación NO incluye datos privados de otras personas (su email)");
+
+    check((await codeOf(() => s.lifecycle.deleteAccount(dSession, { username: "otro", password }))) === "VALIDATION_ERROR", "eliminar exige el usuario de confirmación exacto");
+    check((await codeOf(() => s.lifecycle.deleteAccount(dSession, { username: d.username, password: "mala" }))) === "INVALID_CREDENTIALS", "eliminar exige la contraseña");
+    clearAuthAttempts();
+    check((await db.select().from(appUser).where(eq(appUser.id, d.id))).length === 1, "los rechazos no borran nada");
+
+    await s.lifecycle.deleteAccount(dSession, { username: d.username, password });
+    const leftovers = {
+      app_user: (await db.select().from(appUser).where(eq(appUser.id, d.id))).length,
+      listas: (await db.select().from(userList).where(eq(userList.ownerId, d.id))).length,
+      valoraciones: (await db.select().from(rating).where(eq(rating.userId, d.id))).length,
+      reseñas: (await db.select().from(review).where(eq(review.userId, d.id))).length,
+      comentarios: (await db.select().from(comment).where(eq(comment.userId, d.id))).length,
+      favoritos: (await db.select().from(favorite).where(eq(favorite.userId, d.id))).length,
+      diario: (await db.select().from(listenEntry).where(eq(listenEntry.userId, d.id))).length,
+      preguntas: (await db.select().from(userProfilePrompt).where(eq(userProfilePrompt.userId, d.id))).length,
+      sesiones: (await db.select().from(session).where(eq(session.userId, d.id))).length,
+      identidades: (await db.select().from(authIdentity).where(eq(authIdentity.userId, d.id))).length,
+      seguimientos: (await db.select().from(userFollow).where(eq(userFollow.followerId, d.id))).length + (await db.select().from(userFollow).where(eq(userFollow.followedId, d.id))).length,
+    };
+    check(Object.values(leftovers).every((n) => n === 0), `no queda ninguna fila de la persona (${JSON.stringify(leftovers)})`);
+    const rest = await s.following.listFollowing(v.id);
+    check(!rest.users.some((u) => u.username === d.username), "los demás dejan de verla en sus listados");
+    check(!has(await s.reviewsSvc.listReviews(target, 1, 50), "reseña de D"), "su reseña se borra (no queda como «desactivada»)");
+
+    console.log("  · cuenta con historial de moderación");
+    const m2 = await newUser("mod");
+    const other = await newUser("mod2");
+    await db.insert(userRoleAction).values({ actorId: m2.id, targetId: other.id, role: "moderator", action: "grant" });
+    const m2Session = (await sessionOf(m2.id)).resolved;
+    const blockedCode = await codeOf(() => s.lifecycle.deleteAccount(m2Session, { username: m2.username, password }));
+    check(blockedCode === "ACCOUNT_DELETION_BLOCKED", "una cuenta con historial de moderación NO se puede eliminar");
+    check((await db.select().from(appUser).where(eq(appUser.id, m2.id))).length === 1, "y no cambia nada");
+    await s.lifecycle.deactivateAccount(m2Session, password);
+    const [m2Row] = await db.select({ at: appUser.deactivatedAt }).from(appUser).where(eq(appUser.id, m2.id));
+    check(m2Row?.at !== null, "en su lugar sí se puede desactivar");
+
+    console.log("\n✅ smoke de cuenta, identidad musical y ciclo de vida OK");
   } finally {
+    // Las filas de auditoría referencian al actor con RESTRICT: hay que soltarlas antes.
+    for (const id of createdUserIds) {
+      await db.delete(userRoleAction).where(eq(userRoleAction.actorId, id)).catch(() => undefined);
+    }
     for (const id of createdUserIds) {
       await db.delete(appUser).where(eq(appUser.id, id)).catch(() => undefined);
     }

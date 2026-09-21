@@ -171,7 +171,8 @@ describe("seguimiento", () => {
 
   it("cuenta las solicitudes de seguimiento pendientes recibidas", async () => {
     const where = vi.fn().mockResolvedValue([{ count: 3 }]);
-    const from = vi.fn().mockReturnValue({ where });
+    // from().innerJoin(app_user).where(): solo cuenta solicitudes de cuentas activas.
+    const from = vi.fn().mockReturnValue({ innerJoin: vi.fn().mockReturnValue({ where }) });
     mocks.db.select.mockReturnValue({ from });
 
     await expect(countPendingFollowRequests("t1")).resolves.toBe(3);
@@ -179,7 +180,7 @@ describe("seguimiento", () => {
 
   it("devuelve 0 cuando no hay solicitudes pendientes", async () => {
     const where = vi.fn().mockResolvedValue([]);
-    const from = vi.fn().mockReturnValue({ where });
+    const from = vi.fn().mockReturnValue({ innerJoin: vi.fn().mockReturnValue({ where }) });
     mocks.db.select.mockReturnValue({ from });
 
     await expect(countPendingFollowRequests("t1")).resolves.toBe(0);

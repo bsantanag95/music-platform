@@ -386,6 +386,14 @@ una cuenta sin contraseña, una sesión de menos de 10 minutos (`403 REAUTH_REQU
 | `GET /api/me/sessions` | `200 { sessions: [{ id, deviceLabel, createdAt, lastSeenAt, current }] }`, la actual primero; `deviceLabel: null` = "Dispositivo desconocido". Sin token ni hash |
 | `DELETE /api/me/sessions/{id}` | `204`. `404 SESSION_NOT_FOUND` (inexistente, no UUID o de otra persona), `400 VALIDATION_ERROR` si es la sesión actual (para eso está cerrar sesión) |
 | `PATCH /api/me/preferences` | `{ locale: "es" \| "en" }` → `200 { locale }`. `400 VALIDATION_ERROR` con otro valor |
+| `POST /api/me/account/deactivate` | `{ password? }` → `200 { ok: true }`. Marca `deactivated_at`, borra **todas** las sesiones de la persona y limpia la cookie. `401 INVALID_CREDENTIALS`, `429 RATE_LIMITED`, `REAUTH_REQUIRED` (cuenta de Google con sesión de más de 10 min). No borra contenido |
+| `DELETE /api/me/account` | `{ username, password? }` → `200 { ok: true }`. `username` debe ser igual al de la cuenta (`400 VALIDATION_ERROR` si no). Borra la cuenta y todo lo suyo, y limpia la cookie. `409 ACCOUNT_DELETION_BLOCKED` si tiene historial de moderación o editorial (no cambia nada). Mismos errores de identidad que desactivar |
+| `GET /api/me/export` | `200` con el JSON de la persona (`Content-Disposition: attachment; filename="music-platform-<usuario>-<fecha>.json"`, `Cache-Control: no-store`). Forma: `{ version, exportedAt, account, profile, library, activity, lists, highlights, social, catalog }`. Sin hash de contraseña, tokens ni sesiones. `429 RATE_LIMITED`: una exportación por minuto por persona |
+
+**Autoría desactivada.** En reseñas y comentarios, `user` gana `deactivated?: boolean`. Cuando es `true`,
+`username` es `""` y `displayName` es `null` (la API no entrega la identidad real de una cuenta
+desactivada); el cliente muestra «Cuenta desactivada» sin enlace. Iniciar sesión con una cuenta
+desactivada la **reactiva**: `POST /api/auth/login` y el callback de Google limpian la marca.
 
 `POST /api/auth/login` incluye ahora `user.locale` (preferencia guardada o `null`): `AuthForm` lleva a
 la persona a ese idioma si difiere del actual.

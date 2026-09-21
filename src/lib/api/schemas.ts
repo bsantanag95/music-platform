@@ -234,6 +234,7 @@ export const ErrorCodeSchema = z.enum([
   "OAUTH_IDENTITY_TAKEN",
   "OAUTH_IDENTITY_MISMATCH",
   "SESSION_NOT_FOUND",
+  "ACCOUNT_DELETION_BLOCKED",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 
@@ -505,6 +506,9 @@ export const CommentSchema = z.object({
     id: z.uuid(),
     username: z.string(),
     displayName: z.string().nullable(),
+    // Autoría de una cuenta desactivada (spec account-lifecycle): `username` viene vacío
+    // y `displayName` nulo; la interfaz muestra «Cuenta desactivada», sin enlace.
+    deactivated: z.boolean().optional(),
   }),
   body: z.string(),
   createdAt: z.string(),
@@ -565,6 +569,8 @@ export const ReviewSchema = z.object({
     id: z.uuid(),
     username: z.string(),
     displayName: z.string().nullable(),
+    // Ver `CommentSchema`: cuenta desactivada → sin nombre ni enlace.
+    deactivated: z.boolean().optional(),
   }),
   title: z.string().nullable(),
   body: z.string(),
@@ -2022,4 +2028,20 @@ export const ProfilePromptSchema = z.object({
 });
 export const PromptsResponseSchema = z.object({ prompts: z.array(ProfilePromptSchema) });
 export type PromptsResponse = z.infer<typeof PromptsResponseSchema>;
+
+// --- Ciclo de vida de la cuenta (change rework-account-settings, Fase 3) ---
+
+// Desactivar: la contraseña es el factor en cuentas con contraseña; en cuentas de
+// Google no se envía (sesión reciente o `REAUTH_REQUIRED`).
+export const DeactivateAccountRequestSchema = z.object({
+  password: z.string().min(1).max(PASSWORD_MAX).optional(),
+});
+export type DeactivateAccountRequest = z.infer<typeof DeactivateAccountRequestSchema>;
+
+// Eliminar: el usuario como confirmación, más el factor de identidad.
+export const DeleteAccountRequestSchema = z.object({
+  username: z.string().trim().min(1).max(64),
+  password: z.string().min(1).max(PASSWORD_MAX).optional(),
+});
+export type DeleteAccountRequest = z.infer<typeof DeleteAccountRequestSchema>;
 

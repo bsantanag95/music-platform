@@ -68,6 +68,10 @@ export const appUser = pgTable(
     listeningFormats: text("listening_formats").array().notNull().default(sql`'{}'::text[]`),
     // Mostrar la hora local en la Placa; exige `timezone`.
     showLocalTime: boolean("show_local_time").notNull().default(false),
+    // Cuenta desactivada (migración 0041, capability account-lifecycle). Nulo =
+    // activa. Una cuenta desactivada no tiene sesiones y desaparece para las demás
+    // personas, pero conserva su contenido; se reactiva al iniciar sesión.
+    deactivatedAt: timestamp("deactivated_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

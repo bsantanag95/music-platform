@@ -86,7 +86,7 @@ Nueva tabla `email_change_token(user_id unique, new_email, token_hash, created_a
 ### D8. Datos: exportar sincrónico, eliminar por cascada
 
 - **Exportar:** `GET /api/me/export` arma el JSON en la petición y lo devuelve con `Content-Disposition: attachment`. Incluye perfil y preferencias, enlaces, destacados, diario (con notas privadas), valoraciones, reseñas, comentarios, favoritos, por escuchar, listas con sus ítems, colección y deseos, artistas seguidos, y los usernames de seguidores, seguidos y bloqueados. **Excluye** hash de contraseña, tokens, sesiones y datos de otras personas. Límite de una exportación por minuto por usuario. Se descartó el trabajo en segundo plano con correo y enlace: no hay infraestructura de trabajos ni almacenamiento, y el volumen por persona es acotado. Si crece, se pagina en lotes por tabla dentro de la misma respuesta.
-- **Eliminar:** `DELETE /api/me/account` con el usuario como confirmación y el factor de D2. Ejecuta `DELETE FROM app_user`; una violación de clave foránea (`23503`, por historial de moderación o editorial) se traduce a `ACCOUNT_DELETION_BLOCKED` (409) y la transacción no cambia nada. Se limpia la cookie de sesión. No hay período de gracia: **Desactivar** cubre "quiero una pausa".
+- **Eliminar:** `DELETE /api/me/account` con el usuario como confirmación y el factor de D2. Ejecuta `DELETE FROM app_user`; una violación de clave foránea (`23001` restrict_violation por las tablas de auditoría con `RESTRICT`, o `23503`; por historial de moderación o editorial) se traduce a `ACCOUNT_DELETION_BLOCKED` (409) y la transacción no cambia nada. Se limpia la cookie de sesión. No hay período de gracia: **Desactivar** cubre "quiero una pausa".
 
 ### D9. Desactivar: una columna y un solo criterio de "cuenta activa"
 
@@ -110,7 +110,7 @@ Las listas cerradas (roles, géneros, formatos, preguntas), los límites y las r
 ## Risks / Trade-offs
 
 - **[Cuenta desactivada que sigue apareciendo en una superficie olvidada]** → `activeUserCondition` centralizado, una prueba por servicio afectado y una prueba de integración que recorre los 18 servicios con una cuenta desactivada sembrada; el requisito de la spec enumera las superficies.
-- **[Eliminar con datos que no cascadean]** → una prueba contra la base real con una cuenta que tiene contenido en todas las tablas comprobando que no queda ninguna fila; el error `23503` se traduce en vez de filtrarse.
+- **[Eliminar con datos que no cascadean]** → una prueba contra la base real con una cuenta que tiene contenido en todas las tablas comprobando que no queda ninguna fila; los errores `23001`/`23503` se traducen en vez de filtrarse (la prueba contra Postgres real destapó que `RESTRICT` responde `23001`, no `23503`).
 - **[Vincular Google abre la puerta a tomar la cuenta de otra persona]** → solo con sesión iniciada, con `state`/PKCE/`nonce` del flujo existente y sin `returnTo`; una identidad ya vinculada a otra cuenta se rechaza; el email de Google no se usa para enlazar.
 - **[Bloqueo por robo de sesión]** → cambiar email o eliminar exige contraseña o sesión reciente; el aviso al email anterior da tiempo de reaccionar.
 - **[`last_seen_at` genera escrituras]** → actualización con umbral de 10 minutos.

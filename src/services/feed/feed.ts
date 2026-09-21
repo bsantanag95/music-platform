@@ -17,6 +17,7 @@ import {
 } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import type { Audience } from "@/services/social/types";
+import { activeUserCondition } from "@/services/auth/account-status";
 
 export type FeedAuthor = { id: string; username: string; displayName: string | null };
 
@@ -299,7 +300,7 @@ export async function listFeedAuthors(viewerId: string): Promise<FeedAuthor[]> {
     .select({ id: appUser.id, username: appUser.username, displayName: appUser.displayName })
     .from(userFollow)
     .innerJoin(appUser, eq(userFollow.followedId, appUser.id))
-    .where(and(eq(userFollow.followerId, viewerId), eq(userFollow.status, "accepted")))
+    .where(and(eq(userFollow.followerId, viewerId), eq(userFollow.status, "accepted"), activeUserCondition()))
     .orderBy(appUser.username);
   return rows.map((row) => ({ id: row.id, username: row.username ?? "", displayName: row.displayName }));
 }
@@ -323,10 +324,14 @@ export async function listFeed(
     throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
   }
 
+  // Solo las cuentas ACTIVAS: los eventos de una cuenta desactivada desaparecen del
+  // feed (spec account-lifecycle). Como todas las fuentes se acotan por `authorIds`,
+  // esto basta para listens, favoritos, listas, ratings, comentarios y reseñas.
   const followed = await db
     .select({ followedId: userFollow.followedId })
     .from(userFollow)
-    .where(and(eq(userFollow.followerId, viewerId), eq(userFollow.status, "accepted")));
+    .innerJoin(appUser, eq(userFollow.followedId, appUser.id))
+    .where(and(eq(userFollow.followerId, viewerId), eq(userFollow.status, "accepted"), activeUserCondition()));
 
   if (followed.length === 0) {
     return { entries: [], page, pageSize, hasNext: false };
@@ -608,6 +613,7 @@ export async function listFeed(
             and(
               inArray(userFollow.followerId, authorIds),
               eq(userFollow.status, "accepted"),
+              activeUserCondition(followedUser),
               ne(followedUser.id, viewerId),
               or(eq(followedUser.profileVisibility, "public"), inArray(followedUser.id, followedIds)),
               BLOCKED_SQL(viewerId, userFollow.followerId),

@@ -218,5 +218,9 @@
   "SESSION_NOT_FOUND": {
     "title": "Session not found",
     "description": "That session no longer exists."
+  },
+  "ACCOUNT_DELETION_BLOCKED": {
+    "title": "This account cannot be deleted",
+    "description": "This account has moderation or editorial history and cannot be deleted. You can deactivate it instead."
   }
 }

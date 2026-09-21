@@ -31,6 +31,15 @@ agregar un género es cambiar código, no una migración. `show_local_time` (`BO
 false`) exige `timezone` (`chk_app_user_local_time`). La migración también deja en `NULL` las
 `timezone` previas que no existan en `pg_timezone_names` (eran texto libre que ninguna vista mostraba).
 
+**Cuenta desactivada (migración `0041`, `rework-account-settings` Fase 3):** `deactivated_at`
+(TIMESTAMPTZ nullable; nulo = cuenta activa). Desactivar solo escribe esta columna y borra las sesiones;
+no toca ninguna otra tabla, así que valoraciones, reseñas, comentarios, listas, favoritos, diario y
+seguimientos se conservan. Toda consulta que muestre personas filtra con `activeUserCondition()`
+(`services/auth/account-status.ts`). Eliminar la cuenta es `DELETE FROM app_user`: las tablas del
+usuario declaran `ON DELETE CASCADE`; solo las de auditoría (`moderation_action`, `user_role_action`,
+`editorial_action` como actor y `user_list.editorial_*`) usan `RESTRICT`, y por eso una cuenta con
+historial no se puede eliminar (Postgres responde `23001`).
+
 ## `user_profile_prompt`
 
 **Propósito:** las preguntas del perfil de una persona (capability `profile-music-identity`): hasta 3,

@@ -1,6 +1,7 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, rating, review, type ReviewRow } from "@/db/schema";
+import { maskAuthor } from "@/services/auth/account-status";
 import { ApiError } from "@/lib/api/errors";
 import type { Review, ReviewRequest, ReviewUpdate, SocialTargetType } from "@/lib/api/schemas";
 import {
@@ -51,13 +52,14 @@ function serializeReview(row: {
   body: string;
   createdAt: Date;
   updatedAt: Date;
-  user: { id: string; username: string; displayName: string | null };
+  user: { id: string; username: string | null; displayName: string | null; deactivatedAt: Date | null };
   stars: string | null;
   detailedScore: number | null;
 }): Review {
   return {
     id: row.id,
-    user: row.user,
+    // Una cuenta desactivada conserva sus reseñas, pero sin nombre ni usuario reales.
+    user: maskAuthor(row.user),
     title: row.title,
     body: row.body,
     rating:
@@ -75,7 +77,7 @@ const reviewSelection = {
   body: review.body,
   createdAt: review.createdAt,
   updatedAt: review.updatedAt,
-  user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName },
+  user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName, deactivatedAt: appUser.deactivatedAt },
   stars: rating.stars,
   detailedScore: rating.detailedScore,
 };
@@ -115,7 +117,7 @@ async function getReviewResponse(reviewId: string): Promise<Review> {
       artistId: review.artistId,
       releaseGroupId: review.releaseGroupId,
       recordingId: review.recordingId,
-      user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName },
+      user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName, deactivatedAt: appUser.deactivatedAt },
     })
     .from(review)
     .innerJoin(appUser, eq(review.userId, appUser.id))

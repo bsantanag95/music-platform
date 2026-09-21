@@ -1,6 +1,7 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, artist, comment, rating, ratingHighlight, recording, releaseGroup } from "@/db/schema";
+import { maskAuthor } from "@/services/auth/account-status";
 import { ApiError } from "@/lib/api/errors";
 import type { SocialTargetType } from "@/lib/api/schemas";
 
@@ -97,7 +98,7 @@ export async function deleteRating(target: SocialTarget, userId: string) {
 }
 
 export async function listComments(target: SocialTarget, page = 1, pageSize = 20) {
-  const rows = await db.select({ id: comment.id, body: comment.body, createdAt: comment.createdAt, user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName } }).from(comment).innerJoin(appUser, eq(comment.userId, appUser.id)).where(and(commentTargetWhere(target), eq(comment.moderationStatus, "visible"))).orderBy(desc(comment.createdAt), desc(comment.id)).limit(pageSize + 1).offset((page - 1) * pageSize);
+  const rows = await db.select({ id: comment.id, body: comment.body, createdAt: comment.createdAt, user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName, deactivatedAt: appUser.deactivatedAt } }).from(comment).innerJoin(appUser, eq(comment.userId, appUser.id)).where(and(commentTargetWhere(target), eq(comment.moderationStatus, "visible"))).orderBy(desc(comment.createdAt), desc(comment.id)).limit(pageSize + 1).offset((page - 1) * pageSize);
   return { comments: rows.slice(0, pageSize).map(serializeComment), page, pageSize, hasNext: rows.length > pageSize };
 }
 
@@ -114,7 +115,7 @@ export async function createComment(target: SocialTarget, userId: string, body: 
 }
 
 async function getComment(id: string) {
-  const [row] = await db.select({ id: comment.id, body: comment.body, createdAt: comment.createdAt, user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName } }).from(comment).innerJoin(appUser, eq(comment.userId, appUser.id)).where(and(eq(comment.id, id), eq(comment.moderationStatus, "visible"))).limit(1);
+  const [row] = await db.select({ id: comment.id, body: comment.body, createdAt: comment.createdAt, user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName, deactivatedAt: appUser.deactivatedAt } }).from(comment).innerJoin(appUser, eq(comment.userId, appUser.id)).where(and(eq(comment.id, id), eq(comment.moderationStatus, "visible"))).limit(1);
   if (!row) throw new ApiError("COMMENT_NOT_FOUND", 404, "Comentario no encontrado");
   return serializeComment(row);
 }
@@ -140,6 +141,7 @@ export async function deleteComment(id: string, userId: string) {
 function serializeRating(row: typeof rating.$inferSelect) {
   return { ...row, stars: Number(row.stars), detailedScore: row.detailedScore, createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString() };
 }
-function serializeComment(row: { id: string; body: string; createdAt: Date; user: { id: string; username: string; displayName: string | null } }) {
-  return { ...row, createdAt: row.createdAt.toISOString() };
+function serializeComment(row: { id: string; body: string; createdAt: Date; user: { id: string; username: string | null; displayName: string | null; deactivatedAt: Date | null } }) {
+  // Una cuenta desactivada conserva sus comentarios, pero sin nombre ni usuario reales.
+  return { ...row, user: maskAuthor(row.user), createdAt: row.createdAt.toISOString() };
 }

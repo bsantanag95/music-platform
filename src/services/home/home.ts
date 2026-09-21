@@ -34,8 +34,10 @@ import type {
   FeedReview,
 } from "@/services/feed/feed";
 import type { Audience } from "@/services/social/types";
+import { activeUserCondition } from "@/services/auth/account-status";
 
-const PUBLIC_PROFILE = eq(appUser.profileVisibility, "public");
+// Perfil público Y cuenta activa: una cuenta desactivada no aparece en Home.
+const PUBLIC_PROFILE = and(eq(appUser.profileVisibility, "public"), activeUserCondition());
 
 const NOT_BLOCKED_SQL = (viewerId: string, authorId: unknown) =>
   sql`NOT EXISTS (
@@ -215,7 +217,7 @@ export async function listMyRecentActivity(
       .from(userFollow)
       .innerJoin(appUser, eq(appUser.id, userFollow.followerId))
       .innerJoin(followedUser, eq(followedUser.id, userFollow.followedId))
-      .where(and(eq(userFollow.followerId, userId), eq(userFollow.status, "accepted")))
+      .where(and(eq(userFollow.followerId, userId), eq(userFollow.status, "accepted"), activeUserCondition(followedUser)))
       .orderBy(desc(userFollow.updatedAt), desc(userFollow.id))
       .limit(perSource),
 

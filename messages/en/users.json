@@ -572,6 +572,52 @@
       "dialog": {
         "cancel": "Cancel",
         "close": "Close"
+      },
+      "lifecycle": {
+        "pause": {
+          "title": "Pause or leave"
+        },
+        "deactivate": {
+          "title": "Deactivate account",
+          "hint": "Your profile stops being visible, but all your activity is kept. Come back any time by signing in.",
+          "button": "Deactivate…",
+          "dialogTitle": "Deactivate account",
+          "hidesTitle": "Hidden",
+          "hides1": "Your profile (anyone opening it sees “not available”)",
+          "hides2": "Your appearance in search, the feed and follower lists",
+          "hides3": "Your public lists",
+          "keepsTitle": "Kept",
+          "keeps1": "Diary, favorites, lists and collection",
+          "keeps2": "Ratings, reviews and comments",
+          "keeps3": "Who follows you and who you follow",
+          "note": "On reviews and comments you already published, your name becomes “Deactivated account”, with no link to your profile.",
+          "reactivate": "To reactivate it, sign in. Nothing is lost.",
+          "submit": "Deactivate my account",
+          "saving": "Deactivating…"
+        },
+        "export": {
+          "title": "Export my data",
+          "hint": "A file with your profile, diary, favorites, lists, collection, ratings and comments. It is generated instantly.",
+          "button": "Download my data",
+          "working": "Preparing…",
+          "done": "Done: you downloaded your data."
+        },
+        "delete": {
+          "title": "Delete account",
+          "hint": "Permanently deletes your profile and everything you created. It cannot be undone. If you only want a break, use “Deactivate”.",
+          "button": "Delete my account…",
+          "dialogTitle": "Delete account",
+          "warning": "This cannot be undone.",
+          "item1": "Your profile, diary, favorites, lists, collection and want-to-listen are deleted",
+          "item2": "Your ratings, reviews and comments are deleted",
+          "item3": "You stop following and being followed, and all your sessions are closed",
+          "alternativePrefix": "Just want a break?",
+          "alternativeLink": "Deactivate the account",
+          "alternativeSuffix": "and keep everything.",
+          "confirmLabel": "Type your username ({username}) to confirm",
+          "submit": "Delete forever",
+          "saving": "Deleting…"
+        }
       }
     }
   },

@@ -823,8 +823,63 @@ localiza.
 
 **Idioma**: con preferencia guardada, iniciar sesión (contraseña o Google) lleva a ese idioma.
 
-Aún no ofrece (Fases 2 y 3 del cambio): desactivar, exportar y eliminar la cuenta. La foto de perfil
-queda para una spec de imágenes aparte.
+### Desactivar, exportar y eliminar la cuenta (Fase 3)
+
+Dos tarjetas al final de Cuenta y seguridad: **Pausar o salir** (desactivar y descargar tus datos) y,
+aparte y en zona de peligro, **Eliminar cuenta**. La foto de perfil queda para una spec de imágenes
+aparte.
+
+| Acción | Efecto | Reversible |
+|---|---|---|
+| **Desactivar** | Oculta a la persona y **conserva todo lo que hizo**. Cierra todas sus sesiones. | Sí: iniciar sesión (contraseña o Google) la reactiva |
+| **Eliminar** | Borra la cuenta y **todo lo que creó** (`DELETE FROM app_user` en cascada). | No |
+| **Descargar mis datos** | Un JSON con lo propio. No cambia nada. | — |
+
+**Desactivar** (`app_user.deactivated_at`, migración `0041`). Exige el factor de identidad (mismo
+mecanismo de la autenticación reciente). Una cuenta desactivada **no existe para los demás**: su perfil
+y sus 9 subpáginas responden como un usuario inexistente, no aparece en búsqueda, seguidores/seguidos/
+mutuos ni en sus contadores, ni en solicitudes de seguimiento, vista rápida, afinidad, feed, feed
+ambiente, actividad de la comunidad, Home, ni en listas descubiertas, guardadas o de la comunidad; y no
+se la puede seguir ni bloquear. Todo eso sale de **un único criterio**
+(`activeUserCondition()` en `services/auth/account-status.ts`), así que una superficie nueva lo hereda
+en una línea.
+
+Lo que **se conserva**: valoraciones (siguen contando en los promedios), reseñas, comentarios, listas,
+favoritos, diario y seguimientos. Las reseñas y comentarios se siguen mostrando pero con la autoría
+**«Cuenta desactivada»**, sin enlace ni vista rápida (`maskAuthor()`: la API nunca entrega el usuario ni
+el nombre reales de la autora; solo `user.deactivated: true`). Sobre ese contenido se puede **reportar**,
+pero no bloquear a la autora ni, desde moderación, suspenderla (las consultas de moderación conservan la
+identidad real).
+
+**Reactivar** no tiene botón: iniciar sesión (`POST /api/auth/login` o el callback de Google) limpia
+`deactivated_at` antes de crear la sesión. Restablecer la contraseña de una cuenta desactivada también
+funciona (la encuentra) y el siguiente inicio de sesión la reactiva. Todo vuelve como estaba.
+
+**Eliminar** pide, además del factor de identidad, **escribir el usuario exacto** (solo se ignoran los
+espacios de los bordes). El diálogo lista lo que se borra, avisa que no se deshace y ofrece
+"Desactivá la cuenta" como alternativa. Una cuenta con historial de moderación o editorial (las filas de
+auditoría referencian a la persona con `RESTRICT`) **no se puede eliminar**: la base rechaza el borrado
+(`23001`, o `23503` con `NO ACTION`), la API responde `ACCOUNT_DELETION_BLOCKED` sin cambiar nada y el
+diálogo sugiere desactivar. Tras borrar, la página recarga hacia el inicio.
+
+**Descargar mis datos** (`GET /api/me/export`, una por minuto): archivo JSON
+`music-platform-<usuario>-<fecha>.json` con la cuenta (sin hash de contraseña), el perfil (enlaces,
+fijados, vitrina, preguntas), la biblioteca (diario con las notas privadas, favoritos, para escuchar,
+colección, buscados, artistas seguidos), la actividad (valoraciones, reseñas, comentarios), las listas
+(propias con sus ítems, guardadas y fijadas), los destacados y la red (seguidores, seguidos y bloqueados
+**solo por usuario público**, nunca su email ni sus datos privados). Los ítems del catálogo van como id y
+un mapa de nombres. Es síncrono, sin trabajos en segundo plano ni almacenamiento; nunca incluye tokens,
+sesiones ni columnas de moderación.
+
+**Política de privacidad (`/privacy`).** Todo lo anterior está descrito para las personas usuarias en
+`messages/{es,en}/legal.json` (`privacy.sections.*`, renderizado por `LegalPageView`), junto con una
+sección final **«Por definir antes de la apertura al público»** que es el registro de lo que quedó
+abierto: período de recuperación de 14–30 días tras eliminar, plazo de las copias de seguridad y
+registros técnicos, cuánto se conserva una cuenta desactivada sin actividad (hoy sin límite),
+anonimizar a la persona en los registros de moderación (hoy bloquean la eliminación), datos a conservar
+por obligación legal, plazos del derecho de supresión según jurisdicción y la reactivación sin
+confirmar ni avisar. **Si cambia el comportamiento de desactivar, reactivar, eliminar o exportar, hay
+que actualizar ese texto** (la página sigue siendo un borrador `noindex`, no una política vigente).
 
 ### Audiencia por defecto del contenido nuevo
 

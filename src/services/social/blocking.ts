@@ -4,6 +4,7 @@ import { appUser, userBlock, userFollow } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import type { UserSummary } from "./types";
 import { isBlockedBetween } from "./relations";
+import { activeUserCondition } from "@/services/auth/account-status";
 
 function isUniqueViolation(error: unknown): error is { code: "23505" } {
   return typeof error === "object" && error !== null && "code" in error && error.code === "23505";
@@ -13,7 +14,7 @@ async function resolveTargetByUsername(username: string) {
   const [user] = await db
     .select({ id: appUser.id })
     .from(appUser)
-    .where(eq(appUser.username, username))
+    .where(and(eq(appUser.username, username), activeUserCondition()))
     .limit(1);
   if (!user) throw new ApiError("USER_NOT_FOUND", 404, "Usuario no encontrado");
   return user.id;
@@ -59,7 +60,7 @@ export async function listBlocks(userId: string, page = 1, pageSize = 20) {
     .select({ user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName, profileVisibility: appUser.profileVisibility } })
     .from(userBlock)
     .innerJoin(appUser, eq(userBlock.blockedId, appUser.id))
-    .where(eq(userBlock.blockerId, userId))
+    .where(and(eq(userBlock.blockerId, userId), activeUserCondition()))
     .orderBy(appUser.username)
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);

@@ -16,6 +16,7 @@ import { PrivacySettings } from "@/components/social/PrivacySettings";
 import { DefaultAudienceSettings } from "@/components/settings/DefaultAudienceSettings";
 import { AccountDataCard } from "@/components/settings/account/AccountDataCard";
 import { LanguagePreference } from "@/components/settings/account/LanguagePreference";
+import { LifecycleCards } from "@/components/settings/account/LifecycleCards";
 import { SessionsCard } from "@/components/settings/account/SessionsCard";
 import { SignInCard } from "@/components/settings/account/SignInCard";
 import { OwnerIdentityCardEditor } from "@/components/profiles/OwnerIdentityCardEditor";
@@ -82,6 +83,7 @@ vi.mock("@/components/settings/account/AccountDataCard", () => ({ AccountDataCar
 vi.mock("@/components/settings/account/SignInCard", () => ({ SignInCard: () => null }));
 vi.mock("@/components/settings/account/SessionsCard", () => ({ SessionsCard: () => null }));
 vi.mock("@/components/settings/account/LanguagePreference", () => ({ LanguagePreference: () => null }));
+vi.mock("@/components/settings/account/LifecycleCards", () => ({ LifecycleCards: () => null }));
 vi.mock("@/components/profiles/OwnerIdentityCardEditor", () => ({ OwnerIdentityCardEditor: () => null }));
 vi.mock("@/components/profiles/OwnerIdentityEditor", () => ({ OwnerIdentityEditor: () => null }));
 vi.mock("@/components/profiles/OwnerLinksEditor", () => ({ OwnerLinksEditor: () => null }));
@@ -304,6 +306,14 @@ describe("pantalla Cuenta y seguridad", () => {
       { id: "s1", deviceLabel: "Chrome · Windows", createdAt: now.toISOString(), lastSeenAt: now.toISOString(), current: true },
       { id: "s2", deviceLabel: null, createdAt: now.toISOString(), lastSeenAt: null, current: false },
     ]);
+  });
+
+  it("ofrece desactivar, exportar y eliminar con el usuario y el método de acceso de la cuenta", async () => {
+    const props = findElement(await renderAccount(), LifecycleCards)?.props;
+    expect(props).toMatchObject({ username: "ana", hasPassword: true });
+
+    m.getAccessMethod.mockResolvedValue({ hasPassword: false, providers: ["google"] });
+    expect(findElement(await renderAccount(), LifecycleCards)?.props?.hasPassword).toBe(false);
   });
 
   it("ofrece el idioma de la interfaz", async () => {

@@ -8,6 +8,7 @@ import { getOwnProfile } from "@/services/social/profiles";
 import { getAccessMethod } from "@/services/profiles/account-settings";
 import { AccountDataCard } from "@/components/settings/account/AccountDataCard";
 import { LanguagePreference } from "@/components/settings/account/LanguagePreference";
+import { LifecycleCards } from "@/components/settings/account/LifecycleCards";
 import { SessionsCard } from "@/components/settings/account/SessionsCard";
 import { SignInCard, type GoogleFlash } from "@/components/settings/account/SignInCard";
 import { SettingsSection } from "@/components/settings/SettingsSection";
@@ -30,8 +31,8 @@ function parseGoogleFlash(google: string | undefined, code: string | undefined, 
 // Pantalla Cuenta y seguridad (specs owner-settings, account-username,
 // account-credentials, session-management y account-preferences): datos de la
 // cuenta, cómo se inicia sesión, sesiones por dispositivo y preferencias. Nada de
-// esto se muestra a otras personas. Las acciones de las Fases 2 y 3 de
-// `rework-account-settings` (desactivar, exportar, eliminar) llegan después.
+// esto se muestra a otras personas. Cierra con "Pausar o salir" (desactivar y
+// exportar) y la zona de peligro "Eliminar cuenta" (spec account-lifecycle).
 export default async function AccountSettingsPage({
   searchParams,
 }: {
@@ -76,6 +77,7 @@ export default async function AccountSettingsPage({
         }))}
       />
       <LanguagePreference />
+      <LifecycleCards username={profile.username} hasPassword={access.hasPassword} />
     </SettingsSection>
   );
 }

@@ -12,6 +12,7 @@ import {
 } from "@/lib/api/schemas";
 import type { ProfileLinkKind, ProfileVisibility } from "@/services/social/types";
 import { PROFILE_MAX_LINKS } from "@/services/social/types";
+import { activeUserCondition } from "@/services/auth/account-status";
 
 export interface ProfileLinkData {
   id: string;
@@ -152,7 +153,7 @@ export async function getExtendedIdentityByUsername(
   const [user] = await db
     .select(IDENTITY_COLUMNS)
     .from(appUser)
-    .where(eq(appUser.username, username))
+    .where(and(eq(appUser.username, username), activeUserCondition()))
     .limit(1);
   return user ? hydrate(user) : null;
 }
@@ -267,21 +268,23 @@ export async function replaceLinks(
     .sort((a, b) => a.position - b.position);
 }
 
-// Conteo de seguidores/seguidos aceptados de un usuario, en una sola query.
+// Conteo de seguidores/seguidos aceptados de un usuario. Cuenta solo a las
+// personas con cuenta ACTIVA: una cuenta desactivada deja de contarse mientras
+// dure la desactivación (spec account-lifecycle) y vuelve al reactivarse.
 export async function countFollows(
   userId: string,
 ): Promise<{ followerCount: number; followingCount: number }> {
-  const [row] = await db
-    .select({
-      followers: sql<number>`count(*) filter (where ${userFollow.followedId} = ${userId})::int`,
-      following: sql<number>`count(*) filter (where ${userFollow.followerId} = ${userId})::int`,
-    })
-    .from(userFollow)
-    .where(
-      and(
-        eq(userFollow.status, "accepted"),
-        sql`${userFollow.followedId} = ${userId} OR ${userFollow.followerId} = ${userId}`,
-      ),
-    );
-  return { followerCount: row?.followers ?? 0, followingCount: row?.following ?? 0 };
+  const [[followers], [following]] = await Promise.all([
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(userFollow)
+      .innerJoin(appUser, eq(userFollow.followerId, appUser.id))
+      .where(and(eq(userFollow.followedId, userId), eq(userFollow.status, "accepted"), activeUserCondition())),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(userFollow)
+      .innerJoin(appUser, eq(userFollow.followedId, appUser.id))
+      .where(and(eq(userFollow.followerId, userId), eq(userFollow.status, "accepted"), activeUserCondition())),
+  ]);
+  return { followerCount: followers?.count ?? 0, followingCount: following?.count ?? 0 };
 }

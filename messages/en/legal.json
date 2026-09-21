@@ -11,7 +11,45 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "body": "This is where we'll set out what personal data is collected, on what legal basis, how long it is kept, and how to exercise your rights over it."
+    "body": "This is where we'll set out what personal data is collected, on what legal basis, how long it is kept, and how to exercise your rights over it.",
+    "intro": "This is the part of the policy that already describes what the application does today with your account and data. The rest of the document is being prepared.",
+    "sections": {
+      "deactivate": {
+        "title": "Deactivating your account",
+        "body": "From Settings → Account and security you can deactivate your account to take a break. Your profile stops being visible to other people: it does not appear in search, followers, following, the feed, community activity or lists, and nobody can follow or block you. We sign you out everywhere. You must confirm your identity to do it.",
+        "body2": "Deactivating deletes nothing: we keep your ratings, reviews, comments, lists, favorites, diary and follows. Your ratings still count in averages, and your reviews and comments stay visible with the author shown as “Deactivated account”, without your username, your name or a link to your profile."
+      },
+      "reactivate": {
+        "title": "Reactivating your account",
+        "body": "Signing in, with your password or with Google, reactivates your account immediately and everything is visible again as it was. There is no extra confirmation step: if you do not want your profile to be visible again, do not sign in."
+      },
+      "delete": {
+        "title": "Deleting your account",
+        "body": "Also from Account and security you can delete your account. We delete the account and everything you created: profile, links and prompts, ratings, reviews, comments, lists, favorites, diary, collection, follows, blocks, reports you filed and sessions. Other people’s data is not affected.",
+        "body2": "Deleting is immediate and irreversible: there is currently no grace period. To confirm, we ask you to type your username and confirm your identity. If you only want a break, deactivate the account."
+      },
+      "export": {
+        "title": "Downloading your data",
+        "body": "In the same place you can download a JSON file with your data: account, profile, library (including private diary notes), activity, lists and network. For people who follow you or that you follow, only the public username is included. The file never includes your password, tokens or sessions. One download per minute is allowed."
+      },
+      "limits": {
+        "title": "What cannot be deleted today",
+        "body": "An account with moderation or editorial history cannot be deleted, because we keep the record of those actions (who did them and when). It can be deactivated instead. A deactivated account keeps its data until you reactivate or delete it."
+      },
+      "pending": {
+        "title": "To be defined before the public launch",
+        "body": "These points are not settled yet and this policy does not promise them:",
+        "items": [
+          "Recovery period: we are considering having deletion leave the account deactivated and recoverable for 14 to 30 days before the final purge, to cover mistakes or unauthorized access. Today deletion is immediate.",
+          "Backups and technical logs: define how long until the data of a deleted account disappears from them.",
+          "Deactivated accounts: define how long they are kept without activity (today, no limit).",
+          "Moderation records: anonymize the person in those records so accounts with history can be deleted, instead of blocking it.",
+          "Data we must keep because of a legal obligation (fraud, legal requests): define which, for how long and isolated from the rest.",
+          "Right to erasure: confirm the deadlines and legal basis for each jurisdiction (for example, GDPR Art. 17 requires erasure without undue delay, generally within one month).",
+          "Reactivation: today signing in is enough, with no confirmation or notice. Revisit if there are complaints about unintended reactivations."
+        ]
+      }
+    }
   },
   "cookies": {
     "title": "Cookie Policy",

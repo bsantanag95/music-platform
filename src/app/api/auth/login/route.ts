@@ -3,6 +3,7 @@ import { LoginRequestSchema } from "@/lib/api/schemas";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { getAuthClientIp, consumeAuthAttempt, clearAuthAttempts } from "@/services/auth/rate-limit";
 import { authenticateUser } from "@/services/auth/users";
+import { reactivateAccount } from "@/services/auth/account-lifecycle";
 import { rotateCurrentSession, setSessionCookie } from "@/services/auth/sessions";
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
@@ -23,6 +24,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   }
 
   clearAuthAttempts([`login:ip:${ip}`, `login:identifier:${identifier}`]);
+  // Iniciar sesión en una cuenta desactivada la reactiva (spec account-lifecycle).
+  if (user.deactivatedAt) await reactivateAccount(user.id);
   const session = await rotateCurrentSession(user.id);
   const response = NextResponse.json({ user: publicUser(user) });
   setSessionCookie(response, session.token);

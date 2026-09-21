@@ -63,6 +63,7 @@ además del `error` legible:
 | `LAST_ACCESS_METHOD` | 409 | `DELETE /api/me/account/identities/google`: Google es el único método de acceso (la cuenta no tiene contraseña); crear una contraseña primero. |
 | `OAUTH_IDENTITY_TAKEN` | — | Flujo `link` de Google: esa cuenta de Google ya está vinculada a otra cuenta. Llega como `?google=error&code=…` a `/me/settings/account` (no es una respuesta JSON). |
 | `OAUTH_IDENTITY_MISMATCH` | — | Flujo `reauth` de Google: se eligió una cuenta de Google distinta de la vinculada. Igual que el anterior, vuelve por query a Ajustes. |
+| `ACCOUNT_DELETION_BLOCKED` | 409 | `DELETE /api/me/account`: la cuenta tiene historial de moderación o editorial (filas de auditoría con `ON DELETE RESTRICT`) y no se puede eliminar. No cambia nada; la pantalla sugiere desactivar. |
 | `SESSION_NOT_FOUND` | 404 | `DELETE /api/me/sessions/{id}`: la sesión no existe, el id no es UUID o pertenece a otra persona. |
 | `USER_NOT_FOUND` | 404 | Perfil, búsqueda o destino de una relación: el username no corresponde a ningún usuario. |
 | `RELATION_INVALID` | 400 | Operación de seguimiento o bloqueo inválida (ej. intentar seguirse o bloquearse a sí mismo). |

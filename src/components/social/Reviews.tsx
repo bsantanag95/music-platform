@@ -234,6 +234,8 @@ export function Reviews({
         <ul className="flex flex-col gap-6">
           {reviews.map((review) => {
             const authorName = review.user.displayName ?? review.user.username;
+            // Cuenta desactivada: sin nombre, enlace ni vista rápida (spec account-lifecycle).
+            const deactivated = review.user.deactivated === true;
             const isLong = review.body.length > 600;
             const isExpanded = expanded.has(review.id);
             return (
@@ -241,11 +243,15 @@ export function Reviews({
                 <div className="flex flex-wrap items-baseline gap-x-2 font-data text-xs text-paper-muted">
                   <span>
                     {t("reviewByPrefix")}{" "}
-                    <UserHoverCard username={review.user.username}>
-                      <Link href={`/users/${review.user.username}`} className="hover:text-paper hover:underline">
-                        {authorName}
-                      </Link>
-                    </UserHoverCard>
+                    {deactivated ? (
+                      <span>{t("deactivatedAccount")}</span>
+                    ) : (
+                      <UserHoverCard username={review.user.username}>
+                        <Link href={`/users/${review.user.username}`} className="hover:text-paper hover:underline">
+                          {authorName}
+                        </Link>
+                      </UserHoverCard>
+                    )}
                   </span>
                   {review.rating && (
                     <span>
@@ -350,6 +356,7 @@ export function Reviews({
                     targetId={review.id}
                     authorUsername={review.user.username}
                     authorId={review.user.id}
+                    authorDeactivated={deactivated}
                     canModerate={canModerate}
                     onBlocked={() => setReviews((current) => current.filter((r) => r.user.id !== review.user.id))}
                   />

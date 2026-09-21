@@ -10,6 +10,7 @@ import {
 import type { ExternalIdentity } from "@/services/auth/providers";
 import { createSession, resolveSession, rotateCurrentSession, setSessionCookie } from "@/services/auth/sessions";
 import { clearAuthAttempts, consumeAuthAttempt, getAuthClientIp } from "@/services/auth/rate-limit";
+import { reactivateAccount } from "@/services/auth/account-lifecycle";
 
 function errorRedirect(locale: string, code: string): NextResponse {
   return NextResponse.redirect(new URL(`/${locale}/auth/error?code=${code}`, process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"));
@@ -136,6 +137,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   }
 
   clearAuthAttempts(rateLimitKeys);
+
+  // Iniciar sesión con Google en una cuenta desactivada la reactiva (spec account-lifecycle).
+  if (user.deactivatedAt) await reactivateAccount(user.id);
 
   const existing = await resolveSession();
   const session = existing

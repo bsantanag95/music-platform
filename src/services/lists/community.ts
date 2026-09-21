@@ -16,6 +16,7 @@ import {
   PUBLIC_LIST_COLUMNS,
   type PublicListRow,
 } from "./discovery";
+import { activeUserCondition } from "@/services/auth/account-status";
 
 /**
  * Sección "Destacadas": primero las listas editoriales oficiales publicadas de
@@ -36,6 +37,7 @@ export async function listFeaturedLists(readerId: string | null) {
           eq(userList.audience, "public"),
           eq(userList.moderationStatus, "visible"),
           eq(appUser.profileVisibility, "public"),
+          activeUserCondition(),
           isNull(userList.officialWithdrawnAt),
           eq(userList.kind, "standard"),
         ),
@@ -90,6 +92,7 @@ export async function listPopularLists(
         eq(userList.audience, "public"),
         eq(userList.moderationStatus, "visible"),
         eq(appUser.profileVisibility, "public"),
+        activeUserCondition(),
         readerId ? ne(userList.ownerId, readerId) : undefined,
         notBlockedByReader(readerId),
         eq(userList.kind, "standard"),

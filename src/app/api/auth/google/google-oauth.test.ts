@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => {
     resolveOrCreateOAuthUser: vi.fn(),
     findIdentityByProvider: vi.fn(),
     linkIdentityToUser: vi.fn(),
+    reactivateAccount: vi.fn(),
     createSession: vi.fn(),
     rotateCurrentSession: vi.fn(),
     resolveSession: vi.fn(),
@@ -52,6 +53,7 @@ vi.mock("@/services/auth/identities", () => ({
   findIdentityByProvider: mocks.findIdentityByProvider,
   linkIdentityToUser: mocks.linkIdentityToUser,
 }));
+vi.mock("@/services/auth/account-lifecycle", () => ({ reactivateAccount: mocks.reactivateAccount }));
 vi.mock("@/services/auth/sessions", () => ({
   createSession: mocks.createSession,
   rotateCurrentSession: mocks.rotateCurrentSession,
@@ -483,3 +485,41 @@ describe("GET /api/auth/google/callback: idioma preferido de la cuenta", () => {
     expect(new URL(response.headers.get("location")!).pathname).toBe("/en");
   });
 });
+
+describe("GET /api/auth/google/callback: cuenta desactivada", () => {
+  function loginFlow(user: Record<string, unknown>) {
+    vi.clearAllMocks();
+    mocks.consumeAuthAttempt.mockReturnValue(true);
+    mockConfig();
+    mocks.resolveSession.mockResolvedValue(null);
+    mocks.createSession.mockResolvedValue({ token: "t", expiresAt: new Date() });
+    mocks.consumeOAuthFlowCookies.mockResolvedValue({
+      state: "valid-state",
+      codeVerifier: "verifier",
+      nonce: "nonce",
+      locale: "es",
+      intent: "login",
+    });
+    mocks.exchangeCode.mockResolvedValue({ idToken: "t", accessToken: "a", tokenType: "Bearer", expiresIn: 3600 });
+    mocks.validateIdToken.mockResolvedValue({ sub: "s", nonce: "nonce" });
+    mocks.toIdentity.mockReturnValue({ provider: "google", providerAccountId: "s", email: "a@b.com", emailVerified: true });
+    mocks.resolveOrCreateOAuthUser.mockResolvedValue({ id: "u1", locale: null, onboardedAt: new Date("2026-01-01"), ...user });
+  }
+  const callback = () =>
+    callbackGet(new NextRequest("http://localhost:3000/api/auth/google/callback?code=c&state=valid-state"));
+
+  it("iniciar sesión con Google en una cuenta desactivada la reactiva y crea la sesión", async () => {
+    loginFlow({ deactivatedAt: new Date("2026-09-01T00:00:00Z") });
+    const response = await callback();
+    expect(response.status).toBe(307);
+    expect(mocks.reactivateAccount).toHaveBeenCalledWith("u1");
+    expect(mocks.createSession).toHaveBeenCalledWith("u1");
+  });
+
+  it("una cuenta activa no se toca", async () => {
+    loginFlow({ deactivatedAt: null });
+    await callback();
+    expect(mocks.reactivateAccount).not.toHaveBeenCalled();
+  });
+});
+

@@ -14,8 +14,10 @@ import { db } from "@/db";
 import { appUser, artist, comment, rating, recording, releaseGroup, review } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import type { FeedAuthor, FeedComment, FeedRating, FeedReview } from "@/services/feed/feed";
+import { activeUserCondition } from "@/services/auth/account-status";
 
-const PUBLIC_PROFILE = eq(appUser.profileVisibility, "public");
+// Perfil público Y cuenta activa: una cuenta desactivada no aparece en la actividad de la comunidad.
+const PUBLIC_PROFILE = and(eq(appUser.profileVisibility, "public"), activeUserCondition());
 
 const NOT_BLOCKED_SQL = (viewerId: string, authorId: unknown) =>
   sql`NOT EXISTS (

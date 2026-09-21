@@ -13,6 +13,7 @@ import { audiencesForProfile } from "@/services/social/visibility";
 import type { Audience, FollowRelation } from "@/services/social/types";
 import { enrichLists } from "./lists";
 import type { ListEntityType } from "./types";
+import { activeUserCondition } from "@/services/auth/account-status";
 
 export interface SavedListSummary {
   id: string;
@@ -62,7 +63,7 @@ export async function saveList(
     })
     .from(userList)
     .innerJoin(appUser, eq(userList.ownerId, appUser.id))
-    .where(eq(userList.id, listId))
+    .where(and(eq(userList.id, listId), activeUserCondition()))
     .limit(1);
 
   if (!row) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
@@ -184,6 +185,7 @@ async function buildSavedSummaries(
           listSave.listId,
           keys.map((key) => key.listId),
         ),
+        activeUserCondition(),
       ),
     );
   return mapSavedRows(saverId, rows);
@@ -200,7 +202,7 @@ export async function listSavedLists(saverId: string, page = 1, pageSize = 20) {
     .from(listSave)
     .innerJoin(userList, eq(listSave.listId, userList.id))
     .innerJoin(appUser, eq(userList.ownerId, appUser.id))
-    .where(eq(listSave.saverId, saverId))
+    .where(and(eq(listSave.saverId, saverId), activeUserCondition()))
     .orderBy(desc(listSave.createdAt))
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);

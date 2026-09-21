@@ -572,6 +572,52 @@
       "dialog": {
         "cancel": "Cancelar",
         "close": "Cerrar"
+      },
+      "lifecycle": {
+        "pause": {
+          "title": "Pausar o salir"
+        },
+        "deactivate": {
+          "title": "Desactivar cuenta",
+          "hint": "Tu perfil deja de verse, pero se conserva toda tu actividad. Volvés cuando quieras iniciando sesión.",
+          "button": "Desactivar…",
+          "dialogTitle": "Desactivar cuenta",
+          "hidesTitle": "Se oculta",
+          "hides1": "Tu perfil (quien lo abra ve «no disponible»)",
+          "hides2": "Tu aparición en búsquedas, feed y listados de seguidores",
+          "hides3": "Tus listas públicas",
+          "keepsTitle": "Se conserva",
+          "keeps1": "Diario, favoritos, listas y colección",
+          "keeps2": "Valoraciones, reseñas y comentarios",
+          "keeps3": "Quién te sigue y a quién seguís",
+          "note": "En las reseñas y comentarios que ya publicaste, tu nombre pasa a «Cuenta desactivada», sin enlace a tu perfil.",
+          "reactivate": "Para reactivarla, iniciá sesión. No se pierde nada.",
+          "submit": "Desactivar mi cuenta",
+          "saving": "Desactivando…"
+        },
+        "export": {
+          "title": "Exportar mis datos",
+          "hint": "Un archivo con tu perfil, diario, favoritos, listas, colección, valoraciones y comentarios. Se genera al instante.",
+          "button": "Descargar mis datos",
+          "working": "Preparando…",
+          "done": "Listo: descargaste tus datos."
+        },
+        "delete": {
+          "title": "Eliminar cuenta",
+          "hint": "Borra para siempre tu perfil y todo lo que creaste. No se puede deshacer. Si solo querés una pausa, usá «Desactivar».",
+          "button": "Eliminar mi cuenta…",
+          "dialogTitle": "Eliminar cuenta",
+          "warning": "Esto no se puede deshacer.",
+          "item1": "Se borran tu perfil, diario, favoritos, listas, colección y por escuchar",
+          "item2": "Se borran tus valoraciones, reseñas y comentarios",
+          "item3": "Dejás de seguir y de ser seguido, y se cierran todas tus sesiones",
+          "alternativePrefix": "¿Solo querés una pausa?",
+          "alternativeLink": "Desactivá la cuenta",
+          "alternativeSuffix": "y conservás todo.",
+          "confirmLabel": "Escribí tu usuario ({username}) para confirmar",
+          "submit": "Eliminar para siempre",
+          "saving": "Eliminando…"
+        }
       }
     }
   },

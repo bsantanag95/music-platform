@@ -83,25 +83,25 @@
 
 ## 12. Fase 3 — Desactivar: columna, criterio único y superficies
 
-- [ ] 12.1 Verificar el siguiente número libre y crear la migración de la Fase 3: `app_user.deactivated_at`; actualizar `schema.ts`
-- [ ] 12.2 Crear `services/auth/account-status.ts` con `activeUserCondition` y el modelo de autoría desactivada; pruebas
-- [ ] 12.3 Aplicar el criterio en perfil (`getProfileView`, `getProfileByUsername`) y las 9 páginas, búsqueda de usuarios, seguidores/seguidos/mutuos y sus contadores, solicitudes pendientes, vista rápida y afinidad; pruebas por servicio
-- [ ] 12.4 Aplicarlo en feed, feed ambiente, actividad de la comunidad y Home; y en listas descubiertas, guardadas y de la comunidad; pruebas por servicio
-- [ ] 12.5 Reseñas y comentarios: autoría «Cuenta desactivada» sin enlace, sin vista rápida (componentes `Reviews`, `Comments`, `UserHoverCard`); las consultas de moderación conservan la identidad real; pruebas
-- [ ] 12.6 Rechazar seguir y bloquear a una cuenta desactivada (usuario inexistente); prueba de integración que siembra una cuenta desactivada y recorre todos los servicios de 12.3 a 12.5
+- [x] 12.1 Verificar el siguiente número libre y crear la migración de la Fase 3: `app_user.deactivated_at`; actualizar `schema.ts`
+- [x] 12.2 Crear `services/auth/account-status.ts` con `activeUserCondition` y el modelo de autoría desactivada; pruebas
+- [x] 12.3 Aplicar el criterio en perfil (`getProfileView`, `getProfileByUsername`) y las 9 páginas, búsqueda de usuarios, seguidores/seguidos/mutuos y sus contadores, solicitudes pendientes, vista rápida y afinidad; pruebas por servicio
+- [x] 12.4 Aplicarlo en feed, feed ambiente, actividad de la comunidad y Home; y en listas descubiertas, guardadas y de la comunidad; pruebas por servicio
+- [x] 12.5 Reseñas y comentarios: autoría «Cuenta desactivada» sin enlace, sin vista rápida (componentes `Reviews`, `Comments`, `UserHoverCard`); las consultas de moderación conservan la identidad real; pruebas
+- [x] 12.6 Rechazar seguir y bloquear a una cuenta desactivada (usuario inexistente); prueba de integración que siembra una cuenta desactivada y recorre todos los servicios de 12.3 a 12.5
 
 ## 13. Fase 3 — Desactivar, reactivar, eliminar y exportar
 
-- [ ] 13.1 Servicio y ruta `POST /api/me/account/deactivate` (con `requireRecentAuth`, borra todas las sesiones, limpia la cookie); pruebas
-- [ ] 13.2 Reactivar al iniciar sesión: `authenticateUser`/login por contraseña, callback de Google y restablecimiento de contraseña limpian `deactivated_at`; pruebas de cada camino
-- [ ] 13.3 Servicio y ruta `DELETE /api/me/account` (usuario de confirmación + factor de identidad, `DELETE FROM app_user`, `23503` → `ACCOUNT_DELETION_BLOCKED`, limpia la cookie); prueba contra la base real con una cuenta con contenido en todas las tablas comprobando que no queda ninguna fila, y con una cuenta con historial de moderación
-- [ ] 13.4 Servicio y ruta `GET /api/me/export` (JSON adjunto, sin hashes, tokens ni sesiones, con límite de una por minuto); pruebas del contenido y de la exclusión de datos ajenos
-- [ ] 13.5 Tarjetas "Pausar o salir" y "Eliminar cuenta" en Cuenta y seguridad con sus diálogos (desactivar con lista de qué se oculta y qué se conserva; eliminar con lista de lo que se borra, enlace a Desactivar y confirmación del usuario); pruebas de componente
-- [ ] 13.6 Claves `messages/es|en` de estos flujos
+- [x] 13.1 Servicio y ruta `POST /api/me/account/deactivate` (con `requireRecentAuth`, borra todas las sesiones, limpia la cookie); pruebas
+- [x] 13.2 Reactivar al iniciar sesión: `authenticateUser`/login por contraseña, callback de Google y restablecimiento de contraseña limpian `deactivated_at`; pruebas de cada camino
+- [x] 13.3 Servicio y ruta `DELETE /api/me/account` (usuario de confirmación + factor de identidad, `DELETE FROM app_user`, `23503` → `ACCOUNT_DELETION_BLOCKED`, limpia la cookie); prueba contra la base real con una cuenta con contenido en todas las tablas comprobando que no queda ninguna fila, y con una cuenta con historial de moderación
+- [x] 13.4 Servicio y ruta `GET /api/me/export` (JSON adjunto, sin hashes, tokens ni sesiones, con límite de una por minuto); pruebas del contenido y de la exclusión de datos ajenos
+- [x] 13.5 Tarjetas "Pausar o salir" y "Eliminar cuenta" en Cuenta y seguridad con sus diálogos (desactivar con lista de qué se oculta y qué se conserva; eliminar con lista de lo que se borra, enlace a Desactivar y confirmación del usuario); pruebas de componente
+- [x] 13.6 Claves `messages/es|en` de estos flujos
 
 ## 14. Fase 3 — Verificación, documentación y cierre
 
-- [ ] 14.1 `pnpm typecheck`, `pnpm lint`, `pnpm test` y `pnpm build` en verde
+- [x] 14.1 `pnpm typecheck`, `pnpm lint`, `pnpm test` y `pnpm build` en verde
 - [ ] 14.2 Probar en el navegador: desactivar y comprobar que el perfil, la búsqueda y el feed la ocultan y que una reseña muestra «Cuenta desactivada»; volver a entrar y ver todo restaurado; exportar; eliminar una cuenta de prueba
-- [ ] 14.3 Documentar la Fase 3 en `docs/05-features/user-profile.md` y `docs/04-api`; actualizar `AGENTS.md` si algún procedimiento cambia
+- [x] 14.3 Documentar la Fase 3 en `docs/05-features/user-profile.md` y `docs/04-api`; actualizar `AGENTS.md` si algún procedimiento cambia
 - [ ] 14.4 `openspec validate rework-account-settings --strict` y archivar (`## Purpose` en los specs que se toquen; ver las notas de archivo)

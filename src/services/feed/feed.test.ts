@@ -15,10 +15,13 @@ vi.mock("@/db", () => ({ db: mocks.db }));
 // Postgres. Mismo criterio que `services/diary/diary.test.ts`.
 const dialect = new PgDialect();
 
+// from().innerJoin(appUser).where(): las personas seguidas se acotan a cuentas ACTIVAS
+// (spec account-lifecycle), por eso hay un join con `app_user`.
 function followedQuery(followedIds: string[]) {
   const where = vi.fn().mockResolvedValue(followedIds.map((followedId) => ({ followedId })));
-  const from = vi.fn(() => ({ where }));
-  return { from };
+  const chain = { innerJoin: vi.fn(() => chain), where };
+  const from = vi.fn(() => chain);
+  return { from, where };
 }
 
 // leftJoin()×n.where().orderBy().limit() → terminal de cada fuente del feed
