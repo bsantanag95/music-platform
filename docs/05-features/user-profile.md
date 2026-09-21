@@ -708,7 +708,7 @@ redirige a `/me/settings/profile`. Cada pantalla vuelve a exigir sesión.
 |---|---|
 | `profile` | Tarjeta de Identidad, identidad (bio, pronombres, ubicación, zona horaria) y enlaces — los mismos editores que abre el modo edición |
 | `curation` | Filas con conteo: Destacados, Himno y Álbumes favoritos (abren su editor en el panel lateral); listas fijadas, valoraciones destacadas y diario destacado (solo conteo y enlace/pista a donde se fijan; las valoraciones se destacan desde la valoración de cada álbum o canción). `getCurationSummary` aporta esos tres conteos |
-| `privacy` | Visibilidad público/privado y **audiencia por defecto del contenido nuevo** |
+| `privacy` | Visibilidad público/privado y **audiencia por defecto del contenido nuevo**, con la acción aparte "Aplicar a lo existente" |
 | `network` | Enlaces a solicitudes (con bandeja), seguidores, seguidos y bloqueadas, desde la superficie `settings` de `user-menu-items.ts` (la superficie `panel` sigue existiendo: la usa el panel móvil del Header) |
 | `account` | Nombre visible (`displayName`, ≤50, vacío = se muestra el username), método de acceso en solo lectura (contraseña / proveedores, nunca el hash) y "Cerrar todas las sesiones" (`DELETE /api/auth/revoke-all`, con confirmación y redirección a login) |
 
@@ -724,6 +724,27 @@ uniformes (favoritos `public`, listas y colección `followers`, diario `private`
 degradaría favoritos o el diario. Precedencia al crear (`resolveNewContentAudience`): valor
 explícito de la petición > preferencia > default del tipo. Se resuelve en el servidor y solo cuando
 la petición no trae audiencia.
+
+**Aplicar a lo existente** (cambio `apply-default-audience`). Elegir la preferencia sigue sin tocar
+nada; para llevarla a lo ya creado hay una acción aparte, el botón "Aplicar a lo existente" bajo el
+control (`DefaultAudienceSettings`). Solo está activo con una audiencia elegida — con "Según el tipo"
+no hay un valor único que aplicar. Al pulsarlo pide una vista previa
+(`GET /api/me/default-audience/apply`) y abre una confirmación con cuántos elementos cambian por tipo
+(favoritos, diario, listas, colección) y cuántos están fijados o destacados; si nada cambiaría lo
+dice y no pide confirmar. Tras confirmar (`POST`) muestra el resultado y refresca la página.
+
+- **Alcance:** favoritos, entradas de diario, listas estándar propias y copias de colección. No cubre
+  reseñas ni comentarios, ni la wishlist (siempre privada), ni los recorridos de artista (no tienen
+  control de audiencia).
+- **Fijados y destacados se incluyen**, y la confirmación avisa. Una lista o un álbum favorito
+  fijado que pase a una audiencia más cerrada deja de verse para quien quede fuera; las entradas de
+  diario destacadas siguen visibles para cualquiera (`diary-visibility`).
+- **Atómica e idempotente:** una transacción, solo actualiza las filas que difieren. Solo escribe la
+  columna `audience`; no toca pines, destacados ni la preferencia guardada. No se puede deshacer
+  (no se guarda el estado anterior), pero se puede volver a aplicar otra audiencia.
+- **Sin ruido en el feed:** el trigger de `updated_at` de `user_list` y `collection_entry` respeta el
+  indicador `app.preserve_updated_at` (migración `0037`), así que no se generan eventos de "lista
+  actualizada" ni se mueve la última actividad del perfil.
 
 Alcance: **no** cubre las reseñas ni los comentarios — no tienen audiencia propia y son públicos en
 la página del álbum o la canción, por lo que la sección "Reseñas" del perfil se muestra igual con

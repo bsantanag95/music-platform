@@ -385,7 +385,7 @@
       "intro": "Quién puede ver tu perfil y con qué audiencia nace lo que agregues.",
       "audience": {
         "title": "Audiencia por defecto del contenido nuevo",
-        "intro": "Aplica a los favoritos, entradas de diario, listas y copias de colección que agregues desde ahora. No cambia lo que ya tenés, y podés ajustar cada elemento por separado.",
+        "intro": "Aplica a los favoritos, entradas de diario, listas y copias de colección que agregues desde ahora. No cambia lo que ya tenés (para eso está «Aplicar a lo existente», más abajo) y podés ajustar cada elemento por separado.",
         "options": {
           "auto": {
             "title": "Según el tipo (recomendado)",
@@ -404,7 +404,39 @@
             "description": "Lo nuevo nace visible para cualquier persona con acceso a tu perfil."
           }
         },
-        "excluded": "Las reseñas y los comentarios no dependen de esta preferencia: son públicos y se muestran en la página de cada álbum o canción."
+        "excluded": "Las reseñas y los comentarios no dependen de esta preferencia: son públicos y se muestran en la página de cada álbum o canción.",
+        "apply": {
+          "button": "Aplicar a lo existente",
+          "hint": "Lleva la audiencia elegida a todo lo que ya tenés en tu biblioteca. Antes de confirmar te mostramos cuántos elementos cambian.",
+          "disabledHint": "Elegí Privado, Seguidores o Público para poder aplicarlo a lo existente.",
+          "checking": "Revisando tu biblioteca...",
+          "applying": "Aplicando...",
+          "nothing": "Todo tu contenido ya tiene la audiencia «{audience}». No hay nada que cambiar.",
+          "audience": {
+            "private": "Privado",
+            "followers": "Seguidores",
+            "public": "Público"
+          },
+          "parts": {
+            "favorites": "{count, plural, one {# favorito} other {# favoritos}}",
+            "diary": "{count, plural, one {# entrada de diario} other {# entradas de diario}}",
+            "lists": "{count, plural, one {# lista} other {# listas}}",
+            "collection": "{count, plural, one {# copia de colección} other {# copias de colección}}",
+            "pinnedLists": "{count, plural, one {# lista fijada} other {# listas fijadas}}",
+            "pinnedAlbumFavorites": "{count, plural, one {# álbum favorito fijado} other {# álbumes favoritos fijados}}",
+            "highlightedDiary": "{count, plural, one {# entrada de diario destacada} other {# entradas de diario destacadas}}"
+          },
+          "confirm": {
+            "title": "Aplicar «{audience}» a lo existente",
+            "summary": "Va a cambiar la audiencia de {items} a «{audience}». No se puede deshacer, aunque después podés volver a aplicar otra.",
+            "highlighted": "Entre ellos hay elementos fijados o destacados de tu perfil: {items}.",
+            "diaryHighlightedVisible": "Las entradas de diario destacadas siguen visibles para cualquiera.",
+            "pinnedHidden": "Las listas y los álbumes fijados que pasen a una audiencia más cerrada dejarán de verse para quien quede fuera.",
+            "confirm": "Aplicar",
+            "cancel": "Cancelar"
+          },
+          "result": "Listo: se actualizó la audiencia de {items} a «{audience}»."
+        }
       }
     },
     "network": {

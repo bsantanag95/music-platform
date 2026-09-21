@@ -385,7 +385,7 @@
       "intro": "Who can see your profile and the audience new content is created with.",
       "audience": {
         "title": "Default audience for new content",
-        "intro": "Applies to the favorites, diary entries, lists and collection copies you add from now on. It does not change what you already have, and you can adjust each item separately.",
+        "intro": "Applies to the favorites, diary entries, lists and collection copies you add from now on. It does not change what you already have (that is what \"Apply to existing content\" below is for), and you can adjust each item separately.",
         "options": {
           "auto": {
             "title": "By type (recommended)",
@@ -404,7 +404,39 @@
             "description": "New content is visible to anyone with access to your profile."
           }
         },
-        "excluded": "Reviews and comments do not depend on this preference: they are public and appear on each album or song page."
+        "excluded": "Reviews and comments do not depend on this preference: they are public and appear on each album or song page.",
+        "apply": {
+          "button": "Apply to existing content",
+          "hint": "Brings the chosen audience to everything already in your library. Before you confirm, we show how many items change.",
+          "disabledHint": "Choose Private, Followers or Public to apply it to existing content.",
+          "checking": "Checking your library...",
+          "applying": "Applying...",
+          "nothing": "All your content already has the \"{audience}\" audience. There is nothing to change.",
+          "audience": {
+            "private": "Private",
+            "followers": "Followers",
+            "public": "Public"
+          },
+          "parts": {
+            "favorites": "{count, plural, one {# favorite} other {# favorites}}",
+            "diary": "{count, plural, one {# diary entry} other {# diary entries}}",
+            "lists": "{count, plural, one {# list} other {# lists}}",
+            "collection": "{count, plural, one {# collection copy} other {# collection copies}}",
+            "pinnedLists": "{count, plural, one {# pinned list} other {# pinned lists}}",
+            "pinnedAlbumFavorites": "{count, plural, one {# pinned favorite album} other {# pinned favorite albums}}",
+            "highlightedDiary": "{count, plural, one {# highlighted diary entry} other {# highlighted diary entries}}"
+          },
+          "confirm": {
+            "title": "Apply \"{audience}\" to existing content",
+            "summary": "This will change the audience of {items} to \"{audience}\". It cannot be undone, though you can apply another audience afterwards.",
+            "highlighted": "They include pinned or highlighted items on your profile: {items}.",
+            "diaryHighlightedVisible": "Highlighted diary entries stay visible to everyone.",
+            "pinnedHidden": "Pinned lists and albums that move to a narrower audience will stop being visible to anyone left out.",
+            "confirm": "Apply",
+            "cancel": "Cancel"
+          },
+          "result": "Done: the audience of {items} was updated to \"{audience}\"."
+        }
       }
     },
     "network": {

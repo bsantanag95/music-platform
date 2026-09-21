@@ -407,13 +407,48 @@ el campo (`null`; en `displayName` el sitio vuelve a mostrar el username).
 `defaultAudience` es la audiencia con la que nace el contenido **nuevo** de biblioteca (favoritos,
 diario, listas y colección). `null` la quita: cada tipo vuelve a su default (favoritos `public`,
 listas y colección `followers`, diario `private`). Precedencia al crear: audiencia explícita de la
-petición > `defaultAudience` > default del tipo. Nunca modifica contenido ya creado.
+petición > `defaultAudience` > default del tipo. Nunca modifica contenido ya creado: para eso está
+`/api/me/default-audience/apply`.
 
 **200 OK:** `{ user: { id, username, displayName, email, profileVisibility, defaultAudience } }`
 actualizado.
 **400** con `VALIDATION_ERROR` si un valor no es válido (p. ej. una audiencia fuera del conjunto
 permitido o un nombre de más de 50 caracteres) o el body está vacío. **401** con `AUTH_REQUIRED` si
 no hay sesión; no se modifica ningún dato.
+
+### `GET /api/me/default-audience/apply?audience=`
+
+Vista previa de solo lectura de "Aplicar a lo existente" (cambio `apply-default-audience`): cuántos
+elementos del usuario cambiarían si se aplicara esa audiencia (los que hoy tienen una distinta) y,
+de ellos, cuántos están fijados o destacados. No modifica nada. `audience` ∈ `private | followers |
+public`; `null` y "según el tipo" no son válidos (no hay un valor único que aplicar).
+
+**200 OK:** `{ audience, favorites, diary, lists, collection, highlighted: { pinnedLists,
+pinnedAlbumFavorites, highlightedDiary } }`, todos enteros ≥ 0. Las listas cuentan solo las
+estándar propias (`kind = 'standard'`); los recorridos de artista no.
+**400** con `VALIDATION_ERROR` si `audience` falta o no es válida. **401** con `AUTH_REQUIRED` si no
+hay sesión.
+
+### `POST /api/me/default-audience/apply`
+
+Aplica una audiencia a **todo el contenido de biblioteca existente** del usuario: favoritos,
+entradas de diario, listas estándar propias y copias de colección. Es una acción explícita, distinta
+de `PATCH /api/me/profile` (que solo fija la preferencia para el contenido nuevo y no toca lo ya
+creado).
+
+**Body:** `{ audience: "private" | "followers" | "public" }`.
+
+- Una sola transacción: o cambian todos los tipos o ninguno.
+- Idempotente: solo actualiza las filas cuya audiencia difiere; repetirla responde con ceros.
+- Incluye los elementos fijados o destacados y **no** modifica pines, destacados, la preferencia
+  guardada, valoraciones, escuchas, comentarios, reseñas ni la wishlist.
+- No cambia `updated_at` de listas ni de copias de colección (no genera eventos de "lista
+  actualizada" en el feed).
+
+**200 OK:** `{ audience, favorites, diary, lists, collection }`, con cuántos elementos se actualizaron
+de cada tipo (pueden diferir de la vista previa si algo cambió entre ambos pasos).
+**400** con `VALIDATION_ERROR` si `audience` falta, es `null` o no es válida. **401** con
+`AUTH_REQUIRED` si no hay sesión; no se modifica ningún dato. Sin códigos de error nuevos.
 
 ### `PUT` / `DELETE /api/me/profile/links`
 
