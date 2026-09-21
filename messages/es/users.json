@@ -180,6 +180,13 @@
       "noSongFavorites": "Marcá una canción como favorita para poder elegirla."
     }
   },
+  "favoritePicker": {
+    "searchLabel": "Buscar en tus favoritos",
+    "searchPlaceholder": "Buscar por nombre…",
+    "loading": "Buscando…",
+    "noResults": "Ningún favorito coincide con «{query}».",
+    "moreHint": "Mostrando los primeros {count}. Escribí para buscar entre el resto."
+  },
   "hoverCard": {
     "loading": "Cargando...",
     "error": "No se pudo cargar.",

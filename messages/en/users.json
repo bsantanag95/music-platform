@@ -180,6 +180,13 @@
       "noSongFavorites": "Favorite a song to be able to choose it here."
     }
   },
+  "favoritePicker": {
+    "searchLabel": "Search your favorites",
+    "searchPlaceholder": "Search by name…",
+    "loading": "Searching…",
+    "noResults": "No favorite matches “{query}”.",
+    "moreHint": "Showing the first {count}. Type to search the rest."
+  },
   "hoverCard": {
     "loading": "Loading...",
     "error": "Couldn't load.",

@@ -5,9 +5,9 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { apiFetch, ApiError } from "@/lib/api/client";
-import { getMyFavorites } from "@/lib/api/favorites";
 import { ShowcaseResponseSchema, type Favorite, type SocialTargetType } from "@/lib/api/schemas";
 import type { IdentityCard, ShowcaseEntity } from "@/services/profiles/showcase";
+import { FavoritePicker } from "./FavoritePicker";
 import { useNotifySaved, type EditorHostCallbacks } from "./editor-host";
 
 // Aplica cada cambio al instante (no hay borrador), así que solo usa `onSaved`.
@@ -49,19 +49,8 @@ export function OwnerIdentityCardEditor({ initial, onSaved }: OwnerIdentityCardE
   const notifySaved = useNotifySaved(onSaved);
 
   const [identityCard, setIdentityCard] = useState<IdentityCard>(initial);
-  const [favorites, setFavorites] = useState<Partial<Record<SocialTargetType, Favorite[]>>>({});
   const [pendingSlot, setPendingSlot] = useState<SlotKey | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
-
-  async function loadFavoritesFor(type: SocialTargetType) {
-    if (favorites[type]) return;
-    try {
-      const result = await getMyFavorites(1, 50, { type });
-      setFavorites((prev) => ({ ...prev, [type]: result.favorites }));
-    } catch (error) {
-      setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
-    }
-  }
 
   async function chooseDefining(type: "artist" | "release-group", entity: ShowcaseEntity, slot: SlotKey) {
     setPendingSlot(slot);
@@ -192,31 +181,14 @@ export function OwnerIdentityCardEditor({ initial, onSaved }: OwnerIdentityCardE
               <p className="font-body text-xs text-paper-muted">{slot.emptyLabel}</p>
             )}
 
-            <details onToggle={() => void loadFavoritesFor(slot.favType)}>
-              <summary className="cursor-pointer font-data text-xs text-paper-muted hover:text-paper">
-                {slot.entity ? t("identityCard.editor.change") : t("identityCard.editor.choose")}
-              </summary>
-              <ul className="mt-2 flex max-h-48 flex-col gap-1 overflow-y-auto">
-                {favorites[slot.favType]?.length === 0 && (
-                  <li className="font-body text-xs text-paper-muted">{slot.noFavoritesLabel}</li>
-                )}
-                {favorites[slot.favType]
-                  ?.filter((favorite) => favorite.target.id !== slot.entity?.id)
-                  .map((favorite) => (
-                    <li key={favorite.id}>
-                      <button
-                        type="button"
-                        disabled={pendingSlot === slot.key}
-                        onClick={() => slot.onChoose(favoriteToEntity(favorite))}
-                        className="flex w-full items-center gap-2 rounded border border-ink-border bg-ink-surface px-2 py-1.5 text-left transition-colors hover:border-amber disabled:opacity-50"
-                      >
-                        <CoverThumb cover={favorite.target.coverThumbUrl} label="" className="size-8" />
-                        <span className="truncate font-body text-xs text-paper">{favorite.target.title}</span>
-                      </button>
-                    </li>
-                  ))}
-              </ul>
-            </details>
+            <FavoritePicker
+              summary={slot.entity ? t("identityCard.editor.change") : t("identityCard.editor.choose")}
+              type={slot.favType}
+              excludeIds={slot.entity ? new Set([slot.entity.id]) : undefined}
+              emptyLabel={slot.noFavoritesLabel}
+              disabled={pendingSlot === slot.key}
+              onPick={(favorite) => slot.onChoose(favoriteToEntity(favorite))}
+            />
 
             {slot.entity && (
               <Button

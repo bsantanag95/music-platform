@@ -145,6 +145,32 @@ describe("OwnerShowcaseEditor — Empieza por aquí", () => {
     expect(mocks.apiFetch).not.toHaveBeenCalled();
   });
 
+  it("el selector de favoritos trae un buscador y no ofrece lo que ya está fijado", async () => {
+    const user = userEvent.setup();
+    getMyFavorites.mockResolvedValue({
+      favorites: [
+        { id: "f1", targetType: "artist", audience: "public", createdAt: "2026-01-01T00:00:00Z", target: { id: "ar1", title: "Radiohead", coverThumbUrl: null, artistName: null, artistId: null } },
+        { id: "f2", targetType: "artist", audience: "public", createdAt: "2026-01-01T00:00:00Z", target: { id: "ar2", title: "boygenius", coverThumbUrl: null, artistName: null, artistId: null } },
+      ],
+      page: 1,
+      pageSize: 50,
+      hasNext: false,
+      counts: { artist: 2, "release-group": 0, recording: 0 },
+    });
+    renderWithIntl(
+      <OwnerShowcaseEditor initial={withPins([{ id: "p1", note: null, position: 0, entity: radiohead }])} />,
+    );
+
+    await user.click(screen.getByText("Agregar de favoritos"));
+
+    expect(await screen.findByRole("searchbox", { name: "Buscar en tus favoritos" })).toBeInTheDocument();
+    const offered = await screen.findByRole("button", { name: /boygenius/ });
+    expect(offered).toBeInTheDocument();
+    // Radiohead ya está fijado: aparece en la fila del ítem, pero no como opción.
+    expect(screen.queryByRole("button", { name: /Radiohead/ })).not.toBeInTheDocument();
+    expect(getMyFavorites).toHaveBeenCalledWith(1, 50, {});
+  });
+
   it("con 4 ítems oculta el selector y avisa del máximo", () => {
     const four = ["a", "b", "c", "d"].map((id, position) => ({
       id: `p${id}`,

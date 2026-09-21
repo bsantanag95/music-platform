@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/Button";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { ArtistPlate } from "@/components/favorites/ArtistPlate";
 import { apiFetch, ApiError } from "@/lib/api/client";
-import { getMyFavorites } from "@/lib/api/favorites";
 import { ShowcaseResponseSchema, type Favorite } from "@/lib/api/schemas";
 import { PROFILE_IDENTITY_LIMITS, PROFILE_MAX_PINNED } from "@/services/social/types";
 import type { Showcase, ShowcaseEntity } from "@/services/profiles/showcase";
+import { FavoritePicker } from "./FavoritePicker";
 import { useNotifySaved, useReportDirty, type EditorHostCallbacks } from "./editor-host";
 
 interface OwnerShowcaseEditorProps extends EditorHostCallbacks {
@@ -53,7 +53,6 @@ export function OwnerShowcaseEditor({ initial, onSaved, onDirtyChange }: OwnerSh
   const [pins, setPins] = useState<PinRow[]>(
     initial.pinned.map((item) => ({ entity: item.entity, note: item.note ?? "" })),
   );
-  const [favorites, setFavorites] = useState<Favorite[] | null>(null);
   const [pinStatus, setPinStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [baseline, setBaseline] = useState(() =>
@@ -62,16 +61,6 @@ export function OwnerShowcaseEditor({ initial, onSaved, onDirtyChange }: OwnerSh
   useReportDirty(pinSignature(pins) !== baseline, onDirtyChange);
 
   const pinnedIds = new Set(pins.map((row) => row.entity.id));
-
-  async function loadFavorites() {
-    if (favorites) return;
-    try {
-      const result = await getMyFavorites(1, 50);
-      setFavorites(result.favorites);
-    } catch (error) {
-      setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
-    }
-  }
 
   function move(index: number, delta: number) {
     setPins((prev) => {
@@ -202,33 +191,15 @@ export function OwnerShowcaseEditor({ initial, onSaved, onDirtyChange }: OwnerSh
       )}
 
       {pins.length < PROFILE_MAX_PINNED ? (
-        <details onToggle={() => void loadFavorites()}>
-          <summary className="cursor-pointer font-data text-xs text-paper-muted hover:text-paper">
-            {t("showcase.edit.addFromFavorites")}
-          </summary>
-          <ul className="mt-2 flex max-h-64 flex-col gap-1 overflow-y-auto">
-            {favorites?.length === 0 && (
-              <li className="font-body text-xs text-paper-muted">{t("showcase.edit.noFavorites")}</li>
-            )}
-            {favorites
-              ?.filter((favorite) => !pinnedIds.has(favorite.target.id))
-              .map((favorite) => (
-                <li key={favorite.id}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPins((prev) => [...prev, { entity: favoriteToEntity(favorite), note: "" }]);
-                      setPinStatus("idle");
-                    }}
-                    className="flex w-full items-center gap-2 rounded border border-ink-border bg-ink-surface px-2 py-1.5 text-left transition-colors hover:border-amber"
-                  >
-                    <CoverThumb cover={favorite.target.coverThumbUrl} label="" className="size-8" />
-                    <span className="truncate font-body text-xs text-paper">{favorite.target.title}</span>
-                  </button>
-                </li>
-              ))}
-          </ul>
-        </details>
+        <FavoritePicker
+          summary={t("showcase.edit.addFromFavorites")}
+          excludeIds={pinnedIds}
+          emptyLabel={t("showcase.edit.noFavorites")}
+          onPick={(favorite) => {
+            setPins((prev) => [...prev, { entity: favoriteToEntity(favorite), note: "" }]);
+            setPinStatus("idle");
+          }}
+        />
       ) : (
         <p className="font-data text-xs text-paper-muted">{t("showcase.edit.maxPinned")}</p>
       )}

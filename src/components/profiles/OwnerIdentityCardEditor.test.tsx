@@ -91,6 +91,32 @@ describe("OwnerIdentityCardEditor", () => {
     expect(JSON.parse((init as RequestInit).body as string)).toEqual({ type: "artist", id: "artist1" });
   });
 
+  it("cada slot busca solo entre los favoritos de su tipo, con buscador, y no ofrece lo ya elegido", async () => {
+    const user = userEvent.setup();
+    getMyFavorites.mockResolvedValue({
+      favorites: [
+        { id: "f1", targetType: "release-group", audience: "public", createdAt: "2026-01-01T00:00:00Z", target: { id: "rg1", title: "Fall Apart", coverThumbUrl: null, artistName: "Sabrina Carpenter", artistId: null } },
+        { id: "f2", targetType: "release-group", audience: "public", createdAt: "2026-01-01T00:00:00Z", target: { id: "rg2", title: "Souvlaki", coverThumbUrl: null, artistName: "Slowdive", artistId: null } },
+      ],
+      page: 1,
+      pageSize: 50,
+      hasNext: false,
+      counts: { artist: 0, "release-group": 2, recording: 0 },
+    });
+    renderWithIntl(<OwnerIdentityCardEditor initial={filledIdentityCard} />);
+    expect(getMyFavorites).not.toHaveBeenCalled(); // no se consulta al montar
+
+    const albumSection = screen.getByText("Álbum que me define").parentElement!;
+    await user.click(within(albumSection).getByText("Cambiar"));
+
+    expect(await within(albumSection).findByRole("searchbox", { name: "Buscar en tus favoritos" })).toBeInTheDocument();
+    expect(await within(albumSection).findByRole("button", { name: /Souvlaki/ })).toBeInTheDocument();
+    // "Fall Apart" ya es el álbum definitorio: no se ofrece de nuevo.
+    expect(within(albumSection).queryByRole("button", { name: /Fall Apart/ })).not.toBeInTheDocument();
+    expect(getMyFavorites).toHaveBeenCalledTimes(1);
+    expect(getMyFavorites).toHaveBeenCalledWith(1, 50, { type: "release-group" });
+  });
+
   it("quitar el álbum definitorio hace DELETE con el id del álbum actual", async () => {
     const user = userEvent.setup();
     mocks.apiFetch.mockResolvedValue({
