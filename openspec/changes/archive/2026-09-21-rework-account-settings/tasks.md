@@ -78,7 +78,7 @@
 ## 11. Fase 2 — Verificación y documentación
 
 - [x] 11.1 `pnpm typecheck`, `pnpm lint`, `pnpm test` y `pnpm build` en verde
-- [ ] 11.2 Probar en el navegador con una cuenta de prueba: completar cada campo, ver la ficha en la Placa, editar desde el modo edición, perfil vacío sin hueco, perfil privado sin ficha y hora local con zona — _Sin ejecutar al archivar (2026-09-21): requiere una sesión iniciada por la persona; la ficha y sus editores están cubiertos por pruebas de componente y el smoke contra Postgres._
+- [x] 11.2 Probar en el navegador con una cuenta de prueba: completar cada campo, ver la ficha en la Placa, editar desde el modo edición, perfil vacío sin hueco, perfil privado sin ficha y hora local con zona — _Ejecutado el 2026-09-21 en el navegador contra la BD scratch: campos completados y guardados desde el modo edición, ficha en la Placa (bio, hora local, Soy/Géneros/Escucho en, primer disco), perfil vacío sin hueco, perfil privado sin ficha para un anónimo (la bio sigue siendo identidad pública) y hora local con zona._
 - [x] 11.3 Documentar la Fase 2 en `docs/05-features/user-profile.md`
 
 ## 12. Fase 3 — Desactivar: columna, criterio único y superficies
@@ -102,6 +102,6 @@
 ## 14. Fase 3 — Verificación, documentación y cierre
 
 - [x] 14.1 `pnpm typecheck`, `pnpm lint`, `pnpm test` y `pnpm build` en verde
-- [ ] 14.2 Probar en el navegador: desactivar y comprobar que el perfil, la búsqueda y el feed la ocultan y que una reseña muestra «Cuenta desactivada»; volver a entrar y ver todo restaurado; exportar; eliminar una cuenta de prueba — _Sin ejecutar al archivar (2026-09-21): requiere una sesión iniciada por la persona y una cuenta de prueba; el recorrido de desactivar, reactivar, exportar y eliminar está cubierto por pruebas de componente y el smoke contra Postgres._
+- [x] 14.2 Probar en el navegador: desactivar y comprobar que el perfil, la búsqueda y el feed la ocultan y que una reseña muestra «Cuenta desactivada»; volver a entrar y ver todo restaurado; exportar; eliminar una cuenta de prueba — _Ejecutado el 2026-09-21 en el navegador contra la BD scratch: desactivar (perfil 404, fuera de la búsqueda, reseña y comentario con «Cuenta desactivada» sin enlace, 0 sesiones, contenido conservado), reactivar iniciando sesión (todo restaurado), exportar (adjunto sin hash, límite de una por minuto con 429) y eliminar una cuenta descartable (0 filas restantes en 13 tablas y su reseña y comentario desaparecidos del álbum)._
 - [x] 14.3 Documentar la Fase 3 en `docs/05-features/user-profile.md` y `docs/04-api`; actualizar `AGENTS.md` si algún procedimiento cambia
 - [x] 14.4 `openspec validate rework-account-settings --strict` y archivar (`## Purpose` en los specs que se toquen; ver las notas de archivo)
