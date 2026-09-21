@@ -225,7 +225,8 @@ definitorios** — un artista, un álbum y una canción (el himno). Reemplaza al
   motivó moverlo a una referencia directa (migración 0030).
 - **Editor único de la Tarjeta** (`OwnerIdentityCardEditor`; se abre desde el lápiz de la Tarjeta
   en el modo edición y desde `/me/settings/profile`): los 3 slots juntos, cada uno con su propio
-  selector sobre los favoritos del dueño (artista, álbum, canción) y una acción "Quitar". Es el
+  selector sobre los favoritos del dueño (artista, álbum, canción; ver "Selector de favoritos con
+  buscador") y una acción "Quitar". Es el
   **único** lugar donde se eligen: el cambio `simplify-profile-curation` (2026-09-21) retiró los
   marcadores ★/☆ de los editores de Destacados y de Álbumes favoritos, y la sección "Himno" que
   vivía dentro del editor de Destacados — eran atajos sobre el mismo dato y el ítem marcado
@@ -373,9 +374,9 @@ conozca. Distinta de Favoritos ("lo que amo") y de la Tarjeta de Identidad ("lo 
   nota; un ítem sin nota se dibuja igual, sin línea vacía. El editor (`OwnerShowcaseEditor`) la pone
   en primer plano: campo con la etiqueta "¿Por qué empezar por aquí?", contador `n/120` y los saltos
   de línea aplanados a un espacio.
-- El editor del dueño reordena / quita / anota los ítems **desde sus favoritos** — no hay buscador
-  de catálogo embebido (mismo criterio que el detalle de lista, ver la memoria `list-detail-scope`).
-  Un único `PUT /api/me/profile/pinned` reemplaza el conjunto. Ya no aloja el himno ni marcadores
+- El editor del dueño reordena / quita / anota los ítems **desde sus favoritos**, con un buscador
+  chico (ver "Selector de favoritos con buscador") — no hay buscador de catálogo embebido (mismo
+  criterio que el detalle de lista, ver la memoria `list-detail-scope`). Un único `PUT /api/me/profile/pinned` reemplaza el conjunto. Ya no aloja el himno ni marcadores
   "me define": eso vive solo en el editor de la Tarjeta de Identidad.
 - **Sin audiencia propia** (a diferencia de los favoritos): un ítem es visible para cualquiera con
   acceso al perfil, y la API no exige que la entidad sea un favorito.
@@ -386,6 +387,24 @@ segundo muro repetía las carátulas de la fila de álbumes de Favoritos, así q
 la migración `0038` (`DROP TABLE user_album_pin`): se perdió solo el orden manual, los `favorite` de
 álbum y su audiencia no cambiaron. Onboarding, "Aplicar a lo existente" y la pantalla Curaduría
 dejaron de mencionarlo.
+
+### Selector de favoritos con buscador
+
+`FavoritePicker` (`src/components/profiles/FavoritePicker.tsx`) es el desplegable "elegir de mis
+favoritos" que comparten el editor de la Tarjeta de Identidad (uno por slot, limitado a su tipo) y
+el de "Empieza por aquí" (todos los tipos). Sigue siendo una elección **entre favoritos**, no una
+búsqueda de catálogo: el buscador solo ayuda a encontrar uno cuando hay muchos.
+
+- **Consulta al abrir, no al montar** (el editor de la Tarjeta tiene tres selectores y no debe traer
+  tres listas al cargar). Pide `GET /api/me/favorites?pageSize=50` (más `type` si aplica); si hay más
+  de 50, avisa "Mostrando los primeros 50" para invitar a buscar.
+- **El filtro lo hace el servidor** (`q` sobre el título del favorito, sin distinguir mayúsculas: el
+  nombre en artistas, el título en álbumes y canciones), con debounce de 300 ms; vaciar el buscador
+  vuelve a pedir la lista sin `q` al instante. Una respuesta vieja que llega tarde se descarta
+  (`runId`).
+- No ofrece lo ya elegido (`excludeIds`: el slot actual de la Tarjeta, o los ítems ya fijados).
+- Estados: buscando, sin coincidencias («Ningún favorito coincide con «…»»), sin favoritos elegibles
+  (el aviso propio de cada editor) y error localizado.
 
 ## Valoraciones destacadas
 
