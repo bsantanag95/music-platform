@@ -630,6 +630,32 @@ export type PublicProfileResponse = z.infer<typeof PublicProfileResponseSchema>;
 export const DefaultAudienceSchema = z.enum(AUDIENCES);
 export type DefaultAudience = z.infer<typeof DefaultAudienceSchema>;
 
+// "Aplicar a lo existente" (spec default-audience): aquí la audiencia es
+// obligatoria y nunca `null`, porque "según el tipo" no es un valor único que
+// se pueda aplicar a todo.
+export const ApplyAudienceRequestSchema = z.object({ audience: DefaultAudienceSchema });
+export type ApplyAudienceRequest = z.infer<typeof ApplyAudienceRequestSchema>;
+
+const ChangeCountSchema = z.number().int().nonnegative();
+
+export const ApplyAudienceResultSchema = z.object({
+  audience: DefaultAudienceSchema,
+  favorites: ChangeCountSchema,
+  diary: ChangeCountSchema,
+  lists: ChangeCountSchema,
+  collection: ChangeCountSchema,
+});
+export type ApplyAudienceResult = z.infer<typeof ApplyAudienceResultSchema>;
+
+export const ApplyAudiencePreviewSchema = ApplyAudienceResultSchema.extend({
+  highlighted: z.object({
+    pinnedLists: ChangeCountSchema,
+    pinnedAlbumFavorites: ChangeCountSchema,
+    highlightedDiary: ChangeCountSchema,
+  }),
+});
+export type ApplyAudiencePreview = z.infer<typeof ApplyAudiencePreviewSchema>;
+
 export const OwnProfileSchema = z.object({
   id: z.uuid(),
   username: z.string(),

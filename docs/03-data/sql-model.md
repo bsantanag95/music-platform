@@ -539,7 +539,9 @@ propiedad de un único usuario (no colaborativa) y de un solo tipo de entidad (n
 - `description`: opcional, hasta 500 caracteres.
 - `audience`: `private`, `followers` o `public`, con `DEFAULT 'followers'`.
 - `created_at`, `updated_at`: `updated_at` lo mantiene el trigger
-  `trg_user_list_updated_at`.
+  `trg_user_list_updated_at`. Si la transacción tiene `app.preserve_updated_at = 'on'` el trigger
+  conserva el valor anterior (migración `0037`, cambio `apply-default-audience`); sin el indicador
+  pone `now()` como siempre. Solo lo activa "Aplicar a lo existente".
 
 **Índices:** `idx_user_list_owner_created` (listas propias, fecha descendente) y
 `idx_user_list_owner_audience` (listas públicas de un usuario en su perfil).
@@ -613,7 +615,9 @@ Cada fila es una copia física de un álbum que el usuario posee. A diferencia d
 - `audience`: `private` / `followers` / `public`, default `followers` (mismo patrón que
   `favorite` / `listen_entry`).
 - `created_at` / `updated_at`: `updated_at` lo mantiene el trigger
-  `trg_collection_entry_updated_at` (regla del proyecto: nunca desde la app).
+  `trg_collection_entry_updated_at` (regla del proyecto: nunca desde la app). Con
+  `app.preserve_updated_at = 'on'` en la transacción conserva el valor anterior (migración `0037`,
+  igual que `user_list`).
 
 **Restricciones:** ninguna de unicidad. Se permiten **varias entradas por (usuario, álbum)**,
 con el mismo o distinto `format`, para representar copias distinguibles (vinilo + CD, dos

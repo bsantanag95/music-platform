@@ -87,7 +87,7 @@ export function ConfirmDialog({
         <h2 id={titleId} className="font-display text-lg text-paper">
           {title}
         </h2>
-        <p className="font-body text-sm text-paper-muted">{message}</p>
+        <p className="whitespace-pre-line font-body text-sm text-paper-muted">{message}</p>
         <div className="flex justify-end gap-2">
           <button
             type="button"
