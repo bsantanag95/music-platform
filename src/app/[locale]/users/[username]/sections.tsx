@@ -70,7 +70,7 @@ export async function SettingsCardSection({ ownerId }: { ownerId: string }) {
 // (spec profile-edit-mode). Para el resto de visitantes la sección es la de
 // siempre. El `editor` se construye acá, en el servidor, con su `initial`.
 
-// La Placa: bio, pronombres, ubicación, zona horaria, enlaces y la ficha musical
+// La Placa: bio, pronombres, país, ciudad o región, zona horaria, enlaces y la ficha musical
 // (roles, géneros, formatos y preguntas) — todo lo que dibuja la Placa se edita en
 // un mismo panel.
 export async function EditablePlaca({ profile, children }: { profile: ProfileView; children: ReactNode }) {
@@ -81,9 +81,12 @@ export async function EditablePlaca({ profile, children }: { profile: ProfileVie
       editor={
         <div className="flex flex-col gap-6">
           <OwnerIdentityEditor
+            name={profile.displayName ?? profile.username}
             initial={{
               bio: profile.bio,
               pronouns: profile.pronouns,
+              pronounSet: profile.pronounSet,
+              country: profile.country,
               location: profile.location,
               timezone: profile.timezone,
               showLocalTime: profile.showLocalTime,

@@ -68,6 +68,46 @@ describe("PATCH /api/me/profile", () => {
     expect(mocks.updateIdentity).toHaveBeenCalledWith(user.id, { location: "Rosario" });
   });
 
+  describe("país y pronombres (spec profile-personal-info)", () => {
+    it("acepta un país de la lista y una clave de pronombres", async () => {
+      const res = await PATCH(req({ country: "CL", pronounSet: "she" }));
+      expect(res.status).toBe(200);
+      expect(mocks.updateIdentity).toHaveBeenCalledWith(user.id, { country: "CL", pronounSet: "she" });
+    });
+
+    it("«Otro» con su texto llega al servicio, recortado", async () => {
+      await PATCH(req({ pronounSet: "other", pronouns: "  ellx  " }));
+      expect(mocks.updateIdentity).toHaveBeenCalledWith(user.id, { pronounSet: "other", pronouns: "ellx" });
+    });
+
+    it("acepta vaciar el país y los pronombres", async () => {
+      await PATCH(req({ country: "", pronounSet: null }));
+      expect(mocks.updateIdentity).toHaveBeenCalledWith(user.id, { country: "", pronounSet: null });
+    });
+
+    it.each([
+      ["un país fuera de la lista", { country: "ZZ" }],
+      ["un país escrito como nombre", { country: "Chile" }],
+      ["un país en minúsculas", { country: "cl" }],
+      ["una clave de pronombres fuera de la lista", { pronounSet: "xe" }],
+      ["«Otro» sin texto", { pronounSet: "other" }],
+      ["una clave de la lista junto a texto libre", { pronounSet: "she", pronouns: "ellx" }],
+    ])("rechaza %s con VALIDATION_ERROR y no guarda nada", async (_name, body) => {
+      const res = await PATCH(req(body));
+      expect(res.status).toBe(400);
+      expect(await res.json()).toMatchObject({ code: "VALIDATION_ERROR" });
+      expect(mocks.updateIdentity).not.toHaveBeenCalled();
+    });
+
+    it("los datos que no se piden se descartan: una petición que solo los trae se rechaza", async () => {
+      for (const body of [{ birthYear: 1990 }, { gender: "x" }, { firstName: "Ana" }, { lastName: "Pérez" }]) {
+        const res = await PATCH(req(body));
+        expect(res.status).toBe(400);
+      }
+      expect(mocks.updateIdentity).not.toHaveBeenCalled();
+    });
+  });
+
   it("rechaza un body vacío con VALIDATION_ERROR", async () => {
     const res = await PATCH(req({}));
     expect(res.status).toBe(400);

@@ -2,7 +2,8 @@ export {};
 
 // Smoke test del cambio rework-account-settings (Fase 1: cuenta y seguridad; Fase 2:
 // identidad musical, preguntas, zona horaria y hora local; Fase 3: cuenta desactivada,
-// reactivación, eliminación en cascada y exportación).
+// reactivación, eliminación en cascada y exportación; change profile-personal-info: país,
+// ciudad y pronombres, sus CHECKs y su privacidad según el acceso al perfil).
 // Ejecuta contra Postgres REAL el SQL que las pruebas unitarias mockean:
 // cambio de usuario (enfriamiento, reserva sin distinguir mayúsculas, alias,
 // recuperación), cambio de email con confirmación, cambio y creación de
@@ -510,7 +511,97 @@ async function main() {
     const [m2Row] = await db.select({ at: appUser.deactivatedAt }).from(appUser).where(eq(appUser.id, m2.id));
     check(m2Row?.at !== null, "en su lugar sí se puede desactivar");
 
-    console.log("\n✅ smoke de cuenta, identidad musical y ciclo de vida OK");
+
+    console.log("\n10) Datos personales opcionales: país, ciudad y pronombres (change profile-personal-info)");
+    const q = await newUser("pi");
+    const outsider = await newUser("pis");
+    const follower = await newUser("pif");
+    const rowOf = async (id: string) => (await db.select().from(appUser).where(eq(appUser.id, id)))[0]!;
+
+    console.log("  · valores anteriores y CHECKs de la base");
+    await db.update(appUser).set({ pronouns: "she/they", location: "Santiago, Chile", bio: "una bio" }).where(eq(appUser.id, q.id));
+    const legacy = await rowOf(q.id);
+    check(legacy.country === null && legacy.pronounSet === null, "las columnas nuevas nacen en NULL, sin backfill");
+    check(legacy.pronouns === "she/they" && legacy.location === "Santiago, Chile", "los pronombres y la ubicación anteriores se conservan tal cual");
+    const legacyView = await s.profileView.getProfileView(q.username, null);
+    check(legacyView.pronouns === "she/they" && legacyView.location === "Santiago, Chile" && legacyView.pronounSet === null, "un perfil público sigue mostrando los valores anteriores («Otro» y ciudad)");
+
+    check((await codeOf(() => db.update(appUser).set({ country: "cl" }).where(eq(appUser.id, q.id)))) === "23514", "el CHECK rechaza un país en minúscula");
+    check((await codeOf(() => db.update(appUser).set({ country: "CHL" }).where(eq(appUser.id, q.id)))) === "23514", "el CHECK rechaza un país de tres letras");
+    check((await codeOf(() => db.update(appUser).set({ country: "Chile" }).where(eq(appUser.id, q.id)))) === "23514", "el CHECK rechaza un nombre de país");
+    // Con `pronouns` ya escrito, una clave de la lista sería un estado mixto.
+    check((await codeOf(() => db.update(appUser).set({ pronounSet: "she" }).where(eq(appUser.id, q.id)))) === "23514", "el CHECK impide una clave de la lista junto a texto libre (estado mixto)");
+    check((await rowOf(q.id)).country === null, "los rechazos de la base no dejan cambios a medias");
+
+    console.log("  · updateIdentity: los tres estados de pronombres y el país");
+    await s.identity.updateIdentity(q.id, { pronounSet: "she" });
+    let r = await rowOf(q.id);
+    check(r.pronounSet === "she" && r.pronouns === null, "una clave de la lista borra el texto libre");
+    await s.identity.updateIdentity(q.id, { pronounSet: "other", pronouns: "  ellx  " });
+    r = await rowOf(q.id);
+    check(r.pronounSet === null && r.pronouns === "ellx", "«Otro» guarda el texto recortado y deja la clave en NULL");
+    check((await codeOf(() => s.identity.updateIdentity(q.id, { pronounSet: "other" }))) === "VALIDATION_ERROR", "«Otro» sin texto se rechaza");
+    check((await codeOf(() => s.identity.updateIdentity(q.id, { pronounSet: "she", pronouns: "ellx" }))) === "VALIDATION_ERROR", "clave de la lista con texto libre se rechaza");
+    check((await codeOf(() => s.identity.updateIdentity(q.id, { pronounSet: "xe" as never }))) === "VALIDATION_ERROR", "una clave fuera de la lista se rechaza");
+    check((await rowOf(q.id)).pronouns === "ellx", "los rechazos no cambian los pronombres");
+    await s.identity.updateIdentity(q.id, { pronouns: "elle" });
+    r = await rowOf(q.id);
+    check(r.pronounSet === null && r.pronouns === "elle", "un cliente anterior que envía solo `pronouns` se trata como «Otro»");
+    await s.identity.updateIdentity(q.id, { pronounSet: null });
+    r = await rowOf(q.id);
+    check(r.pronounSet === null && r.pronouns === null, "null (sin especificar) borra ambos");
+
+    await s.identity.updateIdentity(q.id, { country: "CL", location: "Quilpué" });
+    r = await rowOf(q.id);
+    check(r.country === "CL" && r.location === "Quilpué", "se guardan el país y la ciudad por separado");
+    check((await codeOf(() => s.identity.updateIdentity(q.id, { country: "ZZ" }))) === "VALIDATION_ERROR", "un país fuera de la lista se rechaza");
+    check((await codeOf(() => s.identity.updateIdentity(q.id, { country: "Chile" }))) === "VALIDATION_ERROR", "un nombre de país se rechaza");
+    check((await rowOf(q.id)).country === "CL", "los rechazos no cambian el país");
+    await s.identity.updateIdentity(q.id, { pronounSet: "she" });
+
+    console.log("  · privacidad según el acceso al perfil");
+    const ownPublic = await s.profileView.getProfileView(q.username, null);
+    check(ownPublic.country === "CL" && ownPublic.location === "Quilpué" && ownPublic.pronounSet === "she", "un perfil público los entrega a un visitante anónimo");
+
+    await db.update(appUser).set({ profileVisibility: "private" }).where(eq(appUser.id, q.id));
+    const hiddenFor = async (viewerId: string | null) => {
+      const v = await s.profileView.getProfileView(q.username, viewerId);
+      return v.country === null && v.location === null && v.pronouns === null && v.pronounSet === null;
+    };
+    check(await hiddenFor(null), "un perfil privado NO los entrega a un anónimo");
+    check(await hiddenFor(outsider.id), "ni a alguien sin relación");
+    const anonView = await s.profileView.getProfileView(q.username, null);
+    check(anonView.bio === "una bio" && anonView.followerCount === 0, "la bio y los contadores siguen siendo la identidad pública");
+    check(!JSON.stringify(anonView).includes("Quilpué") && !JSON.stringify(anonView).includes('"CL"'), "los valores no viajan en ninguna parte de la vista");
+
+    const requested = await s.following.followUser(follower.id, q.username);
+    check(requested.relation === "requested", "seguir un perfil privado deja una solicitud pendiente");
+    check(await hiddenFor(follower.id), "con la solicitud pendiente tampoco los ve");
+
+    await s.following.approveRequest(q.id, follower.id);
+    const approved = await s.profileView.getProfileView(q.username, follower.id);
+    check(approved.country === "CL" && approved.location === "Quilpué" && approved.pronounSet === "she", "un seguidor aprobado sí los ve");
+    const ownerView = await s.profileView.getProfileView(q.username, q.id);
+    check(ownerView.country === "CL" && ownerView.location === "Quilpué" && ownerView.pronounSet === "she", "el dueño siempre los ve");
+    check(await hiddenFor(null), "y siguen ocultos para un anónimo después de aprobar a otra persona");
+
+    console.log("  · exportación, desactivar y eliminar");
+    const exportedPI = await s.dataExport.buildDataExport(q.id);
+    check(exportedPI.account.country === "CL" && exportedPI.account.pronounSet === "she" && exportedPI.account.location === "Quilpué", "la exportación incluye país, clave de pronombres y ciudad");
+    check(!JSON.stringify(exportedPI).includes("passwordHash"), "la exportación sigue sin hash de contraseña");
+
+    const qSession = (await sessionOf(q.id)).resolved;
+    await s.lifecycle.deactivateAccount(qSession, password);
+    check(!(await s.profilesSvc.searchUsers(q.username, follower.id)).users.some((u) => u.username === q.username), "desactivada, la persona no aparece en la búsqueda");
+    const kept = await rowOf(q.id);
+    check(kept.country === "CL" && kept.pronounSet === "she" && kept.location === "Quilpué", "desactivar conserva los datos personales");
+    await s.lifecycle.reactivateAccount(q.id);
+    check((await rowOf(q.id)).country === "CL", "al reactivar siguen ahí");
+
+    await db.delete(appUser).where(eq(appUser.id, q.id));
+    check((await db.select().from(appUser).where(eq(appUser.id, q.id))).length === 0, "eliminar la cuenta no deja ninguna fila con sus datos personales");
+
+    console.log("\n✅ smoke de cuenta, identidad musical, ciclo de vida y datos personales OK");
   } finally {
     // Las filas de auditoría referencian al actor con RESTRICT: hay que soltarlas antes.
     for (const id of createdUserIds) {

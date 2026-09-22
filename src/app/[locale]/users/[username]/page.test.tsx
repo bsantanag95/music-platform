@@ -110,6 +110,8 @@ const profile = (over: Partial<ProfileView>): ProfileView => ({
   profileVisibility: "private",
   bio: null,
   pronouns: null,
+  pronounSet: null,
+  country: null,
   location: null,
   timezone: null,
   showLocalTime: false,

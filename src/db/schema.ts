@@ -42,6 +42,12 @@ export const appUser = pgTable(
     bio: text("bio"),
     pronouns: text("pronouns"),
     location: text("location"),
+    // Datos personales opcionales (migración 0042, cambio profile-personal-info).
+    // `country` es un código ISO de dos letras y `pronoun_set` una clave de la lista
+    // cerrada; ambas listas viven en `src/lib/personal-info.ts`. `pronouns` pasa a
+    // ser el texto libre de "Otro" y `location` la ciudad o región.
+    country: text("country"),
+    pronounSet: text("pronoun_set"),
     timezone: text("timezone"),
     avatarUrl: text("avatar_url"),
     // Onboarding de dos puertas (migración 0020, cambio add-two-door-onboarding).
@@ -91,6 +97,8 @@ export const appUser = pgTable(
     check("chk_app_user_bio", sql`${t.bio} IS NULL OR length(${t.bio}) <= 200`),
     check("chk_app_user_pronouns", sql`${t.pronouns} IS NULL OR length(${t.pronouns}) <= 40`),
     check("chk_app_user_location", sql`${t.location} IS NULL OR length(${t.location}) <= 80`),
+    check("chk_app_user_country", sql`${t.country} IS NULL OR ${t.country} ~ '^[A-Z]{2}$'`),
+    check("chk_app_user_pronouns_exclusive", sql`${t.pronounSet} IS NULL OR ${t.pronouns} IS NULL`),
     check("chk_app_user_timezone", sql`${t.timezone} IS NULL OR length(${t.timezone}) <= 64`),
     check(
       "chk_app_user_avatar_url",

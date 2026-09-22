@@ -444,7 +444,21 @@ son opcionales; se requiere al menos uno. Las cadenas de texto se recortan; la c
 el campo (`null`; en `displayName` el sitio vuelve a mostrar el username).
 
 **Body:** cualquier subconjunto de
-`{ profileVisibility: "public" | "private", displayName (≤50), defaultAudience: "private" | "followers" | "public" | null, bio (≤200), pronouns (≤40), location (≤80), timezone, showLocalTime: boolean }`.
+`{ profileVisibility: "public" | "private", displayName (≤50), defaultAudience: "private" | "followers" | "public" | null, bio (≤200), pronouns (≤40), pronounSet, country, location (≤80), timezone, showLocalTime: boolean }`.
+
+`country` es un **código ISO de dos letras de la lista cerrada** (`CL`, `ES`…; en mayúsculas — `cl`,
+`Chile` o `ZZ` responden `400 VALIDATION_ERROR`); la cadena vacía o `null` lo borra. `location` es la
+ciudad o región en texto libre. Los **pronombres** son `pronounSet`: `"he"` \| `"she"` \| `"they"`
+(guarda la clave y **borra** `pronouns`), `"other"` (exige `pronouns` no vacío en la misma petición,
+guarda el texto y deja la clave en `NULL`) o `null` (borra ambos). Una clave de la lista con `pronouns`
+no vacío, `"other"` sin texto o una clave fuera de la lista responden `400 VALIDATION_ERROR`. Un
+cliente anterior que solo envía `pronouns` se trata como «Otro» (y vacío lo borra, junto con la clave).
+`birthYear`, `birthDate`, `gender`, `firstName` y `lastName` **no existen**: se descartan y una petición
+que solo los trae responde `400 VALIDATION_ERROR`.
+
+`country`, `location` y los pronombres **no se entregan** a quien no tiene acceso a un perfil privado
+(la vista del perfil los vacía en el servidor); `GET /api/me/export` los incluye en `account`
+(`country`, `pronounSet`, `pronouns`, `location`).
 
 `timezone` es un **identificador IANA de la lista** (`America/Santiago`, `UTC`…; sensible a
 mayúsculas); la cadena vacía o `null` la borra y cualquier otro valor responde `400

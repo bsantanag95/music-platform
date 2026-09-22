@@ -73,16 +73,18 @@ export function LegalPageView({
 
 type LegalTranslator = Awaited<ReturnType<typeof getTranslations<"legal">>>;
 
-// Cuenta y datos (cambio rework-account-settings, Fase 3): lo que la aplicación hace hoy
-// al desactivar, reactivar, eliminar y exportar, y lo que queda por definir antes de la
+// Datos personales y cuenta (cambios profile-personal-info y rework-account-settings,
+// Fase 3): lo que la aplicación guarda de forma opcional en el perfil, lo que hace hoy al
+// desactivar, reactivar, eliminar y exportar, y lo que queda por definir antes de la
 // apertura. Las claves son fijas: cada sección lleva sus párrafos y, la última, una lista.
 const PRIVACY_SECTIONS = [
+  { id: "personal", paragraphs: ["body", "body2", "body3"] },
   { id: "deactivate", paragraphs: ["body", "body2"] },
   { id: "reactivate", paragraphs: ["body"] },
   { id: "delete", paragraphs: ["body", "body2"] },
   { id: "export", paragraphs: ["body"] },
   { id: "limits", paragraphs: ["body"] },
-  { id: "pending", paragraphs: ["body"], items: 7 },
+  { id: "pending", paragraphs: ["body"], items: 8 },
 ] as const;
 
 function privacySections(t: LegalTranslator): LegalContentSection[] {

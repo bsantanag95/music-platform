@@ -59,6 +59,8 @@ export const PROFILE_IDENTITY_LIMITS = {
   bio: 200,
   pronouns: 40,
   location: 80,
+  /** Código ISO de país (`app_user.country`, migración 0042); la lista cerrada vive en `lib/personal-info.ts`. */
+  country: 2,
   timezone: 64,
   linkUrl: 400,
   pinnedNote: 120,

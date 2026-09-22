@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
 import { monogramLetter, monogramStyle } from "@/components/social/monogram";
+import { isPronounSet } from "@/lib/personal-info";
 import { describeStoredLink } from "@/lib/profile-links";
 import { LinkKindIcon } from "./LinkKindIcon";
 import type { ProfileView } from "@/services/profiles/profile-view";
@@ -25,6 +26,11 @@ interface ProfileIdentityProps {
   badge?: ReactNode;
   /** Hora actual del perfil ya formateada ("14:32"), si su dueño eligió mostrarla. */
   localTime?: string | null;
+  /**
+   * Nombre del país ya localizado ("Chile"), calculado por el Server Component que
+   * compone la Placa con el idioma de la ruta. Sin él, solo se muestra la ciudad.
+   */
+  countryLabel?: string | null;
 }
 
 const PILL =
@@ -45,9 +51,15 @@ export function ProfileIdentity({
   minimal = false,
   badge,
   localTime = null,
+  countryLabel = null,
 }: ProfileIdentityProps) {
   const name = profile.displayName ?? profile.username;
   const compact = size === "sm";
+  // Pronombres (spec profile-personal-info): la clave de la lista en el idioma de quien
+  // mira, o el texto libre de «Otro». Solo llegan si quien mira tiene acceso al perfil.
+  const pronounLabel = isPronounSet(profile.pronounSet) ? t(`pronounSet.${profile.pronounSet}`) : profile.pronouns;
+  // «Ciudad, País»: se omite lo que falte, sin separadores sobrantes.
+  const place = [profile.location, countryLabel].filter(Boolean).join(", ");
 
   const followers = (
     <>
@@ -76,16 +88,18 @@ export function ProfileIdentity({
         <div className="min-w-0">
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
             <h1 className={`truncate font-display ${compact ? "text-xl" : "text-2xl"} text-paper`}>{name}</h1>
+            {!minimal && pronounLabel && (
+              <span
+                aria-label={t("pronounsAria", { pronouns: pronounLabel })}
+                className="rounded-full border border-ink-border px-2 py-0.5 font-data text-xs text-paper-muted"
+              >
+                {pronounLabel}
+              </span>
+            )}
             {badge}
           </div>
           <p className="font-data text-sm text-paper-muted">
             <span>@{profile.username}</span>
-            {!minimal && profile.pronouns && (
-              <>
-                <span aria-hidden="true"> · </span>
-                <span>{profile.pronouns}</span>
-              </>
-            )}
           </p>
         </div>
       </div>
@@ -111,13 +125,13 @@ export function ProfileIdentity({
           </div>
 
           <p className="font-data text-xs text-paper-muted">
-            {t("memberSince", { date: memberSinceDate })}
-            {profile.location && (
+            {place && (
               <>
+                <span>{place}</span>
                 <span aria-hidden="true"> · </span>
-                <span>{profile.location}</span>
               </>
             )}
+            {t("memberSince", { date: memberSinceDate })}
             {localTime && (
               <>
                 <span aria-hidden="true"> · </span>
