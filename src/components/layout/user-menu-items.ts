@@ -55,6 +55,7 @@ export const USER_MENU_ITEMS: readonly UserMenuItemDef[] = [
     group: "library",
     surfaces: BOTH,
   },
+  { id: "caminos", href: "/me/caminos", labelKey: "caminos", group: "library", surfaces: BOTH },
   { id: "feed", href: "/me/feed", labelKey: "feed", group: "library", surfaces: ["header"] },
 
   {

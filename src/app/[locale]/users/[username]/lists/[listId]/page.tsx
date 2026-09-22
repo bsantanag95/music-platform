@@ -5,6 +5,7 @@ import { resolveSession } from "@/services/auth/sessions";
 import { getProfileByUsername } from "@/services/social/profiles";
 import { getUserListDetail } from "@/services/lists/lists";
 import { saveCountsFor, savedStateFor } from "@/services/lists/saved-lists";
+import { countsByListId } from "@/services/journeys/progress";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListDetailHeader } from "@/components/lists/ListDetailHeader";
 import { ListItemsView } from "@/components/lists/ListItemsView";
@@ -53,6 +54,12 @@ export default async function UserListDetailPage({ params }: PageProps) {
     list.audience === "public"
       ? ((await saveCountsFor([listId])).get(listId) ?? 0)
       : undefined;
+  // Progreso propio del visitante, solo si tiene tracking activo sobre esta
+  // lista de álbumes (openspec: add-camino).
+  const trackingProgress =
+    viewerId && savedState?.tracking && list.entityType === "release-group"
+      ? ((await countsByListId(viewerId, [listId])).get(listId) ?? { selected: 0, listened: 0 })
+      : null;
 
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
@@ -65,6 +72,12 @@ export default async function UserListDetailPage({ params }: PageProps) {
           following={savedState?.following ?? false}
           canSave={Boolean(viewerId)}
           saveCount={saveCount}
+          tracking={savedState?.tracking ?? false}
+          trackingProgress={
+            trackingProgress
+              ? { selectedCount: trackingProgress.selected, listenedCount: trackingProgress.listened }
+              : null
+          }
         />
 
         {list.items.length === 0 ? (

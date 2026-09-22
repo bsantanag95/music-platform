@@ -12,6 +12,7 @@ import { OwnerEditProvider } from "@/components/profiles/OwnerEditProvider";
 import { OwnerProfileBar } from "@/components/profiles/OwnerProfileBar";
 import {
   AffinitySection,
+  CaminosRail,
   CollectionRail,
   DiaryRail,
   ExplorationSection,
@@ -196,6 +197,9 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
         </Streamed>
         <Streamed>
           <ListsRail {...section} />
+        </Streamed>
+        <Streamed>
+          <CaminosRail {...section} />
         </Streamed>
         <Streamed>
           <CollectionRail {...section} />

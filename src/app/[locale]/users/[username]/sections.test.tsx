@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AffinitySection,
+  CaminosRail,
   CollectionRail,
   DiaryRail,
   EditablePlaca,
@@ -17,6 +18,7 @@ import {
 } from "./sections";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
 import { ListsCarousel } from "@/components/lists/ListsCarousel";
+import { CaminosCarousel } from "@/components/camino/CaminosCarousel";
 import { CollectionPreview } from "@/components/collection/CollectionPreview";
 import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
 import { InRotation } from "@/components/profiles/InRotation";
@@ -51,6 +53,7 @@ const svc = vi.hoisted(() => ({
   listUserFavorites: vi.fn(),
   getFavoritesPreview: vi.fn(),
   listUserLists: vi.fn(),
+  listVisibleCaminos: vi.fn(),
   listProfileCollection: vi.fn(),
   getCollectionPreview: vi.fn(),
   getTasteFingerprint: vi.fn(),
@@ -70,6 +73,8 @@ vi.mock("@/services/favorites/favorites", () => ({
   getFavoritesPreview: svc.getFavoritesPreview,
 }));
 vi.mock("@/services/lists/lists", () => ({ listUserLists: svc.listUserLists }));
+vi.mock("@/services/camino/camino", () => ({ listVisibleCaminos: svc.listVisibleCaminos }));
+vi.mock("@/services/camino/types", () => ({ CAMINOS_PREVIEW_LIMIT: 10 }));
 vi.mock("@/services/collection/collection", () => ({
   listProfileCollection: svc.listProfileCollection,
   getCollectionPreview: svc.getCollectionPreview,
@@ -96,6 +101,7 @@ vi.mock("@/services/social/following", () => ({ countPendingFollowRequests: svc.
 vi.mock("@/components/diary/DiaryReadList", () => ({ DiaryReadList: () => null }));
 vi.mock("@/components/favorites/FavoritesPreview", () => ({ FavoritesPreview: () => null }));
 vi.mock("@/components/lists/ListsCarousel", () => ({ ListsCarousel: () => null }));
+vi.mock("@/components/camino/CaminosCarousel", () => ({ CaminosCarousel: () => null }));
 vi.mock("@/components/collection/CollectionPreview", () => ({ CollectionPreview: () => null }));
 vi.mock("@/components/profiles/OwnerIdentityCardEditor", () => ({ OwnerIdentityCardEditor: () => null }));
 vi.mock("@/components/profiles/OwnerIdentityEditor", () => ({ OwnerIdentityEditor: () => null }));
@@ -181,6 +187,34 @@ describe("estantes vacíos", () => {
     expect(carousel?.type).toBe(ListsCarousel);
     expect(carousel?.props).toMatchObject({ username: "ana", totalCount: 23 });
     expect(carousel?.props?.lists).toHaveLength(10);
+  });
+
+  it("CaminosRail colapsa (null) sin Caminos visibles para un visitante, pero no para el dueño", async () => {
+    svc.listVisibleCaminos.mockResolvedValue({ caminos: [], page: 1, pageSize: 10, totalCount: 0 });
+    expect(await CaminosRail(section)).toBeNull();
+    expect(await CaminosRail({ ...section, isOwn: true })).not.toBeNull();
+  });
+
+  it("CaminosRail pide solo los primeros 10, usa el total real y desactiva tracking para el dueño", async () => {
+    const caminos = Array.from({ length: 10 }, (_, i) => ({ id: `c${i}` }));
+    svc.listVisibleCaminos.mockResolvedValue({ caminos, page: 1, pageSize: 10, totalCount: 14 });
+
+    const tree = (await CaminosRail(section)) as {
+      type?: unknown;
+      props?: { count?: number; children?: { type?: unknown; props?: Record<string, unknown> } };
+    };
+
+    expect(svc.listVisibleCaminos).toHaveBeenCalledWith("ana", null, 1, 10);
+    expect(tree?.type).toBe(ProfileRail);
+    expect(tree?.props?.count).toBe(14);
+    const carousel = tree?.props?.children;
+    expect(carousel?.type).toBe(CaminosCarousel);
+    expect(carousel?.props).toMatchObject({ username: "ana", totalCount: 14, canTrack: true });
+
+    const ownTree = (await CaminosRail({ ...section, isOwn: true })) as {
+      props?: { children?: { props?: Record<string, unknown> } };
+    };
+    expect(ownTree?.props?.children?.props).toMatchObject({ canTrack: false });
   });
 
   it("CollectionRail colapsa (null) sin copias visibles para un visitante, pero no para el dueño", async () => {

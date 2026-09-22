@@ -733,10 +733,12 @@ isOfficial: boolean("is_official").notNull().default(false),
     // Subtipo "recorrido de artista" (migración 0027, cambio add-artist-journey).
     // `kind = 'artist_journey'` reutiliza esta misma tabla/ítems para la
     // selección personal de discografía; `journeyArtistId`/`journeyArchivedAt`
-    // solo se usan en ese subtipo. El estado "completo"/"en curso" NO se
-    // persiste — se deriva en el momento de lectura contra `listen_entry`
-    // (ver src/services/artist-journeys/artist-journeys.ts), así nunca queda
-    // desincronizado al agregar o quitar un ítem.
+    // solo se usan en ese subtipo. `kind = 'custom_journey'` (migración 0043,
+    // cambio add-camino) es un "Camino" dinámico: mismo mecanismo, sin
+    // artista ni discografía de fondo. En ambos subtipos el estado
+    // "completo"/"en curso" NO se persiste — se deriva en el momento de
+    // lectura contra `listen_entry` (ver src/services/journeys/progress.ts),
+    // así nunca queda desincronizado al agregar o quitar un ítem.
     kind: text("kind").notNull().default("standard"),
     journeyArtistId: uuid("journey_artist_id").references(() => artist.id, { onDelete: "cascade" }),
     journeyArchivedAt: timestamp("journey_archived_at", { withTimezone: true }),
@@ -757,7 +759,7 @@ isOfficial: boolean("is_official").notNull().default(false),
     check("chk_user_list_title", sql`length(${t.title}) <= 100`),
     check("chk_user_list_description", sql`${t.description} IS NULL OR length(${t.description}) <= 500`),
     check("chk_user_list_moderation_status", sql`${t.moderationStatus} IN ('visible', 'hidden')`),
-    check("chk_user_list_kind", sql`${t.kind} IN ('standard', 'artist_journey')`),
+    check("chk_user_list_kind", sql`${t.kind} IN ('standard', 'artist_journey', 'custom_journey')`),
   ],
 );
 
@@ -788,6 +790,10 @@ export const userListItem = pgTable(
 // Guardar / seguir listas ajenas (cambio rework-lists-section). Marcador
 // privado por (saver_id, list_id); `following` habilita que las
 // actualizaciones de la lista entren en el feed de quien la sigue.
+// `tracking` (migración 0043, cambio add-camino) es un eje independiente:
+// el propio guardador activa su seguimiento de progreso sobre una lista
+// ajena de álbumes, sin que el dueño opine ni se entere — el progreso nunca
+// se persiste, se deriva en lectura (ver src/services/journeys/progress.ts).
 export const listSave = pgTable(
   "list_save",
   {
@@ -798,12 +804,15 @@ export const listSave = pgTable(
       .notNull()
       .references(() => userList.id, { onDelete: "cascade" }),
     following: boolean("following").notNull().default(false),
+    tracking: boolean("tracking").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     primaryKey({ columns: [t.saverId, t.listId] }),
     index("idx_list_save_saver_created").on(t.saverId, t.createdAt),
     index("idx_list_save_list").on(t.listId),
+    index("idx_list_save_saver_tracking").on(t.saverId).where(sql`${t.tracking}`),
+    index("idx_list_save_list_tracking").on(t.listId).where(sql`${t.tracking}`),
   ],
 );
 

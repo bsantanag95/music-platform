@@ -1043,15 +1043,27 @@ Descubrir lista las listas públicas de la comunidad. Ambas superficies requiere
 
 Guarda (o actualiza `following` de) una lista ajena visible. Idempotente por `(saver, list)`.
 
-**Body:** `{ listId, following? }` (`following` por defecto `false`).
-**201 OK:** `{ list }` con `{ id, entityType, title, description, createdAt, updatedAt, itemCount, coverThumbs, owner: { id, username, displayName }, following, unavailable }`.
+**Body:** `{ listId, following? }` (`following` por defecto `false`; no toca `tracking`).
+**201 OK:** `{ list }` con `{ id, entityType, title, description, createdAt, updatedAt, itemCount, coverThumbs, owner: { id, username, displayName }, following, tracking, unavailable }`.
 **400** con `VALIDATION_ERROR` si el body no es válido o la lista es propia.
 **404** con `LIST_NOT_FOUND` si la lista no existe o no es visible.
 **401** con `AUTH_REQUIRED` sin sesión.
 
 ### `DELETE /api/me/saved-lists/{listId}`
 
-Quita el guardado. Idempotente. **204.** **400** si el id no es UUID. **401** sin sesión.
+Quita el guardado (y su tracking, si estaba activo). Idempotente. **204.** **400** si el id no
+es UUID. **401** sin sesión.
+
+### `PATCH /api/me/saved-lists/{listId}` (cambio `add-camino`)
+
+Activa o desactiva el tracking de progreso propio sobre una lista ajena de álbumes
+(`entityType = 'release-group'`), sin tocar `following`. Crea el guardado si todavía no existía.
+
+**Body:** `{ tracking: boolean }`.
+**200 OK:** `{ list }` — mismo `SavedListSummary` que `POST`, con el campo `tracking` actualizado.
+**400** con `VALIDATION_ERROR` si el body no es válido o la lista no es de álbumes.
+**404** con `LIST_NOT_FOUND` si la lista no existe o no es visible.
+**401** con `AUTH_REQUIRED` sin sesión.
 
 ### `GET /api/me/saved-lists?page=&pageSize=`
 
@@ -1100,6 +1112,67 @@ bloqueos y las listas propias.
 
 **200 OK:** `{ lists: [{ ..., owner, saved, following }], page, pageSize, hasNext }`.
 **400** con `VALIDATION_ERROR` si la paginación es inválida. **401** con `AUTH_REQUIRED` sin sesión.
+
+## Camino (cambio `add-camino`)
+
+Generaliza el mecanismo de progreso derivado de "Recorrido de artista" más allá de un artista: un
+Camino es un `user_list` con `kind = 'custom_journey'`, siempre `entityType = 'release-group'`,
+sin discografía de fondo — el Camino ES el conjunto de álbumes que su dueño agregó. Todos los
+endpoints propios requieren sesión; el progreso (`{ selectedCount, listenedCount }`) se deriva en
+cada lectura, nunca se persiste.
+
+### `GET /api/me/caminos`
+
+Listado combinado: Caminos dinámicos propios + listas ajenas trackeadas.
+
+**200 OK:** `{ caminos: [CaminoSummary], trackedLists: [TrackedListSummary] }`, donde
+`CaminoSummary = { id, title, state, progress, coverThumbUrl, updatedAt }` y
+`TrackedListSummary = { id, title, kind, owner, state, progress, updatedAt }` (`kind` distingue
+`standard` de `custom_journey` para resolver la ruta de lectura correcta). **401** sin sesión.
+
+### `POST /api/me/caminos`
+
+Crea un Camino vacío.
+
+**Body:** `{ title, description?, audience? }` (mismos límites que Listas: título ≤100,
+descripción ≤500).
+**201 OK:** `{ camino: CaminoDetail }`, con
+`CaminoDetail = { id, title, description, audience, state, createdAt, updatedAt, progress, albums }`
+y `albums: [{ id, title, coverThumbUrl, listened }]`.
+**400** con `VALIDATION_ERROR`. **401** sin sesión.
+
+### `GET /api/me/caminos/{caminoId}` · `DELETE /api/me/caminos/{caminoId}`
+
+Detalle propio; borrado físico e irreversible. **200** / **204**.
+**404** con `CAMINO_NOT_FOUND` si no existe o no es propio. **401** sin sesión.
+
+### `POST /api/me/caminos/{caminoId}/archive` · `DELETE /api/me/caminos/{caminoId}/archive`
+
+Archiva / desarchiva, conservando contenido y progreso. **200 OK:** `{ camino }`.
+**404** con `CAMINO_NOT_FOUND`. **401** sin sesión.
+
+### `POST /api/me/caminos/{caminoId}/albums`
+
+Agrega un álbum al final del Camino propio. Idempotente.
+
+**Body:** `{ releaseGroupId }`. **201 OK:** `{ camino }`.
+**400** con `VALIDATION_ERROR` si el álbum no existe. **404** con `CAMINO_NOT_FOUND`. **401** sin sesión.
+
+### `DELETE /api/me/caminos/{caminoId}/albums/{releaseGroupId}`
+
+Quita un álbum del Camino propio. Idempotente. **200 OK:** `{ camino }`.
+**404** con `CAMINO_NOT_FOUND` o `ALBUM_NOT_FOUND` según qué id no es válido. **401** sin sesión.
+
+### `GET /api/caminos/discover?page=&pageSize=&genre=&artist=`
+
+Descubrimiento público de Caminos populares — **sin sesión**. Lista las listas de álbumes
+visibles (`public`, `kind` `standard` o `custom_journey`) con al menos un trackeo activo,
+ordenadas por conteo de trackeo descendente (no por guardado simple). `genre` filtra por
+coincidencia de al menos un álbum etiquetado; `artist` busca por nombre de artista acreditado
+en al menos un álbum (sin distinguir mayúsculas), no por id.
+
+**200 OK:** `{ caminos: [{ id, title, kind, owner, itemCount, coverThumbs, trackingCount }], page, pageSize, hasNext }`.
+**400** con `VALIDATION_ERROR` si la paginación es inválida.
 
 ## Colección física (Fase 5.5, cambios `add-physical-collection` y `rework-collection-section`)
 

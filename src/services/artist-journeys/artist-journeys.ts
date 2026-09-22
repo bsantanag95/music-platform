@@ -1,11 +1,21 @@
 import { and, desc, eq, inArray, max, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { artist, listenEntry, userList, userListItem, type ReleaseGroupRow } from "@/db/schema";
+import { artist, userList, userListItem, type ReleaseGroupRow } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { findOrIngestDiscography } from "@/services/catalog/ingest-discography";
 import { getArtistById } from "@/services/catalog/ingest-artist";
+import {
+  countsByListId,
+  deriveJourneyState,
+  listenedReleaseGroupIds,
+} from "@/services/journeys/progress";
 import type { ReleaseGroupCategory } from "@/lib/api/schemas";
 import type { ArtistJourneyState } from "./types";
+
+// Reexportados para no romper a los consumidores existentes (incluido
+// artist-journeys.test.ts) tras la extracción a un módulo compartido con
+// Camino (openspec: add-camino, Decisión D2 de su design.md).
+export { deriveJourneyState };
 
 // "Recorrido de artista" (openspec: add-artist-journey,
 // docs/00-product/product_philosophy.md §6.4): selección personal de álbumes
@@ -65,40 +75,6 @@ async function selectedReleaseGroupIds(listId: string): Promise<Set<string>> {
     .from(userListItem)
     .where(eq(userListItem.listId, listId));
   return new Set(rows.map((r) => r.releaseGroupId).filter((id): id is string => id !== null));
-}
-
-/**
- * Ids de `releaseGroupIds` que el propio dueño tiene registrados en su
- * diario (cualquier escucha, sin filtro de audiencia — es lectura del dueño
- * sobre su propio progreso). Sobre toda la discografía, no solo la
- * selección, para que cada álbum pueda exponer si ya se escuchó (openspec:
- * add-artist-journey-mark-listened, D2 de design.md) — `listenedCount` del
- * progreso agregado sale de intersecar este set con la selección.
- */
-async function listenedReleaseGroupIds(
-  ownerId: string,
-  releaseGroupIds: string[],
-): Promise<Set<string>> {
-  if (releaseGroupIds.length === 0) return new Set();
-  const rows = await db
-    .select({ releaseGroupId: listenEntry.releaseGroupId })
-    .from(listenEntry)
-    .where(
-      and(eq(listenEntry.userId, ownerId), inArray(listenEntry.releaseGroupId, releaseGroupIds)),
-    )
-    .groupBy(listenEntry.releaseGroupId);
-  return new Set(rows.map((r) => r.releaseGroupId).filter((id): id is string => id !== null));
-}
-
-/** Estado derivado — nunca persistido (D3 de design.md). */
-export function deriveJourneyState(
-  archivedAt: Date | null,
-  selectedCount: number,
-  listenedCount: number,
-): ArtistJourneyState {
-  if (archivedAt) return "archived";
-  if (selectedCount > 0 && listenedCount === selectedCount) return "complete";
-  return "in_progress";
 }
 
 /**
@@ -333,45 +309,6 @@ export async function unarchiveArtistJourney(
 export async function deleteArtistJourney(ownerId: string, artistId: string): Promise<void> {
   const listRow = await requireOwnedJourney(ownerId, artistId);
   await db.delete(userList).where(eq(userList.id, listRow.id));
-}
-
-/**
- * Cuenta, para un conjunto de `listId` de recorridos, la selección y lo
- * escuchado de cada uno en una sola consulta agregada (no N+1). Compartida
- * por `journeyStatesForArtists` y `listMyArtistJourneys`.
- *
- * LEFT JOIN contra `listen_entry` puede multiplicar filas si el dueño
- * escuchó el mismo álbum más de una vez — por eso ambos agregados cuentan
- * `DISTINCT user_list_item.id` (un ítem por álbum, invariante ya
- * garantizada por la unicidad `(list_id, release_group_id)` de
- * `user_list_item`), no `count(*)`.
- */
-async function countsByListId(
-  ownerId: string,
-  listIds: string[],
-): Promise<Map<string, { selected: number; listened: number }>> {
-  const result = new Map<string, { selected: number; listened: number }>();
-  if (listIds.length === 0) return result;
-
-  const counts = await db
-    .select({
-      listId: userListItem.listId,
-      selected: sql<number>`count(distinct ${userListItem.id})::int`,
-      listened: sql<number>`count(distinct ${userListItem.id}) filter (where ${listenEntry.id} is not null)::int`,
-    })
-    .from(userListItem)
-    .leftJoin(
-      listenEntry,
-      and(
-        eq(listenEntry.releaseGroupId, userListItem.releaseGroupId),
-        eq(listenEntry.userId, ownerId),
-      ),
-    )
-    .where(inArray(userListItem.listId, listIds))
-    .groupBy(userListItem.listId);
-
-  for (const c of counts) result.set(c.listId, { selected: c.selected, listened: c.listened });
-  return result;
 }
 
 /**

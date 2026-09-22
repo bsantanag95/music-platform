@@ -5,6 +5,8 @@ import { listUserDiary } from "@/services/diary/diary";
 import { getFavoritesPreview, listUserFavorites } from "@/services/favorites/favorites";
 import { listUserLists } from "@/services/lists/lists";
 import { LISTS_PREVIEW_LIMIT } from "@/services/lists/types";
+import { listVisibleCaminos } from "@/services/camino/camino";
+import { CAMINOS_PREVIEW_LIMIT } from "@/services/camino/types";
 import { getCollectionPreview, listProfileCollection } from "@/services/collection/collection";
 import { getTasteFingerprint } from "@/services/profiles/stats";
 import { getShowcase } from "@/services/profiles/showcase";
@@ -38,6 +40,7 @@ import { ProfileRecency } from "@/components/profiles/ProfileRecency";
 import { DiaryReadList } from "@/components/diary/DiaryReadList";
 import { FavoritesPreview } from "@/components/favorites/FavoritesPreview";
 import { ListsCarousel } from "@/components/lists/ListsCarousel";
+import { CaminosCarousel } from "@/components/camino/CaminosCarousel";
 import { CollectionPreview } from "@/components/collection/CollectionPreview";
 
 // Secciones asíncronas del perfil, cada una envuelta por su propio <Suspense>
@@ -279,6 +282,27 @@ export async function ListsRail({ username, viewerId, isOwn }: SectionProps) {
   );
 }
 
+// Estante "Caminos": mismo molde que ListsRail, sobre `listVisibleCaminos`
+// (Caminos propios visibles, no archivados). Un Camino nunca cuenta como
+// "lista" en ningún otro estante ni conteo (openspec: add-camino).
+export async function CaminosRail({ username, viewerId, isOwn }: SectionProps) {
+  const t = await getTranslations("users");
+  const initial = await listVisibleCaminos(username, viewerId, 1, CAMINOS_PREVIEW_LIMIT);
+  if (initial.caminos.length === 0) {
+    return isOwn ? <EmptyRailForOwner label={t("caminosTitle")} message={t("railEmptyOwn")} /> : null;
+  }
+  return (
+    <ProfileRail id="caminos" label={t("caminosTitle")} count={initial.totalCount}>
+      <CaminosCarousel
+        caminos={initial.caminos}
+        username={username}
+        totalCount={initial.totalCount}
+        canTrack={!isOwn}
+      />
+    </ProfileRail>
+  );
+}
+
 // Estante "Colección": una previsualización con tope (5 artistas × 4 copias, los
 // de los que más copias tiene) y la puerta a `/users/[username]/collection`. El
 // conteo del encabezado es el total real de copias, no lo traído.
@@ -306,10 +330,11 @@ export async function CollectionRail({ username, viewerId, isOwn }: SectionProps
 // y con su propio <Suspense> en `page.tsx`, igual que el resto de las
 // secciones — no bloquea ni depende de los estantes que referencia.
 export async function Level3LinksSection({ username, viewerId }: Omit<SectionProps, "isOwn">) {
-  const [diary, favorites, lists, collection, fingerprint] = await Promise.all([
+  const [diary, favorites, lists, caminos, collection, fingerprint] = await Promise.all([
     listUserDiary(username, viewerId, 1, 1),
     listUserFavorites(username, viewerId, 1, 1),
     listUserLists(username, viewerId, 1, 1),
+    listVisibleCaminos(username, viewerId, 1, 1),
     listProfileCollection(username, viewerId, 1, 1),
     getTasteFingerprint(username, viewerId),
   ]);
@@ -321,6 +346,7 @@ export async function Level3LinksSection({ username, viewerId }: Omit<SectionPro
         diary: diary.entries.length > 0,
         favorites: favorites.favorites.length > 0,
         lists: lists.lists.length > 0,
+        caminos: caminos.caminos.length > 0,
         collection: collection.entries.length > 0,
       }}
       hasFingerprint={Boolean(fingerprint)}

@@ -23,6 +23,8 @@ const mocks = vi.hoisted(() => ({
   getProfileByUsername: vi.fn(),
   getUserListDetail: vi.fn(),
   savedStateFor: vi.fn(),
+  saveCountsFor: vi.fn(),
+  countsByListId: vi.fn(),
 }));
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: () => mocks.resolveSession() }));
 vi.mock("@/services/social/profiles", () => ({
@@ -33,6 +35,10 @@ vi.mock("@/services/lists/lists", () => ({
 }));
 vi.mock("@/services/lists/saved-lists", () => ({
   savedStateFor: (...a: unknown[]) => mocks.savedStateFor(...a),
+  saveCountsFor: (...a: unknown[]) => mocks.saveCountsFor(...a),
+}));
+vi.mock("@/services/journeys/progress", () => ({
+  countsByListId: (...a: unknown[]) => mocks.countsByListId(...a),
 }));
 vi.mock("@/components/lists/ListDetailHeader", () => ({ ListDetailHeader: () => null }));
 vi.mock("@/components/lists/ListItemsView", () => ({ ListItemsView: () => null }));
@@ -49,6 +55,8 @@ describe("UserListDetailPage", () => {
     vi.clearAllMocks();
     mocks.resolveSession.mockResolvedValue({ user: { id: "viewer" } });
     mocks.savedStateFor.mockResolvedValue(new Map());
+    mocks.saveCountsFor.mockResolvedValue(new Map());
+    mocks.countsByListId.mockResolvedValue(new Map());
   });
 
   it("id no uuid → notFound", async () => {

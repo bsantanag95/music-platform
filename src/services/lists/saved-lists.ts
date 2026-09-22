@@ -14,6 +14,7 @@ import type { Audience, FollowRelation } from "@/services/social/types";
 import { enrichLists } from "./lists";
 import type { ListEntityType } from "./types";
 import { activeUserCondition } from "@/services/auth/account-status";
+import { countsByListId, deriveJourneyState, type JourneyState } from "@/services/journeys/progress";
 
 export interface SavedListSummary {
   id: string;
@@ -27,8 +28,32 @@ export interface SavedListSummary {
   owner: { id: string; username: string; displayName: string | null };
   /** El guardado tiene `following` activo. */
   following: boolean;
+  /**
+   * El guardado tiene tracking de progreso propio activo (openspec:
+   * add-camino) — solo significativo cuando `entityType = 'release-group'`.
+   */
+  tracking: boolean;
   /** La lista dejó de ser visible para quien la guardó (privada, bloqueo). */
   unavailable: boolean;
+}
+
+export interface TrackedListSummary {
+  id: string;
+  title: string;
+  coverThumbUrl: string | null;
+  /**
+   * Subtipo de la lista trackeada — determina a qué ruta de lectura ajena
+   * enlazar: `standard` va a `/users/[username]/lists/[id]`, `custom_journey`
+   * (un Camino ajeno) va a `/users/[username]/caminos/[id]` (openspec:
+   * add-camino, Requirement "Exclusión de toda superficie que lea listas
+   * genéricamente" de `camino` — un Camino no vive detrás de los endpoints
+   * de `lists`).
+   */
+  kind: "standard" | "custom_journey";
+  owner: { id: string; username: string; displayName: string | null };
+  state: JourneyState;
+  progress: { selectedCount: number; listenedCount: number };
+  updatedAt: string;
 }
 
 /** Audiencias visibles para un lector según su relación con el dueño. */
@@ -102,8 +127,121 @@ export async function unsaveList(saverId: string, listId: string): Promise<void>
     .where(and(eq(listSave.saverId, saverId), eq(listSave.listId, listId)));
 }
 
+/**
+ * Activa o desactiva el tracking de progreso propio sobre una lista ajena de
+ * álbumes (openspec: add-camino, Requirement "Trackear el progreso propio
+ * sobre una lista ajena" de `list-saves`). Eje independiente de `following`:
+ * a diferencia de `saveList`, el `set` del upsert solo toca `tracking`, así
+ * que nunca pisa el `following` que el guardado ya tuviera. Si la lista
+ * todavía no estaba guardada, la crea con `following: false` en la misma
+ * operación.
+ */
+export async function setListTracking(
+  trackerId: string,
+  listId: string,
+  tracking: boolean,
+): Promise<SavedListSummary> {
+  const [row] = await db
+    .select({
+      id: userList.id,
+      ownerId: userList.ownerId,
+      entityType: userList.entityType,
+      audience: userList.audience,
+      ownerVisibility: appUser.profileVisibility,
+    })
+    .from(userList)
+    .innerJoin(appUser, eq(userList.ownerId, appUser.id))
+    .where(and(eq(userList.id, listId), activeUserCondition()))
+    .limit(1);
+
+  if (!row) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
+  if (row.ownerId === trackerId) {
+    throw new ApiError("VALIDATION_ERROR", 400, "No podés trackear tu propia lista");
+  }
+  if (row.entityType !== "release-group") {
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      400,
+      "Solo se puede trackear progreso sobre listas de álbumes",
+    );
+  }
+
+  const relations = await relationsFor(trackerId, [row.ownerId]);
+  const allowed = audiencesFor(
+    trackerId,
+    row.ownerId,
+    row.ownerVisibility,
+    relations.get(row.ownerId) ?? "none",
+  );
+  if (!allowed.includes(row.audience as Audience)) {
+    throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
+  }
+
+  await db
+    .insert(listSave)
+    .values({ saverId: trackerId, listId, following: false, tracking })
+    .onConflictDoUpdate({
+      target: [listSave.saverId, listSave.listId],
+      set: { tracking },
+    });
+
+  const [saved] = await buildSavedSummaries(trackerId, [{ listId }]);
+  if (!saved) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo activar el tracking");
+  return saved;
+}
+
+/**
+ * Listas ajenas sobre las que `trackerId` activó tracking de progreso, con
+ * su estado y progreso derivados contra el propio diario de `trackerId` —
+ * para la superficie combinada `/me/caminos`. Una lista tracked no tiene
+ * noción de "archivada" (esa acción pertenece al dueño de la lista, no a
+ * quien la trackea), así que su estado siempre es `in_progress` o
+ * `complete`.
+ */
+export async function listTrackedLists(trackerId: string): Promise<TrackedListSummary[]> {
+  const rows = await db
+    .select({
+      listId: userList.id,
+      title: userList.title,
+      kind: userList.kind,
+      updatedAt: userList.updatedAt,
+      ownerId: appUser.id,
+      ownerUsername: appUser.username,
+      ownerDisplayName: appUser.displayName,
+    })
+    .from(listSave)
+    .innerJoin(userList, eq(listSave.listId, userList.id))
+    .innerJoin(appUser, eq(userList.ownerId, appUser.id))
+    .where(and(eq(listSave.saverId, trackerId), eq(listSave.tracking, true), activeUserCondition()))
+    .orderBy(desc(userList.updatedAt));
+  if (rows.length === 0) return [];
+
+  const listIds = rows.map((r) => r.listId);
+  const [counts, enrichment] = await Promise.all([
+    countsByListId(trackerId, listIds),
+    enrichLists(listIds),
+  ]);
+
+  return rows.map((row) => {
+    const count = counts.get(row.listId);
+    const selectedCount = count?.selected ?? 0;
+    const listenedCount = count?.listened ?? 0;
+    return {
+      id: row.listId,
+      title: row.title,
+      coverThumbUrl: enrichment.get(row.listId)?.coverThumbs[0] ?? null,
+      kind: row.kind as "standard" | "custom_journey",
+      owner: { id: row.ownerId, username: row.ownerUsername, displayName: row.ownerDisplayName },
+      state: deriveJourneyState(null, selectedCount, listenedCount),
+      progress: { selectedCount, listenedCount },
+      updatedAt: row.updatedAt.toISOString(),
+    };
+  });
+}
+
 interface SavedRow {
   following: boolean;
+  tracking: boolean;
   id: string;
   entityType: string;
   title: string;
@@ -119,6 +257,7 @@ interface SavedRow {
 
 const SAVED_ROW_COLUMNS = {
   following: listSave.following,
+  tracking: listSave.tracking,
   id: userList.id,
   entityType: userList.entityType,
   title: userList.title,
@@ -163,6 +302,7 @@ async function mapSavedRows(saverId: string, rows: SavedRow[]): Promise<SavedLis
         displayName: row.ownerDisplayName,
       },
       following: row.following,
+      tracking: row.tracking,
       unavailable: !allowed.includes(row.audience as Audience),
     };
   });
@@ -247,15 +387,15 @@ export async function saveCountsFor(listIds: string[]): Promise<Map<string, numb
 export async function savedStateFor(
   saverId: string,
   listIds: string[],
-): Promise<Map<string, { saved: boolean; following: boolean }>> {
-  const result = new Map<string, { saved: boolean; following: boolean }>();
+): Promise<Map<string, { saved: boolean; following: boolean; tracking: boolean }>> {
+  const result = new Map<string, { saved: boolean; following: boolean; tracking: boolean }>();
   if (listIds.length === 0) return result;
   const rows = await db
-    .select({ listId: listSave.listId, following: listSave.following })
+    .select({ listId: listSave.listId, following: listSave.following, tracking: listSave.tracking })
     .from(listSave)
     .where(and(eq(listSave.saverId, saverId), inArray(listSave.listId, listIds)));
   for (const row of rows) {
-    result.set(row.listId, { saved: true, following: row.following });
+    result.set(row.listId, { saved: true, following: row.following, tracking: row.tracking });
   }
   return result;
 }
