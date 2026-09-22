@@ -19,6 +19,8 @@ const mocks = vi.hoisted(() => {
     getMyLists: vi.fn(),
     addItemToList: vi.fn(),
     createList: vi.fn(),
+    getMyCaminos: vi.fn(),
+    addAlbumToCamino: vi.fn(),
     ApiError,
   };
 });
@@ -28,9 +30,14 @@ vi.mock("@/lib/api/lists", () => ({
   addItemToList: mocks.addItemToList,
   createList: mocks.createList,
 }));
+vi.mock("@/lib/api/camino", () => ({
+  getMyCaminos: mocks.getMyCaminos,
+  addAlbumToCamino: mocks.addAlbumToCamino,
+}));
 vi.mock("@/lib/api/client", () => ({ ApiError: mocks.ApiError }));
 
 const artistTarget: ListTarget = { type: "artist", id: "a1b2c3d4-0000-4000-8000-000000000009" };
+const albumTarget: ListTarget = { type: "release-group", id: "a1b2c3d4-0000-4000-8000-000000000010" };
 
 function compatibleList(id: string, title: string): UserListSummary {
   return {
@@ -106,5 +113,44 @@ describe("AddToListPanel", () => {
     await waitFor(() => expect(mocks.getMyLists).toHaveBeenCalled());
     await user.click(screen.getByRole("button", { name: "Cerrar" }));
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it("con un objetivo de álbum, no carga Caminos", async () => {
+    mocks.getMyLists.mockResolvedValue({ lists: [], page: 1, pageSize: 50, hasNext: false });
+    renderWithIntl(<AddToListPanel target={artistTarget} />);
+    await waitFor(() => expect(mocks.getMyLists).toHaveBeenCalled());
+    expect(mocks.getMyCaminos).not.toHaveBeenCalled();
+  });
+
+  it("con un objetivo de álbum, ofrece los Caminos propios además de las listas", async () => {
+    const user = userEvent.setup();
+    mocks.getMyLists.mockResolvedValue({
+      lists: [{ ...compatibleList("l1", "Discos que me cambiaron"), entityType: "release-group" }],
+      page: 1,
+      pageSize: 50,
+      hasNext: false,
+    });
+    mocks.getMyCaminos.mockResolvedValue({
+      caminos: [
+        {
+          id: "c1",
+          title: "Shoegaze esencial",
+          state: "in_progress",
+          progress: { selectedCount: 2, listenedCount: 1 },
+          coverThumbUrl: null,
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        },
+      ],
+      trackedLists: [],
+    });
+    mocks.addAlbumToCamino.mockResolvedValue({});
+
+    renderWithIntl(<AddToListPanel target={albumTarget} />);
+
+    await waitFor(() => expect(mocks.getMyCaminos).toHaveBeenCalled());
+    const caminoButton = await screen.findByRole("button", { name: /Shoegaze esencial/ });
+    await user.click(caminoButton);
+
+    await waitFor(() => expect(mocks.addAlbumToCamino).toHaveBeenCalledWith("c1", albumTarget.id));
   });
 });

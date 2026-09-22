@@ -24,6 +24,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       favorites: (await import(`../../messages/${resolvedLocale}/favorites.json`)).default,
       wantToListen: (await import(`../../messages/${resolvedLocale}/wantToListen.json`)).default,
       artistJourney: (await import(`../../messages/${resolvedLocale}/artistJourney.json`)).default,
+      camino: (await import(`../../messages/${resolvedLocale}/camino.json`)).default,
       lists: (await import(`../../messages/${resolvedLocale}/lists.json`)).default,
       collection: (await import(`../../messages/${resolvedLocale}/collection.json`)).default,
       home: (await import(`../../messages/${resolvedLocale}/home.json`)).default,

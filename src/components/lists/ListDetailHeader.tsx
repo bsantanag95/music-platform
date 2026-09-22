@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ListCoverMosaic } from "./ListCoverMosaic";
 import { SaveListButton } from "./SaveListButton";
+import { TrackListButton } from "@/components/camino/TrackListButton";
 import { RelativeDate } from "@/components/feed/feed-row-parts";
 import { UserHoverCard } from "@/components/profiles/UserHoverCard";
 import { entityTypeKey } from "./lists-shared";
@@ -29,6 +30,9 @@ interface ListDetailHeaderProps {
   canSave?: boolean;
   /** Conteo agregado de guardados. Solo se muestra en listas `public`. */
   saveCount?: number;
+  /** Tracking de progreso propio (openspec: add-camino), solo en modo lectura de álbumes. */
+  tracking?: boolean;
+  trackingProgress?: { selectedCount: number; listenedCount: number } | null;
   /** Modo gestión: la lista quedó actualizada / borrada. */
   onUpdated?: (list: UserListDetail) => void;
   onDeleted?: () => void;
@@ -44,6 +48,8 @@ export function ListDetailHeader({
   following = false,
   canSave = false,
   saveCount,
+  tracking = false,
+  trackingProgress = null,
   onUpdated,
   onDeleted,
 }: ListDetailHeaderProps) {
@@ -183,11 +189,20 @@ export function ListDetailHeader({
           </div>
 
           {owner && canSave ? (
-            <SaveListButton
-              listId={list.id}
-              initialSaved={saved}
-              initialFollowing={following}
-            />
+            <div className="flex flex-wrap items-start gap-3">
+              <SaveListButton
+                listId={list.id}
+                initialSaved={saved}
+                initialFollowing={following}
+              />
+              {list.entityType === "release-group" ? (
+                <TrackListButton
+                  listId={list.id}
+                  initialTracking={tracking}
+                  initialProgress={trackingProgress}
+                />
+              ) : null}
+            </div>
           ) : null}
         </div>
       </div>

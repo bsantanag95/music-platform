@@ -597,6 +597,15 @@ propiedad de un único usuario (no colaborativa) y de un solo tipo de entidad (n
 **Índices:** `idx_user_list_owner_created` (listas propias, fecha descendente) y
 `idx_user_list_owner_audience` (listas públicas de un usuario en su perfil).
 
+**Subtipos vía `kind`:** además de `'standard'`, `kind` admite `'artist_journey'` (migración
+`0027`, cambio `add-artist-journey` — recorrido personal sobre la discografía de un artista,
+`journey_artist_id`/`journey_archived_at`) y `'custom_journey'` (migración `0043`, cambio
+`add-camino` — un Camino armado a mano, sin artista asociado; reusa `journey_archived_at`, deja
+`journey_artist_id` en `NULL`). Ambos subtipos derivan su progreso ("completo"/"en curso") en
+lectura contra `listen_entry` (`src/services/journeys/progress.ts`) — nunca lo persisten — y
+quedan excluidos de toda lectura genérica de `user_list` (Mis listas, Guardadas, Descubrir,
+conteos de la huella de gusto).
+
 ## `user_list_featured`
 
 **Propósito:** marca una `user_list` como **colección destacada** del descubrimiento
@@ -641,6 +650,32 @@ debe coincidir con el `entity_type` de la lista padre (validado por trigger
 **Trigger `trg_user_list_item_target_type`**: valida que el objetivo del ítem coincida con
 `entity_type` de la lista padre. No es posible expresar esto con un `CHECK` porque requiere
 consultar otra tabla (mismo criterio que `trg_membership_types`).
+
+## `list_save`
+
+**Propósito:** guardar/seguir una lista ajena (cambio `rework-lists-section`). Marcador privado
+por `(saver_id, list_id)` — solo quien guarda ve que lo hizo; el conteo agregado por lista sí es
+dato público para listas `public` (`saveCountsFor`).
+
+**Campos:**
+
+- `saver_id`, `list_id`: PK compuesta, `ON DELETE CASCADE` en ambos sentidos.
+- `following`: si está activo, las actualizaciones de metadatos de la lista entran en el feed de
+  quien la sigue.
+- `tracking` (migración `0043`, cambio `add-camino`): eje independiente de `following` — el
+  guardador activa el seguimiento de su propio progreso de escucha sobre una lista ajena de
+  álbumes (`entity_type = 'release-group'`), sin que el dueño de la lista opine ni se entere. El
+  progreso se deriva igual que en `user_list.kind = 'custom_journey'`, parametrizado por
+  `(saver_id, list_id)` en vez de `(owner_id, list_id)`. Activar `tracking` sobre una lista no
+  guardada crea el guardado y el tracking en una sola operación
+  (`src/services/lists/saved-lists.ts:setListTracking`); el `UPDATE` de esa operación solo toca
+  `tracking`, nunca `following`, y viceversa.
+- `created_at`: fecha de guardado.
+
+**Índices:** `idx_list_save_saver_created`, `idx_list_save_list` (conteo agregado),
+`idx_list_save_saver_tracking` y `idx_list_save_list_tracking` (parciales, `WHERE tracking`) para
+"mis trackeos activos" (`/me/caminos`) y el agregado de descubrimiento (`/caminos`)
+respectivamente.
 
 ## `collection_entry`
 

@@ -26,6 +26,8 @@ import wantToListenEs from "../../messages/es/wantToListen.json";
 import wantToListenEn from "../../messages/en/wantToListen.json";
 import artistJourneyEs from "../../messages/es/artistJourney.json";
 import artistJourneyEn from "../../messages/en/artistJourney.json";
+import caminoEs from "../../messages/es/camino.json";
+import caminoEn from "../../messages/en/camino.json";
 
 const messagesByLocale = {
   es: {
@@ -41,6 +43,7 @@ const messagesByLocale = {
     favorites: favoritesEs,
     wantToListen: wantToListenEs,
     artistJourney: artistJourneyEs,
+    camino: caminoEs,
   },
   en: {
     common: commonEn,
@@ -55,6 +58,7 @@ const messagesByLocale = {
     favorites: favoritesEn,
     wantToListen: wantToListenEn,
     artistJourney: artistJourneyEn,
+    camino: caminoEn,
   },
 };
 

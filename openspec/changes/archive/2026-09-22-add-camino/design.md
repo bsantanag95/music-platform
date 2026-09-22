@@ -128,7 +128,11 @@ spec de `artist-journey`.
 3. Servicio y API de Camino dinámico (creación, ítems, progreso, archivado, borrado).
 4. Extensión de `list-saves` con el eje de tracking.
 5. Superficie `/me/caminos` y acceso desde menú de usuario / panel de gestión del perfil.
-6. Acción de tracking en el detalle de lista ajena (`/users/[username]/lists/[listId]`).
+6. Acción de tracking en el detalle de lista ajena — `/users/[username]/lists/[listId]` para
+   Listas normales, y una ruta de lectura propia `/users/[username]/caminos/[caminoId]` para un
+   Camino ajeno (surgió durante la implementación: un Camino no puede leerse a través de los
+   endpoints de `lists` por la exclusión de la Decisión D6, así que necesita su propio detalle de
+   lectura en vez de reusar el de Listas).
 7. Descubrimiento público `/caminos` con filtros de género y artista.
 
 **Rollback**: cada paso es aditivo (nuevo valor de enum, columna con default, endpoints y rutas
@@ -138,11 +142,15 @@ nuevas); revertir el código de aplicación en cualquier paso no deja datos hué
 
 ## Open Questions
 
-- Criterio de coincidencia del filtro de género en `/caminos`: ¿"al menos un álbum de la lista
-  tiene esa etiqueta" o un umbral de proporción? Definir antes de implementar el filtro.
-- Tope de ítems por Camino dinámico: las Listas no tienen límite de cantidad de ítems hoy; validar
-  si Camino hereda ese mismo criterio (sin límite) o necesita uno propio dado que se arma "de a
-  poco" en el tiempo, no de una carga inicial.
-- Copy exacto para distinguir "Camino" de "Recorrido" en el menú de usuario y en el panel de
-  gestión del perfil, para validar con el usuario que la distinción se entiende sin necesitar
-  explicación adicional.
+Resueltas durante la implementación:
+
+- **Criterio de coincidencia del filtro de género**: "al menos un álbum de la lista tiene esa
+  etiqueta" (EXISTS, no un umbral de proporción) — especificado en
+  `specs/camino-discovery/spec.md`.
+- **Tope de ítems por Camino dinámico**: sin límite, mismo criterio que Listas.
+- **Filtro de artista en `/caminos`**: búsqueda por nombre (ILIKE sobre `artist.name`), no un
+  selector con autocompletado por id — se evaluó construir un picker de artista dedicado y se
+  descartó por alcance para v1; queda en el backlog de `docs/05-features/caminos.md`.
+- **Copy para distinguir "Camino" de "Recorrido"**: `messages/{es,en}/camino.json`, con "Paths"
+  como traducción al inglés (evita "Route"/"Journey", ya usados o descartados). Falta validar
+  con uso real, no solo con revisión de texto.

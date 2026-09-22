@@ -223,6 +223,7 @@ export const ErrorCodeSchema = z.enum([
   "LIST_TARGET_INVALID",
   "LIST_ITEM_NOT_FOUND",
   "ARTIST_JOURNEY_NOT_FOUND",
+  "CAMINO_NOT_FOUND",
   "COLLECTION_ENTRY_NOT_FOUND",
   "WANTED_ENTRY_NOT_FOUND",
 "MODERATION_REPORT_NOT_FOUND",
@@ -1476,6 +1477,11 @@ export const SavedListSummarySchema = z.object({
   coverThumbs: z.array(z.string()),
   owner: ListOwnerSchema,
   following: z.boolean(),
+  // Tracking de progreso propio (openspec: add-camino), solo relevante para
+  // listas de álbumes (`entityType = 'release-group'`) — ver capability
+  // `list-saves`, Requirement "Trackear el progreso propio sobre una lista
+  // ajena".
+  tracking: z.boolean(),
   unavailable: z.boolean(),
 });
 export type SavedListSummary = z.infer<typeof SavedListSummarySchema>;
@@ -1587,6 +1593,142 @@ export const ArtistJourneySummarySchema = z.object({
   updatedAt: z.string(),
 });
 export type ArtistJourneySummary = z.infer<typeof ArtistJourneySummarySchema>;
+
+// ============================================================
+// Camino (openspec: add-camino)
+// ============================================================
+
+// Mismos tres estados que artist-journey, derivados en el servidor — sin
+// persistir un cuarto estado "pendiente".
+export const CaminoStateSchema = z.enum(["in_progress", "complete", "archived"]);
+export type CaminoState = z.infer<typeof CaminoStateSchema>;
+
+export const CaminoAlbumSchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  artistName: z.string().nullable(),
+  firstReleaseYear: z.number().int().nullable(),
+  coverThumbUrl: z.string().nullable(),
+  listened: z.boolean(),
+});
+export type CaminoAlbum = z.infer<typeof CaminoAlbumSchema>;
+
+export const CaminoDetailSchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  description: z.string().nullable(),
+  audience: DiaryAudienceSchema,
+  state: CaminoStateSchema,
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  progress: z.object({
+    selectedCount: z.number().int().nonnegative(),
+    listenedCount: z.number().int().nonnegative(),
+  }),
+  albums: z.array(CaminoAlbumSchema),
+});
+export type CaminoDetail = z.infer<typeof CaminoDetailSchema>;
+
+export const CaminoDetailResponseSchema = z.object({ camino: CaminoDetailSchema });
+export type CaminoDetailResponse = z.infer<typeof CaminoDetailResponseSchema>;
+
+export const CreateCaminoRequestSchema = z.object({
+  title: z.string().trim().min(1).max(100),
+  description: z.string().trim().max(500).nullable().optional(),
+  audience: DiaryAudienceSchema.optional(),
+});
+export type CreateCaminoRequest = z.infer<typeof CreateCaminoRequestSchema>;
+
+export const AddCaminoAlbumRequestSchema = z.object({ releaseGroupId: z.uuid() });
+export type AddCaminoAlbumRequest = z.infer<typeof AddCaminoAlbumRequestSchema>;
+
+export const CaminoSummarySchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  state: CaminoStateSchema,
+  progress: z.object({
+    selectedCount: z.number().int().nonnegative(),
+    listenedCount: z.number().int().nonnegative(),
+  }),
+  coverThumbUrl: z.string().nullable(),
+  updatedAt: z.string(),
+});
+export type CaminoSummary = z.infer<typeof CaminoSummarySchema>;
+
+// Listas ajenas sobre las que el usuario activó tracking de progreso
+// (Requirement "Trackear el progreso propio sobre una lista ajena" de
+// list-saves), para la superficie combinada `/me/caminos`.
+export const TrackedListSummarySchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  coverThumbUrl: z.string().nullable(),
+  kind: z.enum(["standard", "custom_journey"]),
+  owner: ListOwnerSchema,
+  state: CaminoStateSchema,
+  progress: z.object({
+    selectedCount: z.number().int().nonnegative(),
+    listenedCount: z.number().int().nonnegative(),
+  }),
+  updatedAt: z.string(),
+});
+export type TrackedListSummary = z.infer<typeof TrackedListSummarySchema>;
+
+// Listado combinado de /me/caminos (Requirement "Listado propio en
+// /me/caminos"): Caminos dinámicos propios + listas ajenas trackeadas, cada
+// grupo distinguible por el cliente sin ambigüedad.
+export const MyCaminosResponseSchema = z.object({
+  caminos: z.array(CaminoSummarySchema),
+  trackedLists: z.array(TrackedListSummarySchema),
+});
+export type MyCaminosResponse = z.infer<typeof MyCaminosResponseSchema>;
+
+export const SetListTrackingRequestSchema = z.object({ tracking: z.boolean() });
+export type SetListTrackingRequest = z.infer<typeof SetListTrackingRequestSchema>;
+
+// Descubrimiento público de Caminos populares (capability camino-discovery),
+// ordenado por conteo de trackeo activo — no por guardado simple.
+export const CaminoDiscoverySummarySchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  kind: z.enum(["standard", "custom_journey"]),
+  owner: ListOwnerSchema,
+  itemCount: z.number().int(),
+  coverThumbs: z.array(z.string()),
+  trackingCount: z.number().int().nonnegative(),
+});
+export type CaminoDiscoverySummary = z.infer<typeof CaminoDiscoverySummarySchema>;
+
+// Estante "Caminos" del perfil (Nivel 2) y su página dedicada
+// `/users/[username]/caminos`.
+export const CaminoProfileSummarySchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  state: CaminoStateSchema,
+  progress: z.object({
+    selectedCount: z.number().int().nonnegative(),
+    listenedCount: z.number().int().nonnegative(),
+  }),
+  itemCount: z.number().int(),
+  coverThumbs: z.array(z.string()),
+  tracking: z.boolean(),
+});
+export type CaminoProfileSummary = z.infer<typeof CaminoProfileSummarySchema>;
+
+export const VisibleCaminosResponseSchema = z.object({
+  caminos: z.array(CaminoProfileSummarySchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  totalCount: z.number().int(),
+});
+export type VisibleCaminosResponse = z.infer<typeof VisibleCaminosResponseSchema>;
+
+export const CaminoDiscoveryResponseSchema = z.object({
+  caminos: z.array(CaminoDiscoverySummarySchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  hasNext: z.boolean(),
+});
+export type CaminoDiscoveryResponse = z.infer<typeof CaminoDiscoveryResponseSchema>;
 
 // ============================================================
 // Feed (Fase 5, add-favorites-and-lists)

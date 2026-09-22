@@ -45,6 +45,7 @@ describe("SavedListsTab", () => {
           coverThumbs: [],
           owner,
           following: false,
+          tracking: false,
           unavailable: true,
         },
       ],

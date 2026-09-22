@@ -36,6 +36,7 @@ export function Header({
 }: HeaderProps) {
   const t = useTranslations("common");
   const tExplore = useTranslations("catalog.explore");
+  const tCamino = useTranslations("camino");
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -91,6 +92,8 @@ export function Header({
   const generalNavClass = "font-data text-sm text-paper-muted transition-colors hover:text-paper";
   // Barra general: navegación de contenido que el sitio ofrece a cualquiera.
   // "Listas" es la superficie pública `/lists`, distinta de `/me/lists`.
+  // "Caminos" es `/caminos` (descubrimiento, openspec: add-camino), distinta
+  // de `/me/caminos` (gestión propia) — mismo criterio que "Listas".
   // "Actividad" es `/activity`, distinta del feed de seguidos en `/me/feed`.
   const generalLinks = (
     <>
@@ -101,6 +104,9 @@ export function Header({
       ) : null}
       <Link href="/lists" className={generalNavClass}>
         {t("lists")}
+      </Link>
+      <Link href="/caminos" className={generalNavClass}>
+        {tCamino("railLabel")}
       </Link>
       <Link href="/activity" className={generalNavClass}>
         {t("activity")}

@@ -325,12 +325,14 @@
   "diaryTitle": "Diary",
   "favoritesTitle": "Favorites",
   "listsTitle": "Lists",
+  "caminosTitle": "Paths",
   "collectionTitle": "Collection",
   "level3": {
     "navLabel": "Explore more of the profile",
     "diary": "Full diary",
     "favorites": "All favorites",
     "lists": "All lists",
+    "caminos": "All Paths",
     "collection": "Full collection",
     "fingerprint": "Full taste fingerprint"
   },
