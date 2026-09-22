@@ -31,6 +31,16 @@ agregar un género es cambiar código, no una migración. `show_local_time` (`BO
 false`) exige `timezone` (`chk_app_user_local_time`). La migración también deja en `NULL` las
 `timezone` previas que no existan en `pg_timezone_names` (eran texto libre que ninguna vista mostraba).
 
+**Datos personales (migración `0042`, cambio `profile-personal-info`):** `country` (`TEXT NULL`,
+`CHECK (country IS NULL OR country ~ '^[A-Z]{2}$')`: código ISO de dos letras; la lista de países vive en
+`src/lib/personal-info.ts`, la base solo asegura el **formato**) y `pronoun_set` (`TEXT NULL`: clave de la
+lista cerrada `he`/`she`/`they`, sin `CHECK` de valores, igual que géneros y roles). Un `CHECK`
+(`chk_app_user_pronouns_exclusive`: `pronoun_set IS NULL OR pronouns IS NULL`) impide el estado mixto:
+o hay una clave de la lista o hay un texto libre («Otro» en `pronouns`), nunca los dos. Sin backfill:
+las columnas nacen en `NULL` y `location`/`pronouns` anteriores se conservan (ahora ciudad o región y
+«Otro»). La vista del perfil (`getProfileView`) vacía `country`, `location`, `pronouns` y `pronoun_set`
+para quien no tiene acceso a un perfil privado.
+
 **Cuenta desactivada (migración `0041`, `rework-account-settings` Fase 3):** `deactivated_at`
 (TIMESTAMPTZ nullable; nulo = cuenta activa). Desactivar solo escribe esta columna y borra las sesiones;
 no toca ninguna otra tabla, así que valoraciones, reseñas, comentarios, listas, favoritos, diario y

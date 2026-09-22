@@ -242,6 +242,8 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
       locale: user.locale,
       bio: user.bio,
       pronouns: user.pronouns,
+      pronounSet: user.pronounSet,
+      country: user.country,
       location: user.location,
       timezone: user.timezone,
       showLocalTime: user.showLocalTime,

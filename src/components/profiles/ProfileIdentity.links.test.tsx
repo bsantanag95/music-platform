@@ -27,6 +27,8 @@ const base: ProfileView = {
   profileVisibility: "public",
   bio: null,
   pronouns: null,
+  pronounSet: null,
+  country: null,
   location: null,
   timezone: null,
   showLocalTime: false,

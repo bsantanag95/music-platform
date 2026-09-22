@@ -248,7 +248,7 @@
     "bioLabel": "Bio",
     "bioPlaceholder": "Una línea sobre vos y tu relación con la música",
     "pronounsLabel": "Pronombres",
-    "locationLabel": "Ubicación",
+    "locationLabel": "Ciudad o región",
     "timezoneLabel": "Zona horaria",
     "linksHeading": "Enlaces",
     "linkKindLabel": "Tipo",
@@ -296,7 +296,31 @@
     "showLocalTimeNeedsZone": "Elegí una zona horaria para poder mostrar tu hora local.",
     "timezoneSearch": "Buscar zona (ej. Santiago)",
     "timezoneNoResults": "Ninguna zona coincide con «{query}».",
-    "timezoneResults": "{count, plural, one {# zona} other {# zonas}}"
+    "timezoneResults": "{count, plural, one {# zona} other {# zonas}}",
+    "countryLabel": "País",
+    "countryNone": "Sin país",
+    "countrySearch": "Buscar país (ej. Chile)",
+    "countryNoResults": "Ningún país coincide con «{query}».",
+    "countryResults": "{count, plural, one {# país} other {# países}}",
+    "pronounOption": {
+      "none": "Sin especificar",
+      "he": "Él",
+      "she": "Ella",
+      "they": "Elle",
+      "other": "Otro…"
+    },
+    "pronounOtherLabel": "Tus pronombres",
+    "pronounOtherRequired": "Escribí tus pronombres para poder guardar.",
+    "pronounExampleLabel": "Ejemplo",
+    "pronounExampleName": "Ana",
+    "pronounExample": {
+      "he": "{name} agregó Pride a su lista de «Quiero escuchar». Él lo escuchó por primera vez esta semana.",
+      "she": "{name} agregó Pride a su lista de «Quiero escuchar». Ella lo escuchó por primera vez esta semana.",
+      "they": "{name} agregó Pride a su lista de «Quiero escuchar». Elle lo escuchó por primera vez esta semana.",
+      "neutral": "{name} agregó Pride a su lista de «Quiero escuchar». Lo escuchó por primera vez esta semana."
+    },
+    "pronounExampleNeutralNote": "Sin pronombres de la lista, la interfaz usa la forma neutra.",
+    "personalVisibilityHint": "Solo lo ven quienes pueden ver tu perfil."
   },
   "diaryTitle": "Diario",
   "favoritesTitle": "Favoritos",
@@ -718,5 +742,11 @@
       "emptyAnswer": "Escribí una respuesta o quitá la pregunta."
     }
   },
-  "profileLocalTime": "{time} hora local"
+  "profileLocalTime": "{time} hora local",
+  "pronounSet": {
+    "he": "él",
+    "she": "ella",
+    "they": "elle"
+  },
+  "pronounsAria": "Pronombres: {pronouns}"
 }

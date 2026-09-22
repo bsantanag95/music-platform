@@ -14,6 +14,12 @@
     "body": "Acá se detallará qué datos personales se recogen, con qué base legal, durante cuánto tiempo se conservan y cómo ejercer tus derechos sobre ellos.",
     "intro": "Esta es la parte de la política que ya describe lo que la aplicación hace hoy con tu cuenta y tus datos. El resto del documento está en preparación.",
     "sections": {
+      "personal": {
+        "title": "Datos personales opcionales del perfil",
+        "body": "En tu perfil podés agregar, si querés, tu país, tu ciudad o región, tus pronombres, una bio, tu zona horaria y, si lo activás, tu hora local. Todo es opcional, empieza vacío y hoy se usa solo para mostrarlo en tu perfil.",
+        "body2": "Quién lo ve: en un perfil público, cualquier persona; en un perfil privado, solo tú y quienes te siguen con la solicitud aprobada. La bio, los enlaces y los contadores siguen la regla de siempre y se ven en la tarjeta de un perfil privado.",
+        "body3": "Nunca te lo pedimos al registrarte. Podés cambiarlo o vaciarlo cuando quieras desde Ajustes → Perfil, y se borra junto con tu cuenta cuando la eliminás. No recogemos tu fecha de nacimiento, tu género ni tu nombre legal en campos aparte: el único nombre es el «Nombre visible», que puede ser un apodo."
+      },
       "deactivate": {
         "title": "Desactivar tu cuenta",
         "body": "Desde Ajustes → Cuenta y seguridad podés desactivar tu cuenta para tomarte una pausa. Tu perfil deja de ser visible para las demás personas: no aparece en búsquedas, seguidores, seguidos, feed, actividad de la comunidad ni listas, y nadie puede seguirte ni bloquearte. Cerramos todas tus sesiones. Para hacerlo te pedimos confirmar tu identidad.",
@@ -46,7 +52,8 @@
           "Registros de moderación: anonimizar a la persona en esos registros para poder eliminar cuentas con historial, en vez de bloquearlo.",
           "Datos que haya que conservar por obligación legal (fraude, requerimientos legales): definir cuáles, por cuánto tiempo y aislados del resto.",
           "Derecho de supresión: confirmar los plazos y la base legal según la jurisdicción (por ejemplo, el art. 17 del RGPD exige borrar sin demora injustificada, en general dentro de un mes).",
-          "Reactivación: hoy basta iniciar sesión, sin confirmar ni avisar. Revisarlo si hay quejas de reactivaciones involuntarias."
+          "Reactivación: hoy basta iniciar sesión, sin confirmar ni avisar. Revisarlo si hay quejas de reactivaciones involuntarias.",
+          "Edad mínima: fijar en los Términos del servicio la edad mínima para usar la plataforma. Hoy no se pregunta ni se verifica la edad."
         ]
       }
     }

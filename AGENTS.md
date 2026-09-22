@@ -65,8 +65,9 @@ necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
 >   suelta las filas de auditoría del caso de eliminación bloqueada, que referencian al actor con
 >   `RESTRICT`). Ejecuta contra Postgres real el SQL que las pruebas unitarias mockean (cambio de
 >   usuario, cambio de email, contraseña, Google, sesiones, identidad musical y, en la Fase 3, cuenta
->   desactivada en todas las superficies, reactivación, exportación y eliminación en cascada). Necesita
->   al menos un álbum en el catálogo.
+>   desactivada en todas las superficies, reactivación, exportación y eliminación en cascada) y los datos
+>   personales opcionales (país, ciudad y pronombres: `CHECK` de la base, los tres estados de pronombres
+>   y su privacidad según el acceso al perfil). Necesita al menos un álbum en el catálogo.
 > - `smoke-test-email-verification.ts` crea usuarios `smoke_verify_*` y los
 >   borra al terminar (el `ON DELETE CASCADE` limpia tokens y sesiones). Si se
 >   interrumpió, limpiar con

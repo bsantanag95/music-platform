@@ -473,8 +473,12 @@ describe("secciones editables del dueño", () => {
   it("EditablePlaca: aloja identidad, identidad musical, preguntas y enlaces en un mismo editor, con los valores del perfil", async () => {
     const prompts = [{ promptKey: "first-record", answer: "Un casete", position: 0 }];
     const profile = {
+      username: "ana",
+      displayName: null,
       bio: "Colecciono casetes",
       pronouns: "él",
+      pronounSet: null,
+      country: "CL",
       location: "Quilpué",
       timezone: "America/Santiago",
       showLocalTime: true,
@@ -494,10 +498,14 @@ describe("secciones editables del dueño", () => {
     expect(inner?.[0]?.props?.initial).toEqual({
       bio: "Colecciono casetes",
       pronouns: "él",
+      pronounSet: null,
+      country: "CL",
       location: "Quilpué",
       timezone: "America/Santiago",
       showLocalTime: true,
     });
+    // Sin nombre visible, el ejemplo de los pronombres usa el usuario.
+    expect(inner?.[0]?.props?.name).toBe("ana");
     expect(inner?.[1]?.type).toBe(OwnerMusicIdentityEditor);
     expect(inner?.[1]?.props?.initial).toEqual({
       selfRoles: ["collector"],

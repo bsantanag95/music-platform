@@ -54,6 +54,8 @@ const user = {
   locale: "es",
   bio: "hola",
   pronouns: null,
+  pronounSet: "she",
+  country: "CL",
   location: "Quilpué",
   timezone: "America/Santiago",
   showLocalTime: true,
@@ -95,6 +97,9 @@ describe("buildDataExport", () => {
     expect(data.version).toBe(DATA_EXPORT_VERSION);
     expect(data.exportedAt).toBe("2026-09-21T15:00:00.000Z");
     expect(data.account).toMatchObject({ username: "ana", email: "ana@example.com", bio: "hola", selfRoles: ["dj"], genres: ["jazz"] });
+    // Datos personales opcionales (spec profile-personal-info): la clave de pronombres, el
+    // país y la ciudad o región salen en la cuenta.
+    expect(data.account).toMatchObject({ pronounSet: "she", pronouns: null, country: "CL", location: "Quilpué" });
     expect(data.library.diary).toEqual([expect.objectContaining({ body: "nota PRIVADA del diario", audience: "private" })]);
     expect(data.activity.ratings).toHaveLength(1);
   });

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import type { ReactNode } from "react";
+import { getLocale } from "next-intl/server";
 import { Placa } from "./Placa";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import type { ProfileView } from "@/services/profiles/profile-view";
@@ -44,6 +45,8 @@ const base: ProfileView = {
   profileVisibility: "public",
   bio: null,
   pronouns: null,
+  pronounSet: null,
+  country: null,
   location: null,
   timezone: null,
   showLocalTime: false,
@@ -170,6 +173,34 @@ describe("Placa", () => {
       "https://ana.bandcamp.com",
     );
     expect(screen.getByText("12")).toBeInTheDocument();
+  });
+
+  it("muestra «Ciudad, País» con el país en el idioma de la ruta, y los pronombres de la lista como etiqueta", async () => {
+    renderWithIntl(
+      await Placa({
+        profile: { ...base, location: "Santiago", country: "CL", pronounSet: "she" },
+        authenticated: true,
+      }),
+    );
+    expect(screen.getByText("Santiago, Chile")).toBeInTheDocument();
+    // El traductor de este test devuelve la clave: la etiqueta sale de `users.pronounSet.she`.
+    expect(screen.getByText("pronounSet.she")).toBeInTheDocument();
+  });
+
+  it("el nombre del país sigue el idioma de la ruta (Spain en inglés)", async () => {
+    vi.mocked(getLocale).mockResolvedValueOnce("en");
+    renderWithIntl(
+      await Placa({ profile: { ...base, location: "Madrid", country: "ES" }, authenticated: true }),
+      "en",
+    );
+    expect(screen.getByText("Madrid, Spain")).toBeInTheDocument();
+  });
+
+  it("sin país, ciudad ni pronombres la Placa no dibuja etiqueta ni ubicación", async () => {
+    renderWithIntl(await Placa({ profile: base, authenticated: true }));
+    expect(screen.queryByText(/^pronounSet\./)).not.toBeInTheDocument();
+    expect(screen.queryByText(/·.*Miembro/)).not.toBeInTheDocument();
+    expect(screen.getByText(/^Miembro desde/)).toBeInTheDocument();
   });
 
   it("vista del dueño: sin botón de bloqueo", async () => {

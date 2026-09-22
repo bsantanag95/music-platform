@@ -162,8 +162,12 @@ describe("pantalla Perfil", () => {
     const links = [{ id: "l1", kind: "other", url: "https://ana.example", position: 0 }];
     const prompts = [{ promptKey: "first-record", answer: "Un casete", position: 0 }];
     m.getExtendedIdentity.mockResolvedValue({
+      username: "ana",
+      displayName: "Ana Pérez",
       bio: "hola",
-      pronouns: "ella",
+      pronouns: null,
+      pronounSet: "she",
+      country: "CL",
       location: "Quilpué",
       timezone: "America/Santiago",
       showLocalTime: true,
@@ -181,11 +185,15 @@ describe("pantalla Perfil", () => {
     expect(findElement(tree, OwnerIdentityCardEditor)?.props?.initial).toBe(identityCard);
     expect(findElement(tree, OwnerIdentityEditor)?.props?.initial).toEqual({
       bio: "hola",
-      pronouns: "ella",
+      pronouns: null,
+      pronounSet: "she",
+      country: "CL",
       location: "Quilpué",
       timezone: "America/Santiago",
       showLocalTime: true,
     });
+    // El ejemplo de los pronombres usa el nombre visible de la persona.
+    expect(findElement(tree, OwnerIdentityEditor)?.props?.name).toBe("Ana Pérez");
     expect(findElement(tree, OwnerMusicIdentityEditor)?.props?.initial).toEqual({
       selfRoles: ["collector"],
       genres: ["jazz", "shoegaze"],

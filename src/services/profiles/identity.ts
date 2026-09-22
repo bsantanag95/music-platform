@@ -4,6 +4,7 @@ import { appUser, userFollow, userProfileLink, userProfilePrompt } from "@/db/sc
 import { ApiError } from "@/lib/api/errors";
 import { normalizeLinkInput } from "@/lib/profile-links";
 import type { Genre, ListeningFormat, ProfilePromptData, PromptKey, SelfRole } from "@/lib/music-identity";
+import { isPronounSet, isValidCountry, type PronounSet } from "@/lib/personal-info";
 import {
   ReplaceProfileLinksRequestSchema,
   UpdateProfileIdentityRequestSchema,
@@ -31,7 +32,13 @@ export interface ExtendedIdentityData {
   displayName: string | null;
   profileVisibility: ProfileVisibility;
   bio: string | null;
+  /** Texto libre de «Otro» (spec profile-personal-info); nunca coexiste con `pronounSet`. */
   pronouns: string | null;
+  /** Clave de la lista cerrada de pronombres. */
+  pronounSet: PronounSet | null;
+  /** Código ISO del país (lista cerrada). */
+  country: string | null;
+  /** Ciudad o región en texto libre. */
   location: string | null;
   timezone: string | null;
   /** Mostrar la hora local en la Placa (exige `timezone`). */
@@ -56,6 +63,8 @@ const IDENTITY_COLUMNS = {
   profileVisibility: appUser.profileVisibility,
   bio: appUser.bio,
   pronouns: appUser.pronouns,
+  pronounSet: appUser.pronounSet,
+  country: appUser.country,
   location: appUser.location,
   timezone: appUser.timezone,
   showLocalTime: appUser.showLocalTime,
@@ -73,6 +82,8 @@ type IdentityRow = {
   profileVisibility: string;
   bio: string | null;
   pronouns: string | null;
+  pronounSet: string | null;
+  country: string | null;
   location: string | null;
   timezone: string | null;
   showLocalTime: boolean;
@@ -114,6 +125,9 @@ async function hydrate(user: IdentityRow): Promise<ExtendedIdentityData> {
     profileVisibility: user.profileVisibility as ProfileVisibility,
     bio: user.bio,
     pronouns: user.pronouns,
+    // Defensa: una clave o un país que ya no estén en la lista se tratan como vacíos.
+    pronounSet: isPronounSet(user.pronounSet) ? user.pronounSet : null,
+    country: isValidCountry(user.country) ? user.country : null,
     location: user.location,
     timezone: user.timezone,
     showLocalTime: user.showLocalTime,
@@ -176,12 +190,33 @@ export async function updateIdentity(
     throw new ApiError("VALIDATION_ERROR", 400, "Los datos de identidad no son válidos");
   }
 
-  const patch: Partial<Record<"bio" | "pronouns" | "location" | "timezone", string | null>> & {
+  const patch: Partial<
+    Record<"bio" | "pronouns" | "pronounSet" | "country" | "location" | "timezone", string | null>
+  > & {
     showLocalTime?: boolean;
   } = {};
-  for (const key of ["bio", "pronouns", "location", "timezone"] as const) {
+  for (const key of ["bio", "country", "location", "timezone"] as const) {
     const next = normalizeText(parsed.data[key]);
     if (next !== undefined) patch[key] = next;
+  }
+
+  // Pronombres: tres estados en dos columnas (spec profile-personal-info). Una clave de
+  // la lista borra el texto libre; «Otro» guarda el texto (que el esquema exige no
+  // vacío) y deja la clave en NULL; null borra ambos. Un cliente anterior que solo
+  // envía `pronouns` se trata como «Otro» (y vacío lo borra): en todos los casos la
+  // clave se limpia, así el `CHECK` de exclusión nunca se dispara.
+  const { pronounSet, pronouns } = parsed.data;
+  if (pronounSet !== undefined) {
+    if (pronounSet === "other") {
+      patch.pronounSet = null;
+      patch.pronouns = normalizeText(pronouns) ?? null;
+    } else {
+      patch.pronounSet = pronounSet;
+      patch.pronouns = null;
+    }
+  } else if (pronouns !== undefined) {
+    patch.pronounSet = null;
+    patch.pronouns = normalizeText(pronouns) ?? null;
   }
 
   // Mostrar la hora local exige tener zona (`CHECK chk_app_user_local_time`): sin
@@ -201,11 +236,17 @@ export async function updateIdentity(
   }
   if (Object.keys(patch).length === 0) return;
 
-  const updated = await db
-    .update(appUser)
-    .set(patch)
-    .where(eq(appUser.id, userId))
-    .returning({ id: appUser.id });
+  let updated: { id: string }[];
+  try {
+    updated = await db.update(appUser).set(patch).where(eq(appUser.id, userId)).returning({ id: appUser.id });
+  } catch (error) {
+    // Un CHECK de la base (país, exclusión de pronombres, hora local) que el esquema no
+    // atrapó: se traduce a un error de validación en vez de filtrarse como un 500.
+    if (typeof error === "object" && error !== null && "code" in error && error.code === "23514") {
+      throw new ApiError("VALIDATION_ERROR", 400, "Los datos de identidad no son válidos");
+    }
+    throw error;
+  }
   if (updated.length === 0) {
     throw new ApiError("USER_NOT_FOUND", 404, "Usuario no encontrado");
   }

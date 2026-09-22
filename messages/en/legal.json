@@ -14,6 +14,12 @@
     "body": "This is where we'll set out what personal data is collected, on what legal basis, how long it is kept, and how to exercise your rights over it.",
     "intro": "This is the part of the policy that already describes what the application does today with your account and data. The rest of the document is being prepared.",
     "sections": {
+      "personal": {
+        "title": "Optional personal details on your profile",
+        "body": "On your profile you can add, if you want, your country, your city or region, your pronouns, a bio, your time zone and, if you turn it on, your local time. Everything is optional, starts empty and today is used only to show it on your profile.",
+        "body2": "Who sees it: on a public profile, anyone; on a private profile, only you and the people who follow you with an approved request. The bio, links and counters follow the usual rule and are shown on the card of a private profile.",
+        "body3": "We never ask for it when you sign up. You can change or clear it whenever you want from Settings → Profile, and it is deleted with your account when you delete it. We do not collect your birth date, your gender or your legal name in separate fields: the only name is the “Display name”, which can be a nickname."
+      },
       "deactivate": {
         "title": "Deactivating your account",
         "body": "From Settings → Account and security you can deactivate your account to take a break. Your profile stops being visible to other people: it does not appear in search, followers, following, the feed, community activity or lists, and nobody can follow or block you. We sign you out everywhere. You must confirm your identity to do it.",
@@ -46,7 +52,8 @@
           "Moderation records: anonymize the person in those records so accounts with history can be deleted, instead of blocking it.",
           "Data we must keep because of a legal obligation (fraud, legal requests): define which, for how long and isolated from the rest.",
           "Right to erasure: confirm the deadlines and legal basis for each jurisdiction (for example, GDPR Art. 17 requires erasure without undue delay, generally within one month).",
-          "Reactivation: today signing in is enough, with no confirmation or notice. Revisit if there are complaints about unintended reactivations."
+          "Reactivation: today signing in is enough, with no confirmation or notice. Revisit if there are complaints about unintended reactivations.",
+          "Minimum age: set in the Terms of service the minimum age to use the platform. Today age is neither asked nor verified."
         ]
       }
     }

@@ -13,7 +13,9 @@ export const GET = withErrorHandling(async () => {
 });
 
 // PATCH acepta un subconjunto de { profileVisibility, displayName,
-// defaultAudience, bio, pronouns, location, timezone }. La visibilidad, las
+// defaultAudience, bio, pronouns, pronounSet, country, location, timezone,
+// showLocalTime }. `pronounSet` es una clave de la lista cerrada, `other` (con el
+// texto en `pronouns`) o null; `country` es un código de la lista. La visibilidad, las
 // preferencias de cuenta (nombre visible y audiencia por defecto) y la
 // identidad extendida se persisten por separado; la respuesta devuelve el
 // perfil propio actualizado.

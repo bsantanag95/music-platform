@@ -248,7 +248,7 @@
     "bioLabel": "Bio",
     "bioPlaceholder": "One line about you and your relationship with music",
     "pronounsLabel": "Pronouns",
-    "locationLabel": "Location",
+    "locationLabel": "City or region",
     "timezoneLabel": "Time zone",
     "linksHeading": "Links",
     "linkKindLabel": "Type",
@@ -296,7 +296,31 @@
     "showLocalTimeNeedsZone": "Pick a time zone to be able to show your local time.",
     "timezoneSearch": "Search a zone (e.g. Santiago)",
     "timezoneNoResults": "No zone matches “{query}”.",
-    "timezoneResults": "{count, plural, one {# zone} other {# zones}}"
+    "timezoneResults": "{count, plural, one {# zone} other {# zones}}",
+    "countryLabel": "Country",
+    "countryNone": "No country",
+    "countrySearch": "Search a country (e.g. Chile)",
+    "countryNoResults": "No country matches “{query}”.",
+    "countryResults": "{count, plural, one {# country} other {# countries}}",
+    "pronounOption": {
+      "none": "Not specified",
+      "he": "He / his",
+      "she": "She / her",
+      "they": "They / their",
+      "other": "Other…"
+    },
+    "pronounOtherLabel": "Your pronouns",
+    "pronounOtherRequired": "Type your pronouns to be able to save.",
+    "pronounExampleLabel": "Example",
+    "pronounExampleName": "Ana",
+    "pronounExample": {
+      "he": "{name} added Pride to his want-to-listen list.",
+      "she": "{name} added Pride to her want-to-listen list.",
+      "they": "{name} added Pride to their want-to-listen list.",
+      "neutral": "{name} added Pride to their want-to-listen list."
+    },
+    "pronounExampleNeutralNote": "Without a pronoun from the list, the interface uses the neutral form.",
+    "personalVisibilityHint": "Only people who can see your profile can see this."
   },
   "diaryTitle": "Diary",
   "favoritesTitle": "Favorites",
@@ -718,5 +742,11 @@
       "emptyAnswer": "Write an answer or remove the question."
     }
   },
-  "profileLocalTime": "{time} local time"
+  "profileLocalTime": "{time} local time",
+  "pronounSet": {
+    "he": "he/him",
+    "she": "she/her",
+    "they": "they/them"
+  },
+  "pronounsAria": "Pronouns: {pronouns}"
 }

@@ -6,6 +6,7 @@ import { ProfileModerationActions } from "@/components/profiles/ProfileModeratio
 import { MutualFollowersRow } from "@/components/profiles/MutualFollowersRow";
 import { ProfileFicha } from "@/components/profiles/ProfileFicha";
 import { formatLocalTime } from "@/lib/music-identity";
+import { countryName } from "@/lib/personal-info";
 import type { ProfileView } from "@/services/profiles/profile-view";
 import type { MutualFollowersPreview } from "@/services/profiles/affinity";
 
@@ -41,6 +42,9 @@ export async function Placa({
   // La hora local solo aparece si su dueño la activó y la zona es válida; se
   // calcula al renderizar (una pista de contexto, no un reloj).
   const localTime = profile.showLocalTime && profile.timezone ? formatLocalTime(profile.timezone, locale) : null;
+  // El país llega ya vaciado para quien no tiene acceso (getProfileView); el nombre se
+  // calcula acá, en el servidor, con el idioma de la ruta.
+  const countryLabel = profile.country ? countryName(profile.country, locale) : null;
   const showBlock =
     authenticated &&
     !preview &&
@@ -56,6 +60,7 @@ export async function Placa({
           memberSinceDate={format.dateTime(profile.memberSince, { year: "numeric", month: "long" })}
           size="sm"
           localTime={localTime}
+          countryLabel={countryLabel}
         />
 
         {/* La ficha musical va solo en la Placa de un perfil accesible (nunca en la tarjeta del privado). */}

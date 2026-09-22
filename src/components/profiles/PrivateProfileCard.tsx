@@ -4,6 +4,7 @@ import { BlockButton } from "@/components/social/BlockButton";
 import { FollowButton } from "@/components/social/FollowButton";
 import { ProfileIdentity } from "@/components/profiles/ProfileIdentity";
 import { ProfileModerationActions } from "@/components/profiles/ProfileModerationActions";
+import { EMPTY_PERSONAL_INFO } from "@/lib/personal-info";
 import type { ProfileView } from "@/services/profiles/profile-view";
 
 type PrivateState =
@@ -111,8 +112,11 @@ export async function PrivateProfileCard({
       </div>
 
       <div className="relative">
+        {/* País, ciudad y pronombres son de quien tiene acceso al perfil (spec
+            profile-personal-info): `getProfileView` ya los vacía, y acá se ignoran aunque el
+            objeto los traiga, igual que la ficha musical. */}
         <ProfileIdentity
-          profile={profile}
+          profile={{ ...profile, ...EMPTY_PERSONAL_INFO }}
           t={t}
           memberSinceDate={format.dateTime(profile.memberSince, { year: "numeric", month: "long" })}
           counters="plain"

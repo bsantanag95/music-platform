@@ -9,6 +9,7 @@ import {
   PROMPT_KEYS,
   SELF_ROLES,
 } from "@/lib/music-identity";
+import { isValidCountry, PRONOUN_SETS } from "@/lib/personal-info";
 import { normalizeLinkInput } from "@/lib/profile-links";
 import {
   PASSWORD_MAX,
@@ -753,7 +754,11 @@ export const ExtendedIdentitySchema = z.object({
   displayName: z.string().nullable(),
   profileVisibility: ProfileVisibilitySchema,
   bio: z.string().max(PROFILE_IDENTITY_LIMITS.bio).nullable(),
+  // `pronouns` es el texto libre de "Otro"; `pronounSet`, la clave de la lista
+  // cerrada (spec profile-personal-info). Nunca vienen los dos.
   pronouns: z.string().max(PROFILE_IDENTITY_LIMITS.pronouns).nullable(),
+  pronounSet: z.enum(PRONOUN_SETS).nullable(),
+  country: z.string().length(PROFILE_IDENTITY_LIMITS.country).nullable(),
   location: z.string().max(PROFILE_IDENTITY_LIMITS.location).nullable(),
   timezone: z.string().max(PROFILE_IDENTITY_LIMITS.timezone).nullable(),
   memberSince: z.string(),
@@ -775,14 +780,49 @@ const timezoneField = identityText(PROFILE_IDENTITY_LIMITS.timezone).refine(
   "La zona horaria no es válida",
 );
 
-export const UpdateProfileIdentityRequestSchema = z.object({
-  bio: identityText(PROFILE_IDENTITY_LIMITS.bio).optional(),
-  pronouns: identityText(PROFILE_IDENTITY_LIMITS.pronouns).optional(),
-  location: identityText(PROFILE_IDENTITY_LIMITS.location).optional(),
-  timezone: timezoneField.optional(),
-  // Mostrar la hora local en la Placa; el servicio exige que haya zona.
-  showLocalTime: z.boolean().optional(),
-});
+// El país es un código de la lista cerrada (spec profile-personal-info, "País del
+// perfil"): en mayúsculas, sin nombres ni texto libre; vacío o `null` lo borra.
+const countryField = z
+  .string()
+  .trim()
+  .nullable()
+  .refine((value) => value === null || value === "" || isValidCountry(value), "El país no es válido");
+
+// Pronombres (spec profile-personal-info, "Pronombres"): una clave de la lista, `other`
+// (con el texto en `pronouns`) o `null` para no especificar ninguno.
+const pronounChoiceField = z.enum([...PRONOUN_SETS, "other"]).nullable();
+
+// `other` exige el texto y una clave de la lista (o ninguno) no admite texto libre:
+// la combinación de los dos es siempre un error.
+function checkPronounChoice(
+  value: { pronounSet?: string | null; pronouns?: string | null },
+  ctx: z.RefinementCtx,
+) {
+  if (value.pronounSet === undefined) return;
+  const text = (value.pronouns ?? "").trim();
+  if (value.pronounSet === "other" && text === "") {
+    ctx.addIssue({ code: "custom", path: ["pronouns"], message: "Escribí tus pronombres" });
+  } else if (value.pronounSet !== "other" && text !== "") {
+    ctx.addIssue({
+      code: "custom",
+      path: ["pronouns"],
+      message: "El texto libre solo se usa con la opción «Otro»",
+    });
+  }
+}
+
+export const UpdateProfileIdentityRequestSchema = z
+  .object({
+    bio: identityText(PROFILE_IDENTITY_LIMITS.bio).optional(),
+    pronouns: identityText(PROFILE_IDENTITY_LIMITS.pronouns).optional(),
+    pronounSet: pronounChoiceField.optional(),
+    country: countryField.optional(),
+    location: identityText(PROFILE_IDENTITY_LIMITS.location).optional(),
+    timezone: timezoneField.optional(),
+    // Mostrar la hora local en la Placa; el servicio exige que haya zona.
+    showLocalTime: z.boolean().optional(),
+  })
+  .superRefine(checkPronounChoice);
 export type UpdateProfileIdentityRequest = z.infer<typeof UpdateProfileIdentityRequestSchema>;
 
 // Un enlace del perfil tal como lo envía el cliente: el tipo y lo que la persona
@@ -1014,10 +1054,13 @@ export const UpdateOwnProfileRequestSchema = z
     defaultAudience: DefaultAudienceSchema.nullable().optional(),
     bio: identityText(PROFILE_IDENTITY_LIMITS.bio).optional(),
     pronouns: identityText(PROFILE_IDENTITY_LIMITS.pronouns).optional(),
+    pronounSet: pronounChoiceField.optional(),
+    country: countryField.optional(),
     location: identityText(PROFILE_IDENTITY_LIMITS.location).optional(),
     timezone: timezoneField.optional(),
     showLocalTime: z.boolean().optional(),
   })
+  .superRefine(checkPronounChoice)
   .refine((value) => Object.keys(value).length > 0, {
     message: "No hay nada para actualizar",
   });

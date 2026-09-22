@@ -56,8 +56,10 @@ const base: ProfileView = {
   displayName: "Ana Torres",
   profileVisibility: "private",
   bio: "Colecciono ediciones japonesas.",
-  pronouns: "elle",
-  location: "Rosario",
+  pronouns: null,
+  pronounSet: null,
+  country: null,
+  location: null,
   timezone: null,
   showLocalTime: false,
   selfRoles: [],
@@ -85,6 +87,37 @@ describe("PrivateProfileCard: ficha musical", () => {
     } as Partial<ProfileView>);
     expect(document.body.textContent).not.toMatch(/musicIdentity|profileLocalTime/);
     expect(document.body.querySelector("dl")).toBeNull();
+  });
+});
+
+describe("PrivateProfileCard: datos personales (spec profile-personal-info)", () => {
+  const personal = {
+    pronouns: "elle",
+    pronounSet: "she",
+    country: "CL",
+    location: "Rosario",
+  } as Partial<ProfileView>;
+
+  it("no dibuja país, ciudad ni pronombres, aunque el objeto los traiga", async () => {
+    await renderCard(personal);
+    expect(screen.queryByText("elle")).not.toBeInTheDocument();
+    expect(screen.queryByText("pronounSet.she")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Rosario/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Chile/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/pronounsAria/)).not.toBeInTheDocument();
+  });
+
+  it("tampoco en la vista previa del dueño ('cómo te ven')", async () => {
+    await renderCard(personal, { preview: true });
+    expect(screen.queryByText("elle")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Rosario/)).not.toBeInTheDocument();
+  });
+
+  it("la bio, los contadores y los enlaces siguen siendo visibles", async () => {
+    await renderCard(personal);
+    expect(screen.getByText("Colecciono ediciones japonesas.")).toBeInTheDocument();
+    expect(screen.getByText("12")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "linkAria" })).toBeInTheDocument();
   });
 });
 
@@ -122,7 +155,6 @@ describe("PrivateProfileCard", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Ana Torres" })).toBeInTheDocument();
     expect(screen.getByText("privateProfile.chipPrivate")).toBeInTheDocument();
     expect(screen.getByText("@ana")).toBeInTheDocument();
-    expect(screen.getByText("elle")).toBeInTheDocument();
     expect(screen.getByText("12")).toBeInTheDocument();
     expect(screen.getByText("Colecciono ediciones japonesas.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "linkAria" })).toHaveAttribute(

@@ -26,9 +26,12 @@ export default async function ProfileSettingsPage() {
       </SettingsCard>
       <SettingsCard>
         <OwnerIdentityEditor
+          name={identity.displayName ?? identity.username}
           initial={{
             bio: identity.bio,
             pronouns: identity.pronouns,
+            pronounSet: identity.pronounSet,
+            country: identity.country,
             location: identity.location,
             timezone: identity.timezone,
             showLocalTime: identity.showLocalTime,

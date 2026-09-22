@@ -46,9 +46,54 @@ extendida.
 ## Identidad
 
 Además de nombre visible y username, `app_user` guarda (todo opcional): **bio** (≤200),
-**pronombres** (≤40), **ubicación** (≤80), **zona horaria** (un identificador IANA de una lista, no
-texto libre — ver "Identidad musical") y **avatar_url** (reservado, sin lectura en UI — la identidad
-visual es el monograma determinista por username; el avatar irá en una spec de imágenes aparte).
+**pronombres** (lista cerrada + «Otro» de hasta 40), **país** (lista cerrada), **ciudad o región**
+(`location`, texto libre ≤80), **zona horaria** (un identificador IANA de una lista, no texto libre —
+ver "Identidad musical") y **avatar_url** (reservado, sin lectura en UI — la identidad visual es el
+monograma determinista por username; el avatar irá en una spec de imágenes aparte). País y pronombres
+están en "Datos personales opcionales" más abajo.
+
+### Datos personales opcionales (país, ciudad y pronombres)
+
+Cambio `profile-personal-info`. **Nada de esto se pide al registrarse** (el registro sigue pidiendo
+usuario, email y contraseña): todo empieza vacío, se edita desde Ajustes → Perfil o el modo edición
+(el mismo `OwnerIdentityEditor`) y se puede vaciar en cualquier momento.
+
+| Dato | Cómo se guarda | Cómo se ve |
+|---|---|---|
+| **País** | `app_user.country`: código ISO de dos letras de una lista cerrada (`src/lib/personal-info.ts`, 249 códigos + `XK`) | Nombre en el idioma de la ruta (`Intl.DisplayNames`, sin dependencias); **sin bandera emoji** (Windows no la dibuja) |
+| **Ciudad o región** | `app_user.location` (texto libre ≤80); es el campo de siempre, solo cambió la etiqueta. Los valores anteriores se conservan | «Ciudad, País · Miembro desde … · hora local», al inicio de la línea de datos de la Placa; con solo uno de los dos, ese solo |
+| **Pronombres** | Tres estados en dos columnas: sin especificar (`NULL`/`NULL`), de la lista (`pronoun_set` = `he` \| `she` \| `they`) o «Otro» (`pronouns` con el texto). `CHECK` de exclusión: nunca los dos | Etiqueta junto al nombre: «él», «ella», «elle» en español y «he/him», «she/her», «they/them» en inglés (según el idioma de **quien mira**); «Otro» muestra el texto tal cual |
+
+Los pronombres libres que ya existían **no se migran**: quedan como «Otro» con su texto. El editor
+muestra debajo del selector una frase de **ejemplo en vivo** (en inglés cambia el posesivo,
+*his / her / their*; en español, donde «su» no varía, el sujeto). Es una **ilustración**: la interfaz no
+conjuga con los pronombres, que solo se muestran en el perfil (copia por persona casi no hay, y usarlos
+en tarjetas de perfiles sin acceso los filtraría).
+
+**Privacidad (cambio de comportamiento):** país, ciudad y pronombres siguen la regla de la ficha
+musical. Solo los ve quien tiene acceso al perfil (dueño, cualquier visitante de un perfil público,
+seguidor aprobado de uno privado). A un anónimo, a alguien sin relación o con solicitud pendiente **no
+se les entrega**: `getProfileView` los vacía junto con la ficha, en el mismo punto (`hidden`), y
+`PrivateProfileCard` además los ignora aunque el objeto los traiga. Antes ubicación y pronombres se
+veían en la tarjeta de un perfil privado; **la bio, los enlaces y los contadores siguen siendo
+públicos**. Se verifica contra un build de producción (en desarrollo el payload RSC incluye las filas
+crudas de las consultas).
+
+**Lo que no se pide, a propósito:** año o fecha de nacimiento, género, y nombre y apellido separados
+(el único nombre es «Nombre visible», libre, que puede ser un apodo). Dividir nombres falla con nombres
+únicos, dos apellidos u otro orden; la edad y el género son datos sensibles con casi ningún uso en una
+app de música (los pronombres ya resuelven cómo referirse a la persona). La API de edición del perfil
+los descarta (una petición que solo los trae responde `400 VALIDATION_ERROR`), y la **edad mínima** se
+fija en los Términos (anotada como pendiente en `/privacy`).
+
+**Exportación y borrado:** `country` y `pronoun_set` salen en el bloque `account` de «Descargar mis
+datos» y se borran con la cuenta (columnas de `app_user`); desactivar los conserva y deja de mostrarlos.
+La política `/privacy` los declara (qué son, quién los ve, que nunca se piden al registrarse, cómo
+borrarlos y que no se recogen fecha de nacimiento, género ni nombre legal).
+
+El selector de país reutiliza el combobox del de zona horaria: la mecánica (filtrar sin distinguir
+mayúsculas ni tildes, teclado, Escape que no cierra el panel) vive en `SearchablePicker`, y
+`TimezonePicker` y `CountryPicker` son envoltorios finos.
 
 ### Enlaces externos
 
@@ -171,8 +216,9 @@ fantasma y una carta centrada mínima):
   (`ProfileIdentity`, compartida con la Placa) con un chip de candado "Privado"; debajo de un
   divisor, el estado del visitante, "Se abre al seguir" (los 4 estantes como huecos con candado,
   **sin cifras de contenido** — mostrarían actividad de una cuenta privada) y **una** acción.
-  Mantiene el disco de vinilo como marca de agua. La identidad extendida sigue siendo visible
-  por decisión de producto (bio, enlaces, contadores: dan razones reales para seguir).
+  Mantiene el disco de vinilo como marca de agua. Sigue siendo visible por decisión de producto
+  la bio, los enlaces y los contadores (dan razones reales para seguir); **país, ciudad y
+  pronombres ya no** (ver "Datos personales opcionales").
 - **Los contadores no son enlaces** en esta vista: los listados de conexiones de un perfil
   privado solo mostraban "es privado" (callejón sin salida).
 - **Estados** (`privateState`): anónimo (Iniciar sesión para seguir + Crear cuenta), sin relación
@@ -774,7 +820,7 @@ redirige a `/me/settings/profile`. Cada pantalla vuelve a exigir sesión.
 
 | Pantalla | Contenido |
 |---|---|
-| `profile` | Tarjeta de Identidad, identidad (bio, pronombres, ubicación, zona horaria y hora local), **identidad musical** (roles, géneros, formatos), **preguntas del perfil** y enlaces — los mismos editores que abre el modo edición |
+| `profile` | Tarjeta de Identidad, identidad (bio, pronombres, país, ciudad o región, zona horaria y hora local), **identidad musical** (roles, géneros, formatos), **preguntas del perfil** y enlaces — los mismos editores que abre el modo edición |
 | `curation` | Filas con conteo: Empieza por aquí (abre su editor en el panel lateral; el himno se elige desde la Tarjeta de Identidad, en `profile`); listas fijadas, valoraciones destacadas y diario destacado (solo conteo y enlace/pista a donde se fijan; las valoraciones se destacan desde la valoración de cada álbum o canción). `getCurationSummary` aporta esos tres conteos |
 | `privacy` | Visibilidad público/privado y **audiencia por defecto del contenido nuevo**, con la acción aparte "Aplicar a lo existente" |
 | `network` | Enlaces a solicitudes (con bandeja), seguidores, seguidos y bloqueadas, desde la superficie `settings` de `user-menu-items.ts` (la superficie `panel` sigue existiendo: la usa el panel móvil del Header) |
@@ -928,7 +974,8 @@ cuántas veces se escuchó algo — es "qué está sonando", no una métrica.
 
 | Tabla / columna | Qué |
 |---|---|
-| `app_user.{bio, pronouns, location, timezone, avatar_url}` | Identidad extendida (migración 0014) |
+| `app_user.{bio, pronouns, location, timezone, avatar_url}` | Identidad extendida (migración 0014). Desde el cambio `profile-personal-info`, `pronouns` es el texto libre de «Otro» y `location` la ciudad o región |
+| `app_user.{country, pronoun_set}` | País (código ISO de dos letras, `CHECK` de formato) y clave de la lista de pronombres (`he`/`she`/`they`, sin `CHECK` de valores); `CHECK (pronoun_set IS NULL OR pronouns IS NULL)` — migración 0042 |
 | `app_user.display_name` | Nombre visible; editable desde `/me/settings/account` (≤50, vacío = `NULL`, el sitio muestra el username) |
 | `app_user.{self_roles, genres, listening_formats}` | Identidad musical: `TEXT[] NOT NULL DEFAULT '{}'`, claves de listas cerradas validadas en la aplicación; la base solo limita la cardinalidad (≤3, ≤5, ≤5) — migración 0040 |
 | `app_user.show_local_time` | Mostrar la hora local en la Placa (`BOOLEAN`, por defecto `false`); `CHECK (NOT show_local_time OR timezone IS NOT NULL)` — migración 0040 |
