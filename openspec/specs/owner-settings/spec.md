@@ -57,8 +57,8 @@ pantalla concreta.
 ### Requirement: Pantalla Perfil
 
 La pantalla **Perfil** SHALL contener los editores de la identidad pública del dueño: Tarjeta de
-Identidad (artista, álbum y canción que definen), bio, pronombres, ubicación, zona horaria (con la
-opción de mostrar la hora local), enlaces, y la identidad musical (roles "Me defino como", géneros,
+Identidad (artista, álbum y canción que definen), bio, pronombres (lista cerrada con «Otro» y un
+ejemplo en vivo), país, ciudad o región, zona horaria (con la opción de mostrar la hora local), enlaces, y la identidad musical (roles "Me defino como", géneros,
 formatos "Cómo escucho" y preguntas del perfil, ver `profile-music-identity`). SHALL usar los mismos
 editores que la edición sobre el perfil, con los mismos estados de carga, éxito y error recuperable,
 sin duplicar su lógica. La pantalla SHALL NOT ofrecer elegir una foto de perfil.
@@ -77,6 +77,12 @@ sin duplicar su lógica. La pantalla SHALL NOT ofrecer elegir una foto de perfil
 
 - **WHEN** el dueño elige roles, géneros y formatos en la pantalla Perfil y guarda
 - **THEN** los cambios se persisten y la ficha de la Placa de su perfil los muestra
+
+#### Scenario: Elegir país y pronombres desde Ajustes
+
+- **WHEN** el dueño elige un país, escribe su ciudad y elige unos pronombres en la pantalla Perfil y guarda
+- **THEN** los cambios se persisten, el ejemplo de los pronombres refleja la opción elegida y su perfil
+  los muestra a quien tiene acceso (ver `profile-personal-info`)
 
 #### Scenario: Sin foto de perfil
 

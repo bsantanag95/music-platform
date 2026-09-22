@@ -6,8 +6,9 @@ Identidad extendida del perfil (bio, pronombres, ubicación, zona horaria, enlac
 ### Requirement: Campos de identidad extendida
 
 El sistema SHALL permitir que un usuario autenticado registre una bio (máximo 200
-caracteres), pronombres (máximo 40), una ubicación en texto libre (máximo 80) y una zona
-horaria. La zona horaria SHALL ser un identificador de zona válido (por ejemplo
+caracteres), pronombres (una opción de una lista cerrada o un texto libre «Otro» de máximo 40),
+un país de una lista cerrada, una ciudad o región en texto libre (máximo 80) y una zona
+horaria. Los pronombres, el país y la ciudad o región se rigen además por `profile-personal-info`. La zona horaria SHALL ser un identificador de zona válido (por ejemplo
 `America/Santiago`) elegido de una lista, y el sistema SHALL rechazar cualquier otro valor con un
 error de validación localizado. Como la lista tiene cientos de zonas, el editor SHALL ofrecerla con un
 buscador que filtra mientras se escribe (sin distinguir mayúsculas ni tildes) y que se puede usar con
@@ -18,9 +19,9 @@ de esta regla que no sean una zona válida SHALL descartarse (quedan vacíos).
 
 #### Scenario: Guardar bio y pronombres
 
-- **WHEN** el dueño guarda una bio de 120 caracteres y los pronombres "elle"
-- **THEN** el perfil persiste ambos valores y los muestra en la identidad extendida en las
-  tres vistas
+- **WHEN** el dueño guarda una bio de 120 caracteres y elige los pronombres «Elle» de la lista
+- **THEN** el perfil persiste ambos valores y los muestra en la identidad extendida de un perfil
+  al que quien mira tiene acceso
 
 #### Scenario: Vaciar un campo
 
