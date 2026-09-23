@@ -41,6 +41,14 @@ las columnas nacen en `NULL` y `location`/`pronouns` anteriores se conservan (ah
 «Otro»). La vista del perfil (`getProfileView`) vacía `country`, `location`, `pronouns` y `pronoun_set`
 para quien no tiene acceso a un perfil privado.
 
+**Foto de perfil (migración `0045`, openspec `connect-avatar-upload`):** `avatar_image_id`
+(`UUID NULL`, `REFERENCES image(id) ON DELETE SET NULL`). Apunta a la fila de `image` que
+representa la foto de perfil actual del usuario. `NULL` = sin foto (se muestra el monograma
+determinista por username). Al subir una foto nueva, la fila anterior queda huérfana de esta
+referencia pero no se borra automáticamente (la limpieza de imágenes sin referencia es un
+proceso aparte). Al borrar la foto, se limpia la columna; la fila de `image` queda para
+recolección posterior.
+
 **Cuenta desactivada (migración `0041`, `rework-account-settings` Fase 3):** `deactivated_at`
 (TIMESTAMPTZ nullable; nulo = cuenta activa). Desactivar solo escribe esta columna y borra las sesiones;
 no toca ninguna otra tabla, así que valoraciones, reseñas, comentarios, listas, favoritos, diario y

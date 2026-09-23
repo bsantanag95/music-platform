@@ -79,6 +79,10 @@ además del `error` legible:
 | `CAMINO_NOT_FOUND` | 404 | Camino: el Camino no existe o no pertenece al usuario autenticado. |
 | `COLLECTION_ENTRY_NOT_FOUND` | 404 | Colección física: la entrada no existe o no pertenece al usuario autenticado (se responde 404 para no revelar existencia de entradas ajenas). |
 | `WANTED_ENTRY_NOT_FOUND` | 404 | Wishlist de colección: la entrada de deseo no existe o no pertenece al usuario autenticado (se responde 404 para no revelar existencia de entradas ajenas). |
+| `IMAGE_UNSUPPORTED_FORMAT` | 400 | `PUT /api/me/profile/avatar`: el formato de la imagen subida no es admitido (solo JPEG, PNG, WebP, GIF). |
+| `IMAGE_TOO_LARGE` | 413 | `PUT /api/me/profile/avatar`: el archivo excede el máximo de 10 MB. |
+| `IMAGE_DIMENSIONS_EXCEEDED` | 400 | `PUT /api/me/profile/avatar`: las dimensiones de la imagen superan 8192×8192. |
+| `IMAGE_DIMENSIONS_INSUFFICIENT` | 400 | `PUT /api/me/profile/avatar`: las dimensiones de la imagen son menores a 128×128. |
 
 ### Implementación
 

@@ -15,8 +15,9 @@ Si se pierde, se pierde para siempre: no existe ninguna fuente externa de la que
 - `user_follow`, `user_block` — relaciones sociales.
 - `user_list`, `user_list_item` — agregación de contenido por el usuario.
 - `collection_entry` — coleccionismo físico declarado por el usuario (formato, atributos de edición y nota son 100% dato del usuario, no derivables del catálogo).
+- **Imágenes propias del usuario** (objetos en storage: foto de perfil, y en el futuro foto de artista o portada de playlist). El archivo binario vive en un bucket externo a Postgres, pero la fila de `image` que lo referencia es Clase A (irreproducible: el usuario subió ese archivo, no se puede regenerar). La URL se resuelve en runtime desde `storage_key`; si se pierde el objeto, la fila queda con una URL rota sin remedio.
 
-**Implicación de backup:** máxima prioridad. Sin estos datos, la base de usuarios queda vacía o corrupta sin remedio.
+**Implicación de backup:** máxima prioridad. Sin estos datos, la base de usuarios queda vacía o corrupta sin remedio. Las imágenes propias requieren respaldar tanto la base de datos (filas de `image` y FKs como `app_user.avatar_image_id`) como los objetos del bucket; restaurar solo la BD sin el storage deja las fotos rotas (ver `06-operations/backup-restore.md`).
 
 ### Clase B — Espejo reconstruible de fuente externa
 

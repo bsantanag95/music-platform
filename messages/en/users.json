@@ -750,5 +750,17 @@
     "she": "she/her",
     "they": "they/them"
   },
-  "pronounsAria": "Pronouns: {pronouns}"
+  "pronounsAria": "Pronouns: {pronouns}",
+  "avatar": {
+    "uploadLabel": "Profile photo",
+    "uploadButton": "Upload photo",
+    "replaceButton": "Change photo",
+    "removeButton": "Remove photo",
+    "uploading": "Uploading photo…",
+    "removing": "Removing photo…",
+    "success": "Photo updated.",
+    "removed": "Photo removed.",
+    "errorGeneric": "Could not complete the operation. Please try again.",
+    "helpText": "JPEG, PNG, WebP or AVIF. Max 10 MB."
+  }
 }

@@ -237,6 +237,10 @@ export const ErrorCodeSchema = z.enum([
   "OAUTH_IDENTITY_MISMATCH",
   "SESSION_NOT_FOUND",
   "ACCOUNT_DELETION_BLOCKED",
+  "IMAGE_UNSUPPORTED_FORMAT",
+  "IMAGE_TOO_LARGE",
+  "IMAGE_DIMENSIONS_EXCEEDED",
+  "IMAGE_DIMENSIONS_INSUFFICIENT",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 
@@ -612,6 +616,7 @@ export const UserSummarySchema = z.object({
   username: z.string(),
   displayName: z.string().nullable(),
   profileVisibility: ProfileVisibilitySchema,
+  avatarUrl: z.string().nullable(),
 });
 export type UserSummary = z.infer<typeof UserSummarySchema>;
 
@@ -966,6 +971,7 @@ export const IdentityCardPreviewSchema = z.object({
   username: z.string(),
   displayName: z.string().nullable(),
   bio: z.string().nullable(),
+  avatarUrl: z.string().nullable(),
   relation: FollowRelationSchema,
   viewerAuthenticated: z.boolean(),
   accessible: z.boolean(),

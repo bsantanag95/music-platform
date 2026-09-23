@@ -410,7 +410,7 @@ Busca usuarios por username o displayName (coincidencia parcial). Devuelve tanto
 como privados, sin email ni datos de autenticación. Si el visitante tiene sesión, cada resultado
 incluye `relation` (`none` | `following` | `requested` | `incoming` | `blocked` | `self`).
 
-**200 OK:** `{ users: [{ id, username, displayName, profileVisibility, relation }], page, pageSize, hasNext }`.
+**200 OK:** `{ users: [{ id, username, displayName, profileVisibility, avatarUrl, relation }], page, pageSize, hasNext }`.
 
 **400** con `VALIDATION_ERROR` si falta `q` o la paginación es inválida. **401** con
 `AUTH_REQUIRED` en operaciones que exijan sesión.
@@ -421,7 +421,7 @@ Perfil por username. Un perfil público expone su identidad; un perfil privado m
 identidad mínima para visitantes no autorizados. La respuesta incluye `relation` del visitante y
 `accessible` (si el visitante puede ver contenido no mínimo).
 
-**200 OK:** `{ user: { id, username, displayName, profileVisibility, relation, blockedByMe, accessible } }`.
+**200 OK:** `{ user: { id, username, displayName, profileVisibility, avatarUrl, relation, blockedByMe, accessible } }`.
 **404** con `USER_NOT_FOUND` si el username no existe.
 
 `blockedByMe` es `true` cuando el visitante autenticado es quien bloqueó al dueño del perfil (y por
@@ -432,7 +432,7 @@ lo tanto dispone de la acción de desbloquear); si el visitante fue bloqueado po
 
 Perfil propio autenticado, incluye `email`.
 
-**200 OK:** `{ user: { id, username, displayName, email, profileVisibility, defaultAudience } }`, con
+**200 OK:** `{ user: { id, username, displayName, email, profileVisibility, avatarUrl, defaultAudience } }`, con
 `defaultAudience` en `"private" | "followers" | "public" | null` (`null` = "según el tipo", ver
 `PATCH`). **401** con `AUTH_REQUIRED` si no hay sesión.
 
@@ -472,7 +472,7 @@ listas y colección `followers`, diario `private`). Precedencia al crear: audien
 petición > `defaultAudience` > default del tipo. Nunca modifica contenido ya creado: para eso está
 `/api/me/default-audience/apply`.
 
-**200 OK:** `{ user: { id, username, displayName, email, profileVisibility, defaultAudience } }`
+**200 OK:** `{ user: { id, username, displayName, email, profileVisibility, avatarUrl, defaultAudience } }`
 actualizado.
 **400** con `VALIDATION_ERROR` si un valor no es válido (p. ej. una audiencia fuera del conjunto
 permitido o un nombre de más de 50 caracteres) o el body está vacío. **401** con `AUTH_REQUIRED` si
@@ -574,6 +574,20 @@ Fija (`PUT`) o quita (`DELETE`) el himno del perfil — una canción elegida man
 
 **Body (PUT):** `{ recordingId }`. **200 OK:** `{ showcase }` (misma forma que arriba).
 **400** con `VALIDATION_ERROR` si el `recordingId` no es válido o no existe.
+
+### `PUT` / `DELETE /api/me/profile/avatar`
+
+Sube (`PUT`) o quita (`DELETE`) la foto de perfil. `PUT` acepta `multipart/form-data` con un
+único campo `file` (imagen, máx. 10 MB; formatos: JPEG, PNG, WebP, GIF; dimensiones entre
+128×128 y 8192×8192). El servidor normaliza a WebP, genera una fila en `image` (preset
+`avatar`) y actualiza `app_user.avatar_image_id`; la fila anterior se libera (`ON DELETE SET
+NULL`). `DELETE` limpia `avatar_image_id` y libera la fila anterior.
+
+**200 OK:** `{ avatarUrl: string | null }` — la URL pública de la foto tras el upload, o `null`
+tras borrar. **400** con `IMAGE_UNSUPPORTED_FORMAT` si el formato no es admitido,
+`IMAGE_DIMENSIONS_EXCEEDED` si supera 8192×8192, `IMAGE_DIMENSIONS_INSUFFICIENT` si es menor a
+128×128, o `VALIDATION_ERROR` si el body no es válido. **413** con `IMAGE_TOO_LARGE` si el
+archivo excede 10 MB. **401** con `AUTH_REQUIRED` sin sesión.
 
 ### `GET /api/users/[username]/fingerprint`
 

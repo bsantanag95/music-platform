@@ -45,6 +45,12 @@ gestionado (que suele traer PITR por defecto) — ver sección "Migración futur
   También existe PostgreSQL 17 en `5432` (otros proyectos; no es esta base).
 - **BD principal:** `music_platform` → datos de Clase A (usuarios, ratings, comments, etc.) y
   catálogo Clase B.
+- **Storage de imágenes:** bucket externo (objetos binarios: fotos de perfil, y en el futuro
+  otras imágenes propias). **No está cubierto por este backup.** El backup cubre solo Postgres;
+  restaurar la BD sin el storage deja las fotos de perfil rotas (la fila de `image` apunta a un
+  `storage_key` que ya no existe). Prioridad de recuperación: las imágenes propias son Clase A
+  (irreproducibles, ver `02-architecture/data-classification.md`), así que el storage debe
+  tener su propia política de respaldo independiente.
 - **BD scratch:** `music_platform_scratch` → usada por los smoke tests. Es **Efímera** en la
   clasificación de datos: se respalda por conveniencia, no por necesidad.
 - **Conexión:** `DATABASE_URL` en `.env` (host/puerto/usuario/password). El nombre de BD objetivo

@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { requirePageUser } from "@/services/auth/page-auth";
 import { getExtendedIdentity } from "@/services/profiles/identity";
 import { getShowcase } from "@/services/profiles/showcase";
+import { OwnerAvatarEditor } from "@/components/profiles/OwnerAvatarEditor";
 import { OwnerIdentityCardEditor } from "@/components/profiles/OwnerIdentityCardEditor";
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
@@ -21,6 +22,13 @@ export default async function ProfileSettingsPage() {
 
   return (
     <SettingsSection title={t("settings.profile.title")} intro={t("settings.profile.intro")}>
+      <SettingsCard>
+        <OwnerAvatarEditor
+          username={identity.username}
+          name={identity.displayName ?? identity.username}
+          initialAvatarUrl={identity.avatarUrl}
+        />
+      </SettingsCard>
       <SettingsCard>
         <OwnerIdentityCardEditor initial={showcase.identityCard} />
       </SettingsCard>

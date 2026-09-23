@@ -1,6 +1,6 @@
 import { and, eq, ilike, or } from "drizzle-orm";
 import { db } from "@/db";
-import { appUser, userFollow } from "@/db/schema";
+import { appUser, image, userFollow } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import {
   PROFILE_VISIBILITIES,
@@ -10,6 +10,17 @@ import {
 } from "./types";
 import { getRelationBetween, isBlocking, relationsFor } from "./relations";
 import { activeUserCondition } from "@/services/auth/account-status";
+import { imageService } from "@/services/storage";
+
+async function resolveAvatarUrl(imageId: string | null): Promise<string | null> {
+  if (!imageId) return null;
+  const [img] = await db
+    .select({ storageKey: image.storageKey })
+    .from(image)
+    .where(eq(image.id, imageId))
+    .limit(1);
+  return img ? imageService.resolveUrl(img.storageKey) : null;
+}
 
 export interface OwnProfile {
   id: string;
@@ -132,6 +143,7 @@ export async function searchUsers(
       username: appUser.username,
       displayName: appUser.displayName,
       profileVisibility: appUser.profileVisibility,
+      avatarImageId: appUser.avatarImageId,
     })
     .from(appUser)
     .where(
@@ -160,6 +172,7 @@ export async function searchUsers(
       displayName: row.displayName,
       profileVisibility: row.profileVisibility as ProfileVisibility,
       relation: (relations.get(row.id) ?? "none") as FollowRelation,
+      avatarUrl: row.avatarImageId ? imageService.resolveUrl(row.avatarImageId) : null,
     })),
     page,
     pageSize,

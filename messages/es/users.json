@@ -750,5 +750,17 @@
     "she": "ella",
     "they": "elle"
   },
-  "pronounsAria": "Pronombres: {pronouns}"
+  "pronounsAria": "Pronombres: {pronouns}",
+  "avatar": {
+    "uploadLabel": "Foto de perfil",
+    "uploadButton": "Subir foto",
+    "replaceButton": "Cambiar foto",
+    "removeButton": "Quitar foto",
+    "uploading": "Subiendo foto…",
+    "removing": "Quitando foto…",
+    "success": "Foto actualizada.",
+    "removed": "Foto quitada.",
+    "errorGeneric": "No se pudo completar la operación. Intentá de nuevo.",
+    "helpText": "JPEG, PNG, WebP o AVIF. Máximo 10 MB."
+  }
 }

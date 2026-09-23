@@ -35,6 +35,7 @@ const users: UserSummary[] = [
     username: "ana",
     displayName: "Ana",
     profileVisibility: "public",
+    avatarUrl: null,
   },
 ];
 

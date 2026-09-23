@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { monogramLetter, monogramStyle } from "@/components/social/monogram";
+import { UserAvatar } from "@/components/social/UserAvatar";
 import { Spinner } from "@/components/ui/Spinner";
 import { apiFetch } from "@/lib/api/client";
 import { MutualFollowersResponseSchema, type UserSummary } from "@/lib/api/schemas";
@@ -35,14 +35,12 @@ export function MutualFollowersRow({ username, total, first }: MutualFollowersRo
           href={`/users/${encodeURIComponent(first.username)}`}
           className="flex items-center gap-1.5 text-paper-muted transition-colors hover:text-paper"
         >
-          <span
-            aria-hidden="true"
-            className={`flex size-4 shrink-0 items-center justify-center rounded-full border font-display text-[0.55rem] ${monogramStyle(
-              first.username,
-            )}`}
-          >
-            {monogramLetter(name)}
-          </span>
+          <UserAvatar
+            avatarUrl={first.avatarUrl}
+            username={first.username}
+            name={name}
+            size="xs"
+          />
           <span>{name}</span>
         </Link>
         {othersCount > 0 ? (
@@ -160,14 +158,13 @@ function MutualFollowersModal({
                 onClick={onClose}
                 className="group flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-ink"
               >
-                <span
-                  aria-hidden="true"
-                  className={`flex size-9 shrink-0 items-center justify-center rounded-full border font-display text-sm ${monogramStyle(
-                    user.username,
-                  )}`}
-                >
-                  {monogramLetter(name)}
-                </span>
+                <UserAvatar
+                  avatarUrl={user.avatarUrl}
+                  username={user.username}
+                  name={name}
+                  size="sm"
+                  className="size-9"
+                />
                 <span className="min-w-0">
                   <span className="block truncate font-display text-sm text-paper group-hover:text-amber">
                     {name}

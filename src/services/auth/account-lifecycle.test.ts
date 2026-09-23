@@ -7,6 +7,7 @@ const h = vi.hoisted(() => {
     reactivateRows: [{ id: "u1" }] as unknown[],
     deleteError: null as unknown,
     txOrder: [] as string[],
+    avatarImageId: null as string | null,
   };
 
   function chain(next: () => unknown): unknown {
@@ -38,6 +39,13 @@ const h = vi.hoisted(() => {
         if (state.deleteError && table.__name === "app_user") throw state.deleteError;
         return undefined;
       }),
+    select: () => ({
+      from: () => ({
+        where: () => ({
+          limit: () => Promise.resolve(state.avatarImageId !== null ? [{ avatarImageId: state.avatarImageId }] : [{ avatarImageId: null }]),
+        }),
+      }),
+    }),
   };
   const db = {
     ...executor,
@@ -48,10 +56,13 @@ const h = vi.hoisted(() => {
 
 vi.mock("@/db", () => ({ db: h.db }));
 vi.mock("@/db/schema", () => ({
-  appUser: { __name: "app_user", id: "app_user.id", deactivatedAt: "app_user.deactivated_at" },
+  appUser: { __name: "app_user", id: "app_user.id", deactivatedAt: "app_user.deactivated_at", avatarImageId: "app_user.avatar_image_id" },
   session: { __name: "session", userId: "session.user_id" },
 }));
 vi.mock("./recent-auth", () => ({ requireRecentAuth: h.requireRecentAuth }));
+vi.mock("@/services/storage", () => ({
+  imageService: { deleteImage: vi.fn().mockResolvedValue(undefined) },
+}));
 
 import { deactivateAccount, deleteAccount, reactivateAccount } from "./account-lifecycle";
 import type { ResolvedSession } from "./sessions";
@@ -73,6 +84,7 @@ beforeEach(() => {
   h.state.txOrder = [];
   h.state.reactivateRows = [{ id: "u1" }];
   h.state.deleteError = null;
+  h.state.avatarImageId = null;
   h.requireRecentAuth.mockResolvedValue(undefined);
 });
 

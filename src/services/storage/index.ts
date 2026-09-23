@@ -27,19 +27,28 @@ export class StorageConfigError extends Error {
   }
 }
 
+let cachedProvider: StorageProvider | null = null;
+
 /**
  * Devuelve el proveedor de storage activo según `STORAGE_DRIVER`.
  *
  * `local` escribe en `public/uploads/` y solo funciona fuera de producción.
  * `s3` usa un proveedor S3-compatible (Cloudflare R2). En producción, sin un
  * proveedor real configurado, falla cerrado con `STORAGE_CONFIG_MISSING`.
+ *
+ * El proveedor se memoiza a nivel de módulo: con el driver `s3`, construir
+ * un `S3Client` nuevo en cada invocación es inaceptable al resolver listas
+ * de avatares (openspec: connect-avatar-upload, Decisión 13).
  */
 export function getStorageProvider(): StorageProvider {
+  if (cachedProvider) return cachedProvider;
+
   const driver = process.env.STORAGE_DRIVER;
 
   if (!driver || driver === "local") {
     if (process.env.NODE_ENV === "production") throw new StorageConfigError();
-    return localDriver;
+    cachedProvider = localDriver;
+    return cachedProvider;
   }
 
   if (driver === "s3") {
@@ -53,7 +62,8 @@ export function getStorageProvider(): StorageProvider {
       throw new StorageConfigError();
     }
 
-    return createS3Driver(endpoint, bucket, accessKeyId, secretAccessKey, publicDomain);
+    cachedProvider = createS3Driver(endpoint, bucket, accessKeyId, secretAccessKey, publicDomain);
+    return cachedProvider;
   }
 
   throw new StorageConfigError();

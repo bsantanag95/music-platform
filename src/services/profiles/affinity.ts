@@ -8,6 +8,7 @@ import { audiencesForProfile } from "@/services/social/visibility";
 import type { Audience, ProfileVisibility, UserSummary } from "@/services/social/types";
 import type { ShowcaseEntity, ShowcaseEntityType } from "./showcase";
 import { activeUserCondition } from "@/services/auth/account-status";
+import { imageService } from "@/services/storage";
 
 // Cuántos de los seguidores aprobados del dueño son personas que el visitante
 // también sigue (relación aceptada). Señal para el aviso de perfil privado:
@@ -72,6 +73,7 @@ async function pagedMutualUsers(
           username: appUser.username,
           displayName: appUser.displayName,
           profileVisibility: appUser.profileVisibility,
+          avatarImageId: appUser.avatarImageId,
         },
       })
       .from(userFollow)
@@ -87,6 +89,7 @@ async function pagedMutualUsers(
     users: rows.slice(0, pageSize).map((row) => ({
       ...row.user,
       profileVisibility: row.user.profileVisibility as ProfileVisibility,
+      avatarUrl: row.user.avatarImageId ? imageService.resolveUrl(row.user.avatarImageId) : null,
     })),
     totalCount: countRow?.count ?? 0,
     page,

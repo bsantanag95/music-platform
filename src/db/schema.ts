@@ -36,9 +36,8 @@ export const appUser = pgTable(
     passwordHash: text("password_hash"),
     profileVisibility: text("profile_visibility").notNull().default("public"),
     // Identidad extendida del perfil (cambio redesign-user-profile). Todas
-    // opcionales. `avatarUrl` existe en el schema pero la UI no lo lee todavía
-    // (la subida de avatares es un cambio posterior); la identidad visual es
-    // el monograma determinista por username.
+    // opcionales. La identidad visual es la foto de perfil subida cuando
+    // existe, y el monograma determinista por username como fallback.
     bio: text("bio"),
     pronouns: text("pronouns"),
     location: text("location"),
@@ -49,7 +48,12 @@ export const appUser = pgTable(
     country: text("country"),
     pronounSet: text("pronoun_set"),
     timezone: text("timezone"),
-    avatarUrl: text("avatar_url"),
+    // Foto de perfil (migración 0045, openspec: connect-avatar-upload).
+    // Referencia a `image(id)` con `ON DELETE SET NULL`: la aplicación borra
+    // el archivo y la fila `image` deliberadamente (reemplazo, eliminación
+    // de cuenta); el `SET NULL` es defensa para el borrado directo de una
+    // fila `image` sin pasar por la capa de aplicación.
+    avatarImageId: uuid("avatar_image_id"),
     // Onboarding de dos puertas (migración 0020, cambio add-two-door-onboarding).
     // Nulo = pendiente; se fija al completar o saltar /welcome. Los usuarios
     // previos a la migración quedan con onboarded_at = created_at.
@@ -100,10 +104,6 @@ export const appUser = pgTable(
     check("chk_app_user_country", sql`${t.country} IS NULL OR ${t.country} ~ '^[A-Z]{2}$'`),
     check("chk_app_user_pronouns_exclusive", sql`${t.pronounSet} IS NULL OR ${t.pronouns} IS NULL`),
     check("chk_app_user_timezone", sql`${t.timezone} IS NULL OR length(${t.timezone}) <= 64`),
-    check(
-      "chk_app_user_avatar_url",
-      sql`${t.avatarUrl} IS NULL OR length(${t.avatarUrl}) <= 400`,
-    ),
   ],
 );
 

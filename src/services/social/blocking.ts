@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/api/errors";
 import type { UserSummary } from "./types";
 import { isBlockedBetween } from "./relations";
 import { activeUserCondition } from "@/services/auth/account-status";
+import { imageService } from "@/services/storage";
 
 function isUniqueViolation(error: unknown): error is { code: "23505" } {
   return typeof error === "object" && error !== null && "code" in error && error.code === "23505";
@@ -57,7 +58,7 @@ export async function unblockUser(blockerId: string, targetUsername: string): Pr
 
 export async function listBlocks(userId: string, page = 1, pageSize = 20) {
   const rows = await db
-    .select({ user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName, profileVisibility: appUser.profileVisibility } })
+    .select({ user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName, profileVisibility: appUser.profileVisibility, avatarImageId: appUser.avatarImageId } })
     .from(userBlock)
     .innerJoin(appUser, eq(userBlock.blockedId, appUser.id))
     .where(and(eq(userBlock.blockerId, userId), activeUserCondition()))
@@ -78,11 +79,13 @@ function serializeSummary(user: {
   username: string;
   displayName: string | null;
   profileVisibility: string;
+  avatarImageId: string | null;
 }): UserSummary {
   return {
     id: user.id,
     username: user.username,
     displayName: user.displayName,
     profileVisibility: user.profileVisibility as UserSummary["profileVisibility"],
+    avatarUrl: user.avatarImageId ? imageService.resolveUrl(user.avatarImageId) : null,
   };
 }

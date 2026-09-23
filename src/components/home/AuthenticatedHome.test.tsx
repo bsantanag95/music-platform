@@ -63,7 +63,7 @@ describe("AuthenticatedHome", () => {
 
   it("con al menos un seguido: muestra el preview de feed, no el onboarding", async () => {
     vi.mocked(following.listFollowing).mockResolvedValue({
-      users: [{ id: "u2", username: "seguido", displayName: null, profileVisibility: "public" }],
+      users: [{ id: "u2", username: "seguido", displayName: null, profileVisibility: "public", avatarUrl: null }],
       page: 1,
       pageSize: 1,
       hasNext: false,

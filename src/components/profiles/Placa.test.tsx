@@ -254,7 +254,7 @@ describe("Placa", () => {
         authenticated: true,
         mutualFollowers: {
           total: 3,
-          first: { id: "u2", username: "leo", displayName: "Leo", profileVisibility: "public" },
+          first: { id: "u2", username: "leo", displayName: "Leo", profileVisibility: "public", avatarUrl: null },
         },
       }),
     );

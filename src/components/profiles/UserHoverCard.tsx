@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { Spinner } from "@/components/ui/Spinner";
 import { FollowButton } from "@/components/social/FollowButton";
-import { monogramLetter, monogramStyle } from "@/components/social/monogram";
+import { UserAvatar } from "@/components/social/UserAvatar";
 import { apiFetch } from "@/lib/api/client";
 import { targetHref } from "@/components/feed/feed-target";
 import { IdentityCardPreviewResponseSchema, type IdentityCardPreviewDto } from "@/lib/api/schemas";
@@ -138,14 +138,13 @@ function HoverCardBody({ preview }: { preview: IdentityCardPreviewDto }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-start gap-3">
-        <span
-          aria-hidden="true"
-          className={`flex size-11 shrink-0 items-center justify-center rounded-lg border font-display text-lg ${monogramStyle(
-            preview.username,
-          )}`}
-        >
-          {monogramLetter(name)}
-        </span>
+        <UserAvatar
+          avatarUrl={preview.avatarUrl}
+          username={preview.username}
+          name={name}
+          size="sm"
+          className="rounded-lg"
+        />
         <Link href={`/users/${preview.username}`} className="min-w-0 flex-1">
           <span className="block truncate font-display text-sm text-paper hover:text-amber">{name}</span>
           <span className="block truncate font-data text-xs text-paper-muted">@{preview.username}</span>

@@ -13,6 +13,7 @@ export interface IdentityCardPreview {
    * a diferencia de la Tarjeta de Identidad.
    */
   bio: string | null;
+  avatarUrl: string | null;
   relation: FollowRelation;
   /** true si quien pide la previsualización tiene sesión — habilita el botón Seguir. */
   viewerAuthenticated: boolean;
@@ -42,6 +43,7 @@ export async function getIdentityCardPreview(
     username: profile.username,
     displayName: profile.displayName,
     bio: identity?.bio ?? null,
+    avatarUrl: identity?.avatarUrl ?? null,
     relation: profile.relation,
     viewerAuthenticated: viewerId !== null,
   };

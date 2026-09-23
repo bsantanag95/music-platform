@@ -48,8 +48,10 @@ extendida.
 Además de nombre visible y username, `app_user` guarda (todo opcional): **bio** (≤200),
 **pronombres** (lista cerrada + «Otro» de hasta 40), **país** (lista cerrada), **ciudad o región**
 (`location`, texto libre ≤80), **zona horaria** (un identificador IANA de una lista, no texto libre —
-ver "Identidad musical") y **avatar_url** (reservado, sin lectura en UI — la identidad visual es el
-monograma determinista por username; el avatar irá en una spec de imágenes aparte). País y pronombres
+ver "Identidad musical") y **avatar_image_id** (FK a `image`, nullable — la foto de perfil es
+identidad pública: se muestra en la Placa, el hover card y cualquier superficie que exponga al
+usuario, incluso en perfiles privados, porque forma parte de la identidad visual de la persona
+ante los demás; sin foto se muestra el monograma determinista por username). País y pronombres
 están en "Datos personales opcionales" más abajo.
 
 ### Datos personales opcionales (país, ciudad y pronombres)
@@ -361,10 +363,11 @@ popover.
 
 - **Endpoint público**: `GET /api/users/[username]/identity-card-preview`
   (`getIdentityCardPreview`, `src/services/profiles/identity-preview.ts`) — devuelve `id`,
-  `username`, `displayName`, `bio`, `relation` (`FollowRelation`) y `viewerAuthenticated`
-  siempre (identidad extendida, pública incluso en un perfil privado — mismo criterio que
-  `Placa`), más `identityCard` solo si `accessible` es `true` (misma regla que la página de
-  perfil, vía `getProfileByUsername().accessible`).
+  `username`, `displayName`, `bio`, `avatarUrl`, `relation` (`FollowRelation`),
+  `viewerAuthenticated` y `accessible` siempre (identidad extendida, pública incluso en un
+  perfil privado — mismo criterio que `Placa`; la foto de perfil es identidad pública y
+  viaja incluso en perfiles privados), más `identityCard` solo si `accessible` es `true`
+  (misma regla que la página de perfil, vía `getProfileByUsername().accessible`).
 - **La bio se recorta a 2 líneas** (`line-clamp-2`) — el campo admite hasta 200 caracteres
   (spec `social-profiles`) y sin el recorte una bio larga infla el popover.
 - **Fetch perezoso con demora de apertura** (300ms) para no disparar una petición por cada
@@ -974,7 +977,7 @@ cuántas veces se escuchó algo — es "qué está sonando", no una métrica.
 
 | Tabla / columna | Qué |
 |---|---|
-| `app_user.{bio, pronouns, location, timezone, avatar_url}` | Identidad extendida (migración 0014). Desde el cambio `profile-personal-info`, `pronouns` es el texto libre de «Otro» y `location` la ciudad o región |
+| `app_user.{bio, pronouns, location, timezone, avatar_image_id}` | Identidad extendida (migración 0014; `avatar_image_id` migración 0045). Desde el cambio `profile-personal-info`, `pronouns` es el texto libre de «Otro» y `location` la ciudad o región. La foto de perfil es identidad pública (visible incluso en perfiles privados) |
 | `app_user.{country, pronoun_set}` | País (código ISO de dos letras, `CHECK` de formato) y clave de la lista de pronombres (`he`/`she`/`they`, sin `CHECK` de valores); `CHECK (pronoun_set IS NULL OR pronouns IS NULL)` — migración 0042 |
 | `app_user.display_name` | Nombre visible; editable desde `/me/settings/account` (≤50, vacío = `NULL`, el sitio muestra el username) |
 | `app_user.{self_roles, genres, listening_formats}` | Identidad musical: `TEXT[] NOT NULL DEFAULT '{}'`, claves de listas cerradas validadas en la aplicación; la base solo limita la cardinalidad (≤3, ≤5, ≤5) — migración 0040 |

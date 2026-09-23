@@ -222,5 +222,21 @@
   "ACCOUNT_DELETION_BLOCKED": {
     "title": "No se puede eliminar esta cuenta",
     "description": "Esta cuenta tiene historial de moderación o editorial y no puede eliminarse. Podés desactivarla en su lugar."
+  },
+  "IMAGE_UNSUPPORTED_FORMAT": {
+    "title": "Formato de imagen no soportado",
+    "description": "Solo se aceptan imágenes en formato JPEG, PNG, WebP o AVIF."
+  },
+  "IMAGE_TOO_LARGE": {
+    "title": "La imagen es demasiado grande",
+    "description": "El archivo no puede superar los 10 MB."
+  },
+  "IMAGE_DIMENSIONS_EXCEEDED": {
+    "title": "Las dimensiones de la imagen son demasiado grandes",
+    "description": "La imagen no puede superar los 8192×8192 píxeles."
+  },
+  "IMAGE_DIMENSIONS_INSUFFICIENT": {
+    "title": "Las dimensiones de la imagen son demasiado pequeñas",
+    "description": "La imagen debe ser de al menos 128×128 píxeles."
   }
 }

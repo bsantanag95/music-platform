@@ -16,7 +16,7 @@ vi.mock("@/i18n/navigation", () => ({
 const mocks = vi.hoisted(() => ({ apiFetch: vi.fn() }));
 vi.mock("@/lib/api/client", () => ({ apiFetch: mocks.apiFetch }));
 
-const first = { id: "u2", username: "leo", displayName: "Leo Martínez", profileVisibility: "public" as const };
+const first = { id: "u2", username: "leo", displayName: "Leo Martínez", profileVisibility: "public" as const, avatarUrl: null };
 
 function renderRow(total: number) {
   return render(

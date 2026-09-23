@@ -21,6 +21,7 @@ import type { ProfileView } from "@/services/profiles/profile-view";
 import { ProfileAffinity } from "@/components/profiles/ProfileAffinity";
 import { OwnerSettingsCard } from "@/components/profiles/OwnerSettingsCard";
 import { EditableBlock } from "@/components/profiles/EditableBlock";
+import { OwnerAvatarEditor } from "@/components/profiles/OwnerAvatarEditor";
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
 import { OwnerMusicIdentityEditor } from "@/components/profiles/OwnerMusicIdentityEditor";
@@ -83,6 +84,11 @@ export async function EditablePlaca({ profile, children }: { profile: ProfileVie
       label={t("editMode.placa")}
       editor={
         <div className="flex flex-col gap-6">
+          <OwnerAvatarEditor
+            username={profile.username}
+            name={profile.displayName ?? profile.username}
+            initialAvatarUrl={profile.avatarUrl}
+          />
           <OwnerIdentityEditor
             name={profile.displayName ?? profile.username}
             initial={{

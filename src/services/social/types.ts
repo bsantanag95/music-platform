@@ -27,6 +27,7 @@ export interface UserSummary {
   username: string;
   displayName: string | null;
   profileVisibility: ProfileVisibility;
+  avatarUrl: string | null;
 }
 
 export const AUDIENCES = ["private", "followers", "public"] as const;

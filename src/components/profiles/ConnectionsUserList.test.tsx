@@ -27,8 +27,8 @@ const mocks = vi.hoisted(() => {
 vi.mock("@/lib/api/client", () => ({ apiFetch: mocks.apiFetch, ApiError: mocks.ApiError }));
 
 const users = [
-  { id: "u1", username: "leo", displayName: "Leo", profileVisibility: "public" as const, relation: "none" as const },
-  { id: "u2", username: "mia", displayName: null, profileVisibility: "public" as const, relation: "following" as const },
+  { id: "u1", username: "leo", displayName: "Leo", profileVisibility: "public" as const, avatarUrl: null, relation: "none" as const },
+  { id: "u2", username: "mia", displayName: null, profileVisibility: "public" as const, avatarUrl: null, relation: "following" as const },
 ];
 
 describe("ConnectionsUserList", () => {

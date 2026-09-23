@@ -39,7 +39,9 @@ export async function getProfileView(
   // tiene acceso a un perfil privado no se le entregan, aunque la tarjeta del
   // perfil privado no los dibuje. Este es el ÚNICO punto que lo decide: ninguna
   // vista que consuma `ProfileView` los recibe sin acceso. La bio, los enlaces y
-  // los contadores siguen siendo la identidad pública de siempre.
+  // los contadores siguen siendo la identidad pública de siempre. La foto de
+  // perfil también es identidad pública (Decisión 10 de connect-avatar-upload):
+  // `avatarUrl` NO se vacía aquí, igual que la bio.
   const hidden = !relationInfo.accessible && relationInfo.relation !== "self";
   return {
     ...identity,

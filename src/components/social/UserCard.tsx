@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { FollowRelation, UserSummary } from "@/lib/api/schemas";
 import { FollowButton } from "./FollowButton";
-import { monogramLetter, monogramStyle } from "./monogram";
+import { UserAvatar } from "./UserAvatar";
 
 interface UserCardProps {
   user: UserSummary & { relation?: FollowRelation };
@@ -23,7 +23,6 @@ interface UserCardProps {
 export function UserCard({ user, authenticated, showFollow = true, onRelationChange, extra }: UserCardProps) {
   const t = useTranslations("users");
   const name = user.displayName ?? user.username;
-  const monogramClass = monogramStyle(user.username);
 
   return (
     <li className="group flex flex-col gap-3 rounded-lg border border-ink-border bg-ink-surface px-4 py-3.5 transition-colors hover:border-amber/70 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5">
@@ -31,12 +30,12 @@ export function UserCard({ user, authenticated, showFollow = true, onRelationCha
         href={`/users/${encodeURIComponent(user.username)}`}
         className="flex min-w-0 flex-1 items-center gap-3 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2"
       >
-        <span
-          aria-hidden="true"
-          className={`flex size-11 shrink-0 items-center justify-center rounded-full border font-display text-lg ${monogramClass}`}
-        >
-          {monogramLetter(name)}
-        </span>
+        <UserAvatar
+          avatarUrl={user.avatarUrl}
+          username={user.username}
+          name={name}
+          size="sm"
+        />
         <span className="min-w-0 flex flex-col font-body text-sm text-paper">
           <span className="truncate font-display text-base text-paper transition-colors group-hover:text-amber">
             {name}

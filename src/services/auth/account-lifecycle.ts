@@ -4,6 +4,7 @@ import { appUser, session } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { requireRecentAuth } from "./recent-auth";
 import type { ResolvedSession } from "./sessions";
+import { imageService } from "@/services/storage";
 
 // Ciclo de vida de la cuenta (spec account-lifecycle): desactivar y reactivar
 // (oculta a la persona pero conserva su actividad) y eliminar (borra todo lo que
@@ -69,6 +70,13 @@ export async function deleteAccount(
   }
   await requireRecentAuth(current, input.password);
 
+  const [avatar] = await db
+    .select({ avatarImageId: appUser.avatarImageId })
+    .from(appUser)
+    .where(eq(appUser.id, current.user.id))
+    .limit(1);
+  const avatarImageId = avatar?.avatarImageId ?? null;
+
   try {
     await db.delete(appUser).where(eq(appUser.id, current.user.id));
   } catch (error) {
@@ -80,5 +88,9 @@ export async function deleteAccount(
       );
     }
     throw error;
+  }
+
+  if (avatarImageId) {
+    await imageService.deleteImage(avatarImageId).catch(() => {});
   }
 }

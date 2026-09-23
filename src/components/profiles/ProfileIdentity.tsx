@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
-import { monogramLetter, monogramStyle } from "@/components/social/monogram";
+import { UserAvatar } from "@/components/social/UserAvatar";
 import { isPronounSet } from "@/lib/personal-info";
 import { describeStoredLink } from "@/lib/profile-links";
 import { LinkKindIcon } from "./LinkKindIcon";
@@ -76,14 +76,13 @@ export function ProfileIdentity({
   return (
     <div className="flex min-w-0 flex-col gap-3">
       <div className="flex min-w-0 gap-3">
-        <span
-          aria-hidden="true"
-          className={`flex ${compact ? "size-14" : "size-16"} shrink-0 items-center justify-center rounded-full border font-display text-2xl ${monogramStyle(
-            profile.username,
-          )}`}
-        >
-          {monogramLetter(name)}
-        </span>
+        <UserAvatar
+          avatarUrl={profile.avatarUrl}
+          username={profile.username}
+          name={name}
+          size={compact ? "md" : "md"}
+          className={compact ? "size-14" : "size-16"}
+        />
 
         <div className="min-w-0">
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">

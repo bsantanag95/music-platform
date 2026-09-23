@@ -21,6 +21,7 @@ function user(overrides: Partial<CardUser> & { username: string; id: string }): 
   return {
     displayName: null,
     profileVisibility: "public" as ProfileVisibility,
+    avatarUrl: null,
     ...overrides,
   };
 }
