@@ -23,6 +23,8 @@ if (typeof globalThis.IntersectionObserver === "undefined") {
 // jsdom no implementa `scrollIntoView` (usado por `ProsePanel` para corregir
 // la posición del scroll al colapsar una cita larga). Stub no-op global,
 // mismo criterio que IntersectionObserver arriba.
-if (typeof Element.prototype.scrollIntoView !== "function") {
+// Solo en entornos con DOM (jsdom); los tests con `@vitest-environment node`
+// no tienen `Element` definido.
+if (typeof Element !== "undefined" && typeof Element.prototype.scrollIntoView !== "function") {
   Element.prototype.scrollIntoView = function scrollIntoView() {};
 }

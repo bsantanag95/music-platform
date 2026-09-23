@@ -713,3 +713,27 @@ ediciones del mismo CD). No es un toggle idempotente.
 `idx_collection_entry_user_release_group` (copias del usuario para un álbum, acción en la
 página de álbum), `idx_collection_entry_release_group` (recuperación por álbum) e
 `idx_collection_entry_attributes` (`GIN` sobre `attributes`, filtro por atributo).
+
+## `image`
+
+**Propósito:** cada fila representa un archivo procesado que la aplicación posee (migración `0044`,
+openspec: `add-image-storage`). No es un "dueño" polimórfico: los consumidores futuros (avatar de
+usuario, foto de artista, portada de playlist) tendrán FK propias (`*_image_id → image(id)` con
+`ON DELETE SET NULL`).
+
+**Columnas:**
+- `id`: UUID, clave primaria.
+- `storage_key`: texto, único. Clave del objeto en el proveedor de storage (`{kind}/{uuid}.webp`).
+  La URL pública se resuelve en runtime por el servicio (`resolveUrl()`), no se persiste.
+- `kind`: texto. Identifica el preset con que se generó la imagen (ej. `avatar`). Se persiste para
+  poder identificar qué filas reprocesar si un preset cambia; sin `kind` no habría forma de saber
+  con qué preset se generó una fila.
+- `mime_type`: texto. Constante (`image/webp`) mientras la normalización sea forzada; se persiste
+  para no tener que migrar si en el futuro se admite otro formato de salida.
+- `width`, `height`: enteros. Dimensiones finales de la imagen procesada.
+- `byte_size`: entero. Tamaño del archivo en bytes; queda para auditoría y cuotas futuras.
+- `created_at`: timestamptz, default `now()`.
+
+**Sin asociación polimórfica:** se descartó `image.owner_type` / `image.owner_id` porque Postgres
+no puede validarla con FK real. En su lugar, cada entidad consumidora tendrá su propia columna
+`*_image_id` con integridad referencial real.

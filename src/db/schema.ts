@@ -1210,3 +1210,21 @@ export const review = pgTable(
 );
 
 export type ReviewRow = typeof review.$inferSelect;
+
+// Imagen propia de la aplicación (migración 0044, openspec: add-image-storage).
+// Cada fila es un archivo procesado (WebP, una resolución) que la app posee.
+// `kind` se persiste para identificar qué filas reprocesar si un preset cambia;
+// no hay asociación polimórfica — los dueños futuros tendrán FK propias
+// (`*_image_id → image(id)` con `ON DELETE SET NULL`).
+export const image = pgTable("image", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  storageKey: text("storage_key").notNull().unique(),
+  kind: text("kind").notNull(),
+  mimeType: text("mime_type").notNull(),
+  width: integer("width").notNull(),
+  height: integer("height").notNull(),
+  byteSize: integer("byte_size").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type ImageRow = typeof image.$inferSelect;
