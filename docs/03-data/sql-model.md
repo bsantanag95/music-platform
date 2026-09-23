@@ -116,7 +116,7 @@ Conserva motivo, actor, fechas de inicio/expiración y revocación. No elimina c
 por autor y objetivo. `moderation_action` registra ocultaciones/restauraciones, resoluciones y
 descartes de reportes y suspensiones/revocaciones sociales con su actor, objetivo (comentario,
 reseña, lista, restricción o usuario), motivo y fecha; el `CHECK` de `action` admite `hide`,
-`restore`, `report_resolve`, `report_dismiss`, `suspend_social` y `revoke_social` (migración `0023`).
+`restore`, `report_resolve`, `report_dismiss`, `suspend_social` y `revoke_social` (migración `0023`). Los FK del objetivo son `ON DELETE SET NULL` para conservar la auditoría cuando el objetivo desaparece (p. ej. al eliminar una cuenta con restricciones), por eso el `CHECK` admite **como máximo** un objetivo (`num_nonnulls(...) <= 1`, migración `0046`); antes exigía exactamente uno y el `SET NULL` violaba `23514`.
 
 Comentarios, reseñas y listas tienen `moderation_status` (`visible`/`hidden`) para separar la
 moderación reversible del borrado físico del autor. `user_list` agrega además `is_official`,

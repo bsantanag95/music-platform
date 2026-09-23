@@ -194,7 +194,7 @@ export const moderationAction = pgTable(
     ),
     check(
       "chk_moderation_action_target",
-      sql`num_nonnulls(${t.commentId}, ${t.reviewId}, ${t.listId}, ${t.restrictionId}, ${t.userId}) = 1`,
+      sql`num_nonnulls(${t.commentId}, ${t.reviewId}, ${t.listId}, ${t.restrictionId}, ${t.userId}) <= 1`,
     ),
   ],
 );
