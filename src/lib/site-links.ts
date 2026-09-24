@@ -34,6 +34,15 @@ export const SOCIAL_LINKS: readonly SocialLink[] = [
   { id: "rss", href: "/feed.xml" },
 ] as const;
 
+/**
+ * Contacto público para pedir el retiro de una carátula (openspec:
+ * mirror-cover-art). Se lee de `COVER_ART_TAKEDOWN_EMAIL`; junto con un storage
+ * configurado habilita el espejo. Sin valor, el footer omite la frase de retiro
+ * y la app resuelve carátulas por hotlink.
+ */
+export const COVER_TAKEDOWN_EMAIL: string | null =
+  process.env.COVER_ART_TAKEDOWN_EMAIL?.trim() || null;
+
 /** URLs oficiales de las fuentes de datos citadas en el bloque de atribución. */
 export const DATA_SOURCE_URLS = {
   musicbrainz: "https://musicbrainz.org",

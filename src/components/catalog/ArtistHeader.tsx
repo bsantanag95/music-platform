@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { AppImage } from "@/components/ui/AppImage";
 import { DiscPlaceholder } from "./DiscPlaceholder";
 import type { ArtistRow } from "@/db/schema";
 
@@ -16,7 +16,7 @@ export function ArtistHeader({ artist, typeLabel, noPhotoAlt }: ArtistHeaderProp
     <header className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
       {artist.photoUrl ? (
         <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-full">
-          <Image
+          <AppImage
             src={artist.photoUrl}
             alt={artist.name}
             fill

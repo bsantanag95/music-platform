@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { AppImage } from "@/components/ui/AppImage";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
@@ -60,7 +60,7 @@ function ListMosaic({ covers, title }: { covers: string[]; title: string }) {
         return (
           <span key={i} className="relative bg-ink">
             {cover ? (
-              <Image src={cover} alt="" fill sizes="32px" className="object-cover" />
+              <AppImage src={cover} alt="" fill sizes="32px" className="object-cover" />
             ) : null}
           </span>
         );

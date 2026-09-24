@@ -24,9 +24,15 @@ export function createS3Driver(
   });
 
   return {
-    async put(key: string, body: Buffer, contentType: string): Promise<void> {
+    async put(key: string, body: Buffer, contentType: string, options): Promise<void> {
       await client.send(
-        new PutObjectCommand({ Bucket: bucket, Key: key, Body: body, ContentType: contentType }),
+        new PutObjectCommand({
+          Bucket: bucket,
+          Key: key,
+          Body: body,
+          ContentType: contentType,
+          ...(options?.cacheControl ? { CacheControl: options.cacheControl } : {}),
+        }),
       );
     },
 

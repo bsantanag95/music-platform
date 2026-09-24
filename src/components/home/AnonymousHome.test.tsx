@@ -90,6 +90,8 @@ describe("AnonymousHome", () => {
     firstReleaseDate: null,
     firstReleaseYear: 2000,
     createdAt: "2026-01-01T00:00:00.000Z",
+    coverThumbUrl: null,
+    coverResolved: false,
   };
 
   it("muestra el bloque editorial de álbumes cuando hay colecciones o mejor valorados", async () => {

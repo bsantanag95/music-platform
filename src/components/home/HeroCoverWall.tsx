@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { AppImage } from "@/components/ui/AppImage";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 
 // Muro de carátulas detrás del hero anónimo: cuadrícula tenue de sleeves
@@ -24,7 +24,7 @@ export function HeroCoverWall({ covers }: { covers: string[] }) {
       {tiles.map((url, i) => (
         <div key={i} className="relative aspect-square">
           {url ? (
-            <Image
+            <AppImage
               src={url}
               alt=""
               fill

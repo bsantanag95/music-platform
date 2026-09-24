@@ -35,9 +35,9 @@ const categoryLabels = {
 };
 
 const albums: ReleaseGroup[] = [
-  { id: "s1", mbid: null, title: "Studio One", category: "studio", firstReleaseDate: null, firstReleaseYear: 1990, createdAt: "2026-01-01T00:00:00.000Z" },
-  { id: "s2", mbid: null, title: "Studio Two", category: "studio", firstReleaseDate: null, firstReleaseYear: 1995, createdAt: "2026-01-01T00:00:00.000Z" },
-  { id: "l1", mbid: null, title: "Live One", category: "live_other", firstReleaseDate: null, firstReleaseYear: 2000, createdAt: "2026-01-01T00:00:00.000Z" },
+  { id: "s1", mbid: null, title: "Studio One", category: "studio", firstReleaseDate: null, firstReleaseYear: 1990, createdAt: "2026-01-01T00:00:00.000Z", coverThumbUrl: null, coverResolved: false },
+  { id: "s2", mbid: null, title: "Studio Two", category: "studio", firstReleaseDate: null, firstReleaseYear: 1995, createdAt: "2026-01-01T00:00:00.000Z", coverThumbUrl: null, coverResolved: false },
+  { id: "l1", mbid: null, title: "Live One", category: "live_other", firstReleaseDate: null, firstReleaseYear: 2000, createdAt: "2026-01-01T00:00:00.000Z", coverThumbUrl: null, coverResolved: false },
 ];
 
 function journey(over: Partial<ArtistJourneyDetail> = {}): ArtistJourneyDetail {

@@ -1,7 +1,9 @@
 # site-footer Specification
 
 ## Purpose
-TBD - created by archiving change add-site-footer. Update Purpose after archive.
+
+El pie de página global del sitio: identidad de la aplicación, navegación secundaria (Explorar, Cuenta, Recursos), vías de contacto y perfiles sociales, barra inferior con copyright y políticas, y el bloque de atribución de fuentes de datos (MusicBrainz, Cover Art Archive y MetaBrainz Foundation), que incluye el contacto público para pedir el retiro de una carátula cuando está configurado.
+
 ## Requirements
 ### Requirement: Presencia global del pie de página
 
@@ -129,8 +131,12 @@ parte bajo CC BY-NC-SA 3.0; (2) que las carátulas provienen del Cover Art Archi
 se muestran en baja resolución con fines de identificación y son propiedad de sus
 titulares de derechos; (3) que el servicio de metadata lo opera la MetaBrainz
 Foundation; (4) que music-platform no está afiliada ni respaldada por la MetaBrainz
-Foundation; (5) que music-platform no reproduce ni aloja audio. Cada fuente
-nombrada SHALL enlazar a su sitio oficial.
+Foundation; (5) que music-platform no reproduce ni aloja audio; y (6), cuando el
+contacto de retiro de carátulas está configurado, cómo pedir el retiro de una
+carátula, con un enlace `mailto:` a ese contacto cuya dirección es visible como texto.
+Cada fuente nombrada SHALL enlazar a su sitio oficial. El contacto de retiro SHALL
+provenir de `src/lib/site-links.ts`, que lo lee de la configuración
+(`COVER_ART_TAKEDOWN_EMAIL`); si no está configurado, el punto (6) SHALL omitirse.
 
 #### Scenario: Las tres fuentes están nombradas y enlazadas
 
@@ -155,6 +161,17 @@ nombrada SHALL enlazar a su sitio oficial.
 - **WHEN** se renderiza el bloque de atribución
 - **THEN** incluye una frase de no afiliación con MetaBrainz Foundation y una frase
   de que la aplicación no reproduce ni aloja audio
+
+#### Scenario: Contacto de retiro configurado
+
+- **WHEN** `COVER_ART_TAKEDOWN_EMAIL` tiene valor y se renderiza el bloque de atribución
+- **THEN** incluye una frase localizada para pedir el retiro de una carátula con un
+  enlace `mailto:` cuyo texto visible es esa dirección
+
+#### Scenario: Contacto de retiro sin configurar
+
+- **WHEN** `COVER_ART_TAKEDOWN_EMAIL` no tiene valor
+- **THEN** el bloque de atribución no muestra la frase de retiro ni un enlace vacío
 
 ### Requirement: Barra inferior con copyright y políticas
 

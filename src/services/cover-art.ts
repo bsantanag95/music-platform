@@ -9,8 +9,52 @@
 // para la edición que realmente lleva la imagen. El endpoint de release-group
 // devuelve la portada del álbum completo sin importar qué edición se ingirió.
 
+import { COVER_MIRROR } from "@/lib/config/cover-mirror";
+
 export function coverThumbUrl(releaseGroupMbid: string): string {
   return `https://coverartarchive.org/release-group/${releaseGroupMbid}/front-250`;
+}
+
+/** Resultado de un `GET` a la miniatura de CAA (openspec: mirror-cover-art). */
+export type CoverThumbFetchResult =
+  | { status: "found"; bytes: Buffer }
+  | { status: "missing" }
+  | { status: "transient" };
+
+/**
+ * Descarga la miniatura `front-250` de CAA siguiendo sus redirecciones (307 a
+ * archive.org, 302 a un nodo `dnXXXX.ca.archive.org`). Devuelve los bytes para
+ * espejar. Distingue la ausencia confirmada (`404` → `missing`) de los errores
+ * que ameritan reintento (`5xx`, timeout, red → `transient`). El timeout lo
+ * impone `AbortController`: la cadena puede tardar 2,5–3 s en frío.
+ *
+ * Solo para la ruta cover-only, el backfill y la revalidación; el render SSR
+ * del detalle usa `resolveCoverThumbUrl` (un `HEAD` barato).
+ */
+export async function fetchCoverThumb(
+  releaseGroupMbid: string,
+): Promise<CoverThumbFetchResult> {
+  if (!releaseGroupMbid) return { status: "missing" };
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), COVER_MIRROR.fetchTimeoutMs);
+
+  try {
+    const response = await fetch(coverThumbUrl(releaseGroupMbid), {
+      redirect: "follow",
+      signal: controller.signal,
+    });
+
+    if (response.status === 404) return { status: "missing" };
+    if (!response.ok) return { status: "transient" };
+
+    const bytes = Buffer.from(await response.arrayBuffer());
+    return bytes.length > 0 ? { status: "found", bytes } : { status: "transient" };
+  } catch {
+    return { status: "transient" };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**

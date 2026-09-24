@@ -371,12 +371,25 @@ búsqueda y discografía la siembran en la creación pero no la sobrescriben. Co
 existentes: `scripts/recanonicalize-release-group.ts`. Índice `idx_release_group_first_year` para
 ordenar la discografía por año.
 
-**Carátula (`cover_thumb_url`):** URL de la miniatura de 250px de la portada del álbum, resuelta contra
-Cover Art Archive a nivel de **release-group** (ver `data-licensing.md`). Es la **única fuente escribible**
-de la carátula: se resuelve bajo demanda con un `HEAD` a CAA sin ingestar el tracklist de una edición (patrón
-cover-only, ver `04-api/contracts.md`). Es `null` cuando el álbum no tiene carátula (demos/outtakes). Si el
-valor cacheado es `null`, la resolución se re-intenta en cada acceso posterior por si la portada aparece
-después (self-heal, mismo criterio que aplicaba `release`).
+**Carátula (`cover_thumb_url`, `cover_storage_key`, `cover_checked_at`, `cover_blocked_at`, migración `0047`):**
+`cover_thumb_url` es la **URL servible** de la miniatura de 250px: la del storage propio cuando la
+carátula está espejada y la de Cover Art Archive en otro caso. Es la **única fuente escribible** de
+la carátula y ninguno de los ~25 lectores del read-model cambia. La resolución es a nivel de
+**release-group**, sin ingestar el tracklist de una edición (patrón cover-only, ver
+`04-api/contracts.md`). Columnas de operación del espejo (ADR 0018):
+
+- `cover_storage_key` (`TEXT`, único, nullable): clave del objeto espejado
+  (`covers/{mbid}/{sha256[0..12]}.webp`); fuente de verdad para operar el storage.
+- `cover_checked_at` (`TIMESTAMPTZ`, nullable): momento de la última verificación concluyente
+  contra CAA (encontrada o `404`); acota el reintento de negativos a una vez cada 7 días. No
+  equivale a "resuelta" (ver `coverResolved` en `04-api/contracts.md`).
+- `cover_blocked_at` (`TIMESTAMPTZ`, nullable): retiro a pedido; un álbum marcado no se vuelve a
+  resolver, espejar ni mostrar por hotlink.
+
+Con el espejo habilitado (storage configurado **y** `COVER_ART_TAKEDOWN_EMAIL`), la resolución
+hace un `GET` que sigue las redirecciones de CAA, convierte a WebP ≤250 px y guarda la clave y la
+URL. Sin el espejo (o ante un error transitorio), guarda la URL de CAA (hotlink) o no escribe,
+respectivamente. `cover_thumb_url` es `null` cuando el álbum no tiene carátula.
 
 ## `release`
 

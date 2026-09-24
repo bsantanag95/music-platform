@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { AppImage } from "@/components/ui/AppImage";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useState, useEffect, useCallback } from "react";
@@ -25,8 +25,8 @@ const BACKOFF_DELAYS = [250, 750];
 // progresiva por álbum, ver Etapa 3.2). Consulta el endpoint cover-only del
 // release-group vía `src/lib/api/catalog.ts` + TanStack Query: resuelve la
 // carátula con un HEAD a Cover Art Archive sin ingestar el tracklist (0
-// llamadas a MusicBrainz), y consume la URL `cover` con `next/image`, sin
-// construir URLs de Cover Art Archive manualmente.
+// llamadas a MusicBrainz), y consume la URL `cover` con `AppImage` (el wrapper
+// de `next/image`), sin construir URLs de Cover Art Archive manualmente.
 //
 // Resiliencia: limita reintentos de consulta (máx 2 con backoff) y errores
 // de carga de imagen (máx 2 reintentos visuales). Tras agotar intentos,
@@ -85,14 +85,18 @@ export function LazyCoverImage({ releaseGroupId, coverLabel, className = "" }: L
     return <DiscPlaceholder alt={t("coverFailed")} className={className} />;
   }
 
+  // La fuente (`front-250`) mide 250 px: no tiene sentido declarar anchos de
+  // viewport que pidan variantes mayores (openspec: mirror-cover-art). Se
+  // acota el escritorio a 250 px y el móvil a una fracción que no supera la
+  // fuente.
   return (
     <div className={`relative overflow-hidden rounded ${className}`}>
-      <Image
+      <AppImage
         key={`cover-${releaseGroupId}-${imageRetries}`}
         src={cover}
         alt={coverLabel ?? ""}
         fill
-        sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+        sizes="(min-width: 1024px) 250px, (min-width: 640px) 33vw, 50vw"
         className="object-cover"
         loading="lazy"
         onError={handleImageError}

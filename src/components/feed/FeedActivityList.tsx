@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { AppImage } from "@/components/ui/AppImage";
 import { useNow, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
@@ -547,7 +547,7 @@ function initialFor(author: FeedEntry["author"]): string {
 function AuthorAvatar({ author }: { author: FeedEntry["author"] }) {
   if (author.avatarUrl) {
     return (
-      <Image
+      <AppImage
         src={author.avatarUrl}
         alt=""
         width={16}

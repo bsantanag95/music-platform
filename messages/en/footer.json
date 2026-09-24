@@ -49,7 +49,11 @@
       "after": "."
     },
     "noAffiliation": "{appName} is not affiliated with or endorsed by the MetaBrainz Foundation.",
-    "noAudio": "{appName} is a catalog and community about music: it does not play or host audio."
+    "noAudio": "{appName} is a catalog and community about music: it does not play or host audio.",
+    "takedown": {
+      "before": "To request the removal of cover art, email",
+      "after": "."
+    }
   },
   "bottom": {
     "label": "Legal",

@@ -123,7 +123,9 @@ determinista con `pickRepresentativeRelease` (openspec: `album-edition-selection
     "category": "studio | single_ep | compilation | live_other",
     "firstReleaseDate": "YYYY-MM-DD | null",
     "firstReleaseYear": "int | null",
-    "createdAt": "ISO-8601"
+    "createdAt": "ISO-8601",
+    "coverThumbUrl": "string | null",
+    "coverResolved": true
   },
   "release": {
     "id": "uuid",
@@ -157,11 +159,14 @@ determinista con `pickRepresentativeRelease` (openspec: `album-edition-selection
 **404** si el `id` no corresponde a ningún `release_group`, o si MusicBrainz no tiene
 ninguna edición ingerible para ese álbum.
 
-**Nota:** `cover` se resuelve contra Cover Art Archive a nivel de **release-group**
-(`coverartarchive.org/release-group/{mbid}/front-250`, siempre baja resolución, ver
-`03-data/data-licensing.md`) y se cachea en `release_group.cover_thumb_url` (migración `0003`);
-`release.cover_thumb_url` quedó deprecada como fallback legado para filas pre-migración. Vale
-`null` cuando el álbum no tiene carátula. Nunca construir esta URL a mano en el frontend.
+**Nota:** `cover` es la **URL servible** de la carátula del release-group: la del storage propio
+si está espejada o la de Cover Art Archive (`front-250`, siempre baja resolución, ver
+`03-data/data-licensing.md`) en otro caso, y se cachea en `release_group.cover_thumb_url`
+(migración `0047`; `release.cover_thumb_url` sigue deprecada como fallback legado). Vale `null`
+cuando el álbum no tiene carátula o fue retirada. En el render SSR del detalle se verifica la
+existencia con un `HEAD` y, si hay carátula y el espejo está habilitado, la descarga + espejo se
+difieren con `after()` (openspec: `mirror-cover-art`). Nunca construir esta URL a mano en el
+frontend.
 
 **Créditos por canción:** cada elemento de `tracks` incluye `credits: [{ artistId, name, role, joinPhrase }]`, ordenado por posición. Se arma con un `JOIN` de `credit` + `artist` sobre los `recordingId` de todo el tracklist en una sola query (no una query por canción).
 
@@ -176,11 +181,16 @@ de 2015 de un disco de 1994). El frontend muestra `releaseGroup.firstReleaseYear
 ## `GET /api/catalog/release-group/[id]/cover` — ✅ Existe
 
 Trae (o resuelve bajo demanda) únicamente la carátula miniatura de un álbum ya conocido por su
-`id` propio. **No ingesta el tracklist** ni consulta MusicBrainz: la carátula se resuelve con un
-`HEAD` a Cover Art Archive a nivel de release-group (`front-250`, ver `03-data/data-licensing.md`)
-y se cachea en `release_group.cover_thumb_url`. Es lo que consume `LazyCoverImage` en la grilla
-del perfil de artista, de modo que cargar las carátulas de un artista frío no se bloquea detrás de
-la ingesta de cada tracklist (0 llamadas a MusicBrainz por álbum).
+`id` propio. **No ingesta el tracklist** ni consulta MusicBrainz. Es lo que consume
+`LazyCoverImage` en la grilla del perfil de artista para los `releaseGroup` no resueltos, de modo
+que cargar las carátulas de un artista frío no se bloquea detrás de la ingesta de cada tracklist
+(0 llamadas a MusicBrainz por álbum).
+
+Con el espejo habilitado, la resolución hace un `GET` a Cover Art Archive a nivel de release-group
+(`front-250`, sigue las redirecciones, ver `03-data/data-licensing.md`), convierte a WebP ≤250 px,
+la sube al storage propio y devuelve su URL; sin el espejo, guarda y devuelve la URL de CAA. Un
+`404` confirma la ausencia y se recuerda por la ventana de reintento de negativos (7 días); un
+error transitorio no escribe nada. Nunca construir esta URL a mano en el frontend.
 
 **200 OK**
 
@@ -211,6 +221,13 @@ de `discographySyncedAt`; `memberships` contiene `artistId`, `name`, `type`, `ro
 La primera lectura sincroniza `artist-rels` antes de leer memberships; las lecturas posteriores con
 `membershipsSyncedAt` ya establecido no consultan MusicBrainz. Para personas, `releaseGroups`
 combina la discografía propia y la de grupos relacionados, sin duplicados por id.
+
+Cada `releaseGroup` de la discografía incluye además `coverThumbUrl: string | null` (la URL
+servible, del storage propio o de Cover Art Archive) y `coverResolved: boolean` (la resolución ya
+tiene respuesta sin consultar CAA: URL conocida, ausencia confirmada dentro de la ventana de
+negativos de 7 días, o carátula retirada). `AlbumCard` renderiza la carátula en la carga inicial
+cuando `coverResolved` es verdadero y solo resuelve por el endpoint cover-only los no resueltos;
+un negativo vencido cuenta como no resuelto (openspec: `mirror-cover-art`).
 
 **404** con `code: ARTIST_NOT_FOUND` si el `id` no corresponde a ningún artista.
 

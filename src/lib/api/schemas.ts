@@ -71,6 +71,13 @@ export const ReleaseGroupSchema = z.object({
   firstReleaseDate: z.string().nullable(),
   firstReleaseYear: z.number().int().nullable(),
   createdAt: z.string(),
+  // Carátula conocida y estado de resolución (openspec: mirror-cover-art).
+  // `coverResolved` es verdadero cuando la resolución ya se puede usar sin
+  // consultar Cover Art Archive: URL conocida, ausencia confirmada dentro de
+  // la ventana de negativos o carátula retirada. `AlbumCard` usa
+  // `coverThumbUrl` en la carga inicial solo si `coverResolved` es verdadero.
+  coverThumbUrl: z.string().nullable(),
+  coverResolved: z.boolean(),
 });
 export type ReleaseGroup = z.infer<typeof ReleaseGroupSchema>;
 

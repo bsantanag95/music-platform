@@ -494,6 +494,15 @@ export const releaseGroup = pgTable(
     title: text("title").notNull(),
     category: text("category").notNull(), // 'studio' | 'single_ep' | 'compilation' | 'live_other'
     coverThumbUrl: text("cover_thumb_url"), // única fuente escribible de la carátula
+    // Espejo propio de la carátula (migración 0047, openspec: mirror-cover-art).
+    // `coverStorageKey` es la fuente de verdad del objeto espejado;
+    // `coverThumbUrl` queda como URL servible denormalizada (espejo o CAA).
+    coverStorageKey: text("cover_storage_key").unique(),
+    // Última verificación concluyente contra CAA (encontrada o 404), para
+    // acotar el reintento de negativos. No es "resuelta": ver `coverResolved`.
+    coverCheckedAt: timestamp("cover_checked_at", { withTimezone: true }),
+    // Retiro a pedido: bloquea resolución, espejo y hotlink.
+    coverBlockedAt: timestamp("cover_blocked_at", { withTimezone: true }),
     // Fecha de lanzamiento canónica del release-group (migración 0016):
     // derivada de `first-release-date` de MusicBrainz sobre TODAS las
     // ediciones, no de la edición ingerida. `firstReleaseDate` solo se

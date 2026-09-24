@@ -7,23 +7,40 @@ vi.mock("@/db", () => ({
 }));
 
 vi.mock("../cover-art", () => ({
+  coverThumbUrl: vi.fn(
+    (mbid: string) => `https://coverartarchive.org/release-group/${mbid}/front-250`,
+  ),
+  fetchCoverThumb: vi.fn(),
   resolveCoverThumbUrl: vi.fn(),
 }));
 
+vi.mock("./cover-mirror", () => ({
+  isCoverMirrorEnabled: vi.fn(),
+  mirrorCover: vi.fn(),
+}));
+
 const { db } = await import("@/db");
-const { resolveCoverThumbUrl } = await import("../cover-art");
+const { fetchCoverThumb } = await import("../cover-art");
+const { isCoverMirrorEnabled, mirrorCover } = await import("./cover-mirror");
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const COVER_URL = "https://coverartarchive.org/release-group/mbid-rg-1/front-250";
+const STORAGE_URL = "https://cdn.example.com/covers/mbid-rg-1/abcdef123456.webp";
 
 type UpdateChain = {
+  setValues: unknown[];
   set: Mock<(values: unknown) => UpdateChain>;
-  where: Mock<(args: unknown) => UpdateChain>;
-  returning: Mock<() => Promise<{ coverThumbUrl: string | null }[]>>;
+  where: Mock<(args: unknown) => Promise<void>>;
 };
 
-function makeUpdateChain(cover: string | null): UpdateChain {
+function makeUpdateChain(): UpdateChain {
   const chain: UpdateChain = {
-    set: vi.fn(() => chain) as Mock<(values: unknown) => UpdateChain>,
-    where: vi.fn(() => chain) as Mock<(args: unknown) => UpdateChain>,
-    returning: vi.fn(async () => [{ coverThumbUrl: cover }]),
+    setValues: [],
+    set: vi.fn((values: unknown) => {
+      chain.setValues.push(values);
+      return chain;
+    }) as Mock<(values: unknown) => UpdateChain>,
+    where: vi.fn(async () => {}) as Mock<(args: unknown) => Promise<void>>,
   };
   return chain;
 }
@@ -35,6 +52,9 @@ function makeRg(overrides: Partial<ReleaseGroupRow> = {}): ReleaseGroupRow {
     title: "Album",
     category: "studio",
     coverThumbUrl: null,
+    coverStorageKey: null,
+    coverCheckedAt: null,
+    coverBlockedAt: null,
     firstReleaseDate: null,
     firstReleaseYear: null,
     createdAt: new Date(),
@@ -42,66 +62,97 @@ function makeRg(overrides: Partial<ReleaseGroupRow> = {}): ReleaseGroupRow {
   };
 }
 
-const COVER_URL = "https://coverartarchive.org/release-group/mbid-rg-1/front-250";
-
 describe("findOrResolveCover", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(isCoverMirrorEnabled).mockReturnValue(false);
   });
 
-  it("devuelve el cache hit sin tocar la red ni la base", async () => {
-    const rg = makeRg({ coverThumbUrl: COVER_URL });
-
-    const result = await findOrResolveCover(rg);
+  it("devuelve la URL cacheada sin tocar la red ni la base", async () => {
+    const result = await findOrResolveCover(makeRg({ coverThumbUrl: COVER_URL }));
 
     expect(result).toBe(COVER_URL);
-    expect(resolveCoverThumbUrl).not.toHaveBeenCalled();
+    expect(fetchCoverThumb).not.toHaveBeenCalled();
     expect(db.update).not.toHaveBeenCalled();
   });
 
-  it("resuelve contra Cover Art Archive y persiste el resultado en release_group", async () => {
-    vi.mocked(resolveCoverThumbUrl).mockResolvedValue(COVER_URL);
-    const updateChain = makeUpdateChain(COVER_URL);
-    vi.mocked(db.update).mockReturnValue(updateChain as never);
+  it("una carátula retirada devuelve null sin consultar Cover Art Archive", async () => {
+    const result = await findOrResolveCover(makeRg({ coverBlockedAt: new Date() }));
+
+    expect(result).toBeNull();
+    expect(fetchCoverThumb).not.toHaveBeenCalled();
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
+  it("un negativo reciente no se re-consulta", async () => {
+    const result = await findOrResolveCover(
+      makeRg({ coverCheckedAt: new Date(Date.now() - 1 * DAY_MS) }),
+    );
+
+    expect(result).toBeNull();
+    expect(fetchCoverThumb).not.toHaveBeenCalled();
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
+  it("un negativo vencido se re-resuelve y espeja cuando el espejo está habilitado", async () => {
+    vi.mocked(isCoverMirrorEnabled).mockReturnValue(true);
+    vi.mocked(fetchCoverThumb).mockResolvedValue({
+      status: "found",
+      bytes: Buffer.from([1, 2, 3]),
+    });
+    vi.mocked(mirrorCover).mockResolvedValue(STORAGE_URL);
+
+    const result = await findOrResolveCover(
+      makeRg({ coverCheckedAt: new Date(Date.now() - 8 * DAY_MS) }),
+    );
+
+    expect(fetchCoverThumb).toHaveBeenCalledWith("mbid-rg-1");
+    expect(mirrorCover).toHaveBeenCalled();
+    expect(result).toBe(STORAGE_URL);
+  });
+
+  it("con el espejo deshabilitado guarda la URL de Cover Art Archive", async () => {
+    const chain = makeUpdateChain();
+    vi.mocked(db.update).mockReturnValue(chain as never);
+    vi.mocked(fetchCoverThumb).mockResolvedValue({
+      status: "found",
+      bytes: Buffer.from([1, 2, 3]),
+    });
 
     const result = await findOrResolveCover(makeRg());
 
-    expect(resolveCoverThumbUrl).toHaveBeenCalledWith("mbid-rg-1");
+    expect(mirrorCover).not.toHaveBeenCalled();
     expect(result).toBe(COVER_URL);
-    const setArg = updateChain.set.mock.calls[0]?.[0] as { coverThumbUrl: unknown };
-    expect(setArg.coverThumbUrl).toBe(COVER_URL);
+    expect(chain.setValues[0]).toMatchObject({ coverThumbUrl: COVER_URL });
   });
 
-  it("persiste null cuando Cover Art Archive responde 404", async () => {
-    vi.mocked(resolveCoverThumbUrl).mockResolvedValue(null);
-    const updateChain = makeUpdateChain(null);
-    vi.mocked(db.update).mockReturnValue(updateChain as never);
+  it("un 404 persiste null y cover_checked_at", async () => {
+    const chain = makeUpdateChain();
+    vi.mocked(db.update).mockReturnValue(chain as never);
+    vi.mocked(fetchCoverThumb).mockResolvedValue({ status: "missing" });
 
     const result = await findOrResolveCover(makeRg());
 
     expect(result).toBeNull();
-    const setArg = updateChain.set.mock.calls[0]?.[0] as { coverThumbUrl: unknown };
+    const setArg = chain.setValues[0] as { coverThumbUrl: unknown; coverCheckedAt: unknown };
     expect(setArg.coverThumbUrl).toBeNull();
+    expect(setArg.coverCheckedAt).toBeInstanceOf(Date);
   });
 
-  it("no consulta la red cuando el release-group no tiene mbid y persiste null", async () => {
-    const updateChain = makeUpdateChain(null);
-    vi.mocked(db.update).mockReturnValue(updateChain as never);
+  it("un error transitorio no escribe nada", async () => {
+    vi.mocked(fetchCoverThumb).mockResolvedValue({ status: "transient" });
 
+    const result = await findOrResolveCover(makeRg());
+
+    expect(result).toBeNull();
+    expect(db.update).not.toHaveBeenCalled();
+    expect(mirrorCover).not.toHaveBeenCalled();
+  });
+
+  it("no consulta la red cuando el release-group no tiene mbid", async () => {
     const result = await findOrResolveCover(makeRg({ mbid: null }));
 
-    expect(resolveCoverThumbUrl).not.toHaveBeenCalled();
+    expect(fetchCoverThumb).not.toHaveBeenCalled();
     expect(result).toBeNull();
-  });
-
-  it("re-resuelve un valor cacheado nulo (self-heal) y devuelve el resultado", async () => {
-    vi.mocked(resolveCoverThumbUrl).mockResolvedValue(COVER_URL);
-    const updateChain = makeUpdateChain(COVER_URL);
-    vi.mocked(db.update).mockReturnValue(updateChain as never);
-
-    const result = await findOrResolveCover(makeRg({ coverThumbUrl: null }));
-
-    expect(resolveCoverThumbUrl).toHaveBeenCalledWith("mbid-rg-1");
-    expect(result).toBe(COVER_URL);
   });
 });

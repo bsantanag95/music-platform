@@ -6,6 +6,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { RowMenu, RowMenuItem } from "@/components/ui/RowMenu";
 import { ListsContainingItemPanel } from "@/components/lists/ListsContainingItemPanel";
 import { AddToListPanel } from "@/components/lists/AddToListPanel";
+import { CoverThumb } from "./CoverThumb";
 import { LazyCoverImage } from "./LazyCoverImage";
 import { addWantedEntries } from "@/lib/api/wanted";
 import { toggleFavorite } from "@/lib/api/favorites";
@@ -145,11 +146,21 @@ export function AlbumCard({ releaseGroup, categoryLabel, coverLabel, authenticat
   return (
     <div className="group relative flex w-full flex-col gap-2 rounded-lg border border-ink-border bg-ink-surface p-3 transition-colors hover:border-amber">
       <Link href={`/album/${releaseGroup.id}`} className="flex flex-col gap-2">
-        <LazyCoverImage
-          releaseGroupId={releaseGroup.id}
-          coverLabel={coverLabel}
-          className="aspect-square w-full"
-        />
+        {releaseGroup.coverResolved ? (
+          // Resuelta (URL conocida, ausencia confirmada o retirada): se
+          // renderiza en la carga inicial, sin request por carátula.
+          <CoverThumb
+            cover={releaseGroup.coverThumbUrl}
+            label={coverLabel}
+            className="aspect-square w-full"
+          />
+        ) : (
+          <LazyCoverImage
+            releaseGroupId={releaseGroup.id}
+            coverLabel={coverLabel}
+            className="aspect-square w-full"
+          />
+        )}
         <div className="min-w-0">
           <h3 className="truncate font-display text-sm text-paper">{releaseGroup.title}</h3>
           <p className="font-data text-xs text-paper-muted">

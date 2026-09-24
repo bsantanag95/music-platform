@@ -10,6 +10,7 @@ import {
 } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import type { ReleaseGroup } from "@/lib/api/schemas";
+import { isCoverResolved } from "@/services/catalog/cover-resolution";
 import { enrichLists } from "@/services/lists/lists";
 import {
   FILTERED_PAGE_SIZE,
@@ -70,6 +71,9 @@ const albumColumns = {
   firstReleaseDate: releaseGroup.firstReleaseDate,
   firstReleaseYear: releaseGroup.firstReleaseYear,
   createdAt: releaseGroup.createdAt,
+  coverThumbUrl: releaseGroup.coverThumbUrl,
+  coverCheckedAt: releaseGroup.coverCheckedAt,
+  coverBlockedAt: releaseGroup.coverBlockedAt,
 };
 
 function serializeAlbum(row: {
@@ -80,6 +84,9 @@ function serializeAlbum(row: {
   firstReleaseDate: string | null;
   firstReleaseYear: number | null;
   createdAt: Date;
+  coverThumbUrl: string | null;
+  coverCheckedAt: Date | null;
+  coverBlockedAt: Date | null;
 }): ReleaseGroup {
   return {
     id: row.id,
@@ -89,6 +96,8 @@ function serializeAlbum(row: {
     firstReleaseDate: row.firstReleaseDate,
     firstReleaseYear: row.firstReleaseYear,
     createdAt: row.createdAt.toISOString(),
+    coverThumbUrl: row.coverThumbUrl,
+    coverResolved: isCoverResolved(row),
   };
 }
 

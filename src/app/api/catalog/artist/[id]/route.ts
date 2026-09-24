@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ensureArtistMemberships, getArtistById, getArtistMemberships } from "@/services/catalog/ingest-artist";
 import { findOrIngestDiscography } from "@/services/catalog/ingest-discography";
+import { isCoverResolved } from "@/services/catalog/cover-resolution";
 import { withErrorHandling } from "@/lib/with-error-handling";
 
 export const GET = withErrorHandling(
@@ -20,6 +21,13 @@ export const GET = withErrorHandling(
       getArtistMemberships(artist),
     ]);
 
-    return NextResponse.json({ artist, releaseGroups, memberships });
+    return NextResponse.json({
+      artist,
+      releaseGroups: releaseGroups.map((rg) => ({
+        ...rg,
+        coverResolved: isCoverResolved(rg),
+      })),
+      memberships,
+    });
   },
 );

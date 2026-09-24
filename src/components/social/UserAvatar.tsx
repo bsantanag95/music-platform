@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { AppImage } from "@/components/ui/AppImage";
 import { monogramLetter, monogramStyle } from "./monogram";
 
 interface UserAvatarProps {
@@ -28,7 +28,7 @@ export function UserAvatar({ avatarUrl, username, name, size, className = "" }: 
 
   if (avatarUrl) {
     return (
-      <Image
+      <AppImage
         src={avatarUrl}
         alt=""
         width={config.px}

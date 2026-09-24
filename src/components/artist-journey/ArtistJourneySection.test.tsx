@@ -40,7 +40,7 @@ const categoryLabels = {
 };
 
 const albums: ReleaseGroup[] = [
-  { id: "s1", mbid: null, title: "Studio One", category: "studio", firstReleaseDate: null, firstReleaseYear: 1990, createdAt: "2026-01-01T00:00:00.000Z" },
+  { id: "s1", mbid: null, title: "Studio One", category: "studio", firstReleaseDate: null, firstReleaseYear: 1990, createdAt: "2026-01-01T00:00:00.000Z", coverThumbUrl: null, coverResolved: false },
 ];
 
 function journey(over: Partial<ArtistJourneyDetail> = {}): ArtistJourneyDetail {

@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { AppImage } from "@/components/ui/AppImage";
 import { DiscPlaceholder } from "./DiscPlaceholder";
 
 // Miniatura cuadrada de carátula para listados densos (feed, actividad de
@@ -28,9 +28,11 @@ export function CoverThumb({
     );
   }
 
+  // La fuente mide 250 px como máximo (espejo o `front-250`): `sizes` se acota
+  // a ese ancho para no pedir variantes mayores (openspec: mirror-cover-art).
   return (
     <div className={`relative shrink-0 overflow-hidden rounded ${className}`}>
-      <Image src={cover} alt={label} fill sizes="64px" className="object-cover" />
+      <AppImage src={cover} alt={label} fill sizes="250px" className="object-cover" />
     </div>
   );
 }

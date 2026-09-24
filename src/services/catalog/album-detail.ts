@@ -9,8 +9,12 @@ import {
   type ReleaseGroupRow,
   type ReleaseRow,
 } from "@/db/schema";
+import { after } from "next/server";
+import { NEGATIVE_RETRY_MS } from "@/lib/config/cover-mirror";
 import { findOrIngestTracklist } from "./ingest-release";
-import { findOrResolveCover } from "./cover";
+import { fetchCoverThumb, resolveCoverThumbUrl } from "../cover-art";
+import { isCoverMirrorEnabled, mirrorCover } from "./cover-mirror";
+import { isCoverResolved } from "./cover-resolution";
 
 export interface AlbumCredit {
   artistId: string;
@@ -38,7 +42,9 @@ export interface AlbumDetail {
   // canónica (`firstReleaseDate` / `firstReleaseYear`) del release-group.
   // La fecha del ÁLBUM es esta, no la de la edición ingerida
   // (openspec: canonicalize-release-group).
-  releaseGroup: ReleaseGroupRow;
+  // `coverResolved` (openspec: mirror-cover-art) espeja el campo del payload
+  // de discografía para que `ReleaseGroupSchema` valide la misma forma.
+  releaseGroup: ReleaseGroupRow & { coverResolved: boolean };
   // La edición representativa ingerida. `release.releaseDate` es la fecha de
   // ESTA edición y puede diferir de la fecha canónica del álbum.
   release: ReleaseRow;
@@ -133,12 +139,12 @@ export async function getAlbumDetail(releaseGroupId: string): Promise<AlbumDetai
   // lectura legada: el fallback solo cubre filas pre-migración (0003), y el
   // response se normaliza para que `release.coverThumbUrl` y `cover`
   // coincidan siempre (contrato coherente).
-  const cover = (await findOrResolveCover(rg)) ?? releaseRow.coverThumbUrl;
+  const cover = (await resolveAlbumCover(rg)) ?? releaseRow.coverThumbUrl;
 
   return {
     kind: "ok",
     detail: {
-      releaseGroup: rg,
+      releaseGroup: { ...rg, coverResolved: isCoverResolved(rg) },
       release: { ...releaseRow, coverThumbUrl: cover },
       cover,
       tracks: albumTracks,
@@ -146,6 +152,61 @@ export async function getAlbumDetail(releaseGroupId: string): Promise<AlbumDetai
         (await resolvePrimaryArtist(rg.id)) ?? (await backfillPrimaryArtistFromTracks(rg.id, albumTracks)),
     },
   };
+}
+
+/**
+ * Resolución SSR del detalle de álbum (openspec: mirror-cover-art, decisión 7):
+ * conserva el `HEAD` barato (un solo salto, ~0,8 s) en lugar del `GET` que
+ * sigue las 3 redirecciones. Si hay carátula y el espejo está habilitado,
+ * agenda la descarga + espejo con `after()` para que la próxima visita ya use
+ * la URL del storage. Respeta el retiro y la ventana de negativos.
+ */
+export async function resolveAlbumCover(rg: ReleaseGroupRow): Promise<string | null> {
+  if (rg.coverBlockedAt) return null;
+
+  if (rg.coverThumbUrl) {
+    scheduleCoverMirror(rg);
+    return rg.coverThumbUrl;
+  }
+
+  const verifiedRecently =
+    rg.coverCheckedAt !== null &&
+    Date.now() - rg.coverCheckedAt.getTime() < NEGATIVE_RETRY_MS;
+  if (verifiedRecently) return null;
+
+  const url = rg.mbid ? await resolveCoverThumbUrl(rg.mbid) : null;
+  if (!url) {
+    // El `HEAD` no distingue `404` de error transitorio: no se registra
+    // `cover_checked_at` para no cachear un transitorio como ausencia. La
+    // ruta cover-only (`GET`) sí los distingue y es la que confirma negativos.
+    return null;
+  }
+
+  await db
+    .update(releaseGroup)
+    .set({ coverThumbUrl: url, coverCheckedAt: new Date() })
+    .where(eq(releaseGroup.id, rg.id));
+
+  scheduleCoverMirror({ ...rg, coverThumbUrl: url });
+  return url;
+}
+
+/**
+ * Difierre la descarga y el espejo hasta después de enviar la respuesta. Solo
+ * cuando el espejo está habilitado y la carátula todavía no está en el storage
+ * (clave nula): así no se re-descarga una ya espejada.
+ */
+function scheduleCoverMirror(rg: ReleaseGroupRow): void {
+  if (!rg.mbid || rg.coverStorageKey) return;
+  if (!isCoverMirrorEnabled()) return;
+
+  const mbid = rg.mbid;
+  after(async () => {
+    const fetched = await fetchCoverThumb(mbid);
+    if (fetched.status === "found") {
+      await mirrorCover(rg, fetched.bytes);
+    }
+  });
 }
 
 async function resolvePrimaryArtist(

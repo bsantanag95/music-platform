@@ -61,10 +61,22 @@ La aplicación SHALL renderizar un fallback visual cuando el artista no tenga fo
 - **THEN** el encabezado muestra el fallback visual y el resto del perfil se renderiza correctamente
 
 ### Requirement: Carga progresiva de carátulas
-La aplicación SHALL cargar cada carátula después del render inicial mediante el endpoint cover-only del `releaseGroup` (`GET /api/catalog/release-group/{id}/cover`), que resuelve la carátula sin ingerir el tracklist del álbum, SHALL mostrar un estado de carga accesible, SHALL reintentar de forma limitada los fallos transitorios y SHALL usar un fallback visual estable cuando no exista carátula o se agoten los reintentos.
+La discografía SHALL incluir, por cada `releaseGroup`, su carátula conocida y si su carátula está resuelta. Una carátula está resuelta cuando su URL es conocida, cuando su ausencia fue confirmada dentro de la ventana de reintento de negativos o cuando fue retirada. La aplicación SHALL renderizar en la carga inicial la carátula (o el fallback visual de álbum sin carátula) de los `releaseGroup` resueltos, sin requests por carátula desde el cliente. Solo para los `releaseGroup` no resueltos, la aplicación SHALL cargar la carátula después del render inicial mediante el endpoint cover-only (`GET /api/catalog/release-group/{id}/cover`), que resuelve la carátula sin ingerir el tracklist del álbum, SHALL mostrar un estado de carga accesible, SHALL reintentar de forma limitada los fallos transitorios y SHALL usar un fallback visual estable cuando no exista carátula o se agoten los reintentos.
+
+#### Scenario: Carátula con URL conocida
+- **WHEN** la discografía incluye un `releaseGroup` con URL de carátula conocida
+- **THEN** la tarjeta muestra la miniatura desde la carga inicial, sin skeleton y sin consultar el endpoint cover-only
+
+#### Scenario: Ausencia confirmada o carátula retirada
+- **WHEN** la discografía incluye un `releaseGroup` cuya ausencia de carátula fue confirmada dentro de la ventana de reintento de negativos, o cuya carátula fue retirada
+- **THEN** la tarjeta muestra el fallback visual estable desde la carga inicial, sin consultar el endpoint cover-only
+
+#### Scenario: Negativo vencido se re-resuelve
+- **WHEN** la discografía incluye un `releaseGroup` sin carátula cuya última confirmación de ausencia está fuera de la ventana de reintento
+- **THEN** la tarjeta resuelve la carátula después del render inicial mediante el endpoint cover-only
 
 #### Scenario: Carátula disponible
-- **WHEN** el endpoint cover-only devuelve una carátula válida y la imagen carga
+- **WHEN** el `releaseGroup` no está resuelto, el endpoint cover-only devuelve una carátula válida y la imagen carga
 - **THEN** la tarjeta reemplaza su skeleton por la miniatura devuelta por el backend sin bloquear la carga inicial del perfil
 
 #### Scenario: Fallo transitorio de consulta

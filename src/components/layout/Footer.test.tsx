@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import { createTranslator } from "next-intl";
 
@@ -172,3 +172,43 @@ describe("Footer", () => {
     ).toBeInTheDocument();
   });
 });
+
+// `COVER_TAKEDOWN_EMAIL` se lee de `process.env` al cargar `site-links`; estos
+// tests recargan el módulo tras fijar la variable (openspec: mirror-cover-art).
+describe("Footer — contacto de retiro", () => {
+  const original = process.env.COVER_ART_TAKEDOWN_EMAIL;
+
+  afterEach(() => {
+    if (original === undefined) delete process.env.COVER_ART_TAKEDOWN_EMAIL;
+    else process.env.COVER_ART_TAKEDOWN_EMAIL = original;
+    vi.resetModules();
+  });
+
+  it("muestra la frase y el mailto visible con el contacto configurado", async () => {
+    activeLocale = "es";
+    process.env.COVER_ART_TAKEDOWN_EMAIL = "retiro@ejemplo.com";
+    vi.resetModules();
+    const { Footer: FreshFooter } = await import("./Footer");
+
+    render(await FreshFooter({}));
+
+    expect(screen.getByText(/retiro de una carátula/)).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "retiro@ejemplo.com" });
+    expect(link).toHaveAttribute("href", "mailto:retiro@ejemplo.com");
+  });
+
+  it("no muestra la frase sin contacto configurado", async () => {
+    activeLocale = "es";
+    delete process.env.COVER_ART_TAKEDOWN_EMAIL;
+    vi.resetModules();
+    const { Footer: FreshFooter } = await import("./Footer");
+
+    render(await FreshFooter({}));
+
+    expect(screen.queryByText(/retiro de una carátula/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "retiro@ejemplo.com" }),
+    ).not.toBeInTheDocument();
+  });
+});
+

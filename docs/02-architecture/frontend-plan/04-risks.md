@@ -10,7 +10,7 @@
 | 6 | **Uso incorrecto de carátulas** (Cover Art Archive): cualquier componente que arme una URL de imagen a mano, en vez de usar `coverThumbUrl()`, podría terminar sirviendo una imagen de alta resolución — violando la política de producto documentada en `docs/03-data/data-licensing.md`. | Centralizar todo uso de carátula en `AlbumCover`/`LazyCoverImage`, que internamente llaman a `coverThumbUrl()`; prohibir por convención de código construir esa URL en cualquier otro componente (ver `03-best-practices.md`). |
 | 7 | **PWA diferida a Fase 6 (ADR 0001)**: si el frontend de Fase 3 no se construye mobile-first desde el principio, hay retrabajo visual en Fase 6. | Tailwind + diseño responsive desde la Etapa 3.0/3.6, aunque el manifest/service worker en sí queden fuera de esta fase. |
 | 8 | ~~**Decisión de alcance de "detalle de canción" sin resolver**~~ **✅ Resuelto** — Camino A confirmado, diferido a Fase 4. | — |
-| 9 | **Disponibilidad de Cover Art Archive / Archive.org (carátulas):** la app hotlinkea las miniaturas de CAA (`coverartarchive.org/release-group/{mbid}/front-250`), que redirige a archive.org. Se cachea solo la **URL**, no los bytes de la imagen. Una URL cacheada como "válida" no garantiza que la imagen esté disponible en el momento del GET (ver detalle abajo). | Aceptar como riesgo conocido mientras se valida la Fase 3 — la Fase 3 existe para descubrir estos problemas antes de sumar complejidad. Mitigación inmediata de bajo coste (Etapa 3.6, estados de carga): retry limitado con pequeño backoff, skeleton/placeholder mientras se reintenta y fallback definitivo al agotar intentos — sin reintentos infinitos ni tráfico excesivo. **No introduce almacenamiento propio.** Reevaluar con métricas reales (ver detalle abajo) antes de desacoplar la disponibilidad de las carátulas de CAA. |
+| 9 | ~~**Disponibilidad de Cover Art Archive / Archive.org (carátulas):** la app hotlinkea las miniaturas de CAA (`coverartarchive.org/release-group/{mbid}/front-250`), que redirige a archive.org. Se cachea solo la **URL**, no los bytes de la imagen. Una URL cacheada como "válida" no garantiza que la imagen esté disponible en el momento del GET (ver detalle abajo).~~ **✅ Mitigado por ADR 0018.** | **Espejo propio de baja resolución (ADR 0018):** la app descarga `front-250`, la convierte a WebP ≤250 px y la sirve desde el storage propio; la cadena de redirecciones de archive.org se paga una sola vez por carátula, para todos los usuarios. La medición del 2026-09-23 (2,5–3 s en frío por 8,7 KB, sin `Cache-Control` en el host final) fue la evidencia que activó la reevaluación. Se conserva el retry/backoff de la Etapa 3.6 como red de seguridad del camino de hotlink residual. |
 | 10 | **Dogpile sobre MusicBrainz en cache-miss concurrente:** múltiples requests HTTP sobre la misma entidad no cacheada generan llamadas duplicadas a la API de MusicBrainz. La cola serial en proceso las espacia pero no las descarta — ver detalle abajo. | **Riesgo aceptado sin mitigación activa.** Si el tráfico lo justifica, la solución es un rate limitador distribuido (Redis token bucket, previsto en `client.ts:9-13`), no advisory locks. Ver ADR 0011. Revisar cuando la profundidad de cola sostenida o el p95 de latencia en rutas de cache-miss superen un umbral definido. **El checklist de métricas pre-despliegue vive en B.3 de `scalability-infrastructure.md`** (fuente única, no duplicada aquí). |
 | 11 | **Costo del agregado de rating en vivo (`AVG()`/`count(*)` por lectura).** El promedio por entidad se calcula al vuelo (`src/services/social.ts:37-39`) y no hay columna materializada (`rating_average`/`rating_sum`/`rating_count`) en ninguna tabla. Hoy está mitigado por los índices de target (`idx_rating_*`, ver detalle abajo), que hacen de la agregación un index scan por entidad, no un seq scan. Diferido: no hay señal de tráfico que justifique materializar todavía. | **No-riesgo con ADR 0009** — como no existe el estado derivado, el borrado físico de `rating` no puede dejar agregados desfasados: no hay nada que sincronizar. **Diferido por falta de señal.** Si se materializa el agregado, la sincronización debe usar triggers de Postgres (mismo argumento estructural de ADR 0009: no depender de que cada código de mutación, escrito por modelos distintos, recuerde actualizar el agregado). Revisar cuando el p95 de latencia en páginas de entidad con conteo alto de ratings, o el volumen de ratings por entidad, superen un umbral definido. |
 | 12 | **Fragmentación del índice de PK por UUID v4 aleatorio en tablas comunitarias de alto volumen** (`rating`, `comment`, `listen_entry`): cada `INSERT` cae en una posición impredecible del B-tree de la PK (a diferencia de un BIGSERIAL o UUID v7 monótonos). A volumen alto: el índice de PK se fragmenta más rápido (peor cache hit ratio, más I/O) y ocupa más espacio en disco (16 bytes vs 8 bytes por entrada, antes del row). **Trade-off no documentado en ADR 0003**, que eligió UUID por otro eje (colisiones con MusicBrainz, pre-generación, no exponer conteo) y solo mencionó el peso del índice, no la localidad de inserción. Ver detalle abajo. | **Diferido sin mitigación activa.** Riesgo de escala, no de corrección — el límite de INT no aplica y no hay bug. Si se activa el trigger, las opciones incluyen indexar por un `BIGSERIAL` de solo-índice, migrar a UUID v7 (monótono, no expone conteo vía leak inferencial bajo, preserva la pre-generación), o particionar las tablas. Preserva el argumento de ADR 0003 para el catálogo (mbid externo). Revisar cuando el volumen de filas en una tabla comunitaria o el tamaño/fragmentación del índice de PK superen un umbral definido. |
@@ -20,7 +20,15 @@ mitigación concreta y de bajo costo. El único requisito real antes de escribir
 resolver los bloqueantes de decisión listados en `00-backend-analysis.md`, porque esos sí
 cambian el diseño de las pantallas, no solo su implementación.
 
-## Riesgo 9 — Disponibilidad de Cover Art Archive (detalle y evidencia para reevaluar)
+## Riesgo 9 — Disponibilidad de Cover Art Archive (mitigado por ADR 0018)
+
+**Estado: mitigado.** La evidencia medida el 2026-09-23 (cadena de 3 hosts, 2,5–3 s en frío
+por carátula de 8,7 KB, sin `Cache-Control` en el nodo final) cumplió el criterio de
+reevaluación que este documento había fijado, y la decisión tomada fue el **espejo propio de
+baja resolución** documentado en `docs/02-architecture/adr/0018-espejo-de-caratulas.md`: la app
+descarga `front-250` una vez por carátula, la convierte a WebP ≤250 px y la sirve desde el
+storage propio (R2 detrás de CDN), con revalidación contra la fuente, retiro a pedido y
+atribución. El resto de esta sección queda como contexto histórico de la reevaluación.
 
 - **Por qué una URL válida no garantiza que la imagen esté disponible en el GET:**
   `resolveCoverThumbUrl` (`src/services/cover-art.ts`) verifica existencia con un `HEAD` y
@@ -29,12 +37,13 @@ cambian el diseño de las pantallas, no solo su implementación.
   propia: puede responder `404`/`503` de forma transitoria o estar lento, y el optimizador de
   Next propaga ese estado al `<img>`. Por eso la misma URL puede fallar una vez y cargar
   correctamente al recargar. Se observó este comportamiento en la práctica durante la Fase 3.
-- **Por qué no se introduce almacenamiento propio ahora:** la Fase 3 existe para validar el
-  modelo contra discografías reales antes de agregar complejidad; todavía no hay evidencia de
-  que esta dependencia degrade la experiencia de forma relevante en producción; PostgreSQL no
-  debe usarse para almacenar binarios; y almacenar/servir copias propias de portadas tiene
-  implicaciones de copyright que obligan a revisar `docs/03-data/data-licensing.md` antes de
-  adoptarlo.
+- **Por qué en Fase 3 no se introdujo almacenamiento propio (contexto histórico, superado por
+  ADR 0018):** la Fase 3 existía para validar el modelo contra discografías reales antes de
+  agregar complejidad; todavía no había evidencia de degradación relevante; PostgreSQL no debe
+  usarse para almacenar binarios; y almacenar/servir copias propias de portadas tiene
+  implicaciones de copyright que obligaron a revisar `docs/03-data/data-licensing.md` — revisión
+  que ADR 0018 resolvió con condiciones verificables (solo `front-250`, sigue a la fuente,
+  retiro a pedido con contacto publicado, sin exposición como colección, atribución).
 - **Mitigación inmediata (bajo coste):** retry limitado + pequeño backoff + skeleton/placeholder
   mientras se reintenta + fallback definitivo, especificada en la Etapa 3.6 de
   `02-implementation-plan.md`. Es resiliencia de bajo coste, no la solución arquitectónica

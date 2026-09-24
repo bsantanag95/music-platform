@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { AppImage } from "@/components/ui/AppImage";
 import { useState, useEffect, useCallback } from "react";
 import { DiscPlaceholder } from "./DiscPlaceholder";
 
@@ -14,9 +14,9 @@ interface AlbumCoverProps {
 
 const MAX_IMAGE_RETRIES = 2;
 
-// Componente de presentación para la carátula del álbum. Usa `next/image`
-// y la URL proporcionada por el backend (miniatura de 250px). No construye
-// URLs de Cover Art Archive manualmente.
+// Componente de presentación para la carátula del álbum. Usa `AppImage`
+// (el wrapper de `next/image`) y la URL proporcionada por el backend
+// (miniatura de 250px). No construye URLs de Cover Art Archive manualmente.
 //
 // Resiliencia: maneja errores de carga de imagen con máximo 2 reintentos
 // visuales. Tras agotar intentos, muestra placeholder estable.
@@ -53,7 +53,7 @@ export function AlbumCover({
 
   return (
     <div className={`relative overflow-hidden rounded ${className}`}>
-      <Image
+      <AppImage
         key={`cover-${cover}-${imageRetries}`}
         src={cover}
         alt={coverLabel}

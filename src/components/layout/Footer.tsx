@@ -2,7 +2,12 @@ import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
 import type { AuthUser } from "@/lib/api/schemas";
-import { CONTACT_EMAIL, DATA_SOURCE_URLS, SOCIAL_LINKS } from "@/lib/site-links";
+import {
+  CONTACT_EMAIL,
+  COVER_TAKEDOWN_EMAIL,
+  DATA_SOURCE_URLS,
+  SOCIAL_LINKS,
+} from "@/lib/site-links";
 import { Logo } from "./Logo";
 
 interface FooterProps {
@@ -146,6 +151,18 @@ export async function Footer({ user = null, exploreEnabled = false }: FooterProp
           </p>
           <p>{t("attribution.noAffiliation", { appName })}</p>
           <p>{t("attribution.noAudio", { appName })}</p>
+          {COVER_TAKEDOWN_EMAIL ? (
+            <p>
+              {t("attribution.takedown.before")}{" "}
+              <a
+                href={`mailto:${COVER_TAKEDOWN_EMAIL}`}
+                className="text-paper underline decoration-ink-border underline-offset-2 transition-colors hover:text-amber"
+              >
+                {COVER_TAKEDOWN_EMAIL}
+              </a>
+              {t("attribution.takedown.after")}
+            </p>
+          ) : null}
         </section>
 
         {/* Barra inferior */}

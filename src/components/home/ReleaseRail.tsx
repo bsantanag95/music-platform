@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import { AppImage } from "@/components/ui/AppImage";
 import { Link } from "@/i18n/navigation";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import type { HomeRelease } from "@/services/home/home";
@@ -168,7 +168,7 @@ export function ReleaseRail({
                         upcoming ? "opacity-60" : ""
                       }`}
                     >
-                      <Image
+                      <AppImage
                         src={release.coverThumbUrl}
                         alt=""
                         fill

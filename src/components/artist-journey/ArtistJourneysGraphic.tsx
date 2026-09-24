@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { AppImage } from "@/components/ui/AppImage";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -32,7 +32,7 @@ export function ArtistJourneysGraphic({ journeys, actions }: ArtistJourneyRender
             >
               {journey.artistPhotoUrl ? (
                 <div className="relative aspect-square w-full">
-                  <Image src={journey.artistPhotoUrl} alt="" fill sizes="20vw" className="object-cover" />
+                  <AppImage src={journey.artistPhotoUrl} alt="" fill sizes="20vw" className="object-cover" />
                 </div>
               ) : (
                 <DiscPlaceholder alt="" className="aspect-square w-full" />

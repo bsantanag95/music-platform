@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { ensureArtistMemberships, getArtistById, getArtistMemberships } from "@/services/catalog/ingest-artist";
 import { findOrIngestDiscography } from "@/services/catalog/ingest-discography";
+import { isCoverResolved } from "@/services/catalog/cover-resolution";
 import { ArtistHeader } from "@/components/catalog/ArtistHeader";
 import { AlbumGrid } from "@/components/catalog/AlbumGrid";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
@@ -102,6 +103,8 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
     firstReleaseDate: rg.firstReleaseDate,
     firstReleaseYear: rg.firstReleaseYear,
     createdAt: rg.createdAt.toISOString(),
+    coverThumbUrl: rg.coverThumbUrl,
+    coverResolved: isCoverResolved(rg),
   }));
 
   return (

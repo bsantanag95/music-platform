@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import Image from "next/image";
+import { AppImage } from "@/components/ui/AppImage";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
@@ -118,7 +118,7 @@ export function FollowedArtistRow({ artist, mode }: FollowedArtistRowProps) {
           >
             {artist.photoUrl ? (
               <div className="relative aspect-square w-full">
-                <Image src={artist.photoUrl} alt="" fill sizes="160px" className="object-cover" />
+                <AppImage src={artist.photoUrl} alt="" fill sizes="160px" className="object-cover" />
               </div>
             ) : (
               <DiscPlaceholder alt="" className="aspect-square w-full" />
@@ -144,7 +144,7 @@ export function FollowedArtistRow({ artist, mode }: FollowedArtistRowProps) {
         <Link href={href} className="shrink-0" tabIndex={-1} aria-hidden>
           {artist.photoUrl ? (
             <div className="relative size-10 shrink-0 overflow-hidden rounded-full">
-              <Image src={artist.photoUrl} alt="" fill sizes="2.5rem" className="object-cover" />
+              <AppImage src={artist.photoUrl} alt="" fill sizes="2.5rem" className="object-cover" />
             </div>
           ) : (
             <DiscPlaceholder alt="" className="size-10 shrink-0 rounded-full" />

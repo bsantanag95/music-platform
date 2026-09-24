@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
+import { AppImage } from "@/components/ui/AppImage";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
@@ -272,7 +272,7 @@ export function ArtistJourneyManager({
           <div className="flex min-w-0 items-center gap-3">
             {artistPhotoUrl ? (
               <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full">
-                <Image src={artistPhotoUrl} alt={artistName} fill sizes="4rem" className="object-cover" />
+                <AppImage src={artistPhotoUrl} alt={artistName} fill sizes="4rem" className="object-cover" />
               </div>
             ) : (
               <DiscPlaceholder

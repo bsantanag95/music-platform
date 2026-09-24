@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { AppImage } from "@/components/ui/AppImage";
 import { Link } from "@/i18n/navigation";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import type { FollowedArtist } from "@/services/social/artist-following";
@@ -27,7 +27,7 @@ export function ArtistTile({ artist, shared, size = "size-20", t }: ArtistTilePr
       <div className="relative">
         {artist.photoUrl ? (
           <div className={`relative ${size} overflow-hidden rounded-full border border-ink-border transition-colors group-hover:border-amber`}>
-            <Image src={artist.photoUrl} alt="" fill sizes="6rem" className="object-cover" />
+            <AppImage src={artist.photoUrl} alt="" fill sizes="6rem" className="object-cover" />
           </div>
         ) : (
           <DiscPlaceholder

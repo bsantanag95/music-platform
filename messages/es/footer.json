@@ -49,7 +49,11 @@
       "after": "."
     },
     "noAffiliation": "{appName} no está afiliada ni respaldada por la MetaBrainz Foundation.",
-    "noAudio": "{appName} es un catálogo y una comunidad sobre música: no reproduce ni aloja audio."
+    "noAudio": "{appName} es un catálogo y una comunidad sobre música: no reproduce ni aloja audio.",
+    "takedown": {
+      "before": "Para pedir el retiro de una carátula, escribí a",
+      "after": "."
+    }
   },
   "bottom": {
     "label": "Legal",

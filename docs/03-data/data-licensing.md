@@ -28,16 +28,27 @@ La metadata de qué imágenes existen es abierta, pero **las imágenes en sí so
 
 **Decisión de producto adoptada:** tratarlas como Wikipedia trata las portadas de álbum — uso de baja resolución, con fines de identificación/catalogación del contenido, no como elemento decorativo a resolución completa. Es la práctica estándar de la industria (Discogs, RateYourMusic, Last.fm operan así) y la ruta más defendible sin pagar licencia por portada.
 
-**Evolución futura condicionada (no es una decisión tomada):** la app hotlinkea hoy las
-miniaturas de CAA, que redirige a Archive.org — una dependencia de disponibilidad de terceros
-documentada como riesgo conocido (ver `frontend-plan/04-risks.md`, riesgo 9). Si las métricas
-de la Fase 3 mostraran una degradación relevante, se podrían evaluar cache HTTP/CDN, proxy
-propio, endpoint de imágenes u Object Storage. **Cualquier estrategia que almacene y sirva
-copias propias** de las portadas — aunque sea en baja resolución — debe re-evaluarse primero
-bajo esta política: son material con copyright de las disqueras y parte del arte cargado en CAA
-tiene condiciones de licencia propias. La adopción de una capa propia no está decidida de
-antemano; se elegirá comparando licencia, disponibilidad, latencia, coste y complejidad
-operativa.
+**Política vigente — espejo propio de baja resolución (ADR 0018):** la app mantiene un espejo
+de la miniatura `front-250` en Object Storage (R2 detrás del CDN de Cloudflare) bajo condiciones
+verificables que hacen defendible alojar copias:
+
+- solo baja resolución (`front-250`), recodificada a WebP con lado mayor ≤250 px; nunca otra
+  variante ni resolución completa;
+- el espejo **sigue a la fuente**: una revalidación periódica vuelve a consultar CAA y borra o
+  reemplaza la copia si la portada fue retirada o cambió;
+- **retiro a pedido**: existe un procedimiento inmediato que borra la copia y marca el álbum
+  para que no se vuelva a resolver, y el **contacto público de retiro es un requisito técnico de
+  habilitación** del espejo (`COVER_ART_TAKEDOWN_EMAIL`, publicado en el bloque de atribución del
+  footer);
+- **sin exposición como colección**: las carátulas se sirven solo por su URL exacta, en el
+  contexto de su álbum; no hay endpoint que liste o permita descargar en bloque;
+- la **atribución** de siempre (bloque del footer) se mantiene.
+
+El espejo se habilita solo con storage configurado **y** el contacto de retiro presente; si falta
+cualquiera de los dos, la app vuelve al hotlink y no aloja copias. La medición que activó la
+reevaluación (riesgo 9) y las decisiones completas están en
+`docs/02-architecture/adr/0018-espejo-de-caratulas.md`. Los gates de monetización de abajo siguen
+vigentes.
 
 ## Dónde se materializa la atribución
 

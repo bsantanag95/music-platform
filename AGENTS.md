@@ -104,6 +104,9 @@ necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
 - `src/services/cover-art.ts` solo genera miniaturas 250px — nunca resolución
   completa (decisión de licencia documentada en `docs/03-data/data-licensing.md`,
   no solo optimización). No construir URLs de carátula a mano en otro lugar.
+  `src/services/catalog/cover-mirror.ts` mantiene el espejo propio en el
+  storage (ADR 0018), con scripts operativos `scripts/{backfill,revalidate,
+  takedown}-cover-mirror.ts` / `scripts/takedown-cover.ts`.
 - Todo route handler se envuelve con `src/lib/with-error-handling.ts` →
   respuesta uniforme `{ error, code }` ante excepciones no controladas
   (`docs/04-api/errors.md`).

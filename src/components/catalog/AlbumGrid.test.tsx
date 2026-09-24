@@ -37,6 +37,8 @@ function makeReleaseGroup(
     firstReleaseDate: null,
     firstReleaseYear,
     createdAt: "2024-01-01T00:00:00Z",
+    coverThumbUrl: null,
+    coverResolved: false,
   };
 }
 

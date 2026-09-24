@@ -19,6 +19,12 @@ vi.mock("./LazyCoverImage", () => ({
   LazyCoverImage: () => <div data-testid="mock-cover" />,
 }));
 
+vi.mock("./CoverThumb", () => ({
+  CoverThumb: ({ cover }: { cover: string | null }) => (
+    <div data-testid="cover-thumb" data-cover={cover ?? "none"} />
+  ),
+}));
+
 // AddToListPanel carga las listas propias al montar (efecto con llamada a la
 // API); se aísla para no tener que mockear `@/lib/api/lists` acá — su
 // comportamiento propio ya está cubierto por AddToListPanel.test.tsx.
@@ -57,6 +63,8 @@ const releaseGroup: ReleaseGroup = {
   firstReleaseDate: null,
   firstReleaseYear: 1973,
   createdAt: "2024-01-01T00:00:00Z",
+  coverThumbUrl: null,
+  coverResolved: false,
 };
 
 describe("AlbumCard", () => {
@@ -212,5 +220,58 @@ describe("AlbumCard", () => {
 
     expect(mocks.push).toHaveBeenCalledWith("/auth/login");
     expect(screen.queryByTestId("mock-add-to-list-panel")).not.toBeInTheDocument();
+  });
+});
+
+// Carátula resuelta (openspec: mirror-cover-art): si la resolución ya tiene
+// respuesta se renderiza en la carga inicial sin consultar el endpoint
+// cover-only; solo lo no resuelto pasa por LazyCoverImage.
+describe("AlbumCard — carátula resuelta", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("con URL conocida renderiza CoverThumb sin request", () => {
+    renderWithIntl(
+      <AlbumCard
+        releaseGroup={{
+          ...releaseGroup,
+          coverResolved: true,
+          coverThumbUrl: "https://cdn.example.com/covers/x.webp",
+        }}
+        categoryLabel="Estudio"
+        coverLabel="Carátula"
+      />,
+    );
+
+    expect(screen.getByTestId("cover-thumb")).toHaveAttribute(
+      "data-cover",
+      "https://cdn.example.com/covers/x.webp",
+    );
+    expect(screen.queryByTestId("mock-cover")).not.toBeInTheDocument();
+  });
+
+  it("con ausencia confirmada o retirada renderiza el placeholder sin request", () => {
+    renderWithIntl(
+      <AlbumCard
+        releaseGroup={{ ...releaseGroup, coverResolved: true, coverThumbUrl: null }}
+        categoryLabel="Estudio"
+        coverLabel="Carátula"
+      />,
+    );
+
+    expect(screen.getByTestId("cover-thumb")).toHaveAttribute("data-cover", "none");
+    expect(screen.queryByTestId("mock-cover")).not.toBeInTheDocument();
+  });
+
+  it("sin resolver usa LazyCoverImage", () => {
+    renderWithIntl(
+      <AlbumCard
+        releaseGroup={{ ...releaseGroup, coverResolved: false }}
+        categoryLabel="Estudio"
+        coverLabel="Carátula"
+      />,
+    );
+
+    expect(screen.getByTestId("mock-cover")).toBeInTheDocument();
+    expect(screen.queryByTestId("cover-thumb")).not.toBeInTheDocument();
   });
 });
