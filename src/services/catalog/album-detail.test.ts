@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { ReleaseGroupRow } from "@/db/schema";
 
 vi.mock("next/server", () => ({ after: vi.fn() }));
-vi.mock("@/db", () => ({ db: { update: vi.fn() } }));
+vi.mock("@/db", () => ({ db: { update: vi.fn(), select: vi.fn(), insert: vi.fn() } }));
 vi.mock("./ingest-release", () => ({ findOrIngestTracklist: vi.fn() }));
 vi.mock("../cover-art", () => ({
   resolveCoverThumbUrl: vi.fn(),
@@ -17,7 +17,8 @@ const { after } = await import("next/server");
 const { db } = await import("@/db");
 const { resolveCoverThumbUrl, fetchCoverThumb } = await import("../cover-art");
 const { isCoverMirrorEnabled, mirrorCover } = await import("./cover-mirror");
-const { resolveAlbumCover } = await import("./album-detail");
+const { resolveAlbumCover, getAlbumDetail } = await import("./album-detail");
+const { findOrIngestTracklist } = await import("./ingest-release");
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MBID = "mbid-rg-1";
@@ -124,5 +125,89 @@ describe("resolveAlbumCover (SSR del detalle de álbum)", () => {
     expect(result).toBeNull();
     expect(db.update).not.toHaveBeenCalled();
     expect(after).not.toHaveBeenCalled();
+  });
+});
+
+/** Cadena de consulta encadenable que, al esperarse, resuelve `result`. */
+function queryChain(result: unknown) {
+  const chain: object = new Proxy(
+    {},
+    {
+      get(_target, prop) {
+        if (prop === "then") {
+          return (resolve: (v: unknown) => void, reject: (e: unknown) => void) =>
+            Promise.resolve(result).then(resolve, reject);
+        }
+        return () => chain;
+      },
+    },
+  );
+  return chain;
+}
+
+describe("getAlbumDetail (artistas principales y variantes)", () => {
+  const releaseRow = {
+    id: "rel-1",
+    mbid: "mbid-rel-1",
+    releaseGroupId: "rg-1",
+    editionLabel: "standard",
+    releaseDate: null,
+    coverThumbUrl: null,
+    creditsSyncedAt: new Date(),
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(isCoverMirrorEnabled).mockReturnValue(false);
+    vi.mocked(findOrIngestTracklist).mockResolvedValue(releaseRow as never);
+  });
+
+  function queueSelects(...results: unknown[]) {
+    const queue = [...results];
+    vi.mocked(db.select).mockImplementation((() => queryChain(queue.shift())) as never);
+  }
+
+  it("devuelve todos los artistas principales en orden con su joinPhrase", async () => {
+    queueSelects(
+      [makeRg({ coverThumbUrl: COVER_URL })],
+      [
+        { recordingId: "r1", position: 1, discNumber: 1, title: "Money (Live)", durationSec: 380, variantType: "live", variantOfId: "r0" },
+        { recordingId: "r2", position: 2, discNumber: 1, title: "Time", durationSec: 413, variantType: "original", variantOfId: null },
+      ],
+      [],
+      [{ id: "r0", title: "Money" }],
+      [
+        { id: "a1", name: "Artista A", joinPhrase: " & " },
+        { id: "a2", name: "Artista B", joinPhrase: null },
+      ],
+    );
+
+    const result = await getAlbumDetail("rg-1");
+    if (result.kind !== "ok") throw new Error("esperaba ok");
+
+    expect(result.detail.primaryArtists).toEqual([
+      { id: "a1", name: "Artista A", joinPhrase: " & " },
+      { id: "a2", name: "Artista B", joinPhrase: null },
+    ]);
+    expect(result.detail.primaryArtist).toEqual({ id: "a1", name: "Artista A" });
+    expect(result.detail.tracks[0]?.variantType).toBe("live");
+    expect(result.detail.tracks[0]?.variantOf).toEqual({ recordingId: "r0", title: "Money" });
+    expect(result.detail.tracks[1]?.variantOf).toBeNull();
+  });
+
+  it("sin crédito de release-group deriva el artista de las pistas", async () => {
+    queueSelects(
+      [makeRg({ coverThumbUrl: COVER_URL })],
+      [{ recordingId: "r1", position: 1, discNumber: 1, title: "Uno", durationSec: 100, variantType: "original", variantOfId: null }],
+      [{ recordingId: "r1", artistId: "a9", name: "Banda", role: "primary", joinPhrase: null, position: 0 }],
+      [],
+    );
+    vi.mocked(db.insert).mockReturnValue(queryChain(undefined) as never);
+
+    const result = await getAlbumDetail("rg-1");
+    if (result.kind !== "ok") throw new Error("esperaba ok");
+
+    expect(result.detail.primaryArtists).toEqual([{ id: "a9", name: "Banda", joinPhrase: null }]);
+    expect(db.insert).toHaveBeenCalledTimes(1);
   });
 });

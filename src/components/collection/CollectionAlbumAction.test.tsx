@@ -88,13 +88,13 @@ describe("CollectionAlbumAction", () => {
     );
   });
 
-  it("al abrir muestra el selector 'La tengo' / 'La quiero' antes de cualquier formulario", async () => {
+  it("al abrir muestra el selector 'La tengo' / 'La busco' antes de cualquier formulario", async () => {
     const user = userEvent.setup();
     renderAction();
 
     await user.click(screen.getByRole("button", { name: "Agregar a la colección" }));
     expect(screen.getByRole("radio", { name: "La tengo" })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "La quiero" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "La busco" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Formato")).not.toBeInTheDocument();
   });
 
@@ -161,14 +161,14 @@ describe("CollectionAlbumAction", () => {
     );
   });
 
-  it("agrega una sola variante deseada tras elegir 'La quiero'", async () => {
+  it("agrega una sola variante deseada tras elegir 'La busco'", async () => {
     const user = userEvent.setup();
     mocks.addWantedEntries.mockResolvedValue([wantedEntry]);
     renderAction();
 
     await user.click(screen.getByRole("button", { name: "Agregar a la colección" }));
-    await user.click(screen.getByRole("radio", { name: "La quiero" }));
-    await user.click(screen.getByRole("button", { name: "Agregar a mi lista de deseados" }));
+    await user.click(screen.getByRole("radio", { name: "La busco" }));
+    await user.click(screen.getByRole("button", { name: "Agregar a tu búsqueda" }));
 
     await waitFor(() =>
       expect(mocks.addWantedEntries).toHaveBeenCalledWith({
@@ -184,13 +184,13 @@ describe("CollectionAlbumAction", () => {
     renderAction();
 
     await user.click(screen.getByRole("button", { name: "Agregar a la colección" }));
-    await user.click(screen.getByRole("radio", { name: "La quiero" }));
+    await user.click(screen.getByRole("radio", { name: "La busco" }));
     await user.click(screen.getByRole("button", { name: "Agregar otra variante" }));
 
     const vinylOptions = screen.getAllByRole("radio", { name: "Vinilo" });
     await user.click(vinylOptions[0]!);
 
-    await user.click(screen.getByRole("button", { name: "Agregar a mi lista de deseados" }));
+    await user.click(screen.getByRole("button", { name: "Agregar a tu búsqueda" }));
 
     await waitFor(() =>
       expect(mocks.addWantedEntries).toHaveBeenCalledWith({
@@ -218,8 +218,8 @@ describe("CollectionAlbumAction", () => {
     renderAction({ initialEntries: [entry] });
 
     await user.click(screen.getByRole("button", { name: "Agregar a la colección" }));
-    await user.click(screen.getByRole("radio", { name: "La quiero" }));
-    await user.click(screen.getByRole("button", { name: "Agregar a mi lista de deseados" }));
+    await user.click(screen.getByRole("radio", { name: "La busco" }));
+    await user.click(screen.getByRole("button", { name: "Agregar a tu búsqueda" }));
 
     await waitFor(() => expect(mocks.addWantedEntries).toHaveBeenCalled());
   });

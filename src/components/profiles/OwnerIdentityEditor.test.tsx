@@ -154,7 +154,7 @@ describe("OwnerIdentityEditor", () => {
 
     it("sin pronombres el ejemplo usa la forma neutra y lo dice", () => {
       renderWithIntl(<OwnerIdentityEditor initial={emptyInitial} name="Ana" />);
-      expect(example()).toHaveTextContent("Ana agregó Pride a su lista de «Quiero escuchar». Lo escuchó por primera vez esta semana.");
+      expect(example()).toHaveTextContent("Ana agregó Pride a su lista de «Pendientes». Lo escuchó por primera vez esta semana.");
       expect(example()).toHaveTextContent("la interfaz usa la forma neutra");
     });
 
@@ -163,7 +163,7 @@ describe("OwnerIdentityEditor", () => {
       renderWithIntl(<OwnerIdentityEditor initial={emptyInitial} name="Fran" />);
 
       await user.selectOptions(select(), "she");
-      expect(example()).toHaveTextContent("Fran agregó Pride a su lista de «Quiero escuchar». Ella lo escuchó");
+      expect(example()).toHaveTextContent("Fran agregó Pride a su lista de «Pendientes». Ella lo escuchó");
       expect(example()).not.toHaveTextContent("neutra");
 
       await user.selectOptions(select(), "they");

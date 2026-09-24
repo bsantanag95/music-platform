@@ -100,7 +100,149 @@
     "workType": {
       "compilation": "Recopilación",
       "live_other": "En vivo",
-      "single_ep": "Single / EP"
+      "single_ep": "Single / EP",
+      "studio": "Álbum de estudio"
+    },
+    "facts": {
+      "heading": "Ficha técnica",
+      "release": "Lanzamiento",
+      "duration": "Duración",
+      "durationValue": "{tracks, plural, one {# pista} other {# pistas}} · {total}",
+      "durationPartial": "≥ {total}",
+      "durationPartialHint": "Falta la duración de alguna pista",
+      "edition": "Edición",
+      "editionStandard": "Estándar",
+      "editionOriginal": "Original",
+      "seeEditions": "Ver ediciones",
+      "label": "Sello"
+    },
+    "community": {
+      "heading": "Comunidad",
+      "average": "Media",
+      "averageValue": "★ {stars}",
+      "detailedValue": "{score}/100",
+      "fewRatings": "Pocas valoraciones",
+      "ratings": "Valoraciones",
+      "reviewCount": "{count, plural, =0 {Sin reseñas} one {# reseña} other {# reseñas}}",
+      "collectors": "Lo coleccionan",
+      "seekers": "{value} lo buscan",
+      "fewer": "Menos de {threshold}",
+      "fewerLower": "menos de {threshold}",
+      "lists": "En listas",
+      "seeLists": "Ver listas",
+      "histogramLabel": "Distribución de valoraciones",
+      "histogramItem": "{stars} estrellas: {count}",
+      "histogramMin": "½★",
+      "histogramMax": "5★",
+      "summaryRatings": "{count, plural, one {# valoración} other {# valoraciones}}",
+      "summaryCollectors": "{value} lo coleccionan"
+    },
+    "tabs": {
+      "label": "Secciones del álbum",
+      "songs": "Canciones",
+      "credits": "Créditos",
+      "editions": "Ediciones",
+      "reviews": "Reseñas",
+      "reviewsCount": "Reseñas ({count})"
+    },
+    "tracks": {
+      "heading": "Canciones",
+      "shownEdition": "Edición mostrada: {edition}",
+      "seeEditions": "Ver ediciones",
+      "discSummary": "{tracks, plural, one {# pista} other {# pistas}} · {duration}",
+      "total": "{tracks, plural, one {# pista} other {# pistas}}",
+      "variant": {
+        "live": "En vivo",
+        "remix": "Remix",
+        "re_recording": "Regrabación"
+      },
+      "versionOf": "versión de {title}",
+      "communityFavorite": "Favorita de la comunidad",
+      "youListened": "La escuchaste",
+      "menuLabel": "Acciones de {title}",
+      "menu": {
+        "logListen": "Registrar escucha",
+        "react": "Reaccionar",
+        "rate": "Valorar",
+        "favorite": "Marcar como favorita",
+        "unfavorite": "Quitar de favoritas",
+        "addToList": "Agregar a lista",
+        "showInLists": "Ver en listas",
+        "goToSong": "Ir a la canción"
+      },
+      "logged": "Escucha registrada",
+      "reacted": "Reacción registrada",
+      "actionError": "No pudimos guardar el cambio. Intentá de nuevo.",
+      "close": "Cerrar"
+    },
+    "discography": {
+      "heading": "Discografía de {artist}",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "current": "Álbum actual"
+    },
+    "relation": {
+      "heading": "Tu relación",
+      "signInPrompt": "Valorá, reseñá y registrá tus escuchas.",
+      "signIn": "Iniciar sesión",
+      "rating": "Tu nota",
+      "rate": "Valorar",
+      "editRating": "Cambiar",
+      "review": "Tu reseña",
+      "writeReview": "Escribir reseña",
+      "editReview": "Editar",
+      "listens": "{count, plural, =0 {Sin escuchas} one {# escucha} other {# escuchas}}",
+      "lastListen": "Última: {date}",
+      "logListen": "Registrar escucha",
+      "logAnother": "Registrar otra",
+      "logging": "Registrando...",
+      "favorite": "Favorito",
+      "pending": "Pendiente",
+      "add": "Agregar",
+      "remove": "Quitar",
+      "saving": "Guardando...",
+      "have": "Lo tenés",
+      "haveFormats": "Lo tenés · {formats}",
+      "seeking": "En tu búsqueda",
+      "collection": "Colección",
+      "manageCollection": "Gestionar",
+      "lists": "{count, plural, =0 {En ninguna de tus listas} one {En # de tus listas} other {En # de tus listas}}",
+      "addToList": "Agregar a lista",
+      "showInLists": "Ver en listas",
+      "more": "Más acciones",
+      "close": "Cerrar",
+      "saveError": "No pudimos guardar el cambio. Intentá de nuevo."
+    },
+    "reviews": {
+      "heading": "Reseñas",
+      "sortLabel": "Ordenar por",
+      "sort": {
+        "recent": "Más recientes",
+        "best": "Mejor nota",
+        "worst": "Peor nota"
+      },
+      "columns": {
+        "review": "Reseña",
+        "rating": "Nota",
+        "author": "Autor",
+        "date": "Fecha"
+      },
+      "empty": "Todavía no hay reseñas de este álbum.",
+      "loadMore": "Cargar más",
+      "loadingMore": "Cargando...",
+      "loadError": "No pudimos cargar las reseñas. Intentá de nuevo.",
+      "writeHeading": "Tu reseña de este álbum"
+    },
+    "reviewModal": {
+      "close": "Cerrar",
+      "previous": "Reseña anterior",
+      "next": "Reseña siguiente",
+      "fullPage": "Abrir página completa"
+    },
+    "reviewPage": {
+      "reviewOf": "Reseña de {album}",
+      "backToAlbum": "Ir al álbum",
+      "byPrefix": "Por"
     }
   },
   "song": {

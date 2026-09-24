@@ -99,8 +99,34 @@ página esperando carátulas.
 
 ## 3. Detalle de álbum
 
-Tracklist completo de la edición "oficial" (o la primera disponible), con posición,
-título, duración (`mm:ss`), carátula, y créditos por canción.
+**Estructura** (cambio `redesign-album-page`, 2026-09 — la página se lee como ficha de
+biblioteca, con Metal-Archives como referencia y la capa personal de Letterboxd):
+
+- **Cabecera**, renderizada una vez por un layout común de pestañas: carátula (miniatura de
+  250 px como máximo, por licencia), **tipo de obra como antetítulo** (siempre, también
+  "Álbum de estudio"), título, **todos los artistas principales** con su `joinPhrase`,
+  **ficha técnica** (lanzamiento con la precisión conocida, duración total —con "≥" si falta
+  alguna duración—, edición mostrada y, cuando el catálogo lo conozca, sello; solo se pintan
+  filas con dato), **bloque de comunidad** (media de estrellas y detallada, valoraciones y
+  reseñas, "lo coleccionan / lo buscan", listas e histograma; umbrales en
+  `01-domain/business-rules.md`) y el **panel "Tu relación"** (valoración propia, reseña,
+  escuchas, favorito, Pendiente, colección y listas, mostrados como estado).
+- **Pestañas con URL propia** (slugs en inglés): `/album/{id}` (Canciones, siempre la
+  pestaña por defecto), `/album/{id}/reviews` (Reseñas, con contador), y `/credits` y
+  `/editions`, que se muestran solo cuando el cambio de datos
+  `enrich-album-editions-and-credits` las alimente.
+- **Al pie**, fuera de las pestañas: franja de discografía del artista principal (mismo
+  tipo de obra, orden cronológico, anterior / siguiente) y **comentarios**.
+- **Móvil**: carátula e identidad, línea resumen de comunidad, panel compacto, ficha técnica
+  colapsable, pestañas.
+
+**Pestaña Canciones:** tracklist de la edición representativa con posición, título completo
+(sin truncar), duración, subtotal por disco y total. Cada pista muestra su variante
+(en vivo, remix, regrabación, con enlace a la original), el artista cuando no es el del
+álbum (recopilaciones), la marca de **favorita de la comunidad** (hasta 3 pistas con al
+menos 5 reacciones `loved`/`obsessed` públicas; no hay media de estrellas por pista) y, con
+sesión, si ya la escuchaste. El menú "···" ordena las acciones según el Modelo C: registrar
+escucha y reaccionar primero; después valorar, favorito y listas; al final, ir a la canción.
 
 **Créditos (`feat.`):** cada canción con colaboración muestra el crédito reconstruido
 (ej. "Pink Floyd feat. Roger Waters"), enlazado al perfil del artista credited. Un track
@@ -111,10 +137,11 @@ cuando aporta información sobre-y-encima del artista principal del álbum.
 ese `release_group`. Estado vacío claro, no una pantalla en blanco ni un error genérico
 (`NO_EDITIONS_FOUND`).
 
-**Ediciones alternativas (japonesa, remaster, deluxe):** fuera de alcance de la Fase 3 —
-se ingiere y muestra una sola edición por álbum (simplificación documentada en
-`ingest-release.ts` y `sql-model.md`). El selector de edición es una función futura, no
-decidida todavía.
+**Ediciones alternativas (japonesa, remaster, deluxe):** hoy se ingiere y muestra una sola
+edición por álbum. Decidido en `redesign-album-page`: las ediciones **no** tienen página
+propia ni cambian la tracklist principal; se listan en la pestaña Ediciones y las pistas
+que agregan las ediciones ampliadas se muestran en secciones desplegables de la pestaña
+Canciones. Los datos llegan con `enrich-album-editions-and-credits`.
 
 ## 3b. Detalle de canción — página mínima
 

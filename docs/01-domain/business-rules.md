@@ -100,3 +100,22 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
   audiencia después de publicar.
 - Un perfil privado no revela contenido no autorizado: las superficies ajenas devuelven lista
   vacía (o `404` en el detalle) sin indicar si el usuario tiene contenido.
+
+## Agregados de comunidad del álbum
+
+Cambio `redesign-album-page` (2026-09). La cabecera del álbum muestra agregados de la
+comunidad; los umbrales se aplican en el read-model (`album-community-shared.ts`), no en la
+interfaz:
+
+- **Media e histograma** de estrellas solo con **5 o más valoraciones**; con menos, solo la
+  cantidad.
+- **"Lo coleccionan" / "lo buscan"** cuentan **personas distintas** (no copias ni variantes),
+  con entradas de cualquier audiencia y sin cuentas desactivadas. Entre 1 y 4 se muestra
+  **"menos de 5"**: el total nunca permite identificar a nadie. La colección conserva la
+  visibilidad de sus entradas individuales; la wishlist sigue sin superficie propia.
+- **Pendiente** (want-to-listen) **no** se agrega: no tiene superficie pública.
+- **Favorita de la comunidad** por pista: hasta 3 pistas del álbum con al menos 5 reacciones
+  `loved`/`obsessed` en entradas de diario públicas. La tracklist no muestra medias de
+  estrellas por pista (Modelo C: en una canción, lo primario es la reacción).
+- **Listas**: listas públicas y visibles que contienen el álbum, con los mismos filtros que
+  "Mostrar en listas".

@@ -1,5 +1,12 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { createOrReplaceReview, deleteReview, listReviews, updateReview } from "./reviews";
+import {
+  createOrReplaceReview,
+  deleteReview,
+  getReviewDetail,
+  listReviewIds,
+  listReviews,
+  updateReview,
+} from "./reviews";
 
 const mocks = vi.hoisted(() => ({
   db: { insert: vi.fn(), select: vi.fn(), delete: vi.fn(), update: vi.fn(), transaction: vi.fn() },
@@ -146,3 +153,70 @@ describe("listReviews: autoría de cuentas desactivadas", () => {
   });
 });
 
+
+describe("orden del índice y detalle de reseña (openspec: redesign-album-page)", () => {
+  /** Cadena encadenable que registra los argumentos de `orderBy` y resuelve `rows`. */
+  function recordingChain(rows: unknown[]) {
+    const orderByCalls: unknown[][] = [];
+    const chain: unknown = new Proxy(function () {}, {
+      get(_t, prop) {
+        if (prop === "then") {
+          const result = Promise.resolve(rows);
+          return result.then.bind(result);
+        }
+        if (prop === "orderBy") {
+          return (...args: unknown[]) => {
+            orderByCalls.push(args);
+            return chain;
+          };
+        }
+        return () => chain;
+      },
+    });
+    mocks.db.select.mockReturnValue(chain);
+    return orderByCalls;
+  }
+
+  it("por defecto ordena por fecha; por nota agrega las estrellas como primer criterio", async () => {
+    const recent = recordingChain([]);
+    await listReviews(ALBUM);
+    expect(recent[0]).toHaveLength(2);
+
+    const best = recordingChain([]);
+    await listReviews(ALBUM, 1, 20, "best");
+    expect(best[0]).toHaveLength(3);
+  });
+
+  it("listReviewIds devuelve los ids en el orden de la consulta", async () => {
+    recordingChain([{ id: "r2" }, { id: "r1" }]);
+    await expect(listReviewIds(ALBUM, "worst")).resolves.toEqual(["r2", "r1"]);
+  });
+
+  it("getReviewDetail devuelve null si la reseña no existe o no es visible", async () => {
+    recordingChain([]);
+    await expect(getReviewDetail(REVIEW_ID)).resolves.toBeNull();
+  });
+
+  it("getReviewDetail devuelve la reseña con su álbum y enmascara una cuenta desactivada", async () => {
+    recordingChain([
+      {
+        id: REVIEW_ID,
+        title: "Título",
+        body: "Cuerpo",
+        createdAt: new Date("2026-01-01"),
+        updatedAt: new Date("2026-01-01"),
+        user: { id: USER, username: "ana", displayName: "Ana", deactivatedAt: new Date("2026-09-01") },
+        stars: "4.5",
+        detailedScore: 90,
+        albumId: ALBUM.id,
+        albumTitle: "Álbum",
+        albumCover: null,
+      },
+    ]);
+    const detail = await getReviewDetail(REVIEW_ID);
+    expect(detail?.album).toEqual({ id: ALBUM.id, title: "Álbum", coverThumbUrl: null });
+    expect(detail?.review.rating).toEqual({ stars: 4.5, detailedScore: 90 });
+    expect(detail?.review.user.deactivated).toBe(true);
+    expect(detail?.review.user.username).toBe("");
+  });
+});

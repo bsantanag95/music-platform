@@ -867,8 +867,11 @@ La reseña es la superficie crítica del álbum: texto largo, título opcional, 
 (usuario, objetivo)**, editable. Distinta de `comment`. El rating no vive en la reseña — el listado
 lo trae por `LEFT JOIN` con `rating` (refleja el valor **vigente** del autor, o `null` si lo borró).
 
-`GET` es **público** (con o sin sesión), acepta `page` / `pageSize` (entero 1-100) y devuelve
-`{ reviews, page, pageSize, hasNext }`, ordenado por fecha de creación descendente. Cada entrada:
+`GET` es **público** (con o sin sesión), acepta `page` / `pageSize` (entero 1-100) y `sort`
+(`recent` por defecto, `best`, `worst` — cambio `redesign-album-page`; otro valor →
+`400 { code: "VALIDATION_ERROR" }`) y devuelve `{ reviews, page, pageSize, hasNext }`. `recent`
+ordena por fecha de creación descendente; `best` / `worst` por las estrellas vigentes del autor
+(descendente / ascendente, reseñas sin rating al final) y luego por fecha. Cada entrada:
 `{ id, user: { id, username, displayName }, title: string | null, body, rating: { stars, detailedScore } | null, createdAt, updatedAt }`.
 
 `POST` requiere sesión y recibe `{ body, title?, stars?, detailedScore? }`:

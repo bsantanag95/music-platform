@@ -314,10 +314,10 @@
     "pronounExampleLabel": "Ejemplo",
     "pronounExampleName": "Ana",
     "pronounExample": {
-      "he": "{name} agregó Pride a su lista de «Quiero escuchar». Él lo escuchó por primera vez esta semana.",
-      "she": "{name} agregó Pride a su lista de «Quiero escuchar». Ella lo escuchó por primera vez esta semana.",
-      "they": "{name} agregó Pride a su lista de «Quiero escuchar». Elle lo escuchó por primera vez esta semana.",
-      "neutral": "{name} agregó Pride a su lista de «Quiero escuchar». Lo escuchó por primera vez esta semana."
+      "he": "{name} agregó Pride a su lista de «Pendientes». Él lo escuchó por primera vez esta semana.",
+      "she": "{name} agregó Pride a su lista de «Pendientes». Ella lo escuchó por primera vez esta semana.",
+      "they": "{name} agregó Pride a su lista de «Pendientes». Elle lo escuchó por primera vez esta semana.",
+      "neutral": "{name} agregó Pride a su lista de «Pendientes». Lo escuchó por primera vez esta semana."
     },
     "pronounExampleNeutralNote": "Sin pronombres de la lista, la interfaz usa la forma neutra.",
     "personalVisibilityHint": "Solo lo ven quienes pueden ver tu perfil."

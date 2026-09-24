@@ -241,6 +241,48 @@ function itemColumnFor(type: ListEntityType) {
 }
 
 /**
+ * Condiciones de "lista pública que contiene el ítem", compartidas por el listado
+ * (`listPublicListsContainingItem`) y el conteo (`countPublicListsContainingItem`) para
+ * que la cifra de la página de álbum coincida con la página "Mostrar en listas".
+ */
+function publicListsContainingItemConditions(
+  target: { type: ListEntityType; id: string },
+  readerId: string | null,
+): (SQL | undefined)[] {
+  const itemColumn = itemColumnFor(target.type);
+  return [
+    eq(userList.audience, "public"),
+    eq(userList.kind, "standard"),
+    eq(userList.moderationStatus, "visible"),
+    eq(appUser.profileVisibility, "public"),
+    activeUserCondition(),
+    isNull(userList.officialWithdrawnAt),
+    eq(userList.entityType, target.type),
+    sql`exists (
+      select 1 from ${userListItem}
+      where ${userListItem.listId} = ${userList.id} and ${itemColumn} = ${target.id}
+    )`,
+    notBlockedByReader(readerId),
+  ];
+}
+
+/**
+ * Cantidad de listas públicas que contienen un ítem (openspec: redesign-album-page,
+ * bloque de comunidad). Sin lector: el agregado es el mismo para cualquier visitante.
+ */
+export async function countPublicListsContainingItem(target: {
+  type: ListEntityType;
+  id: string;
+}): Promise<number> {
+  const [row] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(userList)
+    .innerJoin(appUser, eq(userList.ownerId, appUser.id))
+    .where(and(...publicListsContainingItemConditions(target, null)));
+  return row?.n ?? 0;
+}
+
+/**
  * Listas públicas (de cualquier usuario, incluido el propio lector) que
  * contienen un artista, álbum o canción puntual — acción "Mostrar en listas"
  * (openspec: show-item-in-lists). A diferencia de `listDiscoverLists`, no
@@ -262,22 +304,7 @@ export async function listPublicListsContainingItem(
   sort: PublicListSort = "popular",
 ) {
   assertPagination(page, pageSize);
-  const itemColumn = itemColumnFor(target.type);
-
-  const conditions: (SQL | undefined)[] = [
-    eq(userList.audience, "public"),
-    eq(userList.kind, "standard"),
-    eq(userList.moderationStatus, "visible"),
-    eq(appUser.profileVisibility, "public"),
-    activeUserCondition(),
-    isNull(userList.officialWithdrawnAt),
-    eq(userList.entityType, target.type),
-    sql`exists (
-      select 1 from ${userListItem}
-      where ${userListItem.listId} = ${userList.id} and ${itemColumn} = ${target.id}
-    )`,
-    notBlockedByReader(readerId),
-  ];
+  const conditions = publicListsContainingItemConditions(target, readerId);
 
   if (sort === "popular") {
     const saves = count(listSave.saverId);

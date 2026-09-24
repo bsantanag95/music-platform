@@ -100,7 +100,149 @@
     "workType": {
       "compilation": "Compilation",
       "live_other": "Live album",
-      "single_ep": "Single / EP"
+      "single_ep": "Single / EP",
+      "studio": "Studio album"
+    },
+    "facts": {
+      "heading": "Details",
+      "release": "Released",
+      "duration": "Length",
+      "durationValue": "{tracks, plural, one {# track} other {# tracks}} · {total}",
+      "durationPartial": "≥ {total}",
+      "durationPartialHint": "Some track lengths are unknown",
+      "edition": "Edition",
+      "editionStandard": "Standard",
+      "editionOriginal": "Original",
+      "seeEditions": "See editions",
+      "label": "Label"
+    },
+    "community": {
+      "heading": "Community",
+      "average": "Average",
+      "averageValue": "★ {stars}",
+      "detailedValue": "{score}/100",
+      "fewRatings": "Few ratings",
+      "ratings": "Ratings",
+      "reviewCount": "{count, plural, =0 {No reviews} one {# review} other {# reviews}}",
+      "collectors": "Collected by",
+      "seekers": "{value} looking for it",
+      "fewer": "Fewer than {threshold}",
+      "fewerLower": "fewer than {threshold}",
+      "lists": "In lists",
+      "seeLists": "See lists",
+      "histogramLabel": "Rating distribution",
+      "histogramItem": "{stars} stars: {count}",
+      "histogramMin": "½★",
+      "histogramMax": "5★",
+      "summaryRatings": "{count, plural, one {# rating} other {# ratings}}",
+      "summaryCollectors": "collected by {value}"
+    },
+    "tabs": {
+      "label": "Album sections",
+      "songs": "Songs",
+      "credits": "Credits",
+      "editions": "Editions",
+      "reviews": "Reviews",
+      "reviewsCount": "Reviews ({count})"
+    },
+    "tracks": {
+      "heading": "Songs",
+      "shownEdition": "Edition shown: {edition}",
+      "seeEditions": "See editions",
+      "discSummary": "{tracks, plural, one {# track} other {# tracks}} · {duration}",
+      "total": "{tracks, plural, one {# track} other {# tracks}}",
+      "variant": {
+        "live": "Live",
+        "remix": "Remix",
+        "re_recording": "Re-recording"
+      },
+      "versionOf": "version of {title}",
+      "communityFavorite": "Community favorite",
+      "youListened": "You listened",
+      "menuLabel": "Actions for {title}",
+      "menu": {
+        "logListen": "Log a listen",
+        "react": "React",
+        "rate": "Rate",
+        "favorite": "Add to favorites",
+        "unfavorite": "Remove from favorites",
+        "addToList": "Add to list",
+        "showInLists": "See in lists",
+        "goToSong": "Go to song"
+      },
+      "logged": "Listen logged",
+      "reacted": "Reaction logged",
+      "actionError": "We could not save the change. Try again.",
+      "close": "Close"
+    },
+    "discography": {
+      "heading": "{artist} discography",
+      "previous": "Previous",
+      "next": "Next",
+      "current": "Current album"
+    },
+    "relation": {
+      "heading": "You and this album",
+      "signInPrompt": "Rate, review and log your listens.",
+      "signIn": "Sign in",
+      "rating": "Your rating",
+      "rate": "Rate",
+      "editRating": "Change",
+      "review": "Your review",
+      "writeReview": "Write a review",
+      "editReview": "Edit",
+      "listens": "{count, plural, =0 {No listens} one {# listen} other {# listens}}",
+      "lastListen": "Last: {date}",
+      "logListen": "Log a listen",
+      "logAnother": "Log another",
+      "logging": "Logging...",
+      "favorite": "Favorite",
+      "pending": "Listen later",
+      "add": "Add",
+      "remove": "Remove",
+      "saving": "Saving...",
+      "have": "You have it",
+      "haveFormats": "You have it · {formats}",
+      "seeking": "On your wishlist",
+      "collection": "Collection",
+      "manageCollection": "Manage",
+      "lists": "{count, plural, =0 {In none of your lists} one {In # of your lists} other {In # of your lists}}",
+      "addToList": "Add to list",
+      "showInLists": "See in lists",
+      "more": "More actions",
+      "close": "Close",
+      "saveError": "We could not save the change. Try again."
+    },
+    "reviews": {
+      "heading": "Reviews",
+      "sortLabel": "Sort by",
+      "sort": {
+        "recent": "Most recent",
+        "best": "Highest rated",
+        "worst": "Lowest rated"
+      },
+      "columns": {
+        "review": "Review",
+        "rating": "Rating",
+        "author": "Author",
+        "date": "Date"
+      },
+      "empty": "No reviews of this album yet.",
+      "loadMore": "Load more",
+      "loadingMore": "Loading...",
+      "loadError": "We could not load the reviews. Try again.",
+      "writeHeading": "Your review of this album"
+    },
+    "reviewModal": {
+      "close": "Close",
+      "previous": "Previous review",
+      "next": "Next review",
+      "fullPage": "Open full page"
+    },
+    "reviewPage": {
+      "reviewOf": "Review of {album}",
+      "backToAlbum": "Go to album",
+      "byPrefix": "By"
     }
   },
   "song": {

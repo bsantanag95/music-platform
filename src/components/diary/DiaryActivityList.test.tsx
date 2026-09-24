@@ -395,7 +395,7 @@ describe("DiaryActivityList", () => {
     );
   });
 
-  it("quiero volver a escuchar desde el menú agrega el objetivo a Want to Listen", async () => {
+  it("marcar como pendiente desde el menú agrega el objetivo a Want to Listen", async () => {
     const user = userEvent.setup();
     mocks.toggleWantToListen.mockResolvedValue({
       id: "wtl-1",
@@ -407,26 +407,26 @@ describe("DiaryActivityList", () => {
 
     const firstRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
     await openRowMenu(user, firstRow);
-    await user.click(screen.getByRole("menuitem", { name: "Quiero volver a escuchar" }));
+    await user.click(screen.getByRole("menuitem", { name: "Marcar como pendiente" }));
 
     await waitFor(() =>
       expect(mocks.toggleWantToListen).toHaveBeenCalledWith({ type: "artist", id: liked.target.id }),
     );
     expect(firstRow.className).toMatch(/bg-amber\/10/);
-    expect(screen.getByRole("status")).toHaveTextContent("Se agregó a tu lista Quiero escuchar");
+    expect(screen.getByRole("status")).toHaveTextContent("Se agregó a tus Pendientes");
   });
 
-  it("quiero volver a escuchar anuncia la remoción cuando el objetivo ya estaba en la lista", async () => {
+  it("marcar como pendiente anuncia la remoción cuando el objetivo ya estaba en la lista", async () => {
     const user = userEvent.setup();
     mocks.toggleWantToListen.mockResolvedValue(null);
     renderWithQuery(<DiaryActivityList initial={initial} />);
 
     const firstRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
     await openRowMenu(user, firstRow);
-    await user.click(screen.getByRole("menuitem", { name: "Quiero volver a escuchar" }));
+    await user.click(screen.getByRole("menuitem", { name: "Marcar como pendiente" }));
 
     await waitFor(() => expect(mocks.toggleWantToListen).toHaveBeenCalled());
-    expect(screen.getByRole("status")).toHaveTextContent("Se quitó de tu lista Quiero escuchar");
+    expect(screen.getByRole("status")).toHaveTextContent("Se quitó de tus Pendientes");
   });
 
   it("no ofrece quiero volver a escuchar para una canción", async () => {
@@ -438,7 +438,7 @@ describe("DiaryActivityList", () => {
 
     const row = screen.getByText("Vogue (version 2)").closest("li") as HTMLElement;
     await openRowMenu(user, row);
-    expect(screen.queryByRole("menuitem", { name: "Quiero volver a escuchar" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Marcar como pendiente" })).not.toBeInTheDocument();
   });
 
   it("destacar una entrada desde el menú la marca y ofrece 'Quitar destacado' luego", async () => {

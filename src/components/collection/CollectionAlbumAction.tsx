@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { addCollectionEntry, removeCollectionEntry } from "@/lib/api/collection";
@@ -24,6 +24,8 @@ interface CollectionAlbumActionProps {
   initialWantedEntries: WantedEntry[];
   /** Deep-link desde el menú "···" de `AlbumCard`: abre el panel ya en "La tengo" o "La quiero". */
   initialChoice?: "have" | "want";
+  /** Se llama cuando cambian las copias o los deseos propios (panel "Tu relación" del álbum). */
+  onEntriesChange?: (entries: CollectionEntry[], wantedEntries: WantedEntry[]) => void;
 }
 
 function formatLabel(format: string | null, t: ReturnType<typeof useTranslations>): string {
@@ -42,6 +44,7 @@ export function CollectionAlbumAction({
   initialEntries,
   initialWantedEntries,
   initialChoice,
+  onEntriesChange,
 }: CollectionAlbumActionProps) {
   const t = useTranslations("collection");
   const [entries, setEntries] = useState<CollectionEntry[]>(initialEntries);
@@ -53,6 +56,18 @@ export function CollectionAlbumAction({
   const [busy, setBusy] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+
+  // Avisa solo cambios reales, no el estado inicial.
+  const onEntriesChangeRef = useRef(onEntriesChange);
+  onEntriesChangeRef.current = onEntriesChange;
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    onEntriesChangeRef.current?.(entries, wantedEntries);
+  }, [entries, wantedEntries]);
 
   if (!authenticated) {
     return (

@@ -30,11 +30,20 @@ export interface AlbumTrack {
   title: string;
   durationSec: number | null;
   credits: AlbumCredit[];
+  /** `original` | `re_recording` | `remix` | `live` (`recording.variant_type`). */
+  variantType: string;
+  /** Grabación original de la que esta es variante, cuando se conoce (`variant_of_id`). */
+  variantOf: { recordingId: string; title: string } | null;
 }
 
 export interface PrimaryArtist {
   id: string;
   name: string;
+}
+
+/** Artista principal del álbum con su `joinPhrase` (orden del crédito de release-group). */
+export interface AlbumArtistCredit extends PrimaryArtist {
+  joinPhrase: string | null;
 }
 
 export interface AlbumDetail {
@@ -50,7 +59,10 @@ export interface AlbumDetail {
   release: ReleaseRow;
   cover: string | null;
   tracks: AlbumTrack[];
+  /** Primer artista principal; atajo para breadcrumb y enlaces de un solo artista. */
   primaryArtist: PrimaryArtist | null;
+  /** Todos los artistas principales en orden, con su `joinPhrase` (álbumes colaborativos). */
+  primaryArtists: AlbumArtistCredit[];
 }
 
 export type AlbumDetailResult =
@@ -87,6 +99,8 @@ export async function getAlbumDetail(releaseGroupId: string): Promise<AlbumDetai
       discNumber: track.discNumber,
       title: recording.title,
       durationSec: recording.durationSec,
+      variantType: recording.variantType,
+      variantOfId: recording.variantOfId,
     })
     .from(track)
     .innerJoin(recording, eq(track.recordingId, recording.id))
@@ -110,6 +124,17 @@ export async function getAlbumDetail(releaseGroupId: string): Promise<AlbumDetai
         .where(inArray(credit.recordingId, recordingIds))
     : [];
 
+  const variantOfIds = [
+    ...new Set(tracks.flatMap((t) => (t.variantOfId ? [t.variantOfId] : []))),
+  ];
+  const variantOfRows = variantOfIds.length
+    ? await db
+        .select({ id: recording.id, title: recording.title })
+        .from(recording)
+        .where(inArray(recording.id, variantOfIds))
+    : [];
+  const variantOfTitles = new Map(variantOfRows.map((row) => [row.id, row.title]));
+
   const creditsByRecording = new Map<string, typeof creditRows>();
   for (const c of creditRows) {
     if (!c.recordingId) continue;
@@ -132,6 +157,11 @@ export async function getAlbumDetail(releaseGroupId: string): Promise<AlbumDetai
         role: role as "primary" | "featured",
         joinPhrase,
       })),
+    variantType: t.variantType,
+    variantOf:
+      t.variantOfId && variantOfTitles.has(t.variantOfId)
+        ? { recordingId: t.variantOfId, title: variantOfTitles.get(t.variantOfId)! }
+        : null,
   }));
 
   // La carátula se resuelve a nivel de release-group (cover-only, sin
@@ -141,6 +171,13 @@ export async function getAlbumDetail(releaseGroupId: string): Promise<AlbumDetai
   // coincidan siempre (contrato coherente).
   const cover = (await resolveAlbumCover(rg)) ?? releaseRow.coverThumbUrl;
 
+  const resolvedArtists = await resolvePrimaryArtists(rg.id);
+  const primaryArtists: AlbumArtistCredit[] = resolvedArtists.length
+    ? resolvedArtists
+    : await backfillPrimaryArtistFromTracks(rg.id, albumTracks).then((artistRow) =>
+        artistRow ? [{ ...artistRow, joinPhrase: null }] : [],
+      );
+
   return {
     kind: "ok",
     detail: {
@@ -148,8 +185,8 @@ export async function getAlbumDetail(releaseGroupId: string): Promise<AlbumDetai
       release: { ...releaseRow, coverThumbUrl: cover },
       cover,
       tracks: albumTracks,
-      primaryArtist:
-        (await resolvePrimaryArtist(rg.id)) ?? (await backfillPrimaryArtistFromTracks(rg.id, albumTracks)),
+      primaryArtist: primaryArtists[0] ? { id: primaryArtists[0].id, name: primaryArtists[0].name } : null,
+      primaryArtists,
     },
   };
 }
@@ -209,13 +246,12 @@ function scheduleCoverMirror(rg: ReleaseGroupRow): void {
   });
 }
 
-async function resolvePrimaryArtist(
-  releaseGroupId: string,
-): Promise<PrimaryArtist | null> {
-  const [row] = await db
+async function resolvePrimaryArtists(releaseGroupId: string): Promise<AlbumArtistCredit[]> {
+  return db
     .select({
       id: artist.id,
       name: artist.name,
+      joinPhrase: credit.joinPhrase,
     })
     .from(credit)
     .innerJoin(artist, eq(artist.id, credit.artistId))
@@ -226,17 +262,14 @@ async function resolvePrimaryArtist(
         isNull(credit.recordingId),
       ),
     )
-    .orderBy(asc(credit.position))
-    .limit(1);
-
-  return row ?? null;
+    .orderBy(asc(credit.position));
 }
 
 /**
  * Autocuración: un release-group llegado como stub de búsqueda (a diferencia
  * de la ingesta de discografía en `ingest-discography.ts`) puede no tener su
  * propio crédito de artista, aunque sus pistas sí lo tengan (`findOrIngestTracklist`
- * ingiere créditos por grabación siempre). Si `resolvePrimaryArtist` no
+ * ingiere créditos por grabación siempre). Si `resolvePrimaryArtists` no
  * encuentra nada, se deriva el artista principal del crédito "primary" más
  * frecuente entre las pistas ya ingeridas y se persiste como crédito de
  * release-group — así el breadcrumb y los listados que dependen de él
