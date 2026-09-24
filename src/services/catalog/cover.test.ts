@@ -55,6 +55,7 @@ function makeRg(overrides: Partial<ReleaseGroupRow> = {}): ReleaseGroupRow {
     coverStorageKey: null,
     coverCheckedAt: null,
     coverBlockedAt: null,
+    editionsSyncedAt: null,
     firstReleaseDate: null,
     firstReleaseYear: null,
     createdAt: new Date(),

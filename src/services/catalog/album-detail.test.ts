@@ -8,6 +8,12 @@ vi.mock("../cover-art", () => ({
   resolveCoverThumbUrl: vi.fn(),
   fetchCoverThumb: vi.fn(),
 }));
+vi.mock("./personnel-credits", () => ({
+  savePersonnelCredits: vi.fn(),
+  completePersonnelSync: vi.fn(),
+  syncPersonnelCredits: vi.fn(),
+}));
+vi.mock("./release-editions", () => ({ syncReleaseEditions: vi.fn() }));
 vi.mock("./cover-mirror", () => ({
   isCoverMirrorEnabled: vi.fn(),
   mirrorCover: vi.fn(),
@@ -19,6 +25,8 @@ const { resolveCoverThumbUrl, fetchCoverThumb } = await import("../cover-art");
 const { isCoverMirrorEnabled, mirrorCover } = await import("./cover-mirror");
 const { resolveAlbumCover, getAlbumDetail } = await import("./album-detail");
 const { findOrIngestTracklist } = await import("./ingest-release");
+const { syncReleaseEditions } = await import("./release-editions");
+const { syncPersonnelCredits } = await import("./personnel-credits");
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MBID = "mbid-rg-1";
@@ -34,6 +42,7 @@ function makeRg(overrides: Partial<ReleaseGroupRow> = {}): ReleaseGroupRow {
     coverStorageKey: null,
     coverCheckedAt: null,
     coverBlockedAt: null,
+    editionsSyncedAt: null,
     firstReleaseDate: null,
     firstReleaseYear: null,
     createdAt: new Date(),
@@ -154,6 +163,8 @@ describe("getAlbumDetail (artistas principales y variantes)", () => {
     releaseDate: null,
     coverThumbUrl: null,
     creditsSyncedAt: new Date(),
+    isRepresentative: true,
+    personnelSyncedAt: new Date(),
   };
 
   beforeEach(() => {
@@ -209,5 +220,59 @@ describe("getAlbumDetail (artistas principales y variantes)", () => {
 
     expect(result.detail.primaryArtists).toEqual([{ id: "a9", name: "Banda", joinPhrase: null }]);
     expect(db.insert).toHaveBeenCalledTimes(1);
+  });
+
+  it("agenda la sincronización de ediciones pendiente y la respuesta no depende de su resultado", async () => {
+    queueSelects(
+      [makeRg({ coverThumbUrl: COVER_URL, editionsSyncedAt: null })],
+      [{ recordingId: "r1", position: 1, discNumber: 1, title: "Uno", durationSec: 100, variantType: "original", variantOfId: null }],
+      [],
+      [{ id: "a1", name: "Banda", joinPhrase: null }],
+    );
+    const tasks: (() => Promise<void>)[] = [];
+    vi.mocked(after).mockImplementation((task) => {
+      tasks.push(task as () => Promise<void>);
+    });
+    vi.mocked(syncReleaseEditions).mockRejectedValue(new Error("MusicBrainz caído"));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const result = await getAlbumDetail("rg-1");
+
+    expect(result.kind).toBe("ok");
+    expect(tasks).toHaveLength(1);
+    await expect(tasks[0]!()).resolves.toBeUndefined();
+    expect(syncReleaseEditions).toHaveBeenCalledWith("rg-1");
+  });
+
+  it("no agenda nada si el álbum ya tiene el resumen de ediciones", async () => {
+    queueSelects(
+      [makeRg({ coverThumbUrl: COVER_URL, editionsSyncedAt: new Date() })],
+      [],
+      [{ id: "a1", name: "Banda", joinPhrase: null }],
+    );
+    vi.mocked(after).mockImplementation(() => {});
+
+    await getAlbumDetail("rg-1");
+
+    expect(after).not.toHaveBeenCalled();
+  });
+
+  it("agenda los créditos de personal pendientes de la edición representativa", async () => {
+    vi.mocked(findOrIngestTracklist).mockResolvedValue({ ...releaseRow, personnelSyncedAt: null } as never);
+    queueSelects(
+      [makeRg({ coverThumbUrl: COVER_URL, editionsSyncedAt: new Date() })],
+      [],
+      [{ id: "a1", name: "Banda", joinPhrase: null }],
+    );
+    const tasks: (() => Promise<void>)[] = [];
+    vi.mocked(after).mockImplementation((task) => {
+      tasks.push(task as () => Promise<void>);
+    });
+
+    await getAlbumDetail("rg-1");
+
+    expect(tasks).toHaveLength(1);
+    await tasks[0]!();
+    expect(syncPersonnelCredits).toHaveBeenCalledWith("rg-1");
   });
 });

@@ -510,6 +510,8 @@ export const releaseGroup = pgTable(
     // conocido (misma tolerancia que release-date-precision).
     firstReleaseDate: date("first_release_date"),
     firstReleaseYear: smallint("first_release_year"),
+    // NULL = resumen de ediciones pendiente de sincronizar (migración 0048).
+    editionsSyncedAt: timestamp("editions_synced_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("idx_release_group_first_year").on(t.firstReleaseYear)],
@@ -527,8 +529,65 @@ export const release = pgTable(
     releaseDate: date("release_date"),
     coverThumbUrl: text("cover_thumb_url"),
     creditsSyncedAt: timestamp("credits_synced_at", { withTimezone: true }),
+    // Edición cuya tracklist es "la del álbum". A lo sumo una por release-group:
+    // índice único parcial `uq_release_representative` en la migración 0048.
+    isRepresentative: boolean("is_representative").notNull().default(false),
+    // NULL = créditos de personal pendientes (distinto de `creditsSyncedAt`,
+    // que cubre los créditos de autoría `primary` / `featured`).
+    personnelSyncedAt: timestamp("personnel_synced_at", { withTimezone: true }),
   },
   (t) => [index("idx_release_release_group").on(t.releaseGroupId)],
+);
+
+/** Resumen de cada edición que MusicBrainz reporta para un release-group (migración 0048). */
+export const releaseEdition = pgTable(
+  "release_edition",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    mbid: uuid("mbid").notNull().unique(),
+    releaseGroupId: uuid("release_group_id")
+      .notNull()
+      .references(() => releaseGroup.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    disambiguation: text("disambiguation"),
+    status: text("status"), // 'Official' | 'Promotion' | 'Bootleg' | 'Pseudo-Release' | null
+    releaseDate: date("release_date"),
+    releaseYear: smallint("release_year"),
+    country: text("country"),
+    packaging: text("packaging"),
+    formats: text("formats").array().notNull().default(sql`'{}'::text[]`),
+    mediumCount: smallint("medium_count").notNull().default(0),
+    trackCount: smallint("track_count"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("idx_release_edition_release_group").on(t.releaseGroupId)],
+);
+
+export const label = pgTable("label", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  mbid: uuid("mbid").notNull().unique(),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Sello y número de catálogo de una edición, en el orden de MusicBrainz. */
+export const releaseEditionLabel = pgTable(
+  "release_edition_label",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    releaseEditionId: uuid("release_edition_id")
+      .notNull()
+      .references(() => releaseEdition.id, { onDelete: "cascade" }),
+    labelId: uuid("label_id").references(() => label.id, { onDelete: "cascade" }),
+    catalogNumber: text("catalog_number"),
+    position: smallint("position").notNull(),
+  },
+  (t) => [
+    unique("release_edition_label_release_edition_id_position_key").on(t.releaseEditionId, t.position),
+    index("idx_release_edition_label_label").on(t.labelId),
+    check("chk_release_edition_label_value", sql`num_nonnulls(${t.labelId}, ${t.catalogNumber}) >= 1`),
+  ],
 );
 
 export const recording = pgTable(
@@ -598,6 +657,35 @@ export const credit = pgTable(
   ],
 );
 
+/**
+ * Crédito de personal (relación de artista de MusicBrainz) sobre una edición o una
+ * grabación (migración 0048). Separado de `credit`, que modela la autoría visible.
+ */
+export const personnelCredit = pgTable(
+  "personnel_credit",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    artistId: uuid("artist_id")
+      .notNull()
+      .references(() => artist.id, { onDelete: "cascade" }),
+    releaseId: uuid("release_id").references(() => release.id, { onDelete: "cascade" }),
+    recordingId: uuid("recording_id").references(() => recording.id, { onDelete: "cascade" }),
+    relationType: text("relation_type").notNull(),
+    attributes: text("attributes").array().notNull().default(sql`'{}'::text[]`),
+    creditedAs: text("credited_as"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_personnel_credit_artist").on(t.artistId),
+    check(
+      "chk_personnel_credit_single_target",
+      sql`num_nonnulls(${t.releaseId}, ${t.recordingId}) = 1`,
+    ),
+    // uq_personnel_credit_release / uq_personnel_credit_recording: índices únicos
+    // parciales definidos en la migración SQL.
+  ],
+);
+
 export const rating = pgTable(
   "rating",
   {
@@ -632,6 +720,9 @@ export const rating = pgTable(
 );
 
 export type ArtistRow = typeof artist.$inferSelect;
+export type ReleaseEditionRow = typeof releaseEdition.$inferSelect;
+export type LabelRow = typeof label.$inferSelect;
+export type PersonnelCreditRow = typeof personnelCredit.$inferSelect;
 export type AppUserRow = typeof appUser.$inferSelect;
 export type UserRoleRow = typeof userRole.$inferSelect;
 export type UserRestrictionRow = typeof userRestriction.$inferSelect;

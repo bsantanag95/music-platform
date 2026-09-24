@@ -53,7 +53,7 @@ El sistema SHALL ofrecer una lectura de los créditos de personal de un álbum (
 edición representativa y los de las grabaciones de su tracklist) agrupada por persona y
 clasificada en cuatro niveles, con una tabla fija de tipos de relación en código:
 **Integrantes de la banda** (cualquier crédito de una persona que es miembro de algún
-artista principal del álbum), **Músicos invitados** (tipos de intérprete de no miembros),
+artista principal del álbum, o que es ella misma un artista principal del álbum), **Músicos invitados** (tipos de intérprete de no miembros),
 **Producción y sonido** (tipos de producción, ingeniería, mezcla y masterización) y **Arte
 y otros** (todos los demás, incluidos los tipos desconocidos). Cada persona SHALL aparecer
 una sola vez, en el nivel más alto que le corresponde, con todos sus roles y la lista de
@@ -85,9 +85,9 @@ incluir personas sin crédito de personal en el álbum.
 
 #### Scenario: Álbum de solista
 
-- **WHEN** el artista principal es una persona
-- **THEN** el nivel Integrantes de la banda queda vacío y los demás créditos se clasifican
-  normalmente
+- **WHEN** el artista principal es una persona acreditada con voz en su propio álbum
+- **THEN** aparece en el primer nivel, no como músico invitado, y los demás créditos se
+  clasifican normalmente
 
 ### Requirement: Pertenencias necesarias para clasificar
 

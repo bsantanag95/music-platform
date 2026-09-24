@@ -145,3 +145,41 @@ describe("búsqueda de grabaciones y apariciones (recording)", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
+
+describe("ediciones y créditos de personal (openspec: enrich-album-editions-and-credits)", () => {
+  it("browseReleasesByReleaseGroup pide /release por release-group, de a 100, con sellos, media y release-group", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ "release-count": 0, releases: [] }));
+
+    await musicbrainz.browseReleasesByReleaseGroup("rg-mbid-1", 100);
+
+    const url = new URL(String(fetchMock.mock.calls[0]![0]));
+    expect(url.pathname).toBe("/ws/2/release");
+    expect(url.searchParams.get("release-group")).toBe("rg-mbid-1");
+    expect(url.searchParams.get("limit")).toBe("100");
+    expect(url.searchParams.get("offset")).toBe("100");
+    expect(url.searchParams.get("inc")).toBe("labels+media+release-groups");
+  });
+
+  it("browseReleasesByReleaseGroup no se cachea: es ingesta", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ "release-count": 0, releases: [] }));
+
+    await musicbrainz.browseReleasesByReleaseGroup("rg-mbid-1");
+    tickPastQueue();
+    await musicbrainz.browseReleasesByReleaseGroup("rg-mbid-1");
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const first = new URL(String(fetchMock.mock.calls[0]![0]));
+    expect(first.searchParams.get("offset")).toBe("0");
+  });
+
+  it("getRelease pide los créditos de personal en la misma request que la tracklist", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ id: "rel-1", title: "x", media: [] }));
+
+    await musicbrainz.getRelease("rel-1");
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const url = new URL(String(fetchMock.mock.calls[0]![0]));
+    expect(url.pathname).toBe("/ws/2/release/rel-1");
+    expect(url.searchParams.get("inc")).toBe("recordings+artist-credits+artist-rels+recording-level-rels");
+  });
+});

@@ -1,0 +1,2289 @@
+{
+ "id": "b84ee12a-09ef-421b-82de-0441a926375b",
+ "title": "The Dark Side of the Moon",
+ "date": "1973-03-24",
+ "relations": [
+  {
+   "type": "design/illustration",
+   "target-type": "artist",
+   "direction": "backward",
+   "attributes": [],
+   "target-credit": "George Hardie N.T.A.",
+   "artist": {
+    "id": "89931942-3182-4448-8e63-0c2ce90f1f81",
+    "name": "George Hardie",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "design/illustration",
+   "target-type": "artist",
+   "direction": "backward",
+   "attributes": [],
+   "target-credit": "",
+   "artist": {
+    "id": "fd1a4572-59ca-40f2-8f55-b82be28bb0ff",
+    "name": "Hipgnosis",
+    "type": "Group"
+   }
+  },
+  {
+   "type": "photography",
+   "target-type": "artist",
+   "direction": "backward",
+   "attributes": [],
+   "target-credit": "",
+   "artist": {
+    "id": "fd1a4572-59ca-40f2-8f55-b82be28bb0ff",
+    "name": "Hipgnosis",
+    "type": "Group"
+   }
+  }
+ ],
+ "media": [
+  {
+   "position": 1,
+   "tracks": [
+    {
+     "position": 1,
+     "recording": {
+      "id": "bef3fddb-5aca-49f5-b2fd-d56a23268d63",
+      "title": "Speak to Me",
+      "length": 68346,
+      "relations": [
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "assistant"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "3f82ca05-977f-4f73-806e-4dd0037eab19",
+         "name": "Peter James",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "9774cfd1-8862-42bd-919e-156c31f079b4",
+         "name": "Alan Parsons",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "percussion",
+         "tape"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "d6c37074-0155-46a3-8af2-338a4f625afc",
+         "name": "Nick Mason",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "tape"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "d6c37074-0155-46a3-8af2-338a4f625afc",
+         "name": "Nick Mason",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "tape"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "0f50beab-d77d-4f0f-ac26-0b87d3e9b11b",
+         "name": "Roger Waters",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "tape"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "0f50beab-d77d-4f0f-ac26-0b87d3e9b11b",
+         "name": "Roger Waters",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "piano"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "mix",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "2a25263b-54ad-42c5-acea-e50b3913369c",
+         "name": "Chris Thomas",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "producer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "83d91898-7763-47d7-b03b-b92132375c47",
+         "name": "Pink Floyd",
+         "type": "Group"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "spoken vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "30b03f5b-36f9-421d-a6a2-3628fca311c2",
+         "name": "Chris Adamson",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "spoken vocals"
+        ],
+        "target-credit": "Gerry O’Driscoll",
+        "artist": {
+         "id": "b2116cd0-20e4-40f5-bd8d-bd9dc9537dd7",
+         "name": "Gerry O’Driscoll",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "other vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "2392d194-9ebb-46dc-b67a-a01b41c58af5",
+         "name": "Clare Torry",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "other vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "27da0e1e-39ca-40f9-bb71-46ee9472865a",
+         "name": "Peter Watts",
+         "type": "Person"
+        }
+       }
+      ]
+     },
+     "artist-credit": [
+      {
+       "name": "Pink Floyd",
+       "joinphrase": "",
+       "artist": {
+        "id": "83d91898-7763-47d7-b03b-b92132375c47",
+        "name": "Pink Floyd",
+        "type": "Group"
+       }
+      }
+     ]
+    },
+    {
+     "position": 2,
+     "recording": {
+      "id": "ecbc7c9b-e79d-4ec8-ac77-44e4a7f7f1b8",
+      "title": "Breathe",
+      "length": 168720,
+      "relations": [
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "assistant"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "3f82ca05-977f-4f73-806e-4dd0037eab19",
+         "name": "Peter James",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "9774cfd1-8862-42bd-919e-156c31f079b4",
+         "name": "Alan Parsons",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "pedal steel guitar"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "electric guitar"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "drums (drum set)",
+         "percussion"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "d6c37074-0155-46a3-8af2-338a4f625afc",
+         "name": "Nick Mason",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "electric bass guitar"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "0f50beab-d77d-4f0f-ac26-0b87d3e9b11b",
+         "name": "Roger Waters",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "Hammond organ"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "Rhodes piano"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "mix",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "2a25263b-54ad-42c5-acea-e50b3913369c",
+         "name": "Chris Thomas",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "producer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "83d91898-7763-47d7-b03b-b92132375c47",
+         "name": "Pink Floyd",
+         "type": "Group"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals",
+         "lead vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       }
+      ]
+     },
+     "artist-credit": [
+      {
+       "name": "Pink Floyd",
+       "joinphrase": "",
+       "artist": {
+        "id": "83d91898-7763-47d7-b03b-b92132375c47",
+        "name": "Pink Floyd",
+        "type": "Group"
+       }
+      }
+     ]
+    },
+    {
+     "position": 3,
+     "recording": {
+      "id": "747a79a7-644e-42d4-be86-9adaf44393d8",
+      "title": "On the Run",
+      "length": 226000,
+      "relations": [
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "assistant"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "3f82ca05-977f-4f73-806e-4dd0037eab19",
+         "name": "Peter James",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "9774cfd1-8862-42bd-919e-156c31f079b4",
+         "name": "Alan Parsons",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "synthesizer"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "electric guitar"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "foot stomps"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "3f82ca05-977f-4f73-806e-4dd0037eab19",
+         "name": "Peter James",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "percussion",
+         "tape"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "d6c37074-0155-46a3-8af2-338a4f625afc",
+         "name": "Nick Mason",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "synthesizer",
+         "tape"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "0f50beab-d77d-4f0f-ac26-0b87d3e9b11b",
+         "name": "Roger Waters",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "Hammond organ"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "mix",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "2a25263b-54ad-42c5-acea-e50b3913369c",
+         "name": "Chris Thomas",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "producer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "83d91898-7763-47d7-b03b-b92132375c47",
+         "name": "Pink Floyd",
+         "type": "Group"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "spoken vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "d05a5203-8abd-4395-97c7-178bb4f7e897",
+         "name": "Roger “The Hat” Manifold",
+         "type": "Person"
+        }
+       }
+      ]
+     },
+     "artist-credit": [
+      {
+       "name": "Pink Floyd",
+       "joinphrase": "",
+       "artist": {
+        "id": "83d91898-7763-47d7-b03b-b92132375c47",
+        "name": "Pink Floyd",
+        "type": "Group"
+       }
+      }
+     ]
+    },
+    {
+     "position": 4,
+     "recording": {
+      "id": "41959321-f2bb-4580-aa19-16248fe665d3",
+      "title": "Time",
+      "length": 413000,
+      "relations": [
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "assistant"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "3f82ca05-977f-4f73-806e-4dd0037eab19",
+         "name": "Peter James",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "9774cfd1-8862-42bd-919e-156c31f079b4",
+         "name": "Alan Parsons",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "electric guitar"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "drums (drum set)",
+         "rototom"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "d6c37074-0155-46a3-8af2-338a4f625afc",
+         "name": "Nick Mason",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "electric bass guitar"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "0f50beab-d77d-4f0f-ac26-0b87d3e9b11b",
+         "name": "Roger Waters",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "synthesizer"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "farfisa"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "Wurlitzer electric piano"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "mix",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "2a25263b-54ad-42c5-acea-e50b3913369c",
+         "name": "Chris Thomas",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "producer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "83d91898-7763-47d7-b03b-b92132375c47",
+         "name": "Pink Floyd",
+         "type": "Group"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "Leslie Duncan",
+        "artist": {
+         "id": "93b359db-4f8d-4d2d-b537-e78e0c10a9e2",
+         "name": "Lesley Duncan",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals",
+         "lead vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "99387357-2f81-4cf3-8cb8-acdd3cb179d7",
+         "name": "Barry St. John",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "c6e02275-f8a7-4981-94bc-8f268a39cf53",
+         "name": "Liza Strike",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "19ef4a75-f072-4a1b-b687-ed516ee52e87",
+         "name": "Doris Troy",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "lead vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       }
+      ]
+     },
+     "artist-credit": [
+      {
+       "name": "Pink Floyd",
+       "joinphrase": "",
+       "artist": {
+        "id": "83d91898-7763-47d7-b03b-b92132375c47",
+        "name": "Pink Floyd",
+        "type": "Group"
+       }
+      }
+     ]
+    },
+    {
+     "position": 5,
+     "recording": {
+      "id": "73b01cea-2dad-4fc2-9e61-02a31477c1b1",
+      "title": "The Great Gig in the Sky",
+      "length": 284066,
+      "relations": [
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "assistant"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "3f82ca05-977f-4f73-806e-4dd0037eab19",
+         "name": "Peter James",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "9774cfd1-8862-42bd-919e-156c31f079b4",
+         "name": "Alan Parsons",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "pedal steel guitar"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "drums (drum set)"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "d6c37074-0155-46a3-8af2-338a4f625afc",
+         "name": "Nick Mason",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "electric bass guitar"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "0f50beab-d77d-4f0f-ac26-0b87d3e9b11b",
+         "name": "Roger Waters",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "Hammond organ"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "piano"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "mix",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "2a25263b-54ad-42c5-acea-e50b3913369c",
+         "name": "Chris Thomas",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "producer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "83d91898-7763-47d7-b03b-b92132375c47",
+         "name": "Pink Floyd",
+         "type": "Group"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "spoken vocals"
+        ],
+        "target-credit": "Gerry O’Driscoll",
+        "artist": {
+         "id": "b2116cd0-20e4-40f5-bd8d-bd9dc9537dd7",
+         "name": "Gerry O’Driscoll",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "lead vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "2392d194-9ebb-46dc-b67a-a01b41c58af5",
+         "name": "Clare Torry",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "spoken vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "59bd71a2-86ce-48b6-8c74-8bf4bfc288f1",
+         "name": "Patricia “Puddy” Watts",
+         "type": "Person"
+        }
+       }
+      ]
+     },
+     "artist-credit": [
+      {
+       "name": "Pink Floyd",
+       "joinphrase": "",
+       "artist": {
+        "id": "83d91898-7763-47d7-b03b-b92132375c47",
+        "name": "Pink Floyd",
+        "type": "Group"
+       }
+      }
+     ]
+    },
+    {
+     "position": 6,
+     "recording": {
+      "id": "7fef22bd-76aa-4803-b56b-93a5d6e70662",
+      "title": "Money",
+      "length": 382746,
+      "relations": [
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "assistant"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "3f82ca05-977f-4f73-806e-4dd0037eab19",
+         "name": "Peter James",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "9774cfd1-8862-42bd-919e-156c31f079b4",
+         "name": "Alan Parsons",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "electric guitar"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "drums (drum set)",
+         "tape"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "d6c37074-0155-46a3-8af2-338a4f625afc",
+         "name": "Nick Mason",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "tenor saxophone"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "5bb61f52-7168-43d7-b910-2fa9500cb71b",
+         "name": "Dick Parry",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "electric bass guitar",
+         "tape"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "0f50beab-d77d-4f0f-ac26-0b87d3e9b11b",
+         "name": "Roger Waters",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "Wurlitzer electric piano"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "mix",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "2a25263b-54ad-42c5-acea-e50b3913369c",
+         "name": "Chris Thomas",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "producer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "83d91898-7763-47d7-b03b-b92132375c47",
+         "name": "Pink Floyd",
+         "type": "Group"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "lead vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "spoken vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "30b03f5b-36f9-421d-a6a2-3628fca311c2",
+         "name": "Chris Adamson",
+         "type": "Person"
+        }
+       }
+      ]
+     },
+     "artist-credit": [
+      {
+       "name": "Pink Floyd",
+       "joinphrase": "",
+       "artist": {
+        "id": "83d91898-7763-47d7-b03b-b92132375c47",
+        "name": "Pink Floyd",
+        "type": "Group"
+       }
+      }
+     ]
+    },
+    {
+     "position": 7,
+     "recording": {
+      "id": "2d1201cf-59bb-4ffa-9f52-f5b3afa13346",
+      "title": "Us and Them",
+      "length": 469853,
+      "relations": [
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "assistant"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "3f82ca05-977f-4f73-806e-4dd0037eab19",
+         "name": "Peter James",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "9774cfd1-8862-42bd-919e-156c31f079b4",
+         "name": "Alan Parsons",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "electric guitar"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "drums (drum set)"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "d6c37074-0155-46a3-8af2-338a4f625afc",
+         "name": "Nick Mason",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "tenor saxophone"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "5bb61f52-7168-43d7-b910-2fa9500cb71b",
+         "name": "Dick Parry",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "electric bass guitar"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "0f50beab-d77d-4f0f-ac26-0b87d3e9b11b",
+         "name": "Roger Waters",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "Hammond organ"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "piano"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "mix",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "2a25263b-54ad-42c5-acea-e50b3913369c",
+         "name": "Chris Thomas",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "producer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "83d91898-7763-47d7-b03b-b92132375c47",
+         "name": "Pink Floyd",
+         "type": "Group"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "93b359db-4f8d-4d2d-b537-e78e0c10a9e2",
+         "name": "Lesley Duncan",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "lead vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "spoken vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "d05a5203-8abd-4395-97c7-178bb4f7e897",
+         "name": "Roger “The Hat” Manifold",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "99387357-2f81-4cf3-8cb8-acdd3cb179d7",
+         "name": "Barry St. John",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "c6e02275-f8a7-4981-94bc-8f268a39cf53",
+         "name": "Liza Strike",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "19ef4a75-f072-4a1b-b687-ed516ee52e87",
+         "name": "Doris Troy",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "spoken vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "56d62009-9b85-40e6-bd85-430074d02ea3",
+         "name": "Henry McCullough",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "spoken vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "59bd71a2-86ce-48b6-8c74-8bf4bfc288f1",
+         "name": "Patricia “Puddy” Watts",
+         "type": "Person"
+        }
+       }
+      ]
+     },
+     "artist-credit": [
+      {
+       "name": "Pink Floyd",
+       "joinphrase": "",
+       "artist": {
+        "id": "83d91898-7763-47d7-b03b-b92132375c47",
+        "name": "Pink Floyd",
+        "type": "Group"
+       }
+      }
+     ]
+    },
+    {
+     "position": 8,
+     "recording": {
+      "id": "7c278a16-ae04-460c-88ea-39155cadcd09",
+      "title": "Any Colour You Like",
+      "length": 205720,
+      "relations": [
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "assistant"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "3f82ca05-977f-4f73-806e-4dd0037eab19",
+         "name": "Peter James",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "9774cfd1-8862-42bd-919e-156c31f079b4",
+         "name": "Alan Parsons",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "electric guitar"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "drums (drum set)",
+         "percussion"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "d6c37074-0155-46a3-8af2-338a4f625afc",
+         "name": "Nick Mason",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "electric bass guitar"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "0f50beab-d77d-4f0f-ac26-0b87d3e9b11b",
+         "name": "Roger Waters",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "synthesizer"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "Hammond organ"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "Minimoog"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "synthesizer"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "mix",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "2a25263b-54ad-42c5-acea-e50b3913369c",
+         "name": "Chris Thomas",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "producer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "83d91898-7763-47d7-b03b-b92132375c47",
+         "name": "Pink Floyd",
+         "type": "Group"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "other vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       }
+      ]
+     },
+     "artist-credit": [
+      {
+       "name": "Pink Floyd",
+       "joinphrase": "",
+       "artist": {
+        "id": "83d91898-7763-47d7-b03b-b92132375c47",
+        "name": "Pink Floyd",
+        "type": "Group"
+       }
+      }
+     ]
+    },
+    {
+     "position": 9,
+     "recording": {
+      "id": "71c0e054-b700-4fd2-a35b-95c7afc566cb",
+      "title": "Brain Damage",
+      "length": 229000,
+      "relations": [
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "assistant"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "3f82ca05-977f-4f73-806e-4dd0037eab19",
+         "name": "Peter James",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "9774cfd1-8862-42bd-919e-156c31f079b4",
+         "name": "Alan Parsons",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "electric guitar"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "drums (drum set)",
+         "tape",
+         "tubular bells"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "d6c37074-0155-46a3-8af2-338a4f625afc",
+         "name": "Nick Mason",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "electric bass guitar",
+         "tape"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "0f50beab-d77d-4f0f-ac26-0b87d3e9b11b",
+         "name": "Roger Waters",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "synthesizer"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "Hammond organ"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "mix",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "2a25263b-54ad-42c5-acea-e50b3913369c",
+         "name": "Chris Thomas",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "producer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "83d91898-7763-47d7-b03b-b92132375c47",
+         "name": "Pink Floyd",
+         "type": "Group"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "93b359db-4f8d-4d2d-b537-e78e0c10a9e2",
+         "name": "Lesley Duncan",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "99387357-2f81-4cf3-8cb8-acdd3cb179d7",
+         "name": "Barry St. John",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "c6e02275-f8a7-4981-94bc-8f268a39cf53",
+         "name": "Liza Strike",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "19ef4a75-f072-4a1b-b687-ed516ee52e87",
+         "name": "Doris Troy",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "lead vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "0f50beab-d77d-4f0f-ac26-0b87d3e9b11b",
+         "name": "Roger Waters",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "other vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "27da0e1e-39ca-40f9-bb71-46ee9472865a",
+         "name": "Peter Watts",
+         "type": "Person"
+        }
+       }
+      ]
+     },
+     "artist-credit": [
+      {
+       "name": "Pink Floyd",
+       "joinphrase": "",
+       "artist": {
+        "id": "83d91898-7763-47d7-b03b-b92132375c47",
+        "name": "Pink Floyd",
+        "type": "Group"
+       }
+      }
+     ]
+    },
+    {
+     "position": 10,
+     "recording": {
+      "id": "c46641c1-fdbc-4401-8b1d-23a4062a207a",
+      "title": "Eclipse",
+      "length": 126400,
+      "relations": [
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "assistant"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "3f82ca05-977f-4f73-806e-4dd0037eab19",
+         "name": "Peter James",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "engineer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "9774cfd1-8862-42bd-919e-156c31f079b4",
+         "name": "Alan Parsons",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "electric guitar"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "bass drum",
+         "drums (drum set)",
+         "tape"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "d6c37074-0155-46a3-8af2-338a4f625afc",
+         "name": "Nick Mason",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "electric bass guitar"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "0f50beab-d77d-4f0f-ac26-0b87d3e9b11b",
+         "name": "Roger Waters",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "Hammond organ"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "electric guitar"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "drums (drum set)",
+         "percussion",
+         "tape"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "d6c37074-0155-46a3-8af2-338a4f625afc",
+         "name": "Nick Mason",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "electric bass guitar"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "0f50beab-d77d-4f0f-ac26-0b87d3e9b11b",
+         "name": "Roger Waters",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "instrument",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "Hammond organ"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "mix",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "2a25263b-54ad-42c5-acea-e50b3913369c",
+         "name": "Chris Thomas",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "producer",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [],
+        "target-credit": "",
+        "artist": {
+         "id": "83d91898-7763-47d7-b03b-b92132375c47",
+         "name": "Pink Floyd",
+         "type": "Group"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "93b359db-4f8d-4d2d-b537-e78e0c10a9e2",
+         "name": "Lesley Duncan",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "spoken vocals"
+        ],
+        "target-credit": "Gerry O’Driscoll",
+        "artist": {
+         "id": "b2116cd0-20e4-40f5-bd8d-bd9dc9537dd7",
+         "name": "Gerry O’Driscoll",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "99387357-2f81-4cf3-8cb8-acdd3cb179d7",
+         "name": "Barry St. John",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "c6e02275-f8a7-4981-94bc-8f268a39cf53",
+         "name": "Liza Strike",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "19ef4a75-f072-4a1b-b687-ed516ee52e87",
+         "name": "Doris Troy",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "lead vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "0f50beab-d77d-4f0f-ac26-0b87d3e9b11b",
+         "name": "Roger Waters",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "Leslie Duncan",
+        "artist": {
+         "id": "93b359db-4f8d-4d2d-b537-e78e0c10a9e2",
+         "name": "Lesley Duncan",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+         "name": "David Gilmour",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "99387357-2f81-4cf3-8cb8-acdd3cb179d7",
+         "name": "Barry St. John",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "c6e02275-f8a7-4981-94bc-8f268a39cf53",
+         "name": "Liza Strike",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "19ef4a75-f072-4a1b-b687-ed516ee52e87",
+         "name": "Doris Troy",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "lead vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "0f50beab-d77d-4f0f-ac26-0b87d3e9b11b",
+         "name": "Roger Waters",
+         "type": "Person"
+        }
+       },
+       {
+        "type": "vocal",
+        "target-type": "artist",
+        "direction": "backward",
+        "attributes": [
+         "background vocals"
+        ],
+        "target-credit": "",
+        "artist": {
+         "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+         "name": "Richard Wright",
+         "type": "Person"
+        }
+       }
+      ]
+     },
+     "artist-credit": [
+      {
+       "name": "Pink Floyd",
+       "joinphrase": "",
+       "artist": {
+        "id": "83d91898-7763-47d7-b03b-b92132375c47",
+        "name": "Pink Floyd",
+        "type": "Group"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

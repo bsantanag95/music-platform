@@ -403,9 +403,22 @@ por álbum, elegida de forma determinista por `pickRepresentativeRelease`
 (sin `deluxe`/`remaster`/… en título o disambiguation) → país primario → packaging estándar →
 recuento de pistas cercano a la mediana → desempate por `mbid`. `edition_label` se deriva de la
 edición elegida (`disambiguation` → sufijo de título → `"standard"`), ya no es siempre `"original"`.
-La invariante "un `release` por `release_group`" se mantiene; corregir una elección subóptima ya
-ingerida reemplaza `release` + `track` sin tocar datos sociales
+Corregir una elección subóptima ya ingerida no toca datos sociales
 (`scripts/recanonicalize-release-group.ts`).
+
+**Varias ediciones por álbum (migración `0048`, openspec: `enrich-album-editions-and-credits`):**
+un `release_group` puede tener varias filas `release` — la **representativa** y ediciones cuya
+tracklist se ingirió bajo demanda (variantes con pistas adicionales). `is_representative` marca la
+edición cuya tracklist es "la del álbum", y el índice único parcial
+`uq_release_representative (release_group_id) WHERE is_representative` garantiza **a lo sumo una**
+por álbum. Toda lectura de "la tracklist del álbum" filtra `is_representative`. La
+re-canonicalización intercambia la marca (la anterior queda como edición no representativa) en vez
+de borrar y reingerir. La edición representativa se elige entre **todas** las ediciones del grupo
+(browse paginado `/release?release-group=`), no entre las 25 que devuelve el lookup del grupo.
+
+**Créditos de personal (`personnel_synced_at`, migración `0048`):** `NULL` indica que los créditos de
+personal (`personnel_credit`) de esta edición y de sus grabaciones están pendientes. Es distinto de
+`credits_synced_at`, que cubre los créditos de autoría (`credit`).
 
 **Carátula (`cover_thumb_url`) — DEPRECADA:** columna legada de la resolución de carátula, que pasó a
 `release_group.cover_thumb_url` (migración `0003`). Ya **no se escribe** desde la app; el read-model
@@ -437,6 +450,44 @@ una columna nullable `release_year` (entero), separada de `release_date`:
 - La UI mostrará `release_year` como fallback cuando `release_date` sea nulo.
 
 Esa columna **no está implementada todavía**; requiere una migración SQL y un change separado.
+
+## `release_edition`, `label` y `release_edition_label`
+
+**Propósito (migración `0048`):** el resumen de **cada** edición que MusicBrainz reporta para un
+`release_group`, tenga o no tracklist ingerida (eso último es `release`). Alimenta la pestaña
+Ediciones, la fila Sello del álbum, la elección de la edición representativa y la detección de
+variantes con pistas adicionales.
+
+- `release_edition`: `mbid` único; título, desambiguación, estado (`Official`, `Promotion`,
+  `Bootleg`, `Pseudo-Release` o `NULL`), `release_date` (solo con precisión diaria) +
+  `release_year` (cualquier precisión — mismo criterio que `release_group.first_release_year`),
+  país, embalaje, `formats` (un formato por disco, en orden), `medium_count` y `track_count`
+  (`NULL` si MusicBrainz no informa el recuento). `updated_at` por trigger.
+- `label`: sello como entidad propia, identificado por `mbid`.
+- `release_edition_label`: sello y número de catálogo de una edición, en el orden de MusicBrainz
+  (`position`). `CHECK (num_nonnulls(label_id, catalog_number) >= 1)`: hay ediciones con número de
+  catálogo sin sello identificado.
+
+**Sincronización:** `release_group.editions_synced_at` (`NULL` = pendiente). La ingesta hace upsert
+idempotente por `mbid`; sellos, números de catálogo y relaciones son datos centrales de
+MusicBrainz (CC0).
+
+## `personnel_credit`
+
+**Propósito (migración `0048`):** créditos de personal — las relaciones de artista de MusicBrainz
+sobre una edición (`release_id`: suele ser arte y diseño) o una grabación (`recording_id`:
+instrumento, voz, producción, ingeniería, mezcla). Separado de `credit`, que modela la autoría
+visible (`primary` / `featured`) y admite un solo crédito por artista y destino; un músico tiene
+varias relaciones por pista.
+
+- `relation_type`: el tipo de MusicBrainz tal cual (`instrument`, `vocal`, `producer`, …). Se guardan
+  **todos** los tipos; la clasificación en niveles (integrantes, invitados, producción, arte y otros)
+  es de lectura (`src/services/catalog/personnel-levels.ts`).
+- `attributes`: instrumentos y matices (`guitar`, `lead vocals`, `assistant`), ordenados para que la
+  unicidad sea estable. `credited_as`: `target-credit` cuando difiere del nombre del artista.
+- `CHECK (num_nonnulls(release_id, recording_id) = 1)` e índices únicos parciales
+  `uq_personnel_credit_release` / `uq_personnel_credit_recording` sobre
+  `(destino, artist_id, relation_type, attributes)`.
 
 ## `recording`
 

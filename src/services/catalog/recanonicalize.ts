@@ -1,9 +1,9 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { releaseGroup, release } from "@/db/schema";
-import { musicbrainz } from "../musicbrainz/client";
 import { pickRepresentativeRelease } from "./representative-release";
-import { findOrIngestTracklist, persistCanonicalReleaseDate } from "./ingest-release";
+import { ingestReleaseTracklist, persistCanonicalReleaseDate } from "./ingest-release";
+import { fetchReleaseEditions, saveReleaseEditions } from "./release-editions";
 
 export type RecanonicalizeResult =
   | { status: "skipped"; reason: "not-found" | "no-mbid" }
@@ -18,8 +18,9 @@ export type RecanonicalizeResult =
   | { status: "recanonicalized"; fromReleaseMbid: string | null; toReleaseMbid: string };
 
 /**
- * Reevalúa la edición representativa de un `release_group` y, si difiere de
- * la ingerida, reemplaza sus filas `release` + `track`. Nunca crea, modifica
+ * Reevalúa la edición representativa de un `release_group` sobre TODAS sus
+ * ediciones y, si difiere de la actual, mueve la marca de representativa
+ * (openspec: enrich-album-editions-and-credits). Nunca crea, modifica
  * ni elimina filas de `rating`, `favorite`, `comment`, `listen_entry`,
  * `user_list_item`, `user_pinned_item` ni `collection_entry` — todas
  * referencian el `release_group`, no la edición (openspec:
@@ -43,13 +44,13 @@ export async function recanonicalizeReleaseGroup(
   if (!rg) return { status: "skipped", reason: "not-found" };
   if (!rg.mbid) return { status: "skipped", reason: "no-mbid" };
 
-  const rgWithReleases = await musicbrainz.getReleaseGroup(rg.mbid);
-  const chosen = pickRepresentativeRelease(rgWithReleases.releases ?? []);
+  const { editions, firstReleaseDate } = await fetchReleaseEditions(rg.mbid);
+  const chosen = pickRepresentativeRelease(editions);
 
   const [current] = await db
     .select()
     .from(release)
-    .where(eq(release.releaseGroupId, releaseGroupId))
+    .where(and(eq(release.releaseGroupId, releaseGroupId), eq(release.isRepresentative, true)))
     .limit(1);
   const currentReleaseMbid = current?.mbid ?? null;
   const chosenReleaseMbid = chosen?.id ?? null;
@@ -61,22 +62,41 @@ export async function recanonicalizeReleaseGroup(
       currentReleaseMbid,
       chosenReleaseMbid,
       wouldChangeEdition,
-      canonicalFirstReleaseDate: rgWithReleases["first-release-date"] ?? null,
+      canonicalFirstReleaseDate: firstReleaseDate ?? null,
     };
   }
 
-  await persistCanonicalReleaseDate(releaseGroupId, rgWithReleases["first-release-date"]);
+  await persistCanonicalReleaseDate(releaseGroupId, firstReleaseDate);
+  await saveReleaseEditions(releaseGroupId, editions);
 
-  if (!wouldChangeEdition) {
+  if (!wouldChangeEdition || !chosen) {
     return { status: "unchanged", currentReleaseMbid };
   }
 
-  // Un solo DELETE (atómico); `track` cae por `ON DELETE cascade`. Las tablas
-  // sociales no se tocan. La re-ingesta usa el mismo path determinista que un
-  // álbum nuevo, así que vuelve a elegir `chosen`; si fallara, la vista de
-  // álbum la re-ingiere en la siguiente visita (self-heal).
-  await db.delete(release).where(eq(release.releaseGroupId, releaseGroupId));
-  await findOrIngestTracklist(releaseGroupId, rg.mbid);
+  // Intercambio de la marca, no borrado: la representativa anterior queda como
+  // edición no representativa (su tracklist sigue siendo válida) y las tablas
+  // sociales no se tocan. Si la nueva ya está ingerida (una variante), basta con
+  // mover la marca en una transacción; si no, se desmarca la anterior y se ingiere
+  // la nueva como representativa. Si esa ingesta fallara, la vista de álbum la
+  // re-ingiere en la siguiente visita (self-heal).
+  const [alreadyIngested] = await db
+    .select()
+    .from(release)
+    .where(and(eq(release.releaseGroupId, releaseGroupId), eq(release.mbid, chosen.id)))
+    .limit(1);
 
-  return { status: "recanonicalized", fromReleaseMbid: currentReleaseMbid, toReleaseMbid: chosen!.id };
+  await db.transaction(async (tx) => {
+    await tx
+      .update(release)
+      .set({ isRepresentative: false })
+      .where(and(eq(release.releaseGroupId, releaseGroupId), eq(release.isRepresentative, true)));
+    if (alreadyIngested) {
+      await tx.update(release).set({ isRepresentative: true }).where(eq(release.id, alreadyIngested.id));
+    }
+  });
+  if (!alreadyIngested) {
+    await ingestReleaseTracklist(releaseGroupId, chosen, { representative: true });
+  }
+
+  return { status: "recanonicalized", fromReleaseMbid: currentReleaseMbid, toReleaseMbid: chosen.id };
 }

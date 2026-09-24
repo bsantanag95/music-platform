@@ -166,6 +166,21 @@ export const TrackSchema = z.object({
 });
 export type Track = z.infer<typeof TrackSchema>;
 
+/**
+ * `GET /api/catalog/release-group/{id}/editions/{editionId}/extra-tracks` (openspec:
+ * enrich-album-editions-and-credits): pistas que una edición agrega a la lista del álbum.
+ */
+export const ExtraTrackSchema = z.object({
+  recordingId: z.uuid(),
+  discNumber: z.number().int(),
+  position: z.number().int(),
+  title: z.string(),
+  durationSec: z.number().int().nullable(),
+  variantType: z.string(),
+});
+export const ExtraTracksResponseSchema = z.object({ tracks: z.array(ExtraTrackSchema) });
+export type ExtraTracksResponse = z.infer<typeof ExtraTracksResponseSchema>;
+
 export const ReleaseWithTracksSchema = z.object({
   // `releaseGroup` es la obra (openspec: canonicalize-release-group): lleva
   // la categoría/tipo de obra y la fecha canónica del álbum. `release` sigue
@@ -190,6 +205,8 @@ export const ErrorCodeSchema = z.enum([
   "ALBUM_NOT_FOUND",
   "RECORDING_NOT_FOUND",
   "NO_EDITIONS_FOUND",
+  "EDITION_NOT_FOUND",
+  "EDITION_IS_BOX",
   "AUTH_REQUIRED",
   "INVALID_CREDENTIALS",
   "USERNAME_TAKEN",

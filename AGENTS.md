@@ -73,6 +73,16 @@ necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
 >   interrumpió, limpiar con
 >   `DELETE FROM app_user WHERE username LIKE 'smoke_verify_%';`. Captura el
 >   token de verificación del adaptador `console`; no envía correo real.
+> - `smoke-test-album-editions.ts` y `smoke-test-personnel-credits.ts` (fixtures
+>   compartidos en `scripts/smoke-album-fixtures.ts`) crean un álbum, ediciones,
+>   grabaciones, un sello y artistas con MBID sintéticos `5e0ce000-0000-4000-8000-*`
+>   y los borran al terminar (también si fallan). Si se interrumpieron, limpiar con
+>   `DELETE FROM release_group WHERE mbid::text LIKE '5e0ce000%'; DELETE FROM recording
+>   WHERE mbid::text LIKE '5e0ce000%'; DELETE FROM label WHERE mbid::text LIKE
+>   '5e0ce000%'; DELETE FROM artist WHERE mbid::text LIKE '5e0ce000%';` (en ese orden:
+>   el `ON DELETE CASCADE` limpia releases, pistas, ediciones, créditos y pertenencias).
+>   Verifican la ingesta paginada de ediciones, variantes y pistas adicionales, el índice
+>   único de representativa, la re-canonicalización y los créditos de personal.
 
 ## Base de datos / migraciones
 

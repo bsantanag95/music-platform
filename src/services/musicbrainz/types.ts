@@ -63,10 +63,10 @@ export interface MBReleaseGroupSearchResponse {
 }
 
 /**
- * Edición (release) tal como llega embebida en `/release-group/{mbid}?inc=releases+media`.
- * Solo los campos que consume `pickRepresentativeRelease`.
+ * Edición (release) con los campos que consume `pickRepresentativeRelease`. Llega en el
+ * browse `/release?release-group=` (`MBReleaseBrowseByGroupItem`, que la extiende).
  *
- * Disponibilidad observada en el browse de release-group:
+ * Disponibilidad observada en el browse de ediciones:
  * - `status`, `date`, `country`, `disambiguation`, `title`, `packaging`: presentes.
  * - `media[].track-count`: presente con `inc=media`; si MusicBrainz lo omitiera para
  *   alguna edición, el criterio de recuento de pistas se degrada a "no aplica"
@@ -83,8 +83,41 @@ export interface MBReleaseSummary {
   media?: { "track-count"?: number }[];
 }
 
-export interface MBReleaseGroupWithReleases extends MBReleaseGroup {
-  releases?: MBReleaseSummary[];
+/** Sello y número de catálogo de una edición (`inc=labels`). */
+export interface MBLabelInfo {
+  "catalog-number"?: string | null;
+  label?: { id: string; name: string } | null;
+}
+
+/**
+ * Edición tal como llega en el browse `/release?release-group=` con
+ * `inc=labels+media+release-groups` (openspec: enrich-album-editions-and-credits):
+ * todas las ediciones del grupo, de a 100, con sellos, formato por disco y el
+ * release-group embebido (de ahí sale `first-release-date`).
+ */
+export interface MBReleaseBrowseByGroupItem extends MBReleaseSummary {
+  media?: { position?: number; format?: string | null; "track-count"?: number }[];
+  "label-info"?: MBLabelInfo[];
+  "release-group"?: MBReleaseGroup;
+}
+
+export interface MBReleaseBrowseByGroupResponse {
+  "release-count": number;
+  "release-offset"?: number;
+  releases: MBReleaseBrowseByGroupItem[];
+}
+
+/**
+ * Relación de artista de una edición o de una grabación
+ * (`inc=artist-rels+recording-level-rels`): los créditos de personal.
+ */
+export interface MBCreditRelation {
+  type: string; // 'instrument' | 'vocal' | 'producer' | 'engineer' | 'mix' | 'design/illustration' | ...
+  "target-type": string; // solo interesan las de 'artist'
+  direction?: string;
+  attributes?: string[]; // instrumentos y matices: 'guitar', 'lead vocals', 'assistant'
+  "target-credit"?: string; // nombre acreditado cuando difiere del nombre del artista
+  artist?: MBArtistSummary;
 }
 
 export interface MBRecordingSearchItem {
@@ -123,7 +156,7 @@ export interface MBReleaseBrowseResponse {
 
 export interface MBTrack {
   position: number;
-  recording: { id: string; title: string; length?: number };
+  recording: { id: string; title: string; length?: number; relations?: MBCreditRelation[] };
   "artist-credit"?: MBArtistCreditItem[];
 }
 
@@ -137,4 +170,6 @@ export interface MBRelease {
   title: string;
   date?: string;
   media?: MBMedium[];
+  /** Relaciones de nivel edición (con `inc=artist-rels`). */
+  relations?: MBCreditRelation[];
 }

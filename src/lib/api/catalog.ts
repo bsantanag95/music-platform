@@ -4,11 +4,13 @@ import {
   ArtistWithDiscographySchema,
   CatalogSearchResponseSchema,
   CoverSchema,
+  ExtraTracksResponseSchema,
   ReleaseWithTracksSchema,
   type ArtistFollowResponse,
   type ArtistWithDiscography,
   type CatalogSearchResponse,
   type Cover,
+  type ExtraTracksResponse,
   type ReleaseWithTracks,
 } from "./schemas";
 
@@ -27,6 +29,14 @@ export function getReleaseGroupDetail(id: string): Promise<ReleaseWithTracks> {
 
 export function getReleaseGroupCover(id: string): Promise<Cover> {
   return apiFetch(`/api/catalog/release-group/${id}/cover`, CoverSchema);
+}
+
+/** Pistas que una edición agrega a la lista del álbum (sección desplegable de Canciones). */
+export function getEditionExtraTracks(releaseGroupId: string, editionId: string): Promise<ExtraTracksResponse> {
+  return apiFetch(
+    `/api/catalog/release-group/${releaseGroupId}/editions/${editionId}/extra-tracks`,
+    ExtraTracksResponseSchema,
+  );
 }
 
 // Seguir / dejar de seguir un artista (openspec: add-artist-following).
