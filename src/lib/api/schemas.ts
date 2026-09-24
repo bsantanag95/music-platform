@@ -597,6 +597,11 @@ export type Review = z.infer<typeof ReviewSchema>;
 
 export const ReviewMutationResponseSchema = z.object({ review: ReviewSchema });
 
+/** Orden del índice de reseñas de un objetivo (openspec: redesign-album-page). */
+export const REVIEW_SORTS = ["recent", "best", "worst"] as const;
+export const ReviewSortSchema = z.enum(REVIEW_SORTS);
+export type ReviewSort = z.infer<typeof ReviewSortSchema>;
+
 export const ReviewsResponseSchema = z.object({
   reviews: z.array(ReviewSchema),
   page: z.number().int(),

@@ -5,7 +5,7 @@ export default async function AlbumLoading() {
   const t = await getTranslations("common");
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
+    <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-4 sm:flex-row">
           <Skeleton

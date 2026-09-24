@@ -38,8 +38,21 @@ describe("GET reseñas", () => {
     mocks.listReviews.mockResolvedValue({ reviews: [], page: 1, pageSize: 20, hasNext: false });
     const response = await GET(new NextRequest("http://localhost/x"), params());
     expect(response.status).toBe(200);
-    expect(mocks.listReviews).toHaveBeenCalledWith(expect.anything(), 1, 20);
+    expect(mocks.listReviews).toHaveBeenCalledWith(expect.anything(), 1, 20, "recent");
     expect(mocks.requireUser).not.toHaveBeenCalled();
+  });
+
+  it("pasa el orden pedido al listado", async () => {
+    mocks.listReviews.mockResolvedValue({ reviews: [], page: 1, pageSize: 20, hasNext: false });
+    const response = await GET(new NextRequest("http://localhost/x?sort=best"), params());
+    expect(response.status).toBe(200);
+    expect(mocks.listReviews).toHaveBeenCalledWith(expect.anything(), 1, 20, "best");
+  });
+
+  it("rechaza un orden desconocido", async () => {
+    const response = await GET(new NextRequest("http://localhost/x?sort=random"), params());
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: "VALIDATION_ERROR" });
   });
 });
 

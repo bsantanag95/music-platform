@@ -1,9 +1,9 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { appUser, rating, review, type ReviewRow } from "@/db/schema";
+import { appUser, rating, releaseGroup, review, type ReviewRow } from "@/db/schema";
 import { maskAuthor } from "@/services/auth/account-status";
 import { ApiError } from "@/lib/api/errors";
-import type { Review, ReviewRequest, ReviewUpdate, SocialTargetType } from "@/lib/api/schemas";
+import type { Review, ReviewRequest, ReviewSort, ReviewUpdate, SocialTargetType } from "@/lib/api/schemas";
 import {
   resolveSocialTarget,
   targetValues,
@@ -82,7 +82,22 @@ const reviewSelection = {
   detailedScore: rating.detailedScore,
 };
 
-export async function listReviews(target: SocialTarget, page = 1, pageSize = 20) {
+/**
+ * Orden del índice de reseñas (openspec: redesign-album-page): por fecha, o por las
+ * estrellas vigentes del autor (las reseñas sin rating van al final en ambos sentidos).
+ */
+function reviewOrder(sort: ReviewSort): SQL[] {
+  if (sort === "best") return [sql`${rating.stars} desc nulls last`, desc(review.createdAt), desc(review.id)];
+  if (sort === "worst") return [sql`${rating.stars} asc nulls last`, desc(review.createdAt), desc(review.id)];
+  return [desc(review.createdAt), desc(review.id)];
+}
+
+export async function listReviews(
+  target: SocialTarget,
+  page = 1,
+  pageSize = 20,
+  sort: ReviewSort = "recent",
+) {
   const targetColumn = target.column;
   const rows = await db
     .select(reviewSelection)
@@ -93,7 +108,7 @@ export async function listReviews(target: SocialTarget, page = 1, pageSize = 20)
       and(eq(rating.userId, review.userId), eq(rating[targetColumn], target.id)),
     )
     .where(and(reviewTargetWhere(target), eq(review.moderationStatus, "visible")))
-    .orderBy(desc(review.createdAt), desc(review.id))
+    .orderBy(...reviewOrder(sort))
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
 
@@ -102,6 +117,63 @@ export async function listReviews(target: SocialTarget, page = 1, pageSize = 20)
     page,
     pageSize,
     hasNext: rows.length > pageSize,
+  };
+}
+
+/** Tope de ids para anterior/siguiente en el modal de reseña. */
+const REVIEW_NAVIGATION_LIMIT = 500;
+
+/**
+ * Ids de las reseñas visibles de un objetivo en el orden del índice, para navegar
+ * anterior/siguiente desde el modal de una reseña.
+ */
+export async function listReviewIds(target: SocialTarget, sort: ReviewSort = "recent"): Promise<string[]> {
+  const rows = await db
+    .select({ id: review.id })
+    .from(review)
+    .leftJoin(
+      rating,
+      and(eq(rating.userId, review.userId), eq(rating[target.column], target.id)),
+    )
+    .where(and(reviewTargetWhere(target), eq(review.moderationStatus, "visible")))
+    .orderBy(...reviewOrder(sort))
+    .limit(REVIEW_NAVIGATION_LIMIT);
+  return rows.map((row) => row.id);
+}
+
+export interface ReviewDetail {
+  review: Review;
+  album: { id: string; title: string; coverThumbUrl: string | null };
+}
+
+/**
+ * Una reseña visible de álbum con su álbum, para `/review/{id}` y su modal
+ * (openspec: redesign-album-page, capability `review-detail`). Mismas reglas de
+ * visibilidad que el listado: solo `moderation_status = 'visible'`, autor desactivado
+ * enmascarado. `null` si no existe, no es visible o no es de un álbum.
+ */
+export async function getReviewDetail(reviewId: string): Promise<ReviewDetail | null> {
+  const [row] = await db
+    .select({
+      ...reviewSelection,
+      albumId: releaseGroup.id,
+      albumTitle: releaseGroup.title,
+      albumCover: releaseGroup.coverThumbUrl,
+    })
+    .from(review)
+    .innerJoin(appUser, eq(review.userId, appUser.id))
+    .innerJoin(releaseGroup, eq(releaseGroup.id, review.releaseGroupId))
+    .leftJoin(
+      rating,
+      and(eq(rating.userId, review.userId), eq(rating.releaseGroupId, review.releaseGroupId)),
+    )
+    .where(and(eq(review.id, reviewId), eq(review.moderationStatus, "visible")))
+    .limit(1);
+  if (!row) return null;
+  const { albumId, albumTitle, albumCover, ...reviewRow } = row;
+  return {
+    review: serializeReview(reviewRow),
+    album: { id: albumId, title: albumTitle, coverThumbUrl: albumCover },
   };
 }
 

@@ -40,6 +40,23 @@ Dos escalas, siempre coherentes entre sí (forzado a nivel de base, no solo de i
 anterior — no hay historial en `rating` (eso es justamente lo que
 `listening-diary-and-ratings.md` propone agregar por separado, sin tocar esta garantía).
 
+## Reseñas en la página de álbum
+
+Cambio `redesign-album-page` (2026-09):
+
+- La **valoración propia** se edita en el panel "Tu relación" de la cabecera del álbum; la
+  media de la comunidad vive en el bloque de comunidad (con umbral mínimo de 5 valoraciones
+  para media e histograma).
+- La pestaña **Reseñas** (`/album/{id}/reviews`) muestra un **índice** compacto: título (o,
+  sin título, un extracto del inicio del cuerpo), estrellas vigentes del autor, autor y
+  fecha, ordenable por más recientes, mejor nota y peor nota (`?sort=recent|best|worst`).
+  Debajo, el editor de la reseña propia.
+- Cada reseña tiene **página propia** en `/review/{id}`. Desde el índice del álbum, esa URL
+  se abre como **modal** (ruta interceptada) con anterior / siguiente en el orden activo;
+  abrir, recargar o compartir la URL muestra la página completa.
+- **Reseñas y comentarios no se mezclan**: las reseñas viven en su pestaña, los comentarios
+  al pie de la página, fuera de las pestañas.
+
 ## Comentarios
 
 Texto libre, con un máximo implementado de 5000 caracteres y sin mínimo. A diferencia de la

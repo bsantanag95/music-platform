@@ -8,7 +8,7 @@
   "diary": "Diary",
   "feed": "Feed",
   "favorites": "Favorites",
-  "wantToListen": "Want to Listen",
+  "wantToListen": "Listen Later",
   "lists": "Lists",
   "activity": "Activity",
   "collection": "Collection",
@@ -31,7 +31,7 @@
   "closeMenu": "Close menu",
   "userMenu": "User menu",
   "generalNav": "General navigation",
-"moderation": "Moderation",
+  "moderation": "Moderation",
   "administration": "Administration",
   "moderationPresets": {
     "24h": "24 hours",
@@ -39,7 +39,7 @@
     "1w": "1 week",
     "1m": "1 month"
   },
-"moderationConsole": {
+  "moderationConsole": {
     "title": "Moderation",
     "description": "Review reports and act on social content.",
     "empty": "There are no pending reports.",
@@ -126,7 +126,7 @@
   "loading": {
     "artist": "Loading artist...",
     "album": "Loading album...",
-    "search": "Loading search..."
-    ,"song": "Loading song..."
+    "search": "Loading search...",
+    "song": "Loading song..."
   }
 }

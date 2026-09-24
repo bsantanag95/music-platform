@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { ApiError } from "@/lib/api/errors";
-import { ReviewRequestSchema, SocialTargetTypeSchema } from "@/lib/api/schemas";
+import { ReviewRequestSchema, ReviewSortSchema, SocialTargetTypeSchema } from "@/lib/api/schemas";
 import { requireSocialActivityAllowed, requireUser } from "@/services/auth/authorization";
 import { createOrReplaceReview, listReviews, resolveSocialTarget } from "@/services/reviews";
 
 const ReviewsPaginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  sort: ReviewSortSchema.default("recent"),
 });
 
 async function target(params: Promise<{ target: string; id: string }>) {
@@ -27,12 +28,13 @@ export const GET = withErrorHandling(
     const pagination = ReviewsPaginationSchema.safeParse({
       page: search.get("page") ?? undefined,
       pageSize: search.get("pageSize") ?? undefined,
+      sort: search.get("sort") ?? undefined,
     });
     if (!pagination.success) {
       throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
     }
     return NextResponse.json(
-      await listReviews(resolved, pagination.data.page, pagination.data.pageSize),
+      await listReviews(resolved, pagination.data.page, pagination.data.pageSize, pagination.data.sort),
     );
   },
 );

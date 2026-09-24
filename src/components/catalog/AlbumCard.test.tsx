@@ -70,7 +70,7 @@ const releaseGroup: ReleaseGroup = {
 describe("AlbumCard", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("agrega una entrada de deseo con un solo click en 'Lo quiero'", async () => {
+  it("agrega una entrada de deseo con un solo click en 'Lo busco'", async () => {
     const user = userEvent.setup();
     mocks.addWantedEntries.mockResolvedValue([{ id: "w1" }]);
     renderWithIntl(
@@ -83,7 +83,7 @@ describe("AlbumCard", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Más acciones" }));
-    await user.click(screen.getByRole("menuitem", { name: "Lo quiero" }));
+    await user.click(screen.getByRole("menuitem", { name: "Lo busco" }));
 
     await waitFor(() =>
       expect(mocks.addWantedEntries).toHaveBeenCalledWith({
@@ -91,17 +91,17 @@ describe("AlbumCard", () => {
         entries: [{}],
       }),
     );
-    expect(await screen.findByRole("status")).toHaveTextContent("Agregado a tu lista de deseados");
+    expect(await screen.findByRole("status")).toHaveTextContent("Agregado a tu búsqueda");
   });
 
-  it("redirige a login al elegir 'Lo quiero' sin sesión", async () => {
+  it("redirige a login al elegir 'Lo busco' sin sesión", async () => {
     const user = userEvent.setup();
     renderWithIntl(
       <AlbumCard releaseGroup={releaseGroup} categoryLabel="Estudio" coverLabel="Carátula" />,
     );
 
     await user.click(screen.getByRole("button", { name: "Más acciones" }));
-    await user.click(screen.getByRole("menuitem", { name: "Lo quiero" }));
+    await user.click(screen.getByRole("menuitem", { name: "Lo busco" }));
 
     expect(mocks.push).toHaveBeenCalledWith("/auth/login");
     expect(mocks.addWantedEntries).not.toHaveBeenCalled();
@@ -165,7 +165,7 @@ describe("AlbumCard", () => {
     expect(mocks.toggleFavorite).not.toHaveBeenCalled();
   });
 
-  it("agrega a Quiero escuchar con un solo click", async () => {
+  it("marca como pendiente con un solo click", async () => {
     const user = userEvent.setup();
     mocks.toggleWantToListen.mockResolvedValue({ id: "wtl-1" });
     renderWithIntl(
@@ -173,12 +173,12 @@ describe("AlbumCard", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Más acciones" }));
-    await user.click(screen.getByRole("menuitem", { name: "Quiero escuchar" }));
+    await user.click(screen.getByRole("menuitem", { name: "Marcar como pendiente" }));
 
     await waitFor(() =>
       expect(mocks.toggleWantToListen).toHaveBeenCalledWith({ type: "release-group", id: releaseGroup.id }),
     );
-    expect(await screen.findByRole("status")).toHaveTextContent("Agregado a Quiero escuchar");
+    expect(await screen.findByRole("status")).toHaveTextContent("Agregado a Pendientes");
   });
 
   it("registra una escucha con un solo click en 'Registrar escucha'", async () => {

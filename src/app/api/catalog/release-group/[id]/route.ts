@@ -27,7 +27,16 @@ export const GET = withErrorHandling(
       releaseGroup: detail.releaseGroup,
       release: detail.release,
       cover: detail.cover,
-      tracks: detail.tracks,
+      // Contrato estable (docs/04-api/contracts.md): los datos de variante y los artistas
+      // principales son del read-model de la página, no del endpoint.
+      tracks: detail.tracks.map(({ recordingId, discNumber, position, title, durationSec, credits }) => ({
+        recordingId,
+        discNumber,
+        position,
+        title,
+        durationSec,
+        credits,
+      })),
     });
   },
 );

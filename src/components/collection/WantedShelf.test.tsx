@@ -83,7 +83,7 @@ describe("WantedShelf", () => {
   it("wishlist vacía muestra el estado vacío con CTA al catálogo", () => {
     renderShelf(response([]));
     expect(
-      screen.getByText("Todavía no agregaste discos a tu lista de deseados"),
+      screen.getByText("Todavía no agregaste discos a tu búsqueda"),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Buscar en el catálogo" })).toHaveAttribute(
       "href",

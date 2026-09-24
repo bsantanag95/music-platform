@@ -8,6 +8,8 @@ interface DialogProps {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  /** `"md"` (por defecto) para formularios; `"lg"` para contenido de lectura (una reseña). */
+  size?: "md" | "lg";
 }
 
 const FOCUSABLE = "button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href]";
@@ -16,7 +18,7 @@ const FOCUSABLE = "button:not([disabled]), input:not([disabled]), select:not([di
 // mecánica que `ConfirmDialog` — portal, foco atrapado, Escape y bloqueo de
 // scroll —, pero abre con el foco en el primer campo en vez del botón de
 // cancelar y admite contenido libre. Clic en el fondo cierra.
-export function Dialog({ open, title, onClose, children }: DialogProps) {
+export function Dialog({ open, title, onClose, children, size = "md" }: DialogProps) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -75,7 +77,7 @@ export function Dialog({ open, title, onClose, children }: DialogProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="flex max-h-[90vh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-lg border border-ink-border bg-ink-surface p-6"
+        className={`flex max-h-[90vh] w-full ${size === "lg" ? "max-w-2xl" : "max-w-md"} flex-col gap-4 overflow-y-auto rounded-lg border border-ink-border bg-ink-surface p-6`}
       >
         <h2 id={titleId} className="font-display text-lg text-paper">
           {title}

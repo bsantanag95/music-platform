@@ -8,7 +8,7 @@
   "diary": "Diario",
   "feed": "Feed",
   "favorites": "Favoritos",
-  "wantToListen": "Quiero escuchar",
+  "wantToListen": "Pendientes",
   "lists": "Listas",
   "activity": "Actividad",
   "collection": "Colección",
@@ -31,7 +31,7 @@
   "closeMenu": "Cerrar menú",
   "userMenu": "Menú de usuario",
   "generalNav": "Navegación general",
-"moderation": "Moderación",
+  "moderation": "Moderación",
   "administration": "Administración",
   "moderationPresets": {
     "24h": "24 horas",
@@ -39,7 +39,7 @@
     "1w": "1 semana",
     "1m": "1 mes"
   },
-"moderationConsole": {
+  "moderationConsole": {
     "title": "Moderación",
     "description": "Revisá reportes y aplicá acciones sobre contenido social.",
     "empty": "No hay reportes pendientes.",
@@ -126,7 +126,7 @@
   "loading": {
     "artist": "Cargando artista...",
     "album": "Cargando álbum...",
-    "search": "Cargando búsqueda..."
-    ,"song": "Cargando canción..."
+    "search": "Cargando búsqueda...",
+    "song": "Cargando canción..."
   }
 }

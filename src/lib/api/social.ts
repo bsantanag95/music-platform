@@ -1,5 +1,5 @@
 import { apiFetch } from "./client";
-import { CommentMutationResponseSchema, CommentsResponseSchema, RatingHighlightsResponseSchema, RatingMutationResponseSchema, RatingsResponseSchema, ReviewMutationResponseSchema, ReviewsResponseSchema, type CommentsResponse, type RatingHighlightsResponse, type RatingsResponse, type ReviewsResponse } from "./schemas";
+import { CommentMutationResponseSchema, CommentsResponseSchema, RatingHighlightsResponseSchema, RatingMutationResponseSchema, RatingsResponseSchema, ReviewMutationResponseSchema, ReviewsResponseSchema, type CommentsResponse, type RatingHighlightsResponse, type RatingsResponse, type ReviewSort, type ReviewsResponse } from "./schemas";
 import { z } from "zod";
 
 export interface ReviewInput {
@@ -23,7 +23,7 @@ export function updateComment(id: string, body: string) { return apiFetch(`/api/
 export function deleteComment(id: string) { return apiFetch(`/api/catalog/comments/${id}`, z.null(), { method: "DELETE" }); }
 
 // Reseñas (openspec: add-album-review)
-export function getReviews(target: Target, id: string, page = 1, pageSize = 20): Promise<ReviewsResponse> { return apiFetch(`${path(target, id)}/reviews?page=${page}&pageSize=${pageSize}`, ReviewsResponseSchema); }
+export function getReviews(target: Target, id: string, page = 1, pageSize = 20, sort: ReviewSort = "recent"): Promise<ReviewsResponse> { return apiFetch(`${path(target, id)}/reviews?page=${page}&pageSize=${pageSize}&sort=${sort}`, ReviewsResponseSchema); }
 export function saveReview(target: Target, id: string, input: ReviewInput) { return apiFetch(`${path(target, id)}/reviews`, ReviewMutationResponseSchema, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) }).then((response) => response.review); }
 export function updateReview(id: string, input: Partial<ReviewInput>) { return apiFetch(`/api/catalog/reviews/${id}`, ReviewMutationResponseSchema, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(input) }).then((response) => response.review); }
 export function deleteReview(id: string) { return apiFetch(`/api/catalog/reviews/${id}`, z.null(), { method: "DELETE" }); }

@@ -67,8 +67,12 @@ Regla: **los álbumes explican quién es culturalmente el usuario; las canciones
 cómo vive la música día a día; el artista es la unidad de descubrimiento.**
 
 El **objeto crítico del álbum es el `release-group`**: todo rating, reseña, favorito e
-ítem de lista de "álbum" apunta ahí. Las ediciones (deluxe, remaster, regional) son un
-selector de tracklist en la página, no objetos valorables distintos.
+ítem de lista de "álbum" apunta ahí. Las ediciones (deluxe, remaster, regional) no son
+objetos valorables distintos ni tienen página propia, y **no cambian la tracklist
+principal**: se listan en la pestaña Ediciones del álbum y las pistas que agregan las
+ediciones ampliadas se muestran como secciones desplegables en la pestaña Canciones
+(corrección de `redesign-album-page`, que reemplaza la idea anterior de un "selector de
+tracklist").
 
 ## 3. Separación obra ↔ evento de consumo (principio transversal)
 

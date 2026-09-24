@@ -19,8 +19,13 @@ interface DualRatingProps {
    * `"starsOnly"`: solo las estrellas + guardar/borrar, sin encabezado ni
    * agregado — para la divulgación secundaria de la página de canción
    * (openspec: rebalance-catalog-detail-pages).
+   * `"panel"`: estrellas + puntaje detallado sin encabezado ni agregado — el panel
+   * "Tu relación" del álbum, donde la media vive en el bloque de comunidad
+   * (openspec: redesign-album-page).
    */
-  variant?: "full" | "starsOnly";
+  variant?: "full" | "starsOnly" | "panel";
+  /** Se llama tras guardar o borrar la valoración (p. ej. para refrescar la página). */
+  onChange?: (ratings: RatingsResponse) => void;
 }
 
 export function DualRating({
@@ -29,6 +34,7 @@ export function DualRating({
   initial,
   authenticated,
   variant = "full",
+  onChange,
 }: DualRatingProps) {
   const t = useTranslations("catalog.social");
   const tErrors = useTranslations("errors");
@@ -51,7 +57,9 @@ export function DualRating({
         stars,
         ...(detailedScore ? { detailedScore: Number(detailedScore) } : {}),
       });
-       setRatings(await getRatings(target, targetId));
+      const updated = await getRatings(target, targetId);
+      setRatings(updated);
+      onChange?.(updated);
       setNotice("saved");
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
@@ -67,7 +75,9 @@ export function DualRating({
     setNotice(null);
     try {
       await deleteRating(target, targetId);
-       setRatings(await getRatings(target, targetId));
+      const updated = await getRatings(target, targetId);
+      setRatings(updated);
+      onChange?.(updated);
       setStars(0);
       setDetailedScore("");
       setNotice("deleted");
@@ -97,18 +107,19 @@ export function DualRating({
   }
 
   const starsOnly = variant === "starsOnly";
+  const showHeader = variant === "full";
 
   return (
     <section
-      aria-labelledby={starsOnly ? undefined : "rating-heading"}
-      aria-label={starsOnly ? t("starsLabel") : undefined}
+      aria-labelledby={showHeader ? "rating-heading" : undefined}
+      aria-label={showHeader ? undefined : t("starsLabel")}
       className={
-        starsOnly
-          ? "flex flex-col gap-4"
-          : "flex flex-col gap-4 border-t border-ink-border pt-6"
+        showHeader
+          ? "flex flex-col gap-4 border-t border-ink-border pt-6"
+          : "flex flex-col gap-4"
       }
     >
-      {!starsOnly && (
+      {showHeader && (
         <div>
           <h2 id="rating-heading" className="font-display text-xl text-paper">{t("ratingHeading")}</h2>
           <p className="font-data text-sm text-paper-muted">
