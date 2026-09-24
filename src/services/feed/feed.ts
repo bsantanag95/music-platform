@@ -18,8 +18,9 @@ import {
 import { ApiError } from "@/lib/api/errors";
 import type { Audience } from "@/services/social/types";
 import { activeUserCondition } from "@/services/auth/account-status";
+import { resolveImageUrls } from "@/services/storage/avatar-urls";
 
-export type FeedAuthor = { id: string; username: string; displayName: string | null };
+export type FeedAuthor = { id: string; username: string; displayName: string | null; avatarUrl?: string | null };
 
 export interface FeedListenEntry {
   kind: "listen";
@@ -287,6 +288,24 @@ function titleSearchCondition(pattern: string | null, releaseGroupIdCol: AnyColu
     sql`${PRIMARY_ARTIST_SQL(releaseGroupIdCol, recordingIdCol)} ILIKE ${pattern}`,
   );
   return condition ? [condition] : [];
+}
+
+/**
+ * Completa `author.avatarUrl` de las entradas de UNA página con una consulta
+ * por lote (foto de perfil, openspec: connect-avatar-upload). Se hace sobre la
+ * página ya recortada, no sobre cada fuente, para no pagar el join en filas que
+ * nunca se devuelven.
+ */
+async function attachAuthorAvatars(entries: { author: FeedAuthor }[]): Promise<void> {
+  const authorIds = [...new Set(entries.map((entry) => entry.author.id))];
+  if (authorIds.length === 0) return;
+  const rows = await db
+    .select({ id: appUser.id, avatarImageId: appUser.avatarImageId })
+    .from(appUser)
+    .where(inArray(appUser.id, authorIds));
+  const urls = await resolveImageUrls(rows.map((row) => row.avatarImageId));
+  const byUser = new Map(rows.map((row) => [row.id, row.avatarImageId ? (urls.get(row.avatarImageId) ?? null) : null]));
+  for (const entry of entries) entry.author.avatarUrl = byUser.get(entry.author.id) ?? null;
 }
 
 /**
@@ -820,8 +839,11 @@ export async function listFeed(
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice((page - 1) * pageSize, page * pageSize + extra);
 
+  const entries = merged.slice(0, pageSize);
+  await attachAuthorAvatars(entries);
+
   return {
-    entries: merged.slice(0, pageSize),
+    entries,
     page,
     pageSize,
     hasNext: merged.length > pageSize,

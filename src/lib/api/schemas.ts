@@ -1187,6 +1187,9 @@ export const AuthorSummarySchema = z.object({
   id: z.uuid(),
   username: z.string(),
   displayName: z.string().nullable(),
+  // Foto de perfil ya resuelta (openspec: connect-avatar-upload). Opcional: solo
+  // el feed la completa; el resto de superficies sigue mostrando la inicial.
+  avatarUrl: z.string().nullable().optional(),
 });
 export type AuthorSummary = z.infer<typeof AuthorSummarySchema>;
 

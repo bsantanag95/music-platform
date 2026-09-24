@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useNow, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
@@ -544,6 +545,17 @@ function initialFor(author: FeedEntry["author"]): string {
 // Decorativo: el nombre ya lo dice `AuthorLink` al lado — repetirlo acá
 // duplicaría el anuncio para lector de pantalla sin agregar información.
 function AuthorAvatar({ author }: { author: FeedEntry["author"] }) {
+  if (author.avatarUrl) {
+    return (
+      <Image
+        src={author.avatarUrl}
+        alt=""
+        width={16}
+        height={16}
+        className="size-4 shrink-0 rounded-full object-cover"
+      />
+    );
+  }
   return (
     <span
       aria-hidden="true"

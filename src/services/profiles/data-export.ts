@@ -28,7 +28,7 @@ import {
   wantToListenEntry,
 } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
-import { imageService } from "@/services/storage";
+import { resolveImageUrl } from "@/services/storage/avatar-urls";
 
 // Exportación de los datos propios (spec account-lifecycle, "Exportar los datos
 // propios"): un objeto JSON con lo que la persona creó, para descargarlo. Solo
@@ -251,7 +251,7 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
       selfRoles: user.selfRoles,
       genres: user.genres,
       listeningFormats: user.listeningFormats,
-      avatarUrl: user.avatarImageId ? imageService.resolveUrl(user.avatarImageId) : null,
+      avatarUrl: await resolveImageUrl(user.avatarImageId),
       memberSince: user.createdAt,
     },
     profile: { links, pinned, showcase: showcase ?? null, prompts },

@@ -4,13 +4,11 @@ const mocks = vi.hoisted(() => ({
   db: {
     select: vi.fn(),
   },
-  imageService: {
-    resolveUrl: vi.fn(),
-  },
+  resolveImageUrl: vi.fn(),
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
-vi.mock("@/services/storage", () => ({ imageService: mocks.imageService }));
+vi.mock("@/services/storage/avatar-urls", () => ({ resolveImageUrl: mocks.resolveImageUrl }));
 
 import { getExtendedIdentity } from "./identity";
 
@@ -68,11 +66,11 @@ function setupSelectChain(userRow: unknown) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.imageService.resolveUrl.mockReturnValue("https://cdn.example.com/avatar/uuid.webp");
+  mocks.resolveImageUrl.mockImplementation(async (id: string | null) => (id ? "https://cdn.example.com/avatar/uuid.webp" : null));
 });
 
 describe("resolución de avatarUrl en identity", () => {
-  it("resuelve avatarUrl desde avatarImageId usando imageService.resolveUrl", async () => {
+  it("resuelve avatarUrl desde avatarImageId con el resolutor de imágenes", async () => {
     const userRow = {
       id: "u1",
       username: "ana",
@@ -98,7 +96,7 @@ describe("resolución de avatarUrl en identity", () => {
 
     expect(result).not.toBeNull();
     expect(result!.avatarUrl).toBe("https://cdn.example.com/avatar/uuid.webp");
-    expect(mocks.imageService.resolveUrl).toHaveBeenCalledWith("img-123");
+    expect(mocks.resolveImageUrl).toHaveBeenCalledWith("img-123");
   });
 
   it("devuelve null cuando no hay avatar", async () => {
@@ -127,6 +125,6 @@ describe("resolución de avatarUrl en identity", () => {
 
     expect(result).not.toBeNull();
     expect(result!.avatarUrl).toBeNull();
-    expect(mocks.imageService.resolveUrl).not.toHaveBeenCalled();
+    expect(mocks.resolveImageUrl).toHaveBeenCalledWith(null);
   });
 });

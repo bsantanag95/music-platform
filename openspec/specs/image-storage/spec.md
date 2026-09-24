@@ -1,4 +1,10 @@
-## ADDED Requirements
+# image-storage Specification
+
+## Purpose
+
+Gestión del ciclo de vida de las imágenes propias de la aplicación: registro en la tabla `image`, proveedor de storage intercambiable (driver local para desarrollo y S3-compatible para producción) separado del servicio de imágenes, validación de formato, tamaño y dimensiones, normalización a WebP con presets por `kind`, generación de la clave de storage en el servidor, resolución de URL y borrado coordinado de objeto y registro. Cambio add-image-storage.
+
+## Requirements
 
 ### Requirement: Registro de imágenes propias
 El sistema SHALL representar cada imagen procesada que la aplicación posee mediante un registro en la tabla `image`, con al menos `id`, `storage_key`, `kind`, `mime_type`, `width`, `height`, `byte_size` y `created_at`. Un registro `image` representa un único archivo en una única resolución; el sistema SHALL NOT almacenar el archivo original recibido en el upload.

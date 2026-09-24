@@ -763,6 +763,9 @@ actualización de metadatos) de los usuarios seguidos (relación `accepted`) que
 el lector. Se calcula bajo demanda uniendo las tres fuentes, ordenado por `createdAt` descendente
 con desempate por fuente e id. Requiere sesión.
 
+`author` de cada entrada incluye `avatarUrl: string | null` (campo aditivo de `connect-avatar-upload`): la foto
+de perfil ya resuelta, o `null` si el autor no tiene y el cliente dibuja la inicial.
+
 **200 OK:** `{ entries: [FeedEntry], page, pageSize, hasNext }` donde `FeedEntry` es una unión
 discriminada por `kind: "listen" | "favorite" | "list"`. **401** con `AUTH_REQUIRED` sin sesión.
 **400** con `VALIDATION_ERROR` si la paginación es inválida.

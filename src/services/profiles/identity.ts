@@ -1,6 +1,6 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { appUser, image, userFollow, userProfileLink, userProfilePrompt } from "@/db/schema";
+import { appUser, userFollow, userProfileLink, userProfilePrompt } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { normalizeLinkInput } from "@/lib/profile-links";
 import type { Genre, ListeningFormat, ProfilePromptData, PromptKey, SelfRole } from "@/lib/music-identity";
@@ -14,7 +14,7 @@ import {
 import type { ProfileLinkKind, ProfileVisibility } from "@/services/social/types";
 import { PROFILE_MAX_LINKS } from "@/services/social/types";
 import { activeUserCondition } from "@/services/auth/account-status";
-import { imageService } from "@/services/storage";
+import { resolveImageUrl } from "@/services/storage/avatar-urls";
 
 export interface ProfileLinkData {
   id: string;
@@ -95,16 +95,6 @@ type IdentityRow = {
   createdAt: Date;
 };
 
-async function resolveAvatarUrl(imageId: string | null): Promise<string | null> {
-  if (!imageId) return null;
-  const [img] = await db
-    .select({ storageKey: image.storageKey })
-    .from(image)
-    .where(eq(image.id, imageId))
-    .limit(1);
-  return img ? imageService.resolveUrl(img.storageKey) : null;
-}
-
 async function hydrate(user: IdentityRow): Promise<ExtendedIdentityData> {
   const [links, counts, prompts, avatarUrl] = await Promise.all([
     db
@@ -127,7 +117,7 @@ async function hydrate(user: IdentityRow): Promise<ExtendedIdentityData> {
       .from(userProfilePrompt)
       .where(eq(userProfilePrompt.userId, user.id))
       .orderBy(asc(userProfilePrompt.position)),
-    resolveAvatarUrl(user.avatarImageId),
+    resolveImageUrl(user.avatarImageId),
   ]);
 
   return {

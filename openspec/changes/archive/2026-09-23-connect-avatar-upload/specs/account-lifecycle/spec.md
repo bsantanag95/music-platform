@@ -1,4 +1,4 @@
-,## MODIFIED Requirements
+## MODIFIED Requirements
 
 ### Requirement: Eliminar la cuenta
 
