@@ -132,17 +132,27 @@ release-group ↔ release, y "a lo sumo una" se expresa igual de bien con el ín
 `detectEditionVariants(editions, representative)` sobre las filas de `release_edition`:
 
 1. Solo ediciones `Official` con `track_count` conocido.
-2. **Candidata** si `track_count` > el de la representativa. Menos pistas no es variante
-   (ej.: las 39 ediciones de 9 pistas de DSOTM fusionan dos canciones).
-3. **Caja** si el embalaje contiene "box", o `medium_count` ≥ 4, o `track_count` > 3× el de
+2. **Recuento efectivo**: un SACD híbrido informa cada capa (CD, SACD 2 canales, SACD
+   multicanal) como un disco con el mismo programa. Sin recuento por disco, se asume el
+   programa repartido en partes iguales y se cuenta una sola capa.
+3. **Candidata** si el recuento efectivo > el de la representativa. Menos pistas no es
+   variante (ej.: las 39 ediciones de 9 pistas de DSOTM fusionan dos canciones).
+4. **Caja** si el embalaje contiene "box", o `medium_count` ≥ 4, o `track_count` > 3× el de
    la representativa.
-4. **Agrupación** por (`track_count`, nombre normalizado de la edición: título si difiere
-   del título del álbum, si no la desambiguación). De cada grupo se elige una edición con
-   los mismos criterios de `pickRepresentativeRelease` (adaptador de `release_edition` a
+5. **Agrupación** por (`track_count`, formatos). De cada grupo se elige una edición con los
+   mismos criterios de `pickRepresentativeRelease` (adaptador de `release_edition` a
    `MBReleaseSummary`).
-5. **Salida** por variante: edición elegida, nombre (fallback "Edición {año} · {formato}"),
-   año, sellos, formatos, países de las ediciones del grupo, cantidad de ediciones,
-   `estimatedExtraTracks` (= diferencia de recuentos) y `isBox`.
+6. **Salida** por variante: edición elegida, nombre (título si difiere del álbum, si no la
+   **primera frase** de la desambiguación; fallback "Edición {año} · {formato}"), año,
+   sellos, formatos, países de las ediciones del grupo, cantidad de ediciones,
+   `estimatedExtraTracks` (= recuento efectivo − el de la representativa) e `isBox`.
+
+**Corrección durante la implementación (datos reales de DSOTM):** la primera versión
+agrupaba por nombre y contaba todas las pistas. Con las 150 ediciones reales eso daba 6
+"variantes" de la misma edición del 30 aniversario (la desambiguación trae detalles de
+prensado: "printed in EU, stars in matrix") y presentaba los SACD de 3 capas como +20
+pistas. Con recuento efectivo y agrupación por formatos, DSOTM da una sola variante real
+(Experience Edition: 4 ediciones de BR, GB, JP y US, +10) y 3 cajas.
 
 Es pura y determinista (mismas entradas → misma salida, sin importar el orden), y se testea
 con los recuentos reales de DSOTM como fixture.
@@ -197,7 +207,7 @@ Se guardan todos los tipos. La clasificación es de lectura, en
 
 | Nivel | Regla |
 |---|---|
-| 1. Integrantes de la banda | Cualquier crédito de una persona que es miembro (`membership`) de algún artista principal del álbum |
+| 1. Integrantes de la banda | Cualquier crédito de una persona que es miembro (`membership`) de algún artista principal del álbum, o que es ella misma un artista principal (solista: no es "invitado" en su propio disco) |
 | 2. Músicos invitados | Tipos de intérprete (`instrument`, `vocal`, `performer`, `performing orchestra`, `conductor`, `chorus master`, `concertmaster`) de no miembros |
 | 3. Producción y sonido | `producer`, `engineer`, `audio`, `sound`, `recording`, `mix`, `mastering`, `programming`, `editor`, `balance` |
 | 4. Arte y otros | Todo lo demás, incluidos tipos desconocidos |

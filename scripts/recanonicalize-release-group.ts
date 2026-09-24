@@ -6,9 +6,10 @@ import { recanonicalizeReleaseGroup } from "@/services/catalog/recanonicalize";
 /**
  * Reevalúa la edición representativa de release-groups ya ingeridos y
  * repuebla su fecha de lanzamiento canónica (openspec:
- * canonicalize-release-group). Corregir una edición subóptima reemplaza
- * `release` + `track` SIN tocar ningún dato social (todo cuelga del
- * release-group). Complementa `scripts/backfill-release-credits.ts`, que
+ * canonicalize-release-group). Evalúa sobre TODAS las ediciones (browse
+ * paginado) y corregir una edición subóptima mueve la marca de representativa
+ * (openspec: enrich-album-editions-and-credits) SIN tocar ningún dato social
+ * (todo cuelga del release-group). Complementa `scripts/backfill-release-credits.ts`, que
  * solo sincroniza créditos de la edición ya elegida.
  *
  * Uso:

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import { findOrIngestTracklist } from "./ingest-release";
 import * as schema from "@/db/schema";
+import type { MBReleaseSummary } from "@/services/musicbrainz/types";
 
 vi.mock("@/db", () => ({
   db: {
@@ -12,9 +13,18 @@ vi.mock("@/db", () => ({
 
 vi.mock("@/services/musicbrainz/client", () => ({
   musicbrainz: {
-    getReleaseGroup: vi.fn(),
     getRelease: vi.fn(),
   },
+}));
+
+vi.mock("./personnel-credits", () => ({
+  savePersonnelCredits: vi.fn(),
+  completePersonnelSync: vi.fn(),
+  syncPersonnelCredits: vi.fn(),
+}));
+vi.mock("./release-editions", () => ({
+  fetchReleaseEditions: vi.fn(),
+  saveReleaseEditions: vi.fn(),
 }));
 
 vi.mock("./ingest-discography", () => ({
@@ -24,6 +34,23 @@ vi.mock("./ingest-discography", () => ({
 const { db } = await import("@/db");
 const { musicbrainz } = await import("@/services/musicbrainz/client");
 const { ingestCredits } = await import("./ingest-discography");
+const { fetchReleaseEditions, saveReleaseEditions } = await import("./release-editions");
+
+/** Ediciones que devolvería el browse paginado de MusicBrainz para el release-group. */
+function mockEditions(rg: {
+  id?: string;
+  title?: string;
+  "first-release-date"?: string;
+  releases?: MBReleaseSummary[];
+}) {
+  const editions = rg.releases ?? [];
+  vi.mocked(fetchReleaseEditions).mockResolvedValue({
+    editions,
+    firstReleaseDate: rg["first-release-date"],
+    total: editions.length,
+    truncated: false,
+  });
+}
 
 function makeSelectChain(rows: unknown[] = []) {
   const chain = {
@@ -61,6 +88,8 @@ function makeReleaseRow(overrides: Partial<schema.ReleaseRow> = {}): schema.Rele
     releaseDate: null,
     coverThumbUrl: null,
     creditsSyncedAt: null,
+    isRepresentative: true,
+    personnelSyncedAt: null,
     ...overrides,
   };
 }
@@ -85,7 +114,7 @@ describe("findOrIngestTracklist", () => {
   });
 
   it("ingiere una edición con fecha anual (1985) sin enviar el valor a la base", async () => {
-    vi.mocked(musicbrainz.getReleaseGroup).mockResolvedValue({
+    mockEditions({
       id: "mbid-rg-1",
       title: "Icon",
       releases: [{ id: "mbid-r-1", status: "Official", date: "1985" }],
@@ -108,7 +137,7 @@ describe("findOrIngestTracklist", () => {
   });
 
   it("convierte una fecha anual a null en el onConflictDoUpdate (upsert idempotente)", async () => {
-    vi.mocked(musicbrainz.getReleaseGroup).mockResolvedValue({
+    mockEditions({
       id: "mbid-rg-1",
       title: "Icon",
       releases: [{ id: "mbid-r-1", status: "Official", date: "1985" }],
@@ -131,7 +160,7 @@ describe("findOrIngestTracklist", () => {
   });
 
   it("ingiere la edición sin resolver la carátula (vive en release_group)", async () => {
-    vi.mocked(musicbrainz.getReleaseGroup).mockResolvedValue({
+    mockEditions({
       id: "mbid-rg-1",
       title: "Album",
       releases: [{ id: "mbid-r-1", status: "Official", date: "1973-03-01" }],
@@ -164,7 +193,7 @@ describe("findOrIngestTracklist", () => {
   });
 
   it("elige la edición representativa (original) frente a una reedición deluxe", async () => {
-    vi.mocked(musicbrainz.getReleaseGroup).mockResolvedValue({
+    mockEditions({
       id: "mbid-rg-1",
       title: "Album",
       releases: [
@@ -189,7 +218,7 @@ describe("findOrIngestTracklist", () => {
   });
 
   it("deriva editionLabel de la disambiguation en vez de 'original' fijo", async () => {
-    vi.mocked(musicbrainz.getReleaseGroup).mockResolvedValue({
+    mockEditions({
       id: "mbid-rg-1",
       title: "Album",
       releases: [{ id: "mbid-r-1", status: "Official", date: "1994", disambiguation: "Japanese edition" }],
@@ -206,7 +235,7 @@ describe("findOrIngestTracklist", () => {
   });
 
   it("persiste la fecha canónica del release-group desde first-release-date de MusicBrainz", async () => {
-    vi.mocked(musicbrainz.getReleaseGroup).mockResolvedValue({
+    mockEditions({
       id: "mbid-rg-1",
       title: "Album",
       "first-release-date": "1973-03-24",
@@ -233,7 +262,7 @@ describe("findOrIngestTracklist", () => {
   });
 
   it("con first-release-date anual solo puebla el año canónico", async () => {
-    vi.mocked(musicbrainz.getReleaseGroup).mockResolvedValue({
+    mockEditions({
       id: "mbid-rg-1",
       title: "Album",
       "first-release-date": "1985",
@@ -253,7 +282,7 @@ describe("findOrIngestTracklist", () => {
   });
 
   it("devuelve null cuando el release-group no tiene ediciones ingeribles", async () => {
-    vi.mocked(musicbrainz.getReleaseGroup).mockResolvedValue({
+    mockEditions({
       id: "mbid-rg-1",
       title: "Album",
       releases: [],
@@ -263,6 +292,38 @@ describe("findOrIngestTracklist", () => {
 
     expect(result).toBeNull();
     expect(musicbrainz.getRelease).not.toHaveBeenCalled();
+  });
+
+  it("marca la edición ingerida como representativa y guarda el resumen de ediciones", async () => {
+    const releases = [{ id: "mbid-r-1", status: "Official", date: "1973-03-01" }];
+    mockEditions({ releases });
+    vi.mocked(musicbrainz.getRelease).mockResolvedValue({ id: "mbid-r-1", title: "Album", date: "1973-03-01" });
+    const insertChain = makeInsertChain(makeReleaseRow());
+    vi.mocked(db.insert).mockReturnValue(insertChain as never);
+
+    await findOrIngestTracklist("rg-1", "mbid-rg-1");
+
+    expect(fetchReleaseEditions).toHaveBeenCalledWith("mbid-rg-1");
+    expect(saveReleaseEditions).toHaveBeenCalledWith("rg-1", releases);
+    const valuesArg = insertChain.values.mock.calls[0]?.[0] as { isRepresentative: unknown };
+    expect(valuesArg.isRepresentative).toBe(true);
+    const updateArg = insertChain.onConflictDoUpdate.mock.calls[0]?.[0] as { set: { isRepresentative?: unknown } };
+    expect(updateArg.set.isRepresentative).toBe(true);
+  });
+
+  it("elige la original aunque esté más allá de las primeras 25 ediciones", async () => {
+    const reissues = Array.from({ length: 59 }, (_, i) => ({
+      id: `mbid-reissue-${String(i).padStart(2, "0")}`,
+      status: "Official",
+      date: `20${String(10 + (i % 10)).padStart(2, "0")}-01-01`,
+    }));
+    mockEditions({ releases: [...reissues, { id: "mbid-original", status: "Official", date: "1973-03-24" }] });
+    vi.mocked(musicbrainz.getRelease).mockResolvedValue({ id: "mbid-original", title: "Album", date: "1973-03-24" });
+    vi.mocked(db.insert).mockReturnValue(makeInsertChain(makeReleaseRow()) as never);
+
+    await findOrIngestTracklist("rg-1", "mbid-rg-1");
+
+    expect(musicbrainz.getRelease).toHaveBeenCalledWith("mbid-original");
   });
 
   it("devuelve la release existente sin llamar a MusicBrainz aunque creditsSyncedAt sea NULL", async () => {
@@ -276,6 +337,7 @@ describe("findOrIngestTracklist", () => {
 
     expect(result).toEqual(existing);
     expect(musicbrainz.getRelease).not.toHaveBeenCalled();
+    expect(fetchReleaseEditions).not.toHaveBeenCalled();
     expect(ingestCredits).not.toHaveBeenCalled();
     expect(db.update).not.toHaveBeenCalled();
     expect(db.insert).not.toHaveBeenCalled();

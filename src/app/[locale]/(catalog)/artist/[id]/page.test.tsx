@@ -124,6 +124,7 @@ function makeReleaseGroup(overrides: Partial<ReleaseGroupRow> = {}): ReleaseGrou
     coverStorageKey: null,
     coverCheckedAt: null,
     coverBlockedAt: null,
+    editionsSyncedAt: null,
     firstReleaseDate: null,
     firstReleaseYear: null,
     createdAt: new Date("2024-01-01T00:00:00Z"),

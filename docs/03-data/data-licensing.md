@@ -8,6 +8,11 @@ La base se divide en dos licencias:
 - **Datos "core"** (la mayoría): CC0 — dominio público, uso libre incluso comercial, sin restricciones.
 - **Datos suplementarios** (parte de las relaciones/anotaciones editadas por la comunidad): CC BY-NC-SA 3.0 — exige atribución, prohíbe uso comercial, y obliga a compartir cualquier derivado bajo la misma licencia.
 
+**Qué usamos (cambio `enrich-album-editions-and-credits`):** ediciones, sellos, números de
+catálogo, formatos y las relaciones artista ↔ edición/grabación de los créditos de personal
+(instrumentos, voz, producción, ingeniería, arte) son datos centrales de MusicBrainz (CC0). No
+se ingieren anotaciones, tags ni ratings de MusicBrainz, que son los datos suplementarios.
+
 **Implicancia práctica:** no bloquea el MVP. El riesgo aparece solo si el proyecto monetiza usando específicamente esos datos suplementarios a gran escala — en ese punto, MetaBrainz ofrece licenciamiento comercial directo.
 
 ## B) El servicio API en vivo (distinto de los dumps descargables)

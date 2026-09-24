@@ -202,6 +202,33 @@ error transitorio no escribe nada. Nunca construir esta URL a mano en el fronten
 
 **404** con `code: ALBUM_NOT_FOUND` si el `id` no corresponde a ningún `release_group`.
 
+## `GET /api/catalog/release-group/[id]/editions/[editionId]/extra-tracks` — ✅ Existe
+
+Cambio `enrich-album-editions-and-credits`. Pistas que una edición agrega a la lista de la
+edición representativa del álbum — la sección desplegable "Pistas adicionales" de la
+pestaña Canciones. Público (catálogo).
+
+- `editionId` es el id propio de `release_edition` (UUID), no el MBID.
+- La primera vez ingiere la tracklist de la edición como `release` **no representativa**
+  (una request a MusicBrainz); las siguientes se sirven desde la base.
+- Una pista es adicional si su grabación no está en la lista principal y su título
+  normalizado (minúsculas, sin acentos, sin marcas de remasterización) tampoco coincide.
+  "Money (Live)" es adicional; "Money - 2011 Remaster" no.
+
+**Respuesta `200`:**
+
+```json
+{
+  "tracks": [
+    { "recordingId": "uuid", "discNumber": 2, "position": 1, "title": "Money (Live)", "durationSec": 400, "variantType": "live" }
+  ]
+}
+```
+
+**Errores:** `400 VALIDATION_ERROR` (algún id no es UUID), `404 EDITION_NOT_FOUND` (la edición
+no existe o es de otro álbum), `422 EDITION_IS_BOX` (la edición es una caja: no se ingiere; la
+interfaz enlaza a MusicBrainz).
+
 ## Descubrimiento `/explore` (cambio `add-album-discovery`)
 
 **No expone endpoints.** La superficie `/[locale]/explore` y sus listados filtrados

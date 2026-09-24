@@ -1,25 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { recanonicalizeReleaseGroup } from "./recanonicalize";
+import type { MBReleaseSummary } from "@/services/musicbrainz/types";
 
 vi.mock("@/db", () => ({
   db: {
     select: vi.fn(),
-    delete: vi.fn(),
+    transaction: vi.fn(),
   },
 }));
 
-vi.mock("@/services/musicbrainz/client", () => ({
-  musicbrainz: { getReleaseGroup: vi.fn() },
-}));
-
 vi.mock("./ingest-release", () => ({
-  findOrIngestTracklist: vi.fn(),
+  ingestReleaseTracklist: vi.fn(),
   persistCanonicalReleaseDate: vi.fn(),
 }));
 
+vi.mock("./release-editions", () => ({
+  fetchReleaseEditions: vi.fn(),
+  saveReleaseEditions: vi.fn(),
+}));
+
 const { db } = await import("@/db");
-const { musicbrainz } = await import("@/services/musicbrainz/client");
-const { findOrIngestTracklist, persistCanonicalReleaseDate } = await import("./ingest-release");
+const { ingestReleaseTracklist, persistCanonicalReleaseDate } = await import("./ingest-release");
+const { fetchReleaseEditions, saveReleaseEditions } = await import("./release-editions");
 
 /** Encola respuestas para llamadas sucesivas a `db.select()...limit()`. */
 function queueSelects(...results: unknown[][]) {
@@ -35,34 +37,51 @@ function queueSelects(...results: unknown[][]) {
   });
 }
 
-function mockDelete() {
-  const chain = { where: vi.fn(async () => undefined) };
-  vi.mocked(db.delete).mockReturnValue(chain as never);
-  return chain;
+/** Transacción que registra cada `update().set()` para verificar el intercambio de la marca. */
+function mockTransaction() {
+  const sets: unknown[] = [];
+  vi.mocked(db.transaction).mockImplementation((async (cb: (tx: unknown) => Promise<void>) => {
+    const tx = {
+      update: () => ({
+        set: (values: unknown) => {
+          sets.push(values);
+          return { where: async () => undefined };
+        },
+      }),
+    };
+    await cb(tx);
+  }) as never);
+  return sets;
+}
+
+function mockEditions(releases: MBReleaseSummary[], firstReleaseDate?: string) {
+  vi.mocked(fetchReleaseEditions).mockResolvedValue({
+    editions: releases,
+    firstReleaseDate,
+    total: releases.length,
+    truncated: false,
+  });
 }
 
 const RG_ROW = { id: "rg-1", mbid: "mbid-rg-1", title: "Album", category: "studio" };
+const REMASTER_AND_ORIGINAL: MBReleaseSummary[] = [
+  { id: "mbid-remaster", status: "Official", date: "2011-01-01", title: "Album (Remastered)" },
+  { id: "mbid-original", status: "Official", date: "1994-09-13" },
+];
 
 describe("recanonicalizeReleaseGroup", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("reemplaza la edición cuando la representativa difiere, sin tocar tablas sociales", async () => {
+  it("desmarca la anterior e ingiere la nueva representativa, sin tocar tablas sociales", async () => {
     queueSelects(
       [RG_ROW], // release_group
-      [{ id: "r-old", mbid: "mbid-remaster" }], // release actual
+      [{ id: "r-old", mbid: "mbid-remaster" }], // representativa actual
+      [], // la nueva todavía no está ingerida
     );
-    vi.mocked(musicbrainz.getReleaseGroup).mockResolvedValue({
-      id: "mbid-rg-1",
-      title: "Album",
-      "first-release-date": "1994-09-13",
-      releases: [
-        { id: "mbid-remaster", status: "Official", date: "2011-01-01", title: "Album (Remastered)" },
-        { id: "mbid-original", status: "Official", date: "1994-09-13" },
-      ],
-    });
-    const del = mockDelete();
+    mockEditions(REMASTER_AND_ORIGINAL, "1994-09-13");
+    const sets = mockTransaction();
 
     const result = await recanonicalizeReleaseGroup("rg-1");
 
@@ -72,40 +91,44 @@ describe("recanonicalizeReleaseGroup", () => {
       toReleaseMbid: "mbid-original",
     });
     expect(persistCanonicalReleaseDate).toHaveBeenCalledWith("rg-1", "1994-09-13");
-    expect(del.where).toHaveBeenCalledTimes(1); // solo el DELETE de release
-    expect(findOrIngestTracklist).toHaveBeenCalledWith("rg-1", "mbid-rg-1");
+    expect(saveReleaseEditions).toHaveBeenCalledWith("rg-1", REMASTER_AND_ORIGINAL);
+    expect(sets).toEqual([{ isRepresentative: false }]);
+    expect(ingestReleaseTracklist).toHaveBeenCalledWith(
+      "rg-1",
+      expect.objectContaining({ id: "mbid-original" }),
+      { representative: true },
+    );
   });
 
-  it("no escribe nada cuando la edición ingerida ya es la representativa", async () => {
+  it("si la nueva representativa ya está ingerida como variante, intercambia la marca sin pedir su tracklist", async () => {
+    queueSelects([RG_ROW], [{ id: "r-old", mbid: "mbid-remaster" }], [{ id: "r-orig", mbid: "mbid-original" }]);
+    mockEditions(REMASTER_AND_ORIGINAL, "1994-09-13");
+    const sets = mockTransaction();
+
+    const result = await recanonicalizeReleaseGroup("rg-1");
+
+    expect(result).toMatchObject({ status: "recanonicalized", toReleaseMbid: "mbid-original" });
+    expect(sets).toEqual([{ isRepresentative: false }, { isRepresentative: true }]);
+    expect(ingestReleaseTracklist).not.toHaveBeenCalled();
+  });
+
+  it("no cambia la edición cuando la ingerida ya es la representativa", async () => {
     queueSelects([RG_ROW], [{ id: "r-1", mbid: "mbid-original" }]);
-    vi.mocked(musicbrainz.getReleaseGroup).mockResolvedValue({
-      id: "mbid-rg-1",
-      title: "Album",
-      "first-release-date": "1994",
-      releases: [{ id: "mbid-original", status: "Official", date: "1994-09-13" }],
-    });
-    mockDelete();
+    mockEditions([{ id: "mbid-original", status: "Official", date: "1994-09-13" }], "1994");
 
     const result = await recanonicalizeReleaseGroup("rg-1");
 
     expect(result).toEqual({ status: "unchanged", currentReleaseMbid: "mbid-original" });
-    // la fecha canónica se repuebla igual (backfill)
+    // la fecha canónica y el resumen de ediciones se repueblan igual (backfill)
     expect(persistCanonicalReleaseDate).toHaveBeenCalledWith("rg-1", "1994");
-    expect(db.delete).not.toHaveBeenCalled();
-    expect(findOrIngestTracklist).not.toHaveBeenCalled();
+    expect(saveReleaseEditions).toHaveBeenCalled();
+    expect(db.transaction).not.toHaveBeenCalled();
+    expect(ingestReleaseTracklist).not.toHaveBeenCalled();
   });
 
   it("en dry-run informa sin escribir", async () => {
     queueSelects([RG_ROW], [{ id: "r-old", mbid: "mbid-remaster" }]);
-    vi.mocked(musicbrainz.getReleaseGroup).mockResolvedValue({
-      id: "mbid-rg-1",
-      title: "Album",
-      "first-release-date": "1994-09-13",
-      releases: [
-        { id: "mbid-remaster", status: "Official", date: "2011-01-01", title: "Album (Remastered)" },
-        { id: "mbid-original", status: "Official", date: "1994-09-13" },
-      ],
-    });
+    mockEditions(REMASTER_AND_ORIGINAL, "1994-09-13");
 
     const result = await recanonicalizeReleaseGroup("rg-1", { dryRun: true });
 
@@ -114,10 +137,12 @@ describe("recanonicalizeReleaseGroup", () => {
       currentReleaseMbid: "mbid-remaster",
       chosenReleaseMbid: "mbid-original",
       wouldChangeEdition: true,
+      canonicalFirstReleaseDate: "1994-09-13",
     });
     expect(persistCanonicalReleaseDate).not.toHaveBeenCalled();
-    expect(db.delete).not.toHaveBeenCalled();
-    expect(findOrIngestTracklist).not.toHaveBeenCalled();
+    expect(saveReleaseEditions).not.toHaveBeenCalled();
+    expect(db.transaction).not.toHaveBeenCalled();
+    expect(ingestReleaseTracklist).not.toHaveBeenCalled();
   });
 
   it("omite un release-group sin mbid", async () => {
@@ -126,6 +151,6 @@ describe("recanonicalizeReleaseGroup", () => {
     const result = await recanonicalizeReleaseGroup("rg-1");
 
     expect(result).toEqual({ status: "skipped", reason: "no-mbid" });
-    expect(musicbrainz.getReleaseGroup).not.toHaveBeenCalled();
+    expect(fetchReleaseEditions).not.toHaveBeenCalled();
   });
 });

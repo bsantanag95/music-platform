@@ -84,6 +84,7 @@ function makeDetail(overrides: Partial<AlbumDetail> = {}): AlbumDetail {
       coverStorageKey: null,
       coverCheckedAt: null,
       coverBlockedAt: null,
+      editionsSyncedAt: null,
       coverResolved: false,
       firstReleaseDate: "1973-03-24",
       firstReleaseYear: 1973,
@@ -97,6 +98,8 @@ function makeDetail(overrides: Partial<AlbumDetail> = {}): AlbumDetail {
       releaseDate: "1973-03-01",
       coverThumbUrl: null,
       creditsSyncedAt: new Date(),
+      isRepresentative: true,
+      personnelSyncedAt: null,
     },
     cover: null,
     tracks: [

@@ -1,10 +1,13 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { release, recording, track, releaseGroup, type ReleaseRow } from "@/db/schema";
 import { musicbrainz } from "../musicbrainz/client";
 import { normalizeReleaseDate, yearFromMbDate } from "../musicbrainz/mappers";
 import { ingestCredits } from "./ingest-discography";
 import { pickRepresentativeRelease, deriveEditionLabel } from "./representative-release";
+import { fetchReleaseEditions, saveReleaseEditions } from "./release-editions";
+import { completePersonnelSync, savePersonnelCredits } from "./personnel-credits";
+import type { MBReleaseSummary } from "../musicbrainz/types";
 
 /**
  * Persiste la fecha de lanzamiento canónica del release-group
@@ -33,18 +36,17 @@ export async function persistCanonicalReleaseDate(
 
 /**
  * Trae y cachea el tracklist de la **edición representativa** de un
- * release-group, elegida de forma determinista por
- * `pickRepresentativeRelease` (openspec: album-edition-selection).
- * Simplificación de la Fase 2: se ingiere una sola edición por álbum;
- * ingerir ediciones alternativas (japonesa, remaster) queda para cuando
- * el modelo de selección de edición se implemente en el frontend.
+ * release-group, elegida de forma determinista por `pickRepresentativeRelease`
+ * (openspec: album-edition-selection) entre TODAS sus ediciones: el browse
+ * paginado reemplaza al lookup del grupo, que devolvía como máximo 25
+ * (openspec: enrich-album-editions-and-credits). La misma pasada guarda el
+ * resumen de ediciones (sellos, formatos) y la fecha canónica del álbum.
  *
- * Nota: si el release ya existe se devuelve tal cual, sin llamadas a
- * MusicBrainz. Los releases cacheados antes de la ingesta de créditos se
- * re-sincronizan con el script `scripts/backfill-release-credits.ts`,
- * nunca dentro del path de lectura del álbum (una caída de MusicBrainz
- * no debe romper la vista de álbum). Corregir una edición representativa
- * subóptima ya ingerida es tarea de `scripts/recanonicalize-release-group.ts`.
+ * Nota: si la representativa ya existe se devuelve tal cual, sin llamadas a
+ * MusicBrainz (una caída de MusicBrainz no debe romper la vista de álbum). Los
+ * álbumes ingeridos antes del resumen de ediciones lo sincronizan en segundo
+ * plano (`scheduleEditionsSync`); corregir una edición representativa subóptima
+ * es tarea de `scripts/recanonicalize-release-group.ts`.
  */
 export async function findOrIngestTracklist(
   releaseGroupId: string,
@@ -53,20 +55,35 @@ export async function findOrIngestTracklist(
   const [existing] = await db
     .select()
     .from(release)
-    .where(eq(release.releaseGroupId, releaseGroupId))
+    .where(and(eq(release.releaseGroupId, releaseGroupId), eq(release.isRepresentative, true)))
     .limit(1);
 
   if (existing) return existing;
 
-  const rgWithReleases = await musicbrainz.getReleaseGroup(releaseGroupMbid);
-  await persistCanonicalReleaseDate(releaseGroupId, rgWithReleases["first-release-date"]);
+  const { editions, firstReleaseDate } = await fetchReleaseEditions(releaseGroupMbid);
+  await persistCanonicalReleaseDate(releaseGroupId, firstReleaseDate);
+  await saveReleaseEditions(releaseGroupId, editions);
 
-  const chosen = pickRepresentativeRelease(rgWithReleases.releases ?? []);
+  const chosen = pickRepresentativeRelease(editions);
   if (!chosen) return null;
 
-  const full = await musicbrainz.getRelease(chosen.id);
+  return ingestReleaseTracklist(releaseGroupId, chosen, { representative: true });
+}
+
+/**
+ * Ingiere la tracklist de UNA edición: `release`, grabaciones, `track` y créditos de
+ * autoría de cada pista. `representative: true` la marca como la edición del álbum;
+ * `false` la guarda como edición adicional (variantes con pistas adicionales, ingeridas
+ * bajo demanda) sin tocar la representativa.
+ */
+export async function ingestReleaseTracklist(
+  releaseGroupId: string,
+  edition: MBReleaseSummary,
+  { representative }: { representative: boolean },
+): Promise<ReleaseRow> {
+  const full = await musicbrainz.getRelease(edition.id);
   const releaseDate = normalizeReleaseDate(full.date);
-  const editionLabel = deriveEditionLabel(chosen);
+  const editionLabel = deriveEditionLabel(edition);
 
   // La carátula ya no se resuelve acá: vive en `release_group.cover_thumb_url`
   // (patrón cover-only, ver services/catalog/cover.ts) y `release.cover_thumb_url`
@@ -79,8 +96,12 @@ export async function findOrIngestTracklist(
       editionLabel,
       releaseDate,
       creditsSyncedAt: new Date(),
+      isRepresentative: representative,
     })
-    .onConflictDoUpdate({ target: release.mbid, set: { releaseDate, editionLabel } })
+    .onConflictDoUpdate({
+      target: release.mbid,
+      set: { releaseDate, editionLabel, ...(representative ? { isRepresentative: true } : {}) },
+    })
     .returning();
 
   const releaseRow = insertedReleases[0];
@@ -118,6 +139,10 @@ export async function findOrIngestTracklist(
       }
     }
   }
+
+  // Créditos de personal: vienen en la misma respuesta (`getRelease` pide las relaciones).
+  await savePersonnelCredits(releaseRow.id, full);
+  await completePersonnelSync(releaseRow.id, releaseGroupId);
 
   return releaseRow;
 }

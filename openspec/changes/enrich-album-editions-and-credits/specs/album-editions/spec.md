@@ -93,11 +93,12 @@ cambiaría.
 ### Requirement: Detección de variantes con pistas adicionales
 
 El sistema SHALL detectar, mediante una función pura y determinista sobre el resumen de
-ediciones, las **variantes** de un álbum: grupos de ediciones oficiales con cantidad de
-pistas conocida mayor que la de la edición representativa, agrupadas por cantidad de pistas
-y nombre normalizado de la edición. Cada variante SHALL exponer una edición elegida con los
-criterios de la selección de edición representativa, un nombre (título de la edición si
-difiere del título del álbum, si no su desambiguación, si no "Edición {año} · {formato}"),
+ediciones, las **variantes** de un álbum: grupos de ediciones oficiales cuyo recuento
+efectivo de pistas (contando una sola vez las capas de un SACD híbrido, que repiten el
+programa) es mayor que el de la edición representativa, agrupadas por cantidad de pistas y
+formatos. Cada variante SHALL exponer una edición elegida con los criterios de la selección
+de edición representativa, un nombre (título de la edición si difiere del título del álbum,
+si no la primera frase de su desambiguación, si no "Edición {año} · {formato}"),
 año, sellos, formatos, países y cantidad de ediciones del grupo, la cantidad estimada de
 pistas adicionales y si es una **caja** (embalaje de caja, 4 o más discos, o más del triple
 de pistas que la representativa). Las ediciones con igual o menor cantidad de pistas que la
@@ -105,10 +106,17 @@ representativa SHALL NOT ser variantes.
 
 #### Scenario: Ediciones de DSOTM
 
-- **WHEN** se evalúan las ediciones oficiales de un álbum cuya representativa tiene 10
-  pistas, con grupos de 9, 10, 20, 30, 74, 152 y 193 pistas
-- **THEN** los grupos de 9 y 10 no son variantes, los de 20 y 30 son variantes con 10 y 20
-  pistas adicionales estimadas, y los de 74, 152 y 193 son cajas
+- **WHEN** se evalúan las 150 ediciones reales de *The Dark Side of the Moon*, cuya
+  representativa tiene 10 pistas
+- **THEN** las ediciones de 9 y 10 pistas no son variantes, los SACD híbridos de 30 pistas
+  (3 capas del mismo programa) tampoco, la Experience Edition de 20 pistas es una sola
+  variante con +10 pistas, y las ediciones de 74, 152 y 193 pistas son cajas
+
+#### Scenario: Misma edición con distintas desambiguaciones de prensado
+
+- **WHEN** varias ediciones con los mismos formatos y cantidad de pistas se diferencian solo
+  por detalles de prensado en la desambiguación ("printed in EU", "stars in matrix")
+- **THEN** forman una sola variante, nombrada con la primera frase de la desambiguación
 
 #### Scenario: Varias ediciones con la misma lista
 

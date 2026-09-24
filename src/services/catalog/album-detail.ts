@@ -15,6 +15,8 @@ import { findOrIngestTracklist } from "./ingest-release";
 import { fetchCoverThumb, resolveCoverThumbUrl } from "../cover-art";
 import { isCoverMirrorEnabled, mirrorCover } from "./cover-mirror";
 import { isCoverResolved } from "./cover-resolution";
+import { syncReleaseEditions } from "./release-editions";
+import { syncPersonnelCredits } from "./personnel-credits";
 
 export interface AlbumCredit {
   artistId: string;
@@ -91,6 +93,8 @@ export async function getAlbumDetail(releaseGroupId: string): Promise<AlbumDetai
 
   const releaseRow = await findOrIngestTracklist(rg.id, rg.mbid ?? "");
   if (!releaseRow) return { kind: "no_editions" };
+  scheduleEditionsSync(rg);
+  schedulePersonnelSync(releaseRow);
 
   const tracks = await db
     .select({
@@ -242,6 +246,38 @@ function scheduleCoverMirror(rg: ReleaseGroupRow): void {
     const fetched = await fetchCoverThumb(mbid);
     if (fetched.status === "found") {
       await mirrorCover(rg, fetched.bytes);
+    }
+  });
+}
+
+/**
+ * Álbumes ingeridos antes del resumen de ediciones (openspec:
+ * enrich-album-editions-and-credits): lo sincroniza después de responder, como el
+ * espejo de carátulas. Un fallo de MusicBrainz no afecta la respuesta y el álbum queda
+ * pendiente para la próxima visita.
+ */
+function scheduleEditionsSync(rg: ReleaseGroupRow): void {
+  if (!rg.mbid || rg.editionsSyncedAt) return;
+  after(async () => {
+    try {
+      await syncReleaseEditions(rg.id);
+    } catch (error) {
+      console.error(`[album-detail] no se pudo sincronizar las ediciones de ${rg.id}`, error);
+    }
+  });
+}
+
+/**
+ * Ediciones ingeridas antes de los créditos de personal: los sincroniza después de
+ * responder (una request a MusicBrainz). Un fallo deja la edición pendiente.
+ */
+function schedulePersonnelSync(releaseRow: ReleaseRow): void {
+  if (!releaseRow.mbid || releaseRow.personnelSyncedAt) return;
+  after(async () => {
+    try {
+      await syncPersonnelCredits(releaseRow.releaseGroupId);
+    } catch (error) {
+      console.error(`[album-detail] no se pudieron sincronizar los créditos de ${releaseRow.releaseGroupId}`, error);
     }
   });
 }

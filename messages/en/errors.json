@@ -238,5 +238,13 @@
   "IMAGE_DIMENSIONS_INSUFFICIENT": {
     "title": "Image dimensions are too small",
     "description": "The image must be at least 128×128 pixels."
+  },
+  "EDITION_NOT_FOUND": {
+    "title": "Edition not found",
+    "description": "The edition does not exist or does not belong to this album."
+  },
+  "EDITION_IS_BOX": {
+    "title": "This is a box set",
+    "description": "Box sets do not show their track list here: check it on MusicBrainz."
   }
 }

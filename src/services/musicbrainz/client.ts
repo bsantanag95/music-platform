@@ -18,14 +18,17 @@ import type {
   MBArtistSearchResponse,
   MBReleaseGroupBrowseResponse,
   MBReleaseGroupSearchResponse,
-  MBReleaseGroupWithReleases,
   MBRelease,
   MBRecordingSearchResponse,
   MBReleaseBrowseResponse,
+  MBReleaseBrowseByGroupResponse,
 } from "./types";
 
 const MB_BASE_URL = "https://musicbrainz.org/ws/2";
 const MIN_INTERVAL_MS = 1100; // margen sobre el límite de 1 req/seg
+
+/** Tamaño de página máximo que acepta MusicBrainz en un browse. */
+export const RELEASE_BROWSE_PAGE_SIZE = 100;
 
 let queueTail: Promise<unknown> = Promise.resolve();
 let lastRequestAt = 0;
@@ -216,20 +219,26 @@ export const musicbrainz = {
     });
   },
 
-  getReleaseGroup(mbid: string) {
-    // `releases+media`: el ranking de edición representativa
-    // (`pickRepresentativeRelease`) necesita status, fecha, país, packaging,
-    // disambiguation y recuento de pistas de cada edición. `first-release-date`
-    // del release-group viene sin `inc` extra (campo core). Sigue siendo UNA
-    // petición por álbum en la primera visita.
-    return mbFetch<MBReleaseGroupWithReleases>(`/release-group/${mbid}`, {
-      inc: "releases+media",
+  /**
+   * Todas las ediciones de un release-group, de a 100 (el lookup del grupo con
+   * `inc=releases` devuelve como máximo 25). Trae sellos y catálogo, formato y
+   * recuento de pistas por disco, y el release-group embebido con su
+   * `first-release-date` (openspec: enrich-album-editions-and-credits).
+   */
+  browseReleasesByReleaseGroup(releaseGroupMbid: string, offset = 0) {
+    return mbFetch<MBReleaseBrowseByGroupResponse>("/release", {
+      "release-group": releaseGroupMbid,
+      limit: String(RELEASE_BROWSE_PAGE_SIZE),
+      offset: String(offset),
+      inc: "labels+media+release-groups",
     });
   },
 
   getRelease(mbid: string) {
+    // `artist-rels+recording-level-rels`: créditos de personal de la edición y de
+    // cada grabación en la MISMA request que la tracklist (sin requests extra).
     return mbFetch<MBRelease>(`/release/${mbid}`, {
-      inc: "recordings+artist-credits",
+      inc: "recordings+artist-credits+artist-rels+recording-level-rels",
     });
   },
 };

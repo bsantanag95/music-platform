@@ -28,6 +28,8 @@ además del `error` legible:
 | `ARTIST_NOT_FOUND` | 404 | `artist/[id]`: no se encontró el artista. (En `search` ya no aplica: una búsqueda sin coincidencias es `200` con lista vacía.) |
 | `ALBUM_NOT_FOUND` | 404 | `release-group/[id]`: el `id` no corresponde a ningún `release_group`. |
 | `NO_EDITIONS_FOUND` | 404 | `release-group/[id]`: MusicBrainz no tiene ninguna edición ingerible para ese álbum. |
+| `EDITION_NOT_FOUND` | 404 | `release-group/[id]/editions/[editionId]/extra-tracks`: la edición no existe o no pertenece a ese álbum. |
+| `EDITION_IS_BOX` | 422 | `release-group/[id]/editions/[editionId]/extra-tracks`: la edición es una caja; su lista no se ingiere ni se sirve (la interfaz enlaza a MusicBrainz). |
 | `RECORDING_NOT_FOUND` | 404 | No existe la grabación solicitada. |
 | `AUTH_REQUIRED` | 401 | Falta una sesión válida para una operación protegida. |
 | `INVALID_CREDENTIALS` | 401 | Login fallido; no revela si falló el identificador o la contraseña. |

@@ -18,7 +18,7 @@ vi.mock("@/services/musicbrainz/client", () => ({
     searchRecording: vi.fn(),
     browseReleaseGroupsByArtist: vi.fn(),
     browseReleasesByRecording: vi.fn(),
-    getReleaseGroup: vi.fn(),
+    browseReleasesByReleaseGroup: vi.fn(),
     getArtist: vi.fn(),
   },
 }));
@@ -69,6 +69,7 @@ function makeAlbumRow(overrides: Partial<ReleaseGroupRow> = {}): ReleaseGroupRow
     coverStorageKey: null,
     coverCheckedAt: null,
     coverBlockedAt: null,
+    editionsSyncedAt: null,
     firstReleaseDate: null,
     firstReleaseYear: null,
     createdAt: new Date("2026-01-01"),
@@ -209,7 +210,7 @@ describe("searchCatalog", () => {
     expect(musicbrainz.searchRecording).toHaveBeenCalledTimes(1);
     expect(musicbrainz.browseReleaseGroupsByArtist).not.toHaveBeenCalled();
     expect(musicbrainz.browseReleasesByRecording).not.toHaveBeenCalled();
-    expect(musicbrainz.getReleaseGroup).not.toHaveBeenCalled();
+    expect(musicbrainz.browseReleasesByReleaseGroup).not.toHaveBeenCalled();
     expect(musicbrainz.getArtist).not.toHaveBeenCalled();
   });
 

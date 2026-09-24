@@ -238,5 +238,13 @@
   "IMAGE_DIMENSIONS_INSUFFICIENT": {
     "title": "Las dimensiones de la imagen son demasiado pequeñas",
     "description": "La imagen debe ser de al menos 128×128 píxeles."
+  },
+  "EDITION_NOT_FOUND": {
+    "title": "No se encontró la edición",
+    "description": "La edición no existe o no pertenece a este álbum."
+  },
+  "EDITION_IS_BOX": {
+    "title": "Es una caja",
+    "description": "Las cajas no muestran su lista de pistas acá: consultala en MusicBrainz."
   }
 }
