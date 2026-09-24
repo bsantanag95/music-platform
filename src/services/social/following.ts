@@ -1,21 +1,11 @@
 import { and, eq, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { appUser, image, userFollow } from "@/db/schema";
+import { appUser, userFollow } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import type { ProfileVisibility, UserSummary } from "./types";
 import { isBlockedBetween } from "./relations";
 import { activeUserCondition } from "@/services/auth/account-status";
-import { imageService } from "@/services/storage";
-
-async function resolveAvatarUrl(imageId: string | null): Promise<string | null> {
-  if (!imageId) return null;
-  const [img] = await db
-    .select({ storageKey: image.storageKey })
-    .from(image)
-    .where(eq(image.id, imageId))
-    .limit(1);
-  return img ? imageService.resolveUrl(img.storageKey) : null;
-}
+import { resolveImageUrls } from "@/services/storage/avatar-urls";
 
 function isUniqueViolation(error: unknown): error is { code: "23505" } {
   return typeof error === "object" && error !== null && "code" in error && error.code === "23505";
@@ -227,8 +217,9 @@ async function listRelatedUsers(
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
 
+  const avatarUrls = await resolveImageUrls(rows.slice(0, pageSize).map((row) => row.user.avatarImageId));
   return {
-    users: rows.slice(0, pageSize).map((row) => serializeSummary(row.user)),
+    users: rows.slice(0, pageSize).map((row) => serializeSummary(row.user, avatarUrls)),
     page,
     pageSize,
     hasNext: rows.length > pageSize,
@@ -241,12 +232,12 @@ function serializeSummary(user: {
   displayName: string | null;
   profileVisibility: string;
   avatarImageId: string | null;
-}): UserSummary {
+}, avatarUrls: Map<string, string>): UserSummary {
   return {
     id: user.id,
     username: user.username,
     displayName: user.displayName,
     profileVisibility: user.profileVisibility as ProfileVisibility,
-    avatarUrl: user.avatarImageId ? imageService.resolveUrl(user.avatarImageId) : null,
+    avatarUrl: user.avatarImageId ? (avatarUrls.get(user.avatarImageId) ?? null) : null,
   };
 }

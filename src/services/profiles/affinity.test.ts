@@ -12,6 +12,7 @@ const rowsByTable: Record<string, unknown[]> = {};
 const mocks = vi.hoisted(() => ({ select: vi.fn(), getProfileByUsername: vi.fn() }));
 
 vi.mock("@/db", () => ({ db: { select: mocks.select } }));
+vi.mock("@/services/storage/avatar-urls", () => ({ resolveImageUrls: async () => new Map<string, string>() }));
 vi.mock("@/services/feed/feed", () => ({ PRIMARY_ARTIST_SQL: () => ({}) }));
 vi.mock("@/services/social/profiles", () => ({ getProfileByUsername: mocks.getProfileByUsername }));
 
@@ -79,7 +80,7 @@ describe("listMutualFollowers", () => {
     ];
     const page = await listMutualFollowers("viewer", "owner", 1, 20);
     expect(page).toEqual({
-      users: [{ id: "a", username: "ana", displayName: "Ana", profileVisibility: "public" }],
+      users: [{ id: "a", username: "ana", displayName: "Ana", profileVisibility: "public", avatarUrl: null }],
       totalCount: 1,
       page: 1,
       pageSize: 20,
@@ -114,7 +115,7 @@ describe("listMutualFollowing", () => {
       [{ count: 1 }],
     ];
     const page = await listMutualFollowing("viewer", "owner", 1, 20);
-    expect(page.users).toEqual([{ id: "a", username: "ana", displayName: "Ana", profileVisibility: "public" }]);
+    expect(page.users).toEqual([{ id: "a", username: "ana", displayName: "Ana", profileVisibility: "public", avatarUrl: null }]);
     expect(page.totalCount).toBe(1);
   });
 });
@@ -157,7 +158,7 @@ describe("getMutualFollowersPreview", () => {
     ];
     await expect(getMutualFollowersPreview("ana-con-mutuos", "viewer")).resolves.toEqual({
       total: 2,
-      first: { id: "a", username: "ana", displayName: "Ana", profileVisibility: "public" },
+      first: { id: "a", username: "ana", displayName: "Ana", profileVisibility: "public", avatarUrl: null },
     });
   });
 });

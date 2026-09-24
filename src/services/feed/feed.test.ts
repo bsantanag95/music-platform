@@ -529,7 +529,7 @@ describe("servicio de feed ampliado", () => {
 
       expect(result.entries).toHaveLength(1);
       expect(result.entries[0]!.kind).toBe("review");
-      expect(mocks.db.select).toHaveBeenCalledTimes(2);
+      expect(mocks.db.select).toHaveBeenCalledTimes(3); // fuente + amigos + avatares de la página
     });
 
     it("mantiene el filtro de bloqueo sobre la fuente de reseñas", async () => {
@@ -730,7 +730,7 @@ describe("servicio de feed ampliado", () => {
 
       expect(result.entries).toHaveLength(1);
       expect(result.entries[0]!.kind).toBe("rating");
-      expect(mocks.db.select).toHaveBeenCalledTimes(2);
+      expect(mocks.db.select).toHaveBeenCalledTimes(3);
     });
 
     it("authorId: acota la condición de autor a ese único seguido", async () => {

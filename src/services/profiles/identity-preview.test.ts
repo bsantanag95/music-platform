@@ -43,6 +43,7 @@ describe("getIdentityCardPreview", () => {
       viewerAuthenticated: true,
       accessible: true,
       identityCard,
+      avatarUrl: null,
     });
     expect(mocks.getShowcase).toHaveBeenCalledWith("u1");
   });
@@ -67,6 +68,7 @@ describe("getIdentityCardPreview", () => {
       viewerAuthenticated: false,
       accessible: false,
       identityCard: null,
+      avatarUrl: null,
     });
     expect(mocks.getShowcase).not.toHaveBeenCalled();
   });

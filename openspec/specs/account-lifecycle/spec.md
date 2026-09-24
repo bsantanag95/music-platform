@@ -123,7 +123,8 @@ El sistema SHALL permitir a un usuario autenticado eliminar su cuenta de forma d
 petición SHALL incluir el usuario de la cuenta como confirmación y el factor de "Autenticación
 reciente para acciones sensibles". Eliminar SHALL borrar el perfil y todo lo que la persona creó
 (diario, favoritos, por escuchar, listas, colección, deseos, valoraciones, reseñas, comentarios,
-seguimientos, bloqueos, enlaces, preguntas, sesiones e identidades), cerrar la sesión y limpiar la
+seguimientos, bloqueos, enlaces, preguntas, sesiones e identidades), incluida su foto de perfil y
+el archivo correspondiente en el storage (ver `avatar-upload`), cerrar la sesión y limpiar la
 cookie. No SHALL existir período de gracia ni forma de deshacerlo. El sistema SHALL rechazar la
 eliminación, sin borrar nada, cuando el usuario de confirmación no coincida o cuando la cuenta tenga
 historial de moderación o editorial que impide borrarla (`ACCOUNT_DELETION_BLOCKED`, 409); en ese caso
@@ -150,6 +151,12 @@ como alternativa antes de confirmar.
 
 - **WHEN** se elimina una cuenta con contenido en todas las tablas que la referencian
 - **THEN** no queda ninguna fila de esa persona en la base de datos
+
+#### Scenario: La foto no sobrevive a la cuenta
+
+- **WHEN** se elimina una cuenta que tenía foto de perfil
+- **THEN** el registro de esa imagen y su archivo en el storage se eliminan también, sin quedar
+  accesibles por su URL pública
 
 #### Scenario: Alternativa visible
 
@@ -180,4 +187,3 @@ exportación por minuto por usuario (`RATE_LIMITED`).
 
 - **WHEN** la persona pide otra exportación pocos segundos después
 - **THEN** la API responde `RATE_LIMITED` y no genera el archivo
-

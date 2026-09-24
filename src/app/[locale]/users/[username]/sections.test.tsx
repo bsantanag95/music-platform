@@ -31,6 +31,7 @@ import { ProfileAffinity } from "@/components/profiles/ProfileAffinity";
 import { EditableBlock } from "@/components/profiles/EditableBlock";
 import { OwnerSettingsCard } from "@/components/profiles/OwnerSettingsCard";
 import { OwnerIdentityCardEditor } from "@/components/profiles/OwnerIdentityCardEditor";
+import { OwnerAvatarEditor } from "@/components/profiles/OwnerAvatarEditor";
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
 import { OwnerMusicIdentityEditor } from "@/components/profiles/OwnerMusicIdentityEditor";
@@ -528,8 +529,11 @@ describe("secciones editables del dueño", () => {
     expect(tree.type).toBe(EditableBlock);
     expect(tree.props?.label).toBe("editMode.placa");
     const inner = (tree.props?.editor?.props as { children?: { type?: unknown; props?: Record<string, unknown> }[] }).children;
-    expect(inner?.[0]?.type).toBe(OwnerIdentityEditor);
-    expect(inner?.[0]?.props?.initial).toEqual({
+    // El editor de foto de perfil abre la Placa (spec avatar-upload).
+    expect(inner?.[0]?.type).toBe(OwnerAvatarEditor);
+    expect(inner?.[0]?.props?.username).toBe("ana");
+    expect(inner?.[1]?.type).toBe(OwnerIdentityEditor);
+    expect(inner?.[1]?.props?.initial).toEqual({
       bio: "Colecciono casetes",
       pronouns: "él",
       pronounSet: null,
@@ -539,17 +543,17 @@ describe("secciones editables del dueño", () => {
       showLocalTime: true,
     });
     // Sin nombre visible, el ejemplo de los pronombres usa el usuario.
-    expect(inner?.[0]?.props?.name).toBe("ana");
-    expect(inner?.[1]?.type).toBe(OwnerMusicIdentityEditor);
-    expect(inner?.[1]?.props?.initial).toEqual({
+    expect(inner?.[1]?.props?.name).toBe("ana");
+    expect(inner?.[2]?.type).toBe(OwnerMusicIdentityEditor);
+    expect(inner?.[2]?.props?.initial).toEqual({
       selfRoles: ["collector"],
       genres: ["jazz"],
       listeningFormats: ["vinyl"],
     });
-    expect(inner?.[2]?.type).toBe(OwnerPromptsEditor);
-    expect(inner?.[2]?.props?.initial).toBe(prompts);
-    expect(inner?.[3]?.type).toBe(OwnerLinksEditor);
-    expect(inner?.[3]?.props?.initialLinks).toBe(profile.links);
+    expect(inner?.[3]?.type).toBe(OwnerPromptsEditor);
+    expect(inner?.[3]?.props?.initial).toBe(prompts);
+    expect(inner?.[4]?.type).toBe(OwnerLinksEditor);
+    expect(inner?.[4]?.props?.initialLinks).toBe(profile.links);
   });
 
   it("SettingsCardSection: cuenta las solicitudes pendientes del dueño y las pasa a la tarjeta", async () => {

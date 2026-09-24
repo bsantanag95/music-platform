@@ -10,6 +10,7 @@
 - [x] 2.2 Actualizar `src/services/profiles/identity.ts`: reemplazar la selección de `appUser.avatarUrl` por `appUser.avatarImageId`, resolviendo `avatarUrl` en `ExtendedIdentityData` vía `imageService.resolveUrl()` cuando no es null, manteniendo la forma `string | null` del campo.
 - [x] 2.3 Extender `UserSummarySchema` con `avatarUrl: string | null` y actualizar las queries de `src/services/social/` que construyen esos DTO (`profiles.ts`, `following.ts`, `blocking.ts`) para seleccionar `avatar_image_id` y resolver la URL antes de devolverlos: búsqueda de personas, seguidores, seguidos, bloqueados y mutuals.
 - [x] 2.4 Extender `IdentityCardPreviewSchema` con `avatarUrl: string | null` y su servicio/endpoint (`/api/users/{username}/identity-card-preview`).
+- [x] 2.4b Feed: `AuthorSummarySchema` gana `avatarUrl` opcional; `listFeed` lo completa por lote sobre la página ya recortada (`attachAuthorAvatars`) y el chip `AuthorAvatar` de `FeedActivityList` renderiza la foto, con la inicial de siempre como fallback.
 - [x] 2.5 Confirmar que ningún DTO expone `avatar_image_id` ni ruta del proveedor: el cliente solo recibe URLs ya resueltas.
 - [x] 2.6 Confirmar que `getProfileView` **no** vacía `avatarUrl` cuando el visitante no tiene acceso: la foto es identidad pública, como la bio y los contadores (Decisión 10 del design), y dejarlo anotado en el comentario que ya explica qué se vacía y por qué.
 

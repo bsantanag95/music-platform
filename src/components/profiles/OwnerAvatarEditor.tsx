@@ -40,7 +40,7 @@ export function OwnerAvatarEditor({
   const inputRef = useRef<HTMLInputElement>(null);
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
   const [status, setStatus] = useState<"idle" | "uploading" | "removing">("idle");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ title: string; description?: string } | null>(null);
 
   async function handleUpload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -62,9 +62,9 @@ export function OwnerAvatarEditor({
       if (!response.ok) {
         const code = body?.code as string | undefined;
         if (code && AVATAR_ERROR_CODES.has(code)) {
-          setError(tErrors(`${code}.title`));
+          setError({ title: tErrors(`${code}.title`), description: tErrors(`${code}.description`) });
         } else {
-          setError(t("avatar.errorGeneric"));
+          setError({ title: t("avatar.errorGeneric") });
         }
         setStatus("idle");
         return;
@@ -74,7 +74,7 @@ export function OwnerAvatarEditor({
       notifySaved();
       setStatus("idle");
     } catch {
-      setError(t("avatar.errorGeneric"));
+      setError({ title: t("avatar.errorGeneric") });
       setStatus("idle");
     }
   }
@@ -93,9 +93,9 @@ export function OwnerAvatarEditor({
     } catch (err) {
       const code = err instanceof Error && "code" in err ? (err as { code: string }).code : null;
       if (code && AVATAR_ERROR_CODES.has(code)) {
-        setError(tErrors(`${code}.title`));
+        setError({ title: tErrors(`${code}.title`), description: tErrors(`${code}.description`) });
       } else {
-        setError(t("avatar.errorGeneric"));
+        setError({ title: t("avatar.errorGeneric") });
       }
       setStatus("idle");
     }
@@ -140,9 +140,13 @@ export function OwnerAvatarEditor({
         </div>
       </div>
       {error && (
-        <p className="font-body text-xs text-red" role="alert">
-          {error}
-        </p>
+        <div
+          role="alert"
+          className="flex flex-col gap-0.5 rounded-md border border-danger/40 bg-danger/10 px-3 py-2 font-body text-xs"
+        >
+          <p className="font-medium text-danger">{error.title}</p>
+          {error.description && <p className="text-danger/80">{error.description}</p>}
+        </div>
       )}
     </div>
   );

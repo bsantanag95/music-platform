@@ -56,17 +56,28 @@ pantalla concreta.
 
 ### Requirement: Pantalla Perfil
 
-La pantalla **Perfil** SHALL contener los editores de la identidad pública del dueño: Tarjeta de
-Identidad (artista, álbum y canción que definen), bio, pronombres (lista cerrada con «Otro» y un
-ejemplo en vivo), país, ciudad o región, zona horaria (con la opción de mostrar la hora local), enlaces, y la identidad musical (roles "Me defino como", géneros,
-formatos "Cómo escucho" y preguntas del perfil, ver `profile-music-identity`). SHALL usar los mismos
-editores que la edición sobre el perfil, con los mismos estados de carga, éxito y error recuperable,
-sin duplicar su lógica. La pantalla SHALL NOT ofrecer elegir una foto de perfil.
+La pantalla **Perfil** SHALL contener los editores de la identidad pública del dueño: foto de
+perfil (ver `avatar-upload`), Tarjeta de Identidad (artista, álbum y canción que definen), bio,
+pronombres (lista cerrada con «Otro» y un ejemplo en vivo), país, ciudad o región, zona horaria
+(con la opción de mostrar la hora local), enlaces, y la identidad musical (roles "Me defino como",
+géneros, formatos "Cómo escucho" y preguntas del perfil, ver `profile-music-identity`). SHALL usar
+los mismos editores que la edición sobre el perfil, con los mismos estados de carga, éxito y error
+recuperable, sin duplicar su lógica.
 
 #### Scenario: Editar la bio desde Ajustes
 
 - **WHEN** el dueño cambia su bio en la pantalla Perfil y guarda
 - **THEN** el cambio se persiste y su perfil público muestra la nueva bio
+
+#### Scenario: Subir foto de perfil desde Ajustes
+
+- **WHEN** el dueño sube una foto de perfil válida en la pantalla Perfil
+- **THEN** la foto se persiste y su perfil público la muestra en vez del monograma
+
+#### Scenario: Quitar foto de perfil desde Ajustes
+
+- **WHEN** el dueño quita su foto de perfil en la pantalla Perfil
+- **THEN** su perfil público vuelve a mostrar el monograma
 
 #### Scenario: Error recuperable en Ajustes
 
@@ -83,11 +94,6 @@ sin duplicar su lógica. La pantalla SHALL NOT ofrecer elegir una foto de perfil
 - **WHEN** el dueño elige un país, escribe su ciudad y elige unos pronombres en la pantalla Perfil y guarda
 - **THEN** los cambios se persisten, el ejemplo de los pronombres refleja la opción elegida y su perfil
   los muestra a quien tiene acceso (ver `profile-personal-info`)
-
-#### Scenario: Sin foto de perfil
-
-- **WHEN** el dueño abre la pantalla Perfil
-- **THEN** no ve ningún control para subir o elegir una foto y su imagen sigue siendo el monograma
 
 ### Requirement: Pantalla Curaduría
 
@@ -223,4 +229,3 @@ sesión. Un control SHALL mostrarse únicamente cuando su función esté disponi
 - **WHEN** el usuario pidió cambiar su email y aún no confirmó
 - **THEN** la pantalla indica que hay un cambio pendiente a la dirección nueva y que el email actual
   sigue vigente
-

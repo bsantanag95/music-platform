@@ -1,4 +1,14 @@
-## ADDED Requirements
+# avatar-upload Specification
+
+## Purpose
+
+Ciclo de vida técnico de la foto de perfil de usuario: subida, reemplazo y borrado mediante
+`/api/me/profile/avatar` sobre el servicio de imágenes (`image-storage`, `kind: "avatar"`), con
+límites de tamaño y de frecuencia, traducción de los motivos de rechazo a códigos propios del
+contrato de errores, limpieza de la imagen reemplazada o quitada, y entrega de la URL ya resuelta
+en cada superficie que representa a un usuario. Cambio connect-avatar-upload.
+
+## Requirements
 
 ### Requirement: Subida y reemplazo de avatar
 El sistema SHALL permitir que un usuario autenticado suba una foto de perfil mediante `PUT
@@ -95,7 +105,7 @@ de storage ausente: esa falla SHALL presentarse como un error interno del servid
 ### Requirement: La foto acompaña al usuario en toda superficie que lo represente
 El sistema SHALL entregar la URL de la foto de perfil junto con los demás datos de identidad en
 cada superficie que represente a un usuario (perfil, búsqueda de personas, listados de
-conexiones y vista rápida del perfil), de modo que ninguna superficie muestre el monograma de un
+conexiones, vista rápida del perfil y feed de actividad), de modo que ninguna superficie muestre el monograma de un
 usuario que sí tiene foto. El sistema SHALL resolver esa URL en el servidor y SHALL NOT exponer
 al cliente el identificador de la imagen ni la ruta del proveedor de storage.
 
@@ -103,6 +113,10 @@ al cliente el identificador de la imagen ni la ruta del proveedor de storage.
 - **WHEN** un usuario con foto aparece en su perfil, en la búsqueda de personas, en un listado de
   conexiones y en la vista rápida del perfil
 - **THEN** las cuatro superficies muestran su foto, no su monograma
+
+#### Scenario: El autor de una entrada del feed muestra su foto
+- **WHEN** el feed muestra actividad de un usuario con foto
+- **THEN** el chip del autor muestra su foto en lugar de la inicial, y las entradas de usuarios sin foto conservan la inicial
 
 #### Scenario: El cliente no conoce el storage
 - **WHEN** el cliente recibe los datos de identidad de un usuario con foto

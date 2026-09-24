@@ -5,7 +5,7 @@ import { ApiError } from "@/lib/api/errors";
 import type { UserSummary } from "./types";
 import { isBlockedBetween } from "./relations";
 import { activeUserCondition } from "@/services/auth/account-status";
-import { imageService } from "@/services/storage";
+import { resolveImageUrls } from "@/services/storage/avatar-urls";
 
 function isUniqueViolation(error: unknown): error is { code: "23505" } {
   return typeof error === "object" && error !== null && "code" in error && error.code === "23505";
@@ -66,8 +66,9 @@ export async function listBlocks(userId: string, page = 1, pageSize = 20) {
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
 
+  const avatarUrls = await resolveImageUrls(rows.slice(0, pageSize).map((row) => row.user.avatarImageId));
   return {
-    users: rows.slice(0, pageSize).map((row) => serializeSummary(row.user)),
+    users: rows.slice(0, pageSize).map((row) => serializeSummary(row.user, avatarUrls)),
     page,
     pageSize,
     hasNext: rows.length > pageSize,
@@ -80,12 +81,12 @@ function serializeSummary(user: {
   displayName: string | null;
   profileVisibility: string;
   avatarImageId: string | null;
-}): UserSummary {
+}, avatarUrls: Map<string, string>): UserSummary {
   return {
     id: user.id,
     username: user.username,
     displayName: user.displayName,
     profileVisibility: user.profileVisibility as UserSummary["profileVisibility"],
-    avatarUrl: user.avatarImageId ? imageService.resolveUrl(user.avatarImageId) : null,
+    avatarUrl: user.avatarImageId ? (avatarUrls.get(user.avatarImageId) ?? null) : null,
   };
 }
