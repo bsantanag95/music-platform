@@ -212,13 +212,13 @@ export function AlbumListPicker({ releaseGroupId, memberships, onMembershipsChan
               onCancel={() => setCreating(null)}
             />
           )}
+          {listRows.length > 0 && <ul className="flex flex-col">{listRows.map(renderRow)}</ul>}
+          {/* Mientras carga, las pertenencias ya se ven: el aviso evita que parezcan ser todas. */}
           {listsQuery.isError ? (
             <p className="px-2 font-data text-xs text-danger">{t("loadError")}</p>
-          ) : listRows.length > 0 ? (
-            <ul className="flex flex-col">{listRows.map(renderRow)}</ul>
           ) : listsQuery.isPending ? (
             <p className="px-2 font-data text-xs text-paper-muted">{t("loading")}</p>
-          ) : (
+          ) : listRows.length > 0 ? null : (
             <p className="px-2 font-data text-xs text-paper-muted">
               {debouncedQuery ? t("noMatches", { query: debouncedQuery }) : t("noLists")}
             </p>
@@ -250,11 +250,10 @@ export function AlbumListPicker({ releaseGroupId, memberships, onMembershipsChan
               onCancel={() => setCreating(null)}
             />
           )}
-          {caminoRows.length > 0 ? (
-            <ul className="flex flex-col">{caminoRows.map(renderRow)}</ul>
-          ) : caminosQuery.isPending ? (
+          {caminoRows.length > 0 && <ul className="flex flex-col">{caminoRows.map(renderRow)}</ul>}
+          {caminosQuery.isPending ? (
             <p className="px-2 font-data text-xs text-paper-muted">{t("loading")}</p>
-          ) : (
+          ) : caminoRows.length > 0 ? null : (
             <p className="px-2 font-data text-xs text-paper-muted">
               {debouncedQuery ? t("noMatches", { query: debouncedQuery }) : t("noCaminos")}
             </p>
