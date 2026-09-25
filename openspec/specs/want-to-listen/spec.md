@@ -7,9 +7,7 @@ group) — nunca canción. Es un marcador binario por usuario y objetivo, indepe
 favoritos, listas y del diario de escucha, salvo por una integración: registrar una escucha
 de un objetivo retira automáticamente su entrada de Want to Listen, porque la intención ya se
 cumplió.
-
 ## Requirements
-
 ### Requirement: Marcar y desmarcar un objetivo en Want to Listen
 El sistema SHALL permitir a un usuario autenticado marcar o quitar de su lista Want to Listen
 un artista o un álbum, de forma idempotente. Marcar un objetivo que ya está en la lista SHALL
@@ -140,7 +138,10 @@ el mismo objetivo.
 ### Requirement: Acción de Want to Listen en las páginas de catálogo
 El sistema SHALL ofrecer en las páginas de artista y álbum una acción autenticada para marcar
 o quitar el objetivo de Want to Listen, con estados de carga, éxito, error y sesión requerida,
-que SHALL NOT bloquear la carga del contenido musical.
+que SHALL NOT bloquear la carga del contenido musical. En toda la interfaz la acción y su
+estado SHALL rotularse **"Pendiente"** (no "Quiero escuchar"), para no confundirse con la
+wishlist física ("En tu búsqueda"). En la página de álbum la acción SHALL vivir dentro del
+panel "Tu relación" (capacidad `album-personal-panel`).
 
 #### Scenario: Acción sin sesión
 - **WHEN** un visitante no autenticado pulsa la acción de Want to Listen en una página de
@@ -152,6 +153,10 @@ que SHALL NOT bloquear la carga del contenido musical.
   álbum
 - **THEN** la entrada se marca o se quita y el estado de la UI se actualiza con confirmación
   accesible
+
+#### Scenario: Rótulo Pendiente
+- **WHEN** una persona ve la acción de Want to Listen en cualquier idioma soportado
+- **THEN** la acción se rotula con la traducción de "Pendiente" y no con "Quiero escuchar"
 
 ### Requirement: Independencia de Want to Listen
 El sistema SHALL tratar Want to Listen como una señal independiente de favoritos, listas,
@@ -167,3 +172,4 @@ ningún favorito, lista, rating ni comentario del mismo objetivo, y viceversa.
 - **WHEN** un usuario marca como favorito o agrega a una lista un objetivo que no está en su
   lista Want to Listen
 - **THEN** no se crea ninguna entrada de Want to Listen como efecto de esa acción
+

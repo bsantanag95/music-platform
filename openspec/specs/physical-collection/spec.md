@@ -14,9 +14,7 @@ superficie única con tres modos de visualización a elegir (estantería / lista
 agrupación, conteo por formato en el encabezado, edición de cada copia en línea y cambio de
 audiencia en lote. La sección del perfil hereda esa estantería en modo lectura, filtrada por la
 matriz de visibilidad.
-
 ## Requirements
-
 ### Requirement: Agregar una entrada de colección
 El sistema SHALL permitir a un usuario autenticado agregar a su colección física una entrada
 sobre un álbum (`release_group`) válido. Cada entrada SHALL registrar un formato obligatorio,
@@ -370,3 +368,18 @@ comentarios ni listas del mismo álbum, y SHALL NOT derivar formato ni atributos
 #### Scenario: Agregar a la colección no afecta otras señales
 - **WHEN** un usuario agrega un álbum a su colección
 - **THEN** sus favoritos, escuchas, ratings, comentarios y listas de ese álbum quedan intactos
+
+### Requirement: Participación anónima en el conteo agregado
+
+Las entradas de colección SHALL contar, como personas distintas y con cualquier
+audiencia, en el conteo agregado "lo coleccionan" del bloque de comunidad del álbum
+(capacidad `album-community-stats`), con el umbral mínimo de esa capacidad. El conteo
+SHALL NOT revelar la identidad de ninguna persona ni alterar la visibilidad de las
+entradas individuales, que sigue rigiéndose por su audiencia.
+
+#### Scenario: Entrada privada en el total
+
+- **WHEN** una persona tiene un álbum en su colección con audiencia privada
+- **THEN** cuenta en "lo coleccionan" del álbum y su entrada sigue sin ser visible para
+  otros en su perfil
+
