@@ -126,12 +126,25 @@ export function classifyPersonnel(
 }
 
 /**
+ * Tipo del artista principal, para rotular el primer nivel (openspec:
+ * compact-album-credits, D1): `person` solo si todos los principales son personas.
+ */
+export type LeadKind = "person" | "group";
+
+export function leadKindOf(primaryTypes: (string | null)[]): LeadKind {
+  return primaryTypes.length > 0 && primaryTypes.every((type) => type === "person") ? "person" : "group";
+}
+
+export interface AlbumPersonnel {
+  levels: Record<PersonnelLevel, PersonnelEntry[]>;
+  leadKind: LeadKind;
+}
+
+/**
  * Créditos de personal del álbum (edición representativa y sus grabaciones) clasificados
  * en niveles. `null` si el álbum no tiene créditos de personal (la pestaña no se muestra).
  */
-export async function getAlbumPersonnel(
-  releaseGroupId: string,
-): Promise<Record<PersonnelLevel, PersonnelEntry[]> | null> {
+export async function getAlbumPersonnel(releaseGroupId: string): Promise<AlbumPersonnel | null> {
   const [representative] = await db
     .select({ id: release.id })
     .from(release)
@@ -180,5 +193,8 @@ export async function getAlbumPersonnel(
     ...primaryRows.filter((row) => row.type === "person").map((row) => row.id),
   ]);
 
-  return classifyPersonnel(creditRows, albumTracks, memberIds);
+  return {
+    levels: classifyPersonnel(creditRows, albumTracks, memberIds),
+    leadKind: leadKindOf(primaryRows.map((row) => row.type)),
+  };
 }

@@ -15,20 +15,41 @@ export function messageKey(value: string): string {
 }
 
 type Translate = (kind: "roles" | "attributes", raw: string) => string;
+/** Etiqueta compuesta de tipo + modificador ("producer" + "co" → "coproducción"), o `null`. */
+type Compound = (relationType: string, modifier: string) => string | null;
+
+// Atributos de MusicBrainz que matizan un rol en vez de nombrar un instrumento (openspec:
+// compact-album-credits, D4). En instrumentos y voces, "additional" y "guest" se omiten (el
+// nivel ya dice si es invitado) y "solo" se muestra como matiz.
+const MODIFIERS = new Set(["additional", "guest", "solo", "co", "executive", "assistant"]);
+const DROPPED_PERFORMER_MODIFIERS = new Set(["additional", "guest"]);
 
 /**
  * Roles legibles de una persona, sin repetir: los instrumentos y la voz se muestran por
- * sus atributos ("guitarra", "voz principal"); el resto por su tipo, con sus matices entre
- * paréntesis ("ingeniería (asistente)").
+ * sus atributos ("guitarra", "voz principal"); el resto por su tipo, con una etiqueta
+ * compuesta si existe ("coproducción") o sus matices entre paréntesis
+ * ("programación (percusión)").
  */
-export function formatRoles(roles: PersonnelRole[], label: Translate): string[] {
+export function formatRoles(roles: PersonnelRole[], label: Translate, compound: Compound = () => null): string[] {
   const out: string[] = [];
   const add = (value: string) => {
     if (!out.includes(value)) out.push(value);
   };
   for (const role of roles) {
-    if ((role.relationType === "instrument" || role.relationType === "vocal") && role.attributes.length > 0) {
-      for (const attribute of role.attributes) add(label("attributes", attribute));
+    const modifiers = role.attributes.filter((a) => MODIFIERS.has(a));
+    const rest = role.attributes.filter((a) => !MODIFIERS.has(a));
+
+    if (role.relationType === "instrument" || role.relationType === "vocal") {
+      const shades = modifiers.filter((m) => !DROPPED_PERFORMER_MODIFIERS.has(m)).map((m) => label("attributes", m));
+      const withShades = (base: string) => (shades.length > 0 ? `${base} (${shades.join(", ")})` : base);
+      if (rest.length === 0) add(withShades(label("roles", role.relationType)));
+      for (const attribute of rest) add(withShades(label("attributes", attribute)));
+      continue;
+    }
+
+    const combined = modifiers.length === 1 && rest.length === 0 ? compound(role.relationType, modifiers[0]!) : null;
+    if (combined) {
+      add(combined);
       continue;
     }
     const base = label("roles", role.relationType);

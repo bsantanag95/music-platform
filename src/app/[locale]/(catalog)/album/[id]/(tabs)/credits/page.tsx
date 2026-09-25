@@ -27,9 +27,9 @@ export default async function AlbumCreditsPage({ params }: AlbumCreditsPageProps
   const result = await loadAlbumDetail(id);
   if (result.kind !== "ok") return null;
 
-  const levels = await loadAlbumPersonnel(result.detail.releaseGroup.id);
-  if (!levels) notFound();
+  const personnel = await loadAlbumPersonnel(result.detail.releaseGroup.id);
+  if (!personnel) notFound();
 
   const multiDisc = new Set(result.detail.tracks.map((t) => t.discNumber)).size > 1;
-  return <AlbumCredits levels={levels} multiDisc={multiDisc} />;
+  return <AlbumCredits levels={personnel.levels} leadKind={personnel.leadKind} multiDisc={multiDisc} />;
 }

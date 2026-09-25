@@ -160,10 +160,13 @@ function makeEdition(id: string, overrides: Record<string, unknown> = {}) {
 }
 
 const PERSONNEL = {
-  members: [{ artistId: "m1", name: "Integrante", creditedAs: null, level: "members", roles: [{ relationType: "instrument", attributes: ["guitar"] }], tracks: "all" }],
-  guests: [],
-  production: [],
-  other: [],
+  levels: {
+    members: [{ artistId: "m1", name: "Integrante", creditedAs: null, level: "members", roles: [{ relationType: "instrument", attributes: ["guitar"] }], tracks: "all" }],
+    guests: [],
+    production: [],
+    other: [],
+  },
+  leadKind: "group",
 };
 
 const stats = {

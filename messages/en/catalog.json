@@ -299,7 +299,8 @@
         "members": "Band members",
         "guests": "Guest musicians",
         "production": "Production and sound",
-        "other": "Art and other"
+        "other": "Art and other",
+        "leadPerson": "{count, plural, one {Main artist} other {Main artists}}"
       },
       "otherCount": "{count, plural, one {+# credit} other {+# credits}}",
       "allTracks": "all",
@@ -333,7 +334,16 @@
         "creative_direction": "creative direction",
         "liner_notes": "liner notes",
         "artwork": "artwork",
-        "misc": "other"
+        "misc": "other",
+        "arranger": "arrangement",
+        "instrument_arranger": "instrument arrangement",
+        "vocal_arranger": "vocal arrangement",
+        "producer_co": "co-production",
+        "producer_executive": "executive production",
+        "producer_additional": "additional production",
+        "engineer_assistant": "assistant engineering",
+        "mix_additional": "additional mixing",
+        "recording_assistant": "assistant recording"
       },
       "attributes": {
         "guitar": "guitar",
@@ -390,8 +400,24 @@
         "choir_vocals": "choir",
         "spoken_vocals": "spoken vocals",
         "whistling": "whistling",
-        "handclaps": "handclaps"
-      }
+        "handclaps": "handclaps",
+        "membranophone": "percussion",
+        "tambourine": "tambourine",
+        "bell": "bell",
+        "clavinet": "clavinet",
+        "sitar": "sitar",
+        "baritone_saxophone": "baritone saxophone",
+        "wurlitzer_electric_piano": "Wurlitzer piano",
+        "guitar_family": "guitars",
+        "task": "tasks",
+        "idiophone": "percussion",
+        "chordophone": "strings",
+        "aerophone": "winds"
+      },
+      "levelSummary": "{count} · {names}",
+      "levelSummaryMore": "{count} · {names} and {rest} more",
+      "moreRoles": "+{count}",
+      "moreRolesLabel": "{count, plural, one {Show # more role} other {Show # more roles}}"
     },
     "editions": {
       "heading": "Editions",
