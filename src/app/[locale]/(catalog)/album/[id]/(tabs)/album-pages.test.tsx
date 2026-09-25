@@ -16,6 +16,8 @@ const mocks = vi.hoisted(() => ({
   loadCommunityFavorites: vi.fn(),
   loadDiscographyStrip: vi.fn(),
   loadPersonalState: vi.fn(),
+  loadAlbumEditions: vi.fn(),
+  loadAlbumPersonnel: vi.fn(),
   listReviews: vi.fn(),
   getReviewDetail: vi.fn(),
   segment: null as string | null,
@@ -29,7 +31,10 @@ vi.mock("../album-data", () => ({
   loadCommunityFavorites: mocks.loadCommunityFavorites,
   loadDiscographyStrip: mocks.loadDiscographyStrip,
   loadPersonalState: mocks.loadPersonalState,
+  loadAlbumEditions: mocks.loadAlbumEditions,
+  loadAlbumPersonnel: mocks.loadAlbumPersonnel,
 }));
+vi.mock("@/lib/api/catalog", () => ({ getEditionExtraTracks: vi.fn() }));
 vi.mock("@/services/social", () => ({
   resolveSocialTarget: vi.fn().mockResolvedValue({ type: "release-group", id: "rg", column: "releaseGroupId" }),
   getRatings: vi.fn().mockResolvedValue({ own: null, aggregate: { count: 0, averageStars: null, averageDetailedScore: null } }),
@@ -133,6 +138,34 @@ function makeDetail(overrides: Partial<AlbumDetail> = {}): AlbumDetail {
   };
 }
 
+const NO_EDITIONS = { editions: [], representativeMbid: null, representativeTrackCount: 0, variants: [] };
+
+function makeEdition(id: string, overrides: Record<string, unknown> = {}) {
+  return {
+    id,
+    mbid: `${id}-mbid`,
+    title: "The Dark Side of the Moon",
+    disambiguation: null,
+    status: "Official",
+    releaseDate: null,
+    releaseYear: 1973,
+    country: "GB",
+    packaging: null,
+    formats: ["CD"],
+    mediumCount: 1,
+    trackCount: 2,
+    labels: [{ name: "Harvest", catalogNumber: "SHVL 804" }],
+    ...overrides,
+  };
+}
+
+const PERSONNEL = {
+  members: [{ artistId: "m1", name: "Integrante", creditedAs: null, level: "members", roles: [{ relationType: "instrument", attributes: ["guitar"] }], tracks: "all" }],
+  guests: [],
+  production: [],
+  other: [],
+};
+
 const stats = {
   ratings: { count: 0, averageStars: null, averageDetailedScore: null, histogram: null },
   reviewCount: 17,
@@ -149,6 +182,8 @@ beforeEach(() => {
   mocks.loadCommunityStats.mockResolvedValue(stats);
   mocks.loadCommunityFavorites.mockResolvedValue(new Set());
   mocks.loadDiscographyStrip.mockResolvedValue(null);
+  mocks.loadAlbumEditions.mockResolvedValue(NO_EDITIONS);
+  mocks.loadAlbumPersonnel.mockResolvedValue(null);
 });
 
 async function renderLayout(children: React.ReactNode = <p>contenido</p>) {
@@ -250,5 +285,48 @@ describe("pestaña Reseñas", () => {
       searchParams: Promise.resolve({ sort: "cualquiera" }),
     });
     expect(mocks.listReviews).toHaveBeenCalledWith(expect.anything(), 1, 20, "recent");
+  });
+});
+
+describe("pestañas con datos de ediciones y créditos", () => {
+  it("muestra Créditos y Ediciones cuando hay datos, y el sello de la edición mostrada", async () => {
+    mocks.loadAlbumEditions.mockResolvedValue({
+      editions: [makeEdition("e1", { mbid: "rep" }), makeEdition("e2")],
+      representativeMbid: "rep",
+      representativeTrackCount: 2,
+      variants: [],
+    });
+    mocks.loadAlbumPersonnel.mockResolvedValue(PERSONNEL);
+    await renderLayout();
+    expect(screen.getByRole("link", { name: catalogEs.album.tabs.credits })).toHaveAttribute("href", `/album/${VALID_UUID}/credits`);
+    expect(screen.getByRole("link", { name: catalogEs.album.tabs.editions })).toHaveAttribute("href", `/album/${VALID_UUID}/editions`);
+    expect(screen.getAllByText("Harvest").length).toBeGreaterThan(0);
+  });
+
+  it("la pestaña Créditos muestra los niveles y responde 404 sin créditos", async () => {
+    const { default: AlbumCreditsPage } = await import("./credits/page");
+    mocks.loadAlbumPersonnel.mockResolvedValue(PERSONNEL);
+    renderWithIntl(await AlbumCreditsPage({ params: Promise.resolve({ id: VALID_UUID }) }));
+    expect(screen.getByText(catalogEs.album.credits.levels.members)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Integrante" })).toHaveAttribute("href", "/artist/m1");
+
+    mocks.loadAlbumPersonnel.mockResolvedValue(null);
+    await expect(AlbumCreditsPage({ params: Promise.resolve({ id: VALID_UUID }) })).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  it("la pestaña Ediciones lista las ediciones y responde 404 con una sola", async () => {
+    const { default: AlbumEditionsPage } = await import("./editions/page");
+    mocks.loadAlbumEditions.mockResolvedValue({
+      editions: [makeEdition("e1", { mbid: "rep" }), makeEdition("e2", { country: "US" })],
+      representativeMbid: "rep",
+      representativeTrackCount: 2,
+      variants: [],
+    });
+    renderWithIntl(await AlbumEditionsPage({ params: Promise.resolve({ id: VALID_UUID }) }));
+    expect(screen.getByRole("heading", { name: catalogEs.album.editions.heading })).toBeInTheDocument();
+    expect(screen.getAllByRole("row")).toHaveLength(3);
+
+    mocks.loadAlbumEditions.mockResolvedValue({ ...NO_EDITIONS, editions: [makeEdition("e1")] });
+    await expect(AlbumEditionsPage({ params: Promise.resolve({ id: VALID_UUID }) })).rejects.toThrow("NEXT_NOT_FOUND");
   });
 });

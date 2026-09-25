@@ -3,6 +3,8 @@ import { getAlbumDetail } from "@/services/catalog/album-detail";
 import { getAlbumCommunityStats, getCommunityFavoriteRecordings } from "@/services/catalog/album-community";
 import { getAlbumPersonalExtras } from "@/services/catalog/album-personal";
 import { getDiscographyStrip } from "@/services/catalog/album-neighbors";
+import { getAlbumEditions } from "@/services/catalog/album-editions";
+import { getAlbumPersonnel } from "@/services/catalog/personnel-levels";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
 import { getOwnRatingRow, resolveSocialTarget } from "@/services/social";
@@ -33,6 +35,12 @@ async function recordingIdsOf(releaseGroupId: string): Promise<string[]> {
 export const loadCommunityFavorites = cache(async (releaseGroupId: string) =>
   getCommunityFavoriteRecordings(await recordingIdsOf(releaseGroupId)),
 );
+
+/** Ediciones del álbum con sellos y variantes (openspec: enrich-album-editions-and-credits). */
+export const loadAlbumEditions = cache((releaseGroupId: string) => getAlbumEditions(releaseGroupId));
+
+/** Créditos de personal clasificados en niveles; `null` si el álbum no tiene. */
+export const loadAlbumPersonnel = cache((releaseGroupId: string) => getAlbumPersonnel(releaseGroupId));
 
 export const loadDiscographyStrip = cache(
   (primaryArtistId: string, releaseGroupId: string, category: string) =>

@@ -35,7 +35,7 @@ export function DiscographyStrip({ artistName, strip }: DiscographyStripProps) {
           )}
         </div>
       </div>
-      <ol className="flex gap-3 overflow-x-auto pb-2">
+      <ol className="relative flex gap-3 overflow-x-auto pb-2">
         {strip.items.map((item, index) => {
           const current = index === strip.currentIndex;
           const body = (

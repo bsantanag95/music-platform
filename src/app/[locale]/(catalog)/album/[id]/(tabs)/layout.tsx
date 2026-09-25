@@ -15,6 +15,8 @@ import { itemListsHref } from "@/components/lists/lists-shared";
 import { getRatings, listComments, resolveSocialTarget } from "@/services/social";
 import {
   loadAlbumDetail,
+  loadAlbumEditions,
+  loadAlbumPersonnel,
   loadCanModerate,
   loadCommunityStats,
   loadDiscographyStrip,
@@ -41,10 +43,6 @@ export async function generateMetadata({ params }: AlbumLayoutProps): Promise<Me
   return { title: result.detail.releaseGroup.title };
 }
 
-// Pestañas que dependen de datos que todavía no se ingieren (openspec:
-// enrich-album-editions-and-credits). Se ocultan hasta que ese cambio las alimente.
-const TABS_WITHOUT_DATA = { credits: false, editions: false };
-
 export default async function AlbumLayout({ children, modal, params }: AlbumLayoutProps) {
   const { id } = await params;
   if (!isValidUuid(id)) notFound();
@@ -69,7 +67,7 @@ export default async function AlbumLayout({ children, modal, params }: AlbumLayo
   const userId = session?.user.id ?? null;
   const socialTarget = await resolveSocialTarget("release-group", releaseGroupId);
 
-  const [stats, ratings, personal, canModerate, comments, strip] = await Promise.all([
+  const [stats, ratings, personal, canModerate, comments, strip, editions, personnel] = await Promise.all([
     loadCommunityStats(releaseGroupId),
     getRatings(socialTarget, userId ?? undefined),
     userId ? loadPersonalState(userId, releaseGroupId) : Promise.resolve(null),
@@ -78,7 +76,14 @@ export default async function AlbumLayout({ children, modal, params }: AlbumLayo
     detail.primaryArtist
       ? loadDiscographyStrip(detail.primaryArtist.id, releaseGroupId, detail.releaseGroup.category)
       : Promise.resolve(null),
+    loadAlbumEditions(releaseGroupId),
+    loadAlbumPersonnel(releaseGroupId),
   ]);
+
+  // Créditos y Ediciones solo existen con datos (openspec: enrich-album-editions-and-credits).
+  const availableTabs = { credits: personnel !== null, editions: editions.editions.length > 1 };
+  const representativeLabel =
+    editions.editions.find((e) => e.mbid === editions.representativeMbid)?.labels.find((l) => l.name)?.name ?? null;
 
   const breadcrumbItems = [
     { label: tCommon("home"), href: "/" },
@@ -118,7 +123,8 @@ export default async function AlbumLayout({ children, modal, params }: AlbumLayo
             firstReleaseYear={detail.releaseGroup.firstReleaseYear}
             tracks={detail.tracks}
             editionLabel={detail.release.editionLabel}
-            editionsAvailable={TABS_WITHOUT_DATA.editions}
+            editionsAvailable={availableTabs.editions}
+            label={representativeLabel}
           />
         </div>
         <div className="[grid-area:community]">
@@ -146,7 +152,7 @@ export default async function AlbumLayout({ children, modal, params }: AlbumLayo
       </header>
 
       <div className="flex flex-col gap-6">
-        <AlbumTabs releaseGroupId={releaseGroupId} available={TABS_WITHOUT_DATA} reviewCount={stats.reviewCount} />
+        <AlbumTabs releaseGroupId={releaseGroupId} available={availableTabs} reviewCount={stats.reviewCount} />
         {children}
       </div>
 
