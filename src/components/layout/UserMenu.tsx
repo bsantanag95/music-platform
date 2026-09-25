@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
+import type { Permission } from "@/services/auth/authorization";
 import {
   buildUserMenuItems,
   USER_MENU_GROUP_ORDER,
@@ -20,6 +21,8 @@ interface UserMenuListProps extends LogoutControls {
   username: string;
   pendingFollowRequests: number;
   surface: UserMenuSurface;
+  /** Permisos de plataforma: habilitan las herramientas de rol. */
+  permissions?: readonly Permission[];
   /** `id` del contenedor, para `aria-controls` del disparador en escritorio. */
   id?: string;
   onNavigate?: () => void;
@@ -32,6 +35,7 @@ export function UserMenuList({
   username,
   pendingFollowRequests,
   surface,
+  permissions = [],
   id,
   onNavigate,
   logoutPending,
@@ -40,7 +44,7 @@ export function UserMenuList({
 }: UserMenuListProps) {
   const t = useTranslations("common");
   const tErrors = useTranslations("errors");
-  const items = buildUserMenuItems({ username, pendingFollowRequests, surface });
+  const items = buildUserMenuItems({ username, pendingFollowRequests, surface, permissions });
 
   const groups = USER_MENU_GROUP_ORDER.map((group) => ({
     group,
@@ -131,6 +135,7 @@ interface UserMenuProps extends LogoutControls {
   username: string;
   displayName: string;
   pendingFollowRequests: number;
+  permissions?: readonly Permission[];
 }
 
 // Menú de usuario de escritorio: disparador anclado al nombre visible que
@@ -142,6 +147,7 @@ export function UserMenu({
   username,
   displayName,
   pendingFollowRequests,
+  permissions = [],
   logoutPending,
   logoutError,
   onLogout,
@@ -207,6 +213,7 @@ export function UserMenu({
             username={username}
             pendingFollowRequests={pendingFollowRequests}
             surface="header"
+            permissions={permissions}
             onNavigate={() => setOpen(false)}
             logoutPending={logoutPending}
             logoutError={logoutError}

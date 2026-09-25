@@ -257,19 +257,23 @@ El Header separa dos zonas (cambio `regroup-authenticated-header`, spec
   Listas (`/lists`, pública, distinta de `/me/lists`), Actividad (`/activity`, pública,
   distinta de `/me/feed`), el control **"+ Registrar"** (solo con sesión, abre el modal de
   registro de escucha — `add-global-listen-logging`) y, con el catálogo editorial
-  habilitado, Explorar. Con permisos de moderación o edición editorial, suma Moderación y/o
-  Administración. No lleva enlaces `/me/*` en el nivel superior.
+  habilitado, Explorar. No lleva enlaces `/me/*` en el nivel superior. Moderación y
+  Administración salieron de la barra en `fix-header-overflow` (2026-09): ahora viven en el
+  menú de usuario.
 - **Menú de usuario** — desplegable anclado al nombre visible (se abre al posar el cursor en
   escritorio, con cheurón hacia abajo; clic/teclado como alternativa) que agrupa todo lo que
   identifica a la persona: mi perfil, diario, favoritos, listas, colección, artistas
   seguidos, feed de actividad, seguidores, seguidos, solicitudes (con badge de pendientes),
+  herramientas de rol (Moderación y/o Administración, solo con el permiso correspondiente),
   ajustes y cierre de sesión.
 
 Los destinos del menú, del panel móvil del Header y de la pantalla Red del área de ajustes
 (`/me/settings/network`) salen de una única fuente (`src/components/layout/user-menu-items.ts`,
 superficies `header`, `panel` y `settings`). El panel de atajos del dueño (`OwnerHubPanel`) se
-reemplazó por una tarjeta de acceso a Ajustes (`rework-owner-management`). En móvil el Header colapsa en un panel con la
-misma división: bloque de barra general y bloque de usuario.
+reemplazó por una tarjeta de acceso a Ajustes (`rework-owner-management`). Por debajo de `lg` (1024 px) el Header colapsa en
+un panel con la misma división: bloque de barra general y bloque de usuario. Era `md`
+hasta `fix-header-overflow`: con sesión la fila completa necesita ~835 px y desbordaba entre
+768 y 1024 px.
 
 La búsqueda de usuarios ("Miembros") quedó deliberadamente fuera de la barra general —
 decisión de `redesign-users-search`, con acceso desde Home y Footer en su lugar (ver

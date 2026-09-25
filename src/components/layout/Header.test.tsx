@@ -315,36 +315,41 @@ describe("Header", () => {
     expect(requests).toHaveTextContent("3");
   });
 
-  it("un usuario normal no ve enlaces a moderación ni administración", () => {
+  it("un usuario normal no ve moderación ni administración, ni en la barra ni en el menú", () => {
     renderWithIntl(
       <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
     );
+    fireEvent.click(screen.getByRole("button", { name: "Ana" }));
 
     expect(screen.queryByRole("link", { name: "Moderación" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Administración" })).not.toBeInTheDocument();
   });
 
-  it("un moderador ve el enlace a moderación pero no a administración", () => {
+  it("un moderador encuentra moderación en el menú de usuario, no en la barra general", () => {
     renderWithIntl(
       <Header
         user={{ id: "u1", username: "ana", displayName: "Ana" }}
         platformPermissions={["moderation.review_content"]}
       />,
     );
+    const generalNav = screen.getAllByRole("navigation", { name: "Navegación general" })[0]!;
+    expect(generalNav).not.toHaveTextContent("Moderación");
 
-    const moderation = screen.getByRole("link", { name: "Moderación" });
-    expect(moderation).toHaveAttribute("href", "/moderation");
+    fireEvent.click(screen.getByRole("button", { name: "Ana" }));
+    expect(screen.getByRole("link", { name: "Moderación" })).toHaveAttribute("href", "/moderation");
     expect(screen.queryByRole("link", { name: "Administración" })).not.toBeInTheDocument();
   });
 
-  it("un administrador ve administración y moderación en la barra general", () => {
+  it("un administrador encuentra administración y moderación en el menú de usuario", () => {
     renderWithIntl(
       <Header
         user={{ id: "u1", username: "ana", displayName: "Ana" }}
         platformPermissions={["moderation.review_content", "moderation.suspend_social", "editorial.author", "editorial.publish", "platform.manage_roles"]}
       />,
     );
+    expect(screen.queryByRole("link", { name: "Administración" })).not.toBeInTheDocument();
 
+    fireEvent.click(screen.getByRole("button", { name: "Ana" }));
     expect(screen.getByRole("link", { name: "Administración" })).toHaveAttribute("href", "/admin");
     expect(screen.getByRole("link", { name: "Moderación" })).toHaveAttribute("href", "/moderation");
   });
@@ -356,8 +361,24 @@ describe("Header", () => {
         platformPermissions={["editorial.author"]}
       />,
     );
+    fireEvent.click(screen.getByRole("button", { name: "Ana" }));
 
     expect(screen.getByRole("link", { name: "Administración" })).toHaveAttribute("href", "/admin");
     expect(screen.queryByRole("link", { name: "Moderación" })).not.toBeInTheDocument();
+  });
+
+  it("en el panel colapsado las herramientas de rol van en el bloque de usuario", () => {
+    renderWithIntl(
+      <Header
+        user={{ id: "u1", username: "ana", displayName: "Ana" }}
+        platformPermissions={["moderation.review_content"]}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Abrir menú" }));
+
+    const panel = document.getElementById("header-mobile-menu")!;
+    const [panelGeneralNav] = [...panel.querySelectorAll('nav[aria-label="Navegación general"]')];
+    expect(panelGeneralNav).not.toHaveTextContent("Moderación");
+    expect(panel.querySelector('a[href="/moderation"]')).not.toBeNull();
   });
 });
