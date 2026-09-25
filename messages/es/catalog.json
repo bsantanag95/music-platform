@@ -264,7 +264,8 @@
         "members": "Integrantes de la banda",
         "guests": "Músicos invitados",
         "production": "Producción y sonido",
-        "other": "Arte y otros"
+        "other": "Arte y otros",
+        "leadPerson": "{count, plural, one {Artista principal} other {Artistas principales}}"
       },
       "otherCount": "{count, plural, one {+# crédito} other {+# créditos}}",
       "allTracks": "todas",
@@ -298,7 +299,16 @@
         "creative_direction": "dirección creativa",
         "liner_notes": "notas de carpeta",
         "artwork": "arte",
-        "misc": "otros"
+        "misc": "otros",
+        "arranger": "arreglos",
+        "instrument_arranger": "arreglos instrumentales",
+        "vocal_arranger": "arreglos vocales",
+        "producer_co": "coproducción",
+        "producer_executive": "producción ejecutiva",
+        "producer_additional": "producción adicional",
+        "engineer_assistant": "asistencia de ingeniería",
+        "mix_additional": "mezcla adicional",
+        "recording_assistant": "asistencia de grabación"
       },
       "attributes": {
         "guitar": "guitarra",
@@ -355,8 +365,24 @@
         "choir_vocals": "coro",
         "spoken_vocals": "voz hablada",
         "whistling": "silbido",
-        "handclaps": "palmas"
-      }
+        "handclaps": "palmas",
+        "membranophone": "percusión",
+        "tambourine": "pandereta",
+        "bell": "campana",
+        "clavinet": "clavinet",
+        "sitar": "sitar",
+        "baritone_saxophone": "saxo barítono",
+        "wurlitzer_electric_piano": "piano Wurlitzer",
+        "guitar_family": "guitarras",
+        "task": "tareas",
+        "idiophone": "percusión",
+        "chordophone": "cuerdas",
+        "aerophone": "vientos"
+      },
+      "levelSummary": "{count} · {names}",
+      "levelSummaryMore": "{count} · {names} y {rest} más",
+      "moreRoles": "+{count}",
+      "moreRolesLabel": "{count, plural, one {Ver # rol más} other {Ver # roles más}}"
     },
     "editions": {
       "heading": "Ediciones",

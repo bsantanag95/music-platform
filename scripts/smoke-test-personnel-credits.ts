@@ -88,7 +88,9 @@ async function main() {
     check(Boolean(memberRow), "se sincronizaron las pertenencias de la banda");
 
     console.log("3) Clasificación en niveles");
-    const levels = await getAlbumPersonnel(rg!.id);
+    const personnel = await getAlbumPersonnel(rg!.id);
+    const levels = personnel?.levels;
+    check(personnel?.leadKind === "group", "el artista principal de una banda se informa como grupo");
     check(levels?.members.map((e) => e.name).join() === "Integrante de humo", "el integrante está en Integrantes");
     check(levels?.members[0]?.tracks === "all", "el integrante participa en todas las pistas");
     const guest = levels?.guests[0];

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/db", () => ({ db: {} }));
-const { classifyPersonnel, relationKind } = await import("./personnel-levels");
+const { classifyPersonnel, leadKindOf, relationKind } = await import("./personnel-levels");
 
 const TRACKS = [
   { recordingId: "r1", discNumber: 1, position: 1 },
@@ -12,6 +12,17 @@ const TRACKS = [
 function c(artistId: string, relationType: string, recordingId: string | null, attributes: string[] = []) {
   return { artistId, name: artistId, creditedAs: null, relationType, attributes, recordingId };
 }
+
+describe("leadKindOf", () => {
+  it("es persona solo si todos los artistas principales son personas", () => {
+    expect(leadKindOf(["person"])).toBe("person");
+    expect(leadKindOf(["person", "person"])).toBe("person");
+    expect(leadKindOf(["person", "group"])).toBe("group");
+    expect(leadKindOf(["group"])).toBe("group");
+    expect(leadKindOf([null])).toBe("group");
+    expect(leadKindOf([])).toBe("group");
+  });
+});
 
 describe("relationKind", () => {
   it("clasifica tipos de intérprete, producción y el resto", () => {
