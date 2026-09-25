@@ -100,11 +100,12 @@ describe("CommunityStats", () => {
     expect(screen.getByText("38 reseñas")).toBeInTheDocument();
     expect(screen.getByText("212")).toBeInTheDocument();
     expect(screen.getByText("97 lo buscan")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: album.community.seeLists })).toHaveAttribute("href", "/album/rg-1/lists");
+    expect(screen.getByRole("link", { name: /Aparece en 64 listas/ })).toHaveAttribute("href", "/album/rg-1/lists");
+    expect(screen.queryByText(/^En listas$/)).not.toBeInTheDocument();
     expect(screen.getByRole("img", { name: /Distribución de valoraciones/ })).toBeInTheDocument();
   });
 
-  it("por debajo del umbral muestra el conteo sin media ni histograma, y 'menos de 5'", () => {
+  it("por debajo del umbral muestra el conteo sin media ni histograma, y '<5' accesible", () => {
     renderWithIntl(
       <CommunityStats
         stats={makeStats({
@@ -118,8 +119,11 @@ describe("CommunityStats", () => {
     );
     expect(screen.getByText(album.community.fewRatings)).toBeInTheDocument();
     expect(screen.getByText("4")).toBeInTheDocument();
-    expect(screen.getByText("Menos de 5")).toBeInTheDocument();
+    const compact = screen.getByText("<5");
+    expect(compact).toHaveAttribute("aria-hidden", "true");
+    expect(compact.parentElement).toHaveAttribute("title", "Menos de 5");
+    expect(screen.getByText("Menos de 5")).toHaveClass("sr-only");
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: album.community.seeLists })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Aparece en/ })).not.toBeInTheDocument();
   });
 });

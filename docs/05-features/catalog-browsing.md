@@ -108,17 +108,29 @@ biblioteca, con Metal-Archives como referencia y la capa personal de Letterboxd)
   **ficha técnica** (lanzamiento con la precisión conocida, duración total —con "≥" si falta
   alguna duración—, edición mostrada y, cuando el catálogo lo conozca, sello; solo se pintan
   filas con dato), **bloque de comunidad** (media de estrellas y detallada, valoraciones y
-  reseñas, "lo coleccionan / lo buscan", listas e histograma; umbrales en
+  reseñas, "lo coleccionan / lo buscan" en tres tarjetas —los conteos bajo umbral se ven
+  como "<5"—, un enlace "Aparece en N listas" solo si N > 0, e histograma; umbrales en
   `01-domain/business-rules.md`) y el **panel "Tu relación"** (valoración propia, reseña,
   escuchas, favorito, Pendiente, colección y listas, mostrados como estado).
+- **Panel "Tu relación"** (cambio `rework-album-relation-panel`, 2026-09): todas las filas
+  siempre visibles, sin menú "···" ni "Más acciones", también en móvil. **Nota**: cinco
+  estrellas en línea con medias estrellas que guardan con un clic; junto a ellas, un botón
+  abre un diálogo con el puntaje detallado limitado al tramo de las estrellas, destacar y
+  borrar. Cambiar las estrellas descarta el puntaje detallado (cada valor de estrellas tiene
+  su propio tramo, ver `business-rules.md`) y lo avisa. **Escuchas**: conteo y última
+  fecha, "+ Registrar" y una confirmación con "Agregar detalles". **Favorito** y
+  **Pendiente**: conmutadores con ícono (corazón y marcador). **Listas**: "En N de tus
+  listas" (listas y Caminos propios, sin recorridos de artista) y un selector de casillas
+  con búsqueda que agrega y quita; las listas de la comunidad que contienen el álbum se
+  abren desde el bloque de comunidad, no desde el panel.
 - **Pestañas con URL propia** (slugs en inglés): `/album/{id}` (Canciones, siempre la
   pestaña por defecto), `/album/{id}/reviews` (Reseñas, con contador), y `/credits` y
   `/editions`, que se muestran solo cuando el cambio de datos
   `enrich-album-editions-and-credits` las alimente.
 - **Al pie**, fuera de las pestañas: franja de discografía del artista principal (mismo
   tipo de obra, orden cronológico, anterior / siguiente) y **comentarios**.
-- **Móvil**: carátula e identidad, línea resumen de comunidad, panel compacto, ficha técnica
-  colapsable, pestañas.
+- **Móvil**: carátula e identidad, línea resumen de comunidad, panel (mismas filas que en
+  escritorio), ficha técnica colapsable, pestañas.
 
 **Pestaña Canciones:** tracklist de la edición representativa con posición, título completo
 (sin truncar), duración, subtotal por disco y total. Cada pista muestra su variante
