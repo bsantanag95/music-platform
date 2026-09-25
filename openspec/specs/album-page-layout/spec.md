@@ -2,7 +2,6 @@
 
 ## Purpose
 Definir la estructura de la página de álbum como ficha de biblioteca: cabecera, pestañas, franja de discografía y comentarios separados de las reseñas.
-
 ## Requirements
 ### Requirement: Zonas de la página de álbum
 
@@ -12,7 +11,10 @@ ficha técnica, el bloque de comunidad y el panel "Tu relación"; la barra de pe
 contenido de la pestaña activa; la franja de discografía del artista; y los comentarios.
 En escritorio el panel "Tu relación" SHALL ocupar una columna lateral solo a la altura de
 la cabecera, de modo que las pestañas y su contenido usen el ancho completo. La carátula
-SHALL mostrarse como máximo a 250 px de lado.
+SHALL mostrarse como máximo a 250 px de lado. Cuando el panel lateral crece (por ejemplo,
+al abrir el selector de listas), la identidad, la ficha técnica y el bloque de comunidad
+SHALL conservar su espaciado vertical y SHALL NOT separarse para acompañar la altura del
+panel.
 
 #### Scenario: Escritorio
 
@@ -24,8 +26,15 @@ SHALL mostrarse como máximo a 250 px de lado.
 
 - **WHEN** una persona abre un álbum en un viewport móvil
 - **THEN** las zonas se apilan en este orden: carátula e identidad, una línea resumen de
-  comunidad, el panel "Tu relación" compacto, la ficha técnica colapsable, las pestañas, la
+  comunidad, el panel "Tu relación", la ficha técnica colapsable, las pestañas, la
   discografía y los comentarios, sin desbordamiento horizontal de la página
+
+#### Scenario: Panel lateral expandido
+
+- **WHEN** un usuario abre el selector de listas en escritorio y el panel supera la altura
+  de la columna central
+- **THEN** título, ficha y comunidad quedan juntos arriba y el espacio sobrante queda debajo
+  de ellos
 
 ### Requirement: Pestañas de contenido
 
