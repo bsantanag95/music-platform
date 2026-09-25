@@ -102,7 +102,13 @@ menú al activarse (soporte táctil y de teclado), el menú SHALL cerrarse con `
 devolviendo el foco al control, y el control SHALL exponer su estado mediante
 `aria-expanded` y `aria-controls`. El menú SHALL cerrarse al navegar a una ruta nueva.
 
-En viewports por debajo del punto de corte `md`, el Header SHALL colapsar en un panel único
+Los accesos a herramientas de rol (Moderación, para quien tenga permisos de moderación, y
+Administración, para quien tenga permiso de autoría editorial) SHALL mostrarse solo a
+quienes tengan ese permiso, dentro del menú de usuario y del bloque de usuario del panel
+colapsado, en un grupo propio antes de los ajustes, y SHALL NOT ocupar un lugar en la barra
+general.
+
+En viewports por debajo del punto de corte `lg`, el Header SHALL colapsar en un panel único
 que conserve la misma división: un bloque de barra general (buscador, Listas, Actividad,
 Explorar y el control "Registrar") y un bloque de usuario con los mismos accesos del menú,
 el selector de locale y el cierre de sesión.
@@ -189,8 +195,28 @@ el selector de locale y el cierre de sesión.
 
 #### Scenario: Panel colapsado en viewport móvil
 
-- **WHEN** un usuario con sesión abre el panel del Header en un viewport por debajo de `md`
+- **WHEN** un usuario con sesión abre el panel del Header en un viewport por debajo de `lg`
 - **THEN** ve un bloque de barra general con el buscador, el enlace a `/lists`, el enlace a
   `/activity`, Explorar y el control "Registrar", y un bloque de usuario con los mismos
   accesos del menú más el selector de locale y el cierre de sesión
+
+#### Scenario: Herramientas de rol en el menú de usuario
+
+- **WHEN** un usuario con permisos de moderación y de autoría editorial abre el menú de
+  usuario
+- **THEN** encuentra los accesos a Moderación (`/moderation`) y Administración (`/admin`) en
+  un grupo propio del menú
+- **AND** la barra general no muestra esos enlaces
+
+#### Scenario: Sin permisos de rol
+
+- **WHEN** un usuario sin permisos de moderación ni de autoría editorial abre el menú
+- **THEN** el menú no muestra accesos a Moderación ni a Administración
+
+#### Scenario: Sin desborde horizontal en anchos intermedios
+
+- **WHEN** un usuario con sesión y todos los permisos de rol abre una página en un viewport
+  de 800 px de ancho
+- **THEN** el Header se muestra colapsado con el botón del panel y la página no tiene
+  desplazamiento horizontal
 
