@@ -8,6 +8,7 @@ import { ListenEntryForm } from "@/components/diary/ListenEntryForm";
 import { AddToListPanel } from "@/components/lists/AddToListPanel";
 import { ListsContainingItemPanel } from "@/components/lists/ListsContainingItemPanel";
 import { CollectionAlbumAction } from "@/components/collection/CollectionAlbumAction";
+import { REVIEW_COMPOSER_ANCHOR, revealReviewComposer } from "@/components/album/ReviewComposer";
 import { createListenEntry } from "@/lib/api/diary";
 import { toggleFavorite } from "@/lib/api/favorites";
 import { toggleWantToListen } from "@/lib/api/want-to-listen";
@@ -182,7 +183,14 @@ function AuthenticatedPanel({
 
       <Row className={mobileSecondary}>
         <span className="font-body text-sm text-paper">{t("review")}</span>
-        <Link href={`/album/${releaseGroupId}/reviews#your-review`} scroll={false} className={linkButton}>
+        <Link
+          href={`/album/${releaseGroupId}/reviews#${REVIEW_COMPOSER_ANCHOR}`}
+          scroll={false}
+          onClick={(event) => {
+            if (revealReviewComposer()) event.preventDefault();
+          }}
+          className={linkButton}
+        >
           {state.ownReviewId ? t("editReview") : t("writeReview")}
         </Link>
       </Row>

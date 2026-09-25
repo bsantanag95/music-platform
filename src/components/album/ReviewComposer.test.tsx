@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
-import { ReviewComposer } from "./ReviewComposer";
+import { ReviewComposer, revealReviewComposer } from "./ReviewComposer";
 import type { Review } from "@/lib/api/schemas";
 
 const mocks = vi.hoisted(() => ({
@@ -36,9 +36,46 @@ const ownReview: Review = {
   updatedAt: "2026-02-01T00:00:00.000Z",
 };
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  window.history.replaceState(null, "", "/");
+  Element.prototype.scrollIntoView = vi.fn();
+});
 
 describe("ReviewComposer", () => {
+  it("al llegar con #your-review abre la reseña propia en edición, se desplaza y enfoca el cuerpo", () => {
+    window.history.replaceState(null, "", "/album/x/reviews#your-review");
+    renderWithIntl(<ReviewComposer releaseGroupId={RG} authenticated ownStars={4} ownReview={ownReview} />);
+    const body = screen.getByLabelText(social.reviewBodyLabel);
+    expect(body).toHaveFocus();
+    expect(body).toHaveValue("Mi reseña anterior");
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
+  });
+
+  it("sin hash no se desplaza ni roba el foco", () => {
+    renderWithIntl(<ReviewComposer releaseGroupId={RG} authenticated ownStars={4} ownReview={null} />);
+    expect(screen.getByLabelText(social.reviewBodyLabel)).not.toHaveFocus();
+    expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it("ya montado, revealReviewComposer lo muestra sin navegar y fija el hash", () => {
+    renderWithIntl(<ReviewComposer releaseGroupId={RG} authenticated ownStars={4} ownReview={ownReview} />);
+    expect(screen.queryByLabelText(social.reviewBodyLabel)).not.toBeInTheDocument();
+    let handled = false;
+    act(() => {
+      handled = revealReviewComposer();
+    });
+    expect(handled).toBe(true);
+    expect(window.location.hash).toBe("#your-review");
+    expect(screen.getByLabelText(social.reviewBodyLabel)).toHaveFocus();
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
+  });
+
+  it("sin editor montado, revealReviewComposer deja navegar al enlace", () => {
+    expect(revealReviewComposer()).toBe(false);
+    expect(window.location.hash).toBe("");
+  });
+
   it("sin sesión ofrece iniciar sesión y no muestra editor", () => {
     renderWithIntl(<ReviewComposer releaseGroupId={RG} authenticated={false} ownStars={0} ownReview={null} />);
     expect(screen.getByRole("link", { name: social.loginToReview })).toHaveAttribute("href", "/auth/login");

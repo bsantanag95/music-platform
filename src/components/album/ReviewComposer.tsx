@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { SubmitEventHandler } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -14,6 +14,24 @@ import type { Review } from "@/lib/api/schemas";
 // vive aparte (`ReviewIndex`).
 
 const STAR_VALUES = Array.from({ length: 10 }, (_, index) => (index + 1) / 2);
+
+/** Ancla del editor; el panel "Tu relación" enlaza a `/album/<id>/reviews#your-review`. */
+export const REVIEW_COMPOSER_ANCHOR = "your-review";
+const REVEAL_EVENT = "review-composer:reveal";
+
+/**
+ * Si el editor ya está montado (el usuario está en la pestaña Reseñas), le pide que se
+ * muestre y devuelve `true` para que el enlace no navegue: la navegación de Next solo
+ * cambia el hash con `pushState` (no dispara `hashchange`) y además corta el scroll suave.
+ * Devuelve `false` si no está montado; entonces el enlace navega y el editor se muestra
+ * al montarse por el hash.
+ */
+export function revealReviewComposer(): boolean {
+  if (!document.getElementById(REVIEW_COMPOSER_ANCHOR)) return false;
+  window.history.replaceState(window.history.state, "", `#${REVIEW_COMPOSER_ANCHOR}`);
+  window.dispatchEvent(new Event(REVEAL_EVENT));
+  return true;
+}
 
 interface ReviewComposerProps {
   releaseGroupId: string;
@@ -36,6 +54,28 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
   const [stars, setStars] = useState(0);
   const [pending, setPending] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [revealRequest, setRevealRequest] = useState(0);
+  const sectionRef = useRef<HTMLElement>(null);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+
+  // El editor vive al final de la pestaña, debajo del índice: al llegar desde "Escribir
+  // reseña"/"Editar" del panel la URL cambiaba pero la pantalla no. Se abre en modo edición,
+  // se desplaza hasta él y se enfoca el cuerpo.
+  useEffect(() => {
+    const reveal = () => {
+      setEditing(true);
+      setRevealRequest((count) => count + 1);
+    };
+    if (window.location.hash === `#${REVIEW_COMPOSER_ANCHOR}`) reveal();
+    window.addEventListener(REVEAL_EVENT, reveal);
+    return () => window.removeEventListener(REVEAL_EVENT, reveal);
+  }, []);
+
+  useEffect(() => {
+    if (revealRequest === 0) return;
+    sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    bodyRef.current?.focus({ preventScroll: true });
+  }, [revealRequest]);
 
   const needsStars = !review && ownStars === 0 && !stars;
 
@@ -91,7 +131,11 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
   }
 
   return (
-    <section id="your-review" aria-labelledby="your-review-heading" className="flex scroll-mt-24 flex-col gap-3">
+    <section
+      ref={sectionRef}
+      id={REVIEW_COMPOSER_ANCHOR}
+      aria-labelledby="your-review-heading" className="flex scroll-mt-24 flex-col gap-3"
+    >
       <h3 id="your-review-heading" className="font-display text-lg text-paper">
         {tAlbum("writeHeading")}
       </h3>
@@ -157,6 +201,7 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
             {t("reviewBodyLabel")}
           </label>
           <textarea
+            ref={bodyRef}
             id={`review-body-${releaseGroupId}`}
             value={body}
             onChange={(event) => setBody(event.target.value)}
