@@ -92,6 +92,14 @@ describe("AlbumListPicker", () => {
     expect(mocks.getMyLists).toHaveBeenCalledWith(1, 20, { entityType: "release-group" });
   });
 
+  it("mientras carga muestra la pertenencia y avisa que faltan listas por cargar", () => {
+    mocks.getMyLists.mockReturnValue(new Promise(() => {}));
+    mocks.getMyCaminos.mockReturnValue(new Promise(() => {}));
+    renderPicker([oldMembership]);
+    expect(screen.getByRole("checkbox", { name: "Hard Rock 1998" })).toBeChecked();
+    expect(screen.getAllByText(picker.loading)).toHaveLength(2);
+  });
+
   it("oculta los Caminos archivados", async () => {
     renderPicker();
     expect(await screen.findByRole("checkbox", { name: "Pink Floyd" })).toBeInTheDocument();

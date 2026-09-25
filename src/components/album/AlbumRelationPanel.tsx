@@ -107,6 +107,9 @@ function AuthenticatedPanel({
   const [memberships, setMemberships] = useState(state.ownListMemberships);
   const [pickerOpen, setPickerOpen] = useState(false);
   const listsChanged = useRef(false);
+  // Solo la última valoración enviada aplica su respuesta: las estrellas no se deshabilitan
+  // mientras se guarda (perderían el foco del teclado), así que puede haber varias en vuelo.
+  const ratingSeq = useRef(0);
   const listsButton = useRef<HTMLButtonElement>(null);
   const [busy, setBusy] = useState<"listen" | "favorite" | "pending" | null>(null);
   const [error, setError] = useState(false);
@@ -134,7 +137,8 @@ function AuthenticatedPanel({
   // caer en el tramo de las nuevas estrellas, se guarda sin él y se avisa: el `CHECK` de
   // `rating` rechazaría la combinación.
   async function rate(value: number) {
-    const previous = stars;
+    const seq = ++ratingSeq.current;
+    const previous = own?.stars ?? null;
     const score = own?.detailedScore ?? null;
     const keepScore = score !== null && isScoreCoherent(value, score);
     setStars(value);
@@ -146,15 +150,18 @@ function AuthenticatedPanel({
         stars: value,
         ...(keepScore ? { detailedScore: score } : {}),
       });
-      applyRatings(await getRatings("release-group", releaseGroupId));
+      const updated = await getRatings("release-group", releaseGroupId);
+      if (seq !== ratingSeq.current) return;
+      applyRatings(updated);
       if (score !== null && !keepScore) {
         setRatingNotice(t("scoreDropped", { score, stars: formatStars(value, locale) }));
       }
     } catch {
+      if (seq !== ratingSeq.current) return;
       setStars(previous);
       setError(true);
     } finally {
-      setRatingBusy(false);
+      if (seq === ratingSeq.current) setRatingBusy(false);
     }
   }
 
@@ -203,7 +210,6 @@ function AuthenticatedPanel({
             onChange={(value) => void rate(value)}
             legend={t("starsLegend")}
             valueLabel={(value) => t("starsValue", { stars: formatStars(value, locale) })}
-            disabled={ratingBusy}
           />
           <button
             type="button"

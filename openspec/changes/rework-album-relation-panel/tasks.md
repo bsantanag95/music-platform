@@ -45,5 +45,5 @@
 
 - [x] 7.1 Revisar `docs/05-features/catalog-browsing.md`, `ratings-and-reviews.md` y `physical-collection.md` y actualizar las menciones al panel (menú `···`, "Más acciones", formulario de valoración, "Ver en listas")
 - [x] 7.2 `pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build`
-- [ ] 7.3 Verificar en el navegador (escritorio y móvil): valorar con medias estrellas y teclado, cambio de estrellas con puntaje incoherente, registrar escucha, conmutadores, selector con muchas listas y Caminos, cabecera estable al abrir el selector
+- [x] 7.3 Verificar en el navegador (escritorio y móvil): valorar con medias estrellas y teclado, cambio de estrellas con puntaje incoherente, registrar escucha, conmutadores, selector con muchas listas y Caminos, cabecera estable al abrir el selector
 - [ ] 7.4 Al archivar: agregar `## Purpose` a `openspec/specs/album-list-picker/spec.md`

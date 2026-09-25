@@ -153,6 +153,14 @@ describe("AlbumRelationPanel", () => {
     expect(await screen.findByRole("status")).toHaveTextContent("Se quitó tu puntuación 95");
   });
 
+  it("las estrellas siguen habilitadas mientras se guarda (no pierden el foco del teclado)", async () => {
+    mocks.saveRating.mockReturnValue(new Promise(() => {}));
+    renderWithIntl(<AlbumRelationPanel releaseGroupId={RG} state={makeState({ ratings: ratings(3) })} />);
+    fireEvent.click(screen.getByRole("radio", { name: "3,5 estrellas" }));
+    await waitFor(() => expect(mocks.saveRating).toHaveBeenCalled());
+    for (const radio of screen.getAllByRole("radio")) expect(radio).toBeEnabled();
+  });
+
   it("si falla el guardado, las estrellas vuelven al valor anterior y se muestra el error", async () => {
     mocks.saveRating.mockRejectedValue(new Error("red"));
     renderWithIntl(<AlbumRelationPanel releaseGroupId={RG} state={makeState({ ratings: ratings(2) })} />);
