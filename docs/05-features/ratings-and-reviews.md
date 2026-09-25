@@ -46,7 +46,10 @@ Cambio `redesign-album-page` (2026-09):
 
 - La **valoración propia** se edita en el panel "Tu relación" de la cabecera del álbum; la
   media de la comunidad vive en el bloque de comunidad (con umbral mínimo de 5 valoraciones
-  para media e histograma).
+  para media e histograma). Desde `rework-album-relation-panel` las estrellas se eligen en
+  línea (un clic guarda) y el puntaje detallado se afina en un diálogo que solo ofrece el
+  tramo coherente con las estrellas; cambiar las estrellas descarta el puntaje detallado y
+  lo avisa, en lugar de chocar con el `CHECK` de `rating`.
 - La pestaña **Reseñas** (`/album/{id}/reviews`) muestra un **índice** compacto: título (o,
   sin título, un extracto del inicio del cuerpo), estrellas vigentes del autor, autor y
   fecha, ordenable por más recientes, mejor nota y peor nota (`?sort=recent|best|worst`).

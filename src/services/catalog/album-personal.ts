@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { favorite, listenEntry, review, userList, userListItem } from "@/db/schema";
 
@@ -13,12 +13,23 @@ export interface AlbumListenSummary {
   lastAt: string | null;
 }
 
+export interface AlbumListMembership {
+  listId: string;
+  itemId: string;
+  kind: "standard" | "custom_journey";
+  title: string;
+}
+
 export interface AlbumPersonalExtras {
   listens: AlbumListenSummary;
   /** Id de la reseña propia sobre el álbum, si existe. */
   ownReviewId: string | null;
-  /** Cantidad de listas propias (cualquier audiencia) que contienen el álbum. */
-  ownListCount: number;
+  /**
+   * Listas y Caminos propios (cualquier audiencia) que contienen el álbum, con el ítem
+   * para poder quitarlo desde el selector (openspec: rework-album-relation-panel, D1).
+   * Excluye los recorridos de artista (se gestionan solos) y los Caminos archivados.
+   */
+  ownListMemberships: AlbumListMembership[];
   /** Grabaciones del álbum con al menos una entrada de diario del usuario. */
   listenedRecordingIds: Set<string>;
   /** Grabaciones del álbum marcadas como favoritas por el usuario (menú por pista). */
@@ -45,10 +56,25 @@ export async function getAlbumPersonalExtras(
       .orderBy(desc(review.createdAt))
       .limit(1),
     db
-      .select({ n: sql<number>`count(distinct ${userList.id})::int` })
+      .select({
+        listId: userList.id,
+        itemId: userListItem.id,
+        kind: userList.kind,
+        title: userList.title,
+      })
       .from(userList)
       .innerJoin(userListItem, eq(userListItem.listId, userList.id))
-      .where(and(eq(userList.ownerId, userId), eq(userListItem.releaseGroupId, releaseGroupId))),
+      .where(
+        and(
+          eq(userList.ownerId, userId),
+          eq(userListItem.releaseGroupId, releaseGroupId),
+          or(
+            eq(userList.kind, "standard"),
+            and(eq(userList.kind, "custom_journey"), isNull(userList.journeyArchivedAt)),
+          ),
+        ),
+      )
+      .orderBy(desc(userList.createdAt), desc(userList.id)),
     recordingIds.length === 0
       ? Promise.resolve([])
       : db
@@ -76,7 +102,11 @@ export async function getAlbumPersonalExtras(
       lastAt: listen?.lastAt ? new Date(listen.lastAt).toISOString() : null,
     },
     ownReviewId: reviewRows[0]?.id ?? null,
-    ownListCount: listRows[0]?.n ?? 0,
+    ownListMemberships: listRows.flatMap((row) =>
+      row.kind === "standard" || row.kind === "custom_journey"
+        ? [{ listId: row.listId, itemId: row.itemId, kind: row.kind, title: row.title }]
+        : [],
+    ),
     listenedRecordingIds: new Set(
       listenedRows.flatMap((row) => (row.recordingId ? [row.recordingId] : [])),
     ),

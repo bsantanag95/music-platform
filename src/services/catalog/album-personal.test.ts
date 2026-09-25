@@ -28,7 +28,11 @@ describe("getAlbumPersonalExtras", () => {
     const queue = [
       [{ count: 3, lastAt: "2026-09-12 10:00:00+00" }],
       [{ id: "review-1" }],
-      [{ n: 2 }],
+      [
+        { listId: "l1", itemId: "i1", kind: "standard", title: "Glam" },
+        { listId: "c1", itemId: "i2", kind: "custom_journey", title: "Camino" },
+        { listId: "j1", itemId: "i3", kind: "artist_journey", title: "Recorrido" },
+      ],
       [{ recordingId: "r1" }],
     ];
     mocks.select.mockImplementation(() => queryChain(queue.shift()));
@@ -40,20 +44,23 @@ describe("getAlbumPersonalExtras", () => {
 
     expect(extras.listens).toEqual({ count: 3, lastAt: "2026-09-12T10:00:00.000Z" });
     expect(extras.ownReviewId).toBe("review-1");
-    expect(extras.ownListCount).toBe(2);
+    expect(extras.ownListMemberships).toEqual([
+      { listId: "l1", itemId: "i1", kind: "standard", title: "Glam" },
+      { listId: "c1", itemId: "i2", kind: "custom_journey", title: "Camino" },
+    ]);
     expect([...extras.listenedRecordingIds]).toEqual(["r2"]);
     expect([...extras.favoriteRecordingIds]).toEqual(["r1"]);
   });
 
   it("sin actividad devuelve ceros y no consulta pistas si no hay grabaciones", async () => {
-    const queue = [[{ count: 0, lastAt: null }], [], [{ n: 0 }]];
+    const queue = [[{ count: 0, lastAt: null }], [], []];
     mocks.select.mockImplementation(() => queryChain(queue.shift()));
 
     const extras = await getAlbumPersonalExtras("u1", "rg-1", []);
 
     expect(extras.listens).toEqual({ count: 0, lastAt: null });
     expect(extras.ownReviewId).toBeNull();
-    expect(extras.ownListCount).toBe(0);
+    expect(extras.ownListMemberships).toEqual([]);
     expect(extras.listenedRecordingIds.size).toBe(0);
     expect(extras.favoriteRecordingIds.size).toBe(0);
     expect(mocks.selectDistinct).not.toHaveBeenCalled();

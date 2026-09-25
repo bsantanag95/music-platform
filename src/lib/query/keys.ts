@@ -21,6 +21,9 @@ export const queryKeys = {
   myDiaryMonths: () => ["diary", "mine", "months"] as const,
   myFeed: (filters: FeedFiltersParams) => ["feed", "mine", filters] as const,
   myLists: (filters: ListFiltersParams) => ["lists", "mine", filters] as const,
+  // Selector de listas del panel del álbum: serie propia (otro tamaño de página que /lists).
+  myListsPicker: (filters: ListFiltersParams) => ["lists", "mine", "picker", filters] as const,
+  myCaminos: () => ["caminos", "mine"] as const,
   savedLists: () => ["lists", "saved"] as const,
   discoverLists: () => ["lists", "discover"] as const,
   // Modo explorar de /lists: namespace propio para no colisionar con la serie

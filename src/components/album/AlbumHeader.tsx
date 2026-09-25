@@ -163,7 +163,23 @@ function useThresholdedValue() {
       : new Intl.NumberFormat(locale).format(count.value);
 }
 
-function StatTile({ label, value, detail }: { label: string; value: string; detail?: React.ReactNode }) {
+/**
+ * Valor principal de una tarjeta para un conteo con umbral: "<5" compacto a la vista, con
+ * el texto completo ("menos de 5") para lectores de pantalla y al pasar el puntero.
+ */
+function ThresholdedTileValue({ count }: { count: ThresholdedCount }) {
+  const t = useTranslations("catalog.album.community");
+  const locale = useLocale();
+  if (count.kind !== "fewer") return <>{new Intl.NumberFormat(locale).format(count.value)}</>;
+  return (
+    <span title={t("fewer", { threshold: count.threshold })}>
+      <span aria-hidden="true">{t("fewerShort", { threshold: count.threshold })}</span>
+      <span className="sr-only">{t("fewer", { threshold: count.threshold })}</span>
+    </span>
+  );
+}
+
+function StatTile({ label, value, detail }: { label: string; value: React.ReactNode; detail?: React.ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col gap-0.5 rounded border border-ink-border bg-ink-surface px-3 py-2">
       <span className="font-data text-xs text-paper-muted">{label}</span>
@@ -225,7 +241,7 @@ export function CommunityStats({ stats, listsHref }: CommunityStatsProps) {
   return (
     <section aria-label={t("heading")} className="flex flex-col gap-3">
       <p className="font-data text-sm text-paper sm:hidden">{summary}</p>
-      <div className="hidden grid-cols-2 gap-2 sm:grid xl:grid-cols-4">
+      <div className="hidden grid-cols-3 gap-2 sm:grid">
         <StatTile
           label={t("average")}
           value={ratings.averageStars !== null ? t("averageValue", { stars: formatStars(ratings.averageStars, locale) }) : "—"}
@@ -244,21 +260,15 @@ export function CommunityStats({ stats, listsHref }: CommunityStatsProps) {
         />
         <StatTile
           label={t("collectors")}
-          value={thresholded(stats.collectors)}
+          value={<ThresholdedTileValue count={stats.collectors} />}
           detail={t("seekers", { value: thresholded(stats.seekers, true) })}
         />
-        <StatTile
-          label={t("lists")}
-          value={number(stats.listCount)}
-          detail={
-            stats.listCount > 0 ? (
-              <Link href={listsHref} className="text-amber hover:underline">
-                {t("seeLists")}
-              </Link>
-            ) : undefined
-          }
-        />
       </div>
+      {stats.listCount > 0 && (
+        <Link href={listsHref} className="self-start font-data text-xs text-amber hover:underline">
+          {t("appearsInLists", { count: stats.listCount })} →
+        </Link>
+      )}
       {ratings.histogram && (
         <div className="hidden sm:block">
           <RatingHistogram histogram={ratings.histogram} />
