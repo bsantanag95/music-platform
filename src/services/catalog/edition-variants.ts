@@ -71,6 +71,11 @@ export function editionOwnName(edition: Pick<EditionForVariants, "title" | "disa
   return firstPhrase || null;
 }
 
+/** Clave de agrupación de variantes: misma cantidad de pistas y mismos formatos. */
+export function variantKeyOf(edition: Pick<EditionForVariants, "trackCount" | "formats">): string {
+  return `${edition.trackCount}|${edition.formats.join("+").toLowerCase()}`;
+}
+
 const LAYER_FORMAT = /layer/i;
 
 /**
@@ -120,7 +125,7 @@ export function detectEditionVariants(
 
   const groups = new Map<string, EditionForVariants[]>();
   for (const edition of candidates) {
-    const key = `${edition.trackCount}|${edition.formats.join("+").toLowerCase()}`;
+    const key = variantKeyOf(edition);
     const group = groups.get(key) ?? [];
     group.push(edition);
     groups.set(key, group);

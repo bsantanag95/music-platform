@@ -55,15 +55,15 @@
 - [x] 7.4 Etiqueta de variante (en vivo, remix, regrabación) desde `variant_type` y enlace "versión de X" desde `variant_of_id`
 - [x] 7.5 Marca de favorita de la comunidad y marca personal "la escuchaste", siempre visible y solo con sesión
 - [x] 7.6 Menú `···` por pista en el orden de la spec: Registrar escucha, Reaccionar | Valorar, Favorito, Añadir a lista, Ver en listas | Ir a la canción; sin sesión pide iniciar sesión
-- [ ] 7.7 Bloque "Pistas adicionales en otras ediciones": secciones por variante contraídas por defecto, frase aclaratoria, encabezado (nombre, año, sello, formato, ediciones y países, "+N pistas"), carga de las pistas al desplegar vía `src/lib/api/catalog.ts` (TanStack Query), cajas con enlace a MusicBrainz; oculto sin variantes (depende de `enrich-album-editions-and-credits`)
+- [x] 7.7 Bloque "Pistas adicionales en otras ediciones": secciones por variante contraídas por defecto, frase aclaratoria, encabezado (nombre, año, sello, formato, ediciones y países, "+N pistas"), carga de las pistas al desplegar vía `src/lib/api/catalog.ts` (TanStack Query), cajas con enlace a MusicBrainz; oculto sin variantes (depende de `enrich-album-editions-and-credits`)
 - [x] 7.8 Tests de la tracklist: título largo, multidisco con subtotales, duración faltante, pista de otro artista, variante en vivo, marcas, menú sin sesión, secciones contraídas y despliegue
 
 ## 8. Pestañas Créditos y Ediciones
 
-- [ ] 8.1 Pestaña Créditos con los cuatro niveles (integrantes destacados, invitados, producción y sonido, arte y otros contraído con "+N créditos"), roles y pistas por persona; oculta sin créditos (depende de `enrich-album-editions-and-credits`)
-- [ ] 8.2 Traducción de roles e instrumentos: lista cerrada en i18n con fallback al texto de MusicBrainz
-- [ ] 8.3 Pestaña Ediciones: tabla (año, país, formato, sello · catálogo, pistas, enlace a MusicBrainz), filtro por formato, solo oficiales por defecto con control para incluir no oficiales, fila de la representativa marcada, "+N pistas" que lleva a su sección en Canciones; oculta sin ediciones además de la representativa
-- [ ] 8.4 Tests de Créditos y Ediciones, incluidos los estados ocultos
+- [x] 8.1 Pestaña Créditos con los cuatro niveles (integrantes destacados, invitados, producción y sonido, arte y otros contraído con "+N créditos"), roles y pistas por persona; oculta sin créditos (depende de `enrich-album-editions-and-credits`)
+- [x] 8.2 Traducción de roles e instrumentos: lista cerrada en i18n con fallback al texto de MusicBrainz
+- [x] 8.3 Pestaña Ediciones: tabla (año, país, formato, sello · catálogo, pistas, enlace a MusicBrainz), filtro por formato, solo oficiales por defecto con control para incluir no oficiales, fila de la representativa marcada, "+N pistas" que lleva a su sección en Canciones; oculta sin ediciones además de la representativa
+- [x] 8.4 Tests de Créditos y Ediciones, incluidos los estados ocultos
 
 ## 9. Reseñas
 

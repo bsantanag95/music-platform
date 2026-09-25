@@ -49,3 +49,13 @@ export const DATA_SOURCE_URLS = {
   coverArtArchive: "https://coverartarchive.org",
   metabrainz: "https://metabrainz.org",
 } as const;
+
+/**
+ * Página pública de una edición en MusicBrainz: la pestaña Ediciones enlaza cada edición
+ * ahí en lugar de tener páginas propias (openspec: redesign-album-page), y de paso atribuye
+ * la fuente. Es un enlace para personas, no una llamada a la API (esas pasan solo por
+ * `src/services/musicbrainz/client.ts`).
+ */
+export function musicBrainzReleaseUrl(mbid: string): string {
+  return `${DATA_SOURCE_URLS.musicbrainz}/release/${mbid}`;
+}
