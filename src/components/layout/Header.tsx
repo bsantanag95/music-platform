@@ -44,8 +44,9 @@ export function Header({
   const [currentUser, setCurrentUser] = useState(user);
   const [logoutPending, setLogoutPending] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
-  // Debajo de `md` la barra general y la zona de usuario no entran en una fila:
-  // se pliegan en este panel. Ver critique 2026-09-04, hallazgo P1.
+  // Debajo de `lg` la barra general y la zona de usuario no entran en una fila:
+  // se pliegan en este panel. Ver critique 2026-09-04, hallazgo P1, y
+  // fix-header-overflow (con sesión la fila necesita ~835 px).
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -95,6 +96,7 @@ export function Header({
   // "Caminos" es `/caminos` (descubrimiento, openspec: add-camino), distinta
   // de `/me/caminos` (gestión propia) — mismo criterio que "Listas".
   // "Actividad" es `/activity`, distinta del feed de seguidos en `/me/feed`.
+  // Moderación y Administración viven en el menú de usuario (openspec: fix-header-overflow).
   const generalLinks = (
     <>
       {exploreEnabled ? (
@@ -111,16 +113,6 @@ export function Header({
       <Link href="/activity" className={generalNavClass}>
         {t("activity")}
       </Link>
-      {platformPermissions.includes("moderation.review_content") || platformPermissions.includes("moderation.suspend_social") ? (
-        <Link href="/moderation" className={generalNavClass}>
-          {t("moderation")}
-        </Link>
-      ) : null}
-      {platformPermissions.includes("editorial.author") ? (
-        <Link href="/admin" className={generalNavClass}>
-          {t("administration")}
-        </Link>
-      ) : null}
     </>
   );
 
@@ -129,12 +121,12 @@ export function Header({
       <div className="flex w-full items-center justify-between px-4 py-3">
         <div className="flex min-w-0 items-center gap-4">
           <Logo />
-          <div className="hidden md:block">
+          <div className="hidden lg:block">
             <HeaderSearch />
           </div>
           {/* Barra general: solo navegación de contenido que ofrece el sitio a
               cualquiera. Las superficies personales viven en el menú de usuario. */}
-          <nav aria-label={t("generalNav")} className="hidden items-center gap-4 md:flex">
+          <nav aria-label={t("generalNav")} className="hidden items-center gap-4 lg:flex">
             {generalLinks}
             {currentUser ? <RegisterListenButton /> : null}
           </nav>
@@ -143,13 +135,14 @@ export function Header({
         {/* Sesión e idioma van juntos al extremo derecho, separados de la navegación
             de contenido: no son "a dónde ir" sino "quién soy / preferencias de la
             app" — mismo patrón que Letterboxd, GitHub, etc. */}
-        <div className="hidden items-center gap-4 md:flex">
+        <div className="hidden items-center gap-4 lg:flex">
           <LocaleSwitcher t={t} currentLocale={currentLocale} onChange={handleLocaleChange} />
           {currentUser ? (
             <UserMenu
               username={currentUser.username}
               displayName={currentUser.displayName ?? currentUser.username}
               pendingFollowRequests={pendingFollowRequests}
+              permissions={platformPermissions}
               logoutPending={logoutPending}
               logoutError={logoutError}
               onLogout={handleLogout}
@@ -159,12 +152,12 @@ export function Header({
           )}
         </div>
 
-        {/* Debajo de `md`, la fila de arriba se reduce a logo + este botón: el
+        {/* Debajo de `lg`, la fila de arriba se reduce a logo + este botón: el
             buscador, la navegación y la zona de usuario se pliegan en el panel
             de abajo en vez de desbordar a 375px. */}
         <button
           type="button"
-          className="flex size-9 shrink-0 items-center justify-center text-paper-muted transition-colors hover:text-paper md:hidden"
+          className="flex size-9 shrink-0 items-center justify-center text-paper-muted transition-colors hover:text-paper lg:hidden"
           aria-expanded={menuOpen}
           aria-controls="header-mobile-menu"
           aria-label={menuOpen ? t("closeMenu") : t("openMenu")}
@@ -177,7 +170,7 @@ export function Header({
       {menuOpen ? (
         <div
           id="header-mobile-menu"
-          className="flex flex-col gap-4 border-t border-ink-border px-4 py-4 md:hidden"
+          className="flex flex-col gap-4 border-t border-ink-border px-4 py-4 lg:hidden"
         >
           {/* Bloque 1 — barra general. */}
           <HeaderSearch />
@@ -193,6 +186,7 @@ export function Header({
                 username={currentUser.username}
                 pendingFollowRequests={pendingFollowRequests}
                 surface="panel"
+                permissions={platformPermissions}
                 onNavigate={() => setMenuOpen(false)}
                 logoutPending={logoutPending}
                 logoutError={logoutError}

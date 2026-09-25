@@ -7,6 +7,8 @@
 //
 // Sin JSX ni dependencias de React: son datos. Cada consumidor aporta su marcado.
 
+import type { Permission } from "@/services/auth/authorization";
+
 /**
  * Superficie donde aparece un destino: `header` (desplegable de escritorio),
  * `panel` (bloque de usuario del panel móvil del Header) y `settings`
@@ -15,7 +17,7 @@
 export type UserMenuSurface = "header" | "panel" | "settings";
 
 /** Bloque visual dentro del menú / panel; separa grupos con un divisor. */
-export type UserMenuGroup = "identity" | "library" | "network" | "account";
+export type UserMenuGroup = "identity" | "library" | "network" | "tools" | "account";
 
 export interface UserMenuItemDef {
   /** Identificador estable del ítem (para `key` de React y tests). */
@@ -33,6 +35,8 @@ export interface UserMenuItemDef {
   surfaces: readonly UserMenuSurface[];
   /** Si está presente, el ítem recibe un contador (bandeja de entrada). */
   badge?: "pendingFollowRequests";
+  /** Permisos de plataforma que habilitan el ítem (basta uno); sin él, se muestra siempre. */
+  requires?: readonly Permission[];
 }
 
 const BOTH: readonly UserMenuSurface[] = ["header", "panel"];
@@ -81,6 +85,25 @@ export const USER_MENU_ITEMS: readonly UserMenuItemDef[] = [
     badge: "pendingFollowRequests",
   },
 
+  // Herramientas de rol (openspec: fix-header-overflow): viven en el menú y no en la barra
+  // general, que queda para navegación de contenido y así entra en una fila.
+  {
+    id: "moderation",
+    href: "/moderation",
+    labelKey: "moderation",
+    group: "tools",
+    surfaces: BOTH,
+    requires: ["moderation.review_content", "moderation.suspend_social"],
+  },
+  {
+    id: "administration",
+    href: "/admin",
+    labelKey: "administration",
+    group: "tools",
+    surfaces: BOTH,
+    requires: ["editorial.author"],
+  },
+
   {
     id: "blocks",
     href: "/me/blocks",
@@ -111,10 +134,12 @@ interface BuildUserMenuItemsOptions {
   pendingFollowRequests?: number;
   /** Superficie que consume la lista. */
   surface: UserMenuSurface;
+  /** Permisos de plataforma del usuario, para los ítems con `requires`. */
+  permissions?: readonly Permission[];
 }
 
 /**
- * Resuelve `USER_MENU_ITEMS` para una superficie: filtra por `surface`,
+ * Resuelve `USER_MENU_ITEMS` para una superficie: filtra por `surface` y permisos,
  * sustituye `:username` y adjunta el conteo de solicitudes pendientes al ítem
  * con badge cuando es mayor que cero.
  */
@@ -122,8 +147,13 @@ export function buildUserMenuItems({
   username = "",
   pendingFollowRequests = 0,
   surface,
+  permissions = [],
 }: BuildUserMenuItemsOptions): ResolvedUserMenuItem[] {
-  return USER_MENU_ITEMS.filter((item) => item.surfaces.includes(surface)).map((item) => ({
+  return USER_MENU_ITEMS.filter(
+    (item) =>
+      item.surfaces.includes(surface) &&
+      (!item.requires || item.requires.some((permission) => permissions.includes(permission))),
+  ).map((item) => ({
     id: item.id,
     href: item.href.replace(":username", encodeURIComponent(username)),
     labelKey: item.labelKey,
@@ -140,5 +170,6 @@ export const USER_MENU_GROUP_ORDER: readonly UserMenuGroup[] = [
   "identity",
   "library",
   "network",
+  "tools",
   "account",
 ];

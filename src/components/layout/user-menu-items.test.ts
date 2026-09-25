@@ -78,4 +78,26 @@ describe("user-menu-items", () => {
       expect(ids).toEqual(expect.arrayContaining(["followers", "following", "followRequests"]));
     }
   });
+
+  it("las herramientas de rol solo aparecen con el permiso, en un grupo antes de la cuenta", () => {
+    const none = buildUserMenuItems({ username: "ana", surface: "header" }).map((i) => i.id);
+    expect(none).not.toContain("moderation");
+    expect(none).not.toContain("administration");
+
+    const items = buildUserMenuItems({
+      username: "ana",
+      surface: "header",
+      permissions: ["moderation.suspend_social", "editorial.author"],
+    });
+    const ids = items.map((i) => i.id);
+    expect(ids.slice(-3)).toEqual(["moderation", "administration", "settings"]);
+    expect(items.find((i) => i.id === "moderation")).toMatchObject({ href: "/moderation", group: "tools" });
+
+    const panel = buildUserMenuItems({ surface: "panel", permissions: ["editorial.author"] }).map((i) => i.id);
+    expect(panel).toContain("administration");
+    expect(panel).not.toContain("moderation");
+
+    const settings = buildUserMenuItems({ surface: "settings", permissions: ["editorial.author"] }).map((i) => i.id);
+    expect(settings).not.toContain("administration");
+  });
 });
