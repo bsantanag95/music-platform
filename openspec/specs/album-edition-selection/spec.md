@@ -6,9 +6,12 @@ TBD - created by archiving change canonicalize-release-group. Update Purpose aft
 ### Requirement: Selección determinista de la edición representativa
 
 El sistema SHALL elegir para cada `release_group` una única **edición representativa**
-(fila `release`) mediante una función de ranking pura y documentada sobre las ediciones
-que MusicBrainz reporta para ese grupo. El ranking SHALL aplicar los siguientes criterios
-en orden estricto de prioridad, pasando al siguiente solo ante empate:
+(fila `release`) mediante una función de ranking pura y documentada sobre **todas** las
+ediciones que MusicBrainz reporta para ese grupo, obtenidas con el browse paginado de
+ediciones por release-group (no con el lookup del release-group, que devuelve como máximo
+25), sujeto al tope de páginas de la capacidad `album-editions`. El ranking SHALL aplicar
+los siguientes criterios en orden estricto de prioridad, pasando al siguiente solo ante
+empate:
 
 1. Estado `Official` antes que cualquier otro estado o estado ausente.
 2. Fecha de lanzamiento más temprana (una edición sin fecha SHALL ordenarse después de
@@ -27,6 +30,11 @@ en orden estricto de prioridad, pasando al siguiente solo ante empate:
 
 La función SHALL ser determinista: la misma lista de ediciones de entrada SHALL producir
 siempre la misma elección, independientemente del orden en que MusicBrainz las devuelva.
+
+Un `release_group` SHALL poder tener varias filas `release` (la representativa y ediciones
+no representativas cuya tracklist se ingirió bajo demanda), y SHALL tener **a lo sumo
+una** marcada como representativa, garantizado por un índice único parcial en SQL. Toda
+lectura de "la tracklist del álbum" SHALL usar la edición representativa.
 
 #### Scenario: Original oficial frente a reedición deluxe
 
@@ -51,6 +59,19 @@ siempre la misma elección, independientemente del orden en que MusicBrainz las 
 - **THEN** el read-model de álbum responde `no_editions` / `NO_EDITIONS_FOUND` y no se
   persiste ninguna fila `release` ni `track`
 
+#### Scenario: Original fuera de las primeras 25
+
+- **WHEN** la edición original de un álbum es la número 60 de las ediciones que devuelve
+  MusicBrainz
+- **THEN** el sistema la considera y la elige como representativa
+
+#### Scenario: Álbum con una variante ingerida
+
+- **WHEN** un álbum tiene su edición representativa y una edición ampliada ingerida bajo
+  demanda
+- **THEN** la tracklist del álbum es la de la representativa y la base rechaza marcar una
+  segunda edición como representativa
+
 ### Requirement: Etiqueta de edición derivada
 
 El sistema SHALL guardar en `release.edition_label` un valor derivado de la edición
@@ -72,19 +93,21 @@ guardar `"original"` de forma incondicional.
 
 El sistema SHALL exponer una operación de servicio, invocable desde un script
 (`scripts/recanonicalize-release-group.ts`), que reevalúa la edición representativa de un
-`release_group` y, si el resultado difiere de la edición ingerida, reemplaza sus filas
-`release` y `track` de forma idempotente. La operación SHALL NOT crear, modificar ni
-eliminar filas de `rating`, `favorite`, `comment`, `listen_entry`, `user_list_item`,
-`user_pinned_item` ni `collection_entry`, porque todas referencian el `release_group` y no
-la edición. El script SHALL ofrecer un modo `--dry-run` que informa qué edición elegiría
-sin escribir nada.
+`release_group` sobre todas sus ediciones y, si el resultado difiere de la edición
+representativa actual, cambia la representativa de forma idempotente: si la nueva ya está
+ingerida como edición no representativa, SHALL intercambiar la marca en una transacción;
+si no, SHALL ingerirla como representativa y desmarcar la anterior, que queda como edición
+no representativa. La operación SHALL NOT crear, modificar ni eliminar filas de `rating`,
+`favorite`, `comment`, `listen_entry`, `user_list_item`, `user_pinned_item` ni
+`collection_entry`, porque todas referencian el `release_group` y no la edición. El script
+SHALL ofrecer un modo `--dry-run` que informa qué edición elegiría sin escribir nada.
 
 #### Scenario: Corrección de una edición subóptima
 
 - **WHEN** un `release_group` fue ingerido con una edición remaster y se ejecuta la
   re-canonicalización, que ahora elige la edición original
-- **THEN** las filas `release` y `track` del grupo se reemplazan por las de la edición
-  original y las valoraciones, escuchas, favoritos, comentarios y entradas de lista y
+- **THEN** la edición original pasa a ser la representativa, la tracklist del álbum es la
+  suya y las valoraciones, escuchas, favoritos, comentarios y entradas de lista y
   colección de ese álbum permanecen intactas
 
 #### Scenario: Re-canonicalización sin cambios
@@ -97,4 +120,10 @@ sin escribir nada.
 
 - **WHEN** el script se ejecuta con `--dry-run` sobre un grupo
 - **THEN** informa la edición que elegiría y no escribe en la base de datos
+
+#### Scenario: Nueva representativa ya ingerida como variante
+
+- **WHEN** la edición que elige la re-canonicalización ya existe como edición no
+  representativa
+- **THEN** el sistema intercambia la marca sin volver a pedir su tracklist a MusicBrainz
 

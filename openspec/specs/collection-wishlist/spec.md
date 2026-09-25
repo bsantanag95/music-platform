@@ -3,9 +3,7 @@
 ## Purpose
 
 La wishlist privada del usuario: los álbumes que querría conseguir, en una o varias variantes de formato y edición a la vez, con nota libre. Convive con la colección poseída (`physical-collection`) sin competir ni bloquearla. Cubre el alta (desde la página del álbum y desde el menú rápido), la edición y baja de entradas, el listado propio y la independencia entre "la tengo" y "la quiero".
-
 ## Requirements
-
 ### Requirement: Agregar una o varias entradas de deseo
 El sistema SHALL permitir a un usuario autenticado agregar a su wishlist una o varias entradas
 de deseo sobre un álbum (`release_group`) válido en una sola operación (entre 1 y 10 variantes
@@ -192,3 +190,28 @@ dueño puede listarla.
 #### Scenario: Sin superficie pública
 - **WHEN** un visitante intenta consultar la wishlist de otro usuario por su `username`
 - **THEN** el sistema no ofrece ninguna ruta ni endpoint para esa consulta
+
+### Requirement: Rótulo "En tu búsqueda"
+
+En toda la interfaz la wishlist física SHALL rotularse **"En tu búsqueda"** para el estado
+propio y **"lo buscan"** para el agregado de la comunidad, y SHALL NOT usar el verbo
+"querer" ("Lo quiero"), para no confundirse con la señal Pendiente (want-to-listen).
+
+#### Scenario: Estado propio
+
+- **WHEN** un usuario tiene un álbum en su wishlist y abre la página del álbum
+- **THEN** el panel "Tu relación" muestra "En tu búsqueda"
+
+### Requirement: Participación anónima en el conteo agregado
+
+Las entradas de la wishlist SHALL contar, como personas distintas, en el conteo agregado
+"lo buscan" del bloque de comunidad del álbum (capacidad `album-community-stats`), con el
+umbral mínimo de esa capacidad. Ese conteo SHALL ser la única exposición de la wishlist
+fuera de su listado propio y SHALL NOT revelar la identidad de ninguna persona.
+
+#### Scenario: Wishlist privada en el total
+
+- **WHEN** 12 personas tienen un álbum en su wishlist
+- **THEN** el bloque de comunidad muestra "12 lo buscan" y ninguna superficie permite ver
+  quiénes son
+
