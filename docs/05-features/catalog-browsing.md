@@ -142,12 +142,22 @@ biblioteca, con Metal-Archives como referencia y la capa personal de Letterboxd)
   escritorio), ficha técnica colapsable, pestañas.
 
 **Pestaña Canciones:** tracklist de la edición representativa con posición, título completo
-(sin truncar), duración, subtotal por disco y total. Cada pista muestra su variante
-(en vivo, remix, regrabación, con enlace a la original), el artista cuando no es el del
-álbum (recopilaciones), la marca de **favorita de la comunidad** (hasta 3 pistas con al
-menos 5 reacciones `loved`/`obsessed` públicas; no hay media de estrellas por pista) y, con
-sesión, si ya la escuchaste. El menú "···" ordena las acciones según el Modelo C: registrar
-escucha y reaccionar primero; después valorar, favorito y listas; al final, ir a la canción.
+(sin truncar), duración y subtotal por disco. Cada pista muestra su variante (en vivo,
+remix, regrabación, con enlace a la original), el artista cuando no es el del álbum
+(recopilaciones) y la marca de **favorita de la comunidad** junto al título (hasta 3 pistas
+con al menos 5 reacciones `loved`/`obsessed` públicas; no hay media de estrellas de la
+comunidad por pista), explicada con una leyenda sobre la lista. Desde
+`rework-album-tracklist` (2026-09), con sesión cada fila muestra siempre tu relación con la
+canción: tu nota en estrellas chicas, la marca de escuchada y un corazón de favorito que se
+alterna sin abrir el menú. La pestaña no repite lo que ya muestran la barra de pestañas y
+la ficha técnica: el título "Canciones" es solo para lectores de pantalla, la línea de
+edición mostrada solo aparece en móvil y el total al pie solo con varios discos. Las marcas
+son íconos de tamaño fijo (todas las filas miden lo mismo) y la fila se resalta al pasar el
+cursor. El menú "···" ordena las acciones según el Modelo C: registrar escucha y reaccionar
+primero; después valorar, favorito y listas ("Ir a la canción" se quitó: el título ya
+enlaza). Valorar abre estrellas en línea que guardan con un clic, con "Quitar nota" y el
+mismo aviso que el panel si se descarta un puntaje detallado; registrar escucha muestra
+"Escucha registrada · Agregar detalles" en lugar de abrir el formulario.
 
 **Créditos (`feat.`):** cada canción con colaboración muestra el crédito reconstruido
 (ej. "Pink Floyd feat. Roger Waters"), enlazado al perfil del artista credited. Un track

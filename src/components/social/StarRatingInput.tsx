@@ -71,12 +71,21 @@ export function StarRatingInput({ value, onChange, legend, valueLabel, disabled 
 const STAR_PATH =
   "M12 2.5l2.94 5.96 6.56.95-4.75 4.63 1.12 6.54L12 17.49l-5.87 3.09 1.12-6.54L2.5 9.41l6.56-.95L12 2.5z";
 
-function StarGlyph({ fill, preview }: { fill: 0 | 0.5 | 1; preview: boolean }) {
+/** Estrella con relleno completo, medio o vacío; la comparten el input y `StarRatingDisplay`. */
+export function StarGlyph({
+  fill,
+  preview = false,
+  className = "size-6",
+}: {
+  fill: 0 | 0.5 | 1;
+  preview?: boolean;
+  className?: string;
+}) {
   // `useId` puede traer caracteres que rompen `url(#…)`; se dejan solo los seguros.
   const clipId = `star-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const tone = preview ? "text-amber-hover" : "text-amber";
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="pointer-events-none size-6">
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={`pointer-events-none shrink-0 ${className}`}>
       <defs>
         <clipPath id={clipId}>
           <rect x="0" y="0" width={24 * fill} height="24" />

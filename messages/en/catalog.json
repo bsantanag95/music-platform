@@ -167,13 +167,24 @@
         "favorite": "Add to favorites",
         "unfavorite": "Remove from favorites",
         "addToList": "Add to list",
-        "showInLists": "See in lists",
-        "goToSong": "Go to song"
+        "showInLists": "See in lists"
       },
       "logged": "Listen logged",
       "reacted": "Reaction logged",
       "actionError": "We could not save the change. Try again.",
-      "close": "Close"
+      "close": "Close",
+      "favoriteToggle": "Favorite: {title}",
+      "ownRating": "Your rating: {stars} stars",
+      "editOwnRating": "Your rating for {title}: {stars} stars. Change",
+      "starsLegend": "Your rating for {title}",
+      "starsValue": "{stars} stars",
+      "scoreDropped": "Your score {score} was removed: it does not match {stars} stars.",
+      "removeRating": "Remove rating",
+      "removeRatingTitle": "Remove your rating?",
+      "removeRatingMessage": "Your rating for this song will be deleted.",
+      "removeRatingConfirm": "Remove",
+      "cancel": "Cancel",
+      "addDetails": "Add details"
     },
     "discography": {
       "heading": "{artist} discography",

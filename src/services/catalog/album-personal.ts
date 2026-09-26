@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { favorite, listenEntry, review, userList, userListItem } from "@/db/schema";
+import { favorite, listenEntry, rating, review, userList, userListItem } from "@/db/schema";
 
 // Estado personal del usuario sobre un álbum para el panel "Tu relación" y las marcas por
 // pista (openspec: redesign-album-page, capability `album-personal-panel`). Solo consultas
@@ -34,6 +34,16 @@ export interface AlbumPersonalExtras {
   listenedRecordingIds: Set<string>;
   /** Grabaciones del álbum marcadas como favoritas por el usuario (menú por pista). */
   favoriteRecordingIds: Set<string>;
+  /**
+   * Valoraciones propias de las grabaciones del álbum, por `recordingId`, para mostrarlas
+   * en cada fila de la tracklist (openspec: rework-album-tracklist, D1).
+   */
+  ownTrackRatings: Map<string, TrackRating>;
+}
+
+export interface TrackRating {
+  stars: number;
+  detailedScore: number | null;
 }
 
 export async function getAlbumPersonalExtras(
@@ -41,7 +51,7 @@ export async function getAlbumPersonalExtras(
   releaseGroupId: string,
   recordingIds: string[],
 ): Promise<AlbumPersonalExtras> {
-  const [listenRows, reviewRows, listRows, listenedRows, favoriteRows] = await Promise.all([
+  const [listenRows, reviewRows, listRows, listenedRows, favoriteRows, ratingRows] = await Promise.all([
     db
       .select({
         count: sql<number>`count(*)::int`,
@@ -93,6 +103,12 @@ export async function getAlbumPersonalExtras(
           .select({ recordingId: favorite.recordingId })
           .from(favorite)
           .where(and(eq(favorite.userId, userId), inArray(favorite.recordingId, recordingIds))),
+    recordingIds.length === 0
+      ? Promise.resolve([])
+      : db
+          .select({ recordingId: rating.recordingId, stars: rating.stars, detailedScore: rating.detailedScore })
+          .from(rating)
+          .where(and(eq(rating.userId, userId), inArray(rating.recordingId, recordingIds))),
   ]);
 
   const listen = listenRows[0];
@@ -112,6 +128,13 @@ export async function getAlbumPersonalExtras(
     ),
     favoriteRecordingIds: new Set(
       favoriteRows.flatMap((row) => (row.recordingId ? [row.recordingId] : [])),
+    ),
+    ownTrackRatings: new Map(
+      ratingRows.flatMap((row) =>
+        row.recordingId
+          ? [[row.recordingId, { stars: Number(row.stars), detailedScore: row.detailedScore }] as const]
+          : [],
+      ),
     ),
   };
 }
