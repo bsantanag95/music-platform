@@ -174,7 +174,8 @@ export interface MBTrack {
 
 export interface MBMedium {
   position: number; // usado como disc_number
-  tracks: MBTrack[];
+  /** Puede faltar: MusicBrainz devuelve medios sin lista de pistas (p. ej. "Outlawed"). */
+  tracks?: MBTrack[];
 }
 
 export interface MBRelease {

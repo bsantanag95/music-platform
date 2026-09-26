@@ -109,7 +109,7 @@ export async function ingestReleaseTracklist(
   if (!releaseRow) throw new Error(`No se pudo hacer upsert de la edición ${full.id}`);
 
   for (const medium of full.media ?? []) {
-    for (const mbTrack of medium.tracks) {
+    for (const mbTrack of medium.tracks ?? []) {
       const insertedRecordings = await db
         .insert(recording)
         .values({
@@ -161,7 +161,7 @@ export async function syncReleaseCredits(releaseRow: ReleaseRow): Promise<void> 
   const full = await musicbrainz.getRelease(releaseRow.mbid);
 
   for (const medium of full.media ?? []) {
-    for (const mbTrack of medium.tracks) {
+    for (const mbTrack of medium.tracks ?? []) {
       if (!mbTrack["artist-credit"]?.length) continue;
 
       // Buscar el recording correspondiente en la base local

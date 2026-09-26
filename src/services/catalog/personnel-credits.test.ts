@@ -53,6 +53,11 @@ beforeEach(() => {
 describe("mapPersonnelRelations con la edición real de DSOTM", () => {
   const mapped = mapPersonnelRelations(RELEASE);
 
+  it("tolera un medio sin lista de pistas (MusicBrainz, álbum \"Outlawed\")", () => {
+    const withEmptyMedium: MBRelease = { ...RELEASE, media: [...(RELEASE.media ?? []), { position: 9 }] };
+    expect(mapPersonnelRelations(withEmptyMedium).byRecordingMbid.size).toBe(mapped.byRecordingMbid.size);
+  });
+
   it("separa las relaciones de la edición (arte) de las de cada grabación", () => {
     expect(mapped.release.map((r) => r.relationType).sort()).toEqual(["design/illustration", "design/illustration", "photography"].sort());
     expect(mapped.byRecordingMbid.size).toBeGreaterThan(0);
@@ -113,7 +118,7 @@ describe("savePersonnelCredits", () => {
   }
 
   it("crea stubs de artistas una vez por artista y reemplaza los créditos en una transacción", async () => {
-    const recordingMbids = RELEASE.media!.flatMap((m) => m.tracks.map((t) => t.recording.id));
+    const recordingMbids = RELEASE.media!.flatMap((m) => (m.tracks ?? []).map((t) => t.recording.id));
     const queue = [
       recordingMbids.map((mbid, i) => ({ id: `rec-${i}`, mbid })),
       recordingMbids.map((_mbid, i) => ({ recordingId: `rec-${i}` })),
@@ -124,7 +129,7 @@ describe("savePersonnelCredits", () => {
     await savePersonnelCredits("release-1", RELEASE);
 
     const distinctArtists = new Set(
-      [...(RELEASE.relations ?? []), ...RELEASE.media!.flatMap((m) => m.tracks.flatMap((t) => t.recording.relations ?? []))]
+      [...(RELEASE.relations ?? []), ...RELEASE.media!.flatMap((m) => (m.tracks ?? []).flatMap((t) => t.recording.relations ?? []))]
         .filter((r) => r["target-type"] === "artist")
         .map((r) => r.artist!.id),
     );

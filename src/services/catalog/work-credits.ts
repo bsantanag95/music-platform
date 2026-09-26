@@ -41,7 +41,7 @@ export function mapWorkRelations(full: MBRelease): {
   const byRecordingMbid = new Map<string, MappedRecordingWork[]>();
 
   for (const medium of full.media ?? []) {
-    for (const mbTrack of medium.tracks) {
+    for (const mbTrack of medium.tracks ?? []) {
       for (const relation of mbTrack.recording.relations ?? []) {
         if (relation["target-type"] !== "work" || !relation.work) continue;
         const mbWork = relation.work;
