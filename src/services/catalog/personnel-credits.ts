@@ -34,7 +34,7 @@ export function mapPersonnelRelations(full: MBRelease): {
   );
   const byRecordingMbid = new Map<string, MappedPersonnelRelation[]>();
   for (const medium of full.media ?? []) {
-    for (const mbTrack of medium.tracks) {
+    for (const mbTrack of medium.tracks ?? []) {
       const mapped = (mbTrack.recording.relations ?? []).flatMap((r) => {
         const m = mapRelation(r);
         return m ? [m] : [];

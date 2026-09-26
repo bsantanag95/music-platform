@@ -32,31 +32,39 @@ export async function getArtistMemberships(target: ArtistRow): Promise<ArtistMem
   return rows;
 }
 
+type Period = Pick<MappedArtistMembership, "joinedOn" | "leftOn">;
+
+/**
+ * Fechas de una pertenencia a partir de sus relaciones en MusicBrainz, que pueden ser el mismo
+ * período partido por rol (guitarra con inicio, voz con fin) o períodos distintos (se fue y
+ * volvió). Toma el inicio conocido más temprano y el fin conocido más tardío, salvo que:
+ * - un período sin inicio terminó antes de ese inicio: hubo una etapa anterior de inicio
+ *   desconocido → inicio nulo;
+ * - un período sin fin empezó después de ese fin: volvió y sigue (o no se sabe) → fin nulo.
+ * Si aun así el fin queda antes del inicio (dato incoherente en MusicBrainz), ambos quedan
+ * nulos: no se inventa una fecha ni se viola el `CHECK left_on >= joined_on`.
+ */
+export function mergeMembershipDates(periods: Period[]): Period {
+  const joins = periods.map((p) => p.joinedOn).filter((d): d is string => d !== null).sort();
+  const lefts = periods.map((p) => p.leftOn).filter((d): d is string => d !== null).sort();
+  let joinedOn = joins[0] ?? null;
+  let leftOn = lefts[lefts.length - 1] ?? null;
+  if (joinedOn && periods.some((p) => p.joinedOn === null && p.leftOn !== null && p.leftOn < joinedOn!)) joinedOn = null;
+  if (leftOn && periods.some((p) => p.leftOn === null && p.joinedOn !== null && p.joinedOn > leftOn!)) leftOn = null;
+  if (joinedOn && leftOn && leftOn < joinedOn) return { joinedOn: null, leftOn: null };
+  return { joinedOn, leftOn };
+}
+
 function mergeMemberships(memberships: MappedArtistMembership[]): MappedArtistMembership[] {
-  const merged = new Map<string, MappedArtistMembership>();
+  const groups = new Map<string, MappedArtistMembership[]>();
   for (const item of memberships) {
     const key = `${item.person.id}:${item.group.id}`;
-    const previous = merged.get(key);
-    if (!previous) {
-      merged.set(key, item);
-      continue;
-    }
-
-    const roles = [...new Set([previous.role, item.role].filter((role): role is string => Boolean(role)).flatMap((role) => role.split(", ")))].sort();
-    const joinedOn = previous.joinedOn && item.joinedOn
-      ? (previous.joinedOn < item.joinedOn ? previous.joinedOn : item.joinedOn)
-      : previous.joinedOn ?? item.joinedOn;
-    const leftOn = previous.leftOn && item.leftOn
-      ? (previous.leftOn > item.leftOn ? previous.leftOn : item.leftOn)
-      : previous.leftOn ?? item.leftOn;
-    merged.set(key, {
-      ...previous,
-      role: roles.length ? roles.join(", ") : null,
-      joinedOn,
-      leftOn,
-    });
+    groups.set(key, [...(groups.get(key) ?? []), item]);
   }
-  return [...merged.values()];
+  return [...groups.values()].map((items) => {
+    const roles = [...new Set(items.map((item) => item.role).filter((role): role is string => Boolean(role)).flatMap((role) => role.split(", ")))].sort();
+    return { ...items[0]!, role: roles.length ? roles.join(", ") : null, ...mergeMembershipDates(items) };
+  });
 }
 
 /** Ingesta memberships de una sola llamada externa; la lectura permanece en getArtistMemberships. */

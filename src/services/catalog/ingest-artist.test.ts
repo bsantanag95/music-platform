@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ArtistRow } from "@/db/schema";
 import type { MBArtistRelation } from "../musicbrainz/types";
-import { ensureArtistMemberships, upsertArtistStubsFromSearch } from "./ingest-artist";
+import { ensureArtistMemberships, mergeMembershipDates, upsertArtistStubsFromSearch } from "./ingest-artist";
 
 vi.mock("@/db", () => ({
   db: {
@@ -160,6 +160,32 @@ describe("ensureArtistMemberships", () => {
 
     expect(musicbrainz.getArtistWithRelations).toHaveBeenCalledTimes(1);
     expect(inserts.length).toBeGreaterThan(0);
+  });
+});
+
+describe("mergeMembershipDates", () => {
+  const p = (joinedOn: string | null, leftOn: string | null) => ({ joinedOn, leftOn });
+
+  it("un mismo período partido por rol conserva el extremo conocido de cada relación", () => {
+    expect(mergeMembershipDates([p("1975-01-01", null), p(null, "1980-01-01")])).toEqual(p("1975-01-01", "1980-01-01"));
+  });
+
+  it("se fue sin inicio conocido y volvió: ambos extremos desconocidos (Portnoy en Dream Theater)", () => {
+    expect(mergeMembershipDates([p(null, "2010-09-08"), p("2023-10-25", null)])).toEqual(p(null, null));
+  });
+
+  it("dos etapas con fechas: el fin es nulo si volvió después de irse", () => {
+    expect(mergeMembershipDates([p("1990-01-01", "2000-01-01"), p("2005-01-01", null)])).toEqual(p("1990-01-01", null));
+  });
+
+  it("dos etapas cerradas: del primer inicio al último fin", () => {
+    expect(mergeMembershipDates([p("1990-01-01", "2000-01-01"), p("2005-01-01", "2010-01-01")])).toEqual(
+      p("1990-01-01", "2010-01-01"),
+    );
+  });
+
+  it("un período incoherente en MusicBrainz queda sin fechas en vez de violar el CHECK", () => {
+    expect(mergeMembershipDates([p("2010-01-01", "2005-01-01")])).toEqual(p(null, null));
   });
 });
 
