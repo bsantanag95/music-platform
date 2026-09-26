@@ -142,13 +142,59 @@ describe("AlbumCredits", () => {
           other: [
             entry("Hipgnosis", { roles: [{ relationType: "design/illustration", attributes: [] }] }),
             entry("Storm", { roles: [{ relationType: "photography", attributes: [] }] }),
+            entry("Aubrey", { roles: [{ relationType: "photography", attributes: [] }] }),
+            entry("Peter", { roles: [{ relationType: "design", attributes: [] }] }),
           ],
         })}
       />,
     );
-    const summary = screen.getByText("+2 créditos");
+    const summary = screen.getByText("+4 créditos");
     expect(summary.closest("details")).not.toHaveAttribute("open");
     expect(summary.closest("details")).toBe(screen.getByText(credits.levels.other).closest("details"));
+  });
+
+  it("un nivel de hasta 3 personas nombra a cada una con su primer rol y sigue contraído", () => {
+    const person = (name: string, ...types: string[]) =>
+      entry(name, { level: "production", roles: types.map((relationType) => ({ relationType, attributes: [] })) });
+    renderWithIntl(
+      <AlbumCredits
+        leadKind="group"
+        multiDisc={false}
+        levels={levels({
+          production: [person("Bob Rock", "producer", "engineer"), person("Chris Taylor", "engineer"), person("Randy Staub", "engineer", "mix")],
+        })}
+      />,
+    );
+    const summary = screen.getByText("Bob Rock (producción) · Chris Taylor (ingeniería) · Randy Staub (ingeniería)");
+    expect(summary.closest("details")).not.toHaveAttribute("open");
+  });
+
+  it("un nivel largo mantiene cantidad y tres nombres", () => {
+    const many = Array.from({ length: 4 }, (_, i) => entry(`Invitado ${i + 1}`, { roles: [{ relationType: "vocal", attributes: [] }] }));
+    renderWithIntl(<AlbumCredits leadKind="group" multiDisc={false} levels={levels({ guests: many })} />);
+    expect(screen.getByText("4 · Invitado 1, Invitado 2, Invitado 3 y 1 más")).toBeInTheDocument();
+  });
+
+  it("la nota de fuente enlaza a la edición en MusicBrainz en una pestaña nueva", () => {
+    renderWithIntl(
+      <AlbumCredits
+        leadKind="group"
+        multiDisc={false}
+        levels={levels({ guests: [entry("Uno")] })}
+        releaseMbid="b84ee12a-09ef-421b-82de-0441a926375b"
+      />,
+    );
+    const link = screen.getByRole("link", { name: credits.sourceLinkLabel });
+    expect(link).toHaveAttribute("href", "https://musicbrainz.org/release/b84ee12a-09ef-421b-82de-0441a926375b");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    expect(link.parentElement).toHaveTextContent("Créditos según MusicBrainz.");
+  });
+
+  it("sin MBID de edición la nota queda sin enlace", () => {
+    renderWithIntl(<AlbumCredits leadKind="group" multiDisc={false} levels={levels({ guests: [entry("Uno")] })} />);
+    expect(screen.getByText("Créditos según MusicBrainz.")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: credits.sourceLinkLabel })).not.toBeInTheDocument();
   });
 
   it("agrupa los niveles contraídos en una sola lista, Arte y otros incluido", () => {
@@ -431,6 +477,56 @@ describe("AlbumCredits — composición", () => {
     expect(headings).toEqual([credits.levels.members, credits.levels.songwriting, credits.levels.production]);
     expect(screen.getAllByRole("link", { name: "Mitch Allan" })).toHaveLength(2);
     expect(screen.getByText("música")).toBeInTheDocument();
+  });
+
+  describe("integrantes que compusieron", () => {
+    const band = ["Nikki Sixx", "Mick Mars", "Tommy Lee", "Vince Neil"].map((name) => entry(name, { level: "members" }));
+    const bandWriters = [
+      { ...writerEntry("Nikki Sixx", "all", "composer"), roles: [{ relationType: "composer", attributes: [] }, { relationType: "lyricist", attributes: [] }] },
+      writerEntry("Mick Mars", "all", "composer"),
+      writerEntry("Tommy Lee", "all", "composer"),
+      writerEntry("Vince Neil", "all", "composer"),
+    ];
+
+    it("la fila del integrante muestra su autoría", () => {
+      renderWithIntl(<AlbumCredits leadKind="group" multiDisc={false} levels={levels({ members: band })} songwriters={bandWriters.slice(0, 1)} />);
+      const members = screen.getByText(credits.levels.members).closest("section")!;
+      expect(within(members).getByText(/música, letra ·/)).toHaveTextContent(`${credits.authorshipLabel} música, letra · todas`);
+      // Solo quien compuso tiene la línea.
+      expect(within(members).getAllByText(credits.authorshipLabel, { exact: false })).toHaveLength(1);
+    });
+
+    it("el resumen de Composición cuenta integrantes y nombra a las externas", () => {
+      renderWithIntl(
+        <AlbumCredits
+          leadKind="group"
+          multiDisc={false}
+          levels={levels({ members: band })}
+          songwriters={[...bandWriters, writerEntry("Donna McDaniel", "all", "composer")]}
+        />,
+      );
+      expect(screen.getByText("5 · 4 integrantes + Donna McDaniel")).toBeInTheDocument();
+      // Desplegada, la sección sigue listando a todos.
+      const section = screen.getByText(credits.levels.songwriting).closest("details")!;
+      expect(within(section).getAllByRole("link")).toHaveLength(5);
+    });
+
+    it("toda la autoría es de la banda", () => {
+      renderWithIntl(<AlbumCredits leadKind="group" multiDisc={false} levels={levels({ members: band })} songwriters={bandWriters.slice(0, 3)} />);
+      expect(screen.getByText("3 · todas integrantes")).toBeInTheDocument();
+    });
+
+    it("con una solista el resumen es el general", () => {
+      renderWithIntl(
+        <AlbumCredits
+          leadKind="person"
+          multiDisc={false}
+          levels={levels({ members: [entry("Sabrina", { level: "members" })] })}
+          songwriters={["Sabrina", "Amy", "Julian", "John"].map((name) => writerEntry(name))}
+        />,
+      );
+      expect(screen.getByText("4 · Sabrina, Amy, Julian y 1 más")).toBeInTheDocument();
+    });
   });
 
   it("sin autores no muestra la sección", () => {

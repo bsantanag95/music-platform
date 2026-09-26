@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { musicBrainzReleaseUrl } from "@/lib/site-links";
 import type {
   CreditsByTrack,
   LeadKind,
@@ -50,6 +51,8 @@ interface AlbumCreditsProps {
   view?: CreditsView;
   /** Para los enlaces del control de vista. */
   releaseGroupId?: string;
+  /** Edición representativa: la nota de fuente enlaza a su página en MusicBrainz. */
+  releaseMbid?: string | null;
 }
 
 function useRoleFormatter() {
@@ -137,14 +140,18 @@ function CreditRow({
   multiDisc,
   prominent,
   edition,
+  authorship,
 }: {
   entry: CreditEntry;
   multiDisc: boolean;
   prominent: boolean;
   edition: Map<string, CreditsTrack>;
+  /** Autoría de la misma persona, para el primer nivel (openspec: album-credits-context, D1). */
+  authorship?: CreditEntry;
 }) {
   const t = useTranslations("catalog.album.credits");
-  const roles = useRoleFormatter()(entry.roles);
+  const format = useRoleFormatter();
+  const roles = format(entry.roles);
   // Esconder un solo rol no ahorra espacio: "+N" solo con 2 o más ocultos.
   const collapse = roles.length > ROLES_VISIBLE + 1;
   const visible = collapse ? roles.slice(0, ROLES_VISIBLE) : roles;
@@ -181,6 +188,14 @@ function CreditRow({
         <span className="text-paper-muted">
           <TrackRefs entry={entry} multiDisc={multiDisc} edition={edition} />
         </span>
+        {authorship && (
+          // Las etiquetas ("música, letra") ya dicen que es autoría; el prefijo es para lectores
+          // de pantalla.
+          <span className="text-paper-muted">
+            <span className="sr-only">{t("authorshipLabel")} </span>
+            {format(authorship.roles).join(", ")} · <TrackRefs entry={authorship} multiDisc={multiDisc} edition={edition} />
+          </span>
+        )}
       </div>
     </li>
   );
@@ -191,16 +206,25 @@ function LevelList({
   multiDisc,
   edition,
   prominent = false,
+  authorship,
 }: {
   entries: CreditEntry[];
   multiDisc: boolean;
   edition: Map<string, CreditsTrack>;
   prominent?: boolean;
+  authorship?: Map<string, CreditEntry>;
 }) {
   return (
     <ul className="flex flex-col">
       {entries.map((entry) => (
-        <CreditRow key={entry.artistId} entry={entry} multiDisc={multiDisc} prominent={prominent} edition={edition} />
+        <CreditRow
+          key={entry.artistId}
+          entry={entry}
+          multiDisc={multiDisc}
+          prominent={prominent}
+          edition={edition}
+          authorship={authorship?.get(entry.artistId)}
+        />
       ))}
     </ul>
   );
@@ -208,31 +232,62 @@ function LevelList({
 
 const levelHeading = "font-data text-xs uppercase tracking-wider text-paper-muted";
 
+type CollapsedLevel = "songwriting" | "guests" | "production" | "other";
+
+/**
+ * Resumen de un nivel contraído (openspec: album-credits-context, D2 y D3):
+ * - Composición con integrantes de una banda: los cuenta aparte y nombra a las externas.
+ * - Hasta `SUMMARY_NAMES` personas (el resumen ya las nombra a todas): cada una con su
+ *   primer rol.
+ * - Si no, cantidad y tres nombres; Arte y otros solo cuenta sus créditos.
+ */
+function useLevelSummary(level: CollapsedLevel, entries: CreditEntry[], memberIds?: Set<string>): string {
+  const t = useTranslations("catalog.album.credits");
+  const format = useRoleFormatter();
+  const count = entries.length;
+  const listNames = (list: CreditEntry[]) => list.slice(0, SUMMARY_NAMES).map((entry) => entry.name).join(", ");
+
+  if (level === "songwriting" && memberIds && entries.some((entry) => memberIds.has(entry.artistId))) {
+    const external = entries.filter((entry) => !memberIds.has(entry.artistId));
+    const members = count - external.length;
+    if (external.length === 0) return t("songwritingSummaryAllMembers", { count });
+    const rest = external.length - SUMMARY_NAMES;
+    return rest > 0
+      ? t("songwritingSummaryMembersMore", { count, members, names: listNames(external), rest })
+      : t("songwritingSummaryMembers", { count, members, names: listNames(external) });
+  }
+  if (count <= SUMMARY_NAMES) {
+    return entries
+      .map((entry) => {
+        const role = format(entry.roles)[0];
+        return role ? `${entry.name} (${role})` : entry.name;
+      })
+      .join(" · ");
+  }
+  if (level === "other") return t("otherCount", { count });
+  return t("levelSummaryMore", { count, names: listNames(entries), rest: count - SUMMARY_NAMES });
+}
+
 /**
  * Nivel desplegable, contraído al cargar: una fila de la lista de niveles (openspec:
- * polish-album-credits, D4). El resumen dice cuántas personas son y nombra a las tres de
- * mayor participación; Arte y otros solo cuenta sus créditos.
+ * polish-album-credits, D4), con el resumen de `useLevelSummary`.
  */
 function CollapsibleLevel({
   level,
   entries,
   multiDisc,
   edition,
+  memberIds,
 }: {
-  level: "songwriting" | "guests" | "production" | "other";
+  level: CollapsedLevel;
   entries: CreditEntry[];
   multiDisc: boolean;
   edition: Map<string, CreditsTrack>;
+  /** Integrantes de la banda, para el resumen de Composición; ausente con solista. */
+  memberIds?: Set<string>;
 }) {
   const t = useTranslations("catalog.album.credits");
-  const names = entries.slice(0, SUMMARY_NAMES).map((entry) => entry.name).join(", ");
-  const rest = entries.length - SUMMARY_NAMES;
-  const summary =
-    level === "other"
-      ? t("otherCount", { count: entries.length })
-      : rest > 0
-        ? t("levelSummaryMore", { count: entries.length, names, rest })
-        : t("levelSummary", { count: entries.length, names });
+  const summary = useLevelSummary(level, entries, memberIds);
 
   return (
     <details className="group/level">
@@ -275,6 +330,9 @@ function PeopleView({
       ["other", levels.other],
     ] as const
   ).filter(([, entries]) => entries.length > 0);
+  const authorship = new Map<string, CreditEntry>(songwriters.map((entry) => [entry.artistId, entry]));
+  // Con una solista, "1 integrante" sería ella misma: el resumen de Composición es el general.
+  const memberIds = solo ? undefined : new Set(levels.members.map((entry) => entry.artistId));
 
   return (
     <>
@@ -288,7 +346,13 @@ function PeopleView({
           <h3 id="credits-members" className={`mb-1 ${levelHeading}`}>
             {solo ? t("levels.leadPerson", { count: levels.members.length }) : t("levels.members")}
           </h3>
-          <LevelList entries={levels.members} multiDisc={multiDisc} edition={edition} prominent={!solo} />
+          <LevelList
+            entries={levels.members}
+            multiDisc={multiDisc}
+            edition={edition}
+            prominent={!solo}
+            authorship={authorship}
+          />
         </section>
       )}
 
@@ -298,7 +362,14 @@ function PeopleView({
       {collapsed.length > 0 && (
         <div className="flex flex-col divide-y divide-ink-border border-y border-ink-border">
           {collapsed.map(([level, entries]) => (
-            <CollapsibleLevel key={level} level={level} entries={entries} multiDisc={multiDisc} edition={edition} />
+            <CollapsibleLevel
+              key={level}
+              level={level}
+              entries={entries}
+              multiDisc={multiDisc}
+              edition={edition}
+              memberIds={memberIds}
+            />
           ))}
         </div>
       )}
@@ -428,6 +499,7 @@ export function AlbumCredits({
   view = "people",
   releaseGroupId,
   songwriters = [],
+  releaseMbid,
 }: AlbumCreditsProps) {
   const t = useTranslations("catalog.album.credits");
   const edition = new Map(tracks.map((track) => [track.recordingId, track]));
@@ -451,7 +523,24 @@ export function AlbumCredits({
         <PeopleView levels={levels} leadKind={leadKind} multiDisc={multiDisc} edition={edition} songwriters={songwriters} />
       )}
 
-      <p className="font-data text-xs text-paper-muted">{t("source")}</p>
+      <p className="font-data text-xs text-paper-muted">
+        {t.rich("source", {
+          link: (chunks) =>
+            releaseMbid ? (
+              <a
+                href={musicBrainzReleaseUrl(releaseMbid)}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t("sourceLinkLabel")}
+                className="underline decoration-dotted underline-offset-2 hover:text-amber"
+              >
+                {chunks}
+              </a>
+            ) : (
+              chunks
+            ),
+        })}
+      </p>
     </section>
   );
 }

@@ -50,6 +50,7 @@ export default async function AlbumCreditsPage({ params, searchParams }: AlbumCr
       songwriters={personnel.songwriters}
       view={view === "songs" ? "songs" : "people"}
       releaseGroupId={result.detail.releaseGroup.id}
+      releaseMbid={personnel.releaseMbid}
     />
   );
 }

@@ -169,6 +169,16 @@ biblioteca, con Metal-Archives como referencia y la capa personal de Letterboxd)
     otros) forman una sola lista con divisores, chevron y fondo al pasar el mouse.
   - La pestaña tiene un ancho de lectura acotado (`max-w-3xl`), para que los roles no queden
     lejos del nombre en pantallas anchas.
+- **Contexto sin desplegar** (cambio `album-credits-context`, 2026-09):
+  - Un integrante (o artista principal) que además firmó obras muestra en su fila una línea
+    de autoría ("música, letra · todas").
+  - Con una banda, el resumen de Composición cuenta a los integrantes aparte y nombra a los
+    autores externos ("5 · 4 integrantes + Donna McDaniel"; "3 · todas integrantes"). Con
+    una solista se usa el resumen general. Al desplegar se lista a todos los autores.
+  - Un nivel contraído de hasta 3 personas nombra a cada una con su primer rol ("Bob Rock
+    (producción) · Chris Taylor (ingeniería)") y sigue contraído.
+  - "Créditos según MusicBrainz" enlaza a la página de la edición representativa en
+    musicbrainz.org, en una pestaña nueva (`AlbumPersonnel.releaseMbid`).
   - Se tradujeron los roles e instrumentos que llegaban en inglés ("other vocals", "grand
     piano", "video director"…). Una prueba exige las mismas claves en `es` y `en`.
 - **Al pie**, fuera de las pestañas: franja de discografía del artista principal (mismo

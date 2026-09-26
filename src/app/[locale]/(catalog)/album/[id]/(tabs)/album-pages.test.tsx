@@ -173,6 +173,7 @@ const PERSONNEL = {
     albumWide: { songwriting: [], production: [], performers: [], sound: [], other: [] },
     tracks: {},
   },
+  releaseMbid: "b84ee12a-09ef-421b-82de-0441a926375b",
 };
 
 const stats = {

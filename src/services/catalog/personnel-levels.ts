@@ -201,6 +201,8 @@ export interface AlbumPersonnel {
   songwriters: SongwriterEntry[];
   /** Los mismos créditos agrupados por canción, para la vista "Por canción". */
   byTrack: CreditsByTrack;
+  /** MBID de la edición representativa: la atribución enlaza ahí (openspec: album-credits-context). */
+  releaseMbid: string | null;
 }
 
 /** Rango de un tipo de relación dentro de un nivel: lo que define el nivel va primero. */
@@ -354,7 +356,7 @@ export async function getRecordingSongwriters(recordingId: string): Promise<Trac
  */
 export async function getAlbumPersonnel(releaseGroupId: string): Promise<AlbumPersonnel | null> {
   const [representative] = await db
-    .select({ id: release.id })
+    .select({ id: release.id, mbid: release.mbid })
     .from(release)
     .where(and(eq(release.releaseGroupId, releaseGroupId), eq(release.isRepresentative, true)))
     .limit(1);
@@ -408,5 +410,6 @@ export async function getAlbumPersonnel(releaseGroupId: string): Promise<AlbumPe
     leadKind: leadKindOf(primaryRows.map((row) => row.type)),
     songwriters: songwriterEntries(songwriterRows, albumTracks),
     byTrack: groupCreditsByTrack(creditRows, albumTracks, songwriterRows),
+    releaseMbid: representative.mbid,
   };
 }
