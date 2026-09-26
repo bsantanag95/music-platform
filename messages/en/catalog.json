@@ -315,11 +315,10 @@
       },
       "otherCount": "{count, plural, one {+# credit} other {+# credits}}",
       "allTracks": "all",
-      "tracks": "{count, plural, one {track {list}} other {tracks {list}}}",
       "creditedAs": "credited as {name}",
       "source": "Credits from MusicBrainz.",
       "roles": {
-        "instrument": "instruments",
+        "instrument": "various instruments",
         "vocal": "vocals",
         "performer": "performer",
         "performing_orchestra": "orchestra",
@@ -354,7 +353,9 @@
         "producer_additional": "additional production",
         "engineer_assistant": "assistant engineering",
         "mix_additional": "additional mixing",
-        "recording_assistant": "assistant recording"
+        "recording_assistant": "assistant recording",
+        "engineer_additional": "additional engineering",
+        "programming_additional": "additional programming"
       },
       "attributes": {
         "guitar": "guitar",
@@ -428,7 +429,20 @@
       "levelSummary": "{count} · {names}",
       "levelSummaryMore": "{count} · {names} and {rest} more",
       "moreRoles": "+{count}",
-      "moreRolesLabel": "{count, plural, one {Show # more role} other {Show # more roles}}"
+      "moreRolesLabel": "{count, plural, one {Show # more role} other {Show # more roles}}",
+      "viewLabel": "View credits",
+      "viewPeople": "By person",
+      "viewSongs": "By song",
+      "albumWide": "Whole album",
+      "noTrackCredits": "No credits recorded for this track.",
+      "tracksLabel": "{count, plural, one {track} other {tracks}}",
+      "trackLink": "Track {position}: {title}",
+      "groups": {
+        "production": "Production",
+        "performers": "Performers",
+        "sound": "Sound",
+        "other": "Other"
+      }
     },
     "editions": {
       "heading": "Editions",

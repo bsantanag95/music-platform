@@ -315,11 +315,10 @@
       },
       "otherCount": "{count, plural, one {+# crédito} other {+# créditos}}",
       "allTracks": "todas",
-      "tracks": "{count, plural, one {pista {list}} other {pistas {list}}}",
       "creditedAs": "acreditado como {name}",
       "source": "Créditos según MusicBrainz.",
       "roles": {
-        "instrument": "instrumentos",
+        "instrument": "varios instrumentos",
         "vocal": "voz",
         "performer": "intérprete",
         "performing_orchestra": "orquesta",
@@ -354,7 +353,9 @@
         "producer_additional": "producción adicional",
         "engineer_assistant": "asistencia de ingeniería",
         "mix_additional": "mezcla adicional",
-        "recording_assistant": "asistencia de grabación"
+        "recording_assistant": "asistencia de grabación",
+        "engineer_additional": "ingeniería adicional",
+        "programming_additional": "programación adicional"
       },
       "attributes": {
         "guitar": "guitarra",
@@ -428,7 +429,20 @@
       "levelSummary": "{count} · {names}",
       "levelSummaryMore": "{count} · {names} y {rest} más",
       "moreRoles": "+{count}",
-      "moreRolesLabel": "{count, plural, one {Ver # rol más} other {Ver # roles más}}"
+      "moreRolesLabel": "{count, plural, one {Ver # rol más} other {Ver # roles más}}",
+      "viewLabel": "Ver créditos",
+      "viewPeople": "Por persona",
+      "viewSongs": "Por canción",
+      "albumWide": "Todo el álbum",
+      "noTrackCredits": "Sin créditos registrados para esta pista.",
+      "tracksLabel": "{count, plural, one {pista} other {pistas}}",
+      "trackLink": "Pista {position}: {title}",
+      "groups": {
+        "production": "Producción",
+        "performers": "Intérpretes",
+        "sound": "Sonido",
+        "other": "Otros"
+      }
     },
     "editions": {
       "heading": "Ediciones",

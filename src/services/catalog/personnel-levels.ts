@@ -60,7 +60,32 @@ export interface PersonnelEntry {
   level: PersonnelLevel;
   roles: PersonnelRole[];
   /** Pistas en que participa, o `"all"` si participa en todas (o tiene un crédito de nivel edición). */
-  tracks: "all" | { discNumber: number; position: number }[];
+  tracks: "all" | PersonnelTrackRef[];
+}
+
+export interface PersonnelTrackRef {
+  recordingId: string;
+  discNumber: number;
+  position: number;
+}
+
+/** Grupo de roles de la vista por canción (openspec: album-credits-by-song, D4). */
+export type TrackCreditKind = "production" | "performers" | "sound" | "other";
+
+export interface TrackCreditPerson {
+  artistId: string;
+  name: string;
+  creditedAs: string | null;
+  roles: PersonnelRole[];
+}
+
+export type TrackCreditGroups = Record<TrackCreditKind, TrackCreditPerson[]>;
+
+export interface CreditsByTrack {
+  /** Créditos de nivel edición: aplican a todo el álbum. */
+  albumWide: TrackCreditGroups;
+  /** Una entrada por pista con créditos, por `recordingId`. */
+  tracks: Record<string, TrackCreditGroups>;
 }
 
 const LEVEL_ORDER: PersonnelLevel[] = ["members", "guests", "production", "other"];
@@ -87,22 +112,28 @@ export function classifyPersonnel(
   const result: Record<PersonnelLevel, PersonnelEntry[]> = { members: [], guests: [], production: [], other: [] };
   for (const [artistId, list] of byArtist) {
     const kinds = new Set(list.map((c) => relationKind(c.relationType)));
+    // Producir pesa más que tocar (openspec: album-credits-by-song, D1): en discos pop quien
+    // produce una canción suele tocar todo, y no es un "músico invitado". Solo `producer`
+    // promueve; programar o mezclar no.
     const level: PersonnelLevel = memberIds.has(artistId)
       ? "members"
-      : kinds.has("performer")
-        ? "guests"
-        : kinds.has("production")
-          ? "production"
-          : "other";
+      : list.some((c) => c.relationType === "producer")
+        ? "production"
+        : kinds.has("performer")
+          ? "guests"
+          : kinds.has("production")
+            ? "production"
+            : "other";
 
     const roleKeys = new Map<string, PersonnelRole>();
     for (const c of list) roleKeys.set(`${c.relationType}|${c.attributes.join(",")}`, { relationType: c.relationType, attributes: c.attributes });
+    const roles = sortRolesForLevel([...roleKeys.values()], level);
 
     const hasReleaseLevel = list.some((c) => c.recordingId === null);
-    const trackSet = new Map<string, { discNumber: number; position: number }>();
+    const trackSet = new Map<string, PersonnelTrackRef>();
     for (const c of list) {
       const t = c.recordingId ? trackByRecording.get(c.recordingId) : undefined;
-      if (t) trackSet.set(t.recordingId, { discNumber: t.discNumber, position: t.position });
+      if (t) trackSet.set(t.recordingId, { recordingId: t.recordingId, discNumber: t.discNumber, position: t.position });
     }
     const allTracks = hasReleaseLevel || (albumTracks.length > 0 && trackSet.size === albumTracks.length);
 
@@ -111,7 +142,7 @@ export function classifyPersonnel(
       name: list[0]!.name,
       creditedAs: list.find((c) => c.creditedAs)?.creditedAs ?? null,
       level,
-      roles: [...roleKeys.values()],
+      roles,
       tracks: allTracks
         ? "all"
         : [...trackSet.values()].sort((a, b) => a.discNumber - b.discNumber || a.position - b.position),
@@ -138,6 +169,76 @@ export function leadKindOf(primaryTypes: (string | null)[]): LeadKind {
 export interface AlbumPersonnel {
   levels: Record<PersonnelLevel, PersonnelEntry[]>;
   leadKind: LeadKind;
+  /** Los mismos créditos agrupados por canción, para la vista "Por canción". */
+  byTrack: CreditsByTrack;
+}
+
+/** Rango de un tipo de relación dentro de un nivel: lo que define el nivel va primero. */
+function roleRank(relationType: string, level: PersonnelLevel): number {
+  const kind = relationKind(relationType);
+  if (level === "production") {
+    if (relationType === "producer") return 0;
+    return kind === "production" ? 1 : kind === "performer" ? 2 : 3;
+  }
+  if (level === "guests") return kind === "performer" ? 0 : relationType === "producer" ? 1 : kind === "production" ? 2 : 3;
+  return 0;
+}
+
+/** Ordena los roles de una persona según su nivel (openspec: album-credits-by-song, D2). Estable. */
+export function sortRolesForLevel(roles: PersonnelRole[], level: PersonnelLevel): PersonnelRole[] {
+  return roles
+    .map((role, index) => ({ role, index }))
+    .sort((a, b) => roleRank(a.role.relationType, level) - roleRank(b.role.relationType, level) || a.index - b.index)
+    .map(({ role }) => role);
+}
+
+function trackCreditKind(relationType: string): TrackCreditKind {
+  if (relationType === "producer") return "production";
+  const kind = relationKind(relationType);
+  return kind === "performer" ? "performers" : kind === "production" ? "sound" : "other";
+}
+
+function emptyGroups(): TrackCreditGroups {
+  return { production: [], performers: [], sound: [], other: [] };
+}
+
+/**
+ * Créditos agrupados por pista (openspec: album-credits-by-song, D4): por cada grabación del
+ * álbum, las personas con sus roles en esa pista, en Producción / Intérpretes / Sonido /
+ * Otros. Una persona con roles de varios grupos aparece en cada grupo con los roles que le
+ * tocan. Los créditos de nivel edición van a `albumWide`. Pura y determinista.
+ */
+export function groupCreditsByTrack(
+  credits: PersonnelCreditInput[],
+  albumTracks: { recordingId: string }[],
+): CreditsByTrack {
+  const albumRecordings = new Set(albumTracks.map((t) => t.recordingId));
+  const albumWide = emptyGroups();
+  const tracks: Record<string, TrackCreditGroups> = {};
+
+  for (const c of credits) {
+    let groups: TrackCreditGroups;
+    if (c.recordingId === null) groups = albumWide;
+    else if (albumRecordings.has(c.recordingId)) groups = tracks[c.recordingId] ??= emptyGroups();
+    else continue;
+
+    const list = groups[trackCreditKind(c.relationType)];
+    let person = list.find((p) => p.artistId === c.artistId);
+    if (!person) {
+      person = { artistId: c.artistId, name: c.name, creditedAs: c.creditedAs, roles: [] };
+      list.push(person);
+    }
+    const key = `${c.relationType}|${c.attributes.join(",")}`;
+    if (!person.roles.some((r) => `${r.relationType}|${r.attributes.join(",")}` === key)) {
+      person.roles.push({ relationType: c.relationType, attributes: c.attributes });
+    }
+  }
+
+  const byName = (a: TrackCreditPerson, b: TrackCreditPerson) => a.name.localeCompare(b.name) || a.artistId.localeCompare(b.artistId);
+  for (const groups of [albumWide, ...Object.values(tracks)]) {
+    for (const kind of Object.keys(groups) as TrackCreditKind[]) groups[kind].sort(byName);
+  }
+  return { albumWide, tracks };
 }
 
 /**
@@ -196,5 +297,6 @@ export async function getAlbumPersonnel(releaseGroupId: string): Promise<AlbumPe
   return {
     levels: classifyPersonnel(creditRows, albumTracks, memberIds),
     leadKind: leadKindOf(primaryRows.map((row) => row.type)),
+    byTrack: groupCreditsByTrack(creditRows, albumTracks),
   };
 }

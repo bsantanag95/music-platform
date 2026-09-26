@@ -136,6 +136,18 @@ biblioteca, con Metal-Archives como referencia y la capa personal de Letterboxd)
   se muestran como roles: `additional`/`guest` se omiten en instrumentos y voces, `solo` es
   un matiz, y los demás forman etiquetas compuestas ("coproducción"); `membranophone` se
   lee "percusión".
+- **Créditos por canción** (cambio `album-credits-by-song`, 2026-09): un control **Por
+  persona / Por canción** con el estado en la URL (`?view=songs`, enlazable y renderizado en
+  el servidor). La vista por canción lista cada pista con Producción, Intérpretes, Sonido y
+  Otros, más los créditos de edición una vez como "Todo el álbum"; una pista sin créditos lo
+  indica. En la vista por persona, quien no es integrante y tiene un crédito `producer` va a
+  Producción y sonido aunque también toque (producir pesa más que tocar: en pop el
+  productor suele tocar todo), con la producción primero en sus roles; programar o mezclar
+  no promueve. Los números de pista enlazan a la canción con su título; "+N" aparece solo con
+  2 o más roles ocultos; una solista va en línea compacta (el bloque destacado queda para
+  bandas); el título "Créditos" es solo para lectores de pantalla; un instrumento sin
+  especificar se lee "varios instrumentos". Compositores y letristas (créditos de obra en
+  MusicBrainz) todavía no se ingieren.
 - **Al pie**, fuera de las pestañas: franja de discografía del artista principal (mismo
   tipo de obra, orden cronológico, anterior / siguiente) y **comentarios**.
 - **Móvil**: carátula e identidad, línea resumen de comunidad, panel (mismas filas que en

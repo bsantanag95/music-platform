@@ -1,26 +1,54 @@
+import { Fragment } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import type { LeadKind, PersonnelEntry, PersonnelLevel } from "@/services/catalog/personnel-levels";
-import { formatRoles, formatTrackList, messageKey } from "./credit-roles";
+import type {
+  CreditsByTrack,
+  LeadKind,
+  PersonnelEntry,
+  PersonnelLevel,
+  PersonnelRole,
+  TrackCreditGroups,
+  TrackCreditKind,
+  TrackCreditPerson,
+} from "@/services/catalog/personnel-levels";
+import { formatRoles, messageKey } from "./credit-roles";
 
 // Pestaña Créditos del álbum (openspec: redesign-album-page, tarea 8.1; compactada en
-// compact-album-credits): solo personas acreditadas en el disco, en cuatro niveles. El
-// primer nivel siempre visible; invitados y producción se contraen cuando son muchos; "Arte
-// y otros" contraído siempre. Sin estado ni JavaScript: `<details>` y render en el servidor.
+// compact-album-credits; vista por canción en album-credits-by-song). Dos vistas elegibles
+// por URL (`?view=songs`): **Por persona**, en cuatro niveles — el primero siempre visible,
+// invitados y producción contraídos cuando son muchos, "Arte y otros" contraído siempre —, y
+// **Por canción**, con quién produjo, tocó y grabó cada pista. Sin estado ni JavaScript:
+// `<details>`, enlaces y render en el servidor.
 
 /** Hasta esta cantidad de personas, invitados y producción se muestran desplegados. */
 export const LEVEL_OPEN_MAX = 6;
-/** Roles visibles por fila antes de "+N". */
+/** Roles visibles por fila antes de "+N" (solo si quedan al menos 2 ocultos). */
 export const ROLES_VISIBLE = 4;
 const SUMMARY_NAMES = 3;
+
+export type CreditsView = "people" | "songs";
+
+export interface CreditsTrack {
+  recordingId: string;
+  title: string;
+  discNumber: number;
+  position: number;
+}
 
 interface AlbumCreditsProps {
   levels: Record<PersonnelLevel, PersonnelEntry[]>;
   leadKind: LeadKind;
   multiDisc: boolean;
+  /** Pistas de la edición representativa: títulos para los enlaces y la vista por canción. */
+  tracks?: CreditsTrack[];
+  /** Créditos agrupados por canción; sin ellos no se ofrece la vista por canción. */
+  byTrack?: CreditsByTrack;
+  view?: CreditsView;
+  /** Para los enlaces del control de vista. */
+  releaseGroupId?: string;
 }
 
-function useRoleLabels() {
+function useRoleFormatter() {
   const t = useTranslations("catalog.album.credits");
   const label = (kind: "roles" | "attributes", raw: string) => {
     const key = `${kind}.${messageKey(raw)}`;
@@ -30,18 +58,70 @@ function useRoleLabels() {
     const key = `roles.${messageKey(relationType)}_${messageKey(modifier)}`;
     return t.has(key) ? t(key) : null;
   };
-  return (entry: PersonnelEntry) => formatRoles(entry.roles, label, compound);
+  return (roles: PersonnelRole[]) => formatRoles(roles, label, compound);
 }
 
-function CreditRow({ entry, multiDisc, prominent }: { entry: PersonnelEntry; multiDisc: boolean; prominent: boolean }) {
+function trackLabel(track: { discNumber: number; position: number }, multiDisc: boolean) {
+  return multiDisc ? `${track.discNumber}-${track.position}` : String(track.position);
+}
+
+/** "pistas 2, 3" con cada número enlazado a su canción y su título como ayuda. */
+function TrackRefs({
+  entry,
+  multiDisc,
+  titles,
+}: {
+  entry: PersonnelEntry;
+  multiDisc: boolean;
+  titles: Map<string, string>;
+}) {
   const t = useTranslations("catalog.album.credits");
-  const roles = useRoleLabels()(entry);
-  const visible = roles.slice(0, ROLES_VISIBLE);
-  const hidden = roles.slice(ROLES_VISIBLE);
-  const tracks =
-    entry.tracks === "all"
-      ? t("allTracks")
-      : t("tracks", { count: entry.tracks.length, list: formatTrackList(entry.tracks, multiDisc) });
+  if (entry.tracks === "all") return <>{t("allTracks")}</>;
+  return (
+    <>
+      {t("tracksLabel", { count: entry.tracks.length })}{" "}
+      {entry.tracks.map((track, index) => {
+        const label = trackLabel(track, multiDisc);
+        const title = titles.get(track.recordingId);
+        return (
+          <Fragment key={track.recordingId}>
+            {index > 0 && ", "}
+            {title ? (
+              <Link
+                href={`/song/${track.recordingId}`}
+                title={title}
+                aria-label={t("trackLink", { position: label, title })}
+                className="underline decoration-dotted underline-offset-2 hover:text-paper"
+              >
+                {label}
+              </Link>
+            ) : (
+              label
+            )}
+          </Fragment>
+        );
+      })}
+    </>
+  );
+}
+
+function CreditRow({
+  entry,
+  multiDisc,
+  prominent,
+  titles,
+}: {
+  entry: PersonnelEntry;
+  multiDisc: boolean;
+  prominent: boolean;
+  titles: Map<string, string>;
+}) {
+  const t = useTranslations("catalog.album.credits");
+  const roles = useRoleFormatter()(entry.roles);
+  // Esconder un solo rol no ahorra espacio: "+N" solo con 2 o más ocultos.
+  const collapse = roles.length > ROLES_VISIBLE + 1;
+  const visible = collapse ? roles.slice(0, ROLES_VISIBLE) : roles;
+  const hidden = collapse ? roles.slice(ROLES_VISIBLE) : [];
 
   return (
     <li className="grid grid-cols-1 gap-x-4 gap-y-0.5 border-b border-ink-border py-2 last:border-b-0 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">
@@ -71,17 +151,29 @@ function CreditRow({ entry, multiDisc, prominent }: { entry: PersonnelEntry; mul
             </details>
           )}
         </div>
-        <span className="text-paper-muted">{tracks}</span>
+        <span className="text-paper-muted">
+          <TrackRefs entry={entry} multiDisc={multiDisc} titles={titles} />
+        </span>
       </div>
     </li>
   );
 }
 
-function LevelList({ entries, multiDisc, prominent = false }: { entries: PersonnelEntry[]; multiDisc: boolean; prominent?: boolean }) {
+function LevelList({
+  entries,
+  multiDisc,
+  titles,
+  prominent = false,
+}: {
+  entries: PersonnelEntry[];
+  multiDisc: boolean;
+  titles: Map<string, string>;
+  prominent?: boolean;
+}) {
   return (
     <ul className="flex flex-col">
       {entries.map((entry) => (
-        <CreditRow key={entry.artistId} entry={entry} multiDisc={multiDisc} prominent={prominent} />
+        <CreditRow key={entry.artistId} entry={entry} multiDisc={multiDisc} prominent={prominent} titles={titles} />
       ))}
     </ul>
   );
@@ -93,7 +185,17 @@ const levelHeading = "font-data text-xs uppercase tracking-wider text-paper-mute
  * Nivel desplegable: abierto con hasta `LEVEL_OPEN_MAX` personas; contraído, el resumen
  * dice cuántas son y nombra a las tres de mayor participación.
  */
-function CollapsibleLevel({ level, entries, multiDisc }: { level: "guests" | "production"; entries: PersonnelEntry[]; multiDisc: boolean }) {
+function CollapsibleLevel({
+  level,
+  entries,
+  multiDisc,
+  titles,
+}: {
+  level: "guests" | "production";
+  entries: PersonnelEntry[];
+  multiDisc: boolean;
+  titles: Map<string, string>;
+}) {
   const t = useTranslations("catalog.album.credits");
   const names = entries.slice(0, SUMMARY_NAMES).map((entry) => entry.name).join(", ");
   const rest = entries.length - SUMMARY_NAMES;
@@ -112,36 +214,46 @@ function CollapsibleLevel({ level, entries, multiDisc }: { level: "guests" | "pr
         </span>
       </summary>
       <div className="mt-1">
-        <LevelList entries={entries} multiDisc={multiDisc} />
+        <LevelList entries={entries} multiDisc={multiDisc} titles={titles} />
       </div>
     </details>
   );
 }
 
-export function AlbumCredits({ levels, leadKind, multiDisc }: AlbumCreditsProps) {
+function PeopleView({
+  levels,
+  leadKind,
+  multiDisc,
+  titles,
+}: {
+  levels: Record<PersonnelLevel, PersonnelEntry[]>;
+  leadKind: LeadKind;
+  multiDisc: boolean;
+  titles: Map<string, string>;
+}) {
   const t = useTranslations("catalog.album.credits");
-  const leadHeading =
-    leadKind === "person" ? t("levels.leadPerson", { count: levels.members.length }) : t("levels.members");
+  const solo = leadKind === "person";
 
   return (
-    <section aria-labelledby="credits-heading" className="flex flex-col gap-6">
-      <h2 id="credits-heading" className="font-display text-xl text-paper">
-        {t("heading")}
-      </h2>
-
+    <>
       {levels.members.length > 0 && (
-        <section aria-labelledby="credits-members" className="rounded border border-ink-border bg-ink-surface px-4 py-3">
+        // Una solista va en una línea compacta; el bloque destacado queda para una banda,
+        // donde los integrantes sí son el centro de los créditos.
+        <section
+          aria-labelledby="credits-members"
+          className={solo ? "flex flex-col" : "rounded border border-ink-border bg-ink-surface px-4 py-3"}
+        >
           <h3 id="credits-members" className={`mb-1 ${levelHeading}`}>
-            {leadHeading}
+            {solo ? t("levels.leadPerson", { count: levels.members.length }) : t("levels.members")}
           </h3>
-          <LevelList entries={levels.members} multiDisc={multiDisc} prominent />
+          <LevelList entries={levels.members} multiDisc={multiDisc} titles={titles} prominent={!solo} />
         </section>
       )}
 
       {(["guests", "production"] as const).map(
         (level) =>
           levels[level].length > 0 && (
-            <CollapsibleLevel key={level} level={level} entries={levels[level]} multiDisc={multiDisc} />
+            <CollapsibleLevel key={level} level={level} entries={levels[level]} multiDisc={multiDisc} titles={titles} />
           ),
       )}
 
@@ -151,9 +263,152 @@ export function AlbumCredits({ levels, leadKind, multiDisc }: AlbumCreditsProps)
             {t("levels.other")} · {t("otherCount", { count: levels.other.length })}
           </summary>
           <div className="mt-2">
-            <LevelList entries={levels.other} multiDisc={multiDisc} />
+            <LevelList entries={levels.other} multiDisc={multiDisc} titles={titles} />
           </div>
         </details>
+      )}
+    </>
+  );
+}
+
+const GROUP_ORDER: TrackCreditKind[] = ["production", "performers", "sound", "other"];
+
+function hasCredits(groups: TrackCreditGroups | undefined): groups is TrackCreditGroups {
+  return !!groups && GROUP_ORDER.some((kind) => groups[kind].length > 0);
+}
+
+/** Personas de un grupo: "Jon Sosin (ukelele)". En Producción se omite el "producción" obvio. */
+function GroupPeople({ kind, people }: { kind: TrackCreditKind; people: TrackCreditPerson[] }) {
+  const format = useRoleFormatter();
+  return (
+    <>
+      {people.map((person, index) => {
+        const roles = format(
+          kind === "production"
+            ? person.roles.filter((r) => !(r.relationType === "producer" && r.attributes.length === 0))
+            : person.roles,
+        );
+        return (
+          <Fragment key={person.artistId}>
+            {index > 0 && ", "}
+            <Link href={`/artist/${person.artistId}`} className="text-paper hover:text-amber hover:underline">
+              {person.name}
+            </Link>
+            {roles.length > 0 && <span className="text-paper-muted"> ({roles.join(", ")})</span>}
+          </Fragment>
+        );
+      })}
+    </>
+  );
+}
+
+function CreditGroups({ groups }: { groups: TrackCreditGroups }) {
+  const t = useTranslations("catalog.album.credits");
+  return (
+    <dl className="grid grid-cols-1 gap-x-4 gap-y-1 font-data text-xs sm:grid-cols-[7rem_minmax(0,1fr)]">
+      {GROUP_ORDER.filter((kind) => groups[kind].length > 0).map((kind) => (
+        <div key={kind} className="contents">
+          <dt className="text-paper-muted">{t(`groups.${kind}`)}</dt>
+          <dd className="font-body text-sm">
+            <GroupPeople kind={kind} people={groups[kind]} />
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function SongsView({ tracks, byTrack, multiDisc }: { tracks: CreditsTrack[]; byTrack: CreditsByTrack; multiDisc: boolean }) {
+  const t = useTranslations("catalog.album.credits");
+  const ordered = [...tracks].sort((a, b) => a.discNumber - b.discNumber || a.position - b.position);
+
+  return (
+    <div className="flex flex-col gap-4">
+      {hasCredits(byTrack.albumWide) && (
+        <section aria-labelledby="credits-album-wide" className="rounded border border-ink-border bg-ink-surface px-4 py-3">
+          <h3 id="credits-album-wide" className={`mb-2 ${levelHeading}`}>
+            {t("albumWide")}
+          </h3>
+          <CreditGroups groups={byTrack.albumWide} />
+        </section>
+      )}
+      <ol className="flex flex-col divide-y divide-ink-border">
+        {ordered.map((track) => {
+          const groups = byTrack.tracks[track.recordingId];
+          return (
+            <li key={track.recordingId} className="flex flex-col gap-2 py-3">
+              <h3 className="flex items-baseline gap-3">
+                <span className="w-8 shrink-0 text-right font-data text-xs text-paper-muted">
+                  {trackLabel(track, multiDisc)}
+                </span>
+                <Link href={`/song/${track.recordingId}`} className="font-body text-paper hover:text-amber">
+                  {track.title}
+                </Link>
+              </h3>
+              <div className="sm:pl-11">
+                {hasCredits(groups) ? (
+                  <CreditGroups groups={groups} />
+                ) : (
+                  <p className="font-data text-xs text-paper-muted">{t("noTrackCredits")}</p>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
+/** Control segmentado Por persona / Por canción: dos enlaces, el estado vive en la URL. */
+function ViewSwitch({ view, releaseGroupId }: { view: CreditsView; releaseGroupId: string }) {
+  const t = useTranslations("catalog.album.credits");
+  const base = `/album/${releaseGroupId}/credits`;
+  const option = (value: CreditsView, href: string, label: string) => (
+    <Link
+      href={href}
+      scroll={false}
+      aria-current={view === value ? "page" : undefined}
+      className="rounded px-3 py-1.5 font-data text-xs text-paper-muted transition-colors hover:text-paper aria-[current=page]:bg-amber/15 aria-[current=page]:text-amber"
+    >
+      {label}
+    </Link>
+  );
+  return (
+    <nav aria-label={t("viewLabel")} className="inline-flex self-start rounded border border-ink-border bg-ink-surface p-0.5">
+      {option("people", base, t("viewPeople"))}
+      {option("songs", `${base}?view=songs`, t("viewSongs"))}
+    </nav>
+  );
+}
+
+export function AlbumCredits({
+  levels,
+  leadKind,
+  multiDisc,
+  tracks = [],
+  byTrack,
+  view = "people",
+  releaseGroupId,
+}: AlbumCreditsProps) {
+  const t = useTranslations("catalog.album.credits");
+  const titles = new Map(tracks.map((track) => [track.recordingId, track.title]));
+  const songsAvailable = byTrack !== undefined && tracks.length > 0;
+  const activeView: CreditsView = view === "songs" && songsAvailable ? "songs" : "people";
+
+  return (
+    <section aria-labelledby="credits-heading" className="flex flex-col gap-6">
+      {/* La pestaña activa ya dice "Créditos": el título queda para lectores de pantalla. */}
+      <h2 id="credits-heading" className="sr-only">
+        {t("heading")}
+      </h2>
+
+      {songsAvailable && releaseGroupId && <ViewSwitch view={activeView} releaseGroupId={releaseGroupId} />}
+
+      {activeView === "songs" && byTrack ? (
+        <SongsView tracks={tracks} byTrack={byTrack} multiDisc={multiDisc} />
+      ) : (
+        <PeopleView levels={levels} leadKind={leadKind} multiDisc={multiDisc} titles={titles} />
       )}
 
       <p className="font-data text-xs text-paper-muted">{t("source")}</p>

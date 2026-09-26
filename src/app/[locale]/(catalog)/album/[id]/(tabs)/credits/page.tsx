@@ -6,10 +6,13 @@ import { isValidUuid } from "@/lib/validation";
 import { loadAlbumDetail, loadAlbumPersonnel } from "../../album-data";
 
 // Pestaña Créditos (openspec: redesign-album-page): créditos de personal del disco en
-// cuatro niveles. Sin créditos la pestaña no existe: la URL directa responde 404.
+// cuatro niveles, o por canción con `?view=songs`. Sin créditos la pestaña no existe: la URL
+// directa responde 404.
 
 interface AlbumCreditsPageProps {
   params: Promise<{ id: string }>;
+  /** `?view=songs` elige la vista por canción (openspec: album-credits-by-song, D5). */
+  searchParams?: Promise<{ view?: string | string[] }>;
 }
 
 export async function generateMetadata({ params }: AlbumCreditsPageProps): Promise<Metadata> {
@@ -21,7 +24,7 @@ export async function generateMetadata({ params }: AlbumCreditsPageProps): Promi
   return { title: `${t("credits")} · ${result.detail.releaseGroup.title}` };
 }
 
-export default async function AlbumCreditsPage({ params }: AlbumCreditsPageProps) {
+export default async function AlbumCreditsPage({ params, searchParams }: AlbumCreditsPageProps) {
   const { id } = await params;
   if (!isValidUuid(id)) notFound();
   const result = await loadAlbumDetail(id);
@@ -31,5 +34,21 @@ export default async function AlbumCreditsPage({ params }: AlbumCreditsPageProps
   if (!personnel) notFound();
 
   const multiDisc = new Set(result.detail.tracks.map((t) => t.discNumber)).size > 1;
-  return <AlbumCredits levels={personnel.levels} leadKind={personnel.leadKind} multiDisc={multiDisc} />;
+  const { view } = (await searchParams) ?? {};
+  return (
+    <AlbumCredits
+      levels={personnel.levels}
+      leadKind={personnel.leadKind}
+      multiDisc={multiDisc}
+      tracks={result.detail.tracks.map(({ recordingId, title, discNumber, position }) => ({
+        recordingId,
+        title,
+        discNumber,
+        position,
+      }))}
+      byTrack={personnel.byTrack}
+      view={view === "songs" ? "songs" : "people"}
+      releaseGroupId={result.detail.releaseGroup.id}
+    />
+  );
 }
