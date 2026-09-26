@@ -504,7 +504,8 @@ SHALL aparecer una sola vez, en el nivel más alto que le corresponde, con todos
 las pistas en que participa ("todas" cuando participa en todas). La pestaña SHALL NOT
 mostrar integrantes calculados por fechas de pertenencia ni personas sin crédito en el
 disco, y SHALL NOT mostrar un distintivo de fundador. Un tipo de crédito sin nivel asignado
-SHALL mostrarse en Arte y otros. Sin créditos de personal, la pestaña no se muestra.
+SHALL mostrarse en Arte y otros. Sin créditos de personal ni de autoría, la pestaña no se
+muestra.
 
 #### Scenario: Integrante acreditado
 
@@ -690,8 +691,9 @@ La pestaña Créditos SHALL ofrecer dos vistas, **Por persona** (la de niveles) 
 canción**, elegibles con un control segmentado cuyo estado vive en la URL
 (`?view=songs`), de modo que la vista se entregue renderizada desde el servidor y sea
 enlazable. La vista Por canción SHALL listar las pistas en orden de disco y posición, con su
-título enlazado a la canción y, bajo cada una, las personas agrupadas en Producción,
-Intérpretes, Sonido y Otros con sus roles en esa pista; una pista sin créditos SHALL
+título enlazado a la canción y, bajo cada una, las personas agrupadas en Composición (los
+autores de la obra de esa pista), Producción, Intérpretes, Sonido y Otros, en ese orden,
+con sus roles en esa pista; una pista sin créditos SHALL
 indicarlo. Los créditos de nivel edición SHALL mostrarse una vez, al principio, como
 créditos de todo el álbum.
 
@@ -710,4 +712,35 @@ créditos de todo el álbum.
 
 - **WHEN** una pista no tiene créditos de personal
 - **THEN** la vista por canción la lista con la indicación de que no hay créditos registrados
+
+#### Scenario: Autores de la pista
+
+- **WHEN** la obra de la pista 1 tiene como autores a Jerrod Bettis, Meghan Kabir y Audra Mae
+- **THEN** la pista 1 muestra primero el grupo Composición con esas tres personas
+
+### Requirement: Composición en la vista por persona
+
+La vista Por persona de la pestaña Créditos SHALL mostrar una sección **Composición**
+después del primer nivel y antes de Músicos invitados, con cada autora o autor una vez, sus
+roles de autoría (rotulados "composición" para `writer`, "música" para `composer`, "letra"
+para `lyricist`, y el resto traducido o con el texto de MusicBrainz) y las pistas cuyas
+obras firmó, con los mismos números enlazados que las demás filas. La sección SHALL seguir
+la regla de contracción de los demás niveles (abierta con hasta 6 personas; contraída con
+cantidad y tres nombres). Una persona de la sección Composición SHALL poder figurar además
+en su nivel de personal. Sin autores, la sección SHALL NOT mostrarse.
+
+#### Scenario: Disco pop con muchos autores
+
+- **WHEN** las obras de un álbum suman 20 autores
+- **THEN** la sección Composición aparece contraída con "20" y los tres primeros nombres
+
+#### Scenario: Letra y música por separado
+
+- **WHEN** una obra tiene una relación `composer` de una persona y `lyricist` de otra
+- **THEN** la primera figura con "música" y la segunda con "letra"
+
+#### Scenario: Sin autores cargados
+
+- **WHEN** ninguna obra del álbum tiene autores en MusicBrainz
+- **THEN** la vista Por persona no muestra la sección Composición
 
