@@ -420,6 +420,13 @@ de borrar y reingerir. La edición representativa se elige entre **todas** las e
 personal (`personnel_credit`) de esta edición y de sus grabaciones están pendientes. Es distinto de
 `credits_synced_at`, que cubre los créditos de autoría (`credit`).
 
+**Autoría de obras (`works_synced_at`, migración `0049`):** `NULL` indica que las obras de las
+grabaciones de esta edición y sus autores (`work`, `recording_work`, `work_credit`) están
+pendientes. Arranca en `NULL` para las ediciones previas a la migración (estado real: nunca se
+pidió). La sincronización diferida y `scripts/backfill-personnel-credits.ts` tratan como pendiente
+una edición con `personnel_synced_at` **o** `works_synced_at` nulo: una sola request de edición
+completa ambos.
+
 **Carátula (`cover_thumb_url`) — DEPRECADA:** columna legada de la resolución de carátula, que pasó a
 `release_group.cover_thumb_url` (migración `0003`). Ya **no se escribe** desde la app; el read-model
 (`album-detail.ts`) la usa solo como fallback de compatibilidad para filas pre-migración
@@ -488,6 +495,26 @@ varias relaciones por pista.
 - `CHECK (num_nonnulls(release_id, recording_id) = 1)` e índices únicos parciales
   `uq_personnel_credit_release` / `uq_personnel_credit_recording` sobre
   `(destino, artist_id, relation_type, attributes)`.
+
+## `work`, `recording_work` y `work_credit`
+
+**Propósito (migración `0049`, openspec: add-songwriter-credits):** compositores y letristas. En
+MusicBrainz la autoría cuelga de la **obra** (*work*), no de la grabación, y la misma obra la
+comparten la versión de estudio, las versiones en vivo y los covers. Llega en la misma request de
+edición que la tracklist (`inc=…+work-rels+work-level-rels`), sin requests adicionales.
+
+- `work`: una fila por obra (`mbid` único) con su título. `updated_at` por trigger.
+- `recording_work`: grabación ↔ obra (PK compuesta; una grabación puede tener varias obras, p. ej.
+  un medley), con los `attributes` del vínculo (`cover`, `live`, `instrumental`, `medley`,
+  `partial`), ordenados.
+- `work_credit`: relaciones de artista de la obra con el tipo de MusicBrainz tal cual (`writer`,
+  `composer`, `lyricist`, `librettist`, `arranger`, `translator`, …), `attributes` ordenados y
+  `credited_as`. `UNIQUE (work_id, artist_id, relation_type, attributes)`. Las relaciones con otro
+  destino (editoriales) no se guardan.
+
+Separado de `personnel_credit` (créditos de **grabación**) para no repetir los autores en cada
+versión ni mezclar los dos ejes. La lectura por álbum y por canción vive en
+`src/services/catalog/personnel-levels.ts`.
 
 ## `recording`
 

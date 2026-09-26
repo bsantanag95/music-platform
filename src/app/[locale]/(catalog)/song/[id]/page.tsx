@@ -4,6 +4,8 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getRecordingDetail } from "@/services/catalog/recording-detail";
 import { getRecordingReactionSummary } from "@/services/catalog/recording-reactions";
+import { getRecordingSongwriters } from "@/services/catalog/personnel-levels";
+import { SongwritersLine } from "@/components/catalog/SongwritersLine";
 import { listMyListensForRecording } from "@/services/diary/diary";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { isValidUuid } from "@/lib/validation";
@@ -63,7 +65,7 @@ export default async function SongPage({ params }: SongPageProps) {
     ? (await getUserPermissions(session.user.id)).includes("moderation.suspend_social")
     : false;
   const socialTarget = await resolveSocialTarget("recording", detail.recording.id);
-  const [ratings, comments, reactionSummary, listenHistory, favorited] = await Promise.all([
+  const [ratings, comments, reactionSummary, listenHistory, favorited, songwriters] = await Promise.all([
     getRatings(socialTarget, userId),
     listComments(socialTarget),
     getRecordingReactionSummary(detail.recording.id),
@@ -71,6 +73,7 @@ export default async function SongPage({ params }: SongPageProps) {
     userId
       ? isFavorited({ type: "recording", id: detail.recording.id }, userId)
       : Promise.resolve(false),
+    getRecordingSongwriters(detail.recording.id),
   ]);
 
   const mainAlbum = detail.containingAlbums[0];
@@ -98,6 +101,7 @@ export default async function SongPage({ params }: SongPageProps) {
             </Link>
           </p>
         )}
+        <SongwritersLine songwriters={songwriters} />
         {detail.recording.variantType !== "original" && (
           <p className="font-data text-xs uppercase tracking-wider text-paper-muted">
             {t("song.variant")}: {detail.recording.variantType}

@@ -47,6 +47,7 @@ export default async function AlbumCreditsPage({ params, searchParams }: AlbumCr
         position,
       }))}
       byTrack={personnel.byTrack}
+      songwriters={personnel.songwriters}
       view={view === "songs" ? "songs" : "people"}
       releaseGroupId={result.detail.releaseGroup.id}
     />

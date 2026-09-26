@@ -165,6 +165,7 @@ describe("getAlbumDetail (artistas principales y variantes)", () => {
     creditsSyncedAt: new Date(),
     isRepresentative: true,
     personnelSyncedAt: new Date(),
+    worksSyncedAt: new Date(),
   };
 
   beforeEach(() => {

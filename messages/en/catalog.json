@@ -311,7 +311,8 @@
         "guests": "Guest musicians",
         "production": "Production and sound",
         "other": "Art and other",
-        "leadPerson": "{count, plural, one {Main artist} other {Main artists}}"
+        "leadPerson": "{count, plural, one {Main artist} other {Main artists}}",
+        "songwriting": "Songwriting"
       },
       "otherCount": "{count, plural, one {+# credit} other {+# credits}}",
       "allTracks": "all",
@@ -355,7 +356,12 @@
         "mix_additional": "additional mixing",
         "recording_assistant": "assistant recording",
         "engineer_additional": "additional engineering",
-        "programming_additional": "additional programming"
+        "programming_additional": "additional programming",
+        "writer": "songwriting",
+        "composer": "music",
+        "lyricist": "lyrics",
+        "librettist": "libretto",
+        "translator": "translation"
       },
       "attributes": {
         "guitar": "guitar",
@@ -441,7 +447,8 @@
         "production": "Production",
         "performers": "Performers",
         "sound": "Sound",
-        "other": "Other"
+        "other": "Other",
+        "songwriting": "Songwriting"
       }
     },
     "editions": {
@@ -501,7 +508,8 @@
       "obsessed": "obsessed",
       "neutral": "neutral",
       "disliked": "disliked it"
-    }
+    },
+    "writtenBy": "Written by"
   },
   "social": {
     "ratingHeading": "Ratings",

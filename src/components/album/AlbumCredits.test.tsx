@@ -270,6 +270,7 @@ describe("AlbumCredits — vista por canción", () => {
     roles: [{ relationType, attributes }],
   });
   const groups = (partial: Partial<TrackCreditGroups>): TrackCreditGroups => ({
+    songwriting: [],
     production: [],
     performers: [],
     sound: [],
@@ -329,3 +330,67 @@ describe("AlbumCredits — vista por canción", () => {
     expect(screen.getByRole("link", { name: "Uno" })).toBeInTheDocument();
   });
 });
+
+describe("AlbumCredits — composición", () => {
+  const writerEntry = (name: string, tracks: PersonnelEntry["tracks"] = "all", relationType = "writer") => ({
+    artistId: name,
+    name,
+    creditedAs: null,
+    roles: [{ relationType, attributes: [] as string[] }],
+    tracks,
+  });
+
+  it("muestra la sección Composición tras el primer nivel, aunque la persona también produzca", () => {
+    renderWithIntl(
+      <AlbumCredits
+        leadKind="group"
+        multiDisc={false}
+        levels={levels({
+          members: [entry("Gilmour", { level: "members" })],
+          production: [entry("Mitch Allan", { level: "production", roles: [{ relationType: "producer", attributes: [] }] })],
+        })}
+        songwriters={[writerEntry("Mitch Allan"), writerEntry("Compositora", "all", "composer")]}
+      />,
+    );
+    const headings = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent?.replace("›", ""));
+    expect(headings).toEqual([credits.levels.members, credits.levels.songwriting, credits.levels.production]);
+    expect(screen.getAllByRole("link", { name: "Mitch Allan" })).toHaveLength(2);
+    expect(screen.getByText("música")).toBeInTheDocument();
+  });
+
+  it("sin autores no muestra la sección", () => {
+    renderWithIntl(<AlbumCredits leadKind="group" multiDisc={false} levels={levels({ guests: [entry("Uno")] })} songwriters={[]} />);
+    expect(screen.queryByText(credits.levels.songwriting)).not.toBeInTheDocument();
+  });
+
+  it("en la vista por canción, Composición va primero y omite el rol 'composición' obvio", () => {
+    const people = (...names: [string, string][]) =>
+      names.map(([name, relationType]) => ({ artistId: name, name, creditedAs: null, roles: [{ relationType, attributes: [] as string[] }] }));
+    renderWithIntl(
+      <AlbumCredits
+        leadKind="person"
+        multiDisc={false}
+        levels={levels({ production: [entry("Productor", { level: "production" })] })}
+        tracks={[{ recordingId: "rec-1", title: "Eyes Wide Open", discNumber: 1, position: 1 }]}
+        byTrack={{
+          albumWide: { songwriting: [], production: [], performers: [], sound: [], other: [] },
+          tracks: {
+            "rec-1": {
+              songwriting: people(["Jerrod Bettis", "writer"], ["Letrista", "lyricist"]),
+              production: people(["Productor", "producer"]),
+              performers: [],
+              sound: [],
+              other: [],
+            },
+          },
+        }}
+        view="songs"
+        releaseGroupId="rg-1"
+      />,
+    );
+    const terms = screen.getAllByRole("term").map((dt) => dt.textContent);
+    expect(terms).toEqual([credits.groups.songwriting, credits.groups.production]);
+    expect(screen.getByRole("link", { name: "Jerrod Bettis" }).parentElement).toHaveTextContent(/^Jerrod Bettis, Letrista \(letra\)$/);
+  });
+});
+

@@ -180,6 +180,6 @@ describe("ediciones y créditos de personal (openspec: enrich-album-editions-and
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const url = new URL(String(fetchMock.mock.calls[0]![0]));
     expect(url.pathname).toBe("/ws/2/release/rel-1");
-    expect(url.searchParams.get("inc")).toBe("recordings+artist-credits+artist-rels+recording-level-rels");
+    expect(url.searchParams.get("inc")).toBe("recordings+artist-credits+artist-rels+recording-level-rels+work-rels+work-level-rels");
   });
 });

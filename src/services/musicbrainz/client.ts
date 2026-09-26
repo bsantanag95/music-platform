@@ -237,8 +237,11 @@ export const musicbrainz = {
   getRelease(mbid: string) {
     // `artist-rels+recording-level-rels`: créditos de personal de la edición y de
     // cada grabación en la MISMA request que la tracklist (sin requests extra).
+    // `work-rels+work-level-rels`: la obra de cada grabación con sus autores
+    // (compositores, letristas), también en la misma request (openspec:
+    // add-songwriter-credits).
     return mbFetch<MBRelease>(`/release/${mbid}`, {
-      inc: "recordings+artist-credits+artist-rels+recording-level-rels",
+      inc: "recordings+artist-credits+artist-rels+recording-level-rels+work-rels+work-level-rels",
     });
   },
 };

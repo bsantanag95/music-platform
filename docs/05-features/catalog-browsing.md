@@ -146,8 +146,17 @@ biblioteca, con Metal-Archives como referencia y la capa personal de Letterboxd)
   no promueve. Los números de pista enlazan a la canción con su título; "+N" aparece solo con
   2 o más roles ocultos; una solista va en línea compacta (el bloque destacado queda para
   bandas); el título "Créditos" es solo para lectores de pantalla; un instrumento sin
-  especificar se lee "varios instrumentos". Compositores y letristas (créditos de obra en
-  MusicBrainz) todavía no se ingieren.
+  especificar se lee "varios instrumentos".
+- **Composición** (cambio `add-songwriter-credits`, 2026-09): compositores y letristas vienen
+  de las **obras** de MusicBrainz (la autoría cuelga de la obra, que comparten estudio, vivo
+  y covers) y llegan en la **misma** request de edición (`work-rels+work-level-rels`), sin
+  requests extra. La vista por persona muestra una sección **Composición** tras el primer
+  nivel (eje aparte: una autora puede figurar además en Producción), con la misma regla de
+  contracción; la vista por canción pone el grupo **Composición** primero. Roles: `writer` →
+  "composición", `composer` → "música", `lyricist` → "letra". Obras sin autores cargados en
+  MusicBrainz no muestran nada; las editoriales no se guardan. Los álbumes ingeridos antes se
+  completan al visitarlos o con `scripts/backfill-personnel-credits.ts` (marca
+  `release.works_synced_at`).
 - **Al pie**, fuera de las pestañas: franja de discografía del artista principal (mismo
   tipo de obra, orden cronológico, anterior / siguiente) y **comentarios**.
 - **Móvil**: carátula e identidad, línea resumen de comunidad, panel (mismas filas que en
@@ -194,7 +203,9 @@ siendo entidad real, pero su página no es un destino rico: la inversión va al 
 
 La página lidera con **el o los álbumes que contienen la canción** (carátula + título +
 año, enlace al álbum; el más temprano marcado como "aparición principal"). Después: título
-y artista acreditado, acciones de catálogo (registrar escucha, favorito, agregar a lista),
+y artista acreditado —con la línea **"Escrita por"** (autores de la obra, cambio
+`add-songwriter-credits`) cuando MusicBrainz los tiene—, acciones de catálogo (registrar
+escucha, favorito, agregar a lista),
 **tu historial de escuchas** de esa canción (solo con sesión y ≥1 escucha), la **reacción
 agregada pública** de la comunidad, comentarios, la divulgación de estrellas plegada, y por
 último una **ficha técnica** (`<details>` plegado) con los créditos completos y todas las

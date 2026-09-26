@@ -7,6 +7,7 @@ import { ingestCredits } from "./ingest-discography";
 import { pickRepresentativeRelease, deriveEditionLabel } from "./representative-release";
 import { fetchReleaseEditions, saveReleaseEditions } from "./release-editions";
 import { completePersonnelSync, savePersonnelCredits } from "./personnel-credits";
+import { saveWorkCredits } from "./work-credits";
 import type { MBReleaseSummary } from "../musicbrainz/types";
 
 /**
@@ -143,6 +144,8 @@ export async function ingestReleaseTracklist(
   // Créditos de personal: vienen en la misma respuesta (`getRelease` pide las relaciones).
   await savePersonnelCredits(releaseRow.id, full);
   await completePersonnelSync(releaseRow.id, releaseGroupId);
+  // Autoría de obras: también en la misma respuesta (`work-rels+work-level-rels`).
+  await saveWorkCredits(releaseRow.id, full);
 
   return releaseRow;
 }

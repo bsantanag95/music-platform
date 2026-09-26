@@ -20,6 +20,8 @@ export const IDS = {
   engineer: smokeMbid(SMOKE_PREFIX, 5),
   designer: smokeMbid(SMOKE_PREFIX, 6),
   label: smokeMbid(SMOKE_PREFIX, 7),
+  songwriter: smokeMbid(SMOKE_PREFIX, 8),
+  lyricist: smokeMbid(SMOKE_PREFIX, 9),
   original: smokeMbid(SMOKE_PREFIX, 0x100),
   fused: smokeMbid(SMOKE_PREFIX, 0x101),
   experienceGb: smokeMbid(SMOKE_PREFIX, 0x102),
@@ -27,6 +29,8 @@ export const IDS = {
   sacd: smokeMbid(SMOKE_PREFIX, 0x104),
   box: smokeMbid(SMOKE_PREFIX, 0x105),
   recording: (n: number) => smokeMbid(SMOKE_PREFIX, 0x1000 + n),
+  /** Obra de la canción `n` (openspec: add-songwriter-credits). */
+  work: (n: number) => smokeMbid(SMOKE_PREFIX, 0x2000 + n),
 };
 
 export const ALBUM_TITLE = "Álbum de humo (smoke)";
@@ -128,6 +132,30 @@ function artistRel(type: string, artistId: string, name: string, attributes: str
   };
 }
 
+/**
+ * Relación `performance` con la obra de la canción `n` (`work-rels+work-level-rels`): la 1 y
+ * la 3 con una autora `writer`, la 2 con música y letra separadas, la 4 con obra sin autores.
+ * Las pistas 10+ (disco extra) no traen obra.
+ */
+function workRelOf(n: number, title: string) {
+  if (n > 4) return [];
+  const authors =
+    n === 2
+      ? [artistRel("composer", IDS.songwriter, "Autora de humo"), artistRel("lyricist", IDS.lyricist, "Letrista de humo")]
+      : n === 4
+        ? []
+        : [artistRel("writer", IDS.songwriter, "Autora de humo")];
+  return [
+    {
+      type: "performance",
+      "target-type": "work",
+      direction: "forward",
+      attributes: [],
+      work: { id: IDS.work(n), title, relations: authors },
+    },
+  ];
+}
+
 function trackOf(n: number, title: string) {
   return {
     position: n,
@@ -139,6 +167,7 @@ function trackOf(n: number, title: string) {
         artistRel("instrument", IDS.member, "Integrante de humo", ["guitar"]),
         ...(n === 3 ? [artistRel("vocal", IDS.guest, "Invitada de humo", ["lead vocals"])] : []),
         artistRel("engineer", IDS.engineer, "Ingeniero de humo"),
+        ...workRelOf(n, title),
       ],
     },
     "artist-credit": [{ name: "Banda de humo", joinphrase: "", artist: { id: IDS.band, name: "Banda de humo" } }],

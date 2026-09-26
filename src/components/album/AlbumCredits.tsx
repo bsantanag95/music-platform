@@ -7,6 +7,7 @@ import type {
   PersonnelEntry,
   PersonnelLevel,
   PersonnelRole,
+  SongwriterEntry,
   TrackCreditGroups,
   TrackCreditKind,
   TrackCreditPerson,
@@ -35,10 +36,15 @@ export interface CreditsTrack {
   position: number;
 }
 
+/** Fila de crédito: una persona con sus roles y pistas (personal o autoría). */
+type CreditEntry = Omit<PersonnelEntry, "level">;
+
 interface AlbumCreditsProps {
   levels: Record<PersonnelLevel, PersonnelEntry[]>;
   leadKind: LeadKind;
   multiDisc: boolean;
+  /** Autoría de las obras (openspec: add-songwriter-credits); eje aparte de los niveles. */
+  songwriters?: SongwriterEntry[];
   /** Pistas de la edición representativa: títulos para los enlaces y la vista por canción. */
   tracks?: CreditsTrack[];
   /** Créditos agrupados por canción; sin ellos no se ofrece la vista por canción. */
@@ -71,7 +77,7 @@ function TrackRefs({
   multiDisc,
   titles,
 }: {
-  entry: PersonnelEntry;
+  entry: CreditEntry;
   multiDisc: boolean;
   titles: Map<string, string>;
 }) {
@@ -111,7 +117,7 @@ function CreditRow({
   prominent,
   titles,
 }: {
-  entry: PersonnelEntry;
+  entry: CreditEntry;
   multiDisc: boolean;
   prominent: boolean;
   titles: Map<string, string>;
@@ -165,7 +171,7 @@ function LevelList({
   titles,
   prominent = false,
 }: {
-  entries: PersonnelEntry[];
+  entries: CreditEntry[];
   multiDisc: boolean;
   titles: Map<string, string>;
   prominent?: boolean;
@@ -191,8 +197,8 @@ function CollapsibleLevel({
   multiDisc,
   titles,
 }: {
-  level: "guests" | "production";
-  entries: PersonnelEntry[];
+  level: "songwriting" | "guests" | "production";
+  entries: CreditEntry[];
   multiDisc: boolean;
   titles: Map<string, string>;
 }) {
@@ -225,11 +231,13 @@ function PeopleView({
   leadKind,
   multiDisc,
   titles,
+  songwriters,
 }: {
   levels: Record<PersonnelLevel, PersonnelEntry[]>;
   leadKind: LeadKind;
   multiDisc: boolean;
   titles: Map<string, string>;
+  songwriters: SongwriterEntry[];
 }) {
   const t = useTranslations("catalog.album.credits");
   const solo = leadKind === "person";
@@ -248,6 +256,12 @@ function PeopleView({
           </h3>
           <LevelList entries={levels.members} multiDisc={multiDisc} titles={titles} prominent={!solo} />
         </section>
+      )}
+
+      {/* Composición: quién escribió las canciones. Eje aparte de los niveles de personal: una
+          autora puede figurar aquí y además en Producción (openspec: add-songwriter-credits). */}
+      {songwriters.length > 0 && (
+        <CollapsibleLevel level="songwriting" entries={songwriters} multiDisc={multiDisc} titles={titles} />
       )}
 
       {(["guests", "production"] as const).map(
@@ -271,22 +285,24 @@ function PeopleView({
   );
 }
 
-const GROUP_ORDER: TrackCreditKind[] = ["production", "performers", "sound", "other"];
+const GROUP_ORDER: TrackCreditKind[] = ["songwriting", "production", "performers", "sound", "other"];
 
 function hasCredits(groups: TrackCreditGroups | undefined): groups is TrackCreditGroups {
   return !!groups && GROUP_ORDER.some((kind) => groups[kind].length > 0);
 }
 
-/** Personas de un grupo: "Jon Sosin (ukelele)". En Producción se omite el "producción" obvio. */
+/**
+ * Personas de un grupo: "Jon Sosin (ukelele)". Se omite el rol obvio del grupo: "producción"
+ * en Producción y "composición" (`writer`) en Composición.
+ */
 function GroupPeople({ kind, people }: { kind: TrackCreditKind; people: TrackCreditPerson[] }) {
   const format = useRoleFormatter();
   return (
     <>
       {people.map((person, index) => {
+        const obvious = kind === "production" ? "producer" : kind === "songwriting" ? "writer" : null;
         const roles = format(
-          kind === "production"
-            ? person.roles.filter((r) => !(r.relationType === "producer" && r.attributes.length === 0))
-            : person.roles,
+          obvious ? person.roles.filter((r) => !(r.relationType === obvious && r.attributes.length === 0)) : person.roles,
         );
         return (
           <Fragment key={person.artistId}>
@@ -390,6 +406,7 @@ export function AlbumCredits({
   byTrack,
   view = "people",
   releaseGroupId,
+  songwriters = [],
 }: AlbumCreditsProps) {
   const t = useTranslations("catalog.album.credits");
   const titles = new Map(tracks.map((track) => [track.recordingId, track.title]));
@@ -408,7 +425,7 @@ export function AlbumCredits({
       {activeView === "songs" && byTrack ? (
         <SongsView tracks={tracks} byTrack={byTrack} multiDisc={multiDisc} />
       ) : (
-        <PeopleView levels={levels} leadKind={leadKind} multiDisc={multiDisc} titles={titles} />
+        <PeopleView levels={levels} leadKind={leadKind} multiDisc={multiDisc} titles={titles} songwriters={songwriters} />
       )}
 
       <p className="font-data text-xs text-paper-muted">{t("source")}</p>
