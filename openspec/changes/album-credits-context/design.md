@@ -20,6 +20,9 @@ niveles o la regla de contracción.
 
 ### D1. El cruce integrante ↔ autoría se hace en el componente, por `artistId`
 
+> **Retirada** (fix `compact-credit-rows`): la línea de autoría en la fila del integrante se
+> quitó; la sección Composición contraída (con su resumen de integrantes, D2) cubre el dato.
+
 `PeopleView` arma un `Map<artistId, SongwriterEntry>` a partir de `songwriters` y se lo pasa
 a la `LevelList` del primer nivel; `CreditRow` recibe un `authorship?: CreditEntry`
 opcional y, si existe, dibuja una tercera línea: roles de autoría formateados con el mismo

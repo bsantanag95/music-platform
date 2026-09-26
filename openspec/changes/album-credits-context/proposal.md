@@ -10,9 +10,9 @@ roles. Y "Créditos según MusicBrainz." no enlaza a la fuente, aunque la licenc
 
 ## What Changes
 
-- **Autoría en la fila del integrante**: cada integrante (o artista principal) que también
-  firmó obras del disco muestra una línea secundaria con sus roles de autoría y las pistas
-  ("música, letra · todas").
+- ~~**Autoría en la fila del integrante**~~: implementada y retirada después (fix
+  `compact-credit-rows`): ocupaba demasiado en un bloque que solo muestra roles, y la sección
+  Composición ya lo cubre.
 - **Resumen de Composición con integrantes**: si hay integrantes entre los autores, el
   resumen los cuenta aparte y nombra a los autores externos ("5 · 4 integrantes + Donna
   McDaniel"). La sección desplegada sigue listando a todos.

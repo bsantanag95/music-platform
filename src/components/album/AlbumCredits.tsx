@@ -74,7 +74,7 @@ function trackLabel(track: { discNumber: number; position: number }, multiDisc: 
 
 /**
  * Pistas de una fila, compactas (openspec: polish-album-credits, D2): "pistas 2–6, 9" o
- * "todas salvo la 1", con cada número enlazado a su canción y su título como ayuda.
+ * "todas salvo la pista 1", con cada número enlazado a su canción y su título como ayuda.
  */
 function TrackRefs({
   entry,
@@ -110,6 +110,7 @@ function TrackRefs({
     return (
       <>
         {t.rich("allTracksExcept", {
+          count: compact.tracks.length,
           tracks: () =>
             second ? t.rich("exceptJoin", { first: () => ref(first!), second: () => ref(second) }) : ref(first!),
         })}
@@ -140,25 +141,21 @@ function CreditRow({
   multiDisc,
   prominent,
   edition,
-  authorship,
 }: {
   entry: CreditEntry;
   multiDisc: boolean;
   prominent: boolean;
   edition: Map<string, CreditsTrack>;
-  /** Autoría de la misma persona, para el primer nivel (openspec: album-credits-context, D1). */
-  authorship?: CreditEntry;
 }) {
   const t = useTranslations("catalog.album.credits");
-  const format = useRoleFormatter();
-  const roles = format(entry.roles);
+  const roles = useRoleFormatter()(entry.roles);
   // Esconder un solo rol no ahorra espacio: "+N" solo con 2 o más ocultos.
   const collapse = roles.length > ROLES_VISIBLE + 1;
   const visible = collapse ? roles.slice(0, ROLES_VISIBLE) : roles;
   const hidden = collapse ? roles.slice(ROLES_VISIBLE) : [];
 
   return (
-    <li className="grid grid-cols-1 gap-x-4 gap-y-0.5 border-b border-ink-border py-2 last:border-b-0 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">
+    <li className="grid grid-cols-1 gap-x-4 gap-y-0.5 border-b border-ink-border py-2 last:border-b-0 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)] sm:items-baseline">
       <span className="min-w-0">
         <Link
           href={`/artist/${entry.artistId}`}
@@ -170,9 +167,10 @@ function CreditRow({
           <span className="block font-data text-xs text-paper-muted">{t("creditedAs", { name: entry.creditedAs })}</span>
         )}
       </span>
-      <div className="flex min-w-0 flex-col gap-0.5 font-data text-xs">
-        <div className="text-paper">
-          {visible.join(", ")}
+      {/* Roles y pistas en una sola línea: los roles resaltan, las pistas quedan en segundo plano.
+          Un <div> y no un <p>: el <details> del "+N" no puede ir dentro de un párrafo. */}
+      <div className="min-w-0 font-data text-xs text-paper">
+        {visible.join(", ")}
           {hidden.length > 0 && (
             <details className="group/roles inline">
               <summary
@@ -184,18 +182,10 @@ function CreditRow({
               <span>, {hidden.join(", ")}</span>
             </details>
           )}
-        </div>
         <span className="text-paper-muted">
+          {roles.length > 0 && " · "}
           <TrackRefs entry={entry} multiDisc={multiDisc} edition={edition} />
         </span>
-        {authorship && (
-          // Las etiquetas ("música, letra") ya dicen que es autoría; el prefijo es para lectores
-          // de pantalla.
-          <span className="text-paper-muted">
-            <span className="sr-only">{t("authorshipLabel")} </span>
-            {format(authorship.roles).join(", ")} · <TrackRefs entry={authorship} multiDisc={multiDisc} edition={edition} />
-          </span>
-        )}
       </div>
     </li>
   );
@@ -206,25 +196,16 @@ function LevelList({
   multiDisc,
   edition,
   prominent = false,
-  authorship,
 }: {
   entries: CreditEntry[];
   multiDisc: boolean;
   edition: Map<string, CreditsTrack>;
   prominent?: boolean;
-  authorship?: Map<string, CreditEntry>;
 }) {
   return (
     <ul className="flex flex-col">
       {entries.map((entry) => (
-        <CreditRow
-          key={entry.artistId}
-          entry={entry}
-          multiDisc={multiDisc}
-          prominent={prominent}
-          edition={edition}
-          authorship={authorship?.get(entry.artistId)}
-        />
+        <CreditRow key={entry.artistId} entry={entry} multiDisc={multiDisc} prominent={prominent} edition={edition} />
       ))}
     </ul>
   );
@@ -330,7 +311,6 @@ function PeopleView({
       ["other", levels.other],
     ] as const
   ).filter(([, entries]) => entries.length > 0);
-  const authorship = new Map<string, CreditEntry>(songwriters.map((entry) => [entry.artistId, entry]));
   // Con una solista, "1 integrante" sería ella misma: el resumen de Composición es el general.
   const memberIds = solo ? undefined : new Set(levels.members.map((entry) => entry.artistId));
 
@@ -346,13 +326,7 @@ function PeopleView({
           <h3 id="credits-members" className={`mb-1 ${levelHeading}`}>
             {solo ? t("levels.leadPerson", { count: levels.members.length }) : t("levels.members")}
           </h3>
-          <LevelList
-            entries={levels.members}
-            multiDisc={multiDisc}
-            edition={edition}
-            prominent={!solo}
-            authorship={authorship}
-          />
+          <LevelList entries={levels.members} multiDisc={multiDisc} edition={edition} prominent={!solo} />
         </section>
       )}
 

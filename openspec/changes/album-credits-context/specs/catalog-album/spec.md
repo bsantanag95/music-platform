@@ -1,25 +1,5 @@
 ## ADDED Requirements
 
-### Requirement: Autoría en las filas del primer nivel
-
-En la vista Por persona, la fila de cada persona del primer nivel (integrantes de la banda o
-artista principal) que también tiene créditos de autoría en el disco SHALL mostrar una
-línea secundaria con sus roles de autoría (con las mismas etiquetas que la sección
-Composición) y las pistas cuyas obras firmó, con el mismo formato compacto de pistas. Una
-persona del primer nivel sin autoría SHALL NOT mostrar esa línea. La sección Composición
-SHALL seguir listando a todas las personas autoras, integrantes incluidos.
-
-#### Scenario: Integrante que compuso
-
-- **WHEN** Nikki Sixx es integrante y tiene `composer` y `lyricist` en todas las obras
-- **THEN** su fila de integrante muestra una línea "música, letra · todas" además de sus
-  roles de intérprete
-
-#### Scenario: Integrante sin autoría
-
-- **WHEN** un integrante no firmó ninguna obra del disco
-- **THEN** su fila no muestra línea de autoría
-
 ### Requirement: Resumen de Composición con integrantes
 
 Cuando al menos una persona autora pertenece al primer nivel y el artista principal es un
