@@ -167,6 +167,8 @@ biblioteca, con Metal-Archives como referencia y la capa personal de Letterboxd)
     enlazada.
   - Los niveles contraídos (Composición, Músicos invitados, Producción y sonido, Arte y
     otros) forman una sola lista con divisores, chevron y fondo al pasar el mouse.
+  - La pestaña tiene un ancho de lectura acotado (`max-w-3xl`), para que los roles no queden
+    lejos del nombre en pantallas anchas.
   - Se tradujeron los roles e instrumentos que llegaban en inglés ("other vocals", "grand
     piano", "video director"…). Una prueba exige las mismas claves en `es` y `en`.
 - **Al pie**, fuera de las pestañas: franja de discografía del artista principal (mismo

@@ -435,7 +435,9 @@ export function AlbumCredits({
   const activeView: CreditsView = view === "songs" && songsAvailable ? "songs" : "people";
 
   return (
-    <section aria-labelledby="credits-heading" className="flex flex-col gap-6">
+    // Ancho de lectura acotado: en pantallas anchas los roles quedaban lejos del nombre y la
+    // mitad derecha vacía.
+    <section aria-labelledby="credits-heading" className="flex max-w-3xl flex-col gap-6">
       {/* La pestaña activa ya dice "Créditos": el título queda para lectores de pantalla. */}
       <h2 id="credits-heading" className="sr-only">
         {t("heading")}
