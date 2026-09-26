@@ -167,6 +167,10 @@ const PERSONNEL = {
     other: [],
   },
   leadKind: "group",
+  byTrack: {
+    albumWide: { production: [], performers: [], sound: [], other: [] },
+    tracks: {},
+  },
 };
 
 const stats = {
@@ -315,6 +319,21 @@ describe("pestañas con datos de ediciones y créditos", () => {
 
     mocks.loadAlbumPersonnel.mockResolvedValue(null);
     await expect(AlbumCreditsPage({ params: Promise.resolve({ id: VALID_UUID }) })).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  it("la pestaña Créditos abre la vista por canción con ?view=songs", async () => {
+    const { default: AlbumCreditsPage } = await import("./credits/page");
+    mocks.loadAlbumPersonnel.mockResolvedValue(PERSONNEL);
+    renderWithIntl(
+      await AlbumCreditsPage({
+        params: Promise.resolve({ id: VALID_UUID }),
+        searchParams: Promise.resolve({ view: "songs" }),
+      }),
+    );
+    const credits = catalogEs.album.credits;
+    expect(screen.getByRole("link", { name: credits.viewSongs })).toBeInTheDocument();
+    expect(screen.getAllByText(credits.noTrackCredits).length).toBeGreaterThan(0);
+    expect(screen.queryByText(credits.levels.members)).not.toBeInTheDocument();
   });
 
   it("la pestaña Ediciones lista las ediciones y responde 404 con una sola", async () => {

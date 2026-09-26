@@ -1,13 +1,18 @@
 import { describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
 import { AlbumCredits, LEVEL_OPEN_MAX } from "./AlbumCredits";
 import { formatRoles, formatTrackList, messageKey } from "./credit-roles";
-import type { PersonnelEntry, PersonnelLevel } from "@/services/catalog/personnel-levels";
+import type { PersonnelEntry, PersonnelLevel, TrackCreditGroups } from "@/services/catalog/personnel-levels";
 
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>,
+  // Reenvía title, aria-label y aria-current; `scroll` es de next/link y no va al <a>.
+  Link: (props: { href: string; children: React.ReactNode; scroll?: boolean } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+    const anchor: Record<string, unknown> = { ...props };
+    delete anchor.scroll;
+    return <a {...(anchor as React.AnchorHTMLAttributes<HTMLAnchorElement>)} />;
+  },
 }));
 
 const credits = catalogEs.album.credits;
@@ -109,7 +114,7 @@ describe("AlbumCredits", () => {
           guests: [
             entry("Torry", {
               roles: [{ relationType: "vocal", attributes: ["lead vocals"] }],
-              tracks: [{ discNumber: 1, position: 5 }],
+              tracks: [{ recordingId: "rec-5", discNumber: 1, position: 5 }],
             }),
             entry("Theremin", { roles: [{ relationType: "instrument", attributes: ["theremin"] }] }),
           ],
@@ -149,8 +154,22 @@ describe("AlbumCredits", () => {
     renderWithIntl(
       <AlbumCredits leadKind="person" multiDisc={false} levels={levels({ members: [entry("Sabrina", { level: "members" })] })} />,
     );
-    expect(screen.getByText("Artista principal")).toBeInTheDocument();
+    const heading = screen.getByText("Artista principal");
     expect(screen.queryByText(credits.levels.members)).not.toBeInTheDocument();
+    // Línea compacta: sin el bloque destacado de las bandas.
+    expect(heading.closest("section")).not.toHaveClass("bg-ink-surface");
+  });
+
+  it("una banda mantiene el bloque destacado de integrantes", () => {
+    renderWithIntl(
+      <AlbumCredits leadKind="group" multiDisc={false} levels={levels({ members: [entry("Gilmour", { level: "members" })] })} />,
+    );
+    expect(screen.getByText(credits.levels.members).closest("section")).toHaveClass("bg-ink-surface");
+  });
+
+  it("el título 'Créditos' queda solo para lectores de pantalla", () => {
+    renderWithIntl(<AlbumCredits leadKind="group" multiDisc={false} levels={levels({ guests: [entry("Uno")] })} />);
+    expect(screen.getByRole("heading", { name: credits.heading })).toHaveClass("sr-only");
   });
 
   it("contrae un nivel largo con cantidad y tres nombres; deja abierto uno corto", () => {
@@ -179,10 +198,134 @@ describe("AlbumCredits", () => {
     expect(screen.getByText(", violín, violonchelo")).toBeInTheDocument();
   });
 
+  it("con 5 roles los muestra todos, sin '+N'", () => {
+    const attributes = ["guitar", "bass", "piano", "organ", "violin"];
+    renderWithIntl(
+      <AlbumCredits
+        leadKind="group"
+        multiDisc={false}
+        levels={levels({ guests: [entry("Cinco", { roles: attributes.map((a) => ({ relationType: "instrument", attributes: [a] })) })] })}
+      />,
+    );
+    expect(screen.getByText("guitarra, bajo, piano, órgano, violín")).toBeInTheDocument();
+    expect(screen.queryByText(/^\+\d/)).not.toBeInTheDocument();
+  });
+
+  it("un instrumento sin especificar se rotula 'varios instrumentos'", () => {
+    renderWithIntl(
+      <AlbumCredits
+        leadKind="group"
+        multiDisc={false}
+        levels={levels({ guests: [entry("Gordon", { roles: [{ relationType: "instrument", attributes: [] }] })] })}
+      />,
+    );
+    expect(screen.getByText("varios instrumentos")).toBeInTheDocument();
+  });
+
+  it("los números de pista enlazan a la canción y anuncian su título", () => {
+    renderWithIntl(
+      <AlbumCredits
+        leadKind="group"
+        multiDisc={false}
+        tracks={[
+          { recordingId: "rec-2", title: "Tears", discNumber: 1, position: 2 },
+          { recordingId: "rec-3", title: "My Man on Willpower", discNumber: 1, position: 3 },
+        ]}
+        levels={levels({
+          guests: [
+            entry("McGorman", {
+              tracks: [
+                { recordingId: "rec-2", discNumber: 1, position: 2 },
+                { recordingId: "rec-3", discNumber: 1, position: 3 },
+              ],
+            }),
+          ],
+        })}
+      />,
+    );
+    const link = screen.getByRole("link", { name: "Pista 2: Tears" });
+    expect(link).toHaveAttribute("href", "/song/rec-2");
+    expect(link).toHaveTextContent("2");
+    expect(link).toHaveAttribute("title", "Tears");
+    expect(screen.getByRole("link", { name: "Pista 3: My Man on Willpower" })).toBeInTheDocument();
+  });
+
   it("muestra el nombre acreditado cuando difiere", () => {
     renderWithIntl(
       <AlbumCredits leadKind="group" multiDisc={false} levels={levels({ guests: [entry("Storm Thorgerson", { creditedAs: "Storm" })] })} />,
     );
     expect(screen.getByText("acreditado como Storm")).toBeInTheDocument();
+  });
+});
+
+describe("AlbumCredits — vista por canción", () => {
+  const TRACKS = [
+    { recordingId: "rec-1", title: "Manchild", discNumber: 1, position: 1 },
+    { recordingId: "rec-8", title: "Sugar Talking", discNumber: 1, position: 8 },
+  ];
+  const person = (artistId: string, relationType: string, attributes: string[] = []) => ({
+    artistId,
+    name: artistId,
+    creditedAs: null,
+    roles: [{ relationType, attributes }],
+  });
+  const groups = (partial: Partial<TrackCreditGroups>): TrackCreditGroups => ({
+    production: [],
+    performers: [],
+    sound: [],
+    other: [],
+    ...partial,
+  });
+  const byTrack = {
+    albumWide: groups({ sound: [person("Mastering Guy", "mastering")] }),
+    tracks: {
+      "rec-8": groups({
+        production: [person("Jon Levine", "producer")],
+        performers: [person("Jon Sosin", "instrument", ["ukulele"])],
+      }),
+    },
+  };
+
+  function renderSongs(view: "people" | "songs") {
+    return renderWithIntl(
+      <AlbumCredits
+        leadKind="person"
+        multiDisc={false}
+        levels={levels({ guests: [entry("Jon Sosin")] })}
+        tracks={TRACKS}
+        byTrack={byTrack}
+        view={view}
+        releaseGroupId="rg-1"
+      />,
+    );
+  }
+
+  it("el control de vista marca la activa y enlaza con ?view=songs", () => {
+    renderSongs("people");
+    const nav = screen.getByRole("navigation", { name: credits.viewLabel });
+    expect(within(nav).getByRole("link", { name: credits.viewPeople })).toHaveAttribute("aria-current", "page");
+    expect(within(nav).getByRole("link", { name: credits.viewSongs })).toHaveAttribute("href", "/album/rg-1/credits?view=songs");
+  });
+
+  it("por canción lista las pistas en orden con Producción e Intérpretes, sin repetir 'producción'", () => {
+    renderSongs("songs");
+    const headings = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
+    expect(headings).toEqual([credits.albumWide, "1Manchild", "8Sugar Talking"]);
+    expect(screen.getByRole("link", { name: "Sugar Talking" })).toHaveAttribute("href", "/song/rec-8");
+    expect(screen.getByText(credits.groups.production)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Jon Levine" }).parentElement).toHaveTextContent(/^Jon Levine$/);
+    expect(screen.getByText("(ukelele)")).toBeInTheDocument();
+  });
+
+  it("indica las pistas sin créditos y muestra una vez los créditos de todo el álbum", () => {
+    renderSongs("songs");
+    expect(screen.getByText(credits.noTrackCredits)).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Mastering Guy" })).toHaveLength(1);
+  });
+
+  it("sin la agrupación por canción no ofrece el control de vista", () => {
+    renderWithIntl(<AlbumCredits leadKind="group" multiDisc={false} levels={levels({ guests: [entry("Uno")] })} view="songs" />);
+    expect(screen.queryByRole("navigation", { name: credits.viewLabel })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Uno" })).toBeInTheDocument();
   });
 });
