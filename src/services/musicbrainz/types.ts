@@ -113,11 +113,23 @@ export interface MBReleaseBrowseByGroupResponse {
  */
 export interface MBCreditRelation {
   type: string; // 'instrument' | 'vocal' | 'producer' | 'engineer' | 'mix' | 'design/illustration' | ...
-  "target-type": string; // solo interesan las de 'artist'
+  "target-type": string; // solo interesan las de 'artist' (y 'work' para la autoría)
   direction?: string;
   attributes?: string[]; // instrumentos y matices: 'guitar', 'lead vocals', 'assistant'
   "target-credit"?: string; // nombre acreditado cuando difiere del nombre del artista
   artist?: MBArtistSummary;
+  /**
+   * Obra vinculada (`type: 'performance'`, `target-type: 'work'`), con sus relaciones de
+   * artista (`writer`, `composer`, `lyricist`…) gracias a `work-rels+work-level-rels`.
+   */
+  work?: MBWork;
+}
+
+/** Obra de MusicBrainz embebida en la relación `performance` de una grabación. */
+export interface MBWork {
+  id: string; // mbid
+  title: string;
+  relations?: MBCreditRelation[];
 }
 
 export interface MBRecordingSearchItem {

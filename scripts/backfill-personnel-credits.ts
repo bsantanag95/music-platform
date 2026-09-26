@@ -1,10 +1,11 @@
-import { and, asc, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, asc, eq, isNotNull, isNull, or } from "drizzle-orm";
 import { db } from "@/db";
 import { release, releaseGroup } from "@/db/schema";
 import { syncPersonnelCredits } from "@/services/catalog/personnel-credits";
 
 /**
- * Sincroniza los créditos de personal (instrumentos, voz, producción, ingeniería, arte) de
+ * Sincroniza los créditos de personal (instrumentos, voz, producción, ingeniería, arte) y la
+ * autoría de obras (compositores y letristas; openspec: add-songwriter-credits) de
  * las ediciones representativas ingeridas antes de que existieran (openspec:
  * enrich-album-editions-and-credits). Es lo mismo que hace la página de álbum en segundo
  * plano, en lote: una request a MusicBrainz por álbum, más las pertenencias de la banda
@@ -39,11 +40,17 @@ async function main() {
     .select({ releaseGroupId: releaseGroup.id, title: releaseGroup.title })
     .from(release)
     .innerJoin(releaseGroup, eq(releaseGroup.id, release.releaseGroupId))
-    .where(and(eq(release.isRepresentative, true), isNull(release.personnelSyncedAt), isNotNull(release.mbid)))
+    .where(
+      and(
+        eq(release.isRepresentative, true),
+        or(isNull(release.personnelSyncedAt), isNull(release.worksSyncedAt)),
+        isNotNull(release.mbid),
+      ),
+    )
     .orderBy(asc(releaseGroup.createdAt));
   const pending = limit ? await pendingQuery.limit(limit) : await pendingQuery;
 
-  console.log(`${dryRun ? "[DRY-RUN] " : ""}${pending.length} álbum(es) con créditos de personal pendientes\n`);
+  console.log(`${dryRun ? "[DRY-RUN] " : ""}${pending.length} álbum(es) con créditos de personal o autoría pendientes\n`);
 
   const tally: Record<string, number> = {};
   for (let i = 0; i < pending.length; i++) {
@@ -51,7 +58,8 @@ async function main() {
     try {
       const result = await syncPersonnelCredits(releaseGroupId, { dryRun });
       tally[result.status] = (tally[result.status] ?? 0) + 1;
-      const detail = result.status === "synced" ? `${result.creditCount} créditos` : "omitido";
+      const detail =
+        result.status === "synced" ? `${result.creditCount} créditos · ${result.workCreditCount} de autoría` : "omitido";
       console.log(`[${i + 1}/${pending.length}] ${title} · ${detail}`);
     } catch (error) {
       tally.error = (tally.error ?? 0) + 1;

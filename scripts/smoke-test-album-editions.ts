@@ -45,6 +45,7 @@ async function main() {
 
   async function cleanup() {
     await db.delete(schema.releaseGroup).where(eq(schema.releaseGroup.mbid, IDS.releaseGroup));
+    await db.delete(schema.work).where(like(sql`${schema.work.mbid}::text`, `${SMOKE_PREFIX}%`));
     await db.delete(schema.recording).where(like(sql`${schema.recording.mbid}::text`, `${SMOKE_PREFIX}%`));
     await db.delete(schema.label).where(eq(schema.label.mbid, IDS.label));
     await db.delete(schema.artist).where(like(sql`${schema.artist.mbid}::text`, `${SMOKE_PREFIX}%`));

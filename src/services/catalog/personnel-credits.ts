@@ -2,35 +2,18 @@ import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, credit, personnelCredit, recording, release, track } from "@/db/schema";
 import { musicbrainz } from "../musicbrainz/client";
-import type { MBCreditRelation, MBRelease } from "../musicbrainz/types";
+import type { MBRelease } from "../musicbrainz/types";
+import { mapRelation, type MappedPersonnelRelation } from "./credit-relations";
 import { ensureArtistMemberships, upsertArtistStub } from "./ingest-artist";
+import { countWorkCredits, saveWorkCredits } from "./work-credits";
+
+export type { MappedPersonnelRelation } from "./credit-relations";
 
 // Créditos de personal (openspec: enrich-album-editions-and-credits, capability
 // `personnel-credits`): las relaciones de artista de MusicBrainz sobre una edición (arte,
 // diseño) y sobre cada grabación (instrumento, voz, producción, ingeniería, mezcla). Llegan
 // en la MISMA request que la tracklist (`getRelease`). Se guardan todos los tipos; la
 // clasificación en niveles es de lectura (`personnel-levels.ts`).
-
-export interface MappedPersonnelRelation {
-  artistMbid: string;
-  artistName: string;
-  relationType: string;
-  /** Instrumentos y matices, ordenados para que la unicidad sea estable. */
-  attributes: string[];
-  creditedAs: string | null;
-}
-
-function mapRelation(relation: MBCreditRelation): MappedPersonnelRelation | null {
-  if (relation["target-type"] !== "artist" || !relation.artist) return null;
-  const creditedAs = relation["target-credit"]?.trim();
-  return {
-    artistMbid: relation.artist.id,
-    artistName: relation.artist.name,
-    relationType: relation.type,
-    attributes: [...new Set(relation.attributes ?? [])].sort(),
-    creditedAs: creditedAs && creditedAs !== relation.artist.name ? creditedAs : null,
-  };
-}
 
 function dedupe(relations: MappedPersonnelRelation[]): MappedPersonnelRelation[] {
   const seen = new Map<string, MappedPersonnelRelation>();
@@ -162,12 +145,16 @@ export async function completePersonnelSync(releaseId: string, releaseGroupId: s
   return true;
 }
 
-export type PersonnelSyncResult = { status: "skipped" } | { status: "synced"; creditCount: number };
+export type PersonnelSyncResult =
+  | { status: "skipped" }
+  | { status: "synced"; creditCount: number; workCreditCount: number };
 
 /**
- * Sincroniza los créditos de personal de la edición representativa de un álbum ingerido
- * antes de este cambio (`personnel_synced_at` nulo). Lock por edición y relectura de la
- * marca: dos visitas simultáneas no piden dos veces. Una request a MusicBrainz.
+ * Sincroniza los créditos de personal y la autoría de obras de la edición representativa de
+ * un álbum ingerido antes de alguno de los dos (`personnel_synced_at` o `works_synced_at`
+ * nulo; openspec: add-songwriter-credits). Lock por edición y relectura de las marcas: dos
+ * visitas simultáneas no piden dos veces. Una request a MusicBrainz trae ambos; se reemplaza
+ * todo (idempotente).
  */
 export async function syncPersonnelCredits(
   releaseGroupId: string,
@@ -182,15 +169,17 @@ export async function syncPersonnelCredits(
     if (!current?.mbid) return { status: "skipped" };
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`personnel:${current.id}`}, 0))`);
     const [locked] = await tx.select().from(release).where(eq(release.id, current.id)).limit(1);
-    if (!locked?.mbid || locked.personnelSyncedAt) return { status: "skipped" };
+    if (!locked?.mbid || (locked.personnelSyncedAt && locked.worksSyncedAt)) return { status: "skipped" };
 
     const full = await musicbrainz.getRelease(locked.mbid);
     const mapped = mapPersonnelRelations(full);
     const creditCount = mapped.release.length + [...mapped.byRecordingMbid.values()].reduce((n, r) => n + r.length, 0);
-    if (dryRun) return { status: "synced", creditCount };
+    const workCreditCount = countWorkCredits(full);
+    if (dryRun) return { status: "synced", creditCount, workCreditCount };
 
     await savePersonnelCredits(locked.id, full);
     await completePersonnelSync(locked.id, releaseGroupId);
-    return { status: "synced", creditCount };
+    await saveWorkCredits(locked.id, full);
+    return { status: "synced", creditCount, workCreditCount };
   });
 }

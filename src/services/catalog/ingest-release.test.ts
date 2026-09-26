@@ -22,6 +22,7 @@ vi.mock("./personnel-credits", () => ({
   completePersonnelSync: vi.fn(),
   syncPersonnelCredits: vi.fn(),
 }));
+vi.mock("./work-credits", () => ({ saveWorkCredits: vi.fn() }));
 vi.mock("./release-editions", () => ({
   fetchReleaseEditions: vi.fn(),
   saveReleaseEditions: vi.fn(),
@@ -90,6 +91,7 @@ function makeReleaseRow(overrides: Partial<schema.ReleaseRow> = {}): schema.Rele
     creditsSyncedAt: null,
     isRepresentative: true,
     personnelSyncedAt: null,
+    worksSyncedAt: null,
     ...overrides,
   };
 }

@@ -105,6 +105,7 @@ function makeDetail(overrides: Partial<AlbumDetail> = {}): AlbumDetail {
       creditsSyncedAt: new Date(),
       isRepresentative: true,
       personnelSyncedAt: null,
+      worksSyncedAt: null,
     },
     cover: null,
     tracks: [
@@ -167,8 +168,9 @@ const PERSONNEL = {
     other: [],
   },
   leadKind: "group",
+  songwriters: [],
   byTrack: {
-    albumWide: { production: [], performers: [], sound: [], other: [] },
+    albumWide: { songwriting: [], production: [], performers: [], sound: [], other: [] },
     tracks: {},
   },
 };

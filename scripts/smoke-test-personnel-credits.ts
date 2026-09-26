@@ -32,7 +32,7 @@ async function main() {
   const { upsertArtistFromMb } = await import("../src/services/catalog/ingest-artist");
   const { findOrIngestTracklist } = await import("../src/services/catalog/ingest-release");
   const { syncPersonnelCredits } = await import("../src/services/catalog/personnel-credits");
-  const { getAlbumPersonnel } = await import("../src/services/catalog/personnel-levels");
+  const { getAlbumPersonnel, getRecordingSongwriters } = await import("../src/services/catalog/personnel-levels");
 
   const mb = mockMusicBrainz({
     browse: () => editionsBrowse(),
@@ -42,6 +42,7 @@ async function main() {
 
   async function cleanup() {
     await db.delete(schema.releaseGroup).where(eq(schema.releaseGroup.mbid, IDS.releaseGroup));
+    await db.delete(schema.work).where(like(sql`${schema.work.mbid}::text`, `${SMOKE_PREFIX}%`));
     await db.delete(schema.recording).where(like(sql`${schema.recording.mbid}::text`, `${SMOKE_PREFIX}%`));
     await db.delete(schema.label).where(eq(schema.label.mbid, IDS.label));
     await db.delete(schema.artist).where(like(sql`${schema.artist.mbid}::text`, `${SMOKE_PREFIX}%`));
@@ -61,6 +62,12 @@ async function main() {
     check(mb.calls.filter((c) => c.startsWith("release/")).length === 1, "una sola request de edición");
     const [afterIngest] = await db.select().from(schema.release).where(eq(schema.release.id, representative!.id));
     check(afterIngest?.personnelSyncedAt !== null, "la edición queda con personnel_synced_at");
+    check(afterIngest?.worksSyncedAt !== null, "la edición queda con works_synced_at (autoría en la misma request)");
+    const worksAfterIngest = await db
+      .select()
+      .from(schema.work)
+      .where(like(sql`${schema.work.mbid}::text`, `${SMOKE_PREFIX}%`));
+    check(worksAfterIngest.length === 4, `se guardaron las 4 obras (${worksAfterIngest.length})`);
 
     console.log("2) Álbum ingerido antes de los créditos");
     const trackRows = await db.select().from(schema.track).where(eq(schema.track.releaseId, representative!.id));
@@ -68,7 +75,8 @@ async function main() {
     for (const t of trackRows) {
       await db.delete(schema.personnelCredit).where(eq(schema.personnelCredit.recordingId, t.recordingId));
     }
-    await db.update(schema.release).set({ personnelSyncedAt: null }).where(eq(schema.release.id, representative!.id));
+    await db.update(schema.release).set({ personnelSyncedAt: null, worksSyncedAt: null }).where(eq(schema.release.id, representative!.id));
+    await db.delete(schema.work).where(like(sql`${schema.work.mbid}::text`, `${SMOKE_PREFIX}%`));
     await db.delete(schema.membership).where(eq(schema.membership.groupId, band.id));
     await db.update(schema.artist).set({ membershipsSyncedAt: null }).where(eq(schema.artist.id, band.id));
 
@@ -86,6 +94,12 @@ async function main() {
       .from(schema.membership)
       .where(and(eq(schema.membership.groupId, band.id)));
     check(Boolean(memberRow), "se sincronizaron las pertenencias de la banda");
+    const workCredits = await db
+      .select({ relationType: schema.workCredit.relationType })
+      .from(schema.workCredit)
+      .innerJoin(schema.work, eq(schema.work.id, schema.workCredit.workId))
+      .where(like(sql`${schema.work.mbid}::text`, `${SMOKE_PREFIX}%`));
+    check(workCredits.length === 4, `se guardaron los 4 créditos de autoría en la misma sincronización (${workCredits.length})`);
 
     console.log("3) Clasificación en niveles");
     const personnel = await getAlbumPersonnel(rg!.id);
@@ -100,6 +114,32 @@ async function main() {
     );
     check(levels?.production.map((e) => e.name).join() === "Ingeniero de humo", "el ingeniero está en Producción y sonido");
     check(levels?.other.map((e) => e.name).join() === "Diseño de humo", "el diseño está en Arte y otros");
+    const songwriters = personnel?.songwriters ?? [];
+    check(
+      songwriters[0]?.name === "Autora de humo" && Array.isArray(songwriters[0].tracks) && songwriters[0].tracks.length === 3,
+      "la autora firma las pistas 1 a 3 (la 4 tiene obra sin autores)",
+    );
+    const track2 = trackRows.find((t) => t.position === 2)!;
+    const byTrack2 = personnel?.byTrack.tracks[track2.recordingId]?.songwriting.map((p) => p.name).sort();
+    check(byTrack2?.join() === "Autora de humo,Letrista de humo", "la pista 2 lista música y letra en Composición");
+    const writers2 = await getRecordingSongwriters(track2.recordingId);
+    check(
+      writers2.map((p) => `${p.name}:${p.roles.map((r) => r.relationType).join("+")}`).sort().join() ===
+        "Autora de humo:composer,Letrista de humo:lyricist",
+      "la canción 2 tiene autora (música) y letrista",
+    );
+
+    console.log("3b) Autoría pendiente con el personal ya sincronizado");
+    await db.update(schema.release).set({ worksSyncedAt: null }).where(eq(schema.release.id, representative!.id));
+    const beforeWorks = mb.calls.length;
+    const worksOnly = await syncPersonnelCredits(rg!.id);
+    check(worksOnly.status === "synced" && mb.calls.length === beforeWorks + 1, "una sola request de edición completa la autoría");
+    const creditsAgain = await db
+      .select({ id: schema.workCredit.id })
+      .from(schema.workCredit)
+      .innerJoin(schema.work, eq(schema.work.id, schema.workCredit.workId))
+      .where(like(sql`${schema.work.mbid}::text`, `${SMOKE_PREFIX}%`));
+    check(creditsAgain.length === 4, `reemplazo idempotente: siguen 4 créditos de autoría (${creditsAgain.length})`);
 
     console.log("4) Segunda sincronización");
     const beforeSecond = mb.calls.length;

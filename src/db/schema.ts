@@ -535,6 +535,8 @@ export const release = pgTable(
     // NULL = créditos de personal pendientes (distinto de `creditsSyncedAt`,
     // que cubre los créditos de autoría `primary` / `featured`).
     personnelSyncedAt: timestamp("personnel_synced_at", { withTimezone: true }),
+    // NULL = autoría de obras pendiente (migración 0049, openspec: add-songwriter-credits).
+    worksSyncedAt: timestamp("works_synced_at", { withTimezone: true }),
   },
   (t) => [index("idx_release_release_group").on(t.releaseGroupId)],
 );
@@ -686,6 +688,57 @@ export const personnelCredit = pgTable(
   ],
 );
 
+// Obras de MusicBrainz y su autoría (migración 0049, openspec: add-songwriter-credits).
+// La autoría cuelga de la obra, que comparten estudio, vivo y covers.
+export const work = pgTable("work", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  mbid: uuid("mbid").notNull().unique(),
+  title: text("title").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const recordingWork = pgTable(
+  "recording_work",
+  {
+    recordingId: uuid("recording_id")
+      .notNull()
+      .references(() => recording.id, { onDelete: "cascade" }),
+    workId: uuid("work_id")
+      .notNull()
+      .references(() => work.id, { onDelete: "cascade" }),
+    /** Atributos del vínculo (`cover`, `live`, `instrumental`, …), ordenados. */
+    attributes: text("attributes").array().notNull().default(sql`'{}'::text[]`),
+  },
+  (t) => [primaryKey({ columns: [t.recordingId, t.workId] }), index("idx_recording_work_work").on(t.workId)],
+);
+
+export const workCredit = pgTable(
+  "work_credit",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workId: uuid("work_id")
+      .notNull()
+      .references(() => work.id, { onDelete: "cascade" }),
+    artistId: uuid("artist_id")
+      .notNull()
+      .references(() => artist.id, { onDelete: "cascade" }),
+    relationType: text("relation_type").notNull(),
+    attributes: text("attributes").array().notNull().default(sql`'{}'::text[]`),
+    creditedAs: text("credited_as"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("work_credit_work_id_artist_id_relation_type_attributes_key").on(
+      t.workId,
+      t.artistId,
+      t.relationType,
+      t.attributes,
+    ),
+    index("idx_work_credit_artist").on(t.artistId),
+  ],
+);
+
 export const rating = pgTable(
   "rating",
   {
@@ -723,6 +776,9 @@ export type ArtistRow = typeof artist.$inferSelect;
 export type ReleaseEditionRow = typeof releaseEdition.$inferSelect;
 export type LabelRow = typeof label.$inferSelect;
 export type PersonnelCreditRow = typeof personnelCredit.$inferSelect;
+export type WorkRow = typeof work.$inferSelect;
+export type RecordingWorkRow = typeof recordingWork.$inferSelect;
+export type WorkCreditRow = typeof workCredit.$inferSelect;
 export type AppUserRow = typeof appUser.$inferSelect;
 export type UserRoleRow = typeof userRole.$inferSelect;
 export type UserRestrictionRow = typeof userRestriction.$inferSelect;

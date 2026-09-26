@@ -9,12 +9,17 @@ const mocks = vi.hoisted(() => ({
   getRelease: vi.fn(),
   upsertArtistStub: vi.fn(),
   ensureArtistMemberships: vi.fn(),
+  saveWorkCredits: vi.fn(),
 }));
 vi.mock("@/db", () => ({ db: { select: mocks.select, update: mocks.update, transaction: mocks.transaction } }));
 vi.mock("../musicbrainz/client", () => ({ musicbrainz: { getRelease: mocks.getRelease } }));
 vi.mock("./ingest-artist", () => ({
   upsertArtistStub: mocks.upsertArtistStub,
   ensureArtistMemberships: mocks.ensureArtistMemberships,
+}));
+vi.mock("./work-credits", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./work-credits")>()),
+  saveWorkCredits: mocks.saveWorkCredits,
 }));
 
 const { completePersonnelSync, mapPersonnelRelations, savePersonnelCredits, syncPersonnelCredits } = await import(
@@ -160,14 +165,45 @@ describe("completePersonnelSync", () => {
 });
 
 describe("syncPersonnelCredits", () => {
-  it("omite una edición ya sincronizada sin llamar a MusicBrainz", async () => {
-    const queue = [[{ id: "release-1", mbid: "mbid-1" }], [{ id: "release-1", mbid: "mbid-1", personnelSyncedAt: new Date() }]];
+  it("omite una edición con personal y autoría sincronizados sin llamar a MusicBrainz", async () => {
+    const queue = [
+      [{ id: "release-1", mbid: "mbid-1" }],
+      [{ id: "release-1", mbid: "mbid-1", personnelSyncedAt: new Date(), worksSyncedAt: new Date() }],
+    ];
     mocks.transaction.mockImplementation(async (cb: (tx: unknown) => Promise<unknown>) =>
       cb({ select: () => queryChain(queue.shift()), execute: async () => undefined }),
     );
 
     await expect(syncPersonnelCredits("rg-1")).resolves.toEqual({ status: "skipped" });
     expect(mocks.getRelease).not.toHaveBeenCalled();
+  });
+
+  it("con el personal sincronizado pero la autoría pendiente, pide la edición y guarda ambos", async () => {
+    const queue = [
+      [{ id: "release-1", mbid: "mbid-1" }],
+      [{ id: "release-1", mbid: "mbid-1", personnelSyncedAt: new Date(), worksSyncedAt: null }],
+    ];
+    // La misma transacción falsa sirve para el lock de la sincronización y para el reemplazo
+    // de los créditos de personal (que abre su propia transacción).
+    mocks.transaction.mockImplementation(async (cb: (tx: unknown) => Promise<unknown>) =>
+      cb({
+        select: () => queryChain(queue.shift()),
+        execute: async () => undefined,
+        delete: () => queryChain(undefined),
+        insert: () => queryChain(undefined),
+      }),
+    );
+    const noCredits = { id: "mbid-1", title: "Sin créditos", media: [] } as MBRelease;
+    mocks.getRelease.mockResolvedValue(noCredits);
+    mocks.select.mockImplementation(() => queryChain([]));
+    mocks.update.mockImplementation(() => queryChain(undefined));
+    mocks.ensureArtistMemberships.mockResolvedValue(undefined);
+
+    const result = await syncPersonnelCredits("rg-1");
+
+    expect(result).toEqual({ status: "synced", creditCount: 0, workCreditCount: 0 });
+    expect(mocks.getRelease).toHaveBeenCalledTimes(1);
+    expect(mocks.saveWorkCredits).toHaveBeenCalledWith("release-1", noCredits);
   });
 
   it("en dry-run cuenta los créditos sin escribir", async () => {
@@ -182,5 +218,6 @@ describe("syncPersonnelCredits", () => {
     expect(result).toMatchObject({ status: "synced" });
     expect((result as { creditCount: number }).creditCount).toBeGreaterThan(100);
     expect(mocks.upsertArtistStub).not.toHaveBeenCalled();
+    expect(mocks.saveWorkCredits).not.toHaveBeenCalled();
   });
 });

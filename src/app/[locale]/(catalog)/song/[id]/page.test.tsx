@@ -5,6 +5,8 @@ import * as diaryService from "@/services/diary/diary";
 import { SongAlbums, SongListenHistory, SongReactionSummary } from "@/components/catalog/SongSections";
 import { SongStarDisclosure } from "@/components/social/SongStarDisclosure";
 import { Comments } from "@/components/social/Comments";
+import { SongwritersLine } from "@/components/catalog/SongwritersLine";
+import { getRecordingSongwriters } from "@/services/catalog/personnel-levels";
 
 type PageModule = {
   default: (props: { params: Promise<{ id: string }> }) => Promise<unknown>;
@@ -41,6 +43,7 @@ vi.mock("@/services/catalog/recording-detail", () => ({ getRecordingDetail: vi.f
 vi.mock("@/services/catalog/recording-reactions", () => ({ getRecordingReactionSummary: vi.fn() }));
 vi.mock("@/services/diary/diary", () => ({ listMyListensForRecording: vi.fn() }));
 vi.mock("@/services/favorites/favorites", () => ({ isFavorited: vi.fn().mockResolvedValue(false) }));
+vi.mock("@/services/catalog/personnel-levels", () => ({ getRecordingSongwriters: vi.fn() }));
 
 const RID = "a1b2c3d4-0000-4000-8000-000000000abc";
 const RG_ID = "a1b2c3d4-0000-4000-8000-0000000000b1";
@@ -85,6 +88,7 @@ beforeEach(async () => {
     top: null,
   });
   vi.mocked(diaryService.listMyListensForRecording).mockResolvedValue([]);
+  vi.mocked(getRecordingSongwriters).mockResolvedValue([]);
 });
 
 describe("SongPage", () => {
@@ -130,5 +134,27 @@ describe("SongPage", () => {
     expect(types).toContain(SongReactionSummary);
     expect((findEl(SongListenHistory)?.props?.entries as unknown[]).length).toBe(0);
     expect((findEl(SongReactionSummary)?.props?.summary as { total: number }).total).toBe(0);
+  });
+
+  it("pasa los autores de la grabación a la línea 'Escrita por', bajo el artista", async () => {
+    const songwriters = [
+      { artistId: "w1", name: "Audra Mae", creditedAs: null, roles: [{ relationType: "writer", attributes: [] }] },
+    ];
+    vi.mocked(recordingService.getRecordingDetail).mockResolvedValue(detail());
+    vi.mocked(getRecordingSongwriters).mockResolvedValue(songwriters);
+    const tree = await pageModule.default({ params: Promise.resolve({ id: RID }) });
+
+    expect(getRecordingSongwriters).toHaveBeenCalledWith(RID);
+    let line: { props?: { songwriters?: unknown } } | null = null;
+    const walk = (n: unknown) => {
+      if (line || n == null || typeof n !== "object") return;
+      if (Array.isArray(n)) return n.forEach(walk);
+      const el = n as { type?: unknown; props?: { children?: unknown } };
+      if (el.type === SongwritersLine) line = el as { props?: { songwriters?: unknown } };
+      else walk(el.props?.children);
+    };
+    walk(tree);
+    expect(line).not.toBeNull();
+    expect(line!.props?.songwriters).toEqual(songwriters);
   });
 });

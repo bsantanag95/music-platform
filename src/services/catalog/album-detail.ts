@@ -268,11 +268,12 @@ function scheduleEditionsSync(rg: ReleaseGroupRow): void {
 }
 
 /**
- * Ediciones ingeridas antes de los créditos de personal: los sincroniza después de
- * responder (una request a MusicBrainz). Un fallo deja la edición pendiente.
+ * Ediciones ingeridas antes de los créditos de personal o de la autoría de obras: los
+ * sincroniza después de responder (una request a MusicBrainz trae ambos). Un fallo deja la
+ * edición pendiente.
  */
 function schedulePersonnelSync(releaseRow: ReleaseRow): void {
-  if (!releaseRow.mbid || releaseRow.personnelSyncedAt) return;
+  if (!releaseRow.mbid || (releaseRow.personnelSyncedAt && releaseRow.worksSyncedAt)) return;
   after(async () => {
     try {
       await syncPersonnelCredits(releaseRow.releaseGroupId);

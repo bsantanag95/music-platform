@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/db", () => ({ db: {} }));
-const { classifyPersonnel, groupCreditsByTrack, leadKindOf, relationKind } = await import("./personnel-levels");
+const dbMock = vi.hoisted(() => ({ select: vi.fn() }));
+vi.mock("@/db", () => ({ db: dbMock }));
+const { classifyPersonnel, getRecordingSongwriters, groupCreditsByTrack, leadKindOf, relationKind, songwriterEntries } =
+  await import("./personnel-levels");
 
 const TRACKS = [
   { recordingId: "r1", discNumber: 1, position: 1 },
@@ -143,5 +145,72 @@ describe("groupCreditsByTrack", () => {
   it("no repite un rol idéntico de la misma persona en la misma pista", () => {
     const { tracks } = groupCreditsByTrack([c("a", "vocal", "r1"), c("a", "vocal", "r1")], TRACKS);
     expect(tracks.r1!.performers[0]?.roles).toHaveLength(1);
+  });
+});
+
+function w(artistId: string, recordingId: string, relationType = "writer") {
+  return { recordingId, artistId, name: artistId, creditedAs: null, relationType, attributes: [] as string[] };
+}
+
+describe("songwriterEntries", () => {
+  it("una persona por autora, con sus roles y las pistas cuyas obras firmó", () => {
+    const entries = songwriterEntries(
+      [w("bettis", "r1"), w("kabir", "r1"), w("kabir", "r2"), w("kabir", "r2", "lyricist")],
+      TRACKS,
+    );
+    expect(entries.map((e) => e.artistId)).toEqual(["kabir", "bettis"]);
+    expect(entries[0]?.roles.map((r) => r.relationType)).toEqual(["writer", "lyricist"]);
+    expect(entries[0]?.tracks).toEqual([
+      { recordingId: "r1", discNumber: 1, position: 1 },
+      { recordingId: "r2", discNumber: 1, position: 2 },
+    ]);
+  });
+
+  it("marca 'todas' cuando firmó todas las pistas e ignora grabaciones ajenas al álbum", () => {
+    const entries = songwriterEntries([w("a", "r1"), w("a", "r2"), w("a", "r5"), w("a", "fuera")], TRACKS);
+    expect(entries[0]?.tracks).toBe("all");
+  });
+
+  it("es un eje aparte: la agrupación por canción los pone en Composición aunque también produzcan", () => {
+    const { tracks } = groupCreditsByTrack([c("allan", "producer", "r1")], TRACKS, [w("allan", "r1")]);
+    expect(tracks.r1!.songwriting.map((p) => p.artistId)).toEqual(["allan"]);
+    expect(tracks.r1!.production.map((p) => p.artistId)).toEqual(["allan"]);
+  });
+
+  it("una pista con autoría y sin personal igual tiene su grupo", () => {
+    const { tracks } = groupCreditsByTrack([], TRACKS, [w("a", "r2")]);
+    expect(tracks.r2!.songwriting).toHaveLength(1);
+    expect(tracks.r2!.production).toEqual([]);
+  });
+});
+
+describe("getRecordingSongwriters", () => {
+  function chain(result: unknown) {
+    const proxy: object = new Proxy(
+      {},
+      {
+        get(_target, prop) {
+          if (prop === "then") return (resolve: (v: unknown) => void) => Promise.resolve(result).then(resolve);
+          return () => proxy;
+        },
+      },
+    );
+    return proxy;
+  }
+
+  it("junta los roles de cada autor en una sola entrada, ordenadas por nombre", async () => {
+    dbMock.select.mockReturnValue(
+      chain([w("Meghan Kabir", "r1"), w("Audra Mae", "r1"), w("Meghan Kabir", "r1", "lyricist")].map((row) => ({ ...row, artistId: `id-${row.name}` }))),
+    );
+    const people = await getRecordingSongwriters("r1");
+    expect(people.map((p) => [p.name, p.roles.map((r) => r.relationType)])).toEqual([
+      ["Audra Mae", ["writer"]],
+      ["Meghan Kabir", ["writer", "lyricist"]],
+    ]);
+  });
+
+  it("sin obra o sin autores devuelve una lista vacía", async () => {
+    dbMock.select.mockReturnValue(chain([]));
+    await expect(getRecordingSongwriters("r9")).resolves.toEqual([]);
   });
 });
