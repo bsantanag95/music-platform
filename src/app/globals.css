@@ -62,7 +62,7 @@
 }
 
 /* Scrollbar propia para los contenedores con scroll interno de Inicio ("Tu
-   feed", "Tu rastro reciente"): reposo en ink-border, ámbar solo al pasar el
+   feed", "Tu rastro reciente") y la franja de discografía del álbum: reposo en ink-border, ámbar solo al pasar el
    mouse — la barra nativa sin estilizar rompe la identidad visual del
    proyecto. Regla de Rareza: el ámbar no aparece en reposo. */
 .themed-scrollbar {
@@ -72,6 +72,7 @@
 
 .themed-scrollbar::-webkit-scrollbar {
   width: 6px;
+  height: 6px; /* contenedores con scroll horizontal (franja de discografía) */
 }
 
 .themed-scrollbar::-webkit-scrollbar-track {
