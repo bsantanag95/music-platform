@@ -1,7 +1,8 @@
 # account-lifecycle Specification
 
 ## Purpose
-TBD - created by archiving change rework-account-settings. Update Purpose after archive.
+Definir el ciclo de vida de la cuenta: desactivarla y reactivarla, qué queda visible mientras está desactivada, eliminarla y exportar los datos propios.
+
 ## Requirements
 ### Requirement: Desactivar la cuenta
 

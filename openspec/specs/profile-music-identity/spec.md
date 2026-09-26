@@ -1,7 +1,8 @@
 # profile-music-identity Specification
 
 ## Purpose
-TBD - created by archiving change rework-account-settings. Update Purpose after archive.
+Describir la identidad musical del usuario (cómo se define, géneros, hábitos de escucha y preguntas del perfil) y mostrarla en la Placa.
+
 ## Requirements
 ### Requirement: Me defino como
 

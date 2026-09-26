@@ -1,7 +1,8 @@
 # account-credentials Specification
 
 ## Purpose
-TBD - created by archiving change rework-account-settings. Update Purpose after archive.
+Gestionar las credenciales de la cuenta (email, contraseña y vínculo con Google) exigiendo autenticación reciente para las acciones sensibles y sin que el usuario pierda nunca el acceso.
+
 ## Requirements
 ### Requirement: Autenticación reciente para acciones sensibles
 

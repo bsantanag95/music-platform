@@ -1,7 +1,8 @@
 # legal-pages Specification
 
 ## Purpose
-TBD - created by archiving change add-site-footer. Update Purpose after archive.
+Publicar las páginas de información y políticas del sitio, con contenido provisional honesto y fuera de la indexación mientras lo sea.
+
 ## Requirements
 ### Requirement: Rutas de información y políticas
 
