@@ -157,6 +157,18 @@ biblioteca, con Metal-Archives como referencia y la capa personal de Letterboxd)
   MusicBrainz no muestran nada; las editoriales no se guardan. Los álbumes ingeridos antes se
   completan al visitarlos o con `scripts/backfill-personnel-credits.ts` (marca
   `release.works_synced_at`).
+- **Pulido de Créditos** (cambio `polish-album-credits`, 2026-09):
+  - Los roles de intérprete se ordenan por peso: voz principal, instrumentos, coros y otras
+    voces, y al final la percusión menor (pandereta, shakers, palmas…). Los demás roles
+    no se mueven, y el "+N" esconde lo de menor peso.
+  - Las pistas se compactan: 3 o más seguidas del mismo disco forman un rango ("pistas
+    2–6, 9", con los extremos enlazados). Si alguien está en todas las pistas menos una o
+    dos, y la edición tiene al menos 5, se lee "todas salvo la 1", con la excluida
+    enlazada.
+  - Los niveles contraídos (Composición, Músicos invitados, Producción y sonido, Arte y
+    otros) forman una sola lista con divisores, chevron y fondo al pasar el mouse.
+  - Se tradujeron los roles e instrumentos que llegaban en inglés ("other vocals", "grand
+    piano", "video director"…). Una prueba exige las mismas claves en `es` y `en`.
 - **Al pie**, fuera de las pestañas: franja de discografía del artista principal (mismo
   tipo de obra, orden cronológico, anterior / siguiente) y **comentarios**.
 - **Móvil**: carátula e identidad, línea resumen de comunidad, panel (mismas filas que en

@@ -361,7 +361,15 @@
         "composer": "música",
         "lyricist": "letra",
         "librettist": "libreto",
-        "translator": "traducción"
+        "translator": "traducción",
+        "video_director": "dirección de video",
+        "remixer": "remezcla",
+        "orchestrator": "orquestación",
+        "instrument_technician": "técnica de instrumentos",
+        "artists_and_repertoire": "A&R",
+        "video_appearance": "aparición en video",
+        "cinematographer": "dirección de fotografía",
+        "lacquer_cut": "corte de lacquer"
       },
       "attributes": {
         "guitar": "guitarra",
@@ -430,7 +438,26 @@
         "task": "tareas",
         "idiophone": "percusión",
         "chordophone": "cuerdas",
-        "aerophone": "vientos"
+        "aerophone": "vientos",
+        "associate": "asociada",
+        "grand_piano": "piano de cola",
+        "guitar_synthesizer": "sintetizador de guitarra",
+        "bass_synthesizer": "sintetizador de bajo",
+        "bass_pedals": "pedalera de bajo",
+        "moog": "Moog",
+        "oboe": "oboe",
+        "cor_anglais": "corno inglés",
+        "electric_piano": "piano eléctrico",
+        "shakers": "shakers",
+        "brass": "metales",
+        "timbales": "timbales",
+        "congas": "congas",
+        "other_vocals": "otras voces",
+        "prepared_piano": "piano preparado",
+        "lap_steel_guitar": "guitarra lap steel",
+        "continuum": "Continuum",
+        "hammond_organ": "órgano Hammond",
+        "resonator_guitar": "guitarra resonadora"
       },
       "levelSummary": "{count} · {names}",
       "levelSummaryMore": "{count} · {names} y {rest} más",
@@ -449,7 +476,9 @@
         "sound": "Sonido",
         "other": "Otros",
         "songwriting": "Composición"
-      }
+      },
+      "allTracksExcept": "todas salvo la <tracks></tracks>",
+      "exceptJoin": "<first></first> y la <second></second>"
     },
     "editions": {
       "heading": "Ediciones",

@@ -361,7 +361,15 @@
         "composer": "music",
         "lyricist": "lyrics",
         "librettist": "libretto",
-        "translator": "translation"
+        "translator": "translation",
+        "video_director": "video direction",
+        "remixer": "remix",
+        "orchestrator": "orchestration",
+        "instrument_technician": "instrument technician",
+        "artists_and_repertoire": "A&R",
+        "video_appearance": "video appearance",
+        "cinematographer": "cinematography",
+        "lacquer_cut": "lacquer cut"
       },
       "attributes": {
         "guitar": "guitar",
@@ -430,7 +438,26 @@
         "task": "tasks",
         "idiophone": "percussion",
         "chordophone": "strings",
-        "aerophone": "winds"
+        "aerophone": "winds",
+        "associate": "associate",
+        "grand_piano": "grand piano",
+        "guitar_synthesizer": "guitar synthesizer",
+        "bass_synthesizer": "bass synthesizer",
+        "bass_pedals": "bass pedals",
+        "moog": "Moog",
+        "oboe": "oboe",
+        "cor_anglais": "cor anglais",
+        "electric_piano": "electric piano",
+        "shakers": "shakers",
+        "brass": "brass",
+        "timbales": "timbales",
+        "congas": "congas",
+        "other_vocals": "other vocals",
+        "prepared_piano": "prepared piano",
+        "lap_steel_guitar": "lap steel guitar",
+        "continuum": "Continuum",
+        "hammond_organ": "Hammond organ",
+        "resonator_guitar": "resonator guitar"
       },
       "levelSummary": "{count} · {names}",
       "levelSummaryMore": "{count} · {names} and {rest} more",
@@ -449,7 +476,9 @@
         "sound": "Sound",
         "other": "Other",
         "songwriting": "Songwriting"
-      }
+      },
+      "allTracksExcept": "all but <tracks></tracks>",
+      "exceptJoin": "<first></first> and <second></second>"
     },
     "editions": {
       "heading": "Editions",
