@@ -190,7 +190,8 @@
       "heading": "{artist} discography",
       "previous": "Previous",
       "next": "Next",
-      "current": "Current album"
+      "current": "Current album",
+      "neighbors": "Previous and next album"
     },
     "relation": {
       "heading": "You and this album",
