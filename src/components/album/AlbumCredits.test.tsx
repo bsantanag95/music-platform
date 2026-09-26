@@ -36,7 +36,7 @@ describe("messageKey", () => {
 describe("formatRoles", () => {
   const label = (kind: "roles" | "attributes", raw: string) => `${kind}:${raw}`;
 
-  it("muestra instrumentos y voz por sus atributos, y el resto por su tipo con matices", () => {
+  it("muestra instrumentos y voz por sus atributos (la voz primero), y el resto por su tipo con matices", () => {
     expect(
       formatRoles(
         [
@@ -47,7 +47,7 @@ describe("formatRoles", () => {
         ],
         label,
       ),
-    ).toEqual(["attributes:guitar", "attributes:piano", "roles:vocal", "roles:engineer (attributes:assistant)"]);
+    ).toEqual(["roles:vocal", "attributes:guitar", "attributes:piano", "roles:engineer (attributes:assistant)"]);
   });
 });
 
@@ -146,8 +146,29 @@ describe("AlbumCredits", () => {
         })}
       />,
     );
-    const summary = screen.getByText(`${credits.levels.other} · +2 créditos`);
+    const summary = screen.getByText("+2 créditos");
     expect(summary.closest("details")).not.toHaveAttribute("open");
+    expect(summary.closest("details")).toBe(screen.getByText(credits.levels.other).closest("details"));
+  });
+
+  it("agrupa los niveles contraídos en una sola lista, Arte y otros incluido", () => {
+    renderWithIntl(
+      <AlbumCredits
+        leadKind="group"
+        multiDisc={false}
+        levels={levels({
+          guests: [entry("Invitada")],
+          production: [entry("Productora", { level: "production" })],
+          other: [entry("Diseño", { level: "other" })],
+        })}
+      />,
+    );
+    const rows = [credits.levels.guests, credits.levels.production, credits.levels.other].map(
+      (name) => screen.getByText(name).closest("details")!,
+    );
+    const list = rows[0]!.parentElement!;
+    expect(list).toHaveClass("divide-y");
+    expect(rows.every((row) => row.parentElement === list)).toBe(true);
   });
 
   it("rotula 'Artista principal' cuando el principal es una persona", () => {
@@ -187,6 +208,20 @@ describe("AlbumCredits", () => {
     expect(summary.closest("details")).not.toHaveAttribute("open");
     expect(screen.getByText(credits.levels.production).closest("details")).not.toHaveAttribute("open");
     expect(screen.getByText(credits.levels.members).closest("details")).toBeNull();
+  });
+
+  it("el '+N' esconde los roles de menor peso", () => {
+    const roles = [
+      { relationType: "instrument", attributes: ["tambourine"] },
+      { relationType: "vocal", attributes: ["background vocals"] },
+      { relationType: "instrument", attributes: ["shakers"] },
+      { relationType: "vocal", attributes: ["lead vocals"] },
+      { relationType: "instrument", attributes: ["harmonica"] },
+      { relationType: "instrument", attributes: ["guitar"] },
+    ];
+    renderWithIntl(<AlbumCredits leadKind="group" multiDisc={false} levels={levels({ guests: [entry("Vince", { roles })] })} />);
+    expect(screen.getByText("voz principal, armónica, guitarra, coros", { exact: false })).toBeInTheDocument();
+    expect(screen.getByText(", pandereta, shakers")).toBeInTheDocument();
   });
 
   it("muestra 4 roles y '+N' con el resto", () => {
@@ -255,6 +290,39 @@ describe("AlbumCredits", () => {
     expect(link).toHaveTextContent("2");
     expect(link).toHaveAttribute("title", "Tears");
     expect(screen.getByRole("link", { name: "Pista 3: My Man on Willpower" })).toBeInTheDocument();
+  });
+
+  describe("pistas compactas", () => {
+    const edition = (count: number) =>
+      Array.from({ length: count }, (_, i) => ({ recordingId: `rec-${i + 1}`, title: `Canción ${i + 1}`, discNumber: 1, position: i + 1 }));
+    const refs = (...positions: number[]) => positions.map((p) => ({ recordingId: `rec-${p}`, discNumber: 1, position: p }));
+    const renderGuest = (count: number, positions: number[]) =>
+      renderWithIntl(
+        <AlbumCredits
+          leadKind="group"
+          multiDisc={false}
+          tracks={edition(count)}
+          levels={levels({ guests: [entry("Invitada", { tracks: refs(...positions) })] })}
+        />,
+      );
+
+    it("muestra un rango con ambos extremos enlazados", () => {
+      renderGuest(14, [2, 3, 4, 5, 6, 9]);
+      const line = screen.getByRole("link", { name: "Pista 2: Canción 2" }).parentElement!;
+      expect(line).toHaveTextContent("pistas 2–6, 9");
+      expect(within(line).getAllByRole("link").map((a) => a.textContent)).toEqual(["2", "6", "9"]);
+    });
+
+    it("dice 'todas salvo la 1' con la pista excluida enlazada", () => {
+      renderGuest(11, [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+      const link = screen.getByRole("link", { name: "Pista 1: Canción 1" });
+      expect(link.parentElement).toHaveTextContent("todas salvo la 1");
+    });
+
+    it("con dos excluidas las nombra a ambas", () => {
+      renderGuest(8, [1, 2, 3, 5, 6, 8]);
+      expect(screen.getByRole("link", { name: "Pista 4: Canción 4" }).parentElement).toHaveTextContent("todas salvo la 4 y la 7");
+    });
   });
 
   it("muestra el nombre acreditado cuando difiere", () => {
