@@ -163,15 +163,17 @@ biblioteca, con Metal-Archives como referencia y la capa personal de Letterboxd)
     no se mueven, y el "+N" esconde lo de menor peso.
   - Las pistas se compactan: 3 o más seguidas del mismo disco forman un rango ("pistas
     2–6, 9", con los extremos enlazados). Si alguien está en todas las pistas menos una o
-    dos, y la edición tiene al menos 5, se lee "todas salvo la 1", con la excluida
+    dos, y la edición tiene al menos 5, se lee "todas salvo la pista 1", con la excluida
     enlazada.
   - Los niveles contraídos (Composición, Músicos invitados, Producción y sonido, Arte y
     otros) forman una sola lista con divisores, chevron y fondo al pasar el mouse.
   - La pestaña tiene un ancho de lectura acotado (`max-w-3xl`), para que los roles no queden
     lejos del nombre en pantallas anchas.
+  - Cada fila muestra roles y pistas en una sola línea ("batería, coros, percusión · todas las pistas"),
+    con las pistas en tono secundario, y la columna del nombre mide 11rem.
 - **Contexto sin desplegar** (cambio `album-credits-context`, 2026-09):
-  - Un integrante (o artista principal) que además firmó obras muestra en su fila una línea
-    de autoría ("música, letra · todas").
+  - La autoría de los integrantes no se repite en sus filas (se probó y se retiró: ocupaba
+    demasiado en un bloque de roles); queda en la sección Composición.
   - Con una banda, el resumen de Composición cuenta a los integrantes aparte y nombra a los
     autores externos ("5 · 4 integrantes + Donna McDaniel"; "3 · todas integrantes"). Con
     una solista se usa el resumen general. Al desplegar se lista a todos los autores.

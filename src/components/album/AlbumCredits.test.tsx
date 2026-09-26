@@ -126,10 +126,10 @@ describe("AlbumCredits", () => {
     expect(screen.getByText(credits.levels.members)).toBeInTheDocument();
     expect(screen.getByText("guitarra")).toBeInTheDocument();
     expect(screen.getByText("voz principal")).toBeInTheDocument();
-    expect(screen.getByText("pista 5")).toBeInTheDocument();
+    expect(screen.getByText("· pista 5")).toBeInTheDocument();
     expect(screen.getByText("theremin")).toBeInTheDocument();
     expect(screen.getByText("ingeniería")).toBeInTheDocument();
-    expect(screen.getAllByText(credits.allTracks)).toHaveLength(3);
+    expect(screen.getAllByText(`· ${credits.allTracks}`)).toHaveLength(3);
     expect(screen.queryByText(credits.levels.other, { exact: false })).not.toBeInTheDocument();
   });
 
@@ -359,15 +359,15 @@ describe("AlbumCredits", () => {
       expect(within(line).getAllByRole("link").map((a) => a.textContent)).toEqual(["2", "6", "9"]);
     });
 
-    it("dice 'todas salvo la 1' con la pista excluida enlazada", () => {
+    it("dice 'todas salvo la pista 1' con la pista excluida enlazada", () => {
       renderGuest(11, [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
       const link = screen.getByRole("link", { name: "Pista 1: Canción 1" });
-      expect(link.parentElement).toHaveTextContent("todas salvo la 1");
+      expect(link.parentElement).toHaveTextContent("todas salvo la pista 1");
     });
 
     it("con dos excluidas las nombra a ambas", () => {
       renderGuest(8, [1, 2, 3, 5, 6, 8]);
-      expect(screen.getByRole("link", { name: "Pista 4: Canción 4" }).parentElement).toHaveTextContent("todas salvo la 4 y la 7");
+      expect(screen.getByRole("link", { name: "Pista 4: Canción 4" }).parentElement).toHaveTextContent("todas salvo las pistas 4 y 7");
     });
   });
 
@@ -488,12 +488,10 @@ describe("AlbumCredits — composición", () => {
       writerEntry("Vince Neil", "all", "composer"),
     ];
 
-    it("la fila del integrante muestra su autoría", () => {
+    it("la fila del integrante no repite su autoría: queda en Composición", () => {
       renderWithIntl(<AlbumCredits leadKind="group" multiDisc={false} levels={levels({ members: band })} songwriters={bandWriters.slice(0, 1)} />);
       const members = screen.getByText(credits.levels.members).closest("section")!;
-      expect(within(members).getByText(/música, letra ·/)).toHaveTextContent(`${credits.authorshipLabel} música, letra · todas`);
-      // Solo quien compuso tiene la línea.
-      expect(within(members).getAllByText(credits.authorshipLabel, { exact: false })).toHaveLength(1);
+      expect(within(members).queryByText(/música/)).not.toBeInTheDocument();
     });
 
     it("el resumen de Composición cuenta integrantes y nombra a las externas", () => {

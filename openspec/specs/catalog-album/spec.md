@@ -501,7 +501,7 @@ barra de pestañas ya lo muestra. Músicos invitados y Producción y sonido SHAL
 contraídos por defecto, sea cual sea la cantidad de personas, con un resumen que indica la
 cantidad y los tres primeros nombres, y SHALL poder desplegarse. Cada persona
 SHALL aparecer una sola vez, en el nivel más alto que le corresponde, con todos sus roles y
-las pistas en que participa ("todas" cuando participa en todas). La pestaña SHALL NOT
+las pistas en que participa ("todas las pistas" cuando participa en todas). La pestaña SHALL NOT
 mostrar integrantes calculados por fechas de pertenencia ni personas sin crédito en el
 disco, y SHALL NOT mostrar un distintivo de fundador. Un tipo de crédito sin nivel asignado
 SHALL mostrarse en Arte y otros. Sin créditos de personal ni de autoría, la pestaña no se
@@ -511,7 +511,7 @@ muestra.
 
 - **WHEN** un miembro de la banda está acreditado con guitarra y voz en todas las pistas y
   como coproductor
-- **THEN** aparece en Integrantes de la banda con "guitarra, voz, coproducción · todas" y
+- **THEN** aparece en Integrantes de la banda con "guitarra, voz, coproducción · todas las pistas" y
   no se repite en Producción y sonido
 
 #### Scenario: Miembro sin crédito en el disco
@@ -586,7 +586,7 @@ allá de la representativa, la pestaña no se muestra.
 ### Requirement: Filas de crédito compactas
 
 Cada fila de la pestaña Créditos SHALL mostrar el nombre de la persona y, aparte, sus roles
-y sus pistas en líneas separadas. Con más de 5 roles, la fila SHALL mostrar los 4 primeros
+y sus pistas en una misma línea, separados por " · ", con las pistas en un tono secundario. Con más de 5 roles, la fila SHALL mostrar los 4 primeros
 y una acción "+N" que despliega el resto; con 5 o menos SHALL mostrarlos todos, porque
 esconder un solo rol no ahorra espacio. Cada número de pista SHALL enlazar a la página de
 esa canción y exponer su título (texto de ayuda y nombre accesible). Un crédito de
@@ -594,7 +594,7 @@ instrumento sin instrumento especificado SHALL rotularse "varios instrumentos".
 Tres o más pistas consecutivas del mismo disco SHALL mostrarse como un rango ("2–11") con
 ambos extremos enlazados; dos pistas consecutivas SHALL seguir mostrándose separadas por
 coma. Cuando la persona participa en todas las pistas de la edición menos una o dos, y la
-edición tiene al menos 5 pistas, la fila SHALL mostrar "todas salvo" y las pistas
+edición tiene al menos 5 pistas, la fila SHALL mostrar "todas salvo la pista" (o "las pistas") y las pistas
 excluidas, también enlazadas, en lugar de la lista de pistas.
 
 #### Scenario: Persona con muchos roles
@@ -620,7 +620,7 @@ excluidas, también enlazadas, en lugar de la lista de pistas.
 #### Scenario: Todas salvo una
 
 - **WHEN** en un disco de 11 pistas una persona participa en las pistas 2 a 11
-- **THEN** la fila muestra "todas salvo la 1", con "1" enlazado a esa canción
+- **THEN** la fila muestra "todas salvo la pista 1", con "1" enlazado a esa canción
 
 #### Scenario: Disco corto
 

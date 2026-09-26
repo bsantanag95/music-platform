@@ -315,7 +315,7 @@
         "songwriting": "Composición"
       },
       "otherCount": "{count, plural, one {+# crédito} other {+# créditos}}",
-      "allTracks": "todas",
+      "allTracks": "todas las pistas",
       "creditedAs": "acreditado como {name}",
       "source": "Créditos según <link>MusicBrainz</link>.",
       "roles": {
@@ -477,10 +477,9 @@
         "other": "Otros",
         "songwriting": "Composición"
       },
-      "allTracksExcept": "todas salvo la <tracks></tracks>",
-      "exceptJoin": "<first></first> y la <second></second>",
+      "allTracksExcept": "{count, plural, one {todas salvo la pista <tracks></tracks>} other {todas salvo las pistas <tracks></tracks>}}",
+      "exceptJoin": "<first></first> y <second></second>",
       "sourceLinkLabel": "MusicBrainz (abre en una pestaña nueva)",
-      "authorshipLabel": "Composición:",
       "songwritingSummaryMembers": "{count} · {members, plural, one {# integrante} other {# integrantes}} + {names}",
       "songwritingSummaryMembersMore": "{count} · {members, plural, one {# integrante} other {# integrantes}} + {names} y {rest} más",
       "songwritingSummaryAllMembers": "{count} · todas integrantes"
