@@ -16,13 +16,11 @@ import { formatRoles, messageKey } from "./credit-roles";
 
 // Pestaña Créditos del álbum (openspec: redesign-album-page, tarea 8.1; compactada en
 // compact-album-credits; vista por canción en album-credits-by-song). Dos vistas elegibles
-// por URL (`?view=songs`): **Por persona**, en cuatro niveles — el primero siempre visible,
-// invitados y producción contraídos cuando son muchos, "Arte y otros" contraído siempre —, y
+// por URL (`?view=songs`): **Por persona**, en cuatro niveles — el primero siempre visible y
+// los demás contraídos con un resumen —, y
 // **Por canción**, con quién produjo, tocó y grabó cada pista. Sin estado ni JavaScript:
 // `<details>`, enlaces y render en el servidor.
 
-/** Hasta esta cantidad de personas, invitados y producción se muestran desplegados. */
-export const LEVEL_OPEN_MAX = 6;
 /** Roles visibles por fila antes de "+N" (solo si quedan al menos 2 ocultos). */
 export const ROLES_VISIBLE = 4;
 const SUMMARY_NAMES = 3;
@@ -188,8 +186,8 @@ function LevelList({
 const levelHeading = "font-data text-xs uppercase tracking-wider text-paper-muted";
 
 /**
- * Nivel desplegable: abierto con hasta `LEVEL_OPEN_MAX` personas; contraído, el resumen
- * dice cuántas son y nombra a las tres de mayor participación.
+ * Nivel desplegable, contraído al cargar: el resumen dice cuántas personas son y nombra a
+ * las tres de mayor participación.
  */
 function CollapsibleLevel({
   level,
@@ -207,7 +205,7 @@ function CollapsibleLevel({
   const rest = entries.length - SUMMARY_NAMES;
 
   return (
-    <details open={entries.length <= LEVEL_OPEN_MAX} className="group/level">
+    <details className="group/level">
       <summary className="flex cursor-pointer list-none flex-wrap items-baseline gap-x-2 [&::-webkit-details-marker]:hidden">
         <h3 id={`credits-${level}`} className={`${levelHeading} inline`}>
           <span aria-hidden="true" className="mr-1 inline-block transition-transform group-open/level:rotate-90">
