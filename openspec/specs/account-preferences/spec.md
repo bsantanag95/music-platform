@@ -1,7 +1,8 @@
 # account-preferences Specification
 
 ## Purpose
-TBD - created by archiving change rework-account-settings. Update Purpose after archive.
+Guardar en la cuenta las preferencias de interfaz, como el idioma, y aplicarlas al iniciar sesión en cualquier dispositivo.
+
 ## Requirements
 ### Requirement: Idioma de la interfaz guardado en la cuenta
 

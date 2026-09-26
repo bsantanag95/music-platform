@@ -1,7 +1,8 @@
 # account-username Specification
 
 ## Purpose
-TBD - created by archiving change rework-account-settings. Update Purpose after archive.
+Permitir cambiar el nombre de usuario con un límite de frecuencia, reservando el anterior y redirigiendo sus enlaces.
+
 ## Requirements
 ### Requirement: Cambiar el usuario propio
 

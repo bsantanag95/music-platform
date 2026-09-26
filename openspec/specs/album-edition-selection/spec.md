@@ -1,7 +1,8 @@
 # album-edition-selection Specification
 
 ## Purpose
-TBD - created by archiving change canonicalize-release-group. Update Purpose after archive.
+Elegir de forma determinista la edición representativa de cada álbum, derivar su etiqueta y permitir re-canonicalizarla sin afectar los datos sociales.
+
 ## Requirements
 ### Requirement: Selección determinista de la edición representativa
 

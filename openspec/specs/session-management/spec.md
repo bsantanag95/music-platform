@@ -1,7 +1,8 @@
 # session-management Specification
 
 ## Purpose
-TBD - created by archiving change rework-account-settings. Update Purpose after archive.
+Mostrar al usuario sus sesiones abiertas, con dispositivo y última actividad, y permitirle cerrar cualquiera de ellas.
+
 ## Requirements
 ### Requirement: Etiqueta de dispositivo y última actividad de la sesión
 

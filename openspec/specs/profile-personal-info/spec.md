@@ -1,7 +1,8 @@
 # profile-personal-info Specification
 
 ## Purpose
-TBD - created by archiving change profile-personal-info. Update Purpose after archive.
+Permitir datos personales opcionales (país, ciudad y pronombres) con visibilidad según el acceso al perfil, sin pedir datos innecesarios.
+
 ## Requirements
 ### Requirement: País del perfil
 

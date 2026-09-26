@@ -1,7 +1,8 @@
 # diary-visibility Specification
 
 ## Purpose
-TBD - created by archiving change add-diary-social-surfaces. Update Purpose after archive.
+Definir quién puede ver el diario de escucha de otro usuario y cómo se lee en su perfil, incluidas las entradas destacadas.
+
 ## Requirements
 ### Requirement: Visibilidad del diario ajeno
 
