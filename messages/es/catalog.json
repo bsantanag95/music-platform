@@ -317,7 +317,7 @@
       "otherCount": "{count, plural, one {+# crédito} other {+# créditos}}",
       "allTracks": "todas",
       "creditedAs": "acreditado como {name}",
-      "source": "Créditos según MusicBrainz.",
+      "source": "Créditos según <link>MusicBrainz</link>.",
       "roles": {
         "instrument": "varios instrumentos",
         "vocal": "voz",
@@ -478,7 +478,12 @@
         "songwriting": "Composición"
       },
       "allTracksExcept": "todas salvo la <tracks></tracks>",
-      "exceptJoin": "<first></first> y la <second></second>"
+      "exceptJoin": "<first></first> y la <second></second>",
+      "sourceLinkLabel": "MusicBrainz (abre en una pestaña nueva)",
+      "authorshipLabel": "Composición:",
+      "songwritingSummaryMembers": "{count} · {members, plural, one {# integrante} other {# integrantes}} + {names}",
+      "songwritingSummaryMembersMore": "{count} · {members, plural, one {# integrante} other {# integrantes}} + {names} y {rest} más",
+      "songwritingSummaryAllMembers": "{count} · todas integrantes"
     },
     "editions": {
       "heading": "Ediciones",
