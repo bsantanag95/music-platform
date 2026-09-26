@@ -130,8 +130,8 @@ biblioteca, con Metal-Archives como referencia y la capa personal de Letterboxd)
 - **Pestaña Créditos** (cambio `compact-album-credits`, 2026-09): el primer nivel se rotula
   "Artista principal" cuando todos los artistas principales son personas e "Integrantes de
   la banda" en los demás casos, y está siempre visible. Músicos invitados y Producción y
-  sonido se muestran abiertos con hasta 6 personas; con más, contraídos con la cantidad y
-  los tres primeros nombres. Arte y otros sigue contraído. Cada fila muestra 4 roles y
+  sonido (y Composición) se muestran siempre contraídos, con la cantidad y los tres
+  primeros nombres; solo el primer nivel queda a la vista. Arte y otros sigue contraído. Cada fila muestra 4 roles y
   "+N" para el resto, con las pistas en línea propia. Los modificadores de MusicBrainz no
   se muestran como roles: `additional`/`guest` se omiten en instrumentos y voces, `solo` es
   un matiz, y los demás forman etiquetas compuestas ("coproducción"); `membranophone` se

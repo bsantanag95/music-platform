@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { screen, within } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
-import { AlbumCredits, LEVEL_OPEN_MAX } from "./AlbumCredits";
+import { AlbumCredits } from "./AlbumCredits";
 import { formatRoles, formatTrackList, messageKey } from "./credit-roles";
 import type { PersonnelEntry, PersonnelLevel, TrackCreditGroups } from "@/services/catalog/personnel-levels";
 
@@ -172,14 +172,21 @@ describe("AlbumCredits", () => {
     expect(screen.getByRole("heading", { name: credits.heading })).toHaveClass("sr-only");
   });
 
-  it("contrae un nivel largo con cantidad y tres nombres; deja abierto uno corto", () => {
-    const many = Array.from({ length: LEVEL_OPEN_MAX + 1 }, (_, i) => entry(`Invitado ${i + 1}`));
+  it("contrae todos los niveles salvo el primero, con cantidad y tres nombres", () => {
+    const many = Array.from({ length: 7 }, (_, i) => entry(`Invitado ${i + 1}`));
     const few = [entry("Ingeniera", { level: "production" })];
-    renderWithIntl(<AlbumCredits leadKind="group" multiDisc={false} levels={levels({ guests: many, production: few })} />);
+    renderWithIntl(
+      <AlbumCredits
+        leadKind="group"
+        multiDisc={false}
+        levels={levels({ members: [entry("Gilmour", { level: "members" })], guests: many, production: few })}
+      />,
+    );
 
     const summary = screen.getByText("7 · Invitado 1, Invitado 2, Invitado 3 y 4 más");
     expect(summary.closest("details")).not.toHaveAttribute("open");
-    expect(screen.getByText(credits.levels.production).closest("details")).toHaveAttribute("open");
+    expect(screen.getByText(credits.levels.production).closest("details")).not.toHaveAttribute("open");
+    expect(screen.getByText(credits.levels.members).closest("details")).toBeNull();
   });
 
   it("muestra 4 roles y '+N' con el resto", () => {

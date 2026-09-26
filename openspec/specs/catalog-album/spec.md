@@ -497,9 +497,9 @@ cuando todos los artistas principales del álbum son personas, e "Integrantes de
 en los demás casos. Con un artista principal persona, el primer nivel SHALL mostrarse como
 una línea compacta sin bloque destacado; el bloque destacado queda para los integrantes de
 una banda. El título "Créditos" SHALL existir solo para lectores de pantalla, porque la
-barra de pestañas ya lo muestra. Músicos invitados y Producción y sonido SHALL mostrarse desplegados
-cuando tienen hasta 6 personas y contraídos por defecto cuando tienen más, con un resumen
-que indica la cantidad y los tres primeros nombres, y SHALL poder desplegarse. Cada persona
+barra de pestañas ya lo muestra. Músicos invitados y Producción y sonido SHALL mostrarse
+contraídos por defecto, sea cual sea la cantidad de personas, con un resumen que indica la
+cantidad y los tres primeros nombres, y SHALL poder desplegarse. Cada persona
 SHALL aparecer una sola vez, en el nivel más alto que le corresponde, con todos sus roles y
 las pistas en que participa ("todas" cuando participa en todas). La pestaña SHALL NOT
 mostrar integrantes calculados por fechas de pertenencia ni personas sin crédito en el
@@ -544,7 +544,7 @@ muestra.
 #### Scenario: Pocos músicos invitados
 
 - **WHEN** el disco tiene 4 músicos invitados
-- **THEN** el nivel se muestra desplegado
+- **THEN** el nivel se muestra igualmente contraído, con "4" y los tres primeros nombres
 
 #### Scenario: Solista con pocos créditos
 
@@ -725,8 +725,8 @@ después del primer nivel y antes de Músicos invitados, con cada autora o autor
 roles de autoría (rotulados "composición" para `writer`, "música" para `composer`, "letra"
 para `lyricist`, y el resto traducido o con el texto de MusicBrainz) y las pistas cuyas
 obras firmó, con los mismos números enlazados que las demás filas. La sección SHALL seguir
-la regla de contracción de los demás niveles (abierta con hasta 6 personas; contraída con
-cantidad y tres nombres). Una persona de la sección Composición SHALL poder figurar además
+la regla de contracción de los demás niveles (contraída por defecto, con cantidad y tres
+nombres). Una persona de la sección Composición SHALL poder figurar además
 en su nivel de personal. Sin autores, la sección SHALL NOT mostrarse.
 
 #### Scenario: Disco pop con muchos autores
