@@ -23,9 +23,11 @@ function KebabIcon() {
 interface RowMenuProps {
   label: string;
   children: ReactNode;
+  /** Tamaño del control; por defecto 24 px. La tracklist lo agranda para el área táctil. */
+  triggerClassName?: string;
 }
 
-export function RowMenu({ label, children }: RowMenuProps) {
+export function RowMenu({ label, children, triggerClassName = "size-6" }: RowMenuProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -74,7 +76,7 @@ export function RowMenu({ label, children }: RowMenuProps) {
         aria-expanded={open}
         aria-label={label}
         onClick={() => setOpen((current) => !current)}
-        className="flex size-6 items-center justify-center rounded text-paper-muted transition-colors hover:text-paper"
+        className={`flex ${triggerClassName} items-center justify-center rounded text-paper-muted transition-colors hover:text-paper`}
       >
         <KebabIcon />
       </button>

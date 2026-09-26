@@ -34,6 +34,10 @@ describe("getAlbumPersonalExtras", () => {
         { listId: "j1", itemId: "i3", kind: "artist_journey", title: "Recorrido" },
       ],
       [{ recordingId: "r1" }],
+      [
+        { recordingId: "r1", stars: "4.5", detailedScore: 88 },
+        { recordingId: "r2", stars: "3.0", detailedScore: null },
+      ],
     ];
     mocks.select.mockImplementation(() => queryChain(queue.shift()));
     mocks.selectDistinct.mockImplementation(() =>
@@ -50,6 +54,10 @@ describe("getAlbumPersonalExtras", () => {
     ]);
     expect([...extras.listenedRecordingIds]).toEqual(["r2"]);
     expect([...extras.favoriteRecordingIds]).toEqual(["r1"]);
+    expect(Object.fromEntries(extras.ownTrackRatings)).toEqual({
+      r1: { stars: 4.5, detailedScore: 88 },
+      r2: { stars: 3, detailedScore: null },
+    });
   });
 
   it("sin actividad devuelve ceros y no consulta pistas si no hay grabaciones", async () => {
@@ -63,6 +71,7 @@ describe("getAlbumPersonalExtras", () => {
     expect(extras.ownListMemberships).toEqual([]);
     expect(extras.listenedRecordingIds.size).toBe(0);
     expect(extras.favoriteRecordingIds.size).toBe(0);
+    expect(extras.ownTrackRatings.size).toBe(0);
     expect(mocks.selectDistinct).not.toHaveBeenCalled();
   });
 });

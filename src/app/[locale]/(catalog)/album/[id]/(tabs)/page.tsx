@@ -46,6 +46,7 @@ export default async function AlbumSongsPage({ params }: AlbumSongsPageProps) {
         communityFavoriteIds={[...communityFavorites]}
         listenedIds={personal ? [...personal.listenedRecordingIds] : []}
         favoriteIds={personal ? [...personal.favoriteRecordingIds] : []}
+        ownRatings={personal ? Object.fromEntries(personal.ownTrackRatings) : {}}
       />
       <EditionExtraTracks
         releaseGroupId={detail.releaseGroup.id}
