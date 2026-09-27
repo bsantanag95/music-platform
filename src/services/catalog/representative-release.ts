@@ -95,14 +95,32 @@ function hasStandardPackaging(release: MBReleaseSummary): boolean {
 }
 
 /**
- * Clave de fecha comparable como string. Rellena fechas parciales para que
- * `'1973'` (inicio de año) ordene antes que `'1973-03-24'`, y una edición sin
- * fecha ordene después de cualquiera con fecha.
+ * Clave de fecha comparable como string. Rellena fechas parciales con ceros (inicio de
+ * año o de mes) y ordena una edición sin fecha después de cualquiera con fecha. Una fecha
+ * parcial con otra más precisa compatible en el grupo se eleva antes (`effectiveDateKeys`).
  */
 function dateSortKey(date: string | undefined): string {
   if (!date) return "9999-99-99";
   const [y, m, d] = date.split("-");
   return `${(y ?? "9999").padStart(4, "0")}-${(m ?? "00").padStart(2, "0")}-${(d ?? "00").padStart(2, "0")}`;
+}
+
+/**
+ * Clave de fecha de cada edición, con las fechas parciales "elevadas": una fecha con solo
+ * año (o año y mes) toma la fecha más temprana y más precisa compatible con ella que tenga
+ * otra edición del grupo. Así `'2024'` no le gana a `'2024-08-23'` solo por no tener día, y
+ * el criterio de edición estándar vuelve a decidir. Sin ninguna fecha compatible más precisa,
+ * se usa el relleno de `dateSortKey`. Depende solo del conjunto de ediciones, no del orden.
+ */
+function effectiveDateKeys(releases: readonly MBReleaseSummary[]): Map<MBReleaseSummary, string> {
+  const dates = releases.map((r) => r.date).filter((d): d is string => Boolean(d));
+  const keys = new Map<MBReleaseSummary, string>();
+  for (const release of releases) {
+    const date = release.date;
+    const morePrecise = date ? dates.filter((other) => other.startsWith(`${date}-`)).map(dateSortKey).sort() : [];
+    keys.set(release, morePrecise[0] ?? dateSortKey(date));
+  }
+  return keys;
 }
 
 function totalTrackCount(release: MBReleaseSummary): number | null {
@@ -146,12 +164,13 @@ export function pickRepresentativeRelease(
     .filter((c): c is number => c !== null);
   const referenceMedian = median(officialCounts.length ? officialCounts : fallbackCounts);
 
+  const dateKeys = effectiveDateKeys(releases);
   const scored = releases.map((release) => {
     const trackCount = totalTrackCount(release);
     return {
       release,
       isOfficial: release.status === "Official" ? 0 : 1,
-      dateKey: dateSortKey(release.date),
+      dateKey: dateKeys.get(release)!,
       nonStandard: hasNonStandardMarker(release) ? 1 : 0,
       notPrimaryCountry: isPrimaryCountry(release) ? 0 : 1,
       notStandardPackaging: hasStandardPackaging(release) ? 0 : 1,
