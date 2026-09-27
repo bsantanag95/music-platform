@@ -16,13 +16,15 @@ Verificación en vivo (2026-09-27):
 Trampas encontradas: la miniatura del resumen de Wikipedia en inglés de Pink Floyd es una
 imagen de uso justo alojada en `upload.wikimedia.org/wikipedia/en/` (no Commons); la relación
 `image` de MusicBrainz de Mon Laferte apunta a un diario argentino. Los géneros de
-MusicBrainz son abundantes en artistas masivos y nulos en los pequeños. Para una persona, el
+MusicBrainz son **etiquetas** (datos suplementarios CC BY-NC-SA 3.0, no comerciales), están en
+inglés y faltan en los artistas pequeños; los de Wikidata (P136) son CC0, traducidos y cubren
+incluso a Kuervos del Sur, pero no tienen votos. Para una persona, el
 `life-span` es nacimiento y muerte, y el país (`area`) puede no ser el de nacimiento (Mon
 Laferte: `MX`, nacida en Viña del Mar).
 
 Decisiones de producto ya tomadas: agregar las fuentes de Wikimedia; resumen en la cabecera y
-texto en una pestaña Biografía; los 3 géneros más votados visibles y el resto contraído; sin
-nombre legal; con lugar de nacimiento; foto chica rectangular, sin portada; enlaces en orden
+texto en una pestaña Biografía; **sin géneros por ahora** (decidido al implementar, por la
+licencia de los de MusicBrainz); sin nombre legal; con lugar de nacimiento; foto chica rectangular, sin portada; enlaces en orden
 fijo, sin redes sociales.
 
 ## Goals / Non-Goals
@@ -40,7 +42,8 @@ fijo, sin redes sociales.
 - Espejo propio de las fotos (se sirven miniaturas de Commons; un espejo al estilo de ADR
   0018 queda para después si hace falta).
 - Logos de bandas (P154), alias, nombre legal, redes sociales.
-- Géneros deducidos de la discografía para artistas sin géneros.
+- Géneros: ni los de MusicBrainz (licencia no comercial) ni los de Wikidata hasta que se
+  decida la fuente.
 - Integrantes y sus períodos.
 
 ## Decisions
@@ -60,8 +63,8 @@ descripciones, sitelinks), `wbgetentities` de las etiquetas del lugar y su país
 una miniatura que puede no ser libre.
 
 **D3 — Ficha de MusicBrainz sin requests extra.** `getArtistWithRelations` pasa a
-`inc=artist-rels+url-rels+genres`. País, `area`, `begin-area`, `end-area` y `life-span`
-vienen en la misma respuesta.
+`inc=artist-rels+url-rels`. País, `area`, `begin-area`, `end-area` y `life-span` vienen en la
+misma respuesta. No se piden `genres` ni `tags`.
 
 **D4 — Esquema.**
 
@@ -70,7 +73,6 @@ vienen en la misma respuesta.
   parciales), `life_ended`, `wikidata_id`, `profile_synced_at`, `wikimedia_synced_at`;
   foto: `photo_url` (miniatura), `photo_file`, `photo_author`, `photo_license`,
   `photo_license_url`, `photo_source_url`, `photo_blocked_at`. `bio` → `disambiguation`.
-- `artist_genre (artist_id, name, votes)`.
 - `artist_link (artist_id, kind, url, position)` con `kind` acotado por `CHECK` a
   `official`, `bandcamp`, `streaming`.
 - `artist_localized_text (artist_id, locale, description, summary, summary_title,

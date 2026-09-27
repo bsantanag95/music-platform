@@ -10,7 +10,7 @@ de comunidad y pestañas). Con los datos de `fix-artist-discography-ingestion` y
 ## What Changes
 
 - **Cabecera** con foto chica rectangular (4:3) y su crédito, antetítulo de tipo, nombre,
-  descripción traducida, los 3 géneros más votados con el resto contraído detrás de "+N",
+  descripción traducida (sin géneros por ahora: se decide su fuente después),
   ficha (origen o nacimiento, actividad y estado, enlaces en orden fijo) y un resumen de
   tres líneas de Wikipedia con atribución y "Seguir leyendo".
 - **Panel "Tu relación"** con el mismo patrón que el álbum: Siguiendo, Favorito, Pendiente,
@@ -36,7 +36,7 @@ de comunidad y pestañas). Con los datos de `fix-artist-discography-ingestion` y
 
 - `artist-page-layout`: zonas de la página de artista, pestañas enlazables, orden en móvil,
   integrantes y notas al final.
-- `artist-header`: foto con crédito, identidad, géneros, ficha, enlaces y resumen de la
+- `artist-header`: foto con crédito, identidad, ficha, enlaces y resumen de la
   biografía.
 - `artist-personal-panel`: panel "Tu relación" del artista.
 - `artist-community-stats`: bloque de comunidad del artista con umbrales.

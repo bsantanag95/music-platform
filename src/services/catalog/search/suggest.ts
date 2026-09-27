@@ -148,7 +148,7 @@ async function artistSuggestions(text: string): Promise<SearchSuggestion[]> {
     id: row.id,
     name: row.name,
     artistType: isArtistType(row.type) ? row.type : "unknown",
-    disambiguation: row.bio,
+    disambiguation: row.disambiguation,
   }));
   // Las filas puente van primero: si la consulta nombra artista + álbum, es
   // más específica que cualquier artista que solo contenga el texto.

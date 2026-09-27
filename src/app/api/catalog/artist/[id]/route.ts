@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ensureArtistMemberships, getArtistById, getArtistMemberships } from "@/services/catalog/ingest-artist";
 import { findOrIngestDiscography } from "@/services/catalog/ingest-discography";
+import { scheduleArtistProfileRefresh } from "@/services/catalog/artist-profile-sync";
 import { isCoverResolved } from "@/services/catalog/cover-resolution";
 import { withErrorHandling } from "@/lib/with-error-handling";
 
@@ -16,6 +17,7 @@ export const GET = withErrorHandling(
     }
 
     await ensureArtistMemberships(artist);
+    scheduleArtistProfileRefresh(artist);
     const [releaseGroups, memberships] = await Promise.all([
       findOrIngestDiscography(artist),
       getArtistMemberships(artist),

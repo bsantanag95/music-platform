@@ -48,8 +48,8 @@ function mapRelation(source: MBArtistDetail, relation: MBArtistRelation): Mapped
     person,
     group,
     role: attributes.length ? attributes.join(", ") : null,
-    joinedOn: normalizeReleaseDate(relation.begin),
-    leftOn: normalizeReleaseDate(relation.end),
+    joinedOn: normalizeReleaseDate(relation.begin ?? undefined),
+    leftOn: normalizeReleaseDate(relation.end ?? undefined),
   };
 }
 

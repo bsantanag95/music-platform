@@ -29,6 +29,19 @@ const nextConfig = {
         protocol: "https",
         hostname: "*.archive.org",
       },
+      // Fotos de artista: solo miniaturas de Wikimedia Commons (licencia libre verificada,
+      // ADR 0021). La ruta excluye los archivos locales de cada Wikipedia
+      // (`/wikipedia/en/…`), que pueden ser imágenes de uso justo.
+      {
+        protocol: "https",
+        hostname: "thumb.wikimedia.org",
+        pathname: "/wikipedia/commons/**",
+      },
+      {
+        protocol: "https",
+        hostname: "upload.wikimedia.org",
+        pathname: "/wikipedia/commons/**",
+      },
       ...(process.env.STORAGE_PUBLIC_DOMAIN
         ? [
             {

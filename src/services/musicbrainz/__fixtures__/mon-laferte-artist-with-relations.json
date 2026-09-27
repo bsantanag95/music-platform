@@ -1,0 +1,179 @@
+{
+ "id": "ab966c0f-e526-46ae-b492-82c27b87f81f",
+ "name": "Mon Laferte",
+ "type": "Person",
+ "disambiguation": "",
+ "country": "MX",
+ "area": {
+  "id": "3e08b2cd-69f3-317c-b1e4-e71be581839e",
+  "name": "Mexico"
+ },
+ "begin-area": {
+  "id": "91f54885-82f1-4c49-9336-35f2c3c48dc1",
+  "name": "Viña del Mar"
+ },
+ "end-area": null,
+ "life-span": {
+  "ended": false,
+  "begin": "1983-05-02",
+  "end": null
+ },
+ "relations": [
+  {
+   "type": "discogs",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.discogs.com/artist/4692293"
+   }
+  },
+  {
+   "type": "free streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://open.spotify.com/artist/4boI7bJtmB1L3b1cuL75Zr"
+   }
+  },
+  {
+   "type": "free streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.deezer.com/artist/5284515"
+   }
+  },
+  {
+   "type": "image",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://cdn.ciudad.com.ar/sites/default/files/nota/2018/04/03/mon_laferte.jpg"
+   }
+  },
+  {
+   "type": "official homepage",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "http://www.monlaferte.com/"
+   }
+  },
+  {
+   "type": "social network",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://twitter.com/monlaferte"
+   }
+  },
+  {
+   "type": "social network",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.facebook.com/monlaferte"
+   }
+  },
+  {
+   "type": "social network",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.instagram.com/monlaferte/"
+   }
+  },
+  {
+   "type": "social network",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.reverbnation.com/monlaferte"
+   }
+  },
+  {
+   "type": "streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://music.apple.com/gb/artist/447436990"
+   }
+  },
+  {
+   "type": "streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://open.qobuz.com/artist/1610770"
+   }
+  },
+  {
+   "type": "streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://tidal.com/artist/5635583"
+   }
+  },
+  {
+   "type": "wikidata",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.wikidata.org/wiki/Q2836528"
+   }
+  }
+ ]
+}

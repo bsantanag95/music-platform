@@ -26,22 +26,16 @@ request a MusicBrainz que ya trae las pertenencias del artista, sin requests adi
 - **WHEN** se sincronizan a la vez las pertenencias y la ficha de un artista
 - **THEN** se hace una sola request a MusicBrainz para ambas
 
-### Requirement: Géneros con votos
+### Requirement: Sin géneros ni etiquetas de MusicBrainz
 
-El sistema SHALL guardar todos los géneros que MusicBrainz asocia al artista (de su lista
-curada de géneros, no las etiquetas libres) con la cantidad de votos de cada uno, sin umbral
-mínimo. Un artista sin géneros SHALL quedar sin géneros guardados.
+El sistema SHALL NOT ingerir los géneros ni las etiquetas de MusicBrainz: son datos
+suplementarios con licencia CC BY-NC-SA 3.0 (no comercial). La fuente de los géneros del
+artista queda para una decisión posterior.
 
-#### Scenario: Artista con muchos géneros
+#### Scenario: Artista con géneros en MusicBrainz
 
-- **WHEN** MusicBrainz asocia 8 géneros a un artista
-- **THEN** se guardan los 8 con sus votos, y la lectura los devuelve ordenados por votos de
-  mayor a menor
-
-#### Scenario: Artista sin géneros
-
-- **WHEN** MusicBrainz no asocia ningún género a un artista
-- **THEN** la lectura devuelve una lista vacía
+- **WHEN** se sincroniza la ficha de un artista que tiene géneros en MusicBrainz
+- **THEN** la request no pide géneros ni etiquetas y el artista no guarda ninguno
 
 ### Requirement: Enlaces curados
 

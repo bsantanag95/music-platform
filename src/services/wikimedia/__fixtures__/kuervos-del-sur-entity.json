@@ -1,0 +1,53 @@
+{
+ "entities": {
+  "Q63565567": {
+   "id": "Q63565567",
+   "descriptions": {
+    "es": {
+     "language": "es",
+     "value": "Grupo de música de Chile"
+    },
+    "en": {
+     "language": "en",
+     "value": "Chilean musical group"
+    }
+   },
+   "sitelinks": {
+    "eswiki": {
+     "site": "eswiki",
+     "title": "Kuervos del Sur",
+     "badges": []
+    }
+   },
+   "claims": {
+    "P18": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "Kuervos del Sur.jpg",
+        "type": "string"
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P19": [],
+    "P740": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 13030,
+         "id": "Q13030"
+        },
+        "type": "wikibase-entityid"
+       }
+      },
+      "rank": "normal"
+     }
+    ]
+   }
+  }
+ }
+}

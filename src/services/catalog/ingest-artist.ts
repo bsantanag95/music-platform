@@ -3,6 +3,8 @@ import { db } from "@/db";
 import { artist, membership, type ArtistRow } from "@/db/schema";
 import { musicbrainz } from "../musicbrainz/client";
 import { mapArtistMemberships, mapArtistType, type MappedArtistMembership } from "../musicbrainz/mappers";
+import { mapArtistProfileFacts } from "../musicbrainz/artist-profile-mappers";
+import { saveArtistProfileFacts } from "./artist-profile";
 
 const VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377";
 
@@ -76,9 +78,8 @@ export async function ensureArtistMemberships(target: ArtistRow): Promise<void> 
     const [current] = await tx.select().from(artist).where(eq(artist.id, target.id)).limit(1);
     if (!current || current.membershipsSyncedAt) return;
 
-    const memberships = current.mbid
-      ? mergeMemberships(mapArtistMemberships(await musicbrainz.getArtistWithRelations(current.mbid)))
-      : [];
+    const detail = current.mbid ? await musicbrainz.getArtistWithRelations(current.mbid) : null;
+    const memberships = detail ? mergeMemberships(mapArtistMemberships(detail)) : [];
     const pairs: Array<{ personId: string; groupId: string }> = [];
 
     for (const item of memberships) {
@@ -99,6 +100,9 @@ export async function ensureArtistMemberships(target: ArtistRow): Promise<void> 
     const relatedIds = pairs.map((pair) => current.type === "group" ? pair.personId : pair.groupId);
     const scope = eq(targetColumn, current.id);
     await tx.delete(membership).where(relatedIds.length ? and(scope, notInArray(relatedColumn, relatedIds)) : scope);
+    // La misma respuesta trae la ficha (país, áreas, fechas, enlaces): se guarda sin otra
+    // request (openspec: enrich-artist-profile).
+    if (detail) await saveArtistProfileFacts(tx, current.id, mapArtistProfileFacts(detail));
     await tx.update(artist).set({ membershipsSyncedAt: new Date() }).where(eq(artist.id, current.id));
   });
 }
@@ -116,7 +120,7 @@ async function enrichIfUnknown(row: ArtistRow): Promise<ArtistRow> {
   const detail = await musicbrainz.getArtist(row.mbid);
   const rows = await db
     .update(artist)
-    .set({ type: mapArtistType(detail.type), bio: detail.disambiguation ?? null })
+    .set({ type: mapArtistType(detail.type), disambiguation: detail.disambiguation ?? null })
     .where(eq(artist.id, row.id))
     .returning();
   return rows[0] ?? row;
@@ -154,7 +158,7 @@ export async function findOrIngestArtist(name: string): Promise<ArtistRow | null
     // para no terminar con dos artistas duplicados con el mismo nombre.
     const rows = await db
       .update(artist)
-      .set({ mbid: best.id, type: mapArtistType(best.type), bio: best.disambiguation ?? null })
+      .set({ mbid: best.id, type: mapArtistType(best.type), disambiguation: best.disambiguation ?? null })
       .where(eq(artist.id, local.id))
       .returning();
     return rows[0] ?? local;
@@ -173,17 +177,17 @@ export async function upsertArtistFromMb(
   mbid: string,
   name: string,
   mbType: string | undefined,
-  bio: string | null = null,
+  disambiguation: string | null = null,
   executor: Pick<typeof db, "insert"> = db,
 ): Promise<ArtistRow> {
   const type = mbid === VARIOUS_ARTISTS_MBID ? "various" : mapArtistType(mbType);
 
   const rows = await executor
     .insert(artist)
-    .values({ mbid, name, type, bio })
+    .values({ mbid, name, type, disambiguation })
     .onConflictDoUpdate({
       target: artist.mbid,
-      set: { name, type, bio },
+      set: { name, type, disambiguation },
     })
     .returning();
 
@@ -218,7 +222,7 @@ export interface ArtistSearchStubInput {
   name: string;
   /** `type` crudo de MusicBrainz ('Person' | 'Group' | ...); ya viene en la respuesta de búsqueda. */
   mbType: string | undefined;
-  /** `disambiguation` de MusicBrainz — va a `bio`, mismo criterio que `upsertArtistFromMb`. */
+  /** `disambiguation` de MusicBrainz — va a `artist.disambiguation`, mismo criterio que `upsertArtistFromMb`. */
   disambiguation: string | null;
 }
 
@@ -227,7 +231,7 @@ export interface ArtistSearchStubInput {
  * operación (INSERT ... ON CONFLICT DO NOTHING) sobre todo el conjunto de
  * candidatos. A diferencia de `upsertArtistStub` (créditos de feat., donde
  * el tipo se desconoce), la respuesta de búsqueda de MusicBrainz ya trae
- * `type` y `disambiguation`: el stub se guarda con su tipo real y la bio,
+ * `type` y `disambiguation`: el stub se guarda con su tipo real y la desambiguación,
  * evitando el enriquecimiento extra (`enrichIfUnknown`) en la primera
  * visita al perfil. Nunca sobrescribe una fila existente — puede ser un
  * artista ya enriquecido o con discografía cacheada.
@@ -254,7 +258,7 @@ export async function upsertArtistStubsFromSearch(
             : stub.mbType
               ? mapArtistType(stub.mbType)
               : ("unknown" as const),
-        bio: stub.disambiguation,
+        disambiguation: stub.disambiguation,
       })),
     )
     .onConflictDoNothing({ target: artist.mbid });

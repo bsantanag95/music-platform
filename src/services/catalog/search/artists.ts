@@ -93,7 +93,7 @@ export async function searchArtists(
     const remoteItem = row.mbid ? remoteByMbid.get(row.mbid) : undefined;
     return {
       row,
-      disambiguation: row.bio ?? remoteItem?.disambiguation ?? null,
+      disambiguation: row.disambiguation ?? remoteItem?.disambiguation ?? null,
       country: remoteItem?.country ?? null,
       rank: {
         level: 0,
@@ -109,7 +109,7 @@ export async function searchArtists(
     if (!row) return;
     entries.push({
       row,
-      disambiguation: item.disambiguation ?? row.bio ?? null,
+      disambiguation: item.disambiguation ?? row.disambiguation ?? null,
       country: item.country ?? null,
       rank: { level: 0, activity: 0, group: 1, index },
     });

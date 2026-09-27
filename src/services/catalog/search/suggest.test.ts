@@ -31,7 +31,7 @@ vi.mock("./local-match", async (importOriginal) => {
 const localMatch = await import("./local-match");
 const { suggest } = await import("./suggest");
 
-const dokken = { id: "dokken", name: "Dokken", type: "group", bio: null } as ArtistRow;
+const dokken = { id: "dokken", name: "Dokken", type: "group", disambiguation: null } as ArtistRow;
 const attack = { id: "attack", title: "Back for the Attack", firstReleaseYear: 1987 } as ReleaseGroupRow;
 
 beforeEach(() => vi.clearAllMocks());

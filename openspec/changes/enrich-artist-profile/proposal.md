@@ -4,7 +4,7 @@ La página de artista debe ser un híbrido entre ficha de biblioteca y biografí
 (`redesign-artist-page`), pero el catálogo casi no guarda datos del artista: `artist.bio` es
 en realidad la desambiguación de MusicBrainz (en inglés, a menudo vacía) y `artist.photo_url`
 no se llena nunca. Una verificación en vivo (2026-09-27) mostró que MusicBrainz tiene los
-datos de ficha (país, lugar de origen, fechas, géneros, enlaces) y que enlaza a **Wikidata
+datos de ficha (país, lugar de origen, fechas, enlaces) y que enlaza a **Wikidata
 incluso en bandas pequeñas**; desde Wikidata se llega a una foto con licencia libre en
 Wikimedia Commons, a una descripción traducida y al resumen de Wikipedia en el idioma de cada
 usuario. Kuervos del Sur, una banda de Curicó, tiene foto libre y resumen en español.
@@ -12,8 +12,11 @@ usuario. Kuervos del Sur, una banda de Curicó, tiene foto libre y resumen en es
 ## What Changes
 
 - **Datos de ficha desde MusicBrainz**, en la misma request que ya trae las pertenencias (sin
-  requests extra): país, lugar de inicio, fechas de vida o actividad y si terminó, géneros
-  con sus votos y enlaces curados (sitio oficial, Bandcamp y una plataforma de streaming).
+  requests extra): país, lugar de inicio, fechas de vida o actividad y si terminó, y
+  enlaces curados (sitio oficial, Bandcamp y una plataforma de streaming).
+- **Sin géneros por ahora**: los de MusicBrainz son etiquetas con licencia CC BY-NC-SA (no
+  comercial). La fuente se decide después (alternativa CC0: la propiedad de género de
+  Wikidata, traducida).
 - **Nuevas fuentes externas: Wikidata, Wikipedia y Wikimedia Commons**, con un cliente
   propio como único punto de salida, y solo a partir del enlace a Wikidata que declara
   MusicBrainz (nunca por búsqueda de nombre).
@@ -34,7 +37,7 @@ usuario. Kuervos del Sur, una banda de Curicó, tiene foto libre y resumen en es
 ### New Capabilities
 
 - `artist-profile-facts`: datos de ficha del artista desde MusicBrainz (país, lugar de
-  inicio, fechas, géneros con votos, enlaces curados) y su actualización.
+  inicio, fechas, enlaces curados) y su actualización, sin géneros ni etiquetas.
 - `artist-wikimedia-enrichment`: enlace a Wikidata, foto libre de Commons con crédito,
   descripción traducida, resumen de Wikipedia por idioma, lugar de nacimiento o formación,
   actualización, aislamiento de fallos y retiro de fotos.
@@ -46,9 +49,9 @@ usuario. Kuervos del Sur, una banda de Curicó, tiene foto libre y resumen en es
 ## Impact
 
 - **Esquema**: migración nueva: columnas de ficha y de foto en `artist`, renombre de `bio`,
-  tablas de géneros, enlaces y textos por idioma. Espejo en `src/db/schema.ts` y
+  tablas de enlaces y textos por idioma. Espejo en `src/db/schema.ts` y
   `docs/03-data/sql-model.md`.
-- **MusicBrainz**: `getArtistWithRelations` agrega `url-rels+genres` a la request existente.
+- **MusicBrainz**: `getArtistWithRelations` agrega `url-rels` a la request existente.
 - **Cliente nuevo** `src/services/wikimedia/client.ts` (Wikidata, Wikipedia, Commons) con
   User-Agent obligatorio y cola propia.
 - **Catálogo**: servicio de enriquecimiento del perfil; `ingest-artist.ts`, búsqueda y
@@ -62,4 +65,5 @@ usuario. Kuervos del Sur, una banda de Curicó, tiene foto libre y resumen en es
   `docs/06-operations/catalog-scripts.md`, `AGENTS.md` (nuevo punto de salida externo).
 - **Configuración**: variable nueva de User-Agent para Wikimedia en `.env.example`.
 - **Fuera de alcance**: la interfaz (cabecera, pestaña Biografía), el espejo propio de las
-  fotos, logos de bandas, alias y nombre legal (decidido no mostrarlos), integrantes.
+  fotos, logos de bandas, alias y nombre legal (decidido no mostrarlos), integrantes y
+  géneros.

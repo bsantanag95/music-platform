@@ -1,0 +1,60 @@
+{
+ "entities": {
+  "Q2306": {
+   "id": "Q2306",
+   "descriptions": {
+    "en": {
+     "language": "en",
+     "value": "English rock band"
+    },
+    "es": {
+     "language": "es",
+     "value": "grupo de rock británico"
+    }
+   },
+   "sitelinks": {
+    "enwiki": {
+     "site": "enwiki",
+     "title": "Pink Floyd",
+     "badges": [
+      "Q17437796"
+     ]
+    },
+    "eswiki": {
+     "site": "eswiki",
+     "title": "Pink Floyd",
+     "badges": []
+    }
+   },
+   "claims": {
+    "P18": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "Pink Floyd, 1971 (HQ).jpg",
+        "type": "string"
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P19": [],
+    "P740": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 84,
+         "id": "Q84"
+        },
+        "type": "wikibase-entityid"
+       }
+      },
+      "rank": "normal"
+     }
+    ]
+   }
+  }
+ }
+}

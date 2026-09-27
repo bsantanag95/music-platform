@@ -90,6 +90,36 @@ de la discografía y cuántos vuelven, sin escribir. `--artist <uuid>` procesa u
 (se omite si su discografía está al día). Cuesta una request por cada 100 release-groups
 oficiales (tope de 20). Con el tope alcanzado se informa `TOPE DE PÁGINAS` y no se marca nada.
 
+## `scripts/backfill-artist-profile.ts`
+
+Completa el **perfil de artista** (cambio `enrich-artist-profile`, ADR 0021) de los artistas con
+`profile_synced_at` o `wikimedia_synced_at` en `NULL`: la ficha de MusicBrainz (país, lugares,
+fechas, enlaces curados) y, solo si MusicBrainz declara la relación `wikidata`, la foto libre de
+Commons con su crédito, la descripción corta, el resumen de Wikipedia (es, en) y el lugar de
+nacimiento o formación. La página de artista hace lo mismo en segundo plano cada 30 días; el
+script lo hace en lote.
+
+```bash
+tsx --env-file=.env scripts/backfill-artist-profile.ts --limit 20 --dry-run
+tsx --env-file=.env scripts/backfill-artist-profile.ts --artist <uuid> --force
+tsx --env-file=.env scripts/backfill-artist-profile.ts
+```
+
+Requiere `WIKIMEDIA_USER_AGENT` además de `MUSICBRAINZ_USER_AGENT`. Cuesta una request a
+MusicBrainz y hasta cinco a Wikimedia por artista. Cada paso escribe por separado: si Wikimedia
+falla, el artista conserva los datos anteriores y queda pendiente.
+
+## `scripts/takedown-artist-photo.ts`
+
+**Retiro a pedido** de la foto de un artista: vacía la foto y su crédito y marca
+`artist.photo_blocked_at`, así el enriquecimiento no se la vuelve a asignar. `--undo` quita la
+marca y deja al artista pendiente de un nuevo enriquecimiento.
+
+```bash
+tsx --env-file=.env scripts/takedown-artist-photo.ts <artist-uuid>
+tsx --env-file=.env scripts/takedown-artist-photo.ts <artist-uuid> --undo
+```
+
 ## `scripts/backfill-personnel-credits.ts`
 
 Sincroniza los **créditos de personal** (instrumentos, voz, producción, ingeniería, arte) de

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { ensureArtistMemberships, getArtistById, getArtistMemberships } from "@/services/catalog/ingest-artist";
 import { findOrIngestDiscography } from "@/services/catalog/ingest-discography";
+import { scheduleArtistProfileRefresh } from "@/services/catalog/artist-profile-sync";
 import { isCoverResolved } from "@/services/catalog/cover-resolution";
 import { ArtistHeader } from "@/components/catalog/ArtistHeader";
 import { AlbumGrid } from "@/components/catalog/AlbumGrid";
@@ -67,6 +68,9 @@ export default async function ArtistPage({ params, searchParams }: ArtistPagePro
   if (!artist) notFound();
 
   await ensureArtistMemberships(artist);
+  // Ficha de MusicBrainz y Wikimedia (foto, descripción, resumen) en segundo plano cada 30
+  // días (openspec: enrich-artist-profile).
+  scheduleArtistProfileRefresh(artist);
   const session = await resolveSession();
   const canModerate = session?.user
     ? (await getUserPermissions(session.user.id)).includes("moderation.suspend_social")

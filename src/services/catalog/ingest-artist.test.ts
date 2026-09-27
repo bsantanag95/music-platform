@@ -24,12 +24,27 @@ function makeArtist(overrides: Partial<ArtistRow> = {}): ArtistRow {
     mbid: "person-mb",
     type: "person",
     name: "Persona",
-    bio: null,
+    disambiguation: null,
     photoUrl: null,
     createdAt: new Date("2026-01-01"),
     discographySyncedAt: null,
     discographyCompleteAt: null,
     membershipsSyncedAt: null,
+    country: null,
+    beginAreaName: null,
+    endAreaName: null,
+    lifeBegin: null,
+    lifeEnd: null,
+    lifeEnded: null,
+    wikidataId: null,
+    profileSyncedAt: null,
+    wikimediaSyncedAt: null,
+    photoFile: null,
+    photoAuthor: null,
+    photoLicense: null,
+    photoLicenseUrl: null,
+    photoSourceUrl: null,
+    photoBlockedAt: null,
     ...overrides,
   };
 }
@@ -94,8 +109,42 @@ describe("ensureArtistMemberships", () => {
     expect(tx.execute).toHaveBeenCalledTimes(1);
     expect(musicbrainz.getArtistWithRelations).toHaveBeenCalledWith("person-mb");
     expect(inserts).toHaveLength(3); // artista persona, grupo y membership
-    expect(deletes).toHaveLength(1); // borra solo relaciones stale de esta persona
-    expect(updates).toEqual([{ membershipsSyncedAt: expect.any(Date) }]);
+    // Borra solo relaciones stale de esta persona, y reemplaza sus enlaces curados.
+    expect(deletes).toHaveLength(2);
+    // La ficha llega en la misma respuesta y se guarda antes del flag (openspec: enrich-artist-profile).
+    expect(updates).toEqual([
+      expect.objectContaining({ profileSyncedAt: expect.any(Date), wikidataId: null }),
+      { membershipsSyncedAt: expect.any(Date) },
+    ]);
+  });
+
+  it("guarda ficha y enlaces con la misma request que las pertenencias", async () => {
+    const { inserts, updates } = setup(makeArtist());
+    vi.mocked(musicbrainz.getArtistWithRelations).mockResolvedValue({
+      ...detail(),
+      country: "CL",
+      "begin-area": { id: "a1", name: "Concepción" },
+      "life-span": { begin: "1999", end: null, ended: false },
+      relations: [
+        ...detail().relations,
+        { type: "wikidata", "target-type": "url", url: { resource: "https://www.wikidata.org/wiki/Q2737642" } },
+        { type: "official homepage", "target-type": "url", url: { resource: "http://losbunkers.cl/" } },
+      ],
+    });
+
+    await ensureArtistMemberships(makeArtist());
+
+    expect(musicbrainz.getArtistWithRelations).toHaveBeenCalledTimes(1);
+    expect(updates[0]).toMatchObject({
+      country: "CL",
+      beginAreaName: "Concepción",
+      lifeBegin: "1999",
+      lifeEnd: null,
+      lifeEnded: false,
+      wikidataId: "Q2737642",
+    });
+    const linkInsert = inserts.at(-1) as { values: unknown };
+    expect(linkInsert.values).toEqual([{ artistId: "person-local", kind: "official", url: "http://losbunkers.cl/", position: 0 }]);
   });
 
   it("no llama a MusicBrainz en cache hit", async () => {
@@ -229,8 +278,8 @@ describe("upsertArtistStubsFromSearch", () => {
 
     expect(db.insert).toHaveBeenCalledTimes(1);
     expect(captured.values).toEqual([
-      { mbid: "group-mbid", name: "Poison", type: "group", bio: "glam metal band" },
-      { mbid: "person-mbid", name: "Sabrina", type: "person", bio: null },
+      { mbid: "group-mbid", name: "Poison", type: "group", disambiguation: "glam metal band" },
+      { mbid: "person-mbid", name: "Sabrina", type: "person", disambiguation: null },
     ]);
   });
 
@@ -242,7 +291,7 @@ describe("upsertArtistStubsFromSearch", () => {
     ]);
 
     expect(captured.values).toEqual([
-      { mbid: "icon-trance", name: "Icon", type: "unknown", bio: "Japanese trance artist" },
+      { mbid: "icon-trance", name: "Icon", type: "unknown", disambiguation: "Japanese trance artist" },
     ]);
   });
 
@@ -263,7 +312,7 @@ describe("upsertArtistStubsFromSearch", () => {
         mbid: "89ad4ac3-39f7-470e-963a-56509c546377",
         name: "Various Artists",
         type: "various",
-        bio: null,
+        disambiguation: null,
       },
     ]);
     expect(musicbrainz.getArtistWithRelations).not.toHaveBeenCalled();

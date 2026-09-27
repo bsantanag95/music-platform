@@ -11,7 +11,7 @@ describe("cliente del catálogo de artistas", () => {
     mbid: null,
     type: "group" as const,
     name: "Pink Floyd",
-    bio: null,
+    disambiguation: null,
     photoUrl: null,
     createdAt: "2024-01-01T00:00:00.000Z",
     discographySyncedAt: null,

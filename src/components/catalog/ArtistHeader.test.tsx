@@ -12,20 +12,35 @@ function makeArtist(overrides: Partial<ArtistRow> = {}): ArtistRow {
     mbid: null,
     type: "group",
     name: "Pink Floyd",
-    bio: null,
+    disambiguation: null,
     photoUrl: null,
     createdAt: new Date("2024-01-01T00:00:00Z"),
     discographySyncedAt: null,
     discographyCompleteAt: null,
     membershipsSyncedAt: null,
+    country: null,
+    beginAreaName: null,
+    endAreaName: null,
+    lifeBegin: null,
+    lifeEnd: null,
+    lifeEnded: null,
+    wikidataId: null,
+    profileSyncedAt: null,
+    wikimediaSyncedAt: null,
+    photoFile: null,
+    photoAuthor: null,
+    photoLicense: null,
+    photoLicenseUrl: null,
+    photoSourceUrl: null,
+    photoBlockedAt: null,
     ...overrides,
   };
 }
 
 describe("ArtistHeader", () => {
-  it("muestra nombre, tipo traducido y bio cuando existen", () => {
+  it("muestra nombre y tipo traducido, pero no la desambiguación de MusicBrainz", () => {
     const artist = makeArtist({
-      bio: "Banda británica de rock progresivo.",
+      disambiguation: "UK rock band",
       photoUrl: "https://example.com/photo.jpg",
     });
 
@@ -39,11 +54,11 @@ describe("ArtistHeader", () => {
 
     expect(screen.getByRole("heading", { name: "Pink Floyd" })).toBeInTheDocument();
     expect(screen.getByText(catalogEs.artist.typeLabels.group)).toBeInTheDocument();
-    expect(screen.getByText("Banda británica de rock progresivo.")).toBeInTheDocument();
+    expect(screen.queryByText("UK rock band")).not.toBeInTheDocument();
   });
 
-  it("muestra el placeholder de foto y omite la bio cuando son nulos", () => {
-    const artist = makeArtist({ photoUrl: null, bio: null });
+  it("muestra el placeholder cuando no hay foto", () => {
+    const artist = makeArtist({ photoUrl: null });
 
     renderWithIntl(
       <ArtistHeader
@@ -55,9 +70,6 @@ describe("ArtistHeader", () => {
 
     expect(screen.getByRole("img", { name: catalogEs.artist.noPhotoAlt })).toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Pink Floyd" })).not.toBeInTheDocument();
-    expect(
-      screen.queryByText("Banda británica de rock progresivo."),
-    ).not.toBeInTheDocument();
   });
 
   it("traduce el tipo según el locale", () => {

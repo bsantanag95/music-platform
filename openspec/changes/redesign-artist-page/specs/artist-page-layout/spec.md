@@ -3,7 +3,7 @@
 ### Requirement: Zonas de la página de artista
 
 La página de artista SHALL organizarse, de arriba hacia abajo, en: breadcrumb; cabecera con
-la foto, la identidad (antetítulo de tipo, nombre, descripción), los géneros, la ficha, el
+la foto, la identidad (antetítulo de tipo, nombre, descripción), la ficha, el
 resumen de la biografía, el bloque de comunidad y el panel "Tu relación"; la barra de
 pestañas; el contenido de la pestaña activa; la sección de integrantes o grupos; y las notas
 de la comunidad. En escritorio el panel "Tu relación" SHALL ocupar una columna lateral solo a
@@ -12,14 +12,14 @@ la altura de la cabecera, de modo que las pestañas y su contenido usen el ancho
 #### Scenario: Escritorio
 
 - **WHEN** una persona abre un artista en un viewport de escritorio
-- **THEN** la cabecera muestra foto, identidad, géneros, ficha y resumen junto al panel
+- **THEN** la cabecera muestra foto, identidad, ficha y resumen junto al panel
   "Tu relación", y la discografía ocupa el ancho completo bajo las pestañas
 
 #### Scenario: Móvil
 
 - **WHEN** una persona abre un artista en un viewport móvil
 - **THEN** las zonas se apilan en este orden: foto chica junto al tipo, el nombre y la
-  descripción; géneros; ficha; resumen de la biografía; panel "Tu relación"; bloque de
+  descripción; ficha; resumen de la biografía; panel "Tu relación"; bloque de
   comunidad; pestañas; integrantes; notas, sin desbordamiento horizontal de la página
 
 ### Requirement: Pestañas del artista
