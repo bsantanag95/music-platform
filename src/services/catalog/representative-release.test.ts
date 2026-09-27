@@ -91,6 +91,45 @@ describe("pickRepresentativeRelease", () => {
     ).toBe("b-plain");
   });
 
+  it("ante un empate total prefiere el CD, después el digital, antes que vinilo o cassette", () => {
+    const sameDay = { date: "2025-08-29", country: "US" };
+    const media = (...formats: string[]) => formats.map((format) => ({ format, "track-count": 6 }));
+    const vinyl = rel({ id: "a-vinyl", media: media('12" Vinyl', '12" Vinyl'), ...sameDay });
+    const cassette = rel({ id: "b-cassette", media: media("Cassette", "Cassette"), ...sameDay });
+    const digital = rel({ id: "c-digital", media: media("Digital Media", "Digital Media"), ...sameDay });
+    const cd = rel({ id: "d-cd", media: media("CD", "Enhanced CD"), ...sameDay });
+
+    expect(pickRepresentativeRelease([vinyl, cassette, digital, cd])?.id).toBe("d-cd");
+    expect(pickRepresentativeRelease([vinyl, cassette, digital])?.id).toBe("c-digital");
+  });
+
+  it("no trata como CD al SACD, al CD-R, a una mezcla de formatos ni a un formato desconocido", () => {
+    const sameDay = { date: "2000", country: "US" };
+    const oneDisc = (format: string | null) => [{ format, "track-count": 10 }];
+    const vinyl = rel({ id: "a-vinyl", media: oneDisc('12" Vinyl'), ...sameDay });
+    for (const media of [
+      oneDisc("Hybrid SACD"),
+      oneDisc("CD-R"),
+      oneDisc(null),
+      [
+        { format: "CD", "track-count": 5 },
+        { format: "DVD-Video", "track-count": 5 },
+      ],
+    ]) {
+      expect(pickRepresentativeRelease([rel({ id: "b-other", media, ...sameDay }), vinyl])?.id).toBe("a-vinyl");
+    }
+  });
+
+  it("el formato no pesa más que el recuento de pistas", () => {
+    const sameDay = { date: "2000", country: "US" };
+    const releases = [
+      rel({ id: "cd-bonus", media: [{ format: "CD", "track-count": 14 }], ...sameDay }),
+      rel({ id: "vinyl-1", media: [{ format: '12" Vinyl', "track-count": 10 }], ...sameDay }),
+      rel({ id: "vinyl-2", media: [{ format: '12" Vinyl', "track-count": 10 }], ...sameDay }),
+    ];
+    expect(pickRepresentativeRelease(releases)?.id).toBe("vinyl-1");
+  });
+
   it("desempata de forma estable por mbid", () => {
     const releases = [
       rel({ id: "bbb", date: "1994", country: "US", packaging: "Jewel Case" }),

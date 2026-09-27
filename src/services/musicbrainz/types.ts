@@ -87,7 +87,7 @@ export interface MBReleaseSummary {
   country?: string; // 'US' | 'GB' | 'XW' (Worldwide) | 'XE' (Europe) | ...
   packaging?: string | null; // 'Jewel Case' | 'Box' | 'Digipak' | ...
   disambiguation?: string;
-  media?: { "track-count"?: number }[];
+  media?: { format?: string | null; "track-count"?: number }[];
 }
 
 /** Sello y número de catálogo de una edición (`inc=labels`). */

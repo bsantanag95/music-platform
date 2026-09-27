@@ -414,8 +414,9 @@ respectivamente. `cover_thumb_url` es `null` cuando el álbum no tiene carátula
 **Edición representativa (openspec: `canonicalize-release-group`):** se ingiere **una sola** edición
 por álbum, elegida de forma determinista por `pickRepresentativeRelease`
 (`src/services/catalog/representative-release.ts`): `Official` → fecha más temprana → edición estándar
-(sin `deluxe`/`remaster`/… en título o disambiguation) → país primario → packaging estándar →
-recuento de pistas cercano a la mediana → desempate por `mbid`. `edition_label` se deriva de la
+(sin `deluxe`/`remaster`/`signed`/`exclusive`/… en título o disambiguation) → país primario →
+packaging estándar → recuento de pistas cercano a la mediana → formato (CD, después digital) →
+desempate por `mbid`. `edition_label` se deriva de la
 edición elegida (`disambiguation` → sufijo de título → `"standard"`), ya no es siempre `"original"`.
 Corregir una elección subóptima ya ingerida no toca datos sociales
 (`scripts/recanonicalize-release-group.ts`).
