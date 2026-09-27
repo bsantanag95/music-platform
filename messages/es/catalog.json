@@ -23,15 +23,43 @@
     "notFoundDescription": "Ese filtro de descubrimiento no es válido."
   },
   "search": {
-    "pageTitle": "Buscar en el catálogo",
+    "pageTitle": "Buscar",
     "breadcrumb": "Búsqueda",
-    "fieldLabel": "Buscar en el catálogo",
-    "placeholder": "Ej: Queen",
+    "fieldLabel": "Texto a buscar",
+    "placeholder": {
+      "artist": "Buscar artistas",
+      "album": "Buscar álbumes, con o sin el artista",
+      "song": "Buscar canciones, con o sin el artista",
+      "user": "Buscar usuarios"
+    },
     "submit": "Buscar",
     "submitting": "Buscando...",
     "loading": "Consultando el catálogo...",
     "validationEmpty": "Ingresá un texto para buscar.",
     "searchAgain": "Buscar otro artista",
+    "types": {
+      "artist": "Artistas",
+      "album": "Álbumes",
+      "song": "Canciones",
+      "user": "Usuarios"
+    },
+    "kinds": {
+      "artist": "Artista",
+      "album": "Álbum",
+      "song": "Canción",
+      "user": "Usuario"
+    },
+    "typeSelector": {
+      "label": "Tipo de búsqueda: {type}",
+      "listLabel": "Tipos de búsqueda"
+    },
+    "suggestions": {
+      "listLabel": "Sugerencias",
+      "count": "{count, plural, =0 {Sin sugerencias del catálogo} one {# sugerencia} other {# sugerencias}}",
+      "seeAll": "Ver todos los resultados de «{query}» en {type}",
+      "otherTypes": "Buscar en otro tipo",
+      "fromCatalog": "En tu catálogo"
+    },
     "recent": {
       "heading": "Búsquedas recientes",
       "clearAll": "Borrar todo",
@@ -39,21 +67,64 @@
       "remove": "Quitar «{query}» de las búsquedas recientes"
     },
     "results": {
-      "tabsLabel": "Tipo de resultado",
-      "tabAll": "Todo",
-      "tabArtists": "Artistas",
-      "tabAlbums": "Álbumes",
       "summary": "Resultados para «{query}»",
+      "inType": "en {type}",
       "count": "{count, plural, one {# resultado} other {# resultados}}",
       "cachedTag": "en tu catálogo",
+      "switchLabel": "Buscar «{query}» en:",
       "emptyTitle": "Sin coincidencias",
-      "emptyDescription": "No encontramos artistas ni álbumes para esa búsqueda. Probá con otra grafía.",
-      "emptyUsersLink": "¿Buscabas una persona? Ver usuarios llamados «{query}»",
+      "emptyDescription": {
+        "artist": "No encontramos artistas con ese nombre. Probá con otra grafía o buscá en otro tipo.",
+        "album": "No encontramos álbumes para esa búsqueda. Probá sumar el artista o buscá en otro tipo.",
+        "song": "No encontramos esa canción. Probá sumar el artista o buscá en otro tipo.",
+        "user": "No encontramos usuarios con ese nombre."
+      },
+      "remoteFailed": {
+        "title": "Faltan resultados de MusicBrainz",
+        "description": "MusicBrainz no respondió: mostramos solo lo que ya está en el catálogo.",
+        "retry": "Reintentar"
+      },
+      "pendingRemote": "Buscando en MusicBrainz...",
+      "loadMore": "Cargar más",
+      "loadingMore": "Cargando más resultados...",
+      "loadMoreError": "No se pudieron cargar más resultados.",
+      "refine": {
+        "album": "{total, plural, one {# álbum coincide} other {# álbumes coinciden}} con «{query}». Agregá el artista para acotar:",
+        "song": "{total, plural, one {# canción coincide} other {# canciones coinciden}} con «{query}». Agregá el artista para acotar:"
+      },
+      "artists": {
+        "bestMatch": "Mejor coincidencia",
+        "homonyms": "Otros artistas llamados «{query}»",
+        "more": "Más resultados",
+        "viewProfile": "Ver perfil",
+        "filterLabel": "Tipo de artista",
+        "filterAll": "Todos",
+        "filterPerson": "Persona",
+        "filterGroup": "Grupo"
+      },
+      "albums": {
+        "categoryLabel": "Categoría",
+        "categoryAll": "Todas",
+        "decadeLabel": "Década",
+        "decadeAll": "Todas",
+        "decade": "{decade}s"
+      },
+      "songs": {
+        "interpretation": "Interpretado como canción «{song}» de {artist}",
+        "alternative": "¿Buscabas «{song}» de {artist}?",
+        "otherSongs": "Otras canciones con ese título",
+        "openSong": "Ver álbumes de «{song}»",
+        "noAlbums": "Todavía no conocemos los álbumes de esta versión."
+      },
       "songContext": {
         "title": "Álbumes que contienen «{song}»",
         "showMore": "Ver {count} más",
         "showLess": "Ver menos"
       }
+    },
+    "origin": {
+      "notThisOne": "¿No era este?",
+      "seeAll": "Ver todos los artistas llamados «{query}»"
     }
   },
   "artist": {

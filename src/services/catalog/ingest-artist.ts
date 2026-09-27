@@ -243,10 +243,17 @@ export async function upsertArtistStubsFromSearch(
       stubs.map((stub) => ({
         mbid: stub.mbid,
         name: stub.name,
+        // Sin `type` en la respuesta de búsqueda el tipo NO se conoce:
+        // `mapArtistType(undefined)` devolvería 'various' (reservado a Various
+        // Artists) y el stub se listaría como tal. 'unknown' deja que
+        // `enrichIfUnknown` lo resuelva en la primera visita (openspec:
+        // redesign-scoped-search).
         type:
           stub.mbid === VARIOUS_ARTISTS_MBID
             ? ("various" as const)
-            : mapArtistType(stub.mbType),
+            : stub.mbType
+              ? mapArtistType(stub.mbType)
+              : ("unknown" as const),
         bio: stub.disambiguation,
       })),
     )

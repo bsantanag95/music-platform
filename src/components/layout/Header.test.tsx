@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),
   push: vi.fn(),
   apiFetch: vi.fn(),
-  searchCatalog: vi.fn(),
+  getSearchSuggestions: vi.fn(async () => ({ suggestions: [] })),
   pathname: "/album/rg-1",
   search: "",
 }));
@@ -36,7 +36,7 @@ vi.mock("@/lib/api/client", () => ({
 }));
 
 vi.mock("@/lib/api/catalog", () => ({
-  searchCatalog: mocks.searchCatalog,
+  getSearchSuggestions: mocks.getSearchSuggestions,
 }));
 
 vi.mock("next-intl", async () => {
@@ -48,8 +48,8 @@ vi.mock("next-intl", async () => {
       const map: Record<string, string> = {
         home: "Inicio",
         search: "Buscar",
-        "search.fieldLabel": "Buscar artista",
-        "search.placeholder": "Ej: Pink Floyd",
+        fieldLabel: "Buscar artista",
+        "placeholder.artist": "Buscar artistas",
         login: "Iniciar sesión",
         register: "Registrarse",
         logout: "Cerrar sesión",

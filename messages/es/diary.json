@@ -26,7 +26,8 @@
     "typeSong": "Canción",
     "created": "Registrada: {title}",
     "registerAnother": "Registrar otra",
-    "viewDiary": "Ver mi diario"
+    "viewDiary": "Ver mi diario",
+    "typeLabel": "Qué registrar"
   },
   "expand": "Ampliar",
   "edit": "Editar",

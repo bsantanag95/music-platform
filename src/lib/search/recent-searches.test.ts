@@ -26,25 +26,33 @@ beforeEach(() => {
 });
 
 describe("recent-searches", () => {
-  it("guarda la más reciente al frente", () => {
+  it("guarda la más reciente al frente, con su tipo", () => {
     pushRecentSearch("Queen");
-    pushRecentSearch("Radiohead");
+    pushRecentSearch("Destroyer", "album");
 
-    expect(readRecentSearches()).toEqual(["Radiohead", "Queen"]);
+    expect(readRecentSearches()).toEqual([
+      { q: "Destroyer", type: "album" },
+      { q: "Queen", type: "artist" },
+    ]);
   });
 
-  it("deduplica sin distinguir mayúsculas y reordena al frente", () => {
+  it("deduplica por tipo sin distinguir mayúsculas y reordena al frente", () => {
     pushRecentSearch("Queen");
     pushRecentSearch("Radiohead");
     pushRecentSearch("queen");
+    pushRecentSearch("queen", "song");
 
-    expect(readRecentSearches()).toEqual(["queen", "Radiohead"]);
+    expect(readRecentSearches()).toEqual([
+      { q: "queen", type: "song" },
+      { q: "queen", type: "artist" },
+      { q: "Radiohead", type: "artist" },
+    ]);
   });
 
   it("recorta a las 6 más recientes", () => {
     for (const q of ["a", "b", "c", "d", "e", "f", "g"]) pushRecentSearch(q);
 
-    expect(readRecentSearches()).toEqual(["g", "f", "e", "d", "c", "b"]);
+    expect(readRecentSearches().map((entry) => entry.q)).toEqual(["g", "f", "e", "d", "c", "b"]);
   });
 
   it("ignora texto vacío", () => {
@@ -56,8 +64,22 @@ describe("recent-searches", () => {
     pushRecentSearch("Queen");
     pushRecentSearch("Radiohead");
 
-    expect(removeRecentSearch("queen")).toEqual(["Radiohead"]);
+    expect(removeRecentSearch({ q: "queen", type: "artist" })).toEqual([
+      { q: "Radiohead", type: "artist" },
+    ]);
     expect(clearRecentSearches()).toEqual([]);
+  });
+
+  it("lee las entradas antiguas (solo texto) como búsquedas de Artistas", () => {
+    window.localStorage.setItem(
+      "mp:catalog-recent-searches",
+      JSON.stringify(["Pink Floyd", { q: "Taste", type: "song" }, { q: "x", type: "genre" }, 3, ""]),
+    );
+    expect(readRecentSearches()).toEqual([
+      { q: "Pink Floyd", type: "artist" },
+      { q: "Taste", type: "song" },
+      { q: "x", type: "artist" },
+    ]);
   });
 
   it("devuelve lista vacía ante JSON corrupto", () => {

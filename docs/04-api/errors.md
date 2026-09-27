@@ -24,7 +24,7 @@ además del `error` legible:
 
 | `code` | Status HTTP | Dónde ocurre |
 |---|---|---|
-| `VALIDATION_ERROR` | 400 | `search`: falta el query param `q` o llega vacío tras normalizar; `recording/[id]`: el id no es UUID; comentarios: paginación inválida. |
+| `VALIDATION_ERROR` | 400 | `search`: falta el query param `q` o llega vacío tras normalizar, o `type` no es `artist | album | song`; `search/suggest`: `type` no es `artist | album | song | user`; `recording/[id]`: el id no es UUID; comentarios: paginación inválida. |
 | `ARTIST_NOT_FOUND` | 404 | `artist/[id]`: no se encontró el artista. (En `search` ya no aplica: una búsqueda sin coincidencias es `200` con lista vacía.) |
 | `ALBUM_NOT_FOUND` | 404 | `release-group/[id]`: el `id` no corresponde a ningún `release_group`. |
 | `NO_EDITIONS_FOUND` | 404 | `release-group/[id]`: MusicBrainz no tiene ninguna edición ingerible para ese álbum. |
@@ -43,7 +43,7 @@ además del `error` legible:
 | `REVIEW_NOT_FOUND` | 404 | No existe la reseña solicitada (o el id no es UUID). |
 | `REVIEW_REQUIRES_RATING` | 400 | Crear/editar una reseña sin enviar `stars` y sin tener un rating propio del objetivo. |
 | `REVIEW_TARGET_NOT_SUPPORTED` | 400 | Escritura de reseña sobre artista o canción: en esta versión solo se aceptan reseñas de álbum. |
-| `INTERNAL_ERROR` | 500/502 | Cualquier error no controlado (ej. MusicBrainz caído durante la ingesta fría, timeout, error de base de datos) — capturado por `withErrorHandling`, que devuelve este shape en vez de un 500 sin body. La marca de memberships no se escribe ante este error. En `search` es **502** solo si MusicBrainz falla y además no hay ninguna coincidencia local (con datos locales degrada a 200). |
+| `INTERNAL_ERROR` | 500/502 | Cualquier error no controlado (ej. MusicBrainz caído durante la ingesta fría, timeout, error de base de datos) — capturado por `withErrorHandling`, que devuelve este shape en vez de un 500 sin body. La marca de memberships no se escribe ante este error. En `search` es **502** solo si MusicBrainz falla y además no hay ninguna coincidencia local para el tipo pedido (con datos locales degrada a 200 con `remoteFailed: true`). `search/suggest` nunca sale a MusicBrainz. |
 | `SOCIAL_SUSPENSION_ACTIVE` | 403 | La cuenta tiene una restricción social temporal activa y la mutación produciría nueva actividad pública o social. |
 | `ROLE_REQUIRED` | 403 | La operación requiere un rol de plataforma que la sesión no tiene. |
 | `MODERATION_REPORT_NOT_FOUND` | 404 | El reporte de moderación no existe o no es accesible para la operación solicitada. |

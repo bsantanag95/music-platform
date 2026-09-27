@@ -41,16 +41,20 @@ describe("RecentSearches", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("lista las búsquedas guardadas como enlaces a /search", () => {
+  it("lista las búsquedas guardadas como enlaces a /search con su tipo", () => {
     pushRecentSearch("Pink Floyd");
+    pushRecentSearch("Destroyer", "album");
     renderWithIntl(<RecentSearches />);
 
     expect(
       screen.getByText(catalogEs.search.recent.heading),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Pink Floyd" })).toHaveAttribute(
+    expect(
+      screen.getByRole("link", { name: `Destroyer, ${catalogEs.search.types.album}` }),
+    ).toHaveAttribute("href", "/search?type=album&q=Destroyer");
+    expect(screen.getByRole("link", { name: /Pink Floyd/ })).toHaveAttribute(
       "href",
-      "/search?q=Pink%20Floyd",
+      "/search?type=artist&q=Pink+Floyd",
     );
   });
 
@@ -64,8 +68,8 @@ describe("RecentSearches", () => {
         name: catalogEs.search.recent.remove.replace("{query}", "Queen"),
       }),
     );
-    expect(screen.queryByRole("link", { name: "Queen" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Radiohead" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Queen/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Radiohead/ })).toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole("button", { name: catalogEs.search.recent.clearAll }),

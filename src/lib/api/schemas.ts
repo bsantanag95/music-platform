@@ -91,47 +91,141 @@ export const ArtistMembershipSchema = z.object({
 });
 export type ArtistMembership = z.infer<typeof ArtistMembershipSchema>;
 
-// Espejo runtime del tipo de dominio `CatalogSearchResult`
-// (src/services/catalog/search-catalog.ts) — contrato de GET /api/catalog/search.
-export const CatalogSearchResultSchema = z.object({
-  kind: z.enum(["artist", "release-group"]),
+// Espejo runtime de la búsqueda por tipo (src/services/catalog/search/types.ts,
+// openspec: redesign-scoped-search) — contrato de GET /api/catalog/search.
+const CatalogArtistTypeSchema = z.enum(["person", "group", "various", "unknown"]);
+
+export const ArtistSearchResultSchema = z.object({
+  kind: z.literal("artist"),
   id: z.uuid(),
   mbid: z.uuid().nullable(),
   name: z.string(),
-  subtitle: z.string().nullable(),
-  artistType: z.enum(["person", "group", "various", "unknown"]).nullable(),
-  category: ReleaseGroupCategorySchema.nullable(),
+  disambiguation: z.string().nullable(),
+  artistType: CatalogArtistTypeSchema,
+  country: z.string().nullable(),
+  cached: z.boolean(),
+  exact: z.boolean(),
+});
+export type ArtistSearchResult = z.infer<typeof ArtistSearchResultSchema>;
+
+export const AlbumSearchResultSchema = z.object({
+  kind: z.literal("release-group"),
+  id: z.uuid(),
+  mbid: z.uuid().nullable(),
+  title: z.string(),
+  artistName: z.string().nullable(),
+  category: ReleaseGroupCategorySchema,
   year: z.number().int().nullable(),
   cached: z.boolean(),
 });
-export type CatalogSearchResult = z.infer<typeof CatalogSearchResultSchema>;
+export type AlbumSearchResult = z.infer<typeof AlbumSearchResultSchema>;
 
-// Espejo runtime del contexto de canción (openspec: add-recording-album-search):
-// clave OPCIONAL de GET /api/catalog/search. Los clientes la tratan como dato
-// adicional no esencial — puede faltar en cualquier momento.
-export const CatalogSongContextAlbumSchema = z.object({
+export const SongAlbumSchema = z.object({
   id: z.uuid(),
   mbid: z.uuid().nullable(),
   title: z.string(),
   category: ReleaseGroupCategorySchema,
   year: z.number().int().nullable(),
 });
-export type CatalogSongContextAlbum = z.infer<typeof CatalogSongContextAlbumSchema>;
+export type SongAlbum = z.infer<typeof SongAlbumSchema>;
 
-export const CatalogSongContextSchema = z.object({
-  recordingId: z.uuid(),
-  mbid: z.uuid().nullable(),
+export const SongGroupResultSchema = z.object({
+  kind: z.literal("song"),
+  key: z.string(),
   title: z.string(),
   artistName: z.string().nullable(),
-  albums: z.array(CatalogSongContextAlbumSchema),
+  recordingId: z.uuid().nullable(),
+  mbid: z.uuid().nullable(),
+  albums: z.array(SongAlbumSchema),
+  query: z.string(),
 });
-export type CatalogSongContext = z.infer<typeof CatalogSongContextSchema>;
+export type SongGroupResult = z.infer<typeof SongGroupResultSchema>;
 
-export const CatalogSearchResponseSchema = z.object({
-  results: z.array(CatalogSearchResultSchema),
-  songContext: CatalogSongContextSchema.optional(),
+const SearchRefineHintSchema = z.object({
+  total: z.number().int(),
+  artists: z.array(z.string()),
 });
+export type SearchRefineHint = z.infer<typeof SearchRefineHintSchema>;
+
+const SongInterpretationSchema = z.object({
+  song: z.string(),
+  artistName: z.string().nullable(),
+});
+export type SongInterpretation = z.infer<typeof SongInterpretationSchema>;
+
+export const ArtistSearchResponseSchema = z.object({
+  type: z.literal("artist"),
+  results: z.array(ArtistSearchResultSchema),
+  remoteFailed: z.boolean(),
+});
+export type ArtistSearchResponse = z.infer<typeof ArtistSearchResponseSchema>;
+
+export const AlbumSearchResponseSchema = z.object({
+  type: z.literal("album"),
+  results: z.array(AlbumSearchResultSchema),
+  remoteFailed: z.boolean(),
+  total: z.number().int().nullable(),
+  nextOffset: z.number().int().nullable(),
+  refine: SearchRefineHintSchema.nullable(),
+});
+export type AlbumSearchResponse = z.infer<typeof AlbumSearchResponseSchema>;
+
+export const SongSearchResponseSchema = z.object({
+  type: z.literal("song"),
+  results: z.array(SongGroupResultSchema),
+  remoteFailed: z.boolean(),
+  total: z.number().int().nullable(),
+  nextOffset: z.number().int().nullable(),
+  interpretation: SongInterpretationSchema.nullable(),
+  alternatives: z.array(SongInterpretationSchema.extend({ query: z.string() })),
+  refine: SearchRefineHintSchema.nullable(),
+});
+export type SongSearchResponse = z.infer<typeof SongSearchResponseSchema>;
+
+export const CatalogSearchResponseSchema = z.discriminatedUnion("type", [
+  ArtistSearchResponseSchema,
+  AlbumSearchResponseSchema,
+  SongSearchResponseSchema,
+]);
 export type CatalogSearchResponse = z.infer<typeof CatalogSearchResponseSchema>;
+
+// Sugerencias del buscador (GET /api/search/suggest, capacidad search-typeahead).
+export const SearchSuggestionSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("artist"),
+    id: z.uuid(),
+    name: z.string(),
+    artistType: CatalogArtistTypeSchema,
+    disambiguation: z.string().nullable(),
+  }),
+  z.object({
+    kind: z.literal("album"),
+    id: z.uuid(),
+    title: z.string(),
+    artistName: z.string().nullable(),
+    year: z.number().int().nullable(),
+    bridge: z.boolean(),
+  }),
+  z.object({
+    kind: z.literal("song"),
+    id: z.uuid(),
+    title: z.string(),
+    artistName: z.string().nullable(),
+  }),
+  z.object({
+    kind: z.literal("user"),
+    id: z.uuid(),
+    username: z.string(),
+    displayName: z.string().nullable(),
+    avatarUrl: z.string().nullable(),
+  }),
+]);
+export type SearchSuggestion = z.infer<typeof SearchSuggestionSchema>;
+
+export const SearchSuggestionsResponseSchema = z.object({
+  suggestions: z.array(SearchSuggestionSchema),
+});
+export type SearchSuggestionsResponse = z.infer<typeof SearchSuggestionsResponseSchema>;
 
 export const ArtistWithDiscographySchema = z.object({
   artist: ArtistSchema,

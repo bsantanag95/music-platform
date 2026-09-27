@@ -22,13 +22,11 @@ interface AlbumIdentityPickerProps {
 // estado; el guardado lo dispara `TwoDoorOnboarding`.
 export function AlbumIdentityPicker({ picked, onChange }: AlbumIdentityPickerProps) {
   const t = useTranslations("onboarding");
-  const { query, setQuery, response, loading } = useCatalogSearch();
+  const { query, setQuery, response, loading } = useCatalogSearch("album");
 
   const pickedIds = new Set(picked.map((a) => a.id));
   const atMax = picked.length >= ONBOARDING_MAX_ALBUMS;
-  const albums = (response?.results ?? []).filter(
-    (r) => r.kind === "release-group" && !pickedIds.has(r.id),
-  );
+  const albums = (response?.results ?? []).filter((r) => !pickedIds.has(r.id));
 
   return (
     <section className="flex flex-col gap-4 rounded-lg border border-ink-border bg-ink-surface p-6">
@@ -93,17 +91,17 @@ export function AlbumIdentityPicker({ picked, onChange }: AlbumIdentityPickerPro
                   onClick={() =>
                     onChange([
                       ...picked,
-                      { id: album.id, title: album.name, artistName: album.subtitle, year: album.year },
+                      { id: album.id, title: album.title, artistName: album.artistName, year: album.year },
                     ])
                   }
                   className="flex w-full items-center gap-2 rounded border border-ink-border bg-ink px-2 py-1.5 text-left transition-colors hover:border-amber"
                 >
                   <LazyCoverImage releaseGroupId={album.id} coverLabel="" className="size-8" />
                   <span className="min-w-0">
-                    <span className="block truncate font-body text-xs text-paper">{album.name}</span>
-                    {album.subtitle && (
+                    <span className="block truncate font-body text-xs text-paper">{album.title}</span>
+                    {album.artistName && (
                       <span className="block truncate font-data text-[11px] text-paper-muted">
-                        {album.subtitle}
+                        {album.artistName}
                       </span>
                     )}
                   </span>

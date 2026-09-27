@@ -53,7 +53,7 @@ src/
 │   ├── api/
 │   │   ├── client.ts                fetch wrapper tipado + manejo de errores (nuevo)
 │   │   ├── schemas.ts                esquemas zod espejo de las respuestas del backend (nuevo)
-│   │   └── catalog.ts               funciones de alto nivel: searchCatalog, getArtist... (nuevo)
+│   │   └── catalog.ts               funciones de alto nivel: searchArtists/searchAlbums/searchSongs, getArtist...
 │   └── query/keys.ts                query keys de TanStack Query centralizadas (nuevo)
 ├── db/, services/                   (ya existen — sin cambios salvo las brechas puntuales
 │                                      de backend descriptas en 04-api/contracts.md)

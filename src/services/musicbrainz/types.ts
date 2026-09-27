@@ -29,9 +29,16 @@ export interface MBArtistDetail extends MBArtistSummary {
 
 export interface MBArtistSearchItem extends MBArtistSummary {
   score?: number; // relevancia asignada por MusicBrainz (0-100), ya ordenado por score
+  country?: string; // ISO 3166-1 alfa-2 del área principal, si se conoce
 }
 
-export interface MBArtistSearchResponse {
+/** Campos de paginación comunes a las respuestas de búsqueda. */
+export interface MBSearchPage {
+  count?: number; // total de coincidencias
+  offset?: number;
+}
+
+export interface MBArtistSearchResponse extends MBSearchPage {
   artists: MBArtistSearchItem[];
 }
 
@@ -58,7 +65,7 @@ export interface MBReleaseGroupSearchItem {
   score?: number;
 }
 
-export interface MBReleaseGroupSearchResponse {
+export interface MBReleaseGroupSearchResponse extends MBSearchPage {
   "release-groups": MBReleaseGroupSearchItem[];
 }
 
@@ -142,7 +149,7 @@ export interface MBRecordingSearchItem {
   score?: number;
 }
 
-export interface MBRecordingSearchResponse {
+export interface MBRecordingSearchResponse extends MBSearchPage {
   recordings: MBRecordingSearchItem[];
 }
 

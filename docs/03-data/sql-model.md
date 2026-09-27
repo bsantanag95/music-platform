@@ -340,6 +340,20 @@ tokens ya vencidos al crearse.
 
 **Evolución (migración `0001_artist_type_unknown.sql`):** `type` admite además `'unknown'`. Se agregó al ingerir créditos (feat., colaboraciones) desde MusicBrainz: se crean filas "stub" con solo `mbid` y `name`, sin gastar una llamada extra a la API solo para conocer si es persona o grupo. Esas filas quedan en `unknown` hasta que alguien visita el perfil de ese artista directamente y se enriquece bajo demanda — el mismo patrón de cacheo aplicado de forma recursiva a los propios créditos.
 
+**Evolución (migración `0050_search_trigram_indexes.sql`, openspec `redesign-scoped-search`):** los stubs que crea la búsqueda cuando MusicBrainz no informa el tipo del artista se guardan como `'unknown'` (antes caían en `'various'`, reservado a Various Artists). La migración corrigió los 369 stubs existentes en ese estado (ninguno tenía discografía sincronizada); el enriquecimiento bajo demanda re-deriva su tipo en la primera visita.
+
+## Búsqueda local tolerante (migración `0050_search_trigram_indexes.sql`)
+
+**Propósito:** que la búsqueda por tipo y las sugerencias del buscador encuentren coincidencias locales sin distinguir mayúsculas ni acentos, toleren errores menores y se ordenen (exacta → palabra completa → prefijo → similitud) **antes** de aplicar el tope. El `ILIKE '%q%' LIMIT n` anterior no tenía orden y dejaba fuera coincidencias exactas (buscar `icon` devolvía "Ennio Morricone" antes que la banda "Icon").
+
+**Requisitos:** extensiones `pg_trgm` y `unaccent` (ambas de `contrib` y *trusted* desde PostgreSQL 13: las crea el dueño de la base sin superusuario).
+
+**Función `search_normalize(text)`:** `lower(unaccent('public.unaccent', value))`, declarada `IMMUTABLE`. `unaccent(text)` a secas es `STABLE` (resuelve el diccionario vía `search_path`) y no puede usarse en un índice de expresión; el envoltorio con diccionario explícito sí. La normalización de puntuación y espacios de la consulta se hace en TypeScript (`src/services/catalog/search/normalize.ts`) antes de enviarla.
+
+**Índices GIN `gin_trgm_ops` sobre `search_normalize(...)`:** `artist.name`, `release_group.title`, `recording.title`, `app_user.username` y `app_user.display_name`.
+
+**Función `search_key(text)` e índice `idx_artist_search_key` (migración `0051_artist_search_key.sql`):** `search_normalize` más la misma regla de puntuación que `normalizeSearchText` (apóstrofo interno eliminado, resto de puntuación a espacio), de modo que "AC/DC" y "ac dc" comparten clave. El índice B-tree sobre `search_key(artist.name)` sirve la detección de "artista + título": igualdad del nombre del artista con cada extremo posible de la consulta, en una sola consulta con `= ANY(...)`. Llama a `public.search_normalize` calificado porque desde PostgreSQL 17 las funciones de un índice se evalúan con un `search_path` restringido.
+
 ## `membership`
 
 **Propósito:** resuelve el caso de referencia del proyecto (Roger Waters / Pink Floyd) — una persona puede pertenecer a uno o más grupos, con rol y período.
