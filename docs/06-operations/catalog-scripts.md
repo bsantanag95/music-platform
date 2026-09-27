@@ -69,6 +69,27 @@ cuya representativa sería otra con el conjunto completo de ediciones; se corrig
 por uno, con `recanonicalize-release-group.ts <id>`. Cuesta una request por cada 100
 ediciones del álbum (tope de 5).
 
+## `scripts/backfill-artist-discography.ts`
+
+Completa las **discografías de artista** guardadas antes del cambio
+`fix-artist-discography-ingestion` (`artist.discography_synced_at` con valor y
+`discography_complete_at` en `NULL`): la ingesta anterior se cortaba en 100 release-groups y no
+filtraba bootlegs. Recorre todas las páginas del browse sin bootlegs, guarda los tipos crudos de
+MusicBrainz y marca `release_group.discography_unlisted_at` en los release-groups acreditados que
+ya no vuelven (solo bootleg, fusionados o borrados en MusicBrainz), **sin borrarlos**. La página
+de artista hace lo mismo en segundo plano en la próxima visita; el script lo hace en lote.
+
+```bash
+tsx --env-file=.env scripts/backfill-artist-discography.ts --limit 20 --dry-run
+tsx --env-file=.env scripts/backfill-artist-discography.ts --artist <uuid>
+tsx --env-file=.env scripts/backfill-artist-discography.ts
+```
+
+`--dry-run` informa, por artista, cuántos release-groups se guardarían, cuántos quedarían fuera
+de la discografía y cuántos vuelven, sin escribir. `--artist <uuid>` procesa un solo artista
+(se omite si su discografía está al día). Cuesta una request por cada 100 release-groups
+oficiales (tope de 20). Con el tope alcanzado se informa `TOPE DE PÁGINAS` y no se marca nada.
+
 ## `scripts/backfill-personnel-credits.ts`
 
 Sincroniza los **créditos de personal** (instrumentos, voz, producción, ingeniería, arte) de

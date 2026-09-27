@@ -5,7 +5,8 @@ import { AlbumGrid } from "@/components/catalog/AlbumGrid";
 import { ArtistMemberships } from "@/components/catalog/ArtistMemberships";
 import { Comments } from "@/components/social/Comments";
 import { DualRating } from "@/components/social/DualRating";
-import type { ArtistRow, ReleaseGroupRow } from "@/db/schema";
+import type { ArtistRow } from "@/db/schema";
+import type { DiscographyRow } from "@/services/catalog/ingest-discography";
 
 // Aplana el árbol y devuelve el orden de aparición de ciertos tipos de
 // componente (para verificar el reordenamiento discografía-forward).
@@ -109,12 +110,13 @@ function makeArtist(overrides: Partial<ArtistRow> = {}): ArtistRow {
     photoUrl: null,
     createdAt: new Date("2024-01-01T00:00:00Z"),
     discographySyncedAt: null,
+    discographyCompleteAt: null,
     membershipsSyncedAt: null,
     ...overrides,
   };
 }
 
-function makeReleaseGroup(overrides: Partial<ReleaseGroupRow> = {}): ReleaseGroupRow {
+function makeReleaseGroup(overrides: Partial<DiscographyRow> = {}): DiscographyRow {
   return {
     id: "a1b2c3d4-0000-4000-8000-000000000002",
     mbid: null,
@@ -125,6 +127,10 @@ function makeReleaseGroup(overrides: Partial<ReleaseGroupRow> = {}): ReleaseGrou
     coverCheckedAt: null,
     coverBlockedAt: null,
     editionsSyncedAt: null,
+    discographyUnlistedAt: null,
+    primaryType: null,
+    secondaryTypes: null,
+    creditRole: "primary",
     firstReleaseDate: null,
     firstReleaseYear: null,
     createdAt: new Date("2024-01-01T00:00:00Z"),

@@ -341,6 +341,18 @@ La primera lectura sincroniza `artist-rels` antes de leer memberships; las lectu
 `membershipsSyncedAt` ya establecido no consultan MusicBrainz. Para personas, `releaseGroups`
 combina la discografía propia y la de grupos relacionados, sin duplicados por id.
 
+**Discografía (openspec: `fix-artist-discography-ingestion`):** `releaseGroups` es la discografía
+oficial completa (browse paginado de MusicBrainz sin los release-groups que solo tienen ediciones
+bootleg) y **excluye** los release-groups fuera de la discografía (`discographyUnlistedAt` con
+valor, siempre `null` en la respuesta). Cada release-group incluye además `primaryType: string |
+null` y `secondaryTypes: string[] | null` (tipos crudos de MusicBrainz; `null` si todavía no se
+sincronizaron) y `creditRole: "primary" | "featured"` (el rol del artista consultado en ese
+release-group). `artist` incluye `discographyCompleteAt` (`null` si la discografía nunca se
+recorrió entera). Una discografía guardada responde sin esperar a MusicBrainz; si está incompleta
+o tiene más de 7 días, se resincroniza en segundo plano después de responder. La primera lectura
+de un artista trae hasta 3 páginas (300 release-groups) antes de responder y el resto en segundo
+plano.
+
 Cada `releaseGroup` de la discografía incluye además `coverThumbUrl: string | null` (la URL
 servible, del storage propio o de Cover Art Archive) y `coverResolved: boolean` (la resolución ya
 tiene respuesta sin consultar CAA: URL conocida, ausencia confirmada dentro de la ventana de

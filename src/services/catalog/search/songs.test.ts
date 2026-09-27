@@ -61,6 +61,7 @@ beforeEach(() => {
       }) as never,
   );
   vi.mocked(musicbrainz.browseReleaseGroupsByArtist).mockResolvedValue({
+    "release-group-count": 1,
     "release-groups": [{ id: "rg-attack", title: "Back for the Attack", "primary-type": "Album" }],
   });
   vi.mocked(musicbrainz.browseReleasesByRecording).mockResolvedValue({ releases: [], "release-count": 1 } as never);

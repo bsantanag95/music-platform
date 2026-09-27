@@ -1,0 +1,362 @@
+{
+ "release-group-count": 18,
+ "release-group-offset": 0,
+ "release-groups": [
+  {
+   "id": "09f22be0-c43f-4418-ad28-0cfecaddf7f2",
+   "title": "Música libre",
+   "primary-type": "Album",
+   "secondary-types": [],
+   "first-release-date": "2010-11-16",
+   "artist-credit": [
+    {
+     "name": "Los Bunkers",
+     "joinphrase": "",
+     "artist": {
+      "id": "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+      "name": "Los Bunkers",
+      "type": "Group",
+      "disambiguation": "Chilean alternative rock band"
+     }
+    }
+   ]
+  },
+  {
+   "id": "108c832e-e7fb-4072-840f-b25d1451e407",
+   "title": "En vivo",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2007",
+   "artist-credit": [
+    {
+     "name": "Los Bunkers",
+     "joinphrase": "",
+     "artist": {
+      "id": "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+      "name": "Los Bunkers",
+      "type": "Group",
+      "disambiguation": "Chilean alternative rock band"
+     }
+    }
+   ]
+  },
+  {
+   "id": "111d1c13-7fc4-31b6-986f-318cf2451a7c",
+   "title": "Singles (2001-2006)",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Compilation"
+   ],
+   "first-release-date": "2007-10",
+   "artist-credit": [
+    {
+     "name": "Los Bunkers",
+     "joinphrase": "",
+     "artist": {
+      "id": "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+      "name": "Los Bunkers",
+      "type": "Group",
+      "disambiguation": "Chilean alternative rock band"
+     }
+    }
+   ]
+  },
+  {
+   "id": "18e89944-6de3-4ce7-a3e6-ed296c27e151",
+   "title": "MTV Unplugged",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2024-12-20",
+   "artist-credit": [
+    {
+     "name": "Los Bunkers",
+     "joinphrase": "",
+     "artist": {
+      "id": "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+      "name": "Los Bunkers",
+      "type": "Group",
+      "disambiguation": "Chilean alternative rock band"
+     }
+    }
+   ]
+  },
+  {
+   "id": "1e8c550a-ed2e-4aa5-8866-0b1502a3cc82",
+   "title": "SCL",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2016",
+   "artist-credit": [
+    {
+     "name": "Los Bunkers",
+     "joinphrase": "",
+     "artist": {
+      "id": "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+      "name": "Los Bunkers",
+      "type": "Group",
+      "disambiguation": "Chilean alternative rock band"
+     }
+    }
+   ]
+  },
+  {
+   "id": "38cfba17-db8e-361e-b1ae-96549f71e0ce",
+   "title": "La culpa",
+   "primary-type": "Album",
+   "secondary-types": [],
+   "first-release-date": "2003-01-01",
+   "artist-credit": [
+    {
+     "name": "Los Bunkers",
+     "joinphrase": "",
+     "artist": {
+      "id": "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+      "name": "Los Bunkers",
+      "type": "Group",
+      "disambiguation": "Chilean alternative rock band"
+     }
+    }
+   ]
+  },
+  {
+   "id": "4281425b-a220-4eef-9e86-537bfc87c46e",
+   "title": "Antología",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Compilation"
+   ],
+   "first-release-date": "2017-11-21",
+   "artist-credit": [
+    {
+     "name": "Los Bunkers",
+     "joinphrase": "",
+     "artist": {
+      "id": "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+      "name": "Los Bunkers",
+      "type": "Group",
+      "disambiguation": "Chilean alternative rock band"
+     }
+    }
+   ]
+  },
+  {
+   "id": "4befb97c-36da-41fe-8aa1-49fb72626ceb",
+   "title": "La velocidad de la luz",
+   "primary-type": "Album",
+   "secondary-types": [],
+   "first-release-date": "2013-05-14",
+   "artist-credit": [
+    {
+     "name": "Los Bunkers",
+     "joinphrase": "",
+     "artist": {
+      "id": "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+      "name": "Los Bunkers",
+      "type": "Group",
+      "disambiguation": "Chilean alternative rock band"
+     }
+    }
+   ]
+  },
+  {
+   "id": "500020af-70ee-44c3-a1aa-60a183880601",
+   "title": "Barrio Estación",
+   "primary-type": "Album",
+   "secondary-types": [],
+   "first-release-date": "2008-06-10",
+   "artist-credit": [
+    {
+     "name": "Los Bunkers",
+     "joinphrase": "",
+     "artist": {
+      "id": "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+      "name": "Los Bunkers",
+      "type": "Group",
+      "disambiguation": "Chilean alternative rock band"
+     }
+    }
+   ]
+  },
+  {
+   "id": "5d3475ff-408c-3479-bb8d-4b1068addbae",
+   "title": "Vida de perros",
+   "primary-type": "Album",
+   "secondary-types": [],
+   "first-release-date": "2005-09-08",
+   "artist-credit": [
+    {
+     "name": "Los Bunkers",
+     "joinphrase": "",
+     "artist": {
+      "id": "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+      "name": "Los Bunkers",
+      "type": "Group",
+      "disambiguation": "Chilean alternative rock band"
+     }
+    }
+   ]
+  },
+  {
+   "id": "64f29b72-de1d-3505-86b7-4923cb5e0ace",
+   "title": "Los Bunkers",
+   "primary-type": "Album",
+   "secondary-types": [],
+   "first-release-date": "2001-04-03",
+   "artist-credit": [
+    {
+     "name": "Los Bunkers",
+     "joinphrase": "",
+     "artist": {
+      "id": "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+      "name": "Los Bunkers",
+      "type": "Group",
+      "disambiguation": "Chilean alternative rock band"
+     }
+    }
+   ]
+  },
+  {
+   "id": "685b2058-b628-40ee-8123-c36fc64df008",
+   "title": "Noviembre",
+   "primary-type": "Album",
+   "secondary-types": [],
+   "first-release-date": "2023-11-01",
+   "artist-credit": [
+    {
+     "name": "Los Bunkers",
+     "joinphrase": "",
+     "artist": {
+      "id": "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+      "name": "Los Bunkers",
+      "type": "Group",
+      "disambiguation": "Chilean alternative rock band"
+     }
+    }
+   ]
+  },
+  {
+   "id": "7099373f-9a73-3ffe-a76d-5d71527b1779",
+   "title": "Canción de lejos",
+   "primary-type": "Album",
+   "secondary-types": [],
+   "first-release-date": "2002-01-01",
+   "artist-credit": [
+    {
+     "name": "Los Bunkers",
+     "joinphrase": "",
+     "artist": {
+      "id": "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+      "name": "Los Bunkers",
+      "type": "Group",
+      "disambiguation": "Chilean alternative rock band"
+     }
+    }
+   ]
+  },
+  {
+   "id": "7101d041-f6e4-451b-b9e5-3d16b20cb4d7",
+   "title": "Bailando solo",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "2013-02-04",
+   "artist-credit": [
+    {
+     "name": "Los Bunkers",
+     "joinphrase": "",
+     "artist": {
+      "id": "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+      "name": "Los Bunkers",
+      "type": "Group",
+      "disambiguation": "Chilean alternative rock band"
+     }
+    }
+   ]
+  },
+  {
+   "id": "8b471086-0c38-4deb-9eed-4066b86af664",
+   "title": "Rey",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "2023-03-11",
+   "artist-credit": [
+    {
+     "name": "Los Bunkers",
+     "joinphrase": "",
+     "artist": {
+      "id": "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+      "name": "Los Bunkers",
+      "type": "Group",
+      "disambiguation": "Chilean alternative rock band"
+     }
+    }
+   ]
+  },
+  {
+   "id": "8db80bce-310f-4f18-b77f-69b9bc8f37ab",
+   "title": "Jamás",
+   "primary-type": "EP",
+   "secondary-types": [],
+   "first-release-date": "2000",
+   "artist-credit": [
+    {
+     "name": "Los Bunkers",
+     "joinphrase": "",
+     "artist": {
+      "id": "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+      "name": "Los Bunkers",
+      "type": "Group",
+      "disambiguation": "Chilean alternative rock band"
+     }
+    }
+   ]
+  },
+  {
+   "id": "ccc1fdb3-b427-48dc-851b-afbe7cf7eb4b",
+   "title": "16 éxitos de oro",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Compilation"
+   ],
+   "first-release-date": "2012",
+   "artist-credit": [
+    {
+     "name": "Los Bunkers",
+     "joinphrase": "",
+     "artist": {
+      "id": "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+      "name": "Los Bunkers",
+      "type": "Group",
+      "disambiguation": "Chilean alternative rock band"
+     }
+    }
+   ]
+  },
+  {
+   "id": "e6483246-33f7-4390-b307-72fbfb06e83d",
+   "title": "Grandes éxitos",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Compilation"
+   ],
+   "first-release-date": "2008",
+   "artist-credit": [
+    {
+     "name": "Los Bunkers",
+     "joinphrase": "",
+     "artist": {
+      "id": "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+      "name": "Los Bunkers",
+      "type": "Group",
+      "disambiguation": "Chilean alternative rock band"
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -231,13 +231,19 @@ export const musicbrainz = {
     return mbFetch<MBArtistDetail>(`/artist/${mbid}`, { inc: "artist-rels" });
   },
 
-  /** Álbumes/EPs/singles etc. donde este artista aparece como crédito. */
+  /**
+   * Álbumes/EPs/singles etc. donde este artista aparece como crédito, de a 100.
+   * `release-group-status=website-default` es el criterio del sitio de MusicBrainz:
+   * excluye los release-groups que solo tienen ediciones bootleg (openspec:
+   * fix-artist-discography-ingestion).
+   */
   browseReleaseGroupsByArtist(artistMbid: string, offset = 0) {
     return mbFetch<MBReleaseGroupBrowseResponse>("/release-group", {
       artist: artistMbid,
-      limit: "100",
-      ...(offset > 0 ? { offset: String(offset) } : {}),
+      limit: String(RELEASE_BROWSE_PAGE_SIZE),
+      offset: String(offset),
       inc: "artist-credits",
+      "release-group-status": "website-default",
     });
   },
 

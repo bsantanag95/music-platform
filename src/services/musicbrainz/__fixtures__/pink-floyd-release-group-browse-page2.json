@@ -1,0 +1,2034 @@
+{
+ "release-group-count": 219,
+ "release-group-offset": 100,
+ "release-groups": [
+  {
+   "id": "05ea0da2-05cf-45ba-873d-e865c5789b31",
+   "title": "Run Like Hell (live, Delicate Sound of Thunder, 2019 remix)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2019-11-15",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "07088662-1c13-35ca-bc5f-bbcf371b6e2b",
+   "title": "Wish You Were Here",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "1995-07-20",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "0af5f757-f765-4fb5-a579-fb8cb39fcc3d",
+   "title": "One of These Days (BBC Radio session, 30 September 1971)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2017-03-20",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "0f51a5e6-ac11-4fd7-b0a7-9a5c5c8783a7",
+   "title": "Night",
+   "primary-type": "EP",
+   "secondary-types": [
+    "Compilation"
+   ],
+   "first-release-date": "2021-10-01",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "119c04fb-fa5b-44ae-8c34-65c16baf34de",
+   "title": "The Dogs of War",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1988",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "180edd4d-cdfa-4f77-ae7f-eecbdea37c03",
+   "title": "Brain Damage",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "2023-01-19",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "186a9cc6-ac8d-302c-99e6-2d040f0ee0bc",
+   "title": "Arnold Layne",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1967-03-10",
+   "artist-credit": [
+    {
+     "name": "The Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "18cc8e55-ba55-48fb-a88f-3cf517c509bf",
+   "title": "One of These Days: 吹けよ風、呼べよ嵐 / Seamus: シーマスのブルース",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1977",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "18e251c9-9fc9-4f22-b1d9-dbc271675208",
+   "title": "Have a Cigar",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1975",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "1ac6af64-25af-3ccb-a913-a7890ae8035c",
+   "title": "Tonite Let’s All Make Love in London… Plus",
+   "primary-type": "EP",
+   "secondary-types": [
+    "Soundtrack"
+   ],
+   "first-release-date": "1991",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "1ad9b6f1-7402-4757-8af9-9a82661c5e42",
+   "title": "The Great Gig in the Sky (Delicate Sound of Thunder remix, 2020 edit, live)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2020-10-16",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "1b96a838-2f0b-445f-93f7-b80cb758deb6",
+   "title": "Dogs (2018 remix)",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "2022-07-15",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "1cf1fe4d-9cb0-39eb-83f3-1f210156d2ab",
+   "title": "One of These Days / Fearless",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1971-11-29",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "1f03fbe2-5458-4f3e-88f6-f23eeb3d9594",
+   "title": "Let There Be More Light / Remember a Day",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1968-08-19",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "24a99313-6f2d-30d9-b309-f7e05d3edb00",
+   "title": "Take It Back",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1994-04",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "25a1dc51-7e10-4669-b8c7-2dd3fd452bad",
+   "title": "Odeon, Newcastle‐Upon‐Tyne, UK, 9 Nov 1974",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2024-12-06",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "26ce0875-e8c8-4cb2-bdaa-36feaa76d3a5",
+   "title": "Comfortably Numb",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1980",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "30adeda5-e532-4869-8946-dc3779fc7532",
+   "title": "Noel Fielding on Pink Floyd, Syd Barrett & Shine On You Crazy Diamond",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Interview"
+   ],
+   "first-release-date": "2025-11-19",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "318f82bb-c253-4602-9617-ea1b5c45a758",
+   "title": "Free Four / Stay",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1972-07-10",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "32c7ed5f-84b2-3e05-a546-d710b1aeff3c",
+   "title": "High Hopes",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1994-10-10",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "357241df-b9b9-4192-a510-1b7544d195ad",
+   "title": "Dinero (Money) / A nosotros y a ellos (Us and Them)",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1973-05-10",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "3a1e4e0c-9f9a-4f73-8129-ef67cdeac725",
+   "title": "Point Me to the Sky / Arnold Layne",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1972",
+   "artist-credit": [
+    {
+     "name": "ピンク・フロイド",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "41dfe5d3-8512-4e1a-8dbf-eb7afb5804e5",
+   "title": "Empire Theatre, Liverpool, UK, 29 Nov 1974",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2024-12-06",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "43da3b03-cc44-47b1-91da-f3eb4e692f5b",
+   "title": "Grantchester Meadows (BBC session, 12 May 1969)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2016-09-01",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "476d0419-0036-36ee-ac80-63bbfcbfb064",
+   "title": "Learning to Fly",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1987",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "49bad840-f827-3e20-8a9f-3143b71d4883",
+   "title": "British Winter Tour 74",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2024-12-06",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "4b5e57d3-8784-4a9d-84a4-e3c337e8d791",
+   "title": "Home",
+   "primary-type": "EP",
+   "secondary-types": [
+    "Compilation"
+   ],
+   "first-release-date": "2021-10-01",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "4c7cd1f2-12d7-3486-bcd1-1d95813f270e",
+   "title": "It Would Be So Nice / Julia Dream",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1968-04-12",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "4ca914d1-cca6-3856-9fe8-e6df9d097b3b",
+   "title": "The Wall: Music From the Film",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Soundtrack"
+   ],
+   "first-release-date": "1982-07-20",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "4dae088d-7f12-4393-a4f8-ddba112fb37c",
+   "title": "Live at Roosevelt Stadium, Jersey City, USA, 18 June 1973",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2023-12-08",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "50620f1d-557c-4439-a118-6d431e9341ae",
+   "title": "The Nile Song / Main Theme",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1969",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "513409c7-b34f-4679-b4cd-312b8a7dd7f6",
+   "title": "Sorrow (2019 remix)",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "2019-11-22",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "52278fff-59ae-4ef2-9cac-a096caadff7d",
+   "title": "Live at Radio City Music Hall, New York, USA, 17 Mar 1973",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2023-12-08",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "53f98256-0009-4766-92d1-a11997f6995a",
+   "title": "Vegetable Man (2010 mix)",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "2017-03-03",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "5866fb65-04a0-4a62-a9f3-74d5530a9c12",
+   "title": "On the Turning Away (Delicate Sound of Thunder 2019 remix) (live)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2020-11-17",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "58c673eb-3bff-4fa5-b0f5-1c4ddeeef4b9",
+   "title": "Wish You Were Here (live at Knebworth 1990) (2019 mix)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2019-08-29",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "5d588c4c-3127-4210-88cd-1679a629c87e",
+   "title": "Raving and Drooling (live at Wembley 1974) (2011 mix)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2020-07-03",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "5f2d9719-4abf-4246-9999-120c68d591b7",
+   "title": "に消えるジュリア / サマー’68",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1971",
+   "artist-credit": [
+    {
+     "name": "ピンク・フロイド",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "635e3449-ad74-4384-a391-d93c765f810a",
+   "title": "Paintbox (live from “Tienerklanken,” Brussels, Belgium, 18/19 February 1968)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2020-04-10",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "672bb01d-dc26-33a0-a1b0-a81b199b3ad7",
+   "title": "1974-12-09: Palace Theatre, Manchester, UK",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2024-12-06",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "68a5607b-ce07-39d0-a301-014c4ce40d5d",
+   "title": "Point Me at the Sky / Careful With That Axe Eugene",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1968-12-17",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "6c2f3922-5437-4f84-9016-5f26a339f886",
+   "title": "Flaming",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1967-11-02",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "6e2ec608-edc6-4f4b-a6c1-a0b9d05dfb93",
+   "title": "Keep Talking",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1994-03-12",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "6e3331f0-b0dd-4617-9c17-17cb1ced37fc",
+   "title": "Money",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1981",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "6f5eb210-efb4-49db-b27c-c43044e71425",
+   "title": "Learning to Fly (Delicate Sound of Thunder remix, 2020 edit, live)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2020-09-24",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "706f01a7-01bf-4d96-81d9-e76729bf8b6e",
+   "title": "Wish You Were Here",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "2013-06-14",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "70b47bad-2a56-4919-96dc-97179c656f33",
+   "title": "Fat Old Sun (BBC Radio session, 16 July 1970)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2017-03-17",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "792cc52a-e763-479a-b15a-0026a28e3f2e",
+   "title": "Shine On You Crazy Diamond, Pts. 1–9 (new stereo mix)",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "2025-11-18",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "7d832f6b-a77d-40d3-b84c-0011a8a8ffcd",
+   "title": "Shine On You Crazy Diamond, Pts. 1–6 (live at Wembley 1974) (2011 mix)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2020-06-26",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "80e9119f-b87a-4f47-ac82-283eaade0c3a",
+   "title": "Careful With That Axe, Eugene (alternative take) (live at Pompeii) (2016 remix)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2017-03-22",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "8170a594-6a34-4d13-bd43-f1e701a00705",
+   "title": "Have a Cigar (alternate version)",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "2020-05-29",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "8505b153-ae56-4ac3-97f7-d5e196e814da",
+   "title": "The Great Gig in the Sky",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "2023-02-10",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "854f15cb-e75c-47ee-beb0-402ec4c5a957",
+   "title": "Any Colour You Like (live at the Empire Pool, Wembley, London, 1974)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2020-06-08",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "85c58f04-d355-4606-abf6-f61aff1a080e",
+   "title": "The Hippodrome, Bristol, UK, 13 Dec 1974",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2024-12-06",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "88ba333f-831a-4b0a-a80e-6204d516a1c8",
+   "title": "Free Four / The Gold It’s in The…",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1978-09-26",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "895ed5cd-b59e-48c8-aa6d-4e81c8a50f5a",
+   "title": "Chillout",
+   "primary-type": "EP",
+   "secondary-types": [
+    "Compilation"
+   ],
+   "first-release-date": "2021-10-01",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "8cfe1674-1fd4-45d4-ad2d-b30951d07a59",
+   "title": "1965: Their First Recordings",
+   "primary-type": "EP",
+   "secondary-types": [],
+   "first-release-date": "2015-11-27",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "901d4d61-d143-487f-b3d1-1680b704fca5",
+   "title": "Arnold Layne",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2020-08-29",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "91685e6d-ad83-30dc-bb68-d7e1beacd06b",
+   "title": "1967: The First 3 Singles",
+   "primary-type": "EP",
+   "secondary-types": [
+    "Compilation"
+   ],
+   "first-release-date": "1997-08-04",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "981911ba-b43a-312a-a1b7-afb819a3d223",
+   "title": "London 1966/1967",
+   "primary-type": "EP",
+   "secondary-types": [],
+   "first-release-date": "1995",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "99d8e3fc-0b2d-38a0-812a-f28db849417b",
+   "title": "Money",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1973-05-04",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "99f1ecac-3206-4521-b3ee-14301c1b4e02",
+   "title": "Side 3, Pt. 4: Allons‐y (1)",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "2014-11-03",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "a30549ee-5965-3ab3-a5ef-05f1096d77e1",
+   "title": "Apples and Oranges",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1967-11-17",
+   "artist-credit": [
+    {
+     "name": "The Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "a524532a-582c-47fa-91f1-af769ccfaaa6",
+   "title": "One Slip (Delicate Sound of Thunder remix, 2020 edit, live)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2020-11-06",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "a5ced291-0055-320c-b8a8-c9b64a68b43f",
+   "title": "Proper Education",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "2006-09",
+   "artist-credit": [
+    {
+     "name": "Eric Prydz",
+     "joinphrase": " vs. ",
+     "artist": {
+      "id": "35dac7d2-0b1f-470f-9a5a-c53c8821f6d6",
+      "name": "Eric Prydz",
+      "type": "Person",
+      "disambiguation": ""
+     }
+    },
+    {
+     "name": "Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "a62213c6-3024-4748-b986-ec58e3c937b6",
+   "title": "Us and Them (live at the Empire Pool, Wembley, London, 1974)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2020-05-22",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "a7984ecb-9bf3-41cb-ac4a-3fd1f993d9c8",
+   "title": "Palais de Sports, Paris, France, 24 June 1974",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2024-12-06",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "a9aafc80-79de-453b-a46c-b21602004d3c",
+   "title": "See Emily Play",
+   "primary-type": "EP",
+   "secondary-types": [
+    "Compilation"
+   ],
+   "first-release-date": "1967-06",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "aa23c62a-2831-4381-8a0a-528d4b33e99a",
+   "title": "The Hippodrome, Bristol, UK, 14 Dec 1974",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2024-12-06",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "ac76e96e-9ea7-43d4-805e-bd29d4173c5f",
+   "title": "Interstellar Overdrive",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "2017-04-22",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "ad81f0bb-3eb7-420e-b5e9-aa0fe6acbe99",
+   "title": "Money (live at Knebworth 1990, 2021 edit)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2021-04-09",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "ae4a2079-84a8-4c5d-81e0-77a44f6cc256",
+   "title": "Comfortably Numb (live at Knebworth 1990, 2021 edit)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2021-04-16",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "ae863755-476e-45f8-a2c5-adfb4635f289",
+   "title": "The Great Gig in the Sky (live at Knebworth 1990, 2021 edit)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2021-03-19",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "b8a87a37-d282-4d25-ac51-1fdf6e0bbab1",
+   "title": "Point Me at the Sky / 48 Crash",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Compilation"
+   ],
+   "first-release-date": "1973-09-20",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": " / ",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    },
+    {
+     "name": "Suzi Quatro",
+     "joinphrase": "",
+     "artist": {
+      "id": "2c16cb3f-e85f-4158-889f-ffc038f5792d",
+      "name": "Suzi Quatro",
+      "type": "Person",
+      "disambiguation": "US rock singer‐songwriter, multi‐instrumentalist & actress"
+     }
+    }
+   ]
+  },
+  {
+   "id": "c20e3fb5-00f3-48eb-a226-74c13c22a312",
+   "title": "Live at the Rainbow Theatre, London, UK, (early show) 4 Nov 1973",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2023-12-08",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "c2c2671b-afc9-4b2e-b0c8-0b54116c0933",
+   "title": "Time / Us and Them",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1974-02-04",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "c303c567-0b1f-4e9e-8eb9-0dafa9dab66f",
+   "title": "Usher Hall, Edinburgh, UK, 5 Nov 1974",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2024-12-06",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "c4cd60f7-5109-3834-b3b8-9af9cd4e2658",
+   "title": "One Slip",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1988-06",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "c691539d-6db8-4a2c-83e0-cc958f2f2654",
+   "title": "Shine On You Crazy Diamond (Pts. 1–5) (live at Knebworth 1990) (2021 edit)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2021-03-10",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "c762686c-a694-47a1-90ce-368106f97ad2",
+   "title": "Childhood’s End (2016 remix)",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "2016-10-06",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "c7e6600d-6dbd-4722-901f-663be40bfa9a",
+   "title": "Sorrow (live at Knebworth, 1990)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2019-12-13",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "cb30bfe5-cea5-4b76-8555-92c30f0c2116",
+   "title": "Green Is the Colour",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2016-10-27",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "cb3bae49-d624-4dd9-b0a4-b4dfc4f3cefa",
+   "title": "The Final Cut: Video EP",
+   "primary-type": "EP",
+   "secondary-types": [],
+   "first-release-date": "1983",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "cc4e0ed5-42e0-375b-85c7-2506d3abccf4",
+   "title": "See Emily Play",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1967-06-16",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "ce74f453-629c-4cc0-b6e5-19d3a3ed5d2e",
+   "title": "Nothing, Part 14",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "2016-11-10",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "cf46aaf9-533f-46de-bc5e-f855cef94c45",
+   "title": "Play",
+   "primary-type": "EP",
+   "secondary-types": [
+    "Compilation"
+   ],
+   "first-release-date": "2021-10-01",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "d15d737e-9b03-47a1-afa5-0eea932a28a8",
+   "title": "Another Brick in the Wall (Part II) / Another Brick in the Wall (Part I)",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1979",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "d2090b8a-17e6-4fd0-a91b-2b460b9c9912",
+   "title": "Hey Hey Rise Up",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "2022-04-08",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": " featuring ",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    },
+    {
+     "name": "Andriy Khlyvnyuk of Boombox",
+     "joinphrase": "",
+     "artist": {
+      "id": "c22b6881-5a20-4e64-bc86-402e46af5fe1",
+      "name": "Андрій Хливнюк",
+      "type": "Person",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "d2b9adbb-3b89-4977-b464-0ac2af71b81d",
+   "title": "Usher Hall, Edinburgh, UK, 4 Nov 1974",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2024-12-06",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "d39c40ba-c173-309c-a374-97c0ccdf2a19",
+   "title": "Another Brick in the Wall, Part II",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1979-11-16",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "dc91e05d-7239-3844-b85e-eb30df1352dc",
+   "title": "On the Turning Away",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1987-11-05",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "de4d485e-9e65-4859-801b-8168f52da810",
+   "title": "More Blues (alternative version)",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "2017-03-10",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "de9577b5-e9e9-44b1-b8a3-768f9df75aad",
+   "title": "Run Like Hell",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1979",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "e8ee82a9-c6ce-47ae-a694-a0726c88865c",
+   "title": "The Wall Singles Collection",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Compilation"
+   ],
+   "first-release-date": "2011-11-25",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "ec5fd60f-d68f-49ac-be06-a293e6aca605",
+   "title": "Song 1 (Capitol Studio session, 22 August 1968) (2016 mix)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2017-03-08",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "fa9ae658-66bd-4a65-b4b1-d51b42ae7645",
+   "title": "Live at Olympiahalle, Munich, Germany, 12 Oct 1973",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2023-12-08",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "fd2e9b40-0550-45a8-aa6d-120c866db3a9",
+   "title": "Not Now John",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1983-05",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "fd603b04-86b5-426c-814f-544709880ead",
+   "title": "Run Like Hell / Comfortably Numb",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "1988",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "fdd1a13f-35c3-49ce-bb7a-153277907d10",
+   "title": "Wish You Were Here / Have a Cigar",
+   "primary-type": "Single",
+   "secondary-types": [],
+   "first-release-date": "2000-10-12",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "ffc75a44-666c-46b6-85f0-240685eee15f",
+   "title": "Live at Sportatorium, Hollywood, USA, 28 June 1973",
+   "primary-type": "Album",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2023-12-08",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  }
+ ]
+}
