@@ -60,7 +60,7 @@ entidades:
 | Entidad | Primario (empujado) | Secundario (disponible, no prominente) |
 |---|---|---|
 | **Álbum** | Obra: valorar + reseñar | Consumo: registrar la sesión completa |
-| **Canción** | Consumo: registrar + reaccionar | Obra: valorar (tras "más"), favorito |
+| **Canción** | Consumo: registrar + reaccionar | Obra: valorar (estrellas visibles en el panel desde `redesign-song-page`), favorito |
 | **Artista** | Exploración + seguir | Obra: nota / contexto (sin veredicto), favorito |
 
 Regla: **los álbumes explican quién es culturalmente el usuario; las canciones explican
@@ -140,7 +140,7 @@ natural?"* — y el éxito se mide por si `álbum→crítica`, `canción→hábi
 | Q | Decisión |
 |---|---|
 | **Usuario objetivo** | Audiencia amplia con identidad cultural álbum-led. No elitista para consumidores de álbumes, pero tampoco competir con Spotify como plataforma de consumo de canciones. La diferenciación es la *relación consciente* con la música, no el formato. |
-| **Rating de canción** | Se mantiene, degradado a secundario tras la reacción cualitativa (`liked`/`loved`/`obsessed`/`neutral`/`disliked`). No se elimina en Fase 1; se mide antes de cualquier retirada. |
+| **Rating de canción** | Se mantiene, degradado a secundario tras la reacción cualitativa (`liked`/`loved`/`obsessed`/`neutral`/`disliked`). No se elimina en Fase 1; se mide antes de cualquier retirada. **Actualización 2026-09 (`redesign-song-page`):** las estrellas de la canción pasan a estar siempre visibles en su panel "Tu relación" (ya lo estaban en cada fila de la lista del álbum desde `rework-album-tracklist`); la reacción se sigue eligiendo al registrar la escucha en el diario. |
 | **Diario** | Manual, intencional y explícito — *"tu registro personal de experiencias musicales"*, nunca *"historial automático de escuchas"*. Importación desde streaming, fuera de alcance. |
 | **`review`** | Entidad propia (tabla `reviews`), distinta de `comment`. Larga, editable, con rating asociado, peso social alto. Puede reutilizar UI/infra de `comment` pero no depende de ese modelo. En Fase 1 la escritura se restringe a álbumes en la capa de validación, no en el esquema. |
 | **Seguir artista** | Relación unilateral usuario → artista, separada del seguimiento usuario → usuario. En Fase 1 solo alimenta afinidad, descubrimiento y organización personal. Notificaciones de lanzamiento, fuera de alcance (el esquema las deja preparadas). |

@@ -17,8 +17,8 @@ Buscar en el catálogo → Resultados → Perfil de artista / Álbum (tracklist 
 ```
 
 La vista de detalle de canción quedó fuera de esta fase (Camino A,
-`02-implementation-plan.md`, Etapa 3.5); se construyó después, mínima a propósito — ver
-"3b. Detalle de canción" más abajo (cambio `rebalance-catalog-detail-pages`).
+`02-implementation-plan.md`, Etapa 3.5); se construyó después — ver "3b. Detalle de canción"
+más abajo (cambios `rebalance-catalog-detail-pages` y `redesign-song-page`).
 
 ## 1. Buscar en el catálogo
 
@@ -221,21 +221,40 @@ propia ni cambian la tracklist principal; se listan en la pestaña Ediciones y l
 que agregan las ediciones ampliadas se muestran en secciones desplegables de la pestaña
 Canciones. Los datos llegan con `enrich-album-editions-and-credits`.
 
-## 3b. Detalle de canción — página mínima
+## 3b. Detalle de canción — ficha compacta
 
-Fuera del alcance original de Fase 3; añadida y **deliberadamente mínima** por el cambio
-`rebalance-catalog-detail-pages` (Fase 1 de `redefine-content-hierarchy`). La canción sigue
-siendo entidad real, pero su página no es un destino rico: la inversión va al álbum.
+Nació mínima (`rebalance-catalog-detail-pages`); desde `redesign-song-page` (2026-09) es una
+**ficha compacta de biblioteca**, coherente con el álbum y **sin pestañas** (una canción tiene
+cerca de un tercio del contenido de un álbum). Reutiliza los componentes del álbum. De arriba
+hacia abajo:
 
-La página lidera con **el o los álbumes que contienen la canción** (carátula + título +
-año, enlace al álbum; el más temprano marcado como "aparición principal"). Después: título
-y artista acreditado —con la línea **"Escrita por"** (autores de la obra, cambio
-`add-songwriter-credits`) cuando MusicBrainz los tiene—, acciones de catálogo (registrar
-escucha, favorito, agregar a lista),
-**tu historial de escuchas** de esa canción (solo con sesión y ≥1 escucha), la **reacción
-agregada pública** de la comunidad, comentarios, la divulgación de estrellas plegada, y por
-último una **ficha técnica** (`<details>` plegado) con los créditos completos y todas las
-ediciones. Sin bloque de reseñas. Ver `ratings-and-reviews.md` para reacción vs. estrellas.
+- **Cabecera**: carátula del **disco principal** (el primer disco de estudio que contiene la
+  grabación; si no hay, el más temprano), antetítulo "Canción · pista N de *Disco*", título,
+  artistas, **ficha técnica** (duración, "Escrita por", primera aparición y, si es una versión,
+  "Versión en vivo de *X*" / "Versión de *X* (*Artista*)" con enlace a la original) y **bloque
+  de comunidad**: valoración media (desde 5 valoraciones), reacción común (desde 5 reacciones
+  públicas del diario), "favorita de" ("<5" por debajo del umbral) y "Aparece en N listas".
+- **Panel "Tu relación"** al costado: estrellas **siempre visibles** (mismo control y diálogo de
+  puntaje detallado que el álbum), "Registrar escucha" (la reacción se elige en el formulario del
+  diario), el historial en una línea ("3 escuchas · última: Obsesión, 12 sep") con enlace al
+  diario, Favorita y Listas (el mismo selector del álbum, con listas de canciones y sin Caminos).
+  Sin reseña, Pendiente ni colección.
+- **Tira de pistas**: el disco principal con "pista N de M" y enlaces a la pista anterior y la
+  siguiente de su edición representativa (cruza discos). No aparece si la grabación no está en esa
+  lista (por ejemplo, una pista adicional de otra edición).
+- **Composición** (autores de la obra con sus roles) y **Créditos de esta grabación**
+  (Intérpretes con los integrantes primero y destacados, Producción, Sonido, Otros; los mismos
+  grupos que la vista por canción del álbum). Los créditos de todo el disco no se repiten: un
+  enlace lleva a la pestaña Créditos del álbum. Si alguien llega a la canción sin pasar por el
+  álbum, la página agenda en segundo plano la sincronización de créditos y autoría del disco
+  principal.
+- **"Esta grabación aparece en"**: los discos que contienen esta misma grabación, por tipo
+  (estudio, singles y EP, recopilaciones, en vivo y otros), 3 por grupo más "+N", con la marca
+  "original" en el más temprano.
+- **"Otras versiones de la canción"**: las demás grabaciones de su obra, en grupos contraídos —
+  Versiones de otros artistas (`cover`), En vivo (`live`) y Otras grabaciones (sin marca) — según
+  los atributos de MusicBrainz, sin deducir nada (ADR 0020).
+- **Comentarios** al final. Sin reseñas de canción.
 
 ## 4. Navegación por membresías (banda → integrantes) — diferida a Fase 4
 
@@ -275,8 +294,14 @@ no depende de autenticación.
 ## Casos límite conocidos (heredados del modelo de datos)
 
 - **Re-grabación, remix o versión en vivo** de una canción aparecen como una entrada
-  separada en el tracklist de su propio álbum — nunca se fusionan con la canción original,
-  ni siquiera visualmente (son `RECORDING` distintos por diseño, ver `business-rules.md`).
+  separada en el tracklist de su propio álbum — nunca se fusionan con la canción original
+  (son `RECORDING` distintos por diseño, ver `business-rules.md`). Se conectan por su **obra**:
+  la página de cada una lista las demás en "Otras versiones" y, si MusicBrainz marca el vínculo
+  como `live` o `cover`, enlaza a la original (ADR 0020).
+- **Versiones sin marcar**: muchas tomas en vivo o demos llegan de MusicBrainz sin el atributo
+  `live` en su vínculo con la obra. Se muestran en "Otras grabaciones", sin deducir su tipo.
+- **Grabación sin obra** (el 56 % tiene obra en la base de scratch, 2026-09): la canción no
+  muestra "Otras versiones" ni línea de versión.
 - **Remaster de audio** de una canción existente **no** genera una entrada nueva en
   ningún listado — es la misma canción, mismo `RECORDING`, sin importar la edición.
 - **Artista credited aún no visitado** (`type = 'unknown'`): si un usuario llega al perfil

@@ -19,13 +19,14 @@ import { formatStars } from "./album-format";
 interface RatingDetailDialogProps {
   open: boolean;
   onClose: () => void;
-  releaseGroupId: string;
+  /** Álbum o canción valorada (la canción usa el mismo diálogo: openspec redesign-song-page). */
+  target: { type: "release-group" | "recording"; id: string };
   /** Valoración propia vigente; el diálogo solo se abre con estrellas elegidas. */
   own: NonNullable<RatingsResponse["own"]>;
   onChange: (ratings: RatingsResponse) => void;
 }
 
-export function RatingDetailDialog({ open, onClose, releaseGroupId, own, onChange }: RatingDetailDialogProps) {
+export function RatingDetailDialog({ open, onClose, target, own, onChange }: RatingDetailDialogProps) {
   const t = useTranslations("catalog.album.relation.detail");
   const tErrors = useTranslations("errors");
   const locale = useLocale();
@@ -50,13 +51,13 @@ export function RatingDetailDialog({ open, onClose, releaseGroupId, own, onChang
     }
   }
 
-  const refresh = async () => onChange(await getRatings("release-group", releaseGroupId));
+  const refresh = async () => onChange(await getRatings(target.type, target.id));
 
   const save: SubmitEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
     if (!valid) return;
     void run(async () => {
-      await saveRating("release-group", releaseGroupId, {
+      await saveRating(target.type, target.id, {
         stars: own.stars,
         ...(parsed !== null ? { detailedScore: parsed } : {}),
       });
@@ -74,7 +75,7 @@ export function RatingDetailDialog({ open, onClose, releaseGroupId, own, onChang
   const remove = () => {
     setConfirmDelete(false);
     void run(async () => {
-      await deleteRating("release-group", releaseGroupId);
+      await deleteRating(target.type, target.id);
       await refresh();
       onClose();
     });

@@ -27,7 +27,11 @@ export interface PickerMembership {
 }
 
 interface AlbumListPickerProps {
-  releaseGroupId: string;
+  /**
+   * Objetivo que se agrega o quita. Una canción (openspec: redesign-song-page) usa el mismo
+   * selector con sus listas de canciones y sin Caminos, que solo admiten álbumes.
+   */
+  target: { type: "release-group" | "recording"; id: string };
   memberships: PickerMembership[];
   /** Recibe una función de actualización: varias casillas pueden estar en vuelo a la vez. */
   onMembershipsChange: (update: (current: PickerMembership[]) => PickerMembership[]) => void;
@@ -47,9 +51,9 @@ function matches(title: string, query: string): boolean {
   return title.toLocaleLowerCase().includes(query.toLocaleLowerCase());
 }
 
-export function AlbumListPicker({ releaseGroupId, memberships, onMembershipsChange, onClose }: AlbumListPickerProps) {
+export function AlbumListPicker({ target, memberships, onMembershipsChange, onClose }: AlbumListPickerProps) {
   const t = useTranslations("catalog.album.relation.picker");
-  const target = { type: "release-group" as const, id: releaseGroupId };
+  const allowsCaminos = target.type === "release-group";
 
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -67,7 +71,7 @@ export function AlbumListPicker({ releaseGroupId, memberships, onMembershipsChan
     return () => window.clearTimeout(id);
   }, [query]);
 
-  const filters = { entityType: "release-group" as const, ...(debouncedQuery ? { q: debouncedQuery } : {}) };
+  const filters = { entityType: target.type, ...(debouncedQuery ? { q: debouncedQuery } : {}) };
   const listsQuery = useInfiniteQuery<ListsListResponse, ApiError, { pages: ListsListResponse[] }, readonly unknown[], number>({
     queryKey: queryKeys.myListsPicker(filters),
     queryFn: ({ pageParam }) => getMyLists(pageParam, PAGE_SIZE, filters),
@@ -75,7 +79,7 @@ export function AlbumListPicker({ releaseGroupId, memberships, onMembershipsChan
     getNextPageParam: (last) => (last.hasNext ? last.page + 1 : undefined),
     placeholderData: keepPreviousData,
   });
-  const caminosQuery = useQuery({ queryKey: queryKeys.myCaminos(), queryFn: getMyCaminos });
+  const caminosQuery = useQuery({ queryKey: queryKeys.myCaminos(), queryFn: getMyCaminos, enabled: allowsCaminos });
 
   const memberIds = useMemo(() => new Set(memberships.map((m) => m.listId)), [memberships]);
   const pinnedIds = useMemo(() => new Set(pinned.map((row) => row.id)), [pinned]);
@@ -109,10 +113,10 @@ export function AlbumListPicker({ releaseGroupId, memberships, onMembershipsChan
   async function add(row: Row): Promise<PickerMembership> {
     if (row.kind === "standard") {
       const detail = await addItemToList(row.id, target);
-      const item = detail.items.find((candidate) => candidate.target.id === releaseGroupId);
+      const item = detail.items.find((candidate) => candidate.target.id === target.id);
       return { listId: row.id, itemId: item?.id ?? null, kind: row.kind, title: row.title };
     }
-    await addAlbumToCamino(row.id, releaseGroupId);
+    await addAlbumToCamino(row.id, target.id);
     return { listId: row.id, itemId: null, kind: row.kind, title: row.title };
   }
 
@@ -132,7 +136,7 @@ export function AlbumListPicker({ releaseGroupId, memberships, onMembershipsChan
           if (!current.itemId) throw new Error("Falta el ítem de la lista");
           await removeItemFromList(current.listId, current.itemId);
         } else {
-          await removeAlbumFromCamino(current.listId, releaseGroupId);
+          await removeAlbumFromCamino(current.listId, target.id);
         }
       } else {
         const added = await add(row);
@@ -207,7 +211,7 @@ export function AlbumListPicker({ releaseGroupId, memberships, onMembershipsChan
         >
           {creating === "list" && (
             <ListForm
-              fixedEntityType="release-group"
+              fixedEntityType={target.type}
               onCreated={(list: UserListDetail) => void created({ id: list.id, title: list.title, kind: "standard" })}
               onCancel={() => setCreating(null)}
             />
@@ -235,30 +239,32 @@ export function AlbumListPicker({ releaseGroupId, memberships, onMembershipsChan
           )}
         </Section>
 
-        <Section
-          title={t("caminos")}
-          action={t("newCamino")}
-          actionLabel={t("newCaminoLabel")}
-          onAction={() => setCreating(creating === "camino" ? null : "camino")}
-          expanded={creating === "camino"}
-        >
-          {creating === "camino" && (
-            <CaminoForm
-              onCreated={(camino: CaminoDetail) =>
-                void created({ id: camino.id, title: camino.title, kind: "custom_journey" })
-              }
-              onCancel={() => setCreating(null)}
-            />
-          )}
-          {caminoRows.length > 0 && <ul className="flex flex-col">{caminoRows.map(renderRow)}</ul>}
-          {caminosQuery.isPending ? (
-            <p className="px-2 font-data text-xs text-paper-muted">{t("loading")}</p>
-          ) : caminoRows.length > 0 ? null : (
-            <p className="px-2 font-data text-xs text-paper-muted">
-              {debouncedQuery ? t("noMatches", { query: debouncedQuery }) : t("noCaminos")}
-            </p>
-          )}
-        </Section>
+        {allowsCaminos && (
+          <Section
+            title={t("caminos")}
+            action={t("newCamino")}
+            actionLabel={t("newCaminoLabel")}
+            onAction={() => setCreating(creating === "camino" ? null : "camino")}
+            expanded={creating === "camino"}
+          >
+            {creating === "camino" && (
+              <CaminoForm
+                onCreated={(camino: CaminoDetail) =>
+                  void created({ id: camino.id, title: camino.title, kind: "custom_journey" })
+                }
+                onCancel={() => setCreating(null)}
+              />
+            )}
+            {caminoRows.length > 0 && <ul className="flex flex-col">{caminoRows.map(renderRow)}</ul>}
+            {caminosQuery.isPending ? (
+              <p className="px-2 font-data text-xs text-paper-muted">{t("loading")}</p>
+            ) : caminoRows.length > 0 ? null : (
+              <p className="px-2 font-data text-xs text-paper-muted">
+                {debouncedQuery ? t("noMatches", { query: debouncedQuery }) : t("noCaminos")}
+              </p>
+            )}
+          </Section>
+        )}
       </div>
 
       {error && (

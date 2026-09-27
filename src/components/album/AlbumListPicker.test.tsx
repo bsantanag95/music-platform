@@ -50,12 +50,14 @@ function camino(id: string, title: string, state = "in_progress") {
 
 let latest: PickerMembership[] = [];
 
-function Harness({ initial }: { initial: PickerMembership[] }) {
+type PickerTarget = { type: "release-group" | "recording"; id: string };
+
+function Harness({ initial, target }: { initial: PickerMembership[]; target: PickerTarget }) {
   const [memberships, setMemberships] = useState(initial);
   latest = memberships;
   return (
     <AlbumListPicker
-      releaseGroupId={RG}
+      target={target}
       memberships={memberships}
       onMembershipsChange={(update) => setMemberships(update)}
       onClose={vi.fn()}
@@ -63,11 +65,11 @@ function Harness({ initial }: { initial: PickerMembership[] }) {
   );
 }
 
-function renderPicker(initial: PickerMembership[] = []) {
+function renderPicker(initial: PickerMembership[] = [], target: PickerTarget = { type: "release-group", id: RG }) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return renderWithIntl(
     <QueryClientProvider client={client}>
-      <Harness initial={initial} />
+      <Harness initial={initial} target={target} />
     </QueryClientProvider>,
   );
 }
@@ -98,6 +100,18 @@ describe("AlbumListPicker", () => {
     renderPicker([oldMembership]);
     expect(screen.getByRole("checkbox", { name: "Hard Rock 1998" })).toBeChecked();
     expect(screen.getAllByText(picker.loading)).toHaveLength(2);
+  });
+
+  it("para una canción usa sus listas de canciones y no ofrece Caminos", async () => {
+    mocks.addItemToList.mockResolvedValue({ items: [{ id: "item-9", position: 1, target: { id: "rec-1" } }] });
+    renderPicker([], { type: "recording", id: "rec-1" });
+
+    fireEvent.click(await screen.findByRole("checkbox", { name: "Glam Metal" }));
+    await waitFor(() => expect(latest).toEqual([{ listId: "l1", itemId: "item-9", kind: "standard", title: "Glam Metal" }]));
+    expect(mocks.getMyLists).toHaveBeenCalledWith(1, 20, { entityType: "recording" });
+    expect(mocks.addItemToList).toHaveBeenCalledWith("l1", { type: "recording", id: "rec-1" });
+    expect(mocks.getMyCaminos).not.toHaveBeenCalled();
+    expect(screen.queryByText(picker.caminos)).not.toBeInTheDocument();
   });
 
   it("oculta los Caminos archivados", async () => {

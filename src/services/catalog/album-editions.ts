@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { label, recording, release, releaseEdition, releaseEditionLabel, releaseGroup, track } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { ingestReleaseTracklist } from "./ingest-release";
+import { loadVersionAttributes, resolveVersionOf } from "./recording-versions";
 import {
   detectEditionVariants,
   extraTracks,
@@ -119,7 +120,9 @@ export interface ExtraTrack {
   position: number;
   title: string;
   durationSec: number | null;
-  variantType: string;
+  /** Atributos del vínculo con la obra (`live`, `cover`, …); ver `recording-versions.ts`. */
+  versionAttributes: string[];
+  versionOf: { recordingId: string; title: string } | null;
 }
 
 /**
@@ -167,12 +170,23 @@ export async function getEditionExtraTracks(releaseGroupId: string, editionId: s
       position: track.position,
       title: recording.title,
       durationSec: recording.durationSec,
-      variantType: recording.variantType,
     })
     .from(track)
     .innerJoin(recording, eq(recording.id, track.recordingId))
     .where(eq(track.releaseId, editionRelease.id))
     .orderBy(asc(track.discNumber), asc(track.position), asc(recording.id));
 
-  return extraTracks(variantTracks, mainTracks);
+  // Misma etiqueta y enlace a la original que la lista principal (openspec: redesign-song-page).
+  const extras = extraTracks(variantTracks, mainTracks);
+  const ids = extras.map((t) => t.recordingId);
+  const attributes = await loadVersionAttributes(ids);
+  const versionOf = await resolveVersionOf(ids, attributes);
+  return extras.map((t) => {
+    const original = versionOf.get(t.recordingId) ?? null;
+    return {
+      ...t,
+      versionAttributes: attributes.get(t.recordingId) ?? [],
+      versionOf: original ? { recordingId: original.recordingId, title: original.title } : null,
+    };
+  });
 }

@@ -28,7 +28,7 @@ function renderDialog(overrides: Partial<typeof own> & { isHighlighted?: boolean
   const onChange = vi.fn();
   const onClose = vi.fn();
   renderWithIntl(
-    <RatingDetailDialog open onClose={onClose} releaseGroupId={RG} own={{ ...own, ...overrides }} onChange={onChange} />,
+    <RatingDetailDialog open onClose={onClose} target={{ type: "release-group", id: RG }} own={{ ...own, ...overrides }} onChange={onChange} />,
   );
   return { onChange, onClose };
 }

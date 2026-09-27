@@ -232,10 +232,11 @@ export const musicbrainz = {
   },
 
   /** Álbumes/EPs/singles etc. donde este artista aparece como crédito. */
-  browseReleaseGroupsByArtist(artistMbid: string) {
+  browseReleaseGroupsByArtist(artistMbid: string, offset = 0) {
     return mbFetch<MBReleaseGroupBrowseResponse>("/release-group", {
       artist: artistMbid,
       limit: "100",
+      ...(offset > 0 ? { offset: String(offset) } : {}),
       inc: "artist-credits",
     });
   },

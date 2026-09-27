@@ -17,6 +17,7 @@ import { isScoreCoherent } from "@/lib/rating-range";
 import { ListenReactionSchema, type ListenEntry, type ListenReaction } from "@/lib/api/schemas";
 import { formatDuration, formatStars, summarizeDurations } from "@/components/album/album-format";
 import type { AlbumTrack, AlbumCredit } from "@/services/catalog/album-detail";
+import { VersionAttributeTags } from "@/components/catalog/VersionAttributeTags";
 
 // Pestaña Canciones de la página de álbum (openspec: redesign-album-page, rehecha en
 // rework-album-tracklist). Títulos completos sin truncar; duración, estado personal y menú
@@ -325,7 +326,6 @@ export function TrackList({
                 const primary = track.credits.filter((c) => c.role === "primary");
                 const otherArtist =
                   primary.length > 0 && primary.some((c) => !albumArtists.has(c.artistId)) ? primary : [];
-                const variant = track.variantType !== "original" ? track.variantType : null;
                 const isCommunityFavorite = communityFavorites.has(track.recordingId);
                 const isListened = authenticated && listened.has(track.recordingId);
                 const isFavorite = favorites.has(track.recordingId);
@@ -397,11 +397,7 @@ export function TrackList({
                               <span className="sr-only">{t("communityFavorite")}</span>
                             </span>
                           )}
-                          {variant && (
-                            <span className="ml-2 rounded border border-ink-border px-1.5 py-0.5 align-middle font-data text-xs text-paper-muted">
-                              {t(`variant.${variant}`)}
-                            </span>
-                          )}
+                          <VersionAttributeTags attributes={track.versionAttributes} />
                         </span>
                         {otherArtist.length > 0 && (
                           <span className="font-data text-xs">
@@ -413,10 +409,10 @@ export function TrackList({
                             {tCatalog("creditsLabel")}: <CreditLinks credits={featured} />
                           </span>
                         )}
-                        {track.variantOf && (
+                        {track.versionOf && (
                           <span className="font-data text-xs text-paper-muted">
-                            <Link href={`/song/${track.variantOf.recordingId}`} className="hover:text-paper hover:underline">
-                              {t("versionOf", { title: track.variantOf.title })}
+                            <Link href={`/song/${track.versionOf.recordingId}`} className="hover:text-paper hover:underline">
+                              {t("versionOf", { title: track.versionOf.title })}
                             </Link>
                           </span>
                         )}

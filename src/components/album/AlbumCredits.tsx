@@ -361,11 +361,23 @@ function hasCredits(groups: TrackCreditGroups | undefined): groups is TrackCredi
  * Personas de un grupo: "Jon Sosin (ukelele)". Se omite el rol obvio del grupo: "producción"
  * en Producción y "composición" (`writer`) en Composición.
  */
-function GroupPeople({ kind, people }: { kind: TrackCreditKind; people: TrackCreditPerson[] }) {
+function GroupPeople({
+  kind,
+  people,
+  memberIds,
+}: {
+  kind: TrackCreditKind;
+  people: TrackCreditPerson[];
+  memberIds?: Set<string>;
+}) {
   const format = useRoleFormatter();
+  // Integrantes primero y destacados (página de canción, openspec: redesign-song-page).
+  const ordered = memberIds
+    ? [...people].sort((a, b) => Number(memberIds.has(b.artistId)) - Number(memberIds.has(a.artistId)))
+    : people;
   return (
     <>
-      {people.map((person, index) => {
+      {ordered.map((person, index) => {
         const obvious = kind === "production" ? "producer" : kind === "songwriting" ? "writer" : null;
         const roles = format(
           obvious ? person.roles.filter((r) => !(r.relationType === obvious && r.attributes.length === 0)) : person.roles,
@@ -373,7 +385,10 @@ function GroupPeople({ kind, people }: { kind: TrackCreditKind; people: TrackCre
         return (
           <Fragment key={person.artistId}>
             {index > 0 && ", "}
-            <Link href={`/artist/${person.artistId}`} className="text-paper hover:text-amber hover:underline">
+            <Link
+              href={`/artist/${person.artistId}`}
+              className={`text-paper hover:text-amber hover:underline ${memberIds?.has(person.artistId) ? "font-semibold" : ""}`}
+            >
               {person.name}
             </Link>
             {roles.length > 0 && <span className="text-paper-muted"> ({roles.join(", ")})</span>}
@@ -384,15 +399,26 @@ function GroupPeople({ kind, people }: { kind: TrackCreditKind; people: TrackCre
   );
 }
 
-function CreditGroups({ groups }: { groups: TrackCreditGroups }) {
+/** Grupos de créditos de una pista; también los usa la página de canción. */
+export function CreditGroups({
+  groups,
+  kinds = GROUP_ORDER,
+  memberIds,
+}: {
+  groups: TrackCreditGroups;
+  /** Grupos a mostrar, en orden (por defecto todos). */
+  kinds?: TrackCreditKind[];
+  /** Integrantes de los artistas principales: se listan primero y destacados. */
+  memberIds?: Set<string>;
+}) {
   const t = useTranslations("catalog.album.credits");
   return (
     <dl className="grid grid-cols-1 gap-x-4 gap-y-1 font-data text-xs sm:grid-cols-[7rem_minmax(0,1fr)]">
-      {GROUP_ORDER.filter((kind) => groups[kind].length > 0).map((kind) => (
+      {kinds.filter((kind) => groups[kind].length > 0).map((kind) => (
         <div key={kind} className="contents">
           <dt className="text-paper-muted">{t(`groups.${kind}`)}</dt>
           <dd className="font-body text-sm">
-            <GroupPeople kind={kind} people={groups[kind]} />
+            <GroupPeople kind={kind} people={groups[kind]} memberIds={memberIds} />
           </dd>
         </div>
       ))}

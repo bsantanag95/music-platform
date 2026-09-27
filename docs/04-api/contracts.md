@@ -302,10 +302,20 @@ pestaña Canciones. Público (catálogo).
 ```json
 {
   "tracks": [
-    { "recordingId": "uuid", "discNumber": 2, "position": 1, "title": "Money (Live)", "durationSec": 400, "variantType": "live" }
+    {
+      "recordingId": "uuid", "discNumber": 2, "position": 1, "title": "Money (Live)", "durationSec": 400,
+      "versionAttributes": ["live"],
+      "versionOf": { "recordingId": "uuid", "title": "Money" }
+    }
   ]
 }
 ```
+
+`versionAttributes` son los atributos del vínculo grabación → obra (`live`, `cover`,
+`instrumental`, `medley`, `partial`…) tal como vienen de MusicBrainz, vacío si la grabación no
+tiene obra; `versionOf` es la grabación original de la obra cuando la pista es en vivo o cover
+de otra (`null` si no). **BREAKING** (cambio `redesign-song-page`, 2026-09): reemplazan a
+`variantType`, que salía de una columna retirada que nunca se completó.
 
 **Errores:** `400 VALIDATION_ERROR` (algún id no es UUID), `404 EDITION_NOT_FOUND` (la edición
 no existe o es de otro álbum), `422 EDITION_IS_BOX` (la edición es una caja: no se ingiere; la
@@ -356,9 +366,9 @@ La lectura no ingesta desde MusicBrainz ni resuelve carátulas externamente.
     "id": "uuid",
     "mbid": "uuid | null",
     "title": "string",
-    "durationSec": "int | null",
-    "variantType": "original | re_recording | remix | live"
+    "durationSec": "int | null"
   },
+  "versionAttributes": ["live"],
   "credits": [
     {
       "artistId": "uuid",
@@ -378,11 +388,28 @@ La lectura no ingesta desde MusicBrainz ni resuelve carátulas externamente.
       "discNumber": "int",
       "position": "int"
     }
-  ]
+  ],
+  "containingAlbums": [
+    {
+      "releaseGroupId": "uuid",
+      "title": "string",
+      "category": "studio | single_ep | compilation | live_other",
+      "coverThumbUrl": "string | null",
+      "firstReleaseDate": "YYYY-MM-DD | null",
+      "firstReleaseYear": "int | null"
+    }
+  ],
+  "primaryArtist": { "id": "uuid", "name": "string" }
 }
 ```
 
-El endpoint comparte el read-model `getRecordingDetail` con las lecturas de servidor futuras.
+`containingAlbums` son los discos distintos que contienen la grabación, del más temprano al más
+tardío; `primaryArtist` es el artista principal de su disco principal (o `null`).
+
+El endpoint comparte el read-model `getRecordingDetail` con la página de canción, pero publica
+solo estos campos. **BREAKING** (cambio `redesign-song-page`, 2026-09): `recording.variantType`
+se reemplaza por `versionAttributes` (atributos del vínculo con la obra, ver pistas adicionales
+arriba; `[]` si la grabación no tiene obra).
 
 ## Autenticación local
 

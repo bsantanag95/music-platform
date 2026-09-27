@@ -167,7 +167,7 @@ function useThresholdedValue() {
  * Valor principal de una tarjeta para un conteo con umbral: "<5" compacto a la vista, con
  * el texto completo ("menos de 5") para lectores de pantalla y al pasar el puntero.
  */
-function ThresholdedTileValue({ count }: { count: ThresholdedCount }) {
+export function ThresholdedTileValue({ count }: { count: ThresholdedCount }) {
   const t = useTranslations("catalog.album.community");
   const locale = useLocale();
   if (count.kind !== "fewer") return <>{new Intl.NumberFormat(locale).format(count.value)}</>;
@@ -179,7 +179,7 @@ function ThresholdedTileValue({ count }: { count: ThresholdedCount }) {
   );
 }
 
-function StatTile({ label, value, detail }: { label: string; value: React.ReactNode; detail?: React.ReactNode }) {
+export function StatTile({ label, value, detail }: { label: string; value: React.ReactNode; detail?: React.ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col gap-0.5 rounded border border-ink-border bg-ink-surface px-3 py-2">
       <span className="font-data text-xs text-paper-muted">{label}</span>

@@ -8,7 +8,15 @@ import {
   releaseGroup,
   track,
   type RecordingRow,
+  type ReleaseRow,
 } from "@/db/schema";
+import { schedulePersonnelSync } from "./album-detail";
+import {
+  compareDiscsByDate,
+  discDateKey,
+  loadVersionAttributes,
+  pickPrincipalDisc,
+} from "./recording-versions";
 
 export interface RecordingCredit {
   artistId: string;
@@ -33,6 +41,7 @@ export interface ContainingAlbum {
   title: string;
   category: string;
   coverThumbUrl: string | null;
+  firstReleaseDate: string | null;
   firstReleaseYear: number | null;
 }
 
@@ -43,6 +52,10 @@ export interface RecordingDetail {
   containingAlbums: ContainingAlbum[];
   appearances: RecordingAppearance[];
   primaryArtist: { id: string; name: string } | null;
+  /** Atributos del vínculo con la obra (openspec: redesign-song-page, `song-versions`). */
+  versionAttributes: string[];
+  /** Primer disco de estudio que la contiene, si no el más temprano (`song-page-layout`). */
+  principalDisc: ContainingAlbum | null;
 }
 
 export type RecordingDetailResult =
@@ -59,7 +72,7 @@ export async function getRecordingDetail(recordingId: string): Promise<Recording
 
   if (!recordingRow) return { kind: "not_found" };
 
-  const [creditRows, appearanceRows, containingAlbumRows] = await Promise.all([
+  const [creditRows, appearanceRows, containingAlbumRows, versionAttributes] = await Promise.all([
     db
       .select({
         artistId: artist.id,
@@ -101,34 +114,21 @@ export async function getRecordingDetail(recordingId: string): Promise<Recording
       .innerJoin(release, eq(release.id, track.releaseId))
       .innerJoin(releaseGroup, eq(releaseGroup.id, release.releaseGroupId))
       .where(eq(track.recordingId, recordingId)),
+    loadVersionAttributes([recordingId]),
   ]);
 
   // Álbumes contenedores ordenados por primer lanzamiento (nulls al final).
-  const containingAlbums = [...containingAlbumRows]
-    .sort((a, b) => {
-      const ka = a.firstReleaseDate ?? `${String(a.firstReleaseYear ?? 9999).padStart(4, "0")}-99-99`;
-      const kb = b.firstReleaseDate ?? `${String(b.firstReleaseYear ?? 9999).padStart(4, "0")}-99-99`;
-      return ka.localeCompare(kb) || a.releaseGroupId.localeCompare(b.releaseGroupId);
-    })
-    .map(({ releaseGroupId, title, category, coverThumbUrl, firstReleaseYear }) => ({
-      releaseGroupId,
-      title,
-      category,
-      coverThumbUrl,
-      firstReleaseYear,
-    }));
+  const containingAlbums: ContainingAlbum[] = [...containingAlbumRows].sort(compareDiscsByDate);
+  const principalDisc = pickPrincipalDisc(containingAlbums);
 
-  const [primaryArtist] = appearanceRows[0]
+  // Artista para las migas: el principal del disco principal (o del primero que aparezca).
+  const breadcrumbAlbumId = principalDisc?.releaseGroupId ?? appearanceRows[0]?.releaseGroupId;
+  const [primaryArtist] = breadcrumbAlbumId
     ? await db
         .select({ id: artist.id, name: artist.name })
         .from(credit)
         .innerJoin(artist, eq(artist.id, credit.artistId))
-        .where(
-          and(
-            eq(credit.releaseGroupId, appearanceRows[0].releaseGroupId),
-            eq(credit.role, "primary"),
-          ),
-        )
+        .where(and(eq(credit.releaseGroupId, breadcrumbAlbumId), eq(credit.role, "primary")))
         .orderBy(asc(credit.position))
         .limit(1)
     : [];
@@ -146,6 +146,130 @@ export async function getRecordingDetail(recordingId: string): Promise<Recording
       containingAlbums,
       appearances: appearanceRows,
       primaryArtist: primaryArtist ? { id: primaryArtist.id, name: primaryArtist.name } : null,
+      versionAttributes: versionAttributes.get(recordingId) ?? [],
+      principalDisc,
     },
   };
+}
+
+// ---------------------------------------------------------------------------
+// "Esta grabación aparece en" (openspec: redesign-song-page, `song-versions`).
+// ---------------------------------------------------------------------------
+
+export const APPEARANCE_CATEGORY_ORDER = ["studio", "single_ep", "compilation", "live_other"] as const;
+export type AppearanceCategory = (typeof APPEARANCE_CATEGORY_ORDER)[number];
+
+/** Discos visibles por grupo antes del "+N". */
+export const APPEARANCES_VISIBLE_PER_GROUP = 3;
+
+export interface AppearanceGroup {
+  category: AppearanceCategory;
+  discs: ContainingAlbum[];
+}
+
+export interface GroupedAppearances {
+  groups: AppearanceGroup[];
+  /** El disco más temprano de todos: lleva la marca "original". */
+  originalReleaseGroupId: string | null;
+}
+
+/**
+ * Agrupa los discos por tipo en orden fijo, cada grupo del más temprano al más tardío; los
+ * grupos vacíos no aparecen. Una categoría desconocida cae en "en vivo y otros". Pura.
+ */
+export function groupAppearances(discs: ContainingAlbum[]): GroupedAppearances {
+  const byCategory = new Map<AppearanceCategory, ContainingAlbum[]>();
+  for (const disc of discs) {
+    const category = (APPEARANCE_CATEGORY_ORDER as readonly string[]).includes(disc.category)
+      ? (disc.category as AppearanceCategory)
+      : "live_other";
+    byCategory.set(category, [...(byCategory.get(category) ?? []), disc]);
+  }
+  const groups = APPEARANCE_CATEGORY_ORDER.flatMap((category) => {
+    const group = byCategory.get(category);
+    return group ? [{ category, discs: [...group].sort(compareDiscsByDate) }] : [];
+  });
+  const earliest = [...discs].sort(compareDiscsByDate)[0];
+  return { groups, originalReleaseGroupId: earliest?.releaseGroupId ?? null };
+}
+
+/** Año del disco para mostrar (el año canónico, o el de la fecha si solo hay fecha). */
+export function discYear(disc: Pick<ContainingAlbum, "firstReleaseDate" | "firstReleaseYear">): number | null {
+  if (disc.firstReleaseYear !== null) return disc.firstReleaseYear;
+  const year = Number(discDateKey(disc).slice(0, 4));
+  return year === 9999 ? null : year;
+}
+
+// ---------------------------------------------------------------------------
+// Tira de pistas (openspec: redesign-song-page, `song-page-layout`, design D5).
+// ---------------------------------------------------------------------------
+
+export interface StripTrack {
+  recordingId: string;
+  discNumber: number;
+  position: number;
+  title: string;
+}
+
+export interface TrackStrip {
+  current: StripTrack;
+  /** Posición 1-based en el orden global del álbum y total de pistas. */
+  index: number;
+  total: number;
+  /** El álbum tiene más de un disco: la numeración visible es `disco-pista`. */
+  multiDisc: boolean;
+  previous: StripTrack | null;
+  next: StripTrack | null;
+}
+
+/**
+ * Ubica la grabación en la lista (ya ordenada por disco y posición) y toma la anterior y la
+ * siguiente cruzando discos. `null` si la grabación no está en la lista. Pura.
+ */
+export function buildTrackStrip(tracks: StripTrack[], recordingId: string): TrackStrip | null {
+  const index = tracks.findIndex((t) => t.recordingId === recordingId);
+  if (index === -1) return null;
+  return {
+    current: tracks[index]!,
+    index: index + 1,
+    total: tracks.length,
+    multiDisc: new Set(tracks.map((t) => t.discNumber)).size > 1,
+    previous: tracks[index - 1] ?? null,
+    next: tracks[index + 1] ?? null,
+  };
+}
+
+/** Edición representativa ingerida de un disco, o `null` si todavía no tiene tracklist. */
+export async function loadRepresentativeRelease(releaseGroupId: string): Promise<ReleaseRow | null> {
+  const [row] = await db
+    .select()
+    .from(release)
+    .where(and(eq(release.releaseGroupId, releaseGroupId), eq(release.isRepresentative, true)))
+    .limit(1);
+  return row ?? null;
+}
+
+/** Tira de pistas de la grabación en la edición representativa de su disco principal. */
+export async function getTrackStrip(recordingId: string, representativeReleaseId: string): Promise<TrackStrip | null> {
+  const tracks = await db
+    .select({
+      recordingId: track.recordingId,
+      discNumber: track.discNumber,
+      position: track.position,
+      title: recording.title,
+    })
+    .from(track)
+    .innerJoin(recording, eq(recording.id, track.recordingId))
+    .where(eq(track.releaseId, representativeReleaseId))
+    .orderBy(asc(track.discNumber), asc(track.position), asc(recording.id));
+  return buildTrackStrip(tracks, recordingId);
+}
+
+/**
+ * Créditos y autoría se ingieren por disco. Si alguien llega a la canción sin pasar por el
+ * álbum, se programan en segundo plano para la edición representativa del disco principal
+ * (design D7), con la misma función y los mismos locks que la página de álbum.
+ */
+export function scheduleSongCreditsSync(representativeRelease: ReleaseRow | null): void {
+  if (representativeRelease) schedulePersonnelSync(representativeRelease);
 }

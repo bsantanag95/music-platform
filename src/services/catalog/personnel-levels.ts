@@ -413,3 +413,68 @@ export async function getAlbumPersonnel(releaseGroupId: string): Promise<AlbumPe
     releaseMbid: representative.mbid,
   };
 }
+
+/** Créditos de la página de canción (openspec: redesign-song-page, design D6). */
+export interface RecordingCredits {
+  /** Mismos grupos que la vista por canción del álbum; `songwriting` es el bloque Composición. */
+  groups: TrackCreditGroups;
+  /** Integrantes de los artistas principales (y el propio artista si es una persona): se destacan. */
+  memberIds: string[];
+  /** La edición representativa del disco principal tiene créditos de todo el disco. */
+  hasAlbumWideCredits: boolean;
+}
+
+/**
+ * Créditos de una grabación con la misma agrupación que la vista por canción del álbum, más
+ * la autoría de su obra. Los créditos de nivel edición del disco principal no se repiten: solo
+ * se informa que existen, para enlazar a la pestaña Créditos del álbum. Lectura pura de la base.
+ */
+export async function getRecordingCredits(
+  recordingId: string,
+  primaryArtistIds: string[],
+  representativeReleaseId: string | null,
+): Promise<RecordingCredits> {
+  const [creditRows, songwriterRows, albumWideRows, primaryRows] = await Promise.all([
+    db
+      .select({
+        artistId: personnelCredit.artistId,
+        name: artist.name,
+        creditedAs: personnelCredit.creditedAs,
+        relationType: personnelCredit.relationType,
+        attributes: personnelCredit.attributes,
+        recordingId: personnelCredit.recordingId,
+      })
+      .from(personnelCredit)
+      .innerJoin(artist, eq(artist.id, personnelCredit.artistId))
+      .where(eq(personnelCredit.recordingId, recordingId)),
+    loadSongwriterRows([recordingId]),
+    representativeReleaseId
+      ? db
+          .select({ id: personnelCredit.id })
+          .from(personnelCredit)
+          .where(eq(personnelCredit.releaseId, representativeReleaseId))
+          .limit(1)
+      : Promise.resolve([]),
+    primaryArtistIds.length
+      ? db.select({ id: artist.id, type: artist.type }).from(artist).where(inArray(artist.id, primaryArtistIds))
+      : Promise.resolve([]),
+  ]);
+
+  const groupIds = primaryRows.map((row) => row.id);
+  const memberRows = groupIds.length
+    ? await db.select({ personId: membership.personId }).from(membership).where(inArray(membership.groupId, groupIds))
+    : [];
+  const memberIds = [
+    ...new Set([
+      ...memberRows.map((row) => row.personId),
+      ...primaryRows.filter((row) => row.type === "person").map((row) => row.id),
+    ]),
+  ];
+
+  const byTrack = groupCreditsByTrack(creditRows, [{ recordingId }], songwriterRows);
+  return {
+    groups: byTrack.tracks[recordingId] ?? emptyGroups(),
+    memberIds,
+    hasAlbumWideCredits: albumWideRows.length > 0,
+  };
+}
