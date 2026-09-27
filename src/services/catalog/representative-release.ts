@@ -64,6 +64,22 @@ const PRIMARY_COUNTRIES = ["XW", "US", "GB", "XE"];
 // corriente del disco.
 const NON_STANDARD_PACKAGINGS = ["box", "slim jewel case with slipcase"];
 
+// Formato preferido ante un empate total: el CD, y después el digital, antes que vinilo,
+// cassette u otros. Cubre variantes de CD ("Enhanced CD", "HDCD", "SHM-CD", "Blu-spec CD")
+// pero no "CD-R" ni el SACD híbrido.
+const CD_FORMAT = /cd$/i;
+const SACD_FORMAT = /sacd/i;
+const DIGITAL_FORMAT = "digital media";
+
+/** 0 = todo CD, 1 = todo digital, 2 = otro, mezcla de formatos o formato desconocido. */
+function formatRank(release: MBReleaseSummary): number {
+  const formats = (release.media ?? []).map((medium) => medium.format?.trim() ?? "");
+  if (formats.length === 0 || formats.some((format) => format === "")) return 2;
+  if (formats.every((format) => CD_FORMAT.test(format) && !SACD_FORMAT.test(format))) return 0;
+  if (formats.every((format) => format.toLowerCase() === DIGITAL_FORMAT)) return 1;
+  return 2;
+}
+
 function hasNonStandardMarker(release: MBReleaseSummary): boolean {
   return NON_STANDARD_EDITION_PATTERN.test(`${release.title ?? ""} ${release.disambiguation ?? ""}`);
 }
@@ -110,7 +126,7 @@ function median(values: number[]): number | null {
 }
 
 /**
- * Devuelve la edición representativa según los 7 criterios ordenados de la
+ * Devuelve la edición representativa según los 8 criterios ordenados de la
  * capability `album-edition-selection`, o `null` si la lista está vacía.
  */
 export function pickRepresentativeRelease(
@@ -143,6 +159,7 @@ export function pickRepresentativeRelease(
         referenceMedian !== null && trackCount !== null
           ? Math.abs(trackCount - referenceMedian)
           : Number.POSITIVE_INFINITY,
+      formatRank: formatRank(release),
       mbid: release.id,
     };
   });
@@ -155,6 +172,7 @@ export function pickRepresentativeRelease(
       a.notPrimaryCountry - b.notPrimaryCountry ||
       a.notStandardPackaging - b.notStandardPackaging ||
       a.trackDistance - b.trackDistance ||
+      a.formatRank - b.formatRank ||
       a.mbid.localeCompare(b.mbid),
   );
 

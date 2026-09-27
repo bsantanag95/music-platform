@@ -31,7 +31,9 @@ empate:
 6. Recuento total de pistas más cercano a la mediana de recuentos de las ediciones
    `Official` del grupo (penaliza ediciones truncadas y ediciones infladas con bonus
    tracks).
-7. Desempate final estable por `mbid` ascendente.
+7. Formato: CD (incluidas sus variantes, no `CD-R` ni SACD) antes que digital, y digital
+   antes que vinilo, cassette, otros formatos, mezclas de formatos o formato desconocido.
+8. Desempate final estable por `mbid` ascendente.
 
 La función SHALL ser determinista: la misma lista de ediciones de entrada SHALL producir
 siempre la misma elección, independientemente del orden en que MusicBrainz las devuelva.
@@ -52,6 +54,14 @@ lectura de "la tracklist del álbum" SHALL usar la edición representativa.
 - **WHEN** un `release_group` tiene, con la misma fecha, país primario y recuento de pistas,
   un vinilo `signed`, una edición `Target exclusive` y un vinilo sin marcadores
 - **THEN** el sistema elige el vinilo sin marcadores como representativa
+
+#### Scenario: Preferencia de formato ante un empate
+
+- **WHEN** un `release_group` tiene, con la misma fecha, país primario, empaquetado y
+  recuento de pistas, un vinilo, un cassette, una edición digital y un CD, todos sin
+  marcadores
+- **THEN** el sistema elige el CD como representativa
+- **AND** sin el CD, elige la edición digital
 
 #### Scenario: Orden de entrada indiferente
 
