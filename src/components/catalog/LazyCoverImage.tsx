@@ -17,6 +17,7 @@ interface LazyCoverImageProps {
 
 import type { Cover } from "@/lib/api/schemas";
 
+const VISIBILITY_MARGIN = "200px";
 const MAX_QUERY_RETRIES = 2;
 const MAX_IMAGE_RETRIES = 2;
 const BACKOFF_DELAYS = [250, 750];
@@ -34,10 +35,34 @@ const BACKOFF_DELAYS = [250, 750];
 export function LazyCoverImage({ releaseGroupId, coverLabel, className = "" }: LazyCoverImageProps) {
   const t = useTranslations("catalog.artist");
   const [imageRetries, setImageRetries] = useState(0);
+  // La carátula se resuelve recién cuando la tarjeta entra (o se acerca) al área visible
+  // (openspec: redesign-artist-page, D5): 200 discos sin resolver no disparan 200 requests.
+  const [target, setTarget] = useState<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (visible || !target) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setVisible(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: VISIBILITY_MARGIN },
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [target, visible]);
 
   const { data, isLoading, isError } = useQuery<Cover>({
     queryKey: queryKeys.releaseGroupCover(releaseGroupId),
     queryFn: () => getReleaseGroupCover(releaseGroupId),
+    enabled: visible,
     retry: (failureCount) => failureCount < MAX_QUERY_RETRIES,
     retryDelay: (failureCount) => {
       const index = Math.min(failureCount, BACKOFF_DELAYS.length - 1);
@@ -57,14 +82,12 @@ export function LazyCoverImage({ releaseGroupId, coverLabel, className = "" }: L
   // Determinar si se agotaron los reintentos
   const imageError = imageRetries > MAX_IMAGE_RETRIES;
 
-  // Durante carga de consulta
-  if (isLoading) {
+  // Antes de entrar en pantalla, o durante la consulta: el skeleton hace de centinela.
+  if (!visible || isLoading) {
     return (
-      <Skeleton
-        variant="disc"
-        ariaLabel={t("coverLoading")}
-        className={className}
-      />
+      <div ref={setTarget} className={className}>
+        <Skeleton variant="disc" ariaLabel={t("coverLoading")} className="size-full" />
+      </div>
     );
   }
 

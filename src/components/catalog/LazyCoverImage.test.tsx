@@ -35,9 +35,40 @@ function makeCover(cover: string | null): Cover {
   return { cover };
 }
 
+/** IntersectionObserver que informa visibles los elementos al observarlos (o nunca). */
+function stubIntersection(visible: boolean) {
+  const observed: Element[] = [];
+  class StubObserver {
+    constructor(private readonly callback: IntersectionObserverCallback) {}
+    observe(element: Element) {
+      observed.push(element);
+      if (visible) this.callback([{ isIntersecting: true, target: element } as IntersectionObserverEntry], this as never);
+    }
+    disconnect() {}
+    unobserve() {}
+    takeRecords() {
+      return [];
+    }
+  }
+  vi.stubGlobal("IntersectionObserver", StubObserver);
+  return observed;
+}
+
 describe("LazyCoverImage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    stubIntersection(true);
+  });
+
+  it("no pide la carátula hasta que la tarjeta entra en pantalla (openspec: redesign-artist-page)", () => {
+    const observed = stubIntersection(false);
+    vi.mocked(catalogApi.getReleaseGroupCover).mockResolvedValue(makeCover(null));
+
+    renderWithQuery(<LazyCoverImage releaseGroupId="g1" coverLabel={catalogEs.artist.albumCoverLabel} />);
+
+    expect(observed).toHaveLength(1);
+    expect(catalogApi.getReleaseGroupCover).not.toHaveBeenCalled();
+    expect(screen.getByRole("status")).toHaveAttribute("aria-label", catalogEs.artist.coverLoading);
   });
 
   it("muestra un skeleton accesible mientras carga", () => {

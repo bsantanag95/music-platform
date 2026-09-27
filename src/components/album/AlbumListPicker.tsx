@@ -28,10 +28,11 @@ export interface PickerMembership {
 
 interface AlbumListPickerProps {
   /**
-   * Objetivo que se agrega o quita. Una canción (openspec: redesign-song-page) usa el mismo
-   * selector con sus listas de canciones y sin Caminos, que solo admiten álbumes.
+   * Objetivo que se agrega o quita. Una canción (openspec: redesign-song-page) y un artista
+   * (openspec: redesign-artist-page) usan el mismo selector con sus listas y sin Caminos, que
+   * solo admiten álbumes.
    */
-  target: { type: "release-group" | "recording"; id: string };
+  target: { type: "release-group" | "recording" | "artist"; id: string };
   memberships: PickerMembership[];
   /** Recibe una función de actualización: varias casillas pueden estar en vuelo a la vez. */
   onMembershipsChange: (update: (current: PickerMembership[]) => PickerMembership[]) => void;

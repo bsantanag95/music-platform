@@ -120,3 +120,20 @@ interfaz:
   estrellas por pista (Modelo C: en una canción, lo primario es la reacción).
 - **Listas**: listas públicas y visibles que contienen el álbum, con los mismos filtros que
   "Mostrar en listas".
+
+## Agregados de comunidad del artista
+
+Cambio `redesign-artist-page` (2026-09). La cabecera del artista muestra tres agregados, con
+el mismo umbral que el álbum, aplicado en el read-model (`artist-community.ts`):
+
+- **Oyentes**: personas distintas con al menos una escucha del artista o de un disco de su
+  discografía propia (las apariciones en discos ajenos no suman).
+- **Seguidores** y **favoritos**: personas distintas que siguen al artista o lo tienen como
+  favorito. **Se levanta la restricción anterior de no mostrar el conteo de seguidores**
+  (`artist-following`, "en esta fase"): la cifra aparece solo en el bloque de comunidad, nunca
+  en el control de seguir.
+- **Listas**: listas públicas y visibles que contienen al artista.
+- Los tres conteos de personas incluyen cualquier audiencia, excluyen cuentas desactivadas y
+  muestran **"menos de 5"** entre 1 y 4. No hay promedio de estrellas del artista (su opinión
+  es una nota, no una valoración), ni conteo de Pendiente, ni **ningún agregado de
+  recorridos** entre usuarios.

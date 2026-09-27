@@ -155,7 +155,158 @@
     "follow": "Follow",
     "following": "Following",
     "signInToFollow": "Log in to follow",
-    "followError": "We couldn't complete the action."
+    "followError": "We couldn't complete the action.",
+    "typeEyebrow": {
+      "person": "Solo artist",
+      "group": "Band",
+      "various": "Various artists",
+      "unknown": "Artist"
+    },
+    "tabs": {
+      "label": "Artist sections",
+      "discography": "Discography",
+      "biography": "Biography"
+    },
+    "photo": {
+      "alt": "Photo of {name}",
+      "credit": "Photo: {author}",
+      "creditNoAuthor": "Photo",
+      "license": "License {license}"
+    },
+    "facts": {
+      "heading": "Facts",
+      "origin": "Origin",
+      "activity": "Active",
+      "born": "Born",
+      "died": "Died",
+      "links": "Links",
+      "since": "since {year}",
+      "range": "{begin} – {end}",
+      "active": "Active",
+      "disbanded": "Disbanded",
+      "official": "Official site",
+      "bandcamp": "Bandcamp",
+      "wikipedia": "Wikipedia",
+      "streaming": "Streaming"
+    },
+    "summary": {
+      "readMore": "Keep reading",
+      "source": "Source: Wikipedia",
+      "license": "CC BY-SA 4.0",
+      "languageNote": "Summary in {language}",
+      "languages": {
+        "es": "Spanish",
+        "en": "English"
+      }
+    },
+    "biography": {
+      "heading": "Biography",
+      "readFull": "Read the full article on Wikipedia",
+      "languageNote": "Text in {language}"
+    },
+    "relation": {
+      "heading": "Your relationship",
+      "signInPrompt": "Sign in to follow the artist, log listens and build your journey.",
+      "signIn": "Sign in",
+      "following": "Following",
+      "follow": "Follow",
+      "favorite": "Favorite",
+      "pending": "To listen",
+      "listens": "Listens",
+      "listensNone": "No listens",
+      "listensAlbums": "{count, plural, one {# record} other {# records}}",
+      "listensLast": "{title}, {date}",
+      "logListen": "+ Log",
+      "logging": "Logging…",
+      "listenLogged": "Listen logged",
+      "addDetails": "Add details",
+      "collection": "Collection",
+      "collectionNone": "None of their records",
+      "collectionHave": "{count, plural, one {# record} other {# records}}",
+      "collectionSeeking": "seeking {count}",
+      "lists": "{count, plural, =0 {In none of your lists} one {In # of your lists} other {In # of your lists}}",
+      "chooseLists": "Choose lists",
+      "close": "Close",
+      "journey": "Journey",
+      "journeyStart": "Build journey",
+      "journeyManage": "Manage",
+      "journeyProgress": "Your journey progress",
+      "journeyStates": {
+        "in_progress": "In progress",
+        "complete": "Complete",
+        "archived": "Archived"
+      },
+      "saveError": "Couldn't save. Try again."
+    },
+    "community": {
+      "heading": "Community",
+      "listeners": "Listeners",
+      "followers": "Followers",
+      "favorites": "favorite of {value}",
+      "lists": "In lists",
+      "listsNone": "In no lists"
+    },
+    "discography": {
+      "heading": "Discography",
+      "sectionsLabel": "Discography sections",
+      "sections": {
+        "main": "Main",
+        "live": "Live",
+        "compilations": "Compilations",
+        "singles": "Singles",
+        "other": "Other",
+        "appearances": "Appearances"
+      },
+      "viewLabel": "View",
+      "viewGrid": "Grid",
+      "viewTable": "Table",
+      "ep": "EP",
+      "bestRated": "Top rated",
+      "listened": "Listened",
+      "yourStars": "Your rating: {stars}",
+      "showMore": "Show more",
+      "columns": {
+        "year": "Year",
+        "cover": "Cover",
+        "title": "Title",
+        "type": "Type",
+        "community": "Community",
+        "you": "You"
+      },
+      "fewRatings": "< 5 ratings",
+      "communityValue": "★ {average} ({count})",
+      "withArtist": "by {name}",
+      "empty": "No records by this artist yet.",
+      "kinds": {
+        "album": "album",
+        "ep": "EP",
+        "single": "single",
+        "broadcast": "broadcast",
+        "other": "other",
+        "live": "live",
+        "compilation": "compilation",
+        "soundtrack": "soundtrack",
+        "remix": "remix",
+        "demo": "demo",
+        "interview": "interview",
+        "spokenword": "spoken word",
+        "dj_mix": "DJ mix",
+        "mixtape_street": "mixtape",
+        "audiobook": "audiobook",
+        "audio_drama": "audio drama",
+        "field_recording": "field recording",
+        "studio": "studio",
+        "single_ep": "single or EP",
+        "live_other": "live or other"
+      }
+    },
+    "alsoIn": {
+      "heading": "Also in",
+      "period": "{from} – {to}",
+      "since": "since {from}",
+      "unknownPeriod": "unknown period",
+      "mainCount": "{count, plural, one {# main record} other {# main records}}"
+    }
   },
   "album": {
     "tracklistHeading": "Tracklist",
