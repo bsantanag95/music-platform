@@ -52,9 +52,10 @@ export interface MBReleaseGroup {
 }
 
 export interface MBReleaseGroupBrowseResponse {
-  "release-groups": MBReleaseGroup[];
   /** Total de release-groups del artista (más allá de la página devuelta). */
-  "release-group-count"?: number;
+  "release-group-count": number;
+  "release-group-offset"?: number;
+  "release-groups": MBReleaseGroup[];
 }
 
 export interface MBReleaseGroupSearchItem {

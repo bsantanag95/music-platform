@@ -85,6 +85,12 @@ necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
 >   pertenencias). Verifican la ingesta paginada de ediciones, variantes y pistas
 >   adicionales, el índice único de representativa, la re-canonicalización, los créditos
 >   de personal y la autoría de obras (compositores y letristas).
+> - `smoke-test-artist-discography.ts` crea dos bandas, un artista invitado y cientos de
+>   release-groups con el mismo prefijo sintético `5e0ce000-0000-4000-8000-*` y los borra al
+>   terminar (también si falla); si se interrumpió, la limpieza de arriba lo cubre. Verifica la
+>   discografía paginada sin bootlegs, los tipos crudos, la marca de fuera de la discografía (sin
+>   borrar) y su reversión, la primera visita parcial de un artista con más de 300 discos, la
+>   sincronización interrumpida sin marcas y la simulación sin escritura.
 
 ## Base de datos / migraciones
 

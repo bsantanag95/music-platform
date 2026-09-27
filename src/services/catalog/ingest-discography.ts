@@ -1,4 +1,5 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, notInArray, sql } from "drizzle-orm";
+import { after } from "next/server";
 import { db } from "@/db";
 import {
   artist,
@@ -8,23 +9,36 @@ import {
   type ReleaseGroupRow,
   type ArtistRow,
 } from "@/db/schema";
-import { musicbrainz } from "../musicbrainz/client";
+import { musicbrainz, RELEASE_BROWSE_PAGE_SIZE } from "../musicbrainz/client";
 import { mapReleaseGroupCategory } from "../musicbrainz/mappers";
 import { upsertArtistStub } from "./ingest-artist";
 import { canonicalDateValues } from "./ingest-release-group";
-import type { MBArtistCreditItem } from "../musicbrainz/types";
+import type { MBArtistCreditItem, MBReleaseGroup } from "../musicbrainz/types";
+
+// Discografía de un artista (openspec: fix-artist-discography-ingestion, capability
+// `artist-discography`): browse paginado sin bootlegs, tipos crudos de MusicBrainz,
+// marca de release-groups fuera de la discografía y resincronización semanal.
+
+/** Tope de páginas del browse (2.000 release-groups) para acotar un artista anómalo. */
+export const DISCOGRAPHY_MAX_PAGES = 20;
+/** Páginas que la primera visita trae de forma síncrona; el resto va en segundo plano. */
+export const DISCOGRAPHY_INITIAL_PAGES = 3;
+/** Antigüedad a partir de la cual una discografía completa se vuelve a sincronizar. */
+export const DISCOGRAPHY_REFRESH_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Release-group de la discografía con el rol del crédito del artista. */
+export type DiscographyRow = ReleaseGroupRow & { creditRole: "primary" | "featured" };
 
 /**
  * Trae y cachea todos los release-groups donde el artista aparece
  * acreditado (como principal o como feat.), junto con sus créditos.
  *
  * Si `target.discographySyncedAt` ya está seteado, se devuelve directo
- * desde la base local sin tocar MusicBrainz — antes esta función siempre
- * volvía a consultar la API en cada búsqueda, incluso para un artista ya
- * conocido, rompiendo el patrón de cacheo bajo demanda justo en el punto
- * de mayor tráfico.
+ * desde la base local sin esperar a MusicBrainz; si además la discografía
+ * no está completa o tiene más de 7 días, se resincroniza en segundo plano.
+ * Los release-groups fuera de la discografía nunca se devuelven.
  */
-export async function findOrIngestDiscography(target: ArtistRow): Promise<ReleaseGroupRow[]> {
+export async function findOrIngestDiscography(target: ArtistRow): Promise<DiscographyRow[]> {
   const direct = await findOrIngestOwnDiscography(target);
 
   if (target.type !== "person") return direct;
@@ -42,45 +56,234 @@ export async function findOrIngestDiscography(target: ArtistRow): Promise<Releas
   return [...combined.values()];
 }
 
-async function findOrIngestOwnDiscography(target: ArtistRow): Promise<ReleaseGroupRow[]> {
+async function findOrIngestOwnDiscography(target: ArtistRow): Promise<DiscographyRow[]> {
   if (target.discographySyncedAt) {
-    const rows = await db
-      .select({ releaseGroup })
-      .from(credit)
-      .innerJoin(releaseGroup, eq(releaseGroup.id, credit.releaseGroupId))
-      .where(eq(credit.artistId, target.id));
-    return rows.map((r) => r.releaseGroup);
+    if (needsDiscographyRefresh(target)) scheduleDiscographySync(target.id);
+    return readArtistDiscography(target.id);
   }
 
   if (!target.mbid) return [];
 
-  const browse = await musicbrainz.browseReleaseGroupsByArtist(target.mbid);
-  const rows: ReleaseGroupRow[] = [];
+  const result = await syncArtistDiscography(target.id, { mode: "initial" });
+  if (result.status === "partial") scheduleDiscographySync(target.id);
+  return readArtistDiscography(target.id);
+}
 
-  for (const rg of browse["release-groups"]) {
+/** Discografía guardada de un artista, sin los release-groups fuera de la discografía. */
+export async function readArtistDiscography(artistId: string): Promise<DiscographyRow[]> {
+  const rows = await db
+    .select({ releaseGroup, role: credit.role })
+    .from(credit)
+    .innerJoin(releaseGroup, eq(releaseGroup.id, credit.releaseGroupId))
+    .where(and(eq(credit.artistId, artistId), isNull(releaseGroup.discographyUnlistedAt)));
+
+  // Un artista acreditado dos veces en el mismo release-group cuenta una vez; manda el
+  // crédito principal.
+  const byId = new Map<string, DiscographyRow>();
+  for (const { releaseGroup: row, role } of rows) {
+    const creditRole = role === "primary" ? "primary" : "featured";
+    const existing = byId.get(row.id);
+    if (!existing || (existing.creditRole === "featured" && creditRole === "primary")) {
+      byId.set(row.id, { ...row, creditRole });
+    }
+  }
+  return [...byId.values()];
+}
+
+/** La discografía nunca se recorrió entera, o la última vez fue hace más de 7 días. */
+export function needsDiscographyRefresh(target: Pick<ArtistRow, "discographyCompleteAt">, now = Date.now()): boolean {
+  return target.discographyCompleteAt === null || now - target.discographyCompleteAt.getTime() > DISCOGRAPHY_REFRESH_MS;
+}
+
+/**
+ * Programa una sincronización completa después de responder. Fuera de una request de Next
+ * (scripts) `after()` no está disponible: se omite y la próxima visita la vuelve a programar.
+ */
+function scheduleDiscographySync(artistId: string): void {
+  try {
+    after(async () => {
+      try {
+        await syncArtistDiscography(artistId, { mode: "full" });
+      } catch (error) {
+        console.error(`[discography] no se pudo sincronizar la discografía de ${artistId}`, error);
+      }
+    });
+  } catch {
+    console.warn(`[discography] sincronización de ${artistId} omitida: fuera de una request`);
+  }
+}
+
+export interface DiscographyPages {
+  releaseGroups: MBReleaseGroup[];
+  total: number;
+  /** Se recorrieron todas las páginas que informa MusicBrainz. */
+  complete: boolean;
+  /** Se cortó por el tope de seguridad, no por el límite pedido. */
+  truncated: boolean;
+}
+
+/** Recorre el browse de release-groups (sin bootlegs) hasta el total o hasta `maxPages`. */
+export async function fetchDiscographyPages(artistMbid: string, maxPages = DISCOGRAPHY_MAX_PAGES): Promise<DiscographyPages> {
+  const releaseGroups: MBReleaseGroup[] = [];
+  let total = 0;
+  let pages = 0;
+  do {
+    const page = await musicbrainz.browseReleaseGroupsByArtist(artistMbid, pages * RELEASE_BROWSE_PAGE_SIZE);
+    total = page["release-group-count"];
+    releaseGroups.push(...page["release-groups"]);
+    pages += 1;
+    if (page["release-groups"].length === 0) break;
+  } while (releaseGroups.length < total && pages < maxPages);
+
+  const complete = releaseGroups.length >= total;
+  const truncated = !complete && pages >= DISCOGRAPHY_MAX_PAGES;
+  if (truncated) {
+    console.warn(`[discography] ${artistMbid}: tope de ${DISCOGRAPHY_MAX_PAGES} páginas (${releaseGroups.length} de ${total})`);
+  }
+  return { releaseGroups, total, complete, truncated };
+}
+
+/** Upsert de los release-groups del browse con sus tipos crudos y sus créditos. */
+async function saveDiscographyReleaseGroups(groups: MBReleaseGroup[]): Promise<void> {
+  for (const rg of groups) {
     const category = mapReleaseGroupCategory(rg["primary-type"], rg["secondary-types"]);
     const canonicalDate = canonicalDateValues({ firstReleaseDate: rg["first-release-date"] });
+    const types = { primaryType: rg["primary-type"] ?? null, secondaryTypes: rg["secondary-types"] ?? [] };
 
     const inserted = await db
       .insert(releaseGroup)
       // La fecha canónica solo se escribe al crear el stub: un release_group
       // ya enriquecido conserva la que resolvió `findOrIngestTracklist`.
-      .values({ mbid: rg.id, title: rg.title, category, ...canonicalDate })
-      .onConflictDoUpdate({ target: releaseGroup.mbid, set: { title: rg.title, category } })
-      .returning();
+      .values({ mbid: rg.id, title: rg.title, category, ...types, ...canonicalDate })
+      .onConflictDoUpdate({ target: releaseGroup.mbid, set: { title: rg.title, category, ...types } })
+      .returning({ id: releaseGroup.id });
 
     const row = inserted[0];
-    if (!row) continue;
-    rows.push(row);
-
-    if (rg["artist-credit"]?.length) {
+    if (row && rg["artist-credit"]?.length) {
       await ingestCredits(rg["artist-credit"], { releaseGroupId: row.id });
     }
   }
+}
 
-  await db.update(artist).set({ discographySyncedAt: new Date() }).where(eq(artist.id, target.id));
+export type DiscographySyncResult =
+  | { status: "skipped" }
+  /** Se guardaron las páginas iniciales; faltan otras (la sincronización completa sigue en segundo plano). */
+  | { status: "partial"; saved: number; total: number }
+  | { status: "complete"; saved: number; total: number; unlisted: number; relisted: number; truncated: boolean };
 
-  return rows;
+export interface DiscographySyncOptions {
+  /**
+   * `initial`: primera visita, hasta 3 páginas y solo si nunca se sincronizó.
+   * `full`: todas las páginas, solo si la discografía está incompleta o vencida.
+   */
+  mode: "initial" | "full";
+  /** Recorre MusicBrainz y calcula el resultado sin escribir (backfill en simulación). */
+  dryRun?: boolean;
+}
+
+/**
+ * Sincroniza la discografía de un artista bajo un candado por artista: dos visitas
+ * simultáneas hacen una sola sincronización (la segunda relee el artista y la omite).
+ * Solo una sincronización que recorrió todas las páginas marca y desmarca los
+ * release-groups fuera de la discografía y fija `discography_complete_at`.
+ */
+export async function syncArtistDiscography(
+  artistId: string,
+  { mode, dryRun = false }: DiscographySyncOptions,
+): Promise<DiscographySyncResult> {
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`discography:${artistId}`}, 0))`);
+    const [current] = await tx.select().from(artist).where(eq(artist.id, artistId)).limit(1);
+    if (!current?.mbid) return { status: "skipped" };
+    if (mode === "initial" && current.discographySyncedAt) return { status: "skipped" };
+    if (mode === "full" && !needsDiscographyRefresh(current)) return { status: "skipped" };
+
+    const pages = await fetchDiscographyPages(current.mbid, mode === "initial" ? DISCOGRAPHY_INITIAL_PAGES : DISCOGRAPHY_MAX_PAGES);
+    const saved = pages.releaseGroups.length;
+    const now = new Date();
+
+    if (!pages.complete && !pages.truncated) {
+      if (!dryRun) {
+        await saveDiscographyReleaseGroups(pages.releaseGroups);
+        await tx.update(artist).set({ discographySyncedAt: now }).where(eq(artist.id, artistId));
+      }
+      return { status: "partial", saved, total: pages.total };
+    }
+
+    // Con el tope alcanzado no se sabe qué hay más allá: no se marca nada.
+    let marks = { unlisted: 0, relisted: 0 };
+    if (dryRun) {
+      if (!pages.truncated) marks = await countUnlistedChanges(tx, artistId, pages.releaseGroups);
+    } else {
+      await saveDiscographyReleaseGroups(pages.releaseGroups);
+      if (!pages.truncated) marks = await applyUnlistedMarks(tx, artistId, pages.releaseGroups, now);
+      await tx
+        .update(artist)
+        .set({ discographySyncedAt: now, discographyCompleteAt: now })
+        .where(eq(artist.id, artistId));
+    }
+    return { status: "complete", saved, total: pages.total, ...marks, truncated: pages.truncated };
+  });
+}
+
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/** Release-groups acreditados al artista, con MBID (los únicos que MusicBrainz puede devolver). */
+function creditedReleaseGroupIds(tx: Tx, artistId: string) {
+  return tx
+    .select({ id: credit.releaseGroupId })
+    .from(credit)
+    .where(and(eq(credit.artistId, artistId), isNotNull(credit.releaseGroupId)));
+}
+
+/**
+ * Marca los release-groups acreditados que la sincronización completa no devolvió y
+ * desmarca los que volvieron. No borra nada: los datos de usuarios se conservan.
+ */
+async function applyUnlistedMarks(tx: Tx, artistId: string, groups: MBReleaseGroup[], now: Date) {
+  const returned = groups.map((rg) => rg.id);
+  const credited = inArray(releaseGroup.id, creditedReleaseGroupIds(tx, artistId));
+
+  const unlisted = await tx
+    .update(releaseGroup)
+    .set({ discographyUnlistedAt: now })
+    .where(
+      and(
+        credited,
+        isNotNull(releaseGroup.mbid),
+        isNull(releaseGroup.discographyUnlistedAt),
+        returned.length > 0 ? notInArray(releaseGroup.mbid, returned) : undefined,
+      ),
+    )
+    .returning({ id: releaseGroup.id });
+
+  const relisted =
+    returned.length === 0
+      ? []
+      : await tx
+          .update(releaseGroup)
+          .set({ discographyUnlistedAt: null })
+          .where(and(credited, isNotNull(releaseGroup.discographyUnlistedAt), inArray(releaseGroup.mbid, returned)))
+          .returning({ id: releaseGroup.id });
+
+  return { unlisted: unlisted.length, relisted: relisted.length };
+}
+
+/** Lo que `applyUnlistedMarks` cambiaría, sin escribir (simulación del backfill). */
+async function countUnlistedChanges(tx: Tx, artistId: string, groups: MBReleaseGroup[]) {
+  const returned = new Set(groups.map((rg) => rg.id));
+  const rows = await tx
+    .select({ mbid: releaseGroup.mbid, unlistedAt: releaseGroup.discographyUnlistedAt })
+    .from(releaseGroup)
+    .where(and(inArray(releaseGroup.id, creditedReleaseGroupIds(tx, artistId)), isNotNull(releaseGroup.mbid)));
+  let unlisted = 0;
+  let relisted = 0;
+  for (const row of rows) {
+    const isReturned = row.mbid !== null && returned.has(row.mbid);
+    if (!isReturned && row.unlistedAt === null) unlisted += 1;
+    if (isReturned && row.unlistedAt !== null) relisted += 1;
+  }
+  return { unlisted, relisted };
 }
 
 /**

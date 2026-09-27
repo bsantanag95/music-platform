@@ -45,7 +45,7 @@ fijo, sin redes sociales.
 
 ## Decisions
 
-**D1 — Wikimedia como fuente del perfil, con ADR nuevo.** ADR 0020: Wikidata (CC0),
+**D1 — Wikimedia como fuente del perfil, con ADR nuevo.** ADR 0021: Wikidata (CC0),
 Wikipedia (texto CC BY-SA 4.0) y Commons (licencia por archivo) como fuentes del perfil de
 artista, siempre subordinadas a MusicBrainz: se llega a ellas solo desde la relación
 `wikidata` de MusicBrainz (nunca por nombre, para no confundir homónimos).

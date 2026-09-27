@@ -1,6 +1,6 @@
 ## 1. Preparación
 
-- [ ] 1.1 Redactar el ADR 0020 (Wikimedia como fuente del perfil de artista, design.md D1) y actualizar `docs/03-data/data-licensing.md` (Wikidata CC0, texto de Wikipedia CC BY-SA 4.0, fotos de Commons con licencia por archivo y crédito obligatorio)
+- [ ] 1.1 Redactar el ADR 0021 (Wikimedia como fuente del perfil de artista, design.md D1) y actualizar `docs/03-data/data-licensing.md` (Wikidata CC0, texto de Wikipedia CC BY-SA 4.0, fotos de Commons con licencia por archivo y crédito obligatorio)
 - [ ] 1.2 Guardar como fixtures de test respuestas reales recortadas: lookup de artista de MusicBrainz con `url-rels+genres` (Pink Floyd, Kuervos del Sur, Mon Laferte), `wbgetentities`, TextExtracts en es y en, `imageinfo` con `extmetadata` (dominio público, CC BY-SA y un archivo no libre)
 
 ## 2. Esquema

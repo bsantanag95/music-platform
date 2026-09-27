@@ -14,8 +14,8 @@ las bandas de las que es integrante.
 #### Scenario: Banda con muchos discos
 
 - **WHEN** una persona abre Pink Floyd
-- **THEN** ve "Principal 16", "En vivo 67", "Recopilatorios 27", "Sencillos 79", "Otros 27"
-  y "Apariciones 4", con Principal activa
+- **THEN** ve "Principal 19", "En vivo 95", "Recopilatorios 40", "Sencillos 48", "Otros 16"
+  y "Apariciones 1", con Principal activa
 
 #### Scenario: Artista con pocas secciones
 

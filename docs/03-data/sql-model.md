@@ -342,6 +342,8 @@ tokens ya vencidos al crearse.
 
 **Evolución (migración `0050_search_trigram_indexes.sql`, openspec `redesign-scoped-search`):** los stubs que crea la búsqueda cuando MusicBrainz no informa el tipo del artista se guardan como `'unknown'` (antes caían en `'various'`, reservado a Various Artists). La migración corrigió los 369 stubs existentes en ese estado (ninguno tenía discografía sincronizada); el enriquecimiento bajo demanda re-deriva su tipo en la primera visita.
 
+**Discografía completa (migración `0053_artist_discography_sync.sql`, openspec `fix-artist-discography-ingestion`):** `discography_synced_at` indica que hay discografía guardada; `discography_complete_at` (`TIMESTAMPTZ` nullable) que se recorrieron **todas** las páginas del browse de MusicBrainz (con `release-group-status=website-default`, sin bootlegs). Arranca en `NULL` para todos los artistas existentes, porque la ingesta anterior se cortaba en 100 release-groups: la próxima lectura completa la discografía en segundo plano. Una discografía completa se vuelve a sincronizar en segundo plano cuando `discography_complete_at` tiene más de 7 días, con un `pg_advisory_xact_lock` por artista.
+
 ## Búsqueda local tolerante (migración `0050_search_trigram_indexes.sql`)
 
 **Propósito:** que la búsqueda por tipo y las sugerencias del buscador encuentren coincidencias locales sin distinguir mayúsculas ni acentos, toleren errores menores y se ordenen (exacta → palabra completa → prefijo → similitud) **antes** de aplicar el tope. El `ILIKE '%q%' LIMIT n` anterior no tenía orden y dejaba fuera coincidencias exactas (buscar `icon` devolvía "Ennio Morricone" antes que la banda "Icon").
@@ -374,6 +376,22 @@ Antes de crear la unicidad, la migración `0006_membership_sync.sql` consolida c
 **Propósito:** el álbum como concepto general — el nivel al que pertenecen la valoración y los comentarios de "el álbum", independiente de cuántas ediciones tenga.
 
 **Restricciones:** `category` limitado a `studio`, `single_ep`, `compilation`, `live_other`.
+
+**Tipos originales y discografía (migración `0053`, openspec `fix-artist-discography-ingestion`):**
+
+- `primary_type` (`TEXT` nullable) y `secondary_types` (`TEXT[]` nullable): tipos crudos de
+  MusicBrainz (`Album`, `EP`, `Single`, `Broadcast`, `Other` / `Compilation`, `Live`,
+  `Soundtrack`, `Remix`, …). `NULL` = todavía no sincronizados; `{}` = sin secundarios. Sin
+  `CHECK`, porque MusicBrainz puede agregar tipos. `category` se sigue calculando igual y la
+  siguen usando recorridos, búsqueda y la franja de discografía del álbum; las secciones de la
+  página de artista se derivan en código (`discographySection`) de estos tipos y del rol del
+  crédito.
+- `discography_unlisted_at` (`TIMESTAMPTZ` nullable): el release-group quedó **fuera de la
+  discografía** — la última sincronización completa de un artista acreditado no lo devolvió
+  (solo tiene ediciones bootleg, o MusicBrainz lo fusionó o borró). No se borra: conserva
+  créditos, escuchas, valoraciones y colecciones, y su página de álbum sigue funcionando.
+  Toda lectura de discografía lo excluye; una sincronización que vuelve a devolverlo le quita
+  la marca.
 
 **Fecha de lanzamiento canónica (`first_release_date` / `first_release_year`, migración `0016`):**
 la fecha del **álbum**, derivada de `first-release-date` de MusicBrainz (calculada sobre todas las

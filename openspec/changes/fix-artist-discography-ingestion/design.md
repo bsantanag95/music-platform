@@ -47,7 +47,7 @@ discografía del álbum (`album-neighbors.ts`), búsqueda y descubrimiento.
 pide `limit=100`, `offset` y `release-group-status=website-default`, que es el criterio del
 sitio de MusicBrainz: incluye un release-group si tiene al menos una edición que no es
 bootleg. Tope de 20 páginas (2.000 release-groups) para acotar el costo de un artista
-anómalo; si se alcanza, se registra y la discografía queda como completa con lo traído.
+anómalo; si se alcanza, se registra y la discografía queda como completa con lo traído, pero sin marcar nada fuera de la discografía (no se sabe qué hay más allá del tope).
 *Alternativa descartada:* traer todo (`all`) y filtrar por estado de cada edición, que
 exigiría un browse de ediciones por release-group.
 

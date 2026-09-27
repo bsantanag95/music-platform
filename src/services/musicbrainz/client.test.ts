@@ -208,3 +208,31 @@ describe("ediciones y créditos de personal (openspec: enrich-album-editions-and
     expect(url.searchParams.get("inc")).toBe("recordings+artist-credits+artist-rels+recording-level-rels+work-rels+work-level-rels");
   });
 });
+
+describe("discografía de un artista (openspec: fix-artist-discography-ingestion)", () => {
+  it("browseReleaseGroupsByArtist pide /release-group de a 100, con offset, créditos y sin bootlegs", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ "release-group-count": 0, "release-groups": [] }));
+
+    await musicbrainz.browseReleaseGroupsByArtist("artist-mbid-1", 200);
+
+    const url = new URL(String(fetchMock.mock.calls[0]![0]));
+    expect(url.pathname).toBe("/ws/2/release-group");
+    expect(url.searchParams.get("artist")).toBe("artist-mbid-1");
+    expect(url.searchParams.get("limit")).toBe("100");
+    expect(url.searchParams.get("offset")).toBe("200");
+    expect(url.searchParams.get("inc")).toBe("artist-credits");
+    expect(url.searchParams.get("release-group-status")).toBe("website-default");
+  });
+
+  it("browseReleaseGroupsByArtist arranca en la primera página y no se cachea: es ingesta", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ "release-group-count": 0, "release-groups": [] }));
+
+    await musicbrainz.browseReleaseGroupsByArtist("artist-mbid-1");
+    tickPastQueue();
+    await musicbrainz.browseReleaseGroupsByArtist("artist-mbid-1");
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const first = new URL(String(fetchMock.mock.calls[0]![0]));
+    expect(first.searchParams.get("offset")).toBe("0");
+  });
+});

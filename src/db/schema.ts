@@ -462,6 +462,9 @@ export const artist = pgTable(
     photoUrl: text("photo_url"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     discographySyncedAt: timestamp("discography_synced_at", { withTimezone: true }),
+    // NULL = la discografía nunca se recorrió entera (migración 0053, openspec:
+    // fix-artist-discography-ingestion). Base de la resincronización cada 7 días.
+    discographyCompleteAt: timestamp("discography_complete_at", { withTimezone: true }),
     membershipsSyncedAt: timestamp("memberships_synced_at", { withTimezone: true }),
   },
   (t) => [
@@ -525,6 +528,11 @@ export const releaseGroup = pgTable(
     firstReleaseYear: smallint("first_release_year"),
     // NULL = resumen de ediciones pendiente de sincronizar (migración 0048).
     editionsSyncedAt: timestamp("editions_synced_at", { withTimezone: true }),
+    // Discografía (migración 0053): fuera de la discografía (solo bootleg o ya no
+    // devuelto por MusicBrainz) y tipos crudos de MusicBrainz (NULL = sin sincronizar).
+    discographyUnlistedAt: timestamp("discography_unlisted_at", { withTimezone: true }),
+    primaryType: text("primary_type"),
+    secondaryTypes: text("secondary_types").array(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

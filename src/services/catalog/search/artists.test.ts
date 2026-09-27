@@ -31,6 +31,7 @@ function row(overrides: Partial<ArtistRow>): ArtistRow {
     photoUrl: null,
     createdAt: new Date("2026-01-01"),
     discographySyncedAt: null,
+    discographyCompleteAt: null,
     membershipsSyncedAt: null,
     ...overrides,
   };

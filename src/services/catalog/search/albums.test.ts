@@ -37,6 +37,9 @@ function rgRow(overrides: Partial<ReleaseGroupRow>): ReleaseGroupRow {
     firstReleaseDate: null,
     firstReleaseYear: null,
     editionsSyncedAt: null,
+    discographyUnlistedAt: null,
+    primaryType: null,
+    secondaryTypes: null,
     createdAt: new Date("2026-01-01"),
     ...overrides,
   };

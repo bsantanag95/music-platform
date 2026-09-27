@@ -1,0 +1,393 @@
+{
+ "release-group-count": 219,
+ "release-group-offset": 200,
+ "release-groups": [
+  {
+   "id": "029d702a-2435-4a61-8882-4076ce27573e",
+   "title": "Echoes, Part 1 (edit) (live at Pompeii – MCMLXXII) (2025 mix)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2025-02-26",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "02e2ff52-2e20-4156-998c-d49d6e7f3031",
+   "title": "Welcome to the Machine",
+   "primary-type": "Other",
+   "secondary-types": [],
+   "first-release-date": "2020-03-06",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "0f8eb479-3f74-4b39-ab57-a9b5a9cb99e5",
+   "title": "Run Like Hell (live at Knebworth 1990) (2021 edit)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2021-04-23",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "181b4a67-8ed2-455c-a2df-ddedfe053739",
+   "title": "Run Like Hell (The Wall work in progress, pt. 2, 1979) (programme 1) (band demo)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Demo"
+   ],
+   "first-release-date": "2020-06-12",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "2e760881-05d6-4c54-99b6-046a63c787ff",
+   "title": "Money (early mix)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Demo"
+   ],
+   "first-release-date": "2020-06-19",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "30ac1917-debe-39b8-a06c-8abb7c70ad76",
+   "title": "Star Profile",
+   "primary-type": "Other",
+   "secondary-types": [
+    "Interview"
+   ],
+   "first-release-date": "1998-09-15",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "4d9177fb-4fd7-4f3b-977f-68524074e932",
+   "title": "Wot’s Uh the Deal…",
+   "primary-type": "Other",
+   "secondary-types": [],
+   "first-release-date": "2020-04-10",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "4ef04539-ebf7-4173-a533-faba597c513d",
+   "title": "Marooned",
+   "primary-type": "Other",
+   "secondary-types": [],
+   "first-release-date": "2014",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "825707e2-a7d2-4a31-998e-c255e316f6d0",
+   "title": "Louder Than Words",
+   "primary-type": "Other",
+   "secondary-types": [],
+   "first-release-date": "2014-10-14",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "833e96e2-1437-40ca-b964-0cdb0655ab46",
+   "title": "High Hopes (early version, 1994 recording)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Demo"
+   ],
+   "first-release-date": "2019-09-27",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "8f975670-ca63-4fb2-9c8b-44bd0201ed05",
+   "title": "The Wall Movie",
+   "primary-type": "Other",
+   "secondary-types": [],
+   "first-release-date": "1999",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "979a0b8e-70d1-43c9-8cf2-1b27704c9edf",
+   "title": "Lucy Leave",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Demo"
+   ],
+   "first-release-date": "1965",
+   "artist-credit": [
+    {
+     "name": "The Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "a15ac746-f11c-4337-a76a-a96d36a83aca",
+   "title": "One of These Days (live at Pompeii – MCMLXXII) (2025 mix)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2025-04-11",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "a65d0ac9-64b9-49c2-823f-33eeb19a7a36",
+   "title": "Breathe (in the Air) (live at Wembley 1974)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Live"
+   ],
+   "first-release-date": "2023-03-01",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "c25544da-bd6d-4b96-badc-056c0024f45e",
+   "title": "The Doctor (Comfortably Numb) (The Wall work in progress, pt. 2, 1979) (programme 1) (band demo)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Demo"
+   ],
+   "first-release-date": "2020-07-07",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "dcddbd40-67db-4d2e-abc6-f439355ad6fd",
+   "title": "The Machine Song (demo #2, revisited)",
+   "primary-type": "Single",
+   "secondary-types": [
+    "Demo"
+   ],
+   "first-release-date": "2025-09-12",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "dd28e0c6-58d7-3490-ab33-940e1ab3fbd5",
+   "title": "Interview Disc",
+   "primary-type": "Other",
+   "secondary-types": [
+    "Interview"
+   ],
+   "first-release-date": "1995",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "f810afc5-deb1-40b4-ad62-73b2c4f96456",
+   "title": "The Gunner’s Dream",
+   "primary-type": "Other",
+   "secondary-types": [],
+   "first-release-date": "2020-03-06",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "fc851e0c-0261-472b-847c-a0cf8fedf80f",
+   "title": "The Making of The Dark Side of the Moon",
+   "primary-type": "Other",
+   "secondary-types": [
+    "Interview"
+   ],
+   "first-release-date": "2003",
+   "artist-credit": [
+    {
+     "name": "Pink Floyd",
+     "joinphrase": "",
+     "artist": {
+      "id": "83d91898-7763-47d7-b03b-b92132375c47",
+      "name": "Pink Floyd",
+      "type": "Group",
+      "disambiguation": ""
+     }
+    }
+   ]
+  }
+ ]
+}
