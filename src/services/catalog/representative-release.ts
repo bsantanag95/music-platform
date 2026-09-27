@@ -28,7 +28,33 @@ const NON_STANDARD_EDITION_MARKERS = [
   "tour edition",
   "bonus track",
   "bonus tracks",
+  // Ediciones de tienda o de coleccionista que salen el mismo día que la corriente
+  // (openspec: album-edition-selection): sin estos marcadores, el desempate por mbid
+  // podía elegir un vinilo firmado o una exclusiva de una cadena.
+  "signed",
+  "autographed",
+  "exclusive",
+  "limited",
+  "picture disc",
+  "colored vinyl",
+  "coloured vinyl",
+  "alt cover",
+  "alternate cover",
+  "alternative cover",
+  "luxe",
+  // Mezclas y versiones alternativas de la misma edición digital.
+  "dolby atmos",
+  "spatial audio",
+  "clean",
+  "censored",
 ];
+
+// Cada marcador debe empezar una palabra: "signed" no marca "designed" ni "limited"
+// marca "unlimited"; el final queda abierto para cubrir "remasters" o "remastered".
+const NON_STANDARD_EDITION_PATTERN = new RegExp(
+  `\\b(?:${NON_STANDARD_EDITION_MARKERS.join("|")})`,
+  "i",
+);
 
 // Países que representan "la edición como salió al mundo" antes que una
 // variante regional concreta. XW = Worldwide, XE = Europe.
@@ -39,8 +65,7 @@ const PRIMARY_COUNTRIES = ["XW", "US", "GB", "XE"];
 const NON_STANDARD_PACKAGINGS = ["box", "slim jewel case with slipcase"];
 
 function hasNonStandardMarker(release: MBReleaseSummary): boolean {
-  const haystack = `${release.title ?? ""} ${release.disambiguation ?? ""}`.toLowerCase();
-  return NON_STANDARD_EDITION_MARKERS.some((marker) => haystack.includes(marker));
+  return NON_STANDARD_EDITION_PATTERN.test(`${release.title ?? ""} ${release.disambiguation ?? ""}`);
 }
 
 function isPrimaryCountry(release: MBReleaseSummary): boolean {

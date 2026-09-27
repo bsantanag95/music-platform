@@ -19,7 +19,11 @@ empate:
    cualquier edición con fecha).
 3. Edición **estándar**: sin marcadores `deluxe`, `expanded`, `anniversary`, `remaster`,
    `remastered`, `super deluxe`, `special edition` ni equivalentes en el título o en la
-   `disambiguation` del release.
+   `disambiguation` del release. También cuentan como no estándar las ediciones de tienda
+   o de coleccionista (`signed`, `autographed`, `exclusive`, `limited`, `picture disc`,
+   vinilo de color, tapa alternativa, `luxe`) y las versiones alternativas de la misma
+   edición (`Dolby Atmos`, `spatial audio`, `clean`, `censored`). Un marcador SHALL
+   coincidir solo al comienzo de una palabra (`signed` no marca `designed`).
 4. País primario: `[Worldwide]` / `XW` / `US` / `GB` / `XE` antes que otros países; sin
    país conocido, después de los anteriores.
 5. Empaquetado estándar (no `Box`, no ediciones de coleccionista) cuando MusicBrainz lo
@@ -42,6 +46,12 @@ lectura de "la tracklist del álbum" SHALL usar la edición representativa.
 - **WHEN** un `release_group` tiene una edición `Official` de 1994 sin marcadores y una
   edición `Official` "Deluxe Edition" de 2015
 - **THEN** el sistema elige la edición de 1994 como representativa
+
+#### Scenario: Ediciones firmadas y exclusivas del mismo día
+
+- **WHEN** un `release_group` tiene, con la misma fecha, país primario y recuento de pistas,
+  un vinilo `signed`, una edición `Target exclusive` y un vinilo sin marcadores
+- **THEN** el sistema elige el vinilo sin marcadores como representativa
 
 #### Scenario: Orden de entrada indiferente
 
