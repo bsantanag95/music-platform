@@ -85,6 +85,15 @@ export const appUser = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
+    // Búsqueda local tolerante (migración 0050, openspec redesign-scoped-search).
+    index("idx_app_user_username_search").using(
+      "gin",
+      sql`search_normalize(${t.username}) gin_trgm_ops`,
+    ),
+    index("idx_app_user_display_name_search").using(
+      "gin",
+      sql`search_normalize(${t.displayName}) gin_trgm_ops`,
+    ),
     check("chk_app_user_locale", sql`${t.locale} IS NULL OR ${t.locale} IN ('es','en')`),
     check("chk_app_user_self_roles", sql`cardinality(${t.selfRoles}) <= 3`),
     check("chk_app_user_genres", sql`cardinality(${t.genres}) <= 5`),
@@ -457,6 +466,10 @@ export const artist = pgTable(
   },
   (t) => [
     index("idx_artist_name").on(t.name),
+    // Búsqueda local tolerante (migración 0050, openspec redesign-scoped-search).
+    index("idx_artist_name_search").using("gin", sql`search_normalize(${t.name}) gin_trgm_ops`),
+    // Igualdad exacta por nombre normalizado (migración 0051).
+    index("idx_artist_search_key").on(sql`search_key(${t.name})`),
     check("chk_artist_type", sql`${t.type} IN ('person','group','various','unknown')`),
   ],
 );
@@ -514,7 +527,14 @@ export const releaseGroup = pgTable(
     editionsSyncedAt: timestamp("editions_synced_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("idx_release_group_first_year").on(t.firstReleaseYear)],
+  (t) => [
+    index("idx_release_group_first_year").on(t.firstReleaseYear),
+    // Búsqueda local tolerante (migración 0050, openspec redesign-scoped-search).
+    index("idx_release_group_title_search").using(
+      "gin",
+      sql`search_normalize(${t.title}) gin_trgm_ops`,
+    ),
+  ],
 );
 
 export const release = pgTable(
@@ -604,6 +624,8 @@ export const recording = pgTable(
   },
   (t) => [
     index("idx_recording_title").on(t.title),
+    // Búsqueda local tolerante (migración 0050, openspec redesign-scoped-search).
+    index("idx_recording_title_search").using("gin", sql`search_normalize(${t.title}) gin_trgm_ops`),
     index("idx_recording_variant_of").on(t.variantOfId),
     check(
       "chk_recording_variant_type",

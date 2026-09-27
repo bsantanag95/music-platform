@@ -1,20 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchCatalog } from "@/services/catalog/search-catalog";
+import { searchCatalogByType } from "@/services/catalog/search";
+import { parseCatalogSearchParams } from "@/services/catalog/search/params";
 import { withErrorHandling } from "@/lib/with-error-handling";
 
-// Búsqueda de candidatos (artistas + álbumes) sin ingerir discografía.
-// Sin coincidencias es `200 { results: [] }`, no 404; el fallo total de
-// MusicBrainz sin datos locales se propaga como ApiError(INTERNAL_ERROR,
-// 502) y lo resuelve `withErrorHandling`.
+// Búsqueda del catálogo por tipo (openspec: redesign-scoped-search): un tipo
+// por solicitud (`type=artist|album|song`), sin ingerir discografía. Sin
+// coincidencias es `200` con `results: []`; `q` o `type` inválidos → 400
+// VALIDATION_ERROR; MusicBrainz caído sin datos locales → ApiError
+// (INTERNAL_ERROR, 502), resuelto por `withErrorHandling`.
 export const GET = withErrorHandling(async (req: NextRequest) => {
-  const q = req.nextUrl.searchParams.get("q")?.trim();
-  if (!q) {
-    return NextResponse.json(
-      { error: "Falta el parámetro q", code: "VALIDATION_ERROR" },
-      { status: 400 },
-    );
-  }
-
-  const response = await searchCatalog(q);
-  return NextResponse.json(response);
+  const params = parseCatalogSearchParams(req.nextUrl.searchParams);
+  return NextResponse.json(await searchCatalogByType(params));
 });

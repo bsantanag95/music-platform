@@ -108,6 +108,21 @@ export function clearMusicBrainzSearchCacheForTests(): void {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/** Página de una búsqueda: MusicBrainz acepta hasta 100 por página; por defecto 25. */
+export interface SearchPage {
+  limit?: number;
+  offset?: number;
+}
+
+const DEFAULT_SEARCH_LIMIT = 25;
+const MAX_SEARCH_LIMIT = 100;
+
+function resolvePage({ limit, offset }: SearchPage): { limit: string; offset: string } {
+  const safeLimit = Math.min(Math.max(Math.trunc(limit ?? DEFAULT_SEARCH_LIMIT), 1), MAX_SEARCH_LIMIT);
+  const safeOffset = Math.max(Math.trunc(offset ?? 0), 0);
+  return { limit: String(safeLimit), offset: String(safeOffset) };
+}
+
 async function mbFetch<T>(path: string, params: Record<string, string> = {}): Promise<T> {
   return schedule(async () => {
     const url = new URL(`${MB_BASE_URL}${path}`);
@@ -158,29 +173,35 @@ async function mbFetch<T>(path: string, params: Record<string, string> = {}): Pr
 }
 
 export const musicbrainz = {
-  searchArtist(query: string) {
-    return cachedSearch(`searchArtist|${query}`, () =>
-      mbFetch<MBArtistSearchResponse>("/artist", { query }),
+  /** Búsqueda de artistas por texto (sintaxis Lucene) — página de `limit` desde `offset`. */
+  searchArtist(query: string, page: SearchPage = {}) {
+    const { limit, offset } = resolvePage(page);
+    return cachedSearch(`searchArtist|${query}|${limit}|${offset}`, () =>
+      mbFetch<MBArtistSearchResponse>("/artist", { query, limit, offset }),
     );
   },
 
   /** Búsqueda de álbumes/EPs/singles por texto — solo candidatos, sin releases ni tracklist. */
-  searchReleaseGroup(query: string) {
-    return cachedSearch(`searchReleaseGroup|${query}`, () =>
+  searchReleaseGroup(query: string, page: SearchPage = {}) {
+    const { limit, offset } = resolvePage(page);
+    return cachedSearch(`searchReleaseGroup|${query}|${limit}|${offset}`, () =>
       mbFetch<MBReleaseGroupSearchResponse>("/release-group", {
         query,
-        limit: "25",
+        limit,
+        offset,
         inc: "artist-credits",
       }),
     );
   },
 
   /** Búsqueda de grabaciones por texto — solo candidatos, para resolver "artista + canción" hacia sus álbumes. */
-  searchRecording(query: string) {
-    return cachedSearch(`searchRecording|${query}`, () =>
+  searchRecording(query: string, page: SearchPage = {}) {
+    const { limit, offset } = resolvePage(page);
+    return cachedSearch(`searchRecording|${query}|${limit}|${offset}`, () =>
       mbFetch<MBRecordingSearchResponse>("/recording", {
         query,
-        limit: "25",
+        limit,
+        offset,
         inc: "artist-credits",
       }),
     );

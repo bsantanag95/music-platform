@@ -3,10 +3,12 @@ import { assertSmokeAllowed } from "./assert-smoke-allowed";
 
 assertSmokeAllowed();
 
-// Smoke test de add-recording-album-search: busca "stairway de prueba" contra
-// una BD de scratch con fetch mockeado y verifica:
-//   1) la canción en frío produce songContext con la UNIÓN de apariciones de
-//      los candidatos (toma de estudio + live), y persiste recording +
+// Smoke test del tipo Canciones (add-recording-album-search, reescrito para
+// redesign-scoped-search): busca "stairway de prueba" con el tipo Canciones
+// contra una BD de scratch con fetch mockeado y verifica:
+//   1) la canción en frío es el primer grupo, con la UNIÓN de apariciones de
+//      sus versiones (toma de estudio acreditada + live SIN artist-credit, que
+//      se une al grupo del mismo título), y persiste recording +
 //      créditos + stubs de release_group (una sola ingesta: la identidad),
 //   2) NO escribe release ni track (prohibición de ingestas parciales),
 //   3) la segunda búsqueda no repite requests de recordings (caché TTL del
@@ -22,6 +24,8 @@ const TEST_ARTIST_MBID = "dddddddd-0000-4000-8000-910000000004";
 const QUERY = "stairway de prueba";
 
 const fetchCounts: Record<string, number> = {};
+/** Búsquedas de release-groups (con `query=`), distintas del browse de discografía. */
+let releaseGroupSearches = 0;
 
 const mbRecordingSearchResponse = {
   recordings: [
@@ -86,6 +90,7 @@ const realFetch = global.fetch;
 global.fetch = (async (input: RequestInfo | URL) => {
   const url = new URL(input.toString());
   fetchCounts[url.pathname] = (fetchCounts[url.pathname] ?? 0) + 1;
+  if (url.pathname === "/ws/2/release-group" && url.searchParams.has("query")) releaseGroupSearches++;
 
   if (url.pathname === "/ws/2/artist") {
     return new Response(JSON.stringify({ artists: [] }), { status: 200 });
@@ -107,7 +112,7 @@ async function main() {
   const { db } = await import("../src/db");
   const { artist, credit, recording, release, releaseGroup, track } = await import("../src/db/schema");
   const { eq, inArray } = await import("drizzle-orm");
-  const { searchCatalog } = await import("../src/services/catalog/search-catalog");
+  const { searchSongs } = await import("../src/services/catalog/search/songs");
 
   let failures = 0;
   const check = (label: string, ok: boolean) => {
@@ -116,23 +121,22 @@ async function main() {
   };
 
   console.log("1) Búsqueda en frío de la canción...");
-  const first = await searchCatalog(QUERY);
-  check(
-    "songContext presente con la canción detectada",
-    first.songContext?.title === "Stairway de Prueba",
-  );
-  const albumTitles = (first.songContext?.albums ?? []).map((a) => a.title);
+  const first = await searchSongs(QUERY);
+  const song = first.results[0];
+  check("un solo grupo: la versión sin crédito se une a la del mismo título", first.results.length === 1);
+  check("primer grupo con la canción detectada", song?.title === "Stairway de Prueba");
+  const albumTitles = (song?.albums ?? []).map((a) => a.title);
   check(
     "UNIÓN de apariciones: estudio + live de dos grabaciones distintas",
     albumTitles.includes("Álbum de Prueba") && albumTitles.includes("Álbum en Vivo de Prueba"),
   );
   check(
     "álbum enlazable: usa el id local del release_group stub y orden por categoría",
-    first.songContext?.albums[0]?.category === "studio" && first.songContext?.albums[0]?.year === 1971,
+    song?.albums[0]?.category === "studio" && song?.albums[0]?.year === 1971,
   );
   check(
     "identidad = primera grabación (gana por release-count), una sola ingesta",
-    first.songContext?.mbid === TEST_RECORDING_MBID,
+    song?.mbid === TEST_RECORDING_MBID,
   );
 
   const [recRow] = await db.select().from(recording).where(eq(recording.mbid, TEST_RECORDING_MBID)).limit(1);
@@ -164,16 +168,26 @@ async function main() {
   check("CERO escrituras a release", releaseRows.length === 0);
   check("CERO escrituras a track", trackRows.length === 0);
 
+  // Conteos tras la primera búsqueda: la BD puede tener artistas cuyo nombre
+  // ocupa un extremo de la consulta (p. ej. una banda "Stairway"), lo que suma
+  // una interpretación a probar; lo que se verifica es que la segunda búsqueda
+  // no agregue ninguna solicitud.
+  const afterFirst = { ...fetchCounts };
+
   console.log("2) Segunda búsqueda (caché del cliente + idempotencia)...");
-  const second = await searchCatalog(QUERY);
+  const second = await searchSongs(QUERY);
   check(
-    "songContext coincide con la primera resolución",
-    JSON.stringify(second.songContext) === JSON.stringify(first.songContext),
+    "el resultado coincide con la primera resolución",
+    JSON.stringify(second.results) === JSON.stringify(first.results),
   );
   check(
     "no repitió requests de recordings ni de apariciones",
-    fetchCounts["/ws/2/recording"] === 1 && fetchCounts["/ws/2/release"] === 2,
+    fetchCounts["/ws/2/recording"] === afterFirst["/ws/2/recording"] &&
+      fetchCounts["/ws/2/release"] === afterFirst["/ws/2/release"],
   );
+  check("nunca más de dos búsquedas de recordings", (afterFirst["/ws/2/recording"] ?? 0) <= 2);
+  check("apariciones: un browse por versión del grupo (2)", afterFirst["/ws/2/release"] === 2);
+  check("el tipo Canciones no busca álbumes", releaseGroupSearches === 0);
   const recCount = await db.select().from(recording).where(eq(recording.mbid, TEST_RECORDING_MBID));
   check("grabación no duplicada", recCount.length === 1);
 

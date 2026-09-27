@@ -23,7 +23,8 @@
     "searching": "Buscando...",
     "noResults": "Sin resultados.",
     "logged": "Registrado: {title}",
-    "logAnother": "Registrar otra"
+    "logAnother": "Registrar otra",
+    "typeLabel": "Qué buscar"
   },
   "finish": {
     "done": "Ir a Inicio",

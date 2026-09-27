@@ -28,9 +28,13 @@ import { isFollowingArtist } from "@/services/social/artist-following";
 import { isFavorited } from "@/services/favorites/favorites";
 import { isWantToListen } from "@/services/want-to-listen/want-to-listen";
 import { getArtistJourneyDetail } from "@/services/artist-journeys/artist-journeys";
+import { SearchOriginNotice } from "@/components/catalog/search-results/SearchOriginNotice";
 
 interface ArtistPageProps {
   params: Promise<{ id: string }>;
+  // `from=search&q=`: la búsqueda redirigió acá por coincidencia exacta única
+  // (openspec: redesign-scoped-search) — se ofrece volver a la lista.
+  searchParams?: Promise<{ from?: string | string[]; q?: string | string[] }>;
 }
 
 // `generateMetadata` y `page` resuelven el mismo artista en el mismo request.
@@ -48,8 +52,10 @@ export async function generateMetadata({ params }: ArtistPageProps): Promise<Met
   return artist ? { title: artist.name } : {};
 }
 
-export default async function ArtistPage({ params }: ArtistPageProps) {
+export default async function ArtistPage({ params, searchParams }: ArtistPageProps) {
   const { id } = await params;
+  const origin = (await searchParams) ?? {};
+  const fromSearch = origin.from === "search" && typeof origin.q === "string" && origin.q.trim() ? origin.q.trim() : null;
   const t = await getTranslations("catalog");
   const tCommon = await getTranslations("common");
 
@@ -115,6 +121,7 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
           { label: artist.name },
         ]}
       />
+      {fromSearch ? <SearchOriginNotice query={fromSearch} /> : null}
       <ArtistHeader
         artist={artist}
         typeLabel={typeLabel}

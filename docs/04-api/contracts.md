@@ -4,106 +4,188 @@ Documenta el contrato real de los endpoints existentes (Fases 1-4) y las brechas
 `02-architecture/frontend-plan/00-backend-analysis.md` identificó como necesarias para la
 Fase 3. Ver ADR 0006 sobre por qué este contrato es REST y no tRPC.
 
-## `GET /api/catalog/search?q=<texto>` — ✅ Existe
+## `GET /api/catalog/search?type=<tipo>&q=<texto>` — ✅ Existe
 
-Busca **candidatos** (artistas y álbumes) que coinciden con el texto, combinando la base
-local y la búsqueda en vivo de MusicBrainz (`/artist?query=`, `/release-group?query=` y
-`/recording?query=`, una request por tipo como máximo). **No ingiere** discografía, tracklist ni
-carátula: la ingesta pesada ocurre al abrir un resultado (`/api/catalog/artist/[id]`,
-`/api/catalog/release-group/[id]`). Cada candidato de MusicBrainz aún no visto se
-persiste como stub (una operación por tipo) para que todo resultado tenga `id` local.
-Adicionalmente, si la consulta coincide con una **canción**, la respuesta puede incluir un
-contexto `songContext` con los álbumes que la contienen (ver más abajo).
+Búsqueda del catálogo **por tipo** (openspec `redesign-scoped-search`): cada solicitud busca un
+solo tipo, con su propio presupuesto de MusicBrainz, combinando la base local (índices trigram,
+migraciones `0050`/`0051`) y la búsqueda en vivo. **No ingiere** discografía, tracklist ni
+carátula: la ingesta pesada ocurre al abrir un resultado. Cada candidato de MusicBrainz aún no
+visto se persiste como stub (una operación por tipo) para que todo resultado tenga `id` local;
+un artista sin `type` en MusicBrainz se guarda como `unknown` (nunca `various`).
 
-**Query params:** `q` (string, requerido; vacío o solo espacios tras normalizar → 400).
+> **BREAKING** respecto del contrato anterior (`?q=` sin tipo, `results` mezclados y
+> `songContext` opcional): ya no existen la mezcla de tipos, `subtitle` ni `songContext`.
+
+**Query params:**
+
+| Param | Tipos | Descripción |
+|---|---|---|
+| `q` | todos | Requerido; vacío o solo espacios tras normalizar → 400. |
+| `type` | — | Requerido: `artist`, `album` o `song` (Usuarios usa `/api/users` y `/api/search/suggest`). Otro valor → 400. |
+| `offset` | `album`, `song` | Página siguiente de MusicBrainz (lo local solo acompaña a la primera). |
+| `artistType` | `artist` | `person` o `group`: filtra lo local y la consulta remota (`type:`). |
+| `category` | `album` | `studio`, `single_ep`, `compilation`, `live_other`. |
+| `decade` | `album` | Primer año de la década (`1970`) → `firstreleasedate:[1970 TO 1979-12-31]`. |
+
+Los filtros inválidos se ignoran. Las cláusulas de MusicBrainz para categoría y década son una
+aproximación: el filtro exacto se reaplica sobre la categoría mapeada y el año conocido.
+
+**200 OK — `type=artist`**
+
+```json
+{
+  "type": "artist",
+  "remoteFailed": false,
+  "results": [
+    {
+      "kind": "artist",
+      "id": "uuid",
+      "mbid": "uuid | null",
+      "name": "string",
+      "disambiguation": "string | null",
+      "artistType": "person | group | various | unknown",
+      "country": "string | null",
+      "cached": "boolean",
+      "exact": "boolean"
+    }
+  ]
+}
+```
+
+Orden: exacta → palabra completa → prefijo → resto (normalizado sin mayúsculas, acentos ni
+puntuación); dentro de cada nivel, actividad en la plataforma → discografía cacheada → resto de
+locales → solo MusicBrainz (por score). `exact` alimenta la redirección de `/search`: si hay
+**exactamente un** `exact` y `remoteFailed` es falso, la página abre el perfil directamente.
+Presupuesto: **1** solicitud a MusicBrainz.
+
+**200 OK — `type=album`**
+
+```json
+{
+  "type": "album",
+  "remoteFailed": false,
+  "total": "int | null",
+  "nextOffset": "int | null",
+  "refine": { "total": "int", "artists": ["string"] },
+  "results": [
+    {
+      "kind": "release-group",
+      "id": "uuid",
+      "mbid": "uuid | null",
+      "title": "string",
+      "artistName": "string | null",
+      "category": "studio | single_ep | compilation | live_other",
+      "year": "int | null",
+      "cached": "boolean"
+    }
+  ]
+}
+```
+
+Orden por **cobertura de términos** (las palabras pueden repartirse entre título y artista, en
+cualquier orden): (1) un artista acreditado ocupa un extremo de la consulta y el resto es el
+título; (2) título igual a la consulta; (3) todas las palabras cubiertas; (4) parcial. Luego
+actividad → cacheado → local → MusicBrainz. Con separador explícito `Artista - Título` se usan
+campos (`releasegroup:"…" AND artist:"…"`), probando el orden inverso si el primero no trae nada.
+`refine` (o `null`): consulta genérica — primera página, más de 50 coincidencias y ningún
+resultado de nivel 1 — con hasta 5 artistas frecuentes para acotar. `total` y `nextOffset` son
+`null` si la pata remota falló. Presupuesto: **1** solicitud por página (2 solo con separador y
+el primer orden vacío).
+
+**200 OK — `type=song`**
+
+```json
+{
+  "type": "song",
+  "remoteFailed": false,
+  "total": "int | null",
+  "nextOffset": "int | null",
+  "interpretation": { "song": "string", "artistName": "string | null" },
+  "alternatives": [{ "song": "string", "artistName": "string | null", "query": "string" }],
+  "refine": { "total": "int", "artists": ["string"] },
+  "results": [
+    {
+      "kind": "song",
+      "key": "string",
+      "title": "string",
+      "artistName": "string | null",
+      "recordingId": "uuid | null",
+      "mbid": "uuid | null",
+      "albums": [
+        {
+          "id": "uuid",
+          "mbid": "uuid | null",
+          "title": "string",
+          "category": "studio | single_ep | compilation | live_other",
+          "year": "int | null"
+        }
+      ],
+      "query": "string"
+    }
+  ]
+}
+```
+
+- **Interpretación**: el artista solo se reconoce si su nombre ocupa el **inicio o el final** de
+  la consulta (en límite de palabra) y deja una canción de ≥2 caracteres; los candidatos (locales
+  por `search_key` + una búsqueda de artistas en MusicBrainz) se ordenan por actividad y score,
+  nunca por longitud. Se prueba la mejor interpretación y, si no produce una canción relevante, la
+  consulta completa como título; con separador explícito, los dos órdenes. Nunca más de dos
+  búsquedas de recordings. `interpretation` es `null` si no se usó artista; `alternatives` ofrece
+  como mucho una lectura no probada y plausible (score ≥ 80 o con actividad), ya reescrita con
+  separador explícito en `query`.
+- Con artista, la búsqueda de recordings se acota a sus release-groups propios
+  (`"<canción>" AND (rgid:… OR rgid:…)`, estudio primero, tope 120; sale de créditos locales o de
+  un browse de discografía): el texto libre y `artist:"nombre"` no son fiables (bootlegs, bandas
+  de cover, grabaciones canónicas sin artist-credit como el *Stairway to Heaven* de estudio). Sin
+  rgids degrada a `recording:"…" AND artist:"…"`. Filtro de relevancia: contención mutua por
+  palabras completas entre título y canción, ≤2 tokens extra en el título.
+- `results` son grupos **(título base, artista principal)**: las versiones (`(live)`,
+  `[demo]`, ` - Live at …`) cuentan como la misma canción, pero nunca se mezclan artistas. Solo
+  el primer grupo se expande: se browséan sus primeras **4** grabaciones (una página de 100 cada
+  una), se unen con las apariciones locales (tracklists ya ingeridas) y se ingiere su grabación
+  identidad (la de mayor `release-count`; `recordingId` solo en ese grupo). `albums` va
+  deduplicado por `release_group` (año mínimo entre fuentes), ordenado por categoría → año →
+  título, máximo **12**. Los demás grupos llegan con `albums: []` y `query` =
+  `"<artista> - <título>"` para abrirlos como primer grupo.
+- La canción no enlaza a `/song/<id>` desde la búsqueda; la navegación es hacia sus álbumes.
+- Presupuesto: 1 búsqueda de artistas + por interpretación ≤1 browse de discografía (0 con
+  créditos locales) y 1 búsqueda de recordings (≤2 en total) + ≤4 browses de apariciones. Todo
+  comparte la caché TTL de búsquedas (10 min) salvo el browse de discografía. La resolución
+  persiste `recording`, sus créditos y stubs de `release_group`; **nunca** `release` ni `track`
+  (capacidad `catalog-recording-ingestion`).
+
+**Errores:** **400** `VALIDATION_ERROR` si falta `q`, llega vacío o `type` no es
+`artist | album | song`. Sin coincidencias es **200** con `results: []`, nunca 404. Si
+MusicBrainz falla y hay coincidencias locales, **200** con `remoteFailed: true` (la página lo
+avisa y ofrece reintentar); sin coincidencias locales, **502** `INTERNAL_ERROR`.
+
+## `GET /api/search/suggest?type=<tipo>&q=<texto>` — ✅ Existe
+
+Sugerencias del buscador mientras se escribe (openspec `redesign-scoped-search`, capacidad
+`search-typeahead`). **Solo lecturas locales: nunca sale a MusicBrainz ni persiste nada.**
+`type`: `artist | album | song | user` (otro valor → 400 `VALIDATION_ERROR`). Menos de 2
+caracteres tras normalizar → `{ "suggestions": [] }`. Máximo 6. `Cache-Control: private,
+max-age=30`.
 
 **200 OK**
 
 ```json
 {
-  "results": [
-    {
-      "kind": "artist | release-group",
-      "id": "uuid",
-      "mbid": "uuid | null",
-      "name": "string",
-      "subtitle": "string | null",
-      "artistType": "person | group | various | unknown | null",
-      "category": "studio | single_ep | compilation | live_other | null",
-      "year": "int | null",
-      "cached": "boolean"
-    }
-  ],
-  "songContext": {
-    "recordingId": "uuid",
-    "mbid": "uuid | null",
-    "title": "string",
-    "artistName": "string | null",
-    "albums": [
-      {
-        "id": "uuid",
-        "mbid": "uuid | null",
-        "title": "string",
-        "category": "studio | single_ep | compilation | live_other",
-        "year": "int | null"
-      }
-    ]
-  }
+  "suggestions": [
+    { "kind": "artist", "id": "uuid", "name": "string", "artistType": "person | group | various | unknown", "disambiguation": "string | null" },
+    { "kind": "album", "id": "uuid", "title": "string", "artistName": "string | null", "year": "int | null", "bridge": "boolean" },
+    { "kind": "song", "id": "uuid", "title": "string", "artistName": "string | null" },
+    { "kind": "user", "id": "uuid", "username": "string", "displayName": "string | null", "avatarUrl": "string | null" }
+  ]
 }
 ```
 
-`subtitle`: disambiguation del artista o artista principal del álbum. `artistType` solo
-en artistas; `category` y `year` solo en álbumes (el año si MusicBrainz lo trae, con
-precisión anual basta). `cached`: la entidad local ya tiene contenido cacheado
-(discografía sincronizada / tracklist ingerido). Sin coincidencias es **200 con
-`{ "results": [] }`**, no 404.
-
-**`songContext` (opcional, openspec `add-recording-album-search`):** la canción detectada para
-`q` y los álbumes que la contienen. Es dato **adicional no esencial**: los clientes deben tratar
-su ausencia como normal — puede omitirse si no hay coincidencia de canción relevante o si la pata
-de recordings de MusicBrainz falla (ese fallo **nunca** convierte la búsqueda en 502 mientras
-haya resultados de artistas/álbumes). Reglas:
-
-- La canción **no es un resultado navegable**: `kind` sigue siendo solo `artist | release-group`;
-  `recordingId` se expone como dato, sin enlace a `/song/...` desde la búsqueda.
-- Detección (dos fuentes que se **unen**): (a) la base local — `recording`s cuyo título coincide
-  con la parte de canción de `q` y ya tienen apariciones ingeridas (tracklists de álbumes
-  visitados); (b) MusicBrainz — si un candidato de artista de la propia búsqueda está contenido
-  en `q`, la query de recordings se acota a sus **release-groups propios** con cláusula
-  `"<canción>" AND (rgid:… OR rgid:…)` (lista ordenada por categoría —estudio primero—, tope 120;
-  sale de créditos locales o de un browse de discografía). El texto libre y `artist:"nombre"` no
-  son fiables: los bootlegs y las bandas de cover se acreditan con el nombre literal del artista,
-  y grabaciones canónicas como el *Stairway to Heaven* de estudio ni siquiera tienen
-  artist-credit en MusicBrainz. Se aceptan candidatos cuyo título guarde contención mutua con la
-  consulta tolerando ≤2 tokens extra; se browséan los primeros 4 candidatos (en orden de score) y
-  la sección es la **unión** de las apariciones de ambas fuentes — cualquier versión (estudio,
-  live, remix) cuenta como la misma canción. La **identidad** del contexto (`recordingId`,
-  `mbid`, `title`, `artistName`) es la contribución de mayor `release-count`, única grabación
-  ingestionada. Una sola canción por búsqueda.
-- `albums`: apariciones agrupadas por `release_group` (muchas ediciones, un álbum; el año mínimo
-  se propaga entre fuentes al deduplicar), excluidos los que ya figuran en `results`, ordenados
-  por categoría (`studio` → `single_ep` → `compilation` → `live_other`), luego `year` ascendente
-  (null al final) y título; máximo **12**. `year` es el año del release más antiguo del grupo
-  (proxy del álbum original).
-- Presupuesto (peor caso en frío, con hint de artista): ≤1 browse de discografía del hint (0 si
-  hay créditos locales) + ≤1 request de búsqueda de recordings + ≤4 browses de candidatos (cada
-  uno, una página de 100; una canción con más de 100 releases puede no listar todos sus álbumes
-  por esa grabación — la página del álbum sigue siendo la fuente de verdad). No hay corte
-  temprano del recorrido, pero todo se cachea con la TTL de búsquedas del cliente (10 min, por
-  mbid en los browses), salvo el browse de discografía (política de ingestas frescas): el coste
-  completo es solo del primer golpe. Si MusicBrainz falla, la sección degrada a las apariciones
-  locales sin romper `results`.
-- La resolución en frío persiste `recording`, sus créditos y stubs de `release_group`; **nunca**
-  escribe `release` ni `track` (ver la capacidad `catalog-recording-ingestion`: ingerir
-  apariciones parciales congelaría el álbum con tracklists incompletos).
-
-Orden determinista: locales cacheados → resto de locales → solo-MusicBrainz (por score),
-con coincidencia exacta de nombre/título al tope de su grupo; "Todo" intercala artistas
-y álbumes preservando el orden relativo.
-
-**400** `VALIDATION_ERROR` si falta `q` o llega vacío. **502** `INTERNAL_ERROR` si
-MusicBrainz falla y no hay ninguna coincidencia local (con datos locales, degrada a 200
-con las coincidencias locales).
+Orden: exacta → palabra completa → prefijo → resto; a igualdad, actividad en la plataforma y
+contenido cacheado. En `artist`, si un artista local ocupa un extremo de la consulta y el resto
+es el **prefijo** del título de uno de sus álbumes, ese álbum llega primero con `bridge: true`
+(puente artista + título: `dokken back for` → *Back for the Attack*). `user` aplica las mismas
+reglas que `/api/users` (solo cuentas activas).
 
 ## `GET /api/catalog/release-group/[id]` — ✅ Existe
 

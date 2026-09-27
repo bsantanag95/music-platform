@@ -23,7 +23,8 @@
     "searching": "Searching...",
     "noResults": "No results.",
     "logged": "Logged: {title}",
-    "logAnother": "Log another"
+    "logAnother": "Log another",
+    "typeLabel": "What to search"
   },
   "finish": {
     "done": "Go to Home",

@@ -173,7 +173,7 @@ export function Header({
           className="flex flex-col gap-4 border-t border-ink-border px-4 py-4 lg:hidden"
         >
           {/* Bloque 1 — barra general. */}
-          <HeaderSearch />
+          <HeaderSearch fluid />
           <nav aria-label={t("generalNav")} className="flex flex-col items-start gap-3">
             {generalLinks}
             {currentUser ? <RegisterListenButton /> : null}

@@ -233,6 +233,18 @@ describe("upsertArtistStubsFromSearch", () => {
     ]);
   });
 
+  it("guarda 'unknown' si MusicBrainz no informa el tipo (nunca 'various')", async () => {
+    const captured = mockSearchDb([]);
+
+    await upsertArtistStubsFromSearch([
+      { mbid: "icon-trance", name: "Icon", mbType: undefined, disambiguation: "Japanese trance artist" },
+    ]);
+
+    expect(captured.values).toEqual([
+      { mbid: "icon-trance", name: "Icon", type: "unknown", bio: "Japanese trance artist" },
+    ]);
+  });
+
   it("usa 'various' para el mbid de Various Artists sin llamar a MusicBrainz", async () => {
     const captured = mockSearchDb([]);
 

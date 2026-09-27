@@ -37,9 +37,15 @@ beta).
 **Resuelto en parte — `add-recording-album-search`:** existe `findOrIngestRecording` (ingesta
 mínima de una grabación suelta: recording + créditos + stubs de álbumes, nunca tracks
 parciales) y `/search` resuelve "artista + canción" hacia **los álbumes que la contienen**
-como sección contextual (`songContext`); la canción no es resultado navegable. La pestaña
-**Canciones** sigue diferida: falta la decisión de producto sobre qué muestra la página de
-una canción abierta en frío.
+como sección contextual (`songContext`); la canción no es resultado navegable.
+
+**Resuelto — `redesign-scoped-search`:** la búsqueda es **por tipo** (Artistas, Álbumes,
+Canciones, Usuarios) con el tipo dentro del campo, sugerencias locales instantáneas,
+redirección por coincidencia exacta única y emparejamiento "artista + título" en cualquier
+orden. **Canciones** es un tipo propio: el resultado es la canción agrupada por (título,
+artista) con los álbumes que la contienen. Enlazar a la página de una canción desde la
+búsqueda sigue diferido (misma decisión de producto pendiente). Géneros, sellos y búsqueda
+avanzada quedan para cambios propios.
 
 ## Fase 4 — Auth, ratings y comentarios
 

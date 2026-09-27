@@ -3,22 +3,30 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { LazyCoverImage } from "@/components/catalog/LazyCoverImage";
+import { SearchTypeToggle } from "@/components/catalog/SearchTypeToggle";
 import { createListenEntry } from "@/lib/api/diary";
 import { useCatalogSearch } from "./useCatalogSearch";
 
 // Puerta 2 del onboarding: registrar una escucha en el diario. Solo eso —
 // sin pedir reacción ni impresión (openspec: add-two-door-onboarding, OQ1);
 // se agregan después desde el diario. Acepta álbum (`release-group`) y
-// canción (vía `songContext`).
+// canción: un tipo por búsqueda, elegido con el conmutador (openspec:
+// redesign-scoped-search). De Canciones solo es registrable la canción
+// resuelta (la única con grabación identidad).
+const DOOR2_TYPES = ["album", "song"] as const;
+
 export function NowPlayingPicker() {
   const t = useTranslations("onboarding");
-  const { query, setQuery, response, loading } = useCatalogSearch();
+  const [type, setType] = useState<(typeof DOOR2_TYPES)[number]>("album");
+  const { query, setQuery, response, loading } = useCatalogSearch(type);
   const [logged, setLogged] = useState<string[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [errored, setErrored] = useState(false);
 
-  const albums = (response?.results ?? []).filter((r) => r.kind === "release-group");
-  const song = response?.songContext ?? null;
+  const albums = response?.type === "album" ? response.results : [];
+  const firstSong = response?.type === "song" ? response.results[0] : undefined;
+  const song =
+    firstSong?.recordingId ? { recordingId: firstSong.recordingId, title: firstSong.title, artistName: firstSong.artistName } : null;
 
   async function log(target: { type: "release-group" | "recording"; id: string }, title: string) {
     setBusyId(target.id);
@@ -49,6 +57,8 @@ export function NowPlayingPicker() {
           ))}
         </ul>
       )}
+
+      <SearchTypeToggle types={DOOR2_TYPES} value={type} onChange={setType} label={t("door2.typeLabel")} />
 
       <label className="flex flex-col gap-1 font-data text-xs text-paper">
         {t("door2.searchLabel")}
@@ -92,15 +102,15 @@ export function NowPlayingPicker() {
             <button
               type="button"
               disabled={busyId === album.id}
-              onClick={() => log({ type: "release-group", id: album.id }, album.name)}
+              onClick={() => log({ type: "release-group", id: album.id }, album.title)}
               className="flex w-full items-center gap-2 rounded border border-ink-border bg-ink px-2 py-1.5 text-left transition-colors hover:border-amber disabled:opacity-50"
             >
               <LazyCoverImage releaseGroupId={album.id} coverLabel="" className="size-8" />
               <span className="min-w-0">
-                <span className="block truncate font-body text-xs text-paper">{album.name}</span>
-                {album.subtitle && (
+                <span className="block truncate font-body text-xs text-paper">{album.title}</span>
+                {album.artistName && (
                   <span className="block truncate font-data text-[11px] text-paper-muted">
-                    {album.subtitle}
+                    {album.artistName}
                   </span>
                 )}
               </span>

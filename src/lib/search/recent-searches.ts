@@ -4,11 +4,33 @@
 // el principio "sin gamificación"). Vive en localStorage y toda lectura o
 // escritura va protegida: una ventana privada, el storage lleno o
 // deshabilitado devuelven una lista vacía sin romper la página.
+//
+// Desde la búsqueda por tipo (openspec: redesign-scoped-search) cada entrada
+// guarda también el tipo. Las entradas antiguas (solo texto) se leen como
+// búsquedas de Artistas, el tipo por defecto.
+
+import type { SearchType } from "@/services/catalog/search/types";
 
 const STORAGE_KEY = "mp:catalog-recent-searches";
 const MAX_ENTRIES = 6;
+const TYPES: readonly SearchType[] = ["artist", "album", "song", "user"];
 
-export function readRecentSearches(): string[] {
+export interface RecentSearch {
+  q: string;
+  type: SearchType;
+}
+
+function parseEntry(entry: unknown): RecentSearch | null {
+  if (typeof entry === "string") {
+    return entry.trim() ? { q: entry, type: "artist" } : null;
+  }
+  if (typeof entry !== "object" || entry === null) return null;
+  const { q, type } = entry as { q?: unknown; type?: unknown };
+  if (typeof q !== "string" || !q.trim()) return null;
+  return { q, type: TYPES.includes(type as SearchType) ? (type as SearchType) : "artist" };
+}
+
+export function readRecentSearches(): RecentSearch[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -16,14 +38,15 @@ export function readRecentSearches(): string[] {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     return parsed
-      .filter((entry): entry is string => typeof entry === "string" && entry.trim().length > 0)
+      .map(parseEntry)
+      .filter((entry): entry is RecentSearch => entry !== null)
       .slice(0, MAX_ENTRIES);
   } catch {
     return [];
   }
 }
 
-function write(entries: string[]): string[] {
+function write(entries: RecentSearch[]): RecentSearch[] {
   const next = entries.slice(0, MAX_ENTRIES);
   if (typeof window !== "undefined") {
     try {
@@ -36,26 +59,24 @@ function write(entries: string[]): string[] {
   return next;
 }
 
-// Coloca `query` al frente, quitando cualquier duplicado sin distinguir
-// mayúsculas. Devuelve la lista resultante para que el componente actualice
-// su estado sin releer.
-export function pushRecentSearch(query: string): string[] {
+function sameSearch(a: RecentSearch, b: RecentSearch): boolean {
+  return a.type === b.type && a.q.toLowerCase() === b.q.toLowerCase();
+}
+
+// Coloca la búsqueda al frente, quitando cualquier duplicado del mismo tipo
+// sin distinguir mayúsculas. Devuelve la lista resultante para que el
+// componente actualice su estado sin releer.
+export function pushRecentSearch(query: string, type: SearchType = "artist"): RecentSearch[] {
   const normalized = query.trim();
   if (!normalized) return readRecentSearches();
-  const rest = readRecentSearches().filter(
-    (entry) => entry.toLowerCase() !== normalized.toLowerCase(),
-  );
-  return write([normalized, ...rest]);
+  const entry = { q: normalized, type };
+  return write([entry, ...readRecentSearches().filter((existing) => !sameSearch(existing, entry))]);
 }
 
-export function removeRecentSearch(query: string): string[] {
-  return write(
-    readRecentSearches().filter(
-      (entry) => entry.toLowerCase() !== query.toLowerCase(),
-    ),
-  );
+export function removeRecentSearch(search: RecentSearch): RecentSearch[] {
+  return write(readRecentSearches().filter((existing) => !sameSearch(existing, search)));
 }
 
-export function clearRecentSearches(): string[] {
+export function clearRecentSearches(): RecentSearch[] {
   return write([]);
 }

@@ -23,15 +23,43 @@
     "notFoundDescription": "That discovery filter is not valid."
   },
   "search": {
-    "pageTitle": "Search the catalog",
+    "pageTitle": "Search",
     "breadcrumb": "Search",
-    "fieldLabel": "Search the catalog",
-    "placeholder": "E.g.: Queen",
+    "fieldLabel": "Search text",
+    "placeholder": {
+      "artist": "Search artists",
+      "album": "Search albums, with or without the artist",
+      "song": "Search songs, with or without the artist",
+      "user": "Search users"
+    },
     "submit": "Search",
     "submitting": "Searching...",
     "loading": "Checking the catalog...",
     "validationEmpty": "Enter a text to search.",
     "searchAgain": "Search another artist",
+    "types": {
+      "artist": "Artists",
+      "album": "Albums",
+      "song": "Songs",
+      "user": "Users"
+    },
+    "kinds": {
+      "artist": "Artist",
+      "album": "Album",
+      "song": "Song",
+      "user": "User"
+    },
+    "typeSelector": {
+      "label": "Search type: {type}",
+      "listLabel": "Search types"
+    },
+    "suggestions": {
+      "listLabel": "Suggestions",
+      "count": "{count, plural, =0 {No catalog suggestions} one {# suggestion} other {# suggestions}}",
+      "seeAll": "See all results for “{query}” in {type}",
+      "otherTypes": "Search another type",
+      "fromCatalog": "In your catalog"
+    },
     "recent": {
       "heading": "Recent searches",
       "clearAll": "Clear all",
@@ -39,21 +67,64 @@
       "remove": "Remove “{query}” from recent searches"
     },
     "results": {
-      "tabsLabel": "Result type",
-      "tabAll": "All",
-      "tabArtists": "Artists",
-      "tabAlbums": "Albums",
       "summary": "Results for “{query}”",
+      "inType": "in {type}",
       "count": "{count, plural, one {# result} other {# results}}",
       "cachedTag": "in your catalog",
+      "switchLabel": "Search “{query}” in:",
       "emptyTitle": "No matches",
-      "emptyDescription": "We couldn't find artists or albums for that search. Try a different spelling.",
-      "emptyUsersLink": "Looking for a person? See users named “{query}”",
+      "emptyDescription": {
+        "artist": "We couldn't find artists with that name. Try a different spelling or another type.",
+        "album": "We couldn't find albums for that search. Try adding the artist or another type.",
+        "song": "We couldn't find that song. Try adding the artist or another type.",
+        "user": "We couldn't find users with that name."
+      },
+      "remoteFailed": {
+        "title": "MusicBrainz results are missing",
+        "description": "MusicBrainz didn't respond: showing only what's already in the catalog.",
+        "retry": "Retry"
+      },
+      "pendingRemote": "Searching MusicBrainz...",
+      "loadMore": "Load more",
+      "loadingMore": "Loading more results...",
+      "loadMoreError": "Couldn't load more results.",
+      "refine": {
+        "album": "{total, plural, one {# album matches} other {# albums match}} “{query}”. Add the artist to narrow it down:",
+        "song": "{total, plural, one {# song matches} other {# songs match}} “{query}”. Add the artist to narrow it down:"
+      },
+      "artists": {
+        "bestMatch": "Best match",
+        "homonyms": "Other artists named “{query}”",
+        "more": "More results",
+        "viewProfile": "View profile",
+        "filterLabel": "Artist type",
+        "filterAll": "All",
+        "filterPerson": "Person",
+        "filterGroup": "Group"
+      },
+      "albums": {
+        "categoryLabel": "Category",
+        "categoryAll": "All",
+        "decadeLabel": "Decade",
+        "decadeAll": "All",
+        "decade": "{decade}s"
+      },
+      "songs": {
+        "interpretation": "Read as the song “{song}” by {artist}",
+        "alternative": "Did you mean “{song}” by {artist}?",
+        "otherSongs": "Other songs with that title",
+        "openSong": "See albums for “{song}”",
+        "noAlbums": "We don't know the albums for this version yet."
+      },
       "songContext": {
         "title": "Albums that contain “{song}”",
         "showMore": "Show {count} more",
         "showLess": "Show less"
       }
+    },
+    "origin": {
+      "notThisOne": "Not the one?",
+      "seeAll": "See all artists named “{query}”"
     }
   },
   "artist": {

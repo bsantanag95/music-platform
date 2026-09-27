@@ -10,6 +10,14 @@ vi.mock("@/i18n/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
+vi.mock("@/lib/api/catalog", () => ({
+  getSearchSuggestions: vi.fn(async () => ({ suggestions: [] })),
+}));
+
+vi.mock("@/lib/search/recent-searches", () => ({ pushRecentSearch: vi.fn() }));
+
+const { pushRecentSearch } = await import("@/lib/search/recent-searches");
+
 describe("SearchForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -20,14 +28,15 @@ describe("SearchForm", () => {
     expect(screen.getByLabelText(catalogEs.search.fieldLabel)).toBeInTheDocument();
   });
 
-  it("al enviar navega a /search?q= con el texto normalizado", () => {
-    renderWithIntl(<SearchForm />);
+  it("al enviar navega a /search con el tipo de la URL y guarda la búsqueda reciente", () => {
+    renderWithIntl(<SearchForm initialType="album" />);
 
     const input = screen.getByLabelText(catalogEs.search.fieldLabel);
-    fireEvent.change(input, { target: { value: "  Pink Floyd  " } });
+    fireEvent.change(input, { target: { value: "  kiss destroyer  " } });
     fireEvent.click(screen.getByRole("button", { name: catalogEs.search.submit }));
 
-    expect(mockPush).toHaveBeenCalledWith("/search?q=Pink%20Floyd");
+    expect(mockPush).toHaveBeenCalledWith("/search?type=album&q=kiss+destroyer");
+    expect(pushRecentSearch).toHaveBeenCalledWith("kiss destroyer", "album");
   });
 
   it("no navega con entrada vacía y muestra validación local", () => {

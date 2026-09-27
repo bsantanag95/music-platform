@@ -89,6 +89,31 @@ describe("caché de respuestas de búsqueda (client.ts)", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it("la página (limit/offset) forma parte de la clave y de la URL", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ "release-groups": [], count: 0 }));
+
+    await musicbrainz.searchReleaseGroup("destroyer");
+    tickPastQueue();
+    await musicbrainz.searchReleaseGroup("destroyer", { offset: 25 });
+    await musicbrainz.searchReleaseGroup("destroyer", { offset: 25 });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const urls = fetchMock.mock.calls.map(([url]) => new URL(String(url)));
+    expect(urls[0]!.searchParams.get("offset")).toBe("0");
+    expect(urls[0]!.searchParams.get("limit")).toBe("25");
+    expect(urls[1]!.searchParams.get("offset")).toBe("25");
+  });
+
+  it("acota limit y offset a valores válidos", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ artists: [] }));
+
+    await musicbrainz.searchArtist("kiss", { limit: 500, offset: -3 });
+
+    const url = new URL(String(fetchMock.mock.calls[0]![0]));
+    expect(url.searchParams.get("limit")).toBe("100");
+    expect(url.searchParams.get("offset")).toBe("0");
+  });
+
   it("los get de entidad no se cachean (la ingesta siempre es fresca)", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ id: "mb-1", name: "x" }));
 

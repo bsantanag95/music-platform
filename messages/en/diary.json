@@ -26,7 +26,8 @@
     "typeSong": "Song",
     "created": "Logged: {title}",
     "registerAnother": "Log another",
-    "viewDiary": "View my diary"
+    "viewDiary": "View my diary",
+    "typeLabel": "What to log"
   },
   "expand": "Expand",
   "edit": "Edit",

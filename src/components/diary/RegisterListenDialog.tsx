@@ -7,10 +7,22 @@ import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
-import { searchCatalog } from "@/lib/api/catalog";
+import { searchAlbums, searchArtists, searchSongs } from "@/lib/api/catalog";
+import { SearchTypeToggle } from "@/components/catalog/SearchTypeToggle";
 import { createListenEntry } from "@/lib/api/diary";
 import { ApiError } from "@/lib/api/client";
 import type { CatalogSearchResponse, ListenEntry, SocialTargetType } from "@/lib/api/schemas";
+
+// Un tipo por búsqueda (openspec: redesign-scoped-search): álbum por defecto,
+// que es lo que más se registra.
+const DIALOG_TYPES = ["album", "song", "artist"] as const;
+type DialogType = (typeof DIALOG_TYPES)[number];
+
+function searchByType(type: DialogType, query: string): Promise<CatalogSearchResponse> {
+  if (type === "album") return searchAlbums(query);
+  if (type === "song") return searchSongs(query);
+  return searchArtists(query);
+}
 import { ListenEntryForm } from "./ListenEntryForm";
 
 interface RegisterListenDialogProps {
@@ -38,6 +50,7 @@ export function RegisterListenDialog({ onClose }: RegisterListenDialogProps) {
   const [mounted, setMounted] = useState(false);
 
   const [rawQuery, setRawQuery] = useState("");
+  const [searchType, setSearchType] = useState<DialogType>("album");
   const [query, setQuery] = useState("");
   const [entry, setEntry] = useState<ListenEntry | null>(null);
   const [creating, setCreating] = useState(false);
@@ -99,7 +112,7 @@ export function RegisterListenDialog({ onClose }: RegisterListenDialogProps) {
     }
     let cancelled = false;
     setSearchState("loading");
-    searchCatalog(query)
+    searchByType(searchType, query)
       .then((res) => {
         if (!cancelled) {
           setResults(res);
@@ -112,27 +125,26 @@ export function RegisterListenDialog({ onClose }: RegisterListenDialogProps) {
     return () => {
       cancelled = true;
     };
-  }, [query, entry]);
+  }, [query, entry, searchType]);
 
   const candidates = useMemo<PickTarget[]>(() => {
     if (!results) return [];
-    const songs: PickTarget[] = results.songContext
-      ? [
-          {
-            type: "recording",
-            id: results.songContext.recordingId,
-            title: results.songContext.title,
-            subtitle: results.songContext.artistName,
-          },
-        ]
-      : [];
-    const albums = results.results
-      .filter((r) => r.kind === "release-group")
-      .map((r): PickTarget => ({ type: "release-group", id: r.id, title: r.name, subtitle: r.subtitle }));
-    const artists = results.results
-      .filter((r) => r.kind === "artist")
-      .map((r): PickTarget => ({ type: "artist", id: r.id, title: r.name, subtitle: r.subtitle }));
-    return [...songs, ...albums, ...artists];
+    if (results.type === "album") {
+      return results.results.map(
+        (r): PickTarget => ({ type: "release-group", id: r.id, title: r.title, subtitle: r.artistName }),
+      );
+    }
+    if (results.type === "artist") {
+      return results.results.map(
+        (r): PickTarget => ({ type: "artist", id: r.id, title: r.name, subtitle: r.disambiguation }),
+      );
+    }
+    // Canciones: solo la canción resuelta tiene grabación identidad registrable.
+    return results.results.flatMap((group): PickTarget[] =>
+      group.recordingId
+        ? [{ type: "recording", id: group.recordingId, title: group.title, subtitle: group.artistName }]
+        : [],
+    );
   }, [results]);
 
   const pick = useCallback(
@@ -229,6 +241,12 @@ export function RegisterListenDialog({ onClose }: RegisterListenDialogProps) {
             <label htmlFor={`${titleId}-q`} className="font-data text-sm text-paper">
               {t("global.pickPrompt")}
             </label>
+            <SearchTypeToggle
+              types={DIALOG_TYPES}
+              value={searchType}
+              onChange={setSearchType}
+              label={t("global.typeLabel")}
+            />
             <input
               id={`${titleId}-q`}
               ref={searchInputRef}

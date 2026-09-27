@@ -1,128 +1,120 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-import { GET } from "./route";
-import * as searchService from "@/services/catalog/search-catalog";
 import { ApiError } from "@/lib/api/errors";
-import type { CatalogSearchResult } from "@/services/catalog/search-catalog";
+import type { ArtistSearchResponse } from "@/services/catalog/search/types";
 
-vi.mock("@/services/catalog/search-catalog", () => ({
-  searchCatalog: vi.fn(),
-}));
+vi.mock("@/services/catalog/search", () => ({ searchCatalogByType: vi.fn() }));
 
-function makeRequest(url: string): NextRequest {
-  return new NextRequest(url);
+const { searchCatalogByType } = await import("@/services/catalog/search");
+const { GET } = await import("./route");
+
+function request(query: string): NextRequest {
+  return new NextRequest(`http://localhost/api/catalog/search${query}`);
 }
 
-const poisonGlam: CatalogSearchResult = {
-  kind: "artist",
-  id: "11111111-1111-4111-8111-111111111111",
-  mbid: "aaaaaaaa-0000-4000-8000-000000000001",
-  name: "Poison",
-  subtitle: "glam metal band",
-  artistType: "group",
-  category: null,
-  year: null,
-  cached: false,
-};
-
-const poisonThrash: CatalogSearchResult = {
-  ...poisonGlam,
-  id: "22222222-2222-4222-8222-222222222222",
-  mbid: "aaaaaaaa-0000-4000-8000-000000000002",
-  subtitle: "thrash metal band",
+const poisons: ArtistSearchResponse = {
+  type: "artist",
+  remoteFailed: false,
+  results: [
+    {
+      kind: "artist",
+      id: "11111111-1111-4111-8111-111111111111",
+      mbid: "aaaaaaaa-0000-4000-8000-000000000001",
+      name: "Poison",
+      disambiguation: "glam metal band",
+      artistType: "group",
+      country: "US",
+      cached: false,
+      exact: true,
+    },
+    {
+      kind: "artist",
+      id: "22222222-2222-4222-8222-222222222222",
+      mbid: "aaaaaaaa-0000-4000-8000-000000000002",
+      name: "Poison",
+      disambiguation: "thrash metal band",
+      artistType: "group",
+      country: null,
+      cached: false,
+      exact: true,
+    },
+  ],
 };
 
 describe("GET /api/catalog/search", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  beforeEach(() => vi.clearAllMocks());
 
-  it("devuelve la lista de candidatos con homónimos preservados", async () => {
-    vi.mocked(searchService.searchCatalog).mockResolvedValue({ results: [poisonGlam, poisonThrash] });
+  it("busca solo el tipo pedido y preserva homónimos", async () => {
+    vi.mocked(searchCatalogByType).mockResolvedValue(poisons);
 
-    const res = await GET(makeRequest("http://localhost/api/catalog/search?q=Poison"));
+    const res = await GET(request("?type=artist&q=Poison"));
 
     expect(res.status).toBe(200);
-    expect(searchService.searchCatalog).toHaveBeenCalledWith("Poison");
-    await expect(res.json()).resolves.toEqual({ results: [poisonGlam, poisonThrash] });
+    expect(searchCatalogByType).toHaveBeenCalledWith({
+      type: "artist",
+      q: "Poison",
+      offset: 0,
+      artistType: undefined,
+      category: undefined,
+      decade: undefined,
+    });
+    await expect(res.json()).resolves.toEqual(poisons);
+  });
+
+  it("pasa offset y filtros válidos, e ignora los inválidos", async () => {
+    vi.mocked(searchCatalogByType).mockResolvedValue({
+      type: "album",
+      results: [],
+      remoteFailed: false,
+      total: 0,
+      nextOffset: null,
+      refine: null,
+    });
+
+    await GET(request("?type=album&q=%20destroyer%20&offset=25&category=studio&decade=1970&artistType=robot"));
+    await GET(request("?type=album&q=destroyer&category=jazz&decade=1975"));
+
+    expect(vi.mocked(searchCatalogByType).mock.calls.map(([params]) => params)).toEqual([
+      { type: "album", q: "destroyer", offset: 25, artistType: undefined, category: "studio", decade: 1970 },
+      { type: "album", q: "destroyer", offset: 0, artistType: undefined, category: undefined, decade: undefined },
+    ]);
   });
 
   it("sin coincidencias es 200 con lista vacía, no 404", async () => {
-    vi.mocked(searchService.searchCatalog).mockResolvedValue({ results: [] });
+    vi.mocked(searchCatalogByType).mockResolvedValue({ type: "artist", results: [], remoteFailed: false });
 
-    const res = await GET(makeRequest("http://localhost/api/catalog/search?q=zzzz"));
+    const res = await GET(request("?type=artist&q=zzzz"));
 
     expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({ results: [] });
+    await expect(res.json()).resolves.toEqual({ type: "artist", results: [], remoteFailed: false });
   });
 
-  it("falta q o llega vacío tras normalizar -> 400 VALIDATION_ERROR", async () => {
-    for (const url of [
-      "http://localhost/api/catalog/search",
-      "http://localhost/api/catalog/search?q=",
-      "http://localhost/api/catalog/search?q=%20%20",
-    ]) {
-      const res = await GET(makeRequest(url));
+  it("falta q o type, o type no es de catálogo → 400 VALIDATION_ERROR", async () => {
+    for (const query of ["", "?type=artist", "?type=artist&q=%20%20", "?q=Poison", "?type=user&q=ana", "?type=all&q=x"]) {
+      const res = await GET(request(query));
       expect(res.status).toBe(400);
       await expect(res.json()).resolves.toMatchObject({ code: "VALIDATION_ERROR" });
     }
-    expect(searchService.searchCatalog).not.toHaveBeenCalled();
-  });
-
-  it("normaliza el texto antes de buscar", async () => {
-    vi.mocked(searchService.searchCatalog).mockResolvedValue({ results: [] });
-
-    await GET(makeRequest("http://localhost/api/catalog/search?q=%20Pink%20Floyd%20"));
-
-    expect(searchService.searchCatalog).toHaveBeenCalledWith("Pink Floyd");
+    expect(searchCatalogByType).not.toHaveBeenCalled();
   });
 
   it("el fallo total de MusicBrainz se mapea a INTERNAL_ERROR (502)", async () => {
-    vi.mocked(searchService.searchCatalog).mockRejectedValue(
+    vi.mocked(searchCatalogByType).mockRejectedValue(
       new ApiError("INTERNAL_ERROR", 502, "MusicBrainz no respondió"),
     );
 
-    const res = await GET(makeRequest("http://localhost/api/catalog/search?q=Poison"));
+    const res = await GET(request("?type=song&q=taste"));
 
     expect(res.status).toBe(502);
     await expect(res.json()).resolves.toMatchObject({ code: "INTERNAL_ERROR" });
   });
 
-  it("la degradación parcial (hubo resultados locales) es un 200 normal", async () => {
-    vi.mocked(searchService.searchCatalog).mockResolvedValue({ results: [poisonGlam] });
+  it("la degradación parcial es un 200 con remoteFailed", async () => {
+    vi.mocked(searchCatalogByType).mockResolvedValue({ ...poisons, remoteFailed: true });
 
-    const res = await GET(makeRequest("http://localhost/api/catalog/search?q=Poison"));
+    const res = await GET(request("?type=artist&q=Poison"));
 
     expect(res.status).toBe(200);
-  });
-
-  it("propaga songContext cuando el servicio lo resuelve y lo omite cuando no", async () => {
-    const songContext = {
-      recordingId: "33333333-3333-4333-8333-333333333333",
-      mbid: "aaaaaaaa-0000-4000-8000-000000000003",
-      title: "Stairway to Heaven",
-      artistName: "Led Zeppelin",
-      albums: [
-        {
-          id: "44444444-4444-4444-8444-444444444444",
-          mbid: null,
-          title: "Led Zeppelin IV",
-          category: "studio" as const,
-          year: 1971,
-        },
-      ],
-    };
-    vi.mocked(searchService.searchCatalog).mockResolvedValueOnce({
-      results: [],
-      songContext,
-    });
-    const conContexto = await GET(
-      makeRequest("http://localhost/api/catalog/search?q=led%20zeppelin%20stairway%20to%20heaven"),
-    );
-    await expect(conContexto.json()).resolves.toEqual({ results: [], songContext });
-
-    vi.mocked(searchService.searchCatalog).mockResolvedValueOnce({ results: [] });
-    const sinContexto = await GET(makeRequest("http://localhost/api/catalog/search?q=Poison"));
-    await expect(sinContexto.json()).resolves.toEqual({ results: [] });
+    await expect(res.json()).resolves.toMatchObject({ remoteFailed: true });
   });
 });
