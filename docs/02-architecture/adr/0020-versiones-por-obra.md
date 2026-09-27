@@ -65,3 +65,12 @@ El rediseño de la página de canción necesita mostrar la familia de versiones 
   ahora sí aparece.
 - Cualquier consulta nueva sobre "qué versión es" debe leer `recording_work.attributes`
   (`src/services/catalog/recording-versions.ts`), no un campo de `recording`.
+
+## Enmienda (2026-09-27)
+
+Antes de correr la reclasificación en la base real, el dry run mostró que la regla del punto 5
+sacaba de los álbumes de estudio bandas sonoras que se cuentan entre la obra de un artista
+(*More* y *Obscured by Clouds* de Pink Floyd, *I'm Breathless* de Madonna). Se decidió que un
+`Album` cuyo único tipo secundario es `Soundtrack` **sigue siendo `studio`**; el resto de los
+tipos secundarios del punto 5 (Demo, Remix, DJ-mix, Mixtape/Street, Spokenword, Interview,
+Audiobook, Audio drama, Field recording) va a `live_other`.

@@ -58,7 +58,7 @@ versiones es la obra.
   secundario distinto de `Compilation` o `Live` (Demo, Remix, DJ-mix, Mixtape, Soundtrack…)
   queda como **estudio**. Las reglas de disco principal y de original dependen de "estudio"
   (un "Studio Demos" de 1986 le ganaba a *Use Your Illusion I*), así que esos discos pasan a
-  **"en vivo y otros"**, en las ingestas nuevas y con un script que reclasifica los discos ya
+  **"en vivo y otros"**, salvo las bandas sonoras (`Soundtrack`), que siguen siendo de estudio, en las ingestas nuevas y con un script que reclasifica los discos ya
   ingeridos (una request por artista sincronizado y una por disco suelto de estudio). Como
   efecto visible, los demos y remixes dejan de figurar como álbumes de estudio en la página
   de artista.

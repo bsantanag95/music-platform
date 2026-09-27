@@ -89,8 +89,8 @@ el álbum queda pendiente.
 
 Reclasifica los release-groups ya ingeridos con la regla de categoría vigente (cambio
 `redesign-song-page`, ADR 0020): un `Album` de MusicBrainz con tipos secundarios (Demo, Remix,
-DJ-mix, Mixtape/Street, Soundtrack, Spokenword, Interview, Audiobook, Audio drama, Field
-recording) ya no es `studio` sino `live_other`. Antes de la corrección, esos discos figuraban
+DJ-mix, Mixtape/Street, Spokenword, Interview, Audiobook, Audio drama, Field recording) ya no es
+`studio` sino `live_other`. Una banda sonora (`Soundtrack` solo) sigue siendo `studio`. Antes de la corrección, esos discos figuraban
 entre los álbumes de estudio del artista y podían ganarle al disco original en las reglas de
 disco principal y de grabación original de la página de canción.
 
