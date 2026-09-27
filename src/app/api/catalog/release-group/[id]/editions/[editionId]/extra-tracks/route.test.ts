@@ -25,7 +25,8 @@ describe("GET /api/catalog/release-group/{id}/editions/{editionId}/extra-tracks"
         position: 1,
         title: "Money (Live)",
         durationSec: 400,
-        variantType: "live",
+        versionAttributes: ["live"],
+        versionOf: null,
       },
     ];
     mocks.getEditionExtraTracks.mockResolvedValue(tracks);

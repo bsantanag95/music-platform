@@ -42,8 +42,8 @@ function makeTrack(discNumber: number, position: number, title: string, override
     title,
     durationSec: 200,
     credits: [{ artistId: ALBUM_ARTIST, name: "Pink Floyd", role: "primary", joinPhrase: null }],
-    variantType: "original",
-    variantOf: null,
+    versionAttributes: [],
+    versionOf: null,
     ...overrides,
   };
 }
@@ -138,12 +138,20 @@ describe("TrackList", () => {
     expect(screen.getByRole("link", { name: "Invitado Dos" })).toHaveAttribute("href", "/artist/feat-2");
   });
 
-  it("etiqueta una variante en vivo y enlaza a la original", () => {
+  it("etiqueta una versión en vivo y enlaza a la original", () => {
     renderList([
-      makeTrack(1, 1, "Money", { variantType: "live", variantOf: { recordingId: "rec-orig", title: "Money" } }),
+      makeTrack(1, 1, "Money", { versionAttributes: ["live"], versionOf: { recordingId: "rec-orig", title: "Money" } }),
     ]);
-    expect(screen.getByText(tracksEs.variant.live)).toBeInTheDocument();
+    expect(screen.getByText(catalogEs.versionAttributes.live)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "versión de Money" })).toHaveAttribute("href", "/song/rec-orig");
+  });
+
+  it("una etiqueta por atributo, con el texto de MusicBrainz si no hay traducción", () => {
+    renderList([makeTrack(1, 1, "Money", { versionAttributes: ["cover", "instrumental", "a cappella"] })]);
+    expect(screen.getByText(catalogEs.versionAttributes.cover)).toBeInTheDocument();
+    expect(screen.getByText(catalogEs.versionAttributes.instrumental)).toBeInTheDocument();
+    expect(screen.getByText("a cappella")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /versión de/ })).not.toBeInTheDocument();
   });
 
   it("marca las favoritas de la comunidad y, con sesión, las pistas escuchadas", () => {

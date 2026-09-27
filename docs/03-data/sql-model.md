@@ -536,9 +536,15 @@ versión ni mezclar los dos ejes. La lectura por álbum y por canción vive en
 
 **Restricciones:**
 
-- `variant_type` limitado a `original`, `re_recording`, `remix`, `live`.
-- `variant_type = 'original' OR variant_of_id IS NOT NULL`: toda versión distinta de la original debe declarar explícitamente a cuál hace referencia.
 - Un remaster de audio **nunca** crea una fila nueva aquí — reutiliza el mismo `id`, tal como se definió en `01-domain/business-rules.md`.
+
+**Versiones (migración `0052`, openspec: redesign-song-page, ADR 0020):** las columnas
+`variant_type` y `variant_of_id` de `0000` se retiraron porque nunca se completaron. Qué versión
+es una grabación (en vivo, cover, instrumental…) lo dicen los `attributes` de su vínculo con la
+obra en `recording_work`, y la obra conecta las versiones entre sí: la **grabación original** de
+una obra es la que no lleva `live` ni `cover` y tiene el primer disco de estudio más temprano (si
+ninguna está en un disco de estudio, el disco más temprano). Se resuelve al leer, en
+`src/services/catalog/recording-versions.ts`.
 
 ## `track`
 

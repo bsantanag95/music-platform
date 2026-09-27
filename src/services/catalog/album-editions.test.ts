@@ -3,6 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ select: vi.fn(), ingest: vi.fn() }));
 vi.mock("@/db", () => ({ db: { select: mocks.select } }));
 vi.mock("./ingest-release", () => ({ ingestReleaseTracklist: mocks.ingest }));
+vi.mock("./recording-versions", () => ({
+  loadVersionAttributes: vi.fn(async (ids: string[]) => new Map(ids.map((id) => [id, ["live"]]))),
+  resolveVersionOf: vi.fn(async (ids: string[]) =>
+    new Map(ids.map((id) => [id, { recordingId: "r-money", title: "Money", artistName: null }])),
+  ),
+}));
 
 const { getAlbumEditions, getEditionExtraTracks } = await import("./album-editions");
 
@@ -48,8 +54,8 @@ const MAIN_TRACKS = [
   { recordingId: "r-time", title: "Time", releaseMbid: "mbid-original" },
 ];
 const VARIANT_TRACKS = [
-  { recordingId: "r-money", discNumber: 1, position: 1, title: "Money", durationSec: 380, variantType: "original" },
-  { recordingId: "r-money-live", discNumber: 2, position: 1, title: "Money (Live)", durationSec: 400, variantType: "live" },
+  { recordingId: "r-money", discNumber: 1, position: 1, title: "Money", durationSec: 380 },
+  { recordingId: "r-money-live", discNumber: 2, position: 1, title: "Money (Live)", durationSec: 400 },
 ];
 
 beforeEach(() => vi.clearAllMocks());
@@ -68,6 +74,7 @@ describe("getEditionExtraTracks", () => {
       { representative: false },
     );
     expect(tracks.map((t) => t.recordingId)).toEqual(["r-money-live"]);
+    expect(tracks[0]).toMatchObject({ versionAttributes: ["live"], versionOf: { recordingId: "r-money", title: "Money" } });
   });
 
   it("la segunda vez lee la edición ya ingerida sin ir a MusicBrainz", async () => {

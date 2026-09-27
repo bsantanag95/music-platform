@@ -250,6 +250,8 @@ export const TrackCreditSchema = z.object({
   joinPhrase: z.string().nullable(),
 });
 
+export const VersionLinkSchema = z.object({ recordingId: z.uuid(), title: z.string() });
+
 export const TrackSchema = z.object({
   recordingId: z.uuid(),
   position: z.number().int(),
@@ -270,7 +272,8 @@ export const ExtraTrackSchema = z.object({
   position: z.number().int(),
   title: z.string(),
   durationSec: z.number().int().nullable(),
-  variantType: z.string(),
+  versionAttributes: z.array(z.string()),
+  versionOf: VersionLinkSchema.nullable(),
 });
 export const ExtraTracksResponseSchema = z.object({ tracks: z.array(ExtraTrackSchema) });
 export type ExtraTracksResponse = z.infer<typeof ExtraTracksResponseSchema>;
@@ -534,7 +537,6 @@ export const RecordingSchema = z.object({
   mbid: z.uuid().nullable(),
   title: z.string(),
   durationSec: z.number().int().nullable(),
-  variantType: z.enum(["original", "re_recording", "remix", "live"]),
 });
 export type Recording = z.infer<typeof RecordingSchema>;
 
@@ -544,6 +546,7 @@ export const ContainingAlbumSchema = z.object({
   title: z.string(),
   category: z.string(),
   coverThumbUrl: z.string().nullable(),
+  firstReleaseDate: z.string().nullable(),
   firstReleaseYear: z.number().int().nullable(),
 });
 export const RecordingAppearanceSchema = z.object({
@@ -558,6 +561,7 @@ export const RecordingAppearanceSchema = z.object({
 });
 export const RecordingDetailSchema = z.object({
   recording: RecordingSchema,
+  versionAttributes: z.array(z.string()),
   credits: z.array(RecordingCreditSchema),
   containingAlbums: z.array(ContainingAlbumSchema),
   appearances: z.array(RecordingAppearanceSchema),

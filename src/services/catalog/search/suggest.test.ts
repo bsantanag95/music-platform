@@ -72,7 +72,7 @@ describe("suggest", () => {
 
   it("Canciones: grabaciones locales con su artista", async () => {
     vi.mocked(localMatch.matchLocalRecordings).mockResolvedValue([
-      { id: "taste", mbid: null, title: "Taste", durationSec: null, variantType: "original", variantOfId: null },
+      { id: "taste", mbid: null, title: "Taste", durationSec: null },
     ]);
 
     expect(await suggest("song", "tas")).toEqual([

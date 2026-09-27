@@ -13,6 +13,7 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - Una Canción es un único registro de valoración/comentarios, sin importar en cuántas Ediciones o Álbumes aparezca.
 - Un remaster de audio **no** genera una Canción nueva: se puntúa independiente de la calidad del remaster.
 - Una re-grabación, un remix o una versión en vivo sí cuentan como una Canción nueva y distinta de la original.
+- Las versiones de una canción se agrupan por su Obra, pero cada una conserva su propia valoración, diario, favoritos y comentarios: la agrupación nunca fusiona lo social (ADR 0020). El tipo de versión es el que declara MusicBrainz; sin marca, no se deduce.
 
 ## Álbumes y ediciones
 

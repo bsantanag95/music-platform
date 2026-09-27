@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { getEditionExtraTracks } from "@/lib/api/catalog";
 import { musicBrainzReleaseUrl } from "@/lib/site-links";
+import { VersionAttributeTags } from "@/components/catalog/VersionAttributeTags";
 import { formatDuration } from "./album-format";
 import { describeFormats } from "./EditionsTable";
 
@@ -31,7 +32,7 @@ export interface ExtraTracksVariant {
 
 function VariantTracks({ releaseGroupId, editionId }: { releaseGroupId: string; editionId: string }) {
   const t = useTranslations("catalog.album.extraTracks");
-  const tVariant = useTranslations("catalog.album.tracks.variant");
+  const tTracks = useTranslations("catalog.album.tracks");
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["edition-extra-tracks", releaseGroupId, editionId],
     queryFn: () => getEditionExtraTracks(releaseGroupId, editionId),
@@ -66,9 +67,12 @@ function VariantTracks({ releaseGroupId, editionId }: { releaseGroupId: string; 
             <Link href={`/song/${track.recordingId}`} className="hover:text-amber">
               {track.title}
             </Link>
-            {track.variantType !== "original" && tVariant.has(track.variantType) && (
-              <span className="ml-2 rounded border border-ink-border px-1.5 py-0.5 font-data text-xs text-paper-muted">
-                {tVariant(track.variantType)}
+            <VersionAttributeTags attributes={track.versionAttributes} />
+            {track.versionOf && (
+              <span className="block font-data text-xs text-paper-muted">
+                <Link href={`/song/${track.versionOf.recordingId}`} className="hover:text-paper hover:underline">
+                  {tTracks("versionOf", { title: track.versionOf.title })}
+                </Link>
               </span>
             )}
           </span>

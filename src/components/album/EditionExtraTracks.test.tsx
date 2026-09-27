@@ -65,7 +65,15 @@ describe("EditionExtraTracks", () => {
   it("al desplegar pide las pistas y muestra solo las adicionales", async () => {
     mocks.getEditionExtraTracks.mockResolvedValue({
       tracks: [
-        { recordingId: "r-live", discNumber: 2, position: 1, title: "Money (Live)", durationSec: 400, variantType: "live" },
+        {
+          recordingId: "r-live",
+          discNumber: 2,
+          position: 1,
+          title: "Money (Live)",
+          durationSec: 400,
+          versionAttributes: ["live"],
+          versionOf: { recordingId: "r-money", title: "Money" },
+        },
       ],
     });
     renderSections([variant("exp")]);
@@ -74,7 +82,8 @@ describe("EditionExtraTracks", () => {
     await waitFor(() => expect(screen.getByRole("link", { name: "Money (Live)" })).toHaveAttribute("href", "/song/r-live"));
     expect(mocks.getEditionExtraTracks).toHaveBeenCalledWith("rg-1", "exp");
     expect(screen.getByText("2-1")).toBeInTheDocument();
-    expect(screen.getByText(catalogEs.album.tracks.variant.live)).toBeInTheDocument();
+    expect(screen.getByText(catalogEs.versionAttributes.live)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "versión de Money" })).toHaveAttribute("href", "/song/r-money");
   });
 
   it("muestra un error con reintento si falla la carga", async () => {

@@ -17,6 +17,11 @@ import { isCoverMirrorEnabled, mirrorCover } from "./cover-mirror";
 import { isCoverResolved } from "./cover-resolution";
 import { syncReleaseEditions } from "./release-editions";
 import { syncPersonnelCredits } from "./personnel-credits";
+import { loadVersionAttributes, resolveVersionOf, type VersionOf } from "./recording-versions";
+
+function toVersionLink(version: VersionOf | null): AlbumTrack["versionOf"] {
+  return version ? { recordingId: version.recordingId, title: version.title } : null;
+}
 
 export interface AlbumCredit {
   artistId: string;
@@ -32,10 +37,13 @@ export interface AlbumTrack {
   title: string;
   durationSec: number | null;
   credits: AlbumCredit[];
-  /** `original` | `re_recording` | `remix` | `live` (`recording.variant_type`). */
-  variantType: string;
-  /** Grabación original de la que esta es variante, cuando se conoce (`variant_of_id`). */
-  variantOf: { recordingId: string; title: string } | null;
+  /**
+   * Atributos del vínculo grabación → obra (`live`, `cover`, `instrumental`, …), tal como
+   * vienen de MusicBrainz (openspec: redesign-song-page, `song-versions`).
+   */
+  versionAttributes: string[];
+  /** Grabación original de la obra cuando esta es en vivo o cover de otra (design D3). */
+  versionOf: { recordingId: string; title: string } | null;
 }
 
 export interface PrimaryArtist {
@@ -103,8 +111,6 @@ export async function getAlbumDetail(releaseGroupId: string): Promise<AlbumDetai
       discNumber: track.discNumber,
       title: recording.title,
       durationSec: recording.durationSec,
-      variantType: recording.variantType,
-      variantOfId: recording.variantOfId,
     })
     .from(track)
     .innerJoin(recording, eq(track.recordingId, recording.id))
@@ -128,16 +134,8 @@ export async function getAlbumDetail(releaseGroupId: string): Promise<AlbumDetai
         .where(inArray(credit.recordingId, recordingIds))
     : [];
 
-  const variantOfIds = [
-    ...new Set(tracks.flatMap((t) => (t.variantOfId ? [t.variantOfId] : []))),
-  ];
-  const variantOfRows = variantOfIds.length
-    ? await db
-        .select({ id: recording.id, title: recording.title })
-        .from(recording)
-        .where(inArray(recording.id, variantOfIds))
-    : [];
-  const variantOfTitles = new Map(variantOfRows.map((row) => [row.id, row.title]));
+  const versionAttributes = await loadVersionAttributes(recordingIds);
+  const versionOf = await resolveVersionOf(recordingIds, versionAttributes);
 
   const creditsByRecording = new Map<string, typeof creditRows>();
   for (const c of creditRows) {
@@ -161,11 +159,8 @@ export async function getAlbumDetail(releaseGroupId: string): Promise<AlbumDetai
         role: role as "primary" | "featured",
         joinPhrase,
       })),
-    variantType: t.variantType,
-    variantOf:
-      t.variantOfId && variantOfTitles.has(t.variantOfId)
-        ? { recordingId: t.variantOfId, title: variantOfTitles.get(t.variantOfId)! }
-        : null,
+    versionAttributes: versionAttributes.get(t.recordingId) ?? [],
+    versionOf: toVersionLink(versionOf.get(t.recordingId) ?? null),
   }));
 
   // La carátula se resuelve a nivel de release-group (cover-only, sin
@@ -272,7 +267,7 @@ function scheduleEditionsSync(rg: ReleaseGroupRow): void {
  * sincroniza después de responder (una request a MusicBrainz trae ambos). Un fallo deja la
  * edición pendiente.
  */
-function schedulePersonnelSync(releaseRow: ReleaseRow): void {
+export function schedulePersonnelSync(releaseRow: ReleaseRow): void {
   if (!releaseRow.mbid || (releaseRow.personnelSyncedAt && releaseRow.worksSyncedAt)) return;
   after(async () => {
     try {

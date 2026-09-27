@@ -233,7 +233,7 @@ function AuthenticatedPanel({
           <RatingDetailDialog
             open
             onClose={() => setDetailOpen(false)}
-            releaseGroupId={releaseGroupId}
+            target={target}
             own={own}
             onChange={(updated) => {
               setRatingNotice(null);
@@ -368,7 +368,7 @@ function AuthenticatedPanel({
           </Row>
           {pickerOpen && (
             <AlbumListPicker
-              releaseGroupId={releaseGroupId}
+              target={target}
               memberships={memberships}
               onMembershipsChange={(update) => {
                 listsChanged.current = true;
@@ -389,7 +389,7 @@ function AuthenticatedPanel({
   );
 }
 
-function ToggleChip({
+export function ToggleChip({
   pressed,
   disabled,
   onClick,
@@ -416,7 +416,7 @@ function ToggleChip({
   );
 }
 
-function HeartIcon({ filled }: { filled: boolean }) {
+export function HeartIcon({ filled }: { filled: boolean }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4 shrink-0">
       <path
