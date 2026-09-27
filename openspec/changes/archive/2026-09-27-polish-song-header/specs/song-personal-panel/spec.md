@@ -1,27 +1,4 @@
-# song-personal-panel Specification
-
-## Purpose
-Reunir en el panel "Tu relación" de la canción la nota con estrellas visibles, las escuchas con su reacción e historial en una línea, la favorita y las listas.
-## Requirements
-### Requirement: Panel "Tu relación" de la canción
-
-La cabecera de la canción SHALL incluir un panel "Tu relación" que reúna todas las acciones
-personales sobre la grabación, en este orden: **Nota** (estrellas y puntaje detallado),
-**Escuchas**, **Favorita** y **Listas**. La página SHALL NOT mostrar estas acciones fuera
-del panel. El panel SHALL NOT ofrecer reseña, Pendiente ni colección. Las filas SHALL
-rotularse sin el posesivo, como en el panel del álbum.
-
-#### Scenario: Acciones reunidas
-
-- **WHEN** un usuario autenticado abre una canción
-- **THEN** todas sus acciones sobre la canción están en el panel y no hay botones sueltos
-  en la página
-
-#### Scenario: Sin reseña ni Pendiente
-
-- **WHEN** un usuario autenticado abre una canción
-- **THEN** el panel no ofrece escribir una reseña, marcarla como Pendiente ni agregarla a
-  la colección
+## MODIFIED Requirements
 
 ### Requirement: Estrellas visibles en la canción
 
@@ -90,22 +67,3 @@ listas con casillas que el álbum, filtrado a listas de canciones.
 
 - **WHEN** un usuario marca una de sus listas de canciones en el selector
 - **THEN** la grabación se agrega a esa lista y la fila pasa a "En 1 de tus listas"
-
-### Requirement: Estados del panel de la canción
-
-El panel SHALL tener tres estados, como el del álbum: **anónimo** — invitación a iniciar
-sesión, sin controles de escritura; **sin interacción** — todas las filas con sus acciones
-mínimas; **con interacción** — el estado de cada señal. En móvil SHALL mostrarse entre la
-identidad y la ficha técnica, con las mismas filas, en una columna y con áreas táctiles de
-al menos 40 px de alto para estrellas y conmutadores.
-
-#### Scenario: Visitante anónimo
-
-- **WHEN** una persona sin sesión abre una canción
-- **THEN** el panel muestra la invitación a iniciar sesión y ningún control de escritura
-
-#### Scenario: Móvil
-
-- **WHEN** un usuario autenticado abre una canción en móvil
-- **THEN** ve Nota, Escuchas, Favorita y Listas sin abrir ningún menú
-

@@ -1,7 +1,7 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CreditGroups } from "@/components/album/AlbumCredits";
-import { SongwriterNames } from "@/components/catalog/SongwriterNames";
+import { SongwriterNames, songwritersShareRoles } from "@/components/catalog/SongwriterNames";
 import type { RecordingCredits } from "@/services/catalog/personnel-levels";
 
 // Bloques Composición y Créditos de esta grabación (openspec: redesign-song-page, design D6):
@@ -13,14 +13,16 @@ const headingClass = "font-data text-xs uppercase tracking-wider text-paper-mute
 
 export function SongComposition({ credits }: { credits: RecordingCredits }) {
   const t = useTranslations("catalog.song");
-  if (credits.groups.songwriting.length === 0) return null;
+  // Solo cuando agrega algo a la fila "Escrita por": roles distintos entre autores.
+  const songwriters = credits.groups.songwriting;
+  if (songwriters.length === 0 || songwritersShareRoles(songwriters)) return null;
   return (
     <section aria-labelledby="song-composition" className={blockClass}>
       <h2 id="song-composition" className={headingClass}>
         {t("composition")}
       </h2>
       <p className="font-body text-sm text-paper">
-        <SongwriterNames songwriters={credits.groups.songwriting} />
+        <SongwriterNames songwriters={songwriters} showRoles />
       </p>
     </section>
   );

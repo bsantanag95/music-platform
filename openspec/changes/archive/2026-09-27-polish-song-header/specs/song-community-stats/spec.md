@@ -1,8 +1,5 @@
-# song-community-stats Specification
+## MODIFIED Requirements
 
-## Purpose
-Mostrar en la cabecera de la canción los agregados de la comunidad (media, reacción común, favoritas y listas) con umbrales mínimos y sin exponer identidades.
-## Requirements
 ### Requirement: Bloque de comunidad de la canción
 
 La cabecera de la canción SHALL mostrar un bloque de comunidad con tres tarjetas —
@@ -65,26 +62,3 @@ ningún dato SHALL mostrar "—", igual que las demás, sin "0" ni "menos de 5".
 
 - **WHEN** una canción tiene 3 valoraciones y 12 favoritas
 - **THEN** la tarjeta de media muestra "—" con "3 valoraciones" como detalle
-
-### Requirement: Origen y anonimato de los agregados de la canción
-
-La reacción común SHALL derivarse únicamente de entradas de diario con audiencia `public` y
-reacción no nula sobre la grabación. El conteo de favoritas SHALL contar personas distintas
-con la grabación en favoritos, de cualquier audiencia, sin exponer su identidad. Todos los
-agregados SHALL referirse a esta grabación, no a las demás versiones de su obra.
-
-#### Scenario: Reacciones privadas
-
-- **WHEN** las únicas reacciones a la canción están en entradas `private` o `followers`
-- **THEN** no alimentan la reacción común
-
-#### Scenario: Favorita privada
-
-- **WHEN** una persona tiene la canción de favorita con audiencia privada
-- **THEN** cuenta en "favorita de" y el bloque no ofrece forma de saber quién es
-
-#### Scenario: Versiones separadas
-
-- **WHEN** la versión en vivo de una canción tiene 20 valoraciones y la de estudio 3
-- **THEN** la página de la versión de estudio muestra "3 valoraciones" sin media
-

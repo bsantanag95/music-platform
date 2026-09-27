@@ -475,7 +475,8 @@
         "loadError": "We could not load your lists.",
         "saveError": "We could not save the change. Try again.",
         "done": "Done"
-      }
+      },
+      "detailScale": "{score}/100"
     },
     "reviews": {
       "heading": "Reviews",
@@ -738,7 +739,7 @@
   },
   "song": {
     "kicker": "Song",
-    "kickerTrack": "Song · track {position} of <album>{title}</album>",
+    "kickerTrack": "Song · Track {position}",
     "duration": "Duration",
     "writtenBy": "Written by",
     "firstAppearance": "First appearance",
@@ -756,7 +757,9 @@
       "reactionsCount": "{count, plural, =0 {No public reactions} one {# reaction} other {# reactions}}",
       "ratingsCount": "{count, plural, =0 {No ratings} one {# rating} other {# ratings}}",
       "favorites": "Favorite of",
-      "favoritesSummary": "favorite of {value}"
+      "favoritesSummary": "favorite of {value}",
+      "sparse": "Not much community activity yet",
+      "none": "No community activity yet"
     },
     "strip": {
       "label": "Tracks on the record",
@@ -789,10 +792,17 @@
       "signInPrompt": "Rate this song and log your listens.",
       "logListen": "+ Log listen",
       "favorite": "Favorite",
-      "history": "{count, plural, one {# listen} other {# listens}} · last: {date}",
-      "historyWithReaction": "{count, plural, one {# listen} other {# listens}} · last: {reaction}, {date}",
-      "historyCount": "{count, plural, one {# listen} other {# listens}}",
+      "history": "{count} · last: {date}",
+      "historyWithReaction": "{count} · last: {reaction}, {date}",
+      "historyCount": "{count}",
       "diaryLink": "See in your diary"
+    },
+    "coverLink": "Go to {title}",
+    "discTypes": {
+      "studio": "album",
+      "single_ep": "single/EP",
+      "compilation": "compilation",
+      "live_other": "live or other"
     }
   },
   "social": {

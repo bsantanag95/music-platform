@@ -253,20 +253,26 @@ cerca de un tercio del contenido de un álbum). Reutiliza los componentes del á
 hacia abajo:
 
 - **Cabecera**: carátula del **disco principal** (el primer disco de estudio que contiene la
-  grabación; si no hay, el más temprano), antetítulo "Canción · pista N de *Disco*", título,
-  artistas, **ficha técnica** (duración, "Escrita por", primera aparición y, si es una versión,
-  "Versión en vivo de *X*" / "Versión de *X* (*Artista*)" con enlace a la original) y **bloque
-  de comunidad**: valoración media (desde 5 valoraciones), reacción común (desde 5 reacciones
-  públicas del diario), "favorita de" ("<5" por debajo del umbral) y "Aparece en N listas".
-- **Panel "Tu relación"** al costado: estrellas **siempre visibles** (mismo control y diálogo de
-  puntaje detallado que el álbum), "Registrar escucha" (la reacción se elige en el formulario del
-  diario), el historial en una línea ("3 escuchas · última: Obsesión, 12 sep") con enlace al
-  diario, Favorita y Listas (el mismo selector del álbum, con listas de canciones y sin Caminos).
-  Sin reseña, Pendiente ni colección.
+  grabación; si no hay, el más temprano), que enlaza a ese disco; antetítulo "Canción · Pista N"
+  (el disco lo nombran las migas y la tira); título, artistas, **ficha técnica** (duración,
+  "Escrita por" solo con nombres, primera aparición —con su tipo, "(single/EP)", cuando no es el
+  disco principal— y, si es una versión, "Versión en vivo de *X*" / "Versión de *X* (*Artista*)"
+  con enlace a la original) y **bloque de comunidad**: valoración media (desde 5 valoraciones),
+  reacción común (desde 5 reacciones públicas del diario), "favorita de" ("<5" por debajo del
+  umbral) y "Aparece en N listas". Las tarjetas siempre muestran la cantidad real y "—" cuando no
+  hay valor; si no hay media, reacción predominante ni favoritas, se reemplazan por una sola
+  línea ("Todavía hay poca actividad de la comunidad · 1 valoración") (`polish-song-header`).
+- **Panel "Tu relación"** al costado: estrellas **siempre visibles** con el puntaje detallado
+  como "88/100" (mismo control y diálogo que el álbum), Escuchas en dos líneas fijas ("Escuchas ·
+  + Registrar escucha" y "3 · última: Obsesión, 12 sep · Ver en tu diario →"; la reacción se
+  elige en el formulario del diario), Favorita como fila compacta con un conmutador, y Listas (el
+  mismo selector del álbum, con listas de canciones y sin Caminos). Sin reseña, Pendiente ni
+  colección.
 - **Tira de pistas**: el disco principal con "pista N de M" y enlaces a la pista anterior y la
   siguiente de su edición representativa (cruza discos). No aparece si la grabación no está en esa
   lista (por ejemplo, una pista adicional de otra edición).
-- **Composición** (autores de la obra con sus roles) y **Créditos de esta grabación**
+- **Composición** (autores de la obra con sus roles, solo cuando los roles difieren entre
+  autores; si no, la ficha ya lo dice) y **Créditos de esta grabación**
   (Intérpretes con los integrantes primero y destacados, Producción, Sonido, Otros; los mismos
   grupos que la vista por canción del álbum). Los créditos de todo el disco no se repiten: un
   enlace lleva a la pestaña Créditos del álbum. Si alguien llega a la canción sin pasar por el

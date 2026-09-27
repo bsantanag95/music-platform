@@ -1,13 +1,5 @@
-# catalog-song Specification
+## MODIFIED Requirements
 
-## Purpose
-
-Define la autoría que muestra la página de detalle de canción. La página nació mínima
-(`rebalance-catalog-detail-pages`) y desde `redesign-song-page` es una ficha compacta de
-biblioteca: su estructura vive en `song-page-layout`, las versiones y los discos en
-`song-versions`, el panel personal en `song-personal-panel` y los agregados en
-`song-community-stats`. Esta capacidad conserva la fila "Escrita por" y el bloque Composición.
-## Requirements
 ### Requirement: Autoría en la página de canción
 
 La página de canción SHALL mostrar, en la ficha técnica de la cabecera, una fila "Escrita
@@ -39,4 +31,3 @@ renderizar. Sin autores registrados, la fila y el bloque SHALL NOT mostrarse.
 - **WHEN** una canción tiene una compositora (música) y un letrista (letra)
 - **THEN** la ficha muestra "Escrita por Compositora, Letrista" y el bloque Composición los
   lista con sus roles: "Compositora (música), Letrista (letra)"
-

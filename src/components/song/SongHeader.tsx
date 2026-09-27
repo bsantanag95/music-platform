@@ -30,16 +30,9 @@ export function SongIdentity({ title, artists, principalDisc, strip }: SongIdent
   return (
     <div className="flex min-w-0 flex-col gap-1">
       <p className="font-data text-xs uppercase tracking-wider text-paper-muted">
+        {/* El disco lo nombran las migas y la tira de pistas (openspec: polish-song-header). */}
         {principalDisc && strip
-          ? t.rich("kickerTrack", {
-              position: trackNumber(strip.current, strip.multiDisc),
-              album: (chunks) => (
-                <Link href={`/album/${principalDisc.releaseGroupId}`} className="normal-case tracking-normal text-amber hover:underline">
-                  {chunks}
-                </Link>
-              ),
-              title: principalDisc.title,
-            })
+          ? t("kickerTrack", { position: trackNumber(strip.current, strip.multiDisc) })
           : t("kicker")}
       </p>
       <h1 className="font-display text-3xl leading-tight text-paper [overflow-wrap:anywhere] sm:text-4xl">{title}</h1>
@@ -63,6 +56,8 @@ interface SongFactsProps {
   durationSec: number | null;
   songwriters: TrackCreditPerson[];
   firstAppearance: ContainingAlbum | null;
+  /** Para decir el tipo de la primera aparición cuando no es el disco principal. */
+  principalDiscId: string | null;
   versionLine: VersionLine | null;
 }
 
@@ -76,9 +71,14 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
 }
 
 /** Ficha técnica: solo las filas con datos. */
-export function SongFacts({ durationSec, songwriters, firstAppearance, versionLine }: SongFactsProps) {
+export function SongFacts({ durationSec, songwriters, firstAppearance, principalDiscId, versionLine }: SongFactsProps) {
   const t = useTranslations("catalog.song");
   const year = firstAppearance ? discYear(firstAppearance) : null;
+  // "Manchild (single/EP)": sin el tipo, una primera aparición homónima parece la propia canción.
+  const discType =
+    firstAppearance && firstAppearance.releaseGroupId !== principalDiscId && t.has(`discTypes.${firstAppearance.category}`)
+      ? t(`discTypes.${firstAppearance.category}`)
+      : null;
   const originalLink = (chunks: ReactNode) =>
     versionLine ? (
       <Link href={`/song/${versionLine.original.recordingId}`} className="text-amber hover:underline">
@@ -91,7 +91,7 @@ export function SongFacts({ durationSec, songwriters, firstAppearance, versionLi
       {durationSec !== null && <Fact label={t("duration")}>{formatDuration(durationSec)}</Fact>}
       {songwriters.length > 0 && (
         <Fact label={t("writtenBy")}>
-          <SongwriterNames songwriters={songwriters} />
+          <SongwriterNames songwriters={songwriters} showRoles={false} />
         </Fact>
       )}
       {firstAppearance && (
@@ -99,6 +99,7 @@ export function SongFacts({ durationSec, songwriters, firstAppearance, versionLi
           <Link href={`/album/${firstAppearance.releaseGroupId}`} className="text-amber hover:underline">
             {firstAppearance.title}
           </Link>
+          {discType && <span className="text-paper-muted"> ({discType})</span>}
           {year !== null && <span className="text-paper-muted"> · {year}</span>}
         </Fact>
       )}
@@ -135,31 +136,49 @@ export function SongCommunity({ stats, listsHref }: SongCommunityProps) {
   const favoritesText =
     favorites.kind === "fewer" ? tAlbum("fewerLower", { threshold: favorites.threshold }) : number(favorites.value);
 
+  const noFavorites = favorites.kind === "exact" && favorites.value === 0;
+  // Sin media, reacción predominante ni favoritas, las tarjetas estarían vacías: una línea.
+  const sparse = ratings.averageStars === null && reactions.top === null && noFavorites;
+  const counts = [
+    ratings.count > 0 ? t("ratingsCount", { count: ratings.count }) : null,
+    reactions.count > 0 ? t("reactionsCount", { count: reactions.count }) : null,
+  ].filter(Boolean);
+
   const summary = [
     ratings.averageStars !== null ? tAlbum("averageValue", { stars: formatStars(ratings.averageStars, locale) }) : null,
     t("ratingsCount", { count: ratings.count }),
     reactions.top ? tReaction(reactions.top) : null,
-    favorites.kind === "exact" && favorites.value === 0 ? null : t("favoritesSummary", { value: favoritesText }),
+    noFavorites ? null : t("favoritesSummary", { value: favoritesText }),
   ]
     .filter(Boolean)
     .join(" · ");
 
   return (
     <section aria-label={tAlbum("heading")} className="flex flex-col gap-3">
-      <p className="font-data text-sm text-paper sm:hidden">{summary}</p>
-      <div className="hidden grid-cols-3 gap-2 sm:grid">
-        <StatTile
-          label={tAlbum("average")}
-          value={ratings.averageStars !== null ? tAlbum("averageValue", { stars: formatStars(ratings.averageStars, locale) }) : "—"}
-          detail={ratings.averageStars === null && ratings.count > 0 ? tAlbum("fewRatings") : t("ratingsCount", { count: ratings.count })}
-        />
-        <StatTile
-          label={t("reaction")}
-          value={reactions.top ? tReaction(reactions.top) : "—"}
-          detail={t("reactionsCount", { count: reactions.count })}
-        />
-        <StatTile label={t("favorites")} value={<ThresholdedTileValue count={favorites} />} />
-      </div>
+      {sparse ? (
+        <p className="font-data text-xs text-paper-muted">
+          {[counts.length > 0 ? t("sparse") : t("none"), ...counts].join(" · ")}
+        </p>
+      ) : (
+        <>
+          <p className="font-data text-sm text-paper sm:hidden">{summary}</p>
+          <div className="hidden grid-cols-3 gap-2 sm:grid">
+            <StatTile
+              label={tAlbum("average")}
+              value={
+                ratings.averageStars !== null ? tAlbum("averageValue", { stars: formatStars(ratings.averageStars, locale) }) : "—"
+              }
+              detail={t("ratingsCount", { count: ratings.count })}
+            />
+            <StatTile
+              label={t("reaction")}
+              value={reactions.top ? tReaction(reactions.top) : "—"}
+              detail={t("reactionsCount", { count: reactions.count })}
+            />
+            <StatTile label={t("favorites")} value={noFavorites ? "—" : <ThresholdedTileValue count={favorites} />} />
+          </div>
+        </>
+      )}
       {stats.listCount > 0 && (
         <Link href={listsHref} className="self-start font-data text-xs text-amber hover:underline">
           {tAlbum("appearsInLists", { count: stats.listCount })} →

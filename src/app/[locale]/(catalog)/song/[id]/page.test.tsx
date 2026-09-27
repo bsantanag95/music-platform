@@ -69,12 +69,13 @@ vi.mock("next/image", () => ({
 
 const messages: Record<string, unknown> = { catalog: catalogEs, common: commonEs };
 vi.mock("next-intl/server", () => ({
-  getTranslations: vi.fn(async (namespace: string) => (key: string) => {
+  getTranslations: vi.fn(async (namespace: string) => (key: string, params?: Record<string, string | number>) => {
     let value: unknown = messages;
     for (const part of `${namespace}.${key}`.split(".")) {
       value = value && typeof value === "object" ? (value as Record<string, unknown>)[part] : undefined;
     }
-    return typeof value === "string" ? value : key;
+    if (typeof value !== "string") return key;
+    return Object.entries(params ?? {}).reduce((text, [k, v]) => text.replace(`{${k}}`, String(v)), value);
   }),
 }));
 
@@ -203,14 +204,38 @@ describe("página de canción", () => {
   it("cabecera: antetítulo con la pista del disco principal, ficha técnica y comunidad", async () => {
     await renderPage();
     expect(screen.getByRole("heading", { level: 1, name: "November Rain" })).toBeInTheDocument();
-    expect(screen.getByText(/Canción · pista 10 de/)).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: "Use Your Illusion I" })[0]).toHaveAttribute("href", `/album/${UYI}`);
+    // El antetítulo ya no repite el disco: lo nombran las migas y la tira.
+    expect(screen.getByText("Canción · Pista 10")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Ir a Use Your Illusion I" })).toHaveAttribute("href", `/album/${UYI}`);
     expect(screen.getByText("8:57")).toBeInTheDocument();
     expect(screen.getByText(song.writtenBy)).toBeInTheDocument();
     expect(screen.getByText(song.firstAppearance)).toBeInTheDocument();
     expect(screen.getByText(song.community.reaction)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Aparece en 23 listas/ })).toHaveAttribute("href", expect.stringContaining(RID));
     expect(mocks.scheduleSongCreditsSync).toHaveBeenCalledWith({ id: "rel-uyi", releaseGroupId: UYI });
+  });
+
+  it("comunidad con poca actividad: una línea con las cantidades en lugar de tarjetas vacías", async () => {
+    mocks.loadSongCommunity.mockResolvedValue({
+      ratings: { count: 1, averageStars: null },
+      reactions: { count: 0, top: null },
+      favorites: { kind: "exact", value: 0 },
+      listCount: 0,
+    });
+    await renderPage();
+    expect(screen.getByText("Todavía hay poca actividad de la comunidad · 1 valoración")).toBeInTheDocument();
+    expect(screen.queryByText(song.community.reaction)).not.toBeInTheDocument();
+  });
+
+  it("primera aparición en un disco distinto del principal: dice su tipo", async () => {
+    const single = disc("single", "Manchild", "single_ep", 1985);
+    mocks.loadRecordingDetail.mockResolvedValue({
+      kind: "ok",
+      detail: makeDetail({ containingAlbums: [single, ...makeDetail().containingAlbums] }),
+    });
+    await renderPage();
+    const facts = screen.getByText(song.firstAppearance).nextElementSibling;
+    expect(facts).toHaveTextContent("Manchild (single/EP) · 1985");
   });
 
   it("migas con artista y disco principal", async () => {
@@ -235,10 +260,33 @@ describe("página de canción", () => {
     expect(screen.getByText(song.kicker)).toBeInTheDocument();
   });
 
-  it("composición y créditos de la grabación, con integrantes primero y enlace a los créditos del disco", async () => {
+  it("un solo autor: la ficha lo nombra y no hay bloque Composición", async () => {
+    await renderPage();
+    expect(screen.getByRole("link", { name: "Axl Rose" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: song.composition })).not.toBeInTheDocument();
+  });
+
+  it("autores con roles distintos: la ficha solo con nombres y el bloque Composición con roles", async () => {
+    mocks.loadRecordingCredits.mockResolvedValue({
+      ...CREDITS,
+      groups: {
+        ...CREDITS.groups,
+        songwriting: [
+          { artistId: "c", name: "Compositora", creditedAs: null, roles: [{ relationType: "composer", attributes: [] }] },
+          { artistId: "l", name: "Letrista", creditedAs: null, roles: [{ relationType: "lyricist", attributes: [] }] },
+        ],
+      },
+    });
     await renderPage();
     const composition = screen.getByRole("region", { name: song.composition });
-    expect(within(composition).getByRole("link", { name: "Axl Rose" })).toBeInTheDocument();
+    expect(composition).toHaveTextContent("Compositora (música), Letrista (letra)");
+    const facts = screen.getByText(song.writtenBy).nextElementSibling;
+    expect(facts).toHaveTextContent("Compositora, Letrista");
+    expect(facts).not.toHaveTextContent("(música)");
+  });
+
+  it("créditos de la grabación, con integrantes primero y enlace a los créditos del disco", async () => {
+    await renderPage();
     const credits = screen.getByRole("region", { name: song.recordingCredits });
     const names = within(credits)
       .getAllByRole("link")
