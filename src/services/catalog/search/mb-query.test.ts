@@ -33,11 +33,11 @@ describe("releaseGroupQuery", () => {
 
   it("filtros de categoría y década", () => {
     expect(releaseGroupQuery("destroyer", { category: "studio", decade: 1970 })).toBe(
-      '(destroyer) AND (primarytype:album AND NOT secondarytype:(compilation OR live OR soundtrack OR spokenword OR interview OR audiobook OR "audio drama" OR remix OR "dj-mix" OR "mixtape/street" OR demo OR "field recording")) AND firstreleasedate:[1970 TO 1979-12-31]',
+      '(destroyer) AND (primarytype:album AND NOT secondarytype:(compilation OR live OR spokenword OR interview OR audiobook OR "audio drama" OR remix OR "dj-mix" OR "mixtape/street" OR demo OR "field recording")) AND firstreleasedate:[1970 TO 1979-12-31]',
     );
     // Un demo o un remix publicados como álbum caen en "en vivo y otros".
     expect(releaseGroupQuery("destroyer", { category: "live_other" })).toContain(
-      '(primarytype:album AND secondarytype:(soundtrack OR spokenword OR interview OR audiobook OR "audio drama" OR remix OR "dj-mix" OR "mixtape/street" OR demo OR "field recording"))',
+      '(primarytype:album AND secondarytype:(spokenword OR interview OR audiobook OR "audio drama" OR remix OR "dj-mix" OR "mixtape/street" OR demo OR "field recording"))',
     );
     expect(releaseGroupQuery("destroyer", { category: "compilation" })).toBe(
       "(destroyer) AND (secondarytype:compilation)",

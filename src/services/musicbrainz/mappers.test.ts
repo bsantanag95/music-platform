@@ -25,12 +25,15 @@ describe("mapeo de resultados de búsqueda de release-groups", () => {
     expect(mapReleaseGroupCategory("Other", [])).toBe("live_other");
   });
 
-  it("un Album con tipos secundarios no es de estudio (demo, remix, soundtrack…)", () => {
+  it("un Album con tipos secundarios no es de estudio (demo, remix…), salvo Soundtrack", () => {
     expect(mapReleaseGroupCategory("Album", [])).toBe("studio");
     expect(mapReleaseGroupCategory("Album", undefined)).toBe("studio");
-    for (const secondary of ["Demo", "Remix", "DJ-mix", "Mixtape/Street", "Soundtrack", "Spokenword", "Field recording"]) {
+    for (const secondary of ["Demo", "Remix", "DJ-mix", "Mixtape/Street", "Spokenword", "Interview", "Field recording"]) {
       expect(mapReleaseGroupCategory("Album", [secondary])).toBe("live_other");
     }
+    // More, Obscured by Clouds: bandas sonoras que se cuentan entre los álbumes de estudio.
+    expect(mapReleaseGroupCategory("Album", ["Soundtrack"])).toBe("studio");
+    expect(mapReleaseGroupCategory("Album", ["Soundtrack", "Remix"])).toBe("live_other");
     expect(mapReleaseGroupCategory("Album", ["Compilation", "Demo"])).toBe("compilation");
     expect(mapReleaseGroupCategory("Single", ["Remix"])).toBe("single_ep");
   });

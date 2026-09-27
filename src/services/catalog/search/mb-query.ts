@@ -33,10 +33,10 @@ export function artistQuery(query: string, artistType?: ArtistTypeFilter): strin
 // Categorías propias (`mapReleaseGroupCategory`) traducidas a cláusulas de
 // MusicBrainz. Son una aproximación para que la página remota venga filtrada;
 // el filtro exacto se reaplica localmente sobre la categoría mapeada.
-// Un `Album` con cualquier tipo secundario deja de ser de estudio (design D13 de
+// Un `Album` con un tipo secundario (salvo Soundtrack) deja de ser de estudio (design D13 de
 // redesign-song-page): la lista explícita de tipos secundarios de MusicBrainz.
 const NON_STUDIO_SECONDARY =
-  'soundtrack OR spokenword OR interview OR audiobook OR "audio drama" OR remix OR "dj-mix" OR "mixtape/street" OR demo OR "field recording"';
+  'spokenword OR interview OR audiobook OR "audio drama" OR remix OR "dj-mix" OR "mixtape/street" OR demo OR "field recording"';
 
 const CATEGORY_CLAUSE: Record<ReleaseGroupCategoryValue, string> = {
   studio: `primarytype:album AND NOT secondarytype:(compilation OR live OR ${NON_STUDIO_SECONDARY})`,

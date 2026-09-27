@@ -59,6 +59,9 @@ export function mapArtistMemberships(detail: MBArtistDetail): MappedArtistMember
     .filter((membership): membership is MappedArtistMembership => membership !== null);
 }
 
+/** Tipos secundarios que no le quitan a un `Album` la categoría de estudio. */
+const STUDIO_SECONDARY_TYPES = new Set(["Soundtrack"]);
+
 export function mapReleaseGroupCategory(
   primaryType: string | undefined,
   secondaryTypes: string[] | undefined,
@@ -67,10 +70,13 @@ export function mapReleaseGroupCategory(
 
   if (secondary.includes("Compilation")) return "compilation";
   if (secondary.includes("Live")) return "live_other";
-  // Un `Album` es de estudio solo sin tipos secundarios: Demo, Remix, DJ-mix,
-  // Soundtrack, Mixtape/Street… no son álbumes de estudio (openspec:
-  // redesign-song-page, D13 — un demo de 1986 le ganaba al disco original).
-  if (primaryType === "Album") return secondary.length === 0 ? "studio" : "live_other";
+  // Un `Album` es de estudio sin tipos secundarios o si solo es `Soundtrack`
+  // (More, Obscured by Clouds: se cuentan entre los álbumes del artista). Demo,
+  // Remix, DJ-mix, Mixtape/Street, Interview… no son álbumes de estudio
+  // (openspec: redesign-song-page, D13 — un demo de 1986 le ganaba al original).
+  if (primaryType === "Album") {
+    return secondary.every((type) => STUDIO_SECONDARY_TYPES.has(type)) ? "studio" : "live_other";
+  }
   if (primaryType === "Single" || primaryType === "EP") return "single_ep";
 
   // Broadcast, Other, remixes, soundtracks, etc. — se agrupan como
