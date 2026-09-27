@@ -56,7 +56,8 @@ export async function findOrIngestDiscography(target: ArtistRow): Promise<Discog
   return [...combined.values()];
 }
 
-async function findOrIngestOwnDiscography(target: ArtistRow): Promise<DiscographyRow[]> {
+/** Solo la discografía propia del artista (sin la de sus grupos): la usa la página de artista. */
+export async function findOrIngestOwnDiscography(target: ArtistRow): Promise<DiscographyRow[]> {
   if (target.discographySyncedAt) {
     if (needsDiscographyRefresh(target)) scheduleDiscographySync(target.id);
     return readArtistDiscography(target.id);

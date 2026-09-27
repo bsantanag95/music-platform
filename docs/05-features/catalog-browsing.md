@@ -70,21 +70,43 @@ se revisa antes de una exposición pública o cuando el catálogo tenga volumen 
 
 ## 2. Perfil de artista
 
-Foto, nombre, biografía breve (si existe), y discografía agrupada en cuatro categorías
-fijas: **De estudio**, **Singles/EP**, **Compilados**, **En vivo / Misceláneos** — el
-diseño ya definido en la visión de producto.
+**Estructura** (cambio `redesign-artist-page`, 2026-09 — la página es un híbrido entre ficha
+de biblioteca y biografía, con la misma estructura que el álbum):
 
-**Discografía-forward** (cambio `rebalance-catalog-detail-pages`): la discografía va
-**justo debajo del encabezado**, antes de las acciones de catálogo, las membresías y las
-notas de la comunidad. El artista se lee primero por su obra. El área de comunidad del
-artista **no tiene rating de estrellas**: son notas cortas de contexto ("empezá por
-aquí"), no reseñas.
+- **Cabecera**: foto rectangular 4:3 (a lo sumo 200 px; 96 px en móvil, junto al nombre) con
+  el crédito que exige su licencia (autor y licencia enlazados, ADR 0021) o el placeholder;
+  antetítulo de tipo ("Banda", "Solista"), nombre y la descripción corta de Wikidata en el
+  idioma de la interfaz; **ficha** (grupo: Origen y Actividad con estado "Activa" /
+  "Separada"; persona: Nacimiento con fecha y lugar, Fallecimiento y Actividad desde su
+  primer disco; Enlaces en orden fijo: sitio oficial, Bandcamp, Wikipedia y una plataforma de
+  streaming); y un **resumen** de Wikipedia de tres líneas con "Seguir leyendo" y la
+  atribución CC BY-SA 4.0. Sin géneros por ahora (los de MusicBrainz son etiquetas no
+  comerciales) y sin la desambiguación de MusicBrainz ni el nombre legal. Cada dato que falta
+  se omite sin dejar huecos.
+- **Panel "Tu relación"** (columna lateral en escritorio): Siguiendo, Favorito y Pendiente
+  como conmutadores; Escuchas y Colección calculadas desde los discos de la discografía propia
+  (nunca el total de la discografía, que la regla de recorridos prohíbe fuera de su gestión);
+  Listas con el mismo selector de casillas que el álbum; y Recorrido (barra sin cifras y
+  enlace a la gestión, o "Armar recorrido"). **Sin estrellas ni reseña del artista.**
+- **Bloque de comunidad**: Oyentes (personas con escuchas del artista o de sus discos), Lo
+  siguen (con "favorito de N") y En listas, con el umbral de 5 del álbum. Sin promedio de
+  estrellas ni agregado de recorridos.
+- **Pestañas** enlazables: **Discografía** (por defecto) y **Biografía** (la introducción
+  completa del artículo de Wikipedia; solo si existe).
+- **Discografía por secciones** (`?section=`): Principal (estudio, EP y bandas sonoras
+  propias), En vivo, Recopilatorios, Sencillos, Otros y Apariciones, cada una con su cantidad;
+  grilla por defecto en Principal y tabla en el resto, con la elección recordada por sección
+  en el navegador; "Mostrar más" de a 48 en la grilla; "Mejor valorado" (mayor media con al
+  menos 5 valoraciones) y las marcas del usuario (escuchado, su nota).
+- Al pie, fuera de las pestañas: integrantes o grupos (sin cambios) y **notas de la
+  comunidad**: notas cortas de contexto ("empezá por aquí"), no reseñas.
 
-**Caso Roger Waters / Pink Floyd (referencia del proyecto):** el perfil de un artista
-muestra tanto su discografía como banda como su carrera solista en la misma pantalla, sin
-distinguir "modo banda" de "modo solista" — es una sola discografía agrupada por
-categoría, el hecho de que algunos álbumes sean con una banda y otros en solitario no
-cambia la estructura de la pantalla. Ver ADR 0004 (modelo `CREDIT`) para el porqué.
+**Caso Roger Waters / Pink Floyd (referencia del proyecto):** la discografía de una persona
+muestra **solo sus propios discos** (y sus apariciones); sus bandas aparecen en la franja
+**"También en"**, con el período de pertenencia y la cantidad de discos principales de cada
+banda (si su discografía ya se sincronizó), enlazadas a sus páginas. Antes de este cambio se
+mezclaban los discos de las bandas con los del solista. Los recorridos siguen usando la
+discografía combinada.
 
 **Artista sin discografía todavía cacheada:** la búsqueda ya no ingiere nada — abre un
 artista recién descubierto (stub creado por la búsqueda o por créditos de `feat.`)
@@ -95,7 +117,9 @@ importación" corresponde acá, no a la búsqueda.
 **Carátulas:** carga progresiva (lazy) — la grilla de álbumes se renderiza de inmediato
 sin carátula, y cada álbum completa la suya en segundo plano apenas es visible. Decisión
 ya tomada (Opción C, `00-backend-analysis.md`); nunca bloquear el render inicial de la
-página esperando carátulas.
+página esperando carátulas. Desde `redesign-artist-page`, una carátula sin resolver se pide
+recién cuando su tarjeta o fila entra en pantalla (o está a 200 px): 200 discos sin resolver no
+disparan 200 requests al abrir la página.
 
 ## 3. Detalle de álbum
 

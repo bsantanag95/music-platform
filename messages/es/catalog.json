@@ -155,7 +155,158 @@
     "follow": "Seguir",
     "following": "Siguiendo",
     "signInToFollow": "Iniciá sesión para seguir",
-    "followError": "No se pudo completar la acción."
+    "followError": "No se pudo completar la acción.",
+    "typeEyebrow": {
+      "person": "Solista",
+      "group": "Banda",
+      "various": "Varios artistas",
+      "unknown": "Artista"
+    },
+    "tabs": {
+      "label": "Secciones del artista",
+      "discography": "Discografía",
+      "biography": "Biografía"
+    },
+    "photo": {
+      "alt": "Foto de {name}",
+      "credit": "Foto: {author}",
+      "creditNoAuthor": "Foto",
+      "license": "Licencia {license}"
+    },
+    "facts": {
+      "heading": "Ficha",
+      "origin": "Origen",
+      "activity": "Actividad",
+      "born": "Nacimiento",
+      "died": "Fallecimiento",
+      "links": "Enlaces",
+      "since": "desde {year}",
+      "range": "{begin} – {end}",
+      "active": "Activa",
+      "disbanded": "Separada",
+      "official": "Sitio oficial",
+      "bandcamp": "Bandcamp",
+      "wikipedia": "Wikipedia",
+      "streaming": "Streaming"
+    },
+    "summary": {
+      "readMore": "Seguir leyendo",
+      "source": "Fuente: Wikipedia",
+      "license": "CC BY-SA 4.0",
+      "languageNote": "Resumen en {language}",
+      "languages": {
+        "es": "español",
+        "en": "inglés"
+      }
+    },
+    "biography": {
+      "heading": "Biografía",
+      "readFull": "Leer el artículo completo en Wikipedia",
+      "languageNote": "Texto en {language}"
+    },
+    "relation": {
+      "heading": "Tu relación",
+      "signInPrompt": "Seguí al artista, registrá tus escuchas y armá tu recorrido.",
+      "signIn": "Iniciar sesión",
+      "following": "Siguiendo",
+      "follow": "Seguir",
+      "favorite": "Favorito",
+      "pending": "Pendiente",
+      "listens": "Escuchas",
+      "listensNone": "Sin escuchas",
+      "listensAlbums": "{count, plural, one {# disco} other {# discos}}",
+      "listensLast": "{title}, {date}",
+      "logListen": "+ Registrar",
+      "logging": "Registrando…",
+      "listenLogged": "Escucha registrada",
+      "addDetails": "Agregar detalles",
+      "collection": "Colección",
+      "collectionNone": "Ningún disco suyo",
+      "collectionHave": "{count, plural, one {# disco} other {# discos}}",
+      "collectionSeeking": "buscás {count}",
+      "lists": "{count, plural, =0 {En ninguna de tus listas} one {En # de tus listas} other {En # de tus listas}}",
+      "chooseLists": "Elegir listas",
+      "close": "Cerrar",
+      "journey": "Recorrido",
+      "journeyStart": "Armar recorrido",
+      "journeyManage": "Gestionar",
+      "journeyProgress": "Progreso de tu recorrido",
+      "journeyStates": {
+        "in_progress": "En curso",
+        "complete": "Completo",
+        "archived": "Archivado"
+      },
+      "saveError": "No pudimos guardar el cambio. Intentá de nuevo."
+    },
+    "community": {
+      "heading": "Comunidad",
+      "listeners": "Oyentes",
+      "followers": "Lo siguen",
+      "favorites": "favorito de {value}",
+      "lists": "En listas",
+      "listsNone": "En ninguna lista"
+    },
+    "discography": {
+      "heading": "Discografía",
+      "sectionsLabel": "Secciones de la discografía",
+      "sections": {
+        "main": "Principal",
+        "live": "En vivo",
+        "compilations": "Recopilatorios",
+        "singles": "Sencillos",
+        "other": "Otros",
+        "appearances": "Apariciones"
+      },
+      "viewLabel": "Vista",
+      "viewGrid": "Grilla",
+      "viewTable": "Tabla",
+      "ep": "EP",
+      "bestRated": "Mejor valorado",
+      "listened": "Escuchado",
+      "yourStars": "Tu nota: {stars}",
+      "showMore": "Mostrar más",
+      "columns": {
+        "year": "Año",
+        "cover": "Carátula",
+        "title": "Título",
+        "type": "Tipo",
+        "community": "Comunidad",
+        "you": "Tú"
+      },
+      "fewRatings": "< 5 notas",
+      "communityValue": "★ {average} ({count})",
+      "withArtist": "de {name}",
+      "empty": "Todavía no hay discos de este artista.",
+      "kinds": {
+        "album": "álbum",
+        "ep": "EP",
+        "single": "sencillo",
+        "broadcast": "emisión",
+        "other": "otro",
+        "live": "en vivo",
+        "compilation": "recopilatorio",
+        "soundtrack": "banda sonora",
+        "remix": "remix",
+        "demo": "demo",
+        "interview": "entrevista",
+        "spokenword": "palabra hablada",
+        "dj_mix": "DJ mix",
+        "mixtape_street": "mixtape",
+        "audiobook": "audiolibro",
+        "audio_drama": "radioteatro",
+        "field_recording": "grabación de campo",
+        "studio": "estudio",
+        "single_ep": "sencillo o EP",
+        "live_other": "en vivo u otro"
+      }
+    },
+    "alsoIn": {
+      "heading": "También en",
+      "period": "{from} – {to}",
+      "since": "desde {from}",
+      "unknownPeriod": "período desconocido",
+      "mainCount": "{count, plural, one {# disco principal} other {# discos principales}}"
+    }
   },
   "album": {
     "tracklistHeading": "Tracklist",
