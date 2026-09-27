@@ -166,8 +166,11 @@ así que un `Album` con `Demo`, `Remix`, `DJ-mix`, `Mixtape/Street`, `Soundtrack
 `Spokenword`, `Interview`, `Audiobook`, `Audio drama` o `Field recording` quedaba como
 `studio`. Verificado con "Studio Demos" (1986, `Official`, `Album` + `Demo`): la regla de
 original elegía el demo antes que *Use Your Illusion I*. Nueva regla: `studio` solo para
-`Album` **sin** tipos secundarios; cualquier otro tipo secundario (salvo `Compilation`, que
-sigue siendo `compilation`) va a `live_other`. Singles y EP no cambian. Las cláusulas de
+`Album` **sin** tipos secundarios **o solo con `Soundtrack`**; cualquier otro tipo secundario
+(salvo `Compilation`, que sigue siendo `compilation`) va a `live_other`. La excepción de
+`Soundtrack` salió del dry run sobre la base real: *More* y *Obscured by Clouds* (Pink Floyd) o
+*I'm Breathless* (Madonna) son bandas sonoras para MusicBrainz, pero se cuentan entre los
+álbumes de estudio del artista (decisión del usuario, 2026-09-27). Singles y EP no cambian. Las cláusulas de
 búsqueda por categoría (`mb-query.ts`) se ajustan con la lista explícita de tipos
 secundarios; siguen siendo una aproximación que se refiltra localmente.
 
@@ -177,14 +180,15 @@ artista con discografía sincronizada (`browseReleaseGroupsByArtist` trae los ti
 sus discos); después, para los discos `studio` que ese paso no cubrió (stubs de apariciones),
 una request por disco (`browseReleasesByReleaseGroup` trae los tipos del grupo). Solo se
 actualiza `category`; el error solo podía clasificar de más como `studio`, así que el segundo
-paso se limita a esos. **Alternativas descartadas:** guardar los tipos secundarios en una
+paso se limita a esos (un disco suelto que una versión anterior de la regla sacó de `studio`
+no vuelve solo: el paso 1 sí recalcula en ambos sentidos los discos de los artistas). **Alternativas descartadas:** guardar los tipos secundarios en una
 columna nueva (más esquema sin un uso adicional hoy) o excluir los discos sin ediciones
 oficiales (el demo del ejemplo es `Official`).
 
 ## Risks / Trade-offs
 
-- [Soundtracks y remixes de un artista dejan "Álbumes de estudio"] → es lo que dice
-  MusicBrainz; aparecen en "En vivo y otros" de la discografía.
+- [Remixes, demos y entrevistas de un artista dejan "Álbumes de estudio"] → es lo que dice
+  MusicBrainz; aparecen en "En vivo y otros" de la discografía. Las bandas sonoras se quedan.
 - [Script con cientos de requests] → usa el cliente con rate limit, reanudable con `--limit`,
   y solo escribe filas cuya categoría cambia.
 
