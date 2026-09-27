@@ -40,7 +40,8 @@ const DEBOUNCE_MS = 300;
 
 // Modal del acceso global "+ Registrar" (cambio add-global-listen-logging):
 // buscar en el catálogo → elegir objetivo → crear la escucha → ampliarla.
-// Es el flujo de `MarkAsListened` con un paso previo de elegir objetivo. A11y
+// Es el flujo de registro de escucha de los paneles "Tu relación" con un paso previo
+// de elegir objetivo. A11y
 // al nivel de `GetStartedModal`: portal, focus-trap, Escape, retorno de foco.
 export function RegisterListenDialog({ onClose }: RegisterListenDialogProps) {
   const t = useTranslations("diary");

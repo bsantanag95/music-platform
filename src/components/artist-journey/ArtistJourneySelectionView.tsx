@@ -60,7 +60,7 @@ function CheckIcon() {
 // local que ya maneja el editor — no llama al servidor, solo habilita
 // "Guardar". "Registrar escucha" crea un registro rápido (mismo primer paso
 // que el resto del catálogo); una vez creada la entrada, "Ampliar" despliega
-// el mismo `ListenEntryForm` que usa `MarkAsListened` para completar
+// el mismo `ListenEntryForm` que usan los paneles "Tu relación" para completar
 // Impresión/Contexto/Reacción/Audiencia sin salir de esta página (openspec:
 // add-artist-journey-mark-listened, revisión "ampliar en la misma fila").
 export function ArtistJourneySelectionView({
