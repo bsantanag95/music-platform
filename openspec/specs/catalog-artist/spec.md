@@ -5,7 +5,7 @@
 Perfil público de artista en el catálogo navegable, con enriquecimiento de stub y discografía agrupada.
 ## Requirements
 ### Requirement: Perfil localizado de artista
-La aplicación SHALL exponer un perfil público en `/{locale}/artist/{id}` para los locales soportados y SHALL mostrar el nombre del artista, su tipo traducido, su biografía cuando exista, su discografía disponible y breadcrumbs localizados dentro del encabezado global del catálogo.
+La aplicación SHALL exponer un perfil público en `/{locale}/artist/{id}` para los locales soportados y SHALL mostrar la cabecera del artista (foto, identidad, ficha y resumen de la biografía cuando existan, según la capability `artist-header`), su discografía disponible y breadcrumbs localizados dentro del encabezado global del catálogo.
 
 #### Scenario: Artista válido en español
 - **WHEN** una persona visita `/es/artist/<id-válido>`
@@ -26,42 +26,15 @@ La aplicación SHALL enriquecer automáticamente un artista almacenado como stub
 - **WHEN** una persona visita el perfil de un artista cuyo tipo almacenado es `unknown`
 - **THEN** el servicio de catálogo intenta enriquecerlo antes de mostrar la información y la página presenta los datos obtenidos
 
-### Requirement: Discografía agrupada
-
-La aplicación SHALL mostrar los grupos de lanzamiento agrupados y etiquetados por las
-categorías `studio`, `single_ep`, `compilation` y `live_other`, manteniendo el título
-original de cada grupo. Dentro de cada categoría, las tarjetas SHALL ordenarse por el año
-de lanzamiento canónico del `release_group` (`first_release_year`) de forma ascendente; los
-grupos sin año conocido SHALL ordenarse al final de su categoría, con un orden estable
-entre ellos. Cada tarjeta SHALL mostrar ese año cuando exista.
-
-#### Scenario: Categorías con contenido
-
-- **WHEN** el artista tiene grupos de lanzamiento en una o más categorías
-- **THEN** cada grupo aparece bajo la sección traducida correspondiente, ordenado por año
-  ascendente dentro de la sección, y cada tarjeta conserva su título sin traducir y
-  muestra su año cuando se conoce
-
-#### Scenario: Grupo sin año conocido
-
-- **WHEN** un grupo de lanzamiento no tiene `first_release_year`
-- **THEN** su tarjeta se muestra sin año y se ordena después de los grupos con año dentro
-  de su categoría, sin romper el layout
-
-#### Scenario: Categoría vacía
-
-- **WHEN** el artista no tiene grupos de lanzamiento en una categoría
-- **THEN** esa categoría no muestra una sección vacía ni rompe el layout del perfil
-
 ### Requirement: Datos opcionales del artista
-La aplicación SHALL renderizar un fallback visual cuando el artista no tenga foto y SHALL omitir o presentar de forma neutra la biografía cuando sea nula, sin impedir la navegación de la página.
+La aplicación SHALL renderizar el placeholder visual 4:3 cuando el artista no tenga foto y SHALL omitir, sin dejar huecos, cada dato de la cabecera que falte (descripción, cada fila de la ficha, enlaces y resumen de la biografía), sin impedir la navegación de la página.
 
 #### Scenario: Artista sin foto ni biografía
-- **WHEN** la respuesta del artista contiene `photoUrl` y `bio` nulos
-- **THEN** el encabezado muestra el fallback visual y el resto del perfil se renderiza correctamente
+- **WHEN** el artista no tiene foto, descripción ni resumen de la biografía
+- **THEN** la cabecera muestra el placeholder, el tipo y el nombre, sin líneas vacías, y el resto del perfil se renderiza correctamente
 
 ### Requirement: Carga progresiva de carátulas
-La discografía SHALL incluir, por cada `releaseGroup`, su carátula conocida y si su carátula está resuelta. Una carátula está resuelta cuando su URL es conocida, cuando su ausencia fue confirmada dentro de la ventana de reintento de negativos o cuando fue retirada. La aplicación SHALL renderizar en la carga inicial la carátula (o el fallback visual de álbum sin carátula) de los `releaseGroup` resueltos, sin requests por carátula desde el cliente. Solo para los `releaseGroup` no resueltos, la aplicación SHALL cargar la carátula después del render inicial mediante el endpoint cover-only (`GET /api/catalog/release-group/{id}/cover`), que resuelve la carátula sin ingerir el tracklist del álbum, SHALL mostrar un estado de carga accesible, SHALL reintentar de forma limitada los fallos transitorios y SHALL usar un fallback visual estable cuando no exista carátula o se agoten los reintentos.
+La discografía SHALL incluir, por cada `releaseGroup`, su carátula conocida y si su carátula está resuelta. Una carátula está resuelta cuando su URL es conocida, cuando su ausencia fue confirmada dentro de la ventana de reintento de negativos o cuando fue retirada. La aplicación SHALL renderizar en la carga inicial la carátula (o el fallback visual de álbum sin carátula) de los `releaseGroup` resueltos, sin requests por carátula desde el cliente. Solo para los `releaseGroup` no resueltos, y solo cuando su tarjeta o fila entra en el área visible (o se acerca a ella), la aplicación SHALL cargar la carátula mediante el endpoint cover-only (`GET /api/catalog/release-group/{id}/cover`), que resuelve la carátula sin ingerir el tracklist del álbum, SHALL mostrar un estado de carga accesible, SHALL reintentar de forma limitada los fallos transitorios y SHALL usar un fallback visual estable cuando no exista carátula o se agoten los reintentos.
 
 #### Scenario: Carátula con URL conocida
 - **WHEN** la discografía incluye un `releaseGroup` con URL de carátula conocida
@@ -73,7 +46,7 @@ La discografía SHALL incluir, por cada `releaseGroup`, su carátula conocida y 
 
 #### Scenario: Negativo vencido se re-resuelve
 - **WHEN** la discografía incluye un `releaseGroup` sin carátula cuya última confirmación de ausencia está fuera de la ventana de reintento
-- **THEN** la tarjeta resuelve la carátula después del render inicial mediante el endpoint cover-only
+- **THEN** la tarjeta resuelve la carátula mediante el endpoint cover-only cuando entra en el área visible
 
 #### Scenario: Carátula disponible
 - **WHEN** el `releaseGroup` no está resuelto, el endpoint cover-only devuelve una carátula válida y la imagen carga
@@ -91,6 +64,10 @@ La discografía SHALL incluir, por cada `releaseGroup`, su carátula conocida y 
 - **WHEN** el endpoint cover-only devuelve `cover: null`
 - **THEN** la tarjeta muestra inmediatamente un fallback visual estable y conserva su enlace al álbum
 
+#### Scenario: Carátula fuera de pantalla
+- **WHEN** la discografía tiene 200 discos sin carátula resuelta y la persona solo ve los primeros 12
+- **THEN** la aplicación consulta el endpoint cover-only solo para los discos visibles o próximos a serlo, y consulta los demás a medida que se desplaza
+
 ### Requirement: Enlaces preparados para álbumes
 Las tarjetas de discografía SHALL construir enlaces locale-aware a `/album/[id]` usando la navegación interna del proyecto, sin construir URLs de carátula manualmente.
 
@@ -100,7 +77,7 @@ Las tarjetas de discografía SHALL construir enlaces locale-aware a `/album/[id]
 
 ### Requirement: Sección de integrantes y membresías
 
-El perfil SHALL integrar la sección de integrantes para grupos y SHALL integrar la discografía de los grupos asociados al perfil de una persona, respetando las categorías y los enlaces locale-aware existentes.
+El perfil SHALL integrar la sección de integrantes para grupos y la sección de grupos para personas, y SHALL NOT combinar la discografía de los grupos asociados con la discografía de una persona: los grupos de una persona se presentan en la franja "También en" de la capability `artist-discography-view`.
 
 #### Scenario: Perfil de grupo con integrantes
 
@@ -110,7 +87,7 @@ El perfil SHALL integrar la sección de integrantes para grupos y SHALL integrar
 #### Scenario: Perfil de persona con membresías
 
 - **WHEN** se visita un perfil de tipo `person` con grupos relacionados
-- **THEN** la página combina discografía solista y de grupos sin duplicar álbumes
+- **THEN** la discografía muestra solo los discos de la persona y sus grupos aparecen en la franja "También en", enlazados a sus páginas
 
 ### Requirement: Memberships disponibles tras ingesta fría
 
@@ -128,22 +105,23 @@ El perfil de artista SHALL garantizar que las memberships se hayan sincronizado 
 
 ### Requirement: Página de artista discografía-forward
 
-La página de detalle de artista SHALL presentar la **discografía agrupada inmediatamente
-después del encabezado del artista**, antes de la sección de integrantes/membresías y antes
-de cualquier área de opinión de la comunidad. El artista se lee primero por su obra. Las
-acciones de catálogo (registrar escucha, marcar favorito, agregar a lista) SHALL ubicarse
-junto a la discografía o inmediatamente después de ella, no por encima.
+La página de detalle de artista SHALL presentar la **discografía inmediatamente después de
+la cabecera del artista**, como pestaña activa por defecto, antes de la sección de
+integrantes/membresías y antes de cualquier área de opinión de la comunidad. El artista se
+lee primero por su obra. Las acciones de catálogo (seguir, registrar escucha, marcar
+favorito, Pendiente, agregar a lista, recorrido) SHALL ubicarse en el panel "Tu relación" de
+la cabecera (capability `artist-personal-panel`), no en una columna de botones aparte.
 
 #### Scenario: La discografía va primero
 
 - **WHEN** una persona abre la página de un artista con discografía
-- **THEN** ve la discografía agrupada justo debajo del encabezado, antes de las membresías
-  y de las notas de la comunidad
+- **THEN** ve la discografía justo debajo de la cabecera, antes de las membresías y de las
+  notas de la comunidad
 
 #### Scenario: Artista sin discografía ingerida aún
 
 - **WHEN** la discografía todavía se está resolviendo o está vacía
-- **THEN** el resto de la página (encabezado, membresías, notas) se compone sin un hueco
+- **THEN** el resto de la página (cabecera, membresías, notas) se compone sin un hueco
   roto donde iría la discografía
 
 ### Requirement: Opinión sobre el artista como nota, sin rating
