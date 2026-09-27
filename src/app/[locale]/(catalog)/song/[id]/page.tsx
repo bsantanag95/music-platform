@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { AlbumCover } from "@/components/catalog/AlbumCover";
 import { itemListsHref } from "@/components/lists/lists-shared";
 import { SongAppearances } from "@/components/song/SongAppearances";
@@ -85,6 +86,16 @@ export default async function SongPage({ params }: SongPageProps) {
   const grouped = groupAppearances(detail.containingAlbums);
   const years = Object.fromEntries(detail.containingAlbums.map((disc) => [disc.releaseGroupId, discYear(disc)]));
 
+  const cover = (
+    <AlbumCover
+      cover={detail.principalDisc?.coverThumbUrl ?? null}
+      coverLabel={t("album.coverLabel")}
+      coverPlaceholderAlt={t("album.coverPlaceholderAlt")}
+      coverFailed={t("album.coverFailed")}
+      className="size-32 sm:size-[160px] lg:size-[200px]"
+    />
+  );
+
   const breadcrumbItems = [
     { label: tCommon("home"), href: "/" },
     ...(detail.primaryArtist ? [{ label: detail.primaryArtist.name, href: `/artist/${detail.primaryArtist.id}` }] : []),
@@ -100,13 +111,19 @@ export default async function SongPage({ params }: SongPageProps) {
 
       <header className="grid grid-cols-1 gap-5 [grid-template-areas:'cover'_'identity'_'community'_'panel'_'facts'] sm:grid-cols-[160px_minmax(0,1fr)] sm:[grid-template-areas:'cover_identity'_'cover_facts'_'community_community'_'panel_panel'] lg:grid-cols-[200px_minmax(0,1fr)_18rem] lg:grid-rows-[auto_auto_auto_1fr] lg:[grid-template-areas:'cover_identity_panel'_'cover_facts_panel'_'cover_community_panel'_'._._panel']">
         <div className="[grid-area:cover]">
-          <AlbumCover
-            cover={detail.principalDisc?.coverThumbUrl ?? null}
-            coverLabel={t("album.coverLabel")}
-            coverPlaceholderAlt={t("album.coverPlaceholderAlt")}
-            coverFailed={t("album.coverFailed")}
-            className="size-32 sm:size-[160px] lg:size-[200px]"
-          />
+          {detail.principalDisc ? (
+            // La carátula es del disco principal: lleva a él (openspec: polish-song-header).
+            <Link
+              href={`/album/${detail.principalDisc.releaseGroupId}`}
+              title={detail.principalDisc.title}
+              aria-label={t("song.coverLink", { title: detail.principalDisc.title })}
+              className="block w-fit rounded transition-opacity hover:opacity-90"
+            >
+              {cover}
+            </Link>
+          ) : (
+            cover
+          )}
         </div>
         <div className="[grid-area:identity]">
           <SongIdentity
@@ -121,6 +138,7 @@ export default async function SongPage({ params }: SongPageProps) {
             durationSec={detail.recording.durationSec}
             songwriters={credits.groups.songwriting}
             firstAppearance={firstAppearance}
+            principalDiscId={detail.principalDisc?.releaseGroupId ?? null}
             versionLine={versionLine}
           />
         </div>

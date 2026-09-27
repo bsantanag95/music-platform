@@ -5,7 +5,7 @@ import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ListenEntryForm } from "@/components/diary/ListenEntryForm";
 import { AlbumListPicker, type PickerMembership } from "@/components/album/AlbumListPicker";
-import { HeartIcon, ToggleChip } from "@/components/album/AlbumRelationPanel";
+import { HeartIcon } from "@/components/album/AlbumRelationPanel";
 import { RatingDetailDialog } from "@/components/album/RatingDetailDialog";
 import { formatStars } from "@/components/album/album-format";
 import { StarRatingInput } from "@/components/social/StarRatingInput";
@@ -191,7 +191,7 @@ function AuthenticatedPanel({ recordingId, state }: { recordingId: string; state
             onClick={() => setDetailOpen(true)}
             className="inline-flex h-10 min-w-10 items-center justify-center rounded border border-ink-border px-1.5 font-data text-xs text-paper transition-colors hover:border-amber disabled:cursor-not-allowed disabled:opacity-40 sm:h-8 sm:min-w-8"
           >
-            {detailedScore ?? "+"}
+            {detailedScore !== null ? tAlbum("detailScale", { score: detailedScore }) : "+"}
           </button>
         </Row>
         {ratingNotice && (
@@ -219,27 +219,27 @@ function AuthenticatedPanel({ recordingId, state }: { recordingId: string; state
             {busy === "listen" ? tAlbum("logging") : t("logListen")}
           </button>
         </Row>
-        <p className="font-body text-sm text-paper">
-          {listens.count === 0
-            ? tAlbum("listensNone")
-            : listens.lastReaction && lastDate
-              ? t("historyWithReaction", {
-                  count: listens.count,
-                  reaction: tReaction(listens.lastReaction),
-                  date: lastDate,
-                })
-              : lastDate
-                ? t("history", { count: listens.count, date: lastDate })
-                : t("historyCount", { count: listens.count })}
+        {/* Segunda línea fija: el historial a la izquierda y el diario a la derecha. */}
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <span className="font-body text-sm text-paper">
+            {listens.count === 0
+              ? tAlbum("listensNone")
+              : listens.lastReaction && lastDate
+                ? t("historyWithReaction", {
+                    count: listens.count,
+                    reaction: tReaction(listens.lastReaction),
+                    date: lastDate,
+                  })
+                : lastDate
+                  ? t("history", { count: listens.count, date: lastDate })
+                  : t("historyCount", { count: listens.count })}
+          </span>
           {listens.count > 0 && (
-            <>
-              {" · "}
-              <Link href="/me/diary" className={linkButton}>
-                {t("diaryLink")}
-              </Link>
-            </>
+            <Link href="/me/diary" className={linkButton}>
+              {t("diaryLink")} →
+            </Link>
           )}
-        </p>
+        </div>
         {loggedEntry && (
           <ListenEntryForm
             entryId={loggedEntry.id}
@@ -257,13 +257,22 @@ function AuthenticatedPanel({ recordingId, state }: { recordingId: string; state
           />
         )}
 
-        <ToggleChip
-          pressed={favorited}
-          disabled={busy === "favorite"}
-          onClick={() => void toggleFav()}
-          icon={<HeartIcon filled={favorited} />}
-          label={t("favorite")}
-        />
+      </div>
+
+      {/* Favorita como fila compacta, con el mismo ritmo que las demás (polish-song-header). */}
+      <div className={`pt-3 ${divider}`}>
+        <Row label={<span className={favorited ? "text-paper" : undefined}>{t("favorite")}</span>}>
+          <button
+            type="button"
+            aria-pressed={favorited}
+            aria-label={t("favorite")}
+            disabled={busy === "favorite"}
+            onClick={() => void toggleFav()}
+            className="inline-flex size-10 items-center justify-center rounded border border-ink-border text-paper-muted transition-colors hover:border-amber hover:text-paper aria-pressed:border-amber aria-pressed:text-amber disabled:cursor-wait disabled:opacity-60 sm:size-8"
+          >
+            <HeartIcon filled={favorited} />
+          </button>
+        </Row>
       </div>
 
       <div className={`flex flex-col gap-1 pt-3 ${divider}`}>

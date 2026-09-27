@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
-import { SongwriterNames } from "./SongwriterNames";
+import { SongwriterNames, songwritersShareRoles } from "./SongwriterNames";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) => (
@@ -32,6 +32,15 @@ describe("SongwriterNames", () => {
       <SongwriterNames songwriters={[person("a1", "Compositora", "composer"), person("a2", "Letrista", "lyricist", "writer")]} />,
     );
     expect(container).toHaveTextContent("Compositora (música), Letrista (letra)");
+  });
+
+  it("si todos comparten roles, los omite (Manchild: tres autores de música y letra)", () => {
+    const both = (id: string, name: string) => person(id, name, "composer", "lyricist");
+    const { container } = renderWithIntl(<SongwriterNames songwriters={[both("a", "Amy Allen"), both("b", "Jack Antonoff")]} />);
+    expect(container).toHaveTextContent("Amy Allen, Jack Antonoff");
+    expect(container).not.toHaveTextContent("(música");
+    expect(songwritersShareRoles([both("a", "A"), both("b", "B")])).toBe(true);
+    expect(songwritersShareRoles([person("a", "A", "composer"), person("b", "B", "lyricist")])).toBe(false);
   });
 
   it("sin autores no renderiza nada", () => {

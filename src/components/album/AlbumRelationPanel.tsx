@@ -221,7 +221,7 @@ function AuthenticatedPanel({
             onClick={() => setDetailOpen(true)}
             className="inline-flex h-8 min-w-8 items-center justify-center rounded border border-ink-border px-1.5 font-data text-xs text-paper transition-colors hover:border-amber disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {detailedScore ?? "+"}
+            {detailedScore !== null ? t("detailScale", { score: detailedScore }) : "+"}
           </button>
         </Row>
         {ratingNotice && (

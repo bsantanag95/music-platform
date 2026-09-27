@@ -43,9 +43,9 @@ const song = catalogEs.song.relation;
 const REC = "550e8400-e29b-41d4-a716-446655440000";
 const RATING_ID = "550e8400-e29b-41d4-a716-446655440009";
 
-function ratings(stars: number | null): RatingsResponse {
+function ratings(stars: number | null, detailedScore: number | null = null): RatingsResponse {
   return {
-    own: stars === null ? null : { id: RATING_ID, stars, detailedScore: null, createdAt: "", updatedAt: "" },
+    own: stars === null ? null : { id: RATING_ID, stars, detailedScore, createdAt: "", updatedAt: "" },
     aggregate: { count: stars === null ? 0 : 1, averageStars: null, averageDetailedScore: null },
   };
 }
@@ -93,10 +93,30 @@ describe("SongRelationPanel", () => {
         })}
       />,
     );
-    expect(screen.getByText(/3 escuchas · última: Obsesión, 12 sept?\.?/)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: song.diaryLink })).toHaveAttribute("href", "/me/diary");
+    // Dos líneas fijas: el historial y el diario, sin separadores sueltos.
+    expect(screen.getByText(/^3 · última: Obsesión, 12 sept?\.?$/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: `${song.diaryLink} →` })).toHaveAttribute("href", "/me/diary");
     expect(screen.getByRole("button", { name: song.favorite })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByText("En 1 de tus listas")).toBeInTheDocument();
+  });
+
+  it("muestra el puntaje detallado con su escala", () => {
+    renderWithIntl(<SongRelationPanel recordingId={REC} state={makeState({ ratings: ratings(4.5, 88) })} />);
+    expect(screen.getByRole("button", { name: /Puntuación detallada 88/ })).toHaveTextContent("88/100");
+  });
+
+  it("sin escuchas dice 'Ninguna' y no ofrece el diario", () => {
+    renderWithIntl(<SongRelationPanel recordingId={REC} state={makeState()} />);
+    expect(screen.getByText(relation.listensNone)).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: new RegExp(song.diaryLink) })).not.toBeInTheDocument();
+  });
+
+  it("Favorita es una fila compacta con un conmutador", () => {
+    renderWithIntl(<SongRelationPanel recordingId={REC} state={makeState({ favorited: true })} />);
+    const toggle = screen.getByRole("button", { name: song.favorite });
+    expect(toggle).toHaveAttribute("aria-pressed", "true");
+    expect(toggle).not.toHaveTextContent(song.favorite);
+    expect(screen.getByText(song.favorite)).toBeInTheDocument();
   });
 
   it("valorar guarda la nota de la grabación y actualiza sin recargar", async () => {
@@ -137,7 +157,7 @@ describe("SongRelationPanel", () => {
 
     expect(await screen.findByText("formulario de escucha")).toBeInTheDocument();
     expect(mocks.createListenEntry).toHaveBeenCalledWith({ type: "recording", id: REC });
-    expect(screen.getByText(/^1 escucha · última:/)).toBeInTheDocument();
+    expect(screen.getByText(/^1 · última:/)).toBeInTheDocument();
   });
 
   it("Favorita alterna el favorito de la grabación", async () => {
