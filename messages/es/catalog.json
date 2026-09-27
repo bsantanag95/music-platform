@@ -222,11 +222,6 @@
       "seeEditions": "Ver ediciones",
       "discSummary": "{tracks, plural, one {# pista} other {# pistas}} · {duration}",
       "total": "{tracks, plural, one {# pista} other {# pistas}}",
-      "variant": {
-        "live": "En vivo",
-        "remix": "Remix",
-        "re_recording": "Regrabación"
-      },
       "versionOf": "versión de {title}",
       "communityFavorite": "Favorita de la comunidad",
       "youListened": "La escuchaste",
@@ -591,30 +586,63 @@
     }
   },
   "song": {
-    "creditsHeading": "Créditos",
-    "appearancesHeading": "Aparece en",
-    "appearancePosition": "Disco {disc}, pista {position}",
-    "variant": "Variante",
+    "kicker": "Canción",
+    "kickerTrack": "Canción · pista {position} de <album>{title}</album>",
     "duration": "Duración",
-    "durationUnknown": "Duración desconocida",
+    "writtenBy": "Escrita por",
+    "firstAppearance": "Primera aparición",
+    "version": "Versión",
+    "versionOfCover": "Versión de <link>{title}</link> ({artist})",
+    "versionOfCoverNoArtist": "Versión de <link>{title}</link>",
+    "versionOfLive": "Versión en vivo de <link>{title}</link>",
+    "composition": "Composición",
+    "recordingCredits": "Créditos de esta grabación",
+    "albumWideCredits": "Créditos de todo el disco",
     "notFoundTitle": "Grabación no encontrada",
     "notFoundDescription": "No encontramos esta grabación en el catálogo.",
-    "containingAlbumsHeading": "En estos álbumes",
-    "mainAppearance": "Aparición principal",
-    "communityReactionHeading": "La comunidad",
-    "reactionSummary": "{count, plural, one {# persona la registró} other {# personas la registraron}} · sobre todo {top}",
-    "yourHistoryHeading": "Tu historial con esta canción",
-    "yourHistoryLink": "Ver en tu diario",
-    "starsDisclosure": "Añadir una valoración de estrellas",
-    "technicalDetailsHeading": "Ficha técnica",
-    "reaction": {
-      "liked": "les gustó",
-      "loved": "la aman",
-      "obsessed": "están obsesionados",
-      "neutral": "neutral",
-      "disliked": "no les gustó"
+    "community": {
+      "reaction": "Reacción común",
+      "reactionsCount": "{count, plural, =0 {Sin reacciones públicas} one {# reacción} other {# reacciones}}",
+      "ratingsCount": "{count, plural, =0 {Sin valoraciones} one {# valoración} other {# valoraciones}}",
+      "favorites": "Favorita de",
+      "favoritesSummary": "favorita de {value}"
     },
-    "writtenBy": "Escrita por"
+    "strip": {
+      "label": "Pistas del disco",
+      "position": "pista {index} de {total}",
+      "previous": "Pista anterior: {number}. {title}",
+      "next": "Pista siguiente: {number}. {title}"
+    },
+    "appearances": {
+      "heading": "Esta grabación aparece en",
+      "groups": {
+        "studio": "Álbumes de estudio",
+        "single_ep": "Singles y EP",
+        "compilation": "Recopilaciones",
+        "live_other": "En vivo y otros"
+      },
+      "original": "original",
+      "unknownYear": "Año desconocido",
+      "showMore": "+{count} más",
+      "showLess": "Mostrar menos"
+    },
+    "versions": {
+      "heading": "Otras versiones de la canción",
+      "groups": {
+        "covers": "Versiones de otros artistas",
+        "live": "En vivo",
+        "others": "Otras grabaciones"
+      }
+    },
+    "relation": {
+      "signInPrompt": "Valorá y registrá tus escuchas.",
+      "logListen": "+ Registrar escucha",
+      "favorite": "Favorita",
+      "history": "{count, plural, one {# escucha} other {# escuchas}} · última: {date}",
+      "historyWithReaction": "{count, plural, one {# escucha} other {# escuchas}} · última: {reaction}, {date}",
+      "historyCount": "{count, plural, one {# escucha} other {# escuchas}}",
+      "diaryLink": "Ver en tu diario"
+    }
   },
   "social": {
     "ratingHeading": "Valoraciones",
@@ -684,5 +712,13 @@
     "suspendSubmit": "Suspender",
     "suspendDone": "Suspensión aplicada.",
     "deactivatedAccount": "Cuenta desactivada"
+  },
+  "versionAttributes": {
+    "live": "En vivo",
+    "cover": "Cover",
+    "instrumental": "Instrumental",
+    "medley": "Medley",
+    "partial": "Parcial",
+    "karaoke": "Karaoke"
   }
 }

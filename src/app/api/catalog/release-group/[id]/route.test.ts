@@ -81,8 +81,8 @@ describe("GET /api/catalog/release-group/[id]", () => {
             title: "Speak to Me",
             durationSec: 90,
             credits: [],
-            variantType: "original",
-            variantOf: null,
+            versionAttributes: [],
+            versionOf: null,
           },
         ],
         primaryArtist: { id: "a1", name: "Pink Floyd" },
@@ -103,8 +103,8 @@ describe("GET /api/catalog/release-group/[id]", () => {
     expect(body.release.id).toBe("r-1");
     expect(body.cover).toBe("https://coverartarchive.org/release-group/mbid-rg-1/front-250");
     // El contrato no cambia: los datos de variante son del read-model de la página.
-    expect(body.tracks[0]).not.toHaveProperty("variantType");
-    expect(body.tracks[0]).not.toHaveProperty("variantOf");
+    expect(body.tracks[0]).not.toHaveProperty("versionAttributes");
+    expect(body.tracks[0]).not.toHaveProperty("versionOf");
     expect(body).not.toHaveProperty("primaryArtists");
     expect(body.tracks).toHaveLength(1);
     expect(body.tracks[0].recordingId).toBe("rec-1");

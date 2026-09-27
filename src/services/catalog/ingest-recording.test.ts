@@ -28,8 +28,6 @@ function makeRecordingRow(overrides: Partial<RecordingRow> = {}): RecordingRow {
     mbid: "mbid-rec",
     title: "Stairway to Heaven",
     durationSec: 482,
-    variantType: "original",
-    variantOfId: null,
     ...overrides,
   };
 }

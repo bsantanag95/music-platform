@@ -25,6 +25,16 @@ describe("mapeo de resultados de búsqueda de release-groups", () => {
     expect(mapReleaseGroupCategory("Other", [])).toBe("live_other");
   });
 
+  it("un Album con tipos secundarios no es de estudio (demo, remix, soundtrack…)", () => {
+    expect(mapReleaseGroupCategory("Album", [])).toBe("studio");
+    expect(mapReleaseGroupCategory("Album", undefined)).toBe("studio");
+    for (const secondary of ["Demo", "Remix", "DJ-mix", "Mixtape/Street", "Soundtrack", "Spokenword", "Field recording"]) {
+      expect(mapReleaseGroupCategory("Album", [secondary])).toBe("live_other");
+    }
+    expect(mapReleaseGroupCategory("Album", ["Compilation", "Demo"])).toBe("compilation");
+    expect(mapReleaseGroupCategory("Single", ["Remix"])).toBe("single_ep");
+  });
+
   it("conserva el año solo si la fecha viene completa; una fecha parcial no se inventa", () => {
     expect(normalizeReleaseDate(item({ "first-release-date": "2001-09-18" })["first-release-date"])).toBe("2001-09-18");
     expect(normalizeReleaseDate(item({ "first-release-date": "2001" })["first-release-date"])).toBeNull();

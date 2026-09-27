@@ -22,6 +22,15 @@ export const GET = withErrorHandling(
       );
     }
 
-    return NextResponse.json(result.detail);
+    // Contrato público (docs/04-api/contracts.md): solo estos campos del read-model.
+    const { recording, versionAttributes, credits, containingAlbums, appearances, primaryArtist } = result.detail;
+    return NextResponse.json({
+      recording: { id: recording.id, mbid: recording.mbid, title: recording.title, durationSec: recording.durationSec },
+      versionAttributes,
+      credits,
+      containingAlbums,
+      appearances,
+      primaryArtist,
+    });
   },
 );

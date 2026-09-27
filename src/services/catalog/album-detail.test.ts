@@ -14,6 +14,12 @@ vi.mock("./personnel-credits", () => ({
   syncPersonnelCredits: vi.fn(),
 }));
 vi.mock("./release-editions", () => ({ syncReleaseEditions: vi.fn() }));
+vi.mock("./recording-versions", () => ({
+  loadVersionAttributes: vi.fn(async (ids: string[]) => new Map(ids.map((id) => [id, id === "r1" ? ["live"] : []]))),
+  resolveVersionOf: vi.fn(async (ids: string[]) =>
+    new Map(ids.map((id) => [id, id === "r1" ? { recordingId: "r0", title: "Money", artistName: null } : null])),
+  ),
+}));
 vi.mock("./cover-mirror", () => ({
   isCoverMirrorEnabled: vi.fn(),
   mirrorCover: vi.fn(),
@@ -183,11 +189,10 @@ describe("getAlbumDetail (artistas principales y variantes)", () => {
     queueSelects(
       [makeRg({ coverThumbUrl: COVER_URL })],
       [
-        { recordingId: "r1", position: 1, discNumber: 1, title: "Money (Live)", durationSec: 380, variantType: "live", variantOfId: "r0" },
-        { recordingId: "r2", position: 2, discNumber: 1, title: "Time", durationSec: 413, variantType: "original", variantOfId: null },
+        { recordingId: "r1", position: 1, discNumber: 1, title: "Money (Live)", durationSec: 380 },
+        { recordingId: "r2", position: 2, discNumber: 1, title: "Time", durationSec: 413 },
       ],
       [],
-      [{ id: "r0", title: "Money" }],
       [
         { id: "a1", name: "Artista A", joinPhrase: " & " },
         { id: "a2", name: "Artista B", joinPhrase: null },
@@ -202,15 +207,16 @@ describe("getAlbumDetail (artistas principales y variantes)", () => {
       { id: "a2", name: "Artista B", joinPhrase: null },
     ]);
     expect(result.detail.primaryArtist).toEqual({ id: "a1", name: "Artista A" });
-    expect(result.detail.tracks[0]?.variantType).toBe("live");
-    expect(result.detail.tracks[0]?.variantOf).toEqual({ recordingId: "r0", title: "Money" });
-    expect(result.detail.tracks[1]?.variantOf).toBeNull();
+    expect(result.detail.tracks[0]?.versionAttributes).toEqual(["live"]);
+    expect(result.detail.tracks[0]?.versionOf).toEqual({ recordingId: "r0", title: "Money" });
+    expect(result.detail.tracks[1]?.versionAttributes).toEqual([]);
+    expect(result.detail.tracks[1]?.versionOf).toBeNull();
   });
 
   it("sin crédito de release-group deriva el artista de las pistas", async () => {
     queueSelects(
       [makeRg({ coverThumbUrl: COVER_URL })],
-      [{ recordingId: "r1", position: 1, discNumber: 1, title: "Uno", durationSec: 100, variantType: "original", variantOfId: null }],
+      [{ recordingId: "r1", position: 1, discNumber: 1, title: "Uno", durationSec: 100 }],
       [{ recordingId: "r1", artistId: "a9", name: "Banda", role: "primary", joinPhrase: null, position: 0 }],
       [],
     );
@@ -226,7 +232,7 @@ describe("getAlbumDetail (artistas principales y variantes)", () => {
   it("agenda la sincronización de ediciones pendiente y la respuesta no depende de su resultado", async () => {
     queueSelects(
       [makeRg({ coverThumbUrl: COVER_URL, editionsSyncedAt: null })],
-      [{ recordingId: "r1", position: 1, discNumber: 1, title: "Uno", durationSec: 100, variantType: "original", variantOfId: null }],
+      [{ recordingId: "r1", position: 1, discNumber: 1, title: "Uno", durationSec: 100 }],
       [],
       [{ id: "a1", name: "Banda", joinPhrase: null }],
     );

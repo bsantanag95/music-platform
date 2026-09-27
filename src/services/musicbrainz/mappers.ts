@@ -67,7 +67,10 @@ export function mapReleaseGroupCategory(
 
   if (secondary.includes("Compilation")) return "compilation";
   if (secondary.includes("Live")) return "live_other";
-  if (primaryType === "Album") return "studio";
+  // Un `Album` es de estudio solo sin tipos secundarios: Demo, Remix, DJ-mix,
+  // Soundtrack, Mixtape/Street… no son álbumes de estudio (openspec:
+  // redesign-song-page, D13 — un demo de 1986 le ganaba al disco original).
+  if (primaryType === "Album") return secondary.length === 0 ? "studio" : "live_other";
   if (primaryType === "Single" || primaryType === "EP") return "single_ep";
 
   // Broadcast, Other, remixes, soundtracks, etc. — se agrupan como

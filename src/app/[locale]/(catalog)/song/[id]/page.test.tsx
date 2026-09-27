@@ -1,160 +1,310 @@
-import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
-import * as recordingService from "@/services/catalog/recording-detail";
-import * as reactionService from "@/services/catalog/recording-reactions";
-import * as diaryService from "@/services/diary/diary";
-import { SongAlbums, SongListenHistory, SongReactionSummary } from "@/components/catalog/SongSections";
-import { SongStarDisclosure } from "@/components/social/SongStarDisclosure";
-import { Comments } from "@/components/social/Comments";
-import { SongwritersLine } from "@/components/catalog/SongwritersLine";
-import { getRecordingSongwriters } from "@/services/catalog/personnel-levels";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, screen, within } from "@testing-library/react";
+import { renderWithIntl } from "@/test/i18n-test-utils";
+import catalogEs from "../../../../../../messages/es/catalog.json";
+import commonEs from "../../../../../../messages/es/common.json";
+import type { RecordingDetail } from "@/services/catalog/recording-detail";
+import type { RecordingCredits } from "@/services/catalog/personnel-levels";
+import type { RecordingVersions } from "@/services/catalog/recording-versions";
 
-type PageModule = {
-  default: (props: { params: Promise<{ id: string }> }) => Promise<unknown>;
-};
+// Composición de la página de canción (openspec: redesign-song-page): cabecera, panel, tira
+// de pistas, composición y créditos, discos, versiones y comentarios.
 
-let pageModule: PageModule;
-beforeAll(async () => {
-  pageModule = (await vi.importActual("./page")) as PageModule;
-});
+const mocks = vi.hoisted(() => ({
+  loadRecordingDetail: vi.fn(),
+  loadSession: vi.fn(),
+  loadCanModerate: vi.fn(),
+  loadPrincipalRelease: vi.fn(),
+  loadTrackStrip: vi.fn(),
+  loadRecordingCredits: vi.fn(),
+  loadVersions: vi.fn(),
+  loadVersionLine: vi.fn(),
+  loadSongCommunity: vi.fn(),
+  loadSongPersonalState: vi.fn(),
+  scheduleSongCreditsSync: vi.fn(),
+}));
 
-vi.mock("next/navigation", () => ({
-  notFound: vi.fn(() => {
-    throw new Error("NEXT_NOT_FOUND");
-  }),
+vi.mock("./song-data", () => ({
+  loadRecordingDetail: mocks.loadRecordingDetail,
+  loadSession: mocks.loadSession,
+  loadCanModerate: mocks.loadCanModerate,
+  loadPrincipalRelease: mocks.loadPrincipalRelease,
+  loadTrackStrip: mocks.loadTrackStrip,
+  loadRecordingCredits: mocks.loadRecordingCredits,
+  loadVersions: mocks.loadVersions,
+  loadVersionLine: mocks.loadVersionLine,
+  loadSongCommunity: mocks.loadSongCommunity,
+  loadSongPersonalState: mocks.loadSongPersonalState,
 }));
-vi.mock("next-intl/server", () => ({
-  getTranslations: vi.fn().mockResolvedValue((key: string) => key),
-  getFormatter: vi.fn().mockResolvedValue({ dateTime: () => "1 ene 2026" }),
+vi.mock("@/services/catalog/recording-detail", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/services/catalog/recording-detail")>()),
+  scheduleSongCreditsSync: mocks.scheduleSongCreditsSync,
 }));
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>,
-}));
-vi.mock("@/components/catalog/LazyCoverImage", () => ({ LazyCoverImage: () => <div /> }));
-vi.mock("@/services/auth/sessions", () => ({ resolveSession: vi.fn() }));
-vi.mock("@/services/auth/authorization", () => ({
-  getUserPermissions: vi.fn().mockResolvedValue([]),
-}));
+vi.mock("@/db", () => ({ db: {} }));
 vi.mock("@/services/social", () => ({
-  resolveSocialTarget: vi.fn().mockResolvedValue({ type: "recording", id: "r1", column: "recordingId" }),
+  resolveSocialTarget: vi.fn().mockResolvedValue({ type: "recording", id: "r", column: "recordingId" }),
   getRatings: vi.fn().mockResolvedValue({ own: null, aggregate: { count: 0, averageStars: null, averageDetailedScore: null } }),
   listComments: vi.fn().mockResolvedValue({ comments: [], page: 1, pageSize: 20, hasNext: false }),
 }));
-vi.mock("@/services/catalog/recording-detail", () => ({ getRecordingDetail: vi.fn() }));
-vi.mock("@/services/catalog/recording-reactions", () => ({ getRecordingReactionSummary: vi.fn() }));
-vi.mock("@/services/diary/diary", () => ({ listMyListensForRecording: vi.fn() }));
-vi.mock("@/services/favorites/favorites", () => ({ isFavorited: vi.fn().mockResolvedValue(false) }));
-vi.mock("@/services/catalog/personnel-levels", () => ({ getRecordingSongwriters: vi.fn() }));
+vi.mock("@/components/catalog/LazyCoverImage", () => ({ LazyCoverImage: () => <span /> }));
+vi.mock("@/components/album/AlbumListPicker", () => ({ AlbumListPicker: () => <div /> }));
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ href, children, "aria-label": label }: { href: string; children: React.ReactNode; "aria-label"?: string }) => (
+    <a href={href} aria-label={label}>
+      {children}
+    </a>
+  ),
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}));
+vi.mock("next/navigation", () => ({
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
+}));
+vi.mock("next/image", () => ({
+  // eslint-disable-next-line @next/next/no-img-element
+  default: (props: { src: string; alt: string }) => <img src={props.src} alt={props.alt} />,
+}));
+
+const messages: Record<string, unknown> = { catalog: catalogEs, common: commonEs };
+vi.mock("next-intl/server", () => ({
+  getTranslations: vi.fn(async (namespace: string) => (key: string) => {
+    let value: unknown = messages;
+    for (const part of `${namespace}.${key}`.split(".")) {
+      value = value && typeof value === "object" ? (value as Record<string, unknown>)[part] : undefined;
+    }
+    return typeof value === "string" ? value : key;
+  }),
+}));
 
 const RID = "a1b2c3d4-0000-4000-8000-000000000abc";
-const RG_ID = "a1b2c3d4-0000-4000-8000-0000000000b1";
-const ART_ID = "a1b2c3d4-0000-4000-8000-0000000000a1";
+const UYI = "a1b2c3d4-0000-4000-8000-0000000000b1";
+const GNR = "a1b2c3d4-0000-4000-8000-0000000000a1";
 
-function detail(over: Partial<recordingService.RecordingDetail> = {}): recordingService.RecordingDetailResult {
-  return {
-    kind: "ok",
-    detail: {
-      recording: { id: RID, mbid: null, title: "Time", durationSec: 412, variantType: "original", variantOfId: null },
-      credits: [],
-      containingAlbums: [
-        { releaseGroupId: RG_ID, title: "The Dark Side of the Moon", category: "studio", coverThumbUrl: null, firstReleaseYear: 1973 },
-      ],
-      appearances: [],
-      primaryArtist: { id: ART_ID, name: "Pink Floyd" },
-      ...over,
-    },
-  };
-}
-
-function typeList(node: unknown): unknown[] {
-  const out: unknown[] = [];
-  const walk = (n: unknown) => {
-    if (n == null || typeof n !== "object") return;
-    if (Array.isArray(n)) return n.forEach(walk);
-    const el = n as { type?: unknown; props?: { children?: unknown } };
-    if (el.type) out.push(el.type);
-    walk(el.props?.children);
-  };
-  walk(node);
-  return out;
-}
-
-beforeEach(async () => {
-  vi.clearAllMocks();
-  const { resolveSession } = await import("@/services/auth/sessions");
-  vi.mocked(resolveSession).mockResolvedValue(null as never);
-  vi.mocked(reactionService.getRecordingReactionSummary).mockResolvedValue({
-    total: 0,
-    byReaction: { liked: 0, loved: 0, obsessed: 0, neutral: 0, disliked: 0 },
-    top: null,
-  });
-  vi.mocked(diaryService.listMyListensForRecording).mockResolvedValue([]);
-  vi.mocked(getRecordingSongwriters).mockResolvedValue([]);
+const disc = (releaseGroupId: string, title: string, category: string, year: number) => ({
+  releaseGroupId,
+  title,
+  category,
+  coverThumbUrl: null,
+  firstReleaseDate: null,
+  firstReleaseYear: year,
 });
 
-describe("SongPage", () => {
+function makeDetail(overrides: Partial<RecordingDetail> = {}): RecordingDetail {
+  const principal = disc(UYI, "Use Your Illusion I", "studio", 1991);
+  return {
+    recording: { id: RID, mbid: null, title: "November Rain", durationSec: 537 },
+    credits: [{ artistId: GNR, name: "Guns N' Roses", role: "primary", joinPhrase: null }],
+    containingAlbums: [
+      principal,
+      disc("s1", "November Rain", "single_ep", 1992),
+      disc("s2", "Yesterdays", "single_ep", 1992),
+      disc("c1", "Use Your Illusion", "compilation", 1998),
+      disc("c2", "Greatest Hits", "compilation", 2004),
+      disc("c3", "Best Ballads", "compilation", 2005),
+      disc("c4", "Roses N' Guns", "compilation", 2010),
+    ],
+    appearances: [],
+    primaryArtist: { id: GNR, name: "Guns N' Roses" },
+    versionAttributes: [],
+    principalDisc: principal,
+    ...overrides,
+  };
+}
+
+const EMPTY_GROUPS = { songwriting: [], production: [], performers: [], sound: [], other: [] };
+
+const CREDITS: RecordingCredits = {
+  groups: {
+    ...EMPTY_GROUPS,
+    songwriting: [{ artistId: "axl", name: "Axl Rose", creditedAs: null, roles: [{ relationType: "writer", attributes: [] }] }],
+    performers: [
+      { artistId: "guest", name: "Invitada", creditedAs: null, roles: [{ relationType: "vocal", attributes: [] }] },
+      { artistId: "slash", name: "Slash", creditedAs: null, roles: [{ relationType: "instrument", attributes: ["guitar"] }] },
+    ],
+  },
+  memberIds: ["slash"],
+  hasAlbumWideCredits: true,
+};
+
+const VERSIONS: RecordingVersions = {
+  covers: [
+    {
+      recordingId: "cover-1",
+      title: "November Rain",
+      durationSec: 287,
+      artist: { id: "rockabye", name: "Rockabye Baby!" },
+      attributes: ["cover", "instrumental"],
+      disc: { releaseGroupId: "lull", title: "Lullaby Renditions", year: 2009 },
+      earliestKey: "2009",
+    },
+  ],
+  live: [
+    {
+      recordingId: "live-1",
+      title: "November Rain",
+      durationSec: 750,
+      artist: { id: GNR, name: "Guns N' Roses" },
+      attributes: ["live"],
+      disc: { releaseGroupId: "era", title: "Live Era '87–'93", year: 1999 },
+      earliestKey: "1999",
+    },
+  ],
+  others: [],
+};
+
+const STATS = {
+  ratings: { count: 128, averageStars: 4.3 },
+  reactions: { count: 60, top: "obsessed" },
+  favorites: { kind: "exact", value: 41 },
+  listCount: 23,
+};
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.loadRecordingDetail.mockResolvedValue({ kind: "ok", detail: makeDetail() });
+  mocks.loadSession.mockResolvedValue(null);
+  mocks.loadPrincipalRelease.mockResolvedValue({ id: "rel-uyi", releaseGroupId: UYI });
+  mocks.loadTrackStrip.mockResolvedValue({
+    current: { recordingId: RID, discNumber: 1, position: 10, title: "November Rain" },
+    index: 10,
+    total: 16,
+    multiDisc: false,
+    previous: { recordingId: "prev", discNumber: 1, position: 9, title: "Double Talkin' Jive" },
+    next: { recordingId: "next", discNumber: 1, position: 11, title: "The Garden" },
+  });
+  mocks.loadRecordingCredits.mockResolvedValue(CREDITS);
+  mocks.loadVersions.mockResolvedValue(VERSIONS);
+  mocks.loadVersionLine.mockResolvedValue(null);
+  mocks.loadSongCommunity.mockResolvedValue(STATS);
+});
+
+type SongPageComponent = (props: { params: Promise<{ id: string }> }) => Promise<React.ReactElement>;
+let SongPage: SongPageComponent;
+
+// La primera importación del módulo es lenta con la suite completa en paralelo.
+beforeAll(async () => {
+  SongPage = (await import("./page")).default as SongPageComponent;
+}, 30_000);
+
+async function renderPage() {
+  renderWithIntl(await SongPage({ params: Promise.resolve({ id: RID }) }));
+}
+
+const song = catalogEs.song;
+
+describe("página de canción", () => {
   it("convierte una grabación inexistente en notFound()", async () => {
-    vi.mocked(recordingService.getRecordingDetail).mockResolvedValue({ kind: "not_found" });
-    await expect(
-      pageModule.default({ params: Promise.resolve({ id: RID }) }),
-    ).rejects.toThrow("NEXT_NOT_FOUND");
+    mocks.loadRecordingDetail.mockResolvedValue({ kind: "not_found" });
+    await expect(SongPage({ params: Promise.resolve({ id: RID }) })).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
-  it("lidera con los álbumes contenedores y no monta rating ni reseñas como acción primaria", async () => {
-    vi.mocked(recordingService.getRecordingDetail).mockResolvedValue(detail());
-    const tree = await pageModule.default({ params: Promise.resolve({ id: RID }) });
-    const types = typeList(tree);
-
-    expect(types).toContain(SongAlbums);
-    expect(types).toContain(Comments);
-    // Las estrellas están, pero como divulgación secundaria (SongStarDisclosure),
-    // no como SocialSection / DualRating de primer nivel.
-    expect(types).toContain(SongStarDisclosure);
-    // SongAlbums aparece antes que la divulgación de estrellas.
-    expect(types.indexOf(SongAlbums)).toBeLessThan(types.indexOf(SongStarDisclosure));
+  it("cabecera: antetítulo con la pista del disco principal, ficha técnica y comunidad", async () => {
+    await renderPage();
+    expect(screen.getByRole("heading", { level: 1, name: "November Rain" })).toBeInTheDocument();
+    expect(screen.getByText(/Canción · pista 10 de/)).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Use Your Illusion I" })[0]).toHaveAttribute("href", `/album/${UYI}`);
+    expect(screen.getByText("8:57")).toBeInTheDocument();
+    expect(screen.getByText(song.writtenBy)).toBeInTheDocument();
+    expect(screen.getByText(song.firstAppearance)).toBeInTheDocument();
+    expect(screen.getByText(song.community.reaction)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Aparece en 23 listas/ })).toHaveAttribute("href", expect.stringContaining(RID));
+    expect(mocks.scheduleSongCreditsSync).toHaveBeenCalledWith({ id: "rel-uyi", releaseGroupId: UYI });
   });
 
-  it("oculta el historial y el resumen de reacción sin datos", async () => {
-    vi.mocked(recordingService.getRecordingDetail).mockResolvedValue(detail());
-    const tree = await pageModule.default({ params: Promise.resolve({ id: RID }) });
-    const types = typeList(tree);
-    // Los componentes se montan pero devuelven null; comprobamos vía props.
-    const findEl = (t: unknown): { props?: Record<string, unknown> } | null => {
-      let f: { props?: Record<string, unknown> } | null = null;
-      const walk = (n: unknown) => {
-        if (f || n == null || typeof n !== "object") return;
-        if (Array.isArray(n)) return n.forEach(walk);
-        const el = n as { type?: unknown; props?: { children?: unknown } };
-        if (el.type === t) f = el as { props?: Record<string, unknown> };
-        else walk(el.props?.children);
-      };
-      walk(tree);
-      return f;
-    };
-    expect(types).toContain(SongListenHistory);
-    expect(types).toContain(SongReactionSummary);
-    expect((findEl(SongListenHistory)?.props?.entries as unknown[]).length).toBe(0);
-    expect((findEl(SongReactionSummary)?.props?.summary as { total: number }).total).toBe(0);
+  it("migas con artista y disco principal", async () => {
+    await renderPage();
+    const crumbs = screen.getByRole("navigation", { name: /migas|breadcrumb/i });
+    expect(within(crumbs).getByRole("link", { name: "Guns N' Roses" })).toHaveAttribute("href", `/artist/${GNR}`);
+    expect(within(crumbs).getByRole("link", { name: "Use Your Illusion I" })).toHaveAttribute("href", `/album/${UYI}`);
   });
 
-  it("pasa los autores de la grabación a la línea 'Escrita por', bajo el artista", async () => {
-    const songwriters = [
-      { artistId: "w1", name: "Audra Mae", creditedAs: null, roles: [{ relationType: "writer", attributes: [] }] },
-    ];
-    vi.mocked(recordingService.getRecordingDetail).mockResolvedValue(detail());
-    vi.mocked(getRecordingSongwriters).mockResolvedValue(songwriters);
-    const tree = await pageModule.default({ params: Promise.resolve({ id: RID }) });
+  it("tira de pistas con la anterior y la siguiente", async () => {
+    await renderPage();
+    const strip = screen.getByRole("navigation", { name: song.strip.label });
+    expect(within(strip).getByText("· pista 10 de 16")).toBeInTheDocument();
+    expect(within(strip).getByRole("link", { name: "Pista anterior: 9. Double Talkin' Jive" })).toHaveAttribute("href", "/song/prev");
+    expect(within(strip).getByRole("link", { name: "Pista siguiente: 11. The Garden" })).toHaveAttribute("href", "/song/next");
+  });
 
-    expect(getRecordingSongwriters).toHaveBeenCalledWith(RID);
-    let line: { props?: { songwriters?: unknown } } | null = null;
-    const walk = (n: unknown) => {
-      if (line || n == null || typeof n !== "object") return;
-      if (Array.isArray(n)) return n.forEach(walk);
-      const el = n as { type?: unknown; props?: { children?: unknown } };
-      if (el.type === SongwritersLine) line = el as { props?: { songwriters?: unknown } };
-      else walk(el.props?.children);
-    };
-    walk(tree);
-    expect(line).not.toBeNull();
-    expect(line!.props?.songwriters).toEqual(songwriters);
+  it("sin tira cuando la grabación no está en la lista del disco principal", async () => {
+    mocks.loadTrackStrip.mockResolvedValue(null);
+    await renderPage();
+    expect(screen.queryByRole("navigation", { name: song.strip.label })).not.toBeInTheDocument();
+    expect(screen.getByText(song.kicker)).toBeInTheDocument();
+  });
+
+  it("composición y créditos de la grabación, con integrantes primero y enlace a los créditos del disco", async () => {
+    await renderPage();
+    const composition = screen.getByRole("region", { name: song.composition });
+    expect(within(composition).getByRole("link", { name: "Axl Rose" })).toBeInTheDocument();
+    const credits = screen.getByRole("region", { name: song.recordingCredits });
+    const names = within(credits)
+      .getAllByRole("link")
+      .map((link) => link.textContent);
+    expect(names.indexOf("Slash")).toBeLessThan(names.indexOf("Invitada"));
+    expect(within(credits).getByRole("link", { name: /Créditos de todo el disco/ })).toHaveAttribute("href", `/album/${UYI}/credits`);
+  });
+
+  it("discos por tipo, con la marca original y el '+N' en recopilaciones", async () => {
+    await renderPage();
+    const section = screen.getByRole("region", { name: song.appearances.heading });
+    expect(within(section).getByText(song.appearances.groups.studio, { exact: false })).toBeInTheDocument();
+    expect(within(section).getByText(song.appearances.original)).toBeInTheDocument();
+    const more = within(section).getByRole("button", { name: "+1 más" });
+    fireEvent.click(more);
+    expect(within(section).getByRole("link", { name: /Roses N' Guns/ })).toBeInTheDocument();
+  });
+
+  it("otras versiones agrupadas y contraídas; al desplegar muestra artista y atributos extra", async () => {
+    await renderPage();
+    const section = screen.getByRole("region", { name: song.versions.heading });
+    const covers = within(section).getByRole("button", { name: /Versiones de otros artistas/ });
+    expect(covers).toHaveAttribute("aria-expanded", "false");
+    expect(within(section).queryByRole("button", { name: /Otras grabaciones/ })).not.toBeInTheDocument();
+    fireEvent.click(covers);
+    expect(within(section).getByRole("link", { name: "Rockabye Baby!" })).toBeInTheDocument();
+    expect(within(section).getByText(catalogEs.versionAttributes.instrumental)).toBeInTheDocument();
+  });
+
+  it("una versión en vivo muestra la línea de versión con enlace a la original", async () => {
+    mocks.loadRecordingDetail.mockResolvedValue({ kind: "ok", detail: makeDetail({ versionAttributes: ["live"] }) });
+    mocks.loadVersionLine.mockResolvedValue({
+      kind: "live",
+      original: { recordingId: "studio", title: "November Rain", artistName: "Guns N' Roses" },
+    });
+    await renderPage();
+    expect(screen.getByText(song.version)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "November Rain" })).toHaveAttribute("href", "/song/studio");
+  });
+
+  it("sin créditos ni versiones no muestra esos bloques y los comentarios siguen", async () => {
+    mocks.loadRecordingCredits.mockResolvedValue({ groups: EMPTY_GROUPS, memberIds: [], hasAlbumWideCredits: false });
+    mocks.loadVersions.mockResolvedValue(null);
+    await renderPage();
+    expect(screen.queryByRole("region", { name: song.composition })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: song.recordingCredits })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: song.versions.heading })).not.toBeInTheDocument();
+    expect(screen.queryByText(song.writtenBy)).not.toBeInTheDocument();
+  });
+
+  it("anónimo: el panel invita a iniciar sesión y no hay reseñas", async () => {
+    await renderPage();
+    expect(screen.getByText(song.relation.signInPrompt)).toBeInTheDocument();
+    expect(screen.queryByText(catalogEs.album.relation.writeReview)).not.toBeInTheDocument();
+  });
+
+  it("con sesión: el panel recibe el estado personal", async () => {
+    mocks.loadSession.mockResolvedValue({ user: { id: "u1" } });
+    mocks.loadCanModerate.mockResolvedValue(false);
+    mocks.loadSongPersonalState.mockResolvedValue({
+      favorited: true,
+      listens: { count: 2, lastAt: "2026-09-12T15:00:00.000Z", lastReaction: null },
+      ownListMemberships: [],
+    });
+    await renderPage();
+    expect(screen.getByRole("button", { name: song.relation.favorite })).toHaveAttribute("aria-pressed", "true");
+    expect(mocks.loadSongPersonalState).toHaveBeenCalledWith("u1", RID);
   });
 });

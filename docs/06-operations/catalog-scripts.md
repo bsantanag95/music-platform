@@ -84,3 +84,23 @@ tsx --env-file=.env scripts/backfill-personnel-credits.ts
 Una request por álbum (más una por banda sin pertenencias). Reemplaza los créditos de personal
 de la edición y de sus grabaciones en una transacción: si falla, se conservan los anteriores y
 el álbum queda pendiente.
+
+## `scripts/backfill-release-group-category.ts`
+
+Reclasifica los release-groups ya ingeridos con la regla de categoría vigente (cambio
+`redesign-song-page`, ADR 0020): un `Album` de MusicBrainz con tipos secundarios (Demo, Remix,
+DJ-mix, Mixtape/Street, Soundtrack, Spokenword, Interview, Audiobook, Audio drama, Field
+recording) ya no es `studio` sino `live_other`. Antes de la corrección, esos discos figuraban
+entre los álbumes de estudio del artista y podían ganarle al disco original en las reglas de
+disco principal y de grabación original de la página de canción.
+
+```bash
+tsx --env-file=.env scripts/backfill-release-group-category.ts --dry-run --limit 5
+tsx --env-file=.env scripts/backfill-release-group-category.ts
+```
+
+No guardamos los tipos secundarios, así que el script los vuelve a pedir en dos pasos: una
+request por cada 100 discos de cada artista con discografía sincronizada, y después una
+request por cada disco `studio` que ningún artista cubrió (stubs de apariciones). Solo escribe
+`category` en las filas que cambian y lista cada cambio. Las ingestas nuevas ya aplican la
+regla (`mapReleaseGroupCategory`); el script se corre una vez por base.

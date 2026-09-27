@@ -2,8 +2,15 @@ import { describe, expect, it, vi } from "vitest";
 
 const dbMock = vi.hoisted(() => ({ select: vi.fn() }));
 vi.mock("@/db", () => ({ db: dbMock }));
-const { classifyPersonnel, getRecordingSongwriters, groupCreditsByTrack, leadKindOf, relationKind, songwriterEntries } =
-  await import("./personnel-levels");
+const {
+  classifyPersonnel,
+  getRecordingCredits,
+  getRecordingSongwriters,
+  groupCreditsByTrack,
+  leadKindOf,
+  relationKind,
+  songwriterEntries,
+} = await import("./personnel-levels");
 
 const TRACKS = [
   { recordingId: "r1", discNumber: 1, position: 1 },
@@ -212,5 +219,36 @@ describe("getRecordingSongwriters", () => {
   it("sin obra o sin autores devuelve una lista vacía", async () => {
     dbMock.select.mockReturnValue(chain([]));
     await expect(getRecordingSongwriters("r9")).resolves.toEqual([]);
+  });
+
+  it("getRecordingCredits agrupa la grabación, suma la autoría y marca integrantes y créditos del disco", async () => {
+    const queue: unknown[] = [
+      // créditos de la grabación
+      [c("slash", "instrument", "r1", ["guitar"]), c("price", "mix", "r1")],
+      // autoría
+      [{ ...w("Axl Rose", "r1"), artistId: "axl" }],
+      // créditos de nivel edición del disco principal
+      [{ id: "pc-1" }],
+      // artistas principales
+      [{ id: "gnr", type: "group" }],
+      // integrantes
+      [{ personId: "slash" }],
+    ];
+    dbMock.select.mockImplementation(() => chain(queue.shift()));
+
+    const credits = await getRecordingCredits("r1", ["gnr"], "rel-uyi");
+    expect(credits.groups.performers.map((p) => p.artistId)).toEqual(["slash"]);
+    expect(credits.groups.sound.map((p) => p.artistId)).toEqual(["price"]);
+    expect(credits.groups.songwriting.map((p) => p.name)).toEqual(["Axl Rose"]);
+    expect(credits.memberIds).toEqual(["slash"]);
+    expect(credits.hasAlbumWideCredits).toBe(true);
+  });
+
+  it("getRecordingCredits sin créditos ni edición representativa devuelve grupos vacíos", async () => {
+    const queue: unknown[] = [[], []];
+    dbMock.select.mockImplementation(() => chain(queue.shift()));
+    const credits = await getRecordingCredits("r9", [], null);
+    expect(Object.values(credits.groups).every((group) => group.length === 0)).toBe(true);
+    expect(credits).toMatchObject({ memberIds: [], hasAlbumWideCredits: false });
   });
 });

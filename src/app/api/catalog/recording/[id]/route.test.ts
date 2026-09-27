@@ -26,4 +26,29 @@ describe("GET /api/catalog/recording/[id]", () => {
     expect(response.status).toBe(404);
     expect((await response.json()).code).toBe("RECORDING_NOT_FOUND");
   });
+
+  it("publica versionAttributes y no expone campos internos del read-model", async () => {
+    vi.mocked(recordingDetail.getRecordingDetail).mockResolvedValue({
+      kind: "ok",
+      detail: {
+        recording: { id: "550e8400-e29b-41d4-a716-446655440000", mbid: null, title: "Money", durationSec: 400 },
+        credits: [],
+        containingAlbums: [],
+        appearances: [],
+        primaryArtist: null,
+        versionAttributes: ["live"],
+        principalDisc: null,
+      },
+    });
+
+    const response = await GET(new NextRequest("http://localhost"), {
+      params: Promise.resolve({ id: "550e8400-e29b-41d4-a716-446655440000" }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.versionAttributes).toEqual(["live"]);
+    expect(body.recording).not.toHaveProperty("variantType");
+    expect(body).not.toHaveProperty("principalDisc");
+  });
 });

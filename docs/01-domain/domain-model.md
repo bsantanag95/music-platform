@@ -53,6 +53,8 @@ La **Pista** es la posición concreta de una Canción dentro de una Edición par
 
 Una Canción puede ser una versión distinta de otra: una re-grabación, un remix, o una versión en vivo cuentan como una Canción nueva y separada. Un remaster de audio, en cambio, **no** genera una Canción nueva — sigue siendo la misma grabación, solo con distinto tratamiento de audio.
 
+Las versiones de una misma canción se conectan por su **Obra** (la composición: título y autores). La Obra no se valora ni se comenta; agrupa las Canciones que la interpretan — la de estudio, las versiones en vivo, los covers de otros artistas — y dice quién la escribió. Qué versión es cada Canción (en vivo, cover, instrumental…) lo indica MusicBrainz en el vínculo Canción ↔ Obra; la **original** de una Obra es la Canción sin marca de en vivo ni de cover que aparece primero en un disco de estudio (ADR 0020).
+
 ## Crédito
 
 El **Crédito** conecta un Artista con un Álbum o con una Canción, y resuelve los distintos patrones de autoría de la industria:

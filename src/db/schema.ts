@@ -619,18 +619,13 @@ export const recording = pgTable(
     mbid: uuid("mbid").unique(),
     title: text("title").notNull(),
     durationSec: integer("duration_sec"),
-    variantType: text("variant_type").notNull().default("original"), // original | re_recording | remix | live
-    variantOfId: uuid("variant_of_id"),
+    // Las variantes (`variant_type`, `variant_of_id`) se retiraron en 0052: qué versión es
+    // una grabación lo dicen los atributos de `recording_work` (openspec: redesign-song-page).
   },
   (t) => [
     index("idx_recording_title").on(t.title),
     // Búsqueda local tolerante (migración 0050, openspec redesign-scoped-search).
     index("idx_recording_title_search").using("gin", sql`search_normalize(${t.title}) gin_trgm_ops`),
-    index("idx_recording_variant_of").on(t.variantOfId),
-    check(
-      "chk_recording_variant_type",
-      sql`${t.variantType} IN ('original','re_recording','remix','live')`,
-    ),
   ],
 );
 

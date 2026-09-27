@@ -222,11 +222,6 @@
       "seeEditions": "See editions",
       "discSummary": "{tracks, plural, one {# track} other {# tracks}} · {duration}",
       "total": "{tracks, plural, one {# track} other {# tracks}}",
-      "variant": {
-        "live": "Live",
-        "remix": "Remix",
-        "re_recording": "Re-recording"
-      },
       "versionOf": "version of {title}",
       "communityFavorite": "Community favorite",
       "youListened": "You listened",
@@ -591,30 +586,63 @@
     }
   },
   "song": {
-    "creditsHeading": "Credits",
-    "appearancesHeading": "Appears on",
-    "appearancePosition": "Disc {disc}, track {position}",
-    "variant": "Variant",
+    "kicker": "Song",
+    "kickerTrack": "Song · track {position} of <album>{title}</album>",
     "duration": "Duration",
-    "durationUnknown": "Duration unknown",
+    "writtenBy": "Written by",
+    "firstAppearance": "First appearance",
+    "version": "Version",
+    "versionOfCover": "Cover of <link>{title}</link> ({artist})",
+    "versionOfCoverNoArtist": "Cover of <link>{title}</link>",
+    "versionOfLive": "Live version of <link>{title}</link>",
+    "composition": "Composition",
+    "recordingCredits": "Credits for this recording",
+    "albumWideCredits": "Credits for the whole record",
     "notFoundTitle": "Recording not found",
     "notFoundDescription": "We could not find this recording in the catalog.",
-    "containingAlbumsHeading": "On these albums",
-    "mainAppearance": "Main appearance",
-    "communityReactionHeading": "The community",
-    "reactionSummary": "{count, plural, one {# person logged it} other {# people logged it}} · mostly {top}",
-    "yourHistoryHeading": "Your history with this song",
-    "yourHistoryLink": "See in your diary",
-    "starsDisclosure": "Add a star rating",
-    "technicalDetailsHeading": "Technical details",
-    "reaction": {
-      "liked": "liked it",
-      "loved": "loved it",
-      "obsessed": "obsessed",
-      "neutral": "neutral",
-      "disliked": "disliked it"
+    "community": {
+      "reaction": "Common reaction",
+      "reactionsCount": "{count, plural, =0 {No public reactions} one {# reaction} other {# reactions}}",
+      "ratingsCount": "{count, plural, =0 {No ratings} one {# rating} other {# ratings}}",
+      "favorites": "Favorite of",
+      "favoritesSummary": "favorite of {value}"
     },
-    "writtenBy": "Written by"
+    "strip": {
+      "label": "Tracks on the record",
+      "position": "track {index} of {total}",
+      "previous": "Previous track: {number}. {title}",
+      "next": "Next track: {number}. {title}"
+    },
+    "appearances": {
+      "heading": "This recording appears on",
+      "groups": {
+        "studio": "Studio albums",
+        "single_ep": "Singles and EPs",
+        "compilation": "Compilations",
+        "live_other": "Live and other"
+      },
+      "original": "original",
+      "unknownYear": "Unknown year",
+      "showMore": "+{count} more",
+      "showLess": "Show less"
+    },
+    "versions": {
+      "heading": "Other versions of the song",
+      "groups": {
+        "covers": "Versions by other artists",
+        "live": "Live",
+        "others": "Other recordings"
+      }
+    },
+    "relation": {
+      "signInPrompt": "Rate this song and log your listens.",
+      "logListen": "+ Log listen",
+      "favorite": "Favorite",
+      "history": "{count, plural, one {# listen} other {# listens}} · last: {date}",
+      "historyWithReaction": "{count, plural, one {# listen} other {# listens}} · last: {reaction}, {date}",
+      "historyCount": "{count, plural, one {# listen} other {# listens}}",
+      "diaryLink": "See in your diary"
+    }
   },
   "social": {
     "ratingHeading": "Ratings",
@@ -684,5 +712,13 @@
     "suspendSubmit": "Suspend",
     "suspendDone": "Suspension applied.",
     "deactivatedAccount": "Deactivated account"
+  },
+  "versionAttributes": {
+    "live": "Live",
+    "cover": "Cover",
+    "instrumental": "Instrumental",
+    "medley": "Medley",
+    "partial": "Partial",
+    "karaoke": "Karaoke"
   }
 }
