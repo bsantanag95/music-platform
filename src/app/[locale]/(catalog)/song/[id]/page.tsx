@@ -129,8 +129,6 @@ export default async function SongPage({ params }: SongPageProps) {
           <SongIdentity
             title={detail.recording.title}
             artists={primaryArtists}
-            principalDisc={detail.principalDisc}
-            strip={strip}
           />
         </div>
         <div className="[grid-area:facts]">
@@ -164,7 +162,8 @@ export default async function SongPage({ params }: SongPageProps) {
 
       {strip && detail.principalDisc && <SongTrackStrip strip={strip} disc={detail.principalDisc} />}
 
-      <div className="grid grid-cols-1 items-start gap-4 empty:hidden md:grid-cols-2">
+      {/* Apilados a ancho completo: Composición es corta y los créditos usan dos columnas. */}
+      <div className="flex flex-col gap-4 empty:hidden">
         <SongComposition credits={credits} />
         <SongRecordingCredits credits={credits} principalReleaseGroupId={detail.principalDisc?.releaseGroupId ?? null} />
       </div>

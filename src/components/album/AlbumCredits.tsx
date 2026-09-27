@@ -55,7 +55,7 @@ interface AlbumCreditsProps {
   releaseMbid?: string | null;
 }
 
-function useRoleFormatter() {
+export function useRoleFormatter() {
   const t = useTranslations("catalog.album.credits");
   const label = (kind: "roles" | "attributes", raw: string) => {
     const key = `${kind}.${messageKey(raw)}`;

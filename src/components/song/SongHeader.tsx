@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { StatTile, ThresholdedTileValue } from "@/components/album/AlbumHeader";
 import { formatDuration, formatStars } from "@/components/album/album-format";
 import { SongwriterNames } from "@/components/catalog/SongwriterNames";
-import { discYear, type ContainingAlbum, type TrackStrip } from "@/services/catalog/recording-detail";
+import { discYear, type ContainingAlbum } from "@/services/catalog/recording-detail";
 import type { TrackCreditPerson } from "@/services/catalog/personnel-levels";
 import type { VersionLine } from "@/services/catalog/recording-versions";
 import type { SongCommunityStats } from "@/services/catalog/song-community";
@@ -21,19 +21,15 @@ export function trackNumber(track: { discNumber: number; position: number }, mul
 interface SongIdentityProps {
   title: string;
   artists: { artistId: string; name: string; joinPhrase: string | null }[];
-  principalDisc: ContainingAlbum | null;
-  strip: TrackStrip | null;
 }
 
-export function SongIdentity({ title, artists, principalDisc, strip }: SongIdentityProps) {
+export function SongIdentity({ title, artists }: SongIdentityProps) {
   const t = useTranslations("catalog.song");
   return (
     <div className="flex min-w-0 flex-col gap-1">
       <p className="font-data text-xs uppercase tracking-wider text-paper-muted">
-        {/* El disco lo nombran las migas y la tira de pistas (openspec: polish-song-header). */}
-        {principalDisc && strip
-          ? t("kickerTrack", { position: trackNumber(strip.current, strip.multiDisc) })
-          : t("kicker")}
+        {/* La posición y el disco los nombran la tira y las migas (polish-song-credits-strip). */}
+        {t("kicker")}
       </p>
       <h1 className="font-display text-3xl leading-tight text-paper [overflow-wrap:anywhere] sm:text-4xl">{title}</h1>
       {artists.length > 0 && (
