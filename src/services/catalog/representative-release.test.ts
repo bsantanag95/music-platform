@@ -130,6 +130,30 @@ describe("pickRepresentativeRelease", () => {
     expect(pickRepresentativeRelease(releases)?.id).toBe("vinyl-1");
   });
 
+  it("una fecha con solo año no le gana a las fechas completas de ese año (Short n' Sweet)", () => {
+    const releases = [
+      rel({ id: "a-ar", date: "2024", country: "US", disambiguation: "retailers exclusive" }),
+      rel({ id: "b-uo", date: "2024-08-23", country: "US", disambiguation: "UO exclusive, baby blue" }),
+      rel({ id: "c-standard", date: "2024-08-23", country: "US" }),
+    ];
+    expect(pickRepresentativeRelease(releases)?.id).toBe("c-standard");
+  });
+
+  it("la fecha parcial toma la más temprana compatible y sigue ganándole a un año posterior", () => {
+    const releases = [
+      rel({ id: "a-later", date: "1973-11-01", country: "US" }),
+      rel({ id: "b-partial", date: "1973-03", country: "GB" }),
+      rel({ id: "c-full", date: "1973-03-24", country: "GB", disambiguation: "remastered" }),
+      rel({ id: "d-next-year", date: "1974-01-01", country: "US" }),
+    ];
+    // "1973-03" se eleva a 1973-03-24 y empata con la remasterizada: gana por edición estándar.
+    expect(pickRepresentativeRelease(releases)?.id).toBe("b-partial");
+    // Sin fecha más precisa compatible, "1973" se ordena como inicio de año.
+    expect(
+      pickRepresentativeRelease([rel({ id: "a-later", date: "1974-02-01" }), rel({ id: "b-year", date: "1973" })])?.id,
+    ).toBe("b-year");
+  });
+
   it("desempata de forma estable por mbid", () => {
     const releases = [
       rel({ id: "bbb", date: "1994", country: "US", packaging: "Jewel Case" }),

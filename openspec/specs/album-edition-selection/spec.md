@@ -16,7 +16,9 @@ empate:
 
 1. Estado `Official` antes que cualquier otro estado o estado ausente.
 2. Fecha de lanzamiento más temprana (una edición sin fecha SHALL ordenarse después de
-   cualquier edición con fecha).
+   cualquier edición con fecha). Una fecha parcial (solo año, o año y mes) SHALL compararse
+   como la fecha más temprana y más precisa compatible con ella entre las ediciones del
+   grupo; sin ninguna compatible, como el inicio de su año o mes.
 3. Edición **estándar**: sin marcadores `deluxe`, `expanded`, `anniversary`, `remaster`,
    `remastered`, `super deluxe`, `special edition` ni equivalentes en el título o en la
    `disambiguation` del release. También cuentan como no estándar las ediciones de tienda
@@ -54,6 +56,13 @@ lectura de "la tracklist del álbum" SHALL usar la edición representativa.
 - **WHEN** un `release_group` tiene, con la misma fecha, país primario y recuento de pistas,
   un vinilo `signed`, una edición `Target exclusive` y un vinilo sin marcadores
 - **THEN** el sistema elige el vinilo sin marcadores como representativa
+
+#### Scenario: Fecha parcial frente a fechas completas del mismo año
+
+- **WHEN** un `release_group` tiene una edición `Official` "retailers exclusive" con fecha
+  `2024` y ediciones `Official` con fecha `2024-08-23`, una de ellas sin marcadores
+- **THEN** la fecha `2024` se compara como `2024-08-23`
+- **AND** el sistema elige la edición sin marcadores como representativa
 
 #### Scenario: Preferencia de formato ante un empate
 
