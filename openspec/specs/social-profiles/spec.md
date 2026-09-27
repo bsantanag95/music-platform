@@ -63,7 +63,7 @@ valorar, rachas ni medallas de completitud.
 
 ### Requirement: Búsqueda de usuarios
 
-El sistema SHALL permitir buscar usuarios por username o nombre visible desde una superficie dedicada en `/users`, separada de la búsqueda del catálogo musical en `/search`. La búsqueda SHALL mostrar tanto perfiles públicos como privados y SHALL omitir email, password hash, tokens, actividades privadas y datos internos. La interfaz SHALL identificar la superficie con la terminología localizada de Usuarios, SHALL conservar el estado de relación y la acción social correspondiente cuando aplique, SHALL comunicar el término y los resultados cargados, y SHALL permitir continuar la búsqueda cuando existan más páginas.
+El sistema SHALL permitir buscar usuarios por username o nombre visible desde una superficie dedicada en `/users` y, además, desde el buscador global con el tipo **Usuarios** (`/search?type=user`, capacidad `search-scopes`), que aplica exactamente las mismas reglas. Los resultados de usuarios SHALL NOT mezclarse con resultados de catálogo: solo aparecen cuando el tipo activo es Usuarios. La búsqueda SHALL mostrar tanto perfiles públicos como privados y SHALL omitir email, password hash, tokens, actividades privadas y datos internos. La interfaz SHALL identificar la superficie con la terminología localizada de Usuarios, SHALL conservar el estado de relación y la acción social correspondiente cuando aplique, SHALL comunicar el término y los resultados cargados, y SHALL permitir continuar la búsqueda cuando existan más páginas.
 
 #### Scenario: Encontrar perfil privado
 
@@ -82,8 +82,8 @@ El sistema SHALL permitir buscar usuarios por username o nombre visible desde un
 
 #### Scenario: Separación del buscador musical
 
-- **WHEN** una persona utiliza el buscador musical del Header
-- **THEN** la navegación continúa dirigiendo a `/search` y no mezcla resultados de usuarios
+- **WHEN** una persona utiliza el buscador del Header con un tipo de catálogo (Artistas, Álbumes o Canciones)
+- **THEN** la navegación continúa dirigiendo a `/search` con ese tipo y no mezcla resultados de usuarios; los usuarios solo aparecen al elegir el tipo Usuarios
 
 #### Scenario: Navegación de usuarios fuera del Header
 
