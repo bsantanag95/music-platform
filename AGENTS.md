@@ -91,6 +91,14 @@ necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
 >   discografía paginada sin bootlegs, los tipos crudos, la marca de fuera de la discografía (sin
 >   borrar) y su reversión, la primera visita parcial de un artista con más de 300 discos, la
 >   sincronización interrumpida sin marcas y la simulación sin escritura.
+> - `smoke-test-artist-profile.ts` crea una banda y un integrante con el mismo prefijo
+>   sintético `5e0ce000-0000-4000-8000-*` (el `ON DELETE CASCADE` limpia enlaces, textos por
+>   idioma y pertenencias) y los borra al terminar (también si falla); si se interrumpió, la
+>   limpieza de arriba lo cubre. Mockea MusicBrainz y Wikimedia (no sale a internet ni necesita
+>   `WIKIMEDIA_USER_AGENT` real). Verifica la ficha con la misma request que las pertenencias,
+>   los enlaces curados, la foto con crédito, los textos por idioma con respaldo, el lugar con
+>   país, los `CHECK` de la migración `0054`, que un fallo de Wikimedia conserva los datos y el
+>   retiro de fotos.
 
 ## Base de datos / migraciones
 
@@ -119,6 +127,12 @@ necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
   MusicBrainz: cola de rate limit (≥1.1s entre requests) y exige
   `MUSICBRAINZ_USER_AGENT` o lanza error. No construir URLs de MusicBrainz en
   otro lugar.
+- `src/services/wikimedia/client.ts` es el **único** punto de salida a Wikidata,
+  Wikipedia y Commons (perfil de artista, ADR 0021): exige `WIKIMEDIA_USER_AGENT` o
+  lanza error, y serializa las requests. Solo se llega a Wikidata desde la relación
+  `wikidata` que declara MusicBrainz, nunca buscando por nombre. La foto del artista
+  sale solo de Commons con licencia libre verificada, nunca de la miniatura de un
+  resumen de Wikipedia.
 - `src/services/cover-art.ts` solo genera miniaturas 250px — nunca resolución
   completa (decisión de licencia documentada en `docs/03-data/data-licensing.md`,
   no solo optimización). No construir URLs de carátula a mano en otro lugar.

@@ -36,22 +36,6 @@ desambiguación de MusicBrainz ni el nombre legal.
 - **WHEN** el artista no tiene descripción en el idioma de la interfaz
 - **THEN** la cabecera muestra tipo y nombre, sin una línea vacía
 
-### Requirement: Géneros
-
-La cabecera SHALL mostrar los 3 géneros con más votos del artista y un control "+N" que
-despliega el resto, ordenados por votos de mayor a menor. Sin géneros, la línea SHALL
-omitirse.
-
-#### Scenario: Artista con 8 géneros
-
-- **WHEN** un artista tiene 8 géneros
-- **THEN** la cabecera muestra los 3 más votados y "+5", que al activarse muestra los otros 5
-
-#### Scenario: Artista con 2 géneros
-
-- **WHEN** un artista tiene 2 géneros
-- **THEN** la cabecera muestra los 2, sin control "+N"
-
 ### Requirement: Ficha del artista
 
 La cabecera SHALL mostrar una ficha con estas filas, omitiendo las que no tienen dato:

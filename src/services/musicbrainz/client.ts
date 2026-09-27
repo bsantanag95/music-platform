@@ -227,8 +227,13 @@ export const musicbrainz = {
     return mbFetch<MBArtistSummary>(`/artist/${mbid}`, {});
   },
 
+  /**
+   * Artista con sus pertenencias (`artist-rels`) y sus enlaces (`url-rels`) en una sola
+   * request: la misma respuesta trae país, áreas y fechas para la ficha (openspec:
+   * enrich-artist-profile). No se piden `genres` ni `tags` (datos CC BY-NC-SA).
+   */
   getArtistWithRelations(mbid: string) {
-    return mbFetch<MBArtistDetail>(`/artist/${mbid}`, { inc: "artist-rels" });
+    return mbFetch<MBArtistDetail>(`/artist/${mbid}`, { inc: "artist-rels+url-rels" });
   },
 
   /**

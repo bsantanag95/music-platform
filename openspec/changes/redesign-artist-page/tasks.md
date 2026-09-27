@@ -8,10 +8,9 @@
 ## 2. Cabecera
 
 - [ ] 2.1 Reescribir `ArtistHeader`: foto 4:3 (200 px escritorio, 96 px móvil) con crédito enlazado o placeholder 4:3; antetítulo de tipo, nombre y descripción
-- [ ] 2.2 Géneros: 3 visibles y "+N" que despliega el resto
-- [ ] 2.3 Ficha por tipo (grupo: Origen, Actividad y estado; persona: Nacimiento, Fallecimiento, Actividad desde el primer disco) y Enlaces en orden fijo (design.md D9)
-- [ ] 2.4 Resumen recortado a tres líneas con "Seguir leyendo", atribución y aviso de idioma
-- [ ] 2.5 Tests: cada escenario de `artist-header` y `catalog-artist` "Datos opcionales del artista"
+- [ ] 2.2 Ficha por tipo (grupo: Origen, Actividad y estado; persona: Nacimiento, Fallecimiento, Actividad desde el primer disco) y Enlaces en orden fijo (design.md D9)
+- [ ] 2.3 Resumen recortado a tres líneas con "Seguir leyendo", atribución y aviso de idioma
+- [ ] 2.4 Tests: cada escenario de `artist-header` y `catalog-artist` "Datos opcionales del artista"
 
 ## 3. Panel "Tu relación"
 

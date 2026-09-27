@@ -1,0 +1,34 @@
+{
+ "entities": {
+  "Q13030": {
+   "id": "Q13030",
+   "labels": {
+    "es": {
+     "language": "es",
+     "value": "Curicó"
+    },
+    "en": {
+     "language": "en",
+     "value": "Curicó"
+    }
+   },
+   "claims": {
+    "P17": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 298,
+         "id": "Q298"
+        },
+        "type": "wikibase-entityid"
+       }
+      },
+      "rank": "normal"
+     }
+    ]
+   }
+  }
+ }
+}

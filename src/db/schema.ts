@@ -458,7 +458,10 @@ export const artist = pgTable(
     mbid: uuid("mbid").unique(),
     type: text("type").notNull(), // 'person' | 'group' | 'various'
     name: text("name").notNull(),
-    bio: text("bio"),
+    // Desambiguación de MusicBrainz ("Chilean alternative rock band"): distingue
+    // homónimos en la búsqueda; no es una biografía (migración 0054 la renombró de `bio`).
+    disambiguation: text("disambiguation"),
+    // Miniatura (≤500 px) de la foto de Commons, con licencia libre verificada.
     photoUrl: text("photo_url"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     discographySyncedAt: timestamp("discography_synced_at", { withTimezone: true }),
@@ -466,6 +469,26 @@ export const artist = pgTable(
     // fix-artist-discography-ingestion). Base de la resincronización cada 7 días.
     discographyCompleteAt: timestamp("discography_complete_at", { withTimezone: true }),
     membershipsSyncedAt: timestamp("memberships_synced_at", { withTimezone: true }),
+    // Ficha desde MusicBrainz (migración 0054, openspec: enrich-artist-profile). Fechas
+    // con su precisión ('YYYY' | 'YYYY-MM' | 'YYYY-MM-DD'); en una persona son
+    // nacimiento y muerte, en un grupo formación y separación.
+    country: text("country"),
+    beginAreaName: text("begin_area_name"),
+    endAreaName: text("end_area_name"),
+    lifeBegin: text("life_begin"),
+    lifeEnd: text("life_end"),
+    lifeEnded: boolean("life_ended"),
+    // Entidad de Wikidata declarada por MusicBrainz (ADR 0021).
+    wikidataId: text("wikidata_id"),
+    profileSyncedAt: timestamp("profile_synced_at", { withTimezone: true }),
+    wikimediaSyncedAt: timestamp("wikimedia_synced_at", { withTimezone: true }),
+    // Crédito obligatorio de la foto de Commons y retiro a pedido.
+    photoFile: text("photo_file"),
+    photoAuthor: text("photo_author"),
+    photoLicense: text("photo_license"),
+    photoLicenseUrl: text("photo_license_url"),
+    photoSourceUrl: text("photo_source_url"),
+    photoBlockedAt: timestamp("photo_blocked_at", { withTimezone: true }),
   },
   (t) => [
     index("idx_artist_name").on(t.name),
@@ -474,6 +497,62 @@ export const artist = pgTable(
     // Igualdad exacta por nombre normalizado (migración 0051).
     index("idx_artist_search_key").on(sql`search_key(${t.name})`),
     check("chk_artist_type", sql`${t.type} IN ('person','group','various','unknown')`),
+    check("chk_artist_country", sql`${t.country} IS NULL OR ${t.country} ~ '^[A-Z]{2}$'`),
+    check("chk_artist_life_begin", sql`${t.lifeBegin} IS NULL OR ${t.lifeBegin} ~ '^\\d{4}(-\\d{2}(-\\d{2})?)?$'`),
+    check("chk_artist_life_end", sql`${t.lifeEnd} IS NULL OR ${t.lifeEnd} ~ '^\\d{4}(-\\d{2}(-\\d{2})?)?$'`),
+    check("chk_artist_wikidata_id", sql`${t.wikidataId} IS NULL OR ${t.wikidataId} ~ '^Q[0-9]+$'`),
+    check(
+      "chk_artist_photo_credit",
+      sql`${t.photoFile} IS NULL OR (${t.photoUrl} IS NOT NULL AND ${t.photoLicense} IS NOT NULL AND ${t.photoSourceUrl} IS NOT NULL)`,
+    ),
+  ],
+);
+
+/** Enlaces curados del artista en orden fijo (migración 0054): sin redes sociales. */
+export const artistLink = pgTable(
+  "artist_link",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    artistId: uuid("artist_id")
+      .notNull()
+      .references(() => artist.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(), // 'official' | 'bandcamp' | 'streaming'
+    url: text("url").notNull(),
+    position: smallint("position").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("chk_artist_link_kind", sql`${t.kind} IN ('official', 'bandcamp', 'streaming')`),
+    unique("uq_artist_link_kind").on(t.artistId, t.kind),
+  ],
+);
+
+/**
+ * Textos del artista por idioma de la interfaz (migración 0054): descripción corta de
+ * Wikidata, resumen de Wikipedia con su artículo (atribución CC BY-SA) y el lugar de
+ * nacimiento o formación ya traducido.
+ */
+export const artistLocalizedText = pgTable(
+  "artist_localized_text",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    artistId: uuid("artist_id")
+      .notNull()
+      .references(() => artist.id, { onDelete: "cascade" }),
+    locale: text("locale").notNull(), // 'es' | 'en'
+    description: text("description"),
+    summary: text("summary"),
+    summaryTitle: text("summary_title"),
+    summaryUrl: text("summary_url"),
+    placeLabel: text("place_label"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("chk_artist_localized_text_locale", sql`${t.locale} IN ('es', 'en')`),
+    check("chk_artist_localized_text_summary", sql`${t.summary} IS NULL OR ${t.summaryUrl} IS NOT NULL`),
+    unique("uq_artist_localized_text").on(t.artistId, t.locale),
   ],
 );
 
@@ -798,6 +877,8 @@ export const rating = pgTable(
 );
 
 export type ArtistRow = typeof artist.$inferSelect;
+export type ArtistLinkRow = typeof artistLink.$inferSelect;
+export type ArtistLocalizedTextRow = typeof artistLocalizedText.$inferSelect;
 export type ReleaseEditionRow = typeof releaseEdition.$inferSelect;
 export type LabelRow = typeof label.$inferSelect;
 export type PersonnelCreditRow = typeof personnelCredit.$inferSelect;

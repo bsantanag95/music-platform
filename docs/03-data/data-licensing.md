@@ -55,6 +55,35 @@ reevaluación (riesgo 9) y las decisiones completas están en
 `docs/02-architecture/adr/0018-espejo-de-caratulas.md`. Los gates de monetización de abajo siguen
 vigentes.
 
+**Géneros y etiquetas (cambio `enrich-artist-profile`):** los géneros de MusicBrainz son una
+lista curada de **etiquetas**, así que son datos suplementarios (CC BY-NC-SA 3.0, no comerciales).
+No se ingieren; la fuente de los géneros del artista queda pendiente (la alternativa CC0 es la
+propiedad de género de Wikidata, D).
+
+## D) Wikidata, Wikipedia y Wikimedia Commons (perfil de artista, ADR 0021)
+
+Se llega a las tres solo desde la relación `wikidata` que MusicBrainz declara para un artista.
+Cada una tiene su licencia:
+
+- **Wikidata** (descripción corta, lugar de nacimiento o formación, enlaces a los artículos):
+  CC0, uso libre sin atribución obligatoria.
+- **Wikipedia** (resumen del artículo): texto **CC BY-SA 4.0**. Toda superficie que muestre el
+  resumen incluye la atribución visible "Fuente: Wikipedia" con enlace al artículo y a la
+  licencia. El texto no se modifica ni se traduce; la cabecera muestra un fragmento que enlaza al
+  texto completo.
+- **Wikimedia Commons** (foto del artista): **licencia por archivo**. Solo se acepta una foto de
+  la propiedad de imagen de Wikidata con una licencia libre verificada en sus metadatos (dominio
+  público, CC0, CC BY o CC BY-SA en cualquier versión); se rechaza lo marcado como no libre o sin
+  licencia. Se guardan autor, licencia y enlaces al archivo y a la licencia, y la página del
+  artista muestra el crédito bajo la foto. Nunca se usa la miniatura del resumen de Wikipedia, que
+  puede ser una imagen de uso justo. Se sirve una miniatura de a lo sumo 500 px.
+
+**Retiro a pedido:** `scripts/takedown-artist-photo.ts` quita la foto de un artista y lo marca
+para que el enriquecimiento no se la vuelva a asignar.
+
+**Reglas técnicas:** User-Agent con contacto (`WIKIMEDIA_USER_AGENT`), requests serializadas y
+`maxlag` en la API de Wikidata, según la política de uso de las APIs de Wikimedia.
+
 ## Dónde se materializa la atribución
 
 El bloque de atribución del **pie de página global** (`src/components/layout/Footer.tsx`,
@@ -64,6 +93,9 @@ nombra y enlaza a MusicBrainz (CC0 + parte CC BY-NC-SA 3.0), al Cover Art Archiv
 MetaBrainz Foundation, más la aclaración de no afiliación. Si cambian las condiciones
 de licencia de MetaBrainz, el texto de ese componente (`messages/{es,en}/footer.json`,
 clave `attribution`) es lo que hay que actualizar.
+
+La atribución de Wikipedia y de las fotos de Commons (D) no va en el footer: es por contenido y
+se muestra junto al resumen y bajo la foto, en la página del artista.
 
 ## Gates a revisar antes de monetizar
 

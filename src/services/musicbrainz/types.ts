@@ -16,14 +16,30 @@ export interface MBArtistSummary {
 
 export interface MBArtistRelation {
   type?: string;
+  "target-type"?: string; // 'artist' | 'url' | ...
   direction?: string;
   attributes?: string[];
-  begin?: string;
-  end?: string;
+  begin?: string | null;
+  end?: string | null;
+  ended?: boolean;
   artist?: MBArtistSummary;
+  /** Solo en relaciones de URL (`inc=url-rels`). */
+  url?: { resource: string };
+}
+
+export interface MBArea {
+  id: string;
+  name: string;
 }
 
 export interface MBArtistDetail extends MBArtistSummary {
+  /** ISO 3166-1 alfa-2 del área principal (no necesariamente la de nacimiento). */
+  country?: string | null;
+  area?: MBArea | null;
+  "begin-area"?: MBArea | null;
+  "end-area"?: MBArea | null;
+  /** Fechas 'YYYY' | 'YYYY-MM' | 'YYYY-MM-DD': nacimiento y muerte en una persona. */
+  "life-span"?: { begin?: string | null; end?: string | null; ended?: boolean | null };
   relations?: MBArtistRelation[];
 }
 

@@ -1,0 +1,17 @@
+{
+ "entities": {
+  "Q298": {
+   "id": "Q298",
+   "labels": {
+    "es": {
+     "language": "es",
+     "value": "Chile"
+    },
+    "en": {
+     "language": "en",
+     "value": "Chile"
+    }
+   }
+  }
+ }
+}

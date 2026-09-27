@@ -1,0 +1,358 @@
+{
+ "id": "83d91898-7763-47d7-b03b-b92132375c47",
+ "name": "Pink Floyd",
+ "type": "Group",
+ "disambiguation": "",
+ "country": "GB",
+ "area": {
+  "id": "9d5dd675-3cf4-4296-9e39-67865ebee758",
+  "name": "England"
+ },
+ "begin-area": {
+  "id": "f03d09b3-39dc-4083-afd6-159e3f0d462f",
+  "name": "London"
+ },
+ "end-area": null,
+ "life-span": {
+  "ended": true,
+  "begin": "1965",
+  "end": "2014"
+ },
+ "relations": [
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "1965",
+   "end": "1968-04",
+   "ended": true,
+   "attributes": [
+    "guitar",
+    "lead vocals",
+    "original"
+   ],
+   "artist": {
+    "id": "12327d75-47d5-45d9-84c2-3760b9210c17",
+    "name": "Syd Barrett",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "1965",
+   "end": "1981",
+   "ended": true,
+   "attributes": [
+    "keyboard",
+    "lead vocals",
+    "original"
+   ],
+   "artist": {
+    "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+    "name": "Richard Wright",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "1965",
+   "end": "1985",
+   "ended": true,
+   "attributes": [
+    "bass guitar",
+    "lead vocals",
+    "original"
+   ],
+   "artist": {
+    "id": "0f50beab-d77d-4f0f-ac26-0b87d3e9b11b",
+    "name": "Roger Waters",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "1965",
+   "end": null,
+   "ended": false,
+   "attributes": [
+    "drums (drum set)",
+    "original",
+    "percussion"
+   ],
+   "artist": {
+    "id": "d6c37074-0155-46a3-8af2-338a4f625afc",
+    "name": "Nick Mason",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "1968-02-18",
+   "end": null,
+   "ended": false,
+   "attributes": [
+    "guitar",
+    "lead vocals",
+    "slide guitar"
+   ],
+   "artist": {
+    "id": "1dce970e-34bc-48b2-ab51-48d87544a4c2",
+    "name": "David Gilmour",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "1987",
+   "end": "2008-09-15",
+   "ended": true,
+   "attributes": [
+    "keyboard",
+    "lead vocals"
+   ],
+   "artist": {
+    "id": "6f7e36da-79d8-4219-990d-8e9224d04ebc",
+    "name": "Richard Wright",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "discogs",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.discogs.com/artist/45467"
+   }
+  },
+  {
+   "type": "free streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://open.spotify.com/artist/0k17h0D3J5VfsdmQ1iZtE9"
+   }
+  },
+  {
+   "type": "free streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.deezer.com/artist/860"
+   }
+  },
+  {
+   "type": "image",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://commons.wikimedia.org/wiki/File:PinkFloyd1973_retouched.jpg"
+   }
+  },
+  {
+   "type": "official homepage",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.pinkfloyd.com/"
+   }
+  },
+  {
+   "type": "social network",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://twitter.com/PinkFloyd"
+   }
+  },
+  {
+   "type": "social network",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.facebook.com/pinkfloyd"
+   }
+  },
+  {
+   "type": "social network",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.instagram.com/pinkfloyd/"
+   }
+  },
+  {
+   "type": "social network",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.threads.com/@pinkfloyd"
+   }
+  },
+  {
+   "type": "social network",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.tiktok.com/@pinkfloyd"
+   }
+  },
+  {
+   "type": "streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://music.amazon.co.uk/artists/B001E3CM0S"
+   }
+  },
+  {
+   "type": "streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://music.apple.com/co/artist/487143"
+   }
+  },
+  {
+   "type": "streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://music.apple.com/gb/artist/487143"
+   }
+  },
+  {
+   "type": "streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://music.bugs.co.kr/artist/34055"
+   }
+  },
+  {
+   "type": "streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://open.qobuz.com/artist/38324"
+   }
+  },
+  {
+   "type": "streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://tidal.com/artist/9706"
+   }
+  },
+  {
+   "type": "streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.melon.com/artist/detail.htm?artistId=104130"
+   }
+  },
+  {
+   "type": "streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.qobuz.com/gb-en/interpreter/pink-floyd/38324"
+   }
+  },
+  {
+   "type": "wikidata",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.wikidata.org/wiki/Q2306"
+   }
+  }
+ ]
+}

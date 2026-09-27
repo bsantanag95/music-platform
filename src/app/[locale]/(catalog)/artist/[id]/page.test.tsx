@@ -57,6 +57,9 @@ vi.mock("@/services/catalog/ingest-artist", () => ({
 vi.mock("@/services/catalog/ingest-discography", () => ({
   findOrIngestDiscography: vi.fn(),
 }));
+vi.mock("@/services/catalog/artist-profile-sync", () => ({
+  scheduleArtistProfileRefresh: vi.fn(),
+}));
 
 vi.mock("@/services/auth/sessions", () => ({
   resolveSession: vi.fn().mockResolvedValue(null),
@@ -106,12 +109,27 @@ function makeArtist(overrides: Partial<ArtistRow> = {}): ArtistRow {
     mbid: null,
     type: "group",
     name: "Pink Floyd",
-    bio: null,
+    disambiguation: null,
     photoUrl: null,
     createdAt: new Date("2024-01-01T00:00:00Z"),
     discographySyncedAt: null,
     discographyCompleteAt: null,
     membershipsSyncedAt: null,
+    country: null,
+    beginAreaName: null,
+    endAreaName: null,
+    lifeBegin: null,
+    lifeEnd: null,
+    lifeEnded: null,
+    wikidataId: null,
+    profileSyncedAt: null,
+    wikimediaSyncedAt: null,
+    photoFile: null,
+    photoAuthor: null,
+    photoLicense: null,
+    photoLicenseUrl: null,
+    photoSourceUrl: null,
+    photoBlockedAt: null,
     ...overrides,
   };
 }

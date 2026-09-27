@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Perfil localizado de artista
-La aplicación SHALL exponer un perfil público en `/{locale}/artist/{id}` para los locales soportados y SHALL mostrar la cabecera del artista (foto, identidad, géneros, ficha y resumen de la biografía cuando existan, según la capability `artist-header`), su discografía disponible y breadcrumbs localizados dentro del encabezado global del catálogo.
+La aplicación SHALL exponer un perfil público en `/{locale}/artist/{id}` para los locales soportados y SHALL mostrar la cabecera del artista (foto, identidad, ficha y resumen de la biografía cuando existan, según la capability `artist-header`), su discografía disponible y breadcrumbs localizados dentro del encabezado global del catálogo.
 
 #### Scenario: Artista válido en español
 - **WHEN** una persona visita `/es/artist/<id-válido>`
@@ -16,10 +16,10 @@ La aplicación SHALL exponer un perfil público en `/{locale}/artist/{id}` para 
 - **THEN** la aplicación responde con un 404 amigable y localizado, sin mostrar el mensaje crudo del backend
 
 ### Requirement: Datos opcionales del artista
-La aplicación SHALL renderizar el placeholder visual 4:3 cuando el artista no tenga foto y SHALL omitir, sin dejar huecos, cada dato de la cabecera que falte (descripción, géneros, cada fila de la ficha, enlaces y resumen de la biografía), sin impedir la navegación de la página.
+La aplicación SHALL renderizar el placeholder visual 4:3 cuando el artista no tenga foto y SHALL omitir, sin dejar huecos, cada dato de la cabecera que falte (descripción, cada fila de la ficha, enlaces y resumen de la biografía), sin impedir la navegación de la página.
 
 #### Scenario: Artista sin foto ni biografía
-- **WHEN** el artista no tiene foto, descripción, géneros ni resumen de la biografía
+- **WHEN** el artista no tiene foto, descripción ni resumen de la biografía
 - **THEN** la cabecera muestra el placeholder, el tipo y el nombre, sin líneas vacías, y el resto del perfil se renderiza correctamente
 
 ### Requirement: Carga progresiva de carátulas

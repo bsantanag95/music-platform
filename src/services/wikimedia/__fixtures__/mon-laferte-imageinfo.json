@@ -1,0 +1,54 @@
+{
+ "batchcomplete": true,
+ "query": {
+  "pages": [
+   {
+    "pageid": 88377405,
+    "ns": 6,
+    "title": "File:MX TV GESTOS MON LAFERTE (49651087132) (cropped).jpg",
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f9/MX_TV_GESTOS_MON_LAFERTE_%2849651087132%29_%28cropped%29.jpg/500px-MX_TV_GESTOS_MON_LAFERTE_%2849651087132%29_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 500,
+      "thumbheight": 588,
+      "responsiveUrls": {
+       "2": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f9/MX_TV_GESTOS_MON_LAFERTE_%2849651087132%29_%28cropped%29.jpg/1280px-MX_TV_GESTOS_MON_LAFERTE_%2849651087132%29_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      },
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f9/MX_TV_GESTOS_MON_LAFERTE_%2849651087132%29_%28cropped%29.jpg/500px-MX_TV_GESTOS_MON_LAFERTE_%2849651087132%29_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 500,
+       "height": 588,
+       "srcset": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f9/MX_TV_GESTOS_MON_LAFERTE_%2849651087132%29_%28cropped%29.jpg/1280px-MX_TV_GESTOS_MON_LAFERTE_%2849651087132%29_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail 2x"
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/f/f9/MX_TV_GESTOS_MON_LAFERTE_%2849651087132%29_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:MX_TV_GESTOS_MON_LAFERTE_(49651087132)_(cropped).jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=88377405",
+      "extmetadata": {
+       "Artist": {
+        "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/people/113756879@N03\">Secretaría de Cultura Ciudad de México</a> from México",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "CC BY 2.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by/2.0",
+        "source": "commons-desc-page"
+       }
+      }
+     }
+    ]
+   }
+  ]
+ }
+}

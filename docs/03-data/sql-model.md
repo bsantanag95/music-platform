@@ -344,6 +344,42 @@ tokens ya vencidos al crearse.
 
 **Discografía completa (migración `0053_artist_discography_sync.sql`, openspec `fix-artist-discography-ingestion`):** `discography_synced_at` indica que hay discografía guardada; `discography_complete_at` (`TIMESTAMPTZ` nullable) que se recorrieron **todas** las páginas del browse de MusicBrainz (con `release-group-status=website-default`, sin bootlegs). Arranca en `NULL` para todos los artistas existentes, porque la ingesta anterior se cortaba en 100 release-groups: la próxima lectura completa la discografía en segundo plano. Una discografía completa se vuelve a sincronizar en segundo plano cuando `discography_complete_at` tiene más de 7 días, con un `pg_advisory_xact_lock` por artista.
 
+**Perfil del artista (migración `0054_artist_profile.sql`, openspec `enrich-artist-profile`, ADR 0021):**
+
+- `bio` se renombró **`disambiguation`**: siempre guardó la desambiguación de MusicBrainz ("Chilean
+  alternative rock band"), no una biografía. La búsqueda y las sugerencias la usan para distinguir
+  homónimos; la página de artista no la muestra.
+- **Ficha desde MusicBrainz** (misma request que las pertenencias, `inc=artist-rels+url-rels`):
+  `country` (ISO de 2 letras, `CHECK`), `begin_area_name`, `end_area_name`, `life_begin` y
+  `life_end` (texto con la precisión de MusicBrainz: `YYYY`, `YYYY-MM` o `YYYY-MM-DD`, `CHECK`) y
+  `life_ended`. En una persona, inicio y fin son nacimiento y muerte; en un grupo, formación y
+  separación. `profile_synced_at` (`NULL` = pendiente) se renueva cada 30 días en segundo plano.
+- **Wikimedia**: `wikidata_id` (`CHECK` `^Q[0-9]+$`) sale solo de la relación `wikidata` de
+  MusicBrainz; `wikimedia_synced_at` (`NULL` = pendiente, vigencia de 30 días).
+- **Foto**: `photo_url` es la miniatura (≤500 px) de un archivo de Wikimedia Commons con licencia
+  libre verificada; `photo_file`, `photo_author`, `photo_license`, `photo_license_url` y
+  `photo_source_url` guardan el crédito obligatorio (`CHECK chk_artist_photo_credit`: una foto
+  guardada siempre tiene URL, licencia y enlace al archivo). `photo_blocked_at` es el retiro a
+  pedido (`scripts/takedown-artist-photo.ts`): mientras tenga valor, no se asigna foto.
+- **Sin géneros**: los de MusicBrainz son etiquetas CC BY-NC-SA (no comerciales); la fuente queda
+  pendiente.
+
+## `artist_link` (migración `0054`)
+
+**Propósito:** enlaces curados del artista en orden fijo: `official` (sitio oficial), `bandcamp` y
+`streaming` (la primera disponible entre Spotify, Apple Music, Deezer y YouTube Music). Sin redes
+sociales ni el resto de las relaciones de URL de MusicBrainz. `UNIQUE (artist_id, kind)`, `CHECK`
+sobre `kind`, `position` para el orden. La sincronización de la ficha reemplaza el conjunto.
+
+## `artist_localized_text` (migración `0054`)
+
+**Propósito:** textos del artista por idioma de la interfaz (`locale` acotado a `es` y `en`,
+`UNIQUE (artist_id, locale)`): `description` (descripción corta de Wikidata, CC0), `summary`
+(introducción del artículo de Wikipedia en texto plano, CC BY-SA 4.0) con `summary_title` y
+`summary_url` (`CHECK`: un resumen siempre enlaza a su artículo, para la atribución) y
+`place_label` (lugar de nacimiento o de formación ya traducido y con su país, "Viña del Mar,
+Chile"). Si un idioma no tiene artículo, la lectura usa el resumen del otro e informa su idioma.
+
 ## Búsqueda local tolerante (migración `0050_search_trigram_indexes.sql`)
 
 **Propósito:** que la búsqueda por tipo y las sugerencias del buscador encuentren coincidencias locales sin distinguir mayúsculas ni acentos, toleren errores menores y se ordenen (exacta → palabra completa → prefijo → similitud) **antes** de aplicar el tope. El `ILIKE '%q%' LIMIT n` anterior no tenía orden y dejaba fuera coincidencias exactas (buscar `icon` devolvía "Ennio Morricone" antes que la banda "Icon").

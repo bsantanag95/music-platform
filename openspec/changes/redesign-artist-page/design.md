@@ -13,7 +13,8 @@ La página de álbum ya resolvió el mismo problema (`album-page-layout`,
 pestañas enlazables.
 
 Decisiones de producto (exploración del 2026-09-27): foto chica rectangular sin portada;
-resumen en la cabecera y texto en Biografía; 3 géneros visibles con el resto contraído; sin
+resumen en la cabecera y texto en Biografía; sin géneros por ahora (decidido al implementar
+`enrich-artist-profile`: los de MusicBrainz son etiquetas CC BY-NC-SA); sin
 nombre legal y con lugar de nacimiento; panel heredado del álbum con Escuchas y Colección
 calculadas desde los discos; seguidores con umbral; enlaces en orden fijo; recorrido como
 fila; EP en Principal; sin bootlegs; grilla por defecto en Principal y tabla en el resto con

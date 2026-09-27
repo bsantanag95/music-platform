@@ -43,11 +43,30 @@ export const ArtistSchema = z.object({
   mbid: z.uuid().nullable(),
   type: z.enum(["person", "group", "various", "unknown"]),
   name: z.string(),
-  bio: z.string().nullable(),
+  /** Desambiguación de MusicBrainz (antes `bio`): distingue homónimos, no es una biografía. */
+  disambiguation: z.string().nullable(),
+  /** Miniatura de la foto de Commons; su crédito va en los campos `photo*`. */
   photoUrl: z.string().nullable(),
   createdAt: z.string(),
   discographySyncedAt: z.string().nullable(),
+  discographyCompleteAt: z.string().nullable().optional(),
   membershipsSyncedAt: z.string().nullable(),
+  // Ficha y perfil (openspec: enrich-artist-profile). Fechas con la precisión de MusicBrainz.
+  country: z.string().nullable().optional(),
+  beginAreaName: z.string().nullable().optional(),
+  endAreaName: z.string().nullable().optional(),
+  lifeBegin: z.string().nullable().optional(),
+  lifeEnd: z.string().nullable().optional(),
+  lifeEnded: z.boolean().nullable().optional(),
+  wikidataId: z.string().nullable().optional(),
+  profileSyncedAt: z.string().nullable().optional(),
+  wikimediaSyncedAt: z.string().nullable().optional(),
+  photoFile: z.string().nullable().optional(),
+  photoAuthor: z.string().nullable().optional(),
+  photoLicense: z.string().nullable().optional(),
+  photoLicenseUrl: z.string().nullable().optional(),
+  photoSourceUrl: z.string().nullable().optional(),
+  photoBlockedAt: z.string().nullable().optional(),
 });
 export type Artist = z.infer<typeof ArtistSchema>;
 

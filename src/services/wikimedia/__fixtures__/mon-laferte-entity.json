@@ -1,0 +1,58 @@
+{
+ "entities": {
+  "Q2836528": {
+   "id": "Q2836528",
+   "descriptions": {
+    "en": {
+     "language": "en",
+     "value": "Chilean Mexican singer-songwriter"
+    },
+    "es": {
+     "language": "es",
+     "value": "cantuatora chilenomexicana"
+    }
+   },
+   "sitelinks": {
+    "enwiki": {
+     "site": "enwiki",
+     "title": "Mon Laferte",
+     "badges": []
+    },
+    "eswiki": {
+     "site": "eswiki",
+     "title": "Mon Laferte",
+     "badges": []
+    }
+   },
+   "claims": {
+    "P18": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "MX TV GESTOS MON LAFERTE (49651087132) (cropped).jpg",
+        "type": "string"
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P19": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 184345,
+         "id": "Q184345"
+        },
+        "type": "wikibase-entityid"
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P740": []
+   }
+  }
+ }
+}

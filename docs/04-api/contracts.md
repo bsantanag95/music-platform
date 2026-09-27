@@ -341,6 +341,18 @@ La primera lectura sincroniza `artist-rels` antes de leer memberships; las lectu
 `membershipsSyncedAt` ya establecido no consultan MusicBrainz. Para personas, `releaseGroups`
 combina la discografía propia y la de grupos relacionados, sin duplicados por id.
 
+**Perfil (openspec: `enrich-artist-profile`, ADR 0021) — BREAKING:** `artist.bio` pasa a llamarse
+`artist.disambiguation` (siempre fue la desambiguación de MusicBrainz, no una biografía). `artist`
+suma la ficha de MusicBrainz: `country` (ISO de 2 letras), `beginAreaName`, `endAreaName`,
+`lifeBegin` y `lifeEnd` (`YYYY` | `YYYY-MM` | `YYYY-MM-DD`; en una persona son nacimiento y muerte),
+`lifeEnded`, `wikidataId` y `profileSyncedAt`; y la foto de Wikimedia Commons: `photoUrl`
+(miniatura ≤500 px), `photoFile`, `photoAuthor`, `photoLicense`, `photoLicenseUrl`,
+`photoSourceUrl` (crédito obligatorio: quien muestre `photoUrl` debe mostrar autor y licencia),
+`photoBlockedAt` y `wikimediaSyncedAt`. Todos pueden ser `null`. La primera lectura de un artista
+responde sin esperar a Wikimedia: la ficha y Wikimedia se actualizan en segundo plano cuando están
+pendientes o tienen más de 30 días. Los enlaces curados, la descripción y el resumen por idioma no
+viajan en esta respuesta (los lee la página de artista).
+
 **Discografía (openspec: `fix-artist-discography-ingestion`):** `releaseGroups` es la discografía
 oficial completa (browse paginado de MusicBrainz sin los release-groups que solo tienen ediciones
 bootleg) y **excluye** los release-groups fuera de la discografía (`discographyUnlistedAt` con

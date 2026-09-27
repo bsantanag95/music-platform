@@ -1,0 +1,92 @@
+{
+ "id": "b97abf8a-6b72-43eb-8f0f-8ce210fce812",
+ "name": "Kuervos del Sur",
+ "type": "Group",
+ "disambiguation": "Chilean fusion band",
+ "country": "CL",
+ "area": {
+  "id": "82d5f4d6-aed4-3ff5-81d1-5363ac6e97a7",
+  "name": "Chile"
+ },
+ "begin-area": null,
+ "end-area": null,
+ "life-span": {
+  "ended": false,
+  "begin": "2003",
+  "end": null
+ },
+ "relations": [
+  {
+   "type": "bandcamp",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://kuervosdelsuroficial.bandcamp.com/"
+   }
+  },
+  {
+   "type": "discogs",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.discogs.com/artist/4260044"
+   }
+  },
+  {
+   "type": "free streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://open.spotify.com/artist/6BYwseleN4FiZvX4dFirBj"
+   }
+  },
+  {
+   "type": "social network",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://twitter.com/kuervosdelsur"
+   }
+  },
+  {
+   "type": "social network",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.facebook.com/kuervosdelsur"
+   }
+  },
+  {
+   "type": "wikidata",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.wikidata.org/wiki/Q63565567"
+   }
+  }
+ ]
+}

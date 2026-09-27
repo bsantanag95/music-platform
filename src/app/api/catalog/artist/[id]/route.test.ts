@@ -13,6 +13,9 @@ vi.mock("@/services/catalog/ingest-artist", () => ({
 vi.mock("@/services/catalog/ingest-discography", () => ({
   findOrIngestDiscography: vi.fn(),
 }));
+vi.mock("@/services/catalog/artist-profile-sync", () => ({
+  scheduleArtistProfileRefresh: vi.fn(),
+}));
 
 function makeRequest(id: string): NextRequest {
   return new NextRequest(`http://localhost/api/catalog/artist/${id}`);
@@ -29,12 +32,27 @@ describe("GET /api/catalog/artist/[id]", () => {
       mbid: null,
       type: "group" as const,
       name: "Pink Floyd",
-      bio: null,
+      disambiguation: null,
       photoUrl: null,
       createdAt: new Date("2024-01-01T00:00:00.000Z"),
       discographySyncedAt: null,
       discographyCompleteAt: null,
       membershipsSyncedAt: null,
+      country: null,
+      beginAreaName: null,
+      endAreaName: null,
+      lifeBegin: null,
+      lifeEnd: null,
+      lifeEnded: null,
+      wikidataId: null,
+      profileSyncedAt: null,
+      wikimediaSyncedAt: null,
+      photoFile: null,
+      photoAuthor: null,
+      photoLicense: null,
+      photoLicenseUrl: null,
+      photoSourceUrl: null,
+      photoBlockedAt: null,
     };
     const memberships = [{
       artistId: "22222222-2222-4222-8222-222222222222",

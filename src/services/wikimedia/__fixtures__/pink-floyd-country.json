@@ -1,0 +1,17 @@
+{
+ "entities": {
+  "Q145": {
+   "id": "Q145",
+   "labels": {
+    "es": {
+     "language": "es",
+     "value": "Reino Unido"
+    },
+    "en": {
+     "language": "en",
+     "value": "United Kingdom"
+    }
+   }
+  }
+ }
+}
