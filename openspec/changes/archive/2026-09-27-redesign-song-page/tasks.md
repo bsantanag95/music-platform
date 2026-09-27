@@ -72,4 +72,4 @@
 - [x] 9.1 `pnpm run typecheck && pnpm run lint && pnpm test && pnpm run build`
 - [x] 9.2 Smoke tests de catálogo relevantes contra la base de scratch (`ALLOW_SMOKE_ON_REAL_DB=1`), con limpieza de fixtures
 - [x] 9.3 Verificar en el navegador con datos reales: canción de estudio con muchas versiones, versión en vivo, cover, canción sin obra, recorrido con la tira de pistas, escritorio y móvil sin desbordamiento
-- [ ] 9.4 Al archivar: reescribir el `## Purpose` de `openspec/specs/catalog-song/spec.md` (ya no es una página mínima)
+- [x] 9.4 Al archivar: reescribir el `## Purpose` de `openspec/specs/catalog-song/spec.md` (ya no es una página mínima)

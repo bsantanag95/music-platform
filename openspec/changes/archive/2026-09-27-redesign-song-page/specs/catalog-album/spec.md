@@ -16,7 +16,7 @@ aplicarse a las pistas adicionales de otras ediciones.
 - **THEN** la fila muestra la etiqueta "En vivo" y un enlace "versión de Money" a la
   página de esa canción
 
-#### Scenario: Pista sin atributos
+#### Scenario: Pista original
 
 - **WHEN** la grabación de una pista no tiene atributos de versión
 - **THEN** la fila no muestra etiqueta de variante
