@@ -739,7 +739,6 @@
   },
   "song": {
     "kicker": "Song",
-    "kickerTrack": "Song · Track {position}",
     "duration": "Duration",
     "writtenBy": "Written by",
     "firstAppearance": "First appearance",
@@ -763,9 +762,13 @@
     },
     "strip": {
       "label": "Tracks on the record",
-      "position": "track {index} of {total}",
+      "position": "{index} of {total}",
       "previous": "Previous track: {number}. {title}",
-      "next": "Next track: {number}. {title}"
+      "next": "Next track: {number}. {title}",
+      "previousLabel": "Previous",
+      "nextLabel": "Next",
+      "discStart": "Start of the record",
+      "discEnd": "End of the record"
     },
     "appearances": {
       "heading": "This recording appears on",
@@ -803,7 +806,8 @@
       "single_ep": "single/EP",
       "compilation": "compilation",
       "live_other": "live or other"
-    }
+    },
+    "assistants": "{count, plural, one {+# assistant} other {+# assistants}}"
   },
   "social": {
     "ratingHeading": "Ratings",

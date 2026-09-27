@@ -205,7 +205,9 @@ describe("página de canción", () => {
     await renderPage();
     expect(screen.getByRole("heading", { level: 1, name: "November Rain" })).toBeInTheDocument();
     // El antetítulo ya no repite el disco: lo nombran las migas y la tira.
-    expect(screen.getByText("Canción · Pista 10")).toBeInTheDocument();
+    // La posición vive solo en la tira; el antetítulo es "Canción".
+    expect(screen.getByText(song.kicker)).toBeInTheDocument();
+    expect(screen.queryByText(/Pista 10/)).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Ir a Use Your Illusion I" })).toHaveAttribute("href", `/album/${UYI}`);
     expect(screen.getByText("8:57")).toBeInTheDocument();
     expect(screen.getByText(song.writtenBy)).toBeInTheDocument();
@@ -248,9 +250,29 @@ describe("página de canción", () => {
   it("tira de pistas con la anterior y la siguiente", async () => {
     await renderPage();
     const strip = screen.getByRole("navigation", { name: song.strip.label });
-    expect(within(strip).getByText("· pista 10 de 16")).toBeInTheDocument();
+    expect(within(strip).getByText("· 10 de 16")).toBeInTheDocument();
+    expect(within(strip).getByText("← Anterior")).toBeInTheDocument();
+    expect(within(strip).getByText("Siguiente →")).toBeInTheDocument();
     expect(within(strip).getByRole("link", { name: "Pista anterior: 9. Double Talkin' Jive" })).toHaveAttribute("href", "/song/prev");
     expect(within(strip).getByRole("link", { name: "Pista siguiente: 11. The Garden" })).toHaveAttribute("href", "/song/next");
+  });
+
+  it("en la primera pista la tira dice 'Inicio del disco' en lugar de un hueco", async () => {
+    mocks.loadTrackStrip.mockResolvedValue({
+      current: { recordingId: RID, discNumber: 1, position: 1, title: "November Rain" },
+      index: 1,
+      total: 16,
+      multiDisc: false,
+      previous: null,
+      next: { recordingId: "next", discNumber: 1, position: 2, title: "Tears" },
+    });
+    await renderPage();
+    const strip = screen.getByRole("navigation", { name: song.strip.label });
+    expect(within(strip).getByText(song.strip.discStart)).toBeInTheDocument();
+    // El número va separado del título: "2 ·" y "Tears", no "2 Tears".
+    const next = within(strip).getByRole("link", { name: "Pista siguiente: 2. Tears" });
+    expect(within(next).getByText("2 ·")).toBeInTheDocument();
+    expect(within(next).getByText("Tears")).toBeInTheDocument();
   });
 
   it("sin tira cuando la grabación no está en la lista del disco principal", async () => {
@@ -293,6 +315,39 @@ describe("página de canción", () => {
       .map((link) => link.textContent);
     expect(names.indexOf("Slash")).toBeLessThan(names.indexOf("Invitada"));
     expect(within(credits).getByRole("link", { name: /Créditos de todo el disco/ })).toHaveAttribute("href", `/album/${UYI}/credits`);
+  });
+
+  it("créditos por fila: integrantes separados, '+N' con muchos roles y asistentes contraídos", async () => {
+    const role = (relationType: string, attributes: string[] = []) => ({ relationType, attributes });
+    mocks.loadRecordingCredits.mockResolvedValue({
+      ...CREDITS,
+      groups: {
+        ...CREDITS.groups,
+        performers: [
+          {
+            artistId: "jack",
+            name: "Jack Antonoff",
+            creditedAs: null,
+            roles: ["guitar", "banjo", "bass guitar", "drums (drum set)", "electric guitar", "sitar"].map((a) =>
+              role("instrument", [a]),
+            ),
+          },
+          { artistId: "slash", name: "Slash", creditedAs: null, roles: [role("instrument", ["guitar"])] },
+        ],
+        sound: [
+          { artistId: "laura", name: "Laura Sisk", creditedAs: null, roles: [role("recording")] },
+          { artistId: "serban", name: "Serban Ghenea", creditedAs: null, roles: [role("mix")] },
+          { artistId: "joey", name: "Joey Miller", creditedAs: null, roles: [role("engineer", ["assistant"])] },
+        ],
+      },
+    });
+    await renderPage();
+    const credits = screen.getByRole("region", { name: song.recordingCredits });
+    expect(within(credits).getByText("+2")).toBeInTheDocument();
+    const sound = within(credits).getByRole("region", { name: catalogEs.album.credits.groups.sound });
+    const names = within(sound).getAllByRole("link").map((link) => link.textContent);
+    expect(names.slice(0, 2)).toEqual(["Serban Ghenea", "Laura Sisk"]);
+    expect(within(sound).getByText("+1 asistente")).toBeInTheDocument();
   });
 
   it("discos por tipo, con la marca original y el '+N' en recopilaciones", async () => {

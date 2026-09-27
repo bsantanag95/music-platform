@@ -739,7 +739,6 @@
   },
   "song": {
     "kicker": "Canción",
-    "kickerTrack": "Canción · Pista {position}",
     "duration": "Duración",
     "writtenBy": "Escrita por",
     "firstAppearance": "Primera aparición",
@@ -763,9 +762,13 @@
     },
     "strip": {
       "label": "Pistas del disco",
-      "position": "pista {index} de {total}",
+      "position": "{index} de {total}",
       "previous": "Pista anterior: {number}. {title}",
-      "next": "Pista siguiente: {number}. {title}"
+      "next": "Pista siguiente: {number}. {title}",
+      "previousLabel": "Anterior",
+      "nextLabel": "Siguiente",
+      "discStart": "Inicio del disco",
+      "discEnd": "Fin del disco"
     },
     "appearances": {
       "heading": "Esta grabación aparece en",
@@ -803,7 +806,8 @@
       "single_ep": "single/EP",
       "compilation": "recopilación",
       "live_other": "en vivo u otro"
-    }
+    },
+    "assistants": "{count, plural, one {+# asistente} other {+# asistentes}}"
   },
   "social": {
     "ratingHeading": "Valoraciones",

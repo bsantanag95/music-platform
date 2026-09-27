@@ -253,8 +253,110 @@ cerca de un tercio del contenido de un álbum). Reutiliza los componentes del á
 hacia abajo:
 
 - **Cabecera**: carátula del **disco principal** (el primer disco de estudio que contiene la
-  grabación; si no hay, el más temprano), que enlaza a ese disco; antetítulo "Canción · Pista N"
-  (el disco lo nombran las migas y la tira); título, artistas, **ficha técnica** (duración,
+  grabación; si no hay, el más temprano), que enlaza a ese disco; antetítulo "Canción" (la posición y
+  el disco los nombran la tira y las migas); título, artistas, **ficha técnica** (duración,
+  "Escrita por" solo con nombres, primera aparición —con su tipo, "(single/EP)", cuando no es el
+  disco principal— y, si es una versión, "Versión en vivo de *X*" / "Versión de *X* (*Artista*)"
+  con enlace a la original) y **bloque de comunidad**: valoración media (desde 5 valoraciones),
+  reacción común (desde 5 reacciones públicas del diario), "favorita de" ("<5" por debajo del
+  umbral) y "Aparece en N listas". Las tarjetas siempre muestran la cantidad real y "—" cuando no
+  hay valor; si no hay media, reacción predominante ni favoritas, se reemplazan por una sola
+  línea ("Todavía hay poca actividad de la comunidad · 1 valoración") (`polish-song-header`).
+- **Panel "Tu relación"** al costado: estrellas **siempre visibles** con el puntaje detallado
+  como "88/100" (mismo control y diálogo que el álbum), Escuchas en dos líneas fijas ("Escuchas ·
+  + Registrar escucha" y "3 · última: Obsesión, 12 sep · Ver en tu diario →"; la reacción se
+  elige en el formulario del diario), Favorita como fila compacta con un conmutador, y Listas (el
+  mismo selector del álbum, con listas de canciones y sin Caminos). Sin reseña, Pendiente ni
+  colección.
+- **Tira de pistas**: el disco principal con "N de M" en el centro y, a cada lado, "Anterior" /
+  "Siguiente" con el número separado del título ("2 · Tears") y toda el área clicable; en los
+  extremos, "Inicio del disco" / "Fin del disco". Cruza discos y no aparece si la grabación no
+  está en la lista de la edición representativa (por ejemplo, una pista adicional de otra
+  edición).
+- **Composición** (cambio `add-songwriter-credits`, 2026-09): compositores y letristas vienen
+  de las **obras** de MusicBrainz (la autoría cuelga de la obra, que comparten estudio, vivo
+  y covers) y llegan en la **misma** request de edición (`work-rels+work-level-rels`), sin
+  requests extra. La vista por persona muestra una sección **Composición** tras el primer
+  nivel (eje aparte: una autora puede figurar además en Producción), con la misma regla de
+  contracción; la vista por canción pone el grupo **Composición** primero. Roles: `writer` →
+  "composición", `composer` → "música", `lyricist` → "letra". Obras sin autores cargados en
+  MusicBrainz no muestran nada; las editoriales no se guardan. Los álbumes ingeridos antes se
+  completan al visitarlos o con `scripts/backfill-personnel-credits.ts` (marca
+  `release.works_synced_at`).
+- **Pulido de Créditos** (cambio `polish-album-credits`, 2026-09):
+  - Los roles de intérprete se ordenan por peso: voz principal, instrumentos, coros y otras
+    voces, y al final la percusión menor (pandereta, shakers, palmas…). Los demás roles
+    no se mueven, y el "+N" esconde lo de menor peso.
+  - Las pistas se compactan: 3 o más seguidas del mismo disco forman un rango ("pistas
+    2–6, 9", con los extremos enlazados). Si alguien está en todas las pistas menos una o
+    dos, y la edición tiene al menos 5, se lee "todas salvo la pista 1", con la excluida
+    enlazada.
+  - Los niveles contraídos (Composición, Músicos invitados, Producción y sonido, Arte y
+    otros) forman una sola lista con divisores, chevron y fondo al pasar el mouse.
+  - La pestaña tiene un ancho de lectura acotado (`max-w-3xl`), para que los roles no queden
+    lejos del nombre en pantallas anchas.
+  - Cada fila muestra roles y pistas en una sola línea ("batería, coros, percusión · todas las pistas"),
+    con las pistas en tono secundario, y la columna del nombre mide 11rem.
+- **Contexto sin desplegar** (cambio `album-credits-context`, 2026-09):
+  - La autoría de los integrantes no se repite en sus filas (se probó y se retiró: ocupaba
+    demasiado en un bloque de roles); queda en la sección Composición.
+  - Con una banda, el resumen de Composición cuenta a los integrantes aparte y nombra a los
+    autores externos ("5 · 4 integrantes + Donna McDaniel"; "3 · todas integrantes"). Con
+    una solista se usa el resumen general. Al desplegar se lista a todos los autores.
+  - Un nivel contraído de hasta 3 personas nombra a cada una con su primer rol ("Bob Rock
+    (producción) · Chris Taylor (ingeniería)") y sigue contraído.
+  - "Créditos según MusicBrainz" enlaza a la página de la edición representativa en
+    musicbrainz.org, en una pestaña nueva (`AlbumPersonnel.releaseMbid`).
+  - Se tradujeron los roles e instrumentos que llegaban en inglés ("other vocals", "grand
+    piano", "video director"…). Una prueba exige las mismas claves en `es` y `en`.
+- **Al pie**, fuera de las pestañas: franja de discografía del artista principal (mismo
+  tipo de obra, orden cronológico, anterior / siguiente) y **comentarios**.
+- **Móvil**: carátula e identidad, línea resumen de comunidad, panel (mismas filas que en
+  escritorio), ficha técnica colapsable, pestañas.
+
+**Pestaña Canciones:** tracklist de la edición representativa con posición, título completo
+(sin truncar), duración y subtotal por disco. Cada pista muestra su variante (en vivo,
+remix, regrabación, con enlace a la original), el artista cuando no es el del álbum
+(recopilaciones) y la marca de **favorita de la comunidad** junto al título (hasta 3 pistas
+con al menos 5 reacciones `loved`/`obsessed` públicas; no hay media de estrellas de la
+comunidad por pista), explicada con una leyenda sobre la lista. Desde
+`rework-album-tracklist` (2026-09), con sesión cada fila muestra siempre tu relación con la
+canción: tu nota en estrellas chicas, la marca de escuchada y un corazón de favorito que se
+alterna sin abrir el menú. La pestaña no repite lo que ya muestran la barra de pestañas y
+la ficha técnica: el título "Canciones" es solo para lectores de pantalla, la línea de
+edición mostrada solo aparece en móvil y el total al pie solo con varios discos. Las marcas
+son íconos de tamaño fijo (todas las filas miden lo mismo) y la fila se resalta al pasar el
+cursor. El menú "···" ordena las acciones según el Modelo C: registrar escucha y reaccionar
+primero; después valorar, favorito y listas ("Ir a la canción" se quitó: el título ya
+enlaza). Valorar abre estrellas en línea que guardan con un clic, con "Quitar nota" y el
+mismo aviso que el panel si se descarta un puntaje detallado; registrar escucha muestra
+"Escucha registrada · Agregar detalles" en lugar de abrir el formulario.
+
+**Créditos (`feat.`):** cada canción con colaboración muestra el crédito reconstruido
+(ej. "Pink Floyd feat. Roger Waters"), enlazado al perfil del artista credited. Un track
+sin créditos adicionales (el caso normal) no muestra nada extra — el crédito solo aparece
+cuando aporta información sobre-y-encima del artista principal del álbum.
+
+**Álbum sin ediciones ingeribles:** MusicBrainz no tiene ninguna `release` utilizable para
+ese `release_group`. Estado vacío claro, no una pantalla en blanco ni un error genérico
+(`NO_EDITIONS_FOUND`).
+
+**Ediciones alternativas (japonesa, remaster, deluxe):** hoy se ingiere y muestra una sola
+edición por álbum. Decidido en `redesign-album-page`: las ediciones **no** tienen página
+propia ni cambian la tracklist principal; se listan en la pestaña Ediciones y las pistas
+que agregan las ediciones ampliadas se muestran en secciones desplegables de la pestaña
+Canciones. Los datos llegan con `enrich-album-editions-and-credits`.
+
+## 3b. Detalle de canción — ficha compacta
+
+Nació mínima (`rebalance-catalog-detail-pages`); desde `redesign-song-page` (2026-09) es una
+**ficha compacta de biblioteca**, coherente con el álbum y **sin pestañas** (una canción tiene
+cerca de un tercio del contenido de un álbum). Reutiliza los componentes del álbum. De arriba
+hacia abajo:
+
+- **Cabecera**: carátula del **disco principal** (el primer disco de estudio que contiene la
+  grabación; si no hay, el más temprano), que enlaza a ese disco; antetítulo "Canción" (la posición y
+  el disco los nombran la tira y las migas); título, artistas, **ficha técnica** (duración,
   "Escrita por" solo con nombres, primera aparición —con su tipo, "(single/EP)", cuando no es el
   disco principal— y, si es una versión, "Versión en vivo de *X*" / "Versión de *X* (*Artista*)"
   con enlace a la original) y **bloque de comunidad**: valoración media (desde 5 valoraciones),
@@ -272,9 +374,12 @@ hacia abajo:
   siguiente de su edición representativa (cruza discos). No aparece si la grabación no está en esa
   lista (por ejemplo, una pista adicional de otra edición).
 - **Composición** (autores de la obra con sus roles, solo cuando los roles difieren entre
-  autores; si no, la ficha ya lo dice) y **Créditos de esta grabación**
-  (Intérpretes con los integrantes primero y destacados, Producción, Sonido, Otros; los mismos
-  grupos que la vista por canción del álbum). Los créditos de todo el disco no se repiten: un
+  autores; si no, la ficha ya lo dice) y **Créditos de esta grabación**, apilados a ancho
+  completo. Los créditos van **una persona por fila** (nombre | roles, 4 roles y "+N"), con
+  Intérpretes en una columna —integrantes primero, en la tipografía destacada, separados de los
+  invitados— y Producción, Sonido y Otros en la otra; Sonido ordena por rol (mezcla,
+  masterización, grabación, ingeniería, programación) y contrae las asistencias en "+N
+  asistentes" (`polish-song-credits-strip`). Los créditos de todo el disco no se repiten: un
   enlace lleva a la pestaña Créditos del álbum. Si alguien llega a la canción sin pasar por el
   álbum, la página agenda en segundo plano la sincronización de créditos y autoría del disco
   principal.
