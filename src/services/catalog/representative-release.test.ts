@@ -55,6 +55,42 @@ describe("pickRepresentativeRelease", () => {
     expect(pickRepresentativeRelease(releases)?.id).toBe("us");
   });
 
+  it("no elige una edición firmada, exclusiva o de tapa alternativa del mismo día (Man's Best Friend)", () => {
+    const sameDay = { date: "2025-08-29", country: "US", packaging: "Gatefold Cover", media: [{ "track-count": 12 }] };
+    const releases = [
+      rel({ id: "0-signed", disambiguation: "signed", ...sameDay }),
+      rel({ id: "1-target", disambiguation: "Target exclusive", ...sameDay }),
+      rel({ id: "2-picture", disambiguation: "picture disc", ...sameDay }),
+      rel({ id: "3-d2c", disambiguation: "D2C exclusive, alt cover, signed", ...sameDay }),
+      rel({ id: "4-luxe", disambiguation: "D2C luxe packaging, limited edition", ...sameDay }),
+      rel({ id: "5-atmos", disambiguation: "Dolby Atmos mix, explicit", ...sameDay }),
+      rel({ id: "6-clean", disambiguation: "clean", ...sameDay }),
+      rel({ id: "9-standard", ...sameDay }),
+    ];
+    expect(pickRepresentativeRelease(releases)?.id).toBe("9-standard");
+  });
+
+  it("solo marca palabras que empiezan con el marcador", () => {
+    const sameDay = { date: "2000", country: "US" };
+    const releases = [
+      rel({ id: "a-signed", disambiguation: "signed", ...sameDay }),
+      rel({ id: "b-designed", disambiguation: "sleeve designed by Hipgnosis", ...sameDay }),
+    ];
+    expect(pickRepresentativeRelease(releases)?.id).toBe("b-designed");
+    expect(
+      pickRepresentativeRelease([
+        rel({ id: "a-limited", disambiguation: "limited", ...sameDay }),
+        rel({ id: "b-unlimited", title: "Unlimited", ...sameDay }),
+      ])?.id,
+    ).toBe("b-unlimited");
+    expect(
+      pickRepresentativeRelease([
+        rel({ id: "a-remasters", disambiguation: "50th anniversary remasters", ...sameDay }),
+        rel({ id: "b-plain", ...sameDay }),
+      ])?.id,
+    ).toBe("b-plain");
+  });
+
   it("desempata de forma estable por mbid", () => {
     const releases = [
       rel({ id: "bbb", date: "1994", country: "US", packaging: "Jewel Case" }),
