@@ -469,6 +469,9 @@ export const artist = pgTable(
     // fix-artist-discography-ingestion). Base de la resincronización cada 7 días.
     discographyCompleteAt: timestamp("discography_complete_at", { withTimezone: true }),
     membershipsSyncedAt: timestamp("memberships_synced_at", { withTimezone: true }),
+    // NULL = la alineación nunca se guardó con períodos (migración 0055, openspec:
+    // add-artist-lineup-data); se renueva con la ficha cada 30 días.
+    lineupSyncedAt: timestamp("lineup_synced_at", { withTimezone: true }),
     // Ficha desde MusicBrainz (migración 0054, openspec: enrich-artist-profile). Fechas
     // con su precisión ('YYYY' | 'YYYY-MM' | 'YYYY-MM-DD'); en una persona son
     // nacimiento y muerte, en un grupo formación y separación.
@@ -578,6 +581,68 @@ export const membership = pgTable(
     // La validación de que person_id sea type='person' y group_id sea
     // type='group' vive en el trigger trg_membership_types (ver migración),
     // no se puede expresar como CHECK porque requiere consultar otra tabla.
+  ],
+);
+
+// Un período por relación `member of band` de MusicBrainz (migración 0055, openspec:
+// add-artist-lineup-data). `membership.role`/`joinedOn`/`leftOn` son su resumen derivado.
+export const membershipPeriod = pgTable(
+  "membership_period",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    membershipId: uuid("membership_id")
+      .notNull()
+      .references(() => membership.id, { onDelete: "cascade" }),
+    beginDate: text("begin_date"),
+    endDate: text("end_date"),
+    ended: boolean("ended").notNull().default(false),
+    // Atributos crudos de MusicBrainz sin las marcas `original` y `additional`.
+    instruments: text("instruments").array().notNull().default(sql`'{}'::text[]`),
+    isFounder: boolean("is_founder").notNull().default(false),
+    isAdditional: boolean("is_additional").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_membership_period_membership").on(t.membershipId),
+    check("chk_membership_period_begin", sql`${t.beginDate} IS NULL OR ${t.beginDate} ~ '^\\d{4}(-\\d{2}(-\\d{2})?)?$'`),
+    check("chk_membership_period_end", sql`${t.endDate} IS NULL OR ${t.endDate} ~ '^\\d{4}(-\\d{2}(-\\d{2})?)?$'`),
+    check(
+      "chk_membership_period_order",
+      sql`${t.beginDate} IS NULL OR ${t.endDate} IS NULL OR left(${t.endDate}, 4) >= left(${t.beginDate}, 4)`,
+    ),
+  ],
+);
+
+// Músico de apoyo (instrumental, vocal o genérico) de cualquier artista, también de un
+// solista (migración 0055). Nunca es integrante: no va en `membership`.
+export const artistSupport = pgTable(
+  "artist_support",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    musicianId: uuid("musician_id")
+      .notNull()
+      .references(() => artist.id, { onDelete: "cascade" }),
+    artistId: uuid("artist_id")
+      .notNull()
+      .references(() => artist.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(), // 'instrumental' | 'vocal' | 'general'
+    instruments: text("instruments").array().notNull().default(sql`'{}'::text[]`),
+    beginDate: text("begin_date"),
+    endDate: text("end_date"),
+    ended: boolean("ended").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_artist_support_musician").on(t.musicianId),
+    index("idx_artist_support_artist").on(t.artistId),
+    check("chk_artist_support_kind", sql`${t.kind} IN ('instrumental', 'vocal', 'general')`),
+    check("chk_artist_support_not_self", sql`${t.musicianId} <> ${t.artistId}`),
+    check("chk_artist_support_begin", sql`${t.beginDate} IS NULL OR ${t.beginDate} ~ '^\\d{4}(-\\d{2}(-\\d{2})?)?$'`),
+    check("chk_artist_support_end", sql`${t.endDate} IS NULL OR ${t.endDate} ~ '^\\d{4}(-\\d{2}(-\\d{2})?)?$'`),
+    check(
+      "chk_artist_support_order",
+      sql`${t.beginDate} IS NULL OR ${t.endDate} IS NULL OR left(${t.endDate}, 4) >= left(${t.beginDate}, 4)`,
+    ),
   ],
 );
 
@@ -879,6 +944,8 @@ export const rating = pgTable(
 export type ArtistRow = typeof artist.$inferSelect;
 export type ArtistLinkRow = typeof artistLink.$inferSelect;
 export type ArtistLocalizedTextRow = typeof artistLocalizedText.$inferSelect;
+export type MembershipPeriodRow = typeof membershipPeriod.$inferSelect;
+export type ArtistSupportRow = typeof artistSupport.$inferSelect;
 export type ReleaseEditionRow = typeof releaseEdition.$inferSelect;
 export type LabelRow = typeof label.$inferSelect;
 export type PersonnelCreditRow = typeof personnelCredit.$inferSelect;
@@ -1141,7 +1208,7 @@ export const collectionEntry = pgTable(
     attributes: text("attributes")
       .array()
       .notNull()
-      .default(sql`'{}'`),
+      .default(sql`'{}'::text[]`),
     note: text("note"),
     audience: text("audience").notNull().default("followers"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -1180,7 +1247,7 @@ export const wantedEntry = pgTable(
     attributes: text("attributes")
       .array()
       .notNull()
-      .default(sql`'{}'`),
+      .default(sql`'{}'::text[]`),
     note: text("note"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

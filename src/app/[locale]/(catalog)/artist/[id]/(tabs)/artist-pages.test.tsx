@@ -97,6 +97,7 @@ function makeArtist(overrides: Partial<ArtistRow> = {}): ArtistRow {
     discographySyncedAt: new Date(),
     discographyCompleteAt: new Date(),
     membershipsSyncedAt: new Date(),
+    lineupSyncedAt: null,
     country: "GB",
     beginAreaName: "London",
     endAreaName: null,

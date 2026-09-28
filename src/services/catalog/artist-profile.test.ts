@@ -8,7 +8,7 @@ const state = vi.hoisted(() => ({
   inserts: [] as unknown[],
   execute: 0,
 }));
-const mocks = vi.hoisted(() => ({ getArtistWithRelations: vi.fn() }));
+const mocks = vi.hoisted(() => ({ getArtistWithRelations: vi.fn(), saveArtistLineup: vi.fn() }));
 
 vi.mock("@/db", () => {
   const tx = {
@@ -37,6 +37,7 @@ vi.mock("@/db", () => {
   return { db: { transaction: async (fn: (t: typeof tx) => unknown) => fn(tx) } };
 });
 vi.mock("../musicbrainz/client", () => ({ musicbrainz: { getArtistWithRelations: mocks.getArtistWithRelations } }));
+vi.mock("./artist-lineup-save", () => ({ saveArtistLineup: mocks.saveArtistLineup }));
 
 const { syncArtistProfileFacts, needsProfileRefresh, isStale, ARTIST_PROFILE_REFRESH_MS } = await import("./artist-profile");
 
@@ -44,7 +45,7 @@ const DAY = 24 * 60 * 60 * 1000;
 
 beforeEach(() => {
   vi.clearAllMocks();
-  state.current = { id: "a1", mbid: "b97abf8a-6b72-43eb-8f0f-8ce210fce812", profileSyncedAt: null };
+  state.current = { id: "a1", mbid: "b97abf8a-6b72-43eb-8f0f-8ce210fce812", profileSyncedAt: null, lineupSyncedAt: null };
   state.updates = [];
   state.deletes = 0;
   state.inserts = [];
@@ -61,6 +62,8 @@ describe("syncArtistProfileFacts", () => {
     expect(result.status).toBe("synced");
     expect(state.updates[0]).toMatchObject({ country: "CL", lifeBegin: "2003", wikidataId: "Q63565567", profileSyncedAt: expect.any(Date) });
     expect(state.deletes).toBe(1);
+    // La alineación se renueva con la misma respuesta (openspec: add-artist-lineup-data).
+    expect(mocks.saveArtistLineup).toHaveBeenCalledWith(expect.anything(), state.current, kuervos);
     expect(state.inserts[0]).toEqual([
       expect.objectContaining({ artistId: "a1", kind: "bandcamp", position: 0 }),
       expect.objectContaining({ artistId: "a1", kind: "streaming", position: 1 }),
@@ -68,11 +71,17 @@ describe("syncArtistProfileFacts", () => {
   });
 
   it("con la ficha al día no llama a MusicBrainz, salvo que se fuerce", async () => {
-    state.current = { ...state.current, profileSyncedAt: new Date(Date.now() - DAY) };
+    state.current = { ...state.current, profileSyncedAt: new Date(Date.now() - DAY), lineupSyncedAt: new Date() };
     expect(await syncArtistProfileFacts("a1")).toEqual({ status: "skipped" });
     expect(mocks.getArtistWithRelations).not.toHaveBeenCalled();
 
     expect((await syncArtistProfileFacts("a1", { force: true })).status).toBe("synced");
+  });
+
+  it("con la ficha al día pero la alineación sin períodos, actualiza", async () => {
+    state.current = { ...state.current, profileSyncedAt: new Date(Date.now() - DAY), lineupSyncedAt: null };
+    expect((await syncArtistProfileFacts("a1")).status).toBe("synced");
+    expect(mocks.saveArtistLineup).toHaveBeenCalledTimes(1);
   });
 
   it("un stub toma su tipo real de la misma respuesta", async () => {
@@ -86,6 +95,7 @@ describe("syncArtistProfileFacts", () => {
     await syncArtistProfileFacts("a1", { dryRun: true });
     expect(state.updates).toHaveLength(0);
     expect(state.inserts).toHaveLength(0);
+    expect(mocks.saveArtistLineup).not.toHaveBeenCalled();
   });
 
   it("un artista sin MBID se omite", async () => {
@@ -101,8 +111,10 @@ describe("vigencia", () => {
     expect(isStale(new Date(now - ARTIST_PROFILE_REFRESH_MS - 1), now)).toBe(true);
     expect(isStale(new Date(now - DAY), now)).toBe(false);
     const fresh = new Date();
-    expect(needsProfileRefresh({ mbid: "m", profileSyncedAt: fresh, wikimediaSyncedAt: fresh })).toBe(false);
-    expect(needsProfileRefresh({ mbid: "m", profileSyncedAt: fresh, wikimediaSyncedAt: null })).toBe(true);
-    expect(needsProfileRefresh({ mbid: null, profileSyncedAt: null, wikimediaSyncedAt: null })).toBe(false);
+    const synced = { mbid: "m", profileSyncedAt: fresh, lineupSyncedAt: fresh, wikimediaSyncedAt: fresh };
+    expect(needsProfileRefresh(synced)).toBe(false);
+    expect(needsProfileRefresh({ ...synced, wikimediaSyncedAt: null })).toBe(true);
+    expect(needsProfileRefresh({ ...synced, lineupSyncedAt: null })).toBe(true);
+    expect(needsProfileRefresh({ mbid: null, profileSyncedAt: null, lineupSyncedAt: null, wikimediaSyncedAt: null })).toBe(false);
   });
 });

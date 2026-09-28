@@ -1,0 +1,1120 @@
+{
+ "id": "26f07661-e115-471d-a930-206f5c89d17c",
+ "name": "Mötley Crüe",
+ "type": "Group",
+ "disambiguation": "",
+ "country": "US",
+ "area": {
+  "id": "489ce91b-6658-3307-9877-795b68554c98",
+  "name": "United States"
+ },
+ "begin-area": {
+  "id": "1f40c6e1-47ba-4e35-996f-fe6ee5840e62",
+  "name": "Los Angeles"
+ },
+ "end-area": null,
+ "life-span": {
+  "ended": false,
+  "end": null,
+  "begin": "1981-01-17"
+ },
+ "relations": [
+  {
+   "type": "instrumental supporting musician",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "2000",
+   "end": "2002",
+   "ended": true,
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "artist": {
+    "id": "94d3ba8f-e450-454d-a63a-f99086d76f79",
+    "name": "Samantha Maloney",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "instrumental supporting musician",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "2005",
+   "end": "2005",
+   "ended": true,
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "artist": {
+    "id": "1ba97964-8d70-4b33-a361-d1a4ed222672",
+    "name": "Josh Freese",
+    "type": "Person",
+    "disambiguation": "American drummer"
+   }
+  },
+  {
+   "type": "instrumental supporting musician",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "2007-06-12",
+   "end": "2007-06-12",
+   "ended": true,
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "artist": {
+    "id": "3f8c7dda-6a3f-4cce-a298-8985e467b6ed",
+    "name": "Will Hunt",
+    "type": "Person",
+    "disambiguation": "drummer of Evanescence"
+   }
+  },
+  {
+   "type": "instrumental supporting musician",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "2009-08",
+   "end": "2009-08",
+   "ended": true,
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "artist": {
+    "id": "36c90160-4af0-4252-b803-02c0066a5c42",
+    "name": "Morgan Rose",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "instrumental supporting musician",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "2009-08",
+   "end": "2009-08",
+   "ended": true,
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "artist": {
+    "id": "2831a6fb-851e-4ee7-97f5-aaa46a4f6e2f",
+    "name": "Frank Zummo",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "instrumental supporting musician",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "2015-10",
+   "end": "2015-10",
+   "ended": true,
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "artist": {
+    "id": "8c252877-ed1f-4a12-a917-7e42b71d1451",
+    "name": "Glen Sobel",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "1981-01-17",
+   "end": "1992",
+   "ended": true,
+   "attributes": [
+    "lead vocals",
+    "original"
+   ],
+   "artist": {
+    "id": "ce39ec95-5476-4c65-a862-fec96ff851ec",
+    "name": "Vince Neil",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "1981-01-17",
+   "end": "1999",
+   "ended": true,
+   "attributes": [
+    "drums (drum set)",
+    "original"
+   ],
+   "artist": {
+    "id": "9e8ae35d-95d3-4d49-aab9-d979d64902b7",
+    "name": "Tommy Lee",
+    "type": "Person",
+    "disambiguation": "Mötley Crüe drummer"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "1981-01-17",
+   "end": "2015-12-31",
+   "ended": true,
+   "attributes": [
+    "background vocals",
+    "electric guitar",
+    "original"
+   ],
+   "artist": {
+    "id": "40e4bac7-0ed5-41a2-9b65-b72756002256",
+    "name": "Mick Mars",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "1981-01-17",
+   "end": "2015-12-31",
+   "ended": true,
+   "attributes": [
+    "electric bass guitar",
+    "original"
+   ],
+   "artist": {
+    "id": "f84f1c8d-8b26-47c4-b1e2-76d812149047",
+    "name": "Nikki Sixx",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "1992",
+   "end": "1996",
+   "ended": true,
+   "attributes": [
+    "electric bass guitar",
+    "electric guitar",
+    "keyboard",
+    "lead vocals",
+    "piano"
+   ],
+   "artist": {
+    "id": "0a383cd4-d26a-4ce1-8d9c-8bbb8a6df1e3",
+    "name": "John Corabi",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "1997",
+   "end": "2015-12-31",
+   "ended": true,
+   "attributes": [
+    "lead vocals",
+    "original"
+   ],
+   "artist": {
+    "id": "ce39ec95-5476-4c65-a862-fec96ff851ec",
+    "name": "Vince Neil",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "1999",
+   "end": "2002-03-26",
+   "ended": true,
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "artist": {
+    "id": "f7fc5a30-008d-48ab-861d-f328120e6702",
+    "name": "Randy Castillo",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "2004",
+   "end": "2015-12-31",
+   "ended": true,
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "artist": {
+    "id": "9e8ae35d-95d3-4d49-aab9-d979d64902b7",
+    "name": "Tommy Lee",
+    "type": "Person",
+    "disambiguation": "Mötley Crüe drummer"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "2018",
+   "end": "2022",
+   "ended": true,
+   "attributes": [
+    "background vocals",
+    "electric guitar",
+    "original"
+   ],
+   "artist": {
+    "id": "40e4bac7-0ed5-41a2-9b65-b72756002256",
+    "name": "Mick Mars",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "2018",
+   "end": null,
+   "ended": false,
+   "attributes": [
+    "background vocals",
+    "drums (drum set)",
+    "keyboard",
+    "piano"
+   ],
+   "artist": {
+    "id": "9e8ae35d-95d3-4d49-aab9-d979d64902b7",
+    "name": "Tommy Lee",
+    "type": "Person",
+    "disambiguation": "Mötley Crüe drummer"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "2018",
+   "end": null,
+   "ended": false,
+   "attributes": [
+    "electric guitar",
+    "harmonica",
+    "lead vocals",
+    "original"
+   ],
+   "artist": {
+    "id": "ce39ec95-5476-4c65-a862-fec96ff851ec",
+    "name": "Vince Neil",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "2018",
+   "end": null,
+   "ended": false,
+   "attributes": [
+    "background vocals",
+    "electric bass guitar",
+    "keyboard",
+    "original",
+    "piano"
+   ],
+   "artist": {
+    "id": "f84f1c8d-8b26-47c4-b1e2-76d812149047",
+    "name": "Nikki Sixx",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": "2022-10-27",
+   "end": null,
+   "ended": false,
+   "attributes": [
+    "guitar"
+   ],
+   "artist": {
+    "id": "66ac10d4-37cc-4b84-91dd-4863e3dc9a32",
+    "name": "John 5",
+    "type": "Person",
+    "disambiguation": "American guitarist"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [
+    "additional",
+    "turntable"
+   ],
+   "artist": {
+    "id": "9b24f071-e879-4010-914f-2b19fbb2515c",
+    "name": "DJ Larceny",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "supporting musician",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "artist": {
+    "id": "9c45fb12-ab4f-4d11-852d-e415b07c69db",
+    "name": "Motley Crew",
+    "type": null
+   }
+  },
+  {
+   "type": "tribute",
+   "target-type": "artist",
+   "direction": "backward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "artist": {
+    "id": "fe621b92-a49a-4b63-a74f-e8bfed847136",
+    "name": "CRÜED",
+    "type": "Group"
+   }
+  },
+  {
+   "type": "allmusic",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.allmusic.com/artist/mn0000500992"
+   }
+  },
+  {
+   "type": "bandsintown",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.bandsintown.com/a/50324"
+   }
+  },
+  {
+   "type": "BBC Music page",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": "2020-11-19",
+   "ended": true,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.bbc.co.uk/music/artists/26f07661-e115-471d-a930-206f5c89d17c"
+   }
+  },
+  {
+   "type": "discogs",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.discogs.com/artist/94068"
+   }
+  },
+  {
+   "type": "free streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://open.spotify.com/artist/0cc6vw3VN8YlIcvr1v7tBL"
+   }
+  },
+  {
+   "type": "free streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.deezer.com/artist/531"
+   }
+  },
+  {
+   "type": "image",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://commons.wikimedia.org/wiki/File:Crue_CIMG4784.JPG"
+   }
+  },
+  {
+   "type": "IMDb",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.imdb.com/name/nm1566588/"
+   }
+  },
+  {
+   "type": "last.fm",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.last.fm/music/M%C3%B6tley+Cr%C3%BCe"
+   }
+  },
+  {
+   "type": "lyrics",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://genius.com/artists/Motley-crue"
+   }
+  },
+  {
+   "type": "lyrics",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://muzikum.eu/en/motley-crue/lyrics"
+   }
+  },
+  {
+   "type": "lyrics",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.musixmatch.com/artist/M%C3%B6tley-Cr%C3%BCe"
+   }
+  },
+  {
+   "type": "myspace",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://myspace.com/motleycrue"
+   }
+  },
+  {
+   "type": "official homepage",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.motley.com/"
+   }
+  },
+  {
+   "type": "official homepage",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": true,
+   "attributes": [],
+   "url": {
+    "resource": "https://motley.com/"
+   }
+  },
+  {
+   "type": "other databases",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "http://id.loc.gov/authorities/names/n84181288"
+   }
+  },
+  {
+   "type": "other databases",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "http://musicmoz.org/Bands_and_Artists/M/Motley_Crue/"
+   }
+  },
+  {
+   "type": "other databases",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://catalogue.bnf.fr/ark:/12148/cb139736348"
+   }
+  },
+  {
+   "type": "other databases",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://d-nb.info/gnd/1225721-7"
+   }
+  },
+  {
+   "type": "other databases",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://imvdb.com/n/motley-crue"
+   }
+  },
+  {
+   "type": "other databases",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://nla.gov.au/nla.party-863447"
+   }
+  },
+  {
+   "type": "other databases",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://openlibrary.org/authors/OL2629326A"
+   }
+  },
+  {
+   "type": "other databases",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://rateyourmusic.com/artist/motley_crue"
+   }
+  },
+  {
+   "type": "other databases",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.livefans.jp/artists/3653"
+   }
+  },
+  {
+   "type": "other databases",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.metal-archives.com/bands/M%C3%B6tley_Cr%C3%BCe/1025"
+   }
+  },
+  {
+   "type": "other databases",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.metalmusicarchives.com/artist/motley-crue"
+   }
+  },
+  {
+   "type": "other databases",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.musik-sammler.de/artist/m%C3%B6tley-cr%C3%BCe/"
+   }
+  },
+  {
+   "type": "other databases",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.muziekweb.nl/Link/M00000014104/POPULAR/"
+   }
+  },
+  {
+   "type": "other databases",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.spirit-of-metal.com/en/band/Motley_Crue"
+   }
+  },
+  {
+   "type": "other databases",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.spirit-of-rock.com/en/band/motley_crue"
+   }
+  },
+  {
+   "type": "other databases",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.whosampled.com/M%C3%B6tley-Cr%C3%BCe/"
+   }
+  },
+  {
+   "type": "other databases",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "http://www.worldcat.org/identities/lccn-n84181288/"
+   }
+  },
+  {
+   "type": "purchase for download",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://itunes.apple.com/us/artist/id284113"
+   }
+  },
+  {
+   "type": "purchase for download",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://music.apple.com/us/artist/284113"
+   }
+  },
+  {
+   "type": "purchase for download",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://us.7digital.com/artist/motley-crue-1"
+   }
+  },
+  {
+   "type": "purchase for download",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.qobuz.com/gb-en/interpreter/motley-crue/download-streaming-albums"
+   }
+  },
+  {
+   "type": "purchase for mail-order",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.cdjapan.co.jp/person/700273980"
+   }
+  },
+  {
+   "type": "purevolume",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": "2018-06-30",
+   "ended": true,
+   "attributes": [],
+   "url": {
+    "resource": "http://www.purevolume.com/motleycrueband"
+   }
+  },
+  {
+   "type": "secondhandsongs",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://secondhandsongs.com/artist/1274"
+   }
+  },
+  {
+   "type": "setlistfm",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.setlist.fm/setlists/motley-crue-bd6b5d2.html"
+   }
+  },
+  {
+   "type": "social network",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": "2019-04",
+   "ended": true,
+   "attributes": [],
+   "url": {
+    "resource": "https://plus.google.com/+motleycrue"
+   }
+  },
+  {
+   "type": "social network",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://twitter.com/MotleyCrue"
+   }
+  },
+  {
+   "type": "social network",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.facebook.com/MotleyCrue"
+   }
+  },
+  {
+   "type": "social network",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.instagram.com/motleycrue/"
+   }
+  },
+  {
+   "type": "social network",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.tiktok.com/@motleycrue"
+   }
+  },
+  {
+   "type": "songkick",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.songkick.com/artists/109416"
+   }
+  },
+  {
+   "type": "soundcloud",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://soundcloud.com/motley-crue"
+   }
+  },
+  {
+   "type": "streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": "2022-06-08",
+   "ended": true,
+   "attributes": [],
+   "url": {
+    "resource": "https://us.napster.com/artist/motley-crue"
+   }
+  },
+  {
+   "type": "streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": "2022-06-08",
+   "ended": true,
+   "attributes": [],
+   "url": {
+    "resource": "https://web.napster.com/artist/motley-crue"
+   }
+  },
+  {
+   "type": "streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://music.amazon.com/artists/B00137CPYI"
+   }
+  },
+  {
+   "type": "streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://music.apple.com/us/artist/284113"
+   }
+  },
+  {
+   "type": "streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://tidal.com/artist/3555613"
+   }
+  },
+  {
+   "type": "streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.qobuz.com/de-de/interpreter/-/47438"
+   }
+  },
+  {
+   "type": "streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.qobuz.com/gb-en/interpreter/motley-crue/download-streaming-albums"
+   }
+  },
+  {
+   "type": "ticketing",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.ticketmaster.com/artist/910417"
+   }
+  },
+  {
+   "type": "VIAF",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "http://viaf.org/viaf/142387640"
+   }
+  },
+  {
+   "type": "wikidata",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.wikidata.org/wiki/Q486688"
+   }
+  },
+  {
+   "type": "youtube",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.youtube.com/channel/UC4OIQdGVhOAQx3IgrAnSzaw"
+   }
+  },
+  {
+   "type": "youtube",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.youtube.com/channel/UCq2g_Vcu3J1OwNRmdTNoxYA"
+   }
+  },
+  {
+   "type": "youtube music",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://music.youtube.com/channel/UCaeBWvnAVVgyfFT-gnWwURg"
+   }
+  }
+ ]
+}

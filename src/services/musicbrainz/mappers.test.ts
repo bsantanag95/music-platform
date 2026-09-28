@@ -1,10 +1,17 @@
 import { describe, it, expect } from "vitest";
 import {
   mapArtistMemberships,
+  mapArtistSupports,
   mapReleaseGroupCategory,
   normalizeReleaseDate,
 } from "./mappers";
-import type { MBReleaseGroupSearchItem } from "./types";
+import motleyCrue from "./__fixtures__/motley-crue-artist-with-relations.json";
+import randyCastillo from "./__fixtures__/randy-castillo-artist-with-relations.json";
+import type { MBArtistDetail, MBReleaseGroupSearchItem } from "./types";
+
+const MOTLEY_CRUE = motleyCrue as MBArtistDetail;
+const RANDY_CASTILLO = randyCastillo as MBArtistDetail;
+const NO_PERIOD = { beginDate: null, endDate: null, ended: false, instruments: [], isFounder: false, isAdditional: false };
 
 describe("mapeo de resultados de búsqueda de release-groups", () => {
   const item = (overrides: Partial<MBReleaseGroupSearchItem> = {}): MBReleaseGroupSearchItem => ({
@@ -77,10 +84,10 @@ describe("mapArtistMemberships", () => {
     const group = { id: "group", name: "Banda", type: "Group" as const };
 
     expect(mapArtistMemberships({ ...person, relations: [{ type: "member of band", artist: group }] })).toEqual([
-      { person, group, role: null, joinedOn: null, leftOn: null },
+      { person, group, role: null, joinedOn: null, leftOn: null, ...NO_PERIOD },
     ]);
     expect(mapArtistMemberships({ ...group, relations: [{ type: "member of band", artist: person }] })).toEqual([
-      { person, group, role: null, joinedOn: null, leftOn: null },
+      { person, group, role: null, joinedOn: null, leftOn: null, ...NO_PERIOD },
     ]);
   });
 
@@ -97,7 +104,7 @@ describe("mapArtistMemberships", () => {
           begin: "1965-01-02",
           end: "1980-06",
         }],
-      })).toMatchObject([{ role: "bass, vocals", joinedOn: "1965-01-02", leftOn: null }]);
+      })).toMatchObject([{ role: "bass, vocals", joinedOn: "1965-01-02", leftOn: null, beginDate: "1965-01-02", endDate: "1980-06" }]);
     }
   });
 
@@ -112,5 +119,72 @@ describe("mapArtistMemberships", () => {
         { type: "member of band" },
       ],
     })).toEqual([]);
+  });
+});
+
+describe("períodos de pertenencia (add-artist-lineup-data)", () => {
+  const byName = (name: string) => mapArtistMemberships(MOTLEY_CRUE).filter((m) => m.person.name === name);
+
+  it("devuelve un período por relación: quien se fue y volvió trae varios", () => {
+    const vince = byName("Vince Neil");
+    expect(vince.map((m) => [m.beginDate, m.endDate, m.ended])).toEqual([
+      ["1981-01-17", "1992", true],
+      ["1997", "2015-12-31", true],
+      ["2018", null, false],
+    ]);
+    expect(vince.every((m) => m.isFounder)).toBe(true);
+  });
+
+  it("separa las marcas de fundador y adicional de los instrumentos", () => {
+    const [nikki] = byName("Nikki Sixx");
+    expect(nikki!.instruments).toEqual(["electric bass guitar"]);
+    expect(nikki!.role).toBe("electric bass guitar");
+    expect(nikki!.isFounder).toBe(true);
+    const [dj] = byName("DJ Larceny");
+    expect(dj).toMatchObject({ instruments: ["turntable"], isAdditional: true, isFounder: false, beginDate: null, ended: false });
+  });
+
+  it("conserva la precisión parcial en el período y solo fechas completas en el resumen", () => {
+    const [john5] = byName("John 5");
+    expect(john5).toMatchObject({ beginDate: "2022-10-27", joinedOn: "2022-10-27" });
+    const [corabi] = byName("John Corabi");
+    expect(corabi).toMatchObject({ beginDate: "1992", endDate: "1996", joinedOn: null, leftOn: null });
+  });
+
+  it("deja sin fechas una relación con fin anterior al inicio", () => {
+    const [m] = mapArtistMemberships({
+      id: "g", name: "Banda", type: "Group",
+      relations: [{ type: "member of band", direction: "backward", begin: "2010", end: "2005", ended: true, artist: { id: "p", name: "P", type: "Person" } }],
+    });
+    expect(m).toMatchObject({ beginDate: null, endDate: null, ended: true });
+  });
+});
+
+describe("mapArtistSupports", () => {
+  it("lee el apoyo que recibe un grupo e ignora al músico sin tipo persona", () => {
+    const supports = mapArtistSupports(MOTLEY_CRUE);
+    expect(supports).toHaveLength(6);
+    expect(supports.every((s) => s.supported.name === "Mötley Crüe" && s.kind === "instrumental")).toBe(true);
+    expect(supports.find((s) => s.musician.name === "Samantha Maloney")).toMatchObject({
+      instruments: ["drums (drum set)"], beginDate: "2000", endDate: "2002", ended: true,
+    });
+    expect(supports.some((s) => s.musician.name === "Motley Crew")).toBe(false);
+  });
+
+  it("lee el apoyo que da una persona, también a un solista", () => {
+    const supports = mapArtistSupports(RANDY_CASTILLO);
+    expect(supports.map((s) => [s.musician.name, s.supported.name, s.beginDate])).toEqual([
+      ["Randy Castillo", "Ozzy Osbourne", "1983"],
+      ["Randy Castillo", "Ozzy Osbourne", "1995"],
+      ["Randy Castillo", "Lita Ford", null],
+    ]);
+  });
+
+  it("mapea los tres tipos de relación de apoyo", () => {
+    const musician = { id: "m", name: "M", type: "Person" };
+    const kinds = ["instrumental supporting musician", "vocal supporting musician", "supporting musician"].map(
+      (type) => mapArtistSupports({ id: "a", name: "A", type: "Person", relations: [{ type, direction: "backward", artist: musician }] })[0]?.kind,
+    );
+    expect(kinds).toEqual(["instrumental", "vocal", "general"]);
   });
 });

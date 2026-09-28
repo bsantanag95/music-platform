@@ -37,6 +37,8 @@ realiza automáticamente por coincidencia de email.
 
 Puede ser una **persona** o un **grupo**. Una persona puede pertenecer a uno o más grupos a la vez, y puede tener también su propia carrera solista — ambas discografías conviven en el mismo perfil de artista sin tratarse como conceptos separados. Un grupo también es un Artista, con su propio perfil y discografía, compuesto por personas que fueron o son sus miembros a lo largo del tiempo.
 
+Una **pertenencia** (persona ↔ grupo) tiene uno o más **períodos**: quien se fue y volvió tiene uno por etapa, cada uno con sus fechas (con la precisión que se conozca), sus instrumentos y las marcas de integrante fundador o adicional. Un **músico de apoyo** es una persona que acompaña a un artista, grupo o solista, en giras o grabaciones sin ser integrante; tiene sus propios períodos e instrumentos y nunca cuenta como miembro. La fuente (MusicBrainz) no distingue el apoyo en vivo del apoyo en estudio.
+
 Existe además un tipo especial de Artista, "Various Artists", usado para álbumes compilatorios donde no hay un único artista principal, aunque cada canción dentro sí lo tenga.
 
 ## Álbum (concepto) y Edición

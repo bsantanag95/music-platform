@@ -99,6 +99,13 @@ necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
 >   los enlaces curados, la foto con crédito, los textos por idioma con respaldo, el lugar con
 >   país, los `CHECK` de la migración `0054`, que un fallo de Wikimedia conserva los datos y el
 >   retiro de fotos.
+> - `smoke-test-artist-lineup.ts` crea una banda, tres integrantes o músicos de apoyo, otra banda
+>   y un solista con el mismo prefijo sintético `5e0ce000-0000-4000-8000-*` (el `ON DELETE
+>   CASCADE` limpia pertenencias, períodos y apoyo) y los borra al terminar (también si falla); si
+>   se interrumpió, la limpieza de arriba lo cubre. Mockea MusicBrainz. Verifica los períodos con
+>   las marcas aparte en una sola request, el apoyo (también a un solista), la clasificación y la
+>   lectura, la sincronización de integrantes sin tocar al resto de la banda, la actualización que
+>   suma y quita integrantes y los `CHECK` de la migración `0055`.
 
 ## Base de datos / migraciones
 

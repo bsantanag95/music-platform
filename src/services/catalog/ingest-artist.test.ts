@@ -30,6 +30,7 @@ function makeArtist(overrides: Partial<ArtistRow> = {}): ArtistRow {
     discographySyncedAt: null,
     discographyCompleteAt: null,
     membershipsSyncedAt: null,
+    lineupSyncedAt: null,
     country: null,
     beginAreaName: null,
     endAreaName: null,
@@ -108,11 +109,14 @@ describe("ensureArtistMemberships", () => {
 
     expect(tx.execute).toHaveBeenCalledTimes(1);
     expect(musicbrainz.getArtistWithRelations).toHaveBeenCalledWith("person-mb");
-    expect(inserts).toHaveLength(3); // artista persona, grupo y membership
-    // Borra solo relaciones stale de esta persona, y reemplaza sus enlaces curados.
-    expect(deletes).toHaveLength(2);
-    // La ficha llega en la misma respuesta y se guarda antes del flag (openspec: enrich-artist-profile).
+    expect(inserts).toHaveLength(4); // artista persona, grupo, membership y su período
+    // Reemplaza los períodos del par, borra solo relaciones stale y el apoyo de esta persona, y
+    // reemplaza sus enlaces curados.
+    expect(deletes).toHaveLength(4);
+    // Alineación y ficha llegan en la misma respuesta y se guardan antes del flag (openspec:
+    // add-artist-lineup-data, enrich-artist-profile).
     expect(updates).toEqual([
+      { lineupSyncedAt: expect.any(Date), membershipsSyncedAt: expect.any(Date) },
       expect.objectContaining({ profileSyncedAt: expect.any(Date), wikidataId: null }),
       { membershipsSyncedAt: expect.any(Date) },
     ]);
@@ -135,7 +139,7 @@ describe("ensureArtistMemberships", () => {
     await ensureArtistMemberships(makeArtist());
 
     expect(musicbrainz.getArtistWithRelations).toHaveBeenCalledTimes(1);
-    expect(updates[0]).toMatchObject({
+    expect(updates[1]).toMatchObject({
       country: "CL",
       beginAreaName: "Concepción",
       lifeBegin: "1999",

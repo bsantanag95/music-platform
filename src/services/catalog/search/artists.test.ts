@@ -33,6 +33,7 @@ function row(overrides: Partial<ArtistRow>): ArtistRow {
     discographySyncedAt: null,
     discographyCompleteAt: null,
     membershipsSyncedAt: null,
+    lineupSyncedAt: null,
     country: null,
     beginAreaName: null,
     endAreaName: null,

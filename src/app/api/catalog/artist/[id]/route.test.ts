@@ -38,6 +38,7 @@ describe("GET /api/catalog/artist/[id]", () => {
       discographySyncedAt: null,
       discographyCompleteAt: null,
       membershipsSyncedAt: null,
+      lineupSyncedAt: null,
       country: null,
       beginAreaName: null,
       endAreaName: null,

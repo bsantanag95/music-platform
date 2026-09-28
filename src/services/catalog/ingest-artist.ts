@@ -1,12 +1,14 @@
-import { and, eq, ilike, inArray, notInArray, sql } from "drizzle-orm";
+import { and, eq, ilike, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, membership, type ArtistRow } from "@/db/schema";
 import { musicbrainz } from "../musicbrainz/client";
-import { mapArtistMemberships, mapArtistType, type MappedArtistMembership } from "../musicbrainz/mappers";
+import { mapArtistType } from "../musicbrainz/mappers";
 import { mapArtistProfileFacts } from "../musicbrainz/artist-profile-mappers";
 import { saveArtistProfileFacts } from "./artist-profile";
+import { mergeMembershipDates, saveArtistLineup } from "./artist-lineup-save";
+import { upsertArtistFromMb, VARIOUS_ARTISTS_MBID } from "./artist-upsert";
 
-const VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377";
+export { mergeMembershipDates, upsertArtistFromMb };
 
 export interface ArtistMembership {
   artistId: string;
@@ -34,41 +36,6 @@ export async function getArtistMemberships(target: ArtistRow): Promise<ArtistMem
   return rows;
 }
 
-type Period = Pick<MappedArtistMembership, "joinedOn" | "leftOn">;
-
-/**
- * Fechas de una pertenencia a partir de sus relaciones en MusicBrainz, que pueden ser el mismo
- * período partido por rol (guitarra con inicio, voz con fin) o períodos distintos (se fue y
- * volvió). Toma el inicio conocido más temprano y el fin conocido más tardío, salvo que:
- * - un período sin inicio terminó antes de ese inicio: hubo una etapa anterior de inicio
- *   desconocido → inicio nulo;
- * - un período sin fin empezó después de ese fin: volvió y sigue (o no se sabe) → fin nulo.
- * Si aun así el fin queda antes del inicio (dato incoherente en MusicBrainz), ambos quedan
- * nulos: no se inventa una fecha ni se viola el `CHECK left_on >= joined_on`.
- */
-export function mergeMembershipDates(periods: Period[]): Period {
-  const joins = periods.map((p) => p.joinedOn).filter((d): d is string => d !== null).sort();
-  const lefts = periods.map((p) => p.leftOn).filter((d): d is string => d !== null).sort();
-  let joinedOn = joins[0] ?? null;
-  let leftOn = lefts[lefts.length - 1] ?? null;
-  if (joinedOn && periods.some((p) => p.joinedOn === null && p.leftOn !== null && p.leftOn < joinedOn!)) joinedOn = null;
-  if (leftOn && periods.some((p) => p.leftOn === null && p.joinedOn !== null && p.joinedOn > leftOn!)) leftOn = null;
-  if (joinedOn && leftOn && leftOn < joinedOn) return { joinedOn: null, leftOn: null };
-  return { joinedOn, leftOn };
-}
-
-function mergeMemberships(memberships: MappedArtistMembership[]): MappedArtistMembership[] {
-  const groups = new Map<string, MappedArtistMembership[]>();
-  for (const item of memberships) {
-    const key = `${item.person.id}:${item.group.id}`;
-    groups.set(key, [...(groups.get(key) ?? []), item]);
-  }
-  return [...groups.values()].map((items) => {
-    const roles = [...new Set(items.map((item) => item.role).filter((role): role is string => Boolean(role)).flatMap((role) => role.split(", ")))].sort();
-    return { ...items[0]!, role: roles.length ? roles.join(", ") : null, ...mergeMembershipDates(items) };
-  });
-}
-
 /** Ingesta memberships de una sola llamada externa; la lectura permanece en getArtistMemberships. */
 export async function ensureArtistMemberships(target: ArtistRow): Promise<void> {
   await db.transaction(async (tx) => {
@@ -79,30 +46,13 @@ export async function ensureArtistMemberships(target: ArtistRow): Promise<void> 
     if (!current || current.membershipsSyncedAt) return;
 
     const detail = current.mbid ? await musicbrainz.getArtistWithRelations(current.mbid) : null;
-    const memberships = detail ? mergeMemberships(mapArtistMemberships(detail)) : [];
-    const pairs: Array<{ personId: string; groupId: string }> = [];
-
-    for (const item of memberships) {
-      const person = await upsertArtistFromMb(item.person.id, item.person.name, item.person.type, item.person.disambiguation ?? null, tx);
-      const group = await upsertArtistFromMb(item.group.id, item.group.name, item.group.type, item.group.disambiguation ?? null, tx);
-      pairs.push({ personId: person.id, groupId: group.id });
-      await tx
-        .insert(membership)
-        .values({ personId: person.id, groupId: group.id, role: item.role, joinedOn: item.joinedOn, leftOn: item.leftOn })
-        .onConflictDoUpdate({
-          target: [membership.personId, membership.groupId],
-          set: { role: item.role, joinedOn: item.joinedOn, leftOn: item.leftOn },
-        });
+    if (detail) {
+      // Pertenencias con sus períodos y músicos de apoyo (openspec: add-artist-lineup-data) y la
+      // ficha (país, áreas, fechas, enlaces; openspec: enrich-artist-profile), todo de la misma
+      // respuesta, sin otra request.
+      await saveArtistLineup(tx, current, detail);
+      await saveArtistProfileFacts(tx, current.id, mapArtistProfileFacts(detail));
     }
-
-    const targetColumn = current.type === "group" ? membership.groupId : membership.personId;
-    const relatedColumn = current.type === "group" ? membership.personId : membership.groupId;
-    const relatedIds = pairs.map((pair) => current.type === "group" ? pair.personId : pair.groupId);
-    const scope = eq(targetColumn, current.id);
-    await tx.delete(membership).where(relatedIds.length ? and(scope, notInArray(relatedColumn, relatedIds)) : scope);
-    // La misma respuesta trae la ficha (país, áreas, fechas, enlaces): se guarda sin otra
-    // request (openspec: enrich-artist-profile).
-    if (detail) await saveArtistProfileFacts(tx, current.id, mapArtistProfileFacts(detail));
     await tx.update(artist).set({ membershipsSyncedAt: new Date() }).where(eq(artist.id, current.id));
   });
 }
@@ -165,35 +115,6 @@ export async function findOrIngestArtist(name: string): Promise<ArtistRow | null
   }
 
   return upsertArtistFromMb(best.id, best.name, best.type, best.disambiguation ?? null);
-}
-
-/**
- * Crea o actualiza un artista a partir de datos de MusicBrainz. Se usa
- * tanto para el resultado de una búsqueda directa como para los "stubs"
- * que se crean al ingerir créditos de otros artistas (ver
- * ingest-discography.ts), donde el tipo puede no conocerse todavía.
- */
-export async function upsertArtistFromMb(
-  mbid: string,
-  name: string,
-  mbType: string | undefined,
-  disambiguation: string | null = null,
-  executor: Pick<typeof db, "insert"> = db,
-): Promise<ArtistRow> {
-  const type = mbid === VARIOUS_ARTISTS_MBID ? "various" : mapArtistType(mbType);
-
-  const rows = await executor
-    .insert(artist)
-    .values({ mbid, name, type, disambiguation })
-    .onConflictDoUpdate({
-      target: artist.mbid,
-      set: { name, type, disambiguation },
-    })
-    .returning();
-
-  const row = rows[0];
-  if (!row) throw new Error(`No se pudo hacer upsert del artista ${mbid}`);
-  return row;
 }
 
 /**
