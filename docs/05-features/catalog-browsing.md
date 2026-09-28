@@ -392,10 +392,10 @@ hacia abajo:
 - **"Otras versiones de la canción"**: las demás grabaciones de su obra, por grupo —
   Versiones de otros artistas (`cover`), En vivo (`live`) y Otras grabaciones (sin marca) — según
   los atributos de MusicBrainz, sin deducir nada (ADR 0020). Los grupos de hasta 5 grabaciones
-  arrancan desplegados; un grupo único va como subtítulo, sin acordeón. Cada fila muestra el
-  artista como línea principal (si es otro), el título solo si difiere del de la canción y el
-  disco sin su nombre cuando se llama igual; en pantallas anchas, en dos columnas
-  (`polish-song-appearances-versions`).
+  arrancan desplegados; un grupo único va como subtítulo, sin acordeón. Cada fila la encabeza el
+  artista (si es otro) o el disco que la contiene, con el título solo si difiere del de la canción
+  y el disco sin su nombre cuando se llama igual; en pantallas anchas, en dos columnas
+  (`polish-song-appearances-versions`, `lead-version-rows-with-disc`).
 - **Comentarios** al final. Sin reseñas de canción.
 
 ## 4. Navegación por membresías (banda → integrantes) — diferida a Fase 4
