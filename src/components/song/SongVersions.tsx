@@ -9,7 +9,8 @@ import type { RecordingVersions, VersionEntry, VersionGroup } from "@/services/c
 
 // "Otras versiones de la canción" (openspec: redesign-song-page, `song-versions`; presentación
 // desde polish-song-appearances-versions): las demás grabaciones de la obra, por tipo de versión
-// según los atributos de MusicBrainz (sin deducir nada). Con varios grupos, los de hasta 5
+// según los atributos de MusicBrainz (sin deducir nada). Cada fila la encabeza el artista si es
+// otro, o el disco que la contiene (fix/song-version-rows). Con varios grupos, los de hasta 5
 // grabaciones arrancan desplegados; un solo grupo va sin acordeón. Desplegar es estado local:
 // las filas ya vienen del servidor.
 
@@ -30,11 +31,15 @@ function VersionRow({ entry, songTitle, songArtistIds }: { entry: VersionEntry }
   // En vivo y cover ya los dice el grupo; se muestran los demás atributos (instrumental, …).
   const extra = entry.attributes.filter((attribute) => attribute !== "live" && attribute !== "cover");
   const otherArtist = entry.artist && !songArtistIds.has(entry.artist.id) ? entry.artist : null;
-  // La línea principal es el artista si es otro; el título solo si agrega algo.
-  const primary = otherArtist ? otherArtist.name : entry.title;
-  const showTitle = otherArtist !== null && !sameTitle(entry.title, songTitle);
   const disc = entry.disc;
-  const showDiscTitle = disc !== null && !sameTitle(disc.title, songTitle) && !sameTitle(disc.title, entry.title);
+  // La línea principal es lo que distingue a la versión: el artista si es otro; si no, el
+  // disco que la contiene (el título casi siempre repite el de la canción).
+  const discLeads = otherArtist === null && disc !== null;
+  const primary = otherArtist?.name ?? disc?.title ?? entry.title;
+  // El título solo si agrega algo ("(take 1)", "(instrumental)").
+  const showTitle = !sameTitle(entry.title, songTitle) && !sameTitle(entry.title, primary);
+  const showDiscTitle =
+    disc !== null && !discLeads && !sameTitle(disc.title, songTitle) && !sameTitle(disc.title, entry.title);
   const discText = disc && [showDiscTitle ? disc.title : null, disc.year].filter((part) => part !== null).join(" · ");
   return (
     <li className="grid grid-cols-[minmax(0,1fr)_3.5rem] items-baseline gap-x-3 py-2">
