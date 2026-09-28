@@ -14,12 +14,46 @@ export function mapArtistType(mbType: string | undefined): "person" | "group" | 
 
 const GROUP_TYPES = new Set(["Group", "Orchestra", "Choir"]);
 
-export interface MappedArtistMembership {
+/**
+ * Período de una relación de MusicBrainz (openspec: add-artist-lineup-data): fechas con su
+ * precisión, si terminó e instrumentos crudos. Una relación con fin anterior al inicio queda
+ * sin fechas: no se inventa ni se invierte una fecha.
+ */
+export interface MappedLineupPeriod {
+  beginDate: string | null;
+  endDate: string | null;
+  ended: boolean;
+  instruments: string[];
+}
+
+export interface MappedArtistMembership extends MappedLineupPeriod {
   person: MBArtistSummary;
   group: MBArtistSummary;
+  /** Resumen para `membership.role`: los instrumentos, sin las marcas. */
   role: string | null;
   joinedOn: string | null;
   leftOn: string | null;
+  isFounder: boolean;
+  isAdditional: boolean;
+}
+
+/** Marcas de MusicBrainz que no son instrumentos: fundador e integrante adicional. */
+const FOUNDER_ATTRIBUTE = "original";
+const ADDITIONAL_ATTRIBUTE = "additional";
+
+const PARTIAL_DATE = /^\d{4}(-\d{2}(-\d{2})?)?$/;
+
+function lineupPeriod(relation: MBArtistRelation): MappedLineupPeriod {
+  let beginDate = relation.begin && PARTIAL_DATE.test(relation.begin) ? relation.begin : null;
+  let endDate = relation.end && PARTIAL_DATE.test(relation.end) ? relation.end : null;
+  if (beginDate && endDate && endDate.slice(0, 4) < beginDate.slice(0, 4)) {
+    beginDate = null;
+    endDate = null;
+  }
+  const instruments = [...new Set((relation.attributes ?? []).filter(Boolean))].filter(
+    (attribute) => attribute !== FOUNDER_ATTRIBUTE && attribute !== ADDITIONAL_ATTRIBUTE,
+  );
+  return { beginDate, endDate, ended: relation.ended === true || endDate !== null, instruments };
 }
 
 function isPerson(artist: MBArtistSummary | undefined): artist is MBArtistSummary {
@@ -43,20 +77,61 @@ function mapRelation(source: MBArtistDetail, relation: MBArtistRelation): Mapped
   const group = isGroup(sourceSummary) ? sourceSummary : isGroup(relation.artist) ? relation.artist : null;
   if (!person || !group || person.id === group.id) return null;
 
-  const attributes = [...new Set((relation.attributes ?? []).filter(Boolean))];
+  const period = lineupPeriod(relation);
+  const attributes = relation.attributes ?? [];
   return {
     person,
     group,
-    role: attributes.length ? attributes.join(", ") : null,
-    joinedOn: normalizeReleaseDate(relation.begin ?? undefined),
-    leftOn: normalizeReleaseDate(relation.end ?? undefined),
+    role: period.instruments.length ? period.instruments.join(", ") : null,
+    joinedOn: period.beginDate ? normalizeReleaseDate(period.beginDate) : null,
+    leftOn: period.endDate ? normalizeReleaseDate(period.endDate) : null,
+    isFounder: attributes.includes(FOUNDER_ATTRIBUTE),
+    isAdditional: attributes.includes(ADDITIONAL_ATTRIBUTE),
+    ...period,
   };
 }
 
+/** Una entrada por relación `member of band`: un integrante que volvió trae varias. */
 export function mapArtistMemberships(detail: MBArtistDetail): MappedArtistMembership[] {
   return (detail.relations ?? [])
     .map((relation) => mapRelation(detail, relation))
     .filter((membership): membership is MappedArtistMembership => membership !== null);
+}
+
+export type ArtistSupportKind = "instrumental" | "vocal" | "general";
+
+const SUPPORT_KINDS: Record<string, ArtistSupportKind> = {
+  "instrumental supporting musician": "instrumental",
+  "vocal supporting musician": "vocal",
+  "supporting musician": "general",
+};
+
+/** Músico de apoyo de un artista (grupo o solista), en vivo o en estudio: MusicBrainz no lo distingue. */
+export interface MappedArtistSupport extends MappedLineupPeriod {
+  musician: MBArtistSummary;
+  supported: MBArtistSummary;
+  kind: ArtistSupportKind;
+}
+
+function sourceSummary(source: MBArtistDetail): MBArtistSummary {
+  return { id: source.id, name: source.name, type: source.type, disambiguation: source.disambiguation };
+}
+
+/**
+ * Relaciones de apoyo del artista, en ambas direcciones: `forward` es el artista consultado
+ * apoyando a otro ("supporting drums for"), `backward` otro apoyándolo. MusicBrainz la define
+ * de persona a artista, así que se exige que el músico sea una persona confirmada.
+ */
+export function mapArtistSupports(detail: MBArtistDetail): MappedArtistSupport[] {
+  const source = sourceSummary(detail);
+  return (detail.relations ?? []).flatMap((relation): MappedArtistSupport[] => {
+    const kind = relation.type ? SUPPORT_KINDS[relation.type] : undefined;
+    if (!kind || !relation.artist) return [];
+    const [musician, supported] =
+      relation.direction === "backward" ? [relation.artist, source] : [source, relation.artist];
+    if (!isPerson(musician) || musician.id === supported.id) return [];
+    return [{ musician, supported, kind, ...lineupPeriod(relation) }];
+  });
 }
 
 /** Tipos secundarios que no le quitan a un `Album` la categoría de estudio. */

@@ -42,7 +42,7 @@ export async function refreshArtistProfile(
  * vuelve a programar.
  */
 export function scheduleArtistProfileRefresh(
-  target: Pick<ArtistRow, "id" | "mbid" | "profileSyncedAt" | "wikimediaSyncedAt">,
+  target: Pick<ArtistRow, "id" | "mbid" | "profileSyncedAt" | "lineupSyncedAt" | "wikimediaSyncedAt">,
 ): void {
   if (!needsProfileRefresh(target)) return;
   try {

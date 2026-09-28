@@ -117,11 +117,14 @@ primer paso tras el deploy sale solo con las visitas, y el backfill (D8) lo adel
 
 - **Actual**: la persona tiene algún período abierto (sin fin y sin la marca de terminado).
   Un período sin fechas y sin terminar cuenta como abierto (criterio de MusicBrainz) y se marca
-  con período desconocido.
+  con período desconocido. Una persona fallecida (`life_ended`) no tiene períodos abiertos:
+  Randy Castillo (†2002) figura en MusicBrainz con una pertenencia a Stone Fury sin fin ni
+  marca de terminado, y no puede ser integrante actual.
 - **Antiguo**: todos sus períodos terminaron.
 - **Última alineación**: si el grupo terminó (`life_ended`), en lugar de Actual van quienes
   tienen un período que termina en el año de fin del grupo o sigue abierto; el resto es
-  Antiguo. Sin año de fin del grupo, solo quienes siguen abiertos.
+  Antiguo. Sin año de fin del grupo, solo quienes siguen abiertos. Al mostrarse, esos períodos
+  abiertos terminan con el grupo (Gilmour en Pink Floyd: 1968–2014, no "1968–presente").
 - **Apoyo actual / anterior**: el mismo criterio sobre `artist_support`. En un grupo terminado,
   todo el apoyo es anterior.
 - **Orden** dentro de cada grupo: fundadores primero, luego por el año del primer período, los
@@ -129,6 +132,8 @@ primer paso tras el deploy sale solo con las visitas, y el backfill (D8) lo adel
 - **Instrumentos por períodos**: cada instrumento reúne los períodos en que aparece; los
   instrumentos con el mismo conjunto de períodos forman una línea (Tommy Lee: batería en
   tres períodos; coros, teclados y piano en uno). Las líneas se ordenan por su primer período.
+  Antes se unen las relaciones con las mismas fechas: MusicBrainz a veces carga una por
+  instrumento (Los Bunkers: guitarra y voz 1999–2014 por separado).
 
 La traducción de instrumentos y el formato de los años son de la interfaz.
 
@@ -144,9 +149,11 @@ muerte (`life_end` de la ficha).
   requests): 10 personas ocupan unos 11 s, lo que acota cuánto espera una ingesta en primer
   plano de otro usuario. Mötley Crüe (14 personas) se completa en dos visitas.
 - Prioridad: actuales, luego antiguos, luego apoyo, en el orden de D5.
-- Un solo proceso por artista a la vez (`pg_try_advisory_lock` por artista; si está tomado, se
-  omite). Cada persona usa además el candado de su ficha, así que una visita a esa persona no
-  duplica la request.
+- Una sola sincronización por artista a la vez en cada instancia (un registro en memoria; si ya
+  corre, se omite). No se usa un candado de PostgreSQL que dure toda la corrida porque ocuparía
+  una conexión del pool (5) durante ~11 s. Entre instancias, cada persona se sincroniza bajo el
+  candado de su ficha, que relee la vigencia: dos corridas simultáneas nunca repiten la request
+  de una misma persona, y una visita a esa persona tampoco.
 - Fuera de una request de Next (scripts) se omite, como `scheduleArtistProfileRefresh`.
 - Un fallo con una persona se registra y sigue con la siguiente.
 

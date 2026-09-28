@@ -70,7 +70,8 @@ stub con su tipo.
 El sistema SHALL clasificar a los integrantes de un grupo en actuales (algún período abierto) y
 antiguos (todos sus períodos terminados), y a sus músicos de apoyo en actuales y anteriores con
 el mismo criterio. Un período sin fechas y sin la marca de terminado SHALL contar como abierto
-y marcarse con período desconocido. Si el grupo terminó, en lugar de actuales SHALL formar la
+y marcarse con período desconocido. Los períodos de una persona fallecida SHALL contar como
+terminados. Si el grupo terminó, en lugar de actuales SHALL formar la
 "Última alineación" quienes tienen un período que termina en el año de fin del grupo o sigue
 abierto, y todo el apoyo SHALL ser anterior. Dentro de cada grupo el orden SHALL ser:
 fundadores primero, luego por año del primer período, los sin año al final, y por nombre. Los
@@ -81,6 +82,13 @@ períodos.
 
 - **WHEN** DJ Larceny tiene una relación sin fechas y sin terminar
 - **THEN** queda entre los actuales con período desconocido
+
+#### Scenario: Integrante fallecido con relación abierta
+
+- **WHEN** Randy Castillo, fallecido en 2002, tiene una pertenencia a Stone Fury sin fin ni marca
+  de terminado
+- **THEN** figura entre los antiguos de Stone Fury, y Stone Fury aparece como antigua entre sus
+  otras bandas
 
 #### Scenario: Grupo separado
 
@@ -101,7 +109,9 @@ Al mostrar la alineación de un grupo, o los músicos de apoyo de un solista, el
 programar en segundo plano la sincronización de sus integrantes y músicos de apoyo cuya alineación está pendiente o tiene más
 de 30 días (ficha y pertenencias en una request por persona, sin Wikimedia), con un tope de 10
 personas por visita, priorizando actuales, luego antiguos y luego apoyo. A lo sumo una
-sincronización por grupo SHALL ejecutarse a la vez, y la página SHALL responder sin esperarla.
+sincronización de integrantes por artista SHALL ejecutarse a la vez en cada instancia, una
+misma persona SHALL NOT consultarse dos veces a la vez, y la página SHALL responder sin
+esperarla.
 Un fallo con una persona SHALL NOT detener a las demás.
 
 #### Scenario: Primera visita a una banda grande
@@ -113,7 +123,7 @@ Un fallo con una persona SHALL NOT detener a las demás.
 #### Scenario: Visitas simultáneas
 
 - **WHEN** dos personas abren la alineación del mismo grupo a la vez
-- **THEN** solo una sincronización de integrantes se ejecuta
+- **THEN** cada persona se consulta a MusicBrainz una sola vez
 
 ### Requirement: Lectura de la alineación
 

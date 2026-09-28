@@ -1,0 +1,190 @@
+{
+ "id": "f7fc5a30-008d-48ab-861d-f328120e6702",
+ "name": "Randy Castillo",
+ "type": "Person",
+ "disambiguation": "",
+ "country": "US",
+ "area": {
+  "id": "489ce91b-6658-3307-9877-795b68554c98",
+  "name": "United States"
+ },
+ "begin-area": {
+  "id": "075e1cc9-9567-4317-a931-4f6dcecc688f",
+  "name": "Albuquerque"
+ },
+ "end-area": {
+  "id": "1f40c6e1-47ba-4e35-996f-fe6ee5840e62",
+  "name": "Los Angeles"
+ },
+ "life-span": {
+  "end": "2002-03-26",
+  "begin": "1950-12-18",
+  "ended": true
+ },
+ "relations": [
+  {
+   "type": "instrumental supporting musician",
+   "target-type": "artist",
+   "direction": "forward",
+   "begin": "1983",
+   "end": "1993",
+   "ended": true,
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "artist": {
+    "id": "8aa5b65a-5b3c-4029-92bf-47a544356934",
+    "name": "Ozzy Osbourne",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "instrumental supporting musician",
+   "target-type": "artist",
+   "direction": "forward",
+   "begin": "1995",
+   "end": "1995",
+   "ended": true,
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "artist": {
+    "id": "8aa5b65a-5b3c-4029-92bf-47a544356934",
+    "name": "Ozzy Osbourne",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "instrumental supporting musician",
+   "target-type": "artist",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": true,
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "artist": {
+    "id": "f20ba447-269a-445a-9347-c1ec8632c455",
+    "name": "Lita Ford",
+    "type": "Person"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "forward",
+   "begin": "1999",
+   "end": "2002-03-26",
+   "ended": true,
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "artist": {
+    "id": "26f07661-e115-471d-a930-206f5c89d17c",
+    "name": "Mötley Crüe",
+    "type": "Group"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "artist": {
+    "id": "3d6dd167-4a89-4fd6-9464-5fee4d8fa5b3",
+    "name": "Stone Fury",
+    "type": "Group"
+   }
+  },
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": true,
+   "attributes": [],
+   "artist": {
+    "id": "9981dec3-d5e6-4d58-867b-4fe84a594b9f",
+    "name": "Doc Rand & The Purple Blues",
+    "type": "Group"
+   }
+  },
+  {
+   "type": "discogs",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.discogs.com/artist/1349618"
+   }
+  },
+  {
+   "type": "discogs",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.discogs.com/artist/300662"
+   }
+  },
+  {
+   "type": "fanpage",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "http://www.randycastillo.com/"
+   }
+  },
+  {
+   "type": "free streaming",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://open.spotify.com/artist/3x1e0TnGsJgh35HZaTJFmL"
+   }
+  },
+  {
+   "type": "IMDb",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.imdb.com/name/nm0145168/"
+   }
+  },
+  {
+   "type": "wikidata",
+   "target-type": "url",
+   "direction": "forward",
+   "begin": null,
+   "end": null,
+   "ended": false,
+   "attributes": [],
+   "url": {
+    "resource": "https://www.wikidata.org/wiki/Q976331"
+   }
+  }
+ ]
+}

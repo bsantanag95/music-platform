@@ -8,6 +8,16 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - Un grupo es en sí mismo un Artista, con perfil y discografía propios.
 - "Various Artists" es un Artista especial reservado para álbumes compilatorios sin un artista principal único.
 
+### Alineación de un grupo
+
+- Una persona es **integrante actual** si tiene algún período abierto (sin fin y sin marca de terminado); un período sin fechas y sin terminar cuenta como abierto y se muestra como "período desconocido". Si todos sus períodos terminaron, es **integrante antiguo**.
+- Los períodos de una persona fallecida nunca cuentan como abiertos, aunque la fuente los deje sin fin.
+- Si el grupo se separó, en lugar de "actuales" se muestra la **Última alineación**: quienes tienen un período que termina en el año de separación o que sigue abierto en la fuente; al mostrarlos, esos períodos terminan con el grupo.
+- Los **músicos de apoyo** se clasifican igual (actuales o anteriores) y nunca se mezclan con los integrantes, tampoco en los créditos de un álbum. En un grupo separado todo el apoyo es anterior.
+- Orden dentro de cada bloque: fundadores primero, luego por año del primer período (sin año al final) y por nombre.
+- Los instrumentos de una persona se agrupan por el conjunto de períodos en que los tocó: quien sumó teclados en su última etapa muestra dos líneas.
+- La alineación se renueva cada 30 días junto con la ficha del artista; las otras bandas de cada integrante se completan en segundo plano, con un tope por visita.
+
 ## Canciones y versiones
 
 - Una Canción es un único registro de valoración/comentarios, sin importar en cuántas Ediciones o Álbumes aparezca.

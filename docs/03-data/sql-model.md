@@ -407,6 +407,28 @@ Antes de crear la unicidad, la migración `0006_membership_sync.sql` consolida c
 
 `artist.memberships_synced_at` es nullable. `NULL` indica que todavía debe intentarse la ingesta de memberships desde MusicBrainz; una fecha indica que la sincronización terminó correctamente y permite leer las relaciones exclusivamente desde PostgreSQL. La ingesta toma un `pg_advisory_xact_lock` por artista y relee este flag dentro de la transacción para que las solicitudes concurrentes no dupliquen la llamada externa. La misma transacción hace upsert de artistas y memberships, elimina solo las relaciones actuales del artista que ya no aparecen en la respuesta válida y marca el flag al final; cualquier error revierte el conjunto completo.
 
+**Resumen derivado (migración `0055_artist_lineup.sql`):** desde `add-artist-lineup-data`, `role`, `joined_on` y `left_on` son un resumen de los períodos de `membership_period` (unión ordenada de instrumentos, sin las marcas `original` ni `additional`; inicio y fin con `mergeMembershipDates`), escrito en la misma transacción. Los consumidores que solo necesitan el par (discografía de una persona, niveles de créditos, API del artista) siguen leyendo `membership`.
+
+`artist.lineup_synced_at` (`NULL` = la alineación nunca se guardó con períodos) se escribe cada vez que se guardan pertenencias, períodos y apoyo; la alineación se renueva junto con la ficha cada 30 días.
+
+## `membership_period`
+
+**Propósito:** una fila por relación `member of band` de MusicBrainz. Un integrante que se fue y volvió tiene varios períodos (Vince Neil en Mötley Crüe: 1981–1992, 1997–2015, 2018–).
+
+**Columnas:** `membership_id` (FK con `ON DELETE CASCADE`), `begin_date` y `end_date` (fecha con su precisión: `YYYY`, `YYYY-MM` o `YYYY-MM-DD`), `ended`, `instruments` (atributos crudos de MusicBrainz, sin las marcas), `is_founder` (atributo `original`) e `is_additional` (atributo `additional`).
+
+**Restricciones:** formato de las fechas y año de fin no anterior al de inicio. Una relación incoherente en MusicBrainz se guarda sin fechas. Las filas se reemplazan completas en cada sincronización del par (nunca se actualizan, por eso no hay `updated_at`).
+
+## `artist_support`
+
+**Propósito:** músicos de apoyo (relaciones `instrumental supporting musician`, `vocal supporting musician` y `supporting musician` de MusicBrainz): una persona que apoya a un artista, grupo o solista, "en álbumes y/o en conciertos". MusicBrainz no distingue apoyo en vivo de apoyo en estudio.
+
+**Columnas:** `musician_id` y `artist_id` (FK a `artist` con `ON DELETE CASCADE`), `kind` (`instrumental` | `vocal` | `general`), `instruments` (instrumentos o tipos de voz crudos), `begin_date`, `end_date`, `ended`.
+
+**Restricciones:** `kind` acotado, `musician_id <> artist_id`, formato y orden de las fechas. Sin unicidad: una sincronización reemplaza las filas de su lado (el apoyo que recibe un grupo; el que da y recibe una persona).
+
+No va en `membership` porque el artista apoyado puede ser una persona (lo que viola `trg_membership_types`) y porque los niveles de créditos del álbum tratan a toda pertenencia como integrante.
+
 ## `release_group`
 
 **Propósito:** el álbum como concepto general — el nivel al que pertenecen la valoración y los comentarios de "el álbum", independiente de cuántas ediciones tenga.

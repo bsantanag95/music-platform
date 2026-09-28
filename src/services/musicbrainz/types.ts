@@ -15,6 +15,10 @@ export interface MBArtistSummary {
 }
 
 export interface MBArtistRelation {
+  /**
+   * 'member of band', 'instrumental supporting musician', 'vocal supporting musician',
+   * 'supporting musician', o tipos de URL ('wikidata', 'official homepage', ...).
+   */
   type?: string;
   "target-type"?: string; // 'artist' | 'url' | ...
   direction?: string;

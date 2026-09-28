@@ -341,6 +341,12 @@ La primera lectura sincroniza `artist-rels` antes de leer memberships; las lectu
 `membershipsSyncedAt` ya establecido no consultan MusicBrainz. Para personas, `releaseGroups`
 combina la discografía propia y la de grupos relacionados, sin duplicados por id.
 
+**Alineación (openspec: `add-artist-lineup-data`):** `memberships` mantiene su forma, pero es un
+resumen de los períodos de cada pertenencia: `role` une los instrumentos de todos los períodos y ya
+no incluye las marcas `original` (fundador) ni `additional` (adicional). `artist` incluye además
+`lineupSyncedAt` (`null` = la alineación nunca se guardó con períodos). La primera lectura guarda
+también los períodos y los músicos de apoyo, con la misma request a MusicBrainz.
+
 **Perfil (openspec: `enrich-artist-profile`, ADR 0021) — BREAKING:** `artist.bio` pasa a llamarse
 `artist.disambiguation` (siempre fue la desambiguación de MusicBrainz, no una biografía). `artist`
 suma la ficha de MusicBrainz: `country` (ISO de 2 letras), `beginAreaName`, `endAreaName`,

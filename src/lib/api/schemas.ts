@@ -51,6 +51,8 @@ export const ArtistSchema = z.object({
   discographySyncedAt: z.string().nullable(),
   discographyCompleteAt: z.string().nullable().optional(),
   membershipsSyncedAt: z.string().nullable(),
+  // Alineación con períodos (openspec: add-artist-lineup-data).
+  lineupSyncedAt: z.string().nullable().optional(),
   // Ficha y perfil (openspec: enrich-artist-profile). Fechas con la precisión de MusicBrainz.
   country: z.string().nullable().optional(),
   beginAreaName: z.string().nullable().optional(),

@@ -46,7 +46,7 @@ describe("refreshArtistProfile", () => {
 });
 
 describe("scheduleArtistProfileRefresh", () => {
-  const stale = { id: "a1", mbid: "m1", profileSyncedAt: null, wikimediaSyncedAt: null };
+  const stale = { id: "a1", mbid: "m1", profileSyncedAt: null, lineupSyncedAt: null, wikimediaSyncedAt: null };
 
   it("programa la actualización si falta algo", () => {
     scheduleArtistProfileRefresh(stale);
@@ -54,7 +54,7 @@ describe("scheduleArtistProfileRefresh", () => {
   });
 
   it("no programa nada si todo está al día", () => {
-    scheduleArtistProfileRefresh({ ...stale, profileSyncedAt: new Date(), wikimediaSyncedAt: new Date() });
+    scheduleArtistProfileRefresh({ ...stale, profileSyncedAt: new Date(), lineupSyncedAt: new Date(), wikimediaSyncedAt: new Date() });
     expect(mocks.after).not.toHaveBeenCalled();
   });
 
