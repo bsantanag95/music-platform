@@ -391,11 +391,11 @@ hacia abajo:
   temprano. Con recopilaciones y discos del artista, cada origen va en su columna.
 - **"Otras versiones de la canción"**: las demás grabaciones de su obra, por grupo —
   Versiones de otros artistas (`cover`), En vivo (`live`) y Otras grabaciones (sin marca) — según
-  los atributos de MusicBrainz, sin deducir nada (ADR 0020). Los grupos de hasta 5 grabaciones
-  arrancan desplegados; un grupo único va como subtítulo, sin acordeón. Cada fila la encabeza el
-  artista (si es otro) o el disco que la contiene, con el título solo si difiere del de la canción
-  y el disco sin su nombre cuando se llama igual; en pantallas anchas, en dos columnas
-  (`polish-song-appearances-versions`, `lead-version-rows-with-disc`).
+  los atributos de MusicBrainz, sin deducir nada (ADR 0020). Cada grupo es una pestaña (un grupo
+  único va como subtítulo) con una tabla de una columna: una fila por disco (Año | Disco |
+  Grabaciones, más Artista en los covers) con sus grabaciones como variantes enlazadas —lo que
+  el título agrega al de la canción, "version 1", o "Ver versión"/"Grabación N"— y "+N más"
+  pasados 10 discos (`song-versions-tabs`).
 - **Comentarios** al final. Sin reseñas de canción.
 
 ## 4. Navegación por membresías (banda → integrantes) — diferida a Fase 4

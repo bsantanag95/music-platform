@@ -792,7 +792,17 @@
         "others": "Otras grabaciones"
       },
       "showMore": "+{count} más",
-      "showLess": "Mostrar menos"
+      "showLess": "Mostrar menos",
+      "tablist": "Tipos de versión",
+      "openVersion": "Ver versión",
+      "recordingN": "Grabación {n}",
+      "noDisc": "Sin disco",
+      "columns": {
+        "year": "Año",
+        "artist": "Artista",
+        "disc": "Disco",
+        "recordings": "Grabaciones"
+      }
     },
     "relation": {
       "signInPrompt": "Valorá y registrá tus escuchas.",

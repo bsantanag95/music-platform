@@ -792,7 +792,17 @@
         "others": "Other recordings"
       },
       "showMore": "+{count} more",
-      "showLess": "Show less"
+      "showLess": "Show less",
+      "tablist": "Version types",
+      "openVersion": "View version",
+      "recordingN": "Recording {n}",
+      "noDisc": "No release",
+      "columns": {
+        "year": "Year",
+        "artist": "Artist",
+        "disc": "Release",
+        "recordings": "Recordings"
+      }
     },
     "relation": {
       "signInPrompt": "Rate this song and log your listens.",
