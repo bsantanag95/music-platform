@@ -1,13 +1,14 @@
-import { and, asc, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, asc, eq, isNotNull, isNull, or } from "drizzle-orm";
 import { db } from "@/db";
 import { artist } from "@/db/schema";
 import { syncArtistProfileFacts } from "@/services/catalog/artist-profile";
 
 /**
- * Guarda con períodos y músicos de apoyo la alineación de los artistas ya sincronizados antes de
- * la migración 0055 (openspec: add-artist-lineup-data): la misma actualización que la página de
- * artista programa en segundo plano (ficha y alineación con una sola request a MusicBrainz, sin
- * Wikimedia), en lote y en serie por la cola de MusicBrainz.
+ * Guarda con períodos y músicos de apoyo la alineación de los artistas ya visitados (con
+ * pertenencias sincronizadas antes de la migración 0055, o solo con su ficha; openspec:
+ * add-artist-lineup-data): la misma actualización que la página de artista programa en segundo
+ * plano (ficha y alineación con una sola request a MusicBrainz, sin Wikimedia), en lote y en serie
+ * por la cola de MusicBrainz.
  *
  * Uso:
  *   tsx --env-file=.env scripts/backfill-artist-lineup.ts [--limit N] [--dry-run] [--artist <uuid>]
@@ -46,14 +47,20 @@ async function main() {
   const limit = parseLimit(args);
   const onlyArtist = parseOption(args, "--artist");
 
-  // Pendientes: la sincronización fría ya pasó (hay pertenencias guardadas sin períodos).
+  // Pendientes: artistas ya visitados cuya alineación nunca se guardó con períodos. "Visitado" es
+  // tener pertenencias sincronizadas o ficha: una base que solo pasó por el backfill de perfiles
+  // (`backfill-artist-profile.ts`) tiene ficha pero ninguna pertenencia guardada.
   const pendingQuery = db
     .select({ id: artist.id, name: artist.name })
     .from(artist)
     .where(
       onlyArtist
         ? eq(artist.id, onlyArtist)
-        : and(isNotNull(artist.mbid), isNotNull(artist.membershipsSyncedAt), isNull(artist.lineupSyncedAt)),
+        : and(
+            isNotNull(artist.mbid),
+            isNull(artist.lineupSyncedAt),
+            or(isNotNull(artist.membershipsSyncedAt), isNotNull(artist.profileSyncedAt)),
+          ),
     )
     .orderBy(asc(artist.createdAt));
   const pending = limit ? await pendingQuery.limit(limit) : await pendingQuery;
