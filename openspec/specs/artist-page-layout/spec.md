@@ -1,15 +1,16 @@
 # artist-page-layout Specification
 
 ## Purpose
-Organizar la página de artista como ficha de biblioteca y biografía: cabecera, pestañas enlazables Discografía y Biografía, integrantes y notas de la comunidad al final, con su orden en móvil.
+Organizar la página de artista como ficha de biblioteca y biografía: cabecera, pestañas enlazables Discografía, Integrantes o Bandas y Biografía, y notas de la comunidad al final, con su orden en móvil.
 ## Requirements
 ### Requirement: Zonas de la página de artista
 
 La página de artista SHALL organizarse, de arriba hacia abajo, en: breadcrumb; cabecera con
 la foto, la identidad (antetítulo de tipo, nombre, descripción), la ficha, el
 resumen de la biografía, el bloque de comunidad y el panel "Tu relación"; la barra de
-pestañas; el contenido de la pestaña activa; la sección de integrantes o grupos; y las notas
-de la comunidad. En escritorio el panel "Tu relación" SHALL ocupar una columna lateral solo a
+pestañas; el contenido de la pestaña activa; y las notas de la comunidad. Los integrantes o
+grupos SHALL mostrarse en su pestaña (capability `artist-lineup-view`), no debajo de las
+pestañas. En escritorio el panel "Tu relación" SHALL ocupar una columna lateral solo a
 la altura de la cabecera, de modo que las pestañas y su contenido usen el ancho completo.
 
 #### Scenario: Escritorio
@@ -23,14 +24,17 @@ la altura de la cabecera, de modo que las pestañas y su contenido usen el ancho
 - **WHEN** una persona abre un artista en un viewport móvil
 - **THEN** las zonas se apilan en este orden: foto chica junto al tipo, el nombre y la
   descripción; ficha; resumen de la biografía; panel "Tu relación"; bloque de
-  comunidad; pestañas; integrantes; notas, sin desbordamiento horizontal de la página
+  comunidad; pestañas; contenido de la pestaña; notas, sin desbordamiento horizontal de la
+  página
 
 ### Requirement: Pestañas del artista
 
-La página SHALL ofrecer las pestañas Discografía y Biografía, en ese orden. Discografía SHALL
-ser la pestaña activa al llegar a la página sin pestaña explícita. La pestaña Biografía SHALL
-ocultarse cuando el artista no tiene resumen de Wikipedia en ningún idioma, y su URL directa
-SHALL responder 404 en ese caso.
+La página SHALL ofrecer las pestañas Discografía, Integrantes (grupos) o Bandas (personas) y
+Biografía, en ese orden. Discografía SHALL ser la pestaña activa al llegar a la página sin
+pestaña explícita. La pestaña Integrantes o Bandas SHALL ocultarse cuando no hay nada que
+listar (capability `artist-lineup-view`). La pestaña Biografía SHALL ocultarse cuando el
+artista no tiene resumen de Wikipedia en ningún idioma, y su URL directa SHALL responder 404 en
+ese caso.
 
 #### Scenario: Llegada a la página
 
@@ -42,6 +46,16 @@ SHALL responder 404 en ese caso.
 - **WHEN** un artista no tiene resumen de Wikipedia
 - **THEN** la barra de pestañas no muestra Biografía y `/{locale}/artist/{id}/biography`
   responde 404
+
+#### Scenario: Grupo con integrantes
+
+- **WHEN** una persona abre un grupo con integrantes y resumen de Wikipedia
+- **THEN** la barra muestra Discografía · Integrantes · Biografía
+
+#### Scenario: Persona con bandas
+
+- **WHEN** una persona abre a un solista que es integrante de un grupo
+- **THEN** la barra muestra Bandas entre Discografía y Biografía
 
 ### Requirement: Pestañas enlazables
 
@@ -60,15 +74,13 @@ volver a sincronizar la discografía ni recargar la cabecera.
 - **WHEN** una persona pasa de Discografía a Biografía y pulsa "atrás"
 - **THEN** vuelve a la pestaña Discografía del mismo artista
 
-### Requirement: Integrantes y notas fuera de las pestañas
+### Requirement: Notas de la comunidad al final
 
-La sección de integrantes (grupos) o de grupos (personas) SHALL mostrarse después del
-contenido de las pestañas con el mismo contenido y comportamiento que antes de este cambio,
-y las notas de la comunidad SHALL mostrarse al final de la página. Ambas SHALL verse con
-cualquier pestaña activa.
+Las notas de la comunidad SHALL mostrarse al final de la página, después del contenido de la
+pestaña, con cualquier pestaña activa.
 
-#### Scenario: Notas con la pestaña Biografía activa
+#### Scenario: Notas con la pestaña Integrantes activa
 
-- **WHEN** la pestaña activa es Biografía
-- **THEN** la sección de integrantes y las notas de la comunidad siguen visibles debajo
+- **WHEN** la pestaña activa es Integrantes
+- **THEN** las notas de la comunidad se ven debajo de la alineación
 

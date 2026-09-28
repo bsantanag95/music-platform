@@ -146,12 +146,6 @@
     "coverPlaceholderAlt": "Carátula no disponible",
     "coverLoading": "Cargando carátula",
     "coverFailed": "No se pudo cargar la carátula",
-    "membersHeading": "Integrantes",
-    "memberRole": "Rol",
-    "memberPeriod": "Período",
-    "memberPeriodOpen": "hasta hoy",
-    "memberPeriodUnknown": "Período desconocido",
-    "membershipsHeading": "Membresías",
     "follow": "Seguir",
     "following": "Siguiendo",
     "signInToFollow": "Iniciá sesión para seguir",
@@ -165,6 +159,8 @@
     "tabs": {
       "label": "Secciones del artista",
       "discography": "Discografía",
+      "members": "Integrantes",
+      "bands": "Bandas",
       "biography": "Biografía"
     },
     "photo": {
@@ -187,7 +183,12 @@
       "official": "Sitio oficial",
       "bandcamp": "Bandcamp",
       "wikipedia": "Wikipedia",
-      "streaming": "Streaming"
+      "streaming": "Streaming",
+      "members": "Integrantes",
+      "lastLineup": "Última alineación",
+      "bands": "Bandas",
+      "seeLineup": "Ver alineación",
+      "seeAll": "Ver todas"
     },
     "summary": {
       "readMore": "Seguir leyendo",
@@ -300,11 +301,40 @@
         "live_other": "en vivo u otro"
       }
     },
-    "alsoIn": {
-      "heading": "También en",
-      "period": "{from} – {to}",
-      "since": "desde {from}",
+    "lineup": {
+      "views": {
+        "label": "Vistas de la alineación",
+        "all": "Completa",
+        "current": "Actual",
+        "lastLineup": "Última alineación",
+        "past": "Antiguos",
+        "support": "Apoyo"
+      },
+      "blocks": {
+        "current": "Actual",
+        "lastLineup": "Última alineación",
+        "past": "Antiguos",
+        "supportCurrent": "Músicos de apoyo · actuales",
+        "supportPast": "Músicos de apoyo · anteriores",
+        "bands": "Bandas",
+        "supportFor": "Apoyo para",
+        "supporters": "Músicos de apoyo"
+      },
+      "present": "presente",
       "unknownPeriod": "período desconocido",
+      "additional": "adicional",
+      "founder": "integrante fundador",
+      "died": "murió en {year}",
+      "diedUnknown": "fallecido",
+      "legendFounder": "integrante fundador",
+      "legendDied": "año de muerte",
+      "alsoIn": "También en",
+      "ex": "ex-{name}",
+      "support": "{name} (apoyo)",
+      "more": "+{count}",
+      "moreLabel": "{count, plural, one {Ver # banda más de {name}} other {Ver # bandas más de {name}}}",
+      "less": "Ver menos",
+      "pending": "Estamos sumando las otras bandas de los integrantes; van a aparecer en tu próxima visita.",
       "mainCount": "{count, plural, one {# disco principal} other {# discos principales}}"
     }
   },
@@ -676,7 +706,24 @@
         "lap_steel_guitar": "guitarra lap steel",
         "continuum": "Continuum",
         "hammond_organ": "órgano Hammond",
-        "resonator_guitar": "guitarra resonadora"
+        "resonator_guitar": "guitarra resonadora",
+        "turntable": "tornamesa",
+        "woodwind": "vientos de madera",
+        "accordion": "acordeón",
+        "talkbox": "talk box",
+        "djembe": "yembé",
+        "maracas": "maracas",
+        "effects": "efectos",
+        "fiddle": "violín",
+        "analog_synthesizer": "sintetizador analógico",
+        "string_synthesizer": "sintetizador de cuerdas",
+        "alto_saxophone": "saxofón alto",
+        "chapman_stick": "Chapman stick",
+        "ondes_martenot": "ondas Martenot",
+        "tenor_vocals": "voz de tenor",
+        "toy_piano": "piano de juguete",
+        "cajon": "cajón",
+        "marimba": "marimba"
       },
       "levelSummary": "{count} · {names}",
       "levelSummaryMore": "{count} · {names} y {rest} más",

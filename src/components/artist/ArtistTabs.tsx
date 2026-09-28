@@ -6,26 +6,42 @@ import { Link } from "@/i18n/navigation";
 
 // Barra de pestañas de la página de artista (openspec: redesign-artist-page, capability
 // `artist-page-layout`). Cada pestaña es un segmento de ruta propio: se puede enlazar y el
-// botón "atrás" las recorre. Biografía solo existe si el artista tiene resumen.
+// botón "atrás" las recorre. Biografía solo existe si el artista tiene resumen. La alineación
+// (openspec: add-artist-members-tab) se llama Integrantes en un grupo y Bandas en una persona, y
+// solo existe si hay algo que listar.
 
-type ArtistTabKey = "discography" | "biography";
+type ArtistTabKey = "discography" | "members" | "bands" | "biography";
 
 interface ArtistTabsProps {
   artistId: string;
   hasBiography: boolean;
+  /** Pestaña de la alineación con su nombre, o `null` si no hay nada que listar. */
+  lineupTab: "members" | "bands" | null;
 }
 
-export function ArtistTabs({ artistId, hasBiography }: ArtistTabsProps) {
+const SEGMENTS: Record<ArtistTabKey, string | null> = {
+  discography: null,
+  members: "members",
+  bands: "members",
+  biography: "biography",
+};
+
+export function ArtistTabs({ artistId, hasBiography, lineupTab }: ArtistTabsProps) {
   const t = useTranslations("catalog.artist.tabs");
   const segment = useSelectedLayoutSegment();
-  const tabs: ArtistTabKey[] = ["discography", ...(hasBiography ? (["biography"] as const) : [])];
+  const tabs: ArtistTabKey[] = [
+    "discography",
+    ...(lineupTab ? [lineupTab] : []),
+    ...(hasBiography ? (["biography"] as const) : []),
+  ];
 
   return (
     <nav aria-label={t("label")} className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
       <ul className="flex min-w-max gap-1 border-b border-ink-border">
         {tabs.map((tab) => {
-          const active = tab === "biography" ? segment === "biography" : segment === null || segment === "__PAGE__";
-          const href = tab === "biography" ? `/artist/${artistId}/biography` : `/artist/${artistId}`;
+          const own = SEGMENTS[tab];
+          const active = own ? segment === own : segment === null || segment === "__PAGE__";
+          const href = own ? `/artist/${artistId}/${own}` : `/artist/${artistId}`;
           return (
             <li key={tab}>
               <Link

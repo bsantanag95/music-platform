@@ -4,6 +4,7 @@ import { AppImage } from "@/components/ui/AppImage";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import type { ArtistProfile } from "@/services/catalog/artist-profile-read";
 import { countryName, formatPartialDate, streamingName, yearOf } from "./artist-format";
+import type { LineupFact } from "./lineup-fact";
 
 // Cabecera de la página de artista (openspec: redesign-artist-page, capability
 // `artist-header`): foto con crédito, identidad, ficha y resumen de la biografía. Componentes
@@ -78,11 +79,16 @@ interface ArtistFactsProps {
   profile: ArtistProfile;
   /** Año del primer disco principal: la actividad de un solista. */
   firstMainYear: number | null;
+  /** Alineación actual o grupos de una persona (openspec: add-artist-members-tab). */
+  lineup?: LineupFact | null;
 }
 
-/** Filas de la ficha con dato, en orden: origen o nacimiento, fallecimiento, actividad, enlaces. */
+/**
+ * Filas de la ficha con dato, en orden: origen o nacimiento, fallecimiento, actividad,
+ * integrantes o bandas, enlaces.
+ */
 export function artistFactRows(
-  { type, profile, firstMainYear }: ArtistFactsProps,
+  { type, profile, firstMainYear, lineup }: ArtistFactsProps,
   locale: string,
   t: (key: string, values?: Record<string, string | number>) => string,
 ): { key: string; label: string; value: React.ReactNode }[] {
@@ -116,6 +122,29 @@ export function artistFactRows(
     const status = facts.lifeEnded === true ? t("facts.disbanded") : facts.lifeEnded === false && begin ? t("facts.active") : null;
     const activity = [period, status].filter(Boolean).join(" · ");
     if (activity) rows.push({ key: "activity", label: t("facts.activity"), value: activity });
+  }
+
+  if (lineup && lineup.people.length > 0) {
+    rows.push({
+      key: "lineup",
+      label: t(`facts.${lineup.label}`),
+      value: (
+        <span>
+          {lineup.people.map((person, index) => (
+            <span key={person.id}>
+              {index > 0 ? ", " : null}
+              <Link href={`/artist/${person.id}`} className="hover:text-amber hover:underline">
+                {person.name}
+              </Link>
+            </span>
+          ))}
+          {" · "}
+          <Link href={lineup.href} className={`whitespace-nowrap ${externalLink}`}>
+            {t(`facts.${lineup.more}`)} →
+          </Link>
+        </span>
+      ),
+    });
   }
 
   const links: { label: string; url: string }[] = [];

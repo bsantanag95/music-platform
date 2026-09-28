@@ -5,7 +5,7 @@ import { getArtistDiscography, getDiscographyMarks } from "@/services/catalog/ar
 import { getArtistCommunityStats } from "@/services/catalog/artist-community";
 import { getArtistPersonalState } from "@/services/catalog/artist-personal";
 import { getArtistProfile, type ProfileLocale } from "@/services/catalog/artist-profile-read";
-import { getAlsoInGroups } from "@/services/catalog/artist-also-in";
+import { getArtistLineup } from "@/services/catalog/artist-lineup";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
 
@@ -28,10 +28,16 @@ export const loadCanModerate = cache(async (userId: string) =>
  * resincroniza en segundo plano) y devuelve su vista por secciones. Nunca ingiere la
  * discografía de los grupos de una persona (design D2 y D8).
  */
-export const loadDiscography = cache(async (id: string) => {
+/** Sincronización fría de pertenencias (con sus períodos y el apoyo), una vez por request. */
+const loadMemberships = cache(async (id: string) => {
   const artist = await loadArtist(id);
+  if (artist) await ensureArtistMemberships(artist);
+  return artist;
+});
+
+export const loadDiscography = cache(async (id: string) => {
+  const artist = await loadMemberships(id);
   if (!artist) return null;
-  await ensureArtistMemberships(artist);
   await findOrIngestOwnDiscography(artist);
   return getArtistDiscography(artist.id);
 });
@@ -60,4 +66,12 @@ export const loadDiscographyMarks = cache(async (userId: string, id: string) => 
   return getDiscographyMarks(userId, (view?.sections ?? []).flatMap((s) => s.items.map((item) => item.id)));
 });
 
-export const loadAlsoIn = cache((personId: string) => getAlsoInGroups(personId));
+/**
+ * Alineación del artista (openspec: add-artist-members-tab, design D1): la usan la barra de
+ * pestañas, la fila de la ficha y la pestaña Integrantes o Bandas, con una sola lectura. Nunca
+ * consulta MusicBrainz más allá de la sincronización fría de pertenencias.
+ */
+export const loadLineup = cache(async (id: string) => {
+  const artist = await loadMemberships(id);
+  return artist ? getArtistLineup(artist.id) : null;
+});

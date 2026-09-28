@@ -3,7 +3,6 @@ import { screen, within } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
 import { ArtistCommunity } from "./ArtistCommunity";
-import { AlsoIn } from "./AlsoIn";
 import { ArtistBiography } from "./ArtistBiography";
 import { ArtistTabs } from "./ArtistTabs";
 
@@ -53,32 +52,6 @@ describe("ArtistCommunity", () => {
   });
 });
 
-describe("AlsoIn", () => {
-  it("una tarjeta por grupo con período y discos principales, enlazada al grupo", () => {
-    renderWithIntl(
-      <AlsoIn
-        groups={[
-          { id: "pf", name: "Pink Floyd", photoUrl: null, joinedOn: "1965-01-01", leftOn: "1985-12-12", mainCount: 12 },
-          { id: "bh", name: "The Bleeding Heart Band", photoUrl: null, joinedOn: null, leftOn: null, mainCount: null },
-        ]}
-      />,
-    );
-    expect(screen.getByRole("heading", { name: artistEs.alsoIn.heading })).toBeInTheDocument();
-    const pf = screen.getByRole("link", { name: /Pink Floyd/ });
-    expect(pf).toHaveAttribute("href", "/artist/pf");
-    expect(pf).toHaveTextContent("1965 – 1985 · 12 discos principales");
-    // Grupo sin discografía sincronizada: sin cantidad.
-    const bh = screen.getByRole("link", { name: /Bleeding Heart/ });
-    expect(bh).toHaveTextContent(artistEs.alsoIn.unknownPeriod);
-    expect(bh).not.toHaveTextContent(/discos principales/);
-  });
-
-  it("sin grupos no renderiza nada", () => {
-    const { container } = renderWithIntl(<AlsoIn groups={[]} />);
-    expect(container).toBeEmptyDOMElement();
-  });
-});
-
 describe("ArtistBiography", () => {
   const summary = {
     text: "Primer párrafo de la biografía.\nSegundo párrafo.",
@@ -104,20 +77,36 @@ describe("ArtistBiography", () => {
 describe("ArtistTabs", () => {
   it("Discografía activa por defecto y Biografía enlazable", () => {
     mocks.segment = null;
-    renderWithIntl(<ArtistTabs artistId="a1" hasBiography />);
+    renderWithIntl(<ArtistTabs artistId="a1" hasBiography lineupTab={null} />);
     expect(screen.getByRole("link", { name: artistEs.tabs.discography })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: artistEs.tabs.biography })).toHaveAttribute("href", "/artist/a1/biography");
   });
 
   it("con Biografía activa marca esa pestaña", () => {
     mocks.segment = "biography";
-    renderWithIntl(<ArtistTabs artistId="a1" hasBiography />);
+    renderWithIntl(<ArtistTabs artistId="a1" hasBiography lineupTab={null} />);
     expect(screen.getByRole("link", { name: artistEs.tabs.biography })).toHaveAttribute("aria-current", "page");
+  });
+
+  it("un grupo con alineación suma Integrantes entre Discografía y Biografía", () => {
+    mocks.segment = "members";
+    renderWithIntl(<ArtistTabs artistId="a1" hasBiography lineupTab="members" />);
+    const names = screen.getAllByRole("link").map((link) => link.textContent);
+    expect(names).toEqual([artistEs.tabs.discography, artistEs.tabs.members, artistEs.tabs.biography]);
+    const members = screen.getByRole("link", { name: artistEs.tabs.members });
+    expect(members).toHaveAttribute("href", "/artist/a1/members");
+    expect(members).toHaveAttribute("aria-current", "page");
+  });
+
+  it("una persona la ve como Bandas, en la misma URL", () => {
+    mocks.segment = null;
+    renderWithIntl(<ArtistTabs artistId="a1" hasBiography={false} lineupTab="bands" />);
+    expect(screen.getByRole("link", { name: artistEs.tabs.bands })).toHaveAttribute("href", "/artist/a1/members");
   });
 
   it("sin biografía no muestra la pestaña", () => {
     mocks.segment = null;
-    renderWithIntl(<ArtistTabs artistId="a1" hasBiography={false} />);
+    renderWithIntl(<ArtistTabs artistId="a1" hasBiography={false} lineupTab={null} />);
     expect(screen.queryByRole("link", { name: artistEs.tabs.biography })).not.toBeInTheDocument();
   });
 });

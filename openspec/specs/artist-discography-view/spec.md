@@ -1,7 +1,7 @@
 # artist-discography-view Specification
 
 ## Purpose
-Presentar la discografía propia del artista por secciones, en grilla o tabla, con la sección en la URL, las marcas del usuario, "Mejor valorado" y la franja "También en" para las bandas de una persona.
+Presentar la discografía propia del artista por secciones, en grilla o tabla, con la sección en la URL, las marcas del usuario y "Mejor valorado"; las bandas de una persona están en su pestaña Bandas.
 ## Requirements
 ### Requirement: Secciones de la discografía
 
@@ -114,24 +114,4 @@ llevar la marca.
 
 - **WHEN** ningún disco principal tiene 5 valoraciones
 - **THEN** ninguna tarjeta lleva la marca
-
-### Requirement: También en
-
-En la página de una persona que es integrante de grupos, la pestaña Discografía SHALL
-mostrar, debajo de la discografía propia, una franja "También en" con una tarjeta por grupo:
-foto, nombre, período de pertenencia y cantidad de discos principales del grupo cuando su
-discografía ya está sincronizada, con enlace a la página del grupo. Construir la franja SHALL
-NOT sincronizar la discografía de ningún grupo.
-
-#### Scenario: Solista con banda
-
-- **WHEN** una persona abre a un solista que fue integrante de Pink Floyd de 1965 a 1985
-- **THEN** ve la tarjeta "Pink Floyd · 1965 – 1985 · 12 discos principales" enlazada a la
-  página de la banda, y los discos de Pink Floyd no aparecen en su discografía
-
-#### Scenario: Grupo sin discografía sincronizada
-
-- **WHEN** el grupo de una persona nunca tuvo su discografía sincronizada
-- **THEN** su tarjeta se muestra sin cantidad de discos y la página no consulta MusicBrainz
-  por ese grupo
 

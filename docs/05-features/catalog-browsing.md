@@ -78,8 +78,9 @@ de biblioteca y biografía, con la misma estructura que el álbum):
   antetítulo de tipo ("Banda", "Solista"), nombre y la descripción corta de Wikidata en el
   idioma de la interfaz; **ficha** (grupo: Origen y Actividad con estado "Activa" /
   "Separada"; persona: Nacimiento con fecha y lugar, Fallecimiento y Actividad desde su
-  primer disco; Enlaces en orden fijo: sitio oficial, Bandcamp, Wikipedia y una plataforma de
-  streaming); y un **resumen** de Wikipedia de tres líneas con "Seguir leyendo" y la
+  primer disco; **Integrantes** —o **Última alineación** si la banda se separó— con hasta 5
+  nombres y "Ver alineación", o **Bandas** en una persona con "Ver todas"; Enlaces en orden
+  fijo: sitio oficial, Bandcamp, Wikipedia y una plataforma de streaming); y un **resumen** de Wikipedia de tres líneas con "Seguir leyendo" y la
   atribución CC BY-SA 4.0. Sin géneros por ahora (los de MusicBrainz son etiquetas no
   comerciales) y sin la desambiguación de MusicBrainz ni el nombre legal. Cada dato que falta
   se omite sin dejar huecos.
@@ -91,20 +92,34 @@ de biblioteca y biografía, con la misma estructura que el álbum):
 - **Bloque de comunidad**: Oyentes (personas con escuchas del artista o de sus discos), Lo
   siguen (con "favorito de N") y En listas, con el umbral de 5 del álbum. Sin promedio de
   estrellas ni agregado de recorridos.
-- **Pestañas** enlazables: **Discografía** (por defecto) y **Biografía** (la introducción
-  completa del artículo de Wikipedia; solo si existe).
+- **Pestañas** enlazables: **Discografía** (por defecto), **Integrantes** (grupos) o **Bandas**
+  (personas), solo si hay algo que listar, y **Biografía** (la introducción completa del artículo
+  de Wikipedia; solo si existe).
 - **Discografía por secciones** (`?section=`): Principal (estudio, EP y bandas sonoras
   propias), En vivo, Recopilatorios, Sencillos, Otros y Apariciones, cada una con su cantidad;
   grilla por defecto en Principal y tabla en el resto, con la elección recordada por sección
   en el navegador; "Mostrar más" de a 48 en la grilla; "Mejor valorado" (mayor media con al
   menos 5 valoraciones) y las marcas del usuario (escuchado, su nota).
-- Al pie, fuera de las pestañas: integrantes o grupos (sin cambios) y **notas de la
-  comunidad**: notas cortas de contexto ("empezá por aquí"), no reseñas.
+- **Integrantes** (cambio `add-artist-members-tab`, al estilo de Metal-Archives): sub-vistas
+  Completa (por defecto), Actual (o Última alineación), Antiguos y Apoyo en `?view=`, ocultas
+  si están vacías. Cada fila: nombre enlazado, ★ fundador, (†año) si murió, y una línea por
+  grupo de instrumentos con sus períodos en años ("Batería (1981–1999, 2004–presente)"),
+  "adicional" y "período desconocido". Debajo, **"También en"**: las otras bandas del
+  integrante (actuales, "ex-" y "(apoyo)"), enlazadas, en **una sola línea** con 3 y "+N" que
+  expande solo esa fila. Los **músicos de apoyo** van en su propio bloque (MusicBrainz no
+  distingue gira de estudio). Mientras se sincronizan los integrantes en segundo plano (10 por
+  visita) se avisa que sus otras bandas aparecerán en la próxima visita.
+- **Bandas** (una persona): tarjetas de sus grupos con foto, instrumentos y períodos, años del
+  grupo y discos principales; "Apoyo para" (artistas a los que acompañó); y sus propios
+  músicos de apoyo si es solista.
+- Al pie, fuera de las pestañas: **notas de la comunidad**: notas cortas de contexto ("empezá
+  por aquí"), no reseñas.
 
 **Caso Roger Waters / Pink Floyd (referencia del proyecto):** la discografía de una persona
-muestra **solo sus propios discos** (y sus apariciones); sus bandas aparecen en la franja
-**"También en"**, con el período de pertenencia y la cantidad de discos principales de cada
-banda (si su discografía ya se sincronizó), enlazadas a sus páginas. Antes de este cambio se
+muestra **solo sus propios discos** (y sus apariciones); sus bandas aparecen en la pestaña
+**Bandas** (antes, en la franja "También en" de la discografía), con sus instrumentos y períodos
+y la cantidad de discos principales de cada banda (si su discografía ya se sincronizó),
+enlazadas a sus páginas. Antes de este cambio se
 mezclaban los discos de las bandas con los del solista. Los recorridos siguen usando la
 discografía combinada.
 
