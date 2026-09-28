@@ -151,6 +151,15 @@ describe("períodos de pertenencia (add-artist-lineup-data)", () => {
     expect(corabi).toMatchObject({ beginDate: "1992", endDate: "1996", joinedOn: null, leftOn: null });
   });
 
+  it("tampoco trata como instrumentos a eponymous ni principal", () => {
+    const [m] = mapArtistMemberships({
+      id: "g", name: "Fleetwood Mac", type: "Group",
+      relations: [{ type: "member of band", direction: "backward", attributes: ["drums (drum set)", "eponymous", "principal"], artist: { id: "p", name: "Mick Fleetwood", type: "Person" } }],
+    });
+    expect(m!.instruments).toEqual(["drums (drum set)"]);
+    expect(m!.role).toBe("drums (drum set)");
+  });
+
   it("deja sin fechas una relación con fin anterior al inicio", () => {
     const [m] = mapArtistMemberships({
       id: "g", name: "Banda", type: "Group",

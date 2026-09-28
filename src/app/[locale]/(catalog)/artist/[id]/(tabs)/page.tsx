@@ -1,15 +1,14 @@
 import { notFound } from "next/navigation";
 import { ArtistDiscography } from "@/components/artist/ArtistDiscography";
-import { AlsoIn } from "@/components/artist/AlsoIn";
 import { SearchOriginNotice } from "@/components/catalog/search-results/SearchOriginNotice";
 import { isValidUuid } from "@/lib/validation";
 import { DISCOGRAPHY_SECTIONS, type DiscographySection } from "@/services/catalog/discography-sections";
-import { loadAlsoIn, loadArtist, loadDiscography, loadDiscographyMarks, loadSession } from "../artist-data";
+import { loadArtist, loadDiscography, loadDiscographyMarks, loadSession } from "../artist-data";
 
 // Pestaña Discografía, la activa por defecto (openspec: redesign-artist-page, capability
 // `artist-discography-view`). La sección vive en `?section=`: un valor desconocido o una
-// sección vacía cae en la por defecto (Principal, o la primera con discos). En una persona,
-// la franja "También en" enlaza a sus grupos sin mezclar sus discos.
+// sección vacía cae en la por defecto (Principal, o la primera con discos). Los grupos de una
+// persona están en su pestaña Bandas (openspec: add-artist-members-tab), sin mezclar sus discos.
 
 interface ArtistDiscographyPageProps {
   params: Promise<{ id: string }>;
@@ -31,10 +30,9 @@ export default async function ArtistDiscographyPage({ params, searchParams }: Ar
   const artist = await loadArtist(id);
   if (!artist) notFound();
   const session = await loadSession();
-  const [view, marks, alsoIn] = await Promise.all([
+  const [view, marks] = await Promise.all([
     loadDiscography(artist.id),
     session ? loadDiscographyMarks(session.user.id, artist.id) : Promise.resolve(null),
-    artist.type === "person" ? loadAlsoIn(artist.id) : Promise.resolve([]),
   ]);
   const sections = view?.sections ?? [];
   const requested = isSection(query.section) ? query.section : null;
@@ -51,7 +49,6 @@ export default async function ArtistDiscographyPage({ params, searchParams }: Ar
         bestRatedId={view?.bestRatedId ?? null}
         marks={marks}
       />
-      <AlsoIn groups={alsoIn} />
     </div>
   );
 }

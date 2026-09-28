@@ -40,6 +40,11 @@ export interface MappedArtistMembership extends MappedLineupPeriod {
 /** Marcas de MusicBrainz que no son instrumentos: fundador e integrante adicional. */
 const FOUNDER_ATTRIBUTE = "original";
 const ADDITIONAL_ATTRIBUTE = "additional";
+/**
+ * Otros atributos de pertenencia que tampoco son instrumentos y no se muestran: `eponymous` (la
+ * banda lleva el nombre de la persona: Mick Fleetwood en Fleetwood Mac) y `principal`.
+ */
+const NON_INSTRUMENT_ATTRIBUTES = new Set([FOUNDER_ATTRIBUTE, ADDITIONAL_ATTRIBUTE, "eponymous", "principal"]);
 
 const PARTIAL_DATE = /^\d{4}(-\d{2}(-\d{2})?)?$/;
 
@@ -51,7 +56,7 @@ function lineupPeriod(relation: MBArtistRelation): MappedLineupPeriod {
     endDate = null;
   }
   const instruments = [...new Set((relation.attributes ?? []).filter(Boolean))].filter(
-    (attribute) => attribute !== FOUNDER_ATTRIBUTE && attribute !== ADDITIONAL_ATTRIBUTE,
+    (attribute) => !NON_INSTRUMENT_ATTRIBUTES.has(attribute),
   );
   return { beginDate, endDate, ended: relation.ended === true || endDate !== null, instruments };
 }

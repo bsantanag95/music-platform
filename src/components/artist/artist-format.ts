@@ -53,3 +53,52 @@ export function streamingName(url: string): string | null {
   }
   return null;
 }
+
+/** Período de la alineación (openspec: add-artist-members-tab): fechas con su precisión y si terminó. */
+export interface LineupSpanLike {
+  beginDate: string | null;
+  endDate: string | null;
+  ended: boolean;
+}
+
+export interface LineupPeriodLabels {
+  /** Fin de un período abierto: "presente". */
+  present: string;
+  /** Período sin fechas: "período desconocido". */
+  unknown: string;
+}
+
+/**
+ * Años de un período de la alineación: `1981–1992`; abierto `2018–presente`; mismo año `2005`;
+ * sin inicio `?–1992`; terminado sin fin `1992–?`; sin fechas, "período desconocido".
+ */
+export function formatLineupPeriod(span: LineupSpanLike, labels: LineupPeriodLabels): string {
+  const begin = yearOf(span.beginDate);
+  const end = yearOf(span.endDate);
+  if (!begin && !end) return labels.unknown;
+  if (begin && end) return begin === end ? begin : `${begin}–${end}`;
+  if (begin) return `${begin}–${span.ended ? "?" : labels.present}`;
+  return `?–${end}`;
+}
+
+/** Varios períodos separados por coma: `1981–1992, 1997–2015, 2018–presente`. */
+export function formatLineupPeriods(spans: LineupSpanLike[], labels: LineupPeriodLabels): string {
+  return spans.map((span) => formatLineupPeriod(span, labels)).join(", ");
+}
+
+/**
+ * Una línea del rol de un integrante: instrumentos traducidos con mayúscula inicial, la marca de
+ * adicional y sus períodos entre paréntesis ("Batería (1981–1999, 2004–presente)",
+ * "Tornamesa · adicional (período desconocido)"). Sin instrumentos, solo los años.
+ */
+export function formatInstrumentLine(
+  line: { instruments: string[]; periods: LineupSpanLike[] },
+  { label, additional, ...labels }: LineupPeriodLabels & { label: (raw: string) => string; additional?: string },
+): string {
+  const periods = formatLineupPeriods(line.periods, labels);
+  const instruments = line.instruments.map(label).join(", ");
+  const head = [instruments ? instruments.charAt(0).toLocaleUpperCase() + instruments.slice(1) : "", additional ?? ""]
+    .filter(Boolean)
+    .join(" · ");
+  return head ? `${head} (${periods})` : periods;
+}

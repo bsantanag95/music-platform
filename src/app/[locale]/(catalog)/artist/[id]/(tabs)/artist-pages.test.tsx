@@ -6,10 +6,11 @@ import commonEs from "../../../../../../../messages/es/common.json";
 import type { ArtistRow } from "@/db/schema";
 import type { ArtistProfile } from "@/services/catalog/artist-profile-read";
 import type { ArtistDiscographyView } from "@/services/catalog/artist-discography-view";
+import type { GroupLineup, LineupMember, PersonLineup } from "@/services/catalog/artist-lineup";
 
-// Composición de la página de artista (openspec: redesign-artist-page): layout de pestañas
-// (cabecera, pestañas, integrantes, notas), pestaña Discografía con su sección en la URL y
-// pestaña Biografía.
+// Composición de la página de artista (openspec: redesign-artist-page, add-artist-members-tab):
+// layout de pestañas (cabecera, pestañas, notas), pestaña Discografía con su sección en la URL,
+// pestaña Integrantes o Bandas y pestaña Biografía.
 
 const mocks = vi.hoisted(() => ({
   loadArtist: vi.fn(),
@@ -20,8 +21,9 @@ const mocks = vi.hoisted(() => ({
   loadCommunityStats: vi.fn(),
   loadPersonalState: vi.fn(),
   loadDiscographyMarks: vi.fn(),
-  loadAlsoIn: vi.fn(),
+  loadLineup: vi.fn(),
   scheduleArtistProfileRefresh: vi.fn(),
+  scheduleLineupMembersSync: vi.fn(),
   segment: null as string | null,
   locale: "es",
 }));
@@ -35,10 +37,10 @@ vi.mock("../artist-data", () => ({
   loadCommunityStats: mocks.loadCommunityStats,
   loadPersonalState: mocks.loadPersonalState,
   loadDiscographyMarks: mocks.loadDiscographyMarks,
-  loadAlsoIn: mocks.loadAlsoIn,
+  loadLineup: mocks.loadLineup,
 }));
-vi.mock("../../artist-data", () => ({ loadArtist: mocks.loadArtist, loadProfile: mocks.loadProfile }));
-vi.mock("@/services/catalog/ingest-artist", () => ({ getArtistMemberships: vi.fn().mockResolvedValue([]) }));
+vi.mock("../../artist-data", () => ({ loadArtist: mocks.loadArtist, loadProfile: mocks.loadProfile, loadLineup: mocks.loadLineup }));
+vi.mock("@/services/catalog/artist-lineup-sync", () => ({ scheduleLineupMembersSync: mocks.scheduleLineupMembersSync }));
 vi.mock("@/services/catalog/ingest-discography", () => ({ readArtistDiscography: vi.fn().mockResolvedValue([]) }));
 vi.mock("@/services/catalog/artist-profile-sync", () => ({ scheduleArtistProfileRefresh: mocks.scheduleArtistProfileRefresh }));
 vi.mock("@/services/social", () => ({
@@ -144,6 +146,31 @@ function item(id: string, section: ArtistDiscographyView["sections"][number]["ke
   };
 }
 
+const member = (artistId: string, name: string, extra: Partial<LineupMember> = {}): LineupMember => ({
+  artistId,
+  name,
+  isFounder: false,
+  isAdditional: false,
+  deceased: false,
+  deathYear: null,
+  lines: [{ instruments: ["guitar"], periods: [{ beginDate: "1968", endDate: "2014", ended: true }] }],
+  affiliations: [],
+  pending: false,
+  ...extra,
+});
+
+const GROUP_LINEUP: GroupLineup = {
+  kind: "group",
+  lastLineup: true,
+  current: [member("gilmour", "David Gilmour"), member("mason", "Nick Mason", { isFounder: true })],
+  past: [member("waters", "Roger Waters", { isFounder: true })],
+  supportCurrent: [],
+  supportPast: [],
+  pending: 0,
+};
+
+const EMPTY_PERSON_LINEUP: PersonLineup = { kind: "person", groups: [], supportFor: [], supportersCurrent: [], supportersPast: [], pending: 0 };
+
 const VIEW: ArtistDiscographyView = {
   sections: [
     { key: "main", items: [item("dsotm", "main")] },
@@ -169,7 +196,7 @@ beforeEach(() => {
     listCount: 0,
   });
   mocks.loadDiscographyMarks.mockResolvedValue(null);
-  mocks.loadAlsoIn.mockResolvedValue([]);
+  mocks.loadLineup.mockResolvedValue(GROUP_LINEUP);
 });
 
 async function renderLayout(children: React.ReactNode = <p>contenido de la pestaña</p>) {
@@ -182,7 +209,7 @@ function isBefore(a: HTMLElement, b: HTMLElement) {
 }
 
 describe("layout de la página de artista", () => {
-  it("zonas en orden: cabecera, pestañas, contenido, integrantes y notas al final", async () => {
+  it("zonas en orden: cabecera, pestañas, contenido y notas al final", async () => {
     await renderLayout();
     const title = screen.getByRole("heading", { level: 1, name: "Pink Floyd" });
     const tabs = screen.getByRole("navigation", { name: artistEs.tabs.label });
@@ -201,6 +228,27 @@ describe("layout de la página de artista", () => {
     await renderLayout();
     expect(screen.getByRole("link", { name: artistEs.tabs.discography })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: artistEs.tabs.biography })).toHaveAttribute("href", `/artist/${VALID_UUID}/biography`);
+  });
+
+  it("un grupo con alineación suma Integrantes y la fila de la ficha", async () => {
+    await renderLayout();
+    const tabs = screen.getByRole("navigation", { name: artistEs.tabs.label });
+    expect(tabs).toHaveTextContent(`${artistEs.tabs.discography}${artistEs.tabs.members}${artistEs.tabs.biography}`);
+    // Separado: la fila es la Última alineación y enlaza a la sub-vista Actual.
+    expect(screen.getAllByText(artistEs.facts.lastLineup).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: "David Gilmour" })[0]).toHaveAttribute("href", "/artist/gilmour");
+    expect(screen.getAllByRole("link", { name: `${artistEs.facts.seeLineup} →` })[0]).toHaveAttribute(
+      "href",
+      `/artist/${VALID_UUID}/members?view=current`,
+    );
+  });
+
+  it("sin nada que listar no hay pestaña de alineación ni fila en la ficha", async () => {
+    mocks.loadArtist.mockResolvedValue(makeArtist({ type: "person", name: "Solista" }));
+    mocks.loadLineup.mockResolvedValue(EMPTY_PERSON_LINEUP);
+    await renderLayout();
+    expect(screen.queryByRole("link", { name: artistEs.tabs.bands })).not.toBeInTheDocument();
+    expect(screen.queryByText(artistEs.facts.bands)).not.toBeInTheDocument();
   });
 
   it("sin resumen no hay pestaña Biografía", async () => {
@@ -257,17 +305,41 @@ describe("pestaña Discografía", () => {
     expect(screen.getByRole("link", { name: /Sencillos/ })).toHaveAttribute("aria-current", "page");
   });
 
-  it("una persona muestra 'También en' con sus grupos", async () => {
+  it("una persona no muestra sus grupos en la discografía (están en Bandas)", async () => {
     mocks.loadArtist.mockResolvedValue(makeArtist({ type: "person", name: "Roger Waters" }));
-    mocks.loadAlsoIn.mockResolvedValue([{ id: "pf", name: "Pink Floyd", photoUrl: null, joinedOn: "1965", leftOn: "1985", mainCount: 12 }]);
     await renderPage();
-    expect(screen.getByRole("heading", { name: artistEs.alsoIn.heading })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Pink Floyd/ })).toHaveAttribute("href", "/artist/pf");
+    expect(screen.queryByRole("link", { name: /Pink Floyd/ })).not.toBeInTheDocument();
+  });
+});
+
+describe("pestaña Integrantes", () => {
+  async function renderMembers(query: Record<string, string> = {}) {
+    const { default: Page } = await import("./members/page");
+    renderWithIntl(await Page({ params: Promise.resolve({ id: VALID_UUID }), searchParams: Promise.resolve(query) }));
+  }
+
+  it("muestra la alineación y programa la sincronización de integrantes", async () => {
+    await renderMembers();
+    expect(screen.getByRole("heading", { name: artistEs.lineup.blocks.lastLineup })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: artistEs.lineup.blocks.past })).toBeInTheDocument();
+    expect(mocks.scheduleLineupMembersSync).toHaveBeenCalledWith(VALID_UUID);
   });
 
-  it("un grupo no consulta 'También en'", async () => {
-    await renderPage();
-    expect(mocks.loadAlsoIn).not.toHaveBeenCalled();
+  it("?view=past muestra solo Antiguos", async () => {
+    await renderMembers({ view: "past" });
+    expect(screen.queryByRole("heading", { name: artistEs.lineup.blocks.lastLineup })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: artistEs.lineup.views.past })).toHaveAttribute("aria-current", "page");
+  });
+
+  it("sin nada que listar responde 404", async () => {
+    mocks.loadLineup.mockResolvedValue(EMPTY_PERSON_LINEUP);
+    const { default: Page } = await import("./members/page");
+    await expect(Page({ params: Promise.resolve({ id: VALID_UUID }) })).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  it("el título usa el nombre de la pestaña según el tipo", async () => {
+    const { generateMetadata } = await import("./members/page");
+    expect(await generateMetadata({ params: Promise.resolve({ id: VALID_UUID }) })).toEqual({ title: "Integrantes · Pink Floyd" });
   });
 });
 
