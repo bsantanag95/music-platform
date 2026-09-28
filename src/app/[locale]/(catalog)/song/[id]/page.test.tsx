@@ -417,65 +417,66 @@ describe("página de canción", () => {
     );
   });
 
-  it("otras versiones: grupos cortos desplegados, el artista como línea principal y sin repetir el título", async () => {
+  it("otras versiones: una pestaña por grupo y un grupo a la vista", async () => {
     await renderPage();
     const section = screen.getByRole("region", { name: song.versions.heading });
-    const covers = within(section).getByRole("button", { name: /Versiones de otros artistas/ });
-    expect(covers).toHaveAttribute("aria-expanded", "true");
-    expect(within(section).queryByRole("button", { name: /Otras grabaciones/ })).not.toBeInTheDocument();
-    expect(within(section).getByRole("link", { name: "Rockabye Baby!" })).toHaveAttribute("href", "/song/cover-1");
+    const tabs = within(section).getAllByRole("tab");
+    expect(tabs.map((tab) => tab.textContent)).toEqual([
+      `${song.versions.groups.covers} · 1`,
+      `${song.versions.groups.live} · 1`,
+    ]);
+    expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+    // Otros artistas: año, artista, disco y la versión con sus atributos extra.
+    expect(within(section).getByRole("link", { name: "Rockabye Baby!" })).toHaveAttribute("href", "/artist/rockabye");
+    expect(within(section).getByRole("link", { name: "Lullaby Renditions" })).toHaveAttribute("href", "/album/lull");
+    expect(within(section).getByRole("link", { name: song.versions.openVersion })).toHaveAttribute("href", "/song/cover-1");
     expect(within(section).getByText(catalogEs.versionAttributes.instrumental)).toBeInTheDocument();
-    // La versión en vivo propia la encabeza su disco (el título repetiría el de la canción).
-    expect(within(section).getByRole("link", { name: "Live Era '87–'93" })).toHaveAttribute("href", "/song/live-1");
-    expect(within(section).getByRole("link", { name: "1999" })).toHaveAttribute("href", "/album/era");
-    fireEvent.click(covers);
+    fireEvent.click(tabs[1]!);
+    expect(tabs[1]).toHaveAttribute("aria-selected", "true");
     expect(within(section).queryByRole("link", { name: "Rockabye Baby!" })).not.toBeInTheDocument();
+    expect(within(section).getByRole("link", { name: "Live Era '87–'93" })).toHaveAttribute("href", "/album/era");
   });
 
-  it("otras versiones propias: el disco encabeza y el título aparece solo si difiere", async () => {
+  it("otras versiones propias: una fila por disco con sus grabaciones como variantes", async () => {
+    const take = (recordingId: string, title: string) => ({ ...VERSIONS.live[0]!, recordingId, attributes: [], title });
     mocks.loadVersions.mockResolvedValue({
       covers: [],
       live: [],
       others: [
-        { ...VERSIONS.live[0], recordingId: "take-1", attributes: [], title: "November Rain (take 1)" },
-        { ...VERSIONS.live[0], recordingId: "take-2", attributes: [], disc: null },
+        take("take-1", "November Rain (take 1)"),
+        take("take-2", "November Rain (take 2)"),
+        take("plain-a", "November Rain"),
+        take("plain-b", "November Rain"),
+        { ...take("loose", "November Rain"), disc: null },
       ],
     });
     await renderPage();
     const section = screen.getByRole("region", { name: song.versions.heading });
-    expect(within(section).getByRole("link", { name: "Live Era '87–'93" })).toHaveAttribute("href", "/song/take-1");
-    expect(within(section).getByText("November Rain (take 1)", { exact: false })).toBeInTheDocument();
-    // Sin disco no queda otra que el título.
-    expect(within(section).getByRole("link", { name: "November Rain" })).toHaveAttribute("href", "/song/take-2");
+    expect(within(section).queryByRole("tab")).not.toBeInTheDocument();
+    expect(within(section).getByRole("heading", { name: song.versions.groups.others })).toBeInTheDocument();
+    // El disco aparece una vez; las grabaciones son sus variantes.
+    expect(within(section).getAllByRole("link", { name: "Live Era '87–'93" })).toHaveLength(1);
+    expect(within(section).getByRole("link", { name: "take 1" })).toHaveAttribute("href", "/song/take-1");
+    expect(within(section).getByRole("link", { name: "take 2" })).toHaveAttribute("href", "/song/take-2");
+    expect(within(section).getByRole("link", { name: "Grabación 1" })).toHaveAttribute("href", "/song/plain-a");
+    expect(within(section).getByRole("link", { name: "Grabación 2" })).toHaveAttribute("href", "/song/plain-b");
+    // Sin disco: su propia fila.
+    expect(within(section).getByText(song.versions.noDisc)).toBeInTheDocument();
+    expect(within(section).getByRole("link", { name: song.versions.openVersion })).toHaveAttribute("href", "/song/loose");
   });
 
-  it("otras versiones: un grupo de más de 5 arranca contraído", async () => {
-    const many = Array.from({ length: 6 }, (_, i) => ({ ...VERSIONS.live[0], recordingId: `live-${i}` }));
-    mocks.loadVersions.mockResolvedValue({ ...VERSIONS, live: many });
+  it("otras versiones: más de 10 discos muestran '+N más'", async () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({
+      ...VERSIONS.live[0]!,
+      recordingId: `live-${i}`,
+      disc: { releaseGroupId: `disc-${i}`, title: `Disco ${i}`, year: 2000 + i },
+    }));
+    mocks.loadVersions.mockResolvedValue({ covers: [], live: many, others: [] });
     await renderPage();
     const section = screen.getByRole("region", { name: song.versions.heading });
-    expect(within(section).getByRole("button", { name: /En vivo/ })).toHaveAttribute("aria-expanded", "false");
-  });
-
-  it("otras versiones: un solo grupo va como subtítulo, sin acordeón ni el disco homónimo", async () => {
-    mocks.loadVersions.mockResolvedValue({
-      covers: [
-        {
-          ...VERSIONS.covers[0],
-          attributes: ["cover"],
-          disc: { releaseGroupId: "single-kb", title: "November Rain", year: 2025 },
-        },
-      ],
-      live: [],
-      others: [],
-    });
-    await renderPage();
-    const section = screen.getByRole("region", { name: song.versions.heading });
-    expect(within(section).queryByRole("button")).not.toBeInTheDocument();
-    expect(within(section).getByRole("heading", { name: song.versions.groups.covers })).toBeInTheDocument();
-    const year = within(section).getByRole("link", { name: "2025" });
-    expect(year).toHaveAttribute("title", "November Rain");
-    expect(within(section).queryByText("November Rain")).not.toBeInTheDocument();
+    expect(within(section).queryByRole("link", { name: "Disco 11" })).not.toBeInTheDocument();
+    fireEvent.click(within(section).getByRole("button", { name: "+2 más" }));
+    expect(within(section).getByRole("link", { name: "Disco 11" })).toBeInTheDocument();
   });
 
   it("una versión en vivo muestra la línea de versión con enlace a la original", async () => {

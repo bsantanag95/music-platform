@@ -1,89 +1,139 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState, type KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { formatDuration } from "@/components/album/album-format";
 import { VersionAttributeTags } from "@/components/catalog/VersionAttributeTags";
 import type { RecordingVersions, VersionEntry, VersionGroup } from "@/services/catalog/recording-versions";
+import { groupByDisc, variantLabel, type VersionDiscRow } from "./song-versions";
 
-// "Otras versiones de la canción" (openspec: redesign-song-page, `song-versions`; presentación
-// desde polish-song-appearances-versions): las demás grabaciones de la obra, por tipo de versión
-// según los atributos de MusicBrainz (sin deducir nada). Cada fila la encabeza el artista si es
-// otro, o el disco que la contiene (fix/song-version-rows). Con varios grupos, los de hasta 5
-// grabaciones arrancan desplegados; un solo grupo va sin acordeón. Desplegar es estado local:
-// las filas ya vienen del servidor.
+// "Otras versiones de la canción" (openspec: redesign-song-page, `song-versions`; pestañas y
+// tabla desde song-versions-tabs): las demás grabaciones de la obra, por tipo de versión según
+// los atributos de MusicBrainz (sin deducir nada). Un grupo a la vista por pestaña (un grupo
+// único va como subtítulo) y una fila por disco, con sus grabaciones como variantes. Todo es
+// estado local: las filas ya vienen del servidor.
 
 const GROUP_ORDER: VersionGroup[] = ["covers", "live", "others"];
-/** Un grupo con hasta tantas grabaciones arranca desplegado. */
-export const OPEN_UP_TO = 5;
-/** Grabaciones visibles de un grupo único antes del "+N". */
-export const SINGLE_GROUP_VISIBLE = 10;
+/** Filas (discos) visibles de un grupo antes del "+N". */
+export const ROWS_VISIBLE = 10;
 
-const sameTitle = (a: string, b: string) => a.trim().toLocaleLowerCase() === b.trim().toLocaleLowerCase();
+// Columnas: año | (artista) | disco | grabaciones. Clases literales para que Tailwind las vea.
+const COLUMNS_OWN = "sm:grid-cols-[3rem_minmax(0,1fr)_minmax(0,1.2fr)]";
+const COLUMNS_COVERS = "sm:grid-cols-[3rem_minmax(0,11rem)_minmax(0,1fr)_minmax(0,1.2fr)]";
 
-interface RowContext {
-  songTitle: string;
-  songArtistIds: Set<string>;
-}
-
-function VersionRow({ entry, songTitle, songArtistIds }: { entry: VersionEntry } & RowContext) {
-  // En vivo y cover ya los dice el grupo; se muestran los demás atributos (instrumental, …).
-  const extra = entry.attributes.filter((attribute) => attribute !== "live" && attribute !== "cover");
-  const otherArtist = entry.artist && !songArtistIds.has(entry.artist.id) ? entry.artist : null;
-  const disc = entry.disc;
-  // La línea principal es lo que distingue a la versión: el artista si es otro; si no, el
-  // disco que la contiene (el título casi siempre repite el de la canción).
-  const discLeads = otherArtist === null && disc !== null;
-  const primary = otherArtist?.name ?? disc?.title ?? entry.title;
-  // El título solo si agrega algo ("(take 1)", "(instrumental)").
-  const showTitle = !sameTitle(entry.title, songTitle) && !sameTitle(entry.title, primary);
-  const showDiscTitle =
-    disc !== null && !discLeads && !sameTitle(disc.title, songTitle) && !sameTitle(disc.title, entry.title);
-  const discText = disc && [showDiscTitle ? disc.title : null, disc.year].filter((part) => part !== null).join(" · ");
+function RecordingItem({ entry, label }: { entry: VersionEntry; label: string }) {
+  // En vivo y cover ya los dice el grupo; tampoco se repite un atributo que ya dice la variante.
+  const extra = entry.attributes.filter(
+    (attribute) =>
+      attribute !== "live" && attribute !== "cover" && attribute.toLocaleLowerCase() !== label.toLocaleLowerCase(),
+  );
   return (
-    <li className="grid grid-cols-[minmax(0,1fr)_3.5rem] items-baseline gap-x-3 py-2">
-      <span className="min-w-0">
-        <Link href={`/song/${entry.recordingId}`} className="font-body text-sm text-paper [overflow-wrap:anywhere] hover:text-amber">
-          {primary}
-        </Link>
-        <VersionAttributeTags attributes={extra} />
-        {(showTitle || discText) && (
-          <span className="block font-data text-xs text-paper-muted [overflow-wrap:anywhere]">
-            {showTitle && entry.title}
-            {showTitle && discText && " · "}
-            {disc && discText && (
-              <Link
-                href={`/album/${disc.releaseGroupId}`}
-                title={showDiscTitle ? undefined : disc.title}
-                className="hover:text-amber hover:underline"
-              >
-                {discText}
-              </Link>
-            )}
-          </span>
-        )}
-      </span>
-      <span className="text-right font-data text-xs text-paper-muted">
-        {entry.durationSec !== null ? formatDuration(entry.durationSec) : ""}
-      </span>
+    <li className="min-w-0">
+      <Link
+        href={`/song/${entry.recordingId}`}
+        className="font-body text-sm text-paper-muted underline decoration-ink-border underline-offset-4 [overflow-wrap:anywhere] hover:text-amber hover:decoration-amber"
+      >
+        {label}
+      </Link>
+      <VersionAttributeTags attributes={extra} />
+      {entry.durationSec !== null && (
+        <span className="ml-2 font-data text-xs text-paper-muted">{formatDuration(entry.durationSec)}</span>
+      )}
     </li>
   );
 }
 
-function VersionList({ id, entries, context }: { id?: string; entries: VersionEntry[]; context: RowContext }) {
+function DiscRow({ row, songTitle, withArtist }: { row: VersionDiscRow; songTitle: string; withArtist: boolean }) {
+  const t = useTranslations("catalog.song.versions");
+  const labels = row.recordings.map((entry) => variantLabel(entry.title, songTitle));
+  const unnamedTotal = labels.filter((label) => label === null).length;
+  let unnamed = 0;
+  const artist = row.artist && (
+    <Link href={`/artist/${row.artist.id}`} className="text-paper [overflow-wrap:anywhere] hover:text-amber hover:underline">
+      {row.artist.name}
+    </Link>
+  );
   return (
-    <ol id={id} className="grid grid-cols-1 gap-x-8 lg:grid-cols-2">
-      {entries.map((entry) => (
-        <VersionRow key={entry.recordingId} entry={entry} {...context} />
-      ))}
-    </ol>
+    <li
+      className={`grid grid-cols-[3rem_minmax(0,1fr)] items-baseline gap-x-4 gap-y-1 py-2.5 ${
+        withArtist ? COLUMNS_COVERS : COLUMNS_OWN
+      }`}
+    >
+      <span className="font-data text-xs text-paper-muted">{row.disc?.year ?? "—"}</span>
+      {withArtist && <span className="min-w-0 font-body text-sm">{artist}</span>}
+      <span className={`min-w-0 font-body text-sm ${withArtist ? "col-start-2 sm:col-start-auto" : ""}`}>
+        {row.disc ? (
+          <Link
+            href={`/album/${row.disc.releaseGroupId}`}
+            className="text-paper [overflow-wrap:anywhere] hover:text-amber hover:underline"
+          >
+            {row.disc.title}
+          </Link>
+        ) : (
+          <span className="text-paper-muted">{t("noDisc")}</span>
+        )}
+        {/* En los grupos propios, una grabación acreditada a otra entrada del catálogo. */}
+        {!withArtist && artist && <span className="block font-data text-xs">{artist}</span>}
+      </span>
+      <ul className="col-start-2 flex min-w-0 flex-wrap gap-x-4 gap-y-1 sm:col-start-auto">
+        {row.recordings.map((entry, index) => {
+          const variant = labels[index] ?? null;
+          if (variant === null) unnamed += 1;
+          const label = variant ?? (unnamedTotal > 1 ? t("recordingN", { n: unnamed }) : t("openVersion"));
+          return <RecordingItem key={entry.recordingId} entry={entry} label={label} />;
+        })}
+      </ul>
+    </li>
+  );
+}
+
+interface GroupTableProps {
+  entries: VersionEntry[];
+  songTitle: string;
+  songArtistIds: Set<string>;
+  withArtist: boolean;
+}
+
+function GroupTable({ entries, songTitle, songArtistIds, withArtist }: GroupTableProps) {
+  const t = useTranslations("catalog.song.versions");
+  const [showAll, setShowAll] = useState(false);
+  const rows = groupByDisc(entries, songArtistIds);
+  const hidden = rows.length - ROWS_VISIBLE;
+  const headClass = "font-data text-xs uppercase tracking-wider text-paper-muted";
+  return (
+    <div className="flex flex-col">
+      <div
+        aria-hidden="true"
+        className={`hidden gap-x-4 border-b border-ink-border pb-1.5 sm:grid ${withArtist ? COLUMNS_COVERS : COLUMNS_OWN}`}
+      >
+        <span className={headClass}>{t("columns.year")}</span>
+        {withArtist && <span className={headClass}>{t("columns.artist")}</span>}
+        <span className={headClass}>{t("columns.disc")}</span>
+        <span className={headClass}>{t("columns.recordings")}</span>
+      </div>
+      <ol className="flex flex-col divide-y divide-ink-border">
+        {(showAll ? rows : rows.slice(0, ROWS_VISIBLE)).map((row) => (
+          <DiscRow key={row.key} row={row} songTitle={songTitle} withArtist={withArtist} />
+        ))}
+      </ol>
+      {hidden > 0 && (
+        <button
+          type="button"
+          aria-expanded={showAll}
+          onClick={() => setShowAll((current) => !current)}
+          className="self-start pt-2 font-data text-xs text-amber hover:underline"
+        >
+          {showAll ? t("showLess") : t("showMore", { count: hidden })}
+        </button>
+      )}
+    </div>
   );
 }
 
 interface SongVersionsProps {
   versions: RecordingVersions;
-  /** Título de la canción: en las filas no se repite. */
+  /** Título de la canción: las variantes son lo que cada título le agrega. */
   songTitle: string;
   /** Artistas principales de la canción: en sus propias versiones no se repite el nombre. */
   songArtistIds: string[];
@@ -91,85 +141,73 @@ interface SongVersionsProps {
 
 export function SongVersions({ versions, songTitle, songArtistIds }: SongVersionsProps) {
   const t = useTranslations("catalog.song.versions");
+  const baseId = useId();
+  const [selected, setSelected] = useState<VersionGroup | null>(null);
   const groups = GROUP_ORDER.filter((group) => versions[group].length > 0);
-  const [open, setOpen] = useState<Set<VersionGroup>>(
-    () => new Set(groups.filter((group) => versions[group].length <= OPEN_UP_TO)),
+  const [first] = groups;
+  if (!first) return null;
+  const active = selected !== null && groups.includes(selected) ? selected : first;
+  const artists = new Set(songArtistIds);
+
+  const table = (group: VersionGroup) => (
+    <GroupTable
+      key={group}
+      entries={versions[group]}
+      songTitle={songTitle}
+      songArtistIds={artists}
+      withArtist={group === "covers"}
+    />
   );
-  const [showAll, setShowAll] = useState(false);
-  if (groups.length === 0) return null;
-  const context: RowContext = { songTitle, songArtistIds: new Set(songArtistIds) };
 
-  const heading = (
-    <h2 id="song-versions" className="font-display text-lg text-paper">
-      {t("heading")}
-    </h2>
-  );
-
-  // Un solo grupo: su nombre es un subtítulo y no hace falta acordeón.
-  const [single] = groups;
-  if (groups.length === 1 && single) {
-    const group = single;
-    const entries = versions[group];
-    const hidden = entries.length - SINGLE_GROUP_VISIBLE;
-    return (
-      <section aria-labelledby="song-versions" className="flex flex-col gap-2">
-        {heading}
-        <h3 className="font-data text-xs uppercase tracking-wider text-paper-muted">{t(`groups.${group}`)}</h3>
-        <VersionList entries={showAll ? entries : entries.slice(0, SINGLE_GROUP_VISIBLE)} context={context} />
-        {hidden > 0 && (
-          <button
-            type="button"
-            aria-expanded={showAll}
-            onClick={() => setShowAll((current) => !current)}
-            className="self-start font-data text-xs text-amber hover:underline"
-          >
-            {showAll ? t("showLess") : t("showMore", { count: hidden })}
-          </button>
-        )}
-      </section>
-    );
-  }
-
-  const toggle = (group: VersionGroup) =>
-    setOpen((current) => {
-      const next = new Set(current);
-      if (next.has(group)) next.delete(group);
-      else next.add(group);
-      return next;
-    });
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const index = groups.indexOf(active);
+    const next = groups[(index + (event.key === "ArrowRight" ? 1 : groups.length - 1)) % groups.length] ?? first;
+    setSelected(next);
+    document.getElementById(`${baseId}-tab-${next}`)?.focus();
+  };
 
   return (
     <section aria-labelledby="song-versions" className="flex flex-col gap-3">
-      {heading}
-      <ul className="flex flex-col gap-2">
-        {groups.map((group) => {
-          const isOpen = open.has(group);
-          const panelId = `versions-${group}`;
-          return (
-            <li key={group} className="rounded border border-ink-border">
-              <button
-                type="button"
-                aria-expanded={isOpen}
-                aria-controls={panelId}
-                onClick={() => toggle(group)}
-                className="flex w-full items-baseline justify-between gap-2 px-3 py-2 text-left"
-              >
-                <span className="font-body text-sm text-paper">
-                  {t(`groups.${group}`)} <span className="font-data text-xs text-paper-muted">· {versions[group].length}</span>
-                </span>
-                <span aria-hidden="true" className="font-data text-xs text-paper-muted">
-                  {isOpen ? "▴" : "▾"}
-                </span>
-              </button>
-              {isOpen && (
-                <div className="border-t border-ink-border px-3">
-                  <VersionList id={panelId} entries={versions[group]} context={context} />
-                </div>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+      <h2 id="song-versions" className="font-display text-lg text-paper">
+        {t("heading")}
+      </h2>
+      {groups.length === 1 ? (
+        // Un solo grupo: su nombre es un subtítulo y no hacen falta pestañas.
+        <>
+          <h3 className="font-data text-xs uppercase tracking-wider text-paper-muted">{t(`groups.${first}`)}</h3>
+          {table(first)}
+        </>
+      ) : (
+        <>
+          <div role="tablist" aria-label={t("tablist")} className="flex flex-wrap gap-2" onKeyDown={onKeyDown}>
+            {groups.map((group) => {
+              const isActive = group === active;
+              return (
+                <button
+                  key={group}
+                  id={`${baseId}-tab-${group}`}
+                  role="tab"
+                  type="button"
+                  aria-selected={isActive}
+                  aria-controls={`${baseId}-panel-${group}`}
+                  tabIndex={isActive ? 0 : -1}
+                  onClick={() => setSelected(group)}
+                  className={`rounded border px-3 py-1.5 font-data text-xs transition-colors ${
+                    isActive ? "border-amber text-paper" : "border-ink-border text-paper-muted hover:text-paper"
+                  }`}
+                >
+                  {t(`groups.${group}`)} · {versions[group].length}
+                </button>
+              );
+            })}
+          </div>
+          <div id={`${baseId}-panel-${active}`} role="tabpanel" aria-labelledby={`${baseId}-tab-${active}`}>
+            {table(active)}
+          </div>
+        </>
+      )}
     </section>
   );
 }
