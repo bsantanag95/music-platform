@@ -170,7 +170,7 @@ export default async function SongPage({ params }: SongPageProps) {
 
       <SongAppearances grouped={grouped} years={years} />
 
-      {versions && <SongVersions versions={versions} songArtistIds={primaryArtists.map((artist) => artist.artistId)} />}
+      {versions && <SongVersions versions={versions} songTitle={detail.recording.title} songArtistIds={primaryArtists.map((artist) => artist.artistId)} />}
 
       <Comments
         target="recording"
