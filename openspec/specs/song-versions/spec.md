@@ -104,10 +104,11 @@ ella, agrupadas por sus atributos de versión en este orden: **Versiones de otro
 (ninguno de los dos). Con varios grupos, cada uno SHALL mostrar su cantidad y estar
 desplegado al cargar solo si tiene hasta 5 grabaciones; con un solo grupo, su nombre SHALL
 mostrarse como subtítulo, sin control de despliegue, con hasta 10 grabaciones y un "+N" para el
-resto. Cada grabación SHALL mostrar como línea principal el artista cuando difiere del de la
-canción (si no, su título), enlazada a su página; su título solo cuando difiere del de la
-canción; su disco principal con el año (sin el nombre del disco si coincide con el título de la
-canción), su duración y sus demás atributos traducidos (por ejemplo, instrumental) con la misma
+resto. Cada grabación SHALL mostrar como línea principal, enlazada a su página, el artista cuando
+difiere del de la canción; si no, su disco principal (y su título si no tiene disco). Debajo
+SHALL mostrar su título solo cuando difiere del de la canción y de la línea principal, y su disco
+principal con el año (solo el año cuando el disco ya es la línea principal o se llama igual que
+la canción), su duración y sus demás atributos traducidos (por ejemplo, instrumental) con la misma
 forma de etiqueta que el resto de la página. En pantallas anchas las grabaciones SHALL
 repartirse en dos columnas. Las grabaciones de cada grupo SHALL ordenarse por la fecha de su
 disco más temprano. Un grupo vacío SHALL NOT renderizarse; sin otras versiones, la sección
@@ -137,6 +138,13 @@ MusicBrainz.
 - **WHEN** las otras grabaciones de la obra son tres covers llamados igual que la canción
 - **THEN** la sección muestra "Versiones de otros artistas" como subtítulo, sin control de
   despliegue, y cada fila muestra el artista y el año de su disco sin repetir el título
+
+#### Scenario: Tomas del mismo artista
+
+- **WHEN** las otras grabaciones son del mismo artista y se llaman como la canción, en discos
+  distintos, y una de ellas se titula "(take 1)"
+- **THEN** cada fila la encabeza el nombre de su disco, y solo la toma muestra su título debajo,
+  junto al año
 
 ### Requirement: Atributos de versión en los contratos de catálogo
 
