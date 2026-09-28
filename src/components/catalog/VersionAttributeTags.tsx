@@ -5,6 +5,9 @@ import { useTranslations } from "next-intl";
 // texto de MusicBrainz si no hay traducción. Sirve en la lista del álbum, en las pistas
 // adicionales y en la página de canción.
 
+/** Forma común de las etiquetas de la página (versión, "Primer lanzamiento"); el color va aparte. */
+export const TAG_CLASS = "rounded border px-1.5 py-0.5 align-middle font-data text-xs";
+
 interface VersionAttributeTagsProps {
   attributes: string[];
   className?: string;
@@ -18,7 +21,7 @@ export function VersionAttributeTags({ attributes, className = "ml-2" }: Version
       {attributes.map((attribute) => (
         <span
           key={attribute}
-          className={`${className} rounded border border-ink-border px-1.5 py-0.5 align-middle font-data text-xs text-paper-muted`}
+          className={`${className} ${TAG_CLASS} border-ink-border text-paper-muted`}
         >
           {t.has(attribute) ? t(attribute) : attribute}
         </span>

@@ -49,8 +49,18 @@ vi.mock("@/services/social", () => ({
 vi.mock("@/components/catalog/LazyCoverImage", () => ({ LazyCoverImage: () => <span /> }));
 vi.mock("@/components/album/AlbumListPicker", () => ({ AlbumListPicker: () => <div /> }));
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children, "aria-label": label }: { href: string; children: React.ReactNode; "aria-label"?: string }) => (
-    <a href={href} aria-label={label}>
+  Link: ({
+    href,
+    children,
+    title,
+    "aria-label": label,
+  }: {
+    href: string;
+    children: React.ReactNode;
+    title?: string;
+    "aria-label"?: string;
+  }) => (
+    <a href={href} title={title} aria-label={label}>
       {children}
     </a>
   ),
@@ -348,6 +358,36 @@ describe("página de canción", () => {
     const names = within(sound).getAllByRole("link").map((link) => link.textContent);
     expect(names.slice(0, 2)).toEqual(["Serban Ghenea", "Laura Sisk"]);
     expect(within(sound).getByText("+1 asistente")).toBeInTheDocument();
+    // Desplegados, los asistentes se ocultan con otro texto (lo alterna el CSS del <details>).
+    expect(within(sound).getByText(song.hideAssistants)).toBeInTheDocument();
+  });
+
+  it("los roles desplegados se vuelven a contraer con 'ocultar'", async () => {
+    const role = (a: string) => ({ relationType: "instrument", attributes: [a] });
+    mocks.loadRecordingCredits.mockResolvedValue({
+      ...CREDITS,
+      groups: {
+        ...CREDITS.groups,
+        performers: [
+          {
+            artistId: "jack",
+            name: "Jack Antonoff",
+            creditedAs: null,
+            roles: ["guitar", "banjo", "bass guitar", "drums (drum set)", "electric guitar", "sitar"].map(role),
+          },
+        ],
+      },
+    });
+    await renderPage();
+    const credits = screen.getByRole("region", { name: song.recordingCredits });
+    const more = within(credits).getByRole("button", { name: /Ver 2 roles más/ });
+    expect(more).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(more);
+    const hide = within(credits).getByRole("button", { name: song.fewerRoles });
+    expect(hide).toHaveAttribute("aria-expanded", "true");
+    expect(within(credits).queryByText("+2")).not.toBeInTheDocument();
+    fireEvent.click(hide);
+    expect(within(credits).getByText("+2")).toBeInTheDocument();
   });
 
   it("discos por tipo, con la marca original y el '+N' en recopilaciones", async () => {
@@ -355,20 +395,69 @@ describe("página de canción", () => {
     const section = screen.getByRole("region", { name: song.appearances.heading });
     expect(within(section).getByText(song.appearances.groups.studio, { exact: false })).toBeInTheDocument();
     expect(within(section).getByText(song.appearances.original)).toBeInTheDocument();
+    // Un solo disco en el grupo: sin "· 1".
+    expect(within(section).getByText(song.appearances.groups.studio).textContent).toBe(song.appearances.groups.studio);
     const more = within(section).getByRole("button", { name: "+1 más" });
     fireEvent.click(more);
     expect(within(section).getByRole("link", { name: /Roses N' Guns/ })).toBeInTheDocument();
   });
 
-  it("otras versiones agrupadas y contraídas; al desplegar muestra artista y atributos extra", async () => {
+  it("apariciones: mes y año cuando la fecha lo tiene y la fecha completa del primer lanzamiento", async () => {
+    const detail = makeDetail();
+    detail.containingAlbums = detail.containingAlbums.map((album, i) =>
+      i === 0 ? { ...album, firstReleaseDate: "1991-09-17" } : album,
+    );
+    mocks.loadRecordingDetail.mockResolvedValue({ kind: "ok", detail });
+    await renderPage();
+    const section = screen.getByRole("region", { name: song.appearances.heading });
+    expect(within(section).getByText(/sept?.? 1991/)).toBeInTheDocument();
+    expect(within(section).getByText(song.appearances.original)).toHaveAttribute(
+      "title",
+      "Primer lanzamiento: 17 de septiembre de 1991",
+    );
+  });
+
+  it("otras versiones: grupos cortos desplegados, el artista como línea principal y sin repetir el título", async () => {
     await renderPage();
     const section = screen.getByRole("region", { name: song.versions.heading });
     const covers = within(section).getByRole("button", { name: /Versiones de otros artistas/ });
-    expect(covers).toHaveAttribute("aria-expanded", "false");
+    expect(covers).toHaveAttribute("aria-expanded", "true");
     expect(within(section).queryByRole("button", { name: /Otras grabaciones/ })).not.toBeInTheDocument();
-    fireEvent.click(covers);
-    expect(within(section).getByRole("link", { name: "Rockabye Baby!" })).toBeInTheDocument();
+    expect(within(section).getByRole("link", { name: "Rockabye Baby!" })).toHaveAttribute("href", "/song/cover-1");
     expect(within(section).getByText(catalogEs.versionAttributes.instrumental)).toBeInTheDocument();
+    // La versión en vivo propia muestra su título (no hay otro artista) y el disco con el año.
+    expect(within(section).getByRole("link", { name: "Live Era '87–'93 · 1999" })).toBeInTheDocument();
+    fireEvent.click(covers);
+    expect(within(section).queryByRole("link", { name: "Rockabye Baby!" })).not.toBeInTheDocument();
+  });
+
+  it("otras versiones: un grupo de más de 5 arranca contraído", async () => {
+    const many = Array.from({ length: 6 }, (_, i) => ({ ...VERSIONS.live[0], recordingId: `live-${i}` }));
+    mocks.loadVersions.mockResolvedValue({ ...VERSIONS, live: many });
+    await renderPage();
+    const section = screen.getByRole("region", { name: song.versions.heading });
+    expect(within(section).getByRole("button", { name: /En vivo/ })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("otras versiones: un solo grupo va como subtítulo, sin acordeón ni el disco homónimo", async () => {
+    mocks.loadVersions.mockResolvedValue({
+      covers: [
+        {
+          ...VERSIONS.covers[0],
+          attributes: ["cover"],
+          disc: { releaseGroupId: "single-kb", title: "November Rain", year: 2025 },
+        },
+      ],
+      live: [],
+      others: [],
+    });
+    await renderPage();
+    const section = screen.getByRole("region", { name: song.versions.heading });
+    expect(within(section).queryByRole("button")).not.toBeInTheDocument();
+    expect(within(section).getByRole("heading", { name: song.versions.groups.covers })).toBeInTheDocument();
+    const year = within(section).getByRole("link", { name: "2025" });
+    expect(year).toHaveAttribute("title", "November Rain");
+    expect(within(section).queryByText("November Rain")).not.toBeInTheDocument();
   });
 
   it("una versión en vivo muestra la línea de versión con enlace a la original", async () => {
@@ -379,7 +468,9 @@ describe("página de canción", () => {
     });
     await renderPage();
     expect(screen.getByText(song.version)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "November Rain" })).toHaveAttribute("href", "/song/studio");
+    // La versión en vivo desplegada en "Otras versiones" también se llama igual.
+    const links = screen.getAllByRole("link", { name: "November Rain" }).map((link) => link.getAttribute("href"));
+    expect(links).toContain("/song/studio");
   });
 
   it("sin créditos ni versiones no muestra esos bloques y los comentarios siguen", async () => {

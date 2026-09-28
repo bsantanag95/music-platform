@@ -375,20 +375,27 @@ hacia abajo:
   lista (por ejemplo, una pista adicional de otra edición).
 - **Composición** (autores de la obra con sus roles, solo cuando los roles difieren entre
   autores; si no, la ficha ya lo dice) y **Créditos de esta grabación**, apilados a ancho
-  completo. Los créditos van **una persona por fila** (nombre | roles, 4 roles y "+N"), con
+  completo. Los créditos van **una persona por fila** (nombre | roles, 4 roles y "+N", que
+  desplegado ofrece "ocultar"), con
   Intérpretes en una columna —integrantes primero, en la tipografía destacada, separados de los
   invitados— y Producción, Sonido y Otros en la otra; Sonido ordena por rol (mezcla,
   masterización, grabación, ingeniería, programación) y contrae las asistencias en "+N
-  asistentes" (`polish-song-credits-strip`). Los créditos de todo el disco no se repiten: un
+  asistentes", que desplegado dice "Ocultar asistentes" (`polish-song-credits-strip`,
+  `polish-song-appearances-versions`). Los créditos de todo el disco no se repiten: un
   enlace lleva a la pestaña Créditos del álbum. Si alguien llega a la canción sin pasar por el
   álbum, la página agenda en segundo plano la sincronización de créditos y autoría del disco
   principal.
 - **"Esta grabación aparece en"**: los discos que contienen esta misma grabación, por tipo
-  (estudio, singles y EP, recopilaciones, en vivo y otros), 3 por grupo más "+N", con la marca
-  "original" en el más temprano.
-- **"Otras versiones de la canción"**: las demás grabaciones de su obra, en grupos contraídos —
+  (estudio, singles y EP, recopilaciones, en vivo y otros), 3 por grupo más "+N", con mes y año
+  cuando la fecha los tiene y la marca "Primer lanzamiento" (fecha completa como ayuda) en el más
+  temprano. Con recopilaciones y discos del artista, cada origen va en su columna.
+- **"Otras versiones de la canción"**: las demás grabaciones de su obra, por grupo —
   Versiones de otros artistas (`cover`), En vivo (`live`) y Otras grabaciones (sin marca) — según
-  los atributos de MusicBrainz, sin deducir nada (ADR 0020).
+  los atributos de MusicBrainz, sin deducir nada (ADR 0020). Los grupos de hasta 5 grabaciones
+  arrancan desplegados; un grupo único va como subtítulo, sin acordeón. Cada fila muestra el
+  artista como línea principal (si es otro), el título solo si difiere del de la canción y el
+  disco sin su nombre cuando se llama igual; en pantallas anchas, en dos columnas
+  (`polish-song-appearances-versions`).
 - **Comentarios** al final. Sin reseñas de canción.
 
 ## 4. Navegación por membresías (banda → integrantes) — diferida a Fase 4

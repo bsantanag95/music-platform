@@ -778,7 +778,8 @@
         "compilation": "Compilations",
         "live_other": "Live and other"
       },
-      "original": "original",
+      "original": "First release",
+      "originalOn": "First release: {date}",
       "unknownYear": "Unknown year",
       "showMore": "+{count} more",
       "showLess": "Show less"
@@ -789,7 +790,9 @@
         "covers": "Versions by other artists",
         "live": "Live",
         "others": "Other recordings"
-      }
+      },
+      "showMore": "+{count} more",
+      "showLess": "Show less"
     },
     "relation": {
       "signInPrompt": "Rate this song and log your listens.",
@@ -807,7 +810,9 @@
       "compilation": "compilation",
       "live_other": "live or other"
     },
-    "assistants": "{count, plural, one {+# assistant} other {+# assistants}}"
+    "assistants": "{count, plural, one {+# assistant} other {+# assistants}}",
+    "hideAssistants": "Hide assistants",
+    "fewerRoles": "hide"
   },
   "social": {
     "ratingHeading": "Ratings",

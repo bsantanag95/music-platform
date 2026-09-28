@@ -778,7 +778,8 @@
         "compilation": "Recopilaciones",
         "live_other": "En vivo y otros"
       },
-      "original": "original",
+      "original": "Primer lanzamiento",
+      "originalOn": "Primer lanzamiento: {date}",
       "unknownYear": "Año desconocido",
       "showMore": "+{count} más",
       "showLess": "Mostrar menos"
@@ -789,7 +790,9 @@
         "covers": "Versiones de otros artistas",
         "live": "En vivo",
         "others": "Otras grabaciones"
-      }
+      },
+      "showMore": "+{count} más",
+      "showLess": "Mostrar menos"
     },
     "relation": {
       "signInPrompt": "Valorá y registrá tus escuchas.",
@@ -807,7 +810,9 @@
       "compilation": "recopilación",
       "live_other": "en vivo u otro"
     },
-    "assistants": "{count, plural, one {+# asistente} other {+# asistentes}}"
+    "assistants": "{count, plural, one {+# asistente} other {+# asistentes}}",
+    "hideAssistants": "Ocultar asistentes",
+    "fewerRoles": "ocultar"
   },
   "social": {
     "ratingHeading": "Valoraciones",

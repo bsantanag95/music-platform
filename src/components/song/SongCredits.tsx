@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { ROLES_VISIBLE, useRoleFormatter } from "@/components/album/AlbumCredits";
 import { SongwriterNames, songwritersShareRoles } from "@/components/catalog/SongwriterNames";
 import type { RecordingCredits, TrackCreditKind, TrackCreditPerson } from "@/services/catalog/personnel-levels";
+import { ExpandableRoles } from "./ExpandableRoles";
 import { orderSound, splitMembers } from "./song-credits";
 
 // Bloques Composición y Créditos de esta grabación (openspec: redesign-song-page, design D6;
@@ -48,7 +49,6 @@ export function hasRecordingCreditsBlock(credits: RecordingCredits, principalRel
 
 /** Una persona por fila: nombre a un lado, roles al otro, con "+N" si son muchos. */
 function PersonRow({ kind, person, prominent }: { kind: TrackCreditKind; person: TrackCreditPerson; prominent: boolean }) {
-  const t = useTranslations("catalog.album.credits");
   const format = useRoleFormatter();
   // Producción ya dice "producción": ese rol sin matices no se repite en la fila.
   const roles = format(
@@ -69,20 +69,8 @@ function PersonRow({ kind, person, prominent }: { kind: TrackCreditKind; person:
       >
         {person.name}
       </Link>
-      {/* Un <div> y no un <p>: el <details> del "+N" no puede ir dentro de un párrafo. */}
       <div className="min-w-0 font-data text-xs text-paper-muted">
-        {visible.join(", ")}
-        {hidden.length > 0 && (
-          <details className="group/roles inline">
-            <summary
-              aria-label={t("moreRolesLabel", { count: hidden.length })}
-              className="ml-1 inline cursor-pointer list-none text-amber hover:underline group-open/roles:hidden [&::-webkit-details-marker]:hidden"
-            >
-              {t("moreRoles", { count: hidden.length })}
-            </summary>
-            <span>, {hidden.join(", ")}</span>
-          </details>
-        )}
+        <ExpandableRoles visible={visible} hidden={hidden} />
       </div>
     </li>
   );
@@ -123,7 +111,8 @@ function CreditGroup({ kind, credits }: { kind: TrackCreditKind; credits: Record
         {assistants.length > 0 && (
           <details className="group/assistants">
             <summary className="cursor-pointer list-none py-1.5 font-data text-xs text-amber hover:underline [&::-webkit-details-marker]:hidden">
-              {tSong("assistants", { count: assistants.length })}
+              <span className="group-open/assistants:hidden">{tSong("assistants", { count: assistants.length })}</span>
+              <span className="hidden group-open/assistants:inline">{tSong("hideAssistants")}</span>
             </summary>
             <PeopleList kind={kind} people={assistants} />
           </details>

@@ -131,11 +131,12 @@ ficha, que lista solo nombres, ya lo dice todo), y un bloque **Créditos de esta
 las personas acreditadas en la grabación agrupadas en Intérpretes, Producción, Sonido y Otros.
 Cada persona SHALL ocupar su propia fila, con el nombre a un lado y sus roles traducidos al
 otro, como en la pestaña Créditos del álbum; con más de 5 roles SHALL mostrar los 4 primeros y
-"+N" para desplegar el resto. Entre los intérpretes, los integrantes de los artistas
+"+N" para desplegar el resto, y desplegados SHALL ofrecer "ocultar" para volver a contraerlos. Entre los intérpretes, los integrantes de los artistas
 principales SHALL ir primero, con la tipografía destacada de los integrantes del álbum, y
 separados de los invitados. En Sonido, las personas SHALL ordenarse por su rol principal
 (mezcla, masterización, grabación, ingeniería, programación, otros) y quienes solo tienen
-roles de asistencia SHALL ir al final, contraídos en "+N asistentes". Los dos bloques SHALL
+roles de asistencia SHALL ir al final, contraídos en "+N asistentes", control que desplegado
+SHALL decir "Ocultar asistentes". Los dos bloques SHALL
 ocupar el ancho completo, apilados; dentro del de créditos, Intérpretes SHALL ir en una columna
 y los demás grupos apilados en otra cuando hay espacio. Cuando el disco principal tiene
 créditos de nivel edición, el bloque SHALL ofrecer un enlace a la pestaña Créditos de ese
@@ -163,13 +164,13 @@ requests a MusicBrainz al renderizar.
 #### Scenario: Muchos roles
 
 - **WHEN** una persona tiene 9 roles en la grabación
-- **THEN** su fila muestra 4 y "+5", que despliega el resto
+- **THEN** su fila muestra 4 y "+5", que despliega el resto, y "ocultar" los vuelve a contraer
 
 #### Scenario: Asistentes de sonido
 
 - **WHEN** Sonido tiene dos personas de mezcla, cuatro de grabación y tres asistentes
 - **THEN** primero aparecen las de mezcla, luego las de grabación, y al final "+3 asistentes"
-  contraído
+  contraído, que desplegado dice "Ocultar asistentes"
 
 ### Requirement: Comentarios al final de la canción
 
