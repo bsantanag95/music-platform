@@ -36,7 +36,7 @@ vi.mock("@/components/album/AlbumListPicker", () => ({
 }));
 
 const d = catalogEs.artist.discography;
-const menu = d.menu;
+const menu = catalogEs.albumActions;
 
 function item(id: string): ArtistDiscographyItem {
   return {

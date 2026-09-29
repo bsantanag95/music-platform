@@ -1,5 +1,7 @@
 import { apiFetch } from "./client";
 import {
+  ReleaseGroupMarksSchema,
+  type ReleaseGroupMarks,
   AlbumSearchResponseSchema,
   ArtistFollowResponseSchema,
   ArtistSearchResponseSchema,
@@ -83,6 +85,12 @@ export function getEditionExtraTracks(releaseGroupId: string, editionId: string)
 // Ambos idempotentes en el servidor.
 export function followArtist(id: string): Promise<ArtistFollowResponse> {
   return apiFetch(`/api/artists/${id}/follow`, ArtistFollowResponseSchema, { method: "PUT" });
+}
+
+// Marcas propias sobre un disco, para el menú de acciones fuera de la discografía
+// (openspec: extend-album-quick-actions).
+export function getReleaseGroupMarks(id: string): Promise<ReleaseGroupMarks> {
+  return apiFetch(`/api/me/release-groups/${id}/marks`, ReleaseGroupMarksSchema);
 }
 
 export function unfollowArtist(id: string): Promise<ArtistFollowResponse> {

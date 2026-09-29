@@ -302,23 +302,7 @@
       "fewRatingsLabel": "fewer than 5 ratings",
       "favorite": "Favorite",
       "pendingMark": "On your to-listen list",
-      "menu": {
-        "open": "Actions for {title}",
-        "logListen": "Log listen",
-        "logging": "Logging…",
-        "listenLogged": "Listen logged",
-        "addDetails": "Add details",
-        "favorite": "Favorite",
-        "pending": "To listen",
-        "rating": "Your rating",
-        "addToList": "Add to list…",
-        "closeLists": "Close lists",
-        "goToAlbum": "Go to album",
-        "signInPrompt": "Sign in to log listens, rate or build lists.",
-        "signIn": "Sign in",
-        "saveError": "We couldn't save the change. Try again.",
-        "column": "Actions"
-      }
+      "actionsColumn": "Actions"
     },
     "lineup": {
       "views": {
@@ -966,5 +950,23 @@
     "medley": "Medley",
     "partial": "Partial",
     "karaoke": "Karaoke"
+  },
+  "albumActions": {
+    "open": "Actions for {title}",
+    "logListen": "Log listen",
+    "logging": "Logging…",
+    "listenLogged": "Listen logged",
+    "addDetails": "Add details",
+    "favorite": "Favorite",
+    "pending": "To listen",
+    "rating": "Your rating",
+    "addToList": "Add to list…",
+    "closeLists": "Close lists",
+    "goToAlbum": "Go to album",
+    "signInPrompt": "Sign in to log listens, rate or build lists.",
+    "signIn": "Sign in",
+    "saveError": "We couldn't save the change. Try again.",
+    "loadError": "We could not load your marks for this record.",
+    "retry": "Retry"
   }
 }

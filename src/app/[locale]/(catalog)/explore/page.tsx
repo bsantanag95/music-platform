@@ -7,6 +7,7 @@ import { CollectionRail } from "@/components/discovery/CollectionRail";
 import { BrowseChips } from "@/components/discovery/BrowseChips";
 import { FilteredAlbumList } from "@/components/discovery/FilteredAlbumList";
 import { isExploreEnabled } from "@/lib/config/discovery";
+import { getCurrentUser } from "@/services/auth/authorization";
 import { CURATOR_USERNAME } from "@/services/discovery/constants";
 import {
   getExplorePage,
@@ -47,6 +48,9 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
     live_other: tCat("categories.live_other"),
   } satisfies Record<ReleaseGroupCategory, string>;
   const coverLabel = t("albumCoverLabel");
+  // Sesión para el menú de acciones de cada disco (openspec: extend-album-quick-actions); antes
+  // las tarjetas trataban a todos como anónimos.
+  const authenticated = (await getCurrentUser()) !== null;
 
   // --- Vista filtrada: un corte a la vez, década tiene prioridad ---
   if (decada !== undefined) {
@@ -54,6 +58,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
     const result = await listAlbumsByDecade(decade, parsePage(rawPage));
     return (
       <FilteredAlbumList
+        authenticated={authenticated}
         heading={t("decadeResultsHeading", { decade })}
         result={result}
         baseHref={`/explore?decada=${decade}`}
@@ -71,6 +76,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
     const result = await listAlbumsByGenre(genre, parsePage(rawPage));
     return (
       <FilteredAlbumList
+        authenticated={authenticated}
         heading={t("genreResultsHeading", { genre })}
         result={result}
         baseHref={`/explore?genero=${encodeURIComponent(genre)}`}
@@ -103,6 +109,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
       />
 
       <AlbumRail
+        authenticated={authenticated}
         heading={t("newReleasesHeading")}
         albums={explore.newReleases}
         categoryLabels={categoryLabels}
@@ -126,6 +133,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
       />
 
       <AlbumRail
+        authenticated={authenticated}
         heading={t("topRatedHeading")}
         albums={explore.topRated}
         categoryLabels={categoryLabels}
@@ -133,6 +141,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
       />
 
       <AlbumRail
+        authenticated={authenticated}
         heading={t("mostReviewedHeading")}
         albums={explore.mostReviewed}
         categoryLabels={categoryLabels}

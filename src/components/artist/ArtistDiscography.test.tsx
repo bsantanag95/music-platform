@@ -173,7 +173,9 @@ describe("ArtistDiscography", () => {
       activeSection: "main",
     });
     fireEvent.click(screen.getByRole("button", { name: d.viewTable }));
-    const [studio, ep] = screen.getAllByRole("row").slice(1);
+    const rowOf = (title: string) => screen.getAllByRole("row").find((row) => row.textContent?.includes(title));
+    const studio = rowOf("Disco studio");
+    const ep = rowOf("Disco ep");
     expect(within(studio!).queryByText(d.kinds.album)).not.toBeInTheDocument();
     expect(within(ep!).getAllByText(d.kinds.ep).length).toBeGreaterThan(0);
     expect(screen.getAllByRole("columnheader").map((th) => th.textContent)).not.toContain("Tipo");
@@ -190,5 +192,50 @@ describe("ArtistDiscography", () => {
   it("sin discos muestra el aviso vacío", () => {
     renderDiscography({ sections: [], activeSection: "main" });
     expect(screen.getByText(d.empty)).toBeInTheDocument();
+  });
+});
+
+describe("orden de la tabla (extend-album-quick-actions)", () => {
+  const rows = [
+    item("a", { title: "Aaa", year: 1985, community: { average: 3.9, count: 8 } }),
+    item("b", { title: "Bbb", year: null, community: { average: null, count: 2 } }),
+    item("c", { title: "Ccc", year: 1981, community: { average: 4.6, count: 12 } }),
+  ];
+  const titles = () => screen.getAllByRole("row").slice(1).map((row) => within(row).getByRole("link").textContent);
+
+  function renderTable() {
+    renderDiscography({
+      sections: [{ key: "live", items: rows }],
+      activeSection: "live",
+      marks: { ...EMPTY_DISCOGRAPHY_MARKS, stars: { a: 4.5 } },
+    });
+  }
+
+  it("por defecto ordena por año ascendente, con los discos sin año al final", () => {
+    renderTable();
+    expect(titles()).toEqual(["Ccc", "Aaa", "Bbb"]);
+    expect(screen.getByRole("columnheader", { name: d.columns.year })).toHaveAttribute("aria-sort", "ascending");
+  });
+
+  it("Tú ordena de tu nota más alta a la más baja, sin nota al final", () => {
+    renderTable();
+    fireEvent.click(screen.getByRole("button", { name: d.columns.you }));
+    expect(titles()).toEqual(["Aaa", "Bbb", "Ccc"]);
+    expect(screen.getByRole("columnheader", { name: d.columns.you })).toHaveAttribute("aria-sort", "descending");
+    expect(screen.getByRole("columnheader", { name: d.columns.year })).toHaveAttribute("aria-sort", "none");
+  });
+
+  it("Media ordena descendente y el segundo uso lo invierte, sin valor siempre al final", () => {
+    renderTable();
+    fireEvent.click(screen.getByRole("button", { name: d.columns.average }));
+    expect(titles()).toEqual(["Ccc", "Aaa", "Bbb"]);
+    fireEvent.click(screen.getByRole("button", { name: d.columns.average }));
+    expect(titles()).toEqual(["Aaa", "Ccc", "Bbb"]);
+  });
+
+  it("Año dos veces queda del más reciente al más antiguo", () => {
+    renderTable();
+    fireEvent.click(screen.getByRole("button", { name: d.columns.year }));
+    expect(titles()).toEqual(["Aaa", "Ccc", "Bbb"]);
   });
 });

@@ -871,6 +871,19 @@ export type FollowResponse = z.infer<typeof FollowResponseSchema>;
 export const ArtistFollowResponseSchema = z.object({ following: z.boolean() });
 export type ArtistFollowResponse = z.infer<typeof ArtistFollowResponseSchema>;
 
+// Marcas del usuario sobre un disco (openspec: extend-album-quick-actions).
+export const ReleaseGroupMarksSchema = z.object({
+  listened: z.boolean(),
+  stars: z.number().nullable(),
+  detailedScore: z.number().int().nullable(),
+  favorite: z.boolean(),
+  pending: z.boolean(),
+  lists: z.array(
+    z.object({ listId: z.string(), itemId: z.string().nullable(), kind: z.enum(["standard", "custom_journey"]), title: z.string() }),
+  ),
+});
+export type ReleaseGroupMarks = z.infer<typeof ReleaseGroupMarksSchema>;
+
 export const FollowedArtistSchema = z.object({
   id: z.uuid(),
   name: z.string(),

@@ -6,6 +6,8 @@ interface AlbumRailProps {
   albums: ReleaseGroup[];
   categoryLabels: Record<ReleaseGroupCategory, string>;
   coverLabel: string;
+  /** Hay sesión: el menú de acciones de cada disco pide sus marcas. */
+  authenticated?: boolean;
 }
 
 /**
@@ -13,7 +15,7 @@ interface AlbumRailProps {
  * `AlbumCard`. No pagina. No renderiza nada si `albums` viene vacío — la
  * portada se compone solo con las secciones que tienen contenido.
  */
-export function AlbumRail({ heading, albums, categoryLabels, coverLabel }: AlbumRailProps) {
+export function AlbumRail({ heading, albums, categoryLabels, coverLabel, authenticated = false }: AlbumRailProps) {
   if (albums.length === 0) return null;
   return (
     <section className="flex w-full flex-col gap-3">
@@ -25,6 +27,7 @@ export function AlbumRail({ heading, albums, categoryLabels, coverLabel }: Album
               releaseGroup={album}
               categoryLabel={categoryLabels[album.category]}
               coverLabel={coverLabel}
+              authenticated={authenticated}
             />
           </li>
         ))}

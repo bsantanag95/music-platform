@@ -6,10 +6,11 @@ import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { ReorderButtons, RemoveItemButton } from "./ListItemControls";
 import { listItemHref } from "./lists-shared";
 import type { ListItemsRendererProps } from "./list-items-view";
+import { ListItemQuickActions } from "./ListItemQuickActions";
 
 // Modo Detallada: una fila-tarjeta por ítem con carátula, título y artista, y
 // los controles de gestión al pie. Es el modo por defecto.
-export function ItemsDetailed({ items, entityType, actions }: ListItemsRendererProps) {
+export function ItemsDetailed({ items, entityType, actions, quickActions }: ListItemsRendererProps) {
   const t = useTranslations("lists");
   return (
     <ol className="flex flex-col gap-2">
@@ -55,6 +56,7 @@ export function ItemsDetailed({ items, entityType, actions }: ListItemsRendererP
               </div>
             ) : null}
           </div>
+          {quickActions ? <ListItemQuickActions item={item} quick={quickActions} variant="row" className="shrink-0 self-center" /> : null}
         </li>
       ))}
     </ol>

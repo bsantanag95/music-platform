@@ -11,6 +11,8 @@ interface FilteredAlbumListProps {
   baseHref: string;
   categoryLabels: Record<ReleaseGroupCategory, string>;
   coverLabel: string;
+  /** Hay sesión: el menú de acciones de cada disco pide sus marcas. */
+  authenticated?: boolean;
   emptyMessage: string;
   prevLabel: string;
   nextLabel: string;
@@ -28,6 +30,7 @@ export function FilteredAlbumList({
   baseHref,
   categoryLabels,
   coverLabel,
+  authenticated = false,
   emptyMessage,
   prevLabel,
   nextLabel,
@@ -53,6 +56,7 @@ export function FilteredAlbumList({
                 releaseGroup={album}
                 categoryLabel={categoryLabels[album.category]}
                 coverLabel={coverLabel}
+                authenticated={authenticated}
               />
             </li>
           ))}

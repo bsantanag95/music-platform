@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/i18n-test-utils";
+import catalogEs from "../../../messages/es/catalog.json";
+import collectionEs from "../../../messages/es/collection.json";
+import listsEs from "../../../messages/es/lists.json";
 import { AlbumCard } from "./AlbumCard";
 import type { ReleaseGroup } from "@/lib/api/schemas";
 
@@ -11,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   toggleFavorite: vi.fn(),
   toggleWantToListen: vi.fn(),
   createListenEntry: vi.fn(),
+  getReleaseGroupMarks: vi.fn(),
 }));
 
 // LazyCoverImage resuelve la carátula en el cliente vía TanStack Query; se
@@ -25,12 +29,13 @@ vi.mock("./CoverThumb", () => ({
   ),
 }));
 
-// AddToListPanel carga las listas propias al montar (efecto con llamada a la
-// API); se aísla para no tener que mockear `@/lib/api/lists` acá — su
-// comportamiento propio ya está cubierto por AddToListPanel.test.tsx.
-vi.mock("@/components/lists/AddToListPanel", () => ({
-  AddToListPanel: () => <div data-testid="mock-add-to-list-panel" />,
+// Los paneles de listas cargan datos al montar; se aíslan (sus tests propios los cubren).
+vi.mock("@/components/lists/ListsContainingItemPanel", () => ({
+  ListsContainingItemPanel: () => <div data-testid="mock-lists-containing" />,
 }));
+vi.mock("@/components/album/AlbumListPicker", () => ({ AlbumListPicker: () => null }));
+vi.mock("@/lib/api/catalog", () => ({ getReleaseGroupMarks: mocks.getReleaseGroupMarks }));
+vi.mock("@/lib/api/social", () => ({ saveRating: vi.fn() }));
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
@@ -67,159 +72,63 @@ const releaseGroup: ReleaseGroup = {
   coverResolved: false,
 };
 
-describe("AlbumCard", () => {
-  beforeEach(() => vi.clearAllMocks());
+describe("AlbumCard — menú de acciones del disco (extend-album-quick-actions)", () => {
+  const a = catalogEs.albumActions;
+  const MARKS = { listened: false, stars: null, detailedScore: null, favorite: true, pending: false, lists: [] };
 
-  it("agrega una entrada de deseo con un solo click en 'Lo busco'", async () => {
-    const user = userEvent.setup();
-    mocks.addWantedEntries.mockResolvedValue([{ id: "w1" }]);
-    renderWithIntl(
-      <AlbumCard
-        releaseGroup={releaseGroup}
-        categoryLabel="Estudio"
-        coverLabel="Carátula"
-        authenticated
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Más acciones" }));
-    await user.click(screen.getByRole("menuitem", { name: "Lo busco" }));
-
-    await waitFor(() =>
-      expect(mocks.addWantedEntries).toHaveBeenCalledWith({
-        releaseGroupId: releaseGroup.id,
-        entries: [{}],
-      }),
-    );
-    expect(await screen.findByRole("status")).toHaveTextContent("Agregado a tu búsqueda");
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getReleaseGroupMarks.mockResolvedValue(MARKS);
   });
 
-  it("redirige a login al elegir 'Lo busco' sin sesión", async () => {
-    const user = userEvent.setup();
-    renderWithIntl(
-      <AlbumCard releaseGroup={releaseGroup} categoryLabel="Estudio" coverLabel="Carátula" />,
-    );
+  function renderCard(authenticated: boolean) {
+    renderWithIntl(<AlbumCard releaseGroup={releaseGroup} categoryLabel="Estudio" coverLabel="Carátula" authenticated={authenticated} />);
+    return userEvent.setup();
+  }
 
-    await user.click(screen.getByRole("button", { name: "Más acciones" }));
-    await user.click(screen.getByRole("menuitem", { name: "Lo busco" }));
+  async function openMenu(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByRole("button", { name: a.open.replace("{title}", releaseGroup.title) }));
+    return screen.getByRole("dialog", { name: releaseGroup.title });
+  }
 
-    expect(mocks.push).toHaveBeenCalledWith("/auth/login");
-    expect(mocks.addWantedEntries).not.toHaveBeenCalled();
+  it("con sesión pide las marcas y muestra Favorito con su estado", async () => {
+    const user = renderCard(true);
+    const dialog = await openMenu(user);
+    expect(mocks.getReleaseGroupMarks).toHaveBeenCalledWith(releaseGroup.id);
+    await waitFor(() => expect(within(dialog).getByRole("button", { name: a.favorite })).toHaveAttribute("aria-pressed", "true"));
   });
 
-  it("lleva al flujo 'La tengo' de la página de álbum al elegir 'Ya la tengo'", async () => {
-    const user = userEvent.setup();
-    renderWithIntl(
-      <AlbumCard
-        releaseGroup={releaseGroup}
-        categoryLabel="Estudio"
-        coverLabel="Carátula"
-        authenticated
-      />,
-    );
+  it("conserva Lo busco: agrega el deseo con un clic y muestra el resultado", async () => {
+    mocks.addWantedEntries.mockResolvedValue({});
+    const user = renderCard(true);
+    const dialog = await openMenu(user);
+    await user.click(within(dialog).getByRole("button", { name: collectionEs.menuWantIt }));
+    expect(mocks.addWantedEntries).toHaveBeenCalledWith({ releaseGroupId: releaseGroup.id, entries: [{}] });
+    expect(await screen.findByRole("status")).toHaveTextContent(collectionEs.quickWantedAdded);
+  });
 
-    await user.click(screen.getByRole("button", { name: "Más acciones" }));
-    await user.click(screen.getByRole("menuitem", { name: "Ya la tengo" }));
-
+  it("conserva Ya la tengo: lleva al flujo de colección del álbum", async () => {
+    const user = renderCard(true);
+    const dialog = await openMenu(user);
+    await user.click(within(dialog).getByRole("button", { name: collectionEs.menuHaveIt }));
     expect(mocks.push).toHaveBeenCalledWith(`/album/${releaseGroup.id}?collection=have`);
   });
 
-  it("redirige a login al elegir 'Ya la tengo' sin sesión", async () => {
-    const user = userEvent.setup();
-    renderWithIntl(
-      <AlbumCard releaseGroup={releaseGroup} categoryLabel="Estudio" coverLabel="Carátula" />,
-    );
+  it("conserva Ver en listas", async () => {
+    const user = renderCard(true);
+    const dialog = await openMenu(user);
+    await user.click(within(dialog).getByRole("button", { name: listsEs.showInLists }));
+    expect(screen.getByTestId("mock-lists-containing")).toBeInTheDocument();
+  });
 
-    await user.click(screen.getByRole("button", { name: "Más acciones" }));
-    await user.click(screen.getByRole("menuitem", { name: "Ya la tengo" }));
-
+  it("sin sesión no pide marcas; las acciones de colección llevan a iniciar sesión", async () => {
+    const user = renderCard(false);
+    const dialog = await openMenu(user);
+    expect(within(dialog).getByText(a.signInPrompt)).toBeInTheDocument();
+    expect(mocks.getReleaseGroupMarks).not.toHaveBeenCalled();
+    await user.click(within(dialog).getByRole("button", { name: collectionEs.menuWantIt }));
     expect(mocks.push).toHaveBeenCalledWith("/auth/login");
-  });
-
-  it("marca como favorito con un solo click en 'Marcar como favorito'", async () => {
-    const user = userEvent.setup();
-    mocks.toggleFavorite.mockResolvedValue({ id: "fav-1" });
-    renderWithIntl(
-      <AlbumCard releaseGroup={releaseGroup} categoryLabel="Estudio" coverLabel="Carátula" authenticated />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Más acciones" }));
-    await user.click(screen.getByRole("menuitem", { name: "Marcar como favorito" }));
-
-    await waitFor(() =>
-      expect(mocks.toggleFavorite).toHaveBeenCalledWith({ type: "release-group", id: releaseGroup.id }),
-    );
-    expect(await screen.findByRole("status")).toHaveTextContent("Agregado a favoritos");
-  });
-
-  it("redirige a login al elegir 'Marcar como favorito' sin sesión", async () => {
-    const user = userEvent.setup();
-    renderWithIntl(
-      <AlbumCard releaseGroup={releaseGroup} categoryLabel="Estudio" coverLabel="Carátula" />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Más acciones" }));
-    await user.click(screen.getByRole("menuitem", { name: "Marcar como favorito" }));
-
-    expect(mocks.push).toHaveBeenCalledWith("/auth/login");
-    expect(mocks.toggleFavorite).not.toHaveBeenCalled();
-  });
-
-  it("marca como pendiente con un solo click", async () => {
-    const user = userEvent.setup();
-    mocks.toggleWantToListen.mockResolvedValue({ id: "wtl-1" });
-    renderWithIntl(
-      <AlbumCard releaseGroup={releaseGroup} categoryLabel="Estudio" coverLabel="Carátula" authenticated />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Más acciones" }));
-    await user.click(screen.getByRole("menuitem", { name: "Marcar como pendiente" }));
-
-    await waitFor(() =>
-      expect(mocks.toggleWantToListen).toHaveBeenCalledWith({ type: "release-group", id: releaseGroup.id }),
-    );
-    expect(await screen.findByRole("status")).toHaveTextContent("Agregado a Pendientes");
-  });
-
-  it("registra una escucha con un solo click en 'Registrar escucha'", async () => {
-    const user = userEvent.setup();
-    mocks.createListenEntry.mockResolvedValue({ id: "listen-1" });
-    renderWithIntl(
-      <AlbumCard releaseGroup={releaseGroup} categoryLabel="Estudio" coverLabel="Carátula" authenticated />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Más acciones" }));
-    await user.click(screen.getByRole("menuitem", { name: "Registrar escucha" }));
-
-    await waitFor(() =>
-      expect(mocks.createListenEntry).toHaveBeenCalledWith({ type: "release-group", id: releaseGroup.id }),
-    );
-    expect(await screen.findByRole("status")).toHaveTextContent("Escucha registrada");
-  });
-
-  it("abre el panel de 'Agregar a lista' al elegirlo con sesión", async () => {
-    const user = userEvent.setup();
-    renderWithIntl(
-      <AlbumCard releaseGroup={releaseGroup} categoryLabel="Estudio" coverLabel="Carátula" authenticated />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Más acciones" }));
-    await user.click(screen.getByRole("menuitem", { name: "Agregar elemento" }));
-
-    expect(screen.getByTestId("mock-add-to-list-panel")).toBeInTheDocument();
-  });
-
-  it("redirige a login al elegir 'Agregar a lista' sin sesión", async () => {
-    const user = userEvent.setup();
-    renderWithIntl(
-      <AlbumCard releaseGroup={releaseGroup} categoryLabel="Estudio" coverLabel="Carátula" />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Más acciones" }));
-    await user.click(screen.getByRole("menuitem", { name: "Agregar elemento" }));
-
-    expect(mocks.push).toHaveBeenCalledWith("/auth/login");
-    expect(screen.queryByTestId("mock-add-to-list-panel")).not.toBeInTheDocument();
+    expect(mocks.addWantedEntries).not.toHaveBeenCalled();
   });
 });
 

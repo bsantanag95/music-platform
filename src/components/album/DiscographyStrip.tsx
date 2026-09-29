@@ -2,6 +2,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { DiscographyScroller } from "./DiscographyScroller";
+import { StripItemActions } from "./StripItemActions";
 import type {
   DiscographyItem,
   DiscographyStrip as DiscographyStripData,
@@ -9,14 +10,17 @@ import type {
 
 // Franja de discografía al pie de la página de álbum (openspec: redesign-album-page, D15):
 // álbumes del artista principal del mismo tipo, en orden cronológico, con el actual
-// resaltado y accesos directos al anterior y al siguiente.
+// resaltado y accesos directos al anterior y al siguiente. Cada disco, salvo el actual, lleva el
+// menú de acciones en la esquina de la portada (openspec: extend-album-quick-actions).
 
 interface DiscographyStripProps {
   artistName: string;
   strip: DiscographyStripData;
+  /** Hay sesión: el menú de acciones de cada disco pide sus marcas. */
+  authenticated?: boolean;
 }
 
-export function DiscographyStrip({ artistName, strip }: DiscographyStripProps) {
+export function DiscographyStrip({ artistName, strip, authenticated = false }: DiscographyStripProps) {
   const t = useTranslations("catalog.album.discography");
   const { previous, next } = strip;
 
@@ -64,7 +68,7 @@ export function DiscographyStrip({ artistName, strip }: DiscographyStripProps) {
             </>
           );
           return (
-            <li key={item.id} data-current={current || undefined} className="shrink-0">
+            <li key={item.id} data-current={current || undefined} className="group/card relative shrink-0">
               {current ? (
                 <span aria-current="page" className="flex flex-col gap-1">
                   <span className="sr-only">{t("current")}: </span>
@@ -75,6 +79,7 @@ export function DiscographyStrip({ artistName, strip }: DiscographyStripProps) {
                   {body}
                 </Link>
               )}
+              {!current && <StripItemActions item={item} authenticated={authenticated} />}
             </li>
           );
         })}
