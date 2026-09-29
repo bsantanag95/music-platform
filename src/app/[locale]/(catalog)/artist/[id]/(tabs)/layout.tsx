@@ -6,7 +6,7 @@ import { ArtistCommunity } from "@/components/artist/ArtistCommunity";
 import { ArtistFacts, ArtistIdentity, ArtistPhoto, ArtistPhotoCreditMobile, ArtistSummary } from "@/components/artist/ArtistHeader";
 import { ArtistRelationPanel } from "@/components/artist/ArtistRelationPanel";
 import { ArtistTabs } from "@/components/artist/ArtistTabs";
-import { lineupFact, lineupTabOf } from "@/components/artist/lineup-fact";
+import { ARTIST_TABS_ANCHOR, lineupFact, lineupTabOf } from "@/components/artist/lineup-fact";
 import { itemListsHref } from "@/components/lists/lists-shared";
 import { Comments } from "@/components/social/Comments";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
@@ -138,7 +138,7 @@ export default async function ArtistLayout({ children, params }: ArtistLayoutPro
         </div>
       </header>
 
-      <div className="flex flex-col gap-6">
+      <div id={ARTIST_TABS_ANCHOR} className="flex scroll-mt-6 flex-col gap-6">
         <ArtistTabs artistId={artist.id} hasBiography={profile.summary !== null} lineupTab={lineupTabOf(lineup)} />
         {children}
       </div>

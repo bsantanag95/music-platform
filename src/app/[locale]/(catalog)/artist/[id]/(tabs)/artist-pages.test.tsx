@@ -239,7 +239,7 @@ describe("layout de la página de artista", () => {
     expect(screen.getAllByRole("link", { name: "David Gilmour" })[0]).toHaveAttribute("href", "/artist/gilmour");
     expect(screen.getAllByRole("link", { name: `${artistEs.facts.seeLineup} →` })[0]).toHaveAttribute(
       "href",
-      `/artist/${VALID_UUID}/members?view=current`,
+      `/artist/${VALID_UUID}/members?view=current#artist-tabs`,
     );
   });
 
