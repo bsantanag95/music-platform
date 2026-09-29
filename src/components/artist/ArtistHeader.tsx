@@ -21,7 +21,7 @@ export function ArtistPhoto({ name, photo }: { name: string; photo: ArtistProfil
   return (
     <figure className="flex w-24 shrink-0 flex-col gap-1 sm:w-[200px]">
       <div className={frame}>
-        <AppImage src={photo.url} alt={t("photo.alt", { name })} fill sizes="(min-width: 640px) 200px, 96px" className="object-cover" />
+        <AppImage src={photo.url} alt={t("photo.alt", { name })} fill sizes="(min-width: 640px) 200px, 96px" className="object-cover object-[center_20%]" />
       </div>
       {/* Crédito obligatorio de la licencia (ADR 0021): autor enlazado al archivo en Commons
           y licencia enlazada a su texto. */}
