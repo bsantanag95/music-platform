@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatInstrumentLine, formatLineupPeriod, formatLineupPeriods } from "./artist-format";
+import { formatInstrumentLine, formatLineupPeriod, formatLineupPeriods, repairSentenceSpacing } from "./artist-format";
 
 const labels = { present: "presente", unknown: "período desconocido" };
 const span = (beginDate: string | null, endDate: string | null, ended = endDate !== null) => ({ beginDate, endDate, ended });
@@ -44,5 +44,16 @@ describe("formatInstrumentLine", () => {
 
   it("sin instrumentos muestra solo los años", () => {
     expect(formatInstrumentLine({ instruments: [], periods: [span("1990", "1995")] }, { ...labels, label })).toBe("1990–1995");
+  });
+});
+
+describe("repairSentenceSpacing", () => {
+  it("restituye el espacio perdido entre oraciones", () => {
+    expect(repairSentenceSpacing("actriz estadounidense.Obtuvo reconocimiento")).toBe("actriz estadounidense. Obtuvo reconocimiento");
+    expect(repairSentenceSpacing("¿Quién?Él.")).toBe("¿Quién? Él.");
+  });
+
+  it("no toca siglas, decimales ni texto ya espaciado", () => {
+    expect(repairSentenceSpacing("en los U.S.A. en 1.5 horas. Luego")).toBe("en los U.S.A. en 1.5 horas. Luego");
   });
 });

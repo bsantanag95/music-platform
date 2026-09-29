@@ -3,7 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { AppImage } from "@/components/ui/AppImage";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import type { ArtistProfile } from "@/services/catalog/artist-profile-read";
-import { countryName, formatPartialDate, streamingName, yearOf } from "./artist-format";
+import { countryName, formatPartialDate, repairSentenceSpacing, streamingName, yearOf } from "./artist-format";
 import type { LineupFact } from "./lineup-fact";
 
 // Cabecera de la página de artista (openspec: redesign-artist-page, capability
@@ -31,11 +31,11 @@ export function ArtistPhoto({ name, photo }: { name: string; photo: ArtistProfil
         </a>
         {" · "}
         {photo.licenseUrl ? (
-          <a href={photo.licenseUrl} target="_blank" rel="noopener noreferrer license" className="hover:text-paper hover:underline">
+          <a href={photo.licenseUrl} target="_blank" rel="noopener noreferrer license" className="whitespace-nowrap hover:text-paper hover:underline">
             {photo.license}
           </a>
         ) : (
-          photo.license
+          <span className="whitespace-nowrap">{photo.license}</span>
         )}
       </figcaption>
     </figure>
@@ -53,11 +53,11 @@ export function ArtistPhotoCreditMobile({ photo }: { photo: ArtistProfile["photo
       </a>
       {" · "}
       {photo.licenseUrl ? (
-        <a href={photo.licenseUrl} target="_blank" rel="noopener noreferrer license" className="hover:underline">
+        <a href={photo.licenseUrl} target="_blank" rel="noopener noreferrer license" className="whitespace-nowrap hover:underline">
           {photo.license}
         </a>
       ) : (
-        photo.license
+        <span className="whitespace-nowrap">{photo.license}</span>
       )}
     </p>
   );
@@ -219,7 +219,7 @@ export function ArtistSummary({ artistId, summary }: { artistId: string; summary
   const t = useTranslations("catalog.artist.summary");
   const locale = useLocale();
   if (!summary) return null;
-  const firstParagraph = summary.text.split(/\n+/)[0] ?? summary.text;
+  const firstParagraph = repairSentenceSpacing(summary.text.split(/\n+/)[0] ?? summary.text);
   return (
     <section aria-label={t("readMore")} className="flex flex-col gap-1.5">
       {summary.language !== locale && (

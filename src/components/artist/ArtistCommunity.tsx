@@ -41,7 +41,6 @@ export function ArtistCommunity({ stats, listsHref }: { stats: ArtistCommunitySt
             "0"
           )
         }
-        detail={stats.listCount === 0 ? t("listsNone") : undefined}
       />
     </section>
   );

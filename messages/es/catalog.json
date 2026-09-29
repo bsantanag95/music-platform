@@ -227,9 +227,11 @@
       "collectionSeeking": "buscás {count}",
       "lists": "{count, plural, =0 {En ninguna de tus listas} one {En # de tus listas} other {En # de tus listas}}",
       "chooseLists": "Elegir listas",
+      "listsLabel": "Listas",
       "close": "Cerrar",
       "journey": "Recorrido",
       "journeyStart": "Armar recorrido",
+      "journeyNone": "Sin recorrido",
       "journeyManage": "Gestionar",
       "journeyProgress": "Progreso de tu recorrido",
       "journeyStates": {
@@ -244,8 +246,7 @@
       "listeners": "Oyentes",
       "followers": "Lo siguen",
       "favorites": "favorito de {value}",
-      "lists": "En listas",
-      "listsNone": "En ninguna lista"
+      "lists": "En listas"
     },
     "discography": {
       "heading": "Discografía",

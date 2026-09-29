@@ -227,9 +227,11 @@
       "collectionSeeking": "seeking {count}",
       "lists": "{count, plural, =0 {In none of your lists} one {In # of your lists} other {In # of your lists}}",
       "chooseLists": "Choose lists",
+      "listsLabel": "Lists",
       "close": "Close",
       "journey": "Journey",
       "journeyStart": "Build journey",
+      "journeyNone": "No journey yet",
       "journeyManage": "Manage",
       "journeyProgress": "Your journey progress",
       "journeyStates": {
@@ -244,8 +246,7 @@
       "listeners": "Listeners",
       "followers": "Followers",
       "favorites": "favorite of {value}",
-      "lists": "In lists",
-      "listsNone": "In no lists"
+      "lists": "In lists"
     },
     "discography": {
       "heading": "Discography",

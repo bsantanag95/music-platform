@@ -395,20 +395,24 @@ export function ToggleChip({
   onClick,
   icon,
   label,
+  stacked = false,
 }: {
   pressed: boolean;
   disabled: boolean;
   onClick: () => void;
   icon: ReactNode;
   label: string;
+  /** Icono sobre la etiqueta: tres conmutadores caben en la columna del panel (artista). */
+  stacked?: boolean;
 }) {
+  const layout = stacked ? "min-h-14 flex-col gap-1 px-1 py-2 text-center leading-tight" : "min-h-10 gap-2 px-3";
   return (
     <button
       type="button"
       aria-pressed={pressed}
       disabled={disabled}
       onClick={onClick}
-      className="inline-flex min-h-10 items-center justify-center gap-2 rounded border border-ink-border px-3 font-body text-sm text-paper-muted transition-colors hover:border-amber hover:text-paper aria-pressed:border-amber aria-pressed:bg-amber/10 aria-pressed:text-amber disabled:cursor-wait disabled:opacity-60"
+      className={`inline-flex min-w-0 items-center justify-center rounded border border-ink-border font-body text-sm text-paper-muted transition-colors hover:border-amber hover:text-paper aria-pressed:border-amber aria-pressed:bg-amber/10 aria-pressed:text-amber disabled:cursor-wait disabled:opacity-60 ${layout}`}
     >
       {icon}
       {label}

@@ -102,3 +102,12 @@ export function formatInstrumentLine(
     .join(" · ");
   return head ? `${head} (${periods})` : periods;
 }
+
+/**
+ * Restituye el espacio entre oraciones que el extracto de Wikipedia pierde al quitar las
+ * referencias ("estadounidense.Obtuvo" → "estadounidense. Obtuvo"). Solo actúa entre una
+ * minúscula y una mayúscula, así que no toca siglas ("U.S.A.") ni decimales.
+ */
+export function repairSentenceSpacing(text: string): string {
+  return text.replace(/(\p{Ll})([.!?])(\p{Lu})/gu, "$1$2 $3");
+}

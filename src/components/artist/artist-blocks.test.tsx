@@ -42,7 +42,7 @@ describe("ArtistCommunity", () => {
     expect(screen.getAllByText("Menos de 5").length).toBe(2);
     expect(screen.getAllByText("<5").length).toBe(2);
     expect(screen.queryByText(/favorito de/)).not.toBeInTheDocument();
-    expect(screen.getByText(artistEs.community.listsNone)).toBeInTheDocument();
+    expect(screen.getByText("0")).toBeInTheDocument();
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 
