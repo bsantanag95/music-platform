@@ -148,7 +148,9 @@ el primer orden vacío).
   deduplicado por `release_group` (año mínimo entre fuentes), ordenado por categoría → año →
   título, máximo **12**. Los demás grupos llegan con `albums: []` y `query` =
   `"<artista> - <título>"` para abrirlos como primer grupo.
-- La canción no enlaza a `/song/<id>` desde la búsqueda; la navegación es hacia sus álbumes.
+- El grupo resuelto (`recordingId` no nulo) ofrece un enlace directo a `/song/<id>` («Ver canción»)
+  además de listar sus álbumes; los grupos no expandidos (`recordingId: null`) siguen abriéndose
+  con `query` como primer grupo. No cambia el shape de la respuesta.
 - Presupuesto: 1 búsqueda de artistas + por interpretación ≤1 browse de discografía (0 con
   créditos locales) y 1 búsqueda de recordings (≤2 en total) + ≤4 browses de apariciones. Todo
   comparte la caché TTL de búsquedas (10 min) salvo el browse de discografía. La resolución

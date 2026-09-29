@@ -156,6 +156,11 @@ describe("Canciones", () => {
     expect(
       screen.getByRole("heading", { name: labels.results.songContext.title.replace("{song}", "Kiss of Death") }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", {
+        name: labels.results.songContext.viewSongAria.replace("{song}", "Kiss of Death"),
+      }),
+    ).toHaveAttribute("href", "/song/11111111-1111-4111-8111-111111111111");
     expect(screen.getByRole("link", { name: /Álbum 0/ })).toHaveAttribute("href", "/album/album-0");
     // Cinco visibles y el resto a un clic.
     expect(screen.queryByRole("link", { name: /Álbum 6/ })).not.toBeInTheDocument();
@@ -168,6 +173,29 @@ describe("Canciones", () => {
         name: labels.results.songs.openSong.replace("{song}", "Kiss of Death — New Order"),
       }),
     ).toHaveAttribute("href", "/search?type=song&q=New+Order+-+Kiss+of+Death");
+  });
+
+  it("sin grabación identidad no ofrece enlace directo a la canción", () => {
+    renderWithIntl(
+      <SongResults
+        response={{
+          type: "song",
+          results: [newOrder],
+          remoteFailed: false,
+          total: 1,
+          nextOffset: null,
+          interpretation: null,
+          alternatives: [],
+          refine: null,
+        }}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("link", {
+        name: labels.results.songContext.viewSongAria.replace("{song}", "Kiss of Death"),
+      }),
+    ).not.toBeInTheDocument();
   });
 });
 

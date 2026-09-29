@@ -31,9 +31,22 @@ export function SongGroupPanel({ group }: { group: SongGroupResult }) {
           <span className="size-1.5 shrink-0 rounded-full bg-amber" aria-hidden />
           {t("search.results.songContext.title", { song: group.title })}
         </h3>
-        {group.artistName ? (
-          <p className="pl-3.5 font-data text-xs text-paper-muted">{group.artistName}</p>
-        ) : null}
+        {/* Artista y acción comparten fila: el enlace no suma un renglón suelto. */}
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 pl-3.5">
+          {group.artistName ? <p className="min-w-0 font-data text-xs text-paper-muted">{group.artistName}</p> : null}
+          {group.recordingId ? (
+            // Enlace directo a la ficha de la canción resuelta (openspec:
+            // link-song-from-search); el panel describe sus álbumes, así que la
+            // canción se ofrece como acción explícita.
+            <Link
+              href={`/song/${group.recordingId}`}
+              aria-label={t("search.results.songContext.viewSongAria", { song: group.title })}
+              className="shrink-0 font-data text-xs text-amber underline-offset-2 transition-colors hover:text-amber-hover hover:underline"
+            >
+              {t("search.results.songContext.viewSong")} <span aria-hidden>→</span>
+            </Link>
+          ) : null}
+        </div>
       </header>
 
       {total === 0 ? (

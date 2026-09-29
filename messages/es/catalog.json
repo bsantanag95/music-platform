@@ -119,7 +119,9 @@
       "songContext": {
         "title": "Álbumes que contienen «{song}»",
         "showMore": "Ver {count} más",
-        "showLess": "Ver menos"
+        "showLess": "Ver menos",
+        "viewSong": "Ver canción",
+        "viewSongAria": "Ver la canción «{song}»"
       }
     },
     "origin": {

@@ -22,29 +22,31 @@ más abajo (cambios `rebalance-catalog-detail-pages` y `redesign-song-page`).
 
 ## 1. Buscar en el catálogo
 
-El usuario escribe un texto y `/search` muestra **todas** las coincidencias de artistas y
-álbumes (pestañas **Todo / Artistas / Álbumes**); la persona elige cuál abrir. La búsqueda
-no resuelve a un único resultado ni ingiere nada: combina la base local con una sola
-request a MusicBrainz por tipo, persiste los candidatos aún no vistos como stubs y ordena
-de forma determinista (locales cacheados → resto de locales → solo-MusicBrainz por score,
-coincidencia exacta al tope de su grupo). El campo del Header siempre navega a
-`/search?q=<consulta>`.
+El usuario elige un **tipo** (Artistas, Álbumes, Canciones o Usuarios) y escribe un texto;
+`/search?type=<tipo>&q=<texto>` muestra las coincidencias **de ese tipo** y la persona elige
+cuál abrir. La búsqueda no ingiere discografía: combina la base local con una sola request a
+MusicBrainz por tipo (ninguna en Usuarios), persiste los candidatos aún no vistos como stubs
+y ordena de forma determinista (locales cacheados → resto de locales → solo-MusicBrainz por
+score, coincidencia exacta al tope de su grupo). El campo del Header siempre navega a
+`/search?q=<consulta>` (tipo Artistas).
 
 **Estados:**
 - **Resultados** — lista de candidatos; cada fila enlaza directo a `/artist/<id>` o
   `/album/<id>`. Un artista o álbum todavía no ingerido se trae **en la vista destino**,
   con su propio estado de carga — la página de resultados nunca habla de "primera
   importación".
-- **Sin coincidencias** — lista vacía (`200`, no error): estado vacío propio.
+- **Canciones** — el grupo canción+artista resuelto lista los álbumes que la contienen y
+  ofrece un enlace directo **"Ver canción"** a `/song/<id>` (cambio `link-song-from-search`);
+  las demás canciones con ese título abren su propia búsqueda.
+- **Sin coincidencias** — lista vacía (`200`, no error): estado vacío propio, que ofrece el
+  mismo texto en los otros tipos.
 - **Carga** — mientras la página resuelve el `q` de la URL, `loading.tsx` muestra el
   skeleton de la lista y el formulario queda deshabilitado.
 - **Error** — solo si MusicBrainz falla y no hay ninguna coincidencia local
   (`INTERNAL_ERROR`): recuperable, con reintento. Distinto de "sin coincidencias".
 
 Los homónimos ("Poison" glam vs. thrash) aparecen como filas separadas con su
-disambiguation — la ambigüedad la resuelve el usuario, no `artists[0]`. Búsqueda de
-canciones, autocompletado y paginación: diferidos (ver el roadmap y
-`openspec/changes/add-search-results-page/design.md` → *Trabajo futuro diferido*).
+disambiguation — la ambigüedad la resuelve el usuario, no `artists[0]`.
 
 **Tolerancia a errores de tipeo — limitación conocida (aceptada por ahora).** La base
 local coincide por *substring exacto*, sin distinguir mayúsculas (`ILIKE '%texto%'`): no

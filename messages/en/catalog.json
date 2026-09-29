@@ -119,7 +119,9 @@
       "songContext": {
         "title": "Albums that contain “{song}”",
         "showMore": "Show {count} more",
-        "showLess": "Show less"
+        "showLess": "Show less",
+        "viewSong": "Open song",
+        "viewSongAria": "Open the song “{song}”"
       }
     },
     "origin": {
