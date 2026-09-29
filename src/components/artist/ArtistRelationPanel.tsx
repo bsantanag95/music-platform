@@ -45,13 +45,26 @@ const linkButton =
   "font-data text-xs text-amber underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50";
 const divider = "border-t border-ink-border";
 
-function Row({ label, children }: { label: ReactNode; children: ReactNode }) {
+/**
+ * Fila del panel: la etiqueta y su acción en la primera línea, el valor debajo. En la columna
+ * angosta del panel, un valor largo ("2 discos · Man’s Best Friend, hace 4 días") no empuja la
+ * acción a una línea suelta ni desalinea las filas entre sí.
+ */
+function Field({ label, action, children }: { label: string; action?: ReactNode; children: ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-      <span className="font-body text-sm text-paper-muted">{label}</span>
-      <span className="flex min-w-0 flex-wrap items-center justify-end gap-x-3 gap-y-1">{children}</span>
+    <div className="flex flex-col gap-0.5">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="font-body text-sm text-paper-muted">{label}</span>
+        {action}
+      </div>
+      {children}
     </div>
   );
+}
+
+/** Valor de una fila: atenuado cuando dice que no hay nada ("Sin escuchas"). */
+function Value({ empty, children }: { empty: boolean; children: ReactNode }) {
+  return <p className={`font-body text-sm ${empty ? "text-paper-muted" : "text-paper"}`}>{children}</p>;
 }
 
 export function ArtistRelationPanel(props: ArtistRelationPanelProps) {
@@ -148,8 +161,9 @@ function AuthenticatedPanel({
   };
 
   const relativeDate = (iso: string) => format.relativeTime(new Date(iso), new Date());
+  const noListens = !last && state.listens.albumCount === 0;
   const listensSummary = (() => {
-    if (!last && state.listens.albumCount === 0) return t("listensNone");
+    if (noListens) return t("listensNone");
     const parts: string[] = [];
     if (state.listens.albumCount > 0) parts.push(t("listensAlbums", { count: state.listens.albumCount }));
     if (last) parts.push(last.title ? t("listensLast", { title: last.title, date: relativeDate(last.at) }) : relativeDate(last.at));
@@ -157,8 +171,9 @@ function AuthenticatedPanel({
   })();
 
   const { have, seeking } = state.collection;
+  const noCollection = have === 0 && seeking === 0;
   const collectionSummary =
-    have === 0 && seeking === 0
+    noCollection
       ? t("collectionNone")
       : [have > 0 ? t("collectionHave", { count: have }) : null, seeking > 0 ? t("collectionSeeking", { count: seeking }) : null]
           .filter(Boolean)
@@ -175,6 +190,7 @@ function AuthenticatedPanel({
           onClick={() => void toggleFollow()}
           icon={<FollowIcon active={following} />}
           label={following ? t("following") : t("follow")}
+          stacked
         />
         <ToggleChip
           pressed={favorited}
@@ -182,6 +198,7 @@ function AuthenticatedPanel({
           onClick={() => void toggleFav()}
           icon={<HeartIcon filled={favorited} />}
           label={t("favorite")}
+          stacked
         />
         <ToggleChip
           pressed={pending}
@@ -189,16 +206,21 @@ function AuthenticatedPanel({
           onClick={() => void togglePending()}
           icon={<BookmarkIcon filled={pending} />}
           label={t("pending")}
+          stacked
         />
       </div>
 
-      <div className={`flex flex-col gap-2 pt-3 ${divider}`}>
-        <Row label={t("listens")}>
-          <span className="font-body text-sm text-paper">{listensSummary}</span>
-          <button type="button" className={linkButton} disabled={busy === "listen"} onClick={() => void logListen()}>
-            {busy === "listen" ? t("logging") : t("logListen")}
-          </button>
-        </Row>
+      <div className={`flex flex-col gap-3 pt-3 ${divider}`}>
+        <Field
+          label={t("listens")}
+          action={
+            <button type="button" className={linkButton} disabled={busy === "listen"} onClick={() => void logListen()}>
+              {busy === "listen" ? t("logging") : t("logListen")}
+            </button>
+          }
+        >
+          <Value empty={noListens}>{listensSummary}</Value>
+        </Field>
         {loggedEntry && !detailsOpen && (
           <p role="status" className="font-data text-xs text-paper-muted">
             {t("listenLogged")} ·{" "}
@@ -223,24 +245,29 @@ function AuthenticatedPanel({
             }}
           />
         )}
-        <Row label={t("collection")}>
-          <span className="font-body text-sm text-paper">{collectionSummary}</span>
-        </Row>
+        <Field label={t("collection")}>
+          <Value empty={noCollection}>{collectionSummary}</Value>
+        </Field>
       </div>
 
-      <div className={`flex flex-col gap-2 pt-3 ${divider}`}>
+      <div className={`flex flex-col gap-3 pt-3 ${divider}`}>
         <div className="flex flex-col gap-1">
-          <Row label={<span className={memberships.length > 0 ? "text-paper" : undefined}>{t("lists", { count: memberships.length })}</span>}>
-            <button
-              ref={listsButton}
-              type="button"
-              className={linkButton}
-              aria-expanded={pickerOpen}
-              onClick={() => (pickerOpen ? closePicker() : setPickerOpen(true))}
-            >
-              {pickerOpen ? t("close") : t("chooseLists")}
-            </button>
-          </Row>
+          <Field
+            label={t("listsLabel")}
+            action={
+              <button
+                ref={listsButton}
+                type="button"
+                className={linkButton}
+                aria-expanded={pickerOpen}
+                onClick={() => (pickerOpen ? closePicker() : setPickerOpen(true))}
+              >
+                {pickerOpen ? t("close") : t("chooseLists")}
+              </button>
+            }
+          >
+            <Value empty={memberships.length === 0}>{t("lists", { count: memberships.length })}</Value>
+          </Field>
           {pickerOpen && (
             <AlbumListPicker
               target={target}
@@ -254,10 +281,23 @@ function AuthenticatedPanel({
           )}
         </div>
 
-        <Row label={t("journey")}>
+        <Field
+          label={t("journey")}
+          action={
+            state.journey ? (
+              <Link href={`/me/artist-journeys/${artistId}`} className={linkButton}>
+                {t("journeyManage")} →
+              </Link>
+            ) : (
+              <button type="button" className={linkButton} onClick={() => setJourneyModalOpen(true)}>
+                {t("journeyStart")}
+              </button>
+            )
+          }
+        >
           {state.journey ? (
-            <>
-              <span className="font-data text-xs text-paper-muted">{t(`journeyStates.${state.journey.state}`)}</span>
+            <div className="flex items-center gap-3">
+              <span className="font-body text-sm text-paper">{t(`journeyStates.${state.journey.state}`)}</span>
               {state.journey.state !== "archived" && (
                 // Señal discreta sin fracción numérica (spec artist-journey).
                 <span
@@ -266,21 +306,16 @@ function AuthenticatedPanel({
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-valuenow={Math.round(state.journey.progress * 100)}
-                  className="inline-block h-1.5 w-16 overflow-hidden rounded-full bg-ink-border"
+                  className="block h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-ink-border"
                 >
                   <span className="block h-full rounded-full bg-petrol" style={{ width: `${Math.round(state.journey.progress * 100)}%` }} />
                 </span>
               )}
-              <Link href={`/me/artist-journeys/${artistId}`} className={linkButton}>
-                {t("journeyManage")} →
-              </Link>
-            </>
+            </div>
           ) : (
-            <button type="button" className={linkButton} onClick={() => setJourneyModalOpen(true)}>
-              {t("journeyStart")}
-            </button>
+            <Value empty>{t("journeyNone")}</Value>
           )}
-        </Row>
+        </Field>
         {journeyModalOpen && (
           <ArtistJourneyStartModal
             artistId={artistId}

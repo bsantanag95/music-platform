@@ -1,6 +1,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import type { ArtistProfile } from "@/services/catalog/artist-profile-read";
 import { WikipediaAttribution } from "./ArtistHeader";
+import { repairSentenceSpacing } from "./artist-format";
 
 // Pestaña Biografía (openspec: redesign-artist-page, capability `artist-biography`): la
 // introducción completa del artículo de Wikipedia en párrafos, sin modificar ni traducir,
@@ -10,7 +11,7 @@ export function ArtistBiography({ summary }: { summary: NonNullable<ArtistProfil
   const t = useTranslations("catalog.artist.biography");
   const tSummary = useTranslations("catalog.artist.summary");
   const locale = useLocale();
-  const paragraphs = summary.text.split(/\n+/).map((p) => p.trim()).filter(Boolean);
+  const paragraphs = summary.text.split(/\n+/).map((p) => repairSentenceSpacing(p.trim())).filter(Boolean);
 
   return (
     <article className="flex max-w-prose flex-col gap-4">

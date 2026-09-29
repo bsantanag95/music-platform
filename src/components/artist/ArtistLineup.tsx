@@ -124,7 +124,7 @@ function PendingNote({ pending }: { pending: number }) {
   if (pending === 0) return null;
   return (
     <p role="status" className="font-data text-xs text-paper-muted">
-      ⓘ {t("pending")}
+      {t("pending")}
     </p>
   );
 }
