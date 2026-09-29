@@ -59,7 +59,8 @@ popover si falla:
 - **Favorito** y **Pendiente**: conmutadores con `aria-pressed`.
 - **Agregar a lista…**: despliega `AlbumListPicker` con las pertenencias del disco.
 - **Calificar**: `StarRatingInput` en línea; guardar conserva el puntaje detallado solo si sigue
-  siendo coherente (mismo criterio que el panel del álbum); quitar la nota la borra.
+  siendo coherente, y si lo descarta lo avisa (mismo criterio y mensaje que el panel del álbum,
+  que tampoco ofrece quitar la nota).
 - **Ir al álbum**: enlace.
 
 Sin sesión, el popover muestra "Iniciá sesión para registrar escuchas, calificar o armar listas",
@@ -75,7 +76,8 @@ actualiza.
 
 ### D4. Tus marcas a la vista
 
-- **Grilla**: franja en la base de la carátula, sobre un degradé oscuro para el contraste, con tu
+- **Grilla**: etiqueta en la esquina inferior de la carátula, con el mismo fondo que las
+  etiquetas "EP" y "Mejor valorado" (sin degradés nuevos), con tu
   nota ("★ 4½") o ✓ si solo escuchaste, ♥ si es favorito y el marcador si está en Pendiente. Sin
   marcas, no hay franja. Cada ícono con texto accesible.
 - **Tabla**: la columna "Tú" con el mismo contenido y el mismo orden.

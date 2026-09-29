@@ -434,7 +434,7 @@ export function HeartIcon({ filled }: { filled: boolean }) {
   );
 }
 
-function BookmarkIcon({ filled }: { filled: boolean }) {
+export function BookmarkIcon({ filled }: { filled: boolean }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4 shrink-0">
       <path

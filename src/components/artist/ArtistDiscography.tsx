@@ -6,14 +6,18 @@ import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { LazyCoverImage } from "@/components/catalog/LazyCoverImage";
 import { formatStars } from "@/components/album/album-format";
-import type { ArtistDiscographyItem } from "@/services/catalog/artist-discography-view";
+import { BookmarkIcon, HeartIcon } from "@/components/album/AlbumRelationPanel";
+import type { ArtistDiscographyItem, DiscographyMarks } from "@/services/catalog/artist-discography-view";
 import type { DiscographySection } from "@/services/catalog/discography-sections";
 import { kindKey } from "./artist-format";
+import { DiscographyItemMenu, type DiscMarks } from "./DiscographyItemMenu";
 
 // Discografía de la página de artista (openspec: redesign-artist-page, capability
 // `artist-discography-view`): selector de secciones con su cantidad (la sección vive en la
 // URL, `?section=`), vistas grilla y tabla con la elección recordada por sección en el
-// navegador, "Mostrar más" de a 48 en la grilla, "Mejor valorado" y las marcas del usuario.
+// navegador, "Mostrar más" de a 48 en la grilla, "Mejor valorado" y las marcas del usuario. Cada
+// disco tiene su menú "…" de acciones (openspec: add-discography-quick-actions); las marcas viven
+// en estado local y el menú las actualiza.
 
 export const GRID_PAGE_SIZE = 48;
 
@@ -61,18 +65,57 @@ function useSectionView(section: DiscographySection): [View, (view: View) => voi
   ];
 }
 
-export interface DiscographyMarksProps {
-  listened: string[];
-  stars: Record<string, number>;
-}
-
 interface ArtistDiscographyProps {
   artistId: string;
   sections: { key: DiscographySection; items: ArtistDiscographyItem[] }[];
   activeSection: DiscographySection;
   bestRatedId: string | null;
   /** Marcas del usuario en sesión; `null` para visitantes anónimos. */
-  marks: DiscographyMarksProps | null;
+  marks: DiscographyMarks | null;
+}
+
+const NO_MARKS: DiscMarks = {
+  listened: false,
+  stars: null,
+  detailedScore: null,
+  favorite: false,
+  pending: false,
+  lists: [],
+};
+
+/** Marcas por disco a partir de las precargadas en lote. */
+function marksByDisc(marks: DiscographyMarks): Record<string, DiscMarks> {
+  const ids = new Set([
+    ...marks.listened,
+    ...Object.keys(marks.stars),
+    ...marks.favorites,
+    ...marks.pending,
+    ...Object.keys(marks.lists),
+  ]);
+  const listened = new Set(marks.listened);
+  const favorites = new Set(marks.favorites);
+  const pending = new Set(marks.pending);
+  return Object.fromEntries(
+    [...ids].map((id) => [
+      id,
+      {
+        listened: listened.has(id),
+        stars: marks.stars[id] ?? null,
+        detailedScore: marks.detailedScores[id] ?? null,
+        favorite: favorites.has(id),
+        pending: pending.has(id),
+        lists: marks.lists[id] ?? [],
+      },
+    ]),
+  );
+}
+
+/** Marcas y menú compartidos por la grilla y la tabla: un solo menú abierto a la vez. */
+interface DiscActions {
+  marksOf: (id: string) => DiscMarks | null;
+  openId: string | null;
+  setOpenId: (id: string | null) => void;
+  updateMarks: (id: string, update: (current: DiscMarks) => DiscMarks) => void;
 }
 
 function sectionHref(artistId: string, section: DiscographySection, defaultSection: DiscographySection) {
@@ -84,14 +127,21 @@ export function ArtistDiscography({ artistId, sections, activeSection, bestRated
   const [view, setView] = useSectionView(activeSection);
   const active = sections.find((s) => s.key === activeSection);
   const defaultSection = sections[0]?.key ?? "main";
+  const [discMarks, setDiscMarks] = useState<Record<string, DiscMarks>>(() => (marks ? marksByDisc(marks) : {}));
+  const [openId, setOpenId] = useState<string | null>(null);
 
   if (!active) {
     return <p className="font-body text-sm text-paper-muted">{t("empty")}</p>;
   }
 
-  const listened = new Set(marks?.listened ?? []);
+  const actions: DiscActions = {
+    marksOf: (id) => (marks ? (discMarks[id] ?? NO_MARKS) : null),
+    openId,
+    setOpenId,
+    updateMarks: (id, update) => setDiscMarks((current) => ({ ...current, [id]: update(current[id] ?? NO_MARKS) })),
+  };
   return (
-    <section aria-labelledby="discography-heading" className="flex flex-col gap-4">
+    <section aria-labelledby="discography-heading" data-menu-bounds className="flex flex-col gap-4">
       <h2 id="discography-heading" className="sr-only">
         {t("heading")}
       </h2>
@@ -139,11 +189,10 @@ export function ArtistDiscography({ artistId, sections, activeSection, bestRated
           items={active.items}
           bestRatedId={activeSection === "main" ? bestRatedId : null}
           showEpBadge={activeSection === "main"}
-          listened={listened}
-          stars={marks?.stars ?? {}}
+          actions={actions}
         />
       ) : (
-        <DiscographyTable items={active.items} listened={listened} stars={marks?.stars ?? {}} />
+        <DiscographyTable items={active.items} actions={actions} />
       )}
     </section>
   );
@@ -158,40 +207,55 @@ function Cover({ item, className }: { item: ArtistDiscographyItem; className: st
   );
 }
 
-function PersonalMarks({ listened, stars }: { listened: boolean; stars: number | undefined }) {
+/** Tus marcas sobre un disco: tu nota (o ✓ si solo lo escuchaste), favorito y Pendiente. */
+function DiscMarksView({ marks }: { marks: DiscMarks }) {
   const t = useTranslations("catalog.artist.discography");
   const locale = useLocale();
-  if (!listened && stars === undefined) return null;
+  const stars = marks.stars !== null ? formatStars(marks.stars, locale) : null;
   return (
     <span className="inline-flex items-center gap-1.5 font-data text-xs text-paper">
-      {listened && (
-        <span title={t("listened")}>
-          <span aria-hidden="true">✓</span>
-          <span className="sr-only">{t("listened")}</span>
+      {stars !== null ? (
+        <span title={t("yourStars", { stars })}>
+          <span aria-hidden="true">★ {stars}</span>
+          <span className="sr-only">{t("yourStars", { stars })}</span>
+        </span>
+      ) : (
+        marks.listened && (
+          <span title={t("listened")}>
+            <span aria-hidden="true">✓</span>
+            <span className="sr-only">{t("listened")}</span>
+          </span>
+        )
+      )}
+      {marks.favorite && (
+        <span title={t("favorite")} className="text-amber">
+          <HeartIcon filled />
+          <span className="sr-only">{t("favorite")}</span>
         </span>
       )}
-      {stars !== undefined && (
-        <span title={t("yourStars", { stars: formatStars(stars, locale) })}>
-          <span aria-hidden="true">★ {formatStars(stars, locale)}</span>
-          <span className="sr-only">{t("yourStars", { stars: formatStars(stars, locale) })}</span>
+      {marks.pending && (
+        <span title={t("pendingMark")}>
+          <BookmarkIcon filled />
+          <span className="sr-only">{t("pendingMark")}</span>
         </span>
       )}
     </span>
   );
 }
 
+const hasMarks = (marks: DiscMarks | null): marks is DiscMarks =>
+  marks !== null && (marks.listened || marks.stars !== null || marks.favorite || marks.pending);
+
 function DiscographyGrid({
   items,
   bestRatedId,
   showEpBadge,
-  listened,
-  stars,
+  actions,
 }: {
   items: ArtistDiscographyItem[];
   bestRatedId: string | null;
   showEpBadge: boolean;
-  listened: Set<string>;
-  stars: Record<string, number>;
+  actions: DiscActions;
 }) {
   const t = useTranslations("catalog.artist.discography");
   const locale = useLocale();
@@ -202,34 +266,56 @@ function DiscographyGrid({
       <ul className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
         {items.slice(0, visible).map((item) => {
           const best = item.id === bestRatedId;
+          const marks = actions.marksOf(item.id);
+          const open = actions.openId === item.id;
           return (
-            <li key={item.id}>
+            <li key={item.id} className="group/card relative">
               <Link href={`/album/${item.id}`} className="group flex flex-col gap-1.5">
                 <span className="relative block">
                   <Cover item={item} className="aspect-square w-full" />
                   {(best || (showEpBadge && item.isEp)) && (
                     <span className="absolute left-1.5 top-1.5 flex flex-col items-start gap-1">
                       {best && (
-                        <span className="rounded bg-ink/85 px-1.5 py-0.5 font-data text-xs text-amber">★ {t("bestRated")}</span>
+                        <span className="rounded bg-ink/85 px-1.5 py-0.5 font-data text-xs text-amber">
+                          ★ {t("bestRated")}
+                        </span>
                       )}
                       {showEpBadge && item.isEp && (
                         <span className="rounded bg-ink/85 px-1.5 py-0.5 font-data text-xs text-paper">{t("ep")}</span>
                       )}
                     </span>
                   )}
-                  {(listened.has(item.id) || stars[item.id] !== undefined) && (
+                  {hasMarks(marks) && (
                     <span className="absolute bottom-1.5 right-1.5 rounded bg-ink/85 px-1.5 py-0.5">
-                      <PersonalMarks listened={listened.has(item.id)} stars={stars[item.id]} />
+                      <DiscMarksView marks={marks} />
                     </span>
                   )}
                 </span>
                 <span className="line-clamp-2 font-body text-sm text-paper group-hover:text-amber">{item.title}</span>
                 <span className="font-data text-xs text-paper-muted">
-                  {[item.year, best && item.community.average !== null ? `★ ${formatStars(item.community.average, locale)}` : null]
+                  {[
+                    item.year,
+                    best && item.community.average !== null ? `★ ${formatStars(item.community.average, locale)}` : null,
+                  ]
                     .filter(Boolean)
                     .join(" · ")}
                 </span>
               </Link>
+              {/* Fuera del enlace (no se anidan controles): visible al pasar el mouse o con el
+                  foco, siempre en pantallas táctiles y mientras su menú está abierto. */}
+              <DiscographyItemMenu
+                item={item}
+                marks={marks}
+                open={open}
+                onOpenChange={(next) => actions.setOpenId(next ? item.id : null)}
+                onMarksChange={(update) => actions.updateMarks(item.id, update)}
+                variant="cover"
+                className={`!absolute right-1.5 top-1.5 ${
+                  open
+                    ? "opacity-100"
+                    : "opacity-0 focus-within:opacity-100 group-hover/card:opacity-100 [@media(hover:none)]:opacity-100"
+                }`}
+              />
             </li>
           );
         })}
@@ -260,22 +346,32 @@ function useKindLabel() {
   };
 }
 
-function DiscographyTable({
-  items,
-  listened,
-  stars,
-}: {
-  items: ArtistDiscographyItem[];
-  listened: Set<string>;
-  stars: Record<string, number>;
-}) {
+/** El tipo solo se muestra cuando algún tipo del disco no es "álbum" (EP, en vivo, remix…). */
+function showsKind(kinds: string[]): boolean {
+  return !(kinds.length === 1 && kindKey(kinds[0]!) === "album");
+}
+
+function DiscographyTable({ items, actions }: { items: ArtistDiscographyItem[]; actions: DiscActions }) {
   const t = useTranslations("catalog.artist.discography");
   const locale = useLocale();
   const kindLabel = useKindLabel();
-  const community = (item: ArtistDiscographyItem) =>
-    item.community.average !== null
-      ? t("communityValue", { average: formatStars(item.community.average, locale), count: item.community.count })
-      : t("fewRatings");
+  // Con menos de 5 valoraciones, un "—" atenuado: "< 5 notas" en cada fila era ruido y
+  // "notas" chocaba con las notas de la comunidad de la misma página.
+  const average = (item: ArtistDiscographyItem) =>
+    item.community.average !== null ? (
+      t("communityValue", { average: formatStars(item.community.average, locale), count: item.community.count })
+    ) : (
+      <span title={t("fewRatingsLabel")}>
+        <span aria-hidden="true">—</span>
+        <span className="sr-only">{t("fewRatingsLabel")}</span>
+      </span>
+    );
+  const kindChip = (item: ArtistDiscographyItem) =>
+    showsKind(item.kinds) ? (
+      <span className="shrink-0 rounded border border-ink-border px-1.5 py-0.5 font-data text-xs text-paper-muted">
+        {kindLabel(item.kinds)}
+      </span>
+    ) : null;
 
   return (
     <table className="w-full table-fixed border-collapse text-left">
@@ -284,53 +380,65 @@ function DiscographyTable({
           <th scope="col" className="w-12 py-2 pr-2 font-normal">
             {t("columns.year")}
           </th>
-          <th scope="col" className="w-11 py-2 pr-2 font-normal">
+          <th scope="col" className="hidden w-11 py-2 pr-2 font-normal sm:table-cell">
             <span className="sr-only">{t("columns.cover")}</span>
           </th>
           <th scope="col" className="py-2 pr-2 font-normal">
             {t("columns.title")}
           </th>
-          <th scope="col" className="hidden w-36 py-2 pr-2 font-normal sm:table-cell">
-            {t("columns.type")}
-          </th>
           <th scope="col" className="hidden w-32 py-2 pr-2 font-normal sm:table-cell">
-            {t("columns.community")}
+            {t("columns.average")}
           </th>
-          <th scope="col" className="w-20 py-2 font-normal">
+          <th scope="col" className="w-20 py-2 pr-2 font-normal sm:w-24">
             {t("columns.you")}
+          </th>
+          <th scope="col" className="w-10 py-2 font-normal">
+            <span className="sr-only">{t("menu.column")}</span>
           </th>
         </tr>
       </thead>
       <tbody>
-        {items.map((item) => (
-          <tr key={item.id} className="border-b border-ink-border align-middle">
-            <td className="py-2 pr-2 font-data text-xs text-paper-muted">{item.year ?? "—"}</td>
-            <td className="py-2 pr-2">
-              <Cover item={item} className="aspect-square w-9" />
-            </td>
-            <td className="min-w-0 py-2 pr-2">
-              <Link href={`/album/${item.id}`} className="block truncate font-body text-sm text-paper hover:text-amber">
-                {item.title}
-              </Link>
-              {item.primaryArtist && (
-                <span className="block truncate font-data text-xs text-paper-muted">
-                  {t("withArtist", { name: item.primaryArtist.name })}
+        {items.map((item) => {
+          const marks = actions.marksOf(item.id);
+          return (
+            <tr key={item.id} className="border-b border-ink-border align-middle">
+              <td className="py-2 pr-2 font-data text-xs text-paper-muted">{item.year ?? "—"}</td>
+              <td className="hidden py-2 pr-2 sm:table-cell">
+                <Cover item={item} className="aspect-square w-9" />
+              </td>
+              <td className="min-w-0 py-2 pr-2">
+                <span className="flex min-w-0 items-center gap-2">
+                  <Link href={`/album/${item.id}`} className="truncate font-body text-sm text-paper hover:text-amber">
+                    {item.title}
+                  </Link>
+                  <span className="hidden sm:contents">{kindChip(item)}</span>
                 </span>
-              )}
-              {/* En móvil, tipo y comunidad pasan a una segunda línea bajo el título. */}
-              <span className="block truncate font-data text-xs text-paper-muted sm:hidden">
-                {kindLabel(item.kinds)} · {community(item)}
-              </span>
-            </td>
-            <td className="hidden truncate py-2 pr-2 font-data text-xs text-paper-muted sm:table-cell">
-              <span className="rounded border border-ink-border px-1.5 py-0.5">{kindLabel(item.kinds)}</span>
-            </td>
-            <td className="hidden py-2 pr-2 font-data text-xs text-paper-muted sm:table-cell">{community(item)}</td>
-            <td className="py-2">
-              <PersonalMarks listened={listened.has(item.id)} stars={stars[item.id]} />
-            </td>
-          </tr>
-        ))}
+                {item.primaryArtist && (
+                  <span className="block truncate font-data text-xs text-paper-muted">
+                    {t("withArtist", { name: item.primaryArtist.name })}
+                  </span>
+                )}
+                {/* En móvil, el tipo (si no es álbum) y la media pasan a una segunda línea. */}
+                <span className="mt-0.5 flex min-w-0 items-center gap-2 font-data text-xs text-paper-muted sm:hidden">
+                  {kindChip(item)}
+                  <span className="truncate">{average(item)}</span>
+                </span>
+              </td>
+              <td className="hidden py-2 pr-2 font-data text-xs text-paper-muted sm:table-cell">{average(item)}</td>
+              <td className="py-2 pr-2">{hasMarks(marks) && <DiscMarksView marks={marks} />}</td>
+              <td className="py-2">
+                <DiscographyItemMenu
+                  item={item}
+                  marks={marks}
+                  open={actions.openId === item.id}
+                  onOpenChange={(next) => actions.setOpenId(next ? item.id : null)}
+                  onMarksChange={(update) => actions.updateMarks(item.id, update)}
+                  variant="row"
+                />
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
