@@ -262,6 +262,16 @@
       "viewLabel": "View",
       "viewGrid": "Grid",
       "viewTable": "Table",
+      "search": {
+        "label": "Search the discography",
+        "placeholder": "Search the discography",
+        "open": "Open discography search",
+        "clear": "Clear search",
+        "results": "{count, plural, =0 {No results} one {# result} other {# results}} in the discography",
+        "empty": "No release matches “{query}”.",
+        "searchCatalog": "Search the whole catalog",
+        "incomplete": "The discography is still being completed: some releases may be missing."
+      },
       "ep": "EP",
       "bestRated": "Top rated",
       "listened": "Listened",

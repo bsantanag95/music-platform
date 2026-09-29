@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
@@ -10,6 +10,8 @@ import { BookmarkIcon, HeartIcon } from "@/components/album/AlbumRelationPanel";
 import type { ArtistDiscographyItem, DiscographyMarks } from "@/services/catalog/artist-discography-view";
 import type { DiscographySection } from "@/services/catalog/discography-sections";
 import { kindKey } from "./artist-format";
+import { DISCOGRAPHY_SEARCH_MIN_DISCS, normalizeForSearch, searchDiscography } from "./discography-search";
+import { SearchIcon } from "@/components/home/QuickLinkIcons";
 import { AlbumQuickActions, type DiscMarks } from "@/components/catalog/AlbumQuickActions";
 
 // Discografía de la página de artista (openspec: redesign-artist-page, capability
@@ -17,7 +19,8 @@ import { AlbumQuickActions, type DiscMarks } from "@/components/catalog/AlbumQui
 // URL, `?section=`), vistas grilla y tabla con la elección recordada por sección en el
 // navegador, "Mostrar más" de a 48 en la grilla, "Mejor valorado" y las marcas del usuario. Cada
 // disco tiene su menú "…" de acciones (openspec: add-discography-quick-actions); las marcas viven
-// en estado local y el menú las actualiza.
+// en estado local y el menú las actualiza. Con 20 discos o más, un buscador filtra todas las
+// secciones (openspec: add-discography-search).
 
 export const GRID_PAGE_SIZE = 48;
 
@@ -72,6 +75,8 @@ interface ArtistDiscographyProps {
   bestRatedId: string | null;
   /** Marcas del usuario en sesión; `null` para visitantes anónimos. */
   marks: DiscographyMarks | null;
+  /** `false` mientras la discografía se sigue ingiriendo en segundo plano (primera visita). */
+  discographyComplete?: boolean;
 }
 
 const NO_MARKS: DiscMarks = {
@@ -122,13 +127,32 @@ function sectionHref(artistId: string, section: DiscographySection, defaultSecti
   return section === defaultSection ? `/artist/${artistId}` : `/artist/${artistId}?section=${section}`;
 }
 
-export function ArtistDiscography({ artistId, sections, activeSection, bestRatedId, marks }: ArtistDiscographyProps) {
+export function ArtistDiscography({
+  artistId,
+  sections,
+  activeSection,
+  bestRatedId,
+  marks,
+  discographyComplete = true,
+}: ArtistDiscographyProps) {
   const t = useTranslations("catalog.artist.discography");
   const [view, setView] = useSectionView(activeSection);
   const active = sections.find((s) => s.key === activeSection);
   const defaultSection = sections[0]?.key ?? "main";
   const [discMarks, setDiscMarks] = useState<Record<string, DiscMarks>>(() => (marks ? marksByDisc(marks) : {}));
   const [openId, setOpenId] = useState<string | null>(null);
+  // Búsqueda temporal (openspec: add-discography-search, design D3): no va a la URL ni se recuerda.
+  const [query, setQuery] = useState("");
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const totalDiscs = sections.reduce((sum, section) => sum + section.items.length, 0);
+  const searchable = totalDiscs >= DISCOGRAPHY_SEARCH_MIN_DISCS;
+  const searching = searchable && normalizeForSearch(query) !== "";
+  const result = useMemo(() => (searching ? searchDiscography(sections, query) : null), [searching, sections, query]);
+
+  useEffect(() => {
+    if (searchExpanded) searchInput.current?.focus();
+  }, [searchExpanded]);
 
   if (!active) {
     return <p className="font-body text-sm text-paper-muted">{t("empty")}</p>;
@@ -140,6 +164,15 @@ export function ArtistDiscography({ artistId, sections, activeSection, bestRated
     setOpenId,
     updateMarks: (id, update) => setDiscMarks((current) => ({ ...current, [id]: update(current[id] ?? NO_MARKS) })),
   };
+  const clearSearch = () => {
+    setQuery("");
+    searchInput.current?.focus();
+  };
+  const pillClass = (current: boolean) =>
+    `inline-flex items-baseline gap-1.5 rounded border px-2.5 py-1 font-body text-sm transition-colors ${
+      current ? "border-amber text-paper" : "border-ink-border text-paper-muted hover:text-paper"
+    }`;
+
   return (
     <section aria-labelledby="discography-heading" data-menu-bounds className="flex flex-col gap-4">
       <h2 id="discography-heading" className="sr-only">
@@ -149,6 +182,26 @@ export function ArtistDiscography({ artistId, sections, activeSection, bestRated
         <nav aria-label={t("sectionsLabel")}>
           <ul className="flex flex-wrap gap-1.5">
             {sections.map((section) => {
+              const label = t(`sections.${section.key}`);
+              if (result) {
+                // Durante la búsqueda cada pastilla lleva a su grupo de resultados (design D5).
+                const count = result.counts[section.key] ?? 0;
+                return (
+                  <li key={section.key}>
+                    <button
+                      type="button"
+                      disabled={count === 0}
+                      onClick={() =>
+                        document.getElementById(groupAnchor(section.key))?.scrollIntoView({ behavior: "smooth" })
+                      }
+                      className={`${pillClass(false)} disabled:cursor-default disabled:opacity-40 disabled:hover:text-paper-muted`}
+                    >
+                      {label}
+                      <span className="font-data text-xs text-paper-muted">{count}</span>
+                    </button>
+                  </li>
+                );
+              }
               const current = section.key === activeSection;
               return (
                 <li key={section.key}>
@@ -156,11 +209,9 @@ export function ArtistDiscography({ artistId, sections, activeSection, bestRated
                     href={sectionHref(artistId, section.key, defaultSection)}
                     scroll={false}
                     aria-current={current ? "page" : undefined}
-                    className={`inline-flex items-baseline gap-1.5 rounded border px-2.5 py-1 font-body text-sm transition-colors ${
-                      current ? "border-amber text-paper" : "border-ink-border text-paper-muted hover:text-paper"
-                    }`}
+                    className={pillClass(current)}
                   >
-                    {t(`sections.${section.key}`)}
+                    {label}
                     <span className="font-data text-xs text-paper-muted">{section.items.length}</span>
                   </Link>
                 </li>
@@ -168,22 +219,98 @@ export function ArtistDiscography({ artistId, sections, activeSection, bestRated
             })}
           </ul>
         </nav>
-        <div role="group" aria-label={t("viewLabel")} className="flex overflow-hidden rounded border border-ink-border">
-          {(["grid", "table"] as const).map((option) => (
+        {/* En móvil el buscador es un botón que despliega el campo en su propia fila (design D7). */}
+        <div className={`flex items-center gap-2 ${searchExpanded ? "basis-full sm:basis-auto" : ""}`}>
+          {searchable && !searchExpanded && (
             <button
-              key={option}
               type="button"
-              aria-pressed={view === option}
-              onClick={() => setView(option)}
-              className="px-2.5 py-1 font-data text-xs text-paper-muted transition-colors aria-pressed:bg-ink-surface aria-pressed:text-paper"
+              onClick={() => setSearchExpanded(true)}
+              aria-label={t("search.open")}
+              className="rounded border border-ink-border p-1.5 text-paper-muted transition-colors hover:text-paper sm:hidden"
             >
-              {option === "grid" ? t("viewGrid") : t("viewTable")}
+              <SearchIcon className="size-3.5" />
             </button>
-          ))}
+          )}
+          {searchable && (
+            <div className={`${searchExpanded ? "flex" : "hidden"} relative flex-1 items-center sm:flex sm:flex-none`}>
+              <SearchIcon className="pointer-events-none absolute left-2 size-3.5 text-paper-muted" />
+              <input
+                ref={searchInput}
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key !== "Escape") return;
+                  event.preventDefault();
+                  if (query) setQuery("");
+                  else setSearchExpanded(false);
+                }}
+                aria-label={t("search.label")}
+                placeholder={t("search.placeholder")}
+                className="w-full rounded border border-ink-border bg-transparent py-1 pl-7 pr-7 font-body text-sm text-paper placeholder:text-paper-muted focus:border-amber focus:outline-none sm:w-56 [&::-webkit-search-cancel-button]:hidden"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  aria-label={t("search.clear")}
+                  className="absolute right-1.5 px-1 font-data text-sm text-paper-muted hover:text-paper"
+                >
+                  <span aria-hidden="true">×</span>
+                </button>
+              )}
+            </div>
+          )}
+          {!result && (
+            <div role="group" aria-label={t("viewLabel")} className="flex overflow-hidden rounded border border-ink-border">
+              {(["grid", "table"] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  aria-pressed={view === option}
+                  onClick={() => setView(option)}
+                  className="px-2.5 py-1 font-data text-xs text-paper-muted transition-colors aria-pressed:bg-ink-surface aria-pressed:text-paper"
+                >
+                  {option === "grid" ? t("viewGrid") : t("viewTable")}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {view === "grid" ? (
+      {searchable && (
+        <p aria-live="polite" className={result ? "font-data text-xs text-paper-muted" : "sr-only"}>
+          {result ? t("search.results", { count: result.total }) : ""}
+        </p>
+      )}
+
+      {result ? (
+        <div className="flex flex-col gap-3">
+          {!discographyComplete && <p className="font-body text-xs text-paper-muted">{t("search.incomplete")}</p>}
+          {result.total === 0 ? (
+            <p className="font-body text-sm text-paper-muted">
+              {t("search.empty", { query: query.trim() })}{" "}
+              <Link
+                href={`/search?type=album&q=${encodeURIComponent(query.trim())}`}
+                className="text-amber hover:underline"
+              >
+                {t("search.searchCatalog")}
+              </Link>
+            </p>
+          ) : (
+            <DiscographyTable
+              key="search"
+              groups={result.groups.map((group) => ({
+                key: group.key,
+                heading: { id: groupAnchor(group.key), label: t(`sections.${group.key}`), count: group.items.length },
+                items: group.items,
+              }))}
+              actions={actions}
+            />
+          )}
+        </div>
+      ) : view === "grid" ? (
         <DiscographyGrid
           key={activeSection}
           items={active.items}
@@ -193,11 +320,13 @@ export function ArtistDiscography({ artistId, sections, activeSection, bestRated
         />
       ) : (
         // La clave de sección reinicia el orden al cambiar de sección.
-        <DiscographyTable key={activeSection} items={active.items} actions={actions} />
+        <DiscographyTable key={activeSection} groups={[{ key: activeSection, items: active.items }]} actions={actions} />
       )}
     </section>
   );
 }
+
+const groupAnchor = (section: DiscographySection) => `discography-group-${section}`;
 
 function Cover({ item, className }: { item: ArtistDiscographyItem; className: string }) {
   const tArtist = useTranslations("catalog.artist");
@@ -401,7 +530,15 @@ function SortIndicator({ direction }: { direction: SortDirection | null }) {
   );
 }
 
-function DiscographyTable({ items, actions }: { items: ArtistDiscographyItem[]; actions: DiscActions }) {
+/** Grupo de filas de la tabla: una sección, o un grupo de resultados de la búsqueda (con encabezado). */
+interface TableGroup {
+  key: string;
+  /** Encabezado del grupo; sin él, la tabla es la de una sección. */
+  heading?: { id: string; label: string; count: number };
+  items: ArtistDiscographyItem[];
+}
+
+function DiscographyTable({ groups, actions }: { groups: TableGroup[]; actions: DiscActions }) {
   const t = useTranslations("catalog.artist.discography");
   const locale = useLocale();
   const kindLabel = useKindLabel();
@@ -413,7 +550,11 @@ function DiscographyTable({ items, actions }: { items: ArtistDiscographyItem[]; 
     you: (item) => actions.marksOf(item.id)?.stars ?? null,
   };
   const collator = useMemo(() => titleCollator(locale), [locale]);
-  const rows = sortDiscographyRows(items, sortValue[sort.key], sort.direction, collator);
+  // El orden se aplica dentro de cada grupo (openspec: add-discography-search, design D4).
+  const sorted = groups.map((group) => ({
+    ...group,
+    rows: sortDiscographyRows(group.items, sortValue[sort.key], sort.direction, collator),
+  }));
   const toggleSort = (key: SortKey) =>
     setSort((current) =>
       current.key === key
@@ -470,49 +611,63 @@ function DiscographyTable({ items, actions }: { items: ArtistDiscographyItem[]; 
           </th>
         </tr>
       </thead>
-      <tbody>
-        {rows.map((item) => {
-          const marks = actions.marksOf(item.id);
-          return (
-            <tr key={item.id} className="border-b border-ink-border align-middle">
-              <td className="py-2 pr-2 font-data text-xs text-paper-muted">{item.year ?? "—"}</td>
-              <td className="hidden py-2 pr-2 sm:table-cell">
-                <Cover item={item} className="aspect-square w-9" />
-              </td>
-              <td className="min-w-0 py-2 pr-2">
-                <span className="flex min-w-0 items-center gap-2">
-                  <Link href={`/album/${item.id}`} className="truncate font-body text-sm text-paper hover:text-amber">
-                    {item.title}
-                  </Link>
-                  <span className="hidden sm:contents">{kindChip(item)}</span>
-                </span>
-                {item.primaryArtist && (
-                  <span className="block truncate font-data text-xs text-paper-muted">
-                    {t("withArtist", { name: item.primaryArtist.name })}
-                  </span>
-                )}
-                {/* En móvil, el tipo (si no es álbum) y la media pasan a una segunda línea. */}
-                <span className="mt-0.5 flex min-w-0 items-center gap-2 font-data text-xs text-paper-muted sm:hidden">
-                  {kindChip(item)}
-                  <span className="truncate">{average(item)}</span>
-                </span>
-              </td>
-              <td className="hidden py-2 pr-2 font-data text-xs text-paper-muted sm:table-cell">{average(item)}</td>
-              <td className="py-2 pr-2">{hasMarks(marks) && <DiscMarksView marks={marks} />}</td>
-              <td className="py-2">
-                <AlbumQuickActions
-                  item={item}
-                  marks={marks}
-                  open={actions.openId === item.id}
-                  onOpenChange={(next) => actions.setOpenId(next ? item.id : null)}
-                  onMarksChange={(update) => actions.updateMarks(item.id, update)}
-                  variant="row"
-                />
-              </td>
+      {sorted.map((group) => (
+        <tbody key={group.key}>
+          {group.heading && (
+            <tr>
+              <th
+                scope="rowgroup"
+                colSpan={6}
+                id={group.heading.id}
+                className="scroll-mt-6 pb-1.5 pt-5 text-left font-data text-xs font-normal uppercase tracking-wide text-paper-muted"
+              >
+                {group.heading.label} <span className="text-paper-muted/70">· {group.heading.count}</span>
+              </th>
             </tr>
-          );
-        })}
-      </tbody>
+          )}
+          {group.rows.map((item) => {
+            const marks = actions.marksOf(item.id);
+            return (
+              <tr key={item.id} className="border-b border-ink-border align-middle">
+                <td className="py-2 pr-2 font-data text-xs text-paper-muted">{item.year ?? "—"}</td>
+                <td className="hidden py-2 pr-2 sm:table-cell">
+                  <Cover item={item} className="aspect-square w-9" />
+                </td>
+                <td className="min-w-0 py-2 pr-2">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <Link href={`/album/${item.id}`} className="truncate font-body text-sm text-paper hover:text-amber">
+                      {item.title}
+                    </Link>
+                    <span className="hidden sm:contents">{kindChip(item)}</span>
+                  </span>
+                  {item.primaryArtist && (
+                    <span className="block truncate font-data text-xs text-paper-muted">
+                      {t("withArtist", { name: item.primaryArtist.name })}
+                    </span>
+                  )}
+                  {/* En móvil, el tipo (si no es álbum) y la media pasan a una segunda línea. */}
+                  <span className="mt-0.5 flex min-w-0 items-center gap-2 font-data text-xs text-paper-muted sm:hidden">
+                    {kindChip(item)}
+                    <span className="truncate">{average(item)}</span>
+                  </span>
+                </td>
+                <td className="hidden py-2 pr-2 font-data text-xs text-paper-muted sm:table-cell">{average(item)}</td>
+                <td className="py-2 pr-2">{hasMarks(marks) && <DiscMarksView marks={marks} />}</td>
+                <td className="py-2">
+                  <AlbumQuickActions
+                    item={item}
+                    marks={marks}
+                    open={actions.openId === item.id}
+                    onOpenChange={(next) => actions.setOpenId(next ? item.id : null)}
+                    onMarksChange={(update) => actions.updateMarks(item.id, update)}
+                    variant="row"
+                  />
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      ))}
     </table>
   );
 }

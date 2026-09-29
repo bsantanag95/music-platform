@@ -262,6 +262,16 @@
       "viewLabel": "Vista",
       "viewGrid": "Grilla",
       "viewTable": "Tabla",
+      "search": {
+        "label": "Buscar en la discografía",
+        "placeholder": "Buscar en la discografía",
+        "open": "Abrir el buscador de la discografía",
+        "clear": "Borrar la búsqueda",
+        "results": "{count, plural, =0 {Sin resultados} one {# resultado} other {# resultados}} en la discografía",
+        "empty": "Ningún disco coincide con «{query}».",
+        "searchCatalog": "Buscalo en todo el catálogo",
+        "incomplete": "La discografía todavía se está completando: puede faltar algún disco."
+      },
       "ep": "EP",
       "bestRated": "Mejor valorado",
       "listened": "Escuchado",

@@ -286,3 +286,87 @@ describe("sortDiscographyRows", () => {
     ]);
   });
 });
+
+describe("buscador de la discografía (add-discography-search)", () => {
+  const s = d.search;
+  // 20 discos en total: 17 de relleno en Principal y los que interesan en En vivo y Sencillos.
+  const searchSections = () => [
+    {
+      key: "main" as const,
+      items: Array.from({ length: 17 }, (_, i) => item(`m${i}`, { title: `Estudio ${i}` })),
+    },
+    { key: "live" as const, items: [item("l1", { title: "Live: Home Sweet Home Tour", section: "live" })] },
+    {
+      key: "singles" as const,
+      items: [
+        item("s1", { title: "Home Sweet Home", section: "singles", year: 1985 }),
+        item("s2", { title: "Don’t Go Away Mad", section: "singles", year: 1990 }),
+      ],
+    },
+  ];
+  const type = (text: string) => fireEvent.change(screen.getByRole("searchbox", { name: s.label }), { target: { value: text } });
+
+  it("no se ofrece con menos de 20 discos", () => {
+    renderDiscography({ sections: sections({ main: 12, live: 7 }) });
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: s.open })).not.toBeInTheDocument();
+  });
+
+  it("agrupa las coincidencias de todas las secciones y las pastillas muestran sus conteos", () => {
+    renderDiscography({ sections: searchSections() });
+    type("home");
+    const table = screen.getByRole("table");
+    expect(within(table).getByText(d.sections.live)).toBeInTheDocument();
+    expect(within(table).getByText(d.sections.singles)).toBeInTheDocument();
+    expect(within(table).getByRole("link", { name: "Home Sweet Home" })).toBeInTheDocument();
+    expect(within(table).getByRole("link", { name: "Live: Home Sweet Home Tour" })).toBeInTheDocument();
+    expect(within(table).queryByRole("link", { name: "Don’t Go Away Mad" })).not.toBeInTheDocument();
+    const nav = screen.getByRole("navigation", { name: d.sectionsLabel });
+    // El nombre accesible une la sección y su conteo ("Principal0"), igual que las pastillas de sección.
+    expect(within(nav).getByRole("button", { name: `${d.sections.main}0` })).toBeDisabled();
+    expect(within(nav).getByRole("button", { name: `${d.sections.singles}1` })).toBeEnabled();
+    expect(screen.getByText("2 resultados en la discografía")).toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: d.viewLabel })).not.toBeInTheDocument();
+  });
+
+  it("tolera el apóstrofo tipográfico y ofrece el menú de acciones en los resultados", () => {
+    renderDiscography({ sections: searchSections() });
+    type("dont go");
+    expect(screen.getByRole("link", { name: "Don’t Go Away Mad" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: catalogEs.albumActions.open.replace("{title}", "Don’t Go Away Mad") }),
+    ).toBeInTheDocument();
+  });
+
+  it("Esc vacía la búsqueda y vuelve la sección en grilla", () => {
+    renderDiscography({ sections: searchSections() });
+    type("home");
+    expect(screen.getByRole("table")).toBeInTheDocument();
+    fireEvent.keyDown(screen.getByRole("searchbox", { name: s.label }), { key: "Escape" });
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: d.viewGrid })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("link", { name: /Estudio 0/ })).toBeInTheDocument();
+  });
+
+  it("el botón de borrar también restaura la sección", () => {
+    renderDiscography({ sections: searchSections() });
+    type("home");
+    fireEvent.click(screen.getByRole("button", { name: s.clear }));
+    expect(screen.getByRole("searchbox", { name: s.label })).toHaveValue("");
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+  });
+
+  it("sin coincidencias ofrece buscar en todo el catálogo", () => {
+    renderDiscography({ sections: searchSections() });
+    type("zzz");
+    expect(screen.getByText(/«zzz»/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: s.searchCatalog })).toHaveAttribute("href", "/search?type=album&q=zzz");
+  });
+
+  it("avisa si la discografía todavía se está completando", () => {
+    renderDiscography({ sections: searchSections(), discographyComplete: false });
+    expect(screen.queryByText(s.incomplete)).not.toBeInTheDocument();
+    type("home");
+    expect(screen.getByText(s.incomplete)).toBeInTheDocument();
+  });
+});
