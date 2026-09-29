@@ -4,7 +4,7 @@ import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
 import { EMPTY_DISCOGRAPHY_MARKS, type ArtistDiscographyItem } from "@/services/catalog/artist-discography-view";
 import type { DiscographySection } from "@/services/catalog/discography-sections";
-import { ArtistDiscography, GRID_PAGE_SIZE } from "./ArtistDiscography";
+import { ArtistDiscography, GRID_PAGE_SIZE, sortDiscographyRows, titleCollator } from "./ArtistDiscography";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, className, ...rest }: { href: string; children: React.ReactNode; className?: string }) => (
@@ -237,5 +237,52 @@ describe("orden de la tabla (extend-album-quick-actions)", () => {
     renderTable();
     fireEvent.click(screen.getByRole("button", { name: d.columns.year }));
     expect(titles()).toEqual(["Aaa", "Ccc", "Bbb"]);
+  });
+
+  it("Título ordena de la A a la Z y el segundo uso lo invierte", () => {
+    renderTable();
+    fireEvent.click(screen.getByRole("button", { name: d.columns.title }));
+    expect(titles()).toEqual(["Aaa", "Bbb", "Ccc"]);
+    expect(screen.getByRole("columnheader", { name: d.columns.title })).toHaveAttribute("aria-sort", "ascending");
+    fireEvent.click(screen.getByRole("button", { name: d.columns.title }));
+    expect(titles()).toEqual(["Ccc", "Bbb", "Aaa"]);
+  });
+});
+
+describe("sortDiscographyRows", () => {
+  const rows = [
+    { title: "Zeta", year: 2001 },
+    { title: "Vol. 10", year: 1999 },
+    { title: "Live", year: 1990 },
+    { title: "Ænima", year: 1996 },
+    { title: "Live", year: null },
+    { title: "Vol. 2", year: 1995 },
+    { title: "live", year: 1985 },
+  ];
+  const byTitle = (row: { title: string }) => row.title;
+  const label = (row: { title: string; year: number | null }) => `${row.title} ${row.year ?? "?"}`;
+
+  it("compara títulos según el idioma, con números y ligaduras, y desempata por año", () => {
+    expect(sortDiscographyRows(rows, byTitle, "asc", titleCollator("es")).map(label)).toEqual([
+      "Ænima 1996",
+      "live 1985",
+      "Live 1990",
+      "Live ?",
+      "Vol. 2 1995",
+      "Vol. 10 1999",
+      "Zeta 2001",
+    ]);
+  });
+
+  it("al invertir el título, el desempate por año se mantiene ascendente", () => {
+    expect(sortDiscographyRows(rows, byTitle, "desc", titleCollator("es")).map(label)).toEqual([
+      "Zeta 2001",
+      "Vol. 10 1999",
+      "Vol. 2 1995",
+      "live 1985",
+      "Live 1990",
+      "Live ?",
+      "Ænima 1996",
+    ]);
   });
 });
