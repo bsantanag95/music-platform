@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useFormatter, useNow, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ListenEntryForm } from "@/components/diary/ListenEntryForm";
 import { AlbumListPicker, type PickerMembership } from "@/components/album/AlbumListPicker";
@@ -160,7 +160,14 @@ function AuthenticatedPanel({
     }
   };
 
-  const relativeDate = (iso: string) => format.relativeTime(new Date(iso), new Date());
+  // Hasta hidratar, el instante de referencia es el `now` de la request (src/i18n/request.ts),
+  // el mismo que usó el servidor: con `new Date()` el texto ("hace 48 segundos") no coincidía y
+  // React descartaba el HTML. Después de hidratar, la hora real: una escucha recién registrada
+  // es posterior al `now` de la request y saldría "dentro de…".
+  const requestNow = useNow();
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+  const relativeDate = (iso: string) => format.relativeTime(new Date(iso), hydrated ? new Date() : requestNow);
   const noListens = !last && state.listens.albumCount === 0;
   const listensSummary = (() => {
     if (noListens) return t("listensNone");
