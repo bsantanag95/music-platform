@@ -52,7 +52,7 @@ marcas visibles, así que pedirlas en la carga de la página sería trabajo que 
 
 `GET /api/me/release-groups/{id}/marks` → `{ listened, stars, detailedScore, favorite, pending,
 lists }` (la forma de `DiscMarks`), con `withErrorHandling`. Sin sesión, `401 AUTH_REQUIRED`;
-id inválido, `400`; disco inexistente, `404 NOT_FOUND`. Reutiliza las consultas de
+id inválido, `400`; disco inexistente, `404 ALBUM_NOT_FOUND` (el código que ya usan las rutas de álbum). Reutiliza las consultas de
 `getDiscographyMarks` con un solo id (una por tabla). `Cache-Control: no-store`.
 
 ### D3. Secciones extra opcionales

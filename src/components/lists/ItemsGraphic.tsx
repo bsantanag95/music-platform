@@ -7,11 +7,12 @@ import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { RemoveItemButton } from "./ListItemControls";
 import { listItemHref } from "./lists-shared";
 import type { ListItemsRendererProps } from "./list-items-view";
+import { ListItemQuickActions } from "./ListItemQuickActions";
 
 // Modo Gráfico: pared de carátulas. El título va como caption visible (no solo
 // atributo) para que cada ítem siga siendo texto accesible. Para reordenar,
 // se selecciona un tile y se actúa desde la barra de acciones sobre la grilla.
-export function ItemsGraphic({ items, entityType, actions }: ListItemsRendererProps) {
+export function ItemsGraphic({ items, entityType, actions, quickActions }: ListItemsRendererProps) {
   const t = useTranslations("lists");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -83,7 +84,7 @@ export function ItemsGraphic({ items, entityType, actions }: ListItemsRendererPr
 
       <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
         {items.map((item, index) => (
-          <li key={item.id} className="flex flex-col gap-1.5">
+          <li key={item.id} className="group/card relative flex flex-col gap-1.5">
             {actions ? (
               <button
                 type="button"
@@ -116,6 +117,18 @@ export function ItemsGraphic({ items, entityType, actions }: ListItemsRendererPr
             >
               {item.target.title || t("itemUnavailable")}
             </Link>
+            {quickActions ? (
+              <ListItemQuickActions
+                item={item}
+                quick={quickActions}
+                variant="cover"
+                className={`!absolute right-1 top-1 ${
+                  quickActions.openId === item.id
+                    ? "opacity-100"
+                    : "opacity-0 focus-within:opacity-100 group-hover/card:opacity-100 [@media(hover:none)]:opacity-100"
+                }`}
+              />
+            ) : null}
           </li>
         ))}
       </ul>

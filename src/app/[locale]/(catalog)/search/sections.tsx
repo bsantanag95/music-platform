@@ -135,6 +135,8 @@ export async function AlbumSection({
   decade?: number;
 }) {
   const t = await getTranslations("catalog");
+  // Sesión para el menú de acciones de cada disco (openspec: extend-album-quick-actions).
+  const authenticated = (await getCurrentUser()) !== null;
   const local = await searchAlbums(query, {
     category,
     decade,
@@ -196,7 +198,7 @@ export async function AlbumSection({
           }
         >
           {local.results.length > 0 ? (
-            <AlbumList albums={local.results} />
+            <AlbumList albums={local.results} authenticated={authenticated} />
           ) : null}
         </LocalFirst>
       }
@@ -206,6 +208,7 @@ export async function AlbumSection({
         category={category}
         decade={decade}
         filters={filters}
+        authenticated={authenticated}
       />
     </Suspense>
   );
@@ -216,11 +219,13 @@ async function AlbumRemote({
   category,
   decade,
   filters,
+  authenticated,
 }: {
   query: string;
   category?: ReleaseGroupCategoryValue;
   decade?: number;
   filters: ReactNode;
+  authenticated: boolean;
 }) {
   let response: AlbumSearchResponse;
   try {
@@ -244,7 +249,7 @@ async function AlbumRemote({
         <SearchEmpty query={query} type="album" />
       ) : (
         <div className="flex flex-col gap-4">
-          <AlbumList albums={response.results} />
+          <AlbumList albums={response.results} authenticated={authenticated} />
           {response.nextOffset !== null ? (
             <LoadMoreResults
               kind="album"
@@ -252,6 +257,7 @@ async function AlbumRemote({
               filters={{ category, decade }}
               initialNextOffset={response.nextOffset}
               seen={response.results.map((album) => album.id)}
+              authenticated={authenticated}
             />
           ) : null}
         </div>

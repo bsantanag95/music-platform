@@ -5,8 +5,6 @@
   "emptyCta": "Search the catalog",
   "add": "Listen later",
   "remove": "Remove from Listen Later",
-  "quickAdded": "Added to Listen Later",
-  "quickRemoved": "Removed from Listen Later",
   "signInToAdd": "Sign in to add",
   "saving": "Saving...",
   "saveError": "We could not save the change. Try again.",

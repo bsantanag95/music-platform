@@ -52,7 +52,7 @@ de reintentar. Para un visitante sin sesión no SHALL hacerse la consulta.
 `GET /api/me/release-groups/{id}/marks` SHALL devolver, para el usuario en sesión, si escuchó el
 disco, su nota y puntaje detallado, si es favorito, si está en Pendiente y las listas propias que
 lo contienen. Sin sesión SHALL responder `401 AUTH_REQUIRED`, con un id inválido `400` y con un
-disco inexistente `404 NOT_FOUND`. La respuesta SHALL NOT guardarse en caché.
+disco inexistente `404 ALBUM_NOT_FOUND`. La respuesta SHALL NOT guardarse en caché.
 
 #### Scenario: Disco con marcas
 

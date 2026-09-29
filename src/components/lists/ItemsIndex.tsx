@@ -5,11 +5,12 @@ import { Link } from "@/i18n/navigation";
 import { ReorderButtons, RemoveItemButton } from "./ListItemControls";
 import { listItemHref } from "./lists-shared";
 import type { ListItemsRendererProps } from "./list-items-view";
+import { ListItemQuickActions } from "./ListItemQuickActions";
 
 // Modo Índice: filas de texto compactas para escanear y reordenar listas
 // largas. Los controles se revelan al posar el puntero o enfocar (siempre
 // visibles en pantallas angostas, donde no hay hover).
-export function ItemsIndex({ items, entityType, actions }: ListItemsRendererProps) {
+export function ItemsIndex({ items, entityType, actions, quickActions }: ListItemsRendererProps) {
   const t = useTranslations("lists");
   return (
     <ol className="flex flex-col">
@@ -50,6 +51,7 @@ export function ItemsIndex({ items, entityType, actions }: ListItemsRendererProp
               />
             </div>
           ) : null}
+          {quickActions ? <ListItemQuickActions item={item} quick={quickActions} variant="row" className="shrink-0" /> : null}
         </li>
       ))}
     </ol>

@@ -15,13 +15,15 @@ interface LoadMoreResultsProps {
   initialNextOffset: number;
   /** Ids (álbumes) o keys (canciones) ya mostrados, para no repetirlos. */
   seen: string[];
+  /** Hay sesión: el menú de acciones de cada disco pide sus marcas al abrirse. */
+  authenticated?: boolean;
 }
 
 // "Cargar más" de Álbumes y Canciones (openspec: redesign-scoped-search): pide
 // la página siguiente de MusicBrainz y la agrega debajo sin reemplazar lo ya
 // mostrado. La primera página la resuelve el servidor. Estado explícito (como
 // `UserSearch`): una acción de la persona, no un dato a cachear.
-export function LoadMoreResults({ kind, query, filters, initialNextOffset, seen }: LoadMoreResultsProps) {
+export function LoadMoreResults({ kind, query, filters, initialNextOffset, seen, authenticated = false }: LoadMoreResultsProps) {
   const t = useTranslations("catalog.search.results");
   const [albums, setAlbums] = useState<AlbumSearchResult[]>([]);
   const [songs, setSongs] = useState<SongGroupResult[]>([]);
@@ -58,7 +60,7 @@ export function LoadMoreResults({ kind, query, filters, initialNextOffset, seen 
 
   return (
     <div className="flex flex-col gap-4" aria-busy={loading}>
-      {albums.length > 0 ? <AlbumList albums={albums} /> : null}
+      {albums.length > 0 ? <AlbumList albums={albums} authenticated={authenticated} /> : null}
       {songs.length > 0 ? <SongList groups={songs} /> : null}
 
       {failed ? (

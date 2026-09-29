@@ -228,7 +228,9 @@ canciones al no existir búsqueda de `recording`).
   cabecera; `entityType` visible como dato de sólo lectura; línea de metadatos con
   audiencia, tipo, conteo, fecha y "Fijada".
 - **Vista de lectura de lista ajena** `/<locale>/users/[username]/lists/[listId]`: mismo
-  cuerpo de tres modos sin controles de gestión, atribución al dueño, tiempo relativo y la
+  cuerpo de tres modos sin controles de gestión (en una lista de álbumes, cada disco lleva el menú
+  "…" de acciones del disco — cambio `extend-album-quick-actions` — para guardarlo en Pendiente o
+  en tus listas sin salir), atribución al dueño, tiempo relativo y la
   acción Guardar/Seguir. Cierra los enlaces que Descubrir, Guardadas, el feed, los perfiles
   e Inicio ya apuntaban ahí.
 - **Carátula representativa para ítems de canción:** cada `recording` se enriquece con la

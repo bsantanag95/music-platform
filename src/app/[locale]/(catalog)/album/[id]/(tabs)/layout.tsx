@@ -158,7 +158,7 @@ export default async function AlbumLayout({ children, modal, params }: AlbumLayo
         {children}
       </div>
 
-      {strip && detail.primaryArtist && <DiscographyStrip artistName={detail.primaryArtist.name} strip={strip} />}
+      {strip && detail.primaryArtist && <DiscographyStrip artistName={detail.primaryArtist.name} strip={strip} authenticated={userId !== null} />}
 
       <Comments
         target="release-group"

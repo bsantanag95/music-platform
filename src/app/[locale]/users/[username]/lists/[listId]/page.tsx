@@ -83,7 +83,7 @@ export default async function UserListDetailPage({ params }: PageProps) {
         {list.items.length === 0 ? (
           <EmptyState title={t("noItems")} description={t("readEmptyItems")} />
         ) : (
-          <ListItemsView items={list.items} entityType={list.entityType} />
+          <ListItemsView items={list.items} entityType={list.entityType} viewerAuthenticated={Boolean(viewerId)} />
         )}
       </div>
     </main>

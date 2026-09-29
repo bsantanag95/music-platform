@@ -302,23 +302,7 @@
       "fewRatingsLabel": "menos de 5 valoraciones",
       "favorite": "Favorito",
       "pendingMark": "En Pendiente",
-      "menu": {
-        "open": "Acciones de {title}",
-        "logListen": "Registrar escucha",
-        "logging": "Registrando…",
-        "listenLogged": "Escucha registrada",
-        "addDetails": "Agregar detalles",
-        "favorite": "Favorito",
-        "pending": "Pendiente",
-        "rating": "Tu nota",
-        "addToList": "Agregar a lista…",
-        "closeLists": "Cerrar listas",
-        "goToAlbum": "Ir al álbum",
-        "signInPrompt": "Iniciá sesión para registrar escuchas, calificar o armar listas.",
-        "signIn": "Iniciar sesión",
-        "saveError": "No pudimos guardar el cambio. Intentá de nuevo.",
-        "column": "Acciones"
-      }
+      "actionsColumn": "Acciones"
     },
     "lineup": {
       "views": {
@@ -966,5 +950,23 @@
     "medley": "Medley",
     "partial": "Parcial",
     "karaoke": "Karaoke"
+  },
+  "albumActions": {
+    "open": "Acciones de {title}",
+    "logListen": "Registrar escucha",
+    "logging": "Registrando…",
+    "listenLogged": "Escucha registrada",
+    "addDetails": "Agregar detalles",
+    "favorite": "Favorito",
+    "pending": "Pendiente",
+    "rating": "Tu nota",
+    "addToList": "Agregar a lista…",
+    "closeLists": "Cerrar listas",
+    "goToAlbum": "Ir al álbum",
+    "signInPrompt": "Iniciá sesión para registrar escuchas, calificar o armar listas.",
+    "signIn": "Iniciar sesión",
+    "saveError": "No pudimos guardar el cambio. Intentá de nuevo.",
+    "loadError": "No pudimos cargar tus marcas de este disco.",
+    "retry": "Reintentar"
   }
 }

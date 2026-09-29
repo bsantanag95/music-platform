@@ -108,6 +108,13 @@ de biblioteca y biografía, con la misma estructura que el álbum):
   listas, calificar con estrellas e ir al álbum, sin salir de la discografía; cada acción se
   comporta como en el panel del álbum y actualiza las marcas. Es un diálogo no modal (hoja
   inferior en móvil), uno abierto a la vez; sin sesión invita a iniciar sesión.
+  Desde `extend-album-quick-actions`, el mismo menú está en los resultados de búsqueda de
+  álbumes, las tarjetas de Explorar, las listas de álbumes ajenas y la tira de la discografía del
+  álbum (salvo el disco actual); ahí las marcas se piden al abrirlo
+  (`GET /api/me/release-groups/[id]/marks`).
+- **Orden de la tabla**: Año, Media y Tú ordenan la tabla (el primer uso en su sentido natural:
+  año ascendente, notas descendente; el segundo lo invierte); los discos sin valor van al final y
+  cambiar de sección vuelve al orden por año.
 - **Integrantes** (cambio `add-artist-members-tab`, al estilo de Metal-Archives): sub-vistas
   Completa (por defecto), Actual (o Última alineación), Antiguos y Apoyo en `?view=`, ocultas
   si están vacías. Cada fila: nombre enlazado, ★ fundador, (†año) si murió, y una línea por

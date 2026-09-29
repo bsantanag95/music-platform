@@ -1150,6 +1150,20 @@ Lista paginada de la lista propia, orden cronológico descendente.
 **200 OK:** `{ items: [{ id, targetType, createdAt, target: { id, title, coverThumbUrl } }], page, pageSize, hasNext }`.
 **401** con `AUTH_REQUIRED` sin sesión.
 
+## Marcas de un disco (cambio `extend-album-quick-actions`)
+
+### `GET /api/me/release-groups/[id]/marks`
+
+Marcas del usuario en sesión sobre un disco, para el menú "…" de acciones fuera de la discografía
+del artista (búsqueda, Explorar, listas ajenas, tira de la discografía del álbum). El menú las pide
+al abrirse; ninguna página las precarga.
+
+**200 OK:** `{ listened, stars, detailedScore, favorite, pending, lists: [{ listId, itemId, kind, title }] }`
+— `stars` y `detailedScore` son `null` sin valoración; `lists` son las listas propias (comunes y
+Caminos no archivados) que contienen el disco. `Cache-Control: no-store`.
+**400** con `VALIDATION_ERROR` si el id no es UUID. **401** con `AUTH_REQUIRED` sin sesión.
+**404** con `ALBUM_NOT_FOUND` si el disco no existe.
+
 ## Listas (Fase 5.5, cambio `add-favorites-and-lists`)
 
 Colecciones curadas de un solo tipo de entidad (`artist`/`release-group`/`recording`), propiedad de

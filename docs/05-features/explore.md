@@ -30,6 +30,14 @@ sin tabla materializada. Cada sección se **omite** si no tiene contenido.
 
 Ajustar estos valores es editar la constante — no hay migración.
 
+### Tarjetas de álbum
+
+Cada tarjeta (`AlbumCard`) lleva en la esquina de la portada el menú "…" de acciones del disco
+(cambio `extend-album-quick-actions`): registrar escucha, Favorito y Pendiente con su estado,
+listas, calificar e ir al álbum, más las acciones que solo tenía el menú "···" anterior: "Ver en
+listas", "Lo busco" y "Ya la tengo". Las marcas se piden al abrir el menú. La página pasa la
+sesión a las tarjetas (antes las trataba a todas como anónimas).
+
 ## Listados filtrados
 
 `/explore?decada=<año>` o `/explore?genero=<tag>` (un corte a la vez; la década tiene

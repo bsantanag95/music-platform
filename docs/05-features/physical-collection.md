@@ -102,9 +102,10 @@ código, la tabla `wanted_entry` y la API no cambian.
   bifurca en un selector "La tengo" / "La busco" antes de mostrar el formulario
   correspondiente — no dos botones separados. "La busco" permite declarar una o varias variantes deseadas (formato + atributos) en una sola
   operación en lote (1 a 10, transacción atómica).
-- **Menú "···" de una ficha de álbum** (`AlbumCard`): alta rápida "Lo busco" (una entrada sin
-  formato, un click, sin formulario) y "Ya la tengo" (deep-link `?collection=have` que abre la
-  página de álbum ya en el flujo de "La tengo").
+- **Menú "…" de una ficha de álbum** (`AlbumCard`, Explorar): alta rápida "Lo busco" (una entrada
+  sin formato, un click, sin formulario) y "Ya la tengo" (deep-link `?collection=have` que abre la
+  página de álbum ya en el flujo de "La tengo"). Desde `extend-album-quick-actions` van como
+  acciones extra del menú de acciones del disco compartido, junto a "Ver en listas".
 - **`/me/collection`**: segunda pestaña "Busco" (`?tab=wanted`) junto a la existente. A
   diferencia de "Tengo", es una lista simple con búsqueda y orden (recencia/alfabético), sin los
   tres modos de visualización, filtro por formato/atributo, agrupación ni cambio de audiencia en

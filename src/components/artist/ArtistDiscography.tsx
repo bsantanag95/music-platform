@@ -10,7 +10,7 @@ import { BookmarkIcon, HeartIcon } from "@/components/album/AlbumRelationPanel";
 import type { ArtistDiscographyItem, DiscographyMarks } from "@/services/catalog/artist-discography-view";
 import type { DiscographySection } from "@/services/catalog/discography-sections";
 import { kindKey } from "./artist-format";
-import { DiscographyItemMenu, type DiscMarks } from "./DiscographyItemMenu";
+import { AlbumQuickActions, type DiscMarks } from "@/components/catalog/AlbumQuickActions";
 
 // Discografía de la página de artista (openspec: redesign-artist-page, capability
 // `artist-discography-view`): selector de secciones con su cantidad (la sección vive en la
@@ -192,7 +192,8 @@ export function ArtistDiscography({ artistId, sections, activeSection, bestRated
           actions={actions}
         />
       ) : (
-        <DiscographyTable items={active.items} actions={actions} />
+        // La clave de sección reinicia el orden al cambiar de sección.
+        <DiscographyTable key={activeSection} items={active.items} actions={actions} />
       )}
     </section>
   );
@@ -303,7 +304,7 @@ function DiscographyGrid({
               </Link>
               {/* Fuera del enlace (no se anidan controles): visible al pasar el mouse o con el
                   foco, siempre en pantallas táctiles y mientras su menú está abierto. */}
-              <DiscographyItemMenu
+              <AlbumQuickActions
                 item={item}
                 marks={marks}
                 open={open}
@@ -351,10 +352,72 @@ function showsKind(kinds: string[]): boolean {
   return !(kinds.length === 1 && kindKey(kinds[0]!) === "album");
 }
 
+type SortKey = "year" | "average" | "you";
+type SortDirection = "asc" | "desc";
+
+/** Sentido del primer uso de cada columna: el año de lo más viejo a lo más nuevo; las notas, de la más alta. */
+const NATURAL_DIRECTION: Record<SortKey, SortDirection> = { year: "asc", average: "desc", you: "desc" };
+
+/**
+ * Orden de la tabla (openspec: extend-album-quick-actions, design D5): los discos sin valor en la
+ * columna van siempre al final, en cualquier sentido, con el título como desempate.
+ */
+export function sortDiscographyRows<T extends { title: string }>(
+  rows: T[],
+  value: (row: T) => number | null,
+  direction: SortDirection,
+): T[] {
+  const sign = direction === "asc" ? 1 : -1;
+  return [...rows].sort((a, b) => {
+    const va = value(a);
+    const vb = value(b);
+    if (va === null || vb === null) return va === vb ? a.title.localeCompare(b.title) : va === null ? 1 : -1;
+    return (va - vb) * sign || a.title.localeCompare(b.title);
+  });
+}
+
+function SortIndicator({ direction }: { direction: SortDirection | null }) {
+  return (
+    <svg viewBox="0 0 12 12" aria-hidden="true" className={`size-3 ${direction ? "text-amber" : "text-paper-muted/60"}`}>
+      {direction !== "desc" && <path d="M3 5l3-3 3 3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />}
+      {direction !== "asc" && <path d="M3 7l3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />}
+    </svg>
+  );
+}
+
 function DiscographyTable({ items, actions }: { items: ArtistDiscographyItem[]; actions: DiscActions }) {
   const t = useTranslations("catalog.artist.discography");
   const locale = useLocale();
   const kindLabel = useKindLabel();
+  const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection }>({ key: "year", direction: "asc" });
+  const sortValue: Record<SortKey, (item: ArtistDiscographyItem) => number | null> = {
+    year: (item) => item.year,
+    average: (item) => item.community.average,
+    you: (item) => actions.marksOf(item.id)?.stars ?? null,
+  };
+  const rows = sortDiscographyRows(items, sortValue[sort.key], sort.direction);
+  const toggleSort = (key: SortKey) =>
+    setSort((current) =>
+      current.key === key
+        ? { key, direction: current.direction === "asc" ? "desc" : "asc" }
+        : { key, direction: NATURAL_DIRECTION[key] },
+    );
+  const sortHeader = (key: SortKey, label: string) => {
+    const active = sort.key === key;
+    return {
+      "aria-sort": active ? (sort.direction === "asc" ? "ascending" : "descending") : "none",
+      children: (
+        <button
+          type="button"
+          onClick={() => toggleSort(key)}
+          className={`inline-flex items-center gap-1 transition-colors hover:text-paper ${active ? "text-paper" : ""}`}
+        >
+          {label}
+          <SortIndicator direction={active ? sort.direction : null} />
+        </button>
+      ),
+    } as const;
+  };
   // Con menos de 5 valoraciones, un "—" atenuado: "< 5 notas" en cada fila era ruido y
   // "notas" chocaba con las notas de la comunidad de la misma página.
   const average = (item: ArtistDiscographyItem) =>
@@ -377,28 +440,22 @@ function DiscographyTable({ items, actions }: { items: ArtistDiscographyItem[]; 
     <table className="w-full table-fixed border-collapse text-left">
       <thead>
         <tr className="border-b border-ink-border font-data text-xs text-paper-muted">
-          <th scope="col" className="w-12 py-2 pr-2 font-normal">
-            {t("columns.year")}
-          </th>
+          <th scope="col" className="w-14 py-2 pr-2 font-normal" {...sortHeader("year", t("columns.year"))} />
           <th scope="col" className="hidden w-11 py-2 pr-2 font-normal sm:table-cell">
             <span className="sr-only">{t("columns.cover")}</span>
           </th>
           <th scope="col" className="py-2 pr-2 font-normal">
             {t("columns.title")}
           </th>
-          <th scope="col" className="hidden w-32 py-2 pr-2 font-normal sm:table-cell">
-            {t("columns.average")}
-          </th>
-          <th scope="col" className="w-20 py-2 pr-2 font-normal sm:w-24">
-            {t("columns.you")}
-          </th>
+          <th scope="col" className="hidden w-32 py-2 pr-2 font-normal sm:table-cell" {...sortHeader("average", t("columns.average"))} />
+          <th scope="col" className="w-20 py-2 pr-2 font-normal sm:w-24" {...sortHeader("you", t("columns.you"))} />
           <th scope="col" className="w-10 py-2 font-normal">
-            <span className="sr-only">{t("menu.column")}</span>
+            <span className="sr-only">{t("actionsColumn")}</span>
           </th>
         </tr>
       </thead>
       <tbody>
-        {items.map((item) => {
+        {rows.map((item) => {
           const marks = actions.marksOf(item.id);
           return (
             <tr key={item.id} className="border-b border-ink-border align-middle">
@@ -427,7 +484,7 @@ function DiscographyTable({ items, actions }: { items: ArtistDiscographyItem[]; 
               <td className="hidden py-2 pr-2 font-data text-xs text-paper-muted sm:table-cell">{average(item)}</td>
               <td className="py-2 pr-2">{hasMarks(marks) && <DiscMarksView marks={marks} />}</td>
               <td className="py-2">
-                <DiscographyItemMenu
+                <AlbumQuickActions
                   item={item}
                   marks={marks}
                   open={actions.openId === item.id}

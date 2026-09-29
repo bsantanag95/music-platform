@@ -24,9 +24,9 @@ además del `error` legible:
 
 | `code` | Status HTTP | Dónde ocurre |
 |---|---|---|
-| `VALIDATION_ERROR` | 400 | `search`: falta el query param `q` o llega vacío tras normalizar, o `type` no es `artist | album | song`; `search/suggest`: `type` no es `artist | album | song | user`; `recording/[id]`: el id no es UUID; comentarios: paginación inválida. |
+| `VALIDATION_ERROR` | 400 | `search`: falta el query param `q` o llega vacío tras normalizar, o `type` no es `artist | album | song`; `search/suggest`: `type` no es `artist | album | song | user`; `recording/[id]`: el id no es UUID; `me/release-groups/[id]/marks`: el id no es UUID; comentarios: paginación inválida. |
 | `ARTIST_NOT_FOUND` | 404 | `artist/[id]`: no se encontró el artista. (En `search` ya no aplica: una búsqueda sin coincidencias es `200` con lista vacía.) |
-| `ALBUM_NOT_FOUND` | 404 | `release-group/[id]`: el `id` no corresponde a ningún `release_group`. |
+| `ALBUM_NOT_FOUND` | 404 | `release-group/[id]` y `me/release-groups/[id]/marks`: el `id` no corresponde a ningún `release_group`. |
 | `NO_EDITIONS_FOUND` | 404 | `release-group/[id]`: MusicBrainz no tiene ninguna edición ingerible para ese álbum. |
 | `EDITION_NOT_FOUND` | 404 | `release-group/[id]/editions/[editionId]/extra-tracks`: la edición no existe o no pertenece a ese álbum. |
 | `EDITION_IS_BOX` | 422 | `release-group/[id]/editions/[editionId]/extra-tracks`: la edición es una caja; su lista no se ingiere ni se sirve (la interfaz enlaza a MusicBrainz). |
