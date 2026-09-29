@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, within } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
-import type { ArtistDiscographyItem } from "@/services/catalog/artist-discography-view";
+import { EMPTY_DISCOGRAPHY_MARKS, type ArtistDiscographyItem } from "@/services/catalog/artist-discography-view";
 import type { DiscographySection } from "@/services/catalog/discography-sections";
 import { ArtistDiscography, GRID_PAGE_SIZE } from "./ArtistDiscography";
 
@@ -12,6 +12,9 @@ vi.mock("@/i18n/navigation", () => ({
       {children}
     </a>
   ),
+}));
+vi.mock("@/services/catalog/artist-discography-view", () => ({
+  EMPTY_DISCOGRAPHY_MARKS: { listened: [], stars: {}, detailedScores: {}, favorites: [], pending: [], lists: {} },
 }));
 vi.mock("next/image", () => ({
   // eslint-disable-next-line @next/next/no-img-element
@@ -127,7 +130,7 @@ describe("ArtistDiscography", () => {
     renderDiscography({
       sections: [{ key: "main", items: [item("ep", { isEp: true }), item("dsotm", { community: { average: 4.6, count: 40 } })] }],
       bestRatedId: "dsotm",
-      marks: { listened: ["ep"], stars: { dsotm: 4.5 } },
+      marks: { ...EMPTY_DISCOGRAPHY_MARKS, listened: ["ep"], stars: { dsotm: 4.5 }, favorites: ["dsotm"], pending: ["ep"] },
     });
     const ep = screen.getByText("Disco ep").closest("a")!;
     expect(within(ep).getByText(d.ep)).toBeInTheDocument();
@@ -135,6 +138,9 @@ describe("ArtistDiscography", () => {
     const best = screen.getByText("Disco dsotm").closest("a")!;
     expect(within(best).getByText(`★ ${d.bestRated}`)).toBeInTheDocument();
     expect(within(best).getByText("Tu nota: 4,5")).toBeInTheDocument();
+    // Favorito y Pendiente, con texto accesible.
+    expect(within(best).getByText(d.favorite)).toBeInTheDocument();
+    expect(within(ep).getByText(d.pendingMark)).toBeInTheDocument();
   });
 
   it("grilla: muestra 48 discos y 'Mostrar más' agrega los siguientes", () => {
@@ -144,7 +150,7 @@ describe("ArtistDiscography", () => {
     expect(screen.getAllByRole("listitem").filter((li) => li.querySelector("img"))).toHaveLength(GRID_PAGE_SIZE * 2);
   });
 
-  it("tabla: tipo traducido, comunidad con umbral y artista principal en Apariciones", () => {
+  it("tabla: tipo traducido, media con umbral y artista principal en Apariciones", () => {
     renderDiscography({
       sections: [
         { key: "live", items: [item("p", { kinds: ["album", "live"], community: { average: 4.3, count: 41 } }), item("u", { kinds: ["album", "live"], community: { average: null, count: 3 } })] },
@@ -155,7 +161,22 @@ describe("ArtistDiscography", () => {
     const rows = screen.getAllByRole("row").slice(1);
     expect(within(rows[0]!).getAllByText("en vivo").length).toBeGreaterThan(0);
     expect(within(rows[0]!).getAllByText(/★ 4,3 \(41\)/).length).toBeGreaterThan(0);
-    expect(within(rows[1]!).getAllByText(/< 5 notas/).length).toBeGreaterThan(0);
+    // Menos de 5 valoraciones: "—" con el texto accesible, sin "< 5 notas".
+    expect(within(rows[1]!).getAllByText(d.fewRatingsLabel).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/notas/)).not.toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: d.columns.average })).toBeInTheDocument();
+  });
+
+  it("tabla: la etiqueta de tipo va junto al título solo si no es álbum, sin columna Tipo", () => {
+    renderDiscography({
+      sections: [{ key: "main", items: [item("studio"), item("ep", { kinds: ["ep"], isEp: true })] }],
+      activeSection: "main",
+    });
+    fireEvent.click(screen.getByRole("button", { name: d.viewTable }));
+    const [studio, ep] = screen.getAllByRole("row").slice(1);
+    expect(within(studio!).queryByText(d.kinds.album)).not.toBeInTheDocument();
+    expect(within(ep!).getAllByText(d.kinds.ep).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("columnheader").map((th) => th.textContent)).not.toContain("Tipo");
   });
 
   it("tabla de Apariciones indica el artista principal", () => {

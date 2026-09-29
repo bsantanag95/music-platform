@@ -271,11 +271,9 @@
         "year": "Año",
         "cover": "Carátula",
         "title": "Título",
-        "type": "Tipo",
-        "community": "Comunidad",
-        "you": "Tú"
+        "you": "Tú",
+        "average": "Media"
       },
-      "fewRatings": "< 5 notas",
       "communityValue": "★ {average} ({count})",
       "withArtist": "de {name}",
       "empty": "Todavía no hay discos de este artista.",
@@ -300,6 +298,26 @@
         "studio": "estudio",
         "single_ep": "sencillo o EP",
         "live_other": "en vivo u otro"
+      },
+      "fewRatingsLabel": "menos de 5 valoraciones",
+      "favorite": "Favorito",
+      "pendingMark": "En Pendiente",
+      "menu": {
+        "open": "Acciones de {title}",
+        "logListen": "Registrar escucha",
+        "logging": "Registrando…",
+        "listenLogged": "Escucha registrada",
+        "addDetails": "Agregar detalles",
+        "favorite": "Favorito",
+        "pending": "Pendiente",
+        "rating": "Tu nota",
+        "addToList": "Agregar a lista…",
+        "closeLists": "Cerrar listas",
+        "goToAlbum": "Ir al álbum",
+        "signInPrompt": "Iniciá sesión para registrar escuchas, calificar o armar listas.",
+        "signIn": "Iniciar sesión",
+        "saveError": "No pudimos guardar el cambio. Intentá de nuevo.",
+        "column": "Acciones"
       }
     },
     "lineup": {

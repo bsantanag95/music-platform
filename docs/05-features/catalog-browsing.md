@@ -99,7 +99,15 @@ de biblioteca y biografía, con la misma estructura que el álbum):
   propias), En vivo, Recopilatorios, Sencillos, Otros y Apariciones, cada una con su cantidad;
   grilla por defecto en Principal y tabla en el resto, con la elección recordada por sección
   en el navegador; "Mostrar más" de a 48 en la grilla; "Mejor valorado" (mayor media con al
-  menos 5 valoraciones) y las marcas del usuario (escuchado, su nota).
+  menos 5 valoraciones) y las marcas del usuario (su nota o ✓ si solo escuchó, favorito y
+  Pendiente). La tabla muestra la **Media** ("—" con menos de 5 valoraciones) y la etiqueta de
+  tipo junto al título solo cuando no es álbum.
+- **Menú "…" por disco** (cambio `add-discography-quick-actions`): en la esquina de la carátula
+  (al pasar el mouse o con el foco; siempre visible en táctiles) y en la última columna de la
+  tabla. Registrar escucha en un clic (con "Agregar detalles"), Favorito, Pendiente, agregar a
+  listas, calificar con estrellas e ir al álbum, sin salir de la discografía; cada acción se
+  comporta como en el panel del álbum y actualiza las marcas. Es un diálogo no modal (hoja
+  inferior en móvil), uno abierto a la vez; sin sesión invita a iniciar sesión.
 - **Integrantes** (cambio `add-artist-members-tab`, al estilo de Metal-Archives): sub-vistas
   Completa (por defecto), Actual (o Última alineación), Antiguos y Apoyo en `?view=`, ocultas
   si están vacías. Cada fila: nombre enlazado, ★ fundador, (†año) si murió, y una línea por

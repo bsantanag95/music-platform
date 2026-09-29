@@ -1,6 +1,6 @@
-import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { artist, credit, listenEntry, rating } from "@/db/schema";
+import { artist, credit, favorite, listenEntry, rating, userList, userListItem, wantToListenEntry } from "@/db/schema";
 import type { ReleaseGroupCategory } from "@/lib/api/schemas";
 import { COMMUNITY_MIN_COUNT } from "./album-community-shared";
 import { isCoverResolved } from "./cover-resolution";
@@ -152,17 +152,45 @@ export async function getArtistDiscography(artistId: string): Promise<ArtistDisc
   return buildDiscographyView(rows, ratings, primaryArtists);
 }
 
+/** Pertenencia del disco a una lista propia (la forma que usa el selector de listas). */
+export interface DiscographyListMembership {
+  listId: string;
+  itemId: string | null;
+  kind: "standard" | "custom_journey";
+  title: string;
+}
+
 export interface DiscographyMarks {
   /** Discos con al menos una escucha del usuario. */
   listened: string[];
   /** Estrellas propias por disco. */
   stars: Record<string, number>;
+  /** Puntaje detallado propio (1–100) por disco, si lo tiene: se conserva al cambiar estrellas solo si sigue coherente. */
+  detailedScores: Record<string, number>;
+  favorites: string[];
+  /** Discos en Pendiente. */
+  pending: string[];
+  /** Listas propias que contienen cada disco (openspec: add-discography-quick-actions). */
+  lists: Record<string, DiscographyListMembership[]>;
 }
 
-/** Marcas personales del usuario sobre los discos de la discografía, en dos consultas. */
+export const EMPTY_DISCOGRAPHY_MARKS: DiscographyMarks = {
+  listened: [],
+  stars: {},
+  detailedScores: {},
+  favorites: [],
+  pending: [],
+  lists: {},
+};
+
+/**
+ * Marcas personales del usuario sobre los discos de la discografía, precargadas en lote (una
+ * consulta por tabla) para que el menú de acciones de cada disco abra sin requests (openspec:
+ * add-discography-quick-actions, design D3).
+ */
 export async function getDiscographyMarks(userId: string, releaseGroupIds: string[]): Promise<DiscographyMarks> {
-  if (releaseGroupIds.length === 0) return { listened: [], stars: {} };
-  const [listenedRows, starRows] = await Promise.all([
+  if (releaseGroupIds.length === 0) return EMPTY_DISCOGRAPHY_MARKS;
+  const [listenedRows, ratingRows, favoriteRows, pendingRows, listRows] = await Promise.all([
     db
       .selectDistinct({ releaseGroupId: listenEntry.releaseGroupId })
       .from(listenEntry)
@@ -170,12 +198,57 @@ export async function getDiscographyMarks(userId: string, releaseGroupIds: strin
         and(eq(listenEntry.userId, userId), inArray(listenEntry.releaseGroupId, releaseGroupIds), isNotNull(listenEntry.releaseGroupId)),
       ),
     db
-      .select({ releaseGroupId: rating.releaseGroupId, stars: rating.stars })
+      .select({ releaseGroupId: rating.releaseGroupId, stars: rating.stars, detailedScore: rating.detailedScore })
       .from(rating)
       .where(and(eq(rating.userId, userId), inArray(rating.releaseGroupId, releaseGroupIds))),
+    db
+      .select({ releaseGroupId: favorite.releaseGroupId })
+      .from(favorite)
+      .where(and(eq(favorite.userId, userId), inArray(favorite.releaseGroupId, releaseGroupIds))),
+    db
+      .select({ releaseGroupId: wantToListenEntry.releaseGroupId })
+      .from(wantToListenEntry)
+      .where(and(eq(wantToListenEntry.userId, userId), inArray(wantToListenEntry.releaseGroupId, releaseGroupIds))),
+    // Mismo criterio que el panel del álbum: listas comunes y Caminos no archivados.
+    db
+      .select({
+        releaseGroupId: userListItem.releaseGroupId,
+        listId: userList.id,
+        itemId: userListItem.id,
+        kind: userList.kind,
+        title: userList.title,
+      })
+      .from(userList)
+      .innerJoin(userListItem, eq(userListItem.listId, userList.id))
+      .where(
+        and(
+          eq(userList.ownerId, userId),
+          inArray(userListItem.releaseGroupId, releaseGroupIds),
+          or(eq(userList.kind, "standard"), and(eq(userList.kind, "custom_journey"), isNull(userList.journeyArchivedAt))),
+        ),
+      )
+      .orderBy(desc(userList.createdAt), desc(userList.id)),
   ]);
+
+  const ids = (rows: { releaseGroupId: string | null }[]) => rows.flatMap((r) => (r.releaseGroupId ? [r.releaseGroupId] : []));
+  const lists: Record<string, DiscographyListMembership[]> = {};
+  for (const row of listRows) {
+    if (!row.releaseGroupId) continue;
+    (lists[row.releaseGroupId] ??= []).push({
+      listId: row.listId,
+      itemId: row.itemId,
+      kind: row.kind === "custom_journey" ? "custom_journey" : "standard",
+      title: row.title,
+    });
+  }
   return {
-    listened: listenedRows.flatMap((r) => (r.releaseGroupId ? [r.releaseGroupId] : [])),
-    stars: Object.fromEntries(starRows.flatMap((r) => (r.releaseGroupId ? [[r.releaseGroupId, Number(r.stars)]] : []))),
+    listened: ids(listenedRows),
+    stars: Object.fromEntries(ratingRows.flatMap((r) => (r.releaseGroupId ? [[r.releaseGroupId, Number(r.stars)]] : []))),
+    detailedScores: Object.fromEntries(
+      ratingRows.flatMap((r) => (r.releaseGroupId && r.detailedScore !== null ? [[r.releaseGroupId, r.detailedScore]] : [])),
+    ),
+    favorites: ids(favoriteRows),
+    pending: ids(pendingRows),
+    lists,
   };
 }
