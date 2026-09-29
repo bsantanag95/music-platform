@@ -48,6 +48,7 @@ export default async function ArtistDiscographyPage({ params, searchParams }: Ar
         activeSection={activeSection}
         bestRatedId={view?.bestRatedId ?? null}
         marks={marks}
+        discographyComplete={artist.discographyCompleteAt !== null}
       />
     </div>
   );

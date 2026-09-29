@@ -117,6 +117,16 @@ de biblioteca y biografía, con la misma estructura que el álbum):
   discos sin valor van al final y cambiar de sección vuelve al orden por año. El título se compara
   con `Intl.Collator` del idioma de la interfaz (`numeric`: "Vol. 2" antes que "Vol. 10"), sin
   quitar artículos ("The Wall" va en la T), y los títulos repetidos se desempatan por año.
+- **Buscador de la discografía** (cambio `add-discography-search`): con 20 discos o más, un campo en
+  la barra de secciones (en móvil, una lupa que lo despliega) filtra en el cliente todas las
+  secciones ya cargadas, sin request. Con texto, la sección se reemplaza por una tabla de resultados
+  agrupada por sección (mismas columnas, marcas y menú "…"), las pastillas muestran las
+  coincidencias de cada sección y llevan a su grupo, y el selector de vista se oculta. Coincide sin
+  distinguir mayúsculas, acentos, ligaduras ni apóstrofos ("dont" encuentra "Don’t"), en Apariciones
+  también por el artista principal y, con un año de cuatro cifras, por año. Esc o el botón de borrar
+  restauran la sección; la búsqueda no va a la URL. Sin coincidencias, enlaza a
+  `/search?type=album&q=`; si `discography_complete_at` es `NULL` (primera visita de un artista con
+  más de 300 discos), avisa que puede faltar algún disco.
 - **Integrantes** (cambio `add-artist-members-tab`, al estilo de Metal-Archives): sub-vistas
   Completa (por defecto), Actual (o Última alineación), Antiguos y Apoyo en `?view=`, ocultas
   si están vacías. Cada fila: nombre enlazado, ★ fundador, (†año) si murió, y una línea por
