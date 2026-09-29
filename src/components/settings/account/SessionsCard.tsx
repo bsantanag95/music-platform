@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useNow, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { SettingsCard } from "@/components/settings/SettingsSection";
 import { RevokeSessionsButton } from "@/components/settings/RevokeSessionsButton";
@@ -24,6 +24,9 @@ export function SessionsCard({ sessions: initial }: SessionsCardProps) {
   const t = useTranslations("users");
   const tErrors = useTranslations("errors");
   const format = useFormatter();
+  // El `now` de la request (src/i18n/request.ts), igual en servidor y cliente: sin él, la fecha
+  // relativa se calcula con `new Date()` en cada lado y la hidratación no coincide.
+  const now = useNow();
   const [sessions, setSessions] = useState(initial);
   const [closingId, setClosingId] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -70,7 +73,7 @@ export function SessionsCard({ sessions: initial }: SessionsCardProps) {
                   {activeNow
                     ? t("settings.account.sessions.activeNow")
                     : lastSeen
-                      ? t("settings.account.sessions.lastSeen", { when: format.relativeTime(lastSeen) })
+                      ? t("settings.account.sessions.lastSeen", { when: format.relativeTime(lastSeen, now) })
                       : null}
                 </div>
               </div>
