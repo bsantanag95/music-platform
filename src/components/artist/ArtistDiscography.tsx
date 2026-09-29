@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
@@ -352,27 +352,43 @@ function showsKind(kinds: string[]): boolean {
   return !(kinds.length === 1 && kindKey(kinds[0]!) === "album");
 }
 
-type SortKey = "year" | "average" | "you";
+type SortKey = "year" | "title" | "average" | "you";
 type SortDirection = "asc" | "desc";
 
-/** Sentido del primer uso de cada columna: el año de lo más viejo a lo más nuevo; las notas, de la más alta. */
-const NATURAL_DIRECTION: Record<SortKey, SortDirection> = { year: "asc", average: "desc", you: "desc" };
+/**
+ * Sentido del primer uso de cada columna: el año de lo más viejo a lo más nuevo, el título de la A a
+ * la Z y las notas, de la más alta.
+ */
+const NATURAL_DIRECTION: Record<SortKey, SortDirection> = { year: "asc", title: "asc", average: "desc", you: "desc" };
+
+type SortableRow = { title: string; year: number | null };
+
+/** Compara títulos según el idioma: acentos y ligaduras en su lugar y "Vol. 2" antes que "Vol. 10". */
+export function titleCollator(locale: string): Intl.Collator {
+  return new Intl.Collator(locale, { numeric: true, sensitivity: "base" });
+}
 
 /**
  * Orden de la tabla (openspec: extend-album-quick-actions, design D5): los discos sin valor en la
- * columna van siempre al final, en cualquier sentido, con el título como desempate.
+ * columna van siempre al final, en cualquier sentido. Las columnas numéricas desempatan por título;
+ * el título desempata por año, con los discos sin año al final.
  */
-export function sortDiscographyRows<T extends { title: string }>(
+export function sortDiscographyRows<T extends SortableRow>(
   rows: T[],
-  value: (row: T) => number | null,
+  value: (row: T) => number | string | null,
   direction: SortDirection,
+  collator: Intl.Collator,
 ): T[] {
   const sign = direction === "asc" ? 1 : -1;
+  const byYear = (a: T, b: T) =>
+    a.year === null || b.year === null ? (a.year === b.year ? 0 : a.year === null ? 1 : -1) : a.year - b.year;
   return [...rows].sort((a, b) => {
     const va = value(a);
     const vb = value(b);
-    if (va === null || vb === null) return va === vb ? a.title.localeCompare(b.title) : va === null ? 1 : -1;
-    return (va - vb) * sign || a.title.localeCompare(b.title);
+    if (typeof va === "string" && typeof vb === "string") return collator.compare(va, vb) * sign || byYear(a, b);
+    const byTitle = collator.compare(a.title, b.title);
+    if (va === null || vb === null) return va === vb ? byTitle : va === null ? 1 : -1;
+    return (Number(va) - Number(vb)) * sign || byTitle;
   });
 }
 
@@ -390,12 +406,14 @@ function DiscographyTable({ items, actions }: { items: ArtistDiscographyItem[]; 
   const locale = useLocale();
   const kindLabel = useKindLabel();
   const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection }>({ key: "year", direction: "asc" });
-  const sortValue: Record<SortKey, (item: ArtistDiscographyItem) => number | null> = {
+  const sortValue: Record<SortKey, (item: ArtistDiscographyItem) => number | string | null> = {
     year: (item) => item.year,
+    title: (item) => item.title,
     average: (item) => item.community.average,
     you: (item) => actions.marksOf(item.id)?.stars ?? null,
   };
-  const rows = sortDiscographyRows(items, sortValue[sort.key], sort.direction);
+  const collator = useMemo(() => titleCollator(locale), [locale]);
+  const rows = sortDiscographyRows(items, sortValue[sort.key], sort.direction, collator);
   const toggleSort = (key: SortKey) =>
     setSort((current) =>
       current.key === key
@@ -444,9 +462,7 @@ function DiscographyTable({ items, actions }: { items: ArtistDiscographyItem[]; 
           <th scope="col" className="hidden w-11 py-2 pr-2 font-normal sm:table-cell">
             <span className="sr-only">{t("columns.cover")}</span>
           </th>
-          <th scope="col" className="py-2 pr-2 font-normal">
-            {t("columns.title")}
-          </th>
+          <th scope="col" className="py-2 pr-2 font-normal" {...sortHeader("title", t("columns.title"))} />
           <th scope="col" className="hidden w-32 py-2 pr-2 font-normal sm:table-cell" {...sortHeader("average", t("columns.average"))} />
           <th scope="col" className="w-20 py-2 pr-2 font-normal sm:w-24" {...sortHeader("you", t("columns.you"))} />
           <th scope="col" className="w-10 py-2 font-normal">

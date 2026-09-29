@@ -112,9 +112,11 @@ de biblioteca y biografía, con la misma estructura que el álbum):
   álbumes, las tarjetas de Explorar, las listas de álbumes ajenas y la tira de la discografía del
   álbum (salvo el disco actual); ahí las marcas se piden al abrirlo
   (`GET /api/me/release-groups/[id]/marks`).
-- **Orden de la tabla**: Año, Media y Tú ordenan la tabla (el primer uso en su sentido natural:
-  año ascendente, notas descendente; el segundo lo invierte); los discos sin valor van al final y
-  cambiar de sección vuelve al orden por año.
+- **Orden de la tabla**: Año, Título, Media y Tú ordenan la tabla (el primer uso en su sentido
+  natural: año ascendente, título de la A a la Z, notas descendente; el segundo lo invierte); los
+  discos sin valor van al final y cambiar de sección vuelve al orden por año. El título se compara
+  con `Intl.Collator` del idioma de la interfaz (`numeric`: "Vol. 2" antes que "Vol. 10"), sin
+  quitar artículos ("The Wall" va en la T), y los títulos repetidos se desempatan por año.
 - **Integrantes** (cambio `add-artist-members-tab`, al estilo de Metal-Archives): sub-vistas
   Completa (por defecto), Actual (o Última alineación), Antiguos y Apoyo en `?view=`, ocultas
   si están vacías. Cada fila: nombre enlazado, ★ fundador, (†año) si murió, y una línea por
