@@ -6,6 +6,12 @@ import type { ArtistLineup } from "@/services/catalog/artist-lineup";
 
 export const LINEUP_FACT_LIMIT = 5;
 
+/**
+ * Ancla de la barra de pestañas: el enlace de la ficha lleva directo a la alineación, no al tope
+ * de la página (la cabecera ocupa casi toda la primera pantalla).
+ */
+export const ARTIST_TABS_ANCHOR = "artist-tabs";
+
 export interface LineupFact {
   label: "members" | "lastLineup" | "bands";
   people: { id: string; name: string }[];
@@ -25,7 +31,7 @@ export function lineupFact(lineup: ArtistLineup | null, artistId: string): Lineu
     return {
       label: lineup.lastLineup ? "lastLineup" : "members",
       people: lineup.current.slice(0, LINEUP_FACT_LIMIT).map((p) => ({ id: p.artistId, name: p.name })),
-      href: `/artist/${artistId}/members?view=current`,
+      href: `/artist/${artistId}/members?view=current#${ARTIST_TABS_ANCHOR}`,
       more: "seeLineup",
     };
   }
@@ -36,7 +42,7 @@ export function lineupFact(lineup: ArtistLineup | null, artistId: string): Lineu
   return {
     label: "bands",
     people: [...current, ...past].slice(0, LINEUP_FACT_LIMIT).map((g) => ({ id: g.artistId, name: g.name })),
-    href: `/artist/${artistId}/members`,
+    href: `/artist/${artistId}/members#${ARTIST_TABS_ANCHOR}`,
     more: "seeAll",
   };
 }

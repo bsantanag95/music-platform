@@ -217,7 +217,7 @@ describe("PersonLineupView", () => {
         { id: "recent", name: "Reciente" },
         { id: "old", name: "Vieja" },
       ],
-      href: "/artist/tommy/members",
+      href: "/artist/tommy/members#artist-tabs",
       more: "seeAll",
     });
   });
@@ -229,7 +229,7 @@ describe("lineupFact y lineupTabOf de un grupo", () => {
     const fact = lineupFact(six, "crue")!;
     expect(fact.label).toBe("members");
     expect(fact.people).toHaveLength(5);
-    expect(fact.href).toBe("/artist/crue/members?view=current");
+    expect(fact.href).toBe("/artist/crue/members?view=current#artist-tabs");
     expect(lineupFact({ ...CRUE, lastLineup: true }, "crue")!.label).toBe("lastLineup");
   });
 
@@ -262,7 +262,7 @@ describe("fila de la alineación en la ficha", () => {
     expect(screen.getByRole("link", { name: "Vince Neil" })).toHaveAttribute("href", "/artist/vince");
     expect(screen.getByRole("link", { name: `${catalogEs.artist.facts.seeLineup} →` })).toHaveAttribute(
       "href",
-      "/artist/crue/members?view=current",
+      "/artist/crue/members?view=current#artist-tabs",
     );
   });
 });
