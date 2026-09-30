@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { albumHref, reviewHref } from "@/lib/catalog-links";
@@ -44,6 +44,16 @@ export function ReviewIndex({ releaseGroupId, initial, sort, albumTitle, albumAr
   const [hasNext, setHasNext] = useState(initial.hasNext);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+
+  // `initial` viene del Server Component y conserva la identidad entre renders locales,
+  // pero cambia cuando llega un payload nuevo de RSC. `router.refresh()` (guardar, editar
+  // o borrar una reseña) entrega datos frescos sin remontar este componente, así que el
+  // índice se quedaría con la lista vieja hasta recargar. Sincronizamos aquí.
+  useEffect(() => {
+    setReviews(initial.reviews);
+    setPage(initial.page);
+    setHasNext(initial.hasNext);
+  }, [initial]);
 
   async function loadMore() {
     setLoading(true);

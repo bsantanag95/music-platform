@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
 import { ReviewIndex } from "./ReviewIndex";
@@ -77,6 +78,21 @@ describe("ReviewIndex", () => {
   it("muestra el estado vacío", () => {
     renderWithIntl(<ReviewIndex releaseGroupId={RG} initial={page([])} sort="recent" />);
     expect(screen.getByText(reviewsEs.empty)).toBeInTheDocument();
+  });
+
+  it("sincroniza el índice cuando el servidor entrega reseñas nuevas tras router.refresh", async () => {
+    const { rerender } = renderWithIntl(
+      <ReviewIndex releaseGroupId={RG} initial={page([review("1")])} sort="recent" />,
+    );
+    expect(screen.queryByRole("link", { name: "Título 2" })).not.toBeInTheDocument();
+
+    rerender(
+      <NextIntlClientProvider locale="es" messages={{ catalog: catalogEs }}>
+        <ReviewIndex releaseGroupId={RG} initial={page([review("2"), review("1")])} sort="recent" />
+      </NextIntlClientProvider>,
+    );
+
+    expect(await screen.findByRole("link", { name: "Título 2" })).toBeInTheDocument();
   });
 
   it("carga la página siguiente con el mismo orden", async () => {
