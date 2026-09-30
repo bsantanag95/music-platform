@@ -18,6 +18,7 @@ import { getProfileByUsername, searchUsers } from "@/services/social/profiles";
 import { getCurrentUser } from "@/services/auth/authorization";
 import { SearchErrorState } from "@/components/catalog/SearchErrorState";
 import { searchHref } from "@/components/catalog/search-types";
+import { artistHref } from "@/lib/catalog-links";
 import {
   FilterPills,
   PendingRemote,
@@ -72,7 +73,7 @@ export async function ArtistSection({
   const unique = !all && !artistType ? uniqueExactArtist(response) : null;
   if (unique) {
     redirect({
-      href: `/artist/${unique.id}?${new URLSearchParams({ from: "search", q: query }).toString()}`,
+      href: `${artistHref(unique.name, unique.id)}?${new URLSearchParams({ from: "search", q: query }).toString()}`,
       locale: await getLocale(),
     });
   }

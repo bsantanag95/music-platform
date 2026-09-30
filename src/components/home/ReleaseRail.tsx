@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AppImage } from "@/components/ui/AppImage";
 import { Link } from "@/i18n/navigation";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
+import { albumHref } from "@/lib/catalog-links";
 import type { HomeRelease } from "@/services/home/home";
 
 function formatMonth(iso: string, locale: string) {
@@ -161,7 +162,10 @@ export function ReleaseRail({
                 style={revealStyle(i)}
                 className={`w-36 shrink-0 snap-start ${revealClass}`}
               >
-                <Link href={`/album/${release.id}`} className="group flex flex-col gap-2">
+                <Link
+                  href={albumHref(release.artist, release.title, release.id)}
+                  className="group flex flex-col gap-2"
+                >
                   {release.coverThumbUrl ? (
                     <div
                       className={`relative aspect-square overflow-hidden rounded border border-ink-border transition-colors group-hover:border-amber ${

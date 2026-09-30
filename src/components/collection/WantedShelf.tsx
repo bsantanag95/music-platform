@@ -16,6 +16,7 @@ import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { getMyWantedEntries, removeWantedEntry, updateWantedEntry, type WantedQuery } from "@/lib/api/wanted";
 import { ApiError } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
+import { albumHref, artistHref } from "@/lib/catalog-links";
 import { formatCollectionDate } from "./collection-shared";
 import {
   WantedVariantForm,
@@ -226,13 +227,18 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
               key={entry.id}
               className="flex flex-wrap gap-3 rounded-lg border border-ink-border bg-ink-surface p-4 transition-colors focus-within:border-amber hover:border-amber"
             >
-              <Link href={`/album/${entry.album.id}`} tabIndex={-1} aria-hidden className="shrink-0">
+              <Link
+                href={albumHref(entry.album.artistName, entry.album.title, entry.album.id)}
+                tabIndex={-1}
+                aria-hidden
+                className="shrink-0"
+              >
                 <CoverThumb cover={entry.album.coverThumbUrl} label="" className="size-16" />
               </Link>
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <div className="flex flex-wrap items-baseline gap-x-2">
                   <Link
-                    href={`/album/${entry.album.id}`}
+                    href={albumHref(entry.album.artistName, entry.album.title, entry.album.id)}
                     className="font-display text-base text-paper transition-colors hover:text-amber"
                   >
                     {entry.album.title || t("albumUnavailable")}
@@ -240,7 +246,7 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
                   {entry.album.artistName ? (
                     entry.album.artistId ? (
                       <Link
-                        href={`/artist/${entry.album.artistId}`}
+                        href={artistHref(entry.album.artistName ?? "", entry.album.artistId)}
                         className="font-data text-sm text-paper-muted transition-colors hover:text-paper"
                       >
                         {entry.album.artistName}

@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { getRecordingDetail } from "@/services/catalog/recording-detail";
+import { resolvePrimaryArtists, slugArtistName } from "@/services/catalog/primary-artists";
 import { resolveSession } from "@/services/auth/sessions";
 import { listPublicListsContainingItem } from "@/services/lists/discovery";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ItemListsSection } from "@/components/lists/ItemListsSection";
-import { isValidUuid } from "@/lib/validation";
+import { artistHref, songHref, songSegment } from "@/lib/catalog-links";
+import { resolveCatalogRoute } from "@/lib/catalog-route";
+import { parseCatalogSegment } from "@/lib/slug";
 
 interface SongListsPageProps {
   params: Promise<{ id: string }>;
@@ -14,8 +17,9 @@ interface SongListsPageProps {
 
 export async function generateMetadata({ params }: SongListsPageProps): Promise<Metadata> {
   const { id } = await params;
-  if (!isValidUuid(id)) return {};
-  const result = await getRecordingDetail(id);
+  const parsed = parseCatalogSegment(id);
+  if (!parsed) return {};
+  const result = await getRecordingDetail(parsed.id);
   if (result.kind !== "ok") return {};
   const t = await getTranslations("lists");
   return { title: `${t("title")} · ${result.detail.recording.title}` };
@@ -27,23 +31,38 @@ export async function generateMetadata({ params }: SongListsPageProps): Promise<
 // necesario para el breadcrumb y el título, igual que el resto de sub-páginas
 // del catálogo.
 export default async function SongListsPage({ params }: SongListsPageProps) {
-  const { id } = await params;
+  const { id: segment } = await params;
   const common = await getTranslations("common");
   const t = await getTranslations("lists");
-  if (!isValidUuid(id)) notFound();
+  const parsed = parseCatalogSegment(segment);
+  if (!parsed) notFound();
 
-  const result = await getRecordingDetail(id);
+  const result = await getRecordingDetail(parsed.id);
   if (result.kind === "not_found") notFound();
 
   const { recording, primaryArtist } = result.detail;
+  const [artistName, locale] = await Promise.all([
+    resolvePrimaryArtists({ recordingIds: [recording.id] }).then(({ recordings }) =>
+      slugArtistName(recordings.get(recording.id)),
+    ),
+    getLocale(),
+  ]);
+  resolveCatalogRoute({
+    locale,
+    kind: "song",
+    segment,
+    canonical: songSegment(artistName, recording.title, recording.id),
+    subpath: "/lists",
+  });
+
   const session = await resolveSession();
   const target = { type: "recording" as const, id: recording.id };
   const initial = await listPublicListsContainingItem(session?.user.id ?? null, target, 1, 20);
 
   const breadcrumbItems = [
     { label: common("home"), href: "/" },
-    ...(primaryArtist ? [{ label: primaryArtist.name, href: `/artist/${primaryArtist.id}` }] : []),
-    { label: recording.title, href: `/song/${recording.id}` },
+    ...(primaryArtist ? [{ label: primaryArtist.name, href: artistHref(primaryArtist.name, primaryArtist.id) }] : []),
+    { label: recording.title, href: songHref(artistName, recording.title, recording.id) },
     { label: t("title") },
   ];
 

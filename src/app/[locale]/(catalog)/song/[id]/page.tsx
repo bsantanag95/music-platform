@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { AlbumCover } from "@/components/catalog/AlbumCover";
 import { itemListsHref } from "@/components/lists/lists-shared";
@@ -12,7 +12,9 @@ import { SongTrackStrip } from "@/components/song/SongTrackStrip";
 import { SongVersions } from "@/components/song/SongVersions";
 import { Comments } from "@/components/social/Comments";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
-import { isValidUuid } from "@/lib/validation";
+import { albumHref, artistHref } from "@/lib/catalog-links";
+import { resolveCatalogRoute } from "@/lib/catalog-route";
+import { parseCatalogSegment } from "@/lib/slug";
 import { discYear, groupAppearances, scheduleSongCreditsSync } from "@/services/catalog/recording-detail";
 import { getRatings, listComments, resolveSocialTarget } from "@/services/social";
 import {
@@ -23,6 +25,7 @@ import {
   loadSession,
   loadSongCommunity,
   loadSongPersonalState,
+  loadSongSegment,
   loadTrackStrip,
   loadVersionLine,
   loadVersions,
@@ -40,20 +43,28 @@ interface SongPageProps {
 
 export async function generateMetadata({ params }: SongPageProps): Promise<Metadata> {
   const { id } = await params;
-  if (!isValidUuid(id)) return {};
-  const result = await loadRecordingDetail(id);
+  const parsed = parseCatalogSegment(id);
+  if (!parsed) return {};
+  const result = await loadRecordingDetail(parsed.id);
   return result.kind === "ok" ? { title: result.detail.recording.title } : {};
 }
 
 export default async function SongPage({ params }: SongPageProps) {
-  const { id } = await params;
-  if (!isValidUuid(id)) notFound();
+  const { id: segment } = await params;
+  const parsed = parseCatalogSegment(segment);
+  if (!parsed) notFound();
 
-  const result = await loadRecordingDetail(id);
+  const result = await loadRecordingDetail(parsed.id);
   if (result.kind === "not_found") notFound();
 
   const { detail } = result;
   const recordingId = detail.recording.id;
+  resolveCatalogRoute({
+    locale: await getLocale(),
+    kind: "song",
+    segment,
+    canonical: await loadSongSegment(recordingId, detail.recording.title),
+  });
   const t = await getTranslations("catalog");
   const tCommon = await getTranslations("common");
 
@@ -96,11 +107,14 @@ export default async function SongPage({ params }: SongPageProps) {
     />
   );
 
+  const albumHrefValue = detail.principalDisc
+    ? albumHref(detail.primaryArtist?.name ?? null, detail.principalDisc.title, detail.principalDisc.releaseGroupId)
+    : null;
   const breadcrumbItems = [
     { label: tCommon("home"), href: "/" },
-    ...(detail.primaryArtist ? [{ label: detail.primaryArtist.name, href: `/artist/${detail.primaryArtist.id}` }] : []),
-    ...(detail.principalDisc
-      ? [{ label: detail.principalDisc.title, href: `/album/${detail.principalDisc.releaseGroupId}` }]
+    ...(detail.primaryArtist ? [{ label: detail.primaryArtist.name, href: artistHref(detail.primaryArtist.name, detail.primaryArtist.id) }] : []),
+    ...(detail.principalDisc && albumHrefValue
+      ? [{ label: detail.principalDisc.title, href: albumHrefValue }]
       : []),
     { label: detail.recording.title },
   ];
@@ -114,7 +128,7 @@ export default async function SongPage({ params }: SongPageProps) {
           {detail.principalDisc ? (
             // La carátula es del disco principal: lleva a él (openspec: polish-song-header).
             <Link
-              href={`/album/${detail.principalDisc.releaseGroupId}`}
+              href={albumHrefValue!}
               title={detail.principalDisc.title}
               aria-label={t("song.coverLink", { title: detail.principalDisc.title })}
               className="block w-fit rounded transition-opacity hover:opacity-90"

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 
 const COLS_CLASS = {
   1: "",
@@ -25,16 +26,36 @@ export function entityTypeKey(entityType: string) {
 }
 
 // Ruta de catálogo del objetivo de un ítem de lista, según el tipo de la lista.
-export function listItemHref(targetId: string, entityType: string): string {
-  if (entityType === "artist") return `/artist/${targetId}`;
-  if (entityType === "release-group") return `/album/${targetId}`;
-  return `/song/${targetId}`;
+// `meta` lleva el nombre/título para el slug decorativo; sin él la ruta sigue
+// siendo válida (solo el id), así que no es obligatorio.
+interface ListItemHrefMeta {
+  name?: string;
+  title?: string;
+  artistName?: string | null;
+}
+
+export function listItemHref(
+  targetId: string,
+  entityType: string,
+  meta?: ListItemHrefMeta,
+): string {
+  if (entityType === "artist") return artistHref(meta?.name ?? meta?.title ?? "", targetId);
+  if (entityType === "release-group") {
+    return albumHref(meta?.artistName ?? null, meta?.title ?? "", targetId);
+  }
+  return songHref(meta?.artistName ?? null, meta?.title ?? "", targetId);
 }
 
 // Página dedicada de "Mostrar en listas" de un ítem puntual (openspec:
 // show-item-in-lists) — a la que enlaza el "Ver más" del panel acotado a 4
 // resultados. Mismo mapeo de tipo a ruta que `listItemHref`, con el
 // sub-segmento fijo `/lists`.
-export function itemListsHref(target: { type: string; id: string }): string {
-  return `${listItemHref(target.id, target.type)}/lists`;
+export function itemListsHref(target: {
+  type: string;
+  id: string;
+  name?: string;
+  title?: string;
+  artistName?: string | null;
+}): string {
+  return `${listItemHref(target.id, target.type, target)}/lists`;
 }

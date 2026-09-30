@@ -37,7 +37,12 @@ export async function IdentityCard({ identityCard }: IdentityCardProps) {
       {slots.map((slot) => (
         <Link
           key={slot.key}
-          href={targetHref(slot.entity.type, slot.entity.id)}
+          href={targetHref(
+            slot.entity.type,
+            slot.entity.id,
+            slot.entity.title,
+            slot.entity.artistName ?? null,
+          )}
           className="group flex flex-1 flex-col items-center gap-2 text-center"
         >
           <CoverThumb

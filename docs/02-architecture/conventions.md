@@ -59,11 +59,18 @@ Resumen normativo:
 la arquitectura. Resumen normativo para uso diario:
 
 - **Rutas de página**: slugs neutros en inglés, iguales para todos los locales (`/search`, no
-  `/buscar`; `/artist/[id]`, no `/artista/[id]`). El locale vive exclusivamente como segmento de
-  ruta (`src/app/[locale]/...`), nunca traducido en el slug mismo. Esto corrige la propuesta
-  original de `03-best-practices.md`, que sugería slugs en español antes de que se confirmara
-  soporte multi-idioma.
-- **Rutas de API**: sin cambios — siguen en inglés (`/api/catalog/...`), como ya estaba definido.
+  `/buscar`; `/artist/[slug-id]`, no `/artista/[slug-id]`). El locale vive exclusivamente como
+  segmento de ruta (`src/app/[locale]/...`), nunca traducido en el slug mismo. Esto corrige la
+  propuesta original de `03-best-practices.md`, que sugería slugs en español antes de que se
+  confirmara soporte multi-idioma.
+- **Segmento dinámico del catálogo**: `/artist`, `/album` y `/song` (y `/users/{usuario}/lists`,
+  `/review`) usan `<slug>-<id>`, donde `<id>` es el UUID interno codificado en base58 y `<slug>`
+  es texto decorativo derivado del nombre (ver ADR 0022). El id es la verdad: el segmento canónico
+  se arma con los helpers de `src/lib/catalog-links.ts` y las páginas redirigen con `308` al
+  canónico si el recibido (UUID viejo, slug desactualizado o id pelado) no coincide. Los enlaces
+  internos **no** se escriben a mano: un test de cumplimiento lo impide.
+- **Rutas de API**: sin cambios — siguen en inglés (`/api/catalog/...`) y reciben el UUID interno
+  pelado, no el segmento `slug-id`.
 - **Catálogos de mensajes**: `messages/{locale}/{namespace}.json`, namespaces por dominio
   (`common`, `catalog`, `errors`), nunca por página. Ver `i18n.md` §6 para la estructura completa.
 - **`components/ui/`** nunca importa `useTranslations` ni conoce el locale activo — recibe texto

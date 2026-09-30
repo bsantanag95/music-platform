@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
+import { albumHref, albumSegment, artistHref } from "@/lib/catalog-links";
 import catalogEs from "../../../../../../../messages/es/catalog.json";
 import commonEs from "../../../../../../../messages/es/common.json";
 import type { AlbumDetail } from "@/services/catalog/album-detail";
@@ -10,6 +11,7 @@ import type { AlbumDetail } from "@/services/catalog/album-detail";
 
 const mocks = vi.hoisted(() => ({
   loadAlbumDetail: vi.fn(),
+  loadAlbumSegment: vi.fn(),
   loadSession: vi.fn(),
   loadCanModerate: vi.fn(),
   loadCommunityStats: vi.fn(),
@@ -25,6 +27,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("../album-data", () => ({
   loadAlbumDetail: mocks.loadAlbumDetail,
+  loadAlbumSegment: mocks.loadAlbumSegment,
   loadSession: mocks.loadSession,
   loadCanModerate: mocks.loadCanModerate,
   loadCommunityStats: mocks.loadCommunityStats,
@@ -54,6 +57,9 @@ vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
   },
+  permanentRedirect: (url: string) => {
+    throw new Error(`NEXT_PERMANENT_REDIRECT:${url}`);
+  },
   useSelectedLayoutSegment: () => mocks.segment,
 }));
 vi.mock("next/image", () => ({
@@ -63,6 +69,7 @@ vi.mock("next/image", () => ({
 
 const messages: Record<string, unknown> = { catalog: catalogEs, common: commonEs };
 vi.mock("next-intl/server", () => ({
+  getLocale: vi.fn(async () => "es"),
   getTranslations: vi.fn(async (namespace: string) => {
     return (key: string, params?: Record<string, string | number>) => {
       let value: unknown = messages;
@@ -77,6 +84,7 @@ vi.mock("next-intl/server", () => ({
 
 const VALID_UUID = "550e8400-e29b-41d4-a716-446655440000";
 const ARTIST_ID = "550e8400-e29b-41d4-a716-446655440006";
+const SEGMENT = albumSegment("Pink Floyd", "The Dark Side of the Moon", VALID_UUID);
 
 function makeDetail(overrides: Partial<AlbumDetail> = {}): AlbumDetail {
   return {
@@ -191,6 +199,9 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.segment = null;
   mocks.loadAlbumDetail.mockResolvedValue({ kind: "ok", detail: makeDetail() });
+  mocks.loadAlbumSegment.mockImplementation(async (id: string, title: string) =>
+    albumSegment("Pink Floyd", title, id),
+  );
   mocks.loadSession.mockResolvedValue(null);
   mocks.loadCommunityStats.mockResolvedValue(stats);
   mocks.loadCommunityFavorites.mockResolvedValue(new Set());
@@ -211,7 +222,7 @@ describe("layout de la página de álbum", () => {
     await renderLayout();
     expect(screen.getByRole("heading", { level: 1, name: "The Dark Side of the Moon" })).toBeInTheDocument();
     expect(screen.getByText(catalogEs.album.workType.studio)).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: "Pink Floyd" })[0]).toHaveAttribute("href", `/artist/${ARTIST_ID}`);
+    expect(screen.getAllByRole("link", { name: "Pink Floyd" })[0]).toHaveAttribute("href", artistHref("Pink Floyd", ARTIST_ID));
   });
 
   it("muestra el breadcrumb sin artista cuando no hay artista principal", async () => {
@@ -227,8 +238,8 @@ describe("layout de la página de álbum", () => {
   it("muestra pestañas Canciones y Reseñas con contador, activa Canciones por defecto y oculta las que no tienen datos", async () => {
     await renderLayout();
     const songs = screen.getByRole("link", { name: catalogEs.album.tabs.songs });
-    expect(songs).toHaveAttribute("href", `/album/${VALID_UUID}`);
-    expect(screen.getByRole("link", { name: "Reseñas (17)" })).toHaveAttribute("href", `/album/${VALID_UUID}/reviews`);
+    expect(songs).toHaveAttribute("href", albumHref(null, "", VALID_UUID));
+    expect(screen.getByRole("link", { name: "Reseñas (17)" })).toHaveAttribute("href", `${albumHref(null, "", VALID_UUID)}/reviews`);
     expect(screen.queryByRole("link", { name: catalogEs.album.tabs.credits })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: catalogEs.album.tabs.editions })).not.toBeInTheDocument();
   });
@@ -266,11 +277,11 @@ describe("layout de la página de álbum", () => {
 describe("pestaña Canciones", () => {
   it("muestra la lista con créditos destacados enlazados", async () => {
     const { default: AlbumSongsPage } = await import("./page");
-    renderWithIntl(await AlbumSongsPage({ params: Promise.resolve({ id: VALID_UUID }) }));
+    renderWithIntl(await AlbumSongsPage({ params: Promise.resolve({ id: SEGMENT }) }));
     expect(screen.getByRole("heading", { name: catalogEs.album.tracks.heading })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Roger Waters" })).toHaveAttribute(
       "href",
-      "/artist/550e8400-e29b-41d4-a716-446655440007",
+      artistHref("Roger Waters", "550e8400-e29b-41d4-a716-446655440007"),
     );
   });
 });
@@ -281,7 +292,7 @@ describe("pestaña Reseñas", () => {
     const { default: AlbumReviewsPage } = await import("./reviews/page");
     renderWithIntl(
       await AlbumReviewsPage({
-        params: Promise.resolve({ id: VALID_UUID }),
+        params: Promise.resolve({ id: SEGMENT }),
         searchParams: Promise.resolve({ sort: "best" }),
       }),
     );
@@ -294,7 +305,7 @@ describe("pestaña Reseñas", () => {
     mocks.listReviews.mockResolvedValue({ reviews: [], page: 1, pageSize: 20, hasNext: false });
     const { default: AlbumReviewsPage } = await import("./reviews/page");
     await AlbumReviewsPage({
-      params: Promise.resolve({ id: VALID_UUID }),
+      params: Promise.resolve({ id: SEGMENT }),
       searchParams: Promise.resolve({ sort: "cualquiera" }),
     });
     expect(mocks.listReviews).toHaveBeenCalledWith(expect.anything(), 1, 20, "recent");
@@ -311,20 +322,20 @@ describe("pestañas con datos de ediciones y créditos", () => {
     });
     mocks.loadAlbumPersonnel.mockResolvedValue(PERSONNEL);
     await renderLayout();
-    expect(screen.getByRole("link", { name: catalogEs.album.tabs.credits })).toHaveAttribute("href", `/album/${VALID_UUID}/credits`);
-    expect(screen.getByRole("link", { name: catalogEs.album.tabs.editions })).toHaveAttribute("href", `/album/${VALID_UUID}/editions`);
+    expect(screen.getByRole("link", { name: catalogEs.album.tabs.credits })).toHaveAttribute("href", `${albumHref(null, "", VALID_UUID)}/credits`);
+    expect(screen.getByRole("link", { name: catalogEs.album.tabs.editions })).toHaveAttribute("href", `${albumHref(null, "", VALID_UUID)}/editions`);
     expect(screen.getAllByText("Harvest").length).toBeGreaterThan(0);
   });
 
   it("la pestaña Créditos muestra los niveles y responde 404 sin créditos", async () => {
     const { default: AlbumCreditsPage } = await import("./credits/page");
     mocks.loadAlbumPersonnel.mockResolvedValue(PERSONNEL);
-    renderWithIntl(await AlbumCreditsPage({ params: Promise.resolve({ id: VALID_UUID }) }));
+    renderWithIntl(await AlbumCreditsPage({ params: Promise.resolve({ id: SEGMENT }) }));
     expect(screen.getByText(catalogEs.album.credits.levels.members)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Integrante" })).toHaveAttribute("href", "/artist/m1");
 
     mocks.loadAlbumPersonnel.mockResolvedValue(null);
-    await expect(AlbumCreditsPage({ params: Promise.resolve({ id: VALID_UUID }) })).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(AlbumCreditsPage({ params: Promise.resolve({ id: SEGMENT }) })).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
   it("la pestaña Créditos abre la vista por canción con ?view=songs", async () => {
@@ -332,7 +343,7 @@ describe("pestañas con datos de ediciones y créditos", () => {
     mocks.loadAlbumPersonnel.mockResolvedValue(PERSONNEL);
     renderWithIntl(
       await AlbumCreditsPage({
-        params: Promise.resolve({ id: VALID_UUID }),
+        params: Promise.resolve({ id: SEGMENT }),
         searchParams: Promise.resolve({ view: "songs" }),
       }),
     );
@@ -350,11 +361,11 @@ describe("pestañas con datos de ediciones y créditos", () => {
       representativeTrackCount: 2,
       variants: [],
     });
-    renderWithIntl(await AlbumEditionsPage({ params: Promise.resolve({ id: VALID_UUID }) }));
+    renderWithIntl(await AlbumEditionsPage({ params: Promise.resolve({ id: SEGMENT }) }));
     expect(screen.getByRole("heading", { name: catalogEs.album.editions.heading })).toBeInTheDocument();
     expect(screen.getAllByRole("row")).toHaveLength(3);
 
     mocks.loadAlbumEditions.mockResolvedValue({ ...NO_EDITIONS, editions: [makeEdition("e1")] });
-    await expect(AlbumEditionsPage({ params: Promise.resolve({ id: VALID_UUID }) })).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(AlbumEditionsPage({ params: Promise.resolve({ id: SEGMENT }) })).rejects.toThrow("NEXT_NOT_FOUND");
   });
 });

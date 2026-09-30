@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { albumHref, artistHref } from "@/lib/catalog-links";
 import { ROLES_VISIBLE, useRoleFormatter } from "@/components/album/AlbumCredits";
 import { SongwriterNames, songwritersShareRoles } from "@/components/catalog/SongwriterNames";
 import type { RecordingCredits, TrackCreditKind, TrackCreditPerson } from "@/services/catalog/personnel-levels";
@@ -64,7 +65,7 @@ function PersonRow({ kind, person, prominent }: { kind: TrackCreditKind; person:
   return (
     <li className="grid grid-cols-1 gap-x-4 gap-y-0.5 py-1.5 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] sm:items-baseline">
       <Link
-        href={`/artist/${person.artistId}`}
+        href={artistHref(person.name, person.artistId)}
         className={`min-w-0 hover:text-amber hover:underline ${prominent ? "font-display text-paper" : "font-body text-sm text-paper"}`}
       >
         {person.name}
@@ -163,7 +164,7 @@ export function SongRecordingCredits({
         )}
       </div>
       {albumLink && (
-        <Link href={`/album/${principalReleaseGroupId}/credits`} className="self-start font-data text-xs text-amber hover:underline">
+        <Link href={`${albumHref(null, "", principalReleaseGroupId)}/credits`} className="self-start font-data text-xs text-amber hover:underline">
           {t("albumWideCredits")} →
         </Link>
       )}

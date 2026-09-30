@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { albumHref } from "@/lib/catalog-links";
 import type { AlbumSearchResult } from "@/services/catalog/search/types";
 import { LazyCoverImage } from "../LazyCoverImage";
 import { AlbumQuickActions } from "../AlbumQuickActions";
@@ -22,7 +23,7 @@ export function AlbumRow({ album }: { album: AlbumSearchResult }) {
     .join(" · ");
 
   return (
-    <Link href={`/album/${album.id}`} className="group flex min-w-0 flex-1 items-center gap-3">
+    <Link href={albumHref(album.artistName, album.title, album.id)} className="group flex min-w-0 flex-1 items-center gap-3">
       <LazyCoverImage releaseGroupId={album.id} coverLabel="" className="size-12 shrink-0" />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="truncate font-display text-sm text-paper transition-colors group-hover:text-amber">

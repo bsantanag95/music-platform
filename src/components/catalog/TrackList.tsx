@@ -3,6 +3,7 @@
 import { Fragment, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
+import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 import { RowMenu, RowMenuItem } from "@/components/ui/RowMenu";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ListsContainingItemPanel } from "@/components/lists/ListsContainingItemPanel";
@@ -65,7 +66,7 @@ function CreditLinks({ credits }: { credits: AlbumCredit[] }) {
     <>
       {credits.map((credit, index) => (
         <Fragment key={credit.artistId}>
-          <Link href={`/artist/${credit.artistId}`} className="text-paper-muted transition-colors hover:text-paper">
+          <Link href={artistHref(credit.name, credit.artistId)} className="text-paper-muted transition-colors hover:text-paper">
             {credit.name}
           </Link>
           {index < credits.length - 1 ? (credit.joinPhrase ?? ", ") : null}
@@ -294,7 +295,7 @@ export function TrackList({
         {editionsAvailable && (
           <>
             {" · "}
-            <Link href={`/album/${releaseGroupId}/editions`} className="text-amber hover:underline">
+            <Link href={`${albumHref(null, "", releaseGroupId)}/editions`} className="text-amber hover:underline">
               {t("seeEditions")}
             </Link>
           </>
@@ -388,7 +389,7 @@ export function TrackList({
                       <span className="flex h-7 items-center justify-end font-data text-xs text-paper-muted">{track.position}</span>
                       <div className="flex min-w-0 flex-col gap-0.5">
                         <span className="font-body leading-7 text-paper [overflow-wrap:anywhere]">
-                          <Link href={`/song/${track.recordingId}`} className="hover:text-amber">
+                          <Link href={songHref(primary[0]?.name ?? null, track.title, track.recordingId)} className="hover:text-amber">
                             {track.title}
                           </Link>
                           {isCommunityFavorite && (
@@ -411,7 +412,7 @@ export function TrackList({
                         )}
                         {track.versionOf && (
                           <span className="font-data text-xs text-paper-muted">
-                            <Link href={`/song/${track.versionOf.recordingId}`} className="hover:text-paper hover:underline">
+                            <Link href={songHref(null, track.versionOf.title, track.versionOf.recordingId)} className="hover:text-paper hover:underline">
                               {t("versionOf", { title: track.versionOf.title })}
                             </Link>
                           </span>

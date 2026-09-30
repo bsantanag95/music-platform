@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
+import { albumHref } from "@/lib/catalog-links";
 import { ListsContainingItemPanel } from "@/components/lists/ListsContainingItemPanel";
 import { AlbumQuickActions } from "./AlbumQuickActions";
 import { CoverThumb } from "./CoverThumb";
@@ -57,14 +58,14 @@ export function AlbumCard({ releaseGroup, categoryLabel, coverLabel, authenticat
   // Lleva al flujo de "Ya la tengo" en la página de álbum, ya abierto.
   const handleHaveIt = () => {
     setMenuOpen(false);
-    router.push(authenticated ? `/album/${releaseGroup.id}?collection=have` : "/auth/login");
+    router.push(authenticated ? `${albumHref(null, releaseGroup.title, releaseGroup.id)}?collection=have` : "/auth/login");
   };
 
   const extraButton = "font-data text-xs text-amber underline-offset-2 hover:underline disabled:opacity-50";
 
   return (
     <div className="group/card relative flex w-full flex-col gap-2 rounded-lg border border-ink-border bg-ink-surface p-3 transition-colors hover:border-amber">
-      <Link href={`/album/${releaseGroup.id}`} className="flex flex-col gap-2">
+      <Link href={albumHref(null, releaseGroup.title, releaseGroup.id)} className="flex flex-col gap-2">
         {releaseGroup.coverResolved ? (
           // Resuelta (URL conocida, ausencia confirmada o retirada): se
           // renderiza en la carga inicial, sin request por carátula.

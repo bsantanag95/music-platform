@@ -30,6 +30,11 @@ empezar por `/docs/README.md` antes de tocar código. Código y comentarios en e
 `--env-file=.env` el script falla aunque `.env` exista.
 Correr `smoke-test-ingestion.ts` primero: `smoke-test-routes.ts` y otros
 necesitan datos ya poblados (ej. un artista "Pink Floyd" existente).
+`smoke-test-ingestion.ts` exige una BD de scratch **virgen** (aborta si Pink
+Floyd ya tiene la discografía sincronizada): no es idempotente y forzar el
+reset marcaría discos reales como fuera de la discografía. `smoke-test-routes.ts`
+stubea `next/server.after` y elige su release-group por mbid, así que no depende
+de cuál de las filas con el mismo título haya en la BD.
 
 > **⚠️ Los smoke tests ESCRIBEN fixtures en la BD y contaminan el catálogo.**
 > Mockean `global.fetch`, así que ingieren datos sintéticos (mbid falsos, álbumes

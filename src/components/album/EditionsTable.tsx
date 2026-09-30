@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { albumHref } from "@/lib/catalog-links";
 import { musicBrainzReleaseUrl } from "@/lib/site-links";
 
 // Pestaña Ediciones del álbum (openspec: redesign-album-page, tarea 8.3): tabla de todas las
@@ -149,7 +150,7 @@ export function EditionsTable({ releaseGroupId, editions, representativeMbid }: 
                       {status && <span className="ml-2 text-paper-muted">· {status}</span>}
                       {edition.variant && (
                         <Link
-                          href={`/album/${releaseGroupId}#variant-${edition.variant.editionId}`}
+                          href={`${albumHref(null, "", releaseGroupId)}#variant-${edition.variant.editionId}`}
                           className="ml-2 text-amber hover:underline"
                         >
                           {t("extra", { count: edition.variant.extraTracks })}

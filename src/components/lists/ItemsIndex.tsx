@@ -23,7 +23,10 @@ export function ItemsIndex({ items, entityType, actions, quickActions }: ListIte
             {index + 1}
           </span>
           <Link
-            href={listItemHref(item.target.id, entityType)}
+            href={listItemHref(item.target.id, entityType, {
+              title: item.target.title,
+              artistName: item.target.artistName,
+            })}
             className="min-w-0 flex-1 truncate font-display text-sm text-paper transition-colors hover:text-amber"
           >
             {item.target.title || t("itemUnavailable")}

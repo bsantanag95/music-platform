@@ -1,10 +1,13 @@
 import { notFound } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { TrackList } from "@/components/catalog/TrackList";
 import { EditionExtraTracks } from "@/components/album/EditionExtraTracks";
-import { isValidUuid } from "@/lib/validation";
+import { resolveCatalogRoute } from "@/lib/catalog-route";
+import { parseCatalogSegment } from "@/lib/slug";
 import {
   loadAlbumDetail,
   loadAlbumEditions,
+  loadAlbumSegment,
   loadCommunityFavorites,
   loadPersonalState,
   loadSession,
@@ -19,12 +22,19 @@ interface AlbumSongsPageProps {
 }
 
 export default async function AlbumSongsPage({ params }: AlbumSongsPageProps) {
-  const { id } = await params;
-  if (!isValidUuid(id)) notFound();
-  const result = await loadAlbumDetail(id);
+  const { id: segment } = await params;
+  const parsed = parseCatalogSegment(segment);
+  if (!parsed) notFound();
+  const result = await loadAlbumDetail(parsed.id);
   if (result.kind !== "ok") return null;
 
   const { detail } = result;
+  resolveCatalogRoute({
+    locale: await getLocale(),
+    kind: "album",
+    segment,
+    canonical: await loadAlbumSegment(detail.releaseGroup.id, detail.releaseGroup.title),
+  });
   const session = await loadSession();
   const userId = session?.user.id ?? null;
   const [communityFavorites, personal, editions] = await Promise.all([

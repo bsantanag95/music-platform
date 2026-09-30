@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { albumHref } from "@/lib/catalog-links";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { DiscographyScroller } from "./DiscographyScroller";
 import { StripItemActions } from "./StripItemActions";
@@ -35,8 +36,8 @@ export function DiscographyStrip({ artistName, strip, authenticated = false }: D
         </h2>
         {(previous || next) && (
           <nav aria-label={t("neighbors")} className="flex min-w-0 flex-wrap gap-x-5 gap-y-1 text-sm">
-            {previous && <NeighborLink item={previous} label={t("previous")} side="previous" />}
-            {next && <NeighborLink item={next} label={t("next")} side="next" />}
+            {previous && <NeighborLink item={previous} label={t("previous")} side="previous" artistName={artistName} />}
+            {next && <NeighborLink item={next} label={t("next")} side="next" artistName={artistName} />}
           </nav>
         )}
       </div>
@@ -75,7 +76,7 @@ export function DiscographyStrip({ artistName, strip, authenticated = false }: D
                   {body}
                 </span>
               ) : (
-                <Link href={`/album/${item.id}`} className="group flex flex-col gap-1">
+                <Link href={albumHref(artistName, item.title, item.id)} className="group flex flex-col gap-1">
                   {body}
                 </Link>
               )}
@@ -92,10 +93,12 @@ function NeighborLink({
   item,
   label,
   side,
+  artistName,
 }: {
   item: DiscographyItem;
   label: string;
   side: "previous" | "next";
+  artistName: string;
 }) {
   const chevron = (
     <svg
@@ -118,7 +121,7 @@ function NeighborLink({
   // En reposo, neutro (regla de rareza del ámbar, DESIGN.md); el ámbar llega con el hover.
   return (
     <Link
-      href={`/album/${item.id}`}
+      href={albumHref(artistName, item.title, item.id)}
       rel={side === "previous" ? "prev" : "next"}
       className="group flex min-w-0 max-w-80 items-center gap-1.5 whitespace-nowrap text-paper-muted transition-colors hover:text-paper"
     >

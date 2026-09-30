@@ -3,6 +3,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { Link, useRouter, useSearchParams } from "@/i18n/navigation";
+import { albumHref } from "@/lib/catalog-links";
 import { ListenEntryForm } from "@/components/diary/ListenEntryForm";
 import { CollectionAlbumAction } from "@/components/collection/CollectionAlbumAction";
 import { REVIEW_COMPOSER_ANCHOR, revealReviewComposer } from "@/components/album/ReviewComposer";
@@ -246,7 +247,7 @@ function AuthenticatedPanel({
       <Row label={t("review")}>
         {state.ownReviewId && <span className="font-body text-sm text-paper">{t("reviewWritten")}</span>}
         <Link
-          href={`/album/${releaseGroupId}/reviews#${REVIEW_COMPOSER_ANCHOR}`}
+          href={`${albumHref(null, "", releaseGroupId)}/reviews#${REVIEW_COMPOSER_ANCHOR}`}
           scroll={false}
           onClick={(event) => {
             if (revealReviewComposer()) event.preventDefault();

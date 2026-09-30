@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { albumHref, reviewHref } from "@/lib/catalog-links";
 import { getReviews } from "@/lib/api/social";
 import { REVIEW_SORTS, type ReviewSort, type ReviewsResponse } from "@/lib/api/schemas";
 import { reviewHeadline } from "./album-format";
@@ -28,9 +29,13 @@ interface ReviewIndexProps {
   releaseGroupId: string;
   initial: ReviewsResponse;
   sort: ReviewSort;
+  /** Título del álbum, para los enlaces canónicos de la pestaña y de cada reseña. */
+  albumTitle?: string;
+  /** Artista principal del álbum, para el segmento canónico de la pestaña. */
+  albumArtistName?: string | null;
 }
 
-export function ReviewIndex({ releaseGroupId, initial, sort }: ReviewIndexProps) {
+export function ReviewIndex({ releaseGroupId, initial, sort, albumTitle, albumArtistName }: ReviewIndexProps) {
   const t = useTranslations("catalog.album.reviews");
   const tSocial = useTranslations("catalog.social");
   const format = useFormatter();
@@ -68,7 +73,7 @@ export function ReviewIndex({ releaseGroupId, initial, sort }: ReviewIndexProps)
           {REVIEW_SORTS.map((option) => (
             <Link
               key={option}
-              href={`/album/${releaseGroupId}/reviews${option === "recent" ? "" : `?sort=${option}`}`}
+              href={`${albumHref(albumArtistName ?? null, albumTitle ?? "", releaseGroupId)}/reviews${option === "recent" ? "" : `?sort=${option}`}`}
               scroll={false}
               aria-current={option === sort ? "true" : undefined}
               className={option === sort ? "text-paper underline" : "text-amber hover:underline"}
@@ -101,7 +106,7 @@ export function ReviewIndex({ releaseGroupId, initial, sort }: ReviewIndexProps)
                 <tr key={review.id} className="border-b border-ink-border align-baseline">
                   <td className="py-2 pr-3">
                     <Link
-                      href={`/review/${review.id}${sortQuery}`}
+                      href={`${reviewHref(review.user.username, albumTitle ?? "", review.id)}${sortQuery}`}
                       scroll={false}
                       className={`block font-body text-sm hover:text-amber [overflow-wrap:anywhere] ${
                         review.title ? "text-paper" : "italic text-paper-muted"

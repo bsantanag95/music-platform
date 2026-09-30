@@ -245,6 +245,34 @@ La persistencia de autenticación se introdujo en `drizzle/0005_auth.sql`, con e
 no habilitan OAuth/OIDC en esta fase. La limpieza de sesiones expiradas combina un job periódico
 con limpieza oportunista no bloqueante.
 
+## Direcciones públicas del catálogo (`slug-<id>`, ADR 0022)
+
+Las páginas de artista, álbum, canción, lista y reseña identifican la entidad con un segmento
+`<slug>-<id>`, donde `<id>` es el UUID interno codificado en base58 de 22 caracteres y `<slug>` es
+texto decorativo derivado del nombre. La API (`/api/**`) sigue con el UUID.
+
+- **`src/lib/slug.ts`** — `encodeId`/`decodeId` (base58 sobre `BigInt`), `slugify` (NFD → quita
+  U+0300–U+036F → NFC → minúsculas → mapa de letras → apóstrofos → `-`), `truncateSlug`,
+  `buildSegment` y `parseCatalogSegment` (UUID hexadecimal → `legacy`; tramo tras el último guion
+  decodificado → `encoded`; cualquier otra cosa → `null`).
+- **`src/lib/catalog-links.ts`** — los helpers únicos de enlace (`artistHref`, `albumHref`,
+  `songHref`, `listHref`, `reviewHref`) y `localeHref`. Álbum y canción exigen el nombre del
+  artista principal; un test de cumplimiento falla si queda un enlace armado a mano.
+- **`src/lib/catalog-route.ts`** — `resolveCatalogRoute`: compara el segmento recibido (decodificado
+  y en NFC) con el canónico y hace `permanentRedirect` (308) a
+  `/{locale}/{tipo}/{canónico}{subruta}?{query}`. Cada página lo llama con su subruta (un layout
+  no puede, porque no conoce la pestaña ni el query); los layouts y el modal interceptado solo
+  `parseCatalogSegment`. `src/lib/catalog-route-pages.test.ts` recorre las páginas y falla si
+  alguna se olvida.
+
+> **Sin `loading.tsx` en las páginas que canonicalizan (artista, álbum y canción).** Un
+> `loading.tsx` abre una frontera de Suspense y la respuesta empieza a streamearse como `200`
+> antes de que se decida el redirect: el `permanentRedirect` se entregaría dentro del stream como
+> redirect del cliente, no como `308` HTTP. Next solo cambia el status si la decisión ocurre
+> antes de la frontera, así que esas rutas no tienen esqueleto de primera carga (las listas y
+> reseñas, sin `loading.tsx`, ya devolvían `308`/`404` reales). El test `catalog-route-pages.test.ts`
+> falla si se vuelve a agregar uno; ver ADR 0022.
+
 ## Limitación de red del entorno de desarrollo (no del código)
 
 El entorno donde se valida este proyecto durante su construcción no tiene salida de red

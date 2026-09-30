@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { artistHref } from "@/lib/catalog-links";
 import type { ArtistSearchResult } from "@/services/catalog/search/types";
 import { SearchTypeIcon } from "../SearchTypeIcon";
 
@@ -33,7 +34,7 @@ function CachedTag() {
 function ArtistRow({ artist }: { artist: ArtistSearchResult }) {
   const meta = useArtistMeta()(artist);
   return (
-    <Link href={`/artist/${artist.id}`} className="group flex items-center gap-3">
+    <Link href={artistHref(artist.name, artist.id)} className="group flex items-center gap-3">
       <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-ink-surface text-paper-muted">
         <SearchTypeIcon type="artist" className="size-4" />
       </span>
@@ -70,7 +71,7 @@ function BestMatch({ artist }: { artist: ArtistSearchResult }) {
         {t("bestMatch")}
       </h3>
       <Link
-        href={`/artist/${artist.id}`}
+        href={artistHref(artist.name, artist.id)}
         className="group flex items-center gap-4 rounded-lg border border-ink-border bg-ink-surface p-4 transition-colors hover:border-amber/60"
       >
         <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-ink text-amber">

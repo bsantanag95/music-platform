@@ -4,6 +4,8 @@ import { getRecordingCredits } from "@/services/catalog/personnel-levels";
 import { getRecordingVersions, resolveVersionLine } from "@/services/catalog/recording-versions";
 import { getSongCommunityStats } from "@/services/catalog/song-community";
 import { getSongPersonalExtras } from "@/services/catalog/song-personal";
+import { resolvePrimaryArtists, slugArtistName } from "@/services/catalog/primary-artists";
+import { songSegment } from "@/lib/catalog-links";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
 import { isFavorited } from "@/services/favorites/favorites";
@@ -12,6 +14,15 @@ import { isFavorited } from "@/services/favorites/favorites";
 // deduplica por request entre `generateMetadata` y la página.
 
 export const loadRecordingDetail = cache((id: string) => getRecordingDetail(id));
+
+/**
+ * Segmento canónico de la canción para la canonicalización (openspec: add-catalog-slugs):
+ * el artista principal por el resolvedor por lotes, que marca `various` como sin artista.
+ */
+export const loadSongSegment = cache(async (recordingId: string, title: string) => {
+  const { recordings } = await resolvePrimaryArtists({ recordingIds: [recordingId] });
+  return songSegment(slugArtistName(recordings.get(recordingId)), title, recordingId);
+});
 
 export const loadSession = cache(() => resolveSession());
 

@@ -4,6 +4,12 @@ Documenta el contrato real de los endpoints existentes (Fases 1-4) y las brechas
 `02-architecture/frontend-plan/00-backend-analysis.md` identificó como necesarias para la
 Fase 3. Ver ADR 0006 sobre por qué este contrato es REST y no tRPC.
 
+> **La API sigue recibiendo el UUID interno, no el segmento `slug-id`** (ADR 0022). Las direcciones
+> públicas de página (`/{locale}/artist|album|song/...`, listas y reseñas) usan `<slug>-<id>` con
+> el id en base58; ningún endpoint de `/api/**` acepta esa forma: `artist/[id]`,
+> `release-group/[id]`, `recording/[id]`, `me/lists/[listId]`, etc. esperan el UUID, y los
+> clientes lo obtienen decodificando el segmento público con `parseCatalogSegment`.
+
 ## `GET /api/catalog/search?type=<tipo>&q=<texto>` — ✅ Existe
 
 Búsqueda del catálogo **por tipo** (openspec `redesign-scoped-search`): cada solicitud busca un

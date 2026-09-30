@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListCoverMosaic } from "@/components/lists/ListCoverMosaic";
+import { listHref } from "@/lib/catalog-links";
 import { discoverCaminos } from "@/services/camino/discovery";
 import { listGenres } from "@/services/discovery/discovery";
 
@@ -91,7 +92,11 @@ export default async function CaminosDiscoveryPage({ searchParams }: CaminosDisc
           {result.caminos.map((camino) => (
             <li key={camino.id}>
               <Link
-                href={`/users/${camino.owner.username}/${camino.kind === "custom_journey" ? "caminos" : "lists"}/${camino.id}`}
+                href={
+                  camino.kind === "custom_journey"
+                    ? `/users/${camino.owner.username}/caminos/${camino.id}`
+                    : listHref(camino.owner.username, camino.title, camino.id)
+                }
                 className="flex flex-col gap-2 rounded-lg border border-ink-border bg-ink-surface p-3 transition-colors hover:border-amber"
               >
                 <ListCoverMosaic coverThumbs={camino.coverThumbs} className="w-full" />

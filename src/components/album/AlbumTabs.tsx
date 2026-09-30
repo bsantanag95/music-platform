@@ -3,6 +3,7 @@
 import { useSelectedLayoutSegment } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { albumHref } from "@/lib/catalog-links";
 
 // Barra de pestañas de la página de álbum (openspec: redesign-album-page). Cada pestaña es
 // un segmento de ruta propio (D15), así que se puede enlazar y el botón "atrás" las
@@ -41,7 +42,8 @@ export function AlbumTabs({ releaseGroupId, available, reviewCount }: AlbumTabsP
         {tabs.map((tab) => {
           const tabSegment = SEGMENT_BY_TAB[tab];
           const active = segment === tabSegment || (tab === "songs" && segment === "__PAGE__");
-          const href = tabSegment ? `/album/${releaseGroupId}/${tabSegment}` : `/album/${releaseGroupId}`;
+          const base = albumHref(null, "", releaseGroupId);
+          const href = tabSegment ? `${base}/${tabSegment}` : base;
           return (
             <li key={tab}>
               <Link

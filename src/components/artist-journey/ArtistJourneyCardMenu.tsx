@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+import { artistHref } from "@/lib/catalog-links";
 import { RowMenu, RowMenuItem } from "@/components/ui/RowMenu";
 import type { ArtistJourneySummary } from "@/lib/api/schemas";
 import type { ArtistJourneyListActions } from "./artist-journey-list-shared";
@@ -24,7 +25,7 @@ export function ArtistJourneyCardMenu({ journey, actions, onRequestDelete }: Art
 
   return (
     <RowMenu label={t("cardMenuLabel", { artist: journey.artistName })}>
-      <RowMenuItem onSelect={() => router.push(`/artist/${journey.artistId}`)}>
+      <RowMenuItem onSelect={() => router.push(artistHref(journey.artistName, journey.artistId))}>
         {t("viewArtist")}
       </RowMenuItem>
       <RowMenuItem onSelect={() => actions.archive(journey.artistId)}>

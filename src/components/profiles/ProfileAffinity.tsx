@@ -48,7 +48,7 @@ function EntityRow({ label, entities }: { label: string; entities: ShowcaseEntit
         {entities.map((entity) => (
           <li key={entity.id}>
             <Link
-              href={targetHref(entity.type, entity.id)}
+              href={targetHref(entity.type, entity.id, entity.title, entity.artistName ?? null)}
               className="group flex items-center gap-2 rounded border border-ink-border bg-ink-surface px-2 py-1.5 transition-colors hover:border-amber"
             >
               <CoverThumb cover={entity.coverThumbUrl} label="" className="size-8" />

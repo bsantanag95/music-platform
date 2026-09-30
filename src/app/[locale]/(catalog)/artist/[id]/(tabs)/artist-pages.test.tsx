@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
+import { artistHref, artistSegment } from "@/lib/catalog-links";
 import catalogEs from "../../../../../../../messages/es/catalog.json";
 import commonEs from "../../../../../../../messages/es/common.json";
 import type { ArtistRow } from "@/db/schema";
@@ -61,6 +62,9 @@ vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
   },
+  permanentRedirect: (url: string) => {
+    throw new Error(`NEXT_PERMANENT_REDIRECT:${url}`);
+  },
   useSelectedLayoutSegment: () => mocks.segment,
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
@@ -85,6 +89,7 @@ vi.mock("next-intl/server", () => ({
 }));
 
 const VALID_UUID = "a1b2c3d4-0000-4000-8000-000000000001";
+const SEGMENT = artistSegment("Pink Floyd", VALID_UUID);
 const artistEs = catalogEs.artist;
 
 function makeArtist(overrides: Partial<ArtistRow> = {}): ArtistRow {
@@ -227,7 +232,7 @@ describe("layout de la página de artista", () => {
   it("Discografía es la pestaña activa por defecto; Biografía aparece con resumen", async () => {
     await renderLayout();
     expect(screen.getByRole("link", { name: artistEs.tabs.discography })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("link", { name: artistEs.tabs.biography })).toHaveAttribute("href", `/artist/${VALID_UUID}/biography`);
+    expect(screen.getByRole("link", { name: artistEs.tabs.biography })).toHaveAttribute("href", `${artistHref("Pink Floyd", VALID_UUID)}/biography`);
   });
 
   it("un grupo con alineación suma Integrantes y la fila de la ficha", async () => {
@@ -239,7 +244,7 @@ describe("layout de la página de artista", () => {
     expect(screen.getAllByRole("link", { name: "David Gilmour" })[0]).toHaveAttribute("href", "/artist/gilmour");
     expect(screen.getAllByRole("link", { name: `${artistEs.facts.seeLineup} →` })[0]).toHaveAttribute(
       "href",
-      `/artist/${VALID_UUID}/members?view=current#artist-tabs`,
+      `${artistHref("Pink Floyd", VALID_UUID)}/members?view=current#artist-tabs`,
     );
   });
 
@@ -277,9 +282,9 @@ describe("layout de la página de artista", () => {
 });
 
 describe("pestaña Discografía", () => {
-  async function renderPage(query: Record<string, string> = {}) {
+  async function renderPage(query: Record<string, string> = {}, segment = SEGMENT) {
     const { default: Page } = await import("./page");
-    renderWithIntl(await Page({ params: Promise.resolve({ id: VALID_UUID }), searchParams: Promise.resolve(query) }));
+    renderWithIntl(await Page({ params: Promise.resolve({ id: segment }), searchParams: Promise.resolve(query) }));
   }
 
   it("Principal activa por defecto", async () => {
@@ -307,7 +312,7 @@ describe("pestaña Discografía", () => {
 
   it("una persona no muestra sus grupos en la discografía (están en Bandas)", async () => {
     mocks.loadArtist.mockResolvedValue(makeArtist({ type: "person", name: "Roger Waters" }));
-    await renderPage();
+    await renderPage({}, artistSegment("Roger Waters", VALID_UUID));
     expect(screen.queryByRole("link", { name: /Pink Floyd/ })).not.toBeInTheDocument();
   });
 });
@@ -315,7 +320,7 @@ describe("pestaña Discografía", () => {
 describe("pestaña Integrantes", () => {
   async function renderMembers(query: Record<string, string> = {}) {
     const { default: Page } = await import("./members/page");
-    renderWithIntl(await Page({ params: Promise.resolve({ id: VALID_UUID }), searchParams: Promise.resolve(query) }));
+    renderWithIntl(await Page({ params: Promise.resolve({ id: SEGMENT }), searchParams: Promise.resolve(query) }));
   }
 
   it("muestra la alineación y programa la sincronización de integrantes", async () => {
@@ -334,7 +339,7 @@ describe("pestaña Integrantes", () => {
   it("sin nada que listar responde 404", async () => {
     mocks.loadLineup.mockResolvedValue(EMPTY_PERSON_LINEUP);
     const { default: Page } = await import("./members/page");
-    await expect(Page({ params: Promise.resolve({ id: VALID_UUID }) })).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(Page({ params: Promise.resolve({ id: SEGMENT }) })).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
   it("el título usa el nombre de la pestaña según el tipo", async () => {
@@ -346,7 +351,7 @@ describe("pestaña Integrantes", () => {
 describe("pestaña Biografía", () => {
   it("muestra la introducción con la atribución", async () => {
     const { default: Page } = await import("./biography/page");
-    renderWithIntl(await Page({ params: Promise.resolve({ id: VALID_UUID }) }));
+    renderWithIntl(await Page({ params: Promise.resolve({ id: SEGMENT }) }));
     expect(screen.getByText("Pink Floyd fue una banda de rock británica.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: artistEs.summary.source })).toBeInTheDocument();
   });
@@ -354,7 +359,7 @@ describe("pestaña Biografía", () => {
   it("sin resumen responde 404", async () => {
     mocks.loadProfile.mockResolvedValue(makeProfile({ summary: null }));
     const { default: Page } = await import("./biography/page");
-    await expect(Page({ params: Promise.resolve({ id: VALID_UUID }) })).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(Page({ params: Promise.resolve({ id: SEGMENT }) })).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
   it("el título combina la pestaña y el artista", async () => {

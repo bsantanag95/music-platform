@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { ArtistDiscography } from "@/components/artist/ArtistDiscography";
 import { SearchOriginNotice } from "@/components/catalog/search-results/SearchOriginNotice";
-import { isValidUuid } from "@/lib/validation";
+import { artistSegment } from "@/lib/catalog-links";
+import { resolveCatalogRoute } from "@/lib/catalog-route";
+import { parseCatalogSegment } from "@/lib/slug";
 import { DISCOGRAPHY_SECTIONS, type DiscographySection } from "@/services/catalog/discography-sections";
 import { loadArtist, loadDiscography, loadDiscographyMarks, loadSession } from "../artist-data";
 
@@ -22,13 +25,21 @@ function isSection(value: unknown): value is DiscographySection {
 }
 
 export default async function ArtistDiscographyPage({ params, searchParams }: ArtistDiscographyPageProps) {
-  const { id } = await params;
-  if (!isValidUuid(id)) notFound();
+  const { id: segment } = await params;
+  const parsed = parseCatalogSegment(segment);
+  if (!parsed) notFound();
   const query = (await searchParams) ?? {};
   const fromSearch = query.from === "search" && typeof query.q === "string" && query.q.trim() ? query.q.trim() : null;
 
-  const artist = await loadArtist(id);
+  const artist = await loadArtist(parsed.id);
   if (!artist) notFound();
+  resolveCatalogRoute({
+    locale: await getLocale(),
+    kind: "artist",
+    segment,
+    canonical: artistSegment(artist.name, artist.id),
+    searchParams: query,
+  });
   const session = await loadSession();
   const [view, marks] = await Promise.all([
     loadDiscography(artist.id),
@@ -44,6 +55,7 @@ export default async function ArtistDiscographyPage({ params, searchParams }: Ar
       {fromSearch ? <SearchOriginNotice query={fromSearch} /> : null}
       <ArtistDiscography
         artistId={artist.id}
+        artistName={artist.name}
         sections={sections}
         activeSection={activeSection}
         bestRatedId={view?.bestRatedId ?? null}

@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { artistHref } from "@/lib/catalog-links";
 import { AppImage } from "@/components/ui/AppImage";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import { messageKey } from "@/components/album/credit-roles";
@@ -46,7 +47,7 @@ function useAffiliationLabels() {
   return (affiliations: LineupAffiliation[]): AlsoInItem[] =>
     affiliations.map((a) => {
       const name = a.current ? a.name : t("ex", { name: a.name });
-      return { artistId: a.artistId, label: a.support ? t("support", { name }) : name };
+      return { artistId: a.artistId, artistName: a.name, label: a.support ? t("support", { name }) : name };
     });
 }
 
@@ -76,7 +77,7 @@ export function LineupRow({ person }: { person: LineupMember }) {
   return (
     <li className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-[16rem_minmax(0,1fr)] sm:gap-x-6">
       <p className="min-w-0 font-body text-paper">
-        <Link href={`/artist/${person.artistId}`} className="hover:text-amber">
+        <Link href={artistHref(person.name, person.artistId)} className="hover:text-amber">
           {person.name}
         </Link>
         <PersonMarks person={person} />
@@ -139,8 +140,20 @@ export function availableViews(lineup: GroupLineup): LineupView[] {
   ];
 }
 
-export function GroupLineupView({ artistId, lineup, view }: { artistId: string; lineup: GroupLineup; view: LineupView }) {
+export function GroupLineupView({
+  artistId,
+  artistName = "",
+  lineup,
+  view,
+}: {
+  artistId: string;
+  /** Nombre del artista, para las direcciones con slug; opcional para los tests. */
+  artistName?: string;
+  lineup: GroupLineup;
+  view: LineupView;
+}) {
   const t = useTranslations("catalog.artist.lineup");
+  const membersBase = `${artistHref(artistName, artistId)}/members`;
   const views = availableViews(lineup);
   const active = views.includes(view) ? view : "all";
   const currentKey = lineup.lastLineup ? "lastLineup" : "current";
@@ -160,7 +173,7 @@ export function GroupLineupView({ artistId, lineup, view }: { artistId: string; 
             {views.map((key) => (
               <li key={key}>
                 <Link
-                  href={key === "all" ? `/artist/${artistId}/members` : `/artist/${artistId}/members?view=${key}`}
+                  href={key === "all" ? membersBase : `${membersBase}?view=${key}`}
                   scroll={false}
                   aria-current={key === active ? "page" : undefined}
                   className={`inline-flex rounded border px-2.5 py-1 font-body text-sm transition-colors ${
@@ -202,7 +215,7 @@ function GroupCard({ group }: { group: PersonGroupEntry }) {
   return (
     <li>
       <Link
-        href={`/artist/${group.artistId}`}
+        href={artistHref(group.name, group.artistId)}
         className="flex items-start gap-3 rounded border border-ink-border bg-ink-surface p-2 transition-colors hover:border-amber"
       >
         {group.photoUrl ? (
@@ -234,7 +247,7 @@ function SupportedRow({ entry }: { entry: SupportedArtistEntry }) {
   return (
     <li className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-[16rem_minmax(0,1fr)] sm:gap-x-6">
       <p className="min-w-0 font-body text-paper">
-        <Link href={`/artist/${entry.artistId}`} className="hover:text-amber">
+        <Link href={artistHref(entry.name, entry.artistId)} className="hover:text-amber">
           {entry.name}
         </Link>
       </p>

@@ -1,15 +1,20 @@
 import type { WantToListenEntry, WantToListenTargetType } from "@/lib/api/schemas";
+import { albumHref, artistHref } from "@/lib/catalog-links";
 
 // Orden fijo de secciones: artistas → álbumes.
 export const WANT_TO_LISTEN_TYPE_ORDER: WantToListenTargetType[] = ["artist", "release-group"];
 
 export function wantToListenHref(entry: WantToListenEntry): string {
-  return entry.targetType === "artist" ? `/artist/${entry.target.id}` : `/album/${entry.target.id}`;
+  return entry.targetType === "artist"
+    ? artistHref(entry.target.title, entry.target.id)
+    : albumHref(entry.target.artistName ?? null, entry.target.title, entry.target.id);
 }
 
 /** Enlace al artista acreditado de un álbum; `null` si no se conoce. */
 export function wantToListenArtistHref(entry: WantToListenEntry): string | null {
-  return entry.target.artistId ? `/artist/${entry.target.artistId}` : null;
+  return entry.target.artistId
+    ? artistHref(entry.target.artistName ?? "", entry.target.artistId)
+    : null;
 }
 
 export function sectionTitleKey(type: WantToListenTargetType): "sectionArtists" | "sectionAlbums" {

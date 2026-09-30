@@ -10,7 +10,8 @@ import { DiscographyStrip } from "@/components/album/DiscographyStrip";
 import { Comments } from "@/components/social/Comments";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { isValidUuid } from "@/lib/validation";
+import { artistHref } from "@/lib/catalog-links";
+import { parseCatalogSegment } from "@/lib/slug";
 import { itemListsHref } from "@/components/lists/lists-shared";
 import { getRatings, listComments, resolveSocialTarget } from "@/services/social";
 import {
@@ -39,17 +40,19 @@ interface AlbumLayoutProps {
 
 export async function generateMetadata({ params }: AlbumLayoutProps): Promise<Metadata> {
   const { id } = await params;
-  if (!isValidUuid(id)) return {};
-  const result = await loadAlbumDetail(id);
+  const parsed = parseCatalogSegment(id);
+  if (!parsed) return {};
+  const result = await loadAlbumDetail(parsed.id);
   if (result.kind !== "ok") return {};
   return { title: result.detail.releaseGroup.title };
 }
 
 export default async function AlbumLayout({ children, modal, params }: AlbumLayoutProps) {
   const { id } = await params;
-  if (!isValidUuid(id)) notFound();
+  const parsed = parseCatalogSegment(id);
+  if (!parsed) notFound();
 
-  const result = await loadAlbumDetail(id);
+  const result = await loadAlbumDetail(parsed.id);
   if (result.kind === "not_found") notFound();
 
   const t = await getTranslations("catalog");
@@ -90,7 +93,7 @@ export default async function AlbumLayout({ children, modal, params }: AlbumLayo
   const breadcrumbItems = [
     { label: tCommon("home"), href: "/" },
     ...(detail.primaryArtist
-      ? [{ label: detail.primaryArtist.name, href: `/artist/${detail.primaryArtist.id}` }]
+      ? [{ label: detail.primaryArtist.name, href: artistHref(detail.primaryArtist.name, detail.primaryArtist.id) }]
       : []),
     { label: detail.releaseGroup.title },
   ];

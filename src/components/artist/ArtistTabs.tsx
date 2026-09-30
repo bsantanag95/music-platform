@@ -3,6 +3,7 @@
 import { useSelectedLayoutSegment } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { artistHref } from "@/lib/catalog-links";
 
 // Barra de pestañas de la página de artista (openspec: redesign-artist-page, capability
 // `artist-page-layout`). Cada pestaña es un segmento de ruta propio: se puede enlazar y el
@@ -14,6 +15,8 @@ type ArtistTabKey = "discography" | "members" | "bands" | "biography";
 
 interface ArtistTabsProps {
   artistId: string;
+  /** Nombre del artista, para las direcciones con slug; opcional para los tests. */
+  artistName?: string;
   hasBiography: boolean;
   /** Pestaña de la alineación con su nombre, o `null` si no hay nada que listar. */
   lineupTab: "members" | "bands" | null;
@@ -26,7 +29,7 @@ const SEGMENTS: Record<ArtistTabKey, string | null> = {
   biography: "biography",
 };
 
-export function ArtistTabs({ artistId, hasBiography, lineupTab }: ArtistTabsProps) {
+export function ArtistTabs({ artistId, artistName = "", hasBiography, lineupTab }: ArtistTabsProps) {
   const t = useTranslations("catalog.artist.tabs");
   const segment = useSelectedLayoutSegment();
   const tabs: ArtistTabKey[] = [
@@ -41,7 +44,8 @@ export function ArtistTabs({ artistId, hasBiography, lineupTab }: ArtistTabsProp
         {tabs.map((tab) => {
           const own = SEGMENTS[tab];
           const active = own ? segment === own : segment === null || segment === "__PAGE__";
-          const href = own ? `/artist/${artistId}/${own}` : `/artist/${artistId}`;
+          const base = artistHref(artistName, artistId);
+          const href = own ? `${base}/${own}` : base;
           return (
             <li key={tab}>
               <Link

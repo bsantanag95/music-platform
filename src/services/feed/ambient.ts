@@ -3,6 +3,8 @@ import { and, eq, gte, inArray, or } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, collectionEntry, releaseGroup, userBlock, userFollow } from "@/db/schema";
 import { activeUserCondition } from "@/services/auth/account-status";
+import { albumHref } from "@/lib/catalog-links";
+import { resolvePrimaryArtists, slugArtistName } from "@/services/catalog/primary-artists";
 
 // Franja de eventos ambiente (openspec: add-feed-ambient-events; los eventos
 // "seguir usuario" y "seguir artista" se retiraron de acá en
@@ -117,12 +119,25 @@ export const getFeedAmbientEvents = cache(
         ),
       );
 
+    // Artista principal por lote, para que el enlace de cada disco sea canónico
+    // sin una consulta por fila (openspec: add-catalog-slugs).
+    const { releaseGroups: primaryArtists } = await resolvePrimaryArtists({
+      releaseGroupIds: [...new Set(collectionRows.map((row) => row.releaseGroupId))],
+    });
+
     const collectionGroups = group(
       collectionRows.map((row) => ({
         authorId: row.authorId,
         authorUsername: row.authorUsername,
         authorDisplayName: row.authorDisplayName,
-        item: { label: row.releaseTitle, href: `/album/${row.releaseGroupId}` },
+        item: {
+          label: row.releaseTitle,
+          href: albumHref(
+            slugArtistName(primaryArtists.get(row.releaseGroupId)),
+            row.releaseTitle,
+            row.releaseGroupId,
+          ),
+        },
         at: row.at,
       })),
       "collection",

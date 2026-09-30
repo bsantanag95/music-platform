@@ -1,4 +1,5 @@
 import { ListCard } from "@/components/lists/ListCard";
+import { listHref } from "@/lib/catalog-links";
 import type { FeaturedCollection } from "@/services/discovery/discovery";
 
 interface CollectionRailProps {
@@ -28,7 +29,7 @@ export function CollectionRail({
         {collections.map((collection) => (
           <li key={collection.id}>
             <ListCard
-              href={`/users/${encodeURIComponent(curatorUsername)}/lists/${collection.id}`}
+              href={listHref(curatorUsername, collection.title, collection.id)}
               title={collection.title}
               coverThumbs={collection.coverThumbs}
               meta={<span>{itemsLabel(collection.itemCount)}</span>}

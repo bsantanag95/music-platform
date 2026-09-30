@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { artistHref } from "@/lib/catalog-links";
 
 // Línea "También en" de una fila de la alineación (openspec: add-artist-members-tab, design
 // D4): las otras bandas de la persona, enlazadas. Colapsada ocupa una sola línea con las 3
@@ -13,6 +14,8 @@ export const ALSO_IN_COLLAPSED = 3;
 
 export interface AlsoInItem {
   artistId: string;
+  /** Nombre real del artista, para el slug de la dirección; opcional para los tests. */
+  artistName?: string;
   /** Ya formateado: "Rob Zombie", "ex-Marilyn Manson", "David Lee Roth (apoyo)". */
   label: string;
 }
@@ -27,7 +30,7 @@ export function LineupAlsoIn({ personName, items, className = "" }: { personName
   const links = visible.map((item, index) => (
     <span key={item.artistId}>
       {index > 0 ? ", " : null}
-      <Link href={`/artist/${item.artistId}`} className="text-paper-muted hover:text-amber hover:underline">
+      <Link href={artistHref(item.artistName ?? "", item.artistId)} className="text-paper-muted hover:text-amber hover:underline">
         {item.label}
       </Link>
     </span>

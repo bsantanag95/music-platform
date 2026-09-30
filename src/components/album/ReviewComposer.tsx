@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { SubmitEventHandler } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
+import { reviewHref } from "@/lib/catalog-links";
 import { ApiError } from "@/lib/api/client";
 import { deleteReview, saveReview, updateReview } from "@/lib/api/social";
 import type { Review } from "@/lib/api/schemas";
@@ -39,9 +40,11 @@ interface ReviewComposerProps {
   /** Estrellas vigentes del usuario sobre el álbum (0 si no valoró). */
   ownStars: number;
   ownReview: Review | null;
+  /** Título del álbum, para el enlace canónico de la reseña. */
+  albumTitle?: string;
 }
 
-export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownReview }: ReviewComposerProps) {
+export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownReview, albumTitle }: ReviewComposerProps) {
   const t = useTranslations("catalog.social");
   const tAlbum = useTranslations("catalog.album.reviews");
   const tErrors = useTranslations("errors");
@@ -145,7 +148,7 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
           {review.title && <p className="font-display text-paper">{review.title}</p>}
           <p className="line-clamp-4 whitespace-pre-wrap font-body text-sm text-paper">{review.body}</p>
           <div className="flex gap-3">
-            <Link href={`/review/${review.id}`} className="font-data text-xs text-amber underline">
+            <Link href={reviewHref(review.user.username, albumTitle ?? "", review.id)} className="font-data text-xs text-amber underline">
               {t("reviewShowMore")}
             </Link>
             <button type="button" onClick={() => setEditing(true)} className="font-data text-xs text-amber underline">

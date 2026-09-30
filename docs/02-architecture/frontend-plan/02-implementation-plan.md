@@ -162,6 +162,10 @@ existentes.
 
 ## Etapa 3.2 — Vista de perfil de artista (`/artist/[id]`)
 
+> **Nota de formato (agregada tras ADR 0022, cambio `add-catalog-slugs`):** la ruta sigue siendo
+> neutra en inglés, pero el segmento dinámico ya no es el UUID pelado sino `<slug>-<id>` (id en
+> base58, slug decorativo). El UUID viejo sigue resolviendo con un `308` a la dirección canónica.
+
 **Objetivo:** mostrar la info del artista y su discografía, navegable hacia cada álbum.
 
 > **Nota de i18n (agregada tras ADR 0007):** el slug de esta ruta es `/artist/[id]` (inglés),

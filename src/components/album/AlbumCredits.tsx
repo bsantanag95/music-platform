@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 import { musicBrainzReleaseUrl } from "@/lib/site-links";
 import type {
   CreditsByTrack,
@@ -94,7 +95,7 @@ function TrackRefs({
     if (!title) return label;
     return (
       <Link
-        href={`/song/${track.recordingId}`}
+        href={songHref(null, title, track.recordingId)}
         title={title}
         aria-label={t("trackLink", { position: label, title })}
         className="underline decoration-dotted underline-offset-2 hover:text-paper"
@@ -158,7 +159,7 @@ function CreditRow({
     <li className="grid grid-cols-1 gap-x-4 gap-y-0.5 border-b border-ink-border py-2 last:border-b-0 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)] sm:items-baseline">
       <span className="min-w-0">
         <Link
-          href={`/artist/${entry.artistId}`}
+          href={artistHref(entry.name, entry.artistId)}
           className={`hover:text-amber hover:underline ${prominent ? "font-display text-paper" : "font-body text-sm text-paper"}`}
         >
           {entry.name}
@@ -386,7 +387,7 @@ function GroupPeople({
           <Fragment key={person.artistId}>
             {index > 0 && ", "}
             <Link
-              href={`/artist/${person.artistId}`}
+              href={artistHref(person.name, person.artistId)}
               className={`text-paper hover:text-amber hover:underline ${memberIds?.has(person.artistId) ? "font-semibold" : ""}`}
             >
               {person.name}
@@ -449,7 +450,7 @@ function SongsView({ tracks, byTrack, multiDisc }: { tracks: CreditsTrack[]; byT
                 <span className="w-8 shrink-0 text-right font-data text-xs text-paper-muted">
                   {trackLabel(track, multiDisc)}
                 </span>
-                <Link href={`/song/${track.recordingId}`} className="font-body text-paper hover:text-amber">
+                <Link href={songHref(null, track.title, track.recordingId)} className="font-body text-paper hover:text-amber">
                   {track.title}
                 </Link>
               </h3>
@@ -471,7 +472,7 @@ function SongsView({ tracks, byTrack, multiDisc }: { tracks: CreditsTrack[]; byT
 /** Control segmentado Por persona / Por canción: dos enlaces, el estado vive en la URL. */
 function ViewSwitch({ view, releaseGroupId }: { view: CreditsView; releaseGroupId: string }) {
   const t = useTranslations("catalog.album.credits");
-  const base = `/album/${releaseGroupId}/credits`;
+  const base = `${albumHref(null, "", releaseGroupId)}/credits`;
   const option = (value: CreditsView, href: string, label: string) => (
     <Link
       href={href}

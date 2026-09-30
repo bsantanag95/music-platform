@@ -1,6 +1,8 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, within } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
+import { albumHref, artistHref, songSegment } from "@/lib/catalog-links";
+import { encodeId } from "@/lib/slug";
 import catalogEs from "../../../../../../messages/es/catalog.json";
 import commonEs from "../../../../../../messages/es/common.json";
 import type { RecordingDetail } from "@/services/catalog/recording-detail";
@@ -21,6 +23,7 @@ const mocks = vi.hoisted(() => ({
   loadVersionLine: vi.fn(),
   loadSongCommunity: vi.fn(),
   loadSongPersonalState: vi.fn(),
+  loadSongSegment: vi.fn(),
   scheduleSongCreditsSync: vi.fn(),
 }));
 
@@ -35,6 +38,7 @@ vi.mock("./song-data", () => ({
   loadVersionLine: mocks.loadVersionLine,
   loadSongCommunity: mocks.loadSongCommunity,
   loadSongPersonalState: mocks.loadSongPersonalState,
+  loadSongSegment: mocks.loadSongSegment,
 }));
 vi.mock("@/services/catalog/recording-detail", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/services/catalog/recording-detail")>()),
@@ -71,6 +75,9 @@ vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
   },
+  permanentRedirect: (url: string) => {
+    throw new Error(`NEXT_PERMANENT_REDIRECT:${url}`);
+  },
 }));
 vi.mock("next/image", () => ({
   // eslint-disable-next-line @next/next/no-img-element
@@ -79,6 +86,7 @@ vi.mock("next/image", () => ({
 
 const messages: Record<string, unknown> = { catalog: catalogEs, common: commonEs };
 vi.mock("next-intl/server", () => ({
+  getLocale: vi.fn(async () => "es"),
   getTranslations: vi.fn(async (namespace: string) => (key: string, params?: Record<string, string | number>) => {
     let value: unknown = messages;
     for (const part of `${namespace}.${key}`.split(".")) {
@@ -92,6 +100,8 @@ vi.mock("next-intl/server", () => ({
 const RID = "a1b2c3d4-0000-4000-8000-000000000abc";
 const UYI = "a1b2c3d4-0000-4000-8000-0000000000b1";
 const GNR = "a1b2c3d4-0000-4000-8000-0000000000a1";
+const SEGMENT = songSegment("Guns N' Roses", "November Rain", RID);
+const UYI_ALBUM = albumHref("Guns N' Roses", "Use Your Illusion I", UYI);
 
 const disc = (releaseGroupId: string, title: string, category: string, year: number) => ({
   releaseGroupId,
@@ -189,6 +199,9 @@ beforeEach(() => {
   mocks.loadVersions.mockResolvedValue(VERSIONS);
   mocks.loadVersionLine.mockResolvedValue(null);
   mocks.loadSongCommunity.mockResolvedValue(STATS);
+  mocks.loadSongSegment.mockImplementation(async (id: string, title: string) =>
+    songSegment("Guns N' Roses", title, id),
+  );
 });
 
 type SongPageComponent = (props: { params: Promise<{ id: string }> }) => Promise<React.ReactElement>;
@@ -200,7 +213,7 @@ beforeAll(async () => {
 }, 30_000);
 
 async function renderPage() {
-  renderWithIntl(await SongPage({ params: Promise.resolve({ id: RID }) }));
+  renderWithIntl(await SongPage({ params: Promise.resolve({ id: SEGMENT }) }));
 }
 
 const song = catalogEs.song;
@@ -218,12 +231,12 @@ describe("página de canción", () => {
     // La posición vive solo en la tira; el antetítulo es "Canción".
     expect(screen.getByText(song.kicker)).toBeInTheDocument();
     expect(screen.queryByText(/Pista 10/)).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Ir a Use Your Illusion I" })).toHaveAttribute("href", `/album/${UYI}`);
+    expect(screen.getByRole("link", { name: "Ir a Use Your Illusion I" })).toHaveAttribute("href", UYI_ALBUM);
     expect(screen.getByText("8:57")).toBeInTheDocument();
     expect(screen.getByText(song.writtenBy)).toBeInTheDocument();
     expect(screen.getByText(song.firstAppearance)).toBeInTheDocument();
     expect(screen.getByText(song.community.reaction)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Aparece en 23 listas/ })).toHaveAttribute("href", expect.stringContaining(RID));
+    expect(screen.getByRole("link", { name: /Aparece en 23 listas/ })).toHaveAttribute("href", expect.stringContaining(encodeId(RID)));
     expect(mocks.scheduleSongCreditsSync).toHaveBeenCalledWith({ id: "rel-uyi", releaseGroupId: UYI });
   });
 
@@ -253,8 +266,8 @@ describe("página de canción", () => {
   it("migas con artista y disco principal", async () => {
     await renderPage();
     const crumbs = screen.getByRole("navigation", { name: /migas|breadcrumb/i });
-    expect(within(crumbs).getByRole("link", { name: "Guns N' Roses" })).toHaveAttribute("href", `/artist/${GNR}`);
-    expect(within(crumbs).getByRole("link", { name: "Use Your Illusion I" })).toHaveAttribute("href", `/album/${UYI}`);
+    expect(within(crumbs).getByRole("link", { name: "Guns N' Roses" })).toHaveAttribute("href", artistHref("Guns N' Roses", GNR));
+    expect(within(crumbs).getByRole("link", { name: "Use Your Illusion I" })).toHaveAttribute("href", UYI_ALBUM);
   });
 
   it("tira de pistas con la anterior y la siguiente", async () => {
@@ -324,7 +337,7 @@ describe("página de canción", () => {
       .getAllByRole("link")
       .map((link) => link.textContent);
     expect(names.indexOf("Slash")).toBeLessThan(names.indexOf("Invitada"));
-    expect(within(credits).getByRole("link", { name: /Créditos de todo el disco/ })).toHaveAttribute("href", `/album/${UYI}/credits`);
+    expect(within(credits).getByRole("link", { name: /Créditos de todo el disco/ })).toHaveAttribute("href", `/album/${encodeId(UYI)}/credits`);
   });
 
   it("créditos por fila: integrantes separados, '+N' con muchos roles y asistentes contraídos", async () => {

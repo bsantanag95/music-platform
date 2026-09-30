@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { EditionsTable, type EditionRow } from "@/components/album/EditionsTable";
-import { isValidUuid } from "@/lib/validation";
+import { resolveCatalogRoute } from "@/lib/catalog-route";
+import { parseCatalogSegment } from "@/lib/slug";
 import { variantKeyOf } from "@/services/catalog/edition-variants";
-import { loadAlbumDetail, loadAlbumEditions } from "../../album-data";
+import { loadAlbumDetail, loadAlbumEditions, loadAlbumSegment } from "../../album-data";
 
 // Pestaña Ediciones (openspec: redesign-album-page): todas las ediciones del álbum. Sin
 // ediciones además de la representativa, la pestaña no existe: la URL directa responde 404.
@@ -15,18 +16,28 @@ interface AlbumEditionsPageProps {
 
 export async function generateMetadata({ params }: AlbumEditionsPageProps): Promise<Metadata> {
   const { id } = await params;
-  if (!isValidUuid(id)) return {};
-  const result = await loadAlbumDetail(id);
+  const parsed = parseCatalogSegment(id);
+  if (!parsed) return {};
+  const result = await loadAlbumDetail(parsed.id);
   if (result.kind !== "ok") return {};
   const t = await getTranslations("catalog.album.tabs");
   return { title: `${t("editions")} · ${result.detail.releaseGroup.title}` };
 }
 
 export default async function AlbumEditionsPage({ params }: AlbumEditionsPageProps) {
-  const { id } = await params;
-  if (!isValidUuid(id)) notFound();
-  const result = await loadAlbumDetail(id);
+  const { id: segment } = await params;
+  const parsed = parseCatalogSegment(segment);
+  if (!parsed) notFound();
+  const result = await loadAlbumDetail(parsed.id);
   if (result.kind !== "ok") return null;
+
+  resolveCatalogRoute({
+    locale: await getLocale(),
+    kind: "album",
+    segment,
+    canonical: await loadAlbumSegment(result.detail.releaseGroup.id, result.detail.releaseGroup.title),
+    subpath: "/editions",
+  });
 
   const overview = await loadAlbumEditions(result.detail.releaseGroup.id);
   if (overview.editions.length <= 1) notFound();

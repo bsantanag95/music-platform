@@ -7,6 +7,13 @@
 // Los mbid usados son los reales de Pink Floyd / Roger Waters (son datos
 // públicos, no secretos); el tracklist se acortó y se agregó un crédito
 // extra sintético solo para poder probar el caso "feat." de punta a punta.
+//
+// ⚠️ Exige una BD de scratch VIRGEN. No es idempotente: si Pink Floyd ya
+// existe con la discografía sincronizada, el browse mockeado se salta y el
+// script reusa la discografía real; al elegir un release-group que no está en
+// sus mocks, falla. Peor: si se forzara reseteando `discography_synced_at`,
+// marcaría cientos de discos reales como "fuera de la discografía". Para
+// re-poblarla, usá otro `DATABASE_URL` de scratch limpio (ver AGENTS.md).
 
 export {}; // fuerza module scope; sin esto, TS trata el archivo como script global y colisiona con otros scripts/*.ts
 import { assertSmokeAllowed } from "./assert-smoke-allowed";
@@ -143,9 +150,30 @@ global.fetch = (async (input: RequestInfo | URL) => {
 }) as typeof fetch;
 
 async function main() {
+  const { eq } = await import("drizzle-orm");
+  const { db } = await import("../src/db");
+  const { artist: artistTable } = await import("../src/db/schema");
   const { ensureArtistMemberships, findOrIngestArtist } = await import("../src/services/catalog/ingest-artist");
   const { findOrIngestDiscography } = await import("../src/services/catalog/ingest-discography");
   const { findOrIngestTracklist } = await import("../src/services/catalog/ingest-release");
+
+  const [existing] = await db
+    .select()
+    .from(artistTable)
+    .where(eq(artistTable.name, "Pink Floyd"))
+    .limit(1);
+  if (existing?.discographySyncedAt) {
+    console.error(
+      [
+        "⚠️  smoke-test-ingestion exige una BD de scratch VIRGEN.",
+        "Pink Floyd ya existe con la discografía sincronizada: el browse mockeado se saltaría,",
+        "el script reusaría la discografía real y marcaría cientos de discos como fuera de la",
+        "discografía si se forzara el reset. Usá otro DATABASE_URL de scratch limpio, o borrá a",
+        "Pink Floyd de esa BD antes de correrlo (ver AGENTS.md, sección de smoke tests).",
+      ].join("\n"),
+    );
+    process.exit(1);
+  }
 
   console.log("1) Ingiriendo artista...");
   const artist = await findOrIngestArtist("Pink Floyd");

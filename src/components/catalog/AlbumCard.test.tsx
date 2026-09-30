@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/i18n-test-utils";
+import { albumHref } from "@/lib/catalog-links";
 import catalogEs from "../../../messages/es/catalog.json";
 import collectionEs from "../../../messages/es/collection.json";
 import listsEs from "../../../messages/es/lists.json";
@@ -111,7 +112,7 @@ describe("AlbumCard — menú de acciones del disco (extend-album-quick-actions)
     const user = renderCard(true);
     const dialog = await openMenu(user);
     await user.click(within(dialog).getByRole("button", { name: collectionEs.menuHaveIt }));
-    expect(mocks.push).toHaveBeenCalledWith(`/album/${releaseGroup.id}?collection=have`);
+    expect(mocks.push).toHaveBeenCalledWith(`${albumHref(null, releaseGroup.title, releaseGroup.id)}?collection=have`);
   });
 
   it("conserva Ver en listas", async () => {

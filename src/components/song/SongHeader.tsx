@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 import { StatTile, ThresholdedTileValue } from "@/components/album/AlbumHeader";
 import { formatDuration, formatStars } from "@/components/album/album-format";
 import { SongwriterNames } from "@/components/catalog/SongwriterNames";
@@ -36,7 +37,7 @@ export function SongIdentity({ title, artists }: SongIdentityProps) {
         <p className="font-body text-lg text-paper">
           {artists.map((artist, index) => (
             <Fragment key={artist.artistId}>
-              <Link href={`/artist/${artist.artistId}`} className="text-amber hover:text-amber-hover hover:underline">
+              <Link href={artistHref(artist.name, artist.artistId)} className="text-amber hover:text-amber-hover hover:underline">
                 {artist.name}
               </Link>
               {index < artists.length - 1 ? (artist.joinPhrase ?? ", ") : null}
@@ -77,7 +78,7 @@ export function SongFacts({ durationSec, songwriters, firstAppearance, principal
       : null;
   const originalLink = (chunks: ReactNode) =>
     versionLine ? (
-      <Link href={`/song/${versionLine.original.recordingId}`} className="text-amber hover:underline">
+      <Link href={songHref(versionLine.original.artistName, versionLine.original.title, versionLine.original.recordingId)} className="text-amber hover:underline">
         {chunks}
       </Link>
     ) : null;
@@ -92,7 +93,7 @@ export function SongFacts({ durationSec, songwriters, firstAppearance, principal
       )}
       {firstAppearance && (
         <Fact label={t("firstAppearance")}>
-          <Link href={`/album/${firstAppearance.releaseGroupId}`} className="text-amber hover:underline">
+          <Link href={albumHref(null, firstAppearance.title, firstAppearance.releaseGroupId)} className="text-amber hover:underline">
             {firstAppearance.title}
           </Link>
           {discType && <span className="text-paper-muted"> ({discType})</span>}

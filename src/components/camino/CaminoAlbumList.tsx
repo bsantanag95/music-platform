@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { FilterSelect } from "@/components/ui/FilterSelect";
 import { ListenEntryForm } from "@/components/diary/ListenEntryForm";
+import { albumHref } from "@/lib/catalog-links";
 import type { ListenEntry } from "@/lib/api/schemas";
 import { sortAlphabetically, sortByYear } from "@/components/artist-journey/artist-journey-sort";
 
@@ -181,12 +182,17 @@ export function CaminoAlbumList({
             return (
               <li key={album.id} className="flex flex-col gap-3 py-2">
                 <div className="flex items-center gap-3">
-                  <Link href={`/album/${album.id}`} className="shrink-0" tabIndex={-1} aria-hidden>
+                  <Link
+                    href={albumHref(album.artistName, album.title, album.id)}
+                    className="shrink-0"
+                    tabIndex={-1}
+                    aria-hidden
+                  >
                     <CoverThumb cover={album.coverThumbUrl} label="" className="size-12" />
                   </Link>
                   <div className="min-w-0 flex-1">
                     <Link
-                      href={`/album/${album.id}`}
+                      href={albumHref(album.artistName, album.title, album.id)}
                       className="block truncate font-body text-sm text-paper transition-colors hover:text-amber"
                     >
                       {album.title}
@@ -264,7 +270,7 @@ export function CaminoAlbumList({
               return (
                 <li key={album.id} className="flex flex-col gap-1.5">
                   <div className="relative overflow-hidden rounded-md border border-ink-border">
-                    <Link href={`/album/${album.id}`}>
+                    <Link href={albumHref(album.artistName, album.title, album.id)}>
                       <CoverThumb cover={album.coverThumbUrl} label="" className="aspect-square w-full" />
                     </Link>
                     {progressActions && (
@@ -303,7 +309,7 @@ export function CaminoAlbumList({
                     )}
                   </div>
                   <Link
-                    href={`/album/${album.id}`}
+                    href={albumHref(album.artistName, album.title, album.id)}
                     className="truncate font-data text-xs text-paper-muted transition-colors hover:text-amber"
                   >
                     {album.title}

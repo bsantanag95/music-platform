@@ -25,7 +25,12 @@ export async function RatingHighlights({ highlights }: RatingHighlightsProps) {
         {highlights.map((highlight) => (
           <li key={highlight.id}>
             <Link
-              href={targetHref(highlight.entity.type, highlight.entity.id)}
+              href={targetHref(
+                highlight.entity.type,
+                highlight.entity.id,
+                highlight.entity.title,
+                highlight.entity.artistName ?? null,
+              )}
               className="group flex items-center gap-3 rounded-lg border border-ink-border bg-ink-surface p-3 transition-colors hover:border-amber"
             >
               <CoverThumb cover={highlight.entity.coverThumbUrl} label="" className="size-12 rounded" />

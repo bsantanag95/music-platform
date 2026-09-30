@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { albumHref } from "@/lib/catalog-links";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { FilterSelect } from "@/components/ui/FilterSelect";
 import { ListenEntryForm } from "@/components/diary/ListenEntryForm";
@@ -15,6 +16,8 @@ type SelectionMode = "list" | "graphic";
 
 interface ArtistJourneySelectionViewProps {
   albums: ArtistJourneyAlbum[];
+  /** Nombre del artista del recorrido, para las direcciones con slug; opcional para los tests. */
+  artistName?: string;
   categoryLabels: Record<ReleaseGroupCategory, string>;
   onRemove: (albumId: string) => void;
   onMarkListened: (albumId: string) => Promise<void>;
@@ -65,6 +68,7 @@ function CheckIcon() {
 // add-artist-journey-mark-listened, revisión "ampliar en la misma fila").
 export function ArtistJourneySelectionView({
   albums,
+  artistName = "",
   categoryLabels,
   onRemove,
   onMarkListened,
@@ -207,11 +211,16 @@ export function ArtistJourneySelectionView({
                     return (
                       <li key={album.id} className="flex flex-col gap-3 py-2">
                         <div className="flex items-center gap-3">
-                          <Link href={`/album/${album.id}`} className="shrink-0" tabIndex={-1} aria-hidden>
+                          <Link
+                            href={albumHref(artistName || null, album.title, album.id)}
+                            className="shrink-0"
+                            tabIndex={-1}
+                            aria-hidden
+                          >
                             <CoverThumb cover={album.coverThumbUrl} label="" className="size-12" />
                           </Link>
                           <Link
-                            href={`/album/${album.id}`}
+                            href={albumHref(artistName || null, album.title, album.id)}
                             className="min-w-0 flex-1 truncate font-body text-sm text-paper transition-colors hover:text-amber"
                           >
                             {album.title}
@@ -284,7 +293,7 @@ export function ArtistJourneySelectionView({
                       return (
                         <li key={album.id} className="flex flex-col gap-1.5">
                           <div className="relative overflow-hidden rounded-md border border-ink-border">
-                            <Link href={`/album/${album.id}`}>
+                            <Link href={albumHref(artistName || null, album.title, album.id)}>
                               <CoverThumb cover={album.coverThumbUrl} label="" className="aspect-square w-full" />
                             </Link>
                             <button
@@ -318,7 +327,7 @@ export function ArtistJourneySelectionView({
                             </button>
                           </div>
                           <Link
-                            href={`/album/${album.id}`}
+                            href={albumHref(artistName || null, album.title, album.id)}
                             className="truncate font-data text-xs text-paper-muted transition-colors hover:text-amber"
                           >
                             {album.title}

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
+import { albumHref } from "@/lib/catalog-links";
 import catalogEs from "../../../messages/es/catalog.json";
 import { AlbumRelationPanel, type AlbumRelationState } from "./AlbumRelationPanel";
 import type { CollectionEntry, RatingsResponse } from "@/lib/api/schemas";
@@ -119,7 +120,7 @@ describe("AlbumRelationPanel", () => {
     expect(screen.getByText(relation.reviewWritten)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: relation.editReview })).toHaveAttribute(
       "href",
-      `/album/${RG}/reviews#your-review`,
+      `${albumHref(null, "", RG)}/reviews#your-review`,
     );
     expect(screen.getByText(/^3 · última 12 sept?/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: relation.logListen })).toBeInTheDocument();

@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { appUser, rating, releaseGroup, review, type ReviewRow } from "@/db/schema";
 import { maskAuthor } from "@/services/auth/account-status";
 import { ApiError } from "@/lib/api/errors";
+import { reviewSegment } from "@/lib/catalog-links";
 import type { Review, ReviewRequest, ReviewSort, ReviewUpdate, SocialTargetType } from "@/lib/api/schemas";
 import {
   resolveSocialTarget,
@@ -139,6 +140,43 @@ export async function listReviewIds(target: SocialTarget, sort: ReviewSort = "re
     .orderBy(...reviewOrder(sort))
     .limit(REVIEW_NAVIGATION_LIMIT);
   return rows.map((row) => row.id);
+}
+
+/** Vecina del modal de reseña, con su segmento canónico (`/review/<slug>-<id>`). */
+export interface ReviewNeighbor {
+  id: string;
+  href: string;
+}
+
+/**
+ * Anterior y siguiente reseña del índice con su segmento canónico (openspec:
+ * add-catalog-slugs, design D8): el modal no muestra una URL sin canonicalizar.
+ * El autor desactivado comparte el criterio del listado (usuario vacío).
+ */
+export async function listReviewNeighbors(
+  target: SocialTarget,
+  albumTitle: string,
+  currentId: string,
+  sort: ReviewSort = "recent",
+): Promise<{ previous: ReviewNeighbor | null; next: ReviewNeighbor | null }> {
+  const rows = await db
+    .select({ id: review.id, username: appUser.username, deactivatedAt: appUser.deactivatedAt })
+    .from(review)
+    .innerJoin(appUser, eq(review.userId, appUser.id))
+    .leftJoin(
+      rating,
+      and(eq(rating.userId, review.userId), eq(rating[target.column], target.id)),
+    )
+    .where(and(reviewTargetWhere(target), eq(review.moderationStatus, "visible")))
+    .orderBy(...reviewOrder(sort))
+    .limit(REVIEW_NAVIGATION_LIMIT);
+  const entries: ReviewNeighbor[] = rows.map((row) => ({
+    id: row.id,
+    href: reviewSegment(row.deactivatedAt != null ? "" : (row.username ?? ""), albumTitle, row.id),
+  }));
+  const index = entries.findIndex((entry) => entry.id === currentId);
+  if (index === -1) return { previous: null, next: null };
+  return { previous: entries[index - 1] ?? null, next: entries[index + 1] ?? null };
 }
 
 export interface ReviewDetail {

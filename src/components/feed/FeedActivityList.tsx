@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { ReactionBadge } from "@/components/diary/ReactionBadge";
 import { targetHref } from "./feed-target";
+import { listHref } from "@/lib/catalog-links";
 import { FeedRatingMeter } from "./FeedRatingMeter";
 import { isFeedEntryQuote } from "./feed-entry-tier";
 import { groupFeedRuns, type FeedEntryGroup, type FeedRotationPeak } from "./feed-grouping";
@@ -260,7 +261,12 @@ function RotationPeakRow({
       </div>
       <p className="mt-1 font-data text-xs text-paper-muted">
         <Link
-          href={targetHref(peak.target.type, peak.target.id)}
+          href={targetHref(
+            peak.target.type,
+            peak.target.id,
+            peak.target.title,
+            peak.target.artistName ?? null,
+          )}
           className="text-paper transition-colors hover:text-amber"
         >
           {peak.target.title}
@@ -337,7 +343,7 @@ function FollowArtistRow({
           </>
         )}
         {t("followArtistVerb")}{" "}
-        <Link href={targetHref("artist", entry.artist.id)} className="text-paper transition-colors hover:text-amber">
+        <Link href={targetHref("artist", entry.artist.id, entry.artist.name)} className="text-paper transition-colors hover:text-amber">
           {entry.artist.name}
         </Link>
       </span>
@@ -415,7 +421,7 @@ function targetLink(
 ): { href: string; label: string; artist: string | null; artistHref: string | null } {
   if (entry.kind === "list") {
     return {
-      href: `/users/${encodeURIComponent(entry.author.username)}/lists/${entry.list.id}`,
+      href: listHref(entry.author.username, entry.list.title, entry.list.id),
       label: entry.list.title,
       artist: null,
       artistHref: null,
@@ -431,7 +437,7 @@ function targetLink(
   }
   if (entry.kind === "follow-artist") {
     return {
-      href: targetHref("artist", entry.artist.id),
+      href: targetHref("artist", entry.artist.id, entry.artist.name),
       label: entry.artist.name,
       artist: null,
       artistHref: null,
@@ -439,14 +445,16 @@ function targetLink(
   }
   const type = entry.kind === "favorite" ? entry.targetType : entry.target.type;
   return {
-    href: targetHref(type, entry.target.id),
+    href: targetHref(type, entry.target.id, entry.target.title, entry.target.artistName ?? null),
     label: entry.target.title,
     artist: entry.target.artistName ?? null,
     // Enlaza el nombre del artista a su página cuando el objetivo es un álbum
     // o una canción con artista acreditado (openspec: add-feed-artist-link) —
     // `artistId` viene nulo cuando el objetivo ya es el artista (el título ya
     // enlaza ahí) o cuando no hay artista acreditado.
-    artistHref: entry.target.artistId ? targetHref("artist", entry.target.artistId) : null,
+    artistHref: entry.target.artistId
+      ? targetHref("artist", entry.target.artistId, entry.target.artistName ?? "")
+      : null,
   };
 }
 

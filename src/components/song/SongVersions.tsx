@@ -3,6 +3,7 @@
 import { useId, useState, type KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 import { formatDuration } from "@/components/album/album-format";
 import { VersionAttributeTags } from "@/components/catalog/VersionAttributeTags";
 import type { RecordingVersions, VersionEntry, VersionGroup } from "@/services/catalog/recording-versions";
@@ -31,7 +32,7 @@ function RecordingItem({ entry, label }: { entry: VersionEntry; label: string })
   return (
     <li className="min-w-0">
       <Link
-        href={`/song/${entry.recordingId}`}
+        href={songHref(entry.artist?.name ?? null, entry.title, entry.recordingId)}
         className="font-body text-sm text-paper-muted underline decoration-ink-border underline-offset-4 [overflow-wrap:anywhere] hover:text-amber hover:decoration-amber"
       >
         {label}
@@ -50,7 +51,7 @@ function DiscRow({ row, songTitle, withArtist }: { row: VersionDiscRow; songTitl
   const unnamedTotal = labels.filter((label) => label === null).length;
   let unnamed = 0;
   const artist = row.artist && (
-    <Link href={`/artist/${row.artist.id}`} className="text-paper [overflow-wrap:anywhere] hover:text-amber hover:underline">
+    <Link href={artistHref(row.artist.name, row.artist.id)} className="text-paper [overflow-wrap:anywhere] hover:text-amber hover:underline">
       {row.artist.name}
     </Link>
   );
@@ -65,7 +66,7 @@ function DiscRow({ row, songTitle, withArtist }: { row: VersionDiscRow; songTitl
       <span className={`min-w-0 font-body text-sm ${withArtist ? "col-start-2 sm:col-start-auto" : ""}`}>
         {row.disc ? (
           <Link
-            href={`/album/${row.disc.releaseGroupId}`}
+            href={albumHref(row.artist?.name ?? null, row.disc.title, row.disc.releaseGroupId)}
             className="text-paper [overflow-wrap:anywhere] hover:text-amber hover:underline"
           >
             {row.disc.title}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { albumHref, songHref } from "@/lib/catalog-links";
 import type { SongGroupResult } from "@/services/catalog/search/types";
 import { LazyCoverImage } from "../LazyCoverImage";
 
@@ -39,7 +40,7 @@ export function SongGroupPanel({ group }: { group: SongGroupResult }) {
             // link-song-from-search); el panel describe sus álbumes, así que la
             // canción se ofrece como acción explícita.
             <Link
-              href={`/song/${group.recordingId}`}
+              href={songHref(group.artistName, group.title, group.recordingId)}
               aria-label={t("search.results.songContext.viewSongAria", { song: group.title })}
               className="shrink-0 font-data text-xs text-amber underline-offset-2 transition-colors hover:text-amber-hover hover:underline"
             >
@@ -59,7 +60,7 @@ export function SongGroupPanel({ group }: { group: SongGroupResult }) {
               .join(" · ");
             return (
               <li key={album.id} className="py-3 first:pt-0 last:pb-0">
-                <Link href={`/album/${album.id}`} className="group flex gap-3">
+                <Link href={albumHref(group.artistName, album.title, album.id)} className="group flex gap-3">
                   <LazyCoverImage releaseGroupId={album.id} coverLabel="" className="size-10 shrink-0" />
                   <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span className="truncate font-display text-sm text-paper transition-colors group-hover:text-amber">

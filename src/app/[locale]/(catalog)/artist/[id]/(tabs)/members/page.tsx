@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { GroupLineupView, LINEUP_VIEWS, PersonLineupView, type LineupView } from "@/components/artist/ArtistLineup";
 import { lineupTabOf } from "@/components/artist/lineup-fact";
-import { isValidUuid } from "@/lib/validation";
+import { artistSegment } from "@/lib/catalog-links";
+import { resolveCatalogRoute } from "@/lib/catalog-route";
+import { parseCatalogSegment } from "@/lib/slug";
 import { scheduleLineupMembersSync } from "@/services/catalog/artist-lineup-sync";
 import { loadArtist, loadLineup } from "../../artist-data";
 
@@ -22,8 +24,9 @@ function isView(value: unknown): value is LineupView {
 
 export async function generateMetadata({ params }: ArtistMembersPageProps): Promise<Metadata> {
   const { id } = await params;
-  if (!isValidUuid(id)) return {};
-  const [artist, lineup] = await Promise.all([loadArtist(id), loadLineup(id)]);
+  const parsed = parseCatalogSegment(id);
+  if (!parsed) return {};
+  const [artist, lineup] = await Promise.all([loadArtist(parsed.id), loadLineup(parsed.id)]);
   const tab = lineupTabOf(lineup);
   if (!artist || !tab) return {};
   const t = await getTranslations("catalog.artist.tabs");
@@ -31,17 +34,34 @@ export async function generateMetadata({ params }: ArtistMembersPageProps): Prom
 }
 
 export default async function ArtistMembersPage({ params, searchParams }: ArtistMembersPageProps) {
-  const { id } = await params;
-  if (!isValidUuid(id)) notFound();
-  const lineup = await loadLineup(id);
+  const { id: segment } = await params;
+  const parsed = parseCatalogSegment(segment);
+  if (!parsed) notFound();
+  const [artist, lineup] = await Promise.all([loadArtist(parsed.id), loadLineup(parsed.id)]);
+  if (!artist) notFound();
   if (!lineup || !lineupTabOf(lineup)) notFound();
   const query = (await searchParams) ?? {};
+  resolveCatalogRoute({
+    locale: await getLocale(),
+    kind: "artist",
+    segment,
+    canonical: artistSegment(artist.name, artist.id),
+    subpath: "/members",
+    searchParams: query,
+  });
 
   if (lineup.kind === "group") {
     // Otras bandas y fecha de muerte de los integrantes, en segundo plano (design D5).
-    scheduleLineupMembersSync(id);
-    return <GroupLineupView artistId={id} lineup={lineup} view={isView(query.view) ? query.view : "all"} />;
+    scheduleLineupMembersSync(parsed.id);
+    return (
+      <GroupLineupView
+        artistId={parsed.id}
+        artistName={artist.name}
+        lineup={lineup}
+        view={isView(query.view) ? query.view : "all"}
+      />
+    );
   }
-  if (lineup.supportersCurrent.length + lineup.supportersPast.length > 0) scheduleLineupMembersSync(id);
+  if (lineup.supportersCurrent.length + lineup.supportersPast.length > 0) scheduleLineupMembersSync(parsed.id);
   return <PersonLineupView lineup={lineup} />;
 }

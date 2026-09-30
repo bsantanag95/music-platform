@@ -123,7 +123,12 @@ export function CompactActivityRow({ entry }: { entry: CompactActivityEntry }) {
           <RelativeDate iso={entry.createdAt} />
         </div>
         <Link
-          href={targetHref(entry.target.type, entry.target.id)}
+          href={targetHref(
+            entry.target.type,
+            entry.target.id,
+            entry.target.title,
+            entry.target.artistName ?? null,
+          )}
           className="block truncate font-display text-sm text-paper transition-colors hover:text-amber"
         >
           {entry.target.title}

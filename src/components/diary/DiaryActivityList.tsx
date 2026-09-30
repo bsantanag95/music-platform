@@ -502,10 +502,14 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
             )}
             <div className="mt-1">
               <TargetTitle
-                href={targetHref(entry.target.type, entry.target.id)}
+                href={targetHref(entry.target.type, entry.target.id, entry.target.title, entry.target.subtitle ?? null)}
                 label={entry.target.title}
                 artist={entry.target.subtitle}
-                artistHref={entry.target.artistId ? targetHref("artist", entry.target.artistId) : null}
+                artistHref={
+                  entry.target.artistId
+                    ? targetHref("artist", entry.target.artistId, entry.target.subtitle ?? "")
+                    : null
+                }
                 layout="inline"
               />
             </div>

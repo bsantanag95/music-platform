@@ -1,13 +1,16 @@
 import type { CollectionEntry, DiaryAudience } from "@/lib/api/schemas";
 import type { CollectionEntryFormValue } from "./CollectionEntryForm";
 import type { CollectionGrouping } from "@/services/collection/types";
+import { albumHref, artistHref } from "@/lib/catalog-links";
 
 export function collectionAlbumHref(entry: CollectionEntry): string {
-  return `/album/${entry.album.id}`;
+  return albumHref(entry.album.artistName, entry.album.title, entry.album.id);
 }
 
 export function collectionArtistHref(entry: CollectionEntry): string | null {
-  return entry.album.artistId ? `/artist/${entry.album.artistId}` : null;
+  return entry.album.artistId
+    ? artistHref(entry.album.artistName ?? "", entry.album.artistId)
+    : null;
 }
 
 export function formatCollectionDate(iso: string, locale: string): string {

@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { relativeFeedDate } from "@/components/feed/feed-dates";
 import { UserHoverCard } from "@/components/profiles/UserHoverCard";
+import { listHref } from "@/lib/catalog-links";
 import type { FeedListEvent } from "@/services/feed/feed";
 
 interface PublicListsProps {
@@ -37,7 +38,7 @@ async function CompactListRow({ entry }: { entry: FeedListEvent }) {
   return (
     <li className="flex flex-col gap-0.5 py-3 first:pt-0 last:pb-0">
       <Link
-        href={`/users/${encodeURIComponent(username)}/lists/${entry.list.id}`}
+        href={listHref(username, entry.list.title, entry.list.id)}
         className="truncate font-display text-sm text-paper transition-colors hover:text-amber"
       >
         {entry.list.title}

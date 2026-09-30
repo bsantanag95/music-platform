@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { RelativeDate } from "@/components/feed/feed-row-parts";
 import { UserHoverCard } from "@/components/profiles/UserHoverCard";
 import type { DiscoverListSummary } from "@/lib/api/schemas";
+import { listHref } from "@/lib/catalog-links";
 import { ListCard } from "./ListCard";
 import { SaveListButton } from "./SaveListButton";
 import { entityTypeKey } from "./lists-shared";
@@ -29,7 +30,7 @@ export function CommunityListCard({
 
   return (
     <ListCard
-      href={`/users/${encodeURIComponent(list.owner.username)}/lists/${list.id}`}
+      href={listHref(list.owner.username, list.title, list.id)}
       title={list.title}
       coverThumbs={list.coverThumbs}
       description={list.description}

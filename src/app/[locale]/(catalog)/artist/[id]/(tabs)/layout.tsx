@@ -10,7 +10,7 @@ import { ARTIST_TABS_ANCHOR, lineupFact, lineupTabOf } from "@/components/artist
 import { itemListsHref } from "@/components/lists/lists-shared";
 import { Comments } from "@/components/social/Comments";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
-import { isValidUuid } from "@/lib/validation";
+import { parseCatalogSegment } from "@/lib/slug";
 import type { ReleaseGroup, ReleaseGroupCategory } from "@/lib/api/schemas";
 import { readArtistDiscography } from "@/services/catalog/ingest-discography";
 import { isCoverResolved } from "@/services/catalog/cover-resolution";
@@ -43,15 +43,17 @@ type ArtistType = "person" | "group" | "various" | "unknown";
 
 export async function generateMetadata({ params }: ArtistLayoutProps): Promise<Metadata> {
   const { id } = await params;
-  if (!isValidUuid(id)) return {};
-  const artist = await loadArtist(id);
+  const parsed = parseCatalogSegment(id);
+  if (!parsed) return {};
+  const artist = await loadArtist(parsed.id);
   return artist ? { title: artist.name } : {};
 }
 
 export default async function ArtistLayout({ children, params }: ArtistLayoutProps) {
   const { id } = await params;
-  if (!isValidUuid(id)) notFound();
-  const artist = await loadArtist(id);
+  const parsed = parseCatalogSegment(id);
+  if (!parsed) notFound();
+  const artist = await loadArtist(parsed.id);
   if (!artist) notFound();
 
   const t = await getTranslations("catalog.artist");
@@ -94,7 +96,7 @@ export default async function ArtistLayout({ children, params }: ArtistLayoutPro
             coverResolved: isCoverResolved(row),
           }))
       : [];
-  const fact = lineupFact(lineup, artist.id);
+  const fact = lineupFact(lineup, artist.id, artist.name);
   const categoryLabels = {
     studio: t("categories.studio"),
     single_ep: t("categories.single_ep"),
@@ -121,7 +123,7 @@ export default async function ArtistLayout({ children, params }: ArtistLayoutPro
           <div className="sm:hidden">
             <ArtistFacts type={type} profile={profile} firstMainYear={discography?.firstMainYear ?? null} lineup={fact} />
           </div>
-          <ArtistSummary artistId={artist.id} summary={profile.summary} />
+          <ArtistSummary artistId={artist.id} artistName={artist.name} summary={profile.summary} />
           <div className="hidden lg:block">
             <ArtistCommunity stats={stats} listsHref={itemListsHref({ type: "artist", id: artist.id })} />
           </div>
@@ -139,7 +141,12 @@ export default async function ArtistLayout({ children, params }: ArtistLayoutPro
       </header>
 
       <div id={ARTIST_TABS_ANCHOR} className="flex scroll-mt-6 flex-col gap-6">
-        <ArtistTabs artistId={artist.id} hasBiography={profile.summary !== null} lineupTab={lineupTabOf(lineup)} />
+        <ArtistTabs
+          artistId={artist.id}
+          artistName={artist.name}
+          hasBiography={profile.summary !== null}
+          lineupTab={lineupTabOf(lineup)}
+        />
         {children}
       </div>
 

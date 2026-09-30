@@ -10,11 +10,14 @@ vi.mock("@/db", () => ({ db: mocks.db }));
 const viewer = "00000000-0000-4000-8000-000000000001";
 
 // `.from(t).where(cond)` y `.from(t).innerJoin(...).innerJoin(...).where(cond)`
-// son thenables en drizzle — el mock resuelve al array de filas.
+// son thenables en drizzle — el mock resuelve al array de filas. El resolvedor
+// del artista principal encadena `.orderBy(...)` tras `.where(...)`.
 function q(rows: unknown[]) {
+  const promise = Promise.resolve(rows) as Promise<unknown[]> & { orderBy: () => Promise<unknown[]> };
+  promise.orderBy = () => Promise.resolve(rows);
   const chain = {
     innerJoin: () => chain,
-    where: () => Promise.resolve(rows),
+    where: () => promise,
   };
   return { from: () => chain };
 }
@@ -43,6 +46,8 @@ function primeDb(opts: {
   if (opts.follows.length === 0) return;
   mocks.db.select.mockReturnValueOnce(q(opts.blocks ?? []));
   mocks.db.select.mockReturnValueOnce(q(opts.collection ?? []));
+  // Resolvedor del artista principal de los discos (lote vacío: sin slug de artista).
+  mocks.db.select.mockReturnValueOnce(q([]));
 }
 
 describe("getFeedAmbientEvents", () => {

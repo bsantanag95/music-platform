@@ -101,7 +101,7 @@ function CommentRow({ comment, likeWord }: { comment: PopularComment; likeWord: 
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
           <Link
-            href={targetHref(comment.target.type, comment.target.id)}
+            href={targetHref(comment.target.type, comment.target.id, comment.target.title)}
             className="truncate font-display text-sm text-paper transition-colors hover:text-amber"
           >
             {comment.target.title}

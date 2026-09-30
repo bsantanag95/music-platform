@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { albumHref, artistHref } from "@/lib/catalog-links";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { LazyCoverImage } from "@/components/catalog/LazyCoverImage";
 import { formatStars } from "@/components/album/album-format";
@@ -70,6 +71,8 @@ function useSectionView(section: DiscographySection): [View, (view: View) => voi
 
 interface ArtistDiscographyProps {
   artistId: string;
+  /** Nombre del artista, para las direcciones con slug; opcional para los tests. */
+  artistName?: string;
   sections: { key: DiscographySection; items: ArtistDiscographyItem[] }[];
   activeSection: DiscographySection;
   bestRatedId: string | null;
@@ -123,12 +126,14 @@ interface DiscActions {
   updateMarks: (id: string, update: (current: DiscMarks) => DiscMarks) => void;
 }
 
-function sectionHref(artistId: string, section: DiscographySection, defaultSection: DiscographySection) {
-  return section === defaultSection ? `/artist/${artistId}` : `/artist/${artistId}?section=${section}`;
+function sectionHref(artistName: string, artistId: string, section: DiscographySection, defaultSection: DiscographySection) {
+  const base = artistHref(artistName, artistId);
+  return section === defaultSection ? base : `${base}?section=${section}`;
 }
 
 export function ArtistDiscography({
   artistId,
+  artistName = "",
   sections,
   activeSection,
   bestRatedId,
@@ -206,7 +211,7 @@ export function ArtistDiscography({
               return (
                 <li key={section.key}>
                   <Link
-                    href={sectionHref(artistId, section.key, defaultSection)}
+                    href={sectionHref(artistName, artistId, section.key, defaultSection)}
                     scroll={false}
                     aria-current={current ? "page" : undefined}
                     className={pillClass(current)}
@@ -301,6 +306,7 @@ export function ArtistDiscography({
           ) : (
             <DiscographyTable
               key="search"
+              artistName={artistName}
               groups={result.groups.map((group) => ({
                 key: group.key,
                 heading: { id: groupAnchor(group.key), label: t(`sections.${group.key}`), count: group.items.length },
@@ -313,6 +319,7 @@ export function ArtistDiscography({
       ) : view === "grid" ? (
         <DiscographyGrid
           key={activeSection}
+          artistName={artistName}
           items={active.items}
           bestRatedId={activeSection === "main" ? bestRatedId : null}
           showEpBadge={activeSection === "main"}
@@ -320,7 +327,12 @@ export function ArtistDiscography({
         />
       ) : (
         // La clave de sección reinicia el orden al cambiar de sección.
-        <DiscographyTable key={activeSection} groups={[{ key: activeSection, items: active.items }]} actions={actions} />
+        <DiscographyTable
+          key={activeSection}
+          artistName={artistName}
+          groups={[{ key: activeSection, items: active.items }]}
+          actions={actions}
+        />
       )}
     </section>
   );
@@ -377,11 +389,13 @@ const hasMarks = (marks: DiscMarks | null): marks is DiscMarks =>
   marks !== null && (marks.listened || marks.stars !== null || marks.favorite || marks.pending);
 
 function DiscographyGrid({
+  artistName,
   items,
   bestRatedId,
   showEpBadge,
   actions,
 }: {
+  artistName: string;
   items: ArtistDiscographyItem[];
   bestRatedId: string | null;
   showEpBadge: boolean;
@@ -400,7 +414,10 @@ function DiscographyGrid({
           const open = actions.openId === item.id;
           return (
             <li key={item.id} className="group/card relative">
-              <Link href={`/album/${item.id}`} className="group flex flex-col gap-1.5">
+              <Link
+                href={albumHref(item.primaryArtist?.name ?? (artistName || null), item.title, item.id)}
+                className="group flex flex-col gap-1.5"
+              >
                 <span className="relative block">
                   <Cover item={item} className="aspect-square w-full" />
                   {(best || (showEpBadge && item.isEp)) && (
@@ -538,7 +555,15 @@ interface TableGroup {
   items: ArtistDiscographyItem[];
 }
 
-function DiscographyTable({ groups, actions }: { groups: TableGroup[]; actions: DiscActions }) {
+function DiscographyTable({
+  artistName,
+  groups,
+  actions,
+}: {
+  artistName: string;
+  groups: TableGroup[];
+  actions: DiscActions;
+}) {
   const t = useTranslations("catalog.artist.discography");
   const locale = useLocale();
   const kindLabel = useKindLabel();
@@ -635,7 +660,10 @@ function DiscographyTable({ groups, actions }: { groups: TableGroup[]; actions: 
                 </td>
                 <td className="min-w-0 py-2 pr-2">
                   <span className="flex min-w-0 items-center gap-2">
-                    <Link href={`/album/${item.id}`} className="truncate font-body text-sm text-paper hover:text-amber">
+                    <Link
+                      href={albumHref(item.primaryArtist?.name ?? (artistName || null), item.title, item.id)}
+                      className="truncate font-body text-sm text-paper hover:text-amber"
+                    >
                       {item.title}
                     </Link>
                     <span className="hidden sm:contents">{kindChip(item)}</span>

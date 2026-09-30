@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { AlbumCredits } from "@/components/album/AlbumCredits";
-import { isValidUuid } from "@/lib/validation";
-import { loadAlbumDetail, loadAlbumPersonnel } from "../../album-data";
+import { resolveCatalogRoute } from "@/lib/catalog-route";
+import { parseCatalogSegment } from "@/lib/slug";
+import { loadAlbumDetail, loadAlbumPersonnel, loadAlbumSegment } from "../../album-data";
 
 // Pestaña Créditos (openspec: redesign-album-page): créditos de personal del disco en
 // cuatro niveles, o por canción con `?view=songs`. Sin créditos la pestaña no existe: la URL
@@ -17,24 +18,36 @@ interface AlbumCreditsPageProps {
 
 export async function generateMetadata({ params }: AlbumCreditsPageProps): Promise<Metadata> {
   const { id } = await params;
-  if (!isValidUuid(id)) return {};
-  const result = await loadAlbumDetail(id);
+  const parsed = parseCatalogSegment(id);
+  if (!parsed) return {};
+  const result = await loadAlbumDetail(parsed.id);
   if (result.kind !== "ok") return {};
   const t = await getTranslations("catalog.album.tabs");
   return { title: `${t("credits")} · ${result.detail.releaseGroup.title}` };
 }
 
 export default async function AlbumCreditsPage({ params, searchParams }: AlbumCreditsPageProps) {
-  const { id } = await params;
-  if (!isValidUuid(id)) notFound();
-  const result = await loadAlbumDetail(id);
+  const { id: segment } = await params;
+  const parsed = parseCatalogSegment(segment);
+  if (!parsed) notFound();
+  const query = (await searchParams) ?? {};
+  const result = await loadAlbumDetail(parsed.id);
   if (result.kind !== "ok") return null;
+
+  resolveCatalogRoute({
+    locale: await getLocale(),
+    kind: "album",
+    segment,
+    canonical: await loadAlbumSegment(result.detail.releaseGroup.id, result.detail.releaseGroup.title),
+    subpath: "/credits",
+    searchParams: query,
+  });
 
   const personnel = await loadAlbumPersonnel(result.detail.releaseGroup.id);
   if (!personnel) notFound();
 
   const multiDisc = new Set(result.detail.tracks.map((t) => t.discNumber)).size > 1;
-  const { view } = (await searchParams) ?? {};
+  const { view } = query;
   return (
     <AlbumCredits
       levels={personnel.levels}

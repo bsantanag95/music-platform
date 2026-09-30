@@ -102,7 +102,10 @@ export function ItemsGraphic({ items, entityType, actions, quickActions }: ListI
               </button>
             ) : (
               <Link
-                href={listItemHref(item.target.id, entityType)}
+                href={listItemHref(item.target.id, entityType, {
+                  title: item.target.title,
+                  artistName: item.target.artistName,
+                })}
                 className="group relative block overflow-hidden rounded-md border border-ink-border transition-colors hover:border-amber"
               >
                 <CoverThumb cover={item.target.coverThumbUrl} label="" className="aspect-square w-full" />

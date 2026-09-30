@@ -29,7 +29,12 @@ export async function NetworkConvergence({ items }: NetworkConvergenceProps) {
             <CoverThumb cover={item.target.coverThumbUrl} label="" className="size-11 shrink-0" />
             <div className="min-w-0 flex-1">
               <Link
-                href={targetHref(item.target.type, item.target.id)}
+                href={targetHref(
+                  item.target.type,
+                  item.target.id,
+                  item.target.title,
+                  item.target.artistName ?? null,
+                )}
                 className="block truncate font-display text-base text-paper underline decoration-ink-border decoration-1 underline-offset-4 transition-colors hover:text-amber hover:decoration-amber"
               >
                 {item.target.title}

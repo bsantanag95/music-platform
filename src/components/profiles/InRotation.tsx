@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
+import { albumHref, songHref } from "@/lib/catalog-links";
 import type { InRotation as InRotationData } from "@/services/profiles/in-rotation";
 
 interface InRotationProps {
@@ -30,7 +31,7 @@ export async function InRotation({ data }: InRotationProps) {
             {data.songs.map((song) => (
               <li key={song.id}>
                 <Link
-                  href={`/song/${song.id}`}
+                  href={songHref(song.artistName, song.title, song.id)}
                   className="group flex flex-col px-3 py-2 transition-colors hover:bg-ink-surface"
                 >
                   <span className="truncate font-display text-sm text-paper transition-colors group-hover:text-amber">
@@ -56,7 +57,10 @@ export async function InRotation({ data }: InRotationProps) {
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {data.albums.map((album) => (
               <li key={album.id}>
-                <Link href={`/album/${album.id}`} className="group flex flex-col gap-2">
+                <Link
+                  href={albumHref(album.artistName, album.title, album.id)}
+                  className="group flex flex-col gap-2"
+                >
                   <CoverThumb
                     cover={album.coverThumbUrl}
                     label=""

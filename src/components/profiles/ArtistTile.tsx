@@ -1,6 +1,7 @@
 import { AppImage } from "@/components/ui/AppImage";
 import { Link } from "@/i18n/navigation";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
+import { artistHref } from "@/lib/catalog-links";
 import type { FollowedArtist } from "@/services/social/artist-following";
 
 interface ArtistTileProps {
@@ -23,7 +24,7 @@ interface ArtistTileProps {
 export function ArtistTile({ artist, shared, size = "size-20", t }: ArtistTileProps) {
 
   return (
-    <Link href={`/artist/${artist.id}`} className="group flex flex-col items-center gap-2 text-center">
+    <Link href={artistHref(artist.name, artist.id)} className="group flex flex-col items-center gap-2 text-center">
       <div className="relative">
         {artist.photoUrl ? (
           <div className={`relative ${size} overflow-hidden rounded-full border border-ink-border transition-colors group-hover:border-amber`}>

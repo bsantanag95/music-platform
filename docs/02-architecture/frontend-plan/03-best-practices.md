@@ -102,11 +102,13 @@ diaria para quien escribe componentes:
 
 - Seguir `docs/02-architecture/conventions.md` (`snake_case` en DB, `camelCase`/`PascalCase`
   en TS, `kebab-case` en rutas de API).
-- Las rutas de **página** (`/search`, `/artist/[id]`, `/album/[id]`) usan slugs neutros en
-  inglés, iguales para todos los locales — el idioma vive solo en el segmento `[locale]` de la
+- Las rutas de **página** (`/search`, `/artist/[slug-id]`, `/album/[slug-id]`) usan slugs neutros
+  en inglés, iguales para todos los locales — el idioma vive solo en el segmento `[locale]` de la
   URL, nunca en el slug (ver ADR 0007 y `conventions.md`). Esto reemplaza la propuesta original
   de este documento (slugs en español), vigente hasta la confirmación de soporte multi-idioma.
-  Las rutas de **API** quedan sin cambios, en inglés (`/api/catalog/...`).
+  El segmento dinámico del catálogo es `<slug>-<id>` (ADR 0022): el id es el UUID en base58 y el
+  slug es decorativo. Las rutas de **API** quedan sin cambios, en inglés (`/api/catalog/...`), y
+  reciben el UUID pelado.
 
 ## CI
 

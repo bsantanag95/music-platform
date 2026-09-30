@@ -3,6 +3,7 @@ import { screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
+import { listHref } from "@/lib/catalog-links";
 import type { UserListSummary } from "@/lib/api/schemas";
 import { ListsCarousel } from "./ListsCarousel";
 
@@ -53,7 +54,7 @@ describe("ListsCarousel", () => {
     renderCarousel([list(), list()], 2);
     expect(screen.getByRole("link", { name: "Lista 1" })).toHaveAttribute(
       "href",
-      "/users/ana/lists/a1b2c3d4-0000-4000-8000-000000000001",
+      listHref("ana", "Lista 1", "a1b2c3d4-0000-4000-8000-000000000001"),
     );
     expect(screen.getByRole("list", { name: "Listas del perfil" })).toBeInTheDocument();
     expect(screen.getAllByRole("listitem")).toHaveLength(2);

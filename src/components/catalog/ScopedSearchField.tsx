@@ -12,6 +12,7 @@ import {
 } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+import { albumHref, artistHref } from "@/lib/catalog-links";
 import { getSearchSuggestions } from "@/lib/api/catalog";
 import type { SearchSuggestion } from "@/lib/api/schemas";
 import { UserAvatar } from "@/components/social/UserAvatar";
@@ -41,9 +42,9 @@ type Option =
 function suggestionHref(suggestion: SearchSuggestion): string {
   switch (suggestion.kind) {
     case "artist":
-      return `/artist/${suggestion.id}`;
+      return artistHref(suggestion.name, suggestion.id);
     case "album":
-      return `/album/${suggestion.id}`;
+      return albumHref(suggestion.artistName, suggestion.title, suggestion.id);
     case "song":
       return searchHref(
         "song",

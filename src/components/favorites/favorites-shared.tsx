@@ -1,4 +1,5 @@
 import type { Favorite, SocialTargetType } from "@/lib/api/schemas";
+import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 
 // Orden fijo de tipos en el muro: artistas → álbumes → canciones. Coincide con
 // el ORDER BY del servicio (`TYPE_RANK_EXPR`), así que la lista plana que llega
@@ -6,14 +7,19 @@ import type { Favorite, SocialTargetType } from "@/lib/api/schemas";
 export const FAVORITE_TYPE_ORDER: SocialTargetType[] = ["artist", "release-group", "recording"];
 
 export function favoriteTargetHref(favorite: Favorite): string {
-  if (favorite.targetType === "artist") return `/artist/${favorite.target.id}`;
-  if (favorite.targetType === "release-group") return `/album/${favorite.target.id}`;
-  return `/song/${favorite.target.id}`;
+  const { target } = favorite;
+  if (favorite.targetType === "artist") return artistHref(target.title, target.id);
+  if (favorite.targetType === "release-group") {
+    return albumHref(target.artistName ?? null, target.title, target.id);
+  }
+  return songHref(target.artistName ?? null, target.title, target.id);
 }
 
 /** Enlace al artista acreditado de un álbum/canción favoritos; `null` si no se conoce. */
 export function favoriteArtistHref(favorite: Favorite): string | null {
-  return favorite.target.artistId ? `/artist/${favorite.target.artistId}` : null;
+  return favorite.target.artistId
+    ? artistHref(favorite.target.artistName ?? "", favorite.target.artistId)
+    : null;
 }
 
 export function typeLabelKey(type: SocialTargetType): "typeArtist" | "typeAlbum" | "typeSong" {

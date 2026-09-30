@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { AppImage } from "@/components/ui/AppImage";
 import { Link } from "@/i18n/navigation";
+import { artistHref } from "@/lib/catalog-links";
 import { Button } from "@/components/ui/Button";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import { RowMenu, RowMenuItem } from "@/components/ui/RowMenu";
@@ -36,7 +37,7 @@ export function FollowedArtistRow({ artist, mode }: FollowedArtistRowProps) {
   const [status, setStatus] = useState<QuickStatusKind | null>(null);
 
   const target = { type: "artist" as const, id: artist.id };
-  const href = `/artist/${artist.id}`;
+  const href = artistHref(artist.name, artist.id);
 
   const toggleFollow = async () => {
     if (followBusy) return;

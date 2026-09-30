@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/i18n-test-utils";
+import { albumHref } from "@/lib/catalog-links";
 import { FavoriteTile } from "./FavoriteTile";
 import type { Favorite } from "@/lib/api/schemas";
 
@@ -36,7 +37,7 @@ describe("FavoriteTile", () => {
     expect(screen.getByTestId("cover-thumb")).toHaveAttribute("data-cover", "c.jpg");
     expect(screen.getByRole("link", { name: "The Wall" })).toHaveAttribute(
       "href",
-      "/album/11111111-0000-4000-8000-000000000001",
+      albumHref(null, "The Wall", "11111111-0000-4000-8000-000000000001"),
     );
   });
 

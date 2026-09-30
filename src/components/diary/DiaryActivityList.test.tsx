@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactElement } from "react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
+import { artistHref } from "@/lib/catalog-links";
 import { DiaryActivityList } from "./DiaryActivityList";
 import type { DiaryListResponse, ListenEntry } from "@/lib/api/schemas";
 
@@ -162,7 +163,7 @@ describe("DiaryActivityList", () => {
       <DiaryActivityList initial={{ entries: [albumWithCreditedArtist], page: 1, pageSize: 20, hasNext: false }} />,
     );
     const artistLink = screen.getByRole("link", { name: "Radiohead" });
-    expect(artistLink).toHaveAttribute("href", "/artist/a1b2c3d4-0000-4000-8000-000000000007");
+    expect(artistLink).toHaveAttribute("href", artistHref("Radiohead", "a1b2c3d4-0000-4000-8000-000000000007"));
   });
 
   it("sin artista acreditado, el nombre del artista se muestra como texto plano", () => {

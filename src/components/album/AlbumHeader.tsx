@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { albumHref, artistHref } from "@/lib/catalog-links";
 import type { AlbumArtistCredit } from "@/services/catalog/album-detail";
 import {
   STAR_VALUES,
@@ -35,7 +36,7 @@ export function AlbumIdentity({ title, category, artists }: AlbumIdentityProps) 
         <p className="font-body text-lg text-paper">
           {artists.map((artist, index) => (
             <Fragment key={artist.id}>
-              <Link href={`/artist/${artist.id}`} className="text-amber hover:text-amber-hover hover:underline">
+              <Link href={artistHref(artist.name, artist.id)} className="text-amber hover:text-amber-hover hover:underline">
                 {artist.name}
               </Link>
               {index < artists.length - 1 ? (artist.joinPhrase ?? ", ") : null}
@@ -112,7 +113,7 @@ function FactRows({
           {editionsAvailable && (
             <>
               {" · "}
-              <Link href={`/album/${releaseGroupId}/editions`} className="text-amber hover:underline">
+              <Link href={`${albumHref(null, "", releaseGroupId)}/editions`} className="text-amber hover:underline">
                 {t("seeEditions")}
               </Link>
             </>

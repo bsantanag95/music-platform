@@ -22,12 +22,21 @@ export function ItemsDetailed({ items, entityType, actions, quickActions }: List
           <span className="w-5 shrink-0 pt-1 text-right font-data text-xs text-paper-muted">
             {index + 1}
           </span>
-          <Link href={listItemHref(item.target.id, entityType)} className="shrink-0" tabIndex={-1} aria-hidden>
+          <Link
+            href={listItemHref(item.target.id, entityType, {
+              title: item.target.title,
+              artistName: item.target.artistName,
+            })}
+            className="shrink-0" tabIndex={-1} aria-hidden
+          >
             <CoverThumb cover={item.target.coverThumbUrl} label="" className="size-14 sm:size-16" />
           </Link>
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <Link
-              href={listItemHref(item.target.id, entityType)}
+              href={listItemHref(item.target.id, entityType, {
+                title: item.target.title,
+                artistName: item.target.artistName,
+              })}
               className="truncate font-display text-base text-paper transition-colors hover:text-amber"
             >
               {item.target.title || t("itemUnavailable")}

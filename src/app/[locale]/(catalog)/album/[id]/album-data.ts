@@ -5,6 +5,8 @@ import { getAlbumPersonalExtras } from "@/services/catalog/album-personal";
 import { getDiscographyStrip } from "@/services/catalog/album-neighbors";
 import { getAlbumEditions } from "@/services/catalog/album-editions";
 import { getAlbumPersonnel } from "@/services/catalog/personnel-levels";
+import { resolvePrimaryArtists, slugArtistName } from "@/services/catalog/primary-artists";
+import { albumSegment } from "@/lib/catalog-links";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
 import { getOwnRatingRow, resolveSocialTarget } from "@/services/social";
@@ -18,6 +20,15 @@ import { listOwnWantedForReleaseGroup } from "@/services/collection/wanted";
 // pestaña Canciones piden el mismo detalle sin ingerirlo ni consultarlo dos veces.
 
 export const loadAlbumDetail = cache((id: string) => getAlbumDetail(id));
+
+/**
+ * Segmento canónico del álbum para la canonicalización (openspec: add-catalog-slugs):
+ * el artista principal por el resolvedor por lotes, que marca `various` como sin artista.
+ */
+export const loadAlbumSegment = cache(async (releaseGroupId: string, title: string) => {
+  const { releaseGroups } = await resolvePrimaryArtists({ releaseGroupIds: [releaseGroupId] });
+  return albumSegment(slugArtistName(releaseGroups.get(releaseGroupId)), title, releaseGroupId);
+});
 
 export const loadSession = cache(() => resolveSession());
 

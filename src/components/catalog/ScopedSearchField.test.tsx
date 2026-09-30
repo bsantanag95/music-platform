@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { ScopedSearchField } from "./ScopedSearchField";
 import { renderWithIntl } from "@/test/i18n-test-utils";
+import { artistHref } from "@/lib/catalog-links";
 import catalogEs from "../../../messages/es/catalog.json";
 
 const mockPush = vi.fn();
@@ -101,7 +102,7 @@ describe("ScopedSearchField", () => {
     expect(getSearchSuggestions).toHaveBeenCalledWith("artist", "sabr", expect.any(AbortSignal));
     fireEvent.click(option);
 
-    expect(mockPush).toHaveBeenCalledWith(`/artist/${SABRINA.id}`);
+    expect(mockPush).toHaveBeenCalledWith(artistHref(SABRINA.name, SABRINA.id));
   });
 
   it("flechas + Enter eligen la sugerencia activa; Escape cierra", async () => {
@@ -116,7 +117,7 @@ describe("ScopedSearchField", () => {
     fireEvent.keyDown(field(), { key: "ArrowDown" });
     expect(field().getAttribute("aria-activedescendant")).toBeTruthy();
     submit();
-    expect(mockPush).toHaveBeenCalledWith(`/artist/${SABRINA_FILIPINA.id}`);
+    expect(mockPush).toHaveBeenCalledWith(artistHref(SABRINA_FILIPINA.name, SABRINA_FILIPINA.id));
 
     fireEvent.focus(field());
     fireEvent.change(field(), { target: { value: "sabri" } });

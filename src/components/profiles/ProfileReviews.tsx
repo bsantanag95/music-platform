@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { FeedRatingMeter } from "@/components/feed/FeedRatingMeter";
+import { albumHref } from "@/lib/catalog-links";
 import type { ProfileReview } from "@/services/profiles/reviews";
 
 interface ProfileReviewsProps {
@@ -29,7 +30,10 @@ export async function ProfileReviews({ data }: ProfileReviewsProps) {
             key={entry.id}
             className="flex gap-3 rounded-lg border border-ink-border bg-ink-surface p-4 sm:gap-4"
           >
-            <Link href={`/album/${entry.album.id}`} className="group shrink-0">
+            <Link
+              href={albumHref(entry.album.artistName, entry.album.title, entry.album.id)}
+              className="group shrink-0"
+            >
               <CoverThumb
                 cover={entry.album.coverThumbUrl}
                 label=""
@@ -39,7 +43,7 @@ export async function ProfileReviews({ data }: ProfileReviewsProps) {
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <div className="flex flex-wrap items-baseline gap-x-2">
                 <Link
-                  href={`/album/${entry.album.id}`}
+                  href={albumHref(entry.album.artistName, entry.album.title, entry.album.id)}
                   className="truncate font-display text-base text-paper underline decoration-ink-border decoration-1 underline-offset-4 transition-colors hover:text-amber hover:decoration-amber"
                 >
                   {entry.album.title}

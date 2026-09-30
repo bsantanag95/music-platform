@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import type { UserListSummary } from "@/lib/api/schemas";
+import { listHref } from "@/lib/catalog-links";
 import { ListCard } from "./ListCard";
 import { SaveListButton } from "./SaveListButton";
 import { entityTypeKey } from "./lists-shared";
@@ -23,7 +24,7 @@ export function ProfileListCard({
 
   return (
     <ListCard
-      href={`/users/${encodeURIComponent(username)}/lists/${list.id}`}
+      href={listHref(username, list.title, list.id)}
       title={list.title}
       coverThumbs={list.coverThumbs}
       description={list.description}

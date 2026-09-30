@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { albumHref } from "@/lib/catalog-links";
 import { AlbumListPicker, type PickerMembership } from "@/components/album/AlbumListPicker";
 import { BookmarkIcon, HeartIcon, ToggleChip } from "@/components/album/AlbumRelationPanel";
 import { formatStars } from "@/components/album/album-format";
@@ -229,7 +230,7 @@ export function AlbumQuickActions({
             <MenuActions item={item} marks={marks ?? LOADING_MARKS} loading={marks === null} onMarksChange={updateMarks} />
           )}
           {extraActions && <div className="flex flex-col items-start gap-1.5 border-t border-ink-border pt-3">{extraActions}</div>}
-          <Link href={`/album/${item.id}`} className="self-start font-data text-xs text-amber hover:underline">
+          <Link href={albumHref(null, item.title, item.id)} className="self-start font-data text-xs text-amber hover:underline">
             {t("goToAlbum")} →
           </Link>
         </div>

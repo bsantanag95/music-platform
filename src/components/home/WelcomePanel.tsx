@@ -58,7 +58,12 @@ export async function WelcomePanel({ name, username, lastActivity, now = new Dat
 
         {lastActivity ? (
           <Link
-            href={targetHref(lastActivity.target.type, lastActivity.target.id)}
+            href={targetHref(
+              lastActivity.target.type,
+              lastActivity.target.id,
+              lastActivity.target.title,
+              lastActivity.target.artistName ?? null,
+            )}
             className="group flex items-center gap-3 rounded-md border border-ink-border bg-ink p-3 transition-colors hover:border-amber"
           >
             <CoverThumb cover={lastActivity.target.coverThumbUrl} label="" className="size-12" />

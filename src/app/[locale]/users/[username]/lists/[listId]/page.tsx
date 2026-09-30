@@ -1,6 +1,5 @@
 import { notFound, redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
-import { z } from "zod";
 import { resolveSession } from "@/services/auth/sessions";
 import { getProfileByUsername } from "@/services/social/profiles";
 import { getUserListDetail } from "@/services/lists/lists";
@@ -9,6 +8,9 @@ import { countsByListId } from "@/services/journeys/progress";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListDetailHeader } from "@/components/lists/ListDetailHeader";
 import { ListItemsView } from "@/components/lists/ListItemsView";
+import { listSegment } from "@/lib/catalog-links";
+import { resolveCatalogRoute } from "@/lib/catalog-route";
+import { parseCatalogSegment } from "@/lib/slug";
 import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
 
 interface PageProps {
@@ -19,9 +21,11 @@ interface PageProps {
 // modos que el detalle propio, sin controles de gestión. Cierra los enlaces
 // que Descubrir, Guardadas, el feed, los perfiles e Inicio ya apuntaban acá.
 export default async function UserListDetailPage({ params }: PageProps) {
-  const { username, listId } = await params;
+  const { username, listId: segment } = await params;
   const t = await getTranslations("lists");
-  if (!z.uuid().safeParse(listId).success) notFound();
+  const parsed = parseCatalogSegment(segment);
+  if (!parsed) notFound();
+  const listId = parsed.id;
 
   const session = await resolveSession();
   const viewerId = session?.user.id ?? null;
@@ -30,13 +34,14 @@ export default async function UserListDetailPage({ params }: PageProps) {
   try {
     profile = await getProfileByUsername(username, viewerId);
   } catch {
-    await redirectIfRenamed(username, `/lists/${listId}`);
+    await redirectIfRenamed(username, `/lists/${segment}`);
     notFound();
   }
 
   // El dueño gestiona su lista en /me/lists/[listId], no en la vista de lectura.
+  const locale = await getLocale();
   if (profile.relation === "self") {
-    redirect(`/${await getLocale()}/me/lists/${listId}`);
+    redirect(`/${locale}/me/lists/${listId}`);
   }
 
   let list;
@@ -45,6 +50,14 @@ export default async function UserListDetailPage({ params }: PageProps) {
   } catch {
     notFound();
   }
+
+  resolveCatalogRoute({
+    locale,
+    kind: "list",
+    owner: profile.username,
+    segment,
+    canonical: listSegment(list.title, list.id),
+  });
 
   const savedState = viewerId
     ? (await savedStateFor(viewerId, [listId])).get(listId)

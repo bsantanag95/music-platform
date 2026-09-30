@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { albumHref } from "@/lib/catalog-links";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { LazyCoverImage } from "@/components/catalog/LazyCoverImage";
 import { TAG_CLASS } from "@/components/catalog/VersionAttributeTags";
@@ -39,7 +40,7 @@ function DiscRow({ disc, year, isOriginal }: { disc: ContainingAlbum; year: numb
   );
   return (
     <li>
-      <Link href={`/album/${disc.releaseGroupId}`} className="group flex items-center gap-3 py-1.5">
+      <Link href={albumHref(null, disc.title, disc.releaseGroupId)} className="group flex items-center gap-3 py-1.5">
         {cover}
         <span className="min-w-0 flex-1">
           <span className="block font-body text-sm text-paper [overflow-wrap:anywhere] group-hover:text-amber">

@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { artistHref } from "@/lib/catalog-links";
 import type { TrackCreditPerson } from "@/services/catalog/personnel-levels";
 import { messageKey } from "@/components/album/credit-roles";
 
@@ -42,7 +43,7 @@ export function SongwriterNames({
         return (
           <Fragment key={person.artistId}>
             {index > 0 && ", "}
-            <Link href={`/artist/${person.artistId}`} className="text-amber hover:text-amber-hover hover:underline">
+            <Link href={artistHref(person.name, person.artistId)} className="text-amber hover:text-amber-hover hover:underline">
               {person.name}
             </Link>
             {roles.length > 0 && <span className="text-paper-muted"> ({roles.join(", ")})</span>}

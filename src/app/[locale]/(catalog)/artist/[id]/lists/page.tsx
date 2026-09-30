@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { getArtistById } from "@/services/catalog/ingest-artist";
 import { resolveSession } from "@/services/auth/sessions";
 import { listPublicListsContainingItem } from "@/services/lists/discovery";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ItemListsSection } from "@/components/lists/ItemListsSection";
-import { isValidUuid } from "@/lib/validation";
+import { artistHref, artistSegment } from "@/lib/catalog-links";
+import { resolveCatalogRoute } from "@/lib/catalog-route";
+import { parseCatalogSegment } from "@/lib/slug";
 
 interface ArtistListsPageProps {
   params: Promise<{ id: string }>;
@@ -14,8 +16,9 @@ interface ArtistListsPageProps {
 
 export async function generateMetadata({ params }: ArtistListsPageProps): Promise<Metadata> {
   const { id } = await params;
-  if (!isValidUuid(id)) return {};
-  const artist = await getArtistById(id);
+  const parsed = parseCatalogSegment(id);
+  if (!parsed) return {};
+  const artist = await getArtistById(parsed.id);
   if (!artist) return {};
   const t = await getTranslations("lists");
   return { title: `${t("title")} · ${artist.name}` };
@@ -25,13 +28,21 @@ export async function generateMetadata({ params }: ArtistListsPageProps): Promis
 // show-item-in-lists): a la que el panel acotado a 4 resultados en el perfil
 // del artista envía con su enlace "Ver más".
 export default async function ArtistListsPage({ params }: ArtistListsPageProps) {
-  const { id } = await params;
+  const { id: segment } = await params;
   const common = await getTranslations("common");
   const t = await getTranslations("lists");
-  if (!isValidUuid(id)) notFound();
+  const parsed = parseCatalogSegment(segment);
+  if (!parsed) notFound();
 
-  const artist = await getArtistById(id);
+  const artist = await getArtistById(parsed.id);
   if (!artist) notFound();
+  resolveCatalogRoute({
+    locale: await getLocale(),
+    kind: "artist",
+    segment,
+    canonical: artistSegment(artist.name, artist.id),
+    subpath: "/lists",
+  });
 
   const session = await resolveSession();
   const target = { type: "artist" as const, id: artist.id };
@@ -39,7 +50,7 @@ export default async function ArtistListsPage({ params }: ArtistListsPageProps) 
 
   const breadcrumbItems = [
     { label: common("home"), href: "/" },
-    { label: artist.name, href: `/artist/${artist.id}` },
+    { label: artist.name, href: artistHref(artist.name, artist.id) },
     { label: t("title") },
   ];
 

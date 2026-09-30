@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, within } from "@testing-library/react";
 import type { AnchorHTMLAttributes, ReactNode } from "react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
+import { songHref } from "@/lib/catalog-links";
 import catalogEs from "../../../../messages/es/catalog.json";
 import type { ArtistSearchResult, SongGroupResult } from "@/services/catalog/search/types";
 import { ArtistResults } from "./ArtistResults";
@@ -160,7 +161,7 @@ describe("Canciones", () => {
       screen.getByRole("link", {
         name: labels.results.songContext.viewSongAria.replace("{song}", "Kiss of Death"),
       }),
-    ).toHaveAttribute("href", "/song/11111111-1111-4111-8111-111111111111");
+    ).toHaveAttribute("href", songHref("Dokken", "Kiss of Death", "11111111-1111-4111-8111-111111111111"));
     expect(screen.getByRole("link", { name: /Álbum 0/ })).toHaveAttribute("href", "/album/album-0");
     // Cinco visibles y el resto a un clic.
     expect(screen.queryByRole("link", { name: /Álbum 6/ })).not.toBeInTheDocument();

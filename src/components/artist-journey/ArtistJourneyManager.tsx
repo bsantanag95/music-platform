@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { AppImage } from "@/components/ui/AppImage";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
+import { artistHref } from "@/lib/catalog-links";
 import { Button } from "@/components/ui/Button";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import { ApiError } from "@/lib/api/client";
@@ -282,7 +283,7 @@ export function ArtistJourneyManager({
             )}
             <div className="flex min-w-0 flex-col gap-1">
               <Link
-                href={`/artist/${artistId}`}
+                href={artistHref(artistName, artistId)}
                 className="w-fit truncate font-data text-xs uppercase tracking-wider text-paper-muted transition-colors hover:text-paper"
               >
                 {artistName}
@@ -391,6 +392,7 @@ export function ArtistJourneyManager({
           </div>
           <ArtistJourneySelectionView
             albums={selectedAlbums}
+            artistName={artistName}
             categoryLabels={categoryLabels}
             onRemove={toggleAlbum}
             onMarkListened={markListened}

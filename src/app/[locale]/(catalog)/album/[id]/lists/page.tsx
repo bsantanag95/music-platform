@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { getAlbumDetail } from "@/services/catalog/album-detail";
+import { resolvePrimaryArtists, slugArtistName } from "@/services/catalog/primary-artists";
 import { resolveSession } from "@/services/auth/sessions";
 import { listPublicListsContainingItem } from "@/services/lists/discovery";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ItemListsSection } from "@/components/lists/ItemListsSection";
-import { isValidUuid } from "@/lib/validation";
+import { albumHref, albumSegment, artistHref } from "@/lib/catalog-links";
+import { resolveCatalogRoute } from "@/lib/catalog-route";
+import { parseCatalogSegment } from "@/lib/slug";
 
 interface AlbumListsPageProps {
   params: Promise<{ id: string }>;
@@ -14,8 +17,9 @@ interface AlbumListsPageProps {
 
 export async function generateMetadata({ params }: AlbumListsPageProps): Promise<Metadata> {
   const { id } = await params;
-  if (!isValidUuid(id)) return {};
-  const result = await getAlbumDetail(id);
+  const parsed = parseCatalogSegment(id);
+  if (!parsed) return {};
+  const result = await getAlbumDetail(parsed.id);
   if (result.kind !== "ok") return {};
   const t = await getTranslations("lists");
   return { title: `${t("title")} · ${result.detail.releaseGroup.title}` };
@@ -25,23 +29,38 @@ export async function generateMetadata({ params }: AlbumListsPageProps): Promise
 // show-item-in-lists): a la que el panel acotado a 4 resultados en la página
 // del álbum envía con su enlace "Ver más".
 export default async function AlbumListsPage({ params }: AlbumListsPageProps) {
-  const { id } = await params;
+  const { id: segment } = await params;
   const common = await getTranslations("common");
   const t = await getTranslations("lists");
-  if (!isValidUuid(id)) notFound();
+  const parsed = parseCatalogSegment(segment);
+  if (!parsed) notFound();
 
-  const result = await getAlbumDetail(id);
+  const result = await getAlbumDetail(parsed.id);
   if (result.kind === "not_found" || result.kind === "no_editions") notFound();
 
   const { releaseGroup, primaryArtist } = result.detail;
+  const [artistName, locale] = await Promise.all([
+    resolvePrimaryArtists({ releaseGroupIds: [releaseGroup.id] }).then(({ releaseGroups }) =>
+      slugArtistName(releaseGroups.get(releaseGroup.id)),
+    ),
+    getLocale(),
+  ]);
+  resolveCatalogRoute({
+    locale,
+    kind: "album",
+    segment,
+    canonical: albumSegment(artistName, releaseGroup.title, releaseGroup.id),
+    subpath: "/lists",
+  });
+
   const session = await resolveSession();
   const target = { type: "release-group" as const, id: releaseGroup.id };
   const initial = await listPublicListsContainingItem(session?.user.id ?? null, target, 1, 20);
 
   const breadcrumbItems = [
     { label: common("home"), href: "/" },
-    ...(primaryArtist ? [{ label: primaryArtist.name, href: `/artist/${primaryArtist.id}` }] : []),
-    { label: releaseGroup.title, href: `/album/${releaseGroup.id}` },
+    ...(primaryArtist ? [{ label: primaryArtist.name, href: artistHref(primaryArtist.name, primaryArtist.id) }] : []),
+    { label: releaseGroup.title, href: albumHref(artistName, releaseGroup.title, releaseGroup.id) },
     { label: t("title") },
   ];
 

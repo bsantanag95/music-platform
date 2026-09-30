@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterSelect } from "@/components/ui/FilterSelect";
 import { normalizeForSearch } from "@/components/artist-journey/artist-journey-list-shared";
 import { setListTracking } from "@/lib/api/camino";
+import { listHref } from "@/lib/catalog-links";
 import type { TrackedListSummary } from "@/lib/api/schemas";
 
 type TrackedSort = "recent" | "progress";
@@ -95,7 +96,7 @@ export function TrackedCaminosList({ lists: initial }: TrackedCaminosListProps) 
             const href =
               list.kind === "custom_journey"
                 ? `/users/${list.owner.username}/caminos/${list.id}`
-                : `/users/${list.owner.username}/lists/${list.id}`;
+                : listHref(list.owner.username, list.title, list.id);
             return (
               <li key={list.id} className="flex items-center gap-3 px-3 py-2.5">
                 <CoverThumb cover={list.coverThumbUrl} label="" className="size-10 shrink-0 rounded" />

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { songHref } from "@/lib/catalog-links";
 import { getEditionExtraTracks } from "@/lib/api/catalog";
 import { musicBrainzReleaseUrl } from "@/lib/site-links";
 import { VersionAttributeTags } from "@/components/catalog/VersionAttributeTags";
@@ -64,13 +65,13 @@ function VariantTracks({ releaseGroupId, editionId }: { releaseGroupId: string; 
             {multiDisc ? `${track.discNumber}-${track.position}` : track.position}
           </span>
           <span className="font-body text-sm text-paper [overflow-wrap:anywhere]">
-            <Link href={`/song/${track.recordingId}`} className="hover:text-amber">
+            <Link href={songHref(null, track.title, track.recordingId)} className="hover:text-amber">
               {track.title}
             </Link>
             <VersionAttributeTags attributes={track.versionAttributes} />
             {track.versionOf && (
               <span className="block font-data text-xs text-paper-muted">
-                <Link href={`/song/${track.versionOf.recordingId}`} className="hover:text-paper hover:underline">
+                <Link href={songHref(null, track.versionOf.title, track.versionOf.recordingId)} className="hover:text-paper hover:underline">
                   {tTracks("versionOf", { title: track.versionOf.title })}
                 </Link>
               </span>

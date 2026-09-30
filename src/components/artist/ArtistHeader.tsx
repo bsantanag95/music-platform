@@ -2,6 +2,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AppImage } from "@/components/ui/AppImage";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
+import { artistHref } from "@/lib/catalog-links";
 import type { ArtistProfile } from "@/services/catalog/artist-profile-read";
 import { countryName, formatPartialDate, repairSentenceSpacing, streamingName, yearOf } from "./artist-format";
 import type { LineupFact } from "./lineup-fact";
@@ -133,7 +134,7 @@ export function artistFactRows(
           {lineup.people.map((person, index) => (
             <span key={person.id}>
               {index > 0 ? ", " : null}
-              <Link href={`/artist/${person.id}`} className="hover:text-amber hover:underline">
+              <Link href={artistHref(person.name, person.id)} className="hover:text-amber hover:underline">
                 {person.name}
               </Link>
             </span>
@@ -215,7 +216,15 @@ export function WikipediaAttribution({ url }: { url: string }) {
   );
 }
 
-export function ArtistSummary({ artistId, summary }: { artistId: string; summary: ArtistProfile["summary"] }) {
+export function ArtistSummary({
+  artistId,
+  summary,
+  artistName = "",
+}: {
+  artistId: string;
+  summary: ArtistProfile["summary"];
+  artistName?: string;
+}) {
   const t = useTranslations("catalog.artist.summary");
   const locale = useLocale();
   if (!summary) return null;
@@ -231,7 +240,7 @@ export function ArtistSummary({ artistId, summary }: { artistId: string; summary
         {firstParagraph}
       </p>
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <Link href={`/artist/${artistId}/biography`} className="font-data text-xs text-amber hover:underline">
+        <Link href={`${artistHref(artistName, artistId)}/biography`} className="font-data text-xs text-amber hover:underline">
           {t("readMore")} →
         </Link>
         <WikipediaAttribution url={summary.url} />

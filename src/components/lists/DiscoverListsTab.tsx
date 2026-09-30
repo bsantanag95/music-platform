@@ -10,6 +10,7 @@ import { UserHoverCard } from "@/components/profiles/UserHoverCard";
 import { getDiscoverLists } from "@/lib/api/lists";
 import { queryKeys } from "@/lib/query/keys";
 import type { DiscoverListsResponse } from "@/lib/api/schemas";
+import { listHref } from "@/lib/catalog-links";
 import { ListCard } from "./ListCard";
 import { SaveListButton } from "./SaveListButton";
 import { ListsGrid, entityTypeKey } from "./lists-shared";
@@ -45,7 +46,7 @@ export function DiscoverListsTab({ initial }: { initial: DiscoverListsResponse }
         {lists.map((list) => (
           <ListCard
             key={list.id}
-            href={`/users/${encodeURIComponent(list.owner.username)}/lists/${list.id}`}
+            href={listHref(list.owner.username, list.title, list.id)}
             title={list.title}
             coverThumbs={list.coverThumbs}
             description={list.description}

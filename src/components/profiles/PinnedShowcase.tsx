@@ -33,7 +33,12 @@ export async function PinnedShowcase({ pinned }: PinnedShowcaseProps) {
         {pinned.map((item) => (
           <li key={item.id} className="border-t border-ink-border py-4 first:border-t-0 first:pt-0">
             <Link
-              href={targetHref(item.entity.type, item.entity.id)}
+              href={targetHref(
+                item.entity.type,
+                item.entity.id,
+                item.entity.title,
+                item.entity.artistName ?? null,
+              )}
               className="group flex items-start gap-3 sm:gap-4"
             >
               {item.entity.type === "artist" ? (

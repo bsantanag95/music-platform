@@ -1,5 +1,6 @@
 import { useFormatter, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { albumHref } from "@/lib/catalog-links";
 import { ContentActions } from "@/components/social/ContentActions";
 import type { ReviewDetail } from "@/services/reviews";
 
@@ -26,7 +27,7 @@ export function ReviewArticle({ detail, viewerId, canModerate, showTitle = true 
   return (
     <article className="flex flex-col gap-4">
       <p className="font-data text-xs uppercase tracking-wider text-paper-muted">
-        <Link href={`/album/${album.id}`} className="hover:text-paper hover:underline">
+        <Link href={albumHref(null, album.title, album.id)} className="hover:text-paper hover:underline">
           {t("reviewOf", { album: album.title })}
         </Link>
       </p>
