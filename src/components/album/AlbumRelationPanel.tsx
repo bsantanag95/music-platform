@@ -10,9 +10,10 @@ import { REVIEW_COMPOSER_ANCHOR, revealReviewComposer } from "@/components/album
 import { AlbumListPicker, type PickerMembership } from "@/components/album/AlbumListPicker";
 import { RatingDetailDialog } from "@/components/album/RatingDetailDialog";
 import { StarRatingInput } from "@/components/social/StarRatingInput";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { createListenEntry } from "@/lib/api/diary";
 import { toggleFavorite } from "@/lib/api/favorites";
-import { getRatings, saveRating } from "@/lib/api/social";
+import { deleteRating, getRatings, saveRating } from "@/lib/api/social";
 import { toggleWantToListen } from "@/lib/api/want-to-listen";
 import { isScoreCoherent } from "@/lib/rating-range";
 import type { CollectionEntry, ListenEntry, RatingsResponse, WantedEntry } from "@/lib/api/schemas";
@@ -97,6 +98,7 @@ function AuthenticatedPanel({
   const [ratingBusy, setRatingBusy] = useState(false);
   const [ratingNotice, setRatingNotice] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [clearOpen, setClearOpen] = useState(false);
   const [listens, setListens] = useState(state.listens);
   const [loggedEntry, setLoggedEntry] = useState<ListenEntry | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -166,6 +168,29 @@ function AuthenticatedPanel({
     }
   }
 
+  // Borra la valoración propia (estrellas y puntuación detallada) como si nunca se hubiera
+  // hecho. La reseña, si existe, se conserva: el rating es un objeto con lifecycle propio.
+  function clearRating() {
+    setClearOpen(false);
+    const seq = ++ratingSeq.current;
+    setRatingBusy(true);
+    setRatingNotice(null);
+    setError(false);
+    void (async () => {
+      try {
+        await deleteRating("release-group", releaseGroupId);
+        const updated = await getRatings("release-group", releaseGroupId);
+        if (seq !== ratingSeq.current) return;
+        applyRatings(updated);
+      } catch {
+        if (seq !== ratingSeq.current) return;
+        setError(true);
+      } finally {
+        if (seq === ratingSeq.current) setRatingBusy(false);
+      }
+    })();
+  }
+
   const logListen = () =>
     run("listen", async () => {
       const entry = await createListenEntry(target);
@@ -224,6 +249,16 @@ function AuthenticatedPanel({
           >
             {detailedScore !== null ? t("detailScale", { score: detailedScore }) : "+"}
           </button>
+          {own && (
+            <button
+              type="button"
+              disabled={ratingBusy}
+              onClick={() => setClearOpen(true)}
+              className="font-data text-xs text-danger underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {t("clearRating")}
+            </button>
+          )}
         </Row>
         {ratingNotice && (
           <p role="status" className="font-data text-xs text-paper-muted">
@@ -242,6 +277,16 @@ function AuthenticatedPanel({
             }}
           />
         )}
+        <ConfirmDialog
+          open={clearOpen}
+          title={t("clearRatingTitle")}
+          message={t("clearRatingMessage")}
+          confirmLabel={t("clearRatingConfirm")}
+          cancelLabel={t("detail.cancel")}
+          danger
+          onConfirm={clearRating}
+          onCancel={() => setClearOpen(false)}
+        />
       </div>
 
       <Row label={t("review")}>

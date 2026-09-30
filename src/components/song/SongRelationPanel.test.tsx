@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   toggleFavorite: vi.fn(),
   saveRating: vi.fn(),
   getRatings: vi.fn(),
+  deleteRating: vi.fn(),
   refresh: vi.fn(),
 }));
 
@@ -28,7 +29,7 @@ vi.mock("@/lib/api/want-to-listen", () => ({ toggleWantToListen: vi.fn() }));
 vi.mock("@/lib/api/social", () => ({
   saveRating: mocks.saveRating,
   getRatings: mocks.getRatings,
-  deleteRating: vi.fn(),
+  deleteRating: mocks.deleteRating,
   highlightRating: vi.fn(),
   unhighlightRating: vi.fn(),
 }));
@@ -139,6 +140,20 @@ describe("SongRelationPanel", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent(relation.saveError);
     expect(screen.getByRole("radio", { name: "2,0 estrellas" })).toBeChecked();
+  });
+
+  it("quita la nota de la canción de forma dinámica tras confirmar", async () => {
+    mocks.deleteRating.mockResolvedValue(null);
+    mocks.getRatings.mockResolvedValue(ratings(null));
+    renderWithIntl(<SongRelationPanel recordingId={REC} state={makeState({ ratings: ratings(4.5, 88) })} />);
+
+    fireEvent.click(screen.getByRole("button", { name: relation.clearRating }));
+    fireEvent.click(screen.getByRole("button", { name: relation.clearRatingConfirm }));
+
+    await waitFor(() => expect(mocks.deleteRating).toHaveBeenCalledWith("recording", REC));
+    await waitFor(() => expect(screen.queryByRole("button", { name: relation.clearRating })).not.toBeInTheDocument());
+    expect(screen.getByRole("radio", { name: "4,5 estrellas" })).not.toBeChecked();
+    expect(mocks.refresh).toHaveBeenCalled();
   });
 
   it("registrar una escucha abre el formulario del diario (donde se elige la reacción)", async () => {

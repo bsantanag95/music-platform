@@ -9,9 +9,10 @@ import { HeartIcon } from "@/components/album/AlbumRelationPanel";
 import { RatingDetailDialog } from "@/components/album/RatingDetailDialog";
 import { formatStars } from "@/components/album/album-format";
 import { StarRatingInput } from "@/components/social/StarRatingInput";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { createListenEntry } from "@/lib/api/diary";
 import { toggleFavorite } from "@/lib/api/favorites";
-import { getRatings, saveRating } from "@/lib/api/social";
+import { deleteRating, getRatings, saveRating } from "@/lib/api/social";
 import { isScoreCoherent } from "@/lib/rating-range";
 import type { ListenEntry, ListenReaction, RatingsResponse } from "@/lib/api/schemas";
 
@@ -81,6 +82,7 @@ function AuthenticatedPanel({ recordingId, state }: { recordingId: string; state
   const [ratingBusy, setRatingBusy] = useState(false);
   const [ratingNotice, setRatingNotice] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [clearOpen, setClearOpen] = useState(false);
   const [listens, setListens] = useState(state.listens);
   const [loggedEntry, setLoggedEntry] = useState<ListenEntry | null>(null);
   const [favorited, setFavorited] = useState(state.favorited);
@@ -138,6 +140,28 @@ function AuthenticatedPanel({ recordingId, state }: { recordingId: string; state
     }
   }
 
+  // Borra la valoración propia (estrellas y puntuación detallada) como si nunca se hubiera hecho.
+  function clearRating() {
+    setClearOpen(false);
+    const seq = ++ratingSeq.current;
+    setRatingBusy(true);
+    setRatingNotice(null);
+    setError(false);
+    void (async () => {
+      try {
+        await deleteRating("recording", recordingId);
+        const updated = await getRatings("recording", recordingId);
+        if (seq !== ratingSeq.current) return;
+        applyRatings(updated);
+      } catch {
+        if (seq !== ratingSeq.current) return;
+        setError(true);
+      } finally {
+        if (seq === ratingSeq.current) setRatingBusy(false);
+      }
+    })();
+  }
+
   // Registrar abre el formulario del diario en seguida: ahí se elige la reacción.
   const logListen = () =>
     run("listen", async () => {
@@ -193,6 +217,16 @@ function AuthenticatedPanel({ recordingId, state }: { recordingId: string; state
           >
             {detailedScore !== null ? tAlbum("detailScale", { score: detailedScore }) : "+"}
           </button>
+          {own && (
+            <button
+              type="button"
+              disabled={ratingBusy}
+              onClick={() => setClearOpen(true)}
+              className="font-data text-xs text-danger underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {tAlbum("clearRating")}
+            </button>
+          )}
         </Row>
         {ratingNotice && (
           <p role="status" className="font-data text-xs text-paper-muted">
@@ -211,6 +245,16 @@ function AuthenticatedPanel({ recordingId, state }: { recordingId: string; state
             }}
           />
         )}
+        <ConfirmDialog
+          open={clearOpen}
+          title={tAlbum("clearRatingTitle")}
+          message={tAlbum("clearRatingMessage")}
+          confirmLabel={tAlbum("clearRatingConfirm")}
+          cancelLabel={tAlbum("detail.cancel")}
+          danger
+          onConfirm={clearRating}
+          onCancel={() => setClearOpen(false)}
+        />
       </div>
 
       <div className={`flex flex-col gap-2 pt-3 ${divider}`}>

@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   toggleWantToListen: vi.fn(),
   saveRating: vi.fn(),
   getRatings: vi.fn(),
+  deleteRating: vi.fn(),
   refresh: vi.fn(),
   searchParams: new URLSearchParams(),
 }));
@@ -31,7 +32,7 @@ vi.mock("@/lib/api/want-to-listen", () => ({ toggleWantToListen: mocks.toggleWan
 vi.mock("@/lib/api/social", () => ({
   saveRating: mocks.saveRating,
   getRatings: mocks.getRatings,
-  deleteRating: vi.fn(),
+  deleteRating: mocks.deleteRating,
   highlightRating: vi.fn(),
   unhighlightRating: vi.fn(),
 }));
@@ -170,6 +171,20 @@ describe("AlbumRelationPanel", () => {
 
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(relation.saveError));
     expect(screen.getByRole("radio", { name: "2,0 estrellas" })).toBeChecked();
+  });
+
+  it("quita la nota de forma dinámica tras confirmar", async () => {
+    mocks.deleteRating.mockResolvedValue(null);
+    mocks.getRatings.mockResolvedValue(ratings(null));
+    renderWithIntl(<AlbumRelationPanel releaseGroupId={RG} state={makeState({ ratings: ratings(4.5, 91) })} />);
+
+    fireEvent.click(screen.getByRole("button", { name: relation.clearRating }));
+    fireEvent.click(screen.getByRole("button", { name: relation.clearRatingConfirm }));
+
+    await waitFor(() => expect(mocks.deleteRating).toHaveBeenCalledWith("release-group", RG));
+    await waitFor(() => expect(screen.queryByRole("button", { name: relation.clearRating })).not.toBeInTheDocument());
+    expect(screen.getByRole("radio", { name: "4,5 estrellas" })).not.toBeChecked();
+    expect(mocks.refresh).toHaveBeenCalled();
   });
 
   it("registrar una escucha suma al conteo, quita Pendiente y ofrece agregar detalles sin abrir el formulario", async () => {
