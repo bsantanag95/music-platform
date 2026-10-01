@@ -90,6 +90,22 @@ Cambio `redesign-album-page` (2026-09):
 - **Reseñas y comentarios no se mezclan**: las reseñas viven en su pestaña, los comentarios
   al pie de la página, fuera de las pestañas.
 
+### La reseña y la valoración (cambio `fix-review-rating-sync`)
+
+- **La reseña no guarda estrellas.** Muestra la valoración **vigente** de su autor: si la
+  cambia, la reseña muestra la nueva sin tocar el texto; si la borra, la reseña se conserva
+  sin estrellas. Una copia en la reseña crearía dos fuentes de verdad (3★ en la reseña, 5★ en
+  el feed y el perfil).
+- **El rating es requisito para crear una reseña, no para editarla.** Un autor que borró su
+  valoración puede seguir editando el título y el cuerpo; para crear una reseña nueva sin
+  valoración hace falta elegir estrellas (`REVIEW_REQUIRES_RATING` si no llegan).
+- **Compositor y panel escriben el mismo rating.** El compositor solo envía `stars` mientras
+  muestra el selector (no hay reseña ni valoración vigente); si el usuario valora en el panel
+  "Tu relación" después de elegir estrellas en el compositor, publicar la reseña no pisa esa
+  valoración ni su puntaje detallado. A su vez, el panel adopta la valoración que llega del
+  servidor cuando cambia por una acción ajena (publicar una reseña con estrellas), salvo que
+  haya una valoración propia guardándose.
+
 ## Comentarios
 
 Texto libre, con un máximo implementado de 5000 caracteres y sin mínimo. A diferencia de la

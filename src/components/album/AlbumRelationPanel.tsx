@@ -96,9 +96,27 @@ function AuthenticatedPanel({
   const [own, setOwn] = useState(state.ratings.own);
   const [stars, setStars] = useState(state.ratings.own?.stars ?? null);
   const [ratingBusy, setRatingBusy] = useState(false);
+  // `router.refresh()` entrega `state` nuevo pero no reinicia el estado local: una valoración
+  // creada fuera del panel (publicar una reseña con estrellas) no se vería hasta recargar.
+  // Se compara lo que llega del servidor con lo último visto y, si cambió y no hay una
+  // valoración propia en vuelo, se adopta (openspec: fix-review-rating-sync, D3). Sin `key`
+  // (remontaría el panel y perdería avisos y diálogos) ni `useEffect` (un render con el valor viejo).
+  const serverOwn = state.ratings.own;
+  const serverRatingKey = `${serverOwn?.id ?? ""}|${serverOwn?.stars ?? ""}|${serverOwn?.detailedScore ?? ""}`;
+  const [seenRatingKey, setSeenRatingKey] = useState(serverRatingKey);
+  if (serverRatingKey !== seenRatingKey) {
+    setSeenRatingKey(serverRatingKey);
+    if (!ratingBusy) {
+      setOwn(serverOwn);
+      setStars(serverOwn?.stars ?? null);
+    }
+  }
   const [ratingNotice, setRatingNotice] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
+  // Escuchas, favorito, Pendiente, colección y listas solo los cambia este panel, así que su
+  // estado local no necesita resincronizarse con el servidor (a diferencia de la valoración,
+  // que también escribe el compositor de reseñas). `state.ownReviewId` se lee directo de la prop.
   const [listens, setListens] = useState(state.listens);
   const [loggedEntry, setLoggedEntry] = useState<ListenEntry | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);

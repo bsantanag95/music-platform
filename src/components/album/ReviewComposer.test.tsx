@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { renderWithIntl } from "@/test/i18n-test-utils";
+import { renderWithIntl, withIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
 import { ReviewComposer, revealReviewComposer } from "./ReviewComposer";
 import type { Review } from "@/lib/api/schemas";
@@ -138,5 +138,38 @@ describe("ReviewComposer", () => {
 
     expect(mocks.updateReview).toHaveBeenCalledWith(ownReview.id, { body: "Texto corregido", title: "Mi título" });
     expect(await screen.findByText("Texto corregido")).toBeInTheDocument();
+  });
+
+  // openspec: fix-review-rating-sync (D2). `router.refresh()` entrega `ownStars` nuevo pero el
+  // estado local `stars` sigue vivo: no debe enviarse cuando ya hay una valoración vigente.
+  it("no pisa la valoración creada en el panel después de elegir estrellas aquí", async () => {
+    const user = userEvent.setup();
+    mocks.saveReview.mockResolvedValue({ ...ownReview, body: "Un texto nuevo" });
+    const { rerender } = renderWithIntl(
+      <ReviewComposer releaseGroupId={RG} authenticated ownStars={0} ownReview={null} />,
+    );
+    await user.type(screen.getByLabelText(social.reviewBodyLabel), "Un texto nuevo");
+    await user.click(screen.getByRole("radio", { name: "3,0 estrellas" }));
+
+    // El usuario valora 5★ en el panel y la página se refresca con la valoración vigente.
+    rerender(withIntl(<ReviewComposer releaseGroupId={RG} authenticated ownStars={5} ownReview={null} />));
+    expect(screen.queryByRole("radio")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: social.reviewSubmit }));
+
+    expect(mocks.saveReview).toHaveBeenCalledWith("release-group", RG, { body: "Un texto nuevo", title: null });
+  });
+
+  it("si la valoración se borra, el selector reaparece y publicar exige elegir estrellas", async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderWithIntl(
+      <ReviewComposer releaseGroupId={RG} authenticated ownStars={4} ownReview={null} />,
+    );
+    await user.type(screen.getByLabelText(social.reviewBodyLabel), "Un texto nuevo");
+    expect(screen.queryByRole("radio")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: social.reviewSubmit })).toBeEnabled();
+
+    rerender(withIntl(<ReviewComposer releaseGroupId={RG} authenticated ownStars={0} ownReview={null} />));
+    expect(screen.getAllByRole("radio")).toHaveLength(10);
+    expect(screen.getByRole("button", { name: social.reviewSubmit })).toBeDisabled();
   });
 });
