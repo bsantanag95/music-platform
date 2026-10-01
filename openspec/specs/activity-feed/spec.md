@@ -279,8 +279,11 @@ glifo mono de 14px junto al verbo de la línea de metadato, reforzando el tipo d
 ser nunca la única señal — el texto del verbo SHALL acompañar siempre al glifo, mismo
 criterio de accesibilidad que los íconos de reacción de escucha. "Seguir a un usuario" y
 "seguir a un artista" SHALL compartir el mismo glifo (misma acción, "empezar a seguir",
-distinta solo en el objetivo y el verbo). El rating SHALL quedar exento: su medidor de
-valoración ya cumple ese rol y no SHALL sumar un glifo adicional. Una reseña SHALL
+distinta solo en el objetivo y el verbo). El rating SHALL quedar exento: sus estrellas
+(ver `rating-display`) ya cumplen ese rol y no SHALL sumar un glifo adicional. El rating
+SHALL mostrarse con la fila de cinco estrellas de `rating-display`, acompañada del número
+(`4.5`, o `4.5 · 87` con el puntaje detallado); NO SHALL usarse un medidor de barras ni otro
+símbolo propio del feed para la nota. Una reseña SHALL
 distinguirse además con su propio tratamiento: un rótulo "Reseña" en el segundo color de
 acento del sistema, su título (cuando existe) mostrado como titular en vez de como metadato
 secundario, y un borde izquierdo propio en ese color — el mismo tratamiento editorial
@@ -493,7 +496,7 @@ objetivo musical SHALL seguir disponible.
 #### Scenario: Cada tipo de entrada muestra su glifo junto al verbo
 - **WHEN** el feed incluye entradas de distinto `kind`
 - **THEN** cada una muestra un glifo mono reconocible junto al verbo de su línea de
-  metadato, salvo el rating, que no lo necesita porque ya tiene su propio medidor
+  metadato, salvo el rating, que no lo necesita porque ya se reconoce por sus estrellas
 
 #### Scenario: El rastro reciente no muestra el nombre del propio usuario
 - **WHEN** un usuario con sesión abre `/[locale]` y su bloque de rastro reciente tiene

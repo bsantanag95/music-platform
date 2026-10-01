@@ -30,4 +30,4 @@
 - [x] 5.1 `docs/05-features/ratings-and-reviews.md`: sección de la regla de representación (estrellas, fila y compacta, un solo control)
 - [x] 5.2 `docs/05-features/activity-feed.md` (sección "Rating — medidor tipo VU" y la mención de la exención del glifo), `user-profile.md` y `lists-and-favorites.md`: sustituir las referencias a `FeedRatingMeter` por la fila de estrellas; revisar `DESIGN.md` por si describe el medidor como lenguaje del rating
 - [x] 5.3 `pnpm run typecheck && pnpm run lint && pnpm test && pnpm run build`
-- [ ] 5.4 Verificar en el navegador (escritorio y móvil): feed, perfil (destacadas y reseñas), índice y artículo de reseña, y el compositor con teclado y mitades de estrella
+- [x] 5.4 Verificar en el navegador (escritorio y móvil): feed, perfil (destacadas y reseñas), índice y artículo de reseña, y el compositor con teclado y mitades de estrella
