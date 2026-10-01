@@ -150,7 +150,7 @@ describe("AlbumRelationPanel", () => {
     renderWithIntl(<AlbumRelationPanel releaseGroupId={RG} state={makeState()} />);
 
     fireEvent.click(screen.getByRole("button", { name: relation.detailAdd }));
-    fireEvent.change(screen.getByRole("spinbutton"), { target: { value: "86" } });
+    fireEvent.change(screen.getByRole("slider"), { target: { value: "86" } });
     fireEvent.click(screen.getByRole("button", { name: relation.detail.save }));
 
     await waitFor(() => expect(mocks.saveRating).toHaveBeenCalledWith("release-group", RG, { detailedScore: 86 }));
