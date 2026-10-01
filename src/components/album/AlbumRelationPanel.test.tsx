@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { renderWithIntl } from "@/test/i18n-test-utils";
+import { renderWithIntl, withIntl } from "@/test/i18n-test-utils";
 import { albumHref } from "@/lib/catalog-links";
 import catalogEs from "../../../messages/es/catalog.json";
 import { AlbumRelationPanel, type AlbumRelationState } from "./AlbumRelationPanel";
@@ -241,5 +241,57 @@ describe("AlbumRelationPanel", () => {
     mocks.searchParams = new URLSearchParams("collection=have");
     renderWithIntl(<AlbumRelationPanel releaseGroupId={RG} state={makeState()} />);
     expect(screen.getByText("gestión de colección")).toBeInTheDocument();
+  });
+
+  // openspec: fix-review-rating-sync (D3). Publicar una reseña con estrellas crea la valoración
+  // fuera del panel; `router.refresh()` entrega `state` nuevo pero el estado local no se reinicia.
+  describe("valoración creada fuera del panel", () => {
+    const panel = (state: AlbumRelationState) => <AlbumRelationPanel releaseGroupId={RG} state={state} />;
+
+    it("al llegar una valoración nueva del servidor, el panel la muestra sin recargar", () => {
+      const { rerender } = renderWithIntl(panel(makeState()));
+      expect(screen.queryByRole("radio", { checked: true })).not.toBeInTheDocument();
+      expect(screen.queryByText(relation.reviewWritten)).not.toBeInTheDocument();
+
+      rerender(withIntl(panel(makeState({ ratings: ratings(4), ownReviewId: "review-1" }))));
+
+      expect(screen.getByRole("radio", { name: "4,0 estrellas" })).toBeChecked();
+      expect(screen.getByText(relation.reviewWritten)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: relation.detailAdd })).toBeEnabled();
+    });
+
+    it("con una valoración propia en vuelo, un valor viejo del servidor no pisa la elección", async () => {
+      mocks.saveRating.mockReturnValue(new Promise(() => {}));
+      const { rerender } = renderWithIntl(panel(makeState({ ratings: ratings(3) })));
+      fireEvent.click(screen.getByRole("radio", { name: "3,5 estrellas" }));
+      await waitFor(() => expect(mocks.saveRating).toHaveBeenCalled());
+
+      rerender(withIntl(panel(makeState({ ratings: ratings(2) }))));
+
+      expect(screen.getByRole("radio", { name: "3,5 estrellas" })).toBeChecked();
+    });
+
+    it("el aviso de puntaje descartado sobrevive al refresco con el valor guardado", async () => {
+      mocks.saveRating.mockResolvedValue({});
+      mocks.getRatings.mockResolvedValue(ratings(3));
+      const { rerender } = renderWithIntl(panel(makeState({ ratings: ratings(5, 95) })));
+      fireEvent.click(screen.getByRole("radio", { name: "3,0 estrellas" }));
+      expect(await screen.findByRole("status")).toHaveTextContent("Se quitó tu puntuación 95");
+
+      rerender(withIntl(panel(makeState({ ratings: ratings(3) }))));
+
+      expect(screen.getByRole("status")).toHaveTextContent("Se quitó tu puntuación 95");
+      expect(screen.getByRole("radio", { name: "3,0 estrellas" })).toBeChecked();
+    });
+
+    it("un diálogo abierto no se cierra al recibir la valoración del servidor", () => {
+      const { rerender } = renderWithIntl(panel(makeState({ ratings: ratings(4, 35) })));
+      fireEvent.click(screen.getByRole("button", { name: /Puntuación detallada 35/ }));
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+      rerender(withIntl(panel(makeState({ ratings: ratings(4, 36) }))));
+
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
   });
 });

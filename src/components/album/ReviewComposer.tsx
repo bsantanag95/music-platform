@@ -83,7 +83,12 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
     bodyRef.current?.focus({ preventScroll: true });
   }, [revealRequest]);
 
-  const needsStars = !review && ownStars === 0 && !stars;
+  // El selector solo existe mientras no hay reseña ni valoración vigente. Es la misma condición
+  // para pintarlo, exigirlo y enviarlo: `ownStars` cambia cuando el usuario valora en el panel
+  // (`router.refresh`), pero el `stars` local sigue vivo y no debe pisar esa valoración
+  // (openspec: fix-review-rating-sync, D2).
+  const showStarPicker = !review && ownStars === 0;
+  const needsStars = showStarPicker && !stars;
 
   if (!authenticated) {
     return (
@@ -106,7 +111,7 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
         : await saveReview("release-group", releaseGroupId, {
             body,
             title: title.trim() || null,
-            ...(stars ? { stars } : {}),
+            ...(showStarPicker && stars ? { stars } : {}),
           });
       setReview(saved);
       setEditing(false);
@@ -169,7 +174,7 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="flex flex-col gap-3" aria-label={t("reviewFormLabel")}>
-          {!review && ownStars === 0 && (
+          {showStarPicker && (
             <div className="flex flex-col gap-1">
               <StarRatingInput
                 value={stars || null}

@@ -62,13 +62,18 @@ const messagesByLocale = {
   },
 };
 
+/** Envuelve `ui` con el proveedor de i18n; sirve también para `rerender` (que no conserva el de `renderWithIntl`). */
+export function withIntl(ui: ReactNode, locale: "es" | "en" = "es"): ReactNode {
+  return (
+    <NextIntlClientProvider locale={locale} messages={messagesByLocale[locale]}>
+      {ui}
+    </NextIntlClientProvider>
+  );
+}
+
 export function renderWithIntl(
   ui: ReactNode,
   locale: "es" | "en" = "es",
 ): RenderResult {
-  return render(
-    <NextIntlClientProvider locale={locale} messages={messagesByLocale[locale]}>
-      {ui}
-    </NextIntlClientProvider>,
-  );
+  return render(withIntl(ui, locale));
 }
