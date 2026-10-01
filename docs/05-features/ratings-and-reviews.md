@@ -38,10 +38,14 @@ interfaz.
 
 - **Entrada en cualquier orden** (cambio `define-detailed-score`). Se puede puntuar primero
   con el número: las estrellas se derivan (`⌈puntaje / 10⌉ / 2`, p. ej. 86 → 4,5★). El
-  diálogo de puntuación del panel "Tu relación" (álbum y canción) ya no exige estrellas
-  previas ni limita el campo a su banda: acepta todo el 1–100, muestra en vivo la
-  equivalencia (`86 → 4,5★`) y, si el valor cambiaría las estrellas vigentes, lo avisa antes
-  de guardar. La API de valoración acepta `{ detailedScore }` solo (compatible hacia atrás
+  diálogo de puntuación del panel "Tu relación" (álbum y canción) no exige estrellas previas
+  y usa un **deslizador** (cambio `refine-detailed-score-dialog`): con estrellas se limita a
+  su tramo (4★ → 71–80) y guardar no las cambia (las estrellas se cambian con las
+  estrellas); sin estrellas va de 1 a 100 y una fila de estrellas se llena en vivo con las
+  que corresponden. Muestra el valor (`86/100`, o `—/100` antes de elegir) con los extremos
+  del rango, botones `−`/`+` de a 1, teclado (flechas ±1, Re Pág/Av Pág ±10), y "Guardar" se
+  habilita solo al cambiar el valor. Un botón `?` abre una ayuda breve con la tabla de
+  tramos y el de las estrellas vigentes resaltado. La API de valoración acepta `{ detailedScore }` solo (compatible hacia atrás
   con `{ stars }` y `{ stars, detailedScore }`); sin ninguno responde `400`.
 - **Coherencia.** `{ stars, detailedScore }` incoherente → `400 INVALID_RATING`; el puntaje
   fuera de 1–100 o no entero → `400 VALIDATION_ERROR`. La base y el servidor siguen siendo
@@ -105,8 +109,8 @@ Cambio `redesign-album-page` (2026-09):
   media de la comunidad vive en el bloque de comunidad (con umbral mínimo de 5 valoraciones
   para media e histograma). Desde `rework-album-relation-panel` las estrellas se eligen en
   línea (un clic guarda). Desde `define-detailed-score` el puntaje detallado se afina en un
-  diálogo con o sin estrellas previas, que acepta 1–100 y muestra la equivalencia en vivo
-  (derivando las estrellas si se puntúa primero con el número); cambiar las estrellas descarta
+  diálogo con deslizador, con o sin estrellas previas (ver "Entrada en cualquier orden");
+  cambiar las estrellas descarta
   el puntaje detallado y lo avisa, en lugar de chocar con el `CHECK` de `rating`.
 - La pestaña **Reseñas** (`/album/{id}/reviews`) muestra un **índice** compacto: título (o,
   sin título, un extracto del inicio del cuerpo), estrellas vigentes del autor, autor y
