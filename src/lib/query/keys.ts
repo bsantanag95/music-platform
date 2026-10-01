@@ -1,6 +1,7 @@
 import type { DiaryFiltersParams, FeedFiltersParams } from "@/lib/api/diary";
 import type { DiscoverListFiltersParams, ListFiltersParams } from "@/lib/api/lists";
 import type { FavoritesFiltersParams } from "@/lib/api/favorites";
+import type { MyRatingsFiltersParams } from "@/lib/api/ratings";
 import type { CollectionQuery } from "@/lib/api/collection";
 import type { WantedQuery } from "@/lib/api/wanted";
 import type { ListTarget } from "@/lib/api/schemas";
@@ -36,6 +37,7 @@ export const queryKeys = {
   activityRecent: () => ["activity", "recent"] as const,
   activityOwn: () => ["activity", "own"] as const,
   myFavorites: (filters: FavoritesFiltersParams) => ["favorites", "mine", filters] as const,
+  myRatings: (filters: MyRatingsFiltersParams) => ["ratings", "mine", filters] as const,
   myCollection: (filters: Omit<CollectionQuery, "page" | "pageSize">) =>
     ["collection", "mine", filters] as const,
   myWanted: (filters: Omit<WantedQuery, "page" | "pageSize">) =>

@@ -24,6 +24,8 @@ import favoritesEs from "../../messages/es/favorites.json";
 import favoritesEn from "../../messages/en/favorites.json";
 import wantToListenEs from "../../messages/es/wantToListen.json";
 import wantToListenEn from "../../messages/en/wantToListen.json";
+import ratingsEs from "../../messages/es/ratings.json";
+import ratingsEn from "../../messages/en/ratings.json";
 import artistJourneyEs from "../../messages/es/artistJourney.json";
 import artistJourneyEn from "../../messages/en/artistJourney.json";
 import caminoEs from "../../messages/es/camino.json";
@@ -42,6 +44,7 @@ const messagesByLocale = {
     lists: listsEs,
     favorites: favoritesEs,
     wantToListen: wantToListenEs,
+    ratings: ratingsEs,
     artistJourney: artistJourneyEs,
     camino: caminoEs,
   },
@@ -57,6 +60,7 @@ const messagesByLocale = {
     lists: listsEn,
     favorites: favoritesEn,
     wantToListen: wantToListenEn,
+    ratings: ratingsEn,
     artistJourney: artistJourneyEn,
     camino: caminoEn,
   },

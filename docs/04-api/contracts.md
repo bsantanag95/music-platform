@@ -1168,6 +1168,25 @@ Lista paginada de la lista propia, orden cronológico descendente.
 **200 OK:** `{ items: [{ id, targetType, createdAt, target: { id, title, coverThumbUrl } }], page, pageSize, hasNext }`.
 **401** con `AUTH_REQUIRED` sin sesión.
 
+## Mis valoraciones (cambio `add-my-ratings-library`)
+
+Biblioteca propia de valoraciones de álbumes y canciones. Solo del dueño: el endpoint toma el
+`userId` de la sesión y no acepta ningún parámetro de usuario. No existe ruta pública equivalente.
+
+### `GET /api/me/ratings?page=&pageSize=&sort=&stars=&type=&year=&decade=`
+
+Lista paginada de las valoraciones propias (álbumes y canciones; las de artista se excluyen).
+Parámetros opcionales combinables:
+- `sort`: `best` (default) | `worst` | `recent` | `title`.
+- `stars`: valor de ½ a 5 en pasos de ½.
+- `type`: `release-group` | `recording`.
+- `year`: entero.
+- `decade`: entero múltiplo de 10. Año y década son excluyentes; si llegan ambos, el año manda.
+
+**200 OK:** `{ items: [{ id, targetType, stars, detailedScore, updatedAt, target: { id, title, coverThumbUrl, artistName, artistId, year } }], page, pageSize, hasNext, total, facets: { years: number[] } }`.
+`facets.years` lista solo los años con valoraciones, ordenados descendente. **400** con
+`VALIDATION_ERROR` si un parámetro es inválido. **401** con `AUTH_REQUIRED` sin sesión.
+
 ## Marcas de un disco (cambio `extend-album-quick-actions`)
 
 ### `GET /api/me/release-groups/[id]/marks`

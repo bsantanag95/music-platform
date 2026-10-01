@@ -56,6 +56,14 @@ describe("OwnerProfileBar", () => {
     );
   });
 
+  it("'Mis valoraciones' lleva a /me/ratings", () => {
+    renderBar();
+    expect(screen.getByRole("link", { name: "Mis valoraciones" })).toHaveAttribute(
+      "href",
+      "/me/ratings",
+    );
+  });
+
   it("el interruptor empieza desactivado y muestra los lápices al activarlo", async () => {
     const user = userEvent.setup();
     renderBar();
@@ -72,6 +80,7 @@ describe("OwnerProfileBar", () => {
   it("el interruptor se activa con teclado", async () => {
     const user = userEvent.setup();
     renderBar();
+    await user.tab();
     await user.tab();
     await user.tab();
     await user.tab();
