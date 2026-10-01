@@ -20,4 +20,4 @@
 
 - [x] 4.1 `pnpm run typecheck && pnpm run lint && pnpm test && pnpm run build` (copiar `.env` al worktree antes del `build`)
 - [x] 4.2 En el navegador, con un álbum sin valorar: (a) elegir 3★ en el compositor, valorar 5★ con puntaje detallado en el panel y publicar la reseña: la valoración y el puntaje deben seguir intactos; (b) con otro álbum sin valorar, publicar una reseña con 4★ sin recargar: el panel debe mostrar 4★; (c) borrar la valoración desde el panel: el selector del compositor reaparece
-- [ ] 4.3 Limpiar los datos de prueba creados en la BD de desarrollo
+- [x] 4.3 Limpiar los datos de prueba creados en la BD de desarrollo
