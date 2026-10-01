@@ -86,7 +86,7 @@ describe("AlbumRelationPanel", () => {
     renderWithIntl(<AlbumRelationPanel releaseGroupId={RG} state={makeState()} />);
     expect(screen.getByText(relation.rating)).toBeInTheDocument();
     expect(screen.getAllByRole("radio")).toHaveLength(10);
-    expect(screen.getByRole("button", { name: relation.detailNeedsStars })).toBeDisabled();
+    expect(screen.getByRole("button", { name: relation.detailAdd })).toBeEnabled();
     expect(screen.getByRole("link", { name: relation.writeReview })).toBeInTheDocument();
     expect(screen.getByText(relation.listensNone)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: relation.logListen })).toBeInTheDocument();
@@ -142,6 +142,20 @@ describe("AlbumRelationPanel", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: relation.detailAdd })).toBeEnabled());
     expect(screen.getByRole("radio", { name: "3,5 estrellas" })).toBeChecked();
     expect(mocks.refresh).toHaveBeenCalled();
+  });
+
+  it("puntuar con el número sin estrellas previas aplica las estrellas que devuelve el servidor", async () => {
+    mocks.saveRating.mockResolvedValue({});
+    mocks.getRatings.mockResolvedValue(ratings(4.5, 86));
+    renderWithIntl(<AlbumRelationPanel releaseGroupId={RG} state={makeState()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: relation.detailAdd }));
+    fireEvent.change(screen.getByRole("spinbutton"), { target: { value: "86" } });
+    fireEvent.click(screen.getByRole("button", { name: relation.detail.save }));
+
+    await waitFor(() => expect(mocks.saveRating).toHaveBeenCalledWith("release-group", RG, { detailedScore: 86 }));
+    expect(await screen.findByRole("radio", { name: "4,5 estrellas" })).toBeChecked();
+    expect(screen.getByRole("button", { name: /Puntuación detallada 86/ })).toBeInTheDocument();
   });
 
   it("al cambiar a estrellas incoherentes con el puntaje lo quita y avisa", async () => {

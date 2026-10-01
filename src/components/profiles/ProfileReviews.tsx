@@ -58,15 +58,8 @@ export async function ProfileReviews({ data }: ProfileReviewsProps) {
               {entry.stars ? (
                 <StarRatingValue
                   stars={entry.stars}
-                  detailedScore={entry.detailedScore}
-                  label={
-                    entry.detailedScore != null
-                      ? t("reviews.ratingLabelScore", {
-                          stars: formatStars(Number(entry.stars), locale),
-                          score: entry.detailedScore,
-                        })
-                      : t("reviews.ratingLabel", { stars: formatStars(Number(entry.stars), locale) })
-                  }
+                  detailedScore={null}
+                  label={t("reviews.ratingLabel", { stars: formatStars(Number(entry.stars), locale) })}
                 />
               ) : null}
               {entry.title ? (

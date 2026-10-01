@@ -17,7 +17,7 @@ Oyentes activos que quieren llevar un registro curado y personal de su historial
 ## Principios del producto
 
 - Una canción es una entidad única y acumula su valoración e historial sin importar en cuántos discos o ediciones aparezca.
-- Las estrellas y la valoración detallada nunca pueden contradecirse entre sí — es una regla de datos, no solo de interfaz.
+- Las estrellas son la nota; la valoración detallada (1-100) es un **refinamiento opcional** de ellas, no una segunda escala. Nunca pueden contradecirse entre sí — es una regla de datos, no solo de interfaz.
 - El catálogo crece con el uso real de la comunidad, no se intenta precargar el catálogo musical completo desde el día uno.
 - Las carátulas se muestran en baja resolución, respetando que son material con copyright de las disqueras, no activos de libre uso.
 

@@ -42,6 +42,19 @@ describe("RatingHighlights", () => {
     expect(screen.getByRole("link")).toHaveProperty("href", expect.stringContaining("/album/rg1"));
   });
 
+  it("muestra el puntaje detallado en lugar del número de estrellas cuando existe", async () => {
+    renderWithIntl(await RatingHighlights({ highlights: [highlight({ stars: "4.5", detailedScore: 86 })] }));
+
+    expect(screen.getByText("86/100")).toBeInTheDocument();
+    expect(screen.queryByText("4,5")).not.toBeInTheDocument();
+  });
+
+  it("muestra el número de estrellas cuando la destacada no tiene puntaje", async () => {
+    renderWithIntl(await RatingHighlights({ highlights: [highlight({ stars: "4.5", detailedScore: null })] }));
+
+    expect(screen.getByText("4,5")).toBeInTheDocument();
+  });
+
   it("varias valoraciones destacadas se listan todas", async () => {
     renderWithIntl(
       await RatingHighlights({

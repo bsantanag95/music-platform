@@ -27,14 +27,28 @@ Fase 1 de `redefine-content-hierarchy`), porque el álbum es la unidad cultural 
   de la comunidad ("nota / contexto / empezá por aquí"). Un rating de artista creado antes
   del cambio se conserva en la base, inerte en la UI.
 
-## Valoración dual
+## Estrellas y valoración detallada (refinamiento opcional)
 
-Dos escalas, siempre coherentes entre sí (forzado a nivel de base, no solo de interfaz):
+Las **estrellas** (0.5 a 5, pasos de 0.5) son siempre la nota protagonista; la
+**valoración detallada** (1 a 100, opcional) es un **refinamiento** de ellas, no una segunda
+escala con vida propia. Sirve a quien rankea fino (desempatar, ordenar una discografía),
+nunca como requisito para valorar. Cuando existe, cae dentro de la banda de 10 puntos de las
+estrellas (0.5★ → 1-10 … 5★ → 91-100), forzado a nivel de base (`CHECK`), no solo de
+interfaz.
 
-- **Estrellas** (0.5 a 5, pasos de 0.5) — la acción rápida, el primer paso.
-- **Valoración detallada** (1 a 100, opcional) — solo puede moverse dentro del rango de 10
-  puntos que corresponde a las estrellas ya elegidas. Cambiar el rango requiere cambiar
-  primero las estrellas.
+- **Entrada en cualquier orden** (cambio `define-detailed-score`). Se puede puntuar primero
+  con el número: las estrellas se derivan (`⌈puntaje / 10⌉ / 2`, p. ej. 86 → 4,5★). El
+  diálogo de puntuación del panel "Tu relación" (álbum y canción) ya no exige estrellas
+  previas ni limita el campo a su banda: acepta todo el 1–100, muestra en vivo la
+  equivalencia (`86 → 4,5★`) y, si el valor cambiaría las estrellas vigentes, lo avisa antes
+  de guardar. La API de valoración acepta `{ detailedScore }` solo (compatible hacia atrás
+  con `{ stars }` y `{ stars, detailedScore }`); sin ninguno responde `400`.
+- **Coherencia.** `{ stars, detailedScore }` incoherente → `400 INVALID_RATING`; el puntaje
+  fuera de 1–100 o no entero → `400 VALIDATION_ERROR`. La base y el servidor siguen siendo
+  la fuente de verdad; la derivación es su inversa exacta.
+- **Sin promedio de comunidad.** El bloque de comunidad del álbum expresa la media y la
+  distribución **solo en estrellas**; ninguna superficie muestra una media `/100` de la
+  comunidad (el campo `averageDetailedScore` del contrato se conserva, sin uso visible).
 
 **Edición:** una nueva valoración de un usuario sobre el mismo objetivo **reemplaza** a la
 anterior — no hay historial en `rating` (eso es justamente lo que
@@ -62,13 +76,26 @@ numéricos) para ese dato.
 - **Ámbar.** El relleno de la estrella es el único uso de ámbar de la representación; las
   estrellas vacías son un contorno neutro.
 - **Accesibilidad.** Cada nota expone su valor como una sola imagen con una etiqueta que
-  incluye el valor en estrellas (y el puntaje detallado cuando existe); los glifos son
-  decorativos.
+  incluye el valor en estrellas (y el puntaje detallado en las superficies que lo muestran);
+  los glifos son decorativos.
 - **Un solo control de selección.** Elegir o cambiar estrellas (panel "Tu relación",
   compositor de reseñas) usa el mismo control de cinco estrellas con media estrella, con
   navegación por teclado. No se ofrece una fila de botones numéricos como alternativa.
-- **Puntaje detallado 1–100.** Su presentación y su coherencia con las estrellas se tratan
-  aparte; el texto numérico sigue yendo junto a las estrellas (`4.5` / `4.5 · 87`).
+
+### Puntaje detallado: formato y dónde se muestra (cambio `define-detailed-score`)
+
+- **Formato.** Se muestra como `86/100`. Cuando una superficie lo muestra y existe, va junto
+  a la fila de estrellas **en lugar** del número de estrellas (`4,5`); sin puntaje (o en una
+  superficie que no lo muestra) se muestra `4,5`. Nunca ambos, y nunca el formato viejo
+  `4,5 · 87`.
+- **Dónde sí.** El panel "Tu relación" (álbum y canción), la reseña propia (para su autor),
+  las valoraciones destacadas del perfil y, sin mostrarse, como desempate del orden "Tú" de
+  la discografía.
+- **Dónde no.** El feed (ni la fila ni la corrida plegada), las reseñas del perfil, la
+  tracklist, las carátulas de la discografía y las filas compactas (`★ 4,5`). Son superficies
+  densas o de otras personas: el número es íntimo.
+- **Sin color.** La nota no se codifica por color (ni semáforo ni gradiente): el número usa
+  un tono neutro con peso tipográfico. El ámbar queda reservado al relleno de las estrellas.
 
 ## Reseñas en la página de álbum
 
@@ -77,9 +104,10 @@ Cambio `redesign-album-page` (2026-09):
 - La **valoración propia** se edita en el panel "Tu relación" de la cabecera del álbum; la
   media de la comunidad vive en el bloque de comunidad (con umbral mínimo de 5 valoraciones
   para media e histograma). Desde `rework-album-relation-panel` las estrellas se eligen en
-  línea (un clic guarda) y el puntaje detallado se afina en un diálogo que solo ofrece el
-  tramo coherente con las estrellas; cambiar las estrellas descarta el puntaje detallado y
-  lo avisa, en lugar de chocar con el `CHECK` de `rating`.
+  línea (un clic guarda). Desde `define-detailed-score` el puntaje detallado se afina en un
+  diálogo con o sin estrellas previas, que acepta 1–100 y muestra la equivalencia en vivo
+  (derivando las estrellas si se puntúa primero con el número); cambiar las estrellas descarta
+  el puntaje detallado y lo avisa, en lugar de chocar con el `CHECK` de `rating`.
 - La pestaña **Reseñas** (`/album/{id}/reviews`) muestra un **índice** compacto: título (o,
   sin título, un extracto del inicio del cuerpo), estrellas vigentes del autor, autor y
   fecha, ordenable por más recientes, mejor nota y peor nota (`?sort=recent|best|worst`).

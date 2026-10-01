@@ -10,7 +10,7 @@ Oyentes activos que quieren llevar un registro curado de su historial musical, d
 
 ## Propuesta de valor
 
-- Sistema de valoración dual (estrellas + valoración detallada de 1-100), siempre coherente entre sí.
+- Valoración por estrellas con un puntaje detallado de 1-100 como **refinamiento opcional** de ellas (no una segunda nota), siempre coherentes entre sí.
 - Estructura de datos fiel a cómo funciona realmente la industria musical (feat., ediciones múltiples, re-grabaciones vs. remasters).
 - Capa social de descubrimiento pasivo: ver qué escuchan otros usuarios, no solo recibir recomendaciones algorítmicas.
 
@@ -25,7 +25,7 @@ Oyentes activos que quieren llevar un registro curado de su historial musical, d
 Alcance mínimo viable (corresponde a las fases 3 y 4 del roadmap):
 - Catálogo navegable de artistas, álbumes y canciones (solo lectura, sin cuentas).
 - Autenticación de usuarios.
-- Valoración dual (estrellas + detallada) y comentarios en los tres niveles: artista, álbum, canción.
+- Valoración por estrellas con puntaje detallado opcional y comentarios en los tres niveles: artista, álbum, canción.
 
 Quedan fuera del MVP (fases posteriores): listas curadas, favoritos, actividad social tipo "qué estás escuchando", y la propia PWA instalable.
 

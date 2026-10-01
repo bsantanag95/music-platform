@@ -35,4 +35,23 @@ describe("rutas sociales de ratings", () => {
     expect(social.upsertRating).toHaveBeenCalledWith(target, id, 4, 80);
     expect(await response.json()).toEqual({ rating: expect.objectContaining({ stars: 4, detailedScore: 80 }) });
   });
+
+  it("acepta un cuerpo con solo el puntaje detallado", async () => {
+    vi.mocked(auth.requireUser).mockResolvedValue({ id } as never);
+    vi.mocked(social.resolveSocialTarget).mockResolvedValue(target);
+    vi.mocked(social.upsertRating).mockResolvedValue({ id, userId: id, artistId: id, releaseGroupId: null, recordingId: null, stars: 4.5, detailedScore: 86, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    const response = await PUT(new NextRequest("http://localhost", { method: "PUT", body: JSON.stringify({ detailedScore: 86 }) }), { params: Promise.resolve({ target: "artist", id }) });
+    expect(response.status).toBe(200);
+    expect(social.upsertRating).toHaveBeenCalledWith(target, id, undefined, 86);
+  });
+
+  it("rechaza un cuerpo vacío con VALIDATION_ERROR sin llamar al servicio", async () => {
+    vi.mocked(auth.requireUser).mockResolvedValue({ id } as never);
+    vi.mocked(social.resolveSocialTarget).mockResolvedValue(target);
+    vi.mocked(social.upsertRating).mockClear();
+    const response = await PUT(new NextRequest("http://localhost", { method: "PUT", body: JSON.stringify({}) }), { params: Promise.resolve({ target: "artist", id }) });
+    expect(response.status).toBe(400);
+    expect((await response.json()).code).toBe("VALIDATION_ERROR");
+    expect(social.upsertRating).not.toHaveBeenCalled();
+  });
 });

@@ -93,10 +93,10 @@ function makeStats(overrides: Partial<AlbumCommunityStats> = {}): AlbumCommunity
 }
 
 describe("CommunityStats", () => {
-  it("muestra media, detallada, conteos, listas e histograma sobre el umbral", () => {
+  it("muestra media, conteos, listas e histograma sobre el umbral, sin la media del puntaje detallado", () => {
     renderWithIntl(<CommunityStats stats={makeStats()} listsHref="/album/rg-1/lists" />);
     expect(screen.getByText("★ 4,6")).toBeInTheDocument();
-    expect(screen.getByText("89/100")).toBeInTheDocument();
+    expect(screen.queryByText(/\/100/)).not.toBeInTheDocument();
     expect(screen.getByText("38 reseñas")).toBeInTheDocument();
     expect(screen.getByText("212")).toBeInTheDocument();
     expect(screen.getByText("97 lo buscan")).toBeInTheDocument();

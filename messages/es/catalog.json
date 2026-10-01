@@ -387,7 +387,6 @@
       "heading": "Comunidad",
       "average": "Media",
       "averageValue": "★ {stars}",
-      "detailedValue": "{score}/100",
       "fewRatings": "Pocas valoraciones",
       "ratings": "Valoraciones",
       "reviewCount": "{count, plural, =0 {Sin reseñas} one {# reseña} other {# reseñas}}",
@@ -464,7 +463,6 @@
       "starsValue": "{stars} estrellas",
       "detailAdd": "Agregar puntuación detallada",
       "detailEdit": "Puntuación detallada {score}: cambiar, destacar o borrar",
-      "detailNeedsStars": "Elegí primero las estrellas para afinar la nota",
       "clearRating": "Quitar nota",
       "clearRatingTitle": "¿Quitar tu nota?",
       "clearRatingMessage": "Se borrarán las estrellas y la puntuación detallada de este contenido.",
@@ -495,8 +493,10 @@
       "saveError": "No pudimos guardar el cambio. Intentá de nuevo.",
       "detail": {
         "title": "Puntuación detallada",
-        "scoreLabel": "Puntuación para {stars} estrellas",
-        "hint": "Afiná tu nota entre {min} y {max}. Dejalo vacío para no usar puntuación.",
+        "scoreLabel": "Puntuación detallada (1–100)",
+        "hint": "Elegí un número entre 1 y 100.",
+        "equivalence": "{score} → {stars}★",
+        "starsChange": "Cambiará tus estrellas de {from}★ a {to}★.",
         "save": "Guardar",
         "saving": "Guardando...",
         "cancel": "Cancelar",
@@ -530,6 +530,7 @@
     "reviews": {
       "heading": "Reseñas",
       "ratingLabel": "{stars} estrellas",
+      "ratingLabelScore": "{stars} estrellas, {score} de 100",
       "sortLabel": "Ordenar por",
       "sort": {
         "recent": "Más recientes",

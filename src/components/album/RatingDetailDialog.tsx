@@ -8,21 +8,25 @@ import { Dialog } from "@/components/ui/Dialog";
 import { ApiError } from "@/lib/api/client";
 import { deleteRating, getRatings, highlightRating, saveRating, unhighlightRating } from "@/lib/api/social";
 import type { RatingsResponse } from "@/lib/api/schemas";
-import { isScoreCoherent, scoreRange } from "@/lib/rating-range";
+import { starsFromScore } from "@/lib/rating-range";
 import { formatStars } from "./album-format";
 
 // Diálogo de la valoración propia del panel "Tu relación" (openspec:
-// rework-album-relation-panel, D3): puntaje detallado limitado al tramo de las estrellas
-// vigentes, destacar en el perfil y borrar la nota. Las estrellas se eligen en el panel;
-// aquí solo se afinan. `ui/Dialog` devuelve el foco al botón que lo abrió al cerrar.
+// define-detailed-score, D5): se puede puntuar primero con el número (las estrellas se
+// derivan), con o sin valoración previa, y el campo acepta todo el 1–100 sin limitarse a
+// la banda de las estrellas vigentes. `ui/Dialog` devuelve el foco al botón que lo abrió
+// al cerrar y cierra con Escape.
+
+const SCORE_MIN = 1;
+const SCORE_MAX = 100;
 
 interface RatingDetailDialogProps {
   open: boolean;
   onClose: () => void;
   /** Álbum o canción valorada (la canción usa el mismo diálogo: openspec redesign-song-page). */
   target: { type: "release-group" | "recording"; id: string };
-  /** Valoración propia vigente; el diálogo solo se abre con estrellas elegidas. */
-  own: NonNullable<RatingsResponse["own"]>;
+  /** Valoración propia vigente; ausente cuando todavía no hay ninguna. */
+  own?: RatingsResponse["own"];
   onChange: (ratings: RatingsResponse) => void;
 }
 
@@ -30,14 +34,18 @@ export function RatingDetailDialog({ open, onClose, target, own, onChange }: Rat
   const t = useTranslations("catalog.album.relation.detail");
   const tErrors = useTranslations("errors");
   const locale = useLocale();
-  const { min, max } = scoreRange(own.stars);
-  const [score, setScore] = useState(own.detailedScore?.toString() ?? "");
+  const [score, setScore] = useState(own?.detailedScore?.toString() ?? "");
   const [pending, setPending] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
 
-  const parsed = score === "" ? null : Number(score);
-  const valid = isScoreCoherent(own.stars, parsed);
+  const parsed = score === "" ? Number.NaN : Number(score);
+  const valid = Number.isInteger(parsed) && parsed >= SCORE_MIN && parsed <= SCORE_MAX;
+  const derivedStars = valid ? starsFromScore(parsed) : null;
+  const currentStars = own?.stars ?? null;
+  // Aviso accesible cuando el puntaje derivaría unas estrellas distintas de las vigentes.
+  const starsChange =
+    derivedStars !== null && currentStars !== null && derivedStars !== currentStars ? derivedStars : null;
 
   async function run(action: () => Promise<void>) {
     setPending(true);
@@ -57,20 +65,19 @@ export function RatingDetailDialog({ open, onClose, target, own, onChange }: Rat
     event.preventDefault();
     if (!valid) return;
     void run(async () => {
-      await saveRating(target.type, target.id, {
-        stars: own.stars,
-        ...(parsed !== null ? { detailedScore: parsed } : {}),
-      });
+      await saveRating(target.type, target.id, { detailedScore: parsed });
       await refresh();
       onClose();
     });
   };
 
-  const toggleHighlight = () =>
+  const toggleHighlight = () => {
+    if (!own) return;
     void run(async () => {
       await (own.isHighlighted ? unhighlightRating(own.id) : highlightRating(own.id));
       await refresh();
     });
+  };
 
   const remove = () => {
     setConfirmDelete(false);
@@ -86,22 +93,37 @@ export function RatingDetailDialog({ open, onClose, target, own, onChange }: Rat
       <Dialog open={open && !confirmDelete} title={t("title")} onClose={onClose}>
         <form onSubmit={save} className="flex flex-col gap-4">
           <label className="flex flex-col gap-2 font-data text-sm text-paper">
-            {t("scoreLabel", { stars: formatStars(own.stars, locale) })}
+            {t("scoreLabel")}
             <input
               type="number"
               inputMode="numeric"
-              min={min}
-              max={max}
+              min={SCORE_MIN}
+              max={SCORE_MAX}
               step={1}
               value={score}
               onChange={(event) => setScore(event.target.value)}
-              aria-invalid={!valid}
-              aria-describedby="rating-detail-hint"
+              aria-invalid={score !== "" && !valid}
+              aria-describedby="rating-detail-equivalence"
               className="w-28 rounded border border-ink-border bg-ink px-3 py-2 text-paper aria-[invalid=true]:border-danger"
             />
           </label>
-          <p id="rating-detail-hint" className="-mt-2 font-data text-xs text-paper-muted">
-            {t("hint", { min, max })}
+          <p
+            id="rating-detail-equivalence"
+            aria-live="polite"
+            className="-mt-2 font-data text-xs text-paper-muted"
+          >
+            {derivedStars !== null
+              ? t("equivalence", { score: parsed, stars: formatStars(derivedStars, locale) })
+              : t("hint")}
+            {starsChange !== null && (
+              <>
+                {" "}
+                {t("starsChange", {
+                  from: formatStars(currentStars ?? 0, locale),
+                  to: formatStars(starsChange, locale),
+                })}
+              </>
+            )}
           </p>
           <div className="flex flex-wrap gap-2">
             <Button type="submit" disabled={pending || !valid}>
@@ -112,25 +134,27 @@ export function RatingDetailDialog({ open, onClose, target, own, onChange }: Rat
             </Button>
           </div>
         </form>
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-ink-border pt-4">
-          <button
-            type="button"
-            disabled={pending}
-            aria-pressed={own.isHighlighted ?? false}
-            onClick={toggleHighlight}
-            className="font-data text-xs text-paper-muted underline-offset-2 hover:text-paper hover:underline aria-pressed:text-amber disabled:opacity-50"
-          >
-            {own.isHighlighted ? t("unhighlight") : t("highlight")}
-          </button>
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => setConfirmDelete(true)}
-            className="font-data text-xs text-danger underline-offset-2 hover:underline disabled:opacity-50"
-          >
-            {t("delete")}
-          </button>
-        </div>
+        {own && (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-ink-border pt-4">
+            <button
+              type="button"
+              disabled={pending}
+              aria-pressed={own.isHighlighted ?? false}
+              onClick={toggleHighlight}
+              className="font-data text-xs text-paper-muted underline-offset-2 hover:text-paper hover:underline aria-pressed:text-amber disabled:opacity-50"
+            >
+              {own.isHighlighted ? t("unhighlight") : t("highlight")}
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => setConfirmDelete(true)}
+              className="font-data text-xs text-danger underline-offset-2 hover:underline disabled:opacity-50"
+            >
+              {t("delete")}
+            </button>
+          </div>
+        )}
         {errorCode && (
           <p role="alert" className="font-data text-xs text-danger">
             {tErrors(`${errorCode}.description`)}

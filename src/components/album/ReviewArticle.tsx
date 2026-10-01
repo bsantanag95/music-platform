@@ -27,6 +27,11 @@ export function ReviewArticle({ detail, viewerId, canModerate, showTitle = true 
   const { review, album } = detail;
   const deactivated = review.user.deactivated === true;
   const author = deactivated ? tSocial("deactivatedAccount") : (review.user.displayName ?? review.user.username);
+  // El puntaje detallado solo lo ve su autor, y solo cuando la reseña tiene uno
+  // (openspec: define-detailed-score, D7).
+  const isAuthor = viewerId !== null && viewerId === review.user.id;
+  const detailedScore = review.rating?.detailedScore ?? null;
+  const showScore = isAuthor && detailedScore !== null;
 
   return (
     <article className="flex flex-col gap-4">
@@ -53,10 +58,24 @@ export function ReviewArticle({ detail, viewerId, canModerate, showTitle = true 
           )}
         </span>
         {review.rating && (
-          <StarRatingDisplay
-            value={review.rating.stars}
-            label={tReviews("ratingLabel", { stars: formatStars(review.rating.stars, locale) })}
-          />
+          <>
+            <StarRatingDisplay
+              value={review.rating.stars}
+              label={
+                showScore
+                  ? tReviews("ratingLabelScore", {
+                      stars: formatStars(review.rating.stars, locale),
+                      score: detailedScore,
+                    })
+                  : tReviews("ratingLabel", { stars: formatStars(review.rating.stars, locale) })
+              }
+            />
+            {showScore && (
+              <span aria-hidden className="font-medium text-paper">
+                {detailedScore}/100
+              </span>
+            )}
+          </>
         )}
         <time dateTime={review.createdAt}>{format.dateTime(new Date(review.createdAt), { dateStyle: "long" })}</time>
       </p>

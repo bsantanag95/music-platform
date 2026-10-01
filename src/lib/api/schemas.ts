@@ -604,15 +604,25 @@ export const SocialTargetSchema = z
     { message: "Debe indicarse exactamente un objetivo" },
   );
 
+// Al menos uno de los dos valores; con solo `detailedScore` el servidor deriva las
+// estrellas (openspec: define-detailed-score, D4).
+const hasRatingValue = (value: { stars?: number; detailedScore?: number }) =>
+  value.stars !== undefined || value.detailedScore !== undefined;
+const atLeastOneRatingValue = {
+  message: "Se requiere al menos estrellas o puntaje detallado",
+};
+
 export const RatingRequestSchema = SocialTargetSchema.extend({
-  stars: z.number().min(0.5).max(5).multipleOf(0.5),
+  stars: z.number().min(0.5).max(5).multipleOf(0.5).optional(),
   detailedScore: z.number().int().min(1).max(100).optional(),
-});
+}).refine(hasRatingValue, atLeastOneRatingValue);
 export type RatingRequest = z.infer<typeof RatingRequestSchema>;
-export const RatingMutationSchema = z.object({
-  stars: z.number().min(0.5).max(5).multipleOf(0.5),
-  detailedScore: z.number().int().min(1).max(100).optional(),
-});
+export const RatingMutationSchema = z
+  .object({
+    stars: z.number().min(0.5).max(5).multipleOf(0.5).optional(),
+    detailedScore: z.number().int().min(1).max(100).optional(),
+  })
+  .refine(hasRatingValue, atLeastOneRatingValue);
 
 export const CommentRequestSchema = SocialTargetSchema.extend({
   body: z.string().trim().min(1).max(5000),

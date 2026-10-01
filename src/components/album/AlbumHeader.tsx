@@ -246,13 +246,7 @@ export function CommunityStats({ stats, listsHref }: CommunityStatsProps) {
         <StatTile
           label={t("average")}
           value={ratings.averageStars !== null ? t("averageValue", { stars: formatStars(ratings.averageStars, locale) }) : "—"}
-          detail={
-            ratings.averageStars === null
-              ? t("fewRatings")
-              : ratings.averageDetailedScore !== null
-                ? t("detailedValue", { score: Math.round(ratings.averageDetailedScore) })
-                : undefined
-          }
+          detail={ratings.averageStars === null ? t("fewRatings") : undefined}
         />
         <StatTile
           label={t("ratings")}

@@ -106,7 +106,10 @@ en el sentido natural de la columna (Año ascendente; Título de la A a la Z; Me
 descendente) y el siguiente lo invierte, con el orden vigente anunciado en el encabezado para
 lectores de pantalla. Por defecto la tabla SHALL ordenarse por Año ascendente. Los discos sin
 valor en la columna ordenada SHALL ir al final en cualquier sentido, con el título como
-desempate. Los títulos SHALL compararse según el idioma de la interfaz, con los números por su
+desempate. En la columna "Tú", los discos con las mismas estrellas SHALL ordenarse antes por
+el puntaje detallado propio (en el mismo sentido de la columna, con los que no tienen puntaje
+detallado después de los que sí) y solo después por título; el puntaje no se muestra en la
+tabla. Los títulos SHALL compararse según el idioma de la interfaz, con los números por su
 valor ("Vol. 2" antes que "Vol. 10") y sin quitar artículos iniciales; los títulos iguales SHALL
 desempatarse por año ascendente, con los discos sin año al final. Cambiar de sección SHALL
 volver al orden por defecto.
@@ -142,6 +145,12 @@ volver al orden por defecto.
 
 - **WHEN** una persona activa "Año" dos veces
 - **THEN** la tabla queda del disco más reciente al más antiguo, con los discos sin año al final
+
+#### Scenario: Desempate por puntaje detallado
+- **WHEN** una persona ordena "Tú" de mayor a menor y tiene tres discos de 4 estrellas con
+  puntajes 78, 72 y sin puntaje
+- **THEN** quedan en ese orden (78, 72, sin puntaje) y los discos de 4½ estrellas van antes
+  que todos ellos
 
 ### Requirement: Mejor valorado
 

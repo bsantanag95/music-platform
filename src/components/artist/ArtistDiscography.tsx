@@ -515,26 +515,37 @@ export function titleCollator(locale: string): Intl.Collator {
 }
 
 /**
- * Orden de la tabla (openspec: extend-album-quick-actions, design D5): los discos sin valor en la
- * columna van siempre al final, en cualquier sentido. Las columnas numéricas desempatan por título;
- * el título desempata por año, con los discos sin año al final.
+ * Orden de la tabla (openspec: extend-album-quick-actions, design D5; define-detailed-score, D10):
+ * los discos sin valor en la columna van siempre al final, en cualquier sentido. Las columnas
+ * numéricas desempatan por título; el título desempata por año, con los discos sin año al final.
+ * `tiebreak` añade un segundo valor numérico (p. ej. el puntaje detallado propio en la columna
+ * "Tú") que se compara dentro de los mismos valores primarios, en el mismo sentido y con los
+ * ausentes al final, antes del título.
  */
 export function sortDiscographyRows<T extends SortableRow>(
   rows: T[],
   value: (row: T) => number | string | null,
   direction: SortDirection,
   collator: Intl.Collator,
+  tiebreak?: (row: T) => number | null,
 ): T[] {
   const sign = direction === "asc" ? 1 : -1;
   const byYear = (a: T, b: T) =>
     a.year === null || b.year === null ? (a.year === b.year ? 0 : a.year === null ? 1 : -1) : a.year - b.year;
+  const byTitle = (a: T, b: T) => collator.compare(a.title, b.title);
+  const byTiebreak = (a: T, b: T) => {
+    if (!tiebreak) return 0;
+    const ta = tiebreak(a);
+    const tb = tiebreak(b);
+    if (ta === null || tb === null) return ta === tb ? 0 : ta === null ? 1 : -1;
+    return (ta - tb) * sign;
+  };
   return [...rows].sort((a, b) => {
     const va = value(a);
     const vb = value(b);
     if (typeof va === "string" && typeof vb === "string") return collator.compare(va, vb) * sign || byYear(a, b);
-    const byTitle = collator.compare(a.title, b.title);
-    if (va === null || vb === null) return va === vb ? byTitle : va === null ? 1 : -1;
-    return (Number(va) - Number(vb)) * sign || byTitle;
+    if (va === null || vb === null) return va === vb ? byTitle(a, b) : va === null ? 1 : -1;
+    return (Number(va) - Number(vb)) * sign || byTiebreak(a, b) || byTitle(a, b);
   });
 }
 
@@ -574,11 +585,16 @@ function DiscographyTable({
     average: (item) => item.community.average,
     you: (item) => actions.marksOf(item.id)?.stars ?? null,
   };
+  // La columna "Tú" desempata por el puntaje detallado propio dentro de las mismas estrellas
+  // (openspec: define-detailed-score, D10); el puntaje no se muestra en la tabla.
+  const sortTiebreak: Partial<Record<SortKey, (item: ArtistDiscographyItem) => number | null>> = {
+    you: (item) => actions.marksOf(item.id)?.detailedScore ?? null,
+  };
   const collator = useMemo(() => titleCollator(locale), [locale]);
   // El orden se aplica dentro de cada grupo (openspec: add-discography-search, design D4).
   const sorted = groups.map((group) => ({
     ...group,
-    rows: sortDiscographyRows(group.items, sortValue[sort.key], sort.direction, collator),
+    rows: sortDiscographyRows(group.items, sortValue[sort.key], sort.direction, collator, sortTiebreak[sort.key]),
   }));
   const toggleSort = (key: SortKey) =>
     setSort((current) =>

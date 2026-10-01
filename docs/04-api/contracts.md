@@ -1018,9 +1018,19 @@ se deriva de la sesión: ningún body acepta `user_id`.
 ### `GET/PUT/DELETE /api/catalog/{target}/{id}/ratings`
 
 `GET` devuelve `{ own, aggregate }`; `own` es el rating de la sesión o `null` y `aggregate` contiene
-`count`, `averageStars` y `averageDetailedScore`. `PUT` recibe `{ stars, detailedScore? }` y hace
-upsert del rating del usuario; devuelve `200 { rating }`. `DELETE` borra físicamente el rating propio
-y devuelve `204`.
+`count`, `averageStars` y `averageDetailedScore` (el contrato conserva el promedio del puntaje aunque
+ninguna superficie lo muestre — ver `define-detailed-score`, D9). `PUT` recibe `{ stars?, detailedScore? }`
+con **al menos uno** de los dos (cambio `define-detailed-score`):
+
+- `{ stars }`: como antes; reemplazar sin `detailedScore` deja el puntaje en `null`.
+- `{ detailedScore }`: las estrellas se derivan del puntaje (`⌈puntaje / 10⌉ / 2`, p. ej. 86 → 4,5).
+- `{ stars, detailedScore }`: se valida que el puntaje caiga en la banda de las estrellas
+  (`½★ = 1–10 … 5★ = 91–100`).
+- Sin ninguno, o con `detailedScore` fuera de 1–100 o no entero → `400 { code: "VALIDATION_ERROR" }`.
+- `{ stars, detailedScore }` incoherente → `400 { code: "INVALID_RATING" }`.
+
+Hace upsert del rating del usuario y devuelve `200 { rating }`. `DELETE` borra físicamente el rating
+propio y devuelve `204`.
 
 ### `GET/POST /api/catalog/{target}/{id}/comments`
 

@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { appUser, artist, comment, rating, ratingHighlight, recording, releaseGroup } from "@/db/schema";
 import { maskAuthor } from "@/services/auth/account-status";
 import { ApiError } from "@/lib/api/errors";
+import { isScoreCoherent, starsFromScore } from "@/lib/rating-range";
 import type { SocialTargetType } from "@/lib/api/schemas";
 
 type TargetColumn = "artistId" | "releaseGroupId" | "recordingId";
@@ -66,18 +67,28 @@ export async function getRatings(target: SocialTarget, userId?: string) {
   };
 }
 
-export function validateRating(stars: number, detailedScore?: number) {
-  if (stars < 0.5 || stars > 5 || stars * 2 !== Math.round(stars * 2)) {
+/**
+ * Valida una valoración y devuelve las estrellas efectivas. Con `detailedScore` y sin
+ * `stars`, las estrellas se derivan (`starsFromScore`); con ambos, se exige coherencia
+ * (openspec: define-detailed-score, D3/D4). Sin ninguno de los dos es un error de entrada.
+ */
+export function validateRating(stars: number | undefined, detailedScore?: number): number {
+  if (stars === undefined && detailedScore === undefined) {
+    throw new ApiError("VALIDATION_ERROR", 400, "Se requiere al menos estrellas o puntaje detallado");
+  }
+  if (stars !== undefined && (stars < 0.5 || stars > 5 || stars * 2 !== Math.round(stars * 2))) {
     throw new ApiError("INVALID_RATING", 400, "Las estrellas deben estar entre 0.5 y 5 en pasos de 0.5");
   }
-  if (detailedScore !== undefined && (detailedScore < 1 || detailedScore > 100 || detailedScore < (Math.round(stars * 2) - 1) * 10 + 1 || detailedScore > Math.round(stars * 2) * 10)) {
+  const resolvedStars = stars ?? starsFromScore(detailedScore!);
+  if (detailedScore !== undefined && !isScoreCoherent(resolvedStars, detailedScore)) {
     throw new ApiError("INVALID_RATING", 400, "La valoración detallada no es coherente con las estrellas");
   }
+  return resolvedStars;
 }
 
-export async function upsertRating(target: SocialTarget, userId: string, stars: number, detailedScore?: number) {
-  validateRating(stars, detailedScore);
-  const values = { ...targetValues(target), userId, stars: String(stars), detailedScore: detailedScore ?? null };
+export async function upsertRating(target: SocialTarget, userId: string, stars: number | undefined, detailedScore?: number) {
+  const resolvedStars = validateRating(stars, detailedScore);
+  const values = { ...targetValues(target), userId, stars: String(resolvedStars), detailedScore: detailedScore ?? null };
   const targetColumn = rating[target.column];
   const [saved] = await db
     .insert(rating)

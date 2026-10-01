@@ -17,7 +17,6 @@
   "favoriteLabel": "Added a favorite",
   "ratingVerb": "Rated",
   "ratingLabel": "{stars} out of 5 stars",
-  "ratingLabelScore": "{stars} out of 5 stars, {score} out of 100",
   "commentLabel": "Commented",
   "reviewVerb": "Reviewed",
   "reviewVerbTitled": "Reviewed · “{title}”",

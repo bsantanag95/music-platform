@@ -282,8 +282,9 @@ criterio de accesibilidad que los íconos de reacción de escucha. "Seguir a un 
 distinta solo en el objetivo y el verbo). El rating SHALL quedar exento: sus estrellas
 (ver `rating-display`) ya cumplen ese rol y no SHALL sumar un glifo adicional. El rating
 SHALL mostrarse con la fila de cinco estrellas de `rating-display`, acompañada del número
-(`4.5`, o `4.5 · 87` con el puntaje detallado); NO SHALL usarse un medidor de barras ni otro
-símbolo propio del feed para la nota. Una reseña SHALL
+(`4,5`, con la convención del idioma); el puntaje detallado (1–100) NO SHALL mostrarse en el
+feed, ni en la fila de una entrada ni en la corrida plegada; NO SHALL usarse un medidor de
+barras ni otro símbolo propio del feed para la nota. Una reseña SHALL
 distinguirse además con su propio tratamiento: un rótulo "Reseña" en el segundo color de
 acento del sistema, su título (cuando existe) mostrado como titular en vez de como metadato
 secundario, y un borde izquierdo propio en ese color — el mismo tratamiento editorial
@@ -352,10 +353,10 @@ el preview de feed de seguidos de Inicio), el nombre del autor SHALL ir acompañ
 indicador visual del autor (avatar), consistente entre apariciones del mismo autor.
 
 **Rating.** Una entrada de rating SHALL renderizarse con una representación visual de la
-valoración (marcas en el color de acento) acompañada SIEMPRE del valor numérico; cuando
-existe un score detallado, SHALL mostrarse junto al valor de estrellas. El color de
-acento SHALL usarse en reposo únicamente para esta representación del rating, salvo el
-segundo acento reservado a la reseña (ver "Diferenciación visual por tipo").
+valoración (marcas en el color de acento) acompañada SIEMPRE del valor numérico de estrellas;
+el puntaje detallado (1–100) NO SHALL mostrarse en el feed (ver "Jerarquía de presentación del
+feed"). El color de acento SHALL usarse en reposo únicamente para esta representación del
+rating, salvo el segundo acento reservado a la reseña (ver "Diferenciación visual por tipo").
 
 **Fecha.** La fecha SHALL mostrarse en forma relativa ("hace 2 días") y SHALL conservar
 la fecha absoluta como valor accesible del elemento de tiempo. Dentro de una misma
@@ -446,8 +447,8 @@ objetivo musical SHALL seguir disponible.
 #### Scenario: Rating se renderiza con marcas de acento y el valor numérico
 - **WHEN** el feed incluye un rating (con o sin score detallado)
 - **THEN** la entrada se muestra en una sola fila con una representación visual de la
-  valoración en el color de acento y el valor numérico al lado, y el score detallado
-  junto a él cuando existe
+  valoración en el color de acento y el valor numérico de estrellas al lado, sin el score
+  detallado
 
 #### Scenario: Escucha sin nota pero con reacción
 - **WHEN** el feed incluye una escucha sin nota escrita pero con una reacción
@@ -560,6 +561,11 @@ objetivo musical SHALL seguir disponible.
 - **WHEN** el feed incluye una entrada cuyo objetivo es un artista
 - **THEN** solo el título enlaza a la página del artista; no aparece un segundo enlace
   redundante
+
+#### Scenario: El feed no muestra el puntaje detallado
+- **WHEN** un seguido valoró un álbum con 4,5 estrellas y un puntaje detallado de 86
+- **THEN** su entrada en el feed muestra la fila de estrellas con `4,5`, sin `86/100` ni
+  `4,5 · 86`
 
 ### Requirement: Pico de rotación en el feed
 

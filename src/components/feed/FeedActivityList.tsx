@@ -113,8 +113,8 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
               {row.kind === "rating" ? (
                 <StarRatingValue
                   stars={row.stars}
-                  detailedScore={row.detailedScore}
-                  label={ratingLabel(row.stars, row.detailedScore, t, locale)}
+                  detailedScore={null}
+                  label={ratingLabel(row.stars, t, locale)}
                 />
               ) : null}
               {row.kind === "review" ? <ReviewKicker t={t} title={row.title} /> : null}
@@ -141,8 +141,8 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
                 {row.kind === "rating" ? (
                   <StarRatingValue
                     stars={row.stars}
-                    detailedScore={row.detailedScore}
-                    label={ratingLabel(row.stars, row.detailedScore, t, locale)}
+                    detailedScore={null}
+                    label={ratingLabel(row.stars, t, locale)}
                   />
                 ) : null}
                 {row.kind === "review" ? <ReviewKicker t={t} title={row.title} /> : null}
@@ -393,20 +393,17 @@ function actionLabel(entry: FeedEntry, t: FeedT): string {
   }
 }
 
-function ratingLabel(stars: string, score: number | null, t: FeedT, locale: string): string {
-  const value = formatStars(Number(stars), locale);
-  return score != null
-    ? t("ratingLabelScore", { stars: value, score })
-    : t("ratingLabel", { stars: value });
+// El feed nunca muestra el puntaje detallado (openspec: define-detailed-score, D7): la
+// etiqueta accesible lleva solo las estrellas.
+function ratingLabel(stars: string, t: FeedT, locale: string): string {
+  return t("ratingLabel", { stars: formatStars(Number(stars), locale) });
 }
 
-// Valor compacto para una valoración dentro de una fila de grupo plegada
-// (ej. "4,5" o "4,5 · 65") — el número con `formatStars`, sin repetir la fila
-// de estrellas completa por cada entrada de la corrida. Se muestra tras la
-// forma compacta `★ 4,5` (rating-display), no como un número suelto.
+// Valor compacto para una valoración dentro de una fila de grupo plegada (ej. "4,5") — el
+// número con `formatStars`, sin repetir la fila de estrellas completa por cada entrada de la
+// corrida. Se muestra tras la forma compacta `★ 4,5` (rating-display), no como un número suelto.
 function ratingGroupValue(entry: Extract<FeedEntry, { kind: "rating" }>, locale: string): string {
-  const stars = formatStars(Number(entry.stars), locale);
-  return entry.detailedScore != null ? `${stars} · ${entry.detailedScore}` : stars;
+  return formatStars(Number(entry.stars), locale);
 }
 
 function audienceLabel(entry: FeedEntry, t: FeedT): string | null {

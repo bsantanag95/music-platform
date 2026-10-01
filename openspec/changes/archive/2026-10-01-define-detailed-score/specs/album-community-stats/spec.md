@@ -1,8 +1,5 @@
-# album-community-stats Specification
+## MODIFIED Requirements
 
-## Purpose
-Mostrar en la cabecera del álbum las cifras de la comunidad (colección, búsqueda, listas y valoraciones) con umbrales mínimos que evitan cifras engañosas.
-## Requirements
 ### Requirement: Bloque de comunidad del álbum
 
 La cabecera del álbum SHALL mostrar un bloque de comunidad con: la media de estrellas; la cantidad de valoraciones y de reseñas visibles; la
@@ -35,16 +32,6 @@ tarjetas; la cantidad de listas SHALL mostrarse como un enlace de texto bajo las
 - **THEN** el bloque muestra la media en estrellas y no muestra ninguna media ni escala
   `/100` de la comunidad
 
-### Requirement: Histograma de valoraciones
-
-El bloque de comunidad SHALL mostrar la distribución de las valoraciones por valor de
-estrellas (de ½ a 5) como histograma, calculada con una única consulta agrupada.
-
-#### Scenario: Distribución polarizada
-
-- **WHEN** las valoraciones de un álbum se concentran en ★1 y ★5
-- **THEN** el histograma muestra dos picos en esos extremos
-
 ### Requirement: Umbral mínimo de agregados
 
 El sistema SHALL mostrar la media de estrellas y el histograma solo
@@ -70,26 +57,3 @@ pantalla y como texto de ayuda al pasar el puntero.
 
 - **WHEN** nadie tiene el álbum en su colección
 - **THEN** el bloque muestra 0 o omite la cifra, sin mostrar "menos de 5"
-
-### Requirement: Anonimato de los agregados
-
-Los conteos "lo coleccionan" y "lo buscan" SHALL contar personas distintas (no entradas ni
-copias) e incluir las entradas de cualquier audiencia, y SHALL NOT exponer la identidad
-de ninguna de ellas. La señal "Pendiente" (want-to-listen) SHALL NOT agregarse en el
-bloque de comunidad.
-
-#### Scenario: Varias copias de una persona
-
-- **WHEN** una persona tiene el álbum en vinilo y en CD
-- **THEN** cuenta una sola vez en "lo coleccionan"
-
-#### Scenario: Entrada privada
-
-- **WHEN** una persona tiene el álbum en su colección con audiencia privada
-- **THEN** cuenta en el total y el bloque no ofrece forma de saber quién es
-
-#### Scenario: Pendiente no se agrega
-
-- **WHEN** 300 personas tienen el álbum en Pendiente
-- **THEN** el bloque de comunidad no muestra ninguna cifra de Pendiente
-

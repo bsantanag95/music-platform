@@ -68,7 +68,7 @@ El **Crédito** conecta un Artista con un Álbum o con una Canción, y resuelve 
 
 ## Valoración
 
-Un Usuario puede valorar un Artista, un Álbum, o una Canción — nunca más de un objetivo a la vez, y solo una Valoración vigente por Usuario y por objetivo (una nueva valoración reemplaza a la anterior, no la duplica). La Valoración combina dos escalas que deben ser siempre coherentes entre sí: estrellas (de 0.5 a 5, en pasos de 0.5) y una "Valoración detallada" opcional (de 1 a 100).
+Un Usuario puede valorar un Artista, un Álbum, o una Canción — nunca más de un objetivo a la vez, y solo una Valoración vigente por Usuario y por objetivo (una nueva valoración reemplaza a la anterior, no la duplica). La Valoración tiene las estrellas (de 0.5 a 5, en pasos de 0.5) como nota protagonista, y una "Valoración detallada" opcional (de 1 a 100) como **refinamiento** de esas estrellas, no como una nota independiente. Ambas deben ser siempre coherentes entre sí; cuando solo llega el puntaje, las estrellas se derivan (`⌈puntaje / 10⌉ / 2`), de modo que se puede valorar en cualquier orden.
 
 ## Comentario
 

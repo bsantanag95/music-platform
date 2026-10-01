@@ -17,7 +17,6 @@
   "favoriteLabel": "Marcó como favorito",
   "ratingVerb": "Valoró",
   "ratingLabel": "{stars} de 5 estrellas",
-  "ratingLabelScore": "{stars} de 5 estrellas, {score} de 100",
   "commentLabel": "Comentó",
   "reviewVerb": "Reseñó",
   "reviewVerbTitled": "Reseñó · «{title}»",

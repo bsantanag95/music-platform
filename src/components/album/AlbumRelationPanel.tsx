@@ -257,11 +257,8 @@ function AuthenticatedPanel({
           />
           <button
             type="button"
-            disabled={!own || ratingBusy}
-            title={own ? undefined : t("detailNeedsStars")}
-            aria-label={
-              !own ? t("detailNeedsStars") : detailedScore !== null ? t("detailEdit", { score: detailedScore }) : t("detailAdd")
-            }
+            disabled={ratingBusy}
+            aria-label={detailedScore !== null ? t("detailEdit", { score: detailedScore }) : t("detailAdd")}
             onClick={() => setDetailOpen(true)}
             className="inline-flex h-8 min-w-8 items-center justify-center rounded border border-ink-border px-1.5 font-data text-xs text-paper transition-colors hover:border-amber disabled:cursor-not-allowed disabled:opacity-40"
           >
@@ -283,12 +280,12 @@ function AuthenticatedPanel({
             {ratingNotice}
           </p>
         )}
-        {detailOpen && own && (
+        {detailOpen && (
           <RatingDetailDialog
             open
             onClose={() => setDetailOpen(false)}
             target={target}
-            own={own}
+            own={own ?? undefined}
             onChange={(updated) => {
               setRatingNotice(null);
               applyRatings(updated);

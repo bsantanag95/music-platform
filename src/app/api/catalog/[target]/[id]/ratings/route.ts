@@ -23,7 +23,7 @@ export const PUT = withErrorHandling(async (request: NextRequest, context: { par
   const user = await requireUser();
   await requireSocialActivityAllowed(user.id);
   const parsed = RatingMutationSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) throw new ApiError("INVALID_RATING", 400, "El rating no es válido");
+  if (!parsed.success) throw new ApiError("VALIDATION_ERROR", 400, "El rating no es válido");
   return NextResponse.json({ rating: await upsertRating(resolved, user.id, parsed.data.stars, parsed.data.detailedScore) });
 });
 

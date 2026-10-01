@@ -285,6 +285,40 @@ describe("sortDiscographyRows", () => {
       "Ænima 1996",
     ]);
   });
+
+  // openspec: define-detailed-score, D10 — el orden "Tú" desempata por puntaje detallado propio.
+  describe("desempate por puntaje detallado en Tú", () => {
+    const rated = [
+      { title: "Setenta y dos", year: 2000, stars: 4, score: 72 },
+      { title: "Media", year: 2002, stars: 4.5, score: 95 },
+      { title: "Sin nota", year: 2005, stars: null, score: null },
+      { title: "Cuatro liso", year: 2004, stars: 4, score: null },
+      { title: "Setenta y ocho", year: 2003, stars: 4, score: 78 },
+    ];
+    const byStars = (row: (typeof rated)[number]) => row.stars;
+    const byScore = (row: (typeof rated)[number]) => row.score;
+    const title = (row: (typeof rated)[number]) => row.title;
+
+    it("descendente pone 4,5★ primero y desempata por puntaje, con los sin puntaje y sin nota al final", () => {
+      expect(sortDiscographyRows(rated, byStars, "desc", titleCollator("es"), byScore).map(title)).toEqual([
+        "Media",
+        "Setenta y ocho",
+        "Setenta y dos",
+        "Cuatro liso",
+        "Sin nota",
+      ]);
+    });
+
+    it("ascendente invierte estrellas y puntaje y deja los sin valor al final", () => {
+      expect(sortDiscographyRows(rated, byStars, "asc", titleCollator("es"), byScore).map(title)).toEqual([
+        "Setenta y dos",
+        "Setenta y ocho",
+        "Cuatro liso",
+        "Media",
+        "Sin nota",
+      ]);
+    });
+  });
 });
 
 describe("buscador de la discografía (add-discography-search)", () => {

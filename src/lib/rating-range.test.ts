@@ -1,5 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { isScoreCoherent, scoreRange } from "./rating-range";
+import { isScoreCoherent, scoreRange, starsFromScore } from "./rating-range";
+
+describe("starsFromScore", () => {
+  it("es la inversa exacta de las bandas para todo puntaje de 1 a 100", () => {
+    for (let score = 1; score <= 100; score++) {
+      expect(isScoreCoherent(starsFromScore(score), score)).toBe(true);
+    }
+  });
+
+  it("deriva los extremos de las bandas", () => {
+    expect(starsFromScore(10)).toBe(0.5);
+    expect(starsFromScore(11)).toBe(1);
+    expect(starsFromScore(86)).toBe(4.5);
+    expect(starsFromScore(90)).toBe(4.5);
+    expect(starsFromScore(100)).toBe(5);
+  });
+});
 
 describe("scoreRange", () => {
   it("devuelve el tramo de 10 puntos de cada valor de estrellas", () => {

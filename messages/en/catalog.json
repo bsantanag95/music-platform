@@ -387,7 +387,6 @@
       "heading": "Community",
       "average": "Average",
       "averageValue": "★ {stars}",
-      "detailedValue": "{score}/100",
       "fewRatings": "Few ratings",
       "ratings": "Ratings",
       "reviewCount": "{count, plural, =0 {No reviews} one {# review} other {# reviews}}",
@@ -464,7 +463,6 @@
       "starsValue": "{stars} stars",
       "detailAdd": "Add a detailed score",
       "detailEdit": "Detailed score {score}: change, highlight or delete",
-      "detailNeedsStars": "Pick the stars first to fine-tune your rating",
       "clearRating": "Remove rating",
       "clearRatingTitle": "Remove your rating?",
       "clearRatingMessage": "Your stars and detailed score for this item will be deleted.",
@@ -495,8 +493,10 @@
       "saveError": "We could not save the change. Try again.",
       "detail": {
         "title": "Detailed score",
-        "scoreLabel": "Score for {stars} stars",
-        "hint": "Fine-tune your rating between {min} and {max}. Leave it empty to skip the score.",
+        "scoreLabel": "Detailed score (1–100)",
+        "hint": "Pick a number between 1 and 100.",
+        "equivalence": "{score} → {stars}★",
+        "starsChange": "Your stars will change from {from}★ to {to}★.",
         "save": "Save",
         "saving": "Saving...",
         "cancel": "Cancel",
@@ -530,6 +530,7 @@
     "reviews": {
       "heading": "Reviews",
       "ratingLabel": "{stars} stars",
+      "ratingLabelScore": "{stars} stars, {score} out of 100",
       "sortLabel": "Sort by",
       "sort": {
         "recent": "Most recent",

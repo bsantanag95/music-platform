@@ -18,3 +18,9 @@ export function isScoreCoherent(stars: number, score: number | null): boolean {
   const { min, max } = scoreRange(stars);
   return Number.isInteger(score) && score >= min && score <= max;
 }
+
+// Inversa de `scoreRange`: las estrellas que corresponden a un puntaje detallado
+// 1–100, siempre dentro de su banda (openspec: define-detailed-score, D3).
+export function starsFromScore(score: number): number {
+  return Math.ceil(score / 10) / 2;
+}

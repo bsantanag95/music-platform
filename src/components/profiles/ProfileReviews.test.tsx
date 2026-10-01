@@ -54,9 +54,10 @@ describe("ProfileReviews", () => {
     expect(screen.getByText("Un disco para volver")).toBeInTheDocument();
     const body = screen.getByText(/La producción respira/);
     expect(body.className).toMatch(/line-clamp-4/);
-    // la fila de estrellas del rating aparece, con el número en coma
+    // la fila de estrellas del rating aparece, con el número en coma y sin el puntaje
     expect(screen.getByRole("img")).toHaveAttribute("aria-label", expect.stringContaining("4,5"));
-    expect(screen.getByText("4,5 · 88")).toBeInTheDocument();
+    expect(screen.getByText("4,5")).toBeInTheDocument();
+    expect(screen.queryByText(/88/)).not.toBeInTheDocument();
   });
 
   it("muestra 'y N más' cuando el total supera las mostradas", async () => {

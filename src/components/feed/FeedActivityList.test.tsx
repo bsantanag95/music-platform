@@ -274,13 +274,15 @@ describe("FeedActivityList", () => {
     });
   });
 
-  it("un rating se muestra con la fila de estrellas y el valor numérico (estrellas + score)", () => {
+  it("un rating se muestra con la fila de estrellas y el número, sin puntaje detallado", () => {
     renderWithIntl(<FeedActivityList entries={[rating()]} />);
 
-    // valor numérico visible, con coma en español
-    expect(screen.getByText("4,5 · 87")).toBeInTheDocument();
-    // la fila de estrellas lleva un aria-label legible
-    expect(screen.getByRole("img", { name: /4,5.*5.*87.*100/ })).toBeInTheDocument();
+    // valor numérico visible, con coma en español, y sin el puntaje detallado
+    expect(screen.getByText("4,5")).toBeInTheDocument();
+    expect(screen.queryByText(/87/)).not.toBeInTheDocument();
+    // la fila de estrellas lleva un aria-label legible, sin el puntaje
+    expect(screen.getByRole("img", { name: /4,5/ })).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: /87.*100/ })).not.toBeInTheDocument();
     // el verbo del metadato es corto, no "Valoró con 4,5 estrellas"
     expect(screen.queryByText(/Valoró con/)).not.toBeInTheDocument();
   });
@@ -455,9 +457,10 @@ describe("FeedActivityList", () => {
 
     expect(screen.getByText(/valoró 3 discos/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Uno" })).toBeInTheDocument();
-    // forma compacta `★ 4,5`: estrella + número, no un número suelto
-    expect(screen.getByText(/★ 4,5 · 87/)).toBeInTheDocument();
+    // forma compacta `★ 4,5`: estrella + número, no un número suelto ni el puntaje
+    expect(screen.getByText(/★ 4,5/)).toBeInTheDocument();
     expect(screen.getByText(/★ 3,0/)).toBeInTheDocument();
+    expect(screen.queryByText(/87/)).not.toBeInTheDocument();
     // una sola fila: ninguna fila de estrellas individual, ninguna celda de carátula
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
     expect(screen.queryByTestId("cover-thumb")).not.toBeInTheDocument();

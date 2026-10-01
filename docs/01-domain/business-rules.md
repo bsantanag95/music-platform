@@ -42,7 +42,8 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - Un Usuario puede valorar exactamente un objetivo por Valoración: un Artista, un Álbum, o una Canción.
 - Un Usuario solo puede tener una Valoración vigente por objetivo — una nueva valoración reemplaza a la anterior.
 - Las estrellas van de 0.5 a 5, en pasos de 0.5.
-- La "Valoración detallada" (1 a 100) es opcional, pero si existe debe caer dentro del rango de 10 puntos que corresponde a las estrellas elegidas (0.5★ → 1-10, 1★ → 11-20, 1.5★ → 21-30 ... 5★ → 91-100). Nunca pueden contradecirse entre sí.
+- La "Valoración detallada" (1 a 100) es un **refinamiento opcional de las estrellas**, no una segunda nota: puede omitirse siempre y, si existe, debe caer dentro del rango de 10 puntos que corresponde a las estrellas (0.5★ → 1-10, 1★ → 11-20, 1.5★ → 21-30 ... 5★ → 91-100). Nunca pueden contradecirse entre sí.
+- Se puede puntuar en cualquier orden: con solo el puntaje detallado, las estrellas se **derivan** (`⌈puntaje / 10⌉ / 2`: 86 → 4.5★). Las estrellas siempre se guardan, aunque la persona haya escrito primero el número.
 - Una Valoración puede editarse; al editarla, ambas escalas se re-validan juntas.
 - Borrar una Valoración es un borrado físico (`DELETE` real) — no hay historial ni recuperación. Ver ADR 0009.
 

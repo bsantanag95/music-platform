@@ -12,7 +12,7 @@ export interface ReviewInput {
 type Target = "artist" | "release-group" | "recording";
 const path = (target: Target, id: string) => `/api/catalog/${target}/${id}`;
 export function getRatings(target: Target, id: string): Promise<RatingsResponse> { return apiFetch(`${path(target, id)}/ratings`, RatingsResponseSchema); }
-export function saveRating(target: Target, id: string, input: { stars: number; detailedScore?: number }) { return apiFetch(`${path(target, id)}/ratings`, RatingMutationResponseSchema, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(input) }); }
+export function saveRating(target: Target, id: string, input: { stars?: number; detailedScore?: number }) { return apiFetch(`${path(target, id)}/ratings`, RatingMutationResponseSchema, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(input) }); }
 export function deleteRating(target: Target, id: string) { return apiFetch(`${path(target, id)}/ratings`, z.null(), { method: "DELETE" }); }
 // Destacar/quitar una valoración propia del perfil (openspec: rework-user-profile, `rating-highlights`).
 export function highlightRating(ratingId: string): Promise<RatingHighlightsResponse> { return apiFetch(`/api/me/rating-highlights/${ratingId}`, RatingHighlightsResponseSchema, { method: "PUT" }); }

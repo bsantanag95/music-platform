@@ -15,20 +15,28 @@ vi.mock("@/lib/api/social", () => mocks);
 
 const detail = catalogEs.album.relation.detail;
 const RG = "550e8400-e29b-41d4-a716-446655440000";
-const own: { id: string; stars: number; detailedScore: number | null; createdAt: string; updatedAt: string } = {
+const own = {
   id: "550e8400-e29b-41d4-a716-446655440009",
   stars: 4,
-  detailedScore: null,
+  detailedScore: null as number | null,
   createdAt: "",
   updatedAt: "",
 };
 const empty = { own: null, aggregate: { count: 0, averageStars: null, averageDetailedScore: null } };
 
-function renderDialog(overrides: Partial<typeof own> & { isHighlighted?: boolean } = {}) {
+function renderDialog(options: { stars?: number; detailedScore?: number | null; isHighlighted?: boolean; noRating?: boolean } = {}) {
   const onChange = vi.fn();
   const onClose = vi.fn();
+  const ownValue = options.noRating
+    ? undefined
+    : {
+        ...own,
+        stars: options.stars ?? own.stars,
+        detailedScore: options.detailedScore === undefined ? null : options.detailedScore,
+        isHighlighted: options.isHighlighted,
+      };
   renderWithIntl(
-    <RatingDetailDialog open onClose={onClose} target={{ type: "release-group", id: RG }} own={{ ...own, ...overrides }} onChange={onChange} />,
+    <RatingDetailDialog open onClose={onClose} target={{ type: "release-group", id: RG }} own={ownValue} onChange={onChange} />,
   );
   return { onChange, onClose };
 }
@@ -39,27 +47,55 @@ beforeEach(() => {
 });
 
 describe("RatingDetailDialog", () => {
-  it("limita el puntaje al tramo de las estrellas vigentes", () => {
+  it("acepta todo el rango 1–100 y muestra la equivalencia y el cambio de estrellas", () => {
     renderDialog();
     const input = screen.getByRole("spinbutton");
-    expect(input).toHaveAttribute("min", "71");
-    expect(input).toHaveAttribute("max", "80");
-    expect(screen.getByText(/entre 71 y 80/)).toBeInTheDocument();
+    expect(input).toHaveAttribute("min", "1");
+    expect(input).toHaveAttribute("max", "100");
 
-    fireEvent.change(input, { target: { value: "95" } });
+    fireEvent.change(input, { target: { value: "86" } });
+    expect(input).not.toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText(/86 → 4,5★/)).toBeInTheDocument();
+    expect(screen.getByText(/Cambiará tus estrellas de 4,0★ a 4,5★/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: detail.save })).toBeEnabled();
+  });
+
+  it("rechaza un valor fuera de 1–100 y no permite guardar", () => {
+    renderDialog();
+    const input = screen.getByRole("spinbutton");
+    fireEvent.change(input, { target: { value: "101" } });
     expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("button", { name: detail.save })).toBeDisabled();
+
+    fireEvent.change(input, { target: { value: "0" } });
     expect(screen.getByRole("button", { name: detail.save })).toBeDisabled();
   });
 
-  it("guarda un puntaje coherente con las mismas estrellas", async () => {
+  it("guarda solo el puntaje y deja que el servidor derive las estrellas", async () => {
     mocks.saveRating.mockResolvedValue({});
     const { onChange, onClose } = renderDialog();
-    fireEvent.change(screen.getByRole("spinbutton"), { target: { value: "77" } });
+    fireEvent.change(screen.getByRole("spinbutton"), { target: { value: "86" } });
     fireEvent.click(screen.getByRole("button", { name: detail.save }));
 
-    await waitFor(() => expect(mocks.saveRating).toHaveBeenCalledWith("release-group", RG, { stars: 4, detailedScore: 77 }));
+    await waitFor(() => expect(mocks.saveRating).toHaveBeenCalledWith("release-group", RG, { detailedScore: 86 }));
     expect(onChange).toHaveBeenCalledWith(empty);
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it("permite puntuar sin estrellas previas", async () => {
+    mocks.saveRating.mockResolvedValue({});
+    const { onClose } = renderDialog({ noRating: true });
+    fireEvent.change(screen.getByRole("spinbutton"), { target: { value: "86" } });
+    fireEvent.click(screen.getByRole("button", { name: detail.save }));
+
+    await waitFor(() => expect(mocks.saveRating).toHaveBeenCalledWith("release-group", RG, { detailedScore: 86 }));
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("sin valoración no ofrece destacar ni borrar", () => {
+    renderDialog({ noRating: true });
+    expect(screen.queryByRole("button", { name: detail.highlight })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: detail.delete })).not.toBeInTheDocument();
   });
 
   it("borrar la nota pide confirmación y borra estrellas y puntaje", async () => {

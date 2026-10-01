@@ -47,6 +47,7 @@ export async function RatingHighlights({ highlights }: RatingHighlightsProps) {
                 <StarRatingValue
                   stars={highlight.stars}
                   detailedScore={highlight.detailedScore}
+                  showScore
                   label={
                     highlight.detailedScore != null
                       ? t("reviews.ratingLabelScore", {

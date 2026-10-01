@@ -174,11 +174,12 @@ cita se lo gana lo que está **escrito**.
 ### Rating — fila de estrellas
 
 Un rating se renderiza con `StarRatingValue` (`src/components/social/StarRatingValue.tsx`):
-la fila de cinco estrellas de `rating-display` junto al número (`4.5` o `4.5 · 87` con el
-score detallado). El relleno de las estrellas es el único uso de ámbar en reposo del feed
-(Regla de Rareza). `role="img"` + `aria-label` legible; los glifos y el número van
-`aria-hidden`. Es la misma representación que en el resto de las superficies (ver
-`ratings-and-reviews.md`, sección "Representación de la nota").
+la fila de cinco estrellas de `rating-display` junto al número de estrellas (`4,5`). El puntaje
+detallado **no** se muestra en el feed — ni en la fila de una entrada ni en la corrida plegada
+(cambio `define-detailed-score`): es una superficie densa y de otras personas. El relleno de las
+estrellas es el único uso de ámbar en reposo del feed (Regla de Rareza). `role="img"` +
+`aria-label` legible; los glifos y el número van `aria-hidden`. Es la misma representación que en
+el resto de las superficies (ver `ratings-and-reviews.md`, sección "Representación de la nota").
 
 ### Agrupación por tier
 
