@@ -1,7 +1,9 @@
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { albumHref } from "@/lib/catalog-links";
+import { StarRatingDisplay } from "@/components/social/StarRatingDisplay";
 import { ContentActions } from "@/components/social/ContentActions";
+import { formatStars } from "./album-format";
 import type { ReviewDetail } from "@/services/reviews";
 
 // Cuerpo de una reseña de álbum (openspec: redesign-album-page, capability `review-detail`),
@@ -18,8 +20,10 @@ interface ReviewArticleProps {
 
 export function ReviewArticle({ detail, viewerId, canModerate, showTitle = true }: ReviewArticleProps) {
   const t = useTranslations("catalog.album.reviewPage");
+  const tReviews = useTranslations("catalog.album.reviews");
   const tSocial = useTranslations("catalog.social");
   const format = useFormatter();
+  const locale = useLocale();
   const { review, album } = detail;
   const deactivated = review.user.deactivated === true;
   const author = deactivated ? tSocial("deactivatedAccount") : (review.user.displayName ?? review.user.username);
@@ -49,13 +53,10 @@ export function ReviewArticle({ detail, viewerId, canModerate, showTitle = true 
           )}
         </span>
         {review.rating && (
-          <span className="text-amber">
-            <span aria-hidden="true">
-              {"★".repeat(Math.floor(review.rating.stars))}
-              {review.rating.stars % 1 ? "½" : ""}
-            </span>
-            <span className="sr-only">{review.rating.stars}</span>
-          </span>
+          <StarRatingDisplay
+            value={review.rating.stars}
+            label={tReviews("ratingLabel", { stars: formatStars(review.rating.stars, locale) })}
+          />
         )}
         <time dateTime={review.createdAt}>{format.dateTime(new Date(review.createdAt), { dateStyle: "long" })}</time>
       </p>

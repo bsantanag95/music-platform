@@ -157,7 +157,7 @@ pesa distinto sobre un álbum que sobre una canción:
 - **Glifo por tipo** (`add-feed-kind-differentiation`): cada `kind` muestra un ícono mono de
   14px junto al verbo de la línea de metadato (`FeedKindIcons.tsx`, misma familia visual que
   los íconos de reacción de escucha) — siempre acompañado del texto, nunca la única señal.
-  El rating queda exento: su medidor VU ya cumple ese rol. "Seguir a un usuario" y "seguir a
+  El rating queda exento: sus estrellas ya cumplen ese rol. "Seguir a un usuario" y "seguir a
   un artista" comparten el mismo glifo (`add-artist-follow-feed-entry`): es la misma acción,
   distinta solo en el objetivo y el verbo.
 - **La reseña gana identidad propia**: ya no lleva su `title` como sufijo del verbo
@@ -171,13 +171,14 @@ Alinea con `product_philosophy.md`: el Principio 1 (registrar una escucha no req
 juicio, bajo contenido) y el Principio 4 (las reseñas son contenido). El tratamiento de
 cita se lo gana lo que está **escrito**.
 
-### Rating — medidor tipo VU
+### Rating — fila de estrellas
 
-Un rating se renderiza con `FeedRatingMeter` (`src/components/feed/FeedRatingMeter.tsx`):
-una escalera de 5 marcas crecientes en **ámbar**, encendidas hasta el valor (media marca
-por `.5`), **siempre acompañada del número** (`4.5` o `4.5 · 87` con el score detallado).
-Es el único uso de ámbar en reposo del feed (Regla de Rareza). `role="img"` +
-`aria-label` legible; las marcas son `aria-hidden`.
+Un rating se renderiza con `StarRatingValue` (`src/components/social/StarRatingValue.tsx`):
+la fila de cinco estrellas de `rating-display` junto al número (`4.5` o `4.5 · 87` con el
+score detallado). El relleno de las estrellas es el único uso de ámbar en reposo del feed
+(Regla de Rareza). `role="img"` + `aria-label` legible; los glifos y el número van
+`aria-hidden`. Es la misma representación que en el resto de las superficies (ver
+`ratings-and-reviews.md`, sección "Representación de la nota").
 
 ### Agrupación por tier
 

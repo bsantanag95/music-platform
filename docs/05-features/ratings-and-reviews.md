@@ -39,6 +39,36 @@ Dos escalas, siempre coherentes entre sí (forzado a nivel de base, no solo de i
 **Edición:** una nueva valoración de un usuario sobre el mismo objetivo **reemplaza** a la
 anterior — no hay historial en `rating` (eso es justamente lo que
 `listening-diary-and-ratings.md` propone agregar por separado, sin tocar esta garantía).
+También puede **borrarse** (estrellas y puntuación detallada), como si nunca se hubiera
+valorado; la reseña, si existe, se conserva porque es un objeto con lifecycle propio.
+
+## Representación de la nota (cambio `unify-rating-representation`)
+
+La nota de un usuario se dibuja **siempre con estrellas**, en todas las superficies
+(panel "Tu relación", tracklist, feed de actividad, valoraciones destacadas y reseñas del
+perfil, índice y artículo de reseña, comentarios populares, marcas de la discografía y
+compositor de reseñas). Ninguna superficie usa otro símbolo (barras, medidores, chips
+numéricos) para ese dato.
+
+- **Dos formas.** La **fila** de cinco estrellas dibujadas (llenas, medias o vacías) en las
+  superficies donde la nota es protagonista; la **forma compacta** `★ 4,5` (una estrella y
+  el número) en las superficies densas donde no cabe una fila (marca sobre la carátula de
+  la discografía, fila compacta del feed —incluidas las corridas plegadas—, comentarios
+  populares). La media estrella se dibuja como media estrella, no con el carácter `½`. La
+  forma compacta SIEMPRE lleva la estrella: nunca un número suelto.
+- **Formato del número.** El valor se formatea con la convención del idioma (coma decimal
+  en español: `4,5`; punto en inglés: `4.5`), en la fila y en la compacta por igual; no se
+  muestra el string crudo de la base.
+- **Ámbar.** El relleno de la estrella es el único uso de ámbar de la representación; las
+  estrellas vacías son un contorno neutro.
+- **Accesibilidad.** Cada nota expone su valor como una sola imagen con una etiqueta que
+  incluye el valor en estrellas (y el puntaje detallado cuando existe); los glifos son
+  decorativos.
+- **Un solo control de selección.** Elegir o cambiar estrellas (panel "Tu relación",
+  compositor de reseñas) usa el mismo control de cinco estrellas con media estrella, con
+  navegación por teclado. No se ofrece una fila de botones numéricos como alternativa.
+- **Puntaje detallado 1–100.** Su presentación y su coherencia con las estrellas se tratan
+  aparte; el texto numérico sigue yendo junto a las estrellas (`4.5` / `4.5 · 87`).
 
 ## Reseñas en la página de álbum
 

@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { targetHref } from "./feed-target";
 import { RelativeDate } from "./feed-row-parts";
 import { FEED_KIND_ICONS } from "./FeedKindIcons";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { UserHoverCard } from "@/components/profiles/UserHoverCard";
+import { formatStars } from "@/components/album/album-format";
 // Tipos del cliente (inferidos de Zod, `artistName` opcional) en vez de los del
 // servicio: esta fila la consumen tanto un Server Component con datos crudos
 // del servicio (`CommunityActivity`, más estrictos) como un Client Component
@@ -81,6 +82,7 @@ function ClampedSnippet({ body }: { body: string }) {
 // desajuste de hidratación); sin acciones, es una vitrina de lectura.
 export function CompactActivityRow({ entry }: { entry: CompactActivityEntry }) {
   const t = useTranslations("feed");
+  const locale = useLocale();
   const username = entry.author.username;
   const authorLabel = entry.author.displayName ?? `@${username}`;
   const isReview = entry.kind === "review";
@@ -92,7 +94,7 @@ export function CompactActivityRow({ entry }: { entry: CompactActivityEntry }) {
         ? entry.title
           ? t("reviewVerbTitled", { title: entry.title })
           : t("reviewVerb")
-        : `★ ${Number(entry.stars)}`;
+        : `★ ${formatStars(Number(entry.stars), locale)}`;
 
   // El glifo de refuerzo se omite en rating (★ ya cumple ese rol) — mismo
   // criterio que `FeedActivityList` (openspec: add-feed-kind-differentiation).

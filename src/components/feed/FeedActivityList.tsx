@@ -1,13 +1,14 @@
 "use client";
 
 import { AppImage } from "@/components/ui/AppImage";
-import { useNow, useTranslations } from "next-intl";
+import { useLocale, useNow, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { ReactionBadge } from "@/components/diary/ReactionBadge";
+import { formatStars } from "@/components/album/album-format";
 import { targetHref } from "./feed-target";
 import { listHref } from "@/lib/catalog-links";
-import { FeedRatingMeter } from "./FeedRatingMeter";
+import { StarRatingValue } from "@/components/social/StarRatingValue";
 import { isFeedEntryQuote } from "./feed-entry-tier";
 import { groupFeedRuns, type FeedEntryGroup, type FeedRotationPeak } from "./feed-grouping";
 import { ProsePanel, RelativeDate, TargetTitle } from "./feed-row-parts";
@@ -39,6 +40,7 @@ interface FeedActivityListProps {
 // navegación al autor y al objetivo.
 export function FeedActivityList({ entries, variant = "feed", clamp = false }: FeedActivityListProps) {
   const t = useTranslations("feed");
+  const locale = useLocale();
   const self = variant === "self";
   // `now` estable dentro del request (mismo valor que las fechas relativas):
   // `groupFeedRuns` lo usa para la ventana de 7 días del pico de rotación.
@@ -109,10 +111,10 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
                 <EntryReaction entry={row} inline />
               </div>
               {row.kind === "rating" ? (
-                <FeedRatingMeter
+                <StarRatingValue
                   stars={row.stars}
                   detailedScore={row.detailedScore}
-                  label={ratingMeterLabel(row.stars, row.detailedScore, t)}
+                  label={ratingLabel(row.stars, row.detailedScore, t, locale)}
                 />
               ) : null}
               {row.kind === "review" ? <ReviewKicker t={t} title={row.title} /> : null}
@@ -137,10 +139,10 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
                 <TargetTitle {...targetLink(row)} />
                 <EntryReaction entry={row} />
                 {row.kind === "rating" ? (
-                  <FeedRatingMeter
+                  <StarRatingValue
                     stars={row.stars}
                     detailedScore={row.detailedScore}
-                    label={ratingMeterLabel(row.stars, row.detailedScore, t)}
+                    label={ratingLabel(row.stars, row.detailedScore, t, locale)}
                   />
                 ) : null}
                 {row.kind === "review" ? <ReviewKicker t={t} title={row.title} /> : null}
@@ -173,6 +175,7 @@ function GroupRow({
   t: FeedT;
   hideAuthor: boolean;
 }) {
+  const locale = useLocale();
   const shown = group.entries.slice(0, 4);
   const more = group.entries.length - shown.length;
   const verb =
@@ -210,7 +213,7 @@ function GroupRow({
                 {label}
               </Link>
               {entry.kind === "rating" ? (
-                <span className="text-amber"> ({ratingGroupValue(entry)})</span>
+                <span className="text-amber"> (★ {ratingGroupValue(entry, locale)})</span>
               ) : null}
             </span>
           );
@@ -390,17 +393,20 @@ function actionLabel(entry: FeedEntry, t: FeedT): string {
   }
 }
 
-function ratingMeterLabel(stars: string, score: number | null, t: FeedT): string {
+function ratingLabel(stars: string, score: number | null, t: FeedT, locale: string): string {
+  const value = formatStars(Number(stars), locale);
   return score != null
-    ? t("ratingMeterLabelScore", { stars, score })
-    : t("ratingMeterLabel", { stars });
+    ? t("ratingLabelScore", { stars: value, score })
+    : t("ratingLabel", { stars: value });
 }
 
 // Valor compacto para una valoración dentro de una fila de grupo plegada
-// (ej. "4.5" o "4.5 · 65") — mismo formato que el numérico de FeedRatingMeter,
-// sin repetir el meter completo por cada entrada de la corrida.
-function ratingGroupValue(entry: Extract<FeedEntry, { kind: "rating" }>): string {
-  return entry.detailedScore != null ? `${entry.stars} · ${entry.detailedScore}` : entry.stars;
+// (ej. "4,5" o "4,5 · 65") — el número con `formatStars`, sin repetir la fila
+// de estrellas completa por cada entrada de la corrida. Se muestra tras la
+// forma compacta `★ 4,5` (rating-display), no como un número suelto.
+function ratingGroupValue(entry: Extract<FeedEntry, { kind: "rating" }>, locale: string): string {
+  const stars = formatStars(Number(entry.stars), locale);
+  return entry.detailedScore != null ? `${stars} · ${entry.detailedScore}` : stars;
 }
 
 function audienceLabel(entry: FeedEntry, t: FeedT): string | null {

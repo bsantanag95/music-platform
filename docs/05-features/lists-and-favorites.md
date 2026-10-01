@@ -247,7 +247,7 @@ escala o una necesidad que todavía no se observó.
 **Por cercanía al cambio (pronto, riesgo bajo — completan lo recién entregado):**
 
 - **Rating del autor inline en el modo Detallada:** mostrar la valoración del autor de la
-  lista junto a cada ítem. ~1–1.5 unidades de trabajo, sin migración, reusa `FeedRatingMeter`
+  lista junto a cada ítem. ~1–1.5 unidades de trabajo, sin migración, reusa `StarRatingValue`
   y una función batch de ratings nueva (hoy `getRatings` es de a uno). Es lo más "Letterboxd"
   del backlog; buen candidato para la iteración siguiente.
 - **Toggle rankeada / sin orden:** presentación de la lista como ranking numerado o como

@@ -2,19 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { SubmitEventHandler } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { reviewHref } from "@/lib/catalog-links";
 import { ApiError } from "@/lib/api/client";
 import { deleteReview, saveReview, updateReview } from "@/lib/api/social";
+import { StarRatingInput } from "@/components/social/StarRatingInput";
+import { formatStars } from "./album-format";
 import type { Review } from "@/lib/api/schemas";
 
 // Editor de la reseña propia en la pestaña Reseñas del álbum (openspec: redesign-album-page).
 // Mismas reglas que antes (spec album-review): cuerpo obligatorio, título opcional y
 // estrellas solo si el usuario todavía no valoró el álbum. El índice de la comunidad
-// vive aparte (`ReviewIndex`).
-
-const STAR_VALUES = Array.from({ length: 10 }, (_, index) => (index + 1) / 2);
+// vive aparte (`ReviewIndex`). Las estrellas se eligen con `StarRatingInput`, el mismo
+// control del panel "Tu relación" (openspec: unify-rating-representation, D5).
 
 /** Ancla del editor; el panel "Tu relación" enlaza a `/album/<id>/reviews#your-review`. */
 export const REVIEW_COMPOSER_ANCHOR = "your-review";
@@ -47,7 +48,9 @@ interface ReviewComposerProps {
 export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownReview, albumTitle }: ReviewComposerProps) {
   const t = useTranslations("catalog.social");
   const tAlbum = useTranslations("catalog.album.reviews");
+  const tRelation = useTranslations("catalog.album.relation");
   const tErrors = useTranslations("errors");
+  const locale = useLocale();
   const router = useRouter();
 
   const [review, setReview] = useState(ownReview);
@@ -167,27 +170,15 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
       ) : (
         <form onSubmit={handleSubmit} className="flex flex-col gap-3" aria-label={t("reviewFormLabel")}>
           {!review && ownStars === 0 && (
-            <fieldset>
-              <legend className="mb-2 font-data text-sm text-paper">{t("starsLabel")}</legend>
-              <div className="flex flex-wrap gap-2">
-                {STAR_VALUES.map((value) => (
-                  <label key={value} className="cursor-pointer font-data text-sm text-paper">
-                    <input
-                      type="radio"
-                      name={`review-stars-${releaseGroupId}`}
-                      value={value}
-                      checked={stars === value}
-                      onChange={() => setStars(value)}
-                      className="peer sr-only"
-                    />
-                    <span className="inline-flex min-w-10 justify-center rounded border border-ink-border px-2 py-1 peer-checked:border-amber peer-checked:text-amber">
-                      {value}
-                    </span>
-                  </label>
-                ))}
-              </div>
-              <p className="mt-1 font-data text-xs text-paper-muted">{t("reviewStarsHint")}</p>
-            </fieldset>
+            <div className="flex flex-col gap-1">
+              <StarRatingInput
+                value={stars || null}
+                onChange={setStars}
+                legend={t("starsLabel")}
+                valueLabel={(value) => tRelation("starsValue", { stars: formatStars(value, locale) })}
+              />
+              <p className="font-data text-xs text-paper-muted">{t("reviewStarsHint")}</p>
+            </div>
           )}
           <label htmlFor={`review-title-${releaseGroupId}`} className="font-data text-sm text-paper">
             {t("reviewTitleLabel")}

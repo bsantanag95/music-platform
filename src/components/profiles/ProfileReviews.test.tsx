@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import type { ReactNode } from "react";
+import { renderWithIntl } from "@/test/i18n-test-utils";
 import { ProfileReviews } from "./ProfileReviews";
 import type { ProfileReview } from "@/services/profiles/reviews";
 
 vi.mock("next-intl/server", () => ({
+  getLocale: vi.fn().mockResolvedValue("es"),
   getTranslations: vi.fn().mockResolvedValue(
     (key: string, vars?: Record<string, unknown>) =>
       vars ? `${key}:${JSON.stringify(vars)}` : key,
@@ -42,7 +44,7 @@ describe("ProfileReviews", () => {
   });
 
   it("renderiza una tarjeta por reseña con el álbum enlazado, el rating y el cuerpo recortado", async () => {
-    render(await ProfileReviews({ data: { reviews: [review()], total: 1 } }));
+    renderWithIntl(await ProfileReviews({ data: { reviews: [review()], total: 1 } }));
 
     expect(screen.getByRole("link", { name: "A Moon Shaped Pool" })).toHaveAttribute(
       "href",
@@ -52,12 +54,13 @@ describe("ProfileReviews", () => {
     expect(screen.getByText("Un disco para volver")).toBeInTheDocument();
     const body = screen.getByText(/La producción respira/);
     expect(body.className).toMatch(/line-clamp-4/);
-    // el medidor de rating aparece
-    expect(screen.getByRole("img")).toHaveAttribute("aria-label", expect.stringContaining("4.5"));
+    // la fila de estrellas del rating aparece, con el número en coma
+    expect(screen.getByRole("img")).toHaveAttribute("aria-label", expect.stringContaining("4,5"));
+    expect(screen.getByText("4,5 · 88")).toBeInTheDocument();
   });
 
   it("muestra 'y N más' cuando el total supera las mostradas", async () => {
-    render(
+    renderWithIntl(
       await ProfileReviews({
         data: { reviews: [review({ id: "a" }), review({ id: "b" })], total: 7 },
       }),
@@ -66,8 +69,8 @@ describe("ProfileReviews", () => {
     expect(screen.getByText(/reviews\.andMore.*"count":5/)).toBeInTheDocument();
   });
 
-  it("omite el medidor cuando la reseña no tiene rating", async () => {
-    render(
+  it("omite la fila de estrellas cuando la reseña no tiene rating", async () => {
+    renderWithIntl(
       await ProfileReviews({
         data: { reviews: [review({ stars: null, detailedScore: null })], total: 1 },
       }),

@@ -1,29 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { albumHref, reviewHref } from "@/lib/catalog-links";
 import { getReviews } from "@/lib/api/social";
 import { REVIEW_SORTS, type ReviewSort, type ReviewsResponse } from "@/lib/api/schemas";
-import { reviewHeadline } from "./album-format";
+import { StarRatingDisplay } from "@/components/social/StarRatingDisplay";
+import { formatStars, reviewHeadline } from "./album-format";
 
 // Índice de reseñas de la pestaña Reseñas (openspec: redesign-album-page, patrón
 // Metal-Archives): una fila por reseña con título (o extracto), nota, autor y fecha. Cada
 // fila abre `/review/{id}`, que desde el álbum se intercepta como modal. El orden vive en
-// la URL (`?sort=`) para que se pueda enlazar y el modal navegue en el mismo orden.
-
-function Stars({ value }: { value: number }) {
-  return (
-    <>
-      <span aria-hidden="true" className="text-amber">
-        {"★".repeat(Math.floor(value))}
-        {value % 1 ? "½" : ""}
-      </span>
-      <span className="sr-only">{value}</span>
-    </>
-  );
-}
+// la URL (`?sort=`) para que se pueda enlazar y el modal navegue en el mismo orden. La nota
+// se dibuja con la fila de estrellas de `rating-display` (openspec: unify-rating-representation).
 
 interface ReviewIndexProps {
   releaseGroupId: string;
@@ -39,6 +29,7 @@ export function ReviewIndex({ releaseGroupId, initial, sort, albumTitle, albumAr
   const t = useTranslations("catalog.album.reviews");
   const tSocial = useTranslations("catalog.social");
   const format = useFormatter();
+  const locale = useLocale();
   const [reviews, setReviews] = useState(initial.reviews);
   const [page, setPage] = useState(initial.page);
   const [hasNext, setHasNext] = useState(initial.hasNext);
@@ -128,7 +119,16 @@ export function ReviewIndex({ releaseGroupId, initial, sort, albumTitle, albumAr
                       {author} · {date}
                     </span>
                   </td>
-                  <td className="py-2 pr-3 font-data text-sm">{review.rating ? <Stars value={review.rating.stars} /> : "—"}</td>
+                  <td className="py-2 pr-3 font-data text-sm">
+                    {review.rating ? (
+                      <StarRatingDisplay
+                        value={review.rating.stars}
+                        label={t("ratingLabel", { stars: formatStars(review.rating.stars, locale) })}
+                      />
+                    ) : (
+                      "—"
+                    )}
+                  </td>
                   <td className="hidden truncate py-2 pr-3 font-data text-xs text-paper-muted sm:table-cell">{author}</td>
                   <td className="hidden py-2 font-data text-xs text-paper-muted sm:table-cell">{date}</td>
                 </tr>

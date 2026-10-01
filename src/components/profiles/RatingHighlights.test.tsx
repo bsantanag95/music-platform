@@ -6,6 +6,7 @@ import { RatingHighlights } from "./RatingHighlights";
 import type { RatingHighlightEntry } from "@/services/rating-highlights/rating-highlights";
 
 vi.mock("next-intl/server", () => ({
+  getLocale: vi.fn().mockResolvedValue("es"),
   getTranslations: vi.fn().mockResolvedValue((key: string, vars?: Record<string, unknown>) =>
     vars ? `${key}:${JSON.stringify(vars)}` : key,
   ),

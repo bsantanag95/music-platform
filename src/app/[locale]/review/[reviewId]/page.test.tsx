@@ -87,6 +87,8 @@ describe("página de reseña", () => {
       albumHref(null, ALBUM_TITLE, ALBUM_ID),
     );
     expect(screen.getByRole("link", { name: "Ana" })).toHaveAttribute("href", "/users/ana");
+    // La nota se dibuja como fila de estrellas con el valor en la etiqueta accesible.
+    expect(screen.getByRole("img", { name: "3,5 estrellas" })).toBeInTheDocument();
   });
 
   it("UUID hexadecimal viejo → 308 a la dirección canónica", async () => {

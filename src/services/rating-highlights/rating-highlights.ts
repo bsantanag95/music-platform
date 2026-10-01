@@ -13,7 +13,7 @@ export const RATING_HIGHLIGHT_MAX = 6;
 export interface RatingHighlightEntry {
   /** Id de la valoración (`rating.id`), no de la fila de destacado. */
   id: string;
-  /** Como la devuelve la BD: "0.5".."5.0" (mismo formato que `FeedRatingMeter` espera). */
+  /** Como la devuelve la BD: "0.5".."5.0" (mismo formato que `StarRatingValue` espera). */
   stars: string;
   detailedScore: number | null;
   entity: ShowcaseEntity;

@@ -92,7 +92,7 @@ describe("ReviewComposer", () => {
     const user = userEvent.setup();
     mocks.saveReview.mockResolvedValue({ ...ownReview, body: "Un texto nuevo" });
     renderWithIntl(<ReviewComposer releaseGroupId={RG} authenticated ownStars={4} ownReview={null} />);
-    expect(screen.queryByText(social.starsLabel)).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio")).not.toBeInTheDocument();
 
     await user.type(screen.getByLabelText(social.reviewTitleLabel), "Mi título");
     await user.type(screen.getByLabelText(social.reviewBodyLabel), "Un texto nuevo");
@@ -101,6 +101,27 @@ describe("ReviewComposer", () => {
     expect(mocks.saveReview).toHaveBeenCalledWith("release-group", RG, { body: "Un texto nuevo", title: "Mi título" });
     expect(await screen.findByText("Un texto nuevo")).toBeInTheDocument();
     expect(mocks.refresh).toHaveBeenCalled();
+  });
+
+  it("sin valoración previa elige estrellas con el control de estrellas y las envía", async () => {
+    const user = userEvent.setup();
+    mocks.saveReview.mockResolvedValue({ ...ownReview, body: "Un texto nuevo" });
+    renderWithIntl(<ReviewComposer releaseGroupId={RG} authenticated ownStars={0} ownReview={null} />);
+
+    // El control de estrellas ofrece diez radios (½…5), como el panel del álbum.
+    expect(screen.getAllByRole("radio")).toHaveLength(10);
+    expect(screen.getByRole("button", { name: social.reviewSubmit })).toBeDisabled();
+
+    await user.type(screen.getByLabelText(social.reviewBodyLabel), "Un texto nuevo");
+    await user.click(screen.getByRole("radio", { name: "4,5 estrellas" }));
+    expect(screen.getByRole("button", { name: social.reviewSubmit })).toBeEnabled();
+    await user.click(screen.getByRole("button", { name: social.reviewSubmit }));
+
+    expect(mocks.saveReview).toHaveBeenCalledWith("release-group", RG, {
+      body: "Un texto nuevo",
+      title: null,
+      stars: 4.5,
+    });
   });
 
   it("muestra la reseña propia y permite editarla", async () => {

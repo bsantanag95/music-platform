@@ -1,7 +1,8 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
-import { FeedRatingMeter } from "@/components/feed/FeedRatingMeter";
+import { StarRatingValue } from "@/components/social/StarRatingValue";
+import { formatStars } from "@/components/album/album-format";
 import { albumHref } from "@/lib/catalog-links";
 import type { ProfileReview } from "@/services/profiles/reviews";
 
@@ -17,7 +18,7 @@ interface ProfileReviewsProps {
 export async function ProfileReviews({ data }: ProfileReviewsProps) {
   if (!data || data.reviews.length === 0) return null;
 
-  const t = await getTranslations("users");
+  const [t, locale] = await Promise.all([getTranslations("users"), getLocale()]);
   const remainder = data.total - data.reviews.length;
 
   return (
@@ -55,16 +56,16 @@ export async function ProfileReviews({ data }: ProfileReviewsProps) {
                 ) : null}
               </div>
               {entry.stars ? (
-                <FeedRatingMeter
+                <StarRatingValue
                   stars={entry.stars}
                   detailedScore={entry.detailedScore}
                   label={
                     entry.detailedScore != null
                       ? t("reviews.ratingLabelScore", {
-                          stars: entry.stars,
+                          stars: formatStars(Number(entry.stars), locale),
                           score: entry.detailedScore,
                         })
-                      : t("reviews.ratingLabel", { stars: entry.stars })
+                      : t("reviews.ratingLabel", { stars: formatStars(Number(entry.stars), locale) })
                   }
                 />
               ) : null}

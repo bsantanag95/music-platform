@@ -24,7 +24,9 @@ medias o vacías) para las superficies donde la nota es protagonista, y la **for
 `★ 4,5` (una estrella y el número) para las superficies densas donde no cabe una fila
 (marca sobre la carátula de la discografía, fila compacta del feed, comentarios populares).
 La media estrella SHALL dibujarse como media estrella en la fila, no como el carácter `½`.
-El relleno SHALL ser el único uso de ámbar de la representación; las estrellas vacías SHALL
+La forma compacta SHALL llevar siempre la estrella: NUNCA un número suelto. El número SHALL
+formatearse con la convención del idioma (coma decimal en español), en ambas formas. El
+relleno SHALL ser el único uso de ámbar de la representación; las estrellas vacías SHALL
 ser un contorno neutro.
 
 #### Scenario: Media estrella en la fila
@@ -34,6 +36,10 @@ ser un contorno neutro.
 #### Scenario: Forma compacta
 - **WHEN** se muestra una nota de 4 estrellas sobre la carátula de un disco en la discografía
 - **THEN** se muestra `★ 4` como una sola estrella con el número, sin fila de cinco
+
+#### Scenario: Forma compacta en una corrida plegada del feed
+- **WHEN** el feed pliega 3 o más valoraciones de un mismo autor en una fila
+- **THEN** cada valor se muestra como `★ 4,5` (estrella y número con coma), no como `(4.5)`
 
 ### Requirement: Accesibilidad de la nota
 Cada nota mostrada SHALL exponer su valor a tecnologías de apoyo como una sola imagen con

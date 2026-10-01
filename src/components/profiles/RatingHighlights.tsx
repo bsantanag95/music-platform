@@ -1,7 +1,8 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
-import { FeedRatingMeter } from "@/components/feed/FeedRatingMeter";
+import { StarRatingValue } from "@/components/social/StarRatingValue";
+import { formatStars } from "@/components/album/album-format";
 import { targetHref } from "@/components/feed/feed-target";
 import type { RatingHighlightEntry } from "@/services/rating-highlights/rating-highlights";
 
@@ -16,7 +17,7 @@ interface RatingHighlightsProps {
 // si no hay ninguna destacada.
 export async function RatingHighlights({ highlights }: RatingHighlightsProps) {
   if (highlights.length === 0) return null;
-  const t = await getTranslations("users");
+  const [t, locale] = await Promise.all([getTranslations("users"), getLocale()]);
 
   return (
     <section className="flex w-full max-w-2xl flex-col gap-4">
@@ -43,13 +44,16 @@ export async function RatingHighlights({ highlights }: RatingHighlightsProps) {
                     {highlight.entity.artistName}
                   </span>
                 )}
-                <FeedRatingMeter
+                <StarRatingValue
                   stars={highlight.stars}
                   detailedScore={highlight.detailedScore}
                   label={
                     highlight.detailedScore != null
-                      ? t("reviews.ratingLabelScore", { stars: highlight.stars, score: highlight.detailedScore })
-                      : t("reviews.ratingLabel", { stars: highlight.stars })
+                      ? t("reviews.ratingLabelScore", {
+                          stars: formatStars(Number(highlight.stars), locale),
+                          score: highlight.detailedScore,
+                        })
+                      : t("reviews.ratingLabel", { stars: formatStars(Number(highlight.stars), locale) })
                   }
                 />
               </span>

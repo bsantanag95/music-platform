@@ -536,8 +536,9 @@ perfil, sin importar la relación de seguimiento.
   la señal de "quiero que esto se vea". Sí sigue gateado por accesibilidad del perfil
   (bloqueo, perfil privado sin relación) — un perfil inaccesible no expone nada, ni siquiera
   esto.
-- Tarjeta: carátula + título + artista + el mismo medidor visual de valoración que usa el
-  feed (`FeedRatingMeter`). Tope de 6, paridad con Álbumes favoritos (sin relación funcional
+- Tarjeta: carátula + título + artista + la fila de estrellas con el número
+  (`StarRatingValue`, la misma representación que el resto de las superficies — ver
+  `ratings-and-reviews.md`). Tope de 6, paridad con Álbumes favoritos (sin relación funcional
   entre ambos).
 
 ## Reseñas

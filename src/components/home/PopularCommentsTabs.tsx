@@ -1,9 +1,11 @@
 "use client";
 
 import { type KeyboardEvent, useId, useState } from "react";
+import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { targetHref } from "@/components/feed/feed-target";
+import { formatStars } from "@/components/album/album-format";
 import type { PopularComment, PopularCommentsByType } from "@/services/home/home";
 
 type TabKey = "artist" | "release-group" | "recording";
@@ -92,6 +94,7 @@ export function PopularCommentsTabs({
 }
 
 function CommentRow({ comment, likeWord }: { comment: PopularComment; likeWord: string }) {
+  const locale = useLocale();
   const author = comment.authorDisplayName ?? `@${comment.authorUsername}`;
 
   return (
@@ -120,7 +123,7 @@ function CommentRow({ comment, likeWord }: { comment: PopularComment; likeWord: 
           >
             {author}
           </Link>
-          {comment.stars != null && <span>★ {Number(comment.stars)}</span>}
+          {comment.stars != null && <span>★ {formatStars(Number(comment.stars), locale)}</span>}
         </div>
         <p className="mt-1 line-clamp-3 font-body text-sm text-paper-muted">{comment.body}</p>
       </div>

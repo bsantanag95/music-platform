@@ -44,7 +44,23 @@ describe("ReviewIndex", () => {
     renderWithIntl(<ReviewIndex releaseGroupId={RG} initial={page([review("1")])} sort="recent" />);
     expect(screen.getByRole("link", { name: "Título 1" })).toHaveAttribute("href", "/review/1");
     expect(screen.getAllByText("Usuario 1").length).toBeGreaterThan(0);
-    expect(screen.getByText("4.5")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "4,5 estrellas" })).toBeInTheDocument();
+  });
+
+  it("dibuja la media estrella de la nota", () => {
+    const { container } = renderWithIntl(
+      <ReviewIndex
+        releaseGroupId={RG}
+        initial={page([review("1", { rating: { stars: 3.5, detailedScore: null } })])}
+        sort="recent"
+      />,
+    );
+
+    expect(screen.getByRole("img", { name: "3,5 estrellas" })).toBeInTheDocument();
+    const widths = Array.from(container.querySelectorAll("svg rect")).map((rect) =>
+      rect.getAttribute("width"),
+    );
+    expect(widths).toEqual(["24", "24", "24", "12", "0"]);
   });
 
   it("sin título muestra un extracto del cuerpo, sin dejar hueco", () => {

@@ -274,14 +274,14 @@ describe("FeedActivityList", () => {
     });
   });
 
-  it("un rating se muestra con el medidor VU y el valor numérico (estrellas + score)", () => {
+  it("un rating se muestra con la fila de estrellas y el valor numérico (estrellas + score)", () => {
     renderWithIntl(<FeedActivityList entries={[rating()]} />);
 
-    // valor numérico visible
-    expect(screen.getByText("4.5 · 87")).toBeInTheDocument();
-    // el medidor lleva un aria-label legible
-    expect(screen.getByRole("img", { name: /4\.5.*5.*87.*100/ })).toBeInTheDocument();
-    // el verbo del metadato es corto, no "Valoró con 4.5 estrellas"
+    // valor numérico visible, con coma en español
+    expect(screen.getByText("4,5 · 87")).toBeInTheDocument();
+    // la fila de estrellas lleva un aria-label legible
+    expect(screen.getByRole("img", { name: /4,5.*5.*87.*100/ })).toBeInTheDocument();
+    // el verbo del metadato es corto, no "Valoró con 4,5 estrellas"
     expect(screen.queryByText(/Valoró con/)).not.toBeInTheDocument();
   });
 
@@ -455,9 +455,10 @@ describe("FeedActivityList", () => {
 
     expect(screen.getByText(/valoró 3 discos/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Uno" })).toBeInTheDocument();
-    expect(screen.getByText("(4.5 · 87)")).toBeInTheDocument();
-    expect(screen.getByText("(3.0)")).toBeInTheDocument();
-    // una sola fila: ningún medidor VU individual, ninguna celda de carátula
+    // forma compacta `★ 4,5`: estrella + número, no un número suelto
+    expect(screen.getByText(/★ 4,5 · 87/)).toBeInTheDocument();
+    expect(screen.getByText(/★ 3,0/)).toBeInTheDocument();
+    // una sola fila: ninguna fila de estrellas individual, ninguna celda de carátula
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
     expect(screen.queryByTestId("cover-thumb")).not.toBeInTheDocument();
   });
@@ -618,11 +619,11 @@ describe("FeedActivityList", () => {
       expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEqual(3);
     });
 
-    it("el rating no suma un glifo propio: su medidor VU ya cumple ese rol", () => {
+    it("el rating no suma un glifo propio: sus estrellas ya cumplen ese rol", () => {
       const { container } = renderWithIntl(<FeedActivityList entries={[rating()]} />);
 
-      // Único SVG en la fila de rating: ninguno (el medidor VU no es un <svg>).
-      expect(container.querySelector("svg")).toBeNull();
+      // Cinco glifos de estrella y ningún ícono de tipo adicional.
+      expect(container.querySelectorAll("svg")).toHaveLength(5);
     });
   });
 
