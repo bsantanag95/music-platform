@@ -65,7 +65,8 @@ estrellas, no como encabezado— y SHALL omitirse por completo cuando es nulo.
 ### Requirement: La reseña siempre lleva rating
 
 El sistema SHALL exigir que exista un `rating` propio del autor sobre el objetivo para
-crear o editar una reseña. La petición de escritura SHALL aceptar `stars` (0.5 a 5 en
+crear una reseña; editar una reseña ya existente NO requiere rating (ver "Edición y
+borrado físico de la reseña"). La petición de escritura SHALL aceptar `stars` (0.5 a 5 en
 pasos de 0.5) y `detailedScore` (1 a 100, coherente con las estrellas) opcionales; cuando
 se envían, el sistema SHALL hacer upsert del `rating` del autor con las mismas reglas de
 validación que el endpoint de rating, dentro de la misma transacción que la escritura de
@@ -104,6 +105,12 @@ reseña.
 - **WHEN** un usuario reseña un álbum con 3 estrellas y luego cambia su rating a 5 por el
   endpoint de rating
 - **THEN** su reseña se muestra con 5 estrellas, sin haber tocado la reseña
+
+#### Scenario: Editar una reseña sin rating
+
+- **WHEN** un autor que borró su rating después de reseñar edita el título o el cuerpo de su
+  reseña sin enviar `stars`
+- **THEN** el sistema actualiza la reseña y no responde `REVIEW_REQUIRES_RATING`
 
 ### Requirement: Escritura de reseñas restringida a álbumes en esta versión
 
@@ -209,4 +216,27 @@ siguen viviendo solo en el `rating`.
 #### Scenario: Reseña con media estrella en el índice
 - **WHEN** el índice de reseñas lista una reseña de 3,5 estrellas
 - **THEN** la fila muestra tres estrellas llenas, una media y una vacía
+
+### Requirement: El compositor no sobrescribe la valoración vigente
+El compositor de reseñas SHALL enviar `stars` únicamente cuando está mostrando el selector
+de estrellas, es decir, cuando el usuario no tiene reseña ni valoración vigente sobre el
+álbum. Cuando el usuario ya tiene una valoración vigente (porque la creó antes o la creó o
+cambió desde el panel "Tu relación" durante la sesión), el compositor NO SHALL enviar un
+valor de estrellas elegido antes, y publicar la reseña NO SHALL modificar ni el valor de la
+valoración ni su puntaje detallado.
+
+#### Scenario: Valorar en el panel después de elegir estrellas en el compositor
+- **WHEN** un usuario sin valoración elige 3 estrellas en el compositor sin publicar, luego
+  valora el álbum con 5 estrellas en el panel "Tu relación" y después publica la reseña
+- **THEN** la reseña se publica sin enviar estrellas y la valoración del usuario sigue en 5
+  estrellas, con su puntaje detallado si lo tenía
+
+#### Scenario: Reseñar sin valoración previa
+- **WHEN** un usuario sin valoración elige 4 estrellas en el compositor y publica la reseña
+- **THEN** se crea la valoración de 4 estrellas junto con la reseña
+
+#### Scenario: Valoración borrada después de elegir estrellas
+- **WHEN** un usuario con valoración vigente la borra desde el panel y el compositor vuelve a
+  mostrar el selector
+- **THEN** el compositor exige elegir estrellas antes de poder publicar una reseña nueva
 
