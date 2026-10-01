@@ -147,6 +147,32 @@ reemplazo ni límite de cantidad.
 Los comentarios publicados pueden editarse o borrarse únicamente por su autor. El borrado es
 físico e irreversible, y las mutaciones requieren una sesión válida.
 
+## Mis valoraciones (cambio `add-my-ratings-library`)
+
+Página propia `/me/ratings` con las valoraciones de álbumes y canciones del usuario en sesión.
+Solo el dueño ve su biblioteca; no existe ruta pública equivalente.
+
+- **Orden** por mejor nota (default), peor nota, más reciente o título. En ambos sentidos de
+  nota, dentro de las mismas estrellas, las valoraciones sin puntaje detallado van **después**
+  de las que lo tienen, sin imputarles ningún valor; el desempate final es por fecha de
+  actualización descendente.
+- **Filtros** combinables por estrellas (½–5), tipo (álbum o canción), año de salida y década.
+  El año de una canción es el menor `first_release_year` de los álbumes donde aparece; una
+  canción sin año queda fuera de los filtros de año y década. El selector de año ofrece solo
+  los años con valoraciones (facetas). Filtrar por año con orden "mejor nota" da el ranking
+  de ese año.
+- **Edición en la fila.** Cada fila permite cambiar estrellas y abrir el diálogo de puntaje
+  (`RatingDetailDialog`) para afinar, destacar o borrar. Cambiar estrellas conserva el puntaje
+  solo si sigue coherente; si no, se guarda sin puntaje y se avisa. Tras editar, la fila se
+  actualiza en el lugar sin reordenarse hasta cambiar el orden o filtros.
+- **Marca "Sin afinar".** Las filas sin puntaje muestran "Sin afinar" en lugar de `86/100`; es
+  la marca y a la vez la acción para abrir el diálogo.
+- **Privacidad.** El puntaje sigue siendo del dueño y de las destacadas; los seguidores
+  aprobados ven estrellas solo donde ya se ven.
+- **Excepción del tooltip de la discografía.** En la columna "Tú" de la discografía, el
+  tooltip y el texto accesible de la nota propia incluyen el puntaje (`Tu nota: 4,5 · 86/100`)
+  cuando existe; lo visible sigue siendo `★ 4,5`.
+
 ## Fuera de alcance pendiente
 
 - ¿Moderación o reporte de comentarios? Fuera de alcance de este documento — ver

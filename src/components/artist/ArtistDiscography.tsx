@@ -354,12 +354,17 @@ function DiscMarksView({ marks }: { marks: DiscMarks }) {
   const t = useTranslations("catalog.artist.discography");
   const locale = useLocale();
   const stars = marks.stars !== null ? formatStars(marks.stars, locale) : null;
+  const starsLabel = stars !== null
+    ? marks.detailedScore !== null
+      ? t("yourStarsScore", { stars, score: marks.detailedScore })
+      : t("yourStars", { stars })
+    : undefined;
   return (
     <span className="inline-flex items-center gap-1.5 font-data text-xs text-paper">
       {stars !== null ? (
-        <span title={t("yourStars", { stars })}>
+        <span title={starsLabel}>
           <span aria-hidden="true">★ {stars}</span>
-          <span className="sr-only">{t("yourStars", { stars })}</span>
+          <span className="sr-only">{starsLabel}</span>
         </span>
       ) : (
         marks.listened && (

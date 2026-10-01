@@ -102,8 +102,10 @@ de biblioteca y biografía, con la misma estructura que el álbum):
   grilla por defecto en Principal y tabla en el resto, con la elección recordada por sección
   en el navegador; "Mostrar más" de a 48 en la grilla; "Mejor valorado" (mayor media con al
   menos 5 valoraciones) y las marcas del usuario (su nota o ✓ si solo escuchó, favorito y
-  Pendiente). La tabla muestra la **Media** ("—" con menos de 5 valoraciones) y la etiqueta de
-  tipo junto al título solo cuando no es álbum.
+   Pendiente). La tabla muestra la **Media** ("—" con menos de 5 valoraciones) y la etiqueta de
+   tipo junto al título solo cuando no es álbum. En la columna "Tú", el tooltip y el texto
+   accesible de la nota propia incluyen el puntaje detallado (`Tu nota: 4,5 · 86/100`) cuando
+   existe (cambio `add-my-ratings-library`); lo visible sigue siendo `★ 4,5`.
 - **Menú "…" por disco** (cambio `add-discography-quick-actions`): en la esquina de la carátula
   (al pasar el mouse o con el foco; siempre visible en táctiles) y en la última columna de la
   tabla. Registrar escucha en un clic (con "Agregar detalles"), Favorito, Pendiente, agregar a

@@ -13,10 +13,12 @@ interface OwnerProfileBarProps {
 // Barra superior del perfil del dueño (spec profile-edit-mode, "Barra del
 // dueño con estado y acceso a Ajustes"): estado de visibilidad que enlaza a la
 // pantalla de Privacidad —sin cambiar nada por sí mismo—, acceso a "Ver cómo
-// te ven" y el interruptor "Editar perfil". Solo tiene sentido dentro del
-// `OwnerEditProvider`; fuera de él (visitante, previsualización) no renderiza.
+// te ven", acceso a "Mis valoraciones" y el interruptor "Editar perfil". Solo
+// tiene sentido dentro del `OwnerEditProvider`; fuera de él (visitante,
+// previsualización) no renderiza.
 export function OwnerProfileBar({ username, visibility }: OwnerProfileBarProps) {
   const t = useTranslations("users");
+  const tCommon = useTranslations("common");
   const ownerEdit = useOwnerEdit();
   if (!ownerEdit) return null;
 
@@ -47,6 +49,12 @@ export function OwnerProfileBar({ username, visibility }: OwnerProfileBarProps) 
           className="font-data text-xs text-paper-muted underline decoration-paper-muted underline-offset-4 transition-colors hover:text-paper hover:decoration-paper"
         >
           {t("viewAs.enter")}
+        </Link>
+        <Link
+          href="/me/ratings"
+          className="font-data text-xs text-paper-muted underline decoration-paper-muted underline-offset-4 transition-colors hover:text-paper hover:decoration-paper"
+        >
+          {tCommon("ratings")}
         </Link>
       </div>
 

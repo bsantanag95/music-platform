@@ -787,7 +787,8 @@ gestión; el dueño ve el mismo perfil que un visitante hasta que activa el modo
 
 - **`OwnerProfileBar`** — barra superior del perfil, solo para el dueño real (`isOwn` y no
   previsualización): chip de estado "Perfil público/privado · Ajustes →" (enlaza a
-  `/me/settings/privacy`, no cambia nada por sí mismo), el acceso a "Ver cómo te ven" y el
+  `/me/settings/privacy`, no cambia nada por sí mismo), el acceso a "Ver cómo te ven", el
+  enlace a "Mis valoraciones" (`/me/ratings`, cambio `add-my-ratings-library`) y el
   interruptor **"Editar perfil"** (`role="switch"`). El estado es local (`useState`) y no persiste
   al navegar.
 - **`OwnerEditProvider`** (cliente) guarda `editing` y renderiza **una sola vez** el panel lateral.

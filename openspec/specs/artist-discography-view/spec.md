@@ -109,7 +109,7 @@ valor en la columna ordenada SHALL ir al final en cualquier sentido, con el tít
 desempate. En la columna "Tú", los discos con las mismas estrellas SHALL ordenarse antes por
 el puntaje detallado propio (en el mismo sentido de la columna, con los que no tienen puntaje
 detallado después de los que sí) y solo después por título; el puntaje no se muestra en la
-tabla. Los títulos SHALL compararse según el idioma de la interfaz, con los números por su
+tabla, salvo en el tooltip y el texto accesible de la nota propia (`Tu nota: 4,5 · 86/100`). Los títulos SHALL compararse según el idioma de la interfaz, con los números por su
 valor ("Vol. 2" antes que "Vol. 10") y sin quitar artículos iniciales; los títulos iguales SHALL
 desempatarse por año ascendente, con los discos sin año al final. Cambiar de sección SHALL
 volver al orden por defecto.
@@ -151,6 +151,11 @@ volver al orden por defecto.
   puntajes 78, 72 y sin puntaje
 - **THEN** quedan en ese orden (78, 72, sin puntaje) y los discos de 4½ estrellas van antes
   que todos ellos
+
+#### Scenario: Tooltip con el puntaje propio
+- **WHEN** una persona con 4,5 estrellas y puntaje 86 sobre un disco pasa el puntero por su
+  nota en la columna "Tú"
+- **THEN** el tooltip dice `Tu nota: 4,5 · 86/100`, y sin puntaje dice `Tu nota: 4,5`
 
 ### Requirement: Mejor valorado
 

@@ -2410,3 +2410,55 @@ export const DeleteAccountRequestSchema = z.object({
 });
 export type DeleteAccountRequest = z.infer<typeof DeleteAccountRequestSchema>;
 
+// --- Biblioteca "Mis valoraciones" (change add-my-ratings-library) ---
+
+export const MY_RATING_SORTS = ["best", "worst", "recent", "title"] as const;
+export const MyRatingSortSchema = z.enum(MY_RATING_SORTS);
+export type MyRatingSort = z.infer<typeof MyRatingSortSchema>;
+
+export const MY_RATING_TARGET_TYPES = ["release-group", "recording"] as const;
+export const MyRatingTargetTypeSchema = z.enum(MY_RATING_TARGET_TYPES);
+export type MyRatingTargetType = z.infer<typeof MyRatingTargetTypeSchema>;
+
+export const MyRatingsFiltersSchema = z.object({
+  sort: MyRatingSortSchema.optional(),
+  stars: z.number().min(0.5).max(5).multipleOf(0.5).optional(),
+  type: MyRatingTargetTypeSchema.optional(),
+  year: z.number().int().optional(),
+  decade: z.number().int().refine((value) => value % 10 === 0).optional(),
+});
+export type MyRatingsFilters = z.infer<typeof MyRatingsFiltersSchema>;
+
+export const MyRatingTargetInfoSchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  coverThumbUrl: z.string().nullable(),
+  artistName: z.string().nullable(),
+  artistId: z.uuid().nullable(),
+  year: z.number().int().nullable(),
+});
+
+export const MyRatingEntrySchema = z.object({
+  id: z.uuid(),
+  targetType: MyRatingTargetTypeSchema,
+  stars: z.number(),
+  detailedScore: z.number().int().nullable(),
+  updatedAt: z.string(),
+  target: MyRatingTargetInfoSchema,
+});
+export type MyRatingEntry = z.infer<typeof MyRatingEntrySchema>;
+
+export const MyRatingsFacetsSchema = z.object({
+  years: z.array(z.number().int()),
+});
+
+export const MyRatingsListResponseSchema = z.object({
+  items: z.array(MyRatingEntrySchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  hasNext: z.boolean(),
+  total: z.number().int(),
+  facets: MyRatingsFacetsSchema,
+});
+export type MyRatingsListResponse = z.infer<typeof MyRatingsListResponseSchema>;
+

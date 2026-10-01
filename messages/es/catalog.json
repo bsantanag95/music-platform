@@ -278,6 +278,7 @@
       "bestRated": "Mejor valorado",
       "listened": "Escuchado",
       "yourStars": "Tu nota: {stars}",
+      "yourStarsScore": "Tu nota: {stars} · {score}/100",
       "showMore": "Mostrar más",
       "columns": {
         "year": "Año",
