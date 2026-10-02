@@ -64,7 +64,7 @@ export function SensitiveIdentity({
   if (hasPassword) {
     return (
       <Input
-        type="password"
+        revealable
         label={t("settings.account.identity.passwordLabel")}
         value={password}
         autoComplete="current-password"

@@ -6,6 +6,9 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { apiFetch, ApiError } from "@/lib/api/client";
 import { OkResponseSchema, ResetPasswordRequestSchema } from "@/lib/api/schemas";
+import { PASSWORD_MAX, PASSWORD_MIN } from "@/services/auth/account-rules";
+import { Button } from "@/components/ui/Button";
+import { AuthField } from "./AuthField";
 
 const localizedErrorCodes = new Set([
   "INVALID_RESET_TOKEN",
@@ -21,17 +24,26 @@ export function ResetPasswordForm({ token }: { token: string }) {
   const router = useRouter();
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [mismatch, setMismatch] = useState(false);
+  const [tooShort, setTooShort] = useState(false);
   const [pending, setPending] = useState(false);
 
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
     setErrorCode(null);
     setMismatch(false);
-    const data = new FormData(event.currentTarget);
+    setTooShort(false);
+    const form = event.currentTarget;
+    const data = new FormData(form);
     const password = String(data.get("password") ?? "");
     const confirmation = String(data.get("confirmPassword") ?? "");
+    if (password.length < PASSWORD_MIN) {
+      setTooShort(true);
+      form.querySelector<HTMLInputElement>('input[name="password"]')?.focus();
+      return;
+    }
     if (password !== confirmation) {
       setMismatch(true);
+      form.querySelector<HTMLInputElement>('input[name="confirmPassword"]')?.focus();
       return;
     }
     const parsed = ResetPasswordRequestSchema.safeParse({ token, password });
@@ -56,47 +68,56 @@ export function ResetPasswordForm({ token }: { token: string }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex w-full max-w-md flex-col gap-5">
-      <label className="flex flex-col gap-2 font-data text-sm text-paper">
-        {t("newPassword")}
-        <input
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          required
-          minLength={8}
-          maxLength={128}
-          className="rounded-md border border-ink-border bg-ink-surface px-3 py-2"
-        />
-      </label>
-      <label className="flex flex-col gap-2 font-data text-sm text-paper">
-        {t("confirmPassword")}
-        <input
-          name="confirmPassword"
-          type="password"
-          autoComplete="new-password"
-          required
-          minLength={8}
-          maxLength={128}
-          className="rounded-md border border-ink-border bg-ink-surface px-3 py-2"
-        />
-      </label>
-      {(mismatch || errorCode) && (
-        <p role="alert" className="font-data text-sm text-danger">
-          {mismatch
-            ? t("passwordMismatch")
-            : tErrors(
-                `${errorCode && localizedErrorCodes.has(errorCode) ? errorCode : "INTERNAL_ERROR"}.description`,
-              )}
+    <form
+      onSubmit={handleSubmit}
+      onChange={() => {
+        setMismatch(false);
+        setTooShort(false);
+      }}
+      noValidate
+      className="flex w-full flex-col gap-5"
+    >
+      <AuthField
+        name="password"
+        label={t("newPassword")}
+        icon="lock"
+        revealable
+        autoComplete="new-password"
+        required
+        minLength={PASSWORD_MIN}
+        maxLength={PASSWORD_MAX}
+        hint={t("passwordHint", { min: PASSWORD_MIN })}
+        error={tooShort ? t("errorPasswordShort", { min: PASSWORD_MIN }) : undefined}
+      />
+      <AuthField
+        name="confirmPassword"
+        label={t("confirmPassword")}
+        icon="lock"
+        revealable
+        autoComplete="new-password"
+        required
+        minLength={PASSWORD_MIN}
+        maxLength={PASSWORD_MAX}
+        error={mismatch ? t("passwordMismatch") : undefined}
+      />
+      {errorCode && (
+        <p
+          role="alert"
+          className="rounded-md border border-danger/40 bg-danger/10 px-3 py-2 font-data text-sm text-danger"
+        >
+          {tErrors(
+            `${localizedErrorCodes.has(errorCode) ? errorCode : "INTERNAL_ERROR"}.description`,
+          )}
         </p>
       )}
-      <button
+      <Button
         type="submit"
         disabled={pending}
-        className="cursor-pointer rounded-md bg-accent px-4 py-3 font-display text-sm text-ink disabled:cursor-wait disabled:opacity-60"
+        aria-busy={pending}
+        className="mt-1 h-11 w-full cursor-pointer disabled:cursor-wait"
       >
         {pending ? t("submitting") : t("resetSubmit")}
-      </button>
+      </Button>
     </form>
   );
 }

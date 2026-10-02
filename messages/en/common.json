@@ -129,5 +129,7 @@
     "album": "Loading album...",
     "search": "Loading search...",
     "song": "Loading song..."
-  }
+  },
+  "showPassword": "Show password",
+  "hidePassword": "Hide password"
 }

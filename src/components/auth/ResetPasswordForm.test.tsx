@@ -31,7 +31,22 @@ describe("ResetPasswordForm", () => {
     await user.type(screen.getByLabelText(authEs.newPassword), "unaClaveLarga1");
     await user.type(screen.getByLabelText(authEs.confirmPassword), "otraClaveLarga2");
     await user.click(screen.getByRole("button", { name: authEs.resetSubmit }));
-    expect(screen.getByRole("alert")).toHaveTextContent(authEs.passwordMismatch);
+    const confirmation = screen.getByLabelText(authEs.confirmPassword);
+    expect(confirmation).toHaveAccessibleDescription(authEs.passwordMismatch);
+    expect(confirmation).toHaveFocus();
+    expect(mocks.apiFetch).not.toHaveBeenCalled();
+  });
+
+  it("avisa en el campo si la contraseña es demasiado corta", async () => {
+    const user = userEvent.setup();
+    mocks.apiFetch.mockClear();
+    renderWithIntl(<ResetPasswordForm token="tok" />);
+    await user.type(screen.getByLabelText(authEs.newPassword), "corta");
+    await user.type(screen.getByLabelText(authEs.confirmPassword), "corta");
+    await user.click(screen.getByRole("button", { name: authEs.resetSubmit }));
+    expect(screen.getByLabelText(authEs.newPassword)).toHaveAccessibleDescription(
+      authEs.errorPasswordShort.replace("{min}", "8"),
+    );
     expect(mocks.apiFetch).not.toHaveBeenCalled();
   });
 

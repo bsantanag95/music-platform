@@ -88,6 +88,17 @@
   background-color: var(--color-amber);
 }
 
+/* El autofill de Chromium pinta el campo de amarillo/blanco por encima de
+   nuestros tokens. Un inset shadow del color de superficie lo tapa y el
+   texto vuelve a ser Paper. */
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover,
+.auth-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-paper);
+  caret-color: var(--color-paper);
+  box-shadow: 0 0 0 1000px var(--color-ink-surface) inset;
+}
+
 /* El popup nativo de <select> ignora el resto de nuestros tokens — Chromium
    solo respeta background-color/color puestos directamente en <option>. Sin
    esto, `color-scheme: dark` no alcanza y el menú se abre blanco con

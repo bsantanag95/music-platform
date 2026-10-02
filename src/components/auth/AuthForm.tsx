@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { SubmitEventHandler } from "react";
+import type { ReactNode, SubmitEventHandler, SyntheticEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { apiFetch, ApiError } from "@/lib/api/client";
@@ -10,6 +10,13 @@ import {
   LoginRequestSchema,
   RegisterRequestSchema,
 } from "@/lib/api/schemas";
+import {
+  PASSWORD_MIN,
+  USERNAME_MAX,
+  USERNAME_MIN,
+} from "@/services/auth/account-rules";
+import { Button } from "@/components/ui/Button";
+import { AuthField } from "./AuthField";
 
 const localizedErrorCodes = new Set([
   "INVALID_CREDENTIALS",
@@ -19,65 +26,79 @@ const localizedErrorCodes = new Set([
   "INTERNAL_ERROR",
 ]);
 
-const iconUser = (
-  <svg className="h-4 w-4 text-paper-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-    <circle cx="12" cy="7" r="4" />
-  </svg>
-);
+// Errores del servidor que pertenecen a un campo concreto, no al formulario.
+const fieldOfServerError: Record<string, string> = {
+  USERNAME_TAKEN: "username",
+  EMAIL_TAKEN: "email",
+};
 
-const iconEmail = (
-  <svg className="h-4 w-4 text-paper-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <rect x="2" y="4" width="20" height="16" rx="2" />
-    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-  </svg>
-);
+type FieldErrors = Record<string, string>;
 
-const iconLock = (
-  <svg className="h-4 w-4 text-paper-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-  </svg>
-);
-
-const iconEye = (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-);
-
-const iconEyeOff = (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
-    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
-    <line x1="2" x2="22" y1="2" y2="22" />
-  </svg>
-);
-
-export function AuthForm({ mode }: { mode: "login" | "register" }) {
+export function AuthForm({
+  mode,
+  passwordAside,
+}: {
+  mode: "login" | "register";
+  // Enlace junto a la etiqueta de contraseña (login: "¿Olvidaste tu contraseña?").
+  passwordAside?: ReactNode;
+}) {
   const t = useTranslations("auth");
   const tErrors = useTranslations("errors");
   const locale = useLocale();
   const router = useRouter();
   const [errorCode, setErrorCode] = useState<string | null>(null);
-  const [fieldError, setFieldError] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [pending, setPending] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+
+  // Mensaje de validación del cliente según el campo y lo que se escribió.
+  const clientMessage = (field: string, value: string): string => {
+    switch (field) {
+      case "username": {
+        const length = value.trim().length;
+        return length < USERNAME_MIN || length > USERNAME_MAX
+          ? t("errorUsernameLength", { min: USERNAME_MIN, max: USERNAME_MAX })
+          : t("errorUsernameFormat");
+      }
+      case "email":
+        return t("errorEmail");
+      case "identifier":
+        return t("errorIdentifier");
+      case "password":
+        return mode === "login" || value.length === 0
+          ? t("errorPasswordEmpty")
+          : t("errorPasswordShort", { min: PASSWORD_MIN });
+      default:
+        return t("validation");
+    }
+  };
+
+  const focusField = (form: HTMLFormElement, field: string) => {
+    const element = form.elements.namedItem(field);
+    if (element instanceof HTMLInputElement) element.focus();
+  };
 
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
+    const form = event.currentTarget;
     setErrorCode(null);
-    setFieldError(false);
-    const fields = Object.fromEntries(new FormData(event.currentTarget));
+    setFieldErrors({});
+    const fields = Object.fromEntries(new FormData(form));
     const data = mode === "register" ? { ...fields, locale } : fields;
     const parsed =
       mode === "login"
         ? LoginRequestSchema.safeParse(data)
         : RegisterRequestSchema.safeParse(data);
     if (!parsed.success) {
-      setFieldError(true);
+      const errors: FieldErrors = {};
+      for (const issue of parsed.error.issues) {
+        const field = String(issue.path[0]);
+        if (field !== "locale" && !(field in errors)) {
+          errors[field] = clientMessage(field, String(fields[field] ?? ""));
+        }
+      }
+      setFieldErrors(errors);
+      const first = Object.keys(errors)[0];
+      if (first) focusField(form, first);
       return;
     }
     setPending(true);
@@ -93,118 +114,114 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       else router.push(destination);
       router.refresh();
     } catch (error) {
-      setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
+      const code = error instanceof ApiError ? error.code : "INTERNAL_ERROR";
+      const field = fieldOfServerError[code];
+      if (field) {
+        setFieldErrors({ [field]: tErrors(`${code}.description`) });
+        focusField(form, field);
+      } else {
+        setErrorCode(code);
+      }
     } finally {
       setPending(false);
     }
   };
 
-  const inputBase =
-    "rounded-md border border-ink-border bg-ink-surface py-2 pl-10 pr-10 transition-colors duration-150 outline-none focus:border-accent focus:ring-1 focus:ring-accent/30";
+  // Al volver a escribir en un campo con error, el error deja de acusarlo.
+  const handleChange = (event: SyntheticEvent<HTMLFormElement>) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement) || !(target.name in fieldErrors)) return;
+    const { name } = target;
+    setFieldErrors((current) => {
+      const next = { ...current };
+      delete next[name];
+      return next;
+    });
+  };
 
   return (
     <form
       onSubmit={handleSubmit}
+      onChange={handleChange}
       noValidate
-      className="flex w-full max-w-md flex-col gap-5"
+      className="flex w-full flex-col gap-5"
     >
       {mode === "register" && (
-        <label className="flex flex-col gap-2 font-data text-sm text-paper">
-          {t("username")}
-          <div className="relative">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
-              {iconUser}
-            </span>
-            <input
-              name="username"
-              autoComplete="username"
-              required
-              minLength={3}
-              maxLength={32}
-              className={inputBase}
-            />
-          </div>
-        </label>
+        <AuthField
+          name="username"
+          label={t("username")}
+          icon="user"
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+          required
+          minLength={USERNAME_MIN}
+          maxLength={USERNAME_MAX}
+          hint={t("usernameHint", { min: USERNAME_MIN, max: USERNAME_MAX })}
+          error={fieldErrors.username}
+        />
       )}
       {mode === "register" ? (
-        <label className="flex flex-col gap-2 font-data text-sm text-paper">
-          {t("email")}
-          <div className="relative">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
-              {iconEmail}
-            </span>
-            <input
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              className={inputBase}
-            />
-          </div>
-        </label>
+        <AuthField
+          name="email"
+          label={t("email")}
+          icon="email"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          required
+          error={fieldErrors.email}
+        />
       ) : (
-        <label className="flex flex-col gap-2 font-data text-sm text-paper">
-          {t("identifier")}
-          <div className="relative">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
-              {iconUser}
-            </span>
-            <input
-              name="identifier"
-              autoComplete="username"
-              required
-              className={inputBase}
-            />
-          </div>
-        </label>
+        <AuthField
+          name="identifier"
+          label={t("identifier")}
+          icon="user"
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+          required
+          error={fieldErrors.identifier}
+        />
       )}
-      <label className="flex flex-col gap-2 font-data text-sm text-paper">
-        {t("password")}
-        <div className="relative">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
-            {iconLock}
-          </span>
-          <input
-            name="password"
-            type={showPassword ? "text" : "password"}
-            autoComplete={mode === "login" ? "current-password" : "new-password"}
-            required
-            minLength={mode === "register" ? 8 : 1}
-            className={inputBase}
-          />
-          <button
-            type="button"
-            aria-label={t("togglePasswordVisibility")}
-            aria-pressed={showPassword}
-            onMouseDown={() => setShowPassword(true)}
-            onMouseUp={() => setShowPassword(false)}
-            onMouseLeave={() => setShowPassword(false)}
-            onTouchStart={() => setShowPassword(true)}
-            onTouchEnd={() => setShowPassword(false)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-paper-muted hover:text-paper transition-colors duration-150"
-          >
-            {showPassword ? iconEyeOff : iconEye}
-          </button>
-        </div>
-      </label>
-      {(fieldError || errorCode) && (
-        <p role="alert" className="font-data text-sm text-danger">
-          {fieldError
-            ? t("validation")
-            : tErrors(
-                `${errorCode && localizedErrorCodes.has(errorCode) ? errorCode : "INTERNAL_ERROR"}.description`,
-              )}
+      <AuthField
+        name="password"
+        label={t("password")}
+        icon="lock"
+        revealable
+        autoComplete={mode === "login" ? "current-password" : "new-password"}
+        required
+        minLength={mode === "register" ? PASSWORD_MIN : 1}
+        hint={mode === "register" ? t("passwordHint", { min: PASSWORD_MIN }) : undefined}
+        error={fieldErrors.password}
+        aside={mode === "login" ? passwordAside : undefined}
+      />
+      {errorCode && (
+        <p
+          role="alert"
+          className="rounded-md border border-danger/40 bg-danger/10 px-3 py-2 font-data text-sm text-danger"
+        >
+          {tErrors(
+            `${localizedErrorCodes.has(errorCode) ? errorCode : "INTERNAL_ERROR"}.description`,
+          )}
         </p>
       )}
-      <button
+      <Button
         type="submit"
         disabled={pending}
-        className="cursor-pointer rounded-md bg-accent px-4 py-3 font-display text-sm text-ink transition-opacity duration-150 hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
+        aria-busy={pending}
+        className="mt-1 h-11 w-full cursor-pointer disabled:cursor-wait"
       >
-        {pending
-          ? t("submitting")
-          : t(mode === "login" ? "submitLogin" : "submitRegister")}
-      </button>
+        {pending && (
+          <span
+            aria-hidden="true"
+            className="size-4 animate-spin rounded-full border-2 border-ink/25 border-t-ink"
+          />
+        )}
+        {pending ? t("submitting") : t(mode === "login" ? "submitLogin" : "submitRegister")}
+      </Button>
     </form>
   );
 }

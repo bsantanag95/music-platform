@@ -22,7 +22,9 @@ vi.mock("@/i18n/navigation", () => ({
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn().mockResolvedValue((key: string) => key),
 }));
-vi.mock("@/components/auth/AuthForm", () => ({ AuthForm: () => <form /> }));
+vi.mock("@/components/auth/AuthForm", () => ({
+  AuthForm: ({ passwordAside }: { passwordAside?: React.ReactNode }) => <form>{passwordAside}</form>,
+}));
 vi.mock("@/components/auth/ForgotPasswordForm", () => ({
   ForgotPasswordForm: () => <form data-testid="forgot-form" />,
 }));

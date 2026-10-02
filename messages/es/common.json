@@ -129,5 +129,7 @@
     "album": "Cargando álbum...",
     "search": "Cargando búsqueda...",
     "song": "Cargando canción..."
-  }
+  },
+  "showPassword": "Mostrar contraseña",
+  "hidePassword": "Ocultar contraseña"
 }

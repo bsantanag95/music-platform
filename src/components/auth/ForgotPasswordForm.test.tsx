@@ -40,7 +40,9 @@ describe("ForgotPasswordForm", () => {
     renderWithIntl(<ForgotPasswordForm />);
     await user.type(screen.getByLabelText("Email"), "no-es-email");
     await user.click(screen.getByRole("button", { name: authEs.forgotSubmit }));
-    expect(screen.getByRole("alert")).toHaveTextContent(authEs.validation);
+    const email = screen.getByLabelText("Email");
+    expect(email).toHaveAttribute("aria-invalid", "true");
+    expect(email).toHaveAccessibleDescription(authEs.errorEmail);
     expect(mocks.apiFetch).not.toHaveBeenCalled();
   });
 
