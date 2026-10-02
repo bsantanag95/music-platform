@@ -12,13 +12,15 @@ import { CURATOR_USERNAME } from "@/services/discovery/constants";
 import {
   getExplorePage,
   listAlbumsByDecade,
+  listAlbumsByFamily,
   listAlbumsByGenre,
 } from "@/services/discovery/discovery";
+import { genreDisplayName, genreLocaleOf } from "@/services/genres/names";
 import type { ReleaseGroupCategory } from "@/lib/api/schemas";
 
 interface ExplorePageProps {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ decada?: string; genero?: string; page?: string }>;
+  searchParams: Promise<{ decada?: string; familia?: string; genero?: string; page?: string }>;
 }
 
 export async function generateMetadata({ params }: ExplorePageProps): Promise<Metadata> {
@@ -39,7 +41,8 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
   const t = await getTranslations("catalog.explore");
   const tCommon = await getTranslations("common");
   const tCat = await getTranslations("catalog.artist");
-  const { decada, genero, page: rawPage } = await searchParams;
+  const tGenres = await getTranslations("catalog.genres");
+  const { decada, familia, genero, page: rawPage } = await searchParams;
 
   const categoryLabels = {
     studio: tCat("categories.studio"),
@@ -52,7 +55,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
   // las tarjetas trataban a todos como anónimos.
   const authenticated = (await getCurrentUser()) !== null;
 
-  // --- Vista filtrada: un corte a la vez, década tiene prioridad ---
+  // --- Vista filtrada: un corte a la vez; prioridad década > familia > género ---
   if (decada !== undefined) {
     const decade = Number(decada);
     const result = await listAlbumsByDecade(decade, parsePage(rawPage));
@@ -71,15 +74,33 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
       />
     );
   }
+  if (familia !== undefined) {
+    const result = await listAlbumsByFamily(familia, parsePage(rawPage));
+    const family = result.family ? tGenres(`families.${result.family}`) : familia.trim();
+    return (
+      <FilteredAlbumList
+        authenticated={authenticated}
+        heading={t("familyResultsHeading", { family })}
+        result={result}
+        baseHref={`/explore?familia=${encodeURIComponent(result.family ?? familia.trim())}`}
+        categoryLabels={categoryLabels}
+        coverLabel={coverLabel}
+        emptyMessage={t("emptyFiltered")}
+        prevLabel={t("prevPage")}
+        nextLabel={t("nextPage")}
+        backLabel={t("backToExplore")}
+      />
+    );
+  }
   if (genero !== undefined) {
-    const genre = genero.trim();
-    const result = await listAlbumsByGenre(genre, parsePage(rawPage));
+    const result = await listAlbumsByGenre(genero, parsePage(rawPage));
+    const genre = result.genre ? genreDisplayName(result.genre, genreLocaleOf(locale)) : genero.trim();
     return (
       <FilteredAlbumList
         authenticated={authenticated}
         heading={t("genreResultsHeading", { genre })}
         result={result}
-        baseHref={`/explore?genero=${encodeURIComponent(genre)}`}
+        baseHref={`/explore?genero=${encodeURIComponent(result.genre?.slug ?? genero.trim())}`}
         categoryLabels={categoryLabels}
         coverLabel={coverLabel}
         emptyMessage={t("emptyFiltered")}
@@ -92,6 +113,11 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
 
   // --- Portada ---
   const explore = await getExplorePage();
+  const familyChips = (buckets: typeof explore.families) =>
+    buckets.map((bucket) => ({
+      label: t("familyChip", { family: tGenres(`families.${bucket.key}`), count: bucket.count }),
+      href: `/explore?familia=${bucket.key}`,
+    }));
 
   return (
     <main className="flex min-h-screen w-full flex-col items-start gap-10 px-4 py-12">
@@ -126,10 +152,9 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
 
       <BrowseChips
         heading={t("genresHeading")}
-        chips={explore.genres.map((bucket) => ({
-          label: bucket.tag,
-          href: `/explore?genero=${encodeURIComponent(bucket.tag)}`,
-        }))}
+        chips={familyChips(explore.families.filter((f) => f.tier === "main"))}
+        moreChips={familyChips(explore.families.filter((f) => f.tier === "more"))}
+        moreLabel={tGenres("more")}
       />
 
       <AlbumRail

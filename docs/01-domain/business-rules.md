@@ -31,6 +31,23 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - El listado de canciones (Pistas) sí depende de la Edición concreta que se esté mostrando.
 - Todo Álbum se clasifica en exactamente una categoría: de estudio, single/EP, compilado, o en vivo/misceláneo.
 
+## Géneros
+
+- Los géneros son los de la lista oficial de MusicBrainz (taxonomía CC0), con su jerarquía
+  ("subgénero de", "fusión de", "influido por"). Nunca se usan los votos ni las etiquetas de
+  MusicBrainz por artista o álbum (CC BY-NC-SA).
+- Cada género pertenece a una o más de 20 **familias** curadas (17 principales y 3 secundarias).
+  Latina agrupa Latinoamérica y el Caribe hispano; la música de España va a Folk y cantautor; la
+  brasileña es familia propia. Un género sin familia asignable cae en "Del mundo".
+- Los **descriptores** (Instrumental, Navideña, Orquestal, Banda sonora) no son estilos: nunca
+  cuentan como géneros de un álbum. Los géneros **ocultos** no se muestran ni cuentan.
+- Los géneros de artistas y álbumes son **semillas** de Wikidata (P136), a las que se llega solo
+  por la relación `wikidata` que declara MusicBrainz. Un álbum sin semillas propias **hereda** los
+  3 primeros géneros de estilo de su artista principal, marcados como heredados.
+- Las semillas se guardan separadas de los votos de la comunidad: actualizar unas nunca modifica
+  los otros.
+- Ver ADR 0023 y `03-data/sql-model.md` (sección "Géneros").
+
 ## Créditos de artista
 
 - Un Crédito pertenece a exactamente un objetivo: un Álbum o una Canción, nunca ambos ni ninguno.
@@ -93,6 +110,12 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 ## Internacionalización
 
 - Los datos del catálogo musical (nombres de artistas, títulos de álbumes, títulos de canciones, biografías) **no se traducen**. Se muestran tal cual llegan de MusicBrainz, independientemente del idioma activo de la interfaz.
+- Los **nombres de los géneros** son datos del catálogo con una etiqueta por idioma que ya existe en
+  la fuente, no una traducción automática: en español, la etiqueta de Wikidata del género (o una
+  corrección editorial versionada cuando Wikidata enlaza otro concepto); si no hay, el nombre de
+  MusicBrainz. En inglés, el nombre de MusicBrainz. Mismo criterio que los textos por idioma del
+  perfil de artista (ADR 0021). Los nombres de las **familias** son vocabulario propio de la
+  interfaz y sí se traducen.
 - La internacionalización (i18n) aplica únicamente al _chrome_ de la interfaz: etiquetas de UI, botones, mensajes de error, estados de carga, y demás texto no proveniente del dominio musical.
 - Ver `02-architecture/i18n.md` para la arquitectura completa del sistema de idiomas.
 

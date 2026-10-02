@@ -18,6 +18,8 @@ function row(id: string, overrides: Partial<DiscographyRow> = {}): DiscographyRo
     discographyUnlistedAt: null,
     primaryType: "Album",
     secondaryTypes: [],
+    wikidataId: null,
+    genresSyncedAt: null,
     firstReleaseDate: null,
     firstReleaseYear: 2000,
     createdAt: new Date("2026-01-01T00:00:00Z"),

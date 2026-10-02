@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ListCoverMosaic } from "@/components/lists/ListCoverMosaic";
 import { listHref } from "@/lib/catalog-links";
 import { discoverCaminos } from "@/services/camino/discovery";
-import { listGenres } from "@/services/discovery/discovery";
+import { listGenreFamilies } from "@/services/discovery/discovery";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("camino");
@@ -14,25 +14,27 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 interface CaminosDiscoveryPageProps {
-  searchParams: Promise<{ genre?: string; artist?: string }>;
+  searchParams: Promise<{ family?: string; genre?: string; artist?: string }>;
 }
 
 // Descubrimiento público de Caminos populares (openspec: add-camino,
 // capability camino-discovery): ordenado por conteo de trackeo activo, no
 // por guardado simple — vitrina, sin posiciones numeradas ni ranking entre
-// usuarios. Filtros por género y artista vía querystring (`?genre=&artist=`),
-// para que el resultado filtrado sea enlazable.
+// usuarios. Filtros por familia de géneros, género (slug, con subgéneros) y
+// artista vía querystring (`?family=&genre=&artist=`), para que el resultado
+// filtrado sea enlazable (openspec: add-genre-taxonomy).
 export default async function CaminosDiscoveryPage({ searchParams }: CaminosDiscoveryPageProps) {
-  const { genre, artist } = await searchParams;
+  const { family, genre, artist } = await searchParams;
   const t = await getTranslations("camino");
   const tCommon = await getTranslations("common");
+  const tGenres = await getTranslations("catalog.genres");
 
-  const [result, genres] = await Promise.all([
-    discoverCaminos({ genre, artistQuery: artist }, 1, 20),
-    listGenres(),
+  const [result, families] = await Promise.all([
+    discoverCaminos({ family, genre, artistQuery: artist }, 1, 20),
+    listGenreFamilies(),
   ]);
 
-  const hasFilters = Boolean(genre || artist);
+  const hasFilters = Boolean(family || genre || artist);
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col items-start gap-8 px-4 py-12">
@@ -45,17 +47,19 @@ export default async function CaminosDiscoveryPage({ searchParams }: CaminosDisc
         <label className="flex flex-col gap-1">
           <span className="font-data text-xs text-paper-muted">{t("filterGenreLabel")}</span>
           <select
-            name="genre"
-            defaultValue={genre ?? ""}
+            name="family"
+            defaultValue={family ?? ""}
             className="rounded border border-ink-border bg-ink px-3 py-2 font-data text-sm text-paper"
           >
             <option value="">{t("filterAll")}</option>
-            {genres.map((bucket) => (
-              <option key={bucket.tag} value={bucket.tag}>
-                {bucket.tag}
+            {families.map((bucket) => (
+              <option key={bucket.key} value={bucket.key}>
+                {tGenres(`families.${bucket.key}`)}
               </option>
             ))}
           </select>
+          {/* Un enlace por género (?genre=<slug>) se conserva al volver a filtrar. */}
+          {genre ? <input type="hidden" name="genre" value={genre} /> : null}
         </label>
         <label className="flex flex-col gap-1">
           <span className="font-data text-xs text-paper-muted">{t("filterArtistLabel")}</span>

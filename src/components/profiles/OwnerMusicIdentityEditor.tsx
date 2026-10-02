@@ -24,6 +24,8 @@ interface MusicIdentityValues {
 
 interface OwnerMusicIdentityEditorProps extends EditorHostCallbacks {
   initial: MusicIdentityValues;
+  /** Nombres de los géneros de la lista, desde la taxonomía y en el idioma de la página. */
+  genreLabels: Record<Genre, string>;
 }
 
 interface ChipGroupProps<T extends string> {
@@ -89,7 +91,7 @@ const sameList = (a: readonly string[], b: readonly string[]) => a.length === b.
 // defino como" (hasta 3), géneros (hasta 5) y "Cómo escucho" (formatos), todos de
 // listas cerradas. Persiste con PUT /api/me/profile/music-identity; montado en la
 // pantalla Perfil de Ajustes y en el panel lateral del modo edición.
-export function OwnerMusicIdentityEditor({ initial, onSaved, onDirtyChange }: OwnerMusicIdentityEditorProps) {
+export function OwnerMusicIdentityEditor({ initial, genreLabels, onSaved, onDirtyChange }: OwnerMusicIdentityEditorProps) {
   const t = useTranslations("users");
   const tErrors = useTranslations("errors");
   const notifySaved = useNotifySaved(onSaved);
@@ -155,7 +157,7 @@ export function OwnerMusicIdentityEditor({ initial, onSaved, onDirtyChange }: Ow
         options={GENRES}
         selected={values.genres}
         max={MUSIC_IDENTITY_LIMITS.genres}
-        optionLabel={(option) => t(`musicIdentity.genres.${option}`)}
+        optionLabel={(option) => genreLabels[option] ?? option}
         counterLabel={counter(values.genres.length, MUSIC_IDENTITY_LIMITS.genres)}
         onChange={(next) => change("genres", next)}
       />

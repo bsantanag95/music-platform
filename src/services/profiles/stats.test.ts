@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTableName } from "drizzle-orm";
-import { getTasteFingerprint } from "./stats";
+import { releaseGroupEffectiveGenre } from "@/db/schema";
+import { genreSummaryPhrase, getTasteFingerprint, rankGenreFamilies } from "./stats";
 
 // Mock de db agnóstico a la forma de la cadena: `select().from(table)...` y
 // cualquier terminal awaitable resuelve a lo que se haya puesto en
@@ -10,7 +11,7 @@ const rowsByTable: Record<string, unknown[]> = {};
 
 const mocks = vi.hoisted(() => ({ select: vi.fn(), getProfileByUsername: vi.fn() }));
 
-vi.mock("@/db", () => ({ db: { select: mocks.select } }));
+vi.mock("@/db", () => ({ db: { select: mocks.select, selectDistinct: mocks.select } }));
 vi.mock("@/services/social/profiles", () => ({
   getProfileByUsername: mocks.getProfileByUsername,
 }));
@@ -24,7 +25,11 @@ function chainFor() {
       get(_t, prop) {
         if (prop === "from") {
           return (t: unknown) => {
-            table = getTableName(t as Parameters<typeof getTableName>[0]);
+            // La vista de géneros efectivos no tiene nombre de tabla: se reconoce por referencia.
+            table =
+              t === releaseGroupEffectiveGenre
+                ? "release_group_effective_genre"
+                : getTableName(t as Parameters<typeof getTableName>[0]);
             return step;
           };
         }
@@ -94,7 +99,7 @@ describe("getTasteFingerprint", () => {
   it("sin datos de género marca genreDataAvailable en false", async () => {
     mocks.getProfileByUsername.mockResolvedValue(followerProfile);
     rowsByTable.rating = [{ stars: "5", n: 1, artists: 0, albums: 1, songs: 0 }];
-    rowsByTable.release_group_tag = [];
+    rowsByTable.release_group_effective_genre = [];
 
     const fp = await getTasteFingerprint("ana", "viewer");
     expect(fp?.genreDataAvailable).toBe(false);
@@ -124,14 +129,16 @@ describe("getTasteFingerprint", () => {
       mocks.getProfileByUsername.mockResolvedValue(followerProfile);
       rowsByTable.rating = [{ id: "rg1", stars: "5", n: 4, artists: 0, albums: 1, songs: 0 }];
       rowsByTable.release = [{ decade: 2010 }, { decade: 2010 }];
-      rowsByTable.release_group_tag = [{ tag: "pop", total: 3 }];
+      rowsByTable.release_group_effective_genre = [
+        { releaseGroupId: "rg1", familyKey: "pop", slug: "synth-pop", name: "synth-pop", nameEs: "synth pop" },
+      ];
 
       const fp = await getTasteFingerprint("ana", "viewer");
       expect(fp?.summary).toHaveLength(3);
       expect(fp?.summary).toEqual(
         expect.arrayContaining([
           expect.stringContaining("2010s"),
-          expect.stringContaining("pop"),
+          "Su familia más presente es Pop, sobre todo synth pop",
         ]),
       );
     });
@@ -141,7 +148,7 @@ describe("getTasteFingerprint", () => {
       rowsByTable.rating = [{ stars: "5", n: 4, artists: 0, albums: 1, songs: 0 }];
 
       const fp = await getTasteFingerprint("ana", "viewer");
-      const ratingPhrase = fp?.summary.find((s) => !s.includes("década") && !s.includes("género"));
+      const ratingPhrase = fp?.summary.find((s) => !s.includes("década") && !s.includes("familia"));
       expect(ratingPhrase).toBeDefined();
       expect(ratingPhrase).not.toMatch(/\d/);
     });
@@ -155,5 +162,54 @@ describe("getTasteFingerprint", () => {
       const fp = await getTasteFingerprint("ana", null);
       expect(fp?.summary).toEqual(["Escucha sobre todo música de los 1990s"]);
     });
+  });
+});
+
+describe("cresta de géneros híbrida (openspec: add-genre-taxonomy)", () => {
+  const row = (rg: string, familyKey: "rock" | "hip-hop" | "latin" | "pop", slug: string, nameEs: string | null = null) => ({
+    releaseGroupId: rg,
+    familyKey,
+    slug,
+    name: slug.replace(/-/g, " "),
+    nameEs,
+  });
+
+  it("cuenta álbumes por familia (uno por álbum) y nombra sus géneros más presentes", () => {
+    const ridge = rankGenreFamilies([
+      row("a", "rock", "shoegaze"),
+      row("b", "rock", "shoegaze"),
+      row("c", "rock", "shoegaze"),
+      row("c", "rock", "dream-pop"), // mismo álbum, otro género: la familia cuenta una vez
+      row("d", "rock", "post-punk"),
+      row("e", "hip-hop", "trap-latino", "trap latino"),
+      row("e", "latin", "trap-latino", "trap latino"),
+    ]);
+    expect(ridge.map((p) => [p.family, p.count])).toEqual([
+      ["rock", 4],
+      ["hip-hop", 1],
+      ["latin", 1],
+    ]);
+    expect(ridge[0]!.topGenres.map((g) => g.slug)).toEqual(["shoegaze", "dream-pop", "post-punk"]);
+  });
+
+  it("muestra hasta 3 géneros por familia", () => {
+    const keys = ["rock", "hip-hop", "latin", "pop"] as const;
+    const rows = Array.from({ length: 16 }, (_, i) => row(`rg${i}`, keys[i % 4]!, `g-${i}`));
+    const ridge = rankGenreFamilies(rows);
+    expect(ridge).toHaveLength(4);
+    expect(ridge.every((p) => p.topGenres.length === 3)).toBe(true);
+  });
+
+  it("la frase de resumen combina familia y género, en español", () => {
+    expect(
+      genreSummaryPhrase([{ family: "rock", count: 4, topGenres: [{ slug: "shoegaze", name: "shoegaze", nameEs: "shoegazing" }] }]),
+    ).toBe("Su familia más presente es Rock, sobre todo shoegazing");
+  });
+
+  it("omite el género si se llama igual que la familia y no hay otro", () => {
+    expect(genreSummaryPhrase([{ family: "rock", count: 2, topGenres: [{ slug: "rock", name: "rock", nameEs: null }] }])).toBe(
+      "Su familia más presente es Rock",
+    );
+    expect(genreSummaryPhrase([])).toBeNull();
   });
 });

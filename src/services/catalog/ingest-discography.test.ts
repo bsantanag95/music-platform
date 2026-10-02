@@ -66,6 +66,8 @@ const mocks = vi.hoisted(() => ({
   browse: vi.fn(),
   after: vi.fn(),
   upsertArtistStub: vi.fn(async (mbid: string) => ({ id: `artist-${mbid}` })),
+  hasStaleAlbumGenres: vi.fn(async () => true),
+  syncAlbumGenreSeeds: vi.fn(async () => ({})),
 }));
 
 vi.mock("@/db", () => ({ db }));
@@ -76,6 +78,10 @@ vi.mock("../musicbrainz/client", () => ({
 }));
 vi.mock("./ingest-artist", () => ({ upsertArtistStub: mocks.upsertArtistStub }));
 vi.mock("./ingest-release-group", () => ({ canonicalDateValues: () => ({}) }));
+vi.mock("../genres/album-seeds", () => ({
+  hasStaleAlbumGenres: mocks.hasStaleAlbumGenres,
+  syncAlbumGenreSeeds: mocks.syncAlbumGenreSeeds,
+}));
 
 const {
   fetchDiscographyPages,
@@ -140,6 +146,8 @@ function makeReleaseGroup(overrides: Partial<ReleaseGroupRow> = {}): ReleaseGrou
     discographyUnlistedAt: null,
     primaryType: "Album",
     secondaryTypes: [],
+    wikidataId: null,
+    genresSyncedAt: null,
     firstReleaseDate: null,
     firstReleaseYear: 2001,
     createdAt: new Date("2026-01-01T00:00:00Z"),
@@ -233,6 +241,32 @@ describe("syncArtistDiscography", () => {
     expect(sets[0]!.set).toEqual({ discographyUnlistedAt: expect.any(Date) });
     expect(sets[1]!.set).toEqual({ discographyUnlistedAt: null });
     expect(sets[2]!.set).toEqual({ discographySyncedAt: expect.any(Date), discographyCompleteAt: expect.any(Date) });
+  });
+
+  it("guarda la entidad de Wikidata que declara MusicBrainz y la borra si dejó de declararla", async () => {
+    const [first, second, ...rest] = BUNKERS["release-groups"];
+    const withRelation = {
+      ...first!,
+      relations: [{ type: "wikidata", "target-type": "url", url: { resource: "https://www.wikidata.org/wiki/Q205458" } }],
+    };
+    const endedRelation = {
+      ...second!,
+      relations: [{ type: "wikidata", ended: true, url: { resource: "https://www.wikidata.org/wiki/Q1" } }],
+    };
+    state.txSelects.push([makeArtist()]);
+    mocks.browse.mockResolvedValueOnce({ ...BUNKERS, "release-groups": [withRelation, endedRelation, ...rest] });
+
+    await syncArtistDiscography("artist-1", { mode: "initial" });
+
+    const inserted = releaseGroupInserts();
+    expect(inserted[0]).toMatchObject({ wikidataId: "Q205458" });
+    expect(inserted[1]).toMatchObject({ wikidataId: null });
+    // El update en conflicto también escribe la entidad y reinicia la vigencia si cambió.
+    const conflict = state.inserts[0]!.find(([method]) => method === "onConflictDoUpdate")?.[1][0] as {
+      set: Record<string, unknown>;
+    };
+    expect(conflict.set).toMatchObject({ wikidataId: "Q205458" });
+    expect(conflict.set).toHaveProperty("genresSyncedAt");
   });
 
   it("primera visita de un artista con más de 300: trae 3 páginas, guarda y no marca nada", async () => {
@@ -343,11 +377,25 @@ describe("findOrIngestDiscography", () => {
     expect(mocks.after).toHaveBeenCalledTimes(1);
   });
 
-  it("con discografía al día no programa nada", async () => {
+  it("con discografía al día solo programa los géneros de los álbumes vencidos", async () => {
     const fresh = new Date(Date.now() - DAY);
     state.selects.push([]);
     await findOrIngestDiscography(makeArtist({ discographySyncedAt: fresh, discographyCompleteAt: fresh }));
-    expect(mocks.after).not.toHaveBeenCalled();
+    expect(mocks.after).toHaveBeenCalledTimes(1);
+
+    await (mocks.after.mock.calls[0]![0] as () => Promise<void>)();
+    expect(mocks.browse).not.toHaveBeenCalled();
+    expect(mocks.syncAlbumGenreSeeds).toHaveBeenCalledWith("artist-1");
+  });
+
+  it("sin álbumes vencidos no consulta Wikidata", async () => {
+    const fresh = new Date(Date.now() - DAY);
+    state.selects.push([]);
+    mocks.hasStaleAlbumGenres.mockResolvedValueOnce(false);
+    await findOrIngestDiscography(makeArtist({ discographySyncedAt: fresh, discographyCompleteAt: fresh }));
+
+    await (mocks.after.mock.calls[0]![0] as () => Promise<void>)();
+    expect(mocks.syncAlbumGenreSeeds).not.toHaveBeenCalled();
   });
 
   it("fuera de una request de Next omite la sincronización en segundo plano sin fallar", async () => {
@@ -370,17 +418,20 @@ describe("findOrIngestDiscography", () => {
     expect(mocks.after).toHaveBeenCalledTimes(1);
   });
 
-  it("primera visita completa: no programa nada más", async () => {
+  it("primera visita completa: no programa más discografía, solo los géneros de sus álbumes", async () => {
     state.txSelects.push([makeArtist()]);
     state.selects.push([]);
     mocks.browse.mockResolvedValueOnce(BUNKERS);
 
     await findOrIngestDiscography(makeArtist());
 
-    expect(mocks.after).not.toHaveBeenCalled();
+    expect(mocks.after).toHaveBeenCalledTimes(1);
+    await (mocks.after.mock.calls[0]![0] as () => Promise<void>)();
+    expect(mocks.browse).toHaveBeenCalledTimes(1);
+    expect(mocks.syncAlbumGenreSeeds).toHaveBeenCalledWith("artist-1");
   });
 
-  it("la tarea programada ejecuta la sincronización completa", async () => {
+  it("la tarea programada ejecuta la sincronización completa y después la de géneros", async () => {
     const stale = new Date(Date.now() - 8 * DAY);
     state.selects.push([]);
     await findOrIngestDiscography(makeArtist({ discographySyncedAt: stale, discographyCompleteAt: stale }));
@@ -391,6 +442,18 @@ describe("findOrIngestDiscography", () => {
     await task();
 
     expect(mocks.browse).toHaveBeenCalledTimes(1);
+    expect(mocks.syncAlbumGenreSeeds).toHaveBeenCalledWith("artist-1");
+    expect(mocks.browse.mock.invocationCallOrder[0]!).toBeLessThan(mocks.syncAlbumGenreSeeds.mock.invocationCallOrder[0]!);
+  });
+
+  it("un fallo de los géneros no rompe la tarea en segundo plano", async () => {
+    const fresh = new Date(Date.now() - DAY);
+    state.selects.push([]);
+    mocks.syncAlbumGenreSeeds.mockRejectedValueOnce(new Error("Wikidata caído"));
+    await findOrIngestDiscography(makeArtist({ discographySyncedAt: fresh, discographyCompleteAt: fresh }));
+
+    await expect((mocks.after.mock.calls[0]![0] as () => Promise<void>)()).resolves.toBeUndefined();
+    expect(console.error).toHaveBeenCalled();
   });
 });
 

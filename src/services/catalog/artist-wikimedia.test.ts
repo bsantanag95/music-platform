@@ -17,12 +17,21 @@ const state = vi.hoisted(() => ({
   current: null as Record<string, unknown> | null,
   updates: [] as Record<string, unknown>[],
   upserts: [] as { values: Record<string, unknown>; set: Record<string, unknown> }[],
+  deletes: 0,
 }));
 const mocks = vi.hoisted(() => ({ getEntities: vi.fn(), getIntroExtract: vi.fn(), getImageInfo: vi.fn() }));
+const seeds = vi.hoisted(() => ({ replaceArtistGenreSeeds: vi.fn() }));
 
 vi.mock("@/db", () => {
   const tx = {
     execute: async () => undefined,
+    // Savepoint de los géneros: el mismo mock, el error se propaga como en Postgres.
+    transaction: async (fn: (t: unknown) => unknown) => fn(tx),
+    delete: () => ({
+      where: async () => {
+        state.deletes++;
+      },
+    }),
     select: () => ({ from: () => ({ where: () => ({ limit: async () => (state.current ? [state.current] : []) }) }) }),
     update: () => ({
       set: (values: Record<string, unknown>) => ({
@@ -42,6 +51,7 @@ vi.mock("@/db", () => {
   return { db: { transaction: async (fn: (t: typeof tx) => unknown) => fn(tx) } };
 });
 vi.mock("../wikimedia/client", () => ({ wikimedia: mocks }));
+vi.mock("../genres/seeds", () => seeds);
 vi.spyOn(console, "warn").mockImplementation(() => {});
 
 const { enrichArtistFromWikimedia } = await import("./artist-wikimedia");
@@ -65,6 +75,8 @@ beforeEach(() => {
   state.current = artistRow();
   state.updates = [];
   state.upserts = [];
+  state.deletes = 0;
+  seeds.replaceArtistGenreSeeds.mockResolvedValue(2);
   mocks.getEntities.mockImplementation(entitiesFrom(kuervosEntity, kuervosPlace, kuervosCountry));
   mocks.getIntroExtract.mockImplementation(async (lang: string) => (lang === "es" ? kuervosExtractEs : { query: { pages: [] } }));
   mocks.getImageInfo.mockResolvedValue(kuervosImage);
@@ -139,11 +151,51 @@ describe("enrichArtistFromWikimedia", () => {
     expect(state.updates[0]).toMatchObject({ photoUrl: null });
   });
 
-  it("sin relación wikidata no consulta Wikimedia y marca el artista como sincronizado", async () => {
+  it("sin relación wikidata no consulta Wikimedia, marca el artista como sincronizado y borra sus semillas", async () => {
     state.current = artistRow({ wikidataId: null });
     expect(await enrichArtistFromWikimedia("a1")).toEqual({ status: "no-wikidata" });
     expect(mocks.getEntities).not.toHaveBeenCalled();
     expect(state.updates).toEqual([{ wikimediaSyncedAt: expect.any(Date) }]);
+    expect(state.deletes).toBe(1);
+  });
+
+  describe("géneros (P136)", () => {
+    const withGenres = (qids: string[]) => {
+      const entity = structuredClone((kuervosEntity.entities as Record<string, { claims: Record<string, unknown> }>).Q63565567!);
+      entity.claims.P136 = qids.map((id) => ({ mainsnak: { datavalue: { value: { id } } }, rank: "normal" }));
+      mocks.getEntities.mockImplementation(entitiesFrom({ entities: { Q63565567: entity } }, kuervosPlace, kuervosCountry));
+    };
+
+    it("guarda las semillas con los QIDs de la misma entidad, sin requests extra", async () => {
+      withGenres(["Q484641", "Q1129034"]);
+      const result = await enrichArtistFromWikimedia("a1");
+
+      expect(seeds.replaceArtistGenreSeeds).toHaveBeenCalledWith(expect.anything(), "a1", ["Q484641", "Q1129034"]);
+      expect(result.status === "enriched" && result.genres).toEqual(["Q484641", "Q1129034"]);
+      // Entidad del artista + lugar + país: los géneros no suman ninguna consulta.
+      expect(mocks.getEntities).toHaveBeenCalledTimes(3);
+    });
+
+    it("si falla el guardado de los géneros, la foto y los textos se escriben igual", async () => {
+      withGenres(["Q484641"]);
+      seeds.replaceArtistGenreSeeds.mockRejectedValue(new Error("FK"));
+      const result = await enrichArtistFromWikimedia("a1");
+
+      expect(result.status === "enriched" && result.failures).toEqual(["géneros"]);
+      expect(state.updates[0]).toMatchObject({ photoFile: "Kuervos del Sur.jpg" });
+      expect(upsertFor("es")?.summaryTitle).toBe("Kuervos del Sur");
+    });
+
+    it("una entidad sin P136 deja al artista sin semillas", async () => {
+      await enrichArtistFromWikimedia("a1");
+      expect(seeds.replaceArtistGenreSeeds).toHaveBeenCalledWith(expect.anything(), "a1", []);
+    });
+
+    it("en simulación no guarda semillas", async () => {
+      withGenres(["Q484641"]);
+      await enrichArtistFromWikimedia("a1", { dryRun: true });
+      expect(seeds.replaceArtistGenreSeeds).not.toHaveBeenCalled();
+    });
   });
 
   it("al día (menos de 30 días) se omite, salvo que se fuerce", async () => {

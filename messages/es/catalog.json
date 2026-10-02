@@ -20,7 +20,9 @@
     "nextPage": "Página siguiente",
     "emptyFiltered": "No hay álbumes para este corte todavía.",
     "notFoundTitle": "Corte no encontrado",
-    "notFoundDescription": "Ese filtro de descubrimiento no es válido."
+    "notFoundDescription": "Ese filtro de descubrimiento no es válido.",
+    "familyChip": "{family} · {count}",
+    "familyResultsHeading": "Álbumes · {family}"
   },
   "search": {
     "pageTitle": "Buscar",
@@ -988,5 +990,36 @@
     "saveError": "No pudimos guardar el cambio. Intentá de nuevo.",
     "loadError": "No pudimos cargar tus marcas de este disco.",
     "retry": "Reintentar"
+  },
+  "genres": {
+    "families": {
+      "rock": "Rock",
+      "metal": "Metal",
+      "punk": "Punk y hardcore",
+      "pop": "Pop",
+      "electronic": "Electrónica",
+      "hip-hop": "Hip hop",
+      "rnb": "R&B, soul y funk",
+      "jazz": "Jazz",
+      "blues": "Blues",
+      "folk": "Folk y cantautor",
+      "country": "Country",
+      "classical": "Clásica",
+      "experimental": "Experimental",
+      "ambient": "Ambient y new age",
+      "caribbean": "Reggae y Caribe",
+      "latin": "Latina",
+      "brazilian": "Brasileña",
+      "spoken": "Palabra y escena",
+      "religious": "Religiosa",
+      "world": "Del mundo"
+    },
+    "descriptors": {
+      "instrumental": "Instrumental",
+      "christmas": "Navideña",
+      "orchestral": "Orquestal",
+      "soundtrack": "Banda sonora"
+    },
+    "more": "Más"
   }
 }

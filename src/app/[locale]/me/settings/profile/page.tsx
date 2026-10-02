@@ -1,4 +1,7 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { GENRES } from "@/lib/music-identity";
+import { genreLocaleOf } from "@/services/genres/names";
+import { identityGenreLabels } from "@/services/genres/read";
 import { requirePageUser } from "@/services/auth/page-auth";
 import { getExtendedIdentity } from "@/services/profiles/identity";
 import { getShowcase } from "@/services/profiles/showcase";
@@ -17,7 +20,12 @@ import { SettingsCard, SettingsSection } from "@/components/settings/SettingsSec
 export default async function ProfileSettingsPage() {
   const t = await getTranslations("users");
   const user = await requirePageUser();
-  const [identity, showcase] = await Promise.all([getExtendedIdentity(user.id), getShowcase(user.id)]);
+  const locale = genreLocaleOf(await getLocale());
+  const [identity, showcase, genreLabels] = await Promise.all([
+    getExtendedIdentity(user.id),
+    getShowcase(user.id),
+    identityGenreLabels(GENRES, locale),
+  ]);
   if (!identity) return null;
 
   return (
@@ -53,6 +61,7 @@ export default async function ProfileSettingsPage() {
             genres: identity.genres,
             listeningFormats: identity.listeningFormats,
           }}
+          genreLabels={genreLabels}
         />
       </SettingsCard>
       <SettingsCard>

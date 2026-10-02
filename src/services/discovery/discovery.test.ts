@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   listAlbumsByDecade,
+  listAlbumsByFamily,
   listAlbumsByGenre,
   listFeaturedCollections,
+  listGenreFamilies,
   listMostReviewed,
   listTopRated,
 } from "./discovery";
@@ -111,6 +113,24 @@ describe("rieles por reglas: degradación grácil", () => {
   });
 });
 
+describe("listGenreFamilies", () => {
+  it("ordena las familias como la interfaz, con su tier, y omite las que no tienen álbumes", async () => {
+    mocks.db.select.mockReturnValue(
+      chain([
+        { key: "latin", count: 4 },
+        { key: "rock", count: 12 },
+        { key: "world", count: 1 },
+        { key: "jazz", count: 0 },
+      ]),
+    );
+    await expect(listGenreFamilies()).resolves.toEqual([
+      { key: "rock", tier: "main", count: 12 },
+      { key: "latin", tier: "main", count: 4 },
+      { key: "world", tier: "more", count: 1 },
+    ]);
+  });
+});
+
 describe("listados filtrados: validación", () => {
   it("rechaza una década no múltiplo de 10 o fuera de rango", async () => {
     mocks.db.select.mockReturnValue(chain([]));
@@ -122,11 +142,23 @@ describe("listados filtrados: validación", () => {
     mocks.db.select.mockReturnValue(chain([]));
     await expect(listAlbumsByDecade(1990, 0)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
     await expect(listAlbumsByGenre("rock", -1)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    await expect(listAlbumsByFamily("rock", -1)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
   });
 
-  it("rechaza un género vacío", async () => {
+  it("un género o una familia desconocidos devuelven la página vacía sin listar", async () => {
     mocks.db.select.mockReturnValue(chain([]));
-    await expect(listAlbumsByGenre("   ", 1)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    await expect(listAlbumsByGenre("   ", 1)).resolves.toMatchObject({ albums: [], hasNext: false, genre: null });
+    await expect(listAlbumsByGenre("no-existe", 1)).resolves.toMatchObject({ albums: [], genre: null });
+    await expect(listAlbumsByFamily("inexistente", 1)).resolves.toMatchObject({ albums: [], family: null });
+    // Solo la búsqueda del slug consulta la base; ningún listado.
+    expect(mocks.db.select).toHaveBeenCalledTimes(1);
+  });
+
+  it("lista una familia conocida y devuelve su clave", async () => {
+    mocks.db.select.mockReturnValue(chain([albumRow("a1")]));
+    const result = await listAlbumsByFamily(" Latin ", 1);
+    expect(result.family).toBe("latin");
+    expect(result.albums).toHaveLength(1);
   });
 
   it("calcula hasNext con una fila extra y recorta a pageSize", async () => {

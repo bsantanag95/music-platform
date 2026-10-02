@@ -8,6 +8,8 @@ interface ProfileFichaProps {
    * componente async anidado no se resuelve al testear con `render()`).
    */
   t: (key: string, values?: Record<string, string | number>) => string;
+  /** Nombres de los géneros elegidos, desde la taxonomía (openspec: add-genre-taxonomy). */
+  genreLabels: Record<string, string>;
 }
 
 const LABEL = "pt-0.5 font-data text-[11px] uppercase tracking-wide text-paper-muted";
@@ -18,7 +20,7 @@ const LABEL = "pt-0.5 font-data text-[11px] uppercase tracking-wide text-paper-m
 // su divisor— si la persona no completó nada, sin dejar hueco. Solo la dibuja la
 // Placa de un perfil accesible: no la usa la tarjeta del perfil privado. Nunca
 // muestra números de actividad ni logros.
-export function ProfileFicha({ identity, t }: ProfileFichaProps) {
+export function ProfileFicha({ identity, t, genreLabels }: ProfileFichaProps) {
   if (!hasMusicIdentity(identity)) return null;
 
   const list = (namespace: string, keys: readonly string[]) =>
@@ -40,7 +42,9 @@ export function ProfileFicha({ identity, t }: ProfileFichaProps) {
         {identity.genres.length > 0 && (
           <>
             <dt className={LABEL}>{t("musicIdentity.ficha.genres")}</dt>
-            <dd className="m-0 font-body text-sm text-paper">{list("genres", identity.genres)}</dd>
+            <dd className="m-0 font-body text-sm text-paper">
+              {identity.genres.map((genre) => genreLabels[genre] ?? genre).join(" · ")}
+            </dd>
           </>
         )}
         {identity.listeningFormats.length > 0 && (

@@ -49,6 +49,10 @@ vi.mock("next-intl/server", () => ({
   ),
   getLocale: vi.fn().mockResolvedValue("es"),
 }));
+// Nombres de géneros de la taxonomía (openspec: add-genre-taxonomy): sin base en este test.
+vi.mock("@/services/genres/read", () => ({
+  identityGenreLabels: async (slugs: string[]) => Object.fromEntries(slugs.map((slug) => [slug, slug])),
+}));
 vi.mock("@/i18n/navigation", () => ({
   redirect: m.redirect,
   usePathname: () => "/me/settings/curation",

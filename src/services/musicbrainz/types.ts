@@ -69,6 +69,8 @@ export interface MBReleaseGroup {
   "secondary-types"?: string[]; // 'Compilation' | 'Live' | 'Remix' | 'Soundtrack' | ...
   "first-release-date"?: string; // 'YYYY' | 'YYYY-MM' | 'YYYY-MM-DD' | ausente
   "artist-credit"?: MBArtistCreditItem[];
+  /** Relaciones de URL (`inc=url-rels` del browse de discografía): de acá sale la de `wikidata`. */
+  relations?: MBArtistRelation[];
 }
 
 export interface MBReleaseGroupBrowseResponse {

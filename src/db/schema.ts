@@ -24,6 +24,7 @@ import {
   unique,
   uniqueIndex,
   index,
+  pgView,
 } from "drizzle-orm/pg-core";
 
 export const appUser = pgTable(
@@ -678,9 +679,14 @@ export const releaseGroup = pgTable(
     primaryType: text("primary_type"),
     secondaryTypes: text("secondary_types").array(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    // Entidad de Wikidata que MusicBrainz declara para el álbum (migración 0056, ADR 0023)
+    // y vigencia de sus géneros semilla (NULL = nunca sincronizados; 30 días).
+    wikidataId: text("wikidata_id"),
+    genresSyncedAt: timestamp("genres_synced_at", { withTimezone: true }),
   },
   (t) => [
     index("idx_release_group_first_year").on(t.firstReleaseYear),
+    check("chk_release_group_wikidata_id", sql`${t.wikidataId} IS NULL OR ${t.wikidataId} ~ '^Q[0-9]+$'`),
     // Búsqueda local tolerante (migración 0050, openspec redesign-scoped-search).
     index("idx_release_group_title_search").using(
       "gin",
@@ -1270,8 +1276,8 @@ export type WantedEntryRow = typeof wantedEntry.$inferSelect;
 // - user_pinned_item: cuatro destacados, tipos mezclados, patrón triple-FK
 //   nullable + CHECK num_nonnulls igual que rating/favorite/user_list_item.
 // - user_showcase: una fila por usuario, himno elegido manualmente (recording).
-// - release_group_tag: tags de género por álbum para la cresta de géneros de
-//   la huella; sembrados hasta que exista ingesta real desde MusicBrainz.
+// (La tabla de tags sembrados `release_group_tag` se eliminó en la migración 0056: los géneros
+// salen de la taxonomía y de las semillas de Wikidata, ver `genre` más abajo.)
 export const userProfileLink = pgTable(
   "user_profile_link",
   {
@@ -1342,23 +1348,142 @@ export const userShowcase = pgTable("user_showcase", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const releaseGroupTag = pgTable(
-  "release_group_tag",
+// Taxonomía de géneros (migración 0056, openspec: add-genre-taxonomy, ADR 0023): la lista
+// oficial de MusicBrainz (dump core, CC0), cargada por scripts/load-genre-taxonomy.ts desde
+// data/genres/taxonomy.json. `slug` es la clave estable (URL, API e identidad musical), única y
+// en inglés; `nameEs` es la etiqueta de Wikidata (P8052), sin traducción automática.
+export const GENRE_KINDS = ["style", "descriptor", "hidden"] as const;
+export type GenreKind = (typeof GENRE_KINDS)[number];
+
+export const genre = pgTable(
+  "genre",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    mbid: uuid("mbid").notNull().unique(),
+    slug: text("slug").notNull().unique(),
+    name: text("name").notNull(),
+    nameEs: text("name_es"),
+    wikidataId: text("wikidata_id"),
+    kind: text("kind").$type<GenreKind>().notNull().default("style"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_genre_wikidata_id").on(t.wikidataId).where(sql`${t.wikidataId} IS NOT NULL`),
+    check("chk_genre_slug", sql`${t.slug} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`),
+    check("chk_genre_name", sql`length(btrim(${t.name})) > 0`),
+    check("chk_genre_name_es", sql`${t.nameEs} IS NULL OR length(btrim(${t.nameEs})) > 0`),
+    check("chk_genre_wikidata_id", sql`${t.wikidataId} IS NULL OR ${t.wikidataId} ~ '^Q[0-9]+$'`),
+    check("chk_genre_kind", sql`${t.kind} IN ('style','descriptor','hidden')`),
+  ],
+);
+
+export const GENRE_RELATION_KINDS = ["subgenre_of", "fusion_of", "influenced_by"] as const;
+export type GenreRelationKind = (typeof GENRE_RELATION_KINDS)[number];
+
+/** "`genreId` es subgénero de / fusión de / influido por `relatedGenreId`". */
+export const genreRelation = pgTable(
+  "genre_relation",
+  {
+    genreId: uuid("genre_id")
+      .notNull()
+      .references(() => genre.id, { onDelete: "cascade" }),
+    relatedGenreId: uuid("related_genre_id")
+      .notNull()
+      .references(() => genre.id, { onDelete: "cascade" }),
+    kind: text("kind").$type<GenreRelationKind>().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.genreId, t.relatedGenreId, t.kind] }),
+    index("idx_genre_relation_related").on(t.relatedGenreId, t.kind),
+    check("chk_genre_relation_kind", sql`${t.kind} IN ('subgenre_of','fusion_of','influenced_by')`),
+    check("chk_genre_relation_not_self", sql`${t.genreId} <> ${t.relatedGenreId}`),
+  ],
+);
+
+/** Las 20 familias curadas, insertadas por la migración 0056; sus nombres viven en `messages/*`. */
+export const genreFamily = pgTable(
+  "genre_family",
+  {
+    key: text("key").primaryKey(),
+    tier: text("tier").$type<"main" | "more">().notNull(),
+    position: smallint("position").notNull().unique(),
+  },
+  (t) => [
+    check("chk_genre_family_key", sql`${t.key} ~ '^[a-z]+(-[a-z]+)*$'`),
+    check("chk_genre_family_tier", sql`${t.tier} IN ('main','more')`),
+    check("chk_genre_family_position", sql`${t.position} > 0`),
+  ],
+);
+
+export const genreFamilyMember = pgTable(
+  "genre_family_member",
+  {
+    genreId: uuid("genre_id")
+      .notNull()
+      .references(() => genre.id, { onDelete: "cascade" }),
+    familyKey: text("family_key")
+      .notNull()
+      .references(() => genreFamily.key, { onDelete: "restrict" }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.genreId, t.familyKey] }),
+    index("idx_genre_family_member_family").on(t.familyKey),
+  ],
+);
+
+// Géneros semilla desde Wikidata P136 (CC0), en el orden de Wikidata. Separados de los votos de
+// la comunidad; se reemplazan completos en cada sincronización. Un género retirado queda
+// `hidden` en vez de borrarse, por eso el FK a `genre` es RESTRICT.
+export const artistGenreSeed = pgTable(
+  "artist_genre_seed",
+  {
+    artistId: uuid("artist_id")
+      .notNull()
+      .references(() => artist.id, { onDelete: "cascade" }),
+    genreId: uuid("genre_id")
+      .notNull()
+      .references(() => genre.id, { onDelete: "restrict" }),
+    position: smallint("position").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.artistId, t.genreId] }),
+    index("idx_artist_genre_seed_genre").on(t.genreId),
+    check("chk_artist_genre_seed_position", sql`${t.position} >= 0`),
+  ],
+);
+
+export const releaseGroupGenreSeed = pgTable(
+  "release_group_genre_seed",
   {
     releaseGroupId: uuid("release_group_id")
       .notNull()
       .references(() => releaseGroup.id, { onDelete: "cascade" }),
-    tag: text("tag").notNull(),
-    count: integer("count").notNull().default(1),
+    genreId: uuid("genre_id")
+      .notNull()
+      .references(() => genre.id, { onDelete: "restrict" }),
+    position: smallint("position").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    primaryKey({ columns: [t.releaseGroupId, t.tag] }),
-    index("idx_release_group_tag_tag").on(t.tag),
-    check("chk_release_group_tag_tag", sql`length(${t.tag}) <= 80`),
-    check("chk_release_group_tag_count", sql`${t.count} >= 0`),
+    primaryKey({ columns: [t.releaseGroupId, t.genreId] }),
+    index("idx_release_group_genre_seed_genre").on(t.genreId),
+    check("chk_release_group_genre_seed_position", sql`${t.position} >= 0`),
   ],
 );
+
+/**
+ * Géneros efectivos de un álbum (vista de la migración 0056): sus semillas propias visibles si
+ * tiene alguna; si no, los 3 primeros géneros de estilo de su artista principal, con `inherited`.
+ * Nunca incluye ocultos.
+ */
+export const releaseGroupEffectiveGenre = pgView("release_group_effective_genre", {
+  releaseGroupId: uuid("release_group_id").notNull(),
+  genreId: uuid("genre_id").notNull(),
+  position: smallint("position").notNull(),
+  inherited: boolean("inherited").notNull(),
+}).existing();
 
 // Seguir artista — relación unilateral usuario → artista (migración 0021,
 // cambio add-artist-following). Sin `status`: seguir es inmediato, un artista
@@ -1385,7 +1510,11 @@ export const artistFollow = pgTable(
 export type UserProfileLinkRow = typeof userProfileLink.$inferSelect;
 export type UserPinnedItemRow = typeof userPinnedItem.$inferSelect;
 export type UserShowcaseRow = typeof userShowcase.$inferSelect;
-export type ReleaseGroupTagRow = typeof releaseGroupTag.$inferSelect;
+export type GenreRow = typeof genre.$inferSelect;
+export type GenreRelationRow = typeof genreRelation.$inferSelect;
+export type GenreFamilyRow = typeof genreFamily.$inferSelect;
+export type ArtistGenreSeedRow = typeof artistGenreSeed.$inferSelect;
+export type ReleaseGroupGenreSeedRow = typeof releaseGroupGenreSeed.$inferSelect;
 export type ArtistFollowRow = typeof artistFollow.$inferSelect;
 
 // Valoraciones destacadas del perfil (openspec: rework-user-profile). Tabla

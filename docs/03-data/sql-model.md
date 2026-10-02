@@ -27,7 +27,11 @@ nuevo compara con `lower()` (ver `username_alias`).
 **Identidad musical (migración `0040`, `rework-account-settings` Fase 2):** `self_roles`, `genres` y
 `listening_formats` son `TEXT[] NOT NULL DEFAULT '{}'` con `CHECK (cardinality(...) <= N)` (3, 5, 5).
 Los valores permitidos **no** se validan en la base (lista cerrada en `src/lib/music-identity.ts`):
-agregar un género es cambiar código, no una migración. `show_local_time` (`BOOLEAN NOT NULL DEFAULT
+agregar un género es cambiar código, no una migración. Desde la migración `0056`
+(`add-genre-taxonomy`) las claves de `genres` son **slugs de la taxonomía** (`genre.slug`, 22
+estilos; un test las verifica contra `data/genres/taxonomy.json`): la migración reescribió
+`soul-funk` → `soul`, `funk` e `indie` → `indie-rock`, `indie-pop` sin duplicados, y aborta en vez
+de recortar si una elección migrada supera 5. `show_local_time` (`BOOLEAN NOT NULL DEFAULT
 false`) exige `timezone` (`chk_app_user_local_time`). La migración también deja en `NULL` las
 `timezone` previas que no existan en `pg_timezone_names` (eran texto libre que ninguna vista mostraba).
 
@@ -361,8 +365,9 @@ tokens ya vencidos al crearse.
   `photo_source_url` guardan el crédito obligatorio (`CHECK chk_artist_photo_credit`: una foto
   guardada siempre tiene URL, licencia y enlace al archivo). `photo_blocked_at` es el retiro a
   pedido (`scripts/takedown-artist-photo.ts`): mientras tenga valor, no se asigna foto.
-- **Sin géneros**: los de MusicBrainz son etiquetas CC BY-NC-SA (no comerciales); la fuente queda
-  pendiente.
+- **Géneros**: nunca los de MusicBrainz (etiquetas CC BY-NC-SA). Desde la migración `0056` el
+  artista tiene géneros semilla de Wikidata P136 en `artist_genre_seed` (ver "Géneros"), que se
+  refrescan con `wikimedia_synced_at`.
 
 ## `artist_link` (migración `0054`)
 
@@ -450,6 +455,12 @@ No va en `membership` porque el artista apoyado puede ser una persona (lo que vi
   créditos, escuchas, valoraciones y colecciones, y su página de álbum sigue funcionando.
   Toda lectura de discografía lo excluye; una sincronización que vuelve a devolverlo le quita
   la marca.
+
+**Géneros (migración `0056`, openspec `add-genre-taxonomy`):** `wikidata_id` (`TEXT` nullable,
+`CHECK ^Q[0-9]+$`) es la entidad que MusicBrainz declara en la relación `wikidata` del álbum,
+pedida en el mismo browse de discografía (`inc=…+url-rels`); `NULL` si no la declara o dejó de
+hacerlo. `genres_synced_at` (`TIMESTAMPTZ` nullable): última sincronización de sus semillas
+(`NULL` = nunca, vigencia de 30 días). Un cambio de `wikidata_id` la vuelve a `NULL`.
 
 **Fecha de lanzamiento canónica (`first_release_date` / `first_release_year`, migración `0016`):**
 la fecha del **álbum**, derivada de `first-release-date` de MusicBrainz (calculada sobre todas las
@@ -640,6 +651,38 @@ ninguna está en un disco de estudio, el disco más temprano). Se resuelve al le
 - Índices únicos parciales (`uq_credit_pos_*`, `uq_credit_artist_*`): garantizan que no haya dos artistas en la misma posición, ni el mismo artista repetido, dentro del mismo objetivo. Son parciales porque un `UNIQUE` normal no detecta duplicados cuando una de las columnas de destino es `NULL` (`NULL <> NULL` en SQL).
 
 **Ejemplo:** "Mark Ronson feat. Bruno Mars" son dos filas: `position=0, role=primary, join_phrase='feat.'` y `position=1, role=featured`.
+
+## Géneros (migración `0056_genre_taxonomy.sql`, openspec `add-genre-taxonomy`, ADR 0023)
+
+Taxonomía de géneros de MusicBrainz (dump core, CC0) y géneros semilla de Wikidata P136 (CC0).
+Nunca se guardan votos ni etiquetas de MusicBrainz (CC BY-NC-SA).
+
+- **`genre`**: `id` UUID PK · `mbid` UUID único · `slug` único (`CHECK ^[a-z0-9]+(-[a-z0-9]+)*$`;
+  clave estable de URL, API e identidad musical, en inglés para todos los idiomas) · `name` (nombre
+  de MusicBrainz) · `name_es` (etiqueta en español de Wikidata vía P8052 o corrección curada; `NULL`
+  = se muestra `name`) · `wikidata_id` (`CHECK ^Q[0-9]+$`, índice parcial: traduce los QIDs de
+  P136) · `kind` (`style` | `descriptor` | `hidden`) · `created_at` / `updated_at` (trigger
+  `trg_genre_touch`). Las filas las escribe `scripts/load-genre-taxonomy.ts` desde
+  `data/genres/taxonomy.json`; un género que MusicBrainz retiró queda `hidden`, no se borra.
+- **`genre_relation`**: `(genre_id, related_genre_id, kind)` PK, `kind` ∈ `subgenre_of` |
+  `fusion_of` | `influenced_by`, siempre "`genre_id` es subgénero de / fusión de / influido por
+  `related_genre_id`"; `CHECK genre_id <> related_genre_id`; índice por `(related_genre_id, kind)`
+  para bajar a los subgéneros. `ON DELETE CASCADE` en ambos lados.
+- **`genre_family`**: las 20 familias (`key` PK, `tier` `main` | `more`, `position` única),
+  insertadas por la migración; sus nombres viven en `messages/*/catalog.json` (`genres.families`).
+- **`genre_family_member`**: `(genre_id, family_key)` PK, N:M, calculada por el script de
+  generación (`data/genres/curation.ts`); índice por familia.
+- **`artist_genre_seed`** / **`release_group_genre_seed`**: `(artist_id | release_group_id,
+  genre_id)` PK, `position` (orden de Wikidata, `CHECK >= 0`), `created_at`. Se reemplazan completas
+  en cada sincronización (sin `updated_at`). FK a `genre` `ON DELETE RESTRICT` (un género retirado
+  queda oculto), al artista/álbum `ON DELETE CASCADE`. Separadas de los votos de la comunidad.
+- **Vista `release_group_effective_genre`** `(release_group_id, genre_id, position, inherited)`:
+  las semillas propias visibles del álbum si tiene alguna; si no, los **3 primeros géneros de
+  estilo** de su artista principal (primer crédito `primary` por `position`), con
+  `inherited = true`. Excluye `hidden`; los descriptores no se heredan. Es la única definición que
+  usan Explorar, Caminos y la huella de gusto.
+- **`release_group_tag`** (migración `0014`) **se eliminó**: sus filas las sembraba un script con
+  datos inventados.
 
 ## `rating`
 

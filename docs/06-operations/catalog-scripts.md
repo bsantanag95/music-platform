@@ -109,6 +109,61 @@ Requiere `WIKIMEDIA_USER_AGENT` además de `MUSICBRAINZ_USER_AGENT`. Cuesta una 
 MusicBrainz y hasta cinco a Wikimedia por artista. Cada paso escribe por separado: si Wikimedia
 falla, el artista conserva los datos anteriores y queda pendiente.
 
+## Géneros (cambio `add-genre-taxonomy`, ADR 0023)
+
+Tres scripts. La taxonomía vive versionada en `data/genres/taxonomy.json`; solo hace falta
+regenerarla para tomar géneros nuevos de MusicBrainz (propuesta: trimestral o a pedido).
+
+### `scripts/build-genre-taxonomy.ts` (offline, solo al actualizar la taxonomía)
+
+Genera `data/genres/taxonomy.json` desde el **dump core** de MusicBrainz (CC0) y las etiquetas en
+español de Wikidata (P8052), aplicando la curaduría de `data/genres/curation.ts` (familias,
+huérfanos, descriptores, ocultos y nombres corregidos). No toca la base y no necesita
+`DATABASE_URL`; requiere `WIKIMEDIA_USER_AGENT`.
+
+```bash
+# 1. Bajar mbdump.tar.bz2 (~7 GB) de https://data.metabrainz.org/pub/musicbrainz/data/fullexport/<LATEST>/
+# 2. Extraer solo la marca y 4 tablas (tar con bzip2 viene en Linux, macOS y Windows 10+)
+tar -xjf mbdump.tar.bz2 TIMESTAMP mbdump/genre mbdump/l_genre_genre mbdump/link mbdump/link_type
+# 3. Generar (primero en simulación: imprime el reporte sin escribir)
+tsx --env-file=.env scripts/build-genre-taxonomy.ts --dump <carpeta> --dry-run
+tsx --env-file=.env scripts/build-genre-taxonomy.ts --dump <carpeta>
+```
+
+Falla sin escribir si la curaduría nombra un género que ya no existe (MusicBrainz lo renombró o
+borró), si una familia principal queda vacía o si cambió la forma del dump. Conserva el slug de
+cada MBID del archivo anterior. El reporte lista las raíces nuevas sin mapear (caen en "Del
+mundo"). Revisar el diff de `taxonomy.json` (un género por línea), commitear y cargar.
+
+### `scripts/load-genre-taxonomy.ts`
+
+Aplica `data/genres/taxonomy.json` a la base: upsert por MBID solo de lo que cambió, relaciones
+y pertenencias a familias por diferencia, y los géneros que ya no vienen en el archivo quedan
+ocultos (no se borran). Idempotente. Correr después de `pnpm run db:migrate` (migración `0056`)
+y cada vez que se regenera la taxonomía.
+
+```bash
+tsx --env-file=.env scripts/load-genre-taxonomy.ts
+```
+
+### `scripts/backfill-genre-seeds.ts`
+
+Siembra los géneros (Wikidata P136) de los artistas y álbumes existentes. Correr después de cargar
+la taxonomía. La página de artista y la sincronización de discografía hacen lo mismo en segundo
+plano (vigencia de 30 días).
+
+```bash
+tsx --env-file=.env scripts/backfill-genre-seeds.ts --limit 20 --dry-run
+tsx --env-file=.env scripts/backfill-genre-seeds.ts --artist <uuid>
+tsx --env-file=.env scripts/backfill-genre-seeds.ts
+```
+
+Etapa 1: artistas con `wikidata_id`, sus entidades en lotes de 50 por request. Etapa 2: artistas con
+discografía sincronizada; vuelve a recorrer el browse de MusicBrainz (una request cada 100
+álbumes) para guardar la entidad de Wikidata de sus álbumes, y los siembra en lotes de 50.
+`--skip-browse` omite el recorrido; `--force` ignora la vigencia. Requiere `MUSICBRAINZ_USER_AGENT` y
+`WIKIMEDIA_USER_AGENT`. En simulación, la etapa 2 no ve las entidades nuevas (no se guardan).
+
 ## `scripts/takedown-artist-photo.ts`
 
 **Retiro a pedido** de la foto de un artista: vacía la foto y su crédito y marca

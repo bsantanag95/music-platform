@@ -4,19 +4,28 @@ import { db } from "@/db";
 import {
   collectionEntry,
   favorite,
+  genre,
+  genreFamilyMember,
   listenEntry,
   rating,
   release,
-  releaseGroupTag,
+  releaseGroupEffectiveGenre,
   userList,
 } from "@/db/schema";
+import { FAMILY_KEYS, type FamilyKey } from "@/services/genres/families";
+import { genreDisplayName } from "@/services/genres/names";
 import { audiencesForProfile } from "@/services/social/visibility";
 import type { Audience } from "@/services/social/types";
+import catalogEs from "../../../messages/es/catalog.json";
 
 // Estrellas posibles: 0,5 a 5 en pasos de media (paso enforced en el CHECK de
 // la migración 0000). La curva siempre tiene los 10 cubos, con 0 donde no hay.
 const STAR_BUCKETS = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5] as const;
-const TOP_GENRES = 8;
+/** Familias en la cresta de géneros y géneros nombrados por familia. */
+const TOP_GENRE_FAMILIES = 8;
+const TOP_GENRES_PER_FAMILY = 3;
+/** Nombres de familia en español para el resumen (que se arma en español en el servidor). */
+const FAMILY_NAMES_ES: Record<FamilyKey, string> = catalogEs.genres.families;
 
 export interface RatingCurvePoint {
   stars: number;
@@ -28,6 +37,23 @@ export interface RidgePoint {
   count: number;
 }
 
+/** Género de la taxonomía tal como lo nombra la huella (el nombre se localiza al mostrar). */
+export interface FingerprintGenre {
+  slug: string;
+  name: string;
+  nameEs: string | null;
+}
+
+/**
+ * Cresta de géneros híbrida (openspec: add-genre-taxonomy, design D9): álbumes visibles por
+ * familia y, dentro de la familia, sus géneros de estilo más presentes.
+ */
+export interface GenreRidgePoint {
+  family: FamilyKey;
+  count: number;
+  topGenres: FingerprintGenre[];
+}
+
 export interface TasteFingerprint {
   /** El visitante tiene permitido ver las valoraciones (dueño o seguidor aprobado). */
   ratingsVisible: boolean;
@@ -36,8 +62,8 @@ export interface TasteFingerprint {
   totalRatings: number;
   /** Décadas presentes, orden ascendente. Puede estar vacío. */
   decades: RidgePoint[];
-  /** Géneros más presentes. Vacío cuando no hay datos de tag. */
-  genres: RidgePoint[];
+  /** Familias de géneros más presentes, con sus géneros. Vacío cuando no hay datos de género. */
+  genres: GenreRidgePoint[];
   genreDataAvailable: boolean;
   split: {
     ratedArtists: number;
@@ -154,19 +180,56 @@ async function computeDecades(albumIds: string[]): Promise<RidgePoint[]> {
     .sort((a, b) => Number(a.label.slice(0, -1)) - Number(b.label.slice(0, -1)));
 }
 
-async function computeGenres(albumIds: string[]): Promise<RidgePoint[]> {
+export interface AlbumGenreFamilyRow extends FingerprintGenre {
+  releaseGroupId: string;
+  familyKey: FamilyKey;
+}
+
+/**
+ * Agrupa por familia: un álbum suma una vez a cada familia de sus géneros efectivos. Familias por
+ * álbumes desc (empate: orden de la taxonomía), hasta 8; en cada una, hasta 3 géneros por álbumes
+ * desc (empate: slug).
+ */
+export function rankGenreFamilies(rows: readonly AlbumGenreFamilyRow[]): GenreRidgePoint[] {
+  const albumsByFamily = new Map<FamilyKey, Set<string>>();
+  const albumsByGenre = new Map<FamilyKey, Map<string, { genre: FingerprintGenre; albums: Set<string> }>>();
+  for (const row of rows) {
+    albumsByFamily.set(row.familyKey, (albumsByFamily.get(row.familyKey) ?? new Set()).add(row.releaseGroupId));
+    const genres = albumsByGenre.get(row.familyKey) ?? new Map();
+    const entry = genres.get(row.slug) ?? { genre: { slug: row.slug, name: row.name, nameEs: row.nameEs }, albums: new Set() };
+    entry.albums.add(row.releaseGroupId);
+    genres.set(row.slug, entry);
+    albumsByGenre.set(row.familyKey, genres);
+  }
+  const order = (key: FamilyKey) => FAMILY_KEYS.indexOf(key);
+  return [...albumsByFamily.entries()]
+    .sort(([a, x], [b, y]) => y.size - x.size || order(a) - order(b))
+    .slice(0, TOP_GENRE_FAMILIES)
+    .map(([family, albums]) => ({
+      family,
+      count: albums.size,
+      topGenres: [...(albumsByGenre.get(family)?.values() ?? [])]
+        .sort((a, b) => b.albums.size - a.albums.size || a.genre.slug.localeCompare(b.genre.slug))
+        .slice(0, TOP_GENRES_PER_FAMILY)
+        .map((entry) => entry.genre),
+    }));
+}
+
+async function computeGenres(albumIds: string[]): Promise<GenreRidgePoint[]> {
   if (albumIds.length === 0) return [];
   const rows = await db
-    .select({
-      tag: releaseGroupTag.tag,
-      total: sql<number>`sum(${releaseGroupTag.count})::int`,
+    .selectDistinct({
+      releaseGroupId: releaseGroupEffectiveGenre.releaseGroupId,
+      familyKey: genreFamilyMember.familyKey,
+      slug: genre.slug,
+      name: genre.name,
+      nameEs: genre.nameEs,
     })
-    .from(releaseGroupTag)
-    .where(inArray(releaseGroupTag.releaseGroupId, albumIds))
-    .groupBy(releaseGroupTag.tag)
-    .orderBy(sql`sum(${releaseGroupTag.count}) desc`)
-    .limit(TOP_GENRES);
-  return rows.map((row) => ({ label: row.tag, count: row.total }));
+    .from(releaseGroupEffectiveGenre)
+    .innerJoin(genre, and(eq(genre.id, releaseGroupEffectiveGenre.genreId), eq(genre.kind, "style")))
+    .innerJoin(genreFamilyMember, eq(genreFamilyMember.genreId, genre.id))
+    .where(inArray(releaseGroupEffectiveGenre.releaseGroupId, albumIds));
+  return rankGenreFamilies(rows.map((r) => ({ ...r, familyKey: r.familyKey as FamilyKey })));
 }
 
 async function countByAudience(
@@ -196,9 +259,24 @@ function averageStars(curve: RatingCurvePoint[]): number | null {
   return weighted / total;
 }
 
+/**
+ * Frase de géneros del resumen: la familia más presente y, si lo hay, su género más presente con
+ * un nombre distinto al de la familia ("Rock, sobre todo shoegaze"). El resumen se arma en español
+ * (como el resto de sus frases), así que usa los nombres en español.
+ */
+export function genreSummaryPhrase(genres: readonly GenreRidgePoint[]): string | null {
+  const top = genres[0];
+  if (!top) return null;
+  const family = FAMILY_NAMES_ES[top.family];
+  const detail = top.topGenres
+    .map((g) => genreDisplayName(g, "es"))
+    .find((name) => name.toLowerCase() !== family.toLowerCase());
+  return detail ? `Su familia más presente es ${family}, sobre todo ${detail}` : `Su familia más presente es ${family}`;
+}
+
 function deriveSummary(params: {
   decades: RidgePoint[];
-  genres: RidgePoint[];
+  genres: GenreRidgePoint[];
   ratingCurve: RatingCurvePoint[] | null;
 }): string[] {
   const phrases: string[] = [];
@@ -206,8 +284,8 @@ function deriveSummary(params: {
   const topDecade = [...params.decades].sort((a, b) => b.count - a.count)[0];
   if (topDecade) phrases.push(`Escucha sobre todo música de los ${topDecade.label}`);
 
-  const topGenre = [...params.genres].sort((a, b) => b.count - a.count)[0];
-  if (topGenre) phrases.push(`Su género más presente es ${topGenre.label}`);
+  const genrePhrase = genreSummaryPhrase(params.genres);
+  if (genrePhrase) phrases.push(genrePhrase);
 
   const avg = params.ratingCurve ? averageStars(params.ratingCurve) : null;
   if (avg !== null) {

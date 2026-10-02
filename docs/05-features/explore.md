@@ -16,7 +16,7 @@ sin tabla materializada. Cada sección se **omite** si no tiene contenido.
 | Colecciones destacadas | `user_list_featured` (listas de `@exploracion`, por `rank`) | ancla anti-arranque-en-frío |
 | Novedades | `release_group` studio/single_ep por `first_release_year` desc | siempre hay |
 | Explorar por década | `first_release_year` agrupado por década | chips → `/explore?decada=1990` |
-| Explorar por género | top-N de `release_group_tag` | chips → `/explore?genero=rock` |
+| Explorar por género | familias de géneros con álbumes (vista `release_group_effective_genre`, cambio `add-genre-taxonomy`) | chips "Rock · 219" → `/explore?familia=rock`; las 3 familias secundarias detrás de "Más" (`<details>`, sin JS) |
 | Mejor valorados | `rating` agregado por álbum | ver umbrales abajo |
 | Más reseñados | `review` contado por álbum | ver umbrales abajo |
 
@@ -40,8 +40,12 @@ sesión a las tarjetas (antes las trataba a todas como anónimas).
 
 ## Listados filtrados
 
-`/explore?decada=<año>` o `/explore?genero=<tag>` (un corte a la vez; la década tiene
-prioridad si llegan ambos). Grilla paginada con paginación server-side (anterior /
+`/explore?decada=<año>`, `/explore?familia=<clave>` o `/explore?genero=<slug>` (un corte a la vez;
+prioridad `decada` > `familia` > `genero`). La familia lista los álbumes con algún género efectivo de
+ella; el género, los de ese género **o un subgénero** (CTE recursiva sobre "subgénero de"). Los
+géneros efectivos incluyen los heredados del artista (3 primeros). Una clave o un slug desconocido
+muestra el estado vacío. El encabezado nombra la familia (traducida) o el género (nombre de la
+taxonomía según el idioma). Grilla paginada con paginación server-side (anterior /
 siguiente por `?page=`). No hay endpoint dedicado.
 
 ## Flag de lanzamiento

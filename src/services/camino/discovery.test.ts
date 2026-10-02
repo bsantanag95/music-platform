@@ -79,4 +79,23 @@ describe("discoverCaminos", () => {
     const result = await discoverCaminos();
     expect(result.caminos).toEqual([]);
   });
+
+  it("una familia desconocida da sin resultados sin consultar la base", async () => {
+    const result = await discoverCaminos({ family: "inexistente" });
+    expect(result).toEqual({ caminos: [], page: 1, pageSize: 20, hasNext: false });
+    expect(mocks.db.select).not.toHaveBeenCalled();
+  });
+
+  it("un género desconocido da sin resultados después de buscar el slug", async () => {
+    mocks.db.select.mockReturnValueOnce(chain([])); // findStyleGenreBySlug
+    const result = await discoverCaminos({ genre: "no-existe" });
+    expect(result.caminos).toEqual([]);
+    expect(mocks.db.select).toHaveBeenCalledTimes(1);
+  });
+
+  it("una familia conocida filtra y lista", async () => {
+    mocks.db.select.mockReturnValueOnce(chain([row]));
+    const result = await discoverCaminos({ family: "Latin" });
+    expect(result.caminos).toHaveLength(1);
+  });
 });

@@ -114,8 +114,10 @@ propias del visitante.
 Vitrina de Caminos populares — accesible sin sesión —, ordenada por **conteo de trackeo activo**
 (no por guardado simple, a diferencia de "Populares" de `/lists`): "N siguiendo su progreso" por
 tarjeta, sin posiciones numeradas ni distintivos de "top". Solo se listan listas con al menos un
-trackeo activo. Filtros por género (al menos un álbum con esa etiqueta) y por artista (búsqueda
-por nombre, no autocompletado con id, sobre al menos un álbum acreditado).
+trackeo activo. Filtros por género y por artista (búsqueda por nombre, no autocompletado con id,
+sobre al menos un álbum acreditado). El de género (cambio `add-genre-taxonomy`) es un selector de
+**familias** (`?family=`) y también acepta un género por slug (`?genre=`, con subgéneros); coincide si al
+menos un álbum de la lista tiene ese género efectivo (con herencia del artista).
 
 ## Decisiones cerradas
 

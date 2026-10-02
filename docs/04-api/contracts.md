@@ -332,8 +332,10 @@ interfaz enlaza a MusicBrainz).
 ## Descubrimiento `/explore` (cambio `add-album-discovery`)
 
 **No expone endpoints.** La superficie `/[locale]/explore` y sus listados filtrados
-(`?decada=` / `?genero=` / `?page=`) se resuelven en Server Components llamando directo a
-`src/services/discovery/discovery.ts`. La paginación de los listados filtrados es
+(`?decada=` / `?familia=` / `?genero=` / `?page=`) se resuelven en Server Components llamando directo a
+`src/services/discovery/discovery.ts`. Desde `add-genre-taxonomy`, `?familia=<clave>` lista los álbumes
+con algún género efectivo de esa familia y `?genero=<slug>` los de ese género **o un subgénero**
+(prioridad `decada` > `familia` > `genero`; una clave o un slug desconocido muestra el estado vacío). La paginación de los listados filtrados es
 server-side (anterior / siguiente por `?page=`), sin fetch de cliente. Ver
 `docs/05-features/explore.md`.
 
@@ -674,7 +676,9 @@ no hay sesión; no se modifica ningún dato.
 Reemplaza "Me defino como", géneros y/o formatos de escucha (cambio `rework-account-settings`,
 Fase 2). **Body:** cualquier subconjunto no vacío de
 `{ selfRoles: SelfRole[] (≤3), genres: Genre[] (≤5), listeningFormats: ListeningFormat[] (≤5) }`,
-de las listas cerradas de `src/lib/music-identity.ts`, sin repetidos. Lo enviado sustituye al valor
+de las listas cerradas de `src/lib/music-identity.ts`, sin repetidos. **BREAKING** (`add-genre-taxonomy`):
+`Genre` son 22 slugs de la taxonomía de géneros (`indie-rock`, `indie-pop`, `soul`, `funk`… en lugar de
+`indie` y `soul-funk`, que ahora dan `400`); los nombres se muestran desde la taxonomía. Lo enviado sustituye al valor
 anterior (`[]` lo vacía); lo no enviado no se toca. **200 OK:** `{ selfRoles, genres, listeningFormats }`
 guardados. **400 `VALIDATION_ERROR`** con un valor fuera de la lista, un cuarto rol, un sexto género,
 repetidos o un cuerpo vacío (no cambia nada). **401** `AUTH_REQUIRED`.
@@ -786,8 +790,11 @@ Huella de gusto del perfil, filtrada por lo que el visitante puede ver. La curva
 valoraciones solo se calcula para el dueño y seguidores aprobados; escuchas, favoritos,
 listas y colección se filtran por audiencia.
 
-**200 OK:** `{ fingerprint: { ratingsVisible, ratingCurve: [{ stars, count }] | null, totalRatings, decades: [{ label, count }], genres: [{ label, count }], genreDataAvailable, split: { ratedArtists, ratedAlbums, ratedSongs, collection, lists } } | null }`.
-`fingerprint` es `null` cuando el visitante no tiene acceso al contenido del perfil.
+**200 OK:** `{ fingerprint: { ratingsVisible, ratingCurve: [{ stars, count }] | null, totalRatings, decades: [{ label, count }], genres: [{ family, count, topGenres: [{ slug, name, nameEs }] }], genreDataAvailable, split: { ratedArtists, ratedAlbums, ratedSongs, collection, lists } } | null }`.
+`fingerprint` es `null` cuando el visitante no tiene acceso al contenido del perfil. **BREAKING**
+(`add-genre-taxonomy`): `genres` es la cresta híbrida — hasta 8 familias (`family` es la clave; el nombre
+se traduce en la interfaz) por número de álbumes visibles, cada una con hasta 3 géneros de estilo
+(`name` de MusicBrainz, `nameEs` de Wikidata o `null`); antes eran tags sembrados `{ label, count }`.
 
 ### `GET /api/users/[username]/in-rotation`
 
@@ -1417,12 +1424,13 @@ Agrega un álbum al final del Camino propio. Idempotente.
 Quita un álbum del Camino propio. Idempotente. **200 OK:** `{ camino }`.
 **404** con `CAMINO_NOT_FOUND` o `ALBUM_NOT_FOUND` según qué id no es válido. **401** sin sesión.
 
-### `GET /api/caminos/discover?page=&pageSize=&genre=&artist=`
+### `GET /api/caminos/discover?page=&pageSize=&family=&genre=&artist=`
 
 Descubrimiento público de Caminos populares — **sin sesión**. Lista las listas de álbumes
 visibles (`public`, `kind` `standard` o `custom_journey`) con al menos un trackeo activo,
-ordenadas por conteo de trackeo descendente (no por guardado simple). `genre` filtra por
-coincidencia de al menos un álbum etiquetado; `artist` busca por nombre de artista acreditado
+ordenadas por conteo de trackeo descendente (no por guardado simple). `family` (clave de familia de
+géneros) y `genre` (slug de la taxonomía, incluye subgéneros) filtran por al menos un álbum con ese
+género efectivo (`add-genre-taxonomy`; una clave o un slug desconocido da la lista vacía); `artist` busca por nombre de artista acreditado
 en al menos un álbum (sin distinguir mayúsculas), no por id.
 
 **200 OK:** `{ caminos: [{ id, title, kind, owner, itemCount, coverThumbs, trackingCount }], page, pageSize, hasNext }`.

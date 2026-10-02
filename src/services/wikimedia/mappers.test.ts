@@ -11,6 +11,7 @@ import {
   composePlaceLabel,
   countryIdOf,
   decidePhoto,
+  genreIdsOf,
   isAllowedLicense,
   photoFileOf,
   placeIdOf,
@@ -75,6 +76,36 @@ describe("entidad de Wikidata", () => {
     expect(composePlaceLabel("Viña del Mar", "Chile")).toBe("Viña del Mar, Chile");
     expect(composePlaceLabel("Chile", "Chile")).toBe("Chile");
     expect(composePlaceLabel(null, "Chile")).toBeNull();
+  });
+});
+
+describe("géneros (P136)", () => {
+  const genreClaim = (id: string, rank: "preferred" | "normal" | "deprecated" = "normal") => ({
+    mainsnak: { datavalue: { value: { id } } },
+    rank,
+  });
+
+  it("devuelve los QIDs en el orden de Wikidata, sin repetidos", () => {
+    const entity: WDEntity = { id: "Q1", claims: { P136: [genreClaim("Q484641"), genreClaim("Q1129034"), genreClaim("Q484641")] } };
+    expect(genreIdsOf(entity)).toEqual(["Q484641", "Q1129034"]);
+  });
+
+  it("con un valor de rango preferido, devuelve solo los preferidos", () => {
+    const entity: WDEntity = {
+      id: "Q1",
+      claims: { P136: [genreClaim("Q-normal-1"), genreClaim("Q-preferido", "preferred"), genreClaim("Q-normal-2")] },
+    };
+    expect(genreIdsOf(entity)).toEqual(["Q-preferido"]);
+  });
+
+  it("ignora los obsoletos, los valores sin entidad y una entidad sin P136", () => {
+    const entity: WDEntity = {
+      id: "Q1",
+      claims: { P136: [genreClaim("Q-viejo", "deprecated"), { mainsnak: {}, rank: "normal" }, genreClaim("Q-vigente")] },
+    };
+    expect(genreIdsOf(entity)).toEqual(["Q-vigente"]);
+    expect(genreIdsOf({ id: "Q2", claims: {} })).toEqual([]);
+    expect(genreIdsOf(undefined)).toEqual([]);
   });
 });
 

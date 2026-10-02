@@ -162,7 +162,7 @@ cambiar código, no una migración):
 | Campo | Valores | Tope |
 |---|---|---|
 | **Me defino como** (`self_roles`) | `listener`, `collector`, `musician`, `dj`, `critic`, `radio-host` | 3 |
-| **Géneros que me mueven** (`genres`) | 20: `rock`, `punk`, `post-punk`, `indie`, `shoegaze`, `metal`, `hip-hop`, `electronic`, `ambient`, `jazz`, `soul-funk`, `folk`, `blues`, `classical`, `pop`, `latin`, `reggae`, `experimental`, `country`, `bossa-nova` | 5 |
+| **Géneros que me mueven** (`genres`) | 22 slugs de la taxonomía de géneros (cambio `add-genre-taxonomy`): `rock`, `punk`, `post-punk`, `indie-rock`, `indie-pop`, `shoegaze`, `metal`, `hip-hop`, `electronic`, `ambient`, `jazz`, `soul`, `funk`, `folk`, `blues`, `classical`, `pop`, `latin`, `reggae`, `experimental`, `country`, `bossa-nova`; nombres desde la taxonomía según el idioma | 5 |
 | **Cómo escucho** (`listening_formats`) | `vinyl`, `cd`, `cassette`, `streaming`, `digital` | 5 |
 | **Preguntas del perfil** (`user_profile_prompt`) | 8: `first-record`, `sunday-record`, `defended-song`, `guilty-pleasure`, `first-concert`, `desert-island-record`, `sad-day-record`, `road-trip-record` — cada una con su pregunta larga (editor) y una etiqueta corta (Placa) | 3, respuesta de una línea ≤100 |
 
@@ -608,10 +608,11 @@ profundidades distintas:
     única excepción, puntual y curada).
   - **Cresta de décadas** — la década de la edición más temprana de cada álbum de la
     actividad visible. Degrada a vacío si no hay fechas.
-  - **Cresta de géneros** — top de `release_group_tag`. Esta tabla se **siembra** con
-    `scripts/seed-release-group-tags.ts` hasta que exista ingesta real de tags desde
-    MusicBrainz (cambio posterior); mientras tanto el componente muestra "sin datos de
-    género todavía" cuando no hay filas.
+  - **Cresta de géneros** — híbrida (cambio `add-genre-taxonomy`): hasta 8 **familias** por
+    número de álbumes visibles (géneros efectivos, con herencia del artista; un álbum suma una
+    vez a cada familia), cada una con sus 2–3 géneros de estilo más presentes debajo ("Rock —
+    shoegaze, post-punk"). La frase del resumen combina ambos niveles ("Su familia más presente
+    es Rock, sobre todo shoegaze"). Sin datos de género muestra "sin datos de género todavía".
   - **Reparto** — conteos por tipo: artistas/álbumes/canciones valorados, colección física,
     listas visibles.
   - La huella expone un equivalente textual (`<table>`/`<ul>` `sr-only`) — su información no
@@ -1000,5 +1001,5 @@ cuántas veces se escuchó algo — es "qué está sonando", no una métrica.
 | `user_showcase` | Una fila por usuario; `anthem_recording_id` (`ON DELETE SET NULL`, la canción de la Tarjeta de Identidad); `defining_artist_id`/`defining_release_group_id` (`ON DELETE SET NULL`, el artista/álbum definitorios — migración 0030, revisa el `is_defining` sobre `user_pinned_item` de 0029) |
 | ~~`user_album_pin`~~ | Retirada en la migración `0038` (ver "Empieza por aquí", historia) |
 | `favorite.audience` (default) | `public` para favoritos nuevos (antes `followers`); cambio a nivel de aplicación, no de columna — no retroactivo sobre filas existentes |
-| `release_group_tag` | Tags de género por álbum, sembrados |
+| ~~`release_group_tag`~~ | Retirada en la migración `0056` (eran tags sembrados); la cresta de géneros lee la taxonomía (`add-genre-taxonomy`) |
 | `idx_rating_user` | Índice para la curva de valoraciones (migración 0015) |
