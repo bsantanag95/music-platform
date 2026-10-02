@@ -11,9 +11,12 @@ export default async function ForgotPasswordPage() {
         <p className="mt-2 font-body text-paper-muted">{t("forgotDescription")}</p>
       </div>
       <ForgotPasswordForm />
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 border-t border-ink-border pt-6">
         <p className="font-data text-sm text-paper-muted">{t("forgotGoogleNote")}</p>
-        <Link href="/auth/login" className="font-data text-sm text-accent hover:text-paper">
+        <Link
+          href="/auth/login"
+          className="font-data text-sm text-accent underline-offset-4 transition-colors duration-150 hover:text-accent-hover hover:underline"
+        >
           {t("login")}
         </Link>
       </div>

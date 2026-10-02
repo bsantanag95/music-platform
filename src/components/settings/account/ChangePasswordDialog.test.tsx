@@ -50,6 +50,23 @@ describe("ChangePasswordDialog: cambiar", () => {
     expect(submit("Cambiar contraseña")).toBeDisabled();
   });
 
+  it("cada campo de contraseña tiene su ojo, que alterna con un clic", async () => {
+    const { user } = setup("change");
+    const fields = ["Tu contraseña actual", "Contraseña nueva", "Repetí la contraseña nueva"].map((label) =>
+      screen.getByLabelText(label),
+    );
+    const toggles = screen.getAllByRole("button", { name: "Mostrar contraseña" });
+    expect(toggles).toHaveLength(3);
+    fields.forEach((field) => expect(field).toHaveAttribute("type", "password"));
+
+    await user.click(toggles[1]!);
+    expect(fields[1]).toHaveAttribute("type", "text");
+    expect(fields[0]).toHaveAttribute("type", "password");
+
+    await user.click(screen.getByRole("button", { name: "Ocultar contraseña" }));
+    expect(fields[1]).toHaveAttribute("type", "password");
+  });
+
   it("envía la actual y la nueva, con el cierre de las otras sesiones marcado por defecto", async () => {
     const { user, onSaved } = setup("change");
     await fill(user);

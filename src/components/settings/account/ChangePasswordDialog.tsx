@@ -98,7 +98,7 @@ export function ChangePasswordDialog({ open, onClose, mode, onSaved }: ChangePas
             />
           )}
           <Input
-            type="password"
+            revealable
             label={t("settings.account.password.new")}
             value={next}
             autoComplete="new-password"
@@ -109,7 +109,7 @@ export function ChangePasswordDialog({ open, onClose, mode, onSaved }: ChangePas
             }}
           />
           <Input
-            type="password"
+            revealable
             label={t("settings.account.password.repeat")}
             value={repeat}
             autoComplete="new-password"
