@@ -125,10 +125,15 @@ export async function genreNamesBySlug(slugs: readonly string[], locale: GenreLo
 }
 
 /**
- * Etiquetas de los géneros de "Géneros que me mueven" en el idioma pedido. Sin taxonomía cargada
- * (o con un slug ausente) se muestra el slug, nunca una celda vacía.
+ * Etiquetas de los géneros de "Géneros que me mueven" en el idioma pedido. Un slug que ya no es un
+ * estilo visible (género retirado u oculto) no figura en el resultado: se ignora al mostrar y lo
+ * guardado no se toca (openspec: show-genres, D5).
  */
-export async function identityGenreLabels<T extends string>(slugs: readonly T[], locale: GenreLocale): Promise<Record<T, string>> {
-  const names = await genreNamesBySlug(slugs, locale);
-  return Object.fromEntries(slugs.map((slug) => [slug, names.get(slug) ?? slug])) as Record<T, string>;
+export async function identityGenreLabels(slugs: readonly string[], locale: GenreLocale): Promise<Record<string, string>> {
+  if (slugs.length === 0) return {};
+  const rows = await db
+    .select({ slug: genre.slug, name: genre.name, nameEs: genre.nameEs })
+    .from(genre)
+    .where(and(inArray(genre.slug, [...slugs]), eq(genre.kind, "style")));
+  return Object.fromEntries(rows.map((r) => [r.slug, genreDisplayName(r, locale)]));
 }

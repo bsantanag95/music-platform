@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
+import { GenreChips } from "@/components/genres/GenreChips";
+import { getArtistGenres } from "@/services/genres/display";
 import { ArtistCommunity } from "@/components/artist/ArtistCommunity";
 import { ArtistFacts, ArtistIdentity, ArtistPhoto, ArtistPhotoCreditMobile, ArtistSummary } from "@/components/artist/ArtistHeader";
 import { ArtistRelationPanel } from "@/components/artist/ArtistRelationPanel";
@@ -67,7 +69,7 @@ export default async function ArtistLayout({ children, params }: ArtistLayoutPro
   const userId = session?.user.id ?? null;
   const socialTarget = await resolveSocialTarget("artist", artist.id);
 
-  const [discography, profile, stats, personal, lineup, comments, canModerate] = await Promise.all([
+  const [discography, profile, stats, personal, lineup, comments, canModerate, artistGenres] = await Promise.all([
     loadDiscography(artist.id),
     loadProfile(artist.id, locale),
     loadCommunityStats(artist.id),
@@ -75,6 +77,7 @@ export default async function ArtistLayout({ children, params }: ArtistLayoutPro
     loadLineup(artist.id),
     listComments(socialTarget),
     userId ? loadCanModerate(userId) : Promise.resolve(false),
+    getArtistGenres(artist.id),
   ]);
   if (!profile) notFound();
 
@@ -114,6 +117,7 @@ export default async function ArtistLayout({ children, params }: ArtistLayoutPro
             <ArtistPhoto name={artist.name} photo={profile.photo} />
             <div className="flex min-w-0 flex-1 flex-col gap-4">
               <ArtistIdentity type={type} name={artist.name} description={profile.description} />
+              <GenreChips genres={artistGenres.genres} />
               <div className="hidden sm:block">
                 <ArtistFacts type={type} profile={profile} firstMainYear={discography?.firstMainYear ?? null} lineup={fact} />
               </div>

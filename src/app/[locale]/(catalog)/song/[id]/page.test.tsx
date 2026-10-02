@@ -27,6 +27,11 @@ const mocks = vi.hoisted(() => ({
   scheduleSongCreditsSync: vi.fn(),
 }));
 
+// Géneros de la cabecera (openspec: show-genres): sin base en este test; los chips tienen sus propios tests.
+vi.mock("@/services/genres/display", () => ({
+  getSongGenres: vi.fn(async () => ({ genres: [], descriptors: [] })),
+}));
+
 vi.mock("./song-data", () => ({
   loadRecordingDetail: mocks.loadRecordingDetail,
   loadSession: mocks.loadSession,

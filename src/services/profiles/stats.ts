@@ -2,6 +2,7 @@ import { cache } from "react";
 import { and, eq, inArray, isNotNull, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import {
+  appUser,
   collectionEntry,
   favorite,
   genre,
@@ -52,6 +53,8 @@ export interface GenreRidgePoint {
   family: FamilyKey;
   count: number;
   topGenres: FingerprintGenre[];
+  /** La familia contiene algún género que el dueño declara en "Géneros que me mueven". */
+  declared?: boolean;
 }
 
 export interface TasteFingerprint {
@@ -64,6 +67,8 @@ export interface TasteFingerprint {
   decades: RidgePoint[];
   /** Familias de géneros más presentes, con sus géneros. Vacío cuando no hay datos de género. */
   genres: GenreRidgePoint[];
+  /** Familias declaradas por el dueño que no figuran en la cresta (declarado frente a real). */
+  declaredMissing: FamilyKey[];
   genreDataAvailable: boolean;
   split: {
     ratedArtists: number;
@@ -232,6 +237,36 @@ async function computeGenres(albumIds: string[]): Promise<GenreRidgePoint[]> {
   return rankGenreFamilies(rows.map((r) => ({ ...r, familyKey: r.familyKey as FamilyKey })));
 }
 
+/**
+ * Marca las familias de la cresta que contienen algún género declarado y lista las declaradas
+ * ausentes de ella (openspec: show-genres, capability `taste-fingerprint`, D7). Sin géneros
+ * declarados no marca nada.
+ */
+export function markDeclaredFamilies(
+  ridge: readonly GenreRidgePoint[],
+  declared: readonly FamilyKey[],
+): { genres: GenreRidgePoint[]; declaredMissing: FamilyKey[] } {
+  if (declared.length === 0) return { genres: [...ridge], declaredMissing: [] };
+  const wanted = new Set(declared);
+  const shown = new Set(ridge.map((point) => point.family));
+  return {
+    genres: ridge.map((point) => (wanted.has(point.family) ? { ...point, declared: true } : point)),
+    declaredMissing: FAMILY_KEYS.filter((key) => wanted.has(key) && !shown.has(key)),
+  };
+}
+
+/** Familias de los géneros de estilo que el usuario declara (los retirados u ocultos no cuentan). */
+async function declaredFamilies(userId: string): Promise<FamilyKey[]> {
+  const [row] = await db.select({ genres: appUser.genres }).from(appUser).where(eq(appUser.id, userId)).limit(1);
+  if (!row || row.genres.length === 0) return [];
+  const rows = await db
+    .selectDistinct({ family: genreFamilyMember.familyKey })
+    .from(genre)
+    .innerJoin(genreFamilyMember, eq(genreFamilyMember.genreId, genre.id))
+    .where(and(inArray(genre.slug, row.genres), eq(genre.kind, "style")));
+  return rows.map((r) => r.family as FamilyKey);
+}
+
 async function countByAudience(
   table: typeof collectionEntry | typeof userList,
   ownerColumn: typeof collectionEntry.userId | typeof userList.ownerId,
@@ -334,10 +369,12 @@ export const getTasteFingerprint = cache(
       ),
     ]);
 
-    const [decades, genres] = await Promise.all([
+    const [decades, ridge, declared] = await Promise.all([
       computeDecades(albumIds),
       computeGenres(albumIds),
+      declaredFamilies(profile.id),
     ]);
+    const { genres, declaredMissing } = markDeclaredFamilies(ridge, declared);
 
     const hasCurve = ratingStats !== null && ratingStats.total > 0;
     const ratingCurve = hasCurve ? ratingStats.curve : null;
@@ -348,6 +385,7 @@ export const getTasteFingerprint = cache(
       totalRatings: ratingStats?.total ?? 0,
       decades,
       genres,
+      declaredMissing,
       genreDataAvailable: genres.length > 0,
       split: {
         ratedArtists: ratingStats?.ratedArtists ?? 0,

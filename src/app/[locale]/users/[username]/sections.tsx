@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { getLocale, getTranslations } from "next-intl/server";
-import { GENRES } from "@/lib/music-identity";
 import { genreLocaleOf } from "@/services/genres/names";
 import { identityGenreLabels } from "@/services/genres/read";
 import { Link } from "@/i18n/navigation";
@@ -82,7 +81,7 @@ export async function SettingsCardSection({ ownerId }: { ownerId: string }) {
 // un mismo panel.
 export async function EditablePlaca({ profile, children }: { profile: ProfileView; children: ReactNode }) {
   const t = await getTranslations("users");
-  const genreLabels = await identityGenreLabels(GENRES, genreLocaleOf(await getLocale()));
+  const genreLabels = await identityGenreLabels(profile.genres, genreLocaleOf(await getLocale()));
   return (
     <EditableBlock
       label={t("editMode.placa")}
@@ -108,7 +107,7 @@ export async function EditablePlaca({ profile, children }: { profile: ProfileVie
           <OwnerMusicIdentityEditor
             initial={{
               selfRoles: profile.selfRoles,
-              genres: profile.genres,
+              genres: profile.genres.filter((slug) => slug in genreLabels),
               listeningFormats: profile.listeningFormats,
             }}
             genreLabels={genreLabels}

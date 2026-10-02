@@ -120,7 +120,10 @@ de cuál de las filas con el mismo título haya en la BD.
 >   las semillas referencian el género con `RESTRICT`). Mockea MusicBrainz y Wikidata. Verifica la
 >   carga idempotente, el retiro de un género (oculto, conserva semillas), las semillas de artista y
 >   de álbum, el QID del álbum desde el browse, la herencia acotada a 3 y Explorar por familia y por
->   género con subgéneros.
+>   género con subgéneros. Desde `show-genres` también crea un usuario `smoke_gen_*` (lo borra al terminar;
+>   si se interrumpió: `DELETE FROM app_user WHERE username LIKE 'smoke_gen_%';`) y verifica los
+>   géneros de las cabeceras, la página de género, la búsqueda y que la identidad musical se valida
+>   contra la taxonomía.
 
 ## Base de datos / migraciones
 

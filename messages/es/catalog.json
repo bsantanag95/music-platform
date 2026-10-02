@@ -1020,6 +1020,24 @@
       "orchestral": "Orquestal",
       "soundtrack": "Banda sonora"
     },
-    "more": "Más"
+    "more": "Más",
+    "moreCount": "+{count}",
+    "chipsLabel": "Géneros",
+    "descriptorsLabel": "Etiquetas",
+    "inheritedFromArtist": "Heredado de {artist}",
+    "inheritedFromAlbum": "Del álbum",
+    "page": {
+      "pageTitle": "{genre} · Género",
+      "heading": "{genre}",
+      "breadcrumb": "Género",
+      "familiesLabel": "Familias",
+      "parentsLabel": "Subgénero de",
+      "childrenLabel": "Subgéneros",
+      "relatedLabel": "Géneros cercanos",
+      "artistsHeading": "Artistas",
+      "albumsHeading": "Álbumes",
+      "empty": "Todavía no hay música de este género en el catálogo.",
+      "albumCount": "{count, plural, one {# álbum} other {# álbumes}}"
+    }
   }
 }

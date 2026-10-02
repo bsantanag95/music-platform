@@ -1,6 +1,6 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { appUser, userProfilePrompt } from "@/db/schema";
+import { appUser, genre, userProfilePrompt } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import {
   ReplacePromptsRequestSchema,
@@ -33,6 +33,18 @@ export async function updateMusicIdentity(
   const parsed = UpdateMusicIdentityRequestSchema.safeParse(input);
   if (!parsed.success) {
     throw new ApiError("VALIDATION_ERROR", 400, "Los datos de identidad musical no son válidos");
+  }
+
+  // Cada género debe existir como estilo visible de la taxonomía (openspec: show-genres, D5).
+  const slugs = parsed.data.genres;
+  if (slugs && slugs.length > 0) {
+    const found = await db
+      .select({ slug: genre.slug })
+      .from(genre)
+      .where(and(inArray(genre.slug, slugs), eq(genre.kind, "style")));
+    if (found.length !== slugs.length) {
+      throw new ApiError("VALIDATION_ERROR", 400, "Alguno de los géneros no existe");
+    }
   }
 
   const [row] = await db

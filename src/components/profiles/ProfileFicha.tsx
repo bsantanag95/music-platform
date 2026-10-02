@@ -21,7 +21,9 @@ const LABEL = "pt-0.5 font-data text-[11px] uppercase tracking-wide text-paper-m
 // Placa de un perfil accesible: no la usa la tarjeta del perfil privado. Nunca
 // muestra números de actividad ni logros.
 export function ProfileFicha({ identity, t, genreLabels }: ProfileFichaProps) {
-  if (!hasMusicIdentity(identity)) return null;
+  // Un género retirado u oculto no tiene etiqueta y se ignora (openspec: show-genres, D5).
+  const shownGenres = identity.genres.filter((genre) => genre in genreLabels);
+  if (!hasMusicIdentity({ ...identity, genres: shownGenres })) return null;
 
   const list = (namespace: string, keys: readonly string[]) =>
     keys.map((key) => t(`musicIdentity.${namespace}.${key}`)).join(" · ");
@@ -39,11 +41,11 @@ export function ProfileFicha({ identity, t, genreLabels }: ProfileFichaProps) {
             <dd className="m-0 font-body text-sm text-paper">{list("roles", identity.selfRoles)}</dd>
           </>
         )}
-        {identity.genres.length > 0 && (
+        {shownGenres.length > 0 && (
           <>
             <dt className={LABEL}>{t("musicIdentity.ficha.genres")}</dt>
             <dd className="m-0 font-body text-sm text-paper">
-              {identity.genres.map((genre) => genreLabels[genre] ?? genre).join(" · ")}
+              {shownGenres.map((genre) => genreLabels[genre]).join(" · ")}
             </dd>
           </>
         )}

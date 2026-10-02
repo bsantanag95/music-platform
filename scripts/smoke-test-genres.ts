@@ -12,8 +12,9 @@ assertSmokeAllowed();
 // verifica: la carga idempotente de la taxonomía; el retiro de un género (queda oculto y conserva
 // sus semillas); las semillas del artista (P136 de la misma entidad, rango, descarte de lo que no
 // traduce); la entidad de Wikidata de cada álbum desde el browse de discografía; las semillas de
-// álbum en lote; la herencia acotada a 3 en la vista `release_group_effective_genre`; y Explorar por
-// familia y por género con subgéneros.
+// álbum en lote; la herencia acotada a 3 en la vista `release_group_effective_genre`; Explorar por
+// familia y por género con subgéneros; y (cambio show-genres) los géneros de las cabeceras, la página
+// de género (relaciones, artistas), la búsqueda de géneros y la validación de la identidad musical.
 //
 // La taxonomía se carga COMPLETA (la real de data/genres/taxonomy.json más 6 géneros sintéticos con
 // MBID `5e0ce000-…` y slugs `smoke-*`): cargar solo los sintéticos ocultaría los reales. Al terminar
@@ -115,7 +116,12 @@ async function main() {
   const { enrichArtistFromWikimedia } = await import("../src/services/catalog/artist-wikimedia");
   const { syncArtistDiscography } = await import("../src/services/catalog/ingest-discography");
   const { syncAlbumGenreSeeds } = await import("../src/services/genres/album-seeds");
-  const { albumDescriptors } = await import("../src/services/genres/read");
+  const { albumDescriptors, identityGenreLabels } = await import("../src/services/genres/read");
+  const { getAlbumGenres, getArtistGenres, getSongGenres } = await import("../src/services/genres/display");
+  const { getGenrePage } = await import("../src/services/genres/page");
+  const { searchGenres } = await import("../src/services/genres/search");
+  const { updateMusicIdentity } = await import("../src/services/profiles/music-identity");
+  const { registerUser } = await import("../src/services/auth/users");
   const { listAlbumsByFamily, listAlbumsByGenre } = await import("../src/services/discovery/discovery");
   type TaxonomyFile = import("../src/services/genres/taxonomy-build").TaxonomyFile;
 
@@ -144,7 +150,9 @@ async function main() {
   ) as TaxonomyFile;
   const withFixtures = (genres: typeof FIXTURE_GENRES): TaxonomyFile => ({ ...real, genres: [...real.genres, ...genres] });
 
+  const userIds: string[] = [];
   async function cleanup() {
+    for (const id of userIds) await db.delete(schema.appUser).where(eq(schema.appUser.id, id));
     await db.delete(schema.artist).where(like(sql`${schema.artist.mbid}::text`, `${SMOKE_PREFIX}%`));
     await db.delete(schema.releaseGroup).where(like(sql`${schema.releaseGroup.mbid}::text`, `${SMOKE_PREFIX}%`));
     await db.delete(schema.genre).where(like(sql`${schema.genre.mbid}::text`, `${SMOKE_PREFIX}%`));
@@ -245,6 +253,39 @@ async function main() {
     check(smokeIds(folk).length === 0, "el 4.º género del artista no se hereda");
     const unknown = await listAlbumsByFamily("inexistente");
     check(unknown.albums.length === 0 && unknown.family === null, "una familia desconocida da la página vacía");
+
+    console.log("6b) Géneros de las cabeceras, página de género y búsqueda");
+    const artistGenres = await getArtistGenres(band.id);
+    check(artistGenres.genres.map((g) => g.slug).join(",") === "smoke-shoegaze,smoke-trap,smoke-trap-latino,smoke-folk" && artistGenres.genres.every((g) => !g.inherited), "artista: sus semillas, todas propias");
+    const albumInherited = await getAlbumGenres(unlinked.id);
+    check(albumInherited.genres.length === 3 && albumInherited.genres.every((g) => g.inherited) && albumInherited.descriptors.join(",") === "soundtrack", "álbum heredado: 3 géneros marcados y Banda sonora");
+    const songGenres = await getSongGenres(linked.id);
+    check(songGenres.genres.length === 1 && songGenres.genres[0]!.inherited && songGenres.descriptors.length === 0, "canción: los del disco principal, heredados");
+    const rockPage = await getGenrePage("smoke-rock");
+    check(rockPage?.children.map((c) => c.slug).join(",") === "smoke-shoegaze" && rockPage.families.join(",") === "rock", "página de smoke-rock: su subgénero y su familia");
+    check((await getGenrePage("smoke-shoegaze"))?.parents.map((g) => g.slug).join(",") === "smoke-rock", "página de smoke-shoegaze: su padre");
+    check((await getGenrePage("smoke-rock"))?.artists.some((a) => a.id === band.id) === true, "el artista aparece en el género padre vía su subgénero");
+    check((await getGenrePage("smoke-hidden")) === null && (await getGenrePage("instrumental")) === null && (await getGenrePage("no-existe")) === null, "oculto, descriptor e inexistente no tienen página");
+    check((await searchGenres("SMOKE shoe")).map((g) => g.slug).includes("smoke-shoegaze"), "la búsqueda ignora mayúsculas");
+    check((await searchGenres("psicodelico")).some((g) => g.slug === "psychedelic-rock"), "la búsqueda ignora tildes y encuentra por el nombre en español");
+    check(!(await searchGenres("instrumental")).some((g) => g.slug === "instrumental") && !(await searchGenres("smoke-hidden")).length, "descriptores y ocultos no salen en la búsqueda");
+    check((await searchGenres("")).length === 12, "sin texto: 12 sugerencias");
+
+    console.log("6c) Identidad musical validada contra la taxonomía");
+    const stamp = Date.now().toString(36);
+    const user = await registerUser({ username: `smoke_gen_${stamp}`, email: `smoke-gen-${stamp}@example.test`, password: "smoke-password-123" });
+    if (!user) throw new Error("no se creó el usuario");
+    userIds.push(user.id);
+    const saved = await updateMusicIdentity(user.id, { genres: ["smoke-shoegaze", "cumbia-villera"] });
+    check(saved.genres.join(",") === "smoke-shoegaze,cumbia-villera", "acepta un género fuera de las 22 sugerencias");
+    const code = async (promise: Promise<unknown>) => promise.then(() => null, (error: { code?: string }) => error.code ?? "OTRO");
+    check((await code(updateMusicIdentity(user.id, { genres: ["smoke-rock", "no-existe"] }))) === "VALIDATION_ERROR", "rechaza un slug inexistente");
+    check((await code(updateMusicIdentity(user.id, { genres: ["instrumental"] }))) === "VALIDATION_ERROR", "rechaza un descriptor");
+    check((await code(updateMusicIdentity(user.id, { genres: ["smoke-hidden"] }))) === "VALIDATION_ERROR", "rechaza un género oculto");
+    const [stored] = await db.select({ genres: schema.appUser.genres }).from(schema.appUser).where(eq(schema.appUser.id, user.id));
+    check(stored?.genres.join(",") === "smoke-shoegaze,cumbia-villera", "los rechazos no cambian lo guardado");
+    const labels = await identityGenreLabels(["smoke-shoegaze", "smoke-hidden", "no-existe"], "es");
+    check(Object.keys(labels).join(",") === "smoke-shoegaze", "las etiquetas ignoran ocultos e inexistentes");
 
     console.log("7) Un género retirado queda oculto y conserva sus semillas");
     const retired = await loadTaxonomy(withFixtures(FIXTURE_GENRES.filter((g) => g.mbid !== G.trapLatino)));

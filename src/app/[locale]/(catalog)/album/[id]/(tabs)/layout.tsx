@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { GenreChips } from "@/components/genres/GenreChips";
+import { getAlbumGenres } from "@/services/genres/display";
 import { AlbumCover } from "@/components/catalog/AlbumCover";
 import { AlbumFacts, AlbumIdentity, CommunityStats } from "@/components/album/AlbumHeader";
 import { AlbumRelationPanel } from "@/components/album/AlbumRelationPanel";
@@ -72,7 +74,7 @@ export default async function AlbumLayout({ children, modal, params }: AlbumLayo
   const userId = session?.user.id ?? null;
   const socialTarget = await resolveSocialTarget("release-group", releaseGroupId);
 
-  const [stats, ratings, personal, canModerate, comments, strip, editions, personnel] = await Promise.all([
+  const [stats, ratings, personal, canModerate, comments, strip, editions, personnel, albumGenres] = await Promise.all([
     loadCommunityStats(releaseGroupId),
     getRatings(socialTarget, userId ?? undefined),
     userId ? loadPersonalState(userId, releaseGroupId) : Promise.resolve(null),
@@ -83,6 +85,7 @@ export default async function AlbumLayout({ children, modal, params }: AlbumLayo
       : Promise.resolve(null),
     loadAlbumEditions(releaseGroupId),
     loadAlbumPersonnel(releaseGroupId),
+    getAlbumGenres(releaseGroupId),
   ]);
 
   // Créditos y Ediciones solo existen con datos (openspec: enrich-album-editions-and-credits).
@@ -120,6 +123,13 @@ export default async function AlbumLayout({ children, modal, params }: AlbumLayo
             category={detail.releaseGroup.category as "studio" | "compilation" | "live_other" | "single_ep"}
             artists={detail.primaryArtists}
           />
+          <div className="mt-2">
+            <GenreChips
+              genres={albumGenres.genres}
+              descriptors={albumGenres.descriptors}
+              inheritedFrom={detail.primaryArtist?.name ?? null}
+            />
+          </div>
         </div>
         <div className="[grid-area:facts]">
           <AlbumFacts

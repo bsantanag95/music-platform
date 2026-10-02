@@ -46,6 +46,10 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
   3 primeros géneros de estilo de su artista principal, marcados como heredados.
 - Las semillas se guardan separadas de los votos de la comunidad: actualizar unas nunca modifica
   los otros.
+- Las páginas de artista, álbum y canción muestran sus géneros como chips enlazados a la página del género; los
+  heredados se distinguen de los propios y los descriptores van aparte (ver `05-features/genres.md`).
+- "Géneros que me mueven" (≤5) acepta cualquier género de estilo de la taxonomía, validado contra la tabla `genre`;
+  un género retirado u oculto se ignora al mostrar sin tocar lo guardado (ADR 0024).
 - Ver ADR 0023 y `03-data/sql-model.md` (sección "Géneros").
 
 ## Créditos de artista

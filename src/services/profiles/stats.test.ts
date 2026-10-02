@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTableName } from "drizzle-orm";
 import { releaseGroupEffectiveGenre } from "@/db/schema";
-import { genreSummaryPhrase, getTasteFingerprint, rankGenreFamilies } from "./stats";
+import { genreSummaryPhrase, getTasteFingerprint, markDeclaredFamilies, rankGenreFamilies } from "./stats";
 
 // Mock de db agnóstico a la forma de la cadena: `select().from(table)...` y
 // cualquier terminal awaitable resuelve a lo que se haya puesto en
@@ -211,5 +211,29 @@ describe("cresta de géneros híbrida (openspec: add-genre-taxonomy)", () => {
       "Su familia más presente es Rock",
     );
     expect(genreSummaryPhrase([])).toBeNull();
+  });
+});
+
+describe("declarado frente a real (openspec: show-genres)", () => {
+  const ridge = [
+    { family: "rock" as const, count: 4, topGenres: [] },
+    { family: "pop" as const, count: 2, topGenres: [] },
+  ];
+
+  it("marca las familias declaradas presentes y lista las ausentes", () => {
+    const result = markDeclaredFamilies(ridge, ["rock", "jazz"]);
+    expect(result.genres.map((g) => [g.family, g.declared])).toEqual([
+      ["rock", true],
+      ["pop", undefined],
+    ]);
+    expect(result.declaredMissing).toEqual(["jazz"]);
+  });
+
+  it("sin géneros declarados no marca nada", () => {
+    expect(markDeclaredFamilies(ridge, [])).toEqual({ genres: ridge, declaredMissing: [] });
+  });
+
+  it("las ausentes salen en el orden de la interfaz", () => {
+    expect(markDeclaredFamilies([], ["latin", "jazz", "rock"]).declaredMissing).toEqual(["rock", "jazz", "latin"]);
   });
 });

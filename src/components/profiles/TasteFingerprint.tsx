@@ -8,6 +8,8 @@ interface RidgeRow {
   label: string;
   count: number;
   detail?: string;
+  /** La familia contiene un género que el dueño declara (openspec: show-genres). */
+  declared?: boolean;
 }
 
 interface TasteFingerprintProps {
@@ -23,7 +25,7 @@ export async function TasteFingerprint({ fingerprint }: TasteFingerprintProps) {
   const t = await getTranslations("users");
   const tGenres = await getTranslations("catalog.genres");
   const locale = genreLocaleOf(await getLocale());
-  const { ratingCurve, totalRatings, decades, genres, genreDataAvailable, split } = fingerprint;
+  const { ratingCurve, totalRatings, decades, genres, declaredMissing, genreDataAvailable, split } = fingerprint;
 
   const decadeRows: RidgeRow[] = decades.map((d) => ({ key: d.label, label: d.label, count: d.count }));
   // Cresta híbrida (openspec: add-genre-taxonomy): familia + sus géneros más presentes.
@@ -32,7 +34,9 @@ export async function TasteFingerprint({ fingerprint }: TasteFingerprintProps) {
     label: tGenres(`families.${g.family}`),
     count: g.count,
     detail: g.topGenres.map((genre) => genreDisplayName(genre, locale)).join(", ") || undefined,
+    declared: g.declared,
   }));
+  const missingNames = declaredMissing.map((family) => tGenres(`families.${family}`));
 
   const splitParts = [
     split.ratedArtists > 0 && t("fingerprint.splitArtists", { count: split.ratedArtists }),
@@ -78,11 +82,13 @@ export async function TasteFingerprint({ fingerprint }: TasteFingerprintProps) {
         <Ridge
           label={t("fingerprint.genresLabel")}
           points={genreRows}
-          rowLabel={(point) =>
-            point.detail
+          declaredLabel={t("fingerprint.declaredBadge")}
+          rowLabel={(point) => {
+            const base = point.detail
               ? t("fingerprint.a11yRidgeDetail", { label: point.label, count: point.count, detail: point.detail })
-              : t("fingerprint.a11yRidge", { label: point.label, count: point.count })
-          }
+              : t("fingerprint.a11yRidge", { label: point.label, count: point.count });
+            return point.declared ? `${base}. ${t("fingerprint.a11yDeclared")}` : base;
+          }}
         />
       ) : (
         <div className="flex flex-col gap-2">
@@ -91,6 +97,12 @@ export async function TasteFingerprint({ fingerprint }: TasteFingerprintProps) {
           </p>
           <p className="font-body text-sm text-paper-muted">{t("fingerprint.genresEmpty")}</p>
         </div>
+      )}
+
+      {missingNames.length > 0 && (
+        <p className="font-body text-sm text-paper-muted">
+          {t("fingerprint.declaredMissing", { families: missingNames.join(", "), count: missingNames.length })}
+        </p>
       )}
 
       {/* Reparto */}
@@ -174,10 +186,13 @@ function Ridge({
   label,
   points,
   rowLabel,
+  declaredLabel,
 }: {
   label?: string;
   points: RidgeRow[];
   rowLabel: (point: RidgeRow) => string;
+  /** Texto de la marca visible de "declarado" (solo la cresta de géneros la usa). */
+  declaredLabel?: string;
 }) {
   const max = Math.max(1, ...points.map((point) => point.count));
 
@@ -192,6 +207,11 @@ function Ridge({
             <span className="flex items-center gap-3">
               <span className="w-24 shrink-0 truncate font-data text-xs text-paper-muted">
                 {point.label}
+                {point.declared && declaredLabel && (
+                  <span className="ml-1 text-amber" title={declaredLabel}>
+                    ★
+                  </span>
+                )}
               </span>
               <span className="h-2 flex-1 overflow-hidden rounded-sm bg-ink-surface">
                 <span

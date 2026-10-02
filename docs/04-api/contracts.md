@@ -329,6 +329,21 @@ de otra (`null` si no). **BREAKING** (cambio `redesign-song-page`, 2026-09): ree
 no existe o es de otro álbum), `422 EDITION_IS_BOX` (la edición es una caja: no se ingiere; la
 interfaz enlaza a MusicBrainz).
 
+## `GET /api/genres/search?q=` (cambio `show-genres`)
+
+Búsqueda **pública** (sin sesión) de géneros de estilo por nombre en español o inglés, sin distinguir mayúsculas ni
+tildes (`search_normalize`). `q` de 1 a 60 caracteres; sin `q` devuelve los 12 géneros más usados. Orden: coincidencia
+exacta, prefijo, resto; dentro, por uso y nombre; máximo 20. Nunca devuelve descriptores ni ocultos.
+**200 OK:** `{ genres: [{ slug, name, nameEs }] }` (`name` de MusicBrainz, `nameEs` de Wikidata o `null`; el cliente
+elige según el idioma). **400 `VALIDATION_ERROR`** con más de 60 caracteres. Lo usa el selector de "Géneros que me
+mueven".
+
+## Página de género `/genre/<slug>` (cambio `show-genres`)
+
+**No expone endpoint:** es un Server Component que llama a `src/services/genres/page.ts` y a `listAlbumsByGenre`
+(`?page=` server-side). El slug es el guardado en la taxonomía (ADR 0023); mayúsculas → `308` al canónico en
+minúsculas; inexistente o que no es un estilo visible → `404`.
+
 ## Descubrimiento `/explore` (cambio `add-album-discovery`)
 
 **No expone endpoints.** La superficie `/[locale]/explore` y sus listados filtrados
@@ -677,10 +692,693 @@ Reemplaza "Me defino como", géneros y/o formatos de escucha (cambio `rework-acc
 Fase 2). **Body:** cualquier subconjunto no vacío de
 `{ selfRoles: SelfRole[] (≤3), genres: Genre[] (≤5), listeningFormats: ListeningFormat[] (≤5) }`,
 de las listas cerradas de `src/lib/music-identity.ts`, sin repetidos. **BREAKING** (`add-genre-taxonomy`):
-`Genre` son 22 slugs de la taxonomía de géneros (`indie-rock`, `indie-pop`, `soul`, `funk`… en lugar de
-`indie` y `soul-funk`, que ahora dan `400`); los nombres se muestran desde la taxonomía. Lo enviado sustituye al valor
+`Genre` es un slug de la taxonomía de géneros (`indie-rock`, `soul`, `funk`… en lugar de `indie` y
+`soul-funk`, que dan `400`). **BREAKING** (`show-genres`): ya no es una lista de 22: vale **cualquier género de
+estilo visible** (formato `^[a-z0-9]+(-[a-z0-9]+)*# Contrato de API — `/api/*`
+
+Documenta el contrato real de los endpoints existentes (Fases 1-4) y las brechas que
+`02-architecture/frontend-plan/00-backend-analysis.md` identificó como necesarias para la
+Fase 3. Ver ADR 0006 sobre por qué este contrato es REST y no tRPC.
+
+> **La API sigue recibiendo el UUID interno, no el segmento `slug-id`** (ADR 0022). Las direcciones
+> públicas de página (`/{locale}/artist|album|song/...`, listas y reseñas) usan `<slug>-<id>` con
+> el id en base58; ningún endpoint de `/api/**` acepta esa forma: `artist/[id]`,
+> `release-group/[id]`, `recording/[id]`, `me/lists/[listId]`, etc. esperan el UUID, y los
+> clientes lo obtienen decodificando el segmento público con `parseCatalogSegment`.
+
+## `GET /api/catalog/search?type=<tipo>&q=<texto>` — ✅ Existe
+
+Búsqueda del catálogo **por tipo** (openspec `redesign-scoped-search`): cada solicitud busca un
+solo tipo, con su propio presupuesto de MusicBrainz, combinando la base local (índices trigram,
+migraciones `0050`/`0051`) y la búsqueda en vivo. **No ingiere** discografía, tracklist ni
+carátula: la ingesta pesada ocurre al abrir un resultado. Cada candidato de MusicBrainz aún no
+visto se persiste como stub (una operación por tipo) para que todo resultado tenga `id` local;
+un artista sin `type` en MusicBrainz se guarda como `unknown` (nunca `various`).
+
+> **BREAKING** respecto del contrato anterior (`?q=` sin tipo, `results` mezclados y
+> `songContext` opcional): ya no existen la mezcla de tipos, `subtitle` ni `songContext`.
+
+**Query params:**
+
+| Param | Tipos | Descripción |
+|---|---|---|
+| `q` | todos | Requerido; vacío o solo espacios tras normalizar → 400. |
+| `type` | — | Requerido: `artist`, `album` o `song` (Usuarios usa `/api/users` y `/api/search/suggest`). Otro valor → 400. |
+| `offset` | `album`, `song` | Página siguiente de MusicBrainz (lo local solo acompaña a la primera). |
+| `artistType` | `artist` | `person` o `group`: filtra lo local y la consulta remota (`type:`). |
+| `category` | `album` | `studio`, `single_ep`, `compilation`, `live_other`. |
+| `decade` | `album` | Primer año de la década (`1970`) → `firstreleasedate:[1970 TO 1979-12-31]`. |
+
+Los filtros inválidos se ignoran. Las cláusulas de MusicBrainz para categoría y década son una
+aproximación: el filtro exacto se reaplica sobre la categoría mapeada y el año conocido.
+
+**200 OK — `type=artist`**
+
+```json
+{
+  "type": "artist",
+  "remoteFailed": false,
+  "results": [
+    {
+      "kind": "artist",
+      "id": "uuid",
+      "mbid": "uuid | null",
+      "name": "string",
+      "disambiguation": "string | null",
+      "artistType": "person | group | various | unknown",
+      "country": "string | null",
+      "cached": "boolean",
+      "exact": "boolean"
+    }
+  ]
+}
+```
+
+Orden: exacta → palabra completa → prefijo → resto (normalizado sin mayúsculas, acentos ni
+puntuación); dentro de cada nivel, actividad en la plataforma → discografía cacheada → resto de
+locales → solo MusicBrainz (por score). `exact` alimenta la redirección de `/search`: si hay
+**exactamente un** `exact` y `remoteFailed` es falso, la página abre el perfil directamente.
+Presupuesto: **1** solicitud a MusicBrainz.
+
+**200 OK — `type=album`**
+
+```json
+{
+  "type": "album",
+  "remoteFailed": false,
+  "total": "int | null",
+  "nextOffset": "int | null",
+  "refine": { "total": "int", "artists": ["string"] },
+  "results": [
+    {
+      "kind": "release-group",
+      "id": "uuid",
+      "mbid": "uuid | null",
+      "title": "string",
+      "artistName": "string | null",
+      "category": "studio | single_ep | compilation | live_other",
+      "year": "int | null",
+      "cached": "boolean"
+    }
+  ]
+}
+```
+
+Orden por **cobertura de términos** (las palabras pueden repartirse entre título y artista, en
+cualquier orden): (1) un artista acreditado ocupa un extremo de la consulta y el resto es el
+título; (2) título igual a la consulta; (3) todas las palabras cubiertas; (4) parcial. Luego
+actividad → cacheado → local → MusicBrainz. Con separador explícito `Artista - Título` se usan
+campos (`releasegroup:"…" AND artist:"…"`), probando el orden inverso si el primero no trae nada.
+`refine` (o `null`): consulta genérica — primera página, más de 50 coincidencias y ningún
+resultado de nivel 1 — con hasta 5 artistas frecuentes para acotar. `total` y `nextOffset` son
+`null` si la pata remota falló. Presupuesto: **1** solicitud por página (2 solo con separador y
+el primer orden vacío).
+
+**200 OK — `type=song`**
+
+```json
+{
+  "type": "song",
+  "remoteFailed": false,
+  "total": "int | null",
+  "nextOffset": "int | null",
+  "interpretation": { "song": "string", "artistName": "string | null" },
+  "alternatives": [{ "song": "string", "artistName": "string | null", "query": "string" }],
+  "refine": { "total": "int", "artists": ["string"] },
+  "results": [
+    {
+      "kind": "song",
+      "key": "string",
+      "title": "string",
+      "artistName": "string | null",
+      "recordingId": "uuid | null",
+      "mbid": "uuid | null",
+      "albums": [
+        {
+          "id": "uuid",
+          "mbid": "uuid | null",
+          "title": "string",
+          "category": "studio | single_ep | compilation | live_other",
+          "year": "int | null"
+        }
+      ],
+      "query": "string"
+    }
+  ]
+}
+```
+
+- **Interpretación**: el artista solo se reconoce si su nombre ocupa el **inicio o el final** de
+  la consulta (en límite de palabra) y deja una canción de ≥2 caracteres; los candidatos (locales
+  por `search_key` + una búsqueda de artistas en MusicBrainz) se ordenan por actividad y score,
+  nunca por longitud. Se prueba la mejor interpretación y, si no produce una canción relevante, la
+  consulta completa como título; con separador explícito, los dos órdenes. Nunca más de dos
+  búsquedas de recordings. `interpretation` es `null` si no se usó artista; `alternatives` ofrece
+  como mucho una lectura no probada y plausible (score ≥ 80 o con actividad), ya reescrita con
+  separador explícito en `query`.
+- Con artista, la búsqueda de recordings se acota a sus release-groups propios
+  (`"<canción>" AND (rgid:… OR rgid:…)`, estudio primero, tope 120; sale de créditos locales o de
+  un browse de discografía): el texto libre y `artist:"nombre"` no son fiables (bootlegs, bandas
+  de cover, grabaciones canónicas sin artist-credit como el *Stairway to Heaven* de estudio). Sin
+  rgids degrada a `recording:"…" AND artist:"…"`. Filtro de relevancia: contención mutua por
+  palabras completas entre título y canción, ≤2 tokens extra en el título.
+- `results` son grupos **(título base, artista principal)**: las versiones (`(live)`,
+  `[demo]`, ` - Live at …`) cuentan como la misma canción, pero nunca se mezclan artistas. Solo
+  el primer grupo se expande: se browséan sus primeras **4** grabaciones (una página de 100 cada
+  una), se unen con las apariciones locales (tracklists ya ingeridas) y se ingiere su grabación
+  identidad (la de mayor `release-count`; `recordingId` solo en ese grupo). `albums` va
+  deduplicado por `release_group` (año mínimo entre fuentes), ordenado por categoría → año →
+  título, máximo **12**. Los demás grupos llegan con `albums: []` y `query` =
+  `"<artista> - <título>"` para abrirlos como primer grupo.
+- El grupo resuelto (`recordingId` no nulo) ofrece un enlace directo a `/song/<id>` («Ver canción»)
+  además de listar sus álbumes; los grupos no expandidos (`recordingId: null`) siguen abriéndose
+  con `query` como primer grupo. No cambia el shape de la respuesta.
+- Presupuesto: 1 búsqueda de artistas + por interpretación ≤1 browse de discografía (0 con
+  créditos locales) y 1 búsqueda de recordings (≤2 en total) + ≤4 browses de apariciones. Todo
+  comparte la caché TTL de búsquedas (10 min) salvo el browse de discografía. La resolución
+  persiste `recording`, sus créditos y stubs de `release_group`; **nunca** `release` ni `track`
+  (capacidad `catalog-recording-ingestion`).
+
+**Errores:** **400** `VALIDATION_ERROR` si falta `q`, llega vacío o `type` no es
+`artist | album | song`. Sin coincidencias es **200** con `results: []`, nunca 404. Si
+MusicBrainz falla y hay coincidencias locales, **200** con `remoteFailed: true` (la página lo
+avisa y ofrece reintentar); sin coincidencias locales, **502** `INTERNAL_ERROR`.
+
+## `GET /api/search/suggest?type=<tipo>&q=<texto>` — ✅ Existe
+
+Sugerencias del buscador mientras se escribe (openspec `redesign-scoped-search`, capacidad
+`search-typeahead`). **Solo lecturas locales: nunca sale a MusicBrainz ni persiste nada.**
+`type`: `artist | album | song | user` (otro valor → 400 `VALIDATION_ERROR`). Menos de 2
+caracteres tras normalizar → `{ "suggestions": [] }`. Máximo 6. `Cache-Control: private,
+max-age=30`.
+
+**200 OK**
+
+```json
+{
+  "suggestions": [
+    { "kind": "artist", "id": "uuid", "name": "string", "artistType": "person | group | various | unknown", "disambiguation": "string | null" },
+    { "kind": "album", "id": "uuid", "title": "string", "artistName": "string | null", "year": "int | null", "bridge": "boolean" },
+    { "kind": "song", "id": "uuid", "title": "string", "artistName": "string | null" },
+    { "kind": "user", "id": "uuid", "username": "string", "displayName": "string | null", "avatarUrl": "string | null" }
+  ]
+}
+```
+
+Orden: exacta → palabra completa → prefijo → resto; a igualdad, actividad en la plataforma y
+contenido cacheado. En `artist`, si un artista local ocupa un extremo de la consulta y el resto
+es el **prefijo** del título de uno de sus álbumes, ese álbum llega primero con `bridge: true`
+(puente artista + título: `dokken back for` → *Back for the Attack*). `user` aplica las mismas
+reglas que `/api/users` (solo cuentas activas).
+
+## `GET /api/catalog/release-group/[id]` — ✅ Existe
+
+Trae (o ingiere bajo demanda) el tracklist de la **edición representativa** de un álbum ya
+conocido por su `id` propio (no `mbid`). La edición representativa se elige de forma
+determinista con `pickRepresentativeRelease` (openspec: `album-edition-selection`), no
+"la primera oficial".
+
+**200 OK**
+
+```json
+{
+  "releaseGroup": {
+    "id": "uuid",
+    "mbid": "uuid | null",
+    "title": "string",
+    "category": "studio | single_ep | compilation | live_other",
+    "firstReleaseDate": "YYYY-MM-DD | null",
+    "firstReleaseYear": "int | null",
+    "createdAt": "ISO-8601",
+    "coverThumbUrl": "string | null",
+    "coverResolved": true
+  },
+  "release": {
+    "id": "uuid",
+    "mbid": "uuid | null",
+    "releaseGroupId": "uuid",
+    "editionLabel": "string",
+    "releaseDate": "YYYY-MM-DD | null",
+    "coverThumbUrl": "string | null"
+  },
+  "cover": "string | null",
+  "tracks": [
+    {
+      "recordingId": "uuid",
+      "position": "int",
+      "discNumber": "int",
+      "title": "string",
+      "durationSec": "int | null",
+      "credits": [
+        {
+          "artistId": "uuid",
+          "name": "string",
+          "role": "primary | featured",
+          "joinPhrase": "string | null"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**404** si el `id` no corresponde a ningún `release_group`, o si MusicBrainz no tiene
+ninguna edición ingerible para ese álbum.
+
+**Nota:** `cover` es la **URL servible** de la carátula del release-group: la del storage propio
+si está espejada o la de Cover Art Archive (`front-250`, siempre baja resolución, ver
+`03-data/data-licensing.md`) en otro caso, y se cachea en `release_group.cover_thumb_url`
+(migración `0047`; `release.cover_thumb_url` sigue deprecada como fallback legado). Vale `null`
+cuando el álbum no tiene carátula o fue retirada. En el render SSR del detalle se verifica la
+existencia con un `HEAD` y, si hay carátula y el espejo está habilitado, la descarga + espejo se
+difieren con `after()` (openspec: `mirror-cover-art`). Nunca construir esta URL a mano en el
+frontend.
+
+**Créditos por canción:** cada elemento de `tracks` incluye `credits: [{ artistId, name, role, joinPhrase }]`, ordenado por posición. Se arma con un `JOIN` de `credit` + `artist` sobre los `recordingId` de todo el tracklist en una sola query (no una query por canción).
+
+**Obra vs edición (openspec: `canonicalize-release-group`):** `releaseGroup` es la obra —lleva
+`category` (tipo de obra) y la fecha de lanzamiento **canónica** del álbum (`firstReleaseDate` con
+precisión diaria, `firstReleaseYear` con cualquier año conocido, misma tolerancia que
+`release_date`). `release.releaseDate` es la fecha de **esa edición** y puede diferir (una reedición
+de 2015 de un disco de 1994). El frontend muestra `releaseGroup.firstReleaseYear` como año del álbum.
+`release.editionLabel` ya no es siempre `"original"`: se deriva de la edición elegida
+(`disambiguation` → sufijo de título → `"standard"`).
+
+## `GET /api/catalog/release-group/[id]/cover` — ✅ Existe
+
+Trae (o resuelve bajo demanda) únicamente la carátula miniatura de un álbum ya conocido por su
+`id` propio. **No ingesta el tracklist** ni consulta MusicBrainz. Es lo que consume
+`LazyCoverImage` en la grilla del perfil de artista para los `releaseGroup` no resueltos, de modo
+que cargar las carátulas de un artista frío no se bloquea detrás de la ingesta de cada tracklist
+(0 llamadas a MusicBrainz por álbum).
+
+Con el espejo habilitado, la resolución hace un `GET` a Cover Art Archive a nivel de release-group
+(`front-250`, sigue las redirecciones, ver `03-data/data-licensing.md`), convierte a WebP ≤250 px,
+la sube al storage propio y devuelve su URL; sin el espejo, guarda y devuelve la URL de CAA. Un
+`404` confirma la ausencia y se recuerda por la ventana de reintento de negativos (7 días); un
+error transitorio no escribe nada. Nunca construir esta URL a mano en el frontend.
+
+**200 OK**
+
+```json
+{
+  "cover": "string | null"
+}
+```
+
+**404** con `code: ALBUM_NOT_FOUND` si el `id` no corresponde a ningún `release_group`.
+
+## `GET /api/catalog/release-group/[id]/editions/[editionId]/extra-tracks` — ✅ Existe
+
+Cambio `enrich-album-editions-and-credits`. Pistas que una edición agrega a la lista de la
+edición representativa del álbum — la sección desplegable "Pistas adicionales" de la
+pestaña Canciones. Público (catálogo).
+
+- `editionId` es el id propio de `release_edition` (UUID), no el MBID.
+- La primera vez ingiere la tracklist de la edición como `release` **no representativa**
+  (una request a MusicBrainz); las siguientes se sirven desde la base.
+- Una pista es adicional si su grabación no está en la lista principal y su título
+  normalizado (minúsculas, sin acentos, sin marcas de remasterización) tampoco coincide.
+  "Money (Live)" es adicional; "Money - 2011 Remaster" no.
+
+**Respuesta `200`:**
+
+```json
+{
+  "tracks": [
+    {
+      "recordingId": "uuid", "discNumber": 2, "position": 1, "title": "Money (Live)", "durationSec": 400,
+      "versionAttributes": ["live"],
+      "versionOf": { "recordingId": "uuid", "title": "Money" }
+    }
+  ]
+}
+```
+
+`versionAttributes` son los atributos del vínculo grabación → obra (`live`, `cover`,
+`instrumental`, `medley`, `partial`…) tal como vienen de MusicBrainz, vacío si la grabación no
+tiene obra; `versionOf` es la grabación original de la obra cuando la pista es en vivo o cover
+de otra (`null` si no). **BREAKING** (cambio `redesign-song-page`, 2026-09): reemplazan a
+`variantType`, que salía de una columna retirada que nunca se completó.
+
+**Errores:** `400 VALIDATION_ERROR` (algún id no es UUID), `404 EDITION_NOT_FOUND` (la edición
+no existe o es de otro álbum), `422 EDITION_IS_BOX` (la edición es una caja: no se ingiere; la
+interfaz enlaza a MusicBrainz).
+
+## Descubrimiento `/explore` (cambio `add-album-discovery`)
+
+**No expone endpoints.** La superficie `/[locale]/explore` y sus listados filtrados
+(`?decada=` / `?familia=` / `?genero=` / `?page=`) se resuelven en Server Components llamando directo a
+`src/services/discovery/discovery.ts`. Desde `add-genre-taxonomy`, `?familia=<clave>` lista los álbumes
+con algún género efectivo de esa familia y `?genero=<slug>` los de ese género **o un subgénero**
+(prioridad `decada` > `familia` > `genero`; una clave o un slug desconocido muestra el estado vacío). La paginación de los listados filtrados es
+server-side (anterior / siguiente por `?page=`), sin fetch de cliente. Ver
+`docs/05-features/explore.md`.
+
+## `GET /api/catalog/artist/[id]` — ✅ Existe
+
+Perfil de artista navegable directo por `id` propio. Si el artista es un stub
+(`type='unknown'`), se enriquece contra MusicBrainz por id antes de responder — mismo
+patrón que `findOrIngestArtist` aplica a stubs encontrados por nombre.
+
+**200 OK:** `{ artist, releaseGroups, memberships }`. `artist` incluye `membershipsSyncedAt` además
+de `discographySyncedAt`; `memberships` contiene `artistId`, `name`, `type`, `role`, `joinedOn` y `leftOn`.
+La primera lectura sincroniza `artist-rels` antes de leer memberships; las lecturas posteriores con
+`membershipsSyncedAt` ya establecido no consultan MusicBrainz. Para personas, `releaseGroups`
+combina la discografía propia y la de grupos relacionados, sin duplicados por id.
+
+**Alineación (openspec: `add-artist-lineup-data`):** `memberships` mantiene su forma, pero es un
+resumen de los períodos de cada pertenencia: `role` une los instrumentos de todos los períodos y ya
+no incluye las marcas `original` (fundador) ni `additional` (adicional). `artist` incluye además
+`lineupSyncedAt` (`null` = la alineación nunca se guardó con períodos). La primera lectura guarda
+también los períodos y los músicos de apoyo, con la misma request a MusicBrainz.
+
+**Perfil (openspec: `enrich-artist-profile`, ADR 0021) — BREAKING:** `artist.bio` pasa a llamarse
+`artist.disambiguation` (siempre fue la desambiguación de MusicBrainz, no una biografía). `artist`
+suma la ficha de MusicBrainz: `country` (ISO de 2 letras), `beginAreaName`, `endAreaName`,
+`lifeBegin` y `lifeEnd` (`YYYY` | `YYYY-MM` | `YYYY-MM-DD`; en una persona son nacimiento y muerte),
+`lifeEnded`, `wikidataId` y `profileSyncedAt`; y la foto de Wikimedia Commons: `photoUrl`
+(miniatura ≤500 px), `photoFile`, `photoAuthor`, `photoLicense`, `photoLicenseUrl`,
+`photoSourceUrl` (crédito obligatorio: quien muestre `photoUrl` debe mostrar autor y licencia),
+`photoBlockedAt` y `wikimediaSyncedAt`. Todos pueden ser `null`. La primera lectura de un artista
+responde sin esperar a Wikimedia: la ficha y Wikimedia se actualizan en segundo plano cuando están
+pendientes o tienen más de 30 días. Los enlaces curados, la descripción y el resumen por idioma no
+viajan en esta respuesta (los lee la página de artista).
+
+**Discografía (openspec: `fix-artist-discography-ingestion`):** `releaseGroups` es la discografía
+oficial completa (browse paginado de MusicBrainz sin los release-groups que solo tienen ediciones
+bootleg) y **excluye** los release-groups fuera de la discografía (`discographyUnlistedAt` con
+valor, siempre `null` en la respuesta). Cada release-group incluye además `primaryType: string |
+null` y `secondaryTypes: string[] | null` (tipos crudos de MusicBrainz; `null` si todavía no se
+sincronizaron) y `creditRole: "primary" | "featured"` (el rol del artista consultado en ese
+release-group). `artist` incluye `discographyCompleteAt` (`null` si la discografía nunca se
+recorrió entera). Una discografía guardada responde sin esperar a MusicBrainz; si está incompleta
+o tiene más de 7 días, se resincroniza en segundo plano después de responder. La primera lectura
+de un artista trae hasta 3 páginas (300 release-groups) antes de responder y el resto en segundo
+plano.
+
+Cada `releaseGroup` de la discografía incluye además `coverThumbUrl: string | null` (la URL
+servible, del storage propio o de Cover Art Archive) y `coverResolved: boolean` (la resolución ya
+tiene respuesta sin consultar CAA: URL conocida, ausencia confirmada dentro de la ventana de
+negativos de 7 días, o carátula retirada). `AlbumCard` renderiza la carátula en la carga inicial
+cuando `coverResolved` es verdadero y solo resuelve por el endpoint cover-only los no resueltos;
+un negativo vencido cuenta como no resuelto (openspec: `mirror-cover-art`).
+
+**404** con `code: ARTIST_NOT_FOUND` si el `id` no corresponde a ningún artista.
+
+## `GET /api/catalog/recording/[id]` — ✅ Existe
+
+Recibe el UUID interno de una grabación y devuelve únicamente datos cacheados en la base propia.
+La lectura no ingesta desde MusicBrainz ni resuelve carátulas externamente.
+
+**400** con `code: VALIDATION_ERROR` si `id` no es un UUID. **404** con
+`code: RECORDING_NOT_FOUND` si no existe la grabación.
+
+**200 OK**
+
+```json
+{
+  "recording": {
+    "id": "uuid",
+    "mbid": "uuid | null",
+    "title": "string",
+    "durationSec": "int | null"
+  },
+  "versionAttributes": ["live"],
+  "credits": [
+    {
+      "artistId": "uuid",
+      "name": "string",
+      "role": "primary | featured",
+      "joinPhrase": "string | null"
+    }
+  ],
+  "appearances": [
+    {
+      "releaseId": "uuid",
+      "releaseGroupId": "uuid",
+      "albumTitle": "string",
+      "editionLabel": "string",
+      "releaseDate": "YYYY-MM-DD | null",
+      "coverThumbUrl": "string | null",
+      "discNumber": "int",
+      "position": "int"
+    }
+  ],
+  "containingAlbums": [
+    {
+      "releaseGroupId": "uuid",
+      "title": "string",
+      "category": "studio | single_ep | compilation | live_other",
+      "coverThumbUrl": "string | null",
+      "firstReleaseDate": "YYYY-MM-DD | null",
+      "firstReleaseYear": "int | null"
+    }
+  ],
+  "primaryArtist": { "id": "uuid", "name": "string" }
+}
+```
+
+`containingAlbums` son los discos distintos que contienen la grabación, del más temprano al más
+tardío; `primaryArtist` es el artista principal de su disco principal (o `null`).
+
+El endpoint comparte el read-model `getRecordingDetail` con la página de canción, pero publica
+solo estos campos. **BREAKING** (cambio `redesign-song-page`, 2026-09): `recording.variantType`
+se reemplaza por `versionAttributes` (atributos del vínculo con la obra, ver pistas adicionales
+arriba; `[]` si la grabación no tiene obra).
+
+## Autenticación local
+
+`POST /api/auth/register` recibe `{ username, email, password, locale? }`, crea una cuenta y devuelve
+`201 { user }`. Dispara en best-effort el correo de verificación de email (ver sección siguiente);
+un fallo de envío no afecta el alta. `POST /api/auth/login` recibe `{ identifier, password }`, rota la
+sesión actual o crea una nueva y devuelve `200 { user }`. Ambos aplican rate limiting y nunca
+devuelven el token.
+
+`POST` y `DELETE /api/auth/logout` eliminan la sesión actual. `DELETE /api/auth/revoke-all` requiere sesión y
+elimina todas las sesiones del usuario. `GET /api/auth/me` es un contrato opcional para clientes;
+los Server Components resuelven la sesión directamente, sin fetch interno.
+
+Una cookie ausente, inválida o expirada se trata de forma indistinguible y devuelve `AUTH_REQUIRED`
+en operaciones protegidas; no se revela si la sesión existió. Logout solo revoca la sesión actual.
+`revoke-all` revoca todas las sesiones del usuario; no existe listado de dispositivos.
+
+La cookie opaca `music_session` es `httpOnly`, `secure`, `sameSite=lax`, con expiración fija de 30
+días. Los errores posibles están en `docs/04-api/errors.md` y `src/lib/api/schemas.ts`.
+
+## Recuperación de contraseña
+
+`POST /api/auth/password/forgot` recibe `{ email, locale? }` (el `locale` se valida contra los
+locales soportados, default `es`). Responde **siempre `202 { ok: true }`** para todo email bien
+formado —exista o no la cuenta y sea local o solo-Google— para no permitir enumerar cuentas. Solo
+cuando existe un `app_user` con `password_hash` no nulo genera un token de un solo uso (30 minutos,
+guardado hasheado), invalida los tokens previos de esa cuenta y envía un correo con el link
+`/<locale>/auth/reset-password?token=...`. El envío no bloquea la respuesta. Si en producción no hay
+un transporte de email real configurado, responde `503 EMAIL_CONFIG_MISSING` (fail-closed). **400**
+con `VALIDATION_ERROR` si el email no es válido; **429** con `RATE_LIMITED` (por IP y por email).
+
+`POST /api/auth/password/reset` recibe `{ token, password }`. Consume el token de forma atómica, y
+si es válido y no expiró actualiza la contraseña con Argon2id, elimina todos los tokens de
+restablecimiento y todas las sesiones de la cuenta (sin autologin), y responde `200 { ok: true }`.
+**400** con `INVALID_RESET_TOKEN` si el token no existe, expiró o ya fue usado; **400** con
+`PASSWORD_REUSED` si la contraseña nueva es igual a la actual (el token no se consume, para permitir
+reintentar con el mismo link); **400** con `VALIDATION_ERROR` si la contraseña no cumple la política
+(`min(8).max(128)`) —en ese caso el token tampoco se consume—; **429** con `RATE_LIMITED` por IP.
+
+## Verificación de email
+
+`app_user.email_verified_at` registra si el email está verificado. Las cuentas preexistentes quedaron
+verificadas por backfill y las altas de Google se marcan al crearse; las altas locales nuevas quedan
+sin verificar. La verificación es **soft**: no bloquea login ni acciones (ADR 0015).
+
+`POST /api/auth/email/verify` recibe `{ token }` y consume el token de un solo uso (TTL 24 h);
+responde `200 { ok: true }` o `400 INVALID_VERIFICATION_TOKEN` si no existe, expiró o ya fue usado;
+`400 VALIDATION_ERROR` si el body no es válido; `429 RATE_LIMITED` por IP.
+
+`POST /api/auth/email/verify/resend` requiere sesión (`401 AUTH_REQUIRED`), recibe `{ locale? }` y
+reenvía el correo al email de la cuenta autenticada: `200 { ok: true }` si lo envió, `409
+EMAIL_ALREADY_VERIFIED` si ya estaba verificado, `503 EMAIL_CONFIG_MISSING` si no hay transporte de
+correo configurado y `429 RATE_LIMITED` (por usuario e IP). El reenvío nunca opera sobre otra cuenta.
+
+## Autenticación externa — Google (OAuth 2.0 + OIDC)
+
+`GET /api/auth/google/start` recibe el query param opcional `locale` (validado contra los locales
+soportados, default `es`). Genera `state`, `code_verifier`/`code_challenge` (PKCE S256) y `nonce`,
+los persiste en cookies `httpOnly`, `secure`, `sameSite=lax` de corta duración (~10 min)
+incluyendo el `locale`, y redirige (307) a la authorization URL de Google con scopes fijos
+`openid email profile`.
+
+`GET /api/auth/google/callback` recibe los query params que devuelve Google (`code`, `state` y,
+en caso de cancelación o error, `error`). Valida `state` contra la cookie, intercambia el
+authorization code exclusivamente en el backend (`redirect_uri` siempre el configurado en
+`.env`, nunca uno de la request), y valida el ID token con `jose` (issuer, audience, firma JWKS
+RS256, expiración, `nonce`). Aplica rate limiting por IP al intercambio; al superarlo redirige a la
+página de error con `RATE_LIMITED`.
+
+Resuelve la identidad por `(provider='google', provider_account_id=sub)`:
+
+- Si existe, autentica al `app_user` asociado.
+- Si no existe y el email del ID token (con `email_verified=true`) coincide con una cuenta local
+  sin esa identidad vinculada, no crea nada y termina en `EMAIL_TAKEN_BY_LOCAL`.
+- Si no existe, `email_verified=false` o `email_verified` ausente, no crea nada y termina en
+  `OAUTH_EMAIL_NOT_VERIFIED` (se exige email verificado para dar de alta cuentas nuevas).
+- Si no existe, no hay coincidencia y `email_verified=true`, crea `app_user` + `auth_identity`
+  en una transacción, sin `password_hash` y con `email_verified_at` poblado. El username se deriva
+  del local-part del email
+  (`auth.md` sección 6): saneado a `^[a-zA-Z0-9_]+$`, 3–32 caracteres, sufijo numérico
+  incremental en colisión, reintentando la derivación dentro de la misma operación ante colisiones
+  por carrera.
+
+En cualquier resultado exitoso (identidad existente o alta nueva), rota o crea la sesión
+(`rotateCurrentSession`/`createSession`), setea la cookie `music_session` con los mismos
+atributos que el login local, y redirige (307) a `/<locale>/search` de forma fija, usando el
+`locale` persistido en las cookies del flujo — no existe un parámetro `returnTo` ni ninguna URL de
+retorno controlada por el cliente.
+
+Ante cualquier error (`state` inválido, cancelación, callback malformado, token inválido, email
+no verificado, email ya tomado localmente o rate limit), el callback no devuelve JSON: redirige a
+una página localizada de error (`/<locale>/auth/error?code=...`) con el `code` correspondiente como
+query param, ya que el callback es una navegación del navegador y no un `fetch` del cliente. Ver
+`docs/04-api/errors.md` para el catálogo completo de códigos `OAUTH_*` y su excepción de
+transporte.
+
+**Intenciones del flujo (cambio `rework-account-settings`).** `GET /api/auth/google/start` acepta
+además `intent` (`login` por defecto | `link` | `reauth`; cualquier otro valor se trata como `login`).
+`link` y `reauth` exigen sesión (`401 AUTH_REQUIRED` sin redirigir a Google) y guardan en las cookies
+del flujo la intención y quién lo inició; el callback exige que sea la misma sesión. `link` crea la
+identidad de Google para la cuenta de la sesión (por el id de Google, no por email); `reauth` exige que
+la identidad sea la vinculada a esa cuenta y rota la sesión. Ambas terminan siempre en
+`/<locale>/me/settings/account?google=linked|confirmed|error[&code=OAUTH_IDENTITY_TAKEN|OAUTH_IDENTITY_MISMATCH]`
+— un destino **fijo**; sigue sin existir un `returnTo` controlado por el cliente. Con `login`, el
+callback usa el idioma preferido de la cuenta (`app_user.locale`) si lo tiene.
+
+La vinculación implícita sigue prohibida: un email de Google que coincide con una cuenta local se
+rechaza (`EMAIL_TAKEN_BY_LOCAL`); solo se vincula desde una sesión iniciada y con `intent=link`.
+
+## Cuenta y seguridad (cambio `rework-account-settings`, Fase 1)
+
+Todas exigen sesión (`401 AUTH_REQUIRED`). Las acciones sensibles piden el factor de identidad
+descrito en `docs/05-features/user-profile.md` ("Autenticación reciente"): la contraseña actual en el
+cuerpo (`403 INVALID_CREDENTIALS` si no es correcta, `429 RATE_LIMITED` al superar 10 intentos) o, en
+una cuenta sin contraseña, una sesión de menos de 10 minutos (`403 REAUTH_REQUIRED`).
+
+| Endpoint | Cuerpo / respuesta |
+|---|---|
+| `GET /api/me/account/username/availability?q=` | `200 { valid, available, reason }`; `reason`: `too_short` \| `too_long` \| `invalid_chars` \| `current` \| `taken` \| `null`. Nunca dice quién lo tiene. Límite de 120 consultas por 15 min |
+| `PUT /api/me/account/username` | `{ username }` → `200 { username, nextChangeAt }`. `409 USERNAME_TAKEN` (sin distinguir mayúsculas, incluye reservas ajenas), `409 USERNAME_CHANGE_COOLDOWN` (un cambio cada 30 días), `400 VALIDATION_ERROR` |
+| `GET /api/me/account/email` | `200 { pending: { newEmail, expiresAt } \| null }` |
+| `POST /api/me/account/email` | `{ newEmail, password?, locale? }` → `200 { ok: true }`; manda el enlace al email **nuevo**, el actual no cambia. `409 EMAIL_TAKEN`, `503 EMAIL_CONFIG_MISSING`, `429 RATE_LIMITED`. Si el envío falla no queda token |
+| `POST /api/auth/email/change/confirm` | `{ token, locale? }` (sin sesión: el token es el factor) → `200 { ok: true, email }`; `400 INVALID_VERIFICATION_TOKEN` (inexistente, vencido o usado), `409 EMAIL_TAKEN` (otra cuenta lo tomó entretanto) |
+| `PUT /api/me/account/password` | `{ currentPassword, newPassword, revokeOtherSessions?, locale? }` (8–128) → `200 { ok: true }`. `400 PASSWORD_REUSED` si es igual a la actual; con `revokeOtherSessions` borra las demás sesiones y conserva la actual; invalida los tokens de reset; avisa por correo |
+| `POST /api/me/account/password` | `{ newPassword, locale? }` — solo cuentas **sin** contraseña; exige sesión reciente (`REAUTH_REQUIRED`). `400 VALIDATION_ERROR` si ya tiene |
+| `DELETE /api/me/account/identities/google` | `204`. `409 LAST_ACCESS_METHOD` si la cuenta no tiene contraseña |
+| `GET /api/me/sessions` | `200 { sessions: [{ id, deviceLabel, createdAt, lastSeenAt, current }] }`, la actual primero; `deviceLabel: null` = "Dispositivo desconocido". Sin token ni hash |
+| `DELETE /api/me/sessions/{id}` | `204`. `404 SESSION_NOT_FOUND` (inexistente, no UUID o de otra persona), `400 VALIDATION_ERROR` si es la sesión actual (para eso está cerrar sesión) |
+| `PATCH /api/me/preferences` | `{ locale: "es" \| "en" }` → `200 { locale }`. `400 VALIDATION_ERROR` con otro valor |
+| `POST /api/me/account/deactivate` | `{ password? }` → `200 { ok: true }`. Marca `deactivated_at`, borra **todas** las sesiones de la persona y limpia la cookie. `401 INVALID_CREDENTIALS`, `429 RATE_LIMITED`, `REAUTH_REQUIRED` (cuenta de Google con sesión de más de 10 min). No borra contenido |
+| `DELETE /api/me/account` | `{ username, password? }` → `200 { ok: true }`. `username` debe ser igual al de la cuenta (`400 VALIDATION_ERROR` si no). Borra la cuenta y todo lo suyo, y limpia la cookie. `409 ACCOUNT_DELETION_BLOCKED` si tiene historial de moderación o editorial (no cambia nada). Mismos errores de identidad que desactivar |
+| `GET /api/me/export` | `200` con el JSON de la persona (`Content-Disposition: attachment; filename="music-platform-<usuario>-<fecha>.json"`, `Cache-Control: no-store`). Forma: `{ version, exportedAt, account, profile, library, activity, lists, highlights, social, catalog }`. Sin hash de contraseña, tokens ni sesiones. `429 RATE_LIMITED`: una exportación por minuto por persona |
+
+**Autoría desactivada.** En reseñas y comentarios, `user` gana `deactivated?: boolean`. Cuando es `true`,
+`username` es `""` y `displayName` es `null` (la API no entrega la identidad real de una cuenta
+desactivada); el cliente muestra «Cuenta desactivada» sin enlace. Iniciar sesión con una cuenta
+desactivada la **reactiva**: `POST /api/auth/login` y el callback de Google limpian la marca.
+
+`POST /api/auth/login` incluye ahora `user.locale` (preferencia guardada o `null`): `AuthForm` lleva a
+la persona a ese idioma si difiere del actual.
+
+## Identidad social — perfiles, seguimiento y bloqueo
+
+Endpoints de la base social de Fase 5 (cambio `add-social-profile-follow`). Los perfiles se
+identifican por `username`; las mutaciones requieren sesión y derivan el actor de la cookie
+server-side — ningún body acepta `user_id`.
+
+### `GET /api/users?q=<término>&page=&pageSize=`
+
+Busca usuarios por username o displayName (coincidencia parcial). Devuelve tanto perfiles públicos
+como privados, sin email ni datos de autenticación. Si el visitante tiene sesión, cada resultado
+incluye `relation` (`none` | `following` | `requested` | `incoming` | `blocked` | `self`).
+
+**200 OK:** `{ users: [{ id, username, displayName, profileVisibility, avatarUrl, relation }], page, pageSize, hasNext }`.
+
+**400** con `VALIDATION_ERROR` si falta `q` o la paginación es inválida. **401** con
+`AUTH_REQUIRED` en operaciones que exijan sesión.
+
+### `GET /api/users/[username]`
+
+Perfil por username. Un perfil público expone su identidad; un perfil privado muestra solo
+identidad mínima para visitantes no autorizados. La respuesta incluye `relation` del visitante y
+`accessible` (si el visitante puede ver contenido no mínimo).
+
+**200 OK:** `{ user: { id, username, displayName, profileVisibility, avatarUrl, relation, blockedByMe, accessible } }`.
+**404** con `USER_NOT_FOUND` si el username no existe.
+
+`blockedByMe` es `true` cuando el visitante autenticado es quien bloqueó al dueño del perfil (y por
+lo tanto dispone de la acción de desbloquear); si el visitante fue bloqueado por el dueño,
+`relation` es `blocked` pero `blockedByMe` es `false` y no se ofrece la acción.
+
+### `GET /api/me/profile`
+
+Perfil propio autenticado, incluye `email`.
+
+**200 OK:** `{ user: { id, username, displayName, email, profileVisibility, avatarUrl, defaultAudience } }`, con
+`defaultAudience` en `"private" | "followers" | "public" | null` (`null` = "según el tipo", ver
+`PATCH`). **401** con `AUTH_REQUIRED` si no hay sesión.
+
+### `PATCH /api/me/profile`
+
+Actualiza la visibilidad, el nombre visible, la audiencia por defecto y/o la identidad extendida
+del perfil propio (cambios `redesign-user-profile` y `rework-owner-management`). Todos los campos
+son opcionales; se requiere al menos uno. Las cadenas de texto se recortan; la cadena vacía borra
+el campo (`null`; en `displayName` el sitio vuelve a mostrar el username).
+
+**Body:** cualquier subconjunto de
+`{ profileVisibility: "public" | "private", displayName (≤50), defaultAudience: "private" | "followers" | "public" | null, bio (≤200), pronouns (≤40), pronounSet, country, location (≤80), timezone, showLocalTime: boolean }`.
+
+`country` es un **código ISO de dos letras de la lista cerrada** (`CL`, `ES`…; en mayúsculas — `cl`,
+`Chile` o `ZZ` responden `400 VALIDATION_ERROR`); la cadena vacía o `null` lo borra. `location` es la
+ciudad o región en texto libre. Los **pronombres** son `pronounSet`: `"he"` \| `"she"` \| `"they"`
+(guarda la clave y **borra** `pronouns`), `"other"` (exige `pronouns` no vacío en la misma petición,
+guarda el texto y deja la clave en `NULL`) o `null` (borra ambos). Una clave de la lista con `pronouns`
+no vacío, `"other"` sin texto o una clave fuera de la lista responden `400 VALIDATION_ERROR`. Un
+cliente anterior que solo envía `pronouns` se trata como «Otro» (y vacío lo borra, junto con la clave).
+`birthYear`, `birthDate`, `gender`, `firstName` y `lastName` **no existen**: se descartan y una petición
+que solo los trae responde `400 VALIDATION_ERROR`.
+
+`country`, `location` y los pronombres **no se entregan** a quien no tiene acceso a un perfil privado
+(la vista del perfil los vacía en el servidor); `GET /api/me/export` los incluye en `account`
+(`country`, `pronounSet`, `pronouns`, `location`).
+
+`timezone` es un **identificador IANA de la lista** (`America/Santiago`, `UTC`…; sensible a
+mayúsculas); la cadena vacía o `null` la borra y cualquier otro valor responde `400
+VALIDATION_ERROR`. `showLocalTime` muestra la hora local en la Placa y **exige zona**: vaciar la zona
+lo apaga solo y activarlo sin zona (guardada o enviada en la misma petición) responde `400
+VALIDATION_ERROR`.
+
+`defaultAudience` es la audiencia con la que nace el contenido **nuevo** de biblioteca (favoritos,
+diario, listas y colección). `null` la quita: cada tipo vuelve a su default (favoritos `public`,
+listas y colección `followers`, diario `private`). Precedencia al crear: audiencia explícita de la
+petición > `defaultAudience` > default del tipo. Nunca modifica contenido ya creado: para eso está
+`/api/me/default-audience/apply`.
+
+**200 OK:** `{ user: { id, username, displayName, email, profileVisibility, avatarUrl, defaultAudience } }`
+actualizado.
+**400** con `VALIDATION_ERROR` si un valor no es válido (p. ej. una audiencia fuera del conjunto
+permitido o un nombre de más de 50 caracteres) o el body está vacío. **401** con `AUTH_REQUIRED` si
+no hay sesión; no se modifica ningún dato.
+
+### `PUT /api/me/profile/music-identity`
+
+Reemplaza "Me defino como", géneros y/o formatos de escucha (cambio `rework-account-settings`,
+Fase 2). **Body:** cualquier subconjunto no vacío de
+`{ selfRoles: SelfRole[] (≤3), genres: Genre[] (≤5), listeningFormats: ListeningFormat[] (≤5) }`,
+de las listas cerradas de `src/lib/music-identity.ts`, sin repetidos. **BREAKING** (`add-genre-taxonomy`):
+ y existencia validada contra `genre`; un descriptor, un oculto
+o un slug inexistente dan `400` sin cambiar nada). Los nombres se muestran desde la taxonomía; un slug guardado que
+ya no es un estilo visible se ignora al mostrar. Buscar géneros: `GET /api/genres/search`. Lo enviado sustituye al valor
 anterior (`[]` lo vacía); lo no enviado no se toca. **200 OK:** `{ selfRoles, genres, listeningFormats }`
-guardados. **400 `VALIDATION_ERROR`** con un valor fuera de la lista, un cuarto rol, un sexto género,
+guardados. **400 `VALIDATION_ERROR`** con un valor fuera de la lista (roles, formatos) o un género que no es un
+estilo de la taxonomía, un cuarto rol, un sexto género,
 repetidos o un cuerpo vacío (no cambia nada). **401** `AUTH_REQUIRED`.
 
 ### `PUT` / `DELETE /api/me/profile/prompts`
@@ -792,7 +1490,7 @@ listas y colección se filtran por audiencia.
 
 **200 OK:** `{ fingerprint: { ratingsVisible, ratingCurve: [{ stars, count }] | null, totalRatings, decades: [{ label, count }], genres: [{ family, count, topGenres: [{ slug, name, nameEs }] }], genreDataAvailable, split: { ratedArtists, ratedAlbums, ratedSongs, collection, lists } } | null }`.
 `fingerprint` es `null` cuando el visitante no tiene acceso al contenido del perfil. **BREAKING**
-(`add-genre-taxonomy`): `genres` es la cresta híbrida — hasta 8 familias (`family` es la clave; el nombre
+(`add-genre-taxonomy`; `show-genres` suma `declared` por familia y `declaredMissing`): `genres` es la cresta híbrida — hasta 8 familias (`family` es la clave; el nombre
 se traduce en la interfaz) por número de álbumes visibles, cada una con hasta 3 géneros de estilo
 (`name` de MusicBrainz, `nameEs` de Wikidata o `null`); antes eran tags sembrados `{ label, count }`.
 
