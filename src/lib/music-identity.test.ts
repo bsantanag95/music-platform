@@ -17,8 +17,13 @@ describe("listas cerradas", () => {
   it("coinciden con las de la spec", () => {
     expect(SELF_ROLES).toEqual(["listener", "collector", "musician", "dj", "critic", "radio-host"]);
     expect(LISTENING_FORMATS).toEqual(["vinyl", "cd", "cassette", "streaming", "digital"]);
-    expect(GENRES).toHaveLength(20);
-    expect(GENRES).toEqual(expect.arrayContaining(["post-punk", "jazz", "shoegaze", "bossa-nova"]));
+    // Slugs de la taxonomía (openspec: add-genre-taxonomy): indie y soul-funk se separaron.
+    expect(GENRES).toHaveLength(22);
+    expect(GENRES).toEqual(
+      expect.arrayContaining(["post-punk", "jazz", "shoegaze", "bossa-nova", "indie-rock", "indie-pop", "soul", "funk"]),
+    );
+    expect(GENRES).not.toEqual(expect.arrayContaining(["indie"]));
+    expect(GENRES).not.toEqual(expect.arrayContaining(["soul-funk"]));
     expect(PROMPT_KEYS).toHaveLength(8);
   });
 

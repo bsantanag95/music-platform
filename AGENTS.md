@@ -111,6 +111,16 @@ de cuál de las filas con el mismo título haya en la BD.
 >   las marcas aparte en una sola request, el apoyo (también a un solista), la clasificación y la
 >   lectura, la sincronización de integrantes sin tocar al resto de la banda, la actualización que
 >   suma y quita integrantes y los `CHECK` de la migración `0055`.
+> - `smoke-test-genres.ts` **carga la taxonomía de géneros real** (`data/genres/taxonomy.json`) más
+>   6 géneros sintéticos (MBID `5e0ce000-0000-4000-8000-*`, slugs `smoke-*`): cargar solo los
+>   sintéticos ocultaría los reales. Crea una banda y dos álbumes con el mismo prefijo y, al terminar
+>   (también si falla), borra artista, álbumes y géneros sintéticos; la taxonomía real queda cargada
+>   tal como está en el archivo. Si se interrumpió, a la limpieza de arriba sumar
+>   `DELETE FROM genre WHERE mbid::text LIKE '5e0ce000%';` (después de borrar artistas y álbumes:
+>   las semillas referencian el género con `RESTRICT`). Mockea MusicBrainz y Wikidata. Verifica la
+>   carga idempotente, el retiro de un género (oculto, conserva semillas), las semillas de artista y
+>   de álbum, el QID del álbum desde el browse, la herencia acotada a 3 y Explorar por familia y por
+>   género con subgéneros.
 
 ## Base de datos / migraciones
 

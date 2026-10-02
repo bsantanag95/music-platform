@@ -40,6 +40,8 @@ function rgRow(overrides: Partial<ReleaseGroupRow>): ReleaseGroupRow {
     discographyUnlistedAt: null,
     primaryType: null,
     secondaryTypes: null,
+    wikidataId: null,
+    genresSyncedAt: null,
     createdAt: new Date("2026-01-01"),
     ...overrides,
   };

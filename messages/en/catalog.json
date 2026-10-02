@@ -20,7 +20,9 @@
     "nextPage": "Next page",
     "emptyFiltered": "No albums for this slice yet.",
     "notFoundTitle": "Slice not found",
-    "notFoundDescription": "That discovery filter is not valid."
+    "notFoundDescription": "That discovery filter is not valid.",
+    "familyChip": "{family} · {count}",
+    "familyResultsHeading": "Albums · {family}"
   },
   "search": {
     "pageTitle": "Search",
@@ -988,5 +990,36 @@
     "saveError": "We couldn't save the change. Try again.",
     "loadError": "We could not load your marks for this record.",
     "retry": "Retry"
+  },
+  "genres": {
+    "families": {
+      "rock": "Rock",
+      "metal": "Metal",
+      "punk": "Punk & hardcore",
+      "pop": "Pop",
+      "electronic": "Electronic",
+      "hip-hop": "Hip hop",
+      "rnb": "R&B, soul & funk",
+      "jazz": "Jazz",
+      "blues": "Blues",
+      "folk": "Folk & singer-songwriter",
+      "country": "Country",
+      "classical": "Classical",
+      "experimental": "Experimental",
+      "ambient": "Ambient & new age",
+      "caribbean": "Reggae & Caribbean",
+      "latin": "Latin",
+      "brazilian": "Brazilian",
+      "spoken": "Spoken word & stage",
+      "religious": "Religious",
+      "world": "World"
+    },
+    "descriptors": {
+      "instrumental": "Instrumental",
+      "christmas": "Christmas",
+      "orchestral": "Orchestral",
+      "soundtrack": "Soundtrack"
+    },
+    "more": "More"
   }
 }

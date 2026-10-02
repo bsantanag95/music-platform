@@ -41,6 +41,16 @@ export function placeIdOf(entity: WDEntity | undefined, artistType: string): str
   return null;
 }
 
+/**
+ * Géneros (P136) de un artista o un álbum como QIDs, en el orden de Wikidata y sin repetidos
+ * (openspec: add-genre-taxonomy, design D6). Misma selección que el resto de la ficha: los de
+ * rango preferido si hay; si no, los normales (los vigentes primero); nunca los obsoletos.
+ */
+export function genreIdsOf(entity: WDEntity | undefined): string[] {
+  const ids = claimValues(entity, "P136").map(entityIdValue).filter((id): id is string => id !== null);
+  return [...new Set(ids)];
+}
+
 /** País (P17) de un lugar. */
 export function countryIdOf(place: WDEntity | undefined): string | null {
   return entityIdValue(claimValues(place, "P17")[0]);

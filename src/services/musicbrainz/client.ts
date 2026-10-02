@@ -230,7 +230,8 @@ export const musicbrainz = {
   /**
    * Artista con sus pertenencias (`artist-rels`) y sus enlaces (`url-rels`) en una sola
    * request: la misma respuesta trae país, áreas y fechas para la ficha (openspec:
-   * enrich-artist-profile). No se piden `genres` ni `tags` (datos CC BY-NC-SA).
+   * enrich-artist-profile). Ninguna request pide `genres` ni `tags` a MusicBrainz (datos
+   * CC BY-NC-SA): los géneros salen de Wikidata P136 (ADR 0023).
    */
   getArtistWithRelations(mbid: string) {
     return mbFetch<MBArtistDetail>(`/artist/${mbid}`, { inc: "artist-rels+url-rels" });
@@ -240,14 +241,15 @@ export const musicbrainz = {
    * Álbumes/EPs/singles etc. donde este artista aparece como crédito, de a 100.
    * `release-group-status=website-default` es el criterio del sitio de MusicBrainz:
    * excluye los release-groups que solo tienen ediciones bootleg (openspec:
-   * fix-artist-discography-ingestion).
+   * fix-artist-discography-ingestion). `url-rels` trae en la misma request la relación
+   * `wikidata` de cada álbum, base de sus géneros semilla (openspec: add-genre-taxonomy).
    */
   browseReleaseGroupsByArtist(artistMbid: string, offset = 0) {
     return mbFetch<MBReleaseGroupBrowseResponse>("/release-group", {
       artist: artistMbid,
       limit: String(RELEASE_BROWSE_PAGE_SIZE),
       offset: String(offset),
-      inc: "artist-credits",
+      inc: "artist-credits+url-rels",
       "release-group-status": "website-default",
     });
   },

@@ -101,6 +101,8 @@ function makeDetail(overrides: Partial<AlbumDetail> = {}): AlbumDetail {
       discographyUnlistedAt: null,
       primaryType: null,
       secondaryTypes: null,
+      wikidataId: null,
+      genresSyncedAt: null,
       coverResolved: false,
       firstReleaseDate: "1973-03-24",
       firstReleaseYear: 1973,

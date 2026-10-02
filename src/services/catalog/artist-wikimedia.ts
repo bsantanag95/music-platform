@@ -1,11 +1,13 @@
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { artist, artistLocalizedText, type ArtistLocalizedTextRow, type ArtistRow } from "@/db/schema";
+import { artist, artistGenreSeed, artistLocalizedText, type ArtistLocalizedTextRow, type ArtistRow } from "@/db/schema";
+import { replaceArtistGenreSeeds } from "../genres/seeds";
 import { wikimedia, type WikiLanguage } from "../wikimedia/client";
 import {
   composePlaceLabel,
   countryIdOf,
   decidePhoto,
+  genreIdsOf,
   labelOf,
   photoFileOf,
   placeIdOf,
@@ -19,8 +21,9 @@ import { isStale } from "./artist-profile";
 // Enriquecimiento del perfil de artista desde Wikidata, Wikipedia y Commons (openspec:
 // enrich-artist-profile, capability `artist-wikimedia-enrichment`, ADR 0021). Se llega a
 // Wikidata solo desde `artist.wikidata_id`, que sale de la relación `wikidata` de
-// MusicBrainz. Cada paso (textos, lugar, foto) decide por separado: un fallo en uno conserva
-// lo guardado antes para ese dato y no descarta los demás.
+// MusicBrainz. Cada paso (textos, lugar, foto, géneros) decide por separado: un fallo en uno
+// conserva lo guardado antes para ese dato y no descarta los demás. Los géneros (P136) son las
+// semillas del artista (openspec: add-genre-taxonomy, ADR 0023) y salen de la misma entidad.
 
 const LANGUAGES: WikiLanguage[] = ["es", "en"];
 
@@ -32,6 +35,11 @@ type PhotoChange = AcceptedPhoto | null | undefined;
 export interface WikimediaEnrichment {
   texts: Record<WikiLanguage, TextPatch>;
   photo: PhotoChange;
+  /**
+   * QIDs de los géneros (P136) de la entidad, en su orden (openspec: add-genre-taxonomy);
+   * `undefined` = conservar las semillas guardadas (la entidad no se pudo leer).
+   */
+  genres: string[] | undefined;
   /** Pasos que fallaron (sus datos se conservan). */
   failures: string[];
 }
@@ -96,7 +104,9 @@ export async function fetchWikimediaEnrichment(
   const qid = current.wikidataId;
   // Sin la entidad no hay nada que decidir: el error se propaga y se conserva todo.
   const entity = (await wikimedia.getEntities([qid], ["claims", "descriptions", "sitelinks"])).entities?.[qid];
-  if (!entity || entity.missing !== undefined) return { texts: { es: {}, en: {} }, photo: undefined, failures: ["entidad"] };
+  if (!entity || entity.missing !== undefined) {
+    return { texts: { es: {}, en: {} }, photo: undefined, genres: undefined, failures: ["entidad"] };
+  }
 
   const failures: string[] = [];
   const summaries = await fetchSummaries(entity, failures);
@@ -115,7 +125,8 @@ export async function fetchWikimediaEnrichment(
     if (places !== undefined) patch.placeLabel = places[lang];
     texts[lang] = patch;
   }
-  return { texts, photo, failures };
+  // Los géneros salen de la misma entidad: ninguna request extra.
+  return { texts, photo, genres: genreIdsOf(entity), failures };
 }
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -144,6 +155,15 @@ async function saveEnrichment(tx: Tx, artistId: string, enrichment: WikimediaEnr
       .insert(artistLocalizedText)
       .values({ artistId, locale: lang, ...patch })
       .onConflictDoUpdate({ target: [artistLocalizedText.artistId, artistLocalizedText.locale], set: patch });
+  }
+
+  // Géneros en un savepoint: si fallan, conservan las semillas anteriores y no descartan la
+  // foto ni los textos ya escritos en esta transacción.
+  const { genres } = enrichment;
+  if (genres !== undefined) {
+    await tryStep("géneros", enrichment.failures, () =>
+      tx.transaction((savepoint) => replaceArtistGenreSeeds(savepoint, artistId, genres)),
+    );
   }
 }
 
@@ -176,7 +196,11 @@ export async function enrichArtistFromWikimedia(
     const source = dryRun && wikidataId !== undefined ? { ...current, wikidataId } : current;
     const enrichment = await fetchWikimediaEnrichment(source);
     if (!enrichment) {
-      if (!dryRun) await tx.update(artist).set({ wikimediaSyncedAt: now }).where(eq(artist.id, artistId));
+      if (!dryRun) {
+        await tx.update(artist).set({ wikimediaSyncedAt: now }).where(eq(artist.id, artistId));
+        // Sin entidad de Wikidata (p. ej. MusicBrainz quitó la relación) no hay semillas.
+        await tx.delete(artistGenreSeed).where(eq(artistGenreSeed.artistId, artistId));
+      }
       return { status: "no-wikidata" };
     }
     if (!dryRun) await saveEnrichment(tx, artistId, enrichment, now);

@@ -60,6 +60,21 @@ lista curada de **etiquetas**, así que son datos suplementarios (CC BY-NC-SA 3.
 No se ingieren; la fuente de los géneros del artista queda pendiente (la alternativa CC0 es la
 propiedad de género de Wikidata, D).
 
+**Géneros resueltos (cambio `add-genre-taxonomy`, ADR 0023):** se separan dos cosas que
+MusicBrainz publica con licencias distintas.
+
+- **La taxonomía** (la lista de géneros con su MBID y sus relaciones "subgénero de", "fusión de"
+  e "influido por") viene del **dump core** (`mbdump.tar.bz2`, tablas `genre`, `l_genre_genre`,
+  `link`, `link_type`): **CC0**. Se genera offline a `data/genres/taxonomy.json`.
+- **Los votos de género por artista, álbum o grabación** (`inc=genres`, tablas `*_tag` del dump
+  `mbdump-derived`) siguen siendo **CC BY-NC-SA 3.0** y **siguen sin ingerirse**: ninguna request
+  pide `genres` ni `tags` (un test del cliente lo verifica).
+- **Los géneros de cada artista y álbum** salen de **Wikidata P136 (CC0)**, igual que los nombres
+  de los géneros en español (P8052). Se llega a Wikidata solo por la relación `wikidata` que
+  MusicBrainz declara para el artista o el álbum (D).
+
+Todo lo que se guarda de géneros es CC0; no se suman obligaciones de atribución.
+
 ## D) Wikidata, Wikipedia y Wikimedia Commons (perfil de artista, ADR 0021)
 
 Se llega a las tres solo desde la relación `wikidata` que MusicBrainz declara para un artista.

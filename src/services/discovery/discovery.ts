@@ -1,20 +1,24 @@
-import { and, asc, desc, eq, isNotNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import {
+  genre,
+  genreFamilyMember,
   rating,
   releaseGroup,
-  releaseGroupTag,
+  releaseGroupEffectiveGenre,
   review,
   userList,
   userListFeatured,
+  type GenreRow,
 } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import type { ReleaseGroup } from "@/lib/api/schemas";
 import { isCoverResolved } from "@/services/catalog/cover-resolution";
+import { GENRE_FAMILIES, type FamilyKey, type FamilyTier } from "@/services/genres/families";
+import { albumInFamily, albumInGenreTree, findStyleGenreBySlug, parseFamilyKey } from "@/services/genres/read";
 import { enrichLists } from "@/services/lists/lists";
 import {
   FILTERED_PAGE_SIZE,
-  GENRE_TOP_N,
   MIN_ALBUMS_FOR_SECTION,
   MIN_RATINGS_PER_ALBUM,
   MIN_REVIEWS_PER_ALBUM,
@@ -38,9 +42,10 @@ export interface DecadeBucket {
   count: number;
 }
 
-export interface GenreBucket {
-  tag: string;
-  count: number; // release-groups etiquetados con ese género
+export interface FamilyBucket {
+  key: FamilyKey;
+  tier: FamilyTier;
+  count: number; // álbumes con algún género efectivo de la familia
 }
 
 export interface AlbumPage {
@@ -54,7 +59,7 @@ export interface ExplorePage {
   featured: FeaturedCollection[];
   newReleases: ReleaseGroup[];
   decades: DecadeBucket[];
-  genres: GenreBucket[];
+  families: FamilyBucket[];
   topRated: ReleaseGroup[];
   mostReviewed: ReleaseGroup[];
 }
@@ -156,18 +161,22 @@ export async function listDecades(): Promise<DecadeBucket[]> {
   return rows.map((row) => ({ decade: Number(row.decade), count: Number(row.count) }));
 }
 
-/** Top de géneros por cantidad de release-groups etiquetados. */
-export async function listGenres(topN = GENRE_TOP_N): Promise<GenreBucket[]> {
+/**
+ * Familias de géneros con su número de álbumes (géneros efectivos de estilo, con herencia), en
+ * el orden de la interfaz. Las familias sin álbumes se omiten.
+ */
+export async function listGenreFamilies(): Promise<FamilyBucket[]> {
   const rows = await db
     .select({
-      tag: releaseGroupTag.tag,
-      count: sql<number>`count(*)::int`,
+      key: genreFamilyMember.familyKey,
+      count: sql<number>`count(distinct ${releaseGroupEffectiveGenre.releaseGroupId})::int`,
     })
-    .from(releaseGroupTag)
-    .groupBy(releaseGroupTag.tag)
-    .orderBy(sql`count(*) desc`, asc(releaseGroupTag.tag))
-    .limit(topN);
-  return rows.map((row) => ({ tag: row.tag, count: Number(row.count) }));
+    .from(releaseGroupEffectiveGenre)
+    .innerJoin(genreFamilyMember, eq(genreFamilyMember.genreId, releaseGroupEffectiveGenre.genreId))
+    .innerJoin(genre, and(eq(genre.id, releaseGroupEffectiveGenre.genreId), eq(genre.kind, "style")))
+    .groupBy(genreFamilyMember.familyKey);
+  const counts = new Map(rows.map((r) => [r.key, Number(r.count)]));
+  return GENRE_FAMILIES.map((f) => ({ key: f.key, tier: f.tier, count: counts.get(f.key) ?? 0 })).filter((f) => f.count > 0);
 }
 
 /**
@@ -218,15 +227,15 @@ export async function listMostReviewed(limit = RAIL_SIZE): Promise<ReleaseGroup[
 
 /** Composición de la portada de `/explore` en una sola llamada. */
 export async function getExplorePage(): Promise<ExplorePage> {
-  const [featured, newReleases, decades, genres, topRated, mostReviewed] = await Promise.all([
+  const [featured, newReleases, decades, families, topRated, mostReviewed] = await Promise.all([
     listFeaturedCollections(),
     listNewReleases(),
     listDecades(),
-    listGenres(),
+    listGenreFamilies(),
     listTopRated(),
     listMostReviewed(),
   ]);
-  return { featured, newReleases, decades, genres, topRated, mostReviewed };
+  return { featured, newReleases, decades, families, topRated, mostReviewed };
 }
 
 // ---------------------------------------------------------------------------
@@ -280,19 +289,14 @@ export async function listAlbumsByDecade(decade: number, page = 1): Promise<Albu
   return toAlbumPage(rows, page);
 }
 
-/** Álbumes etiquetados con `genre`. */
-export async function listAlbumsByGenre(genre: string, page = 1): Promise<AlbumPage> {
-  const tag = genre.trim().toLowerCase();
-  if (!tag || tag.length > 80) {
-    throw new ApiError("VALIDATION_ERROR", 400, "El género no es válido");
-  }
+/** Álbumes que cumplen `condition` (correlacionada con "release_group"), con el orden compartido. */
+async function listAlbumsWhere(condition: SQL, page: number): Promise<AlbumPage> {
   const { limit, offset } = paginate(page);
   const rows = await db
     .select(albumColumns)
-    .from(releaseGroupTag)
-    .innerJoin(releaseGroup, eq(releaseGroup.id, releaseGroupTag.releaseGroupId))
+    .from(releaseGroup)
     .leftJoin(rating, eq(rating.releaseGroupId, releaseGroup.id))
-    .where(eq(releaseGroupTag.tag, tag))
+    .where(condition)
     .groupBy(releaseGroup.id)
     .orderBy(
       sql`${eligibleAvg} desc nulls last`,
@@ -302,4 +306,29 @@ export async function listAlbumsByGenre(genre: string, page = 1): Promise<AlbumP
     .limit(limit)
     .offset(offset);
   return toAlbumPage(rows, page);
+}
+
+function emptyPage(page: number): AlbumPage {
+  paginate(page);
+  return { albums: [], page, pageSize: FILTERED_PAGE_SIZE, hasNext: false };
+}
+
+/**
+ * Álbumes con algún género efectivo de la familia (openspec: add-genre-taxonomy). Una clave
+ * desconocida devuelve la página vacía.
+ */
+export async function listAlbumsByFamily(familyKey: string, page = 1): Promise<AlbumPage & { family: FamilyKey | null }> {
+  const family = parseFamilyKey(familyKey);
+  if (!family) return { ...emptyPage(page), family: null };
+  return { ...(await listAlbumsWhere(albumInFamily(family), page)), family };
+}
+
+/**
+ * Álbumes con ese género efectivo o uno de sus subgéneros (por slug de la taxonomía). Un slug
+ * desconocido devuelve la página vacía.
+ */
+export async function listAlbumsByGenre(slug: string, page = 1): Promise<AlbumPage & { genre: GenreRow | null }> {
+  const found = await findStyleGenreBySlug(slug);
+  if (!found) return { ...emptyPage(page), genre: null };
+  return { ...(await listAlbumsWhere(albumInGenreTree(found.id), page)), genre: found };
 }

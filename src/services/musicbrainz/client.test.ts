@@ -210,7 +210,7 @@ describe("ediciones y créditos de personal (openspec: enrich-album-editions-and
 });
 
 describe("discografía de un artista (openspec: fix-artist-discography-ingestion)", () => {
-  it("browseReleaseGroupsByArtist pide /release-group de a 100, con offset, créditos y sin bootlegs", async () => {
+  it("browseReleaseGroupsByArtist pide /release-group de a 100, con offset, créditos, relaciones de URL y sin bootlegs", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ "release-group-count": 0, "release-groups": [] }));
 
     await musicbrainz.browseReleaseGroupsByArtist("artist-mbid-1", 200);
@@ -220,7 +220,8 @@ describe("discografía de un artista (openspec: fix-artist-discography-ingestion
     expect(url.searchParams.get("artist")).toBe("artist-mbid-1");
     expect(url.searchParams.get("limit")).toBe("100");
     expect(url.searchParams.get("offset")).toBe("200");
-    expect(url.searchParams.get("inc")).toBe("artist-credits");
+    // `url-rels` trae la relación `wikidata` de cada álbum (openspec: add-genre-taxonomy).
+    expect(url.searchParams.get("inc")).toBe("artist-credits+url-rels");
     expect(url.searchParams.get("release-group-status")).toBe("website-default");
   });
 
@@ -234,5 +235,31 @@ describe("discografía de un artista (openspec: fix-artist-discography-ingestion
     expect(fetchMock).toHaveBeenCalledTimes(2);
     const first = new URL(String(fetchMock.mock.calls[0]![0]));
     expect(first.searchParams.get("offset")).toBe("0");
+  });
+});
+
+describe("licencia de los géneros (ADR 0021 y 0023)", () => {
+  it("ninguna request pide géneros ni etiquetas de MusicBrainz (CC BY-NC-SA)", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({}));
+    const calls: (() => Promise<unknown>)[] = [
+      () => musicbrainz.searchArtist("pink floyd"),
+      () => musicbrainz.searchReleaseGroup("meddle"),
+      () => musicbrainz.searchRecording("money"),
+      () => musicbrainz.browseReleasesByRecording("rec"),
+      () => musicbrainz.getArtist("a"),
+      () => musicbrainz.getArtistWithRelations("a"),
+      () => musicbrainz.browseReleaseGroupsByArtist("a"),
+      () => musicbrainz.browseReleasesByReleaseGroup("rg"),
+      () => musicbrainz.getRelease("r"),
+    ];
+    for (const call of calls) {
+      await call();
+      tickPastQueue();
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(calls.length);
+    for (const [input] of fetchMock.mock.calls) {
+      const inc = new URL(String(input)).searchParams.get("inc") ?? "";
+      expect(inc).not.toMatch(/(^|\+)(user-)?(genres|tags)($|\+)/);
+    }
   });
 });

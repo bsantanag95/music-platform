@@ -8,6 +8,7 @@ vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn().mockResolvedValue((key: string, vars?: Record<string, unknown>) =>
     vars ? `${key}:${JSON.stringify(vars)}` : key,
   ),
+  getLocale: vi.fn().mockResolvedValue("es"),
 }));
 
 const base: TasteFingerprintData = {
@@ -53,20 +54,29 @@ describe("TasteFingerprint", () => {
     expect(screen.getByText("fingerprint.genresEmpty")).toBeInTheDocument();
   });
 
-  it("lista los géneros con equivalente textual cuando hay datos", async () => {
+  it("lista las familias con sus géneros (en el idioma de la página) y su equivalente textual", async () => {
     renderWithIntl(
       await TasteFingerprint({
         fingerprint: {
           ...base,
           genreDataAvailable: true,
           genres: [
-            { label: "shoegaze", count: 5 },
-            { label: "dream pop", count: 3 },
+            {
+              family: "rock",
+              count: 5,
+              topGenres: [
+                { slug: "shoegaze", name: "shoegaze", nameEs: "shoegazing" },
+                { slug: "dream-pop", name: "dream pop", nameEs: null },
+              ],
+            },
+            { family: "latin", count: 1, topGenres: [] },
           ],
         },
       }),
     );
-    expect(screen.getByText(/fingerprint.a11yRidge.*shoegaze/)).toBeInTheDocument();
+    expect(screen.getByText("shoegazing, dream pop")).toBeInTheDocument();
+    expect(screen.getByText(/fingerprint.a11yRidgeDetail.*families.rock.*shoegazing, dream pop/)).toBeInTheDocument();
+    expect(screen.getByText(/fingerprint.a11yRidge:.*families.latin/)).toBeInTheDocument();
   });
 
   it("arma el reparto solo con los conteos > 0", async () => {

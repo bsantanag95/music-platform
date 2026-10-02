@@ -9,7 +9,9 @@ import {
   type ReleaseGroupRow,
   type ArtistRow,
 } from "@/db/schema";
+import { hasStaleAlbumGenres, syncAlbumGenreSeeds } from "../genres/album-seeds";
 import { musicbrainz, RELEASE_BROWSE_PAGE_SIZE } from "../musicbrainz/client";
+import { wikidataIdOf } from "../musicbrainz/artist-profile-mappers";
 import { mapReleaseGroupCategory } from "../musicbrainz/mappers";
 import { upsertArtistStub } from "./ingest-artist";
 import { canonicalDateValues } from "./ingest-release-group";
@@ -60,6 +62,7 @@ export async function findOrIngestDiscography(target: ArtistRow): Promise<Discog
 export async function findOrIngestOwnDiscography(target: ArtistRow): Promise<DiscographyRow[]> {
   if (target.discographySyncedAt) {
     if (needsDiscographyRefresh(target)) scheduleDiscographySync(target.id);
+    else scheduleAlbumGenreSync(target.id);
     return readArtistDiscography(target.id);
   }
 
@@ -67,6 +70,7 @@ export async function findOrIngestOwnDiscography(target: ArtistRow): Promise<Dis
 
   const result = await syncArtistDiscography(target.id, { mode: "initial" });
   if (result.status === "partial") scheduleDiscographySync(target.id);
+  else scheduleAlbumGenreSync(target.id);
   return readArtistDiscography(target.id);
 }
 
@@ -97,7 +101,8 @@ export function needsDiscographyRefresh(target: Pick<ArtistRow, "discographyComp
 }
 
 /**
- * Programa una sincronización completa después de responder. Fuera de una request de Next
+ * Programa una sincronización completa después de responder y, al terminar, la de los géneros
+ * semilla de sus álbumes (openspec: add-genre-taxonomy). Fuera de una request de Next
  * (scripts) `after()` no está disponible: se omite y la próxima visita la vuelve a programar.
  */
 function scheduleDiscographySync(artistId: string): void {
@@ -108,9 +113,27 @@ function scheduleDiscographySync(artistId: string): void {
       } catch (error) {
         console.error(`[discography] no se pudo sincronizar la discografía de ${artistId}`, error);
       }
+      await runAlbumGenreSync(artistId);
     });
   } catch {
     console.warn(`[discography] sincronización de ${artistId} omitida: fuera de una request`);
+  }
+}
+
+/** Géneros semilla de los álbumes vencidos del artista, en segundo plano (Wikidata P136). */
+function scheduleAlbumGenreSync(artistId: string): void {
+  try {
+    after(() => runAlbumGenreSync(artistId));
+  } catch {
+    // Fuera de una request (scripts): el backfill de semillas cubre ese caso.
+  }
+}
+
+async function runAlbumGenreSync(artistId: string): Promise<void> {
+  try {
+    if (await hasStaleAlbumGenres(artistId)) await syncAlbumGenreSeeds(artistId);
+  } catch (error) {
+    console.error(`[genres] no se pudieron sincronizar los géneros de los álbumes de ${artistId}`, error);
   }
 }
 
@@ -144,19 +167,34 @@ export async function fetchDiscographyPages(artistMbid: string, maxPages = DISCO
   return { releaseGroups, total, complete, truncated };
 }
 
-/** Upsert de los release-groups del browse con sus tipos crudos y sus créditos. */
+/**
+ * Upsert de los release-groups del browse con sus tipos crudos, sus créditos y la entidad de
+ * Wikidata que declara MusicBrainz (NULL si dejó de declararla; openspec: add-genre-taxonomy).
+ */
 async function saveDiscographyReleaseGroups(groups: MBReleaseGroup[]): Promise<void> {
   for (const rg of groups) {
     const category = mapReleaseGroupCategory(rg["primary-type"], rg["secondary-types"]);
     const canonicalDate = canonicalDateValues({ firstReleaseDate: rg["first-release-date"] });
     const types = { primaryType: rg["primary-type"] ?? null, secondaryTypes: rg["secondary-types"] ?? [] };
+    const wikidataId = wikidataIdOf(rg);
 
     const inserted = await db
       .insert(releaseGroup)
       // La fecha canónica solo se escribe al crear el stub: un release_group
       // ya enriquecido conserva la que resolvió `findOrIngestTracklist`.
-      .values({ mbid: rg.id, title: rg.title, category, ...types, ...canonicalDate })
-      .onConflictDoUpdate({ target: releaseGroup.mbid, set: { title: rg.title, category, ...types } })
+      .values({ mbid: rg.id, title: rg.title, category, ...types, ...canonicalDate, wikidataId })
+      .onConflictDoUpdate({
+        target: releaseGroup.mbid,
+        set: {
+          title: rg.title,
+          category,
+          ...types,
+          wikidataId,
+          // Una entidad nueva o distinta invalida las semillas: se vuelven a pedir.
+          genresSyncedAt: sql`CASE WHEN ${releaseGroup.wikidataId} IS DISTINCT FROM excluded.wikidata_id
+            THEN NULL ELSE ${releaseGroup.genresSyncedAt} END`,
+        },
+      })
       .returning({ id: releaseGroup.id });
 
     const row = inserted[0];
@@ -164,6 +202,28 @@ async function saveDiscographyReleaseGroups(groups: MBReleaseGroup[]): Promise<v
       await ingestCredits(rg["artist-credit"], { releaseGroupId: row.id });
     }
   }
+}
+
+/**
+ * Solo la entidad de Wikidata de los release-groups ya guardados de un artista, desde el mismo
+ * browse (backfill de semillas, openspec: add-genre-taxonomy): no crea release-groups, no toca
+ * créditos ni marcas. Un cambio de entidad reinicia la vigencia de sus géneros.
+ */
+export async function refreshReleaseGroupWikidataIds(
+  artistMbid: string,
+  { dryRun = false }: { dryRun?: boolean } = {},
+): Promise<{ checked: number; changed: number }> {
+  const { releaseGroups } = await fetchDiscographyPages(artistMbid);
+  let changed = 0;
+  for (const rg of releaseGroups) {
+    const wikidataId = wikidataIdOf(rg);
+    const differs = and(eq(releaseGroup.mbid, rg.id), sql`${releaseGroup.wikidataId} IS DISTINCT FROM ${wikidataId}`);
+    const rows = dryRun
+      ? await db.select({ id: releaseGroup.id }).from(releaseGroup).where(differs)
+      : await db.update(releaseGroup).set({ wikidataId, genresSyncedAt: null }).where(differs).returning({ id: releaseGroup.id });
+    changed += rows.length;
+  }
+  return { checked: releaseGroups.length, changed };
 }
 
 export type DiscographySyncResult =

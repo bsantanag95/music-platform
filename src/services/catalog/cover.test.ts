@@ -59,6 +59,8 @@ function makeRg(overrides: Partial<ReleaseGroupRow> = {}): ReleaseGroupRow {
     discographyUnlistedAt: null,
     primaryType: null,
     secondaryTypes: null,
+    wikidataId: null,
+    genresSyncedAt: null,
     firstReleaseDate: null,
     firstReleaseYear: null,
     createdAt: new Date(),

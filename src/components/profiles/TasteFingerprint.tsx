@@ -1,5 +1,14 @@
-import { getTranslations } from "next-intl/server";
-import type { RidgePoint, TasteFingerprint as TasteFingerprintData } from "@/services/profiles/stats";
+import { getLocale, getTranslations } from "next-intl/server";
+import { genreDisplayName, genreLocaleOf } from "@/services/genres/names";
+import type { TasteFingerprint as TasteFingerprintData } from "@/services/profiles/stats";
+
+/** Fila de una cresta: etiqueta, cantidad y, en la de géneros, los géneros de la familia. */
+interface RidgeRow {
+  key: string;
+  label: string;
+  count: number;
+  detail?: string;
+}
 
 interface TasteFingerprintProps {
   fingerprint: TasteFingerprintData;
@@ -12,7 +21,18 @@ interface TasteFingerprintProps {
 // audiencia desde `getTasteFingerprint`. Ver spec taste-fingerprint.
 export async function TasteFingerprint({ fingerprint }: TasteFingerprintProps) {
   const t = await getTranslations("users");
+  const tGenres = await getTranslations("catalog.genres");
+  const locale = genreLocaleOf(await getLocale());
   const { ratingCurve, totalRatings, decades, genres, genreDataAvailable, split } = fingerprint;
+
+  const decadeRows: RidgeRow[] = decades.map((d) => ({ key: d.label, label: d.label, count: d.count }));
+  // Cresta híbrida (openspec: add-genre-taxonomy): familia + sus géneros más presentes.
+  const genreRows: RidgeRow[] = genres.map((g) => ({
+    key: g.family,
+    label: tGenres(`families.${g.family}`),
+    count: g.count,
+    detail: g.topGenres.map((genre) => genreDisplayName(genre, locale)).join(", ") || undefined,
+  }));
 
   const splitParts = [
     split.ratedArtists > 0 && t("fingerprint.splitArtists", { count: split.ratedArtists }),
@@ -48,7 +68,7 @@ export async function TasteFingerprint({ fingerprint }: TasteFingerprintProps) {
       {decades.length > 0 && (
         <Ridge
           label={t("fingerprint.decadesLabel")}
-          points={decades}
+          points={decadeRows}
           rowLabel={(point) => t("fingerprint.a11yRidge", { label: point.label, count: point.count })}
         />
       )}
@@ -57,8 +77,12 @@ export async function TasteFingerprint({ fingerprint }: TasteFingerprintProps) {
       {genreDataAvailable ? (
         <Ridge
           label={t("fingerprint.genresLabel")}
-          points={genres}
-          rowLabel={(point) => t("fingerprint.a11yRidge", { label: point.label, count: point.count })}
+          points={genreRows}
+          rowLabel={(point) =>
+            point.detail
+              ? t("fingerprint.a11yRidgeDetail", { label: point.label, count: point.count, detail: point.detail })
+              : t("fingerprint.a11yRidge", { label: point.label, count: point.count })
+          }
         />
       ) : (
         <div className="flex flex-col gap-2">
@@ -152,8 +176,8 @@ function Ridge({
   rowLabel,
 }: {
   label?: string;
-  points: RidgePoint[];
-  rowLabel: (point: RidgePoint) => string;
+  points: RidgeRow[];
+  rowLabel: (point: RidgeRow) => string;
 }) {
   const max = Math.max(1, ...points.map((point) => point.count));
 
@@ -164,22 +188,27 @@ function Ridge({
       )}
       <ul aria-hidden="true" className="flex flex-col gap-1.5">
         {points.map((point) => (
-          <li key={point.label} className="flex items-center gap-3">
-            <span className="w-24 shrink-0 truncate font-data text-xs text-paper-muted">
-              {point.label}
+          <li key={point.key} className="flex flex-col gap-0.5">
+            <span className="flex items-center gap-3">
+              <span className="w-24 shrink-0 truncate font-data text-xs text-paper-muted">
+                {point.label}
+              </span>
+              <span className="h-2 flex-1 overflow-hidden rounded-sm bg-ink-surface">
+                <span
+                  className="block h-full rounded-sm bg-paper-muted/45"
+                  style={{ width: `${Math.round((point.count / max) * 100)}%` }}
+                />
+              </span>
             </span>
-            <span className="h-2 flex-1 overflow-hidden rounded-sm bg-ink-surface">
-              <span
-                className="block h-full rounded-sm bg-paper-muted/45"
-                style={{ width: `${Math.round((point.count / max) * 100)}%` }}
-              />
-            </span>
+            {point.detail && (
+              <span className="pl-27 truncate font-body text-[0.6875rem] text-paper-muted/80">{point.detail}</span>
+            )}
           </li>
         ))}
       </ul>
       <ul className="sr-only">
         {points.map((point) => (
-          <li key={point.label}>{rowLabel(point)}</li>
+          <li key={point.key}>{rowLabel(point)}</li>
         ))}
       </ul>
     </div>

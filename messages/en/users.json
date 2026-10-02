@@ -241,7 +241,8 @@
     "a11yCurveCaption": "Distribution of {total, plural, one {# rating} other {# ratings}} by stars",
     "a11yCurveStars": "Stars",
     "a11yCurveCount": "Count",
-    "a11yRidge": "{label}: {count}"
+    "a11yRidge": "{label}: {count}",
+    "a11yRidgeDetail": "{label}: {count} ({detail})"
   },
   "edit": {
     "identityHeading": "Your identity",
@@ -656,28 +657,6 @@
       "dj": "DJ",
       "critic": "Critic",
       "radio-host": "Radio host"
-    },
-    "genres": {
-      "rock": "Rock",
-      "punk": "Punk",
-      "post-punk": "Post-punk",
-      "indie": "Indie",
-      "shoegaze": "Shoegaze",
-      "metal": "Metal",
-      "hip-hop": "Hip hop",
-      "electronic": "Electronic",
-      "ambient": "Ambient",
-      "jazz": "Jazz",
-      "soul-funk": "Soul & funk",
-      "folk": "Folk",
-      "blues": "Blues",
-      "classical": "Classical",
-      "pop": "Pop",
-      "latin": "Latin",
-      "reggae": "Reggae",
-      "experimental": "Experimental",
-      "country": "Country",
-      "bossa-nova": "Bossa nova"
     },
     "formats": {
       "vinyl": "Vinyl",

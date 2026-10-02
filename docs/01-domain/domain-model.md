@@ -57,6 +57,23 @@ Una Canción puede ser una versión distinta de otra: una re-grabación, un remi
 
 Las versiones de una misma canción se conectan por su **Obra** (la composición: título y autores). La Obra no se valora ni se comenta; agrupa las Canciones que la interpretan — la de estudio, las versiones en vivo, los covers de otros artistas — y dice quién la escribió. Qué versión es cada Canción (en vivo, cover, instrumental…) lo indica MusicBrainz en el vínculo Canción ↔ Obra; la **original** de una Obra es la Canción sin marca de en vivo ni de cover que aparece primero en un disco de estudio (ADR 0020).
 
+## Género y familia
+
+Un **Género** es un estilo de la lista oficial de MusicBrainz ("shoegaze", "rock progresivo",
+"cumbia"), con su jerarquía: puede ser subgénero de otro (shoegaze de rock), fusión de varios
+(blackgaze de black metal y shoegaze) o estar influido por otros. Una **Familia** agrupa géneros
+para el usuario común (Rock, Electrónica, Latina…): son 20, curadas, y un género puede pertenecer
+a varias (trap latino es Hip hop y Latina). Así el detalle queda para el especialista y la
+familia para la navegación general.
+
+Algunas etiquetas no son estilos sino **descriptores** de un álbum (Instrumental, Navideña,
+Orquestal, Banda sonora): se muestran aparte y nunca compiten con los géneros.
+
+Los géneros de un Artista y de un Álbum son **semillas** que vienen de Wikidata. Un Álbum sin
+semillas propias toma los géneros principales de su artista (géneros **heredados**). La Canción no
+tiene géneros propios: hereda los de su álbum. Los votos de la comunidad sobre los géneros de un
+álbum, cuando existan, se suman a las semillas sin reemplazarlas.
+
 ## Crédito
 
 El **Crédito** conecta un Artista con un Álbum o con una Canción, y resuelve los distintos patrones de autoría de la industria:

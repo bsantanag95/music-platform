@@ -9,7 +9,7 @@
 //     `maxlag` y se reintenta más tarde.
 // Mismo supuesto de proceso único que la cola de MusicBrainz.
 
-import type { CommonsImageInfoResponse, WDEntitiesResponse, WPExtractResponse } from "./types";
+import type { CommonsImageInfoResponse, WDEntitiesResponse, WDSparqlResponse, WPExtractResponse } from "./types";
 
 const MIN_INTERVAL_MS = 250;
 const REQUEST_TIMEOUT_MS = 10_000;
@@ -92,6 +92,7 @@ async function wikiFetch<T extends { error?: { code: string; info?: string } }>(
 }
 
 const WIKIDATA_API = "https://www.wikidata.org/w/api.php";
+const WIKIDATA_SPARQL = "https://query.wikidata.org/sparql";
 const COMMONS_API = "https://commons.wikimedia.org/w/api.php";
 const wikipediaApi = (lang: WikiLanguage) => `https://${lang}.wikipedia.org/w/api.php`;
 
@@ -134,5 +135,14 @@ export const wikimedia = {
       iiextmetadatafilter: "LicenseShortName|LicenseUrl|Artist|NonFree|AttributionRequired",
       titles: `File:${fileName}`,
     });
+  },
+
+  /**
+   * Consulta al servicio SPARQL de Wikidata. Solo la usa el script offline que genera la
+   * taxonomía de géneros (nombres por idioma vía P8052, ADR 0023); la app en ejecución llega a
+   * Wikidata únicamente por entidades que declara MusicBrainz.
+   */
+  sparql(query: string) {
+    return wikiFetch<WDSparqlResponse>(WIKIDATA_SPARQL, { query });
   },
 };

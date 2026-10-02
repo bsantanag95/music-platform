@@ -6,6 +6,8 @@ import { ProfileModerationActions } from "@/components/profiles/ProfileModeratio
 import { MutualFollowersRow } from "@/components/profiles/MutualFollowersRow";
 import { ProfileFicha } from "@/components/profiles/ProfileFicha";
 import { formatLocalTime } from "@/lib/music-identity";
+import { genreLocaleOf } from "@/services/genres/names";
+import { identityGenreLabels } from "@/services/genres/read";
 import { countryName } from "@/lib/personal-info";
 import type { ProfileView } from "@/services/profiles/profile-view";
 import type { MutualFollowersPreview } from "@/services/profiles/affinity";
@@ -45,6 +47,7 @@ export async function Placa({
   // El país llega ya vaciado para quien no tiene acceso (getProfileView); el nombre se
   // calcula acá, en el servidor, con el idioma de la ruta.
   const countryLabel = profile.country ? countryName(profile.country, locale) : null;
+  const genreLabels = await identityGenreLabels(profile.genres, genreLocaleOf(locale));
   const showBlock =
     authenticated &&
     !preview &&
@@ -72,6 +75,7 @@ export async function Placa({
             prompts: profile.prompts,
           }}
           t={t}
+          genreLabels={genreLabels}
         />
 
         {mutualFollowers && (

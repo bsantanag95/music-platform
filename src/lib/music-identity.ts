@@ -4,23 +4,28 @@
 // (sin base de datos ni `next/*`) para que lo importen el esquema Zod, el
 // servicio y los editores cliente. Se guardan claves estables; los nombres viven
 // en `messages/*/users.json`, así agregar un género es cambiar código, no una
-// migración.
+// migración. Los géneros son la excepción: sus claves son slugs de la taxonomía
+// de géneros (openspec: add-genre-taxonomy) y sus nombres salen de ella, por
+// idioma (`identityGenreLabels`).
 
 export const SELF_ROLES = ["listener", "collector", "musician", "dj", "critic", "radio-host"] as const;
 export type SelfRole = (typeof SELF_ROLES)[number];
 
+/** Slugs de géneros de estilo de la taxonomía (un test los verifica contra data/genres/taxonomy.json). */
 export const GENRES = [
   "rock",
   "punk",
   "post-punk",
-  "indie",
+  "indie-rock",
+  "indie-pop",
   "shoegaze",
   "metal",
   "hip-hop",
   "electronic",
   "ambient",
   "jazz",
-  "soul-funk",
+  "soul",
+  "funk",
   "folk",
   "blues",
   "classical",

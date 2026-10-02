@@ -21,10 +21,7 @@ export const MIN_ALBUMS_FOR_SECTION = 6;
 /** Cuántos ítems muestra cada riel de la portada de /explore (sin paginar). */
 export const RAIL_SIZE = 12;
 
-/** Cuántos géneros ofrece el riel "Explorar por género". */
-export const GENRE_TOP_N = 12;
-
-/** Tamaño de página de los listados filtrados por década o género. */
+/** Tamaño de página de los listados filtrados por década, familia o género. */
 export const FILTERED_PAGE_SIZE = 24;
 
 /** Categorías de release-group que cuentan como "novedad". */

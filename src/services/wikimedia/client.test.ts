@@ -83,6 +83,19 @@ describe("cliente de Wikimedia", () => {
     expect(url.searchParams.get("iiextmetadatafilter")).toContain("LicenseShortName");
   });
 
+  it("sparql consulta el servicio SPARQL de Wikidata en JSON, con el mismo User-Agent", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ results: { bindings: [] } }));
+    const query = "SELECT ?item WHERE { ?item wdt:P8052 ?mbid }";
+    await expect(wikimedia.sparql(query)).resolves.toEqual({ results: { bindings: [] } });
+
+    const url = lastUrl();
+    expect(url.origin + url.pathname).toBe("https://query.wikidata.org/sparql");
+    expect(url.searchParams.get("query")).toBe(query);
+    expect(url.searchParams.get("format")).toBe("json");
+    const headers = fetchMock.mock.calls[0]![1].headers as Record<string, string>;
+    expect(headers["User-Agent"]).toBe("music-platform-test (test@example.com)");
+  });
+
   it("reintenta ante maxlag y devuelve la respuesta siguiente", async () => {
     vi.useFakeTimers({ toFake: ["setTimeout"] });
     fetchMock

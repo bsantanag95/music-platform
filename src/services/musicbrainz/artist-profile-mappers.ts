@@ -43,14 +43,17 @@ function hostOf(url: string): string | null {
   }
 }
 
-function activeUrlRelations(detail: MBArtistDetail): (MBArtistRelation & { url: { resource: string } })[] {
+function activeUrlRelations(detail: { relations?: MBArtistRelation[] }): (MBArtistRelation & { url: { resource: string } })[] {
   return (detail.relations ?? []).filter(
     (r): r is MBArtistRelation & { url: { resource: string } } => Boolean(r.url?.resource) && r.ended !== true,
   );
 }
 
-/** Id de Wikidata (`Q…`) de la relación `wikidata`, o null. */
-export function wikidataIdOf(detail: MBArtistDetail): string | null {
+/**
+ * Id de Wikidata (`Q…`) de la relación `wikidata` de un artista o de un release-group, o null.
+ * Es la única vía a Wikidata (ADR 0021 y 0023): nunca se busca la entidad por nombre.
+ */
+export function wikidataIdOf(detail: { relations?: MBArtistRelation[] }): string | null {
   for (const relation of activeUrlRelations(detail)) {
     if (relation.type !== "wikidata") continue;
     const match = /\/(Q\d+)$/.exec(relation.url.resource);

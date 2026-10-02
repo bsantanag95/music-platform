@@ -55,3 +55,16 @@ export interface CommonsImageInfoResponse {
   query?: { pages: { title: string; missing?: boolean; imageinfo?: CommonsImageInfo[] }[] };
   error?: { code: string; info?: string };
 }
+
+/** Respuesta JSON del servicio SPARQL de Wikidata (solo los campos que se usan). */
+export interface WDSparqlBinding {
+  type: string;
+  value: string;
+  "xml:lang"?: string;
+}
+
+export interface WDSparqlResponse {
+  head?: { vars: string[] };
+  results?: { bindings: Record<string, WDSparqlBinding>[] };
+  error?: { code: string; info?: string };
+}

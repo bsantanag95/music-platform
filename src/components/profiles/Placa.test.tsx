@@ -26,6 +26,12 @@ vi.mock("next-intl/server", () => ({
   getLocale: vi.fn().mockResolvedValue("es"),
 }));
 
+// Nombres de la taxonomía (openspec: add-genre-taxonomy): la base no se toca en este test.
+vi.mock("@/services/genres/read", () => ({
+  identityGenreLabels: async (slugs: string[]) =>
+    Object.fromEntries(slugs.map((slug) => [slug, ({ "post-punk": "post-punk", jazz: "jazz" } as Record<string, string>)[slug] ?? slug])),
+}));
+
 vi.mock("@/components/social/FollowButton", () => ({
   FollowButton: ({ relation, preview }: { relation: string; preview?: boolean }) => (
     <div data-testid="follow-button" data-preview={preview ? "true" : undefined}>
@@ -83,7 +89,7 @@ describe("Placa: ficha musical y hora local", () => {
     expect(ficha).toBeInTheDocument();
     expect(screen.getByText("musicIdentity.ficha.roles")).toBeInTheDocument();
     expect(screen.getByText("musicIdentity.roles.collector · musicIdentity.roles.dj")).toBeInTheDocument();
-    expect(screen.getByText("musicIdentity.genres.post-punk · musicIdentity.genres.jazz")).toBeInTheDocument();
+    expect(screen.getByText("post-punk · jazz")).toBeInTheDocument();
     expect(screen.getByText("musicIdentity.formats.vinyl · musicIdentity.formats.streaming")).toBeInTheDocument();
     expect(screen.getByText("musicIdentity.prompts.first-record.short")).toBeInTheDocument();
     expect(screen.getByText("Un casete de Los Prisioneros")).toBeInTheDocument();
