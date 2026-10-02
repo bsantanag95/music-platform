@@ -11,7 +11,14 @@ const localizedErrorCodes = new Set([
   "INTERNAL_ERROR",
 ]);
 
-export function EmailVerificationNotice({ verified }: { verified: boolean }) {
+type NoticeVariant = "settings" | "welcome" | "home";
+
+interface EmailVerificationNoticeProps {
+  verified: boolean;
+  variant?: NoticeVariant;
+}
+
+export function EmailVerificationNotice({ verified, variant = "settings" }: EmailVerificationNoticeProps) {
   const t = useTranslations("auth");
   const tErrors = useTranslations("errors");
   const locale = useLocale();
@@ -42,14 +49,35 @@ export function EmailVerificationNotice({ verified }: { verified: boolean }) {
     }
   };
 
+  const titleKey = variant === "welcome" ? "verifyEmailWelcomeTitle" : variant === "home" ? "verifyEmailHomeTitle" : "verifyEmailBannerTitle";
+  const descriptionKey = variant === "welcome" ? "verifyEmailWelcomeDescription" : variant === "home" ? "verifyEmailHomeDescription" : "verifyEmailBannerDescription";
+
+  const containerClass = variant === "welcome"
+    ? "flex w-full flex-col gap-4 rounded-lg border border-amber/40 bg-amber/10 px-6 py-5"
+    : variant === "home"
+    ? "flex w-full max-w-3xl flex-col gap-2 rounded-md border border-ink-border bg-ink-surface px-4 py-3"
+    : "flex w-full max-w-md flex-col gap-3 rounded-md border border-ink-border bg-ink-surface px-4 py-3";
+
+  const titleClass = variant === "welcome"
+    ? "font-display text-xl text-paper"
+    : variant === "home"
+    ? "font-display text-sm text-paper"
+    : "font-display text-lg text-paper";
+
+  const descriptionClass = variant === "welcome"
+    ? "font-body text-paper-muted"
+    : variant === "home"
+    ? "font-body text-xs text-paper-muted"
+    : "font-body text-sm text-paper-muted";
+
   return (
     <section
       role="status"
-      aria-label={t("verifyEmailBannerTitle")}
-      className="flex w-full max-w-md flex-col gap-3 rounded-md border border-ink-border bg-ink-surface px-4 py-3"
+      aria-label={t(titleKey)}
+      className={containerClass}
     >
-      <h2 className="font-display text-lg text-paper">{t("verifyEmailBannerTitle")}</h2>
-      <p className="font-body text-sm text-paper-muted">{t("verifyEmailBannerDescription")}</p>
+      <h2 className={titleClass}>{t(titleKey)}</h2>
+      <p className={descriptionClass}>{t(descriptionKey)}</p>
       {(status === "sent" || status === "already") && (
         <p className="font-data text-sm text-paper">
           {status === "sent" ? t("verifyEmailResent") : t("verifyEmailAlreadyVerified")}

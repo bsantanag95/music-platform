@@ -11,6 +11,7 @@ import { OnboardingPrompt } from "./OnboardingPrompt";
 import { WelcomeLink } from "./WelcomeLink";
 import { RecentSelfActivity } from "./RecentSelfActivity";
 import { ResumeList } from "./ResumeList";
+import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn().mockResolvedValue((key: string) => key),
@@ -89,6 +90,27 @@ describe("AuthenticatedHome", () => {
     expect(feed.listFeed).not.toHaveBeenCalled();
     expect(findElement(element, OnboardingPrompt)).not.toBeNull();
     expect(findElement(element, FeedPreview)).toBeNull();
+  });
+
+  it("muestra el aviso de verificación de email cuando el email no está verificado", async () => {
+    vi.mocked(following.listFollowing).mockResolvedValue({
+      users: [], page: 1, pageSize: 1, hasNext: false,
+    });
+    const element = await AuthenticatedHome({ user, emailVerified: false });
+    const notice = findElement(element, EmailVerificationNotice);
+    expect(notice).not.toBeNull();
+    expect(notice?.props?.variant).toBe("home");
+    expect(notice?.props?.verified).toBe(false);
+  });
+
+  it("no muestra el aviso de verificación de email cuando el email está verificado", async () => {
+    vi.mocked(following.listFollowing).mockResolvedValue({
+      users: [], page: 1, pageSize: 1, hasNext: false,
+    });
+    const element = await AuthenticatedHome({ user, emailVerified: true });
+    const notice = findElement(element, EmailVerificationNotice);
+    // El componente se renderiza pero internamente retorna null cuando verified es true
+    expect(notice?.props?.verified).toBe(true);
   });
 
   it("muestra el enlace a /welcome cuando el onboarding está pendiente", async () => {

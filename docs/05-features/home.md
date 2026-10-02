@@ -115,24 +115,28 @@ entró) seguido de los mismos bloques de descubrimiento. Este cambio cierra su j
 1. **Saludo** (`Greeting`): una línea `Hola, {displayName ?? @username}`. Sin conteos,
    fechas de alta ni rachas — recibimiento, no panel de progreso (anti-feature "sin
    gamificación").
-2. **Accesos rápidos** (`QuickLinks`): diario, favoritos, listas, colección, buscador y
+2. **Aviso de verificación de email** (`EmailVerificationNotice` con variante `home`):
+   visible solo si el email del usuario no está verificado (`email_verified_at` nulo).
+   Compacto, no bloqueante, con acción de reenvío. Desaparece cuando el email se verifica.
+   Ver `docs/02-architecture/auth.md` sección 9.
+3. **Accesos rápidos** (`QuickLinks`): diario, favoritos, listas, colección, buscador y
    usuarios. Se ubican justo debajo del saludo, antes del feed, para no quedar relegados
    tras el contenido de lectura. Conservan los seis enlaces.
-3. **Feed de seguidos** (`FeedPreview`) como bloque principal, o **nudge de onboarding**
+4. **Feed de seguidos** (`FeedPreview`) como bloque principal, o **nudge de onboarding**
    (`OnboardingPrompt`) si no sigue a nadie. El nudge ahora también invita a registrar la
    primera escucha, en prosa (no un checklist con tildes). `FeedPreview` usa
    `FeedActivityList` (misma presentación que `/me/feed`, `redesign-feed`), con scroll
    interno y carga de a 10 (ver "Notas técnicas de la implementación").
-4. **Tu rastro reciente** (`RecentSelfActivity`): las últimas escuchas, valoraciones y
+5. **Tu rastro reciente** (`RecentSelfActivity`): las últimas escuchas, valoraciones y
    comentarios del propio usuario. **No filtra por audiencia** (es contenido propio,
    igual que `/me/diary`). Se oculta si no hay actividad. Fuente: `listMyRecentActivity`
    en `src/services/home/home.ts` (pagina de a 10). Presentación: `FeedActivityList` (peso
    por contenido, igual que `/me/feed` — ver `activity-feed.md`, `redesign-feed`), con el
    mismo contenedor de scroll y carga incremental que "Tu feed".
-5. **Retomá una lista** (`ResumeList`): acceso directo a la lista propia con actividad más
+6. **Retomá una lista** (`ResumeList`): acceso directo a la lista propia con actividad más
    reciente, con mini-mosaico 2×2 de carátulas de sus ítems. Se oculta si el usuario no
    tiene listas. Fuente: `getMostRecentEditedList`.
-6. **Descubrimiento**: `CommunityActivity` + `PublicLists` en el **mismo layout compacto
+7. **Descubrimiento**: `CommunityActivity` + `PublicLists` en el **mismo layout compacto
    que el anónimo** — grilla `lg:grid-cols-[1.5fr_1fr]` (apiladas en < `lg`) con `compact`
    y `previewLimit = 6`. Son bloques secundarios acá también (van debajo del contenido
    propio), así que ocupan poco alto. `PopularComments` y `HomeReleases` siguen full-width,

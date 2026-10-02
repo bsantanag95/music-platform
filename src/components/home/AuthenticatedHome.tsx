@@ -9,6 +9,7 @@ import { RecentSelfActivity } from "@/components/home/RecentSelfActivity";
 import { ResumeList } from "@/components/home/ResumeList";
 import { HomeReleases } from "@/components/home/HomeReleases";
 import { PopularComments } from "@/components/home/PopularComments";
+import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 import { listFollowing } from "@/services/social/following";
 import { listFeed } from "@/services/feed/feed";
 import {
@@ -30,13 +31,15 @@ interface AuthenticatedHomeProps {
   user: { id: string; username: string; displayName: string | null };
   /** El onboarding de dos puertas (`/welcome`) está pendiente para este usuario. */
   onboardingPending?: boolean;
+  /** El email del usuario está verificado. */
+  emailVerified?: boolean;
 }
 
 // Inicio del usuario con sesión: saludo + contenido propio (feed de seguidos u
 // onboarding, rastro reciente, retomar lista) arriba, y los bloques de
 // descubrimiento (actividad de la comunidad, listas públicas, comentarios
 // populares, lanzamientos) debajo. Ver docs/05-features/home.md.
-export async function AuthenticatedHome({ user, onboardingPending }: AuthenticatedHomeProps) {
+export async function AuthenticatedHome({ user, onboardingPending, emailVerified }: AuthenticatedHomeProps) {
   const [t, tHome] = await Promise.all([
     getTranslations("common"),
     getTranslations("home"),
@@ -81,6 +84,8 @@ export async function AuthenticatedHome({ user, onboardingPending }: Authenticat
         username={user.username}
         lastActivity={lastTouch}
       />
+
+      <EmailVerificationNotice verified={emailVerified ?? false} variant="home" />
 
       {onboardingPending && <WelcomeLink />}
 

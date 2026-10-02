@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { resolveSession } from "@/services/auth/sessions";
+import { isEmailVerified } from "@/services/auth/email-verification";
 import { TwoDoorOnboarding } from "@/components/onboarding/TwoDoorOnboarding";
+import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 
 interface WelcomePageProps {
   params: Promise<{ locale: string }>;
@@ -37,6 +39,7 @@ export default async function WelcomePage({ params }: WelcomePageProps) {
         <h1 className="font-display text-3xl text-paper">{t("heading")}</h1>
         <p className="font-body text-paper-muted">{t("intro")}</p>
       </header>
+      <EmailVerificationNotice verified={isEmailVerified(sessionData.user)} variant="welcome" />
       <TwoDoorOnboarding />
     </main>
   );

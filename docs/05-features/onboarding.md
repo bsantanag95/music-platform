@@ -48,6 +48,14 @@ onboardeados (`onboarded_at = created_at`): nunca ven `/welcome`.
 `POST /api/me/onboarding` es idempotente: llamarlo para un usuario ya onboardeado devuelve
 `200` sin re-sembrar ni re-marcar.
 
+## Aviso de verificación de email en bienvenida
+
+Si el usuario recién registrado tiene el email sin verificar (`email_verified_at` nulo),
+`/welcome` muestra un aviso destacado antes de las dos puertas. El aviso explica que la
+cuenta puede usarse antes de verificar, ofrece reenviar el enlace de verificación y no
+bloquea el onboarding. El usuario puede completar o saltar el flujo normalmente. Ver
+`docs/02-architecture/auth.md` sección 9 para el detalle del modo soft.
+
 ## Distinto del onboarding social de Inicio
 
 `AuthenticatedHome` ya muestra un bloque de onboarding **social** (`OnboardingPrompt`)

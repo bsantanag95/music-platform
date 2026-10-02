@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import WelcomePage from "./page";
 import { TwoDoorOnboarding } from "@/components/onboarding/TwoDoorOnboarding";
+import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 
 const mocks = vi.hoisted(() => ({ resolveSession: vi.fn(), redirect: vi.fn() }));
 
@@ -14,8 +15,12 @@ vi.mock("@/i18n/navigation", () => ({
   },
 }));
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: mocks.resolveSession }));
+vi.mock("@/services/auth/email-verification", () => ({ isEmailVerified: () => false }));
 vi.mock("@/components/onboarding/TwoDoorOnboarding", () => ({
   TwoDoorOnboarding: () => null,
+}));
+vi.mock("@/components/auth/EmailVerificationNotice", () => ({
+  EmailVerificationNotice: () => null,
 }));
 
 const render = () => WelcomePage({ params: Promise.resolve({ locale: "es" }) });
@@ -43,9 +48,15 @@ describe("WelcomePage", () => {
   });
 
   it("renderiza el flujo de dos puertas si el onboarding está pendiente", async () => {
-    mocks.resolveSession.mockResolvedValue({ user: { onboardedAt: null } });
+    mocks.resolveSession.mockResolvedValue({ user: { onboardedAt: null, emailVerifiedAt: null } });
     const tree = await render();
     expect(mocks.redirect).not.toHaveBeenCalled();
     expect(findType(tree, TwoDoorOnboarding)).toBe(true);
+  });
+
+  it("renderiza el aviso de verificación de email", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { onboardedAt: null, emailVerifiedAt: null } });
+    const tree = await render();
+    expect(findType(tree, EmailVerificationNotice)).toBe(true);
   });
 });

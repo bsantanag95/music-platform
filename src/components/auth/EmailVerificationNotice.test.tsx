@@ -40,4 +40,26 @@ describe("EmailVerificationNotice", () => {
     await user.click(screen.getByRole("button", { name: authEs.verifyEmailResend }));
     expect(await screen.findByText(authEs.verifyEmailAlreadyVerified)).toBeInTheDocument();
   });
+
+  it("muestra el título y descripción de bienvenida con variante welcome", () => {
+    renderWithIntl(<EmailVerificationNotice verified={false} variant="welcome" />);
+    expect(screen.getByText(authEs.verifyEmailWelcomeTitle)).toBeInTheDocument();
+    expect(screen.getByText(authEs.verifyEmailWelcomeDescription)).toBeInTheDocument();
+  });
+
+  it("muestra el título y descripción compactos con variante home", () => {
+    renderWithIntl(<EmailVerificationNotice verified={false} variant="home" />);
+    expect(screen.getByText(authEs.verifyEmailHomeTitle)).toBeInTheDocument();
+    expect(screen.getByText(authEs.verifyEmailHomeDescription)).toBeInTheDocument();
+  });
+
+  it("no renderiza nada con variante welcome si el email está verificado", () => {
+    renderWithIntl(<EmailVerificationNotice verified variant="welcome" />);
+    expect(screen.queryByText(authEs.verifyEmailWelcomeTitle)).not.toBeInTheDocument();
+  });
+
+  it("no renderiza nada con variante home si el email está verificado", () => {
+    renderWithIntl(<EmailVerificationNotice verified variant="home" />);
+    expect(screen.queryByText(authEs.verifyEmailHomeTitle)).not.toBeInTheDocument();
+  });
 });

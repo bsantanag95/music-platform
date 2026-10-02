@@ -304,11 +304,13 @@ mediante el metadata `referrer: "no-referrer"` (renderiza `<meta name="referrer"
 cada reenvío cuenta contra el rate limit (no se limpia al enviar).
 
 La verificación funciona en **modo soft**: no bloquea login ni acciones; se muestra un aviso con
-reenvío en `/<locale>/me/settings` mientras `email_verified_at` sea nulo. Consecuencia deliberada: el
-modo soft **no** impide que alguien reserve un email ajeno (`EMAIL_TAKEN` sigue aplicando) — solo
-registra el estado y avisa; el cierre real de ese caso llega con el enforcement duro, que se activa
-cambiando el helper centralizado `isEmailVerified`. El email verificado no habilita por sí solo la
-vinculación automática por email (ADR 0010).
+reenvío en `/<locale>/welcome`, `/<locale>` (Inicio autenticado) y `/<locale>/me/settings` mientras
+`email_verified_at` sea nulo. El aviso en bienvenida explica que la cuenta puede usarse antes de
+verificar; el aviso en Inicio es compacto; el aviso en Ajustes se mantiene en todas sus pantallas.
+Consecuencia deliberada: el modo soft **no** impide que alguien reserve un email ajeno (`EMAIL_TAKEN`
+sigue aplicando) — solo registra el estado y avisa; el cierre real de ese caso llega con el
+enforcement duro, que se activa cambiando el helper centralizado `isEmailVerified`. El email
+verificado no habilita por sí solo la vinculación automática por email (ADR 0010).
 
 ## Qué no decide este documento
 
