@@ -184,7 +184,8 @@ export function buildTaxonomy(input: BuildInput): BuildResult {
         mbid,
         slug: slugs.get(mbid)!,
         name,
-        nameEs: nameEs && nameEs !== name ? nameEs : null,
+        // Una etiqueta que solo difiere en mayúsculas ("Downtempo") no aporta: se usa el nombre de MusicBrainz.
+        nameEs: nameEs && nameEs.toLowerCase() !== name.toLowerCase() ? nameEs : null,
         wikidataId: label?.qid ?? null,
         kind: a.kind,
         families: a.families,
