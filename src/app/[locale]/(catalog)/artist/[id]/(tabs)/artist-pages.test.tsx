@@ -29,6 +29,11 @@ const mocks = vi.hoisted(() => ({
   locale: "es",
 }));
 
+// Géneros de la cabecera (openspec: show-genres): sin base en este test; los chips tienen sus propios tests.
+vi.mock("@/services/genres/display", () => ({
+  getArtistGenres: vi.fn(async () => ({ genres: [], descriptors: [] })),
+}));
+
 vi.mock("../artist-data", () => ({
   loadArtist: mocks.loadArtist,
   loadSession: mocks.loadSession,

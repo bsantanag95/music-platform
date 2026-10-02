@@ -48,6 +48,9 @@ muestra el estado vacío. El encabezado nombra la familia (traducida) o el géne
 taxonomía según el idioma). Grilla paginada con paginación server-side (anterior /
 siguiente por `?page=`). No hay endpoint dedicado.
 
+Cada género también tiene su propia página, `/genre/<slug>` (cambio `show-genres`, ver `genres.md`), que lista
+sus álbumes con la misma paginación.
+
 ## Flag de lanzamiento
 
 `EXPLORE_ENABLED` (server-side, `src/lib/config/discovery.ts`):

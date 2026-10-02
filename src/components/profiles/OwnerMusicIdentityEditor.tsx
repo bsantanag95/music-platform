@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/Button";
 import { apiFetch, ApiError } from "@/lib/api/client";
 import { MusicIdentityResponseSchema } from "@/lib/api/schemas";
 import {
-  GENRES,
   LISTENING_FORMATS,
   MUSIC_IDENTITY_LIMITS,
   SELF_ROLES,
@@ -14,6 +13,7 @@ import {
   type ListeningFormat,
   type SelfRole,
 } from "@/lib/music-identity";
+import { GenreMultiSelect } from "./GenreMultiSelect";
 import { useNotifySaved, useReportDirty, type EditorHostCallbacks } from "./editor-host";
 
 interface MusicIdentityValues {
@@ -24,8 +24,8 @@ interface MusicIdentityValues {
 
 interface OwnerMusicIdentityEditorProps extends EditorHostCallbacks {
   initial: MusicIdentityValues;
-  /** Nombres de los géneros de la lista, desde la taxonomía y en el idioma de la página. */
-  genreLabels: Record<Genre, string>;
+  /** Nombres de los géneros ya elegidos, desde la taxonomía y en el idioma de la página. */
+  genreLabels: Record<string, string>;
 }
 
 interface ChipGroupProps<T extends string> {
@@ -88,8 +88,8 @@ function ChipGroup<T extends string>({
 const sameList = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every((item, i) => item === b[i]);
 
 // Editor de la identidad musical del dueño (spec profile-music-identity): "Me
-// defino como" (hasta 3), géneros (hasta 5) y "Cómo escucho" (formatos), todos de
-// listas cerradas. Persiste con PUT /api/me/profile/music-identity; montado en la
+// defino como" (hasta 3), géneros (hasta 5, buscados en toda la taxonomía) y "Cómo
+// escucho" (formatos); roles y formatos son listas cerradas. Persiste con PUT /api/me/profile/music-identity; montado en la
 // pantalla Perfil de Ajustes y en el panel lateral del modo edición.
 export function OwnerMusicIdentityEditor({ initial, genreLabels, onSaved, onDirtyChange }: OwnerMusicIdentityEditorProps) {
   const t = useTranslations("users");
@@ -151,13 +151,12 @@ export function OwnerMusicIdentityEditor({ initial, genreLabels, onSaved, onDirt
         counterLabel={counter(values.selfRoles.length, MUSIC_IDENTITY_LIMITS.selfRoles)}
         onChange={(next) => change("selfRoles", next)}
       />
-      <ChipGroup
+      <GenreMultiSelect
         title={t("musicIdentity.editor.genresTitle")}
         hint={t("musicIdentity.editor.genresHint", { max: MUSIC_IDENTITY_LIMITS.genres })}
-        options={GENRES}
         selected={values.genres}
+        labels={genreLabels}
         max={MUSIC_IDENTITY_LIMITS.genres}
-        optionLabel={(option) => genreLabels[option] ?? option}
         counterLabel={counter(values.genres.length, MUSIC_IDENTITY_LIMITS.genres)}
         onChange={(next) => change("genres", next)}
       />

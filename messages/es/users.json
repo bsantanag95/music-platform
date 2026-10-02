@@ -242,7 +242,10 @@
     "a11yCurveStars": "Estrellas",
     "a11yCurveCount": "Cantidad",
     "a11yRidge": "{label}: {count}",
-    "a11yRidgeDetail": "{label}: {count} ({detail})"
+    "a11yRidgeDetail": "{label}: {count} ({detail})",
+    "declaredBadge": "Lo declaraste en tus géneros",
+    "a11yDeclared": "Lo declaraste en tus géneros",
+    "declaredMissing": "{count, plural, one {Declaraste {families}, pero no aparece en lo que valorás.} other {Declaraste {families}, pero no aparecen en lo que valorás.}}"
   },
   "edit": {
     "identityHeading": "Tu identidad",
@@ -709,7 +712,7 @@
       "rolesTitle": "Me defino como",
       "rolesHint": "Hasta {max}. Aparece en tu perfil y cuenta cómo te relacionás con la música.",
       "genresTitle": "Géneros que me mueven",
-      "genresHint": "Hasta {max}, de una lista cerrada.",
+      "genresHint": "Hasta {max}. Buscá entre todos los géneros por su nombre.",
       "formatsTitle": "Cómo escucho",
       "formatsHint": "Los formatos que usás.",
       "counter": "{count} de {max}",
@@ -720,7 +723,15 @@
       "answerPlaceholder": "Una línea",
       "addPrompt": "Agregar pregunta",
       "removePrompt": "Quitar la pregunta «{question}»",
-      "emptyAnswer": "Escribí una respuesta o quitá la pregunta."
+      "emptyAnswer": "Escribí una respuesta o quitá la pregunta.",
+      "genreSearchLabel": "Buscar un género",
+      "genreSearchPlaceholder": "Por ejemplo: shoegaze, cumbia, jazz",
+      "genreSearching": "Buscando…",
+      "genreNoResults": "Sin resultados.",
+      "genreSuggestions": "Los más usados",
+      "genreRemove": "Quitar {genre}",
+      "genreAdd": "Agregar {genre}",
+      "genreFull": "Ya elegiste el máximo. Quitá uno para agregar otro."
     }
   },
   "profileLocalTime": "{time} hora local",

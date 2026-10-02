@@ -17,6 +17,7 @@ const base: TasteFingerprintData = {
   totalRatings: 0,
   decades: [],
   genres: [],
+  declaredMissing: [],
   genreDataAvailable: false,
   split: { ratedArtists: 0, ratedAlbums: 0, ratedSongs: 0, collection: 0, lists: 0 },
   summary: [],
@@ -87,5 +88,34 @@ describe("TasteFingerprint", () => {
     );
     expect(screen.getByText(/fingerprint.splitAlbums/)).toBeInTheDocument();
     expect(screen.queryByText(/fingerprint.splitSongs/)).not.toBeInTheDocument();
+  });
+
+  it("marca las familias declaradas y nombra las declaradas que no aparecen", async () => {
+    renderWithIntl(
+      await TasteFingerprint({
+        fingerprint: {
+          ...base,
+          genreDataAvailable: true,
+          genres: [
+            { family: "rock", count: 5, topGenres: [], declared: true },
+            { family: "pop", count: 2, topGenres: [] },
+          ],
+          declaredMissing: ["jazz"],
+        },
+      }),
+    );
+    expect(screen.getAllByTitle("fingerprint.declaredBadge")).toHaveLength(1);
+    expect(screen.getByText(/fingerprint.a11yRidge:.*families.rock.*. fingerprint.a11yDeclared/)).toBeInTheDocument();
+    expect(screen.getByText(/fingerprint.declaredMissing.*families.jazz/)).toBeInTheDocument();
+  });
+
+  it("sin géneros declarados no hay marcas ni línea adicional", async () => {
+    renderWithIntl(
+      await TasteFingerprint({
+        fingerprint: { ...base, genreDataAvailable: true, genres: [{ family: "rock", count: 5, topGenres: [] }] },
+      }),
+    );
+    expect(screen.queryByTitle("fingerprint.declaredBadge")).toBeNull();
+    expect(screen.queryByText(/declaredMissing/)).toBeNull();
   });
 });

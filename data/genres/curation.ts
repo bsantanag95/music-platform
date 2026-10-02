@@ -269,5 +269,24 @@ export const curation: GenreCuration = {
   namesEs: {
     // P8052 apunta a "art music" (etiqueta "música culta"), no a la música clásica.
     classical: "música clásica",
+    // Las etiquetas de Wikidata de estos géneros son de otro concepto o inusuales en español.
+    punk: "punk",
+    shoegaze: "shoegaze",
+    electronic: "electrónica",
+    folk: "folk",
+    "r&b": "R&B",
+    house: "house",
+    disco: "disco",
+    gospel: "gospel",
+    industrial: "industrial",
+    experimental: "experimental",
+    latin: "latina",
+    comedy: "comedia",
+    "art pop": "art pop",
+    "conscious hip hop": "hip hop consciente",
+    "west coast hip hop": "hip hop de la Costa Oeste",
+    "synth-pop": "synth-pop",
+    idm: "IDM",
+    "avant-prog": "avant-prog",
   },
 };

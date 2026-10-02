@@ -25,6 +25,11 @@ const mocks = vi.hoisted(() => ({
   segment: null as string | null,
 }));
 
+// Géneros de la cabecera (openspec: show-genres): sin base en este test; los chips tienen sus propios tests.
+vi.mock("@/services/genres/display", () => ({
+  getAlbumGenres: vi.fn(async () => ({ genres: [], descriptors: [] })),
+}));
+
 vi.mock("../album-data", () => ({
   loadAlbumDetail: mocks.loadAlbumDetail,
   loadAlbumSegment: mocks.loadAlbumSegment,

@@ -11,7 +11,11 @@
 export const SELF_ROLES = ["listener", "collector", "musician", "dj", "critic", "radio-host"] as const;
 export type SelfRole = (typeof SELF_ROLES)[number];
 
-/** Slugs de géneros de estilo de la taxonomía (un test los verifica contra data/genres/taxonomy.json). */
+/**
+ * Sugerencias iniciales del selector de géneros (slugs de la taxonomía; un test las verifica contra
+ * data/genres/taxonomy.json). Ya NO es el vocabulario permitido: cualquier género de estilo visible
+ * es válido y se valida contra la base (openspec: show-genres, design D5).
+ */
 export const GENRES = [
   "rock",
   "punk",
@@ -36,7 +40,8 @@ export const GENRES = [
   "country",
   "bossa-nova",
 ] as const;
-export type Genre = (typeof GENRES)[number];
+/** Slug de un género de la taxonomía (formato validado en el esquema, existencia en el servicio). */
+export type Genre = string;
 
 export const LISTENING_FORMATS = ["vinyl", "cd", "cassette", "streaming", "digital"] as const;
 export type ListeningFormat = (typeof LISTENING_FORMATS)[number];

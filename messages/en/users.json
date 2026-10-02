@@ -242,7 +242,10 @@
     "a11yCurveStars": "Stars",
     "a11yCurveCount": "Count",
     "a11yRidge": "{label}: {count}",
-    "a11yRidgeDetail": "{label}: {count} ({detail})"
+    "a11yRidgeDetail": "{label}: {count} ({detail})",
+    "declaredBadge": "You declared it in your genres",
+    "a11yDeclared": "You declared it in your genres",
+    "declaredMissing": "{count, plural, one {You declared {families}, but it does not show up in what you rate.} other {You declared {families}, but they do not show up in what you rate.}}"
   },
   "edit": {
     "identityHeading": "Your identity",
@@ -709,7 +712,7 @@
       "rolesTitle": "I define myself as",
       "rolesHint": "Up to {max}. It shows on your profile and tells how you relate to music.",
       "genresTitle": "Genres that move me",
-      "genresHint": "Up to {max}, from a closed list.",
+      "genresHint": "Up to {max}. Search all genres by name.",
       "formatsTitle": "How I listen",
       "formatsHint": "The formats you use.",
       "counter": "{count} of {max}",
@@ -720,7 +723,15 @@
       "answerPlaceholder": "One line",
       "addPrompt": "Add a question",
       "removePrompt": "Remove the question “{question}”",
-      "emptyAnswer": "Write an answer or remove the question."
+      "emptyAnswer": "Write an answer or remove the question.",
+      "genreSearchLabel": "Search for a genre",
+      "genreSearchPlaceholder": "For example: shoegaze, cumbia, jazz",
+      "genreSearching": "Searching…",
+      "genreNoResults": "No results.",
+      "genreSuggestions": "Most used",
+      "genreRemove": "Remove {genre}",
+      "genreAdd": "Add {genre}",
+      "genreFull": "You reached the maximum. Remove one to add another."
     }
   },
   "profileLocalTime": "{time} local time",

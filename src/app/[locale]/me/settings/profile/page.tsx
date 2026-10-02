@@ -1,5 +1,4 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import { GENRES } from "@/lib/music-identity";
 import { genreLocaleOf } from "@/services/genres/names";
 import { identityGenreLabels } from "@/services/genres/read";
 import { requirePageUser } from "@/services/auth/page-auth";
@@ -21,12 +20,10 @@ export default async function ProfileSettingsPage() {
   const t = await getTranslations("users");
   const user = await requirePageUser();
   const locale = genreLocaleOf(await getLocale());
-  const [identity, showcase, genreLabels] = await Promise.all([
-    getExtendedIdentity(user.id),
-    getShowcase(user.id),
-    identityGenreLabels(GENRES, locale),
-  ]);
+  const [identity, showcase] = await Promise.all([getExtendedIdentity(user.id), getShowcase(user.id)]);
   if (!identity) return null;
+  // Los géneros que ya no son un estilo visible no figuran en las etiquetas y se ignoran al mostrar.
+  const genreLabels = await identityGenreLabels(identity.genres, locale);
 
   return (
     <SettingsSection title={t("settings.profile.title")} intro={t("settings.profile.intro")}>
@@ -58,7 +55,7 @@ export default async function ProfileSettingsPage() {
         <OwnerMusicIdentityEditor
           initial={{
             selfRoles: identity.selfRoles,
-            genres: identity.genres,
+            genres: identity.genres.filter((slug) => slug in genreLabels),
             listeningFormats: identity.listeningFormats,
           }}
           genreLabels={genreLabels}

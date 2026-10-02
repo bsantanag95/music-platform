@@ -162,7 +162,7 @@ cambiar código, no una migración):
 | Campo | Valores | Tope |
 |---|---|---|
 | **Me defino como** (`self_roles`) | `listener`, `collector`, `musician`, `dj`, `critic`, `radio-host` | 3 |
-| **Géneros que me mueven** (`genres`) | 22 slugs de la taxonomía de géneros (cambio `add-genre-taxonomy`): `rock`, `punk`, `post-punk`, `indie-rock`, `indie-pop`, `shoegaze`, `metal`, `hip-hop`, `electronic`, `ambient`, `jazz`, `soul`, `funk`, `folk`, `blues`, `classical`, `pop`, `latin`, `reggae`, `experimental`, `country`, `bossa-nova`; nombres desde la taxonomía según el idioma | 5 |
+| **Géneros que me mueven** (`genres`) | cualquier género de estilo de la taxonomía (slug; cambio `show-genres`, ADR 0024), elegido con un buscador (`GET /api/genres/search`); antes eran 22 claves fijas. Nombres desde la taxonomía según el idioma | 5 |
 | **Cómo escucho** (`listening_formats`) | `vinyl`, `cd`, `cassette`, `streaming`, `digital` | 5 |
 | **Preguntas del perfil** (`user_profile_prompt`) | 8: `first-record`, `sunday-record`, `defended-song`, `guilty-pleasure`, `first-concert`, `desert-island-record`, `sad-day-record`, `road-trip-record` — cada una con su pregunta larga (editor) y una etiqueta corta (Placa) | 3, respuesta de una línea ≤100 |
 

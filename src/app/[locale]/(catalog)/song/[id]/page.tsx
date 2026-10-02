@@ -6,6 +6,8 @@ import { AlbumCover } from "@/components/catalog/AlbumCover";
 import { itemListsHref } from "@/components/lists/lists-shared";
 import { SongAppearances } from "@/components/song/SongAppearances";
 import { SongComposition, SongRecordingCredits } from "@/components/song/SongCredits";
+import { GenreChips } from "@/components/genres/GenreChips";
+import { getSongGenres } from "@/services/genres/display";
 import { SongCommunity, SongFacts, SongIdentity } from "@/components/song/SongHeader";
 import { SongRelationPanel } from "@/components/song/SongRelationPanel";
 import { SongTrackStrip } from "@/components/song/SongTrackStrip";
@@ -77,7 +79,7 @@ export default async function SongPage({ params }: SongPageProps) {
   const userId = session?.user.id ?? null;
   const socialTarget = await resolveSocialTarget("recording", recordingId);
 
-  const [strip, credits, versions, versionLine, stats, ratings, personal, canModerate, comments] = await Promise.all([
+  const [strip, credits, versions, versionLine, stats, ratings, personal, canModerate, comments, songGenres] = await Promise.all([
     principalRelease ? loadTrackStrip(recordingId, principalRelease.id) : Promise.resolve(null),
     loadRecordingCredits(
       recordingId,
@@ -91,6 +93,7 @@ export default async function SongPage({ params }: SongPageProps) {
     userId ? loadSongPersonalState(userId, recordingId) : Promise.resolve(null),
     userId ? loadCanModerate(userId) : Promise.resolve(false),
     listComments(socialTarget),
+    getSongGenres(detail.principalDisc?.releaseGroupId ?? null),
   ]);
 
   const firstAppearance = detail.containingAlbums[0] ?? null;
@@ -144,6 +147,9 @@ export default async function SongPage({ params }: SongPageProps) {
             title={detail.recording.title}
             artists={primaryArtists}
           />
+          <div className="mt-2">
+            <GenreChips genres={songGenres.genres} />
+          </div>
         </div>
         <div className="[grid-area:facts]">
           <SongFacts

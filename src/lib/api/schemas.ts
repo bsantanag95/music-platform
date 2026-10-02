@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { routing } from "@/i18n/routing";
+import { GENRE_SLUG_PATTERN } from "@/services/genres/slug";
 import {
-  GENRES,
   isSingleLine,
   isValidTimezone,
   LISTENING_FORMATS,
@@ -2343,7 +2343,9 @@ const closedList = <T extends readonly [string, ...string[]]>(values: T, max: nu
     .refine((items) => new Set(items).size === items.length, "Sin repetidos");
 
 export const SelfRoleSchema = z.enum(SELF_ROLES);
-export const GenreSchema = z.enum(GENRES);
+// Un género es un slug de la taxonomía: aquí solo su formato; que exista como estilo visible lo
+// verifica el servicio contra la base (openspec: show-genres, design D5).
+export const GenreSchema = z.string().max(120).regex(GENRE_SLUG_PATTERN);
 export const ListeningFormatSchema = z.enum(LISTENING_FORMATS);
 export const PromptKeySchema = z.enum(PROMPT_KEYS);
 
@@ -2352,7 +2354,11 @@ export const PromptKeySchema = z.enum(PROMPT_KEYS);
 export const UpdateMusicIdentityRequestSchema = z
   .object({
     selfRoles: closedList(SELF_ROLES, MUSIC_IDENTITY_LIMITS.selfRoles).optional(),
-    genres: closedList(GENRES, MUSIC_IDENTITY_LIMITS.genres).optional(),
+    genres: z
+      .array(GenreSchema)
+      .max(MUSIC_IDENTITY_LIMITS.genres, `Máximo ${MUSIC_IDENTITY_LIMITS.genres}`)
+      .refine((items) => new Set(items).size === items.length, "Sin repetidos")
+      .optional(),
     listeningFormats: closedList(LISTENING_FORMATS, MUSIC_IDENTITY_LIMITS.listeningFormats).optional(),
   })
   .refine((value) => Object.keys(value).length > 0, { message: "No hay nada para actualizar" });
@@ -2462,3 +2468,9 @@ export const MyRatingsListResponseSchema = z.object({
 });
 export type MyRatingsListResponse = z.infer<typeof MyRatingsListResponseSchema>;
 
+
+// GET /api/genres/search (openspec: show-genres): géneros de estilo que coinciden con el texto.
+export const GenreSearchResponseSchema = z.object({
+  genres: z.array(z.object({ slug: z.string(), name: z.string(), nameEs: z.string().nullable() })),
+});
+export type GenreSearchResponse = z.infer<typeof GenreSearchResponseSchema>;

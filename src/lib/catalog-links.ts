@@ -70,6 +70,11 @@ export function reviewHref(username: string, albumTitle: string, reviewId: strin
   return `/review/${reviewSegment(username, albumTitle, reviewId)}`;
 }
 
+/** Página de un género de la taxonomía: usa su slug guardado, sin id (ADR 0023). */
+export function genreHref(slug: string): string {
+  return `/genre/${slug}`;
+}
+
 /** Antepone el locale a una ruta sin locale (redirect de servidor, `<a>` duro). */
 export function localeHref(locale: string, href: string): string {
   return `/${locale}${href}`;

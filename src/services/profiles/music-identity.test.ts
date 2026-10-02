@@ -88,7 +88,7 @@ describe("updateMusicIdentity", () => {
     ["un cuarto rol", { selfRoles: ["listener", "collector", "musician", "dj"] }],
     ["un rol desconocido", { selfRoles: ["admin"] }],
     ["un sexto género", { genres: ["rock", "punk", "jazz", "folk", "blues", "pop"] }],
-    ["un género fuera de la lista", { genres: ["polka-espacial"] }],
+    ["un género con formato inválido", { genres: ["Polka Espacial"] }],
     ["un formato desconocido", { listeningFormats: ["8-track"] }],
     ["repetidos", { genres: ["jazz", "jazz"] }],
     ["un cuerpo sin campos", {}],
@@ -97,7 +97,20 @@ describe("updateMusicIdentity", () => {
     expect(h.state.updates).toHaveLength(0);
   });
 
+  it("un género fuera de las sugerencias iniciales se acepta si existe como estilo visible", async () => {
+    h.state.selects = [[{ slug: "cumbia-villera" }]];
+    await updateMusicIdentity("u1", { genres: ["cumbia-villera"] });
+    expect(h.state.updates).toEqual([{ genres: ["cumbia-villera"] }]);
+  });
+
+  it("un slug que no es un estilo visible (inexistente, descriptor u oculto) se rechaza sin tocar la base", async () => {
+    h.state.selects = [[{ slug: "rock" }]]; // solo uno de los dos existe
+    expect(await code(updateMusicIdentity("u1", { genres: ["rock", "polka-espacial"] }))).toBe("VALIDATION_ERROR");
+    expect(h.state.updates).toHaveLength(0);
+  });
+
   it("USER_NOT_FOUND si el update no afecta filas", async () => {
+    h.state.selects = [[{ slug: "jazz" }]];
     h.state.updateResult = [];
     expect(await code(updateMusicIdentity("nadie", { genres: ["jazz"] }))).toBe("USER_NOT_FOUND");
   });

@@ -7,6 +7,7 @@ import {
   localeHref,
   reviewHref,
   songHref,
+  genreHref,
 } from "./catalog-links";
 import { encodeId } from "./slug";
 
@@ -87,5 +88,11 @@ describe("helpers de enlace", () => {
 
   it("localeHref antepone el locale", () => {
     expect(localeHref("es", "/album/x")).toBe("/es/album/x");
+  });
+});
+
+describe("genreHref", () => {
+  it("usa el slug guardado del género, sin id", () => {
+    expect(genreHref("progressive-rock")).toBe("/genre/progressive-rock");
   });
 });
