@@ -1,8 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { redirect } from "@/i18n/navigation";
-import { AuthForm } from "@/components/auth/AuthForm";
-import { SocialSignIn } from "@/components/auth/SocialSignIn";
+import { LoginPanel } from "@/components/auth/LoginPanel";
 import { resolveSession } from "@/services/auth/sessions";
 
 export default async function LoginPage({
@@ -28,13 +27,10 @@ export default async function LoginPage({
         </p>
       )}
       <div className="flex flex-col gap-6">
-        <SocialSignIn
+        <LoginPanel
           locale={locale}
-          label={t("continueWithGoogle")}
+          googleLabel={t("continueWithGoogle")}
           separator={t("orSeparator")}
-        />
-        <AuthForm
-          mode="login"
           passwordAside={
             <Link
               href="/auth/forgot-password"

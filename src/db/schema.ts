@@ -271,6 +271,9 @@ export const session = pgTable(
     // User-Agent completo ni la IP. Nulos en las sesiones previas.
     deviceLabel: text("device_label"),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
+    // Mantener la sesión en el dispositivo (migración 0058, change add-keep-signed-in).
+    // Las mantenidas se renuevan con el uso; las demás caducan a las 24 h.
+    remember: boolean("remember").notNull().default(true),
   },
   (t) => [
     check("chk_session_device_label", sql`${t.deviceLabel} IS NULL OR length(${t.deviceLabel}) <= 80`),

@@ -26,9 +26,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   clearAuthAttempts([`login:ip:${ip}`, `login:identifier:${identifier}`]);
   // Iniciar sesión en una cuenta desactivada la reactiva (spec account-lifecycle).
   if (user.deactivatedAt) await reactivateAccount(user.id);
-  const session = await rotateCurrentSession(user.id);
+  const session = await rotateCurrentSession(user.id, { remember: body.data.remember ?? true });
   const response = NextResponse.json({ user: publicUser(user) });
-  setSessionCookie(response, session.token);
+  setSessionCookie(response, session.token, session.remember);
   return response;
 });
 

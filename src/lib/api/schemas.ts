@@ -405,6 +405,8 @@ export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
 export const LoginRequestSchema = z.object({
   identifier: z.string().trim().min(1).max(320),
   password: z.string().min(1).max(128),
+  // Mantener la sesión en el dispositivo (change add-keep-signed-in); ausente = sí.
+  remember: z.boolean().optional(),
 });
 export type LoginRequest = z.infer<typeof LoginRequestSchema>;
 

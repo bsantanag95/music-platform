@@ -30,6 +30,8 @@ export interface OAuthFlowState {
   intent: OAuthIntent;
   /** Quién inició un flujo `link`/`reauth`; el callback exige que sea la misma sesión. */
   userId?: string;
+  /** Mantener la sesión en el dispositivo (change add-keep-signed-in); por defecto sí. */
+  remember: boolean;
 }
 
 export function resolveLocale(value: string | null | undefined): string {
@@ -58,6 +60,7 @@ export function computeCodeChallenge(verifier: string): string {
 export function generateOAuthFlowState(
   locale?: string,
   account?: { intent: OAuthIntent; userId: string },
+  remember = true,
 ): OAuthFlowState {
   const state = generateState();
   const nonce = generateNonce();
@@ -70,6 +73,7 @@ export function generateOAuthFlowState(
     codeChallenge,
     locale: resolveLocale(locale),
     intent: account?.intent ?? "login",
+    remember,
     ...(account ? { userId: account.userId } : {}),
   };
 }
@@ -101,7 +105,13 @@ export async function consumeOAuthFlowCookies(): Promise<OAuthFlowState | null> 
     const parsed = JSON.parse(raw) as OAuthFlowState;
     if (!parsed.state || !parsed.codeVerifier || !parsed.nonce) return null;
     // Una cookie anterior a las intenciones no trae `intent`: es un login.
-    return { ...parsed, locale: resolveLocale(parsed.locale), intent: resolveIntent(parsed.intent) };
+    // Tampoco trae `remember`: solo un `false` explícito es una sesión no mantenida.
+    return {
+      ...parsed,
+      locale: resolveLocale(parsed.locale),
+      intent: resolveIntent(parsed.intent),
+      remember: parsed.remember !== false,
+    };
   } catch {
     return null;
   }

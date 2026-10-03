@@ -37,10 +37,16 @@ type FieldErrors = Record<string, string>;
 export function AuthForm({
   mode,
   passwordAside,
+  remember: rememberProp,
+  onRememberChange,
 }: {
   mode: "login" | "register";
   // Enlace junto a la etiqueta de contraseña (login: "¿Olvidaste tu contraseña?").
   passwordAside?: ReactNode;
+  // Casilla "Mantener la sesión iniciada" (solo login). Se controla desde fuera
+  // cuando el botón de Google debe reflejarla (LoginPanel); sola, vive aquí.
+  remember?: boolean;
+  onRememberChange?: (remember: boolean) => void;
 }) {
   const t = useTranslations("auth");
   const tErrors = useTranslations("errors");
@@ -49,6 +55,9 @@ export function AuthForm({
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [pending, setPending] = useState(false);
+  const [ownRemember, setOwnRemember] = useState(true);
+  const remember = rememberProp ?? ownRemember;
+  const setRemember = onRememberChange ?? setOwnRemember;
 
   // Mensaje de validación del cliente según el campo y lo que se escribió.
   const clientMessage = (field: string, value: string): string => {
@@ -83,7 +92,7 @@ export function AuthForm({
     setErrorCode(null);
     setFieldErrors({});
     const fields = Object.fromEntries(new FormData(form));
-    const data = mode === "register" ? { ...fields, locale } : fields;
+    const data = mode === "register" ? { ...fields, locale } : { ...fields, remember };
     const parsed =
       mode === "login"
         ? LoginRequestSchema.safeParse(data)
@@ -207,6 +216,17 @@ export function AuthForm({
             `${localizedErrorCodes.has(errorCode) ? errorCode : "INTERNAL_ERROR"}.description`,
           )}
         </p>
+      )}
+      {mode === "login" && (
+        <label className="flex min-h-9 cursor-pointer items-center gap-2 font-data text-sm text-paper">
+          <input
+            type="checkbox"
+            checked={remember}
+            onChange={(event) => setRemember(event.target.checked)}
+            className="size-4 shrink-0 accent-amber"
+          />
+          <span>{t("keepSignedIn")}</span>
+        </label>
       )}
       <Button
         type="submit"

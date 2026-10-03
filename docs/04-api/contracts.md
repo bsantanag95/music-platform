@@ -491,8 +491,10 @@ arriba; `[]` si la grabación no tiene obra).
 
 `POST /api/auth/register` recibe `{ username, email, password, locale? }`, crea una cuenta y devuelve
 `201 { user }`. Dispara en best-effort el correo de verificación de email (ver sección siguiente);
-un fallo de envío no afecta el alta. `POST /api/auth/login` recibe `{ identifier, password }`, rota la
-sesión actual o crea una nueva y devuelve `200 { user }`. Ambos aplican rate limiting y nunca
+un fallo de envío no afecta el alta. `POST /api/auth/login` recibe `{ identifier, password, remember? }`, rota la
+sesión actual o crea una nueva y devuelve `200 { user }`. `remember` es un booleano opcional (la
+casilla "Mantener la sesión iniciada en este dispositivo"): ausente equivale a `true` y un valor no
+booleano responde `VALIDATION_ERROR` (400) antes de evaluar las credenciales. Ambos aplican rate limiting y nunca
 devuelven el token.
 
 `POST` y `DELETE /api/auth/logout` eliminan la sesión actual. `DELETE /api/auth/revoke-all` requiere sesión y
@@ -503,8 +505,11 @@ Una cookie ausente, inválida o expirada se trata de forma indistinguible y devu
 en operaciones protegidas; no se revela si la sesión existió. Logout solo revoca la sesión actual.
 `revoke-all` revoca todas las sesiones del usuario; no existe listado de dispositivos.
 
-La cookie opaca `music_session` es `httpOnly`, `secure`, `sameSite=lax`, con expiración fija de 30
-días. Los errores posibles están en `docs/04-api/errors.md` y `src/lib/api/schemas.ts`.
+La cookie opaca `music_session` es `httpOnly`, `secure`, `sameSite=lax`. Una sesión **mantenida**
+(`remember` verdadero, también la del registro) dura 30 días desde su última actividad y se renueva
+con el uso; su cookie lleva `maxAge` de 400 días y la validez la decide el servidor. Una sesión no
+mantenida usa una cookie de sesión (sin `maxAge`) y caduca a las 24 horas de iniciada, sin
+renovarse (ADR 0026). Los errores posibles están en `docs/04-api/errors.md` y `src/lib/api/schemas.ts`.
 
 ## Recuperación de contraseña
 
@@ -546,7 +551,9 @@ correo configurado y `429 RATE_LIMITED` (por usuario e IP). El reenvío nunca op
 soportados, default `es`). Genera `state`, `code_verifier`/`code_challenge` (PKCE S256) y `nonce`,
 los persiste en cookies `httpOnly`, `secure`, `sameSite=lax` de corta duración (~10 min)
 incluyendo el `locale`, y redirige (307) a la authorization URL de Google con scopes fijos
-`openid email profile`.
+`openid email profile`. Acepta además `remember` (`0` | `1`): solo `0` desmarca "mantener la sesión";
+cualquier otro valor o su ausencia equivale a `1`. Se guarda en el estado del flujo y el callback
+usa únicamente ese valor, nunca uno recibido en su propio query.
 
 `GET /api/auth/google/callback` recibe los query params que devuelve Google (`code`, `state` y,
 en caso de cancelación o error, `error`). Valida `state` contra la cookie, intercambia el
@@ -1172,8 +1179,10 @@ arriba; `[]` si la grabación no tiene obra).
 
 `POST /api/auth/register` recibe `{ username, email, password, locale? }`, crea una cuenta y devuelve
 `201 { user }`. Dispara en best-effort el correo de verificación de email (ver sección siguiente);
-un fallo de envío no afecta el alta. `POST /api/auth/login` recibe `{ identifier, password }`, rota la
-sesión actual o crea una nueva y devuelve `200 { user }`. Ambos aplican rate limiting y nunca
+un fallo de envío no afecta el alta. `POST /api/auth/login` recibe `{ identifier, password, remember? }`, rota la
+sesión actual o crea una nueva y devuelve `200 { user }`. `remember` es un booleano opcional (la
+casilla "Mantener la sesión iniciada en este dispositivo"): ausente equivale a `true` y un valor no
+booleano responde `VALIDATION_ERROR` (400) antes de evaluar las credenciales. Ambos aplican rate limiting y nunca
 devuelven el token.
 
 `POST` y `DELETE /api/auth/logout` eliminan la sesión actual. `DELETE /api/auth/revoke-all` requiere sesión y
@@ -1184,8 +1193,11 @@ Una cookie ausente, inválida o expirada se trata de forma indistinguible y devu
 en operaciones protegidas; no se revela si la sesión existió. Logout solo revoca la sesión actual.
 `revoke-all` revoca todas las sesiones del usuario; no existe listado de dispositivos.
 
-La cookie opaca `music_session` es `httpOnly`, `secure`, `sameSite=lax`, con expiración fija de 30
-días. Los errores posibles están en `docs/04-api/errors.md` y `src/lib/api/schemas.ts`.
+La cookie opaca `music_session` es `httpOnly`, `secure`, `sameSite=lax`. Una sesión **mantenida**
+(`remember` verdadero, también la del registro) dura 30 días desde su última actividad y se renueva
+con el uso; su cookie lleva `maxAge` de 400 días y la validez la decide el servidor. Una sesión no
+mantenida usa una cookie de sesión (sin `maxAge`) y caduca a las 24 horas de iniciada, sin
+renovarse (ADR 0026). Los errores posibles están en `docs/04-api/errors.md` y `src/lib/api/schemas.ts`.
 
 ## Recuperación de contraseña
 
@@ -1227,7 +1239,9 @@ correo configurado y `429 RATE_LIMITED` (por usuario e IP). El reenvío nunca op
 soportados, default `es`). Genera `state`, `code_verifier`/`code_challenge` (PKCE S256) y `nonce`,
 los persiste en cookies `httpOnly`, `secure`, `sameSite=lax` de corta duración (~10 min)
 incluyendo el `locale`, y redirige (307) a la authorization URL de Google con scopes fijos
-`openid email profile`.
+`openid email profile`. Acepta además `remember` (`0` | `1`): solo `0` desmarca "mantener la sesión";
+cualquier otro valor o su ausencia equivale a `1`. Se guarda en el estado del flujo y el callback
+usa únicamente ese valor, nunca uno recibido en su propio query.
 
 `GET /api/auth/google/callback` recibe los query params que devuelve Google (`code`, `state` y,
 en caso de cancelación o error, `error`). Valida `state` contra la cookie, intercambia el

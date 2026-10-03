@@ -56,9 +56,10 @@ async function completeAccountIntent(
   if (!existing || existing.user.id !== current.user.id) {
     return settingsRedirect(locale, "google=error&code=OAUTH_IDENTITY_MISMATCH");
   }
+  // Sin elección nueva: la sesión rotada conserva la de la que reemplaza.
   const session = await rotateCurrentSession(current.user.id);
   const response = settingsRedirect(locale, "google=confirmed");
-  setSessionCookie(response, session.token);
+  setSessionCookie(response, session.token, session.remember);
   return response;
 }
 
@@ -141,10 +142,12 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   // Iniciar sesión con Google en una cuenta desactivada la reactiva (spec account-lifecycle).
   if (user.deactivatedAt) await reactivateAccount(user.id);
 
+  // La elección sale del estado del flujo, nunca del query del callback.
+  const remember = flowState.remember !== false;
   const existing = await resolveSession();
   const session = existing
-    ? await rotateCurrentSession(user.id)
-    : await createSession(user.id);
+    ? await rotateCurrentSession(user.id, { remember })
+    : await createSession(user.id, { remember });
 
   // Un usuario sin onboarding completado (alta nueva, o preexistente sin la
   // marca) entra por /welcome; el resto, al destino habitual
@@ -156,6 +159,6 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const response = NextResponse.redirect(
     new URL(destination, process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   );
-  setSessionCookie(response, session.token);
+  setSessionCookie(response, session.token, session.remember);
   return response;
 });

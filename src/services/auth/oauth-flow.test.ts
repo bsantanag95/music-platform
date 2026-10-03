@@ -159,6 +159,27 @@ describe("intenciones del flujo", () => {
     });
   });
 
+  it("el flujo mantiene la sesión por defecto y guarda la elección explícita", () => {
+    expect(generateOAuthFlowState("es").remember).toBe(true);
+    expect(generateOAuthFlowState("es", undefined, false).remember).toBe(false);
+    expect(generateOAuthFlowState("es", { intent: "link", userId: "u1" }, false)).toMatchObject({
+      intent: "link",
+      remember: false,
+    });
+  });
+
+  it("la elección sobrevive al viaje por la cookie", async () => {
+    mocks.cookieGet.mockReturnValue({ value: JSON.stringify(generateOAuthFlowState("es", undefined, false)) });
+    expect((await consumeOAuthFlowCookies())?.remember).toBe(false);
+  });
+
+  it("una cookie anterior a la elección se consume como sesión mantenida", async () => {
+    mocks.cookieGet.mockReturnValue({
+      value: JSON.stringify({ state: "s", codeVerifier: "v", nonce: "n", locale: "es", intent: "login" }),
+    });
+    expect((await consumeOAuthFlowCookies())?.remember).toBe(true);
+  });
+
   it("una cookie anterior a las intenciones se consume como login", async () => {
     mocks.cookieGet.mockReturnValue({
       value: JSON.stringify({ state: "s", codeVerifier: "v", nonce: "n", locale: "es" }),

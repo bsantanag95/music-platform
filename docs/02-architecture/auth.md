@@ -53,9 +53,19 @@ desde JavaScript del cliente.
 En cada request que necesite sesión, el servidor recibe el token de la cookie, lo hashea, y
 busca ese hash en `session`. Si no hay fila o `expires_at` ya pasó, no hay sesión válida.
 
-La sesión utiliza expiración fija, adecuada para el uso como PWA: no se extiende en cada request.
+Hay dos tipos de sesión según `session.remember` (ADR 0026, migración `0058`). Una sesión
+**mantenida** (la casilla "Mantener la sesión iniciada en este dispositivo" del login, marcada por
+defecto; también la del registro y la de todas las sesiones anteriores) dura 30 días desde su última
+actividad: `resolveSession` extiende `expires_at` en la misma escritura acotada (como mucho una cada
+10 minutos) que registra `last_seen_at`. Una sesión **no mantenida** usa una cookie de sesión y caduca
+a las 24 horas de iniciada, sin renovarse. Como los Server Components no pueden reescribir la cookie,
+la de una sesión mantenida lleva `maxAge` de 400 días (el tope de los navegadores) y la validez la
+decide siempre `expires_at`: una cookie sin fila vigente no autentica. La renovación no modifica
+`created_at`, que sigue siendo la base de la autenticación reciente.
+
 El token se rota después de autenticarse y después de eventos sensibles, pero no en cada request
-normal. Un usuario puede tener varias sesiones activas en distintos dispositivos.
+normal; rotar sin una elección nueva (confirmar la identidad con Google) conserva la de la sesión que
+se reemplaza. Un usuario puede tener varias sesiones activas en distintos dispositivos.
 
 La revocación puede ser individual, eliminando una sesión concreta, o global, eliminando todas las
 sesiones asociadas al usuario. El cierre de sesión normal elimina la sesión actual; una acción
@@ -217,6 +227,11 @@ para redirigir el éxito a `/<locale>/search` y los errores a la página localiz
 `/<locale>/auth/error?code=...`, sin volver a confiar en un query param controlable. Google no
 incluye `locale` en su redirect al callback, de modo que persistirlo en el estado es lo que
 preserva el idioma desde el que se inició el flujo.
+
+**Elección de mantener la sesión.** `GET /api/auth/google/start` acepta `remember` (`0` desmarca; todo
+lo demás mantiene) y lo persiste en `oauth_state` junto al `locale`. El callback crea o rota la sesión
+con ese valor y nunca lee `remember` de su propio query; una cookie del flujo anterior a este campo se
+consume como sesión mantenida. El botón de Google del login refleja la casilla del formulario (ADR 0026).
 
 ### 7. Autorización de plataforma y suspensión social
 
