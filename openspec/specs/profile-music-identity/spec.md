@@ -2,7 +2,6 @@
 
 ## Purpose
 Describir la identidad musical del usuario (cómo se define, géneros, hábitos de escucha y preguntas del perfil) y mostrarla en la Placa.
-
 ## Requirements
 ### Requirement: Me defino como
 
@@ -30,16 +29,13 @@ SHALL NOT otorgar permisos, insignias ni métricas.
 
 ### Requirement: Géneros que me mueven
 
-El sistema SHALL permitir que una persona elija hasta 5 géneros de una lista cerrada de claves de
-la taxonomía de géneros: `rock`, `punk`, `post-punk`, `indie-rock`, `indie-pop`, `shoegaze`,
-`metal`, `hip-hop`, `electronic`, `ambient`, `jazz`, `soul`, `funk`, `folk`, `blues`,
-`classical`, `pop`, `latin`, `reggae`, `experimental`, `country` y `bossa-nova`. Cada clave SHALL
-existir en la taxonomía como género de estilo y su nombre SHALL mostrarse según el idioma, con las
-reglas de nombres de la taxonomía. El campo SHALL ser opcional, vaciable y sin repetidos; el
-sistema SHALL rechazar un valor fuera de la lista o un sexto género. No SHALL existir texto libre.
-Los valores guardados con las claves anteriores SHALL migrarse sin inventar datos: `soul-funk`
-pasa a `soul` y `funk`, `indie` pasa a `indie-rock` e `indie-pop`, y el resto conserva su clave;
-si el resultado supera 5 géneros, la migración SHALL abortar en lugar de recortar la elección.
+El sistema SHALL permitir que una persona elija hasta 5 géneros de la taxonomía de géneros: cualquier género de estilo visible,
+identificado por su slug. El campo SHALL ser opcional, vaciable y sin repetidos; el sistema SHALL validar el formato del slug
+y que exista como género de estilo visible, y SHALL rechazar un valor que no cumpla o un sexto género. No SHALL existir
+texto libre. El nombre de cada género SHALL mostrarse según el idioma, con las reglas de nombres de la taxonomía. Un slug
+guardado que ya no es un estilo visible (género retirado u oculto) SHALL ignorarse al mostrar, sin modificar lo guardado.
+Los valores guardados con las claves anteriores a la taxonomía migraron sin inventar datos: `soul-funk` pasa a `soul` y
+`funk`, `indie` pasa a `indie-rock` e `indie-pop`.
 
 #### Scenario: Elegir géneros
 
@@ -53,7 +49,7 @@ si el resultado supera 5 géneros, la migración SHALL abortar en lugar de recor
 
 #### Scenario: Género fuera de la lista
 
-- **WHEN** un cliente envía un género que no está en la lista
+- **WHEN** un cliente envía un slug que no es un género de estilo de la taxonomía
 - **THEN** la API responde con un error de validación
 
 #### Scenario: Clave anterior migrada
@@ -65,6 +61,16 @@ si el resultado supera 5 géneros, la migración SHALL abortar en lugar de recor
 
 - **WHEN** un cliente envía `soul-funk` después de la migración
 - **THEN** la API responde con un error de validación
+
+#### Scenario: Género fuera de las sugerencias iniciales
+
+- **WHEN** la persona guarda `cumbia-villera`, que no estaba entre los 22 géneros anteriores
+- **THEN** la API lo acepta y la ficha de la Placa lo muestra con su nombre localizado
+
+#### Scenario: Género retirado de la taxonomía
+
+- **WHEN** un género guardado pasa a oculto
+- **THEN** la ficha no lo muestra y lo guardado no cambia
 
 ### Requirement: Cómo escucho
 
