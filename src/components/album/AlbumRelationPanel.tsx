@@ -9,6 +9,7 @@ import { CollectionAlbumAction } from "@/components/collection/CollectionAlbumAc
 import { REVIEW_COMPOSER_ANCHOR, revealReviewComposer } from "@/components/album/ReviewComposer";
 import { AlbumListPicker, type PickerMembership } from "@/components/album/AlbumListPicker";
 import { RatingDetailDialog } from "@/components/album/RatingDetailDialog";
+import { GenreVotePanel } from "@/components/genres/GenreVotePanel";
 import { StarRatingInput } from "@/components/social/StarRatingInput";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { createListenEntry } from "@/lib/api/diary";
@@ -127,6 +128,7 @@ function AuthenticatedPanel({
   const [collectionOpen, setCollectionOpen] = useState(initialCollectionChoice !== undefined);
   const [memberships, setMemberships] = useState(state.ownListMemberships);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [genresOpen, setGenresOpen] = useState(false);
   const listsChanged = useRef(false);
   // Solo la última valoración enviada aplica su respuesta: las estrellas no se deshabilitan
   // mientras se guarda (perderían el foco del teclado), así que puede haber varias en vuelo.
@@ -242,6 +244,9 @@ function AuthenticatedPanel({
   const hasCollection = entries.length > 0 || wanted.length > 0;
   const formats = [...new Set(entries.map((entry) => tCollection(`format.${entry.format}`)))].join(", ");
   const detailedScore = own?.detailedScore ?? null;
+  // Quien puede votar los géneros: valoró, escuchó o coleccionó el álbum (la búsqueda no cuenta). El
+  // servidor decide; esto solo hace que el panel de géneros vuelva a pedir su acceso al cambiar.
+  const interacted = own !== null || listens.count > 0 || entries.length > 0;
 
   return (
     <aside aria-label={t("heading")} className={panelClass}>
@@ -438,6 +443,20 @@ function AuthenticatedPanel({
               onClose={closePicker}
             />
           )}
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Row label={t("genres")}>
+            <button
+              type="button"
+              className={linkButton}
+              aria-expanded={genresOpen}
+              onClick={() => setGenresOpen((open) => !open)}
+            >
+              {genresOpen ? t("close") : t("voteGenres")}
+            </button>
+          </Row>
+          {genresOpen && <GenreVotePanel releaseGroupId={releaseGroupId} interacted={interacted} />}
         </div>
       </div>
 

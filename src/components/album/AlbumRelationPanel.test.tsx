@@ -41,6 +41,10 @@ vi.mock("@/components/collection/CollectionAlbumAction", () => ({
   CollectionAlbumAction: () => <div>gestión de colección</div>,
 }));
 vi.mock("@/components/album/AlbumListPicker", () => ({ AlbumListPicker: () => <div>selector de listas</div> }));
+// El contenido del panel de votos lo cubre su propio test: aquí solo importa cuándo se monta y su `interacted`.
+vi.mock("@/components/genres/GenreVotePanel", () => ({
+  GenreVotePanel: ({ interacted }: { interacted: boolean }) => <div>votos de género (interacción: {String(interacted)})</div>,
+}));
 
 const relation = catalogEs.album.relation;
 const RG = "550e8400-e29b-41d4-a716-446655440000";
@@ -129,6 +133,43 @@ describe("AlbumRelationPanel", () => {
     expect(screen.getByText("Lo tenés · Vinilo")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: relation.manageCollection })).toBeInTheDocument();
     expect(screen.getByText("En 2 de tus listas")).toBeInTheDocument();
+  });
+
+  it("la fila Géneros despliega el panel de votos y se cierra", () => {
+    renderWithIntl(<AlbumRelationPanel releaseGroupId={RG} state={makeState()} />);
+    expect(screen.getByText(relation.genres)).toBeInTheDocument();
+    expect(screen.queryByText(/votos de género/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: relation.voteGenres }));
+    expect(screen.getByText("votos de género (interacción: false)")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: relation.close }));
+    expect(screen.queryByText(/votos de género/)).not.toBeInTheDocument();
+  });
+
+  it("valorar con el panel de géneros abierto marca la interacción sin cerrarlo", async () => {
+    mocks.saveRating.mockResolvedValue({});
+    mocks.getRatings.mockResolvedValue(ratings(3.5));
+    renderWithIntl(<AlbumRelationPanel releaseGroupId={RG} state={makeState()} />);
+    fireEvent.click(screen.getByRole("button", { name: relation.voteGenres }));
+    expect(screen.getByText("votos de género (interacción: false)")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("radio", { name: "3,5 estrellas" }));
+
+    expect(await screen.findByText("votos de género (interacción: true)")).toBeInTheDocument();
+  });
+
+  it("la interacción cuenta con escuchas o colección, pero no con la búsqueda", () => {
+    const { unmount } = renderWithIntl(
+      <AlbumRelationPanel releaseGroupId={RG} state={makeState({ wantedEntries: [{ id: "w1" } as never] })} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: relation.voteGenres }));
+    expect(screen.getByText("votos de género (interacción: false)")).toBeInTheDocument();
+    unmount();
+
+    renderWithIntl(<AlbumRelationPanel releaseGroupId={RG} state={makeState({ listens: { count: 1, lastAt: null } })} />);
+    fireEvent.click(screen.getByRole("button", { name: relation.voteGenres }));
+    expect(screen.getByText("votos de género (interacción: true)")).toBeInTheDocument();
   });
 
   it("valorar con un clic guarda las estrellas sin botón Guardar", async () => {

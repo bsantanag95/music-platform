@@ -541,7 +541,9 @@
         "saveError": "No pudimos guardar el cambio. Intentá de nuevo.",
         "done": "Listo"
       },
-      "detailScale": "{score}/100"
+      "detailScale": "{score}/100",
+      "genres": "Géneros",
+      "voteGenres": "Votar géneros"
     },
     "reviews": {
       "heading": "Reseñas",
@@ -1041,8 +1043,6 @@
     },
     "primary": "Género principal",
     "votes": {
-      "open": "Votar géneros",
-      "close": "Cerrar",
       "title": "Géneros del álbum",
       "hint": "Vota los géneros que ves en este álbum. Tu voto es privado: solo se publica el resultado.",
       "voteUp": "A favor de {genre}",

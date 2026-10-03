@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { renderWithIntl } from "@/test/i18n-test-utils";
+import { renderWithIntl, withIntl } from "@/test/i18n-test-utils";
 import { ApiError } from "@/lib/api/errors";
 import type { AlbumGenreVotesResponse } from "@/lib/api/schemas";
 import { GenreVotePanel } from "./GenreVotePanel";
@@ -44,17 +44,19 @@ const state = (over: Partial<AlbumGenreVotesResponse> = {}): AlbumGenreVotesResp
   ...over,
 });
 
-function renderPanel() {
+function renderPanel(interacted = true) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return renderWithIntl(
+  const ui = (value: boolean) => (
     <QueryClientProvider client={client}>
-      <GenreVotePanel releaseGroupId={RG} />
-    </QueryClientProvider>,
+      <GenreVotePanel releaseGroupId={RG} interacted={value} />
+    </QueryClientProvider>
   );
+  const view = renderWithIntl(ui(interacted));
+  return { ...view, rerenderInteracted: (value: boolean) => view.rerender(withIntl(ui(value))) };
 }
 
-async function open(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole("button", { name: "Votar géneros" }));
+// El panel ya llega abierto desde "Tu relación": no tiene botón propio.
+async function open() {
   return screen.findByRole("region", { name: "Géneros del álbum" });
 }
 
@@ -65,15 +67,28 @@ beforeEach(() => {
 });
 
 describe("GenreVotePanel", () => {
-  it("no consulta nada hasta abrir el panel", () => {
+  it("pide los votos al montarse y no tiene botón propio de apertura", async () => {
     renderPanel();
-    expect(mocks.getAlbumGenreVotes).not.toHaveBeenCalled();
+    await open();
+    expect(mocks.getAlbumGenreVotes).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: "Votar géneros" })).not.toBeInTheDocument();
+  });
+
+  it("al cambiar la interacción vuelve a pedir el acceso sin remontar el panel", async () => {
+    mocks.getAlbumGenreVotes.mockResolvedValueOnce(state({ canVote: false, reason: "no_interaction" }));
+    const { rerenderInteracted } = renderPanel(false);
+    expect(await screen.findByText("Valora, escucha o colecciona el álbum para votar sus géneros.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "A favor de shoegaze" })).toBeDisabled();
+
+    rerenderInteracted(true);
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "A favor de shoegaze" })).toBeEnabled());
+    expect(mocks.getAlbumGenreVotes).toHaveBeenCalledTimes(2);
   });
 
   it("muestra los géneros con su rango y el voto propio activo", async () => {
-    const user = userEvent.setup();
     renderPanel();
-    await open(user);
+    await open();
     expect(await screen.findByRole("button", { name: "A favor de dream pop" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: "En contra de dream pop" })).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByText("Principal")).toBeInTheDocument();
@@ -84,7 +99,7 @@ describe("GenreVotePanel", () => {
     const user = userEvent.setup();
     mocks.castGenreVote.mockResolvedValue(state());
     renderPanel();
-    await open(user);
+    await open();
     await user.click(await screen.findByRole("button", { name: "A favor de shoegaze" }));
     await waitFor(() => expect(mocks.castGenreVote).toHaveBeenCalledWith(RG, "shoegaze", 1));
     await waitFor(() => expect(mocks.refresh).toHaveBeenCalled());
@@ -94,7 +109,7 @@ describe("GenreVotePanel", () => {
     const user = userEvent.setup();
     mocks.removeGenreVote.mockResolvedValue(state());
     renderPanel();
-    await open(user);
+    await open();
     await user.click(await screen.findByRole("button", { name: "A favor de dream pop" }));
     await waitFor(() => expect(mocks.removeGenreVote).toHaveBeenCalledWith(RG, "dream-pop"));
     expect(mocks.castGenreVote).not.toHaveBeenCalled();
@@ -104,7 +119,7 @@ describe("GenreVotePanel", () => {
     const user = userEvent.setup();
     mocks.castGenreVote.mockResolvedValue(state());
     renderPanel();
-    await open(user);
+    await open();
     await user.click(await screen.findByRole("button", { name: "En contra de dream pop" }));
     await waitFor(() => expect(mocks.castGenreVote).toHaveBeenCalledWith(RG, "dream-pop", -1));
   });
@@ -113,14 +128,13 @@ describe("GenreVotePanel", () => {
     const user = userEvent.setup();
     mocks.castGenreVote.mockResolvedValue(state());
     renderPanel();
-    await open(user);
+    await open();
     await user.type(await screen.findByLabelText("Proponer un género"), "noise");
     await user.click(await screen.findByRole("button", { name: "Proponer noise pop" }));
     await waitFor(() => expect(mocks.castGenreVote).toHaveBeenCalledWith(RG, "noise-pop", 1));
   });
 
   it("muestra las cifras solo cuando la API las trae", async () => {
-    const user = userEvent.setup();
     mocks.getAlbumGenreVotes.mockResolvedValue(
       state({
         showCounts: true,
@@ -128,35 +142,32 @@ describe("GenreVotePanel", () => {
       }),
     );
     renderPanel();
-    await open(user);
+    await open();
     expect(await screen.findByText("5 a favor, 1 en contra")).toBeInTheDocument();
   });
 
   it("sin interacción desactiva los controles y explica cómo votar", async () => {
-    const user = userEvent.setup();
     mocks.getAlbumGenreVotes.mockResolvedValue(state({ canVote: false, reason: "no_interaction" }));
     renderPanel();
-    await open(user);
+    await open();
     expect(await screen.findByText("Valora, escucha o colecciona el álbum para votar sus géneros.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "A favor de shoegaze" })).toBeDisabled();
     expect(screen.getByLabelText("Proponer un género")).toBeDisabled();
   });
 
   it("sin sesión ofrece iniciar sesión", async () => {
-    const user = userEvent.setup();
     mocks.getAlbumGenreVotes.mockResolvedValue(state({ canVote: false, reason: "signed_out" }));
     renderPanel();
-    await open(user);
+    await open();
     expect(await screen.findByRole("link", { name: "Iniciar sesión" })).toHaveAttribute("href", "/es/auth/login");
   });
 
   it("avisa de los géneros heredados", async () => {
-    const user = userEvent.setup();
     mocks.getAlbumGenreVotes.mockResolvedValue(
       state({ genres: [{ slug: "rock", name: "rock", nameEs: null, inherited: true, score: 0, rank: "other", up: null, down: null, mine: null }] }),
     );
     renderPanel();
-    await open(user);
+    await open();
     expect(await screen.findByText(/vienen del artista/)).toBeInTheDocument();
   });
 
@@ -164,7 +175,7 @@ describe("GenreVotePanel", () => {
     const user = userEvent.setup();
     mocks.castGenreVote.mockRejectedValue(new ApiError("VALIDATION_ERROR", 400, "tope"));
     renderPanel();
-    await open(user);
+    await open();
     await user.click(await screen.findByRole("button", { name: "A favor de shoegaze" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("máximo de 8 géneros");
   });
@@ -173,7 +184,7 @@ describe("GenreVotePanel", () => {
     const user = userEvent.setup();
     mocks.castGenreVote.mockRejectedValue(new ApiError("SOCIAL_SUSPENSION_ACTIVE", 403, "x"));
     renderPanel();
-    await open(user);
+    await open();
     await user.click(await screen.findByRole("button", { name: "A favor de shoegaze" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("suspensión social");
   });
