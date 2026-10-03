@@ -43,8 +43,12 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     throw new ApiError("OAUTH_CONFIG_MISSING", 503, "Google OAuth no está configurado");
   }
 
+  // Solo `remember=0` desmarca; cualquier otro valor o su ausencia mantiene la sesión.
+  // Viaja en el estado del flujo: el callback nunca lee la elección de su propio query.
+  const remember = url.searchParams.get("remember") !== "0";
+
   const adapter = new GoogleOAuthAdapter();
-  const flowState = generateOAuthFlowState(locale, account);
+  const flowState = generateOAuthFlowState(locale, account, remember);
   await setOAuthFlowCookies(flowState);
 
   const authUrl = adapter.buildAuthUrl({

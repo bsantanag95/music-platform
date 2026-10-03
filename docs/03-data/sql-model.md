@@ -263,7 +263,12 @@ Google y preparada para futuros proveedores OAuth/OIDC.
 **Seguridad:** almacena únicamente el hash del token opaco enviado en la cookie; el token real
 nunca se persiste ni se devuelve en JSON. Las sesiones expiradas no son válidas.
 
-**Política:** la expiración es fija y no se prolonga con cada request. El token se rota después
+**Política:** hay dos tipos de sesión según `remember` (migración `0058`, ADR 0026). Una sesión
+**mantenida** (`remember = true`, el valor por defecto y el de todas las anteriores) dura 30 días desde su
+última actividad: la aplicación extiende `expires_at` en la misma escritura acotada (como mucho una cada
+10 minutos) que actualiza `last_seen_at`. Una **no mantenida** (`remember = false`) caduca a las 24 horas
+de iniciada y no se renueva. `created_at` nunca cambia, así que la autenticación reciente no se ve
+afectada. El token se rota después
 de autenticarse y ante eventos sensibles, pero no en cada request normal. Un usuario puede tener
 varias sesiones activas. La revocación elimina la fila de sesión, individualmente o para todas las
 sesiones del usuario. No se añade `revoked_at`: la ausencia de la fila invalida el token
@@ -282,8 +287,8 @@ no debe bloquear la respuesta principal.
 persistir el token real. `idx_session_user` permite revocar las sesiones de un usuario y
 `idx_session_expires_at` permite localizar sesiones vencidas para el job de limpieza. La FK a
 `app_user` usa `ON DELETE CASCADE`. La restricción `expires_at > created_at` impide sesiones ya
-vencidas al momento de crearse; la expiración sigue siendo fija porque la aplicación no modifica
-`expires_at` durante requests normales.
+vencidas al momento de crearse; la renovación de una sesión mantenida solo adelanta `expires_at`, así que
+la restricción se sigue cumpliendo.
 
 ## `password_reset_token`
 

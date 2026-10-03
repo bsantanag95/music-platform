@@ -1,18 +1,22 @@
 // Alta o ingreso con Google más el separador "o" hacia el formulario local.
 // Es un enlace (la ruta redirige al proveedor), no un botón de formulario.
+// `remember` (solo el login lo pasa) refleja la casilla de mantener la sesión:
+// desmarcada, el inicio del flujo recibe `remember=0`.
 export function SocialSignIn({
   locale,
   label,
   separator,
+  remember = true,
 }: {
   locale: string;
   label: string;
   separator: string;
+  remember?: boolean;
 }) {
   return (
     <>
       <a
-        href={`/api/auth/google/start?locale=${locale}`}
+        href={`/api/auth/google/start?locale=${locale}${remember ? "" : "&remember=0"}`}
         className="flex h-11 w-full items-center justify-center gap-3 rounded-md border border-ink-border bg-ink-surface px-4 font-display text-sm font-medium text-paper transition-colors duration-150 hover:border-amber"
       >
         <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">

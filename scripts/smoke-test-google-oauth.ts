@@ -1,6 +1,6 @@
 export {};
 
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { createRequire } from "node:module";
 import { SignJWT, exportJWK } from "jose";
 import { and, eq, inArray } from "drizzle-orm";
@@ -162,8 +162,8 @@ async function loadOAuthRoutes() {
 
 type NextRequestCtor = typeof import("next/server").NextRequest;
 
-function makeStartRequest(NextRequest: NextRequestCtor, ip: string, locale?: string): NextRequestT {
-  const query = locale ? `?locale=${locale}` : "";
+function makeStartRequest(NextRequest: NextRequestCtor, ip: string, locale?: string, extraQuery = ""): NextRequestT {
+  const query = `${locale ? `?locale=${locale}` : "?"}${extraQuery}`;
   return new NextRequest(`http://localhost:3000/api/auth/google/start${query}`, {
     headers: { "x-forwarded-for": ip },
   }) as NextRequestT;
@@ -226,7 +226,7 @@ async function main() {
     });
     res = await callbackGet(makeCallbackRequest(NextRequest, ipA, "auth-code-a", flowA.state));
     const locationA = res.headers.get("location") ?? "";
-    if (res.status !== 307 || !locationA.endsWith("/en/search")) {
+    if (res.status !== 307 || !locationA.endsWith("/en/welcome")) {
       throw new Error(`callback (alta nueva): status ${res.status}, location ${locationA}`);
     }
 
@@ -242,7 +242,7 @@ async function main() {
     if ((await countIdentity("google", subNew)) !== 1) throw new Error("Alta nueva: sin auth_identity");
     const [createdSession] = await db.select().from(session).where(eq(session.userId, createdUser.id));
     if (!createdSession) throw new Error("Alta nueva: sin session");
-    console.log("OK 1/4 alta nueva -> /en/search, app_user+auth_identity+session creados");
+    console.log("OK 1/6 alta nueva -> /en/welcome, app_user+auth_identity+session creados");
 
     // --- 2) Identidad existente: mismo sub vuelve a autenticar ------------------
     const ipB = `10.10.${runId.slice(0, 2)}.2`;
@@ -256,12 +256,12 @@ async function main() {
     });
     res = await callbackGet(makeCallbackRequest(NextRequest, ipB, "auth-code-b", flowB.state));
     const locationB = res.headers.get("location") ?? "";
-    if (res.status !== 307 || !locationB.endsWith("/es/search")) {
+    if (res.status !== 307 || !locationB.endsWith("/es/welcome")) {
       throw new Error(`callback (identidad existente): status ${res.status}, location ${locationB}`);
     }
     if ((await countUsersByEmail(emailNew)) !== 1) throw new Error("Identidad existente: usuario duplicado");
     if ((await countIdentity("google", subNew)) !== 1) throw new Error("Identidad existente: identidad duplicada");
-    console.log("OK 2/4 identidad existente -> /es/search, sin duplicados");
+    console.log("OK 2/6 identidad existente (sin onboarding) -> /es/welcome, sin duplicados");
 
     // --- 3) Email colisionado con cuenta local ------------------------------------
     const emailCollision = `smoke-oauth-collision-${runId}@example.test`;
@@ -296,7 +296,7 @@ async function main() {
     if ((await countIdentity("google", `smoke-sub-collision-${runId}`)) !== 0) {
       throw new Error("Email colisionado: se creó identidad no deseada");
     }
-    console.log("OK 3/4 email colisionado -> EMAIL_TAKEN_BY_LOCAL, sin crear nada");
+    console.log("OK 3/6 email colisionado -> EMAIL_TAKEN_BY_LOCAL, sin crear nada");
 
     // --- 4) Email no verificado -> OAUTH_EMAIL_NOT_VERIFIED -------------------------
     const emailUnverified = `smoke-oauth-unver-${runId}@example.test`;
@@ -317,7 +317,82 @@ async function main() {
     if ((await countUsersByEmail(emailUnverified)) !== 0) {
       throw new Error("Email no verificado: se creó usuario no deseado");
     }
-    console.log("OK 4/4 email no verificado -> OAUTH_EMAIL_NOT_VERIFIED, sin crear nada");
+    console.log("OK 4/6 email no verificado -> OAUTH_EMAIL_NOT_VERIFIED, sin crear nada");
+
+    // --- 5) Mantener la sesión (change add-keep-signed-in) -------------------------
+    // La cookie de sesión sale en el Set-Cookie de la respuesta (no pasa por el jar).
+    const sessionCookie = (response: Response): { token: string; maxAge: string | null } => {
+      const header = response.headers.getSetCookie().find((cookie) => cookie.startsWith("music_session="));
+      if (!header) throw new Error("La respuesta no estableció la cookie music_session");
+      return {
+        token: header.split(";")[0]!.slice("music_session=".length),
+        maxAge: header.match(/max-age=(\d+)/i)?.[1] ?? null,
+      };
+    };
+    const hashOf = (token: string) => createHash("sha256").update(token).digest("hex");
+    const rowFor = async (token: string) =>
+      (await db.select().from(session).where(eq(session.tokenHash, hashOf(token))))[0];
+    const loginWith = async (ip: string, extraQuery: string) => {
+      cookieJar.delete("music_session");
+      await startGet(makeStartRequest(NextRequest, ip, "es", extraQuery));
+      const flow = readFlowState() as ReturnType<typeof readFlowState> & { remember?: boolean };
+      currentIdToken = await signIdToken(privateKey, {
+        sub: subNew,
+        email: emailNew,
+        emailVerified: true,
+        nonce: flow.nonce,
+      });
+      const response = await callbackGet(makeCallbackRequest(NextRequest, ip, "auth-code-r", flow.state));
+      return { response, flow };
+    };
+
+    const ipE = `10.10.${runId.slice(0, 2)}.5`;
+    const kept = await loginWith(ipE, "");
+    const keptCookie = sessionCookie(kept.response);
+    const keptRow = await rowFor(keptCookie.token);
+    if (kept.flow.remember !== true) throw new Error("Sin remember el estado del flujo no mantiene la sesión");
+    if (keptCookie.maxAge !== String(400 * 24 * 60 * 60)) {
+      throw new Error(`Sesión mantenida: Max-Age inesperado ${keptCookie.maxAge}`);
+    }
+    if (keptRow?.remember !== true) throw new Error("Sesión mantenida: remember debía ser true");
+
+    const ipF = `10.10.${runId.slice(0, 2)}.6`;
+    const ephemeral = await loginWith(ipF, "&remember=0");
+    const ephemeralCookie = sessionCookie(ephemeral.response);
+    const ephemeralRow = await rowFor(ephemeralCookie.token);
+    if (ephemeral.flow.remember !== false) throw new Error("remember=0 no quedó en el estado del flujo");
+    if (ephemeralCookie.maxAge !== null) {
+      throw new Error(`Sesión no mantenida: la cookie debía ser de sesión, trae Max-Age=${ephemeralCookie.maxAge}`);
+    }
+    if (ephemeralRow?.remember !== false) throw new Error("Sesión no mantenida: remember debía ser false");
+    const hours = ((ephemeralRow?.expiresAt.getTime() ?? 0) - Date.now()) / 3_600_000;
+    if (hours < 23 || hours > 25) throw new Error(`Sesión no mantenida: caducidad de ${hours.toFixed(1)} h`);
+    console.log("OK 5/6 login con y sin remember -> cookie larga + 30 días / cookie de sesión + 24 h");
+
+    // --- 6) Confirmar la identidad (reauth) conserva la elección -------------------
+    const ipG = `10.10.${runId.slice(0, 2)}.7`;
+    cookieJar.set("music_session", ephemeralCookie.token);
+    await startGet(makeStartRequest(NextRequest, ipG, "es", "&intent=reauth"));
+    const reauthFlow = readFlowState();
+    currentIdToken = await signIdToken(privateKey, {
+      sub: subNew,
+      email: emailNew,
+      emailVerified: true,
+      nonce: reauthFlow.nonce,
+    });
+    const reauth = await callbackGet(makeCallbackRequest(NextRequest, ipG, "auth-code-g", reauthFlow.state));
+    if (!(reauth.headers.get("location") ?? "").includes("google=confirmed")) {
+      throw new Error(`reauth: location ${reauth.headers.get("location")}`);
+    }
+    const rotatedCookie = sessionCookie(reauth);
+    const rotatedRow = await rowFor(rotatedCookie.token);
+    if (rotatedCookie.token === ephemeralCookie.token) throw new Error("reauth: la sesión no se rotó");
+    if (rotatedRow?.remember !== false || rotatedCookie.maxAge !== null) {
+      throw new Error("reauth: la sesión rotada debía seguir siendo no mantenida (cookie de sesión)");
+    }
+    if (await rowFor(ephemeralCookie.token)) throw new Error("reauth: la sesión reemplazada sigue existiendo");
+    cookieJar.delete("music_session");
+    console.log("OK 6/6 reauth desde una sesión no mantenida -> rotada, sigue sin mantenerse");
 
     console.log("Smoke Google OAuth OK: flujo completo contra BD real.");
   } finally {

@@ -21,13 +21,14 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   try {
     const user = await registerUser(body.data);
     if (!user) throw new Error("No se pudo crear el usuario");
-    const session = await createSession(user.id);
+    // El alta no ofrece la casilla: la sesión es mantenida, como siempre.
+    const session = await createSession(user.id, { remember: true });
     // La verificación es best-effort: nunca bloquea ni hace fallar el alta.
     void requestEmailVerification(user.id, resolveLocale(body.data.locale)).catch((error) => {
       console.error("No se pudo enviar la verificación de email tras el registro:", error);
     });
     const response = NextResponse.json({ user: publicUser(user) }, { status: 201 });
-    setSessionCookie(response, session.token);
+    setSessionCookie(response, session.token, session.remember);
     return response;
   } catch (error) {
     if (error instanceof Error && error.message === "USERNAME_TAKEN") {

@@ -63,6 +63,12 @@ de cuál de las filas con el mismo título haya en la BD.
 >   `DELETE FROM app_user WHERE username LIKE 'smoke-reset-%';`. Mockea el
 >   transporte de email capturando el token del adaptador `console`; no envía
 >   correo real.
+> - `smoke-test-keep-signed-in.ts` crea un usuario `smoke_keep_*` y lo borra al terminar (el `ON DELETE
+>   CASCADE` limpia sus sesiones). Si se interrumpió, limpiar con
+>   `DELETE FROM app_user WHERE username LIKE 'smoke_keep_%';`. Necesita la migración `0058` aplicada.
+>   Verifica la duración y la renovación por uso de las sesiones mantenidas, que las no mantenidas no se
+>   renuevan y caducan, la rotación que conserva la elección y que una sesión anterior a la columna
+>   queda como mantenida. `smoke-test-google-oauth.ts` además cubre `remember=0` y la reautenticación.
 > - `smoke-test-account-settings.ts` crea usuarios `smoke_acct_*` y los borra al terminar (el `ON
 >   DELETE CASCADE` limpia alias, tokens y sesiones). Si se interrumpió, limpiar con
 >   `DELETE FROM user_role_action WHERE actor_id IN (SELECT id FROM app_user WHERE username LIKE

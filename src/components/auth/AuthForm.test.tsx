@@ -124,6 +124,59 @@ describe("AuthForm", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
+  describe("mantener la sesión iniciada", () => {
+    const loginBody = () => JSON.parse(mocks.apiFetch.mock.calls.at(-1)?.[2].body as string) as Record<string, unknown>;
+
+    it("el login ofrece la casilla marcada por defecto, asociada a su etiqueta", () => {
+      renderWithIntl(<AuthForm mode="login" />);
+      expect(screen.getByLabelText("Mantener la sesión iniciada en este dispositivo")).toBeChecked();
+    });
+
+    it("el registro no ofrece la casilla", () => {
+      renderWithIntl(<AuthForm mode="register" />);
+      expect(screen.queryByLabelText("Mantener la sesión iniciada en este dispositivo")).not.toBeInTheDocument();
+    });
+
+    it("con la casilla marcada el login envía remember: true", async () => {
+      const user = userEvent.setup();
+      mocks.apiFetch.mockResolvedValueOnce({ user: { id: "u1", username: "ana", email: "a@b.c", displayName: null } });
+      await submitLogin(user);
+      expect(loginBody()).toMatchObject({ identifier: "ana", remember: true });
+    });
+
+    it("con la casilla desmarcada el login envía remember: false", async () => {
+      const user = userEvent.setup();
+      mocks.apiFetch.mockResolvedValueOnce({ user: { id: "u1", username: "ana", email: "a@b.c", displayName: null } });
+      renderWithIntl(<AuthForm mode="login" />);
+      await user.type(screen.getByLabelText("Email o nombre de usuario"), "ana");
+      await user.type(screen.getByLabelText("Contraseña"), "unaClaveLarga1");
+      await user.click(screen.getByLabelText("Mantener la sesión iniciada en este dispositivo"));
+      await user.click(screen.getByRole("button", { name: "Iniciar sesión" }));
+      expect(loginBody()).toMatchObject({ remember: false });
+    });
+
+    it("el registro no envía remember", async () => {
+      const user = userEvent.setup();
+      mocks.apiFetch.mockResolvedValueOnce({ user: { id: "u1", username: "ana", email: "a@b.c", displayName: null } });
+      renderWithIntl(<AuthForm mode="register" />);
+      await user.type(screen.getByLabelText("Nombre de usuario"), "ana");
+      await user.type(screen.getByLabelText("Email"), "ana@example.com");
+      await user.type(screen.getByLabelText("Contraseña"), "unaClaveLarga1");
+      await user.click(screen.getByRole("button", { name: "Crear cuenta" }));
+      expect(loginBody()).not.toHaveProperty("remember");
+    });
+
+    it("controlada desde fuera avisa del cambio y refleja el valor recibido", async () => {
+      const user = userEvent.setup();
+      const onRememberChange = vi.fn();
+      renderWithIntl(<AuthForm mode="login" remember={false} onRememberChange={onRememberChange} />);
+      const checkbox = screen.getByLabelText("Mantener la sesión iniciada en este dispositivo");
+      expect(checkbox).not.toBeChecked();
+      await user.click(checkbox);
+      expect(onRememberChange).toHaveBeenCalledWith(true);
+    });
+  });
+
   it("mostrar la contraseña alterna con un clic y es operable con teclado", async () => {
     const user = userEvent.setup();
     renderWithIntl(<AuthForm mode="login" />);

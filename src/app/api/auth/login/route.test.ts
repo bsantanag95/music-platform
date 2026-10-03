@@ -81,11 +81,46 @@ describe("POST /api/auth/login", () => {
 
   it("rota la sesión tras un login válido", async () => {
     authenticateUser.mockResolvedValue({ id: "00000000-0000-0000-0000-000000000001", username: "ana", email: "ana@example.com", displayName: null });
-    rotateCurrentSession.mockResolvedValue({ token: "opaque", expiresAt: new Date() });
+    rotateCurrentSession.mockResolvedValue({ token: "opaque", expiresAt: new Date(), remember: true });
     const response = await POST(request({ identifier: "ana@example.com", password: "correcta" }));
     expect(response.status).toBe(200);
-    expect(rotateCurrentSession).toHaveBeenCalledWith("00000000-0000-0000-0000-000000000001");
-    expect(setSessionCookie).toHaveBeenCalledWith(response, "opaque");
+    expect(rotateCurrentSession).toHaveBeenCalledWith("00000000-0000-0000-0000-000000000001", { remember: true });
+    expect(setSessionCookie).toHaveBeenCalledWith(response, "opaque", true);
+  });
+
+  describe("mantener la sesión", () => {
+    const user = { id: "00000000-0000-0000-0000-000000000001", username: "ana", email: "ana@example.com", displayName: null };
+
+    it("con remember: true crea una sesión mantenida", async () => {
+      authenticateUser.mockResolvedValue(user);
+      rotateCurrentSession.mockResolvedValue({ token: "opaque", expiresAt: new Date(), remember: true });
+      const response = await POST(request({ identifier: "ana", password: "correcta", remember: true }));
+      expect(rotateCurrentSession).toHaveBeenCalledWith(user.id, { remember: true });
+      expect(setSessionCookie).toHaveBeenCalledWith(response, "opaque", true);
+    });
+
+    it("con remember: false crea una sesión no mantenida y su cookie es de sesión", async () => {
+      authenticateUser.mockResolvedValue(user);
+      rotateCurrentSession.mockResolvedValue({ token: "opaque", expiresAt: new Date(), remember: false });
+      const response = await POST(request({ identifier: "ana", password: "correcta", remember: false }));
+      expect(rotateCurrentSession).toHaveBeenCalledWith(user.id, { remember: false });
+      expect(setSessionCookie).toHaveBeenCalledWith(response, "opaque", false);
+    });
+
+    it("un cliente que no envía el campo obtiene una sesión mantenida", async () => {
+      authenticateUser.mockResolvedValue(user);
+      rotateCurrentSession.mockResolvedValue({ token: "opaque", expiresAt: new Date(), remember: true });
+      await POST(request({ identifier: "ana", password: "correcta" }));
+      expect(rotateCurrentSession).toHaveBeenCalledWith(user.id, { remember: true });
+    });
+
+    it("un valor no booleano responde VALIDATION_ERROR sin evaluar credenciales", async () => {
+      const response = await POST(request({ identifier: "ana", password: "correcta", remember: "si" }));
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({ code: "VALIDATION_ERROR" });
+      expect(authenticateUser).not.toHaveBeenCalled();
+      expect(rotateCurrentSession).not.toHaveBeenCalled();
+    });
   });
 
   it("rechaza cuando se supera el rate limit", async () => {

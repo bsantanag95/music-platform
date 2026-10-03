@@ -26,6 +26,7 @@ const mocks = vi.hoisted(() => {
     createSession: vi.fn(),
     rotateCurrentSession: vi.fn(),
     resolveSession: vi.fn(),
+    setSessionCookie: vi.fn(),
     consumeAuthAttempt: vi.fn(() => true),
     getAuthClientIp: vi.fn(() => "127.0.0.1"),
     buildAuthUrl,
@@ -58,7 +59,7 @@ vi.mock("@/services/auth/sessions", () => ({
   createSession: mocks.createSession,
   rotateCurrentSession: mocks.rotateCurrentSession,
   resolveSession: mocks.resolveSession,
-  setSessionCookie: vi.fn(),
+  setSessionCookie: mocks.setSessionCookie,
 }));
 vi.mock("@/services/auth/rate-limit", () => ({
   consumeAuthAttempt: mocks.consumeAuthAttempt,
@@ -78,8 +79,9 @@ function mockConfig(): void {
   });
 }
 
-function startRequest(locale = "es", intent?: string): NextRequest {
-  const query = intent ? `?locale=${locale}&intent=${intent}` : `?locale=${locale}`;
+function startRequest(locale = "es", intent?: string, remember?: string): NextRequest {
+  let query = intent ? `?locale=${locale}&intent=${intent}` : `?locale=${locale}`;
+  if (remember !== undefined) query += `&remember=${remember}`;
   return new NextRequest(`http://localhost:3000/api/auth/google/start${query}`);
 }
 
@@ -117,7 +119,19 @@ describe("GET /api/auth/google/start", () => {
   it("persiste el locale del query en el estado del flujo", async () => {
     await startGet(startRequest("en"));
 
-    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("en", undefined);
+    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("en", undefined, true);
+  });
+
+  it("remember=0 guarda en el estado del flujo que la sesión no se mantiene", async () => {
+    await startGet(startRequest("es", undefined, "0"));
+    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", undefined, false);
+  });
+
+  it("remember=1, sin remember o con un valor raro mantienen la sesión", async () => {
+    await startGet(startRequest("es", undefined, "1"));
+    await startGet(startRequest("es"));
+    await startGet(startRequest("es", undefined, "quizas"));
+    expect(mocks.generateOAuthFlowState.mock.calls.map((call) => call[2])).toEqual([true, true, true]);
   });
 
   it("para vincular guarda la intención y la sesión que inició el flujo", async () => {
@@ -126,13 +140,13 @@ describe("GET /api/auth/google/start", () => {
     const response = await startGet(startRequest("es", "link"));
 
     expect(response.status).toBe(307);
-    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", { intent: "link", userId: "u1" });
+    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", { intent: "link", userId: "u1" }, true);
   });
 
   it("para confirmar la identidad guarda la intención reauth", async () => {
     mocks.resolveSession.mockResolvedValue({ user: { id: "u1" } });
     await startGet(startRequest("es", "reauth"));
-    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", { intent: "reauth", userId: "u1" });
+    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", { intent: "reauth", userId: "u1" }, true);
   });
 
   it("vincular sin sesión se rechaza sin redirigir a Google", async () => {
@@ -152,7 +166,7 @@ describe("GET /api/auth/google/start", () => {
     const response = await startGet(startRequest("es", "admin"));
 
     expect(response.status).toBe(307);
-    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", undefined);
+    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", undefined, true);
   });
 
   it("falla si la configuración de Google está ausente", async () => {
@@ -306,7 +320,7 @@ describe("GET /api/auth/google/callback", () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toContain("/en/welcome");
-    expect(mocks.createSession).toHaveBeenCalledWith("new-user");
+    expect(mocks.createSession).toHaveBeenCalledWith("new-user", { remember: true });
   });
 
   it("un usuario YA onboardeado no pasa por /welcome", async () => {
@@ -347,7 +361,58 @@ describe("GET /api/auth/google/callback", () => {
     const response = await callbackGet(request);
 
     expect(response.status).toBe(307);
-    expect(mocks.rotateCurrentSession).toHaveBeenCalledWith("new-user");
+    expect(mocks.rotateCurrentSession).toHaveBeenCalledWith("new-user", { remember: true });
+  });
+
+  describe("elección de mantener la sesión", () => {
+    function loginFlow(remember?: boolean) {
+      mocks.consumeOAuthFlowCookies.mockResolvedValue({
+        state: "valid-state",
+        codeVerifier: "verifier",
+        nonce: "nonce",
+        locale: "es",
+        intent: "login",
+        ...(remember === undefined ? {} : { remember }),
+      });
+      mocks.exchangeCode.mockResolvedValue({ idToken: "t", accessToken: "a", tokenType: "Bearer", expiresIn: 3600 });
+      mocks.validateIdToken.mockResolvedValue({ sub: "s", nonce: "nonce" });
+      mocks.toIdentity.mockReturnValue({ provider: "google", providerAccountId: "s", email: "a@b.com", emailVerified: true });
+      mocks.resolveOrCreateOAuthUser.mockResolvedValue({ id: "u1", locale: null, onboardedAt: new Date("2026-01-01") });
+    }
+    const callback = (extraQuery = "") =>
+      callbackGet(new NextRequest(`http://localhost:3000/api/auth/google/callback?code=c&state=valid-state${extraQuery}`));
+
+    it("un flujo con remember=false crea una sesión no mantenida y su cookie es de sesión", async () => {
+      loginFlow(false);
+      mocks.createSession.mockResolvedValue({ token: "t", expiresAt: new Date(), remember: false });
+      const response = await callback();
+      expect(mocks.createSession).toHaveBeenCalledWith("u1", { remember: false });
+      expect(mocks.setSessionCookie).toHaveBeenCalledWith(response, "t", false);
+    });
+
+    it("un flujo sin elección guardada crea una sesión mantenida", async () => {
+      loginFlow();
+      mocks.createSession.mockResolvedValue({ token: "t", expiresAt: new Date(), remember: true });
+      const response = await callback();
+      expect(mocks.createSession).toHaveBeenCalledWith("u1", { remember: true });
+      expect(mocks.setSessionCookie).toHaveBeenCalledWith(response, "t", true);
+    });
+
+    it("un remember en el query del callback no pisa la elección guardada en el estado", async () => {
+      loginFlow(false);
+      mocks.createSession.mockResolvedValue({ token: "t", expiresAt: new Date(), remember: false });
+      await callback("&remember=1");
+      expect(mocks.createSession).toHaveBeenCalledWith("u1", { remember: false });
+    });
+
+    it("con una sesión previa la rota con la misma elección", async () => {
+      loginFlow(false);
+      mocks.resolveSession.mockResolvedValue({ user: { id: "u1" } });
+      mocks.rotateCurrentSession.mockResolvedValue({ token: "r", expiresAt: new Date(), remember: false });
+      const response = await callback();
+      expect(mocks.rotateCurrentSession).toHaveBeenCalledWith("u1", { remember: false });
+      expect(mocks.setSessionCookie).toHaveBeenCalledWith(response, "r", false);
+    });
   });
 });
 
@@ -431,12 +496,24 @@ describe("GET /api/auth/google/callback con intención de cuenta", () => {
   it("reauth con la cuenta vinculada rota la sesión y vuelve a Ajustes", async () => {
     flow("reauth");
     mocks.findIdentityByProvider.mockResolvedValue({ user: { id: "u1" } });
-    mocks.rotateCurrentSession.mockResolvedValue({ token: "rotated", expiresAt: new Date() });
+    mocks.rotateCurrentSession.mockResolvedValue({ token: "rotated", expiresAt: new Date(), remember: true });
 
     const response = await callbackGet(new NextRequest(callbackUrl));
 
     expect(response.headers.get("location")).toContain("/en/me/settings/account?google=confirmed");
     expect(mocks.rotateCurrentSession).toHaveBeenCalledWith("u1");
+    expect(mocks.setSessionCookie).toHaveBeenCalledWith(response, "rotated", true);
+  });
+
+  it("reauth desde una sesión no mantenida conserva su elección: sin elección nueva y cookie de sesión", async () => {
+    flow("reauth");
+    mocks.findIdentityByProvider.mockResolvedValue({ user: { id: "u1" } });
+    mocks.rotateCurrentSession.mockResolvedValue({ token: "rotated", expiresAt: new Date(), remember: false });
+
+    const response = await callbackGet(new NextRequest(callbackUrl));
+
+    expect(mocks.rotateCurrentSession).toHaveBeenCalledWith("u1");
+    expect(mocks.setSessionCookie).toHaveBeenCalledWith(response, "rotated", false);
   });
 
   it("reauth con una cuenta de Google distinta responde OAUTH_IDENTITY_MISMATCH sin rotar", async () => {
@@ -513,7 +590,7 @@ describe("GET /api/auth/google/callback: cuenta desactivada", () => {
     const response = await callback();
     expect(response.status).toBe(307);
     expect(mocks.reactivateAccount).toHaveBeenCalledWith("u1");
-    expect(mocks.createSession).toHaveBeenCalledWith("u1");
+    expect(mocks.createSession).toHaveBeenCalledWith("u1", { remember: true });
   });
 
   it("una cuenta activa no se toca", async () => {
