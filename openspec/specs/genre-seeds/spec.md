@@ -2,7 +2,6 @@
 
 ## Purpose
 Géneros semilla de artistas y álbumes desde Wikidata (P136), géneros efectivos con herencia desde el artista, y su separación de los votos de la comunidad.
-
 ## Requirements
 ### Requirement: Géneros semilla del artista desde Wikidata
 
@@ -63,12 +62,15 @@ semillas. Un fallo de un lote SHALL conservar las semillas de esos álbumes.
 
 ### Requirement: Géneros efectivos con herencia
 
-Los géneros efectivos de un álbum SHALL ser sus semillas propias si tiene alguna; si no, SHALL
-ser los 3 primeros géneros de estilo (en el orden de Wikidata) de su artista principal (el
-primer crédito principal), marcados como heredados. Un álbum SHALL NOT heredar los géneros del
-artista más allá de esos 3 ni sus descriptores. Los géneros ocultos SHALL NOT formar parte de
-los géneros efectivos. Todas las lecturas de géneros de álbum (Explorar, Caminos, huella de
-gusto) SHALL usar esta misma definición.
+El puntaje de un género en un álbum SHALL ser 1 si es una semilla propia del álbum (Wikidata) más
+la suma de los votos de la comunidad sobre ese álbum (+1 / −1) de cuentas no desactivadas. Los
+géneros efectivos de un álbum SHALL ser los de estilo con puntaje mayor que 0, ordenados por
+puntaje descendente (desempate: posición de la semilla y luego nombre); el primero es el principal.
+Si ningún género tiene puntaje mayor que 0, los géneros efectivos SHALL ser los 3 primeros
+géneros de estilo (en el orden de Wikidata) de su artista principal (el primer crédito principal),
+marcados como heredados. Un álbum SHALL NOT heredar los géneros del artista más allá de esos 3 ni
+sus descriptores. Los géneros ocultos SHALL NOT formar parte de los géneros efectivos. Todas las
+lecturas de géneros de álbum (Explorar, Caminos, huella de gusto) SHALL usar esta misma definición.
 
 #### Scenario: Álbum con semillas propias
 
@@ -77,7 +79,8 @@ gusto) SHALL usar esta misma definición.
 
 #### Scenario: Álbum que hereda
 
-- **WHEN** un álbum no tiene semillas propias y su artista principal tiene "progressive metal"
+- **WHEN** un álbum no tiene semillas propias ni votos positivos y su artista principal tiene
+  "progressive metal"
 - **THEN** el género efectivo del álbum es "progressive metal", marcado como heredado
 
 #### Scenario: Herencia acotada
@@ -90,6 +93,26 @@ gusto) SHALL usar esta misma definición.
 
 - **WHEN** ni el álbum ni su artista principal tienen semillas
 - **THEN** el álbum no tiene géneros efectivos
+
+#### Scenario: La comunidad corrige una semilla
+
+- **WHEN** un álbum tiene la semilla "post-punk" y una persona la vota −1
+- **THEN** su puntaje es 0 y deja de ser un género efectivo del álbum
+
+#### Scenario: Una persona devuelve la semilla
+
+- **WHEN** además otra persona vota +1 "post-punk"
+- **THEN** su puntaje es 1 y vuelve a ser un género efectivo del álbum
+
+#### Scenario: Propuesta que reemplaza la herencia
+
+- **WHEN** un álbum sin semillas propias recibe un voto +1 para "dream pop"
+- **THEN** su género efectivo es solo "dream pop", sin marca de heredado, y deja de heredar del artista
+
+#### Scenario: Principal por puntaje
+
+- **WHEN** "shoegaze" tiene puntaje 4 y "dream pop" 2
+- **THEN** "shoegaze" es el género principal y "dream pop" va después
 
 ### Requirement: Semillas separadas de los votos
 
@@ -112,3 +135,4 @@ de discografía para guardar su entidad de Wikidata.
 
 - **WHEN** se ejecuta el backfill en modo simulación
 - **THEN** informa cuántos artistas y álbumes sembraría y no escribe en la base
+
