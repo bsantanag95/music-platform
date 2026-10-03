@@ -11,6 +11,10 @@ const AnonymousHome = () => null;
 vi.mock("@/components/home/AuthenticatedHome", () => ({ AuthenticatedHome }));
 vi.mock("@/components/home/AnonymousHome", () => ({ AnonymousHome }));
 vi.mock("@/services/auth/authorization", () => ({ getCurrentUser: vi.fn() }));
+// El módulo real importa `@/db`, que exige DATABASE_URL (ausente en CI).
+vi.mock("@/services/auth/email-verification", () => ({
+  isEmailVerified: (user: { emailVerifiedAt: Date | null }) => user.emailVerifiedAt !== null,
+}));
 
 beforeAll(async () => {
   pageModule = (await vi.importActual("./page")) as PageModule;
