@@ -1,6 +1,7 @@
 import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { artistGenreSeed, genre, releaseGroupEffectiveGenre } from "@/db/schema";
+import { rankGenres, type GenreRank } from "./rank";
 import { albumDescriptors, type DescriptorKey } from "./read";
 
 // Géneros para mostrar en las cabeceras de artista, álbum y canción (openspec: show-genres,
@@ -13,6 +14,8 @@ export interface DisplayGenre {
   nameEs: string | null;
   /** Tomado del artista (álbum sin semillas propias) o, en una canción, del álbum. */
   inherited: boolean;
+  /** Solo en álbumes con géneros propios: principal, secundario u otro por puntaje (add-genre-votes). */
+  rank?: GenreRank;
 }
 
 export interface EntityGenres {
@@ -41,7 +44,7 @@ export async function getArtistGenres(artistId: string): Promise<EntityGenres> {
 export async function getAlbumGenres(releaseGroupId: string): Promise<EntityGenres> {
   const [rows, descriptors] = await Promise.all([
     db
-      .select({ ...genreColumns, inherited: releaseGroupEffectiveGenre.inherited })
+      .select({ ...genreColumns, inherited: releaseGroupEffectiveGenre.inherited, score: releaseGroupEffectiveGenre.score })
       .from(releaseGroupEffectiveGenre)
       .innerJoin(genre, eq(genre.id, releaseGroupEffectiveGenre.genreId))
       .where(and(eq(releaseGroupEffectiveGenre.releaseGroupId, releaseGroupId), eq(genre.kind, "style")))
@@ -49,7 +52,15 @@ export async function getAlbumGenres(releaseGroupId: string): Promise<EntityGenr
       .limit(DISPLAY_GENRES_LIMIT),
     albumDescriptors([releaseGroupId]),
   ]);
-  return { genres: rows, descriptors: descriptors.get(releaseGroupId) ?? [] };
+  // El puntaje no sale de aquí (lo expone el panel de votos); los heredados no llevan rango.
+  const genres = rankGenres(rows).map((g) => ({
+    slug: g.slug,
+    name: g.name,
+    nameEs: g.nameEs,
+    inherited: g.inherited,
+    ...(g.inherited ? {} : { rank: g.rank }),
+  }));
+  return { genres, descriptors: descriptors.get(releaseGroupId) ?? [] };
 }
 
 /**
@@ -60,5 +71,5 @@ export async function getAlbumGenres(releaseGroupId: string): Promise<EntityGenr
 export async function getSongGenres(principalReleaseGroupId: string | null): Promise<EntityGenres> {
   if (!principalReleaseGroupId) return { genres: [], descriptors: [] };
   const album = await getAlbumGenres(principalReleaseGroupId);
-  return { genres: album.genres.map((g) => ({ ...g, inherited: true })), descriptors: [] };
+  return { genres: album.genres.map((g) => ({ slug: g.slug, name: g.name, nameEs: g.nameEs, inherited: true })), descriptors: [] };
 }

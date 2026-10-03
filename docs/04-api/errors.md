@@ -45,6 +45,8 @@ además del `error` legible:
 | `REVIEW_TARGET_NOT_SUPPORTED` | 400 | Escritura de reseña sobre artista o canción: en esta versión solo se aceptan reseñas de álbum. |
 | `INTERNAL_ERROR` | 500/502 | Cualquier error no controlado (ej. MusicBrainz caído durante la ingesta fría, timeout, error de base de datos) — capturado por `withErrorHandling`, que devuelve este shape en vez de un 500 sin body. La marca de memberships no se escribe ante este error. En `search` es **502** solo si MusicBrainz falla y además no hay ninguna coincidencia local para el tipo pedido (con datos locales degrada a 200 con `remoteFailed: true`). `search/suggest` nunca sale a MusicBrainz. |
 | `SOCIAL_SUSPENSION_ACTIVE` | 403 | La cuenta tiene una restricción social temporal activa y la mutación produciría nueva actividad pública o social. |
+| `GENRE_NOT_FOUND` | 404 | El género (slug) no existe en la taxonomía. Votos de género de un álbum (`add-genre-votes`). |
+| `GENRE_VOTE_NO_INTERACTION` | 403 | Votar los géneros de un álbum exige haberlo valorado, escuchado (diario) o coleccionado. |
 | `ROLE_REQUIRED` | 403 | La operación requiere un rol de plataforma que la sesión no tiene. |
 | `MODERATION_REPORT_NOT_FOUND` | 404 | El reporte de moderación no existe o no es accesible para la operación solicitada. |
 | `RESTRICTION_NOT_FOUND` | 404 | La restricción social no existe o ya fue revocada. |

@@ -73,7 +73,10 @@ MusicBrainz publica con licencias distintas.
   de los géneros en español (P8052). Se llega a Wikidata solo por la relación `wikidata` que
   MusicBrainz declara para el artista o el álbum (D).
 
-Todo lo que se guarda de géneros es CC0; no se suman obligaciones de atribución.
+- **Los votos de la comunidad** (cambio `add-genre-votes`, ADR 0025) son datos **propios** de la plataforma, generados
+  por sus usuarios; no tienen relación con los votos de MusicBrainz, que siguen sin ingerirse.
+
+Todo lo que se guarda de géneros es CC0 o propio; no se suman obligaciones de atribución.
 
 ## D) Wikidata, Wikipedia y Wikimedia Commons (perfil de artista, ADR 0021)
 

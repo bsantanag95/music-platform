@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { GenreChips } from "@/components/genres/GenreChips";
+import { GenreVotePanel } from "@/components/genres/GenreVotePanel";
 import { getAlbumGenres } from "@/services/genres/display";
 import { AlbumCover } from "@/components/catalog/AlbumCover";
 import { AlbumFacts, AlbumIdentity, CommunityStats } from "@/components/album/AlbumHeader";
@@ -129,6 +130,9 @@ export default async function AlbumLayout({ children, modal, params }: AlbumLayo
               descriptors={albumGenres.descriptors}
               inheritedFrom={detail.primaryArtist?.name ?? null}
             />
+            <div className="mt-2">
+              <GenreVotePanel releaseGroupId={releaseGroupId} />
+            </div>
           </div>
         </div>
         <div className="[grid-area:facts]">

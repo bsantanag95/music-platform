@@ -48,6 +48,29 @@ describe("getAlbumGenres", () => {
     expect(result.descriptors).toEqual(["instrumental", "soundtrack"]);
   });
 
+  it("marca principal, secundario y otros por puntaje y no expone el puntaje", async () => {
+    state.results = [
+      [
+        { slug: "shoegaze", name: "shoegaze", nameEs: null, inherited: false, score: 4 },
+        { slug: "dream-pop", name: "dream pop", nameEs: null, inherited: false, score: 2 },
+        { slug: "noise-pop", name: "noise pop", nameEs: null, inherited: false, score: 1 },
+      ],
+    ];
+    const { genres } = await getAlbumGenres("rg1");
+    expect(genres.map((g) => [g.slug, g.rank])).toEqual([
+      ["shoegaze", "primary"],
+      ["dream-pop", "secondary"],
+      ["noise-pop", "other"],
+    ]);
+    expect(genres[0]).not.toHaveProperty("score");
+  });
+
+  it("los heredados no llevan rango", async () => {
+    state.results = [[{ slug: "rock", name: "rock", nameEs: null, inherited: true, score: 0 }]];
+    const { genres } = await getAlbumGenres("rg1");
+    expect(genres[0]?.rank).toBeUndefined();
+  });
+
   it("un álbum sin géneros ni descriptores devuelve vacío", async () => {
     await expect(getAlbumGenres("rg1")).resolves.toEqual({ genres: [], descriptors: [] });
   });

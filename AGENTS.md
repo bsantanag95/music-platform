@@ -123,7 +123,11 @@ de cuál de las filas con el mismo título haya en la BD.
 >   género con subgéneros. Desde `show-genres` también crea un usuario `smoke_gen_*` (lo borra al terminar;
 >   si se interrumpió: `DELETE FROM app_user WHERE username LIKE 'smoke_gen_%';`) y verifica los
 >   géneros de las cabeceras, la página de género, la búsqueda y que la identidad musical se valida
->   contra la taxonomía.
+>   contra la taxonomía. Desde `add-genre-votes` crea además cuatro votantes `smoke_gen_<sello>_<n>` (también los
+>   borra al terminar; el `ON DELETE CASCADE` limpia sus valoraciones, votos y restricciones; el mismo `LIKE
+>   'smoke_gen_%'` los cubre) y verifica los votos de género: elegibilidad, propuesta que reemplaza la herencia, puntaje
+>   con principal y secundarios, cifras desde 5 votantes, cuenta desactivada, supervivencia del voto, semilla
+>   neutralizada, tope de 8 y suspensión social.
 
 ## Base de datos / migraciones
 

@@ -676,11 +676,24 @@ Nunca se guardan votos ni etiquetas de MusicBrainz (CC BY-NC-SA).
   genre_id)` PK, `position` (orden de Wikidata, `CHECK >= 0`), `created_at`. Se reemplazan completas
   en cada sincronización (sin `updated_at`). FK a `genre` `ON DELETE RESTRICT` (un género retirado
   queda oculto), al artista/álbum `ON DELETE CASCADE`. Separadas de los votos de la comunidad.
-- **Vista `release_group_effective_genre`** `(release_group_id, genre_id, position, inherited)`:
-  las semillas propias visibles del álbum si tiene alguna; si no, los **3 primeros géneros de
-  estilo** de su artista principal (primer crédito `primary` por `position`), con
-  `inherited = true`. Excluye `hidden`; los descriptores no se heredan. Es la única definición que
-  usan Explorar, Caminos y la huella de gusto.
+- **`release_group_genre_vote`** (migración `0057`, cambio `add-genre-votes`): voto de la comunidad
+  sobre un género de un álbum. `(user_id, release_group_id, genre_id)` única, `value`
+  `CHECK IN (-1, 1)`, `created_at`/`updated_at` (trigger). FK al usuario y al álbum
+  `ON DELETE CASCADE`; al género `RESTRICT`. Votar un género que el álbum no tiene lo propone. El
+  tope de 8 por persona y álbum, que el género sea de estilo y la interacción previa con el álbum se
+  validan en el servicio (un `CHECK` no cuenta filas); el voto sobrevive a que la persona quite la
+  interacción.
+- **Vista `release_group_genre_score`** `(release_group_id, genre_id, seed, up, down, score,
+  seed_position)`: `seed` es 1 si el género es semilla propia del álbum (visible, no `hidden`);
+  `up`/`down` cuentan los votos sobre géneros de estilo de cuentas con `deactivated_at IS NULL`;
+  `score = seed + up - down`.
+- **Vista `release_group_effective_genre`** `(release_group_id, genre_id, position, inherited,
+  score)`: los géneros del álbum con `score > 0`, con `position` = rango por puntaje descendente
+  (1 = principal; desempate: `seed_position` y nombre); si ninguno tiene puntaje positivo, los
+  **3 primeros géneros de estilo** de su artista principal (primer crédito `primary` por
+  `position`), con `inherited = true` y `score = 0`. Excluye `hidden`; los descriptores no se
+  heredan ni se votan. Es la única definición que usan Explorar, Caminos, la huella de gusto y las
+  cabeceras.
 - **`release_group_tag`** (migración `0014`) **se eliminó**: sus filas las sembraba un script con
   datos inventados.
 

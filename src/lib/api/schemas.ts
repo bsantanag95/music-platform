@@ -371,6 +371,8 @@ export const ErrorCodeSchema = z.enum([
 "MODERATION_REPORT_NOT_FOUND",
   "RESTRICTION_NOT_FOUND",
   "SOCIAL_SUSPENSION_ACTIVE",
+  "GENRE_NOT_FOUND",
+  "GENRE_VOTE_NO_INTERACTION",
   "ROLE_REQUIRED",
   "REAUTH_REQUIRED",
   "USERNAME_CHANGE_COOLDOWN",
@@ -2474,3 +2476,29 @@ export const GenreSearchResponseSchema = z.object({
   genres: z.array(z.object({ slug: z.string(), name: z.string(), nameEs: z.string().nullable() })),
 });
 export type GenreSearchResponse = z.infer<typeof GenreSearchResponseSchema>;
+
+// GET /api/catalog/release-group/{id}/genre-votes y PUT/DELETE /api/me/release-groups/{id}/genre-votes/{slug}
+// (openspec: add-genre-votes). `up`/`down` solo con suficientes votantes; `mine` solo con sesión.
+export const GenreVoteValueSchema = z.union([z.literal(1), z.literal(-1)]);
+export const GenreVoteRequestSchema = z.object({ value: GenreVoteValueSchema });
+export type GenreVoteRequest = z.infer<typeof GenreVoteRequestSchema>;
+
+export const AlbumGenreVotesResponseSchema = z.object({
+  genres: z.array(
+    z.object({
+      slug: z.string(),
+      name: z.string(),
+      nameEs: z.string().nullable(),
+      inherited: z.boolean(),
+      score: z.number().int(),
+      rank: z.enum(["primary", "secondary", "other"]),
+      up: z.number().int().nullable(),
+      down: z.number().int().nullable(),
+      mine: GenreVoteValueSchema.nullable(),
+    }),
+  ),
+  showCounts: z.boolean(),
+  canVote: z.boolean(),
+  reason: z.enum(["signed_out", "deactivated", "suspended", "no_interaction"]).nullable(),
+});
+export type AlbumGenreVotesResponse = z.infer<typeof AlbumGenreVotesResponseSchema>;

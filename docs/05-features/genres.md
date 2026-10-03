@@ -8,7 +8,7 @@ Cambios `add-genre-taxonomy` (datos) y `show-genres` (superficie). El modelo de 
 | Superficie | Qué muestra | Fuente |
 |---|---|---|
 | Cabecera de **artista** | hasta 5 chips de sus géneros semilla y un "+N" desplegable (`<details>`) | `artist_genre_seed` (Wikidata P136) |
-| Identidad del **álbum** | hasta 5 chips de géneros efectivos y, en una fila aparte sin enlace, los descriptores (Instrumental, Navideña, Orquestal, Banda sonora) | vista `release_group_effective_genre` + tipo `Soundtrack` |
+| Identidad del **álbum** | hasta 5 chips de géneros efectivos (principal destacado, secundarios y el resto en "+N"), un botón "Votar géneros" y, en una fila aparte sin enlace, los descriptores (Instrumental, Navideña, Orquestal, Banda sonora) | vista `release_group_effective_genre` (semillas + votos) + tipo `Soundtrack` |
 | Identidad de la **canción** | los géneros del disco principal, atenuados ("Del álbum") | idem, vía el disco principal |
 | `/genre/<slug>` | relaciones, artistas y álbumes del género y sus subgéneros | `genre_relation`, semillas |
 | `/explore` | chips por familia (`?familia=`) y listado por género con subgéneros | ver `explore.md` |
@@ -48,7 +48,29 @@ Si el perfil es accesible y el dueño declaró géneros, la cresta de la huella 
 familias que contienen alguno de ellos y nombra aparte las declaradas que no aparecen en lo que valora. Sin géneros
 declarados no hay marcas.
 
+## Votos de la comunidad sobre los géneros del álbum
+
+Cambio `add-genre-votes` (ADR 0025). Junto a los chips de la cabecera del álbum, el botón **"Votar géneros"** abre un
+panel (`GenreVotePanel`) con los géneros del álbum y, por cada uno, ▲ / ▼ conmutables (pulsar el voto activo lo
+retira) y el rango (Principal / Secundario). Un buscador (el mismo `GET /api/genres/search`) permite **proponer** un
+género nuevo, que se vota +1 al elegirlo.
+
+- **Quién vota:** quien valoró, escuchó (diario) o coleccionó ese álbum, con la cuenta activa y sin suspensión social.
+  Quien no puede ve los controles desactivados y el motivo; sin sesión, la invitación a iniciar sesión.
+- **Puntaje y rangos:** semilla de Wikidata (vale 1) + votos. Los géneros son los de puntaje > 0; el primero es el
+  **principal** (chip destacado), los que llegan a la mitad de su puntaje (mínimo 1) son **secundarios** y el resto va al
+  "+N". Un −1 neutraliza una semilla; una propuesta aprobada hace que el álbum deje de heredar del artista (el panel
+  lo avisa).
+- **Privacidad:** el voto individual solo lo ve su autor y no genera actividad. Las cifras (▲ y ▼) se muestran solo con
+  al menos 5 votantes distintos.
+- **Tope:** 8 géneros votados por persona y álbum. No se votan descriptores ni géneros ocultos.
+- **Supervivencia:** el voto sigue contando aunque se quite la valoración, entrada o colección; una cuenta desactivada
+  deja de contar mientras lo esté.
+
+Todas las lecturas (Explorar, Caminos, huella, página de género, cabeceras, canción) usan la misma vista de géneros
+efectivos, así que reflejan el puntaje sin cambios propios.
+
 ## Fuera de alcance
 
-Votos de la comunidad sobre géneros (cambio `add-genre-votes`), géneros propios de canción, edición de géneros de
-un artista o álbum y búsqueda de géneros en el buscador del encabezado.
+Votos sobre artistas, canciones o descriptores, géneros propios de canción, edición de géneros de un artista o álbum y
+búsqueda de géneros en el buscador del encabezado.
