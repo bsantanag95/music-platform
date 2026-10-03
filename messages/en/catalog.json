@@ -541,7 +541,9 @@
         "saveError": "We could not save the change. Try again.",
         "done": "Done"
       },
-      "detailScale": "{score}/100"
+      "detailScale": "{score}/100",
+      "genres": "Genres",
+      "voteGenres": "Vote on genres"
     },
     "reviews": {
       "heading": "Reviews",
@@ -1041,8 +1043,6 @@
     },
     "primary": "Main genre",
     "votes": {
-      "open": "Vote on genres",
-      "close": "Close",
       "title": "Album genres",
       "hint": "Vote on the genres you hear in this album. Your vote is private: only the result is public.",
       "voteUp": "Vote for {genre}",

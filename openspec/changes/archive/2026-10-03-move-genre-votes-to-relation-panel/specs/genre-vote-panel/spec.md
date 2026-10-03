@@ -1,8 +1,5 @@
-# genre-vote-panel Specification
+## MODIFIED Requirements
 
-## Purpose
-Panel de votación de géneros en la cabecera del álbum y la API pública y personal que lo alimenta.
-## Requirements
 ### Requirement: Panel de votación en el álbum
 
 El panel "Tu relación" del álbum SHALL ofrecer a toda persona con sesión una fila "Géneros" con un
@@ -51,28 +48,3 @@ de géneros: "Tu relación" ofrece iniciar sesión.
 
 - **WHEN** una persona sin sesión abre el álbum
 - **THEN** "Tu relación" ofrece iniciar sesión y no muestra la fila "Géneros"
-
-### Requirement: API de votos de género
-
-`GET /api/catalog/release-group/{id}/genre-votes` SHALL ser público y devolver los géneros del
-álbum con su puntaje, si son principal o secundarios y, según el umbral de 5 votantes, las
-cifras; con sesión SHALL incluir además el voto propio por género (`mine`) y si puede votar
-(`canVote`, con la razón cuando no). `PUT /api/me/release-groups/{id}/genre-votes/{slug}` con
-`{ "value": 1 | -1 }` SHALL crear o cambiar el voto y `DELETE` SHALL retirarlo. Un `value` fuera de
-{−1, 1} SHALL responder `400 VALIDATION_ERROR`; un álbum o género inexistente, `404`.
-
-#### Scenario: Lectura anónima
-
-- **WHEN** un visitante sin sesión pide los votos de un álbum
-- **THEN** recibe los géneros con puntaje y sin `mine` ni votos individuales
-
-#### Scenario: Valor inválido
-
-- **WHEN** se envía `{ "value": 2 }`
-- **THEN** la respuesta es `400 VALIDATION_ERROR` y no se guarda nada
-
-#### Scenario: Género inexistente
-
-- **WHEN** el slug no corresponde a ningún género
-- **THEN** la respuesta es `404`
-

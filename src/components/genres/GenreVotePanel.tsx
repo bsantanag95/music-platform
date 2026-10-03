@@ -10,12 +10,15 @@ import type { AlbumGenreVotesResponse } from "@/lib/api/schemas";
 import { queryKeys } from "@/lib/query/keys";
 import { genreDisplayName, genreLocaleOf } from "@/services/genres/names";
 
-// Panel de votación de géneros del álbum (openspec: add-genre-votes, capability
-// `genre-vote-panel`). Un botón "Votar géneros" abre la lista de géneros del álbum con ▲/▼
+// Panel de votación de géneros del álbum (openspec: add-genre-votes y
+// move-genre-votes-to-relation-panel, capability `genre-vote-panel`). Es el contenido que
+// "Tu relación" despliega desde su fila "Géneros": la lista de géneros del álbum con ▲/▼
 // conmutables (pulsar de nuevo el voto activo lo retira) y un buscador para proponer uno nuevo
 // (se vota +1 al elegirlo). Las cifras de votos llegan de la API solo con suficientes votantes.
-// Quien no puede votar ve los controles desactivados y el motivo. Tras cada voto refresca la
-// página para que los chips de la cabecera reflejen el nuevo orden.
+// Quien no puede votar ve los controles desactivados y el motivo. `interacted` (valoración,
+// escuchas o colección de la persona, según el panel) va en la clave de la consulta: cuando cambia
+// se vuelve a pedir el acceso sin cerrar el panel. Tras cada voto refresca la página para que los
+// chips de la cabecera reflejen el nuevo orden.
 
 const DEBOUNCE_MS = 200;
 
@@ -107,27 +110,25 @@ function VoteButton({ label, pressed, disabled, onClick, children }: { label: st
   );
 }
 
-export function GenreVotePanel({ releaseGroupId }: { releaseGroupId: string }) {
+export function GenreVotePanel({ releaseGroupId, interacted }: { releaseGroupId: string; interacted: boolean }) {
   const t = useTranslations("catalog.genres.votes");
   const locale = genreLocaleOf(useLocale());
   const router = useRouter();
   const queryClient = useQueryClient();
-  const panelId = useId();
-  const [open, setOpen] = useState(false);
 
+  const queryKey = [...queryKeys.genreVotes(releaseGroupId), interacted] as const;
   const votes = useQuery({
-    queryKey: queryKeys.genreVotes(releaseGroupId),
+    queryKey,
     queryFn: () => getAlbumGenreVotes(releaseGroupId),
-    enabled: open,
-    // El acceso a votar depende de la valoración, el diario y la colección, que cambian fuera del
-    // panel: al abrirlo siempre se vuelve a pedir (el staleTime global lo daría por fresco).
+    // El acceso a votar depende de la valoración, el diario y la colección, que cambian fuera de
+    // este componente: nunca se da por fresco (el staleTime global lo haría).
     staleTime: 0,
   });
 
   const mutation = useMutation<AlbumGenreVotesResponse, unknown, { slug: string; value: 1 | -1 | null }>({
     mutationFn: ({ slug, value }) => (value === null ? removeGenreVote(releaseGroupId, slug) : castGenreVote(releaseGroupId, slug, value)),
     onSuccess: (data) => {
-      queryClient.setQueryData(queryKeys.genreVotes(releaseGroupId), data);
+      queryClient.setQueryData(queryKey, data);
       router.refresh();
     },
   });
@@ -142,81 +143,66 @@ export function GenreVotePanel({ releaseGroupId }: { releaseGroupId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-controls={panelId}
-        onClick={() => setOpen((v) => !v)}
-        className="self-start rounded-full border border-ink-border px-3 py-1 font-data text-xs text-paper-muted transition-colors hover:border-amber hover:text-paper"
-      >
-        {open ? t("close") : t("open")}
-      </button>
+    <section aria-label={t("title")} className="flex flex-col gap-3">
+      <p className="font-body text-xs text-paper-muted">{t("hint")}</p>
 
-      {open && (
-        <section id={panelId} aria-label={t("title")} className="flex max-w-md flex-col gap-3 rounded border border-ink-border p-3">
-          <h2 className="font-display text-base text-paper">{t("title")}</h2>
-          <p className="font-body text-xs text-paper-muted">{t("hint")}</p>
+      {votes.isPending && <p className="font-body text-sm text-paper-muted">{t("loading")}</p>}
+      {votes.isError && <p role="alert" className="font-body text-sm text-danger">{t("loadError")}</p>}
 
-          {votes.isPending && <p className="font-body text-sm text-paper-muted">{t("loading")}</p>}
-          {votes.isError && <p role="alert" className="font-body text-sm text-danger">{t("loadError")}</p>}
-
-          {data && !data.canVote && (
-            <div className="flex flex-col gap-1">
-              <p className="font-body text-sm text-paper">
-                {data.reason === "signed_out" ? t("signInPrompt") : t(`blocked.${data.reason ?? "no_interaction"}`)}
-              </p>
-              {data.reason === "signed_out" && (
-                <Link href="/auth/login" className="self-start font-display text-sm text-amber hover:underline">
-                  {t("signIn")}
-                </Link>
-              )}
-            </div>
+      {data && !data.canVote && (
+        <div className="flex flex-col gap-1">
+          <p className="font-body text-sm text-paper">
+            {data.reason === "signed_out" ? t("signInPrompt") : t(`blocked.${data.reason ?? "no_interaction"}`)}
+          </p>
+          {data.reason === "signed_out" && (
+            <Link href="/auth/login" className="self-start font-display text-sm text-amber hover:underline">
+              {t("signIn")}
+            </Link>
           )}
-
-          {data && (
-            <>
-              {data.genres.length === 0 && <p className="font-body text-sm text-paper-muted">{t("empty")}</p>}
-              <ul className="flex flex-col gap-1.5">
-                {data.genres.map((g) => {
-                  const name = genreDisplayName(g, locale);
-                  return (
-                    <li key={g.slug} data-inherited={g.inherited ? "true" : undefined} className={`flex items-center gap-2 ${g.inherited ? "opacity-70" : ""}`}>
-                      <span className="min-w-0 flex-1 font-body text-sm text-paper [overflow-wrap:anywhere]">
-                        {name}
-                        {g.rank !== "other" && (
-                          <span className="ml-2 font-data text-xs text-amber">{g.rank === "primary" ? t("rankPrimary") : t("rankSecondary")}</span>
-                        )}
-                      </span>
-                      {data.showCounts && g.up !== null && g.down !== null && (
-                        <span className="font-data text-xs text-paper-muted">{t("score", { up: g.up, down: g.down })}</span>
-                      )}
-                      <VoteButton label={t("voteUp", { genre: name })} pressed={g.mine === 1} disabled={!canVote || busy} onClick={() => vote(g.slug, g.mine, 1)}>
-                        ▲
-                      </VoteButton>
-                      <VoteButton label={t("voteDown", { genre: name })} pressed={g.mine === -1} disabled={!canVote || busy} onClick={() => vote(g.slug, g.mine, -1)}>
-                        ▼
-                      </VoteButton>
-                    </li>
-                  );
-                })}
-              </ul>
-              {hasInherited && <p className="font-body text-xs text-paper-muted">{t("inheritedNote")}</p>}
-              <Proposer
-                existing={new Set(data.genres.map((g) => g.slug))}
-                disabled={!canVote || busy}
-                onPick={(slug) => mutation.mutate({ slug, value: 1 })}
-              />
-            </>
-          )}
-
-          {mutation.isError && (
-            <p role="alert" className="font-body text-sm text-danger">
-              {t(errorKey(mutation.error))}
-            </p>
-          )}
-        </section>
+        </div>
       )}
-    </div>
+
+      {data && (
+        <>
+          {data.genres.length === 0 && <p className="font-body text-sm text-paper-muted">{t("empty")}</p>}
+          <ul className="flex flex-col gap-1.5">
+            {data.genres.map((g) => {
+              const name = genreDisplayName(g, locale);
+              return (
+                <li key={g.slug} data-inherited={g.inherited ? "true" : undefined} className={`flex items-center gap-2 ${g.inherited ? "opacity-70" : ""}`}>
+                  <span className="min-w-0 flex-1 font-body text-sm text-paper [overflow-wrap:anywhere]">
+                    {name}
+                    {g.rank !== "other" && (
+                      <span className="ml-2 font-data text-xs text-amber">{g.rank === "primary" ? t("rankPrimary") : t("rankSecondary")}</span>
+                    )}
+                  </span>
+                  {data.showCounts && g.up !== null && g.down !== null && (
+                    <span className="font-data text-xs text-paper-muted">{t("score", { up: g.up, down: g.down })}</span>
+                  )}
+                  <VoteButton label={t("voteUp", { genre: name })} pressed={g.mine === 1} disabled={!canVote || busy} onClick={() => vote(g.slug, g.mine, 1)}>
+                    ▲
+                  </VoteButton>
+                  <VoteButton label={t("voteDown", { genre: name })} pressed={g.mine === -1} disabled={!canVote || busy} onClick={() => vote(g.slug, g.mine, -1)}>
+                    ▼
+                  </VoteButton>
+                </li>
+              );
+            })}
+          </ul>
+          {hasInherited && <p className="font-body text-xs text-paper-muted">{t("inheritedNote")}</p>}
+          <Proposer
+            existing={new Set(data.genres.map((g) => g.slug))}
+            disabled={!canVote || busy}
+            onPick={(slug) => mutation.mutate({ slug, value: 1 })}
+          />
+        </>
+      )}
+
+      {mutation.isError && (
+        <p role="alert" className="font-body text-sm text-danger">
+          {t(errorKey(mutation.error))}
+        </p>
+      )}
+    </section>
   );
 }

@@ -8,7 +8,7 @@ Cambios `add-genre-taxonomy` (datos) y `show-genres` (superficie). El modelo de 
 | Superficie | Qué muestra | Fuente |
 |---|---|---|
 | Cabecera de **artista** | hasta 5 chips de sus géneros semilla y un "+N" desplegable (`<details>`) | `artist_genre_seed` (Wikidata P136) |
-| Identidad del **álbum** | hasta 5 chips de géneros efectivos (principal destacado, secundarios y el resto en "+N"), un botón "Votar géneros" y, en una fila aparte sin enlace, los descriptores (Instrumental, Navideña, Orquestal, Banda sonora) | vista `release_group_effective_genre` (semillas + votos) + tipo `Soundtrack` |
+| Identidad del **álbum** | hasta 5 chips de géneros efectivos (principal destacado, secundarios y el resto en "+N") y, en una fila aparte sin enlace, los descriptores (Instrumental, Navideña, Orquestal, Banda sonora) | vista `release_group_effective_genre` (semillas + votos) + tipo `Soundtrack` |
 | Identidad de la **canción** | los géneros del disco principal, atenuados ("Del álbum") | idem, vía el disco principal |
 | `/genre/<slug>` | relaciones, artistas y álbumes del género y sus subgéneros | `genre_relation`, semillas |
 | `/explore` | chips por familia (`?familia=`) y listado por género con subgéneros | ver `explore.md` |
@@ -50,10 +50,14 @@ declarados no hay marcas.
 
 ## Votos de la comunidad sobre los géneros del álbum
 
-Cambio `add-genre-votes` (ADR 0025). Junto a los chips de la cabecera del álbum, el botón **"Votar géneros"** abre un
-panel (`GenreVotePanel`) con los géneros del álbum y, por cada uno, ▲ / ▼ conmutables (pulsar el voto activo lo
-retira) y el rango (Principal / Secundario). Un buscador (el mismo `GET /api/genres/search`) permite **proponer** un
-género nuevo, que se vota +1 al elegirlo.
+Cambios `add-genre-votes` (ADR 0025) y `move-genre-votes-to-relation-panel`. Votar es una acción personal sobre el
+álbum, así que vive en el panel **"Tu relación"** (junto a valorar, escuchar, Colección y Listas), no en la cabecera,
+que solo informa: la fila **"Géneros"** tiene el enlace **"Votar géneros"**, que despliega en el propio panel
+(`GenreVotePanel`) los géneros del álbum con ▲ / ▼ conmutables (pulsar el voto activo lo retira) y el rango
+(Principal / Secundario). Un buscador (el mismo `GET /api/genres/search`) permite **proponer** un género nuevo, que
+se vota +1 al elegirlo. Los visitantes sin sesión no ven la fila: "Tu relación" les ofrece iniciar sesión. El panel
+recibe `interacted` (valoración, escuchas o colección, según el estado de "Tu relación") en la clave de su consulta:
+al valorar, registrar una escucha o agregar el álbum a la colección el acceso se vuelve a pedir sin cerrarlo.
 
 - **Quién vota:** quien valoró, escuchó (diario) o coleccionó ese álbum, con la cuenta activa y sin suspensión social.
   Quien no puede ve los controles desactivados y el motivo; sin sesión, la invitación a iniciar sesión.
