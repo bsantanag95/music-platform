@@ -338,6 +338,27 @@ exacta, prefijo, resto; dentro, por uso y nombre; máximo 20. Nunca devuelve des
 elige según el idioma). **400 `VALIDATION_ERROR`** con más de 60 caracteres. Lo usa el selector de "Géneros que me
 mueven".
 
+## `GET /api/catalog/release-group/{id}/genre-votes` (cambio `add-genre-votes`)
+
+Géneros de estilo del álbum con su puntaje, ordenados (el primero es el principal). **Público**; con sesión suma
+el voto propio y si puede votar. Nunca en caché (`Cache-Control: no-store`).
+**200 OK:** `{ genres: [{ slug, name, nameEs, inherited, score, rank: "primary" | "secondary" | "other", up, down,
+mine }], showCounts, canVote, reason }`. `up`/`down` (votos a favor y en contra) solo llegan con
+`showCounts: true` (al menos 5 votantes distintos); si no, `null`. `mine` es `1`, `-1` o `null` y siempre `null`
+sin sesión: nunca se expone el voto de otra persona. `canVote` es `false` con `reason` `signed_out`, `deactivated`,
+`suspended` o `no_interaction`. Los géneros que la persona votó pero que ya no son del álbum (p. ej. un −1 a una
+semilla) se incluyen con `score: 0` para que pueda retirar el voto. **400 `VALIDATION_ERROR`** (`id` no es UUID).
+
+## `PUT` / `DELETE /api/me/release-groups/{id}/genre-votes/{slug}` (cambio `add-genre-votes`)
+
+Voto propio sobre un género del álbum. `PUT` con `{ "value": 1 | -1 }` crea o cambia el voto; votar un género que el
+álbum no tiene lo **propone**. `DELETE` lo retira (idempotente). Ambos responden **200** con el mismo cuerpo que el
+`GET` de arriba, actualizado.
+**Errores:** `401 AUTH_REQUIRED`; `400 VALIDATION_ERROR` (cuerpo inválido, slug con formato inválido, descriptor u
+oculto, o más de 8 géneros votados en el álbum); `403 GENRE_VOTE_NO_INTERACTION` (sin valoración, diario ni colección
+del álbum), `403 SOCIAL_SUSPENSION_ACTIVE` (suspensión social vigente), `403 PERMISSION_DENIED` (cuenta desactivada);
+`404 ALBUM_NOT_FOUND`, `404 GENRE_NOT_FOUND`. El `DELETE` no exige interacción ni ausencia de suspensión.
+
 ## Página de género `/genre/<slug>` (cambio `show-genres`)
 
 **No expone endpoint:** es un Server Component que llama a `src/services/genres/page.ts` y a `listAlbumsByGenre`

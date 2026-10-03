@@ -1473,16 +1473,58 @@ export const releaseGroupGenreSeed = pgTable(
   ],
 );
 
+// Votos de la comunidad sobre los géneros de un álbum (migración 0057, openspec:
+// add-genre-votes). Un voto por persona, álbum y género; votar un género que el álbum no tiene lo
+// propone. El tope de 8, el tipo de género y la interacción con el álbum los valida el servicio.
+export const releaseGroupGenreVote = pgTable(
+  "release_group_genre_vote",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    releaseGroupId: uuid("release_group_id")
+      .notNull()
+      .references(() => releaseGroup.id, { onDelete: "cascade" }),
+    genreId: uuid("genre_id")
+      .notNull()
+      .references(() => genre.id, { onDelete: "restrict" }),
+    value: smallint("value").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("uq_release_group_genre_vote").on(t.userId, t.releaseGroupId, t.genreId),
+    index("idx_release_group_genre_vote_album").on(t.releaseGroupId, t.genreId),
+    check("chk_release_group_genre_vote_value", sql`${t.value} IN (-1, 1)`),
+  ],
+);
+
 /**
- * Géneros efectivos de un álbum (vista de la migración 0056): sus semillas propias visibles si
- * tiene alguna; si no, los 3 primeros géneros de estilo de su artista principal, con `inherited`.
- * Nunca incluye ocultos.
+ * Puntaje de un género en un álbum (vista de la migración 0057): la semilla propia vale 1 y se
+ * suman los votos de cuentas no desactivadas. `seedPosition` es NULL si no hay semilla.
+ */
+export const releaseGroupGenreScore = pgView("release_group_genre_score", {
+  releaseGroupId: uuid("release_group_id").notNull(),
+  genreId: uuid("genre_id").notNull(),
+  seed: integer("seed").notNull(),
+  up: integer("up").notNull(),
+  down: integer("down").notNull(),
+  score: integer("score").notNull(),
+  seedPosition: smallint("seed_position"),
+}).existing();
+
+/**
+ * Géneros efectivos de un álbum (vista de la migración 0057): los géneros con puntaje mayor que 0
+ * ordenados por puntaje (`position` 1 = principal); si no hay ninguno, los 3 primeros géneros de
+ * estilo de su artista principal, con `inherited` y `score` 0. Nunca incluye ocultos.
  */
 export const releaseGroupEffectiveGenre = pgView("release_group_effective_genre", {
   releaseGroupId: uuid("release_group_id").notNull(),
   genreId: uuid("genre_id").notNull(),
   position: smallint("position").notNull(),
   inherited: boolean("inherited").notNull(),
+  score: integer("score").notNull(),
 }).existing();
 
 // Seguir artista — relación unilateral usuario → artista (migración 0021,
@@ -1515,6 +1557,7 @@ export type GenreRelationRow = typeof genreRelation.$inferSelect;
 export type GenreFamilyRow = typeof genreFamily.$inferSelect;
 export type ArtistGenreSeedRow = typeof artistGenreSeed.$inferSelect;
 export type ReleaseGroupGenreSeedRow = typeof releaseGroupGenreSeed.$inferSelect;
+export type ReleaseGroupGenreVoteRow = typeof releaseGroupGenreVote.$inferSelect;
 export type ArtistFollowRow = typeof artistFollow.$inferSelect;
 
 // Valoraciones destacadas del perfil (openspec: rework-user-profile). Tabla

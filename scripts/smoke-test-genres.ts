@@ -14,7 +14,10 @@ assertSmokeAllowed();
 // traduce); la entidad de Wikidata de cada álbum desde el browse de discografía; las semillas de
 // álbum en lote; la herencia acotada a 3 en la vista `release_group_effective_genre`; Explorar por
 // familia y por género con subgéneros; y (cambio show-genres) los géneros de las cabeceras, la página
-// de género (relaciones, artistas), la búsqueda de géneros y la validación de la identidad musical.
+// de género (relaciones, artistas), la búsqueda de géneros y la validación de la identidad musical; y
+// (cambio add-genre-votes) los votos de la comunidad: elegibilidad, propuesta que reemplaza la herencia,
+// puntaje con principal/secundarios, cifras desde 5 votantes, cuentas desactivadas, supervivencia del voto,
+// semilla neutralizada por un −1, tope de 8, suspensión social y Explorar por el puntaje.
 //
 // La taxonomía se carga COMPLETA (la real de data/genres/taxonomy.json más 6 géneros sintéticos con
 // MBID `5e0ce000-…` y slugs `smoke-*`): cargar solo los sintéticos ocultaría los reales. Al terminar
@@ -286,6 +289,102 @@ async function main() {
     check(stored?.genres.join(",") === "smoke-shoegaze,cumbia-villera", "los rechazos no cambian lo guardado");
     const labels = await identityGenreLabels(["smoke-shoegaze", "smoke-hidden", "no-existe"], "es");
     check(Object.keys(labels).join(",") === "smoke-shoegaze", "las etiquetas ignoran ocultos e inexistentes");
+
+    console.log("6d) Votos de la comunidad sobre los géneros del álbum (add-genre-votes)");
+    const { castGenreVote, removeGenreVote, getAlbumGenreVotes, MAX_VOTES_PER_ALBUM } = await import("../src/services/genres/votes");
+    const voters = [user];
+    for (let i = 1; i < 5; i++) {
+      const v = await registerUser({ username: `smoke_gen_${stamp}_${i}`, email: `smoke-gen-${stamp}-${i}@example.test`, password: "smoke-password-123" });
+      if (!v) throw new Error("no se creó el votante");
+      userIds.push(v.id);
+      voters.push(v);
+    }
+    const rate = (userId: string, releaseGroupId: string) =>
+      db.insert(schema.rating).values({ userId, releaseGroupId, stars: "4" });
+    const clearVotes = () => db.delete(schema.releaseGroupGenreVote).where(inArray(schema.releaseGroupGenreVote.releaseGroupId, [linked.id, unlinked.id]));
+    const slugs = async (releaseGroupId: string) => (await effective(releaseGroupId)).map((g) => `${g.slug}${g.inherited ? "*" : ""}`);
+
+    check((await code(castGenreVote(user.id, unlinked.id, "smoke-folk", 1))) === "GENRE_VOTE_NO_INTERACTION", "sin valoración, diario ni colección no se puede votar");
+    await rate(user.id, unlinked.id);
+    check((await code(castGenreVote(user.id, unlinked.id, "instrumental", 1))) === "VALIDATION_ERROR", "un descriptor no se vota");
+    check((await code(castGenreVote(user.id, unlinked.id, "smoke-hidden", 1))) === "VALIDATION_ERROR", "un género oculto no se vota");
+    check((await code(castGenreVote(user.id, unlinked.id, "no-existe", 1))) === "GENRE_NOT_FOUND", "un género inexistente da GENRE_NOT_FOUND");
+    check((await code(castGenreVote(user.id, "00000000-0000-4000-8000-00000000dead", "smoke-folk", 1))) === "ALBUM_NOT_FOUND", "un álbum inexistente da ALBUM_NOT_FOUND");
+
+    // Una propuesta desplaza la herencia: el álbum deja de heredar del artista.
+    await castGenreVote(user.id, unlinked.id, "smoke-folk", 1);
+    check((await slugs(unlinked.id)).join(",") === "smoke-folk", `una propuesta reemplaza la herencia (${(await slugs(unlinked.id)).join(", ")})`);
+    await removeGenreVote(user.id, unlinked.id, "smoke-folk");
+    check((await slugs(unlinked.id)).join(",") === "smoke-shoegaze*,smoke-trap*,smoke-trap-latino*", "sin votos el álbum vuelve a heredar");
+
+    // Puntaje, principal y secundarios.
+    for (const v of voters.slice(0, 3)) await rate(v.id, unlinked.id).catch(() => undefined);
+    await castGenreVote(voters[0]!.id, unlinked.id, "smoke-folk", 1);
+    await castGenreVote(voters[1]!.id, unlinked.id, "smoke-folk", 1);
+    await castGenreVote(voters[2]!.id, unlinked.id, "smoke-shoegaze", 1);
+    const ranked = await getAlbumGenres(unlinked.id);
+    check(ranked.genres.map((g) => `${g.slug}:${g.rank}`).join(",") === "smoke-folk:primary,smoke-shoegaze:secondary", `principal por puntaje y secundario al llegar a la mitad (${ranked.genres.map((g) => `${g.slug}:${g.rank}`).join(",")})`);
+    check(!ranked.genres.some((g) => g.inherited), "con géneros votados no hay herencia");
+
+    // Las cifras solo salen con 5 votantes distintos; el voto ajeno nunca se expone.
+    const fewVoters = await getAlbumGenreVotes(unlinked.id, voters[0]!.id);
+    check(!fewVoters.showCounts && fewVoters.genres.every((g) => g.up === null && g.down === null), "con 3 votantes no hay cifras");
+    check(fewVoters.genres.find((g) => g.slug === "smoke-folk")?.mine === 1 && fewVoters.genres.find((g) => g.slug === "smoke-shoegaze")?.mine === null, "cada persona ve solo su propio voto");
+    await rate(voters[3]!.id, unlinked.id).catch(() => undefined);
+    await rate(voters[4]!.id, unlinked.id).catch(() => undefined);
+    await castGenreVote(voters[3]!.id, unlinked.id, "smoke-folk", -1);
+    await castGenreVote(voters[4]!.id, unlinked.id, "smoke-shoegaze", 1);
+    const manyVoters = await getAlbumGenreVotes(unlinked.id, null);
+    const folkVotes = manyVoters.genres.find((g) => g.slug === "smoke-folk");
+    check(manyVoters.showCounts && folkVotes?.up === 2 && folkVotes.down === 1 && folkVotes.mine === null, "con 5 votantes salen las cifras (2 a favor, 1 en contra) y un visitante no tiene voto propio");
+
+    // Una cuenta desactivada deja de contar y vuelve al reactivarla.
+    await db.update(schema.appUser).set({ deactivatedAt: new Date() }).where(eq(schema.appUser.id, voters[3]!.id));
+    const withoutOne = (await getAlbumGenreVotes(unlinked.id, null)).genres.find((g) => g.slug === "smoke-folk");
+    check(withoutOne?.score === 2, `un votante desactivado no cuenta (puntaje ${withoutOne?.score})`);
+    await db.update(schema.appUser).set({ deactivatedAt: null }).where(eq(schema.appUser.id, voters[3]!.id));
+    check((await getAlbumGenreVotes(unlinked.id, null)).genres.find((g) => g.slug === "smoke-folk")?.score === 1, "al reactivar la cuenta su voto vuelve a contar");
+
+    // El voto sobrevive a quitar la interacción.
+    await db.delete(schema.rating).where(and(eq(schema.rating.userId, voters[0]!.id), eq(schema.rating.releaseGroupId, unlinked.id)));
+    check((await getAlbumGenreVotes(unlinked.id, null)).genres.find((g) => g.slug === "smoke-folk")?.score === 1, "el voto sobrevive a quitar la valoración");
+    await clearVotes();
+
+    // La semilla de Wikidata vale 1: un −1 la neutraliza (1 − 1 = 0) y el álbum vuelve a heredar; un segundo −1 la deja en −1.
+    for (const v of voters.slice(0, 2)) await rate(v.id, linked.id);
+    await castGenreVote(voters[0]!.id, linked.id, "smoke-trap-latino", -1);
+    const neutralized = await slugs(linked.id);
+    check(neutralized.length === 3 && neutralized.every((g) => g.endsWith("*")), `un −1 neutraliza la semilla y el álbum hereda (${neutralized.join(", ")})`);
+    await castGenreVote(voters[1]!.id, linked.id, "smoke-trap-latino", -1);
+    const corrected = await slugs(linked.id);
+    check(corrected.length === 3 && corrected.every((g) => g.endsWith("*")), `con dos −1 la semilla sigue fuera (${corrected.join(", ")})`);
+    await clearVotes();
+    check((await slugs(linked.id)).join(",") === "smoke-trap-latino", "retirados los votos la semilla vuelve");
+
+    // Tope de 8 géneros por persona y álbum.
+    const styleSlugs = (
+      await db
+        .select({ slug: schema.genre.slug })
+        .from(schema.genre)
+        .where(and(eq(schema.genre.kind, "style"), sql`${schema.genre.mbid}::text NOT LIKE ${`${SMOKE_PREFIX}%`}`))
+        .limit(MAX_VOTES_PER_ALBUM + 1)
+    ).map((g) => g.slug);
+    for (const slug of styleSlugs.slice(0, MAX_VOTES_PER_ALBUM)) await castGenreVote(voters[2]!.id, unlinked.id, slug, 1);
+    check((await code(castGenreVote(voters[2]!.id, unlinked.id, styleSlugs[MAX_VOTES_PER_ALBUM]!, 1))) === "VALIDATION_ERROR", `el voto ${MAX_VOTES_PER_ALBUM + 1} se rechaza`);
+    check((await code(castGenreVote(voters[2]!.id, unlinked.id, styleSlugs[0]!, -1))) === null, "cambiar un voto existente con el tope lleno sí se puede");
+    await clearVotes();
+
+    // Una suspensión social bloquea votar.
+    await db.insert(schema.userRestriction).values({ userId: voters[2]!.id, scope: "social_activity", reason: "smoke" });
+    check((await code(castGenreVote(voters[2]!.id, unlinked.id, "smoke-folk", 1))) === "SOCIAL_SUSPENSION_ACTIVE", "con una suspensión social vigente no se puede votar");
+    check((await getAlbumGenreVotes(unlinked.id, voters[2]!.id)).access.canVote === false, "el panel informa que no puede votar");
+
+    // Explorar y la vista usan el puntaje: una propuesta lleva el álbum a la familia/género votado.
+    await db.delete(schema.userRestriction).where(eq(schema.userRestriction.userId, voters[2]!.id));
+    await castGenreVote(voters[1]!.id, unlinked.id, "smoke-folk", 1);
+    const folkAfterVote = await allPages((p) => listAlbumsByGenre("smoke-folk", p));
+    check(smokeIds(folkAfterVote).includes(unlinked.id), "Explorar por género encuentra el álbum por el voto de la comunidad");
+    await clearVotes();
 
     console.log("7) Un género retirado queda oculto y conserva sus semillas");
     const retired = await loadTaxonomy(withFixtures(FIXTURE_GENRES.filter((g) => g.mbid !== G.trapLatino)));

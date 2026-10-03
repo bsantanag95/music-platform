@@ -1038,6 +1038,36 @@
       "albumsHeading": "Álbumes",
       "empty": "Todavía no hay música de este género en el catálogo.",
       "albumCount": "{count, plural, one {# álbum} other {# álbumes}}"
+    },
+    "primary": "Género principal",
+    "votes": {
+      "open": "Votar géneros",
+      "close": "Cerrar",
+      "title": "Géneros del álbum",
+      "hint": "Vota los géneros que ves en este álbum. Tu voto es privado: solo se publica el resultado.",
+      "voteUp": "A favor de {genre}",
+      "voteDown": "En contra de {genre}",
+      "rankPrimary": "Principal",
+      "rankSecondary": "Secundario",
+      "score": "{up} a favor, {down} en contra",
+      "inheritedNote": "Estos géneros vienen del artista. Al votar, la comunidad pasa a definir los del álbum.",
+      "empty": "Este álbum todavía no tiene géneros. Propón el primero.",
+      "proposeLabel": "Proponer un género",
+      "proposePlaceholder": "Busca un género…",
+      "proposeEmpty": "Sin resultados",
+      "proposeAdd": "Proponer {genre}",
+      "removed": "Voto retirado",
+      "error": "No se pudo guardar el voto. Inténtalo de nuevo.",
+      "loadError": "No se pudieron cargar los géneros.",
+      "loading": "Cargando…",
+      "signInPrompt": "Inicia sesión para votar los géneros de este álbum.",
+      "signIn": "Iniciar sesión",
+      "blocked": {
+        "no_interaction": "Valora, escucha o colecciona el álbum para votar sus géneros.",
+        "suspended": "Tu cuenta tiene una suspensión social activa: no puedes votar por ahora.",
+        "deactivated": "Tu cuenta está desactivada: reactívala para votar."
+      },
+      "limit": "Ya votaste el máximo de 8 géneros en este álbum. Retira alguno para votar otro."
     }
   }
 }

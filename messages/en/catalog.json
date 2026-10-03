@@ -1038,6 +1038,36 @@
       "albumsHeading": "Albums",
       "empty": "There is no music of this genre in the catalog yet.",
       "albumCount": "{count, plural, one {# album} other {# albums}}"
+    },
+    "primary": "Main genre",
+    "votes": {
+      "open": "Vote on genres",
+      "close": "Close",
+      "title": "Album genres",
+      "hint": "Vote on the genres you hear in this album. Your vote is private: only the result is public.",
+      "voteUp": "Vote for {genre}",
+      "voteDown": "Vote against {genre}",
+      "rankPrimary": "Main",
+      "rankSecondary": "Secondary",
+      "score": "{up} for, {down} against",
+      "inheritedNote": "These genres come from the artist. Once you vote, the community defines the album's genres.",
+      "empty": "This album has no genres yet. Propose the first one.",
+      "proposeLabel": "Propose a genre",
+      "proposePlaceholder": "Search for a genre…",
+      "proposeEmpty": "No results",
+      "proposeAdd": "Propose {genre}",
+      "removed": "Vote removed",
+      "error": "Couldn't save the vote. Try again.",
+      "loadError": "Couldn't load the genres.",
+      "loading": "Loading…",
+      "signInPrompt": "Sign in to vote on this album's genres.",
+      "signIn": "Sign in",
+      "blocked": {
+        "no_interaction": "Rate, log or collect the album to vote on its genres.",
+        "suspended": "Your account has an active social suspension: you can't vote for now.",
+        "deactivated": "Your account is deactivated: reactivate it to vote."
+      },
+      "limit": "You've already voted on the maximum of 8 genres for this album. Remove one to vote on another."
     }
   }
 }

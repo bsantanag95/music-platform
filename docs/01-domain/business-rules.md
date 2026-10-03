@@ -42,10 +42,19 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - Los **descriptores** (Instrumental, Navideña, Orquestal, Banda sonora) no son estilos: nunca
   cuentan como géneros de un álbum. Los géneros **ocultos** no se muestran ni cuentan.
 - Los géneros de artistas y álbumes son **semillas** de Wikidata (P136), a las que se llega solo
-  por la relación `wikidata` que declara MusicBrainz. Un álbum sin semillas propias **hereda** los
-  3 primeros géneros de estilo de su artista principal, marcados como heredados.
+  por la relación `wikidata` que declara MusicBrainz. Un álbum sin géneros con puntaje positivo (ni semillas ni
+  votos) **hereda** los 3 primeros géneros de estilo de su artista principal, marcados como heredados.
 - Las semillas se guardan separadas de los votos de la comunidad: actualizar unas nunca modifica
   los otros.
+- **Votos de género del álbum** (cambio `add-genre-votes`, ADR 0025): una persona que **interactuó** con el álbum
+  (valoración, entrada de diario o colección), con la cuenta activa y sin suspensión social vigente, vota cada género
+  +1 / −1 y propone uno de la taxonomía votándolo +1. Solo estilos visibles (no descriptores ni ocultos), a lo sumo
+  8 géneros por persona y álbum; no se vota artista ni canción. **Puntaje** = 1 si es semilla propia + votos de
+  cuentas no desactivadas; los géneros del álbum son los de puntaje > 0, el de mayor puntaje es el **principal** y los
+  que llegan a la mitad de su puntaje (mínimo 1) los **secundarios**. Sin ningún género con puntaje positivo, el álbum
+  hereda del artista. Un voto **sobrevive** a que la persona quite su valoración, entrada o colección (la interacción
+  solo se exige al votar). El voto individual es privado y no genera actividad; las cifras de votos son públicas solo
+  con al menos 5 votantes distintos.
 - Las páginas de artista, álbum y canción muestran sus géneros como chips enlazados a la página del género; los
   heredados se distinguen de los propios y los descriptores van aparte (ver `05-features/genres.md`).
 - "Géneros que me mueven" (≤5) acepta cualquier género de estilo de la taxonomía, validado contra la tabla `genre`;

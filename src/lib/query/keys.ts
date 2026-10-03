@@ -10,6 +10,7 @@ import type { ListTarget } from "@/lib/api/schemas";
 // componente que use useQuery/useMutation con TanStack Query.
 export const queryKeys = {
   genreSearch: (query: string) => ["genres", "search", query] as const,
+  genreVotes: (releaseGroupId: string) => ["genres", "votes", releaseGroupId] as const,
   artistSearch: (query: string) => ["artist", "search", query] as const,
   artistById: (id: string) => ["artist", "byId", id] as const,
   releaseGroup: (id: string) => ["releaseGroup", id] as const,

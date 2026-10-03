@@ -14,6 +14,7 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 
 const genre = (slug: string, inherited = false, nameEs: string | null = null) => ({ slug, name: slug.replace(/-/g, " "), nameEs, inherited });
+const ranked = (slug: string, rank: "primary" | "secondary" | "other") => ({ ...genre(slug), rank });
 
 describe("GenreChips", () => {
   it("no renderiza nada sin géneros ni descriptores", () => {
@@ -54,5 +55,19 @@ describe("GenreChips", () => {
     expect(screen.getByText("Instrumental")).toBeInTheDocument();
     expect(screen.getByText("Banda sonora")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Instrumental" })).toBeNull();
+  });
+
+  it("destaca el principal y manda los géneros bajo el umbral al desplegable '+N'", () => {
+    renderWithIntl(<GenreChips genres={[ranked("shoegaze", "primary"), ranked("dream-pop", "secondary"), ranked("noise-pop", "other")]} />);
+    expect(screen.getByRole("link", { name: /shoegaze/ })).toHaveAttribute("data-rank", "primary");
+    expect(screen.getByRole("link", { name: /shoegaze/ })).toHaveTextContent("Género principal");
+    expect(screen.getByText("+1")).toBeInTheDocument();
+    expect(Array.from(document.querySelectorAll("details a")).map((a) => a.textContent)).toEqual(["noise pop"]);
+    expect(document.querySelector("details a")).toHaveAttribute("data-rank", "other");
+  });
+
+  it("sin rangos conserva el comportamiento previo (todos visibles hasta 5)", () => {
+    renderWithIntl(<GenreChips genres={[genre("a"), genre("b")]} />);
+    expect(document.querySelector("details")).toBeNull();
   });
 });

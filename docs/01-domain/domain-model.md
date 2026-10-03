@@ -69,10 +69,12 @@ familia para la navegación general.
 Algunas etiquetas no son estilos sino **descriptores** de un álbum (Instrumental, Navideña,
 Orquestal, Banda sonora): se muestran aparte y nunca compiten con los géneros.
 
-Los géneros de un Artista y de un Álbum son **semillas** que vienen de Wikidata. Un Álbum sin
-semillas propias toma los géneros principales de su artista (géneros **heredados**). La Canción no
-tiene géneros propios: hereda los de su álbum. Los votos de la comunidad sobre los géneros de un
-álbum, cuando existan, se suman a las semillas sin reemplazarlas.
+Los géneros de un Artista y de un Álbum son **semillas** que vienen de Wikidata. Los de un Álbum
+también los votan quienes interactuaron con él: la semilla vale un voto y el **puntaje** (semilla +
+votos +1/−1) decide qué géneros tiene el álbum, cuál es el **principal** y cuáles los
+**secundarios**. Un Álbum sin ningún género con puntaje positivo toma los géneros principales de
+su artista (géneros **heredados**). La Canción no tiene géneros propios: hereda los de su álbum.
+Los votos se guardan aparte de las semillas (`release_group_genre_vote`).
 
 ## Crédito
 
