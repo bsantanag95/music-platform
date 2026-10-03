@@ -121,6 +121,11 @@ español de Wikidata (P8052), aplicando la curaduría de `data/genres/curation.t
 huérfanos, descriptores, ocultos y nombres corregidos). No toca la base y no necesita
 `DATABASE_URL`; requiere `WIKIMEDIA_USER_AGENT`.
 
+Las etiquetas de Wikidata pasan por `normalizeSpanishLabel` (minúscula inicial salvo siglas, sin
+artículo ni "(música)", y descartadas si son una frase larga, llevan coma o están en otro
+alfabeto). Si un nombre sale mal o P8052 apunta a otro concepto, se corrige en `namesEs`; un
+valor igual al nombre de MusicBrainz deja el género con su nombre original.
+
 ```bash
 # 1. Bajar mbdump.tar.bz2 (~7 GB) de https://data.metabrainz.org/pub/musicbrainz/data/fullexport/<LATEST>/
 # 2. Extraer solo la marca y 4 tablas (tar con bzip2 viene en Linux, macOS y Windows 10+)

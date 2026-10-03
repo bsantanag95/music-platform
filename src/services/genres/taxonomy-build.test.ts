@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { GenreCuration } from "./families";
-import { buildRawGraph, buildTaxonomy, parseCopyLine, serializeTaxonomy, type TaxonomyFile } from "./taxonomy-build";
+import {
+  buildRawGraph,
+  buildTaxonomy,
+  normalizeSpanishLabel,
+  parseCopyLine,
+  serializeTaxonomy,
+  type TaxonomyFile,
+} from "./taxonomy-build";
 
 // Dump en miniatura con las columnas reales de MusicBrainz (CreateTables.sql). Los MBID son
 // sintéticos; los ids internos y de link_type imitan los del dump.
@@ -55,6 +62,28 @@ describe("parseCopyLine", () => {
   });
 });
 
+describe("normalizeSpanishLabel", () => {
+  it("pone minúscula inicial pero respeta las siglas", () => {
+    expect(normalizeSpanishLabel("Rock celta")).toBe("rock celta");
+    expect(normalizeSpanishLabel("R&B contemporáneo")).toBe("R&B contemporáneo");
+    expect(normalizeSpanishLabel("IDM")).toBe("IDM");
+  });
+
+  it("quita la desambiguación de Wikipedia, el artículo y las marcas wiki", () => {
+    expect(normalizeSpanishLabel("Footwork (música)")).toBe("footwork");
+    expect(normalizeSpanishLabel("El canto bizantino")).toBe("canto bizantino");
+    expect(normalizeSpanishLabel("''jazz'' vocal")).toBe("jazz vocal");
+  });
+
+  it("descarta lo que no es un nombre: frase larga, con coma, otro alfabeto o vacío", () => {
+    expect(normalizeSpanishLabel("Colindat: ronda navideña de grupos de hombres jóvenes")).toBeNull();
+    expect(normalizeSpanishLabel("Gagok, ciclos de canto lírico")).toBeNull();
+    expect(normalizeSpanishLabel("เพลงไทยเดิม")).toBeNull();
+    expect(normalizeSpanishLabel("  ")).toBeNull();
+    expect(normalizeSpanishLabel(null)).toBeNull();
+  });
+});
+
 describe("buildRawGraph", () => {
   it("orienta cada relación: subgénero hacia el padre, fusión e influencia hacia el origen", () => {
     const graph = buildRawGraph(tables);
@@ -103,6 +132,21 @@ describe("buildTaxonomy", () => {
       mbDump: null,
     });
     expect(file.genres.find((g) => g.mbid === MBID.jazz)).toMatchObject({ nameEs: "jazz clásico", wikidataId: "Q8341" });
+  });
+
+  it("normaliza la etiqueta de Wikidata y descarta la que es igual al nombre de MusicBrainz", () => {
+    const { file } = buildTaxonomy({
+      tables,
+      labels: new Map([
+        [MBID.jazz, { qid: "Q8341", es: "Jazz" }],
+        [MBID.rock, { qid: "Q11399", es: "Rock progresivo (música)" }],
+      ]),
+      curation,
+      previous: null,
+      mbDump: null,
+    });
+    expect(file.genres.find((g) => g.mbid === MBID.jazz)?.nameEs).toBeNull();
+    expect(file.genres.find((g) => g.mbid === MBID.rock)?.nameEs).toBe("rock progresivo");
   });
 
   it("ordena por MBID para que el diff sea estable", () => {
