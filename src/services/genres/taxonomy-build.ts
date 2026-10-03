@@ -141,6 +141,23 @@ export interface BuildResult {
   ruleCounts: Record<string, number>;
 }
 
+/** Más largo que esto la etiqueta es una frase de artículo, no el nombre de un género. */
+const MAX_NAME_ES_LENGTH = 40;
+
+/**
+ * Deja una etiqueta de Wikidata (P8052) en forma de nombre de género: minúscula inicial, sin
+ * artículo ni desambiguación de Wikipedia ("Footwork (música)"), sin marcas wiki. Devuelve null si
+ * no sirve como nombre (frase larga, con coma o en otro alfabeto): se usa el de MusicBrainz o la
+ * corrección curada. Las siglas ("R&B", "IDM") conservan las mayúsculas.
+ */
+export function normalizeSpanishLabel(raw: string | null | undefined): string | null {
+  let label = (raw ?? "").replace(/''+/g, "").replace(/[“”]/g, "").replace(/\s*\([^)]*\)\s*$/, "").trim();
+  label = label.replace(/^(el|la|los|las)\s+(?=\S)/i, "");
+  if (!label || label.length > MAX_NAME_ES_LENGTH || label.includes(",")) return null;
+  if (/[^\p{Script=Latin}\p{N}\s\-'’&./+!]/u.test(label)) return null;
+  return label.replace(/^\p{Lu}(?=\p{Ll})/u, (c) => c.toLowerCase());
+}
+
 export function buildTaxonomy(input: BuildInput): BuildResult {
   const graph = buildRawGraph(input.tables);
   const errors: string[] = [];
@@ -179,13 +196,14 @@ export function buildTaxonomy(input: BuildInput): BuildResult {
     .map(([mbid, name]) => {
       const a = assignments.get(name)!;
       const label = input.labels.get(mbid);
-      const nameEs = input.curation.namesEs[name]?.trim() || label?.es?.trim() || null;
+      const nameEs = input.curation.namesEs[name]?.trim() || normalizeSpanishLabel(label?.es);
       return {
         mbid,
         slug: slugs.get(mbid)!,
         name,
-        // Una etiqueta que solo difiere en mayúsculas ("Downtempo") no aporta: se usa el nombre de MusicBrainz.
-        nameEs: nameEs && nameEs.toLowerCase() !== name.toLowerCase() ? nameEs : null,
+        // Un nombre igual al de MusicBrainz no aporta (la etiqueta de Wikidata ya sale en minúscula inicial).
+        // Solo las mayúsculas curadas de una sigla ("EDM") lo hacen distinto.
+        nameEs: nameEs && nameEs !== name ? nameEs : null,
         wikidataId: label?.qid ?? null,
         kind: a.kind,
         families: a.families,
