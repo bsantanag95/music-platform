@@ -80,8 +80,8 @@ describe("AuthForm", () => {
     await user.click(screen.getByRole("button", { name: "Iniciar sesión" }));
     expect(identifier).toHaveAttribute("aria-invalid", "true");
     expect(identifier).toHaveFocus();
-    expect(identifier).toHaveAccessibleDescription("Ingresá tu email o nombre de usuario.");
-    expect(screen.getByLabelText("Contraseña")).toHaveAccessibleDescription("Ingresá tu contraseña.");
+    expect(identifier).toHaveAccessibleDescription("Ingresa tu email o nombre de usuario.");
+    expect(screen.getByLabelText("Contraseña")).toHaveAccessibleDescription("Ingresa tu contraseña.");
     expect(mocks.apiFetch).not.toHaveBeenCalled();
   });
 
@@ -102,12 +102,12 @@ describe("AuthForm", () => {
     await user.type(screen.getByLabelText("Contraseña"), "corta");
     await user.click(screen.getByRole("button", { name: "Crear cuenta" }));
     expect(screen.getByLabelText("Nombre de usuario")).toHaveAccessibleDescription(
-      "Usá solo letras, números y guion bajo (_).",
+      "Usa solo letras, números y guion bajo (_).",
     );
     expect(screen.getByLabelText("Email")).toHaveAccessibleDescription(
-      "Ingresá un email válido, como nombre@ejemplo.com.",
+      "Ingresa un email válido, como nombre@ejemplo.com.",
     );
-    expect(screen.getByLabelText("Contraseña")).toHaveAccessibleDescription("Usá al menos 8 caracteres.");
+    expect(screen.getByLabelText("Contraseña")).toHaveAccessibleDescription("Usa al menos 8 caracteres.");
   });
 
   it("un usuario ya tomado se muestra en su campo, no como error del formulario", async () => {
@@ -119,7 +119,7 @@ describe("AuthForm", () => {
     await user.type(screen.getByLabelText("Contraseña"), "unaClaveLarga1");
     await user.click(screen.getByRole("button", { name: "Crear cuenta" }));
     const username = await screen.findByLabelText("Nombre de usuario");
-    expect(username).toHaveAccessibleDescription("Elegí otro nombre de usuario.");
+    expect(username).toHaveAccessibleDescription("Elige otro nombre de usuario.");
     expect(username).toHaveFocus();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });

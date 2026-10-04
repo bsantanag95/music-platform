@@ -8,26 +8,35 @@ import type { ReactNode } from "react";
 // nuestra propia flecha para no perder la afordancia de "esto despliega
 // opciones". Compartido entre `/me/diary` y `/me/feed` (ver
 // openspec/changes/add-feed-filters).
+//
+// `label` (opcional) dibuja el nombre del filtro sobre el control, para que un "Todos" no quede
+// sin contexto hasta abrir el menú. Es decorativo (`aria-hidden`): el `aria-label` ya nombra el
+// select. Sin `label` el aspecto no cambia.
 export function FilterSelect({
   value,
   onChange,
   ariaLabel,
   widthClassName,
+  disabled = false,
+  label,
   children,
 }: {
   value: string;
   onChange: (value: string) => void;
   ariaLabel: string;
   widthClassName: string;
+  disabled?: boolean;
+  label?: string;
   children: ReactNode;
 }) {
-  return (
+  const control = (
     <div className="relative">
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
         aria-label={ariaLabel}
-        className={`filter-select appearance-none overflow-hidden text-ellipsis whitespace-nowrap rounded border-b border-ink-border bg-transparent py-1.5 pl-0.5 pr-4 font-data text-sm text-paper-muted transition-colors hover:text-paper ${widthClassName}`}
+        disabled={disabled}
+        className={`filter-select appearance-none overflow-hidden text-ellipsis whitespace-nowrap rounded border-b border-ink-border bg-transparent py-1.5 pl-0.5 pr-4 font-data text-sm text-paper-muted transition-colors hover:text-paper disabled:opacity-50 ${widthClassName}`}
       >
         {children}
       </select>
@@ -41,6 +50,20 @@ export function FilterSelect({
       >
         <path d="M6 9l6 6 6-6" />
       </svg>
+    </div>
+  );
+
+  if (!label) return control;
+
+  return (
+    <div className="flex flex-col">
+      <span
+        aria-hidden="true"
+        className="pl-0.5 font-data text-[0.65rem] uppercase tracking-wide text-paper-muted/70"
+      >
+        {label}
+      </span>
+      {control}
     </div>
   );
 }

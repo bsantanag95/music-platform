@@ -104,7 +104,7 @@ describe("UserSearch", () => {
     await user.type(screen.getByLabelText("Buscar usuarios"), "ana");
     await user.click(screen.getByRole("button", { name: "Buscar" }));
 
-    expect(await screen.findByText("No pudimos completar la solicitud. Intentá de nuevo en un momento.")).toBeInTheDocument();
+    expect(await screen.findByText("No pudimos completar la solicitud. Intenta de nuevo en un momento.")).toBeInTheDocument();
     // El formulario sigue presente para poder reintentar sin perder el término.
     expect(screen.getByLabelText("Buscar usuarios")).toHaveValue("ana");
   });

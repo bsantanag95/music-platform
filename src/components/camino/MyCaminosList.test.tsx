@@ -224,7 +224,7 @@ describe("MyCaminosList", () => {
     await user.click(screen.getByRole("menuitem", { name: "Eliminar" }));
     await user.click(screen.getByRole("button", { name: "Eliminar" }));
     expect(
-      await screen.findByText("No pudimos eliminar el Camino. Intentá de nuevo."),
+      await screen.findByText("No pudimos eliminar el Camino. Intenta de nuevo."),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Shoegaze esencial" })).toBeInTheDocument();
   });

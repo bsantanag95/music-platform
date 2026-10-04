@@ -58,7 +58,7 @@ describe("PrivacySettings", () => {
 
     await user.click(screen.getByRole("radio", { name: /Privado/ }));
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Iniciá sesión para realizar esta acción.",
+      "Inicia sesión para realizar esta acción.",
     );
   });
 });

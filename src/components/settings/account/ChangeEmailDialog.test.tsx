@@ -74,7 +74,7 @@ describe("ChangeEmailDialog", () => {
   it("valida el formato del email en línea", async () => {
     const { user } = setup();
     await user.type(screen.getByLabelText("Email nuevo"), "no-es-email");
-    expect(screen.getByText("Escribí un email válido")).toBeInTheDocument();
+    expect(screen.getByText("Escribe un email válido")).toBeInTheDocument();
     expect(submitButton()).toBeDisabled();
   });
 

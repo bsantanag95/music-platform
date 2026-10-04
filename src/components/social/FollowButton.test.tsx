@@ -121,7 +121,7 @@ describe("FollowButton", () => {
 
     await user.click(screen.getByRole("button", { name: "Seguir" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "No podés realizar esta acción con esta cuenta.",
+      "No puedes realizar esta acción con esta cuenta.",
     );
   });
 

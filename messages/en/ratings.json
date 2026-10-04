@@ -33,5 +33,23 @@
   "deleteError": "We couldn't delete the rating. Please try again.",
   "saveError": "We couldn't save the change. Please try again.",
   "starsLegend": "Stars for {title}",
-  "starValue": "{value} stars"
+  "starValue": "{value} stars",
+  "searchPlaceholder": "Search your ratings",
+  "viewModeLabel": "View mode",
+  "viewMode": {
+    "detailed": "Detailed",
+    "index": "Index",
+    "graphic": "Graphic"
+  },
+  "groupLabel": "Group",
+  "groupType": "By type",
+  "groupNone": "Ungrouped",
+  "sectionAlbums": "Albums",
+  "sectionSongs": "Songs",
+  "countAlbums": "{count, plural, =0 {no albums} one {# album} other {# albums}}",
+  "countSongs": "{count, plural, =0 {no songs} one {# song} other {# songs}}",
+  "editRating": "Edit rating",
+  "editRatingFor": "Edit the rating of {title}",
+  "groupArtist": "By artist",
+  "sectionNoArtist": "No artist"
 }

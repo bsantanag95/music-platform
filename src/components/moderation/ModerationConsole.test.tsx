@@ -125,7 +125,7 @@ describe("ModerationConsole", () => {
 
     fireEvent.click(within(screen.getByRole("listitem")).getByRole("button", { name: "Ocultar" }));
 
-    expect(screen.getByRole("alert")).toHaveTextContent("Escribí un motivo antes de continuar.");
+    expect(screen.getByRole("alert")).toHaveTextContent("Escribe un motivo antes de continuar.");
     expect(apiFetch).not.toHaveBeenCalled();
   });
 

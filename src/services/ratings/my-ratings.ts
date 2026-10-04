@@ -3,7 +3,15 @@ import { db } from "@/db";
 import { rating, recording, releaseGroup } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { PRIMARY_ARTIST_SQL, PRIMARY_ARTIST_ID_SQL, RECORDING_COVER_SQL } from "@/services/feed/feed";
-import type { MyRatingEntry, MyRatingsFilters, MyRatingsListResponse } from "@/lib/api/schemas";
+import { escapeLike } from "@/services/catalog/search/normalize";
+import {
+  MY_RATING_GROUPS,
+  MY_RATING_SEARCH_MAX_LENGTH,
+  type MyRatingGroup,
+  type MyRatingEntry,
+  type MyRatingsFilters,
+  type MyRatingsListResponse,
+} from "@/lib/api/schemas";
 
 export const MY_RATING_SORTS = ["best", "worst", "recent", "title"] as const;
 export type MyRatingSort = (typeof MY_RATING_SORTS)[number];
@@ -22,6 +30,14 @@ function normalizeFilters(filters?: MyRatingsFilters) {
   const sort: MyRatingSort = filters?.sort ?? "best";
   if (!MY_RATING_SORTS.includes(sort)) {
     throw new ApiError("VALIDATION_ERROR", 400, "El orden no es válido");
+  }
+  const group: MyRatingGroup = filters?.group ?? "type";
+  if (!MY_RATING_GROUPS.includes(group)) {
+    throw new ApiError("VALIDATION_ERROR", 400, "La agrupación no es válida");
+  }
+  const q = filters?.q?.trim() ?? "";
+  if (q.length > MY_RATING_SEARCH_MAX_LENGTH) {
+    throw new ApiError("VALIDATION_ERROR", 400, "La búsqueda es demasiado larga");
   }
   if (filters?.stars !== undefined) {
     const stars = Number(filters.stars);
@@ -46,6 +62,8 @@ function normalizeFilters(filters?: MyRatingsFilters) {
   }
   return {
     sort,
+    group,
+    q: q || undefined,
     stars: filters?.stars !== undefined ? Number(filters.stars) : undefined,
     type: filters?.type,
     year: filters?.year !== undefined ? Number(filters.year) : undefined,
@@ -57,6 +75,32 @@ const RELEASE_TITLE = releaseGroup.title;
 const RECORDING_TITLE = recording.title;
 
 const TITLE_EXPR = sql`coalesce(${RELEASE_TITLE}, ${RECORDING_TITLE})`;
+
+// Rango fijo de tipo para que la agrupación por tipo ponga los álbumes antes que las
+// canciones (mismo recurso que `TYPE_RANK_EXPR` de favoritos). Es el primer criterio del
+// orden, así "Cargar más" agrega al final de la sección que corresponde.
+const TYPE_RANK_EXPR = sql`CASE WHEN ${rating.releaseGroupId} IS NOT NULL THEN 0 ELSE 1 END`;
+
+// Orden de la agrupación por artista: por nombre del artista principal acreditado (sin
+// distinguir mayúsculas, las valoraciones sin artista al final) y, a igual nombre, por id para
+// que cada artista quede contiguo aunque haya nombres repetidos.
+const ARTIST_GROUP_ORDER: SQL[] = [
+  sql`lower(${PRIMARY_ARTIST_SQL(rating.releaseGroupId, rating.recordingId)}) ASC NULLS LAST`,
+  sql`${PRIMARY_ARTIST_ID_SQL(rating.releaseGroupId, rating.recordingId)} ASC NULLS LAST`,
+];
+
+function groupOrder(group: MyRatingGroup): SQL[] {
+  if (group === "artist") return [...ARTIST_GROUP_ORDER, asc(TYPE_RANK_EXPR)];
+  if (group === "type") return [asc(TYPE_RANK_EXPR)];
+  return [];
+}
+
+// Búsqueda de texto: título del álbum o la canción, o su artista principal acreditado
+// (mismo criterio que la búsqueda de favoritos y de la colección).
+function textMatch(q: string): SQL {
+  const pattern = `%${escapeLike(q)}%`;
+  return sql`(${TITLE_EXPR} ILIKE ${pattern} OR ${PRIMARY_ARTIST_SQL(rating.releaseGroupId, rating.recordingId)} ILIKE ${pattern})`;
+}
 
 function sortOrder(sort: MyRatingSort): SQL[] {
   const starsNumeric = sql`(${rating.stars})::float`;
@@ -115,6 +159,9 @@ export async function listMyRatings(
   } else if (normalized.type === "recording") {
     baseConditions.push(isNotNull(rating.recordingId));
   }
+  if (normalized.q) {
+    baseConditions.push(textMatch(normalized.q));
+  }
 
   const yearExpr = buildYearExpr();
 
@@ -129,12 +176,20 @@ export async function listMyRatings(
   const whereClause = and(...baseConditions);
 
   const [totalRow] = await db
-    .select({ count: sql<number>`count(*)::int` })
+    .select({
+      count: sql<number>`count(*)::int`,
+      albums: sql<number>`(count(*) FILTER (WHERE ${rating.releaseGroupId} IS NOT NULL))::int`,
+      songs: sql<number>`(count(*) FILTER (WHERE ${rating.recordingId} IS NOT NULL))::int`,
+    })
     .from(rating)
     .leftJoin(releaseGroup, eq(rating.releaseGroupId, releaseGroup.id))
     .leftJoin(recording, eq(rating.recordingId, recording.id))
     .where(whereClause);
   const total = totalRow?.count ?? 0;
+  const counts = {
+    "release-group": totalRow?.albums ?? 0,
+    recording: totalRow?.songs ?? 0,
+  };
 
   const rows = await db
     .select({
@@ -158,7 +213,7 @@ export async function listMyRatings(
     .leftJoin(releaseGroup, eq(rating.releaseGroupId, releaseGroup.id))
     .leftJoin(recording, eq(rating.recordingId, recording.id))
     .where(whereClause)
-    .orderBy(...sortOrder(normalized.sort))
+    .orderBy(...groupOrder(normalized.group), ...sortOrder(normalized.sort))
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
 
@@ -174,7 +229,7 @@ export async function listMyRatings(
   const hasNext = rows.length > pageSize;
   const years = yearRows.map((row) => row.year).filter((year): year is number => year !== null);
 
-  return { items, page, pageSize, hasNext, total, facets: { years } };
+  return { items, page, pageSize, hasNext, total, counts, facets: { years } };
 }
 
 function serializeMyRating(row: {

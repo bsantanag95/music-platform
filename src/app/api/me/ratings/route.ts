@@ -20,6 +20,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     type: searchParams.get("type") || undefined,
     year: rawYear ? Number(rawYear) : undefined,
     decade: rawDecade ? Number(rawDecade) : undefined,
+    q: searchParams.get("q")?.trim() || undefined,
+    group: searchParams.get("group") || undefined,
   });
   if (!parsedFilters.success) {
     throw new ApiError("VALIDATION_ERROR", 400, "Los filtros no son válidos");

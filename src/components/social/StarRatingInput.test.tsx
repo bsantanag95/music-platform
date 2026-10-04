@@ -38,3 +38,19 @@ describe("StarRatingInput", () => {
     for (const radio of screen.getAllByRole("radio")) expect(radio).toBeDisabled();
   });
 });
+
+describe("StarRatingInput · tamaño", () => {
+  const glyphClass = () => screen.getByRole("group", { name: "Tu nota" }).querySelector("svg")?.getAttribute("class") ?? "";
+
+  it("por defecto usa estrellas de 24 px (el panel 'Tu relación' no cambia)", () => {
+    renderInput(3);
+    expect(glyphClass()).toContain("size-6");
+  });
+
+  it("size='sm' achica la estrella y su área, sin perder las diez opciones", () => {
+    render(<StarRatingInput value={3} onChange={vi.fn()} legend="Tu nota" valueLabel={valueLabel} size="sm" />);
+    expect(glyphClass()).toContain("size-5");
+    expect(glyphClass()).not.toContain("size-6");
+    expect(screen.getAllByRole("radio")).toHaveLength(10);
+  });
+});

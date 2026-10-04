@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import ratingsEs from "../../../messages/es/ratings.json";
-import catalogEs from "../../../messages/es/catalog.json";
 import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 import { MyRatingRow } from "./MyRatingRow";
 import type { MyRatingEntry } from "@/lib/api/schemas";
@@ -28,7 +27,6 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/api/social", () => mocks);
 
 const t = ratingsEs;
-const detail = catalogEs.album.relation.detail;
 
 const RATING_ID = "550e8400-e29b-41d4-a716-446655440001";
 const RG_ID = "550e8400-e29b-41d4-a716-446655440002";
@@ -54,19 +52,11 @@ function album(overrides: Partial<MyRatingEntry> = {}): MyRatingEntry {
   };
 }
 
-function ratingsOf(stars: number, detailedScore: number | null) {
-  return {
-    own: { id: RATING_ID, stars, detailedScore, createdAt: "", updatedAt: "2026-10-02T10:00:00.000Z" },
-    aggregate: { count: 1, averageStars: null, averageDetailedScore: null },
-  };
-}
-const noRating = { own: null, aggregate: { count: 0, averageStars: null, averageDetailedScore: null } };
-
-function renderRow(entry: MyRatingEntry = album()) {
+function renderRow(entry: MyRatingEntry = album(), extra: { showArtist?: boolean; showType?: boolean } = {}) {
   const onUpdate = vi.fn();
-  const onDelete = vi.fn();
-  renderWithIntl(<MyRatingRow entry={entry} onUpdate={onUpdate} onDelete={onDelete} />);
-  return { onUpdate, onDelete };
+  const onEdit = vi.fn();
+  renderWithIntl(<MyRatingRow entry={entry} onUpdate={onUpdate} onEdit={onEdit} {...extra} />);
+  return { onUpdate, onEdit };
 }
 
 beforeEach(() => {
@@ -82,6 +72,43 @@ describe("MyRatingRow", () => {
     expect(screen.getByRole("link", { name: "Heart" })).toHaveAttribute("href", artistHref("Heart", ARTIST_ID));
     expect(screen.getByText(t.typeAlbum)).toBeInTheDocument();
     expect(screen.getByTestId("cover")).toBeInTheDocument();
+  });
+
+  it("sin showArtist ni showType omite artista y tipo pero conserva el año y no deja un separador suelto", () => {
+    renderRow(album(), { showArtist: false, showType: false });
+    expect(screen.queryByRole("link", { name: "Heart" })).not.toBeInTheDocument();
+    expect(screen.queryByText(t.typeAlbum)).not.toBeInTheDocument();
+    expect(screen.queryByText("·")).not.toBeInTheDocument();
+    expect(screen.getByText("1987")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Bad Animals" })).toBeInTheDocument();
+  });
+
+  it("con showType=false muestra el artista sin el tipo ni separador", () => {
+    renderRow(album(), { showType: false });
+    expect(screen.getByRole("link", { name: "Heart" })).toBeInTheDocument();
+    expect(screen.queryByText(t.typeAlbum)).not.toBeInTheDocument();
+    expect(screen.queryByText("·")).not.toBeInTheDocument();
+  });
+
+  it("con showArtist=false muestra solo el tipo, sin separador", () => {
+    renderRow(album(), { showArtist: false });
+    expect(screen.getByText(t.typeAlbum)).toBeInTheDocument();
+    expect(screen.queryByText("·")).not.toBeInTheDocument();
+  });
+
+  it("una entrada sin artista no deja un '·' colgando", () => {
+    renderRow(album({ target: { ...album().target, artistName: null, artistId: null } }));
+    expect(screen.getByText(t.typeAlbum)).toBeInTheDocument();
+    expect(screen.queryByText("·")).not.toBeInTheDocument();
+  });
+
+  it("es una fila compacta: título y nota comparten línea desde sm y las estrellas son chicas", () => {
+    renderRow();
+    const article = screen.getByRole("article");
+    expect(article.className).toContain("sm:items-center");
+    const group = screen.getByRole("group", { name: "Estrellas de Bad Animals" });
+    expect(group.querySelector("svg")?.getAttribute("class")).toContain("size-5");
+    expect(group.querySelector("svg")?.getAttribute("class")).not.toContain("size-6");
   });
 
   it("una canción enlaza a su página y se rotula como canción", () => {
@@ -104,16 +131,23 @@ describe("MyRatingRow", () => {
     expect(screen.queryByText(t.untuned)).not.toBeInTheDocument();
   });
 
-  it("sin puntaje muestra 'Sin afinar' como acción que abre el diálogo", () => {
-    renderRow(album({ detailedScore: null, stars: 4 }));
+  it("sin puntaje muestra 'Sin afinar' como acción que pide abrir el diálogo", () => {
+    const entry = album({ detailedScore: null, stars: 4 });
+    const { onEdit } = renderRow(entry);
     expect(screen.queryByText("86/100")).not.toBeInTheDocument();
     const mark = screen.getByRole("button", { name: t.untunedAction });
     expect(mark).toHaveTextContent(t.untuned);
 
     fireEvent.click(mark);
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByRole("slider")).toHaveAttribute("min", "71");
-    expect(screen.getByRole("slider")).toHaveAttribute("max", "80");
+    expect(onEdit).toHaveBeenCalledWith(entry);
+  });
+
+  it("el puntaje pide abrir el diálogo con la valoración de la fila (el diálogo vive en el orquestador)", () => {
+    const entry = album();
+    const { onEdit } = renderRow(entry);
+    fireEvent.click(screen.getByRole("button", { name: "86/100" }));
+    expect(onEdit).toHaveBeenCalledWith(entry);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("los grupos de estrellas llevan una leyenda y etiquetas legibles", () => {
@@ -161,33 +195,5 @@ describe("MyRatingRow", () => {
     await waitFor(() => expect(mocks.saveRating).toHaveBeenCalled());
     expect(onUpdate).not.toHaveBeenCalled();
     expect(screen.getByRole("radio", { name: "5,0 estrellas" })).toBeEnabled();
-  });
-
-  it("afinar desde el diálogo guarda solo el puntaje y actualiza la fila en el lugar", async () => {
-    mocks.saveRating.mockResolvedValue({});
-    mocks.getRatings.mockResolvedValue(ratingsOf(4.5, 88));
-    const { onUpdate } = renderRow();
-
-    fireEvent.click(screen.getByRole("button", { name: "86/100" }));
-    fireEvent.change(screen.getByRole("slider"), { target: { value: "88" } });
-    fireEvent.click(screen.getByRole("button", { name: detail.save }));
-
-    await waitFor(() => expect(mocks.saveRating).toHaveBeenCalledWith("release-group", RG_ID, { detailedScore: 88 }));
-    await waitFor(() =>
-      expect(onUpdate).toHaveBeenCalledWith(RATING_ID, expect.objectContaining({ stars: 4.5, detailedScore: 88 })),
-    );
-  });
-
-  it("borrar la nota desde el diálogo quita la fila", async () => {
-    mocks.deleteRating.mockResolvedValue(null);
-    mocks.getRatings.mockResolvedValue(noRating);
-    const { onDelete } = renderRow();
-
-    fireEvent.click(screen.getByRole("button", { name: "86/100" }));
-    fireEvent.click(screen.getByRole("button", { name: detail.delete }));
-    fireEvent.click(await screen.findByRole("button", { name: detail.deleteConfirm }));
-
-    await waitFor(() => expect(mocks.deleteRating).toHaveBeenCalledWith("release-group", RG_ID));
-    await waitFor(() => expect(onDelete).toHaveBeenCalledWith(RATING_ID));
   });
 });

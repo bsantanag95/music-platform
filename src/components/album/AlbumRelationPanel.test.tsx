@@ -130,7 +130,7 @@ describe("AlbumRelationPanel", () => {
     expect(screen.getByText(/^3 · última 12 sept?/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: relation.logListen })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: relation.favorite })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByText("Lo tenés · Vinilo")).toBeInTheDocument();
+    expect(screen.getByText("Lo tienes · Vinilo")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: relation.manageCollection })).toBeInTheDocument();
     expect(screen.getByText("En 2 de tus listas")).toBeInTheDocument();
   });

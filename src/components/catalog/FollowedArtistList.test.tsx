@@ -49,7 +49,7 @@ describe("FollowedArtistList", () => {
   it("muestra un estado vacío atractivo cuando no se sigue a nadie", () => {
     renderWithIntl(<FollowedArtistList initial={[]} />);
 
-    expect(screen.getByText("Todavía no seguís a ningún artista")).toBeInTheDocument();
+    expect(screen.getByText("Todavía no sigues a ningún artista")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Buscar en el catálogo" })).toHaveAttribute(
       "href",
       "/search",

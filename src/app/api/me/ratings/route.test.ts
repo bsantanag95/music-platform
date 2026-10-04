@@ -21,6 +21,7 @@ const listResult = {
   pageSize: 20,
   hasNext: false,
   total: 0,
+  counts: { "release-group": 0, recording: 0 },
   facets: { years: [] },
 };
 
@@ -55,6 +56,40 @@ describe("GET /api/me/ratings", () => {
       type: "recording",
       year: 1987,
     });
+  });
+
+  it("parsea q y group", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.listMyRatings.mockResolvedValue(listResult);
+    await GET(new NextRequest("http://localhost/api/me/ratings?q=%20floyd%20&group=none"));
+    expect(mocks.listMyRatings).toHaveBeenCalledWith(user.id, 1, 20, { q: "floyd", group: "none" });
+  });
+
+  it("ignora una búsqueda en blanco", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.listMyRatings.mockResolvedValue(listResult);
+    await GET(new NextRequest("http://localhost/api/me/ratings?q=%20%20"));
+    expect(mocks.listMyRatings).toHaveBeenCalledWith(user.id, 1, 20, {});
+  });
+
+  it("acepta group=artist", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.listMyRatings.mockResolvedValue(listResult);
+    await GET(new NextRequest("http://localhost/api/me/ratings?group=artist"));
+    expect(mocks.listMyRatings).toHaveBeenCalledWith(user.id, 1, 20, { group: "artist" });
+  });
+
+  it("rechaza una agrupación fuera de vocabulario", async () => {
+    const response = await GET(new NextRequest("http://localhost/api/me/ratings?group=album"));
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mocks.listMyRatings).not.toHaveBeenCalled();
+  });
+
+  it("rechaza una búsqueda demasiado larga", async () => {
+    const response = await GET(new NextRequest(`http://localhost/api/me/ratings?q=${"x".repeat(101)}`));
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: "VALIDATION_ERROR" });
   });
 
   it("rechaza un orden inválido con VALIDATION_ERROR", async () => {

@@ -228,7 +228,7 @@ describe("EditableBlock", () => {
 
       await user.click(screen.getByRole("button", { name: "interruptor" }));
 
-      expect(screen.getByText("Destacados: todavía no hay nada acá. Editá para agregar.")).toBeInTheDocument();
+      expect(screen.getByText("Destacados: todavía no hay nada acá. Edita para agregar.")).toBeInTheDocument();
       await user.click(screen.getByRole("button", { name: "Editar Destacados" }));
       const dialog = await screen.findByRole("dialog", { name: "Destacados" });
       expect(dialog).toHaveTextContent("editor de destacados");

@@ -19,9 +19,18 @@ interface StarRatingInputProps {
   /** Texto accesible de cada opción (p. ej. "3,5 estrellas"). */
   valueLabel: (value: number) => string;
   disabled?: boolean;
+  /** `sm` achica cada estrella para filas densas (p. ej. la biblioteca de valoraciones). */
+  size?: "md" | "sm";
 }
 
-export function StarRatingInput({ value, onChange, legend, valueLabel, disabled = false }: StarRatingInputProps) {
+export function StarRatingInput({
+  value,
+  onChange,
+  legend,
+  valueLabel,
+  disabled = false,
+  size = "md",
+}: StarRatingInputProps) {
   const name = useId();
   const [preview, setPreview] = useState<number | null>(null);
   const shown = preview ?? value ?? 0;
@@ -37,8 +46,11 @@ export function StarRatingInput({ value, onChange, legend, valueLabel, disabled 
           const star = index + 1;
           const fill = shown >= star ? 1 : shown >= star - 0.5 ? 0.5 : 0;
           return (
-            <span key={star} className="relative inline-flex h-10 w-8 items-center justify-center">
-              <StarGlyph fill={fill} preview={preview !== null} />
+            <span
+              key={star}
+              className={`relative inline-flex items-center justify-center ${size === "sm" ? "h-7 w-6" : "h-10 w-8"}`}
+            >
+              <StarGlyph fill={fill} preview={preview !== null} className={size === "sm" ? "size-5" : "size-6"} />
               {[star - 0.5, star].map((option, half) => (
                 <label
                   key={option}

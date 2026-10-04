@@ -34,7 +34,7 @@ describe("DefaultAudienceSettings", () => {
     expect(screen.getByRole("radio", { name: /Privado/ })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: /Seguidores/ })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: /Público/ })).toBeInTheDocument();
-    expect(screen.getByText(/No cambia lo que ya tenés/)).toBeInTheDocument();
+    expect(screen.getByText(/No cambia lo que ya tienes/)).toBeInTheDocument();
   });
 
   it("aclara que las reseñas y los comentarios no dependen de la preferencia (son públicos)", () => {
@@ -139,7 +139,7 @@ describe("DefaultAudienceSettings · aplicar a lo existente", () => {
     renderWithIntl(<DefaultAudienceSettings initialAudience={null} />);
 
     expect(applyButton()).toBeDisabled();
-    expect(applyButton()).toHaveAccessibleDescription(/Elegí Privado, Seguidores o Público/);
+    expect(applyButton()).toHaveAccessibleDescription(/Elige Privado, Seguidores o Público/);
   });
 
   it("con una audiencia elegida el botón está activo", () => {

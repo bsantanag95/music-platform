@@ -2,6 +2,7 @@ import { apiFetch } from "./client";
 import {
   MyRatingsListResponseSchema,
   type MyRatingsListResponse,
+  type MyRatingGroup,
   type MyRatingSort,
   type MyRatingTargetType,
 } from "./schemas";
@@ -12,6 +13,8 @@ export interface MyRatingsFiltersParams {
   type?: MyRatingTargetType;
   year?: number;
   decade?: number;
+  q?: string;
+  group?: MyRatingGroup;
 }
 
 function ratingsFiltersQuery(filters: MyRatingsFiltersParams = {}): string {
@@ -21,6 +24,8 @@ function ratingsFiltersQuery(filters: MyRatingsFiltersParams = {}): string {
   if (filters.type) params.set("type", filters.type);
   if (filters.year !== undefined) params.set("year", String(filters.year));
   if (filters.decade !== undefined) params.set("decade", String(filters.decade));
+  if (filters.q) params.set("q", filters.q);
+  if (filters.group) params.set("group", filters.group);
   const query = params.toString();
   return query ? `&${query}` : "";
 }
