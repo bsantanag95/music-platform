@@ -1,8 +1,5 @@
-# my-ratings-library Specification
+## MODIFIED Requirements
 
-## Purpose
-Biblioteca de valoraciones propias del usuario, con filtros, orden y edición en fila.
-## Requirements
 ### Requirement: Biblioteca de valoraciones propias
 El sistema SHALL ofrecer a cada persona con sesión una página "Mis valoraciones"
 (`/me/ratings`) con sus valoraciones de álbumes y canciones. Cada entrada SHALL mostrar la
@@ -36,22 +33,6 @@ Explorar; sin sesión SHALL redirigir al inicio de sesión.
 #### Scenario: Sin sesión
 - **WHEN** una persona sin sesión abre `/me/ratings`
 - **THEN** es redirigida al inicio de sesión
-
-### Requirement: Solo el dueño ve su biblioteca
-La biblioteca y su puntaje SHALL ser visibles únicamente para su dueño. El endpoint
-`GET /api/me/ratings` SHALL requerir sesión, SHALL tomar el usuario de la sesión y NO SHALL
-aceptar ningún parámetro que seleccione otro usuario; NO SHALL existir una ruta pública
-equivalente. Los seguidores aprobados y los visitantes SHALL seguir viendo solo estrellas
-donde ya las ven y el puntaje solo en las valoraciones destacadas.
-
-#### Scenario: Solo mis filas
-- **WHEN** dos personas valoraron los mismos álbumes con puntajes distintos y una de ellas
-  pide `GET /api/me/ratings`
-- **THEN** la respuesta contiene únicamente sus propias valoraciones
-
-#### Scenario: Sin sesión
-- **WHEN** se llama a `GET /api/me/ratings` sin sesión
-- **THEN** la API responde `401` con código `AUTH_REQUIRED`
 
 ### Requirement: Orden por nota con los sin puntaje después
 La biblioteca SHALL ordenarse por: mejor nota (por defecto), peor nota, más reciente o
@@ -171,13 +152,3 @@ e Índice y en el overlay del modo Gráfico. La marca SHALL existir solo en esta
 - **WHEN** esa misma valoración se ve en el modo Gráfico y se pasa el cursor sobre la carátula
 - **THEN** el overlay muestra las estrellas y "Sin afinar", y al activarla se abre el diálogo de
   puntaje
-
-### Requirement: Accesos a la biblioteca
-El menú de usuario (escritorio y panel móvil) SHALL ofrecer el acceso "Mis valoraciones", y
-el perfil propio SHALL ofrecer un enlace a la biblioteca visible solo para su dueño.
-
-#### Scenario: Desde el perfil propio
-- **WHEN** una persona abre su propio perfil
-- **THEN** ve un enlace "Mis valoraciones" que lleva a `/me/ratings`, y quien visita el perfil
-  de otra persona no lo ve
-

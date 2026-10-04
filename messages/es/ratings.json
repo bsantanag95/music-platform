@@ -33,5 +33,23 @@
   "deleteError": "No pudimos borrar la valoración. Intenta de nuevo.",
   "saveError": "No pudimos guardar el cambio. Intenta de nuevo.",
   "starsLegend": "Estrellas de {title}",
-  "starValue": "{value} estrellas"
+  "starValue": "{value} estrellas",
+  "searchPlaceholder": "Buscar en tus valoraciones",
+  "viewModeLabel": "Modo de visualización",
+  "viewMode": {
+    "detailed": "Detallada",
+    "index": "Índice",
+    "graphic": "Gráfico"
+  },
+  "groupLabel": "Agrupar",
+  "groupType": "Por tipo",
+  "groupNone": "Sin agrupar",
+  "sectionAlbums": "Álbumes",
+  "sectionSongs": "Canciones",
+  "countAlbums": "{count, plural, =0 {sin álbumes} one {# álbum} other {# álbumes}}",
+  "countSongs": "{count, plural, =0 {sin canciones} one {# canción} other {# canciones}}",
+  "editRating": "Editar nota",
+  "editRatingFor": "Editar la nota de {title}",
+  "groupArtist": "Por artista",
+  "sectionNoArtist": "Sin artista"
 }

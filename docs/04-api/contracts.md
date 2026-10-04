@@ -1913,7 +1913,7 @@ Lista paginada de la lista propia, orden cronológico descendente.
 Biblioteca propia de valoraciones de álbumes y canciones. Solo del dueño: el endpoint toma el
 `userId` de la sesión y no acepta ningún parámetro de usuario. No existe ruta pública equivalente.
 
-### `GET /api/me/ratings?page=&pageSize=&sort=&stars=&type=&year=&decade=`
+### `GET /api/me/ratings?page=&pageSize=&sort=&stars=&type=&year=&decade=&q=&group=`
 
 Lista paginada de las valoraciones propias (álbumes y canciones; las de artista se excluyen).
 Parámetros opcionales combinables:
@@ -1922,10 +1922,23 @@ Parámetros opcionales combinables:
 - `type`: `release-group` | `recording`.
 - `year`: entero.
 - `decade`: entero múltiplo de 10. Año y década son excluyentes; si llegan ambos, el año manda.
+- `q` (cambio `add-ratings-view-modes`): búsqueda de texto, sin distinguir mayúsculas, sobre el
+  título del álbum o la canción y el nombre de su artista principal acreditado. Se recorta; vacío
+  equivale a ausente; máximo 100 caracteres. Los comodines de `LIKE` (`%`, `_`) se escapan.
+- `group` (cambio `add-ratings-view-modes`): `type` (default) | `artist` | `none`. Con `type` el
+  orden antepone el tipo — álbumes antes que canciones — y aplica `sort` dentro de cada tipo, de
+  modo que "Cargar más" agrega al final de la sección correspondiente. Con `artist` el orden es
+  nombre del artista principal acreditado (sin distinguir mayúsculas; sin artista al final), id del
+  artista (cada artista queda contiguo aunque haya nombres repetidos), tipo (álbumes antes que
+  canciones) y por último `sort`. Con `none` el orden `sort` rige para toda la lista (conserva el
+  ranking mezclado, p. ej. el top de un año). Los artistas no se valoran: `artist` solo reúne las
+  valoraciones de álbumes y canciones bajo su artista; no hay conteo de artistas.
 
-**200 OK:** `{ items: [{ id, targetType, stars, detailedScore, updatedAt, target: { id, title, coverThumbUrl, artistName, artistId, year } }], page, pageSize, hasNext, total, facets: { years: number[] } }`.
-`facets.years` lista solo los años con valoraciones, ordenados descendente. **400** con
-`VALIDATION_ERROR` si un parámetro es inválido. **401** con `AUTH_REQUIRED` sin sesión.
+**200 OK:** `{ items: [{ id, targetType, stars, detailedScore, updatedAt, target: { id, title, coverThumbUrl, artistName, artistId, year } }], page, pageSize, hasNext, total, counts: { "release-group": number, recording: number }, facets: { years: number[] } }`.
+`counts` desglosa `total` por tipo y respeta todos los filtros, incluida la búsqueda (campo aditivo
+de `add-ratings-view-modes`). `facets.years` lista solo los años con valoraciones, ordenados
+descendente. **400** con `VALIDATION_ERROR` si un parámetro es inválido (incluida una
+agrupación fuera de vocabulario). **401** con `AUTH_REQUIRED` sin sesión.
 
 ## Marcas de un disco (cambio `extend-album-quick-actions`)
 

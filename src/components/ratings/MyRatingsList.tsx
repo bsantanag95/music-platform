@@ -10,66 +10,92 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { RatingDetailDialog } from "@/components/album/RatingDetailDialog";
 import { getMyRatings, type MyRatingsFiltersParams } from "@/lib/api/ratings";
 import { ApiError } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
-import type { MyRatingsListResponse, MyRatingEntry, MyRatingSort, MyRatingTargetType } from "@/lib/api/schemas";
-import { MyRatingRow } from "./MyRatingRow";
-
-const PAGE_SIZE = 20;
-
-interface FiltersState {
-  sort: MyRatingSort;
-  stars: string;
-  type: string;
-  year: string;
-  decade: string;
-}
-
-const EMPTY_FILTERS: FiltersState = {
-  sort: "best",
-  stars: "",
-  type: "",
-  year: "",
-  decade: "",
-};
+import type {
+  MyRatingEntry,
+  MyRatingGroup,
+  MyRatingSort,
+  MyRatingTargetType,
+  MyRatingsListResponse,
+  RatingsResponse,
+} from "@/lib/api/schemas";
+import {
+  EMPTY_RATING_FILTERS,
+  RatingsToolbar,
+  ratingFiltersActive,
+  type RatingsFiltersState,
+} from "./RatingsToolbar";
+import { RatingsModeSwitcher } from "./RatingsModeSwitcher";
+import { RatingsDetailed } from "./RatingsDetailed";
+import { RatingsIndex } from "./RatingsIndex";
+import { RatingsGraphic } from "./RatingsGraphic";
+import { useRatingViewMode } from "./use-rating-view-mode";
+import {
+  RATINGS_PAGE_SIZE,
+  applyRatingsResponse,
+  displayForGroup,
+  groupRatingsByArtist,
+  groupRatingsByType,
+  ownForDialog,
+  sectionTitleKey,
+} from "./ratings-shared";
+import type { RatingsRowActions } from "./ratings-view";
 
 interface MyRatingsListProps {
   initial: MyRatingsListResponse;
   initialFilters?: MyRatingsFiltersParams;
 }
 
-function toFiltersState(params?: MyRatingsFiltersParams): FiltersState {
+function toFiltersState(params?: MyRatingsFiltersParams): RatingsFiltersState {
   return {
+    q: params?.q ?? "",
     sort: params?.sort ?? "best",
     stars: params?.stars !== undefined ? String(params.stars) : "",
     type: params?.type ?? "",
     year: params?.year !== undefined ? String(params.year) : "",
     decade: params?.decade !== undefined ? String(params.decade) : "",
+    group: params?.group ?? "type",
   };
 }
 
-function toApiFilters(filters: FiltersState): MyRatingsFiltersParams {
+function toApiFilters(filters: RatingsFiltersState): MyRatingsFiltersParams {
   return {
-    sort: filters.sort === "best" ? undefined : filters.sort,
+    q: filters.q.trim() || undefined,
+    sort: filters.sort === "best" ? undefined : (filters.sort as MyRatingSort),
     stars: filters.stars ? Number(filters.stars) : undefined,
     type: (filters.type || undefined) as MyRatingTargetType | undefined,
     year: filters.year ? Number(filters.year) : undefined,
     decade: filters.decade ? Number(filters.decade) : undefined,
+    group: filters.group === "type" ? undefined : (filters.group as MyRatingGroup),
   };
 }
 
-function filtersActive(filters: FiltersState): boolean {
-  return filters.sort !== "best" || Boolean(filters.stars || filters.type || filters.year || filters.decade);
+function sameFilters(a: RatingsFiltersState, b: RatingsFiltersState): boolean {
+  return (
+    a.q.trim() === b.q.trim() &&
+    a.sort === b.sort &&
+    a.stars === b.stars &&
+    a.type === b.type &&
+    a.year === b.year &&
+    a.decade === b.decade &&
+    a.group === b.group
+  );
 }
 
-function syncQueryString(filters: FiltersState) {
+// Refleja filtros, búsqueda, orden y agrupación en la URL; el modo de visualización no va
+// acá (es preferencia del dispositivo, vive en `localStorage`).
+function syncQueryString(filters: RatingsFiltersState) {
   const params = new URLSearchParams();
+  if (filters.q.trim()) params.set("q", filters.q.trim());
   if (filters.sort && filters.sort !== "best") params.set("sort", filters.sort);
   if (filters.stars) params.set("stars", filters.stars);
   if (filters.type) params.set("type", filters.type);
   if (filters.year) params.set("year", filters.year);
   if (filters.decade) params.set("decade", filters.decade);
+  if (filters.group !== "type") params.set("group", filters.group);
   const query = params.toString();
   const url = query ? `?${query}` : window.location.pathname;
   window.history.replaceState(null, "", url);
@@ -79,29 +105,33 @@ type RatingsPages = InfiniteData<MyRatingsListResponse, number>;
 
 export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
   const t = useTranslations("ratings");
+  const [mode, setMode] = useRatingViewMode();
 
   const seededState = useMemo(() => toFiltersState(initialFilters), [initialFilters]);
-  const [filters, setFilters] = useState<FiltersState>(seededState);
+  const [filters, setFilters] = useState<RatingsFiltersState>(seededState);
+  const [searchInput, setSearchInput] = useState(seededState.q);
   const [items, setItems] = useState<MyRatingEntry[]>(initial.items);
   const [total, setTotal] = useState(initial.total);
+  const [counts, setCounts] = useState(initial.counts);
+  const [editing, setEditing] = useState<MyRatingEntry | null>(null);
   const [announce, setAnnounce] = useState("");
+
+  // Debounce del buscador: espera a que la persona deje de tipear.
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setFilters((current) => (current.q === searchInput ? current : { ...current, q: searchInput }));
+    }, 300);
+    return () => window.clearTimeout(id);
+  }, [searchInput]);
 
   const apiFilters = useMemo(() => toApiFilters(filters), [filters]);
   const queryKey = queryKeys.myRatings(apiFilters);
-
-  const seeded = useMemo(() => {
-    if (filters.sort !== seededState.sort) return false;
-    if (filters.stars !== seededState.stars) return false;
-    if (filters.type !== seededState.type) return false;
-    if (filters.year !== seededState.year) return false;
-    if (filters.decade !== seededState.decade) return false;
-    return true;
-  }, [filters, seededState]);
+  const seeded = useMemo(() => sameFilters(filters, seededState), [filters, seededState]);
 
   const { data, hasNextPage, isFetchingNextPage, fetchNextPage, isError } =
     useInfiniteQuery<MyRatingsListResponse, ApiError, RatingsPages, typeof queryKey, number>({
       queryKey,
-      queryFn: ({ pageParam }) => getMyRatings(pageParam, PAGE_SIZE, apiFilters),
+      queryFn: ({ pageParam }) => getMyRatings(pageParam, RATINGS_PAGE_SIZE, apiFilters),
       initialPageParam: 1,
       getNextPageParam: (last) => (last?.hasNext ? last.page + 1 : undefined),
       initialData: seeded ? { pages: [initial], pageParams: [1] } : undefined,
@@ -113,6 +143,7 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
     if (data) {
       setItems(data.pages.flatMap((page) => page.items));
       setTotal(data.pages[0]?.total ?? 0);
+      setCounts(data.pages[0]?.counts ?? { "release-group": 0, recording: 0 });
     }
   }, [data]);
 
@@ -120,21 +151,37 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
     syncQueryString(filters);
   }, [filters]);
 
-  const isFiltered = filtersActive(filters);
+  const isFiltered = ratingFiltersActive(filters);
   const availableYears = data?.pages[0]?.facets.years ?? initial.facets.years;
 
   const updateLocal = useCallback((id: string, entry: MyRatingEntry) => {
     setItems((current) => current.map((item) => (item.id === id ? entry : item)));
   }, []);
 
-  const deleteLocal = useCallback((id: string) => {
-    setItems((current) => current.filter((item) => item.id !== id));
-    setTotal((current) => Math.max(0, current - 1));
-    setAnnounce(t("deletedAnnouncement"));
-  }, [t]);
+  const deleteLocal = useCallback(
+    (entry: MyRatingEntry) => {
+      setItems((current) => current.filter((item) => item.id !== entry.id));
+      setTotal((current) => Math.max(0, current - 1));
+      setCounts((current) => ({
+        ...current,
+        [entry.targetType]: Math.max(0, current[entry.targetType] - 1),
+      }));
+      setAnnounce(t("deletedAnnouncement"));
+    },
+    [t],
+  );
+
+  // Una sola instancia del diálogo para las tres vistas: cada entrada solo pide abrirla.
+  const handleDialogChange = (ratings: RatingsResponse) => {
+    if (!editing) return;
+    const next = applyRatingsResponse(editing, ratings);
+    if (next) updateLocal(editing.id, next);
+    else deleteLocal(editing);
+  };
 
   const clearFilters = () => {
-    setFilters(EMPTY_FILTERS);
+    setSearchInput("");
+    setFilters(EMPTY_RATING_FILTERS);
   };
 
   const loadMore = () => {
@@ -144,6 +191,12 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
       if (after > before) setAnnounce(t("loadedAnnouncement", { count: after - before }));
     });
   };
+
+  const rowActions: RatingsRowActions = { onUpdate: updateLocal, onEdit: setEditing };
+  const display = displayForGroup(filters.group);
+  const Renderer = mode === "detailed" ? RatingsDetailed : mode === "index" ? RatingsIndex : RatingsGraphic;
+  const typeGroups = filters.group === "type" ? groupRatingsByType(items) : null;
+  const artistGroups = filters.group === "artist" ? groupRatingsByArtist(items) : null;
 
   const emptyBlock = isFiltered ? (
     <EmptyState
@@ -171,98 +224,29 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
   );
 
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-5">
-      <p className="font-data text-xs text-paper-muted">{t("totalLabel", { count: total })}</p>
+    <div className={`flex w-full flex-col gap-5 ${mode === "graphic" ? "max-w-5xl" : "max-w-3xl"}`}>
+      <p className="font-data text-xs text-paper-muted">
+        <span>{t("totalLabel", { count: total })}</span>
+        <span aria-hidden> · </span>
+        <span>{t("countAlbums", { count: counts["release-group"] })}</span>
+        <span aria-hidden> · </span>
+        <span>{t("countSongs", { count: counts.recording })}</span>
+      </p>
 
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 font-data text-xs text-paper-muted">
-          {t("sortLabel")}
-          <select
-            value={filters.sort}
-            onChange={(event) => setFilters((current) => ({ ...current, sort: event.target.value as MyRatingSort }))}
-            className="rounded border border-ink-border bg-ink-surface px-2 py-1 text-paper"
-          >
-            <option value="best">{t("sortBest")}</option>
-            <option value="worst">{t("sortWorst")}</option>
-            <option value="recent">{t("sortRecent")}</option>
-            <option value="title">{t("sortTitle")}</option>
-          </select>
-        </label>
+      <RatingsToolbar
+        filters={filters}
+        onChange={setFilters}
+        searchInput={searchInput}
+        onSearchInput={setSearchInput}
+        onClear={clearFilters}
+        availableYears={availableYears}
+      />
 
-        <label className="flex flex-col gap-1 font-data text-xs text-paper-muted">
-          {t("starsFilterLabel")}
-          <select
-            value={filters.stars}
-            onChange={(event) => setFilters((current) => ({ ...current, stars: event.target.value }))}
-            className="rounded border border-ink-border bg-ink-surface px-2 py-1 text-paper"
-          >
-            <option value="">{t("starsAll")}</option>
-            <option value="5">5★</option>
-            <option value="4.5">4½★</option>
-            <option value="4">4★</option>
-            <option value="3.5">3½★</option>
-            <option value="3">3★</option>
-            <option value="2.5">2½★</option>
-            <option value="2">2★</option>
-            <option value="1.5">1½★</option>
-            <option value="1">1★</option>
-            <option value="0.5">½★</option>
-          </select>
-        </label>
-
-        <label className="flex flex-col gap-1 font-data text-xs text-paper-muted">
-          {t("typeFilterLabel")}
-          <select
-            value={filters.type}
-            onChange={(event) => setFilters((current) => ({ ...current, type: event.target.value }))}
-            className="rounded border border-ink-border bg-ink-surface px-2 py-1 text-paper"
-          >
-            <option value="">{t("typeAll")}</option>
-            <option value="release-group">{t("typeAlbum")}</option>
-            <option value="recording">{t("typeSong")}</option>
-          </select>
-        </label>
-
-        <label className="flex flex-col gap-1 font-data text-xs text-paper-muted">
-          {t("yearFilterLabel")}
-          <select
-            value={filters.year}
-            onChange={(event) => setFilters((current) => ({ ...current, year: event.target.value }))}
-            className="rounded border border-ink-border bg-ink-surface px-2 py-1 text-paper"
-          >
-            <option value="">{t("yearAll")}</option>
-            {availableYears.map((year) => (
-              <option key={year} value={year}>{year}</option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col gap-1 font-data text-xs text-paper-muted">
-          {t("decadeFilterLabel")}
-          <select
-            value={filters.decade}
-            onChange={(event) => setFilters((current) => ({ ...current, decade: event.target.value }))}
-            disabled={Boolean(filters.year)}
-            className="rounded border border-ink-border bg-ink-surface px-2 py-1 text-paper disabled:opacity-50"
-          >
-            <option value="">{t("decadeAll")}</option>
-            <option value="2020">2020s</option>
-            <option value="2010">2010s</option>
-            <option value="2000">2000s</option>
-            <option value="1990">1990s</option>
-            <option value="1980">1980s</option>
-            <option value="1970">1970s</option>
-            <option value="1960">1960s</option>
-            <option value="1950">1950s</option>
-          </select>
-        </label>
-
-        {isFiltered ? (
-          <Button variant="secondary" onClick={clearFilters} className="self-end">
-            {t("clearFilters")}
-          </Button>
-        ) : null}
-      </div>
+      {items.length > 0 ? (
+        <div className="flex items-center justify-end">
+          <RatingsModeSwitcher mode={mode} onChange={setMode} />
+        </div>
+      ) : null}
 
       <span role="status" aria-live="polite" className="sr-only">
         {announce}
@@ -270,17 +254,47 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
 
       {items.length === 0 ? (
         emptyBlock
-      ) : (
-        <div className="flex flex-col gap-4">
-          {items.map((entry) => (
-            <MyRatingRow
-              key={entry.id}
-              entry={entry}
-              onUpdate={updateLocal}
-              onDelete={deleteLocal}
-            />
+      ) : artistGroups ? (
+        // Una sección por artista principal; dentro, Álbumes y Canciones por separado para no
+        // confundir una canción con un álbum. Sin contador: la sección puede quedar cortada entre
+        // páginas y el servidor no devuelve totales por artista.
+        <div className="flex flex-col gap-10">
+          {artistGroups.map((group) => (
+            <section key={group.key} className="flex flex-col gap-4">
+              <h2 className="font-display text-lg text-paper">
+                {group.href && group.artistName ? (
+                  <Link href={group.href} className="transition-colors hover:text-amber">
+                    {group.artistName}
+                  </Link>
+                ) : (
+                  (group.artistName ?? t("sectionNoArtist"))
+                )}
+              </h2>
+              {group.byType.map((sub) => (
+                <div key={sub.type} className="flex flex-col gap-2">
+                  <h3 className="font-data text-xs uppercase tracking-wide text-paper-muted">
+                    {t(sectionTitleKey(sub.type))}
+                  </h3>
+                  <Renderer entries={sub.entries} actions={rowActions} display={display} />
+                </div>
+              ))}
+            </section>
           ))}
         </div>
+      ) : typeGroups ? (
+        <div className="flex flex-col gap-8">
+          {typeGroups.map((group) => (
+            <section key={group.type} className="flex flex-col gap-3">
+              <h2 className="flex items-baseline gap-2 font-display text-lg text-paper">
+                {t(sectionTitleKey(group.type))}
+                <span className="font-data text-xs text-paper-muted">{counts[group.type]}</span>
+              </h2>
+              <Renderer entries={group.entries} actions={rowActions} display={display} />
+            </section>
+          ))}
+        </div>
+      ) : (
+        <Renderer entries={items} actions={rowActions} display={display} />
       )}
 
       {isError ? (
@@ -298,6 +312,16 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
         >
           {isFetchingNextPage ? t("loadingMore") : t("loadMore")}
         </Button>
+      ) : null}
+
+      {editing ? (
+        <RatingDetailDialog
+          open
+          onClose={() => setEditing(null)}
+          target={{ type: editing.targetType, id: editing.target.id }}
+          own={ownForDialog(editing)}
+          onChange={handleDialogChange}
+        />
       ) : null}
     </div>
   );

@@ -1,3 +1,4 @@
+import { PgDialect } from "drizzle-orm/pg-core";
 import { describe, expect, it, vi } from "vitest";
 import { listMyRatings } from "./my-ratings";
 
@@ -7,12 +8,18 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/db", () => ({ db: mocks.db }));
 
-function mockCountQuery(count: number) {
+const dialect = new PgDialect();
+
+// Espías de la última consulta de conteo y de lista, para inspeccionar el WHERE y el ORDER BY.
+const spies = { countWhere: vi.fn(), listWhere: vi.fn(), orderBy: vi.fn() };
+
+function mockCountQuery(count: number, albums = count, songs = 0) {
+  spies.countWhere = vi.fn().mockResolvedValue([{ count, albums, songs }]);
   mocks.db.select.mockReturnValueOnce({
     from: vi.fn().mockReturnValue({
       leftJoin: vi.fn().mockReturnValue({
         leftJoin: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([{ count }]),
+          where: spies.countWhere,
         }),
       }),
     }),
@@ -22,8 +29,10 @@ function mockCountQuery(count: number) {
 function mockListQuery(rows: unknown[]) {
   const offset = vi.fn().mockResolvedValue(rows);
   const limit = vi.fn(() => ({ offset }));
-  const orderBy = vi.fn(() => ({ limit }));
-  const where = vi.fn(() => ({ orderBy }));
+  spies.orderBy = vi.fn(() => ({ limit }));
+  const orderBy = spies.orderBy;
+  spies.listWhere = vi.fn(() => ({ orderBy }));
+  const where = spies.listWhere;
   const leftJoin2 = vi.fn(() => ({ where }));
   const leftJoin1 = vi.fn(() => ({ leftJoin: leftJoin2 }));
   mocks.db.select.mockReturnValueOnce({
@@ -41,8 +50,13 @@ function mockYearsQuery(years: (number | null)[]) {
   });
 }
 
-function mockAllQueries(count: number, rows: unknown[], years: (number | null)[] = []) {
-  mockCountQuery(count);
+function mockAllQueries(
+  count: number,
+  rows: unknown[],
+  years: (number | null)[] = [],
+  counts?: { albums: number; songs: number },
+) {
+  mockCountQuery(count, counts?.albums, counts?.songs);
   mockListQuery(rows);
   mockYearsQuery(years);
 }
@@ -121,5 +135,90 @@ describe("listMyRatings", () => {
 
   it("rechaza un orden inválido", async () => {
     await expect(listMyRatings(userId, 1, 20, { sort: "invalid" as "best" })).rejects.toThrow("orden");
+  });
+  it("devuelve el desglose por tipo junto con el total", async () => {
+    mockAllQueries(15, [makeRow()], [], { albums: 12, songs: 3 });
+    const result = await listMyRatings(userId);
+    expect(result.total).toBe(15);
+    expect(result.counts).toEqual({ "release-group": 12, recording: 3 });
+  });
+
+  it("con group=type (por defecto) antepone el rango de tipo al orden elegido", async () => {
+    mockAllQueries(1, [makeRow()]);
+    await listMyRatings(userId, 1, 20, { sort: "recent" });
+    const withGroup = spies.orderBy.mock.calls[0]!.length;
+
+    mockAllQueries(1, [makeRow()]);
+    await listMyRatings(userId, 1, 20, { sort: "recent", group: "none" });
+    const withoutGroup = spies.orderBy.mock.calls[0]!.length;
+
+    expect(withGroup).toBe(withoutGroup + 1);
+  });
+
+  it("con group=artist ordena por artista, luego tipo y luego el orden elegido", async () => {
+    mockAllQueries(1, [makeRow()]);
+    await listMyRatings(userId, 1, 20, { sort: "recent", group: "artist" });
+    const args = spies.orderBy.mock.calls[0]! as unknown as Parameters<PgDialect["sqlToQuery"]>[0][];
+
+    mockAllQueries(1, [makeRow()]);
+    await listMyRatings(userId, 1, 20, { sort: "recent", group: "none" });
+    const plain = spies.orderBy.mock.calls[0]!.length;
+
+    // nombre del artista + id del artista + rango de tipo delante del orden elegido
+    expect(args.length).toBe(plain + 3);
+    const rendered = args.slice(0, 3).map((arg) => dialect.sqlToQuery(arg).sql);
+    expect(rendered[0]).toMatch(/lower\(/i);
+    expect(rendered[0]).toMatch(/nulls last/i);
+    expect(rendered[1]).toMatch(/nulls last/i);
+    expect(rendered[2]).toContain("CASE WHEN");
+  });
+
+  it("group=artist no se confunde con group=type", async () => {
+    mockAllQueries(1, [makeRow()]);
+    await listMyRatings(userId, 1, 20, { sort: "recent", group: "type" });
+    const typeArgs = spies.orderBy.mock.calls[0]!.length;
+    mockAllQueries(1, [makeRow()]);
+    await listMyRatings(userId, 1, 20, { sort: "recent", group: "artist" });
+    expect(spies.orderBy.mock.calls[0]!.length).toBe(typeArgs + 2);
+  });
+
+  it("el rango de tipo pone los álbumes antes que las canciones", async () => {
+    mockAllQueries(1, [makeRow()]);
+    await listMyRatings(userId, 1, 20, { sort: "best" });
+    const first = spies.orderBy.mock.calls[0]![0] as Parameters<PgDialect["sqlToQuery"]>[0];
+    const { sql: text } = dialect.sqlToQuery(first);
+    expect(text).toContain("CASE WHEN");
+    expect(text).toContain("release_group_id");
+    expect(text).toContain("THEN 0 ELSE 1");
+  });
+
+  it("aplica la búsqueda a la lista y al conteo, sobre título y artista", async () => {
+    mockAllQueries(1, [makeRow()]);
+    await listMyRatings(userId, 1, 20, { q: "floyd" });
+    for (const spy of [spies.countWhere, spies.listWhere]) {
+      const condition = spy.mock.calls[0]![0] as Parameters<PgDialect["sqlToQuery"]>[0];
+      const query = dialect.sqlToQuery(condition);
+      expect(query.params).toContain("%floyd%");
+      expect(query.sql.toLowerCase()).toContain("ilike");
+    }
+  });
+
+  it("escapa los comodines de LIKE en la búsqueda", async () => {
+    mockAllQueries(0, []);
+    await listMyRatings(userId, 1, 20, { q: "100%_" });
+    const condition = spies.listWhere.mock.calls[0]![0] as Parameters<PgDialect["sqlToQuery"]>[0];
+    expect(dialect.sqlToQuery(condition).params).toContain(String.raw`%100\%\_%`);
+  });
+
+  it("una búsqueda vacía no agrega condición", async () => {
+    mockAllQueries(0, []);
+    await listMyRatings(userId, 1, 20, { q: "   " });
+    const condition = spies.listWhere.mock.calls[0]![0] as Parameters<PgDialect["sqlToQuery"]>[0];
+    expect(dialect.sqlToQuery(condition).sql.toLowerCase()).not.toContain("ilike");
+  });
+
+  it("rechaza una agrupación o una búsqueda inválidas", async () => {
+    await expect(listMyRatings(userId, 1, 20, { group: "album" as "type" })).rejects.toThrow("agrupación");
+    await expect(listMyRatings(userId, 1, 20, { q: "x".repeat(101) })).rejects.toThrow("búsqueda");
   });
 });

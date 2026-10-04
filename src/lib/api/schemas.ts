@@ -2430,12 +2430,24 @@ export const MY_RATING_TARGET_TYPES = ["release-group", "recording"] as const;
 export const MyRatingTargetTypeSchema = z.enum(MY_RATING_TARGET_TYPES);
 export type MyRatingTargetType = z.infer<typeof MyRatingTargetTypeSchema>;
 
+// Agrupación de la biblioteca (change add-ratings-view-modes): "type" parte la lista en
+// secciones Álbumes → Canciones; "artist" reúne las valoraciones de álbumes y canciones bajo su
+// artista principal acreditado (los artistas en sí no se valoran); "none" la deja como una sola
+// lista.
+export const MY_RATING_GROUPS = ["type", "artist", "none"] as const;
+export const MyRatingGroupSchema = z.enum(MY_RATING_GROUPS);
+export type MyRatingGroup = z.infer<typeof MyRatingGroupSchema>;
+
+export const MY_RATING_SEARCH_MAX_LENGTH = 100;
+
 export const MyRatingsFiltersSchema = z.object({
   sort: MyRatingSortSchema.optional(),
   stars: z.number().min(0.5).max(5).multipleOf(0.5).optional(),
   type: MyRatingTargetTypeSchema.optional(),
   year: z.number().int().optional(),
   decade: z.number().int().refine((value) => value % 10 === 0).optional(),
+  q: z.string().trim().max(MY_RATING_SEARCH_MAX_LENGTH).optional(),
+  group: MyRatingGroupSchema.optional(),
 });
 export type MyRatingsFilters = z.infer<typeof MyRatingsFiltersSchema>;
 
@@ -2462,12 +2474,19 @@ export const MyRatingsFacetsSchema = z.object({
   years: z.array(z.number().int()),
 });
 
+export const MyRatingsCountsSchema = z.object({
+  "release-group": z.number().int(),
+  recording: z.number().int(),
+});
+export type MyRatingsCounts = z.infer<typeof MyRatingsCountsSchema>;
+
 export const MyRatingsListResponseSchema = z.object({
   items: z.array(MyRatingEntrySchema),
   page: z.number().int(),
   pageSize: z.number().int(),
   hasNext: z.boolean(),
   total: z.number().int(),
+  counts: MyRatingsCountsSchema,
   facets: MyRatingsFacetsSchema,
 });
 export type MyRatingsListResponse = z.infer<typeof MyRatingsListResponseSchema>;
