@@ -34,7 +34,7 @@ describe("ChangePasswordDialog: cambiar", () => {
   async function fill(user: ReturnType<typeof userEvent.setup>, next = "nueva-clave-1", repeat = next) {
     await user.type(screen.getByLabelText("Tu contraseña actual"), "actual-123");
     await user.type(screen.getByLabelText("Contraseña nueva"), next);
-    await user.type(screen.getByLabelText("Repetí la contraseña nueva"), repeat);
+    await user.type(screen.getByLabelText("Repite la contraseña nueva"), repeat);
   }
 
   it("valida en línea el largo mínimo y que coincidan", async () => {
@@ -45,14 +45,14 @@ describe("ChangePasswordDialog: cambiar", () => {
 
     await user.clear(screen.getByLabelText("Contraseña nueva"));
     await user.type(screen.getByLabelText("Contraseña nueva"), "nueva-clave-1");
-    await user.type(screen.getByLabelText("Repetí la contraseña nueva"), "otra-clave-9");
+    await user.type(screen.getByLabelText("Repite la contraseña nueva"), "otra-clave-9");
     expect(screen.getByText("Las contraseñas no coinciden")).toBeInTheDocument();
     expect(submit("Cambiar contraseña")).toBeDisabled();
   });
 
   it("cada campo de contraseña tiene su ojo, que alterna con un clic", async () => {
     const { user } = setup("change");
-    const fields = ["Tu contraseña actual", "Contraseña nueva", "Repetí la contraseña nueva"].map((label) =>
+    const fields = ["Tu contraseña actual", "Contraseña nueva", "Repite la contraseña nueva"].map((label) =>
       screen.getByLabelText(label),
     );
     const toggles = screen.getAllByRole("button", { name: "Mostrar contraseña" });
@@ -125,10 +125,10 @@ describe("ChangePasswordDialog: crear (cuenta de Google)", () => {
     expect(screen.getByText(/Así vas a poder entrar con tu email y contraseña/)).toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Contraseña nueva"), "nueva-clave-1");
-    await user.type(screen.getByLabelText("Repetí la contraseña nueva"), "nueva-clave-1");
+    await user.type(screen.getByLabelText("Repite la contraseña nueva"), "nueva-clave-1");
     await user.click(submit("Crear contraseña"));
 
-    expect(await screen.findByRole("status")).toHaveTextContent("Ahora podés entrar con email y contraseña");
+    expect(await screen.findByRole("status")).toHaveTextContent("Ahora puedes entrar con email y contraseña");
     const [, , init] = mocks.apiFetch.mock.calls[0]!;
     expect((init as RequestInit).method).toBe("POST");
     expect(JSON.parse((init as RequestInit).body as string)).toEqual({ newPassword: "nueva-clave-1", locale: "es" });
@@ -139,7 +139,7 @@ describe("ChangePasswordDialog: crear (cuenta de Google)", () => {
     mocks.apiFetch.mockRejectedValue(new mocks.ApiError("REAUTH_REQUIRED"));
     const { user } = setup("create");
     await user.type(screen.getByLabelText("Contraseña nueva"), "nueva-clave-1");
-    await user.type(screen.getByLabelText("Repetí la contraseña nueva"), "nueva-clave-1");
+    await user.type(screen.getByLabelText("Repite la contraseña nueva"), "nueva-clave-1");
 
     await user.click(submit("Crear contraseña"));
 

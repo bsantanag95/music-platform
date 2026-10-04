@@ -82,7 +82,7 @@ describe("SignInCard", () => {
     const dialog = await screen.findByRole("dialog", { name: "Desvincular Google" });
     await user.click(within(dialog).getByRole("button", { name: "Desvincular" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/Creá una contraseña antes de desvincular Google/);
+    expect(await screen.findByRole("alert")).toHaveTextContent(/Crea una contraseña antes de desvincular Google/);
   });
 
   it("muestra el resultado del flujo de Google al volver a Ajustes", () => {

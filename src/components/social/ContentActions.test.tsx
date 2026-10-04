@@ -22,7 +22,7 @@ describe("ContentActions", () => {
     renderWithIntl(<ContentActions targetType="review" targetId="rv1" authorUsername="ana" authorId="u1" />);
 
     fireEvent.click(screen.getByRole("button", { name: "Reportar" }));
-    fireEvent.change(screen.getByPlaceholderText("Contanos por qué lo reportás"), { target: { value: "Spam" } });
+    fireEvent.change(screen.getByPlaceholderText("Cuentanos por qué lo reportas"), { target: { value: "Spam" } });
     fireEvent.click(screen.getByRole("button", { name: "Enviar reporte" }));
 
     await waitFor(() => {

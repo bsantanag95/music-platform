@@ -55,7 +55,7 @@ describe("desactivar", () => {
     expect(within(dialog).getByText("Se oculta")).toBeInTheDocument();
     expect(within(dialog).getByText("Se conserva")).toBeInTheDocument();
     expect(within(dialog).getByText(/«Cuenta desactivada», sin enlace/)).toBeInTheDocument();
-    expect(within(dialog).getByText("Para reactivarla, iniciá sesión. No se pierde nada.")).toBeInTheDocument();
+    expect(within(dialog).getByText("Para reactivarla, inicia sesión. No se pierde nada.")).toBeInTheDocument();
   });
 
   it("pide la contraseña, desactiva y recarga hacia el inicio de sesión", async () => {
@@ -123,13 +123,13 @@ describe("eliminar", () => {
     const dialog = await openDelete(user);
     expect(within(dialog).getByText("Esto no se puede deshacer.")).toBeInTheDocument();
     expect(within(dialog).getByText(/Se borran tus valoraciones, reseñas y comentarios/)).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: "Desactivá la cuenta" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Desactiva la cuenta" })).toBeInTheDocument();
   });
 
-  it("'Desactivá la cuenta' cambia al diálogo de desactivar", async () => {
+  it("'Desactiva la cuenta' cambia al diálogo de desactivar", async () => {
     const user = setup();
     const dialog = await openDelete(user);
-    await user.click(within(dialog).getByRole("button", { name: "Desactivá la cuenta" }));
+    await user.click(within(dialog).getByRole("button", { name: "Desactiva la cuenta" }));
     expect(await screen.findByRole("dialog", { name: "Desactivar cuenta" })).toBeInTheDocument();
     expect(screen.queryByRole("dialog", { name: "Eliminar cuenta" })).not.toBeInTheDocument();
   });
@@ -140,11 +140,11 @@ describe("eliminar", () => {
     const submit = within(dialog).getByRole("button", { name: "Eliminar para siempre" });
     expect(submit).toBeDisabled();
 
-    await user.type(within(dialog).getByLabelText(/Escribí tu usuario \(ana\)/), "an");
+    await user.type(within(dialog).getByLabelText(/Escribe tu usuario \(ana\)/), "an");
     await user.type(within(dialog).getByLabelText("Tu contraseña actual"), "secreta-123");
     expect(submit).toBeDisabled();
 
-    await user.type(within(dialog).getByLabelText(/Escribí tu usuario/), "a");
+    await user.type(within(dialog).getByLabelText(/Escribe tu usuario/), "a");
     expect(submit).toBeEnabled();
   });
 
@@ -152,7 +152,7 @@ describe("eliminar", () => {
     const user = setup();
     mocks.apiFetch.mockResolvedValue({ ok: true });
     const dialog = await openDelete(user);
-    await user.type(within(dialog).getByLabelText(/Escribí tu usuario/), "ana");
+    await user.type(within(dialog).getByLabelText(/Escribe tu usuario/), "ana");
     await user.type(within(dialog).getByLabelText("Tu contraseña actual"), "secreta-123");
     await user.click(within(dialog).getByRole("button", { name: "Eliminar para siempre" }));
 
@@ -167,14 +167,14 @@ describe("eliminar", () => {
     const user = setup();
     mocks.apiFetch.mockRejectedValue(new mocks.ApiError("ACCOUNT_DELETION_BLOCKED"));
     const dialog = await openDelete(user);
-    await user.type(within(dialog).getByLabelText(/Escribí tu usuario/), "ana");
+    await user.type(within(dialog).getByLabelText(/Escribe tu usuario/), "ana");
     await user.type(within(dialog).getByLabelText("Tu contraseña actual"), "secreta-123");
     await user.click(within(dialog).getByRole("button", { name: "Eliminar para siempre" }));
 
     expect(await within(dialog).findByRole("alert")).toHaveTextContent("historial de moderación o editorial");
     expect(mocks.assign).not.toHaveBeenCalled();
     // La alternativa reversible sigue a mano.
-    expect(within(dialog).getByRole("button", { name: "Desactivá la cuenta" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Desactiva la cuenta" })).toBeInTheDocument();
   });
 
   it("una cuenta de Google escribe solo el usuario y no envía contraseña", async () => {
@@ -182,7 +182,7 @@ describe("eliminar", () => {
     mocks.apiFetch.mockResolvedValue({ ok: true });
     const dialog = await openDelete(user);
     expect(within(dialog).queryByLabelText("Tu contraseña actual")).not.toBeInTheDocument();
-    await user.type(within(dialog).getByLabelText(/Escribí tu usuario/), "ana");
+    await user.type(within(dialog).getByLabelText(/Escribe tu usuario/), "ana");
     await user.click(within(dialog).getByRole("button", { name: "Eliminar para siempre" }));
 
     await waitFor(() => expect(mocks.apiFetch).toHaveBeenCalled());

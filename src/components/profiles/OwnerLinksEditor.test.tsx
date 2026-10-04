@@ -170,7 +170,7 @@ describe("OwnerLinksEditor", () => {
       await user.click(screen.getByRole("button", { name: "Guardar" }));
 
       const alert = await screen.findByRole("alert");
-      expect(alert).toHaveTextContent("Ese enlace no es de Instagram. Escribí solo tu usuario de Instagram.");
+      expect(alert).toHaveTextContent("Ese enlace no es de Instagram. Escribe solo tu usuario de Instagram.");
       expect(mocks.apiFetch).not.toHaveBeenCalled();
       // El error está asociado al campo para las tecnologías de asistencia.
       const input = screen.getByLabelText("Usuario o enlace");
@@ -199,7 +199,7 @@ describe("OwnerLinksEditor", () => {
 
       await user.click(screen.getByRole("button", { name: "Guardar" }));
 
-      expect(await screen.findByRole("alert")).toHaveTextContent("Escribí una dirección web válida");
+      expect(await screen.findByRole("alert")).toHaveTextContent("Escribe una dirección web válida");
     });
 
     it("un esquema no web se rechaza", async () => {

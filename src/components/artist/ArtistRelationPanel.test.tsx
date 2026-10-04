@@ -115,7 +115,7 @@ describe("ArtistRelationPanel", () => {
 
   it("Colección en solo lectura: discos en colección y en búsqueda", () => {
     renderPanel(makeState({ collection: { have: 3, seeking: 1 } }));
-    expect(screen.getByText("3 discos · buscás 1")).toBeInTheDocument();
+    expect(screen.getByText("3 discos · buscas 1")).toBeInTheDocument();
   });
 
   it("Recorrido en curso: barra discreta sin cifras y enlace a la gestión", () => {

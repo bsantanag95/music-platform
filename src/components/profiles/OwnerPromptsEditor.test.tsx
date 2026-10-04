@@ -102,7 +102,7 @@ describe("OwnerPromptsEditor", () => {
     // La fila nueva está vacía; el conjunto cambió, así que guardar está habilitado.
     await user.click(save());
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Escribí una respuesta o quitá la pregunta.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Escribe una respuesta o quita la pregunta.");
     expect(mocks.apiFetch).not.toHaveBeenCalled();
   });
 

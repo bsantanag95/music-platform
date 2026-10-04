@@ -92,7 +92,7 @@ describe("ChangeUsernameDialog", () => {
 
   it("avisa del enfriamiento, la redirección y el color del monograma", () => {
     setup();
-    expect(screen.getByText("Podés cambiarlo una vez cada 30 días.")).toBeInTheDocument();
+    expect(screen.getByText("Puedes cambiarlo una vez cada 30 días.")).toBeInTheDocument();
     expect(
       screen.getByText("Durante 30 días /users/besantanag95 redirige a tu perfil nuevo y nadie más puede tomar ese usuario."),
     ).toBeInTheDocument();
@@ -133,7 +133,7 @@ describe("ChangeUsernameDialog", () => {
 
     await user.click(submitButton());
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Solo podés cambiar tu usuario una vez cada 30 días.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Solo puedes cambiar tu usuario una vez cada 30 días.");
     await waitFor(() => expect(submitButton()).toBeEnabled());
   });
 

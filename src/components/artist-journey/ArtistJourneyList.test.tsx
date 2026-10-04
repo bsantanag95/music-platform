@@ -336,7 +336,7 @@ describe("ArtistJourneyList", () => {
     await openCardMenu(user);
     await user.click(screen.getByRole("menuitem", { name: "Eliminar" }));
     await user.click(screen.getByRole("button", { name: "Confirmar eliminación" }));
-    expect(await screen.findByText("No pudimos eliminar el recorrido. Intentá de nuevo.")).toBeInTheDocument();
+    expect(await screen.findByText("No pudimos eliminar el recorrido. Intenta de nuevo.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Deep Purple" })).toBeInTheDocument();
   });
 

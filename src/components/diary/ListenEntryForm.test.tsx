@@ -210,7 +210,7 @@ describe("ListenEntryForm", () => {
 
     await user.click(screen.getByRole("button", { name: "Guardar" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "No pudimos guardar el cambio. Intentá de nuevo.",
+      "No pudimos guardar el cambio. Intenta de nuevo.",
     );
   });
 });

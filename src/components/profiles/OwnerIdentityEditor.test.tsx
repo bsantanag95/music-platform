@@ -71,7 +71,7 @@ describe("OwnerIdentityEditor", () => {
       renderWithIntl(<OwnerIdentityEditor initial={emptyInitial} />);
       expect(showTime()).toBeDisabled();
       expect(showTime()).not.toBeChecked();
-      expect(screen.getByText("Elegí una zona horaria para poder mostrar tu hora local.")).toBeInTheDocument();
+      expect(screen.getByText("Elige una zona horaria para poder mostrar tu hora local.")).toBeInTheDocument();
     });
 
     it("guarda la zona elegida con el buscador y la hora local en un solo PATCH", async () => {
@@ -194,12 +194,12 @@ describe("OwnerIdentityEditor", () => {
       await user.selectOptions(select(), "other");
       expect(other()).toBeInTheDocument();
       expect(example()).toHaveTextContent("la interfaz usa la forma neutra");
-      expect(screen.getByText("Escribí tus pronombres para poder guardar.")).toBeInTheDocument();
+      expect(screen.getByText("Escribe tus pronombres para poder guardar.")).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Guardar" })).toBeDisabled();
 
       await user.type(other(), "ellx");
       expect(screen.getByRole("button", { name: "Guardar" })).toBeEnabled();
-      expect(screen.queryByText("Escribí tus pronombres para poder guardar.")).not.toBeInTheDocument();
+      expect(screen.queryByText("Escribe tus pronombres para poder guardar.")).not.toBeInTheDocument();
     });
 
     it("«Otro» limita el texto a 40 caracteres", async () => {

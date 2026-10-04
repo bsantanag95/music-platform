@@ -22,7 +22,7 @@ describe("buildEmailChangeConfirmEmail", () => {
       token: "t",
       appUrl: 'https://app.test/"><script>',
     });
-    expect(message.subject).toBe("Confirmá tu nuevo email");
+    expect(message.subject).toBe("Confirma tu nuevo email");
     expect(message.html).not.toContain("<script>");
   });
 });
