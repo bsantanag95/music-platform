@@ -7,7 +7,7 @@
   },
   "terms": {
     "title": "Términos del servicio",
-    "body": "Acá vivirán las condiciones de uso de la plataforma: qué se puede publicar, a quién pertenece el contenido que subís, y en qué casos se puede suspender una cuenta."
+    "body": "Acá vivirán las condiciones de uso de la plataforma: qué se puede publicar, a quién pertenece el contenido que subes, y en qué casos se puede suspender una cuenta."
   },
   "privacy": {
     "title": "Política de privacidad",
@@ -16,27 +16,27 @@
     "sections": {
       "personal": {
         "title": "Datos personales opcionales del perfil",
-        "body": "En tu perfil podés agregar, si querés, tu país, tu ciudad o región, tus pronombres, una bio, tu zona horaria y, si lo activás, tu hora local. Todo es opcional, empieza vacío y hoy se usa solo para mostrarlo en tu perfil.",
+        "body": "En tu perfil puedes agregar, si quieres, tu país, tu ciudad o región, tus pronombres, una bio, tu zona horaria y, si lo activas, tu hora local. Todo es opcional, empieza vacío y hoy se usa solo para mostrarlo en tu perfil.",
         "body2": "Quién lo ve: en un perfil público, cualquier persona; en un perfil privado, solo tú y quienes te siguen con la solicitud aprobada. La bio, los enlaces y los contadores siguen la regla de siempre y se ven en la tarjeta de un perfil privado.",
-        "body3": "Nunca te lo pedimos al registrarte. Podés cambiarlo o vaciarlo cuando quieras desde Ajustes → Perfil, y se borra junto con tu cuenta cuando la eliminás. No recogemos tu fecha de nacimiento, tu género ni tu nombre legal en campos aparte: el único nombre es el «Nombre visible», que puede ser un apodo."
+        "body3": "Nunca te lo pedimos al registrarte. Puedes cambiarlo o vaciarlo cuando quieras desde Ajustes → Perfil, y se borra junto con tu cuenta cuando la eliminas. No recogemos tu fecha de nacimiento, tu género ni tu nombre legal en campos aparte: el único nombre es el «Nombre visible», que puede ser un apodo."
       },
       "deactivate": {
         "title": "Desactivar tu cuenta",
-        "body": "Desde Ajustes → Cuenta y seguridad podés desactivar tu cuenta para tomarte una pausa. Tu perfil deja de ser visible para las demás personas: no aparece en búsquedas, seguidores, seguidos, feed, actividad de la comunidad ni listas, y nadie puede seguirte ni bloquearte. Cerramos todas tus sesiones. Para hacerlo te pedimos confirmar tu identidad.",
+        "body": "Desde Ajustes → Cuenta y seguridad puedes desactivar tu cuenta para tomarte una pausa. Tu perfil deja de ser visible para las demás personas: no aparece en búsquedas, seguidores, seguidos, feed, actividad de la comunidad ni listas, y nadie puede seguirte ni bloquearte. Cerramos todas tus sesiones. Para hacerlo te pedimos confirmar tu identidad.",
         "body2": "Desactivar no borra nada: conservamos tus valoraciones, reseñas, comentarios, listas, favoritos, diario y seguimientos. Tus valoraciones siguen contando en los promedios, y tus reseñas y comentarios siguen visibles con la autoría «Cuenta desactivada», sin tu usuario, sin tu nombre y sin enlace a tu perfil."
       },
       "reactivate": {
         "title": "Reactivar tu cuenta",
-        "body": "Iniciar sesión, con tu contraseña o con Google, reactiva tu cuenta de inmediato y todo vuelve a verse como estaba. No hay un paso de confirmación adicional: si no querés que tu perfil vuelva a ser visible, no inicies sesión."
+        "body": "Iniciar sesión, con tu contraseña o con Google, reactiva tu cuenta de inmediato y todo vuelve a verse como estaba. No hay un paso de confirmación adicional: si no quieres que tu perfil vuelva a ser visible, no inicies sesión."
       },
       "delete": {
         "title": "Eliminar tu cuenta",
-        "body": "También desde Cuenta y seguridad podés eliminar tu cuenta. Borramos la cuenta y todo lo que creaste: perfil, enlaces y preguntas, valoraciones, reseñas, comentarios, listas, favoritos, diario, colección, seguimientos, bloqueos, reportes que hiciste y sesiones. Los datos de otras personas no se ven afectados.",
-        "body2": "Eliminar es inmediato e irreversible: hoy no hay período de gracia. Para confirmarlo te pedimos escribir tu usuario y confirmar tu identidad. Si solo querés una pausa, desactivá la cuenta."
+        "body": "También desde Cuenta y seguridad puedes eliminar tu cuenta. Borramos la cuenta y todo lo que creaste: perfil, enlaces y preguntas, valoraciones, reseñas, comentarios, listas, favoritos, diario, colección, seguimientos, bloqueos, reportes que hiciste y sesiones. Los datos de otras personas no se ven afectados.",
+        "body2": "Eliminar es inmediato e irreversible: hoy no hay período de gracia. Para confirmarlo te pedimos escribir tu usuario y confirmar tu identidad. Si solo quieres una pausa, desactiva la cuenta."
       },
       "export": {
         "title": "Descargar tus datos",
-        "body": "En el mismo lugar podés descargar un archivo JSON con tus datos: cuenta, perfil, biblioteca (incluidas las notas privadas del diario), actividad, listas y red. De quienes te siguen o seguís solo figura el usuario público. El archivo nunca incluye tu contraseña, tokens ni sesiones. Se permite una descarga por minuto."
+        "body": "En el mismo lugar puedes descargar un archivo JSON con tus datos: cuenta, perfil, biblioteca (incluidas las notas privadas del diario), actividad, listas y red. De quienes te siguen o sigues solo figura el usuario público. El archivo nunca incluye tu contraseña, tokens ni sesiones. Se permite una descarga por minuto."
       },
       "limits": {
         "title": "Lo que hoy no se puede eliminar",

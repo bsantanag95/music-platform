@@ -1,7 +1,7 @@
 {
   "communityEyebrow": "Comunidad",
   "searchTitle": "Usuarios",
-  "searchDescription": "Descubrí quiénes forman parte de la comunidad.",
+  "searchDescription": "Descubre quiénes forman parte de la comunidad.",
   "searchFieldLabel": "Buscar usuarios",
   "searchPlaceholder": "Buscar por nombre de usuario",
   "searchSubmit": "Buscar",
@@ -30,7 +30,7 @@
   "cancel": "Cancelar",
   "report": "Reportar",
   "reportReasonLabel": "Motivo del reporte",
-  "reportReasonPlaceholder": "Contanos por qué reportás a esta persona",
+  "reportReasonPlaceholder": "Cuentanos por qué reportas a esta persona",
   "reportSubmit": "Enviar reporte",
   "reportSent": "Reporte enviado. Gracias.",
   "suspend": "Suspender actividad",
@@ -48,11 +48,11 @@
   "profilePrivateLabel": "Privado",
   "profilePrivateDescription": "Seguirte requiere aprobación; tus contenidos son privados por defecto.",
   "savingPrivacy": "Guardando...",
-  "privacySaveError": "No pudimos guardar la configuración. Intentá de nuevo.",
+  "privacySaveError": "No pudimos guardar la configuración. Intenta de nuevo.",
   "profileMetaFollowers": "Seguidores",
   "profileMetaFollowing": "Siguiendo",
   "artistsFollowedTitle": "Artistas que sigo",
-  "artistsFollowedEmpty": "Todavía no seguís a ningún artista.",
+  "artistsFollowedEmpty": "Todavía no sigues a ningún artista.",
   "artistsFollowed": {
     "searchPlaceholder": "Buscar en tus artistas",
     "sortLabel": "Ordenar",
@@ -65,8 +65,8 @@
       "index": "Índice",
       "graphic": "Gráfico"
     },
-    "emptyTitle": "Todavía no seguís a ningún artista",
-    "emptyDescription": "Seguí artistas desde su página para armar tu radar personal y encontrarlos acá.",
+    "emptyTitle": "Todavía no sigues a ningún artista",
+    "emptyDescription": "Sigue artistas desde su página para armar tu radar personal y encontrarlos acá.",
     "emptyCta": "Buscar en el catálogo",
     "noResultsTitle": "Sin resultados",
     "noResultsDescription": "Ningún artista seguido coincide con la búsqueda."
@@ -80,13 +80,13 @@
   "journeyStateComplete": "Recorrido completo",
   "requestsTitle": "Solicitudes de seguimiento",
   "blocksTitle": "Cuentas bloqueadas",
-  "emptyRequests": "No tenés solicitudes pendientes.",
+  "emptyRequests": "No tienes solicitudes pendientes.",
   "emptyBlocks": "No bloqueaste a nadie.",
   "removeFollower": "Eliminar seguidor",
   "backToProfile": "Volver a mi perfil",
   "privateNoticeEyebrow": "Perfil privado",
   "privateNoticeTitle": "Este perfil es privado",
-  "privateNoticeMutual": "{count, plural, one {Una persona que seguís también sigue esta cuenta.} other {# personas que seguís también siguen esta cuenta.}}",
+  "privateNoticeMutual": "{count, plural, one {Una persona que sigues también sigue esta cuenta.} other {# personas que sigues también siguen esta cuenta.}}",
   "requestFollow": "Solicitar seguir",
   "createAccount": "Crear cuenta",
   "privateProfile": {
@@ -94,15 +94,15 @@
     "chipBlocked": "Bloqueada",
     "eyebrowBlocked": "Cuenta bloqueada",
     "titleBlockedByMe": "Bloqueaste a esta cuenta",
-    "titleBlockedByThem": "No podés ver este perfil",
+    "titleBlockedByThem": "No puedes ver este perfil",
     "opensOnFollow": "Se abre al seguir",
     "body": {
-      "anonymous": "Iniciá sesión y pedí seguir a @{username} para ver su diario, sus favoritos, sus listas y su colección.",
+      "anonymous": "Inicia sesión y pide seguir a @{username} para ver su diario, sus favoritos, sus listas y su colección.",
       "none": "Pedile seguir a @{username} para ver su diario, sus favoritos, sus listas y su colección. Tiene que aprobar tu solicitud.",
       "requested": "Tu solicitud está enviada. @{username} tiene que aprobarla antes de que puedas ver su contenido.",
-      "incoming": "@{username} te envió una solicitud para seguirte. Su contenido sigue privado; podés responder la solicitud desde acá.",
+      "incoming": "@{username} te envió una solicitud para seguirte. Su contenido sigue privado; puedes responder la solicitud desde acá.",
       "blockedByMe": "Bloqueaste a esta cuenta. Desbloqueala para volver a ver su perfil o seguirla.",
-      "blockedByThem": "No podés ver ni seguir a esta cuenta.",
+      "blockedByThem": "No puedes ver ni seguir a esta cuenta.",
       "preview": "Pedile seguir a @{username} para ver su diario, sus favoritos, sus listas y su colección. Tiene que aprobar tu solicitud."
     }
   },
@@ -147,7 +147,7 @@
     "anthemNowPlaying": "Suena en bucle",
     "edit": {
       "heading": "Empieza por aquí",
-      "pinnedIntro": "Hasta 4 recomendaciones para quien visite tu perfil. Elegí de tus favoritos y contá por qué.",
+      "pinnedIntro": "Hasta 4 recomendaciones para quien visite tu perfil. Elige de tus favoritos y cuenta por qué.",
       "addFromFavorites": "Agregar de favoritos",
       "noteLabel": "¿Por qué empezar por aquí?",
       "notePlaceholder": "Una frase para quien te visita…",
@@ -157,7 +157,7 @@
       "moveDown": "Bajar",
       "savePinned": "Guardar recomendaciones",
       "maxPinned": "Máximo 4 recomendaciones",
-      "noFavorites": "Marcá favoritos para poder recomendarlos."
+      "noFavorites": "Marca favoritos para poder recomendarlos."
     }
   },
   "identityCard": {
@@ -175,9 +175,9 @@
       "emptyArtist": "Todavía no elegiste un artista.",
       "emptyAlbum": "Todavía no elegiste un álbum.",
       "emptySong": "Todavía no elegiste una canción.",
-      "noArtistFavorites": "Marcá un artista como favorito para poder elegirlo.",
-      "noAlbumFavorites": "Marcá un álbum como favorito para poder elegirlo.",
-      "noSongFavorites": "Marcá una canción como favorita para poder elegirla."
+      "noArtistFavorites": "Marcq un artista como favorito para poder elegirlo.",
+      "noAlbumFavorites": "Marcq un álbum como favorito para poder elegirlo.",
+      "noSongFavorites": "Marcq una canción como favorita para poder elegirla."
     }
   },
   "favoritePicker": {
@@ -206,7 +206,7 @@
     "mutualFollowingHeading": "Cuentas que ambos siguen",
     "mutualFollowersHeading": "Seguidores en común",
     "mutualEmpty": "Sin coincidencias todavía.",
-    "mutualSignInHint": "Iniciá sesión para ver las coincidencias con esta cuenta.",
+    "mutualSignInHint": "Inicia sesión para ver las coincidencias con esta cuenta.",
     "emptyFollowing": "No sigue a nadie todavía.",
     "emptyFollowers": "Sin seguidores todavía.",
     "privateNotice": "Este perfil es privado."
@@ -245,12 +245,12 @@
     "a11yRidgeDetail": "{label}: {count} ({detail})",
     "declaredBadge": "Lo declaraste en tus géneros",
     "a11yDeclared": "Lo declaraste en tus géneros",
-    "declaredMissing": "{count, plural, one {Declaraste {families}, pero no aparece en lo que valorás.} other {Declaraste {families}, pero no aparecen en lo que valorás.}}"
+    "declaredMissing": "{count, plural, one {Declaraste {families}, pero no aparece en lo que valoras.} other {Declaraste {families}, pero no aparecen en lo que valoras.}}"
   },
   "edit": {
     "identityHeading": "Tu identidad",
     "bioLabel": "Bio",
-    "bioPlaceholder": "Una línea sobre vos y tu relación con la música",
+    "bioPlaceholder": "Una línea sobre ti y tu relación con la música",
     "pronounsLabel": "Pronombres",
     "locationLabel": "Ciudad o región",
     "timezoneLabel": "Zona horaria",
@@ -264,10 +264,10 @@
     "maxLinksReached": "Llegaste al máximo de 5 enlaces",
     "linkValueLabelHandle": "Usuario o enlace",
     "linkValueLabelWeb": "Dirección web",
-    "linkHandleHelp": "Escribí solo tu usuario. Si pegás el enlace de tu perfil, lo extraemos por vos.",
-    "linkWebHelp": "Podés escribirla sin https://.",
+    "linkHandleHelp": "Escribí solo tu usuario. Si pegas el enlace de tu perfil, lo extraemos por ti.",
+    "linkWebHelp": "Puedes escribirla sin https://.",
     "linkPreview": "Se guardará como {url}",
-    "linkLegacyWarning": "Este enlace no coincide con {site}. Escribí tu usuario de {site}, o quitalo para poder guardar.",
+    "linkLegacyWarning": "Este enlace no coincide con {site}. Escribe tu usuario de {site}, o quitalo para poder guardar.",
     "linkPlaceholder": {
       "instagram": "@usuario",
       "x": "@usuario",
@@ -282,28 +282,28 @@
     },
     "linkKindHelp": {
       "youtube": "Tu @usuario de YouTube, no el enlace del canal.",
-      "bandcamp": "El nombre de tu página: tunombre.bandcamp.com. Si tenés dominio propio, usá Enlace.",
+      "bandcamp": "El nombre de tu página: tunombre.bandcamp.com. Si tienes dominio propio, usa Enlace.",
       "discogs": "Tu perfil de usuario, no una página de artista o de sello.",
       "spotify": "El identificador de tu perfil de usuario, no un artista ni una playlist."
     },
     "linkErrors": {
-      "empty": "Escribí un valor o quitá esta fila.",
-      "wrong_site": "Ese enlace no es de {site}. Escribí solo tu usuario de {site}.",
+      "empty": "Escribe un valor o quita esta fila.",
+      "wrong_site": "Ese enlace no es de {site}. Escribe solo tu usuario de {site}.",
       "missing_handle": "Falta tu usuario de {site}: no alcanza con la página principal ni con una publicación.",
-      "invalid_handle": "Ese no parece un usuario válido de {site}. Revisá que no tenga espacios ni símbolos no permitidos.",
-      "youtube_format": "Escribí tu @usuario de YouTube (por ejemplo @micanal); los enlaces de canal con /channel no sirven.",
-      "invalid_url": "Escribí una dirección web válida, por ejemplo ejemplo.com.",
+      "invalid_handle": "Ese no parece un usuario válido de {site}. Revisa que no tenga espacios ni símbolos no permitidos.",
+      "youtube_format": "Escribe tu @usuario de YouTube (por ejemplo @micanal); los enlaces de canal con /channel no sirven.",
+      "invalid_url": "Escribe una dirección web válida, por ejemplo ejemplo.com.",
       "unsafe_scheme": "Solo se aceptan direcciones web (http o https)."
     },
     "timezoneNone": "Sin zona horaria",
     "showLocalTime": "Mostrar mi hora local en el perfil",
-    "showLocalTimeNeedsZone": "Elegí una zona horaria para poder mostrar tu hora local.",
+    "showLocalTimeNeedsZone": "Elige una zona horaria para poder mostrar tu hora local.",
     "timezoneSearch": "Buscar zona (ej. Santiago)",
     "timezoneNoResults": "Ninguna zona coincide con «{query}».",
     "timezoneResults": "{count, plural, one {# zona} other {# zonas}}",
     "countryLabel": "País",
     "countryNone": "Sin país",
-    "countrySearch": "Buscar país (ej. Chile)",
+    "countrySearch": "Buscar país",
     "countryNoResults": "Ningún país coincide con «{query}».",
     "countryResults": "{count, plural, one {# país} other {# países}}",
     "pronounOption": {
@@ -314,7 +314,7 @@
       "other": "Otro…"
     },
     "pronounOtherLabel": "Tus pronombres",
-    "pronounOtherRequired": "Escribí tus pronombres para poder guardar.",
+    "pronounOtherRequired": "Escribe tus pronombres para poder guardar.",
     "pronounExampleLabel": "Ejemplo",
     "pronounExampleName": "Ana",
     "pronounExample": {
@@ -343,7 +343,7 @@
   "editPanel": {
     "close": "Cerrar",
     "discardTitle": "¿Descartar los cambios?",
-    "discardMessage": "Tenés cambios sin guardar en este editor. Si cerrás, se pierden.",
+    "discardMessage": "Tienes cambios sin guardar en este editor. Si cierras, se pierden.",
     "discardConfirm": "Descartar",
     "discardCancel": "Seguir editando"
   },
@@ -352,7 +352,7 @@
     "editBlock": "Editar {block}",
     "toggle": "Editar perfil",
     "placa": "Tu perfil",
-    "emptyBlock": "{block}: todavía no hay nada acá. Editá para agregar."
+    "emptyBlock": "{block}: todavía no hay nada acá. Edita para agregar."
   },
   "ownerBar": {
     "label": "Opciones de tu perfil",
@@ -373,11 +373,11 @@
     },
     "profile": {
       "title": "Perfil",
-      "intro": "Lo que cualquiera ve como “quién sos”: tu tarjeta de identidad, tu bio y tus enlaces."
+      "intro": "Lo que cualquiera ve como “quién eres”: tu tarjeta de identidad, tu bio y tus enlaces."
     },
     "curation": {
       "title": "Curaduría",
-      "intro": "Lo que elegís mostrar en tu perfil.",
+      "intro": "Lo que eliges mostrar en tu perfil.",
       "edit": "Editar",
       "editRow": "Editar {name}",
       "outOf": "{count} de {max}",
@@ -405,7 +405,7 @@
       "intro": "Quién puede ver tu perfil y con qué audiencia nace lo que agregues.",
       "audience": {
         "title": "Audiencia por defecto del contenido nuevo",
-        "intro": "Aplica a los favoritos, entradas de diario, listas y copias de colección que agregues desde ahora. No cambia lo que ya tenés (para eso está «Aplicar a lo existente», más abajo) y podés ajustar cada elemento por separado.",
+        "intro": "Aplica a los favoritos, entradas de diario, listas y copias de colección que agregues desde ahora. No cambia lo que ya tienes (para eso está «Aplicar a lo existente», más abajo) y puedes ajustar cada elemento por separado.",
         "options": {
           "auto": {
             "title": "Según el tipo (recomendado)",
@@ -413,7 +413,7 @@
           },
           "private": {
             "title": "Privado",
-            "description": "Lo nuevo nace visible solo para vos."
+            "description": "Lo nuevo nace visible solo para ti."
           },
           "followers": {
             "title": "Seguidores",
@@ -427,8 +427,8 @@
         "excluded": "Las reseñas y los comentarios no dependen de esta preferencia: son públicos y se muestran en la página de cada álbum o canción.",
         "apply": {
           "button": "Aplicar a lo existente",
-          "hint": "Lleva la audiencia elegida a todo lo que ya tenés en tu biblioteca. Antes de confirmar te mostramos cuántos elementos cambian.",
-          "disabledHint": "Elegí Privado, Seguidores o Público para poder aplicarlo a lo existente.",
+          "hint": "Lleva la audiencia elegida a todo lo que ya tienes en tu biblioteca. Antes de confirmar te mostramos cuántos elementos cambian.",
+          "disabledHint": "Elige Privado, Seguidores o Público para poder aplicarlo a lo existente.",
           "checking": "Revisando tu biblioteca...",
           "applying": "Aplicando...",
           "nothing": "Todo tu contenido ya tiene la audiencia «{audience}». No hay nada que cambiar.",
@@ -447,7 +447,7 @@
           },
           "confirm": {
             "title": "Aplicar «{audience}» a lo existente",
-            "summary": "Va a cambiar la audiencia de {items} a «{audience}». No se puede deshacer, aunque después podés volver a aplicar otra.",
+            "summary": "Va a cambiar la audiencia de {items} a «{audience}». No se puede deshacer, aunque después puedes volver a aplicar otra.",
             "highlighted": "Entre ellos hay elementos fijados o destacados de tu perfil: {items}.",
             "diaryHighlightedVisible": "Las entradas de diario destacadas siguen visibles para cualquiera.",
             "pinnedHidden": "Las listas fijadas que pasen a una audiencia más cerrada dejarán de verse para quien quede fuera.",
@@ -462,8 +462,8 @@
       "title": "Red",
       "intro": "Las personas alrededor de tu perfil.",
       "hint": {
-        "followers": "Quién te sigue. Podés quitar a alguien de tu lista.",
-        "following": "Las cuentas que seguís.",
+        "followers": "Quién te sigue. Puedes quitar a alguien de tu lista.",
+        "following": "Las cuentas que sigues.",
         "followRequests": "Bandeja de entrada: quién quiere seguirte.",
         "blocks": "Las cuentas que bloqueaste."
       }
@@ -474,17 +474,17 @@
       "displayName": {
         "title": "Nombre visible",
         "label": "Nombre visible",
-        "help": "Cómo aparecés junto a tu @{username}. Si lo dejás vacío se muestra tu usuario."
+        "help": "Cómo aparecés junto a tu @{username}. Si lo dejas vacío se muestra tu usuario."
       },
       "access": {
         "title": "Método de acceso",
-        "hint": "Cómo iniciás sesión en tu cuenta.",
+        "hint": "Cómo inicias sesión en tu cuenta.",
         "password": "Correo y contraseña",
         "none": "No hay ningún método de acceso vinculado."
       },
       "sessions": {
         "title": "Sesiones",
-        "hint": "Cada dispositivo con una sesión abierta. Cerrá la que no reconozcas.",
+        "hint": "Cada dispositivo con una sesión abierta. Cierra la que no reconozcas.",
         "button": "Cerrar todas las sesiones",
         "confirmTitle": "¿Cerrar todas las sesiones?",
         "confirmMessage": "Se cerrará tu sesión en todos los dispositivos, también en este, y tendrás que iniciar sesión de nuevo.",
@@ -507,7 +507,7 @@
         "link": "Tu enlace de perfil: /users/{username}",
         "change": "Cambiar",
         "dialogTitle": "Cambiar usuario",
-        "intro": "Tu usuario es parte del enlace de tu perfil. Usá letras, números y guion bajo, de 3 a 32 caracteres.",
+        "intro": "Tu usuario es parte del enlace de tu perfil. Usa letras, números y guion bajo, de 3 a 32 caracteres.",
         "label": "Usuario nuevo",
         "checking": "Comprobando…",
         "available": "Disponible",
@@ -519,13 +519,13 @@
           "current": "Ese ya es tu usuario",
           "taken": "Ese usuario no está disponible"
         },
-        "note1": "Podés cambiarlo una vez cada 30 días.",
+        "note1": "Puedes cambiarlo una vez cada 30 días.",
         "note2": "Durante 30 días /users/{old} redirige a tu perfil nuevo y nadie más puede tomar ese usuario.",
         "note3": "El color de tu monograma cambia, porque se calcula desde el usuario.",
-        "cooldown": "Ya cambiaste tu usuario hace poco. Podés volver a cambiarlo el {date}.",
+        "cooldown": "Ya cambiaste tu usuario hace poco. Puedes volver a cambiarlo el {date}.",
         "submit": "Cambiar usuario",
         "saving": "Cambiando…",
-        "done": "Listo. Tu usuario ahora es @{username}. Podés volver a cambiarlo el {date}."
+        "done": "Listo. Tu usuario ahora es @{username}. Puedes volver a cambiarlo el {date}."
       },
       "email": {
         "title": "Email",
@@ -534,27 +534,27 @@
         "change": "Cambiar",
         "pending": "Cambio pendiente a {email}. Tu email actual sigue vigente hasta que lo confirmes.",
         "dialogTitle": "Cambiar email",
-        "intro": "Te mandamos un correo al email nuevo. Hasta que lo confirmes, seguís entrando con el actual.",
+        "intro": "Te mandamos un correo al email nuevo. Hasta que lo confirmes, sigues entrando con el actual.",
         "label": "Email nuevo",
         "placeholder": "nuevo@ejemplo.com",
-        "invalid": "Escribí un email válido",
+        "invalid": "Escribe un email válido",
         "note1": "El enlace de confirmación vence a las 24 horas.",
-        "note2": "También avisamos al email actual, por si no fuiste vos.",
+        "note2": "También avisamos al email actual, por si no fuiste tu.",
         "submit": "Enviar confirmación",
         "sending": "Enviando…",
         "done": "Enviamos un correo a {email}. Tu email sigue siendo {current} hasta que confirmes."
       },
       "identity": {
         "passwordLabel": "Tu contraseña actual",
-        "googleHint": "Tu cuenta usa Google: confirmá tu identidad con Google para continuar.",
+        "googleHint": "Tu cuenta usa Google: confirma tu identidad con Google para continuar.",
         "googleButton": "Confirmar con Google"
       },
       "signIn": {
-        "title": "Cómo iniciás sesión",
+        "title": "Cómo inicias sesión",
         "password": {
           "title": "Contraseña",
           "set": "Definida",
-          "none": "Sin contraseña: accedés solo con Google",
+          "none": "Sin contraseña: accedes solo con Google",
           "change": "Cambiar contraseña",
           "create": "Crear contraseña"
         },
@@ -566,9 +566,9 @@
           "unlink": "Desvincular",
           "lastMethod": "Es tu único método de acceso, por eso no se puede desvincular. Creá una contraseña primero.",
           "linkedNotice": "Google quedó vinculada a tu cuenta.",
-          "confirmedNotice": "Identidad confirmada. Ya podés repetir la acción.",
+          "confirmedNotice": "Identidad confirmada. Ya puedes repetir la acción.",
           "unlinkTitle": "Desvincular Google",
-          "unlinkMessage": "Vas a seguir entrando con tu email y contraseña. Podés volver a vincular Google cuando quieras.",
+          "unlinkMessage": "Vas a seguir entrando con tu email y contraseña. Puedes volver a vincular Google cuando quieras.",
           "unlinkConfirm": "Desvincular",
           "unlinked": "Google desvinculada."
         }
@@ -578,7 +578,7 @@
         "createTitle": "Crear contraseña",
         "createIntro": "Así vas a poder entrar con tu email y contraseña, además de con Google.",
         "new": "Contraseña nueva",
-        "repeat": "Repetí la contraseña nueva",
+        "repeat": "Repite la contraseña nueva",
         "help": "De 8 a 128 caracteres.",
         "tooShort": "Mínimo 8 caracteres",
         "mismatch": "Las contraseñas no coinciden",
@@ -588,7 +588,7 @@
         "saving": "Guardando…",
         "doneChange": "Contraseña actualizada.",
         "doneChangeRevoked": "Contraseña actualizada. Cerramos tus otras sesiones.",
-        "doneCreate": "Listo. Ahora podés entrar con email y contraseña."
+        "doneCreate": "Listo. Ahora puedes entrar con email y contraseña."
       },
       "preferences": {
         "title": "Preferencias",
@@ -609,7 +609,7 @@
         },
         "deactivate": {
           "title": "Desactivar cuenta",
-          "hint": "Tu perfil deja de verse, pero se conserva toda tu actividad. Volvés cuando quieras iniciando sesión.",
+          "hint": "Tu perfil deja de verse, pero se conserva toda tu actividad. Vuelve cuando quieras iniciando sesión.",
           "button": "Desactivar…",
           "dialogTitle": "Desactivar cuenta",
           "hidesTitle": "Se oculta",
@@ -619,9 +619,9 @@
           "keepsTitle": "Se conserva",
           "keeps1": "Diario, favoritos, listas y colección",
           "keeps2": "Valoraciones, reseñas y comentarios",
-          "keeps3": "Quién te sigue y a quién seguís",
+          "keeps3": "Quién te sigue y a quién sigues",
           "note": "En las reseñas y comentarios que ya publicaste, tu nombre pasa a «Cuenta desactivada», sin enlace a tu perfil.",
-          "reactivate": "Para reactivarla, iniciá sesión. No se pierde nada.",
+          "reactivate": "Para reactivarla, inicia sesión. No se pierde nada.",
           "submit": "Desactivar mi cuenta",
           "saving": "Desactivando…"
         },
@@ -634,17 +634,17 @@
         },
         "delete": {
           "title": "Eliminar cuenta",
-          "hint": "Borra para siempre tu perfil y todo lo que creaste. No se puede deshacer. Si solo querés una pausa, usá «Desactivar».",
+          "hint": "Borra para siempre tu perfil y todo lo que creaste. No se puede deshacer. Si solo quieres una pausa, usá «Desactivar».",
           "button": "Eliminar mi cuenta…",
           "dialogTitle": "Eliminar cuenta",
           "warning": "Esto no se puede deshacer.",
           "item1": "Se borran tu perfil, diario, favoritos, listas, colección y por escuchar",
           "item2": "Se borran tus valoraciones, reseñas y comentarios",
-          "item3": "Dejás de seguir y de ser seguido, y se cierran todas tus sesiones",
-          "alternativePrefix": "¿Solo querés una pausa?",
-          "alternativeLink": "Desactivá la cuenta",
-          "alternativeSuffix": "y conservás todo.",
-          "confirmLabel": "Escribí tu usuario ({username}) para confirmar",
+          "item3": "Dejas de seguir y de ser seguido, y se cierran todas tus sesiones",
+          "alternativePrefix": "¿Solo quieres una pausa?",
+          "alternativeLink": "Desactiva la cuenta",
+          "alternativeSuffix": "y conservas todo.",
+          "confirmLabel": "Escribe tu usuario ({username}) para confirmar",
           "submit": "Eliminar para siempre",
           "saving": "Eliminando…"
         }
@@ -710,11 +710,11 @@
     },
     "editor": {
       "rolesTitle": "Me defino como",
-      "rolesHint": "Hasta {max}. Aparece en tu perfil y cuenta cómo te relacionás con la música.",
+      "rolesHint": "Hasta {max}. Aparece en tu perfil y cuenta cómo te relacionas con la música.",
       "genresTitle": "Géneros que me mueven",
-      "genresHint": "Hasta {max}. Buscá entre todos los géneros por su nombre.",
+      "genresHint": "Hasta {max}. Busca entre todos los géneros por su nombre.",
       "formatsTitle": "Cómo escucho",
-      "formatsHint": "Los formatos que usás.",
+      "formatsHint": "Los formatos que usas.",
       "counter": "{count} de {max}",
       "promptsTitle": "Preguntas del perfil",
       "promptsHint": "Hasta {max}, con una respuesta de una línea (máximo {chars} caracteres).",
@@ -723,7 +723,7 @@
       "answerPlaceholder": "Una línea",
       "addPrompt": "Agregar pregunta",
       "removePrompt": "Quitar la pregunta «{question}»",
-      "emptyAnswer": "Escribí una respuesta o quitá la pregunta.",
+      "emptyAnswer": "Escribe una respuesta o quita la pregunta.",
       "genreSearchLabel": "Buscar un género",
       "genreSearchPlaceholder": "Por ejemplo: shoegaze, cumbia, jazz",
       "genreSearching": "Buscando…",
@@ -731,7 +731,7 @@
       "genreSuggestions": "Los más usados",
       "genreRemove": "Quitar {genre}",
       "genreAdd": "Agregar {genre}",
-      "genreFull": "Ya elegiste el máximo. Quitá uno para agregar otro."
+      "genreFull": "Ya elegiste el máximo. Quita uno para agregar otro."
     }
   },
   "profileLocalTime": "{time} hora local",
@@ -750,7 +750,7 @@
     "removing": "Quitando foto…",
     "success": "Foto actualizada.",
     "removed": "Foto quitada.",
-    "errorGeneric": "No se pudo completar la operación. Intentá de nuevo.",
+    "errorGeneric": "No se pudo completar la operación. Intenta de nuevo.",
     "helpText": "JPEG, PNG, WebP o AVIF. Máximo 10 MB."
   }
 }

@@ -303,7 +303,7 @@
     "timezoneResults": "{count, plural, one {# zone} other {# zones}}",
     "countryLabel": "Country",
     "countryNone": "No country",
-    "countrySearch": "Search a country (e.g. Chile)",
+    "countrySearch": "Search a country",
     "countryNoResults": "No country matches “{query}”.",
     "countryResults": "{count, plural, one {# country} other {# countries}}",
     "pronounOption": {

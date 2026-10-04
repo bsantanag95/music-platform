@@ -1,13 +1,13 @@
 {
   "title": "Feed",
   "emptyTitle": "Nada para ver todavía",
-  "emptyDescription": "Seguí a personas para que sus escuchas, favoritos, listas, valoraciones y comentarios aparezcan acá.",
+  "emptyDescription": "Sigue a personas para que sus escuchas, favoritos, listas, valoraciones y comentarios aparezcan acá.",
   "community": {
     "pageTitle": "Actividad de la comunidad",
     "heading": "Actividad",
-    "intro": "Valoraciones, comentarios y reseñas recientes de la comunidad, y la actividad de la gente que seguís.",
+    "intro": "Valoraciones, comentarios y reseñas recientes de la comunidad, y la actividad de la gente que sigues.",
     "recentHeading": "Recientes",
-    "followingHeading": "De la gente que seguís",
+    "followingHeading": "De la gente que sigues",
     "ownHeading": "Tu actividad",
     "tablistLabel": "Secciones de actividad",
     "tabEmpty": "Todavía no hay actividad acá.",
@@ -35,7 +35,7 @@
   "rotationPeak": "En rotación · {count, plural, one {# registro} other {# registros}} esta semana",
   "convergence": {
     "title": "En tu red esta semana",
-    "people": "{count, plural, one {# persona que seguís} other {# personas que seguís}}",
+    "people": "{count, plural, one {# persona que sigues} other {# personas que sigues}}",
     "andMore": "y {count} más"
   },
   "ambient": {
@@ -47,7 +47,7 @@
   "loadMore": "Cargar más",
   "loadingMore": "Cargando...",
   "retry": "Reintentar",
-  "loadError": "No pudimos cargar el feed. Intentá de nuevo.",
+  "loadError": "No pudimos cargar el feed. Intenta de nuevo.",
   "caughtUpMessage": "Estás al día",
   "findPeopleCta": "Buscar personas",
   "loadedAnnouncement": "{count, plural, one {Se cargó # entrada nueva} other {Se cargaron # entradas nuevas}}",
@@ -58,7 +58,7 @@
   "filterAllAuthor": "Autor",
   "clearFilters": "Limpiar filtros",
   "noResultsTitle": "Sin resultados para estos filtros",
-  "noResultsDescription": "Probá con otra búsqueda o quitá alguno de los filtros aplicados.",
+  "noResultsDescription": "Prueba con otra búsqueda o quita alguno de los filtros aplicados.",
   "showMore": "Ver más",
   "showLess": "Ver menos",
   "kind": {

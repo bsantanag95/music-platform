@@ -8,7 +8,7 @@
   "clearFilters": "Limpiar filtros",
   "loadMore": "Cargar más",
   "loadingMore": "Cargando…",
-  "loadError": "No pudimos cargar las valoraciones. Intentá de nuevo.",
+  "loadError": "No pudimos cargar las valoraciones. Intenta de nuevo.",
   "loadedAnnouncement": "{count, plural, one {# valoración más cargada} other {# valoraciones más cargadas}}",
   "sortLabel": "Ordenar",
   "sortBest": "Mejor nota",
@@ -30,8 +30,8 @@
   "untunedAction": "Afinar puntaje",
   "scoreRemoved": "Se quitó el puntaje {score} porque no es coherente con las nuevas estrellas.",
   "deletedAnnouncement": "Valoración borrada",
-  "deleteError": "No pudimos borrar la valoración. Intentá de nuevo.",
-  "saveError": "No pudimos guardar el cambio. Intentá de nuevo.",
+  "deleteError": "No pudimos borrar la valoración. Intenta de nuevo.",
+  "saveError": "No pudimos guardar el cambio. Intenta de nuevo.",
   "starsLegend": "Estrellas de {title}",
   "starValue": "{value} estrellas"
 }

@@ -1,11 +1,11 @@
 {
   "VALIDATION_ERROR": {
     "title": "Error de validación",
-    "description": "Revisá los datos ingresados e intentá de nuevo."
+    "description": "Revisa los datos ingresados e intenta de nuevo."
   },
   "ARTIST_NOT_FOUND": {
     "title": "No se encontró el artista",
-    "description": "Probá con otro nombre o verificá que esté bien escrito."
+    "description": "Prueba con otro nombre o verifica que esté bien escrito."
   },
   "ALBUM_NOT_FOUND": {
     "title": "No se encontró el álbum",
@@ -21,7 +21,7 @@
   },
   "AUTH_REQUIRED": {
     "title": "Inicio de sesión requerido",
-    "description": "Iniciá sesión para realizar esta acción."
+    "description": "Inicia sesión para realizar esta acción."
   },
   "INVALID_CREDENTIALS": {
     "title": "Credenciales incorrectas",
@@ -29,19 +29,19 @@
   },
   "USERNAME_TAKEN": {
     "title": "Usuario no disponible",
-    "description": "Elegí otro nombre de usuario."
+    "description": "Elige otro nombre de usuario."
   },
   "EMAIL_TAKEN": {
     "title": "Email ya registrado",
-    "description": "Usá otro email o iniciá sesión."
+    "description": "Usa otro email o inicia sesión."
   },
   "RATE_LIMITED": {
     "title": "Demasiados intentos",
-    "description": "Esperá unos minutos antes de volver a intentar."
+    "description": "Espera unos minutos antes de volver a intentar."
   },
   "PERMISSION_DENIED": {
     "title": "Acción no permitida",
-    "description": "No tenés permiso para modificar este recurso."
+    "description": "No tienes permiso para modificar este recurso."
   },
   "ROLE_REQUIRED": {
     "title": "Permiso de plataforma requerido",
@@ -49,7 +49,7 @@
   },
   "SOCIAL_SUSPENSION_ACTIVE": {
     "title": "Actividad social suspendida",
-    "description": "No podés publicar ni generar nueva actividad social mientras dure la suspensión."
+    "description": "No puedes publicar ni generar nueva actividad social mientras dure la suspensión."
   },
   "MODERATION_REPORT_NOT_FOUND": {
     "title": "Reporte no encontrado",
@@ -65,11 +65,11 @@
   },
   "INVALID_RATING": {
     "title": "Valoración inválida",
-    "description": "Revisá los valores de la valoración."
+    "description": "Revisa los valores de la valoración."
   },
   "INVALID_COMMENT": {
     "title": "Comentario inválido",
-    "description": "Revisá el contenido del comentario."
+    "description": "Revisa el contenido del comentario."
   },
   "RATING_NOT_FOUND": {
     "title": "Valoración no encontrada",
@@ -85,7 +85,7 @@
   },
   "REVIEW_REQUIRES_RATING": {
     "title": "Falta la valoración",
-    "description": "Elegí una valoración para el álbum antes de publicar la reseña."
+    "description": "Elige una valoración para el álbum antes de publicar la reseña."
   },
   "REVIEW_TARGET_NOT_SUPPORTED": {
     "title": "Todavía no disponible",
@@ -93,7 +93,7 @@
   },
   "INTERNAL_ERROR": {
     "title": "Error inesperado",
-    "description": "No pudimos completar la solicitud. Intentá de nuevo en un momento."
+    "description": "No pudimos completar la solicitud. Intenta de nuevo en un momento."
   },
   "OAUTH_CONFIG_MISSING": {
     "title": "Inicio de sesión con Google no disponible",
@@ -101,39 +101,39 @@
   },
   "OAUTH_STATE_INVALID": {
     "title": "Sesión de autenticación expirada",
-    "description": "La sesión de inicio de sesión con Google expiró. Intentá de nuevo."
+    "description": "La sesión de inicio de sesión con Google expiró. Intenta de nuevo."
   },
   "OAUTH_CANCELLED": {
     "title": "Inicio de sesión cancelado",
-    "description": "Cancelaste el inicio de sesión con Google. Podés intentarlo de nuevo cuando quieras."
+    "description": "Cancelaste el inicio de sesión con Google. Puedes intentarlo de nuevo cuando quieras."
   },
   "OAUTH_CALLBACK_INVALID": {
     "title": "Error en el inicio de sesión",
-    "description": "No pudimos completar el inicio de sesión con Google. Intentá de nuevo."
+    "description": "No pudimos completar el inicio de sesión con Google. Intenta de nuevo."
   },
   "OAUTH_TOKEN_INVALID": {
     "title": "Token de Google inválido",
-    "description": "No pudimos verificar tu identidad con Google. Intentá de nuevo."
+    "description": "No pudimos verificar tu identidad con Google. Intenta de nuevo."
   },
   "OAUTH_EMAIL_NOT_VERIFIED": {
     "title": "Email de Google no verificado",
-    "description": "Tu email de Google no está verificado. Verificá tu email en Google e intentá de nuevo."
+    "description": "Tu email de Google no está verificado. Verifica tu email en Google e intenta de nuevo."
   },
   "EMAIL_TAKEN_BY_LOCAL": {
     "title": "Ya existe una cuenta con ese email",
-    "description": "Ya tenés una cuenta con ese email. Iniciá sesión con tu contraseña para continuar."
+    "description": "Ya tienes una cuenta con ese email. Inicia sesión con tu contraseña para continuar."
   },
   "INVALID_RESET_TOKEN": {
     "title": "Link inválido o expirado",
-    "description": "El link para restablecer tu contraseña no es válido o ya expiró. Pedí uno nuevo."
+    "description": "El link para restablecer tu contraseña no es válido o ya expiró. Pide uno nuevo."
   },
   "PASSWORD_REUSED": {
-    "title": "Usá una contraseña distinta",
+    "title": "Usa una contraseña distinta",
     "description": "La contraseña nueva tiene que ser distinta de la anterior."
   },
   "INVALID_VERIFICATION_TOKEN": {
     "title": "Link de verificación inválido",
-    "description": "El link para verificar tu email no es válido o ya expiró. Pedí uno nuevo."
+    "description": "El link para verificar tu email no es válido o ya expiró. Pide uno nuevo."
   },
   "EMAIL_ALREADY_VERIFIED": {
     "title": "Email ya verificado",
@@ -141,7 +141,7 @@
   },
   "EMAIL_CONFIG_MISSING": {
     "title": "Envío de email no disponible",
-    "description": "El envío de emails no está configurado. Intentá más tarde."
+    "description": "El envío de emails no está configurado. Intenta más tarde."
   },
   "USER_NOT_FOUND": {
     "title": "Usuario no encontrado",
@@ -157,7 +157,7 @@
   },
   "BLOCKED": {
     "title": "Cuenta bloqueada",
-    "description": "No podés realizar esta acción con esta cuenta."
+    "description": "No puedes realizar esta acción con esta cuenta."
   },
   "LISTEN_ENTRY_NOT_FOUND": {
     "title": "Escucha no encontrada",
@@ -177,7 +177,7 @@
   },
   "LIST_NOT_FOUND": {
     "title": "Lista no encontrada",
-    "description": "La lista no existe o no es visible para vos."
+    "description": "La lista no existe o no es visible para ti."
   },
   "LIST_TARGET_INVALID": {
     "title": "Objetivo inválido",
@@ -196,24 +196,24 @@
     "description": "La entrada no existe o ya fue quitada de la colección."
   },
   "REAUTH_REQUIRED": {
-    "title": "Confirmá tu identidad",
-    "description": "Por seguridad, confirmá que sos vos antes de continuar."
+    "title": "Confirma tu identidad",
+    "description": "Por seguridad, confirma que eres tú antes de continuar."
   },
   "USERNAME_CHANGE_COOLDOWN": {
     "title": "Cambio de usuario no disponible todavía",
-    "description": "Solo podés cambiar tu usuario una vez cada 30 días."
+    "description": "Solo puedes cambiar tu usuario una vez cada 30 días."
   },
   "LAST_ACCESS_METHOD": {
     "title": "Es tu único método de acceso",
-    "description": "Creá una contraseña antes de desvincular Google, o te quedarías sin forma de entrar."
+    "description": "Crea una contraseña antes de desvincular Google, o te quedarías sin forma de entrar."
   },
   "OAUTH_IDENTITY_TAKEN": {
     "title": "Esa cuenta de Google ya está en uso",
-    "description": "Esa cuenta de Google ya está vinculada a otra cuenta. Probá con otra."
+    "description": "Esa cuenta de Google ya está vinculada a otra cuenta. Prueba con otra."
   },
   "OAUTH_IDENTITY_MISMATCH": {
     "title": "No es la cuenta vinculada",
-    "description": "Elegiste una cuenta de Google distinta de la que tenés vinculada."
+    "description": "Elegiste una cuenta de Google distinta de la que tienes vinculada."
   },
   "SESSION_NOT_FOUND": {
     "title": "Sesión no encontrada",
@@ -221,7 +221,7 @@
   },
   "ACCOUNT_DELETION_BLOCKED": {
     "title": "No se puede eliminar esta cuenta",
-    "description": "Esta cuenta tiene historial de moderación o editorial y no puede eliminarse. Podés desactivarla en su lugar."
+    "description": "Esta cuenta tiene historial de moderación o editorial y no puede eliminarse. Puedes desactivarla en su lugar."
   },
   "IMAGE_UNSUPPORTED_FORMAT": {
     "title": "Formato de imagen no soportado",

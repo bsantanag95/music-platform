@@ -1,6 +1,6 @@
 {
   "appName": "music-platform",
-  "tagline": "Catalogá lo que escuchaste. Un Letterboxd para música.",
+  "tagline": "Cataloga lo que escuchaste. Una biblioteca para social para la música.",
   "retry": "Reintentar",
   "home": "Inicio",
   "search": "Buscar",
@@ -42,7 +42,7 @@
   },
   "moderationConsole": {
     "title": "Moderación",
-    "description": "Revisá reportes y aplicá acciones sobre contenido social.",
+    "description": "Revisa reportes y aplica acciones sobre contenido social.",
     "empty": "No hay reportes pendientes.",
     "emptyFiltered": "No hay reportes con esos filtros.",
     "report": "Reporte",
@@ -52,7 +52,7 @@
     "resolve": "Resolver",
     "dismiss": "Descartar",
     "reasonPlaceholder": "Motivo de la acción",
-    "requiredReason": "Escribí un motivo antes de continuar.",
+    "requiredReason": "Escribe un motivo antes de continuar.",
     "confirmHide": "¿Ocultar este contenido? Se registrará el motivo y dejará de aparecer públicamente.",
     "confirmRestore": "¿Restaurar este contenido? Volverá a ser visible públicamente.",
     "confirmDismiss": "¿Descartar este reporte? No se modificará el contenido.",
@@ -89,7 +89,7 @@
   },
   "adminConsole": {
     "title": "Administración editorial",
-    "description": "Creá, proponé, publicá y retirá listas editoriales.",
+    "description": "Crea, propone, publica y retira listas editoriales.",
     "empty": "No hay listas editoriales.",
     "publish": "Publicar",
     "unpublish": "Retirar",
@@ -117,11 +117,11 @@
   "pendingFollowRequests": "{count, plural, one {# solicitud} other {# solicitudes}}",
   "error": {
     "title": "Algo salió mal",
-    "description": "No pudimos completar la solicitud. Intentá de nuevo en un momento."
+    "description": "No pudimos completar la solicitud. Intenta de nuevo en un momento."
   },
   "notFound": {
     "title": "No encontrado",
-    "description": "La página que buscás no existe o fue movida.",
+    "description": "La página que buscas no existe o fue movida.",
     "action": "Volver al inicio"
   },
   "loading": {

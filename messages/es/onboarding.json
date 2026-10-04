@@ -1,10 +1,10 @@
 {
   "pageTitle": "Te damos la bienvenida",
-  "heading": "Contá quién sos musicalmente",
-  "intro": "Dos formas de empezar. Ninguna es obligatoria y podés hacerlas en el orden que quieras.",
+  "heading": "Cuenta quién eres musicalmente",
+  "intro": "Dos formas de empezar. Ninguna es obligatoria y puedes hacerlas en el orden que quieras.",
   "door1": {
     "heading": "Álbumes que te definen",
-    "intro": "Elegí entre 3 y 5 álbumes que te representan. Quedan guardados entre tus favoritos.",
+    "intro": "Elige entre 3 y 5 álbumes que te representan. Quedan guardados entre tus favoritos.",
     "searchLabel": "Buscar álbumes",
     "searchPlaceholder": "Ej: In Rainbows",
     "searching": "Buscando...",
@@ -17,7 +17,7 @@
   },
   "door2": {
     "heading": "¿Qué estás escuchando ahora?",
-    "intro": "Elegí un álbum o una canción y queda registrado en tu diario. Podés agregar tu impresión más tarde.",
+    "intro": "Elige un álbum o una canción y queda registrado en tu diario. Puedes agregar tu impresión más tarde.",
     "searchLabel": "Buscar álbum o canción",
     "searchPlaceholder": "Ej: Sabrina Carpenter",
     "searching": "Buscando...",
@@ -31,7 +31,7 @@
     "skip": "Saltar por ahora",
     "saving": "Guardando..."
   },
-  "error": "No pudimos completar el paso. Probá de nuevo.",
-  "homeLink": "Completá tu perfil musical",
+  "error": "No pudimos completar el paso. Prueba de nuevo.",
+  "homeLink": "Completa tu perfil musical",
   "homeLinkCta": "Empezar"
 }

@@ -40,8 +40,8 @@
   "containingPageIntro": "Listas públicas que incluyen «{title}».",
   "removeItem": "Quitar",
   "removeItemConfirm": "¿Quitar este elemento de la lista?",
-  "saveError": "No pudimos guardar la lista. Intentá de nuevo.",
-  "loadError": "No pudimos cargar las listas. Intentá de nuevo.",
+  "saveError": "No pudimos guardar la lista. Intenta de nuevo.",
+  "loadError": "No pudimos cargar las listas. Intenta de nuevo.",
   "loadMore": "Cargar más",
   "loadingMore": "Cargando...",
   "audience": {
@@ -78,7 +78,7 @@
   "savedToLibrary": "Guardada",
   "follow": "Seguir",
   "following": "Siguiendo",
-  "saveListError": "No pudimos guardar esta lista. Intentá de nuevo.",
+  "saveListError": "No pudimos guardar esta lista. Intenta de nuevo.",
   "removeSaved": "Quitar de guardadas",
   "unavailable": "Ya no disponible",
   "unavailableHint": "Su dueño la hizo privada o dejó de compartirla.",
@@ -91,7 +91,7 @@
   "community": {
     "pageTitle": "Listas de la comunidad",
     "heading": "Listas",
-    "intro": "Curaduría de la comunidad: colecciones destacadas, las más guardadas, las de la gente que seguís y las más recientes.",
+    "intro": "Curaduría de la comunidad: colecciones destacadas, las más guardadas, las de la gente que sigues y las más recientes.",
     "searchPlaceholder": "Buscar listas",
     "searchLabel": "Buscar listas",
     "sortPopular": "Populares",
@@ -102,7 +102,7 @@
     "featuredEyebrow": "Curaduría editorial",
     "featuredHeading": "Destacadas",
     "popularHeading": "Populares",
-    "followingHeading": "De la gente que seguís",
+    "followingHeading": "De la gente que sigues",
     "recentHeading": "Recientes",
     "emptyTitle": "Todavía no hay listas para descubrir",
     "emptyDescription": "Cuando la comunidad publique listas públicas, van a aparecer acá."
