@@ -1,8 +1,5 @@
-# genre-pages Specification
+## MODIFIED Requirements
 
-## Purpose
-Página pública de cada género (`/genre/<slug>`): cabecera fija y pestañas (Resumen, Álbumes, Artistas, Listas) por `?tab=`, con sus migas, familias y artistas; el contenido de cada pestaña lo definen las capacidades `genre-page-*`.
-## Requirements
 ### Requirement: Página de género
 
 El sistema SHALL ofrecer la página pública `/{locale}/genre/<slug>` para cada género de estilo visible de la
@@ -52,6 +49,8 @@ orden predeterminado SHALL ser por esa cantidad de álbumes y, a igualdad, por n
 - **WHEN** un artista tiene 10 álbumes acreditados, de los cuales 2 son del género
 - **THEN** su tarjeta dice "2 álbumes" y no "10"
 
+## ADDED Requirements
+
 ### Requirement: Pestañas de la página de género
 
 La página de género SHALL elegir su pestaña por el parámetro `?tab=` con los valores `albums`, `artists` y `lists`;
@@ -92,4 +91,3 @@ definida en `genre-page-personal`. El título del documento SHALL incluir el nom
 
 - **WHEN** el género no pertenece a ninguna familia
 - **THEN** las migas omiten el tramo de la familia
-
