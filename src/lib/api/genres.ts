@@ -2,8 +2,10 @@ import { apiFetch } from "./client";
 import {
   AlbumGenreVotesResponseSchema,
   GenreSearchResponseSchema,
+  IdentityGenresResponseSchema,
   type AlbumGenreVotesResponse,
   type GenreSearchResponse,
+  type IdentityGenresResponse,
 } from "./schemas";
 
 // Búsqueda de géneros (openspec: show-genres): GET /api/genres/search?q=. Sin `q` devuelve los
@@ -32,4 +34,14 @@ export function removeGenreVote(releaseGroupId: string, slug: string): Promise<A
   return apiFetch(`/api/me/release-groups/${releaseGroupId}/genre-votes/${slug}`, AlbumGenreVotesResponseSchema, {
     method: "DELETE",
   });
+}
+
+// "Me mueve" (openspec: redesign-genre-page): alta y baja de UN género de "Géneros que me mueven".
+// Idempotentes y atómicos: no reemplazan la lista, así que no pisan cambios hechos desde otra pestaña.
+export function addIdentityGenre(slug: string): Promise<IdentityGenresResponse> {
+  return apiFetch(`/api/me/profile/genres/${encodeURIComponent(slug)}`, IdentityGenresResponseSchema, { method: "PUT" });
+}
+
+export function removeIdentityGenre(slug: string): Promise<IdentityGenresResponse> {
+  return apiFetch(`/api/me/profile/genres/${encodeURIComponent(slug)}`, IdentityGenresResponseSchema, { method: "DELETE" });
 }

@@ -1039,7 +1039,125 @@
       "artistsHeading": "Artists",
       "albumsHeading": "Albums",
       "empty": "There is no music of this genre in the catalog yet.",
-      "albumCount": "{count, plural, one {# album} other {# albums}}"
+      "albumCount": "{count, plural, one {# album} other {# albums}}",
+      "tabsLabel": "Genre sections",
+      "tabs": {
+        "overview": "Overview",
+        "albums": "Albums",
+        "artists": "Artists",
+        "lists": "Lists"
+      },
+      "stats": {
+        "albums": "{count, plural, one {# album} other {# albums}}",
+        "artists": "{count, plural, one {# artist} other {# artists}}",
+        "ratings": "{count, plural, one {# rating} other {# ratings}}",
+        "average": "Community average: {average} out of 5",
+        "peakDecade": "Peak decade: {decade}s",
+        "movedBy": "Moves {count, plural, one {# person} other {# people}}"
+      },
+      "tree": {
+        "heading": "Where it fits",
+        "current": "This genre",
+        "parentsLabel": "Subgenre of",
+        "childrenLabel": "Subgenres",
+        "relatedLabel": "Related genres",
+        "childAlbums": "{count, plural, one {# album} other {# albums}}",
+        "moreChildren": "Show {count, plural, one {# more subgenre} other {# more subgenres}}",
+        "noChildMusic": "No music yet"
+      },
+      "rails": {
+        "essentialsHeading": "Essentials",
+        "newReleasesHeading": "New releases",
+        "seeAll": "See all"
+      },
+      "decades": {
+        "heading": "By decade",
+        "barLabel": "{decade}s: {count, plural, one {# album} other {# albums}}"
+      },
+      "artists": {
+        "heading": "Artists",
+        "seeAll": "See all",
+        "cardAlbums": "{count, plural, one {# album in this genre} other {# albums in this genre}}",
+        "empty": "No artist in the catalog has this genre yet.",
+        "searchPlaceholder": "Search artists in this genre",
+        "sortLabel": "Sort by",
+        "sortAlbums": "Most albums in the genre",
+        "sortFollowed": "Most followed",
+        "sortAz": "A–Z"
+      },
+      "filters": {
+        "searchPlaceholder": "Search by title or artist",
+        "searchLabel": "Search in this genre",
+        "searchSubmit": "Search",
+        "typeLabel": "Type",
+        "typeAll": "All",
+        "decadeLabel": "Decade",
+        "decadeAll": "All",
+        "subLabel": "Subgenre",
+        "subAll": "All",
+        "exactLabel": "This genre only",
+        "sortLabel": "Sort by",
+        "sortBest": "Best rated",
+        "sortPopular": "Most rated",
+        "sortNewest": "Newest",
+        "sortOldest": "Oldest",
+        "sortAz": "A–Z",
+        "viewLabel": "View",
+        "viewGrid": "Grid",
+        "viewList": "List",
+        "clear": "Clear filters",
+        "noResults": "No album matches these filters.",
+        "resultsLabel": "Albums in the genre"
+      },
+      "albumRow": {
+        "yearUnknown": "Unknown year"
+      },
+      "pagination": {
+        "label": "Pagination"
+      },
+      "loading": "Loading",
+      "lists": {
+        "heading": "Community lists",
+        "seeAll": "See all",
+        "railLabel": "Community lists with this genre",
+        "railPrev": "Previous lists",
+        "railNext": "Next lists",
+        "genreAlbums": "{count, plural, one {# album in this genre} other {# albums in this genre}}",
+        "emptyTitle": "There are no lists for this genre yet",
+        "emptyDescription": "When someone builds a public list with at least {min} albums of this genre, it will show up here.",
+        "createCta": "Create a list"
+      },
+      "reviews": {
+        "heading": "Recent reviews",
+        "ratingLabel": "Rating: {stars} stars",
+        "byAuthor": "by {author}"
+      },
+      "move": {
+        "declare": "Moves me",
+        "declared": "Already moves me",
+        "error": "The change could not be saved. Please try again."
+      },
+      "footprint": {
+        "heading": "Your footprint in this genre",
+        "empty": "You haven't rated or saved anything from this genre yet.",
+        "startEssentials": "Start with the Essentials",
+        "startAlbums": "Explore the albums of the genre",
+        "rated": "{count, plural, one {# album rated} other {# albums rated}}",
+        "average": "your average: {average}",
+        "pending": "{count, plural, one {# album pending} other {# albums pending}}",
+        "favorites": "Your favorites"
+      },
+      "about": {
+        "heading": "About the genre",
+        "readMore": "Read more",
+        "source": "Source: Wikipedia —",
+        "licensedUnder": "text licensed under",
+        "fallbackNote": "This text is in {language}: there is none in your language.",
+        "languages": {
+          "es": "Spanish",
+          "en": "English"
+        }
+      }
     },
     "primary": "Main genre",
     "votes": {

@@ -12,8 +12,9 @@ import {
   type GenreRow,
 } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
-import type { ReleaseGroup } from "@/lib/api/schemas";
+import { ReleaseGroupCategorySchema, type ReleaseGroup, type ReleaseGroupCategory } from "@/lib/api/schemas";
 import { isCoverResolved } from "@/services/catalog/cover-resolution";
+import { escapeLike } from "@/services/catalog/search/normalize";
 import { GENRE_FAMILIES, type FamilyKey, type FamilyTier } from "@/services/genres/families";
 import { albumInFamily, albumInGenreTree, findStyleGenreBySlug, parseFamilyKey } from "@/services/genres/read";
 import { enrichLists } from "@/services/lists/lists";
@@ -131,8 +132,11 @@ export async function listFeaturedCollections(): Promise<FeaturedCollection[]> {
   });
 }
 
-/** Novedades: `studio`/`single_ep` con año conocido, por año descendente. */
-export async function listNewReleases(limit = RAIL_SIZE): Promise<ReleaseGroup[]> {
+/**
+ * Novedades: `studio`/`single_ep` con año conocido, por año descendente. `condition` (opcional,
+ * correlacionada con "release_group") acota el conjunto, p. ej. al subárbol de un género.
+ */
+export async function listNewReleases(limit = RAIL_SIZE, condition?: SQL): Promise<ReleaseGroup[]> {
   const rows = await db
     .select(albumColumns)
     .from(releaseGroup)
@@ -140,6 +144,7 @@ export async function listNewReleases(limit = RAIL_SIZE): Promise<ReleaseGroup[]
       and(
         isNotNull(releaseGroup.firstReleaseYear),
         sql`${releaseGroup.category} in ${NEW_RELEASE_CATEGORIES}`,
+        condition,
       ),
     )
     .orderBy(desc(releaseGroup.firstReleaseYear), desc(releaseGroup.createdAt))
@@ -182,9 +187,9 @@ export async function listGenreFamilies(): Promise<FamilyBucket[]> {
 /**
  * Mejor valorados: álbumes con ≥ `MIN_RATINGS_PER_ALBUM` valoraciones, por promedio
  * descendente. Devuelve `[]` (riel omitido) si hay menos de `MIN_ALBUMS_FOR_SECTION`
- * álbumes elegibles.
+ * álbumes elegibles. `condition` (opcional, correlacionada con "release_group") acota el conjunto.
  */
-export async function listTopRated(limit = RAIL_SIZE): Promise<ReleaseGroup[]> {
+export async function listTopRated(limit = RAIL_SIZE, condition?: SQL): Promise<ReleaseGroup[]> {
   const rows = await db
     .select({
       ...albumColumns,
@@ -193,7 +198,7 @@ export async function listTopRated(limit = RAIL_SIZE): Promise<ReleaseGroup[]> {
     })
     .from(rating)
     .innerJoin(releaseGroup, eq(releaseGroup.id, rating.releaseGroupId))
-    .where(isNotNull(rating.releaseGroupId))
+    .where(and(isNotNull(rating.releaseGroupId), condition))
     .groupBy(releaseGroup.id)
     .having(sql`count(*) >= ${MIN_RATINGS_PER_ALBUM}`)
     .orderBy(sql`avg(${rating.stars}) desc`, sql`count(*) desc`, asc(releaseGroup.id))
@@ -266,11 +271,15 @@ function toAlbumPage(rows: unknown[], page: number): AlbumPage {
   };
 }
 
-/** Álbumes cuyo `first_release_year` cae en `[decade, decade+9]`. */
-export async function listAlbumsByDecade(decade: number, page = 1): Promise<AlbumPage> {
+function assertDecade(decade: number): void {
   if (!Number.isInteger(decade) || decade % 10 !== 0 || decade < 1900 || decade > 2100) {
     throw new ApiError("VALIDATION_ERROR", 400, "La década no es válida");
   }
+}
+
+/** Álbumes cuyo `first_release_year` cae en `[decade, decade+9]`. */
+export async function listAlbumsByDecade(decade: number, page = 1): Promise<AlbumPage> {
+  assertDecade(decade);
   const { limit, offset } = paginate(page);
   const rows = await db
     .select(albumColumns)
@@ -289,20 +298,85 @@ export async function listAlbumsByDecade(decade: number, page = 1): Promise<Albu
   return toAlbumPage(rows, page);
 }
 
-/** Álbumes que cumplen `condition` (correlacionada con "release_group"), con el orden compartido. */
-async function listAlbumsWhere(condition: SQL, page: number): Promise<AlbumPage> {
+/**
+ * Órdenes del listado de álbumes (openspec: redesign-genre-page). Todos son deterministas: el
+ * identificador del álbum desempata siempre, así una página no repite ni salta filas.
+ */
+export const ALBUM_SORTS = ["best", "popular", "newest", "oldest", "az"] as const;
+export type AlbumSort = (typeof ALBUM_SORTS)[number];
+
+export interface AlbumFilterOptions {
+  page?: number;
+  category?: ReleaseGroupCategory;
+  /** Año de inicio de la década (1970, 1980, …). */
+  decade?: number;
+  /** Texto libre: título del álbum o nombre de un artista acreditado, sin acentos ni mayúsculas. */
+  q?: string;
+  sort?: AlbumSort;
+}
+
+const bestOrder = [
+  sql`${eligibleAvg} desc nulls last`,
+  sql`${releaseGroup.firstReleaseYear} desc nulls last`,
+  asc(releaseGroup.id),
+];
+
+function albumOrder(sort: AlbumSort): SQL[] {
+  switch (sort) {
+    case "popular":
+      return [sql`count(${rating.id}) desc`, ...bestOrder];
+    case "newest":
+      return [sql`${releaseGroup.firstReleaseYear} desc nulls last`, asc(releaseGroup.id)];
+    case "oldest":
+      return [sql`${releaseGroup.firstReleaseYear} asc nulls last`, asc(releaseGroup.id)];
+    case "az":
+      return [sql`search_normalize(${releaseGroup.title}) asc`, asc(releaseGroup.id)];
+    default:
+      return bestOrder;
+  }
+}
+
+/** Coincidencia de `q` con el título o con un artista acreditado (misma normalización SQL que la búsqueda). */
+function albumTextMatch(q: string): SQL {
+  const pattern = `%${escapeLike(q)}%`;
+  return sql`(
+    search_normalize(${releaseGroup.title}) LIKE search_normalize(${pattern})
+    OR EXISTS (
+      SELECT 1 FROM credit c JOIN artist a ON a.id = c.artist_id
+      WHERE c.release_group_id = "release_group"."id"
+        AND search_normalize(a.name) LIKE search_normalize(${pattern})
+    )
+  )`;
+}
+
+/**
+ * Álbumes que cumplen `condition` (correlacionada con "release_group") más los filtros opcionales.
+ * Sin filtros y con `sort: "best"` es el orden compartido de Explorar.
+ */
+export async function listAlbumsFiltered(condition: SQL, options: AlbumFilterOptions = {}): Promise<AlbumPage> {
+  const { page = 1, category, decade, sort = "best" } = options;
   const { limit, offset } = paginate(page);
+  if (category !== undefined && !ReleaseGroupCategorySchema.safeParse(category).success) {
+    throw new ApiError("VALIDATION_ERROR", 400, "El tipo de álbum no es válido");
+  }
+  if (decade !== undefined) assertDecade(decade);
+  if (!ALBUM_SORTS.includes(sort)) throw new ApiError("VALIDATION_ERROR", 400, "El orden no es válido");
+  const q = options.q?.trim();
+
+  const filters: SQL[] = [condition];
+  if (category !== undefined) filters.push(eq(releaseGroup.category, category));
+  if (decade !== undefined) {
+    filters.push(sql`${releaseGroup.firstReleaseYear} between ${decade} and ${decade + 9}`);
+  }
+  if (q) filters.push(albumTextMatch(q));
+
   const rows = await db
     .select(albumColumns)
     .from(releaseGroup)
     .leftJoin(rating, eq(rating.releaseGroupId, releaseGroup.id))
-    .where(condition)
+    .where(and(...filters))
     .groupBy(releaseGroup.id)
-    .orderBy(
-      sql`${eligibleAvg} desc nulls last`,
-      sql`${releaseGroup.firstReleaseYear} desc nulls last`,
-      asc(releaseGroup.id),
-    )
+    .orderBy(...albumOrder(sort))
     .limit(limit)
     .offset(offset);
   return toAlbumPage(rows, page);
@@ -320,7 +394,7 @@ function emptyPage(page: number): AlbumPage {
 export async function listAlbumsByFamily(familyKey: string, page = 1): Promise<AlbumPage & { family: FamilyKey | null }> {
   const family = parseFamilyKey(familyKey);
   if (!family) return { ...emptyPage(page), family: null };
-  return { ...(await listAlbumsWhere(albumInFamily(family), page)), family };
+  return { ...(await listAlbumsFiltered(albumInFamily(family), { page })), family };
 }
 
 /**
@@ -330,5 +404,5 @@ export async function listAlbumsByFamily(familyKey: string, page = 1): Promise<A
 export async function listAlbumsByGenre(slug: string, page = 1): Promise<AlbumPage & { genre: GenreRow | null }> {
   const found = await findStyleGenreBySlug(slug);
   if (!found) return { ...emptyPage(page), genre: null };
-  return { ...(await listAlbumsWhere(albumInGenreTree(found.id), page)), genre: found };
+  return { ...(await listAlbumsFiltered(albumInGenreTree(found.id), { page })), genre: found };
 }

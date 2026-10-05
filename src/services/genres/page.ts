@@ -2,14 +2,15 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { genre, genreFamilyMember, genreRelation, type GenreRelationKind, type GenreRow } from "@/db/schema";
 import type { FamilyKey } from "./families";
-import { findStyleGenreBySlug, genreWithDescendants } from "./read";
+import { genreDisplayName, type GenreLocale } from "./names";
+import { findStyleGenreBySlug } from "./read";
 
-// Datos de la página de género (openspec: show-genres, capability `genre-pages`). Las relaciones
-// salen de `genre_relation` y solo cuentan géneros de estilo visibles; los álbumes del género los
-// lista `listAlbumsByGenre` (Explorar), con el mismo orden y paginación.
+// Identidad y árbol de la página de género (openspec: show-genres y redesign-genre-page,
+// capabilities `genre-pages` y `genre-page-overview`). Las relaciones salen de `genre_relation` y solo
+// cuentan géneros de estilo visibles. Estadísticas, artistas, rieles, listas y reseñas viven en sus
+// propios módulos: cada pestaña consulta solo lo que muestra.
 
 export const RELATED_GENRES_LIMIT = 8;
-export const GENRE_ARTISTS_LIMIT = 12;
 
 export interface RelatedGenre {
   slug: string;
@@ -17,10 +18,8 @@ export interface RelatedGenre {
   nameEs: string | null;
 }
 
-export interface GenreArtist {
-  id: string;
-  name: string;
-  type: string;
+/** Subgénero directo con la cantidad de álbumes de su subárbol. */
+export interface TreeGenre extends RelatedGenre {
   albumCount: number;
 }
 
@@ -28,10 +27,10 @@ export interface GenrePageData {
   genre: GenreRow;
   families: FamilyKey[];
   parents: RelatedGenre[];
-  children: RelatedGenre[];
+  /** Subgéneros directos, del más grande al más pequeño (desempate por nombre). */
+  children: TreeGenre[];
   /** Fusión de, luego influido por; sin repetir padres, subgéneros ni el propio género. */
   related: RelatedGenre[];
-  artists: GenreArtist[];
 }
 
 const relatedColumns = { id: genre.id, slug: genre.slug, name: genre.name, nameEs: genre.nameEs };
@@ -60,36 +59,51 @@ function childrenOf(genreId: string) {
 }
 
 /**
- * Artistas con el género o un subgénero entre sus semillas, por álbumes acreditados (desempate por
- * nombre). Un artista cuenta una vez aunque tenga varios géneros del subárbol.
+ * Cantidad de álbumes del subárbol de cada subgénero directo de `genreId`, en una sola consulta
+ * (no una por subgénero). Un subgénero sin álbumes no figura en el resultado.
  */
-async function artistsOfGenre(genreId: string): Promise<GenreArtist[]> {
-  const rows = await db.execute<{ id: string; name: string; type: string; album_count: number }>(sql`
-    SELECT a.id, a.name, a.type,
-           (SELECT count(DISTINCT c.release_group_id)::int FROM credit c
-            WHERE c.artist_id = a.id AND c.release_group_id IS NOT NULL) AS album_count
-    FROM artist a
-    WHERE a.type <> 'unknown' AND EXISTS (
-      SELECT 1 FROM artist_genre_seed s WHERE s.artist_id = a.id AND s.genre_id IN ${genreWithDescendants(genreId)}
+export async function childAlbumCounts(genreId: string): Promise<Map<string, number>> {
+  const rows = await db.execute<{ id: string; album_count: number }>(sql`
+    WITH RECURSIVE sub(root_id, id) AS (
+      SELECT r.genre_id, r.genre_id
+      FROM genre_relation r
+      WHERE r.related_genre_id = ${genreId}::uuid AND r.kind = 'subgenre_of'
+      UNION
+      SELECT s.root_id, r.genre_id
+      FROM genre_relation r
+      JOIN sub s ON r.related_genre_id = s.id
+      WHERE r.kind = 'subgenre_of'
     )
-    ORDER BY album_count DESC, a.name ASC
-    LIMIT ${GENRE_ARTISTS_LIMIT}
+    SELECT sub.root_id AS id, count(DISTINCT e.release_group_id)::int AS album_count
+    FROM sub
+    JOIN release_group_effective_genre e ON e.genre_id = sub.id
+    GROUP BY sub.root_id
   `);
-  return rows.map((r) => ({ id: r.id, name: r.name, type: r.type, albumCount: r.album_count }));
+  return new Map(rows.map((r) => [r.id, Number(r.album_count)]));
 }
 
-/** Todo lo que necesita la página de `/genre/<slug>`, o `null` si el slug no es un estilo visible. */
-export async function getGenrePage(slug: string): Promise<GenrePageData | null> {
+/** Del más grande al más pequeño; a igualdad, por el nombre que ve la persona en su idioma. */
+export function sortTreeChildren(children: TreeGenre[], locale: GenreLocale): TreeGenre[] {
+  return [...children].sort(
+    (a, b) =>
+      b.albumCount - a.albumCount ||
+      genreDisplayName(a, locale).localeCompare(genreDisplayName(b, locale), locale) ||
+      a.slug.localeCompare(b.slug),
+  );
+}
+
+/** Identidad, familias y árbol de `/genre/<slug>`, o `null` si el slug no es un estilo visible. */
+export async function getGenrePage(slug: string, locale: GenreLocale = "es"): Promise<GenrePageData | null> {
   const found = await findStyleGenreBySlug(slug);
   if (!found) return null;
 
-  const [families, parents, children, fusionOf, influencedBy, artists] = await Promise.all([
+  const [families, parents, children, fusionOf, influencedBy, counts] = await Promise.all([
     db.select({ key: genreFamilyMember.familyKey }).from(genreFamilyMember).where(eq(genreFamilyMember.genreId, found.id)),
     outgoing(found.id, "subgenre_of"),
     childrenOf(found.id),
     outgoing(found.id, "fusion_of"),
     outgoing(found.id, "influenced_by"),
-    artistsOfGenre(found.id),
+    childAlbumCounts(found.id),
   ]);
 
   const taken = new Set([found.id, ...parents.map((g) => g.id), ...children.map((g) => g.id)]);
@@ -105,9 +119,10 @@ export async function getGenrePage(slug: string): Promise<GenrePageData | null> 
     genre: found,
     families: families.map((f) => f.key as FamilyKey),
     parents: parents.map(toRelated),
-    children: children.map(toRelated),
+    children: sortTreeChildren(
+      children.map((g) => ({ ...toRelated(g), albumCount: counts.get(g.id) ?? 0 })),
+      locale,
+    ),
     related: related.slice(0, RELATED_GENRES_LIMIT).map(toRelated),
-    artists,
   };
 }
-

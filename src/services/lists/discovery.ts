@@ -241,6 +241,25 @@ function itemColumnFor(type: ListEntityType) {
 }
 
 /**
+ * Condiciones base de "lista pública visible", compartidas por todas las superficies que listan
+ * listas de la comunidad por su contenido: audiencia pública, tipo estándar, visible para
+ * moderación, dueño con perfil público y cuenta activa, sin retiro de marca oficial y sin bloqueo
+ * con el lector. Una sola definición para que la cifra del álbum, "Mostrar en listas" y las listas
+ * de un género (openspec: redesign-genre-page) no diverjan.
+ */
+export function publicListBaseConditions(readerId: string | null): (SQL | undefined)[] {
+  return [
+    eq(userList.audience, "public"),
+    eq(userList.kind, "standard"),
+    eq(userList.moderationStatus, "visible"),
+    eq(appUser.profileVisibility, "public"),
+    activeUserCondition(),
+    isNull(userList.officialWithdrawnAt),
+    notBlockedByReader(readerId),
+  ];
+}
+
+/**
  * Condiciones de "lista pública que contiene el ítem", compartidas por el listado
  * (`listPublicListsContainingItem`) y el conteo (`countPublicListsContainingItem`) para
  * que la cifra de la página de álbum coincida con la página "Mostrar en listas".
@@ -251,18 +270,12 @@ function publicListsContainingItemConditions(
 ): (SQL | undefined)[] {
   const itemColumn = itemColumnFor(target.type);
   return [
-    eq(userList.audience, "public"),
-    eq(userList.kind, "standard"),
-    eq(userList.moderationStatus, "visible"),
-    eq(appUser.profileVisibility, "public"),
-    activeUserCondition(),
-    isNull(userList.officialWithdrawnAt),
+    ...publicListBaseConditions(readerId),
     eq(userList.entityType, target.type),
     sql`exists (
       select 1 from ${userListItem}
       where ${userListItem.listId} = ${userList.id} and ${itemColumn} = ${target.id}
     )`,
-    notBlockedByReader(readerId),
   ];
 }
 

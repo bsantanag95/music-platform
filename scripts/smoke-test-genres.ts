@@ -17,7 +17,11 @@ assertSmokeAllowed();
 // de género (relaciones, artistas), la búsqueda de géneros y la validación de la identidad musical; y
 // (cambio add-genre-votes) los votos de la comunidad: elegibilidad, propuesta que reemplaza la herencia,
 // puntaje con principal/secundarios, cifras desde 5 votantes, cuentas desactivadas, supervivencia del voto,
-// semilla neutralizada por un −1, tope de 8, suspensión social y Explorar por el puntaje.
+// semilla neutralizada por un −1, tope de 8, suspensión social y Explorar por el puntaje; y (cambio
+// redesign-genre-page) la página de género rediseñada: cifras con umbral, árbol con conteos, filtros y
+// órdenes del listado, listas y reseñas del género (visibilidad, bloqueos, moderación), huella personal,
+// "Me mueve" atómico (tope y edición concurrente), personas a las que les mueve (umbral de 5) y el texto de
+// Wikipedia (sincronización, vigencia, fallos).
 //
 // La taxonomía se carga COMPLETA (la real de data/genres/taxonomy.json más 6 géneros sintéticos con
 // MBID `5e0ce000-…` y slugs `smoke-*`): cargar solo los sintéticos ocultaría los reales. Al terminar
@@ -83,7 +87,15 @@ const entities: Record<string, unknown> = {
     claims: genreClaims(QID.shoegaze, QID.unmapped, QID.trap, QID.hidden, QID.trapLatino, QID.folk),
   },
   [QID.album]: { id: QID.album, claims: genreClaims(QID.trapLatino) },
+  // Texto "Sobre el género" (redesign-genre-page): descripciones y artículos de Wikipedia en ambos idiomas.
+  [QID.trap]: {
+    id: QID.trap,
+    descriptions: { es: { language: "es", value: "género musical" }, en: { language: "en", value: "music genre" } },
+    sitelinks: { eswiki: { site: "eswiki", title: "Trap sintético" }, enwiki: { site: "enwiki", title: "Synthetic trap" } },
+  },
 };
+// Entidades de Wikidata que deben fallar con un 500 (simula Wikimedia caído).
+const failWikidata = new Set<string>();
 
 const credit = [{ name: "Banda de géneros (smoke)", artist: { id: BAND, name: "Banda de géneros (smoke)" } }];
 const browse = {
@@ -122,6 +134,7 @@ async function main() {
   const { albumDescriptors, identityGenreLabels } = await import("../src/services/genres/read");
   const { getAlbumGenres, getArtistGenres, getSongGenres } = await import("../src/services/genres/display");
   const { getGenrePage } = await import("../src/services/genres/page");
+  const { listGenreArtists } = await import("../src/services/genres/artists");
   const { searchGenres } = await import("../src/services/genres/search");
   const { updateMusicIdentity } = await import("../src/services/profiles/music-identity");
   const { registerUser } = await import("../src/services/auth/users");
@@ -143,7 +156,25 @@ async function main() {
     if (url.hostname === "www.wikidata.org") {
       const ids = (url.searchParams.get("ids") ?? "").split("|");
       calls.push(`wd:${ids.join(",")}`);
+      if (ids.some((id) => failWikidata.has(id))) return new Response("{}", { status: 500 });
       return json({ entities: Object.fromEntries(ids.map((id) => [id, entities[id] ?? { id, missing: "" }])) });
+    }
+    if (url.hostname.endsWith(".wikipedia.org")) {
+      const lang = url.hostname.split(".")[0];
+      const title = url.searchParams.get("titles") ?? "";
+      calls.push(`wp:${lang}:${title}`);
+      return json({
+        query: {
+          pages: [
+            {
+              title,
+              extract: `Primer párrafo de ${title}.
+Segundo párrafo de ${title}.`,
+              fullurl: `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(title)}`,
+            },
+          ],
+        },
+      });
     }
     throw new Error(`No hay mock para: ${url}`);
   }) as typeof fetch;
@@ -267,7 +298,8 @@ async function main() {
     const rockPage = await getGenrePage("smoke-rock");
     check(rockPage?.children.map((c) => c.slug).join(",") === "smoke-shoegaze" && rockPage.families.join(",") === "rock", "página de smoke-rock: su subgénero y su familia");
     check((await getGenrePage("smoke-shoegaze"))?.parents.map((g) => g.slug).join(",") === "smoke-rock", "página de smoke-shoegaze: su padre");
-    check((await getGenrePage("smoke-rock"))?.artists.some((a) => a.id === band.id) === true, "el artista aparece en el género padre vía su subgénero");
+    const rockArtists = rockPage ? await listGenreArtists(rockPage.genre.id) : null;
+    check(rockArtists?.artists.some((a) => a.id === band.id) === true, "el artista aparece en el género padre vía su subgénero");
     check((await getGenrePage("smoke-hidden")) === null && (await getGenrePage("instrumental")) === null && (await getGenrePage("no-existe")) === null, "oculto, descriptor e inexistente no tienen página");
     check((await searchGenres("SMOKE shoe")).map((g) => g.slug).includes("smoke-shoegaze"), "la búsqueda ignora mayúsculas");
     check((await searchGenres("psicodelico")).some((g) => g.slug === "psychedelic-rock"), "la búsqueda ignora tildes y encuentra por el nombre en español");
@@ -289,6 +321,194 @@ async function main() {
     check(stored?.genres.join(",") === "smoke-shoegaze,cumbia-villera", "los rechazos no cambian lo guardado");
     const labels = await identityGenreLabels(["smoke-shoegaze", "smoke-hidden", "no-existe"], "es");
     check(Object.keys(labels).join(",") === "smoke-shoegaze", "las etiquetas ignoran ocultos e inexistentes");
+
+    console.log("6c-bis) Página de género rediseñada (redesign-genre-page): cifras, árbol, filtros, comunidad, huella, Me mueve y texto");
+    {
+      const { getGenreStats } = await import("../src/services/genres/stats");
+      const { listAlbumsFiltered } = await import("../src/services/discovery/discovery");
+      const { albumHasGenre, albumInGenreTree, findDescendantStyleGenre } = await import("../src/services/genres/read");
+      const { getGenreEssentials, getGenreNewReleases } = await import("../src/services/genres/rails");
+      const { listGenreLists } = await import("../src/services/genres/lists");
+      const { getGenreRecentReviews } = await import("../src/services/genres/reviews");
+      const { getGenreFootprint, getMovedByCount } = await import("../src/services/genres/personal");
+      const { addIdentityGenre, removeIdentityGenre } = await import("../src/services/profiles/music-identity");
+      const { enrichGenreFromWikimedia } = await import("../src/services/genres/about-sync");
+      const { getGenreAbout } = await import("../src/services/genres/about");
+
+      const trap = await genreId(G.trap);
+      const rock = await genreId(G.rock);
+      const trapLatino = await genreId(G.trapLatino);
+
+      // Un tercer álbum sintético con semilla propia en smoke-trap: con él, una lista llega a 3 álbumes del género.
+      const [extra] = await db
+        .insert(schema.releaseGroup)
+        .values({ mbid: smokeMbid(SMOKE_PREFIX, 0x7203), title: "Álbum extra (smoke)", category: "single_ep", firstReleaseYear: 2003 })
+        .returning();
+      if (!extra) throw new Error("no se creó el álbum extra");
+      const smokeOnly = <T extends { id: string }>(items: T[]) => items.filter((a) => [linked.id, unlinked.id, extra.id].includes(a.id));
+      await db.insert(schema.releaseGroupGenreSeed).values({ releaseGroupId: extra.id, genreId: trap, position: 0 });
+
+      // --- Cifras y árbol ---
+      const rockStats = await getGenreStats(rock);
+      check(rockStats.albumCount === 1 && rockStats.artistCount === 1, `cifras de smoke-rock: 1 álbum y 1 artista (${JSON.stringify(rockStats)})`);
+      check(rockStats.ratingCount === null && rockStats.averageStars === null, "sin valoraciones no hay media ni cantidad");
+      check(rockStats.peakDecade === null && rockStats.decades.length === 0 && rockStats.allDecades.join(",") === "2000", "una sola década: sin década de auge ni distribución");
+      const trapStats = await getGenreStats(trap);
+      check(trapStats.albumCount === 3 && trapStats.decades.length === 0, "smoke-trap: 3 álbumes (propios y heredados) en una sola década");
+      const trapPage = await getGenrePage("smoke-trap");
+      check(trapPage?.children[0]?.slug === "smoke-trap-latino" && trapPage.children[0].albumCount === 2, "el árbol cuenta los álbumes del subgénero (smoke-trap-latino: 2)");
+      check((await getGenrePage("smoke-rock"))?.children[0]?.albumCount === 1, "el subgénero smoke-shoegaze cuenta 1 álbum");
+
+      // --- Listado filtrado y ordenado ---
+      const tree = albumInGenreTree(trap);
+      const page = (options: Parameters<typeof listAlbumsFiltered>[1]) => listAlbumsFiltered(tree, options).then((p) => smokeOnly(p.albums));
+      check((await page({})).length === 3, "sin filtros: los 3 álbumes del subárbol");
+      const countOf = (category: string) => [linked, unlinked, extra].filter((a) => a.category === category).length;
+      check((await page({ category: "studio" })).length === countOf("studio") && (await page({ category: "single_ep" })).length === countOf("single_ep") && countOf("single_ep") === 1, "filtra por tipo");
+      check((await page({ decade: 2000 })).length === 3 && (await page({ decade: 1990 })).length === 0, "filtra por década");
+      check((await page({ q: "ALBUM ENLAZADO" })).map((a) => a.id).join(",") === linked.id, "la búsqueda ignora mayúsculas y tildes (por título)");
+      check((await page({ q: "banda de generos" })).map((a) => a.id).sort().join(",") === [linked.id, unlinked.id].sort().join(","), "la búsqueda encuentra por el artista acreditado (el álbum extra no tiene crédito)");
+      check((await page({ q: "zzzz" })).length === 0, "una búsqueda sin coincidencias no devuelve nada");
+      check((await page({ sort: "newest" })).map((a) => a.id).join(",") === `${extra.id},${unlinked.id},${linked.id}`, "orden más recientes");
+      check((await page({ sort: "oldest" })).map((a) => a.id).join(",") === `${linked.id},${unlinked.id},${extra.id}`, "orden más antiguos");
+      check((await page({ sort: "az" })).map((a) => a.id).join(",") === `${linked.id},${extra.id},${unlinked.id}`, "orden A–Z");
+      const exact = await listAlbumsFiltered(albumHasGenre(trap), {});
+      check(smokeOnly(exact.albums).map((a) => a.id).sort().join(",") === [extra.id, unlinked.id].sort().join(","), "solo el género exacto: sin los que únicamente tienen un subgénero");
+      check((await findDescendantStyleGenre(trap, "smoke-trap-latino"))?.id === trapLatino, "un subgénero válido cuelga del árbol");
+      check((await findDescendantStyleGenre(trap, "smoke-shoegaze")) === null, "un género de otro árbol se ignora");
+      const bandPage = await listGenreArtists(trap, { q: "BANDA de" });
+      check(bandPage.artists.length === 1 && bandPage.artists[0]!.albumCount === 2, "artistas: búsqueda y álbumes del género acreditados (2: el extra no tiene crédito)");
+      check((await listGenreArtists(trap, { q: "zzzz" })).artists.length === 0, "artistas: búsqueda sin resultados");
+
+      // --- Rieles ---
+      check((await getGenreEssentials(trap)).length === 0, "Esenciales se omite sin álbumes con 3 valoraciones");
+      const expectedNew = [extra, unlinked, linked].filter((a) => ["studio", "single_ep"].includes(a.category)).map((a) => a.id);
+      check(smokeOnly(await getGenreNewReleases(trap)).map((a) => a.id).join(",") === expectedNew.join(","), "Novedades: solo estudio y single/EP, por año descendente");
+
+      // --- Comunidad: listas y reseñas ---
+      const stamp2 = `${stamp}pg`;
+      const mkUser = async (name: string) => {
+        const u = await registerUser({ username: `smoke_gen_${stamp2}_${name}`, email: `smoke-gen-${stamp2}-${name}@example.test`, password: "smoke-password-123" });
+        if (!u) throw new Error(`no se creó ${name}`);
+        userIds.push(u.id);
+        return u;
+      };
+      const owner = await mkUser("owner");
+      const reader = await mkUser("reader");
+      const [list] = await db
+        .insert(schema.userList)
+        .values({ ownerId: owner.id, title: "Lista del género (smoke)", entityType: "release-group", audience: "public" })
+        .returning();
+      if (!list) throw new Error("no se creó la lista");
+      await db.insert(schema.userListItem).values([linked, unlinked, extra].map((rg, position) => ({ listId: list.id, releaseGroupId: rg.id, position })));
+      const [short] = await db
+        .insert(schema.userList)
+        .values({ ownerId: owner.id, title: "Lista corta (smoke)", entityType: "release-group", audience: "public" })
+        .returning();
+      await db.insert(schema.userListItem).values([linked, unlinked].map((rg, position) => ({ listId: short!.id, releaseGroupId: rg.id, position })));
+      const titles = async (readerId: string | null) => (await listGenreLists(readerId, trap)).lists.filter((l) => l.owner.id === owner.id).map((l) => `${l.title}:${l.genreAlbumCount}`);
+      check((await titles(null)).join(",") === "Lista del género (smoke):3", "listas: solo con 3 o más álbumes del género, con su cantidad");
+      check((await titles(reader.id)).length === 1, "listas: el lector con sesión las ve");
+      await db.insert(schema.userBlock).values({ blockerId: reader.id, blockedId: owner.id });
+      check((await titles(reader.id)).length === 0 && (await titles(null)).length === 1, "listas: un bloqueo la oculta solo al lector");
+      await db.delete(schema.userBlock).where(eq(schema.userBlock.blockerId, reader.id));
+      await db.update(schema.userList).set({ audience: "private" }).where(eq(schema.userList.id, list.id));
+      check((await titles(null)).length === 0, "listas: una lista privada no aparece");
+      await db.update(schema.userList).set({ audience: "public" }).where(eq(schema.userList.id, list.id));
+      await db.update(schema.appUser).set({ profileVisibility: "private" }).where(eq(schema.appUser.id, owner.id));
+      check((await titles(null)).length === 0, "listas: un perfil privado no aparece");
+      await db.update(schema.appUser).set({ profileVisibility: "public" }).where(eq(schema.appUser.id, owner.id));
+
+      await db.insert(schema.review).values({ userId: owner.id, releaseGroupId: linked.id, body: "Reseña de prueba del género (smoke)" });
+      const reviewsOf = async (readerId: string | null) => (await getGenreRecentReviews(trap, readerId)).filter((r) => r.album.id === linked.id);
+      check((await reviewsOf(null)).length === 1 && (await reviewsOf(null))[0]!.review.user.username === owner.username, "reseñas: aparece la reseña visible del género");
+      await db.insert(schema.userBlock).values({ blockerId: owner.id, blockedId: reader.id });
+      check((await reviewsOf(reader.id)).length === 0 && (await reviewsOf(null)).length === 1, "reseñas: un bloqueo en cualquier dirección la oculta al lector");
+      await db.delete(schema.userBlock).where(eq(schema.userBlock.blockerId, owner.id));
+      await db.update(schema.review).set({ moderationStatus: "hidden" }).where(eq(schema.review.userId, owner.id));
+      check((await reviewsOf(null)).length === 0, "reseñas: una reseña oculta por moderación no aparece");
+      await db.update(schema.review).set({ moderationStatus: "visible" }).where(eq(schema.review.userId, owner.id));
+      await db.update(schema.appUser).set({ deactivatedAt: new Date() }).where(eq(schema.appUser.id, owner.id));
+      const masked = (await reviewsOf(null))[0]?.review.user;
+      check(masked?.deactivated === true && masked.username !== owner.username, "reseñas: una cuenta desactivada se muestra enmascarada");
+      await db.update(schema.appUser).set({ deactivatedAt: null }).where(eq(schema.appUser.id, owner.id));
+
+      // --- Huella personal ---
+      await db.insert(schema.rating).values([
+        { userId: owner.id, releaseGroupId: linked.id, stars: "4.5" },
+        { userId: owner.id, releaseGroupId: unlinked.id, stars: "3.5" },
+      ]);
+      await db.insert(schema.wantToListenEntry).values({ userId: owner.id, releaseGroupId: extra.id });
+      const footprint = await getGenreFootprint(owner.id, trap);
+      check(
+        footprint.ratedCount === 2 && footprint.averageStars === 4 && footprint.pendingCount === 1 && footprint.favorites.map((f) => f.id).join(",") === `${linked.id},${unlinked.id}`,
+        `huella: 2 valorados, media 4, 1 pendiente y favoritos por estrellas (${JSON.stringify(footprint)})`,
+      );
+      const other = await getGenreFootprint(reader.id, trap);
+      check(other.ratedCount === 0 && other.pendingCount === 0 && other.favorites.length === 0, "huella: aislada entre personas");
+      check((await getGenreStats(trap)).ratingCount === null, "con 2 valoraciones la cabecera sigue sin media (umbral de 5)");
+
+      // --- Me mueve: alta/baja atómicas, tope y edición concurrente ---
+      const me = await mkUser("me");
+      check((await addIdentityGenre(me.id, "smoke-trap")).join(",") === "smoke-trap", "Me mueve agrega el género");
+      check((await addIdentityGenre(me.id, "smoke-trap")).join(",") === "smoke-trap", "agregar dos veces es idempotente (una sola entrada)");
+      await updateMusicIdentity(me.id, { genres: ["smoke-trap", "smoke-folk"] }); // edición desde otra pestaña
+      check((await addIdentityGenre(me.id, "smoke-shoegaze")).join(",") === "smoke-trap,smoke-folk,smoke-shoegaze", "agregar conserva lo editado en otra pestaña");
+      check((await code(addIdentityGenre(me.id, "smoke-hidden"))) === "GENRE_NOT_FOUND" && (await code(addIdentityGenre(me.id, "instrumental"))) === "GENRE_NOT_FOUND", "un oculto o un descriptor no se agregan");
+      await addIdentityGenre(me.id, "smoke-rock");
+      await addIdentityGenre(me.id, "smoke-trap-latino");
+      check((await code(addIdentityGenre(me.id, "psychedelic-rock"))) === "MUSIC_IDENTITY_GENRES_FULL", "con 5 géneros el alta responde MUSIC_IDENTITY_GENRES_FULL");
+      const [fullRow] = await db.select({ genres: schema.appUser.genres }).from(schema.appUser).where(eq(schema.appUser.id, me.id));
+      check(fullRow?.genres.length === 5, "el rechazo no cambia la lista");
+      check((await removeIdentityGenre(me.id, "smoke-rock")).length === 4, "Me mueve quita el género");
+      check((await removeIdentityGenre(me.id, "smoke-rock")).length === 4, "quitar uno que no estaba deja la lista igual");
+
+      // --- Personas a las que les mueve: umbral de 5, solo perfiles públicos y cuentas activas ---
+      const fans: { id: string }[] = [];
+      for (let i = 0; i < 5; i++) {
+        const fan = await mkUser(`fan${i}`);
+        await addIdentityGenre(fan.id, "smoke-folk");
+        fans.push(fan);
+      }
+      // "me" también declara smoke-folk (6 en total).
+      check((await getMovedByCount("smoke-folk")) === 6, "con 6 personas que declaran el género se muestra la cifra");
+      await db.update(schema.appUser).set({ profileVisibility: "private" }).where(eq(schema.appUser.id, fans[0]!.id));
+      check((await getMovedByCount("smoke-folk")) === 5, "un perfil privado no cuenta");
+      await db.update(schema.appUser).set({ deactivatedAt: new Date() }).where(eq(schema.appUser.id, fans[1]!.id));
+      check((await getMovedByCount("smoke-folk")) === null, "una cuenta desactivada no cuenta y bajo 5 no se muestra la cifra");
+      check((await getMovedByCount("smoke-trap-latino")) === null, "bajo el umbral nunca devuelve la cifra");
+
+      // --- Sobre el género: sincronización con Wikimedia (simulada) ---
+      const trapRow = (await db.select().from(schema.genre).where(eq(schema.genre.id, trap)))[0]!;
+      check(trapRow.wikimediaSyncedAt === null, "el género empieza sin sincronizar");
+      calls.length = 0;
+      const synced = await enrichGenreFromWikimedia(trap);
+      check(synced.status === "enriched", `texto sincronizado (${synced.status})`);
+      check(calls.filter((c) => c.startsWith("wp:")).length === 2, "una request de extracto por idioma");
+      const about = await getGenreAbout(trap, "es");
+      check(about?.language === "es" && !about.isFallback && about.title === "Trap sintético" && about.url.startsWith("https://es.wikipedia.org/"), `texto en español con título y URL (${about?.title})`);
+      check(about?.rest === "Segundo párrafo de Trap sintético.", "el resto del texto queda para el desplegable");
+      calls.length = 0;
+      check((await enrichGenreFromWikimedia(trap)).status === "skipped" && calls.length === 0, "vigente: no hace ninguna request");
+      failWikidata.add(QID.trap);
+      let failed = false;
+      try {
+        await enrichGenreFromWikimedia(trap, { force: true });
+      } catch {
+        failed = true;
+      }
+      failWikidata.delete(QID.trap);
+      const [afterFail] = await db.select().from(schema.genreLocalizedText).where(and(eq(schema.genreLocalizedText.genreId, trap), eq(schema.genreLocalizedText.locale, "es")));
+      check(failed && afterFail?.summary !== null, "si Wikidata falla se propaga el error y se conserva el texto anterior");
+      const folkId = await genreId(G.folk);
+      check((await enrichGenreFromWikimedia(folkId)).status === "missing-entity", "una entidad inexistente no escribe texto");
+      check((await getGenreAbout(folkId, "es")) === null, "un género sin texto no tiene bloque");
+      const [noQid] = await db.insert(schema.genre).values({ mbid: smokeMbid(SMOKE_PREFIX, 0x7007), slug: "smoke-sin-wikidata", name: "smoke sin wikidata", kind: "style" }).returning();
+      calls.length = 0;
+      check((await enrichGenreFromWikimedia(noQid!.id)).status === "no-wikidata" && calls.length === 0, "sin wikidata_id no se hace ninguna request a Wikimedia");
+      // Fuera de la taxonomía cargada: si quedara, la sección 7 lo contaría como género retirado.
+      await db.delete(schema.genre).where(eq(schema.genre.id, noQid!.id));
+    }
 
     console.log("6d) Votos de la comunidad sobre los géneros del álbum (add-genre-votes)");
     const { castGenreVote, removeGenreVote, getAlbumGenreVotes, MAX_VOTES_PER_ALBUM } = await import("../src/services/genres/votes");

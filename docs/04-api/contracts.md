@@ -359,10 +359,28 @@ oculto, o más de 8 géneros votados en el álbum); `403 GENRE_VOTE_NO_INTERACTI
 del álbum), `403 SOCIAL_SUSPENSION_ACTIVE` (suspensión social vigente), `403 PERMISSION_DENIED` (cuenta desactivada);
 `404 ALBUM_NOT_FOUND`, `404 GENRE_NOT_FOUND`. El `DELETE` no exige interacción ni ausencia de suspensión.
 
+## `PUT` / `DELETE /api/me/profile/genres/{slug}` (cambio `redesign-genre-page`)
+
+Alta y baja de **un** género de "Géneros que me mueven" (la acción "Me mueve" de la página de género). A
+diferencia de `PUT /api/me/profile/music-identity`, que **reemplaza** la lista completa, estos modifican la lista con
+una sola sentencia atómica y son idempotentes: si la persona la editó desde otra pestaña, los demás géneros se
+conservan. Sin cuerpo. Responden **200** `{ genres: string[] }` con la lista resultante y `Cache-Control: no-store`.
+
+- `PUT`: agrega el género (el slug debe ser un **estilo visible** de la taxonomía, ADR 0024). Si ya estaba, responde 200
+  con la lista tal cual.
+- `DELETE`: lo quita; quitar uno que no estaba responde 200 con la lista sin cambios. No exige que el género siga
+  siendo un estilo visible (se puede retirar uno que MusicBrainz ya ocultó).
+
+**Errores:** `401 AUTH_REQUIRED`; `404 GENRE_NOT_FOUND` (slug con formato inválido o, en el `PUT`, que no es un estilo
+visible); `409 MUSIC_IDENTITY_GENRES_FULL` (el `PUT` con la lista ya en 5 géneros, el tope de `CHECK` de la columna);
+`404 USER_NOT_FOUND`.
+
 ## Página de género `/genre/<slug>` (cambio `show-genres`)
 
-**No expone endpoint:** es un Server Component que llama a `src/services/genres/page.ts` y a `listAlbumsByGenre`
-(`?page=` server-side). El slug es el guardado en la taxonomía (ADR 0023); mayúsculas → `308` al canónico en
+**No expone endpoint de lectura:** es un Server Component con cabecera y pestañas por `?tab=` (`albums`, `artists`,
+`lists`; el Resumen no lleva parámetro) que llama a los servicios de `src/services/genres/` y a `listAlbumsFiltered`
+(`q`, `tipo`, `decada`, `sub`, `solo`, `orden`, `vista` y `?page=`, todo server-side; un valor inválido cae al
+predeterminado). Ver `docs/05-features/genres.md`. El slug es el guardado en la taxonomía (ADR 0023); mayúsculas → `308` al canónico en
 minúsculas; inexistente o que no es un estilo visible → `404`.
 
 ## Descubrimiento `/explore` (cambio `add-album-discovery`)
