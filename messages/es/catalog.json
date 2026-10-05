@@ -1039,7 +1039,125 @@
       "artistsHeading": "Artistas",
       "albumsHeading": "Álbumes",
       "empty": "Todavía no hay música de este género en el catálogo.",
-      "albumCount": "{count, plural, one {# álbum} other {# álbumes}}"
+      "albumCount": "{count, plural, one {# álbum} other {# álbumes}}",
+      "tabsLabel": "Secciones del género",
+      "tabs": {
+        "overview": "Resumen",
+        "albums": "Álbumes",
+        "artists": "Artistas",
+        "lists": "Listas"
+      },
+      "stats": {
+        "albums": "{count, plural, one {# álbum} other {# álbumes}}",
+        "artists": "{count, plural, one {# artista} other {# artistas}}",
+        "ratings": "{count, plural, one {# valoración} other {# valoraciones}}",
+        "average": "Media de la comunidad: {average} de 5",
+        "peakDecade": "Década de auge: {decade}s",
+        "movedBy": "Les mueve a {count, plural, one {# persona} other {# personas}}"
+      },
+      "tree": {
+        "heading": "Dónde encaja",
+        "current": "Este género",
+        "parentsLabel": "Subgénero de",
+        "childrenLabel": "Subgéneros",
+        "relatedLabel": "Géneros cercanos",
+        "childAlbums": "{count, plural, one {# álbum} other {# álbumes}}",
+        "moreChildren": "Ver {count, plural, one {# subgénero más} other {# subgéneros más}}",
+        "noChildMusic": "Sin música todavía"
+      },
+      "rails": {
+        "essentialsHeading": "Esenciales",
+        "newReleasesHeading": "Novedades",
+        "seeAll": "Ver todo"
+      },
+      "decades": {
+        "heading": "Por década",
+        "barLabel": "{decade}s: {count, plural, one {# álbum} other {# álbumes}}"
+      },
+      "artists": {
+        "heading": "Artistas",
+        "seeAll": "Ver todos",
+        "cardAlbums": "{count, plural, one {# álbum del género} other {# álbumes del género}}",
+        "empty": "Ningún artista del catálogo tiene este género todavía.",
+        "searchPlaceholder": "Buscar artistas de este género",
+        "sortLabel": "Ordenar por",
+        "sortAlbums": "Más álbumes del género",
+        "sortFollowed": "Más seguidos",
+        "sortAz": "A–Z"
+      },
+      "filters": {
+        "searchPlaceholder": "Buscar por título o artista",
+        "searchLabel": "Buscar en este género",
+        "searchSubmit": "Buscar",
+        "typeLabel": "Tipo",
+        "typeAll": "Todos",
+        "decadeLabel": "Década",
+        "decadeAll": "Todas",
+        "subLabel": "Subgénero",
+        "subAll": "Todos",
+        "exactLabel": "Solo este género",
+        "sortLabel": "Ordenar por",
+        "sortBest": "Mejor valorados",
+        "sortPopular": "Más valorados",
+        "sortNewest": "Más recientes",
+        "sortOldest": "Más antiguos",
+        "sortAz": "A–Z",
+        "viewLabel": "Vista",
+        "viewGrid": "Cuadrícula",
+        "viewList": "Lista",
+        "clear": "Limpiar filtros",
+        "noResults": "Ningún álbum coincide con estos filtros.",
+        "resultsLabel": "Álbumes del género"
+      },
+      "albumRow": {
+        "yearUnknown": "Año desconocido"
+      },
+      "pagination": {
+        "label": "Paginación"
+      },
+      "loading": "Cargando",
+      "lists": {
+        "heading": "Listas de la comunidad",
+        "seeAll": "Ver todas",
+        "railLabel": "Listas de la comunidad con este género",
+        "railPrev": "Listas anteriores",
+        "railNext": "Listas siguientes",
+        "genreAlbums": "{count, plural, one {# álbum de este género} other {# álbumes de este género}}",
+        "emptyTitle": "Todavía no hay listas de este género",
+        "emptyDescription": "Cuando alguien arme una lista pública con al menos {min} álbumes de este género, va a aparecer acá.",
+        "createCta": "Crear una lista"
+      },
+      "reviews": {
+        "heading": "Reseñas recientes",
+        "ratingLabel": "Nota: {stars} estrellas",
+        "byAuthor": "por {author}"
+      },
+      "move": {
+        "declare": "Me mueve",
+        "declared": "Ya me mueve",
+        "error": "No se pudo guardar el cambio. Inténtalo de nuevo."
+      },
+      "footprint": {
+        "heading": "Tu huella en este género",
+        "empty": "Todavía no has valorado ni guardado nada de este género.",
+        "startEssentials": "Empieza por los Esenciales",
+        "startAlbums": "Explora los álbumes del género",
+        "rated": "{count, plural, one {# álbum valorado} other {# álbumes valorados}}",
+        "average": "tu media: {average}",
+        "pending": "{count, plural, one {# álbum pendiente} other {# álbumes pendientes}}",
+        "favorites": "Tus favoritos"
+      },
+      "about": {
+        "heading": "Sobre el género",
+        "readMore": "Leer más",
+        "source": "Fuente: Wikipedia —",
+        "licensedUnder": "texto bajo licencia",
+        "fallbackNote": "Este texto está en {language}: no hay uno en tu idioma.",
+        "languages": {
+          "es": "español",
+          "en": "inglés"
+        }
+      }
     },
     "primary": "Género principal",
     "votes": {

@@ -47,6 +47,7 @@ además del `error` legible:
 | `SOCIAL_SUSPENSION_ACTIVE` | 403 | La cuenta tiene una restricción social temporal activa y la mutación produciría nueva actividad pública o social. |
 | `GENRE_NOT_FOUND` | 404 | El género (slug) no existe en la taxonomía. Votos de género de un álbum (`add-genre-votes`). |
 | `GENRE_VOTE_NO_INTERACTION` | 403 | Votar los géneros de un álbum exige haberlo valorado, escuchado (diario) o coleccionado. |
+| `MUSIC_IDENTITY_GENRES_FULL` | 409 | La identidad musical ya tiene el máximo de 5 géneros y el alta (`PUT /api/me/profile/genres/{slug}`) no cabe (`redesign-genre-page`). |
 | `ROLE_REQUIRED` | 403 | La operación requiere un rol de plataforma que la sesión no tiene. |
 | `MODERATION_REPORT_NOT_FOUND` | 404 | El reporte de moderación no existe o no es accesible para la operación solicitada. |
 | `RESTRICTION_NOT_FOUND` | 404 | La restricción social no existe o ya fue revocada. |

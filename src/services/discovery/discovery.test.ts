@@ -1,14 +1,17 @@
+import { sql, type SQL } from "drizzle-orm";
+import { PgDialect } from "drizzle-orm/pg-core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   listAlbumsByDecade,
   listAlbumsByFamily,
   listAlbumsByGenre,
+  listAlbumsFiltered,
   listFeaturedCollections,
   listGenreFamilies,
   listMostReviewed,
   listTopRated,
 } from "./discovery";
-import { MIN_ALBUMS_FOR_SECTION } from "./constants";
+import { FILTERED_PAGE_SIZE, MIN_ALBUMS_FOR_SECTION } from "./constants";
 
 const mocks = vi.hoisted(() => ({
   db: { select: vi.fn() },
@@ -167,5 +170,104 @@ describe("listados filtrados: validación", () => {
     const result = await listAlbumsByDecade(1990, 1);
     expect(result.albums).toHaveLength(24);
     expect(result.hasNext).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// listAlbumsFiltered (openspec: redesign-genre-page)
+// ---------------------------------------------------------------------------
+
+describe("listAlbumsFiltered", () => {
+  type Captured = { where?: SQL; orderBy: SQL[]; limit?: number; offset?: number };
+
+  function capture(rows: unknown[] = []): Captured {
+    const captured: Captured = { orderBy: [] };
+    const builder: Record<string, unknown> = {
+      from: () => builder,
+      leftJoin: () => builder,
+      groupBy: () => builder,
+      where: (arg: SQL) => {
+        captured.where = arg;
+        return builder;
+      },
+      orderBy: (...args: SQL[]) => {
+        captured.orderBy = args;
+        return builder;
+      },
+      limit: (n: number) => {
+        captured.limit = n;
+        return builder;
+      },
+      offset: (n: number) => {
+        captured.offset = n;
+        return Promise.resolve(rows);
+      },
+    };
+    mocks.db.select.mockReturnValue(builder);
+    return captured;
+  }
+
+  const dialect = new PgDialect();
+  const render = (chunk: SQL | undefined) => (chunk ? dialect.sqlToQuery(chunk) : { sql: "", params: [] });
+  const base = sql`1 = 1`;
+
+  it("sin filtros usa el orden compartido de Explorar y pide una fila de más para saber si hay siguiente", async () => {
+    const captured = capture([albumRow("a"), albumRow("b")]);
+    const page = await listAlbumsFiltered(base, { page: 2 });
+    expect(captured.limit).toBe(FILTERED_PAGE_SIZE + 1);
+    expect(captured.offset).toBe(FILTERED_PAGE_SIZE);
+    expect(page.hasNext).toBe(false);
+    expect(page.albums.map((a) => a.id)).toEqual(["a", "b"]);
+    const order = captured.orderBy.map((o) => render(o).sql).join(" | ");
+    expect(order).toMatch(/avg\(.*desc nulls last/s);
+    expect(order).toMatch(/first_release_year.*desc nulls last/);
+  });
+
+  it.each([
+    ["popular", /count\(.*desc/],
+    ["newest", /first_release_year" desc nulls last/],
+    ["oldest", /first_release_year" asc nulls last/],
+    ["az", /search_normalize\(.*title.*asc/],
+  ] as const)("el orden %s desempata siempre por id", async (sort, pattern) => {
+    const captured = capture();
+    await listAlbumsFiltered(base, { sort });
+    const rendered = captured.orderBy.map((o) => render(o).sql);
+    expect(rendered.join(" | ")).toMatch(pattern);
+    expect(rendered[rendered.length - 1]).toMatch(/"release_group"\."id" asc/);
+  });
+
+  it("combina tipo, década y texto en el WHERE con parámetros, no concatenados", async () => {
+    const captured = capture();
+    await listAlbumsFiltered(base, { category: "studio", decade: 1970, q: "Motörhead" });
+    const { sql: text, params } = render(captured.where);
+    expect(text).toContain('"category" = $');
+    expect(text).toMatch(/between \$\d+ and \$\d+/);
+    expect(text).toMatch(/search_normalize\(.*title.*\) LIKE search_normalize\(\$\d+\)/s);
+    expect(text).toContain("FROM credit c JOIN artist a");
+    expect(params).toContain("studio");
+    expect(params).toContain(1970);
+    expect(params).toContain(1979);
+    expect(params).toContain("%Motörhead%");
+    expect(text).not.toContain("Motörhead");
+  });
+
+  it("escapa % y _ del texto como literales", async () => {
+    const captured = capture();
+    await listAlbumsFiltered(base, { q: "50%_off" });
+    expect(render(captured.where).params).toContain("%50\\%\\_off%");
+  });
+
+  it("un texto vacío o solo espacios no agrega condición", async () => {
+    const captured = capture();
+    await listAlbumsFiltered(base, { q: "   " });
+    expect(render(captured.where).sql).not.toContain("credit c");
+  });
+
+  it("rechaza tipo, década, orden y paginación inválidos", async () => {
+    capture();
+    await expect(listAlbumsFiltered(base, { category: "bootleg" as never })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    await expect(listAlbumsFiltered(base, { decade: 1975 })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    await expect(listAlbumsFiltered(base, { sort: "azar" as never })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    await expect(listAlbumsFiltered(base, { page: 0 })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
   });
 });

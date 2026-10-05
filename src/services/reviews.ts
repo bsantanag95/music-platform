@@ -1,6 +1,6 @@
 import { and, desc, eq, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { appUser, rating, releaseGroup, review, type ReviewRow } from "@/db/schema";
+import { appUser, rating, releaseGroup, review, userBlock, type ReviewRow } from "@/db/schema";
 import { maskAuthor } from "@/services/auth/account-status";
 import { ApiError } from "@/lib/api/errors";
 import { reviewSegment } from "@/lib/catalog-links";
@@ -213,6 +213,47 @@ export async function getReviewDetail(reviewId: string): Promise<ReviewDetail | 
     review: serializeReview(reviewRow),
     album: { id: albumId, title: albumTitle, coverThumbUrl: albumCover },
   };
+}
+
+/**
+ * Las reseñas visibles más recientes de los álbumes que cumplen `albumCondition` (correlacionada con
+ * "release_group"), con su álbum (openspec: redesign-genre-page, capability `genre-page-community`).
+ * Mismas reglas que el listado y el detalle: solo `moderation_status = 'visible'` y autor
+ * desactivado enmascarado; con `readerId`, además, sin autores bloqueados en ninguna dirección.
+ */
+export async function listRecentAlbumReviews(
+  albumCondition: SQL,
+  readerId: string | null,
+  limit: number,
+): Promise<ReviewDetail[]> {
+  const notBlocked = readerId
+    ? sql`not exists (
+        select 1 from ${userBlock}
+        where (${userBlock.blockerId} = ${readerId} and ${userBlock.blockedId} = ${review.userId})
+           or (${userBlock.blockerId} = ${review.userId} and ${userBlock.blockedId} = ${readerId})
+      )`
+    : undefined;
+  const rows = await db
+    .select({
+      ...reviewSelection,
+      albumId: releaseGroup.id,
+      albumTitle: releaseGroup.title,
+      albumCover: releaseGroup.coverThumbUrl,
+    })
+    .from(review)
+    .innerJoin(appUser, eq(review.userId, appUser.id))
+    .innerJoin(releaseGroup, eq(releaseGroup.id, review.releaseGroupId))
+    .leftJoin(
+      rating,
+      and(eq(rating.userId, review.userId), eq(rating.releaseGroupId, review.releaseGroupId)),
+    )
+    .where(and(eq(review.moderationStatus, "visible"), albumCondition, notBlocked))
+    .orderBy(desc(review.createdAt), desc(review.id))
+    .limit(limit);
+  return rows.map(({ albumId, albumTitle, albumCover, ...reviewRow }) => ({
+    review: serializeReview(reviewRow),
+    album: { id: albumId, title: albumTitle, coverThumbUrl: albumCover },
+  }));
 }
 
 async function getReviewResponse(reviewId: string): Promise<Review> {

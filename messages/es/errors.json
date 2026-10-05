@@ -246,5 +246,13 @@
   "EDITION_IS_BOX": {
     "title": "Es una caja",
     "description": "Las cajas no muestran su lista de pistas acá: consultala en MusicBrainz."
+  },
+  "MUSIC_IDENTITY_GENRES_FULL": {
+    "title": "Ya tienes 5 géneros",
+    "description": "Quita uno de «Géneros que me mueven» en tu perfil para agregar este."
+  },
+  "GENRE_NOT_FOUND": {
+    "title": "No encontramos el género",
+    "description": "Ese género no existe o ya no está disponible."
   }
 }

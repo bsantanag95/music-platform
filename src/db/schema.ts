@@ -95,6 +95,8 @@ export const appUser = pgTable(
       "gin",
       sql`search_normalize(${t.displayName}) gin_trgm_ops`,
     ),
+    // "Géneros que me mueven": la cifra de la página de género cuenta por contención (migración 0059).
+    index("idx_app_user_genres").using("gin", t.genres),
     check("chk_app_user_locale", sql`${t.locale} IS NULL OR ${t.locale} IN ('es','en')`),
     check("chk_app_user_self_roles", sql`cardinality(${t.selfRoles}) <= 3`),
     check("chk_app_user_genres", sql`cardinality(${t.genres}) <= 5`),
@@ -1368,6 +1370,8 @@ export const genre = pgTable(
     nameEs: text("name_es"),
     wikidataId: text("wikidata_id"),
     kind: text("kind").$type<GenreKind>().notNull().default("style"),
+    // Última sincronización del texto "Sobre el género" con Wikimedia (migración 0059, ADR 0027).
+    wikimediaSyncedAt: timestamp("wikimedia_synced_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -1378,6 +1382,31 @@ export const genre = pgTable(
     check("chk_genre_name_es", sql`${t.nameEs} IS NULL OR length(btrim(${t.nameEs})) > 0`),
     check("chk_genre_wikidata_id", sql`${t.wikidataId} IS NULL OR ${t.wikidataId} ~ '^Q[0-9]+$'`),
     check("chk_genre_kind", sql`${t.kind} IN ('style','descriptor','hidden')`),
+  ],
+);
+
+// Texto "Sobre el género" por idioma (migración 0059, openspec: redesign-genre-page, ADR 0027): la
+// descripción corta de Wikidata y la introducción del artículo de Wikipedia (CC BY-SA 4.0) con su
+// título y su URL canónica, que la atribución exige. Misma forma que `artist_localized_text`.
+export const genreLocalizedText = pgTable(
+  "genre_localized_text",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    genreId: uuid("genre_id")
+      .notNull()
+      .references(() => genre.id, { onDelete: "cascade" }),
+    locale: text("locale").notNull(), // 'es' | 'en'
+    description: text("description"),
+    summary: text("summary"),
+    summaryTitle: text("summary_title"),
+    summaryUrl: text("summary_url"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("chk_genre_localized_text_locale", sql`${t.locale} IN ('es', 'en')`),
+    check("chk_genre_localized_text_summary", sql`${t.summary} IS NULL OR ${t.summaryUrl} IS NOT NULL`),
+    unique("uq_genre_localized_text").on(t.genreId, t.locale),
   ],
 );
 
@@ -1556,6 +1585,7 @@ export type UserProfileLinkRow = typeof userProfileLink.$inferSelect;
 export type UserPinnedItemRow = typeof userPinnedItem.$inferSelect;
 export type UserShowcaseRow = typeof userShowcase.$inferSelect;
 export type GenreRow = typeof genre.$inferSelect;
+export type GenreLocalizedTextRow = typeof genreLocalizedText.$inferSelect;
 export type GenreRelationRow = typeof genreRelation.$inferSelect;
 export type GenreFamilyRow = typeof genreFamily.$inferSelect;
 export type ArtistGenreSeedRow = typeof artistGenreSeed.$inferSelect;

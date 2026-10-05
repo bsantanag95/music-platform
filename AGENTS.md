@@ -133,7 +133,14 @@ de cuál de las filas con el mismo título haya en la BD.
 >   borra al terminar; el `ON DELETE CASCADE` limpia sus valoraciones, votos y restricciones; el mismo `LIKE
 >   'smoke_gen_%'` los cubre) y verifica los votos de género: elegibilidad, propuesta que reemplaza la herencia, puntaje
 >   con principal y secundarios, cifras desde 5 votantes, cuenta desactivada, supervivencia del voto, semilla
->   neutralizada, tope de 8 y suspensión social.
+>   neutralizada, tope de 8 y suspensión social. Desde `redesign-genre-page` crea además un álbum sintético
+>   (`5e0ce000-0000-4000-8000-*7203`, lo cubre el mismo `LIKE` de arriba), listas `… (smoke)` y, de usuarios
+>   `smoke_gen_<sello>pg_*`, una reseña, valoraciones y un pendiente (todo cae por `ON DELETE CASCADE` al borrar a los
+>   usuarios y los álbumes; el mismo `LIKE 'smoke_gen_%'` los cubre) y el texto de Wikimedia (`genre_localized_text`) de
+>   los géneros sintéticos, que cae con ellos. Mockea Wikidata y Wikipedia. El género `smoke-sin-wikidata` se borra dentro
+>   del propio script. Verifica cifras con umbral, árbol, filtros y órdenes, listas y reseñas (privacidad, bloqueo,
+>   moderación), huella, "Me mueve" (tope, idempotencia, edición concurrente), la cifra de personas a las que les mueve
+>   (umbral de 5) y la sincronización del texto "Sobre el género". Necesita la migración `0059` aplicada.
 
 ## Base de datos / migraciones
 

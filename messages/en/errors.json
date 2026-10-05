@@ -246,5 +246,13 @@
   "EDITION_IS_BOX": {
     "title": "This is a box set",
     "description": "Box sets do not show their track list here: check it on MusicBrainz."
+  },
+  "MUSIC_IDENTITY_GENRES_FULL": {
+    "title": "You already have 5 genres",
+    "description": "Remove one from “Genres that move me” in your profile to add this one."
+  },
+  "GENRE_NOT_FOUND": {
+    "title": "Genre not found",
+    "description": "That genre doesn't exist or is no longer available."
   }
 }

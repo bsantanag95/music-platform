@@ -669,6 +669,8 @@ Nunca se guardan votos ni etiquetas de MusicBrainz (CC BY-NC-SA).
   P136) · `kind` (`style` | `descriptor` | `hidden`) · `created_at` / `updated_at` (trigger
   `trg_genre_touch`). Las filas las escribe `scripts/load-genre-taxonomy.ts` desde
   `data/genres/taxonomy.json`; un género que MusicBrainz retiró queda `hidden`, no se borra.
+  `wikimedia_synced_at` (migración `0059`, `TIMESTAMPTZ` nullable): última sincronización del texto
+  "Sobre el género" con Wikimedia (vigencia de 30 días; `NULL` = nunca).
 - **`genre_relation`**: `(genre_id, related_genre_id, kind)` PK, `kind` ∈ `subgenre_of` |
   `fusion_of` | `influenced_by`, siempre "`genre_id` es subgénero de / fusión de / influido por
   `related_genre_id`"; `CHECK genre_id <> related_genre_id`; índice por `(related_genre_id, kind)`
@@ -688,6 +690,14 @@ Nunca se guardan votos ni etiquetas de MusicBrainz (CC BY-NC-SA).
   tope de 8 por persona y álbum, que el género sea de estilo y la interacción previa con el álbum se
   validan en el servicio (un `CHECK` no cuenta filas); el voto sobrevive a que la persona quite la
   interacción.
+- **`genre_localized_text`** (migración `0059`, cambio `redesign-genre-page`, ADR 0027): texto "Sobre el género" por
+  idioma. `id` UUID PK · `genre_id` (FK `ON DELETE CASCADE`) · `locale` (`CHECK IN ('es','en')`; única
+  por `(genre_id, locale)`) · `description` (descripción corta de Wikidata, CC0) · `summary` /
+  `summary_title` / `summary_url` (introducción del artículo de Wikipedia, CC BY-SA 4.0, con el título y la URL canónica
+  que la atribución exige; `CHECK summary IS NULL OR summary_url IS NOT NULL`) · `created_at` / `updated_at` (trigger).
+  Se llega al ítem solo por `genre.wikidata_id`; el texto no se traduce ni se modifica.
+- **Índice `idx_app_user_genres`** (migración `0059`): GIN sobre `app_user.genres`, para contar por contención (`@>`) las
+  personas que declaran un género.
 - **Vista `release_group_genre_score`** `(release_group_id, genre_id, seed, up, down, score,
   seed_position)`: `seed` es 1 si el género es semilla propia del álbum (visible, no `hidden`);
   `up`/`down` cuentan los votos sobre géneros de estilo de cuentas con `deactivated_at IS NULL`;

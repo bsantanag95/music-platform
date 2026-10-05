@@ -71,6 +71,46 @@ export function albumInGenreTree(genreId: string): SQL {
   )`;
 }
 
+/**
+ * Igual que `albumInGenreTree`, pero el conjunto de álbumes del subárbol se calcula UNA vez (CTE
+ * materializada). Para consultas cuyo lado exterior es pequeño (reseñas recientes, listas): con un
+ * `EXISTS` correlacionado el planificador, al estimar pocas filas, elige un bucle anidado y vuelve a
+ * evaluar la vista `release_group_effective_genre` entera por cada fila exterior (medido: ~300 ms
+ * para 19 reseñas contra ~35 ms para el listado de álbumes).
+ */
+export function albumInGenreTreeOnce(genreId: string): SQL {
+  return sql`"release_group"."id" IN (
+    WITH tree_albums AS MATERIALIZED (
+      SELECT e.release_group_id
+      FROM release_group_effective_genre e
+      WHERE e.genre_id IN ${genreWithDescendants(genreId)}
+    )
+    SELECT release_group_id FROM tree_albums
+  )`;
+}
+
+/** Condición: el álbum de la consulta exterior tiene exactamente ese género efectivo (sin subgéneros). */
+export function albumHasGenre(genreId: string): SQL {
+  return sql`EXISTS (
+    SELECT 1
+    FROM release_group_effective_genre e
+    WHERE e.release_group_id = "release_group"."id" AND e.genre_id = ${genreId}::uuid
+  )`;
+}
+
+/**
+ * Género de estilo por slug que es descendiente estricto de `rootId` por "subgénero de"; `null` si el
+ * slug no existe, no es un estilo visible o no cuelga de la raíz (openspec: redesign-genre-page).
+ */
+export async function findDescendantStyleGenre(rootId: string, slug: string): Promise<GenreRow | null> {
+  const found = await findStyleGenreBySlug(slug);
+  if (!found || found.id === rootId) return null;
+  const rows = await db.execute<{ ok: number }>(
+    sql`SELECT 1 AS ok WHERE ${found.id}::uuid IN ${genreWithDescendants(rootId)}`,
+  );
+  return rows.length > 0 ? found : null;
+}
+
 export const DESCRIPTOR_KEYS = ["instrumental", "christmas", "orchestral", "soundtrack"] as const;
 export type DescriptorKey = (typeof DESCRIPTOR_KEYS)[number];
 

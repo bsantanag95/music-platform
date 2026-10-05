@@ -373,6 +373,7 @@ export const ErrorCodeSchema = z.enum([
   "SOCIAL_SUSPENSION_ACTIVE",
   "GENRE_NOT_FOUND",
   "GENRE_VOTE_NO_INTERACTION",
+  "MUSIC_IDENTITY_GENRES_FULL",
   "ROLE_REQUIRED",
   "REAUTH_REQUIRED",
   "USERNAME_CHANGE_COOLDOWN",
@@ -2374,6 +2375,10 @@ export const MusicIdentityResponseSchema = z.object({
   listeningFormats: z.array(ListeningFormatSchema),
 });
 export type MusicIdentityResponse = z.infer<typeof MusicIdentityResponseSchema>;
+
+// PUT/DELETE /api/me/profile/genres/{slug}: la lista de géneros resultante (openspec: redesign-genre-page).
+export const IdentityGenresResponseSchema = z.object({ genres: z.array(GenreSchema) });
+export type IdentityGenresResponse = z.infer<typeof IdentityGenresResponseSchema>;
 
 // Respuesta de una pregunta del perfil: una línea, sin saltos, de 1 a 100 caracteres.
 export const ProfilePromptInputSchema = z.object({

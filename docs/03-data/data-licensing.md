@@ -96,6 +96,12 @@ Cada una tiene su licencia:
   artista muestra el crédito bajo la foto. Nunca se usa la miniatura del resumen de Wikipedia, que
   puede ser una imagen de uso justo. Se sirve una miniatura de a lo sumo 500 px.
 
+**Textos de género (ADR 0027):** la introducción de Wikipedia del género (es y en) también es **CC BY-SA 4.0**.
+Se llega al ítem solo por `genre.wikidata_id` (la declaración P8052 atada al MBID, nunca por el nombre), se guarda sin
+modificar ni traducir, y toda página que lo muestra incluye junto al texto «Fuente: Wikipedia» con enlace al artículo
+(con su título, que puede diferir del nombre mostrado) y a la licencia. No hay retiro a pedido: un texto equivocado se
+corrige en la siguiente sincronización (30 días) o con `scripts/backfill-genre-about.ts --force --slug`.
+
 **Retiro a pedido:** `scripts/takedown-artist-photo.ts` quita la foto de un artista y lo marca
 para que el enriquecimiento no se la vuelva a asignar.
 
@@ -113,7 +119,8 @@ de licencia de MetaBrainz, el texto de ese componente (`messages/{es,en}/footer.
 clave `attribution`) es lo que hay que actualizar.
 
 La atribución de Wikipedia y de las fotos de Commons (D) no va en el footer: es por contenido y
-se muestra junto al resumen y bajo la foto, en la página del artista.
+se muestra junto al resumen y bajo la foto, en la página del artista, y junto al texto «Sobre el género» en la
+página de género.
 
 ## Gates a revisar antes de monetizar
 

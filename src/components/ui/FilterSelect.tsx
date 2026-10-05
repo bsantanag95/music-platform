@@ -19,6 +19,7 @@ export function FilterSelect({
   widthClassName,
   disabled = false,
   label,
+  name,
   children,
 }: {
   value: string;
@@ -27,11 +28,14 @@ export function FilterSelect({
   widthClassName: string;
   disabled?: boolean;
   label?: string;
+  /** Nombre del campo: permite que el `<select>` viaje en un formulario `GET` sin JavaScript. */
+  name?: string;
   children: ReactNode;
 }) {
   const control = (
     <div className="relative">
       <select
+        name={name}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         aria-label={ariaLabel}

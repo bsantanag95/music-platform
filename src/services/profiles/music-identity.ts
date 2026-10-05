@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, genre, userProfilePrompt } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -8,7 +8,8 @@ import {
   type ProfilePromptInput,
   type UpdateMusicIdentityRequest,
 } from "@/lib/api/schemas";
-import type { Genre, ListeningFormat, ProfilePromptData, PromptKey, SelfRole } from "@/lib/music-identity";
+import { MUSIC_IDENTITY_LIMITS, type Genre, type ListeningFormat, type ProfilePromptData, type PromptKey, type SelfRole } from "@/lib/music-identity";
+import { GENRE_SLUG_PATTERN } from "@/services/genres/slug";
 
 // Identidad musical del perfil (spec profile-music-identity): "Me defino como",
 // géneros, formatos de escucha y preguntas. Los valores permitidos viven en
@@ -63,6 +64,58 @@ export async function updateMusicIdentity(
     genres: row.genres as Genre[],
     listeningFormats: row.listeningFormats as ListeningFormat[],
   };
+}
+
+/**
+ * Agrega un género a "Géneros que me mueven" sin reemplazar la lista (openspec: redesign-genre-page,
+ * capability `genre-page-personal`). Es una sola sentencia atómica: si la persona editó la lista
+ * desde otra pestaña, esos géneros se conservan. Idempotente (si ya estaba, devuelve la lista tal
+ * cual); con la lista llena (`MUSIC_IDENTITY_LIMITS.genres`) responde 409. El slug debe ser un estilo
+ * visible de la taxonomía (ADR 0024).
+ */
+export async function addIdentityGenre(userId: string, slug: string): Promise<Genre[]> {
+  if (!GENRE_SLUG_PATTERN.test(slug) || slug.length > 120) throw new ApiError("GENRE_NOT_FOUND", 404, "Género no encontrado");
+  const [style] = await db
+    .select({ slug: genre.slug })
+    .from(genre)
+    .where(and(eq(genre.slug, slug), eq(genre.kind, "style")))
+    .limit(1);
+  if (!style) throw new ApiError("GENRE_NOT_FOUND", 404, "Género no encontrado");
+
+  const [updated] = await db
+    .update(appUser)
+    .set({ genres: sql`array_append(${appUser.genres}, ${style.slug})` })
+    .where(
+      and(
+        eq(appUser.id, userId),
+        sql`NOT (${style.slug} = ANY(${appUser.genres}))`,
+        sql`cardinality(${appUser.genres}) < ${MUSIC_IDENTITY_LIMITS.genres}`,
+      ),
+    )
+    .returning({ genres: appUser.genres });
+  if (updated) return updated.genres as Genre[];
+
+  // No actualizó nada: ya estaba (idempotente), la lista está llena o la persona no existe.
+  const [current] = await db.select({ genres: appUser.genres }).from(appUser).where(eq(appUser.id, userId)).limit(1);
+  if (!current) throw new ApiError("USER_NOT_FOUND", 404, "Usuario no encontrado");
+  if (current.genres.includes(style.slug)) return current.genres as Genre[];
+  throw new ApiError("MUSIC_IDENTITY_GENRES_FULL", 409, "La identidad musical ya tiene el máximo de géneros");
+}
+
+/**
+ * Quita un género de "Géneros que me mueven" sin reemplazar la lista. Idempotente: quitar uno que no
+ * estaba responde con la lista sin cambios. No exige que el género siga siendo un estilo visible, para
+ * que se pueda retirar uno que MusicBrainz ya ocultó.
+ */
+export async function removeIdentityGenre(userId: string, slug: string): Promise<Genre[]> {
+  if (!GENRE_SLUG_PATTERN.test(slug) || slug.length > 120) throw new ApiError("GENRE_NOT_FOUND", 404, "Género no encontrado");
+  const [updated] = await db
+    .update(appUser)
+    .set({ genres: sql`array_remove(${appUser.genres}, ${slug})` })
+    .where(eq(appUser.id, userId))
+    .returning({ genres: appUser.genres });
+  if (!updated) throw new ApiError("USER_NOT_FOUND", 404, "Usuario no encontrado");
+  return updated.genres as Genre[];
 }
 
 /** Las preguntas de una persona, en el orden que eligió. */

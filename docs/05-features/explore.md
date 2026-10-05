@@ -48,8 +48,9 @@ muestra el estado vacío. El encabezado nombra la familia (traducida) o el géne
 taxonomía según el idioma). Grilla paginada con paginación server-side (anterior /
 siguiente por `?page=`). No hay endpoint dedicado.
 
-Cada género también tiene su propia página, `/genre/<slug>` (cambio `show-genres`, ver `genres.md`), que lista
-sus álbumes con la misma paginación.
+Cada género también tiene su propia página, `/genre/<slug>` (cambios `show-genres` y `redesign-genre-page`, ver
+`genres.md`), con pestañas, filtros y orden. Comparte con estos listados la función `listAlbumsFiltered`
+(`discovery.ts`): Explorar la llama con el orden `best` y sin filtros, así que su orden y su paginación no cambian.
 
 ## Flag de lanzamiento
 

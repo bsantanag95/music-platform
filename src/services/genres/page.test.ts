@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Base mockeada: `select` resuelve desde una cola en el orden de las consultas de getGenrePage;
-// `execute` devuelve los artistas. El SQL real lo cubre el smoke test (scratch).
+// `execute` devuelve los conteos de álbumes por subgénero. El SQL real lo cubre el smoke test (scratch).
 const state = vi.hoisted(() => ({
   found: null as Record<string, unknown> | null,
   selects: [] as unknown[][],
-  artists: [] as unknown[],
+  counts: [] as unknown[],
 }));
 
 vi.mock("@/db", () => {
@@ -21,7 +21,7 @@ vi.mock("@/db", () => {
     });
     return proxy;
   };
-  return { db: { select: chain, execute: async () => state.artists } };
+  return { db: { select: chain, execute: async () => state.counts } };
 });
 vi.mock("./read", () => ({
   findStyleGenreBySlug: async () => state.found,
@@ -35,7 +35,7 @@ const g = (id: string, slug: string) => ({ id, slug, name: slug, nameEs: null })
 beforeEach(() => {
   state.found = { id: "g0", slug: "shoegaze", name: "shoegaze", nameEs: null, kind: "style" };
   state.selects = [];
-  state.artists = [];
+  state.counts = [];
 });
 
 describe("getGenrePage", () => {
@@ -44,17 +44,16 @@ describe("getGenrePage", () => {
     await expect(getGenrePage("instrumental")).resolves.toBeNull();
   });
 
-  it("arma familias, padres, subgéneros y artistas", async () => {
+  it("arma familias, padres y subgéneros con su cantidad de álbumes", async () => {
     // Orden de las consultas: familias, padres, hijos, fusión, influencias.
     state.selects = [[{ key: "rock" }], [g("p1", "alternative-rock")], [g("c1", "blackgaze")], [], []];
-    state.artists = [{ id: "a1", name: "Slowdive", type: "group", album_count: 9 }];
+    state.counts = [{ id: "c1", album_count: 7 }];
 
     const page = await getGenrePage("shoegaze");
 
     expect(page?.families).toEqual(["rock"]);
     expect(page?.parents).toEqual([{ slug: "alternative-rock", name: "alternative-rock", nameEs: null }]);
-    expect(page?.children.map((c) => c.slug)).toEqual(["blackgaze"]);
-    expect(page?.artists).toEqual([{ id: "a1", name: "Slowdive", type: "group", albumCount: 9 }]);
+    expect(page?.children).toEqual([{ slug: "blackgaze", name: "blackgaze", nameEs: null, albumCount: 7 }]);
   });
 
   it("los cercanos van fusión primero, sin repetir padres ni subgéneros, hasta 8", async () => {
@@ -68,5 +67,31 @@ describe("getGenrePage", () => {
     expect(page?.related).toHaveLength(8);
     expect(page?.related.map((r) => r.slug)).not.toContain("alternative-rock");
     expect(page?.related.map((r) => r.slug)).not.toContain("blackgaze");
+  });
+
+  it("ordena los subgéneros por álbumes y, a igualdad, por nombre en el idioma pedido", async () => {
+    const children = [{ ...g("c1", "a"), name: "zeta", nameEs: "alfa" }, { ...g("c2", "b"), name: "beta", nameEs: "zulu" }, g("c3", "c"), g("c4", "d")];
+    state.selects = [[], [], children, [], []];
+    state.counts = [
+      { id: "c1", album_count: 3 },
+      { id: "c2", album_count: 3 },
+      { id: "c3", album_count: 40 },
+    ];
+    const es = await getGenrePage("shoegaze", "es");
+    expect(es?.children.map((c) => c.slug)).toEqual(["c", "a", "b", "d"]);
+
+    state.selects = [[], [], children.slice(0, 2), [], []];
+    const en = await getGenrePage("shoegaze", "en");
+    expect(en?.children.map((c) => c.slug)).toEqual(["b", "a"]);
+  });
+
+  it("un subgénero sin álbumes queda al final con cero", async () => {
+    state.selects = [[], [], [g("c1", "a"), g("c2", "b")], [], []];
+    state.counts = [{ id: "c2", album_count: 1 }];
+    const page = await getGenrePage("shoegaze");
+    expect(page?.children.map((c) => [c.slug, c.albumCount])).toEqual([
+      ["b", 1],
+      ["a", 0],
+    ]);
   });
 });
