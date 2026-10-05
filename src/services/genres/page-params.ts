@@ -30,6 +30,8 @@ export const ARTIST_SORT_PARAM: Record<GenreArtistSort, string> = {
   albums: "albumes",
   followed: "seguidos",
   az: "az",
+  recent: "recientes",
+  discover: "descubrir",
 };
 
 export type GenreAlbumView = "grid" | "list";
@@ -47,6 +49,14 @@ export interface GenrePageParams {
   exact: boolean;
   albumSort: AlbumSort;
   artistSort: GenreArtistSort;
+  /** Pestaña Artistas: país (ISO-2 en mayúsculas). */
+  country?: string;
+  /** Pestaña Artistas: década de debut (exige debut conocido). */
+  debutDecade?: number;
+  /** Pestaña Artistas: solo discografía corta. */
+  shortOnly: boolean;
+  /** Pestaña Artistas: oculta los artistas que la persona ya conoce (solo con sesión). */
+  hideKnown: boolean;
   view: GenreAlbumView;
   page: number;
 }
@@ -80,6 +90,7 @@ export function parseGenreParams(raw: RawSearchParams): GenrePageParams {
   const tab = GENRE_TABS.find((t) => GENRE_TAB_PARAM[t] !== null && GENRE_TAB_PARAM[t] === tabValue) ?? "overview";
   const category = ReleaseGroupCategorySchema.safeParse(first(raw.tipo));
   const sub = first(raw.sub)?.trim().toLowerCase();
+  const country = first(raw.pais)?.trim().toUpperCase();
 
   return {
     tab,
@@ -90,6 +101,10 @@ export function parseGenreParams(raw: RawSearchParams): GenrePageParams {
     exact: first(raw.solo) === "1",
     albumSort: reverse(ALBUM_SORT_PARAM, first(raw.orden)) ?? "best",
     artistSort: reverse(ARTIST_SORT_PARAM, first(raw.orden)) ?? "albums",
+    country: country && /^[A-Z]{2}$/.test(country) ? country : undefined,
+    debutDecade: parseDecade(first(raw.debut)),
+    shortOnly: first(raw.tam) === "corta",
+    hideKnown: first(raw.conocidos) === "no",
     view: first(raw.vista) === "lista" ? "list" : "grid",
     page: parsePage(first(raw.page)),
   };
@@ -120,8 +135,12 @@ export function genrePageHref(slug: string, current: GenrePageParams, overrides:
     if (next.albumSort !== DEFAULTS.albumSort) params.set("orden", ALBUM_SORT_PARAM[next.albumSort]);
     if (next.view === "list") params.set("vista", "lista");
   }
-  if (next.tab === "artists" && next.artistSort !== DEFAULTS.artistSort) {
-    params.set("orden", ARTIST_SORT_PARAM[next.artistSort]);
+  if (next.tab === "artists") {
+    if (next.country) params.set("pais", next.country);
+    if (next.debutDecade !== undefined) params.set("debut", String(next.debutDecade));
+    if (next.shortOnly) params.set("tam", "corta");
+    if (next.hideKnown) params.set("conocidos", "no");
+    if (next.artistSort !== DEFAULTS.artistSort) params.set("orden", ARTIST_SORT_PARAM[next.artistSort]);
   }
   if (next.tab !== "overview" && next.page > 1) params.set("page", String(next.page));
 
@@ -134,5 +153,17 @@ export function genrePageHref(slug: string, current: GenrePageParams, overrides:
 export function albumFiltersActive(params: GenrePageParams): boolean {
   return Boolean(
     params.q || params.category || params.decade !== undefined || params.sub || params.exact || params.albumSort !== DEFAULTS.albumSort,
+  );
+}
+
+/** Hay algún filtro u orden de la pestaña Artistas distinto del predeterminado (para "Limpiar filtros"). */
+export function artistFiltersActive(params: GenrePageParams): boolean {
+  return Boolean(
+    params.q ||
+      params.country ||
+      params.debutDecade !== undefined ||
+      params.shortOnly ||
+      params.hideKnown ||
+      params.artistSort !== DEFAULTS.artistSort,
   );
 }

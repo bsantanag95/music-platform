@@ -706,9 +706,18 @@ Nunca se guardan votos ni etiquetas de MusicBrainz (CC BY-NC-SA).
   score)`: los géneros del álbum con `score > 0`, con `position` = rango por puntaje descendente
   (1 = principal; desempate: `seed_position` y nombre); si ninguno tiene puntaje positivo, los
   **3 primeros géneros de estilo** de su artista principal (primer crédito `primary` por
-  `position`), con `inherited = true` y `score = 0`. Excluye `hidden`; los descriptores no se
+  `position`), con `inherited = true` y `score = 0` (esa herencia sale de la tabla
+  `release_group_inherited_genre`, ver abajo; la vista exige `genre.kind = 'style'` y la ausencia de puntaje positivo
+  en lectura). Excluye `hidden`; los descriptores no se
   heredan ni se votan. Es la única definición que usan Explorar, Caminos, la huella de gusto y las
   cabeceras.
+- **`release_group_inherited_genre`** (migración `0060`, cambio `add-genre-artist-discovery`, ADR 0028): herencia de
+  géneros materializada. `(release_group_id, genre_id)` PK, `position` (`CHECK >= 0`: el orden de la semilla del
+  artista), índice por `genre_id`, FK `ON DELETE CASCADE` a ambos lados. Guarda solo los 3 primeros géneros de estilo del
+  primer artista principal del álbum; el puntaje y los votos no se materializan. La mantienen triggers: sobre `credit`
+  (por fila, solo créditos principales de álbum), sobre `artist_genre_seed` (por sentencia, con tablas de transición)
+  y sobre `genre` (cambio de `kind`), todos vía `recompute_inherited_genres(uuid[])` (idempotente);
+  `rebuild_inherited_genres()` la reconstruye entera. La aplicación nunca la escribe.
 - **`release_group_tag`** (migración `0014`) **se eliminó**: sus filas las sembraba un script con
   datos inventados.
 

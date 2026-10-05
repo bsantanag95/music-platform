@@ -9,6 +9,7 @@ import {
   GenreAlbumsSection,
   GenreArtistsPreviewSection,
   GenreArtistsSection,
+  GenreDiscoverSection,
   GenreDecadesSection,
   GenreEssentialsSection,
   GenreFootprintSection,
@@ -123,7 +124,7 @@ export default async function GenrePage({ params, searchParams }: GenrePageProps
           )}
           {query.tab === "artists" && (
             <Suspense fallback={<RailFallback label={fallbackLabel} />}>
-              <GenreArtistsSection data={data} params={query} />
+              <GenreArtistsSection {...context} locale={locale} />
             </Suspense>
           )}
           {query.tab === "lists" && (
@@ -142,7 +143,10 @@ export default async function GenrePage({ params, searchParams }: GenrePageProps
                   <GenreNewReleasesSection {...context} />
                 </Suspense>
                 <Suspense fallback={<RailFallback label={fallbackLabel} />}>
-                  <GenreArtistsPreviewSection data={data} params={query} />
+                  <GenreDiscoverSection {...context} />
+                </Suspense>
+                <Suspense fallback={<RailFallback label={fallbackLabel} />}>
+                  <GenreArtistsPreviewSection {...context} />
                 </Suspense>
                 <Suspense fallback={<RailFallback label={fallbackLabel} />}>
                   <GenreListsPreviewSection {...context} />

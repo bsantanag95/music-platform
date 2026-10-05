@@ -177,12 +177,13 @@ describe("GenreDecadeBars", () => {
 
 describe("GenreArtistCard", () => {
   it("muestra el nombre enlazado y los álbumes del género", () => {
-    renderWithIntl(<GenreArtistCard artist={{ id: "a1", name: "Slowdive", type: "group", photoUrl: null, albumCount: 2 }} />);
-    expect(screen.getByRole("link", { name: /Slowdive/ })).toHaveTextContent("2 álbumes del género");
+    renderWithIntl(<GenreArtistCard artist={{ id: "a1", name: "Slowdive", type: "group", photoUrl: null, albumCount: 2, discographyComplete: true, hasMbid: true, featuredAlbum: null }} />);
+    expect(screen.getByRole("link", { name: /Slowdive/ })).toBeInTheDocument();
+    expect(screen.getByText("2 álbumes del género")).toBeInTheDocument();
   });
 
   it("un solo álbum va en singular", () => {
-    renderWithIntl(<GenreArtistCard artist={{ id: "a1", name: "Slowdive", type: "group", photoUrl: null, albumCount: 1 }} />);
+    renderWithIntl(<GenreArtistCard artist={{ id: "a1", name: "Slowdive", type: "group", photoUrl: null, albumCount: 1, discographyComplete: true, hasMbid: true, featuredAlbum: null }} />);
     expect(screen.getByText("1 álbum del género")).toBeInTheDocument();
   });
 });

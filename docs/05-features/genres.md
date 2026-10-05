@@ -49,7 +49,11 @@ escribe lo que no es predeterminado y cambiar un filtro vuelve a la página 1).
 | `sub` | Álbumes | slug de un **descendiente** del género (otro se ignora) |
 | `solo` | Álbumes | `1`: solo el género exacto, sin subgéneros |
 | `orden` | Álbumes | `mejor` (predeterminado), `populares`, `recientes`, `antiguos`, `az` |
-| `orden` | Artistas | `albumes` (predeterminado), `seguidos`, `az` |
+| `orden` | Artistas | `albumes` (predeterminado), `seguidos`, `az`, `recientes`, `descubrir` |
+| `pais` | Artistas | código ISO-2 de un país presente entre los artistas del género |
+| `debut` | Artistas | década de debut (`1990`); solo artistas con debut conocido |
+| `tam` | Artistas | `corta`: discografía corta (explorada y de 1 a 5 discos propios) |
+| `conocidos` | Artistas | `no`: oculta los artistas que ya conoces (solo con sesión) |
 | `vista` | Álbumes | `lista` (predeterminado: cuadrícula) |
 | `page` | Álbumes, Artistas, Listas | entero ≥ 1; páginas de 24 |
 
@@ -64,7 +68,8 @@ servicio los aplica, la interfaz nunca recibe una cifra bajo el mínimo):
 | Sobre el género | primer párrafo de Wikipedia (~600 caracteres, en límite de oración), resto tras "Leer más", atribución | solo si hay texto sincronizado |
 | Esenciales | mejor valorados del subárbol (riel de 12, "Ver todo →") | álbumes con ≥ 3 valoraciones y ≥ 6 elegibles |
 | Novedades | estudio y single/EP por año descendente | siempre que haya |
-| Artistas | 8 tarjetas con foto y "N álbumes del género" | siempre que haya |
+| Para descubrir | hasta 8 artistas con discografía corta y debut conocido, sin los que ya conoces (ver "Descubrir artistas") | desde 4 elegibles |
+| Artistas | 8 tarjetas con foto, "N álbumes del género", disco destacado y, con sesión, Seguir | siempre que haya |
 | Listas de la comunidad | carrusel de hasta 6 | listas con ≥ 3 álbumes del género |
 | Reseñas recientes | las 5 últimas reseñas visibles | siempre que haya |
 | Aside: Tu huella | solo con sesión | ver abajo |
@@ -80,11 +85,91 @@ Cada riel tiene "Ver todo →" hacia su pestaña. En escritorio el aside va a la
   de Explorar. Lo ejecuta `listAlbumsFiltered` (`discovery.ts`), la misma función que ya usan los listados de Explorar.
   Con filtros sin resultados se ofrece "Limpiar filtros"; con el género sin música, el mensaje de género vacío.
 - **Artistas**: los de las semillas del género o de un subgénero (tipo conocido), con foto y "N álbumes del género"
-  (los acreditados que cumplen el género, no el total). `seguidos` ordena por cantidad de seguidores sin mostrarla.
+  (los acreditados que cumplen el género, no el total), búsqueda por nombre, filtros de descubrimiento y órdenes (ver
+  "Descubrir artistas"). `seguidos` ordena por cantidad de seguidores sin mostrarla.
 - **Listas**: listas públicas de álbumes con ≥ 3 álbumes del género, por guardados y luego por álbumes del género. La
   visibilidad es **la misma** que la de "listas públicas que contienen un ítem" (`publicListBaseConditions`): audiencia
   pública, tipo estándar, visibles para moderación, dueño con perfil público y cuenta activa, sin retiro oficial y sin
   bloqueo con el lector. Los Caminos quedan fuera.
+
+### Descubrir artistas
+
+Cambio `add-genre-artist-discovery`. La pestaña Artistas y el Resumen ayudan a **encontrar artistas que aún no conoces**
+dentro de un género, con datos que ya existen (la única migración, `0060`, es técnica y no cambia ningún comportamiento:
+materializa la herencia de géneros, ver "Herencia materializada"):
+
+**Tarjeta de artista.** Foto, nombre, "N álbumes del género" (o **siempre "Discografía sin explorar"** cuando la discografía no
+se recorrió entera, aunque el catálogo ya conozca algunos álbumes suyos: una cantidad parcial se leería como el total), un **disco destacado**
+("Empieza por «…» · año") y, con sesión, el botón **Seguir / Siguiendo** (actualización optimista, nunca dentro de un
+enlace) y la etiqueta **"Ya lo conoces"** si lo conoces y no lo sigues.
+
+**Artista conocido** (`artist-known.ts`, una sola definición en SQL): existe al menos una señal **explícita** tuya: lo
+sigues; valoraste al artista o un álbum donde figura acreditado (principal o invitado); registraste una escucha del
+artista o de un álbum suyo; o lo tienes en favoritos o pendientes, o tienes en ellos un álbum suyo. Sin sesión nadie es
+conocido y no hay marcas ni filtro. Las señales nunca son visibles para otras personas.
+
+**Discografía explorada, corta y debut** (`artists.ts`; nada se inventa):
+
+- *Discos propios* = álbumes como artista **principal** de categoría estudio o single/EP (sin los marcados fuera de la
+  discografía). Las recopilaciones y los directos no cuentan.
+- *Explorada* = `artist.discography_complete_at` no es nulo.
+- *Debut* = el menor año de los discos propios, **solo si está explorada**; si no, desconocido. No se usa `life_begin`
+  (en una persona es el nacimiento) ni los álbumes ya conocidos de una discografía parcial.
+- *Discografía corta* = explorada **y** de 1 a 5 discos propios (`DISCOVER_MAX_ALBUMS`). Sin explorar, o con 0 discos
+  conocidos, el tamaño es **desconocido, no corto**.
+
+**Disco destacado.** Entre los álbumes del artista como principal, de estudio o single/EP, del género o sus subgéneros:
+el de mayor media con ≥ 3 valoraciones; si ninguno llega, el más reciente prefiriendo los de estudio sobre los single/EP.
+
+**Filtros y órdenes de la pestaña Artistas** (parámetros en la tabla de arriba): `pais`, `debut`, `tam=corta` y, con
+sesión, `conocidos=no`; `orden=recientes` (debut más reciente, desconocidos al final) y `orden=descubrir` (primero con
+señal de comunidad —un álbum del género con ≥ 3 valoraciones y media ≥ 3,5—, luego más seguidores, luego debut reciente,
+luego nombre). Los selectores de país y de debut solo ofrecen opciones reales. El **orden predeterminado no cambia**
+(`albumes`): es la lectura de referencia "¿quiénes son los centrales de este género?".
+
+**Riel "Para descubrir"** (Resumen, encima de "Artistas"): hasta 8 artistas del género con discografía corta y debut
+conocido y, con sesión, **sin los que ya conoces**. Se omite con menos de 4 elegibles. Con sesión lleva el subtítulo
+"Sin los artistas que ya conoces" y su "Ver todo →" arrastra `conocidos=no` explícito en la URL (reversible).
+
+> **Principio.** `album-discovery` fija que el descubrimiento es "editorial y por reglas, nunca personalizado por
+> afinidad". El riel lo respeta: no hay perfil de gusto ni puntaje de afinidad; lo único personal es **excluir lo que la
+> persona ya conoce por acciones explícitas suyas**, y se dice en pantalla. Dos personas con las mismas acciones ven lo
+> mismo; no hay aleatoriedad.
+
+**Completar discografías.** El tamaño y el debut solo existen con la discografía explorada, y la base real casi no la
+tiene (medición 2026-10-05: 31 de 668 artistas con género). Hay dos mecanismos (el primero con dos orígenes), ambos sobre la sincronización existente
+(`syncArtistDiscography` modo `full`, con candado por artista y el límite de ritmo de MusicBrainz):
+
+1. **Al mostrar artistas** (Resumen y pestaña Artistas), la página programa con `after()` —después de responder, sin
+   esperar— la sincronización de hasta **3** de los artistas mostrados con la discografía sin explorar y con MBID, uno
+   tras otro (`artist-prefetch.ts` → `runDiscographySync`). Un fallo se registra y el artista queda pendiente. Además, el
+   riel "Para descubrir", cuando muestra menos de 8 artistas, programa del mismo modo hasta 3 artistas **del género** sin
+   explorar (los de más álbumes del género): el riel solo muestra artistas explorados y así crece con el uso.
+2. **Relleno operativo**: `tsx --env-file=.env scripts/backfill-artist-discography.ts --genre-artists [--limit N]
+   [--dry-run]` procesa los artistas con géneros semilla sin discografía completa, incluidos los nunca sincronizados
+   (reanudable). Se corre primero en scratch.
+
+**Costo del relleno** (medido en scratch, `--genre-artists` completo, 2026-10-05): 746 artistas en ~30 min, sin
+errores. La tabla `artist` pasó de 16.175 a 27.747 filas (**+11.572 "stubs" de invitados**: 20.434 en total), los
+release-groups de 7.633 a 58.513 (**×7,7**) y las discografías completas de 119 a 885. Es el comportamiento ya aceptado
+del "cacheo bajo demanda", pero cambia la escala del catálogo: los conteos de las páginas de género crecen en
+proporción (el género `rock` pasó de cientos a 15.551 álbumes) y conviene decidir si se corre en la base real.
+
+**Rendimiento a esa escala.** La pestaña Artistas calcula el conjunto de álbumes y de artistas del subárbol una sola vez
+(CTE materializada) y solo calcula seguidores y discos propios cuando el orden o los filtros los usan. Con 58 mil
+release-groups y la vista antigua tardaba 440–860 ms: el suelo era la rama de herencia de `release_group_effective_genre`
+(una búsqueda lateral por **cada** release-group, 360 ms, lineal con el catálogo). Se resolvió materializando la herencia
+(migración `0060`, ADR 0028; ver "Herencia materializada"). Medido tras eso, mismos 58,5 mil release-groups, en
+`rock`, `electronic`, `progressive-rock`, `shoegaze` y `pop`: pestaña Artistas 97–261 ms (`descubrir`, que calcula la
+señal de comunidad para todos los artistas, 117–520 ms), riel 50–204 ms, cifras de la cabecera 54–89 ms, listado de álbumes
+43–102 ms: dentro del presupuesto de 800 ms.
+
+**Herencia materializada.** Un álbum sin géneros propios con puntaje positivo hereda los 3 primeros géneros de estilo de su
+primer artista principal. Esa herencia vive en `release_group_inherited_genre`, que mantienen **triggers** sobre `credit`
+(créditos principales de álbum), `artist_genre_seed` y `genre.kind`; la aplicación nunca la escribe. La vista
+`release_group_effective_genre` conserva su interfaz y aplica en lectura `kind = 'style'` y la ausencia de puntaje
+positivo, así que votos y semillas del álbum se reflejan al instante. `SELECT rebuild_inherited_genres()` reconstruye
+toda la tabla si se sospecha de un desfase.
 
 ### Comunidad y personalización
 

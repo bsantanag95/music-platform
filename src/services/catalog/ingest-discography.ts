@@ -107,17 +107,25 @@ export function needsDiscographyRefresh(target: Pick<ArtistRow, "discographyComp
  */
 function scheduleDiscographySync(artistId: string): void {
   try {
-    after(async () => {
-      try {
-        await syncArtistDiscography(artistId, { mode: "full" });
-      } catch (error) {
-        console.error(`[discography] no se pudo sincronizar la discografía de ${artistId}`, error);
-      }
-      await runAlbumGenreSync(artistId);
-    });
+    after(() => runDiscographySync(artistId));
   } catch {
     console.warn(`[discography] sincronización de ${artistId} omitida: fuera de una request`);
   }
+}
+
+/**
+ * Sincronización completa de la discografía de un artista y, al terminar, la de los géneros semilla de
+ * sus álbumes. Nunca lanza: un fallo se registra y el artista queda pendiente. Exportada para que otras
+ * superficies (openspec: add-genre-artist-discovery) completen varias discografías una tras otra dentro
+ * de un solo `after()`.
+ */
+export async function runDiscographySync(artistId: string): Promise<void> {
+  try {
+    await syncArtistDiscography(artistId, { mode: "full" });
+  } catch (error) {
+    console.error(`[discography] no se pudo sincronizar la discografía de ${artistId}`, error);
+  }
+  await runAlbumGenreSync(artistId);
 }
 
 /** Géneros semilla de los álbumes vencidos del artista, en segundo plano (Wikidata P136). */

@@ -6,6 +6,10 @@ const mocks = vi.hoisted(() => ({
   essentials: vi.fn(),
   news: vi.fn(),
   artists: vi.fn(),
+  facets: vi.fn(),
+  discover: vi.fn(),
+  candidates: vi.fn(),
+  prefetch: vi.fn(),
   stats: vi.fn(),
   lists: vi.fn(),
   footprint: vi.fn(),
@@ -21,7 +25,14 @@ const mocks = vi.hoisted(() => ({
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
 vi.mock("@/i18n/navigation", () => ({ Link: ({ children }: { children: ReactNode }) => <a>{children}</a> }));
 vi.mock("@/services/genres/rails", () => ({ getGenreEssentials: mocks.essentials, getGenreNewReleases: mocks.news }));
-vi.mock("@/services/genres/artists", () => ({ listGenreArtists: mocks.artists }));
+vi.mock("@/services/genres/artists", () => ({ listGenreArtists: mocks.artists, listGenreArtistFacets: mocks.facets }));
+vi.mock("@/services/genres/artist-discovery", () => ({
+  getGenreDiscoverArtists: mocks.discover,
+  getGenreDiscoverCompletionCandidates: mocks.candidates,
+}));
+vi.mock("@/services/genres/artist-prefetch", () => ({ scheduleGenreArtistsDiscographySync: mocks.prefetch }));
+vi.mock("./GenreDiscoverRail", () => ({ GenreDiscoverRail: () => null }));
+vi.mock("./GenreArtistsView", () => ({ GenreArtistsView: () => null }));
 vi.mock("@/services/genres/stats", () => ({ getGenreStats: mocks.stats }));
 vi.mock("@/services/genres/personal", () => ({ getGenreFootprint: mocks.footprint }));
 vi.mock("./GenreFootprint", () => ({ GenreFootprint: () => null }));
@@ -56,6 +67,8 @@ const {
   GenreListsSection,
   GenreReviewsSection,
   GenreFootprintSection,
+  GenreArtistsSection,
+  GenreDiscoverSection,
 } = await import("./GenrePageSections");
 
 const data = {
@@ -181,5 +194,86 @@ describe("GenreFootprintSection", () => {
     mocks.essentials.mockResolvedValue([]);
     const without = (await GenreFootprintSection({ ...base, readerId: "u1" })) as { props: { start: { kind: string; href: string } } };
     expect(without.props.start).toEqual({ kind: "albums", href: "/genre/shoegaze?tab=albums" });
+  });
+});
+
+describe("secciones de artistas (add-genre-artist-discovery)", () => {
+  const artist = (id: string, over: Record<string, unknown> = {}) => ({ id, discographyComplete: false, hasMbid: true, ...over });
+  const render = async (query: Record<string, string>, extra: Record<string, unknown> = {}) => {
+    const element = await GenreArtistsSection({
+      data,
+      params: parseGenreParams({ tab: "artists", ...query }),
+      authenticated: true,
+      readerId: "u1",
+      locale: "es",
+      ...extra,
+    } as never);
+    return (element as { props: { facets: { countries: { code: string; label: string; count: number }[] } } }).props;
+  };
+
+  beforeEach(() => {
+    mocks.artists.mockResolvedValue({ artists: [artist("a1")], hasNext: false });
+    mocks.facets.mockResolvedValue({ countries: [{ code: "CL", count: 4 }], debutDecades: [{ decade: 2010, count: 2 }] });
+  });
+
+  it("pasa el lector y los filtros de la URL a la lectura", async () => {
+    await render({ q: "ride", pais: "cl", debut: "2010", tam: "corta", conocidos: "no", orden: "descubrir", page: "2" });
+    expect(mocks.artists).toHaveBeenCalledWith("g1", {
+      page: 2,
+      q: "ride",
+      sort: "discover",
+      readerId: "u1",
+      country: "CL",
+      debutDecade: 2010,
+      shortOnly: true,
+      hideKnown: true,
+    });
+  });
+
+  it("programa el completado de discografías con los artistas mostrados, sin esperarlo", async () => {
+    mocks.artists.mockResolvedValue({ artists: [artist("a1"), artist("a2", { discographyComplete: true })], hasNext: false });
+    await render({});
+    expect(mocks.prefetch).toHaveBeenCalledTimes(1);
+    expect(mocks.prefetch.mock.calls[0]![0].map((a: { id: string }) => a.id)).toEqual(["a1", "a2"]);
+  });
+
+  it("traduce los países al idioma de la ruta y conserva las décadas", async () => {
+    const props = (await render({}, { locale: "es" })) as unknown as { facets: { countries: { label: string }[]; debutDecades: unknown[] } };
+    expect(props.facets.countries[0]!.label).toBe("Chile");
+    expect(props.facets.debutDecades).toEqual([{ decade: 2010, count: 2 }]);
+    const en = (await render({}, { locale: "en" })) as unknown as { facets: { countries: { label: string }[] } };
+    expect(en.facets.countries[0]!.label).toBe("Chile");
+  });
+
+  it("la vista previa del Resumen también completa discografías y pide marcas del lector", async () => {
+    mocks.artists.mockResolvedValue({ artists: [artist("a1")], hasNext: true });
+    await GenreArtistsPreviewSection({ ...base, readerId: "u1", authenticated: true });
+    expect(mocks.artists).toHaveBeenCalledWith("g1", { pageSize: 8, readerId: "u1" });
+    expect(mocks.prefetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("el riel «Para descubrir» pide los artistas con el lector", async () => {
+    mocks.discover.mockResolvedValue(Array.from({ length: 8 }, (_, i) => ({ id: `a${i}` })));
+    await GenreDiscoverSection({ ...base, readerId: "u1", authenticated: true });
+    expect(mocks.discover).toHaveBeenCalledWith("g1", "u1");
+  });
+
+  it("un riel lleno (8 artistas) no programa el completado de discografías", async () => {
+    mocks.discover.mockResolvedValue(Array.from({ length: 8 }, (_, i) => ({ id: `a${i}` })));
+    await GenreDiscoverSection({ ...base, readerId: null, authenticated: false });
+    expect(mocks.candidates).not.toHaveBeenCalled();
+    expect(mocks.prefetch).not.toHaveBeenCalled();
+  });
+
+  it("un riel corto o vacío programa el completado de artistas del género sin explorar", async () => {
+    const candidates = [artist("c1"), artist("c2")];
+    mocks.candidates.mockResolvedValue(candidates);
+    for (const shown of [[], [{ id: "a1" }, { id: "a2" }, { id: "a3" }]]) {
+      mocks.prefetch.mockClear();
+      mocks.discover.mockResolvedValue(shown);
+      await GenreDiscoverSection({ ...base, readerId: "u1", authenticated: true });
+      expect(mocks.candidates).toHaveBeenCalledWith("g1");
+      expect(mocks.prefetch).toHaveBeenCalledWith(candidates);
+    }
   });
 });
