@@ -39,3 +39,19 @@ export const GENRE_ABOUT_EXCERPT_CHARS = 600;
 
 /** Revalidación de los agregados públicos si hubiera que cachearlos (design D14). */
 export const GENRE_AGGREGATES_REVALIDATE_SECONDS = 300;
+
+// --- Descubrimiento de artistas (openspec: add-genre-artist-discovery) ---
+// Se ajustan sin migración. El umbral de discografía corta NO se relaja para compensar la falta de
+// datos: lo que falta (discografías sin explorar) se completa, no se reinterpreta.
+
+/** Discografía corta: hasta tantos discos propios (estudio y single/EP como artista principal). */
+export const DISCOVER_MAX_ALBUMS = 5;
+
+/** Señal de comunidad del orden «descubrir»: media mínima de un álbum del género con valoraciones suficientes. */
+export const DISCOVER_MIN_AVG = 3.5;
+
+/** El riel «Para descubrir» se muestra solo con al menos tantos artistas elegibles. */
+export const DISCOVER_MIN_ARTISTS = 4;
+
+/** Artistas cuya discografía se completa en segundo plano por visita (acota la cola de MusicBrainz). */
+export const GENRE_DISCOGRAPHY_PREFETCH = 3;

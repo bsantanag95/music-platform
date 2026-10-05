@@ -21,7 +21,11 @@ assertSmokeAllowed();
 // redesign-genre-page) la página de género rediseñada: cifras con umbral, árbol con conteos, filtros y
 // órdenes del listado, listas y reseñas del género (visibilidad, bloqueos, moderación), huella personal,
 // "Me mueve" atómico (tope y edición concurrente), personas a las que les mueve (umbral de 5) y el texto de
-// Wikipedia (sincronización, vigencia, fallos).
+// Wikipedia (sincronización, vigencia, fallos); y (cambio add-genre-artist-discovery) el descubrimiento de
+// artistas: tamaño y debut solo con la discografía explorada, filtros y órdenes, «artista conocido» por cada señal
+// (también por un disco donde colabora), aislamiento entre personas, disco destacado, riel «Para descubrir»
+// (umbral y exclusión) y el completado de una discografía sin explorar; y (migración 0060, ADR 0028) la herencia
+// de géneros materializada: equivalencia con la definición antigua, triggers de créditos, semillas y tipo de género.
 //
 // La taxonomía se carga COMPLETA (la real de data/genres/taxonomy.json más 6 géneros sintéticos con
 // MBID `5e0ce000-…` y slugs `smoke-*`): cargar solo los sintéticos ocultaría los reales. Al terminar
@@ -122,6 +126,24 @@ const browse = {
   ],
 };
 
+const unexploredCredit = [
+  { name: "Smoke Descubre Sin explorar", artist: { id: smokeMbid(SMOKE_PREFIX, 0x7303), name: "Smoke Descubre Sin explorar" } },
+];
+const browseUnexplored = {
+  "release-group-count": 1,
+  "release-group-offset": 0,
+  "release-groups": [
+    {
+      id: smokeMbid(SMOKE_PREFIX, 0x7311),
+      title: "Álbum recuperado (smoke)",
+      "primary-type": "Album",
+      "secondary-types": [],
+      "first-release-date": "2017",
+      "artist-credit": unexploredCredit,
+    },
+  ],
+};
+
 async function main() {
   const { db } = await import("../src/db");
   const schema = await import("../src/db/schema");
@@ -150,7 +172,11 @@ async function main() {
     const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200 });
     if (url.hostname === "musicbrainz.org") {
       calls.push(`mb:${url.pathname}:${url.searchParams.get("inc")}`);
-      if (url.pathname === "/ws/2/release-group") return json(browse);
+      if (url.pathname === "/ws/2/release-group") {
+        // Descubrimiento de artistas: la discografía de un artista sin explorar trae un solo álbum.
+        if (url.searchParams.get("artist") === smokeMbid(SMOKE_PREFIX, 0x7303)) return json(browseUnexplored);
+        return json(browse);
+      }
       throw new Error(`No hay mock de MusicBrainz para ${url}`);
     }
     if (url.hostname === "www.wikidata.org") {
@@ -508,6 +534,239 @@ Segundo párrafo de ${title}.`,
       check((await enrichGenreFromWikimedia(noQid!.id)).status === "no-wikidata" && calls.length === 0, "sin wikidata_id no se hace ninguna request a Wikimedia");
       // Fuera de la taxonomía cargada: si quedara, la sección 7 lo contaría como género retirado.
       await db.delete(schema.genre).where(eq(schema.genre.id, noQid!.id));
+    }
+
+    console.log("6c-ter) Descubrimiento de artistas (add-genre-artist-discovery): reglas, filtros, órdenes, marcas, disco destacado, riel y completado");
+    {
+      const { listGenreArtistFacets } = await import("../src/services/genres/artists");
+      const { getGenreDiscoverArtists } = await import("../src/services/genres/artist-discovery");
+      const { scheduleGenreArtistsDiscographySync } = await import("../src/services/genres/artist-prefetch");
+      const { runDiscographySync } = await import("../src/services/catalog/ingest-discography");
+
+      const trap = await genreId(G.trap);
+      const stamp3 = `${stamp}ad`;
+      const mkUser3 = async (name: string) => {
+        const u = await registerUser({ username: `smoke_gen_${stamp3}_${name}`, email: `smoke-gen-${stamp3}-${name}@example.test`, password: "smoke-password-123" });
+        if (!u) throw new Error(`no se creó ${name}`);
+        userIds.push(u.id);
+        return u;
+      };
+
+      // --- Fixtures: seis artistas con semilla smoke-trap y distinta cobertura de discografía ---
+      const long = new Date("2026-01-01T00:00:00Z");
+      const mkArtist = async (n: number, name: string, country: string | null, complete: boolean) => {
+        const [row] = await db
+          .insert(schema.artist)
+          .values({ mbid: smokeMbid(SMOKE_PREFIX, 0x7300 + n), type: "group", name, country, discographyCompleteAt: complete ? long : null })
+          .returning();
+        await db.insert(schema.artistGenreSeed).values({ artistId: row!.id, genreId: trap, position: 0 });
+        return row!;
+      };
+      let rgCounter = 0;
+      const mkAlbum = async (artistRow: { id: string }, title: string, category: string, year: number, featured?: { id: string }) => {
+        const [rg] = await db
+          .insert(schema.releaseGroup)
+          .values({ mbid: smokeMbid(SMOKE_PREFIX, 0x7400 + ++rgCounter), title, category, firstReleaseYear: year })
+          .returning();
+        await db.insert(schema.credit).values({ artistId: artistRow.id, releaseGroupId: rg!.id, position: 0, role: "primary" });
+        if (featured) await db.insert(schema.credit).values({ artistId: featured.id, releaseGroupId: rg!.id, position: 1, role: "featured" });
+        return rg!;
+      };
+
+      const short = await mkArtist(1, "Smoke Descubre Corta", "CL", true);
+      const big = await mkArtist(2, "Smoke Descubre Grande", "US", true);
+      const unexplored = await mkArtist(3, "Smoke Descubre Sin explorar", "CL", false);
+      const partial = await mkArtist(4, "Smoke Descubre Parcial", null, false);
+      const comp = await mkArtist(5, "Smoke Descubre Recopilaciones", "GB", true);
+      const signal = await mkArtist(6, "Smoke Descubre Señal", null, true);
+
+      await mkAlbum(short, "Corta 2015", "studio", 2015);
+      await mkAlbum(short, "Corta 2018", "studio", 2018);
+      await mkAlbum(short, "Corta 2021", "studio", 2021);
+      await mkAlbum(short, "Corta single 2023", "single_ep", 2023);
+      const collab = await mkAlbum(short, "Corta colaboración 2019", "studio", 2019, partial);
+      for (let i = 0; i < 7; i++) await mkAlbum(big, `Grande ${1990 + i}`, "studio", 1990 + i);
+      await mkAlbum(partial, "Parcial 2020", "studio", 2020);
+      await mkAlbum(partial, "Parcial 2022", "studio", 2022);
+      const compAlbum = await mkAlbum(comp, "Recopilaciones estudio 2012", "studio", 2012);
+      await mkAlbum(comp, "Recopilaciones estudio 2014", "studio", 2014);
+      for (let i = 0; i < 6; i++) await mkAlbum(comp, `Recopilación ${i}`, "compilation", 2016 + i);
+      const signalOld = await mkAlbum(signal, "Señal 2019", "studio", 2019);
+      await mkAlbum(signal, "Señal 2024", "studio", 2024);
+
+      const ours = new Set([short.id, big.id, unexplored.id, partial.id, comp.id, signal.id]);
+      const list = async (options: Parameters<typeof listGenreArtists>[1] = {}) =>
+        (await listGenreArtists(trap, { pageSize: 100, ...options })).artists.filter((a) => ours.has(a.id));
+      const names = (artists: { name: string }[]) => artists.map((a) => a.name.replace("Smoke Descubre ", ""));
+      const ids = (artists: { id: string }[]) => artists.map((a) => a.id).sort().join(",");
+      const idsOf = (...rows: { id: string }[]) => ids(rows);
+
+      // --- Reglas de datos: tamaño, debut y «sin explorar» ---
+      const all = await list();
+      const byId = new Map(all.map((a) => [a.id, a]));
+      check(all.length === 6, `los seis artistas aparecen sin filtros (${all.length})`);
+      check(byId.get(unexplored.id)?.albumCount === 0 && byId.get(unexplored.id)?.discographyComplete === false, "sin explorar y sin álbumes: conteo 0 y marca de discografía sin explorar");
+      check(byId.get(partial.id)?.albumCount === 3 && byId.get(partial.id)?.discographyComplete === false, "parcial: conoce 3 álbumes acreditados (2 propios y 1 como invitado) pero no está explorada");
+      check(byId.get(comp.id)?.hasMbid === true, "se informa si el artista tiene MBID");
+      check(ids(await list({ shortOnly: true })) === idsOf(short, comp, signal), `discografía corta: explorada y de 1 a 5 discos propios; sin explorar o con 0 discos no cuenta (${names(await list({ shortOnly: true })).join(", ")})`);
+      check((await list({ shortOnly: true })).some((a) => a.id === comp.id), "las recopilaciones no cuentan como discos propios: 2 de estudio y 6 recopilaciones es corta");
+      check(ids(await list({ debutDecade: 2010 })) === idsOf(short, comp, signal), "debut por década: solo artistas con debut conocido (el parcial, con discos de 2020, queda fuera)");
+      check(ids(await list({ debutDecade: 1990 })) === idsOf(big), "debut 1990s");
+      check(ids(await list({ debutDecade: 2020 })) === "", "la discografía parcial no da debut aunque tenga discos de 2020");
+      check(ids(await list({ country: "CL" })) === idsOf(short, unexplored), "filtro por país");
+      check(ids(await list({ country: "CL", shortOnly: true })) === idsOf(short), "los filtros se combinan");
+      check((await code(listGenreArtists(trap, { country: "chile" }))) === "VALIDATION_ERROR" && (await code(listGenreArtists(trap, { debutDecade: 1975 }))) === "VALIDATION_ERROR", "país y década inválidos se rechazan");
+
+      // --- Órdenes ---
+      check(names(await list({ sort: "recent" })).join(",") === "Señal,Corta,Recopilaciones,Grande,Parcial,Sin explorar", `orden por debut reciente, desconocidos al final (${names(await list({ sort: "recent" })).join(", ")})`);
+
+      // --- Marcas personales y «conocido» por cada señal ---
+      const reader = await mkUser3("reader");
+      const quiet = await mkUser3("quiet");
+      const fan = await mkUser3("fan");
+      await db.insert(schema.artistFollow).values({ userId: reader.id, artistId: short.id });
+      await db.insert(schema.rating).values({ userId: reader.id, releaseGroupId: compAlbum.id, stars: "4" });
+      await db.insert(schema.listenEntry).values({ userId: reader.id, artistId: big.id, listenContext: "first_listen" });
+      await db.insert(schema.favorite).values({ userId: reader.id, releaseGroupId: collab.id });
+      await db.insert(schema.wantToListenEntry).values({ userId: reader.id, artistId: unexplored.id });
+      const mine = await list({ readerId: reader.id });
+      const known = (artists: { id: string; known?: boolean }[]) => ids(artists.filter((a) => a.known));
+      check(
+        known(mine) === idsOf(short, big, unexplored, partial, comp),
+        `conocidos: sigue, valoró un álbum, escuchó al artista, favorito de un álbum donde colabora y pendiente del artista (${names(mine.filter((a) => a.known)).join(", ")})`,
+      );
+      check(!mine.find((a) => a.id === signal.id)?.known, "el artista sin ninguna señal no es conocido");
+      check(ids(mine.filter((a) => a.following)) === idsOf(short), "following solo para el artista que sigue");
+      check((await list({ readerId: quiet.id })).every((a) => a.known === false && a.following === false), "otra persona sin acciones no conoce a nadie (aislamiento)");
+      check((await list()).every((a) => !("known" in a) && !("following" in a)), "sin lector no se devuelven marcas");
+      check(ids(await list({ readerId: reader.id, hideKnown: true })) === idsOf(signal), "«que aún no conozco» deja solo al desconocido");
+      check(ids(await list({ hideKnown: true })) === ids(all), "sin lector el filtro de conocidos se ignora");
+
+      // --- Disco destacado ---
+      const rater = [await mkUser3("rater1"), await mkUser3("rater2"), await mkUser3("rater3")];
+      for (const [i, u] of rater.entries()) await db.insert(schema.rating).values({ userId: u.id, releaseGroupId: signalOld.id, stars: ["4", "4", "3.5"][i]! });
+      const featured = new Map((await list()).map((a) => [a.id, a.featuredAlbum?.title]));
+      check(featured.get(signal.id) === "Señal 2019", "con comunidad (3 valoraciones, media 3,8) el destacado es el mejor valorado aunque haya uno más reciente");
+      check(featured.get(short.id) === "Corta 2021", "sin valoraciones: el de estudio más reciente, aunque haya un single más nuevo");
+      check(featured.get(comp.id) === "Recopilaciones estudio 2014", "las recopilaciones nunca son el disco destacado");
+      check(featured.get(unexplored.id) === undefined, "sin álbumes no hay disco destacado");
+
+      // --- Orden «descubrir» y riel ---
+      // Dos seguidores para Recopilaciones: supera al artista que sigue `reader` (1) aunque este tenga el debut más reciente.
+      const fan2 = await mkUser3("fan2");
+      await db.insert(schema.artistFollow).values([
+        { userId: fan.id, artistId: comp.id },
+        { userId: fan2.id, artistId: comp.id },
+      ]);
+      check(names(await list({ sort: "discover" })).slice(0, 3).join(",") === "Señal,Recopilaciones,Corta", `descubrir: señal de comunidad, luego seguidores, luego debut reciente (${names(await list({ sort: "discover" })).join(", ")})`);
+      const railAnon = await getGenreDiscoverArtists(trap, null);
+      check(
+        railAnon.filter((a) => ours.has(a.id)).map((a) => a.name.replace("Smoke Descubre ", "")).join(",") === "Señal,Recopilaciones,Corta",
+        "riel anónimo: elegibles (corta y debut conocido) en el orden descubrir; sin el grande ni los no explorados",
+      );
+      check(railAnon.length >= 4, `el riel aparece con 4 elegibles o más (${railAnon.length})`);
+      check((await getGenreDiscoverArtists(trap, reader.id)).length === 0, "con la exclusión de lo conocido quedan menos de 4 elegibles: el riel se omite");
+      check((await getGenreDiscoverArtists(trap, quiet.id)).length === railAnon.length, "una persona sin acciones ve el mismo riel que un anónimo");
+
+      // --- Facetas ---
+      const facets = await listGenreArtistFacets(trap);
+      check(facets.countries.find((c) => c.code === "CL")?.count === 2 && facets.countries.find((c) => c.code === "US")?.count === 1, "facetas de país con su conteo");
+      check(facets.debutDecades.find((d) => d.decade === 2010)?.count === 3 && facets.debutDecades.find((d) => d.decade === 1990)?.count === 1, "facetas de debut: solo artistas con debut conocido");
+      check(!facets.debutDecades.some((d) => d.decade === 2020), "el artista parcial no aporta décadas de debut");
+
+      // --- Completar discografías: sincronización real con MusicBrainz simulado ---
+      check(
+        (() => {
+          try {
+            scheduleGenreArtistsDiscographySync([{ id: unexplored.id, discographyComplete: false, hasMbid: true }]);
+            return true;
+          } catch {
+            return false;
+          }
+        })(),
+        "fuera de una request el agendado no lanza",
+      );
+      await runDiscographySync(unexplored.id);
+      const [synced] = await db.select().from(schema.artist).where(eq(schema.artist.id, unexplored.id));
+      check(synced?.discographyCompleteAt !== null, "tras completar la discografía queda marcada como explorada");
+      const afterSync = (await list()).find((a) => a.id === unexplored.id);
+      check(afterSync?.albumCount === 1 && afterSync.discographyComplete && afterSync.featuredAlbum?.title === "Álbum recuperado (smoke)", "el artista ya muestra su álbum y su disco destacado");
+      check(ids(await list({ shortOnly: true, debutDecade: 2010 })).includes(unexplored.id), "y entra en discografía corta y en el debut de 2010 (2017)");
+
+      // Los fixtures de esta sección se borran aquí para no alterar las siguientes (las reseñas, votos y retiro de género).
+      await db.delete(schema.artist).where(inArray(schema.artist.id, [...ours]));
+      await db.delete(schema.releaseGroup).where(like(sql`${schema.releaseGroup.mbid}::text`, `${SMOKE_PREFIX}-0000-4000-8000-0000000074%`));
+      await db.delete(schema.releaseGroup).where(eq(schema.releaseGroup.mbid, smokeMbid(SMOKE_PREFIX, 0x7311)));
+    }
+
+    console.log("6c-quater) Herencia de géneros materializada (ADR 0028): triggers, equivalencia con la definición antigua y lectura en vivo");
+    {
+      const OLD_EFFECTIVE = `(
+        SELECT sc.release_group_id, sc.genre_id,
+               (ROW_NUMBER() OVER (PARTITION BY sc.release_group_id ORDER BY sc.score DESC, sc.seed_position NULLS LAST, g.name))::smallint AS position,
+               false AS inherited, sc.score
+        FROM release_group_genre_score sc JOIN genre g ON g.id = sc.genre_id WHERE sc.score > 0
+        UNION ALL
+        SELECT rg.id, a.genre_id, a.position, true, 0
+        FROM release_group rg
+        JOIN LATERAL (SELECT c.artist_id FROM credit c WHERE c.release_group_id = rg.id AND c.role = 'primary' ORDER BY c.position LIMIT 1) pc ON true
+        JOIN LATERAL (SELECT s.genre_id, s.position FROM artist_genre_seed s JOIN genre g ON g.id = s.genre_id AND g.kind = 'style' WHERE s.artist_id = pc.artist_id ORDER BY s.position LIMIT 3) a ON true
+        WHERE NOT EXISTS (SELECT 1 FROM release_group_genre_score sc2 WHERE sc2.release_group_id = rg.id AND sc2.score > 0)
+      ) old_view`;
+      const diff = async () => {
+        const [onlyOld] = await db.execute<{ n: number }>(sql.raw(`SELECT count(*)::int AS n FROM (SELECT * FROM ${OLD_EFFECTIVE} EXCEPT SELECT release_group_id, genre_id, position, inherited, score FROM release_group_effective_genre) d`));
+        const [onlyNew] = await db.execute<{ n: number }>(sql.raw(`SELECT count(*)::int AS n FROM (SELECT release_group_id, genre_id, position, inherited, score FROM release_group_effective_genre EXCEPT SELECT * FROM ${OLD_EFFECTIVE}) d`));
+        return `${onlyOld!.n}/${onlyNew!.n}`;
+      };
+      const countInherited = async () => Number((await db.execute<{ n: number }>(sql`SELECT count(*)::int AS n FROM release_group_inherited_genre`))[0]!.n);
+      const inheritedSlugs = async (releaseGroupId: string) => (await effective(releaseGroupId)).filter((g) => g.inherited).map((g) => g.slug).join(",");
+
+      check((await diff()) === "0/0", "la vista nueva es idéntica a la definición antigua sobre todo el catálogo");
+      check((await inheritedSlugs(unlinked.id)) === "smoke-shoegaze,smoke-trap,smoke-trap-latino", "el álbum sin géneros propios hereda los 3 primeros del artista");
+
+      // --- Semillas del artista: la herencia se actualiza sin tocar nada más ---
+      const seeds = await db.select().from(schema.artistGenreSeed).where(eq(schema.artistGenreSeed.artistId, band.id));
+      const shoegazeId = await genreId(G.shoegaze);
+      await db.delete(schema.artistGenreSeed).where(and(eq(schema.artistGenreSeed.artistId, band.id), eq(schema.artistGenreSeed.genreId, shoegazeId)));
+      check((await inheritedSlugs(unlinked.id)) === "smoke-trap,smoke-trap-latino,smoke-folk", "al quitar una semilla del artista entra el siguiente género");
+      await db.insert(schema.artistGenreSeed).values(seeds.filter((s) => s.genreId === shoegazeId));
+      check((await inheritedSlugs(unlinked.id)) === "smoke-shoegaze,smoke-trap,smoke-trap-latino", "al devolver la semilla vuelve la herencia original");
+
+      // --- Créditos: alta y baja de un crédito principal; el de invitado no hereda ---
+      const mkRg = async (n: number, title: string) =>
+        (await db.insert(schema.releaseGroup).values({ mbid: smokeMbid(SMOKE_PREFIX, 0x7500 + n), title, category: "studio", firstReleaseYear: 2005 }).returning())[0]!;
+      const credited = await mkRg(1, "Herencia con crédito (smoke)");
+      check((await inheritedSlugs(credited.id)) === "", "un álbum sin créditos no hereda nada");
+      const [principal] = await db.insert(schema.credit).values({ artistId: band.id, releaseGroupId: credited.id, position: 0, role: "primary" }).returning();
+      check((await inheritedSlugs(credited.id)) === "smoke-shoegaze,smoke-trap,smoke-trap-latino", "un crédito principal nuevo hereda al instante");
+      await db.delete(schema.credit).where(eq(schema.credit.id, principal!.id));
+      check((await inheritedSlugs(credited.id)) === "", "al borrar el crédito principal desaparece la herencia");
+      const guest = await mkRg(2, "Herencia de invitado (smoke)");
+      await db.insert(schema.credit).values({ artistId: band.id, releaseGroupId: guest.id, position: 0, role: "featured" });
+      check((await inheritedSlugs(guest.id)) === "", "un crédito de invitado no hereda");
+
+      // --- Tipo del género: un estilo que deja de serlo sale de la herencia ---
+      await db.update(schema.genre).set({ kind: "hidden" }).where(eq(schema.genre.mbid, G.trap));
+      check((await inheritedSlugs(unlinked.id)) === "smoke-shoegaze,smoke-trap-latino,smoke-folk", "un género oculto sale de la herencia y entra el siguiente");
+      await db.update(schema.genre).set({ kind: "style" }).where(eq(schema.genre.mbid, G.trap));
+      check((await inheritedSlugs(unlinked.id)) === "smoke-shoegaze,smoke-trap,smoke-trap-latino", "al devolverlo a estilo vuelve");
+
+      // --- Semilla propia del álbum: reemplaza la herencia en lectura, sin mantenimiento ---
+      const folkId = await genreId(G.folk);
+      await db.insert(schema.releaseGroupGenreSeed).values({ releaseGroupId: unlinked.id, genreId: folkId, position: 0 });
+      check((await inheritedSlugs(unlinked.id)) === "" && (await effective(unlinked.id)).map((g) => g.slug).join(",") === "smoke-folk", "una semilla propia reemplaza la herencia al instante");
+      await db.delete(schema.releaseGroupGenreSeed).where(eq(schema.releaseGroupGenreSeed.releaseGroupId, unlinked.id));
+      check((await inheritedSlugs(unlinked.id)) === "smoke-shoegaze,smoke-trap,smoke-trap-latino", "al quitarla vuelve la herencia");
+
+      // --- Reconstrucción y cascada ---
+      const before = await countInherited();
+      await db.execute(sql`SELECT rebuild_inherited_genres()`);
+      check(before === (await countInherited()) && (await diff()) === "0/0", `reconstruir es idempotente y sigue idéntica a la definición antigua (${before} filas)`);
+      await db.delete(schema.releaseGroup).where(inArray(schema.releaseGroup.id, [credited.id, guest.id]));
+      const orphans = Number(
+        (await db.execute<{ n: number }>(sql`SELECT count(*)::int AS n FROM release_group_inherited_genre ig WHERE NOT EXISTS (SELECT 1 FROM release_group rg WHERE rg.id = ig.release_group_id)`))[0]!.n,
+      );
+      check(orphans === 0, "borrar un álbum borra su herencia");
     }
 
     console.log("6d) Votos de la comunidad sobre los géneros del álbum (add-genre-votes)");

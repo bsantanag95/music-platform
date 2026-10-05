@@ -4,7 +4,9 @@ import { Link } from "@/i18n/navigation";
 import type { ReleaseGroupCategory } from "@/lib/api/schemas";
 import { resolvePrimaryArtists } from "@/services/catalog/primary-artists";
 import { listAlbumsFiltered } from "@/services/discovery/discovery";
-import { listGenreArtists } from "@/services/genres/artists";
+import { getGenreDiscoverArtists, getGenreDiscoverCompletionCandidates } from "@/services/genres/artist-discovery";
+import { scheduleGenreArtistsDiscographySync } from "@/services/genres/artist-prefetch";
+import { listGenreArtistFacets, listGenreArtists } from "@/services/genres/artists";
 import { GENRE_OVERVIEW_ARTISTS, GENRE_OVERVIEW_LISTS } from "@/services/genres/constants";
 import { listGenreLists } from "@/services/genres/lists";
 import { getGenreRecentReviews } from "@/services/genres/reviews";
@@ -18,6 +20,7 @@ import { getGenreStats } from "@/services/genres/stats";
 import { GenreAlbumsView } from "./GenreAlbumsView";
 import { GenreArtistGrid } from "./GenreArtistCard";
 import { GenreArtistsView } from "./GenreArtistsView";
+import { GenreDiscoverRail } from "./GenreDiscoverRail";
 import { GenreListsPreview, GenreListsView, GenreRecentReviews } from "./GenreCommunity";
 import { GenreDecadeBars } from "./GenreDecadeBars";
 import { GenreFootprint } from "./GenreFootprint";
@@ -70,9 +73,11 @@ export async function GenreNewReleasesSection({ data, params, categoryLabels, co
   );
 }
 
-export async function GenreArtistsPreviewSection({ data, params }: Pick<RailContext, "data" | "params">) {
-  const { artists } = await listGenreArtists(data.genre.id, { pageSize: GENRE_OVERVIEW_ARTISTS });
+export async function GenreArtistsPreviewSection({ data, params, authenticated, readerId = null }: Pick<RailContext, "data" | "params" | "authenticated" | "readerId">) {
+  const { artists } = await listGenreArtists(data.genre.id, { pageSize: GENRE_OVERVIEW_ARTISTS, readerId });
   if (artists.length === 0) return null;
+  // Completa en segundo plano las discografías pendientes de los artistas mostrados (no espera).
+  scheduleGenreArtistsDiscographySync(artists);
   const t = await getTranslations("catalog.genres.page.artists");
   return (
     <section aria-labelledby="genre-artists-preview" className="flex w-full flex-col gap-3">
@@ -87,7 +92,7 @@ export async function GenreArtistsPreviewSection({ data, params }: Pick<RailCont
           {t("seeAll")} →
         </Link>
       </div>
-      <GenreArtistGrid artists={artists} />
+      <GenreArtistGrid artists={artists} authenticated={authenticated} />
     </section>
   );
 }
@@ -148,9 +153,61 @@ export async function GenreAlbumsSection({
   );
 }
 
-export async function GenreArtistsSection({ data, params }: Pick<RailContext, "data" | "params">) {
-  const page = await listGenreArtists(data.genre.id, { page: params.page, q: params.q, sort: params.artistSort });
-  return <GenreArtistsView slug={data.genre.slug} params={params} artists={page.artists} hasNext={page.hasNext} />;
+export async function GenreArtistsSection({
+  data,
+  params,
+  authenticated,
+  readerId = null,
+  locale,
+}: Pick<RailContext, "data" | "params" | "authenticated" | "readerId"> & { locale: string }) {
+  const [page, facets] = await Promise.all([
+    listGenreArtists(data.genre.id, {
+      page: params.page,
+      q: params.q,
+      sort: params.artistSort,
+      readerId,
+      country: params.country,
+      debutDecade: params.debutDecade,
+      shortOnly: params.shortOnly,
+      hideKnown: params.hideKnown,
+    }),
+    listGenreArtistFacets(data.genre.id),
+  ]);
+  // Completa en segundo plano las discografías pendientes de los artistas mostrados (no espera).
+  scheduleGenreArtistsDiscographySync(page.artists);
+
+  let regionNames: Intl.DisplayNames | null = null;
+  try {
+    regionNames = new Intl.DisplayNames([locale], { type: "region" });
+  } catch {
+    // Sin soporte de nombres de región: se muestra el código.
+  }
+  const countryLabel = (code: string) => regionNames?.of(code) ?? code;
+  const options = {
+    countries: facets.countries.map((c) => ({ code: c.code, label: countryLabel(c.code), count: c.count })),
+    debutDecades: facets.debutDecades,
+  };
+  return (
+    <GenreArtistsView
+      slug={data.genre.slug}
+      params={params}
+      artists={page.artists}
+      hasNext={page.hasNext}
+      facets={options}
+      authenticated={authenticated}
+    />
+  );
+}
+
+/** Riel «Para descubrir» del Resumen: se omite bajo su umbral. */
+export async function GenreDiscoverSection({ data, params, authenticated, readerId = null }: Pick<RailContext, "data" | "params" | "authenticated" | "readerId">) {
+  const artists = await getGenreDiscoverArtists(data.genre.id, readerId);
+  // Con el riel corto, completa en segundo plano la discografía de artistas del género sin explorar: el riel
+  // solo muestra artistas explorados y así crece con el uso (no espera).
+  if (artists.length < GENRE_OVERVIEW_ARTISTS) {
+    scheduleGenreArtistsDiscographySync(await getGenreDiscoverCompletionCandidates(data.genre.id));
+  }
+  return <GenreDiscoverRail slug={data.genre.slug} params={params} artists={artists} authenticated={authenticated} />;
 }
 
 export async function GenreListsPreviewSection({ data, params, authenticated, readerId = null }: Pick<RailContext, "data" | "params" | "authenticated" | "readerId">) {

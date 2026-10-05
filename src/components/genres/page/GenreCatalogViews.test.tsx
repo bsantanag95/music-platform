@@ -137,25 +137,31 @@ describe("GenreAlbumsView", () => {
 
 describe("GenreArtistsView", () => {
   const artists = [
-    { id: "a1", name: "Slowdive", type: "group", photoUrl: null, albumCount: 3 },
-    { id: "a2", name: "Ride", type: "group", photoUrl: null, albumCount: 1 },
+    { id: "a1", name: "Slowdive", type: "group", photoUrl: null, albumCount: 3, discographyComplete: true, hasMbid: true, featuredAlbum: null },
+    { id: "a2", name: "Ride", type: "group", photoUrl: null, albumCount: 1, discographyComplete: true, hasMbid: true, featuredAlbum: null },
   ];
+  const facets = { countries: [], debutDecades: [] };
 
-  it("lista las tarjetas, marca el orden activo y no cambia el orden por defecto en el formulario", () => {
-    renderWithIntl(<GenreArtistsView slug="shoegaze" params={parseGenreParams({ tab: "artists" })} artists={artists} hasNext={false} />);
+  it("lista las tarjetas y la barra de filtros con el orden activo", () => {
+    renderWithIntl(
+      <GenreArtistsView slug="shoegaze" params={parseGenreParams({ tab: "artists" })} artists={artists} hasNext={false} facets={facets} authenticated={false} />,
+    );
     expect(screen.getByRole("link", { name: /Slowdive/ })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Más álbumes del género" })).toHaveAttribute("aria-current", "true");
-    expect(screen.getByRole("link", { name: "A–Z" })).toHaveAttribute("href", "/es/genre/shoegaze?tab=artists&orden=az");
+    expect(screen.getByRole("combobox", { name: "Ordenar por" })).toHaveValue("albumes");
   });
 
   it("una búsqueda sin resultados ofrece limpiarla", () => {
-    renderWithIntl(<GenreArtistsView slug="shoegaze" params={parseGenreParams({ tab: "artists", q: "zzz" })} artists={[]} hasNext={false} />);
-    expect(screen.getByText("Ningún álbum coincide con estos filtros.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Limpiar filtros" })).toHaveAttribute("href", "/es/genre/shoegaze?tab=artists");
+    renderWithIntl(
+      <GenreArtistsView slug="shoegaze" params={parseGenreParams({ tab: "artists", q: "zzz" })} artists={[]} hasNext={false} facets={facets} authenticated={false} />,
+    );
+    expect(screen.getByText("Ningún artista coincide con estos filtros.")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Limpiar filtros" })[0]).toHaveAttribute("href", "/es/genre/shoegaze?tab=artists");
   });
 
-  it("sin artistas y sin búsqueda muestra el estado vacío", () => {
-    renderWithIntl(<GenreArtistsView slug="shoegaze" params={parseGenreParams({ tab: "artists" })} artists={[]} hasNext={false} />);
+  it("sin artistas y sin filtros muestra el estado vacío", () => {
+    renderWithIntl(
+      <GenreArtistsView slug="shoegaze" params={parseGenreParams({ tab: "artists" })} artists={[]} hasNext={false} facets={facets} authenticated={false} />,
+    );
     expect(screen.getByText("Ningún artista del catálogo tiene este género todavía.")).toBeInTheDocument();
   });
 });

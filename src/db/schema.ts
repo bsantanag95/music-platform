@@ -1486,6 +1486,28 @@ export const artistGenreSeed = pgTable(
   ],
 );
 
+// Herencia de géneros materializada (migración 0060, openspec: add-genre-artist-discovery, ADR 0028): los 3
+// primeros géneros de estilo del primer artista principal de cada álbum. La mantienen triggers sobre `credit`,
+// `artist_genre_seed` y `genre.kind`; la vista `release_group_effective_genre` la lee y aplica en lectura
+// `kind = 'style'` y la ausencia de puntaje positivo. Nunca se escribe desde la aplicación.
+export const releaseGroupInheritedGenre = pgTable(
+  "release_group_inherited_genre",
+  {
+    releaseGroupId: uuid("release_group_id")
+      .notNull()
+      .references(() => releaseGroup.id, { onDelete: "cascade" }),
+    genreId: uuid("genre_id")
+      .notNull()
+      .references(() => genre.id, { onDelete: "cascade" }),
+    position: smallint("position").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.releaseGroupId, t.genreId] }),
+    index("idx_release_group_inherited_genre_genre").on(t.genreId),
+    check("chk_release_group_inherited_genre_position", sql`${t.position} >= 0`),
+  ],
+);
+
 export const releaseGroupGenreSeed = pgTable(
   "release_group_genre_seed",
   {
@@ -1585,6 +1607,7 @@ export type UserProfileLinkRow = typeof userProfileLink.$inferSelect;
 export type UserPinnedItemRow = typeof userPinnedItem.$inferSelect;
 export type UserShowcaseRow = typeof userShowcase.$inferSelect;
 export type GenreRow = typeof genre.$inferSelect;
+export type ReleaseGroupInheritedGenreRow = typeof releaseGroupInheritedGenre.$inferSelect;
 export type GenreLocalizedTextRow = typeof genreLocalizedText.$inferSelect;
 export type GenreRelationRow = typeof genreRelation.$inferSelect;
 export type GenreFamilyRow = typeof genreFamily.$inferSelect;

@@ -141,6 +141,17 @@ de cuál de las filas con el mismo título haya en la BD.
 >   del propio script. Verifica cifras con umbral, árbol, filtros y órdenes, listas y reseñas (privacidad, bloqueo,
 >   moderación), huella, "Me mueve" (tope, idempotencia, edición concurrente), la cifra de personas a las que les mueve
 >   (umbral de 5) y la sincronización del texto "Sobre el género". Necesita la migración `0059` aplicada.
+>   Desde `add-genre-artist-discovery` crea además seis artistas `Smoke Descubre …` (MBID `5e0ce000-…-73xx`), sus álbumes
+>   (`…-74xx` y `…-7311`) y usuarios `smoke_gen_<sello>ad_*` (seguidores, valoraciones, favoritos, pendientes y escuchas
+>   caen por `ON DELETE CASCADE`; el mismo `LIKE 'smoke_gen_%'` los cubre). La sección borra sus artistas y álbumes al
+>   terminar para no alterar las siguientes. Mockea el browse de discografía de MusicBrainz de un artista sin explorar.
+>   Verifica tamaño y debut solo con la discografía explorada (sin explorar o con 0 discos no es corta), filtros y órdenes,
+>   «artista conocido» por cada señal (también por un disco donde colabora), aislamiento entre personas, disco destacado,
+>   el riel «Para descubrir» (umbral de 4 y exclusión) y el completado de una discografía sin explorar. Desde la
+>   migración `0060` (herencia de géneros materializada, ADR 0028) también compara, sobre todo el catálogo, la vista
+>   `release_group_effective_genre` con su definición anterior (diferencia vacía en ambos sentidos) y ejercita los
+>   triggers de `credit`, `artist_genre_seed` y `genre.kind`; crea álbumes `…-7501`/`…-7502` y los borra al terminar.
+>   Necesita la migración `0060` aplicada.
 
 ## Base de datos / migraciones
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { albumFiltersActive, genrePageHref, parseGenreParams } from "./page-params";
+import { albumFiltersActive, artistFiltersActive, genrePageHref, parseGenreParams } from "./page-params";
 
 describe("parseGenreParams", () => {
   it("sin parámetros es el Resumen con los predeterminados", () => {
@@ -12,6 +12,10 @@ describe("parseGenreParams", () => {
       exact: false,
       albumSort: "best",
       artistSort: "albums",
+      country: undefined,
+      debutDecade: undefined,
+      shortOnly: false,
+      hideKnown: false,
       view: "grid",
       page: 1,
     });
@@ -105,5 +109,51 @@ describe("albumFiltersActive", () => {
     expect(albumFiltersActive(parseGenreParams({ tipo: "studio" }))).toBe(true);
     expect(albumFiltersActive(parseGenreParams({ orden: "az" }))).toBe(true);
     expect(albumFiltersActive(parseGenreParams({ solo: "1" }))).toBe(true);
+  });
+});
+
+describe("filtros de la pestaña Artistas", () => {
+  it("lee país, debut, tamaño, conocidos y los órdenes nuevos", () => {
+    expect(parseGenreParams({ tab: "artists", pais: "cl", debut: "2010", tam: "corta", conocidos: "no", orden: "descubrir" })).toMatchObject({
+      country: "CL",
+      debutDecade: 2010,
+      shortOnly: true,
+      hideKnown: true,
+      artistSort: "discover",
+    });
+    expect(parseGenreParams({ orden: "recientes" })).toMatchObject({ artistSort: "recent", albumSort: "newest" });
+  });
+
+  it("los valores inválidos caen al predeterminado", () => {
+    expect(parseGenreParams({ pais: "chile", debut: "1975", tam: "larga", conocidos: "si" })).toMatchObject({
+      country: undefined,
+      debutDecade: undefined,
+      shortOnly: false,
+      hideKnown: false,
+    });
+  });
+
+  it("solo escribe lo no predeterminado, solo en la pestaña Artistas, y cambiar un filtro vuelve a la página 1", () => {
+    const artists = { ...parseGenreParams({ tab: "artists", page: "3" }) };
+    expect(genrePageHref("g", artists, { country: "CL", shortOnly: true })).toBe("/genre/g?tab=artists&pais=CL&tam=corta");
+    expect(genrePageHref("g", artists, { hideKnown: true, artistSort: "discover" })).toBe("/genre/g?tab=artists&conocidos=no&orden=descubrir");
+    expect(genrePageHref("g", artists, { page: 4 })).toBe("/genre/g?tab=artists&page=4");
+    const withFilters = parseGenreParams({ tab: "artists", pais: "CL", tam: "corta" });
+    expect(genrePageHref("g", { ...withFilters, tab: "albums" })).toBe("/genre/g?tab=albums");
+  });
+
+  it("el enlace del riel sale con los filtros explícitos", () => {
+    const base = parseGenreParams({});
+    expect(genrePageHref("g", base, { tab: "artists", artistSort: "discover", shortOnly: true, hideKnown: true, page: 1 })).toBe(
+      "/genre/g?tab=artists&tam=corta&conocidos=no&orden=descubrir",
+    );
+  });
+
+  it("artistFiltersActive detecta filtros y órdenes distintos del predeterminado", () => {
+    expect(artistFiltersActive(parseGenreParams({ tab: "artists" }))).toBe(false);
+    expect(artistFiltersActive(parseGenreParams({ pais: "CL" }))).toBe(true);
+    expect(artistFiltersActive(parseGenreParams({ orden: "seguidos" }))).toBe(true);
+    expect(artistFiltersActive(parseGenreParams({ q: "x" }))).toBe(true);
+    expect(artistFiltersActive(parseGenreParams({ conocidos: "no" }))).toBe(true);
   });
 });
