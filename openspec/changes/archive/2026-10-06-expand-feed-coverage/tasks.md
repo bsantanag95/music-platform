@@ -32,6 +32,6 @@
 ## 5. Documentación y cierre
 
 - [x] 5.1 `docs/05-features/activity-feed.md`, `physical-collection.md`, `caminos.md`; `docs/04-api/contracts.md` (`/api/me/feed`, wishlist); `business-rules.md` si aplica
-- [ ] 5.2 Al archivar: borrar `openspec/specs/feed-ambient-events/` (queda sin requisitos; `openspec archive` no acepta un spec vacío)
+- [x] 5.2 Al archivar: borrar `openspec/specs/feed-ambient-events/` (queda sin requisitos; `openspec archive` no acepta un spec vacío)
 - [x] 5.3 `pnpm run typecheck && pnpm run lint && pnpm test && pnpm run build`
 - [x] 5.4 Verificar las queries nuevas contra Postgres (script `tsx --env-file=.env`) y aplicar `0061`
