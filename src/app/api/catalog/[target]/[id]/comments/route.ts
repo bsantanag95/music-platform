@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { ApiError } from "@/lib/api/errors";
 import { CommentRequestSchema, SocialTargetTypeSchema } from "@/lib/api/schemas";
-import { requireSocialActivityAllowed, requireUser } from "@/services/auth/authorization";
+import { getCurrentUser, requireSocialActivityAllowed, requireUser } from "@/services/auth/authorization";
 import { createComment, listComments, resolveSocialTarget } from "@/services/social";
 import { z } from "zod";
 
@@ -23,7 +23,8 @@ export const GET = withErrorHandling(async (request: NextRequest, context: { par
   const search = request.nextUrl.searchParams;
   const pagination = CommentsPaginationSchema.safeParse({ page: search.get("page") ?? undefined, pageSize: search.get("pageSize") ?? undefined });
   if (!pagination.success) throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
-  return NextResponse.json(await listComments(resolved, pagination.data.page, pagination.data.pageSize));
+  const viewer = await getCurrentUser();
+  return NextResponse.json(await listComments(resolved, pagination.data.page, pagination.data.pageSize, viewer?.id ?? null));
 });
 
 export const POST = withErrorHandling(async (request: NextRequest, context: { params: Promise<{ target: string; id: string }> }) => {

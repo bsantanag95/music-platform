@@ -48,6 +48,7 @@ import type {
 } from "@/services/feed/feed";
 import type { Audience } from "@/services/social/types";
 import { activeUserCondition } from "@/services/auth/account-status";
+import { COMMENT_LIKE_COUNT_SQL, thresholdedLikeCount } from "@/services/social/comment-likes";
 
 // Perfil público Y cuenta activa: una cuenta desactivada no aparece en Home.
 const PUBLIC_PROFILE = and(eq(appUser.profileVisibility, "public"), activeUserCondition());
@@ -475,6 +476,8 @@ export async function listHomeReleases(limit = 10): Promise<HomeRelease[]> {
 export interface PopularComment {
   id: string;
   body: string;
+  /** Likes visibles: `null` bajo el umbral de 3 (add-comment-likes). */
+  likeCount: number | null;
   authorUsername: string;
   authorDisplayName: string | null;
   target: {
@@ -496,25 +499,37 @@ export type PopularCommentsByType = Record<
  * "Comentarios populares" de Inicio, agrupados por tipo de entidad (artista /
  * álbum / canción) para el control segmentado.
  *
- * Los comentarios no tienen mecanismo de likes todavía, así que el ranking es
- * un proxy —comentarios más largos, "escritura más sustancial"— y no se
- * muestra ninguna cifra: el contador sintético que había antes (`likeCount`
- * derivado del id) se retiró para no presentar likes inventados como reales.
- * Los likes reales (tabla, interacción, endpoint, ranking) son un cambio
- * aparte — ver docs/05-features/home.md, "Comentarios populares".
+ * Ranking por likes reales (`comment_like`, add-comment-likes): conteo
+ * descendente, desempate por longitud del texto (escritura sustancial) y
+ * luego por fecha. La cifra que sale es la umbralizada (`null` bajo 3 likes);
+ * el conteo real solo ordena y nunca sale del servidor.
  *
- * Filtra por perfil público del autor. No maneja bloqueos (la versión real sí
- * debería, como `listCommunityActivity`).
+ * Filtra por perfil público y cuenta activa del autor, excluye comentarios
+ * ocultos por moderación y, con visitante, los de autores con bloqueo en
+ * cualquier dirección (como `listCommunityActivity`).
  */
-export async function listPopularComments(perType = 6): Promise<PopularCommentsByType> {
+export async function listPopularComments(
+  perType = 6,
+  viewerId: string | null = null,
+): Promise<PopularCommentsByType> {
   const pool = perType * 3;
-  const byLongest = desc(sql<number>`length(${comment.body})`);
+  const byPopularity = [
+    desc(COMMENT_LIKE_COUNT_SQL),
+    desc(sql<number>`length(${comment.body})`),
+    desc(comment.createdAt),
+  ];
+  const visible = and(
+    eq(comment.moderationStatus, "visible"),
+    PUBLIC_PROFILE,
+    viewerId ? NOT_BLOCKED_SQL(viewerId, comment.userId) : undefined,
+  );
 
   const [artistRows, albumRows, songRows] = await Promise.all([
     db
       .select({
         id: comment.id,
         body: comment.body,
+        likes: COMMENT_LIKE_COUNT_SQL,
         authorUsername: appUser.username,
         authorDisplayName: appUser.displayName,
         targetId: comment.artistId,
@@ -529,14 +544,15 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
         rating,
         and(eq(rating.userId, comment.userId), eq(rating.artistId, comment.artistId)),
       )
-      .where(and(isNotNull(comment.artistId), PUBLIC_PROFILE))
-      .orderBy(byLongest)
+      .where(and(isNotNull(comment.artistId), visible))
+      .orderBy(...byPopularity)
       .limit(pool),
 
     db
       .select({
         id: comment.id,
         body: comment.body,
+        likes: COMMENT_LIKE_COUNT_SQL,
         authorUsername: appUser.username,
         authorDisplayName: appUser.displayName,
         targetId: comment.releaseGroupId,
@@ -555,14 +571,15 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
           eq(rating.releaseGroupId, comment.releaseGroupId),
         ),
       )
-      .where(and(isNotNull(comment.releaseGroupId), PUBLIC_PROFILE))
-      .orderBy(byLongest)
+      .where(and(isNotNull(comment.releaseGroupId), visible))
+      .orderBy(...byPopularity)
       .limit(pool),
 
     db
       .select({
         id: comment.id,
         body: comment.body,
+        likes: COMMENT_LIKE_COUNT_SQL,
         authorUsername: appUser.username,
         authorDisplayName: appUser.displayName,
         targetId: comment.recordingId,
@@ -577,8 +594,8 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
         rating,
         and(eq(rating.userId, comment.userId), eq(rating.recordingId, comment.recordingId)),
       )
-      .where(and(isNotNull(comment.recordingId), PUBLIC_PROFILE))
-      .orderBy(byLongest)
+      .where(and(isNotNull(comment.recordingId), visible))
+      .orderBy(...byPopularity)
       .limit(pool),
   ]);
 
@@ -586,6 +603,7 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
     rows: {
       id: string;
       body: string;
+      likes: number;
       authorUsername: string | null;
       authorDisplayName: string | null;
       targetId: string | null;
@@ -600,6 +618,7 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
       .map((row) => ({
         id: row.id,
         body: row.body,
+        likeCount: thresholdedLikeCount(row.likes),
         authorUsername: row.authorUsername ?? "",
         authorDisplayName: row.authorDisplayName,
         target: {

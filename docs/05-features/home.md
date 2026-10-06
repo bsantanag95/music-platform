@@ -255,9 +255,11 @@ Distinto de "Actividad de la comunidad" (cronológica, mezcla ratings + comentar
 **solo espacio con control segmentado** por tipo de entidad — no tres secciones apiladas.
 Alinea con el pilar §4 de `product_philosophy.md` ("las reseñas son contenido en sí mismo").
 
-**Estado:** diseño/layout implementado con **ranking proxy y sin cifra de likes**. El contador
-`♡ N` sintético (derivado del id) se retiró el 2026-10-06 para no mostrar likes inventados
-como reales; la feature real (likes en comentarios) es un cambio aparte — ver abajo.
+**Estado:** implementado con **likes reales** (cambio `add-comment-likes`, 2026-10-06). El
+`♡ N` sintético que hubo antes (derivado del id) se retiró el mismo día; la feature real lo
+reemplaza. Decisiones de producto —contra la anti-feature "sin gamificación" y "la subjetividad es
+el producto"—: la cifra solo se muestra **desde 3 likes**, no se puede likear el propio comentario,
+la cifra es igual para todos (autor incluido) y la identidad de quien likeó no se expone nunca.
 
 - `PopularComments` (server, resuelve i18n) → `PopularCommentsTabs`
   (`src/components/home/PopularCommentsTabs.tsx`, client). ARIA tabs: `role="tablist"` /
@@ -270,36 +272,32 @@ como reales; la feature real (likes en comentarios) es un cambio aparte — ver 
   título del target (display, link), el comentario como cita con borde izquierdo en tono
   principal (`line-clamp-3`) y debajo la firma `— @autor · ★ 86/100` (o `★ 4,5` sin puntaje
   detallado) en mono.
-- **Servicio `listPopularComments()`** (`src/services/home/home.ts`): tres consultas (una por
-  tipo), orden por `length(body) DESC` como proxy de "escritura sustancial". La valoración es
-  real (`rating` del autor sobre el mismo target, con su puntaje detallado, o `null`). Filtra por perfil público; **no**
-  maneja bloqueos (la versión real sí, como `listCommunityActivity`).
+- **Servicio `listPopularComments(perType, viewerId?)`** (`src/services/home/home.ts`): tres
+  consultas (una por tipo) ordenadas por **likes reales** (`COUNT(*)` de `comment_like`, sin cuentas
+  desactivadas), desempate por `length(body)` y luego por fecha. La fila lleva `likeCount`: `null`
+  bajo el umbral (3), de modo que el conteo real solo ordena y nunca sale del servidor. Filtra por
+  perfil público y cuenta activa, excluye comentarios ocultos por moderación y, con visitante, los
+  de autores con bloqueo en cualquier dirección (como `listCommunityActivity`). La valoración es
+  real (`rating` del autor sobre el mismo target, con su puntaje detallado, o `null`).
+- **Pill `♡ N`** a la derecha del título (`aria-label` "N me gusta", clave
+  `home.popularCommentsLikeWord`), solo con cifra visible.
 - El seed (`scripts/seed-home.ts`) ahora genera comentarios de los tres tipos y a veces
   valora el mismo target — antes solo comentaba álbumes/canciones y la pestaña Artistas
   quedaba vacía. Requiere re-correr el seed para verlo poblado.
 
-#### Feature real: "likes en comentarios" (sprint futuro)
+#### Likes en comentarios (implementado)
 
-Discutir cuando cambie el paradigma hacia **la relevancia de las interacciones**, donde los
-comentarios/reseñas pasan a ser parte de la identidad de la página. Ese mismo spec decide
-si se puede **comentar un comentario** (hilos: abrir debates, responder a comentarios
-cómicos, etc.).
-
-- **Schema:** tabla `comment_like (comment_id, user_id, PK/unique(comment_id, user_id))`. El
-  conteo es `COUNT(*)`. **La identidad de quién likeó no se expone nunca** — ni al autor;
-  es un registro contable, solo para deduplicar (un like por usuario). Alternativa: contador
-  denormalizado `comment.like_count` + trigger.
-- **Interacción:** botón de like en `Comments.tsx` + endpoint
-  (`POST/DELETE /api/comments/[id]/like`) + estado optimista. **Requiere sesión** — no se
-  likea anónimo. Sin audiencia en los likes.
-- **Producto:** un ranking de "comentarios más populares" es una mecánica de popularidad
-  agregada — hay que decidirlo contra la anti-feature "sin gamificación" y el posicionamiento
-  "la subjetividad es el producto, no un score agregado tipo Metacritic". Es la decisión que
-  destraba todo lo demás.
-- **Borrado físico:** los comentarios se borran de verdad (ADR 0009) → los likes se van en
-  cascada; un "top" cacheado tiene que tolerar ids que desaparecen.
-- Al implementarse, `listPopularComments` cambia el `ORDER BY length(body)` por
-  `ORDER BY like_count DESC` real y la fila vuelve a mostrar el contador.
+- **Schema:** `comment_like (comment_id, user_id)`, PK del par, `ON DELETE CASCADE` en ambos FK
+  (migración `0062`; ver `docs/03-data/sql-model.md`). Conteo `COUNT(*)` sobre la PK, sin
+  contador denormalizado (se puede agregar luego sin cambiar contratos).
+- **Interacción:** `PUT/DELETE /api/catalog/comments/{commentId}/like` (idempotentes, con sesión;
+  ver `docs/04-api/contracts.md`) y botón con estado optimista en `Comments.tsx`
+  (`CommentLikeButton`). Anónimos y el autor ven la cifra sin botón.
+- **Restricciones:** no se likea lo propio; dar like respeta bloqueos (`BLOCKED`) y suspensión social;
+  quitarlo siempre se permite. Un comentario oculto por moderación cuenta como inexistente.
+- **Borrado físico:** los comentarios se borran de verdad (ADR 0009) → los likes se van en cascada.
+- **Fuera de alcance:** **comentar un comentario** (hilos), likes en reseñas y notificaciones de
+  likes. Siguen pendientes de decisión.
 
 ### Fuente de las carátulas del muro — 32 fijas, un solo mosaico
 
@@ -423,11 +421,8 @@ linkea a `/album/{id}`.
 - Listas públicas en Inicio anónimo con **mini-mosaico de carátulas** (L3) — requiere que
   `listPublicLists` devuelva ~4 `coverThumbUrl` por lista. Ver "Actividad de la comunidad y
   listas públicas — layout".
-- Feature real **"likes en comentarios"** (destraba "Comentarios populares"): tabla
-  `comment_like` anónima (nadie ve quién likeó, ni el autor), like con sesión obligatoria,
-  y la decisión de producto sobre gamificación vs. el posicionamiento anti-agregado. El
-  mismo spec define si se puede **comentar un comentario** (hilos). Se discute cuando el
-  paradigma gire hacia "la relevancia de las interacciones". Ver "'Comentarios populares'".
+- **Hilos** (comentar un comentario): el cambio `add-comment-likes` dejó fuera esa decisión. Se
+  discute cuando el paradigma gire hacia "la relevancia de las interacciones".
 - Apartados **"Lanzamientos recientes" / "Próximos lanzamientos"**: el riel (`ReleaseRail`)
   ya está en Inicio con **datos de maqueta** (fechas sintéticas sobre release-groups reales).
   Falta: (a) paso intermedio con `src/config/home-releases.ts` (curación manual sin backend),

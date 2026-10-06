@@ -56,7 +56,7 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
       getMostRecentEditedList(user.id),
       listCommunityActivity(user.id, 1, previewLimit).then((page) => page.entries),
       listPublicLists(user.id, previewLimit),
-      listPopularComments(),
+      listPopularComments(undefined, user.id),
       listHomeReleases(),
     ]);
 

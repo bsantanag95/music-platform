@@ -75,7 +75,7 @@ export default async function ArtistLayout({ children, params }: ArtistLayoutPro
     loadCommunityStats(artist.id),
     userId ? loadPersonalState(userId, artist.id) : Promise.resolve(null),
     loadLineup(artist.id),
-    listComments(socialTarget),
+    listComments(socialTarget, 1, 20, userId),
     userId ? loadCanModerate(userId) : Promise.resolve(false),
     getArtistGenres(artist.id),
   ]);

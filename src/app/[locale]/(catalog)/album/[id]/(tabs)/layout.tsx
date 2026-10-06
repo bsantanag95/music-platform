@@ -79,7 +79,7 @@ export default async function AlbumLayout({ children, modal, params }: AlbumLayo
     getRatings(socialTarget, userId ?? undefined),
     userId ? loadPersonalState(userId, releaseGroupId) : Promise.resolve(null),
     userId ? loadCanModerate(userId) : Promise.resolve(false),
-    listComments(socialTarget),
+    listComments(socialTarget, 1, 20, userId),
     detail.primaryArtist
       ? loadDiscographyStrip(detail.primaryArtist.id, releaseGroupId, detail.releaseGroup.category)
       : Promise.resolve(null),

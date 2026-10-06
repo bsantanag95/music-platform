@@ -965,7 +965,10 @@
     "suspendExpires": "Expires",
     "suspendSubmit": "Suspend",
     "suspendDone": "Suspension applied.",
-    "deactivatedAccount": "Deactivated account"
+    "deactivatedAccount": "Deactivated account",
+    "likeComment": "Like this comment",
+    "unlikeComment": "Remove my like",
+    "likesCount": "{count} likes"
   },
   "versionAttributes": {
     "live": "Live",

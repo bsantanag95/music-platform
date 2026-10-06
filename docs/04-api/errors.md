@@ -35,7 +35,7 @@ además del `error` legible:
 | `INVALID_CREDENTIALS` | 401 | Login fallido; no revela si falló el identificador o la contraseña. |
 | `USERNAME_TAKEN` / `EMAIL_TAKEN` | 409 | El registro duplicaría una cuenta existente. |
 | `RATE_LIMITED` | 429 | Se superó el límite temporal de login o registro, del flujo OAuth de Google (`/start` y `/callback` limitan por IP; el callback redirige a la página de error con este código) o de los endpoints de recuperación de contraseña (`/password/forgot` limita por IP y email; `/password/reset` por IP). |
-| `PERMISSION_DENIED` | 403 | El usuario no puede modificar el recurso. |
+| `PERMISSION_DENIED` | 403 | El usuario no puede modificar el recurso (también: dar like al propio comentario, `PUT /api/catalog/comments/{commentId}/like`). |
 | `INVALID_TARGET` | 400/404 | Tipo, UUID u objetivo inexistente. |
 | `INVALID_RATING` / `INVALID_COMMENT` | 400 | Entrada social inválida. |
 | `RATING_NOT_FOUND` | 404 | No existe un rating propio para borrar. |
@@ -73,7 +73,7 @@ además del `error` legible:
 | `USER_NOT_FOUND` | 404 | Perfil, búsqueda o destino de una relación: el username no corresponde a ningún usuario. |
 | `RELATION_INVALID` | 400 | Operación de seguimiento o bloqueo inválida (ej. intentar seguirse o bloquearse a sí mismo). |
 | `REQUEST_NOT_FOUND` | 404 | La solicitud de seguimiento no existe o ya fue resuelta (aprobada, rechazada o cancelada). |
-| `BLOCKED` | 403 | La operación de seguimiento está impedida por un bloqueo existente entre las cuentas. |
+| `BLOCKED` | 403 | La operación de seguimiento, o dar like a un comentario, está impedida por un bloqueo existente entre las cuentas. |
 | `LISTEN_ENTRY_NOT_FOUND` | 404 | Diario de escucha: la entrada no existe o no pertenece al usuario autenticado (se responde 404 para no revelar existencia de entradas ajenas). |
 | `DIARY_TARGET_INVALID` | 404 | Diario de escucha: el objetivo indicado no existe o no es un artista/álbum/canción válido. |
 | `FAVORITE_NOT_FOUND` | 404 | Favoritos: el favorito no existe o no pertenece al usuario autenticado. |
