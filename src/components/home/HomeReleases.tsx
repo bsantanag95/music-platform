@@ -18,6 +18,7 @@ export async function HomeReleases({ releases }: { releases: HomeRelease[] }) {
       title={t("releasesTitle")}
       todayLabel={t("releasesToday")}
       upcomingPrefix={t("releasesUpcomingPrefix")}
+      upcomingBadge={t("releasesUpcomingBadge")}
       prevLabel={t("releasesPrev")}
       nextLabel={t("releasesNext")}
     />

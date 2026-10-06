@@ -343,20 +343,26 @@ En vez de dos rieles de carátulas casi idénticos apilados, **un único riel ho
 ordenado por fecha** con un marcador "hoy" en el medio:
 
 ```
-‹ … ago 2026  │ HOY │  sep 2026 … ›
-   [recientes]         [próximos]
+‹ … 22 sept   29 sept  │ HOY │  Sale 13 oct   Sale 20 oct … ›
+  ●──────────●─────────◉──────○─────────────○──────
+     [recientes]                 [próximos]
 ```
 
 - Scroll a la izquierda → lo que ya salió; a la derecha → lo que viene. Flechas ‹ ›
-  (mismo patrón/estilo que `FeatureCarousel`), scrollbar nativa oculta.
+  redondas sobre los bordes (fondo translúcido con desenfoque), scrollbar nativa oculta.
+  Al montar, el riel se posiciona con el marcador "hoy" a ~60 % del ancho (no arranca en
+  el lanzamiento más viejo).
+- **Pista de fechas:** una línea horizontal bajo las carátulas con un hito por tarjeta —
+  relleno lo que ya salió, hueco lo que viene, y el hito del marcador en ámbar.
 - **Marcador "hoy":** una línea vertical fina + label en **VU Gold** — la única veta de
   ámbar del bloque, usada como una aguja de VU / cabezal de reproducción (dentro de la
   Regla de Rareza). Solo aparece si hay ítems de los dos lados.
-- Tarjetas "próximas": carátula a `opacity-60` + fecha con prefijo (`Sale` / `Out`). Las
-  "recientes", normales. Sin cuenta regresiva ni "no te lo pierdas" — la anti-feature
+- Tarjetas "próximas": carátula a `opacity-60` (opaca al pasar el ratón), pastilla
+  `Próximo` / `Upcoming` sobre la carátula y fecha con prefijo (`Sale` / `Out`). Las
+  "recientes", normales. Fecha con día y mes (`12 sept`), con año solo si no es el actual. Sin cuenta regresiva ni "no te lo pierdas" — la anti-feature
   "sin mecánicas de presión" sigue vigente.
-- Carátula cuadrada con hairline `ink-border` (→ `amber` en `group-hover`, como
-  `AlbumCard`) + título (display, `truncate`) + artista y fecha (mono `text-xs`).
+- Carátula cuadrada con anillo `ink-border` y sombra (→ `amber` en `group-hover`) + fecha
+  (mono `text-xs`) + título (display, `truncate`) + artista (mono `text-xs`).
 - Ubicación: debajo de "Actividad de la comunidad" / "Listas públicas". El descubrimiento
   **social** es la identidad; el calendario es contenido editorial secundario. Se muestra
   en ambos estados (anónimo y con sesión).
