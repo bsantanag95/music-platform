@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { ReactNode } from "react";
-import * as home from "@/services/home/home";
 import * as communityActivity from "@/services/activity/community-activity";
 import * as discovery from "@/services/discovery/discovery";
 import * as discoveryConfig from "@/lib/config/discovery";
@@ -24,7 +23,6 @@ vi.mock("@/i18n/navigation", () => ({
 
 vi.mock("@/services/home/home", () => ({
   listPublicLists: vi.fn().mockResolvedValue([]),
-  listRecentCoverArt: vi.fn().mockResolvedValue([]),
   listPopularComments: vi
     .fn()
     .mockResolvedValue({ artist: [], "release-group": [], recording: [] }),
@@ -73,12 +71,9 @@ describe("AnonymousHome", () => {
     expect(includesType(element, FeedPreview)).toBe(false);
   });
 
-  it("arma el muro del hero con las carátulas recientes y no consulta datos de usuario", async () => {
-    vi.mocked(home.listRecentCoverArt).mockResolvedValue(["https://cover/1.jpg"]);
-
+  it("el muro del hero es estático y no consulta datos de usuario", async () => {
     await AnonymousHome();
 
-    expect(home.listRecentCoverArt).toHaveBeenCalled();
     expect(communityActivity.listCommunityActivity).toHaveBeenCalledWith(null, 1, 6);
   });
 

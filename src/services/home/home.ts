@@ -349,25 +349,6 @@ export async function listMyRecentActivity(
   };
 }
 
-/**
- * Carátulas para el muro visual del hero anónimo de Inicio: miniaturas de
- * release-groups con arte disponible, más recientes primero. Solo lee
- * `release_group.cover_thumb_url` (thumbnail público de 250px, sin datos de
- * usuario), así que no requiere sesión ni filtra por visibilidad.
- */
-export async function listRecentCoverArt(limit = 24): Promise<string[]> {
-  const rows = await db
-    .select({ coverThumbUrl: releaseGroup.coverThumbUrl })
-    .from(releaseGroup)
-    .where(isNotNull(releaseGroup.coverThumbUrl))
-    .orderBy(desc(releaseGroup.createdAt))
-    .limit(limit);
-
-  return rows
-    .map((row) => row.coverThumbUrl)
-    .filter((url): url is string => Boolean(url));
-}
-
 export interface HomeRelease {
   id: string;
   title: string;

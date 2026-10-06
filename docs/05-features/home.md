@@ -166,8 +166,8 @@ visual, en la línea de Letterboxd/Musicboard, sin salir de "The Vinyl Listening
 - **Banda a sangre completa** (`AnonHero`, `src/components/home/AnonHero.tsx`): rompe el
   ancho de columna del `main` con `-mx-[calc(50vw-50%)] w-screen` (+ `overflow-x-clip` en el
   `main`), sin bordes ni esquinas.
-- **Muro de carátulas** (`HeroCoverWall`, `src/components/home/HeroCoverWall.tsx`): cuadrícula
-  de miniaturas reales, `opacity` baja, que se **difumina a transparente** hacia los bordes
+- **Muro de carátulas** (`HeroCoverWall`, `src/components/home/HeroCoverWall.tsx`): mosaico
+  estático de 32 portadas fijas (ver "Fuente de las carátulas del muro"), `opacity` baja, que se **difumina a transparente** hacia los bordes
   con una máscara alfa radial (`mask-image`) y un degradado `from-ink via-ink/55 to-ink` de
   legibilidad encima. Es decorativo: `aria-hidden`, `alt=""`.
 - **Un solo CTA "Comenzá"** que abre `GetStartedModal`
@@ -292,54 +292,33 @@ cómicos, etc.).
 - Al implementarse, `listPopularComments` cambia el `ORDER BY length(body)` + `mockLikeCount`
   por `ORDER BY like_count DESC` real; el resto del componente no cambia.
 
-### Fuente de las carátulas del muro — hoy
+### Fuente de las carátulas del muro — 32 fijas, un solo mosaico
 
-`HeroCoverWall` es **agnóstico a la fuente**: recibe `covers: string[]` (URLs) y las cicla
-sobre `TILE_COUNT` celdas con un paso coprimo (`(i * 7) % covers.length`) para que las
-repeticiones no queden pegadas. Hoy `src/app/[locale]/page.tsx` arma ese array así:
+El muro **no se resuelve en runtime**. Son 32 portadas elegidas a mano que dan identidad al
+sitio, listadas en `HERO_COVERS` (`src/lib/config/hero-covers.ts`: `mbid`, `title`, `artist`,
+en orden de lectura izquierda→derecha, arriba→abajo; el orden es parte del diseño).
 
-- `listRecentCoverArt()` (`src/services/home/home.ts`): `release_group.cover_thumb_url`
-  no nulo, `ORDER BY created_at DESC LIMIT 24`. Solo lee la miniatura pública de 250px, sin
-  datos de usuario — no requiere sesión ni filtra por visibilidad.
-- Unido (dedupe) con los `target.coverThumbUrl` de `listCommunityActivity`.
-
-El valor de `release_group.cover_thumb_url` lo resuelve `findOrResolveCover()`
-(`src/services/catalog/cover.ts`) con un `HEAD` a Cover Art Archive la primera vez que se
-abre cada álbum (patrón cover-only, migración 0003). Es decir: el muro muestra las carátulas
-que ya entraron a la base por uso real, más recientes primero.
-
-### Fuente de las carátulas del muro — implementación futura (24 curadas a mano)
-
-Pensado para cuando exista el **guardado definitivo de imágenes** (storage propio). No es
-trabajo de ahora. Lo que habría que tocar:
-
-1. **Fuente curada.** Encapsular la lógica de selección en una única función
-   `getHeroCovers()` en `src/services/home/home.ts` (curadas primero; `listRecentCoverArt()`
-   como fallback si están vacías; dedupe; cap en N) y que `page.tsx` solo llame a esa —
-   hoy el armado está inline en `page.tsx`. Sobre esa función, elegir origen:
-   - **Config estático**: `src/config/hero-covers.ts` con 24 URLs versionadas en git.
-     Cambiarlas requiere deploy.
-   - **Tabla editorial**: `hero_cover` (o `featured_media` genérica) con `image_url` +
-     `position`. Solo si un admin debe curarlas sin deploy — **depende del sistema de
-     roles/cuentas de plataforma que `product_philosophy.md` §7 deja sin resolver**, el
-     mismo bloqueo que las listas oficiales. Si ese sistema se implementa, la tabla sale
-     de ahí.
-   - **Lista destacada**: sacar las carátulas de los items de una `user_list` marcada como
-     editorial, cuando exista esa marca.
-2. **Hosting + `next.config.mjs`.** Si el storage definitivo sirve desde S3/R2/CDN propio,
-   agregar ese hostname a `images.remotePatterns` (hoy solo `coverartarchive.org` y
-   `*.archive.org`). Si se guardan en `public/`, rutas locales sin cambio de config.
-3. **`HeroCoverWall`.** Bajar `TILE_COUNT` a 24 (o múltiplo). Con 24 covers y 24 celdas,
-   `(i * 7) % 24` es una permutación (7 y 24 coprimos) → cada carátula aparece exactamente
-   una vez, barajada. Evaluar `priority` en las primeras imágenes por LCP.
-4. **Tests.** `src/app/[locale]/page.test.tsx` mockea hoy `listRecentCoverArt`; pasaría a
-   mockear `getHeroCovers` / la fuente curada.
-5. **Licencia — el bloqueo que no es de código.** Si las 24 son carátulas de álbum, siguen
-   siendo copyright de las disqueras: aplica la regla de `03-data/data-licensing.md` /
-   `04-risks.md` #6 (miniatura ≤250px, uso de identificación, nunca full-res). El storage
-   definitivo tiene que respetarla. Si en cambio son imágenes propias (arte comisionado,
-   fotos, texturas de vinilo genéricas), no hay restricción de licencia y queda como puro
-   tema de hosting + config.
+- **Un solo archivo.** `npx tsx --env-file=.env scripts/build-hero-wall.ts` baja el
+  `front-250` de cada una (`fetchCoverThumb`, misma fuente y tamaño que el espejo, ADR 0018),
+  las recorta cuadradas (224px, bajo el tope de 250) y las compone en una cuadrícula 8×4 →
+  `public/hero/wall.webp` (1792×896, versionado en git). Con `--placeholder` genera tonos
+  neutros sin red ni BD.
+- **Por qué mosaico y no 32 archivos.** Antes el hero hacía una consulta
+  (`listRecentCoverArt`, que bloqueaba el SSR) y hasta 60 requests de imagen por
+  `/_next/image`, cada una con la cadena CAA → archive.org en frío. Ahora: cero consultas, un
+  request, una decodificación, caché inmutable de `public/`. `HeroCoverWall` es un `<img>`
+  con `fetchPriority="high"` y `object-cover`; la máscara radial y el degradado de
+  legibilidad no cambian. El recorte por `object-cover` hace que en móvil se vea el centro
+  del mosaico.
+- **Licencia, aplicada en código.** El mosaico es una copia almacenada de carátulas, así que
+  rige la regla del espejo (ADR 0018): solo miniaturas ≤250px y retiro a pedido. El script
+  **rechaza** cualquier release-group con `cover_blocked_at`, aborta si falta o falla una
+  portada (nunca publica un mosaico a medias) y exige exactamente 32 MBID válidos y únicos.
+  Atender un retiro = quitar la entrada de `HERO_COVERS` y volver a correr el script.
+- `public/hero/` está excluido del matcher de `src/middleware.ts` (como `uploads`): sin eso el
+  middleware de i18n redirige `/hero/wall.webp` a `/es/hero/wall.webp` y la imagen no carga.
+- Cambiar el tamaño de la cuadrícula es tocar `HERO_WALL` (la comparten el script y el
+  componente) y regenerar.
 
 ## "Lanzamientos recientes" y "Próximos lanzamientos"
 
