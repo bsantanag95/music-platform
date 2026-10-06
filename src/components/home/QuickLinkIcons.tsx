@@ -101,7 +101,9 @@ export function SearchIcon({ className = "" }: IconProps) {
   );
 }
 
-export function UsersIcon({ className = "" }: IconProps) {
+// Recorridos: hitos en fila unidos por un trazo — el avance por la
+// discografía de un artista, disco a disco.
+export function JourneysIcon({ className = "" }: IconProps) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -113,10 +115,32 @@ export function UsersIcon({ className = "" }: IconProps) {
       aria-hidden="true"
       className={className}
     >
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      <circle cx="5" cy="12" r="2.5" />
+      <circle cx="19" cy="12" r="2.5" />
+      <line x1="7.5" y1="12" x2="9.5" y2="12" />
+      <line x1="14.5" y1="12" x2="16.5" y2="12" />
+      <circle cx="12" cy="12" r="1" />
+    </svg>
+  );
+}
+
+// Caminos: ruta sinuosa entre un origen y una meta — un trayecto entre
+// álbumes de artistas distintos.
+export function CaminosIcon({ className = "" }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+    >
+      <circle cx="6" cy="19" r="2.5" />
+      <path d="M8.5 19H16a3.5 3.5 0 0 0 0-7H8a3.5 3.5 0 0 1 0-7h7.5" />
+      <circle cx="18" cy="5" r="2.5" />
     </svg>
   );
 }

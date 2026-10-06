@@ -34,8 +34,8 @@ describe("QuickLinks", () => {
       "/me/favorites",
       "/me/lists",
       "/me/collection",
-      "/search",
-      "/users",
+      "/me/artist-journeys",
+      "/me/caminos",
     ]);
   });
 });

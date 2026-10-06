@@ -5,12 +5,12 @@ import {
   DiaryIcon,
   FavoritesIcon,
   ListsIcon,
-  SearchIcon,
-  UsersIcon,
+  JourneysIcon,
+  CaminosIcon,
 } from "@/components/home/QuickLinkIcons";
 
 // Accesos rápidos de usuario logueado en Inicio: diario, favoritos, listas,
-// colección y buscador. El resto de la navegación completa vive en el Header.
+// colección, recorridos y caminos. El resto de la navegación completa vive en el Header.
 // Vive dentro de WelcomePanel, por eso el grid asume una columna angosta.
 export async function QuickLinks() {
   const t = await getTranslations("common");
@@ -20,8 +20,8 @@ export async function QuickLinks() {
     { href: "/me/favorites" as const, label: t("favorites"), Icon: FavoritesIcon },
     { href: "/me/lists" as const, label: t("lists"), Icon: ListsIcon },
     { href: "/me/collection" as const, label: t("collection"), Icon: CollectionIcon },
-    { href: "/search" as const, label: t("search"), Icon: SearchIcon },
-    { href: "/users" as const, label: t("users"), Icon: UsersIcon },
+    { href: "/me/artist-journeys" as const, label: t("artistJourneys"), Icon: JourneysIcon },
+    { href: "/me/caminos" as const, label: t("caminos"), Icon: CaminosIcon },
   ];
 
   return (
@@ -30,9 +30,11 @@ export async function QuickLinks() {
         <Link
           key={href}
           href={href}
-          className="flex items-center gap-2 rounded-md border border-ink-border px-3 py-2 font-data text-sm text-paper transition-colors hover:border-amber hover:text-amber"
+          className="group flex min-h-11 items-center gap-2 rounded-md border border-ink-border bg-ink/40 py-1.5 pl-1.5 pr-2.5 font-data text-sm text-paper transition-[color,background-color,border-color] duration-150 hover:border-amber/60 hover:bg-ink hover:text-amber"
         >
-          <Icon className="size-4 shrink-0" />
+          <span className="grid size-7 shrink-0 place-items-center rounded-sm bg-ink-border/60 text-paper-muted transition-colors duration-150 group-hover:bg-amber/15 group-hover:text-amber">
+            <Icon className="size-4" />
+          </span>
           <span className="truncate">{label}</span>
         </Link>
       ))}

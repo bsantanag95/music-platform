@@ -92,8 +92,8 @@ Ver "Inicio con sesión — estructura" para la jerarquía completa y los bloque
   `HeaderSearch` en el Header, visible en todos los estados (ver
   `openspec/changes/add-header-search` para el origen del componente).
 - La búsqueda de usuarios es una superficie separada en `/users`: no se mezcla con el
-  buscador musical del Header. Inicio ofrece un acceso contextual a Usuarios tanto para
-  visitantes como para usuarios autenticados, y el Footer conserva el enlace permanente.
+  buscador musical del Header. Inicio ofrece un acceso contextual a Usuarios para
+  visitantes; el Footer conserva el enlace permanente para todos.
 
 ## Inicio con sesión — estructura (`redesign-home-authenticated`)
 
@@ -119,9 +119,10 @@ entró) seguido de los mismos bloques de descubrimiento. Este cambio cierra su j
    visible solo si el email del usuario no está verificado (`email_verified_at` nulo).
    Compacto, no bloqueante, con acción de reenvío. Desaparece cuando el email se verifica.
    Ver `docs/02-architecture/auth.md` sección 9.
-3. **Accesos rápidos** (`QuickLinks`): diario, favoritos, listas, colección, buscador y
-   usuarios. Se ubican justo debajo del saludo, antes del feed, para no quedar relegados
-   tras el contenido de lectura. Conservan los seis enlaces.
+3. **Accesos rápidos** (`QuickLinks`): diario, favoritos, listas, colección, recorridos
+   (`/me/artist-journeys`) y caminos (`/me/caminos`) — todos de la biblioteca propia; la
+   búsqueda ya vive en el Header. Se ubican junto al saludo, antes del feed, para no quedar
+   relegados tras el contenido de lectura. Conservan seis enlaces.
 4. **Feed de seguidos** (`FeedPreview`) como bloque principal, o **nudge de onboarding**
    (`OnboardingPrompt`) si no sigue a nadie. El nudge ahora también invita a registrar la
    primera escucha, en prosa (no un checklist con tildes). `FeedPreview` usa
