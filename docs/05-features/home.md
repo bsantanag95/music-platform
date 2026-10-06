@@ -231,9 +231,11 @@ no `page.tsx`.
   cuerpo del comentario o reseña con `line-clamp-2` y borde izquierdo (petróleo en la reseña).
   `<ul>` con `divide-y divide-ink-border`, sin tarjeta; el encabezado enlaza "Ver todo" a
   `/activity`.
-- `PublicLists` (`CompactListRow`): título de la lista (display) + `@autor · fecha
-  relativa` (mono), `divide-y`, **sin `DiscPlaceholder`** (el disco por ítem no aportaba
-  información).
+- `PublicLists` (`CompactListRow`): mini-mosaico 2×2 de hasta 4 carátulas de la lista
+  (`ListMosaic`, compartido con "Retoma una lista"; disco de respaldo si la lista no es de
+  álbumes o aún no tiene carátulas) + título (display) + `Tipo · N ítems` + `@autor` con la
+  fecha relativa a la derecha (mono), `divide-y`; el encabezado enlaza "Ver todas" a `/lists`.
+  Solo listas `standard`: un Camino público tiene su propio descubrimiento (`/caminos`).
 - `redesign-feed` eliminó de estos dos la rama no usada que renderizaba `FeedEntryCard`
   full-width y el prop `withCover`/`compact`; siempre son densos. `FeedPreview` y
   `RecentSelfActivity` migraron a `FeedActivityList`. `FeedEntryBody` se eliminó;

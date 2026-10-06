@@ -1,7 +1,6 @@
-import { AppImage } from "@/components/ui/AppImage";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { CoverThumb } from "@/components/catalog/CoverThumb";
+import { ListMosaic } from "@/components/home/ListMosaic";
 import type { HomeResumeList } from "@/services/home/home";
 
 // "Retoma una lista": acceso directo a la lista propia con actividad más
@@ -41,7 +40,7 @@ export async function ResumeList({ list }: { list: HomeResumeList | null }) {
         href={`/me/lists/${list.id}`}
         className="group -mx-3 flex items-center gap-4 rounded-lg border border-transparent p-3 transition-[background-color,border-color] duration-150 hover:border-ink-border hover:bg-ink-surface"
       >
-        <ListMosaic covers={list.coverThumbUrls} />
+        <ListMosaic covers={list.coverThumbUrls} className="size-16" />
         <span className="min-w-0 flex-1">
           <span className="block truncate font-display text-lg text-paper transition-colors group-hover:text-amber">
             {list.title}
@@ -75,31 +74,5 @@ export async function ResumeList({ list }: { list: HomeResumeList | null }) {
         </span>
       </Link>
     </section>
-  );
-}
-
-// Mosaico 2×2 de carátulas de los primeros ítems; si la lista no es de álbumes
-// (o aún no tiene carátulas resueltas) cae en un único disco de fallback.
-function ListMosaic({ covers }: { covers: string[] }) {
-  if (covers.length === 0) {
-    return <CoverThumb cover={null} label="" className="size-16 ring-1 ring-ink-border" />;
-  }
-
-  return (
-    <span
-      aria-hidden
-      className="grid size-16 shrink-0 grid-cols-2 grid-rows-2 gap-px overflow-hidden rounded shadow-md shadow-black/40 ring-1 ring-ink-border"
-    >
-      {[0, 1, 2, 3].map((i) => {
-        const cover = covers[i % covers.length];
-        return (
-          <span key={i} className="relative bg-ink">
-            {cover ? (
-              <AppImage src={cover} alt="" fill sizes="32px" className="object-cover" />
-            ) : null}
-          </span>
-        );
-      })}
-    </span>
   );
 }
