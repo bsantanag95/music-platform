@@ -103,7 +103,7 @@ confunde**:
 | **Personal** | ¿Qué hice yo? | diario, rastro reciente y "En rotación" del perfil |
 | **Social** | ¿Qué hizo cada persona que sigo, en orden? | listado cronológico de `/me/feed` |
 | **Relevante** | ¿En qué coincide mi red ahora? | panel de convergencia en `/me/feed` |
-| **Automática** | Derivada sin acción explícita | franja "También en tu red" al pie de `/me/feed` (tier 4) |
+| **Automática** | Derivada sin acción explícita | sin superficie propia desde `expand-feed-coverage`: la franja "También en tu red" se retiró y sus eventos viven en el listado cronológico |
 
 ### Seis separaciones que deben sostenerse en el modelo de datos y en la UI
 

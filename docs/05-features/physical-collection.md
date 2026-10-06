@@ -84,11 +84,16 @@ Señal prospectiva paralela ("quiero conseguir este álbum, no lo tengo"), en ta
 `wanted_entry` — no un flag en `collection_entry` — porque el grano difiere: una entrada de
 colección es una copia real con formato **obligatorio**; una entrada de deseo es una variante
 querida con formato **opcional** (`null` = "cualquier formato"). Mismo vocabulario cerrado de
-formato/atributos que la colección, y misma nota libre opcional (≤140 caracteres). A diferencia
-de la colección física, la wishlist **no tiene audiencia**: es privada del dueño, sin
-lectura por `username` ni superficie en el perfil — mismo criterio que Want to Listen
-(Pendiente). Su única exposición fuera del listado propio es el conteo anónimo "lo buscan"
-del álbum, con umbral (ver `01-domain/business-rules.md`). Tener un
+formato/atributos que la colección, y misma nota libre opcional (≤140 caracteres). Sin lectura
+por `username` ni superficie en el perfil. Desde `expand-feed-coverage` (2026-10-06, migración
+`0061`) cada entrada tiene **audiencia** (`private`/`followers`/`public`), que solo decide si su
+alta aparece en el **feed de seguidos** (`kind: "wanted"`): las entradas anteriores quedaron
+`private` (era la visibilidad que ya tenían) y las nuevas nacen con la audiencia por defecto del
+usuario o, sin preferencia, `followers` — igual que la colección, el alta no pregunta. La
+audiencia se ve en cada entrada (página de álbum y pestaña "Busco") y se edita desde el panel de
+edición de la pestaña "Busco". "Aplicar a lo existente" (`default-audience`) no toca la
+wishlist. Además, el conteo anónimo "lo buscan" del álbum, con umbral, cuenta todas las entradas
+con independencia de su audiencia (ver `01-domain/business-rules.md`). Tener un
 álbum en la colección y quererlo en la wishlist no son mutuamente excluyentes: ninguna operación
 bloquea ni deduplica contra la otra.
 
@@ -125,8 +130,8 @@ pestaña "Quiero". Detalle en `04-api/contracts.md`. Código de error propio:
 
 ### Fuera de alcance de la wishlist (v1)
 
-- Audiencia / visibilidad social y superficie en el perfil ajeno — incremento aditivo posterior
-  si el uso lo pide (columna `audience`, análoga a `collection_entry`).
+- Superficie en el perfil ajeno. (La audiencia por entrada llegó en `expand-feed-coverage`, solo
+  para el feed.)
 - Mover una entrada de la wishlist a la colección con un click ("ya la conseguí").
 - Contador social ("cuántas personas quieren este disco") y notificaciones de disponibilidad.
 - Paridad completa de vistas/filtros/agrupación con la pestaña "Tengo".
@@ -135,9 +140,9 @@ pestaña "Quiero". Detalle en `04-api/contracts.md`. Código de error propio:
 
 ### De la v1 (`add-physical-collection`) — todavía vigentes
 
-- **Aparición en el feed de actividad.** Se presume vía perfil y página de álbum. Sumar
-  `collection_entry` como fuente del feed es un incremento aditivo (nueva fuente en la unión)
-  sin migración, si el uso lo pide. No se modificó `activity-feed`.
+- ~~Aparición en el feed de actividad~~ — resuelto en `expand-feed-coverage`: cada alta con
+  audiencia `followers`/`public` es una entrada `kind: "collection"` del feed (con el formato,
+  sin la nota), que reemplazó a la franja de eventos ambiente.
 - **Modelar identidad de release** (sello, país, número de catálogo, barcode, bonus tracks
   estructurados, matching contra MusicBrainz). Es un proyecto de catálogo aparte; la nota
   libre cubre ese detalle como texto opaco.

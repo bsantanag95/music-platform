@@ -32,6 +32,7 @@ function entry(overrides: Partial<WantedEntry> = {}): WantedEntry {
     format: "vinyl",
     attributes: ["limited-edition"],
     note: "buscando la edición firmada",
+    audience: "followers",
     createdAt: "2026-02-01T00:00:00.000Z",
     updatedAt: "2026-02-01T00:00:00.000Z",
     album: {
@@ -124,6 +125,25 @@ describe("WantedShelf", () => {
       expect(mocks.updateWantedEntry).toHaveBeenCalledWith(
         only.id,
         expect.objectContaining({ format: "cd" }),
+      ),
+    );
+  });
+
+  it("muestra la audiencia de cada entrada y permite cambiarla al editar", async () => {
+    const only = entry({ audience: "followers" });
+    mocks.updateWantedEntry.mockResolvedValue({ ...only, audience: "private" });
+    const user = userEvent.setup();
+    renderShelf(response([only]));
+
+    expect(screen.getByText(/Seguidores/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Editar" }));
+    await user.click(screen.getByLabelText("Privado"));
+    await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+
+    await waitFor(() =>
+      expect(mocks.updateWantedEntry).toHaveBeenCalledWith(
+        only.id,
+        expect.objectContaining({ audience: "private" }),
       ),
     );
   });

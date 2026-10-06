@@ -4,12 +4,12 @@ import { appUser } from "@/db/schema";
 import { AUDIENCES, type Audience } from "./types";
 
 /** Tipos de contenido de biblioteca que nacen con una audiencia. */
-export type NewContentType = "favorite" | "diary" | "list" | "collection";
+export type NewContentType = "favorite" | "diary" | "list" | "collection" | "wanted";
 
 /**
  * Default de cada tipo cuando el usuario no tiene preferencia. No son
- * uniformes a propósito (favoritos `public`, listas y colección `followers`,
- * diario `private`): por eso la preferencia es opcional y `NULL` significa
+ * uniformes a propósito (favoritos `public`, listas, colección y wishlist
+ * `followers`, diario `private`): por eso la preferencia es opcional y `NULL` significa
  * "según el tipo" — un default global degradaría silenciosamente favoritos o
  * el diario. Spec default-audience, "Audiencia por defecto opcional del
  * contenido nuevo".
@@ -19,6 +19,9 @@ export const TYPE_DEFAULT_AUDIENCE: Readonly<Record<NewContentType, Audience>> =
   diary: "private",
   list: "followers",
   collection: "followers",
+  // Wishlist ("En tu búsqueda", openspec: expand-feed-coverage): simétrica a
+  // la colección. Las entradas anteriores a la migración 0061 quedaron `private`.
+  wanted: "followers",
 };
 
 function isAudience(value: unknown): value is Audience {

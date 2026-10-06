@@ -13,6 +13,8 @@ import type {
 } from "./wanted-types";
 import { WANTED_SORTS } from "./wanted-types";
 import { normalizeAttributes } from "./vocabulary";
+import { resolveNewContentAudience } from "@/services/social/default-audience";
+import type { Audience } from "@/services/social/types";
 import type { CollectionFormat, EditionAttribute } from "./vocabulary";
 
 export type { WantedEntry } from "./wanted-types";
@@ -25,6 +27,7 @@ interface WantedRow {
   format: string | null;
   attributes: string[];
   note: string | null;
+  audience: string;
   createdAt: Date;
   updatedAt: Date;
   releaseGroupId: string;
@@ -129,6 +132,7 @@ function serializeEntry(
     format: row.format as CollectionFormat | null,
     attributes: normalizeAttributes(row.attributes),
     note: row.note,
+    audience: row.audience as Audience,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     album: {
@@ -146,6 +150,7 @@ const entrySelection = {
   format: wantedEntry.format,
   attributes: wantedEntry.attributes,
   note: wantedEntry.note,
+  audience: wantedEntry.audience,
   createdAt: wantedEntry.createdAt,
   updatedAt: wantedEntry.updatedAt,
   releaseGroupId: wantedEntry.releaseGroupId,
@@ -168,17 +173,21 @@ function normalizeVariant(variant: NewWantedVariant): {
 /**
  * Agrega una o varias variantes deseadas para un álbum, en una sola
  * transacción: si alguna falla, no se crea ninguna. No es un toggle: cada
- * llamada crea entradas nuevas, sin deduplicar contra existentes.
+ * llamada crea entradas nuevas, sin deduplicar contra existentes. Una sola
+ * audiencia para todo el lote: la explícita o, sin ella, la audiencia por
+ * defecto del usuario / del tipo (spec default-audience).
  */
 export async function addWantedEntries(
   userId: string,
   releaseGroupId: string,
   variants: NewWantedVariant[],
+  audience?: Audience,
 ): Promise<WantedEntry[]> {
   if (variants.length === 0 || variants.length > MAX_BATCH) {
     throw new ApiError("VALIDATION_ERROR", 400, "El lote de deseos no es válido");
   }
   await assertAlbumExists(releaseGroupId);
+  const resolvedAudience = await resolveNewContentAudience(userId, "wanted", audience);
 
   const created = await db.transaction(async (tx) => {
     const ids: string[] = [];
@@ -192,6 +201,7 @@ export async function addWantedEntries(
           format: normalized.format,
           attributes: normalized.attributes,
           note: normalized.note,
+          audience: resolvedAudience,
         })
         .returning({ id: wantedEntry.id });
       if (!row) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo crear la entrada de deseo");
@@ -203,7 +213,7 @@ export async function addWantedEntries(
   return getOwnedEntries(created, userId);
 }
 
-/** Edita formato, atributos y/o nota de una entrada de deseo propia. `format: null` la vuelve a "cualquier formato". */
+/** Edita formato, atributos, nota y/o audiencia de una entrada de deseo propia. `format: null` la vuelve a "cualquier formato". */
 export async function updateWantedEntry(
   entryId: string,
   userId: string,
@@ -213,6 +223,7 @@ export async function updateWantedEntry(
   if (changes.format !== undefined) patch.format = changes.format;
   if (changes.attributes !== undefined) patch.attributes = normalizeAttributes(changes.attributes);
   if (changes.note !== undefined) patch.note = changes.note;
+  if (changes.audience !== undefined) patch.audience = changes.audience;
 
   const [updated] = await db
     .update(wantedEntry)

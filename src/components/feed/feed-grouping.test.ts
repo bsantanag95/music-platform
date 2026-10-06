@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { groupFeedRuns, type FeedEntryGroup, type FeedRotationPeak } from "./feed-grouping";
+import { groupFeedRuns, type FeedEntryGroup, type FeedOpinionRow, type FeedRotationPeak } from "./feed-grouping";
 import type { FeedEntry } from "@/lib/api/schemas";
 
 const ana = { id: "ana", username: "ana", displayName: "Ana" };
@@ -484,6 +484,82 @@ describe("groupFeedRuns", () => {
       );
       expect(rows[0]!.kind).toBe("rotation-peak");
       expect((rows[0] as FeedRotationPeak).author.id).toBe("beto");
+    });
+  });
+
+  describe("fusión de opinión (expand-feed-coverage)", () => {
+    const disco = { type: "release-group" as const, id: "rg-op", title: "Disco", artistName: null, coverThumbUrl: null };
+    const op = {
+      rating: (author = ana, at = "2026-08-10T00:00:03Z"): FeedEntry => ({
+        kind: "rating", id: "op-r", stars: "4.5", detailedScore: 86, createdAt: at, target: disco, author,
+      }),
+      review: (author = ana, at = "2026-08-10T00:00:02Z"): FeedEntry => ({
+        kind: "review", id: "op-rv", title: "Título", body: "Cuerpo", createdAt: at, target: disco, author,
+      }),
+      comment: (id = "op-c", at = "2026-08-10T00:00:01Z"): FeedEntry => ({
+        kind: "comment", id, body: "Comentario", createdAt: at, target: disco, author: ana,
+      }),
+    };
+
+    it("valoración, reseña y comentario contiguos del mismo objetivo se fusionan en una fila", () => {
+      const rows = groupFeedRuns([op.rating(), op.review(), op.comment()]);
+      expect(rows).toHaveLength(1);
+      const row = rows[0] as FeedOpinionRow;
+      expect(row.kind).toBe("opinion");
+      expect(row.rating?.id).toBe("op-r");
+      expect(row.review?.id).toBe("op-rv");
+      expect(row.comment?.id).toBe("op-c");
+      expect(row.createdAt).toBe("2026-08-10T00:00:03Z");
+    });
+
+    it("una valoración y una reseña bastan para fusionar", () => {
+      const rows = groupFeedRuns([op.review(), op.rating()]);
+      expect(rows.map((r) => r.kind)).toEqual(["opinion"]);
+    });
+
+    it("objetivos distintos no se fusionan", () => {
+      expect(groupFeedRuns([ratingAlbum(), comment()]).map((r) => r.kind)).toEqual(["rating", "comment"]);
+    });
+
+    it("otra persona entre medio impide la fusión", () => {
+      const rows = groupFeedRuns([op.rating(), comment(beto), op.review()]);
+      expect(rows.map((r) => r.kind)).toEqual(["rating", "comment", "review"]);
+    });
+
+    it("otro autor sobre el mismo objetivo no se fusiona", () => {
+      expect(groupFeedRuns([op.rating(ana), op.review(beto)]).map((r) => r.kind)).toEqual(["rating", "review"]);
+    });
+
+    it("un segundo comentario queda como fila propia; el contiguo a la valoración se fusiona", () => {
+      const rows = groupFeedRuns([op.comment("c-new", "2026-08-10T00:00:05Z"), op.comment("c-old", "2026-08-10T00:00:04Z"), op.rating()]);
+      expect(rows.map((r) => r.kind)).toEqual(["comment", "opinion"]);
+      expect((rows[1] as FeedOpinionRow).comment?.id).toBe("c-old");
+    });
+
+    it("la fila fusionada corta una corrida de valoraciones de canción", () => {
+      const rows = groupFeedRuns([ratingSong(), ratingSong(), op.rating(), op.review(), ratingSong()]);
+      expect(rows.map((r) => r.kind)).toEqual(["rating", "rating", "opinion", "rating"]);
+    });
+  });
+
+  describe("colección y wishlist (expand-feed-coverage)", () => {
+    function added(kind: "collection" | "wanted", author = ana): FeedEntry {
+      seq += 1;
+      const target = { type: "release-group" as const, id: `rg${seq}`, title: `Disco ${seq}`, artistName: null, coverThumbUrl: null };
+      return kind === "collection"
+        ? { kind, id: `co${seq}`, format: "vinyl", audience: "public", createdAt: iso(), target, author }
+        : { kind, id: `w${seq}`, format: null, audience: "public", createdAt: iso(), target, author };
+    }
+
+    it("3 altas de colección seguidas se pliegan en una fila", () => {
+      const rows = groupFeedRuns([added("collection"), added("collection"), added("collection")]);
+      expect(rows).toHaveLength(1);
+      expect((rows[0] as FeedEntryGroup).groupedKind).toBe("collection");
+    });
+
+    it("colección y wishlist no se mezclan en una misma corrida", () => {
+      const rows = groupFeedRuns([added("collection"), added("collection"), added("wanted"), added("wanted")]);
+      expect(rows.map((r) => r.kind)).toEqual(["collection", "collection", "wanted", "wanted"]);
     });
   });
 });

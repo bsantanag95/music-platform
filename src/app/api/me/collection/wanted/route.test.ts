@@ -22,6 +22,7 @@ const entry = {
   format: null,
   attributes: [],
   note: null,
+  audience: "followers",
   createdAt: "2026-02-01T00:00:00.000Z",
   updatedAt: "2026-02-01T00:00:00.000Z",
   album: { id: albumId, title: "DSOTM", coverThumbUrl: null, artistId: null, artistName: null },
@@ -47,7 +48,7 @@ describe("POST /api/me/collection/wanted", () => {
     );
     expect(res.status).toBe(201);
     expect(await res.json()).toEqual({ entries: [entry] });
-    expect(mocks.addWantedEntries).toHaveBeenCalledWith(user.id, albumId, [{}]);
+    expect(mocks.addWantedEntries).toHaveBeenCalledWith(user.id, albumId, [{}], undefined);
   });
 
   it("crea varias variantes en una sola operación", async () => {
@@ -70,7 +71,34 @@ describe("POST /api/me/collection/wanted", () => {
     expect(mocks.addWantedEntries).toHaveBeenCalledWith(user.id, albumId, [
       { format: "vinyl", attributes: ["deluxe-edition"] },
       { format: "cd", attributes: ["remaster"] },
-    ]);
+    ], undefined);
+  });
+
+  it("pasa la audiencia del lote al servicio", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.addWantedEntries.mockResolvedValue([entry]);
+    const res = await POST(
+      req("/api/me/collection/wanted", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ releaseGroupId: albumId, entries: [{}], audience: "public" }),
+      }),
+    );
+    expect(res.status).toBe(201);
+    expect(mocks.addWantedEntries).toHaveBeenCalledWith(user.id, albumId, [{}], "public");
+  });
+
+  it("rechaza una audiencia fuera del vocabulario con VALIDATION_ERROR", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    const res = await POST(
+      req("/api/me/collection/wanted", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ releaseGroupId: albumId, entries: [{}], audience: "everyone" }),
+      }),
+    );
+    expect(res.status).toBe(400);
+    expect(mocks.addWantedEntries).not.toHaveBeenCalled();
   });
 
   it("rechaza un lote vacío con VALIDATION_ERROR", async () => {

@@ -1705,67 +1705,78 @@ vacía NO revela si el usuario tiene entradas.
 **200 OK:** `{ entries: [ListenEntry], page, pageSize, hasNext }`. **404** con `USER_NOT_FOUND` si
 el `username` no existe. **400** con `VALIDATION_ERROR` si la paginación es inválida.
 
-### `GET /api/me/feed?page=&pageSize=`
+### `GET /api/me/feed?page=&pageSize=&kind=&authorId=&q=`
 
-Feed de actividad v1: escuchas del diario, favoritos y eventos de listas (creación o
-actualización de metadatos) de los usuarios seguidos (relación `accepted`) que sean visibles para
-el lector. Se calcula bajo demanda uniendo las tres fuentes, ordenado por `createdAt` descendente
-con desempate por fuente e id. Requiere sesión.
+Feed de actividad de los usuarios seguidos (relación `accepted`) que sean visibles para el lector:
+escuchas del diario, favoritos, eventos de listas, ratings vigentes, comentarios, reseñas, seguir a
+un usuario, seguir a un artista y —desde `expand-feed-coverage`— altas de colección física, altas
+de wishlist ("En tu búsqueda") y Caminos creados o completados. Se calcula bajo demanda uniendo las
+fuentes, ordenado por `createdAt` descendente. Requiere sesión. Detalle de cada fuente y de sus
+reglas de visibilidad en `05-features/activity-feed.md`.
 
-`author` de cada entrada incluye `avatarUrl: string | null` (campo aditivo de `connect-avatar-upload`): la foto
-de perfil ya resuelta, o `null` si el autor no tiene y el cliente dibuja la inicial.
+**Filtros opcionales y combinables:** `kind` ∈ `listen · favorite · list · rating · comment ·
+review · collection · wanted · camino` (`follow` y `follow-artist` no son filtrables);
+`authorId` (UUID de un seguido aceptado); `q` (coincidencia parcial sobre el título del objetivo y
+el artista acreditado; para listas y Caminos, sobre su título).
 
-**200 OK:** `{ entries: [FeedEntry], page, pageSize, hasNext }` donde `FeedEntry` es una unión
-discriminada por `kind: "listen" | "favorite" | "list"`. **401** con `AUTH_REQUIRED` sin sesión.
-**400** con `VALIDATION_ERROR` si la paginación es inválida.
-
-### Forma de `entry`
-
-```json
-{
-  "id": "uuid",
-  "listenContext": "first_listen | relisten | rediscovery",
-  "body": "string | null",
-  "reaction": "liked | loved | obsessed | neutral | disliked | null",
-  "audience": "private | followers | public",
-  "createdAt": "ISO 8601",
-  "target": {
-    "type": "artist | release-group | recording",
-    "id": "uuid",
-    "title": "string",
-    "subtitle": "string | null",
-    "artistName": "string | null (opcional)",
-    "coverThumbUrl": "string | null"
-  }
-}
-```
-
-`reaction: null` (ausencia de dato) es distinto de `reaction: "neutral"` (elección explícita); los
-textos de cada reacción viven en i18n, no en la API.
-
-`artistName` (campo aditivo de `redesign-feed`): el nombre del artista principal cuando el objetivo
-es un álbum o una canción; `null` para objetivos de tipo artista. Presente también en el `target`
-de las entradas de `kind: "rating"` y `"comment"`.
+**200 OK:** `{ entries: [FeedEntry], page, pageSize, hasNext }`. **401** con `AUTH_REQUIRED` sin
+sesión. **400** con `VALIDATION_ERROR` si la paginación es inválida, `kind` no pertenece al enum o
+`authorId` no es un seguido aceptado.
 
 ### Forma de `FeedEntry`
 
-Unión discriminada por `kind`. Las tres variantes incluyen `author: { id, username, displayName }`:
+Unión discriminada por `kind`. Todas las variantes incluyen `id`, `createdAt` (ISO 8601) y
+`author: { id, username, displayName, avatarUrl }` (`avatarUrl`, aditivo de
+`connect-avatar-upload`: la foto ya resuelta o `null`). El `target` de catálogo es
+`{ type: "artist" | "release-group" | "recording", id, title, artistName, artistId, coverThumbUrl }`
+(`artistName`/`artistId`: artista principal acreditado de un álbum o canción, `null` para un
+artista; `albumId`/`albumTitle` opcionales en escucha, favorito y valoración de canción).
 
-- **`kind: "listen"`**: los campos de `entry` más `author`.
-- **`kind: "favorite"`**: `{ kind, id, targetType, audience, createdAt, target: { id, title, artistName, coverThumbUrl }, author }`.
-- **`kind: "list"`**: `{ kind, id, event: "created" | "updated", audience, createdAt, list: { id, title, entityType }, author }`.
+- **`listen`**: `{ listenContext, body, reaction, audience, target: { …, subtitle } }`.
+  `reaction: null` (sin dato) es distinto de `"neutral"`.
+- **`favorite`**: `{ targetType, audience, target: { id, title, artistName, artistId, coverThumbUrl } }`.
+- **`list`**: `{ event: "created" | "updated", audience, list: { id, title, entityType } }`.
+- **`rating`**: `{ stars, detailedScore, target }` — `detailedScore` (1–100 o `null`) se **muestra**
+  en el feed desde `expand-feed-coverage`.
+- **`comment`**: `{ body, target }`.
+- **`review`**: `{ title, body, target }` (fecha = última edición).
+- **`follow`**: `{ followedUser: { id, username, displayName } }`.
+- **`follow-artist`**: `{ artist: { id, name } }`.
+- **`collection`** (`expand-feed-coverage`): `{ format: "vinyl" | "cd" | "cassette" | "other",
+  audience, target }` — `target` siempre un álbum; sin la nota.
+- **`wanted`** (`expand-feed-coverage`): igual que `collection` con `format` nullable (`null` =
+  "cualquier formato").
+- **`camino`** (`expand-feed-coverage`): `{ event: "created" | "completed", audience,
+  camino: { id, title, albumCount } }`. `id` es el del Camino en ambos eventos (un mismo Camino
+  puede aparecer dos veces en una página). El completado se deriva en lectura.
 
 ```json
 {
-  "kind": "favorite",
+  "kind": "collection",
   "id": "uuid",
-  "targetType": "artist | release-group | recording",
-  "audience": "private | followers | public",
+  "format": "vinyl",
+  "audience": "followers",
   "createdAt": "ISO 8601",
-  "target": { "id": "uuid", "title": "string", "coverThumbUrl": "string | null" },
-  "author": { "id": "uuid", "username": "string", "displayName": "string | null" }
+  "target": {
+    "type": "release-group",
+    "id": "uuid",
+    "title": "string",
+    "artistName": "string | null",
+    "artistId": "uuid | null",
+    "coverThumbUrl": "string | null"
+  },
+  "author": { "id": "uuid", "username": "string", "displayName": "string | null", "avatarUrl": "string | null" }
 }
 ```
+
+La fusión de valoración + reseña + comentario contiguos en una sola fila es solo de presentación
+(`groupFeedRuns`): la API sigue devolviendo una entrada por fuente.
+
+### `GET /api/me/recent-activity?page=&pageSize=`
+
+"Tu rastro reciente" de Inicio: la actividad del propio usuario, sin filtro de audiencia. Misma
+paginación y forma que el feed, con los `kind` `listen · rating · comment · review · follow ·
+follow-artist · collection · wanted · camino` (sin favoritos ni listas).
 
 ## Ratings y comentarios
 
@@ -1833,8 +1844,7 @@ físicamente la reseña propia y devuelve `204`; **no toca el `rating`** del aut
 { code: "REVIEW_NOT_FOUND" }` si no existe (o el id no es UUID); `403 { code: "PERMISSION_DENIED" }`
 si es de otro usuario.
 
-**Feed:** las reseñas **no** entran todavía en `GET /api/me/feed` — la integración es un cambio
-posterior (Fase 2 de `redefine-content-hierarchy`).
+**Feed:** las reseñas entran en `GET /api/me/feed` como `kind: "review"` (`rework-feed-tiers`).
 
 ## Favoritos (Fase 5.5, cambio `add-favorites-and-lists`)
 
@@ -2270,21 +2280,26 @@ mismos parámetros opcionales que la lectura propia.
 
 Señal prospectiva ("quiero conseguir este álbum"), independiente de la colección física
 (`collection_entry`): tener una entrada en una no impide tener el álbum en la otra, y viceversa.
-A diferencia de `collection_entry`, `format` es **opcional** (`null` = "cualquier formato") y no
-hay `audience` — la wishlist es privada del dueño, sin lectura por `username`. Mismo vocabulario
+A diferencia de `collection_entry`, `format` es **opcional** (`null` = "cualquier formato"). Sin
+lectura por `username`; desde `expand-feed-coverage` (migración `0061`) cada entrada tiene
+`audience` (`private` · `followers` · `public`), que solo decide si su alta aparece en el feed de
+seguidos (`GET /api/me/feed`, `kind: "wanted"`). Las entradas anteriores a `0061` quedaron
+`private`. Mismo vocabulario
 cerrado de `format`/`attributes` que la colección física. **No es un toggle idempotente:** `POST`
 siempre crea entradas nuevas, y se permiten varias entradas por álbum sin deduplicar.
 
-Forma de `entry`: `{ id, format, attributes: [...], note, createdAt, updatedAt,
+Forma de `entry`: `{ id, format, attributes: [...], note, audience, createdAt, updatedAt,
 album: { id, title, coverThumbUrl, artistId, artistName } }`.
 
 ### `POST /api/me/collection/wanted`
 
 Crea una o varias entradas de deseo para un mismo álbum en una sola operación (transacción
-atómica). **Body:** `{ releaseGroupId, entries: [{ format?, attributes?, note? }] (1..10) }`.
+atómica). **Body:** `{ releaseGroupId, entries: [{ format?, attributes?, note? }] (1..10),
+audience? }` — una audiencia para todo el lote; sin ella, la audiencia por defecto del usuario o
+`followers` (`default-audience`).
 **201 OK:** `{ entries: [...] }`. **400** con `VALIDATION_ERROR` si el lote está vacío, supera 10
-variantes, o alguna variante tiene un `format`/`attribute` fuera del vocabulario o una `note` de
-más de 140 caracteres (ninguna entrada del lote se crea). **404** con `ALBUM_NOT_FOUND` si el
+variantes, `audience` no es válida, o alguna variante tiene un `format`/`attribute` fuera del
+vocabulario o una `note` de más de 140 caracteres (ninguna entrada del lote se crea). **404** con `ALBUM_NOT_FOUND` si el
 álbum no existe.
 
 ### `GET /api/me/collection/wanted?page=&pageSize=&q=&sort=`
@@ -2296,10 +2311,10 @@ el orden no son válidos.
 
 ### `PATCH /api/me/collection/wanted/{entryId}`
 
-Modifica `format`, `attributes` o `note` de una entrada de deseo propia. Al menos un campo
+Modifica `format`, `attributes`, `note` o `audience` de una entrada de deseo propia. Al menos un campo
 obligatorio. `format: null` vuelve la entrada a "cualquier formato"; `note: null` limpia la nota.
 
-**Body:** `{ format?, attributes?, note? }`. **200 OK:** `{ entry }`. **404** con
+**Body:** `{ format?, attributes?, note?, audience? }`. **200 OK:** `{ entry }`. **404** con
 `WANTED_ENTRY_NOT_FOUND` si no existe o no es del usuario.
 
 ### `DELETE /api/me/collection/wanted/{entryId}`

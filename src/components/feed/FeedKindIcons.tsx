@@ -62,6 +62,37 @@ export function FollowIcon() {
   );
 }
 
+// Disco con su centro: una copia física sumada a la colección.
+export function CollectionIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="2.5" />
+    </svg>
+  );
+}
+
+// Lupa: un disco "en tu búsqueda".
+export function WantedIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <circle cx="10.5" cy="10.5" r="6.5" />
+      <line x1="15.5" y1="15.5" x2="20" y2="20" />
+    </svg>
+  );
+}
+
+// Recorrido con hitos: un Camino creado o completado.
+export function CaminoIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="6" cy="18" r="2" />
+      <circle cx="18" cy="6" r="2" />
+      <path d="M8 18h6a4 4 0 0 0 0-8h-4a4 4 0 0 1 0-8h6" />
+    </svg>
+  );
+}
+
 export const FEED_KIND_ICONS: Partial<Record<FeedEntry["kind"], ReactNode>> = {
   listen: <ListenIcon />,
   favorite: <FavoriteIcon />,
@@ -73,4 +104,8 @@ export const FEED_KIND_ICONS: Partial<Record<FeedEntry["kind"], ReactNode>> = {
   // distinta solo en el objetivo y el verbo.
   follow: <FollowIcon />,
   "follow-artist": <FollowIcon />,
+  // openspec: expand-feed-coverage.
+  collection: <CollectionIcon />,
+  wanted: <WantedIcon />,
+  camino: <CaminoIcon />,
 };
