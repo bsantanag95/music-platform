@@ -485,6 +485,7 @@ export interface PopularComment {
     coverThumbUrl: string | null;
   };
   stars: string | null; // valoración del autor sobre el target, si existe
+  detailedScore: number | null; // puntaje 1–100 de esa valoración, si lo puso
 }
 
 export type PopularCommentsByType = Record<
@@ -532,6 +533,7 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
         targetId: comment.artistId,
         title: artist.name,
         stars: rating.stars,
+        detailedScore: rating.detailedScore,
       })
       .from(comment)
       .innerJoin(appUser, eq(comment.userId, appUser.id))
@@ -554,6 +556,7 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
         title: releaseGroup.title,
         cover: releaseGroup.coverThumbUrl,
         stars: rating.stars,
+        detailedScore: rating.detailedScore,
       })
       .from(comment)
       .innerJoin(appUser, eq(comment.userId, appUser.id))
@@ -578,6 +581,7 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
         targetId: comment.recordingId,
         title: recording.title,
         stars: rating.stars,
+        detailedScore: rating.detailedScore,
       })
       .from(comment)
       .innerJoin(appUser, eq(comment.userId, appUser.id))
@@ -601,6 +605,7 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
       title: string | null;
       cover?: string | null;
       stars: string | null;
+      detailedScore: number | null;
     }[],
     type: "artist" | "release-group" | "recording",
   ): PopularComment[] =>
@@ -618,6 +623,7 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
           coverThumbUrl: row.cover ?? null,
         },
         stars: row.stars,
+        detailedScore: row.detailedScore,
       }))
       .sort((a, b) => b.likeCount - a.likeCount)
       .slice(0, perType);

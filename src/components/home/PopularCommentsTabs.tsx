@@ -50,7 +50,14 @@ export function PopularCommentsTabs({
 
   return (
     <div className="flex flex-col gap-4">
-      <div role="tablist" aria-label={tablistLabel} className="flex flex-wrap gap-2" onKeyDown={onKeyDown}>
+      {/* Control segmentado: una sola pieza con la opción activa rellena, en vez
+          de tres botones sueltos que se leían como filtros independientes. */}
+      <div
+        role="tablist"
+        aria-label={tablistLabel}
+        className="inline-flex w-fit gap-1 rounded-md border border-ink-border bg-ink-surface p-1"
+        onKeyDown={onKeyDown}
+      >
         {TAB_ORDER.map((key) => {
           const selected = key === active;
           return (
@@ -63,10 +70,10 @@ export function PopularCommentsTabs({
               aria-controls={`${baseId}-panel-${key}`}
               tabIndex={selected ? 0 : -1}
               onClick={() => setActive(key)}
-              className={`rounded border px-3 py-1.5 font-data text-xs transition-colors ${
+              className={`rounded px-3 py-1.5 font-data text-xs transition-colors duration-150 ${
                 selected
-                  ? "border-amber text-paper"
-                  : "border-ink-border text-paper-muted hover:text-paper"
+                  ? "bg-ink text-amber shadow-sm shadow-black/40"
+                  : "text-paper-muted hover:text-paper"
               }`}
             >
               {tabLabels[key]}
@@ -96,36 +103,62 @@ export function PopularCommentsTabs({
 function CommentRow({ comment, likeWord }: { comment: PopularComment; likeWord: string }) {
   const locale = useLocale();
   const author = comment.authorDisplayName ?? `@${comment.authorUsername}`;
+  // Forma compacta `★ 86/100` con puntaje detallado, `★ 4,5` sin él (rating-display).
+  const score =
+    comment.stars == null
+      ? null
+      : comment.detailedScore != null
+        ? `${comment.detailedScore}/100`
+        : formatStars(Number(comment.stars), locale);
 
   return (
     <li className="flex gap-3 py-4 first:pt-0 last:pb-0">
       {/* Decorativa: el título del target va al lado como texto. */}
-      <CoverThumb cover={comment.target.coverThumbUrl} label="" className="size-11" />
+      <CoverThumb
+        cover={comment.target.coverThumbUrl}
+        label=""
+        className="size-12 shadow-sm shadow-black/40 ring-1 ring-ink-border"
+      />
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
           <Link
             href={targetHref(comment.target.type, comment.target.id, comment.target.title)}
-            className="truncate font-display text-sm text-paper transition-colors hover:text-amber"
+            className="truncate font-display text-base text-paper transition-colors hover:text-amber"
           >
             {comment.target.title}
           </Link>
           <span
-            className="shrink-0 font-data text-xs text-paper-muted"
+            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-ink-border px-2 py-0.5 font-data text-xs text-paper-muted"
             aria-label={`${comment.likeCount} ${likeWord}`}
           >
-            ♡ {comment.likeCount}
+            <span aria-hidden="true">♡</span>
+            <span aria-hidden="true" className="text-paper">
+              {comment.likeCount}
+            </span>
           </span>
         </div>
-        <div className="flex flex-wrap items-baseline gap-x-2 font-data text-xs text-paper-muted">
+        {/* El comentario es el protagonista del bloque: va en tono principal,
+            como cita con borde, y el autor lo firma debajo. */}
+        <p className="mt-1.5 line-clamp-3 border-l-2 border-ink-border pl-3 font-body text-sm text-paper">
+          {comment.body}
+        </p>
+        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-1.5 pl-3 font-data text-xs text-paper-muted">
+          <span aria-hidden="true">—</span>
           <Link
             href={`/users/${encodeURIComponent(comment.authorUsername)}`}
-            className="transition-colors hover:text-paper"
+            className="transition-colors hover:text-amber"
           >
             {author}
           </Link>
-          {comment.stars != null && <span>★ {formatStars(Number(comment.stars), locale)}</span>}
+          {score != null ? (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>
+                <span className="text-amber">★</span> <span className="font-medium text-paper">{score}</span>
+              </span>
+            </>
+          ) : null}
         </div>
-        <p className="mt-1 line-clamp-3 font-body text-sm text-paper-muted">{comment.body}</p>
       </div>
     </li>
   );
