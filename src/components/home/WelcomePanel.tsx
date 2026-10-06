@@ -46,17 +46,17 @@ export async function WelcomePanel({ name, username, lastActivity, now = new Dat
       />
 
       <div className="relative flex min-w-0 flex-col gap-4">
-        <p className="text-balance font-display text-2xl leading-tight tracking-tight text-paper sm:text-[1.75rem]">
+        <p className="flex min-w-0 items-baseline whitespace-nowrap font-display text-xl leading-tight tracking-tight text-paper sm:text-2xl">
           <Greeting
             initialKey={greetingKey(now)}
             morning={tHome("greetingMorning")}
             afternoon={tHome("greetingAfternoon")}
             evening={tHome("greetingEvening")}
           />
-          {", "}
+          <span className="mr-[0.3em]">,</span>
           <Link
             href={`/users/${encodeURIComponent(username)}`}
-            className="rounded-sm text-amber underline decoration-amber/30 decoration-1 underline-offset-[6px] transition-colors hover:text-amber-hover hover:decoration-amber-hover"
+            className="min-w-0 truncate rounded-sm text-amber underline decoration-amber/30 decoration-1 underline-offset-[6px] transition-colors hover:text-amber-hover hover:decoration-amber-hover"
           >
             {name}
           </Link>

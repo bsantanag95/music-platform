@@ -93,7 +93,8 @@ Ver "Inicio con sesión — estructura" para la jerarquía completa y los bloque
   `openspec/changes/add-header-search` para el origen del componente).
 - La búsqueda de usuarios es una superficie separada en `/users`: no se mezcla con el
   buscador musical del Header. Inicio ofrece un acceso contextual a Usuarios para
-  visitantes; el Footer conserva el enlace permanente para todos.
+  visitantes; con sesión, se llega eligiendo el tipo "Usuarios" en el buscador por ámbito, y el
+  Footer conserva el enlace permanente para todos.
 
 ## Inicio con sesión — estructura (`redesign-home-authenticated`)
 
