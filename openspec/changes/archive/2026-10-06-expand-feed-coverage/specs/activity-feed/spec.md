@@ -333,7 +333,9 @@ Las listas ocultas por moderación NO SHALL generar eventos de lista.
 - **WHEN** una lista de un seguido queda oculta por moderación
 - **THEN** su evento de lista deja de aparecer en el feed
 
-### Requirement: Jerarquía de presentación del feed
+## ADDED Requirements
+
+### Requirement: Presentación del feed por tiers de intención
 
 La presentación de una lista vertical cronológica de entradas de feed SHALL renderizar
 cada entrada según su **tier de intención**, no con un formato único. Esta presentación
@@ -659,7 +661,6 @@ objetivo musical SHALL seguir disponible.
 - **THEN** el feed muestra una fila con el glifo de Camino, el verbo "completó un Camino" y
   el título del Camino enlazado a su página de lectura
 
-## ADDED Requirements
 
 ### Requirement: Fusión de opinión en el feed
 
@@ -704,3 +705,12 @@ quedan separadas.
 #### Scenario: La fusión no altera el filtro por tipo
 - **WHEN** el lector filtra su feed por `kind=rating`
 - **THEN** solo ve valoraciones, sin filas fusionadas
+
+## REMOVED Requirements
+
+### Requirement: Jerarquía de presentación del feed
+**Reason**: Dos de sus escenarios dejan de ser ciertos ("Los eventos ambiente (tier 4) no
+aparecen en el feed en esta versión" y "El feed no muestra el puntaje detallado"): la colección
+entra al feed como tier 3 y el feed muestra el puntaje detallado.
+**Migration**: Reemplazado por "Presentación del feed por tiers de intención", con el mismo contenido actualizado (tiers,
+anatomía de fila, rating con puntaje, colección y wishlist en tier 3, eventos de Camino).
