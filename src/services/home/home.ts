@@ -475,7 +475,6 @@ export async function listHomeReleases(limit = 10): Promise<HomeRelease[]> {
 export interface PopularComment {
   id: string;
   body: string;
-  likeCount: number; // MAQUETA — ver listPopularComments
   authorUsername: string;
   authorDisplayName: string | null;
   target: {
@@ -493,28 +492,16 @@ export type PopularCommentsByType = Record<
   PopularComment[]
 >;
 
-// MAQUETA: cantidad de likes por comentario. Determinística a partir del id
-// para que sea estable entre renders. El mecanismo real de likes en
-// comentarios (tabla, interacción, endpoint) es de un sprint futuro — ver
-// docs/05-features/home.md, "Comentarios populares".
-function mockLikeCount(id: string): number {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = (Math.imul(hash, 31) + id.charCodeAt(i)) | 0;
-  }
-  return 4 + (Math.abs(hash) % 56); // 4..59
-}
-
 /**
  * "Comentarios populares" de Inicio, agrupados por tipo de entidad (artista /
  * álbum / canción) para el control segmentado.
  *
- * MAQUETA: los comentarios no tienen mecanismo de likes todavía, así que el
- * ranking se arma con un proxy —comentarios más largos, "escritura más
- * sustancial"— y a cada uno se le asigna un `likeCount` sintético estable, que
- * después define el orden mostrado. La versión real (tabla `comment_like`
- * anónima, decisión de gamificación, hilos de respuestas) es de un sprint
- * futuro — ver docs/05-features/home.md, "Comentarios populares".
+ * Los comentarios no tienen mecanismo de likes todavía, así que el ranking es
+ * un proxy —comentarios más largos, "escritura más sustancial"— y no se
+ * muestra ninguna cifra: el contador sintético que había antes (`likeCount`
+ * derivado del id) se retiró para no presentar likes inventados como reales.
+ * Los likes reales (tabla, interacción, endpoint, ranking) son un cambio
+ * aparte — ver docs/05-features/home.md, "Comentarios populares".
  *
  * Filtra por perfil público del autor. No maneja bloqueos (la versión real sí
  * debería, como `listCommunityActivity`).
@@ -613,7 +600,6 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
       .map((row) => ({
         id: row.id,
         body: row.body,
-        likeCount: mockLikeCount(row.id),
         authorUsername: row.authorUsername ?? "",
         authorDisplayName: row.authorDisplayName,
         target: {
@@ -625,7 +611,6 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
         stars: row.stars,
         detailedScore: row.detailedScore,
       }))
-      .sort((a, b) => b.likeCount - a.likeCount)
       .slice(0, perType);
 
   return {

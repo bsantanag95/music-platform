@@ -19,13 +19,11 @@ export function PopularCommentsTabs({
   comments,
   tablistLabel,
   tabLabels,
-  likeWord,
   emptyText,
 }: {
   comments: PopularCommentsByType;
   tablistLabel: string;
   tabLabels: Record<TabKey, string>;
-  likeWord: string;
   emptyText: string;
 }) {
   const baseId = useId();
@@ -92,7 +90,7 @@ export function PopularCommentsTabs({
           <li className="py-4 font-body text-sm text-paper-muted">{emptyText}</li>
         ) : (
           rows.map((comment) => (
-            <CommentRow key={comment.id} comment={comment} likeWord={likeWord} />
+            <CommentRow key={comment.id} comment={comment} />
           ))
         )}
       </ul>
@@ -100,7 +98,7 @@ export function PopularCommentsTabs({
   );
 }
 
-function CommentRow({ comment, likeWord }: { comment: PopularComment; likeWord: string }) {
+function CommentRow({ comment }: { comment: PopularComment }) {
   const locale = useLocale();
   const author = comment.authorDisplayName ?? `@${comment.authorUsername}`;
   // Forma compacta `★ 86/100` con puntaje detallado, `★ 4,5` sin él (rating-display).
@@ -120,22 +118,13 @@ function CommentRow({ comment, likeWord }: { comment: PopularComment; likeWord: 
         className="size-12 shadow-sm shadow-black/40 ring-1 ring-ink-border"
       />
       <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
           <Link
             href={targetHref(comment.target.type, comment.target.id, comment.target.title)}
             className="truncate font-display text-base text-paper transition-colors hover:text-amber"
           >
             {comment.target.title}
           </Link>
-          <span
-            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-ink-border px-2 py-0.5 font-data text-xs text-paper-muted"
-            aria-label={`${comment.likeCount} ${likeWord}`}
-          >
-            <span aria-hidden="true">♡</span>
-            <span aria-hidden="true" className="text-paper">
-              {comment.likeCount}
-            </span>
-          </span>
         </div>
         {/* El comentario es el protagonista del bloque: va en tono principal,
             como cita con borde, y el autor lo firma debajo. */}

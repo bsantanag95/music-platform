@@ -251,26 +251,28 @@ no `page.tsx`.
 ### "Comentarios populares" — apartado con control segmentado
 
 Distinto de "Actividad de la comunidad" (cronológica, mezcla ratings + comentarios). Acá son
-**solo comentarios, rankeados, con más contexto** (likes, autor, target, valoración), en un
+**solo comentarios, rankeados, con más contexto** (autor, target, valoración), en un
 **solo espacio con control segmentado** por tipo de entidad — no tres secciones apiladas.
 Alinea con el pilar §4 de `product_philosophy.md` ("las reseñas son contenido en sí mismo").
 
-**Estado:** diseño/layout implementado con **ranking y likes de maqueta**. La feature real
-(likes en comentarios) es de un sprint futuro — ver abajo.
+**Estado:** diseño/layout implementado con **ranking proxy y sin cifra de likes**. El contador
+`♡ N` sintético (derivado del id) se retiró el 2026-10-06 para no mostrar likes inventados
+como reales; la feature real (likes en comentarios) es un cambio aparte — ver abajo.
 
 - `PopularComments` (server, resuelve i18n) → `PopularCommentsTabs`
   (`src/components/home/PopularCommentsTabs.tsx`, client). ARIA tabs: `role="tablist"` /
   `tab` / `tabpanel`, `aria-selected`, roving `tabIndex`, flechas ←/→ para cambiar.
 - Pestañas `Artistas · Álbumes · Canciones` (`TAB_ORDER`). Se muestran las tres siempre;
   la activa arranca en la primera con contenido y una pestaña vacía cae en su empty state.
-  Activa: `border-amber text-paper` (selección = ámbar, dentro de la Regla de Rareza).
-- Fila: `CoverThumb` (disco en las pestañas de artista/canción — no hay foto/carátula),
-  título del target (display, link) + `♡ N` en mono, `@autor · ★N` en mono, cuerpo con
-  `line-clamp-3`. Ubicación: junto a "Actividad de la comunidad".
+  Control segmentado (una pieza `bg-ink-surface` con borde); la activa va rellena `bg-ink`
+  con texto ámbar (selección = ámbar, dentro de la Regla de Rareza).
+- Fila: `CoverThumb` 48px (disco en las pestañas de artista/canción — no hay foto/carátula),
+  título del target (display, link), el comentario como cita con borde izquierdo en tono
+  principal (`line-clamp-3`) y debajo la firma `— @autor · ★ 86/100` (o `★ 4,5` sin puntaje
+  detallado) en mono.
 - **Servicio `listPopularComments()`** (`src/services/home/home.ts`): tres consultas (una por
-  tipo), pool por `length(body) DESC` como proxy de "escritura sustancial", luego `likeCount`
-  sintético estable (`mockLikeCount(id)`) que define el orden mostrado. La valoración es real
-  (`rating` del autor sobre el mismo target, o `null`). Filtra por perfil público; **no**
+  tipo), orden por `length(body) DESC` como proxy de "escritura sustancial". La valoración es
+  real (`rating` del autor sobre el mismo target, con su puntaje detallado, o `null`). Filtra por perfil público; **no**
   maneja bloqueos (la versión real sí, como `listCommunityActivity`).
 - El seed (`scripts/seed-home.ts`) ahora genera comentarios de los tres tipos y a veces
   valora el mismo target — antes solo comentaba álbumes/canciones y la pestaña Artistas
@@ -296,8 +298,8 @@ cómicos, etc.).
   destraba todo lo demás.
 - **Borrado físico:** los comentarios se borran de verdad (ADR 0009) → los likes se van en
   cascada; un "top" cacheado tiene que tolerar ids que desaparecen.
-- Al implementarse, `listPopularComments` cambia el `ORDER BY length(body)` + `mockLikeCount`
-  por `ORDER BY like_count DESC` real; el resto del componente no cambia.
+- Al implementarse, `listPopularComments` cambia el `ORDER BY length(body)` por
+  `ORDER BY like_count DESC` real y la fila vuelve a mostrar el contador.
 
 ### Fuente de las carátulas del muro — 32 fijas, un solo mosaico
 
