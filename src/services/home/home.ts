@@ -682,7 +682,7 @@ export interface HomeResumeList {
 }
 
 /**
- * "Retomá una lista" de Inicio: la lista propia con actividad más reciente,
+ * "Retoma una lista" de Inicio: la lista propia con actividad más reciente,
  * para seguir agregándole ítems. "Actividad" = el más reciente entre la última
  * edición de metadatos (`user_list.updated_at`, mantenido por trigger) y el
  * último ítem agregado (`max(user_list_item.created_at)`) — agregar ítems no

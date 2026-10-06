@@ -51,7 +51,7 @@ describe("UserSearch", () => {
     const user = userEvent.setup();
     renderWithIntl(<UserSearch authenticated />);
     await user.click(screen.getByRole("button", { name: "Buscar" }));
-    expect(screen.getByText("Escribí un término para buscar.")).toBeInTheDocument();
+    expect(screen.getByText("Escribe un término para buscar.")).toBeInTheDocument();
     expect(mocks.apiFetch).not.toHaveBeenCalled();
   });
 

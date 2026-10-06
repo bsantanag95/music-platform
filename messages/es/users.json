@@ -8,7 +8,7 @@
   "searching": "Buscando...",
   "searchEmptyTitle": "Sin resultados",
   "searchEmptyDescription": "No encontramos ningún perfil con ese término.",
-  "searchValidationEmpty": "Escribí un término para buscar.",
+  "searchValidationEmpty": "Escribe un término para buscar.",
   "resultsFor": "Resultados para \"{query}\"",
   "resultsCount": "{count, plural, one {1 usuario} other {# usuarios}}",
   "resultsCountLoaded": "{count, plural, one {1 usuario cargado} other {# usuarios cargados}}",
@@ -185,7 +185,7 @@
     "searchPlaceholder": "Buscar por nombre…",
     "loading": "Buscando…",
     "noResults": "Ningún favorito coincide con «{query}».",
-    "moreHint": "Mostrando los primeros {count}. Escribí para buscar entre el resto."
+    "moreHint": "Mostrando los primeros {count}. Escribe para buscar entre el resto."
   },
   "hoverCard": {
     "loading": "Cargando...",
@@ -264,7 +264,7 @@
     "maxLinksReached": "Llegaste al máximo de 5 enlaces",
     "linkValueLabelHandle": "Usuario o enlace",
     "linkValueLabelWeb": "Dirección web",
-    "linkHandleHelp": "Escribí solo tu usuario. Si pegas el enlace de tu perfil, lo extraemos por ti.",
+    "linkHandleHelp": "Escribe solo tu usuario. Si pegas el enlace de tu perfil, lo extraemos por ti.",
     "linkWebHelp": "Puedes escribirla sin https://.",
     "linkPreview": "Se guardará como {url}",
     "linkLegacyWarning": "Este enlace no coincide con {site}. Escribe tu usuario de {site}, o quitalo para poder guardar.",
@@ -564,7 +564,7 @@
           "notLinked": "No vinculada",
           "link": "Vincular",
           "unlink": "Desvincular",
-          "lastMethod": "Es tu único método de acceso, por eso no se puede desvincular. Creá una contraseña primero.",
+          "lastMethod": "Es tu único método de acceso, por eso no se puede desvincular. Crea una contraseña primero.",
           "linkedNotice": "Google quedó vinculada a tu cuenta.",
           "confirmedNotice": "Identidad confirmada. Ya puedes repetir la acción.",
           "unlinkTitle": "Desvincular Google",

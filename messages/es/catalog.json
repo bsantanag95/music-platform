@@ -91,8 +91,8 @@
       "loadingMore": "Cargando más resultados...",
       "loadMoreError": "No se pudieron cargar más resultados.",
       "refine": {
-        "album": "{total, plural, one {# álbum coincide} other {# álbumes coinciden}} con «{query}». Agregá el artista para acotar:",
-        "song": "{total, plural, one {# canción coincide} other {# canciones coinciden}} con «{query}». Agregá el artista para acotar:"
+        "album": "{total, plural, one {# álbum coincide} other {# álbumes coinciden}} con «{query}». Agrega el artista para acotar:",
+        "song": "{total, plural, one {# canción coincide} other {# canciones coinciden}} con «{query}». Agrega el artista para acotar:"
       },
       "artists": {
         "bestMatch": "Mejor coincidencia",

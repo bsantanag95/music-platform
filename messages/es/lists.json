@@ -1,7 +1,7 @@
 {
   "title": "Listas",
   "emptyTitle": "Todavía no creaste listas",
-  "emptyDescription": "Creá una lista de artistas, álbumes o canciones para guardar y compartir.",
+  "emptyDescription": "Crea una lista de artistas, álbumes o canciones para guardar y compartir.",
   "profileEmptyTitle": "Sin listas",
   "profileEmptyDescription": "Este usuario todavía no compartió listas visibles.",
   "profileCount": "{count, plural, =0 {Sin listas} one {# lista} other {# listas}}",
@@ -119,7 +119,7 @@
   "removeItemNamed": "Quitar “{title}”",
   "removeItemShort": "¿Quitar?",
   "itemUnavailable": "Elemento no disponible",
-  "emptyItemsHint": "Agregá artistas, álbumes o canciones desde su página de catálogo, con la acción “Añadir a lista”.",
+  "emptyItemsHint": "Agrega artistas, álbumes o canciones desde su página de catálogo, con la acción “Añadir a lista”.",
   "readEmptyItems": "Esta lista todavía no tiene elementos.",
   "viewModeLabel": "Modo de visualización",
   "viewMode": {

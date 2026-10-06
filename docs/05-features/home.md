@@ -135,7 +135,7 @@ entró) seguido de los mismos bloques de descubrimiento. Este cambio cierra su j
    en `src/services/home/home.ts` (pagina de a 10). Presentación: `FeedActivityList` (peso
    por contenido, igual que `/me/feed` — ver `activity-feed.md`, `redesign-feed`), con el
    mismo contenedor de scroll y carga incremental que "Tu feed".
-6. **Retomá una lista** (`ResumeList`): acceso directo a la lista propia con actividad más
+6. **Retoma una lista** (`ResumeList`): acceso directo a la lista propia con actividad más
    reciente, con mini-mosaico 2×2 de carátulas de sus ítems. Se oculta si el usuario no
    tiene listas. Fuente: `getMostRecentEditedList`.
 7. **Descubrimiento**: `CommunityActivity` + `PublicLists` en el **mismo layout compacto
