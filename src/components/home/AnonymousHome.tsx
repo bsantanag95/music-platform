@@ -13,7 +13,6 @@ import {
   listHomeReleases,
   listPopularComments,
   listPublicLists,
-  listRecentCoverArt,
 } from "@/services/home/home";
 import { listCommunityActivity } from "@/services/activity/community-activity";
 import { listFeaturedCollections, listTopRated } from "@/services/discovery/discovery";
@@ -38,7 +37,6 @@ export async function AnonymousHome() {
   const [
     communityActivity,
     publicLists,
-    recentCoverArt,
     popularComments,
     homeReleases,
     topRated,
@@ -46,7 +44,6 @@ export async function AnonymousHome() {
   ] = await Promise.all([
     listCommunityActivity(null, 1, previewLimit).then((page) => page.entries),
     listPublicLists(null, previewLimit),
-    listRecentCoverArt(),
     listPopularComments(),
     listHomeReleases(),
     listTopRated(),
@@ -54,15 +51,6 @@ export async function AnonymousHome() {
     // que, con el flag apagado, redirigen a Inicio.
     exploreEnabled ? listFeaturedCollections() : Promise.resolve([]),
   ]);
-
-  const heroCovers = Array.from(
-    new Set([
-      ...recentCoverArt,
-      ...communityActivity
-        .map((entry) => entry.target.coverThumbUrl)
-        .filter((url): url is string => Boolean(url)),
-    ]),
-  );
 
   const categoryLabels = {
     studio: tCat("categories.studio"),
@@ -73,7 +61,7 @@ export async function AnonymousHome() {
 
   return (
     <main className="flex min-h-screen flex-col items-center gap-12 overflow-x-clip px-4 py-12">
-      <AnonHero covers={heroCovers} />
+      <AnonHero />
 
       {/* Bloque editorial de álbumes: la obra primero, la prueba social después.
           Cada riel colapsa por su cuenta; si ambos vienen vacíos no hay bloque. */}
