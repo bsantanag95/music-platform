@@ -92,8 +92,9 @@ Ver "Inicio con sesión — estructura" para la jerarquía completa y los bloque
   `HeaderSearch` en el Header, visible en todos los estados (ver
   `openspec/changes/add-header-search` para el origen del componente).
 - La búsqueda de usuarios es una superficie separada en `/users`: no se mezcla con el
-  buscador musical del Header. Inicio ofrece un acceso contextual a Usuarios tanto para
-  visitantes como para usuarios autenticados, y el Footer conserva el enlace permanente.
+  buscador musical del Header. Inicio ofrece un acceso contextual a Usuarios para
+  visitantes; con sesión, se llega eligiendo el tipo "Usuarios" en el buscador por ámbito, y el
+  Footer conserva el enlace permanente para todos.
 
 ## Inicio con sesión — estructura (`redesign-home-authenticated`)
 
@@ -119,9 +120,10 @@ entró) seguido de los mismos bloques de descubrimiento. Este cambio cierra su j
    visible solo si el email del usuario no está verificado (`email_verified_at` nulo).
    Compacto, no bloqueante, con acción de reenvío. Desaparece cuando el email se verifica.
    Ver `docs/02-architecture/auth.md` sección 9.
-3. **Accesos rápidos** (`QuickLinks`): diario, favoritos, listas, colección, buscador y
-   usuarios. Se ubican justo debajo del saludo, antes del feed, para no quedar relegados
-   tras el contenido de lectura. Conservan los seis enlaces.
+3. **Accesos rápidos** (`QuickLinks`): diario, favoritos, listas, colección, recorridos
+   (`/me/artist-journeys`) y caminos (`/me/caminos`) — todos de la biblioteca propia; la
+   búsqueda ya vive en el Header. Se ubican junto al saludo, antes del feed, para no quedar
+   relegados tras el contenido de lectura. Conservan seis enlaces.
 4. **Feed de seguidos** (`FeedPreview`) como bloque principal, o **nudge de onboarding**
    (`OnboardingPrompt`) si no sigue a nadie. El nudge ahora también invita a registrar la
    primera escucha, en prosa (no un checklist con tildes). `FeedPreview` usa
@@ -133,7 +135,7 @@ entró) seguido de los mismos bloques de descubrimiento. Este cambio cierra su j
    en `src/services/home/home.ts` (pagina de a 10). Presentación: `FeedActivityList` (peso
    por contenido, igual que `/me/feed` — ver `activity-feed.md`, `redesign-feed`), con el
    mismo contenedor de scroll y carga incremental que "Tu feed".
-6. **Retomá una lista** (`ResumeList`): acceso directo a la lista propia con actividad más
+6. **Retoma una lista** (`ResumeList`): acceso directo a la lista propia con actividad más
    reciente, con mini-mosaico 2×2 de carátulas de sus ítems. Se oculta si el usuario no
    tiene listas. Fuente: `getMostRecentEditedList`.
 7. **Descubrimiento**: `CommunityActivity` + `PublicLists` en el **mismo layout compacto
@@ -224,11 +226,16 @@ layout denso: grilla `lg:grid-cols-[1.5fr_1fr]` (apilados en < `lg`) con `compac
 no `page.tsx`.
 
 - `CommunityActivity` renderiza `CompactActivityRow`: carátula 40px + una línea mono
-  `@autor · ★N · fecha relativa` + título del target (display, `truncate`) + cuerpo del
-  comentario con `line-clamp-2`. `<ul>` con `divide-y divide-ink-border`, sin tarjeta.
-- `PublicLists` (`CompactListRow`): título de la lista (display) + `@autor · fecha
-  relativa` (mono), `divide-y`, **sin `DiscPlaceholder`** (el disco por ítem no aportaba
-  información).
+  `@autor · ★ 86/100` (o `★ 4,5` sin puntaje detallado; `Reseñó`/`Comentó` con su glifo) y la
+  fecha relativa alineada a la derecha + título del target (display, `truncate`) `· artista` +
+  cuerpo del comentario o reseña con `line-clamp-2` y borde izquierdo (petróleo en la reseña).
+  `<ul>` con `divide-y divide-ink-border`, sin tarjeta; el encabezado enlaza "Ver todo" a
+  `/activity`.
+- `PublicLists` (`CompactListRow`): mini-mosaico 2×2 de hasta 4 carátulas de la lista
+  (`ListMosaic`, compartido con "Retoma una lista"; disco de respaldo si la lista no es de
+  álbumes o aún no tiene carátulas) + título (display) + `Tipo · N ítems` + `@autor` con la
+  fecha relativa a la derecha (mono), `divide-y`; el encabezado enlaza "Ver todas" a `/lists`.
+  Solo listas `standard`: un Camino público tiene su propio descubrimiento (`/caminos`).
 - `redesign-feed` eliminó de estos dos la rama no usada que renderizaba `FeedEntryCard`
   full-width y el prop `withCover`/`compact`; siempre son densos. `FeedPreview` y
   `RecentSelfActivity` migraron a `FeedActivityList`. `FeedEntryBody` se eliminó;
@@ -244,26 +251,28 @@ no `page.tsx`.
 ### "Comentarios populares" — apartado con control segmentado
 
 Distinto de "Actividad de la comunidad" (cronológica, mezcla ratings + comentarios). Acá son
-**solo comentarios, rankeados, con más contexto** (likes, autor, target, valoración), en un
+**solo comentarios, rankeados, con más contexto** (autor, target, valoración), en un
 **solo espacio con control segmentado** por tipo de entidad — no tres secciones apiladas.
 Alinea con el pilar §4 de `product_philosophy.md` ("las reseñas son contenido en sí mismo").
 
-**Estado:** diseño/layout implementado con **ranking y likes de maqueta**. La feature real
-(likes en comentarios) es de un sprint futuro — ver abajo.
+**Estado:** diseño/layout implementado con **ranking proxy y sin cifra de likes**. El contador
+`♡ N` sintético (derivado del id) se retiró el 2026-10-06 para no mostrar likes inventados
+como reales; la feature real (likes en comentarios) es un cambio aparte — ver abajo.
 
 - `PopularComments` (server, resuelve i18n) → `PopularCommentsTabs`
   (`src/components/home/PopularCommentsTabs.tsx`, client). ARIA tabs: `role="tablist"` /
   `tab` / `tabpanel`, `aria-selected`, roving `tabIndex`, flechas ←/→ para cambiar.
 - Pestañas `Artistas · Álbumes · Canciones` (`TAB_ORDER`). Se muestran las tres siempre;
   la activa arranca en la primera con contenido y una pestaña vacía cae en su empty state.
-  Activa: `border-amber text-paper` (selección = ámbar, dentro de la Regla de Rareza).
-- Fila: `CoverThumb` (disco en las pestañas de artista/canción — no hay foto/carátula),
-  título del target (display, link) + `♡ N` en mono, `@autor · ★N` en mono, cuerpo con
-  `line-clamp-3`. Ubicación: junto a "Actividad de la comunidad".
+  Control segmentado (una pieza `bg-ink-surface` con borde); la activa va rellena `bg-ink`
+  con texto ámbar (selección = ámbar, dentro de la Regla de Rareza).
+- Fila: `CoverThumb` 48px (disco en las pestañas de artista/canción — no hay foto/carátula),
+  título del target (display, link), el comentario como cita con borde izquierdo en tono
+  principal (`line-clamp-3`) y debajo la firma `— @autor · ★ 86/100` (o `★ 4,5` sin puntaje
+  detallado) en mono.
 - **Servicio `listPopularComments()`** (`src/services/home/home.ts`): tres consultas (una por
-  tipo), pool por `length(body) DESC` como proxy de "escritura sustancial", luego `likeCount`
-  sintético estable (`mockLikeCount(id)`) que define el orden mostrado. La valoración es real
-  (`rating` del autor sobre el mismo target, o `null`). Filtra por perfil público; **no**
+  tipo), orden por `length(body) DESC` como proxy de "escritura sustancial". La valoración es
+  real (`rating` del autor sobre el mismo target, con su puntaje detallado, o `null`). Filtra por perfil público; **no**
   maneja bloqueos (la versión real sí, como `listCommunityActivity`).
 - El seed (`scripts/seed-home.ts`) ahora genera comentarios de los tres tipos y a veces
   valora el mismo target — antes solo comentaba álbumes/canciones y la pestaña Artistas
@@ -289,8 +298,8 @@ cómicos, etc.).
   destraba todo lo demás.
 - **Borrado físico:** los comentarios se borran de verdad (ADR 0009) → los likes se van en
   cascada; un "top" cacheado tiene que tolerar ids que desaparecen.
-- Al implementarse, `listPopularComments` cambia el `ORDER BY length(body)` + `mockLikeCount`
-  por `ORDER BY like_count DESC` real; el resto del componente no cambia.
+- Al implementarse, `listPopularComments` cambia el `ORDER BY length(body)` por
+  `ORDER BY like_count DESC` real y la fila vuelve a mostrar el contador.
 
 ### Fuente de las carátulas del muro — 32 fijas, un solo mosaico
 
@@ -334,20 +343,26 @@ En vez de dos rieles de carátulas casi idénticos apilados, **un único riel ho
 ordenado por fecha** con un marcador "hoy" en el medio:
 
 ```
-‹ … ago 2026  │ HOY │  sep 2026 … ›
-   [recientes]         [próximos]
+‹ … 22 sept   29 sept  │ HOY │  Sale 13 oct   Sale 20 oct … ›
+  ●──────────●─────────◉──────○─────────────○──────
+     [recientes]                 [próximos]
 ```
 
 - Scroll a la izquierda → lo que ya salió; a la derecha → lo que viene. Flechas ‹ ›
-  (mismo patrón/estilo que `FeatureCarousel`), scrollbar nativa oculta.
+  redondas sobre los bordes (fondo translúcido con desenfoque), scrollbar nativa oculta.
+  Al montar, el riel se posiciona con el marcador "hoy" a ~60 % del ancho (no arranca en
+  el lanzamiento más viejo).
+- **Pista de fechas:** una línea horizontal bajo las carátulas con un hito por tarjeta —
+  relleno lo que ya salió, hueco lo que viene, y el hito del marcador en ámbar.
 - **Marcador "hoy":** una línea vertical fina + label en **VU Gold** — la única veta de
   ámbar del bloque, usada como una aguja de VU / cabezal de reproducción (dentro de la
   Regla de Rareza). Solo aparece si hay ítems de los dos lados.
-- Tarjetas "próximas": carátula a `opacity-60` + fecha con prefijo (`Sale` / `Out`). Las
-  "recientes", normales. Sin cuenta regresiva ni "no te lo pierdas" — la anti-feature
+- Tarjetas "próximas": carátula a `opacity-60` (opaca al pasar el ratón), pastilla
+  `Próximo` / `Upcoming` sobre la carátula y fecha con prefijo (`Sale` / `Out`). Las
+  "recientes", normales. Fecha con día y mes (`12 sept`), con año solo si no es el actual. Sin cuenta regresiva ni "no te lo pierdas" — la anti-feature
   "sin mecánicas de presión" sigue vigente.
-- Carátula cuadrada con hairline `ink-border` (→ `amber` en `group-hover`, como
-  `AlbumCard`) + título (display, `truncate`) + artista y fecha (mono `text-xs`).
+- Carátula cuadrada con anillo `ink-border` y sombra (→ `amber` en `group-hover`) + fecha
+  (mono `text-xs`) + título (display, `truncate`) + artista (mono `text-xs`).
 - Ubicación: debajo de "Actividad de la comunidad" / "Listas públicas". El descubrimiento
   **social** es la identidad; el calendario es contenido editorial secundario. Se muestra
   en ambos estados (anónimo y con sesión).

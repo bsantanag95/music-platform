@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, isNotNull, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNotNull, lte, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import { ApiError } from "@/lib/api/errors";
@@ -475,7 +475,6 @@ export async function listHomeReleases(limit = 10): Promise<HomeRelease[]> {
 export interface PopularComment {
   id: string;
   body: string;
-  likeCount: number; // MAQUETA — ver listPopularComments
   authorUsername: string;
   authorDisplayName: string | null;
   target: {
@@ -485,6 +484,7 @@ export interface PopularComment {
     coverThumbUrl: string | null;
   };
   stars: string | null; // valoración del autor sobre el target, si existe
+  detailedScore: number | null; // puntaje 1–100 de esa valoración, si lo puso
 }
 
 export type PopularCommentsByType = Record<
@@ -492,28 +492,16 @@ export type PopularCommentsByType = Record<
   PopularComment[]
 >;
 
-// MAQUETA: cantidad de likes por comentario. Determinística a partir del id
-// para que sea estable entre renders. El mecanismo real de likes en
-// comentarios (tabla, interacción, endpoint) es de un sprint futuro — ver
-// docs/05-features/home.md, "Comentarios populares".
-function mockLikeCount(id: string): number {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = (Math.imul(hash, 31) + id.charCodeAt(i)) | 0;
-  }
-  return 4 + (Math.abs(hash) % 56); // 4..59
-}
-
 /**
  * "Comentarios populares" de Inicio, agrupados por tipo de entidad (artista /
  * álbum / canción) para el control segmentado.
  *
- * MAQUETA: los comentarios no tienen mecanismo de likes todavía, así que el
- * ranking se arma con un proxy —comentarios más largos, "escritura más
- * sustancial"— y a cada uno se le asigna un `likeCount` sintético estable, que
- * después define el orden mostrado. La versión real (tabla `comment_like`
- * anónima, decisión de gamificación, hilos de respuestas) es de un sprint
- * futuro — ver docs/05-features/home.md, "Comentarios populares".
+ * Los comentarios no tienen mecanismo de likes todavía, así que el ranking es
+ * un proxy —comentarios más largos, "escritura más sustancial"— y no se
+ * muestra ninguna cifra: el contador sintético que había antes (`likeCount`
+ * derivado del id) se retiró para no presentar likes inventados como reales.
+ * Los likes reales (tabla, interacción, endpoint, ranking) son un cambio
+ * aparte — ver docs/05-features/home.md, "Comentarios populares".
  *
  * Filtra por perfil público del autor. No maneja bloqueos (la versión real sí
  * debería, como `listCommunityActivity`).
@@ -532,6 +520,7 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
         targetId: comment.artistId,
         title: artist.name,
         stars: rating.stars,
+        detailedScore: rating.detailedScore,
       })
       .from(comment)
       .innerJoin(appUser, eq(comment.userId, appUser.id))
@@ -554,6 +543,7 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
         title: releaseGroup.title,
         cover: releaseGroup.coverThumbUrl,
         stars: rating.stars,
+        detailedScore: rating.detailedScore,
       })
       .from(comment)
       .innerJoin(appUser, eq(comment.userId, appUser.id))
@@ -578,6 +568,7 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
         targetId: comment.recordingId,
         title: recording.title,
         stars: rating.stars,
+        detailedScore: rating.detailedScore,
       })
       .from(comment)
       .innerJoin(appUser, eq(comment.userId, appUser.id))
@@ -601,6 +592,7 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
       title: string | null;
       cover?: string | null;
       stars: string | null;
+      detailedScore: number | null;
     }[],
     type: "artist" | "release-group" | "recording",
   ): PopularComment[] =>
@@ -608,7 +600,6 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
       .map((row) => ({
         id: row.id,
         body: row.body,
-        likeCount: mockLikeCount(row.id),
         authorUsername: row.authorUsername ?? "",
         authorDisplayName: row.authorDisplayName,
         target: {
@@ -618,8 +609,8 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
           coverThumbUrl: row.cover ?? null,
         },
         stars: row.stars,
+        detailedScore: row.detailedScore,
       }))
-      .sort((a, b) => b.likeCount - a.likeCount)
       .slice(0, perType);
 
   return {
@@ -633,9 +624,21 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
  * Listas públicas recientes para Inicio: `user_list` con `audience = 'public'`
  * de cualquier usuario con perfil público, sin requerir relación de
  * seguimiento. Si hay `viewerId`, excluye propietarios bloqueados en
- * cualquier dirección. Sin paginación.
+ * cualquier dirección. Sin paginación. Solo listas `standard`: un Camino
+ * público tiene su propio descubrimiento (`/caminos`) y su propia ruta, y un
+ * Recorrido es siempre privado.
+ *
+ * Cada lista trae su recuento de ítems y hasta 4 carátulas (en orden de la
+ * lista) para el mini-mosaico de la fila — mismo criterio que
+ * `getMostRecentEditedList`; las listas de artistas o canciones no tienen
+ * carátula por ítem y quedan con el arreglo vacío.
  */
-export async function listPublicLists(viewerId: string | null, limit = 10): Promise<FeedListEvent[]> {
+export interface HomePublicList extends FeedListEvent {
+  itemCount: number;
+  coverThumbUrls: string[];
+}
+
+export async function listPublicLists(viewerId: string | null, limit = 10): Promise<HomePublicList[]> {
   const rows = await db
     .select({
       id: userList.id,
@@ -652,11 +655,52 @@ export async function listPublicLists(viewerId: string | null, limit = 10): Prom
     .innerJoin(appUser, eq(userList.ownerId, appUser.id))
     .where(
       viewerId
-        ? and(eq(userList.audience, "public"), PUBLIC_PROFILE, NOT_BLOCKED_SQL(viewerId, userList.ownerId))
-        : and(eq(userList.audience, "public"), PUBLIC_PROFILE),
+        ? and(
+            eq(userList.audience, "public"),
+            eq(userList.kind, "standard"),
+            PUBLIC_PROFILE,
+            NOT_BLOCKED_SQL(viewerId, userList.ownerId),
+          )
+        : and(eq(userList.audience, "public"), eq(userList.kind, "standard"), PUBLIC_PROFILE),
     )
     .orderBy(desc(userList.updatedAt), desc(userList.id))
     .limit(limit);
+
+  const ids = rows.map((row) => row.id);
+  const countByList = new Map<string, number>();
+  const coversByList = new Map<string, string[]>();
+
+  if (ids.length > 0) {
+    const ranked = db
+      .select({
+        listId: userListItem.listId,
+        cover: releaseGroup.coverThumbUrl,
+        rn: sql<number>`row_number() over (partition by ${userListItem.listId} order by ${userListItem.position})`.as("rn"),
+      })
+      .from(userListItem)
+      .innerJoin(releaseGroup, eq(userListItem.releaseGroupId, releaseGroup.id))
+      .where(and(inArray(userListItem.listId, ids), isNotNull(releaseGroup.coverThumbUrl)))
+      .as("ranked");
+
+    const [counts, covers] = await Promise.all([
+      db
+        .select({ listId: userListItem.listId, n: count() })
+        .from(userListItem)
+        .where(inArray(userListItem.listId, ids))
+        .groupBy(userListItem.listId),
+      db
+        .select({ listId: ranked.listId, cover: ranked.cover })
+        .from(ranked)
+        .where(lte(ranked.rn, 4))
+        .orderBy(ranked.listId, ranked.rn),
+    ]);
+
+    for (const row of counts) countByList.set(row.listId, Number(row.n));
+    for (const row of covers) {
+      if (!row.cover) continue;
+      coversByList.set(row.listId, [...(coversByList.get(row.listId) ?? []), row.cover]);
+    }
+  }
 
   return rows.map((row) => ({
     kind: "list" as const,
@@ -670,6 +714,8 @@ export async function listPublicLists(viewerId: string | null, limit = 10): Prom
       entityType: row.entityType as "artist" | "release-group" | "recording",
     },
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
+    itemCount: countByList.get(row.id) ?? 0,
+    coverThumbUrls: coversByList.get(row.id) ?? [],
   }));
 }
 
@@ -682,7 +728,7 @@ export interface HomeResumeList {
 }
 
 /**
- * "Retomá una lista" de Inicio: la lista propia con actividad más reciente,
+ * "Retoma una lista" de Inicio: la lista propia con actividad más reciente,
  * para seguir agregándole ítems. "Actividad" = el más reciente entre la última
  * edición de metadatos (`user_list.updated_at`, mantenido por trigger) y el
  * último ítem agregado (`max(user_list_item.created_at)`) — agregar ítems no

@@ -30,6 +30,18 @@ function emptyQuery() {
   return { from: vi.fn(() => chain) };
 }
 
+// Query encadenable de forma libre (from/innerJoin/where/groupBy/orderBy/as…)
+// que al esperarla resuelve `rows` — para las consultas auxiliares de
+// `listPublicLists` (recuento y carátulas por lista).
+function chainQuery(rows: unknown[]) {
+  const chain: Record<string, unknown> = {};
+  for (const method of ["from", "innerJoin", "leftJoin", "where", "groupBy", "orderBy", "limit", "as"]) {
+    chain[method] = vi.fn(() => chain);
+  }
+  chain.then = (resolve: (value: unknown[]) => unknown) => Promise.resolve(rows).then(resolve);
+  return chain;
+}
+
 const author = { id: "00000000-0000-4000-8000-000000000002", username: "alguien", displayName: "Alguien" };
 
 describe("servicio de datos de Inicio", () => {
@@ -47,7 +59,14 @@ describe("servicio de datos de Inicio", () => {
         authorId: author.id,
         authorUsername: author.username,
         authorDisplayName: author.displayName,
-      }]));
+      }]))
+        // subconsulta de carátulas numeradas, recuento por lista, carátulas (≤ 4)
+        .mockReturnValueOnce(chainQuery([]))
+        .mockReturnValueOnce(chainQuery([{ listId: "00000000-0000-4000-8000-000000000007", n: 12 }]))
+        .mockReturnValueOnce(chainQuery([
+          { listId: "00000000-0000-4000-8000-000000000007", cover: "https://example.com/a.jpg" },
+          { listId: "00000000-0000-4000-8000-000000000007", cover: "https://example.com/b.jpg" },
+        ]));
 
       const result = await listPublicLists(null, 10);
 
@@ -56,6 +75,8 @@ describe("servicio de datos de Inicio", () => {
           kind: "list",
           event: "updated",
           list: { id: "00000000-0000-4000-8000-000000000007", title: "Discos esenciales", entityType: "release-group" },
+          itemCount: 12,
+          coverThumbUrls: ["https://example.com/a.jpg", "https://example.com/b.jpg"],
         }),
       ]);
     });

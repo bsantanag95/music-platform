@@ -26,7 +26,9 @@ const CLAMP_LINES = 2;
 // texto para decidir si hace falta el botón — un `line-clamp-2` fijo sin esto
 // corta reseñas largas sin dar forma de leerlas completas (feedback
 // 2026-09-11).
-function ClampedSnippet({ body }: { body: string }) {
+// `accent`: la reseña marca su tipo con el borde petróleo del snippet (antes
+// lo llevaba toda la fila, que desalineaba su carátula respecto del resto).
+function ClampedSnippet({ body, accent }: { body: string; accent: "review" | "neutral" }) {
   const t = useTranslations("feed");
   const [expanded, setExpanded] = useState(false);
   const [overflowing, setOverflowing] = useState(false);
@@ -57,7 +59,7 @@ function ClampedSnippet({ body }: { body: string }) {
     <div ref={containerRef}>
       <p
         ref={ref}
-        className={`mt-0.5 font-body text-sm text-paper-muted${collapsed ? " line-clamp-2" : ""}`}
+        className={`mt-1 border-l-2 pl-2.5 font-body text-sm text-paper-muted ${accent === "review" ? "border-petrol" : "border-ink-border"}${collapsed ? " line-clamp-2" : ""}`}
       >
         {body}
       </p>
@@ -65,7 +67,7 @@ function ClampedSnippet({ body }: { body: string }) {
         <button
           type="button"
           onClick={() => setExpanded((current) => !current)}
-          className="mt-0.5 font-data text-xs text-paper-muted underline decoration-dotted underline-offset-2 transition-colors hover:text-paper"
+          className="mt-0.5 ml-3 font-data text-xs text-paper-muted underline decoration-dotted underline-offset-2 transition-colors hover:text-paper"
         >
           {expanded ? t("showLess") : t("showMore")}
         </button>
@@ -94,7 +96,11 @@ export function CompactActivityRow({ entry }: { entry: CompactActivityEntry }) {
         ? entry.title
           ? t("reviewVerbTitled", { title: entry.title })
           : t("reviewVerb")
-        : `★ ${formatStars(Number(entry.stars), locale)}`;
+        : // Forma compacta `★ 86/100` con puntaje detallado, `★ 4,5` sin él — nunca
+          // ambos (rating-display: el /100 también se muestra en la actividad de la comunidad).
+          entry.detailedScore != null
+          ? `${entry.detailedScore}/100`
+          : formatStars(Number(entry.stars), locale);
 
   // El glifo de refuerzo se omite en rating (★ ya cumple ese rol) — mismo
   // criterio que `FeedActivityList` (openspec: add-feed-kind-differentiation).
@@ -103,39 +109,62 @@ export function CompactActivityRow({ entry }: { entry: CompactActivityEntry }) {
   const body = entry.kind === "comment" || entry.kind === "review" ? entry.body : null;
 
   return (
-    <li className={`flex gap-3 py-3 first:pt-0 last:pb-0 ${isReview ? "border-l-2 border-petrol pl-2" : ""}`}>
+    <li className="flex gap-3 py-3 first:pt-0 last:pb-0">
       {/* Decorativa: el título va al lado como texto. */}
-      <CoverThumb cover={entry.target.coverThumbUrl} label="" className="size-10" />
+      <CoverThumb
+        cover={entry.target.coverThumbUrl}
+        label=""
+        className="size-10 shadow-sm shadow-black/40 ring-1 ring-ink-border"
+      />
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 font-data text-xs text-paper-muted">
-          <UserHoverCard username={username}>
-            <Link
-              href={`/users/${encodeURIComponent(username)}`}
-              className="transition-colors hover:text-amber"
-            >
-              {authorLabel}
-            </Link>
-          </UserHoverCard>
-          {icon ? (
-            <span aria-hidden="true" className={`inline-flex ${isReview ? "text-petrol" : ""}`}>
-              {icon}
-            </span>
-          ) : null}
-          <span className={isReview ? "text-petrol" : ""}>{typeLabel}</span>
+        <div className="flex items-baseline justify-between gap-3 font-data text-xs text-paper-muted">
+          <span className="flex min-w-0 items-baseline gap-x-1.5">
+            <UserHoverCard username={username}>
+              <Link
+                href={`/users/${encodeURIComponent(username)}`}
+                className="truncate text-paper transition-colors hover:text-amber"
+              >
+                {authorLabel}
+              </Link>
+            </UserHoverCard>
+            <span aria-hidden="true">·</span>
+            {entry.kind === "rating" ? (
+              <span className="shrink-0">
+                <span aria-hidden="true" className="text-amber">
+                  ★
+                </span>{" "}
+                <span className="font-medium text-paper">{typeLabel}</span>
+              </span>
+            ) : (
+              <span className={`inline-flex min-w-0 items-baseline gap-1 ${isReview ? "text-petrol" : ""}`}>
+                {icon ? (
+                  <span aria-hidden="true" className="inline-flex translate-y-px self-center">
+                    {icon}
+                  </span>
+                ) : null}
+                <span className="truncate">{typeLabel}</span>
+              </span>
+            )}
+          </span>
           <RelativeDate iso={entry.createdAt} />
         </div>
-        <Link
-          href={targetHref(
-            entry.target.type,
-            entry.target.id,
-            entry.target.title,
-            entry.target.artistName ?? null,
-          )}
-          className="block truncate font-display text-sm text-paper transition-colors hover:text-amber"
-        >
-          {entry.target.title}
-        </Link>
-        {body ? <ClampedSnippet body={body} /> : null}
+        <p className="mt-0.5 truncate">
+          <Link
+            href={targetHref(
+              entry.target.type,
+              entry.target.id,
+              entry.target.title,
+              entry.target.artistName ?? null,
+            )}
+            className="font-display text-sm text-paper transition-colors hover:text-amber"
+          >
+            {entry.target.title}
+          </Link>
+          {entry.target.artistName ? (
+            <span className="font-data text-xs text-paper-muted"> · {entry.target.artistName}</span>
+          ) : null}
+        </p>
+        {body ? <ClampedSnippet body={body} accent={isReview ? "review" : "neutral"} /> : null}
       </div>
     </li>
   );

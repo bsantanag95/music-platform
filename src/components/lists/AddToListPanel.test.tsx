@@ -97,7 +97,7 @@ describe("AddToListPanel", () => {
     renderWithIntl(<AddToListPanel target={artistTarget} />);
 
     await waitFor(() => expect(mocks.getMyLists).toHaveBeenCalled());
-    expect(screen.getByText(/creá una lista de artistas/i)).toBeInTheDocument();
+    expect(screen.getByText(/crea una lista de artistas/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Nueva lista" }));
     expect(screen.getByRole("button", { name: "Crear lista" })).toBeInTheDocument();

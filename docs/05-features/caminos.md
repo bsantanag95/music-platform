@@ -104,7 +104,7 @@ Un Camino público es visible para otros usuarios en `/users/[username]/caminos/
 propia, **no** `/users/[username]/lists/[listId]`: un Camino nunca vive detrás de los endpoints
 de `lists` (mismo criterio de exclusión que ya aplica a Recorrido respecto de toda lectura
 genérica de `user_list`: Mis listas, Guardadas, Descubrir, conteos de la huella de gusto, el
-widget "Retomá una lista" de Inicio, los eventos de feed). La vista de lectura muestra el
+widget "Retoma una lista" de Inicio, los eventos de feed). La vista de lectura muestra el
 progreso propio del dueño (informativo) y ofrece el control de tracking al visitante; con
 tracking activo, ver "Vista de detalle" más arriba para el progreso y las marcas de escuchado
 propias del visitante.

@@ -493,11 +493,11 @@ describe("FeedActivityList", () => {
     expect(screen.getByTestId("cover-thumb")).toHaveAttribute("data-cover", "https://cover/7.jpg");
   });
 
-  it("una reseña sin título usa solo el verbo y el rótulo, sin titular", () => {
+  it("una reseña sin título usa solo el verbo, sin rótulo ni titular", () => {
     renderWithIntl(<FeedActivityList entries={[review({ title: null })]} />);
 
     expect(screen.getByText(/Reseñó/)).toBeInTheDocument();
-    expect(screen.getByText("Reseña")).toBeInTheDocument();
+    expect(screen.queryByText("Reseña")).not.toBeInTheDocument();
   });
 
   it("una reseña corta la corrida de valoraciones y no se pliega con ellas", () => {
@@ -682,7 +682,8 @@ describe("FeedActivityList", () => {
     it("no aparece en el rastro propio (variant self), donde ya se omite el autor", () => {
       const { container } = renderWithIntl(<FeedActivityList entries={[comment()]} variant="self" />);
 
-      expect(container.querySelector('[aria-hidden="true"].rounded-full')).toBeNull();
+      // El hito del riel (línea de tiempo) también es un círculo decorativo, pero no es avatar.
+      expect(container.querySelector('[aria-hidden="true"].rounded-full:not([data-timeline-dot])')).toBeNull();
     });
   });
 

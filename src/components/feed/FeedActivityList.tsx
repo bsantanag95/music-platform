@@ -55,7 +55,9 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
     <ul
       className={
         self
-          ? "divide-y divide-ink-border border-l border-ink-border"
+          ? // `ml-[5px]`: deja sitio a los hitos del riel, que asoman fuera del borde y
+            // si no los recortaría el contenedor con scroll de Inicio.
+            "ml-[5px] divide-y divide-ink-border border-l border-ink-border"
           : "divide-y divide-ink-border"
       }
     >
@@ -64,11 +66,13 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
         // normales (celda `size-11 sm:size-12` + `gap-3 sm:gap-4`), sin celda:
         // tanto el grupo colapsado como el pico de rotación se leen como
         // contexto, no como evento destacado.
-        const subordinateClass = `${self ? "py-2 pl-4" : "py-3 pl-14 sm:pl-16"} first:pt-0 last:pb-0`;
+        const subordinateClass = `${self ? "relative py-2 pl-4" : "py-3 pl-14 sm:pl-16"} first:pt-0 last:pb-0`;
+        const subordinateDot = self ? <TimelineDot top="top-3" /> : null;
 
         if (row.kind === "rotation-peak") {
           return (
             <li key={row.id} className={subordinateClass}>
+              {subordinateDot}
               <RotationPeakRow peak={row} t={t} hideAuthor={self} />
             </li>
           );
@@ -77,6 +81,7 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
         if (row.kind === "group") {
           return (
             <li key={row.id} className={subordinateClass}>
+              {subordinateDot}
               <GroupRow group={row} t={t} hideAuthor={self} />
             </li>
           );
@@ -84,7 +89,8 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
 
         if (row.kind === "opinion") {
           return (
-            <li key={row.id} className={`${self ? "py-3 pl-4" : "py-4"} first:pt-0 last:pb-0`}>
+            <li key={row.id} className={`${self ? "relative py-3 pl-4" : "py-4"} first:pt-0 last:pb-0`}>
+              {self ? <TimelineDot filled top="top-4" /> : null}
               <OpinionRow row={row} t={t} self={self} clamp={clamp} />
             </li>
           );
@@ -93,6 +99,7 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
         if (row.kind === "follow") {
           return (
             <li key={`follow-${row.id}`} className={subordinateClass}>
+              {subordinateDot}
               <FollowRow entry={row} t={t} hideAuthor={self} />
             </li>
           );
@@ -101,6 +108,7 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
         if (row.kind === "follow-artist") {
           return (
             <li key={`follow-artist-${row.id}`} className={subordinateClass}>
+              {subordinateDot}
               <FollowArtistRow entry={row} t={t} hideAuthor={self} />
             </li>
           );
@@ -116,15 +124,22 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
           return (
             <li
               key={entryKey(row)}
-              className={`${heavy ? "py-3" : "py-2"} first:pt-0 last:pb-0 pl-4`}
+              className={`relative ${heavy ? "py-3" : "py-2.5"} first:pt-0 last:pb-0 pl-4`}
             >
+              <TimelineDot filled={heavy} top={heavy ? "top-4" : "top-[0.875rem]"} />
               <MetaLine entry={row} t={t} hideAuthor />
-              <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <div className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                 <TargetTitle {...targetLink(row)} layout="inline" />
                 <EntryReaction entry={row} inline />
+                {/* La nota comparte la línea del título: en el rastro propio la
+                    entrada de valoración queda en dos líneas, no tres. */}
+                {row.kind === "rating" ? (
+                  <span className="shrink-0 [&>span]:mt-0">
+                    <RatingValue entry={row} t={t} locale={locale} />
+                  </span>
+                ) : null}
               </div>
-              {row.kind === "rating" ? <RatingValue entry={row} t={t} locale={locale} /> : null}
-              {row.kind === "review" ? <ReviewKicker t={t} title={row.title} /> : null}
+              {row.kind === "review" ? <ReviewKicker title={row.title} /> : null}
               {heavy && body ? (
                 <ProsePanel
                   body={body}
@@ -146,7 +161,7 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
                 <TargetTitle {...targetLink(row)} />
                 <EntryReaction entry={row} />
                 {row.kind === "rating" ? <RatingValue entry={row} t={t} locale={locale} /> : null}
-                {row.kind === "review" ? <ReviewKicker t={t} title={row.title} /> : null}
+                {row.kind === "review" ? <ReviewKicker title={row.title} /> : null}
                 {heavy && body ? (
                   <ProsePanel
                     body={body}
@@ -360,20 +375,11 @@ function FollowArtistRow({
   );
 }
 
-// Rótulo "Reseña" en el segundo acento del sistema (petróleo) + el título
-// propio de la reseña como titular, cuando existe — antes vivía como sufijo
-// del verbo ("Reseñó · «título»"); acá gana su propio espacio visual en vez de
-// competir con el resto del metadato (openspec: add-feed-kind-differentiation).
-function ReviewKicker({ t, title }: { t: FeedT; title: string | null }) {
-  return (
-    <div className="mt-1.5 flex flex-col gap-0.5">
-      <span className="inline-flex w-fit items-center gap-1 rounded border border-petrol px-1.5 py-0.5 font-data text-[10px] uppercase tracking-wide text-petrol">
-        {FEED_KIND_ICONS.review}
-        {t("kind.review")}
-      </span>
-      {title ? <p className="font-display text-sm text-paper">{title}</p> : null}
-    </div>
-  );
+// Titular propio de la reseña, cuando existe. El rótulo "Reseña" que iba acá
+// arriba se retiró: la línea de metadato ya dice "Reseñó" con su ícono y el
+// borde petróleo de la prosa marca el tipo — eran tres señales para lo mismo.
+function ReviewKicker({ title }: { title: string | null }) {
+  return title ? <p className="mt-1.5 font-display text-sm text-paper">{title}</p> : null;
 }
 
 function actionLabel(entry: FeedEntry, t: FeedT): string {
@@ -420,6 +426,22 @@ function ratingLabel(stars: string, detailedScore: number | null, t: FeedT, loca
   return detailedScore != null
     ? t("ratingLabelScore", { stars: formatted, score: detailedScore })
     : t("ratingLabel", { stars: formatted });
+}
+
+// Hito sobre el riel izquierdo del rastro propio, alineado con la línea de
+// metadato: convierte el borde continuo en una línea de tiempo legible. Las
+// entradas con prosa (reseña, comentario, nota) llevan el hito relleno.
+// `top` = padding superior de la fila + medio renglón de metadato − medio hito.
+function TimelineDot({ filled = false, top }: { filled?: boolean; top: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      data-timeline-dot=""
+      className={`absolute -left-[4.5px] ${top} size-2 rounded-full ring-4 ring-ink [li:first-child>&]:top-1 ${
+        filled ? "bg-paper" : "bg-paper-muted/60"
+      }`}
+    />
+  );
 }
 
 function RatingValue({
@@ -528,7 +550,13 @@ function coverForEntry(entry: FeedEntry): string | null {
 // Celda izquierda fija: carátula del objetivo o disco de vinilo. Columna
 // rígida — la ausencia de arte no deja hueco. Decorativa: el título va al lado.
 function FeedCell({ entry }: { entry: FeedEntry }) {
-  return <CoverThumb cover={coverForEntry(entry)} label="" className="size-11 sm:size-12" />;
+  return (
+    <CoverThumb
+      cover={coverForEntry(entry)}
+      label=""
+      className="size-11 shadow-sm shadow-black/40 ring-1 ring-ink-border sm:size-12"
+    />
+  );
 }
 
 // Línea de metadato: [autor ·] verbo · audiencia, con la fecha relativa a la
@@ -591,7 +619,7 @@ function OpinionRow({ row, t, self, clamp }: { row: FeedOpinionRow; t: FeedT; se
       {row.rating ? <RatingValue entry={row.rating} t={t} locale={locale} /> : null}
       {row.review ? (
         <>
-          <ReviewKicker t={t} title={row.review.title} />
+          <ReviewKicker title={row.review.title} />
           <ProsePanel body={row.review.body} variant="comment" clamp={clamp} accent="review" />
         </>
       ) : null}
@@ -660,16 +688,16 @@ function AuthorAvatar({ author }: { author: FeedEntry["author"] }) {
       <AppImage
         src={author.avatarUrl}
         alt=""
-        width={16}
-        height={16}
-        className="size-4 shrink-0 rounded-full object-cover"
+        width={20}
+        height={20}
+        className="size-5 shrink-0 rounded-full object-cover"
       />
     );
   }
   return (
     <span
       aria-hidden="true"
-      className={`inline-flex size-4 shrink-0 items-center justify-center rounded-full font-data text-[9px] font-medium leading-none ${avatarVariant(author.id)}`}
+      className={`inline-flex size-5 shrink-0 items-center justify-center rounded-full font-data text-[10px] font-medium leading-none ${avatarVariant(author.id)}`}
     >
       {initialFor(author)}
     </span>
@@ -678,7 +706,7 @@ function AuthorAvatar({ author }: { author: FeedEntry["author"] }) {
 
 function AuthorIdentity({ author }: { author: FeedEntry["author"] }) {
   return (
-    <span className="inline-flex items-center gap-1 align-middle">
+    <span className="inline-flex items-center gap-1.5 align-middle">
       <AuthorAvatar author={author} />
       <AuthorLink author={author} />
     </span>

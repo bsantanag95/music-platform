@@ -43,7 +43,7 @@ export interface AlbumSearchResult {
   cached: boolean;
 }
 
-/** Sugerencia para acotar una consulta genérica ("Agregá el artista"). */
+/** Sugerencia para acotar una consulta genérica ("Agrega el artista"). */
 export interface SearchRefineHint {
   total: number;
   artists: string[];

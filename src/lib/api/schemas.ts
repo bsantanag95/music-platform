@@ -983,7 +983,7 @@ function checkPronounChoice(
   if (value.pronounSet === undefined) return;
   const text = (value.pronouns ?? "").trim();
   if (value.pronounSet === "other" && text === "") {
-    ctx.addIssue({ code: "custom", path: ["pronouns"], message: "Escribí tus pronombres" });
+    ctx.addIssue({ code: "custom", path: ["pronouns"], message: "Escribe tus pronombres" });
   } else if (value.pronounSet !== "other" && text !== "") {
     ctx.addIssue({
       code: "custom",

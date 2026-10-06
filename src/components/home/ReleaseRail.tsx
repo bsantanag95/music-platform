@@ -7,8 +7,16 @@ import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import { albumHref } from "@/lib/catalog-links";
 import type { HomeRelease } from "@/services/home/home";
 
-function formatMonth(iso: string, locale: string) {
-  return new Date(iso).toLocaleDateString(locale, { month: "short", year: "numeric" });
+// Fecha corta de lanzamiento: día y mes ("12 sept"), con el año solo cuando no
+// es el actual — en un riel alrededor de hoy el día importa más que el año.
+function formatReleaseDate(iso: string, locale: string) {
+  const date = new Date(`${iso}T00:00:00`);
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return date.toLocaleDateString(locale, {
+    day: "numeric",
+    month: "short",
+    ...(sameYear ? {} : { year: "numeric" }),
+  });
 }
 
 function prefersReducedMotion() {
@@ -37,6 +45,7 @@ export function ReleaseRail({
   title,
   todayLabel,
   upcomingPrefix,
+  upcomingBadge,
   prevLabel,
   nextLabel,
 }: {
@@ -45,6 +54,7 @@ export function ReleaseRail({
   title: string;
   todayLabel: string;
   upcomingPrefix: string;
+  upcomingBadge: string;
   prevLabel: string;
   nextLabel: string;
 }) {
@@ -96,6 +106,17 @@ export function ReleaseRail({
     return () => io.disconnect();
   }, []);
 
+  // El riel arranca alrededor de "hoy" (no en el lanzamiento más viejo): el
+  // marcador queda a ~60 % del ancho, con más recientes a la vista que próximos.
+  // Instantáneo y una sola vez, antes de que el usuario toque el riel.
+  useEffect(() => {
+    const el = scrollerRef.current;
+    const marker = el?.querySelector<HTMLElement>("[data-today-marker]");
+    if (!el || !marker) return;
+    el.scrollLeft = Math.max(0, marker.offsetLeft - el.clientWidth * 0.6);
+    sync();
+  }, [sync]);
+
   // Paginado: scroll suave corto entre grupos (antes era un salto seco). Con
   // reduced-motion vuelve al salto instantáneo.
   const step = (direction: 1 | -1) => {
@@ -145,13 +166,17 @@ export function ReleaseRail({
                 <li
                   key="today-marker"
                   aria-hidden
+                  data-today-marker=""
                   style={revealStyle(firstUpcoming)}
-                  className={`flex shrink-0 flex-col items-center gap-2 self-stretch pt-1 ${revealClass}`}
+                  className={`relative flex w-10 shrink-0 flex-col items-center gap-1.5 self-stretch ${revealClass}`}
                 >
-                  <span className="font-data text-[10px] uppercase tracking-widest text-amber">
+                  <span className="rounded-full border border-amber/50 bg-amber/10 px-1.5 py-px font-data text-[10px] uppercase tracking-widest text-amber">
                     {todayLabel}
                   </span>
-                  <span className="w-px flex-1 bg-amber/60" />
+                  <span className="w-px flex-1 bg-gradient-to-b from-amber/70 to-amber/0" />
+                  {/* Tramo de pista y hito ámbar, a la altura de los hitos de las tarjetas. */}
+                  <span className="absolute -left-4 -right-4 top-[calc(9rem+1.25rem)] h-px bg-ink-border" />
+                  <span className="absolute top-[calc(9rem+1.25rem)] size-2.5 -translate-y-1/2 rounded-full bg-amber ring-4 ring-ink" />
                 </li>,
               );
             }
@@ -164,14 +189,14 @@ export function ReleaseRail({
               >
                 <Link
                   href={albumHref(release.artist, release.title, release.id)}
-                  className="group flex flex-col gap-2"
+                  className="group flex flex-col"
                 >
-                  {release.coverThumbUrl ? (
-                    <div
-                      className={`relative aspect-square overflow-hidden rounded border border-ink-border transition-colors group-hover:border-amber ${
-                        upcoming ? "opacity-60" : ""
-                      }`}
-                    >
+                  <div
+                    className={`relative aspect-square overflow-hidden rounded-md shadow-md shadow-black/40 ring-1 ring-ink-border transition-[opacity,box-shadow] duration-200 group-hover:ring-amber ${
+                      upcoming ? "opacity-60 group-hover:opacity-100" : ""
+                    }`}
+                  >
+                    {release.coverThumbUrl ? (
                       <AppImage
                         src={release.coverThumbUrl}
                         alt=""
@@ -179,25 +204,38 @@ export function ReleaseRail({
                         sizes="144px"
                         className="object-cover transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-safe:group-hover:scale-[1.04]"
                       />
-                    </div>
-                  ) : (
-                    <DiscPlaceholder
-                      alt=""
-                      className={`aspect-square w-full rounded border border-ink-border transition-colors group-hover:border-amber ${
-                        upcoming ? "opacity-60" : ""
+                    ) : (
+                      <DiscPlaceholder alt="" className="size-full" />
+                    )}
+                    {upcoming ? (
+                      <span className="absolute left-1.5 top-1.5 rounded-full bg-ink/85 px-2 py-0.5 font-data text-[10px] uppercase tracking-wider text-paper backdrop-blur-sm">
+                        {upcomingBadge}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  {/* Pista de la línea de tiempo: un tramo por tarjeta (cubre el
+                      hueco hasta la siguiente) con un hito al inicio — relleno lo
+                      que ya salió, hueco lo que viene. */}
+                  <div className="relative mt-5 h-px">
+                    <span className="absolute -right-4 left-0 top-0 h-px bg-ink-border" />
+                    <span
+                      className={`absolute left-0 top-0 size-2 -translate-y-1/2 rounded-full ring-4 ring-ink ${
+                        upcoming ? "border border-paper-muted bg-ink" : "bg-paper-muted"
                       }`}
                     />
-                  )}
-                  <div className="min-w-0">
-                    <span className="block truncate font-display text-sm text-paper transition-colors group-hover:text-amber">
+                  </div>
+
+                  <div className="mt-3 min-w-0">
+                    <time dateTime={release.releaseDate} className="block font-data text-xs text-paper-muted">
+                      {upcoming ? `${upcomingPrefix} ` : ""}
+                      {formatReleaseDate(release.releaseDate, locale)}
+                    </time>
+                    <span className="mt-1 block truncate font-display text-sm text-paper transition-colors group-hover:text-amber">
                       {release.title}
                     </span>
                     <span className="block truncate font-data text-xs text-paper-muted">
                       {release.artist}
-                    </span>
-                    <span className="block font-data text-xs text-paper-muted">
-                      {upcoming ? `${upcomingPrefix} ` : ""}
-                      {formatMonth(release.releaseDate, locale)}
                     </span>
                   </div>
                 </Link>
@@ -239,7 +277,7 @@ function EdgeArrow({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className={`absolute top-[72px] z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded border border-ink-border bg-ink-surface text-paper transition-[opacity,border-color] duration-200 hover:border-amber disabled:pointer-events-none disabled:opacity-0 ${
+      className={`absolute top-[76px] z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-ink-border bg-ink-surface/85 text-paper shadow-lg shadow-black/50 backdrop-blur-sm transition-[opacity,border-color,color] duration-200 hover:border-amber hover:text-amber disabled:pointer-events-none disabled:opacity-0 ${
         side === "left" ? "left-1" : "right-1"
       }`}
     >
