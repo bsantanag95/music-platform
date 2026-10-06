@@ -1,7 +1,7 @@
 {
   "title": "Feed",
   "emptyTitle": "Nada para ver todavía",
-  "emptyDescription": "Sigue a personas para que sus escuchas, favoritos, listas, valoraciones y comentarios aparezcan acá.",
+  "emptyDescription": "Sigue a personas para que sus escuchas, favoritos, listas, valoraciones, comentarios, Caminos y discos de su colección aparezcan acá.",
   "community": {
     "pageTitle": "Actividad de la comunidad",
     "heading": "Actividad",
@@ -38,11 +38,6 @@
     "people": "{count, plural, one {# persona que sigues} other {# personas que sigues}}",
     "andMore": "y {count} más"
   },
-  "ambient": {
-    "title": "También en tu red",
-    "collectionVerb": "sumó a su colección:",
-    "andMore": "y {count} más"
-  },
   "groupMore": "y {count} más",
   "loadMore": "Cargar más",
   "loadingMore": "Cargando...",
@@ -67,7 +62,10 @@
     "list": "Lista",
     "rating": "Valoración",
     "comment": "Comentario",
-    "review": "Reseña"
+    "review": "Reseña",
+    "collection": "Colección",
+    "wanted": "En búsqueda",
+    "camino": "Camino"
   },
   "context": {
     "first_listen": "Primera escucha",
@@ -78,5 +76,28 @@
     "private": "Privado",
     "followers": "Seguidores",
     "public": "Público"
-  }
+  },
+  "ratingLabelScore": "{stars} de 5 estrellas, {score} de 100",
+  "collectionLabel": "Sumó a su colección",
+  "wantedLabel": "Lo busca",
+  "anyFormat": "cualquier formato",
+  "format": {
+    "vinyl": "Vinilo",
+    "cd": "CD",
+    "cassette": "Casete",
+    "other": "Otro formato"
+  },
+  "camino": {
+    "created": "Creó un Camino",
+    "completed": "Completó un Camino"
+  },
+  "caminoAlbums": "{count, plural, one {# disco} other {# discos}}",
+  "opinion": {
+    "rating_review": "Valoró y reseñó",
+    "rating_comment": "Valoró y comentó",
+    "review_comment": "Reseñó y comentó",
+    "rating_review_comment": "Valoró, reseñó y comentó"
+  },
+  "groupCollection": "{count, plural, one {sumó # disco a su colección} other {sumó # discos a su colección}}",
+  "groupWanted": "{count, plural, one {busca # disco} other {busca # discos}}"
 }

@@ -93,11 +93,12 @@ numéricos) para ese dato.
   superficie que no lo muestra) se muestra `4,5`. Nunca ambos, y nunca el formato viejo
   `4,5 · 87`.
 - **Dónde sí.** El panel "Tu relación" (álbum y canción), la reseña propia (para su autor),
-  las valoraciones destacadas del perfil y, sin mostrarse, como desempate del orden "Tú" de
-  la discografía.
-- **Dónde no.** El feed (ni la fila ni la corrida plegada), las reseñas del perfil, la
-  tracklist, las carátulas de la discografía y las filas compactas (`★ 4,5`). Son superficies
-  densas o de otras personas: el número es íntimo.
+  las valoraciones destacadas del perfil, el **feed de actividad** (fila, fila fusionada de
+  opinión y, como `★ 86/100`, la corrida plegada; también el rastro propio de Inicio —
+  `expand-feed-coverage`, 2026-10-06, revierte D7 para el feed: el /100 gana relevancia social)
+  y, sin mostrarse, como desempate del orden "Tú" de la discografía.
+- **Dónde no.** Las reseñas del perfil, la tracklist, las carátulas de la discografía y las
+  demás filas compactas (`★ 4,5`).
 - **Sin color.** La nota no se codifica por color (ni semáforo ni gradiente): el número usa
   un tono neutro con peso tipográfico. El ámbar queda reservado al relleno de las estrellas.
 

@@ -129,6 +129,11 @@ menos un álbum de la lista tiene ese género efectivo (con herencia del artista
 - El dueño de una lista no controla si admite tracking — la decisión es siempre de quien trackea.
 - Convertir una Lista existente en Camino (o viceversa) queda fuera de v1: son objetos distintos.
 - El progreso de Camino no se integra al feed de actividad (mismo tratamiento que Recorrido).
+  **Revisado en `expand-feed-coverage` (2026-10-06):** crear un Camino y completarlo sí generan
+  entradas propias en el feed de seguidos (`kind: "camino"`, con audiencia, moderación y
+  archivado respetados; el completado se deriva en lectura, sin persistir). El progreso
+  parcial, el trackeo de un Camino ajeno (privado de quien trackea) y los Recorridos siguen
+  fuera del feed.
 
 ## Ideas futuras (backlog, no comprometidas)
 

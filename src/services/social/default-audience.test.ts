@@ -23,6 +23,7 @@ describe("TYPE_DEFAULT_AUDIENCE", () => {
       diary: "private",
       list: "followers",
       collection: "followers",
+      wanted: "followers",
     });
   });
 });

@@ -21,6 +21,15 @@ function sourceQuery(rows: unknown[]) {
   return { from };
 }
 
+// Fallback de las queries que un test no configura: vacía tanto si termina en
+// `where()` (avatares de la página) como en `where().orderBy().limit()`
+// (fuentes del feed).
+function emptyQuery() {
+  const where = vi.fn(() => Object.assign(Promise.resolve([]), { orderBy: () => ({ limit: async () => [] }) }));
+  const chain = { innerJoin: vi.fn(() => chain), leftJoin: vi.fn(() => chain), where };
+  return { from: vi.fn(() => chain) };
+}
+
 const author = { id: "00000000-0000-4000-8000-000000000002", username: "alguien", displayName: "Alguien" };
 
 describe("servicio de datos de Inicio", () => {
@@ -53,6 +62,10 @@ describe("servicio de datos de Inicio", () => {
   });
 
   describe("listMyRecentActivity", () => {
+    // Las fuentes que un test no configura (colección, wishlist y Caminos,
+    // openspec: expand-feed-coverage) devuelven vacío.
+    beforeEach(() => mocks.db.select.mockReset().mockReturnValue(emptyQuery()));
+
     const listenRow = (id: string, date: string) => ({
       id,
       listenContext: "first_listen",
@@ -240,6 +253,51 @@ describe("servicio de datos de Inicio", () => {
         kind: "follow-artist",
         artist: { id: "00000000-0000-4000-8000-000000000033", name: "Radiohead" },
       });
+    });
+
+    it("incluye altas de colección y wishlist privadas y Caminos propios (expand-feed-coverage)", async () => {
+      const album = {
+        releaseGroupId: "00000000-0000-4000-8000-0000000000b1",
+        releaseTitle: "Wish You Were Here",
+        releaseCover: null,
+        creditedArtist: "Pink Floyd",
+        creditedArtistId: null,
+        authorId: author.id,
+        authorUsername: author.username,
+        authorDisplayName: author.displayName,
+      };
+      // Orden: escuchas, ratings, comentarios, reseñas, seguir usuario, seguir
+      // artista, colección, wishlist, Camino creado, Camino completado.
+      for (let index = 0; index < 6; index++) mocks.db.select.mockReturnValueOnce(sourceQuery([]));
+      mocks.db.select
+        .mockReturnValueOnce(sourceQuery([{
+          ...album,
+          id: "00000000-0000-4000-8000-0000000000c1",
+          format: "cd",
+          audience: "private",
+          createdAt: new Date("2026-03-03T00:00:00Z"),
+        }]))
+        .mockReturnValueOnce(sourceQuery([{
+          ...album,
+          id: "00000000-0000-4000-8000-0000000000c2",
+          format: null,
+          audience: "private",
+          createdAt: new Date("2026-03-02T00:00:00Z"),
+        }]))
+        .mockReturnValueOnce(sourceQuery([{
+          id: "00000000-0000-4000-8000-0000000000d1",
+          title: "Krautrock esencial",
+          audience: "private",
+          at: new Date("2026-03-01T00:00:00Z"),
+          albumCount: 0,
+          authorId: author.id,
+          authorUsername: author.username,
+          authorDisplayName: author.displayName,
+        }]));
+
+      const result = await listMyRecentActivity(author.id, 1, 10);
+
+      expect(result.entries.map((entry) => entry.kind)).toEqual(["collection", "wanted", "camino"]);
     });
 
     it("devuelve lista vacía cuando no hay actividad propia", async () => {

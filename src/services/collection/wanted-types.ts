@@ -1,6 +1,7 @@
 // Tipos de la wishlist de colección (Fase 5, cambio add-collection-wishlist).
 // El contrato API (src/lib/api/schemas.ts) los refleja con Zod.
 
+import type { Audience } from "@/services/social/types";
 import type { CollectionFormat, EditionAttribute } from "./vocabulary";
 
 export interface WantedEntry {
@@ -9,6 +10,8 @@ export interface WantedEntry {
   format: CollectionFormat | null;
   attributes: EditionAttribute[];
   note: string | null;
+  /** Solo decide si la entrada aparece en el feed de seguidos (migración 0061). */
+  audience: Audience;
   createdAt: string;
   updatedAt: string;
   album: {
@@ -32,6 +35,7 @@ export interface WantedEntryChanges {
   format?: CollectionFormat | null;
   attributes?: EditionAttribute[];
   note?: string | null;
+  audience?: Audience;
 }
 
 export const WANTED_SORTS = ["recent", "alpha"] as const;

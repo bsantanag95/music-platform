@@ -1,7 +1,7 @@
 {
   "title": "Feed",
   "emptyTitle": "Nothing to see yet",
-  "emptyDescription": "Follow people to see their listens, favorites, lists, ratings and comments here.",
+  "emptyDescription": "Follow people to see their listens, favorites, lists, ratings, comments, Paths and collection records here.",
   "community": {
     "pageTitle": "Community activity",
     "heading": "Activity",
@@ -38,11 +38,6 @@
     "people": "{count, plural, one {# person you follow} other {# people you follow}}",
     "andMore": "and {count} more"
   },
-  "ambient": {
-    "title": "Also in your network",
-    "collectionVerb": "added to their collection:",
-    "andMore": "and {count} more"
-  },
   "groupMore": "and {count} more",
   "loadMore": "Load more",
   "loadingMore": "Loading...",
@@ -67,7 +62,10 @@
     "list": "List",
     "rating": "Rating",
     "comment": "Comment",
-    "review": "Review"
+    "review": "Review",
+    "collection": "Collection",
+    "wanted": "Looking for",
+    "camino": "Path"
   },
   "context": {
     "first_listen": "First listen",
@@ -78,5 +76,28 @@
     "private": "Private",
     "followers": "Followers",
     "public": "Public"
-  }
+  },
+  "ratingLabelScore": "{stars} out of 5 stars, {score} out of 100",
+  "collectionLabel": "Added to their collection",
+  "wantedLabel": "Looking for",
+  "anyFormat": "any format",
+  "format": {
+    "vinyl": "Vinyl",
+    "cd": "CD",
+    "cassette": "Cassette",
+    "other": "Other format"
+  },
+  "camino": {
+    "created": "Created a Path",
+    "completed": "Completed a Path"
+  },
+  "caminoAlbums": "{count, plural, one {# album} other {# albums}}",
+  "opinion": {
+    "rating_review": "Rated and reviewed",
+    "rating_comment": "Rated and commented",
+    "review_comment": "Reviewed and commented",
+    "rating_review_comment": "Rated, reviewed and commented"
+  },
+  "groupCollection": "{count, plural, one {added # record to their collection} other {added # records to their collection}}",
+  "groupWanted": "{count, plural, one {is looking for # record} other {is looking for # records}}"
 }

@@ -6,7 +6,9 @@ type GroupableEntry =
   | Extract<FeedEntry, { kind: "favorite" }>
   | Extract<FeedEntry, { kind: "rating" }>
   | Extract<FeedEntry, { kind: "follow" }>
-  | Extract<FeedEntry, { kind: "follow-artist" }>;
+  | Extract<FeedEntry, { kind: "follow-artist" }>
+  | Extract<FeedEntry, { kind: "collection" }>
+  | Extract<FeedEntry, { kind: "wanted" }>;
 
 type ListenEntry = Extract<FeedEntry, { kind: "listen" }>;
 
@@ -14,7 +16,7 @@ export interface FeedEntryGroup {
   kind: "group";
   // Estable para la `key` de React: tipo + id de la primera entrada.
   id: string;
-  groupedKind: "listen" | "favorite" | "rating" | "follow" | "follow-artist";
+  groupedKind: GroupableEntry["kind"];
   // Tier de la corrida (2 = señal de opinión sobre álbum, 3 = presencia
   // cotidiana, 4 = ambiente/seguir a un usuario). El render puede darle un
   // poco más de peso al grupo tier 2.
@@ -43,9 +45,75 @@ export interface FeedRotationPeak {
   createdAt: string;
 }
 
-export type FeedRow = FeedEntry | FeedEntryGroup | FeedRotationPeak;
+type RatingEntry = Extract<FeedEntry, { kind: "rating" }>;
+type ReviewEntry = Extract<FeedEntry, { kind: "review" }>;
+type CommentEntry = Extract<FeedEntry, { kind: "comment" }>;
+type OpinionEntry = RatingEntry | ReviewEntry | CommentEntry;
+
+// Fila fusionada de opinión (openspec: expand-feed-coverage, D6): valoración,
+// reseña y/o comentario consecutivos del mismo autor sobre el mismo objetivo,
+// a lo sumo uno de cada tipo. Siempre incluye prosa (una valoración no se
+// repite por objetivo), así que es tier 1: nunca se pliega y corta corridas.
+export interface FeedOpinionRow {
+  kind: "opinion";
+  id: string;
+  author: FeedEntry["author"];
+  // La más reciente de las fusionadas (la lista viene ordenada desc).
+  createdAt: string;
+  target: OpinionEntry["target"];
+  rating: RatingEntry | null;
+  review: ReviewEntry | null;
+  comment: CommentEntry | null;
+}
+
+export type FeedRow = FeedEntry | FeedEntryGroup | FeedRotationPeak | FeedOpinionRow;
 
 const GROUP_MIN = 3;
+
+function isOpinionEntry(entry: FeedEntry): entry is OpinionEntry {
+  return entry.kind === "rating" || entry.kind === "review" || entry.kind === "comment";
+}
+
+// Fusión de opinión a partir de `entries[start]`: toma las entradas
+// estrictamente contiguas del mismo autor y objetivo mientras su tipo no esté
+// ya incluido (un segundo comentario corta). Sin reordenar: si otra entrada se
+// interpone, no hay fusión. Devuelve `null` si no hay al menos dos.
+function opinionRowAt(entries: FeedEntry[], start: number): { row: FeedOpinionRow; end: number } | null {
+  const first = entries[start]!;
+  if (!isOpinionEntry(first)) return null;
+
+  const picked: Partial<Record<OpinionEntry["kind"], OpinionEntry>> = { [first.kind]: first };
+  let end = start + 1;
+  while (end < entries.length) {
+    const next = entries[end]!;
+    if (
+      !isOpinionEntry(next) ||
+      picked[next.kind] ||
+      next.author.id !== first.author.id ||
+      next.target.type !== first.target.type ||
+      next.target.id !== first.target.id
+    ) {
+      break;
+    }
+    picked[next.kind] = next;
+    end++;
+  }
+  if (end - start < 2) return null;
+
+  return {
+    row: {
+      kind: "opinion",
+      id: `opinion-${first.kind}-${first.id}`,
+      author: first.author,
+      createdAt: first.createdAt,
+      target: first.target,
+      rating: (picked.rating as RatingEntry | undefined) ?? null,
+      review: (picked.review as ReviewEntry | undefined) ?? null,
+      comment: (picked.comment as CommentEntry | undefined) ?? null,
+    },
+    end,
+  };
+}
 
 // Álbum de una escucha, favorito o valoración de canción, cuando está
 // resuelto (ver `RECORDING_ALBUM_ID_SQL`). `null` para cualquier otro caso
@@ -78,10 +146,11 @@ const ROTATION_PEAK_WINDOW_DAYS = 7;
 const ROTATION_PEAK_MIN_SONG = 3;
 const ROTATION_PEAK_MIN_ALBUM = 2;
 
-// Candidata a colapsar: tier 2, 3 (rating, favorito, escucha sin nota) o 4
-// (seguir a un usuario u a un artista, openspec: add-feed-kind-differentiation,
-// add-artist-follow-feed-entry). Los tier 1 (comentario, nota de escucha,
-// reseña, evento de lista) nunca lo son y cortan cualquier corrida.
+// Candidata a colapsar: tier 2, 3 (rating, favorito, escucha sin nota, alta de
+// colección o de wishlist) o 4 (seguir a un usuario u a un artista, openspec:
+// add-feed-kind-differentiation, add-artist-follow-feed-entry). Los tier 1
+// (comentario, nota de escucha, reseña, evento de lista o de Camino) nunca lo
+// son y cortan cualquier corrida.
 function isGroupable(entry: FeedEntry): entry is GroupableEntry {
   const tier = feedEntryTier(entry);
   if (tier !== 2 && tier !== 3 && tier !== 4) return false;
@@ -90,7 +159,9 @@ function isGroupable(entry: FeedEntry): entry is GroupableEntry {
     entry.kind === "favorite" ||
     entry.kind === "rating" ||
     entry.kind === "follow" ||
-    entry.kind === "follow-artist"
+    entry.kind === "follow-artist" ||
+    entry.kind === "collection" ||
+    entry.kind === "wanted"
   );
 }
 
@@ -236,6 +307,10 @@ function albumWindowRows(window: SweepCandidate[], now: Date): FeedRow[] {
  * `GROUP_MIN` o más se pliega en un `FeedEntryGroup` genérico (openspec:
  * rework-feed-tiers + add-feed-rotation-peak).
  *
+ * Antes que todo lo anterior, una valoración, reseña o comentario seguidos de
+ * otra(s) del mismo autor sobre el mismo objetivo se fusionan en una
+ * `FeedOpinionRow` (openspec: expand-feed-coverage, D6).
+ *
  * `now` es inyectable para test; en producción es el `useNow()` estable del
  * componente.
  */
@@ -245,6 +320,13 @@ export function groupFeedRuns(entries: FeedEntry[], now: Date = new Date()): Fee
 
   while (i < entries.length) {
     const entry = entries[i]!;
+
+    const opinion = opinionRowAt(entries, i);
+    if (opinion) {
+      out.push(opinion.row);
+      i = opinion.end;
+      continue;
+    }
 
     if (isAlbumSweepCandidate(entry)) {
       let j = i + 1;

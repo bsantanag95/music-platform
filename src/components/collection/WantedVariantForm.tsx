@@ -5,7 +5,9 @@ import { useTranslations } from "next-intl";
 import { COLLECTION_FORMATS, attributesForFormat } from "@/services/collection/vocabulary";
 import { COLLECTION_NOTE_MAX } from "@/lib/api/schemas";
 import type { CollectionFormat, EditionAttribute } from "@/services/collection/vocabulary";
-import type { WantedEntry } from "@/lib/api/schemas";
+import type { DiaryAudience, WantedEntry } from "@/lib/api/schemas";
+
+const AUDIENCES: DiaryAudience[] = ["private", "followers", "public"];
 
 export interface WantedVariantFormValue {
   /** `null` = cualquier formato — a diferencia de `CollectionEntryFormValue.format`, opcional. */
@@ -14,6 +16,12 @@ export interface WantedVariantFormValue {
   /** "Cualquier edición": excluyente con `attributes`, que queda vacío mientras esté activo. */
   anyEdition: boolean;
   note: string;
+  /**
+   * Solo la edición la fija (migración 0061, expand-feed-coverage): en el alta
+   * queda `null` y el servidor resuelve la audiencia por defecto del usuario,
+   * mismo criterio que el alta de colección.
+   */
+  audience: DiaryAudience | null;
 }
 
 export const EMPTY_WANTED_VARIANT: WantedVariantFormValue = {
@@ -21,6 +29,7 @@ export const EMPTY_WANTED_VARIANT: WantedVariantFormValue = {
   attributes: [],
   anyEdition: false,
   note: "",
+  audience: null,
 };
 
 /** Valor inicial del formulario tomado de una entrada de deseo existente (edición). */
@@ -30,12 +39,15 @@ export function wantedEntryToFormValue(entry: WantedEntry): WantedVariantFormVal
     attributes: [...entry.attributes],
     anyEdition: entry.attributes.length === 0,
     note: entry.note ?? "",
+    audience: entry.audience,
   };
 }
 
 interface WantedVariantFormProps {
   value: WantedVariantFormValue;
   onChange: (next: WantedVariantFormValue) => void;
+  /** Muestra los controles de audiencia (edición); el alta usa el default. */
+  showAudience?: boolean;
   disabled?: boolean;
 }
 
@@ -53,8 +65,9 @@ function optionClasses(active: boolean, disabled?: boolean): string {
 // Formulario controlado de una variante deseada: formato opcional ("cualquier
 // formato" incluido como opción explícita, a diferencia de CollectionEntryForm
 // donde es obligatorio), atributos de edición (cero o más) y nota libre
-// (≤140). Sin audiencia: la wishlist es privada del dueño (D4, design.md).
-export function WantedVariantForm({ value, onChange, disabled }: WantedVariantFormProps) {
+// (≤140). La audiencia (solo en edición) decide si la entrada aparece en el
+// feed de seguidos; no hay vista pública de la wishlist (expand-feed-coverage).
+export function WantedVariantForm({ value, onChange, showAudience = false, disabled }: WantedVariantFormProps) {
   const t = useTranslations("collection");
   const fieldId = useId();
 
@@ -153,6 +166,26 @@ export function WantedVariantForm({ value, onChange, disabled }: WantedVariantFo
           className="rounded border border-ink-border bg-ink px-2 py-1.5 font-data text-sm text-paper disabled:opacity-50"
         />
       </label>
+
+      {showAudience ? (
+        <fieldset className="flex flex-col gap-1" disabled={disabled}>
+          <legend className="font-data text-xs text-paper-muted">{t("audienceLabel")}</legend>
+          <div className="flex flex-wrap gap-1.5">
+            {AUDIENCES.map((audience) => (
+              <label key={audience} className={optionClasses(value.audience === audience)}>
+                <input
+                  type="radio"
+                  name={`${fieldId}-audience`}
+                  className="sr-only"
+                  checked={value.audience === audience}
+                  onChange={() => onChange({ ...value, audience })}
+                />
+                {t(`audience.${audience}`)}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ) : null}
     </div>
   );
 }

@@ -10,10 +10,9 @@ import { FilterSelect } from "@/components/ui/FilterSelect";
 import { FeedActivityList } from "./FeedActivityList";
 import { getFeed, type FeedFiltersParams } from "@/lib/api/diary";
 import { queryKeys } from "@/lib/query/keys";
-import type { AuthorSummary, FeedEntry, FeedResponse } from "@/lib/api/schemas";
+import { FEED_KINDS, type AuthorSummary, type FeedEntry, type FeedResponse } from "@/lib/api/schemas";
 
 const PAGE_SIZE = 20;
-const FEED_KINDS = ["listen", "favorite", "list", "rating", "comment", "review"] as const;
 
 interface FeedListProps {
   initial: FeedResponse;

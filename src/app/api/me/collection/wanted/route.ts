@@ -22,6 +22,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     throw new ApiError("VALIDATION_ERROR", 400, "La entrada de deseo no es válida");
   }
   const user = await requireUser();
-  const entries = await addWantedEntries(user.id, parsed.data.releaseGroupId, parsed.data.entries);
+  const entries = await addWantedEntries(
+    user.id,
+    parsed.data.releaseGroupId,
+    parsed.data.entries,
+    parsed.data.audience,
+  );
   return NextResponse.json({ entries }, { status: 201 });
 });

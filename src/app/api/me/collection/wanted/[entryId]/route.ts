@@ -26,6 +26,7 @@ export const PATCH = withErrorHandling(
       format: parsed.data.format,
       attributes: parsed.data.attributes,
       note: parsed.data.note,
+      audience: parsed.data.audience,
     });
     return NextResponse.json({ entry });
   },

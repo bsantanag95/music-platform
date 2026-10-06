@@ -6,6 +6,7 @@ import {
   appUser,
   artist,
   artistFollow,
+  collectionEntry,
   comment,
   credit,
   listenEntry,
@@ -16,8 +17,17 @@ import {
   userFollow,
   userList,
   userListItem,
+  wantedEntry,
 } from "@/db/schema";
 import {
+  caminoBaseConditions,
+  caminoCompletedFeedQuery,
+  caminoCreatedFeedQuery,
+  caminoFeedEntries,
+  collectionFeedEntry,
+  collectionFeedQuery,
+  wantedFeedEntry,
+  wantedFeedQuery,
   PRIMARY_ARTIST_ID_SQL,
   PRIMARY_ARTIST_SQL,
   RECORDING_ALBUM_ID_SQL,
@@ -25,6 +35,8 @@ import {
 } from "@/services/feed/feed";
 import type {
   FeedAuthor,
+  FeedCamino,
+  FeedCollection,
   FeedComment,
   FeedFollow,
   FeedFollowArtist,
@@ -32,6 +44,7 @@ import type {
   FeedListenEntry,
   FeedRating,
   FeedReview,
+  FeedWanted,
 } from "@/services/feed/feed";
 import type { Audience } from "@/services/social/types";
 import { activeUserCondition } from "@/services/auth/account-status";
@@ -58,7 +71,8 @@ function targetType(
 }
 
 /**
- * "Tu rastro reciente" de Inicio: las escuchas, valoraciones y comentarios más
+ * "Tu rastro reciente" de Inicio: las escuchas, valoraciones, comentarios,
+ * reseñas, seguimientos, altas de colección y de wishlist y Caminos más
  * recientes del propio usuario, como recap de presencia. No filtra por
  * audiencia —es contenido propio, igual que `/me/diary`— ni por bloqueos.
  * Pagina igual que `listFeed`: cada fuente se trae ampliada
@@ -71,7 +85,17 @@ export async function listMyRecentActivity(
   page = 1,
   pageSize = 5,
 ): Promise<{
-  entries: (FeedListenEntry | FeedRating | FeedComment | FeedReview | FeedFollow | FeedFollowArtist)[];
+  entries: (
+    | FeedListenEntry
+    | FeedRating
+    | FeedComment
+    | FeedReview
+    | FeedFollow
+    | FeedFollowArtist
+    | FeedCollection
+    | FeedWanted
+    | FeedCamino
+  )[];
   page: number;
   pageSize: number;
   hasNext: boolean;
@@ -84,7 +108,18 @@ export async function listMyRecentActivity(
   const perSource = pageSize + extra;
   const followedUser = alias(appUser, "followed_user");
 
-  const [listens, ratings, comments, reviews, follows, followArtists] = await Promise.all([
+  const [
+    listens,
+    ratings,
+    comments,
+    reviews,
+    follows,
+    followArtists,
+    collections,
+    wanteds,
+    caminosCreated,
+    caminosCompleted,
+  ] = await Promise.all([
     db
       .select({
         id: listenEntry.id,
@@ -238,6 +273,13 @@ export async function listMyRecentActivity(
       .where(eq(artistFollow.userId, userId))
       .orderBy(desc(artistFollow.createdAt), desc(artistFollow.id))
       .limit(perSource),
+
+    // Colección, wishlist y Caminos propios (openspec: expand-feed-coverage):
+    // mismas fuentes que `listFeed`, sin filtro de audiencia (contenido propio).
+    collectionFeedQuery(eq(collectionEntry.userId, userId), perSource),
+    wantedFeedQuery(eq(wantedEntry.userId, userId), perSource),
+    caminoCreatedFeedQuery(and(...caminoBaseConditions([userId])), perSource),
+    caminoCompletedFeedQuery(and(...caminoBaseConditions([userId])), perSource),
   ]);
 
   const listenEntries: FeedListenEntry[] = listens.map((row) => ({
@@ -337,6 +379,9 @@ export async function listMyRecentActivity(
     ...reviewEntries,
     ...followEntries,
     ...followArtistEntries,
+    ...collections.map(collectionFeedEntry),
+    ...wanteds.map(wantedFeedEntry),
+    ...caminoFeedEntries(caminosCreated, caminosCompleted),
   ]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice((page - 1) * pageSize, page * pageSize + extra);
