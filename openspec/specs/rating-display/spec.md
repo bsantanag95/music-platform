@@ -69,11 +69,12 @@ superficie que no lo muestra) SHALL mostrarse el número de estrellas. El puntaj
 mostrarse solo en: el panel "Tu relación" del álbum y de la canción, la reseña propia, las
 valoraciones destacadas del perfil, la biblioteca propia "Mis valoraciones", el feed de actividad
 (la fila de una entrada, la fila fusionada de opinión y, como `★ 86/100`, la corrida plegada;
-también el rastro propio de Inicio, que comparte esa presentación) y, sin mostrarse,
+también el rastro propio de Inicio, que comparte esa presentación), la actividad de la comunidad
+(bloque de Inicio y sección "Recientes" de `/activity`, como `★ 86/100`) y, sin mostrarse,
 como desempate del orden "Tú" de la discografía; el tooltip y el texto accesible de la nota
 propia en la columna "Tú" de la discografía SHALL incluirlo (`Tu nota: 4,5 · 86/100`). NO SHALL mostrarse en las reseñas del perfil, en la tracklist, en las
 marcas visibles de la discografía ni en ninguna otra forma compacta `★ 4,5`, que nunca lleva puntaje salvo en la corrida plegada
-del feed. El
+del feed y en la actividad de la comunidad. El
 formato antiguo `4,5 · 87` NO SHALL usarse en ninguna superficie.
 
 #### Scenario: Destacada con puntaje

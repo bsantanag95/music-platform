@@ -96,7 +96,11 @@ export function CompactActivityRow({ entry }: { entry: CompactActivityEntry }) {
         ? entry.title
           ? t("reviewVerbTitled", { title: entry.title })
           : t("reviewVerb")
-        : formatStars(Number(entry.stars), locale);
+        : // Forma compacta `★ 86/100` con puntaje detallado, `★ 4,5` sin él — nunca
+          // ambos (rating-display: el /100 también se muestra en la actividad de la comunidad).
+          entry.detailedScore != null
+          ? `${entry.detailedScore}/100`
+          : formatStars(Number(entry.stars), locale);
 
   // El glifo de refuerzo se omite en rating (★ ya cumple ese rol) — mismo
   // criterio que `FeedActivityList` (openspec: add-feed-kind-differentiation).

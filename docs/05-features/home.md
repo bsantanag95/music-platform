@@ -226,8 +226,11 @@ layout denso: grilla `lg:grid-cols-[1.5fr_1fr]` (apilados en < `lg`) con `compac
 no `page.tsx`.
 
 - `CommunityActivity` renderiza `CompactActivityRow`: carátula 40px + una línea mono
-  `@autor · ★N · fecha relativa` + título del target (display, `truncate`) + cuerpo del
-  comentario con `line-clamp-2`. `<ul>` con `divide-y divide-ink-border`, sin tarjeta.
+  `@autor · ★ 86/100` (o `★ 4,5` sin puntaje detallado; `Reseñó`/`Comentó` con su glifo) y la
+  fecha relativa alineada a la derecha + título del target (display, `truncate`) `· artista` +
+  cuerpo del comentario o reseña con `line-clamp-2` y borde izquierdo (petróleo en la reseña).
+  `<ul>` con `divide-y divide-ink-border`, sin tarjeta; el encabezado enlaza "Ver todo" a
+  `/activity`.
 - `PublicLists` (`CompactListRow`): título de la lista (display) + `@autor · fecha
   relativa` (mono), `divide-y`, **sin `DiscPlaceholder`** (el disco por ítem no aportaba
   información).

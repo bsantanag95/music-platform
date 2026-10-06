@@ -155,6 +155,17 @@ describe("CompactActivityRow — diferenciación visual por tipo (add-feed-kind-
     expect(screen.getByText("Comentó").className).not.toMatch(/text-petrol/);
   });
 
+  it("un rating con puntaje detallado muestra ★ 86/100 en lugar de las estrellas", () => {
+    renderWithIntl(
+      <CompactActivityRow
+        entry={{ kind: "rating", id: "rt3", stars: "4.5", detailedScore: 86, createdAt: "2026-01-01T00:00:00.000Z", target, author }}
+      />,
+    );
+
+    expect(screen.getByText("86/100")).toBeInTheDocument();
+    expect(screen.queryByText("4,5")).not.toBeInTheDocument();
+  });
+
   it("comentario y reseña muestran un glifo junto al verbo; el rating no", () => {
     const { container: commentContainer } = renderWithIntl(
       <CompactActivityRow
