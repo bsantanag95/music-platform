@@ -1698,6 +1698,27 @@ export const comment = pgTable(
   ],
 );
 
+// Likes en comentarios (openspec: add-comment-likes, migración 0062). Registro anónimo:
+// solo deduplica y cuenta; nunca se expone quién likeó.
+export const commentLike = pgTable(
+  "comment_like",
+  {
+    commentId: uuid("comment_id")
+      .notNull()
+      .references(() => comment.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.commentId, t.userId] }),
+    index("idx_comment_like_user").on(t.userId),
+  ],
+);
+
+export type CommentLikeRow = typeof commentLike.$inferSelect;
+
 export const listenEntry = pgTable(
   "listen_entry",
   {

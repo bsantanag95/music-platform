@@ -5,9 +5,8 @@ import type { PopularCommentsByType } from "@/services/home/home";
 // Apartado de Inicio "Comentarios populares": distinto de "Actividad de la
 // comunidad" (cronológica, mezcla ratings + comentarios). Acá son solo
 // comentarios, rankeados, con más contexto (autor, target, valoración),
-// en un solo espacio con control segmentado por tipo de entidad. El ranking es
-// un proxy hasta que existan likes reales — ver docs/05-features/home.md,
-// "Comentarios populares".
+// en un solo espacio con control segmentado por tipo de entidad. Ranking por
+// likes reales — ver docs/05-features/home.md, "Comentarios populares".
 export async function PopularComments({ comments }: { comments: PopularCommentsByType }) {
   const total =
     comments.artist.length + comments["release-group"].length + comments.recording.length;
@@ -27,6 +26,7 @@ export async function PopularComments({ comments }: { comments: PopularCommentsB
           recording: t("popularCommentsTabSongs"),
         }}
         emptyText={t("popularCommentsEmpty")}
+        likeWord={t("popularCommentsLikeWord")}
       />
     </section>
   );

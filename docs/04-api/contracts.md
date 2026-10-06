@@ -1808,11 +1808,30 @@ propio y devuelve `204`.
 rangos se rechazan con `400 { error, code: "VALIDATION_ERROR" }`; no se normalizan silenciosamente.
 `POST` recibe `{ body }`, permite múltiples comentarios por usuario y devuelve `201 { comment }`.
 
+Cada comentario trae `likeCount` (cifra visible: `null` mientras haya menos de 3 likes, el número real
+desde 3; igual para todos, autor incluido) y `likedByMe` (si el visitante autenticado likeó; `false`
+sin sesión). El `GET` es público: la sesión es opcional y solo sirve para `likedByMe`. Nunca hay
+identidades de quienes likearon. El `POST` devuelve `likeCount: null, likedByMe: false`.
+
 ### `PATCH/DELETE /api/catalog/comments/{commentId}`
 
 `PATCH` recibe `{ body }` y solo permite editar el comentario propio. `DELETE` realiza borrado físico
 solo del comentario propio y devuelve `204`; devuelve `404 { error, code: "COMMENT_NOT_FOUND" }` si
 el comentario no existe y `403 { error, code: "PERMISSION_DENIED" }` si pertenece a otro usuario.
+
+### `PUT/DELETE /api/catalog/comments/{commentId}/like` (cambio `add-comment-likes`)
+
+Da o quita el like propio a un comentario. Ambos son **idempotentes** (repetir no cambia nada) y
+devuelven `200 { liked, likeCount }`, con `likeCount` ya umbralizado (`null` bajo 3 likes; el conteo
+real bajo el umbral nunca sale del servidor). El conteo excluye likes de cuentas desactivadas.
+
+- Requieren sesión (`401 AUTH_REQUIRED`). Id que no es UUID → `400 INVALID_COMMENT`.
+- `PUT` además exige que no haya suspensión social (`403 SOCIAL_SUSPENSION_ACTIVE`), que el comentario
+  exista y esté visible (`404 COMMENT_NOT_FOUND`; uno oculto por moderación cuenta como inexistente), que
+  no sea propio (`403 PERMISSION_DENIED`) y que no haya bloqueo en ninguna dirección con su autor
+  (`403 BLOCKED`).
+- `DELETE` solo exige sesión y que el comentario exista: sigue permitido bajo suspensión social y bloqueo.
+- La identidad de quien likeó no se expone nunca, ni al autor.
 
 ### `GET/POST /api/catalog/{target}/{id}/reviews` (cambio `add-album-review`)
 

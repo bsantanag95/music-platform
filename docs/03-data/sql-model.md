@@ -745,6 +745,16 @@ creados antes del cambio se conservan intactos; solo cambia qué renderiza la UI
 
 **Restricciones:** `CHECK (num_nonnulls(artist_id, release_group_id, recording_id) = 1)`, igual que `credit` y `rating`.
 
+## `comment_like`
+
+**Propósito:** likes en comentarios (migración `0062`, cambio `add-comment-likes`). Registro **anónimo**:
+solo deduplica (un like por persona y comentario) y alimenta el conteo; la identidad de quien likeó
+no se expone nunca, ni al autor. `PRIMARY KEY (comment_id, user_id)` (sin id propio: nada la
+referencia) e índice `idx_comment_like_user`. Ambos FK son `ON DELETE CASCADE`: los comentarios y las
+cuentas se borran físicamente (ADR 0009). El conteo es `COUNT(*)` sobre la PK, **excluyendo cuentas
+desactivadas** (reaparecen al reactivar); no hay contador denormalizado. Que el autor no pueda likear su
+propio comentario cruza tablas y no es un `CHECK`: lo impone el servicio.
+
 ## `review`
 
 **Propósito:** la reseña como entidad propia (migración `0017`, cambio `add-album-review`) — la

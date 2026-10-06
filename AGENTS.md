@@ -84,6 +84,13 @@ de cuál de las filas con el mismo título haya en la BD.
 >   interrumpió, limpiar con
 >   `DELETE FROM app_user WHERE username LIKE 'smoke_verify_%';`. Captura el
 >   token de verificación del adaptador `console`; no envía correo real.
+> - `smoke-test-comment-likes.ts` crea un artista sintético (MBID `5e0ce000-0000-4000-8000-0000000007c0`) y
+>   usuarios `smoke_like_*` con sus comentarios y likes, y los borra al terminar (también si falla; el `ON
+>   DELETE CASCADE` limpia comentarios, likes, bloqueos y restricciones). Si se interrumpió, limpiar con
+>   `DELETE FROM app_user WHERE username LIKE 'smoke_like_%'; DELETE FROM artist WHERE mbid::text LIKE
+>   '5e0ce000%';`. Necesita la migración `0062` aplicada. Verifica el conteo con umbral, `likedByMe`, el orden
+>   y la cifra de Comentarios populares, que las cuentas desactivadas no cuentan, bloqueos, comentario propio y
+>   oculto, la suspensión social y las cascadas.
 > - `smoke-test-album-editions.ts` y `smoke-test-personnel-credits.ts` (fixtures
 >   compartidos en `scripts/smoke-album-fixtures.ts`) crean un álbum, ediciones,
 >   grabaciones, obras, un sello y artistas con MBID sintéticos `5e0ce000-0000-4000-8000-*`

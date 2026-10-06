@@ -676,6 +676,13 @@ export const CommentSchema = z.object({
   }),
   body: z.string(),
   createdAt: z.string(),
+  // Likes (add-comment-likes): cifra visible (null bajo el umbral de 3) y si el visitante likeó.
+  likeCount: z.number().int().nullable().default(null),
+  likedByMe: z.boolean().default(false),
+});
+export const CommentLikeResponseSchema = z.object({
+  liked: z.boolean(),
+  likeCount: z.number().int().nullable(),
 });
 export const CommentMutationResponseSchema = z.object({
   comment: CommentSchema,
