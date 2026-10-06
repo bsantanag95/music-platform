@@ -5,13 +5,14 @@ import type { FeedEntry } from "@/lib/api/schemas";
  * reemplaza el criterio binario "con texto / sola presencia"):
  *
  *   1 Expresivo         — comentario · escucha con nota · reseña · evento de lista
+ *                         · evento de Camino (openspec: expand-feed-coverage)
  *   2 Señal de opinión  — rating de ÁLBUM · favorito de ÁLBUM
  *   3 Presencia cotidiana — rating de canción · favorito de canción/artista · escucha sin nota
+ *                         · alta en la colección física · alta en la wishlist
+ *                         (openspec: expand-feed-coverage, D4: el objetivo es
+ *                         un álbum, así que llevan celda de carátula)
  *   4 Ambiente          — seguir usuario (openspec: add-feed-kind-differentiation)
- *                         y seguir artista (openspec: add-artist-follow-feed-entry),
- *                         ambos activos en el feed · colección física
- *                         (todavía NO llega al feed principal, ver
- *                         `feed-ambient-events`)
+ *                         y seguir artista (openspec: add-artist-follow-feed-entry)
  *
  * El tier depende del tipo Y del objetivo: el mismo rating pesa distinto sobre
  * un álbum que sobre una canción.
@@ -21,6 +22,7 @@ export function feedEntryTier(entry: FeedEntry): 1 | 2 | 3 | 4 {
     case "comment":
     case "review":
     case "list":
+    case "camino":
       return 1;
     case "listen":
       return hasNote(entry) ? 1 : 3;
@@ -28,6 +30,9 @@ export function feedEntryTier(entry: FeedEntry): 1 | 2 | 3 | 4 {
       return entry.target.type === "release-group" ? 2 : 3;
     case "favorite":
       return entry.targetType === "release-group" ? 2 : 3;
+    case "collection":
+    case "wanted":
+      return 3;
     case "follow":
     case "follow-artist":
       return 4;

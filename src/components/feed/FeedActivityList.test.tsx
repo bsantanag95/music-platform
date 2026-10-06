@@ -274,17 +274,30 @@ describe("FeedActivityList", () => {
     });
   });
 
-  it("un rating se muestra con la fila de estrellas y el número, sin puntaje detallado", () => {
+  it("un rating con puntaje detallado muestra `87/100` en lugar de las estrellas en número (expand-feed-coverage)", () => {
     renderWithIntl(<FeedActivityList entries={[rating()]} />);
 
-    // valor numérico visible, con coma en español, y sin el puntaje detallado
-    expect(screen.getByText("4,5")).toBeInTheDocument();
-    expect(screen.queryByText(/87/)).not.toBeInTheDocument();
-    // la fila de estrellas lleva un aria-label legible, sin el puntaje
-    expect(screen.getByRole("img", { name: /4,5/ })).toBeInTheDocument();
-    expect(screen.queryByRole("img", { name: /87.*100/ })).not.toBeInTheDocument();
+    // el puntaje reemplaza al número de estrellas, nunca ambos
+    expect(screen.getByText("87/100")).toBeInTheDocument();
+    expect(screen.queryByText("4,5")).not.toBeInTheDocument();
+    // la etiqueta accesible incluye estrellas y puntaje
+    expect(screen.getByRole("img", { name: "4,5 de 5 estrellas, 87 de 100" })).toBeInTheDocument();
     // el verbo del metadato es corto, no "Valoró con 4,5 estrellas"
     expect(screen.queryByText(/Valoró con/)).not.toBeInTheDocument();
+  });
+
+  it("un rating sin puntaje detallado muestra el número de estrellas", () => {
+    renderWithIntl(<FeedActivityList entries={[rating({ detailedScore: null })]} />);
+
+    expect(screen.getByText("4,5")).toBeInTheDocument();
+    expect(screen.queryByText(/\/100/)).not.toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "4,5 de 5 estrellas" })).toBeInTheDocument();
+  });
+
+  it("el rastro propio también muestra el puntaje detallado", () => {
+    renderWithIntl(<FeedActivityList entries={[rating()]} variant="self" />);
+
+    expect(screen.getByText("87/100")).toBeInTheDocument();
   });
 
   it("una escucha sin nota con reacción la muestra inline y no abre panel de prosa", () => {
@@ -457,10 +470,11 @@ describe("FeedActivityList", () => {
 
     expect(screen.getByText(/valoró 3 discos/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Uno" })).toBeInTheDocument();
-    // forma compacta `★ 4,5`: estrella + número, no un número suelto ni el puntaje
-    expect(screen.getByText(/★ 4,5/)).toBeInTheDocument();
+    // forma compacta: `★ 87/100` con puntaje, `★ 3,0` sin él — siempre con la estrella
+    expect(screen.getByText(/★ 87\/100/)).toBeInTheDocument();
     expect(screen.getByText(/★ 3,0/)).toBeInTheDocument();
-    expect(screen.queryByText(/87/)).not.toBeInTheDocument();
+    expect(screen.getByText(/★ 100\/100/)).toBeInTheDocument();
+    expect(screen.queryByText(/4,5/)).not.toBeInTheDocument();
     // una sola fila: ninguna fila de estrellas individual, ninguna celda de carátula
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
     expect(screen.queryByTestId("cover-thumb")).not.toBeInTheDocument();
@@ -707,6 +721,103 @@ describe("FeedActivityList", () => {
       renderWithIntl(<FeedActivityList entries={[comment()]} />);
 
       expect(screen.queryByRole("button", { name: "Ver más" })).not.toBeInTheDocument();
+    });
+  });
+
+  describe("colección, wishlist, Caminos y fusión (expand-feed-coverage)", () => {
+    const album = {
+      type: "release-group" as const,
+      id: "rg9",
+      title: "Wish You Were Here",
+      artistName: "Pink Floyd",
+      artistId: "a9",
+      coverThumbUrl: "https://cover/9.jpg",
+    };
+
+    it("un alta de colección abre con la carátula y muestra el formato y la audiencia, sin nota", () => {
+      renderWithIntl(
+        <FeedActivityList
+          entries={[{ kind: "collection", id: "co1", format: "vinyl", audience: "followers", createdAt: "2026-08-05T00:00:00Z", target: album, author }]}
+        />,
+      );
+
+      expect(screen.getByText(/Sumó a su colección · Vinilo · Seguidores/)).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Wish You Were Here" })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Pink Floyd" })).toBeInTheDocument();
+      expect(screen.getByTestId("cover-thumb")).toHaveAttribute("data-cover", "https://cover/9.jpg");
+    });
+
+    it("un alta en la wishlist sin formato dice 'cualquier formato'", () => {
+      renderWithIntl(
+        <FeedActivityList
+          entries={[{ kind: "wanted", id: "w1", format: null, audience: "public", createdAt: "2026-08-05T00:00:00Z", target: album, author }]}
+        />,
+      );
+
+      expect(screen.getByText(/Lo busca · cualquier formato · Público/)).toBeInTheDocument();
+    });
+
+    it("un Camino completado enlaza a su página de lectura y muestra la cantidad de discos", () => {
+      renderWithIntl(
+        <FeedActivityList
+          entries={[
+            {
+              kind: "camino",
+              id: "ca1",
+              event: "completed",
+              audience: "public",
+              createdAt: "2026-08-05T00:00:00Z",
+              camino: { id: "ca1", title: "Krautrock esencial", albumCount: 12 },
+              author,
+            },
+          ]}
+        />,
+      );
+
+      expect(screen.getByText(/Completó un Camino · 12 discos/)).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Krautrock esencial" })).toHaveAttribute(
+        "href",
+        "/users/fran/caminos/ca1",
+      );
+    });
+
+    it("el mismo Camino creado y completado en la página no repite la key", () => {
+      const camino = { id: "ca1", title: "Krautrock esencial", albumCount: 0 };
+      const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+      renderWithIntl(
+        <FeedActivityList
+          entries={[
+            { kind: "camino", id: "ca1", event: "completed", audience: "public", createdAt: "2026-08-05T00:00:00Z", camino, author },
+            { kind: "camino", id: "ca1", event: "created", audience: "public", createdAt: "2026-08-01T00:00:00Z", camino, author },
+          ]}
+        />,
+      );
+
+      expect(screen.getByText(/Creó un Camino/)).toBeInTheDocument();
+      expect(screen.getByText(/Completó un Camino/)).toBeInTheDocument();
+      // React avisa por console.error ante keys repetidas.
+      expect(consoleError).not.toHaveBeenCalled();
+      consoleError.mockRestore();
+    });
+
+    it("valoración, reseña y comentario contiguos se muestran en una sola fila", () => {
+      const target = { type: "release-group" as const, id: "rg3", title: "In Rainbows", artistName: "Radiohead", coverThumbUrl: null };
+      renderWithIntl(
+        <FeedActivityList
+          entries={[
+            rating({ createdAt: "2026-08-05T00:00:03Z", target }),
+            review({ createdAt: "2026-08-05T00:00:02Z", target }),
+            comment({ createdAt: "2026-08-05T00:00:01Z", target }),
+          ]}
+        />,
+      );
+
+      expect(screen.getByText(/Valoró, reseñó y comentó/)).toBeInTheDocument();
+      expect(screen.getAllByRole("link", { name: "In Rainbows" })).toHaveLength(1);
+      expect(screen.getByText("87/100")).toBeInTheDocument();
+      expect(screen.getByText("Un disco para volver")).toBeInTheDocument();
+      expect(screen.getByText("Cada vez que lo vuelvo a poner encuentro algo nuevo.")).toBeInTheDocument();
+      expect(screen.getAllByTestId("cover-thumb")).toHaveLength(1);
     });
   });
 });

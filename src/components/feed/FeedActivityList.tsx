@@ -10,7 +10,12 @@ import { targetHref } from "./feed-target";
 import { listHref } from "@/lib/catalog-links";
 import { StarRatingValue } from "@/components/social/StarRatingValue";
 import { isFeedEntryQuote } from "./feed-entry-tier";
-import { groupFeedRuns, type FeedEntryGroup, type FeedRotationPeak } from "./feed-grouping";
+import {
+  groupFeedRuns,
+  type FeedEntryGroup,
+  type FeedOpinionRow,
+  type FeedRotationPeak,
+} from "./feed-grouping";
 import { ProsePanel, RelativeDate, TargetTitle } from "./feed-row-parts";
 import { FEED_KIND_ICONS } from "./FeedKindIcons";
 import { UserHoverCard } from "@/components/profiles/UserHoverCard";
@@ -77,6 +82,14 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
           );
         }
 
+        if (row.kind === "opinion") {
+          return (
+            <li key={row.id} className={`${self ? "py-3 pl-4" : "py-4"} first:pt-0 last:pb-0`}>
+              <OpinionRow row={row} t={t} self={self} clamp={clamp} />
+            </li>
+          );
+        }
+
         if (row.kind === "follow") {
           return (
             <li key={`follow-${row.id}`} className={subordinateClass}>
@@ -102,7 +115,7 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
           // que una entrada de sola presencia quede en dos líneas, no cuatro.
           return (
             <li
-              key={`${row.kind}-${row.id}`}
+              key={entryKey(row)}
               className={`${heavy ? "py-3" : "py-2"} first:pt-0 last:pb-0 pl-4`}
             >
               <MetaLine entry={row} t={t} hideAuthor />
@@ -110,13 +123,7 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
                 <TargetTitle {...targetLink(row)} layout="inline" />
                 <EntryReaction entry={row} inline />
               </div>
-              {row.kind === "rating" ? (
-                <StarRatingValue
-                  stars={row.stars}
-                  detailedScore={null}
-                  label={ratingLabel(row.stars, t, locale)}
-                />
-              ) : null}
+              {row.kind === "rating" ? <RatingValue entry={row} t={t} locale={locale} /> : null}
               {row.kind === "review" ? <ReviewKicker title={row.title} /> : null}
               {heavy && body ? (
                 <ProsePanel
@@ -131,20 +138,14 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
         }
 
         return (
-          <li key={`${row.kind}-${row.id}`} className={`${heavy ? "py-4" : "py-3"} first:pt-0 last:pb-0`}>
+          <li key={entryKey(row)} className={`${heavy ? "py-4" : "py-3"} first:pt-0 last:pb-0`}>
             <div className="flex gap-3 sm:gap-4">
               <FeedCell entry={row} />
               <div className="min-w-0 flex-1">
                 <MetaLine entry={row} t={t} hideAuthor={false} />
                 <TargetTitle {...targetLink(row)} />
                 <EntryReaction entry={row} />
-                {row.kind === "rating" ? (
-                  <StarRatingValue
-                    stars={row.stars}
-                    detailedScore={null}
-                    label={ratingLabel(row.stars, t, locale)}
-                  />
-                ) : null}
+                {row.kind === "rating" ? <RatingValue entry={row} t={t} locale={locale} /> : null}
                 {row.kind === "review" ? <ReviewKicker title={row.title} /> : null}
                 {heavy && body ? (
                   <ProsePanel
@@ -187,7 +188,11 @@ function GroupRow({
           ? t("groupFollows", { count: group.entries.length })
           : group.groupedKind === "follow-artist"
             ? t("groupFollowArtists", { count: group.entries.length })
-            : t(group.tier === 2 ? "groupRatings" : "groupSongRatings", { count: group.entries.length });
+            : group.groupedKind === "collection"
+              ? t("groupCollection", { count: group.entries.length })
+              : group.groupedKind === "wanted"
+                ? t("groupWanted", { count: group.entries.length })
+                : t(group.tier === 2 ? "groupRatings" : "groupSongRatings", { count: group.entries.length });
 
   return (
     <div>
@@ -381,24 +386,67 @@ function actionLabel(entry: FeedEntry, t: FeedT): string {
       return t("followVerb");
     case "follow-artist":
       return t("followArtistVerb");
+    case "collection":
+      return `${t("collectionLabel")} · ${t(`format.${entry.format}`)}`;
+    case "wanted":
+      return `${t("wantedLabel")} · ${entry.format ? t(`format.${entry.format}`) : t("anyFormat")}`;
+    case "camino":
+      return entry.camino.albumCount > 0
+        ? `${t(`camino.${entry.event}`)} · ${t("caminoAlbums", { count: entry.camino.albumCount })}`
+        : t(`camino.${entry.event}`);
   }
 }
 
-// El feed nunca muestra el puntaje detallado (openspec: define-detailed-score, D7): la
-// etiqueta accesible lleva solo las estrellas.
-function ratingLabel(stars: string, t: FeedT, locale: string): string {
-  return t("ratingLabel", { stars: formatStars(Number(stars), locale) });
+// Key de React por entrada: un Camino puede aparecer dos veces en la misma
+// página (creado y completado) con el mismo id.
+function entryKey(entry: FeedEntry): string {
+  return entry.kind === "camino" ? `camino-${entry.event}-${entry.id}` : `${entry.kind}-${entry.id}`;
 }
 
-// Valor compacto para una valoración dentro de una fila de grupo plegada (ej. "4,5") — el
-// número con `formatStars`, sin repetir la fila de estrellas completa por cada entrada de la
-// corrida. Se muestra tras la forma compacta `★ 4,5` (rating-display), no como un número suelto.
+// El feed muestra el puntaje detallado cuando el autor lo puso (openspec:
+// expand-feed-coverage, revierte D7 de define-detailed-score solo para el feed):
+// `86/100` en lugar de `4,5`, y la etiqueta accesible lo incluye.
+function ratingLabel(stars: string, detailedScore: number | null, t: FeedT, locale: string): string {
+  const formatted = formatStars(Number(stars), locale);
+  return detailedScore != null
+    ? t("ratingLabelScore", { stars: formatted, score: detailedScore })
+    : t("ratingLabel", { stars: formatted });
+}
+
+function RatingValue({
+  entry,
+  t,
+  locale,
+}: {
+  entry: Extract<FeedEntry, { kind: "rating" }>;
+  t: FeedT;
+  locale: string;
+}) {
+  return (
+    <StarRatingValue
+      stars={entry.stars}
+      detailedScore={entry.detailedScore}
+      showScore
+      label={ratingLabel(entry.stars, entry.detailedScore, t, locale)}
+    />
+  );
+}
+
+// Valor compacto para una valoración dentro de una fila de grupo plegada — sin repetir la fila
+// de estrellas completa por cada entrada de la corrida. Se muestra tras la estrella de la forma
+// compacta (rating-display): `★ 86/100` con puntaje detallado, `★ 4,5` sin él; nunca un número
+// suelto ni ambos.
 function ratingGroupValue(entry: Extract<FeedEntry, { kind: "rating" }>, locale: string): string {
-  return formatStars(Number(entry.stars), locale);
+  return entry.detailedScore != null ? `${entry.detailedScore}/100` : formatStars(Number(entry.stars), locale);
 }
 
 function audienceLabel(entry: FeedEntry, t: FeedT): string | null {
-  return entry.kind === "listen" || entry.kind === "favorite" || entry.kind === "list"
+  return entry.kind === "listen" ||
+    entry.kind === "favorite" ||
+    entry.kind === "list" ||
+    entry.kind === "collection" ||
+    entry.kind === "wanted" ||
+    entry.kind === "camino"
     ? t(`audience.${entry.audience}`)
     : null;
 }
@@ -417,6 +465,14 @@ function targetLink(
     return {
       href: listHref(entry.author.username, entry.list.title, entry.list.id),
       label: entry.list.title,
+      artist: null,
+      artistHref: null,
+    };
+  }
+  if (entry.kind === "camino") {
+    return {
+      href: `/users/${encodeURIComponent(entry.author.username)}/caminos/${entry.camino.id}`,
+      label: entry.camino.title,
       artist: null,
       artistHref: null,
     };
@@ -453,7 +509,9 @@ function targetLink(
 }
 
 function coverForEntry(entry: FeedEntry): string | null {
-  if (entry.kind === "list" || entry.kind === "follow" || entry.kind === "follow-artist") return null;
+  if (entry.kind === "list" || entry.kind === "follow" || entry.kind === "follow-artist" || entry.kind === "camino") {
+    return null;
+  }
   const type = entry.kind === "favorite" ? entry.targetType : entry.target.type;
   return type === "release-group" ? entry.target.coverThumbUrl : null;
 }
@@ -477,13 +535,18 @@ function MetaLine({
   entry,
   t,
   hideAuthor,
+  label,
+  iconKind,
 }: {
   entry: FeedEntry;
   t: FeedT;
   hideAuthor: boolean;
+  // Verbo e ícono propios de la fila fusionada de opinión (ver `OpinionRow`).
+  label?: string;
+  iconKind?: FeedEntry["kind"];
 }) {
   const audience = audienceLabel(entry, t);
-  const icon = FEED_KIND_ICONS[entry.kind];
+  const icon = FEED_KIND_ICONS[iconKind ?? entry.kind];
   return (
     <div className="flex items-baseline justify-between gap-3">
       <span className="min-w-0 font-data text-xs text-paper-muted">
@@ -498,10 +561,46 @@ function MetaLine({
             {icon}
           </span>
         ) : null}
-        {actionLabel(entry, t)}
+        {label ?? actionLabel(entry, t)}
         {audience ? ` · ${audience}` : null}
       </span>
       <RelativeDate iso={entry.createdAt} />
+    </div>
+  );
+}
+
+// Fila fusionada de opinión (openspec: expand-feed-coverage, D6): valoración,
+// reseña y/o comentario contiguos del mismo autor sobre el mismo objetivo, en
+// una sola fila — verbo compuesto, estrellas con puntaje, reseña y comentario
+// como citas. Misma anatomía que una fila normal (celda + columna de texto en
+// "feed"; sin celda ni autor en "self").
+function OpinionRow({ row, t, self, clamp }: { row: FeedOpinionRow; t: FeedT; self: boolean; clamp: boolean }) {
+  const locale = useLocale();
+  const primary: FeedEntry = row.rating ?? row.review ?? row.comment!;
+  const parts = [row.rating && "rating", row.review && "review", row.comment && "comment"].filter(Boolean);
+  const verb = t(`opinion.${parts.join("_")}`);
+  const iconKind = row.review ? "review" : "comment";
+
+  const content = (
+    <>
+      <MetaLine entry={primary} t={t} hideAuthor={self} label={verb} iconKind={iconKind} />
+      <TargetTitle {...targetLink(primary)} layout={self ? "inline" : undefined} />
+      {row.rating ? <RatingValue entry={row.rating} t={t} locale={locale} /> : null}
+      {row.review ? (
+        <>
+          <ReviewKicker title={row.review.title} />
+          <ProsePanel body={row.review.body} variant="comment" clamp={clamp} accent="review" />
+        </>
+      ) : null}
+      {row.comment ? <ProsePanel body={row.comment.body} variant="comment" clamp={clamp} /> : null}
+    </>
+  );
+
+  if (self) return content;
+  return (
+    <div className="flex gap-3 sm:gap-4">
+      <FeedCell entry={primary} />
+      <div className="min-w-0 flex-1">{content}</div>
     </div>
   );
 }

@@ -991,6 +991,25 @@ ediciones del mismo CD). No es un toggle idempotente.
 página de álbum), `idx_collection_entry_release_group` (recuperación por álbum) e
 `idx_collection_entry_attributes` (`GIN` sobre `attributes`, filtro por atributo).
 
+## `wanted_entry`
+
+**Propósito:** wishlist de colección, "En tu búsqueda" (migración `0028`, cambio
+`add-collection-wishlist`): discos que el usuario querría conseguir. Mismo objetivo fijo (álbum)
+y mismo vocabulario de `attributes` y `note` que `collection_entry`.
+
+**Campos:** `user_id` y `release_group_id` (`ON DELETE CASCADE`); `format` **nullable** (`NULL`
+= "cualquier formato"); `attributes`, `note`, `created_at` / `updated_at` como en
+`collection_entry`; `audience` (migración `0061`, cambio `expand-feed-coverage`):
+`private` / `followers` / `public` (`chk_wanted_entry_audience`). Las filas anteriores a `0061`
+quedaron `private` (la wishlist era privada por diseño); el default de la columna pasó a
+`followers` y el servicio siempre la resuelve con la audiencia por defecto del usuario. Solo las
+entradas `followers`/`public` llegan al feed de seguidos.
+
+**Restricciones:** ninguna de unicidad (varias variantes por álbum).
+
+**Índices:** `idx_wanted_entry_user_created`, `idx_wanted_entry_user_release_group`,
+`idx_wanted_entry_release_group`.
+
 ## `image`
 
 **Propósito:** cada fila representa un archivo procesado que la aplicación posee (migración `0044`,

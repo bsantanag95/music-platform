@@ -1915,9 +1915,31 @@ export const CaminoDiscoveryResponseSchema = z.object({
 });
 export type CaminoDiscoveryResponse = z.infer<typeof CaminoDiscoveryResponseSchema>;
 
+// Formato físico de colección y wishlist. Fuente de valores:
+// src/services/collection/vocabulary.ts (mantener a mano). Declarado antes del
+// feed porque sus entradas de colección y wishlist lo usan.
+export const CollectionFormatSchema = z.enum(["vinyl", "cd", "cassette", "other"]);
+export type CollectionFormatValue = z.infer<typeof CollectionFormatSchema>;
+
 // ============================================================
 // Feed (Fase 5, add-favorites-and-lists)
 // ============================================================
+
+// Tipos filtrables del feed (`?kind=`), compartidos por el servicio
+// (`listFeed`), la ruta y el selector de `/me/feed`. "follow" y
+// "follow-artist" no son filtrables (no tienen título de objetivo).
+export const FEED_KINDS = [
+  "listen",
+  "favorite",
+  "list",
+  "rating",
+  "comment",
+  "review",
+  "collection",
+  "wanted",
+  "camino",
+] as const;
+export type FeedKind = (typeof FEED_KINDS)[number];
 
 export const FeedFavoriteSchema = z.object({
   kind: z.literal("favorite"),
@@ -2021,6 +2043,45 @@ export const FeedFollowArtistSchema = z.object({
 });
 export type FeedFollowArtist = z.infer<typeof FeedFollowArtistSchema>;
 
+// Alta en la colección física (openspec: expand-feed-coverage): el objetivo es
+// siempre un álbum. Sin `note` (es nota de inventario, no prosa del feed).
+export const FeedCollectionSchema = z.object({
+  kind: z.literal("collection"),
+  id: z.uuid(),
+  format: CollectionFormatSchema,
+  audience: DiaryAudienceSchema,
+  createdAt: z.string(),
+  target: FeedTargetInfoSchema,
+  author: AuthorSummarySchema,
+});
+export type FeedCollection = z.infer<typeof FeedCollectionSchema>;
+
+// Alta en la wishlist, "En tu búsqueda" (openspec: expand-feed-coverage).
+// `format: null` = "cualquier formato".
+export const FeedWantedSchema = z.object({
+  kind: z.literal("wanted"),
+  id: z.uuid(),
+  format: CollectionFormatSchema.nullable(),
+  audience: DiaryAudienceSchema,
+  createdAt: z.string(),
+  target: FeedTargetInfoSchema,
+  author: AuthorSummarySchema,
+});
+export type FeedWanted = z.infer<typeof FeedWantedSchema>;
+
+// Camino creado o completado (openspec: expand-feed-coverage). `id` es el del
+// Camino en ambos eventos; el completado se deriva en lectura.
+export const FeedCaminoSchema = z.object({
+  kind: z.literal("camino"),
+  id: z.uuid(),
+  event: z.enum(["created", "completed"]),
+  audience: DiaryAudienceSchema,
+  createdAt: z.string(),
+  camino: z.object({ id: z.uuid(), title: z.string(), albumCount: z.number().int() }),
+  author: AuthorSummarySchema,
+});
+export type FeedCamino = z.infer<typeof FeedCaminoSchema>;
+
 export const FeedEntrySchema = z.discriminatedUnion("kind", [
   FeedListenEntrySchema,
   FeedFavoriteSchema,
@@ -2030,6 +2091,9 @@ export const FeedEntrySchema = z.discriminatedUnion("kind", [
   FeedReviewSchema,
   FeedFollowSchema,
   FeedFollowArtistSchema,
+  FeedCollectionSchema,
+  FeedWantedSchema,
+  FeedCaminoSchema,
 ]);
 export type FeedEntry = z.infer<typeof FeedEntrySchema>;
 
@@ -2050,6 +2114,9 @@ export const RecentActivityEntrySchema = z.discriminatedUnion("kind", [
   FeedReviewSchema,
   FeedFollowSchema,
   FeedFollowArtistSchema,
+  FeedCollectionSchema,
+  FeedWantedSchema,
+  FeedCaminoSchema,
 ]);
 export type RecentActivityEntry = z.infer<typeof RecentActivityEntrySchema>;
 
@@ -2064,10 +2131,6 @@ export type RecentActivityResponse = z.infer<typeof RecentActivityResponseSchema
 // ============================================================
 // Colección física (Fase 5, add-physical-collection)
 // ============================================================
-
-// Fuente de valores: src/services/collection/vocabulary.ts (mantener a mano).
-export const CollectionFormatSchema = z.enum(["vinyl", "cd", "cassette", "other"]);
-export type CollectionFormatValue = z.infer<typeof CollectionFormatSchema>;
 
 export const EditionAttributeSchema = z.enum([
   "limited-edition",
@@ -2196,13 +2259,15 @@ export type CollectionEntriesResponse = z.infer<typeof CollectionEntriesResponse
 // Wishlist de colección (Fase 5, add-collection-wishlist)
 // ============================================================
 
-// A diferencia de CollectionEntry, format es opcional ("cualquier formato")
-// y no hay audiencia: la wishlist es privada del dueño.
+// A diferencia de CollectionEntry, format es opcional ("cualquier formato").
+// La audiencia (migración 0061, expand-feed-coverage) solo decide si la
+// entrada aparece en el feed de seguidos: no hay vista pública por username.
 export const WantedEntrySchema = z.object({
   id: z.uuid(),
   format: CollectionFormatSchema.nullable(),
   attributes: z.array(EditionAttributeSchema),
   note: z.string().nullable(),
+  audience: DiaryAudienceSchema,
   createdAt: z.string(),
   updatedAt: z.string(),
   album: CollectionAlbumSchema,
@@ -2216,10 +2281,13 @@ const WantedVariantSchema = z.object({
 });
 
 // Alta en lote: 1 a 10 variantes deseadas para un mismo álbum, en una sola
-// transacción (todo o nada si alguna variante es inválida).
+// transacción (todo o nada si alguna variante es inválida). `audience` es
+// única para todo el lote; sin ella, el servidor resuelve la audiencia por
+// defecto del usuario (spec default-audience).
 export const AddWantedEntriesRequestSchema = z.object({
   releaseGroupId: z.uuid(),
   entries: z.array(WantedVariantSchema).min(1).max(10),
+  audience: DiaryAudienceSchema.optional(),
 });
 export type AddWantedEntriesRequest = z.infer<typeof AddWantedEntriesRequestSchema>;
 
@@ -2238,6 +2306,7 @@ export const UpdateWantedEntryRequestSchema = z
       .max(EditionAttributeSchema.options.length)
       .optional(),
     note: z.string().trim().max(COLLECTION_NOTE_MAX).nullable().optional(),
+    audience: DiaryAudienceSchema.optional(),
   })
   .refine((changes) => Object.keys(changes).length > 0, {
     message: "Debe indicarse al menos un campo a modificar",

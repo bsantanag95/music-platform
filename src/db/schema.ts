@@ -1241,9 +1241,11 @@ export const collectionEntry = pgTable(
 export type CollectionEntryRow = typeof collectionEntry.$inferSelect;
 
 // Wishlist de colección (Fase 5, add-collection-wishlist). A diferencia de
-// collectionEntry, format es nullable ("cualquier formato") y no hay
-// audiencia: es privada del dueño, sin vista pública (mismo criterio que
-// want_to_listen). Varias entradas por álbum permitidas, sin índice único.
+// collectionEntry, format es nullable ("cualquier formato"). Sin vista
+// pública por `username`; desde la migración 0061 (expand-feed-coverage) cada
+// entrada tiene audiencia, que solo decide si aparece en el feed de seguidos
+// (las anteriores quedaron `private`). Varias entradas por álbum permitidas,
+// sin índice único.
 export const wantedEntry = pgTable(
   "wanted_entry",
   {
@@ -1260,6 +1262,7 @@ export const wantedEntry = pgTable(
       .notNull()
       .default(sql`'{}'::text[]`),
     note: text("note"),
+    audience: text("audience").notNull().default("followers"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -1269,6 +1272,7 @@ export const wantedEntry = pgTable(
     index("idx_wanted_entry_release_group").on(t.releaseGroupId),
     check("chk_wanted_entry_format", sql`${t.format} IS NULL OR ${t.format} IN ('vinyl', 'cd', 'cassette', 'other')`),
     check("chk_wanted_entry_note", sql`${t.note} IS NULL OR length(${t.note}) <= 140`),
+    check("chk_wanted_entry_audience", sql`${t.audience} IN ('private', 'followers', 'public')`),
   ],
 );
 

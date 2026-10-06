@@ -1,10 +1,11 @@
-import { and, desc, eq, ilike, inArray, ne, or, sql, type AnyColumn, type SQL } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, isNull, ne, or, sql, type AnyColumn, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import {
   appUser,
   artist,
   artistFollow,
+  collectionEntry,
   comment,
   favorite,
   listenEntry,
@@ -14,9 +15,12 @@ import {
   review,
   userFollow,
   userList,
+  wantedEntry,
 } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
+import type { FeedKind } from "@/lib/api/schemas";
 import type { Audience } from "@/services/social/types";
+import type { CollectionFormat } from "@/services/collection/vocabulary";
 import { activeUserCondition } from "@/services/auth/account-status";
 import { resolveImageUrls } from "@/services/storage/avatar-urls";
 
@@ -159,6 +163,58 @@ export interface FeedFollowArtist {
   author: FeedAuthor;
 }
 
+// Objetivo de una entrada de colección o wishlist: siempre un álbum. Misma
+// forma que `FeedComment.target` para reusar el render de título/artista.
+export interface FeedAlbumTarget {
+  type: "artist" | "release-group" | "recording";
+  id: string;
+  title: string;
+  artistName: string | null;
+  artistId: string | null;
+  coverThumbUrl: string | null;
+}
+
+// Alta en la colección física (openspec: expand-feed-coverage). Antes vivía
+// solo en la franja ambiente al pie de `/me/feed`, ya retirada. Una entrada
+// por copia (la colección admite varias por álbum); la nota no viaja: es una
+// nota de inventario, no prosa para el feed.
+export interface FeedCollection {
+  kind: "collection";
+  id: string;
+  format: CollectionFormat;
+  audience: Audience;
+  createdAt: string;
+  target: FeedAlbumTarget;
+  author: FeedAuthor;
+}
+
+// Alta en la wishlist, "En tu búsqueda" (openspec: expand-feed-coverage).
+// `format: null` = "cualquier formato". Solo las entradas con audiencia
+// `followers`/`public` (columna de la migración 0061).
+export interface FeedWanted {
+  kind: "wanted";
+  id: string;
+  format: CollectionFormat | null;
+  audience: Audience;
+  createdAt: string;
+  target: FeedAlbumTarget;
+  author: FeedAuthor;
+}
+
+// Camino creado o completado (openspec: expand-feed-coverage, D2/D3). El id
+// es el del Camino en ambos eventos — el render arma la key con `event`. El
+// completado se deriva en lectura (`CAMINO_COMPLETED_AT_SQL`), nunca se
+// persiste.
+export interface FeedCamino {
+  kind: "camino";
+  id: string;
+  event: "created" | "completed";
+  audience: Audience;
+  createdAt: string;
+  camino: { id: string; title: string; albumCount: number };
+  author: FeedAuthor;
+}
+
 export type FeedEntry =
   | FeedListenEntry
   | FeedFavorite
@@ -167,10 +223,14 @@ export type FeedEntry =
   | FeedComment
   | FeedReview
   | FeedFollow
-  | FeedFollowArtist;
+  | FeedFollowArtist
+  | FeedCollection
+  | FeedWanted
+  | FeedCamino;
 
-export const FEED_KINDS = ["listen", "favorite", "list", "rating", "comment", "review"] as const;
-export type FeedKind = (typeof FEED_KINDS)[number];
+// Fuente única en `lib/api/schemas` (también la usa el selector de tipo de
+// `/me/feed`, en el cliente).
+export { FEED_KINDS, type FeedKind } from "@/lib/api/schemas";
 
 // Filtros combinables de `listFeed` — cada campo es independiente y opcional.
 // `authorId` SHALL pertenecer a los seguidos aceptados del lector (se valida
@@ -217,7 +277,7 @@ export const PRIMARY_ARTIST_SQL = (releaseGroupIdCol: AnyColumn | SQL, recording
 // add-feed-artist-link). Subquery hermana, misma condición — se piden por
 // separado (no como fila compuesta) porque el resto del archivo ya trae cada
 // columna de un `SELECT` plano.
-export const PRIMARY_ARTIST_ID_SQL = (releaseGroupIdCol: AnyColumn, recordingIdCol: AnyColumn) =>
+export const PRIMARY_ARTIST_ID_SQL = (releaseGroupIdCol: AnyColumn | SQL, recordingIdCol: AnyColumn | SQL) =>
   sql<string | null>`(
     SELECT a.id FROM credit c
     JOIN artist a ON a.id = c.artist_id
@@ -290,6 +350,49 @@ function titleSearchCondition(pattern: string | null, releaseGroupIdCol: AnyColu
   return condition ? [condition] : [];
 }
 
+// Para objetivos que siempre son un álbum (colección, wishlist): la columna de
+// grabación de `PRIMARY_ARTIST_SQL`/`PRIMARY_ARTIST_ID_SQL` no existe ahí.
+const NO_RECORDING = sql`NULL::uuid`;
+
+// Búsqueda por título para fuentes cuyo objetivo es siempre un álbum: título
+// del álbum o su artista principal acreditado — mismo criterio que
+// `titleSearchCondition`, sin los joins de artista/canción que esas fuentes no
+// tienen.
+function albumSearchCondition(pattern: string | null, releaseGroupIdCol: AnyColumn): SQL[] {
+  if (!pattern) return [];
+  const condition = or(
+    ilike(releaseGroup.title, pattern),
+    sql`${PRIMARY_ARTIST_SQL(releaseGroupIdCol, NO_RECORDING)} ILIKE ${pattern}`,
+  );
+  return condition ? [condition] : [];
+}
+
+/**
+ * Instante en que un Camino quedó completo, derivado en lectura (openspec:
+ * expand-feed-coverage, D2): NULL si no tiene álbumes o si a alguno le falta
+ * una escucha del dueño; si no, el mayor entre los álbumes de
+ * `greatest(alta del álbum, primera escucha del dueño)` — la primera escucha
+ * del último álbum en cubrirse, o el alta de un álbum ya escuchado. Mismo
+ * criterio de progreso que `countsByListId` (cualquier escucha del dueño).
+ * Correlación con el literal `"user_list"` (ver raw-sql-gotchas): la fuente
+ * se consulta desde `user_list`.
+ */
+export const CAMINO_COMPLETED_AT_SQL = sql<Date | null>`(
+  SELECT CASE WHEN count(*) > 0 AND bool_and(fl.first_at IS NOT NULL)
+              THEN max(greatest(i.created_at, fl.first_at)) END
+  FROM user_list_item i
+  LEFT JOIN LATERAL (
+    SELECT min(le.created_at) AS first_at
+    FROM listen_entry le
+    WHERE le.user_id = "user_list"."owner_id" AND le.release_group_id = i.release_group_id
+  ) fl ON true
+  WHERE i.list_id = "user_list"."id"
+)`;
+
+export const CAMINO_ALBUM_COUNT_SQL = sql<number>`(
+  SELECT count(*)::int FROM user_list_item i WHERE i.list_id = "user_list"."id"
+)`;
+
 /**
  * Completa `author.avatarUrl` de las entradas de UNA página con una consulta
  * por lote (foto de perfil, openspec: connect-avatar-upload). Se hace sobre la
@@ -306,6 +409,215 @@ async function attachAuthorAvatars(entries: { author: FeedAuthor }[]): Promise<v
   const urls = await resolveImageUrls(rows.map((row) => row.avatarImageId));
   const byUser = new Map(rows.map((row) => [row.id, row.avatarImageId ? (urls.get(row.avatarImageId) ?? null) : null]));
   for (const entry of entries) entry.author.avatarUrl = byUser.get(entry.author.id) ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Fuentes de colección, wishlist y Camino (openspec: expand-feed-coverage).
+// Las comparten `listFeed` (actividad de seguidos, con audiencia y bloqueo) y
+// `listMyRecentActivity` (rastro propio, sin filtro de audiencia): cada caller
+// pasa su `where`. Misma forma `select…from…leftJoin…where…orderBy…limit` que
+// el resto de las fuentes.
+// ---------------------------------------------------------------------------
+
+/** Altas en la colección física, más recientes primero. */
+export function collectionFeedQuery(where: SQL | undefined, limit: number) {
+  return db
+    .select({
+      id: collectionEntry.id,
+      format: collectionEntry.format,
+      audience: collectionEntry.audience,
+      createdAt: collectionEntry.createdAt,
+      releaseGroupId: collectionEntry.releaseGroupId,
+      releaseTitle: releaseGroup.title,
+      releaseCover: releaseGroup.coverThumbUrl,
+      creditedArtist: PRIMARY_ARTIST_SQL(collectionEntry.releaseGroupId, NO_RECORDING),
+      creditedArtistId: PRIMARY_ARTIST_ID_SQL(collectionEntry.releaseGroupId, NO_RECORDING),
+      authorId: collectionEntry.userId,
+      authorUsername: appUser.username,
+      authorDisplayName: appUser.displayName,
+    })
+    .from(collectionEntry)
+    .leftJoin(releaseGroup, eq(collectionEntry.releaseGroupId, releaseGroup.id))
+    .leftJoin(appUser, eq(collectionEntry.userId, appUser.id))
+    .where(where)
+    .orderBy(desc(collectionEntry.createdAt), desc(collectionEntry.id))
+    .limit(limit);
+}
+
+/** Altas en la wishlist ("En tu búsqueda"), más recientes primero. */
+export function wantedFeedQuery(where: SQL | undefined, limit: number) {
+  return db
+    .select({
+      id: wantedEntry.id,
+      format: wantedEntry.format,
+      audience: wantedEntry.audience,
+      createdAt: wantedEntry.createdAt,
+      releaseGroupId: wantedEntry.releaseGroupId,
+      releaseTitle: releaseGroup.title,
+      releaseCover: releaseGroup.coverThumbUrl,
+      creditedArtist: PRIMARY_ARTIST_SQL(wantedEntry.releaseGroupId, NO_RECORDING),
+      creditedArtistId: PRIMARY_ARTIST_ID_SQL(wantedEntry.releaseGroupId, NO_RECORDING),
+      authorId: wantedEntry.userId,
+      authorUsername: appUser.username,
+      authorDisplayName: appUser.displayName,
+    })
+    .from(wantedEntry)
+    .leftJoin(releaseGroup, eq(wantedEntry.releaseGroupId, releaseGroup.id))
+    .leftJoin(appUser, eq(wantedEntry.userId, appUser.id))
+    .where(where)
+    .orderBy(desc(wantedEntry.createdAt), desc(wantedEntry.id))
+    .limit(limit);
+}
+
+/**
+ * Condiciones de cualquier entrada de Camino, sin audiencia ni bloqueo (que
+ * agrega cada caller): subtipo `custom_journey`, ni oculto por moderación ni
+ * archivado. Los Recorridos (`artist_journey`) nunca entran: nacen `private`
+ * y no tienen lectura ajena; trackear un Camino ajeno tampoco (es privado de
+ * quien trackea, `list_save`).
+ */
+export function caminoBaseConditions(ownerIds: string[]): SQL[] {
+  return [
+    inArray(userList.ownerId, ownerIds),
+    eq(userList.kind, "custom_journey"),
+    eq(userList.moderationStatus, "visible"),
+    isNull(userList.journeyArchivedAt),
+  ];
+}
+
+/**
+ * Caminos creados (D3), por fecha de creación — no `updated_at`: editar o
+ * archivar no genera evento. Los Caminos siguen excluidos de los eventos de
+ * lista; acá tienen su propio `kind`.
+ */
+export function caminoCreatedFeedQuery(where: SQL | undefined, limit: number) {
+  return db
+    .select({
+      id: userList.id,
+      title: userList.title,
+      audience: userList.audience,
+      at: userList.createdAt,
+      albumCount: CAMINO_ALBUM_COUNT_SQL,
+      authorId: userList.ownerId,
+      authorUsername: appUser.username,
+      authorDisplayName: appUser.displayName,
+    })
+    .from(userList)
+    .leftJoin(appUser, eq(userList.ownerId, appUser.id))
+    .where(where)
+    .orderBy(desc(userList.createdAt), desc(userList.id))
+    .limit(limit);
+}
+
+/**
+ * Caminos completados (D2): derivado en lectura con `CAMINO_COMPLETED_AT_SQL`,
+ * sin tabla de eventos; la subconsulta solo se evalúa sobre los Caminos que ya
+ * pasaron el resto de las condiciones.
+ */
+export function caminoCompletedFeedQuery(where: SQL | undefined, limit: number) {
+  return db
+    .select({
+      id: userList.id,
+      title: userList.title,
+      audience: userList.audience,
+      at: CAMINO_COMPLETED_AT_SQL,
+      albumCount: CAMINO_ALBUM_COUNT_SQL,
+      authorId: userList.ownerId,
+      authorUsername: appUser.username,
+      authorDisplayName: appUser.displayName,
+    })
+    .from(userList)
+    .leftJoin(appUser, eq(userList.ownerId, appUser.id))
+    .where(and(where, sql`${CAMINO_COMPLETED_AT_SQL} IS NOT NULL`))
+    .orderBy(desc(CAMINO_COMPLETED_AT_SQL), desc(userList.id))
+    .limit(limit);
+}
+
+interface AlbumSourceRow {
+  id: string;
+  format: string | null;
+  audience: string;
+  createdAt: Date;
+  releaseGroupId: string;
+  releaseTitle: string | null;
+  releaseCover: string | null;
+  creditedArtist: string | null;
+  creditedArtistId: string | null;
+  authorId: string;
+  authorUsername: string | null;
+  authorDisplayName: string | null;
+}
+
+function albumTarget(row: AlbumSourceRow): FeedAlbumTarget {
+  return {
+    type: "release-group",
+    id: row.releaseGroupId,
+    title: row.releaseTitle ?? "",
+    artistName: row.creditedArtist,
+    artistId: row.creditedArtistId,
+    coverThumbUrl: row.releaseCover,
+  };
+}
+
+function sourceAuthor(row: { authorId: string; authorUsername: string | null; authorDisplayName: string | null }): FeedAuthor {
+  return { id: row.authorId, username: row.authorUsername ?? "", displayName: row.authorDisplayName };
+}
+
+export function collectionFeedEntry(row: AlbumSourceRow): FeedCollection {
+  return {
+    kind: "collection",
+    id: row.id,
+    format: row.format as CollectionFormat,
+    audience: row.audience as Audience,
+    createdAt: row.createdAt.toISOString(),
+    target: albumTarget(row),
+    author: sourceAuthor(row),
+  };
+}
+
+export function wantedFeedEntry(row: AlbumSourceRow): FeedWanted {
+  return {
+    kind: "wanted",
+    id: row.id,
+    format: row.format as CollectionFormat | null,
+    audience: row.audience as Audience,
+    createdAt: row.createdAt.toISOString(),
+    target: albumTarget(row),
+    author: sourceAuthor(row),
+  };
+}
+
+interface CaminoSourceRow {
+  id: string;
+  title: string;
+  audience: string;
+  // Una subconsulta escalar en `sql` vuelve del driver como texto, no como
+  // `Date` (solo las columnas tipadas se mapean): se normaliza en el mapeo.
+  at: Date | string | null;
+  albumCount: number;
+  authorId: string;
+  authorUsername: string | null;
+  authorDisplayName: string | null;
+}
+
+function caminoFeedEntry(row: CaminoSourceRow, event: FeedCamino["event"], at: Date | string): FeedCamino {
+  return {
+    kind: "camino",
+    id: row.id,
+    event,
+    audience: row.audience as Audience,
+    createdAt: new Date(at).toISOString(),
+    camino: { id: row.id, title: row.title, albumCount: Number(row.albumCount) },
+    author: sourceAuthor(row),
+  };
+}
+
+/** Une las dos fuentes de Camino (creado y completado) en entradas de feed. */
+export function caminoFeedEntries(created: CaminoSourceRow[], completed: CaminoSourceRow[]): FeedCamino[] {
+  return [
+    ...created.flatMap((row) => (row.at ? [caminoFeedEntry(row, "created", row.at)] : [])),
+    ...completed.flatMap((row) => (row.at ? [caminoFeedEntry(row, "completed", row.at)] : [])),
+  ];
 }
 
 /**
@@ -326,8 +638,9 @@ export async function listFeedAuthors(viewerId: string): Promise<FeedAuthor[]> {
 
 /**
  * Feed de actividad de usuarios seguidos: escuchas, favoritos, eventos de
- * listas (creación o actualización de metadatos), ratings vigentes y
- * comentarios. Se calcula bajo demanda uniendo las cinco fuentes y ordenando
+ * listas (creación o actualización de metadatos), ratings vigentes,
+ * comentarios, reseñas, seguimientos, altas de colección y de wishlist y
+ * Caminos creados o completados. Se calcula bajo demanda uniendo las fuentes y ordenando
  * por created_at DESC con desempate por fuente e id. Solo incluye actividades
  * visibles según audiencia y sin bloqueo; rating/comment no tienen audiencia
  * propia y se tratan como "public" implícita (ver design.md de
@@ -387,7 +700,20 @@ export async function listFeed(
   const extra = 1;
   const perSource = pageSize + extra;
 
-  const [listens, favorites, lists, ratings, comments, reviews, follows, followArtists] = await Promise.all([
+  const [
+    listens,
+    favorites,
+    lists,
+    ratings,
+    comments,
+    reviews,
+    follows,
+    followArtists,
+    collections,
+    wanteds,
+    caminosCreated,
+    caminosCompleted,
+  ] = await Promise.all([
     includeKind("listen")
       ? db
           .select({
@@ -487,6 +813,8 @@ export async function listFeed(
               inArray(userList.ownerId, authorIds),
               inArray(userList.audience, ["followers", "public"]),
               eq(userList.kind, "standard"),
+              // Una lista oculta por moderación no se anuncia (expand-feed-coverage).
+              eq(userList.moderationStatus, "visible"),
               BLOCKED_SQL(viewerId, userList.ownerId),
               ...(searchPattern ? [ilike(userList.title, searchPattern)] : []),
             ),
@@ -664,6 +992,57 @@ export async function listFeed(
           .orderBy(desc(artistFollow.createdAt), desc(artistFollow.id))
           .limit(perSource)
       : Promise.resolve([]),
+
+    // Altas en la colección física y en la wishlist y Caminos (openspec:
+    // expand-feed-coverage). Fuentes compartidas con el rastro propio de Inicio
+    // (`listMyRecentActivity`), que pasa sus propias condiciones.
+    includeKind("collection")
+      ? collectionFeedQuery(
+          and(
+            inArray(collectionEntry.userId, authorIds),
+            inArray(collectionEntry.audience, ["followers", "public"]),
+            BLOCKED_SQL(viewerId, collectionEntry.userId),
+            ...albumSearchCondition(searchPattern, collectionEntry.releaseGroupId),
+          ),
+          perSource,
+        )
+      : Promise.resolve([]),
+
+    includeKind("wanted")
+      ? wantedFeedQuery(
+          and(
+            inArray(wantedEntry.userId, authorIds),
+            inArray(wantedEntry.audience, ["followers", "public"]),
+            BLOCKED_SQL(viewerId, wantedEntry.userId),
+            ...albumSearchCondition(searchPattern, wantedEntry.releaseGroupId),
+          ),
+          perSource,
+        )
+      : Promise.resolve([]),
+
+    includeKind("camino")
+      ? caminoCreatedFeedQuery(
+          and(
+            ...caminoBaseConditions(authorIds),
+            inArray(userList.audience, ["followers", "public"]),
+            BLOCKED_SQL(viewerId, userList.ownerId),
+            ...(searchPattern ? [ilike(userList.title, searchPattern)] : []),
+          ),
+          perSource,
+        )
+      : Promise.resolve([]),
+
+    includeKind("camino")
+      ? caminoCompletedFeedQuery(
+          and(
+            ...caminoBaseConditions(authorIds),
+            inArray(userList.audience, ["followers", "public"]),
+            BLOCKED_SQL(viewerId, userList.ownerId),
+            ...(searchPattern ? [ilike(userList.title, searchPattern)] : []),
+          ),
+          perSource,
+        )
+      : Promise.resolve([]),
   ]);
 
   const author = (id: string, username: string | null, displayName: string | null): FeedAuthor => ({
@@ -826,6 +1205,10 @@ export async function listFeed(
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
   }));
 
+  const collectionEntries: FeedEntry[] = collections.map(collectionFeedEntry);
+  const wantedEntries: FeedEntry[] = wanteds.map(wantedFeedEntry);
+  const caminoEntries: FeedEntry[] = caminoFeedEntries(caminosCreated, caminosCompleted);
+
   const merged = [
     ...listenEntries,
     ...favoriteEntries,
@@ -835,6 +1218,9 @@ export async function listFeed(
     ...reviewEntries,
     ...followEntries,
     ...followArtistEntries,
+    ...collectionEntries,
+    ...wantedEntries,
+    ...caminoEntries,
   ]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice((page - 1) * pageSize, page * pageSize + extra);

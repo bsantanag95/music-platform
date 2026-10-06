@@ -246,6 +246,8 @@ export function CollectionAlbumAction({
                       {entry.attributes.map((attribute) => t(`attribute.${attribute}`)).join(" · ")}
                     </span>
                   )}
+                  {/* La audiencia decide si el alta llega al feed de seguidos (expand-feed-coverage). */}
+                  <span className="text-paper-muted">{` · ${t(`audience.${entry.audience}`)}`}</span>
                   {entry.note && <span className="mt-0.5 block text-paper-muted">{entry.note}</span>}
                 </div>
                 <Button variant="ghost" disabled={busy} onClick={() => void handleRemoveWanted(entry)}>

@@ -13,6 +13,13 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/db", () => ({ db: mocks.db }));
 
+// La audiencia por defecto se resuelve en su propio módulo (tiene su test);
+// acá solo importa qué audiencia llega al insert.
+const audienceMock = vi.hoisted(() => ({
+  resolve: vi.fn(async (_userId: string, _type: string, explicit?: string | null) => explicit ?? "followers"),
+}));
+vi.mock("@/services/social/default-audience", () => ({ resolveNewContentAudience: audienceMock.resolve }));
+
 // select().from().where().limit()  → assertAlbumExists
 function whereLimit(rows: unknown[]) {
   const limit = vi.fn().mockResolvedValue(rows);
@@ -38,12 +45,12 @@ function joinWherePaged(rows: unknown[]) {
   return { from: vi.fn(() => chain) };
 }
 
-function fakeTransaction(returnedIds: string[]) {
+function fakeTransaction(returnedIds: string[], inserted: unknown[] = []) {
   let call = 0;
   return vi.fn(async (cb: (tx: unknown) => Promise<unknown>) => {
     const tx = {
       insert: vi.fn(() => ({
-        values: vi.fn(() => ({
+        values: vi.fn((value: unknown) => (inserted.push(value), {
           returning: vi.fn().mockResolvedValue([{ id: returnedIds[call++] }]),
         })),
       })),
@@ -60,6 +67,7 @@ const entryRow = {
   format: "vinyl",
   attributes: ["limited-edition"],
   note: null,
+  audience: "followers",
   createdAt: new Date("2026-02-01T00:00:00Z"),
   updatedAt: new Date("2026-02-01T00:00:00Z"),
   releaseGroupId: albumId,
@@ -109,6 +117,50 @@ describe("servicio de wishlist de colección", () => {
 
     const entries = await addWantedEntries(userId, albumId, [{}]);
     expect(entries[0]!.format).toBeNull();
+  });
+
+  it("addWantedEntries aplica una sola audiencia explícita a todo el lote", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(whereLimit([{ id: albumId }]))
+      .mockReturnValueOnce(joinWhereOrderBy([{ ...entryRow, audience: "public" }]))
+      .mockReturnValueOnce(joinWhereOrderBy([]));
+    const inserted: unknown[] = [];
+    mocks.db.transaction = fakeTransaction([entryRow.id, "e2"], inserted);
+
+    const entries = await addWantedEntries(userId, albumId, [{ format: "cd" }, {}], "public");
+    expect(audienceMock.resolve).toHaveBeenCalledWith(userId, "wanted", "public");
+    expect(inserted).toEqual([
+      expect.objectContaining({ audience: "public" }),
+      expect.objectContaining({ audience: "public" }),
+    ]);
+    expect(entries[0]!.audience).toBe("public");
+  });
+
+  it("addWantedEntries sin audiencia usa la resuelta por defecto", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(whereLimit([{ id: albumId }]))
+      .mockReturnValueOnce(joinWhereOrderBy([entryRow]))
+      .mockReturnValueOnce(joinWhereOrderBy([]));
+    const inserted: unknown[] = [];
+    mocks.db.transaction = fakeTransaction([entryRow.id], inserted);
+
+    await addWantedEntries(userId, albumId, [{}]);
+    expect(audienceMock.resolve).toHaveBeenCalledWith(userId, "wanted", undefined);
+    expect(inserted).toEqual([expect.objectContaining({ audience: "followers" })]);
+  });
+
+  it("updateWantedEntry cambia la audiencia", async () => {
+    const set = vi.fn(() => ({
+      where: vi.fn(() => ({ returning: vi.fn().mockResolvedValue([{ id: entryRow.id }]) })),
+    }));
+    mocks.db.update.mockReturnValue({ set });
+    mocks.db.select
+      .mockReturnValueOnce(joinWhereOrderBy([{ ...entryRow, audience: "private" }]))
+      .mockReturnValueOnce(joinWhereOrderBy([]));
+
+    const entry = await updateWantedEntry(entryRow.id, userId, { audience: "private" });
+    expect(set).toHaveBeenCalledWith({ audience: "private" });
+    expect(entry.audience).toBe("private");
   });
 
   it("addWantedEntries rechaza un lote vacío o de más de 10 variantes", async () => {

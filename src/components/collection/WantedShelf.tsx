@@ -57,6 +57,8 @@ function sameFilters(a: WantedFiltersState, b: WantedFiltersState): boolean {
 // Pestaña "Quiero" de /me/collection: lista simple (sin los tres modos de
 // visualización, filtro por formato/atributo, agrupación ni audiencia en
 // lote de la pestaña "Tengo" — ver design.md D5 de add-collection-wishlist).
+// La audiencia por entrada se muestra en la fila y se edita en el panel de
+// edición (expand-feed-coverage).
 export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
   const t = useTranslations("collection");
   const locale = useLocale();
@@ -152,9 +154,16 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
     const note = editDraft.note.trim() === "" ? null : editDraft.note.trim();
     setBusyId(entry.id);
     setActionError(false);
-    patchLocal(entry.id, (item) => ({ ...item, format: editDraft.format, attributes: editDraft.attributes, note }));
+    const audience = editDraft.audience ?? entry.audience;
+    patchLocal(entry.id, (item) => ({
+      ...item,
+      format: editDraft.format,
+      attributes: editDraft.attributes,
+      note,
+      audience,
+    }));
     try {
-      await updateWantedEntry(entry.id, { format: editDraft.format, attributes: editDraft.attributes, note });
+      await updateWantedEntry(entry.id, { format: editDraft.format, attributes: editDraft.attributes, note, audience });
       cancelEdit();
     } catch {
       if (snapshot) queryClient.setQueryData(queryKey, snapshot);
@@ -262,6 +271,7 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
                     <WantedVariantForm
                       value={editDraft}
                       onChange={setEditDraft}
+                      showAudience
                       disabled={busyId === entry.id}
                     />
                     <div className="flex flex-wrap gap-2">
@@ -296,6 +306,7 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
                     <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                       <time dateTime={entry.createdAt} className="font-data text-xs text-paper-muted">
                         {formatCollectionDate(entry.createdAt, locale)}
+                        {` · ${t(`audience.${entry.audience}`)}`}
                       </time>
                       <span className="flex gap-2">
                         <Button

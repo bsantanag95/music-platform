@@ -45,6 +45,15 @@ function sourceQueryCapturing(rows: unknown[]) {
   return { from, where };
 }
 
+// Fallback de las queries que un test no configura: vacía tanto si termina en
+// `where()` (avatares de la página) como en `where().orderBy().limit()`
+// (fuentes del feed).
+function emptyQuery() {
+  const where = vi.fn(() => Object.assign(Promise.resolve([]), { orderBy: () => ({ limit: async () => [] }) }));
+  const chain = { innerJoin: vi.fn(() => chain), leftJoin: vi.fn(() => chain), where };
+  return { from: vi.fn(() => chain) };
+}
+
 const author = { id: "00000000-0000-4000-8000-000000000002", username: "seguido", displayName: "Seguido" };
 
 const listenRow = {
@@ -67,7 +76,12 @@ const listenRow = {
 };
 
 describe("servicio de feed ampliado", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Las fuentes que un test no configura (colección, wishlist y Caminos,
+    // openspec: expand-feed-coverage) devuelven vacío.
+    mocks.db.select.mockReset().mockReturnValue(emptyQuery());
+  });
 
   it("rechaza paginación inválida", async () => {
     await expect(listFeed(author.id, 0)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
@@ -625,6 +639,161 @@ describe("servicio de feed ampliado", () => {
     });
   });
 
+  describe("colección, wishlist y Caminos (expand-feed-coverage)", () => {
+    // Orden de fuentes en `listFeed`: seguidos, escuchas, favoritos, listas,
+    // ratings, comentarios, reseñas, seguir usuario, seguir artista, colección,
+    // wishlist, Camino creado, Camino completado.
+    function withSources(sources: Record<number, unknown>) {
+      mocks.db.select.mockReturnValueOnce(followedQuery(["u2"]));
+      for (let index = 0; index < 12; index++) {
+        mocks.db.select.mockReturnValueOnce(sources[index] ?? sourceQuery([]));
+      }
+    }
+
+    const albumRow = {
+      releaseGroupId: "00000000-0000-4000-8000-0000000000b1",
+      releaseTitle: "Wish You Were Here",
+      releaseCover: "https://cover/wywh.jpg",
+      creditedArtist: "Pink Floyd",
+      creditedArtistId: "00000000-0000-4000-8000-000000000001",
+      authorId: author.id,
+      authorUsername: author.username,
+      authorDisplayName: author.displayName,
+    };
+
+    it("expone un alta de colección con formato y álbum, sin nota", async () => {
+      withSources({
+        8: sourceQuery([{
+          ...albumRow,
+          id: "00000000-0000-4000-8000-0000000000c1",
+          format: "vinyl",
+          audience: "followers",
+          createdAt: new Date("2026-03-01T00:00:00Z"),
+        }]),
+      });
+
+      const result = await listFeed(author.id, 1, 20);
+
+      expect(result.entries).toEqual([
+        {
+          kind: "collection",
+          id: "00000000-0000-4000-8000-0000000000c1",
+          format: "vinyl",
+          audience: "followers",
+          createdAt: "2026-03-01T00:00:00.000Z",
+          target: {
+            type: "release-group",
+            id: albumRow.releaseGroupId,
+            title: "Wish You Were Here",
+            artistName: "Pink Floyd",
+            artistId: albumRow.creditedArtistId,
+            coverThumbUrl: "https://cover/wywh.jpg",
+          },
+          author: { ...author, avatarUrl: null },
+        },
+      ]);
+    });
+
+    it("expone un alta de wishlist con formato nulo como 'cualquier formato'", async () => {
+      withSources({
+        9: sourceQuery([{
+          ...albumRow,
+          id: "00000000-0000-4000-8000-0000000000c2",
+          format: null,
+          audience: "public",
+          createdAt: new Date("2026-03-02T00:00:00Z"),
+        }]),
+      });
+
+      const result = await listFeed(author.id, 1, 20);
+
+      expect(result.entries[0]).toMatchObject({ kind: "wanted", format: null, audience: "public" });
+    });
+
+    it("colección y wishlist solo incluyen audiencias followers/public, con bloqueo y búsqueda", async () => {
+      const collection = sourceQueryCapturing([]);
+      const wanted = sourceQueryCapturing([]);
+      withSources({ 8: collection, 9: wanted });
+
+      await listFeed(author.id, 1, 20, { q: "wish" });
+
+      for (const capturing of [collection, wanted]) {
+        const { sql, params } = dialect.sqlToQuery(capturing.where.mock.calls[0]![0]);
+        expect(sql).toContain('"audience" in');
+        expect(params).toEqual(expect.arrayContaining(["followers", "public", "%wish%"]));
+        expect(params).not.toContain("private");
+        expect(sql.toLowerCase()).toContain("user_block");
+      }
+    });
+
+    it("Camino creado y completado: dos entradas del mismo Camino con su fecha", async () => {
+      const caminoRow = {
+        id: "00000000-0000-4000-8000-0000000000d1",
+        title: "Krautrock esencial",
+        audience: "followers",
+        albumCount: 3,
+        authorId: author.id,
+        authorUsername: author.username,
+        authorDisplayName: author.displayName,
+      };
+      withSources({
+        10: sourceQuery([{ ...caminoRow, at: new Date("2026-03-01T00:00:00Z") }]),
+        // La subconsulta de completado vuelve del driver como texto.
+        11: sourceQuery([{ ...caminoRow, at: "2026-03-05 10:00:00+00" }]),
+      });
+
+      const result = await listFeed(author.id, 1, 20);
+
+      expect(result.entries.map((entry) => entry.kind === "camino" && [entry.event, entry.createdAt])).toEqual([
+        ["completed", "2026-03-05T10:00:00.000Z"],
+        ["created", "2026-03-01T00:00:00.000Z"],
+      ]);
+      expect(result.entries[0]).toMatchObject({
+        camino: { id: caminoRow.id, title: "Krautrock esencial", albumCount: 3 },
+      });
+    });
+
+    it("las fuentes de Camino exigen custom_journey visible, no archivado ni moderado", async () => {
+      const created = sourceQueryCapturing([]);
+      const completed = sourceQueryCapturing([]);
+      withSources({ 10: created, 11: completed });
+
+      await listFeed(author.id, 1, 20);
+
+      for (const capturing of [created, completed]) {
+        const { sql, params } = dialect.sqlToQuery(capturing.where.mock.calls[0]![0]);
+        expect(params).toEqual(expect.arrayContaining(["custom_journey", "visible", "followers", "public"]));
+        expect(params).not.toContain("artist_journey");
+        expect(sql).toContain('"journey_archived_at" is null');
+        expect(sql.toLowerCase()).toContain("user_block");
+      }
+      // Solo el completado filtra por la fecha derivada.
+      expect(dialect.sqlToQuery(completed.where.mock.calls[0]![0]).sql).toContain("bool_and");
+      expect(dialect.sqlToQuery(created.where.mock.calls[0]![0]).sql).not.toContain("bool_and");
+    });
+
+    it("kind=camino solo consulta las dos fuentes de Camino", async () => {
+      mocks.db.select
+        .mockReturnValueOnce(followedQuery(["u2"]))
+        .mockReturnValueOnce(sourceQuery([]))
+        .mockReturnValueOnce(sourceQuery([]));
+
+      await listFeed(author.id, 1, 20, { kind: "camino" });
+
+      expect(mocks.db.select).toHaveBeenCalledTimes(3);
+    });
+
+    it("una lista oculta por moderación no genera evento de lista", async () => {
+      const lists = sourceQueryCapturing([]);
+      withSources({ 2: lists });
+
+      await listFeed(author.id, 1, 20);
+
+      const { params } = dialect.sqlToQuery(lists.where.mock.calls[0]![0]);
+      expect(params).toEqual(expect.arrayContaining(["standard", "visible"]));
+    });
+  });
+
   describe("seguir a un artista (add-artist-follow-feed-entry)", () => {
     const followArtistRow = (over: Record<string, unknown> = {}) => ({
       id: "00000000-0000-4000-8000-000000000f10",
@@ -722,9 +891,8 @@ describe("servicio de feed ampliado", () => {
           authorUsername: author.username,
           authorDisplayName: author.displayName,
         }]));
-      // A propósito: no se registra ningún mock más allá de este — si el
-      // código consultara alguna otra fuente, `db.select()` devolvería
-      // `undefined` y `.from(...)` tiraría un TypeError.
+      // Las fuentes no registradas caen en el fallback vacío: la cuenta de
+      // llamadas de abajo es la que verifica que no se consultaron.
 
       const result = await listFeed(author.id, 1, 20, { kind: "rating" });
 

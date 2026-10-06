@@ -17,6 +17,10 @@ ambiente. `add-feed-artist-link` enlaza el nombre del artista acreditado de un �
 canción a su página. `add-feed-album-sweep` (rediseñado en `widen-feed-album-grouping`)
 extiende la agrupación por tipo a un tramo de escuchas/favoritos/valoraciones del mismo
 álbum con `kind` alternado, aunque no sean consecutivas del mismo tipo en la lista cruda.
+`expand-feed-coverage` (2026-10-06) suma las altas de **colección física** y de **"En tu
+búsqueda"** (wishlist) y los **Caminos** creados y completados como fuentes nuevas, muestra el
+**puntaje detallado** (`86/100`) en el feed, **fusiona** valoración + reseña + comentario
+contiguos sobre el mismo objetivo en una sola fila y retira la franja de eventos ambiente.
 
 ## Qué es
 
@@ -25,7 +29,7 @@ tiempo casi real lo que las personas que seguís están registrando, valorando o
 comentando. Es la pieza central de la diferenciación frente a Spotify/Apple Music, cuya
 capa social es mínima.
 
-## Feed — ocho fuentes (add-diary-social-surfaces + add-favorites-and-lists + add-ratings-comments-feed + rework-feed-tiers + add-feed-kind-differentiation + add-artist-follow-feed-entry)
+## Feed — doce fuentes (add-diary-social-surfaces + add-favorites-and-lists + add-ratings-comments-feed + rework-feed-tiers + add-feed-kind-differentiation + add-artist-follow-feed-entry + expand-feed-coverage)
 
 El feed muestra las actividades de los usuarios seguidos (relación `accepted`) que sean
 visibles para el lector, en orden cronológico descendente con paginación. Se implementa como
@@ -68,8 +72,30 @@ visibles para el lector, en orden cronológico descendente con paginación. Se i
   así que solo se excluye por bloqueo lector↔autor. Fecha = `created_at` del seguimiento (no
   hay estado `pending`/`accepted` para un follow de artista). Sin concepto de edición: si el
   seguimiento deja de existir, la entrada desaparece.
+- **Alta en la colección física** (`kind: "collection"`, `expand-feed-coverage`): una entrada
+  por copia agregada (`collection_entry`, `created_at`), con el álbum como `target`, el
+  `format` y la audiencia propia de la entrada (solo `followers`/`public`). La nota **no**
+  viaja (es nota de inventario). Editar la copia no genera otra entrada; borrarla o pasarla a
+  `private` la retira. Antes vivía solo en la franja de eventos ambiente, ya retirada.
+- **Alta en "En tu búsqueda"** (`kind: "wanted"`, `expand-feed-coverage`): igual que la
+  colección sobre `wanted_entry`, con `format` nullable ("cualquier formato"). La wishlist ganó
+  columna `audience` en la migración `0061`: las entradas anteriores quedaron `private`, así
+  que no aparecen; las nuevas nacen con la audiencia por defecto del usuario (o `followers`).
+- **Camino** (`kind: "camino"`, `expand-feed-coverage`): `event: "created"` con la fecha de
+  creación del Camino (`user_list.kind = 'custom_journey'`; editar o archivar no genera
+  evento) y `event: "completed"`, **derivado en lectura** sin tabla de eventos: completo =
+  al menos un álbum y todos con una escucha del dueño (mismo criterio que la página del
+  Camino, `countsByListId`); la fecha es el instante en que quedó cubierto el último álbum —
+  `max(greatest(alta del álbum, primera escucha del dueño))`, `CAMINO_COMPLETED_AT_SQL`. Si
+  deja de estar completo (álbum nuevo sin escuchar, escucha borrada) la entrada desaparece.
+  Ambos eventos exigen audiencia `followers`/`public`, `moderation_status = 'visible'` y no
+  archivado. El payload trae `camino: { id, title, albumCount }` y enlaza a
+  `/users/[username]/caminos/[id]`. **No entran** el trackeo de un Camino o lista ajena (es
+  privado de quien trackea: el dueño no se entera) ni los Recorridos de artista (nacen
+  siempre `private` y no tienen lectura ajena).
 
-La composición se calcula **bajo demanda** uniendo las ocho fuentes (no hay tabla de eventos
+La composición se calcula **bajo demanda** uniendo las doce fuentes (el Camino aporta dos
+queries, creado y completado) (no hay tabla de eventos
 materializada), ordenando por `created_at DESC` con desempate por fuente e id. La paginación
 consulta una página ampliada por fuente y la fusiona en memoria; materialización y
 deduplicación se evalúan con volumen real.
@@ -86,7 +112,8 @@ La matriz de visibilidad (`audiencesForProfile`, ahora compartida en
 
 El feed aplica esta lógica filtrando `user_id IN (seguidos aceptados)` +
 `audience IN (followers, public)` + `NOT EXISTS` defensivo sobre `user_block` para cada fuente
-que tiene audiencia propia (escucha, favorito, lista).
+que tiene audiencia propia (escucha, favorito, lista, colección, wishlist, Camino). Las
+listas y los Caminos además excluyen los ocultos por moderación.
 
 `rating`, `comment` y `review` **no tienen columna de audiencia** (a diferencia de las otras
 tres fuentes): en la vista de catálogo son siempre públicos. Para el feed se tratan como
@@ -100,9 +127,10 @@ actividad — no hace falta una audiencia explícita. Ver `design.md` del cambio
 ### Pendiente para v2+
 
 - Deduplicación de eventos (un usuario que registra escucha + cambia rating en la misma sesión).
-  Caso concreto ya identificado (`rework-feed-tiers`, OQ2): cuando existe una reseña y una
-  valoración del mismo usuario y álbum, una futura refinación podrá ocultar o suprimir la
-  fila de valoración; por ahora se muestran ambos eventos.
+  El caso de reseña + valoración (`rework-feed-tiers`, OQ2) quedó resuelto en la presentación
+  por la fila fusionada de opinión (`expand-feed-coverage`), solo cuando son contiguas.
+- Recorridos de artista en el feed: requieren audiencia propia y una lectura ajena de
+  Recorridos, que hoy no existen (`expand-feed-coverage`, Open Questions).
 - Notificaciones "Ana te empezó a seguir" — la fuente "seguir a un usuario" del feed
   principal omite a propósito los eventos cuyo objetivo es el propio lector (a diferencia
   de "seguir a un artista", que no tiene ese caso posible); ese caso es materia de una
@@ -142,10 +170,10 @@ pesa distinto sobre un álbum que sobre una canción:
 
 | Tier | Qué | Tratamiento |
 |---|---|---|
-| **1 Expresivo** | comentario · reseña · escucha con nota · evento de lista | cita (`ProsePanel`) para las tres con prosa; fila de título para el evento de lista. Nunca se colapsa; corta cualquier corrida. |
+| **1 Expresivo** | comentario · reseña · escucha con nota · evento de lista · evento de Camino · fila fusionada de opinión | cita (`ProsePanel`) para las que tienen prosa; fila de título para el evento de lista y el de Camino. Nunca se colapsa; corta cualquier corrida. |
 | **2 Señal de opinión** | rating de **álbum** · favorito de **álbum** | fila con carátula + marca de opinión; se colapsa en corridas de 3+. |
-| **3 Presencia cotidiana** | rating de canción · favorito de canción/artista · escucha sin nota · reacción | fila mínima de baseline; se colapsa en corridas de 3+. |
-| **4 Ambiente** | **seguir usuario** · **seguir artista** (ambos activos) · colección (reservada) | seguir usuario/seguir artista: fila mínima sin celda ni objetivo de catálogo, se colapsan en corridas de 3+ igual que tier 2/3 (sin mezclarse entre sí). Colección sigue **sin fila propia en el feed principal** — vive en la franja de eventos ambiente. |
+| **3 Presencia cotidiana** | rating de canción · favorito de canción/artista · escucha sin nota · reacción · **alta de colección** · **alta de wishlist** | fila mínima de baseline (colección y wishlist con la carátula del álbum y el formato junto al verbo); se colapsa en corridas de 3+. |
+| **4 Ambiente** | **seguir usuario** · **seguir artista** | fila mínima sin celda ni objetivo de catálogo, se colapsan en corridas de 3+ igual que tier 2/3 (sin mezclarse entre sí). |
 
 - La regla de qué se renderiza como cita vive en `isFeedEntryQuote` (mismo módulo): tier 1
   con prosa (comentario, reseña, escucha con nota).
@@ -174,9 +202,13 @@ cita se lo gana lo que está **escrito**.
 ### Rating — fila de estrellas
 
 Un rating se renderiza con `StarRatingValue` (`src/components/social/StarRatingValue.tsx`):
-la fila de cinco estrellas de `rating-display` junto al número de estrellas (`4,5`). El puntaje
-detallado **no** se muestra en el feed — ni en la fila de una entrada ni en la corrida plegada
-(cambio `define-detailed-score`): es una superficie densa y de otras personas. El relleno de las
+la fila de cinco estrellas de `rating-display` junto al **puntaje detallado** (`86/100`) cuando
+el autor lo puso o, si no, el número de estrellas (`4,5`) — nunca ambos. En la corrida plegada
+la forma compacta conserva la estrella: `★ 86/100` o `★ 4,5`. La etiqueta accesible incluye el
+puntaje ("4,5 de 5 estrellas, 86 de 100"). `expand-feed-coverage` (2026-10-06) revirtió para el
+feed la decisión D7 de `define-detailed-score` (que lo ocultaba por ser una superficie densa y
+de otras personas): el /100 gana relevancia social. Aplica también al rastro propio de Inicio,
+que comparte el componente; las reseñas del perfil siguen sin puntaje. El relleno de las
 estrellas es el único uso de ámbar en reposo del feed (Regla de Rareza). `role="img"` +
 `aria-label` legible; los glifos y el número van `aria-hidden`. Es la misma representación que en
 el resto de las superficies (ver `ratings-and-reviews.md`, sección "Representación de la nota").
@@ -193,9 +225,21 @@ distinga el grupo de señal de opinión (tier 2, verbo de álbumes) del de prese
 (tier 3, verbo de canciones) del de ambiente (tier 4, seguir usuario/seguir artista). Una
 racha de ratings de canción (tier 3) y ratings de álbum (tier 2) **no se fusionan** aunque
 sean consecutivas — ni una racha de "seguir usuario" con una de "seguir artista" (mismo
-tier 4, distinto `kind`). Toda entrada tier 1 (comentario, reseña, nota de escucha, evento
-de lista) corta la corrida. Corre en el cliente sobre el array acumulado, así que también
+tier 4, distinto `kind`), ni una de colección con una de wishlist. Toda entrada tier 1
+(comentario, reseña, nota de escucha, evento de lista o de Camino) corta la corrida. Corre en el cliente sobre el array acumulado, así que también
 colapsa a través de un "Cargar más".
+
+### Fila fusionada de opinión (`expand-feed-coverage`)
+
+Antes de cualquier otra agrupación, `groupFeedRuns` fusiona una valoración, una reseña y/o un
+comentario **estrictamente contiguos**, del **mismo autor** y sobre el **mismo objetivo**
+(tipo + id), en una `FeedOpinionRow` — a lo sumo uno de cada tipo (un segundo comentario
+queda como fila propia). La fila lleva un verbo compuesto ("Valoró y reseñó", "Valoró,
+reseñó y comentó"…), las estrellas con el puntaje, la reseña (titular + cita en petróleo) y
+el comentario como cita; la fecha es la más reciente. Es tier 1 (siempre incluye prosa: una
+valoración no se repite por objetivo). Solo presentación: el contrato de `/api/me/feed`, el
+filtro por tipo y la paginación no cambian, y no se reordena nada — si la actividad de otra
+persona se interpone, las filas quedan separadas.
 
 ### Pico de rotación (`add-feed-rotation-peak`)
 
@@ -291,43 +335,25 @@ del lector).
 | **Personal** | ¿Qué hice yo? | diario (`/me/diary`), rastro reciente y "En rotación" del perfil — sin filtro de audiencia para uno mismo |
 | **Social** | ¿Qué hizo cada persona que sigo, en orden? | listado cronológico de `/me/feed` y su preview de Inicio |
 | **Relevante** | ¿En qué coincide mi red ahora? | panel de convergencia en la cabecera de `/me/feed` |
-| **Automática** | Derivada sin acción explícita | franja "También en tu red" al pie de `/me/feed` (tier 4: colección) — "seguir usuario" y "seguir artista" pasaron a la capa **Social** (`add-feed-kind-differentiation`, `add-artist-follow-feed-entry`) |
+| **Automática** | Derivada sin acción explícita | ya sin superficie propia: la franja "También en tu red" se retiró en `expand-feed-coverage` — seguir usuario/artista y la colección pasaron a la capa **Social** |
 
-## Franja de eventos ambiente (`add-feed-ambient-events`; ajustada en `add-feed-kind-differentiation` y `add-artist-follow-feed-entry`)
+## Franja de eventos ambiente — retirada (`expand-feed-coverage`)
 
-El tratamiento "minimizado" del **tier 4** para las fuentes que no tienen fila propia en el
-feed principal: una franja compacta **"También en tu red"** al **pie de `/me/feed`**, debajo
-del listado cronológico (`FeedAmbientStrip.tsx`, Server Component, colapsa si vacío).
-Posición de coda —encabezado chico, texto `font-data` muted, sin carátula—: la actividad
-ambiente se alcanza tras el feed, no compite por la atención.
-
-- **Una única fuente**, dentro de una ventana de **14 días** (es escasa): `collection_entry`.
-  **Ni "seguir a un usuario" ni "seguir a un artista" son fuente de este cálculo** — desde
-  `add-feed-kind-differentiation` y `add-artist-follow-feed-entry` respectivamente, ambas
-  tienen su propia fila tier 4 inline en la línea de tiempo principal (ver "Feed — ocho
-  fuentes" más arriba), retiradas de acá para no mostrar el mismo hecho dos veces en la
-  misma página.
-- **Agrupación por autor**: una persona que agregó 5 discos a su colección produce **una**
-  línea ("Ana sumó a su colección: Rumours, Tusk y 3 más"), no 5. Cada grupo lleva hasta 3
-  ítems enlazados + "y N más", ordenados por fecha desc. Máximo 8 grupos, ordenados por el
-  ítem más reciente.
-- **Visibilidad**: `collection_entry` con audiencia propia (`followers`/`public`), seguido
-  con relación aceptada + sin bloqueo con el autor; la actividad del **propio lector nunca
-  aparece**.
-- **Cálculo**: `getFeedAmbientEvents(viewerId)` (`src/services/feed/ambient.ts`), `cache()`
-  por request, una consulta con el query builder (no SQL crudo), agrupada en memoria. Sin
-  tabla materializada, sin endpoint, sin fetcher. Constantes con nombre
-  (`AMBIENT_WINDOW_DAYS`, `AMBIENT_SAMPLE`, `AMBIENT_MAX_GROUPS`).
-- **Independiente del listado cronológico**: la composición, paginación y filtros de
-  `/api/me/feed` no cambian por esta franja — sigue siendo una superficie aparte, ahora
-  acotada a la única fuente que de verdad no tiene fila propia en el feed principal.
+La franja "También en tu red" al pie de `/me/feed` (`add-feed-ambient-events`) resumía por
+autor los eventos tier 4 sin fila propia. Primero perdió "seguir a un usuario" y "seguir a un
+artista" (`add-feed-kind-differentiation`, `add-artist-follow-feed-entry`) y, desde
+`expand-feed-coverage`, también su última fuente, las altas de colección, que pasaron a la
+línea de tiempo (tier 3). Se eliminaron `getFeedAmbientEvents` (`ambient.ts`) y
+`FeedAmbientStrip`.
 
 ### "Tu rastro reciente" — variante `self`
 
 `FeedActivityList variant="self"` (que usa `RecentSelfActivity`): **sin celda y sin
 columna de autor** (ya sabés que sos vos), con un **hairline izquierdo continuo**
 (`border-l`) y las filas indentadas — un margen bajando por tu propio diario. Mismo
-contenido y misma clasificación de peso que "Tu feed".
+contenido y misma clasificación de peso que "Tu feed". `listMyRecentActivity` suma también
+las altas de colección y de wishlist y los Caminos propios, sin filtro de audiencia (es
+contenido propio), con las mismas queries compartidas que `listFeed`.
 
 ### Fechas
 

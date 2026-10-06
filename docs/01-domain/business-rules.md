@@ -160,7 +160,9 @@ interfaz:
 - **"Lo coleccionan" / "lo buscan"** cuentan **personas distintas** (no copias ni variantes),
   con entradas de cualquier audiencia y sin cuentas desactivadas. Entre 1 y 4 se muestra
   **"menos de 5"**: el total nunca permite identificar a nadie. La colección conserva la
-  visibilidad de sus entradas individuales; la wishlist sigue sin superficie propia.
+  visibilidad de sus entradas individuales; la wishlist sigue sin superficie propia por
+  `username` (sus altas solo llegan al feed de seguidos según la audiencia de cada entrada,
+  `expand-feed-coverage`).
 - **Pendiente** (want-to-listen) **no** se agrega: no tiene superficie pública.
 - **Favorita de la comunidad** por pista: hasta 3 pistas del álbum con al menos 5 reacciones
   `loved`/`obsessed` en entradas de diario públicas. La tracklist no muestra medias de
