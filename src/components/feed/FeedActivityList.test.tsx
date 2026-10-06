@@ -682,7 +682,8 @@ describe("FeedActivityList", () => {
     it("no aparece en el rastro propio (variant self), donde ya se omite el autor", () => {
       const { container } = renderWithIntl(<FeedActivityList entries={[comment()]} variant="self" />);
 
-      expect(container.querySelector('[aria-hidden="true"].rounded-full')).toBeNull();
+      // El hito del riel (línea de tiempo) también es un círculo decorativo, pero no es avatar.
+      expect(container.querySelector('[aria-hidden="true"].rounded-full:not([data-timeline-dot])')).toBeNull();
     });
   });
 
