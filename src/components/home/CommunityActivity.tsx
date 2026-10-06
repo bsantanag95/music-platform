@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { CompactActivityRow, type CompactActivityEntry } from "@/components/feed/CompactActivityRow";
 
 interface CommunityActivityProps {
@@ -16,8 +17,16 @@ export async function CommunityActivity({ entries }: CommunityActivityProps) {
   const tHome = await getTranslations("home");
 
   return (
-    <section className="flex w-full flex-col gap-3">
-      <h2 className="font-display text-xl text-paper">{tHome("communityActivityTitle")}</h2>
+    <section className="flex w-full min-w-0 flex-col gap-4">
+      <div className="flex items-baseline justify-between">
+        <h2 className="font-display text-xl text-paper">{tHome("communityActivityTitle")}</h2>
+        <Link
+          href="/activity"
+          className="font-data text-xs text-paper-muted transition-colors hover:text-paper"
+        >
+          {tHome("feedPreviewSeeAll")}
+        </Link>
+      </div>
 
       <ul className="divide-y divide-ink-border">
         {entries.map((entry) => (

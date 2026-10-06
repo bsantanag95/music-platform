@@ -116,7 +116,7 @@ describe("CompactActivityRow — plegado del snippet", () => {
 });
 
 describe("CompactActivityRow — diferenciación visual por tipo (add-feed-kind-differentiation)", () => {
-  it("una reseña gana el acento petróleo en la fila y en su rótulo", () => {
+  it("una reseña gana el acento petróleo en su texto y en su rótulo", () => {
     const { container } = renderWithIntl(
       <CompactActivityRow
         entry={{
@@ -131,8 +131,10 @@ describe("CompactActivityRow — diferenciación visual por tipo (add-feed-kind-
       />,
     );
 
-    expect(container.querySelector("li")!.className).toMatch(/border-petrol/);
-    expect(screen.getByText("Reseñó").className).toMatch(/text-petrol/);
+    // El acento va en el snippet, no en la fila: la carátula queda alineada con el resto.
+    expect(container.querySelector("li")!.className).not.toMatch(/border-petrol/);
+    expect(screen.getByText("Corto.").className).toMatch(/border-petrol/);
+    expect(screen.getByText("Reseñó").closest(".text-petrol")).not.toBeNull();
   });
 
   it("un comentario no lleva acento petróleo", () => {
