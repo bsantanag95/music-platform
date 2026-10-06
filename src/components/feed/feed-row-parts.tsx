@@ -31,7 +31,7 @@ export function TargetTitle({
   const link = (
     <Link
       href={href}
-      className="font-display text-base text-paper underline decoration-ink-border decoration-1 underline-offset-4 transition-colors hover:text-amber hover:decoration-amber"
+      className="font-display text-base text-paper decoration-amber/60 decoration-1 underline-offset-4 transition-colors hover:text-amber hover:underline"
     >
       {label}
     </Link>

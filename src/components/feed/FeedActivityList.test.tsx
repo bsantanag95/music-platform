@@ -479,11 +479,11 @@ describe("FeedActivityList", () => {
     expect(screen.getByTestId("cover-thumb")).toHaveAttribute("data-cover", "https://cover/7.jpg");
   });
 
-  it("una reseña sin título usa solo el verbo y el rótulo, sin titular", () => {
+  it("una reseña sin título usa solo el verbo, sin rótulo ni titular", () => {
     renderWithIntl(<FeedActivityList entries={[review({ title: null })]} />);
 
     expect(screen.getByText(/Reseñó/)).toBeInTheDocument();
-    expect(screen.getByText("Reseña")).toBeInTheDocument();
+    expect(screen.queryByText("Reseña")).not.toBeInTheDocument();
   });
 
   it("una reseña corta la corrida de valoraciones y no se pliega con ellas", () => {

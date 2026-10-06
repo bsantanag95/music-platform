@@ -1,7 +1,7 @@
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { FeedActivityList } from "@/components/feed/FeedActivityList";
 import { Spinner } from "@/components/ui/Spinner";
@@ -87,10 +87,28 @@ export function ScrollablePreviewList({ source, initialEntries, initialHasNext }
 
   const entries = data?.pages.flatMap((page) => page.entries) ?? initialEntries;
 
+  // Degradados en los bordes solo mientras queda contenido de ese lado: avisan
+  // que la lista sigue sin recortar en seco la primera ni la última fila.
+  const [edges, setEdges] = useState({ above: false, below: false });
+  const updateEdges = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const above = el.scrollTop > 8;
+    const below = el.scrollHeight - el.scrollTop - el.clientHeight > 8;
+    setEdges((prev) => (prev.above === above && prev.below === below ? prev : { above, below }));
+  }, []);
+  useEffect(updateEdges, [entries.length, updateEdges]);
+  const fadeTop = edges.above ? "transparent" : "black";
+  const fadeBottom = edges.below ? "transparent" : "black";
+
   return (
     <div
       ref={containerRef}
-      className={`themed-scrollbar overflow-y-auto ${HEIGHT_BY_SOURCE[source]}`}
+      onScroll={updateEdges}
+      style={{
+        maskImage: `linear-gradient(to bottom, ${fadeTop}, black 2.5rem, black calc(100% - 2.5rem), ${fadeBottom})`,
+      }}
+      className={`themed-scrollbar overflow-y-auto pr-3 ${HEIGHT_BY_SOURCE[source]}`}
     >
       <FeedActivityList entries={entries} variant={source} />
       {hasNextPage ? (

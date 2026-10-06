@@ -117,7 +117,7 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
                   label={ratingLabel(row.stars, t, locale)}
                 />
               ) : null}
-              {row.kind === "review" ? <ReviewKicker t={t} title={row.title} /> : null}
+              {row.kind === "review" ? <ReviewKicker title={row.title} /> : null}
               {heavy && body ? (
                 <ProsePanel
                   body={body}
@@ -145,7 +145,7 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
                     label={ratingLabel(row.stars, t, locale)}
                   />
                 ) : null}
-                {row.kind === "review" ? <ReviewKicker t={t} title={row.title} /> : null}
+                {row.kind === "review" ? <ReviewKicker title={row.title} /> : null}
                 {heavy && body ? (
                   <ProsePanel
                     body={body}
@@ -355,20 +355,11 @@ function FollowArtistRow({
   );
 }
 
-// Rótulo "Reseña" en el segundo acento del sistema (petróleo) + el título
-// propio de la reseña como titular, cuando existe — antes vivía como sufijo
-// del verbo ("Reseñó · «título»"); acá gana su propio espacio visual en vez de
-// competir con el resto del metadato (openspec: add-feed-kind-differentiation).
-function ReviewKicker({ t, title }: { t: FeedT; title: string | null }) {
-  return (
-    <div className="mt-1.5 flex flex-col gap-0.5">
-      <span className="inline-flex w-fit items-center gap-1 rounded border border-petrol px-1.5 py-0.5 font-data text-[10px] uppercase tracking-wide text-petrol">
-        {FEED_KIND_ICONS.review}
-        {t("kind.review")}
-      </span>
-      {title ? <p className="font-display text-sm text-paper">{title}</p> : null}
-    </div>
-  );
+// Titular propio de la reseña, cuando existe. El rótulo "Reseña" que iba acá
+// arriba se retiró: la línea de metadato ya dice "Reseñó" con su ícono y el
+// borde petróleo de la prosa marca el tipo — eran tres señales para lo mismo.
+function ReviewKicker({ title }: { title: string | null }) {
+  return title ? <p className="mt-1.5 font-display text-sm text-paper">{title}</p> : null;
 }
 
 function actionLabel(entry: FeedEntry, t: FeedT): string {
@@ -470,7 +461,13 @@ function coverForEntry(entry: FeedEntry): string | null {
 // Celda izquierda fija: carátula del objetivo o disco de vinilo. Columna
 // rígida — la ausencia de arte no deja hueco. Decorativa: el título va al lado.
 function FeedCell({ entry }: { entry: FeedEntry }) {
-  return <CoverThumb cover={coverForEntry(entry)} label="" className="size-11 sm:size-12" />;
+  return (
+    <CoverThumb
+      cover={coverForEntry(entry)}
+      label=""
+      className="size-11 shadow-sm shadow-black/40 ring-1 ring-ink-border sm:size-12"
+    />
+  );
 }
 
 // Línea de metadato: [autor ·] verbo · audiencia, con la fecha relativa a la
@@ -561,16 +558,16 @@ function AuthorAvatar({ author }: { author: FeedEntry["author"] }) {
       <AppImage
         src={author.avatarUrl}
         alt=""
-        width={16}
-        height={16}
-        className="size-4 shrink-0 rounded-full object-cover"
+        width={20}
+        height={20}
+        className="size-5 shrink-0 rounded-full object-cover"
       />
     );
   }
   return (
     <span
       aria-hidden="true"
-      className={`inline-flex size-4 shrink-0 items-center justify-center rounded-full font-data text-[9px] font-medium leading-none ${avatarVariant(author.id)}`}
+      className={`inline-flex size-5 shrink-0 items-center justify-center rounded-full font-data text-[10px] font-medium leading-none ${avatarVariant(author.id)}`}
     >
       {initialFor(author)}
     </span>
@@ -579,7 +576,7 @@ function AuthorAvatar({ author }: { author: FeedEntry["author"] }) {
 
 function AuthorIdentity({ author }: { author: FeedEntry["author"] }) {
   return (
-    <span className="inline-flex items-center gap-1 align-middle">
+    <span className="inline-flex items-center gap-1.5 align-middle">
       <AuthorAvatar author={author} />
       <AuthorLink author={author} />
     </span>
