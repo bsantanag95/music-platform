@@ -1,7 +1,21 @@
-## RENAMED Requirements
+## REMOVED Requirements
 
-- FROM: `### Requirement: Notas de la comunidad al final`
-- TO: `### Requirement: Comentarios de la comunidad al final`
+### Requirement: Notas de la comunidad al final
+
+**Reason**: La sección "Notas de la comunidad" pasa a ser "Comentarios" con temas (capability `artist-comment-topics`).
+**Migration**: Ver el requisito "Comentarios de la comunidad al final".
+
+## ADDED Requirements
+
+### Requirement: Comentarios de la comunidad al final
+
+Los comentarios de la comunidad (capability `artist-comment-topics`) SHALL mostrarse al final de
+la página, después del contenido de la pestaña, con cualquier pestaña activa.
+
+#### Scenario: Comentarios con la pestaña Integrantes activa
+
+- **WHEN** la pestaña activa es Integrantes
+- **THEN** los comentarios de la comunidad se ven debajo de la alineación
 
 ## MODIFIED Requirements
 
@@ -28,13 +42,3 @@ la altura de la cabecera, de modo que las pestañas y su contenido usen el ancho
   descripción; ficha; resumen de la biografía; panel "Tu relación"; bloque de
   comunidad; pestañas; contenido de la pestaña; comentarios, sin desbordamiento horizontal de la
   página
-
-### Requirement: Comentarios de la comunidad al final
-
-Los comentarios de la comunidad (capability `artist-comment-topics`) SHALL mostrarse al final de
-la página, después del contenido de la pestaña, con cualquier pestaña activa.
-
-#### Scenario: Comentarios con la pestaña Integrantes activa
-
-- **WHEN** la pestaña activa es Integrantes
-- **THEN** los comentarios de la comunidad se ven debajo de la alineación

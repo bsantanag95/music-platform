@@ -1,9 +1,11 @@
-## RENAMED Requirements
+## REMOVED Requirements
 
-- FROM: `### Requirement: Opinión sobre el artista como nota, sin rating`
-- TO: `### Requirement: Opinión sobre el artista como comentarios con tema, sin rating`
+### Requirement: Opinión sobre el artista como nota, sin rating
 
-## MODIFIED Requirements
+**Reason**: Las notas de la comunidad pasan a comentarios con tema (capability `artist-comment-topics`).
+**Migration**: Ver el requisito "Opinión sobre el artista como comentarios con tema, sin rating".
+
+## ADDED Requirements
 
 ### Requirement: Opinión sobre el artista como comentarios con tema, sin rating
 
@@ -30,6 +32,8 @@ existentes); solo la página deja de exponerlos.
 - **WHEN** un artista tiene comentarios de la comunidad
 - **THEN** se presentan como comentarios cortos con su tema ("Para empezar", "Álbumes",
   "Canciones" o "General"), diferenciados de una reseña con rating
+
+## MODIFIED Requirements
 
 ### Requirement: Página de artista discografía-forward
 
