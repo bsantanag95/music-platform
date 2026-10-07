@@ -332,8 +332,8 @@ en orden de lectura izquierda→derecha, arriba→abajo; el orden es parte del d
 Dos apartados nuevos de Inicio: discos publicados hace poco (pasado) y discos anunciados
 todavía sin salir (futuro). La distinción es limpia y no se solapa.
 
-**Estado:** el **diseño/layout está implementado** con datos de maqueta (`redesign-frontend`).
-El **pipeline de datos real es de un sprint futuro** (ver "Lo que falta analizar").
+**Estado:** implementado. El diseño/layout viene de `redesign-frontend`; los datos reales, de
+`add-home-release-calendar` (calendario desde ListenBrainz, ADR 0029).
 
 ### Diseño: un solo riel en línea de tiempo
 
@@ -365,50 +365,53 @@ ordenado por fecha** con un marcador "hoy" en el medio:
   **social** es la identidad; el calendario es contenido editorial secundario. Se muestra
   en ambos estados (anónimo y con sesión).
 
-### Datos: maqueta hoy, config manual como paso siguiente
+### Datos: calendario desde ListenBrainz (`add-home-release-calendar`, ADR 0029)
 
-**Hoy (`listHomeReleases()` en `src/services/home/home.ts`):** toma los release-groups con
-carátula más recientes (`created_at DESC`, `credit role='primary'` para el artista, cap de
-3 por artista para que el seed no muestre una sola discografía) y les asigna **fechas
-sintéticas** repartidas alrededor de hoy (mitad pasado / mitad futuro, una por semana).
-Sirve para revisar el layout con carátulas reales de catálogo. Está marcado como maqueta
-en el propio docstring.
+**Fuente.** El feed "Fresh Releases" de ListenBrainz (CC0, mismos MBID que MusicBrainz) da los
+lanzamientos de los últimos 30 días y los próximos 90; `POST /1/popularity/artist` da los oyentes
+de cada artista. MusicBrainz no tiene un feed usable y Spotify/Apple Music prohíben cachear y
+mezclar sus datos. Todo sale de `src/services/listenbrainz/client.ts` (`LISTENBRAINZ_USER_AGENT`).
 
-**Paso siguiente (sin backend nuevo), config manual:** reemplazar la asignación sintética
-por `src/config/home-releases.ts` — `{ releaseGroupId, releaseDate, section: "recent" |
-"upcoming" }[]` referenciando `release_group.id` **ya ingeridos**. Nunca título/artista/URL
-a mano; la carátula sigue saliendo del pipeline `coverThumbUrl()` (≤250px, `04-risks.md`
-#6). Mismo patrón que las 24 carátulas del hero.
+**Calendario aparte del catálogo.** La ventana filtrada (fecha exacta, Álbum o EP) vive en
+`release_calendar_entry` y se reemplaza completa en cada sincronización. **Al catálogo solo entra lo
+que se muestra**: la selección anónima y los discos de artistas con los que alguna persona tiene
+relación se registran como stub de release-group con sus créditos. Esto resuelve la tensión con el
+Principio 4 para este apartado (ver ADR 0029).
+
+**Sincronización** (`src/services/home/release-calendar-sync.ts`): cada 24 h, bajo demanda —Inicio la
+programa con `after()` si está vencida, sin bloquear la página— o forzada con
+`scripts/sync-release-calendar.ts`. Una sola a la vez. Un fallo externo conserva el calendario
+anterior. Pasos: feed → popularidad → selección → verificación en MusicBrainz de los finalistas (una
+búsqueda `rgid:(…)` por lote de 50) → stub + carátula por el pipeline existente → reemplazo
+transaccional. ~40 s con datos reales.
+
+**Filtros de calidad.** Fecha exacta al día; Álbum o EP (sin sencillos); carátula conocida
+(`caa_id` del feed y confirmada por Cover Art Archive); sin tipos secundarios (en vivo,
+recopilatorio, banda sonora, remix…); y sin reediciones (fecha original anterior a la ventana). Lo
+que MusicBrainz aún no indexó queda sin verificar y no se muestra hasta la próxima sincronización.
+
+**Visitante anónimo** (`listHomeReleases`): hasta **12 recientes (30 días) y 12 próximos (60 días,
+ampliable a 90 si hay menos de 4)**, ordenados por `log10(1 + oyentes)` más un impulso de hasta 2
+puntos si el artista tiene actividad en la comunidad (seguidores, valoraciones, escuchas). Un disco por
+artista en todo el riel y como máximo 3 por familia de géneros por lado (si el género del artista se
+conoce). Se precalcula en la sincronización (`anonymous_rank`).
+
+**Usuario con sesión** (`listPersonalHomeReleases`): lanzamientos de artistas con los que la persona
+tiene relación —los sigue (peso 4), favorito o valoración ≥ 4 estrellas (3), escucha (2), colección o
+"En tu búsqueda" (1)— de los últimos 30 días y los próximos hasta **180** (más allá de los 90 del feed,
+desde `release_group.first_release_date` del catálogo). Hasta 20, por peso y cercanía a hoy. Un disco de
+un artista **seguido** entra aunque no tenga carátula, con placeholder y la marca **"Anunciado"**. Con
+menos de 6, se completa con la selección anónima marcada **"Destacado"**. No es la personalización
+algorítmica que la anti-feature descarta: se basa solo en la relación explícita de la persona.
 
 **Componentes:** `HomeReleases` (server, resuelve i18n) → `ReleaseRail`
 (`src/components/home/ReleaseRail.tsx`, client — riel + flechas + marcador). Tipo
-`HomeRelease = { id, title, artist, coverThumbUrl, releaseDate, section }`. Cada tarjeta
+`HomeRelease = { id, title, artist, coverThumbUrl, releaseDate, section, badge }`. Cada tarjeta
 linkea a `/album/{id}`.
 
-### Lo que falta analizar (sprint real)
-
-1. **Fecha de lanzamiento.** Hoy solo existe `release.release_date` (por edición, parcial —
-   solo si se ingirió el tracklist de esa edición) y **no** a nivel `release_group`.
-   MusicBrainz tiene `first-release-date` en el release-group; la ingesta no lo guarda →
-   migración + cambio en `ingest-release.ts` + backfill.
-2. **Release-groups sin tracklist / sin ediciones publicadas** (caso "próximos"): verificar
-   que `ingest-release.ts` y la página `/album/[id]` no rompan con un release-group que no
-   tiene ninguna `release` publicada.
-3. **Estado "aún no salió":** se deriva (`release_date > hoy`), no se guarda flag — pero la
-   UI de `/album/[id]` tiene que manejar "sin tracklist todavía".
-4. **Carátulas pre-release:** Cover Art Archive a veces tiene arte de pre-venta, a veces no
-   → muchos `DiscPlaceholder` en "próximos".
-5. **Tensión con el Principio 4** ("el catálogo crece por uso real, nunca pre-cargado en
-   masa"). Un calendario de lanzamientos es 100% pre-carga de cosas que nadie buscó. Es una
-   decisión de identidad de producto: ¿"un Letterboxd para música" quiere un release
-   calendar editorial? Hay que resolverlo antes de invertir en el sync.
-6. **De dónde sale la lista.** MusicBrainz no tiene un feed de "upcoming" / "new releases"
-   usable (consultar por rango de fechas devuelve el firehose global). Filtrar con calidad =
-   curación editorial → engancha con el sistema de roles/cuentas de plataforma que
-   `product_philosophy.md` §7 deja sin resolver (mismo bloqueo que las listas editoriales y
-   las 24 carátulas del hero).
-7. **Relevancia / localización:** ¿lanzamientos para quién? Sin personalización en fases
-   tempranas (anti-feature declarada). Y la cadencia de refresco / quién cura.
+**Disco que aún no salió:** la ficha de `/album/[id]` muestra "Sale el …"; sin pistas publicadas,
+la pestaña Canciones muestra un estado vacío y, sin ninguna edición en MusicBrainz, la página muestra
+título y fecha en vez del error "Sin ediciones disponibles".
 
 ## Pendiente
 
@@ -423,11 +426,5 @@ linkea a `/album/{id}`.
   listas públicas — layout".
 - **Hilos** (comentar un comentario): el cambio `add-comment-likes` dejó fuera esa decisión. Se
   discute cuando el paradigma gire hacia "la relevancia de las interacciones".
-- Apartados **"Lanzamientos recientes" / "Próximos lanzamientos"**: el riel (`ReleaseRail`)
-  ya está en Inicio con **datos de maqueta** (fechas sintéticas sobre release-groups reales).
-  Falta: (a) paso intermedio con `src/config/home-releases.ts` (curación manual sin backend),
-  y (b) la versión real — resolver los 7 puntos de "Lo que falta analizar", empezando por la
-  decisión de producto (Principio 4) y la fecha de lanzamiento en `release_group`. Ver
-  "'Lanzamientos recientes' y 'Próximos lanzamientos'".
 - Copy y diseño visual concreto de cada bloque (fuera del alcance de este documento, que
   cierra la estructura de contenido, no el layout).

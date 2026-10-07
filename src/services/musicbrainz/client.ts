@@ -30,6 +30,9 @@ const MIN_INTERVAL_MS = 1100; // margen sobre el límite de 1 req/seg
 /** Tamaño de página máximo que acepta MusicBrainz en un browse. */
 export const RELEASE_BROWSE_PAGE_SIZE = 100;
 
+/** MBID por búsqueda `rgid:(…)`: deja la URL holgada y entra en una página. */
+export const RELEASE_GROUP_MBID_BATCH = 50;
+
 let queueTail: Promise<unknown> = Promise.resolve();
 let lastRequestAt = 0;
 
@@ -192,6 +195,25 @@ export const musicbrainz = {
         inc: "artist-credits",
       }),
     );
+  },
+
+  /**
+   * Varios release-groups por MBID en una sola request (`rgid:(A OR B …)`), con tipos secundarios,
+   * `first-release-date` y créditos: verifica los finalistas del calendario de lanzamientos
+   * (openspec: add-home-release-calendar). Hasta `RELEASE_GROUP_MBID_BATCH` por llamada. Sin caché:
+   * el resultado se persiste en el calendario. El índice de búsqueda puede ir atrasado respecto de
+   * la base, así que un MBID ausente no significa que no exista.
+   */
+  searchReleaseGroupsByMbid(mbids: string[]) {
+    if (mbids.length === 0) return Promise.resolve({ "release-groups": [] } as MBReleaseGroupSearchResponse);
+    if (mbids.length > RELEASE_GROUP_MBID_BATCH) {
+      throw new Error(`searchReleaseGroupsByMbid acepta hasta ${RELEASE_GROUP_MBID_BATCH} MBID por llamada`);
+    }
+    return mbFetch<MBReleaseGroupSearchResponse>("/release-group", {
+      query: `rgid:(${mbids.join(" OR ")})`,
+      limit: String(mbids.length),
+      inc: "artist-credits",
+    });
   },
 
   /** Búsqueda de grabaciones por texto — solo candidatos, para resolver "artista + canción" hacia sus álbumes. */

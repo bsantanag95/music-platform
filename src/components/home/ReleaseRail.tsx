@@ -46,6 +46,7 @@ export function ReleaseRail({
   todayLabel,
   upcomingPrefix,
   upcomingBadge,
+  badgeLabels,
   prevLabel,
   nextLabel,
 }: {
@@ -55,6 +56,8 @@ export function ReleaseRail({
   todayLabel: string;
   upcomingPrefix: string;
   upcomingBadge: string;
+  /** Textos de la marca de cada tarjeta (`HomeRelease.badge`). */
+  badgeLabels: { announced: string; featured: string };
   prevLabel: string;
   nextLabel: string;
 }) {
@@ -210,6 +213,16 @@ export function ReleaseRail({
                     {upcoming ? (
                       <span className="absolute left-1.5 top-1.5 rounded-full bg-ink/85 px-2 py-0.5 font-data text-[10px] uppercase tracking-wider text-paper backdrop-blur-sm">
                         {upcomingBadge}
+                      </span>
+                    ) : null}
+                    {release.badge ? (
+                      <span
+                        data-release-badge={release.badge}
+                        className={`absolute bottom-1.5 left-1.5 rounded-full px-2 py-0.5 font-data text-[10px] uppercase tracking-wider backdrop-blur-sm ${
+                          release.badge === "announced" ? "bg-amber/90 text-ink" : "bg-ink/85 text-paper-muted"
+                        }`}
+                      >
+                        {badgeLabels[release.badge]}
                       </span>
                     ) : null}
                   </div>

@@ -27,6 +27,7 @@ vi.mock("@/services/home/home", () => ({
     .fn()
     .mockResolvedValue({ artist: [], "release-group": [], recording: [] }),
   listHomeReleases: vi.fn().mockResolvedValue([]),
+  ensureReleaseCalendarFresh: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/services/activity/community-activity", () => ({

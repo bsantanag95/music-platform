@@ -77,7 +77,7 @@ export interface AlbumDetail {
 
 export type AlbumDetailResult =
   | { kind: "not_found" }
-  | { kind: "no_editions" }
+  | { kind: "no_editions"; releaseGroup: ReleaseGroupRow }
   | { kind: "ok"; detail: AlbumDetail };
 
 /**
@@ -100,7 +100,7 @@ export async function getAlbumDetail(releaseGroupId: string): Promise<AlbumDetai
   if (!rg) return { kind: "not_found" };
 
   const releaseRow = await findOrIngestTracklist(rg.id, rg.mbid ?? "");
-  if (!releaseRow) return { kind: "no_editions" };
+  if (!releaseRow) return { kind: "no_editions", releaseGroup: rg };
   scheduleEditionsSync(rg);
   schedulePersonnelSync(releaseRow);
 

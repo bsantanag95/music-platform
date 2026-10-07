@@ -1810,3 +1810,68 @@ export const image = pgTable("image", {
 });
 
 export type ImageRow = typeof image.$inferSelect;
+
+// Calendario de lanzamientos de Inicio (migración 0063, openspec: add-home-release-calendar, ADR 0029).
+// Índice del feed "Fresh Releases" de ListenBrainz, separado del catálogo: una fila no es un
+// release-group. Solo lo que se muestra se vincula (`releaseGroupId`, SET NULL). La ventana se
+// reemplaza completa en cada sincronización; `verifiedAt`/`firstReleaseDate`/`exclusion` salen de la
+// verificación en MusicBrainz y `anonymousRank` del orden de la selección anónima.
+export const releaseCalendarEntry = pgTable(
+  "release_calendar_entry",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    releaseGroupMbid: uuid("release_group_mbid").notNull().unique(),
+    releaseMbid: uuid("release_mbid"),
+    title: text("title").notNull(),
+    artistCreditName: text("artist_credit_name").notNull(),
+    artistMbids: uuid("artist_mbids").array().notNull().default(sql`'{}'`),
+    releaseDate: date("release_date").notNull(),
+    primaryType: text("primary_type").$type<"Album" | "EP">().notNull(),
+    hasCover: boolean("has_cover").notNull(),
+    artistListeners: integer("artist_listeners"),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    firstReleaseDate: date("first_release_date"),
+    exclusion: text("exclusion").$type<"secondary_type" | "reissue">(),
+    releaseGroupId: uuid("release_group_id").references(() => releaseGroup.id, { onDelete: "set null" }),
+    anonymousRank: smallint("anonymous_rank"),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_release_calendar_entry_date").on(t.releaseDate),
+    index("idx_release_calendar_entry_artists").using("gin", t.artistMbids),
+    index("idx_release_calendar_entry_rank").on(t.anonymousRank).where(sql`${t.anonymousRank} IS NOT NULL`),
+    check("chk_release_calendar_entry_primary_type", sql`${t.primaryType} IN ('Album', 'EP')`),
+    check("chk_release_calendar_entry_exclusion", sql`${t.exclusion} IN ('secondary_type', 'reissue')`),
+    check(
+      "chk_release_calendar_entry_listeners",
+      sql`${t.artistListeners} IS NULL OR ${t.artistListeners} >= 0`,
+    ),
+    check("chk_release_calendar_entry_rank", sql`${t.anonymousRank} IS NULL OR ${t.anonymousRank} > 0`),
+    check(
+      "chk_release_calendar_entry_verified",
+      sql`${t.exclusion} IS NULL OR ${t.verifiedAt} IS NOT NULL`,
+    ),
+  ],
+);
+
+export type ReleaseCalendarEntryRow = typeof releaseCalendarEntry.$inferSelect;
+
+export const releaseCalendarSync = pgTable(
+  "release_calendar_sync",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    status: text("status").$type<"running" | "succeeded" | "failed">().notNull().default("running"),
+    entryCount: integer("entry_count"),
+    error: text("error"),
+  },
+  (t) => [
+    index("idx_release_calendar_sync_finished")
+      .on(t.finishedAt.desc())
+      .where(sql`${t.status} = 'succeeded'`),
+    check("chk_release_calendar_sync_status", sql`${t.status} IN ('running', 'succeeded', 'failed')`),
+  ],
+);
+
+export type ReleaseCalendarSyncRow = typeof releaseCalendarSync.$inferSelect;

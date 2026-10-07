@@ -8,7 +8,7 @@ import {
   type AlbumCommunityStats,
   type ThresholdedCount,
 } from "@/services/catalog/album-community-shared";
-import { formatDuration, formatReleaseDate, formatStars, summarizeDurations } from "./album-format";
+import { formatDuration, formatReleaseDate, formatStars, isUpcomingRelease, summarizeDurations } from "./album-format";
 
 // Cabecera de la página de álbum (openspec: redesign-album-page): identidad, ficha técnica
 // y bloque de comunidad. Componentes sin estado: se renderizan en el servidor y se testean
@@ -90,7 +90,13 @@ function FactRows({
         <div className="contents">
           <dt className="font-data text-xs text-paper-muted">{t("release")}</dt>
           <dd className="font-body text-sm text-paper">
-            <time dateTime={firstReleaseDate ?? String(firstReleaseYear)}>{release}</time>
+            {isUpcomingRelease(firstReleaseDate) ? (
+              t.rich("releaseUpcoming", {
+                date: () => <time dateTime={firstReleaseDate ?? undefined}>{release}</time>,
+              })
+            ) : (
+              <time dateTime={firstReleaseDate ?? String(firstReleaseYear)}>{release}</time>
+            )}
           </dd>
         </div>
       )}
