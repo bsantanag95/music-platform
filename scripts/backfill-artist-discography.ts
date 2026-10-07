@@ -11,15 +11,19 @@ import { syncArtistDiscography } from "@/services/catalog/ingest-discography";
  * release-groups que quedan fuera de la discografía (sin borrarlos).
  *
  * Uso:
- *   tsx --env-file=.env scripts/backfill-artist-discography.ts [--limit N] [--dry-run] [--artist <uuid>] [--genre-artists]
+ *   tsx --env-file=.env scripts/backfill-artist-discography.ts [--limit N] [--dry-run] [--artist <uuid>] [--genre-artists] [--fill-total]
  *
  * `--dry-run` recorre MusicBrainz e informa cuántos release-groups se guardarían, se
  * marcarían y se desmarcarían, sin escribir.
- * `--limit N` procesa como máximo N artistas pendientes (por antigüedad).
- * `--artist <uuid>` procesa un solo artista, esté pendiente o no (si está al día, se omite).
+ * `--limit N` procesa como máximo N artistas (por antigüedad, según el modo).
+ * `--artist <uuid>` procesa un solo artista, esté pendiente o no (si está al día, se omite salvo con
+ *   `--fill-total`).
  * `--genre-artists` (openspec: add-genre-artist-discovery) procesa los artistas con géneros semilla cuya
  *   discografía nunca se recorrió entera, **incluidos los nunca sincronizados**: sin la discografía explorada no
  *   existen su tamaño ni su debut, y la página de género no puede ofrecerlos como emergentes.
+ * `--fill-total` (openspec: refresh-discography-on-new-releases) procesa los artistas con la discografía
+ *   completa pero sin `discography_mb_total` (sincronizados antes de este cambio): corre aunque estén al
+ *   día, para que la verificación barata empiece a regir sin esperar su próximo vencimiento natural.
  * El cliente de MusicBrainz ya respeta el rate limit (≥1,1 s entre requests).
  *
  * Requiere DATABASE_URL en el entorno.
@@ -53,6 +57,7 @@ async function main() {
   const limit = parseLimit(args);
   const onlyArtist = parseOption(args, "--artist");
   const genreArtists = args.includes("--genre-artists");
+  const fillTotal = args.includes("--fill-total");
 
   const pendingQuery = db
     .select({ id: artist.id, name: artist.name })
@@ -66,12 +71,14 @@ async function main() {
               isNotNull(artist.mbid),
               sql`exists (select 1 from artist_genre_seed s where s.artist_id = ${artist.id})`,
             )
-          : and(isNotNull(artist.discographySyncedAt), isNull(artist.discographyCompleteAt), isNotNull(artist.mbid)),
+          : fillTotal
+            ? and(isNotNull(artist.discographyCompleteAt), isNull(artist.discographyMbTotal), isNotNull(artist.mbid))
+            : and(isNotNull(artist.discographySyncedAt), isNull(artist.discographyCompleteAt), isNotNull(artist.mbid)),
     )
     .orderBy(asc(artist.createdAt));
   const pending = limit ? await pendingQuery.limit(limit) : await pendingQuery;
 
-  console.log(`${dryRun ? "[DRY-RUN] " : ""}${pending.length} artista(s) con discografía pendiente\n`);
+  console.log(`${dryRun ? "[DRY-RUN] " : ""}${pending.length} artista(s) ${fillTotal ? "sin total guardado" : "con discografía pendiente"}\n`);
 
   const tally: Record<string, number> = {};
   const totals = { saved: 0, unlisted: 0, relisted: 0 };
@@ -81,7 +88,13 @@ async function main() {
     const prefix = `[${i + 1}/${pending.length}] ${name}`;
     try {
       // Sin verificación barata: el backfill siempre recorre todas las páginas (también con `--artist`).
-      const result = await syncArtistDiscography(id, { mode: "full", dryRun, forceFullWalk: true });
+      // `--fill-total` ignora además si la discografía está al día (artistas completos y recientes).
+      const result = await syncArtistDiscography(id, {
+        mode: "full",
+        dryRun,
+        forceFullWalk: true,
+        ignoreFreshness: fillTotal,
+      });
       tally[result.status] = (tally[result.status] ?? 0) + 1;
       if (result.status === "complete") {
         totals.saved += result.saved;

@@ -413,6 +413,27 @@ describe("syncArtistDiscography: verificación barata", () => {
     expect(mocks.browse).toHaveBeenCalledTimes(3);
   });
 
+  it("ignoreFreshness corre aunque la discografía esté al día (backfill --fill-total)", async () => {
+    const fresh = new Date(Date.now() - DAY);
+    state.txSelects.push([bigArtist({ discographyCompleteAt: fresh, discographyCheckedAt: null, discographyMbTotal: null })]);
+    mocks.browse.mockResolvedValueOnce(PF1).mockResolvedValueOnce(PF2).mockResolvedValueOnce(PF3);
+
+    const result = await syncArtistDiscography("artist-1", { mode: "full", forceFullWalk: true, ignoreFreshness: true });
+
+    expect(result.status).toBe("complete");
+    expect(mocks.browse).toHaveBeenCalledTimes(3);
+  });
+
+  it("sin ignoreFreshness una discografía al día se omite, aunque falte el total", async () => {
+    const fresh = new Date(Date.now() - DAY);
+    state.txSelects.push([bigArtist({ discographyCompleteAt: fresh, discographyCheckedAt: null, discographyMbTotal: null })]);
+
+    const result = await syncArtistDiscography("artist-1", { mode: "full", forceFullWalk: true });
+
+    expect(result).toEqual({ status: "skipped" });
+    expect(mocks.browse).not.toHaveBeenCalled();
+  });
+
   it("forceFullWalk salta el atajo aunque el total coincida", async () => {
     state.txSelects.push([bigArtist()]);
     mocks.browse.mockResolvedValueOnce(PF1).mockResolvedValueOnce(PF2).mockResolvedValueOnce(PF3);
