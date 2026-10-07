@@ -101,7 +101,8 @@ async function main() {
     );
     const names = constraints.map((row) => row.conname).sort();
     check(
-      names.join(",") === "chk_comment_artist_topic_required,chk_comment_topic_artist_only,chk_comment_topic_values",
+      // `add-comment-replies` (0066) suma chk_comment_reply_no_topic: se exige que estén los tres de 0065.
+      ["chk_comment_artist_topic_required", "chk_comment_topic_artist_only", "chk_comment_topic_values"].every((name) => names.includes(name)),
       "los tres CHECK de tema existen con su nombre",
     );
     const indexes = await db.execute<{ indexname: string }>(

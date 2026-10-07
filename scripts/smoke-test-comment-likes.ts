@@ -91,8 +91,8 @@ async function main() {
     const [popular, quiet] = await db
       .insert(comment)
       .values([
-        { userId: author.id, artistId: art.id, body: "comentario popular" },
-        { userId: other.id, artistId: art.id, body: "comentario tranquilo pero bastante más largo que el otro" },
+        { userId: author.id, artistId: art.id, topic: "general", body: "comentario popular" },
+        { userId: other.id, artistId: art.id, topic: "general", body: "comentario tranquilo pero bastante más largo que el otro" },
       ])
       .returning();
     if (!popular || !quiet) throw new Error("no se crearon los comentarios");

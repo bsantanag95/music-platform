@@ -20,6 +20,7 @@ import {
   wantedEntry,
 } from "@/db/schema";
 import type { CommentTopic } from "@/db/schema";
+import { rootCommentsOnly } from "@/services/social/comment-roots";
 import {
   caminoBaseConditions,
   caminoCompletedFeedQuery,
@@ -208,7 +209,7 @@ export async function listMyRecentActivity(
       .leftJoin(artist, eq(comment.artistId, artist.id))
       .leftJoin(releaseGroup, eq(comment.releaseGroupId, releaseGroup.id))
       .leftJoin(recording, eq(comment.recordingId, recording.id))
-      .where(eq(comment.userId, userId))
+      .where(and(rootCommentsOnly(), eq(comment.userId, userId)))
       .orderBy(desc(comment.createdAt), desc(comment.id))
       .limit(perSource),
 
@@ -465,6 +466,8 @@ export async function listPopularComments(
     desc(comment.createdAt),
   ];
   const visible = and(
+    // Solo raíces: una respuesta con muchos likes no aparece sin su pregunta (add-comment-replies).
+    rootCommentsOnly(),
     eq(comment.moderationStatus, "visible"),
     PUBLIC_PROFILE,
     viewerId ? NOT_BLOCKED_SQL(viewerId, comment.userId) : undefined,

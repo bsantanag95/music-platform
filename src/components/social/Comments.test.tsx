@@ -24,6 +24,8 @@ vi.mock("@/lib/api/social", () => ({
   createComment: mocks.createComment,
   updateComment: mocks.updateComment,
   deleteComment: mocks.deleteComment,
+  getReplies: vi.fn(),
+  createReply: vi.fn(),
 }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => <a href={href} {...props}>{children}</a>,
@@ -34,11 +36,13 @@ vi.mock("./CommentLikeButton", () => ({ CommentLikeButton: () => null }));
 
 type Topic = "start" | "albums" | "songs" | "general";
 
-const comment = (id: string, topic: Topic | null, body = `texto ${id}`) => ({
+const comment = (id: string, topic: Topic | null, body = `texto ${id}`, replyCount = 0) => ({
   id,
   user: { id: `u-${id}`, username: `ana${id}`, displayName: null },
   body,
   topic,
+  parentId: null,
+  replyCount,
   createdAt: "2026-10-01T00:00:00.000Z",
   likeCount: null,
   likedByMe: false,
@@ -140,6 +144,13 @@ describe("Comments con temas (artista)", () => {
     await waitFor(() => expect(mocks.getComments).toHaveBeenLastCalledWith("artist", artistProps.targetId, 2, 20, "start"));
   });
 
+  it("cada comentario raíz ofrece su hilo: conteo de respuestas o Responder", () => {
+    renderWithIntl(<Comments {...artistProps} topics initial={page([comment("1", "start", "con hilo", 3), comment("2", "start", "sin hilo", 0)])} />);
+
+    expect(screen.getByRole("button", { name: "Ver 3 respuestas" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Responder" })).toBeInTheDocument();
+  });
+
   it("un error al filtrar muestra el mensaje del código", async () => {
     mocks.getComments.mockRejectedValue(new mocks.ApiError("INVALID_TOPIC", 400, "x"));
     renderWithIntl(<Comments {...artistProps} topics initial={page([])} />);
@@ -160,6 +171,13 @@ describe("Comments sin temas (álbum y canción)", () => {
     expect(screen.queryByRole("group", { name: "Filtrar comentarios por tema" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Tema")).not.toBeInTheDocument();
     expect(screen.queryByText("General")).not.toBeInTheDocument();
+  });
+
+  it("no muestra controles de respuesta ni conteo, ni siquiera con respuestas", () => {
+    renderWithIntl(<Comments target="release-group" targetId="rg" authenticated userId="me" initial={page([comment("1", null, "texto", 4)])} />);
+
+    expect(screen.queryByRole("button", { name: /respuesta/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Responder" })).not.toBeInTheDocument();
   });
 
   it("publica sin tema", async () => {

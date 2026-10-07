@@ -25,6 +25,7 @@ import {
   uniqueIndex,
   index,
   pgView,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
 /**
@@ -1698,6 +1699,9 @@ export const comment = pgTable(
     body: text("body").notNull(),
     // Tema del comentario de artista (add-artist-comment-topics); NULL en álbum y canción.
     topic: text("topic").$type<CommentTopic>(),
+    // Respuesta de un nivel (add-comment-replies): apunta a la RAÍZ (parent_id NULL). La respuesta
+    // copia el objetivo de su raíz y hereda su tema (topic NULL). Cascada: borrar la raíz borra el hilo.
+    parentId: uuid("parent_id").references((): AnyPgColumn => comment.id, { onDelete: "cascade" }),
     moderationStatus: text("moderation_status").notNull().default("visible"),
     moderatedBy: uuid("moderated_by").references(() => appUser.id, { onDelete: "set null" }),
     moderatedAt: timestamp("moderated_at", { withTimezone: true }),
@@ -1715,8 +1719,12 @@ export const comment = pgTable(
     check("chk_comment_topic_artist_only", sql`${t.topic} IS NULL OR ${t.artistId} IS NOT NULL`),
     check(
       "chk_comment_artist_topic_required",
-      sql`${t.artistId} IS NULL OR ${t.topic} IS NOT NULL`,
+      sql`${t.artistId} IS NULL OR ${t.topic} IS NOT NULL OR ${t.parentId} IS NOT NULL`,
     ),
+    check("chk_comment_reply_no_topic", sql`${t.parentId} IS NULL OR ${t.topic} IS NULL`),
+    index("idx_comment_parent")
+      .on(t.parentId, t.createdAt)
+      .where(sql`${t.parentId} IS NOT NULL`),
     index("idx_comment_recording").on(t.recordingId),
     index("idx_comment_release_group").on(t.releaseGroupId),
     index("idx_comment_artist").on(t.artistId),

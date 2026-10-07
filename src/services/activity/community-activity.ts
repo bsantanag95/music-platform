@@ -12,6 +12,7 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, artist, comment, rating, recording, releaseGroup, review } from "@/db/schema";
+import { rootCommentsOnly } from "@/services/social/comment-roots";
 import { ApiError } from "@/lib/api/errors";
 import type { FeedAuthor, FeedComment, FeedRating, FeedReview } from "@/services/feed/feed";
 import { activeUserCondition } from "@/services/auth/account-status";
@@ -107,7 +108,7 @@ export async function listCommunityActivity(
       .leftJoin(artist, eq(comment.artistId, artist.id))
       .leftJoin(releaseGroup, eq(comment.releaseGroupId, releaseGroup.id))
       .leftJoin(recording, eq(comment.recordingId, recording.id))
-      .where(visibility(comment.userId))
+      .where(and(rootCommentsOnly(), visibility(comment.userId)))
       .orderBy(desc(comment.createdAt), desc(comment.id))
       .limit(perSource),
 
