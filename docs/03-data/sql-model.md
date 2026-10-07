@@ -1043,3 +1043,43 @@ usuario, foto de artista, portada de playlist) tendrán FK propias (`*_image_id 
 **Sin asociación polimórfica:** se descartó `image.owner_type` / `image.owner_id` porque Postgres
 no puede validarla con FK real. En su lugar, cada entidad consumidora tendrá su propia columna
 `*_image_id` con integridad referencial real.
+
+## `release_calendar_entry`
+
+**Propósito:** calendario de lanzamientos del riel de Inicio (migración `0063`, cambio
+`add-home-release-calendar`, ADR 0029). Es el índice de la ventana del feed "Fresh Releases" de
+ListenBrainz (30 días atrás, 90 adelante), **separado del catálogo**: una fila no es un release-group.
+Cada sincronización la reemplaza completa (borrado + inserción en una transacción), conservando la
+verificación y el vínculo de las entradas que siguen en el feed.
+
+**Columnas:**
+- `id`: UUID, clave primaria.
+- `release_group_mbid`: UUID, único. El disco en MusicBrainz.
+- `release_mbid`: UUID, nullable. La edición que trae el feed (informativo).
+- `title`, `artist_credit_name`: texto. Tal como los trae el feed; el riel los muestra sin pasar por el catálogo.
+- `artist_mbids`: `UUID[]`. Artistas acreditados; índice GIN para cruzar con los artistas de una persona.
+- `release_date`: date. Fecha del feed (precisión diaria; lo demás se descarta antes de guardar).
+- `primary_type`: texto, `CHECK IN ('Album','EP')`.
+- `has_cover`: boolean. `caa_id` presente en el feed. Sin carátula, la entrada solo sirve para la marca
+  "Anunciado" de artistas seguidos.
+- `artist_listeners`: entero ≥ 0, nullable. Oyentes del artista más popular del crédito (ListenBrainz).
+- `verified_at`, `first_release_date`, `exclusion`: resultado de la verificación en MusicBrainz.
+  `exclusion` ∈ (`secondary_type`, `reissue`) o NULL; `CHECK` exige `verified_at` si hay exclusión. Una
+  verificación vence a los 7 días o si cambia la fecha del feed.
+- `release_group_id`: FK → `release_group`, `ON DELETE SET NULL`. Solo se llena para lo que se muestra
+  (selección anónima) o es de artistas con relación de alguna persona.
+- `anonymous_rank`: smallint > 0, nullable. Orden de la selección anónima (índice parcial).
+- `synced_at`: timestamptz.
+
+**Índices:** `idx_release_calendar_entry_date` (`release_date`), `idx_release_calendar_entry_artists`
+(GIN sobre `artist_mbids`), `idx_release_calendar_entry_rank` (parcial, `anonymous_rank IS NOT NULL`).
+
+## `release_calendar_sync`
+
+**Propósito:** registro de cada sincronización del calendario (migración `0063`). La última `succeeded`
+define si el calendario está vencido (24 h). Una fila `running` de menos de 15 minutos impide que otra
+sincronización arranque (la fila se toma bajo `pg_advisory_xact_lock`).
+
+**Columnas:** `id` (UUID), `started_at`, `finished_at` (timestamptz), `status` (`CHECK IN
+('running','succeeded','failed')`), `entry_count` (entero) y `error` (texto, el mensaje del fallo).
+Índice parcial `idx_release_calendar_sync_finished` (`finished_at DESC` de las exitosas).

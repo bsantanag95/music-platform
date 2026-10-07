@@ -56,6 +56,13 @@ describe("AlbumFacts", () => {
     expect(screen.getAllByText(album.facts.editionStandard).length).toBeGreaterThan(0);
   });
 
+  it("un disco anunciado muestra «Sale el …» con la fecha futura", () => {
+    renderWithIntl(<AlbumFacts {...base} firstReleaseDate="2099-03-14" firstReleaseYear={2099} />);
+    const time = screen.getAllByText("14 de marzo de 2099")[0]!;
+    expect(time.tagName).toBe("TIME");
+    expect(time.parentElement?.textContent).toBe("Sale el 14 de marzo de 2099");
+  });
+
   it("con precisión anual muestra solo el año", () => {
     renderWithIntl(<AlbumFacts {...base} firstReleaseDate={null} firstReleaseYear={1971} />);
     expect(screen.getAllByText("1971").length).toBeGreaterThan(0);

@@ -73,6 +73,8 @@
   "releasesToday": "Hoy",
   "releasesUpcomingPrefix": "Sale",
   "releasesUpcomingBadge": "Próximo",
+  "releasesAnnouncedBadge": "Anunciado",
+  "releasesFeaturedBadge": "Destacado",
   "releasesPrev": "Ver lanzamientos anteriores",
   "releasesNext": "Ver más lanzamientos",
   "anonClosingTitle": "Tu historial de escucha empieza con una cuenta."

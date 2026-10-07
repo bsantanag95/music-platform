@@ -384,7 +384,8 @@
       "editionStandard": "Standard",
       "editionOriginal": "Original",
       "seeEditions": "See editions",
-      "label": "Label"
+      "label": "Label",
+      "releaseUpcoming": "Out <date></date>"
     },
     "community": {
       "heading": "Community",
@@ -821,7 +822,10 @@
         "cassette": "Cassette",
         "other": "Other"
       }
-    }
+    },
+    "upcomingTracksTitle": "Tracklist not available yet",
+    "upcomingTracksDescription": "It will be available once the record is released.",
+    "noEditionsUpcomingTitle": "Out {date}"
   },
   "song": {
     "kicker": "Song",

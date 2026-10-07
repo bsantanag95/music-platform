@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { isUpcomingRelease } from "@/components/album/album-format";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { TrackList } from "@/components/catalog/TrackList";
 import { EditionExtraTracks } from "@/components/album/EditionExtraTracks";
 import { resolveCatalogRoute } from "@/lib/catalog-route";
@@ -43,6 +45,12 @@ export default async function AlbumSongsPage({ params }: AlbumSongsPageProps) {
     loadAlbumEditions(detail.releaseGroup.id),
   ]);
   const totalTracks = new Map(editions.editions.map((e) => [e.id, e.trackCount]));
+
+  // Disco anunciado cuya edición todavía no tiene pistas en MusicBrainz.
+  if (detail.tracks.length === 0 && isUpcomingRelease(detail.releaseGroup.firstReleaseDate)) {
+    const t = await getTranslations("catalog.album");
+    return <EmptyState title={t("upcomingTracksTitle")} description={t("upcomingTracksDescription")} />;
+  }
 
   return (
     <div className="flex flex-col gap-8">

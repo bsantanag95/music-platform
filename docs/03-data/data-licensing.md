@@ -108,6 +108,21 @@ para que el enriquecimiento no se la vuelva a asignar.
 **Reglas técnicas:** User-Agent con contacto (`WIKIMEDIA_USER_AGENT`), requests serializadas y
 `maxlag` en la API de Wikidata, según la política de uso de las APIs de Wikimedia.
 
+## E) ListenBrainz (calendario de lanzamientos de Inicio, ADR 0029)
+
+Del proyecto ListenBrainz (MetaBrainz) se usan dos endpoints públicos: el feed "Fresh Releases"
+(lanzamientos recientes y próximos) y la popularidad de artistas. Sus datos son **CC0**: salen de
+MusicBrainz (mismos MBID) y de las estadísticas agregadas de ListenBrainz, sin atribución obligatoria.
+No se guarda ninguna escucha ni dato de usuarios de ListenBrainz: solo el título, el crédito, la fecha,
+el tipo, si hay carátula y la cantidad de oyentes del artista, en `release_calendar_entry`.
+
+La carátula del riel no viene de ListenBrainz: sale del pipeline de Cover Art Archive de siempre
+(miniatura de 250 px, espejo, retiro a pedido; sección C).
+
+**Reglas técnicas:** User-Agent con contacto (`LISTENBRAINZ_USER_AGENT`), requests en serie y
+reintento ante 429/503; un fallo conserva el calendario anterior. La verificación de los finalistas
+pasa por el cliente de MusicBrainz y su límite de 1 request por segundo (sección B).
+
 ## Dónde se materializa la atribución
 
 El bloque de atribución del **pie de página global** (`src/components/layout/Footer.tsx`,

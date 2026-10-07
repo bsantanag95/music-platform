@@ -73,6 +73,8 @@
   "releasesToday": "Today",
   "releasesUpcomingPrefix": "Out",
   "releasesUpcomingBadge": "Upcoming",
+  "releasesAnnouncedBadge": "Announced",
+  "releasesFeaturedBadge": "Featured",
   "releasesPrev": "See previous releases",
   "releasesNext": "See more releases",
   "anonClosingTitle": "Your listening history starts with an account."

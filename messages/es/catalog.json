@@ -384,7 +384,8 @@
       "editionStandard": "Estándar",
       "editionOriginal": "Original",
       "seeEditions": "Ver ediciones",
-      "label": "Sello"
+      "label": "Sello",
+      "releaseUpcoming": "Sale el <date></date>"
     },
     "community": {
       "heading": "Comunidad",
@@ -821,7 +822,10 @@
         "cassette": "Casete",
         "other": "Otros"
       }
-    }
+    },
+    "upcomingTracksTitle": "Tracklist aún no disponible",
+    "upcomingTracksDescription": "Estará disponible cuando se publique el disco.",
+    "noEditionsUpcomingTitle": "Sale el {date}"
   },
   "song": {
     "kicker": "Canción",

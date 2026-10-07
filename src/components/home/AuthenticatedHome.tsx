@@ -14,7 +14,8 @@ import { listFollowing } from "@/services/social/following";
 import { listFeed } from "@/services/feed/feed";
 import {
   getMostRecentEditedList,
-  listHomeReleases,
+  ensureReleaseCalendarFresh,
+  listPersonalHomeReleases,
   listMyRecentActivity,
   listPopularComments,
   listPublicLists,
@@ -57,7 +58,8 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
       listCommunityActivity(user.id, 1, previewLimit).then((page) => page.entries),
       listPublicLists(user.id, previewLimit),
       listPopularComments(undefined, user.id),
-      listHomeReleases(),
+      listPersonalHomeReleases(user.id),
+      ensureReleaseCalendarFresh(),
     ]);
 
   const hasFollows = following.users.length > 0;
