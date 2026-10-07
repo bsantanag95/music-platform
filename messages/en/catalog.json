@@ -927,12 +927,21 @@
     "commentSubmit": "Post comment",
     "loginToComment": "Log in to comment",
     "noComments": "No comments yet.",
-    "notesHeading": "Community notes",
-    "notesIntro": "Context for anyone arriving at this artist: where to start, what to hear first.",
-    "notesLabel": "Note",
-    "notesSubmit": "Post note",
-    "loginToNote": "Log in to leave a note",
-    "noNotes": "No notes yet.",
+    "topics": {
+      "start": "To start with",
+      "albums": "Albums",
+      "songs": "Songs",
+      "general": "General"
+    },
+    "topicAll": "All",
+    "topicFilterLabel": "Filter comments by topic",
+    "topicSelectLabel": "Topic",
+    "topicEmpty": {
+      "start": "Nobody has left tips on where to start with this artist yet.",
+      "albums": "No comments about their albums yet.",
+      "songs": "No comments about their songs yet.",
+      "general": "No general comments yet."
+    },
     "edit": "Edit",
     "deleteCommentConfirm": "Delete this comment permanently? This cannot be undone.",
     "editCommentLabel": "Edit comment",

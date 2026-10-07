@@ -91,6 +91,15 @@ de cuál de las filas con el mismo título haya en la BD.
 >   '5e0ce000%';`. Necesita la migración `0062` aplicada. Verifica el conteo con umbral, `likedByMe`, el orden
 >   y la cifra de Comentarios populares, que las cuentas desactivadas no cuentan, bloqueos, comentario propio y
 >   oculto, la suspensión social y las cascadas.
+> - `smoke-test-artist-comment-topics.ts` crea un artista y un álbum sintéticos (MBID
+>   `5e0ce000-0000-4000-8000-0000000009a0` / `...09a1`) y usuarios `smoke_topic_*`, y los borra al terminar
+>   (también si falla; el `ON DELETE CASCADE` limpia los comentarios). Si se interrumpió, limpiar con
+>   `DELETE FROM app_user WHERE username LIKE 'smoke_topic_%'; DELETE FROM release_group WHERE
+>   mbid::text LIKE '5e0ce000%'; DELETE FROM artist WHERE mbid::text LIKE '5e0ce000%';`. Necesita la
+>   migración `0065` aplicada. Verifica los tres `CHECK` de tema y el índice, el relleno a `general`, el
+>   tema por defecto y los rechazos `INVALID_TOPIC`, el filtro con paginación, que editar no cambia el tema
+>   y que el feed, la actividad de la comunidad, "Comentarios populares" y la exportación de datos traen el
+>   tema.
 > - `smoke-test-release-calendar.ts` mockea ListenBrainz, MusicBrainz y Cover Art Archive, crea
 >   artistas y release-groups con MBID `5e0ce000-0000-4000-8000-000000008*` y usuarios `smoke_cal_*`,
 >   **respalda el calendario de lanzamientos y lo restaura al terminar** (también si falla) y borra sus

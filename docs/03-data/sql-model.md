@@ -753,6 +753,15 @@ creados antes del cambio se conservan intactos; solo cambia qué renderiza la UI
 
 **Restricciones:** `CHECK (num_nonnulls(artist_id, release_group_id, recording_id) = 1)`, igual que `credit` y `rating`.
 
+**Tema (`topic`, migración `0065`, cambio `add-artist-comment-topics`):** columna `TEXT NULL` con el tema de
+los comentarios **de artista** — catálogo cerrado `start` ("Para empezar") · `albums` · `songs` · `general`
+(por defecto). Los comentarios de álbum y canción tienen `topic NULL`. Tres `CHECK` con nombre, separados a
+propósito para que el cambio de respuestas solo recree uno: `chk_comment_topic_values` (valor del catálogo),
+`chk_comment_topic_artist_only` (solo con `artist_id`) y `chk_comment_artist_topic_required` (todo comentario de
+artista tiene tema). La migración dejó las notas de artista previas en `general` (no se inventa un tema).
+Índice parcial `idx_comment_artist_topic (artist_id, topic, created_at DESC) WHERE artist_id IS NOT NULL` para
+el filtro por tema. El tema no se edita después de publicar.
+
 ## `comment_like`
 
 **Propósito:** likes en comentarios (migración `0062`, cambio `add-comment-likes`). Registro **anónimo**:

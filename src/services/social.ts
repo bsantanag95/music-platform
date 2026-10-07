@@ -1,6 +1,7 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { appUser, artist, comment, rating, ratingHighlight, recording, releaseGroup } from "@/db/schema";
+import { appUser, artist, comment, COMMENT_TOPICS, DEFAULT_COMMENT_TOPIC, rating, ratingHighlight, recording, releaseGroup } from "@/db/schema";
+import type { CommentTopic } from "@/db/schema";
 import { maskAuthor } from "@/services/auth/account-status";
 import { ApiError } from "@/lib/api/errors";
 import { COMMENT_LIKE_COUNT_SQL, likedByViewerSql, thresholdedLikeCount } from "@/services/social/comment-likes";
@@ -109,9 +110,26 @@ export async function deleteRating(target: SocialTarget, userId: string) {
   if (!deleted.length) throw new ApiError("RATING_NOT_FOUND", 404, "No existe un rating propio para este objetivo");
 }
 
-/** `viewerId`: quien mira (opcional), para `likedByMe`; la cifra de likes sale umbralizada. */
-export async function listComments(target: SocialTarget, page = 1, pageSize = 20, viewerId: string | null = null) {
-  const rows = await db.select({ id: comment.id, body: comment.body, createdAt: comment.createdAt, likes: COMMENT_LIKE_COUNT_SQL, likedByMe: viewerId ? likedByViewerSql(viewerId) : sql<boolean>`false`, user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName, deactivatedAt: appUser.deactivatedAt } }).from(comment).innerJoin(appUser, eq(comment.userId, appUser.id)).where(and(commentTargetWhere(target), eq(comment.moderationStatus, "visible"))).orderBy(desc(comment.createdAt), desc(comment.id)).limit(pageSize + 1).offset((page - 1) * pageSize);
+/**
+ * Valida un tema (add-artist-comment-topics): solo los comentarios de artista tienen tema, del
+ * catálogo cerrado. Devuelve `undefined` si no se pidió tema; cualquier otro caso inválido lanza
+ * `INVALID_TOPIC` (el `CHECK` de la base lo garantiza igual, pero sin código propio).
+ */
+function parseTopic(target: SocialTarget, topic: string | null | undefined): CommentTopic | undefined {
+  if (topic === undefined || topic === null) return undefined;
+  if (target.type !== "artist" || !(COMMENT_TOPICS as readonly string[]).includes(topic)) {
+    throw new ApiError("INVALID_TOPIC", 400, "El tema no es válido");
+  }
+  return topic as CommentTopic;
+}
+
+/**
+ * `viewerId`: quien mira (opcional), para `likedByMe`; la cifra de likes sale umbralizada.
+ * `topic`: filtro por tema, solo para artistas (add-artist-comment-topics); sin él, todos los temas.
+ */
+export async function listComments(target: SocialTarget, page = 1, pageSize = 20, viewerId: string | null = null, topic?: string | null) {
+  const topicFilter = parseTopic(target, topic);
+  const rows = await db.select({ id: comment.id, body: comment.body, topic: comment.topic, createdAt: comment.createdAt, likes: COMMENT_LIKE_COUNT_SQL, likedByMe: viewerId ? likedByViewerSql(viewerId) : sql<boolean>`false`, user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName, deactivatedAt: appUser.deactivatedAt } }).from(comment).innerJoin(appUser, eq(comment.userId, appUser.id)).where(and(commentTargetWhere(target), eq(comment.moderationStatus, "visible"), topicFilter ? eq(comment.topic, topicFilter) : undefined)).orderBy(desc(comment.createdAt), desc(comment.id)).limit(pageSize + 1).offset((page - 1) * pageSize);
   return { comments: rows.slice(0, pageSize).map((row) => serializeComment(row, { likes: row.likes, likedByMe: row.likedByMe })), page, pageSize, hasNext: rows.length > pageSize };
 }
 
@@ -119,16 +137,18 @@ function commentTargetWhere(target: SocialTarget) {
   return eq({ artistId: comment.artistId, releaseGroupId: comment.releaseGroupId, recordingId: comment.recordingId }[target.column], target.id);
 }
 
-export async function createComment(target: SocialTarget, userId: string, body: string) {
+export async function createComment(target: SocialTarget, userId: string, body: string, topic?: string | null) {
   const value = body.trim();
   if (!value || value.length > 5000) throw new ApiError("INVALID_COMMENT", 400, "El comentario no es válido");
-  const [created] = await db.insert(comment).values({ ...targetValues(target), userId, body: value }).returning();
+  // Artista: tema pedido o `general`; álbum/canción: sin tema (pedir uno es un error).
+  const resolvedTopic = parseTopic(target, topic) ?? (target.type === "artist" ? DEFAULT_COMMENT_TOPIC : null);
+  const [created] = await db.insert(comment).values({ ...targetValues(target), userId, body: value, topic: resolvedTopic }).returning();
   if (!created) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo crear el comentario");
   return getComment(created.id);
 }
 
 async function getComment(id: string) {
-  const [row] = await db.select({ id: comment.id, body: comment.body, createdAt: comment.createdAt, user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName, deactivatedAt: appUser.deactivatedAt } }).from(comment).innerJoin(appUser, eq(comment.userId, appUser.id)).where(and(eq(comment.id, id), eq(comment.moderationStatus, "visible"))).limit(1);
+  const [row] = await db.select({ id: comment.id, body: comment.body, topic: comment.topic, createdAt: comment.createdAt, user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName, deactivatedAt: appUser.deactivatedAt } }).from(comment).innerJoin(appUser, eq(comment.userId, appUser.id)).where(and(eq(comment.id, id), eq(comment.moderationStatus, "visible"))).limit(1);
   if (!row) throw new ApiError("COMMENT_NOT_FOUND", 404, "Comentario no encontrado");
   return serializeComment(row);
 }
@@ -154,7 +174,7 @@ export async function deleteComment(id: string, userId: string) {
 function serializeRating(row: typeof rating.$inferSelect) {
   return { ...row, stars: Number(row.stars), detailedScore: row.detailedScore, createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString() };
 }
-function serializeComment(row: { id: string; body: string; createdAt: Date; user: { id: string; username: string | null; displayName: string | null; deactivatedAt: Date | null } }, likes: { likes: number; likedByMe: boolean } = { likes: 0, likedByMe: false }) {
+function serializeComment(row: { id: string; body: string; topic: CommentTopic | null; createdAt: Date; user: { id: string; username: string | null; displayName: string | null; deactivatedAt: Date | null } }, likes: { likes: number; likedByMe: boolean } = { likes: 0, likedByMe: false }) {
   // Una cuenta desactivada conserva sus comentarios, pero sin nombre ni usuario reales.
-  return { id: row.id, body: row.body, user: maskAuthor(row.user), createdAt: row.createdAt.toISOString(), likeCount: thresholdedLikeCount(likes.likes), likedByMe: likes.likedByMe };
+  return { id: row.id, body: row.body, topic: row.topic, user: maskAuthor(row.user), createdAt: row.createdAt.toISOString(), likeCount: thresholdedLikeCount(likes.likes), likedByMe: likes.likedByMe };
 }

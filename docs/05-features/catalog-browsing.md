@@ -143,8 +143,12 @@ de biblioteca y biografía, con la misma estructura que el álbum):
 - **Bandas** (una persona): tarjetas de sus grupos con foto, instrumentos y períodos, años del
   grupo y discos principales; "Apoyo para" (artistas a los que acompañó); y sus propios
   músicos de apoyo si es solista.
-- Al pie, fuera de las pestañas: **notas de la comunidad**: notas cortas de contexto ("empezá
-  por aquí"), no reseñas.
+- Al pie, fuera de las pestañas: **Comentarios** de la comunidad, con **tema** (cambio
+  `add-artist-comment-topics`): Para empezar (para quien llega al artista), Álbumes, Canciones y General
+  (por defecto). Chips Todos + un chip por tema filtran la misma lista en el servidor; al escribir, el
+  selector de tema arranca en General o en el chip activo; el tema no se edita. Reemplaza a "Notas de la
+  comunidad" (que era un comentario con otro título): las notas anteriores quedaron en General. Álbum y
+  Canción mantienen su caja de comentarios sin temas.
 
 **Caso Roger Waters / Pink Floyd (referencia del proyecto):** la discografía de una persona
 muestra **solo sus propios discos** (y sus apariciones); sus bandas aparecen en la pestaña

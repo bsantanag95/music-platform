@@ -1,7 +1,7 @@
 # artist-page-layout Specification
 
 ## Purpose
-Organizar la página de artista como ficha de biblioteca y biografía: cabecera, pestañas enlazables Discografía, Integrantes o Bandas y Biografía, y notas de la comunidad al final, con su orden en móvil.
+Organizar la página de artista como ficha de biblioteca y biografía: cabecera, pestañas enlazables Discografía, Integrantes o Bandas y Biografía, y comentarios de la comunidad al final, con su orden en móvil.
 ## Requirements
 ### Requirement: Zonas de la página de artista
 

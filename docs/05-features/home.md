@@ -279,6 +279,9 @@ la cifra es igual para todos (autor incluido) y la identidad de quien likeó no 
   perfil público y cuenta activa, excluye comentarios ocultos por moderación y, con visitante, los
   de autores con bloqueo en cualquier dirección (como `listCommunityActivity`). La valoración es
   real (`rating` del autor sobre el mismo target, con su puntaje detallado, o `null`).
+- **Tema** (`add-artist-comment-topics`): los comentarios de artista llevan su tema (`topic`:
+  Para empezar · Álbumes · Canciones · General) como etiqueta junto al título del target; los de álbum y
+  canción no. No cambia la selección ni el orden.
 - **Pill `♡ N`** a la derecha del título (`aria-label` "N me gusta", clave
   `home.popularCommentsLikeWord`), solo con cifra visible.
 - El seed (`scripts/seed-home.ts`) ahora genera comentarios de los tres tipos y a veces

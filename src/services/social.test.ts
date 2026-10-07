@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { deleteComment, updateComment, upsertRating } from "./social";
+import { createComment, deleteComment, listComments, updateComment, upsertRating } from "./social";
 
-const mocks = vi.hoisted(() => ({ db: { insert: vi.fn(), select: vi.fn(), delete: vi.fn() } }));
+const mocks = vi.hoisted(() => ({ db: { insert: vi.fn(), select: vi.fn(), delete: vi.fn(), update: vi.fn() } }));
 vi.mock("@/db", () => ({ db: mocks.db }));
 
 describe("servicio social", () => {
@@ -116,5 +116,85 @@ describe("servicio social", () => {
     limit.mockResolvedValue([{ id: "00000000-0000-4000-8000-000000000004", userId: "00000000-0000-4000-8000-000000000005" }]);
     await expect(updateComment("00000000-0000-4000-8000-000000000004", "00000000-0000-4000-8000-000000000002", "texto"))
       .rejects.toMatchObject({ code: "PERMISSION_DENIED", status: 403 });
+  });
+
+  describe("temas de los comentarios (add-artist-comment-topics)", () => {
+    const userId = "00000000-0000-4000-8000-000000000002";
+    const album = { type: "release-group" as const, id: "00000000-0000-4000-8000-000000000006", column: "releaseGroupId" as const };
+    const createdRow = {
+      id: "00000000-0000-4000-8000-000000000007",
+      body: "Texto",
+      topic: "general",
+      createdAt: new Date(),
+      user: { id: userId, username: "ana", displayName: null, deactivatedAt: null },
+    };
+
+    /** Prepara `insert` (devuelve la fila creada) y el `select` con el que `createComment` relee el comentario. */
+    function mockInsert() {
+      const values = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: createdRow.id }]) });
+      mocks.db.insert.mockReturnValue({ values });
+      const limit = vi.fn().mockResolvedValue([createdRow]);
+      mocks.db.select.mockReturnValue({ from: vi.fn().mockReturnValue({ innerJoin: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ limit }) }) }) });
+      return values;
+    }
+
+    it("un comentario de artista sin tema se guarda como general", async () => {
+      const values = mockInsert();
+      await createComment(target, userId, "Texto");
+      expect(values).toHaveBeenCalledWith(expect.objectContaining({ topic: "general" }));
+    });
+
+    it("un comentario de artista guarda el tema pedido", async () => {
+      const values = mockInsert();
+      await createComment(target, userId, "Texto", "start");
+      expect(values).toHaveBeenCalledWith(expect.objectContaining({ topic: "start" }));
+    });
+
+    it("un comentario de álbum se guarda sin tema", async () => {
+      const values = mockInsert();
+      await createComment(album, userId, "Texto");
+      expect(values).toHaveBeenCalledWith(expect.objectContaining({ topic: null }));
+    });
+
+    it.each([["fuera del catálogo", "foro"], ["vacío", ""]])("rechaza un tema %s en un artista sin crear la fila", async (_caso, topic) => {
+      mocks.db.insert.mockClear();
+      await expect(createComment(target, userId, "Texto", topic)).rejects.toMatchObject({ code: "INVALID_TOPIC", status: 400 });
+      expect(mocks.db.insert).not.toHaveBeenCalled();
+    });
+
+    it("rechaza un tema en un álbum sin crear la fila", async () => {
+      mocks.db.insert.mockClear();
+      await expect(createComment(album, userId, "Texto", "start")).rejects.toMatchObject({ code: "INVALID_TOPIC", status: 400 });
+      expect(mocks.db.insert).not.toHaveBeenCalled();
+    });
+
+    it("rechaza el filtro de tema en un álbum y en un tema fuera del catálogo", async () => {
+      await expect(listComments(album, 1, 20, null, "start")).rejects.toMatchObject({ code: "INVALID_TOPIC" });
+      await expect(listComments(target, 1, 20, null, "foro")).rejects.toMatchObject({ code: "INVALID_TOPIC" });
+    });
+
+    it("lista un artista filtrado por tema y devuelve el tema de cada comentario", async () => {
+      const offset = vi.fn().mockResolvedValue([{ ...createdRow, topic: "start", likes: 0, likedByMe: false }]);
+      const where = vi.fn().mockReturnValue({ orderBy: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue({ offset }) }) });
+      mocks.db.select.mockReturnValue({ from: vi.fn().mockReturnValue({ innerJoin: vi.fn().mockReturnValue({ where }) }) });
+
+      const result = await listComments(target, 1, 20, null, "start");
+
+      expect(where).toHaveBeenCalledTimes(1);
+      expect(result.comments[0]).toMatchObject({ topic: "start" });
+    });
+
+    it("editar un comentario no toca el tema", async () => {
+      const limit = vi.fn()
+        .mockResolvedValueOnce([{ id: createdRow.id, userId }])
+        .mockResolvedValueOnce([createdRow]);
+      mocks.db.select.mockReturnValue({ from: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ limit }), innerJoin: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ limit }) }) }) });
+      const set = vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+      mocks.db.update.mockReturnValue({ set });
+
+      await updateComment(createdRow.id, userId, "Otro texto");
+
+      expect(set).toHaveBeenCalledWith({ body: "Otro texto" });
+    });
   });
 });

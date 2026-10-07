@@ -155,6 +155,16 @@ describe("CompactActivityRow — diferenciación visual por tipo (add-feed-kind-
     expect(screen.getByText("Comentó").className).not.toMatch(/text-petrol/);
   });
 
+  it("un comentario de artista muestra su tema; uno sin tema no muestra ninguno", () => {
+    const entry = { kind: "comment" as const, id: "c3", body: "Corto.", createdAt: "2026-01-01T00:00:00.000Z", target, author };
+    const { unmount } = renderWithIntl(<CompactActivityRow entry={{ ...entry, topic: "start" }} />);
+    expect(screen.getByText("Para empezar")).toBeInTheDocument();
+    unmount();
+
+    renderWithIntl(<CompactActivityRow entry={entry} />);
+    expect(screen.queryByText("Para empezar")).not.toBeInTheDocument();
+  });
+
   it("un rating con puntaje detallado muestra ★ 86/100 en lugar de las estrellas", () => {
     renderWithIntl(
       <CompactActivityRow

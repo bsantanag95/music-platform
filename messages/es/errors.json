@@ -71,6 +71,10 @@
     "title": "Comentario inválido",
     "description": "Revisa el contenido del comentario."
   },
+  "INVALID_TOPIC": {
+    "title": "Tema inválido",
+    "description": "Elige un tema válido para el comentario."
+  },
   "RATING_NOT_FOUND": {
     "title": "Valoración no encontrada",
     "description": "No se encontró tu valoración."

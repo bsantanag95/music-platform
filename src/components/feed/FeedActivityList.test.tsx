@@ -195,6 +195,17 @@ describe("FeedActivityList", () => {
     expect(screen.getByTestId("cover-thumb")).toHaveAttribute("data-cover", "https://cover/1.jpg");
   });
 
+  it("un comentario de artista muestra su tema junto al verbo (add-artist-comment-topics)", () => {
+    renderWithIntl(<FeedActivityList entries={[comment({ topic: "albums" })]} variant="feed" />);
+    expect(screen.getByText("Álbumes")).toBeInTheDocument();
+  });
+
+  it("un comentario sin tema no muestra ninguno", () => {
+    renderWithIntl(<FeedActivityList entries={[comment()]} variant="feed" />);
+    expect(screen.queryByText("Álbumes")).not.toBeInTheDocument();
+    expect(screen.queryByText("General")).not.toBeInTheDocument();
+  });
+
   it("un comentario se muestra en redonda y sin comillas — crítica u humor, no una impresión sentida", () => {
     renderWithIntl(<FeedActivityList entries={[comment()]} />);
 
