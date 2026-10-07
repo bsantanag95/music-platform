@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { AppImage } from "@/components/ui/AppImage";
 import { Link } from "@/i18n/navigation";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
@@ -47,6 +47,8 @@ export function ReleaseRail({
   upcomingPrefix,
   upcomingBadge,
   badgeLabels,
+  headerAction,
+  footer,
   prevLabel,
   nextLabel,
 }: {
@@ -57,7 +59,11 @@ export function ReleaseRail({
   upcomingPrefix: string;
   upcomingBadge: string;
   /** Textos de la marca de cada tarjeta (`HomeRelease.badge`). */
-  badgeLabels: { announced: string; featured: string };
+  badgeLabels: { announced: string };
+  /** Control junto al título (el selector "De tus artistas | Populares" de Inicio con sesión). */
+  headerAction?: ReactNode;
+  /** Contenido bajo el riel (la invitación a seguir artistas). */
+  footer?: ReactNode;
   prevLabel: string;
   nextLabel: string;
 }) {
@@ -150,7 +156,10 @@ export function ReleaseRail({
 
   return (
     <section ref={sectionRef} className="flex w-full max-w-3xl flex-col gap-4">
-      <h2 className="font-display text-xl text-paper">{title}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <h2 className="font-display text-xl text-paper">{title}</h2>
+        {headerAction}
+      </div>
 
       <div className="relative">
         <ul
@@ -266,6 +275,7 @@ export function ReleaseRail({
           </>
         )}
       </div>
+      {footer}
     </section>
   );
 }

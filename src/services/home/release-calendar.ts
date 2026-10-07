@@ -19,6 +19,11 @@ export const ANONYMOUS_MIN_PER_SIDE = 4;
 export const ANONYMOUS_PER_SIDE = 12;
 /** Tope de discos de una misma familia de géneros por lado. */
 export const ANONYMOUS_FAMILY_CAP = 3;
+/**
+ * Con al menos esta cantidad de discos propios, el riel de Inicio con sesión abre en "De tus
+ * artistas"; con menos, abre en "Populares" y muestra la invitación a seguir artistas.
+ */
+export const PERSONAL_DEFAULT_MIN = 3;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

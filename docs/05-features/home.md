@@ -341,7 +341,7 @@ En vez de dos rieles de carátulas casi idénticos apilados, **un único riel ho
 ordenado por fecha** con un marcador "hoy" en el medio:
 
 ```
-‹ … 22 sept   29 sept  │ HOY │  Sale 13 oct   Sale 20 oct … ›
+‹ … 22 sept   29 sept  │ HOY │  Se lanza 13 oct   Se lanza 20 oct … ›
   ●──────────●─────────◉──────○─────────────○──────
      [recientes]                 [próximos]
 ```
@@ -356,7 +356,7 @@ ordenado por fecha** con un marcador "hoy" en el medio:
   ámbar del bloque, usada como una aguja de VU / cabezal de reproducción (dentro de la
   Regla de Rareza). Solo aparece si hay ítems de los dos lados.
 - Tarjetas "próximas": carátula a `opacity-60` (opaca al pasar el ratón), pastilla
-  `Próximo` / `Upcoming` sobre la carátula y fecha con prefijo (`Sale` / `Out`). Las
+  `Próximo` / `Upcoming` sobre la carátula y fecha con prefijo (`Se lanza` / `Out`). Las
   "recientes", normales. Fecha con día y mes (`12 sept`), con año solo si no es el actual. Sin cuenta regresiva ni "no te lo pierdas" — la anti-feature
   "sin mecánicas de presión" sigue vigente.
 - Carátula cuadrada con anillo `ink-border` y sombra (→ `amber` en `group-hover`) + fecha
@@ -400,16 +400,24 @@ conoce). Se precalcula en la sincronización (`anonymous_rank`).
 tiene relación —los sigue (peso 4), favorito o valoración ≥ 4 estrellas (3), escucha (2), colección o
 "En tu búsqueda" (1)— de los últimos 30 días y los próximos hasta **180** (más allá de los 90 del feed,
 desde `release_group.first_release_date` del catálogo). Hasta 20, por peso y cercanía a hoy. Un disco de
-un artista **seguido** entra aunque no tenga carátula, con placeholder y la marca **"Anunciado"**. Con
-menos de 6, se completa con la selección anónima marcada **"Destacado"**. No es la personalización
-algorítmica que la anti-feature descarta: se basa solo en la relación explícita de la persona.
+un artista **seguido** entra aunque no tenga carátula, con placeholder y la marca **"Anunciado"**. No se
+rellena con la selección anónima: lo popular vive en su propia vista. No es la personalización algorítmica
+que la anti-feature descarta: se basa solo en la relación explícita de la persona.
+
+**Selector con sesión.** Con sesión el riel suma un control segmentado **"De tus artistas | Populares"**
+(`ReleaseSwitcher`): dos vistas con orientación propia que nunca se mezclan, para que el riel no junte
+géneros y artistas dispares. Abre en "De tus artistas" si tiene al menos 3 discos; si no, abre en "Populares"
+y muestra una invitación bajo el riel — *"Sigue artistas, o valóralos y agrégalos a favoritos, y sus
+lanzamientos aparecerán aquí"* — con un enlace a la búsqueda. Con la vista personal vacía y seleccionada se
+muestra solo la invitación. Si "Populares" está vacía el selector se oculta; si ambas lo están, el apartado.
+Sin sesión no hay selector.
 
 **Componentes:** `HomeReleases` (server, resuelve i18n) → `ReleaseRail`
 (`src/components/home/ReleaseRail.tsx`, client — riel + flechas + marcador). Tipo
-`HomeRelease = { id, title, artist, coverThumbUrl, releaseDate, section, badge }`. Cada tarjeta
+`HomeRelease = { id, title, artist, coverThumbUrl, releaseDate, section, badge }` (`badge`: `"announced"` o nada). Cada tarjeta
 linkea a `/album/{id}`.
 
-**Disco que aún no salió:** la ficha de `/album/[id]` muestra "Sale el …"; sin pistas publicadas,
+**Disco que aún no salió:** la ficha de `/album/[id]` muestra "Se lanza el …"; sin pistas publicadas,
 la pestaña Canciones muestra un estado vacío y, sin ninguna edición en MusicBrainz, la página muestra
 título y fecha en vez del error "Sin ediciones disponibles".
 
