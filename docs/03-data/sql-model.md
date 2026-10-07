@@ -353,6 +353,14 @@ tokens ya vencidos al crearse.
 
 **Discografía completa (migración `0053_artist_discography_sync.sql`, openspec `fix-artist-discography-ingestion`):** `discography_synced_at` indica que hay discografía guardada; `discography_complete_at` (`TIMESTAMPTZ` nullable) que se recorrieron **todas** las páginas del browse de MusicBrainz (con `release-group-status=website-default`, sin bootlegs). Arranca en `NULL` para todos los artistas existentes, porque la ingesta anterior se cortaba en 100 release-groups: la próxima lectura completa la discografía en segundo plano. Una discografía completa se vuelve a sincronizar en segundo plano cuando `discography_complete_at` tiene más de 7 días, con un `pg_advisory_xact_lock` por artista.
 
+**Resincronización (migración `0064_artist_discography_refresh.sql`, openspec `refresh-discography-on-new-releases`):** tres columnas nullable, todas aditivas:
+
+- `discography_mb_total` (`INTEGER`, `CHECK >= 0`): el `release-group-count` que informó MusicBrainz en el último recorrido completo no truncado. Con el tope de 20 páginas alcanzado queda en `NULL`. Es la base de la **verificación barata**: si la discografía ocupa más de una página y la página 1 trae el mismo total, se guardan esos 100 release-groups y no se piden los demás. La verificación barata no marca ni desmarca `discography_unlisted_at` y no toca `discography_complete_at`.
+- `discography_checked_at` (`TIMESTAMPTZ`): última vez que la discografía se dio por vigente, por recorrido completo o por verificación barata. Los 7 días de frescura se miden desde el más reciente entre esta columna y `discography_complete_at`.
+- `discography_refresh_requested_at` (`TIMESTAMPTZ`): al terminar cada sincronización del calendario de lanzamientos (`release_calendar_entry`), se escribe en los artistas con discografía guardada que figuran en una entrada no excluida cuyo release-group no tienen acreditado, salvo que su discografía se haya verificado en las últimas 24 h. Si es posterior a la última verificación, la próxima lectura resincroniza aunque no hayan pasado 7 días, y recorre todas las páginas.
+
+Se recorren todas las páginas, sin atajo, si el total es desconocido, si hay una solicitud pendiente, si el último recorrido completo tiene más de 30 días o desde `scripts/backfill-artist-discography.ts`. `discography_complete_at` conserva su significado (última vez que se recorrieron todas las páginas) porque la página de artista y el descubrimiento de géneros lo leen como «discografía explorada»: pedir un refresco nunca lo vuelve `NULL`.
+
 **Perfil del artista (migración `0054_artist_profile.sql`, openspec `enrich-artist-profile`, ADR 0021):**
 
 - `bio` se renombró **`disambiguation`**: siempre guardó la desambiguación de MusicBrainz ("Chilean

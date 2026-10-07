@@ -119,7 +119,13 @@ de cuál de las filas con el mismo título haya en la BD.
 >   terminar (también si falla); si se interrumpió, la limpieza de arriba lo cubre. Verifica la
 >   discografía paginada sin bootlegs, los tipos crudos, la marca de fuera de la discografía (sin
 >   borrar) y su reversión, la primera visita parcial de un artista con más de 300 discos, la
->   sincronización interrumpida sin marcas y la simulación sin escritura.
+>   sincronización interrumpida sin marcas y la simulación sin escritura. Desde
+>   `refresh-discography-on-new-releases` (necesita la migración `0064` aplicada) también verifica la
+>   verificación barata de la página 1, el recorrido completo cuando cambia el total o pasan 30 días y la
+>   solicitud de resincronización desde el calendario de lanzamientos. Para eso inserta entradas en
+>   `release_calendar_entry` con el mismo prefijo (las borra al terminar). La marca queda acotada a los
+>   artistas del smoke, sin tocar los reales. Si se interrumpió, a la limpieza de arriba sumar
+>   `DELETE FROM release_calendar_entry WHERE release_group_mbid::text LIKE '5e0ce000%';`.
 > - `smoke-test-artist-profile.ts` crea una banda y un integrante con el mismo prefijo
 >   sintético `5e0ce000-0000-4000-8000-*` (el `ON DELETE CASCADE` limpia enlaces, textos por
 >   idioma y pertenencias) y los borra al terminar (también si falla); si se interrumpió, la

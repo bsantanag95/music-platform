@@ -385,6 +385,12 @@ anterior. Pasos: feed → popularidad → selección → verificación en MusicB
 búsqueda `rgid:(…)` por lote de 50) → stub + carátula por el pipeline existente → reemplazo
 transaccional. ~40 s con datos reales.
 
+Al terminar, la sincronización marca para resincronizar las discografías guardadas a las que les falta
+un disco del calendario (`artist.discography_refresh_requested_at`, openspec
+`refresh-discography-on-new-releases`): la próxima visita a ese artista lo trae sin esperar los 7 días.
+Es una sola sentencia sobre tablas propias, sin requests externas. Si falla, se registra y el calendario
+igual queda sincronizado.
+
 **Filtros de calidad.** Fecha exacta al día; Álbum o EP (sin sencillos); carátula conocida
 (`caa_id` del feed y confirmada por Cover Art Archive); sin tipos secundarios (en vivo,
 recopilatorio, banda sonora, remix…); y sin reediciones (fecha original anterior a la ventana). Lo

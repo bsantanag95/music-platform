@@ -21,6 +21,7 @@ import { musicbrainz, RELEASE_GROUP_MBID_BATCH } from "../musicbrainz/client";
 import { mapReleaseGroupCategory } from "../musicbrainz/mappers";
 import type { MBReleaseGroupSearchItem } from "../musicbrainz/types";
 import { findOrResolveCover } from "../catalog/cover";
+import { requestDiscographyRefreshes } from "../catalog/discography-refresh-requests";
 import { ingestCredits } from "../catalog/ingest-discography";
 import { upsertReleaseGroupStubs } from "../catalog/ingest-release-group";
 import {
@@ -60,7 +61,7 @@ export function uuidArrayLiteral(ids: Iterable<string>): string {
 
 export type SyncResult =
   | { status: "skipped" }
-  | { status: "succeeded"; entries: number; anonymous: number; linked: number }
+  | { status: "succeeded"; entries: number; anonymous: number; linked: number; refreshRequests: number }
   | { status: "failed"; error: string };
 
 /** Abre una sincronización si no hay otra en curso. Devuelve su id o `null`. */
@@ -172,7 +173,9 @@ export async function syncReleaseCalendar(options: { today?: string } = {}): Pro
   }
 }
 
-async function runSync(today: string): Promise<{ entries: number; anonymous: number; linked: number }> {
+async function runSync(
+  today: string,
+): Promise<{ entries: number; anonymous: number; linked: number; refreshRequests: number }> {
   const now = Date.now();
 
   // 1. Feed: pasado y futuro por separado (cada lado tiene su máximo de días).
@@ -373,10 +376,15 @@ async function runSync(today: string): Promise<{ entries: number; anonymous: num
     }
   });
 
+  // 8. Artistas con discografía guardada a los que les falta un disco del calendario: su próxima
+  //    visita la resincroniza completa (openspec: refresh-discography-on-new-releases). Nunca lanza.
+  const refreshRequests = await requestDiscographyRefreshes();
+
   return {
     entries: rows.length,
     anonymous: finalSelection.length,
     linked: rows.filter((r) => r.releaseGroupId).length,
+    refreshRequests,
   };
 }
 

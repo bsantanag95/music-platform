@@ -9,8 +9,12 @@ assertSmokeAllowed();
 // paginado (MBID `5e0ce000-0000-4000-8000-*`) y verifica: ingesta paginada con tipos
 // crudos, marca de release-groups fuera de la discografía sin borrarlos, release-group
 // que vuelve, primera visita parcial de un artista con más de 300, sincronización
-// interrumpida sin marcas, simulación sin escritura y secciones. Borra sus fixtures al
-// terminar (también si falla).
+// interrumpida sin marcas, simulación sin escritura y secciones. Desde
+// refresh-discography-on-new-releases (migración 0064) también: verificación barata de la
+// página 1, recorrido completo cuando el total cambia o pasan 30 días, y la solicitud de
+// resincronización desde el calendario de lanzamientos (entradas sintéticas en
+// `release_calendar_entry`, acotada a los artistas del smoke). Borra sus fixtures al terminar
+// (también si falla).
 
 let failures = 0;
 function check(condition: boolean, message: string) {
@@ -22,6 +26,9 @@ const BAND = smokeMbid(SMOKE_PREFIX, 0x5001);
 const BIG_BAND = smokeMbid(SMOKE_PREFIX, 0x5002);
 const OTHER_ARTIST = smokeMbid(SMOKE_PREFIX, 0x5003);
 const BOOTLEG = smokeMbid(SMOKE_PREFIX, 0x3fff);
+const NEW_RELEASE = smokeMbid(SMOKE_PREFIX, 0x5101);
+const EXCLUDED_RELEASE = smokeMbid(SMOKE_PREFIX, 0x5102);
+const STUB_RELEASE = smokeMbid(SMOKE_PREFIX, 0x5103);
 const bandGroup = (n: number) => smokeMbid(SMOKE_PREFIX, 0x3000 + n);
 const bigGroup = (n: number) => smokeMbid(SMOKE_PREFIX, 0x4000 + n);
 
@@ -57,9 +64,10 @@ async function main() {
   const schema = await import("../src/db/schema");
   const { and, eq, inArray, like, sql } = await import("drizzle-orm");
   const { upsertArtistFromMb } = await import("../src/services/catalog/ingest-artist");
-  const { findOrIngestDiscography, readArtistDiscography, syncArtistDiscography } = await import(
+  const { findOrIngestDiscography, needsDiscographyRefresh, readArtistDiscography, syncArtistDiscography } = await import(
     "../src/services/catalog/ingest-discography"
   );
+  const { requestDiscographyRefreshes } = await import("../src/services/catalog/discography-refresh-requests");
   const { discographySection } = await import("../src/services/catalog/discography-sections");
 
   // Browse sintético: la banda chica tiene 150 release-groups (2 páginas) y la grande 320.
@@ -84,8 +92,36 @@ async function main() {
   }) as typeof fetch;
 
   async function cleanup() {
+    await db
+      .delete(schema.releaseCalendarEntry)
+      .where(like(sql`${schema.releaseCalendarEntry.releaseGroupMbid}::text`, `${SMOKE_PREFIX}%`));
     await db.delete(schema.releaseGroup).where(like(sql`${schema.releaseGroup.mbid}::text`, `${SMOKE_PREFIX}%`));
     await db.delete(schema.artist).where(like(sql`${schema.artist.mbid}::text`, `${SMOKE_PREFIX}%`));
+  }
+
+  /** Vence la discografía: último recorrido completo y última verificación hace `days` días. */
+  async function expire(artistId: string, days: number, checkedDays = days) {
+    await db
+      .update(schema.artist)
+      .set({
+        discographyCompleteAt: sql`now() - make_interval(days => ${days})`,
+        discographyCheckedAt: sql`now() - make_interval(days => ${checkedDays})`,
+      })
+      .where(eq(schema.artist.id, artistId));
+  }
+
+  /** Entrada sintética del calendario de lanzamientos. */
+  async function calendarEntry(releaseGroupMbid: string, artistMbids: string[], excluded = false) {
+    await db.insert(schema.releaseCalendarEntry).values({
+      releaseGroupMbid,
+      title: "Lanzamiento (smoke)",
+      artistCreditName: "Smoke",
+      artistMbids,
+      releaseDate: "2026-10-01",
+      primaryType: "Album",
+      hasCover: true,
+      ...(excluded ? { exclusion: "secondary_type", verifiedAt: new Date() } : {}),
+    });
   }
 
   async function artistRow(mbid: string) {
@@ -141,20 +177,14 @@ async function main() {
 
     console.log("3) El bootleg vuelve cuando MusicBrainz lo devuelve");
     catalog[BAND]!.push(releaseGroupOf(BAND, "Banda de discografía (smoke)", BOOTLEG, 3));
-    await db
-      .update(schema.artist)
-      .set({ discographyCompleteAt: sql`now() - interval '8 days'` })
-      .where(eq(schema.artist.id, band.id));
+    await expire(band.id, 8);
     const relist = await syncArtistDiscography(band.id, { mode: "full" });
     check(relist.status === "complete" && relist.relisted === 1, `se desmarca (${JSON.stringify(relist)})`);
     check((await readArtistDiscography(band.id)).some((row) => row.mbid === BOOTLEG), "vuelve a la discografía");
 
     console.log("4) Sincronización interrumpida: no marca nada");
     catalog[BAND]!.pop();
-    await db
-      .update(schema.artist)
-      .set({ discographyCompleteAt: sql`now() - interval '8 days'` })
-      .where(eq(schema.artist.id, band.id));
+    await expire(band.id, 8);
     failOnOffset = 100;
     const interrupted = await syncArtistDiscography(band.id, { mode: "full" }).then(
       () => "sin error",
@@ -185,6 +215,67 @@ async function main() {
       .innerJoin(schema.credit, eq(schema.credit.releaseGroupId, schema.releaseGroup.id))
       .where(and(eq(schema.credit.artistId, big.id), inArray(schema.credit.role, ["primary", "featured"])));
     check(stored.length === 320, `320 release-groups acreditados en la base (${stored.length})`);
+    const bigComplete = await artistRow(BIG_BAND);
+    check(bigComplete.discographyMbTotal === 320 && bigComplete.discographyCheckedAt !== null, "guarda el total y la verificación");
+
+    console.log("7) Verificación barata: mismo total, una sola request");
+    await expire(big.id, 8);
+    const beforeVerify = await artistRow(BIG_BAND);
+    let callsBefore = calls.length;
+    const verified = await syncArtistDiscography(big.id, { mode: "full" });
+    check(verified.status === "verified" && calls.length - callsBefore === 1, `una request (${JSON.stringify(verified)})`);
+    const afterVerify = await artistRow(BIG_BAND);
+    check(
+      afterVerify.discographyCompleteAt!.getTime() === beforeVerify.discographyCompleteAt!.getTime(),
+      "no toca el último recorrido completo",
+    );
+    check(!needsDiscographyRefresh(afterVerify), "la discografía queda al día");
+
+    console.log("8) Total distinto: sigue desde la página 2 sin repetir la 1");
+    catalog[BIG_BAND]!.push(releaseGroupOf(BIG_BAND, "Banda grande (smoke)", bigGroup(320), 0));
+    await expire(big.id, 8);
+    callsBefore = calls.length;
+    const grown = await syncArtistDiscography(big.id, { mode: "full" });
+    const offsets = calls.slice(callsBefore).map((c) => c.split("@")[1]);
+    check(grown.status === "complete" && grown.saved === 321, `recorre y guarda los 321 (${JSON.stringify(grown)})`);
+    check(offsets.join(",") === "0,100,200,300", `páginas 0, 100, 200 y 300 (${offsets.join(",")})`);
+    check((await artistRow(BIG_BAND)).discographyMbTotal === 321, "actualiza el total");
+
+    console.log("9) Recorrido completo vencido (31 días): todas las páginas aunque el total coincida");
+    await expire(big.id, 31, 8);
+    callsBefore = calls.length;
+    const walked = await syncArtistDiscography(big.id, { mode: "full" });
+    check(walked.status === "complete" && calls.length - callsBefore === 4, `4 requests (${JSON.stringify(walked)})`);
+
+    console.log("10) Calendario de lanzamientos → solicitud de resincronización");
+    const stub = await upsertArtistFromMb(OTHER_ARTIST, "Otra banda (smoke)", "Group");
+    await expire(band.id, 2);
+    await expire(big.id, 2);
+    // Total igual al del browse: sin la solicitud, la resincronización tomaría el atajo.
+    await db.update(schema.artist).set({ discographyMbTotal: 150 }).where(eq(schema.artist.id, band.id));
+    await calendarEntry(NEW_RELEASE, [BAND]); // disco nuevo de la banda chica: la marca
+    await calendarEntry(bigGroup(0), [BIG_BAND]); // ya acreditado a la grande: no la marca
+    await calendarEntry(EXCLUDED_RELEASE, [BIG_BAND], true); // excluido: no la marca
+    await calendarEntry(STUB_RELEASE, [OTHER_ARTIST]); // artista sin discografía guardada: no lo marca
+    const scope = { artistIds: [band.id, big.id, stub.id] };
+    const flagged = await requestDiscographyRefreshes(scope);
+    check(flagged === 1, `marca un solo artista (${flagged})`);
+    const bandFlagged = await artistRow(BAND);
+    check(bandFlagged.discographyRefreshRequestedAt !== null, "la banda con el disco nuevo queda marcada");
+    check((await artistRow(BIG_BAND)).discographyRefreshRequestedAt === null, "disco acreditado y entrada excluida no marcan");
+    check((await artistRow(OTHER_ARTIST)).discographyRefreshRequestedAt === null, "un artista sin discografía guardada no se marca");
+    check(needsDiscographyRefresh(bandFlagged), "la próxima lectura de la banda programa la resincronización");
+
+    // La solicitud fuerza el recorrido completo aunque el total no cambió (150, 2 páginas).
+    callsBefore = calls.length;
+    const requested = await syncArtistDiscography(band.id, { mode: "full" });
+    check(requested.status === "complete" && calls.length - callsBefore === 2, `recorrido completo (${JSON.stringify(requested)})`);
+    check(!needsDiscographyRefresh(await artistRow(BAND)), "la solicitud queda atendida");
+
+    // El disco sigue sin aparecer en el browse, pero la discografía se verificó hace menos de 24 h.
+    check((await requestDiscographyRefreshes(scope)) === 0, "no se vuelve a marcar dentro de las 24 h");
+    await expire(band.id, 2);
+    check((await requestDiscographyRefreshes(scope)) === 1, "pasadas 24 h se vuelve a marcar");
   } finally {
     global.fetch = realFetch;
     await cleanup();

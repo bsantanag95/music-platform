@@ -474,6 +474,12 @@ export const artist = pgTable(
     // NULL = la discografía nunca se recorrió entera (migración 0053, openspec:
     // fix-artist-discography-ingestion). Base de la resincronización cada 7 días.
     discographyCompleteAt: timestamp("discography_complete_at", { withTimezone: true }),
+    // Resincronización (migración 0064, openspec: refresh-discography-on-new-releases):
+    // total de MusicBrainz del último recorrido completo (base de la verificación barata),
+    // última verificación (recorrido o atajo) y solicitud del calendario de lanzamientos.
+    discographyMbTotal: integer("discography_mb_total"),
+    discographyCheckedAt: timestamp("discography_checked_at", { withTimezone: true }),
+    discographyRefreshRequestedAt: timestamp("discography_refresh_requested_at", { withTimezone: true }),
     membershipsSyncedAt: timestamp("memberships_synced_at", { withTimezone: true }),
     // NULL = la alineación nunca se guardó con períodos (migración 0055, openspec:
     // add-artist-lineup-data); se renueva con la ficha cada 30 días.
@@ -510,6 +516,7 @@ export const artist = pgTable(
     check("chk_artist_life_begin", sql`${t.lifeBegin} IS NULL OR ${t.lifeBegin} ~ '^\\d{4}(-\\d{2}(-\\d{2})?)?$'`),
     check("chk_artist_life_end", sql`${t.lifeEnd} IS NULL OR ${t.lifeEnd} ~ '^\\d{4}(-\\d{2}(-\\d{2})?)?$'`),
     check("chk_artist_wikidata_id", sql`${t.wikidataId} IS NULL OR ${t.wikidataId} ~ '^Q[0-9]+$'`),
+    check("chk_artist_discography_mb_total", sql`${t.discographyMbTotal} IS NULL OR ${t.discographyMbTotal} >= 0`),
     check(
       "chk_artist_photo_credit",
       sql`${t.photoFile} IS NULL OR (${t.photoUrl} IS NOT NULL AND ${t.photoLicense} IS NOT NULL AND ${t.photoSourceUrl} IS NOT NULL)`,

@@ -87,10 +87,12 @@ const {
   fetchDiscographyPages,
   findOrIngestDiscography,
   needsDiscographyRefresh,
+  needsFullWalk,
   readArtistDiscography,
   syncArtistDiscography,
   DISCOGRAPHY_MAX_PAGES,
   DISCOGRAPHY_REFRESH_MS,
+  DISCOGRAPHY_FULL_WALK_MS,
 } = await import("./ingest-discography");
 const { artist, releaseGroup } = await import("@/db/schema");
 
@@ -111,6 +113,9 @@ function makeArtist(overrides: Partial<ArtistRow> = {}): ArtistRow {
     createdAt: new Date("2026-01-01T00:00:00Z"),
     discographySyncedAt: null,
     discographyCompleteAt: null,
+    discographyMbTotal: null,
+    discographyCheckedAt: null,
+    discographyRefreshRequestedAt: null,
     membershipsSyncedAt: null,
     lineupSyncedAt: null,
     country: null,
@@ -240,7 +245,12 @@ describe("syncArtistDiscography", () => {
     expect(sets.map((s) => s.table)).toEqual([releaseGroup, releaseGroup, artist]);
     expect(sets[0]!.set).toEqual({ discographyUnlistedAt: expect.any(Date) });
     expect(sets[1]!.set).toEqual({ discographyUnlistedAt: null });
-    expect(sets[2]!.set).toEqual({ discographySyncedAt: expect.any(Date), discographyCompleteAt: expect.any(Date) });
+    expect(sets[2]!.set).toEqual({
+      discographySyncedAt: expect.any(Date),
+      discographyCompleteAt: expect.any(Date),
+      discographyCheckedAt: expect.any(Date),
+      discographyMbTotal: 18,
+    });
   });
 
   it("guarda la entidad de Wikidata que declara MusicBrainz y la borra si dejó de declararla", async () => {
@@ -339,6 +349,98 @@ describe("syncArtistDiscography", () => {
     expect(result).toEqual({ status: "complete", saved: 18, total: 18, unlisted: 1, relisted: 1, truncated: false });
     expect(state.inserts).toHaveLength(0);
     expect(state.updates).toHaveLength(0);
+  });
+});
+
+describe("syncArtistDiscography: verificación barata", () => {
+  const tenDaysAgo = () => new Date(Date.now() - 10 * DAY);
+  /** Artista grande (219 discos) con un recorrido completo vencido para la frescura, no para el atajo. */
+  const bigArtist = (overrides: Partial<ArtistRow> = {}) =>
+    makeArtist({
+      discographySyncedAt: tenDaysAgo(),
+      discographyCompleteAt: tenDaysAgo(),
+      discographyCheckedAt: tenDaysAgo(),
+      discographyMbTotal: 219,
+      ...overrides,
+    });
+
+  it("con el mismo total hace una sola request, guarda la primera página y no marca nada", async () => {
+    state.txSelects.push([bigArtist()]);
+    mocks.browse.mockResolvedValueOnce(PF1);
+
+    const result = await syncArtistDiscography("artist-1", { mode: "full" });
+
+    expect(result).toEqual({ status: "verified", saved: 100, total: 219 });
+    expect(mocks.browse).toHaveBeenCalledTimes(1);
+    expect(releaseGroupInserts()).toHaveLength(100);
+    expect(updateSets()).toEqual([{ table: artist, set: { discographyCheckedAt: expect.any(Date) } }]);
+  });
+
+  it("con otro total sigue desde la segunda página sin repetir la primera", async () => {
+    state.txSelects.push([bigArtist({ discographyMbTotal: 218 })]);
+    mocks.browse.mockResolvedValueOnce(PF1).mockResolvedValueOnce(PF2).mockResolvedValueOnce(PF3);
+
+    const result = await syncArtistDiscography("artist-1", { mode: "full" });
+
+    expect(result).toMatchObject({ status: "complete", saved: 219, total: 219 });
+    expect(mocks.browse.mock.calls.map(([, offset]) => offset)).toEqual([0, 100, 200]);
+    const artistSet = updateSets().find((s) => s.table === artist)!.set;
+    expect(artistSet).toMatchObject({ discographyMbTotal: 219, discographyCompleteAt: expect.any(Date) });
+  });
+
+  it("un artista de una sola página se sincroniza completo, con marcas", async () => {
+    state.txSelects.push([bigArtist({ discographyMbTotal: 18 })]);
+    state.updateResults.push([{ id: "bootleg" }], []);
+    mocks.browse.mockResolvedValueOnce(BUNKERS);
+
+    const result = await syncArtistDiscography("artist-1", { mode: "full" });
+
+    expect(result).toMatchObject({ status: "complete", unlisted: 1 });
+    expect(mocks.browse).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ["el recorrido completo tiene más de 30 días", { discographyCompleteAt: new Date(Date.now() - 31 * DAY) }],
+    ["el total anterior es desconocido", { discographyMbTotal: null }],
+    ["hay una solicitud del calendario pendiente", { discographyRefreshRequestedAt: new Date(Date.now() - DAY) }],
+  ])("recorre todas las páginas si %s", async (_label, overrides) => {
+    state.txSelects.push([bigArtist(overrides)]);
+    mocks.browse.mockResolvedValueOnce(PF1).mockResolvedValueOnce(PF2).mockResolvedValueOnce(PF3);
+
+    const result = await syncArtistDiscography("artist-1", { mode: "full" });
+
+    expect(result.status).toBe("complete");
+    expect(mocks.browse).toHaveBeenCalledTimes(3);
+  });
+
+  it("forceFullWalk salta el atajo aunque el total coincida", async () => {
+    state.txSelects.push([bigArtist()]);
+    mocks.browse.mockResolvedValueOnce(PF1).mockResolvedValueOnce(PF2).mockResolvedValueOnce(PF3);
+
+    const result = await syncArtistDiscography("artist-1", { mode: "full", forceFullWalk: true });
+
+    expect(result.status).toBe("complete");
+    expect(mocks.browse).toHaveBeenCalledTimes(3);
+  });
+
+  it("en simulación informa el atajo sin escribir", async () => {
+    state.txSelects.push([bigArtist()]);
+    mocks.browse.mockResolvedValueOnce(PF1);
+
+    const result = await syncArtistDiscography("artist-1", { mode: "full", dryRun: true });
+
+    expect(result.status).toBe("verified");
+    expect(state.inserts).toHaveLength(0);
+    expect(state.updates).toHaveLength(0);
+  });
+
+  it("con el tope de páginas alcanzado no guarda el total", async () => {
+    state.txSelects.push([bigArtist({ discographyMbTotal: null })]);
+    mocks.browse.mockResolvedValue({ ...PF1, "release-group-count": 5000 });
+
+    await syncArtistDiscography("artist-1", { mode: "full" });
+
+    expect(updateSets().find((s) => s.table === artist)!.set).toMatchObject({ discographyMbTotal: null });
   });
 });
 
@@ -457,11 +559,58 @@ describe("findOrIngestDiscography", () => {
   });
 });
 
+/** Columnas de frescura de un artista existente antes de la migración 0064. */
+function freshness(overrides: Partial<ArtistRow> = {}) {
+  return {
+    discographyCompleteAt: null,
+    discographyCheckedAt: null,
+    discographyRefreshRequestedAt: null,
+    discographyMbTotal: null,
+    ...overrides,
+  };
+}
+
 describe("needsDiscographyRefresh", () => {
+  const now = Date.now();
+
   it("sin marca de completa o con más de 7 días, sí; al día, no", () => {
-    const now = Date.now();
-    expect(needsDiscographyRefresh({ discographyCompleteAt: null }, now)).toBe(true);
-    expect(needsDiscographyRefresh({ discographyCompleteAt: new Date(now - DISCOGRAPHY_REFRESH_MS - 1) }, now)).toBe(true);
-    expect(needsDiscographyRefresh({ discographyCompleteAt: new Date(now - DAY) }, now)).toBe(false);
+    expect(needsDiscographyRefresh(freshness(), now)).toBe(true);
+    expect(needsDiscographyRefresh(freshness({ discographyCompleteAt: new Date(now - DISCOGRAPHY_REFRESH_MS - 1) }), now)).toBe(true);
+    expect(needsDiscographyRefresh(freshness({ discographyCompleteAt: new Date(now - DAY) }), now)).toBe(false);
+  });
+
+  it("mide desde la última verificación barata, no solo desde el recorrido completo", () => {
+    const old = new Date(now - 20 * DAY);
+    expect(needsDiscographyRefresh(freshness({ discographyCompleteAt: old, discographyCheckedAt: new Date(now - DAY) }), now)).toBe(false);
+    expect(
+      needsDiscographyRefresh(freshness({ discographyCompleteAt: old, discographyCheckedAt: new Date(now - DISCOGRAPHY_REFRESH_MS - 1) }), now),
+    ).toBe(true);
+  });
+
+  it("una solicitud del calendario posterior a la verificación pide resincronizar; una anterior, no", () => {
+    const checked = new Date(now - 3 * DAY);
+    const base = { discographyCompleteAt: checked, discographyCheckedAt: checked };
+    expect(needsDiscographyRefresh(freshness({ ...base, discographyRefreshRequestedAt: new Date(now - DAY) }), now)).toBe(true);
+    expect(needsDiscographyRefresh(freshness({ ...base, discographyRefreshRequestedAt: new Date(now - 4 * DAY) }), now)).toBe(false);
+  });
+});
+
+describe("needsFullWalk", () => {
+  const now = Date.now();
+  const complete = new Date(now - 10 * DAY);
+
+  it("con total conocido, recorrido reciente y sin solicitud, no", () => {
+    expect(needsFullWalk(freshness({ discographyCompleteAt: complete, discographyMbTotal: 219 }), now)).toBe(false);
+  });
+
+  it("sí con el total desconocido, sin recorrido completo, con solicitud pendiente o pasados 30 días", () => {
+    expect(needsFullWalk(freshness({ discographyCompleteAt: complete }), now)).toBe(true);
+    expect(needsFullWalk(freshness({ discographyMbTotal: 219 }), now)).toBe(true);
+    expect(
+      needsFullWalk(freshness({ discographyCompleteAt: complete, discographyMbTotal: 219, discographyRefreshRequestedAt: new Date(now - DAY) }), now),
+    ).toBe(true);
+    expect(
+      needsFullWalk(freshness({ discographyCompleteAt: new Date(now - DISCOGRAPHY_FULL_WALK_MS - 1), discographyMbTotal: 219 }), now),
+    ).toBe(true);
   });
 });
