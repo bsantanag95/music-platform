@@ -52,13 +52,25 @@ async function countLikes(commentId: string): Promise<number> {
 
 async function findComment(commentId: string) {
   const [row] = await db
-    .select({ id: comment.id, userId: comment.userId, moderationStatus: comment.moderationStatus })
+    .select({ id: comment.id, userId: comment.userId, moderationStatus: comment.moderationStatus, parentId: comment.parentId })
     .from(comment)
     .where(eq(comment.id, commentId))
     .limit(1);
   // Un comentario oculto por moderación no existe para quien lo likea.
   if (!row || row.moderationStatus !== "visible") {
     throw new ApiError("COMMENT_NOT_FOUND", 404, "Comentario no encontrado");
+  }
+  // Una respuesta cuya raíz está oculta también está oculta (el hilo cae con su raíz). Ver
+  // `comment-roots.ts`: los likes leen `comment` completo, raíces y respuestas.
+  if (row.parentId) {
+    const [root] = await db
+      .select({ moderationStatus: comment.moderationStatus })
+      .from(comment)
+      .where(eq(comment.id, row.parentId))
+      .limit(1);
+    if (!root || root.moderationStatus !== "visible") {
+      throw new ApiError("COMMENT_NOT_FOUND", 404, "Comentario no encontrado");
+    }
   }
   return row;
 }

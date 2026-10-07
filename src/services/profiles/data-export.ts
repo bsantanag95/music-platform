@@ -157,6 +157,7 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
           recordingId: comment.recordingId,
           body: comment.body,
           topic: comment.topic,
+          parentId: comment.parentId,
           moderationStatus: comment.moderationStatus,
           createdAt: comment.createdAt,
         })

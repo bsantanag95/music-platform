@@ -52,7 +52,8 @@ visibles para el lector, en orden cronológico descendente con paginación. Se i
   puede tener varias entradas de comentario sobre el mismo objetivo. Los comentarios **de artista**
   traen su `topic` (`start` · `albums` · `songs` · `general`, cambio `add-artist-comment-topics`) y se
   muestran como etiqueta junto al verbo; en álbum y canción `topic` es `null`. Lo mismo vale para la
-  actividad de la comunidad.
+  actividad de la comunidad. **Las respuestas** a un comentario (`add-comment-replies`, ADR 0030) **no generan
+  entrada propia**: el feed, la actividad de la comunidad y el rastro propio muestran solo comentarios raíz.
 - **Reseña** (`kind: "review"`): reseña de álbum (`add-album-review` — una por usuario y
   álbum, editable en el lugar). Espeja a `comment`: sin columna de audiencia (pública en
   catálogo, filtrada por visibilidad de perfil), ordenada por `updated_at` y con esa fecha

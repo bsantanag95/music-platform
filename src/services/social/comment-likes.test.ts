@@ -58,6 +58,33 @@ describe("likeComment", () => {
     expect(mocks.db.insert).not.toHaveBeenCalled();
   });
 
+  describe("respuestas (add-comment-replies)", () => {
+    const ROOT = "00000000-0000-4000-8000-000000000002";
+    const reply = [{ id: COMMENT, userId: AUTHOR, moderationStatus: "visible", parentId: ROOT }];
+
+    it("una respuesta se puede likear con las mismas reglas que un comentario", async () => {
+      selects(reply, [{ moderationStatus: "visible" }], [{ count: 4 }]);
+      await expect(likeComment(COMMENT, VIEWER)).resolves.toEqual({ liked: true, likeCount: 4 });
+      expect(onConflictDoNothing).toHaveBeenCalledTimes(1);
+    });
+
+    it("una respuesta de su propia autora no se puede likear", async () => {
+      selects(reply, [{ moderationStatus: "visible" }]);
+      await expect(likeComment(COMMENT, AUTHOR)).rejects.toMatchObject({ code: "PERMISSION_DENIED" });
+    });
+
+    it("una respuesta cuya raíz está oculta responde COMMENT_NOT_FOUND", async () => {
+      selects(reply, [{ moderationStatus: "hidden" }]);
+      await expect(likeComment(COMMENT, VIEWER)).rejects.toMatchObject({ code: "COMMENT_NOT_FOUND", status: 404 });
+      expect(mocks.db.insert).not.toHaveBeenCalled();
+    });
+
+    it("una respuesta cuya raíz ya no existe responde COMMENT_NOT_FOUND", async () => {
+      selects(reply, []);
+      await expect(likeComment(COMMENT, VIEWER)).rejects.toMatchObject({ code: "COMMENT_NOT_FOUND" });
+    });
+  });
+
   it("responde COMMENT_NOT_FOUND si el comentario está oculto", async () => {
     selects([{ id: COMMENT, userId: AUTHOR, moderationStatus: "hidden" }]);
     await expect(likeComment(COMMENT, VIEWER)).rejects.toMatchObject({ code: "COMMENT_NOT_FOUND" });

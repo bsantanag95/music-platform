@@ -100,6 +100,16 @@ de cuál de las filas con el mismo título haya en la BD.
 >   tema por defecto y los rechazos `INVALID_TOPIC`, el filtro con paginación, que editar no cambia el tema
 >   y que el feed, la actividad de la comunidad, "Comentarios populares" y la exportación de datos traen el
 >   tema.
+> - `smoke-test-comment-replies.ts` crea un artista y un álbum sintéticos (MBID
+>   `5e0ce000-0000-4000-8000-0000000009b0` / `...09b1`) y usuarios `smoke_reply_*`, y los borra al terminar
+>   (también si falla; el `ON DELETE CASCADE` limpia comentarios, respuestas, likes y bloqueos). Si se
+>   interrumpió, limpiar con `DELETE FROM app_user WHERE username LIKE 'smoke_reply_%'; DELETE FROM
+>   release_group WHERE mbid::text LIKE '5e0ce000%'; DELETE FROM artist WHERE mbid::text LIKE '5e0ce000%';`.
+>   Necesita las migraciones `0065` y `0066` aplicadas. Verifica los `CHECK` de respuesta, que la respuesta
+>   cuelga de la raíz y hereda el tema, el rechazo en álbum / raíz oculta / bloqueo, `replyCount` (sin ocultas ni
+>   cuentas desactivadas), que el listado solo trae raíces, el hilo en orden cronológico, que el feed, la
+>   actividad de la comunidad, el rastro propio y "Comentarios populares" no muestran respuestas (aunque una
+>   tenga más likes que cualquier raíz), los likes sobre respuestas, la exportación y las cascadas.
 > - `smoke-test-release-calendar.ts` mockea ListenBrainz, MusicBrainz y Cover Art Archive, crea
 >   artistas y release-groups con MBID `5e0ce000-0000-4000-8000-000000008*` y usuarios `smoke_cal_*`,
 >   **respalda el calendario de lanzamientos y lo restaura al terminar** (también si falla) y borra sus

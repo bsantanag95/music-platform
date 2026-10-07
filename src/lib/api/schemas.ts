@@ -339,6 +339,7 @@ export const ErrorCodeSchema = z.enum([
   "INVALID_RATING",
   "INVALID_COMMENT",
   "INVALID_TOPIC",
+  "REPLIES_NOT_ALLOWED",
   "RATING_NOT_FOUND",
   "COMMENT_NOT_FOUND",
   "REVIEW_NOT_FOUND",
@@ -689,6 +690,10 @@ export const CommentSchema = z.object({
   body: z.string(),
   // Tema del comentario de artista; null en álbum y canción (add-artist-comment-topics).
   topic: CommentTopicSchema.nullable().default(null),
+  // Respuestas (add-comment-replies): `parentId` es la raíz de una respuesta (null en una raíz);
+  // `replyCount` cuenta las respuestas visibles de una raíz (0 en una respuesta y en álbum/canción).
+  parentId: z.uuid().nullable().default(null),
+  replyCount: z.number().int().default(0),
   createdAt: z.string(),
   // Likes (add-comment-likes): cifra visible (null bajo el umbral de 3) y si el visitante likeó.
   likeCount: z.number().int().nullable().default(null),

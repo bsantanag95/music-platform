@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { createComment, deleteComment, listComments, updateComment, upsertRating } from "./social";
+import { createComment, createReply, deleteComment, listComments, listReplies, updateComment, upsertRating } from "./social";
 
 const mocks = vi.hoisted(() => ({ db: { insert: vi.fn(), select: vi.fn(), delete: vi.fn(), update: vi.fn() } }));
 vi.mock("@/db", () => ({ db: mocks.db }));
+const isBlockedBetween = vi.hoisted(() => vi.fn().mockResolvedValue(false));
+vi.mock("@/services/social/relations", () => ({ isBlockedBetween }));
 
 describe("servicio social", () => {
   const target = { type: "artist" as const, id: "00000000-0000-4000-8000-000000000001", column: "artistId" as const };
@@ -195,6 +197,108 @@ describe("servicio social", () => {
       await updateComment(createdRow.id, userId, "Otro texto");
 
       expect(set).toHaveBeenCalledWith({ body: "Otro texto" });
+    });
+  });
+
+  describe("respuestas (add-comment-replies)", () => {
+    const userId = "00000000-0000-4000-8000-000000000002";
+    const authorId = "00000000-0000-4000-8000-000000000005";
+    const rootId = "00000000-0000-4000-8000-000000000010";
+    const replyId = "00000000-0000-4000-8000-000000000011";
+    const artistId = "00000000-0000-4000-8000-000000000001";
+    const root = { id: rootId, userId: authorId, artistId, parentId: null, moderationStatus: "visible" };
+    const replyRow = { id: replyId, body: "Texto", topic: "start", parentId: rootId, replyCount: 0, createdAt: new Date(), user: { id: userId, username: "ana", displayName: null, deactivatedAt: null } };
+
+    /** Una cola de resultados para `select().from().where().limit()` y para el releído con `innerJoin`. */
+    function mockSelects(...results: unknown[][]) {
+      const limit = vi.fn();
+      for (const result of results) limit.mockResolvedValueOnce(result);
+      mocks.db.select.mockReturnValue({ from: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ limit }), innerJoin: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ limit }) }) }) });
+    }
+    function mockReplyInsert() {
+      const values = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: replyId }]) });
+      mocks.db.insert.mockReturnValue({ values });
+      return values;
+    }
+
+    it("responde a una raíz: copia el artista, cuelga de la raíz y no guarda tema", async () => {
+      mockSelects([root], [replyRow]);
+      const values = mockReplyInsert();
+
+      const created = await createReply(rootId, userId, "  Texto  ");
+
+      expect(values).toHaveBeenCalledWith({ userId, artistId, parentId: rootId, body: "Texto", topic: null });
+      expect(created).toMatchObject({ parentId: rootId, topic: "start" });
+    });
+
+    it("responder a una respuesta la cuelga de la misma raíz", async () => {
+      mockSelects([{ id: replyId, userId, artistId, parentId: rootId, moderationStatus: "visible" }], [root], [replyRow]);
+      const values = mockReplyInsert();
+
+      await createReply(replyId, userId, "Otra");
+
+      expect(values).toHaveBeenCalledWith(expect.objectContaining({ parentId: rootId }));
+    });
+
+    it("rechaza un texto vacío o demasiado largo sin tocar la base", async () => {
+      mocks.db.insert.mockClear();
+      await expect(createReply(rootId, userId, "   ")).rejects.toMatchObject({ code: "INVALID_COMMENT", status: 400 });
+      await expect(createReply(rootId, userId, "x".repeat(5001))).rejects.toMatchObject({ code: "INVALID_COMMENT" });
+      expect(mocks.db.insert).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ["no existe", []],
+      ["está oculto por moderación", [{ ...root, moderationStatus: "hidden" }]],
+    ])("rechaza responder a un comentario que %s", async (_caso, rows) => {
+      mockSelects(rows);
+      mocks.db.insert.mockClear();
+      await expect(createReply(rootId, userId, "Texto")).rejects.toMatchObject({ code: "COMMENT_NOT_FOUND", status: 404 });
+      expect(mocks.db.insert).not.toHaveBeenCalled();
+    });
+
+    it("una respuesta cuya raíz está oculta tampoco existe", async () => {
+      mockSelects([{ id: replyId, userId, artistId, parentId: rootId, moderationStatus: "visible" }], [{ ...root, moderationStatus: "hidden" }]);
+      await expect(createReply(replyId, userId, "Texto")).rejects.toMatchObject({ code: "COMMENT_NOT_FOUND" });
+    });
+
+    it("solo los comentarios de artista admiten respuestas", async () => {
+      mockSelects([{ ...root, artistId: null }]);
+      mocks.db.insert.mockClear();
+      await expect(createReply(rootId, userId, "Texto")).rejects.toMatchObject({ code: "REPLIES_NOT_ALLOWED", status: 400 });
+      expect(mocks.db.insert).not.toHaveBeenCalled();
+    });
+
+    it("rechaza responder con un bloqueo en cualquier dirección", async () => {
+      mockSelects([root]);
+      isBlockedBetween.mockResolvedValueOnce(true);
+      mocks.db.insert.mockClear();
+      await expect(createReply(rootId, userId, "Texto")).rejects.toMatchObject({ code: "BLOCKED", status: 403 });
+      expect(mocks.db.insert).not.toHaveBeenCalled();
+    });
+
+    it("el hilo de una raíz devuelve las respuestas con parentId, de la más antigua a la más reciente", async () => {
+      const offset = vi.fn().mockResolvedValue([{ ...replyRow, likes: 0, likedByMe: false }]);
+      const orderBy = vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue({ offset }) });
+      const limit = vi.fn().mockResolvedValue([root]);
+      mocks.db.select.mockReturnValue({ from: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ limit }), innerJoin: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ orderBy }) }) }) });
+
+      const result = await listReplies(rootId, 1, 20, null);
+
+      expect(result.comments).toHaveLength(1);
+      expect(result.comments[0]).toMatchObject({ parentId: rootId, topic: "start" });
+      expect(result.hasNext).toBe(false);
+      // El orden ascendente (más antigua primero) se comprueba contra Postgres en el smoke test.
+      expect(orderBy).toHaveBeenCalledTimes(1);
+    });
+
+    it("el hilo de una respuesta, de un inexistente o de una raíz oculta responde COMMENT_NOT_FOUND", async () => {
+      mockSelects([{ ...root, parentId: rootId }]);
+      await expect(listReplies(replyId)).rejects.toMatchObject({ code: "COMMENT_NOT_FOUND", status: 404 });
+      mockSelects([]);
+      await expect(listReplies(rootId)).rejects.toMatchObject({ code: "COMMENT_NOT_FOUND" });
+      mockSelects([{ ...root, moderationStatus: "hidden" }]);
+      await expect(listReplies(rootId)).rejects.toMatchObject({ code: "COMMENT_NOT_FOUND" });
     });
   });
 });

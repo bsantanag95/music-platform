@@ -1841,6 +1841,29 @@ desde 3; igual para todos, autor incluido) y `likedByMe` (si el visitante autent
 sin sesión). El `GET` es público: la sesión es opcional y solo sirve para `likedByMe`. Nunca hay
 identidades de quienes likearon. El `POST` devuelve `likeCount: null, likedByMe: false`.
 
+### `GET/POST /api/catalog/comments/{commentId}/replies` (cambio `add-comment-replies`)
+
+Respuestas de **un solo nivel** a comentarios **de artista**. Responder a una respuesta crea una respuesta
+de la **misma raíz** (el servidor sube a la raíz). La respuesta copia el objetivo de su raíz —nunca lo recibe
+del cliente— y no tiene tema propio: la respuesta del servidor trae `topic` con el de la raíz.
+
+- `GET` (público, sesión opcional solo para `likedByMe`): acepta `page` y `pageSize` como el listado de
+  comentarios (`400 VALIDATION_ERROR` si no son válidos) y devuelve `{ comments, page, pageSize, hasNext }`
+  con las respuestas visibles **de la más antigua a la más reciente**, cada una con `parentId` (la raíz) y
+  `replyCount: 0`. Si el id no es un comentario raíz visible (no existe, es una respuesta, o está oculto por
+  moderación) → `404 COMMENT_NOT_FOUND`.
+- `POST`: requiere sesión (`401 AUTH_REQUIRED`) y actividad social permitida (`403
+  SOCIAL_SUSPENSION_ACTIVE`). Recibe `{ body }` y devuelve `201 { comment }`. `400 INVALID_COMMENT` si el
+  texto está vacío o supera el máximo de un comentario (o el id no es UUID); `404 COMMENT_NOT_FOUND` si el
+  comentario no existe, está oculto o su raíz está oculta; `400 REPLIES_NOT_ALLOWED` si el comentario no es
+  de artista; `403 BLOCKED` si hay un bloqueo en cualquier dirección con la autora de la raíz.
+- Las respuestas se editan (`PATCH`, solo el texto), se borran (`DELETE`), se likean y se reportan como
+  cualquier comentario (`targetType: "comment"`). Borrar una raíz borra sus respuestas.
+- En `GET/POST /api/catalog/{target}/{id}/comments` cada comentario trae ahora `parentId` (`null` en una
+  raíz) y `replyCount` (respuestas visibles, sin las ocultas ni las de cuentas desactivadas; `0` en una
+  respuesta y en álbum/canción). **El listado devuelve solo raíces.** Las respuestas no generan entradas de
+  feed ni de actividad de la comunidad y no entran en «Comentarios populares».
+
 ### `PATCH/DELETE /api/catalog/comments/{commentId}`
 
 `PATCH` recibe `{ body }` y solo permite editar el comentario propio. `DELETE` realiza borrado físico

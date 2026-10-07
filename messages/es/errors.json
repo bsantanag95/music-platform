@@ -75,6 +75,10 @@
     "title": "Tema inválido",
     "description": "Elige un tema válido para el comentario."
   },
+  "REPLIES_NOT_ALLOWED": {
+    "title": "No se puede responder",
+    "description": "Este comentario no admite respuestas."
+  },
   "RATING_NOT_FOUND": {
     "title": "Valoración no encontrada",
     "description": "No se encontró tu valoración."

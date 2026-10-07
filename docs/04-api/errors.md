@@ -39,6 +39,7 @@ además del `error` legible:
 | `INVALID_TARGET` | 400/404 | Tipo, UUID u objetivo inexistente. |
 | `INVALID_RATING` / `INVALID_COMMENT` | 400 | Entrada social inválida. |
 | `INVALID_TOPIC` | 400 | Tema de comentario fuera del catálogo (`start`·`albums`·`songs`·`general`), o un tema (en `POST`) / filtro de tema (en `GET`) sobre un álbum o una canción — solo los comentarios de artista tienen tema. |
+| `REPLIES_NOT_ALLOWED` | 400 | Responder a un comentario que no es de artista: solo los comentarios de artista admiten respuestas (`POST /api/catalog/comments/{commentId}/replies`). |
 | `RATING_NOT_FOUND` | 404 | No existe un rating propio para borrar. |
 | `COMMENT_NOT_FOUND` | 404 | No existe el comentario solicitado. |
 | `REVIEW_NOT_FOUND` | 404 | No existe la reseña solicitada (o el id no es UUID). |

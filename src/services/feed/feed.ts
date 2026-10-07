@@ -18,6 +18,7 @@ import {
   wantedEntry,
 } from "@/db/schema";
 import type { CommentTopic } from "@/db/schema";
+import { rootCommentsOnly } from "@/services/social/comment-roots";
 import { ApiError } from "@/lib/api/errors";
 import type { FeedKind } from "@/lib/api/schemas";
 import type { Audience } from "@/services/social/types";
@@ -894,6 +895,7 @@ export async function listFeed(
           .leftJoin(appUser, eq(comment.userId, appUser.id))
           .where(
             and(
+              rootCommentsOnly(),
               inArray(comment.userId, authorIds),
               BLOCKED_SQL(viewerId, comment.userId),
               ...titleSearchCondition(searchPattern, comment.releaseGroupId, comment.recordingId),

@@ -100,6 +100,12 @@ por separado sin afectar a su raíz.
 
 ### Requirement: Bloqueos y cuentas desactivadas en las respuestas
 Las respuestas SHALL respetar bloqueos y cuentas desactivadas igual que los comentarios raíz.
+Responder a un comentario cuya autora bloqueó a quien responde, o a la que quien responde bloqueó,
+SHALL rechazarse con `BLOCKED`, igual que dar like.
+
+#### Scenario: Bloqueo
+- **WHEN** existe un bloqueo en cualquier dirección entre quien responde y la autora de la raíz
+- **THEN** responder se rechaza con `BLOCKED` y no se crea ninguna fila
 
 #### Scenario: Cuenta desactivada
 - **WHEN** la autora de una respuesta desactiva su cuenta
