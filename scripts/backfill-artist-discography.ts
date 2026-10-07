@@ -80,7 +80,8 @@ async function main() {
     const { id, name } = pending[i]!;
     const prefix = `[${i + 1}/${pending.length}] ${name}`;
     try {
-      const result = await syncArtistDiscography(id, { mode: "full", dryRun });
+      // Sin verificación barata: el backfill siempre recorre todas las páginas (también con `--artist`).
+      const result = await syncArtistDiscography(id, { mode: "full", dryRun, forceFullWalk: true });
       tally[result.status] = (tally[result.status] ?? 0) + 1;
       if (result.status === "complete") {
         totals.saved += result.saved;

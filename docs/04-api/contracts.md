@@ -430,10 +430,20 @@ valor, siempre `null` en la respuesta). Cada release-group incluye además `prim
 null` y `secondaryTypes: string[] | null` (tipos crudos de MusicBrainz; `null` si todavía no se
 sincronizaron) y `creditRole: "primary" | "featured"` (el rol del artista consultado en ese
 release-group). `artist` incluye `discographyCompleteAt` (`null` si la discografía nunca se
-recorrió entera). Una discografía guardada responde sin esperar a MusicBrainz; si está incompleta
-o tiene más de 7 días, se resincroniza en segundo plano después de responder. La primera lectura
+recorrió entera). Una discografía guardada responde sin esperar a MusicBrainz; si está incompleta,
+si su última verificación tiene más de 7 días o si el calendario de lanzamientos pidió
+resincronizarla, se resincroniza en segundo plano después de responder. La primera lectura
 de un artista trae hasta 3 páginas (300 release-groups) antes de responder y el resto en segundo
 plano.
+
+**Resincronización (openspec: `refresh-discography-on-new-releases`):** `artist` incluye además
+`discographyMbTotal: number | null` (total que informó MusicBrainz en el último recorrido completo),
+`discographyCheckedAt: string | null` (última verificación: recorrido completo o verificación barata)
+y `discographyRefreshRequestedAt: string | null` (última solicitud del calendario de lanzamientos).
+Son internos de la sincronización; ninguna pantalla los usa. Una resincronización de un artista con
+más de 100 release-groups pide primero la página 1 y, si el total no cambió, no pide el resto: la
+discografía de la respuesta siguiente es la misma, con los títulos y tipos de esos 100 actualizados.
+Cada 30 días, o cuando el calendario detectó un disco nuevo del artista, recorre todas las páginas.
 
 Cada `releaseGroup` de la discografía incluye además `coverThumbUrl: string | null` (la URL
 servible, del storage propio o de Cover Art Archive) y `coverResolved: boolean` (la resolución ya
@@ -1118,10 +1128,20 @@ valor, siempre `null` en la respuesta). Cada release-group incluye además `prim
 null` y `secondaryTypes: string[] | null` (tipos crudos de MusicBrainz; `null` si todavía no se
 sincronizaron) y `creditRole: "primary" | "featured"` (el rol del artista consultado en ese
 release-group). `artist` incluye `discographyCompleteAt` (`null` si la discografía nunca se
-recorrió entera). Una discografía guardada responde sin esperar a MusicBrainz; si está incompleta
-o tiene más de 7 días, se resincroniza en segundo plano después de responder. La primera lectura
+recorrió entera). Una discografía guardada responde sin esperar a MusicBrainz; si está incompleta,
+si su última verificación tiene más de 7 días o si el calendario de lanzamientos pidió
+resincronizarla, se resincroniza en segundo plano después de responder. La primera lectura
 de un artista trae hasta 3 páginas (300 release-groups) antes de responder y el resto en segundo
 plano.
+
+**Resincronización (openspec: `refresh-discography-on-new-releases`):** `artist` incluye además
+`discographyMbTotal: number | null` (total que informó MusicBrainz en el último recorrido completo),
+`discographyCheckedAt: string | null` (última verificación: recorrido completo o verificación barata)
+y `discographyRefreshRequestedAt: string | null` (última solicitud del calendario de lanzamientos).
+Son internos de la sincronización; ninguna pantalla los usa. Una resincronización de un artista con
+más de 100 release-groups pide primero la página 1 y, si el total no cambió, no pide el resto: la
+discografía de la respuesta siguiente es la misma, con los títulos y tipos de esos 100 actualizados.
+Cada 30 días, o cuando el calendario detectó un disco nuevo del artista, recorre todas las páginas.
 
 Cada `releaseGroup` de la discografía incluye además `coverThumbUrl: string | null` (la URL
 servible, del storage propio o de Cover Art Archive) y `coverResolved: boolean` (la resolución ya

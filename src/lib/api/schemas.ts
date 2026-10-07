@@ -50,6 +50,10 @@ export const ArtistSchema = z.object({
   createdAt: z.string(),
   discographySyncedAt: z.string().nullable(),
   discographyCompleteAt: z.string().nullable().optional(),
+  // Resincronización (openspec: refresh-discography-on-new-releases); internos, la UI no los usa.
+  discographyMbTotal: z.number().int().nullable().optional(),
+  discographyCheckedAt: z.string().nullable().optional(),
+  discographyRefreshRequestedAt: z.string().nullable().optional(),
   membershipsSyncedAt: z.string().nullable(),
   // Alineación con períodos (openspec: add-artist-lineup-data).
   lineupSyncedAt: z.string().nullable().optional(),

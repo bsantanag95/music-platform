@@ -28,7 +28,7 @@ async function main() {
   } else {
     console.log(
       `Listo en ${seconds} s: ${result.entries} entradas, ${result.anonymous} en la selección anónima, ` +
-        `${result.linked} vinculadas al catálogo.`,
+        `${result.linked} vinculadas al catálogo, ${result.refreshRequests} discografía(s) a resincronizar.`,
     );
   }
 }
