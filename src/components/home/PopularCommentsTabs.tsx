@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { targetHref } from "@/components/feed/feed-target";
 import { formatStars } from "@/components/album/album-format";
+import { CommentTopicLabel } from "@/components/social/CommentTopicLabel";
 import type { PopularComment, PopularCommentsByType } from "@/services/home/home";
 
 type TabKey = "artist" | "release-group" | "recording";
@@ -128,6 +129,10 @@ function CommentRow({ comment, likeWord }: { comment: PopularComment; likeWord: 
           >
             {comment.target.title}
           </Link>
+          <CommentTopicLabel
+            topic={comment.topic}
+            className="shrink-0 rounded-full border border-ink-border px-2 py-0.5 font-data text-xs text-paper-muted"
+          />
           {/* Cifra real desde 3 likes (null bajo el umbral); anónima, sin quién likeó. */}
           {comment.likeCount != null ? (
             <span

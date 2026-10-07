@@ -27,6 +27,15 @@ import {
   pgView,
 } from "drizzle-orm/pg-core";
 
+/**
+ * Temas de los comentarios de artista (add-artist-comment-topics). Catálogo cerrado: el
+ * `CHECK chk_comment_topic_values` de la migración 0065 debe coincidir con esta lista.
+ * `general` es el valor por defecto.
+ */
+export const COMMENT_TOPICS = ["start", "albums", "songs", "general"] as const;
+export type CommentTopic = (typeof COMMENT_TOPICS)[number];
+export const DEFAULT_COMMENT_TOPIC: CommentTopic = "general";
+
 export const appUser = pgTable(
   "app_user",
   {
@@ -1687,6 +1696,8 @@ export const comment = pgTable(
     }),
     recordingId: uuid("recording_id").references(() => recording.id, { onDelete: "cascade" }),
     body: text("body").notNull(),
+    // Tema del comentario de artista (add-artist-comment-topics); NULL en álbum y canción.
+    topic: text("topic").$type<CommentTopic>(),
     moderationStatus: text("moderation_status").notNull().default("visible"),
     moderatedBy: uuid("moderated_by").references(() => appUser.id, { onDelete: "set null" }),
     moderatedAt: timestamp("moderated_at", { withTimezone: true }),
@@ -1694,6 +1705,18 @@ export const comment = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
+    index("idx_comment_artist_topic")
+      .on(t.artistId, t.topic, t.createdAt.desc())
+      .where(sql`${t.artistId} IS NOT NULL`),
+    check(
+      "chk_comment_topic_values",
+      sql`${t.topic} IS NULL OR ${t.topic} IN ('start', 'albums', 'songs', 'general')`,
+    ),
+    check("chk_comment_topic_artist_only", sql`${t.topic} IS NULL OR ${t.artistId} IS NOT NULL`),
+    check(
+      "chk_comment_artist_topic_required",
+      sql`${t.artistId} IS NULL OR ${t.topic} IS NOT NULL`,
+    ),
     index("idx_comment_recording").on(t.recordingId),
     index("idx_comment_release_group").on(t.releaseGroupId),
     index("idx_comment_artist").on(t.artistId),

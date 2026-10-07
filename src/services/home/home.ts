@@ -7,7 +7,8 @@ import {
   artist,
   artistFollow,
   collectionEntry,
-  comment,
+  comment,
+
   listenEntry,
   rating,
   recording,
@@ -18,6 +19,7 @@ import {
   userListItem,
   wantedEntry,
 } from "@/db/schema";
+import type { CommentTopic } from "@/db/schema";
 import {
   caminoBaseConditions,
   caminoCompletedFeedQuery,
@@ -186,6 +188,7 @@ export async function listMyRecentActivity(
       .select({
         id: comment.id,
         body: comment.body,
+        topic: comment.topic,
         createdAt: comment.createdAt,
         artistId: comment.artistId,
         releaseGroupId: comment.releaseGroupId,
@@ -327,6 +330,7 @@ export async function listMyRecentActivity(
     kind: "comment" as const,
     id: row.id,
     body: row.body,
+    topic: row.topic,
     createdAt: row.createdAt.toISOString(),
     target: {
       type: targetType(row.artistId, row.releaseGroupId),
@@ -416,6 +420,8 @@ export { ensureReleaseCalendarFresh } from "./release-calendar-sync";
 export interface PopularComment {
   id: string;
   body: string;
+  /** Tema del comentario de artista (add-artist-comment-topics); `null` en álbum y canción. */
+  topic?: CommentTopic | null;
   /** Likes visibles: `null` bajo el umbral de 3 (add-comment-likes). */
   likeCount: number | null;
   authorUsername: string;
@@ -469,6 +475,7 @@ export async function listPopularComments(
       .select({
         id: comment.id,
         body: comment.body,
+        topic: comment.topic,
         likes: COMMENT_LIKE_COUNT_SQL,
         authorUsername: appUser.username,
         authorDisplayName: appUser.displayName,
@@ -543,6 +550,7 @@ export async function listPopularComments(
     rows: {
       id: string;
       body: string;
+      topic?: CommentTopic | null;
       likes: number;
       authorUsername: string | null;
       authorDisplayName: string | null;
@@ -558,6 +566,7 @@ export async function listPopularComments(
       .map((row) => ({
         id: row.id,
         body: row.body,
+        topic: row.topic ?? null,
         likeCount: thresholdedLikeCount(row.likes),
         authorUsername: row.authorUsername ?? "",
         authorDisplayName: row.authorDisplayName,

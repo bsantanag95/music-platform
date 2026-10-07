@@ -35,7 +35,7 @@ describe("GET comentarios", () => {
     const request = new NextRequest("http://localhost/api/catalog/artist/00000000-0000-4000-8000-000000000001/comments?page=2&pageSize=10");
 
     expect((await GET(request, { params: Promise.resolve({ target: "artist", id: "00000000-0000-4000-8000-000000000001" }) })).status).toBe(200);
-    expect(mocks.listComments).toHaveBeenCalledWith(expect.anything(), 2, 10, null);
+    expect(mocks.listComments).toHaveBeenCalledWith(expect.anything(), 2, 10, null, null);
   });
 
   it("POST devuelve el comentario dentro de comment", async () => {
@@ -51,5 +51,34 @@ describe("GET comentarios", () => {
 
     expect(response.status).toBe(201);
     expect(await response.json()).toEqual({ comment: created });
+  });
+});
+
+describe("temas de los comentarios de artista", () => {
+  const params = { params: Promise.resolve({ target: "artist", id: "00000000-0000-4000-8000-000000000001" }) };
+
+  it("GET pasa el filtro de tema al servicio", async () => {
+    mocks.resolveSocialTarget.mockResolvedValue({ type: "artist", id: "id", column: "artistId" });
+    mocks.listComments.mockResolvedValue({ comments: [], page: 1, pageSize: 20, hasNext: false });
+    await GET(new NextRequest("http://localhost/api/catalog/artist/00000000-0000-4000-8000-000000000001/comments?topic=start"), params);
+    expect(mocks.listComments).toHaveBeenLastCalledWith(expect.anything(), 1, 20, null, "start");
+  });
+
+  it("POST pasa el tema al servicio", async () => {
+    mocks.resolveSocialTarget.mockResolvedValue({ type: "artist", id: "id", column: "artistId" });
+    mocks.requireUser.mockResolvedValue({ id: "user-id" });
+    mocks.createComment.mockResolvedValue({ id: "comment-id" });
+    await POST(new NextRequest("http://localhost", { method: "POST", body: JSON.stringify({ body: "Texto", topic: "albums" }) }), params);
+    expect(mocks.createComment).toHaveBeenLastCalledWith(expect.anything(), "user-id", "Texto", "albums");
+  });
+
+  it("POST rechaza un tema que no es texto con INVALID_TOPIC", async () => {
+    mocks.resolveSocialTarget.mockResolvedValue({ type: "artist", id: "id", column: "artistId" });
+    mocks.requireUser.mockResolvedValue({ id: "user-id" });
+    mocks.createComment.mockClear();
+    const response = await POST(new NextRequest("http://localhost", { method: "POST", body: JSON.stringify({ body: "Texto", topic: 3 }) }), params);
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: "INVALID_TOPIC" });
+    expect(mocks.createComment).not.toHaveBeenCalled();
   });
 });

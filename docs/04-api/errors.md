@@ -38,6 +38,7 @@ además del `error` legible:
 | `PERMISSION_DENIED` | 403 | El usuario no puede modificar el recurso (también: dar like al propio comentario, `PUT /api/catalog/comments/{commentId}/like`). |
 | `INVALID_TARGET` | 400/404 | Tipo, UUID u objetivo inexistente. |
 | `INVALID_RATING` / `INVALID_COMMENT` | 400 | Entrada social inválida. |
+| `INVALID_TOPIC` | 400 | Tema de comentario fuera del catálogo (`start`·`albums`·`songs`·`general`), o un tema (en `POST`) / filtro de tema (en `GET`) sobre un álbum o una canción — solo los comentarios de artista tienen tema. |
 | `RATING_NOT_FOUND` | 404 | No existe un rating propio para borrar. |
 | `COMMENT_NOT_FOUND` | 404 | No existe el comentario solicitado. |
 | `REVIEW_NOT_FOUND` | 404 | No existe la reseña solicitada (o el id no es UUID). |

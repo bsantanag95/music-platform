@@ -1758,7 +1758,7 @@ artista; `albumId`/`albumTitle` opcionales en escucha, favorito y valoración de
 - **`list`**: `{ event: "created" | "updated", audience, list: { id, title, entityType } }`.
 - **`rating`**: `{ stars, detailedScore, target }` — `detailedScore` (1–100 o `null`) se **muestra**
   en el feed desde `expand-feed-coverage`.
-- **`comment`**: `{ body, target }`.
+- **`comment`**: `{ body, target, topic }` — `topic` solo en comentarios de artista (`null` en álbum y canción).
 - **`review`**: `{ title, body, target }` (fecha = última edición).
 - **`follow`**: `{ followedUser: { id, username, displayName } }`.
 - **`follow-artist`**: `{ artist: { id, name } }`.
@@ -1826,7 +1826,15 @@ propio y devuelve `204`.
 `GET` acepta opcionalmente `page` (entero desde 1) y `pageSize` (entero 1-100), devolviendo
 `{ comments, page, pageSize, hasNext }`. Valores no numéricos, `NaN`, no enteros o fuera de esos
 rangos se rechazan con `400 { error, code: "VALIDATION_ERROR" }`; no se normalizan silenciosamente.
-`POST` recibe `{ body }`, permite múltiples comentarios por usuario y devuelve `201 { comment }`.
+`POST` recibe `{ body, topic? }`, permite múltiples comentarios por usuario y devuelve `201 { comment }`.
+
+**Tema (cambio `add-artist-comment-topics`):** solo los comentarios **de artista** tienen tema, uno del
+catálogo cerrado `start` ("Para empezar") · `albums` · `songs` · `general`. En `POST`, `topic` es
+opcional: en un artista vale `general` si se omite; en un álbum o una canción pedir un tema se rechaza. En
+`GET`, `topic` (opcional) filtra por tema, con la misma paginación; sin él se devuelven todos los temas. En
+ambos casos un valor fuera del catálogo, o cualquier tema sobre un álbum o una canción, responde
+`400 { error, code: "INVALID_TOPIC" }`. Cada comentario trae `topic` (`null` en álbum y canción). El tema no
+se edita: `PATCH` solo cambia el texto.
 
 Cada comentario trae `likeCount` (cifra visible: `null` mientras haya menos de 3 likes, el número real
 desde 3; igual para todos, autor incluido) y `likedByMe` (si el visitante autenticado likeó; `false`

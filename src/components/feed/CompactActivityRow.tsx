@@ -8,6 +8,7 @@ import { RelativeDate } from "./feed-row-parts";
 import { FEED_KIND_ICONS } from "./FeedKindIcons";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { UserHoverCard } from "@/components/profiles/UserHoverCard";
+import { CommentTopicLabel } from "@/components/social/CommentTopicLabel";
 import { formatStars } from "@/components/album/album-format";
 // Tipos del cliente (inferidos de Zod, `artistName` opcional) en vez de los del
 // servicio: esta fila la consumen tanto un Server Component con datos crudos
@@ -143,6 +144,12 @@ export function CompactActivityRow({ entry }: { entry: CompactActivityEntry }) {
                   </span>
                 ) : null}
                 <span className="truncate">{typeLabel}</span>
+                {entry.kind === "comment" && entry.topic ? (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <CommentTopicLabel topic={entry.topic} className="shrink-0" />
+                  </>
+                ) : null}
               </span>
             )}
           </span>

@@ -1,5 +1,5 @@
 import { apiFetch } from "./client";
-import { CommentLikeResponseSchema, CommentMutationResponseSchema, CommentsResponseSchema, RatingHighlightsResponseSchema, RatingMutationResponseSchema, RatingsResponseSchema, ReviewMutationResponseSchema, ReviewsResponseSchema, type CommentsResponse, type RatingHighlightsResponse, type RatingsResponse, type ReviewSort, type ReviewsResponse } from "./schemas";
+import { CommentLikeResponseSchema, CommentMutationResponseSchema, CommentsResponseSchema, RatingHighlightsResponseSchema, RatingMutationResponseSchema, RatingsResponseSchema, ReviewMutationResponseSchema, ReviewsResponseSchema, type CommentTopic, type CommentsResponse, type RatingHighlightsResponse, type RatingsResponse, type ReviewSort, type ReviewsResponse } from "./schemas";
 import { z } from "zod";
 
 export interface ReviewInput {
@@ -17,11 +17,12 @@ export function deleteRating(target: Target, id: string) { return apiFetch(`${pa
 // Destacar/quitar una valoración propia del perfil (openspec: rework-user-profile, `rating-highlights`).
 export function highlightRating(ratingId: string): Promise<RatingHighlightsResponse> { return apiFetch(`/api/me/rating-highlights/${ratingId}`, RatingHighlightsResponseSchema, { method: "PUT" }); }
 export function unhighlightRating(ratingId: string): Promise<RatingHighlightsResponse> { return apiFetch(`/api/me/rating-highlights/${ratingId}`, RatingHighlightsResponseSchema, { method: "DELETE" }); }
-export function getComments(target: Target, id: string, page = 1, pageSize = 20): Promise<CommentsResponse> { return apiFetch(`${path(target, id)}/comments?page=${page}&pageSize=${pageSize}`, CommentsResponseSchema); }
-export function createComment(target: Target, id: string, body: string) { return apiFetch(`${path(target, id)}/comments`, CommentMutationResponseSchema, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ body }) }).then((response) => response.comment); }
+export function getComments(target: Target, id: string, page = 1, pageSize = 20, topic?: CommentTopic): Promise<CommentsResponse> { return apiFetch(`${path(target, id)}/comments?page=${page}&pageSize=${pageSize}${topic ? `&topic=${topic}` : ""}`, CommentsResponseSchema); }
+export function createComment(target: Target, id: string, body: string, topic?: CommentTopic) { return apiFetch(`${path(target, id)}/comments`, CommentMutationResponseSchema, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(topic ? { body, topic } : { body }) }).then((response) => response.comment); }
 export function updateComment(id: string, body: string) { return apiFetch(`/api/catalog/comments/${id}`, CommentMutationResponseSchema, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ body }) }).then((response) => response.comment); }
 export function deleteComment(id: string) { return apiFetch(`/api/catalog/comments/${id}`, z.null(), { method: "DELETE" }); }
-export function likeComment(id: string) { return apiFetch(`/api/catalog/comments/${id}/like`, CommentLikeResponseSchema, { method: "PUT" }); }
+
+export function likeComment(id: string) { return apiFetch(`/api/catalog/comments/${id}/like`, CommentLikeResponseSchema, { method: "PUT" }); }
 export function unlikeComment(id: string) { return apiFetch(`/api/catalog/comments/${id}/like`, CommentLikeResponseSchema, { method: "DELETE" }); }
 
 // Reseñas (openspec: add-album-review)

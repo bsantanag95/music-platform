@@ -89,6 +89,7 @@ export async function listCommunityActivity(
       .select({
         id: comment.id,
         body: comment.body,
+        topic: comment.topic,
         createdAt: comment.createdAt,
         artistId: comment.artistId,
         releaseGroupId: comment.releaseGroupId,
@@ -164,6 +165,7 @@ export async function listCommunityActivity(
     kind: "comment" as const,
     id: row.id,
     body: row.body,
+    topic: row.topic,
     createdAt: row.createdAt.toISOString(),
     target: {
       type: targetType(row.artistId, row.releaseGroupId),
