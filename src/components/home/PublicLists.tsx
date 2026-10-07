@@ -22,11 +22,11 @@ export async function PublicLists({ entries }: PublicListsProps) {
 
   return (
     <section className="flex w-full min-w-0 flex-col gap-4">
-      <div className="flex items-baseline justify-between">
-        <h2 className="font-display text-xl text-paper">{tHome("publicListsTitle")}</h2>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="min-w-0 truncate font-display text-xl text-paper">{tHome("publicListsTitle")}</h2>
         <Link
           href="/lists"
-          className="font-data text-xs text-paper-muted transition-colors hover:text-paper"
+          className="shrink-0 whitespace-nowrap font-data text-xs text-paper-muted transition-colors hover:text-paper"
         >
           {tHome("resumeListSeeAll")}
         </Link>
@@ -72,32 +72,33 @@ async function CompactListRow({
     <li className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
       <ListMosaic covers={entry.coverThumbUrls} className="size-12" />
       <div className="min-w-0 flex-1">
-        <Link
-          href={listHref(username, entry.list.title, entry.list.id)}
-          className="block truncate font-display text-sm text-paper transition-colors hover:text-amber"
-        >
-          {entry.list.title}
-        </Link>
-        <p className="mt-0.5 truncate font-data text-xs text-paper-muted">
-          {typeLabel}
-          <span aria-hidden="true" className="mx-1.5">
-            ·
-          </span>
-          {countLabel}
-        </p>
-        <div className="flex items-baseline justify-between gap-3 font-data text-xs text-paper-muted">
+        <div className="flex items-baseline justify-between gap-3">
+          <Link
+            href={listHref(username, entry.list.title, entry.list.id)}
+            className="min-w-0 truncate font-display text-sm text-paper transition-colors hover:text-amber"
+          >
+            {entry.list.title}
+          </Link>
+          <time dateTime={entry.createdAt} className="shrink-0 font-data text-xs text-paper-muted">
+            {await relativeFeedDate(entry.createdAt)}
+          </time>
+        </div>
+        {/* Una sola línea de contexto (autor · tipo · tamaño): la fila queda en
+            dos líneas, igual que las de "Actividad de la comunidad". */}
+        <p className="mt-0.5 flex min-w-0 items-baseline gap-x-1.5 font-data text-xs text-paper-muted">
           <UserHoverCard username={username}>
             <Link
               href={`/users/${encodeURIComponent(username)}`}
-              className="truncate transition-colors hover:text-amber"
+              className="min-w-0 shrink truncate text-paper transition-colors hover:text-amber"
             >
               {authorLabel}
             </Link>
           </UserHoverCard>
-          <time dateTime={entry.createdAt} className="shrink-0">
-            {await relativeFeedDate(entry.createdAt)}
-          </time>
-        </div>
+          <span aria-hidden="true">·</span>
+          <span className="shrink-0 whitespace-nowrap">
+            {typeLabel} · {countLabel}
+          </span>
+        </p>
       </div>
     </li>
   );

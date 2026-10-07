@@ -105,7 +105,7 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
       />
       <ResumeList list={resumeList} />
 
-      <div className="grid w-full max-w-3xl gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-start">
+      <div className="grid w-full max-w-3xl gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-start">
         <CommunityActivity entries={communityActivity} />
         <PublicLists entries={publicLists} />
       </div>
