@@ -35,6 +35,7 @@ vi.mock("@/services/home/home", () => ({
   listPopularComments: vi
     .fn()
     .mockResolvedValue({ artist: [], "release-group": [], recording: [] }),
+  listHomeReleases: vi.fn().mockResolvedValue([]),
   listPersonalHomeReleases: vi.fn().mockResolvedValue([]),
   ensureReleaseCalendarFresh: vi.fn().mockResolvedValue(undefined),
 }));

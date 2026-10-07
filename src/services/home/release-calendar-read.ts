@@ -13,8 +13,6 @@ import type { HomeRelease } from "./home";
 
 /** Discos del riel personal. */
 export const PERSONAL_LIMIT = 20;
-/** Bajo este mínimo, el riel personal se completa con la selección anónima. */
-export const PERSONAL_MIN = 6;
 /** Horizonte de los próximos personales (más allá de la ventana del feed sale del catálogo). */
 export const PERSONAL_UPCOMING_DAYS = 180;
 
@@ -67,15 +65,12 @@ interface PersonalCandidate {
 /**
  * Selección personal: discos de artistas con los que la persona tiene relación (últimos 30 días
  * y próximos hasta 180), hasta 20, ordenados por el peso de la relación y la cercanía a hoy. Un
- * disco sin carátula solo entra si la persona sigue al artista (marca "Anunciado"). Bajo 6 se
- * completa con la selección anónima (marca "Destacado").
+ * disco sin carátula solo entra si la persona sigue al artista (marca "Anunciado"). Nunca se
+ * rellena con la selección anónima: son dos vistas distintas del riel.
  */
 export async function listPersonalReleases(userId: string, today = isoDay(new Date())): Promise<HomeRelease[]> {
   const related = await relatedArtistsOfUser(userId);
-  const anonymous = () => listAnonymousReleases(today);
-  if (related.length === 0) {
-    return (await anonymous()).map((release) => ({ ...release, badge: "featured" as const }));
-  }
+  if (related.length === 0) return [];
 
   const byMbid = new Map(related.map((artist) => [artist.mbid, artist]));
   const byId = new Map(related.map((artist) => [artist.artistId, artist]));
@@ -172,17 +167,8 @@ export async function listPersonalReleases(userId: string, today = isoDay(new Da
   }
 
   const distance = (date: string) => Math.abs(Date.parse(date) - Date.parse(today));
-  const personal: HomeRelease[] = [...candidates.values()]
+  return [...candidates.values()]
     .sort((a, b) => b.weight - a.weight || distance(a.release.releaseDate) - distance(b.release.releaseDate))
     .slice(0, PERSONAL_LIMIT)
     .map((candidate) => candidate.release);
-
-  if (personal.length >= PERSONAL_MIN) return personal;
-
-  const taken = new Set(personal.map((release) => release.id));
-  const fill = (await anonymous())
-    .filter((release) => !taken.has(release.id))
-    .slice(0, PERSONAL_LIMIT - personal.length)
-    .map((release) => ({ ...release, badge: "featured" as const }));
-  return [...personal, ...fill];
 }

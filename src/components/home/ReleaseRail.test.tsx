@@ -47,9 +47,9 @@ function renderRail(releases: HomeRelease[]) {
       locale="es"
       title="Lanzamientos"
       todayLabel="Hoy"
-      upcomingPrefix="Sale"
+      upcomingPrefix="Se lanza"
       upcomingBadge="Próximo"
-      badgeLabels={{ announced: "Anunciado", featured: "Destacado" }}
+      badgeLabels={{ announced: "Anunciado" }}
       prevLabel="Anterior"
       nextLabel="Siguiente"
     />,
@@ -60,13 +60,11 @@ describe("ReleaseRail", () => {
   it("muestra la marca de cada tarjeta y el placeholder de un anunciado sin carátula", () => {
     const { container } = renderRail([
       release({ id: "a" }),
-      release({ id: "b", badge: "featured" }),
       release({ id: "c", section: "upcoming", releaseDate: "2027-02-01", coverThumbUrl: null, badge: "announced" }),
     ]);
 
-    expect(screen.getByText("Destacado")).toBeInTheDocument();
     expect(screen.getByText("Anunciado")).toBeInTheDocument();
-    expect(container.querySelectorAll("[data-release-badge]")).toHaveLength(2);
+    expect(container.querySelectorAll("[data-release-badge]")).toHaveLength(1);
     const announcedCard = screen.getByText("Anunciado").closest("li")!;
     expect(announcedCard.querySelector("img")).toBeNull();
   });

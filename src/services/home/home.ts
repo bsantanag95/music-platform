@@ -403,10 +403,9 @@ export interface HomeRelease {
   section: "recent" | "upcoming";
   /**
    * Marca de la tarjeta (openspec: add-home-release-calendar): `announced` = disco de un artista
-   * seguido que aún no tiene carátula; `featured` = relleno de la selección anónima en el riel
-   * personal.
+   * seguido que aún no tiene carátula.
    */
-  badge: "announced" | "featured" | null;
+  badge: "announced" | null;
 }
 
 // Lanzamientos recientes / próximos: calendario real desde ListenBrainz (ver

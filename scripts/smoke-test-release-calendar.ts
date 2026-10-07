@@ -243,14 +243,11 @@ async function main() {
     check(personal[0]?.title === "Anunciado" && personal[0]?.badge === "announced", "el seguido sin carátula va primero con «Anunciado»");
     check(personal[1]?.title === "Lejano" && personal[1]?.section === "upcoming", "el anunciado del catálogo a 150 días aparece");
     check(personal[2]?.title === "Reciente" && personal[2]?.badge === null, "el favorito va después del seguido, sin marca");
-    check(
-      personal.slice(3).length > 0 && personal.slice(3).every((r) => r.badge === "featured"),
-      "con menos de 6 se completa con la selección anónima marcada «Destacado»",
-    );
-    check(new Set(personal.map((r) => r.id)).size === personal.length, "el relleno no repite discos");
+    check(personal.length === 3, "la vista personal trae solo lo propio: no se rellena con la selección anónima");
+    check(new Set(personal.map((r) => r.id)).size === personal.length, "sin discos repetidos");
 
     const fresh = await read.listPersonalReleases(newcomer.id, TODAY);
-    check(fresh.length === anonymous.length && fresh.every((r) => r.badge === "featured"), "una cuenta sin relaciones ve la selección anónima como «Destacado»");
+    check(fresh.length === 0, "una cuenta sin relaciones tiene la vista personal vacía");
 
     console.log("Reemplazo de la ventana");
     feedMode = "without-popular";

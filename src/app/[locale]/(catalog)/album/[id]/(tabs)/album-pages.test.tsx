@@ -288,7 +288,7 @@ describe("layout de la página de álbum", () => {
       releaseGroup: { title: "Disco futuro", firstReleaseDate: "2099-03-14" } as never,
     });
     await renderLayout();
-    expect(screen.getByText(/Disco futuro · Sale el 14 de marzo de 2099/)).toBeInTheDocument();
+    expect(screen.getByText(/Disco futuro · Se lanza el 14 de marzo de 2099/)).toBeInTheDocument();
     expect(screen.getByText(catalogEs.album.upcomingTracksDescription)).toBeInTheDocument();
     expect(screen.queryByText(catalogEs.album.noEditionsTitle)).not.toBeInTheDocument();
   });
