@@ -7,8 +7,7 @@ import {
   artist,
   artistFollow,
   collectionEntry,
-  comment,
-  credit,
+  comment,
   listenEntry,
   rating,
   recording,
@@ -48,6 +47,7 @@ import type {
 } from "@/services/feed/feed";
 import type { Audience } from "@/services/social/types";
 import { activeUserCondition } from "@/services/auth/account-status";
+import { COMMENT_LIKE_COUNT_SQL, thresholdedLikeCount } from "@/services/social/comment-likes";
 
 // Perfil público Y cuenta activa: una cuenta desactivada no aparece en Home.
 const PUBLIC_PROFILE = and(eq(appUser.profileVisibility, "public"), activeUserCondition());
@@ -401,80 +401,23 @@ export interface HomeRelease {
   coverThumbUrl: string | null;
   releaseDate: string; // ISO (YYYY-MM-DD)
   section: "recent" | "upcoming";
+  /**
+   * Marca de la tarjeta (openspec: add-home-release-calendar): `announced` = disco de un artista
+   * seguido que aún no tiene carátula.
+   */
+  badge: "announced" | null;
 }
 
-/**
- * MAQUETA para el diseño de los apartados "Lanzamientos recientes" y
- * "Próximos lanzamientos" de Inicio (riel único en línea de tiempo).
- *
- * El pipeline real —fecha de lanzamiento a nivel `release_group`, curación
- * editorial, "upcoming" sin tracklist, decisión de producto sobre el
- * Principio 4— es de un sprint futuro (ver docs/05-features/home.md,
- * "'Lanzamientos recientes' y 'Próximos lanzamientos'").
- *
- * Por ahora: toma los release-groups con carátula más recientes y les asigna
- * fechas sintéticas repartidas alrededor de hoy (mitad pasado / mitad
- * futuro), una por semana, para poder revisar el layout con datos reales de
- * catálogo.
- */
-export async function listHomeReleases(limit = 10): Promise<HomeRelease[]> {
-  const rows = await db
-    .select({
-      id: releaseGroup.id,
-      title: releaseGroup.title,
-      coverThumbUrl: releaseGroup.coverThumbUrl,
-      artistName: artist.name,
-      position: credit.position,
-    })
-    .from(releaseGroup)
-    .leftJoin(
-      credit,
-      and(eq(credit.releaseGroupId, releaseGroup.id), eq(credit.role, "primary")),
-    )
-    .leftJoin(artist, eq(artist.id, credit.artistId))
-    .where(isNotNull(releaseGroup.coverThumbUrl))
-    .orderBy(desc(releaseGroup.createdAt), asc(credit.position))
-    .limit(limit * 4);
-
-  // Dedupe por release-group y, para la maqueta, cap de 2 por artista: el seed
-  // tiene la discografía completa de pocos artistas y sin esto el riel muestra
-  // 8 discos del mismo.
-  const seen = new Set<string>();
-  const perArtist = new Map<string, number>();
-  const unique: Omit<HomeRelease, "releaseDate" | "section">[] = [];
-  for (const row of rows) {
-    if (seen.has(row.id)) continue;
-    seen.add(row.id);
-    const artistKey = row.artistName ?? "";
-    const count = perArtist.get(artistKey) ?? 0;
-    if (artistKey && count >= 3) continue;
-    perArtist.set(artistKey, count + 1);
-    unique.push({
-      id: row.id,
-      title: row.title,
-      artist: artistKey,
-      coverThumbUrl: row.coverThumbUrl,
-    });
-    if (unique.length === limit) break;
-  }
-
-  const recentCount = Math.ceil(unique.length / 2);
-  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-  const now = Date.now();
-
-  return unique.map((item, i) => {
-    const weeksFromToday = i < recentCount ? i - recentCount : i - recentCount + 1;
-    return {
-      ...item,
-      releaseDate: new Date(now + weeksFromToday * WEEK_MS).toISOString().slice(0, 10),
-      section: i < recentCount ? "recent" : "upcoming",
-    };
-  });
-}
+// Lanzamientos recientes / próximos: calendario real desde ListenBrainz (ver
+// release-calendar-*.ts y docs/05-features/home.md).
+export { listAnonymousReleases as listHomeReleases, listPersonalReleases as listPersonalHomeReleases } from "./release-calendar-read";
+export { ensureReleaseCalendarFresh } from "./release-calendar-sync";
 
 export interface PopularComment {
   id: string;
   body: string;
+  /** Likes visibles: `null` bajo el umbral de 3 (add-comment-likes). */
+  likeCount: number | null;
   authorUsername: string;
   authorDisplayName: string | null;
   target: {
@@ -496,25 +439,37 @@ export type PopularCommentsByType = Record<
  * "Comentarios populares" de Inicio, agrupados por tipo de entidad (artista /
  * álbum / canción) para el control segmentado.
  *
- * Los comentarios no tienen mecanismo de likes todavía, así que el ranking es
- * un proxy —comentarios más largos, "escritura más sustancial"— y no se
- * muestra ninguna cifra: el contador sintético que había antes (`likeCount`
- * derivado del id) se retiró para no presentar likes inventados como reales.
- * Los likes reales (tabla, interacción, endpoint, ranking) son un cambio
- * aparte — ver docs/05-features/home.md, "Comentarios populares".
+ * Ranking por likes reales (`comment_like`, add-comment-likes): conteo
+ * descendente, desempate por longitud del texto (escritura sustancial) y
+ * luego por fecha. La cifra que sale es la umbralizada (`null` bajo 3 likes);
+ * el conteo real solo ordena y nunca sale del servidor.
  *
- * Filtra por perfil público del autor. No maneja bloqueos (la versión real sí
- * debería, como `listCommunityActivity`).
+ * Filtra por perfil público y cuenta activa del autor, excluye comentarios
+ * ocultos por moderación y, con visitante, los de autores con bloqueo en
+ * cualquier dirección (como `listCommunityActivity`).
  */
-export async function listPopularComments(perType = 6): Promise<PopularCommentsByType> {
+export async function listPopularComments(
+  perType = 6,
+  viewerId: string | null = null,
+): Promise<PopularCommentsByType> {
   const pool = perType * 3;
-  const byLongest = desc(sql<number>`length(${comment.body})`);
+  const byPopularity = [
+    desc(COMMENT_LIKE_COUNT_SQL),
+    desc(sql<number>`length(${comment.body})`),
+    desc(comment.createdAt),
+  ];
+  const visible = and(
+    eq(comment.moderationStatus, "visible"),
+    PUBLIC_PROFILE,
+    viewerId ? NOT_BLOCKED_SQL(viewerId, comment.userId) : undefined,
+  );
 
   const [artistRows, albumRows, songRows] = await Promise.all([
     db
       .select({
         id: comment.id,
         body: comment.body,
+        likes: COMMENT_LIKE_COUNT_SQL,
         authorUsername: appUser.username,
         authorDisplayName: appUser.displayName,
         targetId: comment.artistId,
@@ -529,14 +484,15 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
         rating,
         and(eq(rating.userId, comment.userId), eq(rating.artistId, comment.artistId)),
       )
-      .where(and(isNotNull(comment.artistId), PUBLIC_PROFILE))
-      .orderBy(byLongest)
+      .where(and(isNotNull(comment.artistId), visible))
+      .orderBy(...byPopularity)
       .limit(pool),
 
     db
       .select({
         id: comment.id,
         body: comment.body,
+        likes: COMMENT_LIKE_COUNT_SQL,
         authorUsername: appUser.username,
         authorDisplayName: appUser.displayName,
         targetId: comment.releaseGroupId,
@@ -555,14 +511,15 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
           eq(rating.releaseGroupId, comment.releaseGroupId),
         ),
       )
-      .where(and(isNotNull(comment.releaseGroupId), PUBLIC_PROFILE))
-      .orderBy(byLongest)
+      .where(and(isNotNull(comment.releaseGroupId), visible))
+      .orderBy(...byPopularity)
       .limit(pool),
 
     db
       .select({
         id: comment.id,
         body: comment.body,
+        likes: COMMENT_LIKE_COUNT_SQL,
         authorUsername: appUser.username,
         authorDisplayName: appUser.displayName,
         targetId: comment.recordingId,
@@ -577,8 +534,8 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
         rating,
         and(eq(rating.userId, comment.userId), eq(rating.recordingId, comment.recordingId)),
       )
-      .where(and(isNotNull(comment.recordingId), PUBLIC_PROFILE))
-      .orderBy(byLongest)
+      .where(and(isNotNull(comment.recordingId), visible))
+      .orderBy(...byPopularity)
       .limit(pool),
   ]);
 
@@ -586,6 +543,7 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
     rows: {
       id: string;
       body: string;
+      likes: number;
       authorUsername: string | null;
       authorDisplayName: string | null;
       targetId: string | null;
@@ -600,6 +558,7 @@ export async function listPopularComments(perType = 6): Promise<PopularCommentsB
       .map((row) => ({
         id: row.id,
         body: row.body,
+        likeCount: thresholdedLikeCount(row.likes),
         authorUsername: row.authorUsername ?? "",
         authorDisplayName: row.authorDisplayName,
         target: {

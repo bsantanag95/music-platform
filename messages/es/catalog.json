@@ -384,7 +384,8 @@
       "editionStandard": "Estándar",
       "editionOriginal": "Original",
       "seeEditions": "Ver ediciones",
-      "label": "Sello"
+      "label": "Sello",
+      "releaseUpcoming": "Se lanza el <date></date>"
     },
     "community": {
       "heading": "Comunidad",
@@ -821,7 +822,10 @@
         "cassette": "Casete",
         "other": "Otros"
       }
-    }
+    },
+    "upcomingTracksTitle": "Tracklist aún no disponible",
+    "upcomingTracksDescription": "Estará disponible cuando se publique el disco.",
+    "noEditionsUpcomingTitle": "Se lanza el {date}"
   },
   "song": {
     "kicker": "Canción",
@@ -965,7 +969,10 @@
     "suspendExpires": "Expira",
     "suspendSubmit": "Suspender",
     "suspendDone": "Suspensión aplicada.",
-    "deactivatedAccount": "Cuenta desactivada"
+    "deactivatedAccount": "Cuenta desactivada",
+    "likeComment": "Me gusta este comentario",
+    "unlikeComment": "Quitar mi me gusta",
+    "likesCount": "{count} me gusta"
   },
   "versionAttributes": {
     "live": "En vivo",

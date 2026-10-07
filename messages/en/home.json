@@ -73,6 +73,12 @@
   "releasesToday": "Today",
   "releasesUpcomingPrefix": "Out",
   "releasesUpcomingBadge": "Upcoming",
+  "releasesAnnouncedBadge": "Announced",
+  "releasesTabsLabel": "Releases view",
+  "releasesTabPersonal": "From your artists",
+  "releasesTabPopular": "Popular",
+  "releasesFollowHint": "Follow artists, or rate them and add them to favorites, and their releases will show up here.",
+  "releasesFollowCta": "Find artists",
   "releasesPrev": "See previous releases",
   "releasesNext": "See more releases",
   "anonClosingTitle": "Your listening history starts with an account."

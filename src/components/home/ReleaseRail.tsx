@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { AppImage } from "@/components/ui/AppImage";
 import { Link } from "@/i18n/navigation";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
@@ -46,6 +46,9 @@ export function ReleaseRail({
   todayLabel,
   upcomingPrefix,
   upcomingBadge,
+  badgeLabels,
+  headerAction,
+  footer,
   prevLabel,
   nextLabel,
 }: {
@@ -55,6 +58,12 @@ export function ReleaseRail({
   todayLabel: string;
   upcomingPrefix: string;
   upcomingBadge: string;
+  /** Textos de la marca de cada tarjeta (`HomeRelease.badge`). */
+  badgeLabels: { announced: string };
+  /** Control junto al título (el selector "De tus artistas | Populares" de Inicio con sesión). */
+  headerAction?: ReactNode;
+  /** Contenido bajo el riel (la invitación a seguir artistas). */
+  footer?: ReactNode;
   prevLabel: string;
   nextLabel: string;
 }) {
@@ -147,7 +156,10 @@ export function ReleaseRail({
 
   return (
     <section ref={sectionRef} className="flex w-full max-w-3xl flex-col gap-4">
-      <h2 className="font-display text-xl text-paper">{title}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <h2 className="font-display text-xl text-paper">{title}</h2>
+        {headerAction}
+      </div>
 
       <div className="relative">
         <ul
@@ -212,6 +224,16 @@ export function ReleaseRail({
                         {upcomingBadge}
                       </span>
                     ) : null}
+                    {release.badge ? (
+                      <span
+                        data-release-badge={release.badge}
+                        className={`absolute bottom-1.5 left-1.5 rounded-full px-2 py-0.5 font-data text-[10px] uppercase tracking-wider backdrop-blur-sm ${
+                          release.badge === "announced" ? "bg-amber/90 text-ink" : "bg-ink/85 text-paper-muted"
+                        }`}
+                      >
+                        {badgeLabels[release.badge]}
+                      </span>
+                    ) : null}
                   </div>
 
                   {/* Pista de la línea de tiempo: un tramo por tarjeta (cubre el
@@ -253,6 +275,7 @@ export function ReleaseRail({
           </>
         )}
       </div>
+      {footer}
     </section>
   );
 }

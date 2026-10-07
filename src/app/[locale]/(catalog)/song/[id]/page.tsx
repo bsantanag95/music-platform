@@ -92,7 +92,7 @@ export default async function SongPage({ params }: SongPageProps) {
     getRatings(socialTarget, userId ?? undefined),
     userId ? loadSongPersonalState(userId, recordingId) : Promise.resolve(null),
     userId ? loadCanModerate(userId) : Promise.resolve(false),
-    listComments(socialTarget),
+    listComments(socialTarget, 1, 20, userId),
     getSongGenres(detail.principalDisc?.releaseGroupId ?? null),
   ]);
 

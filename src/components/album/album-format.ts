@@ -46,6 +46,14 @@ export function formatReleaseDate(
   return year !== null ? String(year) : null;
 }
 
+/**
+ * Fecha exacta de lanzamiento posterior a hoy (UTC): el disco está anunciado y aún no salió
+ * (openspec: add-home-release-calendar).
+ */
+export function isUpcomingRelease(date: string | null, now: Date = new Date()): boolean {
+  return date !== null && date > now.toISOString().slice(0, 10);
+}
+
 /** Media de estrellas con un decimal en el formato del idioma ("4,6" / "4.6"). */
 export function formatStars(value: number, locale: string): string {
   return new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);

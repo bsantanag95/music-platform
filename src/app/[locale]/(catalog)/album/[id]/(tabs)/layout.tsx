@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { formatReleaseDate, isUpcomingRelease } from "@/components/album/album-format";
 import { GenreChips } from "@/components/genres/GenreChips";
 import { getAlbumGenres } from "@/services/genres/display";
 import { AlbumCover } from "@/components/catalog/AlbumCover";
@@ -61,9 +62,22 @@ export default async function AlbumLayout({ children, modal, params }: AlbumLayo
   const tCommon = await getTranslations("common");
 
   if (result.kind === "no_editions") {
+    // Un disco anunciado (fecha exacta futura) todavía no tiene ediciones publicadas en
+    // MusicBrainz: se muestra su fecha en vez del error (openspec: add-home-release-calendar).
+    const { firstReleaseDate, title } = result.releaseGroup;
+    const upcoming = isUpcomingRelease(firstReleaseDate);
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-        <EmptyState title={t("album.noEditionsTitle")} description={t("album.noEditionsDescription")} />
+        {upcoming ? (
+          <EmptyState
+            title={`${title} · ${t("album.noEditionsUpcomingTitle", {
+              date: formatReleaseDate(firstReleaseDate, null, await getLocale()) ?? "",
+            })}`}
+            description={t("album.upcomingTracksDescription")}
+          />
+        ) : (
+          <EmptyState title={t("album.noEditionsTitle")} description={t("album.noEditionsDescription")} />
+        )}
       </main>
     );
   }
@@ -79,7 +93,7 @@ export default async function AlbumLayout({ children, modal, params }: AlbumLayo
     getRatings(socialTarget, userId ?? undefined),
     userId ? loadPersonalState(userId, releaseGroupId) : Promise.resolve(null),
     userId ? loadCanModerate(userId) : Promise.resolve(false),
-    listComments(socialTarget),
+    listComments(socialTarget, 1, 20, userId),
     detail.primaryArtist
       ? loadDiscographyStrip(detail.primaryArtist.id, releaseGroupId, detail.releaseGroup.category)
       : Promise.resolve(null),

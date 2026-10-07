@@ -10,6 +10,7 @@ import { AlbumRail } from "@/components/discovery/AlbumRail";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import {
+  ensureReleaseCalendarFresh,
   listHomeReleases,
   listPopularComments,
   listPublicLists,
@@ -50,6 +51,8 @@ export async function AnonymousHome() {
     // Solo cuando /explore está habilitada: sus listas curadas enlazan a rutas
     // que, con el flag apagado, redirigen a Inicio.
     exploreEnabled ? listFeaturedCollections() : Promise.resolve([]),
+    // Si el calendario de lanzamientos está vencido, se refresca después de responder.
+    ensureReleaseCalendarFresh(),
   ]);
 
   const categoryLabels = {

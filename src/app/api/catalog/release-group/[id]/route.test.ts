@@ -30,7 +30,7 @@ describe("GET /api/catalog/release-group/[id]", () => {
   });
 
   it("devuelve 404 con NO_EDITIONS_FOUND cuando no hay ediciones", async () => {
-    vi.mocked(albumDetail.getAlbumDetail).mockResolvedValue({ kind: "no_editions" });
+    vi.mocked(albumDetail.getAlbumDetail).mockResolvedValue({ kind: "no_editions", releaseGroup: { title: "Sin ediciones", firstReleaseDate: null } as never });
 
     const response = await GET(makeRequest("album-no-editions"), {
       params: Promise.resolve({ id: "album-no-editions" }),

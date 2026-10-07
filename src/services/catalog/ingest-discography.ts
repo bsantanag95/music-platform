@@ -15,7 +15,7 @@ import { wikidataIdOf } from "../musicbrainz/artist-profile-mappers";
 import { mapReleaseGroupCategory } from "../musicbrainz/mappers";
 import { upsertArtistStub } from "./ingest-artist";
 import { canonicalDateValues } from "./ingest-release-group";
-import type { MBArtistCreditItem, MBReleaseGroup } from "../musicbrainz/types";
+import type { MBArtistCreditItem, MBReleaseGroup, MBReleaseGroupBrowseResponse } from "../musicbrainz/types";
 
 // Discografía de un artista (openspec: fix-artist-discography-ingestion, capability
 // `artist-discography`): browse paginado sin bootlegs, tipos crudos de MusicBrainz,
@@ -25,8 +25,13 @@ import type { MBArtistCreditItem, MBReleaseGroup } from "../musicbrainz/types";
 export const DISCOGRAPHY_MAX_PAGES = 20;
 /** Páginas que la primera visita trae de forma síncrona; el resto va en segundo plano. */
 export const DISCOGRAPHY_INITIAL_PAGES = 3;
-/** Antigüedad a partir de la cual una discografía completa se vuelve a sincronizar. */
+/** Antigüedad a partir de la cual una discografía verificada se vuelve a sincronizar. */
 export const DISCOGRAPHY_REFRESH_MS = 7 * 24 * 60 * 60 * 1000;
+/**
+ * Antigüedad del último recorrido completo a partir de la cual la resincronización recorre todas
+ * las páginas sin verificación barata (openspec: refresh-discography-on-new-releases).
+ */
+export const DISCOGRAPHY_FULL_WALK_MS = 30 * 24 * 60 * 60 * 1000;
 
 /** Release-group de la discografía con el rol del crédito del artista. */
 export type DiscographyRow = ReleaseGroupRow & { creditRole: "primary" | "featured" };
@@ -95,9 +100,47 @@ export async function readArtistDiscography(artistId: string): Promise<Discograp
   return [...byId.values()];
 }
 
-/** La discografía nunca se recorrió entera, o la última vez fue hace más de 7 días. */
-export function needsDiscographyRefresh(target: Pick<ArtistRow, "discographyCompleteAt">, now = Date.now()): boolean {
-  return target.discographyCompleteAt === null || now - target.discographyCompleteAt.getTime() > DISCOGRAPHY_REFRESH_MS;
+type DiscographyFreshness = Pick<
+  ArtistRow,
+  "discographyCompleteAt" | "discographyCheckedAt" | "discographyRefreshRequestedAt" | "discographyMbTotal"
+>;
+
+/** Última vez que la discografía se dio por vigente: recorrido completo o verificación barata. */
+function lastVerifiedAt(target: Pick<DiscographyFreshness, "discographyCompleteAt" | "discographyCheckedAt">): Date | null {
+  const { discographyCompleteAt: complete, discographyCheckedAt: checked } = target;
+  if (!complete || !checked) return complete ?? checked;
+  return checked > complete ? checked : complete;
+}
+
+/** El calendario de lanzamientos pidió una resincronización después de la última verificación. */
+function hasPendingRefreshRequest(target: DiscographyFreshness): boolean {
+  const requested = target.discographyRefreshRequestedAt;
+  if (!requested) return false;
+  const verified = lastVerifiedAt(target);
+  return verified === null || requested > verified;
+}
+
+/**
+ * La discografía nunca se recorrió entera, su última verificación tiene más de 7 días o hay una
+ * solicitud de resincronización posterior a esa verificación.
+ */
+export function needsDiscographyRefresh(target: DiscographyFreshness, now = Date.now()): boolean {
+  const verified = lastVerifiedAt(target);
+  if (target.discographyCompleteAt === null || verified === null) return true;
+  return now - verified.getTime() > DISCOGRAPHY_REFRESH_MS || hasPendingRefreshRequest(target);
+}
+
+/**
+ * La resincronización debe recorrer todas las páginas, sin verificación barata: no se conoce el total
+ * anterior, hay una solicitud pendiente o el último recorrido completo tiene más de 30 días.
+ */
+export function needsFullWalk(target: DiscographyFreshness, now = Date.now()): boolean {
+  return (
+    target.discographyMbTotal === null ||
+    target.discographyCompleteAt === null ||
+    hasPendingRefreshRequest(target) ||
+    now - target.discographyCompleteAt.getTime() > DISCOGRAPHY_FULL_WALK_MS
+  );
 }
 
 /**
@@ -154,13 +197,23 @@ export interface DiscographyPages {
   truncated: boolean;
 }
 
-/** Recorre el browse de release-groups (sin bootlegs) hasta el total o hasta `maxPages`. */
-export async function fetchDiscographyPages(artistMbid: string, maxPages = DISCOGRAPHY_MAX_PAGES): Promise<DiscographyPages> {
+/**
+ * Recorre el browse de release-groups (sin bootlegs) hasta el total o hasta `maxPages`. Con
+ * `firstPage` (ya pedida por la verificación barata) continúa desde la segunda sin repetirla.
+ */
+export async function fetchDiscographyPages(
+  artistMbid: string,
+  maxPages = DISCOGRAPHY_MAX_PAGES,
+  firstPage?: MBReleaseGroupBrowseResponse,
+): Promise<DiscographyPages> {
   const releaseGroups: MBReleaseGroup[] = [];
   let total = 0;
   let pages = 0;
   do {
-    const page = await musicbrainz.browseReleaseGroupsByArtist(artistMbid, pages * RELEASE_BROWSE_PAGE_SIZE);
+    const page =
+      pages === 0 && firstPage
+        ? firstPage
+        : await musicbrainz.browseReleaseGroupsByArtist(artistMbid, pages * RELEASE_BROWSE_PAGE_SIZE);
     total = page["release-group-count"];
     releaseGroups.push(...page["release-groups"]);
     pages += 1;
@@ -238,16 +291,27 @@ export type DiscographySyncResult =
   | { status: "skipped" }
   /** Se guardaron las páginas iniciales; faltan otras (la sincronización completa sigue en segundo plano). */
   | { status: "partial"; saved: number; total: number }
+  /** Verificación barata: el total de MusicBrainz no cambió; solo se pidió y guardó la primera página. */
+  | { status: "verified"; saved: number; total: number }
   | { status: "complete"; saved: number; total: number; unlisted: number; relisted: number; truncated: boolean };
 
 export interface DiscographySyncOptions {
   /**
    * `initial`: primera visita, hasta 3 páginas y solo si nunca se sincronizó.
-   * `full`: todas las páginas, solo si la discografía está incompleta o vencida.
+   * `full`: todas las páginas, solo si la discografía está incompleta o vencida (con verificación
+   * barata si corresponde).
    */
   mode: "initial" | "full";
   /** Recorre MusicBrainz y calcula el resultado sin escribir (backfill en simulación). */
   dryRun?: boolean;
+  /** Recorre todas las páginas sin verificación barata (backfill). */
+  forceFullWalk?: boolean;
+  /**
+   * Ignora si la discografía está al día (backfill `--fill-total`): corre aunque
+   * `needsDiscographyRefresh` diga que no hace falta, para llenar `discography_mb_total` de un
+   * artista ya completo. Nunca la usan las visitas de la app.
+   */
+  ignoreFreshness?: boolean;
 }
 
 /**
@@ -255,19 +319,41 @@ export interface DiscographySyncOptions {
  * simultáneas hacen una sola sincronización (la segunda relee el artista y la omite).
  * Solo una sincronización que recorrió todas las páginas marca y desmarca los
  * release-groups fuera de la discografía y fija `discography_complete_at`.
+ *
+ * En `mode: "full"`, si la discografía ocupa más de una página y MusicBrainz informa el mismo
+ * total que en el último recorrido completo, se guarda solo la primera página y la discografía
+ * queda verificada (openspec: refresh-discography-on-new-releases). El total no dice qué discos
+ * cambiaron (el orden del browse no está documentado), así que el atajo no marca nada.
  */
 export async function syncArtistDiscography(
   artistId: string,
-  { mode, dryRun = false }: DiscographySyncOptions,
+  { mode, dryRun = false, forceFullWalk = false, ignoreFreshness = false }: DiscographySyncOptions,
 ): Promise<DiscographySyncResult> {
   return db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`discography:${artistId}`}, 0))`);
     const [current] = await tx.select().from(artist).where(eq(artist.id, artistId)).limit(1);
     if (!current?.mbid) return { status: "skipped" };
     if (mode === "initial" && current.discographySyncedAt) return { status: "skipped" };
-    if (mode === "full" && !needsDiscographyRefresh(current)) return { status: "skipped" };
+    if (mode === "full" && !ignoreFreshness && !needsDiscographyRefresh(current)) return { status: "skipped" };
 
-    const pages = await fetchDiscographyPages(current.mbid, mode === "initial" ? DISCOGRAPHY_INITIAL_PAGES : DISCOGRAPHY_MAX_PAGES);
+    let firstPage: MBReleaseGroupBrowseResponse | undefined;
+    if (mode === "full" && !forceFullWalk && !needsFullWalk(current)) {
+      firstPage = await musicbrainz.browseReleaseGroupsByArtist(current.mbid, 0);
+      const total = firstPage["release-group-count"];
+      if (total > RELEASE_BROWSE_PAGE_SIZE && total === current.discographyMbTotal) {
+        if (!dryRun) {
+          await saveDiscographyReleaseGroups(firstPage["release-groups"]);
+          await tx.update(artist).set({ discographyCheckedAt: new Date() }).where(eq(artist.id, artistId));
+        }
+        return { status: "verified", saved: firstPage["release-groups"].length, total };
+      }
+    }
+
+    const pages = await fetchDiscographyPages(
+      current.mbid,
+      mode === "initial" ? DISCOGRAPHY_INITIAL_PAGES : DISCOGRAPHY_MAX_PAGES,
+      firstPage,
+    );
     const saved = pages.releaseGroups.length;
     const now = new Date();
 
@@ -288,7 +374,13 @@ export async function syncArtistDiscography(
       if (!pages.truncated) marks = await applyUnlistedMarks(tx, artistId, pages.releaseGroups, now);
       await tx
         .update(artist)
-        .set({ discographySyncedAt: now, discographyCompleteAt: now })
+        .set({
+          discographySyncedAt: now,
+          discographyCompleteAt: now,
+          discographyCheckedAt: now,
+          // Con el tope alcanzado el total no se recorrió: sin base para el atajo.
+          discographyMbTotal: pages.truncated ? null : pages.total,
+        })
         .where(eq(artist.id, artistId));
     }
     return { status: "complete", saved, total: pages.total, ...marks, truncated: pages.truncated };

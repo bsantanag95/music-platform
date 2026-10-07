@@ -7,11 +7,12 @@ const mocks = vi.hoisted(() => ({
   createComment: vi.fn(),
   resolveSocialTarget: vi.fn(),
   requireUser: vi.fn(),
+  getCurrentUser: vi.fn().mockResolvedValue(null),
   requireSocialActivityAllowed: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/services/social", () => mocks);
-vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser, requireSocialActivityAllowed: mocks.requireSocialActivityAllowed }));
+vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser, getCurrentUser: mocks.getCurrentUser, requireSocialActivityAllowed: mocks.requireSocialActivityAllowed }));
 
 describe("GET comentarios", () => {
   it.each([
@@ -34,7 +35,7 @@ describe("GET comentarios", () => {
     const request = new NextRequest("http://localhost/api/catalog/artist/00000000-0000-4000-8000-000000000001/comments?page=2&pageSize=10");
 
     expect((await GET(request, { params: Promise.resolve({ target: "artist", id: "00000000-0000-4000-8000-000000000001" }) })).status).toBe(200);
-    expect(mocks.listComments).toHaveBeenCalledWith(expect.anything(), 2, 10);
+    expect(mocks.listComments).toHaveBeenCalledWith(expect.anything(), 2, 10, null);
   });
 
   it("POST devuelve el comentario dentro de comment", async () => {

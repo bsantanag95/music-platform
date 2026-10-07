@@ -14,7 +14,9 @@ import { listFollowing } from "@/services/social/following";
 import { listFeed } from "@/services/feed/feed";
 import {
   getMostRecentEditedList,
+  ensureReleaseCalendarFresh,
   listHomeReleases,
+  listPersonalHomeReleases,
   listMyRecentActivity,
   listPopularComments,
   listPublicLists,
@@ -49,15 +51,17 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
   // propio), en el mismo layout compacto que el Inicio anónimo — top-N corto.
   const previewLimit = 6;
 
-  const [following, recentActivity, resumeList, communityActivity, publicLists, popularComments, homeReleases] =
+  const [following, recentActivity, resumeList, communityActivity, publicLists, popularComments, homeReleases, personalReleases] =
     await Promise.all([
       listFollowing(user.id, 1, 1),
       listMyRecentActivity(user.id, 1, PREVIEW_PAGE_SIZE),
       getMostRecentEditedList(user.id),
       listCommunityActivity(user.id, 1, previewLimit).then((page) => page.entries),
       listPublicLists(user.id, previewLimit),
-      listPopularComments(),
+      listPopularComments(undefined, user.id),
       listHomeReleases(),
+      listPersonalHomeReleases(user.id),
+      ensureReleaseCalendarFresh(),
     ]);
 
   const hasFollows = following.users.length > 0;
@@ -108,7 +112,7 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
 
       <PopularComments comments={popularComments} />
 
-      <HomeReleases releases={homeReleases} />
+      <HomeReleases releases={homeReleases} personalReleases={personalReleases} />
 
       {communityActivity.length === 0 && publicLists.length === 0 && (
         <p className="max-w-md text-center font-body text-sm text-paper-muted">

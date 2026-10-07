@@ -353,6 +353,14 @@ tokens ya vencidos al crearse.
 
 **Discografía completa (migración `0053_artist_discography_sync.sql`, openspec `fix-artist-discography-ingestion`):** `discography_synced_at` indica que hay discografía guardada; `discography_complete_at` (`TIMESTAMPTZ` nullable) que se recorrieron **todas** las páginas del browse de MusicBrainz (con `release-group-status=website-default`, sin bootlegs). Arranca en `NULL` para todos los artistas existentes, porque la ingesta anterior se cortaba en 100 release-groups: la próxima lectura completa la discografía en segundo plano. Una discografía completa se vuelve a sincronizar en segundo plano cuando `discography_complete_at` tiene más de 7 días, con un `pg_advisory_xact_lock` por artista.
 
+**Resincronización (migración `0064_artist_discography_refresh.sql`, openspec `refresh-discography-on-new-releases`):** tres columnas nullable, todas aditivas:
+
+- `discography_mb_total` (`INTEGER`, `CHECK >= 0`): el `release-group-count` que informó MusicBrainz en el último recorrido completo no truncado. Con el tope de 20 páginas alcanzado queda en `NULL`. Es la base de la **verificación barata**: si la discografía ocupa más de una página y la página 1 trae el mismo total, se guardan esos 100 release-groups y no se piden los demás. La verificación barata no marca ni desmarca `discography_unlisted_at` y no toca `discography_complete_at`.
+- `discography_checked_at` (`TIMESTAMPTZ`): última vez que la discografía se dio por vigente, por recorrido completo o por verificación barata. Los 7 días de frescura se miden desde el más reciente entre esta columna y `discography_complete_at`.
+- `discography_refresh_requested_at` (`TIMESTAMPTZ`): al terminar cada sincronización del calendario de lanzamientos (`release_calendar_entry`), se escribe en los artistas con discografía guardada que figuran en una entrada no excluida cuyo release-group no tienen acreditado, salvo que su discografía se haya verificado en las últimas 24 h. Si es posterior a la última verificación, la próxima lectura resincroniza aunque no hayan pasado 7 días, y recorre todas las páginas.
+
+Se recorren todas las páginas, sin atajo, si el total es desconocido, si hay una solicitud pendiente, si el último recorrido completo tiene más de 30 días o desde `scripts/backfill-artist-discography.ts`. `discography_complete_at` conserva su significado (última vez que se recorrieron todas las páginas) porque la página de artista y el descubrimiento de géneros lo leen como «discografía explorada»: pedir un refresco nunca lo vuelve `NULL`.
+
 **Perfil del artista (migración `0054_artist_profile.sql`, openspec `enrich-artist-profile`, ADR 0021):**
 
 - `bio` se renombró **`disambiguation`**: siempre guardó la desambiguación de MusicBrainz ("Chilean
@@ -745,6 +753,16 @@ creados antes del cambio se conservan intactos; solo cambia qué renderiza la UI
 
 **Restricciones:** `CHECK (num_nonnulls(artist_id, release_group_id, recording_id) = 1)`, igual que `credit` y `rating`.
 
+## `comment_like`
+
+**Propósito:** likes en comentarios (migración `0062`, cambio `add-comment-likes`). Registro **anónimo**:
+solo deduplica (un like por persona y comentario) y alimenta el conteo; la identidad de quien likeó
+no se expone nunca, ni al autor. `PRIMARY KEY (comment_id, user_id)` (sin id propio: nada la
+referencia) e índice `idx_comment_like_user`. Ambos FK son `ON DELETE CASCADE`: los comentarios y las
+cuentas se borran físicamente (ADR 0009). El conteo es `COUNT(*)` sobre la PK, **excluyendo cuentas
+desactivadas** (reaparecen al reactivar); no hay contador denormalizado. Que el autor no pueda likear su
+propio comentario cruza tablas y no es un `CHECK`: lo impone el servicio.
+
 ## `review`
 
 **Propósito:** la reseña como entidad propia (migración `0017`, cambio `add-album-review`) — la
@@ -1033,3 +1051,43 @@ usuario, foto de artista, portada de playlist) tendrán FK propias (`*_image_id 
 **Sin asociación polimórfica:** se descartó `image.owner_type` / `image.owner_id` porque Postgres
 no puede validarla con FK real. En su lugar, cada entidad consumidora tendrá su propia columna
 `*_image_id` con integridad referencial real.
+
+## `release_calendar_entry`
+
+**Propósito:** calendario de lanzamientos del riel de Inicio (migración `0063`, cambio
+`add-home-release-calendar`, ADR 0029). Es el índice de la ventana del feed "Fresh Releases" de
+ListenBrainz (30 días atrás, 90 adelante), **separado del catálogo**: una fila no es un release-group.
+Cada sincronización la reemplaza completa (borrado + inserción en una transacción), conservando la
+verificación y el vínculo de las entradas que siguen en el feed.
+
+**Columnas:**
+- `id`: UUID, clave primaria.
+- `release_group_mbid`: UUID, único. El disco en MusicBrainz.
+- `release_mbid`: UUID, nullable. La edición que trae el feed (informativo).
+- `title`, `artist_credit_name`: texto. Tal como los trae el feed; el riel los muestra sin pasar por el catálogo.
+- `artist_mbids`: `UUID[]`. Artistas acreditados; índice GIN para cruzar con los artistas de una persona.
+- `release_date`: date. Fecha del feed (precisión diaria; lo demás se descarta antes de guardar).
+- `primary_type`: texto, `CHECK IN ('Album','EP')`.
+- `has_cover`: boolean. `caa_id` presente en el feed. Sin carátula, la entrada solo sirve para la marca
+  "Anunciado" de artistas seguidos.
+- `artist_listeners`: entero ≥ 0, nullable. Oyentes del artista más popular del crédito (ListenBrainz).
+- `verified_at`, `first_release_date`, `exclusion`: resultado de la verificación en MusicBrainz.
+  `exclusion` ∈ (`secondary_type`, `reissue`) o NULL; `CHECK` exige `verified_at` si hay exclusión. Una
+  verificación vence a los 7 días o si cambia la fecha del feed.
+- `release_group_id`: FK → `release_group`, `ON DELETE SET NULL`. Solo se llena para lo que se muestra
+  (selección anónima) o es de artistas con relación de alguna persona.
+- `anonymous_rank`: smallint > 0, nullable. Orden de la selección anónima (índice parcial).
+- `synced_at`: timestamptz.
+
+**Índices:** `idx_release_calendar_entry_date` (`release_date`), `idx_release_calendar_entry_artists`
+(GIN sobre `artist_mbids`), `idx_release_calendar_entry_rank` (parcial, `anonymous_rank IS NOT NULL`).
+
+## `release_calendar_sync`
+
+**Propósito:** registro de cada sincronización del calendario (migración `0063`). La última `succeeded`
+define si el calendario está vencido (24 h). Una fila `running` de menos de 15 minutos impide que otra
+sincronización arranque (la fila se toma bajo `pg_advisory_xact_lock`).
+
+**Columnas:** `id` (UUID), `started_at`, `finished_at` (timestamptz), `status` (`CHECK IN
+('running','succeeded','failed')`), `entry_count` (entero) y `error` (texto, el mensaje del fallo).
+Índice parcial `idx_release_calendar_sync_finished` (`finished_at DESC` de las exitosas).

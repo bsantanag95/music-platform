@@ -20,11 +20,14 @@ export function PopularCommentsTabs({
   tablistLabel,
   tabLabels,
   emptyText,
+  likeWord,
 }: {
   comments: PopularCommentsByType;
   tablistLabel: string;
   tabLabels: Record<TabKey, string>;
   emptyText: string;
+  /** Palabra para el texto accesible de la cifra ("me gusta"). */
+  likeWord: string;
 }) {
   const baseId = useId();
   // Se muestran las tres pestañas siempre; la que arranca activa es la primera
@@ -90,7 +93,7 @@ export function PopularCommentsTabs({
           <li className="py-4 font-body text-sm text-paper-muted">{emptyText}</li>
         ) : (
           rows.map((comment) => (
-            <CommentRow key={comment.id} comment={comment} />
+            <CommentRow key={comment.id} comment={comment} likeWord={likeWord} />
           ))
         )}
       </ul>
@@ -98,7 +101,7 @@ export function PopularCommentsTabs({
   );
 }
 
-function CommentRow({ comment }: { comment: PopularComment }) {
+function CommentRow({ comment, likeWord }: { comment: PopularComment; likeWord: string }) {
   const locale = useLocale();
   const author = comment.authorDisplayName ?? `@${comment.authorUsername}`;
   // Forma compacta `★ 86/100` con puntaje detallado, `★ 4,5` sin él (rating-display).
@@ -125,6 +128,15 @@ function CommentRow({ comment }: { comment: PopularComment }) {
           >
             {comment.target.title}
           </Link>
+          {/* Cifra real desde 3 likes (null bajo el umbral); anónima, sin quién likeó. */}
+          {comment.likeCount != null ? (
+            <span
+              aria-label={`${comment.likeCount} ${likeWord}`}
+              className="ml-auto shrink-0 rounded-full border border-ink-border px-2 py-0.5 font-data text-xs text-paper-muted"
+            >
+              <span aria-hidden="true">♡ {comment.likeCount}</span>
+            </span>
+          ) : null}
         </div>
         {/* El comentario es el protagonista del bloque: va en tono principal,
             como cita con borde, y el autor lo firma debajo. */}

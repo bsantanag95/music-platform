@@ -255,9 +255,11 @@ Distinto de "Actividad de la comunidad" (cronológica, mezcla ratings + comentar
 **solo espacio con control segmentado** por tipo de entidad — no tres secciones apiladas.
 Alinea con el pilar §4 de `product_philosophy.md` ("las reseñas son contenido en sí mismo").
 
-**Estado:** diseño/layout implementado con **ranking proxy y sin cifra de likes**. El contador
-`♡ N` sintético (derivado del id) se retiró el 2026-10-06 para no mostrar likes inventados
-como reales; la feature real (likes en comentarios) es un cambio aparte — ver abajo.
+**Estado:** implementado con **likes reales** (cambio `add-comment-likes`, 2026-10-06). El
+`♡ N` sintético que hubo antes (derivado del id) se retiró el mismo día; la feature real lo
+reemplaza. Decisiones de producto —contra la anti-feature "sin gamificación" y "la subjetividad es
+el producto"—: la cifra solo se muestra **desde 3 likes**, no se puede likear el propio comentario,
+la cifra es igual para todos (autor incluido) y la identidad de quien likeó no se expone nunca.
 
 - `PopularComments` (server, resuelve i18n) → `PopularCommentsTabs`
   (`src/components/home/PopularCommentsTabs.tsx`, client). ARIA tabs: `role="tablist"` /
@@ -270,36 +272,32 @@ como reales; la feature real (likes en comentarios) es un cambio aparte — ver 
   título del target (display, link), el comentario como cita con borde izquierdo en tono
   principal (`line-clamp-3`) y debajo la firma `— @autor · ★ 86/100` (o `★ 4,5` sin puntaje
   detallado) en mono.
-- **Servicio `listPopularComments()`** (`src/services/home/home.ts`): tres consultas (una por
-  tipo), orden por `length(body) DESC` como proxy de "escritura sustancial". La valoración es
-  real (`rating` del autor sobre el mismo target, con su puntaje detallado, o `null`). Filtra por perfil público; **no**
-  maneja bloqueos (la versión real sí, como `listCommunityActivity`).
+- **Servicio `listPopularComments(perType, viewerId?)`** (`src/services/home/home.ts`): tres
+  consultas (una por tipo) ordenadas por **likes reales** (`COUNT(*)` de `comment_like`, sin cuentas
+  desactivadas), desempate por `length(body)` y luego por fecha. La fila lleva `likeCount`: `null`
+  bajo el umbral (3), de modo que el conteo real solo ordena y nunca sale del servidor. Filtra por
+  perfil público y cuenta activa, excluye comentarios ocultos por moderación y, con visitante, los
+  de autores con bloqueo en cualquier dirección (como `listCommunityActivity`). La valoración es
+  real (`rating` del autor sobre el mismo target, con su puntaje detallado, o `null`).
+- **Pill `♡ N`** a la derecha del título (`aria-label` "N me gusta", clave
+  `home.popularCommentsLikeWord`), solo con cifra visible.
 - El seed (`scripts/seed-home.ts`) ahora genera comentarios de los tres tipos y a veces
   valora el mismo target — antes solo comentaba álbumes/canciones y la pestaña Artistas
   quedaba vacía. Requiere re-correr el seed para verlo poblado.
 
-#### Feature real: "likes en comentarios" (sprint futuro)
+#### Likes en comentarios (implementado)
 
-Discutir cuando cambie el paradigma hacia **la relevancia de las interacciones**, donde los
-comentarios/reseñas pasan a ser parte de la identidad de la página. Ese mismo spec decide
-si se puede **comentar un comentario** (hilos: abrir debates, responder a comentarios
-cómicos, etc.).
-
-- **Schema:** tabla `comment_like (comment_id, user_id, PK/unique(comment_id, user_id))`. El
-  conteo es `COUNT(*)`. **La identidad de quién likeó no se expone nunca** — ni al autor;
-  es un registro contable, solo para deduplicar (un like por usuario). Alternativa: contador
-  denormalizado `comment.like_count` + trigger.
-- **Interacción:** botón de like en `Comments.tsx` + endpoint
-  (`POST/DELETE /api/comments/[id]/like`) + estado optimista. **Requiere sesión** — no se
-  likea anónimo. Sin audiencia en los likes.
-- **Producto:** un ranking de "comentarios más populares" es una mecánica de popularidad
-  agregada — hay que decidirlo contra la anti-feature "sin gamificación" y el posicionamiento
-  "la subjetividad es el producto, no un score agregado tipo Metacritic". Es la decisión que
-  destraba todo lo demás.
-- **Borrado físico:** los comentarios se borran de verdad (ADR 0009) → los likes se van en
-  cascada; un "top" cacheado tiene que tolerar ids que desaparecen.
-- Al implementarse, `listPopularComments` cambia el `ORDER BY length(body)` por
-  `ORDER BY like_count DESC` real y la fila vuelve a mostrar el contador.
+- **Schema:** `comment_like (comment_id, user_id)`, PK del par, `ON DELETE CASCADE` en ambos FK
+  (migración `0062`; ver `docs/03-data/sql-model.md`). Conteo `COUNT(*)` sobre la PK, sin
+  contador denormalizado (se puede agregar luego sin cambiar contratos).
+- **Interacción:** `PUT/DELETE /api/catalog/comments/{commentId}/like` (idempotentes, con sesión;
+  ver `docs/04-api/contracts.md`) y botón con estado optimista en `Comments.tsx`
+  (`CommentLikeButton`). Anónimos y el autor ven la cifra sin botón.
+- **Restricciones:** no se likea lo propio; dar like respeta bloqueos (`BLOCKED`) y suspensión social;
+  quitarlo siempre se permite. Un comentario oculto por moderación cuenta como inexistente.
+- **Borrado físico:** los comentarios se borran de verdad (ADR 0009) → los likes se van en cascada.
+- **Fuera de alcance:** **comentar un comentario** (hilos), likes en reseñas y notificaciones de
+  likes. Siguen pendientes de decisión.
 
 ### Fuente de las carátulas del muro — 32 fijas, un solo mosaico
 
@@ -334,8 +332,8 @@ en orden de lectura izquierda→derecha, arriba→abajo; el orden es parte del d
 Dos apartados nuevos de Inicio: discos publicados hace poco (pasado) y discos anunciados
 todavía sin salir (futuro). La distinción es limpia y no se solapa.
 
-**Estado:** el **diseño/layout está implementado** con datos de maqueta (`redesign-frontend`).
-El **pipeline de datos real es de un sprint futuro** (ver "Lo que falta analizar").
+**Estado:** implementado. El diseño/layout viene de `redesign-frontend`; los datos reales, de
+`add-home-release-calendar` (calendario desde ListenBrainz, ADR 0029).
 
 ### Diseño: un solo riel en línea de tiempo
 
@@ -343,7 +341,7 @@ En vez de dos rieles de carátulas casi idénticos apilados, **un único riel ho
 ordenado por fecha** con un marcador "hoy" en el medio:
 
 ```
-‹ … 22 sept   29 sept  │ HOY │  Sale 13 oct   Sale 20 oct … ›
+‹ … 22 sept   29 sept  │ HOY │  Se lanza 13 oct   Se lanza 20 oct … ›
   ●──────────●─────────◉──────○─────────────○──────
      [recientes]                 [próximos]
 ```
@@ -358,7 +356,7 @@ ordenado por fecha** con un marcador "hoy" en el medio:
   ámbar del bloque, usada como una aguja de VU / cabezal de reproducción (dentro de la
   Regla de Rareza). Solo aparece si hay ítems de los dos lados.
 - Tarjetas "próximas": carátula a `opacity-60` (opaca al pasar el ratón), pastilla
-  `Próximo` / `Upcoming` sobre la carátula y fecha con prefijo (`Sale` / `Out`). Las
+  `Próximo` / `Upcoming` sobre la carátula y fecha con prefijo (`Se lanza` / `Out`). Las
   "recientes", normales. Fecha con día y mes (`12 sept`), con año solo si no es el actual. Sin cuenta regresiva ni "no te lo pierdas" — la anti-feature
   "sin mecánicas de presión" sigue vigente.
 - Carátula cuadrada con anillo `ink-border` y sombra (→ `amber` en `group-hover`) + fecha
@@ -367,50 +365,67 @@ ordenado por fecha** con un marcador "hoy" en el medio:
   **social** es la identidad; el calendario es contenido editorial secundario. Se muestra
   en ambos estados (anónimo y con sesión).
 
-### Datos: maqueta hoy, config manual como paso siguiente
+### Datos: calendario desde ListenBrainz (`add-home-release-calendar`, ADR 0029)
 
-**Hoy (`listHomeReleases()` en `src/services/home/home.ts`):** toma los release-groups con
-carátula más recientes (`created_at DESC`, `credit role='primary'` para el artista, cap de
-3 por artista para que el seed no muestre una sola discografía) y les asigna **fechas
-sintéticas** repartidas alrededor de hoy (mitad pasado / mitad futuro, una por semana).
-Sirve para revisar el layout con carátulas reales de catálogo. Está marcado como maqueta
-en el propio docstring.
+**Fuente.** El feed "Fresh Releases" de ListenBrainz (CC0, mismos MBID que MusicBrainz) da los
+lanzamientos de los últimos 30 días y los próximos 90; `POST /1/popularity/artist` da los oyentes
+de cada artista. MusicBrainz no tiene un feed usable y Spotify/Apple Music prohíben cachear y
+mezclar sus datos. Todo sale de `src/services/listenbrainz/client.ts` (`LISTENBRAINZ_USER_AGENT`).
 
-**Paso siguiente (sin backend nuevo), config manual:** reemplazar la asignación sintética
-por `src/config/home-releases.ts` — `{ releaseGroupId, releaseDate, section: "recent" |
-"upcoming" }[]` referenciando `release_group.id` **ya ingeridos**. Nunca título/artista/URL
-a mano; la carátula sigue saliendo del pipeline `coverThumbUrl()` (≤250px, `04-risks.md`
-#6). Mismo patrón que las 24 carátulas del hero.
+**Calendario aparte del catálogo.** La ventana filtrada (fecha exacta, Álbum o EP) vive en
+`release_calendar_entry` y se reemplaza completa en cada sincronización. **Al catálogo solo entra lo
+que se muestra**: la selección anónima y los discos de artistas con los que alguna persona tiene
+relación se registran como stub de release-group con sus créditos. Esto resuelve la tensión con el
+Principio 4 para este apartado (ver ADR 0029).
+
+**Sincronización** (`src/services/home/release-calendar-sync.ts`): cada 24 h, bajo demanda —Inicio la
+programa con `after()` si está vencida, sin bloquear la página— o forzada con
+`scripts/sync-release-calendar.ts`. Una sola a la vez. Un fallo externo conserva el calendario
+anterior. Pasos: feed → popularidad → selección → verificación en MusicBrainz de los finalistas (una
+búsqueda `rgid:(…)` por lote de 50) → stub + carátula por el pipeline existente → reemplazo
+transaccional. ~40 s con datos reales.
+
+Al terminar, la sincronización marca para resincronizar las discografías guardadas a las que les falta
+un disco del calendario (`artist.discography_refresh_requested_at`, openspec
+`refresh-discography-on-new-releases`): la próxima visita a ese artista lo trae sin esperar los 7 días.
+Es una sola sentencia sobre tablas propias, sin requests externas. Si falla, se registra y el calendario
+igual queda sincronizado.
+
+**Filtros de calidad.** Fecha exacta al día; Álbum o EP (sin sencillos); carátula conocida
+(`caa_id` del feed y confirmada por Cover Art Archive); sin tipos secundarios (en vivo,
+recopilatorio, banda sonora, remix…); y sin reediciones (fecha original anterior a la ventana). Lo
+que MusicBrainz aún no indexó queda sin verificar y no se muestra hasta la próxima sincronización.
+
+**Visitante anónimo** (`listHomeReleases`): hasta **12 recientes (30 días) y 12 próximos (60 días,
+ampliable a 90 si hay menos de 4)**, ordenados por `log10(1 + oyentes)` más un impulso de hasta 2
+puntos si el artista tiene actividad en la comunidad (seguidores, valoraciones, escuchas). Un disco por
+artista en todo el riel y como máximo 3 por familia de géneros por lado (si el género del artista se
+conoce). Se precalcula en la sincronización (`anonymous_rank`).
+
+**Usuario con sesión** (`listPersonalHomeReleases`): lanzamientos de artistas con los que la persona
+tiene relación —los sigue (peso 4), favorito o valoración ≥ 4 estrellas (3), escucha (2), colección o
+"En tu búsqueda" (1)— de los últimos 30 días y los próximos hasta **180** (más allá de los 90 del feed,
+desde `release_group.first_release_date` del catálogo). Hasta 20, por peso y cercanía a hoy. Un disco de
+un artista **seguido** entra aunque no tenga carátula, con placeholder y la marca **"Anunciado"**. No se
+rellena con la selección anónima: lo popular vive en su propia vista. No es la personalización algorítmica
+que la anti-feature descarta: se basa solo en la relación explícita de la persona.
+
+**Selector con sesión.** Con sesión el riel suma un control segmentado **"De tus artistas | Populares"**
+(`ReleaseSwitcher`): dos vistas con orientación propia que nunca se mezclan, para que el riel no junte
+géneros y artistas dispares. Abre en "De tus artistas" si tiene al menos 3 discos; si no, abre en "Populares"
+y muestra una invitación bajo el riel — *"Sigue artistas, o valóralos y agrégalos a favoritos, y sus
+lanzamientos aparecerán aquí"* — con un enlace a la búsqueda. Con la vista personal vacía y seleccionada se
+muestra solo la invitación. Si "Populares" está vacía el selector se oculta; si ambas lo están, el apartado.
+Sin sesión no hay selector.
 
 **Componentes:** `HomeReleases` (server, resuelve i18n) → `ReleaseRail`
 (`src/components/home/ReleaseRail.tsx`, client — riel + flechas + marcador). Tipo
-`HomeRelease = { id, title, artist, coverThumbUrl, releaseDate, section }`. Cada tarjeta
+`HomeRelease = { id, title, artist, coverThumbUrl, releaseDate, section, badge }` (`badge`: `"announced"` o nada). Cada tarjeta
 linkea a `/album/{id}`.
 
-### Lo que falta analizar (sprint real)
-
-1. **Fecha de lanzamiento.** Hoy solo existe `release.release_date` (por edición, parcial —
-   solo si se ingirió el tracklist de esa edición) y **no** a nivel `release_group`.
-   MusicBrainz tiene `first-release-date` en el release-group; la ingesta no lo guarda →
-   migración + cambio en `ingest-release.ts` + backfill.
-2. **Release-groups sin tracklist / sin ediciones publicadas** (caso "próximos"): verificar
-   que `ingest-release.ts` y la página `/album/[id]` no rompan con un release-group que no
-   tiene ninguna `release` publicada.
-3. **Estado "aún no salió":** se deriva (`release_date > hoy`), no se guarda flag — pero la
-   UI de `/album/[id]` tiene que manejar "sin tracklist todavía".
-4. **Carátulas pre-release:** Cover Art Archive a veces tiene arte de pre-venta, a veces no
-   → muchos `DiscPlaceholder` en "próximos".
-5. **Tensión con el Principio 4** ("el catálogo crece por uso real, nunca pre-cargado en
-   masa"). Un calendario de lanzamientos es 100% pre-carga de cosas que nadie buscó. Es una
-   decisión de identidad de producto: ¿"un Letterboxd para música" quiere un release
-   calendar editorial? Hay que resolverlo antes de invertir en el sync.
-6. **De dónde sale la lista.** MusicBrainz no tiene un feed de "upcoming" / "new releases"
-   usable (consultar por rango de fechas devuelve el firehose global). Filtrar con calidad =
-   curación editorial → engancha con el sistema de roles/cuentas de plataforma que
-   `product_philosophy.md` §7 deja sin resolver (mismo bloqueo que las listas editoriales y
-   las 24 carátulas del hero).
-7. **Relevancia / localización:** ¿lanzamientos para quién? Sin personalización en fases
-   tempranas (anti-feature declarada). Y la cadencia de refresco / quién cura.
+**Disco que aún no salió:** la ficha de `/album/[id]` muestra "Se lanza el …"; sin pistas publicadas,
+la pestaña Canciones muestra un estado vacío y, sin ninguna edición en MusicBrainz, la página muestra
+título y fecha en vez del error "Sin ediciones disponibles".
 
 ## Pendiente
 
@@ -423,16 +438,7 @@ linkea a `/album/{id}`.
 - Listas públicas en Inicio anónimo con **mini-mosaico de carátulas** (L3) — requiere que
   `listPublicLists` devuelva ~4 `coverThumbUrl` por lista. Ver "Actividad de la comunidad y
   listas públicas — layout".
-- Feature real **"likes en comentarios"** (destraba "Comentarios populares"): tabla
-  `comment_like` anónima (nadie ve quién likeó, ni el autor), like con sesión obligatoria,
-  y la decisión de producto sobre gamificación vs. el posicionamiento anti-agregado. El
-  mismo spec define si se puede **comentar un comentario** (hilos). Se discute cuando el
-  paradigma gire hacia "la relevancia de las interacciones". Ver "'Comentarios populares'".
-- Apartados **"Lanzamientos recientes" / "Próximos lanzamientos"**: el riel (`ReleaseRail`)
-  ya está en Inicio con **datos de maqueta** (fechas sintéticas sobre release-groups reales).
-  Falta: (a) paso intermedio con `src/config/home-releases.ts` (curación manual sin backend),
-  y (b) la versión real — resolver los 7 puntos de "Lo que falta analizar", empezando por la
-  decisión de producto (Principio 4) y la fecha de lanzamiento en `release_group`. Ver
-  "'Lanzamientos recientes' y 'Próximos lanzamientos'".
+- **Hilos** (comentar un comentario): el cambio `add-comment-likes` dejó fuera esa decisión. Se
+  discute cuando el paradigma gire hacia "la relevancia de las interacciones".
 - Copy y diseño visual concreto de cada bloque (fuera del alcance de este documento, que
   cierra la estructura de contenido, no el layout).

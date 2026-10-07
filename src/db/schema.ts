@@ -474,6 +474,12 @@ export const artist = pgTable(
     // NULL = la discografía nunca se recorrió entera (migración 0053, openspec:
     // fix-artist-discography-ingestion). Base de la resincronización cada 7 días.
     discographyCompleteAt: timestamp("discography_complete_at", { withTimezone: true }),
+    // Resincronización (migración 0064, openspec: refresh-discography-on-new-releases):
+    // total de MusicBrainz del último recorrido completo (base de la verificación barata),
+    // última verificación (recorrido o atajo) y solicitud del calendario de lanzamientos.
+    discographyMbTotal: integer("discography_mb_total"),
+    discographyCheckedAt: timestamp("discography_checked_at", { withTimezone: true }),
+    discographyRefreshRequestedAt: timestamp("discography_refresh_requested_at", { withTimezone: true }),
     membershipsSyncedAt: timestamp("memberships_synced_at", { withTimezone: true }),
     // NULL = la alineación nunca se guardó con períodos (migración 0055, openspec:
     // add-artist-lineup-data); se renueva con la ficha cada 30 días.
@@ -510,6 +516,7 @@ export const artist = pgTable(
     check("chk_artist_life_begin", sql`${t.lifeBegin} IS NULL OR ${t.lifeBegin} ~ '^\\d{4}(-\\d{2}(-\\d{2})?)?$'`),
     check("chk_artist_life_end", sql`${t.lifeEnd} IS NULL OR ${t.lifeEnd} ~ '^\\d{4}(-\\d{2}(-\\d{2})?)?$'`),
     check("chk_artist_wikidata_id", sql`${t.wikidataId} IS NULL OR ${t.wikidataId} ~ '^Q[0-9]+$'`),
+    check("chk_artist_discography_mb_total", sql`${t.discographyMbTotal} IS NULL OR ${t.discographyMbTotal} >= 0`),
     check(
       "chk_artist_photo_credit",
       sql`${t.photoFile} IS NULL OR (${t.photoUrl} IS NOT NULL AND ${t.photoLicense} IS NOT NULL AND ${t.photoSourceUrl} IS NOT NULL)`,
@@ -1698,6 +1705,27 @@ export const comment = pgTable(
   ],
 );
 
+// Likes en comentarios (openspec: add-comment-likes, migración 0062). Registro anónimo:
+// solo deduplica y cuenta; nunca se expone quién likeó.
+export const commentLike = pgTable(
+  "comment_like",
+  {
+    commentId: uuid("comment_id")
+      .notNull()
+      .references(() => comment.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.commentId, t.userId] }),
+    index("idx_comment_like_user").on(t.userId),
+  ],
+);
+
+export type CommentLikeRow = typeof commentLike.$inferSelect;
+
 export const listenEntry = pgTable(
   "listen_entry",
   {
@@ -1789,3 +1817,68 @@ export const image = pgTable("image", {
 });
 
 export type ImageRow = typeof image.$inferSelect;
+
+// Calendario de lanzamientos de Inicio (migración 0063, openspec: add-home-release-calendar, ADR 0029).
+// Índice del feed "Fresh Releases" de ListenBrainz, separado del catálogo: una fila no es un
+// release-group. Solo lo que se muestra se vincula (`releaseGroupId`, SET NULL). La ventana se
+// reemplaza completa en cada sincronización; `verifiedAt`/`firstReleaseDate`/`exclusion` salen de la
+// verificación en MusicBrainz y `anonymousRank` del orden de la selección anónima.
+export const releaseCalendarEntry = pgTable(
+  "release_calendar_entry",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    releaseGroupMbid: uuid("release_group_mbid").notNull().unique(),
+    releaseMbid: uuid("release_mbid"),
+    title: text("title").notNull(),
+    artistCreditName: text("artist_credit_name").notNull(),
+    artistMbids: uuid("artist_mbids").array().notNull().default(sql`'{}'`),
+    releaseDate: date("release_date").notNull(),
+    primaryType: text("primary_type").$type<"Album" | "EP">().notNull(),
+    hasCover: boolean("has_cover").notNull(),
+    artistListeners: integer("artist_listeners"),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    firstReleaseDate: date("first_release_date"),
+    exclusion: text("exclusion").$type<"secondary_type" | "reissue">(),
+    releaseGroupId: uuid("release_group_id").references(() => releaseGroup.id, { onDelete: "set null" }),
+    anonymousRank: smallint("anonymous_rank"),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_release_calendar_entry_date").on(t.releaseDate),
+    index("idx_release_calendar_entry_artists").using("gin", t.artistMbids),
+    index("idx_release_calendar_entry_rank").on(t.anonymousRank).where(sql`${t.anonymousRank} IS NOT NULL`),
+    check("chk_release_calendar_entry_primary_type", sql`${t.primaryType} IN ('Album', 'EP')`),
+    check("chk_release_calendar_entry_exclusion", sql`${t.exclusion} IN ('secondary_type', 'reissue')`),
+    check(
+      "chk_release_calendar_entry_listeners",
+      sql`${t.artistListeners} IS NULL OR ${t.artistListeners} >= 0`,
+    ),
+    check("chk_release_calendar_entry_rank", sql`${t.anonymousRank} IS NULL OR ${t.anonymousRank} > 0`),
+    check(
+      "chk_release_calendar_entry_verified",
+      sql`${t.exclusion} IS NULL OR ${t.verifiedAt} IS NOT NULL`,
+    ),
+  ],
+);
+
+export type ReleaseCalendarEntryRow = typeof releaseCalendarEntry.$inferSelect;
+
+export const releaseCalendarSync = pgTable(
+  "release_calendar_sync",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    status: text("status").$type<"running" | "succeeded" | "failed">().notNull().default("running"),
+    entryCount: integer("entry_count"),
+    error: text("error"),
+  },
+  (t) => [
+    index("idx_release_calendar_sync_finished")
+      .on(t.finishedAt.desc())
+      .where(sql`${t.status} = 'succeeded'`),
+    check("chk_release_calendar_sync_status", sql`${t.status} IN ('running', 'succeeded', 'failed')`),
+  ],
+);
+
+export type ReleaseCalendarSyncRow = typeof releaseCalendarSync.$inferSelect;

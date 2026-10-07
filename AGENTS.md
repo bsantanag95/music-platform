@@ -84,6 +84,24 @@ de cuál de las filas con el mismo título haya en la BD.
 >   interrumpió, limpiar con
 >   `DELETE FROM app_user WHERE username LIKE 'smoke_verify_%';`. Captura el
 >   token de verificación del adaptador `console`; no envía correo real.
+> - `smoke-test-comment-likes.ts` crea un artista sintético (MBID `5e0ce000-0000-4000-8000-0000000007c0`) y
+>   usuarios `smoke_like_*` con sus comentarios y likes, y los borra al terminar (también si falla; el `ON
+>   DELETE CASCADE` limpia comentarios, likes, bloqueos y restricciones). Si se interrumpió, limpiar con
+>   `DELETE FROM app_user WHERE username LIKE 'smoke_like_%'; DELETE FROM artist WHERE mbid::text LIKE
+>   '5e0ce000%';`. Necesita la migración `0062` aplicada. Verifica el conteo con umbral, `likedByMe`, el orden
+>   y la cifra de Comentarios populares, que las cuentas desactivadas no cuentan, bloqueos, comentario propio y
+>   oculto, la suspensión social y las cascadas.
+> - `smoke-test-release-calendar.ts` mockea ListenBrainz, MusicBrainz y Cover Art Archive, crea
+>   artistas y release-groups con MBID `5e0ce000-0000-4000-8000-000000008*` y usuarios `smoke_cal_*`,
+>   **respalda el calendario de lanzamientos y lo restaura al terminar** (también si falla) y borra sus
+>   fixtures. Si se interrumpió, limpiar con
+>   `DELETE FROM app_user WHERE username LIKE 'smoke_cal_%'; DELETE FROM release_calendar_entry WHERE
+>   release_group_mbid::text LIKE '5e0ce000%'; DELETE FROM release_group WHERE mbid::text LIKE
+>   '5e0ce000%'; DELETE FROM artist WHERE mbid::text LIKE '5e0ce000%';` y volver a correr
+>   `scripts/sync-release-calendar.ts`. Necesita la migración `0063` aplicada. Verifica el lock, las
+>   exclusiones (sencillo, en vivo, reedición, sin carátula, no indexado), que solo lo mostrado entra al
+>   catálogo, la selección personal ("Anunciado", catálogo a 150 días, relleno "Destacado"), el
+>   reemplazo de la ventana y que un fallo conserva el calendario.
 > - `smoke-test-album-editions.ts` y `smoke-test-personnel-credits.ts` (fixtures
 >   compartidos en `scripts/smoke-album-fixtures.ts`) crean un álbum, ediciones,
 >   grabaciones, obras, un sello y artistas con MBID sintéticos `5e0ce000-0000-4000-8000-*`
@@ -101,7 +119,13 @@ de cuál de las filas con el mismo título haya en la BD.
 >   terminar (también si falla); si se interrumpió, la limpieza de arriba lo cubre. Verifica la
 >   discografía paginada sin bootlegs, los tipos crudos, la marca de fuera de la discografía (sin
 >   borrar) y su reversión, la primera visita parcial de un artista con más de 300 discos, la
->   sincronización interrumpida sin marcas y la simulación sin escritura.
+>   sincronización interrumpida sin marcas y la simulación sin escritura. Desde
+>   `refresh-discography-on-new-releases` (necesita la migración `0064` aplicada) también verifica la
+>   verificación barata de la página 1, el recorrido completo cuando cambia el total o pasan 30 días y la
+>   solicitud de resincronización desde el calendario de lanzamientos. Para eso inserta entradas en
+>   `release_calendar_entry` con el mismo prefijo (las borra al terminar). La marca queda acotada a los
+>   artistas del smoke, sin tocar los reales. Si se interrumpió, a la limpieza de arriba sumar
+>   `DELETE FROM release_calendar_entry WHERE release_group_mbid::text LIKE '5e0ce000%';`.
 > - `smoke-test-artist-profile.ts` crea una banda y un integrante con el mismo prefijo
 >   sintético `5e0ce000-0000-4000-8000-*` (el `ON DELETE CASCADE` limpia enlaces, textos por
 >   idioma y pertenencias) y los borra al terminar (también si falla); si se interrumpió, la
@@ -186,6 +210,11 @@ de cuál de las filas con el mismo título haya en la BD.
   `wikidata` que declara MusicBrainz, nunca buscando por nombre. La foto del artista
   sale solo de Commons con licencia libre verificada, nunca de la miniatura de un
   resumen de Wikipedia.
+- `src/services/listenbrainz/client.ts` es el **único** punto de salida a
+  ListenBrainz (calendario de lanzamientos de Inicio, ADR 0029): exige
+  `LISTENBRAINZ_USER_AGENT` o lanza error. El feed vive en
+  `release_calendar_entry`, aparte del catálogo: solo lo que se muestra entra como
+  stub de release-group. `scripts/sync-release-calendar.ts` fuerza la sincronización.
 - `src/services/cover-art.ts` solo genera miniaturas 250px — nunca resolución
   completa (decisión de licencia documentada en `docs/03-data/data-licensing.md`,
   no solo optimización). No construir URLs de carátula a mano en otro lugar.

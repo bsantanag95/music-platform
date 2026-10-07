@@ -277,9 +277,20 @@ describe("layout de la página de álbum", () => {
   });
 
   it("muestra el estado vacío cuando el álbum no tiene ediciones", async () => {
-    mocks.loadAlbumDetail.mockResolvedValue({ kind: "no_editions" });
+    mocks.loadAlbumDetail.mockResolvedValue({ kind: "no_editions", releaseGroup: { title: "Sin ediciones", firstReleaseDate: null } as never });
     await renderLayout();
     expect(screen.getByText(catalogEs.album.noEditionsTitle)).toBeInTheDocument();
+  });
+
+  it("un disco anunciado sin ediciones muestra su fecha en vez del error", async () => {
+    mocks.loadAlbumDetail.mockResolvedValue({
+      kind: "no_editions",
+      releaseGroup: { title: "Disco futuro", firstReleaseDate: "2099-03-14" } as never,
+    });
+    await renderLayout();
+    expect(screen.getByText(/Disco futuro · Se lanza el 14 de marzo de 2099/)).toBeInTheDocument();
+    expect(screen.getByText(catalogEs.album.upcomingTracksDescription)).toBeInTheDocument();
+    expect(screen.queryByText(catalogEs.album.noEditionsTitle)).not.toBeInTheDocument();
   });
 });
 
