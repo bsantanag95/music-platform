@@ -306,6 +306,12 @@ export interface DiscographySyncOptions {
   dryRun?: boolean;
   /** Recorre todas las páginas sin verificación barata (backfill). */
   forceFullWalk?: boolean;
+  /**
+   * Ignora si la discografía está al día (backfill `--fill-total`): corre aunque
+   * `needsDiscographyRefresh` diga que no hace falta, para llenar `discography_mb_total` de un
+   * artista ya completo. Nunca la usan las visitas de la app.
+   */
+  ignoreFreshness?: boolean;
 }
 
 /**
@@ -321,14 +327,14 @@ export interface DiscographySyncOptions {
  */
 export async function syncArtistDiscography(
   artistId: string,
-  { mode, dryRun = false, forceFullWalk = false }: DiscographySyncOptions,
+  { mode, dryRun = false, forceFullWalk = false, ignoreFreshness = false }: DiscographySyncOptions,
 ): Promise<DiscographySyncResult> {
   return db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`discography:${artistId}`}, 0))`);
     const [current] = await tx.select().from(artist).where(eq(artist.id, artistId)).limit(1);
     if (!current?.mbid) return { status: "skipped" };
     if (mode === "initial" && current.discographySyncedAt) return { status: "skipped" };
-    if (mode === "full" && !needsDiscographyRefresh(current)) return { status: "skipped" };
+    if (mode === "full" && !ignoreFreshness && !needsDiscographyRefresh(current)) return { status: "skipped" };
 
     let firstPage: MBReleaseGroupBrowseResponse | undefined;
     if (mode === "full" && !forceFullWalk && !needsFullWalk(current)) {
