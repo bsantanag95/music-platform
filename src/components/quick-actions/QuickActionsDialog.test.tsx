@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { QuickActionsDialog } from "./QuickActionsDialog";
 import { ApiError } from "@/lib/api/client";
+import { OWN_DATA_CHANGED_EVENT } from "./quick-actions-changes";
 
 const mocks = vi.hoisted(() => ({
   searchAlbums: vi.fn(),
@@ -13,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   createListenEntry: vi.fn(),
   createList: vi.fn(),
   createCamino: vi.fn(),
+  refresh: vi.fn(),
 }));
 
 vi.mock("@/lib/api/catalog", () => ({
@@ -26,6 +28,7 @@ vi.mock("@/lib/api/camino", () => ({ createCamino: mocks.createCamino }));
 vi.mock("@/lib/api/diary", () => ({ createListenEntry: mocks.createListenEntry }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>,
+  useRouter: () => ({ refresh: mocks.refresh }),
 }));
 vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: () => null }));
 vi.mock("@/components/diary/ListenEntryForm", () => ({
@@ -311,5 +314,26 @@ describe("QuickActionsDialog", () => {
     await screen.findByRole("dialog");
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(onClose).toHaveBeenCalled());
+    // Sin nada guardado no hay nada que refrescar.
+    expect(mocks.refresh).not.toHaveBeenCalled();
+  });
+
+  it("tras guardar avisa del cambio y al cerrar refresca la página", async () => {
+    mocks.searchAlbums.mockResolvedValue(searchResponse);
+    mocks.createListenEntry.mockResolvedValue(createdEntry);
+    const onChanged = vi.fn();
+    window.addEventListener(OWN_DATA_CHANGED_EVENT, onChanged);
+    const onClose = vi.fn();
+    renderWithIntl(<QuickActionsDialog onClose={onClose} />);
+
+    await userEvent.type(await screen.findByRole("searchbox"), "dark side");
+    await userEvent.click(await screen.findByRole("button", { name: /The Dark Side of the Moon/ }, { timeout: 1500 }));
+    await screen.findByTestId("expand-form");
+    expect(onChanged).toHaveBeenCalledTimes(1);
+    window.removeEventListener(OWN_DATA_CHANGED_EVENT, onChanged);
+
+    await userEvent.click(screen.getByRole("button", { name: "Cerrar" }));
+    expect(mocks.refresh).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalled();
   });
 });

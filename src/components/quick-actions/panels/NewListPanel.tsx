@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { createList } from "@/lib/api/lists";
 import { ApiError } from "@/lib/api/client";
 import type { ListEntityType, UserListDetail } from "@/lib/api/schemas";
+import { useNotifyQuickActionChange } from "../quick-actions-changes";
 
 const LIST_TYPES: readonly ListEntityType[] = ["release-group", "artist", "recording"];
 
@@ -29,6 +30,7 @@ export function NewListPanel({ onAddItems, onNavigate }: NewListPanelProps) {
   const [busy, setBusy] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [created, setCreated] = useState<UserListDetail | null>(null);
+  const notifyChanged = useNotifyQuickActionChange();
 
   const typeLabel = (type: ListEntityType) =>
     type === "artist" ? t("newList.typeArtist") : type === "release-group" ? t("newList.typeAlbum") : t("newList.typeSong");
@@ -44,6 +46,7 @@ export function NewListPanel({ onAddItems, onNavigate }: NewListPanelProps) {
     setErrorCode(null);
     try {
       setCreated(await createList({ entityType, title: title.trim() }));
+      notifyChanged();
     } catch (err) {
       setErrorCode(err instanceof ApiError ? err.code : "INTERNAL_ERROR");
     } finally {

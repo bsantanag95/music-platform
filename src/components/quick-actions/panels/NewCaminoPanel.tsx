@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { createCamino } from "@/lib/api/camino";
 import { ApiError } from "@/lib/api/client";
 import type { CaminoDetail } from "@/lib/api/schemas";
+import { useNotifyQuickActionChange } from "../quick-actions-changes";
 
 interface NewCaminoPanelProps {
   /** Pasa al chip "A lista" con la búsqueda fijada a álbumes. */
@@ -26,6 +27,7 @@ export function NewCaminoPanel({ onAddAlbums, onNavigate }: NewCaminoPanelProps)
   const [busy, setBusy] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [created, setCreated] = useState<CaminoDetail | null>(null);
+  const notifyChanged = useNotifyQuickActionChange();
 
   const submit: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
@@ -38,6 +40,7 @@ export function NewCaminoPanel({ onAddAlbums, onNavigate }: NewCaminoPanelProps)
     setErrorCode(null);
     try {
       setCreated(await createCamino({ title: title.trim() }));
+      notifyChanged();
     } catch (err) {
       setErrorCode(err instanceof ApiError ? err.code : "INTERNAL_ERROR");
     } finally {

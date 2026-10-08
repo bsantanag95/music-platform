@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import type { ListEntityType } from "@/lib/api/schemas";
 import { ActionChips } from "./ActionChips";
 import { TargetPicker } from "./TargetPicker";
@@ -14,6 +15,7 @@ import { MarkPanel } from "./panels/MarkPanel";
 import { NewCaminoPanel } from "./panels/NewCaminoPanel";
 import { NewListPanel } from "./panels/NewListPanel";
 import { RatePanel } from "./panels/RatePanel";
+import { QuickActionsChangeContext, emitOwnDataChanged } from "./quick-actions-changes";
 import {
   ACTION_PICKER_TYPES,
   pickerTypeForList,
@@ -48,6 +50,21 @@ export function QuickActionsDialog({ onClose }: QuickActionsDialogProps) {
 
   useEffect(() => setMounted(true), []);
 
+  // Lo que se guarda aquí no pasa por los componentes que lo muestran (feed de Inicio, diario,
+  // panel del álbum…): cada guardado invalida las series de datos propios y, al cerrar sin navegar,
+  // se refresca la página para que también se actualice lo que viene del servidor. Al navegar desde
+  // un enlace del diálogo no hace falta: la página nueva ya llega fresca.
+  const router = useRouter();
+  const changed = useRef(false);
+  const notifyChanged = useCallback(() => {
+    changed.current = true;
+    emitOwnDataChanged();
+  }, []);
+  const dismiss = useCallback(() => {
+    if (changed.current) router.refresh();
+    onClose();
+  }, [onClose, router]);
+
   // Focus-trap + Escape + bloqueo de scroll. Espera a `mounted` para que el portal ya esté en el DOM.
   useEffect(() => {
     if (!mounted) return;
@@ -56,7 +73,7 @@ export function QuickActionsDialog({ onClose }: QuickActionsDialogProps) {
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        dismiss();
         return;
       }
       if (e.key !== "Tab" || !dialogRef.current) return;
@@ -80,7 +97,7 @@ export function QuickActionsDialog({ onClose }: QuickActionsDialogProps) {
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
     };
-  }, [onClose, mounted]);
+  }, [dismiss, mounted]);
 
   // El foco vuelve al buscador cada vez que se muestra (apertura, cambio de acción, elegir otro).
   const pickerVisible = action !== "newList" && action !== "newCamino" && target === null;
@@ -144,7 +161,7 @@ export function QuickActionsDialog({ onClose }: QuickActionsDialogProps) {
     <div
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink/70 p-4 pt-16 backdrop-blur-sm"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) dismiss();
       }}
     >
       <div
@@ -160,7 +177,7 @@ export function QuickActionsDialog({ onClose }: QuickActionsDialogProps) {
           </h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={dismiss}
             aria-label={t("close")}
             className="-mr-2 -mt-1 flex size-8 shrink-0 items-center justify-center rounded-md text-paper-muted transition-colors hover:bg-ink hover:text-paper"
           >
@@ -180,27 +197,29 @@ export function QuickActionsDialog({ onClose }: QuickActionsDialogProps) {
 
         <ActionChips value={action} onChange={changeAction} />
 
-        <div className="border-t border-ink-border pt-4">
-          {action === "newList" ? (
-            <NewListPanel onAddItems={addItemsToList} onNavigate={onClose} />
-          ) : action === "newCamino" ? (
-            <NewCaminoPanel onAddAlbums={() => addItemsToList("release-group")} onNavigate={onClose} />
-          ) : target ? (
-            renderPanel(action, target)
-          ) : (
-            <TargetPicker
-              types={pickerTypes}
-              type={searchType}
-              onTypeChange={setSearchType}
-              rawQuery={rawQuery}
-              onRawQueryChange={setRawQuery}
-              onPick={setTarget}
-              inputRef={searchInputRef}
-              inputId={`${titleId}-q`}
-              prompt={t(`prompt.${action}`)}
-            />
-          )}
-        </div>
+        <QuickActionsChangeContext.Provider value={notifyChanged}>
+          <div className="border-t border-ink-border pt-4">
+            {action === "newList" ? (
+              <NewListPanel onAddItems={addItemsToList} onNavigate={onClose} />
+            ) : action === "newCamino" ? (
+              <NewCaminoPanel onAddAlbums={() => addItemsToList("release-group")} onNavigate={onClose} />
+            ) : target ? (
+              renderPanel(action, target)
+            ) : (
+              <TargetPicker
+                types={pickerTypes}
+                type={searchType}
+                onTypeChange={setSearchType}
+                rawQuery={rawQuery}
+                onRawQueryChange={setRawQuery}
+                onPick={setTarget}
+                inputRef={searchInputRef}
+                inputId={`${titleId}-q`}
+                prompt={t(`prompt.${action}`)}
+              />
+            )}
+          </div>
+        </QuickActionsChangeContext.Provider>
       </div>
     </div>,
     document.body,

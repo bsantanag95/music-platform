@@ -12,6 +12,7 @@ import { saveRating } from "@/lib/api/social";
 import { ApiError } from "@/lib/api/client";
 import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 import { isScoreCoherent, scoreRange, starsFromScore } from "@/lib/rating-range";
+import { useNotifyQuickActionChange } from "../quick-actions-changes";
 import type { PickTarget } from "../types";
 
 const FULL_RANGE = { min: 1, max: 100 };
@@ -51,6 +52,7 @@ export function RatePanel({ target, onReset, onNavigate }: RatePanelProps) {
   const [busy, setBusy] = useState(false);
   const seq = useRef(0);
   const scoreId = useId();
+  const notifyChanged = useNotifyQuickActionChange();
 
   useEffect(() => {
     let cancelled = false;
@@ -82,6 +84,7 @@ export function RatePanel({ target, onReset, onNavigate }: RatePanelProps) {
     setErrorCode(null);
     try {
       await saveRating(target.type, target.id, { stars: value, ...(keepScore ? { detailedScore: score } : {}) });
+      notifyChanged();
       if (current !== seq.current) return;
       setSavedStars(value);
       if (score !== null && !keepScore) {
@@ -122,6 +125,7 @@ export function RatePanel({ target, onReset, onNavigate }: RatePanelProps) {
     setErrorCode(null);
     try {
       await saveRating(target.type, target.id, { detailedScore: value });
+      notifyChanged();
       const marks = await getTargetMarks(target.type, target.id);
       if (current !== seq.current) return;
       setStars(marks.stars);

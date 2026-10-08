@@ -9,6 +9,7 @@ import { getTargetMarks } from "@/lib/api/marks";
 import { removeFavorite, toggleFavorite } from "@/lib/api/favorites";
 import { removeFromWantToListen, toggleWantToListen } from "@/lib/api/want-to-listen";
 import { ApiError } from "@/lib/api/client";
+import { useNotifyQuickActionChange } from "../quick-actions-changes";
 import type { PickTarget } from "../types";
 
 type MarkKind = "favorite" | "pending";
@@ -35,6 +36,7 @@ export function MarkPanel({ kind, target, onReset }: MarkPanelProps) {
   const [busy, setBusy] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const started = useRef(false);
+  const notifyChanged = useNotifyQuickActionChange();
 
   async function add() {
     if (kind === "favorite") {
@@ -66,6 +68,7 @@ export function MarkPanel({ kind, target, onReset }: MarkPanelProps) {
           return;
         }
         await add();
+        notifyChanged();
         setState("added");
       } catch (err) {
         setErrorCode(err instanceof ApiError ? err.code : "INTERNAL_ERROR");
@@ -80,6 +83,7 @@ export function MarkPanel({ kind, target, onReset }: MarkPanelProps) {
     setErrorCode(null);
     try {
       await remove();
+      notifyChanged();
       setState("removed");
     } catch (err) {
       setErrorCode(err instanceof ApiError ? err.code : "INTERNAL_ERROR");
