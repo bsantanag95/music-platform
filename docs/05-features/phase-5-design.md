@@ -255,17 +255,25 @@ El Header separa dos zonas (cambio `regroup-authenticated-header`, spec
 
 - **Barra general** — solo lo que el sitio ofrece a cualquiera: buscador del catálogo,
   Listas (`/lists`, pública, distinta de `/me/lists`), Actividad (`/activity`, pública,
-  distinta de `/me/feed`), el control **"+ Registrar"** (solo con sesión, abre el modal de
-  registro de escucha — `add-global-listen-logging`) y, con el catálogo editorial
-  habilitado, Explorar. No lleva enlaces `/me/*` en el nivel superior. Moderación y
+  distinta de `/me/feed`), el control **"+ Registrar escucha"** (solo con sesión, abre el
+  modal de registro de escucha — `add-global-listen-logging`; hasta 2026-10 decía solo
+  "Registrar", ambiguo junto a "Registrarse") y, con el catálogo editorial habilitado,
+  Explorar. El enlace de la sección actual va en tono principal con subrayado ámbar
+  (`aria-current="page"`). No lleva enlaces `/me/*` en el nivel superior. Moderación y
   Administración salieron de la barra en `fix-header-overflow` (2026-09): ahora viven en el
   menú de usuario.
-- **Menú de usuario** — desplegable anclado al nombre visible (se abre al posar el cursor en
-  escritorio, con cheurón hacia abajo; clic/teclado como alternativa) que agrupa todo lo que
+- **Menú de usuario** — desplegable anclado al avatar y nombre visible (se abre al posar el
+  cursor en escritorio, con cheurón hacia abajo; clic/teclado como alternativa; un punto ámbar
+  sobre el avatar avisa de solicitudes de seguimiento pendientes). Abre con una cabecera de
+  identidad (avatar, nombre, `@usuario`) y agrupa todo lo que
   identifica a la persona: mi perfil, diario, favoritos, listas, colección, artistas
   seguidos, feed de actividad, seguidores, seguidos, solicitudes (con badge de pendientes),
   herramientas de rol (Moderación y/o Administración, solo con el permiso correspondiente),
   ajustes y cierre de sesión.
+
+El Header es fijo (`sticky top-0`, fondo translúcido con desenfoque); los elementos que ya
+eran fijos en página (aside del perfil, navegación de ajustes) bajan a `top-20` para no quedar
+debajo. El panel móvil tiene desplazamiento propio (alto máximo de la pantalla) y fondo opaco.
 
 Los destinos del menú, del panel móvil del Header y de la pantalla Red del área de ajustes
 (`/me/settings/network`) salen de una única fuente (`src/components/layout/user-menu-items.ts`,

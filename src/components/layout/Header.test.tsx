@@ -308,7 +308,8 @@ describe("Header", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Ana" }));
+    // El disparador anuncia también el aviso de pendientes junto al nombre.
+    fireEvent.click(screen.getByRole("button", { name: /Ana/ }));
 
     const requests = screen.getByRole("link", { name: /Solicitudes/ });
     expect(requests).toHaveAttribute("href", "/me/follow-requests");

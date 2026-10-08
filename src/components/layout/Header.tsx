@@ -12,9 +12,10 @@ import { HeaderSearch } from "./HeaderSearch";
 import { Logo } from "./Logo";
 import { UserMenu, UserMenuList } from "./UserMenu";
 import { RegisterListenButton } from "@/components/diary/RegisterListenButton";
+import { UserAvatar } from "@/components/social/UserAvatar";
 
 interface HeaderProps {
-  user?: Pick<AuthUser, "id" | "username" | "displayName"> | null;
+  user?: (Pick<AuthUser, "id" | "username" | "displayName"> & { avatarUrl?: string | null }) | null;
   exploreEnabled?: boolean;
   /** Solicitudes de seguimiento pendientes, para el badge del menú de usuario. */
   pendingFollowRequests?: number;
@@ -90,7 +91,18 @@ export function Header({
     }
   };
 
-  const generalNavClass = "font-data text-sm text-paper-muted transition-colors hover:text-paper";
+  // Enlace de la barra general; el de la sección actual queda en tono principal
+  // con un subrayado ámbar fino (`aria-current="page"`), para saber dónde se está.
+  const isCurrent = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const navLinkProps = (href: string) => ({
+    href,
+    "aria-current": isCurrent(href) ? ("page" as const) : undefined,
+    className: `relative rounded-sm py-1 font-data text-sm transition-colors after:absolute after:inset-x-0 after:-bottom-px after:h-px after:origin-left after:bg-amber after:transition-transform after:duration-200 ${
+      isCurrent(href)
+        ? "text-paper after:scale-x-100"
+        : "text-paper-muted after:scale-x-0 hover:text-paper"
+    }`,
+  });
   // Barra general: navegación de contenido que el sitio ofrece a cualquiera.
   // "Listas" es la superficie pública `/lists`, distinta de `/me/lists`.
   // "Caminos" es `/caminos` (descubrimiento, openspec: add-camino), distinta
@@ -100,24 +112,26 @@ export function Header({
   const generalLinks = (
     <>
       {exploreEnabled ? (
-        <Link href="/explore" className={generalNavClass}>
+        <Link {...navLinkProps("/explore")}>
           {tExplore("navLabel")}
         </Link>
       ) : null}
-      <Link href="/lists" className={generalNavClass}>
+      <Link {...navLinkProps("/lists")}>
         {t("lists")}
       </Link>
-      <Link href="/caminos" className={generalNavClass}>
+      <Link {...navLinkProps("/caminos")}>
         {tCamino("railLabel")}
       </Link>
-      <Link href="/activity" className={generalNavClass}>
+      <Link {...navLinkProps("/activity")}>
         {t("activity")}
       </Link>
     </>
   );
 
   return (
-    <header className="relative border-b border-ink-border">
+    // Fija arriba con fondo translúcido y desenfoque: la búsqueda y la
+    // navegación quedan a mano al bajar por páginas largas (discografías, feed).
+    <header className="sticky top-0 z-30 border-b border-ink-border bg-ink/85 backdrop-blur-md supports-[backdrop-filter]:bg-ink/70">
       <div className="flex w-full items-center justify-between px-4 py-3">
         <div className="flex min-w-0 items-center gap-4">
           <Logo />
@@ -126,7 +140,7 @@ export function Header({
           </div>
           {/* Barra general: solo navegación de contenido que ofrece el sitio a
               cualquiera. Las superficies personales viven en el menú de usuario. */}
-          <nav aria-label={t("generalNav")} className="hidden items-center gap-4 lg:flex">
+          <nav aria-label={t("generalNav")} className="hidden items-center gap-5 lg:flex">
             {generalLinks}
             {currentUser ? <RegisterListenButton /> : null}
           </nav>
@@ -141,6 +155,7 @@ export function Header({
             <UserMenu
               username={currentUser.username}
               displayName={currentUser.displayName ?? currentUser.username}
+              avatarUrl={currentUser.avatarUrl ?? null}
               pendingFollowRequests={pendingFollowRequests}
               permissions={platformPermissions}
               logoutPending={logoutPending}
@@ -157,7 +172,7 @@ export function Header({
             de abajo en vez de desbordar a 375px. */}
         <button
           type="button"
-          className="flex size-9 shrink-0 items-center justify-center text-paper-muted transition-colors hover:text-paper lg:hidden"
+          className="flex size-9 shrink-0 items-center justify-center rounded-md text-paper-muted transition-colors hover:bg-ink-surface hover:text-paper lg:hidden"
           aria-expanded={menuOpen}
           aria-controls="header-mobile-menu"
           aria-label={menuOpen ? t("closeMenu") : t("openMenu")}
@@ -170,7 +185,9 @@ export function Header({
       {menuOpen ? (
         <div
           id="header-mobile-menu"
-          className="flex flex-col gap-4 border-t border-ink-border px-4 py-4 lg:hidden"
+          // Desplazamiento propio: el header es fijo, así que un panel más alto que
+          // la pantalla dejaría fuera de alcance las últimas opciones (cerrar sesión).
+          className="themed-scrollbar flex max-h-[calc(100dvh-3.75rem)] flex-col gap-4 overflow-y-auto border-t border-ink-border bg-ink px-4 py-4 lg:hidden"
         >
           {/* Bloque 1 — barra general. */}
           <HeaderSearch fluid />
@@ -182,16 +199,37 @@ export function Header({
           {/* Bloque 2 — zona de usuario. */}
           <div className="flex flex-col gap-4 border-t border-ink-border pt-4">
             {currentUser ? (
-              <UserMenuList
-                username={currentUser.username}
-                pendingFollowRequests={pendingFollowRequests}
-                surface="panel"
-                permissions={platformPermissions}
-                onNavigate={() => setMenuOpen(false)}
-                logoutPending={logoutPending}
-                logoutError={logoutError}
-                onLogout={handleLogout}
-              />
+              <>
+                <Link
+                  href={`/users/${encodeURIComponent(currentUser.username)}`}
+                  className="flex items-center gap-2.5 rounded-md px-3 py-1 transition-colors hover:bg-ink-surface"
+                >
+                  <UserAvatar
+                    avatarUrl={currentUser.avatarUrl ?? null}
+                    username={currentUser.username}
+                    name={currentUser.displayName ?? currentUser.username}
+                    size="menu"
+                  />
+                  <span className="min-w-0">
+                    <span className="block truncate font-display text-sm text-paper">
+                      {currentUser.displayName ?? currentUser.username}
+                    </span>
+                    <span className="block truncate font-data text-xs text-paper-muted">
+                      @{currentUser.username}
+                    </span>
+                  </span>
+                </Link>
+                <UserMenuList
+                  username={currentUser.username}
+                  pendingFollowRequests={pendingFollowRequests}
+                  surface="panel"
+                  permissions={platformPermissions}
+                  onNavigate={() => setMenuOpen(false)}
+                  logoutPending={logoutPending}
+                  logoutError={logoutError}
+                  onLogout={handleLogout}
+                />
+              </>
             ) : (
               <AuthActions t={t} />
             )}
@@ -217,14 +255,19 @@ function LocaleSwitcher({
   onChange: (locale: string) => void;
 }) {
   return (
-    <nav aria-label={t("localeSwitcher")} className="flex items-center gap-2">
+    <nav
+      aria-label={t("localeSwitcher")}
+      className="inline-flex w-fit items-center gap-0.5 rounded-md border border-ink-border p-0.5"
+    >
       {routing.locales.map((locale) => (
         <button
           key={locale}
           type="button"
           onClick={() => onChange(locale)}
-          className={`font-data text-xs uppercase transition-colors hover:text-paper ${
-            locale === currentLocale ? "text-paper" : "text-paper-muted"
+          className={`rounded px-1.5 py-0.5 font-data text-[11px] uppercase transition-colors ${
+            locale === currentLocale
+              ? "bg-ink-surface text-paper"
+              : "text-paper-muted hover:text-paper"
           }`}
           aria-label={locale}
           aria-current={locale === currentLocale ? "true" : undefined}
@@ -241,7 +284,7 @@ function AuthActions({ t }: { t: HeaderT }) {
     <div className="flex items-center gap-3 font-data text-xs">
       <Link
         href="/auth/login"
-        className="rounded-md border border-ink-border px-3 py-2 text-paper transition-colors hover:border-paper"
+        className="rounded-md px-3 py-2 text-paper transition-colors hover:bg-ink-surface"
       >
         {t("login")}
       </Link>

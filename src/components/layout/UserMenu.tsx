@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import type { Permission } from "@/services/auth/authorization";
+import { UserAvatar } from "@/components/social/UserAvatar";
 import {
   buildUserMenuItems,
   USER_MENU_GROUP_ORDER,
@@ -71,7 +72,7 @@ export function UserMenuList({
           type="button"
           onClick={onLogout}
           disabled={logoutPending}
-          className="rounded px-3 py-2 text-left font-data text-xs text-paper-muted transition-colors hover:bg-ink-surface hover:text-paper disabled:cursor-wait disabled:opacity-60"
+          className="rounded px-3 py-2 text-left font-data text-xs text-paper-muted transition-colors hover:bg-ink hover:text-danger disabled:cursor-wait disabled:opacity-60"
         >
           {logoutPending ? t("logoutPending") : t("logout")}
         </button>
@@ -100,7 +101,7 @@ function UserMenuLink({
     <Link
       href={item.href}
       onClick={onNavigate}
-      className="flex items-center justify-between gap-3 rounded px-3 py-2 font-data text-xs text-paper-muted transition-colors hover:bg-ink-surface hover:text-paper"
+      className="flex items-center justify-between gap-3 rounded px-3 py-2 font-data text-xs text-paper-muted transition-colors hover:bg-ink hover:text-paper"
     >
       <span className="truncate">{label}</span>
       {item.badgeCount != null && (
@@ -134,6 +135,7 @@ function ChevronDown({ open }: { open: boolean }) {
 interface UserMenuProps extends LogoutControls {
   username: string;
   displayName: string;
+  avatarUrl?: string | null;
   pendingFollowRequests: number;
   permissions?: readonly Permission[];
 }
@@ -146,12 +148,14 @@ interface UserMenuProps extends LogoutControls {
 export function UserMenu({
   username,
   displayName,
+  avatarUrl = null,
   pendingFollowRequests,
   permissions = [],
   logoutPending,
   logoutError,
   onLogout,
 }: UserMenuProps) {
+  const t = useTranslations("common");
   const tErrors = useTranslations("errors");
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -201,24 +205,49 @@ export function UserMenu({
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((value) => !value)}
-        className="flex items-center gap-1 font-data text-xs text-paper transition-colors hover:text-amber"
+        className={`flex items-center gap-2 rounded-full py-1 pl-1 pr-2.5 font-data text-xs text-paper transition-colors hover:bg-ink-surface ${
+          open ? "bg-ink-surface" : ""
+        }`}
       >
-        {displayName}
+        {/* Avatar con un punto ámbar cuando hay solicitudes de seguimiento
+            pendientes: antes solo se veían al abrir el menú. */}
+        <span className="relative">
+          <UserAvatar avatarUrl={avatarUrl} username={username} name={displayName} size="nav" />
+          {pendingFollowRequests > 0 ? (
+            <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-amber ring-2 ring-ink">
+              <span className="sr-only">{t("pendingFollowRequests", { count: pendingFollowRequests })}</span>
+            </span>
+          ) : null}
+        </span>
+        <span className="max-w-40 truncate">{displayName}</span>
         <ChevronDown open={open} />
       </button>
       {open && (
-        <div className="absolute right-0 z-20 w-56 rounded-md border border-ink-border bg-ink p-1 pt-2 shadow-lg">
-          <UserMenuList
-            id={panelId}
-            username={username}
-            pendingFollowRequests={pendingFollowRequests}
-            surface="header"
-            permissions={permissions}
-            onNavigate={() => setOpen(false)}
-            logoutPending={logoutPending}
-            logoutError={logoutError}
-            onLogout={onLogout}
-          />
+        // `pt-2` invisible entre el disparador y el panel: el cursor cruza ese
+        // hueco sin salir del contenedor (el menú se abre al pasar el cursor).
+        <div className="absolute right-0 top-full z-20 w-60 pt-2">
+          <div className="themed-scrollbar max-h-[calc(100vh-5rem)] overflow-y-auto rounded-lg border border-ink-border bg-ink-surface p-1 shadow-xl shadow-black/50">
+            <div className="flex items-center gap-2.5 px-3 pb-2.5 pt-2">
+              <UserAvatar avatarUrl={avatarUrl} username={username} name={displayName} size="menu" />
+              <span className="min-w-0">
+                <span className="block truncate font-display text-sm text-paper">{displayName}</span>
+                <span className="block truncate font-data text-xs text-paper-muted">@{username}</span>
+              </span>
+            </div>
+            <div className="border-t border-ink-border pt-1">
+              <UserMenuList
+                id={panelId}
+                username={username}
+                pendingFollowRequests={pendingFollowRequests}
+                surface="header"
+                permissions={permissions}
+                onNavigate={() => setOpen(false)}
+                logoutPending={logoutPending}
+                logoutError={logoutError}
+                onLogout={onLogout}
+              />
+            </div>
+          </div>
         </div>
       )}
       {!open && logoutError && (

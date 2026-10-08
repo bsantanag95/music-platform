@@ -21,7 +21,7 @@ export function SettingsNav({ screens, badges = {} }: SettingsNavProps) {
   return (
     <nav
       aria-label={t("settings.nav.label")}
-      className="flex gap-1 overflow-x-auto pb-1 md:sticky md:top-8 md:flex-col md:self-start md:overflow-visible md:pb-0"
+      className="flex gap-1 overflow-x-auto pb-1 md:sticky md:top-20 md:flex-col md:self-start md:overflow-visible md:pb-0"
     >
       {screens.map((screen) => {
         const active = pathname === screen.href || pathname.startsWith(`${screen.href}/`);

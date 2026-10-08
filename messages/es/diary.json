@@ -10,7 +10,7 @@
   "signInToListen": "Iniciar sesión para registrar escuchas",
   "listening": "Registrando...",
   "global": {
-    "trigger": "Registrar",
+    "trigger": "Registrar escucha",
     "title": "Registrar una escucha",
     "close": "Cerrar",
     "pickPrompt": "¿Qué quieres registrar?",
