@@ -30,6 +30,8 @@ import artistJourneyEs from "../../messages/es/artistJourney.json";
 import artistJourneyEn from "../../messages/en/artistJourney.json";
 import caminoEs from "../../messages/es/camino.json";
 import caminoEn from "../../messages/en/camino.json";
+import quickActionsEs from "../../messages/es/quickActions.json";
+import quickActionsEn from "../../messages/en/quickActions.json";
 
 const messagesByLocale = {
   es: {
@@ -47,6 +49,7 @@ const messagesByLocale = {
     ratings: ratingsEs,
     artistJourney: artistJourneyEs,
     camino: caminoEs,
+    quickActions: quickActionsEs,
   },
   en: {
     common: commonEn,
@@ -63,6 +66,7 @@ const messagesByLocale = {
     ratings: ratingsEn,
     artistJourney: artistJourneyEn,
     camino: caminoEn,
+    quickActions: quickActionsEn,
   },
 };
 

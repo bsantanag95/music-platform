@@ -2,13 +2,13 @@
 
 import { useCallback, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { RegisterListenDialog } from "./RegisterListenDialog";
+import { QuickActionsDialog } from "./QuickActionsDialog";
 
-// Disparador del acceso global "+ Registrar" en la barra general del Header
-// (cambio add-global-listen-logging). Solo se monta con sesión — lo decide el
-// Header. Es una acción, no un enlace: estilo botón sutil con "+".
-export function RegisterListenButton() {
-  const t = useTranslations("diary");
+// Disparador del acceso global "+ Añadir" en la zona de usuario del Header, junto al menú
+// (openspec: add-header-quick-actions, D10; antes `RegisterListenButton` en la barra general). Solo
+// se monta con sesión — lo decide el Header. Es una acción, no un enlace: botón ámbar con "+".
+export function QuickActionsButton() {
+  const t = useTranslations("quickActions");
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -36,9 +36,9 @@ export function RegisterListenButton() {
         >
           <path d="M12 5v14M5 12h14" />
         </svg>
-        {t("global.trigger")}
+        {t("trigger")}
       </button>
-      {open ? <RegisterListenDialog onClose={close} /> : null}
+      {open ? <QuickActionsDialog onClose={close} /> : null}
     </>
   );
 }

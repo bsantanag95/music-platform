@@ -925,6 +925,17 @@ export const ReleaseGroupMarksSchema = z.object({
 });
 export type ReleaseGroupMarks = z.infer<typeof ReleaseGroupMarksSchema>;
 
+// Marcas del usuario sobre un artista, álbum o canción (openspec: add-header-quick-actions). Las
+// pide el diálogo de acciones rápidas del Header para no alternar una marca por accidente.
+// `pending` es `null` para canciones: Pendiente no las admite.
+export const TargetMarksSchema = z.object({
+  favorite: z.boolean(),
+  pending: z.boolean().nullable(),
+  stars: z.number().nullable(),
+  detailedScore: z.number().int().nullable(),
+});
+export type TargetMarks = z.infer<typeof TargetMarksSchema>;
+
 export const FollowedArtistSchema = z.object({
   id: z.uuid(),
   name: z.string(),

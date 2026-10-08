@@ -1,0 +1,80 @@
+{
+  "trigger": "Add",
+  "title": "Add",
+  "close": "Close",
+  "actionsLabel": "What do you want to do",
+  "actions": {
+    "listen": "Listen",
+    "rate": "Rate",
+    "favorite": "Favorite",
+    "pending": "Pending",
+    "addToList": "To list",
+    "newList": "New list"
+  },
+  "prompt": {
+    "listen": "What do you want to log?",
+    "rate": "What do you want to rate?",
+    "favorite": "What do you want to favorite?",
+    "pending": "What do you want to leave pending?",
+    "addToList": "What do you want to add to a list?"
+  },
+  "picker": {
+    "typeLabel": "What to search",
+    "searchPlaceholder": "Search an album, artist or song",
+    "searchPlaceholderPending": "Search an album or an artist",
+    "hint": "Type at least two letters to search.",
+    "searching": "Searching...",
+    "searchError": "Couldn't search. Try again.",
+    "noResults": "No results for “{query}”.",
+    "typeAlbum": "Album",
+    "typeArtist": "Artist",
+    "typeSong": "Song"
+  },
+  "chooseAnother": "Choose another",
+  "saveError": "We couldn't save the change. Try again.",
+  "signIn": "Sign in to continue",
+  "listen": {
+    "creating": "Logging...",
+    "created": "Logged: {title}",
+    "registerAnother": "Log another",
+    "viewDiary": "View my diary"
+  },
+  "rate": {
+    "loading": "Loading your rating...",
+    "legend": "Your rating for {title}",
+    "starsValue": "{stars} stars",
+    "saved": "Saved: {stars} stars for {title}",
+    "scoreDropped": "Your score {score} was removed: it doesn't match {stars} stars.",
+    "openPage": "Expand on the page",
+    "scoreLabel": "Score (1–100, optional)",
+    "scoreInvalid": "Enter a whole number between 1 and 100."
+  },
+  "mark": {
+    "checking": "Checking...",
+    "undo": "Undo",
+    "remove": "Remove",
+    "favorite": {
+      "added": "Added to your favorites: {title}",
+      "already": "{title} is already in your favorites",
+      "removed": "Removed from your favorites: {title}"
+    },
+    "pending": {
+      "added": "Added to your Pending: {title}",
+      "already": "{title} is already in your Pending",
+      "removed": "Removed from your Pending: {title}"
+    }
+  },
+  "newList": {
+    "titleLabel": "List name",
+    "typeLabel": "List type",
+    "typeArtist": "Artists",
+    "typeAlbum": "Albums",
+    "typeSong": "Songs",
+    "submit": "Create list",
+    "creating": "Creating...",
+    "titleRequired": "Title is required",
+    "created": "List created: {title}",
+    "viewList": "View list",
+    "addItems": "Add to this list"
+  }
+}

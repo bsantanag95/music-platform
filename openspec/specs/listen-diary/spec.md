@@ -388,13 +388,15 @@ El sistema SHALL ofrecer en las páginas de artista, álbum y canción una acci�
 que cree la escucha al instante y permita ampliarla después. El sistema SHALL ofrecer
 además un **punto de entrada global** —fuera de toda página de entidad, disponible solo con
 sesión— que primero resuelva el objetivo mediante el buscador del catálogo (artista, álbum
-o canción) y luego corra ese mismo flujo de creación inmediata y ampliación. La acción SHALL
-rotularse como **"Registrar escucha"** (o "Anotar en el diario" en superficies narrativas),
-NUNCA con un lenguaje que sugiera marcar algo como completado. La acción SHALL tener estados
-de carga, éxito, error y sesión requerida, y no SHALL bloquear la carga del contenido
-musical. La escucha así creada SHALL nacer con audiencia `private` (ver "Audiencia de la
-escucha"), sin importar si se inició desde una página de entidad o desde el punto de entrada
-global.
+o canción) y luego corra ese mismo flujo de creación inmediata y ampliación. El punto de
+entrada global SHALL ser la acción **Escucha** del diálogo de acciones rápidas del Header
+(`header-quick-actions`), que SHALL abrirse siempre con esa acción seleccionada para que
+registrar una escucha no sume pasos. La acción SHALL rotularse como **"Registrar escucha"**
+(o "Anotar en el diario" en superficies narrativas), NUNCA con un lenguaje que sugiera
+marcar algo como completado. La acción SHALL tener estados de carga, éxito, error y sesión
+requerida, y no SHALL bloquear la carga del contenido musical. La escucha así creada SHALL
+nacer con audiencia `private` (ver "Audiencia de la escucha"), sin importar si se inició
+desde una página de entidad o desde el punto de entrada global.
 
 #### Scenario: Acción sin sesión
 
@@ -413,6 +415,12 @@ global.
   canción y elige un resultado
 - **THEN** se crea la escucha sobre ese objetivo con audiencia `private` y se ofrece el
   mismo panel de ampliación que la acción de las páginas de entidad
+
+#### Scenario: El punto de entrada global abre en Escucha
+
+- **WHEN** un usuario autenticado abre el diálogo de acciones rápidas del Header
+- **THEN** la acción "Escucha" está seleccionada y el foco está en el buscador, de modo que
+  registrar una escucha cuesta abrir y escribir
 
 #### Scenario: Punto de entrada global sin sesión
 
@@ -658,3 +666,4 @@ vuelve a regirse únicamente por su audiencia y por la matriz de visibilidad gen
 - **WHEN** una request intenta destacar una entrada de diario que no pertenece a quien la
   envía
 - **THEN** la API responde `404` con código `LISTEN_ENTRY_NOT_FOUND` y no destaca nada
+

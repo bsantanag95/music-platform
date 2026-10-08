@@ -1925,11 +1925,12 @@ server-side.
 
 ### `POST /api/me/favorites`
 
-Marca un favorito (toggle on). Idempotente: si el objetivo ya es favorito, devuelve el existente
-sin duplicar.
+**Alterna** el favorito (toggle): si el objetivo no era favorito lo crea; si ya lo era, lo **quita**.
+No es idempotente. Quien necesite agregar sin riesgo de quitar debe conocer el estado antes
+(`GET /api/me/marks`) o usar `DELETE` para quitar.
 
 **Body:** `{ target: { type: "artist" | "release-group" | "recording", id }, audience? }`.
-**201 OK:** `{ favorite }` si se creó. **200 OK:** `{ favorite }` si ya existía. **404** con
+**201 OK:** `{ favorite }` si se creó. **200 OK:** `{ favorite: null }` si ya existía y se quitó. **404** con
 `FAVORITE_TARGET_INVALID` si el objetivo no existe. **401** con `AUTH_REQUIRED` sin sesión.
 
 ### `DELETE /api/me/favorites`
@@ -1985,11 +1986,11 @@ lecturas requieren sesión.
 
 ### `POST /api/me/want-to-listen`
 
-Marca un objetivo (toggle on). Idempotente: si ya está en la lista, devuelve la entrada existente
-sin duplicar.
+**Alterna** la entrada (toggle): si el objetivo no estaba en la lista lo agrega; si ya estaba, lo
+**quita**. No es idempotente (usar `GET /api/me/marks` para conocer el estado antes).
 
 **Body:** `{ target: { type: "artist" | "release-group", id } }`.
-**201 OK:** `{ entry }` si se creó. **200 OK:** `{ entry }` si ya existía. **400** con
+**201 OK:** `{ entry }` si se creó. **200 OK:** `{ entry: null }` si ya existía y se quitó. **400** con
 `VALIDATION_ERROR` si `type` es `recording` u otro valor inválido. **404** con
 `WANT_TO_LISTEN_TARGET_INVALID` si el objetivo no existe. **401** con `AUTH_REQUIRED` sin sesión.
 
@@ -2051,6 +2052,20 @@ al abrirse; ninguna página las precarga.
 Caminos no archivados) que contienen el disco. `Cache-Control: no-store`.
 **400** con `VALIDATION_ERROR` si el id no es UUID. **401** con `AUTH_REQUIRED` sin sesión.
 **404** con `ALBUM_NOT_FOUND` si el disco no existe.
+
+## Marcas de un objetivo (cambio `add-header-quick-actions`)
+
+### `GET /api/me/marks?type=&id=`
+
+Marcas del usuario en sesión sobre un artista, álbum o canción, para el diálogo de acciones rápidas
+del Header. Se piden antes de marcar un favorito o un Pendiente, porque sus `POST` alternan. Más chico
+que `GET /api/me/release-groups/[id]/marks` (que sigue sirviendo al menú "…" de los discos).
+
+**Query:** `type` ∈ `artist` | `release-group` | `recording`; `id` UUID.
+**200 OK:** `{ favorite, pending, stars, detailedScore }` — `pending` es `null` para canciones
+(Pendiente no las admite); `stars` y `detailedScore` son `null` sin valoración.
+`Cache-Control: no-store`. **400** con `VALIDATION_ERROR` si `type` o `id` son inválidos.
+**401** con `AUTH_REQUIRED` sin sesión. **404** con `INVALID_TARGET` si el objetivo no existe.
 
 ## Listas (Fase 5.5, cambio `add-favorites-and-lists`)
 

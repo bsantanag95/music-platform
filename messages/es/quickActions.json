@@ -1,0 +1,80 @@
+{
+  "trigger": "Añadir",
+  "title": "Añadir",
+  "close": "Cerrar",
+  "actionsLabel": "Qué quieres hacer",
+  "actions": {
+    "listen": "Escucha",
+    "rate": "Valorar",
+    "favorite": "Favorito",
+    "pending": "Pendiente",
+    "addToList": "A lista",
+    "newList": "Nueva lista"
+  },
+  "prompt": {
+    "listen": "¿Qué quieres registrar?",
+    "rate": "¿Qué quieres valorar?",
+    "favorite": "¿Qué quieres marcar como favorito?",
+    "pending": "¿Qué quieres dejar pendiente?",
+    "addToList": "¿Qué quieres agregar a una lista?"
+  },
+  "picker": {
+    "typeLabel": "Qué buscar",
+    "searchPlaceholder": "Busca un álbum, artista o canción",
+    "searchPlaceholderPending": "Busca un álbum o un artista",
+    "hint": "Escribe al menos dos letras para buscar.",
+    "searching": "Buscando...",
+    "searchError": "No se pudo buscar. Prueba de nuevo.",
+    "noResults": "Sin resultados para «{query}».",
+    "typeAlbum": "Álbum",
+    "typeArtist": "Artista",
+    "typeSong": "Canción"
+  },
+  "chooseAnother": "Elegir otro",
+  "saveError": "No pudimos guardar el cambio. Intenta de nuevo.",
+  "signIn": "Iniciar sesión para continuar",
+  "listen": {
+    "creating": "Registrando...",
+    "created": "Registrada: {title}",
+    "registerAnother": "Registrar otra",
+    "viewDiary": "Ver mi diario"
+  },
+  "rate": {
+    "loading": "Cargando tu nota...",
+    "legend": "Tu nota para {title}",
+    "starsValue": "{stars} estrellas",
+    "saved": "Guardado: {stars} estrellas para {title}",
+    "scoreDropped": "Se quitó tu puntuación {score}: no corresponde a {stars} estrellas.",
+    "openPage": "Ampliar en la página",
+    "scoreLabel": "Puntuación (1–100, opcional)",
+    "scoreInvalid": "Escribe un número entero entre 1 y 100."
+  },
+  "mark": {
+    "checking": "Comprobando...",
+    "undo": "Deshacer",
+    "remove": "Quitar",
+    "favorite": {
+      "added": "Agregado a tus favoritos: {title}",
+      "already": "{title} ya está en tus favoritos",
+      "removed": "Se quitó de tus favoritos: {title}"
+    },
+    "pending": {
+      "added": "Agregado a tus Pendientes: {title}",
+      "already": "{title} ya está en tus Pendientes",
+      "removed": "Se quitó de tus Pendientes: {title}"
+    }
+  },
+  "newList": {
+    "titleLabel": "Nombre de la lista",
+    "typeLabel": "Tipo de lista",
+    "typeArtist": "Artistas",
+    "typeAlbum": "Álbumes",
+    "typeSong": "Canciones",
+    "submit": "Crear lista",
+    "creating": "Creando...",
+    "titleRequired": "El título es obligatorio",
+    "created": "Lista creada: {title}",
+    "viewList": "Ver lista",
+    "addItems": "Agregar a esta lista"
+  }
+}

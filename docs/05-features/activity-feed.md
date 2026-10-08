@@ -391,7 +391,7 @@ escalar sobre `credit` con `role='primary'`).
 ## Superficie pública `/activity` (`add-community-activity-surface`)
 
 Vitrina pública de actividad de la comunidad, enlazada desde la barra general del Header
-junto a Buscador · Explorar · Listas · Registrar. Accesible con y sin sesión.
+junto a Buscador · Explorar · Listas. Accesible con y sin sesión.
 
 Sin sesión, la página muestra una única sección sin pestañas:
 

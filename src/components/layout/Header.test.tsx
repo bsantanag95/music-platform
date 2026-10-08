@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent, within } from "@testing-library/react";
 import { Header } from "./Header";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 
@@ -75,7 +75,7 @@ vi.mock("next-intl", async () => {
         administration: "Administración",
         openMenu: "Abrir menú",
         closeMenu: "Cerrar menú",
-        "global.trigger": "Registrar",
+        trigger: "Añadir",
       };
       if (map[key]) return map[key];
       if (values && "count" in values) return `${key}:${values.count}`;
@@ -230,25 +230,53 @@ describe("Header", () => {
     expect(screen.getAllByRole("link", { name: "Actividad" })[0]).toHaveAttribute("href", "/activity");
   });
 
-  it("el control 'Registrar' no aparece sin sesión", () => {
+  it("el control 'Añadir' no aparece sin sesión", () => {
     renderWithIntl(<Header />);
-    expect(screen.queryByRole("button", { name: /Registrar/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Añadir/ })).not.toBeInTheDocument();
   });
 
-  it("el control 'Registrar' aparece con sesión en la barra general", () => {
+  it("el control 'Añadir' aparece con sesión, en la zona de usuario y no en la barra general", () => {
     renderWithIntl(
       <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
     );
-    // Uno en la barra de escritorio; el panel móvil está cerrado.
-    expect(screen.getByRole("button", { name: /Registrar/ })).toBeInTheDocument();
+    // Uno en la zona de usuario de escritorio; el panel móvil está cerrado.
+    const add = screen.getByRole("button", { name: /Añadir/ });
+    expect(add).toBeInTheDocument();
+    const generalNav = screen.getAllByRole("navigation", { name: "Navegación general" })[0]!;
+    expect(generalNav).not.toContainElement(add);
   });
 
-  it("abre el modal de registro sin QueryClientProvider (el Header vive fuera de Providers)", () => {
+  it("el control 'Añadir' va entre el selector de idioma y el menú de usuario", () => {
+    renderWithIntl(
+      <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
+    );
+    const locale = screen.getByRole("navigation", { name: "Idioma" });
+    const add = screen.getByRole("button", { name: /Añadir/ });
+    const userMenu = screen.getByRole("button", { name: "Ana" });
+    expect(locale.compareDocumentPosition(add) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(add.compareDocumentPosition(userMenu) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("en el panel colapsado 'Añadir' encabeza el bloque de usuario y no está en la barra general", () => {
+    renderWithIntl(
+      <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Abrir menú" }));
+
+    const panel = document.getElementById("header-mobile-menu")!;
+    const [panelGeneralNav] = [...panel.querySelectorAll('nav[aria-label="Navegación general"]')];
+    const add = within(panel).getByRole("button", { name: /Añadir/ });
+    expect(panelGeneralNav).not.toContainElement(add);
+    const profile = panel.querySelector('a[href="/users/ana"]')!;
+    expect(add.compareDocumentPosition(profile) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("abre el diálogo de acciones rápidas sin QueryClientProvider (el Header vive fuera de Providers)", () => {
     renderWithIntl(
       <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /Registrar/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Añadir/ }));
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
