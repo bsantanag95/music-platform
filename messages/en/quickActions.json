@@ -45,9 +45,7 @@
     "starsValue": "{stars} stars",
     "saved": "Saved: {stars} stars for {title}",
     "scoreDropped": "Your score {score} was removed: it doesn't match {stars} stars.",
-    "openPage": "Expand on the page",
-    "scoreLabel": "Score (1–100, optional)",
-    "scoreInvalid": "Enter a whole number between 1 and 100."
+    "openPage": "Expand on the page"
   },
   "mark": {
     "checking": "Checking...",

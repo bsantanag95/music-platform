@@ -108,53 +108,53 @@ describe("RatePanel", () => {
     expect(await screen.findByText(/Se quitó tu puntuación 55/)).toBeInTheDocument();
   });
 
-  it("puntuar con el número envía solo el puntaje y muestra las estrellas que deriva el servidor", async () => {
+  it("puntuar con el deslizador envía solo el puntaje y muestra las estrellas que deriva el servidor", async () => {
     mocks.getTargetMarks
       .mockResolvedValueOnce(noMarks)
       .mockResolvedValueOnce({ ...noMarks, stars: 4.5, detailedScore: 90 });
     mocks.saveRating.mockResolvedValue({});
     renderWithIntl(<RatePanel target={album} onReset={() => {}} onNavigate={() => {}} />);
 
-    const field = await screen.findByLabelText("Puntuación (1–100, opcional)");
-    await userEvent.type(field, "90{Enter}");
+    const slider = await screen.findByRole("slider");
+    expect(screen.getByText("—/100")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Guardar" })).toBeDisabled();
+
+    fireEvent.change(slider, { target: { value: "90" } });
+    expect(screen.getByText("90/100")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Guardar" }));
 
     await waitFor(() => expect(mocks.saveRating).toHaveBeenCalledWith("release-group", album.id, { detailedScore: 90 }));
     expect(await screen.findByRole("radio", { name: "4,5 estrellas" })).toBeChecked();
-    expect(field).toHaveValue("90");
     expect(mocks.saveRating).toHaveBeenCalledTimes(1);
   });
 
-  it("precarga la puntuación vigente", async () => {
-    mocks.getTargetMarks.mockResolvedValue({ ...noMarks, stars: 5, detailedScore: 95 });
+  it("precarga la puntuación vigente y limita el deslizador al tramo de las estrellas", async () => {
+    mocks.getTargetMarks.mockResolvedValue({ ...noMarks, stars: 4, detailedScore: 75 });
     renderWithIntl(<RatePanel target={album} onReset={() => {}} onNavigate={() => {}} />);
-    expect(await screen.findByLabelText("Puntuación (1–100, opcional)")).toHaveValue("95");
+    const slider = await screen.findByRole("slider");
+    expect(slider).toHaveValue("75");
+    expect(slider).toHaveAttribute("min", "71");
+    expect(slider).toHaveAttribute("max", "80");
+    expect(screen.getByRole("button", { name: "Guardar" })).toBeDisabled();
   });
 
-  it("una puntuación fuera de rango o no entera no guarda y lo indica", async () => {
+  it("sin estrellas el deslizador va de 1 a 100", async () => {
     mocks.getTargetMarks.mockResolvedValue(noMarks);
     renderWithIntl(<RatePanel target={album} onReset={() => {}} onNavigate={() => {}} />);
-    const field = await screen.findByLabelText("Puntuación (1–100, opcional)");
-
-    await userEvent.type(field, "150{Enter}");
-    expect(await screen.findByRole("alert")).toHaveTextContent("entre 1 y 100");
-
-    await userEvent.clear(field);
-    await userEvent.type(field, "0{Enter}");
-    expect(screen.getByRole("alert")).toHaveTextContent("entre 1 y 100");
-
-    await userEvent.clear(field);
-    await userEvent.type(field, "7a{Enter}");
-    expect(screen.getByRole("alert")).toHaveTextContent("entre 1 y 100");
-    expect(mocks.saveRating).not.toHaveBeenCalled();
+    const slider = await screen.findByRole("slider");
+    expect(slider).toHaveAttribute("min", "1");
+    expect(slider).toHaveAttribute("max", "100");
   });
 
-  it("confirmar sin cambios no vuelve a guardar", async () => {
+  it("los botones − y + ajustan de a 1 y Guardar queda deshabilitado si no cambia", async () => {
     mocks.getTargetMarks.mockResolvedValue({ ...noMarks, stars: 5, detailedScore: 95 });
     renderWithIntl(<RatePanel target={album} onReset={() => {}} onNavigate={() => {}} />);
-    const field = await screen.findByLabelText("Puntuación (1–100, opcional)");
-    await userEvent.click(field);
-    await userEvent.keyboard("{Enter}");
-    await userEvent.tab();
+    await screen.findByRole("slider");
+    await userEvent.click(screen.getByRole("button", { name: "Restar 1" }));
+    expect(screen.getByText("94/100")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Guardar" })).toBeEnabled();
+    await userEvent.click(screen.getByRole("button", { name: "Sumar 1" }));
+    expect(screen.getByRole("button", { name: "Guardar" })).toBeDisabled();
     expect(mocks.saveRating).not.toHaveBeenCalled();
   });
 
@@ -162,13 +162,13 @@ describe("RatePanel", () => {
     mocks.getTargetMarks.mockResolvedValue({ ...noMarks, stars: 5, detailedScore: 95 });
     mocks.saveRating.mockRejectedValue(new ApiError("INTERNAL_ERROR", 500, "x"));
     renderWithIntl(<RatePanel target={album} onReset={() => {}} onNavigate={() => {}} />);
-    const field = await screen.findByLabelText("Puntuación (1–100, opcional)");
+    const slider = await screen.findByRole("slider");
 
-    await userEvent.clear(field);
-    await userEvent.type(field, "93{Enter}");
+    fireEvent.change(slider, { target: { value: "93" } });
+    await userEvent.click(screen.getByRole("button", { name: "Guardar" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("No pudimos guardar");
-    expect(field).toHaveValue("95");
+    expect(screen.getByText("95/100")).toBeInTheDocument();
   });
 
   it("si guardar falla restaura las estrellas y muestra el error", async () => {
