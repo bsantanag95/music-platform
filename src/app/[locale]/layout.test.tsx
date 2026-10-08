@@ -18,6 +18,7 @@ vi.mock("next-intl/server", () => ({ getMessages: vi.fn().mockResolvedValue({ co
 vi.mock("next-intl", () => ({ NextIntlClientProvider: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: mocks.resolveSession }));
 vi.mock("@/services/auth/authorization", () => ({ getUserPermissions: mocks.getUserPermissions }));
+vi.mock("@/services/storage/avatar-urls", () => ({ resolveImageUrl: async () => null }));
 vi.mock("@/services/social/following", () => ({ countPendingFollowRequests: mocks.countPendingFollowRequests }));
 vi.mock("@/components/layout/Header", () => ({ Header: mocks.header }));
 vi.mock("@/components/layout/Footer", () => ({ Footer: mocks.footer }));
@@ -42,7 +43,8 @@ describe("RootLayout", () => {
     render(layout);
 
     expect(mocks.header).toHaveBeenCalledWith(
-      expect.objectContaining({ user: { id: "u1", username: "ana", displayName: "Ana" } }),
+      // `avatarUrl` resuelto aparte (null sin foto); nunca la fila completa del usuario.
+      expect.objectContaining({ user: { id: "u1", username: "ana", displayName: "Ana", avatarUrl: null } }),
       undefined,
     );
     const headerProps = mocks.header.mock.calls[0]?.[0] as {
@@ -54,7 +56,7 @@ describe("RootLayout", () => {
     expect(headerProps.pendingFollowRequests).toBe(0);
     expect(mocks.countPendingFollowRequests).toHaveBeenCalledWith("u1");
 
-    // El Footer recibe el mismo usuario público que el Header.
+    // El Footer recibe el mismo usuario público que el Header, sin la foto.
     expect(mocks.footer).toHaveBeenCalledWith(
       expect.objectContaining({ user: { id: "u1", username: "ana", displayName: "Ana" } }),
       undefined,

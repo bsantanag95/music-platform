@@ -1,3 +1,4 @@
+import { resolveImageUrl } from "@/services/storage/avatar-urls";
 import type { Metadata } from "next";
 import { Space_Grotesk, Source_Serif_4, IBM_Plex_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
@@ -58,12 +59,14 @@ export default async function RootLayout({
   const session = await resolveSession();
   const exploreEnabled = isExploreEnabled();
   const publicUser = session?.user
-      ? {
-         id: session.user.id,
-         username: session.user.username,
-         displayName: session.user.displayName,
-       }
+    ? {
+        id: session.user.id,
+        username: session.user.username,
+        displayName: session.user.displayName,
+      }
     : null;
+  // Foto de perfil para el menú de usuario del Header (monograma si no hay).
+  const avatarUrl = session?.user ? await resolveImageUrl(session.user.avatarImageId) : null;
   const platformPermissions = session?.user ? await getUserPermissions(session.user.id) : [];
   // Badge del menú de usuario: solicitudes de seguimiento pendientes recibidas.
   const pendingFollowRequests = session?.user
@@ -79,7 +82,7 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <span id="top" aria-hidden="true" />
           <Header
-            user={publicUser}
+            user={publicUser ? { ...publicUser, avatarUrl } : null}
             exploreEnabled={exploreEnabled}
             pendingFollowRequests={pendingFollowRequests}
             platformPermissions={platformPermissions}

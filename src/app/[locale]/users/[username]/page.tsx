@@ -144,7 +144,7 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
 
   const content = (
     <div className="grid w-full max-w-5xl gap-8 lg:grid-cols-[19rem_minmax(0,1fr)] lg:gap-10">
-      <aside className="flex flex-col gap-6 lg:sticky lg:top-8 lg:self-start">
+      <aside className="flex flex-col gap-6 lg:sticky lg:top-20 lg:self-start">
         {isOwn ? <EditablePlaca profile={profile}>{placa}</EditablePlaca> : placa}
         {isOwn && (
           <Suspense fallback={<SectionFallback />}>

@@ -5,12 +5,14 @@ interface UserAvatarProps {
   avatarUrl: string | null;
   username: string;
   name: string;
-  size: "xs" | "sm" | "md" | "lg";
+  size: "xs" | "nav" | "menu" | "sm" | "md" | "lg";
   className?: string;
 }
 
 const SIZE_MAP = {
   xs: { px: 16, font: "text-[0.55rem]", border: "rounded-full" },
+  nav: { px: 28, font: "text-xs", border: "rounded-full" },
+  menu: { px: 36, font: "text-sm", border: "rounded-full" },
   sm: { px: 44, font: "text-lg", border: "rounded-full" },
   md: { px: 64, font: "text-2xl", border: "rounded-full" },
   lg: { px: 64, font: "text-2xl", border: "rounded-lg" },

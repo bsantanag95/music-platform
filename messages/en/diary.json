@@ -10,7 +10,7 @@
   "signInToListen": "Log in to record listens",
   "listening": "Logging...",
   "global": {
-    "trigger": "Log",
+    "trigger": "Log listen",
     "title": "Log a listen",
     "close": "Close",
     "pickPrompt": "What do you want to log?",
