@@ -30,7 +30,12 @@ export function EntriesIndex({ entries, actions }: WantToListenRendererProps) {
           </Link>
           <div className="flex shrink-0 items-center gap-3 opacity-100 transition-opacity focus-within:opacity-100 sm:opacity-40 sm:group-hover:opacity-100">
             {entry.targetType === "artist" ? (
-              <WantToListenArtistJourneyAction artistId={entry.target.id} />
+              <WantToListenArtistJourneyAction
+                artistId={entry.target.id}
+                status={actions.journeyStatus(entry.target.id)}
+                onAdded={actions.journeyAdded}
+                onError={actions.journeyError}
+              />
             ) : null}
             <RemoveEntryButton
               title={entry.target.title}

@@ -179,6 +179,21 @@ describe("servicio de artist-journeys", () => {
     expect(detail.albums.find((a) => a.id === sg2)?.listened).toBe(false);
   });
 
+  it("listJourneyArtistIds devuelve solo los artistas con recorrido, sin tocar la discografía", async () => {
+    const { listJourneyArtistIds } = await import("./artist-journeys");
+    mocks.db.select.mockReturnValueOnce(chain([{ artistId }, { artistId: null }]));
+
+    expect(await listJourneyArtistIds(ownerId, [artistId, sg1])).toEqual([artistId]);
+    expect(mocks.findOrIngestDiscography).not.toHaveBeenCalled();
+    expect(mocks.getArtistById).not.toHaveBeenCalled();
+  });
+
+  it("listJourneyArtistIds con una lista vacía no consulta la base", async () => {
+    const { listJourneyArtistIds } = await import("./artist-journeys");
+    expect(await listJourneyArtistIds(ownerId, [])).toEqual([]);
+    expect(mocks.db.select).not.toHaveBeenCalled();
+  });
+
   it("el detalle sin recorrido devuelve null sin leer ni ingerir la discografía", async () => {
     const { getArtistJourneyDetail } = await import("./artist-journeys");
 
