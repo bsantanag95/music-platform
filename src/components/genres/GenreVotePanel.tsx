@@ -60,6 +60,7 @@ function Proposer({ existing, disabled, onPick }: { existing: Set<string>; disab
       <input
         id={inputId}
         type="search"
+        autoComplete="off"
         value={text}
         disabled={disabled}
         placeholder={t("proposePlaceholder")}

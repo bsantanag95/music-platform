@@ -37,6 +37,7 @@ export function ListsToolbar({
     <div className="flex flex-col gap-2">
       <input
         type="search"
+        autoComplete="off"
         value={searchInput}
         onChange={(e) => onSearchInput(e.target.value)}
         placeholder={searchPlaceholder}

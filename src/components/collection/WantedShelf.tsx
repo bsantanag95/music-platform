@@ -184,6 +184,7 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
       <div className="flex flex-col gap-2">
         <input
           type="search"
+          autoComplete="off"
           value={searchInput}
           onChange={(event) => setSearchInput(event.target.value)}
           placeholder={t("searchPlaceholder")}

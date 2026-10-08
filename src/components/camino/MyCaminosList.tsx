@@ -159,6 +159,7 @@ export function MyCaminosList({ caminos: initial }: MyCaminosListProps) {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <input
             type="search"
+            autoComplete="off"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t("searchPlaceholder")}

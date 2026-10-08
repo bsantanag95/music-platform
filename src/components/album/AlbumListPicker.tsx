@@ -195,6 +195,7 @@ export function AlbumListPicker({ target, memberships, onMembershipsChange, onCl
     >
       <input
         type="search"
+        autoComplete="off"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder={t("search")}

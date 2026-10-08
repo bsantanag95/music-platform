@@ -99,6 +99,7 @@ export function FavoritePicker({
         <div className="mt-2 flex flex-col gap-2">
           <input
             type="search"
+            autoComplete="off"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             aria-label={t("favoritePicker.searchLabel")}

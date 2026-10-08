@@ -71,6 +71,7 @@ export function CollectionToolbar({
     <div className="flex flex-col gap-2">
       <input
         type="search"
+        autoComplete="off"
         value={searchInput}
         onChange={(event) => onSearchInput(event.target.value)}
         placeholder={t("searchPlaceholder")}

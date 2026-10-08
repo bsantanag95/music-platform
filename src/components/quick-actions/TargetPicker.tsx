@@ -114,6 +114,7 @@ export function TargetPicker({
         id={inputId}
         ref={inputRef}
         type="search"
+        autoComplete="off"
         value={rawQuery}
         onChange={(e) => onRawQueryChange(e.target.value)}
         placeholder={types.includes("song") ? t("searchPlaceholder") : t("searchPlaceholderPending")}

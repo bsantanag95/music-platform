@@ -567,6 +567,7 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
     <div className="flex w-full flex-col gap-2">
       <input
         type="search"
+        autoComplete="off"
         value={searchInput}
         onChange={(event) => setSearchInput(event.target.value)}
         placeholder={t("searchPlaceholder")}

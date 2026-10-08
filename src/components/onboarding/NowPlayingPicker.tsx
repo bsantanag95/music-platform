@@ -64,6 +64,7 @@ export function NowPlayingPicker() {
         {t("door2.searchLabel")}
         <input
           type="search"
+          autoComplete="off"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t("door2.searchPlaceholder")}
