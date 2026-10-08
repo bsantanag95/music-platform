@@ -2,8 +2,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import sharp from "sharp";
 
+const afterCallbacks = vi.hoisted(() => [] as Array<() => Promise<void>>);
+
+vi.mock("next/server", () => ({
+  after: (callback: () => Promise<void>) => void afterCallbacks.push(callback),
+}));
+
 vi.mock("@/db", () => ({
-  db: { update: vi.fn() },
+  db: { update: vi.fn(), select: vi.fn() },
 }));
 
 vi.mock("@/services/storage", () => ({
@@ -13,7 +19,14 @@ vi.mock("@/services/storage", () => ({
 
 const { db } = await import("@/db");
 const { getStorageProvider, StorageConfigError } = await import("@/services/storage");
-const { IMMUTABLE_CACHE_CONTROL, isCoverMirrorEnabled, mirrorCover, revalidateCover, takedownCover } =
+const {
+  IMMUTABLE_CACHE_CONTROL,
+  isCoverMirrorEnabled,
+  mirrorCover,
+  revalidateCover,
+  scheduleCoverMirrors,
+  takedownCover,
+} =
   await import("./cover-mirror");
 
 const MBID = "mbid-rg-1";
@@ -233,5 +246,68 @@ describe("revalidateCover", () => {
     expect(provider.deleteCalls).toEqual(["old.webp"]);
     expect(chain.setValues[0]).toMatchObject({ coverStorageKey: provider.putCalls[0]!.key });
     vi.unstubAllGlobals();
+  });
+});
+
+describe("scheduleCoverMirrors", () => {
+  const original = process.env.COVER_ART_TAKEDOWN_EMAIL;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    afterCallbacks.length = 0;
+    process.env.COVER_ART_TAKEDOWN_EMAIL = "retiro@ejemplo.com";
+  });
+
+  afterEach(() => {
+    if (original === undefined) delete process.env.COVER_ART_TAKEDOWN_EMAIL;
+    else process.env.COVER_ART_TAKEDOWN_EMAIL = original;
+    vi.unstubAllGlobals();
+  });
+
+  function mockRows(rows: unknown[]) {
+    vi.mocked(db.select).mockReturnValue({ from: () => ({ where: async () => rows }) } as never);
+  }
+
+  it("sin ids no agenda nada", () => {
+    makeProvider();
+    scheduleCoverMirrors([]);
+    expect(afterCallbacks).toHaveLength(0);
+  });
+
+  it("con el espejo deshabilitado no agenda nada", () => {
+    delete process.env.COVER_ART_TAKEDOWN_EMAIL;
+    makeProvider();
+    scheduleCoverMirrors(["rg-1"]);
+    expect(afterCallbacks).toHaveLength(0);
+  });
+
+  it("agenda una sola tarea y espeja cada carátula en serie, tolerando fallas", async () => {
+    const provider = makeProvider();
+    const chain = makeUpdateChain();
+    mockRows([
+      { id: "rg-1", mbid: "mbid-1" },
+      { id: "rg-2", mbid: "mbid-2" },
+      { id: "rg-3", mbid: null },
+    ]);
+    const bytes = await solidPng(300, 300, 120);
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("red"))
+      .mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    scheduleCoverMirrors(["rg-1", "rg-2", "rg-3"]);
+    expect(afterCallbacks).toHaveLength(1);
+    await afterCallbacks[0]!();
+
+    // rg-1 falla la descarga y no detiene a rg-2; rg-3 no tiene mbid y se omite.
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(provider.putCalls).toHaveLength(1);
+    expect(chain.setValues).toHaveLength(1);
   });
 });

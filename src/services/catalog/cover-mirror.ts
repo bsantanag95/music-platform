@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, isNull, like } from "drizzle-orm";
+import { after } from "next/server";
 import sharp from "sharp";
 import { db } from "@/db";
 import { releaseGroup, type ReleaseGroupRow } from "@/db/schema";
@@ -99,6 +100,47 @@ export async function mirrorCover(
     .where(eq(releaseGroup.id, rg.id));
 
   return url;
+}
+
+const CAA_HOTLINK_PREFIX = "https://coverartarchive.org/";
+
+/**
+ * Espeja, después de responder, las carátulas de estos release-groups que todavía apuntan a Cover
+ * Art Archive (openspec: mirror-cover-art; ADR 0018). Las listas personales (Quiero escuchar) solo
+ * leen `cover_thumb_url`: sin esto un álbum ingerido antes del espejo seguía sirviéndose por
+ * hotlink — y por el optimizador de imágenes de Next, que descarga de CAA en cada petición — hasta
+ * que alguien abría su página. La respuesta actual conserva la URL vieja; la próxima ya usa el
+ * storage. Descargas en serie para no martillar archive.org; no lanza ni afecta la respuesta.
+ * Sin espejo habilitado, o fuera de una request de Next (scripts, tests), no hace nada.
+ */
+export function scheduleCoverMirrors(releaseGroupIds: string[]): void {
+  if (releaseGroupIds.length === 0 || !isCoverMirrorEnabled()) return;
+  try {
+    after(async () => {
+      const rows = await db
+        .select()
+        .from(releaseGroup)
+        .where(
+          and(
+            inArray(releaseGroup.id, releaseGroupIds),
+            like(releaseGroup.coverThumbUrl, `${CAA_HOTLINK_PREFIX}%`),
+            isNull(releaseGroup.coverStorageKey),
+            isNull(releaseGroup.coverBlockedAt),
+          ),
+        );
+      for (const rg of rows) {
+        if (!rg.mbid) continue;
+        try {
+          const fetched = await fetchCoverThumb(rg.mbid);
+          if (fetched.status === "found") await mirrorCover(rg, fetched.bytes);
+        } catch (error) {
+          console.error(`[cover-mirror] no se pudo espejar la carátula de ${rg.id}`, error);
+        }
+      }
+    });
+  } catch {
+    // `after()` no está disponible fuera de una request de Next.
+  }
 }
 
 /** Borra un objeto del storage sin lanzar: devuelve si se pudo. */

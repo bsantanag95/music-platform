@@ -14,6 +14,8 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
+const scheduleCoverMirrors = vi.hoisted(() => vi.fn());
+vi.mock("@/services/catalog/cover-mirror", () => ({ scheduleCoverMirrors }));
 
 // select().from().where().limit() → terminal limit
 function whereLimit(rows: unknown[]) {
@@ -144,6 +146,31 @@ describe("servicio de want-to-listen", () => {
     const result = await listMyWantToListen(user);
     expect(result.items).toEqual([]);
     expect(result.hasNext).toBe(false);
+  });
+
+  it("listMyWantToListen agenda el espejo solo de las carátulas que siguen en Cover Art Archive", async () => {
+    const album = (n: number, cover: string | null) => ({
+      id: `00000000-0000-4000-8000-00000000010${n}`,
+      createdAt: new Date("2026-01-02T00:00:00Z"),
+      artistId: null,
+      releaseGroupId: `00000000-0000-4000-8000-00000000020${n}`,
+      artistName: null,
+      releaseTitle: `Álbum ${n}`,
+      releaseCover: cover,
+    });
+    mocks.db.select.mockReturnValueOnce(
+      joinPaged([
+        album(1, "https://coverartarchive.org/release-group/x/front-250"),
+        album(2, "/uploads/covers/x/abc.webp"),
+        album(3, null),
+        entryRow,
+      ]),
+    );
+
+    await listMyWantToListen(user);
+
+    expect(scheduleCoverMirrors).toHaveBeenCalledTimes(1);
+    expect(scheduleCoverMirrors).toHaveBeenCalledWith(["00000000-0000-4000-8000-000000000201"]);
   });
 
   it("listMyWantToListen serializa entradas de artista y de álbum", async () => {

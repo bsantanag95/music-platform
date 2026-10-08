@@ -2,6 +2,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, releaseGroup, wantToListenEntry } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
+import { scheduleCoverMirrors } from "@/services/catalog/cover-mirror";
 import { WANT_TO_LISTEN_TARGET_TYPES } from "./types";
 import type { WantToListenTargetType, WantToListenTarget } from "./types";
 
@@ -174,12 +175,19 @@ export async function listMyWantToListen(
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
 
-  return {
-    items: rows.slice(0, pageSize).map(serializeEntry),
-    page,
-    pageSize,
-    hasNext: rows.length > pageSize,
-  };
+  const items = rows.slice(0, pageSize).map(serializeEntry);
+
+  // Álbumes cuya carátula sigue siendo un hotlink a Cover Art Archive: se espejan al terminar la
+  // respuesta, para que la próxima visita ya use el storage propio.
+  scheduleCoverMirrors(
+    items.flatMap((item) =>
+      item.targetType === "release-group" && item.target.coverThumbUrl?.startsWith("https://coverartarchive.org/")
+        ? [item.target.id]
+        : [],
+    ),
+  );
+
+  return { items, page, pageSize, hasNext: rows.length > pageSize };
 }
 
 const ENTRY_ROW_SELECT = {
