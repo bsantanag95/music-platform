@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
@@ -11,8 +11,11 @@ import { getTargetMarks } from "@/lib/api/marks";
 import { saveRating } from "@/lib/api/social";
 import { ApiError } from "@/lib/api/client";
 import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
-import { isScoreCoherent } from "@/lib/rating-range";
+import { isScoreCoherent, scoreRange, starsFromScore } from "@/lib/rating-range";
 import type { PickTarget } from "../types";
+
+const FULL_RANGE = { min: 1, max: 100 };
+const PAGE_STEP = 10;
 
 interface RatePanelProps {
   target: PickTarget;
@@ -30,14 +33,18 @@ function targetHref(target: PickTarget): string {
 // las marcas para precargar las estrellas y guarda al tocar. Conserva el puntaje detallado si
 // sigue siendo coherente con las nuevas estrellas; si no, lo suelta y avisa (el `CHECK` de
 // `rating` rechazaría la combinación). Replica `AlbumRelationPanel.rate` sin refactorizarlo.
+const stepButton =
+  "flex size-9 shrink-0 items-center justify-center rounded border border-ink-border font-data text-lg text-paper hover:border-amber disabled:cursor-not-allowed disabled:opacity-40";
+
 export function RatePanel({ target, onReset, onNavigate }: RatePanelProps) {
   const t = useTranslations("quickActions");
+  const tDetail = useTranslations("catalog.album.relation.detail");
   const locale = useLocale();
   const [loaded, setLoaded] = useState(false);
   const [stars, setStars] = useState<number | null>(null);
   const [score, setScore] = useState<number | null>(null);
-  const [scoreText, setScoreText] = useState("");
-  const [scoreInvalid, setScoreInvalid] = useState(false);
+  // `null` hasta que se elige: el pulgar queda en el centro y no se puede guardar (como en `RatingDetailDialog`).
+  const [value, setValue] = useState<number | null>(null);
   const [savedStars, setSavedStars] = useState<number | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -52,7 +59,7 @@ export function RatePanel({ target, onReset, onNavigate }: RatePanelProps) {
         if (cancelled) return;
         setStars(marks.stars);
         setScore(marks.detailedScore);
-        setScoreText(marks.detailedScore === null ? "" : String(marks.detailedScore));
+        setValue(marks.detailedScore);
         setLoaded(true);
       })
       .catch((err: unknown) => {
@@ -80,7 +87,7 @@ export function RatePanel({ target, onReset, onNavigate }: RatePanelProps) {
       if (score !== null && !keepScore) {
         setNotice(t("rate.scoreDropped", { score, stars: formatStars(value, locale) }));
         setScore(null);
-        setScoreText("");
+        setValue(null);
       }
     } catch (err) {
       if (current !== seq.current) return;
@@ -91,22 +98,25 @@ export function RatePanel({ target, onReset, onNavigate }: RatePanelProps) {
     }
   }
 
-  // Puntuar con el número (D6): se envía solo `detailedScore` y el servidor deriva las estrellas
-  // (`starsFromScore`), así nunca viaja una combinación incoherente. Se relee para mostrar las
-  // estrellas derivadas. Un campo vacío o igual al vigente no hace nada (Enter y blur disparan esto).
-  async function commitScore() {
-    const text = scoreText.trim();
-    if (text === (score === null ? "" : String(score))) {
-      setScoreInvalid(false);
-      return;
-    }
-    const value = Number(text);
-    if (!/^\d+$/.test(text) || value < 1 || value > 100) {
-      setScoreInvalid(true);
-      return;
-    }
+  // Puntuar con el deslizador (D6): se envía solo `detailedScore` y el servidor deriva las estrellas
+  // (`starsFromScore`), así nunca viaja una combinación incoherente. Con estrellas el rango se limita a
+  // su tramo (4★ → 71–80), igual que `RatingDetailDialog`. Se relee para mostrar lo que quedó guardado.
+  const range = stars !== null ? scoreRange(stars) : FULL_RANGE;
+  const middle = Math.round((range.min + range.max) / 2);
+  const clamp = (next: number) => Math.min(range.max, Math.max(range.min, next));
+  const step = (delta: number) => setValue((previous) => clamp((previous ?? middle) + delta));
+  const canSave = value !== null && value !== score && !busy;
+
+  // Re Pág / Av Pág no mueven de a 10 en todos los navegadores: se fija aquí.
+  function onSliderKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== "PageUp" && event.key !== "PageDown") return;
+    event.preventDefault();
+    step(event.key === "PageUp" ? PAGE_STEP : -PAGE_STEP);
+  }
+
+  async function saveScore() {
+    if (value === null || value === score) return;
     const current = ++seq.current;
-    setScoreInvalid(false);
     setBusy(true);
     setNotice(null);
     setErrorCode(null);
@@ -116,11 +126,11 @@ export function RatePanel({ target, onReset, onNavigate }: RatePanelProps) {
       if (current !== seq.current) return;
       setStars(marks.stars);
       setScore(marks.detailedScore);
-      setScoreText(marks.detailedScore === null ? "" : String(marks.detailedScore));
+      setValue(marks.detailedScore);
       setSavedStars(marks.stars);
     } catch (err) {
       if (current !== seq.current) return;
-      setScoreText(score === null ? "" : String(score));
+      setValue(score);
       setErrorCode(err instanceof ApiError ? err.code : "INTERNAL_ERROR");
     } finally {
       if (current === seq.current) setBusy(false);
@@ -148,37 +158,69 @@ export function RatePanel({ target, onReset, onNavigate }: RatePanelProps) {
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          void commitScore();
+          void saveScore();
         }}
-        className="flex flex-col gap-1"
-        noValidate
+        className="flex flex-col gap-2"
       >
-        <label htmlFor={scoreId} className="font-data text-xs text-paper-muted">
-          {t("rate.scoreLabel")}
-        </label>
-        <input
-          id={scoreId}
-          type="text"
-          inputMode="numeric"
-          value={scoreText}
-          disabled={busy}
-          maxLength={3}
-          aria-invalid={scoreInvalid}
-          aria-describedby={scoreInvalid ? `${scoreId}-error` : undefined}
-          onChange={(e) => {
-            setScoreText(e.target.value);
-            setScoreInvalid(false);
-          }}
-          onBlur={() => void commitScore()}
-          className={`w-24 rounded border bg-ink px-3 py-2 font-data text-sm text-paper ${
-            scoreInvalid ? "border-danger" : "border-ink-border"
-          }`}
-        />
-        {scoreInvalid ? (
-          <span id={`${scoreId}-error`} role="alert" className="font-data text-xs text-danger">
-            {t("rate.scoreInvalid")}
+        <div className="flex items-baseline justify-between gap-2">
+          <label htmlFor={scoreId} className="font-data text-xs text-paper-muted">
+            {tDetail("scoreLabel")}
+          </label>
+          <span aria-hidden="true" className="font-data text-lg font-medium text-paper">
+            {value !== null ? tDetail("valueScale", { score: value }) : tDetail("valueEmpty")}
           </span>
+        </div>
+        {stars !== null ? (
+          <p className="font-data text-xs text-paper-muted">
+            {tDetail("range", { stars: formatStars(stars, locale), min: range.min, max: range.max })}
+          </p>
         ) : null}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label={tDetail("decrease")}
+            disabled={busy || (value !== null && value <= range.min)}
+            onClick={() => step(-1)}
+            className={stepButton}
+          >
+            −
+          </button>
+          <input
+            id={scoreId}
+            type="range"
+            min={range.min}
+            max={range.max}
+            step={1}
+            value={value ?? middle}
+            disabled={busy}
+            aria-valuetext={
+              value !== null
+                ? tDetail("valueText", { score: value, stars: formatStars(starsFromScore(value), locale) })
+                : tDetail("valueTextEmpty")
+            }
+            onChange={(event) => setValue(Number(event.target.value))}
+            // Tocar el pulgar sin moverlo (queda en el centro) no emite `change`: el clic también elige.
+            onClick={(event) => {
+              if (value === null) setValue(Number(event.currentTarget.value));
+            }}
+            onKeyDown={onSliderKeyDown}
+            className={`min-w-0 flex-1 accent-amber transition-opacity ${value === null ? "opacity-40" : ""}`}
+          />
+          <button
+            type="button"
+            aria-label={tDetail("increase")}
+            disabled={busy || (value !== null && value >= range.max)}
+            onClick={() => step(1)}
+            className={stepButton}
+          >
+            +
+          </button>
+        </div>
+        <div>
+          <Button type="submit" variant="secondary" disabled={!canSave}>
+            {busy ? tDetail("saving") : tDetail("save")}
+          </Button>
+        </div>
       </form>
       {errorCode === "AUTH_REQUIRED" ? (
         <Link href="/auth/login" className="font-data text-sm text-amber underline">

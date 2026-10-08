@@ -45,9 +45,7 @@
     "starsValue": "{stars} estrellas",
     "saved": "Guardado: {stars} estrellas para {title}",
     "scoreDropped": "Se quitó tu puntuación {score}: no corresponde a {stars} estrellas.",
-    "openPage": "Ampliar en la página",
-    "scoreLabel": "Puntuación (1–100, opcional)",
-    "scoreInvalid": "Escribe un número entero entre 1 y 100."
+    "openPage": "Ampliar en la página"
   },
   "mark": {
     "checking": "Comprobando...",

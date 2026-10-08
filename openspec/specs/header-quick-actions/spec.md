@@ -71,14 +71,15 @@ diario.
 
 ### Requirement: Acción Valorar
 
-El chip **Valorar** SHALL, tras elegir el objetivo, mostrar las estrellas (½ a 5) y un campo numérico opcional de
-**puntuación detallada** (1–100), ambos con el valor vigente si la persona ya valoró el objetivo. Tocar una
-estrella SHALL guardar al instante; si existe un puntaje detallado coherente con las nuevas estrellas SHALL
-conservarse y, si deja de serlo, SHALL guardarse sin él y avisarse. Confirmar la puntuación (Enter o al salir del
-campo) SHALL guardar solo el puntaje y SHALL aplicar las estrellas que el servidor derive de él, de modo que
-nunca se envíe una combinación incoherente. Un valor fuera de 1–100 SHALL rechazarse en el campo sin guardar.
-El diálogo SHALL NOT editar la reseña ni el comentario: tras guardar SHALL ofrecer un enlace a la página del
-objetivo para ampliarlos.
+El chip **Valorar** SHALL, tras elegir el objetivo, mostrar las estrellas (½ a 5) y un **deslizador** de
+puntuación detallada (1–100) con botones − y +, el mismo de la valoración propia del álbum, ambos con el valor
+vigente si la persona ya valoró el objetivo. Tocar una estrella SHALL guardar al instante; si existe un puntaje
+detallado coherente con las nuevas estrellas SHALL conservarse y, si deja de serlo, SHALL guardarse sin él y
+avisarse. Con estrellas, el deslizador SHALL limitarse a su tramo (4★ → 71–80); sin estrellas SHALL ir de 1 a 100.
+El deslizador SHALL mostrar `—/100` hasta que se elige un valor, y el botón **Guardar** SHALL estar deshabilitado
+mientras no haya un valor distinto del vigente. Guardar SHALL enviar solo el puntaje y aplicar las estrellas que
+el servidor derive de él, de modo que nunca se envíe una combinación incoherente. El diálogo SHALL NOT editar la
+reseña ni el comentario: tras guardar SHALL ofrecer un enlace a la página del objetivo para ampliarlos.
 
 #### Scenario: Valorar un álbum sin valoración previa
 
@@ -95,20 +96,20 @@ objetivo para ampliarlos.
 - **WHEN** una persona con 3 estrellas y puntaje 55 elige un álbum y toca 5 estrellas
 - **THEN** se guardan 5 estrellas sin el puntaje 55 y se avisa que el puntaje detallado se quitó
 
-#### Scenario: Puntuar con el número
+#### Scenario: Puntuar con el deslizador
 
-- **WHEN** una persona sin valoración previa elige un álbum, escribe 90 en la puntuación detallada y confirma
+- **WHEN** una persona sin valoración previa elige un álbum, mueve el deslizador a 90 y activa Guardar
 - **THEN** se guarda el puntaje 90 y las estrellas pasan al valor que el servidor deriva de él (4,5)
 
-#### Scenario: Puntuación fuera de rango
+#### Scenario: Deslizador limitado al tramo
 
-- **WHEN** una persona escribe 150 en la puntuación detallada y confirma
-- **THEN** el campo indica que debe estar entre 1 y 100 y no se guarda nada
+- **WHEN** una persona elige un álbum que ya valoró con 4 estrellas
+- **THEN** el deslizador va de 71 a 80 y Guardar está deshabilitado hasta que cambie el valor
 
 #### Scenario: Puntuación precargada
 
 - **WHEN** una persona elige un álbum que ya valoró con puntaje 95
-- **THEN** el campo de puntuación muestra 95 antes de tocar nada
+- **THEN** el deslizador y el valor muestran 95 antes de tocar nada
 
 ### Requirement: Acciones Favorito y Pendiente
 
