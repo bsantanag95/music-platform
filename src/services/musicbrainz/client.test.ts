@@ -263,3 +263,129 @@ describe("licencia de los géneros (ADR 0021 y 0023)", () => {
     }
   });
 });
+
+describe("cancelación de búsquedas abandonadas (openspec: speed-up-quick-actions-search)", () => {
+  /** Deja la primera request en vuelo hasta llamar a la función devuelta: lo que se pida después espera en la cola. */
+  function holdFirstRequest(body: unknown) {
+    let release = () => {};
+    fetchMock.mockImplementationOnce(
+      () =>
+        new Promise<Response>((resolve) => {
+          release = () => resolve(jsonResponse(body));
+        }),
+    );
+    fetchMock.mockResolvedValue(jsonResponse(body));
+    return () => {
+      tickPastQueue();
+      release();
+    };
+  }
+
+  function requestedQueries(): (string | null)[] {
+    return fetchMock.mock.calls.map(([url]) => new URL(String(url)).searchParams.get("query"));
+  }
+
+  it("una búsqueda abandonada en la cola no se emite y no retrasa a la siguiente", async () => {
+    const release = holdFirstRequest({ artists: [] });
+    const first = musicbrainz.searchArtist("megadeth");
+    const controller = new AbortController();
+    const abandoned = musicbrainz.searchArtist("megadeth rust", { signal: controller.signal });
+    const next = musicbrainz.searchArtist("megadeth rust in peace");
+
+    controller.abort();
+    await expect(abandoned).rejects.toMatchObject({ name: "AbortError" });
+    release();
+    await Promise.all([first, next]);
+
+    expect(requestedQueries()).toEqual(["megadeth", "megadeth rust in peace"]);
+  });
+
+  it("abandonar rechaza al instante, sin esperar el turno en la cola", async () => {
+    const release = holdFirstRequest({ "release-groups": [] });
+    const first = musicbrainz.searchReleaseGroup("slayer");
+    const controller = new AbortController();
+    const abandoned = musicbrainz.searchReleaseGroup("slayer reign", { signal: controller.signal });
+
+    controller.abort();
+    // La primera sigue en vuelo: el rechazo no depende de ella.
+    await expect(abandoned).rejects.toMatchObject({ name: "AbortError" });
+    release();
+    await first;
+  });
+
+  it("una request compartida se emite mientras quede una búsqueda interesada", async () => {
+    const release = holdFirstRequest({ "release-groups": [] });
+    const first = musicbrainz.searchReleaseGroup("kiss");
+    const leaving = new AbortController();
+    const abandoned = musicbrainz.searchReleaseGroup("slayer", { signal: leaving.signal });
+    const staying = musicbrainz.searchReleaseGroup("slayer", { signal: new AbortController().signal });
+
+    leaving.abort();
+    await expect(abandoned).rejects.toMatchObject({ name: "AbortError" });
+    release();
+    await expect(staying).resolves.toEqual({ "release-groups": [] });
+    await first;
+
+    expect(requestedQueries()).toEqual(["kiss", "slayer"]);
+  });
+
+  it("quien busca sin señal retiene la request aunque las demás la abandonen", async () => {
+    const release = holdFirstRequest({ recordings: [] });
+    const first = musicbrainz.searchRecording("taste");
+    const leaving = new AbortController();
+    const abandoned = musicbrainz.searchRecording("espresso", { signal: leaving.signal });
+    const pinned = musicbrainz.searchRecording("espresso");
+
+    leaving.abort();
+    await expect(abandoned).rejects.toMatchObject({ name: "AbortError" });
+    release();
+    await expect(pinned).resolves.toEqual({ recordings: [] });
+    await first;
+
+    expect(requestedQueries()).toEqual(["taste", "espresso"]);
+  });
+
+  it("una request descartada no queda en la caché: la búsqueda siguiente la emite", async () => {
+    const release = holdFirstRequest({ artists: [] });
+    const first = musicbrainz.searchArtist("poison");
+    const controller = new AbortController();
+    const abandoned = musicbrainz.searchArtist("pantera", { signal: controller.signal });
+
+    controller.abort();
+    await expect(abandoned).rejects.toMatchObject({ name: "AbortError" });
+    // Pedida otra vez mientras la descartada seguiría en la cola: no hereda la cancelación.
+    const again = musicbrainz.searchArtist("pantera");
+    release();
+    await first;
+    await expect(again).resolves.toEqual({ artists: [] });
+
+    expect(requestedQueries()).toEqual(["poison", "pantera"]);
+  });
+
+  it("una señal ya abortada no encola nada", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ artists: [] }));
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(musicbrainz.searchArtist("anthrax", { signal: controller.signal })).rejects.toMatchObject({
+      name: "AbortError",
+    });
+    await musicbrainz.searchArtist("testament");
+
+    expect(requestedQueries()).toEqual(["testament"]);
+  });
+
+  it("un browse sin caché abandonado en la cola tampoco se emite", async () => {
+    const release = holdFirstRequest({ "release-groups": [], "release-group-count": 0 });
+    const first = musicbrainz.searchReleaseGroup("dokken");
+    const controller = new AbortController();
+    const abandoned = musicbrainz.browseReleaseGroupsByArtist("mb-dokken", 0, controller.signal);
+
+    controller.abort();
+    await expect(abandoned).rejects.toMatchObject({ name: "AbortError" });
+    release();
+    await first;
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});

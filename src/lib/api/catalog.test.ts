@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
-import { getArtistById, getSearchSuggestions, searchAlbums, searchArtists } from "./catalog";
+import { getArtistById, getSearchSuggestions, searchAlbums, searchArtists, searchSongs } from "./catalog";
 
 describe("cliente del catálogo de artistas", () => {
   afterEach(() => {
@@ -62,6 +62,32 @@ describe("cliente del catálogo de artistas", () => {
 
     await expect(searchArtists("Poison", { artistType: "group" })).resolves.toEqual(searchResponse);
     expect(fetchMock).toHaveBeenCalledWith("/api/catalog/search?type=artist&q=Poison&artistType=group", undefined);
+  });
+
+  it("el diálogo de acciones rápidas pide canciones con purpose=pick y su señal", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          type: "song",
+          results: [],
+          remoteFailed: false,
+          total: 0,
+          nextOffset: null,
+          interpretation: null,
+          alternatives: [],
+          refine: null,
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const controller = new AbortController();
+
+    await searchSongs("holy wars", { purpose: "pick", signal: controller.signal });
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/catalog/search?type=song&q=holy+wars&purpose=pick", {
+      signal: controller.signal,
+    });
   });
 
   it("rechaza la forma vieja mezclada { results } sin tipo", async () => {

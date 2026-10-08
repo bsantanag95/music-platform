@@ -48,6 +48,8 @@ export interface AlbumSearchOptions {
    * página pinta al instante mientras la pata remota llega por streaming.
    */
   localOnly?: boolean;
+  /** Abandono de quien busca: descarta las requests en cola y evita escribir stubs. */
+  signal?: AbortSignal;
 }
 
 function joinArtistCredit(credits: MBArtistCreditItem[] | undefined): string | null {
@@ -95,21 +97,22 @@ async function remotePage(
   query: string,
   filters: ReleaseGroupQueryOptions,
   offset: number,
+  signal: AbortSignal | undefined,
 ): Promise<MBReleaseGroupSearchResponse> {
   const explicit = splitExplicit(query);
   if (!explicit) {
-    return musicbrainz.searchReleaseGroup(releaseGroupQuery(query, filters), { offset });
+    return musicbrainz.searchReleaseGroup(releaseGroupQuery(query, filters), { offset, signal });
   }
   // "Artista - Título" o "Título - Artista": se prueba el primer orden y,
   // solo si no trae nada, el inverso.
   const first = await musicbrainz.searchReleaseGroup(
     releaseGroupFieldQuery(explicit.left, explicit.right, filters),
-    { offset },
+    { offset, signal },
   );
   if (first["release-groups"].length > 0 || offset > 0) return first;
   return musicbrainz.searchReleaseGroup(
     releaseGroupFieldQuery(explicit.right, explicit.left, filters),
-    { offset },
+    { offset, signal },
   );
 }
 
@@ -121,7 +124,7 @@ interface Entry {
 
 export async function searchAlbums(
   query: string,
-  { category, decade, offset = 0, localOnly = false }: AlbumSearchOptions = {},
+  { category, decade, offset = 0, localOnly = false, signal }: AlbumSearchOptions = {},
 ): Promise<AlbumSearchResponse> {
   const q = query.trim();
   const text = withoutSeparator(q);
@@ -135,13 +138,15 @@ export async function searchAlbums(
   let remoteFailed = false;
   if (!localOnly) {
     try {
-      const page = await remotePage(q, filters, offset);
+      const page = await remotePage(q, filters, offset, signal);
       remote = page["release-groups"];
       total = page.count ?? null;
     } catch {
       remoteFailed = true;
     }
   }
+  // Abandonada: ni stubs ni respuesta.
+  signal?.throwIfAborted();
   if (remoteFailed && localRows.length === 0) {
     throw new ApiError("INTERNAL_ERROR", 502, "MusicBrainz no respondió y no hay coincidencias locales");
   }
@@ -157,6 +162,7 @@ export async function searchAlbums(
     })),
   );
   const stubByMbid = new Map(stubbed.map((row) => [row.mbid, row]));
+  signal?.throwIfAborted();
 
   // Los stubs de búsqueda traen el crédito sin costo de red: se ingiere para
   // que el álbum tenga artista principal aunque se agregue a una lista sin

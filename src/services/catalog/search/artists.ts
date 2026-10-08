@@ -21,6 +21,8 @@ const LOCAL_LIMIT = 10;
 
 export interface ArtistSearchOptions {
   artistType?: ArtistTypeFilter;
+  /** Abandono de quien busca: descarta la request en cola y evita escribir stubs. */
+  signal?: AbortSignal;
 }
 
 function isArtistType(value: string): value is CatalogArtistType {
@@ -58,7 +60,7 @@ function toResult(entry: Entry, query: string): ArtistSearchResult {
  */
 export async function searchArtists(
   query: string,
-  { artistType }: ArtistSearchOptions = {},
+  { artistType, signal }: ArtistSearchOptions = {},
 ): Promise<ArtistSearchResponse> {
   const q = query.trim();
   const localRows = await matchLocalArtists(q, { limit: LOCAL_LIMIT, artistType });
@@ -66,10 +68,12 @@ export async function searchArtists(
   let remote: MBArtistSearchItem[] = [];
   let remoteFailed = false;
   try {
-    remote = (await musicbrainz.searchArtist(artistQuery(q, artistType))).artists;
+    remote = (await musicbrainz.searchArtist(artistQuery(q, artistType), { signal })).artists;
   } catch {
     remoteFailed = true;
   }
+  // Abandonada: ni stubs ni respuesta.
+  signal?.throwIfAborted();
   if (remoteFailed && localRows.length === 0) {
     throw new ApiError("INTERNAL_ERROR", 502, "MusicBrainz no respondió y no hay coincidencias locales");
   }

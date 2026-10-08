@@ -50,14 +50,18 @@ describe("GET /api/catalog/search", () => {
     const res = await GET(request("?type=artist&q=Poison"));
 
     expect(res.status).toBe(200);
-    expect(searchCatalogByType).toHaveBeenCalledWith({
-      type: "artist",
-      q: "Poison",
-      offset: 0,
-      artistType: undefined,
-      category: undefined,
-      decade: undefined,
-    });
+    expect(searchCatalogByType).toHaveBeenCalledWith(
+      {
+        type: "artist",
+        q: "Poison",
+        offset: 0,
+        artistType: undefined,
+        category: undefined,
+        decade: undefined,
+        purpose: undefined,
+      },
+      expect.any(AbortSignal),
+    );
     await expect(res.json()).resolves.toEqual(poisons);
   });
 
@@ -75,9 +79,47 @@ describe("GET /api/catalog/search", () => {
     await GET(request("?type=album&q=destroyer&category=jazz&decade=1975"));
 
     expect(vi.mocked(searchCatalogByType).mock.calls.map(([params]) => params)).toEqual([
-      { type: "album", q: "destroyer", offset: 25, artistType: undefined, category: "studio", decade: 1970 },
-      { type: "album", q: "destroyer", offset: 0, artistType: undefined, category: undefined, decade: undefined },
+      { type: "album", q: "destroyer", offset: 25, artistType: undefined, category: "studio", decade: 1970, purpose: undefined },
+      { type: "album", q: "destroyer", offset: 0, artistType: undefined, category: undefined, decade: undefined, purpose: undefined },
     ]);
+  });
+
+  it("pasa purpose=pick y la señal de la solicitud; otro purpose se ignora", async () => {
+    vi.mocked(searchCatalogByType).mockResolvedValue({
+      type: "song",
+      results: [],
+      remoteFailed: false,
+      total: 0,
+      nextOffset: null,
+      interpretation: null,
+      alternatives: [],
+      refine: null,
+    });
+    const req = request("?type=song&q=holy%20wars&purpose=pick");
+
+    await GET(req);
+    await GET(request("?type=song&q=holy%20wars&purpose=browse"));
+
+    const calls = vi.mocked(searchCatalogByType).mock.calls;
+    expect(calls[0]![0]).toMatchObject({ type: "song", q: "holy wars", purpose: "pick" });
+    expect(calls[0]![1]).toBe(req.signal);
+    expect(calls[1]![0].purpose).toBeUndefined();
+  });
+
+  it("una búsqueda abandonada no se registra como error", async () => {
+    const controller = new AbortController();
+    const req = new NextRequest("http://localhost/api/catalog/search?type=album&q=slayer", { signal: controller.signal });
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mocked(searchCatalogByType).mockImplementation(async () => {
+      controller.abort();
+      throw new DOMException("abandonada", "AbortError");
+    });
+
+    const res = await GET(req);
+
+    expect(res.status).toBe(499);
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 
   it("sin coincidencias es 200 con lista vacía, no 404", async () => {

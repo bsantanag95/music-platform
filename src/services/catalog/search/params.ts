@@ -62,6 +62,18 @@ export interface CatalogSearchParams {
   artistType?: ArtistTypeFilter;
   category?: ReleaseGroupCategoryValue;
   decade?: number;
+  /**
+   * Para qué se busca: `pick` = elegir un objetivo (diálogo "Añadir"). En Canciones devuelve
+   * todos los grupos con grabación identidad y sin apariciones (openspec:
+   * speed-up-quick-actions-search); en los demás tipos no cambia nada.
+   */
+  purpose?: SearchPurpose;
+}
+
+export type SearchPurpose = "pick";
+
+export function parsePurpose(value: string | string[] | null | undefined): SearchPurpose | undefined {
+  return first(value) === "pick" ? "pick" : undefined;
 }
 
 /**
@@ -82,5 +94,6 @@ export function parseCatalogSearchParams(params: URLSearchParams): CatalogSearch
     artistType: parseArtistTypeFilter(params.get("artistType")),
     category: parseCategory(params.get("category")),
     decade: parseDecade(params.get("decade")),
+    purpose: parsePurpose(params.get("purpose")),
   };
 }

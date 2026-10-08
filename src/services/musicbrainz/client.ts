@@ -36,18 +36,54 @@ export const RELEASE_GROUP_MBID_BATCH = 50;
 let queueTail: Promise<unknown> = Promise.resolve();
 let lastRequestAt = 0;
 
-function schedule<T>(task: () => Promise<T>): Promise<T> {
+/**
+ * `promise`, pero rechazada en cuanto `signal` se aborta, sin esperarla (openspec:
+ * speed-up-quick-actions-search). `onAbort` corre antes del rechazo.
+ */
+function abandonable<T>(promise: Promise<T>, signal: AbortSignal, onAbort?: () => void): Promise<T> {
+  if (signal.aborted) {
+    onAbort?.();
+    return Promise.reject(signal.reason);
+  }
+  return new Promise<T>((resolve, reject) => {
+    const abort = () => {
+      onAbort?.();
+      reject(signal.reason);
+    };
+    signal.addEventListener("abort", abort, { once: true });
+    promise.then(
+      (value) => {
+        signal.removeEventListener("abort", abort);
+        resolve(value);
+      },
+      (err: unknown) => {
+        signal.removeEventListener("abort", abort);
+        reject(err);
+      },
+    );
+  });
+}
+
+/**
+ * Encola `task` respetando el intervalo mínimo. Si `signal` se aborta antes de que llegue su
+ * turno, la tarea se descarta sin emitir la request ni consumir el intervalo: una búsqueda
+ * abandonada no hace esperar a la siguiente. Una request ya emitida termina igual (cortarla no
+ * devuelve el turno ya pagado y perdería una respuesta que la caché aprovecha).
+ */
+function schedule<T>(task: () => Promise<T>, signal?: AbortSignal): Promise<T> {
   const result = queueTail.then(async () => {
+    signal?.throwIfAborted();
     const elapsed = Date.now() - lastRequestAt;
     if (elapsed < MIN_INTERVAL_MS) {
       await new Promise((resolve) => setTimeout(resolve, MIN_INTERVAL_MS - elapsed));
     }
+    signal?.throwIfAborted();
     lastRequestAt = Date.now();
     return task();
   });
   // Nunca dejamos que un error de una tarea rompa la cola para las siguientes.
   queueTail = result.catch(() => undefined);
-  return result;
+  return signal ? abandonable(result, signal) : result;
 }
 
 function requiredUserAgent(): string {
@@ -78,30 +114,58 @@ const MAX_ATTEMPTS = 3;
 const SEARCH_CACHE_TTL_MS = 10 * 60_000;
 const SEARCH_CACHE_MAX = 200;
 
+// Cancelación (openspec: speed-up-quick-actions-search): cada entrada cuenta las búsquedas que
+// la esperan. Quien llama sin señal no puede abandonarla y la retiene; cuando todas las que sí
+// pueden la abandonan antes de su turno en la cola, la request se descarta y sale de la caché.
+
 interface SearchCacheEntry {
+  key: string;
   promise: Promise<unknown>;
   expiresAt: number;
+  waiters: number;
+  controller: AbortController;
 }
 
 const searchCache = new Map<string, SearchCacheEntry>();
 
-function cachedSearch<T>(key: string, task: () => Promise<T>): Promise<T> {
+function releaseWaiter(entry: SearchCacheEntry): void {
+  entry.waiters -= 1;
+  if (entry.waiters > 0) return;
+  // Fuera de la caché antes de abortar: una búsqueda nueva de la misma clave emite su propia
+  // request en vez de recibir la cancelación de otra.
+  if (searchCache.get(entry.key) === entry) searchCache.delete(entry.key);
+  entry.controller.abort();
+}
+
+function joinSearch<T>(entry: SearchCacheEntry, signal: AbortSignal | undefined): Promise<T> {
+  entry.waiters += 1;
+  const promise = entry.promise as Promise<T>;
+  return signal ? abandonable(promise, signal, () => releaseWaiter(entry)) : promise;
+}
+
+function cachedSearch<T>(
+  key: string,
+  task: (signal: AbortSignal) => Promise<T>,
+  signal?: AbortSignal,
+): Promise<T> {
   const now = Date.now();
   const hit = searchCache.get(key);
   if (hit && hit.expiresAt > now) {
-    return hit.promise as Promise<T>;
+    return joinSearch<T>(hit, signal);
   }
   if (searchCache.size >= SEARCH_CACHE_MAX) {
     const oldest = searchCache.keys().next();
     if (!oldest.done) searchCache.delete(oldest.value);
   }
-  const promise = task();
-  searchCache.set(key, { promise, expiresAt: now + SEARCH_CACHE_TTL_MS });
-  // Un fallo no debe quedar en la caché: el próximo request reintenta.
+  const controller = new AbortController();
+  const promise = task(controller.signal);
+  const entry: SearchCacheEntry = { key, promise, expiresAt: now + SEARCH_CACHE_TTL_MS, waiters: 0, controller };
+  searchCache.set(key, entry);
+  // Un fallo (o un descarte) no debe quedar en la caché: el próximo request reintenta.
   promise.catch(() => {
-    if (searchCache.get(key)?.promise === promise) searchCache.delete(key);
+    if (searchCache.get(key) === entry) searchCache.delete(key);
   });
-  return promise;
+  return joinSearch<T>(entry, signal);
 }
 
 /** Limpia la caché de búsquedas — solo para tests. */
@@ -117,6 +181,14 @@ export interface SearchPage {
   offset?: number;
 }
 
+/**
+ * Página más la señal de quien busca: si todas las búsquedas que esperan la misma request la
+ * abandonan antes de su turno en la cola, la request no se emite.
+ */
+export interface SearchOptions extends SearchPage {
+  signal?: AbortSignal;
+}
+
 const DEFAULT_SEARCH_LIMIT = 25;
 const MAX_SEARCH_LIMIT = 100;
 
@@ -126,7 +198,11 @@ function resolvePage({ limit, offset }: SearchPage): { limit: string; offset: st
   return { limit: String(safeLimit), offset: String(safeOffset) };
 }
 
-async function mbFetch<T>(path: string, params: Record<string, string> = {}): Promise<T> {
+async function mbFetch<T>(
+  path: string,
+  params: Record<string, string> = {},
+  signal?: AbortSignal,
+): Promise<T> {
   return schedule(async () => {
     const url = new URL(`${MB_BASE_URL}${path}`);
     url.searchParams.set("fmt", "json");
@@ -172,28 +248,32 @@ async function mbFetch<T>(path: string, params: Record<string, string> = {}): Pr
     throw lastError instanceof Error
       ? lastError
       : new Error(`MusicBrainz no respondió tras ${MAX_ATTEMPTS} intentos`);
-  });
+  }, signal);
 }
 
 export const musicbrainz = {
   /** Búsqueda de artistas por texto (sintaxis Lucene) — página de `limit` desde `offset`. */
-  searchArtist(query: string, page: SearchPage = {}) {
+  searchArtist(query: string, page: SearchOptions = {}) {
     const { limit, offset } = resolvePage(page);
-    return cachedSearch(`searchArtist|${query}|${limit}|${offset}`, () =>
-      mbFetch<MBArtistSearchResponse>("/artist", { query, limit, offset }),
+    return cachedSearch(
+      `searchArtist|${query}|${limit}|${offset}`,
+      (signal) => mbFetch<MBArtistSearchResponse>("/artist", { query, limit, offset }, signal),
+      page.signal,
     );
   },
 
   /** Búsqueda de álbumes/EPs/singles por texto — solo candidatos, sin releases ni tracklist. */
-  searchReleaseGroup(query: string, page: SearchPage = {}) {
+  searchReleaseGroup(query: string, page: SearchOptions = {}) {
     const { limit, offset } = resolvePage(page);
-    return cachedSearch(`searchReleaseGroup|${query}|${limit}|${offset}`, () =>
-      mbFetch<MBReleaseGroupSearchResponse>("/release-group", {
-        query,
-        limit,
-        offset,
-        inc: "artist-credits",
-      }),
+    return cachedSearch(
+      `searchReleaseGroup|${query}|${limit}|${offset}`,
+      (signal) =>
+        mbFetch<MBReleaseGroupSearchResponse>(
+          "/release-group",
+          { query, limit, offset, inc: "artist-credits" },
+          signal,
+        ),
+      page.signal,
     );
   },
 
@@ -217,15 +297,13 @@ export const musicbrainz = {
   },
 
   /** Búsqueda de grabaciones por texto — solo candidatos, para resolver "artista + canción" hacia sus álbumes. */
-  searchRecording(query: string, page: SearchPage = {}) {
+  searchRecording(query: string, page: SearchOptions = {}) {
     const { limit, offset } = resolvePage(page);
-    return cachedSearch(`searchRecording|${query}|${limit}|${offset}`, () =>
-      mbFetch<MBRecordingSearchResponse>("/recording", {
-        query,
-        limit,
-        offset,
-        inc: "artist-credits",
-      }),
+    return cachedSearch(
+      `searchRecording|${query}|${limit}|${offset}`,
+      (signal) =>
+        mbFetch<MBRecordingSearchResponse>("/recording", { query, limit, offset, inc: "artist-credits" }, signal),
+      page.signal,
     );
   },
 
@@ -234,13 +312,16 @@ export const musicbrainz = {
    * embebido. Una sola página de 100: es contexto de búsqueda, no la fuente de
    * verdad de las apariciones de la canción.
    */
-  browseReleasesByRecording(recordingMbid: string) {
-    return cachedSearch(`browseReleasesByRecording|${recordingMbid}`, () =>
-      mbFetch<MBReleaseBrowseResponse>("/release", {
-        recording: recordingMbid,
-        limit: "100",
-        inc: "release-groups",
-      }),
+  browseReleasesByRecording(recordingMbid: string, signal?: AbortSignal) {
+    return cachedSearch(
+      `browseReleasesByRecording|${recordingMbid}`,
+      (taskSignal) =>
+        mbFetch<MBReleaseBrowseResponse>(
+          "/release",
+          { recording: recordingMbid, limit: "100", inc: "release-groups" },
+          taskSignal,
+        ),
+      signal,
     );
   },
 
@@ -266,14 +347,18 @@ export const musicbrainz = {
    * fix-artist-discography-ingestion). `url-rels` trae en la misma request la relación
    * `wikidata` de cada álbum, base de sus géneros semilla (openspec: add-genre-taxonomy).
    */
-  browseReleaseGroupsByArtist(artistMbid: string, offset = 0) {
-    return mbFetch<MBReleaseGroupBrowseResponse>("/release-group", {
-      artist: artistMbid,
-      limit: String(RELEASE_BROWSE_PAGE_SIZE),
-      offset: String(offset),
-      inc: "artist-credits+url-rels",
-      "release-group-status": "website-default",
-    });
+  browseReleaseGroupsByArtist(artistMbid: string, offset = 0, signal?: AbortSignal) {
+    return mbFetch<MBReleaseGroupBrowseResponse>(
+      "/release-group",
+      {
+        artist: artistMbid,
+        limit: String(RELEASE_BROWSE_PAGE_SIZE),
+        offset: String(offset),
+        inc: "artist-credits+url-rels",
+        "release-group-status": "website-default",
+      },
+      signal,
+    );
   },
 
   /**

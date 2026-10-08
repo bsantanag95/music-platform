@@ -191,6 +191,29 @@ async function main() {
   const recCount = await db.select().from(recording).where(eq(recording.mbid, TEST_RECORDING_MBID));
   check("grabación no duplicada", recCount.length === 1);
 
+  // openspec: speed-up-quick-actions-search — el diálogo "Añadir" busca canciones en modo de elección.
+  console.log("2b) Modo de elección (purpose=pick) y búsqueda abandonada...");
+  const beforePick = { ...fetchCounts };
+  const picked = await searchSongs(QUERY, { purpose: "pick" });
+  check(
+    "modo de elección: el grupo trae la grabación de estudio ya registrada, sin apariciones",
+    picked.results.length === 1 && picked.results[0]?.recordingId === recRow?.id && picked.results[0]?.albums.length === 0,
+  );
+  check("modo de elección: sin browse de apariciones", fetchCounts["/ws/2/release"] === beforePick["/ws/2/release"]);
+  check("modo de elección: sin paginar", picked.nextOffset === null);
+  const pickCount = await db.select().from(recording).where(eq(recording.mbid, TEST_RECORDING_MBID));
+  check("modo de elección: no duplica la grabación", pickCount.length === 1);
+
+  const abandoned = new AbortController();
+  abandoned.abort();
+  const beforeAbort = JSON.stringify(fetchCounts);
+  const abandonedResult = await searchSongs("otra canción de prueba", { purpose: "pick", signal: abandoned.signal }).then(
+    () => "resuelta",
+    (err: unknown) => (err instanceof Error || err instanceof DOMException ? err.name : "otro"),
+  );
+  check("búsqueda abandonada: rechaza con AbortError", abandonedResult === "AbortError");
+  check("búsqueda abandonada: no emitió requests a MusicBrainz", JSON.stringify(fetchCounts) === beforeAbort);
+
   global.fetch = realFetch;
 
   console.log("3) Limpieza de fixtures...");

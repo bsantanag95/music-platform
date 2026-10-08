@@ -28,6 +28,13 @@ export interface CatalogSearchFilters {
   artistType?: "person" | "group";
   category?: string;
   decade?: number;
+  /**
+   * `pick`: elegir un objetivo (diálogo "Añadir"); en Canciones trae todos los grupos con
+   * grabación identidad y sin apariciones (openspec: speed-up-quick-actions-search).
+   */
+  purpose?: "pick";
+  /** Abortar libera también el turno de la búsqueda en la cola de MusicBrainz del servidor. */
+  signal?: AbortSignal;
 }
 
 function searchParams(type: string, query: string, filters: CatalogSearchFilters): URLSearchParams {
@@ -36,19 +43,24 @@ function searchParams(type: string, query: string, filters: CatalogSearchFilters
   if (filters.artistType) params.set("artistType", filters.artistType);
   if (filters.category) params.set("category", filters.category);
   if (filters.decade !== undefined) params.set("decade", String(filters.decade));
+  if (filters.purpose) params.set("purpose", filters.purpose);
   return params;
 }
 
+function searchInit(filters: CatalogSearchFilters): RequestInit | undefined {
+  return filters.signal ? { signal: filters.signal } : undefined;
+}
+
 export function searchArtists(query: string, filters: CatalogSearchFilters = {}): Promise<ArtistSearchResponse> {
-  return apiFetch(`/api/catalog/search?${searchParams("artist", query, filters)}`, ArtistSearchResponseSchema);
+  return apiFetch(`/api/catalog/search?${searchParams("artist", query, filters)}`, ArtistSearchResponseSchema, searchInit(filters));
 }
 
 export function searchAlbums(query: string, filters: CatalogSearchFilters = {}): Promise<AlbumSearchResponse> {
-  return apiFetch(`/api/catalog/search?${searchParams("album", query, filters)}`, AlbumSearchResponseSchema);
+  return apiFetch(`/api/catalog/search?${searchParams("album", query, filters)}`, AlbumSearchResponseSchema, searchInit(filters));
 }
 
 export function searchSongs(query: string, filters: CatalogSearchFilters = {}): Promise<SongSearchResponse> {
-  return apiFetch(`/api/catalog/search?${searchParams("song", query, filters)}`, SongSearchResponseSchema);
+  return apiFetch(`/api/catalog/search?${searchParams("song", query, filters)}`, SongSearchResponseSchema, searchInit(filters));
 }
 
 /** Sugerencias locales del buscador (nunca salen a MusicBrainz). */
