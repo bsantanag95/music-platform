@@ -31,6 +31,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       home: (await import(`../../messages/${resolvedLocale}/home.json`)).default,
       onboarding: (await import(`../../messages/${resolvedLocale}/onboarding.json`)).default,
       footer: (await import(`../../messages/${resolvedLocale}/footer.json`)).default,
+      quickActions: (await import(`../../messages/${resolvedLocale}/quickActions.json`)).default,
       legal: (await import(`../../messages/${resolvedLocale}/legal.json`)).default,
     },
   };

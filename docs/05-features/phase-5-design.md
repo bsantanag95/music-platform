@@ -255,13 +255,18 @@ El Header separa dos zonas (cambio `regroup-authenticated-header`, spec
 
 - **Barra general** — solo lo que el sitio ofrece a cualquiera: buscador del catálogo,
   Listas (`/lists`, pública, distinta de `/me/lists`), Actividad (`/activity`, pública,
-  distinta de `/me/feed`), el control **"+ Registrar escucha"** (solo con sesión, abre el
-  modal de registro de escucha — `add-global-listen-logging`; hasta 2026-10 decía solo
-  "Registrar", ambiguo junto a "Registrarse") y, con el catálogo editorial habilitado,
-  Explorar. El enlace de la sección actual va en tono principal con subrayado ámbar
+  distinta de `/me/feed`) y, con el catálogo editorial habilitado, Explorar. El enlace de la sección actual va en tono principal con subrayado ámbar
   (`aria-current="page"`). No lleva enlaces `/me/*` en el nivel superior. Moderación y
   Administración salieron de la barra en `fix-header-overflow` (2026-09): ahora viven en el
   menú de usuario.
+- **Zona de usuario** — a la derecha: selector de idioma, el control **"+ Añadir"** (solo con
+  sesión, pegado al menú de usuario) y el menú. "Añadir" abre el diálogo de acciones rápidas
+  (`add-header-quick-actions`): Escucha, Valorar (estrellas y puntuación 1–100), Favorito,
+  Pendiente, A lista y Nueva lista, con Escucha preseleccionada. Antes vivía en la barra general
+  como "+ Registrar escucha" (`add-global-listen-logging`) y antes como "Registrar", ambiguo junto
+  a "Registrarse"; se movió porque escribe datos propios y la barra general queda para lo que el
+  sitio ofrece a cualquiera. En el panel móvil encabeza el bloque de usuario. El "+" escribe; el
+  menú ve y gestiona.
 - **Menú de usuario** — desplegable anclado al avatar y nombre visible (se abre al posar el
   cursor en escritorio, con cheurón hacia abajo; clic/teclado como alternativa; un punto ámbar
   sobre el avatar avisa de solicitudes de seguimiento pendientes). Abre con una cabecera de
@@ -285,7 +290,7 @@ hasta `fix-header-overflow`: con sesión la fila completa necesita ~835 px y des
 
 La búsqueda de usuarios ("Miembros") quedó deliberadamente fuera de la barra general —
 decisión de `redesign-users-search`, con acceso desde Home y Footer en su lugar (ver
-sección 8 más arriba). Con "+ Registrar" y las Listas públicas ya en el Header, no queda
+sección 8 más arriba). Con las Listas públicas ya en el Header, no queda
 ningún pendiente de este apartado.
 
 ### 10.2 Páginas existentes

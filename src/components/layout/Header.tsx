@@ -11,7 +11,7 @@ import { LogoutResponseSchema } from "@/lib/api/schemas";
 import { HeaderSearch } from "./HeaderSearch";
 import { Logo } from "./Logo";
 import { UserMenu, UserMenuList } from "./UserMenu";
-import { RegisterListenButton } from "@/components/diary/RegisterListenButton";
+import { QuickActionsButton } from "@/components/quick-actions/QuickActionsButton";
 import { UserAvatar } from "@/components/social/UserAvatar";
 
 interface HeaderProps {
@@ -142,7 +142,6 @@ export function Header({
               cualquiera. Las superficies personales viven en el menú de usuario. */}
           <nav aria-label={t("generalNav")} className="hidden items-center gap-5 lg:flex">
             {generalLinks}
-            {currentUser ? <RegisterListenButton /> : null}
           </nav>
         </div>
 
@@ -152,16 +151,21 @@ export function Header({
         <div className="hidden items-center gap-4 lg:flex">
           <LocaleSwitcher t={t} currentLocale={currentLocale} onChange={handleLocaleChange} />
           {currentUser ? (
-            <UserMenu
-              username={currentUser.username}
-              displayName={currentUser.displayName ?? currentUser.username}
-              avatarUrl={currentUser.avatarUrl ?? null}
-              pendingFollowRequests={pendingFollowRequests}
-              permissions={platformPermissions}
-              logoutPending={logoutPending}
-              logoutError={logoutError}
-              onLogout={handleLogout}
-            />
+            <>
+              {/* Atajo de escritura pegado al menú de usuario (openspec: add-header-quick-actions, D10):
+                  el "+" escribe, el menú ve y gestiona. */}
+              <QuickActionsButton />
+              <UserMenu
+                username={currentUser.username}
+                displayName={currentUser.displayName ?? currentUser.username}
+                avatarUrl={currentUser.avatarUrl ?? null}
+                pendingFollowRequests={pendingFollowRequests}
+                permissions={platformPermissions}
+                logoutPending={logoutPending}
+                logoutError={logoutError}
+                onLogout={handleLogout}
+              />
+            </>
           ) : (
             <AuthActions t={t} />
           )}
@@ -193,13 +197,16 @@ export function Header({
           <HeaderSearch fluid />
           <nav aria-label={t("generalNav")} className="flex flex-col items-start gap-3">
             {generalLinks}
-            {currentUser ? <RegisterListenButton /> : null}
           </nav>
 
           {/* Bloque 2 — zona de usuario. */}
           <div className="flex flex-col gap-4 border-t border-ink-border pt-4">
             {currentUser ? (
               <>
+                {/* Cabeza del bloque de usuario (openspec: add-header-quick-actions, D10). */}
+                <div>
+                  <QuickActionsButton />
+                </div>
                 <Link
                   href={`/users/${encodeURIComponent(currentUser.username)}`}
                   className="flex items-center gap-2.5 rounded-md px-3 py-1 transition-colors hover:bg-ink-surface"

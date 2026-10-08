@@ -108,7 +108,7 @@ Dos tablas con responsabilidades distintas es más simple que una tabla con dos 
 
 Orden de pasos, todos menos el primero opcionales:
 
-1. **Registrar escucha** (crea la `listen_entry`, sin fricción — puede ser un solo tap; ver también sección 2.1, capa de presencia manual). El rótulo es "Registrar escucha" / "Anotar en el diario", nunca "marcar como escuchado" (ver sección 10).
+1. **Registrar escucha** (crea la `listen_entry`, sin fricción — puede ser un solo tap; ver también sección 2.1, capa de presencia manual). El rótulo es "Registrar escucha" / "Anotar en el diario", nunca "marcar como escuchado" (ver sección 10). El punto de entrada global es la acción **Escucha** del diálogo de acciones rápidas del Header ("+ Añadir", cambio `add-header-quick-actions`), que abre siempre con esa acción seleccionada para no sumar pasos.
 2. **Impresión corta** (texto libre, sin mínimo).
 3. **Contexto de escucha** (`first_listen` / `relisten` / `rediscovery` — puede inferirse por defecto si es la primera `listen_entry` del usuario sobre ese objetivo, y el usuario solo lo corrige si quiere).
 4. **Reacción emocional** (opcional, sobre la entrada puntual: `liked` / `loved` / `obsessed` / `neutral` / `disliked`, o ausencia).
