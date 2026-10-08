@@ -2,6 +2,7 @@
   "trigger": "Añadir",
   "title": "Añadir",
   "close": "Cerrar",
+  "createLabel": "Crear",
   "actionsLabel": "Qué quieres hacer",
   "actions": {
     "listen": "Escucha",
