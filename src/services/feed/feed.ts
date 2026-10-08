@@ -17,6 +17,8 @@ import {
   userList,
   wantedEntry,
 } from "@/db/schema";
+import type { CommentTopic } from "@/db/schema";
+import { rootCommentsOnly } from "@/services/social/comment-roots";
 import { ApiError } from "@/lib/api/errors";
 import type { FeedKind } from "@/lib/api/schemas";
 import type { Audience } from "@/services/social/types";
@@ -106,6 +108,8 @@ export interface FeedComment {
   kind: "comment";
   id: string;
   body: string;
+  /** Tema del comentario de artista (add-artist-comment-topics); `null` en álbum y canción. */
+  topic?: CommentTopic | null;
   createdAt: string;
   target: {
     type: "artist" | "release-group" | "recording";
@@ -869,6 +873,7 @@ export async function listFeed(
           .select({
             id: comment.id,
             body: comment.body,
+            topic: comment.topic,
             createdAt: comment.createdAt,
             artistId: comment.artistId,
             releaseGroupId: comment.releaseGroupId,
@@ -890,6 +895,7 @@ export async function listFeed(
           .leftJoin(appUser, eq(comment.userId, appUser.id))
           .where(
             and(
+              rootCommentsOnly(),
               inArray(comment.userId, authorIds),
               BLOCKED_SQL(viewerId, comment.userId),
               ...titleSearchCondition(searchPattern, comment.releaseGroupId, comment.recordingId),
@@ -1152,6 +1158,7 @@ export async function listFeed(
       kind: "comment" as const,
       id: row.id,
       body: row.body,
+      topic: row.topic,
       createdAt: row.createdAt.toISOString(),
       target: {
         type,

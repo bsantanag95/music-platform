@@ -163,7 +163,7 @@ export default async function ArtistLayout({ children, params }: ArtistLayoutPro
           authenticated={Boolean(userId)}
           userId={userId ?? undefined}
           canModerate={canModerate}
-          variant="notes"
+          topics
         />
       </div>
     </main>

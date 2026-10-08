@@ -9,6 +9,7 @@ import { formatStars } from "@/components/album/album-format";
 import { targetHref } from "./feed-target";
 import { listHref } from "@/lib/catalog-links";
 import { StarRatingValue } from "@/components/social/StarRatingValue";
+import { CommentTopicLabel } from "@/components/social/CommentTopicLabel";
 import { isFeedEntryQuote } from "./feed-entry-tier";
 import {
   groupFeedRuns,
@@ -19,7 +20,7 @@ import {
 import { ProsePanel, RelativeDate, TargetTitle } from "./feed-row-parts";
 import { FEED_KIND_ICONS } from "./FeedKindIcons";
 import { UserHoverCard } from "@/components/profiles/UserHoverCard";
-import type { FeedEntry } from "@/lib/api/schemas";
+import type { FeedComment, FeedEntry } from "@/lib/api/schemas";
 
 type FeedT = (key: string, values?: Record<string, string | number>) => string;
 
@@ -568,6 +569,7 @@ function MetaLine({
   hideAuthor,
   label,
   iconKind,
+  topic,
 }: {
   entry: FeedEntry;
   t: FeedT;
@@ -575,8 +577,12 @@ function MetaLine({
   // Verbo e ícono propios de la fila fusionada de opinión (ver `OpinionRow`).
   label?: string;
   iconKind?: FeedEntry["kind"];
+  // Tema del comentario de artista (add-artist-comment-topics); en la fila fusionada el comentario
+  // no es la entrada primaria, así que el tema llega aparte.
+  topic?: FeedComment["topic"];
 }) {
   const audience = audienceLabel(entry, t);
+  const commentTopic = topic ?? (entry.kind === "comment" ? entry.topic : null);
   const icon = FEED_KIND_ICONS[iconKind ?? entry.kind];
   return (
     <div className="flex items-baseline justify-between gap-3">
@@ -594,6 +600,12 @@ function MetaLine({
         ) : null}
         {label ?? actionLabel(entry, t)}
         {audience ? ` · ${audience}` : null}
+        {commentTopic ? (
+          <>
+            {" · "}
+            <CommentTopicLabel topic={commentTopic} />
+          </>
+        ) : null}
       </span>
       <RelativeDate iso={entry.createdAt} />
     </div>
@@ -614,7 +626,7 @@ function OpinionRow({ row, t, self, clamp }: { row: FeedOpinionRow; t: FeedT; se
 
   const content = (
     <>
-      <MetaLine entry={primary} t={t} hideAuthor={self} label={verb} iconKind={iconKind} />
+      <MetaLine entry={primary} t={t} hideAuthor={self} label={verb} iconKind={iconKind} topic={row.comment?.topic} />
       <TargetTitle {...targetLink(primary)} layout={self ? "inline" : undefined} />
       {row.rating ? <RatingValue entry={row.rating} t={t} locale={locale} /> : null}
       {row.review ? (

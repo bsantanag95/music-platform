@@ -1758,7 +1758,7 @@ artista; `albumId`/`albumTitle` opcionales en escucha, favorito y valoración de
 - **`list`**: `{ event: "created" | "updated", audience, list: { id, title, entityType } }`.
 - **`rating`**: `{ stars, detailedScore, target }` — `detailedScore` (1–100 o `null`) se **muestra**
   en el feed desde `expand-feed-coverage`.
-- **`comment`**: `{ body, target }`.
+- **`comment`**: `{ body, target, topic }` — `topic` solo en comentarios de artista (`null` en álbum y canción).
 - **`review`**: `{ title, body, target }` (fecha = última edición).
 - **`follow`**: `{ followedUser: { id, username, displayName } }`.
 - **`follow-artist`**: `{ artist: { id, name } }`.
@@ -1826,12 +1826,43 @@ propio y devuelve `204`.
 `GET` acepta opcionalmente `page` (entero desde 1) y `pageSize` (entero 1-100), devolviendo
 `{ comments, page, pageSize, hasNext }`. Valores no numéricos, `NaN`, no enteros o fuera de esos
 rangos se rechazan con `400 { error, code: "VALIDATION_ERROR" }`; no se normalizan silenciosamente.
-`POST` recibe `{ body }`, permite múltiples comentarios por usuario y devuelve `201 { comment }`.
+`POST` recibe `{ body, topic? }`, permite múltiples comentarios por usuario y devuelve `201 { comment }`.
+
+**Tema (cambio `add-artist-comment-topics`):** solo los comentarios **de artista** tienen tema, uno del
+catálogo cerrado `start` ("Para empezar") · `albums` · `songs` · `general`. En `POST`, `topic` es
+opcional: en un artista vale `general` si se omite; en un álbum o una canción pedir un tema se rechaza. En
+`GET`, `topic` (opcional) filtra por tema, con la misma paginación; sin él se devuelven todos los temas. En
+ambos casos un valor fuera del catálogo, o cualquier tema sobre un álbum o una canción, responde
+`400 { error, code: "INVALID_TOPIC" }`. Cada comentario trae `topic` (`null` en álbum y canción). El tema no
+se edita: `PATCH` solo cambia el texto.
 
 Cada comentario trae `likeCount` (cifra visible: `null` mientras haya menos de 3 likes, el número real
 desde 3; igual para todos, autor incluido) y `likedByMe` (si el visitante autenticado likeó; `false`
 sin sesión). El `GET` es público: la sesión es opcional y solo sirve para `likedByMe`. Nunca hay
 identidades de quienes likearon. El `POST` devuelve `likeCount: null, likedByMe: false`.
+
+### `GET/POST /api/catalog/comments/{commentId}/replies` (cambio `add-comment-replies`)
+
+Respuestas de **un solo nivel** a comentarios **de artista**. Responder a una respuesta crea una respuesta
+de la **misma raíz** (el servidor sube a la raíz). La respuesta copia el objetivo de su raíz —nunca lo recibe
+del cliente— y no tiene tema propio: la respuesta del servidor trae `topic` con el de la raíz.
+
+- `GET` (público, sesión opcional solo para `likedByMe`): acepta `page` y `pageSize` como el listado de
+  comentarios (`400 VALIDATION_ERROR` si no son válidos) y devuelve `{ comments, page, pageSize, hasNext }`
+  con las respuestas visibles **de la más antigua a la más reciente**, cada una con `parentId` (la raíz) y
+  `replyCount: 0`. Si el id no es un comentario raíz visible (no existe, es una respuesta, o está oculto por
+  moderación) → `404 COMMENT_NOT_FOUND`.
+- `POST`: requiere sesión (`401 AUTH_REQUIRED`) y actividad social permitida (`403
+  SOCIAL_SUSPENSION_ACTIVE`). Recibe `{ body }` y devuelve `201 { comment }`. `400 INVALID_COMMENT` si el
+  texto está vacío o supera el máximo de un comentario (o el id no es UUID); `404 COMMENT_NOT_FOUND` si el
+  comentario no existe, está oculto o su raíz está oculta; `400 REPLIES_NOT_ALLOWED` si el comentario no es
+  de artista; `403 BLOCKED` si hay un bloqueo en cualquier dirección con la autora de la raíz.
+- Las respuestas se editan (`PATCH`, solo el texto), se borran (`DELETE`), se likean y se reportan como
+  cualquier comentario (`targetType: "comment"`). Borrar una raíz borra sus respuestas.
+- En `GET/POST /api/catalog/{target}/{id}/comments` cada comentario trae ahora `parentId` (`null` en una
+  raíz) y `replyCount` (respuestas visibles, sin las ocultas ni las de cuentas desactivadas; `0` en una
+  respuesta y en álbum/canción). **El listado devuelve solo raíces.** Las respuestas no generan entradas de
+  feed ni de actividad de la comunidad y no entran en «Comentarios populares».
 
 ### `PATCH/DELETE /api/catalog/comments/{commentId}`
 

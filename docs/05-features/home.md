@@ -279,6 +279,11 @@ la cifra es igual para todos (autor incluido) y la identidad de quien likeó no 
   perfil público y cuenta activa, excluye comentarios ocultos por moderación y, con visitante, los
   de autores con bloqueo en cualquier dirección (como `listCommunityActivity`). La valoración es
   real (`rating` del autor sobre el mismo target, con su puntaje detallado, o `null`).
+- **Solo raíces** (`add-comment-replies`): las respuestas a un comentario de artista no entran en el ranking ni se
+  muestran, aunque tengan más likes que cualquier raíz.
+- **Tema** (`add-artist-comment-topics`): los comentarios de artista llevan su tema (`topic`:
+  Para empezar · Álbumes · Canciones · General) como etiqueta junto al título del target; los de álbum y
+  canción no. No cambia la selección ni el orden.
 - **Pill `♡ N`** a la derecha del título (`aria-label` "N me gusta", clave
   `home.popularCommentsLikeWord`), solo con cifra visible.
 - El seed (`scripts/seed-home.ts`) ahora genera comentarios de los tres tipos y a veces
@@ -438,7 +443,9 @@ título y fecha en vez del error "Sin ediciones disponibles".
 - Listas públicas en Inicio anónimo con **mini-mosaico de carátulas** (L3) — requiere que
   `listPublicLists` devuelva ~4 `coverThumbUrl` por lista. Ver "Actividad de la comunidad y
   listas públicas — layout".
-- **Hilos** (comentar un comentario): el cambio `add-comment-likes` dejó fuera esa decisión. Se
-  discute cuando el paradigma gire hacia "la relevancia de las interacciones".
+- **Hilos** (comentar un comentario): `add-comment-likes` dejó fuera esa decisión. Decidida solo para los
+  comentarios **de artista** en `add-comment-replies` (ADR 0030): respuestas de un nivel, sin actividad propia en
+  feed ni en «Comentarios populares» (que solo cuenta comentarios raíz). Álbum y Canción siguen sin respuestas;
+  habilitarlas es una decisión de producto aparte.
 - Copy y diseño visual concreto de cada bloque (fuera del alcance de este documento, que
   cierra la estructura de contenido, no el layout).

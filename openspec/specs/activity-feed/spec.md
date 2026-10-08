@@ -975,3 +975,30 @@ quedan separadas.
 - **WHEN** el lector filtra su feed por `kind=rating`
 - **THEN** solo ve valoraciones, sin filas fusionadas
 
+### Requirement: Tema en las entradas de comentario de artista
+Una entrada de feed o de actividad de la comunidad cuyo objetivo es un artista SHALL incluir el
+tema del comentario y mostrarlo como etiqueta corta. Las entradas de comentarios de álbum y de
+canción SHALL NOT incluir tema. El tema SHALL NOT alterar la selección, el orden ni la
+agrupación de las entradas.
+
+#### Scenario: Comentario de artista en el feed
+- **WHEN** una persona seguida publica un comentario de artista con tema "Para empezar"
+- **THEN** su entrada del feed muestra la etiqueta "Para empezar" junto al artista
+
+#### Scenario: Comentario de álbum en el feed
+- **WHEN** una persona seguida publica un comentario en un álbum
+- **THEN** su entrada del feed no muestra etiqueta de tema
+
+### Requirement: Las respuestas no generan actividad propia
+Una respuesta a un comentario (capability `comment-replies`) SHALL NOT generar entrada en el feed
+personal ni en la actividad de la comunidad. Esas superficies SHALL mostrar únicamente comentarios
+raíz.
+
+#### Scenario: Respuesta de una persona seguida
+- **WHEN** una persona seguida publica una respuesta en un artista
+- **THEN** no aparece ninguna entrada nueva en el feed por esa respuesta
+
+#### Scenario: Comentario raíz de una persona seguida
+- **WHEN** esa misma persona publica un comentario raíz en un artista
+- **THEN** su entrada de feed aparece como hasta ahora
+

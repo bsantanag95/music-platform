@@ -338,6 +338,8 @@ export const ErrorCodeSchema = z.enum([
   "INVALID_TARGET",
   "INVALID_RATING",
   "INVALID_COMMENT",
+  "INVALID_TOPIC",
+  "REPLIES_NOT_ALLOWED",
   "RATING_NOT_FOUND",
   "COMMENT_NOT_FOUND",
   "REVIEW_NOT_FOUND",
@@ -633,8 +635,15 @@ export const RatingMutationSchema = z
   })
   .refine(hasRatingValue, atLeastOneRatingValue);
 
+// Tema de los comentarios de artista (add-artist-comment-topics). Mismo catálogo que el `CHECK`
+// de la migración 0065 (`COMMENT_TOPICS` en `@/db/schema`).
+export const CommentTopicSchema = z.enum(["start", "albums", "songs", "general"]);
+export type CommentTopic = z.infer<typeof CommentTopicSchema>;
+
 export const CommentRequestSchema = SocialTargetSchema.extend({
   body: z.string().trim().min(1).max(5000),
+  // Opcional: en artista, por defecto `general`; en álbum/canción, el servicio lo rechaza.
+  topic: z.string().optional(),
 });
 export type CommentRequest = z.infer<typeof CommentRequestSchema>;
 
@@ -679,6 +688,12 @@ export const CommentSchema = z.object({
     deactivated: z.boolean().optional(),
   }),
   body: z.string(),
+  // Tema del comentario de artista; null en álbum y canción (add-artist-comment-topics).
+  topic: CommentTopicSchema.nullable().default(null),
+  // Respuestas (add-comment-replies): `parentId` es la raíz de una respuesta (null en una raíz);
+  // `replyCount` cuenta las respuestas visibles de una raíz (0 en una respuesta y en álbum/canción).
+  parentId: z.uuid().nullable().default(null),
+  replyCount: z.number().int().default(0),
   createdAt: z.string(),
   // Likes (add-comment-likes): cifra visible (null bajo el umbral de 3) y si el visitante likeó.
   likeCount: z.number().int().nullable().default(null),
@@ -2010,6 +2025,8 @@ export const FeedCommentSchema = z.object({
   kind: z.literal("comment"),
   id: z.uuid(),
   body: z.string(),
+  // Tema del comentario de artista (add-artist-comment-topics); null/ausente en álbum y canción.
+  topic: CommentTopicSchema.nullish(),
   createdAt: z.string(),
   target: FeedTargetInfoSchema,
   author: AuthorSummarySchema,

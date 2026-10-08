@@ -753,6 +753,28 @@ creados antes del cambio se conservan intactos; solo cambia qué renderiza la UI
 
 **Restricciones:** `CHECK (num_nonnulls(artist_id, release_group_id, recording_id) = 1)`, igual que `credit` y `rating`.
 
+**Tema (`topic`, migración `0065`, cambio `add-artist-comment-topics`):** columna `TEXT NULL` con el tema de
+los comentarios **de artista** — catálogo cerrado `start` ("Para empezar") · `albums` · `songs` · `general`
+(por defecto). Los comentarios de álbum y canción tienen `topic NULL`. Tres `CHECK` con nombre, separados a
+propósito para que el cambio de respuestas solo recree uno: `chk_comment_topic_values` (valor del catálogo),
+`chk_comment_topic_artist_only` (solo con `artist_id`) y `chk_comment_artist_topic_required` (todo comentario de
+artista tiene tema). La migración dejó las notas de artista previas en `general` (no se inventa un tema).
+Índice parcial `idx_comment_artist_topic (artist_id, topic, created_at DESC) WHERE artist_id IS NOT NULL` para
+el filtro por tema. El tema no se edita después de publicar.
+
+**Respuestas (`parent_id`, migración `0066`, cambio `add-comment-replies`):** `parent_id UUID NULL REFERENCES
+comment(id) ON DELETE CASCADE`. Una respuesta es una fila de `comment` con padre, y el padre es siempre una
+**raíz** (`parent_id NULL`): un solo nivel, normalizado por el servicio (responder a una respuesta cuelga la
+nueva de la misma raíz). La respuesta copia el `artist_id` de su raíz —lo fija el servicio, nunca el cliente— y
+**hereda el tema**: tiene `topic NULL`. Por eso `chk_comment_artist_topic_required` se recreó como
+`artist_id IS NULL OR topic IS NOT NULL OR parent_id IS NOT NULL`, y `chk_comment_reply_no_topic`
+(`parent_id IS NULL OR topic IS NULL`) impide que una respuesta tenga tema propio. Que el padre sea una raíz del
+mismo objetivo cruza filas y no es un `CHECK`: lo impone el servicio, igual que «solo comentarios de artista
+admiten respuestas» (para habilitar álbum/canción sin migración). Borrado físico (ADR 0009): borrar una raíz
+borra sus respuestas y, por su propio FK, los likes de unas y otras. Índice parcial `idx_comment_parent
+(parent_id, created_at) WHERE parent_id IS NOT NULL` para leer el hilo. Las lecturas de «comentarios como
+contenido de primer nivel» (listado, feed, actividad, populares) filtran `parent_id IS NULL`.
+
 ## `comment_like`
 
 **Propósito:** likes en comentarios (migración `0062`, cambio `add-comment-likes`). Registro **anónimo**:

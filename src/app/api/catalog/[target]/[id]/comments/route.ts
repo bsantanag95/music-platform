@@ -24,14 +24,19 @@ export const GET = withErrorHandling(async (request: NextRequest, context: { par
   const pagination = CommentsPaginationSchema.safeParse({ page: search.get("page") ?? undefined, pageSize: search.get("pageSize") ?? undefined });
   if (!pagination.success) throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
   const viewer = await getCurrentUser();
-  return NextResponse.json(await listComments(resolved, pagination.data.page, pagination.data.pageSize, viewer?.id ?? null));
+  // `topic` (add-artist-comment-topics): filtro opcional, solo artistas; el servicio valida el valor.
+  return NextResponse.json(await listComments(resolved, pagination.data.page, pagination.data.pageSize, viewer?.id ?? null, search.get("topic")));
 });
 
 export const POST = withErrorHandling(async (request: NextRequest, context: { params: Promise<{ target: string; id: string }> }) => {
   const resolved = await target(context.params);
   const user = await requireUser();
   await requireSocialActivityAllowed(user.id);
-  const parsed = CommentRequestSchema.shape.body.safeParse((await request.json().catch(() => null))?.body);
+  const json = await request.json().catch(() => null);
+  const parsed = CommentRequestSchema.shape.body.safeParse(json?.body);
   if (!parsed.success) throw new ApiError("INVALID_COMMENT", 400, "El comentario no es válido");
-  return NextResponse.json({ comment: await createComment(resolved, user.id, parsed.data) }, { status: 201 });
+  // `topic` opcional (add-artist-comment-topics): un valor que no es texto cuenta como tema inválido.
+  const topic = json?.topic;
+  if (topic !== undefined && typeof topic !== "string") throw new ApiError("INVALID_TOPIC", 400, "El tema no es válido");
+  return NextResponse.json({ comment: await createComment(resolved, user.id, parsed.data, topic) }, { status: 201 });
 });

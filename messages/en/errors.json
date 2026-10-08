@@ -71,6 +71,14 @@
     "title": "Invalid comment",
     "description": "Check the comment content."
   },
+  "INVALID_TOPIC": {
+    "title": "Invalid topic",
+    "description": "Choose a valid topic for the comment."
+  },
+  "REPLIES_NOT_ALLOWED": {
+    "title": "Replies not available",
+    "description": "This comment does not accept replies."
+  },
   "RATING_NOT_FOUND": {
     "title": "Rating not found",
     "description": "Your rating was not found."
