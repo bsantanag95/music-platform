@@ -68,6 +68,7 @@ export function GenreArtistFilters({ slug, params, facets, authenticated }: Genr
       <div className="flex gap-2">
         <input
           type="search"
+          autoComplete="off"
           name="q"
           value={q}
           onChange={(event) => setQ(event.target.value)}

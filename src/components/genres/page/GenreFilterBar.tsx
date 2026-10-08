@@ -68,6 +68,7 @@ export function GenreFilterBar({ slug, params, categoryLabels, decades, subgenre
       <div className="flex gap-2">
         <input
           type="search"
+          autoComplete="off"
           name="q"
           value={q}
           onChange={(event) => setQ(event.target.value)}

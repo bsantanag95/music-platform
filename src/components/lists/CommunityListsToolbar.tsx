@@ -62,6 +62,7 @@ export function CommunityListsToolbar() {
     >
       <input
         type="search"
+        autoComplete="off"
         value={searchInput}
         onChange={(event) => setSearchInput(event.target.value)}
         placeholder={t("community.searchPlaceholder")}

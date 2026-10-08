@@ -73,6 +73,7 @@ export function AlbumIdentityPicker({ picked, onChange }: AlbumIdentityPickerPro
             {t("door1.searchLabel")}
             <input
               type="search"
+              autoComplete="off"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("door1.searchPlaceholder")}

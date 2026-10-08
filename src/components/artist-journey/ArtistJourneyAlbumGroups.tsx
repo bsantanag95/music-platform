@@ -112,6 +112,7 @@ export function ArtistJourneyAlbumGroups<T extends ArtistJourneyGroupableAlbum>(
     <div className="flex flex-col gap-4">
       <input
         type="search"
+        autoComplete="off"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder={t("albumSearch.placeholder")}
