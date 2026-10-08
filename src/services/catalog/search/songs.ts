@@ -38,7 +38,7 @@ import { activityScores } from "./activity";
 import { coverageLevel, edgeSplits, restAfterEdgeArtist } from "./coverage";
 import { findArtistsByKeys, matchLocalRecordings } from "./local-match";
 import { artistQuery, escapeLucenePhrase, recordingFieldQuery, recordingFreeQuery } from "./mb-query";
-import { normalizeSearchText, splitExplicit, tokenize, withoutSeparator } from "./normalize";
+import { baseSongTitle, normalizeSearchText, splitExplicit, tokenize, withoutSeparator } from "./normalize";
 import type { SearchPurpose } from "./params";
 import { sortByRank, topArtistNames, type RankKey } from "./rank";
 import {
@@ -288,24 +288,9 @@ function recordingSeed(item: MBRecordingSearchItem) {
   };
 }
 
-/**
- * Título base de una versión: sin sufijos entre paréntesis o corchetes
- * ("(live)", "[demo]", "(2011 remaster)") ni " - Live at …". Cualquier
- * versión cuenta como la misma canción; sin esto "Kiss of Death (live)"
- * quedaba como un grupo aparte, sin álbumes.
- */
-export function baseSongTitle(title: string): string {
-  let base = title.trim();
-  let previous = "";
-  while (base !== previous) {
-    previous = base;
-    base = base
-      .replace(/\s*[([][^()[\]]*[)\]]\s*$/u, "")
-      .replace(/\s+[-–—]\s+[^-–—]+$/u, "")
-      .trim();
-  }
-  return base || title.trim();
-}
+// Vive en normalize.ts para que las sugerencias agrupen con el mismo criterio sin importar este
+// módulo (openspec: improve-song-suggestions).
+export { baseSongTitle };
 
 function groupKey(title: string, artistName: string | null): string {
   return `${normalizeSearchText(baseSongTitle(title))}|${normalizeSearchText(artistName ?? "")}`;

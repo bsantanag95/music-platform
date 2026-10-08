@@ -10,19 +10,18 @@ import { db } from "@/db";
 import { appUser } from "@/db/schema";
 import { activeUserCondition } from "@/services/auth/account-status";
 import { resolveImageUrls } from "@/services/storage/avatar-urls";
-import { localRecordingArtistName } from "../ingest-recording";
 import { activityScores, type ActivityKind } from "./activity";
 import { edgeSplits, restAfterEdgeArtist } from "./coverage";
 import {
   findArtistsByKeys,
   matchLocalArtists,
-  matchLocalRecordings,
   matchLocalReleaseGroups,
   primaryArtistsByReleaseGroup,
   rankByMatchTier,
   releaseGroupsByArtistsAndTitle,
 } from "./local-match";
 import { escapeLike, matchTier, normalizeSearchText, tokenize, withoutSeparator } from "./normalize";
+import { songSuggestions as rankedSongSuggestions } from "./song-suggestions";
 import type { CatalogArtistType, SearchType } from "./types";
 
 export const SUGGESTION_LIMIT = 6;
@@ -155,21 +154,10 @@ async function artistSuggestions(text: string): Promise<SearchSuggestion[]> {
   return [...albums, ...artistRows].slice(0, SUGGESTION_LIMIT);
 }
 
+/** Agrupadas por canción, con puente artista + canción (openspec: improve-song-suggestions). */
 async function songSuggestions(text: string): Promise<SearchSuggestion[]> {
-  const rows = await rankSuggestionRows(
-    await matchLocalRecordings(text, SUGGESTION_POOL),
-    "recording",
-    text,
-    (row) => row.title,
-  );
-  return Promise.all(
-    rows.slice(0, SUGGESTION_LIMIT).map(async (row) => ({
-      kind: "song" as const,
-      id: row.id,
-      title: row.title,
-      artistName: await localRecordingArtistName(row.id),
-    })),
-  );
+  const rows = await rankedSongSuggestions(text, SUGGESTION_LIMIT);
+  return rows.map((row) => ({ kind: "song", id: row.id, title: row.title, artistName: row.artistName }));
 }
 
 async function userSuggestions(text: string): Promise<SearchSuggestion[]> {

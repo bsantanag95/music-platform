@@ -13,10 +13,12 @@ import { and, asc, eq, inArray, sql, type AnyColumn, type SQL } from "drizzle-or
 import { db } from "@/db";
 import {
   artist,
+  artistFollow,
   credit,
   recording,
   release,
   releaseGroup,
+  track,
   type ArtistRow,
   type RecordingRow,
   type ReleaseGroupRow,
@@ -97,13 +99,22 @@ export async function matchLocalReleaseGroups(
   return rankByMatchTier(rows, (row) => row.title, text).slice(0, limit);
 }
 
-export async function matchLocalRecordings(text: string, limit: number): Promise<RecordingRow[]> {
+/**
+ * `pool`: filas que se piden a la base antes de ordenar. Las sugerencias de canción piden más con
+ * 3+ caracteres porque agrupan versiones (openspec: improve-song-suggestions); con 2 caracteres el
+ * filtro casa miles de títulos y un pool mayor cuesta ~100 ms más.
+ */
+export async function matchLocalRecordings(
+  text: string,
+  limit: number,
+  pool: number = CANDIDATE_POOL,
+): Promise<RecordingRow[]> {
   const rows = await db
     .select()
     .from(recording)
     .where(fuzzyMatch(recording.title, text))
     .orderBy(bySimilarity(recording.title, text))
-    .limit(CANDIDATE_POOL);
+    .limit(pool);
   return rankByMatchTier(rows, (row) => row.title, text).slice(0, limit);
 }
 
@@ -186,4 +197,94 @@ export async function releaseGroupsWithContent(releaseGroupIds: string[]): Promi
     .from(release)
     .where(inArray(release.releaseGroupId, releaseGroupIds));
   return new Set(rows.map((row) => row.releaseGroupId));
+}
+
+/**
+ * Grabaciones con crédito principal de alguno de `artistIds` cuyo título EMPIEZA por `title` (ya
+ * normalizado): el puente artista + canción de las sugerencias (openspec: improve-song-suggestions).
+ * Prefijo, porque la persona todavía está escribiendo.
+ */
+export async function recordingsByArtistsAndTitlePrefix(
+  artistIds: string[],
+  title: string,
+  limit: number,
+): Promise<RecordingRow[]> {
+  if (artistIds.length === 0 || !title.trim()) return [];
+  const rows = await db
+    .select({ row: recording })
+    .from(credit)
+    .innerJoin(recording, eq(recording.id, credit.recordingId))
+    .where(
+      and(
+        inArray(credit.artistId, artistIds),
+        eq(credit.role, "primary"),
+        sql`search_key(${recording.title}) LIKE ${`${escapeLike(title)}%`}`,
+      ),
+    )
+    .orderBy(bySimilarity(recording.title, title))
+    .limit(limit);
+  return rows.map(({ row }) => row);
+}
+
+export interface RecordingSignals {
+  /** Artista principal de cada grabación (el de menor posición de crédito). */
+  artistByRecording: Map<string, { id: string; name: string; explored: boolean }>;
+  /** Álbumes (`release_group` distintos) en que aparece cada grabación; ausente = ninguno. */
+  albumsByRecording: Map<string, number>;
+  /** Seguidores de cada artista principal; ausente = ninguno. */
+  followersByArtist: Map<string, number>;
+}
+
+/**
+ * Señales para ordenar sugerencias de canción, en tres consultas en lote y en paralelo sobre los
+ * candidatos (nunca una por fila). Solo lecturas; ninguna cifra se expone en la respuesta.
+ */
+export async function recordingSignals(recordingIds: string[]): Promise<RecordingSignals> {
+  const signals: RecordingSignals = {
+    artistByRecording: new Map(),
+    albumsByRecording: new Map(),
+    followersByArtist: new Map(),
+  };
+  const ids = [...new Set(recordingIds)];
+  if (ids.length === 0) return signals;
+
+  const primaryArtistIds = db
+    .select({ artistId: credit.artistId })
+    .from(credit)
+    .where(and(inArray(credit.recordingId, ids), eq(credit.role, "primary")));
+  const [artists, albums, followers] = await Promise.all([
+    db
+      .select({
+        recordingId: credit.recordingId,
+        id: artist.id,
+        name: artist.name,
+        syncedAt: artist.discographySyncedAt,
+      })
+      .from(credit)
+      .innerJoin(artist, eq(artist.id, credit.artistId))
+      .where(and(inArray(credit.recordingId, ids), eq(credit.role, "primary")))
+      .orderBy(asc(credit.position)),
+    db
+      .select({
+        recordingId: track.recordingId,
+        albums: sql<number>`count(DISTINCT ${release.releaseGroupId})::int`,
+      })
+      .from(track)
+      .innerJoin(release, eq(release.id, track.releaseId))
+      .where(inArray(track.recordingId, ids))
+      .groupBy(track.recordingId),
+    db
+      .select({ artistId: artistFollow.artistId, followers: sql<number>`count(*)::int` })
+      .from(artistFollow)
+      .where(inArray(artistFollow.artistId, primaryArtistIds))
+      .groupBy(artistFollow.artistId),
+  ]);
+
+  for (const row of artists) {
+    if (!row.recordingId || signals.artistByRecording.has(row.recordingId)) continue;
+    signals.artistByRecording.set(row.recordingId, { id: row.id, name: row.name, explored: row.syncedAt !== null });
+  }
+  for (const row of albums) signals.albumsByRecording.set(row.recordingId, Number(row.albums));
+  for (const row of followers) signals.followersByArtist.set(row.artistId, Number(row.followers));
+  return signals;
 }
