@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { getMyWantToListen, removeFromWantToListen } from "@/lib/api/want-to-listen";
 import type { WantToListenEntry, WantToListenListResponse } from "@/lib/api/schemas";
+import { useJourneyStatuses } from "./use-journey-statuses";
 import { WantToListenModeSwitcher } from "./WantToListenModeSwitcher";
 import { WantToListenSection } from "./WantToListenSection";
 import { groupWantToListenByType } from "./want-to-listen-shared";
@@ -31,6 +32,8 @@ export function WantToListenList({ initial }: WantToListenListProps) {
   const [loadError, setLoadError] = useState(false);
 
   const groups = useMemo(() => groupWantToListenByType(items), [items]);
+  // Antes del retorno temprano: los hooks no pueden ir después de un `return` condicional.
+  const journeys = useJourneyStatuses(items);
 
   if (items.length === 0) {
     return <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />;
@@ -77,7 +80,13 @@ export function WantToListenList({ initial }: WantToListenListProps) {
           key={group.type}
           group={group}
           mode={mode}
-          actions={{ busy: busyId !== null, remove: (id) => void handleRemove(id) }}
+          actions={{
+            busy: busyId !== null,
+            remove: (id) => void handleRemove(id),
+            journeyStatus: journeys.statusOf,
+            journeyAdded: journeys.markAdded,
+            journeyError: journeys.markError,
+          }}
         />
       ))}
 

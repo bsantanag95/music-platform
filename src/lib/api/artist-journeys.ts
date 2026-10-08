@@ -3,6 +3,7 @@ import { apiFetch } from "./client";
 import {
   ArtistJourneyDetailResponseSchema,
   ArtistJourneyDetailSchema,
+  ArtistJourneyStatusResponseSchema,
   type ArtistJourneyDetail,
 } from "./schemas";
 
@@ -11,6 +12,17 @@ export function getArtistJourney(artistId: string): Promise<ArtistJourneyDetail 
     `/api/me/artist-journeys/${artistId}`,
     ArtistJourneyDetailResponseSchema,
   ).then((response) => response.journey);
+}
+
+/**
+ * Cuáles de los artistas dados tienen recorrido propio, en una sola petición (hasta 100). Para listas
+ * con una acción por artista: evita el detalle completo de cada uno.
+ */
+export function getArtistJourneyStatuses(artistIds: string[]): Promise<string[]> {
+  const query = new URLSearchParams({ artistIds: artistIds.join(",") });
+  return apiFetch(`/api/me/artist-journeys?${query.toString()}`, ArtistJourneyStatusResponseSchema).then(
+    (response) => response.journeyArtistIds,
+  );
 }
 
 export function activateArtistJourney(artistId: string): Promise<ArtistJourneyDetail> {

@@ -43,7 +43,12 @@ export function EntriesGraphic({ entries, actions }: WantToListenRendererProps) 
             ) : null}
             <div className="flex flex-wrap items-center gap-2">
               {entry.targetType === "artist" ? (
-                <WantToListenArtistJourneyAction artistId={entry.target.id} />
+                <WantToListenArtistJourneyAction
+                artistId={entry.target.id}
+                status={actions.journeyStatus(entry.target.id)}
+                onAdded={actions.journeyAdded}
+                onError={actions.journeyError}
+              />
               ) : null}
               <RemoveEntryButton
                 title={entry.target.title}

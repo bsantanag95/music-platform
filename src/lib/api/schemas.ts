@@ -1792,6 +1792,12 @@ export const ArtistJourneyDetailResponseSchema = z.object({
 });
 export type ArtistJourneyDetailResponse = z.infer<typeof ArtistJourneyDetailResponseSchema>;
 
+// Artistas con recorrido propio, por lote (openspec: batch-artist-journey-status).
+export const ArtistJourneyStatusResponseSchema = z.object({
+  journeyArtistIds: z.array(z.uuid()),
+});
+export type ArtistJourneyStatusResponse = z.infer<typeof ArtistJourneyStatusResponseSchema>;
+
 // El modal de gestión edita un borrador local (sin llamar al servidor por
 // cada casillero) y "Guardar" envía de una vez el conjunto final completo de
 // álbumes seleccionados (rediseño de modal — guardado en lote, 2026-09).

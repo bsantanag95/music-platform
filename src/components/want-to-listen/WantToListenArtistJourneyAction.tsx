@@ -1,43 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { activateArtistJourney, getArtistJourney } from "@/lib/api/artist-journeys";
+import { activateArtistJourney } from "@/lib/api/artist-journeys";
+import type { JourneyStatus } from "./use-journey-statuses";
 
-type Status = "loading" | "none" | "added" | "error";
+interface WantToListenArtistJourneyActionProps {
+  artistId: string;
+  /** Estado resuelto por lote en `WantToListenList` (`useJourneyStatuses`). */
+  status: JourneyStatus;
+  onAdded: (artistId: string) => void;
+  onError: (artistId: string) => void;
+}
 
 // Acción rápida "Agregar al Recorrido" para las entradas de artista de Quiero
-// Escuchar: consulta si el artista ya tiene un recorrido (openspec:
-// add-artist-journey) y, si no, ofrece activarlo con un clic — sin el modal
-// de selección inicial de álbumes de `ArtistJourneySection`, que solo aplica
-// en la página del artista. Si ya existe, enlaza a su gestión.
-export function WantToListenArtistJourneyAction({ artistId }: { artistId: string }) {
+// Escuchar (openspec: add-artist-journey): si el artista no tiene recorrido, ofrece activarlo
+// con un clic — sin el modal de selección inicial de álbumes de `ArtistJourneySection`, que
+// solo aplica en la página del artista. Si ya existe, enlaza a su gestión. El estado llega de
+// la lista (una petición por lote, openspec: batch-artist-journey-status): este componente ya
+// no consulta por su cuenta.
+export function WantToListenArtistJourneyAction({
+  artistId,
+  status,
+  onAdded,
+  onError,
+}: WantToListenArtistJourneyActionProps) {
   const t = useTranslations("wantToListen");
-  const [status, setStatus] = useState<Status>("loading");
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    getArtistJourney(artistId)
-      .then((journey) => {
-        if (!cancelled) setStatus(journey ? "added" : "none");
-      })
-      .catch(() => {
-        if (!cancelled) setStatus("error");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [artistId]);
 
   const handleAdd = async () => {
     setBusy(true);
     try {
       await activateArtistJourney(artistId);
-      setStatus("added");
+      onAdded(artistId);
     } catch {
-      setStatus("error");
+      onError(artistId);
     } finally {
       setBusy(false);
     }

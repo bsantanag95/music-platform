@@ -2053,6 +2053,26 @@ Caminos no archivados) que contienen el disco. `Cache-Control: no-store`.
 **400** con `VALIDATION_ERROR` si el id no es UUID. **401** con `AUTH_REQUIRED` sin sesión.
 **404** con `ALBUM_NOT_FOUND` si el disco no existe.
 
+## Recorridos de artista (cambio `batch-artist-journey-status`)
+
+### `GET /api/me/artist-journeys?artistIds=`
+
+Cuáles de los artistas dados tienen recorrido propio (activo o archivado), por lote. Lo usa Quiero
+escuchar para decidir qué acción ofrecer en cada tarjeta de artista con **una** petición por página
+en vez de una por tarjeta. Solo consulta `user_list`: nunca lee ni ingiere discografías ni llama a
+MusicBrainz.
+
+**Query:** `artistIds` — UUID separados por coma, de 1 a 100 (se quitan duplicados).
+**200 OK:** `{ journeyArtistIds: [id, …] }` — el subconjunto con recorrido. `Cache-Control: no-store`.
+**400** con `VALIDATION_ERROR` si falta, está vacío, supera 100 o trae un id que no es UUID.
+**401** con `AUTH_REQUIRED` sin sesión.
+
+### `GET /api/me/artist-journeys/[artistId]`
+
+Detalle del recorrido propio sobre un artista; `{ journey: null }` si no hay. Sin recorrido responde
+sin leer la discografía (antes la leía siempre, lo que podía lanzar una ingesta completa desde
+MusicBrainz para artistas nunca visitados). Con recorrido, la lee para armar los álbumes.
+
 ## Marcas de un objetivo (cambio `add-header-quick-actions`)
 
 ### `GET /api/me/marks?type=&id=`

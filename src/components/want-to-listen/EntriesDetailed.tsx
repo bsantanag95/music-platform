@@ -53,7 +53,12 @@ export function EntriesDetailed({ entries, actions }: WantToListenRendererProps)
               </div>
               <div className="flex shrink-0 items-center gap-3">
                 {entry.targetType === "artist" ? (
-                  <WantToListenArtistJourneyAction artistId={entry.target.id} />
+                  <WantToListenArtistJourneyAction
+                artistId={entry.target.id}
+                status={actions.journeyStatus(entry.target.id)}
+                onAdded={actions.journeyAdded}
+                onError={actions.journeyError}
+              />
                 ) : null}
                 <RemoveEntryButton
                   title={entry.target.title}

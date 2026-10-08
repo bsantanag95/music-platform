@@ -407,3 +407,24 @@ export async function listMyArtistJourneys(ownerId: string): Promise<ArtistJourn
     };
   });
 }
+
+/**
+ * De los artistas dados, los que el usuario tiene con un recorrido (activo o archivado). Una sola
+ * consulta, sin leer ni ingerir discografías: la usan las tarjetas de Quiero escuchar para saber
+ * si ofrecer "Agregar al Recorrido" sin pedir el detalle de cada artista (openspec:
+ * batch-artist-journey-status).
+ */
+export async function listJourneyArtistIds(ownerId: string, artistIds: string[]): Promise<string[]> {
+  if (artistIds.length === 0) return [];
+  const rows = await db
+    .select({ artistId: userList.journeyArtistId })
+    .from(userList)
+    .where(
+      and(
+        eq(userList.ownerId, ownerId),
+        eq(userList.kind, "artist_journey"),
+        inArray(userList.journeyArtistId, artistIds),
+      ),
+    );
+  return rows.flatMap((row) => (row.artistId ? [row.artistId] : []));
+}
