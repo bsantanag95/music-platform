@@ -261,6 +261,11 @@ describe("AddToListStep", () => {
 });
 
 describe("NewListPanel", () => {
+  it("el campo del título no ofrece autocompletar del navegador", () => {
+    renderWithIntl(<NewListPanel onAddItems={() => {}} onNavigate={() => {}} />);
+    expect(screen.getByLabelText("Nombre de la lista")).toHaveAttribute("autocomplete", "off");
+  });
+
   it("sin título no crea la lista y lo indica", async () => {
     renderWithIntl(<NewListPanel onAddItems={() => {}} onNavigate={() => {}} />);
     await userEvent.click(screen.getByRole("button", { name: "Crear lista" }));

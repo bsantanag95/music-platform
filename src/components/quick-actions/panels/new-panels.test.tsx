@@ -134,6 +134,11 @@ describe("JourneyPanel", () => {
 });
 
 describe("NewCaminoPanel", () => {
+  it("el campo del título no ofrece autocompletar del navegador", () => {
+    renderWithIntl(<NewCaminoPanel onAddAlbums={() => {}} onNavigate={() => {}} />);
+    expect(screen.getByLabelText("Nombre del Camino")).toHaveAttribute("autocomplete", "off");
+  });
+
   it("sin título no crea el Camino y lo indica", async () => {
     renderWithIntl(<NewCaminoPanel onAddAlbums={() => {}} onNavigate={() => {}} />);
     await userEvent.click(screen.getByRole("button", { name: "Crear Camino" }));

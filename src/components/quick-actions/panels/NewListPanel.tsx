@@ -82,6 +82,7 @@ export function NewListPanel({ onAddItems, onNavigate }: NewListPanelProps) {
         onChange={(e) => setTitle(e.target.value)}
         error={titleError ? t("newList.titleRequired") : undefined}
         autoFocus
+        autoComplete="off"
       />
       <fieldset className="flex flex-col gap-1.5">
         <legend className="font-display text-sm text-paper-muted">{t("newList.typeLabel")}</legend>

@@ -76,6 +76,7 @@ export function NewCaminoPanel({ onAddAlbums, onNavigate }: NewCaminoPanelProps)
         onChange={(e) => setTitle(e.target.value)}
         error={titleError ? t("newCamino.titleRequired") : undefined}
         autoFocus
+        autoComplete="off"
       />
       {errorCode === "AUTH_REQUIRED" ? (
         <Link href="/auth/login" className="font-data text-sm text-amber underline">
