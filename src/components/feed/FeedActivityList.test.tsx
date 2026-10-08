@@ -305,6 +305,15 @@ describe("FeedActivityList", () => {
     expect(screen.getByRole("img", { name: "4,5 de 5 estrellas" })).toBeInTheDocument();
   });
 
+  it("una entrada repetida entre páginas (paginación por offset corrida) se muestra una sola vez", () => {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    renderWithIntl(<FeedActivityList entries={[favorite(), rating(), rating()]} />);
+
+    expect(screen.getAllByText("87/100")).toHaveLength(1);
+    expect(errors).not.toHaveBeenCalledWith(expect.stringContaining("same key"), expect.anything(), expect.anything());
+    errors.mockRestore();
+  });
+
   it("el rastro propio también muestra el puntaje detallado", () => {
     renderWithIntl(<FeedActivityList entries={[rating()]} variant="self" />);
 

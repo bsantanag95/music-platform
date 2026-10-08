@@ -17,6 +17,9 @@ function isCompatible(list: UserListSummary, targetType: string): boolean {
 interface AddToListPanelProps {
   target: ListTarget;
   onClose?: () => void;
+  // Avisa de cada alta (lista o Camino, existente o recién creado). Lo usa el diálogo de acciones
+  // rápidas para refrescar lo que muestra la página de abajo.
+  onAdded?: () => void;
 }
 
 // Panel de "agregar a lista": ofrece las listas propias compatibles con el
@@ -29,7 +32,7 @@ interface AddToListPanelProps {
 // Para objetivos de álbum, agrega una segunda sección de Caminos propios
 // (openspec: add-camino) — mismo mecanismo de alta que las Listas, sin un
 // buscador de catálogo embebido (criterio ya cerrado en rework-list-detail).
-export function AddToListPanel({ target, onClose }: AddToListPanelProps) {
+export function AddToListPanel({ target, onClose, onAdded }: AddToListPanelProps) {
   const t = useTranslations("lists");
   const tCamino = useTranslations("camino");
   const isAlbumTarget = target.type === "release-group";
@@ -73,6 +76,7 @@ export function AddToListPanel({ target, onClose }: AddToListPanelProps) {
     setErrorCode(null);
     try {
       await addItemToList(list.id, target);
+      onAdded?.();
       setAddedListId(list.id);
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
@@ -88,6 +92,7 @@ export function AddToListPanel({ target, onClose }: AddToListPanelProps) {
     setErrorCode(null);
     try {
       await addItemToList(created.id, target);
+      onAdded?.();
       setAddedListId(created.id);
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
@@ -102,6 +107,7 @@ export function AddToListPanel({ target, onClose }: AddToListPanelProps) {
     setErrorCode(null);
     try {
       await addAlbumToCamino(camino.id, target.id);
+      onAdded?.();
       setAddedListId(camino.id);
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
@@ -128,6 +134,7 @@ export function AddToListPanel({ target, onClose }: AddToListPanelProps) {
     setErrorCode(null);
     try {
       await addAlbumToCamino(created.id, target.id);
+      onAdded?.();
       setAddedListId(created.id);
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");

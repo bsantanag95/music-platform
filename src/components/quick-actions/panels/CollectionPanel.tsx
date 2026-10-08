@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { addCollectionEntry, removeCollectionEntry } from "@/lib/api/collection";
 import { ApiError } from "@/lib/api/client";
 import type { CollectionEntry, CollectionFormatValue } from "@/lib/api/schemas";
+import { useNotifyQuickActionChange } from "../quick-actions-changes";
 import type { PickTarget } from "../types";
 
 const FORMATS: readonly CollectionFormatValue[] = ["vinyl", "cd", "cassette", "other"];
@@ -27,12 +28,14 @@ export function CollectionPanel({ target, onReset }: CollectionPanelProps) {
   const [entry, setEntry] = useState<CollectionEntry | null>(null);
   const [removed, setRemoved] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
+  const notifyChanged = useNotifyQuickActionChange();
 
   async function add(format: CollectionFormatValue) {
     setBusy(true);
     setErrorCode(null);
     try {
       setEntry(await addCollectionEntry({ releaseGroupId: target.id, format }));
+      notifyChanged();
       setRemoved(false);
     } catch (err) {
       setErrorCode(err instanceof ApiError ? err.code : "INTERNAL_ERROR");
@@ -47,6 +50,7 @@ export function CollectionPanel({ target, onReset }: CollectionPanelProps) {
     setErrorCode(null);
     try {
       await removeCollectionEntry(entry.id);
+      notifyChanged();
       setRemoved(true);
       setEntry(null);
     } catch (err) {

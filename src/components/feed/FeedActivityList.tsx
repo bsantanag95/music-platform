@@ -62,7 +62,7 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
           : "divide-y divide-ink-border"
       }
     >
-      {groupFeedRuns(entries, now).map((row) => {
+      {groupFeedRuns(uniqueEntries(entries), now).map((row) => {
         // Fila subordinada, indentada a la columna del título de las filas
         // normales (celda `size-11 sm:size-12` + `gap-3 sm:gap-4`), sin celda:
         // tanto el grupo colapsado como el pico de rotación se leen como
@@ -417,6 +417,19 @@ function actionLabel(entry: FeedEntry, t: FeedT): string {
 // página (creado y completado) con el mismo id.
 function entryKey(entry: FeedEntry): string {
   return entry.kind === "camino" ? `camino-${entry.event}-${entry.id}` : `${entry.kind}-${entry.id}`;
+}
+
+// La paginación es por offset: si entra actividad nueva entre una página y la siguiente (por ejemplo,
+// una valoración desde "+ Añadir" con Inicio abierto), la página siguiente repite la última entrada de
+// la anterior. Se conserva la primera aparición, que es la que ya estaba en pantalla.
+function uniqueEntries(entries: FeedEntry[]): FeedEntry[] {
+  const seen = new Set<string>();
+  return entries.filter((entry) => {
+    const key = entryKey(entry);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 // El feed muestra el puntaje detallado cuando el autor lo puso (openspec:

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { activateArtistJourney, getArtistJourneyStatuses } from "@/lib/api/artist-journeys";
 import { ApiError } from "@/lib/api/client";
+import { useNotifyQuickActionChange } from "../quick-actions-changes";
 import type { PickTarget } from "../types";
 
 type JourneyState = "checking" | "activating" | "activated" | "already";
@@ -26,6 +27,7 @@ export function JourneyPanel({ target, onReset, onNavigate }: JourneyPanelProps)
   const [state, setState] = useState<JourneyState>("checking");
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const started = useRef(false);
+  const notifyChanged = useNotifyQuickActionChange();
 
   useEffect(() => {
     if (started.current) return;
@@ -39,12 +41,13 @@ export function JourneyPanel({ target, onReset, onNavigate }: JourneyPanelProps)
         }
         setState("activating");
         await activateArtistJourney(target.id);
+        notifyChanged();
         setState("activated");
       } catch (err) {
         setErrorCode(err instanceof ApiError ? err.code : "INTERNAL_ERROR");
       }
     })();
-  }, [target.id]);
+  }, [target.id, notifyChanged]);
 
   if (errorCode) {
     return (

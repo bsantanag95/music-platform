@@ -9,6 +9,7 @@ import { ListenEntryForm } from "@/components/diary/ListenEntryForm";
 import { createListenEntry } from "@/lib/api/diary";
 import { ApiError } from "@/lib/api/client";
 import type { ListenEntry } from "@/lib/api/schemas";
+import { useNotifyQuickActionChange } from "../quick-actions-changes";
 import type { PickTarget } from "../types";
 
 interface ListenPanelProps {
@@ -28,14 +29,18 @@ export function ListenPanel({ target, onReset, onNavigate }: ListenPanelProps) {
   const [entry, setEntry] = useState<ListenEntry | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const started = useRef(false);
+  const notifyChanged = useNotifyQuickActionChange();
 
   useEffect(() => {
     if (started.current) return;
     started.current = true;
     createListenEntry({ type: target.type, id: target.id })
-      .then(setEntry)
+      .then((created) => {
+        setEntry(created);
+        notifyChanged();
+      })
       .catch((err: unknown) => setErrorCode(err instanceof ApiError ? err.code : "INTERNAL_ERROR"));
-  }, [target.type, target.id]);
+  }, [target.type, target.id, notifyChanged]);
 
   if (errorCode) {
     return (
@@ -78,7 +83,10 @@ export function ListenPanel({ target, onReset, onNavigate }: ListenPanelProps) {
           reaction: entry.reaction,
           audience: entry.audience,
         }}
-        onSaved={setEntry}
+        onSaved={(saved) => {
+          setEntry(saved);
+          notifyChanged();
+        }}
       />
       <div className="flex flex-wrap items-center gap-3 border-t border-ink-border pt-4">
         <Button variant="secondary" onClick={onReset}>
