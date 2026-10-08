@@ -8,6 +8,7 @@ import type { Audience } from "@/services/social/types";
 import { FAVORITE_TARGET_TYPES } from "./types";
 import type { FavoriteTargetType, FavoriteTarget } from "./types";
 import { resolveNewContentAudience } from "@/services/social/default-audience";
+import { scheduleCoverMirrorsForUrls } from "@/services/catalog/cover-mirror";
 
 export type { FavoriteTarget } from "./types";
 
@@ -342,8 +343,11 @@ export async function listMyFavorites(
 
   const counts = await favoriteCounts(scopeConditions);
 
+  const favorites = rows.slice(0, pageSize).map(serializeFavorite);
+  scheduleFavoriteCoverMirrors(favorites);
+
   return {
-    favorites: rows.slice(0, pageSize).map(serializeFavorite),
+    favorites,
     page,
     pageSize,
     hasNext: rows.length > pageSize,
@@ -403,8 +407,11 @@ export async function listUserFavorites(
 
   const counts = await favoriteCounts(scopeConditions);
 
+  const favorites = rows.slice(0, pageSize).map(serializeFavorite);
+  scheduleFavoriteCoverMirrors(favorites);
+
   return {
-    favorites: rows.slice(0, pageSize).map(serializeFavorite),
+    favorites,
     page,
     pageSize,
     hasNext: rows.length > pageSize,
@@ -468,12 +475,24 @@ export async function getFavoritesPreview(
     favoriteCounts(scopeConditions),
   ]);
 
+  const albums = albumRows.map(serializeFavorite);
+  const songs = songRows.map(serializeFavorite);
+  scheduleFavoriteCoverMirrors([...albums, ...songs]);
+
   return {
     artists: artistRows.map(serializeFavorite),
-    albums: albumRows.map(serializeFavorite),
-    songs: songRows.map(serializeFavorite),
+    albums,
+    songs,
     counts,
   };
+}
+
+/**
+ * Espeja, después de responder, las carátulas de estos favoritos que todavía son un hotlink a Cover
+ * Art Archive (openspec: mirror-cover-art). Ver `scheduleCoverMirrorsForUrls`.
+ */
+function scheduleFavoriteCoverMirrors(entries: Array<{ target: { coverThumbUrl: string | null } }>): void {
+  scheduleCoverMirrorsForUrls(entries.map((entry) => entry.target.coverThumbUrl));
 }
 
 async function getOwnedFavorite(id: string, userId: string): Promise<FavoriteEntry> {

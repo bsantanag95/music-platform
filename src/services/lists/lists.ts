@@ -19,6 +19,7 @@ import {
   type ListSort,
 } from "./types";
 import { resolveNewContentAudience } from "@/services/social/default-audience";
+import { scheduleCoverMirrorsForUrls } from "@/services/catalog/cover-mirror";
 
 /** Cantidad máxima de carátulas que se llevan a la tarjeta de una lista. */
 export const LIST_COVER_THUMBS_MAX = 4;
@@ -290,6 +291,9 @@ export async function enrichLists(listIds: string[]): Promise<Map<string, ListEn
     const entry = result.get(row.listId);
     if (entry && row.cover) entry.coverThumbs.push(row.cover);
   }
+
+  // Carátulas que siguen siendo un hotlink a Cover Art Archive: se espejan al terminar la respuesta.
+  scheduleCoverMirrorsForUrls(sorted.map((row) => row.cover));
 
   return result;
 }
@@ -636,6 +640,8 @@ async function listItems(listId: string): Promise<UserListItemEntry[]> {
     .leftJoin(recording, eq(userListItem.recordingId, recording.id))
     .where(eq(userListItem.listId, listId))
     .orderBy(asc(userListItem.position), asc(userListItem.id));
+
+  scheduleCoverMirrorsForUrls(rows.map((row) => row.releaseCover ?? row.songCover));
 
   return rows.map((row) => {
     let id = "";

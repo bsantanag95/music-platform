@@ -104,17 +104,22 @@ export async function mirrorCover(
 
 const CAA_HOTLINK_PREFIX = "https://coverartarchive.org/";
 
+/** Tope de carátulas por tarea diferida: una página trae ≤50 y el resto cae en la siguiente visita. */
+const MAX_DEFERRED_MIRRORS = 50;
+
+type CoverMirrorFilter = ReturnType<typeof inArray>;
+
 /**
- * Espeja, después de responder, las carátulas de estos release-groups que todavía apuntan a Cover
- * Art Archive (openspec: mirror-cover-art; ADR 0018). Las listas personales (Quiero escuchar) solo
+ * Espeja, después de responder, las carátulas que todavía apuntan a Cover Art Archive (openspec:
+ * mirror-cover-art; ADR 0018). Las listas personales (Quiero escuchar, favoritos, listas) solo
  * leen `cover_thumb_url`: sin esto un álbum ingerido antes del espejo seguía sirviéndose por
  * hotlink — y por el optimizador de imágenes de Next, que descarga de CAA en cada petición — hasta
  * que alguien abría su página. La respuesta actual conserva la URL vieja; la próxima ya usa el
  * storage. Descargas en serie para no martillar archive.org; no lanza ni afecta la respuesta.
  * Sin espejo habilitado, o fuera de una request de Next (scripts, tests), no hace nada.
  */
-export function scheduleCoverMirrors(releaseGroupIds: string[]): void {
-  if (releaseGroupIds.length === 0 || !isCoverMirrorEnabled()) return;
+function scheduleMirror(selector: CoverMirrorFilter): void {
+  if (!isCoverMirrorEnabled()) return;
   try {
     after(async () => {
       const rows = await db
@@ -122,7 +127,7 @@ export function scheduleCoverMirrors(releaseGroupIds: string[]): void {
         .from(releaseGroup)
         .where(
           and(
-            inArray(releaseGroup.id, releaseGroupIds),
+            selector,
             like(releaseGroup.coverThumbUrl, `${CAA_HOTLINK_PREFIX}%`),
             isNull(releaseGroup.coverStorageKey),
             isNull(releaseGroup.coverBlockedAt),
@@ -141,6 +146,25 @@ export function scheduleCoverMirrors(releaseGroupIds: string[]): void {
   } catch {
     // `after()` no está disponible fuera de una request de Next.
   }
+}
+
+/** Espeja las carátulas de estos release-groups que sigan en CAA. */
+export function scheduleCoverMirrors(releaseGroupIds: string[]): void {
+  if (releaseGroupIds.length === 0) return;
+  scheduleMirror(inArray(releaseGroup.id, releaseGroupIds.slice(0, MAX_DEFERRED_MIRRORS)));
+}
+
+/**
+ * Igual, a partir de las URLs de carátula que ya trae una respuesta (favoritos, listas): ignora las
+ * nulas y las que no son un hotlink a CAA, y quita duplicados. La URL de CAA es única por álbum
+ * (`/release-group/{mbid}/front-250`), así que identifica la fila sin necesitar su id.
+ */
+export function scheduleCoverMirrorsForUrls(urls: ReadonlyArray<string | null | undefined>): void {
+  const remote = [...new Set(urls)].filter(
+    (url): url is string => typeof url === "string" && url.startsWith(CAA_HOTLINK_PREFIX),
+  );
+  if (remote.length === 0) return;
+  scheduleMirror(inArray(releaseGroup.coverThumbUrl, remote.slice(0, MAX_DEFERRED_MIRRORS)));
 }
 
 /** Borra un objeto del storage sin lanzar: devuelve si se pudo. */
