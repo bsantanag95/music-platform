@@ -3,11 +3,21 @@ import type { ListEntityType, SocialTargetType } from "@/lib/api/schemas";
 // Tipos compartidos del diálogo de acciones rápidas del Header (openspec: add-header-quick-actions).
 
 /** Acciones del diálogo, en el orden en que se muestran como chips. */
-export const QUICK_ACTIONS = ["listen", "rate", "favorite", "pending", "addToList", "newList"] as const;
+export const QUICK_ACTIONS = [
+  "listen",
+  "rate",
+  "favorite",
+  "pending",
+  "collection",
+  "journey",
+  "addToList",
+  "newList",
+  "newCamino",
+] as const;
 export type QuickAction = (typeof QUICK_ACTIONS)[number];
 
 /** Acciones que operan sobre un objetivo del catálogo elegido con el buscador. */
-export type TargetAction = Exclude<QuickAction, "newList">;
+export type TargetAction = Exclude<QuickAction, "newList" | "newCamino">;
 
 /** Tipos que ofrece el buscador de objetivos: uno por búsqueda, álbum por defecto. */
 export const PICKER_TYPES = ["album", "song", "artist"] as const;
@@ -15,13 +25,15 @@ export type PickerType = (typeof PICKER_TYPES)[number];
 
 /**
  * Tipos de búsqueda por acción. Pendiente no admite canciones (`want_to_listen_entry` solo
- * guarda artista y álbum).
+ * guarda artista y álbum); Colección es de álbumes y Recorrido de artistas.
  */
 export const ACTION_PICKER_TYPES: Record<TargetAction, readonly PickerType[]> = {
   listen: PICKER_TYPES,
   rate: PICKER_TYPES,
   favorite: PICKER_TYPES,
   pending: ["album", "artist"],
+  collection: ["album"],
+  journey: ["artist"],
   addToList: PICKER_TYPES,
 };
 

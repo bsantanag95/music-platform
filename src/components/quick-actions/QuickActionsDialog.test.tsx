@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   searchArtists: vi.fn(),
   createListenEntry: vi.fn(),
   createList: vi.fn(),
+  createCamino: vi.fn(),
 }));
 
 vi.mock("@/lib/api/catalog", () => ({
@@ -19,6 +20,7 @@ vi.mock("@/lib/api/catalog", () => ({
   searchArtists: mocks.searchArtists,
 }));
 vi.mock("@/lib/api/lists", () => ({ createList: mocks.createList }));
+vi.mock("@/lib/api/camino", () => ({ createCamino: mocks.createCamino }));
 vi.mock("@/lib/api/diary", () => ({ createListenEntry: mocks.createListenEntry }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>,
@@ -32,6 +34,8 @@ vi.mock("./panels/RatePanel", () => ({ RatePanel: () => <div data-testid="rate-p
 vi.mock("./panels/MarkPanel", () => ({
   MarkPanel: ({ kind }: { kind: string }) => <div data-testid={`mark-panel-${kind}`} />,
 }));
+vi.mock("./panels/CollectionPanel", () => ({ CollectionPanel: () => <div data-testid="collection-panel" /> }));
+vi.mock("./panels/JourneyPanel", () => ({ JourneyPanel: () => <div data-testid="journey-panel" /> }));
 vi.mock("./panels/AddToListStep", () => ({ AddToListStep: () => <div data-testid="add-to-list-step" /> }));
 
 const albumId = "a1b2c3d4-0000-4000-8000-000000000010";
@@ -110,13 +114,23 @@ describe("QuickActionsDialog", () => {
     await waitFor(() => expect(screen.getByRole("searchbox")).toHaveFocus());
   });
 
-  it("ofrece las seis acciones como chips", async () => {
+  it("ofrece las nueve acciones como chips", async () => {
     renderWithIntl(<QuickActionsDialog onClose={() => {}} />);
     const group = await screen.findByRole("radiogroup", { name: "Qué quieres hacer" });
     const names = within(group)
       .getAllByRole("radio")
       .map((chip) => chip.textContent);
-    expect(names).toEqual(["Escucha", "Valorar", "Favorito", "Pendiente", "A lista", "Nueva lista"]);
+    expect(names).toEqual([
+      "Escucha",
+      "Valorar",
+      "Favorito",
+      "Pendiente",
+      "Colección",
+      "Recorrido",
+      "A lista",
+      "Nueva lista",
+      "Nuevo Camino",
+    ]);
   });
 
   it("las flechas mueven entre las acciones", async () => {
@@ -244,6 +258,47 @@ describe("QuickActionsDialog", () => {
     // Tipo fijado: no se ofrece el conmutador de tipo de búsqueda.
     expect(screen.queryByRole("radio", { name: "Álbum" })).not.toBeInTheDocument();
     expect(screen.queryByRole("radio", { name: "Canción" })).not.toBeInTheDocument();
+  });
+
+  it("Colección busca solo álbumes y Recorrido solo artistas, sin conmutador de tipo", async () => {
+    mocks.searchArtists.mockResolvedValue({ ...searchResponse, type: "artist", results: [] });
+    renderWithIntl(<QuickActionsDialog onClose={() => {}} />);
+    await userEvent.click(await screen.findByRole("radio", { name: "Canción" }));
+
+    await userEvent.click(screen.getByRole("radio", { name: "Colección" }));
+    expect(screen.queryByRole("radio", { name: "Canción" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Artista" })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("radio", { name: "Recorrido" }));
+    expect(screen.queryByRole("radio", { name: "Álbum" })).not.toBeInTheDocument();
+    await userEvent.type(screen.getByRole("searchbox"), "pink");
+    await waitFor(() => expect(mocks.searchArtists).toHaveBeenCalledWith("pink"), { timeout: 1500 });
+    expect(mocks.searchAlbums).not.toHaveBeenCalled();
+  });
+
+  it("elegir un álbum con Colección monta el panel de colección", async () => {
+    mocks.searchAlbums.mockResolvedValue(searchResponse);
+    renderWithIntl(<QuickActionsDialog onClose={() => {}} />);
+    await userEvent.click(await screen.findByRole("radio", { name: "Colección" }));
+    await userEvent.type(screen.getByRole("searchbox"), "dark side");
+    await userEvent.click(await screen.findByRole("button", { name: /The Dark Side of the Moon/ }));
+    expect(await screen.findByTestId("collection-panel")).toBeInTheDocument();
+  });
+
+  it("Nuevo Camino no muestra el buscador y 'Agregar a este Camino' pasa a A lista con álbumes fijados", async () => {
+    mocks.createCamino.mockResolvedValue({ id: "c1", title: "Para el auto" });
+    renderWithIntl(<QuickActionsDialog onClose={() => {}} />);
+
+    await userEvent.click(await screen.findByRole("radio", { name: "Nuevo Camino" }));
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText("Nombre del Camino"), "Para el auto");
+    await userEvent.click(screen.getByRole("button", { name: "Crear Camino" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Agregar a este Camino" }));
+
+    expect(screen.getByRole("radio", { name: "A lista", checked: true })).toBeInTheDocument();
+    expect(screen.getByRole("searchbox")).toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Canción" })).not.toBeInTheDocument();
+    expect(mocks.createCamino).toHaveBeenCalledWith({ title: "Para el auto" });
   });
 
   it("Escape cierra el diálogo", async () => {
