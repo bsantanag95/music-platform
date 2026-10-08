@@ -209,6 +209,23 @@ es el **prefijo** del título de uno de sus álbumes, ese álbum llega primero c
 (puente artista + título: `dokken back for` → *Back for the Attack*). `user` aplica las mismas
 reglas que `/api/users` (solo cuentas activas).
 
+`song` (openspec `improve-song-suggestions`) tiene su propio orden:
+
+- **Una sugerencia por canción**: las grabaciones se agrupan por título base (sin "(live)",
+  "[demo]", " - Live at …") y artista principal; `id` es la grabación del grupo que aparece en más
+  álbumes (la versión canónica).
+- **Puente artista + canción**: si un artista local ocupa un extremo de la consulta y el resto
+  tiene 2+ caracteres, sus canciones cuyo título empieza por el resto van primero
+  (`metallica one` → «One — Metallica»).
+- Después, las que **cubren** la consulta (cada palabra está en el título o el artista; la última
+  como prefijo) y al final las coincidencias difusas, que solo rellenan, ordenadas por cuántas
+  palabras cubren.
+- Dentro de cada bloque: nivel de coincidencia del título base → actividad en la plataforma →
+  álbumes en que aparece → seguidores del artista → discografía explorada → similitud. Ninguna
+  cifra se expone en la respuesta.
+- Candidatos: 80 con 3+ caracteres, 40 con 2 (con 2 caracteres el filtro casa miles de títulos).
+  Las señales salen de consultas en lote, nunca una por candidato.
+
 ## `GET /api/catalog/release-group/[id]` — ✅ Existe
 
 Trae (o ingiere bajo demanda) el tracklist de la **edición representativa** de un álbum ya

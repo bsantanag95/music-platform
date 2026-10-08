@@ -18,6 +18,26 @@ export function normalizeSearchText(value: string): string {
     .trim();
 }
 
+/**
+ * Título base de una versión: sin sufijos entre paréntesis o corchetes
+ * ("(live)", "[demo]", "(2011 remaster)") ni " - Live at …". Cualquier
+ * versión cuenta como la misma canción; sin esto "Kiss of Death (live)"
+ * quedaba como un grupo aparte, sin álbumes. Lo usan la búsqueda de Canciones
+ * y sus sugerencias, para agrupar con el mismo criterio.
+ */
+export function baseSongTitle(title: string): string {
+  let base = title.trim();
+  let previous = "";
+  while (base !== previous) {
+    previous = base;
+    base = base
+      .replace(/\s*[([][^()[\]]*[)\]]\s*$/u, "")
+      .replace(/\s+[-–—]\s+[^-–—]+$/u, "")
+      .trim();
+  }
+  return base || title.trim();
+}
+
 export function tokenize(value: string): string[] {
   const normalized = normalizeSearchText(value);
   return normalized ? normalized.split(" ") : [];

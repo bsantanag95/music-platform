@@ -13,7 +13,9 @@ vi.mock("@/services/musicbrainz/client", () => ({
   ),
 }));
 vi.mock("@/services/storage/avatar-urls", () => ({ resolveImageUrls: vi.fn(async () => new Map()) }));
-vi.mock("../ingest-recording", () => ({ localRecordingArtistName: vi.fn(async () => "Sabrina Carpenter") }));
+vi.mock("./song-suggestions", () => ({
+  songSuggestions: vi.fn(async () => [{ id: "taste", title: "Taste", artistName: "Sabrina Carpenter" }]),
+}));
 vi.mock("./activity", () => ({ activityScores: vi.fn(async () => new Map()) }));
 vi.mock("./local-match", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./local-match")>();
@@ -21,7 +23,6 @@ vi.mock("./local-match", async (importOriginal) => {
     rankByMatchTier: actual.rankByMatchTier,
     matchLocalArtists: vi.fn(async () => []),
     matchLocalReleaseGroups: vi.fn(async () => []),
-    matchLocalRecordings: vi.fn(async () => []),
     findArtistsByKeys: vi.fn(async () => []),
     releaseGroupsByArtistsAndTitle: vi.fn(async () => []),
     primaryArtistsByReleaseGroup: vi.fn(async () => new Map()),
@@ -29,6 +30,7 @@ vi.mock("./local-match", async (importOriginal) => {
 });
 
 const localMatch = await import("./local-match");
+const songSuggestionsModule = await import("./song-suggestions");
 const { suggest } = await import("./suggest");
 
 const dokken = { id: "dokken", name: "Dokken", type: "group", disambiguation: null } as ArtistRow;
@@ -70,13 +72,10 @@ describe("suggest", () => {
     ]);
   });
 
-  it("Canciones: grabaciones locales con su artista", async () => {
-    vi.mocked(localMatch.matchLocalRecordings).mockResolvedValue([
-      { id: "taste", mbid: null, title: "Taste", durationSec: null },
-    ]);
-
+  it("Canciones: delega en las sugerencias agrupadas por canción con el límite de seis", async () => {
     expect(await suggest("song", "tas")).toEqual([
       { kind: "song", id: "taste", title: "Taste", artistName: "Sabrina Carpenter" },
     ]);
+    expect(songSuggestionsModule.songSuggestions).toHaveBeenCalledWith("tas", 6);
   });
 });
