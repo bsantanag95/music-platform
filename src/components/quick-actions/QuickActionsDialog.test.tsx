@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   searchAlbums: vi.fn(),
   searchSongs: vi.fn(),
   searchArtists: vi.fn(),
+  getSearchSuggestions: vi.fn(async () => ({ suggestions: [] })),
   createListenEntry: vi.fn(),
   createList: vi.fn(),
   createCamino: vi.fn(),
@@ -18,6 +19,7 @@ vi.mock("@/lib/api/catalog", () => ({
   searchAlbums: mocks.searchAlbums,
   searchSongs: mocks.searchSongs,
   searchArtists: mocks.searchArtists,
+  getSearchSuggestions: mocks.getSearchSuggestions,
 }));
 vi.mock("@/lib/api/lists", () => ({ createList: mocks.createList }));
 vi.mock("@/lib/api/camino", () => ({ createCamino: mocks.createCamino }));
@@ -147,7 +149,7 @@ describe("QuickActionsDialog", () => {
     renderWithIntl(<QuickActionsDialog onClose={() => {}} />);
 
     await userEvent.type(await screen.findByRole("searchbox"), "dark side");
-    await waitFor(() => expect(mocks.searchAlbums).toHaveBeenCalledWith("dark side"), { timeout: 1500 });
+    await waitFor(() => expect(mocks.searchAlbums).toHaveBeenCalledWith("dark side", { signal: expect.any(AbortSignal) }), { timeout: 1500 });
     // Álbum es el tipo por defecto: un solo tipo por búsqueda.
     expect(mocks.searchSongs).not.toHaveBeenCalled();
     expect(mocks.searchArtists).not.toHaveBeenCalled();
@@ -159,7 +161,7 @@ describe("QuickActionsDialog", () => {
     expect(await screen.findByTestId("expand-form")).toHaveTextContent(createdEntry.id);
   });
 
-  it("con el tipo Canción registra la canción resuelta (la única con grabación)", async () => {
+  it("con el tipo Canción registra la canción resuelta (solo las que tienen grabación)", async () => {
     mocks.searchSongs.mockResolvedValue(songResponse);
     mocks.createListenEntry.mockResolvedValue({
       ...createdEntry,
@@ -169,7 +171,7 @@ describe("QuickActionsDialog", () => {
 
     await userEvent.click(await screen.findByRole("radio", { name: "Canción" }));
     await userEvent.type(screen.getByRole("searchbox"), "time");
-    await waitFor(() => expect(mocks.searchSongs).toHaveBeenCalledWith("time"), { timeout: 1500 });
+    await waitFor(() => expect(mocks.searchSongs).toHaveBeenCalledWith("time", { purpose: "pick", signal: expect.any(AbortSignal) }), { timeout: 1500 });
 
     const options = await screen.findAllByRole("button", { name: /Time/ });
     expect(options).toHaveLength(1);
@@ -194,8 +196,9 @@ describe("QuickActionsDialog", () => {
     renderWithIntl(<QuickActionsDialog onClose={() => {}} />);
     await userEvent.type(await screen.findByRole("searchbox"), "d");
     expect(await screen.findByText(/al menos dos letras/)).toBeInTheDocument();
-    await new Promise((resolve) => setTimeout(resolve, 450));
+    await new Promise((resolve) => setTimeout(resolve, 650));
     expect(mocks.searchAlbums).not.toHaveBeenCalled();
+    expect(mocks.getSearchSuggestions).not.toHaveBeenCalled();
   });
 
   it("cambiar de acción conserva el texto de búsqueda y no registra nada", async () => {
@@ -272,7 +275,7 @@ describe("QuickActionsDialog", () => {
     await userEvent.click(screen.getByRole("radio", { name: "Recorrido" }));
     expect(screen.queryByRole("radio", { name: "Álbum" })).not.toBeInTheDocument();
     await userEvent.type(screen.getByRole("searchbox"), "pink");
-    await waitFor(() => expect(mocks.searchArtists).toHaveBeenCalledWith("pink"), { timeout: 1500 });
+    await waitFor(() => expect(mocks.searchArtists).toHaveBeenCalledWith("pink", { signal: expect.any(AbortSignal) }), { timeout: 1500 });
     expect(mocks.searchAlbums).not.toHaveBeenCalled();
   });
 

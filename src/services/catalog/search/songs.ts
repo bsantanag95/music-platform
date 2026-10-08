@@ -39,6 +39,7 @@ import { coverageLevel, edgeSplits, restAfterEdgeArtist } from "./coverage";
 import { findArtistsByKeys, matchLocalRecordings } from "./local-match";
 import { artistQuery, escapeLucenePhrase, recordingFieldQuery, recordingFreeQuery } from "./mb-query";
 import { normalizeSearchText, splitExplicit, tokenize, withoutSeparator } from "./normalize";
+import type { SearchPurpose } from "./params";
 import { sortByRank, topArtistNames, type RankKey } from "./rank";
 import {
   GENERIC_QUERY_THRESHOLD,
@@ -58,6 +59,8 @@ const MAX_ATTEMPTS = 2;
 // grabación individual tiene todas las apariciones.
 const CANDIDATE_BROWSE_LIMIT = 4;
 const RGID_CLAUSE_LIMIT = 120;
+/** Grupos que devuelve el modo de elección, cada uno con su grabación identidad. */
+export const PICK_GROUP_LIMIT = 10;
 
 const SONG_RG_CATEGORY_ORDER: Record<ReleaseGroupCategoryValue, number> = {
   studio: 0,
@@ -90,7 +93,7 @@ export interface Interpretation {
  * consulta, más los de la búsqueda de artistas de MusicBrainz. Deduplicados
  * por mbid (o id local) conservando score y actividad.
  */
-async function artistCandidates(text: string, localOnly: boolean): Promise<{
+async function artistCandidates(text: string, localOnly: boolean, signal?: AbortSignal): Promise<{
   candidates: ArtistCandidate[];
   remoteFailed: boolean;
 }> {
@@ -98,7 +101,9 @@ async function artistCandidates(text: string, localOnly: boolean): Promise<{
   const keys = [...new Set(edgeSplits(tokens).map((split) => split.artistTokens.join(" ")))];
   const [localRows, remoteResult] = await Promise.all([
     findArtistsByKeys(keys),
-    (localOnly ? Promise.resolve({ artists: [] as MBArtistSearchItem[] }) : musicbrainz.searchArtist(artistQuery(text)))
+    (localOnly
+      ? Promise.resolve({ artists: [] as MBArtistSearchItem[] })
+      : musicbrainz.searchArtist(artistQuery(text), { signal }))
       .then((response) => ({ ok: true as const, artists: response.artists }))
       .catch(() => ({ ok: false as const, artists: [] as MBArtistSearchItem[] })),
   ]);
@@ -218,7 +223,7 @@ export function isRelevantRecordingTitle(songPart: string, title: string): boole
  * categoría (estudio primero: ahí vive la grabación canónica) porque la
  * cláusula Lucene tiene tope y no se puede truncar en orden de uuid.
  */
-async function artistReleaseGroupMbids(artist: ArtistCandidate): Promise<string[]> {
+async function artistReleaseGroupMbids(artist: ArtistCandidate, signal?: AbortSignal): Promise<string[]> {
   const byMbid = new Map<string, ReleaseGroupCategoryValue>();
   if (artist.localId) {
     const rows = await db
@@ -232,7 +237,7 @@ async function artistReleaseGroupMbids(artist: ArtistCandidate): Promise<string[
   }
   if (byMbid.size === 0 && artist.mbid) {
     try {
-      const browse = await musicbrainz.browseReleaseGroupsByArtist(artist.mbid);
+      const browse = await musicbrainz.browseReleaseGroupsByArtist(artist.mbid, 0, signal);
       for (const rg of browse["release-groups"]) {
         byMbid.set(rg.id, mapReleaseGroupCategory(rg["primary-type"], rg["secondary-types"]));
       }
@@ -253,9 +258,13 @@ async function artistReleaseGroupMbids(artist: ArtistCandidate): Promise<string[
  * que solo el rgid de [Led Zeppelin IV] la encuentra. Sin rgids se degrada a
  * la consulta por nombre; sin artista, texto libre.
  */
-async function recordingQueryFor(interpretation: Interpretation, fallbackText: string): Promise<string> {
+async function recordingQueryFor(
+  interpretation: Interpretation,
+  fallbackText: string,
+  signal?: AbortSignal,
+): Promise<string> {
   if (!interpretation.artistName) return recordingFreeQuery(fallbackText);
-  const rgMbids = interpretation.artist ? await artistReleaseGroupMbids(interpretation.artist) : [];
+  const rgMbids = interpretation.artist ? await artistReleaseGroupMbids(interpretation.artist, signal) : [];
   if (rgMbids.length > 0) {
     const clause = rgMbids.slice(0, RGID_CLAUSE_LIMIT).map((mbid) => `rgid:${mbid}`).join(" OR ");
     return `"${escapeLucenePhrase(interpretation.songPart)}" AND (${clause})`;
@@ -267,6 +276,16 @@ async function recordingQueryFor(interpretation: Interpretation, fallbackText: s
 
 function primaryArtistName(item: MBRecordingSearchItem): string | null {
   return item["artist-credit"]?.[0]?.name ?? null;
+}
+
+/** Datos para registrar la grabación con lo que trae la propia búsqueda, sin otra request. */
+function recordingSeed(item: MBRecordingSearchItem) {
+  return {
+    mbid: item.id,
+    title: item.title,
+    durationSec: typeof item.length === "number" ? Math.round(item.length / 1000) : null,
+    credits: item["artist-credit"] ?? [],
+  };
 }
 
 /**
@@ -363,7 +382,7 @@ interface Group {
  * ingesta de la grabación identidad (la de más apariciones) — la única de la
  * búsqueda.
  */
-async function expandGroup(group: Group): Promise<{
+async function expandGroup(group: Group, signal?: AbortSignal): Promise<{
   result: SongGroupResult;
   remoteFailed: boolean;
 }> {
@@ -381,7 +400,8 @@ async function expandGroup(group: Group): Promise<{
 
   try {
     for (const item of group.remote.slice(0, CANDIDATE_BROWSE_LIMIT)) {
-      const browse = await musicbrainz.browseReleasesByRecording(item.id);
+      const browse = await musicbrainz.browseReleasesByRecording(item.id, signal);
+      signal?.throwIfAborted();
       const appearances = await albumsFromMbReleases(browse.releases);
       if (appearances.length === 0) continue;
       lists.push(appearances);
@@ -391,17 +411,11 @@ async function expandGroup(group: Group): Promise<{
   } catch {
     remoteFailed = true;
   }
+  signal?.throwIfAborted();
 
   if (winner && (!identity || winner.count > identity.count)) {
     const [existing] = await db.select().from(recording).where(eq(recording.mbid, winner.item.id)).limit(1);
-    const row =
-      existing ??
-      (await findOrIngestRecording({
-        mbid: winner.item.id,
-        title: winner.item.title,
-        durationSec: typeof winner.item.length === "number" ? Math.round(winner.item.length / 1000) : null,
-        credits: winner.item["artist-credit"] ?? [],
-      }));
+    const row = existing ?? (await findOrIngestRecording(recordingSeed(winner.item)));
     identity = {
       row,
       artistName: (await localRecordingArtistName(row.id)) ?? primaryArtistName(winner.item),
@@ -425,13 +439,18 @@ async function expandGroup(group: Group): Promise<{
   };
 }
 
-/** Primer grupo solo con lo local: apariciones ya ingeridas, sin browse ni ingesta. */
-function localExpandedResult(group: Group): SongGroupResult {
-  const best = group.local.reduce<LocalContribution | null>(
+/** La contribución local con más apariciones (la grabación canónica conocida). */
+function bestLocal(group: Group): LocalContribution | null {
+  return group.local.reduce<LocalContribution | null>(
     (current, contribution) =>
       !current || contribution.appearances.length > current.appearances.length ? contribution : current,
     null,
   );
+}
+
+/** Primer grupo solo con lo local: apariciones ya ingeridas, sin browse ni ingesta. */
+function localExpandedResult(group: Group): SongGroupResult {
+  const best = bestLocal(group);
   return {
     ...collapsedResult(group),
     recordingId: best?.row.id ?? null,
@@ -453,6 +472,29 @@ function collapsedResult(group: Group): SongGroupResult {
   };
 }
 
+/**
+ * Grupo del modo de elección (openspec: speed-up-quick-actions-search): sin apariciones, con la
+ * grabación identidad que se pueda registrar sin otra request. Primero la local con más
+ * apariciones; si no hay, la primera remota sin `disambiguation` (las tomas en vivo y los remixes
+ * casi siempre la tienen) y, si todas la tienen, la primera.
+ */
+async function pickedResult(group: Group, signal?: AbortSignal): Promise<SongGroupResult> {
+  const best = bestLocal(group);
+  if (best) {
+    return {
+      ...collapsedResult(group),
+      artistName: best.artistName ?? group.artistName,
+      recordingId: best.row.id,
+      mbid: best.row.mbid,
+    };
+  }
+  const item = group.remote.find((candidate) => !candidate.disambiguation) ?? group.remote[0];
+  if (!item) return collapsedResult(group);
+  signal?.throwIfAborted();
+  const row = await findOrIngestRecording(recordingSeed(item));
+  return { ...collapsedResult(group), recordingId: row.id, mbid: row.mbid };
+}
+
 export interface SongSearchOptions {
   offset?: number;
   /**
@@ -460,16 +502,24 @@ export interface SongSearchOptions {
    * escrituras: lo que la página pinta al instante mientras llega el resto.
    */
   localOnly?: boolean;
+  /**
+   * `pick`: elegir un objetivo. Hasta `PICK_GROUP_LIMIT` grupos, todos con grabación identidad,
+   * sin browse de apariciones (`albums: []`) y sin paginar.
+   */
+  purpose?: SearchPurpose;
+  /** Abandono de quien busca: descarta las requests en cola y evita escribir. */
+  signal?: AbortSignal;
 }
 
 export async function searchSongs(
   query: string,
-  { offset = 0, localOnly = false }: SongSearchOptions = {},
+  { offset = 0, localOnly = false, purpose, signal }: SongSearchOptions = {},
 ): Promise<SongSearchResponse> {
+  const pick = purpose === "pick";
   const q = query.trim();
   const text = withoutSeparator(q);
 
-  const { candidates, remoteFailed: artistLegFailed } = await artistCandidates(text, localOnly);
+  const { candidates, remoteFailed: artistLegFailed } = await artistCandidates(text, localOnly, signal);
   const interpretations = rankInterpretations(q, candidates);
   // La mejor interpretación con artista y, si no da nada, la consulta
   // completa como título (la cobertura de términos ordena igual los grupos).
@@ -490,7 +540,10 @@ export async function searchSongs(
   let remoteFailed = artistLegFailed;
   for (const attempt of localOnly ? [] : attempts) {
     try {
-      const response = await musicbrainz.searchRecording(await recordingQueryFor(attempt, text), { offset });
+      const response = await musicbrainz.searchRecording(await recordingQueryFor(attempt, text, signal), {
+        offset,
+        signal,
+      });
       // Con artista, un título igual a la consulta COMPLETA no confirma la
       // lectura "canción X de artista Y": la persona escribió un título
       // ("stairway de prueba" no es «de prueba» de la banda Stairway).
@@ -512,6 +565,8 @@ export async function searchSongs(
       break;
     }
   }
+  // Abandonada: ni escrituras ni respuesta.
+  signal?.throwIfAborted();
   // Solo local: la mejor interpretación con artista local, si la hay.
   const used = chosen ?? attempts[0] ?? freeText;
 
@@ -571,11 +626,17 @@ export async function searchSongs(
   const ranked = sortByRank(allGroups);
 
   const results: SongGroupResult[] = [];
-  for (const [index, group] of ranked.entries()) {
+  if (pick) {
+    for (const group of ranked.slice(0, PICK_GROUP_LIMIT)) {
+      const result = await pickedResult(group, signal);
+      if (result.recordingId) results.push(result);
+    }
+  }
+  for (const [index, group] of (pick ? [] : ranked).entries()) {
     if (index === 0 && offset === 0 && localOnly) {
       results.push(localExpandedResult(group));
     } else if (index === 0 && offset === 0) {
-      const expanded = await expandGroup(group);
+      const expanded = await expandGroup(group, signal);
       remoteFailed ||= expanded.remoteFailed;
       results.push(expanded.result);
     } else {
@@ -606,7 +667,7 @@ export async function searchSongs(
     results,
     remoteFailed,
     total,
-    nextOffset: total !== null && pageSize > 0 && fetched < total ? fetched : null,
+    nextOffset: !pick && total !== null && pageSize > 0 && fetched < total ? fetched : null,
     interpretation,
     alternatives,
     refine,

@@ -249,3 +249,116 @@ describe("searchSongs", () => {
     await expect(searchSongs("taste")).rejects.toBeInstanceOf(ApiError);
   });
 });
+
+describe("searchSongs en modo de elección (openspec: speed-up-quick-actions-search)", () => {
+  function withDisambiguation(item: MBRecordingSearchItem, disambiguation: string): MBRecordingSearchItem {
+    return { ...item, disambiguation };
+  }
+
+  it("todos los grupos traen grabación identidad, sin browse de apariciones ni paginar", async () => {
+    vi.mocked(musicbrainz.searchArtist).mockResolvedValue({ artists: [] });
+    vi.mocked(musicbrainz.searchRecording).mockResolvedValue({
+      count: 300,
+      recordings: [
+        rec("wars", "Holy Wars", "Megadeth"),
+        withDisambiguation(rec("sabbath-live", "Holy Wars", "Sabbath"), "live, 1990"),
+        rec("sabbath-studio", "Holy Wars", "Sabbath"),
+        rec("cover", "Holy Wars", "Tributo"),
+        rec("other", "Holy Wars", "Otra Banda"),
+      ],
+    });
+
+    const response = await searchSongs("holy wars", { purpose: "pick" });
+
+    expect(response.results.map((group) => [group.artistName, group.recordingId, group.albums])).toEqual([
+      ["Megadeth", "local-wars", []],
+      // Prefiere la versión sin disambiguation aunque la en vivo tenga más score.
+      ["Sabbath", "local-sabbath-studio", []],
+      ["Tributo", "local-cover", []],
+      ["Otra Banda", "local-other", []],
+    ]);
+    expect(musicbrainz.browseReleasesByRecording).not.toHaveBeenCalled();
+    expect(ingestRecording.albumsFromMbReleases).not.toHaveBeenCalled();
+    expect(response.nextOffset).toBeNull();
+  });
+
+  it("si todas las versiones tienen disambiguation, usa la primera", async () => {
+    vi.mocked(musicbrainz.searchArtist).mockResolvedValue({ artists: [] });
+    vi.mocked(musicbrainz.searchRecording).mockResolvedValue({
+      count: 2,
+      recordings: [
+        withDisambiguation(rec("a", "Hangar 18", "Megadeth"), "live"),
+        withDisambiguation(rec("b", "Hangar 18", "Megadeth"), "demo"),
+      ],
+    });
+
+    const response = await searchSongs("hangar 18", { purpose: "pick" });
+
+    expect(response.results.map((group) => group.recordingId)).toEqual(["local-a"]);
+  });
+
+  it("prefiere la grabación local y no registra otra para ese grupo", async () => {
+    const localMatch = await import("./local-match");
+    vi.mocked(musicbrainz.searchArtist).mockResolvedValue({ artists: [] });
+    vi.mocked(musicbrainz.searchRecording).mockResolvedValue({
+      count: 1,
+      recordings: [rec("wars-remote", "Holy Wars", "Megadeth")],
+    });
+    vi.mocked(localMatch.matchLocalRecordings).mockResolvedValueOnce([
+      { id: "loc-wars", mbid: "wars-known", title: "Holy Wars" },
+    ] as never);
+    vi.mocked(ingestRecording.localAppearanceAlbums).mockResolvedValueOnce([
+      album("rg-rust", "Rust in Peace", 1990),
+    ]);
+    vi.mocked(ingestRecording.localRecordingArtistName).mockResolvedValueOnce("Megadeth");
+
+    const response = await searchSongs("holy wars", { purpose: "pick" });
+
+    expect(response.results).toHaveLength(1);
+    expect(response.results[0]).toMatchObject({ recordingId: "loc-wars", mbid: "wars-known", albums: [] });
+    expect(ingestRecording.findOrIngestRecording).not.toHaveBeenCalled();
+  });
+
+  it("devuelve como mucho 10 grupos", async () => {
+    vi.mocked(musicbrainz.searchArtist).mockResolvedValue({ artists: [] });
+    vi.mocked(musicbrainz.searchRecording).mockResolvedValue({
+      count: 12,
+      recordings: Array.from({ length: 12 }, (_, index) => rec(`r${index}`, "Love", `Artista ${index}`)),
+    });
+
+    const response = await searchSongs("love", { purpose: "pick" });
+
+    expect(response.results).toHaveLength(10);
+    expect(ingestRecording.findOrIngestRecording).toHaveBeenCalledTimes(10);
+  });
+
+  it("abandonada: pasa la señal a MusicBrainz y no registra grabaciones", async () => {
+    const controller = new AbortController();
+    vi.mocked(musicbrainz.searchArtist).mockResolvedValue({ artists: [] });
+    vi.mocked(musicbrainz.searchRecording).mockImplementation(async () => {
+      controller.abort();
+      return { count: 1, recordings: [rec("wars", "Holy Wars", "Megadeth")] };
+    });
+
+    await expect(searchSongs("holy wars", { purpose: "pick", signal: controller.signal })).rejects.toMatchObject({
+      name: "AbortError",
+    });
+    expect(vi.mocked(musicbrainz.searchArtist).mock.calls[0]![1]).toEqual({ signal: controller.signal });
+    expect(vi.mocked(musicbrainz.searchRecording).mock.calls[0]![1]).toMatchObject({ signal: controller.signal });
+    expect(ingestRecording.findOrIngestRecording).not.toHaveBeenCalled();
+  });
+
+  it("sin purpose, solo el primer grupo trae identidad y apariciones (como en /search)", async () => {
+    vi.mocked(musicbrainz.searchArtist).mockResolvedValue({ artists: [] });
+    vi.mocked(musicbrainz.searchRecording).mockResolvedValue({
+      count: 2,
+      recordings: [rec("wars", "Holy Wars", "Megadeth"), rec("cover", "Holy Wars", "Tributo")],
+    });
+    vi.mocked(ingestRecording.albumsFromMbReleases).mockResolvedValue([album("rg", "Rust in Peace", 1990)]);
+
+    const response = await searchSongs("holy wars");
+
+    expect(response.results.map((group) => group.recordingId)).toEqual(["local-wars", null]);
+    expect(musicbrainz.browseReleasesByRecording).toHaveBeenCalled();
+  });
+});

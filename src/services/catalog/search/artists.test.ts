@@ -179,7 +179,7 @@ describe("searchArtists", () => {
 
     const response = await searchArtists("dokken", { artistType: "person" });
 
-    expect(musicbrainz.searchArtist).toHaveBeenCalledWith("(dokken) AND type:person");
+    expect(musicbrainz.searchArtist).toHaveBeenCalledWith("(dokken) AND type:person", { signal: undefined });
     expect(matchLocalArtists).toHaveBeenCalledWith("dokken", { limit: 10, artistType: "person" });
     expect(response.results.map((result) => result.name)).toEqual(["Don Dokken"]);
   });
@@ -200,5 +200,22 @@ describe("searchArtists", () => {
     vi.mocked(musicbrainz.searchArtist).mockRejectedValue(new Error("503"));
 
     await expect(searchArtists("icon")).rejects.toBeInstanceOf(ApiError);
+  });
+});
+
+describe("searchArtists abandonada (openspec: speed-up-quick-actions-search)", () => {
+  it("pasa la señal a MusicBrainz y no escribe stubs", async () => {
+    const controller = new AbortController();
+    vi.mocked(matchLocalArtists).mockResolvedValue([]);
+    vi.mocked(musicbrainz.searchArtist).mockImplementation(async () => {
+      controller.abort();
+      return { artists: [{ id: "slayer", name: "Slayer", type: "Group", score: 100 }] };
+    });
+
+    await expect(searchArtists("slayer", { signal: controller.signal })).rejects.toMatchObject({
+      name: "AbortError",
+    });
+    expect(vi.mocked(musicbrainz.searchArtist).mock.calls[0]![1]).toEqual({ signal: controller.signal });
+    expect(upsertArtistStubsFromSearch).not.toHaveBeenCalled();
   });
 });

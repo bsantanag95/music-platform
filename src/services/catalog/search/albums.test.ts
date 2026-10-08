@@ -194,3 +194,20 @@ describe("searchAlbums", () => {
     expect(response.results).toHaveLength(1);
   });
 });
+
+describe("searchAlbums abandonada (openspec: speed-up-quick-actions-search)", () => {
+  it("pasa la señal a MusicBrainz y no escribe stubs ni créditos", async () => {
+    const controller = new AbortController();
+    vi.mocked(musicbrainz.searchReleaseGroup).mockImplementation(async () => {
+      controller.abort();
+      return { count: 1, "release-groups": [mbAlbum("reign", "Reign in Blood", "Slayer")] };
+    });
+
+    await expect(searchAlbums("slayer reign", { signal: controller.signal })).rejects.toMatchObject({
+      name: "AbortError",
+    });
+    expect(vi.mocked(musicbrainz.searchReleaseGroup).mock.calls[0]![1]).toMatchObject({ signal: controller.signal });
+    expect(upsertReleaseGroupStubs).not.toHaveBeenCalled();
+    expect(ingestCredits).not.toHaveBeenCalled();
+  });
+});

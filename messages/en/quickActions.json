@@ -30,6 +30,7 @@
     "searchPlaceholderPending": "Search an album or an artist",
     "hint": "Type at least two letters to search.",
     "searching": "Searching...",
+    "searchingMore": "Searching for more results...",
     "searchError": "Couldn't search. Try again.",
     "noResults": "No results for “{query}”.",
     "typeAlbum": "Album",
