@@ -1,6 +1,14 @@
-## MODIFIED Requirements
+## REMOVED Requirements
 
 ### Requirement: Estructura del Header para el usuario autenticado
+
+**Reason**: El control "Registrar" se reemplaza por "Añadir" (diálogo de acciones rápidas) y pasa de la barra general a la zona de usuario; sus escenarios se renombran.
+
+**Migration**: Reemplazado por "Estructura del Header con acciones rápidas", que conserva todo su contenido y escenarios.
+
+## ADDED Requirements
+
+### Requirement: Estructura del Header con acciones rápidas
 
 Cuando existe sesión, el Header SHALL separar dos zonas: una **barra general** de
 navegación de contenido y un **menú de usuario** anclado al nombre visible, cuyo control

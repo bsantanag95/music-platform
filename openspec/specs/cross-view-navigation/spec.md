@@ -63,7 +63,7 @@ artistas y nombres de créditos SHALL conservarse tal como los entrega el catál
 - **WHEN** una persona visita el álbum en español y en inglés
 - **THEN** cambian las etiquetas de navegación y permanecen iguales los datos musicales
 
-### Requirement: Estructura del Header para el usuario autenticado
+### Requirement: Estructura del Header con acciones rápidas
 
 Cuando existe sesión, el Header SHALL separar dos zonas: una **barra general** de
 navegación de contenido y un **menú de usuario** anclado al nombre visible, cuyo control
@@ -79,11 +79,14 @@ SHALL apuntar a la superficie pública `/activity`, distinta del feed de seguido
 superficies personales del usuario (`/me/diary`, `/me/feed`, `/me/favorites`, `/me/lists`,
 `/me/collection`).
 
-La barra general SHALL incluir además un control **"Registrar"** —solo cuando hay sesión—
-que **no es un enlace de navegación** sino el disparador de un modal para registrar una
-escucha eligiendo el objetivo con el buscador del catálogo (ver `listen-diary`). El control
-SHALL presentarse como acción (no como enlace de texto plano) y SHALL ubicarse después de
-los enlaces de contenido.
+La zona de usuario SHALL incluir además un control **"Añadir"** —solo cuando hay sesión—
+ubicado **junto al menú de usuario** (a su izquierda, después del selector de idioma) y NO en
+la barra general. El control **no es un enlace de navegación** sino el disparador del diálogo
+de acciones rápidas (ver `header-quick-actions`): registrar una escucha, valorar, marcar un
+favorito, dejar algo Pendiente, agregar a una lista y crear una lista, eligiendo el objetivo
+con el buscador del catálogo. El control SHALL presentarse como acción (no como enlace de
+texto plano). La barra general queda para lo que el sitio ofrece a cualquiera; la escritura
+de datos propios vive en la zona de usuario.
 
 En escritorio el menú de usuario SHALL desplegarse al posar el cursor sobre el control y
 SHALL replegarse cuando el cursor abandona el conjunto de control y menú. El menú SHALL
@@ -109,19 +112,19 @@ colapsado, en un grupo propio antes de los ajustes, y SHALL NOT ocupar un lugar 
 general.
 
 En viewports por debajo del punto de corte `lg`, el Header SHALL colapsar en un panel único
-que conserve la misma división: un bloque de barra general (buscador, Listas, Actividad,
-Explorar y el control "Registrar") y un bloque de usuario con los mismos accesos del menú,
-el selector de locale y el cierre de sesión.
+que conserve la misma división: un bloque de barra general (buscador, Listas, Actividad y
+Explorar) y un bloque de usuario que empieza por el control "Añadir" y sigue con los mismos
+accesos del menú, el selector de locale y el cierre de sesión.
 
 #### Scenario: Barra general sin superficies personales
 
 - **WHEN** un usuario con sesión abre cualquier página con el Header en un viewport de
   escritorio
 - **THEN** la barra general muestra el buscador, el enlace a `/lists`, el enlace a
-  `/activity`, el control "Registrar" y, si el catálogo editorial está habilitado, el
-  enlace a Explorar
+  `/activity` y, si el catálogo editorial está habilitado, el enlace a Explorar
 - **AND** no muestra enlaces de nivel superior a diario, feed, favoritos, `/me/lists` ni
   colección
+- **AND** no muestra el control "Añadir", que vive en la zona de usuario
 
 #### Scenario: El enlace de Listas apunta a la superficie pública
 
@@ -135,16 +138,22 @@ el selector de locale y el cierre de sesión.
 - **THEN** llega a `/activity` (actividad de la comunidad) y no a `/me/feed` (su feed de
   seguidos)
 
-#### Scenario: El control "Registrar" solo con sesión
+#### Scenario: El control "Añadir" solo con sesión
 
 - **WHEN** se renderiza el Header sin sesión
-- **THEN** la barra general no muestra el control "Registrar"
-- **AND** con sesión, la barra general sí lo muestra
+- **THEN** la zona de usuario no muestra el control "Añadir"
+- **AND** con sesión, la zona de usuario sí lo muestra
 
-#### Scenario: El control "Registrar" abre el modal de registro
+#### Scenario: El control "Añadir" va junto al menú de usuario
 
-- **WHEN** un usuario con sesión activa el control "Registrar"
-- **THEN** se abre el modal para elegir un objetivo del catálogo y registrar una escucha, sin
+- **WHEN** un usuario con sesión abre una página con el Header en un viewport de escritorio
+- **THEN** en la zona de usuario el orden es selector de idioma, control "Añadir" y menú de
+  usuario, con el control inmediatamente antes del menú
+
+#### Scenario: El control "Añadir" abre el diálogo de acciones rápidas
+
+- **WHEN** un usuario con sesión activa el control "Añadir"
+- **THEN** se abre el diálogo de acciones rápidas con la acción "Escucha" seleccionada, sin
   navegar a otra ruta
 
 #### Scenario: El menú de usuario agrupa las superficies personales
@@ -197,8 +206,8 @@ el selector de locale y el cierre de sesión.
 
 - **WHEN** un usuario con sesión abre el panel del Header en un viewport por debajo de `lg`
 - **THEN** ve un bloque de barra general con el buscador, el enlace a `/lists`, el enlace a
-  `/activity`, Explorar y el control "Registrar", y un bloque de usuario con los mismos
-  accesos del menú más el selector de locale y el cierre de sesión
+  `/activity` y Explorar, y un bloque de usuario que empieza por el control "Añadir" y
+  sigue con los mismos accesos del menú más el selector de locale y el cierre de sesión
 
 #### Scenario: Herramientas de rol en el menú de usuario
 

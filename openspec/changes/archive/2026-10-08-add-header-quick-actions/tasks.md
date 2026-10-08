@@ -41,7 +41,7 @@
 
 - [x] 7.1 `pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build` pasan
 - [x] 7.2 Verificación en el navegador (escritorio y 375 px): abrir con "Añadir", recorrer las seis acciones, comprobar que Favorito / Pendiente sobre un objetivo ya marcado no lo quita, que Nueva lista usa la audiencia por defecto y que no hay desborde horizontal del Header
-- [ ] 7.3 Al archivar: reemplazar el Purpose "TBD" de `header-quick-actions` en `openspec/specs/`
+- [x] 7.3 Al archivar: reemplazar el Purpose "TBD" de `header-quick-actions` en `openspec/specs/`
 
 ## 8. Ajustes tras revisión: puntuación 1–100 y ubicación junto al menú
 
