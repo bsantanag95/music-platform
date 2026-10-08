@@ -22,6 +22,8 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
+const coverMirror = vi.hoisted(() => ({ scheduleCoverMirrorsForUrls: vi.fn() }));
+vi.mock("@/services/catalog/cover-mirror", () => coverMirror);
 // El helper de precedencia tiene sus propios tests (default-audience.test.ts);
 // aquí se mockea para no añadir una consulta al encadenado de `db.select` y se
 // comprueba solo el cableado: qué tipo y qué valor explícito recibe.
@@ -229,6 +231,23 @@ describe("servicio de favoritos", () => {
     expect(result.favorites).toEqual([]);
     expect(result.hasNext).toBe(false);
     expect(result.counts).toEqual({ artist: 0, "release-group": 0, recording: 0 });
+  });
+
+  it("listMyFavorites agenda el espejo de las carátulas de los favoritos mostrados", async () => {
+    const albumRow = {
+      ...favoriteRow,
+      id: "favorito-album",
+      artistId: null,
+      releaseGroupId: "00000000-0000-4000-8000-000000000009",
+      releaseTitle: "Dr. Feelgood",
+      releaseCover: "https://coverartarchive.org/release-group/x/front-250",
+    };
+    mockListQueries([favoriteRow, albumRow]);
+
+    await listMyFavorites(user);
+
+    expect(coverMirror.scheduleCoverMirrorsForUrls).toHaveBeenCalledTimes(1);
+    expect(coverMirror.scheduleCoverMirrorsForUrls).toHaveBeenCalledWith([null, "https://coverartarchive.org/release-group/x/front-250"]);
   });
 
   it("listMyFavorites pagina correctamente con hasNext y expone counts", async () => {

@@ -22,6 +22,8 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
+const coverMirror = vi.hoisted(() => ({ scheduleCoverMirrorsForUrls: vi.fn() }));
+vi.mock("@/services/catalog/cover-mirror", () => coverMirror);
 // El helper de precedencia tiene sus propios tests (default-audience.test.ts);
 // aquí se mockea para no añadir una consulta al encadenado de `db.select` y se
 // comprueba solo el cableado: qué tipo y qué valor explícito recibe.
@@ -269,6 +271,42 @@ describe("servicio de listas", () => {
     expect(result.lists[0]?.pinned).toBe(true);
 
     await expect(listMyLists(owner, 0)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+  });
+
+  it("listMyLists agenda el espejo de las carátulas de las tarjetas", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(chain([{ list: albumListRow, pinnedAt: null }]))
+      .mockReturnValueOnce(chain([{ listId: albumListRow.id, n: 2 }]))
+      .mockReturnValueOnce(
+        chain([
+          { listId: albumListRow.id, cover: "https://coverartarchive.org/release-group/x/front-250", rn: 1 },
+          { listId: albumListRow.id, cover: "/uploads/covers/x/a.webp", rn: 2 },
+        ]),
+      );
+
+    await listMyLists(owner);
+
+    expect(coverMirror.scheduleCoverMirrorsForUrls).toHaveBeenCalledWith(["https://coverartarchive.org/release-group/x/front-250", "/uploads/covers/x/a.webp"]);
+  });
+
+  it("el detalle de una lista agenda el espejo de las carátulas de sus ítems", async () => {
+    mockOwnedList(albumListRow, [
+      {
+        id: "i1",
+        position: 1,
+        artistId: null,
+        releaseGroupId: "rg1",
+        recordingId: null,
+        artistName: null,
+        releaseTitle: "A",
+        releaseCover: "https://coverartarchive.org/release-group/x/front-250",
+        recordingTitle: null,
+      },
+    ]);
+
+    await getOwnedList(albumListRow.id, owner);
+
+    expect(coverMirror.scheduleCoverMirrorsForUrls).toHaveBeenCalledWith(["https://coverartarchive.org/release-group/x/front-250"]);
   });
 
   it("listMyLists rechaza sort y entityType inválidos", async () => {

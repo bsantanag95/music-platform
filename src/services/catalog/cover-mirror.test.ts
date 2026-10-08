@@ -25,6 +25,7 @@ const {
   mirrorCover,
   revalidateCover,
   scheduleCoverMirrors,
+  scheduleCoverMirrorsForUrls,
   takedownCover,
 } =
   await import("./cover-mirror");
@@ -272,6 +273,18 @@ describe("scheduleCoverMirrors", () => {
     makeProvider();
     scheduleCoverMirrors([]);
     expect(afterCallbacks).toHaveLength(0);
+  });
+
+  it("por URLs ignora nulas, locales y duplicadas, y no agenda si no queda ninguna", () => {
+    makeProvider();
+    scheduleCoverMirrorsForUrls([null, undefined, "/uploads/covers/x/a.webp", "https://example.com/c.jpg"]);
+    expect(afterCallbacks).toHaveLength(0);
+  });
+
+  it("por URLs agenda una sola tarea cuando hay hotlinks a CAA", () => {
+    makeProvider();
+    scheduleCoverMirrorsForUrls([COVER_URL, COVER_URL, null, "/uploads/covers/x/a.webp"]);
+    expect(afterCallbacks).toHaveLength(1);
   });
 
   it("con el espejo deshabilitado no agenda nada", () => {
