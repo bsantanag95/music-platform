@@ -7,8 +7,11 @@ import type { ListEntityType } from "@/lib/api/schemas";
 import { ActionChips } from "./ActionChips";
 import { TargetPicker } from "./TargetPicker";
 import { AddToListStep } from "./panels/AddToListStep";
+import { CollectionPanel } from "./panels/CollectionPanel";
+import { JourneyPanel } from "./panels/JourneyPanel";
 import { ListenPanel } from "./panels/ListenPanel";
 import { MarkPanel } from "./panels/MarkPanel";
+import { NewCaminoPanel } from "./panels/NewCaminoPanel";
 import { NewListPanel } from "./panels/NewListPanel";
 import { RatePanel } from "./panels/RatePanel";
 import {
@@ -80,7 +83,7 @@ export function QuickActionsDialog({ onClose }: QuickActionsDialogProps) {
   }, [onClose, mounted]);
 
   // El foco vuelve al buscador cada vez que se muestra (apertura, cambio de acción, elegir otro).
-  const pickerVisible = action !== "newList" && target === null;
+  const pickerVisible = action !== "newList" && action !== "newCamino" && target === null;
   useEffect(() => {
     if (mounted && pickerVisible) searchInputRef.current?.focus();
   }, [mounted, pickerVisible, action]);
@@ -90,7 +93,10 @@ export function QuickActionsDialog({ onClose }: QuickActionsDialogProps) {
       setAction(next);
       setTarget(null);
       setLockedType(null);
-      if (next !== "newList" && !ACTION_PICKER_TYPES[next].includes(searchType)) setSearchType("album");
+      if (next !== "newList" && next !== "newCamino") {
+        const allowed = ACTION_PICKER_TYPES[next];
+        if (!allowed.includes(searchType)) setSearchType(allowed[0] ?? "album");
+      }
     },
     [searchType],
   );
@@ -111,7 +117,8 @@ export function QuickActionsDialog({ onClose }: QuickActionsDialogProps) {
 
   if (!mounted) return null;
 
-  const pickerTypes = lockedType ? [lockedType] : action === "newList" ? [] : ACTION_PICKER_TYPES[action];
+  const noTarget = action === "newList" || action === "newCamino";
+  const pickerTypes = lockedType ? [lockedType] : noTarget ? [] : ACTION_PICKER_TYPES[action];
   const panelKey = target ? `${action}:${target.type}:${target.id}` : action;
 
   const renderPanel = (targetAction: TargetAction, picked: PickTarget) => {
@@ -124,6 +131,10 @@ export function QuickActionsDialog({ onClose }: QuickActionsDialogProps) {
         return <MarkPanel key={panelKey} kind="favorite" target={picked} onReset={() => reset(false)} />;
       case "pending":
         return <MarkPanel key={panelKey} kind="pending" target={picked} onReset={() => reset(false)} />;
+      case "collection":
+        return <CollectionPanel key={panelKey} target={picked} onReset={() => reset(false)} />;
+      case "journey":
+        return <JourneyPanel key={panelKey} target={picked} onReset={() => reset(false)} onNavigate={onClose} />;
       case "addToList":
         return <AddToListStep key={panelKey} target={picked} onReset={() => reset(false)} />;
     }
@@ -162,6 +173,8 @@ export function QuickActionsDialog({ onClose }: QuickActionsDialogProps) {
         <div className="border-t border-ink-border pt-4">
           {action === "newList" ? (
             <NewListPanel onAddItems={addItemsToList} onNavigate={onClose} />
+          ) : action === "newCamino" ? (
+            <NewCaminoPanel onAddAlbums={() => addItemsToList("release-group")} onNavigate={onClose} />
           ) : target ? (
             renderPanel(action, target)
           ) : (

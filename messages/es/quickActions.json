@@ -9,14 +9,19 @@
     "favorite": "Favorito",
     "pending": "Pendiente",
     "addToList": "A lista",
-    "newList": "Nueva lista"
+    "newList": "Nueva lista",
+    "collection": "Colección",
+    "journey": "Recorrido",
+    "newCamino": "Nuevo Camino"
   },
   "prompt": {
     "listen": "¿Qué quieres registrar?",
     "rate": "¿Qué quieres valorar?",
     "favorite": "¿Qué quieres marcar como favorito?",
     "pending": "¿Qué quieres dejar pendiente?",
-    "addToList": "¿Qué quieres agregar a una lista?"
+    "addToList": "¿Qué quieres agregar a una lista?",
+    "collection": "¿Qué álbum quieres agregar a tu colección?",
+    "journey": "¿De qué artista quieres un Recorrido?"
   },
   "picker": {
     "typeLabel": "Qué buscar",
@@ -74,5 +79,27 @@
     "created": "Lista creada: {title}",
     "viewList": "Ver lista",
     "addItems": "Agregar a esta lista"
+  },
+  "collection": {
+    "formatPrompt": "¿En qué formato lo tienes?",
+    "adding": "Agregando...",
+    "added": "Agregado a tu colección ({format}): {title}",
+    "removed": "Se quitó de tu colección: {title}"
+  },
+  "journey": {
+    "checking": "Comprobando...",
+    "activating": "Activando el Recorrido...",
+    "activated": "Recorrido activado: {title}",
+    "already": "{title} ya está en tu Recorrido",
+    "open": "Ver Recorrido"
+  },
+  "newCamino": {
+    "titleLabel": "Nombre del Camino",
+    "submit": "Crear Camino",
+    "creating": "Creando...",
+    "titleRequired": "El título es obligatorio",
+    "created": "Camino creado: {title}",
+    "viewCamino": "Ver Camino",
+    "addAlbums": "Agregar a este Camino"
   }
 }

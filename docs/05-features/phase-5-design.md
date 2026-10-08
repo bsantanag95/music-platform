@@ -261,8 +261,9 @@ El Header separa dos zonas (cambio `regroup-authenticated-header`, spec
   menú de usuario.
 - **Zona de usuario** — a la derecha: selector de idioma, el control **"+ Añadir"** (solo con
   sesión, pegado al menú de usuario) y el menú. "Añadir" abre el diálogo de acciones rápidas
-  (`add-header-quick-actions`): Escucha, Valorar (estrellas y puntuación 1–100), Favorito,
-  Pendiente, A lista y Nueva lista, con Escucha preseleccionada. Antes vivía en la barra general
+  (`add-header-quick-actions` y `add-quick-actions-collection-camino`): Escucha, Valorar (estrellas
+  y puntuación 1–100), Favorito, Pendiente, Colección (álbum + formato), Recorrido (artista), A lista,
+  Nueva lista y Nuevo Camino, con Escucha preseleccionada. Antes vivía en la barra general
   como "+ Registrar escucha" (`add-global-listen-logging`) y antes como "Registrar", ambiguo junto
   a "Registrarse"; se movió porque escribe datos propios y la barra general queda para lo que el
   sitio ofrece a cualquiera. En el panel móvil encabeza el bloque de usuario. El "+" escribe; el

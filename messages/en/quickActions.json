@@ -9,14 +9,19 @@
     "favorite": "Favorite",
     "pending": "Pending",
     "addToList": "To list",
-    "newList": "New list"
+    "newList": "New list",
+    "collection": "Collection",
+    "journey": "Journey",
+    "newCamino": "New Path"
   },
   "prompt": {
     "listen": "What do you want to log?",
     "rate": "What do you want to rate?",
     "favorite": "What do you want to favorite?",
     "pending": "What do you want to leave pending?",
-    "addToList": "What do you want to add to a list?"
+    "addToList": "What do you want to add to a list?",
+    "collection": "Which album do you want to add to your collection?",
+    "journey": "Which artist do you want a Journey for?"
   },
   "picker": {
     "typeLabel": "What to search",
@@ -74,5 +79,27 @@
     "created": "List created: {title}",
     "viewList": "View list",
     "addItems": "Add to this list"
+  },
+  "collection": {
+    "formatPrompt": "Which format do you have?",
+    "adding": "Adding...",
+    "added": "Added to your collection ({format}): {title}",
+    "removed": "Removed from your collection: {title}"
+  },
+  "journey": {
+    "checking": "Checking...",
+    "activating": "Activating the Journey...",
+    "activated": "Journey activated: {title}",
+    "already": "{title} is already in your Journey",
+    "open": "View Journey"
+  },
+  "newCamino": {
+    "titleLabel": "Path name",
+    "submit": "Create Path",
+    "creating": "Creating...",
+    "titleRequired": "Title is required",
+    "created": "Path created: {title}",
+    "viewCamino": "View Path",
+    "addAlbums": "Add to this Path"
   }
 }
