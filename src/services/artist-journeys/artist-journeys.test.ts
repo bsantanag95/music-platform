@@ -179,6 +179,29 @@ describe("servicio de artist-journeys", () => {
     expect(detail.albums.find((a) => a.id === sg2)?.listened).toBe(false);
   });
 
+  it("el detalle sin recorrido devuelve null sin leer ni ingerir la discografía", async () => {
+    const { getArtistJourneyDetail } = await import("./artist-journeys");
+
+    mocks.db.select.mockReturnValueOnce(chain([])); // getJourneyRow: no existe
+
+    expect(await getArtistJourneyDetail(ownerId, artistId)).toBeNull();
+    expect(mocks.findOrIngestDiscography).not.toHaveBeenCalled();
+  });
+
+  it("el detalle con recorrido sí lee la discografía", async () => {
+    const { getArtistJourneyDetail } = await import("./artist-journeys");
+
+    mocks.db.select
+      .mockReturnValueOnce(chain([journeyRow]))
+      .mockReturnValueOnce(chain([{ releaseGroupId: sg1 }]))
+      .mockReturnValueOnce(chain([]));
+
+    const detail = await getArtistJourneyDetail(ownerId, artistId);
+
+    expect(mocks.findOrIngestDiscography).toHaveBeenCalledTimes(1);
+    expect(detail?.albums.length).toBeGreaterThan(0);
+  });
+
   it("el detalle devuelve los álbumes ordenados por año, sin importar el orden del catálogo", async () => {
     // La discografía llega del catálogo en un orden arbitrario (por crédito,
     // no por fecha) — `buildDetail` debe reordenarla, no devolverla tal cual.

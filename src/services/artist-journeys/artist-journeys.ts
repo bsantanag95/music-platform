@@ -139,11 +139,12 @@ export async function getArtistJourneyDetail(
   artistId: string,
 ): Promise<ArtistJourneyDetail | null> {
   const artistRow = await requireArtist(artistId);
-  const [journeyRow, discography] = await Promise.all([
-    getJourneyRow(ownerId, artistId),
-    findOrIngestDiscography(artistRow),
-  ]);
+  // Sin recorrido no hay detalle que armar, así que no se toca la discografía: leerla puede
+  // disparar una ingesta completa contra MusicBrainz (cola global de ≥1,1 s por petición) y esta
+  // lectura la piden las tarjetas de Quiero escuchar solo para saber si existe un recorrido.
+  const journeyRow = await getJourneyRow(ownerId, artistId);
   if (!journeyRow) return null;
+  const discography = await findOrIngestDiscography(artistRow);
   return buildDetail(journeyRow, ownerId, artistId, discography);
 }
 
