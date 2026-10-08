@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type RefObject } from "react";
 import { useTranslations } from "next-intl";
 import { Spinner } from "@/components/ui/Spinner";
-import { CoverThumb } from "@/components/catalog/CoverThumb";
+import { SearchTypeIcon } from "@/components/catalog/SearchTypeIcon";
 import { SearchTypeToggle } from "@/components/catalog/SearchTypeToggle";
 import { searchAlbums, searchArtists, searchSongs } from "@/lib/api/catalog";
 import type { CatalogSearchResponse, SocialTargetType } from "@/lib/api/schemas";
@@ -99,27 +99,48 @@ export function TargetPicker({
     );
   }, [results]);
 
+  // Año del álbum para distinguir ediciones homónimas (solo para mostrar; no viaja en el objetivo).
+  const years = useMemo(() => {
+    const map = new Map<string, number>();
+    if (results?.type === "album") for (const r of results.results) if (r.year) map.set(r.id, r.year);
+    return map;
+  }, [results]);
+
   const typeLabel = (targetType: SocialTargetType) =>
     targetType === "artist" ? t("typeArtist") : targetType === "release-group" ? t("typeAlbum") : t("typeSong");
 
   return (
     <div className="flex flex-col gap-3">
-      <label htmlFor={inputId} className="font-data text-sm text-paper">
+      <label htmlFor={inputId} className="font-display text-base text-paper">
         {prompt}
       </label>
       {types.length > 1 ? (
         <SearchTypeToggle types={types} value={type} onChange={onTypeChange} label={t("typeLabel")} />
       ) : null}
-      <input
-        id={inputId}
-        ref={inputRef}
-        type="search"
-        autoComplete="off"
-        value={rawQuery}
-        onChange={(e) => onRawQueryChange(e.target.value)}
-        placeholder={types.includes("song") ? t("searchPlaceholder") : t("searchPlaceholderPending")}
-        className="rounded border border-ink-border bg-ink px-3 py-2 font-data text-sm text-paper placeholder:text-paper-muted"
-      />
+      <div className="relative">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          aria-hidden="true"
+          className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-paper-muted"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.5-3.5" />
+        </svg>
+        <input
+          id={inputId}
+          ref={inputRef}
+          type="search"
+          autoComplete="off"
+          value={rawQuery}
+          onChange={(e) => onRawQueryChange(e.target.value)}
+          placeholder={types.includes("song") ? t("searchPlaceholder") : t("searchPlaceholderPending")}
+          className="w-full rounded-md border border-ink-border bg-ink py-2.5 pl-9 pr-3 font-data text-sm text-paper transition-colors placeholder:text-paper-muted focus:border-amber/60 focus:outline-none"
+        />
+      </div>
 
       {query.length < 2 ? (
         <p className="font-data text-xs text-paper-muted">{t("hint")}</p>
@@ -134,20 +155,24 @@ export function TargetPicker({
       ) : candidates.length === 0 ? (
         <p className="font-data text-xs text-paper-muted">{t("noResults", { query })}</p>
       ) : (
-        <ul className="flex max-h-80 flex-col gap-1 overflow-y-auto">
+        <ul className="themed-scrollbar -mx-2 flex max-h-80 flex-col gap-0.5 overflow-y-auto">
           {candidates.map((c) => (
             <li key={`${c.type}:${c.id}`}>
               <button
                 type="button"
                 onClick={() => onPick(c)}
-                className="flex w-full items-center gap-3 rounded border border-transparent px-2 py-2 text-left transition-colors hover:border-ink-border hover:bg-ink"
+                className="group flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors hover:bg-ink focus-visible:bg-ink"
               >
-                <CoverThumb cover={null} label="" className="size-10" />
+                {/* La búsqueda no trae carátula: un ícono del tipo en vez de un disco vacío. */}
+                <span className="grid size-9 shrink-0 place-items-center rounded-md bg-ink text-paper-muted ring-1 ring-ink-border transition-colors group-hover:text-amber">
+                  <SearchTypeIcon type={c.type === "release-group" ? "album" : c.type === "recording" ? "song" : "artist"} className="size-4" />
+                </span>
                 <span className="flex min-w-0 flex-col">
                   <span className="truncate font-display text-sm text-paper">{c.title}</span>
                   <span className="truncate font-data text-xs text-paper-muted">
                     {typeLabel(c.type)}
                     {c.subtitle ? ` · ${c.subtitle}` : ""}
+                    {years.get(c.id) ? ` · ${years.get(c.id)}` : ""}
                   </span>
                 </span>
               </button>

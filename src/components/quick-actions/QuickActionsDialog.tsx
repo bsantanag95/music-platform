@@ -142,7 +142,7 @@ export function QuickActionsDialog({ onClose }: QuickActionsDialogProps) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink/70 p-4 pt-16"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink/70 p-4 pt-16 backdrop-blur-sm"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -152,7 +152,7 @@ export function QuickActionsDialog({ onClose }: QuickActionsDialogProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="flex w-full max-w-lg flex-col gap-4 rounded-lg border border-ink-border bg-ink-surface p-6"
+        className="flex w-full max-w-lg flex-col gap-5 rounded-xl border border-ink-border bg-ink-surface p-6 shadow-2xl shadow-black/60"
       >
         <div className="flex items-start justify-between gap-4">
           <h2 id={titleId} className="font-display text-lg text-paper">
@@ -162,9 +162,19 @@ export function QuickActionsDialog({ onClose }: QuickActionsDialogProps) {
             type="button"
             onClick={onClose}
             aria-label={t("close")}
-            className="shrink-0 font-data text-sm text-paper-muted transition-colors hover:text-paper"
+            className="-mr-2 -mt-1 flex size-8 shrink-0 items-center justify-center rounded-md text-paper-muted transition-colors hover:bg-ink hover:text-paper"
           >
-            ✕
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              aria-hidden="true"
+              className="size-4"
+            >
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
           </button>
         </div>
 
