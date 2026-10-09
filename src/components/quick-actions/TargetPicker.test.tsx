@@ -257,6 +257,16 @@ describe("TargetPicker", () => {
     expect(screen.getByRole("searchbox")).toHaveAttribute("placeholder", "Busca un álbum o un artista");
   });
 
+  it.each([
+    [["album", "song", "artist"], "album", "Busca un álbum, artista o canción"],
+    [["album"], "album", "Busca un álbum"],
+    [["artist"], "artist", "Busca un artista"],
+    [["song"], "song", "Busca una canción"],
+  ] as const)("el placeholder refleja solo los tipos que busca (%j)", (types, type, expected) => {
+    renderPicker({ types, type, rawQuery: "" });
+    expect(screen.getByRole("searchbox")).toHaveAttribute("placeholder", expected);
+  });
+
   it("muestra el error de búsqueda si falla sin candidatos locales", async () => {
     mocks.searchAlbums.mockRejectedValue(new Error("x"));
     renderPicker({ types: ["album"], type: "album", rawQuery: "dark" });
