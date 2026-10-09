@@ -22,6 +22,7 @@ function makeArtist(overrides: Partial<ArtistRow> = {}): ArtistRow {
   return {
     id: "person-local",
     mbid: "person-mb",
+    searchText: null,
     type: "person",
     name: "Persona",
     disambiguation: null,

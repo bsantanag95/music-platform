@@ -20,14 +20,24 @@ import {
   matchLocalRecordings,
   recordingSignals,
   recordingsByArtistsAndTitlePrefix,
+  shortPrefixRecordings,
 } from "./local-match";
-import { baseSongTitle, matchTier, normalizeSearchText, tokenize, type MatchTier } from "./normalize";
+import {
+  baseSongTitle,
+  isShortQuery,
+  normalizeSearchText,
+  suggestionTier,
+  tokenize,
+  type MatchTier,
+} from "./normalize";
 
 /** Candidatos por título con 3+ caracteres: al agrupar, varias filas colapsan en una. */
 const SONG_POOL = 80;
-/** Con 2 caracteres el filtro casa miles de títulos y un pool mayor cuesta ~100 ms más. */
+/**
+ * Con 2 caracteres, inicio de palabra sobre `search_text` (openspec: speed-up-short-suggestions):
+ * los candidatos ya llegan elegidos por señales baratas (empieza por, artista explorado, longitud).
+ */
 const SHORT_QUERY_POOL = 40;
-const SHORT_QUERY_LENGTH = 3;
 /** Canciones por artista del puente que se piden antes de agrupar. */
 const BRIDGE_POOL = 40;
 /** Un resto de una letra recorrería miles de grabaciones de un artista prolífico. */
@@ -99,8 +109,10 @@ interface RankedGroup {
 }
 
 export async function songSuggestions(text: string, limit: number): Promise<SongSuggestionRow[]> {
-  const pool = normalizeSearchText(text).length >= SHORT_QUERY_LENGTH ? SONG_POOL : SHORT_QUERY_POOL;
-  const [byTitle, bridged] = await Promise.all([matchLocalRecordings(text, pool, pool), bridgeCandidates(text)]);
+  const [byTitle, bridged] = await Promise.all([
+    isShortQuery(text) ? shortPrefixRecordings(text, SHORT_QUERY_POOL) : matchLocalRecordings(text, SONG_POOL, SONG_POOL),
+    bridgeCandidates(text),
+  ]);
 
   const candidates = new Map<string, Candidate>();
   bridged.forEach(({ row, rest }, index) => {
@@ -128,7 +140,8 @@ export async function songSuggestions(text: string, limit: number): Promise<Song
   const albumsOf = (row: RecordingRow) => signals.albumsByRecording.get(row.id) ?? 0;
   const ranked: RankedGroup[] = [...groups.values()].map((group) => {
     const songPart = group.bridgeRest ?? text;
-    const tierOf = (row: RecordingRow) => matchTier(baseSongTitle(row.title), songPart);
+    // Con 2 letras, palabra completa y prefijo cuentan igual: «On the Floor» no es mejor que «One».
+    const tierOf = (row: RecordingRow) => suggestionTier(baseSongTitle(row.title), songPart);
     // Representante: la versión que aparece en más álbumes (la canónica), luego la mejor coincidencia.
     const representative = [...group.members].sort(
       (a, b) => albumsOf(b.row) - albumsOf(a.row) || tierOf(a.row) - tierOf(b.row) || a.index - b.index,

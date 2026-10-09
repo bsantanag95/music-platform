@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   isExactMatch,
+  isShortQuery,
   matchTier,
+  suggestionTier,
   normalizeSearchText,
   splitExplicit,
   tokenize,
@@ -40,6 +42,27 @@ describe("matchTier", () => {
 
   it("tolera acentos", () => {
     expect(matchTier("Motörhead", "motorhead")).toBe(0);
+  });
+});
+
+describe("isShortQuery", () => {
+  it("exactamente 2 caracteres tras normalizar (acentos y puntuación fuera)", () => {
+    expect(isShortQuery("ma")).toBe(true);
+    expect(isShortQuery(" Mó ")).toBe(true);
+    expect(isShortQuery("m")).toBe(false);
+    expect(isShortQuery("mad")).toBe(false);
+    expect(isShortQuery("a b")).toBe(false);
+  });
+});
+
+describe("suggestionTier", () => {
+  it("con 2 caracteres, palabra completa y prefijo valen lo mismo; con 3+ no", () => {
+    expect(suggestionTier("Mo Pair", "mo")).toBe(1);
+    expect(suggestionTier("Mötley Crüe", "mo")).toBe(1);
+    expect(suggestionTier("Mo", "mo")).toBe(0);
+    expect(suggestionTier("Ennio Morricone", "co")).toBe(3);
+    expect(suggestionTier("Mot Pair", "mot")).toBe(1);
+    expect(suggestionTier("Mötley Crüe", "mot")).toBe(2);
   });
 });
 

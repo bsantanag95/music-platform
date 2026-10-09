@@ -120,7 +120,7 @@ const disc = (releaseGroupId: string, title: string, category: string, year: num
 function makeDetail(overrides: Partial<RecordingDetail> = {}): RecordingDetail {
   const principal = disc(UYI, "Use Your Illusion I", "studio", 1991);
   return {
-    recording: { id: RID, mbid: null, title: "November Rain", durationSec: 537 },
+    recording: { id: RID, mbid: null, title: "November Rain", searchText: null, durationSec: 537 },
     credits: [{ artistId: GNR, name: "Guns N' Roses", role: "primary", joinPhrase: null }],
     containingAlbums: [
       principal,

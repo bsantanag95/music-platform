@@ -15,6 +15,7 @@ function makeRow(overrides: Partial<ReleaseGroupRow> = {}): ReleaseGroupRow {
   return {
     id: "local-id",
     mbid: "mbid-1",
+    searchText: null,
     title: "Toxicity",
     category: "studio",
     coverThumbUrl: null,

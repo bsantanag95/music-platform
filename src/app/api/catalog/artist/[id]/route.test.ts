@@ -30,6 +30,7 @@ describe("GET /api/catalog/artist/[id]", () => {
     const artist = {
       id: "11111111-1111-4111-8111-111111111111",
       mbid: null,
+      searchText: null,
       type: "group" as const,
       name: "Pink Floyd",
       disambiguation: null,

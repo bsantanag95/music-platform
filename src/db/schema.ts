@@ -474,6 +474,9 @@ export const artist = pgTable(
     mbid: uuid("mbid").unique(),
     type: text("type").notNull(), // 'person' | 'group' | 'various'
     name: text("name").notNull(),
+    // Nombre normalizado y guardado (migración 0067, ADR 0031): lo mantiene la base, nunca la app.
+    // Sirve las sugerencias de 2 letras (inicio de palabra) sin recalcular `unaccent`.
+    searchText: text("search_text").generatedAlwaysAs(sql`search_key(name)`),
     // Desambiguación de MusicBrainz ("Chilean alternative rock band"): distingue
     // homónimos en la búsqueda; no es una biografía (migración 0054 la renombró de `bio`).
     disambiguation: text("disambiguation"),
@@ -521,6 +524,7 @@ export const artist = pgTable(
     index("idx_artist_name_search").using("gin", sql`search_normalize(${t.name}) gin_trgm_ops`),
     // Igualdad exacta por nombre normalizado (migración 0051).
     index("idx_artist_search_key").on(sql`search_key(${t.name})`),
+    index("idx_artist_search_text_trgm").using("gin", sql`${t.searchText} gin_trgm_ops`),
     check("chk_artist_type", sql`${t.type} IN ('person','group','various','unknown')`),
     check("chk_artist_country", sql`${t.country} IS NULL OR ${t.country} ~ '^[A-Z]{2}$'`),
     check("chk_artist_life_begin", sql`${t.lifeBegin} IS NULL OR ${t.lifeBegin} ~ '^\\d{4}(-\\d{2}(-\\d{2})?)?$'`),
@@ -675,6 +679,9 @@ export const releaseGroup = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     mbid: uuid("mbid").unique(),
     title: text("title").notNull(),
+    // Nombre normalizado y guardado (migración 0067, ADR 0031): lo mantiene la base, nunca la app.
+    // Sirve las sugerencias de 2 letras (inicio de palabra) sin recalcular `unaccent`.
+    searchText: text("search_text").generatedAlwaysAs(sql`search_key(title)`),
     category: text("category").notNull(), // 'studio' | 'single_ep' | 'compilation' | 'live_other'
     coverThumbUrl: text("cover_thumb_url"), // única fuente escribible de la carátula
     // Espejo propio de la carátula (migración 0047, openspec: mirror-cover-art).
@@ -714,6 +721,7 @@ export const releaseGroup = pgTable(
       "gin",
       sql`search_normalize(${t.title}) gin_trgm_ops`,
     ),
+    index("idx_release_group_search_text_trgm").using("gin", sql`${t.searchText} gin_trgm_ops`),
   ],
 );
 
@@ -798,6 +806,9 @@ export const recording = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     mbid: uuid("mbid").unique(),
     title: text("title").notNull(),
+    // Nombre normalizado y guardado (migración 0067, ADR 0031): lo mantiene la base, nunca la app.
+    // Sirve las sugerencias de 2 letras (inicio de palabra) sin recalcular `unaccent`.
+    searchText: text("search_text").generatedAlwaysAs(sql`search_key(title)`),
     durationSec: integer("duration_sec"),
     // Las variantes (`variant_type`, `variant_of_id`) se retiraron en 0052: qué versión es
     // una grabación lo dicen los atributos de `recording_work` (openspec: redesign-song-page).
@@ -806,6 +817,7 @@ export const recording = pgTable(
     index("idx_recording_title").on(t.title),
     // Búsqueda local tolerante (migración 0050, openspec redesign-scoped-search).
     index("idx_recording_title_search").using("gin", sql`search_normalize(${t.title}) gin_trgm_ops`),
+    index("idx_recording_search_text_trgm").using("gin", sql`${t.searchText} gin_trgm_ops`),
   ],
 );
 

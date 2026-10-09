@@ -71,6 +71,25 @@ export function escapeLike(value: string): string {
   return value.replace(/[\\%_]/g, (char) => `\\${char}`);
 }
 
+/**
+ * Consulta de exactamente 2 caracteres tras normalizar: las sugerencias buscan una palabra que
+ * empieza por ellos en vez de coincidencia tolerante (openspec: speed-up-short-suggestions). Con 2
+ * letras la similitud por trigramas no discrimina y el índice de 0050 no sirve.
+ */
+export function isShortQuery(value: string): boolean {
+  return normalizeSearchText(value).length === 2;
+}
+
+/**
+ * Nivel de coincidencia de una sugerencia. Con 2 caracteres la palabra aún no está terminada:
+ * «Mo Pair» (palabra completa `mo`) no es mejor coincidencia que «Mötley Crüe» (prefijo), así que
+ * ambos niveles cuentan igual y deciden las demás señales (openspec: speed-up-short-suggestions).
+ */
+export function suggestionTier(name: string, query: string): MatchTier {
+  const tier = matchTier(name, query);
+  return tier === 2 && isShortQuery(query) ? 1 : tier;
+}
+
 const EXPLICIT_SEPARATOR = /\s+[-–—]\s+/;
 
 /**

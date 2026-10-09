@@ -8,6 +8,7 @@ function row(id: string, overrides: Partial<DiscographyRow> = {}): DiscographyRo
   return {
     id,
     mbid: `${id}-mbid`,
+    searchText: null,
     title: id,
     category: "studio",
     coverThumbUrl: null,

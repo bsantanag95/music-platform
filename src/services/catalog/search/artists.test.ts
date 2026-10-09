@@ -25,6 +25,7 @@ function row(overrides: Partial<ArtistRow>): ArtistRow {
   return {
     id: `id-${overrides.mbid ?? overrides.name}`,
     mbid: null,
+    searchText: null,
     type: "group",
     name: "X",
     disambiguation: null,

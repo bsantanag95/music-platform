@@ -106,6 +106,7 @@ function makeArtist(overrides: Partial<ArtistRow> = {}): ArtistRow {
   return {
     id: "artist-1",
     mbid: "e99f6d62-f62b-4e1e-8593-33d5696d85f0",
+    searchText: null,
     type: "group",
     name: "Los Bunkers",
     disambiguation: null,
@@ -141,6 +142,7 @@ function makeReleaseGroup(overrides: Partial<ReleaseGroupRow> = {}): ReleaseGrou
   return {
     id: "rg-a",
     mbid: "mbid-a",
+    searchText: null,
     title: "Álbum",
     category: "studio",
     coverThumbUrl: null,

@@ -25,7 +25,7 @@ import {
 } from "@/db/schema";
 import type { ReleaseGroupCategoryValue } from "../ingest-release-group";
 import type { ArtistTypeFilter } from "./mb-query";
-import { escapeLike, matchTier } from "./normalize";
+import { escapeLike, matchTier, normalizeSearchText } from "./normalize";
 
 /** Filas candidatas que se piden a la base antes de ordenar y recortar en TS. */
 const CANDIDATE_POOL = 40;
@@ -100,9 +100,9 @@ export async function matchLocalReleaseGroups(
 }
 
 /**
- * `pool`: filas que se piden a la base antes de ordenar. Las sugerencias de canción piden más con
- * 3+ caracteres porque agrupan versiones (openspec: improve-song-suggestions); con 2 caracteres el
- * filtro casa miles de títulos y un pool mayor cuesta ~100 ms más.
+ * `pool`: filas que se piden a la base antes de ordenar. Las sugerencias de canción piden más porque
+ * agrupan versiones (openspec: improve-song-suggestions). Con 2 caracteres las sugerencias no pasan
+ * por aquí: usan `shortPrefixRecordings`.
  */
 export async function matchLocalRecordings(
   text: string,
@@ -287,4 +287,70 @@ export async function recordingSignals(recordingIds: string[]): Promise<Recordin
   for (const row of albums) signals.albumsByRecording.set(row.recordingId, Number(row.albums));
   for (const row of followers) signals.followersByArtist.set(row.artistId, Number(row.followers));
   return signals;
+}
+
+// ---------- Sugerencias de 2 caracteres (openspec: speed-up-short-suggestions, ADR 0031)
+//
+// Con 2 letras se busca una palabra que EMPIEZA por ellas sobre `search_text` (nombre ya
+// normalizado y guardado, migración 0067), con el índice GIN de esa columna. Entre miles de
+// coincidencias, los candidatos se eligen con señales baratas de la propia fila: el nombre empieza
+// por las letras, la entidad ya es conocida en la plataforma y el nombre más corto.
+
+/** Patrón de inicio de palabra sobre `search_text`, con la consulta normalizada como en `search_key`. */
+function wordStart(text: string): { pattern: string; prefix: string } {
+  const normalized = normalizeSearchText(text);
+  return {
+    pattern: `(^| )${normalized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
+    prefix: `${escapeLike(normalized)}%`,
+  };
+}
+
+/** Artistas: nombre empieza por → discografía explorada → nombre más corto. */
+export async function shortPrefixArtists(text: string, limit: number): Promise<ArtistRow[]> {
+  const { pattern, prefix } = wordStart(text);
+  return db
+    .select()
+    .from(artist)
+    .where(sql`${artist.searchText} ~ ${pattern}`)
+    .orderBy(
+      sql`(${artist.searchText} LIKE ${prefix}) DESC`,
+      sql`(${artist.discographySyncedAt} IS NOT NULL) DESC`,
+      sql`length(${artist.name})`,
+    )
+    .limit(limit);
+}
+
+/** Álbumes: título empieza por → álbum ya abierto (ediciones sincronizadas) → título más corto. */
+export async function shortPrefixReleaseGroups(text: string, limit: number): Promise<ReleaseGroupRow[]> {
+  const { pattern, prefix } = wordStart(text);
+  return db
+    .select()
+    .from(releaseGroup)
+    .where(sql`${releaseGroup.searchText} ~ ${pattern}`)
+    .orderBy(
+      sql`(${releaseGroup.searchText} LIKE ${prefix}) DESC`,
+      sql`(${releaseGroup.editionsSyncedAt} IS NOT NULL) DESC`,
+      sql`length(${releaseGroup.title})`,
+    )
+    .limit(limit);
+}
+
+/**
+ * Canciones: título empieza por → aparece en más pistas (ediciones que la incluyen) → título más
+ * corto. Las pistas son la mejor señal de popularidad local y salen del índice `idx_track_recording`
+ * (4–12 ms en scratch); "artista explorado" costaba 30–35 ms y no distinguía: hay cientos de
+ * artistas explorados poco conocidos.
+ */
+export async function shortPrefixRecordings(text: string, limit: number): Promise<RecordingRow[]> {
+  const { pattern, prefix } = wordStart(text);
+  return db
+    .select()
+    .from(recording)
+    .where(sql`${recording.searchText} ~ ${pattern}`)
+    .orderBy(
+      sql`(${recording.searchText} LIKE ${prefix}) DESC`,
+      sql`(SELECT count(*) FROM ${track} WHERE ${track.recordingId} = ${recording.id}) DESC`,
+      sql`length(${recording.title})`,
+    )
+    .limit(limit);
 }

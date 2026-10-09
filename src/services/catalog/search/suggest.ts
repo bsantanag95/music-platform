@@ -16,11 +16,20 @@ import {
   findArtistsByKeys,
   matchLocalArtists,
   matchLocalReleaseGroups,
+  shortPrefixArtists,
+  shortPrefixReleaseGroups,
   primaryArtistsByReleaseGroup,
   rankByMatchTier,
   releaseGroupsByArtistsAndTitle,
 } from "./local-match";
-import { escapeLike, matchTier, normalizeSearchText, tokenize, withoutSeparator } from "./normalize";
+import {
+  escapeLike,
+  isShortQuery,
+  normalizeSearchText,
+  suggestionTier,
+  tokenize,
+  withoutSeparator,
+} from "./normalize";
 import { songSuggestions as rankedSongSuggestions } from "./song-suggestions";
 import type { CatalogArtistType, SearchType } from "./types";
 
@@ -73,7 +82,7 @@ async function rankSuggestionRows<T extends { id: string }>(
     .map((row, index) => ({
       row,
       index,
-      tier: matchTier(name(row), text),
+      tier: suggestionTier(name(row), text),
       activity: activity.get(row.id) ?? 0,
       cached: cached(row) ? 0 : 1,
     }))
@@ -110,7 +119,10 @@ async function albumSuggestions(text: string, bridgeOnly: boolean): Promise<Sear
   const byTitle = bridgeOnly
     ? []
     : await rankSuggestionRows(
-        await matchLocalReleaseGroups(text, { limit: SUGGESTION_POOL }),
+        // Con 2 letras, inicio de palabra sobre `search_text` (openspec: speed-up-short-suggestions).
+        isShortQuery(text)
+          ? await shortPrefixReleaseGroups(text, SUGGESTION_POOL)
+          : await matchLocalReleaseGroups(text, { limit: SUGGESTION_POOL }),
         "release-group",
         text,
         (row) => row.title,
@@ -137,7 +149,10 @@ async function albumSuggestions(text: string, bridgeOnly: boolean): Promise<Sear
 
 async function artistSuggestions(text: string): Promise<SearchSuggestion[]> {
   const [artists, albums] = await Promise.all([
-    matchLocalArtists(text, { limit: SUGGESTION_POOL }).then((rows) =>
+    (isShortQuery(text)
+      ? shortPrefixArtists(text, SUGGESTION_POOL)
+      : matchLocalArtists(text, { limit: SUGGESTION_POOL })
+    ).then((rows) =>
       rankSuggestionRows(rows, "artist", text, (row) => row.name, (row) => row.discographySyncedAt !== null),
     ),
     albumSuggestions(text, true),

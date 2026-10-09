@@ -98,6 +98,7 @@ function makeDetail(overrides: Partial<AlbumDetail> = {}): AlbumDetail {
     releaseGroup: {
       id: VALID_UUID,
       mbid: "550e8400-e29b-41d4-a716-446655440001",
+      searchText: null,
       title: "The Dark Side of the Moon",
       category: "studio",
       coverThumbUrl: null,

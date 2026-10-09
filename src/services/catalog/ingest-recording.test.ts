@@ -26,6 +26,7 @@ function makeRecordingRow(overrides: Partial<RecordingRow> = {}): RecordingRow {
   return {
     id: "rec-local",
     mbid: "mbid-rec",
+    searchText: null,
     title: "Stairway to Heaven",
     durationSec: 482,
     ...overrides,
@@ -147,6 +148,7 @@ describe("albumsFromMbReleases", () => {
       {
         id: "rg-local",
         mbid: "rg-mbid",
+        searchText: null,
         title: "Led Zeppelin IV",
         category: "studio",
         coverThumbUrl: null,
@@ -189,6 +191,7 @@ describe("albumsFromMbReleases", () => {
       {
         id: "rg-local",
         mbid: "rg-mbid",
+        searchText: null,
         title: "Título local enriquecido",
         category: "compilation",
         coverThumbUrl: null,

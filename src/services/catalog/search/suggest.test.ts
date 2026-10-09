@@ -26,6 +26,8 @@ vi.mock("./local-match", async (importOriginal) => {
     findArtistsByKeys: vi.fn(async () => []),
     releaseGroupsByArtistsAndTitle: vi.fn(async () => []),
     primaryArtistsByReleaseGroup: vi.fn(async () => new Map()),
+    shortPrefixArtists: vi.fn(async () => []),
+    shortPrefixReleaseGroups: vi.fn(async () => []),
   };
 });
 
@@ -70,6 +72,39 @@ describe("suggest", () => {
     expect(await suggest("album", "back for")).toEqual([
       { kind: "album", id: "attack", title: "Back for the Attack", artistName: "Dokken", year: 1987, bridge: false },
     ]);
+  });
+
+  it("con 2 letras, Artistas y Álbumes buscan por inicio de palabra (openspec: speed-up-short-suggestions)", async () => {
+    vi.mocked(localMatch.shortPrefixArtists).mockResolvedValue([dokken]);
+    vi.mocked(localMatch.shortPrefixReleaseGroups).mockResolvedValue([attack]);
+
+    expect(await suggest("artist", "Dö")).toEqual([
+      { kind: "artist", id: "dokken", name: "Dokken", artistType: "group", disambiguation: null },
+    ]);
+    expect(await suggest("album", "ba")).toMatchObject([{ kind: "album", id: "attack" }]);
+    expect(localMatch.shortPrefixArtists).toHaveBeenCalledWith("Dö", 40);
+    expect(localMatch.shortPrefixReleaseGroups).toHaveBeenCalledWith("ba", 40);
+    expect(localMatch.matchLocalArtists).not.toHaveBeenCalled();
+    expect(localMatch.matchLocalReleaseGroups).not.toHaveBeenCalled();
+  });
+
+  it("con 2 letras, un artista conocido por prefijo va antes que uno desconocido por palabra completa", async () => {
+    const moPair = { id: "mo-pair", name: "Mo Pair", type: "group", disambiguation: null, discographySyncedAt: null } as ArtistRow;
+    const motley = { id: "motley", name: "Mötley Crüe", type: "group", disambiguation: null, discographySyncedAt: new Date() } as ArtistRow;
+    vi.mocked(localMatch.shortPrefixArtists).mockResolvedValue([moPair, motley]);
+
+    const names = (await suggest("artist", "mo")).map((row) => (row.kind === "artist" ? row.name : row.kind));
+
+    expect(names).toEqual(["Mötley Crüe", "Mo Pair"]);
+  });
+
+  it("con 3 letras sigue la coincidencia tolerante", async () => {
+    await suggest("artist", "dok");
+    await suggest("album", "bac");
+    expect(localMatch.matchLocalArtists).toHaveBeenCalledWith("dok", { limit: 40 });
+    expect(localMatch.matchLocalReleaseGroups).toHaveBeenCalledWith("bac", { limit: 40 });
+    expect(localMatch.shortPrefixArtists).not.toHaveBeenCalled();
+    expect(localMatch.shortPrefixReleaseGroups).not.toHaveBeenCalled();
   });
 
   it("Canciones: delega en las sugerencias agrupadas por canción con el límite de seis", async () => {
