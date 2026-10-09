@@ -1,9 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import WelcomePage from "./page";
-import { TwoDoorOnboarding } from "@/components/onboarding/TwoDoorOnboarding";
+import { WelcomeFlow } from "@/components/onboarding/WelcomeFlow";
 import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 
-const mocks = vi.hoisted(() => ({ resolveSession: vi.fn(), redirect: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  resolveSession: vi.fn(),
+  redirect: vi.fn(),
+  resolveAudience: vi.fn(),
+  exploreEnabled: vi.fn(),
+}));
 
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn().mockResolvedValue((key: string) => key),
@@ -16,8 +21,10 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: mocks.resolveSession }));
 vi.mock("@/services/auth/email-verification", () => ({ isEmailVerified: () => false }));
-vi.mock("@/components/onboarding/TwoDoorOnboarding", () => ({
-  TwoDoorOnboarding: () => null,
+vi.mock("@/services/social/default-audience", () => ({ resolveNewContentAudience: mocks.resolveAudience }));
+vi.mock("@/lib/config/discovery", () => ({ isExploreEnabled: mocks.exploreEnabled }));
+vi.mock("@/components/onboarding/WelcomeFlow", () => ({
+  WelcomeFlow: () => null,
 }));
 vi.mock("@/components/auth/EmailVerificationNotice", () => ({
   EmailVerificationNotice: () => null,
@@ -25,14 +32,25 @@ vi.mock("@/components/auth/EmailVerificationNotice", () => ({
 
 const render = () => WelcomePage({ params: Promise.resolve({ locale: "es" }) });
 
-function findType(node: unknown, type: unknown): boolean {
-  if (node == null || typeof node !== "object") return false;
-  if (Array.isArray(node)) return node.some((c) => findType(c, type));
-  const el = node as { type?: unknown; props?: { children?: unknown } };
-  return el.type === type || findType(el.props?.children, type);
+function findElement(node: unknown, type: unknown): { props: Record<string, unknown> } | null {
+  if (node == null || typeof node !== "object") return null;
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      const found = findElement(child, type);
+      if (found) return found;
+    }
+    return null;
+  }
+  const el = node as { type?: unknown; props?: Record<string, unknown> };
+  if (el.type === type) return { props: el.props ?? {} };
+  return findElement(el.props?.children, type);
 }
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.resolveAudience.mockImplementation(async (_id: string, type: string) => (type === "diary" ? "private" : "public"));
+  mocks.exploreEnabled.mockReturnValue(true);
+});
 
 describe("WelcomePage", () => {
   it("redirige al login sin sesión", async () => {
@@ -47,16 +65,30 @@ describe("WelcomePage", () => {
     expect(mocks.redirect).toHaveBeenCalledWith({ href: "/", locale: "es" });
   });
 
-  it("renderiza el flujo de dos puertas si el onboarding está pendiente", async () => {
-    mocks.resolveSession.mockResolvedValue({ user: { onboardedAt: null, emailVerifiedAt: null } });
+  it("renderiza el flujo de tres pasos si el onboarding está pendiente", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "u1", onboardedAt: null, emailVerifiedAt: null } });
     const tree = await render();
     expect(mocks.redirect).not.toHaveBeenCalled();
-    expect(findType(tree, TwoDoorOnboarding)).toBe(true);
+    expect(findElement(tree, WelcomeFlow)).not.toBeNull();
   });
 
-  it("renderiza el aviso de verificación de email", async () => {
-    mocks.resolveSession.mockResolvedValue({ user: { onboardedAt: null, emailVerifiedAt: null } });
+  it("pasa las audiencias efectivas y si Explorar está activo", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "u1", onboardedAt: null, emailVerifiedAt: null } });
+    mocks.exploreEnabled.mockReturnValue(false);
     const tree = await render();
-    expect(findType(tree, EmailVerificationNotice)).toBe(true);
+    expect(mocks.resolveAudience).toHaveBeenCalledWith("u1", "favorite");
+    expect(mocks.resolveAudience).toHaveBeenCalledWith("u1", "diary");
+    expect(findElement(tree, WelcomeFlow)?.props).toMatchObject({
+      favoriteAudience: "public",
+      diaryAudience: "private",
+      exploreEnabled: false,
+    });
+  });
+
+  it("entrega el aviso de verificación de email al flujo", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "u1", onboardedAt: null, emailVerifiedAt: null } });
+    const tree = await render();
+    const notice = findElement(tree, WelcomeFlow)?.props.notice;
+    expect(findElement(notice, EmailVerificationNotice)).not.toBeNull();
   });
 });

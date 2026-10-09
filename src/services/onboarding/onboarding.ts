@@ -2,6 +2,7 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, favorite, releaseGroup } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
+import { resolveNewContentAudience } from "@/services/social/default-audience";
 import { ONBOARDING_MAX_ALBUMS } from "@/services/social/types";
 
 // Onboarding de dos puertas (openspec: add-two-door-onboarding).
@@ -15,8 +16,10 @@ export interface OnboardingState {
 
 /**
  * Convierte los álbumes elegidos en la Puerta 1 en favoritos de álbum del
- * usuario: crea el `favorite` que falte (audiencia por defecto de un favorito
- * nuevo) y deja intacto el que ya existía. No fija ni ordena nada (openspec:
+ * usuario: crea el `favorite` que falte y deja intacto el que ya existía. La
+ * audiencia es la que resuelve `resolveNewContentAudience` (preferencia del
+ * usuario o default del tipo), la misma de un favorito que el usuario cree
+ * después: sin ella la columna caía en su `DEFAULT 'followers'`. No fija ni ordena nada (openspec:
  * simplify-profile-curation) y no crea `rating` ni `listen_entry`.
  */
 export async function seedFavoriteAlbums(userId: string, releaseGroupIds: string[]): Promise<void> {
@@ -45,7 +48,10 @@ export async function seedFavoriteAlbums(userId: string, releaseGroupIds: string
 
   const missing = releaseGroupIds.filter((rgId) => !alreadyFavorite.has(rgId));
   if (missing.length > 0) {
-    await db.insert(favorite).values(missing.map((releaseGroupId) => ({ userId, releaseGroupId })));
+    const audience = await resolveNewContentAudience(userId, "favorite");
+    await db
+      .insert(favorite)
+      .values(missing.map((releaseGroupId) => ({ userId, releaseGroupId, audience })));
   }
 }
 

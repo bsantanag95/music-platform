@@ -1,7 +1,7 @@
 {
   "pageTitle": "Welcome",
   "heading": "Tell us who you are musically",
-  "intro": "Two ways to start. Neither is required, and you can do them in any order.",
+  "intro": "Four short steps to get started. None is required, and you can skip any of them.",
   "door1": {
     "heading": "Albums that define you",
     "intro": "Pick 3 to 5 albums that represent you. They're saved to your favorites.",
@@ -13,25 +13,101 @@
     "suggestion": "We suggest 3 to 5.",
     "remove": "Remove",
     "max": "You've reached the maximum of 6.",
-    "save": "Save and continue"
+    "removeLabel": "Remove {title}"
   },
   "door2": {
     "heading": "What are you listening to right now?",
     "intro": "Pick an album or a song and it's logged in your diary. You can add your impression later.",
     "searchLabel": "Search album or song",
-    "searchPlaceholder": "e.g. Sabrina Carpenter",
     "searching": "Searching...",
     "noResults": "No results.",
     "logged": "Logged: {title}",
-    "logAnother": "Log another",
-    "typeLabel": "What to search"
+    "typeLabel": "What to search",
+    "searchPlaceholderAlbum": "e.g. Currents",
+    "searchPlaceholderSong": "e.g. Espresso",
+    "undo": "Undo",
+    "undoLabel": "Undo logging {title}",
+    "undone": "Undone: {title}"
   },
   "finish": {
-    "done": "Go to Home",
     "skip": "Skip for now",
+    "now": "Finish now",
     "saving": "Saving..."
   },
   "error": "We couldn't complete the step. Try again.",
   "homeLink": "Complete your music profile",
-  "homeLinkCta": "Start"
+  "homeLinkCta": "Start",
+  "searchError": "We couldn't search. Try again.",
+  "categories": {
+    "single_ep": "Single / EP",
+    "compilation": "Compilation",
+    "live_other": "Live or other"
+  },
+  "steps": {
+    "progress": "Step {current} of {total}",
+    "nav": "Onboarding steps",
+    "album": "Albums",
+    "artists": "Artists",
+    "listening": "Listening",
+    "wanted": "Later"
+  },
+  "nav": {
+    "next": "Next",
+    "back": "Back",
+    "skipStep": "Skip this step",
+    "finish": "Finish"
+  },
+  "artists": {
+    "heading": "Artists you want to follow",
+    "intro": "Following them builds your radar: their releases will show up on Home.",
+    "searchLabel": "Search artists",
+    "searchPlaceholder": "e.g. Radiohead",
+    "searching": "Searching...",
+    "noResults": "No results.",
+    "count": "{count, plural, =0 {You are not following anyone yet} one {You follow # artist} other {You follow # artists}}",
+    "followed": "You now follow {name}",
+    "unfollowed": "You unfollowed {name}",
+    "unfollow": "Unfollow",
+    "unfollowLabel": "Unfollow {name}",
+    "note": "Following an artist can appear in your activity, depending on your profile privacy."
+  },
+  "audience": {
+    "favorites": "Who sees your favorites: {audience}",
+    "diary": "Who sees your diary: {audience}",
+    "change": "Change",
+    "private": "Only you",
+    "followers": "Your followers",
+    "public": "Everyone"
+  },
+  "summary": {
+    "heading": "You're all set",
+    "intro": "Here's what we saved:",
+    "favorites": "{count, plural, one {# favorite album} other {# favorite albums}}",
+    "following": "{count, plural, one {You follow # artist} other {You follow # artists}}",
+    "listens": "{count, plural, one {# listen in your diary} other {# listens in your diary}}",
+    "empty": "You didn't save anything for now. You can start whenever you like from Home.",
+    "next": "What next",
+    "goHome": "Go to Home",
+    "explore": "Explore albums",
+    "findPeople": "Find people",
+    "wanted": "{count, plural, one {# item in your Pending list} other {# items in your Pending list}}",
+    "suggestGenres": "Pick your genres",
+    "suggestRate": "Rate an album"
+  },
+  "wanted": {
+    "heading": "To listen to later",
+    "intro": "Save albums and artists you want to listen to. They go to your Pending list.",
+    "typeLabel": "What to search",
+    "searchLabel": "Search albums or artists",
+    "searchPlaceholderAlbum": "e.g. Blonde",
+    "searchPlaceholderArtist": "e.g. Fiona Apple",
+    "searching": "Searching...",
+    "noResults": "No results.",
+    "count": "{count, plural, =0 {You have not saved anything yet} one {You saved # item} other {You saved # items}}",
+    "saved": "Saved to Pending: {title}",
+    "removed": "Removed from Pending: {title}",
+    "remove": "Remove",
+    "removeLabel": "Remove {title} from Pending",
+    "note": "Pending is a list only you can see."
+  }
 }

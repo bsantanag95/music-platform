@@ -1,7 +1,7 @@
 {
   "pageTitle": "Te damos la bienvenida",
-  "heading": "Cuenta quién eres musicalmente",
-  "intro": "Dos formas de empezar. Ninguna es obligatoria y puedes hacerlas en el orden que quieras.",
+  "heading": "Cuéntanos quién eres musicalmente",
+  "intro": "Cuatro pasos cortos para empezar. Ninguno es obligatorio y puedes saltar cualquiera.",
   "door1": {
     "heading": "Álbumes que te definen",
     "intro": "Elige entre 3 y 5 álbumes que te representan. Quedan guardados entre tus favoritos.",
@@ -13,25 +13,101 @@
     "suggestion": "Sugerimos entre 3 y 5.",
     "remove": "Quitar",
     "max": "Llegaste al máximo de 6.",
-    "save": "Guardar y continuar"
+    "removeLabel": "Quitar {title}"
   },
   "door2": {
     "heading": "¿Qué estás escuchando ahora?",
     "intro": "Elige un álbum o una canción y queda registrado en tu diario. Puedes agregar tu impresión más tarde.",
     "searchLabel": "Buscar álbum o canción",
-    "searchPlaceholder": "Ej: Sabrina Carpenter",
     "searching": "Buscando...",
     "noResults": "Sin resultados.",
     "logged": "Registrado: {title}",
-    "logAnother": "Registrar otra",
-    "typeLabel": "Qué buscar"
+    "typeLabel": "Qué buscar",
+    "searchPlaceholderAlbum": "Ej: Currents",
+    "searchPlaceholderSong": "Ej: Espresso",
+    "undo": "Deshacer",
+    "undoLabel": "Deshacer el registro de {title}",
+    "undone": "Registro deshecho: {title}"
   },
   "finish": {
-    "done": "Ir a Inicio",
     "skip": "Saltar por ahora",
+    "now": "Terminar ahora",
     "saving": "Guardando..."
   },
   "error": "No pudimos completar el paso. Prueba de nuevo.",
   "homeLink": "Completa tu perfil musical",
-  "homeLinkCta": "Empezar"
+  "homeLinkCta": "Empezar",
+  "searchError": "No pudimos buscar. Prueba de nuevo.",
+  "categories": {
+    "single_ep": "Single / EP",
+    "compilation": "Recopilación",
+    "live_other": "En vivo u otro"
+  },
+  "steps": {
+    "progress": "Paso {current} de {total}",
+    "nav": "Pasos del onboarding",
+    "album": "Álbumes",
+    "artists": "Artistas",
+    "listening": "Escucha",
+    "wanted": "Después"
+  },
+  "nav": {
+    "next": "Siguiente",
+    "back": "Atrás",
+    "skipStep": "Saltar este paso",
+    "finish": "Terminar"
+  },
+  "artists": {
+    "heading": "Artistas que quieres seguir",
+    "intro": "Seguirlos arma tu radar: sus lanzamientos aparecerán en Inicio.",
+    "searchLabel": "Buscar artistas",
+    "searchPlaceholder": "Ej: Radiohead",
+    "searching": "Buscando...",
+    "noResults": "Sin resultados.",
+    "count": "{count, plural, =0 {Todavía no sigues a nadie} one {Sigues a # artista} other {Sigues a # artistas}}",
+    "followed": "Ahora sigues a {name}",
+    "unfollowed": "Dejaste de seguir a {name}",
+    "unfollow": "Dejar de seguir",
+    "unfollowLabel": "Dejar de seguir a {name}",
+    "note": "Seguir a un artista puede aparecer en tu actividad, según la privacidad de tu perfil."
+  },
+  "audience": {
+    "favorites": "Visibilidad de tus favoritos: {audience}",
+    "diary": "Visibilidad de tu diario: {audience}",
+    "change": "Cambiar",
+    "private": "Solo tú",
+    "followers": "Tus seguidores",
+    "public": "Todos"
+  },
+  "summary": {
+    "heading": "Todo listo",
+    "intro": "Esto es lo que guardamos:",
+    "favorites": "{count, plural, one {# álbum favorito} other {# álbumes favoritos}}",
+    "following": "{count, plural, one {Sigues a # artista} other {Sigues a # artistas}}",
+    "listens": "{count, plural, one {# escucha en tu diario} other {# escuchas en tu diario}}",
+    "empty": "No guardaste nada por ahora. Puedes empezar cuando quieras desde Inicio.",
+    "next": "Y ahora",
+    "goHome": "Ir a Inicio",
+    "explore": "Explorar álbumes",
+    "findPeople": "Buscar gente",
+    "wanted": "{count, plural, one {# elemento en tus Pendientes} other {# elementos en tus Pendientes}}",
+    "suggestGenres": "Elegir tus géneros",
+    "suggestRate": "Valorar un disco"
+  },
+  "wanted": {
+    "heading": "Para escuchar después",
+    "intro": "Guarda discos y artistas que quieres escuchar. Quedan en tus Pendientes.",
+    "typeLabel": "Qué buscar",
+    "searchLabel": "Buscar álbumes o artistas",
+    "searchPlaceholderAlbum": "Ej: Blonde",
+    "searchPlaceholderArtist": "Ej: Fiona Apple",
+    "searching": "Buscando...",
+    "noResults": "Sin resultados.",
+    "count": "{count, plural, =0 {Todavía no guardaste nada} one {Guardaste # elemento} other {Guardaste # elementos}}",
+    "saved": "Guardado en Pendientes: {title}",
+    "removed": "Quitado de Pendientes: {title}",
+    "remove": "Quitar",
+    "removeLabel": "Quitar {title} de Pendientes",
+    "note": "Pendientes es una lista solo tuya: nadie más la ve."
+  }
 }

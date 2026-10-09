@@ -13,6 +13,9 @@ const mocks = vi.hoisted(() => ({
   values: vi.fn(),
 }));
 
+const audience = vi.hoisted(() => ({ resolve: vi.fn() }));
+vi.mock("@/services/social/default-audience", () => ({ resolveNewContentAudience: audience.resolve }));
+
 vi.mock("@/db", () => ({
   db: { select: mocks.select, insert: mocks.insert, update: mocks.update },
 }));
@@ -47,6 +50,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   for (const k of Object.keys(rowsByTable)) delete rowsByTable[k];
   mocks.select.mockImplementation(() => chainFor());
+  audience.resolve.mockResolvedValue("public");
   mocks.values.mockResolvedValue(undefined);
   mocks.insert.mockReturnValue({ values: mocks.values });
   mocks.update.mockReturnValue({ set: () => ({ where: async () => undefined }) });
@@ -87,7 +91,22 @@ describe("seedFavoriteAlbums", () => {
     await seedFavoriteAlbums(USER, [RG(2), RG(1)]);
 
     expect(mocks.insert).toHaveBeenCalledTimes(1);
-    expect(mocks.values).toHaveBeenCalledWith([{ userId: USER, releaseGroupId: RG(2) }]);
+    expect(mocks.values).toHaveBeenCalledWith([{ userId: USER, releaseGroupId: RG(2), audience: "public" }]);
+  });
+
+  it("siembra los favoritos con la audiencia que resuelve la regla de audiencia por defecto", async () => {
+    rowsByTable.release_group = [{ id: RG(1) }, { id: RG(2) }];
+    rowsByTable.favorite = [];
+    audience.resolve.mockResolvedValue("private");
+
+    await seedFavoriteAlbums(USER, [RG(1), RG(2)]);
+
+    expect(audience.resolve).toHaveBeenCalledTimes(1);
+    expect(audience.resolve).toHaveBeenCalledWith(USER, "favorite");
+    expect(mocks.values).toHaveBeenCalledWith([
+      { userId: USER, releaseGroupId: RG(1), audience: "private" },
+      { userId: USER, releaseGroupId: RG(2), audience: "private" },
+    ]);
   });
 
   it("no crea nada si todos los álbumes ya eran favoritos", async () => {
@@ -119,7 +138,7 @@ describe("completeOnboarding", () => {
 
     const state = await completeOnboarding(USER, [RG(1)]);
 
-    expect(mocks.values).toHaveBeenCalledWith([{ userId: USER, releaseGroupId: RG(1) }]);
+    expect(mocks.values).toHaveBeenCalledWith([{ userId: USER, releaseGroupId: RG(1), audience: "public" }]);
     expect(mocks.update).toHaveBeenCalledTimes(1); // markOnboarded
     expect(typeof state.onboardedAt).toBe("string");
     expect(state).not.toHaveProperty("albumFavorites");

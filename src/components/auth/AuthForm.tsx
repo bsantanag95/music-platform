@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { ReactNode, SubmitEventHandler, SyntheticEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { hardNavigate } from "@/lib/hard-navigate";
 import { apiFetch, ApiError } from "@/lib/api/client";
 import {
   AuthResponseSchema,
@@ -51,7 +51,6 @@ export function AuthForm({
   const t = useTranslations("auth");
   const tErrors = useTranslations("errors");
   const locale = useLocale();
-  const router = useRouter();
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [pending, setPending] = useState(false);
@@ -111,6 +110,7 @@ export function AuthForm({
       return;
     }
     setPending(true);
+    let navigating = false;
     try {
       const { user } = await apiFetch(`/api/auth/${mode}`, AuthResponseSchema, {
         method: "POST",
@@ -119,9 +119,11 @@ export function AuthForm({
       });
       const destination = mode === "register" ? "/welcome" : "/";
       const preferred = mode === "login" ? user.locale : null;
-      if (preferred && preferred !== locale) router.push(destination, { locale: preferred });
-      else router.push(destination);
-      router.refresh();
+      // Navegación completa: el Header (en el layout) tiene que renderizarse ya con la sesión.
+      // Se mantiene `pending` hasta que el navegador cambie de página.
+      const targetLocale = preferred && preferred !== locale ? preferred : locale;
+      navigating = true;
+      hardNavigate(`/${targetLocale}${destination === "/" ? "" : destination}`);
     } catch (error) {
       const code = error instanceof ApiError ? error.code : "INTERNAL_ERROR";
       const field = fieldOfServerError[code];
@@ -132,7 +134,7 @@ export function AuthForm({
         setErrorCode(code);
       }
     } finally {
-      setPending(false);
+      if (!navigating) setPending(false);
     }
   };
 

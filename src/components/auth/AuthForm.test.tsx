@@ -6,7 +6,7 @@ import { AuthForm } from "./AuthForm";
 
 const mocks = vi.hoisted(() => ({
   apiFetch: vi.fn(),
-  push: vi.fn(),
+  hardNavigate: vi.fn(),
   ApiError: class ApiError extends Error {
     code: string;
     constructor(code: string) {
@@ -16,22 +16,21 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("@/i18n/navigation", () => ({
-  useRouter: () => ({ push: mocks.push, refresh: vi.fn() }),
-}));
+vi.mock("@/lib/hard-navigate", () => ({ hardNavigate: mocks.hardNavigate }));
 vi.mock("@/lib/api/client", () => ({ apiFetch: mocks.apiFetch, ApiError: mocks.ApiError }));
 
 describe("AuthForm", () => {
-  it("un alta exitosa lleva a /welcome (onboarding de dos puertas)", async () => {
+  it("un alta exitosa lleva a /welcome (onboarding guiado) con una navegación completa", async () => {
     const user = userEvent.setup();
-    mocks.push.mockClear();
+    mocks.hardNavigate.mockClear();
     mocks.apiFetch.mockResolvedValueOnce({ user: { id: "u1", username: "ana", email: "a@b.c", displayName: null } });
     renderWithIntl(<AuthForm mode="register" />);
     await user.type(screen.getByLabelText("Nombre de usuario"), "ana");
     await user.type(screen.getByLabelText("Email"), "ana@example.com");
     await user.type(screen.getByLabelText("Contraseña"), "unaClaveLarga1");
     await user.click(screen.getByRole("button", { name: "Crear cuenta" }));
-    expect(mocks.push).toHaveBeenCalledWith("/welcome");
+    expect(mocks.hardNavigate).toHaveBeenCalledWith("/es/welcome");
+    expect(mocks.hardNavigate).toHaveBeenCalledTimes(1);
   });
 
   async function submitLogin(user: ReturnType<typeof userEvent.setup>) {
@@ -43,22 +42,22 @@ describe("AuthForm", () => {
 
   it("un login con idioma preferido distinto lleva a Inicio en ese idioma", async () => {
     const user = userEvent.setup();
-    mocks.push.mockClear();
+    mocks.hardNavigate.mockClear();
     mocks.apiFetch.mockResolvedValueOnce({
       user: { id: "u1", username: "ana", email: "a@b.c", displayName: null, locale: "en" },
     });
     await submitLogin(user);
-    expect(mocks.push).toHaveBeenCalledWith("/", { locale: "en" });
+    expect(mocks.hardNavigate).toHaveBeenCalledWith("/en");
   });
 
   it("un login con el mismo idioma o sin preferencia se queda en el idioma actual", async () => {
     const user = userEvent.setup();
-    mocks.push.mockClear();
+    mocks.hardNavigate.mockClear();
     mocks.apiFetch.mockResolvedValueOnce({
       user: { id: "u1", username: "ana", email: "a@b.c", displayName: null, locale: null },
     });
     await submitLogin(user);
-    expect(mocks.push).toHaveBeenCalledWith("/");
+    expect(mocks.hardNavigate).toHaveBeenCalledWith("/es");
   });
 
   it("mapea el código de autenticación al namespace normativo de errores", async () => {
