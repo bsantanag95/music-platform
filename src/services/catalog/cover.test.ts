@@ -49,6 +49,7 @@ function makeRg(overrides: Partial<ReleaseGroupRow> = {}): ReleaseGroupRow {
   return {
     id: "rg-1",
     mbid: "mbid-rg-1",
+    searchText: null,
     title: "Album",
     category: "studio",
     coverThumbUrl: null,

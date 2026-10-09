@@ -27,6 +27,7 @@ function makeRg(overrides: Partial<ReleaseGroupRow> = {}): ReleaseGroupRow {
   return {
     id: "rg-1",
     mbid: "mbid-rg-1",
+    searchText: null,
     title: "The Dark Side of the Moon",
     category: "studio",
     coverThumbUrl: null,

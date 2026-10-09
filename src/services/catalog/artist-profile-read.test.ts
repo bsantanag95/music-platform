@@ -8,6 +8,7 @@ function row(overrides: Partial<ArtistRow> = {}): ArtistRow {
   return {
     id: "a1",
     mbid: "m1",
+    searchText: null,
     type: "group",
     name: "Kuervos del Sur",
     disambiguation: "Chilean fusion band",

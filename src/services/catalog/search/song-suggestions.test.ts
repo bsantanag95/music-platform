@@ -8,6 +8,7 @@ vi.mock("./local-match", () => ({
   findArtistsByKeys: vi.fn(async () => []),
   recordingsByArtistsAndTitlePrefix: vi.fn(async () => []),
   recordingSignals: vi.fn(),
+  shortPrefixRecordings: vi.fn(async () => []),
 }));
 
 const localMatch = await import("./local-match");
@@ -59,6 +60,7 @@ beforeEach(() => {
   vi.mocked(localMatch.matchLocalRecordings).mockResolvedValue([]);
   vi.mocked(localMatch.findArtistsByKeys).mockResolvedValue([]);
   vi.mocked(localMatch.recordingsByArtistsAndTitlePrefix).mockResolvedValue([]);
+  vi.mocked(localMatch.shortPrefixRecordings).mockResolvedValue([]);
   vi.mocked(activityScores).mockResolvedValue(new Map());
 });
 
@@ -174,9 +176,32 @@ describe("songSuggestions", () => {
     expect(localMatch.recordingsByArtistsAndTitlePrefix).not.toHaveBeenCalled();
     expect(localMatch.matchLocalRecordings).toHaveBeenLastCalledWith("metallica o", 80, 80);
 
+    vi.mocked(localMatch.matchLocalRecordings).mockClear();
     await songSuggestions("on", 6);
-    expect(localMatch.matchLocalRecordings).toHaveBeenLastCalledWith("on", 40, 40);
+    // Con 2 letras, inicio de palabra sobre `search_text` (openspec: speed-up-short-suggestions).
+    expect(localMatch.shortPrefixRecordings).toHaveBeenLastCalledWith("on", 40);
+    expect(localMatch.matchLocalRecordings).not.toHaveBeenCalled();
     expect(localMatch.recordingSignals).not.toHaveBeenCalled();
+  });
+
+  it("con 2 letras, palabra completa y prefijo cuentan igual: deciden los álbumes", async () => {
+    vi.mocked(localMatch.shortPrefixRecordings).mockResolvedValue([rec("floor", "On the Floor"), rec("one", "One")]);
+    signals({
+      floor: { artist: "Jennifer Lopez", albums: 1 },
+      one: { artist: "Metallica", albums: 3 },
+    });
+
+    expect(labels(await songSuggestions("on", 6))).toEqual(["One — Metallica", "On the Floor — Jennifer Lopez"]);
+  });
+
+  it("con 3+ letras, la palabra completa sigue por delante del prefijo", async () => {
+    vi.mocked(localMatch.matchLocalRecordings).mockResolvedValue([rec("one", "Onerous"), rec("floor", "One Floor")]);
+    signals({
+      one: { artist: "Banda", albums: 9 },
+      floor: { artist: "Otra", albums: 1 },
+    });
+
+    expect(labels(await songSuggestions("one", 6))).toEqual(["One Floor — Otra", "Onerous — Banda"]);
   });
 
   it("recorta al límite", async () => {

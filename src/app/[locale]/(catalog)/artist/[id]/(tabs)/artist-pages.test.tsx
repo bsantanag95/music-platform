@@ -101,6 +101,7 @@ function makeArtist(overrides: Partial<ArtistRow> = {}): ArtistRow {
   return {
     id: VALID_UUID,
     mbid: "83d91898-7763-47d7-b03b-b92132375c47",
+    searchText: null,
     type: "group",
     name: "Pink Floyd",
     disambiguation: "UK rock band",

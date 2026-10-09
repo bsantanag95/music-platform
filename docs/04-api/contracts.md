@@ -223,8 +223,17 @@ reglas que `/api/users` (solo cuentas activas).
 - Dentro de cada bloque: nivel de coincidencia del título base → actividad en la plataforma →
   álbumes en que aparece → seguidores del artista → discografía explorada → similitud. Ninguna
   cifra se expone en la respuesta.
-- Candidatos: 80 con 3+ caracteres, 40 con 2 (con 2 caracteres el filtro casa miles de títulos).
-  Las señales salen de consultas en lote, nunca una por candidato.
+- Candidatos: 80 con 3+ caracteres, 40 con 2. Las señales salen de consultas en lote, nunca una
+  por candidato.
+
+**Con exactamente 2 caracteres** tras normalizar (openspec `speed-up-short-suggestions`, ADR 0031),
+`artist`, `album` y `song` no usan la coincidencia tolerante: sugieren nombres con **una palabra que
+empieza** por esos caracteres (sobre la columna guardada `search_text`, migración `0067`), así que
+`on` sugiere «One» y «Ramble On» pero no «Mono». Los 40 candidatos se eligen por: nombre que empieza
+por los caracteres → artista con discografía explorada / álbum ya abierto (`editions_synced_at`) /
+canción que aparece en más pistas → nombre más corto; sobre ellos se aplica el orden de cada tipo (en
+`song`, palabra completa y prefijo cuentan como el mismo nivel). `user` no cambia. Misma forma de
+respuesta.
 
 ## `GET /api/catalog/release-group/[id]` — ✅ Existe
 

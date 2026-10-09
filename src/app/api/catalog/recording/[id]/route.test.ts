@@ -31,7 +31,7 @@ describe("GET /api/catalog/recording/[id]", () => {
     vi.mocked(recordingDetail.getRecordingDetail).mockResolvedValue({
       kind: "ok",
       detail: {
-        recording: { id: "550e8400-e29b-41d4-a716-446655440000", mbid: null, title: "Money", durationSec: 400 },
+        recording: { id: "550e8400-e29b-41d4-a716-446655440000", mbid: null, title: "Money", searchText: null, durationSec: 400 },
         credits: [],
         containingAlbums: [],
         appearances: [],

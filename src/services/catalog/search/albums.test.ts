@@ -28,6 +28,7 @@ function rgRow(overrides: Partial<ReleaseGroupRow>): ReleaseGroupRow {
   return {
     id: `rg-${overrides.mbid ?? overrides.title}`,
     mbid: null,
+    searchText: null,
     title: "X",
     category: "studio",
     coverThumbUrl: null,
