@@ -15,6 +15,8 @@ const mocks = vi.hoisted(() => ({
   createListenEntry: vi.fn(),
   deleteListenEntry: vi.fn(),
   completeOnboarding: vi.fn(),
+  toggleWantToListen: vi.fn(),
+  removeFromWantToListen: vi.fn(),
   push: vi.fn(),
   refresh: vi.fn(),
 }));
@@ -29,6 +31,10 @@ vi.mock("@/lib/api/catalog", () => ({
 vi.mock("@/lib/api/diary", () => ({
   createListenEntry: mocks.createListenEntry,
   deleteListenEntry: mocks.deleteListenEntry,
+}));
+vi.mock("@/lib/api/want-to-listen", () => ({
+  toggleWantToListen: mocks.toggleWantToListen,
+  removeFromWantToListen: mocks.removeFromWantToListen,
 }));
 vi.mock("@/lib/api/onboarding", () => ({ completeOnboarding: mocks.completeOnboarding }));
 vi.mock("@/i18n/navigation", () => ({
@@ -104,6 +110,8 @@ beforeEach(() => {
   mocks.searchArtists.mockResolvedValue(artistResponse);
   mocks.followArtist.mockResolvedValue({ following: true });
   mocks.createListenEntry.mockResolvedValue({ id: "a1b2c3d4-0000-4000-8000-0000000000e1" });
+  mocks.toggleWantToListen.mockResolvedValue({ id: "w1" });
+  mocks.removeFromWantToListen.mockResolvedValue(null);
   mocks.completeOnboarding.mockResolvedValue({ onboardedAt: "2026-10-09T00:00:00.000Z" });
 });
 
@@ -111,7 +119,7 @@ describe("WelcomeFlow", () => {
   it("muestra un solo paso a la vez, con progreso y el aviso de email", () => {
     renderFlow();
 
-    expect(screen.getByText("Paso 1 de 3")).toBeInTheDocument();
+    expect(screen.getByText("Paso 1 de 4")).toBeInTheDocument();
     expect(screen.getByText("aviso-email")).toBeInTheDocument();
     expect(visibleSteps()).toEqual(["Álbumes que te definen"]);
     expect(screen.getByRole("listitem", { current: "step" })).toHaveTextContent("Álbumes");
@@ -125,11 +133,11 @@ describe("WelcomeFlow", () => {
     await user.click(await screen.findByRole("button", { name: /Radiohead · 2007/ }));
     await user.click(screen.getByRole("button", { name: "Siguiente" }));
 
-    expect(screen.getByText("Paso 2 de 3")).toBeInTheDocument();
+    expect(screen.getByText("Paso 2 de 4")).toBeInTheDocument();
     expect(visibleSteps()).toEqual(["Artistas que quieres seguir"]);
     await user.click(screen.getByRole("button", { name: "Atrás" }));
 
-    expect(screen.getByText("Paso 1 de 3")).toBeInTheDocument();
+    expect(screen.getByText("Paso 1 de 4")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Quitar In Rainbows" })).toBeInTheDocument();
   });
 
@@ -139,7 +147,7 @@ describe("WelcomeFlow", () => {
 
     await user.click(screen.getByRole("button", { name: "Saltar este paso" }));
 
-    expect(screen.getByText("Paso 2 de 3")).toBeInTheDocument();
+    expect(screen.getByText("Paso 2 de 4")).toBeInTheDocument();
     expect(mocks.followArtist).not.toHaveBeenCalled();
   });
 
@@ -189,6 +197,7 @@ describe("WelcomeFlow", () => {
 
     await user.click(screen.getByRole("button", { name: "Saltar este paso" }));
     await user.click(screen.getByRole("button", { name: "Saltar este paso" }));
+    await user.click(screen.getByRole("button", { name: "Saltar este paso" }));
     expect(screen.queryByRole("button", { name: "Saltar por ahora" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Terminar" }));
     await user.click(await screen.findByRole("button", { name: "Ir a Inicio" }));
@@ -196,6 +205,38 @@ describe("WelcomeFlow", () => {
     expect(mocks.push).toHaveBeenCalledWith("/");
     // Sin `router.refresh()`: pedía Inicio dos veces y el layout no cambia con el cierre.
     expect(mocks.refresh).not.toHaveBeenCalled();
+  });
+
+  it("el resumen cuenta lo guardado en Pendientes y sugiere géneros y valorar si no registró escuchas", async () => {
+    const user = userEvent.setup();
+    renderFlow();
+    await user.click(screen.getByRole("button", { name: "Saltar este paso" }));
+    await user.click(screen.getByRole("button", { name: "Saltar este paso" }));
+    await user.click(screen.getByRole("button", { name: "Saltar este paso" }));
+    await user.type(screen.getByRole("searchbox"), "in rainbows");
+    await user.click(await screen.findByRole("button", { name: /Radiohead · 2007/ }));
+    await screen.findByRole("button", { name: "Quitar In Rainbows de Pendientes" });
+    await user.click(screen.getByRole("button", { name: "Terminar" }));
+
+    await screen.findByRole("heading", { name: "Todo listo" });
+    expect(screen.getByText("1 elemento en tus Pendientes")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Elegir tus géneros" })).toHaveAttribute("href", "/me/settings/profile");
+    expect(screen.getByRole("link", { name: "Valorar un disco" })).toBeInTheDocument();
+  });
+
+  it("no sugiere valorar si ya registró una escucha", async () => {
+    const user = userEvent.setup();
+    renderFlow();
+    await user.click(screen.getByRole("button", { name: "Saltar este paso" }));
+    await user.click(screen.getByRole("button", { name: "Saltar este paso" }));
+    await user.type(screen.getByRole("searchbox"), "in rainbows");
+    await user.click(await screen.findByRole("button", { name: /Radiohead · 2007/ }));
+    await screen.findByRole("button", { name: "Deshacer el registro de In Rainbows" });
+    await user.click(screen.getByRole("button", { name: "Terminar ahora" }));
+
+    await screen.findByRole("heading", { name: "Todo listo" });
+    expect(screen.queryByRole("link", { name: "Valorar un disco" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Elegir tus géneros" })).toBeInTheDocument();
   });
 
   it("ofrece Explorar en el resumen solo si está activo", async () => {
@@ -226,11 +267,17 @@ describe("WelcomeFlow", () => {
     await user.type(screen.getByRole("searchbox"), "in rainbows");
     await user.click(await screen.findByRole("button", { name: /Radiohead · 2007/ }));
     await screen.findByRole("button", { name: "Deshacer el registro de In Rainbows" });
+    await user.click(screen.getByRole("button", { name: "Siguiente" }));
+    await user.type(screen.getByRole("searchbox"), "in rainbows");
+    await user.click(await screen.findByRole("button", { name: /Radiohead · 2007/ }));
+    await screen.findByRole("button", { name: "Quitar In Rainbows de Pendientes" });
     first.unmount();
 
     renderFlow();
 
-    expect(await screen.findByText("Paso 3 de 3")).toBeInTheDocument();
+    expect(await screen.findByText("Paso 4 de 4")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Quitar In Rainbows de Pendientes" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Atrás" }));
     expect(screen.getByRole("button", { name: "Deshacer el registro de In Rainbows" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Atrás" }));
     expect(screen.getByRole("button", { name: "Dejar de seguir a Radiohead" })).toBeInTheDocument();
@@ -270,7 +317,7 @@ describe("WelcomeFlow", () => {
 
     renderFlow();
 
-    expect(screen.getByText("Paso 1 de 3")).toBeInTheDocument();
+    expect(screen.getByText("Paso 1 de 4")).toBeInTheDocument();
     expect(screen.getByText("Elegiste 0 álbumes · Sugerimos entre 3 y 5.")).toBeInTheDocument();
   });
 
@@ -283,6 +330,6 @@ describe("WelcomeFlow", () => {
 
     expect(await screen.findByText("No pudimos completar el paso. Prueba de nuevo.")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Todo listo" })).not.toBeInTheDocument();
-    expect(screen.getByText("Paso 1 de 3")).toBeInTheDocument();
+    expect(screen.getByText("Paso 1 de 4")).toBeInTheDocument();
   });
 });

@@ -10,16 +10,18 @@ import type { Audience } from "@/services/social/types";
 import { AlbumIdentityPicker, isPickedAlbum, type PickedAlbum } from "./AlbumIdentityPicker";
 import { ArtistFollowPicker } from "./ArtistFollowPicker";
 import { NowPlayingPicker } from "./NowPlayingPicker";
+import { WantToListenPicker } from "./WantToListenPicker";
 
-// Onboarding guiado en tres pasos (openspec: redesign-welcome-flow, sobre
-// add-two-door-onboarding): 1 álbumes que te definen (Puerta 1), 2 artistas que
-// quieres seguir, 3 qué estás escuchando ahora (Puerta 2). Ningún paso es
-// obligatorio. Los tres pasos viven montados y el inactivo se oculta con
+// Onboarding guiado en cuatro pasos (openspec: redesign-welcome-flow y
+// extend-welcome-steps, sobre add-two-door-onboarding): 1 álbumes que te
+// definen (Puerta 1), 2 artistas que quieres seguir, 3 qué estás escuchando
+// ahora (Puerta 2), 4 para escuchar después (Pendientes). Ningún paso es
+// obligatorio. Los pasos viven montados y el inactivo se oculta con
 // `hidden`: así conservan su estado (resultados, lo registrado o seguido) al ir
 // y volver. Lo único que cierra el onboarding es `finish`, que dispara
 // `POST /api/me/onboarding` con los álbumes del paso 1 (o vacío) y muestra el
 // resumen en lugar de saltar directo a Inicio.
-const STEPS = ["album", "artists", "listening"] as const;
+const STEPS = ["album", "artists", "listening", "wanted"] as const;
 const LAST_STEP = STEPS.length - 1;
 
 const isPickedList = isArrayOf(isPickedAlbum);
@@ -42,6 +44,7 @@ interface Summary {
   favorites: number;
   following: number;
   listens: number;
+  wanted: number;
 }
 
 export function WelcomeFlow({ userId, favoriteAudience, diaryAudience, exploreEnabled, notice }: WelcomeFlowProps) {
@@ -54,11 +57,12 @@ export function WelcomeFlow({ userId, favoriteAudience, diaryAudience, exploreEn
   const [picked, setPicked] = useSessionState<PickedAlbum[]>(`${storagePrefix}albums`, [], isPickedList);
   const [followingCount, setFollowingCount] = useState(0);
   const [listenCount, setListenCount] = useState(0);
+  const [wantedCount, setWantedCount] = useState(0);
   const [pending, setPending] = useState(false);
   const [errored, setErrored] = useState(false);
   const [summary, setSummary] = useState<Summary | null>(null);
 
-  const countByStep = [picked.length, followingCount, listenCount];
+  const countByStep = [picked.length, followingCount, listenCount, wantedCount];
   const anythingDone = countByStep.some((n) => n > 0);
 
   function goTo(next: number) {
@@ -72,7 +76,7 @@ export function WelcomeFlow({ userId, favoriteAudience, diaryAudience, exploreEn
     setErrored(false);
     try {
       await completeOnboarding(picked.map((a) => a.id));
-      setSummary({ favorites: picked.length, following: followingCount, listens: listenCount });
+      setSummary({ favorites: picked.length, following: followingCount, listens: listenCount, wanted: wantedCount });
       clearSessionState(storagePrefix);
     } catch {
       setErrored(true);
@@ -92,6 +96,7 @@ export function WelcomeFlow({ userId, favoriteAudience, diaryAudience, exploreEn
       summary.favorites > 0 && t("summary.favorites", { count: summary.favorites }),
       summary.following > 0 && t("summary.following", { count: summary.following }),
       summary.listens > 0 && t("summary.listens", { count: summary.listens }),
+      summary.wanted > 0 && t("summary.wanted", { count: summary.wanted }),
     ].filter(Boolean);
 
     return (
@@ -130,6 +135,19 @@ export function WelcomeFlow({ userId, favoriteAudience, diaryAudience, exploreEn
                 {t("summary.findPeople")}
               </Button>
             </Link>
+            {/* Lo que aún no hizo: géneros de su identidad musical (Ajustes → Perfil) y valorar un disco. */}
+            <Link href="/me/settings/profile">
+              <Button variant="secondary" className="min-h-11">
+                {t("summary.suggestGenres")}
+              </Button>
+            </Link>
+            {summary.listens === 0 && (
+              <Link href="/search?type=album">
+                <Button variant="secondary" className="min-h-11">
+                  {t("summary.suggestRate")}
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -152,7 +170,7 @@ export function WelcomeFlow({ userId, favoriteAudience, diaryAudience, exploreEn
         <p aria-live="polite" className="font-data text-xs text-paper-muted">
           {t("steps.progress", { current: step + 1, total: STEPS.length })}
         </p>
-        <ol aria-label={t("steps.nav")} className="grid grid-cols-3 gap-2">
+        <ol aria-label={t("steps.nav")} className="grid grid-cols-4 gap-2">
           {STEPS.map((name, index) => (
             <li
               key={name}
@@ -179,6 +197,9 @@ export function WelcomeFlow({ userId, favoriteAudience, diaryAudience, exploreEn
       </div>
       <div hidden={step !== 2}>
         <NowPlayingPicker audience={diaryAudience} onCountChange={setListenCount} storageKey={`${storagePrefix}listens`} />
+      </div>
+      <div hidden={step !== 3}>
+        <WantToListenPicker onCountChange={setWantedCount} storageKey={`${storagePrefix}wanted`} />
       </div>
 
       {errored && (

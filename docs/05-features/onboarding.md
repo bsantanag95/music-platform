@@ -1,10 +1,11 @@
-# Onboarding guiado (tres pasos)
+# Onboarding guiado (cuatro pasos)
 
 **Fase 1 de `redefine-content-hierarchy` · cambios `add-two-door-onboarding`,
-`improve-welcome-onboarding` y `redesign-welcome-flow` · Estado: ✅ implementado**
+`improve-welcome-onboarding`, `redesign-welcome-flow`, `harden-welcome-flow` y
+`extend-welcome-steps` · Estado: ✅ implementado**
 
-Un usuario recién registrado aterriza en **`/[locale]/welcome`**: tres pasos con un
-indicador «Paso N de 3», ninguno obligatorio. Solo un paso es visible a la vez; se puede
+Un usuario recién registrado aterriza en **`/[locale]/welcome`**: cuatro pasos con un
+indicador «Paso N de 4», ninguno obligatorio. Solo un paso es visible a la vez; se puede
 avanzar, retroceder y saltar cualquiera, y lo elegido se conserva al ir y volver (los tres
 pasos viven montados y el inactivo se oculta con `hidden`). El flujo nació como «dos puertas»
 (de ahí los nombres «Puerta 1» y «Puerta 2», que se conservan en código, docs e historial):
@@ -14,6 +15,7 @@ pasos viven montados y el inactivo se oculta con `hidden`). El flujo nació como
    lanzamientos de Inicio.
 3. **Puerta 2 — "¿Qué estás escuchando ahora?"** (presente): *"¿qué está pasando contigo
    ahora?"*
+4. **Paso de Pendientes — "Para escuchar después"**: guardar discos y artistas en Pendientes.
 
 ## Puerta 1 — los álbumes elegidos se guardan como favoritos
 
@@ -55,7 +57,7 @@ fallo de búsqueda se dice como error, nunca como «Sin resultados».
 
 ## Recargar no pierde el trabajo
 
-El paso actual, los álbumes elegidos, los artistas seguidos y las escuchas registradas (con el id de la
+El paso actual, los álbumes elegidos, los artistas seguidos, las escuchas registradas y lo guardado en Pendientes (con el id de la
 entrada, para poder deshacerlas) se guardan en `sessionStorage` bajo `welcome:<userId>:…`
 (`src/lib/session-state.ts`, cambio `harden-welcome-flow`): recargar la pestaña no devuelve al paso 1 ni
 permite registrar de nuevo la misma escucha. Se hidrata tras el primer render, un valor con otra forma
@@ -68,6 +70,16 @@ El usuario busca artistas y, al elegir uno, lo sigue de inmediato (`PUT /api/art
 idempotente y sin tope). Lo seguido sale de los resultados y se lista aparte con «Dejar de seguir»
 (`DELETE`), igual que la Puerta 2 con «Deshacer»; un clic repetido no repite la solicitud. No pide
 mínimo ni máximo y no cierra el onboarding. Un seguimiento fallido se dice como error y no se lista.
+
+## Paso de Pendientes
+
+Busca álbumes o artistas (un tipo por búsqueda, mismo conmutador y motor que la Puerta 2) y, al elegir
+uno, lo guarda en Pendientes (Want to Listen; `POST /api/me/want-to-listen`). Lo guardado sale de los
+resultados y se lista aparte con «Quitar» (`DELETE`). Es una lista **solo del usuario** (no tiene
+audiencia) y el paso lo dice. El `POST` es un *toggle* —repetir quita—: por eso el picker oculta lo ya
+guardado, protege el doble clic y, si la respuesta es `null` (el objetivo ya estaba y se acaba de quitar),
+vuelve a llamar para dejarlo guardado. Sin mínimo ni máximo; no cierra el onboarding. Se conserva al
+recargar como los demás pasos (`welcome:<userId>:wanted`).
 
 ## Aviso de audiencia
 
@@ -85,7 +97,10 @@ si ya hay algo; ambos guardan los álbumes elegidos (antes «Saltar» los descar
 3 termina con «Terminar». Tras el cierre (`POST /api/me/onboarding`) se muestra un **resumen** («Todo
 listo»: favoritos guardados, artistas seguidos, escuchas registradas —solo los conteos mayores que
 cero—) con los siguientes pasos: Ir a Inicio, Explorar (solo si `EXPLORE_ENABLED` lo permite) y
-Buscar gente. Es estado del cliente, sin ruta propia: recargar redirige a Inicio.
+Buscar gente; además sugiere, solo entre lo que no hizo, «Elegir tus géneros» (Ajustes → Perfil, donde
+ya está el selector de géneros de la identidad musical) y «Valorar un disco» (buscador de álbumes, si no
+registró ninguna escucha). Los géneros y la valoración no son pasos del flujo: con ellos serían seis y
+duplicarían pantallas que ya existen. Es estado del cliente, sin ruta propia: recargar redirige a Inicio.
 
 **Saltar sigue fijando `onboarded_at`** aunque no se haya hecho nada. Dejarlo nulo haría que el login con
 Google (que envía a `/welcome` mientras sea nulo) devolviera a la persona al flujo en cada inicio de sesión.

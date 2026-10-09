@@ -1,7 +1,7 @@
 {
   "pageTitle": "Te damos la bienvenida",
   "heading": "Cuéntanos quién eres musicalmente",
-  "intro": "Tres pasos cortos para empezar. Ninguno es obligatorio y puedes saltar cualquiera.",
+  "intro": "Cuatro pasos cortos para empezar. Ninguno es obligatorio y puedes saltar cualquiera.",
   "door1": {
     "heading": "Álbumes que te definen",
     "intro": "Elige entre 3 y 5 álbumes que te representan. Quedan guardados entre tus favoritos.",
@@ -48,7 +48,8 @@
     "nav": "Pasos del onboarding",
     "album": "Álbumes",
     "artists": "Artistas",
-    "listening": "Escucha"
+    "listening": "Escucha",
+    "wanted": "Después"
   },
   "nav": {
     "next": "Siguiente",
@@ -88,6 +89,25 @@
     "next": "Y ahora",
     "goHome": "Ir a Inicio",
     "explore": "Explorar álbumes",
-    "findPeople": "Buscar gente"
+    "findPeople": "Buscar gente",
+    "wanted": "{count, plural, one {# elemento en tus Pendientes} other {# elementos en tus Pendientes}}",
+    "suggestGenres": "Elegir tus géneros",
+    "suggestRate": "Valorar un disco"
+  },
+  "wanted": {
+    "heading": "Para escuchar después",
+    "intro": "Guarda discos y artistas que quieres escuchar. Quedan en tus Pendientes.",
+    "typeLabel": "Qué buscar",
+    "searchLabel": "Buscar álbumes o artistas",
+    "searchPlaceholderAlbum": "Ej: Blonde",
+    "searchPlaceholderArtist": "Ej: Fiona Apple",
+    "searching": "Buscando...",
+    "noResults": "Sin resultados.",
+    "count": "{count, plural, =0 {Todavía no guardaste nada} one {Guardaste # elemento} other {Guardaste # elementos}}",
+    "saved": "Guardado en Pendientes: {title}",
+    "removed": "Quitado de Pendientes: {title}",
+    "remove": "Quitar",
+    "removeLabel": "Quitar {title} de Pendientes",
+    "note": "Pendientes es una lista solo tuya: nadie más la ve."
   }
 }
