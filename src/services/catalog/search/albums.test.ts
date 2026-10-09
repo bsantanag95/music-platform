@@ -12,6 +12,7 @@ vi.mock("./local-match", () => ({
   matchLocalReleaseGroups: vi.fn(async () => []),
   findArtistsByKeys: vi.fn(async () => []),
   releaseGroupsByArtistsAndTitle: vi.fn(async () => []),
+  releaseGroupsByArtists: vi.fn(async () => []),
   primaryArtistsByReleaseGroup: vi.fn(async () => new Map()),
   releaseGroupsWithContent: vi.fn(async () => new Set()),
 }));
@@ -67,9 +68,67 @@ function mbAlbum(
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(activityScores).mockResolvedValue(new Map());
+  vi.mocked(localMatch.findArtistsByKeys).mockResolvedValue([]);
+  vi.mocked(localMatch.releaseGroupsByArtists).mockResolvedValue([]);
+  vi.mocked(localMatch.primaryArtistsByReleaseGroup).mockResolvedValue(new Map());
   vi.mocked(upsertReleaseGroupStubs).mockImplementation(async (stubs) =>
     stubs.map((stub) => rgRow({ mbid: stub.mbid, title: stub.title, category: stub.category })),
   );
+});
+
+describe("searchAlbums — notoriedad", () => {
+  it("entre homónimos con la misma coincidencia, el disco con más ediciones va primero", async () => {
+    vi.mocked(musicbrainz.searchReleaseGroup).mockResolvedValue({
+      count: 210,
+      "release-groups": [
+        mbAlbum("tributo", "Abbey Road", "Various Artists", { count: 1 }),
+        mbAlbum("single", "Abbey Road", "Diana Herrera", { "primary-type": "Single", count: 1 }),
+        mbAlbum("beatles", "Abbey Road", "The Beatles", { count: 73 }),
+      ],
+    });
+
+    const response = await searchAlbums("abbey road");
+
+    expect(response.results.map((result) => result.artistName)).toEqual(["The Beatles", "Various Artists", "Diana Herrera"]);
+  });
+
+  it("«The Dark Side of the Moon» cuenta como título exacto de «dark side of the moon»", async () => {
+    vi.mocked(musicbrainz.searchReleaseGroup).mockResolvedValue({
+      count: 77,
+      "release-groups": [
+        mbAlbum("a", "Dark Side of the Moon", "Hedonistas", { count: 1 }),
+        mbAlbum("b", "Dark Side of the Moon", "Medicine Head", { count: 3 }),
+        mbAlbum("pf", "The Dark Side of the Moon", "Pink Floyd", { count: 120 }),
+      ],
+    });
+
+    const response = await searchAlbums("dark side of the moon");
+
+    expect(response.results[0]).toMatchObject({ title: "The Dark Side of the Moon", artistName: "Pink Floyd" });
+  });
+
+  it("si la consulta es el nombre de un artista local, sus discos se suman a los candidatos", async () => {
+    const floyd = { id: "artist-pf", name: "Pink Floyd" };
+    vi.mocked(localMatch.findArtistsByKeys).mockImplementation(async (keys) =>
+      keys.includes("pink floyd") ? ([floyd] as never) : [],
+    );
+    vi.mocked(localMatch.releaseGroupsByArtists).mockResolvedValue([
+      rgRow({ mbid: "wall", title: "The Wall", firstReleaseYear: 1979 }),
+    ]);
+    vi.mocked(localMatch.primaryArtistsByReleaseGroup).mockResolvedValue(
+      new Map([["rg-wall", [floyd]]]) as never,
+    );
+    vi.mocked(musicbrainz.searchReleaseGroup).mockResolvedValue({
+      count: 40,
+      "release-groups": [mbAlbum("homonimo", "Pink Floyd", "Masryat", { count: 1 })],
+    });
+
+    const response = await searchAlbums("pink floyd");
+
+    expect(localMatch.releaseGroupsByArtists).toHaveBeenCalledWith(["artist-pf"], expect.objectContaining({ limit: 10 }));
+    // El disco del artista (nivel 1) va antes que el homónimo exacto de otro artista (nivel 2).
+    expect(response.results.map((result) => result.title)).toEqual(["The Wall", "Pink Floyd"]);
+  });
 });
 
 describe("searchAlbums", () => {

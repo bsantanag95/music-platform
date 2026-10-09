@@ -37,6 +37,26 @@ describe("restAfterEdgeArtist", () => {
   });
 });
 
+describe("coverageLevel — artista y artículo", () => {
+  it("la consulta es el nombre del artista → nivel 1 aunque el título sea otro", () => {
+    expect(coverageLevel("pink floyd", "The Wall", ["Pink Floyd"])).toBe(1);
+  });
+
+  it("un disco que se llama como la consulta sigue siendo nivel 2 si el artista es otro", () => {
+    expect(coverageLevel("pink floyd", "Pink Floyd", ["Masryat"])).toBe(2);
+  });
+
+  it("el disco autotitulado del artista cuenta con su discografía (nivel 1)", () => {
+    expect(coverageLevel("weezer", "Weezer", ["Weezer"])).toBe(1);
+  });
+
+  it("ignora un artículo inicial en el título exacto", () => {
+    expect(coverageLevel("dark side of the moon", "The Dark Side of the Moon", ["Pink Floyd"])).toBe(2);
+    expect(coverageLevel("the wall", "Wall", ["X"])).toBe(2);
+    expect(coverageLevel("the", "The", ["X"])).toBe(2);
+  });
+});
+
 describe("coverageLevel", () => {
   it("artista delante o detrás + título exacto → nivel 1", () => {
     expect(coverageLevel("kiss destroyer", "Destroyer", ["KISS"])).toBe(1);

@@ -12,8 +12,10 @@ import { tokenize } from "./normalize";
 /**
  * Nivel de cobertura, del mejor al peor:
  * 1. un artista acreditado ocupa el inicio o el final de la consulta y el
- *    resto es exactamente el título;
- * 2. el título es exactamente la consulta completa;
+ *    resto es exactamente el título, o la consulta completa es el nombre de
+ *    un artista acreditado (quien escribe "pink floyd" busca sus discos);
+ * 2. el título es exactamente la consulta completa (sin contar un artículo
+ *    inicial: "dark side of the moon" = "The Dark Side of the Moon");
  * 3. todas las palabras aparecen en título ∪ artistas;
  * 4. cobertura parcial.
  */
@@ -53,6 +55,14 @@ function sameTokens(a: string[], b: string[]): boolean {
   return a.length === b.length && a.every((token, index) => token === b[index]);
 }
 
+const LEADING_ARTICLES = new Set(["the", "a", "an", "el", "la", "los", "las", "un", "una", "le", "les", "der", "die", "das"]);
+
+/** Quita un artículo inicial si queda al menos una palabra. */
+function withoutLeadingArticle(tokens: string[]): string[] {
+  const [first, ...rest] = tokens;
+  return first !== undefined && rest.length > 0 && LEADING_ARTICLES.has(first) ? rest : tokens;
+}
+
 /** Resto de la consulta si `artistName` ocupa uno de sus extremos; null si no. */
 export function restAfterEdgeArtist(queryTokens: string[], artistName: string): string[] | null {
   const artistTokens = tokenize(artistName);
@@ -76,7 +86,13 @@ export function coverageLevel(
     const rest = restAfterEdgeArtist(queryTokens, name);
     if (rest && sameTokens(rest, titleTokens)) return 1;
   }
+  // La consulta es el nombre del artista: todos sus discos (también el autotitulado). Un disco que
+  // solo se llama como la consulta, de otro artista, es una coincidencia de título (nivel 2).
+  for (const name of artistNames) {
+    if (sameTokens(queryTokens, tokenize(name))) return 1;
+  }
   if (sameTokens(queryTokens, titleTokens)) return 2;
+  if (sameTokens(withoutLeadingArticle(queryTokens), withoutLeadingArticle(titleTokens))) return 2;
 
   const covered = new Set([...titleTokens, ...artistNames.flatMap((name) => tokenize(name))]);
   if (queryTokens.every((token) => covered.has(token))) return 3;

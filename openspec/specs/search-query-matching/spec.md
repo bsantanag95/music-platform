@@ -3,7 +3,6 @@
 ## Purpose
 
 Cómo se emparejan las consultas con artistas, álbumes y canciones: una sola normalización de texto, cobertura de términos para "artista + título" en cualquier orden, separador explícito, detección del artista en Canciones, agrupación por (canción, artista), actividad propia como señal de orden y herramientas para acotar consultas genéricas.
-
 ## Requirements
 ### Requirement: Normalización de consultas y nombres
 
@@ -24,14 +23,16 @@ título y el nombre del artista acreditado, en cualquier orden. Cada candidato S
 en niveles, del mejor al peor:
 
 1. un artista acreditado ocupa el inicio o el final de la consulta y el título coincide
-   exactamente con las palabras restantes;
-2. el título coincide exactamente con la consulta completa;
+   exactamente con las palabras restantes, o la consulta completa es el nombre de un artista
+   acreditado;
+2. el título coincide exactamente con la consulta completa, sin contar un artículo inicial en
+   ninguno de los dos;
 3. todas las palabras cubiertas por título ∪ artista;
 4. cobertura parcial.
 
-Dentro de cada nivel el orden SHALL ser: actividad en la plataforma, luego contenido ya cacheado,
-luego el orden de relevancia de MusicBrainz. El sistema SHALL NOT exigir que la persona separe
-artista y título.
+Dentro de cada nivel el orden SHALL ser: actividad en la plataforma, luego notoriedad (en Álbumes,
+el número de ediciones que informa MusicBrainz), luego contenido ya cacheado, luego el orden de
+relevancia de MusicBrainz. El sistema SHALL NOT exigir que la persona separe artista y título.
 
 #### Scenario: Artista delante
 - **WHEN** una persona busca `kiss destroyer` en Álbumes
@@ -45,6 +46,14 @@ artista y título.
 - **WHEN** una persona busca `dokken kiss of death` en Canciones
 - **THEN** *Kiss of Death* de Dokken aparece antes que *Kiss of Death* de New Order, que no cubre
   la palabra "dokken"
+
+#### Scenario: Consulta que es el nombre de un artista
+- **WHEN** una persona busca `pink floyd` en Álbumes y existe un álbum de otro artista titulado «Pink Floyd»
+- **THEN** los discos de Pink Floyd aparecen antes que el álbum homónimo del otro artista
+
+#### Scenario: Título con artículo inicial
+- **WHEN** una persona busca `dark side of the moon` en Álbumes
+- **THEN** *The Dark Side of the Moon* cuenta como título exacto y no cae al nivel de cobertura de palabras
 
 ### Requirement: Separador explícito opcional
 
@@ -153,4 +162,20 @@ las que no la tienen, de mayor a menor actividad. La señal SHALL calcularse sol
 - **WHEN** dos álbumes se titulan exactamente "Destroyer" y solo uno tiene calificaciones en la
   plataforma
 - **THEN** el que tiene calificaciones aparece primero
+
+### Requirement: Notoriedad como señal de orden en Álbumes
+
+En Álbumes, entre candidatos del mismo nivel y con la misma actividad, el que tenga más ediciones
+según MusicBrainz SHALL aparecer antes. La señal SHALL salir de la misma respuesta de búsqueda, sin
+solicitudes adicionales, y los candidatos locales que MusicBrainz no devolvió SHALL tratarse como
+sin notoriedad conocida. Si la consulta es el nombre de un artista local, sus discos SHALL sumarse a
+los candidatos locales (de estudio primero, por año).
+
+#### Scenario: Homónimos exactos
+- **WHEN** una persona busca `abbey road` y MusicBrainz devuelve tres álbumes con ese título, uno con 73 ediciones y dos con una
+- **THEN** el de 73 ediciones aparece primero
+
+#### Scenario: Discografía local del artista
+- **WHEN** una persona busca `pink floyd`, Pink Floyd existe como artista local y tiene discos locales
+- **THEN** esos discos forman parte de los candidatos aunque MusicBrainz no los traiga en la primera página
 
