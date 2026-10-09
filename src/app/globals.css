@@ -55,6 +55,28 @@
   }
 }
 
+/* Confirmación de las acciones del diálogo "Añadir" (ActionNotice): la tarjeta entra
+   con un leve ascenso y el check se dibuja. Solo con `motion-safe:`. */
+@keyframes notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes notice-check {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 @keyframes groove-turn {
   to {
     transform: rotate(360deg);

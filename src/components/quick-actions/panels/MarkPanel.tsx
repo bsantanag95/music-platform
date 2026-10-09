@@ -11,6 +11,7 @@ import { removeFromWantToListen, toggleWantToListen } from "@/lib/api/want-to-li
 import { ApiError } from "@/lib/api/client";
 import { useNotifyQuickActionChange } from "../quick-actions-changes";
 import type { PickTarget } from "../types";
+import { ActionNotice } from "../ActionNotice";
 
 type MarkKind = "favorite" | "pending";
 type MarkState = "checking" | "added" | "already" | "removed";
@@ -121,9 +122,12 @@ export function MarkPanel({ kind, target, onReset }: MarkPanelProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <p role="status" className="font-data text-sm text-paper">
-        {t(`mark.${kind}.${state}`, { title: target.title })}
-      </p>
+      <ActionNotice
+        key={state}
+        tone={state === "added" ? "success" : state === "already" ? "info" : "removed"}
+        title={t(`mark.${kind}.${state}`)}
+        detail={target.title}
+      />
       <div className="flex flex-wrap items-center gap-3">
         {state === "added" || state === "already" ? (
           <Button variant="secondary" disabled={busy} onClick={() => void undo()}>

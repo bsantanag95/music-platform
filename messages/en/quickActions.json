@@ -42,7 +42,7 @@
   "signIn": "Sign in to continue",
   "listen": {
     "creating": "Logging...",
-    "created": "Logged: {title}",
+    "created": "Listen logged",
     "registerAnother": "Log another",
     "viewDiary": "View my diary"
   },
@@ -50,7 +50,7 @@
     "loading": "Loading your rating...",
     "legend": "Your rating for {title}",
     "starsValue": "{stars} stars",
-    "saved": "Saved: {stars} stars for {title}",
+    "saved": "Rating saved",
     "scoreDropped": "Your score {score} was removed: it doesn't match {stars} stars.",
     "openPage": "Expand on the page"
   },
@@ -59,14 +59,14 @@
     "undo": "Undo",
     "remove": "Remove",
     "favorite": {
-      "added": "Added to your favorites: {title}",
-      "already": "{title} is already in your favorites",
-      "removed": "Removed from your favorites: {title}"
+      "added": "Added to your favorites",
+      "already": "Already in your favorites",
+      "removed": "Removed from your favorites"
     },
     "pending": {
-      "added": "Added to your Pending: {title}",
-      "already": "{title} is already in your Pending",
-      "removed": "Removed from your Pending: {title}"
+      "added": "Added to your Pending",
+      "already": "Already in your Pending",
+      "removed": "Removed from your Pending"
     }
   },
   "newList": {
@@ -78,21 +78,21 @@
     "submit": "Create list",
     "creating": "Creating...",
     "titleRequired": "Title is required",
-    "created": "List created: {title}",
+    "created": "List created",
     "viewList": "View list",
     "addItems": "Add to this list"
   },
   "collection": {
     "formatPrompt": "Which format do you have?",
     "adding": "Adding...",
-    "added": "Added to your collection ({format}): {title}",
-    "removed": "Removed from your collection: {title}"
+    "added": "Added to your collection",
+    "removed": "Removed from your collection"
   },
   "journey": {
     "checking": "Checking...",
     "activating": "Activating the Journey...",
-    "activated": "Journey activated: {title}",
-    "already": "{title} is already in your Journey",
+    "activated": "Journey activated",
+    "already": "You already have this Journey",
     "open": "View Journey"
   },
   "newCamino": {
@@ -100,7 +100,7 @@
     "submit": "Create Path",
     "creating": "Creating...",
     "titleRequired": "Title is required",
-    "created": "Path created: {title}",
+    "created": "Path created",
     "viewCamino": "View Path",
     "addAlbums": "Add to this Path"
   }

@@ -58,11 +58,12 @@ describe("CollectionPanel", () => {
 
     expect(mocks.addCollectionEntry).toHaveBeenCalledTimes(1);
     expect(mocks.addCollectionEntry).toHaveBeenCalledWith({ releaseGroupId: album.id, format: "vinyl" });
-    expect(await screen.findByText("Agregado a tu colección (Vinilo): Dr. Feelgood")).toBeInTheDocument();
+    expect(await screen.findByText("Añadido a tu colección")).toBeInTheDocument();
+    expect(screen.getByText("Vinilo · Dr. Feelgood")).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Deshacer" }));
     expect(mocks.removeCollectionEntry).toHaveBeenCalledWith("entry1");
-    expect(await screen.findByText("Se quitó de tu colección: Dr. Feelgood")).toBeInTheDocument();
+    expect(await screen.findByText("Quitado de tu colección")).toBeInTheDocument();
   });
 
   it("ofrece los cuatro formatos y no envía audiencia, atributos ni nota", async () => {
@@ -99,7 +100,7 @@ describe("JourneyPanel", () => {
     mocks.activateArtistJourney.mockResolvedValue({});
     renderWithIntl(<JourneyPanel target={artist} onReset={() => {}} onNavigate={() => {}} />);
 
-    expect(await screen.findByText("Recorrido activado: Pink Floyd")).toBeInTheDocument();
+    expect(await screen.findByText("Recorrido activado")).toBeInTheDocument();
     expect(mocks.getArtistJourneyStatuses).toHaveBeenCalledWith([artist.id]);
     expect(mocks.activateArtistJourney).toHaveBeenCalledTimes(1);
     expect(mocks.activateArtistJourney).toHaveBeenCalledWith(artist.id);
@@ -113,7 +114,7 @@ describe("JourneyPanel", () => {
     mocks.getArtistJourneyStatuses.mockResolvedValue([artist.id]);
     renderWithIntl(<JourneyPanel target={artist} onReset={() => {}} onNavigate={() => {}} />);
 
-    expect(await screen.findByText("Pink Floyd ya está en tu Recorrido")).toBeInTheDocument();
+    expect(await screen.findByText("Ya tienes este Recorrido")).toBeInTheDocument();
     expect(mocks.activateArtistJourney).not.toHaveBeenCalled();
     expect(screen.getByRole("link", { name: "Ver Recorrido" })).toBeInTheDocument();
   });
@@ -157,7 +158,7 @@ describe("NewCaminoPanel", () => {
     const input = mocks.createCamino.mock.calls[0]![0];
     expect(input).toEqual({ title: "Para el auto" });
     expect("audience" in input).toBe(false);
-    expect(await screen.findByText("Camino creado: Para el auto")).toBeInTheDocument();
+    expect(await screen.findByText("Camino creado")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Ver Camino" })).toHaveAttribute("href", "/me/caminos/c1");
   });
 

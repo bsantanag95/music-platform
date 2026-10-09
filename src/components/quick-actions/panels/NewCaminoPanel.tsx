@@ -9,6 +9,7 @@ import { createCamino } from "@/lib/api/camino";
 import { ApiError } from "@/lib/api/client";
 import type { CaminoDetail } from "@/lib/api/schemas";
 import { useNotifyQuickActionChange } from "../quick-actions-changes";
+import { ActionNotice } from "../ActionNotice";
 
 interface NewCaminoPanelProps {
   /** Pasa al chip "A lista" con la búsqueda fijada a álbumes. */
@@ -51,9 +52,7 @@ export function NewCaminoPanel({ onAddAlbums, onNavigate }: NewCaminoPanelProps)
   if (created) {
     return (
       <div className="flex flex-col gap-3">
-        <p role="status" className="font-data text-sm text-paper">
-          {t("newCamino.created", { title: created.title })}
-        </p>
+        <ActionNotice tone="success" title={t("newCamino.created")} detail={created.title} />
         <div className="flex flex-wrap items-center gap-3">
           <Button variant="secondary" onClick={onAddAlbums}>
             {t("newCamino.addAlbums")}

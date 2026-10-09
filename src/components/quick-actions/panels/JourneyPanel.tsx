@@ -9,6 +9,7 @@ import { activateArtistJourney, getArtistJourneyStatuses } from "@/lib/api/artis
 import { ApiError } from "@/lib/api/client";
 import { useNotifyQuickActionChange } from "../quick-actions-changes";
 import type { PickTarget } from "../types";
+import { ActionNotice } from "../ActionNotice";
 
 type JourneyState = "checking" | "activating" | "activated" | "already";
 
@@ -79,9 +80,11 @@ export function JourneyPanel({ target, onReset, onNavigate }: JourneyPanelProps)
 
   return (
     <div className="flex flex-col gap-3">
-      <p role="status" className="font-data text-sm text-paper">
-        {t(state === "activated" ? "journey.activated" : "journey.already", { title: target.title })}
-      </p>
+      <ActionNotice
+        tone={state === "activated" ? "success" : "info"}
+        title={t(state === "activated" ? "journey.activated" : "journey.already")}
+        detail={target.title}
+      />
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="secondary" onClick={onReset}>
           {t("chooseAnother")}

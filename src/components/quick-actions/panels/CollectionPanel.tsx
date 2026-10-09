@@ -9,6 +9,7 @@ import { ApiError } from "@/lib/api/client";
 import type { CollectionEntry, CollectionFormatValue } from "@/lib/api/schemas";
 import { useNotifyQuickActionChange } from "../quick-actions-changes";
 import type { PickTarget } from "../types";
+import { ActionNotice } from "../ActionNotice";
 
 const FORMATS: readonly CollectionFormatValue[] = ["vinyl", "cd", "cassette", "other"];
 
@@ -65,13 +66,14 @@ export function CollectionPanel({ target, onReset }: CollectionPanelProps) {
       <p className="truncate font-display text-sm text-paper">{target.title}</p>
 
       {entry ? (
-        <p role="status" className="font-data text-sm text-paper">
-          {t("collection.added", { format: tCollection(`format.${entry.format}`), title: target.title })}
-        </p>
+        <ActionNotice
+          key="added"
+          tone="success"
+          title={t("collection.added")}
+          detail={`${tCollection(`format.${entry.format}`)} · ${target.title}`}
+        />
       ) : removed ? (
-        <p role="status" className="font-data text-sm text-paper">
-          {t("collection.removed", { title: target.title })}
-        </p>
+        <ActionNotice key="removed" tone="removed" title={t("collection.removed")} detail={target.title} />
       ) : null}
 
       {!entry ? (

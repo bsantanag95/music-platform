@@ -71,7 +71,8 @@ describe("RatePanel", () => {
     fireEvent.click(await screen.findByRole("radio", { name: "4,0 estrellas" }));
 
     await waitFor(() => expect(mocks.saveRating).toHaveBeenCalledWith("release-group", album.id, { stars: 4 }));
-    expect(await screen.findByText(/Guardado: 4,0 estrellas/)).toBeInTheDocument();
+    expect(await screen.findByText("Valoración guardada")).toBeInTheDocument();
+    expect(screen.getByText(/★ 4,0 ·/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Ampliar en la página" })).toHaveAttribute(
       "href",
       albumHref(album.subtitle, album.title, album.id),
@@ -190,13 +191,13 @@ describe("MarkPanel", () => {
     mocks.removeFavorite.mockResolvedValue(null);
     renderWithIntl(<MarkPanel kind="favorite" target={album} onReset={() => {}} />);
 
-    expect(await screen.findByText("Agregado a tus favoritos: Dr. Feelgood")).toBeInTheDocument();
+    expect(await screen.findByText("Añadido a tus favoritos")).toBeInTheDocument();
     expect(mocks.toggleFavorite).toHaveBeenCalledTimes(1);
     expect(mocks.toggleFavorite).toHaveBeenCalledWith({ type: "release-group", id: album.id });
 
     await userEvent.click(screen.getByRole("button", { name: "Deshacer" }));
     expect(mocks.removeFavorite).toHaveBeenCalledWith({ type: "release-group", id: album.id });
-    expect(await screen.findByText("Se quitó de tus favoritos: Dr. Feelgood")).toBeInTheDocument();
+    expect(await screen.findByText("Quitado de tus favoritos")).toBeInTheDocument();
   });
 
   it("favorito ya marcado: informa y NO llama a toggle (no lo quita por accidente)", async () => {
@@ -204,7 +205,7 @@ describe("MarkPanel", () => {
     mocks.removeFavorite.mockResolvedValue(null);
     renderWithIntl(<MarkPanel kind="favorite" target={album} onReset={() => {}} />);
 
-    expect(await screen.findByText("Dr. Feelgood ya está en tus favoritos")).toBeInTheDocument();
+    expect(await screen.findByText("Ya estaba en tus favoritos")).toBeInTheDocument();
     expect(mocks.toggleFavorite).not.toHaveBeenCalled();
     expect(mocks.removeFavorite).not.toHaveBeenCalled();
 
@@ -219,7 +220,7 @@ describe("MarkPanel", () => {
     const artist: PickTarget = { type: "artist", id: "a1b2c3d4-0000-4000-8000-000000000050", title: "Pink Floyd", subtitle: null };
     renderWithIntl(<MarkPanel kind="pending" target={artist} onReset={() => {}} />);
 
-    expect(await screen.findByText("Agregado a tus Pendientes: Pink Floyd")).toBeInTheDocument();
+    expect(await screen.findByText("Añadido a tus Pendientes")).toBeInTheDocument();
     expect(mocks.toggleWantToListen).toHaveBeenCalledWith({ type: "artist", id: artist.id });
 
     await userEvent.click(screen.getByRole("button", { name: "Deshacer" }));
@@ -229,7 +230,7 @@ describe("MarkPanel", () => {
   it("Pendiente ya marcado no alterna", async () => {
     mocks.getTargetMarks.mockResolvedValue({ ...noMarks, pending: true });
     renderWithIntl(<MarkPanel kind="pending" target={album} onReset={() => {}} />);
-    expect(await screen.findByText("Dr. Feelgood ya está en tus Pendientes")).toBeInTheDocument();
+    expect(await screen.findByText("Ya estaba en tus Pendientes")).toBeInTheDocument();
     expect(mocks.toggleWantToListen).not.toHaveBeenCalled();
   });
 
@@ -284,7 +285,7 @@ describe("NewListPanel", () => {
     const input = mocks.createList.mock.calls[0]![0];
     expect(input).toEqual({ entityType: "release-group", title: "Para el auto" });
     expect("audience" in input).toBe(false);
-    expect(await screen.findByText("Lista creada: Para el auto")).toBeInTheDocument();
+    expect(await screen.findByText("Lista creada")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Ver lista" })).toHaveAttribute("href", "/me/lists/l1");
   });
 
