@@ -11,6 +11,7 @@ import { OnboardingPrompt } from "./OnboardingPrompt";
 import { WelcomeLink } from "./WelcomeLink";
 import { RecentSelfActivity } from "./RecentSelfActivity";
 import { ResumeList } from "./ResumeList";
+import { WelcomePanel } from "./WelcomePanel";
 import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 
 vi.mock("next-intl/server", () => ({
@@ -153,6 +154,27 @@ describe("AuthenticatedHome", () => {
 
     expect(findElement(element, RecentSelfActivity)?.props?.initialEntries).toEqual(activity);
     expect(findElement(element, ResumeList)?.props?.list).toEqual(resumeList);
+  });
+
+  it("la última vez salta las entradas sin objetivo de catálogo (Camino, lista, favorito)", async () => {
+    vi.mocked(following.listFollowing).mockResolvedValue({
+      users: [], page: 1, pageSize: 1, hasNext: false,
+    });
+    const rating = { kind: "rating", id: "r1", target: { type: "release-group", id: "a1", title: "Álbum" } };
+    vi.mocked(home.listMyRecentActivity).mockResolvedValue({
+      entries: [
+        { kind: "camino", id: "c1", event: "created", camino: { id: "c1", title: "Camino", albumCount: 3 } },
+        { kind: "list", id: "li1", event: "created", list: { id: "li1", title: "Lista" } },
+        rating,
+      ],
+      page: 1,
+      pageSize: 10,
+      hasNext: false,
+    } as unknown as Awaited<ReturnType<typeof home.listMyRecentActivity>>);
+
+    const element = await AuthenticatedHome({ user });
+
+    expect(findElement(element, WelcomePanel)?.props?.lastActivity).toEqual(rating);
   });
 });
 

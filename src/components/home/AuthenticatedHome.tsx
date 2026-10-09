@@ -72,11 +72,15 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
   // "Última vez" necesita un objetivo de catálogo enlazable (carátula +
   // título): ni "seguir a un usuario" ni "seguir a un artista" tienen uno, así
   // que se los salta para este recorte puntual sin afectar "Tu rastro
-  // reciente" (que sí los muestra).
+  // reciente" (que sí los muestra). Lista blanca: los kinds sin `target`
+  // (camino, list, favorite, etc.) rompían el panel al ser el más reciente.
   const lastTouch =
     recentActivity.entries.find(
       (entry): entry is FeedListenEntry | FeedRating | FeedComment | FeedReview =>
-        entry.kind !== "follow" && entry.kind !== "follow-artist",
+        entry.kind === "listen" ||
+        entry.kind === "rating" ||
+        entry.kind === "comment" ||
+        entry.kind === "review",
     ) ?? null;
 
   return (
