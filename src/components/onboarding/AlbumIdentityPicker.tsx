@@ -4,7 +4,8 @@ import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { LazyCoverImage } from "@/components/catalog/LazyCoverImage";
 import { useTargetSearch } from "@/components/quick-actions/use-target-search";
-import { ONBOARDING_MAX_ALBUMS } from "@/services/social/types";
+import { ONBOARDING_MAX_ALBUMS, type Audience } from "@/services/social/types";
+import { AudienceNote } from "./AudienceNote";
 import { categoryKey } from "./ResultCategory";
 import { SearchStatus } from "./SearchStatus";
 
@@ -18,6 +19,8 @@ export interface PickedAlbum {
 interface AlbumIdentityPickerProps {
   picked: PickedAlbum[];
   onChange: (next: PickedAlbum[]) => void;
+  /** Audiencia efectiva de un favorito nuevo del usuario, para el aviso. */
+  audience: Audience;
 }
 
 // Puerta 1 del onboarding: elegir hasta 6 álbumes (sugerencia 3–5) que se
@@ -26,7 +29,7 @@ interface AlbumIdentityPickerProps {
 // que el diálogo "Añadir" (coincidencias locales primero, búsqueda completa
 // después, con cancelación) y acota la búsqueda completa a álbumes de estudio:
 // "los álbumes que te definen" no son sencillos ni versiones de desconocidos.
-export function AlbumIdentityPicker({ picked, onChange }: AlbumIdentityPickerProps) {
+export function AlbumIdentityPicker({ picked, onChange, audience }: AlbumIdentityPickerProps) {
   const t = useTranslations("onboarding");
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -135,6 +138,8 @@ export function AlbumIdentityPicker({ picked, onChange }: AlbumIdentityPickerPro
           </ul>
         </div>
       )}
+
+      <AudienceNote kind="favorites" audience={audience} />
     </section>
   );
 }

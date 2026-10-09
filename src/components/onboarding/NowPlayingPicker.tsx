@@ -1,11 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { LazyCoverImage } from "@/components/catalog/LazyCoverImage";
 import { SearchTypeToggle } from "@/components/catalog/SearchTypeToggle";
 import { useTargetSearch, type TargetCandidate } from "@/components/quick-actions/use-target-search";
 import { createListenEntry, deleteListenEntry } from "@/lib/api/diary";
+import type { Audience } from "@/services/social/types";
+import { AudienceNote } from "./AudienceNote";
 import { categoryKey } from "./ResultCategory";
 import { SearchStatus } from "./SearchStatus";
 
@@ -30,7 +32,14 @@ function candidateKey(candidate: TargetCandidate) {
   return `${candidate.type}:${candidate.id}`;
 }
 
-export function NowPlayingPicker() {
+interface NowPlayingPickerProps {
+  /** Audiencia efectiva de una entrada de diario nueva del usuario, para el aviso. */
+  audience: Audience;
+  /** Cuántas escuchas hay registradas desde este paso (para el resumen y el botón de salida). */
+  onCountChange?: (count: number) => void;
+}
+
+export function NowPlayingPicker({ audience, onCountChange }: NowPlayingPickerProps) {
   const t = useTranslations("onboarding");
   const [type, setType] = useState<(typeof DOOR2_TYPES)[number]>("album");
   const [query, setQuery] = useState("");
@@ -41,6 +50,10 @@ export function NowPlayingPicker() {
   const [announcement, setAnnouncement] = useState("");
   // Fuera del estado: dos clics seguidos llegan antes de que React vuelva a pintar el botón.
   const inFlight = useRef(new Set<string>());
+
+  useEffect(() => {
+    onCountChange?.(logged.length);
+  }, [logged.length, onCountChange]);
 
   const loggedKeys = new Set(logged.map((entry) => entry.key));
   const results = search.candidates.filter((c) => !loggedKeys.has(candidateKey(c)));
@@ -186,6 +199,8 @@ export function NowPlayingPicker() {
           );
         })}
       </ul>
+
+      <AudienceNote kind="diary" audience={audience} />
     </section>
   );
 }

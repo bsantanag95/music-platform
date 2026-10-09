@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useState } from "react";
+import type { AnchorHTMLAttributes, ReactNode } from "react";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/i18n-test-utils";
@@ -17,6 +18,13 @@ vi.mock("@/lib/api/catalog", () => ({
   searchSongs: mocks.searchSongs,
   searchArtists: mocks.searchArtists,
   getSearchSuggestions: mocks.getSearchSuggestions,
+}));
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ href, children, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
 }));
 vi.mock("@/components/catalog/LazyCoverImage", () => ({ LazyCoverImage: () => null }));
 
@@ -43,6 +51,7 @@ function Harness({ onPicked }: { onPicked?: (picked: PickedAlbum[]) => void }) {
   const [picked, setPicked] = useState<PickedAlbum[]>([]);
   return (
     <AlbumIdentityPicker
+      audience="public"
       picked={picked}
       onChange={(next) => {
         setPicked(next);

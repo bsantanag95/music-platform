@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { AnchorHTMLAttributes, ReactNode } from "react";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/i18n-test-utils";
@@ -22,6 +23,13 @@ vi.mock("@/lib/api/catalog", () => ({
 vi.mock("@/lib/api/diary", () => ({
   createListenEntry: mocks.createListenEntry,
   deleteListenEntry: mocks.deleteListenEntry,
+}));
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ href, children, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
 }));
 vi.mock("@/components/catalog/LazyCoverImage", () => ({ LazyCoverImage: () => null }));
 
@@ -86,7 +94,7 @@ describe("NowPlayingPicker", () => {
   it("muestra año y tipo en cada resultado de álbum", async () => {
     mocks.searchAlbums.mockResolvedValue(albumResponse);
     const user = userEvent.setup();
-    renderWithIntl(<NowPlayingPicker />);
+    renderWithIntl(<NowPlayingPicker audience="private" />);
 
     await user.type(screen.getByRole("searchbox"), "ok computer");
 
@@ -97,7 +105,7 @@ describe("NowPlayingPicker", () => {
   it("ofrece todas las canciones registrables, no solo la primera", async () => {
     mocks.searchSongs.mockResolvedValue(songResponse);
     const user = userEvent.setup();
-    renderWithIntl(<NowPlayingPicker />);
+    renderWithIntl(<NowPlayingPicker audience="private" />);
 
     await user.click(screen.getByRole("radio", { name: "Canción" }));
     await user.type(screen.getByRole("searchbox"), "espresso");
@@ -112,7 +120,7 @@ describe("NowPlayingPicker", () => {
     let resolveCreate: (value: { id: string }) => void = () => {};
     mocks.createListenEntry.mockReturnValue(new Promise((resolve) => (resolveCreate = resolve)));
     const user = userEvent.setup();
-    renderWithIntl(<NowPlayingPicker />);
+    renderWithIntl(<NowPlayingPicker audience="private" />);
 
     await user.type(screen.getByRole("searchbox"), "ok computer");
     const row = await screen.findByRole("button", { name: /Radiohead · 1997/ });
@@ -133,7 +141,7 @@ describe("NowPlayingPicker", () => {
   it("deshace el registro borrando la entrada y devuelve el resultado a la lista", async () => {
     mocks.searchAlbums.mockResolvedValue(albumResponse);
     const user = userEvent.setup();
-    renderWithIntl(<NowPlayingPicker />);
+    renderWithIntl(<NowPlayingPicker audience="private" />);
 
     await user.type(screen.getByRole("searchbox"), "ok computer");
     await user.click(await screen.findByRole("button", { name: /Radiohead · 1997/ }));
@@ -148,7 +156,7 @@ describe("NowPlayingPicker", () => {
     mocks.searchAlbums.mockRejectedValue(new Error("boom"));
     mocks.getSearchSuggestions.mockRejectedValue(new Error("boom"));
     const user = userEvent.setup();
-    renderWithIntl(<NowPlayingPicker />);
+    renderWithIntl(<NowPlayingPicker audience="private" />);
 
     await user.type(screen.getByRole("searchbox"), "ok computer");
 
@@ -158,7 +166,7 @@ describe("NowPlayingPicker", () => {
 
   it("el ejemplo del campo corresponde al tipo buscado", async () => {
     const user = userEvent.setup();
-    renderWithIntl(<NowPlayingPicker />);
+    renderWithIntl(<NowPlayingPicker audience="private" />);
 
     expect(screen.getByPlaceholderText(onboardingEs.door2.searchPlaceholderAlbum)).toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: "Canción" }));
