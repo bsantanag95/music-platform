@@ -84,7 +84,7 @@ const artistResponse = {
 
 function renderFlow(props: Partial<Parameters<typeof WelcomeFlow>[0]> = {}) {
   return renderWithIntl(
-    <WelcomeFlow favoriteAudience="public" diaryAudience="private" exploreEnabled notice={<p>aviso-email</p>} {...props} />,
+    <WelcomeFlow userId="user-1" favoriteAudience="public" diaryAudience="private" exploreEnabled notice={<p>aviso-email</p>} {...props} />,
   );
 }
 
@@ -98,6 +98,7 @@ function visibleSteps() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.sessionStorage.clear();
   mocks.getSearchSuggestions.mockResolvedValue({ suggestions: [] });
   mocks.searchAlbums.mockResolvedValue(albumResponse);
   mocks.searchArtists.mockResolvedValue(artistResponse);
@@ -193,7 +194,8 @@ describe("WelcomeFlow", () => {
     await user.click(await screen.findByRole("button", { name: "Ir a Inicio" }));
 
     expect(mocks.push).toHaveBeenCalledWith("/");
-    expect(mocks.refresh).toHaveBeenCalled();
+    // Sin `router.refresh()`: pedía Inicio dos veces y el layout no cambia con el cierre.
+    expect(mocks.refresh).not.toHaveBeenCalled();
   });
 
   it("ofrece Explorar en el resumen solo si está activo", async () => {
@@ -208,6 +210,68 @@ describe("WelcomeFlow", () => {
     renderFlow({ exploreEnabled: true });
     await user.click(screen.getByRole("button", { name: "Saltar por ahora" }));
     expect(await screen.findByRole("link", { name: /Explorar álbumes/ })).toBeInTheDocument();
+  });
+
+  it("recargar la pestaña conserva el paso, los álbumes elegidos, lo seguido y lo registrado", async () => {
+    const user = userEvent.setup();
+    const first = renderFlow();
+
+    await user.type(screen.getByRole("searchbox"), "in rainbows");
+    await user.click(await screen.findByRole("button", { name: /Radiohead · 2007/ }));
+    await user.click(screen.getByRole("button", { name: "Siguiente" }));
+    await user.type(screen.getByRole("searchbox"), "radiohead");
+    await user.click(await screen.findByRole("button", { name: /rock británico/ }));
+    await screen.findByRole("button", { name: "Dejar de seguir a Radiohead" });
+    await user.click(screen.getByRole("button", { name: "Siguiente" }));
+    await user.type(screen.getByRole("searchbox"), "in rainbows");
+    await user.click(await screen.findByRole("button", { name: /Radiohead · 2007/ }));
+    await screen.findByRole("button", { name: "Deshacer el registro de In Rainbows" });
+    first.unmount();
+
+    renderFlow();
+
+    expect(await screen.findByText("Paso 3 de 3")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Deshacer el registro de In Rainbows" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Atrás" }));
+    expect(screen.getByRole("button", { name: "Dejar de seguir a Radiohead" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Atrás" }));
+    expect(screen.getByRole("button", { name: "Quitar In Rainbows" })).toBeInTheDocument();
+    expect(screen.getByText("Elegiste 1 álbum · Sugerimos entre 3 y 5.")).toBeInTheDocument();
+  });
+
+  it("lo guardado es por persona: otra cuenta en la misma pestaña empieza de cero", async () => {
+    const user = userEvent.setup();
+    const first = renderFlow({ userId: "user-1" });
+    await user.type(screen.getByRole("searchbox"), "in rainbows");
+    await user.click(await screen.findByRole("button", { name: /Radiohead · 2007/ }));
+    first.unmount();
+
+    renderFlow({ userId: "user-2" });
+
+    expect(screen.getByText("Elegiste 0 álbumes · Sugerimos entre 3 y 5.")).toBeInTheDocument();
+  });
+
+  it("al cerrar borra lo guardado en la pestaña", async () => {
+    const user = userEvent.setup();
+    renderFlow();
+    await user.type(screen.getByRole("searchbox"), "in rainbows");
+    await user.click(await screen.findByRole("button", { name: /Radiohead · 2007/ }));
+    await waitFor(() => expect(window.sessionStorage.getItem("welcome:user-1:albums")).not.toBeNull());
+
+    await user.click(screen.getByRole("button", { name: "Terminar ahora" }));
+
+    await screen.findByRole("heading", { name: "Todo listo" });
+    expect(window.sessionStorage.getItem("welcome:user-1:albums")).toBeNull();
+  });
+
+  it("descarta lo guardado que no tiene la forma esperada", () => {
+    window.sessionStorage.setItem("welcome:user-1:albums", JSON.stringify([{ id: 1 }]));
+    window.sessionStorage.setItem("welcome:user-1:step", JSON.stringify(9));
+
+    renderFlow();
+
+    expect(screen.getByText("Paso 1 de 3")).toBeInTheDocument();
+    expect(screen.getByText("Elegiste 0 álbumes · Sugerimos entre 3 y 5.")).toBeInTheDocument();
   });
 
   it("si cerrar falla, muestra el error y se queda en el flujo", async () => {

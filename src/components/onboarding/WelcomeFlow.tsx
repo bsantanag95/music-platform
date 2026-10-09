@@ -5,8 +5,9 @@ import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { completeOnboarding } from "@/lib/api/onboarding";
+import { clearSessionState, isArrayOf, useSessionState } from "@/lib/session-state";
 import type { Audience } from "@/services/social/types";
-import { AlbumIdentityPicker, type PickedAlbum } from "./AlbumIdentityPicker";
+import { AlbumIdentityPicker, isPickedAlbum, type PickedAlbum } from "./AlbumIdentityPicker";
 import { ArtistFollowPicker } from "./ArtistFollowPicker";
 import { NowPlayingPicker } from "./NowPlayingPicker";
 
@@ -21,7 +22,13 @@ import { NowPlayingPicker } from "./NowPlayingPicker";
 const STEPS = ["album", "artists", "listening"] as const;
 const LAST_STEP = STEPS.length - 1;
 
+const isPickedList = isArrayOf(isPickedAlbum);
+const isStep = (value: unknown): value is number =>
+  typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= LAST_STEP;
+
 interface WelcomeFlowProps {
+  /** Persona que hace el onboarding: separa lo guardado en la pestaña entre cuentas. */
+  userId: string;
   /** Audiencia efectiva de un favorito nuevo y de una entrada de diario nueva. */
   favoriteAudience: Audience;
   diaryAudience: Audience;
@@ -37,12 +44,14 @@ interface Summary {
   listens: number;
 }
 
-export function WelcomeFlow({ favoriteAudience, diaryAudience, exploreEnabled, notice }: WelcomeFlowProps) {
+export function WelcomeFlow({ userId, favoriteAudience, diaryAudience, exploreEnabled, notice }: WelcomeFlowProps) {
   const t = useTranslations("onboarding");
   const router = useRouter();
   const progressRef = useRef<HTMLDivElement>(null);
-  const [step, setStep] = useState(0);
-  const [picked, setPicked] = useState<PickedAlbum[]>([]);
+  // Recargar la pestaña no pierde el paso ni lo elegido (sessionStorage, por persona).
+  const storagePrefix = `welcome:${userId}:`;
+  const [step, setStep] = useSessionState<number>(`${storagePrefix}step`, 0, isStep);
+  const [picked, setPicked] = useSessionState<PickedAlbum[]>(`${storagePrefix}albums`, [], isPickedList);
   const [followingCount, setFollowingCount] = useState(0);
   const [listenCount, setListenCount] = useState(0);
   const [pending, setPending] = useState(false);
@@ -64,6 +73,7 @@ export function WelcomeFlow({ favoriteAudience, diaryAudience, exploreEnabled, n
     try {
       await completeOnboarding(picked.map((a) => a.id));
       setSummary({ favorites: picked.length, following: followingCount, listens: listenCount });
+      clearSessionState(storagePrefix);
     } catch {
       setErrored(true);
     } finally {
@@ -71,9 +81,10 @@ export function WelcomeFlow({ favoriteAudience, diaryAudience, exploreEnabled, n
     }
   }
 
+  // Inicio es dinámico (Next 15 no lo cachea en el cliente) y el layout no cambia con el cierre del
+  // onboarding: un `router.refresh()` extra pedía la página dos veces.
   function goHome() {
     router.push("/");
-    router.refresh();
   }
 
   if (summary) {
@@ -164,10 +175,10 @@ export function WelcomeFlow({ favoriteAudience, diaryAudience, exploreEnabled, n
         <AlbumIdentityPicker picked={picked} onChange={setPicked} audience={favoriteAudience} />
       </div>
       <div hidden={step !== 1}>
-        <ArtistFollowPicker onCountChange={setFollowingCount} />
+        <ArtistFollowPicker onCountChange={setFollowingCount} storageKey={`${storagePrefix}artists`} />
       </div>
       <div hidden={step !== 2}>
-        <NowPlayingPicker audience={diaryAudience} onCountChange={setListenCount} />
+        <NowPlayingPicker audience={diaryAudience} onCountChange={setListenCount} storageKey={`${storagePrefix}listens`} />
       </div>
 
       {errored && (

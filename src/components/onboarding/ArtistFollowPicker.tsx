@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useTargetSearch, type TargetCandidate } from "@/components/quick-actions/use-target-search";
 import { followArtist, unfollowArtist } from "@/lib/api/catalog";
+import { isArrayOf, isRecord, useSessionState } from "@/lib/session-state";
 import { SearchStatus } from "./SearchStatus";
 
 interface FollowedArtist {
@@ -12,9 +13,22 @@ interface FollowedArtist {
   subtitle: string | null;
 }
 
+function isFollowedArtist(value: unknown): value is FollowedArtist {
+  return (
+    isRecord(value) &&
+    typeof value.id === "string" &&
+    typeof value.name === "string" &&
+    (value.subtitle === null || typeof value.subtitle === "string")
+  );
+}
+
+const isFollowedList = isArrayOf(isFollowedArtist);
+
 interface ArtistFollowPickerProps {
   /** Cuántos artistas sigue el usuario desde este paso (para el resumen y el botón de salida). */
   onCountChange?: (count: number) => void;
+  /** Clave de `sessionStorage` para conservar lo seguido al recargar; sin ella solo vive en memoria. */
+  storageKey?: string;
 }
 
 // Paso 2 del onboarding: seguir artistas. Al elegir uno se sigue de inmediato
@@ -22,11 +36,11 @@ interface ArtistFollowPickerProps {
 // los resultados y se lista aparte con «Dejar de seguir». Mismo patrón que la
 // Puerta 2: un clic repetido no repite la solicitud y un clic errado se corrige.
 // Seguir artistas alimenta «De tus artistas» en los lanzamientos de Inicio.
-export function ArtistFollowPicker({ onCountChange }: ArtistFollowPickerProps) {
+export function ArtistFollowPicker({ onCountChange, storageKey }: ArtistFollowPickerProps) {
   const t = useTranslations("onboarding");
   const [query, setQuery] = useState("");
   const search = useTargetSearch("artist", query);
-  const [followed, setFollowed] = useState<FollowedArtist[]>([]);
+  const [followed, setFollowed] = useSessionState<FollowedArtist[]>(storageKey ?? null, [], isFollowedList);
   const [busyIds, setBusyIds] = useState<string[]>([]);
   const [errored, setErrored] = useState(false);
   const [announcement, setAnnouncement] = useState("");

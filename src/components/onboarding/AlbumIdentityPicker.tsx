@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { LazyCoverImage } from "@/components/catalog/LazyCoverImage";
 import { useTargetSearch } from "@/components/quick-actions/use-target-search";
+import { isRecord } from "@/lib/session-state";
 import { ONBOARDING_MAX_ALBUMS, type Audience } from "@/services/social/types";
 import { AudienceNote } from "./AudienceNote";
 import { categoryKey } from "./ResultCategory";
@@ -14,6 +15,17 @@ export interface PickedAlbum {
   title: string;
   artistName: string | null;
   year: number | null;
+}
+
+/** Forma de un álbum elegido guardado en `sessionStorage` (un valor ajeno se descarta). */
+export function isPickedAlbum(value: unknown): value is PickedAlbum {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === "string" &&
+    typeof value.title === "string" &&
+    (value.artistName === null || typeof value.artistName === "string") &&
+    (value.year === null || typeof value.year === "number")
+  );
 }
 
 interface AlbumIdentityPickerProps {

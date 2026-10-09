@@ -53,6 +53,15 @@ registrar la de The Weeknd. Lo registrado sale de los resultados y se lista apar
 (`DELETE /api/me/diary/{id}`): un clic repetido no duplica la entrada y un clic errado se corrige. Un
 fallo de búsqueda se dice como error, nunca como «Sin resultados».
 
+## Recargar no pierde el trabajo
+
+El paso actual, los álbumes elegidos, los artistas seguidos y las escuchas registradas (con el id de la
+entrada, para poder deshacerlas) se guardan en `sessionStorage` bajo `welcome:<userId>:…`
+(`src/lib/session-state.ts`, cambio `harden-welcome-flow`): recargar la pestaña no devuelve al paso 1 ni
+permite registrar de nuevo la misma escucha. Se hidrata tras el primer render, un valor con otra forma
+se descarta, sin almacenamiento el flujo sigue en memoria, otra cuenta en la misma pestaña empieza de
+cero y todo se borra al cerrar el onboarding.
+
 ## Paso de artistas
 
 El usuario busca artistas y, al elegir uno, lo sigue de inmediato (`PUT /api/artists/{id}/follow`,

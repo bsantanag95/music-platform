@@ -6,6 +6,7 @@ import { LazyCoverImage } from "@/components/catalog/LazyCoverImage";
 import { SearchTypeToggle } from "@/components/catalog/SearchTypeToggle";
 import { useTargetSearch, type TargetCandidate } from "@/components/quick-actions/use-target-search";
 import { createListenEntry, deleteListenEntry } from "@/lib/api/diary";
+import { isArrayOf, isRecord, useSessionState } from "@/lib/session-state";
 import type { Audience } from "@/services/social/types";
 import { AudienceNote } from "./AudienceNote";
 import { categoryKey } from "./ResultCategory";
@@ -28,6 +29,18 @@ interface LoggedEntry {
   subtitle: string | null;
 }
 
+function isLoggedEntry(value: unknown): value is LoggedEntry {
+  return (
+    isRecord(value) &&
+    typeof value.key === "string" &&
+    typeof value.entryId === "string" &&
+    typeof value.title === "string" &&
+    (value.subtitle === null || typeof value.subtitle === "string")
+  );
+}
+
+const isLoggedList = isArrayOf(isLoggedEntry);
+
 function candidateKey(candidate: TargetCandidate) {
   return `${candidate.type}:${candidate.id}`;
 }
@@ -37,14 +50,16 @@ interface NowPlayingPickerProps {
   audience: Audience;
   /** Cuántas escuchas hay registradas desde este paso (para el resumen y el botón de salida). */
   onCountChange?: (count: number) => void;
+  /** Clave de `sessionStorage` para conservar lo registrado al recargar (y poder deshacerlo); sin ella solo vive en memoria. */
+  storageKey?: string;
 }
 
-export function NowPlayingPicker({ audience, onCountChange }: NowPlayingPickerProps) {
+export function NowPlayingPicker({ audience, onCountChange, storageKey }: NowPlayingPickerProps) {
   const t = useTranslations("onboarding");
   const [type, setType] = useState<(typeof DOOR2_TYPES)[number]>("album");
   const [query, setQuery] = useState("");
   const search = useTargetSearch(type, query);
-  const [logged, setLogged] = useState<LoggedEntry[]>([]);
+  const [logged, setLogged] = useSessionState<LoggedEntry[]>(storageKey ?? null, [], isLoggedList);
   const [busyKeys, setBusyKeys] = useState<string[]>([]);
   const [errored, setErrored] = useState(false);
   const [announcement, setAnnouncement] = useState("");
