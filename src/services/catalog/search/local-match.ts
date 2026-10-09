@@ -168,6 +168,39 @@ export async function releaseGroupsByArtistsAndTitle(
   return rankByMatchTier(rows, ({ row }) => row.title, title).slice(0, limit);
 }
 
+/**
+ * Álbumes con crédito primario de alguno de `artistIds`, sin filtrar por título: la consulta es el
+ * nombre del artista ("pink floyd"). Primero los de estudio y los más antiguos, que es donde está
+ * lo que se busca; el orden final lo decide el ranking.
+ */
+export async function releaseGroupsByArtists(
+  artistIds: string[],
+  { limit, ...filters }: LocalReleaseGroupOptions,
+): Promise<ReleaseGroupRow[]> {
+  if (artistIds.length === 0) return [];
+  // Subconsulta en vez de DISTINCT: Postgres exige que el ORDER BY de un DISTINCT esté en el SELECT.
+  const credited = db
+    .select({ id: credit.releaseGroupId })
+    .from(credit)
+    .where(and(inArray(credit.artistId, artistIds), eq(credit.role, "primary")));
+  return db
+    .select()
+    .from(releaseGroup)
+    .where(
+      and(
+        inArray(releaseGroup.id, credited),
+        sql`${releaseGroup.discographyUnlistedAt} IS NULL`,
+        ...releaseGroupFilters(filters),
+      ),
+    )
+    .orderBy(
+      sql`(${releaseGroup.category} = 'studio') DESC`,
+      sql`${releaseGroup.firstReleaseYear} ASC NULLS LAST`,
+      asc(releaseGroup.id),
+    )
+    .limit(limit);
+}
+
 /** Artistas primarios de cada álbum, en orden de crédito. */
 export async function primaryArtistsByReleaseGroup(
   releaseGroupIds: string[],

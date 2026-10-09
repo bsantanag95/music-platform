@@ -88,6 +88,8 @@ export interface MBReleaseGroupSearchItem {
   "first-release-date"?: string; // 'YYYY' | 'YYYY-MM' | 'YYYY-MM-DD' | ausente
   "artist-credit"?: MBArtistCreditItem[]; // requiere inc=artist-credits en la búsqueda
   score?: number;
+  /** Cantidad de ediciones (releases) del grupo: señal barata de notoriedad (Abbey Road: 73; un sencillo suelto: 1). */
+  count?: number;
 }
 
 export interface MBReleaseGroupSearchResponse extends MBSearchPage {

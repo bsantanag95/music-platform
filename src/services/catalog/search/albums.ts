@@ -23,6 +23,7 @@ import {
   findArtistsByKeys,
   matchLocalReleaseGroups,
   primaryArtistsByReleaseGroup,
+  releaseGroupsByArtists,
   releaseGroupsByArtistsAndTitle,
   releaseGroupsWithContent,
 } from "./local-match";
@@ -71,6 +72,13 @@ async function localCandidates(text: string, filters: ReleaseGroupQueryOptions) 
   const byTitle = await matchLocalReleaseGroups(text, { limit: LOCAL_LIMIT, ...filters });
 
   const tokens = tokenize(text);
+  // La consulta completa es el nombre de un artista local ("pink floyd"): sus discos. Los álbumes
+  // que se llaman igual ya vienen por título; sin esto, los homónimos desplazan la discografía.
+  const wholeQueryArtists = tokens.length > 0 ? await findArtistsByKeys([tokens.join(" ")]) : [];
+  const byWholeArtist = await releaseGroupsByArtists(
+    wholeQueryArtists.map((artistRow) => artistRow.id),
+    { limit: LOCAL_LIMIT, ...filters },
+  );
   const keys = [...new Set(edgeSplits(tokens).map((split) => split.artistTokens.join(" ")))];
   const edgeArtists = await findArtistsByKeys(keys);
   const byArtist: ReleaseGroupRow[] = [];
@@ -86,7 +94,7 @@ async function localCandidates(text: string, filters: ReleaseGroupQueryOptions) 
   }
 
   const seen = new Set<string>();
-  return [...byArtist, ...byTitle].filter((row) => {
+  return [...byWholeArtist, ...byArtist, ...byTitle].filter((row) => {
     if (seen.has(row.id)) return false;
     seen.add(row.id);
     return true;
@@ -201,6 +209,7 @@ export async function searchAlbums(
       rank: {
         level: 0,
         activity: 0,
+        popularity: remoteItem?.count ?? 0,
         group: cached ? 0 : 1,
         index: (row.mbid ? remoteIndex.get(row.mbid) : undefined) ?? localOnlyIndex(index),
       },
@@ -223,7 +232,7 @@ export async function searchAlbums(
         cached: false,
       },
       artistNames: credits.map((credit) => credit.name),
-      rank: { level: 0, activity: 0, group: 1, index },
+      rank: { level: 0, activity: 0, popularity: item.count ?? 0, group: 1, index },
     });
   });
 

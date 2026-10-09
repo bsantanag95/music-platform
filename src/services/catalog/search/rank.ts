@@ -4,6 +4,11 @@
 // de relevancia de MusicBrainz; lo local que MusicBrainz no devolvió va al
 // final de su nivel.
 //
+// Entre la actividad y lo cacheado entra la notoriedad (`popularity`, p. ej. el
+// número de ediciones del álbum en MusicBrainz): con decenas de homónimos que
+// MusicBrainz puntúa igual (100), el disco conocido no puede quedar a merced
+// de su orden arbitrario.
+//
 // "Local" no es señal de relevancia: cada búsqueda persiste sus candidatos
 // como stub, así que tras unas pocas búsquedas casi todo es local. Ordenar lo
 // local antes que MusicBrainz dejaba los homónimos en el orden arbitrario de
@@ -22,6 +27,8 @@ export interface RankKey {
   level: number;
   /** Actividad en la plataforma (mayor = mejor). */
   activity: number;
+  /** Notoriedad fuera de la plataforma (mayor = mejor); ausente = 0. */
+  popularity?: number;
   group: SourceGroup;
   /** Orden de relevancia de MusicBrainz (o `localOnlyIndex` si no la devolvió). */
   index: number;
@@ -31,6 +38,7 @@ export function compareRankKeys(a: RankKey, b: RankKey): number {
   return (
     a.level - b.level ||
     b.activity - a.activity ||
+    (b.popularity ?? 0) - (a.popularity ?? 0) ||
     a.group - b.group ||
     a.index - b.index
   );

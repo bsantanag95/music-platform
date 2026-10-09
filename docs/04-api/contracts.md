@@ -91,8 +91,12 @@ Presupuesto: **1** solicitud a MusicBrainz.
 
 Orden por **cobertura de términos** (las palabras pueden repartirse entre título y artista, en
 cualquier orden): (1) un artista acreditado ocupa un extremo de la consulta y el resto es el
-título; (2) título igual a la consulta; (3) todas las palabras cubiertas; (4) parcial. Luego
-actividad → cacheado → local → MusicBrainz. Con separador explícito `Artista - Título` se usan
+título, o la consulta completa es el nombre de un artista acreditado («pink floyd» → su
+discografía); (2) título igual a la consulta, sin contar un artículo inicial («dark side of the
+moon» = «The Dark Side of the Moon»); (3) todas las palabras cubiertas; (4) parcial. Luego
+actividad → notoriedad (nº de ediciones que MusicBrainz informa del álbum; openspec
+`improve-album-search-ranking`) → cacheado → local → MusicBrainz. Si la consulta completa es un
+artista local, sus discos locales (estudio primero) se suman a los candidatos. Con separador explícito `Artista - Título` se usan
 campos (`releasegroup:"…" AND artist:"…"`), probando el orden inverso si el primero no trae nada.
 `refine` (o `null`): consulta genérica — primera página, más de 50 coincidencias y ningún
 resultado de nivel 1 — con hasta 5 artistas frecuentes para acotar. `total` y `nextOffset` son
