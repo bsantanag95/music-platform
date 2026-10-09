@@ -284,7 +284,8 @@ describe("WelcomeFlow", () => {
     await user.click(screen.getByRole("button", { name: "Atrás" }));
     expect(screen.getByRole("button", { name: "Quitar In Rainbows" })).toBeInTheDocument();
     expect(screen.getByText("Elegiste 1 álbum · Sugerimos entre 3 y 5.")).toBeInTheDocument();
-  });
+    // Recorre cuatro pasos con búsquedas de debounce: bajo carga paralela supera los 5 s por defecto.
+  }, 30_000);
 
   it("lo guardado es por persona: otra cuenta en la misma pestaña empieza de cero", async () => {
     const user = userEvent.setup();
