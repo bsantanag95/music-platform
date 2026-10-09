@@ -1,58 +1,4 @@
-# onboarding Specification
-
-## Purpose
-
-Define el **onboarding de dos puertas** de `/[locale]/welcome` (cambio
-`add-two-door-onboarding`, Fase 1 de `redefine-content-hierarchy`): una superficie que se
-muestra **una sola vez** por usuario y ofrece dos entradas complementarias y salteables —
-**Puerta 1** "álbumes que te definen" (que se guardan como favoritos de álbum del usuario,
-sin fijarlos ni ordenarlos, sin rating ni entrada de diario, IQ5) y **Puerta 2** "qué estás escuchando ahora" (que crea
-una entrada de diario, sin favorito ni rating). La marca `app_user.onboarded_at` controla
-la redirección post-alta y el enlace pasivo de Inicio; una vez fijada, `/welcome` redirige
-a Inicio. Distinto del bloque de onboarding social de Inicio.
-## Requirements
-### Requirement: Ruta de bienvenida con onboarding de dos puertas
-
-El sistema SHALL exponer una ruta `/[locale]/welcome` que presente un onboarding de **dos
-puertas complementarias**: "Álbumes que te definen" (identidad) y "¿Qué estás escuchando
-ahora?" (presente). Ninguna puerta SHALL ser obligatoria y SHALL poder completarse en
-cualquier orden, o saltarse. La ruta SHALL requerir sesión: un visitante sin sesión SHALL
-ser redirigido al login.
-
-#### Scenario: Usuario nuevo abre la bienvenida
-
-- **WHEN** un usuario autenticado que no completó el onboarding abre `/welcome`
-- **THEN** ve las dos puertas, cada una con su propia acción y un botón para terminar e ir
-  a Inicio
-
-#### Scenario: Visitante sin sesión
-
-- **WHEN** una persona sin sesión abre `/welcome`
-- **THEN** es redirigida al login
-
-### Requirement: El onboarding se muestra una sola vez
-
-Cada usuario SHALL tener una marca `onboarded_at` (fecha, o nula si está pendiente). Al
-**completar o saltar** el flujo de `/welcome`, el sistema SHALL fijar `onboarded_at`.
-Mientras `onboarded_at` sea nula, la redirección posterior al alta SHALL llevar a
-`/welcome`. Una vez fijada, `/welcome` SHALL redirigir a Inicio y el alta ya no SHALL
-desviar hacia el onboarding. Los usuarios que ya existían cuando se introduce esta
-capacidad SHALL considerarse onboardeados (no ven `/welcome`).
-
-#### Scenario: Segunda visita a la bienvenida
-
-- **WHEN** un usuario que ya completó o saltó el onboarding abre `/welcome`
-- **THEN** es redirigido a Inicio, sin rehacer el flujo
-
-#### Scenario: Redirección tras registrarse
-
-- **WHEN** un usuario se registra (formulario local o Google) y su `onboarded_at` es nula
-- **THEN** aterriza en `/welcome`, no en Inicio
-
-#### Scenario: Usuario preexistente
-
-- **WHEN** un usuario creado antes de esta capacidad inicia sesión
-- **THEN** no es enviado a `/welcome` en ningún momento
+## MODIFIED Requirements
 
 ### Requirement: Puerta 2 — registrar lo que estás escuchando
 
@@ -92,43 +38,6 @@ sola entrada.
 - **WHEN** el usuario toca Deshacer en una escucha registrada desde la Puerta 2
 - **THEN** la entrada de diario se borra, el elemento sale de la lista de registrados y
   vuelve a poder elegirse
-
-### Requirement: Cierre del onboarding
-
-El onboarding SHALL cerrarse mediante una única operación `POST /api/me/onboarding` que
-recibe los ids de álbum de la Puerta 1 (posiblemente vacíos), crea los favoritos de álbum que
-falten y fija `onboarded_at`. La respuesta SHALL informar `onboardedAt`. La operación SHALL ser
-idempotente: invocarla cuando el usuario ya está onboardeado SHALL responder `200` sin volver a
-crear favoritos ni re-marcar.
-
-#### Scenario: Terminar el onboarding
-
-- **WHEN** el usuario toca "Ir a Inicio" tras elegir álbumes
-- **THEN** se crean esos favoritos de álbum, se fija `onboarded_at`, y el usuario llega a
-  Inicio
-
-#### Scenario: Llamada repetida
-
-- **WHEN** el cliente reintenta `POST /api/me/onboarding` para un usuario ya onboardeado
-- **THEN** la API responde `200` sin efectos adicionales
-
-### Requirement: Acceso pasivo al onboarding pendiente desde Inicio
-
-Mientras el onboarding de un usuario esté pendiente (`onboarded_at` nula), Inicio SHALL
-ofrecer un enlace a `/welcome` ("completá tu perfil musical"), diferenciado del bloque de
-onboarding social (buscar gente / listas públicas), que se conserva. Una vez onboardeado,
-el enlace SHALL desaparecer.
-
-#### Scenario: Enlace visible mientras está pendiente
-
-- **WHEN** un usuario con onboarding pendiente abre Inicio
-- **THEN** ve un enlace a `/welcome`, además del bloque de onboarding social si no sigue a
-  nadie
-
-#### Scenario: Enlace ausente tras onboardear
-
-- **WHEN** un usuario que ya completó o saltó el onboarding abre Inicio
-- **THEN** no ve el enlace a `/welcome`
 
 ### Requirement: Puerta 1 — los álbumes elegidos se guardan como favoritos
 
@@ -183,6 +92,8 @@ La ruta `/[locale]/welcome` SHALL mostrar, antes de las dos puertas, un aviso di
 - **WHEN** una persona sin verificar completa o salta el onboarding sin verificar el email
 - **THEN** el onboarding termina con normalidad y la persona llega a Inicio
 
+## ADDED Requirements
+
 ### Requirement: Los buscadores del onboarding comparten el motor del diálogo Añadir
 
 Los buscadores de las dos puertas SHALL buscar con el mismo motor que el selector del diálogo «Añadir»: coincidencias locales primero y búsqueda completa después, cancelando la solicitud anterior al cambiar el texto o el tipo. Un fallo de búsqueda SHALL comunicarse como error y SHALL NOT mostrarse como «Sin resultados». El estado de la búsqueda («Buscando…», sin resultados, error) SHALL anunciarse a los lectores de pantalla.
@@ -205,4 +116,3 @@ Los controles de `/welcome` SHALL tener un área táctil de al menos 44 px de al
 
 - **WHEN** la bienvenida se muestra en un viewport de 375 px
 - **THEN** «Saltar por ahora», el botón principal, el conmutador Álbum/Canción, «Quitar» y «Deshacer» miden al menos 44 px de alto y los campos de búsqueda usan 16 px
-
