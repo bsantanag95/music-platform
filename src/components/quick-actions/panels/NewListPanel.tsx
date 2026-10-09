@@ -9,6 +9,7 @@ import { createList } from "@/lib/api/lists";
 import { ApiError } from "@/lib/api/client";
 import type { ListEntityType, UserListDetail } from "@/lib/api/schemas";
 import { useNotifyQuickActionChange } from "../quick-actions-changes";
+import { ActionNotice } from "../ActionNotice";
 
 const LIST_TYPES: readonly ListEntityType[] = ["release-group", "artist", "recording"];
 
@@ -57,9 +58,7 @@ export function NewListPanel({ onAddItems, onNavigate }: NewListPanelProps) {
   if (created) {
     return (
       <div className="flex flex-col gap-3">
-        <p role="status" className="font-data text-sm text-paper">
-          {t("newList.created", { title: created.title })}
-        </p>
+        <ActionNotice tone="success" title={t("newList.created")} detail={created.title} />
         <div className="flex flex-wrap items-center gap-3">
           <Button variant="secondary" onClick={() => onAddItems(created.entityType)}>
             {t("newList.addItems")}

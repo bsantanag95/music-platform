@@ -42,7 +42,7 @@
   "signIn": "Iniciar sesión para continuar",
   "listen": {
     "creating": "Registrando...",
-    "created": "Registrada: {title}",
+    "created": "Escucha registrada",
     "registerAnother": "Registrar otra",
     "viewDiary": "Ver mi diario"
   },
@@ -50,7 +50,7 @@
     "loading": "Cargando tu nota...",
     "legend": "Tu nota para {title}",
     "starsValue": "{stars} estrellas",
-    "saved": "Guardado: {stars} estrellas para {title}",
+    "saved": "Valoración guardada",
     "scoreDropped": "Se quitó tu puntuación {score}: no corresponde a {stars} estrellas.",
     "openPage": "Ampliar en la página"
   },
@@ -59,14 +59,14 @@
     "undo": "Deshacer",
     "remove": "Quitar",
     "favorite": {
-      "added": "Agregado a tus favoritos: {title}",
-      "already": "{title} ya está en tus favoritos",
-      "removed": "Se quitó de tus favoritos: {title}"
+      "added": "Añadido a tus favoritos",
+      "already": "Ya estaba en tus favoritos",
+      "removed": "Quitado de tus favoritos"
     },
     "pending": {
-      "added": "Agregado a tus Pendientes: {title}",
-      "already": "{title} ya está en tus Pendientes",
-      "removed": "Se quitó de tus Pendientes: {title}"
+      "added": "Añadido a tus Pendientes",
+      "already": "Ya estaba en tus Pendientes",
+      "removed": "Quitado de tus Pendientes"
     }
   },
   "newList": {
@@ -78,21 +78,21 @@
     "submit": "Crear lista",
     "creating": "Creando...",
     "titleRequired": "El título es obligatorio",
-    "created": "Lista creada: {title}",
+    "created": "Lista creada",
     "viewList": "Ver lista",
     "addItems": "Agregar a esta lista"
   },
   "collection": {
     "formatPrompt": "¿En qué formato lo tienes?",
     "adding": "Agregando...",
-    "added": "Agregado a tu colección ({format}): {title}",
-    "removed": "Se quitó de tu colección: {title}"
+    "added": "Añadido a tu colección",
+    "removed": "Quitado de tu colección"
   },
   "journey": {
     "checking": "Comprobando...",
     "activating": "Activando el Recorrido...",
-    "activated": "Recorrido activado: {title}",
-    "already": "{title} ya está en tu Recorrido",
+    "activated": "Recorrido activado",
+    "already": "Ya tienes este Recorrido",
     "open": "Ver Recorrido"
   },
   "newCamino": {
@@ -100,7 +100,7 @@
     "submit": "Crear Camino",
     "creating": "Creando...",
     "titleRequired": "El título es obligatorio",
-    "created": "Camino creado: {title}",
+    "created": "Camino creado",
     "viewCamino": "Ver Camino",
     "addAlbums": "Agregar a este Camino"
   }

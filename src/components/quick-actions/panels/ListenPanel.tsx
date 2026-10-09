@@ -11,6 +11,7 @@ import { ApiError } from "@/lib/api/client";
 import type { ListenEntry } from "@/lib/api/schemas";
 import { useNotifyQuickActionChange } from "../quick-actions-changes";
 import type { PickTarget } from "../types";
+import { ActionNotice } from "../ActionNotice";
 
 interface ListenPanelProps {
   target: PickTarget;
@@ -71,9 +72,7 @@ export function ListenPanel({ target, onReset, onNavigate }: ListenPanelProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <p role="status" className="font-data text-sm text-paper">
-        {t("listen.created", { title: entry.target.title })}
-      </p>
+      <ActionNotice tone="success" title={t("listen.created")} detail={entry.target.title} />
       <ListenEntryForm
         entryId={entry.id}
         target={entry.target}

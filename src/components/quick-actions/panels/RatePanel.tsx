@@ -14,6 +14,7 @@ import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 import { isScoreCoherent, scoreRange, starsFromScore } from "@/lib/rating-range";
 import { useNotifyQuickActionChange } from "../quick-actions-changes";
 import type { PickTarget } from "../types";
+import { ActionNotice } from "../ActionNotice";
 
 const FULL_RANGE = { min: 1, max: 100 };
 const PAGE_STEP = 10;
@@ -47,6 +48,9 @@ export function RatePanel({ target, onReset, onNavigate }: RatePanelProps) {
   // `null` hasta que se elige: el pulgar queda en el centro y no se puede guardar (como en `RatingDetailDialog`).
   const [value, setValue] = useState<number | null>(null);
   const [savedStars, setSavedStars] = useState<number | null>(null);
+  const [savedScore, setSavedScore] = useState<number | null>(null);
+  // Cuenta de guardados: remonta el aviso para que la confirmación se vea en cada guardado.
+  const [saves, setSaves] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -87,6 +91,8 @@ export function RatePanel({ target, onReset, onNavigate }: RatePanelProps) {
       notifyChanged();
       if (current !== seq.current) return;
       setSavedStars(value);
+      setSavedScore(keepScore ? score : null);
+      setSaves((n) => n + 1);
       if (score !== null && !keepScore) {
         setNotice(t("rate.scoreDropped", { score, stars: formatStars(value, locale) }));
         setScore(null);
@@ -132,6 +138,8 @@ export function RatePanel({ target, onReset, onNavigate }: RatePanelProps) {
       setScore(marks.detailedScore);
       setValue(marks.detailedScore);
       setSavedStars(marks.stars);
+      setSavedScore(marks.detailedScore);
+      setSaves((n) => n + 1);
     } catch (err) {
       if (current !== seq.current) return;
       setValue(score);
@@ -159,6 +167,14 @@ export function RatePanel({ target, onReset, onNavigate }: RatePanelProps) {
         valueLabel={(value) => t("rate.starsValue", { stars: formatStars(value, locale) })}
         disabled={busy}
       />
+      {savedStars !== null && !errorCode ? (
+        <ActionNotice
+          key={saves}
+          tone="success"
+          title={t("rate.saved")}
+          detail={`★ ${savedScore !== null ? `${savedScore}/100` : formatStars(savedStars, locale)} · ${target.title}`}
+        />
+      ) : null}
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -234,11 +250,6 @@ export function RatePanel({ target, onReset, onNavigate }: RatePanelProps) {
         <span role="alert" className="font-data text-xs text-danger">
           {t("saveError")}
         </span>
-      ) : null}
-      {savedStars !== null && !errorCode ? (
-        <p role="status" className="font-data text-xs text-paper">
-          {t("rate.saved", { stars: formatStars(savedStars, locale), title: target.title })}
-        </p>
       ) : null}
       {notice ? (
         <p role="status" className="font-data text-xs text-paper-muted">
