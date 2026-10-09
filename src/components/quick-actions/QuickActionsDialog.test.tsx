@@ -161,6 +161,11 @@ describe("QuickActionsDialog", () => {
 
     expect(mocks.createListenEntry).toHaveBeenCalledTimes(1);
     expect(mocks.createListenEntry).toHaveBeenCalledWith({ type: "release-group", id: albumId });
+    // Los detalles son opcionales: plegados hasta que se piden.
+    const toggle = await screen.findByRole("button", { name: /Añadir detalles/ });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByTestId("expand-form")).not.toBeInTheDocument();
+    await userEvent.click(toggle);
     expect(await screen.findByTestId("expand-form")).toHaveTextContent(createdEntry.id);
   });
 
@@ -328,6 +333,7 @@ describe("QuickActionsDialog", () => {
 
     await userEvent.type(await screen.findByRole("searchbox"), "dark side");
     await userEvent.click(await screen.findByRole("button", { name: /The Dark Side of the Moon/ }, { timeout: 1500 }));
+    await userEvent.click(await screen.findByRole("button", { name: /Añadir detalles/ }));
     await screen.findByTestId("expand-form");
     expect(onChanged).toHaveBeenCalledTimes(1);
     window.removeEventListener(OWN_DATA_CHANGED_EVENT, onChanged);

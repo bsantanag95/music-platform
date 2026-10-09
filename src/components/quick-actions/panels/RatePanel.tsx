@@ -15,6 +15,7 @@ import { isScoreCoherent, scoreRange, starsFromScore } from "@/lib/rating-range"
 import { useNotifyQuickActionChange } from "../quick-actions-changes";
 import type { PickTarget } from "../types";
 import { ActionNotice } from "../ActionNotice";
+import { PanelFooter, PanelAction, PanelLink } from "../PanelActions";
 
 const FULL_RANGE = { min: 1, max: 100 };
 const PAGE_STEP = 10;
@@ -256,18 +257,13 @@ export function RatePanel({ target, onReset, onNavigate }: RatePanelProps) {
           {notice}
         </p>
       ) : null}
-      <div className="flex flex-wrap items-center gap-3 border-t border-ink-border pt-3">
-        <Button variant="secondary" onClick={onReset}>
+      <PanelFooter>
+        <PanelAction onClick={onReset}>
           {t("chooseAnother")}
-        </Button>
-        <Link
-          href={targetHref(target)}
-          onClick={onNavigate}
-          className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-paper"
-        >
-          {t("rate.openPage")}
-        </Link>
-      </div>
+        </PanelAction>
+        <PanelLink href={targetHref(target)} onClick={onNavigate}>
+          {t("rate.openPage")}</PanelLink>
+      </PanelFooter>
     </div>
   );
 }

@@ -44,7 +44,10 @@
     "creating": "Logging...",
     "created": "Listen logged",
     "registerAnother": "Log another",
-    "viewDiary": "View my diary"
+    "viewDiary": "View my diary",
+    "addDetails": "Add details",
+    "optional": "Optional",
+    "detailsHint": "Reaction, context, note and who sees it"
   },
   "rate": {
     "loading": "Loading your rating...",

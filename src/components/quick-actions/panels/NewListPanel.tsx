@@ -10,6 +10,7 @@ import { ApiError } from "@/lib/api/client";
 import type { ListEntityType, UserListDetail } from "@/lib/api/schemas";
 import { useNotifyQuickActionChange } from "../quick-actions-changes";
 import { ActionNotice } from "../ActionNotice";
+import { PanelFooter, PanelAction, PanelLink } from "../PanelActions";
 
 const LIST_TYPES: readonly ListEntityType[] = ["release-group", "artist", "recording"];
 
@@ -59,18 +60,14 @@ export function NewListPanel({ onAddItems, onNavigate }: NewListPanelProps) {
     return (
       <div className="flex flex-col gap-3">
         <ActionNotice tone="success" title={t("newList.created")} detail={created.title} />
-        <div className="flex flex-wrap items-center gap-3">
-          <Button variant="secondary" onClick={() => onAddItems(created.entityType)}>
+        <PanelFooter divided={false}>
+          <PanelAction onClick={() => onAddItems(created.entityType)}>
             {t("newList.addItems")}
-          </Button>
-          <Link
-            href={`/me/lists/${created.id}`}
-            onClick={onNavigate}
-            className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-paper"
-          >
-            {t("newList.viewList")}
-          </Link>
-        </div>
+          </PanelAction>
+          <PanelLink href={`/me/lists/${created.id}`} onClick={onNavigate}>
+          {t("newList.viewList")}
+        </PanelLink>
+        </PanelFooter>
       </div>
     );
   }

@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { getTargetMarks } from "@/lib/api/marks";
 import { removeFavorite, toggleFavorite } from "@/lib/api/favorites";
@@ -12,6 +11,7 @@ import { ApiError } from "@/lib/api/client";
 import { useNotifyQuickActionChange } from "../quick-actions-changes";
 import type { PickTarget } from "../types";
 import { ActionNotice } from "../ActionNotice";
+import { PanelFooter, PanelAction } from "../PanelActions";
 
 type MarkKind = "favorite" | "pending";
 type MarkState = "checking" | "added" | "already" | "removed";
@@ -105,9 +105,9 @@ export function MarkPanel({ kind, target, onReset }: MarkPanelProps) {
             {t("saveError")}
           </span>
         )}
-        <Button variant="secondary" onClick={onReset}>
+        <PanelAction onClick={onReset}>
           {t("chooseAnother")}
-        </Button>
+        </PanelAction>
       </div>
     );
   }
@@ -128,16 +128,16 @@ export function MarkPanel({ kind, target, onReset }: MarkPanelProps) {
         title={t(`mark.${kind}.${state}`)}
         detail={target.title}
       />
-      <div className="flex flex-wrap items-center gap-3">
+      <PanelFooter divided={false}>
         {state === "added" || state === "already" ? (
-          <Button variant="secondary" disabled={busy} onClick={() => void undo()}>
+          <PanelAction disabled={busy} onClick={() => void undo()}>
             {state === "added" ? t("mark.undo") : t("mark.remove")}
-          </Button>
+          </PanelAction>
         ) : null}
-        <Button variant="secondary" onClick={onReset}>
+        <PanelAction onClick={onReset}>
           {t("chooseAnother")}
-        </Button>
-      </div>
+        </PanelAction>
+      </PanelFooter>
     </div>
   );
 }
