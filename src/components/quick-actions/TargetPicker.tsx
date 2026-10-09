@@ -138,6 +138,17 @@ function usePhase(
   return phase?.key === key ? phase : null;
 }
 
+/**
+ * Placeholder del buscador según los tipos que SÍ busca: con una lista bloqueada a un solo tipo
+ * (tras crearla desde el diálogo) o con Pendiente, no debe prometer tipos que no devuelve.
+ */
+function placeholderKey(types: readonly PickerType[]) {
+  if (types.length === 1) {
+    return types[0] === "artist" ? "searchPlaceholderArtist" : types[0] === "song" ? "searchPlaceholderSong" : "searchPlaceholderAlbum";
+  }
+  return types.includes("song") ? "searchPlaceholder" : "searchPlaceholderPending";
+}
+
 interface TargetPickerProps {
   /** Tipos de búsqueda permitidos para la acción activa. */
   types: readonly PickerType[];
@@ -228,7 +239,7 @@ export function TargetPicker({
           autoComplete="off"
           value={rawQuery}
           onChange={(e) => onRawQueryChange(e.target.value)}
-          placeholder={types.includes("song") ? t("searchPlaceholder") : t("searchPlaceholderPending")}
+          placeholder={t(placeholderKey(types))}
           className="w-full rounded-md border border-ink-border bg-ink py-2.5 pl-9 pr-3 font-data text-sm text-paper transition-colors placeholder:text-paper-muted focus:border-amber/60 focus:outline-none"
         />
       </div>
