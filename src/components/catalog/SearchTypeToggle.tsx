@@ -10,13 +10,15 @@ interface SearchTypeToggleProps<T extends SearchType> {
   value: T;
   onChange: (next: T) => void;
   label: string;
+  /** `touch`: áreas táctiles de 44 px en móvil (onboarding). */
+  size?: "default" | "touch";
 }
 
 // Conmutador compacto de tipo para los buscadores embebidos (registrar una
 // escucha, onboarding): la búsqueda por tipo también llega ahí (openspec:
 // redesign-scoped-search) — un tipo por solicitud en vez de mezclar álbumes,
 // canciones y artistas en cada tecla. Radio group con flechas.
-export function SearchTypeToggle<T extends SearchType>({ types, value, onChange, label }: SearchTypeToggleProps<T>) {
+export function SearchTypeToggle<T extends SearchType>({ types, value, onChange, label, size = "default" }: SearchTypeToggleProps<T>) {
   const t = useTranslations("catalog.search.kinds");
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -42,6 +44,8 @@ export function SearchTypeToggle<T extends SearchType>({ types, value, onChange,
             tabIndex={checked ? 0 : -1}
             onClick={() => onChange(type)}
             className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-data text-xs transition-colors ${
+              size === "touch" ? "min-h-11 px-3.5 sm:min-h-0 sm:px-2.5" : ""
+            } ${
               checked ? "border-amber text-paper" : "border-ink-border text-paper-muted hover:text-paper"
             }`}
           >

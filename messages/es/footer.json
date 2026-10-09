@@ -24,7 +24,7 @@
   },
   "connect": {
     "label": "Conectar",
-    "contact": "Escribinos",
+    "contact": "Escríbenos",
     "social": {
       "x": "X",
       "instagram": "Instagram",
@@ -51,7 +51,7 @@
     "noAffiliation": "{appName} no está afiliada ni respaldada por la MetaBrainz Foundation.",
     "noAudio": "{appName} es un catálogo y una comunidad sobre música: no reproduce ni aloja audio.",
     "takedown": {
-      "before": "Para pedir el retiro de una carátula, escribí a",
+      "before": "Para pedir el retiro de una carátula, escribe a",
       "after": "."
     }
   },

@@ -49,6 +49,7 @@ export function TwoDoorOnboarding() {
       <div className="flex flex-wrap items-center gap-3">
         <Button
           type="button"
+          className="min-h-11"
           disabled={pending}
           onClick={() => void finish(picked.map((a) => a.id))}
         >
@@ -58,7 +59,7 @@ export function TwoDoorOnboarding() {
           type="button"
           disabled={pending}
           onClick={() => void finish([])}
-          className="font-data text-sm text-paper-muted underline hover:text-paper disabled:opacity-50"
+          className="min-h-11 px-2 font-data text-sm text-paper-muted underline hover:text-paper disabled:opacity-50"
         >
           {t("finish.skip")}
         </button>

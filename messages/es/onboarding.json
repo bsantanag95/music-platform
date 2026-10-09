@@ -1,6 +1,6 @@
 {
   "pageTitle": "Te damos la bienvenida",
-  "heading": "Cuenta quién eres musicalmente",
+  "heading": "Cuéntanos quién eres musicalmente",
   "intro": "Dos formas de empezar. Ninguna es obligatoria y puedes hacerlas en el orden que quieras.",
   "door1": {
     "heading": "Álbumes que te definen",
@@ -13,18 +13,22 @@
     "suggestion": "Sugerimos entre 3 y 5.",
     "remove": "Quitar",
     "max": "Llegaste al máximo de 6.",
-    "save": "Guardar y continuar"
+    "save": "Guardar y continuar",
+    "removeLabel": "Quitar {title}"
   },
   "door2": {
     "heading": "¿Qué estás escuchando ahora?",
     "intro": "Elige un álbum o una canción y queda registrado en tu diario. Puedes agregar tu impresión más tarde.",
     "searchLabel": "Buscar álbum o canción",
-    "searchPlaceholder": "Ej: Sabrina Carpenter",
     "searching": "Buscando...",
     "noResults": "Sin resultados.",
     "logged": "Registrado: {title}",
-    "logAnother": "Registrar otra",
-    "typeLabel": "Qué buscar"
+    "typeLabel": "Qué buscar",
+    "searchPlaceholderAlbum": "Ej: Currents",
+    "searchPlaceholderSong": "Ej: Espresso",
+    "undo": "Deshacer",
+    "undoLabel": "Deshacer el registro de {title}",
+    "undone": "Registro deshecho: {title}"
   },
   "finish": {
     "done": "Ir a Inicio",
@@ -33,5 +37,11 @@
   },
   "error": "No pudimos completar el paso. Prueba de nuevo.",
   "homeLink": "Completa tu perfil musical",
-  "homeLinkCta": "Empezar"
+  "homeLinkCta": "Empezar",
+  "searchError": "No pudimos buscar. Prueba de nuevo.",
+  "categories": {
+    "single_ep": "Single / EP",
+    "compilation": "Recopilación",
+    "live_other": "En vivo u otro"
+  }
 }
