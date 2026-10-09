@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Button } from "@/components/ui/Button";
 import { addCollectionEntry, removeCollectionEntry } from "@/lib/api/collection";
 import { ApiError } from "@/lib/api/client";
 import type { CollectionEntry, CollectionFormatValue } from "@/lib/api/schemas";
 import { useNotifyQuickActionChange } from "../quick-actions-changes";
 import type { PickTarget } from "../types";
 import { ActionNotice } from "../ActionNotice";
+import { PanelFooter, PanelAction } from "../PanelActions";
 
 const FORMATS: readonly CollectionFormatValue[] = ["vinyl", "cd", "cassette", "other"];
 
@@ -105,16 +105,16 @@ export function CollectionPanel({ target, onReset }: CollectionPanelProps) {
         </span>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-ink-border pt-3">
+      <PanelFooter>
         {entry ? (
-          <Button variant="secondary" disabled={busy} onClick={() => void undo()}>
+          <PanelAction disabled={busy} onClick={() => void undo()}>
             {t("mark.undo")}
-          </Button>
+          </PanelAction>
         ) : null}
-        <Button variant="secondary" onClick={onReset}>
+        <PanelAction onClick={onReset}>
           {t("chooseAnother")}
-        </Button>
-      </div>
+        </PanelAction>
+      </PanelFooter>
     </div>
   );
 }

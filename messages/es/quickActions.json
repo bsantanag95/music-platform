@@ -44,7 +44,10 @@
     "creating": "Registrando...",
     "created": "Escucha registrada",
     "registerAnother": "Registrar otra",
-    "viewDiary": "Ver mi diario"
+    "viewDiary": "Ver mi diario",
+    "addDetails": "Añadir detalles",
+    "optional": "Opcional",
+    "detailsHint": "Reacción, contexto, nota y quién la ve"
   },
   "rate": {
     "loading": "Cargando tu nota...",

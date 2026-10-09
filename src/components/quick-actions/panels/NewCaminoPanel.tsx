@@ -10,6 +10,7 @@ import { ApiError } from "@/lib/api/client";
 import type { CaminoDetail } from "@/lib/api/schemas";
 import { useNotifyQuickActionChange } from "../quick-actions-changes";
 import { ActionNotice } from "../ActionNotice";
+import { PanelFooter, PanelAction, PanelLink } from "../PanelActions";
 
 interface NewCaminoPanelProps {
   /** Pasa al chip "A lista" con la búsqueda fijada a álbumes. */
@@ -53,18 +54,14 @@ export function NewCaminoPanel({ onAddAlbums, onNavigate }: NewCaminoPanelProps)
     return (
       <div className="flex flex-col gap-3">
         <ActionNotice tone="success" title={t("newCamino.created")} detail={created.title} />
-        <div className="flex flex-wrap items-center gap-3">
-          <Button variant="secondary" onClick={onAddAlbums}>
+        <PanelFooter divided={false}>
+          <PanelAction onClick={onAddAlbums}>
             {t("newCamino.addAlbums")}
-          </Button>
-          <Link
-            href={`/me/caminos/${created.id}`}
-            onClick={onNavigate}
-            className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-paper"
-          >
-            {t("newCamino.viewCamino")}
-          </Link>
-        </div>
+          </PanelAction>
+          <PanelLink href={`/me/caminos/${created.id}`} onClick={onNavigate}>
+          {t("newCamino.viewCamino")}
+        </PanelLink>
+        </PanelFooter>
       </div>
     );
   }

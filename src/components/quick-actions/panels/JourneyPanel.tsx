@@ -3,13 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { activateArtistJourney, getArtistJourneyStatuses } from "@/lib/api/artist-journeys";
 import { ApiError } from "@/lib/api/client";
 import { useNotifyQuickActionChange } from "../quick-actions-changes";
 import type { PickTarget } from "../types";
 import { ActionNotice } from "../ActionNotice";
+import { PanelFooter, PanelAction, PanelLink } from "../PanelActions";
 
 type JourneyState = "checking" | "activating" | "activated" | "already";
 
@@ -62,9 +62,9 @@ export function JourneyPanel({ target, onReset, onNavigate }: JourneyPanelProps)
             {t("saveError")}
           </span>
         )}
-        <Button variant="secondary" onClick={onReset}>
+        <PanelAction onClick={onReset}>
           {t("chooseAnother")}
-        </Button>
+        </PanelAction>
       </div>
     );
   }
@@ -85,18 +85,14 @@ export function JourneyPanel({ target, onReset, onNavigate }: JourneyPanelProps)
         title={t(state === "activated" ? "journey.activated" : "journey.already")}
         detail={target.title}
       />
-      <div className="flex flex-wrap items-center gap-3">
-        <Button variant="secondary" onClick={onReset}>
+      <PanelFooter divided={false}>
+        <PanelAction onClick={onReset}>
           {t("chooseAnother")}
-        </Button>
-        <Link
-          href={`/me/artist-journeys/${target.id}`}
-          onClick={onNavigate}
-          className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-paper"
-        >
+        </PanelAction>
+        <PanelLink href={`/me/artist-journeys/${target.id}`} onClick={onNavigate}>
           {t("journey.open")}
-        </Link>
-      </div>
+        </PanelLink>
+      </PanelFooter>
     </div>
   );
 }
