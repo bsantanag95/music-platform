@@ -212,3 +212,27 @@ describe("Footer — contacto de retiro", () => {
   });
 });
 
+describe("Footer variante minimal (pantallas de foco)", () => {
+  it("conserva la atribución de fuentes, el aviso de no afiliación y los enlaces legales", async () => {
+    await renderFooter({ variant: "minimal" });
+
+    const attribution = screen.getByRole("region", { name: footerEs.attribution.label });
+    expect(within(attribution).getByRole("link", { name: /MusicBrainz/ })).toBeInTheDocument();
+    expect(within(attribution).getByRole("link", { name: /Cover Art Archive/ })).toBeInTheDocument();
+    expect(within(attribution).getByRole("link", { name: /MetaBrainz Foundation/ })).toBeInTheDocument();
+    const legal = screen.getByRole("navigation", { name: "Legal" });
+    expect(within(legal).getByRole("link", { name: "Términos" })).toHaveAttribute("href", "/terms");
+    expect(within(legal).getByRole("link", { name: "Privacidad" })).toHaveAttribute("href", "/privacy");
+  });
+
+  it("omite la navegación del sitio, la cuenta, los recursos y las redes", async () => {
+    await renderFooter({ variant: "minimal", user: { id: "u1", username: "ana", displayName: "Ana" } });
+
+    for (const label of ["Explorar", "Tu cuenta", "Recursos", "Conectar"]) {
+      expect(screen.queryByRole("navigation", { name: label })).not.toBeInTheDocument();
+    }
+    expect(screen.queryByRole("link", { name: new RegExp(footerEs.backToTop) })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("contentinfo")).toHaveLength(1);
+  });
+});
+

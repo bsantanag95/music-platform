@@ -3,7 +3,6 @@
 ## Purpose
 
 El pie de página global del sitio: identidad de la aplicación, navegación secundaria (Explorar, Cuenta, Recursos), vías de contacto y perfiles sociales, barra inferior con copyright y políticas, y el bloque de atribución de fuentes de datos (MusicBrainz, Cover Art Archive y MetaBrainz Foundation), que incluye el contacto público para pedir el retiro de una carátula cuando está configurado.
-
 ## Requirements
 ### Requirement: Presencia global del pie de página
 
@@ -257,4 +256,23 @@ disponible en `es` y `en`.
 - **WHEN** se solicita el footer en locale `en`
 - **THEN** todas sus etiquetas, encabezados de grupo y textos de atribución se
   muestran en inglés, sin claves de traducción crudas ni texto en español
+
+### Requirement: Pie reducido en pantallas de foco
+
+En las pantallas de foco (hoy, `/welcome`) el pie SHALL ser una variante reducida que conserve el bloque de atribución de fuentes de datos completo (incluido el contacto de retiro de carátulas cuando está configurado) y la barra inferior con copyright y enlaces de políticas, y SHALL omitir la identidad, la navegación Explorar, Cuenta y Recursos, el grupo Conectar y el enlace «volver arriba». Seguirá existiendo un único `<footer>` con rol `contentinfo`, renderizado en el servidor.
+
+#### Scenario: Atribución en una pantalla de foco
+
+- **WHEN** se muestra el pie en `/welcome`
+- **THEN** nombra y enlaza a MusicBrainz, al Cover Art Archive y a la MetaBrainz Foundation, incluye el aviso de no afiliación y los enlaces legales
+
+#### Scenario: Navegación omitida
+
+- **WHEN** se muestra el pie en `/welcome`
+- **THEN** no contiene los grupos Explorar, Tu cuenta, Recursos ni Conectar
+
+#### Scenario: Pie completo en el resto del sitio
+
+- **WHEN** se muestra el pie en cualquier otra ruta
+- **THEN** conserva todos sus grupos
 

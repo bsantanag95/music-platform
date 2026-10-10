@@ -410,4 +410,50 @@ describe("Header", () => {
     expect(panelGeneralNav).not.toHaveTextContent("Moderación");
     expect(panel.querySelector('a[href="/moderation"]')).not.toBeNull();
   });
+
+  describe("en una pantalla de foco (/welcome)", () => {
+    const withPathname = (pathname: string) => {
+      const previous = mocks.pathname;
+      mocks.pathname = pathname;
+      return () => {
+        mocks.pathname = previous;
+      };
+    };
+
+    it("se reduce al logo y al selector de idioma", () => {
+      const restore = withPathname("/welcome");
+      try {
+        renderWithIntl(<Header user={{ id: "u1", username: "ana", displayName: "Ana" }} exploreEnabled />);
+
+        expect(screen.getByRole("link", { name: "Inicio" })).toHaveAttribute("href", "/");
+        expect(screen.getByRole("navigation", { name: "Idioma" })).toBeInTheDocument();
+        expect(screen.queryByLabelText("Buscar artista")).not.toBeInTheDocument();
+        expect(screen.queryByRole("navigation", { name: "Navegación general" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Ana" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Abrir menú" })).not.toBeInTheDocument();
+      } finally {
+        restore();
+      }
+    });
+
+    it("cambiar de idioma conserva la ruta de la bienvenida", () => {
+      const restore = withPathname("/welcome");
+      try {
+        mocks.replace.mockClear();
+        mocks.search = "";
+        renderWithIntl(<Header />);
+        fireEvent.click(screen.getByRole("button", { name: "en" }));
+
+        expect(mocks.replace).toHaveBeenCalledWith("/welcome", { locale: "en" });
+      } finally {
+        restore();
+      }
+    });
+
+    it("fuera de ella sigue mostrando la barra completa", () => {
+      renderWithIntl(<Header />);
+
+      expect(screen.getByLabelText("Buscar artista")).toBeInTheDocument();
+    });
+  });
 });
