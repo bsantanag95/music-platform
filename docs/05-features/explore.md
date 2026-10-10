@@ -9,16 +9,23 @@ listas son pestañas futuras.
 ## Secciones de la portada
 
 Se componen en `src/services/discovery/discovery.ts` (`getExplorePage`), server-render,
-sin tabla materializada. Cada sección se **omite** si no tiene contenido.
+sin tabla materializada. Cada sección se **omite** si no tiene contenido. En orden:
 
-| Sección | Fuente | Notas |
+| Sección | Fuente | Presentación |
 |---|---|---|
-| Colecciones destacadas | `user_list_featured` (listas de `@exploracion`, por `rank`) | ancla anti-arranque-en-frío |
-| Novedades | `release_group` studio/single_ep por `first_release_year` desc | siempre hay |
-| Explorar por década | `first_release_year` agrupado por década | chips → `/explore?decada=1990` |
-| Explorar por género | familias de géneros con álbumes (vista `release_group_effective_genre`, cambio `add-genre-taxonomy`) | chips "Rock · 219" → `/explore?familia=rock`; las 3 familias secundarias detrás de "Más" (`<details>`, sin JS) |
-| Mejor valorados | `rating` agregado por álbum | ver umbrales abajo |
-| Más reseñados | `review` contado por álbum | ver umbrales abajo |
+| Colecciones destacadas | `user_list_featured` (listas de `@exploracion`, por `rank`) | ancla anti-arranque-en-frío; tarjetas de lista (`CollectionRail`) |
+| Explorar por género | familias de géneros con álbumes (vista `release_group_effective_genre`, cambio `add-genre-taxonomy`) | tarjetas con nombre, número de álbumes y una barra de tamaño relativo (escala de raíz cuadrada) → `/explore?familia=rock`; las familias secundarias detrás de "N familias más" (`<details>`, sin JS) (`FamilyGrid`) |
+| Novedades | `release_group` studio/single_ep por `first_release_year` desc | riel horizontal |
+| Explorar por década | `first_release_year` agrupado por década | histograma del catálogo: una columna por década en orden cronológico, altura proporcional a sus álbumes, cada columna → `/explore?decada=1990`; en móvil, barras horizontales de la más reciente a la más antigua (`DecadeHistogram`) |
+| Mejor valorados | `rating` agregado por álbum | riel horizontal; ver umbrales abajo |
+| Más reseñados | `review` contado por álbum | riel horizontal; ver umbrales abajo |
+
+Cada sección lleva bajo el título una línea que dice qué reúne o con qué regla (la de Mejor valorados
+cita `MIN_RATINGS_PER_ALBUM`). Los rieles de álbumes de la portada son **horizontales**
+(`AlbumRail` con `layout="scroll"`, `RailScroller`): una fila con `scroll-snap`, flechas desde `sm`
+que se apagan en cada extremo, y degradados de borde como capas aparte (una `mask-image` recortaría
+el menú "…" de las tarjetas, que en el riel se abre con `positioning="fixed"`). La grilla de dos
+filas (`layout="grid"`, el predeterminado) sigue en la página de género y en la Inicio anónima.
 
 ### Umbrales de los rieles por reglas (`src/services/discovery/constants.ts`)
 
@@ -44,13 +51,27 @@ sesión a las tarjetas (antes las trataba a todas como anónimas).
 prioridad `decada` > `familia` > `genero`). La familia lista los álbumes con algún género efectivo de
 ella; el género, los de ese género **o un subgénero** (CTE recursiva sobre "subgénero de"). Los
 géneros efectivos incluyen los heredados del artista (3 primeros). Una clave o un slug desconocido
-muestra el estado vacío. El encabezado nombra la familia (traducida) o el género (nombre de la
-taxonomía según el idioma). Grilla paginada con paginación server-side (anterior /
-siguiente por `?page=`). No hay endpoint dedicado.
+muestra el estado vacío; una década mal escrita (`?decada=abc`, `?decada=1995`) también, en lugar
+de la pantalla de error. Las décadas válidas van de 1800 a 2100 (el catálogo tiene discos de los
+1890s; antes el límite era 1900 y esa columna llevaba a un error). No hay endpoint dedicado.
+
+La vista (`FilteredAlbumList`) tiene miga de pan (Inicio / Explorar / corte), un rótulo con el tipo
+de corte (Década, Familia de géneros, Género) y:
+
+- **Cortes hermanos**: las otras décadas o las otras familias, para saltar sin volver a la portada
+  (conservan tipo y orden). El listado por género enlaza en su lugar a la página del género.
+- **Tipo y orden** (`ExploreFilterBar`): el tipo es una fila de enlaces (`?tipo=studio|single_ep|
+  compilation|live_other`, sin JS) y el orden un `<select>` (`?orden=mejor|populares|recientes|
+  antiguos|az`, los mismos valores que la página de género). Contrato de URL en
+  `src/services/discovery/explore-params.ts`: lectura tolerante (un valor inválido cae al
+  predeterminado), solo se escriben los valores no predeterminados y cambiar tipo u orden vuelve a la
+  página 1.
+- **Paginación** server-side por `?page=` (anterior / "Página N" / siguiente), que conserva tipo y orden.
+- Estado vacío con "Quitar filtros" si hay tipo u orden elegidos, o "Volver a Explorar" si no.
 
 Cada género también tiene su propia página, `/genre/<slug>` (cambios `show-genres` y `redesign-genre-page`, ver
 `genres.md`), con pestañas, filtros y orden. Comparte con estos listados la función `listAlbumsFiltered`
-(`discovery.ts`): Explorar la llama con el orden `best` y sin filtros, así que su orden y su paginación no cambian.
+(`discovery.ts`): Explorar la llama con el tipo y el orden de la URL (sin ellos, el orden `best` de siempre).
 
 ## Flag de lanzamiento
 
@@ -88,4 +109,4 @@ aparecen en esa consola y rechazan la publicación oficial. La "destacada" del r
 ## No incluido en Fase 1
 
 Feed de reseñas, personalización/afinidad, pestañas no-álbum, UI de administración de
-curaduría, combinación de filtros, "seguir artista".
+curaduría, combinación de cortes (década + familia a la vez), "seguir artista".

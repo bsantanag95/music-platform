@@ -17,6 +17,8 @@ interface AlbumCardProps {
   coverLabel: string;
   /** Hay sesión: el menú de acciones pide las marcas del disco y habilita Guardar/Seguir en "Ver en listas". */
   authenticated?: boolean;
+  /** Ubicación del menú "…": `fixed` dentro de un contenedor con scroll (riel horizontal de Explorar). */
+  menuPositioning?: "absolute" | "fixed";
 }
 
 // Tarjeta de álbum de Explorar. Usa `Link` de next-intl para preservar el locale activo. El
@@ -24,7 +26,13 @@ interface AlbumCardProps {
 // portada, fuera del `Link` (no anidado dentro de él); reemplaza al menú "···" anterior y
 // conserva lo que solo tenía ese menú: "Ver en listas" y las acciones de colección (el spec
 // `collection-wishlist` exige "Lo busco" en el menú de la ficha de álbum).
-export function AlbumCard({ releaseGroup, categoryLabel, coverLabel, authenticated = false }: AlbumCardProps) {
+export function AlbumCard({
+  releaseGroup,
+  categoryLabel,
+  coverLabel,
+  authenticated = false,
+  menuPositioning = "absolute",
+}: AlbumCardProps) {
   const t = useTranslations("lists");
   const tCollection = useTranslations("collection");
   const router = useRouter();
@@ -96,6 +104,7 @@ export function AlbumCard({ releaseGroup, categoryLabel, coverLabel, authenticat
         open={menuOpen}
         onOpenChange={setMenuOpen}
         variant="cover"
+        positioning={menuPositioning}
         className={`!absolute right-4 top-4 ${
           menuOpen
             ? "opacity-100"
