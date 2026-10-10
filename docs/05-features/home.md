@@ -335,7 +335,9 @@ en orden de lectura izquierda→derecha, arriba→abajo; el orden es parte del d
 ## "Lanzamientos recientes" y "Próximos lanzamientos"
 
 Dos apartados nuevos de Inicio: discos publicados hace poco (pasado) y discos anunciados
-todavía sin salir (futuro). La distinción es limpia y no se solapa.
+todavía sin salir (futuro). La distinción es limpia y no se solapa. El recorrido completo de lo que viene
+(180 días, cronológico, sin recortes por popularidad ni artista) vive en `/explore?proximos=1`
+(ver `explore.md`); Inicio es el resumen.
 
 **Estado:** implementado. El diseño/layout viene de `redesign-frontend`; los datos reales, de
 `add-home-release-calendar` (calendario desde ListenBrainz, ADR 0029).

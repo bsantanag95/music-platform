@@ -16,6 +16,7 @@ sin tabla materializada. Cada sección se **omite** si no tiene contenido. En or
 | Colecciones destacadas | `user_list_featured` (listas de `@exploracion`, por `rank`) | ancla anti-arranque-en-frío; tarjetas de lista (`CollectionRail`) |
 | Explorar por género | familias de géneros con álbumes (vista `release_group_effective_genre`, cambio `add-genre-taxonomy`) | tarjetas con nombre, número de álbumes y una barra de tamaño relativo (escala de raíz cuadrada) → `/explore?familia=rock`; las familias secundarias detrás de "N familias más" (`<details>`, sin JS) (`FamilyGrid`) |
 | Novedades | `release_group` studio/single_ep con `first_release_date` completa en los últimos `NEW_RELEASE_WINDOW_DAYS` (90) días hasta hoy, con carátula, por fecha desc | riel horizontal; se omite con menos de `MIN_ALBUMS_FOR_SECTION` (6); sin lanzamientos futuros ni fechas parciales |
+| Próximos lanzamientos | `release_group` studio/single_ep con `first_release_date` completa posterior a hoy y hasta hoy + `UPCOMING_WINDOW_DAYS` (180), con carátula, por fecha asc (cambio `add-explore-upcoming-releases`) | riel horizontal bajo Novedades, con la fecha ("24 oct") en cada tarjeta y "Ver todo →" a `/explore?proximos=1`; se omite con menos de `MIN_ALBUMS_FOR_SECTION` (6) |
 | Explorar por década | `first_release_year` agrupado por década | histograma del catálogo: una columna por década en orden cronológico, altura proporcional a sus álbumes, cada columna → `/explore?decada=1990`; en móvil, barras horizontales de la más reciente a la más antigua (`DecadeHistogram`) |
 | Mejor valorados | `rating` agregado por álbum | riel horizontal; ver umbrales abajo |
 | Más reseñados | `review` contado por álbum | riel horizontal; ver umbrales abajo |
@@ -26,6 +27,20 @@ cita `MIN_RATINGS_PER_ALBUM`). Los rieles de álbumes de la portada son **horizo
 que se apagan en cada extremo, y degradados de borde como capas aparte (una `mask-image` recortaría
 el menú "…" de las tarjetas, que en el riel se abre con `positioning="fixed"`). La grilla de dos
 filas (`layout="grid"`, el predeterminado) sigue en la página de género y en la Inicio anónima.
+
+### Próximos lanzamientos: riel y listado completo
+
+Las ventanas de Novedades (`<= hoy`) y Próximos lanzamientos (`> hoy`) no se solapan ni dejan hueco. Ambas
+leen `release_group`: el sync del calendario de Inicio (ADR 0029) ya vincula al catálogo lo que muestra, así que
+no se lee `release_calendar_entry`. **Qué aporta frente a Inicio**, que es el resumen: ventana de 180 días
+(Inicio: 60–90), orden cronológico (Inicio: popularidad), sin tope por artista ni por familia de géneros, fecha
+exacta en la tarjeta y un listado completo.
+
+`/explore?proximos=1` lista todo lo elegible, paginado (`FILTERED_PAGE_SIZE`) y en orden cronológico
+(`first_release_date`, `id`), con filtro por tipo (`?tipo=`) y **sin** selector de orden. No aplica el umbral de 6
+del riel (con 1 o 2 futuros se muestra) y sin resultados cae al estado vacío. Tiene menor prioridad que década,
+familia y género si se combinan en la URL. Servicio: `listUpcomingReleases` (riel) y `listUpcomingAlbums`
+(listado), con la condición compartida `upcomingCondition()`.
 
 ### Umbrales de los rieles por reglas (`src/services/discovery/constants.ts`)
 

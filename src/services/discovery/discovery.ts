@@ -25,6 +25,7 @@ import {
   MIN_REVIEWS_PER_ALBUM,
   NEW_RELEASE_CATEGORIES,
   NEW_RELEASE_WINDOW_DAYS,
+  UPCOMING_WINDOW_DAYS,
   RAIL_SIZE,
 } from "./constants";
 
@@ -60,6 +61,7 @@ export interface AlbumPage {
 export interface ExplorePage {
   featured: FeaturedCollection[];
   newReleases: ReleaseGroup[];
+  upcoming: ReleaseGroup[];
   decades: DecadeBucket[];
   families: FamilyBucket[];
   topRated: ReleaseGroup[];
@@ -154,6 +156,58 @@ export async function listNewReleases(limit = RAIL_SIZE): Promise<ReleaseGroup[]
 
   if (rows.length < MIN_ALBUMS_FOR_SECTION) return [];
   return rows.slice(0, limit).map(serializeAlbum);
+}
+
+/**
+ * Condición de "Próximos lanzamientos": `studio`/`single_ep` con fecha completa posterior a hoy y
+ * hasta hoy + `UPCOMING_WINDOW_DAYS`, con carátula. Lo de hoy ya cuenta como publicado
+ * (Novedades), así que las dos ventanas no se solapan ni dejan hueco.
+ */
+function upcomingCondition(): SQL {
+  return and(
+    sql`${releaseGroup.category} in ${NEW_RELEASE_CATEGORIES}`,
+    sql`${releaseGroup.firstReleaseDate} > current_date`,
+    sql`${releaseGroup.firstReleaseDate} <= current_date + ${UPCOMING_WINDOW_DAYS}::int`,
+    isNotNull(releaseGroup.coverThumbUrl),
+  ) as SQL;
+}
+
+const upcomingOrder = () => [asc(releaseGroup.firstReleaseDate), asc(releaseGroup.id)];
+
+/**
+ * Próximos lanzamientos de `/explore`: el más cercano primero, sin recorte por popularidad,
+ * artista ni familia. Devuelve `[]` (riel omitido) si hay menos de `MIN_ALBUMS_FOR_SECTION`.
+ */
+export async function listUpcomingReleases(limit = RAIL_SIZE): Promise<ReleaseGroup[]> {
+  const rows = await db
+    .select(albumColumns)
+    .from(releaseGroup)
+    .where(upcomingCondition())
+    .orderBy(...upcomingOrder())
+    .limit(Math.max(limit, MIN_ALBUMS_FOR_SECTION));
+
+  if (rows.length < MIN_ALBUMS_FOR_SECTION) return [];
+  return rows.slice(0, limit).map(serializeAlbum);
+}
+
+/** Listado completo y paginado de próximos lanzamientos (`/explore?proximos=1`), sin umbral. */
+export async function listUpcomingAlbums(
+  page = 1,
+  options: Pick<AlbumFilterOptions, "category"> = {},
+): Promise<AlbumPage> {
+  const { limit, offset } = paginate(page);
+  const { category } = options;
+  if (category !== undefined && !ReleaseGroupCategorySchema.safeParse(category).success) {
+    throw new ApiError("VALIDATION_ERROR", 400, "El tipo de álbum no es válido");
+  }
+  const rows = await db
+    .select(albumColumns)
+    .from(releaseGroup)
+    .where(and(upcomingCondition(), category !== undefined ? eq(releaseGroup.category, category) : undefined))
+    .orderBy(...upcomingOrder())
+    .limit(limit)
+    .offset(offset);
+  return toAlbumPage(rows, page);
 }
 
 /**
@@ -257,15 +311,16 @@ export async function listMostReviewed(limit = RAIL_SIZE): Promise<ReleaseGroup[
 
 /** Composición de la portada de `/explore` en una sola llamada. */
 export async function getExplorePage(): Promise<ExplorePage> {
-  const [featured, newReleases, decades, families, topRated, mostReviewed] = await Promise.all([
+  const [featured, newReleases, upcoming, decades, families, topRated, mostReviewed] = await Promise.all([
     listFeaturedCollections(),
     listNewReleases(),
+    listUpcomingReleases(),
     listDecades(),
     listGenreFamilies(),
     listTopRated(),
     listMostReviewed(),
   ]);
-  return { featured, newReleases, decades, families, topRated, mostReviewed };
+  return { featured, newReleases, upcoming, decades, families, topRated, mostReviewed };
 }
 
 // ---------------------------------------------------------------------------

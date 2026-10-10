@@ -12,8 +12,10 @@ import {
   listNewReleases,
   listRecentByYear,
   listTopRated,
+  listUpcomingAlbums,
+  listUpcomingReleases,
 } from "./discovery";
-import { FILTERED_PAGE_SIZE, MIN_ALBUMS_FOR_SECTION, NEW_RELEASE_WINDOW_DAYS, RAIL_SIZE } from "./constants";
+import { FILTERED_PAGE_SIZE, MIN_ALBUMS_FOR_SECTION, NEW_RELEASE_WINDOW_DAYS, RAIL_SIZE, UPCOMING_WINDOW_DAYS } from "./constants";
 
 const mocks = vi.hoisted(() => ({
   db: { select: vi.fn() },
@@ -157,6 +159,71 @@ describe("listNewReleases", () => {
   it("muestra el riel al alcanzar el umbral, acotado a RAIL_SIZE", async () => {
     capture(Array.from({ length: RAIL_SIZE + 3 }, (_, i) => albumRow(`n${i}`)));
     await expect(listNewReleases()).resolves.toHaveLength(RAIL_SIZE);
+  });
+});
+
+describe("próximos lanzamientos", () => {
+  const dialect = new PgDialect();
+
+  function capture(rows: unknown[]) {
+    const seen: { where?: SQL; order: SQL[]; limit?: number; offset?: number } = { order: [] };
+    const q: Record<string, unknown> = {};
+    q.from = () => q;
+    q.where = (w: SQL) => ((seen.where = w), q);
+    q.orderBy = (...o: SQL[]) => ((seen.order = o), q);
+    q.limit = (n: number) => ((seen.limit = n), q);
+    q.offset = (n: number) => ((seen.offset = n), q);
+    q.then = (resolve: (v: unknown) => unknown) => Promise.resolve(rows).then(resolve);
+    mocks.db.select.mockReturnValue(q);
+    return seen;
+  }
+
+  it("el riel toma lo posterior a hoy hasta hoy + ventana, con carátula, por fecha ascendente y sin rating", async () => {
+    const seen = capture(Array.from({ length: MIN_ALBUMS_FOR_SECTION }, (_, i) => albumRow(`u${i}`)));
+    await listUpcomingReleases();
+    const where = dialect.sqlToQuery(seen.where as SQL);
+    expect(where.sql).toContain("> current_date");
+    expect(where.sql).toContain("<= current_date +");
+    expect(where.sql).toContain('"cover_thumb_url" is not null');
+    expect(where.params).toContain(UPCOMING_WINDOW_DAYS);
+    const order = seen.order.map((o) => dialect.sqlToQuery(o).sql).join(",");
+    expect(order).toContain('"first_release_date" asc');
+    expect(order).toContain('"id" asc');
+    expect(order).not.toContain("rating");
+  });
+
+  it("el riel se omite bajo MIN_ALBUMS_FOR_SECTION y se acota a RAIL_SIZE", async () => {
+    capture([albumRow("u0")]);
+    await expect(listUpcomingReleases()).resolves.toEqual([]);
+    capture(Array.from({ length: RAIL_SIZE + 3 }, (_, i) => albumRow(`u${i}`)));
+    await expect(listUpcomingReleases()).resolves.toHaveLength(RAIL_SIZE);
+  });
+
+  it("el listado no aplica umbral: con 2 resultados los devuelve", async () => {
+    capture([albumRow("u0"), albumRow("u1")]);
+    const page = await listUpcomingAlbums();
+    expect(page.albums).toHaveLength(2);
+    expect(page.hasNext).toBe(false);
+  });
+
+  it("el listado pagina con una fila de más y desplaza por página", async () => {
+    const seen = capture(Array.from({ length: FILTERED_PAGE_SIZE + 1 }, (_, i) => albumRow(`u${i}`)));
+    const page = await listUpcomingAlbums(2);
+    expect(page.albums).toHaveLength(FILTERED_PAGE_SIZE);
+    expect(page.hasNext).toBe(true);
+    expect(seen.limit).toBe(FILTERED_PAGE_SIZE + 1);
+    expect(seen.offset).toBe(FILTERED_PAGE_SIZE);
+  });
+
+  it("el listado filtra por tipo y rechaza uno inválido", async () => {
+    const seen = capture([]);
+    await listUpcomingAlbums(1, { category: "studio" });
+    expect(dialect.sqlToQuery(seen.where as SQL).sql).toContain('"category" = $');
+    await expect(listUpcomingAlbums(1, { category: "otro" as never })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+  });
+
+  it("el listado rechaza una página inválida", async () => {
+    await expect(listUpcomingAlbums(0)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
   });
 });
 

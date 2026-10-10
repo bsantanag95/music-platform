@@ -34,6 +34,12 @@ export const NEW_RELEASE_CATEGORIES = ["studio", "single_ep"] as const;
 export const NEW_RELEASE_WINDOW_DAYS = 90;
 
 /**
+ * Ventana del riel y del listado de "Próximos lanzamientos" de `/explore`: desde mañana hasta hoy +
+ * N días. Más amplia que la de Inicio (60–90) porque Explorar es la vista completa, no el resumen.
+ */
+export const UPCOMING_WINDOW_DAYS = 180;
+
+/**
  * Cuenta curadora: sus listas públicas de álbumes son el contenido editorial
  * de `/explore`. Sin `password_hash` — no puede iniciar sesión. La siembra
  * `scripts/seed-discovery.ts` la crea; el frontend arma con este `username`

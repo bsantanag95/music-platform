@@ -95,4 +95,28 @@ describe("ExploreFilterBar", () => {
       "/es/explore?decada=1990&tipo=compilation&orden=az",
     );
   });
+
+  it("con hideSort no dibuja el selector de orden pero conserva el tipo", () => {
+    renderWithIntl(
+      <ExploreFilterBar
+        baseHref="/explore?proximos=1"
+        params={parseExploreListParams({ tipo: "studio" })}
+        categoryLabels={categoryLabels}
+        hideSort
+      />,
+    );
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "De estudio" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "Compilaciones" })).toHaveAttribute(
+      "href",
+      "/es/explore?proximos=1&tipo=compilation",
+    );
+  });
+
+  it("sin hideSort dibuja el selector de orden", () => {
+    renderWithIntl(
+      <ExploreFilterBar baseHref="/explore?decada=1990" params={parseExploreListParams({})} categoryLabels={categoryLabels} />,
+    );
+    expect(screen.getByRole("combobox")).toBeInTheDocument();
+  });
 });

@@ -73,6 +73,21 @@ const releaseGroup: ReleaseGroup = {
   coverResolved: false,
 };
 
+describe("AlbumCard — línea de datos", () => {
+  it("muestra año y tipo por omisión", () => {
+    renderWithIntl(<AlbumCard releaseGroup={releaseGroup} categoryLabel="Estudio" coverLabel="Carátula" />);
+    expect(screen.getByText("1973 · Estudio")).toBeInTheDocument();
+  });
+
+  it("con releaseDateLabel la fecha reemplaza al año", () => {
+    renderWithIntl(
+      <AlbumCard releaseGroup={releaseGroup} categoryLabel="Estudio" coverLabel="Carátula" releaseDateLabel="24 oct" />,
+    );
+    expect(screen.getByText("24 oct · Estudio")).toBeInTheDocument();
+    expect(screen.queryByText(/1973/)).not.toBeInTheDocument();
+  });
+});
+
 describe("AlbumCard — menú de acciones del disco (extend-album-quick-actions)", () => {
   const a = catalogEs.albumActions;
   const MARKS = { listened: false, stars: null, detailedScore: null, favorite: true, pending: false, lists: [] };

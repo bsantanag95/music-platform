@@ -21,6 +21,8 @@ interface AlbumRailProps {
    * flechas (portada de `/explore`, donde se apilan varios rieles).
    */
   layout?: "grid" | "scroll";
+  /** Fecha de lanzamiento ya formateada por id de álbum; reemplaza al año en la tarjeta. */
+  dateLabels?: Record<string, string>;
 }
 
 /**
@@ -37,6 +39,7 @@ export function AlbumRail({
   seeAll,
   id,
   layout = "grid",
+  dateLabels,
 }: AlbumRailProps) {
   if (albums.length === 0) return null;
   const headingId = id ? `${id}-heading` : undefined;
@@ -57,6 +60,7 @@ export function AlbumRail({
                 coverLabel={coverLabel}
                 authenticated={authenticated}
                 menuPositioning="fixed"
+                releaseDateLabel={dateLabels?.[album.id]}
               />
             </li>
           ))}
@@ -76,6 +80,7 @@ export function AlbumRail({
               categoryLabel={categoryLabels[album.category]}
               coverLabel={coverLabel}
               authenticated={authenticated}
+              releaseDateLabel={dateLabels?.[album.id]}
             />
           </li>
         ))}
