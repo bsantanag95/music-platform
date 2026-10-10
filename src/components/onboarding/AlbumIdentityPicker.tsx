@@ -123,31 +123,33 @@ export function AlbumIdentityPicker({ picked, onChange, audience }: AlbumIdentit
             resultCount={albums.length}
             labels={{ searching: t("door1.searching"), noResults: t("door1.noResults"), error: t("searchError") }}
           />
-          <ul className="themed-scrollbar flex max-h-72 flex-col gap-1 overflow-y-auto">
-            {albums.map((album) => {
-              const category = categoryKey(album.category);
-              const detail = [album.subtitle, album.year, category && t(`categories.${category}`)]
-                .filter(Boolean)
-                .join(" · ");
-              return (
-                <li key={album.id}>
-                  <button
-                    type="button"
-                    onClick={() => pick(album)}
-                    className="flex min-h-11 w-full items-center gap-2 rounded border border-ink-border bg-ink px-2 py-1.5 text-left transition-colors hover:border-amber"
-                  >
-                    <span aria-hidden="true" className="contents"><LazyCoverImage releaseGroupId={album.id} coverLabel="" className="size-8 shrink-0" /></span>
-                    <span className="min-w-0">
-                      <span className="block truncate font-body text-sm text-paper">{album.title}</span>
-                      {detail && (
-                        <span className="block truncate font-data text-xs text-paper-muted">{detail}</span>
-                      )}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          {albums.length > 0 && (
+            <ul className="themed-scrollbar flex max-h-72 flex-col gap-1 overflow-y-auto">
+              {albums.map((album) => {
+                const category = categoryKey(album.category);
+                const detail = [album.subtitle, album.year, category && t(`categories.${category}`)]
+                  .filter(Boolean)
+                  .join(" · ");
+                return (
+                  <li key={album.id}>
+                    <button
+                      type="button"
+                      onClick={() => pick(album)}
+                      className="flex min-h-11 w-full items-center gap-2 rounded border border-ink-border bg-ink px-2 py-1.5 text-left transition-colors hover:border-amber"
+                    >
+                      <span aria-hidden="true" className="contents"><LazyCoverImage releaseGroupId={album.id} coverLabel="" className="size-8 shrink-0" /></span>
+                      <span className="min-w-0">
+                        <span className="block truncate font-body text-sm text-paper">{album.title}</span>
+                        {detail && (
+                          <span className="block truncate font-data text-xs text-paper-muted">{detail}</span>
+                        )}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       )}
 

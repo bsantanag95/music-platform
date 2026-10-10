@@ -21,7 +21,7 @@ export function AudienceNote({ kind, audience }: AudienceNoteProps) {
       <Link
         href="/me/settings/privacy"
         target="_blank"
-        className="inline-flex min-h-11 items-center underline hover:text-paper sm:min-h-0"
+        className="-my-3.5 inline-flex min-h-11 items-center underline hover:text-paper sm:my-0 sm:min-h-0"
       >
         {t("change")}
       </Link>

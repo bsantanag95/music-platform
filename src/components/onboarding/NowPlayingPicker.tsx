@@ -187,33 +187,35 @@ export function NowPlayingPicker({ audience, onCountChange, storageKey }: NowPla
         {announcement}
       </p>
 
-      <ul className="themed-scrollbar flex max-h-72 flex-col gap-1 overflow-y-auto">
-        {results.map((candidate) => {
-          const key = candidateKey(candidate);
-          const category = categoryKey(candidate.category);
-          const detail = [candidate.subtitle, candidate.year, category && t(`categories.${category}`)]
-            .filter(Boolean)
-            .join(" · ");
-          return (
-            <li key={key}>
-              <button
-                type="button"
-                disabled={busyKeys.includes(key)}
-                onClick={() => void log(candidate)}
-                className="flex min-h-11 w-full items-center gap-2 rounded border border-ink-border bg-ink px-2 py-1.5 text-left transition-colors hover:border-amber disabled:opacity-50"
-              >
-                {candidate.type === "release-group" && (
-                  <span aria-hidden="true" className="contents"><LazyCoverImage releaseGroupId={candidate.id} coverLabel="" className="size-8 shrink-0" /></span>
-                )}
-                <span className="min-w-0">
-                  <span className="block truncate font-body text-sm text-paper">{candidate.title}</span>
-                  {detail && <span className="block truncate font-data text-xs text-paper-muted">{detail}</span>}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+      {results.length > 0 && (
+        <ul className="themed-scrollbar flex max-h-72 flex-col gap-1 overflow-y-auto">
+          {results.map((candidate) => {
+            const key = candidateKey(candidate);
+            const category = categoryKey(candidate.category);
+            const detail = [candidate.subtitle, candidate.year, category && t(`categories.${category}`)]
+              .filter(Boolean)
+              .join(" · ");
+            return (
+              <li key={key}>
+                <button
+                  type="button"
+                  disabled={busyKeys.includes(key)}
+                  onClick={() => void log(candidate)}
+                  className="flex min-h-11 w-full items-center gap-2 rounded border border-ink-border bg-ink px-2 py-1.5 text-left transition-colors hover:border-amber disabled:opacity-50"
+                >
+                  {candidate.type === "release-group" && (
+                    <span aria-hidden="true" className="contents"><LazyCoverImage releaseGroupId={candidate.id} coverLabel="" className="size-8 shrink-0" /></span>
+                  )}
+                  <span className="min-w-0">
+                    <span className="block truncate font-body text-sm text-paper">{candidate.title}</span>
+                    {detail && <span className="block truncate font-data text-xs text-paper-muted">{detail}</span>}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       <AudienceNote kind="diary" audience={audience} />
     </section>

@@ -160,25 +160,27 @@ export function ArtistFollowPicker({ onCountChange, storageKey }: ArtistFollowPi
         <p role="status" aria-live="polite" className="sr-only">
           {announcement}
         </p>
-        <ul className="themed-scrollbar flex max-h-72 flex-col gap-1 overflow-y-auto">
-          {results.map((candidate) => (
-            <li key={candidate.id}>
-              <button
-                type="button"
-                disabled={busyIds.includes(candidate.id)}
-                onClick={() => void follow(candidate)}
-                className="flex min-h-11 w-full items-center gap-2 rounded border border-ink-border bg-ink px-2 py-1.5 text-left transition-colors hover:border-amber disabled:opacity-50"
-              >
-                <span className="min-w-0">
-                  <span className="block truncate font-body text-sm text-paper">{candidate.title}</span>
-                  {candidate.subtitle && (
-                    <span className="block truncate font-data text-xs text-paper-muted">{candidate.subtitle}</span>
-                  )}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
+        {results.length > 0 && (
+          <ul className="themed-scrollbar flex max-h-72 flex-col gap-1 overflow-y-auto">
+            {results.map((candidate) => (
+              <li key={candidate.id}>
+                <button
+                  type="button"
+                  disabled={busyIds.includes(candidate.id)}
+                  onClick={() => void follow(candidate)}
+                  className="flex min-h-11 w-full items-center gap-2 rounded border border-ink-border bg-ink px-2 py-1.5 text-left transition-colors hover:border-amber disabled:opacity-50"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate font-body text-sm text-paper">{candidate.title}</span>
+                    {candidate.subtitle && (
+                      <span className="block truncate font-data text-xs text-paper-muted">{candidate.subtitle}</span>
+                    )}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <p className="font-data text-xs text-paper-muted">{t("artists.note")}</p>

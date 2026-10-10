@@ -109,10 +109,10 @@ Un solo botón de salida en los pasos 1 y 2: «Saltar por ahora» si no se hizo 
 si ya hay algo; ambos guardan los álbumes elegidos (antes «Saltar» los descartaba en silencio). El paso
 3 termina con «Terminar». Tras el cierre (`POST /api/me/onboarding`) se muestra un **resumen** («Todo
 listo»: favoritos guardados, artistas seguidos, escuchas registradas —solo los conteos mayores que
-cero—) con los siguientes pasos: Ir a Inicio, Explorar (solo si `EXPLORE_ENABLED` lo permite) y
-Buscar gente; además sugiere, solo entre lo que no hizo, «Elegir tus géneros» (Ajustes → Perfil, donde
-ya está el selector de géneros de la identidad musical) y «Valorar un disco» (buscador de álbumes, si no
-registró ninguna escucha). Los géneros y la valoración no son pasos del flujo: con ellos serían seis y
+cero—) con una **única acción principal**, «Ir a Inicio», y el resto como lista secundaria «También
+puedes» (cambio `polish-welcome-layout`): primero lo que no hizo, «Elegir tus géneros» (Ajustes → Perfil,
+donde ya está el selector de géneros de la identidad musical) y «Valorar un disco» (buscador de álbumes, si no
+registró ninguna escucha); después Explorar (solo si `EXPLORE_ENABLED` lo permite) y Buscar gente. Los géneros y la valoración no son pasos del flujo: con ellos serían seis y
 duplicarían pantallas que ya existen. Es estado del cliente, sin ruta propia: recargar redirige a Inicio.
 
 **Saltar sigue fijando `onboarded_at`** aunque no se haya hecho nada. Dejarlo nulo haría que el login con

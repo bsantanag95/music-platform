@@ -117,39 +117,23 @@ export function WelcomeFlow({ userId, favoriteAudience, diaryAudience, exploreEn
             ))}
           </ul>
         )}
+        {/* Una sola acción principal; lo demás son salidas secundarias en lista, no cinco botones iguales. */}
         <div className="flex flex-col gap-3">
           <p className="font-data text-xs uppercase tracking-wider text-paper-muted">{t("summary.next")}</p>
-          <div className="flex flex-wrap items-center gap-3">
-            <Button type="button" className="min-h-11" onClick={goHome}>
-              {t("summary.goHome")}
-            </Button>
-            {exploreEnabled && (
-              <Link href="/explore">
-                <Button variant="secondary" className="min-h-11">
-                  {t("summary.explore")}
-                </Button>
-              </Link>
-            )}
-            <Link href="/users">
-              <Button variant="secondary" className="min-h-11">
-                {t("summary.findPeople")}
-              </Button>
-            </Link>
-            {/* Lo que aún no hizo: géneros de su identidad musical (Ajustes → Perfil) y valorar un disco. */}
-            <Link href="/me/settings/profile">
-              <Button variant="secondary" className="min-h-11">
-                {t("summary.suggestGenres")}
-              </Button>
-            </Link>
-            {summary.listens === 0 && (
-              <Link href="/search?type=album">
-                <Button variant="secondary" className="min-h-11">
-                  {t("summary.suggestRate")}
-                </Button>
-              </Link>
-            )}
-          </div>
+          <Button type="button" className="min-h-11 w-full sm:w-auto sm:self-start" onClick={goHome}>
+            {t("summary.goHome")}
+          </Button>
         </div>
+        <nav aria-label={t("summary.also")} className="flex flex-col gap-3">
+          <p className="font-data text-xs uppercase tracking-wider text-paper-muted">{t("summary.also")}</p>
+          <ul className="flex flex-col divide-y divide-ink-border overflow-hidden rounded-lg border border-ink-border bg-ink-surface">
+            {/* Lo que aún no hizo (géneros de su identidad musical, valorar un disco) va primero. */}
+            <SummaryLink href="/me/settings/profile">{t("summary.suggestGenres")}</SummaryLink>
+            {summary.listens === 0 && <SummaryLink href="/search?type=album">{t("summary.suggestRate")}</SummaryLink>}
+            {exploreEnabled && <SummaryLink href="/explore">{t("summary.explore")}</SummaryLink>}
+            <SummaryLink href="/users">{t("summary.findPeople")}</SummaryLink>
+          </ul>
+        </nav>
       </div>
     );
   }
@@ -241,5 +225,31 @@ export function WelcomeFlow({ userId, favoriteAudience, diaryAudience, exploreEn
         )}
       </div>
     </div>
+  );
+}
+
+// Salida secundaria del resumen: fila de lista con flecha, para que no compita con «Ir a Inicio».
+function SummaryLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <li>
+      <Link
+        href={href}
+        className="group flex min-h-11 items-center justify-between gap-3 px-4 py-3 font-body text-paper transition-colors hover:bg-ink hover:text-amber"
+      >
+        {children}
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+          className="size-4 shrink-0 text-paper-muted transition-[color,transform] duration-150 group-hover:translate-x-0.5 group-hover:text-amber"
+        >
+          <path d="M9 6l6 6-6 6" />
+        </svg>
+      </Link>
+    </li>
   );
 }

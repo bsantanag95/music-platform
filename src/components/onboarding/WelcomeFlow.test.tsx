@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AnchorHTMLAttributes, ReactNode } from "react";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { WelcomeFlow } from "./WelcomeFlow";
@@ -237,6 +237,24 @@ describe("WelcomeFlow", () => {
     await screen.findByRole("heading", { name: "Todo listo" });
     expect(screen.queryByRole("link", { name: "Valorar un disco" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Elegir tus géneros" })).toBeInTheDocument();
+  });
+
+  it("el resumen tiene una sola acción principal y las demás salidas van en una lista secundaria", async () => {
+    const user = userEvent.setup();
+    renderFlow();
+    await user.click(screen.getByRole("button", { name: "Saltar por ahora" }));
+
+    await screen.findByRole("heading", { name: "Todo listo" });
+    // Un único botón de acción: «Ir a Inicio». Lo demás son enlaces dentro de «También puedes».
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Ir a Inicio" })).toBeInTheDocument();
+    const also = screen.getByRole("navigation", { name: "También puedes" });
+    expect(within(also).getAllByRole("link").map((link) => link.textContent)).toEqual([
+      "Elegir tus géneros",
+      "Valorar un disco",
+      "Explorar álbumes",
+      "Buscar gente",
+    ]);
   });
 
   it("ofrece Explorar en el resumen solo si está activo", async () => {
