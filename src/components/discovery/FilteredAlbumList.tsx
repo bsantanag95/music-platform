@@ -33,6 +33,10 @@ interface FilteredAlbumListProps {
   siblings?: { label: string; links: SliceLink[] };
   /** Enlace relacionado bajo el título (la página completa del género). */
   related?: { href: string; label: string };
+  /** Fecha de lanzamiento ya formateada por id de álbum; reemplaza al año en la tarjeta. */
+  dateLabels?: Record<string, string>;
+  /** Sin selector de orden (el listado tiene un orden fijo, p. ej. cronológico). */
+  hideSort?: boolean;
 }
 
 function PageArrow({ direction }: { direction: "prev" | "next" }) {
@@ -69,11 +73,13 @@ export function FilteredAlbumList({
   authenticated = false,
   siblings,
   related,
+  dateLabels,
+  hideSort = false,
 }: FilteredAlbumListProps) {
   const t = useTranslations("catalog.explore");
   const tCommon = useTranslations("common");
   const { albums, page, hasNext } = result;
-  const filtered = exploreListFiltered(params);
+  const filtered = hideSort ? params.category !== undefined : exploreListFiltered(params);
 
   const pageLink =
     "inline-flex items-center gap-1.5 rounded-md border border-ink-border px-3 py-1.5 font-data text-sm text-paper transition-colors hover:border-amber";
@@ -131,7 +137,7 @@ export function FilteredAlbumList({
         </nav>
       ) : null}
 
-      <ExploreFilterBar baseHref={baseHref} params={params} categoryLabels={categoryLabels} />
+      <ExploreFilterBar baseHref={baseHref} params={params} categoryLabels={categoryLabels} hideSort={hideSort} />
 
       {albums.length === 0 ? (
         <EmptyState
@@ -158,6 +164,7 @@ export function FilteredAlbumList({
                 categoryLabel={categoryLabels[album.category]}
                 coverLabel={coverLabel}
                 authenticated={authenticated}
+                releaseDateLabel={dateLabels?.[album.id]}
               />
             </li>
           ))}

@@ -23,12 +23,14 @@ interface ExploreFilterBarProps {
   baseHref: string;
   params: ExploreListParams;
   categoryLabels: Record<ReleaseGroupCategory, string>;
+  /** Oculta el selector de orden (listados con orden fijo). */
+  hideSort?: boolean;
 }
 
 // Tipo y orden de los listados filtrados de Explorar. El estado vive en la URL (`tipo`, `orden`):
 // el tipo es una fila de enlaces (funciona sin JavaScript) y el orden un `<select>` que navega al
 // cambiar. Cambiar cualquiera vuelve a la página 1. Textos compartidos con la página de género.
-export function ExploreFilterBar({ baseHref, params, categoryLabels }: ExploreFilterBarProps) {
+export function ExploreFilterBar({ baseHref, params, categoryLabels, hideSort = false }: ExploreFilterBarProps) {
   const t = useTranslations("catalog.genres.page.filters");
   const router = useRouter();
 
@@ -62,25 +64,27 @@ export function ExploreFilterBar({ baseHref, params, categoryLabels }: ExploreFi
           );
         })}
       </nav>
-      <FilterSelect
-        name="orden"
-        value={ALBUM_SORT_PARAM[params.sort]}
-        onChange={(value) =>
-          router.replace(
-            exploreListHref(baseHref, params, { sort: SORTS.find((s) => ALBUM_SORT_PARAM[s] === value) ?? "best" }),
-            { scroll: false },
-          )
-        }
-        ariaLabel={t("sortLabel")}
-        label={t("sortLabel")}
-        widthClassName="w-[20ch]"
-      >
-        {SORTS.map((sort) => (
-          <option key={sort} value={ALBUM_SORT_PARAM[sort]}>
-            {t(SORT_LABEL_KEY[sort])}
-          </option>
-        ))}
-      </FilterSelect>
+      {hideSort ? null : (
+        <FilterSelect
+          name="orden"
+          value={ALBUM_SORT_PARAM[params.sort]}
+          onChange={(value) =>
+            router.replace(
+              exploreListHref(baseHref, params, { sort: SORTS.find((s) => ALBUM_SORT_PARAM[s] === value) ?? "best" }),
+              { scroll: false },
+            )
+          }
+          ariaLabel={t("sortLabel")}
+          label={t("sortLabel")}
+          widthClassName="w-[20ch]"
+        >
+          {SORTS.map((sort) => (
+            <option key={sort} value={ALBUM_SORT_PARAM[sort]}>
+              {t(SORT_LABEL_KEY[sort])}
+            </option>
+          ))}
+        </FilterSelect>
+      )}
     </div>
   );
 }

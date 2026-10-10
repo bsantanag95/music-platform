@@ -6,18 +6,20 @@ import { AlbumRail } from "@/components/discovery/AlbumRail";
 import { CollectionRail } from "@/components/discovery/CollectionRail";
 import { DecadeHistogram } from "@/components/discovery/DecadeHistogram";
 import { FamilyGrid, type FamilyTile } from "@/components/discovery/FamilyGrid";
+import { releaseDateLabel } from "@/components/discovery/release-date-label";
 import { FilteredAlbumList } from "@/components/discovery/FilteredAlbumList";
 import { ApiError } from "@/lib/api/errors";
 import { isExploreEnabled } from "@/lib/config/discovery";
 import { genreHref } from "@/lib/catalog-links";
 import { getCurrentUser } from "@/services/auth/authorization";
-import { CURATOR_USERNAME, MIN_RATINGS_PER_ALBUM, NEW_RELEASE_WINDOW_DAYS } from "@/services/discovery/constants";
+import { CURATOR_USERNAME, MIN_RATINGS_PER_ALBUM, NEW_RELEASE_WINDOW_DAYS, UPCOMING_WINDOW_DAYS } from "@/services/discovery/constants";
 import {
   getExplorePage,
   listAlbumsByDecade,
   listAlbumsByFamily,
   listAlbumsByGenre,
   listDecades,
+  listUpcomingAlbums,
   listGenreFamilies,
   type FamilyBucket,
 } from "@/services/discovery/discovery";
@@ -27,7 +29,7 @@ import type { ReleaseGroupCategory } from "@/lib/api/schemas";
 
 interface ExplorePageProps {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ decada?: string; familia?: string; genero?: string; tipo?: string; orden?: string; page?: string }>;
+  searchParams: Promise<{ proximos?: string; decada?: string; familia?: string; genero?: string; tipo?: string; orden?: string; page?: string }>;
 }
 
 export async function generateMetadata({ params }: ExplorePageProps): Promise<Metadata> {
@@ -45,7 +47,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
   const tCat = await getTranslations("catalog.artist");
   const tGenres = await getTranslations("catalog.genres");
   const raw = await searchParams;
-  const { decada, familia, genero } = raw;
+  const { decada, familia, genero, proximos } = raw;
   const listParams = parseExploreListParams(raw);
   const listOptions = { category: listParams.category, sort: listParams.sort };
   const numberFormat = new Intl.NumberFormat(locale);
@@ -60,6 +62,14 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
   // Sesión para el menú de acciones de cada disco (openspec: extend-album-quick-actions); antes
   // las tarjetas trataban a todos como anónimos.
   const authenticated = (await getCurrentUser()) !== null;
+  const dateLabelsFor = (albums: { id: string; firstReleaseDate: string | null }[]): Record<string, string> => {
+    const labels: Record<string, string> = {};
+    for (const album of albums) {
+      const label = releaseDateLabel(album.firstReleaseDate, locale);
+      if (label) labels[album.id] = label;
+    }
+    return labels;
+  };
   const listProps = { params: listParams, categoryLabels, coverLabel, authenticated };
 
   // --- Vista filtrada: un corte a la vez; prioridad década > familia > género. Los cortes hermanos
@@ -142,6 +152,25 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
     );
   }
 
+  if (proximos === "1") {
+    // Orden fijo (cronológico): el selector de orden no aplica y el `orden` de la URL se descarta.
+    const upcomingParams = { ...listParams, sort: "best" as const };
+    const result = await listUpcomingAlbums(listParams.page, { category: listParams.category });
+    return (
+      <FilteredAlbumList
+        {...listProps}
+        params={upcomingParams}
+        kicker={t("kickerUpcoming")}
+        heading={t("upcomingResultsHeading")}
+        crumb={t("upcomingCrumb")}
+        result={result}
+        baseHref="/explore?proximos=1"
+        hideSort
+        dateLabels={dateLabelsFor(result.albums)}
+      />
+    );
+  }
+
   // --- Portada ---
   const explore = await getExplorePage();
   const familyTiles = (buckets: FamilyBucket[]): FamilyTile[] =>
@@ -190,6 +219,19 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         albums={explore.newReleases}
         categoryLabels={categoryLabels}
         coverLabel={coverLabel}
+      />
+
+      <AlbumRail
+        layout="scroll"
+        id="proximos"
+        authenticated={authenticated}
+        heading={t("upcomingHeading")}
+        description={t("upcomingDescription", { days: UPCOMING_WINDOW_DAYS })}
+        albums={explore.upcoming}
+        categoryLabels={categoryLabels}
+        coverLabel={coverLabel}
+        seeAll={{ href: "/explore?proximos=1", label: t("upcomingSeeAll") }}
+        dateLabels={dateLabelsFor(explore.upcoming)}
       />
 
       <DecadeHistogram
