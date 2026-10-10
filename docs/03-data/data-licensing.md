@@ -133,6 +133,10 @@ MetaBrainz Foundation, más la aclaración de no afiliación. Si cambian las con
 de licencia de MetaBrainz, el texto de ese componente (`messages/{es,en}/footer.json`,
 clave `attribution`) es lo que hay que actualizar.
 
+El pie tiene una variante reducida (`<Footer variant="minimal">`, pantallas de foco como `/welcome`,
+cambio `focus-chrome-on-welcome`) que **conserva** este bloque de atribución completo: reducir la navegación
+de una pantalla nunca debe quitar la atribución de las fuentes cuyos datos o carátulas muestra.
+
 La atribución de Wikipedia y de las fotos de Commons (D) no va en el footer: es por contenido y
 se muestra junto al resumen y bajo la foto, en la página del artista, y junto al texto «Sobre el género» en la
 página de género.

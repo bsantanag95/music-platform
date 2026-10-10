@@ -55,6 +55,19 @@ registrar la de The Weeknd. Lo registrado sale de los resultados y se lista apar
 (`DELETE /api/me/diary/{id}`): un clic repetido no duplica la entrada y un clic errado se corrige. Un
 fallo de búsqueda se dice como error, nunca como «Sin resultados».
 
+## Pantalla de foco
+
+`/welcome` se muestra con navegación reducida (cambio `focus-chrome-on-welcome`, hallazgo 19 de la
+auditoría): el **Header** queda en el logo (la salida a Inicio; el progreso se conserva en la pestaña y
+Inicio sigue ofreciendo «Completa tu perfil musical») y el selector de idioma, sin buscador, navegación
+general, acciones rápidas ni menú de usuario; el **pie** queda en la atribución de fuentes de datos y los
+enlaces legales (sin los grupos Explorar, Cuenta, Recursos ni redes). La atribución no se recorta: la
+pantalla muestra carátulas y datos de MusicBrainz y del Cover Art Archive, y el pie es donde se cumple
+la licencia (`docs/03-data/data-licensing.md`). El criterio es `isFocusRoute`
+(`src/lib/focus-routes.ts`, hoy solo `/welcome`); el Header lo aplica por dentro y el layout elige el pie
+con `FooterSlot` entre `<Footer>` y `<Footer variant="minimal">`. Un salto al contenido global sigue siendo
+un cambio aparte: no hay un `id` común en el `<main>` de las páginas.
+
 ## Recargar no pierde el trabajo
 
 El paso actual, los álbumes elegidos, los artistas seguidos, las escuchas registradas y lo guardado en Pendientes (con el id de la

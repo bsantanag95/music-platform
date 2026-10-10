@@ -7,6 +7,7 @@ import { routing } from "@/i18n/routing";
 import type { AuthUser } from "@/lib/api/schemas";
 import type { Permission } from "@/services/auth/authorization";
 import { apiFetch, ApiError } from "@/lib/api/client";
+import { isFocusRoute } from "@/lib/focus-routes";
 import { LogoutResponseSchema } from "@/lib/api/schemas";
 import { HeaderSearch } from "./HeaderSearch";
 import { Logo } from "./Logo";
@@ -127,6 +128,19 @@ export function Header({
       </Link>
     </>
   );
+
+  // Pantalla de foco (onboarding): sin buscador, navegación ni menú de usuario; solo el logo (la
+  // salida a Inicio) y el idioma. Va después de todos los hooks para respetar su orden.
+  if (isFocusRoute(pathname)) {
+    return (
+      <header className="border-b border-ink-border">
+        <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-3">
+          <Logo />
+          <LocaleSwitcher t={t} currentLocale={currentLocale} onChange={handleLocaleChange} />
+        </div>
+      </header>
+    );
+  }
 
   return (
     // Fija arriba con fondo translúcido y desenfoque: la búsqueda y la

@@ -13,22 +13,31 @@ import { Logo } from "./Logo";
 interface FooterProps {
   user?: Pick<AuthUser, "id" | "username" | "displayName"> | null;
   exploreEnabled?: boolean;
+  /**
+   * `minimal` (pantallas de foco, p. ej. el onboarding): solo la atribución de fuentes y los
+   * enlaces legales. La atribución de MusicBrainz / Cover Art Archive no se omite en ninguna
+   * variante: es lo que cumple la licencia en las páginas que muestran sus datos y carátulas
+   * (docs/03-data/data-licensing.md).
+   */
+  variant?: "full" | "minimal";
 }
 
 // Pie de página global. Server Component: no necesita estado ni interactividad
 // (el selector de idioma vive solo en el Header; "volver arriba" es un ancla).
 // La variante logueado/anónimo se resuelve con el mismo `user` que recibe el
 // Header, sin una segunda consulta de sesión.
-export async function Footer({ user = null, exploreEnabled = false }: FooterProps) {
+export async function Footer({ user = null, exploreEnabled = false, variant = "full" }: FooterProps) {
   const t = await getTranslations("footer");
   const tCommon = await getTranslations("common");
   const tExplore = await getTranslations("catalog.explore");
   const appName = tCommon("appName");
   const year = String(new Date().getFullYear());
+  const minimal = variant === "minimal";
 
   return (
     <footer className="w-full overflow-x-clip border-t border-ink-border bg-ink px-4 py-12 font-data text-sm">
-      <div className="mx-auto flex max-w-6xl flex-col gap-10">
+      <div className={`mx-auto flex flex-col gap-10 ${minimal ? "max-w-3xl" : "max-w-6xl"}`}>
+        {minimal ? null : (
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1.2fr]">
           {/* Identidad */}
           <div className="flex flex-col gap-3">
@@ -110,11 +119,12 @@ export async function Footer({ user = null, exploreEnabled = false }: FooterProp
             </nav>
           </div>
         </div>
+        )}
 
         {/* Bloque de atribución de fuentes de datos */}
         <section
           aria-label={t("attribution.label")}
-          className="flex flex-col gap-2 border-t border-ink-border pt-6 font-body text-sm text-paper-muted"
+          className={`flex flex-col gap-2 font-body text-sm text-paper-muted ${minimal ? "" : "border-t border-ink-border pt-6"}`}
         >
           <h2 className="font-display text-xs font-bold uppercase tracking-wide text-paper">
             {t("attribution.label")}
@@ -176,9 +186,11 @@ export async function Footer({ user = null, exploreEnabled = false }: FooterProp
               <FooterLink href="/guidelines">{t("bottom.guidelines")}</FooterLink>
             </ul>
           </nav>
-          <a href="#top" className="transition-colors hover:text-paper">
-            {t("backToTop")} ↑
-          </a>
+          {minimal ? null : (
+            <a href="#top" className="transition-colors hover:text-paper">
+              {t("backToTop")} ↑
+            </a>
+          )}
         </div>
       </div>
     </footer>

@@ -22,6 +22,9 @@ vi.mock("@/services/storage/avatar-urls", () => ({ resolveImageUrl: async () => 
 vi.mock("@/services/social/following", () => ({ countPendingFollowRequests: mocks.countPendingFollowRequests }));
 vi.mock("@/components/layout/Header", () => ({ Header: mocks.header }));
 vi.mock("@/components/layout/Footer", () => ({ Footer: mocks.footer }));
+vi.mock("@/components/layout/FooterSlot", () => ({
+  FooterSlot: ({ full }: { full: React.ReactNode }) => <>{full}</>,
+}));
 vi.mock("./providers", () => ({ Providers: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
 
 import RootLayout from "./layout";

@@ -6,6 +6,7 @@ import { getMessages } from "next-intl/server";
 import { Providers } from "./providers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { FooterSlot } from "@/components/layout/FooterSlot";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
 import { countPendingFollowRequests } from "@/services/social/following";
@@ -88,7 +89,10 @@ export default async function RootLayout({
             platformPermissions={platformPermissions}
           />
           <Providers>{children}</Providers>
-          <Footer user={publicUser} exploreEnabled={exploreEnabled} />
+          <FooterSlot
+            full={<Footer user={publicUser} exploreEnabled={exploreEnabled} />}
+            minimal={<Footer variant="minimal" />}
+          />
         </NextIntlClientProvider>
       </body>
     </html>
