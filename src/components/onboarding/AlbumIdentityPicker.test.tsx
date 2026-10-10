@@ -67,6 +67,12 @@ beforeEach(() => {
 });
 
 describe("AlbumIdentityPicker", () => {
+  it("sin búsqueda ni elegidos no deja una lista vacía ocupando espacio", () => {
+    renderWithIntl(<Harness />);
+
+    expect(screen.queryByRole("list")).not.toBeInTheDocument();
+  });
+
   it("acota la búsqueda completa a álbumes de estudio", async () => {
     mocks.searchAlbums.mockResolvedValue(response);
     const user = userEvent.setup();

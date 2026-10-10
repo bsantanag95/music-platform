@@ -92,7 +92,8 @@
     "findPeople": "Buscar gente",
     "wanted": "{count, plural, one {# elemento en tus Pendientes} other {# elementos en tus Pendientes}}",
     "suggestGenres": "Elegir tus géneros",
-    "suggestRate": "Valorar un disco"
+    "suggestRate": "Valorar un disco",
+    "also": "También puedes"
   },
   "wanted": {
     "heading": "Para escuchar después",

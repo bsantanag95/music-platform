@@ -92,7 +92,8 @@
     "findPeople": "Find people",
     "wanted": "{count, plural, one {# item in your Pending list} other {# items in your Pending list}}",
     "suggestGenres": "Pick your genres",
-    "suggestRate": "Rate an album"
+    "suggestRate": "Rate an album",
+    "also": "You can also"
   },
   "wanted": {
     "heading": "To listen to later",

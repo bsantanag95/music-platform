@@ -33,7 +33,7 @@ export function SearchStatus({ searchable, pending, failed, resultCount, labels 
     }
   }
   return (
-    <div role="status" aria-live="polite" className="min-h-4 font-data text-xs">
+    <div role="status" aria-live="polite" className="font-data text-xs">
       {content}
     </div>
   );
