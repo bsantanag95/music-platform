@@ -136,26 +136,50 @@ export async function listFeaturedCollections(): Promise<FeaturedCollection[]> {
 }
 
 /**
- * Novedades de `/explore`: `studio`/`single_ep` lanzados en los últimos `NEW_RELEASE_WINDOW_DAYS`
- * días (fecha completa, hasta hoy), con carátula, por `first_release_date` descendente. Devuelve
- * `[]` (riel omitido) si hay menos de `MIN_ALBUMS_FOR_SECTION` álbumes elegibles.
+ * Condición de "Novedades": `studio`/`single_ep` lanzados en los últimos `NEW_RELEASE_WINDOW_DAYS`
+ * días (fecha completa, hasta hoy, inclusive), con carátula. La comparten el riel y el listado.
+ */
+function newReleasesCondition(): SQL {
+  return and(
+    sql`${releaseGroup.category} in ${NEW_RELEASE_CATEGORIES}`,
+    sql`${releaseGroup.firstReleaseDate} between current_date - ${NEW_RELEASE_WINDOW_DAYS}::int and current_date`,
+    isNotNull(releaseGroup.coverThumbUrl),
+  ) as SQL;
+}
+
+const newReleasesOrder = () => [desc(releaseGroup.firstReleaseDate), asc(releaseGroup.id)];
+
+/**
+ * Novedades de `/explore`: el más reciente primero. Devuelve `[]` (riel omitido) si hay menos de
+ * `MIN_ALBUMS_FOR_SECTION` álbumes elegibles.
  */
 export async function listNewReleases(limit = RAIL_SIZE): Promise<ReleaseGroup[]> {
   const rows = await db
     .select(albumColumns)
     .from(releaseGroup)
-    .where(
-      and(
-        sql`${releaseGroup.category} in ${NEW_RELEASE_CATEGORIES}`,
-        sql`${releaseGroup.firstReleaseDate} between current_date - ${NEW_RELEASE_WINDOW_DAYS}::int and current_date`,
-        isNotNull(releaseGroup.coverThumbUrl),
-      ),
-    )
-    .orderBy(desc(releaseGroup.firstReleaseDate), asc(releaseGroup.id))
+    .where(newReleasesCondition())
+    .orderBy(...newReleasesOrder())
     .limit(Math.max(limit, MIN_ALBUMS_FOR_SECTION));
 
   if (rows.length < MIN_ALBUMS_FOR_SECTION) return [];
   return rows.slice(0, limit).map(serializeAlbum);
+}
+
+/** Listado completo y paginado de novedades (`/explore?novedades=1`), sin umbral. */
+export async function listNewAlbums(page = 1, options: Pick<AlbumFilterOptions, "category"> = {}): Promise<AlbumPage> {
+  const { limit, offset } = paginate(page);
+  const { category } = options;
+  if (category !== undefined && !ReleaseGroupCategorySchema.safeParse(category).success) {
+    throw new ApiError("VALIDATION_ERROR", 400, "El tipo de álbum no es válido");
+  }
+  const rows = await db
+    .select(albumColumns)
+    .from(releaseGroup)
+    .where(and(newReleasesCondition(), category !== undefined ? eq(releaseGroup.category, category) : undefined))
+    .orderBy(...newReleasesOrder())
+    .limit(limit)
+    .offset(offset);
+  return toAlbumPage(rows, page);
 }
 
 /**
