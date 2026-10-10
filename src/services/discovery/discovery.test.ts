@@ -9,9 +9,11 @@ import {
   listFeaturedCollections,
   listGenreFamilies,
   listMostReviewed,
+  listNewReleases,
+  listRecentByYear,
   listTopRated,
 } from "./discovery";
-import { FILTERED_PAGE_SIZE, MIN_ALBUMS_FOR_SECTION } from "./constants";
+import { FILTERED_PAGE_SIZE, MIN_ALBUMS_FOR_SECTION, NEW_RELEASE_WINDOW_DAYS, RAIL_SIZE } from "./constants";
 
 const mocks = vi.hoisted(() => ({
   db: { select: vi.fn() },
@@ -113,6 +115,55 @@ describe("rieles por reglas: degradación grácil", () => {
   it("listMostReviewed omite el riel bajo umbral", async () => {
     mocks.db.select.mockReturnValue(chain([{ ...albumRow("a0"), reviewCount: 2 }]));
     await expect(listMostReviewed()).resolves.toEqual([]);
+  });
+});
+
+describe("listNewReleases", () => {
+  const dialect = new PgDialect();
+
+  // Captura el `where` y el `orderBy` que arma la consulta para inspeccionar su SQL.
+  function capture(rows: unknown[]) {
+    const seen: { where?: SQL; order: SQL[] } = { order: [] };
+    const q: Record<string, unknown> = {};
+    q.from = () => q;
+    q.where = (w: SQL) => ((seen.where = w), q);
+    q.orderBy = (...o: SQL[]) => ((seen.order = o), q);
+    q.limit = () => q;
+    q.then = (resolve: (v: unknown) => unknown) => Promise.resolve(rows).then(resolve);
+    mocks.db.select.mockReturnValue(q);
+    return seen;
+  }
+
+  it("filtra por ventana de fecha completa, hasta hoy, con carátula, y ordena por fecha", async () => {
+    const seen = capture(Array.from({ length: MIN_ALBUMS_FOR_SECTION }, (_, i) => albumRow(`n${i}`)));
+    await listNewReleases();
+    const where = dialect.sqlToQuery(seen.where as SQL);
+    expect(where.sql).toContain("between current_date -");
+    expect(where.sql).toContain("and current_date");
+    expect(where.sql).toContain('"cover_thumb_url" is not null');
+    expect(where.sql).not.toContain("first_release_year");
+    expect(where.params).toContain(NEW_RELEASE_WINDOW_DAYS);
+    const order = seen.order.map((o) => dialect.sqlToQuery(o).sql).join(",");
+    expect(order).toContain('"first_release_date" desc');
+    expect(order).toContain('"id" asc');
+    expect(order).not.toContain("created_at");
+  });
+
+  it("omite el riel (devuelve []) bajo MIN_ALBUMS_FOR_SECTION", async () => {
+    capture([albumRow("n0")]);
+    await expect(listNewReleases()).resolves.toEqual([]);
+  });
+
+  it("muestra el riel al alcanzar el umbral, acotado a RAIL_SIZE", async () => {
+    capture(Array.from({ length: RAIL_SIZE + 3 }, (_, i) => albumRow(`n${i}`)));
+    await expect(listNewReleases()).resolves.toHaveLength(RAIL_SIZE);
+  });
+});
+
+describe("listRecentByYear", () => {
+  it("conserva la lógica por año del riel de género, sin umbral", async () => {
+    mocks.db.select.mockReturnValue(chain([albumRow("g0")]));
+    await expect(listRecentByYear(12)).resolves.toHaveLength(1);
   });
 });
 

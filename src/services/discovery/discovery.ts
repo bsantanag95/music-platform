@@ -24,6 +24,7 @@ import {
   MIN_RATINGS_PER_ALBUM,
   MIN_REVIEWS_PER_ALBUM,
   NEW_RELEASE_CATEGORIES,
+  NEW_RELEASE_WINDOW_DAYS,
   RAIL_SIZE,
 } from "./constants";
 
@@ -133,10 +134,34 @@ export async function listFeaturedCollections(): Promise<FeaturedCollection[]> {
 }
 
 /**
- * Novedades: `studio`/`single_ep` con año conocido, por año descendente. `condition` (opcional,
- * correlacionada con "release_group") acota el conjunto, p. ej. al subárbol de un género.
+ * Novedades de `/explore`: `studio`/`single_ep` lanzados en los últimos `NEW_RELEASE_WINDOW_DAYS`
+ * días (fecha completa, hasta hoy), con carátula, por `first_release_date` descendente. Devuelve
+ * `[]` (riel omitido) si hay menos de `MIN_ALBUMS_FOR_SECTION` álbumes elegibles.
  */
-export async function listNewReleases(limit = RAIL_SIZE, condition?: SQL): Promise<ReleaseGroup[]> {
+export async function listNewReleases(limit = RAIL_SIZE): Promise<ReleaseGroup[]> {
+  const rows = await db
+    .select(albumColumns)
+    .from(releaseGroup)
+    .where(
+      and(
+        sql`${releaseGroup.category} in ${NEW_RELEASE_CATEGORIES}`,
+        sql`${releaseGroup.firstReleaseDate} between current_date - ${NEW_RELEASE_WINDOW_DAYS}::int and current_date`,
+        isNotNull(releaseGroup.coverThumbUrl),
+      ),
+    )
+    .orderBy(desc(releaseGroup.firstReleaseDate), asc(releaseGroup.id))
+    .limit(Math.max(limit, MIN_ALBUMS_FOR_SECTION));
+
+  if (rows.length < MIN_ALBUMS_FOR_SECTION) return [];
+  return rows.slice(0, limit).map(serializeAlbum);
+}
+
+/**
+ * Recientes por año (riel "Novedades" de la página de género): `studio`/`single_ep` con año
+ * conocido, por año descendente. `condition` (correlacionada con "release_group") acota el
+ * conjunto, p. ej. al subárbol de un género. Sin ventana ni umbral: un género tiene poco catálogo.
+ */
+export async function listRecentByYear(limit = RAIL_SIZE, condition?: SQL): Promise<ReleaseGroup[]> {
   const rows = await db
     .select(albumColumns)
     .from(releaseGroup)

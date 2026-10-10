@@ -11,7 +11,7 @@ import { ApiError } from "@/lib/api/errors";
 import { isExploreEnabled } from "@/lib/config/discovery";
 import { genreHref } from "@/lib/catalog-links";
 import { getCurrentUser } from "@/services/auth/authorization";
-import { CURATOR_USERNAME, MIN_RATINGS_PER_ALBUM } from "@/services/discovery/constants";
+import { CURATOR_USERNAME, MIN_RATINGS_PER_ALBUM, NEW_RELEASE_WINDOW_DAYS } from "@/services/discovery/constants";
 import {
   getExplorePage,
   listAlbumsByDecade,
@@ -186,7 +186,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         id="novedades"
         authenticated={authenticated}
         heading={t("newReleasesHeading")}
-        description={t("newReleasesDescription")}
+        description={t("newReleasesDescription", { days: NEW_RELEASE_WINDOW_DAYS })}
         albums={explore.newReleases}
         categoryLabels={categoryLabels}
         coverLabel={coverLabel}

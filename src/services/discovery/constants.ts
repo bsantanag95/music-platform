@@ -28,6 +28,12 @@ export const FILTERED_PAGE_SIZE = 24;
 export const NEW_RELEASE_CATEGORIES = ["studio", "single_ep"] as const;
 
 /**
+ * Ventana del riel "Novedades" de `/explore`: solo cuenta lo lanzado en los últimos N días (hasta
+ * hoy, inclusive). Ajustable sin migración; si el riel queda oculto a menudo, subirla (p. ej. 180).
+ */
+export const NEW_RELEASE_WINDOW_DAYS = 90;
+
+/**
  * Cuenta curadora: sus listas públicas de álbumes son el contenido editorial
  * de `/explore`. Sin `password_hash` — no puede iniciar sesión. La siembra
  * `scripts/seed-discovery.ts` la crea; el frontend arma con este `username`

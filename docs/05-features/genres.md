@@ -67,7 +67,7 @@ servicio los aplica, la interfaz nunca recibe una cifra bajo el mínimo):
 | Cifras | álbumes y artistas del género y sus subgéneros; valoraciones y media de la comunidad; década de auge; "Les mueve a N personas" | media/valoraciones desde 5 valoraciones; década de auge desde 2 décadas; "les mueve" desde 5 personas |
 | Sobre el género | primer párrafo de Wikipedia (~600 caracteres, en límite de oración), resto tras "Leer más", atribución | solo si hay texto sincronizado |
 | Esenciales | mejor valorados del subárbol (riel de 12, "Ver todo →") | álbumes con ≥ 3 valoraciones y ≥ 6 elegibles |
-| Novedades | estudio y single/EP por año descendente | siempre que haya |
+| Novedades | estudio y single/EP por año descendente (no usa la ventana de 90 días de Explorar: un género tiene poco catálogo) | siempre que haya |
 | Para descubrir | hasta 8 artistas con discografía corta y debut conocido, sin los que ya conoces (ver "Descubrir artistas") | desde 4 elegibles |
 | Artistas | 8 tarjetas con foto, "N álbumes del género", disco destacado y, con sesión, Seguir | siempre que haya |
 | Listas de la comunidad | carrusel de hasta 6 | listas con ≥ 3 álbumes del género |

@@ -1,6 +1,6 @@
 import { cache } from "react";
 import type { ReleaseGroup } from "@/lib/api/schemas";
-import { listNewReleases, listTopRated } from "@/services/discovery/discovery";
+import { listRecentByYear, listTopRated } from "@/services/discovery/discovery";
 import { GENRE_RAIL_SIZE } from "./constants";
 import { albumInGenreTree } from "./read";
 
@@ -19,5 +19,5 @@ export const getGenreEssentials = cache((genreId: string): Promise<ReleaseGroup[
 
 /** Novedades: estudio y single/EP con año conocido, por año descendente. */
 export function getGenreNewReleases(genreId: string): Promise<ReleaseGroup[]> {
-  return listNewReleases(GENRE_RAIL_SIZE, albumInGenreTree(genreId));
+  return listRecentByYear(GENRE_RAIL_SIZE, albumInGenreTree(genreId));
 }
