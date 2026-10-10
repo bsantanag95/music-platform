@@ -26,7 +26,7 @@
     "featuredDescription": "Editorial picks to start listening.",
     "genresDescription": "Pick a genre family to see its albums.",
     "moreFamilies": "{count, plural, one {# more family} other {# more families}}",
-    "newReleasesDescription": "The latest studio albums, singles and EPs in the catalog.",
+    "newReleasesDescription": "Studio albums, singles and EPs released in the last {days} days.",
     "decadesDescription": "How many albums the catalog holds per release decade. Pick one to browse it.",
     "decadeBarLabel": "{decade}s: {count, plural, one {# album} other {# albums}}",
     "topRatedDescription": "By average, among albums with at least {min} ratings.",

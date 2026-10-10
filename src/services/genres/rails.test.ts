@@ -2,13 +2,13 @@ import { describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   listTopRated: vi.fn(),
-  listNewReleases: vi.fn(),
+  listRecentByYear: vi.fn(),
   tree: { tree: "g-1" },
 }));
 
 vi.mock("@/services/discovery/discovery", () => ({
   listTopRated: mocks.listTopRated,
-  listNewReleases: mocks.listNewReleases,
+  listRecentByYear: mocks.listRecentByYear,
 }));
 vi.mock("./read", () => ({ albumInGenreTree: () => mocks.tree }));
 
@@ -21,9 +21,9 @@ describe("rieles del género", () => {
     expect(mocks.listTopRated).toHaveBeenCalledWith(12, mocks.tree);
   });
 
-  it("Novedades delega en las novedades de Explorar acotadas al subárbol", async () => {
-    mocks.listNewReleases.mockResolvedValue([{ id: "a" }]);
+  it("Novedades delega en los recientes por año acotados al subárbol", async () => {
+    mocks.listRecentByYear.mockResolvedValue([{ id: "a" }]);
     await expect(getGenreNewReleases("g-1")).resolves.toEqual([{ id: "a" }]);
-    expect(mocks.listNewReleases).toHaveBeenCalledWith(12, mocks.tree);
+    expect(mocks.listRecentByYear).toHaveBeenCalledWith(12, mocks.tree);
   });
 });

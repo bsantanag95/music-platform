@@ -15,7 +15,7 @@ sin tabla materializada. Cada sección se **omite** si no tiene contenido. En or
 |---|---|---|
 | Colecciones destacadas | `user_list_featured` (listas de `@exploracion`, por `rank`) | ancla anti-arranque-en-frío; tarjetas de lista (`CollectionRail`) |
 | Explorar por género | familias de géneros con álbumes (vista `release_group_effective_genre`, cambio `add-genre-taxonomy`) | tarjetas con nombre, número de álbumes y una barra de tamaño relativo (escala de raíz cuadrada) → `/explore?familia=rock`; las familias secundarias detrás de "N familias más" (`<details>`, sin JS) (`FamilyGrid`) |
-| Novedades | `release_group` studio/single_ep por `first_release_year` desc | riel horizontal |
+| Novedades | `release_group` studio/single_ep con `first_release_date` completa en los últimos `NEW_RELEASE_WINDOW_DAYS` (90) días hasta hoy, con carátula, por fecha desc | riel horizontal; se omite con menos de `MIN_ALBUMS_FOR_SECTION` (6); sin lanzamientos futuros ni fechas parciales |
 | Explorar por década | `first_release_year` agrupado por década | histograma del catálogo: una columna por década en orden cronológico, altura proporcional a sus álbumes, cada columna → `/explore?decada=1990`; en móvil, barras horizontales de la más reciente a la más antigua (`DecadeHistogram`) |
 | Mejor valorados | `rating` agregado por álbum | riel horizontal; ver umbrales abajo |
 | Más reseñados | `review` contado por álbum | riel horizontal; ver umbrales abajo |
