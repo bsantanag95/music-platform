@@ -272,30 +272,9 @@ function toAlbumPage(rows: unknown[], page: number): AlbumPage {
 }
 
 function assertDecade(decade: number): void {
-  if (!Number.isInteger(decade) || decade % 10 !== 0 || decade < 1900 || decade > 2100) {
+  if (!Number.isInteger(decade) || decade % 10 !== 0 || decade < 1800 || decade > 2100) {
     throw new ApiError("VALIDATION_ERROR", 400, "La década no es válida");
   }
-}
-
-/** Álbumes cuyo `first_release_year` cae en `[decade, decade+9]`. */
-export async function listAlbumsByDecade(decade: number, page = 1): Promise<AlbumPage> {
-  assertDecade(decade);
-  const { limit, offset } = paginate(page);
-  const rows = await db
-    .select(albumColumns)
-    .from(releaseGroup)
-    .leftJoin(rating, eq(rating.releaseGroupId, releaseGroup.id))
-    .where(
-      and(
-        isNotNull(releaseGroup.firstReleaseYear),
-        sql`${releaseGroup.firstReleaseYear} between ${decade} and ${decade + 9}`,
-      ),
-    )
-    .groupBy(releaseGroup.id)
-    .orderBy(sql`${eligibleAvg} desc nulls last`, desc(releaseGroup.firstReleaseYear), asc(releaseGroup.id))
-    .limit(limit)
-    .offset(offset);
-  return toAlbumPage(rows, page);
 }
 
 /**
@@ -382,6 +361,18 @@ export async function listAlbumsFiltered(condition: SQL, options: AlbumFilterOpt
   return toAlbumPage(rows, page);
 }
 
+/** Tipo y orden opcionales de los listados de Explorar (la paginación va aparte). */
+export type ExploreListOptions = Pick<AlbumFilterOptions, "category" | "sort">;
+
+/**
+ * Álbumes cuyo `first_release_year` cae en `[decade, decade+9]`. Sin opciones es el orden
+ * compartido de Explorar (`best`); con ellas, el tipo y el orden elegidos en el listado.
+ */
+export async function listAlbumsByDecade(decade: number, page = 1, options: ExploreListOptions = {}): Promise<AlbumPage> {
+  assertDecade(decade);
+  return listAlbumsFiltered(isNotNull(releaseGroup.firstReleaseYear), { ...options, page, decade });
+}
+
 function emptyPage(page: number): AlbumPage {
   paginate(page);
   return { albums: [], page, pageSize: FILTERED_PAGE_SIZE, hasNext: false };
@@ -391,18 +382,26 @@ function emptyPage(page: number): AlbumPage {
  * Álbumes con algún género efectivo de la familia (openspec: add-genre-taxonomy). Una clave
  * desconocida devuelve la página vacía.
  */
-export async function listAlbumsByFamily(familyKey: string, page = 1): Promise<AlbumPage & { family: FamilyKey | null }> {
+export async function listAlbumsByFamily(
+  familyKey: string,
+  page = 1,
+  options: ExploreListOptions = {},
+): Promise<AlbumPage & { family: FamilyKey | null }> {
   const family = parseFamilyKey(familyKey);
   if (!family) return { ...emptyPage(page), family: null };
-  return { ...(await listAlbumsFiltered(albumInFamily(family), { page })), family };
+  return { ...(await listAlbumsFiltered(albumInFamily(family), { ...options, page })), family };
 }
 
 /**
  * Álbumes con ese género efectivo o uno de sus subgéneros (por slug de la taxonomía). Un slug
  * desconocido devuelve la página vacía.
  */
-export async function listAlbumsByGenre(slug: string, page = 1): Promise<AlbumPage & { genre: GenreRow | null }> {
+export async function listAlbumsByGenre(
+  slug: string,
+  page = 1,
+  options: ExploreListOptions = {},
+): Promise<AlbumPage & { genre: GenreRow | null }> {
   const found = await findStyleGenreBySlug(slug);
   if (!found) return { ...emptyPage(page), genre: null };
-  return { ...(await listAlbumsFiltered(albumInGenreTree(found.id), { page })), genre: found };
+  return { ...(await listAlbumsFiltered(albumInGenreTree(found.id), { ...options, page })), genre: found };
 }

@@ -76,7 +76,7 @@ function reverse<K extends string>(map: Record<K, string>, value: string | undef
 function parseDecade(raw: string | undefined): number | undefined {
   if (raw === undefined || !/^\d{4}$/.test(raw)) return undefined;
   const n = Number(raw);
-  return n % 10 === 0 && n >= 1900 && n <= 2100 ? n : undefined;
+  return n % 10 === 0 && n >= 1800 && n <= 2100 ? n : undefined;
 }
 
 function parsePage(raw: string | undefined): number {

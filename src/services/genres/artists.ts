@@ -170,7 +170,7 @@ export async function listGenreArtists(genreId: string, options: GenreArtistOpti
   }
   if (!GENRE_ARTIST_SORTS.includes(sort)) throw new ApiError("VALIDATION_ERROR", 400, "El orden no es válido");
   if (country !== undefined && !COUNTRY_PATTERN.test(country)) throw new ApiError("VALIDATION_ERROR", 400, "El país no es válido");
-  if (debutDecade !== undefined && (!Number.isInteger(debutDecade) || debutDecade % 10 !== 0 || debutDecade < 1900 || debutDecade > 2100)) {
+  if (debutDecade !== undefined && (!Number.isInteger(debutDecade) || debutDecade % 10 !== 0 || debutDecade < 1800 || debutDecade > 2100)) {
     throw new ApiError("VALIDATION_ERROR", 400, "La década de debut no es válida");
   }
 
