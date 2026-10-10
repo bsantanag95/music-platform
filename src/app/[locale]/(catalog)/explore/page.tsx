@@ -19,6 +19,7 @@ import {
   listAlbumsByFamily,
   listAlbumsByGenre,
   listDecades,
+  listNewAlbums,
   listUpcomingAlbums,
   listGenreFamilies,
   type FamilyBucket,
@@ -29,7 +30,7 @@ import type { ReleaseGroupCategory } from "@/lib/api/schemas";
 
 interface ExplorePageProps {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ proximos?: string; decada?: string; familia?: string; genero?: string; tipo?: string; orden?: string; page?: string }>;
+  searchParams: Promise<{ proximos?: string; novedades?: string; decada?: string; familia?: string; genero?: string; tipo?: string; orden?: string; page?: string }>;
 }
 
 export async function generateMetadata({ params }: ExplorePageProps): Promise<Metadata> {
@@ -47,7 +48,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
   const tCat = await getTranslations("catalog.artist");
   const tGenres = await getTranslations("catalog.genres");
   const raw = await searchParams;
-  const { decada, familia, genero, proximos } = raw;
+  const { decada, familia, genero, proximos, novedades } = raw;
   const listParams = parseExploreListParams(raw);
   const listOptions = { category: listParams.category, sort: listParams.sort };
   const numberFormat = new Intl.NumberFormat(locale);
@@ -152,19 +153,56 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
     );
   }
 
+  // --- Listados cronológicos de lanzamientos (orden fijo): el selector de orden no aplica y el `orden`
+  // de la URL se descarta. Prioridad: próximos > novedades. Los dos se enlazan como cortes hermanos. ---
+  const fixedOrderParams = { ...listParams, sort: "best" as const };
+  const releaseSiblings = (current: "novedades" | "proximos") => ({
+    label: t("releasesNavLabel"),
+    links: [
+      {
+        key: "novedades",
+        label: t("newReleasesHeading"),
+        href: exploreListHref("/explore?novedades=1", fixedOrderParams, { page: 1 }),
+        current: current === "novedades",
+      },
+      {
+        key: "proximos",
+        label: t("upcomingHeading"),
+        href: exploreListHref("/explore?proximos=1", fixedOrderParams, { page: 1 }),
+        current: current === "proximos",
+      },
+    ],
+  });
+
   if (proximos === "1") {
-    // Orden fijo (cronológico): el selector de orden no aplica y el `orden` de la URL se descarta.
-    const upcomingParams = { ...listParams, sort: "best" as const };
     const result = await listUpcomingAlbums(listParams.page, { category: listParams.category });
     return (
       <FilteredAlbumList
         {...listProps}
-        params={upcomingParams}
-        kicker={t("kickerUpcoming")}
+        params={fixedOrderParams}
+        siblings={releaseSiblings("proximos")}
+        kicker={t("kickerReleases")}
         heading={t("upcomingResultsHeading")}
         crumb={t("upcomingCrumb")}
         result={result}
         baseHref="/explore?proximos=1"
+        hideSort
+        dateLabels={dateLabelsFor(result.albums)}
+      />
+    );
+  }
+  if (novedades === "1") {
+    const result = await listNewAlbums(listParams.page, { category: listParams.category });
+    return (
+      <FilteredAlbumList
+        {...listProps}
+        params={fixedOrderParams}
+        siblings={releaseSiblings("novedades")}
+        kicker={t("kickerReleases")}
+        heading={t("newReleasesResultsHeading")}
+        crumb={t("newReleasesHeading")}
+        result={result}
+        baseHref="/explore?novedades=1"
         hideSort
         dateLabels={dateLabelsFor(result.albums)}
       />
@@ -219,6 +257,8 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         albums={explore.newReleases}
         categoryLabels={categoryLabels}
         coverLabel={coverLabel}
+        seeAll={{ href: "/explore?novedades=1", label: t("seeAll") }}
+        dateLabels={dateLabelsFor(explore.newReleases)}
       />
 
       <AlbumRail
@@ -230,7 +270,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         albums={explore.upcoming}
         categoryLabels={categoryLabels}
         coverLabel={coverLabel}
-        seeAll={{ href: "/explore?proximos=1", label: t("upcomingSeeAll") }}
+        seeAll={{ href: "/explore?proximos=1", label: t("seeAll") }}
         dateLabels={dateLabelsFor(explore.upcoming)}
       />
 

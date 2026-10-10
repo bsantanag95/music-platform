@@ -9,6 +9,7 @@ import {
   listFeaturedCollections,
   listGenreFamilies,
   listMostReviewed,
+  listNewAlbums,
   listNewReleases,
   listRecentByYear,
   listTopRated,
@@ -159,6 +160,65 @@ describe("listNewReleases", () => {
   it("muestra el riel al alcanzar el umbral, acotado a RAIL_SIZE", async () => {
     capture(Array.from({ length: RAIL_SIZE + 3 }, (_, i) => albumRow(`n${i}`)));
     await expect(listNewReleases()).resolves.toHaveLength(RAIL_SIZE);
+  });
+});
+
+describe("novedades: listado completo", () => {
+  const dialect = new PgDialect();
+
+  function capture(rows: unknown[]) {
+    const seen: { where?: SQL; order: SQL[]; limit?: number; offset?: number } = { order: [] };
+    const q: Record<string, unknown> = {};
+    q.from = () => q;
+    q.where = (w: SQL) => ((seen.where = w), q);
+    q.orderBy = (...o: SQL[]) => ((seen.order = o), q);
+    q.limit = (n: number) => ((seen.limit = n), q);
+    q.offset = (n: number) => ((seen.offset = n), q);
+    q.then = (resolve: (v: unknown) => unknown) => Promise.resolve(rows).then(resolve);
+    mocks.db.select.mockReturnValue(q);
+    return seen;
+  }
+
+  it("usa la misma condición y orden que el riel: ventana hasta hoy, carátula, fecha descendente, sin rating", async () => {
+    const rail = capture(Array.from({ length: MIN_ALBUMS_FOR_SECTION }, (_, i) => albumRow(`n${i}`)));
+    await listNewReleases();
+    const listing = capture([albumRow("n0")]);
+    await listNewAlbums();
+
+    const sqlOf = (x: SQL | undefined) => dialect.sqlToQuery(x as SQL);
+    expect(sqlOf(listing.where).sql).toBe(sqlOf(rail.where).sql);
+    expect(sqlOf(listing.where).params).toEqual(sqlOf(rail.where).params);
+    expect(sqlOf(listing.where).sql).toContain("between current_date -");
+    expect(sqlOf(listing.where).params).toContain(NEW_RELEASE_WINDOW_DAYS);
+    const order = listing.order.map((o) => dialect.sqlToQuery(o).sql).join(",");
+    expect(order).toContain('"first_release_date" desc');
+    expect(order).toContain('"id" asc');
+    expect(order).not.toContain("rating");
+    expect(listing.order.map((o) => dialect.sqlToQuery(o).sql)).toEqual(rail.order.map((o) => dialect.sqlToQuery(o).sql));
+  });
+
+  it("no aplica umbral: con 3 resultados los devuelve", async () => {
+    capture([albumRow("n0"), albumRow("n1"), albumRow("n2")]);
+    const page = await listNewAlbums();
+    expect(page.albums).toHaveLength(3);
+    expect(page.hasNext).toBe(false);
+  });
+
+  it("pagina con una fila de más y desplaza por página", async () => {
+    const seen = capture(Array.from({ length: FILTERED_PAGE_SIZE + 1 }, (_, i) => albumRow(`n${i}`)));
+    const page = await listNewAlbums(3);
+    expect(page.albums).toHaveLength(FILTERED_PAGE_SIZE);
+    expect(page.hasNext).toBe(true);
+    expect(seen.limit).toBe(FILTERED_PAGE_SIZE + 1);
+    expect(seen.offset).toBe(FILTERED_PAGE_SIZE * 2);
+  });
+
+  it("filtra por tipo y rechaza uno inválido o una página inválida", async () => {
+    const seen = capture([]);
+    await listNewAlbums(1, { category: "single_ep" });
+    expect(dialect.sqlToQuery(seen.where as SQL).sql).toContain('"category" = $');
+    await expect(listNewAlbums(1, { category: "otro" as never })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    await expect(listNewAlbums(0)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
   });
 });
 
