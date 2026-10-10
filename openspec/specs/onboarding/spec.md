@@ -234,7 +234,7 @@ Los pasos de álbumes y de escucha SHALL decir con quién se comparte lo que el 
 
 ### Requirement: Resumen al terminar el onboarding
 
-Al cerrar el onboarding con éxito, el sistema SHALL mostrar un resumen de lo hecho en el flujo (favoritos guardados, artistas seguidos, escuchas registradas, elementos en Pendientes; solo los conteos mayores que cero) y los siguientes pasos —ir a Inicio, buscar gente y, solo entre las cosas que la persona aún no hizo, elegir sus géneros en el perfil, valorar un disco y explorar cuando esté activo—, en lugar de redirigir de inmediato a Inicio. El botón de salida SHALL decir «Saltar por ahora» si el usuario no hizo nada y «Terminar ahora» si ya hay algo, y en ambos casos SHALL guardar los álbumes elegidos.
+Al cerrar el onboarding con éxito, el sistema SHALL mostrar un resumen de lo hecho en el flujo (favoritos guardados, artistas seguidos, escuchas registradas, elementos en Pendientes; solo los conteos mayores que cero) y los siguientes pasos, en lugar de redirigir de inmediato a Inicio. El resumen SHALL tener una **única acción principal**, «Ir a Inicio», y SHALL presentar el resto de las salidas como enlaces secundarios en una lista «También puedes»: primero, solo entre las cosas que la persona aún no hizo, elegir sus géneros en el perfil y valorar un disco; después explorar cuando esté activo y buscar gente. El botón de salida SHALL decir «Saltar por ahora» si el usuario no hizo nada y «Terminar ahora» si ya hay algo, y en ambos casos SHALL guardar los álbumes elegidos.
 
 #### Scenario: Resumen con lo hecho
 
@@ -255,6 +255,11 @@ Al cerrar el onboarding con éxito, el sistema SHALL mostrar un resumen de lo he
 
 - **WHEN** el usuario terminó sin registrar ninguna escucha
 - **THEN** el resumen sugiere valorar un disco, y si sí registró una escucha no lo sugiere
+
+#### Scenario: Una sola acción principal
+
+- **WHEN** se muestra el resumen
+- **THEN** «Ir a Inicio» es el único botón y las demás salidas son enlaces dentro de la lista «También puedes», con las sugerencias personales antes que Explorar y Buscar gente
 
 ### Requirement: Ruta de bienvenida con onboarding guiado
 
