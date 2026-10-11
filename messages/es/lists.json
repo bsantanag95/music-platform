@@ -91,7 +91,6 @@
   "community": {
     "pageTitle": "Listas de la comunidad",
     "heading": "Listas",
-    "intro": "Curaduría de la comunidad: colecciones destacadas, las más guardadas, las de la gente que sigues y las más recientes.",
     "searchPlaceholder": "Buscar listas",
     "searchLabel": "Buscar listas",
     "sortPopular": "Populares",
@@ -99,13 +98,13 @@
     "resultsCount": "{count, plural, =0 {Sin resultados} one {# resultado} other {# resultados}}",
     "noResultsTitle": "Sin resultados",
     "noResultsDescription": "Ninguna lista pública coincide con esos filtros.",
-    "featuredEyebrow": "Curaduría editorial",
     "featuredHeading": "Destacadas",
     "popularHeading": "Populares",
     "followingHeading": "De la gente que sigues",
     "recentHeading": "Recientes",
     "emptyTitle": "Todavía no hay listas para descubrir",
-    "emptyDescription": "Cuando la comunidad publique listas públicas, van a aparecer acá."
+    "emptyDescription": "Cuando la comunidad publique listas públicas, aparecerán aquí.",
+    "featuredDescription": "Selección editorial y listas oficiales."
   },
   "deleteShort": "¿Borrar?",
   "moveUp": "Subir “{title}”",

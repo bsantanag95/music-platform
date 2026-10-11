@@ -6,6 +6,7 @@ import { listDiscoverLists } from "@/services/lists/discovery";
 import { listFeaturedLists, listPopularLists, listsFromFollowing } from "@/services/lists/community";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { SectionHeader } from "@/components/discovery/SectionHeader";
 import { ListsGrid } from "@/components/lists/lists-shared";
 import { CommunityListCard } from "@/components/lists/CommunityListCard";
 import { CommunityListSection } from "@/components/lists/CommunityListSection";
@@ -63,13 +64,13 @@ export default async function CommunityListsPage({
         ) : null}
 
         {featured.lists.length > 0 ? (
-          <section className="flex w-full flex-col gap-4 rounded-lg border border-ink-border bg-ink-surface p-6">
-            <div className="flex flex-col gap-1">
-              <p className="font-data text-xs uppercase tracking-wide text-amber">
-                {t("community.featuredEyebrow")}
-              </p>
-              <h2 className="font-display text-xl text-paper">{t("community.featuredHeading")}</h2>
-            </div>
+          // Sin caja propia (era una caja con tarjetas-caja dentro) ni rótulo ámbar: título y una línea
+          // que dice qué reúne, como las secciones de Explorar.
+          <section className="flex w-full flex-col gap-4">
+            <SectionHeader
+              heading={t("community.featuredHeading")}
+              description={t("community.featuredDescription")}
+            />
             <ListsGrid>
               {featured.lists.map((list) => (
                 <CommunityListCard key={list.id} list={list} canSave={canSave} />
@@ -117,10 +118,8 @@ export default async function CommunityListsPage({
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col items-start gap-8 px-4 py-12">
       <Breadcrumbs items={[{ label: tCommon("home"), href: "/" }, { label: t("community.heading") }]} />
-      <div className="flex flex-col gap-1">
-        <h1 className="font-display text-3xl text-paper">{t("community.heading")}</h1>
-        <p className="font-body text-paper-muted">{t("community.intro")}</p>
-      </div>
+      {/* Solo miga de pan y título (como Explorar): la introducción enumeraba las secciones de abajo. */}
+      <h1 className="-mt-4 font-display text-3xl text-paper">{t("community.heading")}</h1>
 
       <Suspense fallback={null}>
         <CommunityListsToolbar />
