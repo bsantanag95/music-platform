@@ -1,0 +1,161 @@
+{
+  "award": "grammy",
+  "categories": [
+    {
+      "key": "album-of-the-year",
+      "tier": "general",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Álbum del año",
+        "en": "Album of the Year"
+      },
+      "order": 1
+    },
+    {
+      "key": "record-of-the-year",
+      "tier": "general",
+      "subject": "recording",
+      "honors": "performer",
+      "name": {
+        "es": "Grabación del año",
+        "en": "Record of the Year"
+      },
+      "order": 2
+    },
+    {
+      "key": "song-of-the-year",
+      "tier": "general",
+      "subject": "recording",
+      "honors": "songwriter",
+      "name": {
+        "es": "Canción del año",
+        "en": "Song of the Year"
+      },
+      "order": 3
+    },
+    {
+      "key": "best-new-artist",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor artista nuevo",
+        "en": "Best New Artist"
+      },
+      "order": 4
+    },
+    {
+      "key": "best-pop-vocal-album",
+      "tier": "genre",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum vocal pop",
+        "en": "Best Pop Vocal Album"
+      },
+      "order": 5
+    },
+    {
+      "key": "best-dance-electronic-album",
+      "tier": "genre",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum dance/electrónico",
+        "en": "Best Dance/Electronic Album"
+      },
+      "order": 6
+    },
+    {
+      "key": "best-rock-album",
+      "tier": "genre",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de rock",
+        "en": "Best Rock Album"
+      },
+      "order": 7
+    },
+    {
+      "key": "best-alternative-music-album",
+      "tier": "genre",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de música alternativa",
+        "en": "Best Alternative Music Album"
+      },
+      "order": 8
+    },
+    {
+      "key": "best-rnb-album",
+      "tier": "genre",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de R&B",
+        "en": "Best R&B Album"
+      },
+      "order": 9
+    },
+    {
+      "key": "best-rap-album",
+      "tier": "genre",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de rap",
+        "en": "Best Rap Album"
+      },
+      "order": 10
+    },
+    {
+      "key": "best-country-album",
+      "tier": "genre",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de country",
+        "en": "Best Country Album"
+      },
+      "order": 11
+    },
+    {
+      "key": "best-latin-pop-album",
+      "tier": "genre",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de pop latino",
+        "en": "Best Latin Pop Album"
+      },
+      "order": 12,
+      "predecessor": "best-latin-pop-or-urban-album"
+    },
+    {
+      "key": "best-musica-urbana-album",
+      "tier": "genre",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de música urbana",
+        "en": "Best Música Urbana Album"
+      },
+      "order": 13,
+      "predecessor": "best-latin-pop-or-urban-album"
+    },
+    {
+      "key": "best-latin-pop-or-urban-album",
+      "tier": "genre",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de pop latino o urbano",
+        "en": "Best Latin Pop or Urban Album"
+      },
+      "order": 14
+    }
+  ]
+}

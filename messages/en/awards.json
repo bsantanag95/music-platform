@@ -1,0 +1,31 @@
+{
+  "pageTitle": "Awards",
+  "heading": "Awards",
+  "kicker": "What's happening",
+  "intro": "Nominees and winners of award ceremonies, linked to the catalog.",
+  "names": {
+    "grammy": "Grammy Awards"
+  },
+  "ceremonyTitle": "{award} {year}",
+  "edition": "{edition, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition",
+  "heldOn": "Held on {date}",
+  "otherCeremonies": "Other ceremonies",
+  "tierGeneral": "General field",
+  "tierGenre": "Best album by genre",
+  "winner": "Winner",
+  "nominees": "Nominees",
+  "winnerOnlyNote": "For this category we only record the winner.",
+  "categoryHistory": "Category history",
+  "fromAlbum": "from {album}",
+  "songwriterNote": "Honors the songwriters.",
+  "historyKicker": "Category",
+  "previouslyNamed": "Previously {name}",
+  "laterNamed": "Later {name}",
+  "ceremonyLink": "See the {year} ceremony",
+  "emptyIndex": "No ceremonies loaded yet.",
+  "exploreHeading": "Awards",
+  "exploreDescription": "Nominees and winners of the latest ceremonies.",
+  "exploreSeeAll": "See all",
+  "ceremonyCount": "{count, plural, one {# ceremony} other {# ceremonies}}",
+  "ceremonyKicker": "Ceremony"
+}

@@ -1115,3 +1115,33 @@ sincronización arranque (la fila se toma bajo `pg_advisory_xact_lock`).
 **Columnas:** `id` (UUID), `started_at`, `finished_at` (timestamptz), `status` (`CHECK IN
 ('running','succeeded','failed')`), `entry_count` (entero) y `error` (texto, el mensaje del fallo).
 Índice parcial `idx_release_calendar_sync_finished` (`finished_at DESC` de las exitosas).
+
+## Premios musicales: `award`, `award_ceremony`, `award_category`, `award_category_edition`, `award_nomination`
+
+**Propósito:** nominados y ganadores de ceremonias de premios, enlazados al catálogo (migración `0068`, cambio
+`add-music-awards`, ADR 0032). **La fuente de verdad son los archivos de `data/awards/`**: las tablas las escribe
+solo `scripts/load-awards.ts`, que es idempotente y borra lo que ya no está en los archivos. Por eso ninguna lleva
+`updated_at`: dos cargas seguidas no deben cambiar ninguna fila.
+
+- `award`: `id`, `slug` (único, `CHECK` de slug en minúsculas con guiones). El nombre visible es texto de interfaz
+  (`messages/*/awards.json`, clave `names.<slug>`).
+- `award_ceremony`: `award_id` (FK `CASCADE`), `year` (año de la **ceremonia**, no de elegibilidad; `CHECK` 1900–2100),
+  `edition` (> 0), `held_on` (`DATE`, `CHECK` del mismo año). Únicos `(award_id, year)` y `(award_id, edition)`.
+- `award_category`: `award_id` (FK `CASCADE`), `key` (clave estable para la historia; único por premio), `tier`
+  (`general` | `genre`), `subject_kind` (`release_group` | `recording` | `artist`), `honors` (`performer` |
+  `songwriter`: Canción del año premia la composición), `name_es`, `name_en` (curados, no en `messages`),
+  `predecessor_id` (FK a sí misma, `SET NULL`, `CHECK` distinto de sí misma), `sort_order`. Una categoría renombrada,
+  fusionada o dividida es otra fila enlazada con `predecessor_id`.
+- `award_category_edition`: una categoría en una ceremonia. `ceremony_id`, `category_id` (FK `CASCADE`), `coverage`
+  (`complete` | `winner_only`). Único `(ceremony_id, category_id)`; índice por `category_id` (historia).
+- `award_nomination`: `category_edition_id` (FK `CASCADE`), `won`, `nominee_text` (`NOT NULL`, no vacío; el texto
+  curado "Título — Artista"), `credit_text` (nullable), una FK de sujeto opcional por tipo (`release_group_id`,
+  `recording_id`, `artist_id`, todas `ON DELETE SET NULL`; `CHECK num_nonnulls(...) <= 1`),
+  `anchor_release_group_id` (FK `SET NULL`: el disco donde aparece una grabación nominada, de donde salen su carátula y
+  el enlace "del disco …") y `sort_order` (único por edición). Índices parciales por cada FK de sujeto, para leer los
+  premios de un álbum, grabación o artista.
+
+Reglas que cruzan tablas y no pueden ser `CHECK` (el tipo de sujeto coincide con el de la categoría; una edición
+`winner_only` solo tiene ganadores; toda categoría tiene al menos un ganador) las valida la carga antes de escribir
+(`src/services/awards/curation-schema.ts`) y una prueba de CI sobre todos los archivos. No se exige un único ganador:
+los empates existen.

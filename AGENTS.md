@@ -110,6 +110,16 @@ de cuál de las filas con el mismo título haya en la BD.
 >   cuentas desactivadas), que el listado solo trae raíces, el hilo en orden cronológico, que el feed, la
 >   actividad de la comunidad, el rastro propio y "Comentarios populares" no muestran respuestas (aunque una
 >   tenga más likes que cualquier raíz), los likes sobre respuestas, la exportación y las cascadas.
+> - `smoke-test-music-awards.ts` carga un premio sintético `smoke-premio` desde una carpeta temporal (no toca
+>   `data/awards/`) con MBID `5e0ce000-0000-4000-8000-00000000a8xx`, bloquea `global.fetch` durante la carga y
+>   borra todo al terminar (también si falla). Si se interrumpió, limpiar con
+>   `DELETE FROM award WHERE slug LIKE 'smoke-%'; DELETE FROM recording WHERE mbid::text LIKE '5e0ce000%';
+>   DELETE FROM release_group WHERE mbid::text LIKE '5e0ce000%'; DELETE FROM artist WHERE mbid::text LIKE
+>   '5e0ce000%';` (el `ON DELETE CASCADE` de `award` limpia ceremonias, categorías y nominaciones). Necesita la
+>   migración `0068`. Verifica los `CHECK`, la carga idempotente (`xmin` sin cambios en la segunda corrida), que la
+>   carga no consulta MusicBrainz, los stubs desde la semilla (créditos y disco ancla), que un archivo inválido aborta
+>   sin escribir, la lectura de ceremonia e historia (predecesora y sucesora), el `ON DELETE SET NULL` y el borrado de
+>   una ceremonia que ya no está en los archivos.
 > - `smoke-test-release-calendar.ts` mockea ListenBrainz, MusicBrainz y Cover Art Archive, crea
 >   artistas y release-groups con MBID `5e0ce000-0000-4000-8000-000000008*` y usuarios `smoke_cal_*`,
 >   **respalda el calendario de lanzamientos y lo restaura al terminar** (también si falla) y borra sus

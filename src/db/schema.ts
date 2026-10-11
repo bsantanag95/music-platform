@@ -1925,3 +1925,135 @@ export const releaseCalendarSync = pgTable(
 );
 
 export type ReleaseCalendarSyncRow = typeof releaseCalendarSync.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Premios musicales curados (migración 0068, openspec: add-music-awards, ADR 0032). Los escribe solo
+// `scripts/load-awards.ts` desde `data/awards/`; la aplicación los lee. Sin `updated_at`: la carga es
+// idempotente.
+// ---------------------------------------------------------------------------
+
+export const AWARD_CATEGORY_TIERS = ["general", "genre"] as const;
+export type AwardCategoryTier = (typeof AWARD_CATEGORY_TIERS)[number];
+export const AWARD_SUBJECT_KINDS = ["release_group", "recording", "artist"] as const;
+export type AwardSubjectKind = (typeof AWARD_SUBJECT_KINDS)[number];
+export const AWARD_HONORS = ["performer", "songwriter"] as const;
+export type AwardHonors = (typeof AWARD_HONORS)[number];
+export const AWARD_COVERAGES = ["complete", "winner_only"] as const;
+export type AwardCoverage = (typeof AWARD_COVERAGES)[number];
+
+export const award = pgTable(
+  "award",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: text("slug").notNull().unique(),
+  },
+  (t) => [check("chk_award_slug", sql`${t.slug} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`)],
+);
+
+export type AwardRow = typeof award.$inferSelect;
+
+export const awardCeremony = pgTable(
+  "award_ceremony",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    awardId: uuid("award_id")
+      .notNull()
+      .references(() => award.id, { onDelete: "cascade" }),
+    // Año de la ceremonia (no el de elegibilidad).
+    year: smallint("year").notNull(),
+    edition: smallint("edition").notNull(),
+    heldOn: date("held_on").notNull(),
+  },
+  (t) => [
+    unique("uq_award_ceremony_year").on(t.awardId, t.year),
+    unique("uq_award_ceremony_edition").on(t.awardId, t.edition),
+    check("chk_award_ceremony_year", sql`${t.year} BETWEEN 1900 AND 2100`),
+    check("chk_award_ceremony_edition", sql`${t.edition} > 0`),
+    check("chk_award_ceremony_held_on", sql`EXTRACT(YEAR FROM ${t.heldOn}) = ${t.year}`),
+  ],
+);
+
+export type AwardCeremonyRow = typeof awardCeremony.$inferSelect;
+
+export const awardCategory = pgTable(
+  "award_category",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    awardId: uuid("award_id")
+      .notNull()
+      .references(() => award.id, { onDelete: "cascade" }),
+    // Clave estable; una categoría renombrada, fusionada o dividida es otra fila con `predecessorId`.
+    key: text("key").notNull(),
+    tier: text("tier").$type<AwardCategoryTier>().notNull(),
+    subjectKind: text("subject_kind").$type<AwardSubjectKind>().notNull(),
+    honors: text("honors").$type<AwardHonors>().notNull().default("performer"),
+    nameEs: text("name_es").notNull(),
+    nameEn: text("name_en").notNull(),
+    predecessorId: uuid("predecessor_id").references((): AnyPgColumn => awardCategory.id, { onDelete: "set null" }),
+    sortOrder: smallint("sort_order").notNull(),
+  },
+  (t) => [
+    unique("uq_award_category_key").on(t.awardId, t.key),
+    check("chk_award_category_key", sql`${t.key} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`),
+    check("chk_award_category_tier", sql`${t.tier} IN ('general', 'genre')`),
+    check("chk_award_category_subject", sql`${t.subjectKind} IN ('release_group', 'recording', 'artist')`),
+    check("chk_award_category_honors", sql`${t.honors} IN ('performer', 'songwriter')`),
+    check("chk_award_category_not_own_predecessor", sql`${t.predecessorId} IS NULL OR ${t.predecessorId} <> ${t.id}`),
+  ],
+);
+
+export type AwardCategoryRow = typeof awardCategory.$inferSelect;
+
+export const awardCategoryEdition = pgTable(
+  "award_category_edition",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ceremonyId: uuid("ceremony_id")
+      .notNull()
+      .references(() => awardCeremony.id, { onDelete: "cascade" }),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => awardCategory.id, { onDelete: "cascade" }),
+    coverage: text("coverage").$type<AwardCoverage>().notNull(),
+  },
+  (t) => [
+    unique("uq_award_category_edition").on(t.ceremonyId, t.categoryId),
+    index("idx_award_category_edition_category").on(t.categoryId),
+    check("chk_award_category_edition_coverage", sql`${t.coverage} IN ('complete', 'winner_only')`),
+  ],
+);
+
+export type AwardCategoryEditionRow = typeof awardCategoryEdition.$inferSelect;
+
+export const awardNomination = pgTable(
+  "award_nomination",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    categoryEditionId: uuid("category_edition_id")
+      .notNull()
+      .references(() => awardCategoryEdition.id, { onDelete: "cascade" }),
+    won: boolean("won").notNull(),
+    nomineeText: text("nominee_text").notNull(),
+    creditText: text("credit_text"),
+    releaseGroupId: uuid("release_group_id").references(() => releaseGroup.id, { onDelete: "set null" }),
+    recordingId: uuid("recording_id").references(() => recording.id, { onDelete: "set null" }),
+    artistId: uuid("artist_id").references(() => artist.id, { onDelete: "set null" }),
+    // Disco donde aparece una grabación nominada: carátula y enlace "del álbum …" (el stub de la grabación no
+    // tiene pistas).
+    anchorReleaseGroupId: uuid("anchor_release_group_id").references(() => releaseGroup.id, { onDelete: "set null" }),
+    sortOrder: smallint("sort_order").notNull(),
+  },
+  (t) => [
+    unique("uq_award_nomination_order").on(t.categoryEditionId, t.sortOrder),
+    index("idx_award_nomination_release_group").on(t.releaseGroupId).where(sql`${t.releaseGroupId} IS NOT NULL`),
+    index("idx_award_nomination_recording").on(t.recordingId).where(sql`${t.recordingId} IS NOT NULL`),
+    index("idx_award_nomination_artist").on(t.artistId).where(sql`${t.artistId} IS NOT NULL`),
+    check("chk_award_nomination_text", sql`length(btrim(${t.nomineeText})) > 0`),
+    check(
+      "chk_award_nomination_one_subject",
+      sql`num_nonnulls(${t.releaseGroupId}, ${t.recordingId}, ${t.artistId}) <= 1`,
+    ),
+  ],
+);
+
+export type AwardNominationRow = typeof awardNomination.$inferSelect;

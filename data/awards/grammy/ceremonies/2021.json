@@ -1,0 +1,2075 @@
+{
+  "award": "grammy",
+  "year": 2021,
+  "edition": 63,
+  "heldOn": "2021-03-14",
+  "sourceUrl": "https://en.wikipedia.org/wiki/63rd_Annual_Grammy_Awards",
+  "categories": [
+    {
+      "key": "album-of-the-year",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Folklore",
+          "artist": "Taylor Swift",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "f1d08326-c23b-4b43-be3b-20b33ab10bf6",
+            "seed": {
+              "kind": "release_group",
+              "title": "folklore",
+              "category": "studio",
+              "firstReleaseDate": "2020-07-24",
+              "credits": [
+                {
+                  "name": "Taylor Swift",
+                  "artist": {
+                    "id": "20244d07-534f-4eff-b4d4-930878889970",
+                    "name": "Taylor Swift"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Chilombo",
+          "artist": "Jhené Aiko",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "75f527d4-413f-4a8f-a209-a8490a2491b4",
+            "seed": {
+              "kind": "release_group",
+              "title": "Chilombo",
+              "category": "studio",
+              "firstReleaseDate": "2020-03-06",
+              "credits": [
+                {
+                  "name": "Jhené Aiko",
+                  "artist": {
+                    "id": "ceb3f5b7-9f1a-430f-afbe-976fdcf30482",
+                    "name": "Jhené Aiko"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Black Pumas (Deluxe Edition)",
+          "artist": "Black Pumas",
+          "searchAs": {
+            "title": "Black Pumas"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a59674f1-3160-44c5-bb67-3fe77f266ce9",
+            "seed": {
+              "kind": "release_group",
+              "title": "Black Pumas",
+              "category": "studio",
+              "firstReleaseDate": "2019-06-21",
+              "credits": [
+                {
+                  "name": "Black Pumas",
+                  "artist": {
+                    "id": "dd569857-d15e-4dbe-baad-b46a5ffe34a0",
+                    "name": "Black Pumas"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Everyday Life",
+          "artist": "Coldplay",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e45c32be-8e8b-48b5-8bbb-60f1a3115532",
+            "seed": {
+              "kind": "release_group",
+              "title": "Everyday Life",
+              "category": "studio",
+              "firstReleaseDate": "2019-10-25",
+              "credits": [
+                {
+                  "name": "Coldplay",
+                  "artist": {
+                    "id": "cc197bad-dc9c-440d-a5b5-d52ba2e14234",
+                    "name": "Coldplay"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Djesse Vol. 3",
+          "artist": "Jacob Collier",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d637dd0a-a79e-4cbc-97dc-48787ac5010c",
+            "seed": {
+              "kind": "release_group",
+              "title": "Djesse, Vol. 3",
+              "category": "studio",
+              "firstReleaseDate": "2020-08-14",
+              "credits": [
+                {
+                  "name": "Jacob Collier",
+                  "artist": {
+                    "id": "1df15ee0-b52b-4315-9cb9-bc5a27a685e9",
+                    "name": "Jacob Collier"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Women in Music Pt. III",
+          "artist": "Haim",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "73b8f504-93e5-483d-918d-1006ca3a315c",
+            "seed": {
+              "kind": "release_group",
+              "title": "Women in Music, Pt. III",
+              "category": "studio",
+              "firstReleaseDate": "2020-06-26",
+              "credits": [
+                {
+                  "name": "HAIM",
+                  "artist": {
+                    "id": "aef06569-098f-4218-a577-b413944d9493",
+                    "name": "HAIM"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Future Nostalgia",
+          "artist": "Dua Lipa",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "aa366795-92d7-4d67-91fa-6741f82a4858",
+            "seed": {
+              "kind": "release_group",
+              "title": "Future Nostalgia",
+              "category": "studio",
+              "firstReleaseDate": "2020-03-21",
+              "credits": [
+                {
+                  "name": "Dua Lipa",
+                  "artist": {
+                    "id": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+                    "name": "Dua Lipa"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Hollywood's Bleeding",
+          "artist": "Post Malone",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "8c9e2ca7-fad0-427c-a963-6bd535992a38",
+            "seed": {
+              "kind": "release_group",
+              "title": "Hollywood’s Bleeding",
+              "category": "studio",
+              "firstReleaseDate": "2019-09-06",
+              "credits": [
+                {
+                  "name": "Post Malone",
+                  "artist": {
+                    "id": "b1e26560-60e5-4236-bbdb-9aa5a8d5ee19",
+                    "name": "Post Malone"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "record-of-the-year",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Everything I Wanted",
+          "artist": "Billie Eilish",
+          "anchor": {
+            "title": "everything i wanted",
+            "artist": "Billie Eilish"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c205a615-d1ee-468c-9fca-dda3cf8f9937",
+            "seed": {
+              "kind": "recording",
+              "title": "everything i wanted",
+              "durationSec": 245,
+              "credits": [
+                {
+                  "name": "Billie Eilish",
+                  "artist": {
+                    "id": "f4abc0b5-3f7a-4eff-8f78-ac078dbce533",
+                    "name": "Billie Eilish"
+                  }
+                }
+              ],
+              "anchorMbid": "bf16775d-b2e2-4e8b-9122-ef80cda6e461",
+              "anchor": {
+                "kind": "release_group",
+                "title": "everything i wanted",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-11-13",
+                "credits": [
+                  {
+                    "name": "Billie Eilish",
+                    "artist": {
+                      "id": "f4abc0b5-3f7a-4eff-8f78-ac078dbce533",
+                      "name": "Billie Eilish"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Black Parade",
+          "artist": "Beyoncé",
+          "anchor": {
+            "title": "Black Parade",
+            "artist": "Beyoncé"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "89ac67a4-5deb-4286-9956-6c3d773e0ae0",
+            "seed": {
+              "kind": "recording",
+              "title": "BLACK PARADE",
+              "durationSec": 281,
+              "credits": [
+                {
+                  "name": "Beyoncé",
+                  "artist": {
+                    "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                    "name": "Beyoncé"
+                  }
+                }
+              ],
+              "anchorMbid": "7bbaafd2-70c1-44c9-a17e-d4d8f52e4a57",
+              "anchor": {
+                "kind": "release_group",
+                "title": "BLACK PARADE",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-06-19",
+                "credits": [
+                  {
+                    "name": "Beyoncé",
+                    "artist": {
+                      "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                      "name": "Beyoncé"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Colors",
+          "artist": "Black Pumas",
+          "anchor": {
+            "title": "Black Pumas",
+            "artist": "Black Pumas"
+          },
+          "won": false,
+          "resolved": {
+            "status": "manual",
+            "mbid": "ea8c802e-7d83-4a0a-8039-b7f7508c22b1",
+            "seed": {
+              "kind": "recording",
+              "title": "Colors",
+              "durationSec": 247,
+              "credits": [
+                {
+                  "name": "Black Pumas",
+                  "artist": {
+                    "id": "dd569857-d15e-4dbe-baad-b46a5ffe34a0",
+                    "name": "Black Pumas"
+                  }
+                }
+              ],
+              "anchorMbid": "a59674f1-3160-44c5-bb67-3fe77f266ce9",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Black Pumas",
+                "category": "studio",
+                "firstReleaseDate": "2019-06-21",
+                "credits": [
+                  {
+                    "name": "Black Pumas",
+                    "artist": {
+                      "id": "dd569857-d15e-4dbe-baad-b46a5ffe34a0",
+                      "name": "Black Pumas"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Rockstar",
+          "artist": "DaBaby featuring Roddy Ricch",
+          "anchor": {
+            "title": "Blame It on Baby",
+            "artist": "DaBaby"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "50a4f12b-8b19-4387-85e6-4ec98e1f2f69",
+            "seed": {
+              "kind": "recording",
+              "title": "ROCKSTAR",
+              "durationSec": 182,
+              "credits": [
+                {
+                  "name": "DaBaby",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "87ae83df-6173-40cc-a0f2-bad543faa6aa",
+                    "name": "DaBaby"
+                  }
+                },
+                {
+                  "name": "Roddy Ricch",
+                  "artist": {
+                    "id": "5721c227-4caf-48b1-bbfc-1a4ed3276963",
+                    "name": "Roddy Ricch"
+                  }
+                }
+              ],
+              "anchorMbid": "88f234a0-8e6d-4a12-b173-71173269f5ee",
+              "anchor": {
+                "kind": "release_group",
+                "title": "BLAME IT ON BABY",
+                "category": "studio",
+                "firstReleaseDate": "2020-04-17",
+                "credits": [
+                  {
+                    "name": "DaBaby",
+                    "artist": {
+                      "id": "87ae83df-6173-40cc-a0f2-bad543faa6aa",
+                      "name": "DaBaby"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Say So",
+          "artist": "Doja Cat",
+          "anchor": {
+            "title": "Hot Pink",
+            "artist": "Doja Cat"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "588ed726-1c5b-4eaf-b84c-68cd8b33e5f8",
+            "seed": {
+              "kind": "recording",
+              "title": "Say So",
+              "durationSec": 235,
+              "credits": [
+                {
+                  "name": "Doja Cat",
+                  "artist": {
+                    "id": "5df62a88-cac9-490a-b62c-c7c88f4020f4",
+                    "name": "Doja Cat"
+                  }
+                }
+              ],
+              "anchorMbid": "88e46272-f172-42ad-ae4a-6df5dbfb5ae0",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Hot Pink",
+                "category": "studio",
+                "firstReleaseDate": "2019-11-07",
+                "credits": [
+                  {
+                    "name": "Doja Cat",
+                    "artist": {
+                      "id": "5df62a88-cac9-490a-b62c-c7c88f4020f4",
+                      "name": "Doja Cat"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Don't Start Now",
+          "artist": "Dua Lipa",
+          "anchor": {
+            "title": "Future Nostalgia",
+            "artist": "Dua Lipa"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6090c671-606f-4704-85c6-8a0c33763a3d",
+            "seed": {
+              "kind": "recording",
+              "title": "Don’t Start Now",
+              "durationSec": 183,
+              "credits": [
+                {
+                  "name": "Dua Lipa",
+                  "artist": {
+                    "id": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+                    "name": "Dua Lipa"
+                  }
+                }
+              ],
+              "anchorMbid": "aa366795-92d7-4d67-91fa-6741f82a4858",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Future Nostalgia",
+                "category": "studio",
+                "firstReleaseDate": "2020-03-21",
+                "credits": [
+                  {
+                    "name": "Dua Lipa",
+                    "artist": {
+                      "id": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+                      "name": "Dua Lipa"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Circles",
+          "artist": "Post Malone",
+          "anchor": {
+            "title": "Hollywood's Bleeding",
+            "artist": "Post Malone"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "9d0a9e5c-a765-40ab-837e-99b0bb197f6c",
+            "seed": {
+              "kind": "recording",
+              "title": "Circles",
+              "durationSec": 215,
+              "credits": [
+                {
+                  "name": "Post Malone",
+                  "artist": {
+                    "id": "b1e26560-60e5-4236-bbdb-9aa5a8d5ee19",
+                    "name": "Post Malone"
+                  }
+                }
+              ],
+              "anchorMbid": "8c9e2ca7-fad0-427c-a963-6bd535992a38",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Hollywood’s Bleeding",
+                "category": "studio",
+                "firstReleaseDate": "2019-09-06",
+                "credits": [
+                  {
+                    "name": "Post Malone",
+                    "artist": {
+                      "id": "b1e26560-60e5-4236-bbdb-9aa5a8d5ee19",
+                      "name": "Post Malone"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Savage",
+          "artist": "Megan Thee Stallion featuring Beyoncé",
+          "anchor": {
+            "title": "Savage Remix",
+            "artist": "Megan Thee Stallion"
+          },
+          "searchAs": {
+            "title": "Savage (Remix)"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "397fe429-7c1b-4c5f-9a89-108ea5426d46",
+            "seed": {
+              "kind": "recording",
+              "title": "Savage Remix",
+              "durationSec": 242,
+              "credits": [
+                {
+                  "name": "Megan Thee Stallion",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "ee27b2d8-648c-4a9d-a68c-e55066959975",
+                    "name": "Megan Thee Stallion"
+                  }
+                },
+                {
+                  "name": "Beyoncé",
+                  "artist": {
+                    "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                    "name": "Beyoncé"
+                  }
+                }
+              ],
+              "anchorMbid": "e57c9bb6-5aed-4517-a36c-c3c40624367c",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Savage (remix)",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-04-28",
+                "credits": [
+                  {
+                    "name": "Megan Thee Stallion",
+                    "joinphrase": " feat. ",
+                    "artist": {
+                      "id": "ee27b2d8-648c-4a9d-a68c-e55066959975",
+                      "name": "Megan Thee Stallion"
+                    }
+                  },
+                  {
+                    "name": "Beyoncé",
+                    "artist": {
+                      "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                      "name": "Beyoncé"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "song-of-the-year",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "I Can't Breathe",
+          "artist": "H.E.R.",
+          "anchor": {
+            "title": "I Can't Breathe",
+            "artist": "H.E.R."
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "825ebc41-847e-41d8-9aad-e0237a8d0a06",
+            "seed": {
+              "kind": "recording",
+              "title": "I Can’t Breathe",
+              "durationSec": 287,
+              "credits": [
+                {
+                  "name": "H.E.R.",
+                  "artist": {
+                    "id": "93998e01-ff53-4af7-ba2a-5674adcdf21e",
+                    "name": "H.E.R."
+                  }
+                }
+              ],
+              "anchorMbid": "87075ce8-d29d-44c2-9b15-eec9977a4798",
+              "anchor": {
+                "kind": "release_group",
+                "title": "I Can’t Breathe",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-06-19",
+                "credits": [
+                  {
+                    "name": "H.E.R.",
+                    "artist": {
+                      "id": "93998e01-ff53-4af7-ba2a-5674adcdf21e",
+                      "name": "H.E.R."
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Black Parade",
+          "artist": "Beyoncé",
+          "anchor": {
+            "title": "Black Parade",
+            "artist": "Beyoncé"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "89ac67a4-5deb-4286-9956-6c3d773e0ae0",
+            "seed": {
+              "kind": "recording",
+              "title": "BLACK PARADE",
+              "durationSec": 281,
+              "credits": [
+                {
+                  "name": "Beyoncé",
+                  "artist": {
+                    "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                    "name": "Beyoncé"
+                  }
+                }
+              ],
+              "anchorMbid": "7bbaafd2-70c1-44c9-a17e-d4d8f52e4a57",
+              "anchor": {
+                "kind": "release_group",
+                "title": "BLACK PARADE",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-06-19",
+                "credits": [
+                  {
+                    "name": "Beyoncé",
+                    "artist": {
+                      "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                      "name": "Beyoncé"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "The Box",
+          "artist": "Roddy Ricch",
+          "anchor": {
+            "title": "Please Excuse Me for Being Antisocial",
+            "artist": "Roddy Ricch"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "3e0b00ff-275f-4472-91b3-df760c8be195",
+            "seed": {
+              "kind": "recording",
+              "title": "The Box",
+              "durationSec": 197,
+              "credits": [
+                {
+                  "name": "Roddy Ricch",
+                  "artist": {
+                    "id": "5721c227-4caf-48b1-bbfc-1a4ed3276963",
+                    "name": "Roddy Ricch"
+                  }
+                }
+              ],
+              "anchorMbid": "51dc2ac9-4580-46aa-99cf-37abd5c93fc0",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Please Excuse Me for Being Antisocial",
+                "category": "studio",
+                "firstReleaseDate": "2019-12-06",
+                "credits": [
+                  {
+                    "name": "Roddy Ricch",
+                    "artist": {
+                      "id": "5721c227-4caf-48b1-bbfc-1a4ed3276963",
+                      "name": "Roddy Ricch"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Cardigan",
+          "artist": "Taylor Swift",
+          "anchor": {
+            "title": "Folklore",
+            "artist": "Taylor Swift"
+          },
+          "won": false,
+          "resolved": {
+            "status": "manual",
+            "mbid": "20a9ef25-b557-4770-8477-e1ca3a060eee",
+            "seed": {
+              "kind": "recording",
+              "title": "cardigan",
+              "durationSec": 240,
+              "credits": [
+                {
+                  "name": "Taylor Swift",
+                  "artist": {
+                    "id": "20244d07-534f-4eff-b4d4-930878889970",
+                    "name": "Taylor Swift"
+                  }
+                }
+              ],
+              "anchorMbid": "f1d08326-c23b-4b43-be3b-20b33ab10bf6",
+              "anchor": {
+                "kind": "release_group",
+                "title": "folklore",
+                "category": "studio",
+                "firstReleaseDate": "2020-07-24",
+                "credits": [
+                  {
+                    "name": "Taylor Swift",
+                    "artist": {
+                      "id": "20244d07-534f-4eff-b4d4-930878889970",
+                      "name": "Taylor Swift"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Circles",
+          "artist": "Post Malone",
+          "anchor": {
+            "title": "Hollywood's Bleeding",
+            "artist": "Post Malone"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "9d0a9e5c-a765-40ab-837e-99b0bb197f6c",
+            "seed": {
+              "kind": "recording",
+              "title": "Circles",
+              "durationSec": 215,
+              "credits": [
+                {
+                  "name": "Post Malone",
+                  "artist": {
+                    "id": "b1e26560-60e5-4236-bbdb-9aa5a8d5ee19",
+                    "name": "Post Malone"
+                  }
+                }
+              ],
+              "anchorMbid": "8c9e2ca7-fad0-427c-a963-6bd535992a38",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Hollywood’s Bleeding",
+                "category": "studio",
+                "firstReleaseDate": "2019-09-06",
+                "credits": [
+                  {
+                    "name": "Post Malone",
+                    "artist": {
+                      "id": "b1e26560-60e5-4236-bbdb-9aa5a8d5ee19",
+                      "name": "Post Malone"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Don't Start Now",
+          "artist": "Dua Lipa",
+          "anchor": {
+            "title": "Future Nostalgia",
+            "artist": "Dua Lipa"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6090c671-606f-4704-85c6-8a0c33763a3d",
+            "seed": {
+              "kind": "recording",
+              "title": "Don’t Start Now",
+              "durationSec": 183,
+              "credits": [
+                {
+                  "name": "Dua Lipa",
+                  "artist": {
+                    "id": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+                    "name": "Dua Lipa"
+                  }
+                }
+              ],
+              "anchorMbid": "aa366795-92d7-4d67-91fa-6741f82a4858",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Future Nostalgia",
+                "category": "studio",
+                "firstReleaseDate": "2020-03-21",
+                "credits": [
+                  {
+                    "name": "Dua Lipa",
+                    "artist": {
+                      "id": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+                      "name": "Dua Lipa"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Everything I Wanted",
+          "artist": "Billie Eilish",
+          "anchor": {
+            "title": "everything i wanted",
+            "artist": "Billie Eilish"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c205a615-d1ee-468c-9fca-dda3cf8f9937",
+            "seed": {
+              "kind": "recording",
+              "title": "everything i wanted",
+              "durationSec": 245,
+              "credits": [
+                {
+                  "name": "Billie Eilish",
+                  "artist": {
+                    "id": "f4abc0b5-3f7a-4eff-8f78-ac078dbce533",
+                    "name": "Billie Eilish"
+                  }
+                }
+              ],
+              "anchorMbid": "bf16775d-b2e2-4e8b-9122-ef80cda6e461",
+              "anchor": {
+                "kind": "release_group",
+                "title": "everything i wanted",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-11-13",
+                "credits": [
+                  {
+                    "name": "Billie Eilish",
+                    "artist": {
+                      "id": "f4abc0b5-3f7a-4eff-8f78-ac078dbce533",
+                      "name": "Billie Eilish"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "If the World Was Ending",
+          "artist": "JP Saxe featuring Julia Michaels",
+          "anchor": {
+            "title": "If the World Was Ending",
+            "artist": "JP Saxe"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e1dfe4f5-3769-4f1a-95c9-60d0bcbc7ae3",
+            "seed": {
+              "kind": "recording",
+              "title": "If the World Was Ending",
+              "durationSec": 209,
+              "credits": [
+                {
+                  "name": "JP Saxe",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "5d27a55a-5731-4ef5-a3ad-d5b44251db0f",
+                    "name": "JP Saxe"
+                  }
+                },
+                {
+                  "name": "Julia Michaels",
+                  "artist": {
+                    "id": "4757df70-6c3e-46b8-99c0-a68644595c9a",
+                    "name": "Julia Michaels"
+                  }
+                }
+              ],
+              "anchorMbid": "d9a061cd-ca40-415c-ad91-d7edaf537d5e",
+              "anchor": {
+                "kind": "release_group",
+                "title": "If the World Was Ending",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-10-19",
+                "credits": [
+                  {
+                    "name": "JP Saxe",
+                    "joinphrase": " ft. ",
+                    "artist": {
+                      "id": "5d27a55a-5731-4ef5-a3ad-d5b44251db0f",
+                      "name": "JP Saxe"
+                    }
+                  },
+                  {
+                    "name": "Julia Michaels",
+                    "artist": {
+                      "id": "4757df70-6c3e-46b8-99c0-a68644595c9a",
+                      "name": "Julia Michaels"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-new-artist",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Megan Thee Stallion",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ee27b2d8-648c-4a9d-a68c-e55066959975",
+            "seed": {
+              "kind": "artist",
+              "name": "Megan Thee Stallion",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Ingrid Andress",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "3ae306a3-b2a6-4969-b59f-89f0370549e5",
+            "seed": {
+              "kind": "artist",
+              "name": "Ingrid Andress",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Phoebe Bridgers",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "96855c21-b832-4366-ba12-0d2330c36a86",
+            "seed": {
+              "kind": "artist",
+              "name": "Phoebe Bridgers",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Chika",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e2203e1f-8091-4d19-8ff8-a5870b6dc5d9",
+            "seed": {
+              "kind": "artist",
+              "name": "CHIKA",
+              "mbType": "Person",
+              "disambiguation": "Chika Oranika, Alabama-born rapper"
+            }
+          }
+        },
+        {
+          "title": "Noah Cyrus",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "5df148ae-78eb-495a-8a0b-d16f3105992d",
+            "seed": {
+              "kind": "artist",
+              "name": "Noah Cyrus",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "D Smoke",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "9b32eab4-d025-4132-b764-b4ef33bf1138",
+            "seed": {
+              "kind": "artist",
+              "name": "D Smoke",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Doja Cat",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "5df62a88-cac9-490a-b62c-c7c88f4020f4",
+            "seed": {
+              "kind": "artist",
+              "name": "Doja Cat",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Kaytranada",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e56aee57-d90e-40cf-a70d-beb70f6f3c69",
+            "seed": {
+              "kind": "artist",
+              "name": "KAYTRANADA",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-pop-vocal-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Future Nostalgia",
+          "artist": "Dua Lipa",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "aa366795-92d7-4d67-91fa-6741f82a4858",
+            "seed": {
+              "kind": "release_group",
+              "title": "Future Nostalgia",
+              "category": "studio",
+              "firstReleaseDate": "2020-03-21",
+              "credits": [
+                {
+                  "name": "Dua Lipa",
+                  "artist": {
+                    "id": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+                    "name": "Dua Lipa"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Changes",
+          "artist": "Justin Bieber",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "7f673bef-5e95-46a7-baa2-8f29df0624cf",
+            "seed": {
+              "kind": "release_group",
+              "title": "Changes",
+              "category": "studio",
+              "firstReleaseDate": "2020-02-14",
+              "credits": [
+                {
+                  "name": "Justin Bieber",
+                  "artist": {
+                    "id": "e0140a67-e4d1-4f13-8a01-364355bee46e",
+                    "name": "Justin Bieber"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Chromatica",
+          "artist": "Lady Gaga",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "accd791c-5948-4414-8ae2-16b71f487863",
+            "seed": {
+              "kind": "release_group",
+              "title": "Chromatica",
+              "category": "studio",
+              "firstReleaseDate": "2020-05-29",
+              "credits": [
+                {
+                  "name": "Lady Gaga",
+                  "artist": {
+                    "id": "650e7db6-b795-4eb5-a702-5ea2fc46c848",
+                    "name": "Lady Gaga"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Fine Line",
+          "artist": "Harry Styles",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b9990da8-7953-4e64-aea5-065ca9cd3cb7",
+            "seed": {
+              "kind": "release_group",
+              "title": "Fine Line",
+              "category": "studio",
+              "firstReleaseDate": "2019-12-13",
+              "credits": [
+                {
+                  "name": "Harry Styles",
+                  "artist": {
+                    "id": "7eb1ce54-a355-41f9-8d68-e018b096d427",
+                    "name": "Harry Styles"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Folklore",
+          "artist": "Taylor Swift",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "f1d08326-c23b-4b43-be3b-20b33ab10bf6",
+            "seed": {
+              "kind": "release_group",
+              "title": "folklore",
+              "category": "studio",
+              "firstReleaseDate": "2020-07-24",
+              "credits": [
+                {
+                  "name": "Taylor Swift",
+                  "artist": {
+                    "id": "20244d07-534f-4eff-b4d4-930878889970",
+                    "name": "Taylor Swift"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-dance-electronic-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Bubba",
+          "artist": "Kaytranada",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "7cf8145c-75a6-473c-90a6-6a36c7164f72",
+            "seed": {
+              "kind": "release_group",
+              "title": "BUBBA",
+              "category": "studio",
+              "firstReleaseDate": "2019-12-13",
+              "credits": [
+                {
+                  "name": "KAYTRANADA",
+                  "artist": {
+                    "id": "e56aee57-d90e-40cf-a70d-beb70f6f3c69",
+                    "name": "KAYTRANADA"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Kick I",
+          "artist": "Arca",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ad20ce4b-6596-4335-b170-64452181fa1b",
+            "seed": {
+              "kind": "release_group",
+              "title": "KiCk i",
+              "category": "studio",
+              "firstReleaseDate": "2020-06-26",
+              "credits": [
+                {
+                  "name": "Arca",
+                  "artist": {
+                    "id": "f7625f34-1799-42a4-a1c6-22b5377c767b",
+                    "name": "Arca"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Energy",
+          "artist": "Disclosure",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "cf39d16f-67bf-4d04-a0a3-177a93eba453",
+            "seed": {
+              "kind": "release_group",
+              "title": "ENERGY",
+              "category": "studio",
+              "firstReleaseDate": "2020-08-28",
+              "credits": [
+                {
+                  "name": "Disclosure",
+                  "artist": {
+                    "id": "ae65c507-d9a0-4d42-9a6c-2b1f82158b9f",
+                    "name": "Disclosure"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Planet's Mad",
+          "artist": "Baauer",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6f271b99-16b2-4f80-a5cb-ab3fe194d1dc",
+            "seed": {
+              "kind": "release_group",
+              "title": "Planet’s Mad",
+              "category": "studio",
+              "firstReleaseDate": "2020-06-05",
+              "credits": [
+                {
+                  "name": "Baauer",
+                  "artist": {
+                    "id": "61a54a1e-3fa1-4ccc-bfc2-86c1a27e27de",
+                    "name": "Baauer"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Good Faith",
+          "artist": "Madeon",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "12eff34f-f0a1-474e-a746-23dc70c99fbf",
+            "seed": {
+              "kind": "release_group",
+              "title": "Good Faith",
+              "category": "studio",
+              "firstReleaseDate": "2019-11-15",
+              "credits": [
+                {
+                  "name": "Madeon",
+                  "artist": {
+                    "id": "fa1de503-aba7-41fa-a1ed-371b3e87a717",
+                    "name": "Madeon"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-rock-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "The New Abnormal",
+          "artist": "The Strokes",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "43ca5aa6-92de-47e9-8f0b-9112e4881426",
+            "seed": {
+              "kind": "release_group",
+              "title": "The New Abnormal",
+              "category": "studio",
+              "firstReleaseDate": "2020-04-10",
+              "credits": [
+                {
+                  "name": "The Strokes",
+                  "artist": {
+                    "id": "f181961b-20f7-459e-89de-920ef03c7ed0",
+                    "name": "The Strokes"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "A Hero's Death",
+          "artist": "Fontaines D.C.",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "8eac43e3-2fbc-488b-b728-f79c17836fef",
+            "seed": {
+              "kind": "release_group",
+              "title": "A Hero’s Death",
+              "category": "studio",
+              "firstReleaseDate": "2020-07-31",
+              "credits": [
+                {
+                  "name": "Fontaines D.C.",
+                  "artist": {
+                    "id": "fd87acc7-e0a0-4a45-bc2a-d2ab5c10be68",
+                    "name": "Fontaines D.C."
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Kiwanuka",
+          "artist": "Michael Kiwanuka",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "042fe94f-5846-469c-a739-38a9e0574d5c",
+            "seed": {
+              "kind": "release_group",
+              "title": "KIWANUKA",
+              "category": "studio",
+              "firstReleaseDate": "2019-10-25",
+              "credits": [
+                {
+                  "name": "Michael Kiwanuka",
+                  "artist": {
+                    "id": "11f570ff-44d9-4e9c-8812-e6d56103c5c1",
+                    "name": "Michael Kiwanuka"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Daylight",
+          "artist": "Grace Potter",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "fdec1982-00ee-4c7f-9903-be50c35bbacf",
+            "seed": {
+              "kind": "release_group",
+              "title": "Daylight",
+              "category": "studio",
+              "firstReleaseDate": "2019-10-25",
+              "credits": [
+                {
+                  "name": "Grace Potter",
+                  "artist": {
+                    "id": "b1103b87-3b91-4ec5-9d7b-15c2d1e486af",
+                    "name": "Grace Potter"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Sound & Fury",
+          "artist": "Sturgill Simpson",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a8ed767b-cb92-4c1c-bf97-147fa56b1180",
+            "seed": {
+              "kind": "release_group",
+              "title": "SOUND & FURY",
+              "category": "studio",
+              "firstReleaseDate": "2019-09-27",
+              "credits": [
+                {
+                  "name": "Sturgill Simpson",
+                  "artist": {
+                    "id": "f6e61750-a6b7-4d88-979b-052345cd0e4a",
+                    "name": "Sturgill Simpson"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-alternative-music-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Fetch the Bolt Cutters",
+          "artist": "Fiona Apple",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "882db6d8-e28b-46ba-8a30-277e86fbddf7",
+            "seed": {
+              "kind": "release_group",
+              "title": "Fetch the Bolt Cutters",
+              "category": "studio",
+              "firstReleaseDate": "2020-04-17",
+              "credits": [
+                {
+                  "name": "Fiona Apple",
+                  "artist": {
+                    "id": "a9ee533f-8871-4f62-a6bb-91eb264abc90",
+                    "name": "Fiona Apple"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Hyperspace",
+          "artist": "Beck",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "67ad5df9-bd8c-45d9-aa1b-14a3ff2cb2ee",
+            "seed": {
+              "kind": "release_group",
+              "title": "Hyperspace",
+              "category": "studio",
+              "firstReleaseDate": "2019-11-22",
+              "credits": [
+                {
+                  "name": "Beck",
+                  "artist": {
+                    "id": "309c62ba-7a22-4277-9f67-4a162526d18a",
+                    "name": "Beck"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Punisher",
+          "artist": "Phoebe Bridgers",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "cf75fd5a-ca84-4371-94d7-27410360f06b",
+            "seed": {
+              "kind": "release_group",
+              "title": "Punisher",
+              "category": "studio",
+              "firstReleaseDate": "2020-06-18",
+              "credits": [
+                {
+                  "name": "Phoebe Bridgers",
+                  "artist": {
+                    "id": "96855c21-b832-4366-ba12-0d2330c36a86",
+                    "name": "Phoebe Bridgers"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Jaime",
+          "artist": "Brittany Howard",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "4577df3e-7447-43d2-a426-8ab74be0951f",
+            "seed": {
+              "kind": "release_group",
+              "title": "Jaime",
+              "category": "studio",
+              "firstReleaseDate": "2019-09-20",
+              "credits": [
+                {
+                  "name": "Brittany Howard",
+                  "artist": {
+                    "id": "03eda2c4-a2b3-4a4e-9527-6791b0ed9d2d",
+                    "name": "Brittany Howard"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "The Slow Rush",
+          "artist": "Tame Impala",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c6fc678e-e987-45c5-811c-e2bd09c8b902",
+            "seed": {
+              "kind": "release_group",
+              "title": "The Slow Rush",
+              "category": "studio",
+              "firstReleaseDate": "2020-02-14",
+              "credits": [
+                {
+                  "name": "Tame Impala",
+                  "artist": {
+                    "id": "63aa26c3-d59b-4da4-84ac-716b54f1ef4d",
+                    "name": "Tame Impala"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-rnb-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Bigger Love",
+          "artist": "John Legend",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d33afbf3-2b26-45d6-8da3-6b0e832fb7c5",
+            "seed": {
+              "kind": "release_group",
+              "title": "Bigger Love",
+              "category": "studio",
+              "firstReleaseDate": "2020-06-19",
+              "credits": [
+                {
+                  "name": "John Legend",
+                  "artist": {
+                    "id": "75a72702-a5ef-4513-bca5-c5b944903546",
+                    "name": "John Legend"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Happy 2 Be Here",
+          "artist": "Ant Clemons",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c1d523b7-35dd-4e28-85d7-36fa6d2c2a11",
+            "seed": {
+              "kind": "release_group",
+              "title": "Happy 2 Be Here",
+              "category": "single_ep",
+              "firstReleaseDate": "2020-02-28",
+              "credits": [
+                {
+                  "name": "Ant Clemons",
+                  "artist": {
+                    "id": "0843b9d2-da32-406b-8c31-2ac4a18e42a8",
+                    "name": "Ant Clemons"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Take Time",
+          "artist": "Giveon",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "8891da89-48da-4f56-85d4-e24053584ea5",
+            "seed": {
+              "kind": "release_group",
+              "title": "Take Time",
+              "category": "single_ep",
+              "firstReleaseDate": "2020-03-27",
+              "credits": [
+                {
+                  "name": "GIVĒON",
+                  "artist": {
+                    "id": "ad322b8b-31b2-437d-8fd8-1af13c1d7b91",
+                    "name": "GIVĒON"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "To Feel Love/D",
+          "artist": "Luke James",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "67e27358-f908-4d75-86d4-539172fb54f4",
+            "seed": {
+              "kind": "release_group",
+              "title": "To Feel Love/D",
+              "category": "studio",
+              "firstReleaseDate": "2020-01-31",
+              "credits": [
+                {
+                  "name": "Luke James",
+                  "artist": {
+                    "id": "128b4591-1702-4e83-b4e8-67d49c7fbd69",
+                    "name": "Luke James"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "All Rise",
+          "artist": "Gregory Porter",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "630bad48-2f57-46df-8248-2ce172e07327",
+            "seed": {
+              "kind": "release_group",
+              "title": "All Rise",
+              "category": "studio",
+              "firstReleaseDate": "2020-08-28",
+              "credits": [
+                {
+                  "name": "Gregory Porter",
+                  "artist": {
+                    "id": "7ac1e33f-0cdf-4e81-b914-41830700d746",
+                    "name": "Gregory Porter"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-rap-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "King's Disease",
+          "artist": "Nas",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "73edf0fe-d715-44e9-b18d-c16a4a765140",
+            "seed": {
+              "kind": "release_group",
+              "title": "King’s Disease",
+              "category": "studio",
+              "firstReleaseDate": "2020-08-20",
+              "credits": [
+                {
+                  "name": "Nas",
+                  "artist": {
+                    "id": "cfbc0924-0035-4d6c-8197-f024653af823",
+                    "name": "Nas"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Black Habits",
+          "artist": "D Smoke",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "8ea71400-5b6c-4919-adb2-5c93f6b862e8",
+            "seed": {
+              "kind": "release_group",
+              "title": "Black Habits",
+              "category": "studio",
+              "firstReleaseDate": "2020-02-07",
+              "credits": [
+                {
+                  "name": "D Smoke",
+                  "artist": {
+                    "id": "9b32eab4-d025-4132-b764-b4ef33bf1138",
+                    "name": "D Smoke"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Alfredo",
+          "artist": "Freddie Gibbs & The Alchemist",
+          "searchAs": {
+            "artist": "Freddie Gibbs"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "13615d5f-c913-4f48-afc7-6f56c8313fd5",
+            "seed": {
+              "kind": "release_group",
+              "title": "Alfredo",
+              "category": "studio",
+              "firstReleaseDate": "2020-05-29",
+              "credits": [
+                {
+                  "name": "Freddie Gibbs",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "21645c31-fe1c-45a4-955c-3e172b12c3f9",
+                    "name": "Freddie Gibbs"
+                  }
+                },
+                {
+                  "name": "The Alchemist",
+                  "artist": {
+                    "id": "03f3deb7-0419-4bf9-a1e7-511946385717",
+                    "name": "The Alchemist"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "A Written Testimony",
+          "artist": "Jay Electronica",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e3db4db7-603a-420b-8e7d-112bd4a8f6c9",
+            "seed": {
+              "kind": "release_group",
+              "title": "A Written Testimony",
+              "category": "studio",
+              "firstReleaseDate": "2020-03-13",
+              "credits": [
+                {
+                  "name": "Jay Electronica",
+                  "artist": {
+                    "id": "8bf283b9-b1e2-4632-a953-eacd212a543e",
+                    "name": "Jay Electronica"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "The Allegory",
+          "artist": "Royce da 5'9\"",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6d3ed0d8-948f-4644-afd9-939dd00e11d7",
+            "seed": {
+              "kind": "release_group",
+              "title": "The Allegory",
+              "category": "studio",
+              "firstReleaseDate": "2020-02-21",
+              "credits": [
+                {
+                  "name": "Royce da 5′9″",
+                  "artist": {
+                    "id": "a818c24f-d7c0-4420-afe9-09971652b87e",
+                    "name": "Royce da 5′9″"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-country-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Wildcard",
+          "artist": "Miranda Lambert",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e2ad3e59-2382-4cc8-90e7-f2bad4b051e4",
+            "seed": {
+              "kind": "release_group",
+              "title": "Wildcard",
+              "category": "studio",
+              "firstReleaseDate": "2019-11-01",
+              "credits": [
+                {
+                  "name": "Miranda Lambert",
+                  "artist": {
+                    "id": "4eca1aa0-c79f-481b-af8a-4a2d6c41aa5c",
+                    "name": "Miranda Lambert"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Nightfall",
+          "artist": "Little Big Town",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "05358d56-89e7-4a46-a491-196179efbeb0",
+            "seed": {
+              "kind": "release_group",
+              "title": "Nightfall",
+              "category": "studio",
+              "firstReleaseDate": "2020-01-17",
+              "credits": [
+                {
+                  "name": "Little Big Town",
+                  "artist": {
+                    "id": "76e78b58-f301-4975-8058-7f84d8360738",
+                    "name": "Little Big Town"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Never Will",
+          "artist": "Ashley McBryde",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1a511cd6-9ccb-4653-9ef3-4888bcbe6f07",
+            "seed": {
+              "kind": "release_group",
+              "title": "Never Will",
+              "category": "studio",
+              "firstReleaseDate": "2020-04-03",
+              "credits": [
+                {
+                  "name": "Ashley McBryde",
+                  "artist": {
+                    "id": "ba8520a7-e14a-4ba6-9ab5-1fab4d0a154f",
+                    "name": "Ashley McBryde"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Lady Like",
+          "artist": "Ingrid Andress",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "f02a6569-b0a2-446c-9be3-7600e60bf93f",
+            "seed": {
+              "kind": "release_group",
+              "title": "Lady Like",
+              "category": "studio",
+              "firstReleaseDate": "2020-03-27",
+              "credits": [
+                {
+                  "name": "Ingrid Andress",
+                  "artist": {
+                    "id": "3ae306a3-b2a6-4969-b59f-89f0370549e5",
+                    "name": "Ingrid Andress"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Your Life Is a Record",
+          "artist": "Brandy Clark",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "535d102e-949c-4f2a-b4df-6c1360d948ce",
+            "seed": {
+              "kind": "release_group",
+              "title": "Your Life Is a Record",
+              "category": "studio",
+              "firstReleaseDate": "2020-03-06",
+              "credits": [
+                {
+                  "name": "Brandy Clark",
+                  "artist": {
+                    "id": "d264a026-7485-4d3a-b4f1-f13fea5c76e2",
+                    "name": "Brandy Clark"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-latin-pop-or-urban-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "YHLQMDLG",
+          "artist": "Bad Bunny",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e20e0bc0-4660-461b-8ac7-14ad2459cda6",
+            "seed": {
+              "kind": "release_group",
+              "title": "YHLQMDLG",
+              "category": "studio",
+              "firstReleaseDate": "2020-02-29",
+              "credits": [
+                {
+                  "name": "Bad Bunny",
+                  "artist": {
+                    "id": "89aa5ecb-59ad-46f5-b3eb-2d424e941f19",
+                    "name": "Bad Bunny"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Por Primera Vez",
+          "artist": "Camilo",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1147947b-df8f-46f7-b103-58b3122b6a85",
+            "seed": {
+              "kind": "release_group",
+              "title": "Por primera vez",
+              "category": "studio",
+              "firstReleaseDate": "2020-04-17",
+              "credits": [
+                {
+                  "name": "Camilo",
+                  "artist": {
+                    "id": "ed90e3b4-8eb8-4f9d-a24e-533c0c60c720",
+                    "name": "Camilo"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Mesa Para Dos",
+          "artist": "Kany García",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2bfee7b2-04a4-4d67-bc9d-2a02713d8919",
+            "seed": {
+              "kind": "release_group",
+              "title": "Mesa para dos",
+              "category": "studio",
+              "firstReleaseDate": "2020-05-28",
+              "credits": [
+                {
+                  "name": "Kany García",
+                  "artist": {
+                    "id": "b73433e9-24bd-4446-bf0c-40826bd48b44",
+                    "name": "Kany García"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Pausa",
+          "artist": "Ricky Martin",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ee4ffa7f-f0d4-4208-bc5b-9e8a6e2948b4",
+            "seed": {
+              "kind": "release_group",
+              "title": "PAUSA",
+              "category": "single_ep",
+              "firstReleaseDate": "2020-05-28",
+              "credits": [
+                {
+                  "name": "Ricky Martin",
+                  "artist": {
+                    "id": "70ea63ea-70dc-4b63-951a-2c249d2b3b0a",
+                    "name": "Ricky Martin"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "3:33",
+          "artist": "Debi Nova",
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        }
+      ]
+    }
+  ]
+}

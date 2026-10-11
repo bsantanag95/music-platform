@@ -1,0 +1,2508 @@
+{
+  "award": "grammy",
+  "year": 2023,
+  "edition": 65,
+  "heldOn": "2023-02-05",
+  "sourceUrl": "https://en.wikipedia.org/wiki/65th_Annual_Grammy_Awards",
+  "categories": [
+    {
+      "key": "album-of-the-year",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Harry's House",
+          "artist": "Harry Styles",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d712ba0e-25fa-4c03-aecd-ec0c100deba5",
+            "seed": {
+              "kind": "release_group",
+              "title": "Harry’s House",
+              "category": "studio",
+              "firstReleaseDate": "2022-04-20",
+              "credits": [
+                {
+                  "name": "Harry Styles",
+                  "artist": {
+                    "id": "7eb1ce54-a355-41f9-8d68-e018b096d427",
+                    "name": "Harry Styles"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Voyage",
+          "artist": "ABBA",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "9077617d-b73f-4498-b415-175d5b843790",
+            "seed": {
+              "kind": "release_group",
+              "title": "Voyage",
+              "category": "studio",
+              "firstReleaseDate": "2021-11-05",
+              "credits": [
+                {
+                  "name": "ABBA",
+                  "artist": {
+                    "id": "d87e52c5-bb8d-4da8-b941-9f4928627dc8",
+                    "name": "ABBA"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "30",
+          "artist": "Adele",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d8a99910-33c2-481d-9b96-085ece5545f6",
+            "seed": {
+              "kind": "release_group",
+              "title": "30",
+              "category": "studio",
+              "firstReleaseDate": "2021-11-19",
+              "credits": [
+                {
+                  "name": "Adele",
+                  "artist": {
+                    "id": "cc2c9c3c-b7bc-4b8b-84d8-4fbd8779e493",
+                    "name": "Adele"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Un Verano Sin Ti",
+          "artist": "Bad Bunny",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e992b449-141b-4aea-b07b-9b2a478a8570",
+            "seed": {
+              "kind": "release_group",
+              "title": "Un verano sin ti",
+              "category": "studio",
+              "firstReleaseDate": "2022-05-06",
+              "credits": [
+                {
+                  "name": "Bad Bunny",
+                  "artist": {
+                    "id": "89aa5ecb-59ad-46f5-b3eb-2d424e941f19",
+                    "name": "Bad Bunny"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Renaissance",
+          "artist": "Beyoncé",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2c385052-5083-43a2-b1e5-36566d2ae3c0",
+            "seed": {
+              "kind": "release_group",
+              "title": "RENAISSANCE",
+              "category": "studio",
+              "firstReleaseDate": "2022-07-29",
+              "credits": [
+                {
+                  "name": "Beyoncé",
+                  "artist": {
+                    "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                    "name": "Beyoncé"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Music of the Spheres",
+          "artist": "Coldplay",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c169f440-90bf-4a0b-aa6a-c83072bd7eed",
+            "seed": {
+              "kind": "release_group",
+              "title": "Music of the Spheres",
+              "category": "studio",
+              "firstReleaseDate": "2021-10-15",
+              "credits": [
+                {
+                  "name": "Coldplay",
+                  "artist": {
+                    "id": "cc197bad-dc9c-440d-a5b5-d52ba2e14234",
+                    "name": "Coldplay"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Mr. Morale & the Big Steppers",
+          "artist": "Kendrick Lamar",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6bd70eee-bd46-4738-851a-f50c19d8d6db",
+            "seed": {
+              "kind": "release_group",
+              "title": "Mr. Morale & the Big Steppers",
+              "category": "studio",
+              "firstReleaseDate": "2022-05-13",
+              "credits": [
+                {
+                  "name": "Kendrick Lamar",
+                  "artist": {
+                    "id": "381086ea-f511-4aba-bdf9-71c753dc5077",
+                    "name": "Kendrick Lamar"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Special",
+          "artist": "Lizzo",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "29bd1493-ce60-43c6-afb4-487b77de494c",
+            "seed": {
+              "kind": "release_group",
+              "title": "Special",
+              "category": "studio",
+              "firstReleaseDate": "2022-07-15",
+              "credits": [
+                {
+                  "name": "Lizzo",
+                  "artist": {
+                    "id": "8fb5370b-9568-4b61-9da5-2aa12c9928db",
+                    "name": "Lizzo"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "In These Silent Days",
+          "artist": "Brandi Carlile",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "f72c752e-599f-40f0-b1db-ec74319303e0",
+            "seed": {
+              "kind": "release_group",
+              "title": "In These Silent Days",
+              "category": "studio",
+              "firstReleaseDate": "2021-10-01",
+              "credits": [
+                {
+                  "name": "Brandi Carlile",
+                  "artist": {
+                    "id": "baf05baf-69fb-47dd-93c2-033536b8c385",
+                    "name": "Brandi Carlile"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Good Morning Gorgeous (Deluxe)",
+          "artist": "Mary J. Blige",
+          "searchAs": {
+            "title": "Good Morning Gorgeous"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "453d1b44-bd15-4594-bd1c-7afc675ee84a",
+            "seed": {
+              "kind": "release_group",
+              "title": "Good Morning Gorgeous",
+              "category": "studio",
+              "firstReleaseDate": "2022-02-11",
+              "credits": [
+                {
+                  "name": "Mary J. Blige",
+                  "artist": {
+                    "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
+                    "name": "Mary J. Blige"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "record-of-the-year",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "About Damn Time",
+          "artist": "Lizzo",
+          "anchor": {
+            "title": "Special",
+            "artist": "Lizzo"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c6ac0f0a-3c15-4615-ace6-64c92144801a",
+            "seed": {
+              "kind": "recording",
+              "title": "About Damn Time",
+              "durationSec": 192,
+              "credits": [
+                {
+                  "name": "Lizzo",
+                  "artist": {
+                    "id": "8fb5370b-9568-4b61-9da5-2aa12c9928db",
+                    "name": "Lizzo"
+                  }
+                }
+              ],
+              "anchorMbid": "29bd1493-ce60-43c6-afb4-487b77de494c",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Special",
+                "category": "studio",
+                "firstReleaseDate": "2022-07-15",
+                "credits": [
+                  {
+                    "name": "Lizzo",
+                    "artist": {
+                      "id": "8fb5370b-9568-4b61-9da5-2aa12c9928db",
+                      "name": "Lizzo"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Don't Shut Me Down",
+          "artist": "ABBA",
+          "anchor": {
+            "title": "Voyage",
+            "artist": "ABBA"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "5e53528a-aa64-4cd0-87e2-d7b1748ccad5",
+            "seed": {
+              "kind": "recording",
+              "title": "Don’t Shut Me Down",
+              "durationSec": 236,
+              "credits": [
+                {
+                  "name": "ABBA",
+                  "artist": {
+                    "id": "d87e52c5-bb8d-4da8-b941-9f4928627dc8",
+                    "name": "ABBA"
+                  }
+                }
+              ],
+              "anchorMbid": "9077617d-b73f-4498-b415-175d5b843790",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Voyage",
+                "category": "studio",
+                "firstReleaseDate": "2021-11-05",
+                "credits": [
+                  {
+                    "name": "ABBA",
+                    "artist": {
+                      "id": "d87e52c5-bb8d-4da8-b941-9f4928627dc8",
+                      "name": "ABBA"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Easy on Me",
+          "artist": "Adele",
+          "anchor": {
+            "title": "30",
+            "artist": "Adele"
+          },
+          "won": false,
+          "resolved": {
+            "status": "manual",
+            "mbid": "a7720370-b5a1-49b0-983a-85081f0bcbfe",
+            "seed": {
+              "kind": "recording",
+              "title": "Easy on Me",
+              "durationSec": 224,
+              "credits": [
+                {
+                  "name": "Adele",
+                  "artist": {
+                    "id": "cc2c9c3c-b7bc-4b8b-84d8-4fbd8779e493",
+                    "name": "Adele"
+                  }
+                }
+              ],
+              "anchorMbid": "d8a99910-33c2-481d-9b96-085ece5545f6",
+              "anchor": {
+                "kind": "release_group",
+                "title": "30",
+                "category": "studio",
+                "firstReleaseDate": "2021-11-19",
+                "credits": [
+                  {
+                    "name": "Adele",
+                    "artist": {
+                      "id": "cc2c9c3c-b7bc-4b8b-84d8-4fbd8779e493",
+                      "name": "Adele"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Break My Soul",
+          "artist": "Beyoncé",
+          "anchor": {
+            "title": "Renaissance",
+            "artist": "Beyoncé"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "378f8d61-8d50-45be-85e6-d442b9941ea5",
+            "seed": {
+              "kind": "recording",
+              "title": "BREAK MY SOUL",
+              "durationSec": 278,
+              "credits": [
+                {
+                  "name": "Beyoncé",
+                  "artist": {
+                    "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                    "name": "Beyoncé"
+                  }
+                }
+              ],
+              "anchorMbid": "2c385052-5083-43a2-b1e5-36566d2ae3c0",
+              "anchor": {
+                "kind": "release_group",
+                "title": "RENAISSANCE",
+                "category": "studio",
+                "firstReleaseDate": "2022-07-29",
+                "credits": [
+                  {
+                    "name": "Beyoncé",
+                    "artist": {
+                      "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                      "name": "Beyoncé"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Good Morning Gorgeous",
+          "artist": "Mary J. Blige",
+          "anchor": {
+            "title": "Good Morning Gorgeous",
+            "artist": "Mary J. Blige"
+          },
+          "won": false,
+          "resolved": {
+            "status": "manual",
+            "mbid": "9aeaf67f-bc61-4f76-838c-9cb897406df8",
+            "seed": {
+              "kind": "recording",
+              "title": "Good Morning Gorgeous",
+              "durationSec": 175,
+              "credits": [
+                {
+                  "name": "Mary J. Blige",
+                  "artist": {
+                    "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
+                    "name": "Mary J. Blige"
+                  }
+                }
+              ],
+              "anchorMbid": "453d1b44-bd15-4594-bd1c-7afc675ee84a",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Good Morning Gorgeous",
+                "category": "studio",
+                "firstReleaseDate": "2022-02-11",
+                "credits": [
+                  {
+                    "name": "Mary J. Blige",
+                    "artist": {
+                      "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
+                      "name": "Mary J. Blige"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "You and Me on the Rock",
+          "artist": "Brandi Carlile featuring Lucius",
+          "anchor": {
+            "title": "In These Silent Days",
+            "artist": "Brandi Carlile"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c407c33f-b0f1-4621-8905-1b9eec23d442",
+            "seed": {
+              "kind": "recording",
+              "title": "You and Me on the Rock",
+              "durationSec": 230,
+              "credits": [
+                {
+                  "name": "Brandi Carlile",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "baf05baf-69fb-47dd-93c2-033536b8c385",
+                    "name": "Brandi Carlile"
+                  }
+                },
+                {
+                  "name": "Lucius",
+                  "artist": {
+                    "id": "1676172f-657a-4771-96ff-4a1c2ef1997e",
+                    "name": "Lucius"
+                  }
+                }
+              ],
+              "anchorMbid": "f72c752e-599f-40f0-b1db-ec74319303e0",
+              "anchor": {
+                "kind": "release_group",
+                "title": "In These Silent Days",
+                "category": "studio",
+                "firstReleaseDate": "2021-10-01",
+                "credits": [
+                  {
+                    "name": "Brandi Carlile",
+                    "artist": {
+                      "id": "baf05baf-69fb-47dd-93c2-033536b8c385",
+                      "name": "Brandi Carlile"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Woman",
+          "artist": "Doja Cat",
+          "anchor": {
+            "title": "Planet Her",
+            "artist": "Doja Cat"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "4d7642a0-c36c-433f-9709-f6ff9a83eb11",
+            "seed": {
+              "kind": "recording",
+              "title": "Woman",
+              "durationSec": 173,
+              "credits": [
+                {
+                  "name": "Doja Cat",
+                  "artist": {
+                    "id": "5df62a88-cac9-490a-b62c-c7c88f4020f4",
+                    "name": "Doja Cat"
+                  }
+                }
+              ],
+              "anchorMbid": "6c90cb91-e615-4545-854b-6d6f10c5cb6d",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Planet Her",
+                "category": "studio",
+                "firstReleaseDate": "2021-06-25",
+                "credits": [
+                  {
+                    "name": "Doja Cat",
+                    "artist": {
+                      "id": "5df62a88-cac9-490a-b62c-c7c88f4020f4",
+                      "name": "Doja Cat"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Bad Habit",
+          "artist": "Steve Lacy",
+          "anchor": {
+            "title": "Gemini Rights",
+            "artist": "Steve Lacy"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1abdf128-2f80-457c-8da0-e554e8e3b534",
+            "seed": {
+              "kind": "recording",
+              "title": "Bad Habit",
+              "durationSec": 232,
+              "credits": [
+                {
+                  "name": "Steve Lacy",
+                  "artist": {
+                    "id": "b29020d6-5dbf-4c99-b16f-c009f8a712ff",
+                    "name": "Steve Lacy"
+                  }
+                }
+              ],
+              "anchorMbid": "ab1c1fd8-f769-4d78-90bc-4677f8ad8c22",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Gemini Rights",
+                "category": "studio",
+                "firstReleaseDate": "2022-07-14",
+                "credits": [
+                  {
+                    "name": "Steve Lacy",
+                    "artist": {
+                      "id": "b29020d6-5dbf-4c99-b16f-c009f8a712ff",
+                      "name": "Steve Lacy"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "The Heart Part 5",
+          "artist": "Kendrick Lamar",
+          "anchor": {
+            "title": "Mr. Morale & the Big Steppers",
+            "artist": "Kendrick Lamar"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "27794da1-0658-4cef-b9f1-11054b11c0e8",
+            "seed": {
+              "kind": "recording",
+              "title": "The Heart, Part 5",
+              "durationSec": 332,
+              "credits": [
+                {
+                  "name": "Kendrick Lamar",
+                  "artist": {
+                    "id": "381086ea-f511-4aba-bdf9-71c753dc5077",
+                    "name": "Kendrick Lamar"
+                  }
+                }
+              ],
+              "anchorMbid": "6bd70eee-bd46-4738-851a-f50c19d8d6db",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Mr. Morale & the Big Steppers",
+                "category": "studio",
+                "firstReleaseDate": "2022-05-13",
+                "credits": [
+                  {
+                    "name": "Kendrick Lamar",
+                    "artist": {
+                      "id": "381086ea-f511-4aba-bdf9-71c753dc5077",
+                      "name": "Kendrick Lamar"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "As It Was",
+          "artist": "Harry Styles",
+          "anchor": {
+            "title": "Harry's House",
+            "artist": "Harry Styles"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "53969964-673a-4407-9396-3087be9245f6",
+            "seed": {
+              "kind": "recording",
+              "title": "As It Was",
+              "durationSec": 167,
+              "credits": [
+                {
+                  "name": "Harry Styles",
+                  "artist": {
+                    "id": "7eb1ce54-a355-41f9-8d68-e018b096d427",
+                    "name": "Harry Styles"
+                  }
+                }
+              ],
+              "anchorMbid": "d712ba0e-25fa-4c03-aecd-ec0c100deba5",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Harry’s House",
+                "category": "studio",
+                "firstReleaseDate": "2022-04-20",
+                "credits": [
+                  {
+                    "name": "Harry Styles",
+                    "artist": {
+                      "id": "7eb1ce54-a355-41f9-8d68-e018b096d427",
+                      "name": "Harry Styles"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "song-of-the-year",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Just Like That",
+          "artist": "Bonnie Raitt",
+          "anchor": {
+            "title": "Just Like That...",
+            "artist": "Bonnie Raitt"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "9207df67-19e7-40ad-878a-120330c90e0e",
+            "seed": {
+              "kind": "recording",
+              "title": "Just Like That",
+              "durationSec": 305,
+              "credits": [
+                {
+                  "name": "Bonnie Raitt",
+                  "artist": {
+                    "id": "0f0da09c-3940-4cb5-879f-4cea28907810",
+                    "name": "Bonnie Raitt"
+                  }
+                }
+              ],
+              "anchorMbid": "bb714334-5052-4c6f-92d8-f8939eea8ffd",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Just Like That…",
+                "category": "studio",
+                "firstReleaseDate": "2022-04-22",
+                "credits": [
+                  {
+                    "name": "Bonnie Raitt",
+                    "artist": {
+                      "id": "0f0da09c-3940-4cb5-879f-4cea28907810",
+                      "name": "Bonnie Raitt"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "ABCDEFU",
+          "artist": "Gayle",
+          "anchor": {
+            "title": "abcdefu",
+            "artist": "Gayle"
+          },
+          "searchAs": {
+            "title": "abcdefu"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "920dd9ae-190a-4026-9189-410ed9b82e48",
+            "seed": {
+              "kind": "recording",
+              "title": "abcdefu",
+              "durationSec": 169,
+              "credits": [
+                {
+                  "name": "GAYLE",
+                  "artist": {
+                    "id": "18fa2604-c608-4e1a-9b9d-05d7360c5817",
+                    "name": "GAYLE"
+                  }
+                }
+              ],
+              "anchorMbid": "23ae5c99-96d8-4804-b9c3-e626dd3a32d8",
+              "anchor": {
+                "kind": "release_group",
+                "title": "abcdefu",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-08-13",
+                "credits": [
+                  {
+                    "name": "GAYLE",
+                    "artist": {
+                      "id": "18fa2604-c608-4e1a-9b9d-05d7360c5817",
+                      "name": "GAYLE"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "About Damn Time",
+          "artist": "Lizzo",
+          "anchor": {
+            "title": "Special",
+            "artist": "Lizzo"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c6ac0f0a-3c15-4615-ace6-64c92144801a",
+            "seed": {
+              "kind": "recording",
+              "title": "About Damn Time",
+              "durationSec": 192,
+              "credits": [
+                {
+                  "name": "Lizzo",
+                  "artist": {
+                    "id": "8fb5370b-9568-4b61-9da5-2aa12c9928db",
+                    "name": "Lizzo"
+                  }
+                }
+              ],
+              "anchorMbid": "29bd1493-ce60-43c6-afb4-487b77de494c",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Special",
+                "category": "studio",
+                "firstReleaseDate": "2022-07-15",
+                "credits": [
+                  {
+                    "name": "Lizzo",
+                    "artist": {
+                      "id": "8fb5370b-9568-4b61-9da5-2aa12c9928db",
+                      "name": "Lizzo"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "All Too Well (10 Minute Version) (The Short Film)",
+          "artist": "Taylor Swift",
+          "anchor": {
+            "title": "Red (Taylor's Version)",
+            "artist": "Taylor Swift"
+          },
+          "searchAs": {
+            "title": "All Too Well (10 Minute Version) (Taylor's Version) (From the Vault)"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "3177689b-8d6f-45a8-bd05-54108ad61e43",
+            "seed": {
+              "kind": "recording",
+              "title": "All Too Well (10 minute version) (Taylor’s version) (from The Vault)",
+              "durationSec": 613,
+              "credits": [
+                {
+                  "name": "Taylor Swift",
+                  "artist": {
+                    "id": "20244d07-534f-4eff-b4d4-930878889970",
+                    "name": "Taylor Swift"
+                  }
+                }
+              ],
+              "anchorMbid": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Red (Taylor’s Version)",
+                "category": "studio",
+                "firstReleaseDate": "2021-11-11",
+                "credits": [
+                  {
+                    "name": "Taylor Swift",
+                    "artist": {
+                      "id": "20244d07-534f-4eff-b4d4-930878889970",
+                      "name": "Taylor Swift"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "As It Was",
+          "artist": "Harry Styles",
+          "anchor": {
+            "title": "Harry's House",
+            "artist": "Harry Styles"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "53969964-673a-4407-9396-3087be9245f6",
+            "seed": {
+              "kind": "recording",
+              "title": "As It Was",
+              "durationSec": 167,
+              "credits": [
+                {
+                  "name": "Harry Styles",
+                  "artist": {
+                    "id": "7eb1ce54-a355-41f9-8d68-e018b096d427",
+                    "name": "Harry Styles"
+                  }
+                }
+              ],
+              "anchorMbid": "d712ba0e-25fa-4c03-aecd-ec0c100deba5",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Harry’s House",
+                "category": "studio",
+                "firstReleaseDate": "2022-04-20",
+                "credits": [
+                  {
+                    "name": "Harry Styles",
+                    "artist": {
+                      "id": "7eb1ce54-a355-41f9-8d68-e018b096d427",
+                      "name": "Harry Styles"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Bad Habit",
+          "artist": "Steve Lacy",
+          "anchor": {
+            "title": "Gemini Rights",
+            "artist": "Steve Lacy"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1abdf128-2f80-457c-8da0-e554e8e3b534",
+            "seed": {
+              "kind": "recording",
+              "title": "Bad Habit",
+              "durationSec": 232,
+              "credits": [
+                {
+                  "name": "Steve Lacy",
+                  "artist": {
+                    "id": "b29020d6-5dbf-4c99-b16f-c009f8a712ff",
+                    "name": "Steve Lacy"
+                  }
+                }
+              ],
+              "anchorMbid": "ab1c1fd8-f769-4d78-90bc-4677f8ad8c22",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Gemini Rights",
+                "category": "studio",
+                "firstReleaseDate": "2022-07-14",
+                "credits": [
+                  {
+                    "name": "Steve Lacy",
+                    "artist": {
+                      "id": "b29020d6-5dbf-4c99-b16f-c009f8a712ff",
+                      "name": "Steve Lacy"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Break My Soul",
+          "artist": "Beyoncé",
+          "anchor": {
+            "title": "Renaissance",
+            "artist": "Beyoncé"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "378f8d61-8d50-45be-85e6-d442b9941ea5",
+            "seed": {
+              "kind": "recording",
+              "title": "BREAK MY SOUL",
+              "durationSec": 278,
+              "credits": [
+                {
+                  "name": "Beyoncé",
+                  "artist": {
+                    "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                    "name": "Beyoncé"
+                  }
+                }
+              ],
+              "anchorMbid": "2c385052-5083-43a2-b1e5-36566d2ae3c0",
+              "anchor": {
+                "kind": "release_group",
+                "title": "RENAISSANCE",
+                "category": "studio",
+                "firstReleaseDate": "2022-07-29",
+                "credits": [
+                  {
+                    "name": "Beyoncé",
+                    "artist": {
+                      "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                      "name": "Beyoncé"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Easy on Me",
+          "artist": "Adele",
+          "anchor": {
+            "title": "30",
+            "artist": "Adele"
+          },
+          "won": false,
+          "resolved": {
+            "status": "manual",
+            "mbid": "a7720370-b5a1-49b0-983a-85081f0bcbfe",
+            "seed": {
+              "kind": "recording",
+              "title": "Easy on Me",
+              "durationSec": 224,
+              "credits": [
+                {
+                  "name": "Adele",
+                  "artist": {
+                    "id": "cc2c9c3c-b7bc-4b8b-84d8-4fbd8779e493",
+                    "name": "Adele"
+                  }
+                }
+              ],
+              "anchorMbid": "d8a99910-33c2-481d-9b96-085ece5545f6",
+              "anchor": {
+                "kind": "release_group",
+                "title": "30",
+                "category": "studio",
+                "firstReleaseDate": "2021-11-19",
+                "credits": [
+                  {
+                    "name": "Adele",
+                    "artist": {
+                      "id": "cc2c9c3c-b7bc-4b8b-84d8-4fbd8779e493",
+                      "name": "Adele"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "God Did",
+          "artist": "DJ Khaled featuring Rick Ross, Lil Wayne, Jay-Z, John Legend & Fridayy",
+          "anchor": {
+            "title": "God Did",
+            "artist": "DJ Khaled"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "12ed45c2-5bba-4b0c-afc5-4105779ef108",
+            "seed": {
+              "kind": "recording",
+              "title": "GOD DID",
+              "durationSec": 502,
+              "credits": [
+                {
+                  "name": "DJ Khaled",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "081a2d60-9791-4e05-a075-f1890355eeee",
+                    "name": "DJ Khaled"
+                  }
+                },
+                {
+                  "name": "Rick Ross",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "13bcb2bb-db37-4397-baf5-e0f085be2d64",
+                    "name": "Rick Ross"
+                  }
+                },
+                {
+                  "name": "Lil Wayne",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "ac9a487a-d9d2-4f27-bb23-0f4686488345",
+                    "name": "Lil Wayne"
+                  }
+                },
+                {
+                  "name": "JAY‐Z",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "f82bcf78-5b69-4622-a5ef-73800768d9ac",
+                    "name": "JAŸ-Z"
+                  }
+                },
+                {
+                  "name": "John Legend",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "75a72702-a5ef-4513-bca5-c5b944903546",
+                    "name": "John Legend"
+                  }
+                },
+                {
+                  "name": "Fridayy",
+                  "artist": {
+                    "id": "cb9c2a2b-96c2-44d7-bd31-04ef87572b57",
+                    "name": "Fridayy"
+                  }
+                }
+              ],
+              "anchorMbid": "ce15f619-d9f6-4a76-be1d-321c719f51e5",
+              "anchor": {
+                "kind": "release_group",
+                "title": "GOD DID",
+                "category": "studio",
+                "firstReleaseDate": "2022-08-26",
+                "credits": [
+                  {
+                    "name": "DJ Khaled",
+                    "artist": {
+                      "id": "081a2d60-9791-4e05-a075-f1890355eeee",
+                      "name": "DJ Khaled"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "The Heart Part 5",
+          "artist": "Kendrick Lamar",
+          "anchor": {
+            "title": "Mr. Morale & the Big Steppers",
+            "artist": "Kendrick Lamar"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "27794da1-0658-4cef-b9f1-11054b11c0e8",
+            "seed": {
+              "kind": "recording",
+              "title": "The Heart, Part 5",
+              "durationSec": 332,
+              "credits": [
+                {
+                  "name": "Kendrick Lamar",
+                  "artist": {
+                    "id": "381086ea-f511-4aba-bdf9-71c753dc5077",
+                    "name": "Kendrick Lamar"
+                  }
+                }
+              ],
+              "anchorMbid": "6bd70eee-bd46-4738-851a-f50c19d8d6db",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Mr. Morale & the Big Steppers",
+                "category": "studio",
+                "firstReleaseDate": "2022-05-13",
+                "credits": [
+                  {
+                    "name": "Kendrick Lamar",
+                    "artist": {
+                      "id": "381086ea-f511-4aba-bdf9-71c753dc5077",
+                      "name": "Kendrick Lamar"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-new-artist",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Samara Joy",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "bf9bd7ab-57f1-426e-bf4f-2da6103b9c17",
+            "seed": {
+              "kind": "artist",
+              "name": "Samara Joy",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Anitta",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d606b860-cc03-4959-a3fd-3a24bccf2560",
+            "seed": {
+              "kind": "artist",
+              "name": "Anitta",
+              "mbType": "Person",
+              "disambiguation": "Brazilian singer"
+            }
+          }
+        },
+        {
+          "title": "Omar Apollo",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "0b966a38-5ad9-43c1-b86b-c07079523165",
+            "seed": {
+              "kind": "artist",
+              "name": "Omar Apollo",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Domi and JD Beck",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "bbe3ca80-7fb3-4a7f-acef-071606af0d3d",
+            "seed": {
+              "kind": "artist",
+              "name": "DOMi & JD BECK",
+              "mbType": "Group",
+              "disambiguation": "French-American jazz duo"
+            }
+          }
+        },
+        {
+          "title": "Muni Long",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "66acfbaf-a28e-49c1-aeff-ef92e4358d90",
+            "seed": {
+              "kind": "artist",
+              "name": "Muni Long",
+              "mbType": "Person",
+              "disambiguation": "R&B/soul singer-songwriter"
+            }
+          }
+        },
+        {
+          "title": "Latto",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "355cc194-b8db-4af2-8678-c7ad54213f4b",
+            "seed": {
+              "kind": "artist",
+              "name": "Latto",
+              "mbType": "Person",
+              "disambiguation": "American rapper"
+            }
+          }
+        },
+        {
+          "title": "Måneskin",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "3862342a-43c4-4cdb-8250-bfdbfb5e1419",
+            "seed": {
+              "kind": "artist",
+              "name": "Måneskin",
+              "mbType": "Group",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Tobe Nwigwe",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "7de9971f-3e29-48b9-9647-f47841eb99db",
+            "seed": {
+              "kind": "artist",
+              "name": "Tobe Nwigwe",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Molly Tuttle",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "968fb129-2c95-4fd5-b195-86552ba45c94",
+            "seed": {
+              "kind": "artist",
+              "name": "Molly Tuttle",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Wet Leg",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "90744b3e-363a-458e-8da1-e3e392a489c4",
+            "seed": {
+              "kind": "artist",
+              "name": "Wet Leg",
+              "mbType": "Group",
+              "disambiguation": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-pop-vocal-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Harry's House",
+          "artist": "Harry Styles",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d712ba0e-25fa-4c03-aecd-ec0c100deba5",
+            "seed": {
+              "kind": "release_group",
+              "title": "Harry’s House",
+              "category": "studio",
+              "firstReleaseDate": "2022-04-20",
+              "credits": [
+                {
+                  "name": "Harry Styles",
+                  "artist": {
+                    "id": "7eb1ce54-a355-41f9-8d68-e018b096d427",
+                    "name": "Harry Styles"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Voyage",
+          "artist": "ABBA",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "9077617d-b73f-4498-b415-175d5b843790",
+            "seed": {
+              "kind": "release_group",
+              "title": "Voyage",
+              "category": "studio",
+              "firstReleaseDate": "2021-11-05",
+              "credits": [
+                {
+                  "name": "ABBA",
+                  "artist": {
+                    "id": "d87e52c5-bb8d-4da8-b941-9f4928627dc8",
+                    "name": "ABBA"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "30",
+          "artist": "Adele",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d8a99910-33c2-481d-9b96-085ece5545f6",
+            "seed": {
+              "kind": "release_group",
+              "title": "30",
+              "category": "studio",
+              "firstReleaseDate": "2021-11-19",
+              "credits": [
+                {
+                  "name": "Adele",
+                  "artist": {
+                    "id": "cc2c9c3c-b7bc-4b8b-84d8-4fbd8779e493",
+                    "name": "Adele"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Music of the Spheres",
+          "artist": "Coldplay",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c169f440-90bf-4a0b-aa6a-c83072bd7eed",
+            "seed": {
+              "kind": "release_group",
+              "title": "Music of the Spheres",
+              "category": "studio",
+              "firstReleaseDate": "2021-10-15",
+              "credits": [
+                {
+                  "name": "Coldplay",
+                  "artist": {
+                    "id": "cc197bad-dc9c-440d-a5b5-d52ba2e14234",
+                    "name": "Coldplay"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Special",
+          "artist": "Lizzo",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "29bd1493-ce60-43c6-afb4-487b77de494c",
+            "seed": {
+              "kind": "release_group",
+              "title": "Special",
+              "category": "studio",
+              "firstReleaseDate": "2022-07-15",
+              "credits": [
+                {
+                  "name": "Lizzo",
+                  "artist": {
+                    "id": "8fb5370b-9568-4b61-9da5-2aa12c9928db",
+                    "name": "Lizzo"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-dance-electronic-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Renaissance",
+          "artist": "Beyoncé",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2c385052-5083-43a2-b1e5-36566d2ae3c0",
+            "seed": {
+              "kind": "release_group",
+              "title": "RENAISSANCE",
+              "category": "studio",
+              "firstReleaseDate": "2022-07-29",
+              "credits": [
+                {
+                  "name": "Beyoncé",
+                  "artist": {
+                    "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                    "name": "Beyoncé"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Fragments",
+          "artist": "Bonobo",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c0b8d15f-baed-499c-80d3-037325756e9c",
+            "seed": {
+              "kind": "release_group",
+              "title": "Fragments",
+              "category": "studio",
+              "firstReleaseDate": "2022-01-14",
+              "credits": [
+                {
+                  "name": "Bonobo",
+                  "artist": {
+                    "id": "9a709693-b4f8-4da9-8cc1-038c911a61be",
+                    "name": "Bonobo"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Diplo",
+          "artist": "Diplo",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "5a7e6aa7-8ca4-4669-a5bf-d7906486d743",
+            "seed": {
+              "kind": "release_group",
+              "title": "Diplo",
+              "category": "studio",
+              "firstReleaseDate": "2022-03-04",
+              "credits": [
+                {
+                  "name": "Diplo",
+                  "artist": {
+                    "id": "a56bd8f9-8ef8-4d63-89a4-794ed1360dd2",
+                    "name": "Diplo"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "The Last Goodbye",
+          "artist": "Odesza",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "3a5d4174-1a4f-4840-93b4-0330052ee03f",
+            "seed": {
+              "kind": "release_group",
+              "title": "The Last Goodbye",
+              "category": "studio",
+              "firstReleaseDate": "2022-07-22",
+              "credits": [
+                {
+                  "name": "ODESZA",
+                  "artist": {
+                    "id": "2e222fce-02ae-4221-b1c6-3c3242b423b6",
+                    "name": "ODESZA"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Surrender",
+          "artist": "Rüfüs Du Sol",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "9a87dc80-36e5-4721-b4c4-a00a749cf14b",
+            "seed": {
+              "kind": "release_group",
+              "title": "Surrender",
+              "category": "studio",
+              "firstReleaseDate": "2021-10-21",
+              "credits": [
+                {
+                  "name": "RÜFÜS DU SOL",
+                  "artist": {
+                    "id": "1cfa6ee5-1189-4ade-97db-8f20a6ba5c76",
+                    "name": "RÜFÜS DU SOL"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-rock-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Patient Number 9",
+          "artist": "Ozzy Osbourne",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "04773d95-c015-4ed3-a114-021391c6af7a",
+            "seed": {
+              "kind": "release_group",
+              "title": "Patient Number 9",
+              "category": "studio",
+              "firstReleaseDate": "2022-09-09",
+              "credits": [
+                {
+                  "name": "Ozzy Osbourne",
+                  "artist": {
+                    "id": "8aa5b65a-5b3c-4029-92bf-47a544356934",
+                    "name": "Ozzy Osbourne"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Dropout Boogie",
+          "artist": "The Black Keys",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "eb6bf6ce-0b50-4967-9c91-e15283472973",
+            "seed": {
+              "kind": "release_group",
+              "title": "Dropout Boogie",
+              "category": "studio",
+              "firstReleaseDate": "2022-05-13",
+              "credits": [
+                {
+                  "name": "The Black Keys",
+                  "artist": {
+                    "id": "d15721d8-56b4-453d-b506-fc915b14cba2",
+                    "name": "The Black Keys"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "The Boy Named If",
+          "artist": "Elvis Costello & The Imposters",
+          "searchAs": {
+            "artist": "Elvis Costello"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "f384784f-7044-4ee6-a5f5-a5ddca47487b",
+            "seed": {
+              "kind": "release_group",
+              "title": "The Boy Named If",
+              "category": "studio",
+              "firstReleaseDate": "2022-01-14",
+              "credits": [
+                {
+                  "name": "Elvis Costello & The Imposters",
+                  "artist": {
+                    "id": "a3e6fa6e-32de-4152-ae38-81291597a10c",
+                    "name": "Elvis Costello & The Imposters"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Crawler",
+          "artist": "Idles",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "da9a2af4-e97d-43aa-92a9-f8e6c0eab37d",
+            "seed": {
+              "kind": "release_group",
+              "title": "CRAWLER",
+              "category": "studio",
+              "firstReleaseDate": "2021-11-12",
+              "credits": [
+                {
+                  "name": "IDLES",
+                  "artist": {
+                    "id": "be465d4f-c28d-4ba1-94ab-ebaada7db8af",
+                    "name": "IDLES"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Mainstream Sellout",
+          "artist": "Machine Gun Kelly",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "4d5f0303-9153-4875-af3c-4f9d97ae89d3",
+            "seed": {
+              "kind": "release_group",
+              "title": "mainstream sellout",
+              "category": "studio",
+              "firstReleaseDate": "2022-03-25",
+              "credits": [
+                {
+                  "name": "Machine Gun Kelly",
+                  "artist": {
+                    "id": "f6af669a-56ea-448a-a044-de76181ada33",
+                    "name": "mgk"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Lucifer on the Sofa",
+          "artist": "Spoon",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "0ea1a9de-547e-4317-a747-f7b2ffb54274",
+            "seed": {
+              "kind": "release_group",
+              "title": "Lucifer on the Sofa",
+              "category": "studio",
+              "firstReleaseDate": "2022-02-11",
+              "credits": [
+                {
+                  "name": "Spoon",
+                  "artist": {
+                    "id": "84eac621-1c5a-49a1-9500-555099c6e184",
+                    "name": "Spoon"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-alternative-music-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Wet Leg",
+          "artist": "Wet Leg",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d53be2e5-fe7c-4681-85f3-960493aa02b5",
+            "seed": {
+              "kind": "release_group",
+              "title": "Wet Leg",
+              "category": "studio",
+              "firstReleaseDate": "2022-04-08",
+              "credits": [
+                {
+                  "name": "Wet Leg",
+                  "artist": {
+                    "id": "90744b3e-363a-458e-8da1-e3e392a489c4",
+                    "name": "Wet Leg"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "We",
+          "artist": "Arcade Fire",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "3491b3c7-47ff-49fc-ab71-c654f66401e7",
+            "seed": {
+              "kind": "release_group",
+              "title": "WE",
+              "category": "studio",
+              "firstReleaseDate": "2022-05-06",
+              "credits": [
+                {
+                  "name": "Arcade Fire",
+                  "artist": {
+                    "id": "52074ba6-e495-4ef3-9bb4-0703888a9f68",
+                    "name": "Arcade Fire"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Dragon New Warm Mountain I Believe in You",
+          "artist": "Big Thief",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d705a3ed-be7a-459c-ac74-58cddaf98576",
+            "seed": {
+              "kind": "release_group",
+              "title": "Dragon New Warm Mountain I Believe in You",
+              "category": "studio",
+              "firstReleaseDate": "2022-02-11",
+              "credits": [
+                {
+                  "name": "Big Thief",
+                  "artist": {
+                    "id": "9f81247f-7f57-42f3-a8ba-75bef554e591",
+                    "name": "Big Thief"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Fossora",
+          "artist": "Björk",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b1977359-d45c-4e49-8ae7-1dbbb37f0811",
+            "seed": {
+              "kind": "release_group",
+              "title": "Fossora",
+              "category": "studio",
+              "firstReleaseDate": "2022-09-30",
+              "credits": [
+                {
+                  "name": "Björk",
+                  "artist": {
+                    "id": "87c5dedd-371d-4a53-9f7f-80522fb7f3cb",
+                    "name": "Björk"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Cool It Down",
+          "artist": "Yeah Yeah Yeahs",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "4d49427b-f9d9-46f6-9922-5e9499433880",
+            "seed": {
+              "kind": "release_group",
+              "title": "Cool It Down",
+              "category": "studio",
+              "firstReleaseDate": "2022-09-30",
+              "credits": [
+                {
+                  "name": "Yeah Yeah Yeahs",
+                  "artist": {
+                    "id": "584c04d2-4acc-491b-8a0a-e63133f4bfc4",
+                    "name": "Yeah Yeah Yeahs"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-rnb-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Black Radio III",
+          "artist": "Robert Glasper",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "63051304-797a-4620-a047-9d7144bf44fa",
+            "seed": {
+              "kind": "release_group",
+              "title": "Black Radio III",
+              "category": "studio",
+              "firstReleaseDate": "2022-02-25",
+              "credits": [
+                {
+                  "name": "Robert Glasper",
+                  "artist": {
+                    "id": "6e8f82ea-9e6d-4fdd-9b32-32feef13186b",
+                    "name": "Robert Glasper"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Good Morning Gorgeous (Deluxe)",
+          "artist": "Mary J. Blige",
+          "searchAs": {
+            "title": "Good Morning Gorgeous"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "453d1b44-bd15-4594-bd1c-7afc675ee84a",
+            "seed": {
+              "kind": "release_group",
+              "title": "Good Morning Gorgeous",
+              "category": "studio",
+              "firstReleaseDate": "2022-02-11",
+              "credits": [
+                {
+                  "name": "Mary J. Blige",
+                  "artist": {
+                    "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
+                    "name": "Mary J. Blige"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Breezy (Deluxe)",
+          "artist": "Chris Brown",
+          "searchAs": {
+            "title": "Breezy"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e204c58a-8587-4049-9b5b-2f72dd97c081",
+            "seed": {
+              "kind": "release_group",
+              "title": "Breezy",
+              "category": "studio",
+              "firstReleaseDate": "2022-06-24",
+              "credits": [
+                {
+                  "name": "Chris Brown",
+                  "artist": {
+                    "id": "c234fa42-e6a6-443e-937e-2f4b073538a3",
+                    "name": "Chris Brown"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Candydrip",
+          "artist": "Lucky Daye",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a84ea427-2abe-4ead-9a8b-ec0b2c3225e7",
+            "seed": {
+              "kind": "release_group",
+              "title": "Candydrip",
+              "category": "studio",
+              "firstReleaseDate": "2022-03-10",
+              "credits": [
+                {
+                  "name": "Lucky Daye",
+                  "artist": {
+                    "id": "a7472b5e-9b6e-48a6-b910-37c940487086",
+                    "name": "Lucky Daye"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Watch the Sun",
+          "artist": "PJ Morton",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "faa1a6a8-375d-4e8e-b342-d31ff874ef94",
+            "seed": {
+              "kind": "release_group",
+              "title": "Watch the Sun",
+              "category": "studio",
+              "firstReleaseDate": "2022-04-29",
+              "credits": [
+                {
+                  "name": "PJ Morton",
+                  "artist": {
+                    "id": "d0bb100a-c0d6-4ef7-bde2-cc5095a31d24",
+                    "name": "PJ Morton"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-rap-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Mr. Morale & the Big Steppers",
+          "artist": "Kendrick Lamar",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6bd70eee-bd46-4738-851a-f50c19d8d6db",
+            "seed": {
+              "kind": "release_group",
+              "title": "Mr. Morale & the Big Steppers",
+              "category": "studio",
+              "firstReleaseDate": "2022-05-13",
+              "credits": [
+                {
+                  "name": "Kendrick Lamar",
+                  "artist": {
+                    "id": "381086ea-f511-4aba-bdf9-71c753dc5077",
+                    "name": "Kendrick Lamar"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "God Did",
+          "artist": "DJ Khaled",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ce15f619-d9f6-4a76-be1d-321c719f51e5",
+            "seed": {
+              "kind": "release_group",
+              "title": "GOD DID",
+              "category": "studio",
+              "firstReleaseDate": "2022-08-26",
+              "credits": [
+                {
+                  "name": "DJ Khaled",
+                  "artist": {
+                    "id": "081a2d60-9791-4e05-a075-f1890355eeee",
+                    "name": "DJ Khaled"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "I Never Liked You",
+          "artist": "Future",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "503bb581-ecf1-4794-9746-aa896c3a89e3",
+            "seed": {
+              "kind": "release_group",
+              "title": "I NEVER LIKED YOU",
+              "category": "studio",
+              "firstReleaseDate": "2022-04-26",
+              "credits": [
+                {
+                  "name": "Future",
+                  "artist": {
+                    "id": "48262e82-db9f-4a92-b650-dfef979b73ec",
+                    "name": "Future"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Come Home the Kids Miss You",
+          "artist": "Jack Harlow",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d0c823fc-ad7c-434d-8555-ad8e7592c33c",
+            "seed": {
+              "kind": "release_group",
+              "title": "Come Home the Kids Miss You",
+              "category": "studio",
+              "firstReleaseDate": "2022-05-05",
+              "credits": [
+                {
+                  "name": "Jack Harlow",
+                  "artist": {
+                    "id": "134cb0bc-06fa-42f7-8078-b0c858349975",
+                    "name": "Jack Harlow"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "It's Almost Dry",
+          "artist": "Pusha T",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6f9df0f8-8d8d-41b4-a623-8fbbd30d7e64",
+            "seed": {
+              "kind": "release_group",
+              "title": "It’s Almost Dry",
+              "category": "studio",
+              "firstReleaseDate": "2022-04-22",
+              "credits": [
+                {
+                  "name": "Pusha T",
+                  "artist": {
+                    "id": "14ecd19f-7121-4192-8549-e5056241a42f",
+                    "name": "Pusha T"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-country-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "A Beautiful Time",
+          "artist": "Willie Nelson",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2ed1dc6e-2694-4822-b7c2-aa52f43707bc",
+            "seed": {
+              "kind": "release_group",
+              "title": "A Beautiful Time",
+              "category": "studio",
+              "firstReleaseDate": "2022-04-29",
+              "credits": [
+                {
+                  "name": "Willie Nelson",
+                  "artist": {
+                    "id": "668fd73c-bf54-4310-a139-305517f05311",
+                    "name": "Willie Nelson"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Growin' Up",
+          "artist": "Luke Combs",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "5e359856-3d25-42e5-80e4-91fac3db6ce0",
+            "seed": {
+              "kind": "release_group",
+              "title": "Growin’ Up",
+              "category": "studio",
+              "firstReleaseDate": "2022-06-24",
+              "credits": [
+                {
+                  "name": "Luke Combs",
+                  "artist": {
+                    "id": "c20ee61f-071f-4e65-9c81-45ee931a54ce",
+                    "name": "Luke Combs"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Palomino",
+          "artist": "Miranda Lambert",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "760bd0db-977e-47ad-b3e2-04e16c6a7b81",
+            "seed": {
+              "kind": "release_group",
+              "title": "Palomino",
+              "category": "studio",
+              "firstReleaseDate": "2022-04-29",
+              "credits": [
+                {
+                  "name": "Miranda Lambert",
+                  "artist": {
+                    "id": "4eca1aa0-c79f-481b-af8a-4a2d6c41aa5c",
+                    "name": "Miranda Lambert"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Ashley McBryde Presents: Lindeville",
+          "artist": "Ashley McBryde",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "cdfa7ba5-60d0-4226-b58c-69797b8ac581",
+            "seed": {
+              "kind": "release_group",
+              "title": "Ashley McBryde Presents: Lindeville",
+              "category": "studio",
+              "firstReleaseDate": "2022-09-30",
+              "credits": [
+                {
+                  "name": "Ashley McBryde",
+                  "artist": {
+                    "id": "ba8520a7-e14a-4ba6-9ab5-1fab4d0a154f",
+                    "name": "Ashley McBryde"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Humble Quest",
+          "artist": "Maren Morris",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "94c9361c-4dc8-45e8-9b2c-0aa0cfd720e4",
+            "seed": {
+              "kind": "release_group",
+              "title": "Humble Quest",
+              "category": "studio",
+              "firstReleaseDate": "2022-03-25",
+              "credits": [
+                {
+                  "name": "Maren Morris",
+                  "artist": {
+                    "id": "109357f0-eb37-4672-9697-dca8c83a61b5",
+                    "name": "Maren Morris"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-latin-pop-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Pasieros",
+          "artist": "Rubén Blades & Boca Livre",
+          "searchAs": {
+            "artist": "Rubén Blades"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "aa95637b-ccfe-49e3-8764-3695c47fe2de",
+            "seed": {
+              "kind": "release_group",
+              "title": "Pasieros",
+              "category": "studio",
+              "firstReleaseDate": "2022-05-20",
+              "credits": [
+                {
+                  "name": "Rubén Blades",
+                  "joinphrase": " con ",
+                  "artist": {
+                    "id": "f050673a-dfb3-4200-b057-bf78213de36c",
+                    "name": "Rubén Blades"
+                  }
+                },
+                {
+                  "name": "Boca Livre",
+                  "artist": {
+                    "id": "6fa56da3-9e74-4920-8c76-947a43dd7fab",
+                    "name": "Boca Livre"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Aguilera",
+          "artist": "Christina Aguilera",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a35ef910-51f5-4522-9ce9-5edd892c5ff0",
+            "seed": {
+              "kind": "release_group",
+              "title": "AGUILERA",
+              "category": "studio",
+              "firstReleaseDate": "2022-05-31",
+              "credits": [
+                {
+                  "name": "Christina Aguilera",
+                  "artist": {
+                    "id": "b202beb7-99bd-47e7-8b72-195c8d72ebdd",
+                    "name": "Christina Aguilera"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "De Adentro Pa Afuera",
+          "artist": "Camilo",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2edbe20e-0f41-462e-9f7c-ce4656e226fd",
+            "seed": {
+              "kind": "release_group",
+              "title": "De adentro pa afuera",
+              "category": "studio",
+              "firstReleaseDate": "2022-09-06",
+              "credits": [
+                {
+                  "name": "Camilo",
+                  "artist": {
+                    "id": "ed90e3b4-8eb8-4f9d-a24e-533c0c60c720",
+                    "name": "Camilo"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Viajante",
+          "artist": "Fonseca",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "daf7d453-289d-44a9-b0dd-f16511261290",
+            "seed": {
+              "kind": "release_group",
+              "title": "VIAJANTE",
+              "category": "studio",
+              "firstReleaseDate": "2022-04-27",
+              "credits": [
+                {
+                  "name": "Fonseca",
+                  "artist": {
+                    "id": "f84e0f7d-86b0-4957-8b17-6b46d6e47246",
+                    "name": "Fonseca"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Dharma+",
+          "artist": "Sebastián Yatra",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "71f2076d-c445-4818-a44a-efb30e12f7d5",
+            "seed": {
+              "kind": "release_group",
+              "title": "Dharma",
+              "category": "studio",
+              "firstReleaseDate": "2022-01-28",
+              "credits": [
+                {
+                  "name": "Sebastián Yatra",
+                  "artist": {
+                    "id": "151d9c35-43b8-49b9-a69a-5db6525dbcd2",
+                    "name": "Sebastián Yatra"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-musica-urbana-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Un Verano Sin Ti",
+          "artist": "Bad Bunny",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e992b449-141b-4aea-b07b-9b2a478a8570",
+            "seed": {
+              "kind": "release_group",
+              "title": "Un verano sin ti",
+              "category": "studio",
+              "firstReleaseDate": "2022-05-06",
+              "credits": [
+                {
+                  "name": "Bad Bunny",
+                  "artist": {
+                    "id": "89aa5ecb-59ad-46f5-b3eb-2d424e941f19",
+                    "name": "Bad Bunny"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Trap Cake, Vol. 2",
+          "artist": "Rauw Alejandro",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "44467c48-0bd4-4acd-98c5-0d8da57e7ad1",
+            "seed": {
+              "kind": "release_group",
+              "title": "TRAP CAKE, VOL. 2",
+              "category": "studio",
+              "firstReleaseDate": "2022-02-25",
+              "credits": [
+                {
+                  "name": "Rauw Alejandro",
+                  "artist": {
+                    "id": "197b70c7-8910-4030-ad03-632d82aa40e3",
+                    "name": "Rauw Alejandro"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Legendaddy",
+          "artist": "Daddy Yankee",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "11929a06-5d2c-4041-b630-42008bcf4c90",
+            "seed": {
+              "kind": "release_group",
+              "title": "LEGENDADDY",
+              "category": "studio",
+              "firstReleaseDate": "2022-03-24",
+              "credits": [
+                {
+                  "name": "Daddy Yankee",
+                  "artist": {
+                    "id": "2f522f5c-111c-4ce8-8bd0-d82e97c227ad",
+                    "name": "Daddy Yankee"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "La 167",
+          "artist": "Farruko",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "4f7d1b17-f6c2-43b5-8dbc-b8ac62da65a3",
+            "seed": {
+              "kind": "release_group",
+              "title": "La 167",
+              "category": "studio",
+              "firstReleaseDate": "2021-10-01",
+              "credits": [
+                {
+                  "name": "Farruko",
+                  "artist": {
+                    "id": "d2b3524f-67e8-45ef-bfc1-693cac525135",
+                    "name": "Farruko"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "The Love & Sex Tape",
+          "artist": "Maluma",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b185d81b-2897-4f80-9c8d-7ff7251f1842",
+            "seed": {
+              "kind": "release_group",
+              "title": "The Love & Sex Tape",
+              "category": "studio",
+              "firstReleaseDate": "2022-06-10",
+              "credits": [
+                {
+                  "name": "Maluma",
+                  "artist": {
+                    "id": "e8979f75-9110-4df8-ac70-898898d080d1",
+                    "name": "Maluma"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
