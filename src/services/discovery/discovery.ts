@@ -1,6 +1,8 @@
-import { and, asc, desc, eq, isNotNull, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import {
+  artist,
+  credit,
   genre,
   genreFamilyMember,
   rating,
@@ -36,6 +38,7 @@ import {
 export interface FeaturedCollection {
   id: string;
   title: string;
+  description: string | null;
   itemCount: number;
   coverThumbs: string[];
 }
@@ -64,9 +67,15 @@ export interface ExplorePage {
   upcoming: ReleaseGroup[];
   decades: DecadeBucket[];
   families: FamilyBucket[];
-  topRated: ReleaseGroup[];
-  mostReviewed: ReleaseGroup[];
+  topRated: TopRatedAlbum[];
+  mostReviewed: MostReviewedAlbum[];
 }
+
+/** Álbum de "Mejor valorados" con la cifra que lo ubica ahí (la tarjeta la muestra). */
+export type TopRatedAlbum = ReleaseGroup & { avgStars: number; ratingCount: number };
+
+/** Álbum de "Más reseñados" con su número de reseñas. */
+export type MostReviewedAlbum = ReleaseGroup & { reviewCount: number };
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -114,21 +123,28 @@ function serializeAlbum(row: {
 // Rieles de la portada
 // ---------------------------------------------------------------------------
 
+/** Carátulas de la tarjeta de una colección destacada (una pila de sleeves, no el mosaico de 4). */
+const FEATURED_COVER_THUMBS = 6;
+
 /** Colecciones editoriales: listas públicas con fila en `user_list_featured`, por `rank` asc. */
 export async function listFeaturedCollections(): Promise<FeaturedCollection[]> {
   const rows = await db
-    .select({ id: userList.id, title: userList.title, rank: userListFeatured.rank })
+    .select({ id: userList.id, title: userList.title, description: userList.description, rank: userListFeatured.rank })
     .from(userListFeatured)
     .innerJoin(userList, eq(userList.id, userListFeatured.listId))
     .where(and(eq(userList.audience, "public"), eq(userList.kind, "standard")))
     .orderBy(asc(userListFeatured.rank));
 
-  const enrichment = await enrichLists(rows.map((row) => row.id));
+  const enrichment = await enrichLists(
+    rows.map((row) => row.id),
+    FEATURED_COVER_THUMBS,
+  );
   return rows.map((row) => {
     const enriched = enrichment.get(row.id);
     return {
       id: row.id,
       title: row.title,
+      description: row.description,
       itemCount: enriched?.itemCount ?? 0,
       coverThumbs: enriched?.coverThumbs ?? [],
     };
@@ -292,7 +308,7 @@ export async function listGenreFamilies(): Promise<FamilyBucket[]> {
  * descendente. Devuelve `[]` (riel omitido) si hay menos de `MIN_ALBUMS_FOR_SECTION`
  * álbumes elegibles. `condition` (opcional, correlacionada con "release_group") acota el conjunto.
  */
-export async function listTopRated(limit = RAIL_SIZE, condition?: SQL): Promise<ReleaseGroup[]> {
+export async function listTopRated(limit = RAIL_SIZE, condition?: SQL): Promise<TopRatedAlbum[]> {
   const rows = await db
     .select({
       ...albumColumns,
@@ -308,14 +324,16 @@ export async function listTopRated(limit = RAIL_SIZE, condition?: SQL): Promise<
     .limit(Math.max(limit, MIN_ALBUMS_FOR_SECTION));
 
   if (rows.length < MIN_ALBUMS_FOR_SECTION) return [];
-  return rows.slice(0, limit).map(serializeAlbum);
+  return rows
+    .slice(0, limit)
+    .map((row) => ({ ...serializeAlbum(row), avgStars: Number(row.avgStars), ratingCount: Number(row.ratingCount) }));
 }
 
 /**
  * Más reseñados: álbumes con ≥ `MIN_REVIEWS_PER_ALBUM` reseñas, por conteo descendente.
  * Devuelve `[]` si hay menos de `MIN_ALBUMS_FOR_SECTION` álbumes elegibles.
  */
-export async function listMostReviewed(limit = RAIL_SIZE): Promise<ReleaseGroup[]> {
+export async function listMostReviewed(limit = RAIL_SIZE): Promise<MostReviewedAlbum[]> {
   const rows = await db
     .select({
       ...albumColumns,
@@ -330,7 +348,26 @@ export async function listMostReviewed(limit = RAIL_SIZE): Promise<ReleaseGroup[
     .limit(Math.max(limit, MIN_ALBUMS_FOR_SECTION));
 
   if (rows.length < MIN_ALBUMS_FOR_SECTION) return [];
-  return rows.slice(0, limit).map(serializeAlbum);
+  return rows.slice(0, limit).map((row) => ({ ...serializeAlbum(row), reviewCount: Number(row.reviewCount) }));
+}
+
+/**
+ * Artista principal de cada álbum (el primer crédito `primary`), para la línea de artista de las tarjetas: sin
+ * ella, un disco homónimo ("Mötley Crüe") o un single de una serie ("Stand Out") no dicen de quién son. Una sola
+ * consulta para todos los ids.
+ */
+export async function albumArtistNames(ids: string[]): Promise<Record<string, string>> {
+  const names: Record<string, string> = {};
+  const unique = [...new Set(ids)];
+  if (unique.length === 0) return names;
+  const rows = await db
+    .select({ releaseGroupId: credit.releaseGroupId, name: artist.name })
+    .from(credit)
+    .innerJoin(artist, eq(artist.id, credit.artistId))
+    .where(and(inArray(credit.releaseGroupId, unique), eq(credit.role, "primary")))
+    .orderBy(asc(credit.position));
+  for (const row of rows) if (row.releaseGroupId && !(row.releaseGroupId in names)) names[row.releaseGroupId] = row.name;
+  return names;
 }
 
 /** Composición de la portada de `/explore` en una sola llamada. */

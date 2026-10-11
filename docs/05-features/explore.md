@@ -13,12 +13,12 @@ sin tabla materializada. Cada sección se **omite** si no tiene contenido. En or
 
 | Sección | Fuente | Presentación |
 |---|---|---|
-| Colecciones destacadas | `user_list_featured` (listas de `@exploracion`, por `rank`) | ancla anti-arranque-en-frío; tarjetas de lista (`CollectionRail`) |
-| Explorar por género | familias de géneros con álbumes (vista `release_group_effective_genre`, cambio `add-genre-taxonomy`) | tarjetas con nombre, número de álbumes y una barra de tamaño relativo (escala de raíz cuadrada) → `/explore?familia=rock`; las familias secundarias detrás de "N familias más" (`<details>`, sin JS) (`FamilyGrid`) |
+| Colecciones destacadas | `user_list_featured` (listas de `@exploracion`, por `rank`) | ancla anti-arranque-en-frío; tarjeta propia (`CollectionRail`): pila de hasta 6 fundas superpuestas que se abren al pasar el mouse (`enrichLists` con `coverLimit`), rótulo "Selección editorial", título, descripción de la lista si la tiene y número de álbumes |
+| Explorar por género | familias de géneros con álbumes (vista `release_group_effective_genre`, cambio `add-genre-taxonomy`) | tarjetas con nombre, número de álbumes y una barra de tamaño relativo (escala de raíz cuadrada) → `/explore?familia=rock`; la flecha solo aparece al pasar el mouse; las familias secundarias se despliegan desde una tarjeta "N familias más" dentro de la propia grilla (botón con `aria-expanded`, "Ver menos" para plegar) (`FamilyGrid`). Las cifras de familias y décadas llevan siempre separador de miles (`useGrouping: "always"`: con la regla del español quedaban "2112" junto a "17.317") |
 | Novedades | `release_group` studio/single_ep con `first_release_date` completa en los últimos `NEW_RELEASE_WINDOW_DAYS` (90) días hasta hoy, con carátula, por fecha desc | riel horizontal con la fecha ("9 oct") en cada tarjeta y "Ver todo →" a `/explore?novedades=1`; se omite con menos de `MIN_ALBUMS_FOR_SECTION` (6); sin lanzamientos futuros ni fechas parciales (cambios `redefine-explore-new-releases` y `add-explore-new-releases-listing`) |
 | Próximos lanzamientos | `release_group` studio/single_ep con `first_release_date` completa posterior a hoy y hasta hoy + `UPCOMING_WINDOW_DAYS` (180), con carátula, por fecha asc (cambio `add-explore-upcoming-releases`) | riel horizontal bajo Novedades, con la fecha ("24 oct") en cada tarjeta y "Ver todo →" a `/explore?proximos=1`; se omite con menos de `MIN_ALBUMS_FOR_SECTION` (6) |
-| Premios | ceremonias cargadas desde `data/awards/` (cambio `add-music-awards`, ADR 0032) | una tarjeta por cada una de las últimas 5 ceremonias → `/awards/<premio>/<año>` y "Ver todos" → `/awards`; se omite sin ceremonias (`AwardsExploreSection`). Ver `awards.md` |
-| Explorar por década | `first_release_year` agrupado por década | histograma del catálogo: una columna por década en orden cronológico, altura proporcional a sus álbumes, cada columna → `/explore?decada=1990`; en móvil, barras horizontales de la más reciente a la más antigua (`DecadeHistogram`) |
+| Premios | ceremonias cargadas desde `data/awards/` (cambio `add-music-awards`, ADR 0032) | una tarjeta por cada una de las últimas 5 ceremonias, con el ganador destacado (Álbum del año en los Grammy: carátula, título y artista; `listRecentCeremonies` lo resuelve en una consulta para todas) → `/awards/<premio>/<año>` y "Ver todos" → `/awards`; se omite sin ceremonias (`AwardsExploreSection`). Ver `awards.md` |
+| Explorar por década | `first_release_year` agrupado por década | histograma del catálogo: una columna por década en orden cronológico, altura proporcional a sus álbumes y la cifra pegada sobre la barra, cada columna → `/explore?decada=1990`; las décadas iniciales por debajo del 2 % de la más grande (hoy, de los 1890s a los 1940s) van en una lista compacta "Antes" a la izquierda en lugar de barras mínimas idénticas; en móvil, barras horizontales de la más reciente a la más antigua (`DecadeHistogram`) |
 | Mejor valorados | `rating` agregado por álbum | riel horizontal; ver umbrales abajo |
 | Más reseñados | `review` contado por álbum | riel horizontal; ver umbrales abajo |
 
@@ -28,6 +28,14 @@ cita `MIN_RATINGS_PER_ALBUM`). Los rieles de álbumes de la portada son **horizo
 que se apagan en cada extremo, y degradados de borde como capas aparte (una `mask-image` recortaría
 el menú "…" de las tarjetas, que en el riel se abre con `positioning="fixed"`). La grilla de dos
 filas (`layout="grid"`, el predeterminado) sigue en la página de género y en la Inicio anónima.
+
+Las tarjetas de álbum de Explorar (rieles y listados) llevan bajo el título el **artista principal**
+(primer crédito `primary`, `albumArtistNames`: una consulta para todos los álbumes de la página). Los
+rieles por reglas muestran sobre la carátula la cifra que ubica al disco ahí: el promedio en Mejor
+valorados ("★ 4,3") y el número de reseñas en Más reseñados ("12 reseñas"). Próximos lanzamientos (riel y
+listado) muestra ahí la cuenta regresiva ("Hoy", "Mañana", "En 5 días"; `daysUntilRelease`, días de calendario UTC
+como la fecha de la tarjeta). Los rieles no dibujan
+barra de desplazamiento: se avanzan con las flechas o deslizando.
 
 ### Novedades y Próximos lanzamientos: rieles y listados completos
 

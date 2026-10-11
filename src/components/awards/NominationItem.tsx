@@ -19,7 +19,8 @@ function Cover({ cover, label, className }: { cover: CoverInfo; label: string; c
   );
 }
 
-function Visual({ nomination, size }: { nomination: NominationView; size: string }) {
+/** Carátula, foto o silueta del nominado (también en la tarjeta de ceremonia de Explorar). */
+export function NomineeVisual({ nomination, size }: { nomination: NominationView; size: string }) {
   const t = useTranslations("catalog.explore");
   const subject = nomination.subject;
   if (subject?.kind === "release_group") return <Cover cover={subject.album.cover} label={t("albumCoverLabel")} className={size} />;
@@ -61,7 +62,7 @@ export function NominationItem({ nomination, featured = false }: { nomination: N
 
   return (
     <div className={`flex min-w-0 items-center ${featured ? "gap-4" : "gap-3"}`}>
-      <Visual nomination={nomination} size={featured ? "size-20 shrink-0" : "size-12 shrink-0"} />
+      <NomineeVisual nomination={nomination} size={featured ? "size-20 shrink-0" : "size-12 shrink-0"} />
       <div className="flex min-w-0 flex-col gap-0.5">
         {nomination.won ? (
           <span className="w-fit rounded-sm bg-amber px-1.5 py-0.5 font-data text-[10px] font-semibold uppercase tracking-wider text-ink">

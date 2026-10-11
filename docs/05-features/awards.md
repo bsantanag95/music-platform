@@ -26,7 +26,7 @@ videojuegos.
 | `/awards` | Premios cubiertos y sus ceremonias, de la más reciente a la más antigua |
 | `/awards/<premio>/<año>` | La ceremonia: edición y fecha, chips a las demás, campo general y después los álbumes por género; en cada categoría el ganador destacado y los nominados |
 | `/awards/<premio>/categories/<clave>` | Historia de una categoría por año, con "Antes llamada …" / "Después llamada …" |
-| `/explore` (sección Premios) | Una tarjeta por cada una de las últimas 5 ceremonias y "Ver todos" |
+| `/explore` (sección Premios) | Una tarjeta por cada una de las últimas 5 ceremonias (año, edición y su ganador destacado: el de la categoría general de álbum con menor orden curado, en los Grammy Álbum del año, con carátula, título y artista) y "Ver todos" |
 
 - El texto del nominado es el curado ("Fortnight — Taylor Swift featuring Post Malone") y enlaza a la ficha del
   catálogo cuando está identificado; si no, se muestra solo el texto.

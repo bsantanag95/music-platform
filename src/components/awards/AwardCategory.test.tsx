@@ -100,8 +100,48 @@ describe("AwardsExploreSection", () => {
   });
 
   it("enlaza cada ceremonia y el índice", () => {
-    renderWithIntl(<AwardsExploreSection ceremonies={[{ awardSlug: "grammy", year: 2025, edition: 67 }]} />);
+    renderWithIntl(
+      <AwardsExploreSection ceremonies={[{ awardSlug: "grammy", year: 2025, edition: 67, heldOn: "2025-02-02", headline: null }]} />,
+    );
     expect(screen.getByRole("link", { name: /Premios Grammy\s*2025/ })).toHaveAttribute("href", "/awards/grammy/2025");
     expect(screen.getByRole("link", { name: /Ver todos/ })).toHaveAttribute("href", "/awards");
+  });
+
+  it("muestra el ganador destacado con título y artista del álbum del catálogo", () => {
+    renderWithIntl(
+      <AwardsExploreSection
+        ceremonies={[
+          {
+            awardSlug: "grammy",
+            year: 2024,
+            edition: 66,
+            heldOn: "2024-02-04",
+            headline: {
+              category: { es: "Álbum del año", en: "Album of the Year" },
+              winner: {
+                id: "n1",
+                won: true,
+                text: "Midnights — Taylor Swift",
+                credit: null,
+                subject: {
+                  kind: "release_group",
+                  album: {
+                    id: "rg1",
+                    title: "Midnights",
+                    artistName: "Taylor Swift",
+                    cover: { releaseGroupId: "rg1", coverThumbUrl: null, coverResolved: true },
+                  },
+                },
+              },
+            },
+          },
+        ]}
+      />,
+    );
+    const card = screen.getByRole("link", { name: /2024/ });
+    expect(card).toHaveTextContent("Álbum del año");
+    expect(card).toHaveTextContent("Midnights");
+    expect(card).toHaveTextContent("Taylor Swift");
+    expect(card).not.toHaveTextContent("Midnights — Taylor Swift");
   });
 });

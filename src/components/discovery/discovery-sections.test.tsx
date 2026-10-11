@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { parseExploreListParams } from "@/services/discovery/explore-params";
+import { CollectionRail } from "./CollectionRail";
 import { DecadeHistogram } from "./DecadeHistogram";
 import { ExploreFilterBar } from "./ExploreFilterBar";
 import { FamilyGrid } from "./FamilyGrid";
@@ -38,7 +39,7 @@ describe("DecadeHistogram", () => {
   }));
 
   it("dibuja las columnas en orden cronológico, cada una con su nombre accesible", () => {
-    renderWithIntl(<DecadeHistogram heading="Explorar por década" decades={decades} />);
+    renderWithIntl(<DecadeHistogram heading="Explorar por década" decades={decades} earlierLabel="Antes" />);
     const [columns] = screen.getAllByRole("list");
     const links = within(columns!).getAllByRole("link");
     expect(links.map((a) => a.getAttribute("aria-label"))).toEqual([
@@ -49,8 +50,27 @@ describe("DecadeHistogram", () => {
     expect(links[0]).toHaveAttribute("href", "/es/explore?decada=1970");
   });
 
+  it("saca del gráfico las décadas iniciales con muy pocos álbumes", () => {
+    const column = (decade: number, count: number) => ({
+      decade,
+      count,
+      href: `/explore?decada=${decade}`,
+      countLabel: String(count),
+      ariaLabel: `${decade}s`,
+    });
+    renderWithIntl(
+      <DecadeHistogram
+        heading="Explorar por década"
+        decades={[column(1900, 2), column(1910, 5), column(1960, 500), column(2010, 10000)]}
+        earlierLabel="Antes"
+      />,
+    );
+    const earlier = screen.getByText("Antes").parentElement!;
+    expect(within(earlier).getAllByRole("link").map((a) => a.getAttribute("aria-label"))).toEqual(["1900s", "1910s"]);
+  });
+
   it("no renderiza nada sin décadas", () => {
-    const { container } = renderWithIntl(<DecadeHistogram heading="Explorar por década" decades={[]} />);
+    const { container } = renderWithIntl(<DecadeHistogram heading="Explorar por década" decades={[]} earlierLabel="Antes" />);
     expect(container).toBeEmptyDOMElement();
   });
 });
@@ -71,11 +91,17 @@ describe("FamilyGrid", () => {
         families={[tile("rock", 100), tile("jazz", 20)]}
         moreFamilies={[tile("world", 2)]}
         moreLabel="1 familia más"
+        lessLabel="Ver menos"
       />,
     );
     expect(screen.getByRole("link", { name: /rock/ })).toHaveAttribute("href", "/es/explore?familia=rock");
     expect(screen.getByText("20 álbumes")).toBeInTheDocument();
-    expect(screen.getByText("1 familia más").closest("details")).not.toHaveAttribute("open");
+    const toggle = screen.getByRole("button", { name: /1 familia más/ });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("link", { name: /world/ })).not.toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(screen.getByRole("link", { name: /world/ })).toHaveAttribute("href", "/es/explore?familia=world");
+    expect(screen.getByRole("button", { name: /Ver menos/ })).toHaveAttribute("aria-expanded", "true");
   });
 });
 
@@ -118,5 +144,32 @@ describe("ExploreFilterBar", () => {
       <ExploreFilterBar baseHref="/explore?decada=1990" params={parseExploreListParams({})} categoryLabels={categoryLabels} />,
     );
     expect(screen.getByRole("combobox")).toBeInTheDocument();
+  });
+});
+
+describe("CollectionRail", () => {
+  it("enlaza cada colección con su rótulo editorial, descripción y número de álbumes", () => {
+    renderWithIntl(
+      <CollectionRail
+        heading="Colecciones destacadas"
+        collections={[
+          { id: "c1", title: "Esenciales", description: "Para empezar", itemCount: 12, coverThumbs: [] },
+        ]}
+        curatorUsername="exploracion"
+        itemsLabel={(count) => `${count} álbumes`}
+      />,
+    );
+    const card = screen.getByRole("link", { name: /Esenciales/ });
+    expect(card.getAttribute("href")).toContain("/es/");
+    expect(within(card).getByText("Selección editorial")).toBeInTheDocument();
+    expect(within(card).getByText("Para empezar")).toBeInTheDocument();
+    expect(within(card).getByText("12 álbumes")).toBeInTheDocument();
+  });
+
+  it("no renderiza nada sin colecciones", () => {
+    const { container } = renderWithIntl(
+      <CollectionRail heading="Colecciones" collections={[]} curatorUsername="exploracion" itemsLabel={String} />,
+    );
+    expect(container).toBeEmptyDOMElement();
   });
 });

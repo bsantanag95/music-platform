@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { releaseDateLabel } from "./release-date-label";
+import { daysUntilRelease, releaseDateLabel } from "./release-date-label";
 
 const today = new Date("2026-10-10T12:00:00Z");
 
@@ -21,5 +21,21 @@ describe("releaseDateLabel", () => {
   it("devuelve undefined sin fecha o con fecha inválida", () => {
     expect(releaseDateLabel(null, "es", today)).toBeUndefined();
     expect(releaseDateLabel("no-es-fecha", "es", today)).toBeUndefined();
+  });
+});
+
+describe("daysUntilRelease", () => {
+  const today = new Date("2026-10-11T22:30:00Z");
+
+  it("cuenta días de calendario: hoy 0, mañana 1", () => {
+    expect(daysUntilRelease("2026-10-11", today)).toBe(0);
+    expect(daysUntilRelease("2026-10-12", today)).toBe(1);
+    expect(daysUntilRelease("2026-10-16", today)).toBe(5);
+  });
+
+  it("sin fecha, inválida o ya pasada: undefined", () => {
+    expect(daysUntilRelease(null, today)).toBeUndefined();
+    expect(daysUntilRelease("no-fecha", today)).toBeUndefined();
+    expect(daysUntilRelease("2026-10-10", today)).toBeUndefined();
   });
 });

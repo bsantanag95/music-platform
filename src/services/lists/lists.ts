@@ -255,7 +255,11 @@ export interface ListEnrichment {
  * toma las primeras carátulas disponibles por lista. Las listas sin carátula
  * (artistas/canciones, o álbumes sin arte) quedan con `coverThumbs` vacío.
  */
-export async function enrichLists(listIds: string[]): Promise<Map<string, ListEnrichment>> {
+export async function enrichLists(
+  listIds: string[],
+  /** Cuántas carátulas por lista (el mosaico usa 4; la tarjeta de colección destacada, más). */
+  coverLimit = LIST_COVER_THUMBS_MAX,
+): Promise<Map<string, ListEnrichment>> {
   const result = new Map<string, ListEnrichment>();
   if (listIds.length === 0) return result;
   for (const id of listIds) result.set(id, { itemCount: 0, coverThumbs: [] });
@@ -285,7 +289,7 @@ export async function enrichLists(listIds: string[]): Promise<Map<string, ListEn
     .leftJoin(releaseGroup, eq(userListItem.releaseGroupId, releaseGroup.id))
     .where(and(inArray(userListItem.listId, listIds), sql`${itemCover} is not null`));
   const sorted = covers
-    .filter((row) => Number(row.rn) <= LIST_COVER_THUMBS_MAX)
+    .filter((row) => Number(row.rn) <= coverLimit)
     .sort((a, b) => Number(a.rn) - Number(b.rn));
   for (const row of sorted) {
     const entry = result.get(row.listId);

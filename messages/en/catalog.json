@@ -36,7 +36,7 @@
     "upcomingCrumb": "Upcoming releases",
     "newReleasesDescription": "Studio albums, singles and EPs released in the last {days} days.",
     "decadesDescription": "How many albums the catalog holds per release decade. Pick one to browse it.",
-    "decadeBarLabel": "{decade}s: {count, plural, one {# album} other {# albums}}",
+    "decadeBarLabel": "{decade}s: {formatted} {count, plural, one {album} other {albums}}",
     "topRatedDescription": "By average, among albums with at least {min} ratings.",
     "mostReviewedDescription": "The albums with the most reviews.",
     "scrollPrev": "Show previous",
@@ -49,7 +49,13 @@
     "genrePageLink": "Go to the {genre} page",
     "clearFilters": "Clear filters",
     "paginationLabel": "Pagination",
-    "pageIndicator": "Page {page}"
+    "pageIndicator": "Page {page}",
+    "editorialKicker": "Editorial pick",
+    "albumCount": "{formatted} {count, plural, one {album} other {albums}}",
+    "fewerFamilies": "Show fewer",
+    "decadesEarlier": "Earlier",
+    "reviewCount": "{count, plural, one {# review} other {# reviews}}",
+    "countdown": "{days, plural, =0 {Today} =1 {Tomorrow} other {In # days}}"
   },
   "search": {
     "pageTitle": "Search",

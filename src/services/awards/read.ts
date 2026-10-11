@@ -236,13 +236,68 @@ export async function listAwards(): Promise<AwardIndexEntry[]> {
 }
 
 /** Últimas ceremonias de todos los premios (sección "Premios" de Explorar). */
-export async function listRecentCeremonies(limit: number): Promise<(CeremonySummary & { awardSlug: string })[]> {
-  return db
-    .select({ awardSlug: award.slug, ...ceremonyColumns })
+export interface CeremonyHeadline {
+  /** Categoría del titular: la general de álbum con menor orden curado (en los Grammy, Álbum del año). */
+  category: CategoryName;
+  winner: NominationView;
+}
+
+export interface RecentCeremony extends CeremonySummary {
+  awardSlug: string;
+  /** Ganador destacado de la ceremonia; `null` si no hay categoría general de álbum con ganador cargado. */
+  headline: CeremonyHeadline | null;
+}
+
+/**
+ * Últimas ceremonias cargadas (de la más reciente a la más antigua), cada una con su ganador destacado para la
+ * tarjeta de Explorar. Dos consultas más para todas las ceremonias juntas, no una por tarjeta.
+ */
+export async function listRecentCeremonies(limit: number): Promise<RecentCeremony[]> {
+  const ceremonies = await db
+    .select({ id: awardCeremony.id, awardSlug: award.slug, ...ceremonyColumns })
     .from(awardCeremony)
     .innerJoin(award, eq(award.id, awardCeremony.awardId))
     .orderBy(desc(awardCeremony.heldOn))
     .limit(limit);
+  if (ceremonies.length === 0) return [];
+
+  const winners = await db
+    .select({
+      ceremonyId: awardCategoryEdition.ceremonyId,
+      nameEs: awardCategory.nameEs,
+      nameEn: awardCategory.nameEn,
+      categoryOrder: awardCategory.sortOrder,
+      nomination: awardNomination,
+    })
+    .from(awardNomination)
+    .innerJoin(awardCategoryEdition, eq(awardCategoryEdition.id, awardNomination.categoryEditionId))
+    .innerJoin(awardCategory, eq(awardCategory.id, awardCategoryEdition.categoryId))
+    .where(
+      and(
+        inArray(
+          awardCategoryEdition.ceremonyId,
+          ceremonies.map((c) => c.id),
+        ),
+        eq(awardNomination.won, true),
+        eq(awardCategory.tier, "general"),
+        eq(awardCategory.subjectKind, "release_group"),
+      ),
+    )
+    .orderBy(asc(awardCategory.sortOrder), asc(awardNomination.sortOrder));
+
+  // El primero por ceremonia (ya ordenados por categoría y luego por nominación).
+  const firstByCeremony = new Map<string, (typeof winners)[number]>();
+  for (const row of winners) if (!firstByCeremony.has(row.ceremonyId)) firstByCeremony.set(row.ceremonyId, row);
+  const views = await nominationViews([...firstByCeremony.values()].map((row) => row.nomination));
+
+  return ceremonies.map(({ id, ...ceremony }) => {
+    const row = firstByCeremony.get(id);
+    const winner = row ? views.get(row.nomination.id) : undefined;
+    return {
+      ...ceremony,
+      headline: row && winner ? { category: { es: row.nameEs, en: row.nameEn }, winner } : null,
+    };
+  });
 }
 
 /** Página de una ceremonia; `null` si el premio o el año no están cargados. */

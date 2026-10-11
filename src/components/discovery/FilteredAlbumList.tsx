@@ -35,6 +35,10 @@ interface FilteredAlbumListProps {
   related?: { href: string; label: string };
   /** Fecha de lanzamiento ya formateada por id de álbum; reemplaza al año en la tarjeta. */
   dateLabels?: Record<string, string>;
+  /** Artista principal por id de álbum (línea bajo el título de cada tarjeta). */
+  artistNames?: Record<string, string>;
+  /** Etiqueta sobre la carátula por id de álbum (la cuenta regresiva de los próximos lanzamientos). */
+  stats?: Record<string, string>;
   /** Sin selector de orden (el listado tiene un orden fijo, p. ej. cronológico). */
   hideSort?: boolean;
 }
@@ -74,6 +78,8 @@ export function FilteredAlbumList({
   siblings,
   related,
   dateLabels,
+  artistNames,
+  stats,
   hideSort = false,
 }: FilteredAlbumListProps) {
   const t = useTranslations("catalog.explore");
@@ -165,6 +171,8 @@ export function FilteredAlbumList({
                 coverLabel={coverLabel}
                 authenticated={authenticated}
                 releaseDateLabel={dateLabels?.[album.id]}
+                artistName={artistNames?.[album.id]}
+                stat={stats?.[album.id]}
               />
             </li>
           ))}

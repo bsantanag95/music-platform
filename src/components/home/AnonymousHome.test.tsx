@@ -91,9 +91,9 @@ describe("AnonymousHome", () => {
   };
 
   it("muestra el bloque editorial de álbumes cuando hay colecciones o mejor valorados", async () => {
-    vi.mocked(discovery.listTopRated).mockResolvedValue([album]);
+    vi.mocked(discovery.listTopRated).mockResolvedValue([{ ...album, avgStars: 4.2, ratingCount: 5 }]);
     vi.mocked(discovery.listFeaturedCollections).mockResolvedValue([
-      { id: "c1", title: "Esenciales", itemCount: 5, coverThumbs: [] },
+      { id: "c1", title: "Esenciales", description: null, itemCount: 5, coverThumbs: [] },
     ]);
 
     const element = await AnonymousHome();
@@ -104,7 +104,7 @@ describe("AnonymousHome", () => {
 
   it("con el descubrimiento deshabilitado no consulta colecciones curadas; el riel de mejor valorados puede seguir", async () => {
     vi.mocked(discoveryConfig.isExploreEnabled).mockReturnValue(false);
-    vi.mocked(discovery.listTopRated).mockResolvedValue([album]);
+    vi.mocked(discovery.listTopRated).mockResolvedValue([{ ...album, avgStars: 4.2, ratingCount: 5 }]);
 
     const element = await AnonymousHome();
 

@@ -6,7 +6,7 @@ import { AlbumRail } from "@/components/discovery/AlbumRail";
 import { CollectionRail } from "@/components/discovery/CollectionRail";
 import { DecadeHistogram } from "@/components/discovery/DecadeHistogram";
 import { FamilyGrid, type FamilyTile } from "@/components/discovery/FamilyGrid";
-import { releaseDateLabel } from "@/components/discovery/release-date-label";
+import { daysUntilRelease, releaseDateLabel } from "@/components/discovery/release-date-label";
 import { AwardsExploreSection } from "@/components/awards/AwardsExploreSection";
 import { listRecentCeremonies } from "@/services/awards/read";
 import { FilteredAlbumList } from "@/components/discovery/FilteredAlbumList";
@@ -17,6 +17,7 @@ import { getCurrentUser } from "@/services/auth/authorization";
 import { CURATOR_USERNAME, MIN_RATINGS_PER_ALBUM, NEW_RELEASE_WINDOW_DAYS, UPCOMING_WINDOW_DAYS } from "@/services/discovery/constants";
 import {
   getExplorePage,
+  albumArtistNames,
   listAlbumsByDecade,
   listAlbumsByFamily,
   listAlbumsByGenre,
@@ -53,7 +54,9 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
   const { decada, familia, genero, proximos, novedades } = raw;
   const listParams = parseExploreListParams(raw);
   const listOptions = { category: listParams.category, sort: listParams.sort };
-  const numberFormat = new Intl.NumberFormat(locale);
+  // Separador de miles siempre: con la regla del español ("2112" pero "17.317") las cifras de una
+  // misma grilla quedaban con formatos distintos.
+  const numberFormat = new Intl.NumberFormat(locale, { useGrouping: "always" });
 
   const categoryLabels = {
     studio: tCat("categories.studio"),
@@ -70,6 +73,16 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
     for (const album of albums) {
       const label = releaseDateLabel(album.firstReleaseDate, locale);
       if (label) labels[album.id] = label;
+    }
+    return labels;
+  };
+  // Cuenta regresiva de "Próximos lanzamientos" sobre la carátula ("En 5 días", "Mañana", "Hoy"): la fecha
+  // sola obligaba a calcular cuánto falta, y el riel quedaba idéntico al de Novedades.
+  const countdownsFor = (albums: { id: string; firstReleaseDate: string | null }[]): Record<string, string> => {
+    const labels: Record<string, string> = {};
+    for (const album of albums) {
+      const days = daysUntilRelease(album.firstReleaseDate);
+      if (days !== undefined) labels[album.id] = t("countdown", { days });
     }
     return labels;
   };
@@ -98,6 +111,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         heading={t("decadeResultsHeading", { decade: decadeLabel })}
         crumb={t("decadeChip", { decade: decadeLabel })}
         result={result}
+        artistNames={await albumArtistNames(result.albums.map((album) => album.id))}
         baseHref={`/explore?decada=${decade}`}
         siblings={{
           label: t("otherDecades"),
@@ -126,6 +140,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         heading={t("familyResultsHeading", { family })}
         crumb={family}
         result={result}
+        artistNames={await albumArtistNames(result.albums.map((album) => album.id))}
         baseHref={`/explore?familia=${encodeURIComponent(result.family ?? familia.trim())}`}
         siblings={{
           label: t("otherFamilies"),
@@ -149,6 +164,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         heading={t("genreResultsHeading", { genre })}
         crumb={genre}
         result={result}
+        artistNames={await albumArtistNames(result.albums.map((album) => album.id))}
         baseHref={`/explore?genero=${encodeURIComponent(result.genre?.slug ?? genero.trim())}`}
         related={result.genre ? { href: genreHref(result.genre.slug), label: t("genrePageLink", { genre }) } : undefined}
       />
@@ -187,9 +203,11 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         heading={t("upcomingResultsHeading")}
         crumb={t("upcomingCrumb")}
         result={result}
+        artistNames={await albumArtistNames(result.albums.map((album) => album.id))}
         baseHref="/explore?proximos=1"
         hideSort
         dateLabels={dateLabelsFor(result.albums)}
+        stats={countdownsFor(result.albums)}
       />
     );
   }
@@ -204,6 +222,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         heading={t("newReleasesResultsHeading")}
         crumb={t("newReleasesHeading")}
         result={result}
+        artistNames={await albumArtistNames(result.albums.map((album) => album.id))}
         baseHref="/explore?novedades=1"
         hideSort
         dateLabels={dateLabelsFor(result.albums)}
@@ -213,13 +232,23 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
 
   // --- Portada ---
   const [explore, recentCeremonies] = await Promise.all([getExplorePage(), listRecentCeremonies(5)]);
+  const railArtistNames = await albumArtistNames(
+    [explore.newReleases, explore.upcoming, explore.topRated, explore.mostReviewed].flat().map((album) => album.id),
+  );
+  const starsFormat = new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  // Cifra que ubica a cada disco en su riel, sobre la carátula: el promedio en "Mejor valorados", las reseñas
+  // en "Más reseñados".
+  const topRatedStats = Object.fromEntries(explore.topRated.map((album) => [album.id, `★ ${starsFormat.format(album.avgStars)}`]));
+  const mostReviewedStats = Object.fromEntries(
+    explore.mostReviewed.map((album) => [album.id, t("reviewCount", { count: album.reviewCount })]),
+  );
   const familyTiles = (buckets: FamilyBucket[]): FamilyTile[] =>
     buckets.map((bucket) => ({
       key: bucket.key,
       label: tGenres(`families.${bucket.key}`),
       href: `/explore?familia=${bucket.key}`,
       count: bucket.count,
-      countLabel: t("collectionItems", { count: bucket.count }),
+      countLabel: t("albumCount", { count: bucket.count, formatted: numberFormat.format(bucket.count) }),
     }));
   const moreFamilies = explore.families.filter((f) => f.tier === "more");
 
@@ -248,6 +277,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         families={familyTiles(explore.families.filter((f) => f.tier === "main"))}
         moreFamilies={familyTiles(moreFamilies)}
         moreLabel={t("moreFamilies", { count: moreFamilies.length })}
+        lessLabel={t("fewerFamilies")}
       />
 
       <AlbumRail
@@ -257,6 +287,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         heading={t("newReleasesHeading")}
         description={t("newReleasesDescription", { days: NEW_RELEASE_WINDOW_DAYS })}
         albums={explore.newReleases}
+        artistNames={railArtistNames}
         categoryLabels={categoryLabels}
         coverLabel={coverLabel}
         seeAll={{ href: "/explore?novedades=1", label: t("seeAll") }}
@@ -270,6 +301,8 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         heading={t("upcomingHeading")}
         description={t("upcomingDescription", { days: UPCOMING_WINDOW_DAYS })}
         albums={explore.upcoming}
+        artistNames={railArtistNames}
+        stats={countdownsFor(explore.upcoming)}
         categoryLabels={categoryLabels}
         coverLabel={coverLabel}
         seeAll={{ href: "/explore?proximos=1", label: t("seeAll") }}
@@ -281,12 +314,17 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
       <DecadeHistogram
         heading={t("decadesHeading")}
         description={t("decadesDescription")}
+        earlierLabel={t("decadesEarlier")}
         decades={explore.decades.map((bucket) => ({
           decade: bucket.decade,
           count: bucket.count,
           href: `/explore?decada=${bucket.decade}`,
           countLabel: numberFormat.format(bucket.count),
-          ariaLabel: t("decadeBarLabel", { decade: bucket.decade, count: bucket.count }),
+          ariaLabel: t("decadeBarLabel", {
+            decade: bucket.decade,
+            count: bucket.count,
+            formatted: numberFormat.format(bucket.count),
+          }),
         }))}
       />
 
@@ -297,6 +335,8 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         heading={t("topRatedHeading")}
         description={t("topRatedDescription", { min: MIN_RATINGS_PER_ALBUM })}
         albums={explore.topRated}
+        artistNames={railArtistNames}
+        stats={topRatedStats}
         categoryLabels={categoryLabels}
         coverLabel={coverLabel}
       />
@@ -308,6 +348,8 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         heading={t("mostReviewedHeading")}
         description={t("mostReviewedDescription")}
         albums={explore.mostReviewed}
+        artistNames={railArtistNames}
+        stats={mostReviewedStats}
         categoryLabels={categoryLabels}
         coverLabel={coverLabel}
       />

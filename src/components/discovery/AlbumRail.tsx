@@ -23,6 +23,10 @@ interface AlbumRailProps {
   layout?: "grid" | "scroll";
   /** Fecha de lanzamiento ya formateada por id de álbum; reemplaza al año en la tarjeta. */
   dateLabels?: Record<string, string>;
+  /** Artista principal por id de álbum (línea bajo el título). */
+  artistNames?: Record<string, string>;
+  /** Cifra del riel por id de álbum, sobre la carátula ("★ 4,3", "12 reseñas"). */
+  stats?: Record<string, string>;
 }
 
 /**
@@ -40,6 +44,8 @@ export function AlbumRail({
   id,
   layout = "grid",
   dateLabels,
+  artistNames,
+  stats,
 }: AlbumRailProps) {
   if (albums.length === 0) return null;
   const headingId = id ? `${id}-heading` : undefined;
@@ -61,6 +67,8 @@ export function AlbumRail({
                 authenticated={authenticated}
                 menuPositioning="fixed"
                 releaseDateLabel={dateLabels?.[album.id]}
+              artistName={artistNames?.[album.id]}
+              stat={stats?.[album.id]}
               />
             </li>
           ))}
@@ -81,6 +89,8 @@ export function AlbumRail({
               coverLabel={coverLabel}
               authenticated={authenticated}
               releaseDateLabel={dateLabels?.[album.id]}
+              artistName={artistNames?.[album.id]}
+              stat={stats?.[album.id]}
             />
           </li>
         ))}
