@@ -39,7 +39,7 @@ describe("DecadeHistogram", () => {
   }));
 
   it("dibuja las columnas en orden cronológico, cada una con su nombre accesible", () => {
-    renderWithIntl(<DecadeHistogram heading="Explorar por década" decades={decades} />);
+    renderWithIntl(<DecadeHistogram heading="Explorar por década" decades={decades} earlierLabel="Antes" />);
     const [columns] = screen.getAllByRole("list");
     const links = within(columns!).getAllByRole("link");
     expect(links.map((a) => a.getAttribute("aria-label"))).toEqual([
@@ -50,8 +50,27 @@ describe("DecadeHistogram", () => {
     expect(links[0]).toHaveAttribute("href", "/es/explore?decada=1970");
   });
 
+  it("saca del gráfico las décadas iniciales con muy pocos álbumes", () => {
+    const column = (decade: number, count: number) => ({
+      decade,
+      count,
+      href: `/explore?decada=${decade}`,
+      countLabel: String(count),
+      ariaLabel: `${decade}s`,
+    });
+    renderWithIntl(
+      <DecadeHistogram
+        heading="Explorar por década"
+        decades={[column(1900, 2), column(1910, 5), column(1960, 500), column(2010, 10000)]}
+        earlierLabel="Antes"
+      />,
+    );
+    const earlier = screen.getByText("Antes").parentElement!;
+    expect(within(earlier).getAllByRole("link").map((a) => a.getAttribute("aria-label"))).toEqual(["1900s", "1910s"]);
+  });
+
   it("no renderiza nada sin décadas", () => {
-    const { container } = renderWithIntl(<DecadeHistogram heading="Explorar por década" decades={[]} />);
+    const { container } = renderWithIntl(<DecadeHistogram heading="Explorar por década" decades={[]} earlierLabel="Antes" />);
     expect(container).toBeEmptyDOMElement();
   });
 });

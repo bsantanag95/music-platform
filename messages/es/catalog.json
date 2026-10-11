@@ -52,7 +52,8 @@
     "pageIndicator": "Página {page}",
     "editorialKicker": "Selección editorial",
     "albumCount": "{formatted} {count, plural, one {álbum} other {álbumes}}",
-    "fewerFamilies": "Ver menos"
+    "fewerFamilies": "Ver menos",
+    "decadesEarlier": "Antes"
   },
   "search": {
     "pageTitle": "Buscar",

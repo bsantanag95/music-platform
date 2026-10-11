@@ -284,6 +284,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
       <DecadeHistogram
         heading={t("decadesHeading")}
         description={t("decadesDescription")}
+        earlierLabel={t("decadesEarlier")}
         decades={explore.decades.map((bucket) => ({
           decade: bucket.decade,
           count: bucket.count,
