@@ -254,13 +254,11 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col items-start gap-12 px-4 py-12">
-      <div className="flex w-full flex-col gap-6">
+      {/* Solo miga de pan y título: el rótulo repetía "Explorar" y la introducción enumeraba lo que cada
+          sección ya explica en su propia línea. Así la primera pantalla muestra contenido. */}
+      <div className="flex w-full flex-col gap-4">
         <Breadcrumbs items={[{ label: tCommon("home"), href: "/" }, { label: t("heading") }]} />
-        <header className="flex max-w-2xl flex-col gap-2">
-          <p className="font-data text-xs uppercase tracking-wider text-amber">{t("kicker")}</p>
-          <h1 className="font-display text-4xl text-paper">{t("heading")}</h1>
-          <p className="font-body text-paper-muted">{t("intro")}</p>
-        </header>
+        <h1 className="font-display text-3xl text-paper">{t("heading")}</h1>
       </div>
 
       <CollectionRail
