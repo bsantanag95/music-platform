@@ -21,6 +21,7 @@ import { GENRE_FAMILIES, type FamilyKey, type FamilyTier } from "@/services/genr
 import { albumInFamily, albumInGenreTree, findStyleGenreBySlug, parseFamilyKey } from "@/services/genres/read";
 import { enrichLists } from "@/services/lists/lists";
 import {
+  FEATURED_RAIL_LIMIT,
   FILTERED_PAGE_SIZE,
   MIN_ALBUMS_FOR_SECTION,
   MIN_RATINGS_PER_ALBUM,
@@ -126,14 +127,29 @@ function serializeAlbum(row: {
 /** Carátulas de la tarjeta de una colección destacada (una pila de sleeves, no el mosaico de 4). */
 const FEATURED_COVER_THUMBS = 6;
 
-/** Colecciones editoriales: listas públicas con fila en `user_list_featured`, por `rank` asc. */
+/**
+ * Condición de vigencia de una fila de `user_list_featured`: ya empezó y no venció. La comparten el
+ * riel de `/explore` y la sección "Destacadas" de Listas.
+ */
+export function featuredActiveCondition(): SQL {
+  return and(
+    sql`${userListFeatured.startsAt} <= now()`,
+    sql`(${userListFeatured.expiresAt} is null or ${userListFeatured.expiresAt} > now())`,
+  ) as SQL;
+}
+
+/**
+ * Colecciones editoriales: listas públicas con fila vigente en `user_list_featured`, por `weight`
+ * desc y `rank` asc, con tope `FEATURED_RAIL_LIMIT` (openspec: automate-explore-collections).
+ */
 export async function listFeaturedCollections(): Promise<FeaturedCollection[]> {
   const rows = await db
     .select({ id: userList.id, title: userList.title, description: userList.description, rank: userListFeatured.rank })
     .from(userListFeatured)
     .innerJoin(userList, eq(userList.id, userListFeatured.listId))
-    .where(and(eq(userList.audience, "public"), eq(userList.kind, "standard")))
-    .orderBy(asc(userListFeatured.rank));
+    .where(and(eq(userList.audience, "public"), eq(userList.kind, "standard"), featuredActiveCondition()))
+    .orderBy(desc(userListFeatured.weight), asc(userListFeatured.rank), desc(userListFeatured.startsAt))
+    .limit(FEATURED_RAIL_LIMIT);
 
   const enrichment = await enrichLists(
     rows.map((row) => row.id),
@@ -155,7 +171,7 @@ export async function listFeaturedCollections(): Promise<FeaturedCollection[]> {
  * Condición de "Novedades": `studio`/`single_ep` lanzados en los últimos `NEW_RELEASE_WINDOW_DAYS`
  * días (fecha completa, hasta hoy, inclusive), con carátula. La comparten el riel y el listado.
  */
-function newReleasesCondition(): SQL {
+export function newReleasesCondition(): SQL {
   return and(
     sql`${releaseGroup.category} in ${NEW_RELEASE_CATEGORIES}`,
     sql`${releaseGroup.firstReleaseDate} between current_date - ${NEW_RELEASE_WINDOW_DAYS}::int and current_date`,
@@ -163,7 +179,7 @@ function newReleasesCondition(): SQL {
   ) as SQL;
 }
 
-const newReleasesOrder = () => [desc(releaseGroup.firstReleaseDate), asc(releaseGroup.id)];
+export const newReleasesOrder = () => [desc(releaseGroup.firstReleaseDate), asc(releaseGroup.id)];
 
 /**
  * Novedades de `/explore`: el más reciente primero. Devuelve `[]` (riel omitido) si hay menos de

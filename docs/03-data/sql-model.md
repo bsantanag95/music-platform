@@ -929,8 +929,16 @@ conteos de la huella de gusto).
 
 **Propósito:** marca una `user_list` como **colección destacada** del descubrimiento
 `/explore` (migración `0018`, cambio `add-album-discovery`). Presencia de fila = destacada;
-`rank` (SMALLINT, `NOT NULL`, `UNIQUE`, `CHECK > 0`) define el orden ascendente del riel
-editorial. Las filas las escribe `scripts/seed-discovery.ts`, no una acción de usuario.
+`rank` (SMALLINT, `NOT NULL`, `CHECK > 0`) es el desempate del orden del riel editorial
+(ya **no es único** desde `0069`). Las filas las escribe la generación de colecciones
+(`src/services/discovery/collections`, `scripts/seed-discovery.ts`), no una acción de usuario.
+
+**Desde `0069`** (cambio `automate-explore-collections`, ADR 0033) la fila lleva además:
+`source` (`curated` | `template`, default `curated`), `template_key` y `period_key` (obligatorias si
+`source='template'`), `starts_at` (default `now()`), `expires_at` (opcional, `> starts_at`) y `weight`
+(SMALLINT, default 0). Índice único parcial `(template_key, period_key) WHERE source='template'` (una lista por
+plantilla y período) e índice de lectura `(weight DESC, rank)`. El riel muestra las filas vigentes por `weight` desc,
+`rank` asc, con tope 6.
 
 **Solo señal de distribución:** no cambia visibilidad, permisos, lectura ni comportamiento
 de la lista en ninguna otra superficie. **Tabla aparte a propósito** (mismo motivo que
@@ -1105,6 +1113,17 @@ verificación y el vínculo de las entradas que siguen en el feed.
 
 **Índices:** `idx_release_calendar_entry_date` (`release_date`), `idx_release_calendar_entry_artists`
 (GIN sobre `artist_mbids`), `idx_release_calendar_entry_rank` (parcial, `anonymous_rank IS NOT NULL`).
+
+## `explore_collection_sync`
+
+**Propósito:** corridas de la generación de colecciones de `/explore` (migración `0069`, cambio
+`automate-explore-collections`, ADR 0033). Misma mecánica que `release_calendar_sync`: una fila `running` de
+menos de 15 minutos de una plantilla bloquea a las demás corridas de esa plantilla (lock bajo
+`pg_advisory_xact_lock`).
+
+**Campos:** `template_key`, `started_at`, `finished_at`, `status` (`running` | `succeeded` | `failed`, `CHECK`),
+`item_count` (álbumes de la colección), `error`. Índice parcial `idx_explore_collection_sync_finished`
+(`template_key, finished_at DESC` de las exitosas), que responde "¿venció la plantilla?" (más de 7 días).
 
 ## `release_calendar_sync`
 

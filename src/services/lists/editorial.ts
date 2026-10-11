@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { appUser, editorialAction, userList } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { requirePermissionForUser } from "@/services/auth/authorization";
+import { notGeneratedCollectionCondition } from "@/services/discovery/collections/conditions";
 import { CURATOR_USERNAME } from "@/services/discovery/constants";
 import {
   addItemToList,
@@ -295,6 +296,8 @@ export async function listEditorialLists(status?: EditorialStatusFilter) {
     .where(
       and(
         eq(appUser.username, CURATOR_USERNAME),
+        // Las colecciones generadas por plantilla no se gestionan aquí (automate-explore-collections).
+        notGeneratedCollectionCondition(),
         status ? statusCondition(status) : undefined,
       ),
     )
