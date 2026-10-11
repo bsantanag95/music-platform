@@ -34,6 +34,8 @@ import quickActionsEs from "../../messages/es/quickActions.json";
 import quickActionsEn from "../../messages/en/quickActions.json";
 import onboardingEs from "../../messages/es/onboarding.json";
 import onboardingEn from "../../messages/en/onboarding.json";
+import awardsEs from "../../messages/es/awards.json";
+import awardsEn from "../../messages/en/awards.json";
 
 const messagesByLocale = {
   es: {
@@ -53,6 +55,7 @@ const messagesByLocale = {
     camino: caminoEs,
     quickActions: quickActionsEs,
     onboarding: onboardingEs,
+    awards: awardsEs,
   },
   en: {
     common: commonEn,
@@ -71,6 +74,7 @@ const messagesByLocale = {
     camino: caminoEn,
     quickActions: quickActionsEn,
     onboarding: onboardingEn,
+    awards: awardsEn,
   },
 };
 

@@ -120,6 +120,18 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - El catálogo se completa bajo demanda (patrón de cacheo): no se precarga el catálogo musical completo desde el día uno.
 - Las carátulas se muestran siempre en baja resolución, con fines de identificación del contenido, no como elemento decorativo a resolución completa — ver `03-data/data-licensing.md` para el detalle legal.
 
+## Premios
+
+- Los premios se curan a mano en `data/awards/` y se cargan con un script; la base no es su fuente de verdad (ADR 0032).
+- Una categoría con cobertura "solo ganador" no tiene nominados no ganadores, y la interfaz lo declara en vez de mostrar
+  una lista parcial como si fuera completa.
+- Toda categoría de una ceremonia cerrada tiene al menos un ganador; puede tener más de uno (empates).
+- El sujeto de una nominación coincide con el tipo que premia su categoría (álbum, grabación o artista). Una nominación
+  sin sujeto identificado se publica igual, como texto.
+- La carga nunca consulta MusicBrainz: la identificación (MBID) se hace antes, con un script que deja los casos
+  ambiguos para el curador en vez de elegir.
+- El nombre del premio se usa solo para describir: sin logos, imágenes de trofeos ni nada que sugiera afiliación.
+
 ## Internacionalización
 
 - Los datos del catálogo musical (nombres de artistas, títulos de álbumes, títulos de canciones, biografías) **no se traducen**. Se muestran tal cual llegan de MusicBrainz, independientemente del idioma activo de la interfaz.
@@ -129,6 +141,9 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
   MusicBrainz. En inglés, el nombre de MusicBrainz. Mismo criterio que los textos por idioma del
   perfil de artista (ADR 0021). Los nombres de las **familias** son vocabulario propio de la
   interfaz y sí se traducen.
+- Los **nombres de las categorías de premios** se traducen (es/en) porque en español se conocen por su nombre
+  traducido ("Álbum del año"); son datos curados con su nombre en cada idioma, no una traducción automática. Los
+  títulos y artistas nominados no se traducen (ADR 0032).
 - La internacionalización (i18n) aplica únicamente al _chrome_ de la interfaz: etiquetas de UI, botones, mensajes de error, estados de carga, y demás texto no proveniente del dominio musical.
 - Ver `02-architecture/i18n.md` para la arquitectura completa del sistema de idiomas.
 

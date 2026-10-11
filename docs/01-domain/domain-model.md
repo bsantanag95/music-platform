@@ -76,6 +76,16 @@ votos +1/−1) decide qué géneros tiene el álbum, cuál es el **principal** y
 su artista (géneros **heredados**). La Canción no tiene géneros propios: hereda los de su álbum.
 Los votos se guardan aparte de las semillas (`release_group_genre_vote`).
 
+## Premio, ceremonia y nominación
+
+Un **Premio** (los Grammy) se entrega en **Ceremonias** anuales (la 67.ª, de 2025). Cada ceremonia tiene
+**Categorías** (Álbum del año, Mejor álbum de rock) con una clave estable para seguir su historia; una categoría
+renombrada, fusionada o dividida es otra, enlazada a la anterior. Una **Nominación** es un candidato de una
+categoría en una ceremonia, ganador o no, y apunta como mucho a un sujeto del catálogo: un Álbum, una Canción
+(grabación, con el disco donde aparece) o un Artista; si no se pudo identificar, queda solo su texto. Cada categoría
+en una ceremonia declara su **cobertura**: completa (todos los nominados) o solo el ganador. Los premios se curan a
+mano en archivos versionados (ADR 0032), no los escriben las personas usuarias.
+
 ## Crédito
 
 El **Crédito** conecta un Artista con un Álbum o con una Canción, y resuelve los distintos patrones de autoría de la industria:

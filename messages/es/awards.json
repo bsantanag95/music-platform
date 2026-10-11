@@ -1,0 +1,31 @@
+{
+  "pageTitle": "Premios",
+  "heading": "Premios",
+  "kicker": "Actualidad",
+  "intro": "Nominados y ganadores de las ceremonias de premios, enlazados al catálogo.",
+  "names": {
+    "grammy": "Premios Grammy"
+  },
+  "ceremonyTitle": "{award} {year}",
+  "edition": "{edition}.ª edición",
+  "heldOn": "Celebrada el {date}",
+  "otherCeremonies": "Otras ceremonias",
+  "tierGeneral": "Campo general",
+  "tierGenre": "Mejor álbum por género",
+  "winner": "Ganador",
+  "nominees": "Nominados",
+  "winnerOnlyNote": "De esta categoría solo registramos al ganador.",
+  "categoryHistory": "Historia de la categoría",
+  "fromAlbum": "del disco {album}",
+  "songwriterNote": "Premia a los autores de la canción.",
+  "historyKicker": "Categoría",
+  "previouslyNamed": "Antes llamada {name}",
+  "laterNamed": "Después llamada {name}",
+  "ceremonyLink": "Ver ceremonia {year}",
+  "emptyIndex": "Todavía no hay ceremonias cargadas.",
+  "exploreHeading": "Premios",
+  "exploreDescription": "Nominados y ganadores de las últimas ceremonias.",
+  "exploreSeeAll": "Ver todos",
+  "ceremonyCount": "{count, plural, one {# ceremonia} other {# ceremonias}}",
+  "ceremonyKicker": "Ceremonia"
+}

@@ -7,6 +7,8 @@ import { CollectionRail } from "@/components/discovery/CollectionRail";
 import { DecadeHistogram } from "@/components/discovery/DecadeHistogram";
 import { FamilyGrid, type FamilyTile } from "@/components/discovery/FamilyGrid";
 import { releaseDateLabel } from "@/components/discovery/release-date-label";
+import { AwardsExploreSection } from "@/components/awards/AwardsExploreSection";
+import { listRecentCeremonies } from "@/services/awards/read";
 import { FilteredAlbumList } from "@/components/discovery/FilteredAlbumList";
 import { ApiError } from "@/lib/api/errors";
 import { isExploreEnabled } from "@/lib/config/discovery";
@@ -210,7 +212,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
   }
 
   // --- Portada ---
-  const explore = await getExplorePage();
+  const [explore, recentCeremonies] = await Promise.all([getExplorePage(), listRecentCeremonies(5)]);
   const familyTiles = (buckets: FamilyBucket[]): FamilyTile[] =>
     buckets.map((bucket) => ({
       key: bucket.key,
@@ -273,6 +275,8 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         seeAll={{ href: "/explore?proximos=1", label: t("seeAll") }}
         dateLabels={dateLabelsFor(explore.upcoming)}
       />
+
+      <AwardsExploreSection ceremonies={recentCeremonies} />
 
       <DecadeHistogram
         heading={t("decadesHeading")}
