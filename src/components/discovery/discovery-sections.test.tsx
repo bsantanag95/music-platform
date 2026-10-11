@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { parseExploreListParams } from "@/services/discovery/explore-params";
 import { CollectionRail } from "./CollectionRail";
@@ -72,11 +72,17 @@ describe("FamilyGrid", () => {
         families={[tile("rock", 100), tile("jazz", 20)]}
         moreFamilies={[tile("world", 2)]}
         moreLabel="1 familia más"
+        lessLabel="Ver menos"
       />,
     );
     expect(screen.getByRole("link", { name: /rock/ })).toHaveAttribute("href", "/es/explore?familia=rock");
     expect(screen.getByText("20 álbumes")).toBeInTheDocument();
-    expect(screen.getByText("1 familia más").closest("details")).not.toHaveAttribute("open");
+    const toggle = screen.getByRole("button", { name: /1 familia más/ });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("link", { name: /world/ })).not.toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(screen.getByRole("link", { name: /world/ })).toHaveAttribute("href", "/es/explore?familia=world");
+    expect(screen.getByRole("button", { name: /Ver menos/ })).toHaveAttribute("aria-expanded", "true");
   });
 });
 

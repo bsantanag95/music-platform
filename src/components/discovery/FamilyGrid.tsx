@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { SectionHeader } from "./SectionHeader";
 
@@ -17,6 +20,8 @@ interface FamilyGridProps {
   /** Familias secundarias, detrás de un desplegable. */
   moreFamilies?: FamilyTile[];
   moreLabel?: string;
+  /** Texto del botón con las secundarias ya desplegadas. */
+  lessLabel?: string;
 }
 
 function Tile({ family, max }: { family: FamilyTile; max: number }) {
@@ -30,7 +35,11 @@ function Tile({ family, max }: { family: FamilyTile; max: number }) {
     >
       <span className="flex items-baseline justify-between gap-2">
         <span className="truncate font-display text-sm text-paper">{family.label}</span>
-        <span aria-hidden="true" className="text-paper-muted transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-amber">
+        {/* La flecha aparece solo al pasar el mouse o con foco: repetida en cada tarjeta era ruido. */}
+        <span
+          aria-hidden="true"
+          className="text-amber opacity-0 transition-[opacity,transform] duration-150 group-hover:translate-x-0.5 group-hover:opacity-100 group-focus-visible:opacity-100"
+        >
           →
         </span>
       </span>
@@ -49,48 +58,50 @@ const GRID = "grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-
 
 /**
  * Familias de géneros de `/explore`: tarjetas con el número de álbumes y una barra de tamaño
- * relativo, cada una lleva a `/explore?familia=`. Las familias secundarias quedan detrás de un
- * `<details>` nativo (sin JavaScript). No renderiza nada si no hay familias.
+ * relativo, cada una lleva a `/explore?familia=`. Las familias secundarias se despliegan desde
+ * una tarjeta más de la propia grilla (ocupa el hueco de la última fila en lugar de quedar suelta
+ * debajo) y se vuelven a plegar con "Ver menos". No renderiza nada si no hay familias.
  */
-export function FamilyGrid({ heading, description, families, moreFamilies = [], moreLabel }: FamilyGridProps) {
+export function FamilyGrid({ heading, description, families, moreFamilies = [], moreLabel, lessLabel }: FamilyGridProps) {
+  const [expanded, setExpanded] = useState(false);
   if (families.length === 0 && moreFamilies.length === 0) return null;
   const max = Math.max(...families.map((f) => f.count), ...moreFamilies.map((f) => f.count), 1);
+  const visible = expanded ? [...families, ...moreFamilies] : families;
+  const canToggle = moreFamilies.length > 0 && moreLabel;
+
   return (
     <section aria-labelledby="explore-genres-heading" className="flex w-full scroll-mt-24 flex-col gap-3">
       <SectionHeader heading={heading} description={description} headingId="explore-genres-heading" />
-      {families.length > 0 && (
-        <ul className={GRID}>
-          {families.map((family) => (
-            <li key={family.key}>
-              <Tile family={family} max={max} />
-            </li>
-          ))}
-        </ul>
-      )}
-      {moreFamilies.length > 0 && moreLabel && (
-        <details className="group/more">
-          <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-md px-1 py-1 font-data text-sm text-paper-muted transition-colors hover:text-paper [&::-webkit-details-marker]:hidden">
-            {moreLabel}
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-              className="size-3.5 transition-transform group-open/more:rotate-180"
+      <ul id="explore-genre-families" className={GRID}>
+        {visible.map((family) => (
+          <li key={family.key}>
+            <Tile family={family} max={max} />
+          </li>
+        ))}
+        {canToggle ? (
+          <li>
+            <button
+              type="button"
+              aria-expanded={expanded}
+              aria-controls="explore-genre-families"
+              onClick={() => setExpanded((open) => !open)}
+              className="flex size-full min-h-[4.75rem] items-center justify-center gap-1.5 rounded-lg border border-dashed border-ink-border px-3 py-2.5 font-data text-xs text-paper-muted transition-colors hover:border-paper-muted/60 hover:text-paper"
             >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </summary>
-          <ul className={`${GRID} mt-2`}>
-            {moreFamilies.map((family) => (
-              <li key={family.key}>
-                <Tile family={family} max={max} />
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
+              {expanded ? lessLabel ?? moreLabel : moreLabel}
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+                className={`size-3.5 transition-transform ${expanded ? "rotate-180" : ""}`}
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+          </li>
+        ) : null}
+      </ul>
     </section>
   );
 }

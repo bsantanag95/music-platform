@@ -36,7 +36,7 @@
     "upcomingCrumb": "Próximos lanzamientos",
     "newReleasesDescription": "Discos de estudio, singles y EPs lanzados en los últimos {days} días.",
     "decadesDescription": "Cuántos álbumes hay en el catálogo por década de lanzamiento. Elige una para recorrerla.",
-    "decadeBarLabel": "{decade}s: {count, plural, one {# álbum} other {# álbumes}}",
+    "decadeBarLabel": "{decade}s: {formatted} {count, plural, one {álbum} other {álbumes}}",
     "topRatedDescription": "Por promedio, entre los discos con al menos {min} valoraciones.",
     "mostReviewedDescription": "Los discos que más reseñas reúnen.",
     "scrollPrev": "Ver anteriores",
@@ -50,7 +50,9 @@
     "clearFilters": "Quitar filtros",
     "paginationLabel": "Paginación",
     "pageIndicator": "Página {page}",
-    "editorialKicker": "Selección editorial"
+    "editorialKicker": "Selección editorial",
+    "albumCount": "{formatted} {count, plural, one {álbum} other {álbumes}}",
+    "fewerFamilies": "Ver menos"
   },
   "search": {
     "pageTitle": "Buscar",

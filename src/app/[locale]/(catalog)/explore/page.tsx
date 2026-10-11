@@ -53,7 +53,9 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
   const { decada, familia, genero, proximos, novedades } = raw;
   const listParams = parseExploreListParams(raw);
   const listOptions = { category: listParams.category, sort: listParams.sort };
-  const numberFormat = new Intl.NumberFormat(locale);
+  // Separador de miles siempre: con la regla del español ("2112" pero "17.317") las cifras de una
+  // misma grilla quedaban con formatos distintos.
+  const numberFormat = new Intl.NumberFormat(locale, { useGrouping: "always" });
 
   const categoryLabels = {
     studio: tCat("categories.studio"),
@@ -219,7 +221,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
       label: tGenres(`families.${bucket.key}`),
       href: `/explore?familia=${bucket.key}`,
       count: bucket.count,
-      countLabel: t("collectionItems", { count: bucket.count }),
+      countLabel: t("albumCount", { count: bucket.count, formatted: numberFormat.format(bucket.count) }),
     }));
   const moreFamilies = explore.families.filter((f) => f.tier === "more");
 
@@ -248,6 +250,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         families={familyTiles(explore.families.filter((f) => f.tier === "main"))}
         moreFamilies={familyTiles(moreFamilies)}
         moreLabel={t("moreFamilies", { count: moreFamilies.length })}
+        lessLabel={t("fewerFamilies")}
       />
 
       <AlbumRail
@@ -286,7 +289,11 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
           count: bucket.count,
           href: `/explore?decada=${bucket.decade}`,
           countLabel: numberFormat.format(bucket.count),
-          ariaLabel: t("decadeBarLabel", { decade: bucket.decade, count: bucket.count }),
+          ariaLabel: t("decadeBarLabel", {
+            decade: bucket.decade,
+            count: bucket.count,
+            formatted: numberFormat.format(bucket.count),
+          }),
         }))}
       />
 
