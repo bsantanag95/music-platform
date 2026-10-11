@@ -17,6 +17,7 @@ import { getCurrentUser } from "@/services/auth/authorization";
 import { CURATOR_USERNAME, MIN_RATINGS_PER_ALBUM, NEW_RELEASE_WINDOW_DAYS, UPCOMING_WINDOW_DAYS } from "@/services/discovery/constants";
 import {
   getExplorePage,
+  albumArtistNames,
   listAlbumsByDecade,
   listAlbumsByFamily,
   listAlbumsByGenre,
@@ -100,6 +101,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         heading={t("decadeResultsHeading", { decade: decadeLabel })}
         crumb={t("decadeChip", { decade: decadeLabel })}
         result={result}
+        artistNames={await albumArtistNames(result.albums.map((album) => album.id))}
         baseHref={`/explore?decada=${decade}`}
         siblings={{
           label: t("otherDecades"),
@@ -128,6 +130,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         heading={t("familyResultsHeading", { family })}
         crumb={family}
         result={result}
+        artistNames={await albumArtistNames(result.albums.map((album) => album.id))}
         baseHref={`/explore?familia=${encodeURIComponent(result.family ?? familia.trim())}`}
         siblings={{
           label: t("otherFamilies"),
@@ -151,6 +154,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         heading={t("genreResultsHeading", { genre })}
         crumb={genre}
         result={result}
+        artistNames={await albumArtistNames(result.albums.map((album) => album.id))}
         baseHref={`/explore?genero=${encodeURIComponent(result.genre?.slug ?? genero.trim())}`}
         related={result.genre ? { href: genreHref(result.genre.slug), label: t("genrePageLink", { genre }) } : undefined}
       />
@@ -189,6 +193,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         heading={t("upcomingResultsHeading")}
         crumb={t("upcomingCrumb")}
         result={result}
+        artistNames={await albumArtistNames(result.albums.map((album) => album.id))}
         baseHref="/explore?proximos=1"
         hideSort
         dateLabels={dateLabelsFor(result.albums)}
@@ -206,6 +211,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         heading={t("newReleasesResultsHeading")}
         crumb={t("newReleasesHeading")}
         result={result}
+        artistNames={await albumArtistNames(result.albums.map((album) => album.id))}
         baseHref="/explore?novedades=1"
         hideSort
         dateLabels={dateLabelsFor(result.albums)}
@@ -215,6 +221,16 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
 
   // --- Portada ---
   const [explore, recentCeremonies] = await Promise.all([getExplorePage(), listRecentCeremonies(5)]);
+  const railArtistNames = await albumArtistNames(
+    [explore.newReleases, explore.upcoming, explore.topRated, explore.mostReviewed].flat().map((album) => album.id),
+  );
+  const starsFormat = new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  // Cifra que ubica a cada disco en su riel, sobre la carátula: el promedio en "Mejor valorados", las reseñas
+  // en "Más reseñados".
+  const topRatedStats = Object.fromEntries(explore.topRated.map((album) => [album.id, `★ ${starsFormat.format(album.avgStars)}`]));
+  const mostReviewedStats = Object.fromEntries(
+    explore.mostReviewed.map((album) => [album.id, t("reviewCount", { count: album.reviewCount })]),
+  );
   const familyTiles = (buckets: FamilyBucket[]): FamilyTile[] =>
     buckets.map((bucket) => ({
       key: bucket.key,
@@ -260,6 +276,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         heading={t("newReleasesHeading")}
         description={t("newReleasesDescription", { days: NEW_RELEASE_WINDOW_DAYS })}
         albums={explore.newReleases}
+        artistNames={railArtistNames}
         categoryLabels={categoryLabels}
         coverLabel={coverLabel}
         seeAll={{ href: "/explore?novedades=1", label: t("seeAll") }}
@@ -273,6 +290,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         heading={t("upcomingHeading")}
         description={t("upcomingDescription", { days: UPCOMING_WINDOW_DAYS })}
         albums={explore.upcoming}
+        artistNames={railArtistNames}
         categoryLabels={categoryLabels}
         coverLabel={coverLabel}
         seeAll={{ href: "/explore?proximos=1", label: t("seeAll") }}
@@ -305,6 +323,8 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         heading={t("topRatedHeading")}
         description={t("topRatedDescription", { min: MIN_RATINGS_PER_ALBUM })}
         albums={explore.topRated}
+        artistNames={railArtistNames}
+        stats={topRatedStats}
         categoryLabels={categoryLabels}
         coverLabel={coverLabel}
       />
@@ -316,6 +336,8 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         heading={t("mostReviewedHeading")}
         description={t("mostReviewedDescription")}
         albums={explore.mostReviewed}
+        artistNames={railArtistNames}
+        stats={mostReviewedStats}
         categoryLabels={categoryLabels}
         coverLabel={coverLabel}
       />

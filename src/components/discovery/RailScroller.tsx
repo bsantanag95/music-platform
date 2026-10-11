@@ -28,6 +28,9 @@ function Arrow({ direction }: { direction: "prev" | "next" }) {
   );
 }
 
+// Sin barra de desplazamiento visible: en Windows dibujaba una barra gris con flechas bajo cada riel; con
+// mouse están las flechas del encabezado y en táctil se desliza.
+//
 // Riel horizontal de Explorar: una sola fila con desplazamiento y `scroll-snap`, en lugar de la
 // grilla de dos filas que alargaba la portada. Las flechas (desde `sm`) avanzan casi un ancho
 // de riel y se apagan en cada extremo; en táctil se desliza. Los degradados de los bordes son
@@ -86,7 +89,7 @@ export function RailScroller({ header, children, labelledBy }: RailScrollerProps
           ref={listRef}
           onScroll={update}
           aria-labelledby={labelledBy}
-          className="themed-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3"
+          className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {children}
         </ul>

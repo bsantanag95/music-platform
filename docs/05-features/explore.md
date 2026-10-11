@@ -29,6 +29,12 @@ que se apagan en cada extremo, y degradados de borde como capas aparte (una `mas
 el menú "…" de las tarjetas, que en el riel se abre con `positioning="fixed"`). La grilla de dos
 filas (`layout="grid"`, el predeterminado) sigue en la página de género y en la Inicio anónima.
 
+Las tarjetas de álbum de Explorar (rieles y listados) llevan bajo el título el **artista principal**
+(primer crédito `primary`, `albumArtistNames`: una consulta para todos los álbumes de la página). Los
+rieles por reglas muestran sobre la carátula la cifra que ubica al disco ahí: el promedio en Mejor
+valorados ("★ 4,3") y el número de reseñas en Más reseñados ("12 reseñas"). Los rieles no dibujan
+barra de desplazamiento: se avanzan con las flechas o deslizando.
+
 ### Novedades y Próximos lanzamientos: rieles y listados completos
 
 Las ventanas de Novedades (`<= hoy`) y Próximos lanzamientos (`> hoy`) no se solapan ni dejan hueco. Ambas

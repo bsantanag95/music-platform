@@ -21,6 +21,10 @@ interface AlbumCardProps {
   menuPositioning?: "absolute" | "fixed";
   /** Fecha de lanzamiento ya formateada (p. ej. "24 oct"): reemplaza al año en la línea de datos. */
   releaseDateLabel?: string;
+  /** Artista principal, en una línea bajo el título. */
+  artistName?: string;
+  /** Cifra del riel sobre la carátula ("★ 4,3", "12 reseñas"): lo que ubica al disco en esa sección. */
+  stat?: string;
 }
 
 // Tarjeta de álbum de Explorar. Usa `Link` de next-intl para preservar el locale activo. El
@@ -35,6 +39,8 @@ export function AlbumCard({
   authenticated = false,
   menuPositioning = "absolute",
   releaseDateLabel,
+  artistName,
+  stat,
 }: AlbumCardProps) {
   const t = useTranslations("lists");
   const tCollection = useTranslations("collection");
@@ -77,23 +83,31 @@ export function AlbumCard({
   return (
     <div className="group/card relative flex w-full flex-col gap-2 rounded-lg border border-ink-border bg-ink-surface p-3 transition-colors hover:border-amber">
       <Link href={albumHref(null, releaseGroup.title, releaseGroup.id)} className="flex flex-col gap-2">
-        {releaseGroup.coverResolved ? (
-          // Resuelta (URL conocida, ausencia confirmada o retirada): se
-          // renderiza en la carga inicial, sin request por carátula.
-          <CoverThumb
-            cover={releaseGroup.coverThumbUrl}
-            label={coverLabel}
-            className="aspect-square w-full"
-          />
-        ) : (
-          <LazyCoverImage
-            releaseGroupId={releaseGroup.id}
-            coverLabel={coverLabel}
-            className="aspect-square w-full"
-          />
-        )}
+        <div className="relative">
+          {releaseGroup.coverResolved ? (
+            // Resuelta (URL conocida, ausencia confirmada o retirada): se
+            // renderiza en la carga inicial, sin request por carátula.
+            <CoverThumb
+              cover={releaseGroup.coverThumbUrl}
+              label={coverLabel}
+              className="aspect-square w-full"
+            />
+          ) : (
+            <LazyCoverImage
+              releaseGroupId={releaseGroup.id}
+              coverLabel={coverLabel}
+              className="aspect-square w-full"
+            />
+          )}
+          {stat ? (
+            <span className="absolute bottom-1.5 left-1.5 rounded-md bg-ink/85 px-1.5 py-0.5 font-data text-[0.7rem] tabular-nums text-paper backdrop-blur-sm">
+              {stat}
+            </span>
+          ) : null}
+        </div>
         <div className="min-w-0">
           <h3 className="truncate font-display text-sm text-paper">{releaseGroup.title}</h3>
+          {artistName ? <p className="truncate font-body text-xs text-paper-muted">{artistName}</p> : null}
           <p className="font-data text-xs text-paper-muted">
             {releaseDateLabel
               ? `${releaseDateLabel} · ${categoryLabel}`

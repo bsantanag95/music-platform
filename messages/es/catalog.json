@@ -53,7 +53,8 @@
     "editorialKicker": "Selección editorial",
     "albumCount": "{formatted} {count, plural, one {álbum} other {álbumes}}",
     "fewerFamilies": "Ver menos",
-    "decadesEarlier": "Antes"
+    "decadesEarlier": "Antes",
+    "reviewCount": "{count, plural, one {# reseña} other {# reseñas}}"
   },
   "search": {
     "pageTitle": "Buscar",
