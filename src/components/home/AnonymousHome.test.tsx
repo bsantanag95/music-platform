@@ -93,7 +93,7 @@ describe("AnonymousHome", () => {
   it("muestra el bloque editorial de álbumes cuando hay colecciones o mejor valorados", async () => {
     vi.mocked(discovery.listTopRated).mockResolvedValue([album]);
     vi.mocked(discovery.listFeaturedCollections).mockResolvedValue([
-      { id: "c1", title: "Esenciales", itemCount: 5, coverThumbs: [] },
+      { id: "c1", title: "Esenciales", description: null, itemCount: 5, coverThumbs: [] },
     ]);
 
     const element = await AnonymousHome();

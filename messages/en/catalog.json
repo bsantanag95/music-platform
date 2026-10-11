@@ -49,7 +49,8 @@
     "genrePageLink": "Go to the {genre} page",
     "clearFilters": "Clear filters",
     "paginationLabel": "Pagination",
-    "pageIndicator": "Page {page}"
+    "pageIndicator": "Page {page}",
+    "editorialKicker": "Editorial pick"
   },
   "search": {
     "pageTitle": "Search",

@@ -36,6 +36,7 @@ import {
 export interface FeaturedCollection {
   id: string;
   title: string;
+  description: string | null;
   itemCount: number;
   coverThumbs: string[];
 }
@@ -114,21 +115,28 @@ function serializeAlbum(row: {
 // Rieles de la portada
 // ---------------------------------------------------------------------------
 
+/** Carátulas de la tarjeta de una colección destacada (una pila de sleeves, no el mosaico de 4). */
+const FEATURED_COVER_THUMBS = 6;
+
 /** Colecciones editoriales: listas públicas con fila en `user_list_featured`, por `rank` asc. */
 export async function listFeaturedCollections(): Promise<FeaturedCollection[]> {
   const rows = await db
-    .select({ id: userList.id, title: userList.title, rank: userListFeatured.rank })
+    .select({ id: userList.id, title: userList.title, description: userList.description, rank: userListFeatured.rank })
     .from(userListFeatured)
     .innerJoin(userList, eq(userList.id, userListFeatured.listId))
     .where(and(eq(userList.audience, "public"), eq(userList.kind, "standard")))
     .orderBy(asc(userListFeatured.rank));
 
-  const enrichment = await enrichLists(rows.map((row) => row.id));
+  const enrichment = await enrichLists(
+    rows.map((row) => row.id),
+    FEATURED_COVER_THUMBS,
+  );
   return rows.map((row) => {
     const enriched = enrichment.get(row.id);
     return {
       id: row.id,
       title: row.title,
+      description: row.description,
       itemCount: enriched?.itemCount ?? 0,
       coverThumbs: enriched?.coverThumbs ?? [],
     };
