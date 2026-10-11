@@ -27,9 +27,9 @@
   y 2025, con nombre es/en, nivel, tipo de sujeto, `honors` y predecesoras.
 - [x] 3.2 `data/awards/grammy/ceremonies/2025.json` (piloto) con `sourceUrl`; resolver y dejar el reporte de
   ambiguos para revisión.
-- [ ] 3.3 **Revisión humana** del piloto 2025 contra la fuente, y decisión de los ambiguos.
+- [x] 3.3 **Revisión humana** del piloto 2025 contra la fuente, y decisión de los ambiguos.
 - [x] 3.4 Ceremonias 2021–2024, resueltas y con su reporte.
-- [ ] 3.5 **Revisión humana** de 2021–2024.
+- [x] 3.5 **Revisión humana** de 2021–2024.
 
 ## 4. Lectura y páginas
 

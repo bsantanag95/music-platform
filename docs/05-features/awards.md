@@ -12,8 +12,10 @@ videojuegos.
   `data/awards/`.
 - **Categorías:** "nivel A" (campo general: Álbum, Grabación y Canción del año, Mejor artista nuevo) y "nivel B"
   (los "Mejor álbum de …" por género). Ingeniería, empaque, video y demás quedan fuera.
-- **Cobertura actual:** campo general completo en 2021–2025; álbumes por género completos en 2025 (pop vocal,
-  dance/electrónico, rock, alternativo, rap, country, pop latino) y solo el ganador en el resto.
+- **Cobertura actual:** 2021–2025 completos, revisados contra Wikipedia (2026-10-10): campo general y nueve
+  categorías de álbum por género (pop vocal, dance/electrónico, rock, alternativo, R&B, rap, country, pop latino y
+  música urbana). En 2021 la categoría latina era "Mejor álbum de pop latino o urbano", predecesora de las dos que la
+  reemplazaron en 2022.
 - **Fuera de este cambio:** la insignia de ganador en las fichas de álbum, canción y artista, los ganadores históricos
   del nivel A (1959 en adelante) y la comparación "ganó X; la comunidad prefería Y". Van en un cambio posterior.
 

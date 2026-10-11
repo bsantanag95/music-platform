@@ -131,7 +131,8 @@
         "es": "Mejor álbum de pop latino",
         "en": "Best Latin Pop Album"
       },
-      "order": 12
+      "order": 12,
+      "predecessor": "best-latin-pop-or-urban-album"
     },
     {
       "key": "best-musica-urbana-album",
@@ -142,7 +143,19 @@
         "es": "Mejor álbum de música urbana",
         "en": "Best Música Urbana Album"
       },
-      "order": 13
+      "order": 13,
+      "predecessor": "best-latin-pop-or-urban-album"
+    },
+    {
+      "key": "best-latin-pop-or-urban-album",
+      "tier": "genre",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de pop latino o urbano",
+        "en": "Best Latin Pop or Urban Album"
+      },
+      "order": 14
     }
   ]
 }
