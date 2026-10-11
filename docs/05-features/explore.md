@@ -32,7 +32,9 @@ filas (`layout="grid"`, el predeterminado) sigue en la página de género y en l
 Las tarjetas de álbum de Explorar (rieles y listados) llevan bajo el título el **artista principal**
 (primer crédito `primary`, `albumArtistNames`: una consulta para todos los álbumes de la página). Los
 rieles por reglas muestran sobre la carátula la cifra que ubica al disco ahí: el promedio en Mejor
-valorados ("★ 4,3") y el número de reseñas en Más reseñados ("12 reseñas"). Los rieles no dibujan
+valorados ("★ 4,3") y el número de reseñas en Más reseñados ("12 reseñas"). Próximos lanzamientos (riel y
+listado) muestra ahí la cuenta regresiva ("Hoy", "Mañana", "En 5 días"; `daysUntilRelease`, días de calendario UTC
+como la fecha de la tarjeta). Los rieles no dibujan
 barra de desplazamiento: se avanzan con las flechas o deslizando.
 
 ### Novedades y Próximos lanzamientos: rieles y listados completos

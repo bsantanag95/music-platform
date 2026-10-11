@@ -6,7 +6,7 @@ import { AlbumRail } from "@/components/discovery/AlbumRail";
 import { CollectionRail } from "@/components/discovery/CollectionRail";
 import { DecadeHistogram } from "@/components/discovery/DecadeHistogram";
 import { FamilyGrid, type FamilyTile } from "@/components/discovery/FamilyGrid";
-import { releaseDateLabel } from "@/components/discovery/release-date-label";
+import { daysUntilRelease, releaseDateLabel } from "@/components/discovery/release-date-label";
 import { AwardsExploreSection } from "@/components/awards/AwardsExploreSection";
 import { listRecentCeremonies } from "@/services/awards/read";
 import { FilteredAlbumList } from "@/components/discovery/FilteredAlbumList";
@@ -73,6 +73,16 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
     for (const album of albums) {
       const label = releaseDateLabel(album.firstReleaseDate, locale);
       if (label) labels[album.id] = label;
+    }
+    return labels;
+  };
+  // Cuenta regresiva de "Próximos lanzamientos" sobre la carátula ("En 5 días", "Mañana", "Hoy"): la fecha
+  // sola obligaba a calcular cuánto falta, y el riel quedaba idéntico al de Novedades.
+  const countdownsFor = (albums: { id: string; firstReleaseDate: string | null }[]): Record<string, string> => {
+    const labels: Record<string, string> = {};
+    for (const album of albums) {
+      const days = daysUntilRelease(album.firstReleaseDate);
+      if (days !== undefined) labels[album.id] = t("countdown", { days });
     }
     return labels;
   };
@@ -197,6 +207,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         baseHref="/explore?proximos=1"
         hideSort
         dateLabels={dateLabelsFor(result.albums)}
+        stats={countdownsFor(result.albums)}
       />
     );
   }
@@ -291,6 +302,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         description={t("upcomingDescription", { days: UPCOMING_WINDOW_DAYS })}
         albums={explore.upcoming}
         artistNames={railArtistNames}
+        stats={countdownsFor(explore.upcoming)}
         categoryLabels={categoryLabels}
         coverLabel={coverLabel}
         seeAll={{ href: "/explore?proximos=1", label: t("seeAll") }}

@@ -54,7 +54,8 @@
     "albumCount": "{formatted} {count, plural, one {álbum} other {álbumes}}",
     "fewerFamilies": "Ver menos",
     "decadesEarlier": "Antes",
-    "reviewCount": "{count, plural, one {# reseña} other {# reseñas}}"
+    "reviewCount": "{count, plural, one {# reseña} other {# reseñas}}",
+    "countdown": "{days, plural, =0 {Hoy} =1 {Mañana} other {En # días}}"
   },
   "search": {
     "pageTitle": "Buscar",
