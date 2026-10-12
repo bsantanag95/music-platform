@@ -28,7 +28,8 @@ interface ListCardProps {
   subMeta?: ReactNode;
   /**
    * Dónde va la acción: `footer` (predeterminado, su propia fila al pie) o `aside` (a la derecha desde
-   * `sm`, centrada: la tarjeta no crece una fila solo por el botón; en mobile vuelve al pie).
+   * `sm`, centrada: la tarjeta no crece una fila solo por el botón; en mobile vuelve al pie, salvo en la
+   * variante densa, cuya acción compacta entra siempre a la derecha).
    */
   actionPlacement?: "footer" | "aside";
 }
@@ -58,7 +59,7 @@ export function ListCard({
     <article
       className={`group flex gap-3 rounded-lg border border-ink-border bg-ink-surface transition-colors focus-within:border-amber hover:border-amber ${
         dense ? "p-2" : "gap-4 p-3"
-      } ${aside ? "flex-wrap items-center sm:flex-nowrap" : ""} ${unavailable ? "opacity-60" : ""} ${className}`}
+      } ${aside ? (dense ? "items-center" : "flex-wrap items-center sm:flex-nowrap") : ""} ${unavailable ? "opacity-60" : ""} ${className}`}
     >
       <Link href={href} className="shrink-0" tabIndex={-1} aria-hidden>
         <ListCoverMosaic coverThumbs={coverThumbs} className={dense ? "w-12" : "w-20"} />
@@ -92,7 +93,7 @@ export function ListCard({
         {action && !aside ? <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">{action}</div> : null}
       </div>
 
-      {aside ? <div className="w-full shrink-0 sm:w-auto">{action}</div> : null}
+      {aside ? <div className={`shrink-0 ${dense ? "" : "w-full sm:w-auto"}`}>{action}</div> : null}
     </article>
   );
 }

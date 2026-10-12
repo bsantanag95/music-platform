@@ -104,7 +104,10 @@
     "recentHeading": "Recent",
     "emptyTitle": "No lists to discover yet",
     "emptyDescription": "Once the community publishes public lists, they will show up here.",
-    "featuredDescription": "Editorial picks and official lists."
+    "featuredDescription": "Editorial picks and official lists.",
+    "popularDescription": "The ones the community saves the most.",
+    "followingDescription": "Recent lists from people you follow.",
+    "recentDescription": "The latest from the community."
   },
   "deleteShort": "Delete?",
   "moveUp": "Move “{title}” up",

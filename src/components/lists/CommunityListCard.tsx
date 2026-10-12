@@ -27,6 +27,7 @@ export function CommunityListCard({
 }) {
   const t = useTranslations("lists");
   const ownerName = list.owner.displayName ?? `@${list.owner.username}`;
+  const hasSaves = typeof list.saveCount === "number" && list.saveCount > 0;
 
   const owner = (
     <UserHoverCard username={list.owner.username}>
@@ -55,37 +56,41 @@ export function CommunityListCard({
       description={list.description}
       dense={dense}
       badge={badge}
-      // Dos líneas en la tarjeta completa (qué es · cuánto; de quién · cuándo): antes era una sola línea que
-      // se partía a mitad, dejando "hace 1 mes" suelto abajo.
+      // Siempre dos líneas: qué es · cuánto (· guardados en la tarjeta completa), y de quién · cuándo (en las
+      // secciones densas, de quién · guardados: la cifra que ordena Populares). Antes era una sola línea que
+      // se partía a mitad y dejaba "hace 1 mes" o "por Fran" sueltos abajo.
       meta={
         <>
           <span>{t(entityTypeKey(list.entityType))}</span>
           <span aria-hidden>·</span>
           <span>{t("itemsCount", { count: list.itemCount })}</span>
-          {dense ? (
+          {!dense && hasSaves ? (
             <>
               <span aria-hidden>·</span>
-              {owner}
-            </>
-          ) : null}
-          {!dense && typeof list.saveCount === "number" && list.saveCount > 0 ? (
-            <>
-              <span aria-hidden>·</span>
-              <span>{t("savesCount", { count: list.saveCount })}</span>
+              <span>{t("savesCount", { count: list.saveCount! })}</span>
             </>
           ) : null}
         </>
       }
       subMeta={
-        dense ? undefined : (
-          <>
-            {owner}
-            <span aria-hidden>·</span>
-            <RelativeDate iso={list.createdAt} />
-          </>
-        )
+        <>
+          {owner}
+          {dense ? (
+            hasSaves ? (
+              <>
+                <span aria-hidden>·</span>
+                <span>{t("savesCount", { count: list.saveCount! })}</span>
+              </>
+            ) : null
+          ) : (
+            <>
+              <span aria-hidden>·</span>
+              <RelativeDate iso={list.createdAt} />
+            </>
+          )}
+        </>
       }
-      actionPlacement={dense ? "footer" : "aside"}
+      actionPlacement="aside"
       action={
         canSave && !list.isOwn ? (
           <SaveListButton
@@ -93,6 +98,7 @@ export function CommunityListCard({
             listId={list.id}
             initialSaved={list.saved}
             initialFollowing={list.following}
+            variant={dense ? "compact" : "full"}
           />
         ) : undefined
       }

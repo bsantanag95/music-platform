@@ -82,6 +82,7 @@ export default async function CommunityListsPage({
         {popular.lists.length > 0 ? (
           <CommunityListSection
             source="popular"
+            descriptionKey="community.popularDescription"
             headingKey="community.popularHeading"
             initial={popular}
             canSave={canSave}
@@ -93,6 +94,7 @@ export default async function CommunityListsPage({
         {fromFollowing && fromFollowing.lists.length > 0 ? (
           <CommunityListSection
             source="from-following"
+            descriptionKey="community.followingDescription"
             headingKey="community.followingHeading"
             initial={fromFollowing}
             canSave={canSave}
@@ -104,6 +106,7 @@ export default async function CommunityListsPage({
         {recent.lists.length > 0 ? (
           <CommunityListSection
             source="recent"
+            descriptionKey="community.recentDescription"
             headingKey="community.recentHeading"
             initial={recent}
             canSave={canSave}
