@@ -453,6 +453,7 @@ async function main() {
       await syncCollections({ keys: [KEY], force: true }); // asegura una colección vigente
       const before = (await listTemplatesAdmin()).find((t) => t.key === KEY)!;
       check(before.current !== null && !before.paused, "la plantilla tiene una colección vigente");
+      check(before.lastItemCount !== null && before.lastItemCount >= 6, "el panel conoce cuántos álbumes cumplió la última corrida");
       await pauseTemplate(adminId, KEY);
       const paused = (await listTemplatesAdmin()).find((t) => t.key === KEY)!;
       check(paused.paused && paused.current === null, "pausar la marca y retira su colección vigente");

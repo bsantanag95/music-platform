@@ -183,7 +183,9 @@
       "run": "Regenerate now",
       "confirmPause": "Pause this template? It will stop regenerating and its collection will leave the rail.",
       "runQueued": "Regeneration in progress. Refresh in a few seconds.",
-      "refresh": "Refresh"
+      "refresh": "Refresh",
+      "notGenerated": "Not generated yet",
+      "belowMinimum": "{count, plural, one {Only # album matches} other {Only # albums match}} the rule (minimum {min}), so there is no collection"
     }
   },
   "pendingFollowRequests": "{count, plural, one {# request} other {# requests}}",
