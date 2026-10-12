@@ -145,7 +145,8 @@ En vitrina, secciones:
 
 1. **Destacadas** — primero las listas **editoriales oficiales publicadas** de `@exploracion`
    (visibles, no retiradas), luego las listas con fila en `user_list_featured` (curaduría
-   editorial), sin filtrar por tipo de entidad y sin duplicar. Rail sin paginación.
+   editorial), sin filtrar por tipo de entidad y sin duplicar. Rail sin paginación. Las listas
+   vacías se omiten (siguen visibles en su perfil, en Recientes y por enlace).
 2. **Populares** — listas públicas ordenadas por conteo agregado de guardados. Vitrina, no
    ranking: "N guardados" en la tarjeta, sin posiciones. `GET /api/lists/popular`.
 3. **De la gente que seguís** — listas visibles (`public` o `followers`) de usuarios que el

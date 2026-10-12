@@ -74,7 +74,12 @@ describe("servicio de listas de la comunidad", () => {
   });
 
   it("Destacadas: pone las editoriales oficiales primero", async () => {
-    mocks.enrichLists.mockResolvedValue(new Map());
+    mocks.enrichLists.mockResolvedValue(
+      new Map([
+        [officialRow.id, { itemCount: 3, coverThumbs: [] }],
+        [row.id, { itemCount: 5, coverThumbs: [] }],
+      ]),
+    );
     mocks.db.select
       .mockReturnValueOnce(chain([officialRow]))
       .mockReturnValueOnce(chain([row]));
@@ -84,12 +89,31 @@ describe("servicio de listas de la comunidad", () => {
   });
 
   it("Destacadas: deduplica una lista oficial que también está destacada", async () => {
-    mocks.enrichLists.mockResolvedValue(new Map());
+    mocks.enrichLists.mockResolvedValue(
+      new Map([
+        [officialRow.id, { itemCount: 3, coverThumbs: [] }],
+        [row.id, { itemCount: 5, coverThumbs: [] }],
+      ]),
+    );
     mocks.db.select
       .mockReturnValueOnce(chain([officialRow]))
       .mockReturnValueOnce(chain([officialRow, row]));
     const result = await listFeaturedLists(reader);
     expect(result.lists.map((l) => l.id)).toEqual([officialRow.id, row.id]);
+  });
+
+  it("Destacadas: omite las listas vacías", async () => {
+    mocks.enrichLists.mockResolvedValue(
+      new Map([
+        [officialRow.id, { itemCount: 0, coverThumbs: [] }],
+        [row.id, { itemCount: 5, coverThumbs: [] }],
+      ]),
+    );
+    mocks.db.select
+      .mockReturnValueOnce(chain([officialRow]))
+      .mockReturnValueOnce(chain([row]));
+    const result = await listFeaturedLists(reader);
+    expect(result.lists.map((l) => l.id)).toEqual([row.id]);
   });
 
   it("Populares: adjunta el conteo agregado de guardados", async () => {
