@@ -75,7 +75,7 @@ conjuntos. Una lista editorial oficial SHALL ser una lista de la cuenta curadora
 (`official_withdrawn_at IS NULL`). Cada entrada SHALL presentar título, dueño (con enlace al
 perfil), tipo de entidad, conteo de ítems y carátulas disponibles, y SHALL enlazar al detalle de esa
 lista; las oficiales SHALL distinguirse con la insignia de contenido oficial. Una lista sin ítems
-SHALL NOT aparecer en la sección (sigue visible en su perfil, en Recientes y por enlace directo). La
+SHALL NOT aparecer en la sección (sigue visible en su perfil y por enlace directo). La
 sección SHALL mostrarse siempre que exista al menos una lista oficial o destacada con ítems y SHALL
 NOT paginar.
 
@@ -139,7 +139,9 @@ La vista `/lists` SHALL mostrar, **solo cuando hay sesión**, una sección con l
 para el lector cuyos dueños son usuarios que el lector sigue con relación aceptada, en orden
 cronológico descendente por fecha de creación. La sección SHALL considerar visibles las
 listas de audiencia `public` y `followers` de esos dueños, SHALL excluir bloqueos y perfiles
-que dejaron de ser visibles, y SHALL excluir las listas del propio lector. Para un lector
+que dejaron de ser visibles, SHALL excluir las listas del propio lector y SHALL excluir las listas
+sin ítems (aparecen cuando tienen el primero; el filtro va en la consulta, así la paginación no
+devuelve páginas cortas). Para un lector
 anónimo la sección SHALL NOT renderizarse, y su API SHALL responder `401` con código
 `AUTH_REQUIRED`. La sección SHALL poder paginarse.
 
@@ -148,6 +150,11 @@ anónimo la sección SHALL NOT renderizarse, y su API SHALL responder `401` con 
 - **WHEN** un usuario con sesión que sigue a otras personas abre `/lists`
 - **THEN** ve una sección con las listas recientes visibles de esas personas, de la más
   reciente a la más antigua
+
+#### Scenario: Lista vacía de alguien que sigo
+
+- **WHEN** una persona que sigo crea una lista y todavía no le agrega ítems
+- **THEN** la lista no aparece en "De la gente que sigues" hasta que tenga su primer ítem
 
 #### Scenario: Incluye audiencia followers de seguidos
 

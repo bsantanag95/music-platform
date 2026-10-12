@@ -17,6 +17,7 @@ export function CommunityListCard({
   list,
   canSave,
   dense = false,
+  showDate = false,
 }: {
   list: DiscoverListSummary;
   /** Hay sesión: se ofrece la acción Guardar/Seguir. */
@@ -24,6 +25,8 @@ export function CommunityListCard({
   /** Variante compacta para las secciones de navegación (no Destacadas): recorta
    * guardados y antigüedad del meta para que la línea entre en una card angosta. */
   dense?: boolean;
+  /** En la variante densa, muestra la antigüedad en lugar de los guardados (De la gente que sigues). */
+  showDate?: boolean;
 }) {
   const t = useTranslations("lists");
   const ownerName = list.owner.displayName ?? `@${list.owner.username}`;
@@ -75,7 +78,7 @@ export function CommunityListCard({
       subMeta={
         <>
           {owner}
-          {dense ? (
+          {dense && !showDate ? (
             hasSaves ? (
               <>
                 <span aria-hidden>·</span>

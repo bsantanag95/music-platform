@@ -146,15 +146,16 @@ En vitrina, secciones:
 1. **Destacadas** — primero las listas **editoriales oficiales publicadas** de `@exploracion`
    (visibles, no retiradas), luego las listas con fila **vigente** en `user_list_featured` (curadas o
    generadas por plantilla, ADR 0033; por `weight` y `rank`), sin filtrar por tipo de entidad y sin duplicar. Rail sin paginación.
-   Las listas vacías se omiten (siguen visibles en su perfil, en Recientes y por enlace).
+   Las listas vacías se omiten (siguen visibles en su perfil y por enlace).
 2. **Populares** — listas públicas ordenadas por conteo agregado de guardados. Vitrina, no
    ranking: "N guardados" en la tarjeta, sin posiciones. `GET /api/lists/popular`.
 3. **De la gente que seguís** — listas visibles (`public` o `followers`) de usuarios que el
-   lector sigue, recientes primero. Solo con sesión; `GET /api/lists/from-following` responde
+   lector sigue, recientes primero, sin las vacías (aparecen con su primer ítem). Solo con sesión; `GET /api/lists/from-following` responde
    `401 AUTH_REQUIRED` sin ella.
 4. **Recientes** — el descubrimiento cronológico de `list-discovery`, ahora accesible sin
    sesión (`GET /api/lists/discover` pasó a público). La pestaña "Descubrir" de `/me/lists`
-   se conserva y comparte servicio.
+   se conserva y comparte servicio. Las listas vacías no se descubren (ni aquí, ni en la búsqueda u
+   orden de `/lists`, ni en "Descubrir"): aparecen con su primer ítem; el filtro va en SQL.
 
 Servicios en `src/services/lists/community.ts` (Destacadas / Populares / De seguidos) y
 `discovery.ts` (Recientes). El conteo agregado de guardados (`saveCountsFor`) se apoya en

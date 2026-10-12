@@ -5,9 +5,9 @@
 // agregado de guardados), De usuarios seguidos (solo con sesión) y Recientes
 // (cronológico — vive en discovery.ts). Sin recomendación algorítmica.
 
-import { and, asc, count, desc, eq, inArray, isNull, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { appUser, listSave, userFollow, userList, userListFeatured } from "@/db/schema";
+import { appUser, listSave, userFollow, userList, userListFeatured, userListItem } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import {
   assertPagination,
@@ -69,7 +69,7 @@ export async function listFeaturedLists(readerId: string | null) {
   }
 
   // Una lista vacía no aporta nada en una vitrina editorial: se omite hasta que tenga ítems (sigue
-  // visible en su perfil, en Recientes y por enlace directo).
+  // visible en su perfil y por enlace directo).
   const lists = await enrichPublicLists(merged, readerId);
   return { lists: lists.filter((list) => list.itemCount > 0) };
 }
@@ -147,6 +147,9 @@ export async function listsFromFollowing(readerId: string, page = 1, pageSize = 
         ne(userList.ownerId, readerId),
         notBlockedByReader(readerId),
         eq(userList.kind, "standard"),
+        // Como en Destacadas, una lista vacía no se muestra: aparece cuando tenga su primer ítem. El filtro va
+        // en SQL (no después) para que la paginación no devuelva páginas cortas.
+        sql`exists (select 1 from ${userListItem} where ${userListItem.listId} = ${userList.id})`,
       ),
     )
     .orderBy(desc(userList.createdAt), desc(userList.id))

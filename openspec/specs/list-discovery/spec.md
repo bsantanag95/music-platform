@@ -17,12 +17,19 @@ de guardados descendente (`sort=popular`); sin estos parámetros el comportamien
 cronológico descrito. El listado SHALL NOT usar recomendación algorítmica ni personalización por
 afinidad: es un descubrimiento editorial, cronológico o por señal social agregada. El listado
 SHALL excluir las listas de usuarios que bloquearon al lector o a los que el lector bloqueó,
-y las de perfiles que dejaron de ser visibles; cuando hay sesión SHALL excluir además las
-listas del propio lector. Cada entrada SHALL mostrar título, dueño (con enlace al perfil),
+y las de perfiles que dejaron de ser visibles, y SHALL excluir las listas sin ítems (aparecen con el
+primero; siguen visibles en el perfil de su dueño y por enlace); cuando hay sesión SHALL excluir además
+las listas del propio lector. Cada entrada SHALL mostrar título, dueño (con enlace al perfil),
 tipo de entidad, conteo de ítems, carátulas disponibles y tiempo relativo de creación; con
 sesión SHALL mostrar además si el lector ya la guardó o la sigue. Para un lector anónimo el
 listado SHALL devolver las mismas listas sin estado de guardado. Una paginación fuera de
 rango o un valor de filtro inválido SHALL responder `400` con código `VALIDATION_ERROR`.
+
+#### Scenario: Lista vacía no se descubre
+
+- **WHEN** una persona publica una lista pública sin ítems
+- **THEN** no aparece en "Descubrir" ni en `/lists` (Recientes, búsqueda u orden por guardados) hasta que
+  tenga su primer ítem
 
 #### Scenario: Ver listas públicas recientes
 
