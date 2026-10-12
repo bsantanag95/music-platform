@@ -163,11 +163,31 @@ Limpieza: `DELETE FROM app_user WHERE username = 'exploracion';` (cascade).
 
 ### Administración editorial
 
-La superficie `/[locale]/admin` (permiso `editorial.publish`) opera **solo** sobre las listas de
+La superficie `/[locale]/admin` (permiso `editorial.author` para entrar) opera **solo** sobre las listas de
 `@exploracion`: lista las colecciones de la cuenta curadora y permite publicarlas como contenido
 oficial (`is_official`) o retirarlas (`official_withdrawn_at`). Las listas de otros usuarios no
 aparecen en esa consola y rechazan la publicación oficial. La "destacada" del riel editorial
-(`user_list_featured`) es independiente de la marca oficial.
+(`user_list_featured`) es independiente de la marca oficial: una lista oficial no se destaca sola.
+
+Desde el cambio `manage-explore-featured-console` ([ADR 0034](../02-architecture/adr/0034-consola-editorial-de-destacadas.md))
+la consola tiene tres pestañas:
+
+- **Listas:** el flujo borrador → propuesta → publicada → retirada de siempre.
+- **Destacadas en Explorar:** todas las filas de `user_list_featured` (curadas y generadas), con su origen,
+  vigencia y estado frente al riel (`En el riel`, `Fuera del tope`, `Programada`, `Vencida`, `Fuera del riel:
+  lista retirada / oculta / no pública`). Quien tiene `editorial.publish` puede **destacar** una lista oficial
+  publicada, **reordenar** (botones subir/bajar; el orden completo se envía de una vez), **programar** la
+  vigencia (`desde`/`hasta`) y **quitar**. Quien solo tiene `editorial.author` la ve en lectura.
+- **Generadas automáticamente:** por plantilla, estado (activa/pausada), última corrida y su error, cuándo
+  vuelve a regenerarse y su colección vigente. `editorial.publish` permite **pausar** (la colección sale del
+  riel y no se regenera), **reanudar** (vuelve la de su período vigente) y **regenerar ahora** (en segundo plano).
+
+Reglas que impone el servicio, no la UI: solo se destaca una lista de `@exploracion`, de álbumes, pública,
+visible, oficial y no retirada (`FEATURE_NOT_ELIGIBLE` / `FEATURE_NOT_PUBLISHED`). Una curada cuya lista se
+retira, se oculta o deja de ser pública sale del riel sin perder su fila (vuelve al republicarla). Quitar una
+**curada** borra su fila; quitar una **generada** la vence (para que no vuelva, se pausa la plantilla). Al
+rotar el período, la lista nueva de una plantilla **hereda el peso y el rank** de la anterior, así el orden
+editorial sobrevive. Cada destacar / quitar / reordenar / reprogramar queda en `editorial_action`.
 
 ## No incluido en Fase 1
 

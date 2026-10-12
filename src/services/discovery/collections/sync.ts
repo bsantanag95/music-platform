@@ -9,6 +9,7 @@ import { db } from "@/db";
 import { exploreCollectionSync } from "@/db/schema";
 import { COLLECTION_REFRESH_DAYS, COLLECTION_RUNNING_STALE_MS } from "../constants";
 import { generateCollection } from "./generate";
+import { pausedTemplateKeys } from "./state";
 import { COLLECTION_TEMPLATES, findTemplate, type CollectionTemplate } from "./templates";
 
 const REFRESH_MS = COLLECTION_REFRESH_DAYS * 24 * 60 * 60 * 1000;
@@ -54,10 +55,12 @@ export async function lastSuccessfulRunAt(templateKey: string): Promise<Date | n
   return row?.finishedAt ?? null;
 }
 
-/** Plantillas sin corrida exitosa en los últimos `COLLECTION_REFRESH_DAYS` días. */
+/** Plantillas sin corrida exitosa en los últimos `COLLECTION_REFRESH_DAYS` días (las pausadas no cuentan). */
 export async function staleTemplates(now = new Date()): Promise<CollectionTemplate[]> {
   const stale: CollectionTemplate[] = [];
+  const paused = await pausedTemplateKeys();
   for (const template of COLLECTION_TEMPLATES) {
+    if (paused.has(template.key)) continue;
     const last = await lastSuccessfulRunAt(template.key);
     if (!last || now.getTime() - last.getTime() > REFRESH_MS) stale.push(template);
   }
@@ -92,9 +95,12 @@ export async function syncTemplate(template: CollectionTemplate, now = new Date(
   }
 }
 
-/** Corre las plantillas indicadas (en serie, aisladas). Sin `keys`, todas; con `force` ignora la antigüedad. */
+/**
+ * Corre las plantillas indicadas (en serie, aisladas). Sin `keys`, todas; con `force` ignora la
+ * antigüedad de la última corrida. Las plantillas pausadas se omiten salvo `includePaused`.
+ */
 export async function syncCollections(
-  options: { keys?: string[]; force?: boolean; now?: Date } = {},
+  options: { keys?: string[]; force?: boolean; includePaused?: boolean; now?: Date } = {},
 ): Promise<TemplateSyncResult[]> {
   const now = options.now ?? new Date();
   const wanted = options.keys
@@ -104,7 +110,13 @@ export async function syncCollections(
         return template;
       })
     : [...COLLECTION_TEMPLATES];
-  const targets = options.force ? wanted : (await staleTemplates(now)).filter((t) => wanted.includes(t));
+  let targets: CollectionTemplate[];
+  if (options.force) {
+    const paused = options.includePaused ? new Set<string>() : await pausedTemplateKeys();
+    targets = wanted.filter((template) => !paused.has(template.key));
+  } else {
+    targets = (await staleTemplates(now)).filter((template) => wanted.includes(template));
+  }
 
   const results: TemplateSyncResult[] = [];
   for (const template of targets) results.push(await syncTemplate(template, now));

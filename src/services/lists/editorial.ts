@@ -69,10 +69,12 @@ async function requireEditableDraft(listId: string): Promise<string> {
   return row.ownerId;
 }
 
-async function recordEditorialAction(
+export type EditorialActionName = "create" | "edit" | "submit" | "publish" | "withdraw" | "feature" | "unfeature";
+
+export async function recordEditorialAction(
   listId: string,
   actorId: string,
-  action: "create" | "edit" | "submit" | "publish" | "withdraw",
+  action: EditorialActionName,
 ): Promise<void> {
   await db.insert(editorialAction).values({ listId, actorId, action });
 }

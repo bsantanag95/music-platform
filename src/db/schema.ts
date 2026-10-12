@@ -263,7 +263,7 @@ export const editorialAction = pgTable(
     index("idx_editorial_action_list").on(t.listId, t.createdAt),
     check(
       "chk_editorial_action_action",
-      sql`${t.action} IN ('create', 'edit', 'submit', 'publish', 'withdraw')`,
+      sql`${t.action} IN ('create', 'edit', 'submit', 'publish', 'withdraw', 'feature', 'unfeature')`,
     ),
   ],
 );
@@ -1263,6 +1263,21 @@ export const exploreCollectionSync = pgTable(
 );
 
 export type ExploreCollectionSyncRow = typeof exploreCollectionSync.$inferSelect;
+
+// Estado operativo por plantilla (migración 0070, openspec: manage-explore-featured-console,
+// ADR 0034). Sin fila = no pausada. Una plantilla pausada no se regenera por visita ni por script.
+export const exploreCollectionTemplateState = pgTable(
+  "explore_collection_template_state",
+  {
+    templateKey: text("template_key").primaryKey(),
+    pausedAt: timestamp("paused_at", { withTimezone: true }),
+    pausedBy: uuid("paused_by").references(() => appUser.id, { onDelete: "set null" }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [check("chk_explore_template_state_paused", sql`${t.pausedAt} IS NOT NULL OR ${t.pausedBy} IS NULL`)],
+);
+
+export type ExploreCollectionTemplateStateRow = typeof exploreCollectionTemplateState.$inferSelect;
 
 export type FavoriteRow = typeof favorite.$inferSelect;
 export type UserListRow = typeof userList.$inferSelect;

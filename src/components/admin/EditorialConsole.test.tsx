@@ -160,3 +160,36 @@ describe("EditorialConsole", () => {
     });
   });
 });
+
+describe("EditorialConsole: pestañas de Explorar", () => {
+  it("sin los paneles de Explorar no muestra pestañas", () => {
+    renderWithIntl(<EditorialConsole initial={{ lists: [] }} permissions={[...publishPermissions]} />);
+
+    expect(screen.queryByRole("tablist")).toBeNull();
+  });
+
+  it("con los paneles muestra las tres pestañas y cambia de panel", () => {
+    renderWithIntl(
+      <EditorialConsole
+        initial={{ lists: [] }}
+        permissions={[...publishPermissions]}
+        featured={{ featured: [], eligible: [] }}
+        templates={{ templates: [] }}
+      />,
+    );
+
+    expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
+      "Listas",
+      "Destacadas en Explorar",
+      "Generadas automáticamente",
+    ]);
+    expect(screen.getByText("No hay listas editoriales.")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Destacadas en Explorar" }));
+    expect(screen.getByText("No hay colecciones destacadas.")).toBeInTheDocument();
+    expect(screen.queryByText("No hay listas editoriales.")).toBeNull();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Generadas automáticamente" }));
+    expect(screen.getByText("No hay plantillas.")).toBeInTheDocument();
+  });
+});

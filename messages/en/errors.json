@@ -262,5 +262,25 @@
   "GENRE_NOT_FOUND": {
     "title": "Genre not found",
     "description": "That genre doesn't exist or is no longer available."
+  },
+  "FEATURE_NOT_PUBLISHED": {
+    "title": "List is not published",
+    "description": "Only a published official list can be featured. Publish it first."
+  },
+  "FEATURE_NOT_ELIGIBLE": {
+    "title": "This list can't be featured",
+    "description": "Only public album lists from the editorial account can be featured."
+  },
+  "FEATURED_NOT_FOUND": {
+    "title": "Collection is not featured",
+    "description": "That collection is not among the featured ones."
+  },
+  "FEATURED_ORDER_CONFLICT": {
+    "title": "The order changed",
+    "description": "The featured collections changed while you were reordering. Reload and try again."
+  },
+  "TEMPLATE_NOT_FOUND": {
+    "title": "Template not found",
+    "description": "That collection template does not exist."
   }
 }

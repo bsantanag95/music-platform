@@ -7,7 +7,9 @@ import { syncCollections } from "@/services/discovery/collections/sync";
  * a la respuesta. Requiere que exista la cuenta curadora (`scripts/seed-discovery.ts` la crea).
  *
  * Uso:
- *   tsx --env-file=.env scripts/sync-explore-collections.ts [--template <clave>]...
+ *   tsx --env-file=.env scripts/sync-explore-collections.ts [--template <clave>]... [--include-paused]
+ *
+ * Las plantillas pausadas desde la consola editorial se omiten salvo `--include-paused`.
  *
  * Escribe en la BD de DATABASE_URL: crea o refresca listas públicas de `@exploracion` y sus filas en
  * `user_list_featured`. Una plantilla con otra corrida en curso se omite.
@@ -15,12 +17,13 @@ import { syncCollections } from "@/services/discovery/collections/sync";
 async function main() {
   const keys: string[] = [];
   const args = process.argv.slice(2);
+  const includePaused = args.includes("--include-paused");
   for (let index = 0; index < args.length; index += 1) {
     if (args[index] === "--template" && args[index + 1]) keys.push(args[(index += 1)]!);
   }
 
   const started = Date.now();
-  const results = await syncCollections({ keys: keys.length > 0 ? keys : undefined, force: true });
+  const results = await syncCollections({ keys: keys.length > 0 ? keys : undefined, force: true, includePaused });
   const seconds = ((Date.now() - started) / 1000).toFixed(1);
 
   for (const result of results) {

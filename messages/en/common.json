@@ -112,7 +112,79 @@
     "entityAlbum": "Albums",
     "entitySong": "Songs",
     "create": "Create draft",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "tabs": {
+      "lists": "Lists",
+      "featured": "Featured in Explore",
+      "templates": "Auto-generated"
+    },
+    "featured": {
+      "title": "Featured in Explore",
+      "description": "Collections in the Explore rail. The ones on top show first and the rail shows up to {limit}.",
+      "empty": "There are no featured collections.",
+      "railSummary": "{count} of {limit} cards in the rail now",
+      "readOnly": "You can view this panel, but featuring, reordering and removing needs publishing permission.",
+      "sourceCurated": "Curated",
+      "sourceTemplate": "Automatic",
+      "status": {
+        "in_rail": "In the rail",
+        "beyond_limit": "Beyond the rail limit",
+        "scheduled": "Scheduled",
+        "expired": "Expired",
+        "withdrawn": "Out of the rail: list withdrawn",
+        "hidden": "Out of the rail: hidden by moderation",
+        "not_public": "Out of the rail: not public"
+      },
+      "items": "{count, plural, one {# album} other {# albums}}",
+      "period": "Period {period}",
+      "moveUp": "Move {title} up",
+      "moveDown": "Move {title} down",
+      "remove": "Remove",
+      "confirmRemove": "Remove this collection from the featured ones? It stays public.",
+      "schedule": "Schedule",
+      "startsAt": "From",
+      "expiresAt": "Until",
+      "save": "Save schedule",
+      "addTitle": "Feature a list",
+      "addSelect": "Official list",
+      "addPlaceholder": "Choose a list",
+      "addEmpty": "There are no official lists to feature. Publish one in the Lists tab.",
+      "add": "Feature",
+      "expiredHeading": "Expired",
+      "refresh": "Refresh"
+    },
+    "templates": {
+      "title": "Auto-generated",
+      "description": "Templates that regenerate every week when someone visits Explore.",
+      "empty": "There are no templates.",
+      "names": {
+        "new-releases": "Essential new releases",
+        "top-rated-quarter": "Top rated of the quarter",
+        "one-per-decade": "One album per decade",
+        "most-reviewed-month": "Most reviewed of the month"
+      },
+      "paused": "Paused",
+      "active": "Active",
+      "lastRun": "Last run",
+      "never": "Never",
+      "runStatus": {
+        "running": "Running",
+        "succeeded": "Succeeded",
+        "failed": "Failed"
+      },
+      "error": "Error: {error}",
+      "nextDue": "Regenerates from {date}",
+      "current": "Current collection",
+      "none": "No current collection",
+      "inRail": "In the rail",
+      "outOfRail": "Out of the rail",
+      "pause": "Pause",
+      "resume": "Resume",
+      "run": "Regenerate now",
+      "confirmPause": "Pause this template? It will stop regenerating and its collection will leave the rail.",
+      "runQueued": "Regeneration in progress. Refresh in a few seconds.",
+      "refresh": "Refresh"
+    }
   },
   "pendingFollowRequests": "{count, plural, one {# request} other {# requests}}",
   "error": {

@@ -2,7 +2,7 @@
 // ADR 0033). Idempotente: una lista por (plantilla, período), con reemplazo completo de ítems.
 // Nunca hace UPDATE sobre `user_list` (su trigger de updated_at generaría eventos de feed).
 
-import { and, eq, isNull, ne, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, userList, userListFeatured, userListItem } from "@/db/schema";
 import { CURATOR_USERNAME, MIN_ALBUMS_FOR_SECTION } from "../constants";
@@ -51,6 +51,21 @@ export async function generateCollection(template: CollectionTemplate, now = new
     let listId = existing?.listId;
     const created = !listId;
     if (!listId) {
+      // Una lista de período nuevo hereda el peso y el rank de la anterior de la plantilla: así el
+      // orden que fijó el equipo editorial sobrevive a la rotación.
+      const [previous] = await tx
+        .select({ rank: userListFeatured.rank, weight: userListFeatured.weight })
+        .from(userListFeatured)
+        .where(
+          and(
+            eq(userListFeatured.source, "template"),
+            eq(userListFeatured.templateKey, template.key),
+            ne(userListFeatured.periodKey, periodKey),
+            isNull(userListFeatured.expiresAt),
+          ),
+        )
+        .orderBy(desc(userListFeatured.startsAt))
+        .limit(1);
       const [list] = await tx
         .insert(userList)
         .values({ ownerId, entityType: "release-group", title: template.title(now), audience: "public" })
@@ -58,7 +73,8 @@ export async function generateCollection(template: CollectionTemplate, now = new
       listId = list!.id;
       await tx.insert(userListFeatured).values({
         listId,
-        rank: template.rank,
+        rank: previous?.rank ?? template.rank,
+        weight: previous?.weight ?? 0,
         source: "template",
         templateKey: template.key,
         periodKey,

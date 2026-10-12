@@ -139,6 +139,21 @@ export function featuredActiveCondition(): SQL {
 }
 
 /**
+ * Condición completa del riel de colecciones destacadas: lista pública, visible, estándar, con fila vigente y, si
+ * es curada, oficial no retirada (retirar una lista oficial la saca del riel sin borrar su fila; las generadas
+ * por plantilla no son oficiales). Openspec: manage-explore-featured-console.
+ */
+export function featuredRailCondition(): SQL {
+  return and(
+    eq(userList.audience, "public"),
+    eq(userList.kind, "standard"),
+    eq(userList.moderationStatus, "visible"),
+    featuredActiveCondition(),
+    sql`(${userListFeatured.source} = 'template' or (${userList.isOfficial} and ${userList.officialWithdrawnAt} is null))`,
+  ) as SQL;
+}
+
+/**
  * Colecciones editoriales: listas públicas con fila vigente en `user_list_featured`, por `weight`
  * desc y `rank` asc, con tope `FEATURED_RAIL_LIMIT` (openspec: automate-explore-collections).
  */
@@ -147,7 +162,7 @@ export async function listFeaturedCollections(): Promise<FeaturedCollection[]> {
     .select({ id: userList.id, title: userList.title, description: userList.description, rank: userListFeatured.rank })
     .from(userListFeatured)
     .innerJoin(userList, eq(userList.id, userListFeatured.listId))
-    .where(and(eq(userList.audience, "public"), eq(userList.kind, "standard"), featuredActiveCondition()))
+    .where(featuredRailCondition())
     .orderBy(desc(userListFeatured.weight), asc(userListFeatured.rank), desc(userListFeatured.startsAt))
     .limit(FEATURED_RAIL_LIMIT);
 
