@@ -60,7 +60,7 @@ export function CollectionRail({
   // lado, seis colecciones ocupaban tres filas altas y los títulos largos se cortaban ("Ganadores del Grammy 20…").
   const compact = collections.length > 2;
   return (
-    <section className="flex w-full flex-col gap-3">
+    <section id="colecciones" className="flex w-full scroll-mt-24 flex-col gap-3">
       <SectionHeader heading={heading} description={description} />
       <ul className={`grid gap-4 sm:grid-cols-2 ${compact ? "lg:grid-cols-3" : ""}`}>
         {collections.map((collection) => (

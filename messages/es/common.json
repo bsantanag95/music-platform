@@ -161,7 +161,11 @@
         "new-releases": "Novedades esenciales",
         "top-rated-quarter": "Mejor valorados del trimestre",
         "one-per-decade": "Un disco por década",
-        "most-reviewed-month": "Lo más reseñado del mes"
+        "most-reviewed-month": "Lo más reseñado del mes",
+        "grammy-winners": "Ganadores del último premio",
+        "genre-spotlight": "Género de la semana",
+        "anniversaries": "Cumplen años este mes",
+        "upcoming": "Lo que viene"
       },
       "paused": "Pausada",
       "active": "Activa",
@@ -183,7 +187,9 @@
       "run": "Regenerar ahora",
       "confirmPause": "¿Pausar esta plantilla? Dejará de regenerarse y su colección saldrá del riel.",
       "runQueued": "Regeneración en curso. Actualiza en unos segundos.",
-      "refresh": "Actualizar"
+      "refresh": "Actualizar",
+      "notGenerated": "Aún no se ha generado",
+      "belowMinimum": "{count, plural, one {Solo # álbum cumple} other {Solo # álbumes cumplen}} la regla (mínimo {min}), por eso no hay colección"
     }
   },
   "pendingFollowRequests": "{count, plural, one {# solicitud} other {# solicitudes}}",

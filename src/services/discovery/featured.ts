@@ -67,6 +67,8 @@ export interface TemplateAdminRow {
   pausedAt: string | null;
   lastRun: { status: "running" | "succeeded" | "failed"; startedAt: string; finishedAt: string | null; itemCount: number | null; error: string | null } | null;
   lastSuccessAt: string | null;
+  /** Álbumes que cumplió la regla en la última corrida exitosa (puede ser menos del mínimo: no se crea la colección). */
+  lastItemCount: number | null;
   nextDueAt: string | null;
   current: { listId: string; title: string; periodKey: string; inRail: boolean } | null;
 }
@@ -340,7 +342,7 @@ export async function listTemplatesAdmin(now = new Date()): Promise<TemplateAdmi
       .orderBy(desc(exploreCollectionSync.startedAt))
       .limit(1);
     const [lastSuccess] = await db
-      .select({ finishedAt: exploreCollectionSync.finishedAt })
+      .select({ finishedAt: exploreCollectionSync.finishedAt, itemCount: exploreCollectionSync.itemCount })
       .from(exploreCollectionSync)
       .where(and(eq(exploreCollectionSync.templateKey, template.key), eq(exploreCollectionSync.status, "succeeded")))
       .orderBy(desc(exploreCollectionSync.finishedAt))
@@ -375,6 +377,7 @@ export async function listTemplatesAdmin(now = new Date()): Promise<TemplateAdmi
           }
         : null,
       lastSuccessAt: lastSuccessAt?.toISOString() ?? null,
+      lastItemCount: lastSuccess?.itemCount ?? null,
       nextDueAt: state?.pausedAt ? null : new Date((lastSuccessAt?.getTime() ?? now.getTime()) + REFRESH_MS).toISOString(),
       current: current
         ? { listId: current.listId, title: current.title, periodKey: current.periodKey ?? "", inRail: inRail.has(current.listId) }
@@ -412,26 +415,29 @@ export async function pauseTemplate(actorId: string, key: string): Promise<void>
   for (const { listId } of retired) await recordEditorialAction(listId, actorId, "unfeature");
 }
 
-/** Reanuda una plantilla y devuelve al riel la colección de su período vigente, si existe. */
+/**
+ * Reanuda una plantilla y devuelve al riel su colección más reciente (la de `starts_at` mayor), si existe.
+ * No se calcula el período con la plantilla: el de Grammy o el de género dependen de los datos.
+ */
 export async function resumeTemplate(actorId: string, key: string): Promise<void> {
   await requirePermissionForUser(actorId, "editorial.publish");
-  const template = requireTemplate(key);
+  requireTemplate(key);
   const revived = await db.transaction(async (tx) => {
     await tx
       .update(exploreCollectionTemplateState)
       .set({ pausedAt: null, pausedBy: null, updatedAt: new Date() })
       .where(eq(exploreCollectionTemplateState.templateKey, key));
+    const [latest] = await tx
+      .select({ listId: userListFeatured.listId })
+      .from(userListFeatured)
+      .where(and(eq(userListFeatured.source, "template"), eq(userListFeatured.templateKey, key)))
+      .orderBy(desc(userListFeatured.startsAt))
+      .limit(1);
+    if (!latest) return [];
     return tx
       .update(userListFeatured)
       .set({ expiresAt: null })
-      .where(
-        and(
-          eq(userListFeatured.source, "template"),
-          eq(userListFeatured.templateKey, key),
-          eq(userListFeatured.periodKey, template.periodKey(new Date())),
-          isNotNull(userListFeatured.expiresAt),
-        ),
-      )
+      .where(and(eq(userListFeatured.listId, latest.listId), isNotNull(userListFeatured.expiresAt)))
       .returning({ listId: userListFeatured.listId });
   });
   for (const { listId } of revived) await recordEditorialAction(listId, actorId, "feature");

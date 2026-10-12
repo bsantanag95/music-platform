@@ -9,7 +9,9 @@ listas son pestañas futuras.
 ## Secciones de la portada
 
 Se componen en `src/services/discovery/discovery.ts` (`getExplorePage`), server-render,
-sin tabla materializada. Cada sección se **omite** si no tiene contenido. En orden:
+sin tabla materializada. Cada sección se **omite** si no tiene contenido. En orden (cambio
+`reorder-explore-sections`: agrupadas por intención — entrada, lo que pasa, la comunidad y un cierre de navegación por
+época):
 
 | Sección | Fuente | Presentación |
 |---|---|---|
@@ -18,9 +20,19 @@ sin tabla materializada. Cada sección se **omite** si no tiene contenido. En or
 | Novedades | `release_group` studio/single_ep con `first_release_date` completa en los últimos `NEW_RELEASE_WINDOW_DAYS` (90) días hasta hoy, con carátula, por fecha desc | riel horizontal con la fecha ("9 oct") en cada tarjeta y "Ver todo →" a `/explore?novedades=1`; se omite con menos de `MIN_ALBUMS_FOR_SECTION` (6); sin lanzamientos futuros ni fechas parciales (cambios `redefine-explore-new-releases` y `add-explore-new-releases-listing`) |
 | Próximos lanzamientos | `release_group` studio/single_ep con `first_release_date` completa posterior a hoy y hasta hoy + `UPCOMING_WINDOW_DAYS` (180), con carátula, por fecha asc (cambio `add-explore-upcoming-releases`) | riel horizontal bajo Novedades, con la fecha ("24 oct") en cada tarjeta y "Ver todo →" a `/explore?proximos=1`; se omite con menos de `MIN_ALBUMS_FOR_SECTION` (6) |
 | Premios | ceremonias cargadas desde `data/awards/` (cambio `add-music-awards`, ADR 0032) | una tarjeta por cada una de las últimas 5 ceremonias, con el ganador destacado (Álbum del año en los Grammy: carátula, título y artista; `listRecentCeremonies` lo resuelve en una consulta para todas) → `/awards/<premio>/<año>` y "Ver todos" → `/awards`; se omite sin ceremonias (`AwardsExploreSection`). Ver `awards.md` |
-| Explorar por década | `first_release_year` agrupado por década | histograma del catálogo: una columna por década en orden cronológico, altura proporcional a sus álbumes y la cifra pegada sobre la barra, cada columna → `/explore?decada=1990`; las décadas iniciales por debajo del 2 % de la más grande (hoy, de los 1890s a los 1940s) van en una lista compacta "Antes" a la izquierda en lugar de barras mínimas idénticas; en móvil, barras horizontales de la más reciente a la más antigua (`DecadeHistogram`) |
 | Mejor valorados | `rating` agregado por álbum | riel horizontal; ver umbrales abajo |
 | Más reseñados | `review` contado por álbum | riel horizontal; ver umbrales abajo |
+| Explorar por década | `first_release_year` agrupado por década | histograma del catálogo: una columna por década en orden cronológico, altura proporcional a sus álbumes y la cifra pegada sobre la barra, cada columna → `/explore?decada=1990`; las décadas iniciales por debajo del 2 % de la más grande (hoy, de los 1890s a los 1940s) van en una lista compacta "Antes" a la izquierda en lugar de barras mínimas idénticas; en móvil, barras horizontales de la más reciente a la más antigua (`DecadeHistogram`) |
+
+### Navegación rápida
+
+Bajo el título hay una fila de píldoras "En esta página" (`ExploreJumpNav`) con un enlace por cada sección que se
+renderiza, en el orden de la página. Las anclas son `colecciones`, `generos`, `novedades`, `proximos`, `premios`,
+`mejor-valorados`, `mas-resenados` y `decadas` (el `id` del `<section>`, con `scroll-mt-24` para que el encabezado fijo no
+tape el título). La página decide qué secciones están visibles con los mismos datos con los que cada una se omite, así que
+la fila nunca enlaza a una sección ausente. Se omite con menos de `MIN_SECTIONS_FOR_JUMP_NAV` (4) secciones. Es solo
+enlaces (sin JavaScript): no es fija ni resalta la sección activa. En móvil se desplaza en horizontal. Las etiquetas son
+cortas (`catalog.explore.jump.*`) y no repiten los títulos de sección.
 
 Cada sección lleva bajo el título una línea que dice qué reúne o con qué regla (la de Mejor valorados
 cita `MIN_RATINGS_PER_ALBUM`). Los rieles de álbumes de la portada son **horizontales**
@@ -137,10 +149,18 @@ producen listas públicas de `@exploracion` (`kind='standard'`, no oficiales), r
 
 | Plantilla | Período | Contenido |
 |---|---|---|
-| `new-releases` | `evergreen` | "Novedades esenciales": studio/single_ep de los últimos `NEW_RELEASE_WINDOW_DAYS` con carátula |
-| `top-rated-quarter` | trimestre (`2026-Q4`) | "Mejor valorados del N.º trimestre de AAAA": valoraciones del trimestre, ≥ `MIN_RATINGS_PER_ALBUM` |
-| `one-per-decade` | `evergreen` | "Un disco por década": el studio más temprano de cada década, con carátula |
-| `most-reviewed-month` | mes (`2026-10`) | "Lo más reseñado de <mes> de AAAA": reseñas visibles del mes |
+| `new-releases` | `evergreen` | "Novedades esenciales": studio/single_ep de los últimos `NEW_RELEASE_WINDOW_DAYS`, ordenados por la señal de calidad (popularidad del calendario si no hay comunidad) y desempatados por fecha |
+| `grammy-winners` | `<premio>-<año>` | "Ganadores del Grammy {año}": ganadores con álbum (directo o disco ancla) de la última ceremonia cargada; categorías generales primero |
+| `genre-spotlight` | semana ISO + familia (`2026-W43-rock`) | "Para entrar a {familia}": una familia de géneros por semana (rota por el orden de la taxonomía); un álbum por era de 5 años, en orden cronológico |
+| `anniversaries` | mes (`2026-10`) | "Cumplen años en {mes}": studio con fecha completa que cumple 10 años o más en el mes; primero los múltiplos de 5, del mayor al menor; si no alcanzan, cualquier aniversario ≥ 10 |
+| `upcoming` | `evergreen` | "Lo que viene": próximos lanzamientos del calendario enlazados al catálogo, por rango de popularidad, completados con los próximos del catálogo |
+| `one-per-decade` | `evergreen` | "Un disco por década": el mejor studio de cada década según la señal de calidad, con carátula |
+| `top-rated-quarter` | trimestre (`2026-Q4`) | "Mejor valorados del N.º trimestre de AAAA": valoraciones del trimestre, ≥ `MIN_RATINGS_PER_ALBUM`. Comunidad: se activa sola (peso 10) |
+| `most-reviewed-month` | mes (`2026-10`) | "Lo más reseñado de <mes> de AAAA": reseñas visibles del mes. Comunidad: se activa sola (peso 10) |
+
+Las seis primeras son el conjunto del **día 0**: no dependen de valoraciones ni reseñas. Las dos de comunidad
+siguen registradas, quedan sin colección hasta que haya actividad y, al crearse, pasan por delante dentro del
+tope de 6 tarjetas.
 
 - **Refresco semanal bajo demanda, sin cron.** Una visita a la portada de `/explore` programa con
   `after()` la regeneración de las plantillas cuya última corrida exitosa tiene más de
@@ -161,6 +181,37 @@ producen listas públicas de `@exploracion` (`kind='standard'`, no oficiales), r
 
 Limpieza: `DELETE FROM app_user WHERE username = 'exploracion';` (cascade).
 
+### Colecciones del día 0 (cambio `add-day-zero-collections`, ADR 0035)
+
+- **Carátulas garantizadas.** Cada plantilla propone candidatos con holgura (`CANDIDATE_POOL`); el generador los
+  recorre en orden, resuelve las carátulas pendientes contra Cover Art Archive (sin la cola de MusicBrainz, 4 en
+  paralelo, presupuesto `COVER_RESOLVE_BUDGET` por corrida) y se queda con los que la tienen, hasta
+  `COLLECTION_SIZE`. Lo resuelto queda guardado: una corrida que agota el presupuesto deja trabajo hecho.
+- **Señal de calidad** (`collections/signal.ts`) para ordenar cuando la comunidad aún no opina: promedio de
+  valoraciones (con `MIN_RATINGS_PER_ALBUM`) → ganador antes que nominado a un premio → rango de popularidad del
+  calendario → carátula resuelta → id. Con comunidad, esta domina y las colecciones mejoran solas.
+- **Rank de las seis:** `new-releases` 1, `grammy-winners` 2, `genre-spotlight` 3, `anniversaries` 4,
+  `upcoming` 5, `one-per-decade` 6. Una lista de período nuevo hereda peso y rank de la anterior de su plantilla.
+
+#### Puesta en marcha (día 0)
+
+Orden, contra la BD de producción (cada paso es idempotente):
+
+1. `pnpm run db:migrate` (incluye `0069` y `0070`).
+2. Taxonomía de géneros cargada (`genre-spotlight` la necesita).
+3. `scripts/load-awards.ts` (`grammy-winners`).
+4. `scripts/sync-release-calendar.ts` (`upcoming` y la popularidad de `new-releases`).
+5. `scripts/seed-discovery.ts` (crea la cuenta `@exploracion`; también genera las colecciones).
+6. **Comprobación previa, sin escribir:** `npx tsx --env-file=.env scripts/sync-explore-collections.ts --dry-run`.
+   Imprime, por plantilla, período, título, candidatos, cuántos tienen carátula y, si no llega a 6, el motivo
+   (sin premios cargados, calendario vacío, sin carátulas…). Las seis del día 0 deben salir con ✓.
+7. `npx tsx --env-file=.env scripts/sync-explore-collections.ts` para generarlas; después, cada semana, `/explore`
+   las refresca solo.
+
+Verificado en scratch con datos reales: las seis del día 0 llegan al mínimo (la primera corrida tarda ~70 s por
+las peticiones de carátulas; las siguientes, menos, porque lo resuelto ya está guardado). `top-rated-quarter` y
+`most-reviewed-month` no llegan sin comunidad, como se espera.
+
 ### Administración editorial
 
 La superficie `/[locale]/admin` (permiso `editorial.author` para entrar) opera **solo** sobre las listas de
@@ -179,7 +230,8 @@ la consola tiene tres pestañas:
   publicada, **reordenar** (botones subir/bajar; el orden completo se envía de una vez), **programar** la
   vigencia (`desde`/`hasta`) y **quitar**. Quien solo tiene `editorial.author` la ve en lectura.
 - **Generadas automáticamente:** por plantilla, estado (activa/pausada), última corrida y su error, cuándo
-  vuelve a regenerarse y su colección vigente. `editorial.publish` permite **pausar** (la colección sale del
+  vuelve a regenerarse y su colección vigente. Si no la hay, el panel dice por qué: pausada, aún sin generar, o "Solo N álbumes
+cumplen la regla (mínimo 6)" cuando la plantilla no alcanza el mínimo (habitual con poca actividad de la comunidad). `editorial.publish` permite **pausar** (la colección sale del
   riel y no se regenera), **reanudar** (vuelve la de su período vigente) y **regenerar ahora** (en segundo plano).
 
 Reglas que impone el servicio, no la UI: solo se destaca una lista de `@exploracion`, de álbumes, pública,

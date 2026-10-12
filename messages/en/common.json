@@ -161,7 +161,11 @@
         "new-releases": "Essential new releases",
         "top-rated-quarter": "Top rated of the quarter",
         "one-per-decade": "One album per decade",
-        "most-reviewed-month": "Most reviewed of the month"
+        "most-reviewed-month": "Most reviewed of the month",
+        "grammy-winners": "Latest award winners",
+        "genre-spotlight": "Genre of the week",
+        "anniversaries": "Anniversaries this month",
+        "upcoming": "What is coming"
       },
       "paused": "Paused",
       "active": "Active",
@@ -183,7 +187,9 @@
       "run": "Regenerate now",
       "confirmPause": "Pause this template? It will stop regenerating and its collection will leave the rail.",
       "runQueued": "Regeneration in progress. Refresh in a few seconds.",
-      "refresh": "Refresh"
+      "refresh": "Refresh",
+      "notGenerated": "Not generated yet",
+      "belowMinimum": "{count, plural, one {Only # album matches} other {Only # albums match}} the rule (minimum {min}), so there is no collection"
     }
   },
   "pendingFollowRequests": "{count, plural, one {# request} other {# requests}}",

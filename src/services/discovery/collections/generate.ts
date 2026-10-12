@@ -5,12 +5,28 @@
 import { and, desc, eq, isNull, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, userList, userListFeatured, userListItem } from "@/db/schema";
-import { CURATOR_USERNAME, MIN_ALBUMS_FOR_SECTION } from "../constants";
-import type { CollectionTemplate } from "./templates";
+import { COLLECTION_SIZE, CURATOR_USERNAME, MIN_ALBUMS_FOR_SECTION } from "../constants";
+import { createCoverResolver, type CoverResolver } from "./covers";
+import { isSkip, type CollectionTemplate } from "./types";
 
 export type GenerateResult =
   | { status: "generated"; listId: string; items: number; created: boolean }
-  | { status: "skipped"; items: number };
+  | { status: "skipped"; items: number; reason: string };
+
+/** Lo que una plantilla elegiría ahora (sin escribir): período, título y álbumes con carátula resuelta. */
+export interface CollectionPreview {
+  key: string;
+  periodKey: string | null;
+  title: string | null;
+  /** Candidatos que propuso la plantilla (antes de verificar carátulas). */
+  candidates: number;
+  /** Álbumes finales, todos con carátula. */
+  albumIds: string[];
+  /** Motivo si no llega a `MIN_ALBUMS_FOR_SECTION`; `null` si la colección es válida. */
+  reason: string | null;
+  coverRequests: number;
+  coverBudgetExhausted: boolean;
+}
 
 async function curatorId(): Promise<string> {
   const [row] = await db
@@ -25,15 +41,55 @@ async function curatorId(): Promise<string> {
 }
 
 /**
+ * Planifica una plantilla y verifica sus carátulas, sin escribir nada. Es lo que usan la generación y
+ * `--dry-run`: los mismos candidatos, los mismos descartes.
+ */
+export async function previewCollection(
+  template: CollectionTemplate,
+  now = new Date(),
+  covers: CoverResolver = createCoverResolver(),
+): Promise<CollectionPreview> {
+  const base = { key: template.key, coverRequests: 0, coverBudgetExhausted: false };
+  const plan = await template.plan(now, { covers });
+  if (isSkip(plan)) {
+    return { ...base, periodKey: null, title: null, candidates: 0, albumIds: [], reason: plan.skip, coverRequests: covers.spent, coverBudgetExhausted: covers.exhausted };
+  }
+  const candidates = [...new Set(plan.candidates)];
+  const albumIds = await covers.take(candidates, COLLECTION_SIZE);
+  let reason: string | null = null;
+  if (albumIds.length < MIN_ALBUMS_FOR_SECTION) {
+    reason =
+      `Solo ${albumIds.length} de ${candidates.length} candidatos tienen carátula (mínimo ${MIN_ALBUMS_FOR_SECTION})` +
+      (covers.exhausted ? "; se agotó el presupuesto de carátulas" : "");
+  }
+  return {
+    ...base,
+    periodKey: plan.periodKey,
+    title: plan.title,
+    candidates: candidates.length,
+    albumIds,
+    reason,
+    coverRequests: covers.spent,
+    coverBudgetExhausted: covers.exhausted,
+  };
+}
+
+/**
  * Genera o refresca la colección de `template` para el período de `now`. Con menos de
  * `MIN_ALBUMS_FOR_SECTION` álbumes no crea ni modifica nada (conserva lo anterior).
  */
-export async function generateCollection(template: CollectionTemplate, now = new Date()): Promise<GenerateResult> {
-  const albumIds = [...new Set(await template.select(now))];
-  if (albumIds.length < MIN_ALBUMS_FOR_SECTION) return { status: "skipped", items: albumIds.length };
+export async function generateCollection(
+  template: CollectionTemplate,
+  now = new Date(),
+  covers: CoverResolver = createCoverResolver(),
+): Promise<GenerateResult> {
+  const preview = await previewCollection(template, now, covers);
+  const { albumIds, periodKey, title } = preview;
+  if (preview.reason !== null || periodKey === null || title === null) {
+    return { status: "skipped", items: albumIds.length, reason: preview.reason ?? "Sin colección" };
+  }
 
   const ownerId = await curatorId();
-  const periodKey = template.periodKey(now);
 
   return db.transaction(async (tx) => {
     const [existing] = await tx
@@ -68,13 +124,13 @@ export async function generateCollection(template: CollectionTemplate, now = new
         .limit(1);
       const [list] = await tx
         .insert(userList)
-        .values({ ownerId, entityType: "release-group", title: template.title(now), audience: "public" })
+        .values({ ownerId, entityType: "release-group", title, audience: "public" })
         .returning({ id: userList.id });
       listId = list!.id;
       await tx.insert(userListFeatured).values({
         listId,
         rank: previous?.rank ?? template.rank,
-        weight: previous?.weight ?? 0,
+        weight: previous?.weight ?? template.weight,
         source: "template",
         templateKey: template.key,
         periodKey,

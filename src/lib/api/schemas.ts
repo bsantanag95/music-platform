@@ -609,6 +609,7 @@ export const TemplateAdminRowSchema = z.object({
     })
     .nullable(),
   lastSuccessAt: z.string().nullable(),
+  lastItemCount: z.number().int().nullable(),
   nextDueAt: z.string().nullable(),
   current: z
     .object({ listId: z.uuid(), title: z.string(), periodKey: z.string(), inRail: z.boolean() })
