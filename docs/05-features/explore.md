@@ -149,10 +149,18 @@ producen listas públicas de `@exploracion` (`kind='standard'`, no oficiales), r
 
 | Plantilla | Período | Contenido |
 |---|---|---|
-| `new-releases` | `evergreen` | "Novedades esenciales": studio/single_ep de los últimos `NEW_RELEASE_WINDOW_DAYS` con carátula |
-| `top-rated-quarter` | trimestre (`2026-Q4`) | "Mejor valorados del N.º trimestre de AAAA": valoraciones del trimestre, ≥ `MIN_RATINGS_PER_ALBUM` |
-| `one-per-decade` | `evergreen` | "Un disco por década": el studio más temprano de cada década, con carátula |
-| `most-reviewed-month` | mes (`2026-10`) | "Lo más reseñado de <mes> de AAAA": reseñas visibles del mes |
+| `new-releases` | `evergreen` | "Novedades esenciales": studio/single_ep de los últimos `NEW_RELEASE_WINDOW_DAYS`, ordenados por la señal de calidad (popularidad del calendario si no hay comunidad) y desempatados por fecha |
+| `grammy-winners` | `<premio>-<año>` | "Ganadores del Grammy {año}": ganadores con álbum (directo o disco ancla) de la última ceremonia cargada; categorías generales primero |
+| `genre-spotlight` | semana ISO + familia (`2026-W43-rock`) | "Para entrar a {familia}": una familia de géneros por semana (rota por el orden de la taxonomía); un álbum por era de 5 años, en orden cronológico |
+| `anniversaries` | mes (`2026-10`) | "Cumplen años en {mes}": studio con fecha completa que cumple 10 años o más en el mes; primero los múltiplos de 5, del mayor al menor; si no alcanzan, cualquier aniversario ≥ 10 |
+| `upcoming` | `evergreen` | "Lo que viene": próximos lanzamientos del calendario enlazados al catálogo, por rango de popularidad, completados con los próximos del catálogo |
+| `one-per-decade` | `evergreen` | "Un disco por década": el mejor studio de cada década según la señal de calidad, con carátula |
+| `top-rated-quarter` | trimestre (`2026-Q4`) | "Mejor valorados del N.º trimestre de AAAA": valoraciones del trimestre, ≥ `MIN_RATINGS_PER_ALBUM`. Comunidad: se activa sola (peso 10) |
+| `most-reviewed-month` | mes (`2026-10`) | "Lo más reseñado de <mes> de AAAA": reseñas visibles del mes. Comunidad: se activa sola (peso 10) |
+
+Las seis primeras son el conjunto del **día 0**: no dependen de valoraciones ni reseñas. Las dos de comunidad
+siguen registradas, quedan sin colección hasta que haya actividad y, al crearse, pasan por delante dentro del
+tope de 6 tarjetas.
 
 - **Refresco semanal bajo demanda, sin cron.** Una visita a la portada de `/explore` programa con
   `after()` la regeneración de las plantillas cuya última corrida exitosa tiene más de
@@ -172,6 +180,37 @@ producen listas públicas de `@exploracion` (`kind='standard'`, no oficiales), r
   actividad de feed (`notGeneratedCollectionCondition()`).
 
 Limpieza: `DELETE FROM app_user WHERE username = 'exploracion';` (cascade).
+
+### Colecciones del día 0 (cambio `add-day-zero-collections`, ADR 0035)
+
+- **Carátulas garantizadas.** Cada plantilla propone candidatos con holgura (`CANDIDATE_POOL`); el generador los
+  recorre en orden, resuelve las carátulas pendientes contra Cover Art Archive (sin la cola de MusicBrainz, 4 en
+  paralelo, presupuesto `COVER_RESOLVE_BUDGET` por corrida) y se queda con los que la tienen, hasta
+  `COLLECTION_SIZE`. Lo resuelto queda guardado: una corrida que agota el presupuesto deja trabajo hecho.
+- **Señal de calidad** (`collections/signal.ts`) para ordenar cuando la comunidad aún no opina: promedio de
+  valoraciones (con `MIN_RATINGS_PER_ALBUM`) → ganador antes que nominado a un premio → rango de popularidad del
+  calendario → carátula resuelta → id. Con comunidad, esta domina y las colecciones mejoran solas.
+- **Rank de las seis:** `new-releases` 1, `grammy-winners` 2, `genre-spotlight` 3, `anniversaries` 4,
+  `upcoming` 5, `one-per-decade` 6. Una lista de período nuevo hereda peso y rank de la anterior de su plantilla.
+
+#### Puesta en marcha (día 0)
+
+Orden, contra la BD de producción (cada paso es idempotente):
+
+1. `pnpm run db:migrate` (incluye `0069` y `0070`).
+2. Taxonomía de géneros cargada (`genre-spotlight` la necesita).
+3. `scripts/load-awards.ts` (`grammy-winners`).
+4. `scripts/sync-release-calendar.ts` (`upcoming` y la popularidad de `new-releases`).
+5. `scripts/seed-discovery.ts` (crea la cuenta `@exploracion`; también genera las colecciones).
+6. **Comprobación previa, sin escribir:** `npx tsx --env-file=.env scripts/sync-explore-collections.ts --dry-run`.
+   Imprime, por plantilla, período, título, candidatos, cuántos tienen carátula y, si no llega a 6, el motivo
+   (sin premios cargados, calendario vacío, sin carátulas…). Las seis del día 0 deben salir con ✓.
+7. `npx tsx --env-file=.env scripts/sync-explore-collections.ts` para generarlas; después, cada semana, `/explore`
+   las refresca solo.
+
+Verificado en scratch con datos reales: las seis del día 0 llegan al mínimo (la primera corrida tarda ~70 s por
+las peticiones de carátulas; las siguientes, menos, porque lo resuelto ya está guardado). `top-rated-quarter` y
+`most-reviewed-month` no llegan sin comunidad, como se espera.
 
 ### Administración editorial
 
