@@ -1868,6 +1868,52 @@ personal de otro usuario responde `404 LIST_NOT_FOUND`; sin `editorial.publish`,
 Requieren `editorial.author`. `POST` agrega un `{ target: { type, id } }` a un borrador, `PUT`
 recibe `{ itemIds }` y reordena, `DELETE` quita un ítem. Devuelven `{ list }` (el detalle actualizado).
 
+### `GET /api/admin/editorial/featured`
+
+Requiere `editorial.author`. Devuelve `{ featured, eligible }` (cambio `manage-explore-featured-console`,
+ADR 0034). `featured` lista **todas** las filas de `user_list_featured` (curadas y generadas por plantilla),
+en el orden del riel y con las vencidas al final: `listId`, `title`, `source` (`curated` | `template`),
+`templateKey`, `periodKey`, `rank`, `weight`, `startsAt`, `expiresAt`, `itemCount`, `orderable` (vigente o
+programada) y `status` (`in_rail` | `beyond_limit` | `scheduled` | `expired` | `withdrawn` | `hidden` |
+`not_public`). `eligible` son las listas que se pueden destacar (`{ id, title }`): oficiales publicadas de
+`@exploracion`, de álbumes, públicas y visibles, aún sin fila destacada.
+
+### `POST /api/admin/editorial/featured`
+
+Requiere `editorial.publish`. Recibe `{ listId, startsAt?, expiresAt?, weight? }` (fechas ISO 8601 con
+huso; `weight` 0–1000) y destaca una lista. Devuelve `{ ok: true }` con `201`. Errores: `404 LIST_NOT_FOUND`,
+`409 FEATURE_NOT_ELIGIBLE` (no es de `@exploracion`, no es de álbumes, no es pública o está oculta),
+`409 FEATURE_NOT_PUBLISHED` (no es oficial o fue retirada), `400 VALIDATION_ERROR` (`expiresAt` ≤ `startsAt`).
+Si la lista ya estaba destacada solo aplica la vigencia y el peso dados (idempotente). Registra `feature`
+en `editorial_action`.
+
+### `PATCH /api/admin/editorial/featured/[listId]` · `DELETE /api/admin/editorial/featured/[listId]`
+
+Requieren `editorial.publish`. `PATCH` recibe `{ startsAt?, expiresAt?, weight? }` (al menos uno;
+`expiresAt: null` quita el vencimiento) y devuelve `{ ok: true }`. `DELETE` quita la colección de las
+destacadas (`204`): una **curada** pierde su fila; una **generada** vence ahora (para que no vuelva se pausa
+su plantilla). Sin fila destacada, `404 FEATURED_NOT_FOUND`. Registran `feature` / `unfeature`.
+
+### `PUT /api/admin/editorial/featured/order`
+
+Requiere `editorial.publish`. Recibe `{ listIds }`: el conjunto **completo** de filas vigentes o programadas
+(`orderable`), de la primera a la última. Es atómico: asigna `weight` descendente y `rank` consecutivo, y
+responde `409 FEATURED_ORDER_CONFLICT` si el conjunto enviado difiere del vigente (o repite ids). Devuelve
+`{ ok: true }`.
+
+### `GET /api/admin/editorial/templates`
+
+Requiere `editorial.author`. Devuelve `{ templates }` con, por plantilla: `key`, `paused`, `pausedAt`,
+`lastRun` (`status`, `startedAt`, `finishedAt`, `itemCount`, `error`), `lastSuccessAt`, `nextDueAt` y
+`current` (la colección vigente: `listId`, `title`, `periodKey`, `inRail`).
+
+### `POST /api/admin/editorial/templates/[key]/pause` · `.../resume` · `.../run`
+
+Requieren `editorial.publish`. `pause` marca la plantilla como pausada (no se regenera por visita ni por
+script) y retira del riel su colección vigente; `resume` la reanuda y devuelve al riel la colección de su
+período vigente; ambas responden `{ ok: true }`. `run` fuerza la regeneración **en segundo plano** (respeta el
+lock de corridas) y responde `202 { ok: true }`. Una clave desconocida responde `404 TEMPLATE_NOT_FOUND`.
+
 Ninguno de estos endpoints borra la lista subyacente salvo el `DELETE` de un borrador nunca
 publicado. Un `listId` o `itemId` no-UUID devuelve `404`.
 

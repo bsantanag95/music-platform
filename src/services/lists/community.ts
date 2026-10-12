@@ -5,7 +5,7 @@
 // agregado de guardados), De usuarios seguidos (solo con sesión) y Recientes
 // (cronológico — vive en discovery.ts). Sin recomendación algorítmica.
 
-import { and, count, desc, eq, inArray, isNull, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNull, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, listSave, userFollow, userList, userListFeatured } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -17,6 +17,7 @@ import {
   type PublicListRow,
 } from "./discovery";
 import { activeUserCondition } from "@/services/auth/account-status";
+import { featuredActiveCondition } from "@/services/discovery/discovery";
 
 /**
  * Sección "Destacadas": primero las listas editoriales oficiales publicadas de
@@ -53,9 +54,10 @@ export async function listFeaturedLists(readerId: string | null) {
           eq(userList.audience, "public"),
           eq(userList.moderationStatus, "visible"),
           eq(userList.kind, "standard"),
+          featuredActiveCondition(),
         ),
       )
-      .orderBy(userListFeatured.rank),
+      .orderBy(desc(userListFeatured.weight), asc(userListFeatured.rank), desc(userListFeatured.startsAt)),
   ]);
 
   const seen = new Set<string>();

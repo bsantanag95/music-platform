@@ -47,3 +47,18 @@ export const UPCOMING_WINDOW_DAYS = 180;
  */
 export const CURATOR_USERNAME = "exploracion";
 export const CURATOR_DISPLAY_NAME = "Exploración";
+
+/**
+ * Colecciones generadas (openspec: automate-explore-collections, ADR 0033): una plantilla se
+ * regenera cuando su última corrida exitosa tiene más de estos días. Constante de servicio.
+ */
+export const COLLECTION_REFRESH_DAYS = 7;
+
+/** Una corrida `running` más vieja que esto se da por muerta (proceso cortado). */
+export const COLLECTION_RUNNING_STALE_MS = 15 * 60 * 1000;
+
+/** Máximo de tarjetas del riel "Colecciones destacadas" de `/explore`. */
+export const FEATURED_RAIL_LIMIT = 6;
+
+/** Ítems por colección generada. */
+export const COLLECTION_SIZE = 12;

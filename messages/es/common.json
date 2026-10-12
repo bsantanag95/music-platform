@@ -112,7 +112,79 @@
     "entityAlbum": "Álbumes",
     "entitySong": "Canciones",
     "create": "Crear borrador",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "tabs": {
+      "lists": "Listas",
+      "featured": "Destacadas en Explorar",
+      "templates": "Generadas automáticamente"
+    },
+    "featured": {
+      "title": "Destacadas en Explorar",
+      "description": "Colecciones del riel de Explorar. Las de arriba se muestran primero y el riel muestra hasta {limit}.",
+      "empty": "No hay colecciones destacadas.",
+      "railSummary": "{count} de {limit} tarjetas en el riel ahora",
+      "readOnly": "Puedes ver este panel, pero destacar, reordenar y quitar requiere permiso de publicación.",
+      "sourceCurated": "Curada",
+      "sourceTemplate": "Automática",
+      "status": {
+        "in_rail": "En el riel",
+        "beyond_limit": "Fuera del tope del riel",
+        "scheduled": "Programada",
+        "expired": "Vencida",
+        "withdrawn": "Fuera del riel: lista retirada",
+        "hidden": "Fuera del riel: oculta por moderación",
+        "not_public": "Fuera del riel: no es pública"
+      },
+      "items": "{count, plural, one {# álbum} other {# álbumes}}",
+      "period": "Período {period}",
+      "moveUp": "Subir {title}",
+      "moveDown": "Bajar {title}",
+      "remove": "Quitar",
+      "confirmRemove": "¿Quitar esta colección de las destacadas? Seguirá siendo pública.",
+      "schedule": "Programar",
+      "startsAt": "Desde",
+      "expiresAt": "Hasta",
+      "save": "Guardar vigencia",
+      "addTitle": "Destacar una lista",
+      "addSelect": "Lista oficial",
+      "addPlaceholder": "Elige una lista",
+      "addEmpty": "No hay listas oficiales por destacar. Publica una en la pestaña Listas.",
+      "add": "Destacar",
+      "expiredHeading": "Vencidas",
+      "refresh": "Actualizar"
+    },
+    "templates": {
+      "title": "Generadas automáticamente",
+      "description": "Plantillas que se regeneran cada semana cuando alguien visita Explorar.",
+      "empty": "No hay plantillas.",
+      "names": {
+        "new-releases": "Novedades esenciales",
+        "top-rated-quarter": "Mejor valorados del trimestre",
+        "one-per-decade": "Un disco por década",
+        "most-reviewed-month": "Lo más reseñado del mes"
+      },
+      "paused": "Pausada",
+      "active": "Activa",
+      "lastRun": "Última corrida",
+      "never": "Nunca",
+      "runStatus": {
+        "running": "En curso",
+        "succeeded": "Exitosa",
+        "failed": "Fallida"
+      },
+      "error": "Error: {error}",
+      "nextDue": "Se regenera desde {date}",
+      "current": "Colección vigente",
+      "none": "Sin colección vigente",
+      "inRail": "En el riel",
+      "outOfRail": "Fuera del riel",
+      "pause": "Pausar",
+      "resume": "Reanudar",
+      "run": "Regenerar ahora",
+      "confirmPause": "¿Pausar esta plantilla? Dejará de regenerarse y su colección saldrá del riel.",
+      "runQueued": "Regeneración en curso. Actualiza en unos segundos.",
+      "refresh": "Actualizar"
+    }
   },
   "pendingFollowRequests": "{count, plural, one {# solicitud} other {# solicitudes}}",
   "error": {

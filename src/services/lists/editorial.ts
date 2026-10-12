@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { appUser, editorialAction, userList } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { requirePermissionForUser } from "@/services/auth/authorization";
+import { notGeneratedCollectionCondition } from "@/services/discovery/collections/conditions";
 import { CURATOR_USERNAME } from "@/services/discovery/constants";
 import {
   addItemToList,
@@ -68,10 +69,12 @@ async function requireEditableDraft(listId: string): Promise<string> {
   return row.ownerId;
 }
 
-async function recordEditorialAction(
+export type EditorialActionName = "create" | "edit" | "submit" | "publish" | "withdraw" | "feature" | "unfeature";
+
+export async function recordEditorialAction(
   listId: string,
   actorId: string,
-  action: "create" | "edit" | "submit" | "publish" | "withdraw",
+  action: EditorialActionName,
 ): Promise<void> {
   await db.insert(editorialAction).values({ listId, actorId, action });
 }
@@ -295,6 +298,8 @@ export async function listEditorialLists(status?: EditorialStatusFilter) {
     .where(
       and(
         eq(appUser.username, CURATOR_USERNAME),
+        // Las colecciones generadas por plantilla no se gestionan aquí (automate-explore-collections).
+        notGeneratedCollectionCondition(),
         status ? statusCondition(status) : undefined,
       ),
     )

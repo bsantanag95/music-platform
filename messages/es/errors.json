@@ -262,5 +262,25 @@
   "GENRE_NOT_FOUND": {
     "title": "No encontramos el género",
     "description": "Ese género no existe o ya no está disponible."
+  },
+  "FEATURE_NOT_PUBLISHED": {
+    "title": "La lista no está publicada",
+    "description": "Solo se puede destacar una lista oficial publicada. Publícala primero."
+  },
+  "FEATURE_NOT_ELIGIBLE": {
+    "title": "La lista no se puede destacar",
+    "description": "Solo se destacan listas públicas de álbumes de la cuenta editorial."
+  },
+  "FEATURED_NOT_FOUND": {
+    "title": "Colección no destacada",
+    "description": "Esa colección no está entre las destacadas."
+  },
+  "FEATURED_ORDER_CONFLICT": {
+    "title": "El orden cambió",
+    "description": "Las destacadas cambiaron mientras reordenabas. Recarga e inténtalo de nuevo."
+  },
+  "TEMPLATE_NOT_FOUND": {
+    "title": "Plantilla no encontrada",
+    "description": "Esa plantilla de colecciones no existe."
   }
 }

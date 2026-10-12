@@ -18,6 +18,7 @@ import {
   wantedEntry,
 } from "@/db/schema";
 import type { CommentTopic } from "@/db/schema";
+import { notGeneratedCollectionCondition } from "@/services/discovery/collections/conditions";
 import { rootCommentsOnly } from "@/services/social/comment-roots";
 import { ApiError } from "@/lib/api/errors";
 import type { FeedKind } from "@/lib/api/schemas";
@@ -819,6 +820,8 @@ export async function listFeed(
               eq(userList.kind, "standard"),
               // Una lista oculta por moderación no se anuncia (expand-feed-coverage).
               eq(userList.moderationStatus, "visible"),
+              // Las colecciones generadas de /explore no son actividad de nadie (automate-explore-collections).
+              notGeneratedCollectionCondition(),
               BLOCKED_SQL(viewerId, userList.ownerId),
               ...(searchPattern ? [ilike(userList.title, searchPattern)] : []),
             ),

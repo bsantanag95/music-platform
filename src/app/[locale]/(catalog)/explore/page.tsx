@@ -27,6 +27,7 @@ import {
   listGenreFamilies,
   type FamilyBucket,
 } from "@/services/discovery/discovery";
+import { ensureCollectionsFresh } from "@/services/discovery/collections/sync";
 import { exploreListHref, parseExploreListParams } from "@/services/discovery/explore-params";
 import { genreDisplayName, genreLocaleOf } from "@/services/genres/names";
 import type { ReleaseGroupCategory } from "@/lib/api/schemas";
@@ -231,7 +232,12 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
   }
 
   // --- Portada ---
-  const [explore, recentCeremonies] = await Promise.all([getExplorePage(), listRecentCeremonies(5)]);
+  // Las colecciones destacadas se regeneran cada semana bajo demanda, después de responder.
+  const [explore, recentCeremonies] = await Promise.all([
+    getExplorePage(),
+    listRecentCeremonies(5),
+    ensureCollectionsFresh(),
+  ]);
   const railArtistNames = await albumArtistNames(
     [explore.newReleases, explore.upcoming, explore.topRated, explore.mostReviewed].flat().map((album) => album.id),
   );

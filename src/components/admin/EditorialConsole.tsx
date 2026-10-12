@@ -12,10 +12,14 @@ import {
 import type { EditorialListSchema } from "@/lib/api/schemas";
 import type { Permission } from "@/services/auth/authorization";
 import type { z } from "zod";
+import type { FeaturedAdminResponse, TemplatesAdminResponse } from "@/lib/api/schemas";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { FeaturedPanel } from "./FeaturedPanel";
+import { TemplatesPanel } from "./TemplatesPanel";
 
 type EditorialList = z.infer<typeof EditorialListSchema>;
 type EntityType = "artist" | "release-group" | "recording";
+type ConsoleTab = "lists" | "featured" | "templates";
 type DialogState = { kind: "publish" | "withdraw" | "delete"; list: EditorialList } | null;
 
 // Una sola superficie editorial, permission-aware: el curador (`editorial.author`)
@@ -24,9 +28,15 @@ type DialogState = { kind: "publish" | "withdraw" | "delete"; list: EditorialLis
 export function EditorialConsole({
   initial,
   permissions,
+  featured,
+  templates,
 }: {
   initial: { lists: EditorialList[] };
   permissions: Permission[];
+  /** Panel "Destacadas en Explorar" (manage-explore-featured-console); sin él no hay pestañas. */
+  featured?: FeaturedAdminResponse;
+  /** Panel "Generadas automáticamente"; sin él no hay pestañas. */
+  templates?: TemplatesAdminResponse;
 }) {
   const t = useTranslations("common.adminConsole");
   const tErrors = useTranslations("errors");
@@ -39,6 +49,7 @@ export function EditorialConsole({
   const [title, setTitle] = useState("");
   const [entityType, setEntityType] = useState<EntityType>("release-group");
   const [creating, setCreating] = useState(false);
+  const [tab, setTab] = useState<ConsoleTab>("lists");
 
   const handleError = (caught: unknown) => {
     setError(
@@ -138,8 +149,14 @@ export function EditorialConsole({
         : { title: t("delete"), message: t("confirmDelete"), confirm: t("delete"), danger: true }
     : { title: "", message: "", confirm: "", danger: false };
 
-  return (
-    <div className="flex w-full max-w-4xl flex-col gap-4">
+  const tabs: { id: ConsoleTab; label: string }[] = [
+    { id: "lists", label: t("tabs.lists") },
+    ...(featured ? [{ id: "featured" as const, label: t("tabs.featured") }] : []),
+    ...(templates ? [{ id: "templates" as const, label: t("tabs.templates") }] : []),
+  ];
+
+  const listsView = (
+    <>
       {error ? (
         <p role="alert" className="rounded border border-danger/40 bg-danger/10 p-3 font-data text-sm text-danger">
           {error}
@@ -267,6 +284,37 @@ export function EditorialConsole({
         onConfirm={() => void confirmDialog()}
         onCancel={() => setDialog(null)}
       />
+    </>
+  );
+
+  return (
+    <div className="flex w-full max-w-4xl flex-col gap-4">
+      {tabs.length > 1 ? (
+        <div role="tablist" aria-label={t("title")} className="flex flex-wrap gap-2 border-b border-ink-border">
+          {tabs.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              id={`console-tab-${id}`}
+              aria-selected={tab === id}
+              aria-controls={`console-panel-${id}`}
+              onClick={() => setTab(id)}
+              className={`-mb-px border-b-2 px-3 py-2 font-data text-xs ${
+                tab === id ? "border-amber text-amber" : "border-transparent text-paper-muted hover:text-paper"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      <div role="tabpanel" id={`console-panel-${tab}`} aria-labelledby={`console-tab-${tab}`} className="flex flex-col gap-4">
+        {tab === "lists" || tabs.length <= 1 ? listsView : null}
+        {tab === "featured" && featured ? <FeaturedPanel initial={featured} canPublish={canPublish} /> : null}
+        {tab === "templates" && templates ? <TemplatesPanel initial={templates} canPublish={canPublish} /> : null}
+      </div>
     </div>
   );
 }

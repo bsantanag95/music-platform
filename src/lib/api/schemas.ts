@@ -392,6 +392,11 @@ export const ErrorCodeSchema = z.enum([
   "IMAGE_TOO_LARGE",
   "IMAGE_DIMENSIONS_EXCEEDED",
   "IMAGE_DIMENSIONS_INSUFFICIENT",
+  "FEATURE_NOT_PUBLISHED",
+  "FEATURE_NOT_ELIGIBLE",
+  "FEATURED_NOT_FOUND",
+  "FEATURED_ORDER_CONFLICT",
+  "TEMPLATE_NOT_FOUND",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 
@@ -532,6 +537,87 @@ export const EditorialListSchema = z.object({
   state: EditorialListStateSchema,
 });
 export const EditorialListsResponseSchema = z.object({ lists: z.array(EditorialListSchema) });
+// --- Colecciones destacadas de /explore: consola editorial (openspec: manage-explore-featured-console) ---
+
+export const FeaturedStatusSchema = z.enum([
+  "in_rail",
+  "beyond_limit",
+  "scheduled",
+  "expired",
+  "withdrawn",
+  "hidden",
+  "not_public",
+]);
+export type FeaturedStatus = z.infer<typeof FeaturedStatusSchema>;
+
+export const FeaturedAdminRowSchema = z.object({
+  listId: z.uuid(),
+  title: z.string(),
+  source: z.enum(["curated", "template"]),
+  templateKey: z.string().nullable(),
+  periodKey: z.string().nullable(),
+  rank: z.number().int(),
+  weight: z.number().int(),
+  startsAt: z.string(),
+  expiresAt: z.string().nullable(),
+  itemCount: z.number().int(),
+  status: FeaturedStatusSchema,
+  orderable: z.boolean(),
+});
+export type FeaturedAdminRow = z.infer<typeof FeaturedAdminRowSchema>;
+
+export const FeaturedAdminResponseSchema = z.object({
+  featured: z.array(FeaturedAdminRowSchema),
+  eligible: z.array(z.object({ id: z.uuid(), title: z.string() })),
+});
+export type FeaturedAdminResponse = z.infer<typeof FeaturedAdminResponseSchema>;
+
+const FeaturedWeightSchema = z.number().int().min(0).max(1000);
+const IsoDateTimeSchema = z.iso.datetime({ offset: true });
+
+export const FeatureListRequestSchema = z.object({
+  listId: z.uuid(),
+  startsAt: IsoDateTimeSchema.optional(),
+  expiresAt: IsoDateTimeSchema.nullable().optional(),
+  weight: FeaturedWeightSchema.optional(),
+});
+export type FeatureListRequest = z.infer<typeof FeatureListRequestSchema>;
+
+export const UpdateFeaturedScheduleRequestSchema = z
+  .object({
+    startsAt: IsoDateTimeSchema.optional(),
+    expiresAt: IsoDateTimeSchema.nullable().optional(),
+    weight: FeaturedWeightSchema.optional(),
+  })
+  .refine((changes) => Object.keys(changes).length > 0, { message: "No hay campos para actualizar" });
+export type UpdateFeaturedScheduleRequest = z.infer<typeof UpdateFeaturedScheduleRequestSchema>;
+
+export const ReorderFeaturedRequestSchema = z.object({ listIds: z.array(z.uuid()).min(1).max(200) });
+export type ReorderFeaturedRequest = z.infer<typeof ReorderFeaturedRequestSchema>;
+
+export const TemplateAdminRowSchema = z.object({
+  key: z.string(),
+  paused: z.boolean(),
+  pausedAt: z.string().nullable(),
+  lastRun: z
+    .object({
+      status: z.enum(["running", "succeeded", "failed"]),
+      startedAt: z.string(),
+      finishedAt: z.string().nullable(),
+      itemCount: z.number().int().nullable(),
+      error: z.string().nullable(),
+    })
+    .nullable(),
+  lastSuccessAt: z.string().nullable(),
+  nextDueAt: z.string().nullable(),
+  current: z
+    .object({ listId: z.uuid(), title: z.string(), periodKey: z.string(), inRail: z.boolean() })
+    .nullable(),
+});
+export type TemplateAdminRow = z.infer<typeof TemplateAdminRowSchema>;
+export const TemplatesAdminResponseSchema = z.object({ templates: z.array(TemplateAdminRowSchema) });
+export type TemplatesAdminResponse = z.infer<typeof TemplatesAdminResponseSchema>;
+
 export const SocialRestrictionSchema = z.object({
   id: z.uuid(),
   userId: z.uuid(),
