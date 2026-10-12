@@ -150,7 +150,7 @@ En vitrina, secciones:
 2. **Populares** — listas públicas ordenadas por conteo agregado de guardados. Vitrina, no
    ranking: "N guardados" en la tarjeta, sin posiciones. `GET /api/lists/popular`.
 3. **De la gente que seguís** — listas visibles (`public` o `followers`) de usuarios que el
-   lector sigue, recientes primero. Solo con sesión; `GET /api/lists/from-following` responde
+   lector sigue, recientes primero, sin las vacías (aparecen con su primer ítem). Solo con sesión; `GET /api/lists/from-following` responde
    `401 AUTH_REQUIRED` sin ella.
 4. **Recientes** — el descubrimiento cronológico de `list-discovery`, ahora accesible sin
    sesión (`GET /api/lists/discover` pasó a público). La pestaña "Descubrir" de `/me/lists`

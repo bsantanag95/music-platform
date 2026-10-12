@@ -71,7 +71,14 @@ export function CommunityListSection({
       <SectionHeader heading={t(headingKey)} description={descriptionKey ? t(descriptionKey) : undefined} />
       <ListsGrid cols={cols}>
         {lists.map((list) => (
-          <CommunityListCard key={list.id} list={list} canSave={canSave} dense={dense} />
+          <CommunityListCard
+            key={list.id}
+            list={list}
+            canSave={canSave}
+            dense={dense}
+            // En "De la gente que sigues" importa cuándo la publicaron, no cuántos la guardaron.
+            showDate={source === "from-following"}
+          />
         ))}
       </ListsGrid>
 

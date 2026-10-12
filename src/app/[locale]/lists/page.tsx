@@ -98,7 +98,7 @@ export default async function CommunityListsPage({
             headingKey="community.followingHeading"
             initial={fromFollowing}
             canSave={canSave}
-            cols={1}
+            cols={2}
             dense
           />
         ) : null}

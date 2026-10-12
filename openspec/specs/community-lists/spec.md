@@ -139,7 +139,9 @@ La vista `/lists` SHALL mostrar, **solo cuando hay sesión**, una sección con l
 para el lector cuyos dueños son usuarios que el lector sigue con relación aceptada, en orden
 cronológico descendente por fecha de creación. La sección SHALL considerar visibles las
 listas de audiencia `public` y `followers` de esos dueños, SHALL excluir bloqueos y perfiles
-que dejaron de ser visibles, y SHALL excluir las listas del propio lector. Para un lector
+que dejaron de ser visibles, SHALL excluir las listas del propio lector y SHALL excluir las listas
+sin ítems (aparecen cuando tienen el primero; el filtro va en la consulta, así la paginación no
+devuelve páginas cortas). Para un lector
 anónimo la sección SHALL NOT renderizarse, y su API SHALL responder `401` con código
 `AUTH_REQUIRED`. La sección SHALL poder paginarse.
 
@@ -148,6 +150,11 @@ anónimo la sección SHALL NOT renderizarse, y su API SHALL responder `401` con 
 - **WHEN** un usuario con sesión que sigue a otras personas abre `/lists`
 - **THEN** ve una sección con las listas recientes visibles de esas personas, de la más
   reciente a la más antigua
+
+#### Scenario: Lista vacía de alguien que sigo
+
+- **WHEN** una persona que sigo crea una lista y todavía no le agrega ítems
+- **THEN** la lista no aparece en "De la gente que sigues" hasta que tenga su primer ítem
 
 #### Scenario: Incluye audiencia followers de seguidos
 
