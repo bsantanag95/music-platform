@@ -6,6 +6,7 @@ import { apiFetch, ApiError } from "@/lib/api/client";
 import { EditorialListMutationResponseSchema, TemplatesAdminResponseSchema } from "@/lib/api/schemas";
 import type { TemplateAdminRow, TemplatesAdminResponse } from "@/lib/api/schemas";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { MIN_ALBUMS_FOR_SECTION } from "@/services/discovery/constants";
 
 // Panel "Generadas automáticamente" (openspec: manage-explore-featured-console): estado de las
 // plantillas de colecciones y control de pausa / regeneración. Escribir exige `editorial.publish`.
@@ -41,6 +42,17 @@ export function TemplatesPanel({ initial, canPublish }: { initial: TemplatesAdmi
     } finally {
       setPending(null);
     }
+  };
+
+  // Por qué una plantilla no tiene colección vigente: pausada, aún sin generar, o la regla no
+  // alcanza el mínimo de álbumes (caso habitual con poca actividad de la comunidad).
+  const noCollectionReason = (template: TemplateAdminRow): string => {
+    if (template.paused || template.lastItemCount === null) {
+      return template.paused || template.lastRun ? t("templates.none") : t("templates.notGenerated");
+    }
+    return template.lastItemCount < MIN_ALBUMS_FOR_SECTION
+      ? t("templates.belowMinimum", { count: template.lastItemCount, min: MIN_ALBUMS_FOR_SECTION })
+      : t("templates.none");
   };
 
   const confirmPause = () => {
@@ -114,7 +126,7 @@ export function TemplatesPanel({ initial, canPublish }: { initial: TemplatesAdmi
                   <dd className="inline">
                     {template.current
                       ? `${template.current.title} · ${template.current.inRail ? t("templates.inRail") : t("templates.outOfRail")}`
-                      : t("templates.none")}
+                      : noCollectionReason(template)}
                   </dd>
                 </div>
               </dl>

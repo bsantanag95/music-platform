@@ -23,6 +23,7 @@ const template = (key: string, over: Record<string, unknown> = {}) => ({
   pausedAt: null,
   lastRun: { status: "succeeded" as const, startedAt: "2026-10-05T10:00:00.000Z", finishedAt: "2026-10-05T10:00:01.000Z", itemCount: 12, error: null },
   lastSuccessAt: "2026-10-05T10:00:01.000Z",
+  lastItemCount: 12,
   nextDueAt: "2026-10-12T10:00:01.000Z",
   current: { listId: LIST, title: "Novedades esenciales", periodKey: "evergreen", inRail: true },
   ...over,
@@ -87,5 +88,41 @@ describe("TemplatesPanel", () => {
 
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Regeneración en curso"));
     expect(vi.mocked(apiFetch).mock.calls[0]![0]).toBe("/api/admin/editorial/templates/new-releases/run");
+  });
+
+  it("explica que la regla no alcanza el mínimo de álbumes", () => {
+    renderWithIntl(
+      <TemplatesPanel initial={{ templates: [template("most-reviewed-month", { current: null, lastItemCount: 5 })] }} canPublish />,
+    );
+
+    expect(screen.getByText(/Solo 5 álbumes cumplen la regla \(mínimo 6\)/)).toBeInTheDocument();
+  });
+
+  it("usa el singular con un solo álbum", () => {
+    renderWithIntl(
+      <TemplatesPanel initial={{ templates: [template("most-reviewed-month", { current: null, lastItemCount: 1 })] }} canPublish />,
+    );
+
+    expect(screen.getByText(/Solo 1 álbum cumple la regla/)).toBeInTheDocument();
+  });
+
+  it("distingue una plantilla que aún no se generó", () => {
+    renderWithIntl(
+      <TemplatesPanel
+        initial={{ templates: [template("new-releases", { current: null, lastRun: null, lastSuccessAt: null, lastItemCount: null })] }}
+        canPublish
+      />,
+    );
+
+    expect(screen.getByText("Aún no se ha generado")).toBeInTheDocument();
+  });
+
+  it("una pausada sin colección dice solo que no hay colección vigente", () => {
+    renderWithIntl(
+      <TemplatesPanel initial={{ templates: [template("new-releases", { paused: true, current: null, lastItemCount: 3 })] }} canPublish />,
+    );
+
+    expect(screen.getByText("Sin colección vigente")).toBeInTheDocument();
+    expect(screen.queryByText(/Solo 3/)).toBeNull();
   });
 });

@@ -179,7 +179,8 @@ la consola tiene tres pestañas:
   publicada, **reordenar** (botones subir/bajar; el orden completo se envía de una vez), **programar** la
   vigencia (`desde`/`hasta`) y **quitar**. Quien solo tiene `editorial.author` la ve en lectura.
 - **Generadas automáticamente:** por plantilla, estado (activa/pausada), última corrida y su error, cuándo
-  vuelve a regenerarse y su colección vigente. `editorial.publish` permite **pausar** (la colección sale del
+  vuelve a regenerarse y su colección vigente. Si no la hay, el panel dice por qué: pausada, aún sin generar, o "Solo N álbumes
+cumplen la regla (mínimo 6)" cuando la plantilla no alcanza el mínimo (habitual con poca actividad de la comunidad). `editorial.publish` permite **pausar** (la colección sale del
   riel y no se regenera), **reanudar** (vuelve la de su período vigente) y **regenerar ahora** (en segundo plano).
 
 Reglas que impone el servicio, no la UI: solo se destaca una lista de `@exploracion`, de álbumes, pública,

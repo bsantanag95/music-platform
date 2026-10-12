@@ -67,6 +67,8 @@ export interface TemplateAdminRow {
   pausedAt: string | null;
   lastRun: { status: "running" | "succeeded" | "failed"; startedAt: string; finishedAt: string | null; itemCount: number | null; error: string | null } | null;
   lastSuccessAt: string | null;
+  /** Álbumes que cumplió la regla en la última corrida exitosa (puede ser menos del mínimo: no se crea la colección). */
+  lastItemCount: number | null;
   nextDueAt: string | null;
   current: { listId: string; title: string; periodKey: string; inRail: boolean } | null;
 }
@@ -340,7 +342,7 @@ export async function listTemplatesAdmin(now = new Date()): Promise<TemplateAdmi
       .orderBy(desc(exploreCollectionSync.startedAt))
       .limit(1);
     const [lastSuccess] = await db
-      .select({ finishedAt: exploreCollectionSync.finishedAt })
+      .select({ finishedAt: exploreCollectionSync.finishedAt, itemCount: exploreCollectionSync.itemCount })
       .from(exploreCollectionSync)
       .where(and(eq(exploreCollectionSync.templateKey, template.key), eq(exploreCollectionSync.status, "succeeded")))
       .orderBy(desc(exploreCollectionSync.finishedAt))
@@ -375,6 +377,7 @@ export async function listTemplatesAdmin(now = new Date()): Promise<TemplateAdmi
           }
         : null,
       lastSuccessAt: lastSuccessAt?.toISOString() ?? null,
+      lastItemCount: lastSuccess?.itemCount ?? null,
       nextDueAt: state?.pausedAt ? null : new Date((lastSuccessAt?.getTime() ?? now.getTime()) + REFRESH_MS).toISOString(),
       current: current
         ? { listId: current.listId, title: current.title, periodKey: current.periodKey ?? "", inRail: inRail.has(current.listId) }

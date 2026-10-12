@@ -1904,7 +1904,8 @@ responde `409 FEATURED_ORDER_CONFLICT` si el conjunto enviado difiere del vigent
 ### `GET /api/admin/editorial/templates`
 
 Requiere `editorial.author`. Devuelve `{ templates }` con, por plantilla: `key`, `paused`, `pausedAt`,
-`lastRun` (`status`, `startedAt`, `finishedAt`, `itemCount`, `error`), `lastSuccessAt`, `nextDueAt` y
+`lastRun` (`status`, `startedAt`, `finishedAt`, `itemCount`, `error`), `lastSuccessAt`, `lastItemCount` (álbumes que
+cumplió la regla en la última corrida exitosa; si es menor que `MIN_ALBUMS_FOR_SECTION` no se crea colección), `nextDueAt` y
 `current` (la colección vigente: `listId`, `title`, `periodKey`, `inRail`).
 
 ### `POST /api/admin/editorial/templates/[key]/pause` · `.../resume` · `.../run`
