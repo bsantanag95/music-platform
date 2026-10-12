@@ -2,6 +2,7 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { SectionHeader } from "@/components/discovery/SectionHeader";
 import { Button } from "@/components/ui/Button";
 import { getDiscoverLists, getListsFromFollowing, getPopularLists } from "@/lib/api/lists";
 import { queryKeys } from "@/lib/query/keys";
@@ -26,6 +27,8 @@ interface CommunityListSectionProps {
   source: CommunitySource;
   /** Clave i18n (namespace `lists`) del encabezado de la sección. */
   headingKey: string;
+  /** Clave i18n de la línea bajo el título: qué reúne la sección y con qué criterio. */
+  descriptionKey?: string;
   initial: DiscoverListsResponse;
   canSave: boolean;
   /** Columnas de la grilla: 1 para un rail compacto (De seguidos), 3 para
@@ -42,6 +45,7 @@ interface CommunityListSectionProps {
 export function CommunityListSection({
   source,
   headingKey,
+  descriptionKey,
   initial,
   canSave,
   cols = 2,
@@ -64,7 +68,7 @@ export function CommunityListSection({
 
   return (
     <section className="flex w-full flex-col gap-4">
-      <h2 className="font-display text-xl text-paper">{t(headingKey)}</h2>
+      <SectionHeader heading={t(headingKey)} description={descriptionKey ? t(descriptionKey) : undefined} />
       <ListsGrid cols={cols}>
         {lists.map((list) => (
           <CommunityListCard key={list.id} list={list} canSave={canSave} dense={dense} />

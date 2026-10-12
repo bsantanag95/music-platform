@@ -27,6 +27,26 @@ export function CommunityListCard({
 }) {
   const t = useTranslations("lists");
   const ownerName = list.owner.displayName ?? `@${list.owner.username}`;
+  const hasSaves = typeof list.saveCount === "number" && list.saveCount > 0;
+
+  const owner = (
+    <UserHoverCard username={list.owner.username}>
+      <Link href={`/users/${encodeURIComponent(list.owner.username)}`} className="transition-colors hover:text-paper">
+        {t("byOwner", { name: ownerName })}
+      </Link>
+    </UserHoverCard>
+  );
+
+  // Marca "Oficial": contorno petróleo con check, no el bloque ámbar macizo de antes (la Regla de Rareza
+  // reserva el ámbar; en Destacadas casi todas las tarjetas lo llevaban).
+  const badge = list.isOfficial ? (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded border border-petrol/50 px-1.5 py-px font-data text-[10px] text-petrol">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true" className="size-2.5">
+        <path d="M5 12.5 10 17.5 19 7" />
+      </svg>
+      {t("officialBadge")}
+    </span>
+  ) : undefined;
 
   return (
     <ListCard
@@ -35,35 +55,42 @@ export function CommunityListCard({
       coverThumbs={list.coverThumbs}
       description={list.description}
       dense={dense}
+      badge={badge}
+      // Siempre dos líneas: qué es · cuánto (· guardados en la tarjeta completa), y de quién · cuándo (en las
+      // secciones densas, de quién · guardados: la cifra que ordena Populares). Antes era una sola línea que
+      // se partía a mitad y dejaba "hace 1 mes" o "por Fran" sueltos abajo.
       meta={
         <>
-          {list.isOfficial ? <span className="rounded bg-amber px-1.5 py-0.5 font-data text-[10px] text-ink">{t("officialBadge")}</span> : null}
           <span>{t(entityTypeKey(list.entityType))}</span>
           <span aria-hidden>·</span>
           <span>{t("itemsCount", { count: list.itemCount })}</span>
-          <span aria-hidden>·</span>
-          <UserHoverCard username={list.owner.username}>
-            <Link
-              href={`/users/${encodeURIComponent(list.owner.username)}`}
-              className="transition-colors hover:text-paper"
-            >
-              {t("byOwner", { name: ownerName })}
-            </Link>
-          </UserHoverCard>
-          {!dense && typeof list.saveCount === "number" && list.saveCount > 0 ? (
+          {!dense && hasSaves ? (
             <>
               <span aria-hidden>·</span>
-              <span>{t("savesCount", { count: list.saveCount })}</span>
-            </>
-          ) : null}
-          {!dense ? (
-            <>
-              <span aria-hidden>·</span>
-              <RelativeDate iso={list.createdAt} />
+              <span>{t("savesCount", { count: list.saveCount! })}</span>
             </>
           ) : null}
         </>
       }
+      subMeta={
+        <>
+          {owner}
+          {dense ? (
+            hasSaves ? (
+              <>
+                <span aria-hidden>·</span>
+                <span>{t("savesCount", { count: list.saveCount! })}</span>
+              </>
+            ) : null
+          ) : (
+            <>
+              <span aria-hidden>·</span>
+              <RelativeDate iso={list.createdAt} />
+            </>
+          )}
+        </>
+      }
+      actionPlacement="aside"
       action={
         canSave && !list.isOwn ? (
           <SaveListButton
@@ -71,6 +98,7 @@ export function CommunityListCard({
             listId={list.id}
             initialSaved={list.saved}
             initialFollowing={list.following}
+            variant={dense ? "compact" : "full"}
           />
         ) : undefined
       }

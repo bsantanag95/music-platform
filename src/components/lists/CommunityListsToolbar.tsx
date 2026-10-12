@@ -54,21 +54,37 @@ export function CommunityListsToolbar() {
   );
 
   return (
+    // Una sola fila (buscador que se estira + filtros a la derecha), sin caja propia: antes era un panel con
+    // el buscador a todo el ancho y los filtros sueltos en una segunda fila.
     <form
       role="search"
       aria-label={t("community.searchLabel")}
       onSubmit={(event) => event.preventDefault()}
-      className="flex w-full flex-col gap-2 rounded-lg border border-ink-border bg-ink-surface p-3"
+      className="flex w-full flex-wrap items-end gap-x-4 gap-y-2"
     >
-      <input
-        type="search"
-        autoComplete="off"
-        value={searchInput}
-        onChange={(event) => setSearchInput(event.target.value)}
-        placeholder={t("community.searchPlaceholder")}
-        aria-label={t("community.searchLabel")}
-        className="w-full rounded-md border border-ink-border bg-ink px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted"
-      />
+      <div className="relative min-w-[14rem] flex-1">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          aria-hidden="true"
+          className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-paper-muted"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.5-3.5" />
+        </svg>
+        <input
+          type="search"
+          autoComplete="off"
+          value={searchInput}
+          onChange={(event) => setSearchInput(event.target.value)}
+          placeholder={t("community.searchPlaceholder")}
+          aria-label={t("community.searchLabel")}
+          className="w-full rounded-md border border-ink-border bg-ink-surface py-2 pl-9 pr-3.5 font-data text-sm text-paper transition-colors placeholder:text-paper-muted focus:border-paper-muted/60"
+        />
+      </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <FilterSelect
           value={currentType}

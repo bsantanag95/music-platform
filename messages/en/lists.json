@@ -91,7 +91,6 @@
   "community": {
     "pageTitle": "Community lists",
     "heading": "Lists",
-    "intro": "Curated by the community: featured collections, the most saved, lists from people you follow, and the newest.",
     "searchPlaceholder": "Search lists",
     "searchLabel": "Search lists",
     "sortPopular": "Popular",
@@ -99,13 +98,16 @@
     "resultsCount": "{count, plural, =0 {No results} one {# result} other {# results}}",
     "noResultsTitle": "No results",
     "noResultsDescription": "No public list matches those filters.",
-    "featuredEyebrow": "Editorial curation",
     "featuredHeading": "Featured",
     "popularHeading": "Popular",
     "followingHeading": "From people you follow",
     "recentHeading": "Recent",
     "emptyTitle": "No lists to discover yet",
-    "emptyDescription": "Once the community publishes public lists, they will show up here."
+    "emptyDescription": "Once the community publishes public lists, they will show up here.",
+    "featuredDescription": "Editorial picks and official lists.",
+    "popularDescription": "The ones the community saves the most.",
+    "followingDescription": "Recent lists from people you follow.",
+    "recentDescription": "The latest from the community."
   },
   "deleteShort": "Delete?",
   "moveUp": "Move “{title}” up",

@@ -74,8 +74,10 @@ conjuntos. Una lista editorial oficial SHALL ser una lista de la cuenta curadora
 (`@exploracion`), de audiencia `public`, `moderation_status = visible` y no retirada
 (`official_withdrawn_at IS NULL`). Cada entrada SHALL presentar título, dueño (con enlace al
 perfil), tipo de entidad, conteo de ítems y carátulas disponibles, y SHALL enlazar al detalle de esa
-lista; las oficiales SHALL distinguirse con la insignia de contenido oficial. La sección SHALL
-mostrarse siempre que exista al menos una lista oficial o destacada y SHALL NOT paginar.
+lista; las oficiales SHALL distinguirse con la insignia de contenido oficial. Una lista sin ítems
+SHALL NOT aparecer en la sección (sigue visible en su perfil, en Recientes y por enlace directo). La
+sección SHALL mostrarse siempre que exista al menos una lista oficial o destacada con ítems y SHALL
+NOT paginar.
 
 #### Scenario: Con listas destacadas
 
@@ -93,6 +95,11 @@ mostrarse siempre que exista al menos una lista oficial o destacada y SHALL NOT 
 
 - **WHEN** no hay listas con fila en `user_list_featured` ni listas editoriales oficiales publicadas
 - **THEN** la sección "Destacadas" no aparece en `/lists`
+
+#### Scenario: Lista vacía no se destaca
+
+- **WHEN** una lista editorial oficial o destacada no tiene ítems
+- **THEN** no aparece en "Destacadas"; si ninguna tiene ítems, la sección no aparece
 
 #### Scenario: Oficial retirada no se destaca
 
