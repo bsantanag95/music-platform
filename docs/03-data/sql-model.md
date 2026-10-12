@@ -143,7 +143,8 @@ publicación). El estado editorial se deriva por presencia de estas columnas má
 (`editorial.publish`).
 
 `editorial_action` (migración `0025`) audita las acciones de autoría editorial —creación, edición,
-propuesta, publicación y retirada— con `actor_id`, `list_id` y `created_at`, siguiendo el patrón de
+propuesta, publicación y retirada— y, desde `0070`, `feature` / `unfeature` (destacar, quitar, reordenar o
+reprogramar una colección destacada de `/explore`) con `actor_id`, `list_id` y `created_at`, siguiendo el patrón de
 `user_role_action` y `moderation_action`. El FK a `user_list` es `ON DELETE CASCADE`: al borrar un
 borrador nunca publicado desaparece su historial, que no tiene nada público que auditar. Los
 borradores nunca publicados (`is_official = false` y `official_withdrawn_at IS NULL`) pueden
@@ -929,8 +930,16 @@ conteos de la huella de gusto).
 
 **Propósito:** marca una `user_list` como **colección destacada** del descubrimiento
 `/explore` (migración `0018`, cambio `add-album-discovery`). Presencia de fila = destacada;
-`rank` (SMALLINT, `NOT NULL`, `UNIQUE`, `CHECK > 0`) define el orden ascendente del riel
-editorial. Las filas las escribe `scripts/seed-discovery.ts`, no una acción de usuario.
+`rank` (SMALLINT, `NOT NULL`, `CHECK > 0`) es el desempate del orden del riel editorial
+(ya **no es único** desde `0069`). Las filas las escribe la generación de colecciones
+(`src/services/discovery/collections`, `scripts/seed-discovery.ts`), no una acción de usuario.
+
+**Desde `0069`** (cambio `automate-explore-collections`, ADR 0033) la fila lleva además:
+`source` (`curated` | `template`, default `curated`), `template_key` y `period_key` (obligatorias si
+`source='template'`), `starts_at` (default `now()`), `expires_at` (opcional, `> starts_at`) y `weight`
+(SMALLINT, default 0). Índice único parcial `(template_key, period_key) WHERE source='template'` (una lista por
+plantilla y período) e índice de lectura `(weight DESC, rank)`. El riel muestra las filas vigentes por `weight` desc,
+`rank` asc, con tope 6.
 
 **Solo señal de distribución:** no cambia visibilidad, permisos, lectura ni comportamiento
 de la lista en ninguna otra superficie. **Tabla aparte a propósito** (mismo motivo que
@@ -1105,6 +1114,26 @@ verificación y el vínculo de las entradas que siguen en el feed.
 
 **Índices:** `idx_release_calendar_entry_date` (`release_date`), `idx_release_calendar_entry_artists`
 (GIN sobre `artist_mbids`), `idx_release_calendar_entry_rank` (parcial, `anonymous_rank IS NOT NULL`).
+
+## `explore_collection_sync`
+
+**Propósito:** corridas de la generación de colecciones de `/explore` (migración `0069`, cambio
+`automate-explore-collections`, ADR 0033). Misma mecánica que `release_calendar_sync`: una fila `running` de
+menos de 15 minutos de una plantilla bloquea a las demás corridas de esa plantilla (lock bajo
+`pg_advisory_xact_lock`).
+
+**Campos:** `template_key`, `started_at`, `finished_at`, `status` (`running` | `succeeded` | `failed`, `CHECK`),
+`item_count` (álbumes de la colección), `error`. Índice parcial `idx_explore_collection_sync_finished`
+(`template_key, finished_at DESC` de las exitosas), que responde "¿venció la plantilla?" (más de 7 días).
+
+## `explore_collection_template_state`
+
+**Propósito:** estado operativo de las plantillas de colecciones de `/explore` (migración `0070`, cambio
+`manage-explore-featured-console`, ADR 0034): hoy, si están **pausadas**. Sin fila = no pausada. Una plantilla
+pausada no se regenera por visita ni por `scripts/sync-explore-collections.ts` (salvo `--include-paused`).
+
+**Campos:** `template_key` (PK, clave de `COLLECTION_TEMPLATES`), `paused_at`, `paused_by` (FK a `app_user`,
+`ON DELETE SET NULL`: es un dato operativo, no auditoría), `updated_at`. `CHECK`: `paused_by` solo con `paused_at`.
 
 ## `release_calendar_sync`
 

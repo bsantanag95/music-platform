@@ -110,6 +110,20 @@ de cuál de las filas con el mismo título haya en la BD.
 >   cuentas desactivadas), que el listado solo trae raíces, el hilo en orden cronológico, que el feed, la
 >   actividad de la comunidad, el rastro propio y "Comentarios populares" no muestran respuestas (aunque una
 >   tenga más likes que cualquier raíz), los likes sobre respuestas, la exportación y las cascadas.
+> - `smoke-test-explore-collections.ts` crea álbumes sintéticos (MBID `5e0ce000-0000-4000-8000-0000000009c*`) y listas
+>   de plantillas `smoke-*` bajo `@exploracion` (crea la cuenta si falta y la borra solo si la creó), y los borra al terminar
+>   (también si falla; las plantillas reales solo se ejecutan en lectura). Si se interrumpió, limpiar con
+>   `DELETE FROM user_list WHERE id IN (SELECT list_id FROM user_list_featured WHERE template_key LIKE 'smoke-%');
+>   DELETE FROM user_list WHERE title LIKE 'Smoke oficial%'; DELETE FROM editorial_action WHERE actor_id IN (SELECT id
+>   FROM app_user WHERE username LIKE 'smoke_feat_%'); DELETE FROM app_user WHERE username LIKE 'smoke_feat_%';
+>   DELETE FROM explore_collection_sync WHERE template_key LIKE 'smoke-%'; DELETE FROM release_group WHERE
+>   mbid::text LIKE '5e0ce000-0000-4000-8000-0000000009c%';`. Necesita las migraciones `0069` y `0070`. Verifica los `CHECK` y el
+>   `rank` no único, la generación idempotente con reemplazo completo sin tocar `user_list.updated_at`, el mínimo de
+>   álbumes, la rotación por período, la vigencia y el tope del riel, el lock, la conservación ante fallo y la exclusión de
+>   la consola editorial y del feed. Desde `manage-explore-featured-console` también cubre la consola editorial (destacar, elegibilidad, permisos, auditoría,
+>   vigencia, orden atómico y su conflicto, quitar, herencia de peso y pausar/reanudar). **Pausa y reanuda la plantilla real
+>   `one-per-decade`**: si se interrumpe en medio, reanudarla desde `/admin`. **Ojo:** `scripts/sync-explore-collections.ts` y `scripts/seed-discovery.ts` generan
+>   las colecciones reales: en la BD real son el comportamiento esperado, no un fixture.
 > - `smoke-test-music-awards.ts` carga un premio sintético `smoke-premio` desde una carpeta temporal (no toca
 >   `data/awards/`) con MBID `5e0ce000-0000-4000-8000-00000000a8xx`, bloquea `global.fetch` durante la carga y
 >   borra todo al terminar (también si falla). Si se interrumpió, limpiar con

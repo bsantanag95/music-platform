@@ -13,7 +13,7 @@ sin tabla materializada. Cada sección se **omite** si no tiene contenido. En or
 
 | Sección | Fuente | Presentación |
 |---|---|---|
-| Colecciones destacadas | `user_list_featured` (listas de `@exploracion`, por `rank`) | ancla anti-arranque-en-frío; tarjeta propia (`CollectionRail`): pila de hasta 6 fundas superpuestas que se abren al pasar el mouse (`enrichLists` con `coverLimit`), rótulo "Selección editorial", título, descripción de la lista si la tiene y número de álbumes |
+| Colecciones destacadas | `user_list_featured` vigentes (listas de `@exploracion`, por `weight` desc y `rank` asc, máximo 6; generadas semanalmente por plantillas, ADR 0033) | ancla anti-arranque-en-frío; tarjeta propia (`CollectionRail`): pila de hasta 6 fundas superpuestas que se abren al pasar el mouse (`enrichLists` con `coverLimit`), rótulo "Selección editorial", título, descripción de la lista si la tiene y número de álbumes |
 | Explorar por género | familias de géneros con álbumes (vista `release_group_effective_genre`, cambio `add-genre-taxonomy`) | tarjetas con nombre, número de álbumes y una barra de tamaño relativo (escala de raíz cuadrada) → `/explore?familia=rock`; la flecha solo aparece al pasar el mouse; las familias secundarias se despliegan desde una tarjeta "N familias más" dentro de la propia grilla (botón con `aria-expanded`, "Ver menos" para plegar) (`FamilyGrid`). Las cifras de familias y décadas llevan siempre separador de miles (`useGrouping: "always"`: con la regla del español quedaban "2112" junto a "17.317") |
 | Novedades | `release_group` studio/single_ep con `first_release_date` completa en los últimos `NEW_RELEASE_WINDOW_DAYS` (90) días hasta hoy, con carátula, por fecha desc | riel horizontal con la fecha ("9 oct") en cada tarjeta y "Ver todo →" a `/explore?novedades=1`; se omite con menos de `MIN_ALBUMS_FOR_SECTION` (6); sin lanzamientos futuros ni fechas parciales (cambios `redefine-explore-new-releases` y `add-explore-new-releases-listing`) |
 | Próximos lanzamientos | `release_group` studio/single_ep con `first_release_date` completa posterior a hoy y hasta hoy + `UPCOMING_WINDOW_DAYS` (180), con carátula, por fecha asc (cambio `add-explore-upcoming-releases`) | riel horizontal bajo Novedades, con la fecha ("24 oct") en cada tarjeta y "Ver todo →" a `/explore?proximos=1`; se omite con menos de `MIN_ALBUMS_FOR_SECTION` (6) |
@@ -120,22 +120,74 @@ Encender en producción cuando el seed tenga contenido suficiente.
 ALLOW_SMOKE_ON_REAL_DB=1 npx tsx --env-file=.env scripts/seed-discovery.ts
 ```
 
-Idempotente. Crea la cuenta `@exploracion` y sus colecciones destacadas. **Las colecciones
-que define el script hoy son semilla derivada de datos** (novedades, un disco por década) —
-garantizan que el riel editorial no esté vacío en cualquier BD poblada. Reemplazá
-`COLLECTIONS` en `scripts/seed-discovery.ts` por picks curados de verdad (por `mbid`)
-cuando tengas curaduría humana; el script salta los álbumes que no estén en el catálogo
-local con un aviso.
+Idempotente. Crea la cuenta `@exploracion` y genera sus colecciones destacadas con las
+**mismas plantillas** que `/explore` usa cada semana (ver abajo). Para regenerar solo las
+colecciones, con la cuenta ya creada:
+
+```
+npx tsx --env-file=.env scripts/sync-explore-collections.ts [--template <clave>]
+```
+
+## Colecciones generadas por plantillas
+
+Cambio `automate-explore-collections` ([ADR 0033](../02-architecture/adr/0033-colecciones-destacadas-generadas-por-plantillas.md)).
+El riel no depende de un seed manual: plantillas en `src/services/discovery/collections/templates.ts`
+producen listas públicas de `@exploracion` (`kind='standard'`, no oficiales), registradas en
+`user_list_featured` con `source='template'`.
+
+| Plantilla | Período | Contenido |
+|---|---|---|
+| `new-releases` | `evergreen` | "Novedades esenciales": studio/single_ep de los últimos `NEW_RELEASE_WINDOW_DAYS` con carátula |
+| `top-rated-quarter` | trimestre (`2026-Q4`) | "Mejor valorados del N.º trimestre de AAAA": valoraciones del trimestre, ≥ `MIN_RATINGS_PER_ALBUM` |
+| `one-per-decade` | `evergreen` | "Un disco por década": el studio más temprano de cada década, con carátula |
+| `most-reviewed-month` | mes (`2026-10`) | "Lo más reseñado de <mes> de AAAA": reseñas visibles del mes |
+
+- **Refresco semanal bajo demanda, sin cron.** Una visita a la portada de `/explore` programa con
+  `after()` la regeneración de las plantillas cuya última corrida exitosa tiene más de
+  `COLLECTION_REFRESH_DAYS` (7) días. Una corrida por plantilla a la vez (fila `running` de menos de 15
+  minutos en `explore_collection_sync`, tomada bajo `pg_advisory_xact_lock`); un fallo se registra
+  `failed`, conserva lo anterior y no detiene a las demás. `scripts/sync-explore-collections.ts` fuerza la
+  corrida (primer llenado, o respaldo si el entorno corta tareas posteriores a la respuesta).
+- **Reemplazo completo** de ítems, en el orden del selector, sin tocar `user_list` (su trigger de
+  `updated_at` generaría eventos de feed). Con menos de `MIN_ALBUMS_FOR_SECTION` álbumes no se crea ni
+  se modifica nada.
+- **Períodos:** una lista nueva por período; al crearla, la del período anterior de la misma plantilla
+  recibe `expires_at` y sale del riel (sigue pública y accesible por su URL).
+- **Vigencia del riel:** `starts_at <= now()` y `expires_at` nulo o futuro; orden `weight` desc, `rank` asc,
+  `starts_at` desc; tope `FEATURED_RAIL_LIMIT` (6). La sección "Destacadas" de Listas (`/lists`) usa la misma
+  vigencia y orden.
+- **Fuera de la consola y del feed:** las listas con `source='template'` no aparecen en `/admin` ni son
+  actividad de feed (`notGeneratedCollectionCondition()`).
 
 Limpieza: `DELETE FROM app_user WHERE username = 'exploracion';` (cascade).
 
 ### Administración editorial
 
-La superficie `/[locale]/admin` (permiso `editorial.publish`) opera **solo** sobre las listas de
+La superficie `/[locale]/admin` (permiso `editorial.author` para entrar) opera **solo** sobre las listas de
 `@exploracion`: lista las colecciones de la cuenta curadora y permite publicarlas como contenido
 oficial (`is_official`) o retirarlas (`official_withdrawn_at`). Las listas de otros usuarios no
 aparecen en esa consola y rechazan la publicación oficial. La "destacada" del riel editorial
-(`user_list_featured`) es independiente de la marca oficial.
+(`user_list_featured`) es independiente de la marca oficial: una lista oficial no se destaca sola.
+
+Desde el cambio `manage-explore-featured-console` ([ADR 0034](../02-architecture/adr/0034-consola-editorial-de-destacadas.md))
+la consola tiene tres pestañas:
+
+- **Listas:** el flujo borrador → propuesta → publicada → retirada de siempre.
+- **Destacadas en Explorar:** todas las filas de `user_list_featured` (curadas y generadas), con su origen,
+  vigencia y estado frente al riel (`En el riel`, `Fuera del tope`, `Programada`, `Vencida`, `Fuera del riel:
+  lista retirada / oculta / no pública`). Quien tiene `editorial.publish` puede **destacar** una lista oficial
+  publicada, **reordenar** (botones subir/bajar; el orden completo se envía de una vez), **programar** la
+  vigencia (`desde`/`hasta`) y **quitar**. Quien solo tiene `editorial.author` la ve en lectura.
+- **Generadas automáticamente:** por plantilla, estado (activa/pausada), última corrida y su error, cuándo
+  vuelve a regenerarse y su colección vigente. `editorial.publish` permite **pausar** (la colección sale del
+  riel y no se regenera), **reanudar** (vuelve la de su período vigente) y **regenerar ahora** (en segundo plano).
+
+Reglas que impone el servicio, no la UI: solo se destaca una lista de `@exploracion`, de álbumes, pública,
+visible, oficial y no retirada (`FEATURE_NOT_ELIGIBLE` / `FEATURE_NOT_PUBLISHED`). Una curada cuya lista se
+retira, se oculta o deja de ser pública sale del riel sin perder su fila (vuelve al republicarla). Quitar una
+**curada** borra su fila; quitar una **generada** la vence (para que no vuelva, se pausa la plantilla). Al
+rotar el período, la lista nueva de una plantilla **hereda el peso y el rank** de la anterior, así el orden
+editorial sobrevive. Cada destacar / quitar / reordenar / reprogramar queda en `editorial_action`.
 
 ## No incluido en Fase 1
 

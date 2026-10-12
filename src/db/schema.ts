@@ -263,7 +263,7 @@ export const editorialAction = pgTable(
     index("idx_editorial_action_list").on(t.listId, t.createdAt),
     check(
       "chk_editorial_action_action",
-      sql`${t.action} IN ('create', 'edit', 'submit', 'publish', 'withdraw')`,
+      sql`${t.action} IN ('create', 'edit', 'submit', 'publish', 'withdraw', 'feature', 'unfeature')`,
     ),
   ],
 );
@@ -1207,9 +1207,9 @@ export const userListPin = pgTable(
 // Colecciones destacadas del descubrimiento `/explore` (migración 0018,
 // openspec: add-album-discovery). Tabla aparte —mismo motivo que
 // user_list_pin—: destacar NO debe tocar user_list.updated_at (que dispara
-// eventos de feed). Presencia de fila = destacada; `rank` NOT NULL, UNIQUE,
-// > 0 (el CHECK vive en la migración SQL cruda). Las escribe
-// scripts/seed-discovery.ts, no una acción de usuario.
+// eventos de feed). Presencia de fila = destacada; `rank` NOT NULL,
+// > 0 (el CHECK vive en la migración SQL cruda). Las escribe la generación
+// de colecciones (src/services/discovery/collections), no una acción de usuario.
 export const userListFeatured = pgTable(
   "user_list_featured",
   {
@@ -1217,10 +1217,67 @@ export const userListFeatured = pgTable(
       .primaryKey()
       .references(() => userList.id, { onDelete: "cascade" }),
     rank: smallint("rank").notNull(),
+    // Migración 0069 (openspec: automate-explore-collections, ADR 0033): origen de la fila,
+    // pareja plantilla/período de las generadas, vigencia y peso. `rank` ya no es único.
+    source: text("source").$type<"curated" | "template">().notNull().default("curated"),
+    templateKey: text("template_key"),
+    periodKey: text("period_key"),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    weight: smallint("weight").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("uq_user_list_featured_rank").on(t.rank)],
+  (t) => [
+    uniqueIndex("uq_user_list_featured_template_period")
+      .on(t.templateKey, t.periodKey)
+      .where(sql`${t.source} = 'template'`),
+    index("idx_user_list_featured_rail").on(t.weight.desc(), t.rank),
+    check("chk_user_list_featured_source", sql`${t.source} IN ('curated', 'template')`),
+    check(
+      "chk_user_list_featured_template",
+      sql`${t.source} <> 'template' OR (${t.templateKey} IS NOT NULL AND ${t.periodKey} IS NOT NULL)`,
+    ),
+    check("chk_user_list_featured_window", sql`${t.expiresAt} IS NULL OR ${t.expiresAt} > ${t.startsAt}`),
+  ],
 );
+
+// Corridas de la generación de colecciones (migración 0069). Una fila `running` de menos de
+// 15 minutos bloquea a las demás de la misma plantilla (patrón de release_calendar_sync).
+export const exploreCollectionSync = pgTable(
+  "explore_collection_sync",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    templateKey: text("template_key").notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    status: text("status").$type<"running" | "succeeded" | "failed">().notNull().default("running"),
+    itemCount: integer("item_count"),
+    error: text("error"),
+  },
+  (t) => [
+    index("idx_explore_collection_sync_finished")
+      .on(t.templateKey, t.finishedAt.desc())
+      .where(sql`${t.status} = 'succeeded'`),
+    check("chk_explore_collection_sync_status", sql`${t.status} IN ('running', 'succeeded', 'failed')`),
+  ],
+);
+
+export type ExploreCollectionSyncRow = typeof exploreCollectionSync.$inferSelect;
+
+// Estado operativo por plantilla (migración 0070, openspec: manage-explore-featured-console,
+// ADR 0034). Sin fila = no pausada. Una plantilla pausada no se regenera por visita ni por script.
+export const exploreCollectionTemplateState = pgTable(
+  "explore_collection_template_state",
+  {
+    templateKey: text("template_key").primaryKey(),
+    pausedAt: timestamp("paused_at", { withTimezone: true }),
+    pausedBy: uuid("paused_by").references(() => appUser.id, { onDelete: "set null" }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [check("chk_explore_template_state_paused", sql`${t.pausedAt} IS NOT NULL OR ${t.pausedBy} IS NULL`)],
+);
+
+export type ExploreCollectionTemplateStateRow = typeof exploreCollectionTemplateState.$inferSelect;
 
 export type FavoriteRow = typeof favorite.$inferSelect;
 export type UserListRow = typeof userList.$inferSelect;

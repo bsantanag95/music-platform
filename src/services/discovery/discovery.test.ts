@@ -6,6 +6,7 @@ import {
   listAlbumsByFamily,
   listAlbumsByGenre,
   listAlbumsFiltered,
+  featuredActiveCondition,
   listFeaturedCollections,
   listGenreFamilies,
   listMostReviewed,
@@ -16,7 +17,7 @@ import {
   listUpcomingAlbums,
   listUpcomingReleases,
 } from "./discovery";
-import { FILTERED_PAGE_SIZE, MIN_ALBUMS_FOR_SECTION, NEW_RELEASE_WINDOW_DAYS, RAIL_SIZE, UPCOMING_WINDOW_DAYS } from "./constants";
+import { FEATURED_RAIL_LIMIT, FILTERED_PAGE_SIZE, MIN_ALBUMS_FOR_SECTION, NEW_RELEASE_WINDOW_DAYS, RAIL_SIZE, UPCOMING_WINDOW_DAYS } from "./constants";
 
 const mocks = vi.hoisted(() => ({
   db: { select: vi.fn() },
@@ -83,6 +84,16 @@ describe("listFeaturedCollections", () => {
     // el orden lo da la query (mockeada); comprobamos el mapeo/enriquecimiento
     expect(result.map((c) => c.id)).toEqual(["l2", "l1"]);
     expect(result.find((c) => c.id === "l1")).toMatchObject({ itemCount: 5, coverThumbs: ["a"] });
+  });
+
+  it("filtra por vigencia y limita al tope del riel", async () => {
+    mocks.db.select.mockReturnValue(chain([]));
+    mocks.enrichLists.mockResolvedValue(new Map());
+    await listFeaturedCollections();
+    const condition = new PgDialect().sqlToQuery(featuredActiveCondition());
+    expect(condition.sql).toContain('"user_list_featured"."starts_at" <= now()');
+    expect(condition.sql).toContain('"user_list_featured"."expires_at" is null or "user_list_featured"."expires_at" > now()');
+    expect(FEATURED_RAIL_LIMIT).toBe(6);
   });
 
   it("sin colecciones destacadas devuelve lista vacía", async () => {
