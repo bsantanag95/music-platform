@@ -161,7 +161,11 @@
         "new-releases": "Essential new releases",
         "top-rated-quarter": "Top rated of the quarter",
         "one-per-decade": "One album per decade",
-        "most-reviewed-month": "Most reviewed of the month"
+        "most-reviewed-month": "Most reviewed of the month",
+        "grammy-winners": "Latest award winners",
+        "genre-spotlight": "Genre of the week",
+        "anniversaries": "Anniversaries this month",
+        "upcoming": "What is coming"
       },
       "paused": "Paused",
       "active": "Active",

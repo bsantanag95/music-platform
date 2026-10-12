@@ -415,26 +415,29 @@ export async function pauseTemplate(actorId: string, key: string): Promise<void>
   for (const { listId } of retired) await recordEditorialAction(listId, actorId, "unfeature");
 }
 
-/** Reanuda una plantilla y devuelve al riel la colección de su período vigente, si existe. */
+/**
+ * Reanuda una plantilla y devuelve al riel su colección más reciente (la de `starts_at` mayor), si existe.
+ * No se calcula el período con la plantilla: el de Grammy o el de género dependen de los datos.
+ */
 export async function resumeTemplate(actorId: string, key: string): Promise<void> {
   await requirePermissionForUser(actorId, "editorial.publish");
-  const template = requireTemplate(key);
+  requireTemplate(key);
   const revived = await db.transaction(async (tx) => {
     await tx
       .update(exploreCollectionTemplateState)
       .set({ pausedAt: null, pausedBy: null, updatedAt: new Date() })
       .where(eq(exploreCollectionTemplateState.templateKey, key));
+    const [latest] = await tx
+      .select({ listId: userListFeatured.listId })
+      .from(userListFeatured)
+      .where(and(eq(userListFeatured.source, "template"), eq(userListFeatured.templateKey, key)))
+      .orderBy(desc(userListFeatured.startsAt))
+      .limit(1);
+    if (!latest) return [];
     return tx
       .update(userListFeatured)
       .set({ expiresAt: null })
-      .where(
-        and(
-          eq(userListFeatured.source, "template"),
-          eq(userListFeatured.templateKey, key),
-          eq(userListFeatured.periodKey, template.periodKey(new Date())),
-          isNotNull(userListFeatured.expiresAt),
-        ),
-      )
+      .where(and(eq(userListFeatured.listId, latest.listId), isNotNull(userListFeatured.expiresAt)))
       .returning({ listId: userListFeatured.listId });
   });
   for (const { listId } of revived) await recordEditorialAction(listId, actorId, "feature");

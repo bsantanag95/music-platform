@@ -1,5 +1,11 @@
-## ADDED Requirements
+# explore-day-zero-templates Specification
 
+## Purpose
+Reglas de las seis colecciones destacadas que deben estar listas el día 0 de `/explore` sin actividad de la
+comunidad: Novedades esenciales, Ganadores del último premio, Para entrar a {género} (una familia por
+semana), Cumplen años en {mes}, Lo que viene y Un disco por década. Cada una exige carátulas resueltas y un
+mínimo de álbumes; las plantillas de comunidad toman el relevo cuando hay actividad (ADR 0035).
+## Requirements
 ### Requirement: Conjunto de seis colecciones del día 0
 
 El sistema SHALL ofrecer seis plantillas que producen una colección válida sin actividad de la comunidad:
@@ -72,8 +78,8 @@ aniversario de al menos 10 años. Su período SHALL ser el mes (`AAAA-MM`).
 
 La plantilla `genre-spotlight` SHALL generar "Para entrar a {familia}" con una familia de géneros por semana
 ISO, elegida de forma determinista entre las familias con candidatos suficientes, en el orden de la taxonomía.
-SHALL listar un álbum por década en orden cronológico. Si la familia elegida no reúne el mínimo con carátula,
-SHALL probar la siguiente. Su período SHALL ser la semana ISO (`AAAA-Www`).
+SHALL listar un álbum por era de 5 años en orden cronológico. Si la familia elegida no reúne el mínimo con carátula,
+SHALL probar la siguiente. Su período SHALL ser la semana ISO y la familia (`AAAA-Www-<familia>`).
 
 #### Scenario: Rotación semanal
 
@@ -83,7 +89,7 @@ SHALL probar la siguiente. Su período SHALL ser la semana ISO (`AAAA-Www`).
 #### Scenario: Un disco por era
 
 - **WHEN** se genera la colección de una familia
-- **THEN** contiene como máximo un álbum por década, ordenados cronológicamente
+- **THEN** contiene como máximo un álbum por era de 5 años, ordenados cronológicamente
 
 #### Scenario: Familia sin contenido suficiente
 
@@ -128,3 +134,4 @@ creadas se siguen refrescando.
 
 - **WHEN** ya existen las listas evergreen de estas plantillas
 - **THEN** la generación las refresca en lugar de crear otras
+

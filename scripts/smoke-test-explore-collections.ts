@@ -22,7 +22,9 @@ export {};
 //   DELETE FROM explore_collection_sync WHERE template_key LIKE 'smoke-%';
 //   DELETE FROM user_list WHERE title LIKE 'Smoke oficial%';
 //   DELETE FROM app_user WHERE username LIKE 'smoke_feat_%';
-//   DELETE FROM release_group WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-0000000009c%';
+//   DELETE FROM release_group WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-0000000009c%' OR mbid::text LIKE '5e0ce000-0000-4000-8000-000000009d%';
+//   DELETE FROM award WHERE slug = 'smoke-premio';
+//   DELETE FROM release_calendar_entry WHERE release_group_mbid::text LIKE '5e0ce000-0000-4000-8000-000000009d%';
 // Necesita las migraciones 0069 y 0070 aplicadas. Correr contra una BD de scratch:
 //   ALLOW_SMOKE_ON_REAL_DB=1 npx tsx --env-file=.env scripts/smoke-test-explore-collections.ts
 
@@ -31,9 +33,15 @@ import { assertSmokeAllowed } from "./assert-smoke-allowed";
 import { db } from "../src/db";
 import {
   appUser,
+  award,
+  awardCategory,
+  awardCategoryEdition,
+  awardCeremony,
+  awardNomination,
   editorialAction,
   exploreCollectionSync,
   exploreCollectionTemplateState,
+  releaseCalendarEntry,
   releaseGroup,
   userList,
   userListFeatured,
@@ -42,7 +50,8 @@ import {
 } from "../src/db/schema";
 import { CURATOR_DISPLAY_NAME, CURATOR_USERNAME, FEATURED_RAIL_LIMIT } from "../src/services/discovery/constants";
 import { notGeneratedCollectionCondition } from "../src/services/discovery/collections/conditions";
-import { generateCollection } from "../src/services/discovery/collections/generate";
+import { createCoverResolver, type CoverResolver } from "../src/services/discovery/collections/covers";
+import { generateCollection, previewCollection } from "../src/services/discovery/collections/generate";
 import { staleTemplates, syncCollections, syncTemplate } from "../src/services/discovery/collections/sync";
 import {
   featureList,
@@ -55,7 +64,7 @@ import {
   unfeatureList,
   updateFeaturedSchedule,
 } from "../src/services/discovery/featured";
-import { COLLECTION_TEMPLATES, EVERGREEN, type CollectionTemplate } from "../src/services/discovery/collections/templates";
+import { COLLECTION_TEMPLATES, EVERGREEN, findTemplate, type CollectionTemplate } from "../src/services/discovery/collections/templates";
 import { listFeaturedCollections } from "../src/services/discovery/discovery";
 import { listEditorialLists } from "../src/services/lists/editorial";
 
@@ -87,11 +96,18 @@ function template(key: string, ids: () => string[], period: (now: Date) => strin
   return {
     key,
     rank: 9,
-    periodKey: period,
-    title: (now) => `Smoke ${key} ${period(now)}`,
-    select: async () => ids(),
+    weight: 0,
+    plan: async (now) => ({ periodKey: period(now), title: `Smoke ${key} ${period(now)}`, candidates: ids() }),
   };
 }
+
+/** Resolvedor sin red para las plantillas reales: acepta todos los candidatos. */
+const offlineCovers: CoverResolver = {
+  first: async (ids) => ids[0] ?? null,
+  take: async (ids, limit) => [...new Set(ids)].slice(0, limit),
+  spent: 0,
+  exhausted: false,
+};
 
 async function cleanup(): Promise<void> {
   await db.execute(
@@ -103,8 +119,13 @@ async function cleanup(): Promise<void> {
     sql`DELETE FROM editorial_action WHERE actor_id IN (SELECT id FROM app_user WHERE username LIKE 'smoke_feat_%')`,
   );
   await db.delete(appUser).where(like(appUser.username, "smoke_feat_%"));
+  await db.delete(award).where(eq(award.slug, "smoke-premio")); // cascada: ceremonias, categorías y nominaciones
+  await db
+    .delete(releaseCalendarEntry)
+    .where(like(sql`${releaseCalendarEntry.releaseGroupMbid}::text`, "5e0ce000-0000-4000-8000-000000009d%"));
   await db.delete(exploreCollectionSync).where(like(exploreCollectionSync.templateKey, "smoke-%"));
   await db.delete(releaseGroup).where(like(sql`${releaseGroup.mbid}::text`, "5e0ce000-0000-4000-8000-0000000009c%"));
+  await db.delete(releaseGroup).where(like(sql`${releaseGroup.mbid}::text`, "5e0ce000-0000-4000-8000-000000009d%"));
   if (createdCurator) await db.delete(appUser).where(eq(appUser.username, CURATOR_USERNAME));
 }
 
@@ -294,7 +315,7 @@ async function main() {
 
   const failing: CollectionTemplate = {
     ...template("smoke-evergreen", () => []),
-    select: async () => {
+    plan: async () => {
       throw new Error("falla simulada");
     },
   };
@@ -476,10 +497,203 @@ async function main() {
     }
   }
 
-  console.log("Plantillas reales (solo lectura):");
+  console.log("Plantillas del día 0 (sintético):");
+  {
+    const SYN = (n: number) => `5e0ce000-0000-4000-8000-000000009d${n.toString(16).padStart(2, "0")}`;
+    const make = async (rows: { n: number; date?: string; year?: number; cover: boolean }[]) =>
+      (
+        await db
+          .insert(releaseGroup)
+          .values(
+            rows.map((r) => ({
+              mbid: SYN(r.n),
+              title: `Smoke día 0 ${r.n}`,
+              category: "studio" as const,
+              firstReleaseDate: r.date ?? null,
+              firstReleaseYear: r.year ?? (r.date ? Number(r.date.slice(0, 4)) : null),
+              coverThumbUrl: r.cover ? "https://example.test/cover.jpg" : null,
+            })),
+          )
+          .returning({ id: releaseGroup.id, mbid: releaseGroup.mbid })
+      ).sort((x, y) => String(x.mbid).localeCompare(String(y.mbid)));
+
+    // --- grammy-winners: la ceremonia más reciente, solo ganadores con álbum, generales primero ---
+    const awardRgs = await make(Array.from({ length: 9 }, (_, i) => ({ n: i, year: 2000 + i, cover: true })));
+    const [syntheticAward] = await db.insert(award).values({ slug: "smoke-premio" }).returning({ id: award.id });
+    const [ceremony] = await db
+      .insert(awardCeremony)
+      .values({ awardId: syntheticAward!.id, year: 2099, edition: 99, heldOn: "2099-02-01" })
+      .returning({ id: awardCeremony.id });
+    const category = async (key: string, tier: "general" | "genre", sortOrder: number) => {
+      const [cat] = await db
+        .insert(awardCategory)
+        .values({ awardId: syntheticAward!.id, key, tier, subjectKind: "release_group", nameEs: key, nameEn: key, sortOrder })
+        .returning({ id: awardCategory.id });
+      const [edition] = await db
+        .insert(awardCategoryEdition)
+        .values({ ceremonyId: ceremony!.id, categoryId: cat!.id, coverage: "complete" })
+        .returning({ id: awardCategoryEdition.id });
+      return edition!.id;
+    };
+    const genreEdition = await category("categoria-genero", "genre", 2);
+    const generalEdition = await category("categoria-general", "general", 1);
+    const nominations = [
+      // categoría de género insertada primero: aun así los generales deben ir antes
+      { categoryEditionId: genreEdition, won: true, nomineeText: "g1", releaseGroupId: awardRgs[0]!.id, sortOrder: 1 },
+      { categoryEditionId: genreEdition, won: false, nomineeText: "g2", releaseGroupId: awardRgs[1]!.id, sortOrder: 2 },
+      { categoryEditionId: genreEdition, won: true, nomineeText: "g3", releaseGroupId: awardRgs[2]!.id, sortOrder: 3 },
+      { categoryEditionId: generalEdition, won: true, nomineeText: "a1", releaseGroupId: awardRgs[3]!.id, sortOrder: 1 },
+      { categoryEditionId: generalEdition, won: false, nomineeText: "a2", releaseGroupId: awardRgs[4]!.id, sortOrder: 2 },
+      // ganador por disco ancla (la grabación no tiene álbum propio)
+      { categoryEditionId: generalEdition, won: true, nomineeText: "a3", anchorReleaseGroupId: awardRgs[5]!.id, sortOrder: 3 },
+      { categoryEditionId: generalEdition, won: true, nomineeText: "a4", releaseGroupId: awardRgs[6]!.id, sortOrder: 4 },
+      { categoryEditionId: generalEdition, won: true, nomineeText: "a5", releaseGroupId: awardRgs[7]!.id, sortOrder: 5 },
+      { categoryEditionId: generalEdition, won: true, nomineeText: "a6", releaseGroupId: awardRgs[8]!.id, sortOrder: 6 },
+    ];
+    await db.insert(awardNomination).values(nominations);
+
+    const grammy = findTemplate("grammy-winners")!;
+    const grammyPlan = await grammy.plan(new Date(), { covers: offlineCovers });
+    check("candidates" in grammyPlan, "grammy-winners planifica con la ceremonia cargada");
+    if ("candidates" in grammyPlan) {
+      check(grammyPlan.periodKey === "smoke-premio-2099", "el período es <premio>-<año> de la ceremonia más reciente");
+      check(grammyPlan.title === "Ganadores del smoke-premio 2099", "el título dice el premio y el año");
+      check(
+        grammyPlan.candidates.join() ===
+          [awardRgs[3], awardRgs[5], awardRgs[6], awardRgs[7], awardRgs[8], awardRgs[0], awardRgs[2]].map((r) => r!.id).join(),
+        "solo ganadores (con disco ancla incluido), los generales antes que los de género",
+      );
+    }
+    const grammyPreview = await previewCollection(grammy, new Date(), offlineCovers);
+    check(grammyPreview.reason === null && grammyPreview.albumIds.length === 7, "la vista previa lo da por válido (7 álbumes)");
+
+    // --- upcoming: el rango del calendario manda; completa con el catálogo ---
+    const calendarRgs = await make(Array.from({ length: 4 }, (_, i) => ({ n: 0x10 + i, date: "2099-06-01", cover: true })));
+    const future = "2099-06-01";
+    await db.insert(releaseCalendarEntry).values(
+      calendarRgs.map((rg, i) => ({
+        releaseGroupMbid: rg.mbid!,
+        title: `Smoke cal ${i}`,
+        artistCreditName: "Smoke",
+        releaseDate: future,
+        primaryType: "Album" as const,
+        hasCover: true,
+        releaseGroupId: rg.id,
+        // rangos invertidos: el último insertado es el de mejor rango
+        anonymousRank: 4 - i,
+      })),
+    );
+    const upcomingPlan = await findTemplate("upcoming")!.plan(new Date(), { covers: offlineCovers });
+    check("candidates" in upcomingPlan, "upcoming planifica con calendario y catálogo");
+    if ("candidates" in upcomingPlan) {
+      const mine = upcomingPlan.candidates.filter((id) => calendarRgs.some((rg) => rg.id === id));
+      check(mine.length === 4, "incluye los próximos del calendario enlazados al catálogo");
+      check(
+        mine.join() === [...calendarRgs].reverse().map((rg) => rg.id).join(),
+        "los ordena por el rango de popularidad del calendario",
+      );
+      check(upcomingPlan.title === "Lo que viene" && upcomingPlan.periodKey === EVERGREEN, "es evergreen");
+    }
+
+    // --- anniversaries: múltiplos de 5 con ≥ 10 años, del mes; los redondos primero ---
+    const NOW = new Date("2026-10-20T00:00:00Z");
+    // Aniversarios muy antiguos (160+ años): ningún disco real los iguala, así que ocupan los primeros lugares.
+    const anniversaryRows = [
+      { n: 0x20, date: "1826-10-15" }, // 200
+      { n: 0x21, date: "1836-10-03" }, // 190
+      { n: 0x22, date: "1846-10-21" }, // 180
+      { n: 0x23, date: "1851-10-09" }, // 175
+      { n: 0x24, date: "1856-10-30" }, // 170
+      { n: 0x25, date: "1861-10-12" }, // 165
+      { n: 0x26, date: "1866-10-14" }, // 160
+      { n: 0x27, date: "1864-10-14" }, // 162: no es múltiplo de 5
+      { n: 0x28, date: "1826-11-21" }, // otro mes
+      { n: 0x29, date: "2021-10-14" }, // 5 años: todavía no
+    ];
+    const anniversaryRgs = await make(anniversaryRows.map((r) => ({ ...r, cover: true })));
+    const idOf = (n: number) => anniversaryRgs.find((rg) => rg.mbid === SYN(n))!.id;
+    const anniversaryPlan = await findTemplate("anniversaries")!.plan(NOW, { covers: offlineCovers });
+    check("candidates" in anniversaryPlan, "anniversaries planifica");
+    if ("candidates" in anniversaryPlan) {
+      check(anniversaryPlan.periodKey === "2026-10" && anniversaryPlan.title === "Cumplen años en octubre", "período y título del mes");
+      const mine = anniversaryPlan.candidates.filter((id) => anniversaryRgs.some((rg) => rg.id === id));
+      check(
+        mine.join() === [0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26].map(idOf).join(),
+        "los aniversarios redondos van del mayor al menor; sin el de 12 años, el de otro mes ni el de 5",
+      );
+    }
+
+    // --- genre-spotlight: forma del resultado sobre el catálogo real (sin red) ---
+    const spotlight = await findTemplate("genre-spotlight")!.plan(NOW, { covers: offlineCovers });
+    if ("skip" in spotlight) {
+      console.log(`  · genre-spotlight se omite sobre este catálogo: ${spotlight.skip}`);
+    } else {
+      check(/^2026-W43-[a-z-]+$/.test(spotlight.periodKey), "el período es la semana ISO y la familia");
+      check(spotlight.title.startsWith("Para entrar a "), "el título nombra la familia");
+      check(spotlight.candidates.length >= 6 && spotlight.candidates.length <= 12, "entre 6 y 12 álbumes");
+      const years = await db
+        .select({ id: releaseGroup.id, year: releaseGroup.firstReleaseYear })
+        .from(releaseGroup)
+        .where(inArray(releaseGroup.id, spotlight.candidates));
+      const yearOf = new Map(years.map((row) => [row.id, Number(row.year)]));
+      const ordered = spotlight.candidates.map((id) => yearOf.get(id)!);
+      check(ordered.every((y, i) => i === 0 || y >= ordered[i - 1]!), "en orden cronológico");
+      check(new Set(ordered.map((y) => Math.floor(y / 5))).size === ordered.length, "un álbum por era de 5 años");
+    }
+
+    // --- resolución de carátulas contra CAA simulado (sin red) ---
+    const coverRgs = await make([
+      { n: 0x30, year: 1990, cover: true },
+      { n: 0x31, year: 1991, cover: false },
+      { n: 0x32, year: 1992, cover: false },
+    ]);
+    const realFetch = globalThis.fetch;
+    let coverRequests = 0;
+    globalThis.fetch = (async () => {
+      coverRequests += 1;
+      return new Response(null, { status: 404 });
+    }) as typeof fetch;
+    try {
+      const resolver = createCoverResolver();
+      const taken = await resolver.take(coverRgs.map((rg) => rg.id), 5);
+      check(taken.length === 1 && taken[0] === coverRgs[0]!.id, "solo se aceptan los discos con carátula confirmada");
+      check(coverRequests === 2 && resolver.spent === 2, "los dos sin carátula costaron una petición cada uno");
+      const [checked] = await db
+        .select({ checkedAt: releaseGroup.coverCheckedAt })
+        .from(releaseGroup)
+        .where(eq(releaseGroup.id, coverRgs[1]!.id));
+      check(checked?.checkedAt !== null, "la ausencia queda registrada (`cover_checked_at`)");
+      await resolver.take(coverRgs.map((rg) => rg.id), 5);
+      check(coverRequests === 2, "no se vuelven a pedir en la misma corrida");
+      const second = createCoverResolver();
+      await second.take(coverRgs.map((rg) => rg.id), 5);
+      check(coverRequests === 2, "ni en otra corrida: la ausencia confirmada dura la ventana de negativos");
+    } finally {
+      globalThis.fetch = realFetch;
+    }
+
+    // --- --dry-run no escribe ---
+    const [before] = await db.execute<{ f: number; s: number; l: number }>(
+      sql`select (select count(*)::int from user_list_featured) f, (select count(*)::int from explore_collection_sync) s, (select count(*)::int from user_list) l`,
+    );
+    await previewCollection(findTemplate("anniversaries")!, NOW, offlineCovers);
+    await previewCollection(grammy, new Date(), offlineCovers);
+    const [afterDry] = await db.execute<{ f: number; s: number; l: number }>(
+      sql`select (select count(*)::int from user_list_featured) f, (select count(*)::int from explore_collection_sync) s, (select count(*)::int from user_list) l`,
+    );
+    check(
+      before!.f === afterDry!.f && before!.s === afterDry!.s && before!.l === afterDry!.l,
+      "la vista previa no crea listas, filas destacadas ni corridas",
+    );
+  }
+
+  console.log("Plantillas reales (solo lectura, sin red):");
   for (const real of COLLECTION_TEMPLATES) {
-    const ids = await real.select(new Date());
-    check(Array.isArray(ids), `${real.key}: el SQL se ejecuta (${ids.length} álbumes)`);
+    const result = await real.plan(new Date(), { covers: offlineCovers });
+    check(
+      "skip" in result || Array.isArray(result.candidates),
+      `${real.key}: el SQL se ejecuta (${"skip" in result ? `omitida: ${result.skip}` : `${result.candidates.length} candidatos`})`,
+    );
   }
 
   console.log("Smoke test OK");

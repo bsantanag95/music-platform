@@ -52,9 +52,10 @@ el tope de 6 o el modelo de datos.
    - `anniversaries` — período `AAAA-MM`; `studio` con `first_release_date` completa en el mes actual y
      aniversario múltiplo de 5 (≥ 10). Si hay menos de 6, se amplía a cualquier aniversario ≥ 10. Orden: mayor
      aniversario redondo primero, luego la señal. Título "Cumplen años en {mes}".
-   - `genre-spotlight` — período semana ISO (`AAAA-Www`); la familia es la `(semana mod n)`-ésima de las
-     familias con ≥ 6 candidatos, en el orden de `GENRE_FAMILIES`; si no llega a 6 con carátula, prueba la
-     siguiente (hasta n intentos). Un disco por era (década) en orden cronológico. Título "Para entrar a
+   - `genre-spotlight` — período semana ISO + familia (`AAAA-Www-<familia>`); la familia es la `(semana mod n)`-ésima en el
+     orden de `GENRE_FAMILIES`; si no reúne 6 eras con carátula, prueba la siguiente (hasta n intentos). Un
+     disco por **era de 5 años** (`ERA_YEARS`), en orden cronológico: con décadas solo caben 7 y casi ninguna
+     familia llega a 6. Título "Para entrar a
      {familia}". Una lista nueva por semana: ~52 al año, públicas y accesibles por URL tras vencer.
    - `upcoming` — evergreen "Lo que viene": filas del calendario con fecha futura, enlazadas al catálogo, por
      `anonymous_rank`; si hay menos de 6, completa con los próximos del catálogo (misma condición que el riel

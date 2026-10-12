@@ -68,3 +68,18 @@ export const FEATURED_RAIL_LIMIT = 6;
 
 /** Ítems por colección generada. */
 export const COLLECTION_SIZE = 12;
+
+/**
+ * Colecciones del día 0 (openspec: add-day-zero-collections, ADR 0035): candidatos que pide una plantilla
+ * para poder descartar los que no tengan carátula (3 × `COLLECTION_SIZE`).
+ */
+export const CANDIDATE_POOL = 36;
+
+/** Resoluciones de carátula (Cover Art Archive) permitidas por corrida de una plantilla. */
+export const COVER_RESOLVE_BUDGET = 40;
+
+/** Resoluciones de carátula en paralelo (CAA, sin la cola de MusicBrainz). */
+export const COVER_RESOLVE_CONCURRENCY = 4;
+
+/** Ancho, en años, de una "era" de "Para entrar a {género}": un álbum por era. */
+export const ERA_YEARS = 5;
