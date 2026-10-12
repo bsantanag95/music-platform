@@ -53,7 +53,18 @@
     "fewerFamilies": "Ver menos",
     "decadesEarlier": "Antes",
     "reviewCount": "{count, plural, one {# reseña} other {# reseñas}}",
-    "countdown": "{days, plural, =0 {Hoy} =1 {Mañana} other {En # días}}"
+    "countdown": "{days, plural, =0 {Hoy} =1 {Mañana} other {En # días}}",
+    "jump": {
+      "label": "En esta página",
+      "collections": "Colecciones",
+      "genres": "Géneros",
+      "newReleases": "Novedades",
+      "upcoming": "Próximos",
+      "awards": "Premios",
+      "topRated": "Mejor valorados",
+      "mostReviewed": "Más reseñados",
+      "decades": "Décadas"
+    }
   },
   "search": {
     "pageTitle": "Buscar",

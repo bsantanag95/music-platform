@@ -45,7 +45,7 @@ export function DecadeHistogram({ heading, description, decades, earlierLabel }:
   const charted = columns.slice(earlier.length);
 
   return (
-    <section aria-labelledby="explore-decades-heading" className="flex w-full scroll-mt-24 flex-col gap-3">
+    <section id="decadas" aria-labelledby="explore-decades-heading" className="flex w-full scroll-mt-24 flex-col gap-3">
       <SectionHeader heading={heading} description={description} headingId="explore-decades-heading" />
       {/* Desde `md`: columnas en orden cronológico, con la cifra pegada sobre cada barra. */}
       <div className="hidden w-full gap-4 rounded-lg border border-ink-border bg-ink-surface px-3 pb-2 pt-4 md:flex">

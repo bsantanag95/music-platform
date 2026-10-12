@@ -59,7 +59,7 @@ export function CollectionRail({
   const t = useTranslations("catalog.explore");
   if (collections.length === 0) return null;
   return (
-    <section className="flex w-full flex-col gap-3">
+    <section id="colecciones" className="flex w-full scroll-mt-24 flex-col gap-3">
       <SectionHeader heading={heading} description={description} />
       <ul className="grid gap-4 sm:grid-cols-2">
         {collections.map((collection) => (

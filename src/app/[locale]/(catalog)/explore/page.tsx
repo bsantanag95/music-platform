@@ -9,6 +9,7 @@ import { FamilyGrid, type FamilyTile } from "@/components/discovery/FamilyGrid";
 import { daysUntilRelease, releaseDateLabel } from "@/components/discovery/release-date-label";
 import { AwardsExploreSection } from "@/components/awards/AwardsExploreSection";
 import { listRecentCeremonies } from "@/services/awards/read";
+import { ExploreJumpNav } from "@/components/discovery/ExploreJumpNav";
 import { FilteredAlbumList } from "@/components/discovery/FilteredAlbumList";
 import { ApiError } from "@/lib/api/errors";
 import { isExploreEnabled } from "@/lib/config/discovery";
@@ -257,6 +258,18 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
       countLabel: t("albumCount", { count: bucket.count, formatted: numberFormat.format(bucket.count) }),
     }));
   const moreFamilies = explore.families.filter((f) => f.tier === "more");
+  // Navegación rápida: una entrada por cada sección que se renderiza (mismos datos que cada sección usa para omitirse),
+  // en el orden de la página.
+  const jumpItems = [
+    { id: "colecciones", label: t("jump.collections"), visible: explore.featured.length > 0 },
+    { id: "generos", label: t("jump.genres"), visible: explore.families.length > 0 },
+    { id: "novedades", label: t("jump.newReleases"), visible: explore.newReleases.length > 0 },
+    { id: "proximos", label: t("jump.upcoming"), visible: explore.upcoming.length > 0 },
+    { id: "premios", label: t("jump.awards"), visible: recentCeremonies.length > 0 },
+    { id: "mejor-valorados", label: t("jump.topRated"), visible: explore.topRated.length > 0 },
+    { id: "mas-resenados", label: t("jump.mostReviewed"), visible: explore.mostReviewed.length > 0 },
+    { id: "decadas", label: t("jump.decades"), visible: explore.decades.length > 0 },
+  ].filter((item) => item.visible);
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col items-start gap-12 px-4 py-12">
@@ -265,6 +278,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
       <div className="flex w-full flex-col gap-4">
         <Breadcrumbs items={[{ label: tCommon("home"), href: "/" }, { label: t("heading") }]} />
         <h1 className="font-display text-3xl text-paper">{t("heading")}</h1>
+        <ExploreJumpNav label={t("jump.label")} items={jumpItems} />
       </div>
 
       <CollectionRail
@@ -315,23 +329,6 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
 
       <AwardsExploreSection ceremonies={recentCeremonies} />
 
-      <DecadeHistogram
-        heading={t("decadesHeading")}
-        description={t("decadesDescription")}
-        earlierLabel={t("decadesEarlier")}
-        decades={explore.decades.map((bucket) => ({
-          decade: bucket.decade,
-          count: bucket.count,
-          href: `/explore?decada=${bucket.decade}`,
-          countLabel: numberFormat.format(bucket.count),
-          ariaLabel: t("decadeBarLabel", {
-            decade: bucket.decade,
-            count: bucket.count,
-            formatted: numberFormat.format(bucket.count),
-          }),
-        }))}
-      />
-
       <AlbumRail
         layout="scroll"
         id="mejor-valorados"
@@ -356,6 +353,23 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         stats={mostReviewedStats}
         categoryLabels={categoryLabels}
         coverLabel={coverLabel}
+      />
+
+      <DecadeHistogram
+        heading={t("decadesHeading")}
+        description={t("decadesDescription")}
+        earlierLabel={t("decadesEarlier")}
+        decades={explore.decades.map((bucket) => ({
+          decade: bucket.decade,
+          count: bucket.count,
+          href: `/explore?decada=${bucket.decade}`,
+          countLabel: numberFormat.format(bucket.count),
+          ariaLabel: t("decadeBarLabel", {
+            decade: bucket.decade,
+            count: bucket.count,
+            formatted: numberFormat.format(bucket.count),
+          }),
+        }))}
       />
     </main>
   );

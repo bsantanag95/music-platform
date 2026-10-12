@@ -70,7 +70,7 @@ export function FamilyGrid({ heading, description, families, moreFamilies = [], 
   const canToggle = moreFamilies.length > 0 && moreLabel;
 
   return (
-    <section aria-labelledby="explore-genres-heading" className="flex w-full scroll-mt-24 flex-col gap-3">
+    <section id="generos" aria-labelledby="explore-genres-heading" className="flex w-full scroll-mt-24 flex-col gap-3">
       <SectionHeader heading={heading} description={description} headingId="explore-genres-heading" />
       <ul id="explore-genre-families" className={GRID}>
         {visible.map((family) => (
