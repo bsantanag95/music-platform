@@ -183,6 +183,9 @@ export async function listDiscoverLists(
     isNull(userList.officialWithdrawnAt),
     readerId ? ne(userList.ownerId, readerId) : undefined,
     notBlockedByReader(readerId),
+    // Una lista vacía no se descubre (Recientes, búsqueda y orden de `/lists`, pestaña Descubrir): aparece con
+    // su primer ítem. Sigue visible en el perfil de su dueño y por enlace. En SQL, para no acortar páginas.
+    sql`exists (select 1 from ${userListItem} where ${userListItem.listId} = ${userList.id})`,
   ];
   if (entityType) conditions.push(eq(userList.entityType, entityType));
   if (q) {

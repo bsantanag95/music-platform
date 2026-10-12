@@ -75,7 +75,7 @@ conjuntos. Una lista editorial oficial SHALL ser una lista de la cuenta curadora
 (`official_withdrawn_at IS NULL`). Cada entrada SHALL presentar título, dueño (con enlace al
 perfil), tipo de entidad, conteo de ítems y carátulas disponibles, y SHALL enlazar al detalle de esa
 lista; las oficiales SHALL distinguirse con la insignia de contenido oficial. Una lista sin ítems
-SHALL NOT aparecer en la sección (sigue visible en su perfil, en Recientes y por enlace directo). La
+SHALL NOT aparecer en la sección (sigue visible en su perfil y por enlace directo). La
 sección SHALL mostrarse siempre que exista al menos una lista oficial o destacada con ítems y SHALL
 NOT paginar.
 

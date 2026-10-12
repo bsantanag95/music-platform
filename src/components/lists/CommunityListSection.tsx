@@ -76,8 +76,8 @@ export function CommunityListSection({
             list={list}
             canSave={canSave}
             dense={dense}
-            // En "De la gente que sigues" importa cuándo la publicaron, no cuántos la guardaron.
-            showDate={source === "from-following"}
+            // En las secciones cronológicas importa cuándo la publicaron, no cuántos la guardaron.
+            showDate={source !== "popular"}
           />
         ))}
       </ListsGrid>

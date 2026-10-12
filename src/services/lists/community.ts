@@ -69,7 +69,7 @@ export async function listFeaturedLists(readerId: string | null) {
   }
 
   // Una lista vacía no aporta nada en una vitrina editorial: se omite hasta que tenga ítems (sigue
-  // visible en su perfil, en Recientes y por enlace directo).
+  // visible en su perfil y por enlace directo).
   const lists = await enrichPublicLists(merged, readerId);
   return { lists: lists.filter((list) => list.itemCount > 0) };
 }
