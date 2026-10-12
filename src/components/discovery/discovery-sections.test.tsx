@@ -148,7 +148,7 @@ describe("ExploreFilterBar", () => {
 });
 
 describe("CollectionRail", () => {
-  it("enlaza cada colección con su rótulo editorial, descripción y número de álbumes", () => {
+  it("enlaza cada colección con su descripción y número de álbumes", () => {
     renderWithIntl(
       <CollectionRail
         heading="Colecciones destacadas"
@@ -161,7 +161,6 @@ describe("CollectionRail", () => {
     );
     const card = screen.getByRole("link", { name: /Esenciales/ });
     expect(card.getAttribute("href")).toContain("/es/");
-    expect(within(card).getByText("Selección editorial")).toBeInTheDocument();
     expect(within(card).getByText("Para empezar")).toBeInTheDocument();
     expect(within(card).getByText("12 álbumes")).toBeInTheDocument();
   });
