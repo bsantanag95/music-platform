@@ -20,9 +20,9 @@ SHALL componer, en este orden, las secciones que tengan contenido:
 3. Novedades
 4. Próximos lanzamientos
 5. Premios
-6. Exploración por década
-7. Mejor valorados de la comunidad
-8. Más reseñados
+6. Mejor valorados de la comunidad
+7. Más reseñados
+8. Exploración por década
 
 Novedades, Próximos lanzamientos, Exploración por década y Exploración por género SHALL ser
 **secciones independientes**, cada una con su propia lógica de navegación (Novedades y
@@ -55,6 +55,11 @@ centrarse en álbumes; SHALL NOT ofrecer pestañas de artistas, canciones ni lis
 - **WHEN** hay ceremonias de premios cargadas
 - **THEN** `/explore` muestra, después de Próximos lanzamientos, una tarjeta por cada una de
   las últimas 5 ceremonias y un enlace a `/awards`; sin ceremonias, la sección se omite
+
+#### Scenario: La comunidad antes que la década
+
+- **WHEN** `/explore` muestra Premios, Mejor valorados, Más reseñados y Exploración por década
+- **THEN** los dos rieles de comunidad aparecen antes que la exploración por década, que cierra la página
 
 ### Requirement: Colecciones destacadas
 
@@ -401,4 +406,34 @@ década, familia, género y próximos lanzamientos cuando se combinan en la URL.
 
 - **WHEN** la URL trae `novedades=1` y `proximos=1`
 - **THEN** se muestra el listado de próximos lanzamientos
+
+### Requirement: Navegación rápida de Explorar
+
+La vista `/explore` SHALL mostrar, bajo el título, una fila de enlaces ("En esta página") con un enlace por cada
+sección que se renderiza, en el mismo orden de la página, cada uno hacia el ancla de su sección: `colecciones`,
+`generos`, `novedades`, `proximos`, `premios`, `mejor-valorados`, `mas-resenados` y `decadas`. La fila SHALL NOT
+enlazar a una sección omitida y SHALL omitirse por completo cuando se rendericen menos de 4 secciones. La fila SHALL
+funcionar sin JavaScript y SHALL NOT ser fija ni resaltar la sección activa. Las etiquetas SHALL ser cortas y estar en
+el locale activo.
+
+#### Scenario: Fila con todas las secciones
+
+- **WHEN** `/es/explore` renderiza las 8 secciones
+- **THEN** la fila muestra "Colecciones, Géneros, Novedades, Próximos, Premios, Mejor valorados, Más reseñados,
+  Décadas", cada una enlazada a su ancla
+
+#### Scenario: Sección omitida
+
+- **WHEN** Novedades y Próximos lanzamientos no tienen contenido
+- **THEN** la fila no los incluye y ninguno de sus enlaces apunta a un ancla inexistente
+
+#### Scenario: Pocas secciones
+
+- **WHEN** `/explore` renderiza solo 3 secciones
+- **THEN** la fila de navegación rápida no aparece
+
+#### Scenario: Salto a una sección
+
+- **WHEN** una persona activa "Premios" en la fila
+- **THEN** la página se desplaza a la sección Premios sin que el encabezado global tape su título
 

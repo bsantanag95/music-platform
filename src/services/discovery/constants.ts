@@ -21,6 +21,12 @@ export const MIN_ALBUMS_FOR_SECTION = 6;
 /** Cuántos ítems muestra cada riel de la portada de /explore (sin paginar). */
 export const RAIL_SIZE = 12;
 
+/**
+ * Navegación rápida de `/explore`: la fila de enlaces a las secciones solo aparece si la página renderiza al menos
+ * esta cantidad. Con menos, la página cabe casi entera y la fila sería ruido.
+ */
+export const MIN_SECTIONS_FOR_JUMP_NAV = 4;
+
 /** Tamaño de página de los listados filtrados por década, familia o género. */
 export const FILTERED_PAGE_SIZE = 24;
 
