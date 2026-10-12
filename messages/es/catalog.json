@@ -48,7 +48,6 @@
     "clearFilters": "Quitar filtros",
     "paginationLabel": "Paginación",
     "pageIndicator": "Página {page}",
-    "editorialKicker": "Selección editorial",
     "albumCount": "{formatted} {count, plural, one {álbum} other {álbumes}}",
     "fewerFamilies": "Ver menos",
     "decadesEarlier": "Antes",

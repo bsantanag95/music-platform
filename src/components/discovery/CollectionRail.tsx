@@ -1,4 +1,3 @@
-import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
@@ -46,7 +45,7 @@ function SleeveStack({ covers }: { covers: string[] }) {
 /**
  * Riel de colecciones editoriales (`/explore` e Inicio anónima): listas públicas de la cuenta
  * curadora, ya ordenadas por `rank`. Cada tarjeta es un enlace al detalle público de la lista,
- * con la pila de fundas, el rótulo editorial, el título, la descripción (si la tiene) y el número
+ * con la pila de fundas, el título, la descripción (si la tiene) y el número
  * de álbumes. No renderiza nada si no hay colecciones.
  */
 export function CollectionRail({
@@ -56,24 +55,27 @@ export function CollectionRail({
   curatorUsername,
   itemsLabel,
 }: CollectionRailProps) {
-  const t = useTranslations("catalog.explore");
   if (collections.length === 0) return null;
+  // Con más de dos colecciones, tres columnas desde `lg` y la pila arriba del texto: en dos columnas con la pila al
+  // lado, seis colecciones ocupaban tres filas altas y los títulos largos se cortaban ("Ganadores del Grammy 20…").
+  const compact = collections.length > 2;
   return (
     <section id="colecciones" className="flex w-full scroll-mt-24 flex-col gap-3">
       <SectionHeader heading={heading} description={description} />
-      <ul className="grid gap-4 sm:grid-cols-2">
+      <ul className={`grid gap-4 sm:grid-cols-2 ${compact ? "lg:grid-cols-3" : ""}`}>
         {collections.map((collection) => (
           <li key={collection.id}>
             <Link
               href={listHref(curatorUsername, collection.title, collection.id)}
-              className="group flex h-full flex-col gap-4 rounded-lg border border-ink-border bg-ink-surface p-4 transition-colors hover:border-amber focus-visible:border-amber lg:flex-row lg:items-center lg:gap-6 lg:p-5"
+              className={`group relative flex h-full flex-col gap-4 rounded-lg border border-ink-border bg-ink-surface p-4 transition-colors hover:border-amber focus-visible:border-amber ${
+                compact ? "" : "lg:flex-row lg:items-center lg:gap-6 lg:p-5"
+              }`}
             >
               <SleeveStack covers={collection.coverThumbs} />
               <span className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="font-data text-[0.65rem] uppercase tracking-wider text-petrol">
-                  {t("editorialKicker")}
-                </span>
-                <span className="truncate font-display text-lg text-paper transition-colors group-hover:text-amber">
+                {/* Sin rótulo "Selección editorial" por tarjeta: el encabezado de la sección ya lo dice, y repetido
+                    en cada una era ruido. Título en hasta dos líneas en lugar de recortarlo. */}
+                <span className="line-clamp-2 font-display text-lg text-paper transition-colors group-hover:text-amber">
                   {collection.title}
                 </span>
                 {collection.description ? (
@@ -83,7 +85,9 @@ export function CollectionRail({
               </span>
               <span
                 aria-hidden="true"
-                className="hidden self-center text-paper-muted transition-[color,transform] duration-150 group-hover:translate-x-0.5 group-hover:text-amber lg:block"
+                className={`text-paper-muted transition-[color,transform] duration-150 group-hover:translate-x-0.5 group-hover:text-amber ${
+                  compact ? "absolute right-4 top-4" : "hidden self-center lg:block"
+                }`}
               >
                 →
               </span>
