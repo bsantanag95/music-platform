@@ -1,3 +1,5 @@
+import { PgDialect } from "drizzle-orm/pg-core";
+import type { SQL } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { listFeaturedLists, listPopularLists, listsFromFollowing } from "./community";
 
@@ -71,6 +73,27 @@ describe("servicio de listas de la comunidad", () => {
     expect(result.lists).toHaveLength(1);
     expect(result.lists[0]?.itemCount).toBe(5);
     expect(result.lists[0]?.saveCount).toBeUndefined();
+  });
+
+  it("Destacadas: excluye las colecciones generadas por plantilla (solo filas curadas)", async () => {
+    let captured: unknown;
+    const builder: Record<string, unknown> = {
+      from: () => builder,
+      innerJoin: () => builder,
+      where: (condition: unknown) => {
+        captured = condition;
+        return builder;
+      },
+      orderBy: () => Promise.resolve([]),
+    };
+    mocks.db.select.mockReturnValueOnce(chain([])).mockReturnValueOnce(builder);
+
+    await listFeaturedLists(reader);
+
+    const { sql, params } = new PgDialect().sqlToQuery(captured as SQL);
+    expect(sql).toContain('"user_list_featured"."source" =');
+    expect(params).toContain("curated");
+    expect(params).not.toContain("template");
   });
 
   it("Destacadas: pone las editoriales oficiales primero", async () => {

@@ -9,7 +9,8 @@ import { ExploreJumpNav, type JumpItem } from "./ExploreJumpNav";
 const items = (labels: Record<string, string>, ids: string[]): JumpItem[] => ids.map((id) => ({ id, label: labels[id]! }));
 
 const es = {
-  colecciones: catalogEs.explore.jump.collections,
+  "seleccion-editorial": catalogEs.explore.jump.editorial,
+  "descubre-por-datos": catalogEs.explore.jump.automatic,
   generos: catalogEs.explore.jump.genres,
   novedades: catalogEs.explore.jump.newReleases,
   proximos: catalogEs.explore.jump.upcoming,
@@ -26,7 +27,8 @@ describe("ExploreJumpNav", () => {
     const nav = screen.getByRole("navigation", { name: "En esta página" });
     const links = within(nav).getAllByRole("link");
     expect(links.map((a) => a.textContent)).toEqual([
-      "Colecciones",
+      "Selección editorial",
+      "Descubre por datos",
       "Géneros",
       "Novedades",
       "Próximos",
@@ -43,7 +45,7 @@ describe("ExploreJumpNav", () => {
     renderWithIntl(<ExploreJumpNav label="En esta página" items={items(es, visible)} />);
     expect(screen.queryByRole("link", { name: "Novedades" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Próximos" })).not.toBeInTheDocument();
-    expect(screen.getAllByRole("link")).toHaveLength(6);
+    expect(screen.getAllByRole("link")).toHaveLength(ALL.length - 2);
   });
 
   it("se omite con menos de MIN_SECTIONS_FOR_JUMP_NAV secciones y aparece con exactamente ese mínimo", () => {

@@ -83,3 +83,19 @@ export const COVER_RESOLVE_CONCURRENCY = 4;
 
 /** Ancho, en años, de una "era" de "Para entrar a {género}": un álbum por era. */
 export const ERA_YEARS = 5;
+
+/**
+ * Riles de colecciones de `/explore` (openspec: split-explore-collections, ADR 0036): "Selección editorial"
+ * (curadas) y "Descubre por datos" (generadas), cada uno con su propio tope.
+ */
+export const EDITORIAL_RAIL_LIMIT = 6;
+export const AUTOMATIC_RAIL_LIMIT = 6;
+
+/** Tope de colecciones curadas vigentes en la página `/explore/collections`. */
+export const HUB_EDITORIAL_LIMIT = 48;
+
+/** Tope de colecciones automáticas vigentes en la página `/explore/collections`. */
+export const HUB_AUTOMATIC_LIMIT = 100;
+
+/** Colecciones por página del archivo de `/explore/collections`. */
+export const ARCHIVE_PAGE_SIZE = 24;

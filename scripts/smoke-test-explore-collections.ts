@@ -48,7 +48,7 @@ import {
   userListItem,
   userRole,
 } from "../src/db/schema";
-import { CURATOR_DISPLAY_NAME, CURATOR_USERNAME, FEATURED_RAIL_LIMIT } from "../src/services/discovery/constants";
+import { AUTOMATIC_RAIL_LIMIT, CURATOR_DISPLAY_NAME, CURATOR_USERNAME, FEATURED_RAIL_LIMIT } from "../src/services/discovery/constants";
 import { notGeneratedCollectionCondition } from "../src/services/discovery/collections/conditions";
 import { createCoverResolver, type CoverResolver } from "../src/services/discovery/collections/covers";
 import { generateCollection, previewCollection } from "../src/services/discovery/collections/generate";
@@ -65,7 +65,14 @@ import {
   updateFeaturedSchedule,
 } from "../src/services/discovery/featured";
 import { COLLECTION_TEMPLATES, EVERGREEN, findTemplate, type CollectionTemplate } from "../src/services/discovery/collections/templates";
-import { listFeaturedCollections } from "../src/services/discovery/discovery";
+import {
+  listAutomaticCollections,
+  listCollectionArchive,
+  listCollectionsHub,
+  listEditorialCollections,
+  listFeaturedCollections,
+} from "../src/services/discovery/discovery";
+import { listFeaturedLists } from "../src/services/lists/community";
 import { listEditorialLists } from "../src/services/lists/editorial";
 
 assertSmokeAllowed();
@@ -271,16 +278,18 @@ async function main() {
   check(oldList?.audience === "public", "la lista vencida sigue pública");
 
   console.log("Riel:");
-  const rail = await listFeaturedCollections();
-  const railIds = rail.map((row) => row.id);
-  check(railIds.includes(listId), "la colección vigente aparece en el riel");
+  // El catálogo de scratch ya trae las seis del día 0 generadas: el rail automático real está lleno, así que la
+  // presencia de las sintéticas se comprueba sin tope y el tope se comprueba aparte.
+  const railIds = (await listAutomaticCollections(100)).map((row) => row.id);
+  check(railIds.includes(listId), "la colección vigente aparece en el rail automático");
   check(railIds.includes(novemberRow.listId) && !railIds.includes(octoberRow.listId), "la vencida no aparece");
-  check(rail.length <= FEATURED_RAIL_LIMIT, `el riel respeta el tope de ${FEATURED_RAIL_LIMIT}`);
+  check((await listAutomaticCollections()).length <= AUTOMATIC_RAIL_LIMIT, `el rail respeta el tope de ${AUTOMATIC_RAIL_LIMIT}`);
+  check((await listFeaturedCollections()).length <= FEATURED_RAIL_LIMIT, `el riel mezclado de Inicio respeta el tope de ${FEATURED_RAIL_LIMIT}`);
   await db
     .update(userListFeatured)
     .set({ startsAt: sql`now() + interval '1 day'`, expiresAt: sql`now() + interval '2 days'` })
     .where(eq(userListFeatured.listId, listId));
-  check(!(await listFeaturedCollections()).some((row) => row.id === listId), "una colección programada a futuro no aparece");
+  check(!(await listAutomaticCollections(100)).some((row) => row.id === listId), "una colección programada a futuro no aparece");
   await db.update(userListFeatured).set({ startsAt: sql`now() - interval '1 day'`, expiresAt: null }).where(eq(userListFeatured.listId, listId));
 
   console.log("Consola editorial y feed:");
@@ -431,20 +440,49 @@ async function main() {
       "reprogramar una no destacada da FEATURED_NOT_FOUND",
     );
 
-    // Orden atómico.
-    const orderable = (await listFeaturedAdmin()).filter((row) => row.orderable).map((row) => row.listId);
-    const wanted = [listB, listA, ...orderable.filter((id) => id !== listA && id !== listB)];
-    await reorderFeatured(adminId, wanted);
-    const afterOrder = (await listFeaturedAdmin()).filter((row) => row.orderable).map((row) => row.listId);
+    // Orden atómico, por grupo: la selección editorial y las automáticas se ordenan por separado.
+    const curatedOrderable = (await listFeaturedAdmin()).filter((row) => row.group === "curated" && row.orderable).map((row) => row.listId);
+    const automaticBefore = (await listFeaturedAdmin()).filter((row) => row.group === "automatic" && row.orderable);
+    const wanted = [listB, listA, ...curatedOrderable.filter((id) => id !== listA && id !== listB)];
+    await reorderFeatured(adminId, "curated", wanted);
+    const afterOrder = (await listFeaturedAdmin()).filter((row) => row.group === "curated" && row.orderable).map((row) => row.listId);
     check(afterOrder[0] === listB && afterOrder[1] === listA, "el nuevo orden se refleja (la primera arriba)");
     check(
-      (await listFeaturedCollections()).slice(0, 2).map((c) => c.id).join() === [listB, listA].join(),
-      "y el riel público respeta el nuevo orden",
+      (await listEditorialCollections()).slice(0, 2).map((c) => c.id).join() === [listB, listA].join(),
+      "y el rail editorial respeta el nuevo orden",
+    );
+    const automaticAfter = (await listFeaturedAdmin()).filter((row) => row.group === "automatic" && row.orderable);
+    check(
+      automaticBefore.map((r) => `${r.listId}:${r.weight}:${r.rank}`).join() === automaticAfter.map((r) => `${r.listId}:${r.weight}:${r.rank}`).join(),
+      "reordenar la selección editorial no mueve el orden de las automáticas",
     );
     check((await actions(listB)).includes("feature"), "reordenar registra `feature` en las listas afectadas");
-    await rejectsCode(() => reorderFeatured(adminId, wanted.slice(1)), "FEATURED_ORDER_CONFLICT", "un conjunto distinto del vigente da FEATURED_ORDER_CONFLICT");
-    await rejectsCode(() => reorderFeatured(adminId, [...wanted, wanted[0]!]), "FEATURED_ORDER_CONFLICT", "ids repetidos dan FEATURED_ORDER_CONFLICT");
-    check((await listFeaturedAdmin()).filter((row) => row.orderable)[0]?.listId === listB, "un conflicto no cambia nada");
+    await rejectsCode(() => reorderFeatured(adminId, "curated", wanted.slice(1)), "FEATURED_ORDER_CONFLICT", "un conjunto distinto del vigente da FEATURED_ORDER_CONFLICT");
+    await rejectsCode(() => reorderFeatured(adminId, "curated", [...wanted, wanted[0]!]), "FEATURED_ORDER_CONFLICT", "ids repetidos dan FEATURED_ORDER_CONFLICT");
+    await rejectsCode(
+      () => reorderFeatured(adminId, "automatic", wanted),
+      "FEATURED_ORDER_CONFLICT",
+      "los ids de la selección editorial no sirven para ordenar las automáticas",
+    );
+    check((await listFeaturedAdmin()).filter((row) => row.group === "curated" && row.orderable)[0]?.listId === listB, "un conflicto no cambia nada");
+
+    // Riles y página de colecciones.
+    const editorialIds = (await listEditorialCollections()).map((c) => c.id);
+    const automaticIds = (await listAutomaticCollections()).map((c) => c.id);
+    check(editorialIds.includes(listB) && !automaticIds.includes(listB), "la curada solo está en el rail editorial");
+    check(
+      automaticIds.length > 0 && automaticIds.every((id) => !editorialIds.includes(id)),
+      "los dos riles no comparten ninguna colección",
+    );
+    check(
+      (await listAutomaticCollections()).every((c) => c.source === "template" && c.family !== null) &&
+        (await listEditorialCollections()).every((c) => c.source === "curated" && c.family === null),
+      "las automáticas llevan familia y las curadas no",
+    );
+    const hub = await listCollectionsHub();
+    check(hub.editorial.some((c) => c.id === listB) && hub.automatic.length > 0, "la página de colecciones trae los dos grupos vigentes");
+    const lists = await listFeaturedLists(null);
+    check(lists.lists.every((l) => !automaticIds.includes(l.id)), "`/lists` → Destacadas no muestra colecciones automáticas");
 
     // Rotación: el período nuevo hereda peso y rank del anterior.
     const novemberId = november.status === "generated" ? november.listId : "";
@@ -452,6 +490,25 @@ async function main() {
     const december = await generateCollection(byMonth(() => albumIds.slice(2, 9)), new Date("2026-12-02T00:00:00Z"));
     const decemberId = december.status === "generated" ? december.listId : "";
     check((await rowOf(decemberId))?.weight === weightBefore, "el período nuevo hereda el peso del anterior");
+
+    // Archivo: las automáticas vencidas, con su fecha y su familia.
+    const octoberId = october.status === "generated" ? october.listId : "";
+    const archive = await listCollectionArchive({ family: "discovery" });
+    const archived = archive.collections.find((c) => c.id === octoberId);
+    check(archived !== undefined && !Number.isNaN(Date.parse(archived.endedAt)), "una automática vencida aparece en el archivo con su fecha");
+    check(archive.collections.some((c) => c.id === novemberId), "el período anterior (noviembre) también vence al rotar");
+    check(!archive.collections.some((c) => c.id === decemberId), "la vigente (diciembre) no está en el archivo");
+    check(
+      !(await listCollectionArchive({ family: "awards" })).collections.some((c) => c.id === octoberId),
+      "el filtro por familia excluye las de otra familia",
+    );
+    check(archive.collections.every((c) => c.endedAt <= new Date().toISOString()), "todo lo archivado ya venció");
+    await db.update(userList).set({ audience: "private" }).where(eq(userList.id, octoberId));
+    check(
+      !(await listCollectionArchive({ family: "discovery" })).collections.some((c) => c.id === octoberId),
+      "una lista que dejó de ser pública sale del archivo",
+    );
+    await db.update(userList).set({ audience: "public" }).where(eq(userList.id, octoberId));
 
     // Quitar.
     await unfeatureList(adminId, listA);

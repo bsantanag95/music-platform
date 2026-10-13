@@ -10,7 +10,11 @@ import {
 } from "@/lib/api/schemas";
 import type { FeaturedAdminResponse, FeaturedAdminRow } from "@/lib/api/schemas";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { FEATURED_RAIL_LIMIT } from "@/services/discovery/constants";
+import { AUTOMATIC_RAIL_LIMIT, EDITORIAL_RAIL_LIMIT } from "@/services/discovery/constants";
+
+type Group = FeaturedAdminRow["group"];
+const GROUPS: Group[] = ["curated", "automatic"];
+const GROUP_LIMIT: Record<Group, number> = { curated: EDITORIAL_RAIL_LIMIT, automatic: AUTOMATIC_RAIL_LIMIT };
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
@@ -44,9 +48,9 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
   const [addExpiresAt, setAddExpiresAt] = useState("");
 
   const dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" });
-  const orderable = data.featured.filter((row) => row.orderable);
+  const orderableOf = (group: Group) => data.featured.filter((row) => row.group === group && row.orderable);
   const expired = data.featured.filter((row) => !row.orderable);
-  const inRailCount = data.featured.filter((row) => row.status === "in_rail").length;
+  const inRailOf = (group: Group) => data.featured.filter((row) => row.group === group && row.status === "in_rail").length;
 
   const run = async (action: () => Promise<unknown>) => {
     setBusy(true);
@@ -65,8 +69,9 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
     }
   };
 
-  const move = (index: number, delta: -1 | 1) => {
-    const ids = orderable.map((row) => row.listId);
+  // El orden es por grupo: reordenar la selección editorial no mueve las automáticas.
+  const move = (group: Group, index: number, delta: -1 | 1) => {
+    const ids = orderableOf(group).map((row) => row.listId);
     const target = index + delta;
     if (target < 0 || target >= ids.length) return;
     [ids[index], ids[target]] = [ids[target]!, ids[index]!];
@@ -74,7 +79,7 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
       apiFetch("/api/admin/editorial/featured/order", EditorialListMutationResponseSchema, {
         method: "PUT",
         headers: JSON_HEADERS,
-        body: JSON.stringify({ listIds: ids }),
+        body: JSON.stringify({ group, listIds: ids }),
       }),
     );
   };
@@ -119,7 +124,7 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
     void run(() => apiFetch(`/api/admin/editorial/featured/${listId}`, NoContentResponseSchema, { method: "DELETE" }));
   };
 
-  const renderRow = (row: FeaturedAdminRow, index: number | null) => (
+  const renderRow = (row: FeaturedAdminRow, index: number | null, size = 0) => (
     <li key={row.listId} className="rounded border border-ink-border bg-ink-surface p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
@@ -149,7 +154,7 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
             type="button"
             aria-label={t("featured.moveUp", { title: row.title })}
             disabled={busy || index === 0}
-            onClick={() => move(index, -1)}
+            onClick={() => move(row.group, index, -1)}
             className="rounded border border-ink-border px-3 py-2 font-data text-xs text-paper-muted hover:text-paper disabled:opacity-50"
           >
             ↑
@@ -157,8 +162,8 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
           <button
             type="button"
             aria-label={t("featured.moveDown", { title: row.title })}
-            disabled={busy || index === orderable.length - 1}
-            onClick={() => move(index, 1)}
+            disabled={busy || index === size - 1}
+            onClick={() => move(row.group, index, 1)}
             className="rounded border border-ink-border px-3 py-2 font-data text-xs text-paper-muted hover:text-paper disabled:opacity-50"
           >
             ↓
@@ -227,12 +232,7 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
         <h2 id="featured-heading" className="font-display text-xl text-paper">
           {t("featured.title")}
         </h2>
-        <p className="mt-1 font-body text-sm text-paper-muted">
-          {t("featured.description", { limit: FEATURED_RAIL_LIMIT })}
-        </p>
-        <p className="mt-1 font-data text-xs text-amber">
-          {t("featured.railSummary", { count: inRailCount, limit: FEATURED_RAIL_LIMIT })}
-        </p>
+        <p className="mt-1 font-body text-sm text-paper-muted">{t("featured.description")}</p>
         {!canPublish ? <p className="mt-2 font-data text-xs text-paper-muted">{t("featured.readOnly")}</p> : null}
       </header>
 
@@ -297,13 +297,29 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
         </form>
       ) : null}
 
-      {orderable.length === 0 ? (
-        <p className="rounded border border-ink-border bg-ink-surface p-8 text-center font-body text-paper-muted">
-          {t("featured.empty")}
-        </p>
-      ) : (
-        <ol className="flex flex-col gap-3">{orderable.map((row, index) => renderRow(row, index))}</ol>
-      )}
+      {GROUPS.map((group) => {
+        const rows = orderableOf(group);
+        return (
+          <section key={group} aria-labelledby={`featured-group-${group}`} className="flex flex-col gap-3">
+            <div>
+              <h3 id={`featured-group-${group}`} className="font-display text-lg text-paper">
+                {t(`featured.group.${group}`)}
+              </h3>
+              <p className="mt-0.5 font-body text-xs text-paper-muted">{t(`featured.groupHint.${group}`)}</p>
+              <p className="mt-0.5 font-data text-xs text-amber">
+                {t("featured.railSummary", { count: inRailOf(group), limit: GROUP_LIMIT[group] })}
+              </p>
+            </div>
+            {rows.length === 0 ? (
+              <p className="rounded border border-ink-border bg-ink-surface p-6 text-center font-body text-sm text-paper-muted">
+                {t(`featured.empty.${group}`)}
+              </p>
+            ) : (
+              <ol className="flex flex-col gap-3">{rows.map((row, index) => renderRow(row, index, rows.length))}</ol>
+            )}
+          </section>
+        );
+      })}
 
       {expired.length > 0 ? (
         <details className="rounded border border-ink-border bg-ink-surface p-4">

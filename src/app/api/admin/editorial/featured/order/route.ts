@@ -10,6 +10,6 @@ export const PUT = withErrorHandling(async (request: NextRequest) => {
   const parsed = ReorderFeaturedRequestSchema.safeParse(body);
   if (!parsed.success) throw new ApiError("VALIDATION_ERROR", 400, "El orden de las destacadas no es válido");
   const actor = await requirePermission("editorial.publish");
-  await reorderFeatured(actor.id, parsed.data.listIds);
+  await reorderFeatured(actor.id, parsed.data.group, parsed.data.listIds);
   return NextResponse.json({ ok: true });
 });

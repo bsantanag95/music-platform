@@ -153,7 +153,7 @@ describe("CollectionRail", () => {
       <CollectionRail
         heading="Colecciones destacadas"
         collections={[
-          { id: "c1", title: "Esenciales", description: "Para empezar", itemCount: 12, coverThumbs: [] },
+          { id: "c1", title: "Esenciales", description: "Para empezar", itemCount: 12, coverThumbs: [], source: "curated", family: null },
         ]}
         curatorUsername="exploracion"
         itemsLabel={(count) => `${count} álbumes`}
@@ -170,5 +170,50 @@ describe("CollectionRail", () => {
       <CollectionRail heading="Colecciones" collections={[]} curatorUsername="exploracion" itemsLabel={String} />,
     );
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it("usa el ancla y el enlace «Ver todas» que recibe", () => {
+    const { container } = renderWithIntl(
+      <CollectionRail
+        id="descubre-por-datos"
+        heading="Descubre por datos"
+        collections={[{ id: "c1", title: "Cumplen años", description: null, itemCount: 12, coverThumbs: [], source: "template", family: "ephemeris" }]}
+        curatorUsername="exploracion"
+        itemsLabel={String}
+        seeAll={{ href: "/explore/collections", label: "Ver todas" }}
+      />,
+    );
+    expect(container.querySelector("section")).toHaveAttribute("id", "descubre-por-datos");
+    expect(screen.getByRole("link", { name: /Ver todas/ })).toHaveAttribute("href", "/es/explore/collections");
+  });
+
+  it("muestra la familia de una colección automática y no la de una curada", () => {
+    renderWithIntl(
+      <CollectionRail
+        heading="Colecciones"
+        collections={[
+          { id: "a", title: "Cumplen años en octubre", description: null, itemCount: 12, coverThumbs: [], source: "template", family: "ephemeris" },
+          { id: "b", title: "Mejores debuts", description: null, itemCount: 20, coverThumbs: [], source: "curated", family: null },
+        ]}
+        curatorUsername="exploracion"
+        itemsLabel={String}
+        familyLabel={(family) => `Familia ${family}`}
+      />,
+    );
+    expect(within(screen.getByRole("link", { name: /Cumplen años/ })).getByText("Familia ephemeris")).toBeInTheDocument();
+    expect(within(screen.getByRole("link", { name: /Mejores debuts/ })).queryByText(/Familia/)).toBeNull();
+  });
+
+  it("muestra la nota extra bajo el conteo (el archivo indica hasta cuándo estuvo vigente)", () => {
+    renderWithIntl(
+      <CollectionRail
+        heading="Anteriores"
+        collections={[{ id: "a", title: "Cumplen años en septiembre", description: null, itemCount: 12, coverThumbs: [], source: "template", family: "ephemeris" }]}
+        curatorUsername="exploracion"
+        itemsLabel={String}
+        noteFor={() => "Hasta el 1 oct 2026"}
+      />,
+    );
+    expect(screen.getByText("Hasta el 1 oct 2026")).toBeInTheDocument();
   });
 });
