@@ -20,7 +20,7 @@ colección automática y SHALL poder filtrarse en la página de colecciones.
 
 ### Requirement: Página de colecciones
 
-El sistema SHALL exponer una vista pública en `/{locale}/explore/colecciones`, accesible con y sin sesión y sujeta al
+El sistema SHALL exponer una vista pública en `/{locale}/explore/collections`, accesible con y sin sesión y sujeta al
 mismo interruptor de Explorar que `/explore`, con tres bloques: la **selección editorial** vigente, las
 **colecciones automáticas** vigentes agrupadas por familia y el **archivo** de las automáticas vencidas. SHALL
 omitir los bloques sin contenido. Cada tarjeta SHALL enlazar al detalle público de su lista. La página SHALL NOT
@@ -28,7 +28,7 @@ personalizar su contenido por la persona que la visita.
 
 #### Scenario: Visita pública
 
-- **WHEN** una persona abre `/es/explore/colecciones`
+- **WHEN** una persona abre `/es/explore/collections`
 - **THEN** ve la selección editorial vigente, las colecciones automáticas por familia y el archivo, en español
 
 #### Scenario: Bloque sin contenido

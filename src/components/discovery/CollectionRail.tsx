@@ -1,18 +1,32 @@
+import type { ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import { listHref } from "@/lib/catalog-links";
 import type { FeaturedCollection } from "@/services/discovery/discovery";
+import type { CollectionFamily } from "@/services/discovery/collections/families";
 import { SectionHeader } from "./SectionHeader";
 
-interface CollectionRailProps {
+interface CollectionRailProps<T extends FeaturedCollection> {
+  /** Ancla de la sección (la navegación rápida de `/explore` enlaza a ella). */
+  id?: string;
   heading: string;
   /** Una línea bajo el título (qué son estas colecciones). */
   description?: string;
-  collections: FeaturedCollection[];
+  collections: T[];
   /** `username` de la cuenta curadora, para armar el enlace a la lista pública. */
   curatorUsername: string;
   itemsLabel: (count: number) => string;
+  /** Enlace "Ver todas" a la página de colecciones. */
+  seeAll?: { href: string; label: string };
+  /** Etiqueta de familia de una colección automática (se muestra sobre el título). */
+  familyLabel?: (family: CollectionFamily) => string;
+  /** Línea extra bajo el conteo (en el archivo: "Hasta 11 oct 2026"). */
+  noteFor?: (collection: T) => string | undefined;
+  /** Controles bajo el encabezado (en el archivo: el filtro por familia). */
+  toolbar?: ReactNode;
+  /** Con colecciones vacías, en vez de omitir la sección muestra este mensaje (el archivo vacío). */
+  emptyMessage?: string;
 }
 
 /** Hasta cuántas fundas muestra la pila (el servicio trae hasta 6). */
@@ -48,20 +62,32 @@ function SleeveStack({ covers }: { covers: string[] }) {
  * con la pila de fundas, el título, la descripción (si la tiene) y el número
  * de álbumes. No renderiza nada si no hay colecciones.
  */
-export function CollectionRail({
+export function CollectionRail<T extends FeaturedCollection>({
+  id = "colecciones",
   heading,
   description,
   collections,
   curatorUsername,
   itemsLabel,
-}: CollectionRailProps) {
-  if (collections.length === 0) return null;
+  seeAll,
+  familyLabel,
+  noteFor,
+  toolbar,
+  emptyMessage,
+}: CollectionRailProps<T>) {
+  if (collections.length === 0 && !emptyMessage) return null;
   // Con más de dos colecciones, tres columnas desde `lg` y la pila arriba del texto: en dos columnas con la pila al
   // lado, seis colecciones ocupaban tres filas altas y los títulos largos se cortaban ("Ganadores del Grammy 20…").
   const compact = collections.length > 2;
   return (
-    <section id="colecciones" className="flex w-full scroll-mt-24 flex-col gap-3">
-      <SectionHeader heading={heading} description={description} />
+    <section id={id} className="flex w-full scroll-mt-24 flex-col gap-3">
+      <SectionHeader heading={heading} description={description} seeAll={seeAll} />
+      {toolbar}
+      {collections.length === 0 ? (
+        <p className="rounded-lg border border-ink-border bg-ink-surface p-6 font-body text-sm text-paper-muted">
+          {emptyMessage}
+        </p>
+      ) : null}
       <ul className={`grid gap-4 sm:grid-cols-2 ${compact ? "lg:grid-cols-3" : ""}`}>
         {collections.map((collection) => (
           <li key={collection.id}>
@@ -73,8 +99,13 @@ export function CollectionRail({
             >
               <SleeveStack covers={collection.coverThumbs} />
               <span className="flex min-w-0 flex-1 flex-col gap-1">
-                {/* Sin rótulo "Selección editorial" por tarjeta: el encabezado de la sección ya lo dice, y repetido
-                    en cada una era ruido. Título en hasta dos líneas en lugar de recortarlo. */}
+                {/* Sin rótulo "Selección editorial" por tarjeta: el encabezado de la sección ya lo dice. Las
+                    automáticas sí llevan su familia (Efemérides, Premios…), que es lo que las distingue entre sí. */}
+                {collection.family && familyLabel ? (
+                  <span className="font-data text-[0.7rem] uppercase tracking-wide text-amber">
+                    {familyLabel(collection.family)}
+                  </span>
+                ) : null}
                 <span className="line-clamp-2 font-display text-lg text-paper transition-colors group-hover:text-amber">
                   {collection.title}
                 </span>
@@ -82,6 +113,9 @@ export function CollectionRail({
                   <span className="line-clamp-2 font-body text-sm text-paper-muted">{collection.description}</span>
                 ) : null}
                 <span className="font-data text-xs text-paper-muted">{itemsLabel(collection.itemCount)}</span>
+                {noteFor?.(collection) ? (
+                  <span className="font-data text-xs text-paper-muted">{noteFor(collection)}</span>
+                ) : null}
               </span>
               <span
                 aria-hidden="true"

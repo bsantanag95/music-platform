@@ -3,7 +3,6 @@
     "navLabel": "Explore",
     "pageTitle": "Explore albums",
     "heading": "Explore",
-    "featuredHeading": "Featured collections",
     "newReleasesHeading": "New releases",
     "decadesHeading": "Explore by decade",
     "genresHeading": "Explore by genre",
@@ -21,7 +20,6 @@
     "notFoundTitle": "Slice not found",
     "notFoundDescription": "That discovery filter is not valid.",
     "familyResultsHeading": "Albums · {family}",
-    "featuredDescription": "Editorial picks to start listening.",
     "genresDescription": "Pick a genre family to see its albums.",
     "moreFamilies": "{count, plural, one {# more family} other {# more families}}",
     "upcomingHeading": "Upcoming releases",
@@ -55,7 +53,8 @@
     "countdown": "{days, plural, =0 {Today} =1 {Tomorrow} other {In # days}}",
     "jump": {
       "label": "On this page",
-      "collections": "Collections",
+      "editorial": "Editorial selection",
+      "automatic": "Discover by data",
       "genres": "Genres",
       "newReleases": "New releases",
       "upcoming": "Upcoming",
@@ -63,6 +62,34 @@
       "topRated": "Top rated",
       "mostReviewed": "Most reviewed",
       "decades": "Decades"
+    },
+    "editorialHeading": "Editorial selection",
+    "editorialDescription": "Collections picked by the team, with taste and context.",
+    "automaticHeading": "Discover by data",
+    "automaticDescription": "Anniversaries, awards and curiosities generated automatically from the catalog.",
+    "seeAllCollections": "See all",
+    "collectionFamilies": {
+      "ephemeris": "Anniversaries",
+      "awards": "Awards",
+      "releases": "Releases",
+      "discovery": "Discovery",
+      "community": "Community"
+    },
+    "collectionsHub": {
+      "pageTitle": "Collections",
+      "heading": "Collections",
+      "description": "The team's selection and the collections that generate themselves, current and past.",
+      "editorialHeading": "Editorial selection",
+      "editorialDescription": "Collections picked by the team, with taste and context.",
+      "automaticHeading": "Automatic collections",
+      "automaticDescription": "Generated from the catalog and renewed every week.",
+      "archiveHeading": "Previous",
+      "archiveDescription": "Automatic collections that already left the rail. They remain available.",
+      "familyFilterLabel": "Filter by type",
+      "allFamilies": "All",
+      "endedOn": "Until {date}",
+      "archiveEmpty": "There are no previous collections yet.",
+      "archiveEmptyFamily": "There are no previous collections of this type."
     }
   },
   "search": {

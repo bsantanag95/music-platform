@@ -18,7 +18,7 @@ explorarlas todas, incluido el archivo de las que ya vencieron.
 - **Cada rail con su propio tope** (6) y su propio orden; ambos con "Ver todas →" a la página dedicada.
 - **Familia de colección** para cada plantilla (`ephemeris`, `awards`, `releases`, `discovery`, `community`),
   definida en el registro de plantillas: etiqueta en la tarjeta y filtro en la página dedicada. Sin migración.
-- **Página propia `/explore/colecciones`** (no se fusiona con Listas): selección editorial vigente, colecciones
+- **Página propia `/explore/collections`** (no se fusiona con Listas): selección editorial vigente, colecciones
   automáticas vigentes agrupadas por familia y **archivo** de las vencidas (ya se conservan, públicas y por URL),
   paginado y filtrable por familia.
 - **Consola `/admin`:** el panel "Destacadas en Explorar" se divide en dos grupos con orden independiente;
@@ -31,7 +31,7 @@ explorarlas todas, incluido el archivo de las que ya vencieron.
 ## Capabilities
 
 ### New Capabilities
-- `explore-collections-hub`: la página `/explore/colecciones` (vigentes por familia, selección editorial,
+- `explore-collections-hub`: la página `/explore/collections` (vigentes por familia, selección editorial,
   archivo y filtro) y las familias de colección.
 
 ### Modified Capabilities
@@ -58,7 +58,7 @@ explorarlas todas, incluido el archivo de las que ya vencieron.
 
 - Código: `src/services/discovery/discovery.ts` (lecturas por grupo y archivo), `collections/families.ts` (nuevo),
   `featured.ts` (orden por grupo), `src/services/lists/community.ts`, `explore/page.tsx`, nueva
-  `explore/colecciones/page.tsx`, `CollectionRail` / nueva grilla, `ExploreJumpNav`, `FeaturedPanel`, rutas
+  `explore/collections/page.tsx`, `CollectionRail` / nueva grilla, `ExploreJumpNav`, `FeaturedPanel`, rutas
   `PUT /api/admin/editorial/featured/order`, `messages/{es,en}`.
 - Contrato: `PUT /featured/order` exige `group`; `GET /featured` expone `group`. Se documenta en `contracts.md`.
 - Docs: `explore.md`, ADR 0036, `AGENTS.md` (smoke test ampliado).

@@ -120,8 +120,11 @@
     },
     "featured": {
       "title": "Destacadas en Explorar",
-      "description": "Colecciones del riel de Explorar. Las de arriba se muestran primero y el riel muestra hasta {limit}.",
-      "empty": "No hay colecciones destacadas.",
+      "description": "Cada rail de Explorar tiene su propio orden y su propio tope. Las de arriba se muestran primero.",
+      "empty": {
+        "curated": "Todavía no hay selección editorial. Destaca una lista oficial publicada.",
+        "automatic": "No hay colecciones automáticas vigentes."
+      },
       "railSummary": "{count} de {limit} tarjetas en el riel ahora",
       "readOnly": "Puedes ver este panel, pero destacar, reordenar y quitar requiere permiso de publicación.",
       "sourceCurated": "Curada",
@@ -151,7 +154,15 @@
       "addEmpty": "No hay listas oficiales por destacar. Publica una en la pestaña Listas.",
       "add": "Destacar",
       "expiredHeading": "Vencidas",
-      "refresh": "Actualizar"
+      "refresh": "Actualizar",
+      "group": {
+        "curated": "Selección editorial",
+        "automatic": "Descubre por datos"
+      },
+      "groupHint": {
+        "curated": "Listas oficiales que destacas a mano. Reordenar aquí no mueve las automáticas.",
+        "automatic": "Las crean las plantillas. Se pueden reordenar, quitar o pausar su plantilla."
+      }
     },
     "templates": {
       "title": "Generadas automáticamente",

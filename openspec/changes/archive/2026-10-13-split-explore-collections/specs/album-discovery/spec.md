@@ -70,7 +70,7 @@ presentarse con su título, su conteo de ítems y sus carátulas disponibles, y 
 esa lista; las automáticas SHALL mostrar además la etiqueta de su familia. Cada rail SHALL ofrecer un enlace "Ver todas"
 a la página de colecciones.
 
-#### Scenario: Los dos riles por separado
+#### Scenario: Con colecciones sembradas
 
 - **WHEN** existen filas curadas y filas generadas vigentes
 - **THEN** `/explore` muestra "Selección editorial" solo con las curadas y "Descubre por datos" solo con las generadas,
@@ -81,7 +81,7 @@ a la página de colecciones.
 - **WHEN** una fila de `user_list_featured` tiene `expires_at` en el pasado
 - **THEN** su colección no aparece en ninguno de los riles
 
-#### Scenario: Tope de tarjetas por rail
+#### Scenario: Tope de tarjetas
 
 - **WHEN** hay más de 6 colecciones vigentes en un grupo
 - **THEN** ese rail muestra solo las 6 primeras según el orden definido y el otro rail no se ve afectado

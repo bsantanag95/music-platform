@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { FeaturedPanel } from "./FeaturedPanel";
 import { apiFetch } from "@/lib/api/client";
@@ -23,6 +23,7 @@ const row = (listId: string, title: string, over: Record<string, unknown> = {}) 
   listId,
   title,
   source: "curated" as const,
+  group: "curated" as const,
   templateKey: null,
   periodKey: null,
   rank: 1,
@@ -48,6 +49,8 @@ describe("FeaturedPanel", () => {
     expect(screen.getByText("En el riel")).toBeInTheDocument();
     expect(screen.getByText("Fuera del riel: lista retirada")).toBeInTheDocument();
     expect(screen.getByText("1 de 6 tarjetas en el riel ahora")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Selección editorial" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Descubre por datos" })).toBeInTheDocument();
   });
 
   it("sin permiso de publicar es de solo lectura", () => {
@@ -68,7 +71,7 @@ describe("FeaturedPanel", () => {
     await waitFor(() => expect(apiFetch).toHaveBeenCalledTimes(2));
     const [url, , init] = vi.mocked(apiFetch).mock.calls[0]!;
     expect(url).toBe("/api/admin/editorial/featured/order");
-    expect(init).toMatchObject({ method: "PUT", body: JSON.stringify({ listIds: [B, A] }) });
+    expect(init).toMatchObject({ method: "PUT", body: JSON.stringify({ group: "curated", listIds: [B, A] }) });
   });
 
   it("no deja subir la primera ni bajar la última", () => {
@@ -115,5 +118,46 @@ describe("FeaturedPanel", () => {
     expect(screen.getByText(/Vencidas \(1\)/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Subir Vieja" })).toBeNull();
     expect(screen.getByText("No hay listas oficiales por destacar. Publica una en la pestaña Listas.")).toBeInTheDocument();
+  });
+
+  it("separa la selección editorial de las automáticas y cuenta el tope de cada rail por su cuenta", () => {
+    const automatic = (id: string, title: string, over: Record<string, unknown> = {}) =>
+      row(id, title, { source: "template", group: "automatic", templateKey: "anniversaries", periodKey: "2026-10", ...over });
+    renderWithIntl(
+      <FeaturedPanel
+        initial={{ featured: [row(A, "Debuts"), automatic(B, "Cumplen años"), automatic(C, "Grammy", { status: "beyond_limit" })], eligible: [] }}
+        canPublish
+      />,
+    );
+
+    const curated = within(screen.getByRole("region", { name: "Selección editorial" }));
+    const auto = within(screen.getByRole("region", { name: "Descubre por datos" }));
+    expect(curated.getByText("Debuts")).toBeInTheDocument();
+    expect(curated.queryByText("Cumplen años")).toBeNull();
+    expect(auto.getByText("Cumplen años")).toBeInTheDocument();
+    expect(curated.getByText("1 de 6 tarjetas en el riel ahora")).toBeInTheDocument();
+    expect(auto.getByText("1 de 6 tarjetas en el riel ahora")).toBeInTheDocument();
+  });
+
+  it("reordena un grupo enviando solo sus ids y su nombre de grupo", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ ok: true }).mockResolvedValueOnce({ featured: [], eligible: [] });
+    const automatic = (id: string, title: string) =>
+      row(id, title, { source: "template", group: "automatic", templateKey: "anniversaries", periodKey: "2026-10" });
+    renderWithIntl(
+      <FeaturedPanel initial={{ featured: [row(A, "Debuts"), automatic(B, "Primera auto"), automatic(C, "Segunda auto")], eligible: [] }} canPublish />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Bajar Primera auto" }));
+
+    await waitFor(() => expect(apiFetch).toHaveBeenCalledTimes(2));
+    const [url, , init] = vi.mocked(apiFetch).mock.calls[0]!;
+    expect(url).toBe("/api/admin/editorial/featured/order");
+    expect(init).toMatchObject({ method: "PUT", body: JSON.stringify({ group: "automatic", listIds: [C, B] }) });
+  });
+
+  it("un grupo sin filas muestra su mensaje de vacío", () => {
+    renderWithIntl(<FeaturedPanel initial={{ featured: [row(A, "Debuts")], eligible: [] }} canPublish />);
+
+    expect(screen.getByText("No hay colecciones automáticas vigentes.")).toBeInTheDocument();
   });
 });

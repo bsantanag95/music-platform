@@ -31,7 +31,7 @@ recorrerlo todo; que una plantilla nueva solo exija declarar su familia.
    `featuredRailCondition()` filtrada por `source`, orden `weight desc, rank asc, starts_at desc` y tope propio
    (`EDITORIAL_RAIL_LIMIT` = `AUTOMATIC_RAIL_LIMIT` = 6; el valor de `FEATURED_RAIL_LIMIT` se conserva para la Inicio
    anónima, que sigue con `listFeaturedCollections()` mezclado). `FeaturedCollection` gana `family` y `source`.
-4. **Página `/explore/colecciones`** (Server Component, bajo el mismo `isExploreEnabled`):
+4. **Página `/explore/collections`** (Server Component, bajo el mismo `isExploreEnabled`):
    - "Selección editorial": todas las curadas vigentes (sin tope de 6, pero acotadas a 48).
    - "Colecciones automáticas": las vigentes agrupadas por familia, cada grupo con su etiqueta.
    - "Anteriores" (archivo): filas `template` vencidas (`expires_at <= now()`) de listas públicas y visibles, de la más

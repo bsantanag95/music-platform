@@ -54,6 +54,8 @@ export async function listFeaturedLists(readerId: string | null) {
           eq(userList.audience, "public"),
           eq(userList.moderationStatus, "visible"),
           eq(userList.kind, "standard"),
+          // Las colecciones generadas por plantilla son de Explorar, no de las listas (split-explore-collections).
+          eq(userListFeatured.source, "curated"),
           featuredActiveCondition(),
         ),
       )

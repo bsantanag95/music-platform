@@ -45,4 +45,4 @@ NOT paginar.
 #### Scenario: Colecciones automáticas fuera
 
 - **WHEN** existe una colección generada por plantilla con fila vigente en `user_list_featured`
-- **THEN** no aparece en la sección "Destacadas" de `/lists` (sí en `/explore` y en `/explore/colecciones`)
+- **THEN** no aparece en la sección "Destacadas" de `/lists` (sí en `/explore` y en `/explore/collections`)

@@ -120,8 +120,11 @@
     },
     "featured": {
       "title": "Featured in Explore",
-      "description": "Collections in the Explore rail. The ones on top show first and the rail shows up to {limit}.",
-      "empty": "There are no featured collections.",
+      "description": "Each Explore rail has its own order and its own limit. The ones on top show first.",
+      "empty": {
+        "curated": "There is no editorial selection yet. Feature a published official list.",
+        "automatic": "There are no current automatic collections."
+      },
       "railSummary": "{count} of {limit} cards in the rail now",
       "readOnly": "You can view this panel, but featuring, reordering and removing needs publishing permission.",
       "sourceCurated": "Curated",
@@ -151,7 +154,15 @@
       "addEmpty": "There are no official lists to feature. Publish one in the Lists tab.",
       "add": "Feature",
       "expiredHeading": "Expired",
-      "refresh": "Refresh"
+      "refresh": "Refresh",
+      "group": {
+        "curated": "Editorial selection",
+        "automatic": "Discover by data"
+      },
+      "groupHint": {
+        "curated": "Official lists you feature by hand. Reordering here does not move the automatic ones.",
+        "automatic": "Created by the templates. You can reorder them, remove them or pause their template."
+      }
     },
     "templates": {
       "title": "Auto-generated",
