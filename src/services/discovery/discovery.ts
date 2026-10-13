@@ -16,13 +16,25 @@ import {
 import { ApiError } from "@/lib/api/errors";
 import { ReleaseGroupCategorySchema, type ReleaseGroup, type ReleaseGroupCategory } from "@/lib/api/schemas";
 import { isCoverResolved } from "@/services/catalog/cover-resolution";
+import {
+  COLLECTION_FAMILIES,
+  FALLBACK_FAMILY,
+  familyOf,
+  templateKeysOf,
+  type CollectionFamily,
+} from "./collections/families";
 import { escapeLike } from "@/services/catalog/search/normalize";
 import { GENRE_FAMILIES, type FamilyKey, type FamilyTier } from "@/services/genres/families";
 import { albumInFamily, albumInGenreTree, findStyleGenreBySlug, parseFamilyKey } from "@/services/genres/read";
 import { enrichLists } from "@/services/lists/lists";
 import {
+  ARCHIVE_PAGE_SIZE,
+  AUTOMATIC_RAIL_LIMIT,
+  EDITORIAL_RAIL_LIMIT,
   FEATURED_RAIL_LIMIT,
   FILTERED_PAGE_SIZE,
+  HUB_AUTOMATIC_LIMIT,
+  HUB_EDITORIAL_LIMIT,
   MIN_ALBUMS_FOR_SECTION,
   MIN_RATINGS_PER_ALBUM,
   MIN_REVIEWS_PER_ALBUM,
@@ -42,6 +54,27 @@ export interface FeaturedCollection {
   description: string | null;
   itemCount: number;
   coverThumbs: string[];
+  /** Origen de la fila destacada: curada a mano o generada por plantilla. */
+  source: "curated" | "template";
+  /** Familia de una colección generada; `null` en las curadas (son "editorial"). */
+  family: CollectionFamily | null;
+}
+
+/** Colección automática vencida: lleva la fecha en que salió del riel. */
+export interface ArchivedCollection extends FeaturedCollection {
+  endedAt: string;
+}
+
+export interface CollectionArchivePage {
+  collections: ArchivedCollection[];
+  page: number;
+  pageSize: number;
+  hasNext: boolean;
+}
+
+export interface CollectionsHub {
+  editorial: FeaturedCollection[];
+  automatic: FeaturedCollection[];
 }
 
 export interface DecadeBucket {
@@ -63,7 +96,8 @@ export interface AlbumPage {
 }
 
 export interface ExplorePage {
-  featured: FeaturedCollection[];
+  editorial: FeaturedCollection[];
+  automatic: FeaturedCollection[];
   newReleases: ReleaseGroup[];
   upcoming: ReleaseGroup[];
   decades: DecadeBucket[];
@@ -153,19 +187,24 @@ export function featuredRailCondition(): SQL {
   ) as SQL;
 }
 
-/**
- * Colecciones editoriales: listas públicas con fila vigente en `user_list_featured`, por `weight`
- * desc y `rank` asc, con tope `FEATURED_RAIL_LIMIT` (openspec: automate-explore-collections).
- */
-export async function listFeaturedCollections(): Promise<FeaturedCollection[]> {
-  const rows = await db
-    .select({ id: userList.id, title: userList.title, description: userList.description, rank: userListFeatured.rank })
-    .from(userListFeatured)
-    .innerJoin(userList, eq(userList.id, userListFeatured.listId))
-    .where(featuredRailCondition())
-    .orderBy(desc(userListFeatured.weight), asc(userListFeatured.rank), desc(userListFeatured.startsAt))
-    .limit(FEATURED_RAIL_LIMIT);
+interface FeaturedRow {
+  id: string;
+  title: string;
+  description: string | null;
+  source: "curated" | "template";
+  templateKey: string | null;
+}
 
+const featuredRowColumns = {
+  id: userList.id,
+  title: userList.title,
+  description: userList.description,
+  source: userListFeatured.source,
+  templateKey: userListFeatured.templateKey,
+};
+
+/** Añade conteo de ítems, carátulas y familia a las filas destacadas. */
+async function enrichFeatured(rows: FeaturedRow[]): Promise<FeaturedCollection[]> {
   const enrichment = await enrichLists(
     rows.map((row) => row.id),
     FEATURED_COVER_THUMBS,
@@ -178,8 +217,111 @@ export async function listFeaturedCollections(): Promise<FeaturedCollection[]> {
       description: row.description,
       itemCount: enriched?.itemCount ?? 0,
       coverThumbs: enriched?.coverThumbs ?? [],
+      source: row.source,
+      family: row.source === "curated" ? null : familyOf(row.templateKey),
     };
   });
+}
+
+const featuredOrder = () => [desc(userListFeatured.weight), asc(userListFeatured.rank), desc(userListFeatured.startsAt)];
+
+/**
+ * Colecciones destacadas mezcladas (curadas y generadas): listas públicas con fila vigente en
+ * `user_list_featured`, por `weight` desc y `rank` asc, con tope `FEATURED_RAIL_LIMIT`. La usa la Inicio
+ * anónima; `/explore` separa los dos grupos (`listEditorialCollections` / `listAutomaticCollections`).
+ */
+export async function listFeaturedCollections(): Promise<FeaturedCollection[]> {
+  const rows = await db
+    .select(featuredRowColumns)
+    .from(userListFeatured)
+    .innerJoin(userList, eq(userList.id, userListFeatured.listId))
+    .where(featuredRailCondition())
+    .orderBy(...featuredOrder())
+    .limit(FEATURED_RAIL_LIMIT);
+  return enrichFeatured(rows);
+}
+
+/** Grupo de un rail de `/explore` y el origen de fila (`source`) que lo alimenta. */
+export type CollectionGroup = "curated" | "automatic";
+export const GROUP_SOURCE: Record<CollectionGroup, "curated" | "template"> = {
+  curated: "curated",
+  automatic: "template",
+};
+
+async function listGroup(group: CollectionGroup, limit: number): Promise<FeaturedCollection[]> {
+  const rows = await db
+    .select(featuredRowColumns)
+    .from(userListFeatured)
+    .innerJoin(userList, eq(userList.id, userListFeatured.listId))
+    .where(and(featuredRailCondition(), eq(userListFeatured.source, GROUP_SOURCE[group])))
+    .orderBy(...featuredOrder())
+    .limit(limit);
+  return enrichFeatured(rows);
+}
+
+/** Rail "Selección editorial": colecciones curadas vigentes, con tope propio. */
+export function listEditorialCollections(limit = EDITORIAL_RAIL_LIMIT): Promise<FeaturedCollection[]> {
+  return listGroup("curated", limit);
+}
+
+/** Rail "Descubre por datos": colecciones generadas vigentes, con tope propio. */
+export function listAutomaticCollections(limit = AUTOMATIC_RAIL_LIMIT): Promise<FeaturedCollection[]> {
+  return listGroup("automatic", limit);
+}
+
+/** Todo lo vigente de `/explore/collections` (sin el tope de 6 de los riles). */
+export async function listCollectionsHub(): Promise<CollectionsHub> {
+  const [editorial, automatic] = await Promise.all([
+    listGroup("curated", HUB_EDITORIAL_LIMIT),
+    listGroup("automatic", HUB_AUTOMATIC_LIMIT),
+  ]);
+  return { editorial, automatic };
+}
+
+/** Condición de familia sobre `template_key`; `discovery` recoge también las claves que ya no están en el registro. */
+function familyCondition(family: CollectionFamily): SQL {
+  if (family !== FALLBACK_FAMILY) return inArray(userListFeatured.templateKey, templateKeysOf(family));
+  const others = COLLECTION_FAMILIES.filter((other) => other !== family).flatMap((other) => templateKeysOf(other));
+  return sql`(${userListFeatured.templateKey} is null or ${userListFeatured.templateKey} not in ${others})`;
+}
+
+/**
+ * Archivo de colecciones automáticas vencidas (`expires_at` en el pasado) cuya lista sigue pública y visible:
+ * la más reciente primero. Sigue enlazando a su lista, que conserva los álbumes del último período.
+ */
+export async function listCollectionArchive(
+  options: { family?: CollectionFamily; page?: number } = {},
+): Promise<CollectionArchivePage> {
+  const page = Math.max(1, Math.floor(options.page ?? 1));
+  const rows = await db
+    .select({ ...featuredRowColumns, endedAt: userListFeatured.expiresAt })
+    .from(userListFeatured)
+    .innerJoin(userList, eq(userList.id, userListFeatured.listId))
+    .where(
+      and(
+        eq(userListFeatured.source, "template"),
+        eq(userList.audience, "public"),
+        eq(userList.kind, "standard"),
+        eq(userList.moderationStatus, "visible"),
+        sql`${userListFeatured.expiresAt} <= now()`,
+        options.family ? familyCondition(options.family) : undefined,
+      ),
+    )
+    .orderBy(desc(userListFeatured.expiresAt), asc(userList.id))
+    .limit(ARCHIVE_PAGE_SIZE + 1)
+    .offset((page - 1) * ARCHIVE_PAGE_SIZE);
+
+  const visible = rows.slice(0, ARCHIVE_PAGE_SIZE);
+  const enriched = await enrichFeatured(visible);
+  return {
+    collections: enriched.map((collection, index) => ({
+      ...collection,
+      endedAt: visible[index]!.endedAt!.toISOString(),
+    })),
+    page,
+    pageSize: ARCHIVE_PAGE_SIZE,
+    hasNext: rows.length > ARCHIVE_PAGE_SIZE,
+  };
 }
 
 /**
@@ -403,8 +545,9 @@ export async function albumArtistNames(ids: string[]): Promise<Record<string, st
 
 /** Composición de la portada de `/explore` en una sola llamada. */
 export async function getExplorePage(): Promise<ExplorePage> {
-  const [featured, newReleases, upcoming, decades, families, topRated, mostReviewed] = await Promise.all([
-    listFeaturedCollections(),
+  const [editorial, automatic, newReleases, upcoming, decades, families, topRated, mostReviewed] = await Promise.all([
+    listEditorialCollections(),
+    listAutomaticCollections(),
     listNewReleases(),
     listUpcomingReleases(),
     listDecades(),
@@ -412,7 +555,7 @@ export async function getExplorePage(): Promise<ExplorePage> {
     listTopRated(),
     listMostReviewed(),
   ]);
-  return { featured, newReleases, upcoming, decades, families, topRated, mostReviewed };
+  return { editorial, automatic, newReleases, upcoming, decades, families, topRated, mostReviewed };
 }
 
 // ---------------------------------------------------------------------------

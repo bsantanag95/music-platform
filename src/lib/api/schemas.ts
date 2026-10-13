@@ -554,6 +554,7 @@ export const FeaturedAdminRowSchema = z.object({
   listId: z.uuid(),
   title: z.string(),
   source: z.enum(["curated", "template"]),
+  group: z.enum(["curated", "automatic"]),
   templateKey: z.string().nullable(),
   periodKey: z.string().nullable(),
   rank: z.number().int(),
@@ -592,7 +593,13 @@ export const UpdateFeaturedScheduleRequestSchema = z
   .refine((changes) => Object.keys(changes).length > 0, { message: "No hay campos para actualizar" });
 export type UpdateFeaturedScheduleRequest = z.infer<typeof UpdateFeaturedScheduleRequestSchema>;
 
-export const ReorderFeaturedRequestSchema = z.object({ listIds: z.array(z.uuid()).min(1).max(200) });
+export const FeaturedGroupSchema = z.enum(["curated", "automatic"]);
+export type FeaturedGroup = z.infer<typeof FeaturedGroupSchema>;
+
+export const ReorderFeaturedRequestSchema = z.object({
+  group: FeaturedGroupSchema,
+  listIds: z.array(z.uuid()).min(1).max(200),
+});
 export type ReorderFeaturedRequest = z.infer<typeof ReorderFeaturedRequestSchema>;
 
 export const TemplateAdminRowSchema = z.object({

@@ -17,8 +17,8 @@ import {
 import { ApiError } from "@/lib/api/errors";
 import { requirePermissionForUser } from "@/services/auth/authorization";
 import { recordEditorialAction } from "@/services/lists/editorial";
-import { COLLECTION_REFRESH_DAYS, CURATOR_USERNAME, FEATURED_RAIL_LIMIT } from "./constants";
-import { featuredRailCondition } from "./discovery";
+import { AUTOMATIC_RAIL_LIMIT, COLLECTION_REFRESH_DAYS, CURATOR_USERNAME, EDITORIAL_RAIL_LIMIT } from "./constants";
+import { GROUP_SOURCE, featuredRailCondition, type CollectionGroup } from "./discovery";
 import { syncTemplate } from "./collections/sync";
 import { COLLECTION_TEMPLATES, findTemplate } from "./collections/templates";
 
@@ -38,6 +38,8 @@ export interface FeaturedAdminRow {
   listId: string;
   title: string;
   source: "curated" | "template";
+  /** Rail al que pertenece: la selección editorial (`curated`) o las automáticas (`automatic`). */
+  group: CollectionGroup;
   templateKey: string | null;
   periodKey: string | null;
   rank: number;
@@ -75,16 +77,27 @@ export interface TemplateAdminRow {
 
 // --- Lecturas ---------------------------------------------------------------------------------
 
-/** Ids de las listas que hoy muestra el riel (mismas condiciones, orden y tope que el riel público). */
-async function railListIds(): Promise<Set<string>> {
+const GROUP_LIMIT: Record<CollectionGroup, number> = {
+  curated: EDITORIAL_RAIL_LIMIT,
+  automatic: AUTOMATIC_RAIL_LIMIT,
+};
+
+/** Ids de las listas que hoy muestra el rail de un grupo (mismas condiciones, orden y tope que el rail público). */
+async function railIdsOf(group: CollectionGroup): Promise<string[]> {
   const rows = await db
     .select({ id: userList.id })
     .from(userListFeatured)
     .innerJoin(userList, eq(userList.id, userListFeatured.listId))
-    .where(featuredRailCondition())
+    .where(and(featuredRailCondition(), eq(userListFeatured.source, GROUP_SOURCE[group])))
     .orderBy(desc(userListFeatured.weight), asc(userListFeatured.rank), desc(userListFeatured.startsAt))
-    .limit(FEATURED_RAIL_LIMIT);
-  return new Set(rows.map((row) => row.id));
+    .limit(GROUP_LIMIT[group]);
+  return rows.map((row) => row.id);
+}
+
+/** Ids de las listas que hoy muestran los dos riles de `/explore`, cada uno con su propio tope. */
+async function railListIds(): Promise<Set<string>> {
+  const [curated, automatic] = await Promise.all([railIdsOf("curated"), railIdsOf("automatic")]);
+  return new Set([...curated, ...automatic]);
 }
 
 /** Todas las filas de `user_list_featured`, con su estado frente al riel. */
@@ -126,6 +139,7 @@ export async function listFeaturedAdmin(now = new Date()): Promise<FeaturedAdmin
       listId: row.listId,
       title: row.title,
       source: row.source,
+      group: row.source === "curated" ? "curated" : "automatic",
       templateKey: row.templateKey,
       periodKey: row.periodKey,
       rank: row.rank,
@@ -283,17 +297,23 @@ export async function unfeatureList(actorId: string, listId: string): Promise<vo
 }
 
 /**
- * Reordena las destacadas vigentes. `listIds` debe ser exactamente el conjunto de filas vigentes o
- * programadas (`orderable`); el primero queda arriba. Atómico: falla con `FEATURED_ORDER_CONFLICT` si
+ * Reordena las destacadas vigentes **de un grupo** (selección editorial o automáticas). `listIds` debe ser
+ * exactamente el conjunto de filas vigentes o programadas (`orderable`) de ese grupo; el primero queda arriba. El
+ * otro grupo no se toca. Atómico: falla con `FEATURED_ORDER_CONFLICT` si
  * el conjunto cambió mientras tanto.
  */
-export async function reorderFeatured(actorId: string, listIds: string[]): Promise<void> {
+export async function reorderFeatured(actorId: string, group: CollectionGroup, listIds: string[]): Promise<void> {
   await requirePermissionForUser(actorId, "editorial.publish");
   const changed = await db.transaction(async (tx) => {
     const current = await tx
       .select({ listId: userListFeatured.listId, rank: userListFeatured.rank, weight: userListFeatured.weight })
       .from(userListFeatured)
-      .where(or(isNull(userListFeatured.expiresAt), sql`${userListFeatured.expiresAt} > now()`))
+      .where(
+        and(
+          eq(userListFeatured.source, GROUP_SOURCE[group]),
+          or(isNull(userListFeatured.expiresAt), sql`${userListFeatured.expiresAt} > now()`),
+        ),
+      )
       .for("update");
 
     const sent = new Set(listIds);

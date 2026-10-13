@@ -24,25 +24,30 @@ beforeEach(() => vi.clearAllMocks());
 describe("PUT orden de destacadas", () => {
   it("exige editorial.publish", async () => {
     mocks.requirePermission.mockRejectedValue(new ApiError("ROLE_REQUIRED", 403, "Sin permiso"));
-    expect((await PUT(put({ listIds: [A] }))).status).toBe(403);
+    expect((await PUT(put({ group: "curated", listIds: [A] }))).status).toBe(403);
     expect(mocks.requirePermission).toHaveBeenCalledWith("editorial.publish");
   });
 
+  it("rechaza un grupo desconocido o ausente con 400", async () => {
+    expect((await PUT(put({ listIds: [A] }))).status).toBe(400);
+    expect((await PUT(put({ group: "otro", listIds: [A] }))).status).toBe(400);
+  });
+
   it("rechaza una lista vacía con 400", async () => {
-    expect((await PUT(put({ listIds: [] }))).status).toBe(400);
+    expect((await PUT(put({ group: "curated", listIds: [] }))).status).toBe(400);
   });
 
   it("reordena y responde ok", async () => {
     mocks.requirePermission.mockResolvedValue({ id: "admin-1" });
-    const response = await PUT(put({ listIds: [B, A] }));
+    const response = await PUT(put({ group: "automatic", listIds: [B, A] }));
     expect(response.status).toBe(200);
-    expect(mocks.reorderFeatured).toHaveBeenCalledWith("admin-1", [B, A]);
+    expect(mocks.reorderFeatured).toHaveBeenCalledWith("admin-1", "automatic", [B, A]);
   });
 
   it("propaga FEATURED_ORDER_CONFLICT como 409", async () => {
     mocks.requirePermission.mockResolvedValue({ id: "admin-1" });
     mocks.reorderFeatured.mockRejectedValue(new ApiError("FEATURED_ORDER_CONFLICT", 409, "Conflicto"));
-    const response = await PUT(put({ listIds: [A] }));
+    const response = await PUT(put({ group: "curated", listIds: [A] }));
     expect(response.status).toBe(409);
     await expect(response.json()).resolves.toMatchObject({ code: "FEATURED_ORDER_CONFLICT" });
   });

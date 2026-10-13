@@ -15,7 +15,8 @@ sin tabla materializada. Cada sección se **omite** si no tiene contenido. En or
 
 | Sección | Fuente | Presentación |
 |---|---|---|
-| Colecciones destacadas | `user_list_featured` vigentes (listas de `@exploracion`, por `weight` desc y `rank` asc, máximo 6; generadas semanalmente por plantillas, ADR 0033) | ancla anti-arranque-en-frío; tarjeta propia (`CollectionRail`): pila de hasta 6 fundas superpuestas que se abren al pasar el mouse (`enrichLists` con `coverLimit`), título en hasta dos líneas, descripción de la lista si la tiene y número de álbumes; con más de dos colecciones, tres columnas desde `lg` con la pila arriba del texto |
+| Selección editorial | filas `user_list_featured` `source='curated'` vigentes: listas oficiales de `@exploracion` destacadas a mano desde `/admin` (cambios `manage-explore-featured-console` y `split-explore-collections`, ADR 0034 y 0036), por `weight` desc y `rank` asc, máximo 6 | colecciones **subjetivas**, con criterio del equipo; tarjeta `CollectionRail` (pila de hasta 6 fundas, título, descripción y número de álbumes) y «Ver todas →» a `/explore/collections`; se omite mientras no haya ninguna publicada |
+| Descubre por datos | filas `source='template'` vigentes: colecciones generadas por plantillas (ADR 0033 y 0035), por `weight` desc y `rank` asc, máximo 6 | efemérides, premios y curiosidades que se generan solas; la misma tarjeta con la **familia** (Efemérides, Premios, Lanzamientos, Descubrimiento, Comunidad) sobre el título y «Ver todas →» a `/explore/collections` |
 | Explorar por género | familias de géneros con álbumes (vista `release_group_effective_genre`, cambio `add-genre-taxonomy`) | tarjetas con nombre, número de álbumes y una barra de tamaño relativo (escala de raíz cuadrada) → `/explore?familia=rock`; la flecha solo aparece al pasar el mouse; las familias secundarias se despliegan desde una tarjeta "N familias más" dentro de la propia grilla (botón con `aria-expanded`, "Ver menos" para plegar) (`FamilyGrid`). Las cifras de familias y décadas llevan siempre separador de miles (`useGrouping: "always"`: con la regla del español quedaban "2112" junto a "17.317") |
 | Novedades | `release_group` studio/single_ep con `first_release_date` completa en los últimos `NEW_RELEASE_WINDOW_DAYS` (90) días hasta hoy, con carátula, por fecha desc | riel horizontal con la fecha ("9 oct") en cada tarjeta y "Ver todo →" a `/explore?novedades=1`; se omite con menos de `MIN_ALBUMS_FOR_SECTION` (6); sin lanzamientos futuros ni fechas parciales (cambios `redefine-explore-new-releases` y `add-explore-new-releases-listing`) |
 | Próximos lanzamientos | `release_group` studio/single_ep con `first_release_date` completa posterior a hoy y hasta hoy + `UPCOMING_WINDOW_DAYS` (180), con carátula, por fecha asc (cambio `add-explore-upcoming-releases`) | riel horizontal bajo Novedades, con la fecha ("24 oct") en cada tarjeta y "Ver todo →" a `/explore?proximos=1`; se omite con menos de `MIN_ALBUMS_FOR_SECTION` (6) |
@@ -180,6 +181,28 @@ tope de 6 tarjetas.
   actividad de feed (`notGeneratedCollectionCondition()`).
 
 Limpieza: `DELETE FROM app_user WHERE username = 'exploracion';` (cascade).
+
+### Dos riles y la página de colecciones (cambio `split-explore-collections`, ADR 0036)
+
+La portada de `/explore` separa lo editorial de lo automático. El nombre del segundo rail es neutro a propósito
+("Descubre por datos"): no todas son de "hoy" (Ganadores del Grammy no lo es); «Hoy en la música» queda reservado para
+una futura sección de efemérides de personas.
+
+- **Qué va en cada uno:** `source='curated'` → "Selección editorial"; `source='template'` → "Descubre por datos".
+  Cada rail tiene su orden (`weight` desc, `rank` asc) y su tope (`EDITORIAL_RAIL_LIMIT`, `AUTOMATIC_RAIL_LIMIT`, 6).
+  La Inicio anónima conserva su riel mezclado (`listFeaturedCollections`).
+- **Familias** (`collections/families.ts`, sin migración): `ephemeris`, `awards`, `releases`, `discovery`, `community`,
+  declaradas por plantilla en código. Una clave que ya no está en el registro cae a `discovery`.
+- **`/explore/collections`:** la selección editorial vigente (hasta 48), las automáticas vigentes agrupadas por familia y el
+  **archivo** de las vencidas (`expires_at` pasado, lista aún pública y visible): la más reciente primero, 24 por página
+  (`?pagina=`), filtrable por `?familia=`. Las vencidas ya se conservaban, públicas y por URL; esta página las muestra.
+  Misma composición para todas las personas y mismo interruptor `EXPLORE_ENABLED` que `/explore`.
+- **No se fusiona con Listas:** `/lists` es social (personas, guardados, seguidores); las colecciones son producidas por la
+  plataforma. `/lists` → Destacadas ya no muestra las automáticas; las curadas siguen en ambas puertas (son listas
+  oficiales), sin duplicar datos.
+- **Consola:** el panel "Destacadas en Explorar" muestra los dos grupos; el orden es **por grupo**
+  (`PUT /api/admin/editorial/featured/order` recibe `group`), así reordenar la selección editorial no mueve las
+  automáticas, y «dentro del tope» se evalúa contra el rail de cada grupo.
 
 ### Colecciones del día 0 (cambio `add-day-zero-collections`, ADR 0035)
 

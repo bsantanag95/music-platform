@@ -1872,7 +1872,8 @@ recibe `{ itemIds }` y reordena, `DELETE` quita un ítem. Devuelven `{ list }` (
 
 Requiere `editorial.author`. Devuelve `{ featured, eligible }` (cambio `manage-explore-featured-console`,
 ADR 0034). `featured` lista **todas** las filas de `user_list_featured` (curadas y generadas por plantilla),
-en el orden del riel y con las vencidas al final: `listId`, `title`, `source` (`curated` | `template`),
+en el orden del riel y con las vencidas al final: `listId`, `title`, `source` (`curated` | `template`), `group`
+(`curated` | `automatic`: el rail al que pertenece),
 `templateKey`, `periodKey`, `rank`, `weight`, `startsAt`, `expiresAt`, `itemCount`, `orderable` (vigente o
 programada) y `status` (`in_rail` | `beyond_limit` | `scheduled` | `expired` | `withdrawn` | `hidden` |
 `not_public`). `eligible` son las listas que se pueden destacar (`{ id, title }`): oficiales publicadas de
@@ -1896,10 +1897,10 @@ su plantilla). Sin fila destacada, `404 FEATURED_NOT_FOUND`. Registran `feature`
 
 ### `PUT /api/admin/editorial/featured/order`
 
-Requiere `editorial.publish`. Recibe `{ listIds }`: el conjunto **completo** de filas vigentes o programadas
-(`orderable`), de la primera a la última. Es atómico: asigna `weight` descendente y `rank` consecutivo, y
-responde `409 FEATURED_ORDER_CONFLICT` si el conjunto enviado difiere del vigente (o repite ids). Devuelve
-`{ ok: true }`.
+Requiere `editorial.publish`. Recibe `{ group, listIds }` (`group`: `curated` | `automatic`, obligatorio; `400` si falta o
+es otro): el conjunto **completo** de filas vigentes o programadas (`orderable`) **de ese grupo**, de la primera a la
+última. Es atómico: asigna `weight` descendente y `rank` consecutivo solo a ese grupo (el otro no cambia), y responde
+`409 FEATURED_ORDER_CONFLICT` si el conjunto enviado difiere del vigente del grupo (o repite ids). Devuelve `{ ok: true }`.
 
 ### `GET /api/admin/editorial/templates`
 

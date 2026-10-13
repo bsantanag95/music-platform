@@ -15,16 +15,20 @@ El sistema SHALL exponer una vista pública en `/{locale}/explore` para los loca
 soportados, accesible con y sin sesión, que presenta el descubrimiento de álbumes. La vista
 SHALL componer, en este orden, las secciones que tengan contenido:
 
-1. Colecciones destacadas
-2. Exploración por género
-3. Novedades
-4. Próximos lanzamientos
-5. Premios
-6. Mejor valorados de la comunidad
-7. Más reseñados
-8. Exploración por década
+1. Selección editorial
+2. Descubre por datos
+3. Exploración por género
+4. Novedades
+5. Próximos lanzamientos
+6. Premios
+7. Mejor valorados de la comunidad
+8. Más reseñados
+9. Exploración por década
 
-Novedades, Próximos lanzamientos, Exploración por década y Exploración por género SHALL ser
+Selección editorial y Descubre por datos SHALL ser **secciones independientes**: la primera muestra las
+colecciones curadas por el equipo y la segunda las generadas por plantilla, cada una con su orden, su tope y su
+enlace "Ver todas" a la página de colecciones. Novedades, Próximos lanzamientos, Exploración por década y
+Exploración por género SHALL ser
 **secciones independientes**, cada una con su propia lógica de navegación (Novedades y
 Próximos lanzamientos abren sus listados completos; Década y Género abren listados filtrados
 con parámetros distintos). Premios SHALL enlazar a las páginas de ceremonia y al índice de
@@ -63,33 +67,48 @@ centrarse en álbumes; SHALL NOT ofrecer pestañas de artistas, canciones ni lis
 
 ### Requirement: Colecciones destacadas
 
-La vista `/explore` SHALL mostrar las listas públicas de álbumes que tienen una fila **vigente** en
-`user_list_featured` (`starts_at` pasado y `expires_at` nulo o futuro), ordenadas por `weight`
-descendente y, a igualdad, por `rank` ascendente, como el riel de colecciones editoriales, con un
-máximo de 6 tarjetas. Cada colección SHALL presentarse con su título, su conteo de ítems y sus
-carátulas disponibles, y SHALL enlazar a la página de detalle de esa lista. El riel SHALL
-mostrarse siempre que exista al menos una lista destacada vigente.
+La vista `/explore` SHALL mostrar las colecciones destacadas en **dos riles**, ambos con filas **vigentes** de
+`user_list_featured` (`starts_at` pasado y `expires_at` nulo o futuro) y listas públicas, visibles y de álbumes:
+
+- **Selección editorial:** filas `source='curated'` de listas oficiales no retiradas.
+- **Descubre por datos:** filas `source='template'`.
+
+Cada rail SHALL ordenarse por `weight` descendente y, a igualdad, por `rank` ascendente, con un máximo de 6 tarjetas
+propio, y SHALL mostrarse siempre que exista al menos una colección vigente en su grupo. Cada colección SHALL
+presentarse con su título, su conteo de ítems y sus carátulas disponibles, y SHALL enlazar a la página de detalle de
+esa lista; las automáticas SHALL mostrar además la etiqueta de su familia. Cada rail SHALL ofrecer un enlace "Ver todas"
+a la página de colecciones.
 
 #### Scenario: Con colecciones sembradas
 
-- **WHEN** existen listas de álbumes con fila vigente en `user_list_featured`
-- **THEN** `/explore` las muestra en el riel de colecciones destacadas, ordenadas por peso y
-  rank, cada una enlazando a su detalle
+- **WHEN** existen filas curadas y filas generadas vigentes
+- **THEN** `/explore` muestra "Selección editorial" solo con las curadas y "Descubre por datos" solo con las generadas,
+  cada una ordenada por peso y rank
 
 #### Scenario: Colección vencida
 
 - **WHEN** una fila de `user_list_featured` tiene `expires_at` en el pasado
-- **THEN** su colección no aparece en el riel
+- **THEN** su colección no aparece en ninguno de los riles
 
 #### Scenario: Tope de tarjetas
 
-- **WHEN** hay más de 6 colecciones vigentes
-- **THEN** el riel muestra solo las 6 primeras según el orden definido
+- **WHEN** hay más de 6 colecciones vigentes en un grupo
+- **THEN** ese rail muestra solo las 6 primeras según el orden definido y el otro rail no se ve afectado
+
+#### Scenario: Sin curaduría publicada
+
+- **WHEN** no hay ninguna colección curada vigente
+- **THEN** "Selección editorial" no aparece y "Descubre por datos" se muestra con normalidad
 
 #### Scenario: Sin colecciones destacadas
 
 - **WHEN** ninguna lista tiene fila vigente en `user_list_featured`
-- **THEN** el riel de colecciones destacadas no aparece en `/explore`
+- **THEN** ninguno de los dos riles aparece en `/explore`
+
+#### Scenario: Etiqueta de familia
+
+- **WHEN** se muestra una colección generada por `grammy-winners`
+- **THEN** su tarjeta lleva la etiqueta "Premios"
 
 ### Requirement: Exploración por década y por género
 

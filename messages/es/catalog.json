@@ -3,7 +3,6 @@
     "navLabel": "Explorar",
     "pageTitle": "Explorar álbumes",
     "heading": "Explorar",
-    "featuredHeading": "Colecciones destacadas",
     "newReleasesHeading": "Novedades",
     "decadesHeading": "Explorar por década",
     "genresHeading": "Explorar por género",
@@ -21,7 +20,6 @@
     "notFoundTitle": "Filtro de descubrimiento no encontrado",
     "notFoundDescription": "Ese filtro de descubrimiento no es válido.",
     "familyResultsHeading": "Álbumes · {family}",
-    "featuredDescription": "Selecciones del equipo editorial para empezar a escuchar.",
     "genresDescription": "Elige una familia de géneros para ver sus álbumes.",
     "moreFamilies": "{count, plural, one {# familia más} other {# familias más}}",
     "upcomingHeading": "Próximos lanzamientos",
@@ -55,7 +53,8 @@
     "countdown": "{days, plural, =0 {Hoy} =1 {Mañana} other {En # días}}",
     "jump": {
       "label": "En esta página",
-      "collections": "Colecciones",
+      "editorial": "Selección editorial",
+      "automatic": "Descubre por datos",
       "genres": "Géneros",
       "newReleases": "Novedades",
       "upcoming": "Próximos",
@@ -63,6 +62,34 @@
       "topRated": "Mejor valorados",
       "mostReviewed": "Más reseñados",
       "decades": "Décadas"
+    },
+    "editorialHeading": "Selección editorial",
+    "editorialDescription": "Colecciones elegidas por el equipo, con criterio y contexto.",
+    "automaticHeading": "Descubre por datos",
+    "automaticDescription": "Efemérides, premios y curiosidades que se generan solas a partir del catálogo.",
+    "seeAllCollections": "Ver todas",
+    "collectionFamilies": {
+      "ephemeris": "Efemérides",
+      "awards": "Premios",
+      "releases": "Lanzamientos",
+      "discovery": "Descubrimiento",
+      "community": "Comunidad"
+    },
+    "collectionsHub": {
+      "pageTitle": "Colecciones",
+      "heading": "Colecciones",
+      "description": "La selección del equipo y las colecciones que se generan solas, vigentes y pasadas.",
+      "editorialHeading": "Selección editorial",
+      "editorialDescription": "Colecciones elegidas por el equipo, con criterio y contexto.",
+      "automaticHeading": "Colecciones automáticas",
+      "automaticDescription": "Se generan solas a partir del catálogo y se renuevan cada semana.",
+      "archiveHeading": "Anteriores",
+      "archiveDescription": "Colecciones automáticas que ya salieron del riel. Siguen disponibles.",
+      "familyFilterLabel": "Filtrar por tipo",
+      "allFamilies": "Todas",
+      "endedOn": "Hasta el {date}",
+      "archiveEmpty": "Todavía no hay colecciones anteriores.",
+      "archiveEmptyFamily": "No hay colecciones anteriores de este tipo."
     }
   },
   "search": {
