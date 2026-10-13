@@ -271,7 +271,7 @@ export function listEditorialCollections(limit = EDITORIAL_RAIL_LIMIT): Promise<
   return listGroup("curated", limit);
 }
 
-/** Rail "Descubre por datos": colecciones generadas vigentes, con tope propio. */
+/** Rail "Descubre": colecciones generadas vigentes, con tope propio. */
 export function listAutomaticCollections(limit = AUTOMATIC_RAIL_LIMIT): Promise<FeaturedCollection[]> {
   return listGroup("automatic", limit);
 }

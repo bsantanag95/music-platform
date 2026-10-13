@@ -86,7 +86,7 @@ export const ERA_YEARS = 5;
 
 /**
  * Riles de colecciones de `/explore` (openspec: split-explore-collections, ADR 0036): "Selección editorial"
- * (curadas) y "Descubre por datos" (generadas), cada uno con su propio tope.
+ * (curadas) y "Descubre" (generadas), cada uno con su propio tope.
  */
 export const EDITORIAL_RAIL_LIMIT = 6;
 export const AUTOMATIC_RAIL_LIMIT = 6;

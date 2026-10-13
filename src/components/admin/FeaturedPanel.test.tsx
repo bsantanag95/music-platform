@@ -50,7 +50,7 @@ describe("FeaturedPanel", () => {
     expect(screen.getByText("Fuera del riel: lista retirada")).toBeInTheDocument();
     expect(screen.getByText("1 de 6 tarjetas en el riel ahora")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Selección editorial" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Descubre por datos" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Descubre" })).toBeInTheDocument();
   });
 
   it("sin permiso de publicar es de solo lectura", () => {
@@ -131,7 +131,7 @@ describe("FeaturedPanel", () => {
     );
 
     const curated = within(screen.getByRole("region", { name: "Selección editorial" }));
-    const auto = within(screen.getByRole("region", { name: "Descubre por datos" }));
+    const auto = within(screen.getByRole("region", { name: "Descubre" }));
     expect(curated.getByText("Debuts")).toBeInTheDocument();
     expect(curated.queryByText("Cumplen años")).toBeNull();
     expect(auto.getByText("Cumplen años")).toBeInTheDocument();
