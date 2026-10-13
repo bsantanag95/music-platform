@@ -125,4 +125,23 @@ describe("TemplatesPanel", () => {
     expect(screen.getByText("Sin colección vigente")).toBeInTheDocument();
     expect(screen.queryByText(/Solo 3/)).toBeNull();
   });
+
+  it("la colección vigente se muestra con el título del idioma", () => {
+    renderWithIntl(
+      <TemplatesPanel
+        initial={{
+          templates: [
+            template("anniversaries", {
+              current: { listId: LIST, title: "Cumplen años en octubre", periodKey: "2026-10", inRail: true },
+            }),
+          ],
+        }}
+        canPublish
+      />,
+      "en",
+    );
+
+    expect(screen.getByText(/Anniversaries in October 2026/)).toBeInTheDocument();
+    expect(screen.queryByText(/Cumplen años/)).toBeNull();
+  });
 });

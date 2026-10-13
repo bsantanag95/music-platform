@@ -11,6 +11,8 @@ import { ApiError } from "@/lib/api/errors";
 import { relationsFor } from "@/services/social/relations";
 import { audiencesForProfile } from "@/services/social/visibility";
 import type { Audience, FollowRelation } from "@/services/social/types";
+import { generatedRefsFor } from "@/services/discovery/collections/generated";
+import type { GeneratedRef } from "@/services/discovery/collections/titles";
 import { enrichLists } from "./lists";
 import type { ListEntityType } from "./types";
 import { activeUserCondition } from "@/services/auth/account-status";
@@ -35,6 +37,8 @@ export interface SavedListSummary {
   tracking: boolean;
   /** La lista dejó de ser visible para quien la guardó (privada, bloqueo). */
   unavailable: boolean;
+  /** Plantilla y período si la lista es una colección generada (para mostrar su título en el idioma). */
+  generated: GeneratedRef | null;
 }
 
 export interface TrackedListSummary {
@@ -54,6 +58,8 @@ export interface TrackedListSummary {
   state: JourneyState;
   progress: { selectedCount: number; listenedCount: number };
   updatedAt: string;
+  /** Plantilla y período si la lista es una colección generada. */
+  generated: GeneratedRef | null;
 }
 
 /** Audiencias visibles para un lector según su relación con el dueño. */
@@ -217,9 +223,10 @@ export async function listTrackedLists(trackerId: string): Promise<TrackedListSu
   if (rows.length === 0) return [];
 
   const listIds = rows.map((r) => r.listId);
-  const [counts, enrichment] = await Promise.all([
+  const [counts, enrichment, generated] = await Promise.all([
     countsByListId(trackerId, listIds),
     enrichLists(listIds),
+    generatedRefsFor(listIds),
   ]);
 
   return rows.map((row) => {
@@ -235,6 +242,7 @@ export async function listTrackedLists(trackerId: string): Promise<TrackedListSu
       state: deriveJourneyState(null, selectedCount, listenedCount),
       progress: { selectedCount, listenedCount },
       updatedAt: row.updatedAt.toISOString(),
+      generated: generated.get(row.listId) ?? null,
     };
   });
 }
@@ -272,8 +280,9 @@ const SAVED_ROW_COLUMNS = {
 } as const;
 
 async function mapSavedRows(saverId: string, rows: SavedRow[]): Promise<SavedListSummary[]> {
-  const [enrichment, relations] = await Promise.all([
+  const [enrichment, generated, relations] = await Promise.all([
     enrichLists(rows.map((row) => row.id)),
+    generatedRefsFor(rows.map((row) => row.id)),
     relationsFor(
       saverId,
       rows.map((row) => row.ownerId),
@@ -304,6 +313,7 @@ async function mapSavedRows(saverId: string, rows: SavedRow[]): Promise<SavedLis
       following: row.following,
       tracking: row.tracking,
       unavailable: !allowed.includes(row.audience as Audience),
+      generated: generated.get(row.id) ?? null,
     };
   });
 }

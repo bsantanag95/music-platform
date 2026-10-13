@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { listSegment } from "@/lib/catalog-links";
+import { collectionHref, listSegment } from "@/lib/catalog-links";
 import UserListDetailPage from "./page";
 
 vi.mock("@/services/profiles/renamed-redirect", () => ({
@@ -34,10 +34,14 @@ const mocks = vi.hoisted(() => ({
   saveCountsFor: vi.fn(),
   countsByListId: vi.fn(),
   redirectIfRenamed: vi.fn(),
+  generatedRefsFor: vi.fn(),
 }));
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: () => mocks.resolveSession() }));
 vi.mock("@/services/social/profiles", () => ({
   getProfileByUsername: (...a: unknown[]) => mocks.getProfileByUsername(...a),
+}));
+vi.mock("@/services/discovery/collections/generated", () => ({
+  generatedRefsFor: (...a: unknown[]) => mocks.generatedRefsFor(...a),
 }));
 vi.mock("@/services/lists/lists", () => ({
   getUserListDetail: (...a: unknown[]) => mocks.getUserListDetail(...a),
@@ -68,6 +72,7 @@ describe("UserListDetailPage", () => {
     mocks.savedStateFor.mockResolvedValue(new Map());
     mocks.saveCountsFor.mockResolvedValue(new Map());
     mocks.countsByListId.mockResolvedValue(new Map());
+    mocks.generatedRefsFor.mockResolvedValue(new Map());
   });
 
   it("segmento inválido → notFound", async () => {
@@ -117,5 +122,35 @@ describe("UserListDetailPage", () => {
     await expect(run("ana", LIST_ID)).rejects.toThrow(
       `NEXT_PERMANENT_REDIRECT:/es/users/ana/lists/${SEGMENT}`,
     );
+  });
+
+  it("colección generada → 308 a su ruta bajo Explorar con el título del idioma", async () => {
+    mocks.getProfileByUsername.mockResolvedValue({ id: "exp", username: "exploracion", displayName: "Exploración", relation: "none" });
+    mocks.getUserListDetail.mockResolvedValue({ id: LIST_ID, entityType: "release-group", title: "Cumplen años en octubre", items: [] });
+    mocks.generatedRefsFor.mockResolvedValue(new Map([[LIST_ID, { templateKey: "anniversaries", periodKey: "2026-10" }]]));
+
+    await expect(run("exploracion", listSegment("Cumplen años en octubre", LIST_ID))).rejects.toThrow(
+      `NEXT_PERMANENT_REDIRECT:/es${collectionHref("Cumplen años en octubre de 2026", LIST_ID)}`,
+    );
+    expect(mocks.generatedRefsFor).toHaveBeenCalledWith([LIST_ID]);
+  });
+
+  it("colección generada con plantilla desconocida → redirige con el título guardado", async () => {
+    mocks.getProfileByUsername.mockResolvedValue({ id: "exp", username: "exploracion", displayName: null, relation: "none" });
+    mocks.getUserListDetail.mockResolvedValue({ id: LIST_ID, entityType: "release-group", title: "Vieja", items: [] });
+    mocks.generatedRefsFor.mockResolvedValue(new Map([[LIST_ID, { templateKey: "ya-no-existe", periodKey: "evergreen" }]]));
+
+    await expect(run("exploracion", listSegment("Vieja", LIST_ID))).rejects.toThrow(
+      `NEXT_PERMANENT_REDIRECT:/es${collectionHref("Vieja", LIST_ID)}`,
+    );
+  });
+
+  it("una lista de una persona no se redirige a Explorar", async () => {
+    mocks.getProfileByUsername.mockResolvedValue({ id: "ana", username: "ana", displayName: "Ana", relation: "following" });
+    mocks.getUserListDetail.mockResolvedValue({ id: LIST_ID, entityType: "release-group", title: "Discos", items: [] });
+
+    await run();
+
+    expect(permanentRedirect).not.toHaveBeenCalled();
   });
 });

@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
+import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
-import { listHref } from "@/lib/catalog-links";
+import { collectionHref, listHref } from "@/lib/catalog-links";
+import { collectionTitle } from "@/services/discovery/collections/titles";
 import type { FeaturedCollection } from "@/services/discovery/discovery";
 import type { CollectionFamily } from "@/services/discovery/collections/families";
 import { SectionHeader } from "./SectionHeader";
@@ -75,7 +77,18 @@ export function CollectionRail<T extends FeaturedCollection>({
   toolbar,
   emptyMessage,
 }: CollectionRailProps<T>) {
+  const locale = useLocale();
   if (collections.length === 0 && !emptyMessage) return null;
+  // Las colecciones generadas se muestran con el título del idioma y viven en su propia ruta bajo Explorar; las
+  // curadas son listas de la cuenta curadora y conservan su título y su ruta de lista.
+  const titleOf = (collection: T) =>
+    collection.source === "template"
+      ? collectionTitle(collection.templateKey, collection.periodKey, locale, collection.title)
+      : collection.title;
+  const hrefOf = (collection: T) =>
+    collection.source === "template"
+      ? collectionHref(titleOf(collection), collection.id)
+      : listHref(curatorUsername, collection.title, collection.id);
   // Con más de dos colecciones, tres columnas desde `lg` y la pila arriba del texto: en dos columnas con la pila al
   // lado, seis colecciones ocupaban tres filas altas y los títulos largos se cortaban ("Ganadores del Grammy 20…").
   const compact = collections.length > 2;
@@ -92,7 +105,7 @@ export function CollectionRail<T extends FeaturedCollection>({
         {collections.map((collection) => (
           <li key={collection.id}>
             <Link
-              href={listHref(curatorUsername, collection.title, collection.id)}
+              href={hrefOf(collection)}
               className={`group relative flex h-full flex-col gap-4 rounded-lg border border-ink-border bg-ink-surface p-4 transition-colors hover:border-amber focus-visible:border-amber ${
                 compact ? "" : "lg:flex-row lg:items-center lg:gap-6 lg:p-5"
               }`}
@@ -107,7 +120,7 @@ export function CollectionRail<T extends FeaturedCollection>({
                   </span>
                 ) : null}
                 <span className="line-clamp-2 font-display text-lg text-paper transition-colors group-hover:text-amber">
-                  {collection.title}
+                  {titleOf(collection)}
                 </span>
                 {collection.description ? (
                   <span className="line-clamp-2 font-body text-sm text-paper-muted">{collection.description}</span>

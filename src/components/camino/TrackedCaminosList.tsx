@@ -1,14 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterSelect } from "@/components/ui/FilterSelect";
 import { normalizeForSearch } from "@/components/artist-journey/artist-journey-list-shared";
 import { setListTracking } from "@/lib/api/camino";
-import { listHref } from "@/lib/catalog-links";
+import { presentList } from "@/lib/list-presentation";
 import type { TrackedListSummary } from "@/lib/api/schemas";
 
 type TrackedSort = "recent" | "progress";
@@ -29,6 +29,7 @@ interface TrackedCaminosListProps {
 // dentro de la pestaña.
 export function TrackedCaminosList({ lists: initial }: TrackedCaminosListProps) {
   const t = useTranslations("camino");
+  const locale = useLocale();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<TrackedSort>("recent");
   const [items, setItems] = useState(initial);
@@ -94,10 +95,9 @@ export function TrackedCaminosList({ lists: initial }: TrackedCaminosListProps) 
         <ul className="flex w-full flex-col divide-y divide-ink-border rounded-lg border border-ink-border">
           {visible.map((list) => {
             const ratio = progressRatio(list.progress);
+            const shown = presentList(list, locale);
             const href =
-              list.kind === "custom_journey"
-                ? `/users/${list.owner.username}/caminos/${list.id}`
-                : listHref(list.owner.username, list.title, list.id);
+              list.kind === "custom_journey" ? `/users/${list.owner.username}/caminos/${list.id}` : shown.href;
             return (
               <li key={list.id} className="flex items-center gap-3 px-3 py-2.5">
                 <CoverThumb cover={list.coverThumbUrl} label="" className="size-10 shrink-0 rounded" />
@@ -106,7 +106,7 @@ export function TrackedCaminosList({ lists: initial }: TrackedCaminosListProps) 
                     href={href}
                     className="min-w-0 truncate font-display text-sm text-paper hover:text-amber"
                   >
-                    {list.title}
+                    {shown.title}
                   </Link>
                   <div className="flex items-center gap-2">
                     <span className="font-data text-[0.65rem] text-paper-muted">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -9,7 +9,8 @@ import { UserHoverCard } from "@/components/profiles/UserHoverCard";
 import { getSavedLists } from "@/lib/api/lists";
 import { queryKeys } from "@/lib/query/keys";
 import type { SavedListsResponse } from "@/lib/api/schemas";
-import { listHref } from "@/lib/catalog-links";
+import { presentList } from "@/lib/list-presentation";
+import { PLATFORM_OWNER_NAME, titleLocaleOf } from "@/services/discovery/collections/titles";
 import { ListCard } from "./ListCard";
 import { SaveListButton } from "./SaveListButton";
 import { ListsGrid, entityTypeKey } from "./lists-shared";
@@ -21,6 +22,7 @@ const PAGE_SIZE = 20;
 // nunca se filtra en silencio.
 export function SavedListsTab({ initial }: { initial: SavedListsResponse }) {
   const t = useTranslations("lists");
+  const locale = useLocale();
 
   const { data, hasNextPage, isFetchingNextPage, fetchNextPage, isError, refetch } =
     useInfiniteQuery({
@@ -43,11 +45,13 @@ export function SavedListsTab({ initial }: { initial: SavedListsResponse }) {
   return (
     <div className="flex flex-col gap-4">
       <ListsGrid>
-        {lists.map((list) => (
+        {lists.map((list) => {
+          const shown = presentList(list, locale);
+          return (
           <ListCard
             key={list.id}
-            href={listHref(list.owner.username, list.title, list.id)}
-            title={list.title}
+            href={shown.href}
+            title={shown.title}
             coverThumbs={list.coverThumbs}
             description={list.description}
             unavailable={list.unavailable}
@@ -57,14 +61,19 @@ export function SavedListsTab({ initial }: { initial: SavedListsResponse }) {
                 <span aria-hidden>·</span>
                 <span>{t("itemsCount", { count: list.itemCount })}</span>
                 <span aria-hidden>·</span>
-                <UserHoverCard username={list.owner.username}>
-                  <Link
-                    href={`/users/${encodeURIComponent(list.owner.username)}`}
-                    className="transition-colors hover:text-paper"
-                  >
-                    {t("byOwner", { name: list.owner.displayName ?? `@${list.owner.username}` })}
-                  </Link>
-                </UserHoverCard>
+                {list.generated ? (
+                  // Una colección generada es de la plataforma, no de un usuario: sin perfil al que enlazar.
+                  <span>{t("byOwner", { name: PLATFORM_OWNER_NAME[titleLocaleOf(locale)] })}</span>
+                ) : (
+                  <UserHoverCard username={list.owner.username}>
+                    <Link
+                      href={`/users/${encodeURIComponent(list.owner.username)}`}
+                      className="transition-colors hover:text-paper"
+                    >
+                      {t("byOwner", { name: list.owner.displayName ?? `@${list.owner.username}` })}
+                    </Link>
+                  </UserHoverCard>
+                )}
                 {list.unavailable ? (
                   <>
                     <span aria-hidden>·</span>
@@ -85,7 +94,8 @@ export function SavedListsTab({ initial }: { initial: SavedListsResponse }) {
               />
             }
           />
-        ))}
+          );
+        })}
       </ListsGrid>
 
       {isError ? (

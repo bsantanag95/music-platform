@@ -109,6 +109,18 @@ describe("listEditorialCollections / listAutomaticCollections", () => {
     expect(result.find((c) => c.id === "g")).toMatchObject({ family: "awards", source: "template", itemCount: 10 });
     expect(result.find((c) => c.id === "c")).toMatchObject({ family: null, source: "curated", itemCount: 0 });
   });
+
+  it("expone plantilla y período de las generadas (para localizar el título) y null en las curadas", async () => {
+    mocks.rows = [
+      { id: "g", title: "Ganadores del Grammy 2025", description: null, source: "template", templateKey: "grammy-winners", periodKey: "grammy-2025" },
+      { id: "c", title: "Debuts", description: null, source: "curated", templateKey: null, periodKey: null },
+    ];
+
+    const result = await listAutomaticCollections();
+
+    expect(result.find((c) => c.id === "g")).toMatchObject({ templateKey: "grammy-winners", periodKey: "grammy-2025" });
+    expect(result.find((c) => c.id === "c")).toMatchObject({ templateKey: null, periodKey: null });
+  });
 });
 
 describe("listCollectionsHub", () => {

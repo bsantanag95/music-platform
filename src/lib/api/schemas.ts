@@ -1799,6 +1799,9 @@ export const SavedListSummarySchema = z.object({
   // ajena".
   tracking: z.boolean(),
   unavailable: z.boolean(),
+  // Plantilla y período si la lista es una colección generada (openspec: localize-collection-titles): con ellos
+  // el cliente muestra el título del idioma y enlaza a la ruta de colecciones.
+  generated: z.object({ templateKey: z.string(), periodKey: z.string() }).nullable().optional(),
 });
 export type SavedListSummary = z.infer<typeof SavedListSummarySchema>;
 
@@ -1992,6 +1995,7 @@ export const TrackedListSummarySchema = z.object({
     listenedCount: z.number().int().nonnegative(),
   }),
   updatedAt: z.string(),
+  generated: z.object({ templateKey: z.string(), periodKey: z.string() }).nullable().optional(),
 });
 export type TrackedListSummary = z.infer<typeof TrackedListSummarySchema>;
 

@@ -35,16 +35,18 @@ traducciones.
    Los meses salen de `Intl.DateTimeFormat(locale, { month: "long", timeZone: "UTC" })` y los nombres de familia de
    los catálogos `genres.families` de cada idioma. *Alternativa descartada:* `titleEs`/`titleEn` en la fila; duplica
    datos derivables, exige migración y se desfasa si cambia la redacción.
-2. **Catálogo de textos** en `messages/{es,en}/catalog.json` (`explore.collectionTitles.*`) con marcadores simples
-   (`{month}`, `{year}`, `{family}`, `{award}`, `{quarter}`) que `titles.ts` sustituye sin ICU; así el servicio no
-   depende del contexto de React. Una prueba de paridad garantiza que ambos idiomas tengan las mismas claves.
+2. **Catálogo de textos en TypeScript** (`collections/titles.ts`), no en `messages/*.json`: marcadores simples (`{month}`,
+   `{year}`, `{family}`, `{award}`, `{quarter}`) que se sustituyen sin ICU. Se eligió así porque lo usan componentes de
+   cliente (guardadas) y no debe arrastrar el catálogo de textos completo al bundle. Las pruebas garantizan la paridad entre
+   idiomas (mismas plantillas y mismos marcadores) y que los nombres de familia coinciden con `messages/{es,en}/catalog.json`.
 3. **El título guardado no cambia.** `user_list.title` sigue en español: es el respaldo y lo leen consumidores que no
    tienen idioma (scripts, consola vieja). Nunca se hace `UPDATE user_list` desde las lecturas.
-4. **Una sola ruta de salida del título.** Las lecturas que arman `FeaturedCollection` / archivo reciben `locale` y
-   devuelven `title` ya localizado y `storedTitle`. Un asistente `localizedTitlesFor(listIds, locale)` consulta
-   `user_list_featured` (solo filas `template`) y devuelve un mapa `id → título` para las superficies que leen listas
-   por otro camino (guardadas, pestaña de listas de `@exploracion`, panel de la consola). Las listas que no son
-   generadas conservan su título.
+4. **La localización ocurre en la presentación, no en los servicios.** Los servicios devuelven la referencia
+   (`templateKey`, `periodKey`) junto al título guardado y quien muestra la lista —con el idioma de quien mira— deriva el
+   título. Así las respuestas de API (guardadas, en seguimiento) no necesitan conocer el idioma de la petición. Dos
+   consultas por lote lo resuelven: `generatedRefsFor(listIds)` (plantilla y período de las listas generadas) y
+   `findGeneratedCollection(id)` (para el detalle: además exige lista estándar, pública y visible). Un asistente puro,
+   `presentList(list, locale)`, devuelve `{ title, href }` para los listados de cliente.
 5. **Ruta de detalle `/explore/collections/[segment]`.** `segment = <slug del título localizado>-<id>`; la página
    resuelve por id, comprueba que la lista sea una colección generada (fila `template`, lista pública y visible) y
    canonicaliza con `resolveCatalogRoute({ kind: "collection", ... })` (nuevo tipo con base `explore/collections`).

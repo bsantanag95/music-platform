@@ -56,6 +56,9 @@ export interface FeaturedCollection {
   coverThumbs: string[];
   /** Origen de la fila destacada: curada a mano o generada por plantilla. */
   source: "curated" | "template";
+  /** Plantilla y período de una colección generada (`null` en las curadas): con ellos se localiza el título. */
+  templateKey: string | null;
+  periodKey: string | null;
   /** Familia de una colección generada; `null` en las curadas (son "editorial"). */
   family: CollectionFamily | null;
 }
@@ -193,6 +196,7 @@ interface FeaturedRow {
   description: string | null;
   source: "curated" | "template";
   templateKey: string | null;
+  periodKey: string | null;
 }
 
 const featuredRowColumns = {
@@ -201,6 +205,7 @@ const featuredRowColumns = {
   description: userList.description,
   source: userListFeatured.source,
   templateKey: userListFeatured.templateKey,
+  periodKey: userListFeatured.periodKey,
 };
 
 /** Añade conteo de ítems, carátulas y familia a las filas destacadas. */
@@ -218,6 +223,8 @@ async function enrichFeatured(rows: FeaturedRow[]): Promise<FeaturedCollection[]
       itemCount: enriched?.itemCount ?? 0,
       coverThumbs: enriched?.coverThumbs ?? [],
       source: row.source,
+      templateKey: row.source === "template" ? row.templateKey : null,
+      periodKey: row.source === "template" ? row.periodKey : null,
       family: row.source === "curated" ? null : familyOf(row.templateKey),
     };
   });

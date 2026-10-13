@@ -61,6 +61,8 @@ const collection = (id: string, over: Partial<FeaturedCollection> = {}): Feature
   itemCount: 12,
   coverThumbs: [],
   source: "template",
+  templateKey: "anniversaries",
+  periodKey: "2026-10",
   family: "ephemeris",
   ...over,
 });
@@ -92,7 +94,7 @@ describe("/explore: dos riles de colecciones", () => {
   it("muestra el rail editorial y el automático por separado, cada uno con su ancla y «Ver todas»", async () => {
     mocks.getExplorePage.mockResolvedValue({
       ...empty,
-      editorial: [collection("e1", { source: "curated", family: null })],
+      editorial: [collection("e1", { source: "curated", templateKey: null, periodKey: null, family: null })],
       automatic: [collection("a1")],
     });
 
@@ -139,7 +141,7 @@ describe("/explore/collections", () => {
 
   it("agrupa las automáticas vigentes por familia y las deja tras la selección editorial", async () => {
     mocks.listCollectionsHub.mockResolvedValue({
-      editorial: [collection("e1", { source: "curated", family: null })],
+      editorial: [collection("e1", { source: "curated", templateKey: null, periodKey: null, family: null })],
       automatic: [
         collection("a1", { family: "awards" }),
         collection("a2", { family: "ephemeris" }),

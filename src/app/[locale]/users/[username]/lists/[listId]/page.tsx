@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { resolveSession } from "@/services/auth/sessions";
 import { getProfileByUsername } from "@/services/social/profiles";
@@ -8,9 +8,11 @@ import { countsByListId } from "@/services/journeys/progress";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListDetailHeader } from "@/components/lists/ListDetailHeader";
 import { ListItemsView } from "@/components/lists/ListItemsView";
-import { listSegment } from "@/lib/catalog-links";
+import { collectionHref, listSegment } from "@/lib/catalog-links";
 import { resolveCatalogRoute } from "@/lib/catalog-route";
 import { parseCatalogSegment } from "@/lib/slug";
+import { generatedRefsFor } from "@/services/discovery/collections/generated";
+import { collectionTitle } from "@/services/discovery/collections/titles";
 import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
 
 interface PageProps {
@@ -49,6 +51,14 @@ export default async function UserListDetailPage({ params }: PageProps) {
     list = await getUserListDetail(username, listId, viewerId);
   } catch {
     notFound();
+  }
+
+  // Una colección generada por plantilla vive bajo Explorar, con el título y el slug del idioma activo: esta ruta
+  // de usuario solo conserva los enlaces antiguos (openspec: localize-collection-titles).
+  const generated = (await generatedRefsFor([list.id])).get(list.id);
+  if (generated) {
+    const title = collectionTitle(generated.templateKey, generated.periodKey, locale, list.title);
+    permanentRedirect(`/${locale}${collectionHref(title, list.id)}`);
   }
 
   resolveCatalogRoute({
