@@ -41,10 +41,8 @@ export default async function CommunityActivityPage() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col items-start gap-8 px-4 py-12">
       <Breadcrumbs items={[{ label: tCommon("home"), href: "/" }, { label: t("community.heading") }]} />
-      <div className="flex flex-col gap-1">
-        <h1 className="font-display text-3xl text-paper">{t("community.heading")}</h1>
-        <p className="font-body text-paper-muted">{t("community.intro")}</p>
-      </div>
+      {/* Solo miga de pan y título (como Explorar y Listas): la introducción describía las pestañas de abajo. */}
+      <h1 className="-mt-4 font-display text-3xl text-paper">{t("community.heading")}</h1>
 
       {!anySection ? (
         <EmptyState title={t("community.emptyTitle")} description={t("community.emptyDescription")} />

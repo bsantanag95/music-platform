@@ -408,6 +408,13 @@ debajo de otra, la página se volvía demasiado vertical para llegar a la últim
 - **Tu actividad** — es **el mismo `listMyRecentActivity`** que alimenta "Tu rastro
   reciente" de Inicio (`FeedActivityList` con `variant="self"`).
 
+Las tres pestañas usan la **misma presentación** (`FeedActivityList` con `clamp`; "Recientes" con
+`variant="feed"`): antes "Recientes" usaba la fila compacta del bloque de Inicio (`CompactActivityRow`, sin
+avatar ni artista) y la misma valoración se veía distinta al cambiar de pestaña. Para eso
+`listCommunityActivity` puebla `artistName`/`artistId` con el artista principal acreditado
+(`PRIMARY_ARTIST_SQL` / `PRIMARY_ARTIST_ID_SQL`, como `listFeed`). Las pestañas son subrayadas (como la
+navegación del Header) y la página tiene solo miga de pan y título, sin introducción.
+
 Cada pestaña es una `CommunityActivitySection` independiente con su propia paginación
 (`useInfiniteQuery`); solo se monta la pestaña activa, y el caché de React Query evita
 volver a pedir la página 1 al regresar a una pestaña ya visitada. Si una pestaña no tiene

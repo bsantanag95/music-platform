@@ -14,7 +14,14 @@ import { db } from "@/db";
 import { appUser, artist, comment, rating, recording, releaseGroup, review } from "@/db/schema";
 import { rootCommentsOnly } from "@/services/social/comment-roots";
 import { ApiError } from "@/lib/api/errors";
-import type { FeedAuthor, FeedComment, FeedRating, FeedReview } from "@/services/feed/feed";
+import {
+  PRIMARY_ARTIST_ID_SQL,
+  PRIMARY_ARTIST_SQL,
+  type FeedAuthor,
+  type FeedComment,
+  type FeedRating,
+  type FeedReview,
+} from "@/services/feed/feed";
 import { activeUserCondition } from "@/services/auth/account-status";
 
 // Perfil público Y cuenta activa: una cuenta desactivada no aparece en la actividad de la comunidad.
@@ -73,6 +80,10 @@ export async function listCommunityActivity(
         releaseTitle: releaseGroup.title,
         releaseCover: releaseGroup.coverThumbUrl,
         recordingTitle: recording.title,
+        // Artista principal del álbum o la canción, como en `listFeed`: "Recientes" de `/activity` ahora usa la misma
+        // presentación que "De la gente que sigues" y sin él la línea de artista quedaba vacía.
+        creditedArtist: PRIMARY_ARTIST_SQL(rating.releaseGroupId, rating.recordingId),
+        creditedArtistId: PRIMARY_ARTIST_ID_SQL(rating.releaseGroupId, rating.recordingId),
         authorId: rating.userId,
         authorUsername: appUser.username,
         authorDisplayName: appUser.displayName,
@@ -99,6 +110,10 @@ export async function listCommunityActivity(
         releaseTitle: releaseGroup.title,
         releaseCover: releaseGroup.coverThumbUrl,
         recordingTitle: recording.title,
+        // Artista principal del álbum o la canción, como en `listFeed`: "Recientes" de `/activity` ahora usa la misma
+        // presentación que "De la gente que sigues" y sin él la línea de artista quedaba vacía.
+        creditedArtist: PRIMARY_ARTIST_SQL(comment.releaseGroupId, comment.recordingId),
+        creditedArtistId: PRIMARY_ARTIST_ID_SQL(comment.releaseGroupId, comment.recordingId),
         authorId: comment.userId,
         authorUsername: appUser.username,
         authorDisplayName: appUser.displayName,
@@ -125,6 +140,10 @@ export async function listCommunityActivity(
         releaseTitle: releaseGroup.title,
         releaseCover: releaseGroup.coverThumbUrl,
         recordingTitle: recording.title,
+        // Artista principal del álbum o la canción, como en `listFeed`: "Recientes" de `/activity` ahora usa la misma
+        // presentación que "De la gente que sigues" y sin él la línea de artista quedaba vacía.
+        creditedArtist: PRIMARY_ARTIST_SQL(review.releaseGroupId, review.recordingId),
+        creditedArtistId: PRIMARY_ARTIST_ID_SQL(review.releaseGroupId, review.recordingId),
         authorId: review.userId,
         authorUsername: appUser.username,
         authorDisplayName: appUser.displayName,
@@ -149,10 +168,8 @@ export async function listCommunityActivity(
       type: targetType(row.artistId, row.releaseGroupId),
       id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
       title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
-      // El bloque compacto de Inicio no muestra el artista; el feed sí (vía
-      // listFeed). Acá queda null a propósito, igual que antes de generalizar.
-      artistName: null,
-      artistId: null,
+      artistName: row.creditedArtist ?? null,
+      artistId: row.creditedArtistId ?? null,
       // Esta fuente no alimenta la detección de "barrido de álbum" (solo
       // `listFeed`/`listMyRecentActivity` la usan) — null a propósito.
       albumId: null,
@@ -172,8 +189,8 @@ export async function listCommunityActivity(
       type: targetType(row.artistId, row.releaseGroupId),
       id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
       title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
-      artistName: null,
-      artistId: null,
+      artistName: row.creditedArtist ?? null,
+      artistId: row.creditedArtistId ?? null,
       coverThumbUrl: row.releaseCover,
     },
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
@@ -189,8 +206,8 @@ export async function listCommunityActivity(
       type: targetType(row.artistId, row.releaseGroupId),
       id: row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "",
       title: row.artistName ?? row.releaseTitle ?? row.recordingTitle ?? "",
-      artistName: null,
-      artistId: null,
+      artistName: row.creditedArtist ?? null,
+      artistId: row.creditedArtistId ?? null,
       coverThumbUrl: row.releaseCover,
     },
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),

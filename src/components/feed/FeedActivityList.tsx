@@ -220,7 +220,9 @@ function GroupRow({
               {" · "}
             </>
           )}
-          {verb}
+          {/* El verbo sigue al autor ("@ana · registró 3 escuchas"); sin autor (el propio rastro) abre la línea y va
+              con mayúscula, como "Creó un Camino". */}
+          {hideAuthor ? verb.charAt(0).toLocaleUpperCase(locale) + verb.slice(1) : verb}
         </span>
         <RelativeDate iso={group.createdAt} />
       </div>
