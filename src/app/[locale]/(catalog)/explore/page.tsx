@@ -261,8 +261,8 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
   // Navegación rápida: una entrada por cada sección que se renderiza (mismos datos que cada sección usa para omitirse),
   // en el orden de la página.
   const jumpItems = [
-    { id: "seleccion-editorial", label: t("jump.editorial"), visible: explore.editorial.length > 0 },
     { id: "descubre-por-datos", label: t("jump.automatic"), visible: explore.automatic.length > 0 },
+    { id: "seleccion-editorial", label: t("jump.editorial"), visible: explore.editorial.length > 0 },
     { id: "generos", label: t("jump.genres"), visible: explore.families.length > 0 },
     { id: "novedades", label: t("jump.newReleases"), visible: explore.newReleases.length > 0 },
     { id: "proximos", label: t("jump.upcoming"), visible: explore.upcoming.length > 0 },
@@ -282,19 +282,9 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         <ExploreJumpNav label={t("jump.label")} items={jumpItems} />
       </div>
 
-      {/* Dos riles con identidad propia: la selección editorial (subjetiva, curada a mano) y lo que se genera solo
-          a partir de datos (efemérides, premios, curiosidades). Cada uno con su orden y su tope; el segundo
-          muestra la familia de cada colección. */}
-      <CollectionRail
-        id="seleccion-editorial"
-        heading={t("editorialHeading")}
-        description={t("editorialDescription")}
-        collections={explore.editorial}
-        curatorUsername={CURATOR_USERNAME}
-        itemsLabel={(count) => t("collectionItems", { count })}
-        seeAll={{ href: "/explore/collections", label: t("seeAllCollections") }}
-      />
-
+      {/* Dos riles con identidad propia: lo que se genera solo a partir de datos (efemérides, premios, curiosidades;
+          muestra la familia de cada colección) y la selección editorial (subjetiva, curada a mano). Cada uno con su
+          orden y su tope. */}
       <CollectionRail
         id="descubre-por-datos"
         heading={t("automaticHeading")}
@@ -303,6 +293,16 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         curatorUsername={CURATOR_USERNAME}
         itemsLabel={(count) => t("collectionItems", { count })}
         familyLabel={(family) => t(`collectionFamilies.${family}`)}
+        seeAll={{ href: "/explore/collections", label: t("seeAllCollections") }}
+      />
+
+      <CollectionRail
+        id="seleccion-editorial"
+        heading={t("editorialHeading")}
+        description={t("editorialDescription")}
+        collections={explore.editorial}
+        curatorUsername={CURATOR_USERNAME}
+        itemsLabel={(count) => t("collectionItems", { count })}
         seeAll={{ href: "/explore/collections", label: t("seeAllCollections") }}
       />
 

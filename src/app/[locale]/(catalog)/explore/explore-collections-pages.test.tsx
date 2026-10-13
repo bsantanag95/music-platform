@@ -101,8 +101,8 @@ describe("/explore: dos riles de colecciones", () => {
     const element = await ExplorePage({ params, searchParams: Promise.resolve({}) });
     const rails = findAll(element, CollectionRail);
 
-    expect(rails.map((rail) => (rail.props as { id: string }).id)).toEqual(["seleccion-editorial", "descubre-por-datos"]);
-    const [editorial, automatic] = rails.map((rail) => rail.props as { collections: FeaturedCollection[]; seeAll?: { href: string }; familyLabel?: unknown });
+    expect(rails.map((rail) => (rail.props as { id: string }).id)).toEqual(["descubre-por-datos", "seleccion-editorial"]);
+    const [automatic, editorial] = rails.map((rail) => rail.props as { collections: FeaturedCollection[]; seeAll?: { href: string }; familyLabel?: unknown });
     expect(editorial!.collections.map((c) => c.id)).toEqual(["e1"]);
     expect(automatic!.collections.map((c) => c.id)).toEqual(["a1"]);
     expect(editorial!.seeAll?.href).toBe("/explore/collections");
