@@ -46,7 +46,7 @@ export function ActivityTabs({ tabs, tablistLabel, emptyMessage }: ActivityTabsP
         role="tablist"
         aria-label={tablistLabel}
         onKeyDown={onKeyDown}
-        className="flex flex-wrap gap-2 border-b border-ink-border pb-3"
+        className="flex w-full gap-6 overflow-x-auto overflow-y-hidden border-b border-ink-border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {tabs.map((tab) => {
           const selected = tab.key === activeTab.key;
@@ -60,10 +60,12 @@ export function ActivityTabs({ tabs, tablistLabel, emptyMessage }: ActivityTabsP
               aria-controls={`${baseId}-panel-${tab.key}`}
               tabIndex={selected ? 0 : -1}
               onClick={() => setActive(tab.key)}
-              className={`rounded border px-3 py-1.5 font-data text-xs transition-colors ${
+              // Pestañas subrayadas, como la navegación del Header: antes eran tres botones con borde que se
+              // leían como filtros o acciones, no como secciones de la misma página.
+              className={`-mb-px shrink-0 whitespace-nowrap border-b-2 pb-2.5 pt-1 font-data text-sm transition-colors ${
                 selected
                   ? "border-amber text-paper"
-                  : "border-ink-border text-paper-muted hover:text-paper"
+                  : "border-transparent text-paper-muted hover:border-ink-border hover:text-paper"
               }`}
             >
               {tab.label}

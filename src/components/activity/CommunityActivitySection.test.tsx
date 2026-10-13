@@ -19,9 +19,6 @@ const feedActivityListMock = vi.fn<(props: unknown) => ReactElement>(() => (
 vi.mock("@/components/feed/FeedActivityList", () => ({
   FeedActivityList: (props: unknown) => feedActivityListMock(props),
 }));
-vi.mock("@/components/feed/CompactActivityRow", () => ({
-  CompactActivityRow: () => <li data-testid="compact-row" />,
-}));
 
 const entry = {
   kind: "rating" as const,
@@ -59,11 +56,13 @@ describe("CommunityActivitySection", () => {
     );
   });
 
-  it("'Recientes' usa la fila compacta, no FeedActivityList", () => {
+  it("'Recientes' usa la misma presentación del feed que las otras pestañas (variant=feed, clamp)", () => {
     render(<CommunityActivitySection source="recent" initial={{ entries: [entry], page: 1, pageSize: 10, hasNext: false }} />);
 
-    expect(screen.getByTestId("compact-row")).toBeInTheDocument();
-    expect(screen.queryByTestId("feed-activity-list")).not.toBeInTheDocument();
+    expect(screen.getByTestId("feed-activity-list")).toBeInTheDocument();
+    expect(feedActivityListMock).toHaveBeenCalledWith(
+      expect.objectContaining({ clamp: true, variant: "feed" }),
+    );
   });
 
   it("sin sesión (headingKey) y sin entradas, no renderiza nada", () => {

@@ -7,7 +7,6 @@ import { getCommunityActivity, getFeed } from "@/lib/api/diary";
 import { getRecentActivity } from "@/lib/api/home";
 import { queryKeys } from "@/lib/query/keys";
 import type { FeedResponse } from "@/lib/api/schemas";
-import { CompactActivityRow } from "@/components/feed/CompactActivityRow";
 import { FeedActivityList } from "@/components/feed/FeedActivityList";
 
 const PAGE_SIZE = 10;
@@ -67,23 +66,12 @@ export function CommunityActivitySection({
       {headingKey ? <h2 className="font-display text-xl text-paper">{t(headingKey)}</h2> : null}
       {entries.length === 0 ? (
         <p className="font-body text-sm text-paper-muted">{emptyMessage}</p>
-      ) : source !== "recent" ? (
-        // "De la gente que seguís" es el mismo feed que `/me/feed`, y "Tu
-        // actividad" el mismo rastro que "Tu rastro reciente" de Inicio — se
-        // reusa su presentación completa (las 6 fuentes, jerarquía por peso)
-        // con `clamp`, igual que `FeedList` en `/me/feed`: es una sección de
-        // altura libre con "cargar más", no un preview con scroll interno
-        // propio (ese caso — `ScrollablePreviewList` de Inicio— deja `clamp`
-        // afuera a propósito para no plegar dos veces).
-        <FeedActivityList entries={entries} variant={source === "own" ? "self" : "feed"} clamp />
       ) : (
-        <ul className="divide-y divide-ink-border">
-          {entries.map((entry) =>
-            entry.kind === "rating" || entry.kind === "comment" || entry.kind === "review" ? (
-              <CompactActivityRow key={`${entry.kind}-${entry.id}`} entry={entry} />
-            ) : null,
-          )}
-        </ul>
+        // Las tres pestañas con la misma presentación del feed (avatar, carátula, artista, jerarquía por peso):
+        // "Recientes" usaba la fila compacta del panel de Inicio, sin avatar ni artista, y al cambiar de pestaña la
+        // misma valoración se veía de dos formas distintas. `clamp` como en `/me/feed`: sección de altura libre con
+        // "cargar más", no un preview con scroll propio.
+        <FeedActivityList entries={entries} variant={source === "own" ? "self" : "feed"} clamp />
       )}
 
       {isError ? (
