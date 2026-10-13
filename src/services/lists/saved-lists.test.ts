@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   db: { select: vi.fn(), insert: vi.fn(), delete: vi.fn() },
   relationsFor: vi.fn(),
   enrichLists: vi.fn(),
+  generatedRefsFor: vi.fn(async (_ids: string[]) => new Map<string, { templateKey: string; periodKey: string }>()),
   countsByListId: vi.fn(async () => new Map()),
   deriveJourneyState: vi.fn(() => "in_progress"),
 }));
@@ -20,6 +21,9 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/db", () => ({ db: mocks.db }));
 vi.mock("@/services/social/relations", () => ({ relationsFor: mocks.relationsFor }));
 vi.mock("./lists", () => ({ enrichLists: mocks.enrichLists }));
+vi.mock("@/services/discovery/collections/generated", () => ({
+  generatedRefsFor: (ids: string[]) => mocks.generatedRefsFor(ids),
+}));
 vi.mock("@/services/journeys/progress", () => ({
   countsByListId: mocks.countsByListId,
   deriveJourneyState: mocks.deriveJourneyState,
@@ -117,6 +121,19 @@ describe("servicio de listas guardadas", () => {
     mocks.relationsFor.mockResolvedValue(new Map([[owner, "none"]]));
     const result = await listSavedLists(saver);
     expect(result.lists[0]?.unavailable).toBe(true);
+  });
+
+  it("listSavedLists expone plantilla y período de una colección generada (y null en las demás)", async () => {
+    mocks.db.select.mockReturnValueOnce(chain([savedJoinRow]));
+    mocks.relationsFor.mockResolvedValue(new Map([[owner, "none"]]));
+    mocks.generatedRefsFor.mockResolvedValueOnce(new Map([[savedJoinRow.id, { templateKey: "anniversaries", periodKey: "2026-10" }]]));
+
+    const generated = await listSavedLists(saver);
+    expect(generated.lists[0]?.generated).toEqual({ templateKey: "anniversaries", periodKey: "2026-10" });
+
+    mocks.db.select.mockReturnValueOnce(chain([savedJoinRow]));
+    const regular = await listSavedLists(saver);
+    expect(regular.lists[0]?.generated).toBeNull();
   });
 
   it("listSavedLists valida la paginación", async () => {

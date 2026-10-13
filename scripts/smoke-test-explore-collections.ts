@@ -74,6 +74,11 @@ import {
 } from "../src/services/discovery/discovery";
 import { listFeaturedLists } from "../src/services/lists/community";
 import { listEditorialLists } from "../src/services/lists/editorial";
+import { listUserLists } from "../src/services/lists/lists";
+import { listSavedLists, saveList } from "../src/services/lists/saved-lists";
+import { findGeneratedCollection, generatedRefsFor } from "../src/services/discovery/collections/generated";
+import { collectionTitle } from "../src/services/discovery/collections/titles";
+import { presentList } from "../src/lib/list-presentation";
 
 assertSmokeAllowed();
 
@@ -552,6 +557,75 @@ async function main() {
       await resumeTemplate(adminId, KEY).catch(() => undefined);
       if (!priorState) await db.delete(exploreCollectionTemplateState).where(eq(exploreCollectionTemplateState.templateKey, KEY));
     }
+
+    // Títulos localizados y ruta propia (openspec: localize-collection-titles).
+    console.log("Títulos localizados y detalle bajo Explorar:");
+    const generatedRows = await db
+      .select({
+        listId: userListFeatured.listId,
+        templateKey: userListFeatured.templateKey,
+        periodKey: userListFeatured.periodKey,
+        title: userList.title,
+      })
+      .from(userListFeatured)
+      .innerJoin(userList, eq(userList.id, userListFeatured.listId))
+      .where(eq(userListFeatured.source, "template"));
+    const real = generatedRows.filter((row) => !row.templateKey!.startsWith("smoke-"));
+    check(real.length > 0, "hay colecciones generadas reales en la base");
+    for (const row of real) {
+      const es = collectionTitle(row.templateKey, row.periodKey, "es", row.title);
+      const en = collectionTitle(row.templateKey, row.periodKey, "en", row.title);
+      check(es.length > 0 && en.length > 0 && es !== en, `${row.templateKey}/${row.periodKey}: «${es}» / «${en}»`);
+    }
+    const evergreen = real.find((row) => row.templateKey === "one-per-decade");
+    if (evergreen) {
+      check(
+        collectionTitle(evergreen.templateKey, evergreen.periodKey, "en", evergreen.title) === "One album per decade",
+        "el título en inglés de una colección real es el del catálogo",
+      );
+    }
+
+    const syntheticRef = await findGeneratedCollection(listId);
+    check(
+      syntheticRef?.templateKey === "smoke-evergreen" && syntheticRef.periodKey === "evergreen",
+      "findGeneratedCollection reconoce una colección generada pública",
+    );
+    check((await findGeneratedCollection(listB)) === null, "una colección curada no es una generada");
+    const personal = await official("Smoke oficial personal", { isOfficial: false, officialPublishedAt: null });
+    check((await findGeneratedCollection(personal)) === null, "una lista que no es colección generada no tiene detalle bajo Explorar");
+    await db.update(userList).set({ audience: "private" }).where(eq(userList.id, listId));
+    check((await findGeneratedCollection(listId)) === null, "una colección que dejó de ser pública devuelve null (404)");
+    await db.update(userList).set({ audience: "public" }).where(eq(userList.id, listId));
+    await db.update(userList).set({ moderationStatus: "hidden" }).where(eq(userList.id, listId));
+    check((await findGeneratedCollection(listId)) === null, "una colección oculta por moderación devuelve null (404)");
+    await db.update(userList).set({ moderationStatus: "visible" }).where(eq(userList.id, listId));
+
+    const refs = await generatedRefsFor([listId, listB, personal]);
+    check(refs.has(listId) && !refs.has(listB) && !refs.has(personal), "generatedRefsFor solo incluye las generadas");
+
+    // Listas guardadas: la colección generada se muestra con título del idioma y enlaza a Explorar.
+    await saveList(adminId, listId, false);
+    const saved = (await listSavedLists(adminId)).lists.find((entry) => entry.id === listId);
+    check(
+      saved?.generated?.templateKey === "smoke-evergreen",
+      "la lista de guardadas expone plantilla y período de la colección generada",
+    );
+    const shown = presentList(saved!, "en");
+    check(
+      shown.href.startsWith("/explore/collections/") && !shown.href.includes("exploracion"),
+      "y la presenta bajo Explorar, sin la cuenta curadora en la URL",
+    );
+
+    // El perfil de la cuenta curadora no lista las colecciones generadas.
+    const profileLists = await listUserLists(CURATOR_USERNAME, null, 1, 50);
+    check(
+      !profileLists.lists.some((entry) => entry.id === listId),
+      "la pestaña de listas de @exploracion no incluye colecciones generadas",
+    );
+    check(
+      profileLists.lists.some((entry) => entry.id === listB),
+      "las demás listas de la cuenta siguen listándose",
+    );
   }
 
   console.log("Plantillas del día 0 (sintético):");

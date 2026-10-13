@@ -93,4 +93,26 @@ describe("resolveCatalogRoute", () => {
       "/es/users/ana/lists/mis-favoritos-b2c3d4e5-0000-4000-8000-000000000def",
     ]);
   });
+
+  it("canonicaliza una colección generada bajo Explorar, sin usuario dueño", () => {
+    resolveCatalogRoute({
+      locale: "en",
+      kind: "collection",
+      segment: "novedades-esenciales-b2c3d4e5-0000-4000-8000-000000000def",
+      canonical: "essential-new-releases-b2c3d4e5-0000-4000-8000-000000000def",
+    });
+    expect(redirects).toEqual([
+      "/en/explore/collections/essential-new-releases-b2c3d4e5-0000-4000-8000-000000000def",
+    ]);
+  });
+
+  it("no redirige una colección cuyo segmento ya es el canónico del idioma", () => {
+    resolveCatalogRoute({
+      locale: "en",
+      kind: "collection",
+      segment: "essential-new-releases-b2c3d4e5-0000-4000-8000-000000000def",
+      canonical: "essential-new-releases-b2c3d4e5-0000-4000-8000-000000000def",
+    });
+    expect(redirects).toEqual([]);
+  });
 });

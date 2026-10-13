@@ -3,6 +3,8 @@ import {
   albumHref,
   artistHref,
   artistSegment,
+  collectionHref,
+  collectionSegment,
   listHref,
   localeHref,
   reviewHref,
@@ -94,5 +96,12 @@ describe("helpers de enlace", () => {
 describe("genreHref", () => {
   it("usa el slug guardado del género, sin id", () => {
     expect(genreHref("progressive-rock")).toBe("/genre/progressive-rock");
+  });
+
+  it("colección generada: vive bajo Explorar con el slug del título localizado y sin cuenta dueña", () => {
+    expect(collectionHref("Novedades esenciales", LIST_ID)).toBe(`/explore/collections/novedades-esenciales-${encodeId(LIST_ID)}`);
+    expect(collectionHref("Essential new releases", LIST_ID)).toBe(`/explore/collections/essential-new-releases-${encodeId(LIST_ID)}`);
+    expect(collectionHref("Cumplen años en octubre de 2026", LIST_ID)).not.toContain("exploracion");
+    expect(collectionSegment("Lo que viene", LIST_ID)).toBe(`lo-que-viene-${encodeId(LIST_ID)}`);
   });
 });

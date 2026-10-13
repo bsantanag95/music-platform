@@ -10,6 +10,7 @@ import {
 } from "@/lib/api/schemas";
 import type { FeaturedAdminResponse, FeaturedAdminRow } from "@/lib/api/schemas";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { collectionTitle } from "@/services/discovery/collections/titles";
 import { AUTOMATIC_RAIL_LIMIT, EDITORIAL_RAIL_LIMIT } from "@/services/discovery/constants";
 
 type Group = FeaturedAdminRow["group"];
@@ -124,11 +125,15 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
     void run(() => apiFetch(`/api/admin/editorial/featured/${listId}`, NoContentResponseSchema, { method: "DELETE" }));
   };
 
+  // Las colecciones generadas se muestran con el título del idioma de la consola (openspec: localize-collection-titles).
+  const titleOf = (row: FeaturedAdminRow) =>
+    row.source === "template" ? collectionTitle(row.templateKey, row.periodKey, locale, row.title) : row.title;
+
   const renderRow = (row: FeaturedAdminRow, index: number | null, size = 0) => (
     <li key={row.listId} className="rounded border border-ink-border bg-ink-surface p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="font-display text-lg text-paper">{row.title}</h3>
+          <h3 className="font-display text-lg text-paper">{titleOf(row)}</h3>
           <p className="mt-1 font-data text-xs text-paper-muted">
             {row.source === "curated" ? t("featured.sourceCurated") : t("featured.sourceTemplate")}
             {" · "}
@@ -152,7 +157,7 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             type="button"
-            aria-label={t("featured.moveUp", { title: row.title })}
+            aria-label={t("featured.moveUp", { title: titleOf(row) })}
             disabled={busy || index === 0}
             onClick={() => move(row.group, index, -1)}
             className="rounded border border-ink-border px-3 py-2 font-data text-xs text-paper-muted hover:text-paper disabled:opacity-50"
@@ -161,7 +166,7 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
           </button>
           <button
             type="button"
-            aria-label={t("featured.moveDown", { title: row.title })}
+            aria-label={t("featured.moveDown", { title: titleOf(row) })}
             disabled={busy || index === size - 1}
             onClick={() => move(row.group, index, 1)}
             className="rounded border border-ink-border px-3 py-2 font-data text-xs text-paper-muted hover:text-paper disabled:opacity-50"

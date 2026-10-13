@@ -1558,7 +1558,10 @@ Activa o desactiva el tracking de progreso propio sobre una lista ajena de álbu
 Listas guardadas del usuario, orden por fecha de guardado descendente. Una lista que dejó de ser
 visible se marca `unavailable: true` en vez de filtrarse.
 
-**200 OK:** `{ lists: [SavedListSummary], page, pageSize, hasNext }`. **401** sin sesión.
+**200 OK:** `{ lists: [SavedListSummary], page, pageSize, hasNext }`. **401** sin sesión. Cada `SavedListSummary` (y cada
+`TrackedListSummary` de `/me/caminos`) trae `generated`: `{ templateKey, periodKey }` si la lista es una colección generada
+por plantilla (el cliente deriva su título en el idioma activo y enlaza a `/explore/collections/<slug>-<id>`), o `null`
+(cambio `localize-collection-titles`).
 
 ### `GET /api/lists/discover?page=&pageSize=&q=&entityType=&sort=` (cambio `rework-public-lists-surface`)
 

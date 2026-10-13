@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, within } from "@testing-library/react";
+import { encodeId } from "@/lib/slug";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { parseExploreListParams } from "@/services/discovery/explore-params";
 import { CollectionRail } from "./CollectionRail";
@@ -153,7 +154,7 @@ describe("CollectionRail", () => {
       <CollectionRail
         heading="Colecciones destacadas"
         collections={[
-          { id: "c1", title: "Esenciales", description: "Para empezar", itemCount: 12, coverThumbs: [], source: "curated", family: null },
+          { id: "c1", title: "Esenciales", description: "Para empezar", itemCount: 12, coverThumbs: [], source: "curated", templateKey: null, periodKey: null, family: null },
         ]}
         curatorUsername="exploracion"
         itemsLabel={(count) => `${count} álbumes`}
@@ -177,7 +178,7 @@ describe("CollectionRail", () => {
       <CollectionRail
         id="descubre-por-datos"
         heading="Descubre por datos"
-        collections={[{ id: "c1", title: "Cumplen años", description: null, itemCount: 12, coverThumbs: [], source: "template", family: "ephemeris" }]}
+        collections={[{ id: "c1", title: "Cumplen años", description: null, itemCount: 12, coverThumbs: [], source: "template", templateKey: "anniversaries", periodKey: "2026-10", family: "ephemeris" }]}
         curatorUsername="exploracion"
         itemsLabel={String}
         seeAll={{ href: "/explore/collections", label: "Ver todas" }}
@@ -187,13 +188,74 @@ describe("CollectionRail", () => {
     expect(screen.getByRole("link", { name: /Ver todas/ })).toHaveAttribute("href", "/es/explore/collections");
   });
 
+  const generated = {
+    id: "00000000-0000-4000-8000-0000000000c1",
+    title: "Cumplen años en octubre",
+    description: null,
+    itemCount: 12,
+    coverThumbs: [],
+    source: "template" as const,
+    templateKey: "anniversaries",
+    periodKey: "2026-10",
+    family: "ephemeris" as const,
+  };
+
+  it("una colección generada se muestra con el título del idioma y enlaza a su ruta bajo Explorar (es)", () => {
+    renderWithIntl(<CollectionRail heading="Colecciones" collections={[generated]} curatorUsername="exploracion" itemsLabel={String} />);
+
+    const card = screen.getByRole("link", { name: /Cumplen años en octubre de 2026/ });
+    expect(card).toHaveAttribute("href", `/es/explore/collections/cumplen-anos-en-octubre-de-2026-${encodeId(generated.id)}`);
+    expect(card.getAttribute("href")).not.toContain("exploracion");
+  });
+
+  it("la misma colección en inglés: título y slug en inglés, sin la cuenta curadora en la URL", () => {
+    renderWithIntl(
+      <CollectionRail heading="Collections" collections={[generated]} curatorUsername="exploracion" itemsLabel={String} />,
+      "en",
+    );
+
+    const card = screen.getByRole("link", { name: /Anniversaries in October 2026/ });
+    // El prefijo de locale lo pone el `Link` de la app (en estas pruebas está fijo en es); lo que importa es el slug.
+    expect(card.getAttribute("href")).toContain(`/explore/collections/anniversaries-in-october-2026-${encodeId(generated.id)}`);
+    expect(card.getAttribute("href")).not.toContain("exploracion");
+  });
+
+  it("una colección curada conserva su título y su ruta de lista", () => {
+    renderWithIntl(
+      <CollectionRail
+        heading="Selección editorial"
+        collections={[{ ...generated, id: "00000000-0000-4000-8000-0000000000c2", title: "Mejores debuts", source: "curated", templateKey: null, periodKey: null, family: null }]}
+        curatorUsername="exploracion"
+        itemsLabel={String}
+      />,
+      "en",
+    );
+
+    const card = screen.getByRole("link", { name: /Mejores debuts/ });
+    expect(card.getAttribute("href")).toContain("/users/exploracion/lists/mejores-debuts-");
+  });
+
+  it("una generada con plantilla desconocida muestra su título guardado", () => {
+    renderWithIntl(
+      <CollectionRail
+        heading="Colecciones"
+        collections={[{ ...generated, templateKey: "ya-no-existe", periodKey: "evergreen" }]}
+        curatorUsername="exploracion"
+        itemsLabel={String}
+      />,
+      "en",
+    );
+
+    expect(screen.getByRole("link", { name: /Cumplen años en octubre/ })).toBeInTheDocument();
+  });
+
   it("muestra la familia de una colección automática y no la de una curada", () => {
     renderWithIntl(
       <CollectionRail
         heading="Colecciones"
         collections={[
-          { id: "a", title: "Cumplen años en octubre", description: null, itemCount: 12, coverThumbs: [], source: "template", family: "ephemeris" },
-          { id: "b", title: "Mejores debuts", description: null, itemCount: 20, coverThumbs: [], source: "curated", family: null },
+          { id: "a", title: "Cumplen años en octubre", description: null, itemCount: 12, coverThumbs: [], source: "template", templateKey: "anniversaries", periodKey: "2026-10", family: "ephemeris" },
+          { id: "b", title: "Mejores debuts", description: null, itemCount: 20, coverThumbs: [], source: "curated", templateKey: null, periodKey: null, family: null },
         ]}
         curatorUsername="exploracion"
         itemsLabel={String}
@@ -208,7 +270,7 @@ describe("CollectionRail", () => {
     renderWithIntl(
       <CollectionRail
         heading="Anteriores"
-        collections={[{ id: "a", title: "Cumplen años en septiembre", description: null, itemCount: 12, coverThumbs: [], source: "template", family: "ephemeris" }]}
+        collections={[{ id: "a", title: "Cumplen años en septiembre", description: null, itemCount: 12, coverThumbs: [], source: "template", templateKey: "anniversaries", periodKey: "2026-10", family: "ephemeris" }]}
         curatorUsername="exploracion"
         itemsLabel={String}
         noteFor={() => "Hasta el 1 oct 2026"}

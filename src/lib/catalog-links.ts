@@ -45,6 +45,11 @@ export function listSegment(listName: string, listId: string): string {
   return buildSegment(truncateSlug(slugify(listName), LIST_SLUG_MAX), listId);
 }
 
+/** Segmento canónico de una colección generada: `<título localizado>-<id>` (mismo formato que una lista). */
+export function collectionSegment(title: string, collectionId: string): string {
+  return buildSegment(truncateSlug(slugify(title), LIST_SLUG_MAX), collectionId);
+}
+
 /** Segmento canónico de una reseña: `<usuario>-<álbum>-<id>`. */
 export function reviewSegment(username: string, albumTitle: string, reviewId: string): string {
   return buildSegment(joinParts(slugify(username), slugify(albumTitle)), reviewId);
@@ -64,6 +69,14 @@ export function songHref(artistName: string | null, title: string, recordingId: 
 
 export function listHref(username: string, listName: string, listId: string): string {
   return `/users/${encodeURIComponent(username)}/lists/${listSegment(listName, listId)}`;
+}
+
+/**
+ * Detalle de una colección generada: `/explore/collections/<slug>-<id>`. Vive bajo Explorar (no bajo la cuenta
+ * curadora), así la URL no mezcla idiomas ni expone un usuario. `title` es el título del idioma activo.
+ */
+export function collectionHref(title: string, collectionId: string): string {
+  return `/explore/collections/${collectionSegment(title, collectionId)}`;
 }
 
 export function reviewHref(username: string, albumTitle: string, reviewId: string): string {

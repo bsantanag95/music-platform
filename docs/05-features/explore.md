@@ -204,6 +204,24 @@ una futura sección de efemérides de personas.
   (`PUT /api/admin/editorial/featured/order` recibe `group`), así reordenar la selección editorial no mueve las
   automáticas, y «dentro del tope» se evalúa contra el rail de cada grupo.
 
+### Títulos y rutas por idioma (cambio `localize-collection-titles`, ADR 0037)
+
+El título de una colección **generada** no se guarda traducido: se deriva al leer de su plantilla y su período con un
+catálogo es/en (`collections/titles.ts`). "Novedades esenciales" es "Essential new releases" en inglés;
+"Cumplen años en octubre de 2026" es "Anniversaries in October 2026" (los períodos llevan año). `user_list.title` sigue en
+español como título canónico y respaldo; una plantilla desconocida o un período ilegible muestran ese título.
+
+- **Detalle:** `/explore/collections/<slug>-<id>`, con el slug del título del idioma activo y sin la cuenta curadora en la
+  URL. Resuelve por id, canonicaliza con 308 y responde 404 si la lista no es una colección generada pública y visible.
+  Muestra a la plataforma como dueño ("Exploración" / "Explore") sin enlace a un perfil; guardar y seguir funcionan igual.
+- **Ruta antigua:** `/users/exploracion/lists/<slug>-<id>` responde 308 a la nueva cuando la lista es una colección
+  generada. Las demás listas no cambian.
+- **Dónde se aplica:** tarjetas del rail y de la página de colecciones, archivo, consola (paneles de destacadas y de
+  generadas), listas guardadas y en seguimiento. La pestaña de listas del perfil de `@exploracion` deja de listar las
+  generadas.
+- **Selección editorial:** conserva el título con que se escribió y su ruta de lista. Traducirla (título y descripción por
+  idioma) es un cambio aparte.
+
 ### Colecciones del día 0 (cambio `add-day-zero-collections`, ADR 0035)
 
 - **Carátulas garantizadas.** Cada plantilla propone candidatos con holgura (`CANDIDATE_POOL`); el generador los

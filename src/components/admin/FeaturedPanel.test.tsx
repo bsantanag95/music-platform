@@ -122,7 +122,7 @@ describe("FeaturedPanel", () => {
 
   it("separa la selección editorial de las automáticas y cuenta el tope de cada rail por su cuenta", () => {
     const automatic = (id: string, title: string, over: Record<string, unknown> = {}) =>
-      row(id, title, { source: "template", group: "automatic", templateKey: "anniversaries", periodKey: "2026-10", ...over });
+      row(id, title, { source: "template", group: "automatic", templateKey: "plantilla-retirada", periodKey: "evergreen", ...over });
     renderWithIntl(
       <FeaturedPanel
         initial={{ featured: [row(A, "Debuts"), automatic(B, "Cumplen años"), automatic(C, "Grammy", { status: "beyond_limit" })], eligible: [] }}
@@ -142,7 +142,7 @@ describe("FeaturedPanel", () => {
   it("reordena un grupo enviando solo sus ids y su nombre de grupo", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({ ok: true }).mockResolvedValueOnce({ featured: [], eligible: [] });
     const automatic = (id: string, title: string) =>
-      row(id, title, { source: "template", group: "automatic", templateKey: "anniversaries", periodKey: "2026-10" });
+      row(id, title, { source: "template", group: "automatic", templateKey: "plantilla-retirada", periodKey: "evergreen" });
     renderWithIntl(
       <FeaturedPanel initial={{ featured: [row(A, "Debuts"), automatic(B, "Primera auto"), automatic(C, "Segunda auto")], eligible: [] }} canPublish />,
     );
@@ -159,5 +159,27 @@ describe("FeaturedPanel", () => {
     renderWithIntl(<FeaturedPanel initial={{ featured: [row(A, "Debuts")], eligible: [] }} canPublish />);
 
     expect(screen.getByText("No hay colecciones automáticas vigentes.")).toBeInTheDocument();
+  });
+
+  it("muestra las colecciones generadas con el título del idioma de la consola", () => {
+    const generated = row(B, "Cumplen años en octubre", {
+      source: "template",
+      group: "automatic",
+      templateKey: "anniversaries",
+      periodKey: "2026-10",
+    });
+    const view = renderWithIntl(<FeaturedPanel initial={{ featured: [generated], eligible: [] }} canPublish />, "en");
+
+    expect(screen.getByRole("heading", { name: "Anniversaries in October 2026" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Move Anniversaries in October 2026 down" })).toBeTruthy();
+    view.unmount();
+    renderWithIntl(<FeaturedPanel initial={{ featured: [generated], eligible: [] }} canPublish />);
+    expect(screen.getByRole("heading", { name: "Cumplen años en octubre de 2026" })).toBeInTheDocument();
+  });
+
+  it("una colección curada conserva el título que escribió el equipo", () => {
+    renderWithIntl(<FeaturedPanel initial={{ featured: [row(A, "Mejores debuts")], eligible: [] }} canPublish />, "en");
+
+    expect(screen.getByRole("heading", { name: "Mejores debuts" })).toBeInTheDocument();
   });
 });

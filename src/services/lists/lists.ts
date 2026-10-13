@@ -20,6 +20,7 @@ import {
 } from "./types";
 import { resolveNewContentAudience } from "@/services/social/default-audience";
 import { scheduleCoverMirrorsForUrls } from "@/services/catalog/cover-mirror";
+import { notGeneratedCollectionCondition } from "@/services/discovery/collections/conditions";
 
 /** Cantidad máxima de carátulas que se llevan a la tarjeta de una lista. */
 export const LIST_COVER_THUMBS_MAX = 4;
@@ -420,6 +421,9 @@ export async function listUserLists(
     eq(userList.ownerId, profile.id),
     inArray(userList.audience, audiences),
     eq(userList.kind, "standard"),
+    // Las colecciones generadas de la cuenta curadora no son listas personales: se descubren en Explorar
+    // (openspec: localize-collection-titles).
+    notGeneratedCollectionCondition(),
     ...listFilterConditions({ q, entityType }),
   );
   const [rows, [totalRow]] = await Promise.all([

@@ -6,6 +6,7 @@ import { apiFetch, ApiError } from "@/lib/api/client";
 import { EditorialListMutationResponseSchema, TemplatesAdminResponseSchema } from "@/lib/api/schemas";
 import type { TemplateAdminRow, TemplatesAdminResponse } from "@/lib/api/schemas";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { collectionTitle } from "@/services/discovery/collections/titles";
 import { MIN_ALBUMS_FOR_SECTION } from "@/services/discovery/constants";
 
 // Panel "Generadas automáticamente" (openspec: manage-explore-featured-console): estado de las
@@ -125,7 +126,7 @@ export function TemplatesPanel({ initial, canPublish }: { initial: TemplatesAdmi
                   <dt className="inline">{t("templates.current")}: </dt>
                   <dd className="inline">
                     {template.current
-                      ? `${template.current.title} · ${template.current.inRail ? t("templates.inRail") : t("templates.outOfRail")}`
+                      ? `${collectionTitle(template.key, template.current.periodKey, locale, template.current.title)} · ${template.current.inRail ? t("templates.inRail") : t("templates.outOfRail")}`
                       : noCollectionReason(template)}
                   </dd>
                 </div>
