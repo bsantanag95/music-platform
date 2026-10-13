@@ -177,7 +177,7 @@ describe("CollectionRail", () => {
     const { container } = renderWithIntl(
       <CollectionRail
         id="descubre-por-datos"
-        heading="Descubre por datos"
+        heading="Descubre"
         collections={[{ id: "c1", title: "Cumplen años", description: null, itemCount: 12, coverThumbs: [], source: "template", templateKey: "anniversaries", periodKey: "2026-10", family: "ephemeris" }]}
         curatorUsername="exploracion"
         itemsLabel={String}

@@ -157,7 +157,7 @@
       "refresh": "Actualizar",
       "group": {
         "curated": "Selección editorial",
-        "automatic": "Descubre por datos"
+        "automatic": "Descubre"
       },
       "groupHint": {
         "curated": "Listas oficiales que destacas a mano. Reordenar aquí no mueve las automáticas.",

@@ -54,7 +54,7 @@
     "jump": {
       "label": "On this page",
       "editorial": "Editorial selection",
-      "automatic": "Discover by data",
+      "automatic": "Discover",
       "genres": "Genres",
       "newReleases": "New releases",
       "upcoming": "Upcoming",
@@ -65,7 +65,7 @@
     },
     "editorialHeading": "Editorial selection",
     "editorialDescription": "Collections picked by the team, with taste and context.",
-    "automaticHeading": "Discover by data",
+    "automaticHeading": "Discover",
     "automaticDescription": "Anniversaries, awards and curiosities generated automatically from the catalog.",
     "seeAllCollections": "See all",
     "collectionFamilies": {

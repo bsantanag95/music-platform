@@ -28,7 +28,7 @@ describe("ExploreJumpNav", () => {
     const links = within(nav).getAllByRole("link");
     expect(links.map((a) => a.textContent)).toEqual([
       "Selección editorial",
-      "Descubre por datos",
+      "Descubre",
       "Géneros",
       "Novedades",
       "Próximos",
