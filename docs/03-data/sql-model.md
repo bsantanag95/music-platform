@@ -938,8 +938,17 @@ conteos de la huella de gusto).
 `source` (`curated` | `template`, default `curated`), `template_key` y `period_key` (obligatorias si
 `source='template'`), `starts_at` (default `now()`), `expires_at` (opcional, `> starts_at`) y `weight`
 (SMALLINT, default 0). Índice único parcial `(template_key, period_key) WHERE source='template'` (una lista por
-plantilla y período) e índice de lectura `(weight DESC, rank)`. El riel muestra las filas vigentes por `weight` desc,
-`rank` asc, con tope 6.
+plantilla y período) e índice de lectura `(weight DESC, rank)`.
+
+**Desde `0071`** (cambio `unify-explore-collections`, ADR 0038) la fila lleva `family` (`NOT NULL`, `CHECK` sobre
+`ephemeris` | `awards` | `releases` | `discovery` | `rankings`, índice `idx_user_list_featured_family`). La familia
+**deja de derivarse** de `template_key` y aplica por igual a las curadas y a las generadas: la generación escribe la
+que declara su plantilla y la consola la exige al destacar a mano. Así el archivo conserva la familia histórica de una
+plantilla retirada del registro. El valor `community` de la primera versión se renombró a `rankings` en la misma
+migración, para no chocar con las listas de la comunidad de `/lists`.
+
+El riel de `/explore` muestra las filas vigentes por `weight` desc, `rank` asc, con tope 10, mezclando los dos
+orígenes: `rank` es una secuencia única sobre todas las colecciones vigentes, no una por origen.
 
 **Solo señal de distribución:** no cambia visibilidad, permisos, lectura ni comportamiento
 de la lista en ninguna otra superficie. **Tabla aparte a propósito** (mismo motivo que

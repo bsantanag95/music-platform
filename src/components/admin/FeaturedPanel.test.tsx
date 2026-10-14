@@ -26,6 +26,7 @@ const row = (listId: string, title: string, over: Record<string, unknown> = {}) 
   group: "curated" as const,
   templateKey: null,
   periodKey: null,
+  family: "discovery" as const,
   rank: 1,
   weight: 0,
   startsAt: "2026-10-01T00:00:00.000Z",
@@ -48,9 +49,12 @@ describe("FeaturedPanel", () => {
     expect(screen.getByText("Primera")).toBeInTheDocument();
     expect(screen.getByText("En el riel")).toBeInTheDocument();
     expect(screen.getByText("Fuera del riel: lista retirada")).toBeInTheDocument();
-    expect(screen.getByText("1 de 6 tarjetas en el riel ahora")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Selección editorial" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Descubre" })).toBeInTheDocument();
+    expect(screen.getByText("1 de 10 tarjetas en el riel ahora")).toBeInTheDocument();
+    // Un solo orden para todo el riel: ya no hay un bloque por origen (ADR 0038).
+    expect(screen.queryByRole("heading", { name: "Selección editorial" })).toBeNull();
+    expect(screen.getByText(/Un solo orden para todo el riel/)).toBeInTheDocument();
+    // El origen de cada fila sigue visible: es lo que dice qué sobreescribe la próxima corrida.
+    expect(screen.getAllByText(/Curada/).length).toBeGreaterThan(0);
   });
 
   it("sin permiso de publicar es de solo lectura", () => {
@@ -71,7 +75,7 @@ describe("FeaturedPanel", () => {
     await waitFor(() => expect(apiFetch).toHaveBeenCalledTimes(2));
     const [url, , init] = vi.mocked(apiFetch).mock.calls[0]!;
     expect(url).toBe("/api/admin/editorial/featured/order");
-    expect(init).toMatchObject({ method: "PUT", body: JSON.stringify({ group: "curated", listIds: [B, A] }) });
+    expect(init).toMatchObject({ method: "PUT", body: JSON.stringify({ listIds: [B, A] }) });
   });
 
   it("no deja subir la primera ni bajar la última", () => {
@@ -86,12 +90,14 @@ describe("FeaturedPanel", () => {
     renderWithIntl(<FeaturedPanel initial={initial} canPublish />);
 
     fireEvent.change(screen.getByLabelText("Lista oficial"), { target: { value: C } });
+    fireEvent.change(screen.getByLabelText("Tipo de colección"), { target: { value: "awards" } });
     fireEvent.click(screen.getByRole("button", { name: "Destacar" }));
 
     await waitFor(() => expect(apiFetch).toHaveBeenCalledTimes(2));
     const [url, , init] = vi.mocked(apiFetch).mock.calls[0]!;
     expect(url).toBe("/api/admin/editorial/featured");
-    expect(init).toMatchObject({ method: "POST", body: JSON.stringify({ listId: C }) });
+    // Destacar a mano exige la familia: sin ella la colección no tendría dónde ubicarse.
+    expect(init).toMatchObject({ method: "POST", body: JSON.stringify({ listId: C, family: "awards" }) });
   });
 
   it("quita una colección solo tras confirmar", async () => {
@@ -120,9 +126,9 @@ describe("FeaturedPanel", () => {
     expect(screen.getByText("No hay listas oficiales por destacar. Publica una en la pestaña Listas.")).toBeInTheDocument();
   });
 
-  it("separa la selección editorial de las automáticas y cuenta el tope de cada rail por su cuenta", () => {
+  it("mezcla curadas y automáticas en una sola secuencia, con un tope único", () => {
     const automatic = (id: string, title: string, over: Record<string, unknown> = {}) =>
-      row(id, title, { source: "template", group: "automatic", templateKey: "plantilla-retirada", periodKey: "evergreen", ...over });
+      row(id, title, { source: "template", group: "automatic", templateKey: "plantilla-retirada", periodKey: "evergreen", family: "ephemeris", ...over });
     renderWithIntl(
       <FeaturedPanel
         initial={{ featured: [row(A, "Debuts"), automatic(B, "Cumplen años"), automatic(C, "Grammy", { status: "beyond_limit" })], eligible: [] }}
@@ -130,35 +136,43 @@ describe("FeaturedPanel", () => {
       />,
     );
 
-    const curated = within(screen.getByRole("region", { name: "Selección editorial" }));
-    const auto = within(screen.getByRole("region", { name: "Descubre" }));
-    expect(curated.getByText("Debuts")).toBeInTheDocument();
-    expect(curated.queryByText("Cumplen años")).toBeNull();
-    expect(auto.getByText("Cumplen años")).toBeInTheDocument();
-    expect(curated.getByText("1 de 6 tarjetas en el riel ahora")).toBeInTheDocument();
-    expect(auto.getByText("1 de 6 tarjetas en el riel ahora")).toBeInTheDocument();
+    // Una sola lista en el orden del riel: las tres filas conviven.
+    const rows = screen.getAllByRole("listitem");
+    expect(rows.map((item) => item.querySelector("h3")?.textContent)).toEqual(["Debuts", "Cumplen años", "Grammy"]);
+    // El tope se cuenta sobre todo el riel, no por origen.
+    expect(screen.getByText("2 de 10 tarjetas en el riel ahora")).toBeInTheDocument();
+    // Cada fila dice su origen y su familia.
+    expect(within(rows[0]!).getByText(/Curada/)).toBeInTheDocument();
+    expect(within(rows[1]!).getByText(/Automática/)).toBeInTheDocument();
+    expect(within(rows[1]!).getByText(/Efemérides/)).toBeInTheDocument();
   });
 
-  it("reordena un grupo enviando solo sus ids y su nombre de grupo", async () => {
+  it("reordena enviando la secuencia completa, cruzando los dos orígenes", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({ ok: true }).mockResolvedValueOnce({ featured: [], eligible: [] });
     const automatic = (id: string, title: string) =>
-      row(id, title, { source: "template", group: "automatic", templateKey: "plantilla-retirada", periodKey: "evergreen" });
+      row(id, title, { source: "template", group: "automatic", templateKey: "plantilla-retirada", periodKey: "evergreen", family: "ephemeris" });
     renderWithIntl(
       <FeaturedPanel initial={{ featured: [row(A, "Debuts"), automatic(B, "Primera auto"), automatic(C, "Segunda auto")], eligible: [] }} canPublish />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Bajar Primera auto" }));
+    // Subir la primera automática la pasa por delante de la curada: un solo orden.
+    fireEvent.click(screen.getByRole("button", { name: "Subir Primera auto" }));
 
     await waitFor(() => expect(apiFetch).toHaveBeenCalledTimes(2));
     const [url, , init] = vi.mocked(apiFetch).mock.calls[0]!;
     expect(url).toBe("/api/admin/editorial/featured/order");
-    expect(init).toMatchObject({ method: "PUT", body: JSON.stringify({ group: "automatic", listIds: [C, B] }) });
+    expect(init).toMatchObject({ method: "PUT", body: JSON.stringify({ listIds: [B, A, C] }) });
   });
 
-  it("un grupo sin filas muestra su mensaje de vacío", () => {
-    renderWithIntl(<FeaturedPanel initial={{ featured: [row(A, "Debuts")], eligible: [] }} canPublish />);
+  it("sin filas vigentes muestra un solo mensaje de vacío", () => {
+    renderWithIntl(
+      <FeaturedPanel
+        initial={{ featured: [row(A, "Vieja", { status: "expired", orderable: false })], eligible: [] }}
+        canPublish
+      />,
+    );
 
-    expect(screen.getByText("No hay colecciones automáticas vigentes.")).toBeInTheDocument();
+    expect(screen.getByText(/Todavía no hay colecciones destacadas/)).toBeInTheDocument();
   });
 
   it("muestra las colecciones generadas con el título del idioma de la consola", () => {
@@ -167,6 +181,7 @@ describe("FeaturedPanel", () => {
       group: "automatic",
       templateKey: "anniversaries",
       periodKey: "2026-10",
+      family: "ephemeris",
     });
     const view = renderWithIntl(<FeaturedPanel initial={{ featured: [generated], eligible: [] }} canPublish />, "en");
 

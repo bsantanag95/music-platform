@@ -4,8 +4,9 @@
 
 Superficie pública `/[locale]/lists` para descubrir listas de la comunidad (cambio
 `add-community-lists-surface`), accesible con y sin sesión y enlazada desde la barra general
-del Header. Compone cuatro secciones —Destacadas (curaduría editorial vía
-`user_list_featured`), Populares (por conteo agregado de guardados), De usuarios seguidos
+del Header. Compone cuatro secciones —Destacadas (listas editoriales oficiales publicadas; las
+colecciones de Explorar se recorren en `/explore/collections`, ADR 0038), Populares (por
+conteo agregado de guardados), De usuarios seguidos
 (solo con sesión) y Recientes (descubrimiento cronológico de `list-discovery`)— omitiendo
 las vacías, sin recomendación algorítmica ni personalización por afinidad.
 ## Requirements
@@ -66,39 +67,40 @@ usuarios y datos de catálogo SHALL conservarse sin traducir.
 
 ### Requirement: Sección "Destacadas"
 
-La vista `/lists` SHALL mostrar como primera sección las listas editoriales oficiales publicadas
-seguidas de las listas curadas con fila en `user_list_featured` (`source='curated'`), ordenadas estas últimas de forma
-ascendente por `rank`, sin filtrar por tipo de entidad y sin duplicar una lista que aparezca en ambos
-conjuntos. Las colecciones generadas por plantilla (`source='template'`) SHALL NOT aparecer en esta sección: son
-contenido de Explorar. Una lista editorial oficial SHALL ser una lista de la cuenta curadora de `/explore`
+La vista `/lists` SHALL mostrar como primera sección las listas editoriales oficiales publicadas,
+sin filtrar por tipo de entidad y sin duplicados. Las colecciones de Explorar SHALL NOT aparecer en esta sección,
+ni las generadas por plantilla (`source='template'`) ni las curadas con fila en `user_list_featured`
+(`source='curated'`): una colección es contenido de la plataforma y se recorre en Explorar, no entre las listas de la
+comunidad. La sección SHALL ofrecer en su lugar un enlace a la página de colecciones (`/explore/collections`).
+Una lista editorial oficial SHALL ser una lista de la cuenta curadora de `/explore`
 (`@exploracion`), de audiencia `public`, `moderation_status = visible` y no retirada
-(`official_withdrawn_at IS NULL`). Cada entrada SHALL presentar título, dueño (con enlace al
+(`official_withdrawn_at IS NULL`), y las oficiales SHALL ordenarse de la más recientemente publicada a la más
+antigua. Cada entrada SHALL presentar título, dueño (con enlace al
 perfil), tipo de entidad, conteo de ítems y carátulas disponibles, y SHALL enlazar al detalle de esa
 lista; las oficiales SHALL distinguirse con la insignia de contenido oficial. Una lista sin ítems
 SHALL NOT aparecer en la sección (sigue visible en su perfil y por enlace directo). La
-sección SHALL mostrarse siempre que exista al menos una lista oficial o curada con ítems y SHALL
+sección SHALL mostrarse siempre que exista al menos una lista oficial con ítems y SHALL
 NOT paginar.
 
 #### Scenario: Con listas destacadas
 
-- **WHEN** existen listas curadas con fila en `user_list_featured` y ninguna lista editorial oficial
-- **THEN** `/lists` las muestra como primera sección en orden ascendente de `rank`, cada una
-  enlazando a su detalle
+- **WHEN** existen listas editoriales oficiales publicadas con ítems
+- **THEN** `/lists` las muestra como primera sección, de la más reciente a la más antigua, cada una
+  enlazando a su detalle, junto al enlace a la página de colecciones
 
 #### Scenario: Editorial oficial dentro de Destacadas
 
 - **WHEN** existe una lista editorial oficial publicada
-- **THEN** aparece en la sección "Destacadas", con la insignia de contenido oficial, antes de las
-  listas destacadas por `rank`
+- **THEN** aparece en la sección "Destacadas" con la insignia de contenido oficial
 
 #### Scenario: Sin listas destacadas ni oficiales
 
-- **WHEN** no hay listas curadas con fila en `user_list_featured` ni listas editoriales oficiales publicadas
+- **WHEN** no hay listas editoriales oficiales publicadas con ítems
 - **THEN** la sección "Destacadas" no aparece en `/lists`
 
 #### Scenario: Lista vacía no se destaca
 
-- **WHEN** una lista editorial oficial o destacada no tiene ítems
+- **WHEN** una lista editorial oficial no tiene ítems
 - **THEN** no aparece en "Destacadas"; si ninguna tiene ítems, la sección no aparece
 
 #### Scenario: Oficial retirada no se destaca
@@ -110,6 +112,17 @@ NOT paginar.
 
 - **WHEN** existe una colección generada por plantilla con fila vigente en `user_list_featured`
 - **THEN** no aparece en la sección "Destacadas" de `/lists` (sí en `/explore` y en `/explore/collections`)
+
+#### Scenario: Colecciones curadas fuera
+
+- **WHEN** una lista oficial está destacada en Explorar con `source='curated'`
+- **THEN** su tarjeta no aparece en "Destacadas" por estar destacada; si está publicada como oficial aparece por eso,
+  y el orden no depende de su `rank`
+
+#### Scenario: Enlace a las colecciones
+
+- **WHEN** se muestra la sección "Destacadas" de `/lists`
+- **THEN** su encabezado ofrece un enlace a `/explore/collections` para recorrer las colecciones de la plataforma
 
 ### Requirement: Sección "Populares"
 

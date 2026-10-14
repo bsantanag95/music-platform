@@ -143,10 +143,12 @@ exploración siempre visible** (búsqueda por texto, filtro por tipo y orden Pop
 
 En vitrina, secciones:
 
-1. **Destacadas** — primero las listas **editoriales oficiales publicadas** de `@exploracion`
-   (visibles, no retiradas), luego las listas con fila **vigente** en `user_list_featured` (curadas o
-   generadas por plantilla, ADR 0033; por `weight` y `rank`), sin filtrar por tipo de entidad y sin duplicar. Rail sin paginación.
-   Las listas vacías se omiten (siguen visibles en su perfil y por enlace).
+1. **Destacadas** — solo las listas **editoriales oficiales publicadas** de `@exploracion`
+   (visibles, no retiradas), de la más recientemente publicada a la más antigua, sin filtrar por tipo de entidad.
+   Rail sin paginación. Las listas vacías se omiten (siguen visibles en su perfil y por enlace).
+   Las **colecciones** de Explorar no entran aquí, ni las generadas por plantilla ni las curadas con fila en
+   `user_list_featured` (ADR 0038): una colección es contenido de la plataforma y se recorre en
+   `/explore/collections`, no entre las listas de la comunidad. El encabezado de la sección enlaza allí.
 2. **Populares** — listas públicas ordenadas por conteo agregado de guardados. Vitrina, no
    ranking: "N guardados" en la tarjeta, sin posiciones. `GET /api/lists/popular`.
 3. **De la gente que seguís** — listas visibles (`public` o `followers`) de usuarios que el

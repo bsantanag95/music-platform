@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { appUser, userList, userListFeatured, userListItem } from "@/db/schema";
 import { COLLECTION_SIZE, CURATOR_USERNAME, MIN_ALBUMS_FOR_SECTION } from "../constants";
 import { createCoverResolver, type CoverResolver } from "./covers";
+import { TEMPLATE_FAMILY } from "./families";
 import { isSkip, type CollectionTemplate } from "./types";
 
 export type GenerateResult =
@@ -134,6 +135,9 @@ export async function generateCollection(
         source: "template",
         templateKey: template.key,
         periodKey,
+        // La familia se guarda en la fila (migración 0071): la plantilla la declara al escribir y la
+        // colección la conserva aunque la plantilla salga del registro.
+        family: TEMPLATE_FAMILY[template.key] ?? "discovery",
       });
       // Rotación: el período anterior de la misma plantilla sale del riel (la lista sigue pública).
       await tx

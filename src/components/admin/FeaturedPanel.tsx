@@ -11,11 +11,8 @@ import {
 import type { FeaturedAdminResponse, FeaturedAdminRow } from "@/lib/api/schemas";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { collectionTitle } from "@/services/discovery/collections/titles";
-import { AUTOMATIC_RAIL_LIMIT, EDITORIAL_RAIL_LIMIT } from "@/services/discovery/constants";
-
-type Group = FeaturedAdminRow["group"];
-const GROUPS: Group[] = ["curated", "automatic"];
-const GROUP_LIMIT: Record<Group, number> = { curated: EDITORIAL_RAIL_LIMIT, automatic: AUTOMATIC_RAIL_LIMIT };
+import { COLLECTION_FAMILIES, type CollectionFamily } from "@/services/discovery/collections/families";
+import { COLLECTION_RAIL_LIMIT } from "@/services/discovery/constants";
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
@@ -45,13 +42,15 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
   const [removing, setRemoving] = useState<FeaturedAdminRow | null>(null);
   const [scheduling, setScheduling] = useState<{ listId: string; startsAt: string; expiresAt: string } | null>(null);
   const [addId, setAddId] = useState("");
+  const [addFamily, setAddFamily] = useState<CollectionFamily>("discovery");
   const [addStartsAt, setAddStartsAt] = useState("");
   const [addExpiresAt, setAddExpiresAt] = useState("");
 
   const dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" });
-  const orderableOf = (group: Group) => data.featured.filter((row) => row.group === group && row.orderable);
+  // Una sola secuencia en el orden del riel (ADR 0038): lo manual y lo automático compiten por el mismo tope.
+  const orderable = data.featured.filter((row) => row.orderable);
   const expired = data.featured.filter((row) => !row.orderable);
-  const inRailOf = (group: Group) => data.featured.filter((row) => row.group === group && row.status === "in_rail").length;
+  const inRail = data.featured.filter((row) => row.status === "in_rail").length;
 
   const run = async (action: () => Promise<unknown>) => {
     setBusy(true);
@@ -70,9 +69,9 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
     }
   };
 
-  // El orden es por grupo: reordenar la selección editorial no mueve las automáticas.
-  const move = (group: Group, index: number, delta: -1 | 1) => {
-    const ids = orderableOf(group).map((row) => row.listId);
+  // Un solo orden sobre las dos fuentes: mover una curada mueve también las automáticas que queden debajo.
+  const move = (index: number, delta: -1 | 1) => {
+    const ids = orderable.map((row) => row.listId);
     const target = index + delta;
     if (target < 0 || target >= ids.length) return;
     [ids[index], ids[target]] = [ids[target]!, ids[index]!];
@@ -80,7 +79,7 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
       apiFetch("/api/admin/editorial/featured/order", EditorialListMutationResponseSchema, {
         method: "PUT",
         headers: JSON_HEADERS,
-        body: JSON.stringify({ group, listIds: ids }),
+        body: JSON.stringify({ listIds: ids }),
       }),
     );
   };
@@ -103,7 +102,7 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
   const add = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!addId) return;
-    const body: Record<string, string | null> = { listId: addId };
+    const body: Record<string, string | null> = { listId: addId, family: addFamily };
     if (addStartsAt) body.startsAt = fromLocalInput(addStartsAt);
     if (addExpiresAt) body.expiresAt = fromLocalInput(addExpiresAt);
     void run(async () => {
@@ -113,6 +112,7 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
         body: JSON.stringify(body),
       });
       setAddId("");
+      setAddFamily("discovery");
       setAddStartsAt("");
       setAddExpiresAt("");
     });
@@ -137,6 +137,8 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
           <p className="mt-1 font-data text-xs text-paper-muted">
             {row.source === "curated" ? t("featured.sourceCurated") : t("featured.sourceTemplate")}
             {" · "}
+            {t(`featured.families.${row.family}`)}
+            {" · "}
             {t("featured.items", { count: row.itemCount })}
             {row.periodKey && row.periodKey !== "evergreen" ? ` · ${t("featured.period", { period: row.periodKey })}` : ""}
           </p>
@@ -159,7 +161,7 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
             type="button"
             aria-label={t("featured.moveUp", { title: titleOf(row) })}
             disabled={busy || index === 0}
-            onClick={() => move(row.group, index, -1)}
+            onClick={() => move(index, -1)}
             className="rounded border border-ink-border px-3 py-2 font-data text-xs text-paper-muted hover:text-paper disabled:opacity-50"
           >
             ↑
@@ -168,7 +170,7 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
             type="button"
             aria-label={t("featured.moveDown", { title: titleOf(row) })}
             disabled={busy || index === size - 1}
-            onClick={() => move(row.group, index, 1)}
+            onClick={() => move(index, 1)}
             className="rounded border border-ink-border px-3 py-2 font-data text-xs text-paper-muted hover:text-paper disabled:opacity-50"
           >
             ↓
@@ -273,6 +275,20 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
                 </select>
               </label>
               <label className="flex flex-col gap-1 font-data text-xs text-paper-muted">
+                <span>{t("featured.addFamily")}</span>
+                <select
+                  value={addFamily}
+                  onChange={(event) => setAddFamily(event.target.value as CollectionFamily)}
+                  className="rounded border border-ink-border bg-ink px-3 py-2 font-data text-xs text-paper"
+                >
+                  {COLLECTION_FAMILIES.map((family) => (
+                    <option key={family} value={family}>
+                      {t(`featured.families.${family}`)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 font-data text-xs text-paper-muted">
                 <span>{t("featured.startsAt")}</span>
                 <input
                   type="datetime-local"
@@ -302,29 +318,23 @@ export function FeaturedPanel({ initial, canPublish }: { initial: FeaturedAdminR
         </form>
       ) : null}
 
-      {GROUPS.map((group) => {
-        const rows = orderableOf(group);
-        return (
-          <section key={group} aria-labelledby={`featured-group-${group}`} className="flex flex-col gap-3">
-            <div>
-              <h3 id={`featured-group-${group}`} className="font-display text-lg text-paper">
-                {t(`featured.group.${group}`)}
-              </h3>
-              <p className="mt-0.5 font-body text-xs text-paper-muted">{t(`featured.groupHint.${group}`)}</p>
-              <p className="mt-0.5 font-data text-xs text-amber">
-                {t("featured.railSummary", { count: inRailOf(group), limit: GROUP_LIMIT[group] })}
-              </p>
-            </div>
-            {rows.length === 0 ? (
-              <p className="rounded border border-ink-border bg-ink-surface p-6 text-center font-body text-sm text-paper-muted">
-                {t(`featured.empty.${group}`)}
-              </p>
-            ) : (
-              <ol className="flex flex-col gap-3">{rows.map((row, index) => renderRow(row, index, rows.length))}</ol>
-            )}
-          </section>
-        );
-      })}
+      <div className="flex flex-col gap-3">
+        <div>
+          <p className="font-body text-xs text-paper-muted">{t("featured.orderHint")}</p>
+          <p className="mt-0.5 font-data text-xs text-amber">
+            {t("featured.railSummary", { count: inRail, limit: COLLECTION_RAIL_LIMIT })}
+          </p>
+        </div>
+        {orderable.length === 0 ? (
+          <p className="rounded border border-ink-border bg-ink-surface p-6 text-center font-body text-sm text-paper-muted">
+            {t("featured.empty")}
+          </p>
+        ) : (
+          <ol className="flex flex-col gap-3">
+            {orderable.map((row, index) => renderRow(row, index, orderable.length))}
+          </ol>
+        )}
+      </div>
 
       {expired.length > 0 ? (
         <details className="rounded border border-ink-border bg-ink-surface p-4">

@@ -120,11 +120,8 @@
     },
     "featured": {
       "title": "Featured in Explore",
-      "description": "Each Explore rail has its own order and its own limit. The ones on top show first.",
-      "empty": {
-        "curated": "There is no editorial selection yet. Feature a published official list.",
-        "automatic": "There are no current automatic collections."
-      },
+      "description": "The Explore rail has one order and one cap, with curated and automatic collections together. The ones on top show first.",
+      "empty": "No featured collections yet. Feature a published official list or wait for a template run.",
       "railSummary": "{count} of {limit} cards in the rail now",
       "readOnly": "You can view this panel, but featuring, reordering and removing needs publishing permission.",
       "sourceCurated": "Curated",
@@ -149,20 +146,21 @@
       "expiresAt": "Until",
       "save": "Save schedule",
       "addTitle": "Feature a list",
+      "families": {
+        "ephemeris": "Anniversaries",
+        "awards": "Awards",
+        "releases": "Releases",
+        "discovery": "Discovery",
+        "rankings": "What people rate highest"
+      },
+      "addFamily": "Collection kind",
       "addSelect": "Official list",
       "addPlaceholder": "Choose a list",
       "addEmpty": "There are no official lists to feature. Publish one in the Lists tab.",
       "add": "Feature",
       "expiredHeading": "Expired",
       "refresh": "Refresh",
-      "group": {
-        "curated": "Editorial selection",
-        "automatic": "Discover"
-      },
-      "groupHint": {
-        "curated": "Official lists you feature by hand. Reordering here does not move the automatic ones.",
-        "automatic": "Created by the templates. You can reorder them, remove them or pause their template."
-      }
+      "orderHint": "One order for the whole rail: moving a collection also moves the automatic ones."
     },
     "templates": {
       "title": "Auto-generated",

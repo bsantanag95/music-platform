@@ -9,6 +9,22 @@ import { DecadeHistogram } from "./DecadeHistogram";
 import { ExploreFilterBar } from "./ExploreFilterBar";
 import { FamilyGrid } from "./FamilyGrid";
 
+// jsdom no implementa ResizeObserver ni matchMedia (el riel desplazable los usa para las flechas y el movimiento).
+vi.stubGlobal("matchMedia", (query: string) => ({
+  matches: false,
+  media: query,
+  addEventListener() {},
+  removeEventListener() {},
+}));
+vi.stubGlobal(
+  "ResizeObserver",
+  class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  },
+);
+
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, ...rest }: { href: string; children: ReactNode; scroll?: boolean }) => {
     // `scroll` es una prop del `Link` de next-intl, no un atributo de `<a>`.
@@ -154,7 +170,7 @@ describe("CollectionRail", () => {
       <CollectionRail
         heading="Colecciones destacadas"
         collections={[
-          { id: "c1", title: "Esenciales", description: "Para empezar", itemCount: 12, coverThumbs: [], source: "curated", templateKey: null, periodKey: null, family: null },
+          { id: "c1", title: "Esenciales", description: "Para empezar", itemCount: 12, coverThumbs: [], source: "curated", templateKey: null, periodKey: null, family: "discovery" },
         ]}
         curatorUsername="exploracion"
         itemsLabel={(count) => `${count} álbumes`}
@@ -224,7 +240,7 @@ describe("CollectionRail", () => {
     renderWithIntl(
       <CollectionRail
         heading="Selección editorial"
-        collections={[{ ...generated, id: "00000000-0000-4000-8000-0000000000c2", title: "Mejores debuts", source: "curated", templateKey: null, periodKey: null, family: null }]}
+        collections={[{ ...generated, id: "00000000-0000-4000-8000-0000000000c2", title: "Mejores debuts", source: "curated", templateKey: null, periodKey: null, family: "discovery" }]}
         curatorUsername="exploracion"
         itemsLabel={String}
       />,
@@ -249,21 +265,87 @@ describe("CollectionRail", () => {
     expect(screen.getByRole("link", { name: /Cumplen años en octubre/ })).toBeInTheDocument();
   });
 
-  it("muestra la familia de una colección automática y no la de una curada", () => {
+  it("muestra la familia de toda colección, venga de plantilla o de la mano de alguien", () => {
     renderWithIntl(
       <CollectionRail
         heading="Colecciones"
         collections={[
           { id: "a", title: "Cumplen años en octubre", description: null, itemCount: 12, coverThumbs: [], source: "template", templateKey: "anniversaries", periodKey: "2026-10", family: "ephemeris" },
-          { id: "b", title: "Mejores debuts", description: null, itemCount: 20, coverThumbs: [], source: "curated", templateKey: null, periodKey: null, family: null },
+          { id: "b", title: "Mejores debuts", description: null, itemCount: 20, coverThumbs: [], source: "curated", templateKey: null, periodKey: null, family: "discovery" },
         ]}
         curatorUsername="exploracion"
         itemsLabel={String}
         familyLabel={(family) => `Familia ${family}`}
       />,
     );
+    // La familia es lo que distingue una colección de otra; el origen no se muestra (ADR 0038).
     expect(within(screen.getByRole("link", { name: /Cumplen años/ })).getByText("Familia ephemeris")).toBeInTheDocument();
-    expect(within(screen.getByRole("link", { name: /Mejores debuts/ })).queryByText(/Familia/)).toBeNull();
+    expect(within(screen.getByRole("link", { name: /Mejores debuts/ })).getByText("Familia discovery")).toBeInTheDocument();
+  });
+
+  it("en disposición de riel desplazable ofrece las flechas y una sola fila", () => {
+    const many = Array.from({ length: 10 }, (_, i) => ({
+      id: `c${i}`,
+      title: `Colección ${i}`,
+      description: null,
+      itemCount: 8,
+      coverThumbs: [],
+      source: "curated" as const,
+      templateKey: null,
+      periodKey: null,
+      family: "discovery" as const,
+    }));
+    renderWithIntl(
+      <CollectionRail
+        id="colecciones"
+        heading="Colecciones"
+        collections={many}
+        curatorUsername="exploracion"
+        itemsLabel={String}
+        layout="scroll"
+      />,
+    );
+
+    // Las 10 caben en la fila desplazable y la lista queda asociada al título de la sección.
+    expect(screen.getAllByRole("link", { name: /Colección/ })).toHaveLength(10);
+    const list = screen.getByRole("list");
+    expect(list).toHaveAttribute("aria-labelledby", "colecciones-heading");
+    expect(list.className).toContain("overflow-x-auto");
+    // Seis de un vistazo (5 desde `lg`): con tarjetas anchas solo se veían 3, menos que los dos riles de 6 que
+    // este reemplaza. El resto queda a un desplazamiento.
+    const items = screen.getAllByRole("listitem");
+    expect(items[0]!.className).toContain("xl:w-[calc((100%-5rem)/6)]");
+    expect(items[0]!.className).toContain("lg:w-[calc((100%-4rem)/5)]");
+    expect(screen.getByRole("heading", { name: "Colecciones" })).toHaveAttribute("id", "colecciones-heading");
+  });
+
+  it("en el riel la tarjeta omite la descripción, que sí aparece en la rejilla", () => {
+    const withDescription = [
+      { id: "c1", title: "Discos de culto", description: "Los que no sonaron en la radio", itemCount: 9, coverThumbs: [], source: "curated" as const, templateKey: null, periodKey: null, family: "discovery" as const },
+    ];
+    const view = renderWithIntl(
+      <CollectionRail heading="Colecciones" collections={withDescription} curatorUsername="exploracion" itemsLabel={String} layout="scroll" />,
+    );
+    expect(screen.queryByText("Los que no sonaron en la radio")).toBeNull();
+    view.unmount();
+
+    renderWithIntl(
+      <CollectionRail heading="Colecciones" collections={withDescription} curatorUsername="exploracion" itemsLabel={String} />,
+    );
+    expect(screen.getByText("Los que no sonaron en la radio")).toBeInTheDocument();
+  });
+
+  it("la rejilla no desplaza: la usan la página de colecciones y el archivo", () => {
+    renderWithIntl(
+      <CollectionRail
+        heading="Anteriores"
+        collections={[{ id: "a", title: "Vencida", description: null, itemCount: 8, coverThumbs: [], source: "template", templateKey: "anniversaries", periodKey: "2026-09", family: "ephemeris" }]}
+        curatorUsername="exploracion"
+        itemsLabel={String}
+      />,
+    );
+    expect(screen.getByRole("list").className).toContain("grid");
+    expect(screen.getByRole("list").className).not.toContain("overflow-x-auto");
   });
 
   it("muestra la nota extra bajo el conteo (el archivo indica hasta cuándo estuvo vigente)", () => {

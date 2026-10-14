@@ -43,19 +43,8 @@ vi.mock("@/db", () => ({
 }));
 vi.mock("@/services/lists/lists", () => ({ enrichLists: mocks.enrichLists }));
 
-import {
-  ARCHIVE_PAGE_SIZE,
-  AUTOMATIC_RAIL_LIMIT,
-  EDITORIAL_RAIL_LIMIT,
-  HUB_AUTOMATIC_LIMIT,
-  HUB_EDITORIAL_LIMIT,
-} from "./constants";
-import {
-  listAutomaticCollections,
-  listCollectionArchive,
-  listCollectionsHub,
-  listEditorialCollections,
-} from "./discovery";
+import { ARCHIVE_PAGE_SIZE, COLLECTION_RAIL_LIMIT, HUB_COLLECTION_LIMIT } from "./constants";
+import { listCollectionArchive, listCollections, listCollectionsHub } from "./discovery";
 
 const render = (condition: unknown) => {
   const query = new PgDialect().sqlToQuery(condition as SQL);
@@ -69,54 +58,53 @@ beforeEach(() => {
   mocks.enrichLists.mockResolvedValue(new Map());
 });
 
-describe("listEditorialCollections / listAutomaticCollections", () => {
-  it("el rail editorial lee solo filas curadas, con su propio tope", async () => {
-    await listEditorialCollections();
+describe("listCollections", () => {
+  it("lee un solo riel con los dos orígenes mezclados, sin filtrar por `source`", async () => {
+    await listCollections();
 
     const { where, limit } = mocks.calls[0]!;
-    expect(limit).toBe(EDITORIAL_RAIL_LIMIT);
-    const { sql, params } = render(where);
-    expect(sql).toContain('"user_list_featured"."source" =');
-    expect(params).toContain("curated");
-    expect(params).not.toContain("template");
+    expect(limit).toBe(COLLECTION_RAIL_LIMIT);
+    // La condición de riel menciona `source` solo para exigir que una curada esté publicada como oficial;
+    // lo que no hace es acotar el riel a uno de los dos orígenes.
+    expect(render(where).sql).not.toContain('"user_list_featured"."source" = $');
   });
 
-  it("el rail automático lee solo filas generadas, con su propio tope", async () => {
-    await listAutomaticCollections();
-
-    const { where, limit } = mocks.calls[0]!;
-    expect(limit).toBe(AUTOMATIC_RAIL_LIMIT);
-    expect(render(where).params).toContain("template");
-  });
-
-  it("ambos exigen la condición de riel (vigencia, lista pública y visible)", async () => {
-    await listEditorialCollections();
+  it("exige la condición de riel (vigencia, lista pública y visible)", async () => {
+    await listCollections();
     const { sql } = render(mocks.calls[0]!.where);
     expect(sql).toContain('"user_list_featured"."starts_at" <= now()');
     expect(sql).toContain('"user_list"."moderation_status" =');
     expect(sql).toContain('"user_list"."audience" =');
   });
 
-  it("añade la familia a las generadas y deja las curadas sin familia", async () => {
+  it("ordena por peso y, a igualdad, por rank", async () => {
+    await listCollections();
+    const order = mocks.calls[0]!.orderBy!;
+    expect(order).toHaveLength(3);
+    expect(render(order[0]).sql).toContain('"weight" desc');
+    expect(render(order[1]).sql).toContain('"rank" asc');
+  });
+
+  it("toma la familia de la fila, tanto en las generadas como en las curadas", async () => {
     mocks.rows = [
-      { id: "g", title: "Grammy", description: null, source: "template", templateKey: "grammy-winners" },
-      { id: "c", title: "Debuts", description: null, source: "curated", templateKey: null },
+      { id: "g", title: "Grammy", description: null, source: "template", templateKey: "grammy-winners", family: "awards" },
+      { id: "c", title: "Discos de culto", description: null, source: "curated", templateKey: null, family: "discovery" },
     ];
     mocks.enrichLists.mockResolvedValue(new Map([["g", { itemCount: 10, coverThumbs: ["a"] }]]));
 
-    const result = await listAutomaticCollections();
+    const result = await listCollections();
 
     expect(result.find((c) => c.id === "g")).toMatchObject({ family: "awards", source: "template", itemCount: 10 });
-    expect(result.find((c) => c.id === "c")).toMatchObject({ family: null, source: "curated", itemCount: 0 });
+    expect(result.find((c) => c.id === "c")).toMatchObject({ family: "discovery", source: "curated", itemCount: 0 });
   });
 
   it("expone plantilla y período de las generadas (para localizar el título) y null en las curadas", async () => {
     mocks.rows = [
-      { id: "g", title: "Ganadores del Grammy 2025", description: null, source: "template", templateKey: "grammy-winners", periodKey: "grammy-2025" },
-      { id: "c", title: "Debuts", description: null, source: "curated", templateKey: null, periodKey: null },
+      { id: "g", title: "Ganadores del Grammy 2025", description: null, source: "template", templateKey: "grammy-winners", periodKey: "grammy-2025", family: "awards" },
+      { id: "c", title: "Debuts", description: null, source: "curated", templateKey: null, periodKey: null, family: "discovery" },
     ];
 
-    const result = await listAutomaticCollections();
+    const result = await listCollections();
 
     expect(result.find((c) => c.id === "g")).toMatchObject({ templateKey: "grammy-winners", periodKey: "grammy-2025" });
     expect(result.find((c) => c.id === "c")).toMatchObject({ templateKey: null, periodKey: null });
@@ -124,12 +112,12 @@ describe("listEditorialCollections / listAutomaticCollections", () => {
 });
 
 describe("listCollectionsHub", () => {
-  it("pide los dos grupos con los topes de la página", async () => {
-    await listCollectionsHub();
+  it("pide una sola secuencia con el techo de la página", async () => {
+    const hub = await listCollectionsHub();
 
-    expect(mocks.calls.map((call) => call.limit).sort((a, b) => a! - b!)).toEqual(
-      [HUB_EDITORIAL_LIMIT, HUB_AUTOMATIC_LIMIT].sort((a, b) => a - b),
-    );
+    expect(mocks.calls).toHaveLength(1);
+    expect(mocks.calls[0]!.limit).toBe(HUB_COLLECTION_LIMIT);
+    expect(hub.collections).toEqual([]);
   });
 });
 
@@ -153,6 +141,7 @@ describe("listCollectionArchive", () => {
       description: null,
       source: "template",
       templateKey: "anniversaries",
+      family: "ephemeris",
       endedAt: new Date("2026-09-01T00:00:00Z"),
     }));
 
@@ -174,18 +163,12 @@ describe("listCollectionArchive", () => {
     expect(mocks.calls[0]!.offset).toBe(0);
   });
 
-  it("el filtro por familia usa las claves de la familia", async () => {
+  it("el filtro por familia compara la columna de la fila", async () => {
     await listCollectionArchive({ family: "awards" });
-    expect(render(mocks.calls[0]!.where).params).toContain("grammy-winners");
-  });
-
-  it("la familia de respaldo recoge también las claves que ya no existen", async () => {
-    await listCollectionArchive({ family: "discovery" });
     const { sql, params } = render(mocks.calls[0]!.where);
-    expect(sql).toContain('"user_list_featured"."template_key" is null or');
-    expect(sql).toContain("not in");
-    // excluye las claves de las demás familias, no las suyas
-    expect(params).toContain("grammy-winners");
-    expect(params).not.toContain("genre-spotlight");
+    expect(sql).toContain('"user_list_featured"."family" =');
+    expect(params).toContain("awards");
+    // Ya no pasa por el registro de plantillas: una clave retirada conserva su familia (migración 0071).
+    expect(params).not.toContain("grammy-winners");
   });
 });

@@ -1876,18 +1876,21 @@ recibe `{ itemIds }` y reordena, `DELETE` quita un ítem. Devuelven `{ list }` (
 Requiere `editorial.author`. Devuelve `{ featured, eligible }` (cambio `manage-explore-featured-console`,
 ADR 0034). `featured` lista **todas** las filas de `user_list_featured` (curadas y generadas por plantilla),
 en el orden del riel y con las vencidas al final: `listId`, `title`, `source` (`curated` | `template`), `group`
-(`curated` | `automatic`: el rail al que pertenece),
-`templateKey`, `periodKey`, `rank`, `weight`, `startsAt`, `expiresAt`, `itemCount`, `orderable` (vigente o
+(`curated` | `automatic`: grupo del panel de la consola, **no** un riel público —el riel es uno solo, ADR 0038),
+`templateKey`, `periodKey`, `family` (`ephemeris` | `awards` | `releases` | `discovery` | `rankings`),
+`rank`, `weight`, `startsAt`, `expiresAt`, `itemCount`, `orderable` (vigente o
 programada) y `status` (`in_rail` | `beyond_limit` | `scheduled` | `expired` | `withdrawn` | `hidden` |
-`not_public`). `eligible` son las listas que se pueden destacar (`{ id, title }`): oficiales publicadas de
+`not_public`). `status` se evalúa contra el **tope único** del riel, contando curadas y generadas juntas. `eligible` son las listas que se pueden destacar (`{ id, title }`): oficiales publicadas de
 `@exploracion`, de álbumes, públicas y visibles, aún sin fila destacada.
 
 ### `POST /api/admin/editorial/featured`
 
-Requiere `editorial.publish`. Recibe `{ listId, startsAt?, expiresAt?, weight? }` (fechas ISO 8601 con
+Requiere `editorial.publish`. Recibe `{ listId, family, startsAt?, expiresAt?, weight? }` (`family` obligatoria
+desde el ADR 0038: `ephemeris` | `awards` | `releases` | `discovery` | `rankings`; fechas ISO 8601 con
 huso; `weight` 0–1000) y destaca una lista. Devuelve `{ ok: true }` con `201`. Errores: `404 LIST_NOT_FOUND`,
 `409 FEATURE_NOT_ELIGIBLE` (no es de `@exploracion`, no es de álbumes, no es pública o está oculta),
-`409 FEATURE_NOT_PUBLISHED` (no es oficial o fue retirada), `400 VALIDATION_ERROR` (`expiresAt` ≤ `startsAt`).
+`409 FEATURE_NOT_PUBLISHED` (no es oficial o fue retirada), `400 VALIDATION_ERROR` (`expiresAt` ≤ `startsAt`,
+o `family` ausente o desconocida).
 Si la lista ya estaba destacada solo aplica la vigencia y el peso dados (idempotente). Registra `feature`
 en `editorial_action`.
 
@@ -1900,10 +1903,11 @@ su plantilla). Sin fila destacada, `404 FEATURED_NOT_FOUND`. Registran `feature`
 
 ### `PUT /api/admin/editorial/featured/order`
 
-Requiere `editorial.publish`. Recibe `{ group, listIds }` (`group`: `curated` | `automatic`, obligatorio; `400` si falta o
-es otro): el conjunto **completo** de filas vigentes o programadas (`orderable`) **de ese grupo**, de la primera a la
-última. Es atómico: asigna `weight` descendente y `rank` consecutivo solo a ese grupo (el otro no cambia), y responde
-`409 FEATURED_ORDER_CONFLICT` si el conjunto enviado difiere del vigente del grupo (o repite ids). Devuelve `{ ok: true }`.
+Requiere `editorial.publish`. Recibe `{ listIds }`: el conjunto **completo** de filas vigentes o programadas
+(`orderable`), sin distinguir el origen, de la primera a la última. Desde el ADR 0038 **ya no recibe `group`**: el
+orden es una secuencia única sobre las curadas y las generadas, así que reordenar mueve también las automáticas. Es
+atómico: asigna `weight` descendente y `rank` consecutivo, y responde
+`409 FEATURED_ORDER_CONFLICT` si el conjunto enviado difiere del vigente (o repite ids). Devuelve `{ ok: true }`.
 
 ### `GET /api/admin/editorial/templates`
 

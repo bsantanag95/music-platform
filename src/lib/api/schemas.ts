@@ -550,6 +550,10 @@ export const FeaturedStatusSchema = z.enum([
 ]);
 export type FeaturedStatus = z.infer<typeof FeaturedStatusSchema>;
 
+/** Familias de colección (migración 0071): toda colección destacada tiene una. */
+export const CollectionFamilySchema = z.enum(["ephemeris", "awards", "releases", "discovery", "rankings"]);
+export type CollectionFamilyValue = z.infer<typeof CollectionFamilySchema>;
+
 export const FeaturedAdminRowSchema = z.object({
   listId: z.uuid(),
   title: z.string(),
@@ -557,6 +561,7 @@ export const FeaturedAdminRowSchema = z.object({
   group: z.enum(["curated", "automatic"]),
   templateKey: z.string().nullable(),
   periodKey: z.string().nullable(),
+  family: CollectionFamilySchema,
   rank: z.number().int(),
   weight: z.number().int(),
   startsAt: z.string(),
@@ -578,6 +583,7 @@ const IsoDateTimeSchema = z.iso.datetime({ offset: true });
 
 export const FeatureListRequestSchema = z.object({
   listId: z.uuid(),
+  family: CollectionFamilySchema,
   startsAt: IsoDateTimeSchema.optional(),
   expiresAt: IsoDateTimeSchema.nullable().optional(),
   weight: FeaturedWeightSchema.optional(),
@@ -593,11 +599,12 @@ export const UpdateFeaturedScheduleRequestSchema = z
   .refine((changes) => Object.keys(changes).length > 0, { message: "No hay campos para actualizar" });
 export type UpdateFeaturedScheduleRequest = z.infer<typeof UpdateFeaturedScheduleRequestSchema>;
 
+/** Grupo del panel de la consola (ayuda para quien edita; el riel público es uno solo). */
 export const FeaturedGroupSchema = z.enum(["curated", "automatic"]);
 export type FeaturedGroup = z.infer<typeof FeaturedGroupSchema>;
 
+// Una sola secuencia sobre los dos orígenes (ADR 0038): el cuerpo ya no lleva grupo.
 export const ReorderFeaturedRequestSchema = z.object({
-  group: FeaturedGroupSchema,
   listIds: z.array(z.uuid()).min(1).max(200),
 });
 export type ReorderFeaturedRequest = z.infer<typeof ReorderFeaturedRequestSchema>;

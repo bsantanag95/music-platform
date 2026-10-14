@@ -1225,6 +1225,12 @@ export const userListFeatured = pgTable(
     startsAt: timestamp("starts_at", { withTimezone: true }).notNull().defaultNow(),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
     weight: smallint("weight").notNull().default(0),
+    // Migración 0071 (openspec: unify-explore-collections, ADR 0038): la familia vive en la fila y
+    // aplica tanto a las curadas como a las generadas. Antes se derivaba de `template_key`, así que
+    // una fila `curated` no tenía familia.
+    family: text("family")
+      .$type<"ephemeris" | "awards" | "releases" | "discovery" | "rankings">()
+      .notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -1232,7 +1238,12 @@ export const userListFeatured = pgTable(
       .on(t.templateKey, t.periodKey)
       .where(sql`${t.source} = 'template'`),
     index("idx_user_list_featured_rail").on(t.weight.desc(), t.rank),
+    index("idx_user_list_featured_family").on(t.family),
     check("chk_user_list_featured_source", sql`${t.source} IN ('curated', 'template')`),
+    check(
+      "chk_user_list_featured_family",
+      sql`${t.family} IN ('ephemeris', 'awards', 'releases', 'discovery', 'rankings')`,
+    ),
     check(
       "chk_user_list_featured_template",
       sql`${t.source} <> 'template' OR (${t.templateKey} IS NOT NULL AND ${t.periodKey} IS NOT NULL)`,

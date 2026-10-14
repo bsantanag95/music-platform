@@ -15,19 +15,19 @@ El sistema SHALL exponer una vista pública en `/{locale}/explore` para los loca
 soportados, accesible con y sin sesión, que presenta el descubrimiento de álbumes. La vista
 SHALL componer, en este orden, las secciones que tengan contenido:
 
-1. Selección editorial
-2. Descubre por datos
-3. Exploración por género
-4. Novedades
-5. Próximos lanzamientos
-6. Premios
-7. Mejor valorados de la comunidad
-8. Más reseñados
-9. Exploración por década
+1. Colecciones
+2. Exploración por género
+3. Novedades
+4. Próximos lanzamientos
+5. Premios
+6. Mejor valorados de la comunidad
+7. Más reseñados
+8. Exploración por década
 
-Selección editorial y Descubre por datos SHALL ser **secciones independientes**: la primera muestra las
-colecciones curadas por el equipo y la segunda las generadas por plantilla, cada una con su orden, su tope y su
-enlace "Ver todas" a la página de colecciones. Novedades, Próximos lanzamientos, Exploración por década y
+Colecciones SHALL ser **una sola sección**, con un único orden, un único tope y un único enlace "Ver todas" a la
+página de colecciones: la vista SHALL NOT separar las colecciones curadas de las generadas por plantilla, porque la
+forma en que se mantiene una colección no es información para quien mira. Novedades, Próximos lanzamientos,
+Exploración por década y
 Exploración por género SHALL ser
 **secciones independientes**, cada una con su propia lógica de navegación (Novedades y
 Próximos lanzamientos abren sus listados completos; Década y Género abren listados filtrados
@@ -65,50 +65,82 @@ centrarse en álbumes; SHALL NOT ofrecer pestañas de artistas, canciones ni lis
 - **WHEN** `/explore` muestra Premios, Mejor valorados, Más reseñados y Exploración por década
 - **THEN** los dos rieles de comunidad aparecen antes que la exploración por década, que cierra la página
 
+#### Scenario: Colecciones abre la página
+
+- **WHEN** `/explore` renderiza la sección Colecciones
+- **THEN** es la primera sección de la página y encabeza el recorrido, antes de la exploración por género
+
 ### Requirement: Colecciones destacadas
 
-La vista `/explore` SHALL mostrar las colecciones destacadas en **dos riles**, ambos con filas **vigentes** de
-`user_list_featured` (`starts_at` pasado y `expires_at` nulo o futuro) y listas públicas, visibles y de álbumes:
+La vista `/explore` SHALL mostrar las colecciones destacadas en **un solo riel**, con las filas **vigentes** de
+`user_list_featured` (`starts_at` pasado y `expires_at` nulo o futuro) cuya lista sea pública, visible y de álbumes,
+sin distinguir el origen: las curadas a mano (`source='curated'`, de listas oficiales no retiradas) y las generadas
+por plantilla (`source='template'`) SHALL compartir el riel, el orden y el tope.
 
-- **Selección editorial:** filas `source='curated'` de listas oficiales no retiradas.
-- **Descubre por datos:** filas `source='template'`.
+El riel SHALL ordenarse por `weight` descendente y, a igualdad, por `rank` ascendente, con un máximo de 10 tarjetas, y
+SHALL mostrarse siempre que exista al menos una colección vigente. Cada colección SHALL presentarse con su título, la
+etiqueta de su familia, su conteo de ítems y sus carátulas disponibles, y SHALL enlazar a su página de detalle. El
+riel SHALL ofrecer un enlace "Ver todas" a la página de colecciones.
 
-Cada rail SHALL ordenarse por `weight` descendente y, a igualdad, por `rank` ascendente, con un máximo de 6 tarjetas
-propio, y SHALL mostrarse siempre que exista al menos una colección vigente en su grupo. Cada colección SHALL
-presentarse con su título, su conteo de ítems y sus carátulas disponibles, y SHALL enlazar a la página de detalle de
-esa lista; las automáticas SHALL mostrar además la etiqueta de su familia. Cada rail SHALL ofrecer un enlace "Ver todas"
-a la página de colecciones.
+El riel SHALL desplazarse horizontalmente y SHALL mostrar al menos **6 colecciones sin desplazar** en un ancho de
+escritorio: la tarjeta del riel SHALL ser más compacta que la de la página de colecciones (pila de fundas reducida y
+sin descripción), porque un riel horizontal no garantiza que alguien lo desplace y mostrar menos de 6 de entrada
+empobrecería la sección. El riel SHALL ofrecer controles de desplazamiento anterior y siguiente con
+etiqueta accesible, que SHALL desactivarse en cada extremo y SHALL omitirse cuando todas las tarjetas caben sin
+desplazar. El desplazamiento SHALL funcionar con el gesto táctil nativo y SHALL respetar la preferencia de movimiento
+reducido del sistema. La tarjeta SHALL NOT indicar si la colección se armó a mano o por plantilla.
 
 #### Scenario: Con colecciones sembradas
 
 - **WHEN** existen filas curadas y filas generadas vigentes
-- **THEN** `/explore` muestra "Selección editorial" solo con las curadas y "Descubre por datos" solo con las generadas,
-  cada una ordenada por peso y rank
+- **THEN** `/explore` muestra un solo riel "Colecciones" con las dos clases mezcladas, ordenadas por peso y rank, sin
+  rótulo que distinga su origen
 
 #### Scenario: Colección vencida
 
 - **WHEN** una fila de `user_list_featured` tiene `expires_at` en el pasado
-- **THEN** su colección no aparece en ninguno de los riles
+- **THEN** su colección no aparece en el riel
 
 #### Scenario: Tope de tarjetas
 
-- **WHEN** hay más de 6 colecciones vigentes en un grupo
-- **THEN** ese rail muestra solo las 6 primeras según el orden definido y el otro rail no se ve afectado
+- **WHEN** hay más de 10 colecciones vigentes
+- **THEN** el riel muestra solo las 10 primeras según el orden definido
 
 #### Scenario: Sin curaduría publicada
 
 - **WHEN** no hay ninguna colección curada vigente
-- **THEN** "Selección editorial" no aparece y "Descubre por datos" se muestra con normalidad
+- **THEN** el riel se muestra con normalidad solo con las generadas, sin un bloque vacío ni un mensaje aparte
 
 #### Scenario: Sin colecciones destacadas
 
 - **WHEN** ninguna lista tiene fila vigente en `user_list_featured`
-- **THEN** ninguno de los dos riles aparece en `/explore`
+- **THEN** el riel no aparece en `/explore`
 
 #### Scenario: Etiqueta de familia
 
 - **WHEN** se muestra una colección generada por `grammy-winners`
 - **THEN** su tarjeta lleva la etiqueta "Premios"
+
+#### Scenario: Familia de una colección manual
+
+- **WHEN** se muestra una colección curada a la que se asignó la familia `discovery`
+- **THEN** su tarjeta lleva la etiqueta "Descubrimiento", igual que una generada de esa familia
+
+#### Scenario: Controles de desplazamiento
+
+- **WHEN** hay más colecciones vigentes de las que caben en el ancho visible
+- **THEN** el riel ofrece los controles anterior y siguiente, el anterior está desactivado al inicio y el siguiente al
+  llegar al final
+
+#### Scenario: Todo cabe en pantalla
+
+- **WHEN** las colecciones vigentes caben sin desplazar
+- **THEN** el riel no muestra los controles de desplazamiento
+
+#### Scenario: Seis de un vistazo
+
+- **WHEN** hay 10 colecciones vigentes y se abre `/explore` en un ancho de escritorio
+- **THEN** se ven 6 tarjetas completas en una sola fila, sin descripción, y las demás quedan a un desplazamiento
 
 ### Requirement: Exploración por década y por género
 

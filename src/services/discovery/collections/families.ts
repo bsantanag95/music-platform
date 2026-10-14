@@ -1,12 +1,16 @@
-// Familias de colección (openspec: split-explore-collections, ADR 0036). Módulo puro y sin base de datos:
-// lo usan las lecturas de Explorar, la página de colecciones y sus pruebas. La familia vive en código, no en
-// la fila: una plantilla retirada del registro no pierde su archivo (cae a `discovery`).
+// Familias de colección (openspec: unify-explore-collections, ADR 0038). Módulo puro y sin base de datos:
+// lo usan la generación, la consola, las lecturas de Explorar y sus pruebas.
+//
+// Desde la migración 0071 la familia **vive en la fila** de `user_list_featured`, no se deriva. Este registro
+// declara la familia que cada plantilla escribe al generar su colección; una colección curada recibe la que
+// elige quien la destaca. Por eso ya no hay `familyOf` ni familia de respaldo: una fila retirada del registro
+// conserva la familia con la que se escribió.
 
-export const COLLECTION_FAMILIES = ["ephemeris", "awards", "releases", "discovery", "community"] as const;
+export const COLLECTION_FAMILIES = ["ephemeris", "awards", "releases", "discovery", "rankings"] as const;
 
 export type CollectionFamily = (typeof COLLECTION_FAMILIES)[number];
 
-/** Familia de cada plantilla del registro (`template_key`). */
+/** Familia que declara cada plantilla del registro (`template_key`) y que la generación escribe en la fila. */
 export const TEMPLATE_FAMILY: Record<string, CollectionFamily> = {
   anniversaries: "ephemeris",
   "grammy-winners": "awards",
@@ -14,24 +18,12 @@ export const TEMPLATE_FAMILY: Record<string, CollectionFamily> = {
   upcoming: "releases",
   "genre-spotlight": "discovery",
   "one-per-decade": "discovery",
-  "top-rated-quarter": "community",
-  "most-reviewed-month": "community",
+  // Rankings calculados de la actividad de la gente. La familia se llamaba `community` y se renombró para no
+  // confundirla con las listas que escribe la comunidad (`/lists`).
+  "top-rated-quarter": "rankings",
+  "most-reviewed-month": "rankings",
 };
-
-/** Familia de respaldo para una clave que ya no está en el registro. */
-export const FALLBACK_FAMILY: CollectionFamily = "discovery";
-
-export function familyOf(templateKey: string | null): CollectionFamily {
-  return (templateKey ? TEMPLATE_FAMILY[templateKey] : undefined) ?? FALLBACK_FAMILY;
-}
 
 export function isCollectionFamily(value: string | undefined | null): value is CollectionFamily {
   return (COLLECTION_FAMILIES as readonly string[]).includes(value ?? "");
-}
-
-/** Claves de plantilla declaradas para una familia. */
-export function templateKeysOf(family: CollectionFamily): string[] {
-  return Object.entries(TEMPLATE_FAMILY)
-    .filter(([, value]) => value === family)
-    .map(([key]) => key);
 }

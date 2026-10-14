@@ -4,6 +4,8 @@ import { MIN_ALBUMS_FOR_SECTION } from "../constants";
 const mocks = vi.hoisted(() => ({ db: { select: vi.fn(), transaction: vi.fn() } }));
 vi.mock("@/db", () => ({ db: mocks.db }));
 
+import { userListFeatured } from "@/db/schema";
+
 import type { CoverResolver } from "./covers";
 import { generateCollection, previewCollection } from "./generate";
 import type { CollectionTemplate } from "./types";
@@ -43,6 +45,34 @@ describe("generateCollection", () => {
       status: "skipped",
       items: 1,
     });
+  });
+
+  it("la fila destacada nace con la familia que declara la plantilla", async () => {
+    // `anniversaries` declara `ephemeris` en el registro (migración 0071: la familia vive en la fila).
+    const template = { ...templateReturning(Array.from({ length: 8 }, (_, i) => `a${i}`)), key: "anniversaries" };
+    const featured: Record<string, unknown>[] = [];
+    // La cuenta curadora, que `generateCollection` resuelve antes de abrir la transacción.
+    mocks.db.select.mockReturnValue({
+      from: () => ({ where: () => ({ limit: async () => [{ id: "curator" }] }) }),
+    });
+    mocks.db.transaction.mockImplementation(async (run: (tx: unknown) => Promise<unknown>) =>
+      run({
+        // Sin fila previa: ni la del período actual ni la del anterior.
+        select: () => ({ from: () => ({ where: () => ({ limit: async () => [], orderBy: () => ({ limit: async () => [] }) }) }) }),
+        insert: (table: unknown) => ({
+          values: (values: Record<string, unknown>) => {
+            if (table === userListFeatured) featured.push(values);
+            return { returning: async () => [{ id: "lista" }] };
+          },
+        }),
+        update: () => ({ set: () => ({ where: async () => undefined }) }),
+        delete: () => ({ where: async () => undefined }),
+      }),
+    );
+
+    await expect(generateCollection(template, new Date(), covers)).resolves.toMatchObject({ status: "generated" });
+    expect(featured).toHaveLength(1);
+    expect(featured[0]).toMatchObject({ source: "template", templateKey: "anniversaries", family: "ephemeris" });
   });
 
   it("una plantilla que se omite explica el motivo", async () => {

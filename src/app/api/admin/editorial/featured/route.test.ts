@@ -52,7 +52,7 @@ describe("POST destacar una lista", () => {
   it("exige editorial.publish: un curador con solo autoría recibe 403", async () => {
     mocks.requirePermission.mockRejectedValue(new ApiError("ROLE_REQUIRED", 403, "Sin permiso"));
 
-    const response = await POST(post({ listId: LIST_ID }));
+    const response = await POST(post({ listId: LIST_ID, family: "discovery" }));
 
     expect(response.status).toBe(403);
     expect(mocks.requirePermission).toHaveBeenCalledWith("editorial.publish");
@@ -60,8 +60,14 @@ describe("POST destacar una lista", () => {
   });
 
   it("rechaza un cuerpo inválido con 400", async () => {
-    const response = await POST(post({ listId: "no-es-uuid" }));
+    const response = await POST(post({ listId: "no-es-uuid", family: "discovery" }));
     expect(response.status).toBe(400);
+    expect(mocks.featureList).not.toHaveBeenCalled();
+  });
+
+  it("sin familia, o con una desconocida, responde 400 (ADR 0038)", async () => {
+    expect((await POST(post({ listId: LIST_ID }))).status).toBe(400);
+    expect((await POST(post({ listId: LIST_ID, family: "inventada" }))).status).toBe(400);
     expect(mocks.featureList).not.toHaveBeenCalled();
   });
 
@@ -70,11 +76,12 @@ describe("POST destacar una lista", () => {
     mocks.featureList.mockResolvedValue(undefined);
 
     const response = await POST(
-      post({ listId: LIST_ID, startsAt: "2026-11-01T00:00:00Z", expiresAt: null, weight: 3 }),
+      post({ listId: LIST_ID, family: "awards", startsAt: "2026-11-01T00:00:00Z", expiresAt: null, weight: 3 }),
     );
 
     expect(response.status).toBe(201);
     expect(mocks.featureList).toHaveBeenCalledWith("admin-1", LIST_ID, {
+      family: "awards",
       startsAt: new Date("2026-11-01T00:00:00Z"),
       expiresAt: null,
       weight: 3,
@@ -85,7 +92,7 @@ describe("POST destacar una lista", () => {
     mocks.requirePermission.mockResolvedValue({ id: "admin-1" });
     mocks.featureList.mockRejectedValue(new ApiError("FEATURE_NOT_PUBLISHED", 409, "No publicada"));
 
-    const response = await POST(post({ listId: LIST_ID }));
+    const response = await POST(post({ listId: LIST_ID, family: "discovery" }));
 
     expect(response.status).toBe(409);
     await expect(response.json()).resolves.toMatchObject({ code: "FEATURE_NOT_PUBLISHED" });

@@ -186,7 +186,7 @@ describe("EditorialConsole: pestañas de Explorar", () => {
     expect(screen.getByText("No hay listas editoriales.")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Destacadas en Explorar" }));
-    expect(screen.getByText("Todavía no hay selección editorial. Destaca una lista oficial publicada.")).toBeInTheDocument();
+    expect(screen.getByText(/Todavía no hay colecciones destacadas/)).toBeInTheDocument();
     expect(screen.queryByText("No hay listas editoriales.")).toBeNull();
 
     fireEvent.click(screen.getByRole("tab", { name: "Generadas automáticamente" }));
