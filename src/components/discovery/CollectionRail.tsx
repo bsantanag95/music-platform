@@ -43,15 +43,17 @@ const STACK_SIZE = 6;
 /** En el riel la pila es más chica y de 3 fundas: así entran 6 colecciones por fila (ADR 0038). */
 const DENSE_STACK_SIZE = 3;
 
-// Pila de fundas de la colección: carátulas superpuestas, la primera encima, que se abren un poco
-// al pasar el mouse. Sin carátulas, tres siluetas de disco (nunca un hueco vacío). Decorativa: el
-// título de la colección es lo que la identifica.
+// Pila de fundas en abanico: carátulas superpuestas, la primera encima, que se abren un poco al
+// pasar el mouse. Sin carátulas, tres siluetas de disco (nunca un hueco vacío). Es la textura que
+// distingue una colección de una lista: el mosaico 2×2 plano de `ListCoverMosaic` lee como un
+// objeto guardado; el abanico lee como varios sleeves apilados a mano, el gesto de quien arma un
+// recorrido por el catálogo.
 function SleeveStack({ covers, dense = false }: { covers: string[]; dense?: boolean }) {
   const limit = dense ? DENSE_STACK_SIZE : STACK_SIZE;
   const items: (string | null)[] = covers.length > 0 ? covers.slice(0, limit) : [null, null, null];
   const size = dense
     ? "size-14 [&:not(:first-child)]:-ml-8 lg:group-hover:[&:not(:first-child)]:-ml-6"
-    : "size-16 [&:not(:first-child)]:-ml-9 lg:size-20 lg:[&:not(:first-child)]:-ml-11 lg:group-hover:[&:not(:first-child)]:-ml-8";
+    : "size-20 [&:not(:first-child)]:-ml-11 lg:size-24 lg:[&:not(:first-child)]:-ml-14 lg:group-hover:[&:not(:first-child)]:-ml-11";
   return (
     <div aria-hidden="true" className="flex shrink-0 items-center">
       {items.map((cover, i) => (
@@ -73,9 +75,13 @@ function SleeveStack({ covers, dense = false }: { covers: string[]; dense?: bool
 
 /**
  * Riel de colecciones editoriales (`/explore` e Inicio anónima): listas públicas de la cuenta
- * curadora, ya ordenadas por `rank`. Cada tarjeta es un enlace al detalle público de la lista,
- * con la pila de fundas, el título, la descripción (si la tiene) y el número
- * de álbumes. No renderiza nada si no hay colecciones.
+ * curadora, ya ordenadas por `rank`. Cada tarjeta es un enlace al detalle público de la lista.
+ *
+ * La tarjeta es deliberadamente **vertical** (abanico de fundas arriba, texto abajo, familia como
+ * sello sobre la propia carátula) en vez de la fila horizontal de `ListCard`: una colección es
+ * contenido de la plataforma, organizado por familia; una lista es de una persona, organizada por
+ * autor. Que se vean distinto a primera vista es parte del modelo, no un detalle de estilo (ADR
+ * 0038). No renderiza nada si no hay colecciones.
  */
 export function CollectionRail<T extends FeaturedCollection>({
   id = "colecciones",
@@ -108,47 +114,64 @@ export function CollectionRail<T extends FeaturedCollection>({
   const header = (
     <SectionHeader heading={heading} description={description} seeAll={seeAll} headingId={headingId} />
   );
-  const card = (collection: T, compact: boolean, dense = false) => (
-    <Link
-      href={hrefOf(collection)}
-      className={`group relative flex h-full flex-col rounded-lg border border-ink-border bg-ink-surface transition-colors hover:border-amber focus-visible:border-amber ${
-        dense ? "gap-3 p-3" : "gap-4 p-4"
-      } ${
-        compact ? "" : "lg:flex-row lg:items-center lg:gap-6 lg:p-5"
-      }`}
-    >
-      <SleeveStack covers={collection.coverThumbs} dense={dense} />
-      <span className="flex min-w-0 flex-1 flex-col gap-1">
-        {/* La familia es lo que distingue una colección de otra, venga de plantilla o de la mano de alguien: desde
-            el ADR 0038 toda colección destacada tiene una y el riel no separa los dos orígenes. */}
-        {familyLabel ? (
-          <span className="font-data text-[0.7rem] uppercase tracking-wide text-amber">
-            {familyLabel(collection.family)}
-          </span>
-        ) : null}
-        <span className="line-clamp-2 font-display text-lg text-paper transition-colors group-hover:text-amber">
-          {titleOf(collection)}
-        </span>
-        {/* En el riel la descripción se omite: el título ya dice qué es la colección y así entran 6 por fila.
-            La descripción completa vive en la página de colecciones y en el detalle. */}
-        {!dense && collection.description ? (
-          <span className="line-clamp-2 font-body text-sm text-paper-muted">{collection.description}</span>
-        ) : null}
-        <span className="font-data text-xs text-paper-muted">{itemsLabel(collection.itemCount)}</span>
-        {noteFor?.(collection) ? (
-          <span className="font-data text-xs text-paper-muted">{noteFor(collection)}</span>
-        ) : null}
-      </span>
-      <span
-        aria-hidden="true"
-        className={`text-paper-muted transition-[color,transform] duration-150 group-hover:translate-x-0.5 group-hover:text-amber ${
-          compact ? "absolute right-4 top-4" : "hidden self-center lg:block"
+  const card = (collection: T, dense = false) => {
+    const family = familyLabel ? familyLabel(collection.family) : null;
+    return (
+      <Link
+        href={hrefOf(collection)}
+        className={`group flex h-full flex-col rounded-lg border border-ink-border bg-ink-surface transition-colors hover:border-amber focus-visible:border-amber ${
+          dense ? "gap-2 p-3" : "gap-3 p-4"
         }`}
       >
-        →
-      </span>
-    </Link>
-  );
+        {/* El escenario de la pila: un marco propio (mismo recurso que el mosaico de `ListCoverMosaic`,
+            un paso más oscuro con hairline) para que el abanico lea como un bloque de arte, no como
+            miniaturas sueltas flotando en el relleno de la tarjeta. */}
+        <div
+          className={`relative flex w-full items-center justify-center rounded-md border border-ink-border bg-ink ${
+            dense ? "py-3" : "py-5"
+          }`}
+        >
+          <SleeveStack covers={collection.coverThumbs} dense={dense} />
+          {/* La familia es lo que distingue una colección de otra, venga de plantilla o de la mano de
+              alguien (ADR 0038): un sello sobre la propia carátula, no un rótulo flotando sobre el
+              título — el mismo recurso que la cifra de `AlbumCard` sobre su carátula. */}
+          {family ? (
+            <span className="absolute bottom-1.5 left-1.5 inline-flex items-center rounded-md bg-ink/85 px-1.5 py-0.5 font-data text-[0.65rem] uppercase tracking-wide text-paper backdrop-blur-sm">
+              {family}
+            </span>
+          ) : null}
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="flex min-w-0 items-start gap-1.5">
+            <h3
+              className={`line-clamp-2 min-w-0 flex-1 font-display text-paper transition-colors group-hover:text-amber ${
+                dense ? "text-sm" : "text-base lg:text-lg"
+              }`}
+            >
+              {titleOf(collection)}
+            </h3>
+            {/* Misma flecha que las fichas de género de `FamilyGrid`, revelada al pasar el mouse o con
+                foco: las fichas de contenido editorial comparten este detalle; las listas no lo llevan. */}
+            <span
+              aria-hidden="true"
+              className="shrink-0 pt-0.5 text-paper-muted opacity-0 transition-[color,opacity,transform] duration-150 group-hover:translate-x-0.5 group-hover:text-amber group-hover:opacity-100 group-focus-visible:opacity-100"
+            >
+              →
+            </span>
+          </div>
+          {/* En el riel la descripción se omite: el título ya dice qué es la colección y así entran 6 por fila.
+              La descripción completa vive en la página de colecciones y en el detalle. */}
+          {!dense && collection.description ? (
+            <p className="line-clamp-2 font-body text-sm text-paper-muted">{collection.description}</p>
+          ) : null}
+          <span className="font-data text-xs text-paper-muted">{itemsLabel(collection.itemCount)}</span>
+          {noteFor?.(collection) ? (
+            <span className="font-data text-xs text-paper-muted">{noteFor(collection)}</span>
+          ) : null}
+        </div>
+      </Link>
+    );
+  };
 
   // Riel de la portada: una fila desplazable con tarjetas densas. Con 10 colecciones una rejilla ocupaba cuatro
   // filas y empujaba el resto de la página; con tarjetas anchas solo se veían 3, menos de las 6 de antes. Densas
@@ -163,7 +186,7 @@ export function CollectionRail<T extends FeaturedCollection>({
               key={collection.id}
               className="w-[46%] shrink-0 snap-start sm:w-[calc((100%-2rem)/3)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]"
             >
-              {card(collection, true, true)}
+              {card(collection, true)}
             </li>
           ))}
         </RailScroller>
@@ -171,9 +194,9 @@ export function CollectionRail<T extends FeaturedCollection>({
     );
   }
 
-  // Con más de dos colecciones, tres columnas desde `lg` y la pila arriba del texto: en dos columnas con la pila al
-  // lado, seis colecciones ocupaban tres filas altas y los títulos largos se cortaban ("Ganadores del Grammy 20…").
-  const compact = collections.length > 2;
+  // Pared de fichas: cuatro columnas desde `xl`, siempre la misma ficha vertical, tenga la familia 1
+  // colección o 10 (antes una familia con pocas colecciones mostraba una ficha horizontal ancha aparte;
+  // una sola forma es más fácil de reconocer que dos).
   return (
     <section id={id} aria-labelledby={headingId} className="flex w-full scroll-mt-24 flex-col gap-3">
       {header}
@@ -183,9 +206,9 @@ export function CollectionRail<T extends FeaturedCollection>({
           {emptyMessage}
         </p>
       ) : null}
-      <ul className={`grid gap-4 sm:grid-cols-2 ${compact ? "lg:grid-cols-3" : ""}`}>
+      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {collections.map((collection) => (
-          <li key={collection.id}>{card(collection, compact)}</li>
+          <li key={collection.id}>{card(collection)}</li>
         ))}
       </ul>
     </section>
