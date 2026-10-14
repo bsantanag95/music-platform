@@ -1,4 +1,5 @@
 import { useTranslations } from "next-intl";
+import { AppImage } from "@/components/ui/AppImage";
 import { SaveListButton } from "@/components/lists/SaveListButton";
 import { TrackListButton } from "@/components/camino/TrackListButton";
 import type { CollectionFamily } from "@/services/discovery/collections/families";
@@ -21,9 +22,8 @@ interface CollectionDetailHeaderProps {
 
 // Cabecera del detalle de una colección (ADR 0038). Es deliberadamente distinta de `ListDetailHeader`: una lista es
 // de una persona (mosaico 2×2 al lado, "por <dueño>", audiencia, antigüedad); una colección es de la plataforma
-// (abanico de fundas en su escenario, la familia como sello sobre la carátula, y nada de audiencia ni fecha: una
-// colección siempre es pública y se regenera). Misma ficha vertical que la tarjeta de la página de colecciones, a
-// escala de portada.
+// (portada a todo el ancho con la carátula difuminada de fondo, abanico de fundas, la familia como sello y una línea
+// que dice qué reúne, y nada de audiencia ni fecha: una colección siempre es pública y se regenera).
 export function CollectionDetailHeader({
   list,
   family,
@@ -38,40 +38,55 @@ export function CollectionDetailHeader({
   const t = useTranslations("lists");
   const tExplore = useTranslations("catalog.explore");
 
+  const backdrop = list.coverThumbs[0] ?? null;
+
   return (
-    <header className="flex flex-col gap-4">
-      <div className="relative flex w-full items-center justify-center rounded-lg border border-ink-border bg-ink px-4 py-8 sm:py-10">
-        <SleeveStack covers={list.coverThumbs} size="hero" />
-        <span className={`absolute bottom-3 left-3 ${FAMILY_STAMP_CLASS}`}>{tExplore(`collectionFamilies.${family}`)}</span>
-      </div>
+    // Portada de "muestra", no ficha de lista: una sola pieza a todo el ancho con la primera carátula difuminada como
+    // luz de fondo, el texto a la izquierda y el abanico de fundas a la derecha (arriba en móvil). Una lista de persona
+    // sigue con su ficha (mosaico 2×2 al lado del título, "por <dueño>", audiencia y fecha) sobre fondo liso.
+    <header className="relative isolate overflow-hidden rounded-xl border border-ink-border bg-ink-surface">
+      {backdrop ? (
+        <div aria-hidden="true" className="absolute inset-0 -z-10">
+          <AppImage src={backdrop} alt="" fill sizes="768px" className="scale-125 object-cover opacity-35 blur-3xl saturate-150" />
+          <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/85 to-ink/40" />
+        </div>
+      ) : null}
 
-      <div className="flex min-w-0 flex-col gap-2">
-        <h1 className="font-display text-2xl text-paper sm:text-3xl">{list.title}</h1>
+      <div className="flex flex-col-reverse gap-6 p-5 sm:p-8 md:flex-row md:items-center md:justify-between">
+        <div className="flex min-w-0 flex-col gap-3 md:max-w-[55%]">
+          <span className={`w-fit ${FAMILY_STAMP_CLASS}`}>{tExplore(`collectionFamilies.${family}`)}</span>
+          <h1 className="font-display text-3xl leading-tight text-paper sm:text-4xl">{list.title}</h1>
 
-        {list.description ? (
-          <p className="max-w-prose whitespace-pre-wrap font-body text-sm text-paper-muted">{list.description}</p>
-        ) : null}
+          {/* Qué es esta colección: la descripción curada o, si no hay, la de su familia. */}
+          <p className="max-w-prose whitespace-pre-wrap font-body text-sm text-paper-muted">
+            {list.description ?? tExplore(`collectionFamilyDescriptions.${family}`)}
+          </p>
 
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-data text-xs text-paper-muted">
-          <span>{platformName}</span>
-          <span aria-hidden>·</span>
-          <span>{tExplore("collectionItems", { count: list.itemCount })}</span>
-          {typeof saveCount === "number" && saveCount > 0 ? (
-            <>
-              <span aria-hidden>·</span>
-              <span>{t("savesCount", { count: saveCount })}</span>
-            </>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-data text-xs text-paper-muted">
+            <span>{platformName}</span>
+            <span aria-hidden>·</span>
+            <span>{tExplore("collectionItems", { count: list.itemCount })}</span>
+            {typeof saveCount === "number" && saveCount > 0 ? (
+              <>
+                <span aria-hidden>·</span>
+                <span>{t("savesCount", { count: saveCount })}</span>
+              </>
+            ) : null}
+          </div>
+
+          {canSave ? (
+            <div className="mt-1 flex flex-wrap items-start gap-3">
+              <SaveListButton listId={list.id} initialSaved={saved} initialFollowing={following} />
+              {list.entityType === "release-group" ? (
+                <TrackListButton listId={list.id} initialTracking={tracking} initialProgress={trackingProgress} />
+              ) : null}
+            </div>
           ) : null}
         </div>
 
-        {canSave ? (
-          <div className="flex flex-wrap items-start gap-3">
-            <SaveListButton listId={list.id} initialSaved={saved} initialFollowing={following} />
-            {list.entityType === "release-group" ? (
-              <TrackListButton listId={list.id} initialTracking={tracking} initialProgress={trackingProgress} />
-            ) : null}
-          </div>
-        ) : null}
+        <div className="flex justify-center md:justify-end md:pr-2">
+          <SleeveStack covers={list.coverThumbs} size="hero" />
+        </div>
       </div>
     </header>
   );

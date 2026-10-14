@@ -86,7 +86,15 @@
       "endedOn": "Until {date}",
       "archiveEmpty": "There are no previous collections yet.",
       "archiveEmptyFamily": "There are no previous collections of this type."
-    }
+    },
+    "collectionFamilyDescriptions": {
+      "ephemeris": "Albums celebrating an anniversary in this period, by release date.",
+      "awards": "Albums awarded at the ceremonies the platform follows.",
+      "releases": "What is new and what is coming in the catalog.",
+      "discovery": "Finds to step outside the usual.",
+      "rankings": "The albums the community rates highest."
+    },
+    "collectionNoteAnniversary": "{years, plural, one {Turns # year old} other {Turns # years old}} · {date}"
   },
   "search": {
     "pageTitle": "Search",

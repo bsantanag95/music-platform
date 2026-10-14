@@ -5,6 +5,7 @@ import { redirect } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CollectionDetailHeader } from "@/components/discovery/CollectionDetailHeader";
+import { collectionNote, formatNoteDate } from "@/components/discovery/collection-notes";
 import { ListItemsView } from "@/components/lists/ListItemsView";
 import { collectionSegment } from "@/lib/catalog-links";
 import { resolveCatalogRoute } from "@/lib/catalog-route";
@@ -12,6 +13,7 @@ import { isExploreEnabled } from "@/lib/config/discovery";
 import { parseCatalogSegment } from "@/lib/slug";
 import { resolveSession } from "@/services/auth/sessions";
 import { findGeneratedCollection } from "@/services/discovery/collections/generated";
+import { albumReleaseDates } from "@/services/discovery/discovery";
 import { PLATFORM_OWNER_NAME, collectionTitle, titleLocaleOf } from "@/services/discovery/collections/titles";
 import { CURATOR_USERNAME } from "@/services/discovery/constants";
 import { countsByListId } from "@/services/journeys/progress";
@@ -66,6 +68,21 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
       ? ((await countsByListId(viewerId, [parsed.id])).get(parsed.id) ?? { selected: 0, listened: 0 })
       : null;
 
+  // Cartela de cada disco: por qué está en la colección (aniversario, fecha o año de lanzamiento).
+  const releaseDates =
+    list.entityType === "release-group" ? await albumReleaseDates(list.items.map((item) => item.target.id)) : {};
+  const notes: Record<string, string> = {};
+  for (const item of list.items) {
+    const note = collectionNote(collection.family, releaseDates[item.target.id]);
+    if (!note) continue;
+    notes[item.id] =
+      note.kind === "anniversary"
+        ? tExplore("collectionNoteAnniversary", { years: note.years, date: formatNoteDate(note.date, locale) })
+        : note.kind === "date"
+          ? formatNoteDate(note.date, locale)
+          : String(note.year);
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
       <div className="flex w-full max-w-3xl flex-col gap-6">
@@ -101,6 +118,7 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
             entityType={list.entityType}
             viewerAuthenticated={Boolean(viewerId)}
             heading={tExplore("collectionAlbums")}
+            notes={notes}
           />
         )}
       </div>

@@ -227,7 +227,13 @@ El modelo que rige, separado por de quién es la voz:
   el mouse) y nunca muestra dueño ni insignia «Oficial». La lista es siempre una fila (mosaico 2×2 a la izquierda,
   «por <dueño>»). El **detalle** sigue la misma lógica con `CollectionDetailHeader`: el abanico en grande, el sello de
   familia, el nombre de la plataforma como texto y el conteo de álbumes; sin «por», audiencia ni antigüedad, que son de
-  las listas. La pila de fundas vive en `CollectionSleeves.tsx` (tamaños `dense`, `card` y `hero`).
+  las listas. La pila de fundas vive en `CollectionSleeves.tsx` (tamaños `dense`, `card` y `hero`). La cabecera es una
+  **portada** a todo el ancho: la primera carátula difuminada como luz de fondo, el texto a la izquierda (sello de
+  familia, título grande, la descripción de la colección o, si no tiene, la de su familia —
+  `catalog.explore.collectionFamilyDescriptions`—) y el abanico a la derecha. Cada disco lleva además una **cartela**
+  bajo el artista que dice por qué está ahí (`collection-notes.ts`, modo Detallada): en Efemérides el aniversario que
+  cumple ("Cumple 70 años · 19 oct 1956", con fecha completa), en Lanzamientos la fecha y en el resto el año
+  (`albumReleaseDates`, una consulta para todos los discos).
 - **Consola:** la distinción entre lo manual y lo automático vive en las **pestañas** ("Destacadas en Explorar" y
   "Generadas automáticamente"), no en dos grupos. El panel de destacadas es una sola lista en el orden del riel, con el
   origen y la familia como rótulos por fila —eso es lo que dice qué sobreescribirá la próxima corrida— y «dentro del
