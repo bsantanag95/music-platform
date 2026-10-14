@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ListDetailHeader } from "@/components/lists/ListDetailHeader";
+import { CollectionDetailHeader } from "@/components/discovery/CollectionDetailHeader";
 import { ListItemsView } from "@/components/lists/ListItemsView";
 import { collectionSegment } from "@/lib/catalog-links";
 import { resolveCatalogRoute } from "@/lib/catalog-route";
@@ -13,7 +13,7 @@ import { parseCatalogSegment } from "@/lib/slug";
 import { resolveSession } from "@/services/auth/sessions";
 import { findGeneratedCollection } from "@/services/discovery/collections/generated";
 import { PLATFORM_OWNER_NAME, collectionTitle, titleLocaleOf } from "@/services/discovery/collections/titles";
-import { CURATOR_DISPLAY_NAME, CURATOR_USERNAME } from "@/services/discovery/constants";
+import { CURATOR_USERNAME } from "@/services/discovery/constants";
 import { countsByListId } from "@/services/journeys/progress";
 import { getUserListDetail } from "@/services/lists/lists";
 import { saveCountsFor, savedStateFor } from "@/services/lists/saved-lists";
@@ -32,7 +32,8 @@ export async function generateMetadata({ params }: CollectionDetailPageProps): P
 
 // Detalle de una colección generada (openspec: localize-collection-titles, ADR 0037). Vive bajo Explorar y no bajo la
 // cuenta curadora: la URL lleva el slug del título del idioma activo y el dueño se muestra como la plataforma. Las
-// listas de personas y las colecciones curadas siguen en `/users/<usuario>/lists/<lista>`.
+// listas de personas y las colecciones curadas siguen en `/users/<usuario>/lists/<lista>`. La cabecera es propia
+// (`CollectionDetailHeader`, ADR 0038): no se parece al detalle de una lista.
 export default async function CollectionDetailPage({ params }: CollectionDetailPageProps) {
   const { locale, segment } = await params;
   if (!isExploreEnabled()) redirect({ href: "/", locale });
@@ -76,11 +77,10 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
             { label: title },
           ]}
         />
-        <ListDetailHeader
+        <CollectionDetailHeader
           list={{ ...list, title }}
-          canManage={false}
-          owner={{ username: CURATOR_USERNAME, displayName: CURATOR_DISPLAY_NAME }}
-          ownerLabel={PLATFORM_OWNER_NAME[titleLocaleOf(locale)]}
+          family={collection.family}
+          platformName={PLATFORM_OWNER_NAME[titleLocaleOf(locale)]}
           saved={savedState?.saved ?? false}
           following={savedState?.following ?? false}
           canSave={Boolean(viewerId)}
@@ -96,7 +96,12 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
         {list.items.length === 0 ? (
           <EmptyState title={t("noItems")} description={t("readEmptyItems")} />
         ) : (
-          <ListItemsView items={list.items} entityType={list.entityType} viewerAuthenticated={Boolean(viewerId)} />
+          <ListItemsView
+            items={list.items}
+            entityType={list.entityType}
+            viewerAuthenticated={Boolean(viewerId)}
+            heading={tExplore("collectionAlbums")}
+          />
         )}
       </div>
     </main>

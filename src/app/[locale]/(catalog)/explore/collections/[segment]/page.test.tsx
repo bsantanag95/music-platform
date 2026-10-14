@@ -39,17 +39,17 @@ vi.mock("@/services/lists/saved-lists", () => ({ savedStateFor: mocks.savedState
 vi.mock("@/services/journeys/progress", () => ({ countsByListId: mocks.countsByListId }));
 
 const { default: CollectionDetailPage } = await import("./page");
-const { ListDetailHeader } = await import("@/components/lists/ListDetailHeader");
+const { CollectionDetailHeader } = await import("@/components/discovery/CollectionDetailHeader");
 
 function findHeader(node: ReactNode): ReactElement | null {
   if (node == null || typeof node !== "object") return null;
   if (Array.isArray(node)) return node.map(findHeader).find(Boolean) ?? null;
   if (!isValidElement(node)) return null;
-  if (node.type === ListDetailHeader) return node;
+  if (node.type === CollectionDetailHeader) return node;
   return findHeader((node.props as { children?: ReactNode }).children);
 }
 
-const generated = { templateKey: "new-releases", periodKey: "evergreen", storedTitle: "Novedades esenciales" };
+const generated = { templateKey: "new-releases", periodKey: "evergreen", storedTitle: "Novedades esenciales", family: "releases" };
 const detail = { id: LIST_ID, entityType: "release-group", title: "Novedades esenciales", audience: "public", items: [] };
 
 function run(locale: string, segment: string) {
@@ -86,19 +86,20 @@ describe("detalle de una colección generada", () => {
 
   it("en español muestra el título en español, con la plataforma como dueño", async () => {
     const element = await run("es", collectionSegment("Novedades esenciales", LIST_ID));
-    const header = findHeader(element)!.props as { list: { title: string }; ownerLabel: string; canManage: boolean };
+    const header = findHeader(element)!.props as { list: { title: string }; platformName: string; family: string };
 
     expect(header.list.title).toBe("Novedades esenciales");
-    expect(header.ownerLabel).toBe("Exploración");
-    expect(header.canManage).toBe(false);
+    expect(header.platformName).toBe("Exploración");
+    // La familia viene de la fila, no del registro de plantillas.
+    expect(header.family).toBe("releases");
   });
 
   it("en inglés muestra el título en inglés y la plataforma como 'Explore'", async () => {
     const element = await run("en", collectionSegment("Essential new releases", LIST_ID));
-    const header = findHeader(element)!.props as { list: { title: string }; ownerLabel: string };
+    const header = findHeader(element)!.props as { list: { title: string }; platformName: string };
 
     expect(header.list.title).toBe("Essential new releases");
-    expect(header.ownerLabel).toBe("Explore");
+    expect(header.platformName).toBe("Explore");
     expect(mocks.permanentRedirect).not.toHaveBeenCalled();
   });
 

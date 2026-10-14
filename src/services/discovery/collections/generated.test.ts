@@ -64,12 +64,13 @@ describe("generatedRefsFor", () => {
 
 describe("findGeneratedCollection", () => {
   it("exige fila de plantilla y lista estándar, pública y visible", async () => {
-    mocks.rows = [{ title: "Novedades esenciales", templateKey: "new-releases", periodKey: "evergreen" }];
+    mocks.rows = [{ title: "Novedades esenciales", templateKey: "new-releases", periodKey: "evergreen", family: "releases" }];
 
     await expect(findGeneratedCollection("a")).resolves.toEqual({
       templateKey: "new-releases",
       periodKey: "evergreen",
       storedTitle: "Novedades esenciales",
+      family: "releases",
     });
     const { sql, params } = render();
     expect(sql).toContain('"user_list_featured"."source" =');

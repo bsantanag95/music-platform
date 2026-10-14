@@ -28,26 +28,7 @@ const list = {
 };
 
 describe("ListDetailHeader: dueño", () => {
-  it("con ownerLabel muestra la plataforma como texto, sin enlazar a un perfil", () => {
-    renderWithIntl(
-      <ListDetailHeader
-        list={list as never}
-        canManage={false}
-        owner={{ username: "exploracion", displayName: "Exploración" }}
-        ownerLabel="Explore"
-        canSave
-      />,
-      "en",
-    );
-
-    expect(screen.getByText("by Explore")).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /Explore/ })).toBeNull();
-    expect(screen.queryByTestId("hover-card")).toBeNull();
-    // Guardar sigue disponible: hay `owner`.
-    expect(screen.getByRole("button", { name: "Guardar" })).toBeInTheDocument();
-  });
-
-  it("sin ownerLabel enlaza al perfil del dueño como siempre", () => {
+  it("enlaza al perfil del dueño", () => {
     renderWithIntl(
       <ListDetailHeader list={list as never} canManage={false} owner={{ username: "ana", displayName: "Ana" }} />,
       "en",

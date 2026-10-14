@@ -6,6 +6,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { userList, userListFeatured } from "@/db/schema";
+import type { CollectionFamily } from "./families";
 import type { GeneratedRef } from "./titles";
 
 /** Plantilla y período de cada lista que es una colección generada; las demás no aparecen en el mapa. */
@@ -28,6 +29,8 @@ export async function generatedRefsFor(listIds: string[]): Promise<Map<string, G
 
 export interface GeneratedCollection extends GeneratedRef {
   storedTitle: string;
+  /** Familia guardada en la fila (migración 0071): la cabecera del detalle la muestra como sello. */
+  family: CollectionFamily;
 }
 
 /**
@@ -40,6 +43,7 @@ export async function findGeneratedCollection(listId: string): Promise<Generated
       title: userList.title,
       templateKey: userListFeatured.templateKey,
       periodKey: userListFeatured.periodKey,
+      family: userListFeatured.family,
     })
     .from(userListFeatured)
     .innerJoin(userList, eq(userList.id, userListFeatured.listId))
@@ -54,5 +58,5 @@ export async function findGeneratedCollection(listId: string): Promise<Generated
     )
     .limit(1);
   if (!row?.templateKey || !row.periodKey) return null;
-  return { templateKey: row.templateKey, periodKey: row.periodKey, storedTitle: row.title };
+  return { templateKey: row.templateKey, periodKey: row.periodKey, storedTitle: row.title, family: row.family };
 }

@@ -1,12 +1,11 @@
 import type { ReactNode } from "react";
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { CoverThumb } from "@/components/catalog/CoverThumb";
-import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import { collectionHref, listHref } from "@/lib/catalog-links";
 import { collectionTitle } from "@/services/discovery/collections/titles";
 import type { FeaturedCollection } from "@/services/discovery/discovery";
 import type { CollectionFamily } from "@/services/discovery/collections/families";
+import { FAMILY_STAMP_CLASS, SleeveStack } from "./CollectionSleeves";
 import { RailScroller } from "./RailScroller";
 import { SectionHeader } from "./SectionHeader";
 
@@ -35,42 +34,6 @@ interface CollectionRailProps<T extends FeaturedCollection> {
    * `/explore`, una fila desplazable con flechas, que resume sin alargar la portada (ADR 0038).
    */
   layout?: "grid" | "scroll";
-}
-
-/** Hasta cuántas fundas muestra la pila (el servicio trae hasta 6). */
-const STACK_SIZE = 6;
-
-/** En el riel la pila es más chica y de 3 fundas: así entran 6 colecciones por fila (ADR 0038). */
-const DENSE_STACK_SIZE = 3;
-
-// Pila de fundas en abanico: carátulas superpuestas, la primera encima, que se abren un poco al
-// pasar el mouse. Sin carátulas, tres siluetas de disco (nunca un hueco vacío). Es la textura que
-// distingue una colección de una lista: el mosaico 2×2 plano de `ListCoverMosaic` lee como un
-// objeto guardado; el abanico lee como varios sleeves apilados a mano, el gesto de quien arma un
-// recorrido por el catálogo.
-function SleeveStack({ covers, dense = false }: { covers: string[]; dense?: boolean }) {
-  const limit = dense ? DENSE_STACK_SIZE : STACK_SIZE;
-  const items: (string | null)[] = covers.length > 0 ? covers.slice(0, limit) : [null, null, null];
-  const size = dense
-    ? "size-14 [&:not(:first-child)]:-ml-8 lg:group-hover:[&:not(:first-child)]:-ml-6"
-    : "size-20 [&:not(:first-child)]:-ml-11 lg:size-24 lg:[&:not(:first-child)]:-ml-14 lg:group-hover:[&:not(:first-child)]:-ml-11";
-  return (
-    <div aria-hidden="true" className="flex shrink-0 items-center">
-      {items.map((cover, i) => (
-        <div
-          key={i}
-          style={{ zIndex: items.length - i }}
-          className={`relative shrink-0 overflow-hidden rounded-md shadow-[0_2px_10px_rgba(0,0,0,0.45)] ring-1 ring-ink first:ml-0 motion-safe:transition-[margin] motion-safe:duration-300 ${size}`}
-        >
-          {cover ? (
-            <CoverThumb cover={cover} label="" className="size-full" />
-          ) : (
-            <DiscPlaceholder alt="" className="size-full" />
-          )}
-        </div>
-      ))}
-    </div>
-  );
 }
 
 /**
@@ -131,12 +94,12 @@ export function CollectionRail<T extends FeaturedCollection>({
             dense ? "py-3" : "py-5"
           }`}
         >
-          <SleeveStack covers={collection.coverThumbs} dense={dense} />
+          <SleeveStack covers={collection.coverThumbs} size={dense ? "dense" : "card"} />
           {/* La familia es lo que distingue una colección de otra, venga de plantilla o de la mano de
               alguien (ADR 0038): un sello sobre la propia carátula, no un rótulo flotando sobre el
               título — el mismo recurso que la cifra de `AlbumCard` sobre su carátula. */}
           {family ? (
-            <span className="absolute bottom-1.5 left-1.5 inline-flex items-center rounded-md bg-ink/85 px-1.5 py-0.5 font-data text-[0.65rem] uppercase tracking-wide text-paper backdrop-blur-sm">
+            <span className={`absolute bottom-1.5 left-1.5 ${FAMILY_STAMP_CLASS}`}>
               {family}
             </span>
           ) : null}

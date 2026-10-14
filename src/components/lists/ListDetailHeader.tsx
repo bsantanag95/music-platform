@@ -24,11 +24,6 @@ interface ListDetailHeaderProps {
   canManage: boolean;
   /** Modo lectura: dueño de la lista y estado de guardado del visitante. */
   owner?: OwnerInfo;
-  /**
-   * Nombre de la plataforma como dueño (colecciones generadas): se muestra como texto, sin enlazar a un perfil.
-   * Las acciones de guardar y seguir siguen disponibles porque `owner` está presente.
-   */
-  ownerLabel?: string;
   saved?: boolean;
   following?: boolean;
   /** Modo lectura: hay sesión, así que se ofrece Guardar/Seguir. */
@@ -49,7 +44,6 @@ export function ListDetailHeader({
   list,
   canManage,
   owner,
-  ownerLabel,
   saved = false,
   following = false,
   canSave = false,
@@ -160,12 +154,7 @@ export function ListDetailHeader({
           ) : null}
 
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-data text-xs text-paper-muted">
-            {owner && ownerLabel ? (
-              <>
-                <span>{t("byOwner", { name: ownerLabel })}</span>
-                <span aria-hidden>·</span>
-              </>
-            ) : owner ? (
+            {owner ? (
               <>
                 <UserHoverCard username={owner.username}>
                   <Link
