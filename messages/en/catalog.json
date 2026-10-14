@@ -10,6 +10,7 @@
     "mostReviewedHeading": "Most reviewed",
     "decadeChip": "{decade}s",
     "collectionItems": "{count, plural, one {# album} other {# albums}}",
+    "collectionAlbums": "Albums",
     "albumCoverLabel": "Album cover",
     "decadeResultsHeading": "Albums from the {decade}s",
     "genreResultsHeading": "{genre} albums",

@@ -221,6 +221,13 @@ El modelo que rige, separado por de quién es la voz:
 - **No se fusiona con Listas:** `/lists` → Destacadas conserva solo las **listas editoriales oficiales** publicadas,
   por fecha de publicación, y su encabezado enlaza a `/explore/collections`. Ninguna colección aparece ahí, ni las
   generadas ni las curadas: una colección no es una lista.
+- **La ficha vertical (y no la fila de `ListCard`):** una colección es contenido de la plataforma y una lista es de una
+  persona; que se vean distintas a primera vista es parte del modelo. La tarjeta de colección es siempre vertical
+  (abanico de fundas en un escenario enmarcado, texto abajo, **familia como sello sobre la carátula**, flecha al pasar
+  el mouse) y nunca muestra dueño ni insignia «Oficial». La lista es siempre una fila (mosaico 2×2 a la izquierda,
+  «por <dueño>»). El **detalle** sigue la misma lógica con `CollectionDetailHeader`: el abanico en grande, el sello de
+  familia, el nombre de la plataforma como texto y el conteo de álbumes; sin «por», audiencia ni antigüedad, que son de
+  las listas. La pila de fundas vive en `CollectionSleeves.tsx` (tamaños `dense`, `card` y `hero`).
 - **Consola:** la distinción entre lo manual y lo automático vive en las **pestañas** ("Destacadas en Explorar" y
   "Generadas automáticamente"), no en dos grupos. El panel de destacadas es una sola lista en el orden del riel, con el
   origen y la familia como rótulos por fila —eso es lo que dice qué sobreescribirá la próxima corrida— y «dentro del

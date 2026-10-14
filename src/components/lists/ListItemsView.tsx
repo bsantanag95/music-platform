@@ -29,12 +29,15 @@ export function ListItemsView({
   entityType,
   manage,
   viewerAuthenticated,
+  heading,
 }: {
   items: UserListItem[];
   entityType: ListEntityType;
   manage?: ListItemsManage;
   /** Vista de lectura de una lista ajena: hay sesión. Sin la prop, no hay menú por disco. */
   viewerAuthenticated?: boolean;
+  /** Encabezado de la sección; por defecto "Elementos" (las colecciones dicen "Álbumes"). */
+  heading?: string;
 }) {
   const t = useTranslations("lists");
   const [mode, setMode] = useListViewMode();
@@ -62,7 +65,7 @@ export function ListItemsView({
     <section data-menu-bounds className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-display text-lg text-paper">
-          {t("items")}{" "}
+          {heading ?? t("items")}{" "}
           <span className="font-data text-sm text-paper-muted">({items.length})</span>
         </h2>
         <ListModeSwitcher mode={mode} onChange={setMode} />
