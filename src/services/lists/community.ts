@@ -1,78 +1,52 @@
 // Superficie pública de descubrimiento de listas de la comunidad `/lists`
 // (cambio add-community-lists-surface).
 //
-// Cuatro secciones: Destacadas (curaduría editorial), Populares (por conteo
+// Cuatro secciones: Destacadas (listas editoriales oficiales), Populares (por conteo
 // agregado de guardados), De usuarios seguidos (solo con sesión) y Recientes
 // (cronológico — vive en discovery.ts). Sin recomendación algorítmica.
 
-import { and, asc, count, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { appUser, listSave, userFollow, userList, userListFeatured, userListItem } from "@/db/schema";
+import { appUser, listSave, userFollow, userList, userListItem } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import {
   assertPagination,
   enrichPublicLists,
   notBlockedByReader,
   PUBLIC_LIST_COLUMNS,
-  type PublicListRow,
 } from "./discovery";
 import { activeUserCondition } from "@/services/auth/account-status";
-import { featuredActiveCondition } from "@/services/discovery/discovery";
 
 /**
- * Sección "Destacadas": primero las listas editoriales oficiales publicadas de
- * `@exploracion`, luego las listas con fila en `user_list_featured` por `rank`
- * ascendente, sin duplicar una lista presente en ambos conjuntos ni filtrar por
- * tipo de entidad. Rail acotado, sin paginación (cambio
- * rework-public-lists-surface).
+ * Sección "Destacadas": las listas editoriales oficiales publicadas de `@exploracion`, de la más reciente a la
+ * más antigua, sin filtrar por tipo de entidad. Rail acotado, sin paginación.
+ *
+ * Las **colecciones** de Explorar no entran aquí, ni las generadas por plantilla ni las curadas con fila en
+ * `user_list_featured` (openspec: unify-explore-collections, ADR 0038): una colección es contenido de la
+ * plataforma y se recorre en `/explore/collections`, no entre las listas de la comunidad. La página enlaza allí
+ * en lugar de mostrar sus tarjetas.
  */
 export async function listFeaturedLists(readerId: string | null) {
-  const [officialRows, featuredRows] = await Promise.all([
-    db
-      .select(PUBLIC_LIST_COLUMNS)
-      .from(userList)
-      .innerJoin(appUser, eq(userList.ownerId, appUser.id))
-      .where(
-        and(
-          eq(userList.isOfficial, true),
-          eq(userList.audience, "public"),
-          eq(userList.moderationStatus, "visible"),
-          eq(appUser.profileVisibility, "public"),
-          activeUserCondition(),
-          isNull(userList.officialWithdrawnAt),
-          eq(userList.kind, "standard"),
-        ),
-      )
-      .orderBy(desc(userList.officialPublishedAt)),
-    db
-      .select(PUBLIC_LIST_COLUMNS)
-      .from(userListFeatured)
-      .innerJoin(userList, eq(userList.id, userListFeatured.listId))
-      .innerJoin(appUser, eq(userList.ownerId, appUser.id))
-      .where(
-        and(
-          eq(userList.audience, "public"),
-          eq(userList.moderationStatus, "visible"),
-          eq(userList.kind, "standard"),
-          // Las colecciones generadas por plantilla son de Explorar, no de las listas (split-explore-collections).
-          eq(userListFeatured.source, "curated"),
-          featuredActiveCondition(),
-        ),
-      )
-      .orderBy(desc(userListFeatured.weight), asc(userListFeatured.rank), desc(userListFeatured.startsAt)),
-  ]);
-
-  const seen = new Set<string>();
-  const merged: PublicListRow[] = [];
-  for (const row of [...officialRows, ...featuredRows]) {
-    if (seen.has(row.id)) continue;
-    seen.add(row.id);
-    merged.push(row);
-  }
+  const officialRows = await db
+    .select(PUBLIC_LIST_COLUMNS)
+    .from(userList)
+    .innerJoin(appUser, eq(userList.ownerId, appUser.id))
+    .where(
+      and(
+        eq(userList.isOfficial, true),
+        eq(userList.audience, "public"),
+        eq(userList.moderationStatus, "visible"),
+        eq(appUser.profileVisibility, "public"),
+        activeUserCondition(),
+        isNull(userList.officialWithdrawnAt),
+        eq(userList.kind, "standard"),
+      ),
+    )
+    .orderBy(desc(userList.officialPublishedAt));
 
   // Una lista vacía no aporta nada en una vitrina editorial: se omite hasta que tenga ítems (sigue
   // visible en su perfil y por enlace directo).
-  const lists = await enrichPublicLists(merged, readerId);
+  const lists = await enrichPublicLists(officialRows, readerId);
   return { lists: lists.filter((list) => list.itemCount > 0) };
 }
 

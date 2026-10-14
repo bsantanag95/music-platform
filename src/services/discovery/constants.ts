@@ -85,17 +85,14 @@ export const COVER_RESOLVE_CONCURRENCY = 4;
 export const ERA_YEARS = 5;
 
 /**
- * Riles de colecciones de `/explore` (openspec: split-explore-collections, ADR 0036): "Selección editorial"
- * (curadas) y "Descubre" (generadas), cada uno con su propio tope.
+ * Riel de colecciones de `/explore` (openspec: unify-explore-collections, ADR 0038): uno solo, que mezcla las
+ * curadas a mano y las generadas por plantilla. Son 10 tarjetas en una fila desplazable, en lugar de los dos
+ * riles de 6 del ADR 0036.
  */
-export const EDITORIAL_RAIL_LIMIT = 6;
-export const AUTOMATIC_RAIL_LIMIT = 6;
+export const COLLECTION_RAIL_LIMIT = 10;
 
-/** Tope de colecciones curadas vigentes en la página `/explore/collections`. */
-export const HUB_EDITORIAL_LIMIT = 48;
-
-/** Tope de colecciones automáticas vigentes en la página `/explore/collections`. */
-export const HUB_AUTOMATIC_LIMIT = 100;
+/** Techo de lectura de las colecciones vigentes en `/explore/collections`: seguridad, no criterio editorial. */
+export const HUB_COLLECTION_LIMIT = 120;
 
 /** Colecciones por página del archivo de `/explore/collections`. */
 export const ARCHIVE_PAGE_SIZE = 24;

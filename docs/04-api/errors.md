@@ -84,7 +84,7 @@ además del `error` legible:
 | `FEATURE_NOT_PUBLISHED` | 409 | Destacar en Explorar: la lista no es oficial o fue retirada. |
 | `FEATURE_NOT_ELIGIBLE` | 409 | Destacar en Explorar: la lista no es de la cuenta curadora, no es de álbumes, no es pública o está oculta. |
 | `FEATURED_NOT_FOUND` | 404 | Quitar, reprogramar: la lista no tiene fila en `user_list_featured`. |
-| `FEATURED_ORDER_CONFLICT` | 409 | Reordenar: el conjunto de ids enviado no coincide con las destacadas vigentes. |
+| `FEATURED_ORDER_CONFLICT` | 409 | Reordenar: el conjunto de ids enviado no coincide con las destacadas vigentes (todas, sin distinguir el origen, desde el ADR 0038). |
 | `TEMPLATE_NOT_FOUND` | 404 | Pausar, reanudar, forzar: la clave no corresponde a una plantilla. |
 | `LIST_TARGET_INVALID` | 404 | Listas: el objetivo del ítem no existe o no es un artista/álbum/canción válido. |
 | `LIST_ITEM_NOT_FOUND` | 404 | Listas: el ítem no existe dentro de la lista indicada. |

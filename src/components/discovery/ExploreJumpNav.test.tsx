@@ -9,8 +9,7 @@ import { ExploreJumpNav, type JumpItem } from "./ExploreJumpNav";
 const items = (labels: Record<string, string>, ids: string[]): JumpItem[] => ids.map((id) => ({ id, label: labels[id]! }));
 
 const es = {
-  "seleccion-editorial": catalogEs.explore.jump.editorial,
-  "descubre-por-datos": catalogEs.explore.jump.automatic,
+  colecciones: catalogEs.explore.jump.collections,
   generos: catalogEs.explore.jump.genres,
   novedades: catalogEs.explore.jump.newReleases,
   proximos: catalogEs.explore.jump.upcoming,
@@ -27,8 +26,7 @@ describe("ExploreJumpNav", () => {
     const nav = screen.getByRole("navigation", { name: "En esta página" });
     const links = within(nav).getAllByRole("link");
     expect(links.map((a) => a.textContent)).toEqual([
-      "Selección editorial",
-      "Descubre",
+      "Colecciones",
       "Géneros",
       "Novedades",
       "Próximos",

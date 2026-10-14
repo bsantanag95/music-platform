@@ -100,8 +100,15 @@ El carrusel es un contenedor con desbordamiento horizontal y anclaje de desplaza
   con el teclado; el navegador desplaza el contenedor al enfocar una tarjeta fuera de vista.
 - La página de colecciones no los usa: ahí el contenido se recorre, no se resume.
 
-Alternativa descartada: una rejilla de 10 en `/explore`. Ocuparía cuatro filas y empujaría el resto de la página,
-que es justo lo que el riel evita.
+La tarjeta del riel es **densa**: pila de 3 fundas más chica y sin descripción, para que entren 6 de un vistazo (5
+desde `lg`, 6 desde `xl`, las proporciones del riel de álbumes). Con la tarjeta ancha de la rejilla solo se veían 3, y
+eso mostraría **menos** que los dos riles de 6 del ADR 0036: un riel horizontal no garantiza que alguien lo desplace,
+así que lo que queda a la derecha puede no verse nunca. La descripción completa vive en la página de colecciones y en
+el detalle; en las generadas casi siempre está vacía.
+
+Alternativas descartadas: una rejilla de 10 en `/explore` (cuatro filas, empuja el resto de la página, que es justo lo
+que el riel evita) y volver a una rejilla de 6 (dos filas de tarjetas altas: se ven las 6, pero cuesta el doble de
+alto y deja fuera las otras 4).
 
 ### 5. Un tope, no dos
 
@@ -111,15 +118,23 @@ seguridad para la lectura de la página, no un criterio editorial.
 
 El total baja de 12 tarjetas posibles a 10, pero en una sola fila desplazable en vez de cuatro filas de rejilla.
 
-### 6. La consola mantiene los dos grupos
+### 6. La consola conserva la distinción en las pestañas, no en dos grupos con órdenes separados
 
-El panel sigue mostrando selección editorial y automáticas por separado, porque quien edita necesita saber qué
-sobreescribe la próxima corrida de la plantilla. Lo que cambia: el estado "dentro del tope" se evalúa contra el tope
-único del riel mezclado, y el control de orden actúa sobre la secuencia completa. Destacar a mano exige elegir
-familia, con un selector de las cinco.
+La distinción entre lo manual y lo automático sigue viviendo donde ya vivía y donde importa: las **pestañas** de la
+consola, "Destacadas en Explorar" y "Generadas automáticamente" (pausar plantillas, forzar corridas). Esas no se
+tocan.
 
-Es deliberado que la consola y la vista pública no coincidan: son dos públicos con necesidades distintas, y es la
-única parte donde el origen sigue siendo información útil.
+Lo que **sí** se retira son los dos grupos *dentro* del panel de destacadas. Existían solo porque había dos riles, y
+su propio texto de ayuda lo decía: "Reordenar aquí no mueve las automáticas". Con una secuencia de orden única, dos
+grupos con flechas propias son incoherentes: subir la primera automática tendría que pasarla por delante de la última
+curada, y la fila no se movería de su grupo aunque su `rank` cambiara.
+
+El panel pasa entonces a una sola lista en el orden del riel, y el origen de cada fila se conserva como rótulo por
+fila (ya existía: "Curada" / "Automática"), junto a su familia. Eso es lo que dice a quien edita qué sobreescribirá la
+próxima corrida, que era la única razón de agrupar. El estado "dentro del tope" se evalúa contra el tope único.
+Destacar a mano exige elegir familia, con un selector de las cinco.
+
+Se descubrió al implementar; la capacidad `explore-featured-management` se corrigió en este mismo cambio.
 
 ### 7. `/lists` enlaza, no muestra tarjetas
 

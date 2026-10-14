@@ -68,14 +68,15 @@ describe("servicio de listas de la comunidad", () => {
   });
 
   it("Destacadas: enriquece sin paginar", async () => {
-    mocks.db.select.mockReturnValueOnce(chain([])).mockReturnValueOnce(chain([row]));
+    mocks.enrichLists.mockResolvedValue(new Map([[officialRow.id, { itemCount: 3, coverThumbs: ["a"] }]]));
+    mocks.db.select.mockReturnValueOnce(chain([officialRow]));
     const result = await listFeaturedLists(reader);
     expect(result.lists).toHaveLength(1);
-    expect(result.lists[0]?.itemCount).toBe(5);
+    expect(result.lists[0]?.itemCount).toBe(3);
     expect(result.lists[0]?.saveCount).toBeUndefined();
   });
 
-  it("Destacadas: excluye las colecciones generadas por plantilla (solo filas curadas)", async () => {
+  it("Destacadas: no consulta `user_list_featured`: una colección no es una lista", async () => {
     let captured: unknown;
     const builder: Record<string, unknown> = {
       from: () => builder,
@@ -86,57 +87,45 @@ describe("servicio de listas de la comunidad", () => {
       },
       orderBy: () => Promise.resolve([]),
     };
-    mocks.db.select.mockReturnValueOnce(chain([])).mockReturnValueOnce(builder);
+    mocks.db.select.mockReturnValueOnce(builder);
 
     await listFeaturedLists(reader);
 
+    // Una sola consulta, y solo por listas oficiales: las colecciones de Explorar quedan fuera (ADR 0038).
+    expect(mocks.db.select).toHaveBeenCalledTimes(1);
     const { sql, params } = new PgDialect().sqlToQuery(captured as SQL);
-    expect(sql).toContain('"user_list_featured"."source" =');
-    expect(params).toContain("curated");
+    expect(sql).not.toContain("user_list_featured");
+    expect(sql).toContain('"user_list"."is_official" =');
+    expect(params).not.toContain("curated");
     expect(params).not.toContain("template");
   });
 
-  it("Destacadas: pone las editoriales oficiales primero", async () => {
+  it("Destacadas: solo listas editoriales oficiales, de la más reciente a la más antigua", async () => {
+    const older = { ...officialRow, id: "00000000-0000-4000-8000-0000000000f1" };
     mocks.enrichLists.mockResolvedValue(
       new Map([
         [officialRow.id, { itemCount: 3, coverThumbs: [] }],
-        [row.id, { itemCount: 5, coverThumbs: [] }],
+        [older.id, { itemCount: 4, coverThumbs: [] }],
       ]),
     );
-    mocks.db.select
-      .mockReturnValueOnce(chain([officialRow]))
-      .mockReturnValueOnce(chain([row]));
+    // El orden lo fija la consulta (`official_published_at` desc); el servicio lo conserva.
+    mocks.db.select.mockReturnValueOnce(chain([officialRow, older]));
     const result = await listFeaturedLists(reader);
-    expect(result.lists.map((l) => l.id)).toEqual([officialRow.id, row.id]);
+    expect(result.lists.map((l) => l.id)).toEqual([officialRow.id, older.id]);
     expect(result.lists[0]?.isOfficial).toBe(true);
   });
 
-  it("Destacadas: deduplica una lista oficial que también está destacada", async () => {
-    mocks.enrichLists.mockResolvedValue(
-      new Map([
-        [officialRow.id, { itemCount: 3, coverThumbs: [] }],
-        [row.id, { itemCount: 5, coverThumbs: [] }],
-      ]),
-    );
-    mocks.db.select
-      .mockReturnValueOnce(chain([officialRow]))
-      .mockReturnValueOnce(chain([officialRow, row]));
-    const result = await listFeaturedLists(reader);
-    expect(result.lists.map((l) => l.id)).toEqual([officialRow.id, row.id]);
-  });
-
   it("Destacadas: omite las listas vacías", async () => {
+    const other = { ...officialRow, id: "00000000-0000-4000-8000-0000000000f2" };
     mocks.enrichLists.mockResolvedValue(
       new Map([
         [officialRow.id, { itemCount: 0, coverThumbs: [] }],
-        [row.id, { itemCount: 5, coverThumbs: [] }],
+        [other.id, { itemCount: 5, coverThumbs: [] }],
       ]),
     );
-    mocks.db.select
-      .mockReturnValueOnce(chain([officialRow]))
-      .mockReturnValueOnce(chain([row]));
+    mocks.db.select.mockReturnValueOnce(chain([officialRow, other]));
     const result = await listFeaturedLists(reader);
-    expect(result.lists.map((l) => l.id)).toEqual([row.id]);
+    expect(result.lists.map((l) => l.id)).toEqual([other.id]);
   });
 
   it("Populares: adjunta el conteo agregado de guardados", async () => {

@@ -3,12 +3,14 @@
 ### Requirement: Panel de destacadas en la consola editorial
 
 La consola `/admin` SHALL ofrecer un panel "Destacadas en Explorar" visible para quien tenga
-`editorial.author`, que liste las colecciones con fila en `user_list_featured` en **dos grupos** —selección editorial
-(`curated`) y colecciones automáticas (`template`)— con su origen, familia, orden, peso, vigencia y si están
-actualmente en el riel. Los dos grupos SHALL ser una ayuda para quien edita —distinguir lo que una corrida de
-plantilla sobreescribe de lo que no— y SHALL NOT corresponder a dos riles públicos: el estado "dentro del tope" de
-cada fila SHALL evaluarse contra el tope único del riel de `/explore`, sobre la secuencia completa de colecciones
-vigentes. Las acciones de escritura del panel SHALL requerir `editorial.publish`; el servidor SHALL
+`editorial.author`, que liste las colecciones con fila en `user_list_featured` en **una sola secuencia**, en el mismo
+orden que el riel público, cada fila con su origen (curada o automática), su familia, su orden, su peso, su vigencia y
+si está actualmente en el riel. El panel SHALL NOT dividir las destacadas en dos grupos con órdenes separados: el
+orden es uno solo y el estado "dentro del tope" de cada fila SHALL evaluarse contra el tope único del riel de
+`/explore`, contando curadas y generadas juntas. El origen de cada fila SHALL seguir visible, porque es lo que dice a
+quien edita qué sobreescribirá la próxima corrida de la plantilla. La distinción entre lo manual y lo automático
+SHALL seguir viviendo en las pestañas de la consola ("Destacadas en Explorar" y "Generadas automáticamente"). Las
+acciones de escritura del panel SHALL requerir `editorial.publish`; el servidor SHALL
 rechazarlas con `403` si falta, aunque la UI las oculte.
 
 #### Scenario: Curador solo con autoría
@@ -25,8 +27,8 @@ rechazarlas con `403` si falta, aunque la UI las oculte.
 #### Scenario: Dos grupos
 
 - **WHEN** hay filas curadas y generadas
-- **THEN** el panel las muestra en dos grupos y el estado "dentro del tope" de cada fila se evalúa contra el tope
-  único del riel, contando curadas y generadas juntas
+- **THEN** el panel las muestra en una sola secuencia, cada fila rotulada con su origen, y el estado "dentro del
+  tope" se evalúa contra el tope único del riel, contando curadas y generadas juntas
 
 ### Requirement: Destacar solo listas elegibles
 

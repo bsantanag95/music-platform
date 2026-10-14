@@ -104,7 +104,8 @@
     "recentHeading": "Recent",
     "emptyTitle": "No lists to discover yet",
     "emptyDescription": "Once the community publishes public lists, they will show up here.",
-    "featuredDescription": "Editorial picks and official lists.",
+    "featuredDescription": "Official lists written by the team. The platform's own collections live on Explore.",
+    "seeCollections": "See collections",
     "popularDescription": "The ones the community saves the most.",
     "followingDescription": "Recent lists from people you follow.",
     "recentDescription": "The latest from the community."

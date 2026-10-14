@@ -53,8 +53,7 @@
     "countdown": "{days, plural, =0 {Hoy} =1 {Mañana} other {En # días}}",
     "jump": {
       "label": "En esta página",
-      "editorial": "Selección editorial",
-      "automatic": "Descubre",
+      "collections": "Colecciones",
       "genres": "Géneros",
       "newReleases": "Novedades",
       "upcoming": "Próximos",
@@ -63,26 +62,22 @@
       "mostReviewed": "Más reseñados",
       "decades": "Décadas"
     },
-    "editorialHeading": "Selección editorial",
-    "editorialDescription": "Colecciones elegidas por el equipo, con criterio y contexto.",
-    "automaticHeading": "Descubre",
-    "automaticDescription": "Efemérides, premios y curiosidades que se generan solas a partir del catálogo.",
+    "collectionsHeading": "Colecciones",
+    "collectionsDescription": "Recorridos por el catálogo: efemérides, premios, rankings y hallazgos.",
     "seeAllCollections": "Ver todas",
     "collectionFamilies": {
       "ephemeris": "Efemérides",
       "awards": "Premios",
       "releases": "Lanzamientos",
       "discovery": "Descubrimiento",
-      "community": "Comunidad"
+      "rankings": "Lo que más valora la gente"
     },
     "collectionsHub": {
       "pageTitle": "Colecciones",
       "heading": "Colecciones",
-      "description": "La selección del equipo y las colecciones que se generan solas, vigentes y pasadas.",
-      "editorialHeading": "Selección editorial",
-      "editorialDescription": "Colecciones elegidas por el equipo, con criterio y contexto.",
-      "automaticHeading": "Colecciones automáticas",
-      "automaticDescription": "Se generan solas a partir del catálogo y se renuevan cada semana.",
+      "description": "Todas las colecciones de la plataforma, por tipo, vigentes y pasadas.",
+      "currentHeading": "Vigentes",
+      "currentDescription": "Lo que está en Explorar ahora mismo, agrupado por tipo.",
       "archiveHeading": "Anteriores",
       "archiveDescription": "Colecciones automáticas que ya salieron del riel. Siguen disponibles.",
       "familyFilterLabel": "Filtrar por tipo",

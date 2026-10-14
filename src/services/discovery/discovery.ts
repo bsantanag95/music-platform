@@ -16,25 +16,17 @@ import {
 import { ApiError } from "@/lib/api/errors";
 import { ReleaseGroupCategorySchema, type ReleaseGroup, type ReleaseGroupCategory } from "@/lib/api/schemas";
 import { isCoverResolved } from "@/services/catalog/cover-resolution";
-import {
-  COLLECTION_FAMILIES,
-  FALLBACK_FAMILY,
-  familyOf,
-  templateKeysOf,
-  type CollectionFamily,
-} from "./collections/families";
+import { type CollectionFamily } from "./collections/families";
 import { escapeLike } from "@/services/catalog/search/normalize";
 import { GENRE_FAMILIES, type FamilyKey, type FamilyTier } from "@/services/genres/families";
 import { albumInFamily, albumInGenreTree, findStyleGenreBySlug, parseFamilyKey } from "@/services/genres/read";
 import { enrichLists } from "@/services/lists/lists";
 import {
   ARCHIVE_PAGE_SIZE,
-  AUTOMATIC_RAIL_LIMIT,
-  EDITORIAL_RAIL_LIMIT,
+  COLLECTION_RAIL_LIMIT,
   FEATURED_RAIL_LIMIT,
   FILTERED_PAGE_SIZE,
-  HUB_AUTOMATIC_LIMIT,
-  HUB_EDITORIAL_LIMIT,
+  HUB_COLLECTION_LIMIT,
   MIN_ALBUMS_FOR_SECTION,
   MIN_RATINGS_PER_ALBUM,
   MIN_REVIEWS_PER_ALBUM,
@@ -59,8 +51,8 @@ export interface FeaturedCollection {
   /** Plantilla y período de una colección generada (`null` en las curadas): con ellos se localiza el título. */
   templateKey: string | null;
   periodKey: string | null;
-  /** Familia de una colección generada; `null` en las curadas (son "editorial"). */
-  family: CollectionFamily | null;
+  /** Familia de la colección, guardada en su fila: toda colección destacada tiene una (migración 0071). */
+  family: CollectionFamily;
 }
 
 /** Colección automática vencida: lleva la fecha en que salió del riel. */
@@ -75,9 +67,9 @@ export interface CollectionArchivePage {
   hasNext: boolean;
 }
 
+/** Colecciones vigentes de `/explore/collections`: una sola secuencia, que la página agrupa por familia. */
 export interface CollectionsHub {
-  editorial: FeaturedCollection[];
-  automatic: FeaturedCollection[];
+  collections: FeaturedCollection[];
 }
 
 export interface DecadeBucket {
@@ -99,8 +91,8 @@ export interface AlbumPage {
 }
 
 export interface ExplorePage {
-  editorial: FeaturedCollection[];
-  automatic: FeaturedCollection[];
+  /** Un solo riel de colecciones: curadas y generadas mezcladas (ADR 0038). */
+  collections: FeaturedCollection[];
   newReleases: ReleaseGroup[];
   upcoming: ReleaseGroup[];
   decades: DecadeBucket[];
@@ -197,6 +189,7 @@ interface FeaturedRow {
   source: "curated" | "template";
   templateKey: string | null;
   periodKey: string | null;
+  family: CollectionFamily;
 }
 
 const featuredRowColumns = {
@@ -206,6 +199,7 @@ const featuredRowColumns = {
   source: userListFeatured.source,
   templateKey: userListFeatured.templateKey,
   periodKey: userListFeatured.periodKey,
+  family: userListFeatured.family,
 };
 
 /** Añade conteo de ítems, carátulas y familia a las filas destacadas. */
@@ -225,7 +219,7 @@ async function enrichFeatured(rows: FeaturedRow[]): Promise<FeaturedCollection[]
       source: row.source,
       templateKey: row.source === "template" ? row.templateKey : null,
       periodKey: row.source === "template" ? row.periodKey : null,
-      family: row.source === "curated" ? null : familyOf(row.templateKey),
+      family: row.family,
     };
   });
 }
@@ -248,48 +242,30 @@ export async function listFeaturedCollections(): Promise<FeaturedCollection[]> {
   return enrichFeatured(rows);
 }
 
-/** Grupo de un rail de `/explore` y el origen de fila (`source`) que lo alimenta. */
-export type CollectionGroup = "curated" | "automatic";
-export const GROUP_SOURCE: Record<CollectionGroup, "curated" | "template"> = {
-  curated: "curated",
-  automatic: "template",
-};
-
-async function listGroup(group: CollectionGroup, limit: number): Promise<FeaturedCollection[]> {
+/**
+ * Riel de colecciones de `/explore` (openspec: unify-explore-collections, ADR 0038): un solo riel con las
+ * curadas y las generadas mezcladas, por `weight` desc y `rank` asc. Cómo se mantiene una colección no es
+ * información para quien mira; lo que la distingue de las otras es su familia.
+ */
+export async function listCollections(limit = COLLECTION_RAIL_LIMIT): Promise<FeaturedCollection[]> {
   const rows = await db
     .select(featuredRowColumns)
     .from(userListFeatured)
     .innerJoin(userList, eq(userList.id, userListFeatured.listId))
-    .where(and(featuredRailCondition(), eq(userListFeatured.source, GROUP_SOURCE[group])))
+    .where(featuredRailCondition())
     .orderBy(...featuredOrder())
     .limit(limit);
   return enrichFeatured(rows);
 }
 
-/** Rail "Selección editorial": colecciones curadas vigentes, con tope propio. */
-export function listEditorialCollections(limit = EDITORIAL_RAIL_LIMIT): Promise<FeaturedCollection[]> {
-  return listGroup("curated", limit);
-}
-
-/** Rail "Descubre": colecciones generadas vigentes, con tope propio. */
-export function listAutomaticCollections(limit = AUTOMATIC_RAIL_LIMIT): Promise<FeaturedCollection[]> {
-  return listGroup("automatic", limit);
-}
-
-/** Todo lo vigente de `/explore/collections` (sin el tope de 6 de los riles). */
+/** Todo lo vigente de `/explore/collections`, en una secuencia que la página agrupa por familia. */
 export async function listCollectionsHub(): Promise<CollectionsHub> {
-  const [editorial, automatic] = await Promise.all([
-    listGroup("curated", HUB_EDITORIAL_LIMIT),
-    listGroup("automatic", HUB_AUTOMATIC_LIMIT),
-  ]);
-  return { editorial, automatic };
+  return { collections: await listCollections(HUB_COLLECTION_LIMIT) };
 }
 
-/** Condición de familia sobre `template_key`; `discovery` recoge también las claves que ya no están en el registro. */
+/** Condición de familia: desde la migración 0071 la familia está en la fila, sin pasar por el registro. */
 function familyCondition(family: CollectionFamily): SQL {
-  if (family !== FALLBACK_FAMILY) return inArray(userListFeatured.templateKey, templateKeysOf(family));
-  const others = COLLECTION_FAMILIES.filter((other) => other !== family).flatMap((other) => templateKeysOf(other));
-  return sql`(${userListFeatured.templateKey} is null or ${userListFeatured.templateKey} not in ${others})`;
+  return eq(userListFeatured.family, family) as SQL;
 }
 
 /**
@@ -552,9 +528,8 @@ export async function albumArtistNames(ids: string[]): Promise<Record<string, st
 
 /** Composición de la portada de `/explore` en una sola llamada. */
 export async function getExplorePage(): Promise<ExplorePage> {
-  const [editorial, automatic, newReleases, upcoming, decades, families, topRated, mostReviewed] = await Promise.all([
-    listEditorialCollections(),
-    listAutomaticCollections(),
+  const [collections, newReleases, upcoming, decades, families, topRated, mostReviewed] = await Promise.all([
+    listCollections(),
     listNewReleases(),
     listUpcomingReleases(),
     listDecades(),
@@ -562,7 +537,7 @@ export async function getExplorePage(): Promise<ExplorePage> {
     listTopRated(),
     listMostReviewed(),
   ]);
-  return { editorial, automatic, newReleases, upcoming, decades, families, topRated, mostReviewed };
+  return { collections, newReleases, upcoming, decades, families, topRated, mostReviewed };
 }
 
 // ---------------------------------------------------------------------------

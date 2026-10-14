@@ -56,6 +56,5 @@ NOT paginar.
 
 #### Scenario: Enlace a las colecciones
 
-- **WHEN** una persona abre `/lists`
-- **THEN** la sección "Destacadas" ofrece un enlace a `/explore/collections` para recorrer las colecciones de la
-  plataforma
+- **WHEN** se muestra la sección "Destacadas" de `/lists`
+- **THEN** su encabezado ofrece un enlace a `/explore/collections` para recorrer las colecciones de la plataforma

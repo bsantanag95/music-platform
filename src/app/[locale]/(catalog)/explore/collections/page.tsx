@@ -49,9 +49,11 @@ export default async function CollectionsPage({ params, searchParams }: Collecti
   const itemsLabel = (count: number) => t("collectionItems", { count });
   const familyLabel = (value: CollectionFamily) => t(`collectionFamilies.${value}`);
 
-  const automaticByFamily = COLLECTION_FAMILIES.map((value) => ({
+  // Un solo bloque de vigentes, agrupado por familia: las curadas a mano y las generadas conviven en el grupo
+  // de su familia, sin rótulo que las distinga (ADR 0038).
+  const currentByFamily = COLLECTION_FAMILIES.map((value) => ({
     family: value,
-    collections: hub.automatic.filter((collection) => collection.family === value),
+    collections: hub.collections.filter((collection) => collection.family === value),
   })).filter((group) => group.collections.length > 0);
 
   const chip =
@@ -77,19 +79,10 @@ export default async function CollectionsPage({ params, searchParams }: Collecti
         <p className="max-w-2xl font-body text-paper-muted">{tHub("description")}</p>
       </div>
 
-      <CollectionRail
-        id="seleccion-editorial"
-        heading={tHub("editorialHeading")}
-        description={tHub("editorialDescription")}
-        collections={hub.editorial}
-        curatorUsername={CURATOR_USERNAME}
-        itemsLabel={itemsLabel}
-      />
-
-      {automaticByFamily.length > 0 ? (
-        <div id="automaticas" className="flex w-full scroll-mt-24 flex-col gap-8">
-          <SectionHeader heading={tHub("automaticHeading")} description={tHub("automaticDescription")} />
-          {automaticByFamily.map((group) => (
+      {currentByFamily.length > 0 ? (
+        <div id="vigentes" className="flex w-full scroll-mt-24 flex-col gap-8">
+          <SectionHeader heading={tHub("currentHeading")} description={tHub("currentDescription")} />
+          {currentByFamily.map((group) => (
             <CollectionRail
               key={group.family}
               id={`familia-${group.family}`}

@@ -120,11 +120,8 @@
     },
     "featured": {
       "title": "Destacadas en Explorar",
-      "description": "Cada rail de Explorar tiene su propio orden y su propio tope. Las de arriba se muestran primero.",
-      "empty": {
-        "curated": "Todavía no hay selección editorial. Destaca una lista oficial publicada.",
-        "automatic": "No hay colecciones automáticas vigentes."
-      },
+      "description": "El riel de Explorar tiene un solo orden y un solo tope, con las curadas y las automáticas juntas. Las de arriba se muestran primero.",
+      "empty": "Todavía no hay colecciones destacadas. Destaca una lista oficial publicada o espera una corrida de plantilla.",
       "railSummary": "{count} de {limit} tarjetas en el riel ahora",
       "readOnly": "Puedes ver este panel, pero destacar, reordenar y quitar requiere permiso de publicación.",
       "sourceCurated": "Curada",
@@ -149,20 +146,21 @@
       "expiresAt": "Hasta",
       "save": "Guardar vigencia",
       "addTitle": "Destacar una lista",
+      "families": {
+        "ephemeris": "Efemérides",
+        "awards": "Premios",
+        "releases": "Lanzamientos",
+        "discovery": "Descubrimiento",
+        "rankings": "Lo que más valora la gente"
+      },
       "addSelect": "Lista oficial",
+      "addFamily": "Tipo de colección",
       "addPlaceholder": "Elige una lista",
       "addEmpty": "No hay listas oficiales por destacar. Publica una en la pestaña Listas.",
       "add": "Destacar",
       "expiredHeading": "Vencidas",
       "refresh": "Actualizar",
-      "group": {
-        "curated": "Selección editorial",
-        "automatic": "Descubre"
-      },
-      "groupHint": {
-        "curated": "Listas oficiales que destacas a mano. Reordenar aquí no mueve las automáticas.",
-        "automatic": "Las crean las plantillas. Se pueden reordenar, quitar o pausar su plantilla."
-      }
+      "orderHint": "Un solo orden para todo el riel: mover una colección mueve también las automáticas."
     },
     "templates": {
       "title": "Generadas automáticamente",

@@ -104,7 +104,8 @@
     "recentHeading": "Recientes",
     "emptyTitle": "Todavía no hay listas para descubrir",
     "emptyDescription": "Cuando la comunidad publique listas públicas, aparecerán aquí.",
-    "featuredDescription": "Selección editorial y listas oficiales.",
+    "featuredDescription": "Listas oficiales que escribe el equipo. Las colecciones de la plataforma viven en Explorar.",
+    "seeCollections": "Ver colecciones",
     "popularDescription": "Las que más guarda la comunidad.",
     "followingDescription": "Listas recientes de las personas que sigues.",
     "recentDescription": "Lo último que publicó la comunidad."

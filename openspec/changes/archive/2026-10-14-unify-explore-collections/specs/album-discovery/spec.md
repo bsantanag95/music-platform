@@ -72,7 +72,10 @@ SHALL mostrarse siempre que exista al menos una colección vigente. Cada colecci
 etiqueta de su familia, su conteo de ítems y sus carátulas disponibles, y SHALL enlazar a su página de detalle. El
 riel SHALL ofrecer un enlace "Ver todas" a la página de colecciones.
 
-El riel SHALL desplazarse horizontalmente y SHALL ofrecer controles de desplazamiento anterior y siguiente con
+El riel SHALL desplazarse horizontalmente y SHALL mostrar al menos **6 colecciones sin desplazar** en un ancho de
+escritorio: la tarjeta del riel SHALL ser más compacta que la de la página de colecciones (pila de fundas reducida y
+sin descripción), porque un riel horizontal no garantiza que alguien lo desplace y mostrar menos de 6 de entrada
+empobrecería la sección. El riel SHALL ofrecer controles de desplazamiento anterior y siguiente con
 etiqueta accesible, que SHALL desactivarse en cada extremo y SHALL omitirse cuando todas las tarjetas caben sin
 desplazar. El desplazamiento SHALL funcionar con el gesto táctil nativo y SHALL respetar la preferencia de movimiento
 reducido del sistema. La tarjeta SHALL NOT indicar si la colección se armó a mano o por plantilla.
@@ -123,3 +126,8 @@ reducido del sistema. La tarjeta SHALL NOT indicar si la colección se armó a m
 
 - **WHEN** las colecciones vigentes caben sin desplazar
 - **THEN** el riel no muestra los controles de desplazamiento
+
+#### Scenario: Seis de un vistazo
+
+- **WHEN** hay 10 colecciones vigentes y se abre `/explore` en un ancho de escritorio
+- **THEN** se ven 6 tarjetas completas en una sola fila, sin descripción, y las demás quedan a un desplazamiento

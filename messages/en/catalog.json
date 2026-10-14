@@ -53,8 +53,7 @@
     "countdown": "{days, plural, =0 {Today} =1 {Tomorrow} other {In # days}}",
     "jump": {
       "label": "On this page",
-      "editorial": "Editorial selection",
-      "automatic": "Discover",
+      "collections": "Collections",
       "genres": "Genres",
       "newReleases": "New releases",
       "upcoming": "Upcoming",
@@ -63,26 +62,22 @@
       "mostReviewed": "Most reviewed",
       "decades": "Decades"
     },
-    "editorialHeading": "Editorial selection",
-    "editorialDescription": "Collections picked by the team, with taste and context.",
-    "automaticHeading": "Discover",
-    "automaticDescription": "Anniversaries, awards and curiosities generated automatically from the catalog.",
+    "collectionsHeading": "Collections",
+    "collectionsDescription": "Ways through the catalog: anniversaries, awards, rankings and finds.",
     "seeAllCollections": "See all",
     "collectionFamilies": {
       "ephemeris": "Anniversaries",
       "awards": "Awards",
       "releases": "Releases",
       "discovery": "Discovery",
-      "community": "Community"
+      "rankings": "What people rate highest"
     },
     "collectionsHub": {
       "pageTitle": "Collections",
       "heading": "Collections",
-      "description": "The team's selection and the collections that generate themselves, current and past.",
-      "editorialHeading": "Editorial selection",
-      "editorialDescription": "Collections picked by the team, with taste and context.",
-      "automaticHeading": "Automatic collections",
-      "automaticDescription": "Generated from the catalog and renewed every week.",
+      "description": "Every collection on the platform, by kind, current and past.",
+      "currentHeading": "Current",
+      "currentDescription": "What is on Explore right now, grouped by kind.",
       "archiveHeading": "Previous",
       "archiveDescription": "Automatic collections that already left the rail. They remain available.",
       "familyFilterLabel": "Filter by type",

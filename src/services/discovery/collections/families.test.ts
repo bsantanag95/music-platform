@@ -3,14 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/db", () => ({ db: {} }));
 
 import { COLLECTION_TEMPLATES } from "./templates";
-import {
-  COLLECTION_FAMILIES,
-  FALLBACK_FAMILY,
-  TEMPLATE_FAMILY,
-  familyOf,
-  isCollectionFamily,
-  templateKeysOf,
-} from "./families";
+import { COLLECTION_FAMILIES, TEMPLATE_FAMILY, isCollectionFamily } from "./families";
 
 describe("familias de colección", () => {
   it("toda plantilla del registro tiene familia", () => {
@@ -24,27 +17,25 @@ describe("familias de colección", () => {
     for (const key of Object.keys(TEMPLATE_FAMILY)) expect(keys.has(key), key).toBe(true);
   });
 
-  it("asigna la familia que corresponde a cada tipo de colección", () => {
-    expect(familyOf("anniversaries")).toBe("ephemeris");
-    expect(familyOf("grammy-winners")).toBe("awards");
-    expect(familyOf("upcoming")).toBe("releases");
-    expect(familyOf("genre-spotlight")).toBe("discovery");
-    expect(familyOf("top-rated-quarter")).toBe("community");
+  it("declara la familia que corresponde a cada tipo de colección", () => {
+    expect(TEMPLATE_FAMILY["anniversaries"]).toBe("ephemeris");
+    expect(TEMPLATE_FAMILY["grammy-winners"]).toBe("awards");
+    expect(TEMPLATE_FAMILY["upcoming"]).toBe("releases");
+    expect(TEMPLATE_FAMILY["genre-spotlight"]).toBe("discovery");
+    expect(TEMPLATE_FAMILY["top-rated-quarter"]).toBe("rankings");
   });
 
-  it("una clave retirada del registro (o nula) cae a la familia de respaldo", () => {
-    expect(familyOf("plantilla-que-ya-no-existe")).toBe(FALLBACK_FAMILY);
-    expect(familyOf(null)).toBe(FALLBACK_FAMILY);
-  });
-
-  it("templateKeysOf devuelve las claves de la familia", () => {
-    expect(templateKeysOf("releases").sort()).toEqual(["new-releases", "upcoming"]);
-    expect(templateKeysOf("awards")).toEqual(["grammy-winners"]);
+  it("toda familia declarada está en el vocabulario", () => {
+    for (const [key, family] of Object.entries(TEMPLATE_FAMILY)) {
+      expect(isCollectionFamily(family), key).toBe(true);
+    }
   });
 
   it("isCollectionFamily valida el vocabulario", () => {
     for (const family of COLLECTION_FAMILIES) expect(isCollectionFamily(family)).toBe(true);
     expect(isCollectionFamily("editorial")).toBe(false);
+    // `community` se renombró a `rankings` en la migración 0071.
+    expect(isCollectionFamily("community")).toBe(false);
     expect(isCollectionFamily(undefined)).toBe(false);
   });
 });

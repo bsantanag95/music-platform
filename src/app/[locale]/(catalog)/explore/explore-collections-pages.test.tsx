@@ -70,8 +70,7 @@ const collection = (id: string, over: Partial<FeaturedCollection> = {}): Feature
 const archived = (id: string): ArchivedCollection => ({ ...collection(id), endedAt: "2026-09-01T00:00:00.000Z" });
 
 const empty = {
-  editorial: [] as FeaturedCollection[],
-  automatic: [] as FeaturedCollection[],
+  collections: [] as FeaturedCollection[],
   newReleases: [],
   upcoming: [],
   decades: [],
@@ -86,48 +85,60 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.isExploreEnabled.mockReturnValue(true);
   mocks.getExplorePage.mockResolvedValue(empty);
-  mocks.listCollectionsHub.mockResolvedValue({ editorial: [], automatic: [] });
+  mocks.listCollectionsHub.mockResolvedValue({ collections: [] });
   mocks.listCollectionArchive.mockResolvedValue({ collections: [], page: 1, pageSize: 24, hasNext: false });
 });
 
-describe("/explore: dos riles de colecciones", () => {
-  it("muestra el rail editorial y el automático por separado, cada uno con su ancla y «Ver todas»", async () => {
+describe("/explore: un solo riel de colecciones", () => {
+  it("mezcla curadas y generadas en un riel desplazable, con su ancla y «Ver todas»", async () => {
     mocks.getExplorePage.mockResolvedValue({
       ...empty,
-      editorial: [collection("e1", { source: "curated", templateKey: null, periodKey: null, family: null })],
-      automatic: [collection("a1")],
+      collections: [
+        collection("e1", { source: "curated", templateKey: null, periodKey: null, family: "discovery" }),
+        collection("a1"),
+      ],
     });
 
     const element = await ExplorePage({ params, searchParams: Promise.resolve({}) });
     const rails = findAll(element, CollectionRail);
 
-    expect(rails.map((rail) => (rail.props as { id: string }).id)).toEqual(["descubre-por-datos", "seleccion-editorial"]);
-    const [automatic, editorial] = rails.map((rail) => rail.props as { collections: FeaturedCollection[]; seeAll?: { href: string }; familyLabel?: unknown });
-    expect(editorial!.collections.map((c) => c.id)).toEqual(["e1"]);
-    expect(automatic!.collections.map((c) => c.id)).toEqual(["a1"]);
-    expect(editorial!.seeAll?.href).toBe("/explore/collections");
-    expect(automatic!.seeAll?.href).toBe("/explore/collections");
-    // Solo las automáticas muestran la familia sobre el título.
-    expect(editorial!.familyLabel).toBeUndefined();
-    expect(automatic!.familyLabel).toBeTypeOf("function");
+    expect(rails).toHaveLength(1);
+    const rail = rails[0]!.props as {
+      id: string;
+      collections: FeaturedCollection[];
+      seeAll?: { href: string };
+      familyLabel?: unknown;
+      layout?: string;
+    };
+    expect(rail.id).toBe("colecciones");
+    // El orden que trae el servicio se respeta: una curada puede ir antes que una generada.
+    expect(rail.collections.map((c) => c.id)).toEqual(["e1", "a1"]);
+    expect(rail.seeAll?.href).toBe("/explore/collections");
+    expect(rail.layout).toBe("scroll");
+    // La familia se muestra en toda colección, no solo en las generadas.
+    expect(rail.familyLabel).toBeTypeOf("function");
   });
 
-  it("la navegación rápida enlaza ambos riles solo si tienen contenido", async () => {
-    mocks.getExplorePage.mockResolvedValue({ ...empty, editorial: [], automatic: [collection("a1")], families: [{ key: "rock", tier: "main", count: 3 }] });
+  it("la navegación rápida enlaza el riel solo si tiene contenido", async () => {
+    mocks.getExplorePage.mockResolvedValue({
+      ...empty,
+      collections: [collection("a1")],
+      families: [{ key: "rock", tier: "main", count: 3 }],
+    });
 
     const element = await ExplorePage({ params, searchParams: Promise.resolve({}) });
     const nav = findAll(element, ExploreJumpNav)[0]!.props as { items: { id: string }[] };
 
-    expect(nav.items.map((item) => item.id)).toEqual(["descubre-por-datos", "generos"]);
+    expect(nav.items.map((item) => item.id)).toEqual(["colecciones", "generos"]);
   });
 
-  it("sin colecciones curadas, el rail editorial no se pide ni se enlaza", async () => {
-    mocks.getExplorePage.mockResolvedValue({ ...empty, automatic: [collection("a1")] });
+  it("sin colecciones vigentes, el riel no se enlaza", async () => {
+    mocks.getExplorePage.mockResolvedValue({ ...empty, families: [{ key: "rock", tier: "main", count: 3 }] });
 
     const element = await ExplorePage({ params, searchParams: Promise.resolve({}) });
     const nav = findAll(element, ExploreJumpNav)[0]?.props as { items: { id: string }[] } | undefined;
 
-    expect(nav?.items.some((item) => item.id === "seleccion-editorial") ?? false).toBe(false);
+    expect(nav?.items.some((item) => item.id === "colecciones") ?? false).toBe(false);
   });
 });
 
@@ -139,28 +150,31 @@ describe("/explore/collections", () => {
     expect(mocks.redirect).toHaveBeenCalledWith({ href: "/", locale: "es" });
   });
 
-  it("agrupa las automáticas vigentes por familia y las deja tras la selección editorial", async () => {
+  it("agrupa las vigentes por familia, con las curadas dentro de su grupo", async () => {
     mocks.listCollectionsHub.mockResolvedValue({
-      editorial: [collection("e1", { source: "curated", templateKey: null, periodKey: null, family: null })],
-      automatic: [
+      collections: [
         collection("a1", { family: "awards" }),
         collection("a2", { family: "ephemeris" }),
         collection("a3", { family: "awards" }),
+        collection("e1", { source: "curated", templateKey: null, periodKey: null, family: "ephemeris" }),
       ],
     });
 
     const element = await CollectionsPage({ params, searchParams: Promise.resolve({}) });
     const rails = findAll(element, CollectionRail).map((rail) => rail.props as { id: string; collections: FeaturedCollection[] });
 
-    expect(rails.map((rail) => rail.id)).toEqual(["seleccion-editorial", "familia-ephemeris", "familia-awards", "anteriores"]);
+    // Un bloque por familia, en el orden del vocabulario, y el archivo al final.
+    expect(rails.map((rail) => rail.id)).toEqual(["familia-ephemeris", "familia-awards", "anteriores"]);
     expect(rails.find((rail) => rail.id === "familia-awards")!.collections.map((c) => c.id)).toEqual(["a1", "a3"]);
+    // La curada convive con la generada en el grupo de su familia.
+    expect(rails.find((rail) => rail.id === "familia-ephemeris")!.collections.map((c) => c.id)).toEqual(["a2", "e1"]);
   });
 
   it("omite las familias sin colecciones vigentes", async () => {
-    mocks.listCollectionsHub.mockResolvedValue({ editorial: [], automatic: [collection("a1", { family: "awards" })] });
+    mocks.listCollectionsHub.mockResolvedValue({ collections: [collection("a1", { family: "awards" })] });
 
     const element = await CollectionsPage({ params, searchParams: Promise.resolve({}) });
-    // `CollectionRail` no pinta nada con una lista vacía y sin mensaje (la selección editorial sin curaduría).
+    // `CollectionRail` no pinta nada con una lista vacía y sin mensaje.
     const visible = findAll(element, CollectionRail)
       .map((rail) => rail.props as { id: string; collections: unknown[]; emptyMessage?: string })
       .filter((rail) => rail.collections.length > 0 || rail.emptyMessage)

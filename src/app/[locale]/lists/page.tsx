@@ -70,6 +70,7 @@ export default async function CommunityListsPage({
             <SectionHeader
               heading={t("community.featuredHeading")}
               description={t("community.featuredDescription")}
+              seeAll={{ href: "/explore/collections", label: t("community.seeCollections") }}
             />
             <ListsGrid>
               {featured.lists.map((list) => (

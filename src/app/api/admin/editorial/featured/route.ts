@@ -16,8 +16,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const parsed = FeatureListRequestSchema.safeParse(body);
   if (!parsed.success) throw new ApiError("VALIDATION_ERROR", 400, "La colección destacada no es válida");
   const actor = await requirePermission("editorial.publish");
-  const { listId, startsAt, expiresAt, weight } = parsed.data;
+  const { listId, family, startsAt, expiresAt, weight } = parsed.data;
   await featureList(actor.id, listId, {
+    family,
     startsAt: startsAt ? new Date(startsAt) : undefined,
     expiresAt: expiresAt === undefined ? undefined : expiresAt === null ? null : new Date(expiresAt),
     weight,

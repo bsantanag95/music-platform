@@ -17,8 +17,9 @@ import {
 import { ApiError } from "@/lib/api/errors";
 import { requirePermissionForUser } from "@/services/auth/authorization";
 import { recordEditorialAction } from "@/services/lists/editorial";
-import { AUTOMATIC_RAIL_LIMIT, COLLECTION_REFRESH_DAYS, CURATOR_USERNAME, EDITORIAL_RAIL_LIMIT } from "./constants";
-import { GROUP_SOURCE, featuredRailCondition, type CollectionGroup } from "./discovery";
+import { COLLECTION_RAIL_LIMIT, COLLECTION_REFRESH_DAYS, CURATOR_USERNAME } from "./constants";
+import { featuredRailCondition } from "./discovery";
+import { isCollectionFamily, type CollectionFamily } from "./collections/families";
 import { syncTemplate } from "./collections/sync";
 import { COLLECTION_TEMPLATES, findTemplate } from "./collections/templates";
 
@@ -38,9 +39,14 @@ export interface FeaturedAdminRow {
   listId: string;
   title: string;
   source: "curated" | "template";
-  /** Rail al que pertenece: la selección editorial (`curated`) o las automáticas (`automatic`). */
-  group: CollectionGroup;
+  /**
+   * Grupo del panel: lo manual (`curated`) o lo que sobreescribe una corrida de plantilla (`automatic`). Es una
+   * ayuda para quien edita, no dos riles: el riel público es uno solo (ADR 0038).
+   */
+  group: "curated" | "automatic";
   templateKey: string | null;
+  /** Familia de la colección, guardada en su fila. */
+  family: CollectionFamily;
   periodKey: string | null;
   rank: number;
   weight: number;
@@ -63,6 +69,11 @@ export interface FeaturedSchedule {
   weight?: number;
 }
 
+/** Lo que hace falta para destacar una lista a mano: su familia, más la vigencia y el peso opcionales. */
+export interface FeatureOptions extends FeaturedSchedule {
+  family?: string;
+}
+
 export interface TemplateAdminRow {
   key: string;
   paused: boolean;
@@ -77,27 +88,19 @@ export interface TemplateAdminRow {
 
 // --- Lecturas ---------------------------------------------------------------------------------
 
-const GROUP_LIMIT: Record<CollectionGroup, number> = {
-  curated: EDITORIAL_RAIL_LIMIT,
-  automatic: AUTOMATIC_RAIL_LIMIT,
-};
-
-/** Ids de las listas que hoy muestra el rail de un grupo (mismas condiciones, orden y tope que el rail público). */
-async function railIdsOf(group: CollectionGroup): Promise<string[]> {
+/**
+ * Ids de las listas que hoy muestra el riel de `/explore`: mismas condiciones, orden y tope que el riel público,
+ * sobre la secuencia completa. Desde el ADR 0038 hay un solo tope y los dos orígenes compiten por él.
+ */
+async function railListIds(): Promise<Set<string>> {
   const rows = await db
     .select({ id: userList.id })
     .from(userListFeatured)
     .innerJoin(userList, eq(userList.id, userListFeatured.listId))
-    .where(and(featuredRailCondition(), eq(userListFeatured.source, GROUP_SOURCE[group])))
+    .where(featuredRailCondition())
     .orderBy(desc(userListFeatured.weight), asc(userListFeatured.rank), desc(userListFeatured.startsAt))
-    .limit(GROUP_LIMIT[group]);
-  return rows.map((row) => row.id);
-}
-
-/** Ids de las listas que hoy muestran los dos riles de `/explore`, cada uno con su propio tope. */
-async function railListIds(): Promise<Set<string>> {
-  const [curated, automatic] = await Promise.all([railIdsOf("curated"), railIdsOf("automatic")]);
-  return new Set([...curated, ...automatic]);
+    .limit(COLLECTION_RAIL_LIMIT);
+  return new Set(rows.map((row) => row.id));
 }
 
 /** Todas las filas de `user_list_featured`, con su estado frente al riel. */
@@ -114,6 +117,7 @@ export async function listFeaturedAdmin(now = new Date()): Promise<FeaturedAdmin
         source: userListFeatured.source,
         templateKey: userListFeatured.templateKey,
         periodKey: userListFeatured.periodKey,
+        family: userListFeatured.family,
         rank: userListFeatured.rank,
         weight: userListFeatured.weight,
         startsAt: userListFeatured.startsAt,
@@ -141,6 +145,7 @@ export async function listFeaturedAdmin(now = new Date()): Promise<FeaturedAdmin
       source: row.source,
       group: row.source === "curated" ? "curated" : "automatic",
       templateKey: row.templateKey,
+      family: row.family,
       periodKey: row.periodKey,
       rank: row.rank,
       weight: row.weight,
@@ -190,8 +195,11 @@ function assertSchedule(startsAt: Date, expiresAt: Date | null): void {
   }
 }
 
-/** Destaca una lista oficial publicada. Si ya estaba destacada, solo aplica la vigencia y el peso dados. */
-export async function featureList(actorId: string, listId: string, schedule: FeaturedSchedule = {}): Promise<void> {
+/**
+ * Destaca una lista oficial publicada, con la familia que elige quien la destaca (migración 0071: toda
+ * colección destacada tiene familia). Si ya estaba destacada, solo aplica la vigencia y el peso dados.
+ */
+export async function featureList(actorId: string, listId: string, options: FeatureOptions = {}): Promise<void> {
   await requirePermissionForUser(actorId, "editorial.publish");
 
   const [list] = await db
@@ -227,12 +235,16 @@ export async function featureList(actorId: string, listId: string, schedule: Fea
     .from(userListFeatured)
     .where(eq(userListFeatured.listId, listId));
   if (existing) {
-    await updateFeaturedSchedule(actorId, listId, schedule);
+    await updateFeaturedSchedule(actorId, listId, options);
     return;
   }
 
-  const startsAt = schedule.startsAt ?? new Date();
-  const expiresAt = schedule.expiresAt ?? null;
+  if (!isCollectionFamily(options.family)) {
+    throw new ApiError("VALIDATION_ERROR", 400, "La familia de la colección no es válida");
+  }
+
+  const startsAt = options.startsAt ?? new Date();
+  const expiresAt = options.expiresAt ?? null;
   assertSchedule(startsAt, expiresAt);
   const [last] = await db
     .select({ next: sql<number>`coalesce(max(${userListFeatured.rank}), 0) + 1` })
@@ -240,8 +252,9 @@ export async function featureList(actorId: string, listId: string, schedule: Fea
   await db.insert(userListFeatured).values({
     listId,
     rank: Math.min(Number(last?.next ?? 1), MAX_RANK),
-    weight: schedule.weight ?? 0,
+    weight: options.weight ?? 0,
     source: "curated",
+    family: options.family,
     startsAt,
     expiresAt,
   });
@@ -297,23 +310,18 @@ export async function unfeatureList(actorId: string, listId: string): Promise<vo
 }
 
 /**
- * Reordena las destacadas vigentes **de un grupo** (selección editorial o automáticas). `listIds` debe ser
- * exactamente el conjunto de filas vigentes o programadas (`orderable`) de ese grupo; el primero queda arriba. El
- * otro grupo no se toca. Atómico: falla con `FEATURED_ORDER_CONFLICT` si
- * el conjunto cambió mientras tanto.
+ * Reordena las destacadas en **una sola secuencia** sobre los dos orígenes (ADR 0038): `listIds` debe ser
+ * exactamente el conjunto de filas vigentes o programadas (`orderable`), y el primero queda arriba. Mover el
+ * orden mueve también las automáticas: es lo que hace que el riel público sea el que se ve en la consola.
+ * Atómico: falla con `FEATURED_ORDER_CONFLICT` si el conjunto cambió mientras tanto.
  */
-export async function reorderFeatured(actorId: string, group: CollectionGroup, listIds: string[]): Promise<void> {
+export async function reorderFeatured(actorId: string, listIds: string[]): Promise<void> {
   await requirePermissionForUser(actorId, "editorial.publish");
   const changed = await db.transaction(async (tx) => {
     const current = await tx
       .select({ listId: userListFeatured.listId, rank: userListFeatured.rank, weight: userListFeatured.weight })
       .from(userListFeatured)
-      .where(
-        and(
-          eq(userListFeatured.source, GROUP_SOURCE[group]),
-          or(isNull(userListFeatured.expiresAt), sql`${userListFeatured.expiresAt} > now()`),
-        ),
-      )
+      .where(or(isNull(userListFeatured.expiresAt), sql`${userListFeatured.expiresAt} > now()`))
       .for("update");
 
     const sent = new Set(listIds);
