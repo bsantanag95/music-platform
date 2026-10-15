@@ -19,8 +19,10 @@ interface CollectionDetailHeaderProps {
   saveCount?: number;
   tracking?: boolean;
   trackingProgress?: { selectedCount: number; listenedCount: number } | null;
-  /** Lo que hace concreta a esta colección (qué ceremonia, cuándo), en lugar de la descripción genérica de su familia. */
-  context?: { text: string; link?: { href: string; label: string } };
+  /** Resumen del presentador de la colección (ya en el idioma activo): qué reúne, p. ej. qué ceremonia y cuándo. */
+  summary?: string;
+  /** Enlace del presentador (p. ej. a la ceremonia), con su etiqueta ya traducida. */
+  link?: { href: string; label: string };
 }
 
 // Cabecera del detalle de una colección (ADR 0038). Es deliberadamente distinta de `ListDetailHeader`: una lista es
@@ -37,7 +39,8 @@ export function CollectionDetailHeader({
   saveCount,
   tracking = false,
   trackingProgress = null,
-  context,
+  summary,
+  link,
 }: CollectionDetailHeaderProps) {
   const t = useTranslations("lists");
   const tExplore = useTranslations("catalog.explore");
@@ -61,17 +64,16 @@ export function CollectionDetailHeader({
           <span className={`w-fit ${FAMILY_STAMP_CLASS}`}>{tExplore(`collectionFamilies.${family}`)}</span>
           <h1 className="font-display text-3xl leading-tight text-paper sm:text-4xl">{list.title}</h1>
 
-          {/* Qué es esta colección: la descripción curada, el contexto concreto (la ceremonia) o, si no hay, la de su
-              familia. */}
+          {/* Qué es esta colección: la descripción escrita, el resumen de su presentador o, si no hay, la de su familia. */}
           <p className="max-w-prose whitespace-pre-wrap font-body text-sm text-paper-muted">
-            {list.description ?? context?.text ?? tExplore(`collectionFamilyDescriptions.${family}`)}
+            {list.description ?? summary ?? tExplore(`collectionFamilyDescriptions.${family}`)}
           </p>
-          {context?.link ? (
+          {link ? (
             <Link
-              href={context.link.href}
+              href={link.href}
               className="w-fit font-data text-xs text-paper underline decoration-dotted underline-offset-4 transition-colors hover:text-amber"
             >
-              {context.link.label} →
+              {link.label} →
             </Link>
           ) : null}
 
