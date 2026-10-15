@@ -3,9 +3,13 @@
 // generación; el presentador lee y corre en la petición de la página. Una plantilla sin presentador cae al de su
 // familia y, si tampoco, a un contexto vacío.
 
+import { anniversariesPresenter } from "./anniversaries";
 import { awardsPresenter } from "./awards";
+import { genreSpotlightPresenter, onePerDecadePresenter } from "./eras";
 import { FAMILY_PRESENTERS } from "./families";
 import { newReleasesPresenter } from "./new-releases";
+import { mostReviewedPresenter, topRatedPresenter } from "./rankings";
+import { upcomingPresenter } from "./upcoming";
 import { resolveContext, type PresenterRegistry } from "./resolve";
 import type { CollectionContext, PresenterInput } from "./types";
 
@@ -13,6 +17,12 @@ import type { CollectionContext, PresenterInput } from "./types";
 export const TEMPLATE_PRESENTERS: PresenterRegistry["byTemplate"] = {
   "grammy-winners": awardsPresenter,
   "new-releases": newReleasesPresenter,
+  upcoming: upcomingPresenter,
+  anniversaries: anniversariesPresenter,
+  "genre-spotlight": genreSpotlightPresenter,
+  "one-per-decade": onePerDecadePresenter,
+  "top-rated-quarter": topRatedPresenter,
+  "most-reviewed-month": mostReviewedPresenter,
 };
 
 export const PRESENTER_REGISTRY: PresenterRegistry = { byTemplate: TEMPLATE_PRESENTERS, byFamily: FAMILY_PRESENTERS };

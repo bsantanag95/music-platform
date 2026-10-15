@@ -5,7 +5,7 @@
 El presentador de `upcoming` SHALL resumir el rango real de fechas de los discos que muestra, SHALL describir cada disco
 con una cartela de cuenta regresiva respecto de hoy y su fecha corta, y SHALL agruparlos por mes de lanzamiento, del mes
 más cercano al más lejano. La cartela SHALL decir "Sale hoy" y "Sale mañana" para los dos primeros días, "Sale en N días"
-hasta la semana y "Sale en N semanas" desde ahí. Un disco cuya fecha ya pasó SHALL describirse con la cartela de pasado
+hasta las dos semanas y "Sale en N semanas" desde ahí. Un disco cuya fecha ya pasó SHALL describirse con la cartela de pasado
 ("Hace N días") y SHALL NOT mostrar un número negativo. Los discos sin fecha completa SHALL ir en el grupo final sin
 encabezado.
 

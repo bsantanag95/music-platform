@@ -65,3 +65,13 @@ días"); lo que la plantilla ya sabe (su ventana de 90 días) vivía solo en su 
   lista de la cuenta curadora y no cambian.
 - Quedan sin presentador propio `upcoming`, `anniversaries`, `one-per-decade`, `genre-spotlight` y los rankings; usan el de
   su familia hasta que un cambio posterior les dé el suyo.
+
+## Seguimiento
+
+El cambio `add-remaining-collection-presenters` (2026-10) completó la cobertura sin tocar el contrato ni el registro: ahora
+**cada plantilla** del registro tiene presentador propio (`upcoming`, `anniversaries`, `genre-spotlight`, `one-per-decade`,
+`top-rated-quarter` y `most-reviewed-month`, además de los dos iniciales) y una prueba lo exige. Los presentadores de familia
+quedan como respaldo para colecciones cuya plantilla se retiró. Las decisiones nuevas: los datos que dependen de una fecha
+de la colección salen de su `period_key` y no del reloj (una colección archivada dice la edad, el trimestre o el mes que
+tenía entonces); un período ilegible hace que el presentador se abstenga; y los rankings leen sus cifras del período del
+propio ranking, con los mismos filtros que la plantilla.

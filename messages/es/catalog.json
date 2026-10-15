@@ -109,7 +109,23 @@
       "newReleasesYesterday": "Ayer",
       "newReleasesDaysAgo": "Hace {days} días · {date}",
       "newReleasesWeeksAgo": "{weeks, plural, one {Hace # semana} other {Hace # semanas}} · {date}",
-      "monthHeading": "{month}"
+      "monthHeading": "{month}",
+      "upcomingSummary": "Lanzamientos que vienen: del {from} al {to}.",
+      "upcomingSummaryNoRange": "Lanzamientos que vienen.",
+      "upcomingToday": "Sale hoy",
+      "upcomingTomorrow": "Sale mañana",
+      "upcomingDaysIn": "Sale en {days} días · {date}",
+      "upcomingWeeksIn": "{weeks, plural, one {Sale en # semana} other {Sale en # semanas}} · {date}",
+      "anniversariesSummary": "Estudios que cumplen años en {month}: de {from} a {to} años.",
+      "anniversariesSummarySingle": "Estudios que cumplen {years} años en {month}.",
+      "genreSpotlightSummary": "Un disco por cada era de {era} años de {genre}, del más antiguo al más reciente.",
+      "genreEra": "Era {from}–{to} · {year}",
+      "decadeSummary": "El disco más destacado de cada década, de la más reciente a la más antigua.",
+      "decadeNote": "Década de {decade} · {year}",
+      "topRatedSummary": "Los álbumes mejor valorados del {quarter}.º trimestre de {year}, con al menos {min} valoraciones.",
+      "topRatedNote": "★ {average, number, ::.0} · {count, plural, one {# valoración} other {# valoraciones}}",
+      "mostReviewedSummary": "Los álbumes que más reseñas recibieron en {month}.",
+      "mostReviewedNote": "{count, plural, one {# reseña} other {# reseñas}}"
     }
   },
   "search": {

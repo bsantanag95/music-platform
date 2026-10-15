@@ -5,6 +5,7 @@ import catalogEn from "../../../../../messages/en/catalog.json";
 // Los presentadores consultan la base al presentar; aquí solo se mira el registro y los textos.
 vi.mock("@/db", () => ({ db: {} }));
 vi.mock("../../discovery", () => ({ albumReleaseDates: vi.fn() }));
+vi.mock("./ranking-stats", () => ({ ratingStats: vi.fn(), reviewCounts: vi.fn() }));
 vi.mock("@/services/awards/collection-context", () => ({ ceremonyContext: vi.fn() }));
 
 const { PRESENTER_REGISTRY, TEMPLATE_PRESENTERS } = await import("./index");
@@ -16,6 +17,10 @@ describe("registro de presentadores", () => {
   it("toda clave de presentador existe en el registro de plantillas", () => {
     const templates = new Set(COLLECTION_TEMPLATES.map((template) => template.key));
     for (const key of Object.keys(TEMPLATE_PRESENTERS)) expect(templates.has(key), key).toBe(true);
+  });
+
+  it("toda plantilla del registro de plantillas tiene presentador propio", () => {
+    for (const template of COLLECTION_TEMPLATES) expect(TEMPLATE_PRESENTERS[template.key], template.key).toBeTypeOf("function");
   });
 
   it("toda familia tiene presentador, y solo ellas", () => {
