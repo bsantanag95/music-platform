@@ -99,7 +99,9 @@ export function CollectionRail<T extends FeaturedCollection>({
               alguien (ADR 0038): un sello sobre la propia carátula, no un rótulo flotando sobre el
               título — el mismo recurso que la cifra de `AlbumCard` sobre su carátula. */}
           {family ? (
-            <span className={`absolute bottom-1.5 left-1.5 ${FAMILY_STAMP_CLASS}`}>
+            // `z-10`: las fundas llevan su propio `z-index` (la primera encima), y sin él el sello quedaba detrás de la
+            // pila y se leía cortado ("LAN", "DES").
+            <span className={`absolute bottom-1.5 left-1.5 z-10 ${FAMILY_STAMP_CLASS}`}>
               {family}
             </span>
           ) : null}

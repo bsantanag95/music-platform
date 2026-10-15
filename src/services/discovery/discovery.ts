@@ -507,6 +507,21 @@ export async function listMostReviewed(limit = RAIL_SIZE): Promise<MostReviewedA
   return rows.slice(0, limit).map((row) => ({ ...serializeAlbum(row), reviewCount: Number(row.reviewCount) }));
 }
 
+/** Fecha de lanzamiento de cada álbum (`YYYY-MM-DD`, parcial o `null`) y su año, en una consulta. */
+export async function albumReleaseDates(
+  ids: string[],
+): Promise<Record<string, { date: string | null; year: number | null }>> {
+  const dates: Record<string, { date: string | null; year: number | null }> = {};
+  const unique = [...new Set(ids)];
+  if (unique.length === 0) return dates;
+  const rows = await db
+    .select({ id: releaseGroup.id, date: releaseGroup.firstReleaseDate, year: releaseGroup.firstReleaseYear })
+    .from(releaseGroup)
+    .where(inArray(releaseGroup.id, unique));
+  for (const row of rows) dates[row.id] = { date: row.date, year: row.year };
+  return dates;
+}
+
 /**
  * Artista principal de cada álbum (el primer crédito `primary`), para la línea de artista de las tarjetas: sin
  * ella, un disco homónimo ("Mötley Crüe") o un single de una serie ("Stand Out") no dicen de quién son. Una sola

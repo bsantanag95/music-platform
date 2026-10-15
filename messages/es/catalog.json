@@ -86,7 +86,15 @@
       "endedOn": "Hasta el {date}",
       "archiveEmpty": "Todavía no hay colecciones anteriores.",
       "archiveEmptyFamily": "No hay colecciones anteriores de este tipo."
-    }
+    },
+    "collectionFamilyDescriptions": {
+      "ephemeris": "Discos que cumplen años en este período, por su fecha de lanzamiento.",
+      "awards": "Discos premiados en las ceremonias que sigue la plataforma.",
+      "releases": "Lo nuevo y lo que viene en el catálogo.",
+      "discovery": "Hallazgos para salir de lo de siempre.",
+      "rankings": "Los discos que la comunidad valora más alto."
+    },
+    "collectionNoteAnniversary": "{years, plural, one {Cumple # año} other {Cumple # años}} · {date}"
   },
   "search": {
     "pageTitle": "Buscar",
