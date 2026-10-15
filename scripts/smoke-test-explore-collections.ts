@@ -33,6 +33,8 @@ import { assertSmokeAllowed } from "./assert-smoke-allowed";
 import { db } from "../src/db";
 import {
   appUser,
+  rating,
+  review,
   award,
   awardCategory,
   awardCategoryEdition,
@@ -929,6 +931,90 @@ async function main() {
     const started = Date.now();
     await presentCollection({ templateKey: "new-releases", periodKey: EVERGREEN, family: "releases", albumIds: ids, today: new Date() });
     check(Date.now() - started < 2000, "presentar la colección es una consulta por lote (rápido, sin una por disco)");
+    await db.delete(releaseGroup).where(sql`mbid::text like '5e0ce000-0000-4000-8000-0000000009e%'`);
+  }
+
+  console.log("Presentadores del resto de las colecciones (sintético):");
+  {
+    const today = new Date();
+    const lastMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - 1, 15));
+    const period = `${lastMonth.getUTCFullYear()}-${String(lastMonth.getUTCMonth() + 1).padStart(2, "0")}`;
+    const quarter = `${lastMonth.getUTCFullYear()}-Q${Math.floor(lastMonth.getUTCMonth() / 3) + 1}`;
+    const inPeriod = new Date(Date.UTC(lastMonth.getUTCFullYear(), lastMonth.getUTCMonth(), 15, 12));
+
+    const albums = await db
+      .insert(releaseGroup)
+      .values(
+        [1994, 1976, 2003].map((year, i) => ({
+          mbid: `5e0ce000-0000-4000-8000-0000000009e${i + 5}`,
+          title: `Smoke ranking ${i}`,
+          category: "studio" as const,
+          firstReleaseDate: `${year}-${String(lastMonth.getUTCMonth() + 1).padStart(2, "0")}-05`,
+          firstReleaseYear: year,
+          coverThumbUrl: "https://coverartarchive.org/smoke.jpg",
+        })),
+      )
+      .returning({ id: releaseGroup.id });
+    const ids = albums.map((row) => row.id);
+
+    // Tres votantes: el disco 0 recibe tres valoraciones del trimestre (4, 5 y 4,5) y dos reseñas visibles y una oculta.
+    const voters: string[] = [];
+    for (const label of ["a", "b", "c"]) {
+      const [user] = await db
+        .insert(appUser)
+        .values({
+          username: `smoke_feat_rank_${label}_${Date.now().toString(36)}`,
+          email: `smoke_feat_rank_${label}_${Date.now().toString(36)}@example.test`,
+          displayName: `Smoke ${label}`,
+          passwordHash: null,
+          profileVisibility: "public",
+        })
+        .returning({ id: appUser.id });
+      voters.push(user!.id);
+    }
+    const stars = ["4.0", "5.0", "4.5"];
+    await db.insert(rating).values(voters.map((userId, i) => ({ userId, releaseGroupId: ids[0]!, stars: stars[i]!, createdAt: inPeriod })));
+    // Una valoración de otro trimestre no debe contar en la cifra del período.
+    await db.insert(rating).values({ userId: voters[0]!, releaseGroupId: ids[1]!, stars: "1.0", createdAt: new Date("2001-01-01T00:00:00Z") });
+    await db.insert(review).values([
+      { userId: voters[0]!, releaseGroupId: ids[0]!, body: "smoke 1", createdAt: inPeriod },
+      { userId: voters[1]!, releaseGroupId: ids[0]!, body: "smoke 2", createdAt: inPeriod },
+      { userId: voters[2]!, releaseGroupId: ids[0]!, body: "smoke oculta", createdAt: inPeriod, moderationStatus: "hidden" },
+    ]);
+
+    const base = { periodKey: period, albumIds: ids, today };
+    const topRated = await presentCollection({ ...base, templateKey: "top-rated-quarter", periodKey: quarter, family: "rankings" });
+    const stat = topRated.notes.get(ids[0]!);
+    check(topRated.numbered === true, "top-rated-quarter numera los discos");
+    check(
+      stat?.key === "topRatedNote" && Math.abs(Number((stat.params as { average: number }).average) - 4.5) < 0.001 && (stat.params as { count: number }).count === 3,
+      "la cifra es el promedio y el conteo de las valoraciones del trimestre (4,5 · 3)",
+    );
+    check(!topRated.notes.has(ids[1]!), "una valoración de otro trimestre no cuenta y ese disco no lleva cifra");
+
+    const reviewed = await presentCollection({ ...base, templateKey: "most-reviewed-month", family: "rankings" });
+    check(reviewed.notes.get(ids[0]!)?.params && (reviewed.notes.get(ids[0]!)!.params as { count: number }).count === 2, "most-reviewed cuenta solo las reseñas visibles del mes (2 de 3)");
+    check(reviewed.numbered === true, "most-reviewed-month numera los discos");
+
+    const fallback = await presentCollection({ ...base, templateKey: "top-rated-quarter", periodKey: "evergreen", family: "rankings" });
+    check(fallback.summary === undefined && fallback.numbered === true, "un período ilegible se abstiene y cae al presentador de la familia (numerado, sin resumen)");
+
+    const anniversaries = await presentCollection({ ...base, templateKey: "anniversaries", family: "ephemeris" });
+    const years = lastMonth.getUTCFullYear() - 1976;
+    check(
+      (anniversaries.notes.get(ids[1]!)?.params as { years: number } | undefined)?.years === years,
+      `el aniversario se calcula contra el año del PERÍODO (${years} años), no contra el de hoy`,
+    );
+    check(anniversaries.summary?.key === "anniversariesSummary", "los aniversarios resumen el mes y el rango de años");
+
+    const decade = await presentCollection({ ...base, templateKey: "one-per-decade", periodKey: "evergreen", family: "discovery" });
+    check((decade.notes.get(ids[0]!)?.params as { decade: string } | undefined)?.decade === "1990", "un disco por década dice su década");
+
+    const spotlight = await presentCollection({ ...base, templateKey: "genre-spotlight", periodKey: "2026-W41-punk", family: "discovery" });
+    check((spotlight.notes.get(ids[2]!)?.params as { from: string } | undefined)?.from === "2000", "género por eras dice la era del disco");
+    const unknown = await presentCollection({ ...base, templateKey: "genre-spotlight", periodKey: "2026-W41-no-existe", family: "discovery" });
+    check(unknown.summary === undefined, "una familia de géneros desconocida se abstiene y cae a la familia");
+
     await db.delete(releaseGroup).where(sql`mbid::text like '5e0ce000-0000-4000-8000-0000000009e%'`);
   }
 

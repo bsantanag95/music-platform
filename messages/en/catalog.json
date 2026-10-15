@@ -109,7 +109,23 @@
       "newReleasesYesterday": "Yesterday",
       "newReleasesDaysAgo": "{days} days ago · {date}",
       "newReleasesWeeksAgo": "{weeks, plural, one {# week ago} other {# weeks ago}} · {date}",
-      "monthHeading": "{month}"
+      "monthHeading": "{month}",
+      "upcomingSummary": "Upcoming releases: {from} to {to}.",
+      "upcomingSummaryNoRange": "Upcoming releases.",
+      "upcomingToday": "Out today",
+      "upcomingTomorrow": "Out tomorrow",
+      "upcomingDaysIn": "Out in {days} days · {date}",
+      "upcomingWeeksIn": "{weeks, plural, one {Out in # week} other {Out in # weeks}} · {date}",
+      "anniversariesSummary": "Studio albums turning another year in {month}: {from} to {to} years.",
+      "anniversariesSummarySingle": "Studio albums turning {years} in {month}.",
+      "genreSpotlightSummary": "One album from each {era}-year era of {genre}, oldest to newest.",
+      "genreEra": "Era {from}–{to} · {year}",
+      "decadeSummary": "The standout album of each decade, newest decade first.",
+      "decadeNote": "{decade}s · {year}",
+      "topRatedSummary": "The highest-rated albums of Q{quarter} {year}, with at least {min} ratings.",
+      "topRatedNote": "★ {average, number, ::.0} · {count, plural, one {# rating} other {# ratings}}",
+      "mostReviewedSummary": "The albums that received the most reviews in {month}.",
+      "mostReviewedNote": "{count, plural, one {# review} other {# reviews}}"
     }
   },
   "search": {

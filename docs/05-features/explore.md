@@ -242,8 +242,16 @@ El modelo que rige, separado por de quién es la voz:
   `catalog.explore.collectionContext`; nada traducido se guarda. Hoy hay presentadores de **Premios** (categoría ganada por
   disco: "Álbum del año · Mejor álbum de country", las generales primero, hasta dos y «+N»; la cabecera dice qué ceremonia es
   y cuándo se entregó y enlaza a su página), de **Novedades esenciales** (resumen con el rango real de los discos mostrados,
-  cartela relativa "Hace 5 días · 9 oct" y los discos agrupados por mes) y de las **cinco familias** como respaldo
-  (efemérides: aniversario con fecha completa; lanzamientos: fecha; el resto: año). Para dar contexto a otra colección se
+  cartela relativa "Hace 5 días · 9 oct" y los discos agrupados por mes) y de las **cinco familias** como respaldo para
+  una colección cuya plantilla se retiró (efemérides: aniversario con fecha completa; lanzamientos: fecha; el resto: año).
+  Desde `add-remaining-collection-presenters` **toda plantilla tiene presentador propio**: **Lo que viene** (rango real,
+  cuenta regresiva "Sale en 9 días · 24 oct" y meses del más cercano al más lejano), **Cumplen años en …** (mes y rango de
+  años, y la edad según el **año del período**, no el de hoy: una colección archivada dice la edad que tenía entonces),
+  **Para entrar a …** (la regla "un disco por cada era de 5 años de {género}" y "Era 1990–1994 · 1992" por disco), **Un
+  disco por década** (la regla y "Década de 1990 · 1994") y los dos rankings de la comunidad, que dicen la cifra del
+  **período del propio ranking** ("★ 4,5 · 12 valoraciones" del trimestre, "12 reseñas" visibles del mes) y numeran los
+  discos (`ranking-stats.ts`, una consulta por dato y por lote). Un período ilegible o una familia de géneros desconocida
+  hacen que el presentador se abstenga y caiga al de la familia. Para dar contexto a otra colección se
   escribe su presentador, sus textos y una línea en `TEMPLATE_PRESENTERS`; la página no cambia. Un presentador no puede
   elegir ni ordenar discos (eso es de `plan()`), y sus grupos son una partición: un disco sin grupo cae a un último grupo
   sin encabezado. Los datos salen de una consulta por lote (`albumReleaseDates`, `ceremonyContext`), no una por disco.

@@ -42,6 +42,7 @@ const DATE_OPTIONS: Record<DatePart["style"], Intl.DateTimeFormatOptions> = {
   long: { dateStyle: "long" },
   "day-month": { day: "numeric", month: "short" },
   "month-year": { month: "long", year: "numeric" },
+  "month-year-inline": { month: "long", year: "numeric" },
 };
 
 /** Fecha en UTC con el idioma activo, para que la zona horaria del servidor no corra el día. */

@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ albumReleaseDates: vi.fn() }));
 vi.mock("../../discovery", () => ({ albumReleaseDates: mocks.albumReleaseDates }));
 
-const { buildNewReleasesContext, newReleasesPresenter, relativeNote } = await import("./new-releases");
+const { buildNewReleasesContext, newReleasesPresenter } = await import("./new-releases");
+const { relativeNote } = await import("./relative");
 const { normalizeGroups } = await import("./groups");
 
 const today = new Date("2026-10-14T18:30:00Z");

@@ -9,7 +9,8 @@ import type { CollectionFamily } from "../families";
 export interface DatePart {
   /** `YYYY-MM-DD`. */
   date: string;
-  style: "short" | "long" | "day-month" | "month-year";
+  /** `month-year` es un encabezado (mayúscula inicial); `month-year-inline` va dentro de una frase (en minúscula). */
+  style: "short" | "long" | "day-month" | "month-year" | "month-year-inline";
 }
 
 /** Texto que el catálogo guarda en los dos idiomas (p. ej. el nombre de una categoría de premios). */

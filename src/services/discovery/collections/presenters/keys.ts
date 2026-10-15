@@ -22,6 +22,26 @@ export const CONTEXT_MESSAGE_KEYS = [
   "newReleasesDaysAgo",
   "newReleasesWeeksAgo",
   "monthHeading",
+  // Lo que viene.
+  "upcomingSummary",
+  "upcomingSummaryNoRange",
+  "upcomingToday",
+  "upcomingTomorrow",
+  "upcomingDaysIn",
+  "upcomingWeeksIn",
+  // Aniversarios.
+  "anniversariesSummary",
+  "anniversariesSummarySingle",
+  // Un género por eras y un disco por década.
+  "genreSpotlightSummary",
+  "genreEra",
+  "decadeSummary",
+  "decadeNote",
+  // Rankings de la comunidad.
+  "topRatedSummary",
+  "topRatedNote",
+  "mostReviewedSummary",
+  "mostReviewedNote",
 ] as const;
 
 export type ContextMessageKey = (typeof CONTEXT_MESSAGE_KEYS)[number];

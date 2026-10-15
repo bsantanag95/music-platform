@@ -32,6 +32,11 @@ describe("formatContextDate", () => {
     expect(formatContextDate({ date: "2026-10-09", style: "day-month" }, "es")).toBe("9 oct");
   });
 
+  it("el mes dentro de una frase va en minúscula", () => {
+    expect(formatContextDate({ date: "2026-10-01", style: "month-year-inline" }, "es")).toBe("octubre de 2026");
+    expect(formatContextDate({ date: "2026-10-01", style: "month-year-inline" }, "en")).toBe("October 2026");
+  });
+
   it("el mes suelto de un encabezado empieza en mayúscula", () => {
     expect(formatContextDate({ date: "2026-10-01", style: "month-year" }, "es")).toBe("Octubre de 2026");
     expect(formatContextDate({ date: "2026-10-01", style: "month-year" }, "en")).toBe("October 2026");
