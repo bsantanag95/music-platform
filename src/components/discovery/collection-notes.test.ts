@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { collectionNote } from "./collection-notes";
+import { awardNote, collectionNote, formatLongDate } from "./collection-notes";
 
 const today = new Date("2026-10-14T12:00:00Z");
 
@@ -25,5 +25,32 @@ describe("collectionNote", () => {
   it("sin datos: null", () => {
     expect(collectionNote("rankings", undefined, today)).toBeNull();
     expect(collectionNote("rankings", { date: null, year: null }, today)).toBeNull();
+  });
+});
+
+describe("awardNote", () => {
+  const won = (es: string, en: string) => ({ name: { es, en } });
+
+  it("la categoría que ganó, en el idioma activo", () => {
+    expect(awardNote([won("Mejor álbum de rock", "Best Rock Album")], "es")).toBe("Mejor álbum de rock");
+    expect(awardNote([won("Mejor álbum de rock", "Best Rock Album")], "en")).toBe("Best Rock Album");
+  });
+
+  it("con varias, las dos primeras (las generales van antes) y cuántas faltan", () => {
+    const albums = [won("Álbum del año", "Album of the Year"), won("Mejor álbum country", "Best Country Album")];
+    expect(awardNote(albums, "es")).toBe("Álbum del año · Mejor álbum country");
+    expect(awardNote([...albums, won("Otra", "Other")], "es")).toBe("Álbum del año · Mejor álbum country · +1");
+  });
+
+  it("sin categorías conocidas: null", () => {
+    expect(awardNote(undefined, "es")).toBeNull();
+    expect(awardNote([], "es")).toBeNull();
+  });
+});
+
+describe("formatLongDate", () => {
+  it("fecha larga en UTC, sin correr el día", () => {
+    expect(formatLongDate("2025-02-02", "es")).toBe("2 de febrero de 2025");
+    expect(formatLongDate("2025-02-02", "en")).toBe("February 2, 2025");
   });
 });

@@ -21,7 +21,7 @@ export function titleLocaleOf(locale: string): TitleLocale {
   return locale.toLowerCase().startsWith("en") ? "en" : "es";
 }
 
-const AWARD_NAMES: Record<string, string> = { grammy: "Grammy" };
+export const AWARD_NAMES: Record<string, string> = { grammy: "Grammy" };
 
 /** Nombres de las familias de géneros por idioma (iguales a `catalog.genres.families`). */
 export const FAMILY_NAMES: Record<TitleLocale, Record<string, string>> = {

@@ -9,13 +9,25 @@ interface CollectionAlbumGridProps {
   entityType: ListEntityType;
   /** Cartela por ítem (id del ítem → texto): por qué está en la colección. */
   notes?: Record<string, string>;
+  /**
+   * Número de orden sobre la carátula. Solo cuando el orden es un ranking (los más valorados): en los premios el
+   * orden es por categoría y un "1" haría creer que ese disco ganó más que los demás.
+   */
+  numbered?: boolean;
   unavailableLabel: string;
 }
 
 // Discos de una colección como muro de carátulas: una colección se recorre con la vista, no se lee como una lista.
 // En filas verticales (la vista de una lista) doce discos ocupaban varias pantallas; en grilla se ven casi todos de
 // entrada. Cada tarjeta lleva su número de orden sobre la carátula, título, artista y la cartela de la colección.
-export function CollectionAlbumGrid({ heading, items, entityType, notes, unavailableLabel }: CollectionAlbumGridProps) {
+export function CollectionAlbumGrid({
+  heading,
+  items,
+  entityType,
+  notes,
+  numbered = true,
+  unavailableLabel,
+}: CollectionAlbumGridProps) {
   return (
     <section className="flex flex-col gap-3">
       <h2 className="font-display text-lg text-paper">
@@ -36,9 +48,11 @@ export function CollectionAlbumGrid({ heading, items, entityType, notes, unavail
                     label=""
                     className="aspect-square w-full rounded-md ring-1 ring-ink-border transition-[box-shadow] group-hover:ring-amber"
                   />
-                  <span className="absolute left-1.5 top-1.5 rounded bg-ink/85 px-1.5 py-0.5 font-data text-[0.65rem] tabular-nums text-paper backdrop-blur-sm">
-                    {index + 1}
-                  </span>
+                  {numbered ? (
+                    <span className="absolute left-1.5 top-1.5 rounded bg-ink/85 px-1.5 py-0.5 font-data text-[0.65rem] tabular-nums text-paper backdrop-blur-sm">
+                      {index + 1}
+                    </span>
+                  ) : null}
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate font-display text-sm text-paper transition-colors group-hover:text-amber">
@@ -48,7 +62,7 @@ export function CollectionAlbumGrid({ heading, items, entityType, notes, unavail
                     <span className="block truncate font-data text-xs text-paper-muted">{item.target.artistName}</span>
                   ) : null}
                   {notes?.[item.id] ? (
-                    <span className="block truncate font-data text-[0.65rem] uppercase tracking-wide text-petrol">
+                    <span className="line-clamp-2 font-data text-[0.65rem] uppercase tracking-wide text-petrol" title={notes[item.id]}>
                       {notes[item.id]}
                     </span>
                   ) : null}

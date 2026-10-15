@@ -1,4 +1,5 @@
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { AppImage } from "@/components/ui/AppImage";
 import { SaveListButton } from "@/components/lists/SaveListButton";
 import { TrackListButton } from "@/components/camino/TrackListButton";
@@ -18,6 +19,8 @@ interface CollectionDetailHeaderProps {
   saveCount?: number;
   tracking?: boolean;
   trackingProgress?: { selectedCount: number; listenedCount: number } | null;
+  /** Lo que hace concreta a esta colección (qué ceremonia, cuándo), en lugar de la descripción genérica de su familia. */
+  context?: { text: string; link?: { href: string; label: string } };
 }
 
 // Cabecera del detalle de una colección (ADR 0038). Es deliberadamente distinta de `ListDetailHeader`: una lista es
@@ -34,6 +37,7 @@ export function CollectionDetailHeader({
   saveCount,
   tracking = false,
   trackingProgress = null,
+  context,
 }: CollectionDetailHeaderProps) {
   const t = useTranslations("lists");
   const tExplore = useTranslations("catalog.explore");
@@ -57,10 +61,19 @@ export function CollectionDetailHeader({
           <span className={`w-fit ${FAMILY_STAMP_CLASS}`}>{tExplore(`collectionFamilies.${family}`)}</span>
           <h1 className="font-display text-3xl leading-tight text-paper sm:text-4xl">{list.title}</h1>
 
-          {/* Qué es esta colección: la descripción curada o, si no hay, la de su familia. */}
+          {/* Qué es esta colección: la descripción curada, el contexto concreto (la ceremonia) o, si no hay, la de su
+              familia. */}
           <p className="max-w-prose whitespace-pre-wrap font-body text-sm text-paper-muted">
-            {list.description ?? tExplore(`collectionFamilyDescriptions.${family}`)}
+            {list.description ?? context?.text ?? tExplore(`collectionFamilyDescriptions.${family}`)}
           </p>
+          {context?.link ? (
+            <Link
+              href={context.link.href}
+              className="w-fit font-data text-xs text-paper underline decoration-dotted underline-offset-4 transition-colors hover:text-amber"
+            >
+              {context.link.label} →
+            </Link>
+          ) : null}
 
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-data text-xs text-paper-muted">
             <span>{platformName}</span>

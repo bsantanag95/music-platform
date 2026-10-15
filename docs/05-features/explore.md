@@ -231,10 +231,15 @@ El modelo que rige, separado por de quién es la voz:
   **portada** a todo el ancho: la primera carátula difuminada como luz de fondo, el texto a la izquierda (sello de
   familia, título grande, la descripción de la colección o, si no tiene, la de su familia —
   `catalog.explore.collectionFamilyDescriptions`—) y el abanico a la derecha. Los discos se muestran como **muro de carátulas** (`CollectionAlbumGrid`,
-  2–4 columnas, número de orden sobre la carátula), no en las filas verticales de una lista, para ver casi todos de
-  entrada. Cada disco lleva además una **cartela** bajo el artista que dice por qué está ahí (`collection-notes.ts`): en Efemérides el aniversario que
-  cumple ("Cumple 70 años · 19 oct 1956", con fecha completa), en Lanzamientos la fecha y en el resto el año
-  (`albumReleaseDates`, una consulta para todos los discos).
+  2–4 columnas), no en las filas verticales de una lista, para ver casi todos de entrada. El **número de orden** sobre la
+  carátula aparece solo en `rankings`, donde el orden es un ranking; en los demás haría creer que el primero «vale más»
+  (en Premios el orden es por categoría). Cada disco lleva además una **cartela** bajo el artista que dice por qué está
+  ahí (`collection-notes.ts`): en Efemérides el aniversario que cumple ("Cumple 70 años · 19 oct 1956", con fecha
+  completa), en Lanzamientos la fecha y en el resto el año (`albumReleaseDates`, una consulta para todos los discos).
+  **Premios** dice la categoría que ganó cada disco ("Álbum del año · Mejor álbum de country": las generales primero, hasta
+  dos y «+N»), no el año de lanzamiento, que se confundía con el de la ceremonia. La cabecera cuenta además de qué ceremonia
+  es y cuándo se entregó ("Los discos ganadores de los premios Grammy 2025, entregados el 2 de febrero de 2025") y enlaza a
+  la página de la ceremonia (`services/awards/collection-context.ts`, que lee el período `<premio>-<año>` de la fila).
 - **Consola:** la distinción entre lo manual y lo automático vive en las **pestañas** ("Destacadas en Explorar" y
   "Generadas automáticamente"), no en dos grupos. El panel de destacadas es una sola lista en el orden del riel, con el
   origen y la familia como rótulos por fila —eso es lo que dice qué sobreescribirá la próxima corrida— y «dentro del

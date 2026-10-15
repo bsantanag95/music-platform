@@ -5,7 +5,8 @@ import { redirect } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CollectionDetailHeader } from "@/components/discovery/CollectionDetailHeader";
-import { collectionNote, formatNoteDate } from "@/components/discovery/collection-notes";
+import { awardNote, collectionNote, formatLongDate, formatNoteDate } from "@/components/discovery/collection-notes";
+import { ceremonyHref } from "@/components/awards/award-links";
 import { CollectionAlbumGrid } from "@/components/discovery/CollectionAlbumGrid";
 import { collectionSegment } from "@/lib/catalog-links";
 import { resolveCatalogRoute } from "@/lib/catalog-route";
@@ -14,7 +15,8 @@ import { parseCatalogSegment } from "@/lib/slug";
 import { resolveSession } from "@/services/auth/sessions";
 import { findGeneratedCollection } from "@/services/discovery/collections/generated";
 import { albumReleaseDates } from "@/services/discovery/discovery";
-import { PLATFORM_OWNER_NAME, collectionTitle, titleLocaleOf } from "@/services/discovery/collections/titles";
+import { ceremonyContext } from "@/services/awards/collection-context";
+import { AWARD_NAMES, PLATFORM_OWNER_NAME, collectionTitle, titleLocaleOf } from "@/services/discovery/collections/titles";
 import { CURATOR_USERNAME } from "@/services/discovery/constants";
 import { countsByListId } from "@/services/journeys/progress";
 import { getUserListDetail } from "@/services/lists/lists";
@@ -71,8 +73,19 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
   // Cartela de cada disco: por qué está en la colección (aniversario, fecha o año de lanzamiento).
   const releaseDates =
     list.entityType === "release-group" ? await albumReleaseDates(list.items.map((item) => item.target.id)) : {};
+  // Premios: la categoría que ganó cada disco ("Álbum del año"), que es por lo que está aquí; el año de lanzamiento
+  // solo confundiría con el de la ceremonia.
+  const ceremony =
+    collection.family === "awards" && collection.periodKey
+      ? await ceremonyContext(collection.periodKey, list.items.map((item) => item.target.id))
+      : null;
   const notes: Record<string, string> = {};
   for (const item of list.items) {
+    const won = awardNote(ceremony?.wonByAlbum.get(item.target.id), locale);
+    if (won) {
+      notes[item.id] = won;
+      continue;
+    }
     const note = collectionNote(collection.family, releaseDates[item.target.id]);
     if (!note) continue;
     notes[item.id] =
@@ -97,6 +110,18 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
         <CollectionDetailHeader
           list={{ ...list, title }}
           family={collection.family}
+          context={
+            ceremony
+              ? {
+                  text: tExplore("collectionAwardsContext", {
+                    award: AWARD_NAMES[ceremony.awardSlug] ?? ceremony.awardSlug,
+                    year: ceremony.year,
+                    date: formatLongDate(ceremony.heldOn, locale),
+                  }),
+                  link: { href: ceremonyHref(ceremony.awardSlug, ceremony.year), label: tExplore("collectionAwardsLink") },
+                }
+              : undefined
+          }
           platformName={PLATFORM_OWNER_NAME[titleLocaleOf(locale)]}
           saved={savedState?.saved ?? false}
           following={savedState?.following ?? false}
@@ -118,6 +143,7 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
             items={list.items}
             entityType={list.entityType}
             notes={notes}
+            numbered={collection.family === "rankings"}
             unavailableLabel={t("itemUnavailable")}
           />
         )}
