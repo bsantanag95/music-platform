@@ -35,6 +35,7 @@ const SAMPLE: Record<ContextMessageKey, Record<string, string | number>> = {
   genreEra: { from: "1990", to: "1994", year: "1992" },
   decadeSummary: {},
   decadeNote: { decade: "1990", year: "1994" },
+  decadeNoteExact: { decade: "2020" },
   topRatedSummary: { quarter: "4", year: "2026", min: 3 },
   topRatedNote: { average: 4.5, count: 12 },
   mostReviewedSummary: { month: "octubre de 2026" },
@@ -76,6 +77,8 @@ describe("textos de los presentadores, formateados", () => {
   it("las frases dicen lo que prometen las especificaciones", () => {
     expect(translator("es")("decadeNote", { decade: "1990", year: "1994" })).toBe("Década de 1990 · 1994");
     expect(translator("en")("decadeNote", { decade: "1990", year: "1994" })).toBe("1990s · 1994");
+    expect(translator("es")("decadeNoteExact", { decade: "2020" })).toBe("Década de 2020");
+    expect(translator("en")("decadeNoteExact", { decade: "2020" })).toBe("2020s");
     expect(translator("es")("genreEra", { from: "1990", to: "1994", year: "1992" })).toBe("Era 1990–1994 · 1992");
     expect(translator("es")("upcomingDaysIn", { days: 9, date: "24 oct" })).toBe("Sale en 9 días · 24 oct");
   });

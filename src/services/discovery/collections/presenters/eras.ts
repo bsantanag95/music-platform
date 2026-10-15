@@ -46,7 +46,12 @@ export function buildOnePerDecadeContext(albumIds: string[], dates: Record<strin
   for (const id of albumIds) {
     const year = yearOf(dates[id]);
     if (!year) continue;
-    context.notes.set(id, ref("decadeNote", { decade: String(Math.floor(year / 10) * 10), year: String(year) }));
+    const decade = Math.floor(year / 10) * 10;
+    // Un disco de 2020 no necesita "Década de 2020 · 2020": cuando el año es el de la década, se dice una sola vez.
+    context.notes.set(
+      id,
+      year === decade ? ref("decadeNoteExact", { decade: String(decade) }) : ref("decadeNote", { decade: String(decade), year: String(year) }),
+    );
   }
   return context;
 }
