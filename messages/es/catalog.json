@@ -94,6 +94,8 @@
       "discovery": "Hallazgos para salir de lo de siempre.",
       "rankings": "Los discos que la comunidad valora más alto."
     },
+    "collectionAwardsContext": "Los discos ganadores de los premios {award} {year}, entregados el {date}. Cada disco dice la categoría que ganó.",
+    "collectionAwardsLink": "Ver la ceremonia completa",
     "collectionNoteAnniversary": "{years, plural, one {Cumple # año} other {Cumple # años}} · {date}"
   },
   "search": {

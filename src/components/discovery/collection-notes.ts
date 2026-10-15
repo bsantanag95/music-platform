@@ -32,6 +32,26 @@ export function collectionNote(
   return year ? { kind: "year", year } : null;
 }
 
+/**
+ * Nota de un álbum de una colección de premios: las categorías que ganó, las generales primero ("Álbum del año ·
+ * Mejor álbum de música country"). Hasta `MAX_AWARD_NOTE` nombres y, si hay más, cuántas faltan ("+1"). `null` si no
+ * ganó ninguna conocida.
+ */
+const MAX_AWARD_NOTE = 2;
+
+export function awardNote(won: { name: { es: string; en: string } }[] | undefined, locale: string): string | null {
+  if (!won || won.length === 0) return null;
+  const english = locale.toLowerCase().startsWith("en");
+  const names = won.slice(0, MAX_AWARD_NOTE).map((category) => (english ? category.name.en : category.name.es));
+  const rest = won.length - names.length;
+  return [...names, ...(rest > 0 ? [`+${rest}`] : [])].join(" · ");
+}
+
+/** Fecha larga con año ("2 de febrero de 2025"), en UTC. */
+export function formatLongDate(isoDate: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { dateStyle: "long", timeZone: "UTC" }).format(new Date(`${isoDate}T00:00:00Z`));
+}
+
 /** Fecha corta con año ("15 oct 1956"), en UTC para que la zona horaria del servidor no corra el día. */
 export function formatNoteDate(isoDate: string, locale: string): string {
   return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(

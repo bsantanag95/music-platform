@@ -3,6 +3,9 @@ import { screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { CollectionDetailHeader } from "./CollectionDetailHeader";
 
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={`/es${href}`}>{children}</a>,
+}));
 vi.mock("@/components/lists/SaveListButton", () => ({ SaveListButton: () => <button type="button">Guardar</button> }));
 vi.mock("@/components/camino/TrackListButton", () => ({ TrackListButton: () => <button type="button">Camino</button> }));
 
@@ -59,5 +62,29 @@ describe("CollectionDetailHeader", () => {
     renderWithIntl(<CollectionDetailHeader list={list} family="awards" platformName="Exploración" canSave />);
     expect(screen.getByRole("button", { name: "Guardar" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Camino" })).toBeInTheDocument();
+  });
+
+  it("con contexto, lo muestra en lugar de la descripción de la familia y enlaza a la ceremonia", () => {
+    renderWithIntl(
+      <CollectionDetailHeader
+        list={list}
+        family="awards"
+        platformName="Exploración"
+        context={{ text: "Los discos ganadores de los premios Grammy 2025.", link: { href: "/awards/grammy/2025", label: "Ver la ceremonia completa" } }}
+      />,
+    );
+
+    expect(screen.getByText("Los discos ganadores de los premios Grammy 2025.")).toBeInTheDocument();
+    expect(screen.queryByText(/ceremonias que sigue la plataforma/)).toBeNull();
+    expect(screen.getByRole("link", { name: /Ver la ceremonia completa/ })).toHaveAttribute("href", "/es/awards/grammy/2025");
+  });
+
+  it("una descripción curada manda sobre el contexto", () => {
+    renderWithIntl(
+      <CollectionDetailHeader list={{ ...list, description: "Mi texto" }} family="awards" platformName="Exploración" context={{ text: "Contexto" }} />,
+    );
+
+    expect(screen.getByText("Mi texto")).toBeInTheDocument();
+    expect(screen.queryByText("Contexto")).toBeNull();
   });
 });
