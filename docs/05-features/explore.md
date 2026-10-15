@@ -230,8 +230,9 @@ El modelo que rige, separado por de quién es la voz:
   las listas. La pila de fundas vive en `CollectionSleeves.tsx` (tamaños `dense`, `card` y `hero`). La cabecera es una
   **portada** a todo el ancho: la primera carátula difuminada como luz de fondo, el texto a la izquierda (sello de
   familia, título grande, la descripción de la colección o, si no tiene, la de su familia —
-  `catalog.explore.collectionFamilyDescriptions`—) y el abanico a la derecha. Cada disco lleva además una **cartela**
-  bajo el artista que dice por qué está ahí (`collection-notes.ts`, modo Detallada): en Efemérides el aniversario que
+  `catalog.explore.collectionFamilyDescriptions`—) y el abanico a la derecha. Los discos se muestran como **muro de carátulas** (`CollectionAlbumGrid`,
+  2–4 columnas, número de orden sobre la carátula), no en las filas verticales de una lista, para ver casi todos de
+  entrada. Cada disco lleva además una **cartela** bajo el artista que dice por qué está ahí (`collection-notes.ts`): en Efemérides el aniversario que
   cumple ("Cumple 70 años · 19 oct 1956", con fecha completa), en Lanzamientos la fecha y en el resto el año
   (`albumReleaseDates`, una consulta para todos los discos).
 - **Consola:** la distinción entre lo manual y lo automático vive en las **pestañas** ("Destacadas en Explorar" y

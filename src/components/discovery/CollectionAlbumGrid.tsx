@@ -1,0 +1,63 @@
+import { Link } from "@/i18n/navigation";
+import { CoverThumb } from "@/components/catalog/CoverThumb";
+import { listItemHref } from "@/components/lists/lists-shared";
+import type { ListEntityType, UserListItem } from "@/lib/api/schemas";
+
+interface CollectionAlbumGridProps {
+  heading: string;
+  items: UserListItem[];
+  entityType: ListEntityType;
+  /** Cartela por ítem (id del ítem → texto): por qué está en la colección. */
+  notes?: Record<string, string>;
+  unavailableLabel: string;
+}
+
+// Discos de una colección como muro de carátulas: una colección se recorre con la vista, no se lee como una lista.
+// En filas verticales (la vista de una lista) doce discos ocupaban varias pantallas; en grilla se ven casi todos de
+// entrada. Cada tarjeta lleva su número de orden sobre la carátula, título, artista y la cartela de la colección.
+export function CollectionAlbumGrid({ heading, items, entityType, notes, unavailableLabel }: CollectionAlbumGridProps) {
+  return (
+    <section className="flex flex-col gap-3">
+      <h2 className="font-display text-lg text-paper">
+        {heading} <span className="font-data text-sm text-paper-muted">({items.length})</span>
+      </h2>
+      <ol className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3 md:grid-cols-4">
+        {items.map((item, index) => {
+          const href = listItemHref(item.target.id, entityType, {
+            title: item.target.title,
+            artistName: item.target.artistName,
+          });
+          return (
+            <li key={item.id}>
+              <Link href={href} className="group flex flex-col gap-1.5">
+                <span className="relative block">
+                  <CoverThumb
+                    cover={item.target.coverThumbUrl}
+                    label=""
+                    className="aspect-square w-full rounded-md ring-1 ring-ink-border transition-[box-shadow] group-hover:ring-amber"
+                  />
+                  <span className="absolute left-1.5 top-1.5 rounded bg-ink/85 px-1.5 py-0.5 font-data text-[0.65rem] tabular-nums text-paper backdrop-blur-sm">
+                    {index + 1}
+                  </span>
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate font-display text-sm text-paper transition-colors group-hover:text-amber">
+                    {item.target.title || unavailableLabel}
+                  </span>
+                  {item.target.artistName ? (
+                    <span className="block truncate font-data text-xs text-paper-muted">{item.target.artistName}</span>
+                  ) : null}
+                  {notes?.[item.id] ? (
+                    <span className="block truncate font-data text-[0.65rem] uppercase tracking-wide text-petrol">
+                      {notes[item.id]}
+                    </span>
+                  ) : null}
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
+}

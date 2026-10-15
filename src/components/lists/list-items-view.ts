@@ -16,6 +16,4 @@ export interface ListItemsRendererProps {
   actions: ListItemsRowActions | null;
   /** Menú de acciones por disco en la lista de álbumes de otra persona; `null` en el resto. */
   quickActions?: ListQuickActions | null;
-  /** Nota por ítem (id del ítem → texto) bajo el artista: por qué está en una colección ("Cumple 70 años · 15 oct 1956"). */
-  notes?: Record<string, string>;
 }

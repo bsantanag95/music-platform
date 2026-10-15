@@ -30,7 +30,6 @@ export function ListItemsView({
   manage,
   viewerAuthenticated,
   heading,
-  notes,
 }: {
   items: UserListItem[];
   entityType: ListEntityType;
@@ -39,8 +38,6 @@ export function ListItemsView({
   viewerAuthenticated?: boolean;
   /** Encabezado de la sección; por defecto "Elementos" (las colecciones dicen "Álbumes"). */
   heading?: string;
-  /** Nota por ítem en el modo Detallada (las colecciones dicen por qué está cada disco). */
-  notes?: Record<string, string>;
 }) {
   const t = useTranslations("lists");
   const [mode, setMode] = useListViewMode();
@@ -74,7 +71,7 @@ export function ListItemsView({
         <ListModeSwitcher mode={mode} onChange={setMode} />
       </div>
 
-      <Renderer items={items} entityType={entityType} actions={actions} quickActions={quickActions} notes={notes} />
+      <Renderer items={items} entityType={entityType} actions={actions} quickActions={quickActions} />
     </section>
   );
 }

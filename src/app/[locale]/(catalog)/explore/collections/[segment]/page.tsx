@@ -6,7 +6,7 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CollectionDetailHeader } from "@/components/discovery/CollectionDetailHeader";
 import { collectionNote, formatNoteDate } from "@/components/discovery/collection-notes";
-import { ListItemsView } from "@/components/lists/ListItemsView";
+import { CollectionAlbumGrid } from "@/components/discovery/CollectionAlbumGrid";
 import { collectionSegment } from "@/lib/catalog-links";
 import { resolveCatalogRoute } from "@/lib/catalog-route";
 import { isExploreEnabled } from "@/lib/config/discovery";
@@ -113,12 +113,12 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
         {list.items.length === 0 ? (
           <EmptyState title={t("noItems")} description={t("readEmptyItems")} />
         ) : (
-          <ListItemsView
+          <CollectionAlbumGrid
+            heading={tExplore("collectionAlbums")}
             items={list.items}
             entityType={list.entityType}
-            viewerAuthenticated={Boolean(viewerId)}
-            heading={tExplore("collectionAlbums")}
             notes={notes}
+            unavailableLabel={t("itemUnavailable")}
           />
         )}
       </div>

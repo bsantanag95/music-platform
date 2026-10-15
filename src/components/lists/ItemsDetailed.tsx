@@ -10,7 +10,7 @@ import { ListItemQuickActions } from "./ListItemQuickActions";
 
 // Modo Detallada: una fila-tarjeta por ítem con carátula, título y artista, y
 // los controles de gestión al pie. Es el modo por defecto.
-export function ItemsDetailed({ items, entityType, actions, quickActions, notes }: ListItemsRendererProps) {
+export function ItemsDetailed({ items, entityType, actions, quickActions }: ListItemsRendererProps) {
   const t = useTranslations("lists");
   return (
     <ol className="flex flex-col gap-2">
@@ -43,9 +43,6 @@ export function ItemsDetailed({ items, entityType, actions, quickActions, notes 
             </Link>
             {item.target.artistName ? (
               <p className="truncate font-data text-xs text-paper-muted">{item.target.artistName}</p>
-            ) : null}
-            {notes?.[item.id] ? (
-              <p className="font-data text-[0.7rem] uppercase tracking-wide text-petrol">{notes[item.id]}</p>
             ) : null}
             {actions ? (
               <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
