@@ -22,7 +22,7 @@ export {};
 //   DELETE FROM explore_collection_sync WHERE template_key LIKE 'smoke-%';
 //   DELETE FROM user_list WHERE title LIKE 'Smoke oficial%';
 //   DELETE FROM app_user WHERE username LIKE 'smoke_feat_%';
-//   DELETE FROM release_group WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-0000000009c%' OR mbid::text LIKE '5e0ce000-0000-4000-8000-000000009d%';
+//   DELETE FROM release_group WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-0000000009c%' OR mbid::text LIKE '5e0ce000-0000-4000-8000-0000000009e%' OR mbid::text LIKE '5e0ce000-0000-4000-8000-000000009d%';
 //   DELETE FROM award WHERE slug = 'smoke-premio';
 //   DELETE FROM release_calendar_entry WHERE release_group_mbid::text LIKE '5e0ce000-0000-4000-8000-000000009d%';
 // Necesita las migraciones 0069 y 0070 aplicadas. Correr contra una BD de scratch:
@@ -77,6 +77,7 @@ import { listUserLists } from "../src/services/lists/lists";
 import { listSavedLists, saveList } from "../src/services/lists/saved-lists";
 import { findGeneratedCollection, generatedRefsFor } from "../src/services/discovery/collections/generated";
 import { collectionTitle } from "../src/services/discovery/collections/titles";
+import { presentCollection } from "../src/services/discovery/collections/presenters";
 import { presentList } from "../src/lib/list-presentation";
 
 assertSmokeAllowed();
@@ -137,6 +138,7 @@ async function cleanup(): Promise<void> {
   await db.delete(exploreCollectionSync).where(like(exploreCollectionSync.templateKey, "smoke-%"));
   await db.delete(releaseGroup).where(like(sql`${releaseGroup.mbid}::text`, "5e0ce000-0000-4000-8000-0000000009c%"));
   await db.delete(releaseGroup).where(like(sql`${releaseGroup.mbid}::text`, "5e0ce000-0000-4000-8000-000000009d%"));
+  await db.delete(releaseGroup).where(like(sql`${releaseGroup.mbid}::text`, "5e0ce000-0000-4000-8000-0000000009e%"));
   if (createdCurator) await db.delete(appUser).where(eq(appUser.username, CURATOR_USERNAME));
 }
 
@@ -746,6 +748,32 @@ async function main() {
     const grammyPreview = await previewCollection(grammy, new Date(), offlineCovers);
     check(grammyPreview.reason === null && grammyPreview.albumIds.length === 7, "la vista previa lo da por válido (7 álbumes)");
 
+    // Presentador de Premios (openspec: add-collection-presenters): categoría ganada por disco, ceremonia y enlace.
+    const awardIds = awardRgs.map((r) => r!.id);
+    const awardsContext = await presentCollection({
+      templateKey: "grammy-winners",
+      periodKey: "smoke-premio-2099",
+      family: "awards",
+      albumIds: awardIds,
+      today: new Date(),
+    });
+    check(awardsContext.summary?.key === "awardsSummary", "el presentador de Premios resume la ceremonia");
+    check(awardsContext.link?.href === "/awards/smoke-premio/2099", "y enlaza a la página de la ceremonia");
+    check(awardsContext.numbered === false, "y no numera los discos");
+    check(
+      awardsContext.notes.get(awardRgs[3]!.id)?.key === "awardsWon1" && !awardsContext.notes.has(awardRgs[4]!.id),
+      "cada ganador dice su categoría y el que solo fue nominado no lleva cartela",
+    );
+    check(awardsContext.notes.has(awardRgs[5]!.id), "el disco ancla de una canción ganadora también la lleva");
+    const lostCeremony = await presentCollection({
+      templateKey: "grammy-winners",
+      periodKey: "smoke-premio-2000",
+      family: "awards",
+      albumIds: awardIds,
+      today: new Date(),
+    });
+    check(lostCeremony.summary === undefined, "sin la ceremonia del período se abstiene y cae al presentador de la familia");
+
     // --- upcoming: el rango del calendario manda; completa con el catálogo ---
     const calendarRgs = await make(Array.from({ length: 4 }, (_, i) => ({ n: 0x10 + i, date: "2099-06-01", cover: true })));
     const future = "2099-06-01";
@@ -864,6 +892,44 @@ async function main() {
       before!.f === afterDry!.f && before!.s === afterDry!.s && before!.l === afterDry!.l,
       "la vista previa no crea listas, filas destacadas ni corridas",
     );
+  }
+
+  console.log("Presentador de Novedades esenciales (sintético):");
+  {
+    const day = (offset: number) => new Date(Date.now() - offset * 24 * 3600 * 1000).toISOString().slice(0, 10);
+    const newRgs = await db
+      .insert(releaseGroup)
+      .values(
+        [1, 5, 40, 75].map((daysAgo, i) => ({
+          mbid: `5e0ce000-0000-4000-8000-0000000009e${i}`,
+          title: `Smoke novedad ${i}`,
+          category: "studio" as const,
+          firstReleaseDate: day(daysAgo),
+          firstReleaseYear: Number(day(daysAgo).slice(0, 4)),
+          coverThumbUrl: "https://coverartarchive.org/smoke.jpg",
+        })),
+      )
+      .returning({ id: releaseGroup.id });
+    const ids = newRgs.map((r) => r.id);
+    const context = await presentCollection({
+      templateKey: "new-releases",
+      periodKey: EVERGREEN,
+      family: "releases",
+      albumIds: ids,
+      today: new Date(),
+    });
+    check(context.summary?.key === "newReleasesSummary", "el resumen dice el rango real de los discos mostrados");
+    check(context.notes.get(ids[0]!)?.key === "newReleasesYesterday", "un disco de ayer dice «Ayer»");
+    check(context.notes.get(ids[1]!)?.key === "newReleasesDaysAgo", "uno de hace 5 días dice «Hace 5 días»");
+    check(context.notes.get(ids[2]!)?.key === "newReleasesWeeksAgo", "uno de hace 40 días dice semanas");
+    const flat = (context.groups ?? []).flatMap((group) => group.albumIds);
+    check(flat.length === ids.length && new Set(flat).size === ids.length, "los grupos por mes son una partición: ningún disco se pierde");
+    check((context.groups ?? []).length >= 2 && (context.groups ?? [])[0]!.label?.key === "monthHeading", "hay un grupo por mes, con encabezado");
+    // Consulta por lote: una sola petición de fechas para todos los discos, no una por disco.
+    const started = Date.now();
+    await presentCollection({ templateKey: "new-releases", periodKey: EVERGREEN, family: "releases", albumIds: ids, today: new Date() });
+    check(Date.now() - started < 2000, "presentar la colección es una consulta por lote (rápido, sin una por disco)");
+    await db.delete(releaseGroup).where(sql`mbid::text like '5e0ce000-0000-4000-8000-0000000009e%'`);
   }
 
   console.log("Plantillas reales (solo lectura, sin red):");

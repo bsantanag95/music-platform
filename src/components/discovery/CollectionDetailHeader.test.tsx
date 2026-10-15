@@ -64,13 +64,14 @@ describe("CollectionDetailHeader", () => {
     expect(screen.getByRole("button", { name: "Camino" })).toBeInTheDocument();
   });
 
-  it("con contexto, lo muestra en lugar de la descripción de la familia y enlaza a la ceremonia", () => {
+  it("con resumen del presentador, lo muestra en lugar de la descripción de la familia y enlaza a la ceremonia", () => {
     renderWithIntl(
       <CollectionDetailHeader
         list={list}
         family="awards"
         platformName="Exploración"
-        context={{ text: "Los discos ganadores de los premios Grammy 2025.", link: { href: "/awards/grammy/2025", label: "Ver la ceremonia completa" } }}
+        summary="Los discos ganadores de los premios Grammy 2025."
+        link={{ href: "/awards/grammy/2025", label: "Ver la ceremonia completa" }}
       />,
     );
 
@@ -79,9 +80,9 @@ describe("CollectionDetailHeader", () => {
     expect(screen.getByRole("link", { name: /Ver la ceremonia completa/ })).toHaveAttribute("href", "/es/awards/grammy/2025");
   });
 
-  it("una descripción curada manda sobre el contexto", () => {
+  it("una descripción escrita manda sobre el resumen", () => {
     renderWithIntl(
-      <CollectionDetailHeader list={{ ...list, description: "Mi texto" }} family="awards" platformName="Exploración" context={{ text: "Contexto" }} />,
+      <CollectionDetailHeader list={{ ...list, description: "Mi texto" }} family="awards" platformName="Exploración" summary="Contexto" />,
     );
 
     expect(screen.getByText("Mi texto")).toBeInTheDocument();

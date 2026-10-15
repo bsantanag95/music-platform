@@ -5,8 +5,7 @@ import { redirect } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CollectionDetailHeader } from "@/components/discovery/CollectionDetailHeader";
-import { awardNote, collectionNote, formatLongDate, formatNoteDate } from "@/components/discovery/collection-notes";
-import { ceremonyHref } from "@/components/awards/award-links";
+import { renderContext, type ContextTranslator } from "@/components/discovery/collection-context-render";
 import { CollectionAlbumGrid } from "@/components/discovery/CollectionAlbumGrid";
 import { collectionSegment } from "@/lib/catalog-links";
 import { resolveCatalogRoute } from "@/lib/catalog-route";
@@ -14,9 +13,9 @@ import { isExploreEnabled } from "@/lib/config/discovery";
 import { parseCatalogSegment } from "@/lib/slug";
 import { resolveSession } from "@/services/auth/sessions";
 import { findGeneratedCollection } from "@/services/discovery/collections/generated";
-import { albumReleaseDates } from "@/services/discovery/discovery";
-import { ceremonyContext } from "@/services/awards/collection-context";
-import { AWARD_NAMES, PLATFORM_OWNER_NAME, collectionTitle, titleLocaleOf } from "@/services/discovery/collections/titles";
+import { presentCollection } from "@/services/discovery/collections/presenters";
+import { emptyContext } from "@/services/discovery/collections/presenters/types";
+import { PLATFORM_OWNER_NAME, collectionTitle, titleLocaleOf } from "@/services/discovery/collections/titles";
 import { CURATOR_USERNAME } from "@/services/discovery/constants";
 import { countsByListId } from "@/services/journeys/progress";
 import { getUserListDetail } from "@/services/lists/lists";
@@ -70,31 +69,21 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
       ? ((await countsByListId(viewerId, [parsed.id])).get(parsed.id) ?? { selected: 0, listened: 0 })
       : null;
 
-  // Cartela de cada disco: por qué está en la colección (aniversario, fecha o año de lanzamiento).
-  const releaseDates =
-    list.entityType === "release-group" ? await albumReleaseDates(list.items.map((item) => item.target.id)) : {};
-  // Premios: la categoría que ganó cada disco ("Álbum del año"), que es por lo que está aquí; el año de lanzamiento
-  // solo confundiría con el de la ceremonia.
-  const ceremony =
-    collection.family === "awards" && collection.periodKey
-      ? await ceremonyContext(collection.periodKey, list.items.map((item) => item.target.id))
-      : null;
-  const notes: Record<string, string> = {};
-  for (const item of list.items) {
-    const won = awardNote(ceremony?.wonByAlbum.get(item.target.id), locale);
-    if (won) {
-      notes[item.id] = won;
-      continue;
-    }
-    const note = collectionNote(collection.family, releaseDates[item.target.id]);
-    if (!note) continue;
-    notes[item.id] =
-      note.kind === "anniversary"
-        ? tExplore("collectionNoteAnniversary", { years: note.years, date: formatNoteDate(note.date, locale) })
-        : note.kind === "date"
-          ? formatNoteDate(note.date, locale)
-          : String(note.year);
-  }
+  // El contexto de la colección (qué dice la cabecera, qué dice cada disco, cómo se agrupan) lo decide el presentador
+  // de su plantilla o, si no tiene, el de su familia (ADR 0039): la página no conoce familias ni plantillas. Solo las
+  // listas de álbumes tienen presentador.
+  const context =
+    list.entityType === "release-group"
+      ? await presentCollection({
+          templateKey: collection.templateKey,
+          periodKey: collection.periodKey,
+          family: collection.family,
+          albumIds: list.items.map((item) => item.target.id),
+          today: new Date(),
+        })
+      : emptyContext();
+  const tContext = (await getTranslations("catalog.explore.collectionContext")) as unknown as ContextTranslator;
+  const rendered = renderContext(context, { t: tContext, locale, items: list.items });
 
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
@@ -110,18 +99,8 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
         <CollectionDetailHeader
           list={{ ...list, title }}
           family={collection.family}
-          context={
-            ceremony
-              ? {
-                  text: tExplore("collectionAwardsContext", {
-                    award: AWARD_NAMES[ceremony.awardSlug] ?? ceremony.awardSlug,
-                    year: ceremony.year,
-                    date: formatLongDate(ceremony.heldOn, locale),
-                  }),
-                  link: { href: ceremonyHref(ceremony.awardSlug, ceremony.year), label: tExplore("collectionAwardsLink") },
-                }
-              : undefined
-          }
+          summary={rendered.summary}
+          link={rendered.link}
           platformName={PLATFORM_OWNER_NAME[titleLocaleOf(locale)]}
           saved={savedState?.saved ?? false}
           following={savedState?.following ?? false}
@@ -142,8 +121,9 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
             heading={tExplore("collectionAlbums")}
             items={list.items}
             entityType={list.entityType}
-            notes={notes}
-            numbered={collection.family === "rankings"}
+            notes={rendered.notes}
+            numbered={rendered.numbered}
+            groups={rendered.groups}
             unavailableLabel={t("itemUnavailable")}
           />
         )}

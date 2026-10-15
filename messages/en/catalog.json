@@ -94,9 +94,23 @@
       "discovery": "Finds to step outside the usual.",
       "rankings": "The albums the community rates highest."
     },
-    "collectionAwardsContext": "The winning albums at the {year} {award} Awards, presented on {date}. Each album shows the category it won.",
-    "collectionAwardsLink": "See the full ceremony",
-    "collectionNoteAnniversary": "{years, plural, one {Turns # year old} other {Turns # years old}} · {date}"
+    "collectionContext": {
+      "anniversary": "{years, plural, one {Turns # year old} other {Turns # years old}} · {date}",
+      "date": "{date}",
+      "year": "{year}",
+      "awardsSummary": "The winning albums at the {year} {award} Awards, presented on {date}. Each album shows the category it won.",
+      "awardsLink": "See the full ceremony",
+      "awardsWon1": "{a}",
+      "awardsWon2": "{a} · {b}",
+      "awardsWonMore": "{a} · {b} · +{more}",
+      "newReleasesSummary": "Studio albums, singles and EPs from the last {days} days: {from} to {to}.",
+      "newReleasesSummaryNoRange": "Studio albums, singles and EPs from the last {days} days.",
+      "newReleasesToday": "Today",
+      "newReleasesYesterday": "Yesterday",
+      "newReleasesDaysAgo": "{days} days ago · {date}",
+      "newReleasesWeeksAgo": "{weeks, plural, one {# week ago} other {# weeks ago}} · {date}",
+      "monthHeading": "{month}"
+    }
   },
   "search": {
     "pageTitle": "Search",
