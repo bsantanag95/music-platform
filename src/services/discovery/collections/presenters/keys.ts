@@ -37,6 +37,7 @@ export const CONTEXT_MESSAGE_KEYS = [
   "genreEra",
   "decadeSummary",
   "decadeNote",
+  "decadeNoteExact",
   // Rankings de la comunidad.
   "topRatedSummary",
   "topRatedNote",

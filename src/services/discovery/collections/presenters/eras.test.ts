@@ -66,6 +66,11 @@ describe("one-per-decade", () => {
     expect(context.notes.get("b")).toEqual({ key: "decadeNote", params: { decade: "2000", year: "2001" } });
   });
 
+  it("un disco del primer año de la década no repite el año", () => {
+    const context = buildOnePerDecadeContext(["a"], { a: { date: "2020-03-01", year: 2020 } });
+    expect(context.notes.get("a")).toEqual({ key: "decadeNoteExact", params: { decade: "2020" } });
+  });
+
   it("un disco sin año no lleva cartela", () => {
     expect(buildOnePerDecadeContext(["a"], { a: { date: null, year: null } }).notes.size).toBe(0);
   });

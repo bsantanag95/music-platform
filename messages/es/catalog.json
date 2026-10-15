@@ -122,6 +122,7 @@
       "genreEra": "Era {from}–{to} · {year}",
       "decadeSummary": "El disco más destacado de cada década, de la más reciente a la más antigua.",
       "decadeNote": "Década de {decade} · {year}",
+      "decadeNoteExact": "Década de {decade}",
       "topRatedSummary": "Los álbumes mejor valorados del {quarter}.º trimestre de {year}, con al menos {min} valoraciones.",
       "topRatedNote": "★ {average, number, ::.0} · {count, plural, one {# valoración} other {# valoraciones}}",
       "mostReviewedSummary": "Los álbumes que más reseñas recibieron en {month}.",
