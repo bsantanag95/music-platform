@@ -12,24 +12,6 @@ vi.mock("@/i18n/navigation", () => ({
     </a>
   ),
 }));
-vi.mock("@/components/catalog/AlbumCard", () => ({
-  AlbumCard: ({ releaseGroup, stat }: { releaseGroup: { title: string }; stat?: string }) => (
-    <span>
-      {releaseGroup.title}
-      {stat ? ` [${stat}]` : ""}
-    </span>
-  ),
-}));
-// El riel desplazable mide el DOM; aquí basta con sus hijos.
-vi.mock("./RailScroller", () => ({
-  RailScroller: ({ header, children }: { header: React.ReactNode; children: React.ReactNode }) => (
-    <div>
-      {header}
-      <ul>{children}</ul>
-    </div>
-  ),
-}));
-
 const categoryLabels: Record<ReleaseGroupCategory, string> = {
   studio: "De estudio",
   single_ep: "Singles y EPs",
@@ -56,7 +38,6 @@ const render = (section: PopularSection) =>
       windowDescription={(window) => `ventana:${window}`}
       peopleLabel={(count) => `${count} personas`}
       categoryLabels={categoryLabels}
-      coverLabel="Carátula"
     />,
   );
 
@@ -74,8 +55,19 @@ describe("PopularNow", () => {
   it("la cifra de personas solo aparece desde 5", () => {
     render(full);
 
-    expect(screen.getByText("Disco a [7 personas]")).toBeInTheDocument();
-    expect(screen.getByText("Disco b")).toBeInTheDocument();
+    const top = screen.getByRole("link", { name: /Disco a/ });
+    expect(top).toHaveTextContent("7 personas");
+    expect(screen.getByRole("link", { name: /Disco b/ })).not.toHaveTextContent("personas");
+  });
+
+  it("es un ranking: el n.º 1 en grande y el resto numerado desde el 2", () => {
+    render(full);
+
+    const top = screen.getByRole("link", { name: /Disco a/ });
+    expect(top).toHaveTextContent("1");
+    const rest = screen.getByRole("list", { name: "Álbumes" });
+    expect(rest).toHaveAttribute("start", "2");
+    expect(within(rest).getByRole("link", { name: /Disco b/ })).toHaveTextContent("2");
   });
 
   it("al cambiar de pestaña muestra su panel y el subtítulo de su ventana, sin recargar", () => {

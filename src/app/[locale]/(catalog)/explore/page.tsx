@@ -311,8 +311,6 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         windowDescription={(window) => t(`popularWindow.${window}`)}
         peopleLabel={(count) => t("popularPeople", { count })}
         categoryLabels={categoryLabels}
-        coverLabel={coverLabel}
-        authenticated={authenticated}
         artistNames={railArtistNames}
       />
 
