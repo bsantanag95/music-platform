@@ -164,12 +164,15 @@ export function CollectionRail<T extends FeaturedCollection>({
   // Pared de fichas: cuatro columnas desde `xl`, siempre la misma ficha vertical, tenga la familia 1
   // colección o 10 (antes una familia con pocas colecciones mostraba una ficha horizontal ancha aparte;
   // una sola forma es más fácil de reconocer que dos).
+  // Con cuatro columnas, una cantidad como 5 o 9 deja una ficha sola en la última fila (4 + 1). En ese caso se
+  // quedan las tres columnas de `lg` también en `xl` (5 → 3 + 2, 9 → 3 × 3).
+  const lonelyAtFour = collections.length > 4 && collections.length % 4 === 1 && collections.length % 3 !== 1;
   const grid = (
     <ul
       className={
         compact
           ? "grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6"
-          : "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          : `grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 ${lonelyAtFour ? "" : "xl:grid-cols-4"}`
       }
     >
       {collections.map((collection) => (
