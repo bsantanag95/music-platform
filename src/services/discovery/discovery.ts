@@ -11,12 +11,13 @@ import {
   review,
   userList,
   userListFeatured,
+  userListItem,
   type GenreRow,
 } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { ReleaseGroupCategorySchema, type ReleaseGroup, type ReleaseGroupCategory } from "@/lib/api/schemas";
 import { isCoverResolved } from "@/services/catalog/cover-resolution";
-import { type CollectionFamily } from "./collections/families";
+import { COLLECTION_FAMILIES, type CollectionFamily } from "./collections/families";
 import { escapeLike } from "@/services/catalog/search/normalize";
 import { GENRE_FAMILIES, type FamilyKey, type FamilyTier } from "@/services/genres/families";
 import { albumInFamily, albumInGenreTree, findStyleGenreBySlug, parseFamilyKey } from "@/services/genres/read";
@@ -168,7 +169,16 @@ export function featuredActiveCondition(): SQL {
 }
 
 /**
- * Condición completa del riel de colecciones destacadas: lista pública, visible, estándar, con fila vigente y, si
+ * La lista tiene al menos un álbum. Una colección sin álbumes no se lista en ninguna superficie (openspec:
+ * redesign-collections-hub): se resuelve aquí, en la consulta, y no filtrando después, para que el tope del riel
+ * siga lleno. El detalle por enlace directo no usa esta condición.
+ */
+export function hasAlbumsCondition(): SQL {
+  return sql`exists (select 1 from ${userListItem} where ${userListItem.listId} = ${userList.id} and ${userListItem.releaseGroupId} is not null)`;
+}
+
+/**
+ * Condición completa del riel de colecciones destacadas: lista pública, visible, estándar, con álbumes, con fila vigente y, si
  * es curada, oficial no retirada (retirar una lista oficial la saca del riel sin borrar su fila; las generadas
  * por plantilla no son oficiales). Openspec: manage-explore-featured-console.
  */
@@ -177,6 +187,7 @@ export function featuredRailCondition(): SQL {
     eq(userList.audience, "public"),
     eq(userList.kind, "standard"),
     eq(userList.moderationStatus, "visible"),
+    hasAlbumsCondition(),
     featuredActiveCondition(),
     sql`(${userListFeatured.source} = 'template' or (${userList.isOfficial} and ${userList.officialWithdrawnAt} is null))`,
   ) as SQL;
@@ -263,6 +274,29 @@ export async function listCollectionsHub(): Promise<CollectionsHub> {
   return { collections: await listCollections(HUB_COLLECTION_LIMIT) };
 }
 
+/**
+ * Familias con al menos una colección listable, vigente o archivada, en el orden del registro de familias. Alimenta el
+ * filtro de la página de colecciones: solo ofrece los tipos que tienen algo que mostrar. Mismas condiciones que las
+ * listas (pública, visible, con álbumes; las archivadas, solo las automáticas).
+ */
+export async function listCollectionFamilies(): Promise<CollectionFamily[]> {
+  const rows = await db
+    .selectDistinct({ family: userListFeatured.family })
+    .from(userListFeatured)
+    .innerJoin(userList, eq(userList.id, userListFeatured.listId))
+    .where(
+      and(
+        eq(userList.audience, "public"),
+        eq(userList.kind, "standard"),
+        eq(userList.moderationStatus, "visible"),
+        hasAlbumsCondition(),
+        sql`(${featuredRailCondition()}) or (${userListFeatured.source} = 'template' and ${userListFeatured.expiresAt} <= now())`,
+      ),
+    );
+  const present = new Set<string>(rows.map((row) => row.family));
+  return COLLECTION_FAMILIES.filter((family) => present.has(family));
+}
+
 /** Condición de familia: desde la migración 0071 la familia está en la fila, sin pasar por el registro. */
 function familyCondition(family: CollectionFamily): SQL {
   return eq(userListFeatured.family, family) as SQL;
@@ -286,6 +320,7 @@ export async function listCollectionArchive(
         eq(userList.audience, "public"),
         eq(userList.kind, "standard"),
         eq(userList.moderationStatus, "visible"),
+        hasAlbumsCondition(),
         sql`${userListFeatured.expiresAt} <= now()`,
         options.family ? familyCondition(options.family) : undefined,
       ),

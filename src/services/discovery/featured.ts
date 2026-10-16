@@ -33,7 +33,8 @@ export type FeaturedStatus =
   | "expired"
   | "withdrawn"
   | "hidden"
-  | "not_public";
+  | "not_public"
+  | "empty";
 
 export interface FeaturedAdminRow {
   listId: string;
@@ -138,6 +139,7 @@ export async function listFeaturedAdmin(now = new Date()): Promise<FeaturedAdmin
     else if (row.moderationStatus !== "visible") status = "hidden";
     else if (row.audience !== "public") status = "not_public";
     else if (row.source === "curated" && (!row.isOfficial || row.officialWithdrawnAt)) status = "withdrawn";
+    else if (Number(row.itemCount) === 0) status = "empty";
     else status = inRail.has(row.listId) ? "in_rail" : "beyond_limit";
     return {
       listId: row.listId,

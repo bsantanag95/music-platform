@@ -283,6 +283,75 @@ describe("CollectionRail", () => {
     expect(within(screen.getByRole("link", { name: /Mejores debuts/ })).getByText("Familia discovery")).toBeInTheDocument();
   });
 
+  it("la frase de contexto va bajo el título y sustituye a la descripción", () => {
+    renderWithIntl(
+      <CollectionRail
+        heading="Colecciones"
+        collections={[{ ...generated, description: "Descripción larga" }]}
+        curatorUsername="exploracion"
+        itemsLabel={String}
+        contextFor={() => "Cumplen años en octubre de 2026 · de 20 a 70 años"}
+      />,
+    );
+
+    const card = screen.getByRole("link", { name: /Cumplen años en octubre de 2026/ });
+    expect(within(card).getByText("Cumplen años en octubre de 2026 · de 20 a 70 años")).toBeInTheDocument();
+    expect(within(card).queryByText("Descripción larga")).toBeNull();
+  });
+
+  it("una colección sin frase de contexto conserva su descripción", () => {
+    renderWithIntl(
+      <CollectionRail
+        heading="Colecciones"
+        collections={[{ ...generated, description: "Descripción larga" }]}
+        curatorUsername="exploracion"
+        itemsLabel={String}
+        contextFor={() => undefined}
+      />,
+    );
+
+    expect(screen.getByText("Descripción larga")).toBeInTheDocument();
+  });
+
+  it("con `compact` usa la rejilla de tarjetas densas, sin descripción", () => {
+    const { container } = renderWithIntl(
+      <CollectionRail
+        heading="Anteriores"
+        collections={[{ ...generated, description: "Descripción larga" }]}
+        curatorUsername="exploracion"
+        itemsLabel={String}
+        compact
+      />,
+    );
+
+    expect(container.querySelector("ul")?.className).toContain("xl:grid-cols-6");
+    expect(screen.queryByText("Descripción larga")).toBeNull();
+  });
+
+  it("con `bare` pinta solo la rejilla, sin sección ni encabezado", () => {
+    const { container } = renderWithIntl(
+      <CollectionRail heading="Vigentes" collections={[generated]} curatorUsername="exploracion" itemsLabel={String} bare />,
+    );
+
+    expect(container.querySelector("section")).toBeNull();
+    expect(screen.queryByRole("heading", { level: 2 })).toBeNull();
+    expect(screen.getByRole("link", { name: /Cumplen años en octubre/ })).toBeInTheDocument();
+  });
+
+  it("con un mensaje de vacío y sin colecciones lo muestra en lugar de omitirse", () => {
+    renderWithIntl(
+      <CollectionRail
+        heading="Anteriores"
+        collections={[]}
+        curatorUsername="exploracion"
+        itemsLabel={String}
+        emptyMessage={<span>No hay anteriores de este tipo</span>}
+      />,
+    );
+
+    expect(screen.getByText("No hay anteriores de este tipo")).toBeInTheDocument();
+  });
+
   it("en disposición de riel desplazable ofrece las flechas y una sola fila", () => {
     const many = Array.from({ length: 10 }, (_, i) => ({
       id: `c${i}`,

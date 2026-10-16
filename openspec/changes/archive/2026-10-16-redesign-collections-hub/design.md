@@ -36,7 +36,8 @@ px y su marco 264 px, y con el mouse encima el paso sube a 52 px (304 px): se sa
    listadas en un solo lote (`user_list_item` ordenado por posición) y ejecuta `presentCollection` por colección en paralelo,
    usando solo el `summary`. Cada presentador ya hace consultas por lote (no por disco), así que el costo es de uno a tres
    consultas por colección, acotado por un tope de resúmenes (`HUB_SUMMARY_LIMIT`, 24): fuera del tope la tarjeta no lleva
-   línea. Un presentador que falla o se abstiene ya cae a la familia o a vacío (`resolveContext`); aquí además se aísla el
+   línea. Solo corren los presentadores propios de una plantilla: los de familia no producen resumen y harían una lectura
+   de fechas por colección para nada, así que una curada o una plantilla sin presentador propio no lleva línea. Un presentador que falla o se abstiene ya cae a la familia o a vacío (`resolveContext`); aquí además se aísla el
    fallo de una colección del resto. Solo las listas de álbumes tienen presentador (igual que el detalle). Se descarta
    guardar el resumen en la fila al generar: congelaría un texto que hoy es dato localizable (ADR 0039) y no cubre las
    curadas.

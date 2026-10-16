@@ -14,7 +14,8 @@ escenario de la tarjeta y el archivo muestra filtros aunque esté vacío.
 - **Una sola rejilla de vigentes** en vez de una sección por familia: el tipo lo dice el sello de cada tarjeta y pasa a ser
   un **filtro** (`?familia=`) que se aplica a vigentes y archivo a la vez. Solo se ofrecen los tipos que tienen contenido.
 - **Frase de contexto en cada tarjeta** de la página (el resumen del presentador: "Cumplen años en octubre de 2026 · de 20
-  a 70 años", "Grammy 2025 · 2 de febrero de 2025"), una sola línea, sin tocar el contrato de los presentadores.
+  a 70 años", "Grammy 2025 · 2 de febrero de 2025"), hasta dos líneas y en lugar de la descripción, sin tocar el contrato de los
+  presentadores.
 - **Cabecera con una frase que explica qué es una colección** frente a una lista de personas, con enlace a Listas.
 - **Colecciones sin álbumes no se listan** en ninguna superficie (página, riel de `/explore`, Inicio anónima y archivo).
 - **La pila de carátulas cabe en su escenario**: cinco fundas en la tarjeta de la página, con el abanico abierto al pasar el

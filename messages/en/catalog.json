@@ -71,14 +71,15 @@
       "awards": "Awards",
       "releases": "Releases",
       "discovery": "Discovery",
-      "rankings": "What people rate highest"
+      "rankings": "Top rated"
     },
     "collectionsHub": {
       "pageTitle": "Collections",
       "heading": "Collections",
-      "description": "Every collection on the platform, by kind, current and past.",
+      "description": "Platform selections with a rule behind them: anniversaries, awards, new releases and finds. Lists made by people live in <lists>Lists</lists>.",
       "currentHeading": "Current",
-      "currentDescription": "What is on Explore right now, grouped by kind.",
+      "openCollection": "Open collection",
+      "archiveEmptyAll": "See all",
       "archiveHeading": "Previous",
       "archiveDescription": "Automatic collections that already left the rail. They remain available.",
       "familyFilterLabel": "Filter by type",

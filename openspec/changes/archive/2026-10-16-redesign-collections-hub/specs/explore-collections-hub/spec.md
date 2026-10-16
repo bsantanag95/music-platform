@@ -6,9 +6,8 @@ El sistema SHALL exponer una vista pública en `/{locale}/explore/collections`, 
 mismo interruptor de Explorar que `/explore`. La página SHALL abrir con una cabecera que explique en una frase qué es una
 colección (selección de la plataforma con un criterio detrás) frente a una lista de personas, con enlace a Listas, y SHALL
 componerse, en este orden, de: una barra de filtro por tipo, el bloque de **vigentes** y el **archivo** de las automáticas
-vencidas. El bloque de vigentes SHALL mostrar, sin filtro activo y con más de una colección, la primera de ellas
-(orden editorial del riel de `/explore`) como **colección destacada** y el resto en **una sola rejilla**, sin separar por
-familia ni por origen. SHALL omitir los bloques sin contenido. Cada tarjeta SHALL enlazar al detalle público de su
+vencidas. El bloque de vigentes SHALL mostrar, sin filtro activo, la primera de ellas (orden editorial del riel de
+`/explore`) como **colección destacada** y el resto en **una sola rejilla**, sin separar por familia ni por origen. SHALL omitir los bloques sin contenido. Cada tarjeta SHALL enlazar al detalle público de su
 colección. La página SHALL NOT personalizar su contenido por la persona que la visita.
 
 #### Scenario: Visita pública sin filtro
@@ -71,8 +70,9 @@ archivo a la vez y SHALL conservarse al paginar el archivo. Un valor de `familia
 
 ### Requirement: Tarjeta de colección con frase de contexto
 
-Cada tarjeta de las vigentes de la página de colecciones SHALL mostrar, bajo el título, una sola línea con el resumen que su
-presentador (ADR 0039) produce para esa colección, localizado en el idioma activo. Una colección sin resumen (curada, sin
+Cada tarjeta de las vigentes de la página de colecciones SHALL mostrar, bajo el título, una frase (hasta dos líneas) con el
+resumen que su presentador (ADR 0039) produce para esa colección, localizado en el idioma activo. La frase SHALL sustituir
+a la descripción de la colección en esa tarjeta. Una colección sin resumen (curada, sin
 presentador que lo produzca o con presentador que falla o se abstiene) SHALL mostrarse sin esa línea, sin error. Calcular
 los resúmenes SHALL NOT requerir una consulta por álbum: SHALL leer los álbumes de todas las colecciones listadas en un
 solo lote y ejecutar un presentador por colección.

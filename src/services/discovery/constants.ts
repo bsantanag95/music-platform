@@ -94,5 +94,8 @@ export const COLLECTION_RAIL_LIMIT = 10;
 /** Techo de lectura de las colecciones vigentes en `/explore/collections`: seguridad, no criterio editorial. */
 export const HUB_COLLECTION_LIMIT = 120;
 
+/** Cuántas colecciones del hub calculan su frase de contexto (un presentador por colección); el resto no lleva línea. */
+export const HUB_SUMMARY_LIMIT = 24;
+
 /** Colecciones por página del archivo de `/explore/collections`. */
 export const ARCHIVE_PAGE_SIZE = 24;

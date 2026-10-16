@@ -16,6 +16,7 @@ import {
   PUBLIC_LIST_COLUMNS,
 } from "./discovery";
 import { activeUserCondition } from "@/services/auth/account-status";
+import { notFeaturedCollectionCondition } from "@/services/discovery/collections/conditions";
 
 /**
  * Sección "Destacadas": las listas editoriales oficiales publicadas de `@exploracion`, de la más reciente a la
@@ -40,6 +41,8 @@ export async function listFeaturedLists(readerId: string | null) {
         activeUserCondition(),
         isNull(userList.officialWithdrawnAt),
         eq(userList.kind, "standard"),
+        // Una oficial destacada en Explorar es una colección, no una lista de la comunidad (ADR 0038).
+        notFeaturedCollectionCondition(),
       ),
     )
     .orderBy(desc(userList.officialPublishedAt));

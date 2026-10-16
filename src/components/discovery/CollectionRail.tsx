@@ -1,10 +1,9 @@
 import type { ReactNode } from "react";
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { collectionHref, listHref } from "@/lib/catalog-links";
-import { collectionTitle } from "@/services/discovery/collections/titles";
 import type { FeaturedCollection } from "@/services/discovery/discovery";
 import type { CollectionFamily } from "@/services/discovery/collections/families";
+import { collectionLinkOf, collectionTitleOf } from "./collection-links";
 import { FAMILY_STAMP_CLASS, SleeveStack } from "./CollectionSleeves";
 import { RailScroller } from "./RailScroller";
 import { SectionHeader } from "./SectionHeader";
@@ -25,15 +24,21 @@ interface CollectionRailProps<T extends FeaturedCollection> {
   familyLabel?: (family: CollectionFamily) => string;
   /** Línea extra bajo el conteo (en el archivo: "Hasta 11 oct 2026"). */
   noteFor?: (collection: T) => string | undefined;
+  /** Frase de contexto bajo el título (la página de colecciones: el resumen del presentador); sustituye a la descripción. */
+  contextFor?: (collection: T) => string | undefined;
   /** Controles bajo el encabezado (en el archivo: el filtro por familia). */
   toolbar?: ReactNode;
   /** Con colecciones vacías, en vez de omitir la sección muestra este mensaje (el archivo vacío). */
-  emptyMessage?: string;
+  emptyMessage?: ReactNode;
   /**
    * `grid` (por defecto) para recorrer todo: la página de colecciones y el archivo. `scroll` para el riel de
    * `/explore`, una fila desplazable con flechas, que resume sin alargar la portada (ADR 0038).
    */
   layout?: "grid" | "scroll";
+  /** Solo con `grid`: tarjetas densas, seis por fila (el archivo), en vez de las de cuatro columnas. */
+  compact?: boolean;
+  /** Solo la rejilla, sin sección ni encabezado: para colocarla dentro de otra sección que ya tiene el suyo. */
+  bare?: boolean;
 }
 
 /**
@@ -56,22 +61,17 @@ export function CollectionRail<T extends FeaturedCollection>({
   seeAll,
   familyLabel,
   noteFor,
+  contextFor,
   toolbar,
   emptyMessage,
   layout = "grid",
+  compact = false,
+  bare = false,
 }: CollectionRailProps<T>) {
   const locale = useLocale();
   if (collections.length === 0 && !emptyMessage) return null;
-  // Las colecciones generadas se muestran con el título del idioma y viven en su propia ruta bajo Explorar; las
-  // curadas son listas de la cuenta curadora y conservan su título y su ruta de lista.
-  const titleOf = (collection: T) =>
-    collection.source === "template"
-      ? collectionTitle(collection.templateKey, collection.periodKey, locale, collection.title)
-      : collection.title;
-  const hrefOf = (collection: T) =>
-    collection.source === "template"
-      ? collectionHref(titleOf(collection), collection.id)
-      : listHref(curatorUsername, collection.title, collection.id);
+  const titleOf = (collection: T) => collectionTitleOf(collection, locale);
+  const hrefOf = (collection: T) => collectionLinkOf(collection, locale, curatorUsername);
 
   const headingId = `${id}-heading`;
   const header = (
@@ -79,6 +79,7 @@ export function CollectionRail<T extends FeaturedCollection>({
   );
   const card = (collection: T, dense = false) => {
     const family = familyLabel ? familyLabel(collection.family) : null;
+    const context = contextFor?.(collection);
     return (
       <Link
         href={hrefOf(collection)}
@@ -90,7 +91,7 @@ export function CollectionRail<T extends FeaturedCollection>({
             un paso más oscuro con hairline) para que el abanico lea como un bloque de arte, no como
             miniaturas sueltas flotando en el relleno de la tarjeta. */}
         <div
-          className={`relative flex w-full items-center justify-center rounded-md border border-ink-border bg-ink ${
+          className={`relative flex w-full items-center justify-center overflow-hidden rounded-md border border-ink-border bg-ink ${
             dense ? "py-3" : "py-5"
           }`}
         >
@@ -124,9 +125,10 @@ export function CollectionRail<T extends FeaturedCollection>({
               →
             </span>
           </div>
+          {context ? <p className="line-clamp-2 font-body text-sm text-paper-muted">{context}</p> : null}
           {/* En el riel la descripción se omite: el título ya dice qué es la colección y así entran 6 por fila.
               La descripción completa vive en la página de colecciones y en el detalle. */}
-          {!dense && collection.description ? (
+          {!dense && !context && collection.description ? (
             <p className="line-clamp-2 font-body text-sm text-paper-muted">{collection.description}</p>
           ) : null}
           <span className="font-data text-xs text-paper-muted">{itemsLabel(collection.itemCount)}</span>
@@ -162,6 +164,20 @@ export function CollectionRail<T extends FeaturedCollection>({
   // Pared de fichas: cuatro columnas desde `xl`, siempre la misma ficha vertical, tenga la familia 1
   // colección o 10 (antes una familia con pocas colecciones mostraba una ficha horizontal ancha aparte;
   // una sola forma es más fácil de reconocer que dos).
+  const grid = (
+    <ul
+      className={
+        compact
+          ? "grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6"
+          : "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      }
+    >
+      {collections.map((collection) => (
+        <li key={collection.id}>{card(collection, compact)}</li>
+      ))}
+    </ul>
+  );
+  if (bare) return grid;
   return (
     <section id={id} aria-labelledby={headingId} className="flex w-full scroll-mt-24 flex-col gap-3">
       {header}
@@ -171,11 +187,7 @@ export function CollectionRail<T extends FeaturedCollection>({
           {emptyMessage}
         </p>
       ) : null}
-      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {collections.map((collection) => (
-          <li key={collection.id}>{card(collection)}</li>
-        ))}
-      </ul>
+      {grid}
     </section>
   );
 }

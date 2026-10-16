@@ -2,17 +2,18 @@ import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 
 /** Cuántas fundas muestra la pila de cada tamaño (el servicio trae hasta 6 carátulas). */
-const STACK_LIMIT = { dense: 3, card: 6, hero: 6 } as const;
+const STACK_LIMIT = { dense: 3, card: 5, hero: 6 } as const;
 
 /**
  * Tamaños de la pila. `dense`: la tarjeta del riel de `/explore` (entran 6 por fila, ADR 0038). `card`: la tarjeta de
- * la página de colecciones. `hero`: la cabecera del detalle de una colección. El solapamiento de cada tamaño es
+ * la página de colecciones: 5 fundas de 80 px con paso de 36 px (224 px; 256 px con el abanico abierto), que caben en el
+ * marco más angosto de la rejilla (264 px a 4 columnas). `hero`: la cabecera del detalle de una colección. El solapamiento de cada tamaño es
  * proporcional al tamaño de sus fundas; el abanico se abre un poco al pasar el mouse (solo desde `lg`, y solo dentro de una
  * tarjeta, que es el `group`).
  */
 const STACK_SIZE = {
   dense: "size-14 [&:not(:first-child)]:-ml-8 lg:group-hover:[&:not(:first-child)]:-ml-6",
-  card: "size-20 [&:not(:first-child)]:-ml-11 lg:size-24 lg:[&:not(:first-child)]:-ml-14 lg:group-hover:[&:not(:first-child)]:-ml-11",
+  card: "size-20 [&:not(:first-child)]:-ml-11 lg:group-hover:[&:not(:first-child)]:-ml-9",
   hero: "size-24 [&:not(:first-child)]:-ml-14 sm:size-32 sm:[&:not(:first-child)]:-ml-20 lg:size-36 lg:[&:not(:first-child)]:-ml-24",
 } as const;
 

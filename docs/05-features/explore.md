@@ -213,11 +213,19 @@ El modelo que rige, separado por de quién es la voz:
   `PUT /api/admin/editorial/featured/order` recibe solo `listIds` (ya no `group`) con todas las vigentes. Mover el
   orden mueve también las automáticas, y la próxima corrida de una plantilla entra al final; `weight` sigue sirviendo
   para subir una sin reordenar.
-- **`/explore/collections`:** dos bloques. Las vigentes agrupadas por familia (hasta `HUB_COLLECTION_LIMIT`, 120), con
-  las curadas dentro del grupo de su familia, y el **archivo** de las automáticas vencidas (`expires_at` pasado, lista
-  aún pública y visible): la más reciente primero, 24 por página (`?pagina=`), filtrable por `?familia=`. El archivo
-  sigue acotado a las automáticas: vencer es un concepto de plantilla, y una colección manual que deja de estar
-  destacada conserva su lista y su URL. Mismo interruptor `EXPLORE_ENABLED` que `/explore`.
+- **`/explore/collections`** (cambio `redesign-collections-hub`, [ADR 0040](../02-architecture/adr/0040-pagina-de-colecciones-destacada-filtro-y-resumenes.md)):
+  cabecera que explica qué es una colección (con enlace a Listas), barra de **filtro por tipo** (`?familia=`, solo las
+  familias con contenido; filtra vigentes y archivo a la vez) y dos bloques. Las **vigentes** (hasta
+  `HUB_COLLECTION_LIMIT`, 120): sin filtro, la primera del orden editorial —la misma del riel de `/explore`— como
+  **colección destacada** grande (`FeaturedCollection`) y el resto en **una sola rejilla** de cuatro columnas, sin
+  agrupar por familia (la dice el sello). Cada tarjeta lleva la **frase de contexto** del presentador de su plantilla
+  (`listCollectionSummaries`: un lote de álbumes y un presentador por colección, tope `HUB_SUMMARY_LIMIT`, 24), que sustituye
+  a la descripción; una curada o una plantilla sin presentador propio no la lleva. El **archivo** de las automáticas
+  vencidas (`expires_at` pasado, lista aún pública y visible): la más reciente primero, 24 por página (`?pagina=`), en
+  tarjetas densas y omitido si está vacío. El archivo sigue acotado a las automáticas: vencer es un concepto de plantilla, y
+  una colección manual que deja de estar destacada conserva su lista y su URL. **Una colección sin álbumes no se lista** en
+  ninguna superficie (la consola la marca `empty`); su detalle por enlace directo sigue abriéndose. Mismo interruptor
+  `EXPLORE_ENABLED` que `/explore`.
 - **No se fusiona con Listas:** `/lists` → Destacadas conserva solo las **listas editoriales oficiales** publicadas,
   por fecha de publicación, y su encabezado enlaza a `/explore/collections`. Ninguna colección aparece ahí, ni las
   generadas ni las curadas: una colección no es una lista.

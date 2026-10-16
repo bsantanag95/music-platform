@@ -547,6 +547,7 @@ export const FeaturedStatusSchema = z.enum([
   "withdrawn",
   "hidden",
   "not_public",
+  "empty",
 ]);
 export type FeaturedStatus = z.infer<typeof FeaturedStatusSchema>;
 

@@ -69,6 +69,7 @@ import {
 import { COLLECTION_TEMPLATES, EVERGREEN, findTemplate, type CollectionTemplate } from "../src/services/discovery/collections/templates";
 import {
   listCollectionArchive,
+  listCollectionFamilies,
   listCollections,
   listCollectionsHub,
   listFeaturedCollections,
@@ -80,6 +81,7 @@ import { listSavedLists, saveList } from "../src/services/lists/saved-lists";
 import { findGeneratedCollection, generatedRefsFor } from "../src/services/discovery/collections/generated";
 import { collectionTitle } from "../src/services/discovery/collections/titles";
 import { presentCollection } from "../src/services/discovery/collections/presenters";
+import { listCollectionSummaries } from "../src/services/discovery/collections/summaries";
 import { presentList } from "../src/lib/list-presentation";
 
 assertSmokeAllowed();
@@ -377,7 +379,8 @@ async function main() {
     const adminId = await makeUser("admin", "admin");
     const authorId = await makeUser("author", "editorial_curator");
 
-    const official = async (title: string, over: Partial<typeof userList.$inferInsert> = {}) => {
+    // Una colección sin álbumes no se lista (redesign-collections-hub): las oficiales de prueba llevan uno, salvo que se pida vacía.
+    const official = async (title: string, over: Partial<typeof userList.$inferInsert> = {}, withAlbum = true) => {
       const [list] = await db
         .insert(userList)
         .values({
@@ -391,6 +394,7 @@ async function main() {
           ...over,
         })
         .returning({ id: userList.id });
+      if (withAlbum) await db.insert(userListItem).values({ listId: list!.id, releaseGroupId: albumIds[0]!, position: 1 });
       return list!.id;
     };
     const actions = async (listId: string) =>
@@ -440,6 +444,18 @@ async function main() {
       ["in_rail", "beyond_limit"].includes(rowA?.status ?? "") && rowA?.source === "curated" && rowA?.family === "discovery",
       "una oficial destacada entra al riel como `curated`, con la familia elegida",
     );
+    // Una colección sin álbumes no se lista en ninguna superficie y la consola lo dice (redesign-collections-hub).
+    const listEmpty = await official("Smoke oficial vacía", {}, false);
+    await featureList(adminId, listEmpty, { family: "awards" });
+    check((await rowOf(listEmpty))?.status === "empty", "la consola marca `empty` una colección vigente sin álbumes");
+    check(!(await listCollections(100)).some((c) => c.id === listEmpty), "una colección vacía no entra en el riel de `/explore`");
+    check(!(await listCollectionsHub()).collections.some((c) => c.id === listEmpty), "ni en la página de colecciones");
+    check(!(await listFeaturedCollections()).some((c) => c.id === listEmpty), "ni en la Inicio anónima");
+    await db.insert(userListItem).values({ listId: listEmpty, releaseGroupId: albumIds[0]!, position: 1 });
+    check((await listCollections(100)).some((c) => c.id === listEmpty), "al recibir un álbum entra en el riel");
+    check((await listCollectionFamilies()).includes("awards"), "las familias con contenido incluyen la de una colección con álbumes");
+    await unfeatureList(adminId, listEmpty);
+    check(!(await listCollectionFamilies()).includes("awards") || (await listCollections(100)).some((c) => c.family === "awards"), "una familia sin colecciones deja de ofrecerse");
     check(!(await listEligibleForFeature()).some((l) => l.id === listA), "una ya destacada deja de ofrecerse");
     check((await actions(listA)).join() === "feature", "destacar registra `feature` en editorial_action");
     await featureList(adminId, listA, { family: "discovery" }); // idempotente: no duplica
@@ -566,6 +582,22 @@ async function main() {
       "una lista que dejó de ser pública sale del archivo",
     );
     await db.update(userList).set({ audience: "public" }).where(eq(userList.id, octoberId));
+
+    // Una vencida sin álbumes tampoco entra en el archivo.
+    await db.delete(userListItem).where(eq(userListItem.listId, octoberId));
+    check(
+      !(await listCollectionArchive({ family: "discovery" })).collections.some((c) => c.id === octoberId),
+      "una colección vencida sin álbumes sale del archivo",
+    );
+    await db.insert(userListItem).values(albumIds.slice(0, 6).map((releaseGroupId, index) => ({ listId: octoberId, releaseGroupId, position: index + 1 })));
+
+    // Resúmenes del hub: un lote de álbumes y un presentador por colección.
+    const summaries = await listCollectionSummaries(hub.collections);
+    check(
+      [...summaries.keys()].every((id) => hub.collections.find((c) => c.id === id)?.source === "template"),
+      "solo las colecciones generadas con presentador propio llevan resumen",
+    );
+    check(!summaries.has(listB), "una curada no lleva resumen");
 
     // Quitar.
     await unfeatureList(adminId, listA);

@@ -2,12 +2,17 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Link, redirect } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { CollectionFamilyFilter, type FamilyFilterOption } from "@/components/discovery/CollectionFamilyFilter";
 import { CollectionRail } from "@/components/discovery/CollectionRail";
+import { collectionLinkOf, collectionTitleOf } from "@/components/discovery/collection-links";
+import { renderRef, type ContextTranslator } from "@/components/discovery/collection-context-render";
+import { FeaturedCollection } from "@/components/discovery/FeaturedCollection";
 import { SectionHeader } from "@/components/discovery/SectionHeader";
 import { isExploreEnabled } from "@/lib/config/discovery";
-import { COLLECTION_FAMILIES, isCollectionFamily, type CollectionFamily } from "@/services/discovery/collections/families";
+import { isCollectionFamily, type CollectionFamily } from "@/services/discovery/collections/families";
+import { listCollectionSummaries } from "@/services/discovery/collections/summaries";
 import { CURATOR_USERNAME } from "@/services/discovery/constants";
-import { listCollectionArchive, listCollectionsHub } from "@/services/discovery/discovery";
+import { listCollectionArchive, listCollectionFamilies, listCollectionsHub } from "@/services/discovery/discovery";
 
 interface CollectionsPageProps {
   params: Promise<{ locale: string }>;
@@ -21,18 +26,20 @@ export async function generateMetadata({ params }: CollectionsPageProps): Promis
 }
 
 const BASE = "/explore/collections";
+const TEXT_LINK = "text-paper underline decoration-ink-border underline-offset-4 hover:text-amber";
 
-function archiveHref(family: CollectionFamily | undefined, page: number): string {
+/** Dirección de la vista: filtro y página del archivo. El filtro cambia vigentes y archivo; la página, solo el archivo. */
+function viewHref(family: CollectionFamily | undefined, page = 1, anchor = ""): string {
   const query = new URLSearchParams();
   if (family) query.set("familia", family);
   if (page > 1) query.set("pagina", String(page));
   const text = query.toString();
-  return `${BASE}${text ? `?${text}` : ""}#anteriores`;
+  return `${BASE}${text ? `?${text}` : ""}${anchor}`;
 }
 
-// Página de colecciones (openspec: split-explore-collections, ADR 0036): la selección editorial vigente, las
-// automáticas vigentes por familia y el archivo de las que ya salieron del riel. Sin personalización: la misma
-// composición para todas las personas.
+// Página de colecciones (openspec: redesign-collections-hub, ADR 0040): una colección destacada, una sola rejilla con
+// el resto de las vigentes y el archivo de las que ya salieron del riel. El tipo es un filtro que se aplica a vigentes
+// y archivo, no la estructura de la página. Sin personalización: la misma composición para todas las personas.
 export default async function CollectionsPage({ params, searchParams }: CollectionsPageProps) {
   const { locale } = await params;
   if (!isExploreEnabled()) redirect({ href: "/", locale });
@@ -40,33 +47,44 @@ export default async function CollectionsPage({ params, searchParams }: Collecti
   const t = await getTranslations("catalog.explore");
   const tHub = await getTranslations("catalog.explore.collectionsHub");
   const tCommon = await getTranslations("common");
+  const tContext = (await getTranslations("catalog.explore.collectionContext")) as unknown as ContextTranslator;
   const raw = await searchParams;
   const family = isCollectionFamily(raw.familia) ? raw.familia : undefined;
   const page = Math.max(1, Number.parseInt(raw.pagina ?? "1", 10) || 1);
 
-  const [hub, archive] = await Promise.all([listCollectionsHub(), listCollectionArchive({ family, page })]);
-  const dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
+  const [hub, archive, families] = await Promise.all([
+    listCollectionsHub(),
+    listCollectionArchive({ family, page }),
+    listCollectionFamilies(),
+  ]);
   const itemsLabel = (count: number) => t("collectionItems", { count });
   const familyLabel = (value: CollectionFamily) => t(`collectionFamilies.${value}`);
+  const dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
 
-  // Un solo bloque de vigentes, agrupado por familia: las curadas a mano y las generadas conviven en el grupo
-  // de su familia, sin rótulo que las distinga (ADR 0038).
-  const currentByFamily = COLLECTION_FAMILIES.map((value) => ({
-    family: value,
-    collections: hub.collections.filter((collection) => collection.family === value),
-  })).filter((group) => group.collections.length > 0);
+  // Con filtro, solo esa familia y sin destacada (la persona ya eligió qué mirar); sin filtro, la primera del orden
+  // editorial —el mismo del riel de `/explore`— abre la página y el resto va en una sola rejilla.
+  const current = family ? hub.collections.filter((collection) => collection.family === family) : hub.collections;
+  const featured = family ? undefined : current[0];
+  const rest = featured ? current.slice(1) : current;
 
-  const chip =
-    "inline-flex shrink-0 items-center rounded-full border px-3 py-1 font-data text-xs transition-colors focus-visible:border-amber";
-  const chipOff = `${chip} border-ink-border text-paper-muted hover:border-amber hover:text-paper`;
-  const chipOn = `${chip} border-amber text-paper`;
+  const summaries = await listCollectionSummaries(current);
+  const contextFor = (collection: { id: string }) => {
+    const message = summaries.get(collection.id);
+    return message ? (renderRef(message, tContext, locale) ?? undefined) : undefined;
+  };
+
+  const filterOptions: FamilyFilterOption[] = [
+    { value: null, label: tHub("allFamilies"), href: viewHref(undefined) },
+    ...families.map((value) => ({ value, label: familyLabel(value), href: viewHref(value) })),
+  ];
   const pageLink =
     "inline-flex items-center gap-1 rounded-full border border-ink-border px-4 py-2 font-data text-xs text-paper-muted transition-colors hover:border-amber hover:text-paper";
   const pageDisabled =
     "inline-flex items-center gap-1 rounded-full border border-ink-border px-4 py-2 font-data text-xs text-paper-muted opacity-40";
+  const archiveHref = (target: number) => viewHref(family, target, "#anteriores");
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col items-start gap-12 px-4 py-12">
+    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col items-start gap-10 px-4 py-12">
       <div className="flex w-full flex-col gap-4">
         <Breadcrumbs
           items={[
@@ -76,23 +94,46 @@ export default async function CollectionsPage({ params, searchParams }: Collecti
           ]}
         />
         <h1 className="font-display text-3xl text-paper">{tHub("heading")}</h1>
-        <p className="max-w-2xl font-body text-paper-muted">{tHub("description")}</p>
+        <p className="max-w-2xl font-body text-paper-muted">
+          {tHub.rich("description", {
+            lists: (chunks) => (
+              <Link href="/lists" className={TEXT_LINK}>
+                {chunks}
+              </Link>
+            ),
+          })}
+        </p>
+        <CollectionFamilyFilter label={tHub("familyFilterLabel")} options={filterOptions} active={family} />
       </div>
 
-      {currentByFamily.length > 0 ? (
-        <div id="vigentes" className="flex w-full scroll-mt-24 flex-col gap-8">
-          <SectionHeader heading={tHub("currentHeading")} description={tHub("currentDescription")} />
-          {currentByFamily.map((group) => (
+      {current.length > 0 ? (
+        <section id="vigentes" aria-labelledby="vigentes-heading" className="flex w-full scroll-mt-24 flex-col gap-5">
+          <SectionHeader heading={tHub("currentHeading")} headingId="vigentes-heading" />
+          {featured ? (
+            <FeaturedCollection
+              href={collectionLinkOf(featured, locale, CURATOR_USERNAME)}
+              title={collectionTitleOf(featured, locale)}
+              description={featured.description}
+              context={contextFor(featured)}
+              coverThumbs={featured.coverThumbs}
+              familyLabel={familyLabel(featured.family)}
+              itemsLabel={itemsLabel(featured.itemCount)}
+              openLabel={tHub("openCollection")}
+            />
+          ) : null}
+          {rest.length > 0 ? (
             <CollectionRail
-              key={group.family}
-              id={`familia-${group.family}`}
-              heading={familyLabel(group.family)}
-              collections={group.collections}
+              id="vigentes-rejilla"
+              heading={tHub("currentHeading")}
+              collections={rest}
               curatorUsername={CURATOR_USERNAME}
               itemsLabel={itemsLabel}
+              familyLabel={familyLabel}
+              contextFor={contextFor}
+              bare
             />
-          ))}
-        </div>
+          ) : null}
+        </section>
       ) : null}
 
       <CollectionRail
@@ -104,34 +145,23 @@ export default async function CollectionsPage({ params, searchParams }: Collecti
         itemsLabel={itemsLabel}
         familyLabel={familyLabel}
         noteFor={(collection) => tHub("endedOn", { date: dateFormat.format(new Date(collection.endedAt)) })}
-        emptyMessage={family ? tHub("archiveEmptyFamily") : tHub("archiveEmpty")}
-        toolbar={
-          <nav aria-label={tHub("familyFilterLabel")} className="flex flex-wrap gap-1.5">
-            <Link
-              href={archiveHref(undefined, 1)}
-              aria-current={family === undefined ? "page" : undefined}
-              className={family === undefined ? chipOn : chipOff}
-            >
-              {tHub("allFamilies")}
-            </Link>
-            {COLLECTION_FAMILIES.map((value) => (
-              <Link
-                key={value}
-                href={archiveHref(value, 1)}
-                aria-current={family === value ? "page" : undefined}
-                className={family === value ? chipOn : chipOff}
-              >
-                {familyLabel(value)}
+        compact
+        emptyMessage={
+          family ? (
+            <>
+              {tHub("archiveEmptyFamily")}{" "}
+              <Link href={viewHref(undefined)} className={TEXT_LINK}>
+                {tHub("archiveEmptyAll")}
               </Link>
-            ))}
-          </nav>
+            </>
+          ) : undefined
         }
       />
 
       {page > 1 || archive.hasNext ? (
         <nav aria-label={t("paginationLabel")} className="flex w-full items-center justify-center gap-3 pt-2">
           {page > 1 ? (
-            <Link href={archiveHref(family, page - 1)} rel="prev" className={pageLink}>
+            <Link href={archiveHref(page - 1)} rel="prev" className={pageLink}>
               {t("prevPage")}
             </Link>
           ) : (
@@ -141,7 +171,7 @@ export default async function CollectionsPage({ params, searchParams }: Collecti
           )}
           <span className="font-data text-xs tabular-nums text-paper-muted">{t("pageIndicator", { page })}</span>
           {archive.hasNext ? (
-            <Link href={archiveHref(family, page + 1)} rel="next" className={pageLink}>
+            <Link href={archiveHref(page + 1)} rel="next" className={pageLink}>
               {t("nextPage")}
             </Link>
           ) : (

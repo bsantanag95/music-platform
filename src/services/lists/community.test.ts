@@ -76,7 +76,7 @@ describe("servicio de listas de la comunidad", () => {
     expect(result.lists[0]?.saveCount).toBeUndefined();
   });
 
-  it("Destacadas: no consulta `user_list_featured`: una colección no es una lista", async () => {
+  it("Destacadas: excluye toda lista con fila en `user_list_featured`: una colección no es una lista", async () => {
     let captured: unknown;
     const builder: Record<string, unknown> = {
       from: () => builder,
@@ -94,7 +94,10 @@ describe("servicio de listas de la comunidad", () => {
     // Una sola consulta, y solo por listas oficiales: las colecciones de Explorar quedan fuera (ADR 0038).
     expect(mocks.db.select).toHaveBeenCalledTimes(1);
     const { sql, params } = new PgDialect().sqlToQuery(captured as SQL);
-    expect(sql).not.toContain("user_list_featured");
+    // Ni las generadas ni las curadas con fila destacada: la exclusión no filtra por `source`.
+    expect(sql).toContain("not exists");
+    expect(sql).toContain("from user_list_featured");
+    expect(sql).not.toContain("ulf.source");
     expect(sql).toContain('"user_list"."is_official" =');
     expect(params).not.toContain("curated");
     expect(params).not.toContain("template");
