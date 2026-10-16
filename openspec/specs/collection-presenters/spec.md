@@ -308,27 +308,6 @@ abstenerse.
 - **WHEN** se abre la colección
 - **THEN** las carátulas llevan número de orden
 
-### Requirement: Presentador de lo más reseñado del mes
-
-El presentador de `most-reviewed-month` SHALL resumir el mes de su período, SHALL describir cada disco con su número de
-reseñas visibles **de ese mes** ("12 reseñas") y SHALL numerar los discos. Las reseñas ocultas por moderación SHALL NOT
-contarse. Si el período no se puede interpretar, SHALL abstenerse.
-
-#### Scenario: Reseñas del mes
-
-- **WHEN** un disco recibió 12 reseñas visibles en el mes
-- **THEN** su cartela dice "12 reseñas"
-
-#### Scenario: Reseñas ocultas
-
-- **WHEN** un disco tiene reseñas ocultas por moderación en el mes
-- **THEN** no se cuentan en su cartela
-
-#### Scenario: Singular
-
-- **WHEN** el conteo es 1
-- **THEN** la cartela dice "1 reseña"
-
 ### Requirement: Toda plantilla tiene presentador propio
 
 Toda plantilla del registro de plantillas SHALL tener un presentador propio en el registro de presentadores. El presentador
@@ -343,4 +322,25 @@ de familia SHALL seguir existiendo como respaldo para colecciones cuya plantilla
 
 - **WHEN** una colección conserva la clave de una plantilla que ya no existe
 - **THEN** se presenta con el presentador de su familia
+
+### Requirement: Presentador de lo más popular del mes
+
+El presentador de `popular-month` SHALL resumir el mes de su período, SHALL numerar los discos y SHALL describir cada disco con su
+número de personas del mes ("12 personas") solo cuando alcanza 5; por debajo el disco SHALL ir sin cartela. Si el período no se puede
+interpretar, SHALL abstenerse.
+
+#### Scenario: Personas del mes
+
+- **WHEN** un disco tuvo 12 personas distintas con algún gesto en el mes
+- **THEN** su cartela dice "12 personas"
+
+#### Scenario: Pocas personas
+
+- **WHEN** un disco tuvo 3 personas en el mes
+- **THEN** aparece numerado sin cartela
+
+#### Scenario: Período ilegible
+
+- **WHEN** el período de la colección no es un mes válido
+- **THEN** el presentador se abstiene y la colección cae al presentador de su familia
 

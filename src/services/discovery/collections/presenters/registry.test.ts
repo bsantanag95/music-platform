@@ -5,7 +5,8 @@ import catalogEn from "../../../../../messages/en/catalog.json";
 // Los presentadores consultan la base al presentar; aquí solo se mira el registro y los textos.
 vi.mock("@/db", () => ({ db: {} }));
 vi.mock("../../discovery", () => ({ albumReleaseDates: vi.fn() }));
-vi.mock("./ranking-stats", () => ({ ratingStats: vi.fn(), reviewCounts: vi.fn() }));
+vi.mock("./ranking-stats", () => ({ ratingStats: vi.fn() }));
+vi.mock("../../popularity", () => ({ popularPeopleOf: vi.fn(), popularAlbumsBetween: vi.fn() }));
 vi.mock("@/services/awards/collection-context", () => ({ ceremonyContext: vi.fn() }));
 
 const { PRESENTER_REGISTRY, TEMPLATE_PRESENTERS } = await import("./index");

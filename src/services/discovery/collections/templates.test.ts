@@ -12,7 +12,7 @@ import {
   quarterPeriodKey,
   quarterStartIso,
   quarterTitle,
-  reviewedMonthTitle,
+  popularMonthTitle,
 } from "./templates";
 
 const at = (iso: string) => new Date(iso);
@@ -27,7 +27,7 @@ describe("registro de plantillas", () => {
       "upcoming",
       "one-per-decade",
       "top-rated-quarter",
-      "most-reviewed-month",
+      "popular-month",
     ]);
   });
 
@@ -39,7 +39,7 @@ describe("registro de plantillas", () => {
 
   it("las de comunidad nacen con más peso que las del día 0", () => {
     for (const template of COLLECTION_TEMPLATES) {
-      const community = template.key === "top-rated-quarter" || template.key === "most-reviewed-month";
+      const community = template.key === "top-rated-quarter" || template.key === "popular-month";
       expect(template.weight).toBe(community ? COMMUNITY_WEIGHT : 0);
     }
   });
@@ -57,10 +57,14 @@ describe("períodos y títulos", () => {
     expect(quarterTitle(at("2026-10-11T00:00:00Z"))).toBe("Mejor valorados del 4.º trimestre de 2026");
   });
 
-  it("most-reviewed-month cambia de período por mes y lo dice en el título", () => {
+  it("popular-month cambia de período por mes y lo dice en el título", () => {
     expect(monthPeriodKey(at("2026-10-11T00:00:00Z"))).toBe("2026-10");
     expect(monthPeriodKey(at("2026-11-01T00:00:00Z"))).toBe("2026-11");
-    expect(reviewedMonthTitle(at("2026-10-11T00:00:00Z"))).toBe("Lo más reseñado de octubre de 2026");
+    expect(popularMonthTitle(at("2026-10-11T00:00:00Z"))).toBe("Lo más popular de octubre de 2026");
+  });
+
+  it("most-reviewed-month ya no está en el registro (se retiró)", () => {
+    expect(findTemplate("most-reviewed-month")).toBeUndefined();
   });
 
   it("calcula el inicio del trimestre y del mes en UTC", () => {

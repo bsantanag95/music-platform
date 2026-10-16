@@ -27,6 +27,11 @@ interface AlbumRailProps {
   artistNames?: Record<string, string>;
   /** Cifra del riel por id de álbum, sobre la carátula ("★ 4,3", "12 reseñas"). */
   stats?: Record<string, string>;
+  /**
+   * Sin encabezado visible: el riel va dentro de otra sección que ya lo tiene (la pestaña de álbumes de "Popular ahora"). El
+   * título queda para los lectores de pantalla y las flechas siguen a la vista.
+   */
+  headerless?: boolean;
 }
 
 /**
@@ -46,10 +51,17 @@ export function AlbumRail({
   dateLabels,
   artistNames,
   stats,
+  headerless = false,
 }: AlbumRailProps) {
   if (albums.length === 0) return null;
   const headingId = id ? `${id}-heading` : undefined;
-  const header = <SectionHeader heading={heading} description={description} seeAll={seeAll} headingId={headingId} />;
+  const header = headerless ? (
+    <h3 id={headingId} className="sr-only">
+      {heading}
+    </h3>
+  ) : (
+    <SectionHeader heading={heading} description={description} seeAll={seeAll} headingId={headingId} />
+  );
 
   if (layout === "scroll") {
     return (

@@ -33,6 +33,8 @@ import { assertSmokeAllowed } from "./assert-smoke-allowed";
 import { db } from "../src/db";
 import {
   appUser,
+  favorite,
+  listenEntry,
   rating,
   review,
   award,
@@ -85,6 +87,7 @@ import { presentCollection } from "../src/services/discovery/collections/present
 import { listCollectionSummaries } from "../src/services/discovery/collections/summaries";
 import { COVERS_PER_FAMILY, listFamilyCovers, resetFamilyCoversCache } from "../src/services/discovery/family-covers";
 import { FAMILY_GENRES_LIMIT, listFamilyGenres, resetFamilyGenresCache } from "../src/services/discovery/family-genres";
+import { popularPeopleOf, popularityScoreQuery, resetAllTimeRankingCache } from "../src/services/discovery/popularity";
 import { presentList } from "../src/lib/list-presentation";
 
 assertSmokeAllowed();
@@ -1027,9 +1030,12 @@ async function main() {
     );
     check(!topRated.notes.has(ids[1]!), "una valoración de otro trimestre no cuenta y ese disco no lleva cifra");
 
-    const reviewed = await presentCollection({ ...base, templateKey: "most-reviewed-month", family: "rankings" });
-    check(reviewed.notes.get(ids[0]!)?.params && (reviewed.notes.get(ids[0]!)!.params as { count: number }).count === 2, "most-reviewed cuenta solo las reseñas visibles del mes (2 de 3)");
-    check(reviewed.numbered === true, "most-reviewed-month numera los discos");
+    // "Lo más popular del mes" reemplazó a "Lo más reseñado del mes" (explore-popular-now).
+    const popularMonthContext = await presentCollection({ ...base, templateKey: "popular-month", family: "rankings" });
+    check(popularMonthContext.numbered === true, "popular-month numera los discos");
+    const [periodStart, periodEnd] = [`${period}-01T00:00:00.000Z`, new Date(Date.UTC(lastMonth.getUTCFullYear(), lastMonth.getUTCMonth() + 1, 1)).toISOString()];
+    check((await popularPeopleOf([ids[0]!], { start: periodStart, end: periodEnd })).get(ids[0]!) === 2, "popular-month cuenta las dos reseñas visibles del mes (la oculta no; las valoraciones fechan por su última modificación, que es hoy)");
+    check(!popularMonthContext.notes.has(ids[0]!), "con menos de 5 personas el disco va sin cartela");
 
     const fallback = await presentCollection({ ...base, templateKey: "top-rated-quarter", periodKey: "evergreen", family: "rankings" });
     check(fallback.summary === undefined && fallback.numbered === true, "un período ilegible se abstiene y cae al presentador de la familia (numerado, sin resumen)");
@@ -1051,6 +1057,83 @@ async function main() {
     check(unknown.summary === undefined, "una familia de géneros desconocida se abstiene y cae a la familia");
 
     await db.delete(releaseGroup).where(sql`mbid::text like '5e0ce000-0000-4000-8000-0000000009e%'`);
+  }
+
+  console.log("Popularidad por personas distintas (explore-popular-now):");
+  {
+    // Tres discos y cuatro personas sintéticas. P: diez escuchas de una persona y una valoración de otra (2 personas, 2 puntos).
+    // Q: favorito, reseña y valoración de la misma persona (tope 4, 1 persona). R: una escucha privada y otra de una cuenta
+    // desactivada (no cuentan). Una escucha vieja de P queda fuera de la ventana de 30 días.
+    const albums = await db
+      .insert(releaseGroup)
+      .values(
+        ["p", "q", "r"].map((tag, i) => ({
+          mbid: `5e0ce000-0000-4000-8000-0000000009f${4 + i}`,
+          title: `Smoke popular ${tag.toUpperCase()}`,
+          category: "studio" as const,
+          firstReleaseYear: 2001,
+          coverThumbUrl: `https://coverartarchive.org/smoke-pop-${tag}.jpg`,
+        })),
+      )
+      .returning({ id: releaseGroup.id });
+    const [P, Q, R] = albums.map((row) => row.id) as [string, string, string];
+    const suffix = Date.now().toString(36);
+    const people: string[] = [];
+    for (const label of ["a", "b", "c", "d"]) {
+      const [user] = await db
+        .insert(appUser)
+        .values({
+          username: `smoke_feat_pop_${label}_${suffix}`,
+          email: `smoke_feat_pop_${label}_${suffix}@example.test`,
+          displayName: `Smoke pop ${label}`,
+          passwordHash: null,
+          profileVisibility: "public",
+          deactivatedAt: label === "d" ? new Date() : null,
+        })
+        .returning({ id: appUser.id });
+      people.push(user!.id);
+    }
+    const [a, b, c, d] = people as [string, string, string, string];
+    try {
+      const listen = (userId: string, releaseGroupId: string, audience = "public", createdAt = new Date()) => ({
+        userId,
+        releaseGroupId,
+        listenContext: "relisten",
+        audience,
+        createdAt,
+      });
+      await db.insert(listenEntry).values(Array.from({ length: 10 }, () => listen(a, P)));
+      await db.insert(listenEntry).values(listen(c, P, "public", new Date(Date.now() - 120 * 24 * 3600 * 1000)));
+      await db.insert(rating).values({ userId: b, releaseGroupId: P, stars: "2.0" });
+      await db.insert(favorite).values({ userId: a, releaseGroupId: Q, audience: "public" });
+      await db.insert(review).values({ userId: a, releaseGroupId: Q, body: "smoke popular" });
+      await db.insert(rating).values({ userId: a, releaseGroupId: Q, stars: "5.0" });
+      await db.insert(listenEntry).values([listen(c, R, "private"), listen(d, R)]);
+
+      type Row = { id: string; score: number; people: number };
+      const scoreOf = async (since?: string) => {
+        const rows = (await db.execute(popularityScoreQuery("album", { ids: [P, Q, R], minPeople: 1, since }))) as unknown as Row[];
+        return new Map(rows.map((row) => [row.id, { score: Number(row.score), people: Number(row.people) }]));
+      };
+      const ever = await scoreOf();
+      check(ever.get(P)?.people === 3 && ever.get(P)?.score === 3, "diez escuchas de una persona cuentan una vez (P: 3 personas, 3 puntos de siempre)");
+      check(ever.get(Q)?.people === 1 && ever.get(Q)?.score === 4, "una persona muy activa llega al tope de 4 (Q)");
+      check(!ever.has(R), "una escucha privada y una cuenta desactivada no cuentan (R)");
+      const month = await scoreOf(new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString());
+      check(month.get(P)?.people === 2, "la ventana de 30 días deja fuera la escucha de hace 4 meses");
+
+      resetAllTimeRankingCache();
+      const popularList = await listAlbumsFiltered(sql`"release_group"."id" in (${P}, ${Q}, ${R})`, { sort: "popular" });
+      check(
+        popularList.albums.map((album) => album.title.slice(-1)).join("") === "QPR",
+        "el orden «Populares» va por la puntuación de siempre (Q 4, P 3) y deja al final el disco sin actividad",
+      );
+    } finally {
+      // El ON DELETE CASCADE de app_user borra escuchas, valoraciones, reseñas y favoritos.
+      await db.delete(appUser).where(inArray(appUser.id, people));
+      await db.delete(releaseGroup).where(inArray(releaseGroup.id, [P, Q, R]));
+      resetAllTimeRankingCache();
+    }
   }
 
   console.log("Orden por defecto «Destacados» y géneros de la familia (redesign-family-view):");

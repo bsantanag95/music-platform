@@ -5,11 +5,12 @@
 
 import { and, asc, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { rating, releaseGroup, review } from "@/db/schema";
+import { rating, releaseGroup } from "@/db/schema";
 import { CANDIDATE_POOL, COLLECTION_SIZE, MIN_RATINGS_PER_ALBUM, NEW_RELEASE_CATEGORIES, NEW_RELEASE_WINDOW_DAYS } from "../constants";
 import { anniversaries, genreSpotlight, grammyWinners, upcoming } from "./templates-day-zero";
 import { EVERGREEN, MONTHS, monthKey } from "./periods";
 import { albumSignalOrder, coverResolvableCondition } from "./signal";
+import { popularAlbumsBetween } from "../popularity";
 import type { CollectionTemplate } from "./types";
 
 export type { CollectionTemplate, CollectionPlan, PlanContext, PlanResult } from "./types";
@@ -35,8 +36,8 @@ export function monthStartIso(now: Date): string {
 export const quarterPeriodKey = (now: Date) => `${now.getUTCFullYear()}-Q${quarterOf(now)}`;
 export const quarterTitle = (now: Date) => `Mejor valorados del ${quarterOf(now)}.º trimestre de ${now.getUTCFullYear()}`;
 export const monthPeriodKey = monthKey;
-export const reviewedMonthTitle = (now: Date) =>
-  `Lo más reseñado de ${MONTHS[now.getUTCMonth()]} de ${now.getUTCFullYear()}`;
+export const popularMonthTitle = (now: Date) =>
+  `Lo más popular de ${MONTHS[now.getUTCMonth()]} de ${now.getUTCFullYear()}`;
 
 const newReleases: CollectionTemplate = {
   key: "new-releases",
@@ -126,29 +127,19 @@ const onePerDecade: CollectionTemplate = {
   },
 };
 
-const mostReviewedMonth: CollectionTemplate = {
-  key: "most-reviewed-month",
+/**
+ * "Lo más popular del mes" (openspec: explore-popular-now): los discos con más personas distintas y su peso por gesto en el mes,
+ * con al menos dos personas (capacidad `popularity`). Reemplaza a "Lo más reseñado del mes", que solo contaba reseñas. Las
+ * carátulas se resuelven al generar.
+ */
+const popularMonth: CollectionTemplate = {
+  key: "popular-month",
   rank: 8,
   weight: COMMUNITY_WEIGHT,
   async plan(now) {
-    const since = monthStartIso(now);
-    const rows = await db
-      .select({ id: releaseGroup.id })
-      .from(review)
-      .innerJoin(releaseGroup, eq(releaseGroup.id, review.releaseGroupId))
-      .where(
-        and(
-          isNotNull(review.releaseGroupId),
-          isNotNull(releaseGroup.coverThumbUrl),
-          eq(review.moderationStatus, "visible"),
-          gte(review.createdAt, sql`${since}::timestamptz`),
-        ),
-      )
-      .groupBy(releaseGroup.id)
-      .orderBy(sql`count(*) desc`, asc(releaseGroup.id))
-      .limit(COLLECTION_SIZE);
-    if (rows.length === 0) return { skip: "Ningún álbum recibió reseñas este mes" };
-    return { periodKey: monthPeriodKey(now), title: reviewedMonthTitle(now), candidates: rows.map((row) => row.id) };
+    const scores = await popularAlbumsBetween({ start: monthStartIso(now), end: now.toISOString() }, 2, CANDIDATE_POOL);
+    if (scores.length === 0) return { skip: "Ningún álbum reunió a dos personas este mes" };
+    return { periodKey: monthPeriodKey(now), title: popularMonthTitle(now), candidates: scores.map((score) => score.id) };
   },
 };
 
@@ -161,7 +152,7 @@ export const COLLECTION_TEMPLATES: readonly CollectionTemplate[] = [
   upcoming,
   onePerDecade,
   topRatedQuarter,
-  mostReviewedMonth,
+  popularMonth,
 ];
 
 export function findTemplate(key: string): CollectionTemplate | undefined {

@@ -8,7 +8,6 @@ import {
   rating,
   releaseGroup,
   releaseGroupEffectiveGenre,
-  review,
   userList,
   userListFeatured,
   userListItem,
@@ -23,6 +22,7 @@ import { GENRE_FAMILIES, type FamilyKey, type FamilyTier } from "@/services/genr
 import { albumInFamily, albumInGenreTree, findStyleGenreBySlug, parseFamilyKey } from "@/services/genres/read";
 import { enrichLists } from "@/services/lists/lists";
 import { listFamilyCovers } from "./family-covers";
+import { allTimeAlbumRanking, listPopularNow, type PopularResult, type PopularWindow } from "./popularity";
 import {
   ARCHIVE_PAGE_SIZE,
   COLLECTION_RAIL_LIMIT,
@@ -31,7 +31,6 @@ import {
   HUB_COLLECTION_LIMIT,
   MIN_ALBUMS_FOR_SECTION,
   MIN_RATINGS_PER_ALBUM,
-  MIN_REVIEWS_PER_ALBUM,
   NEW_RELEASE_CATEGORIES,
   NEW_RELEASE_WINDOW_DAYS,
   UPCOMING_WINDOW_DAYS,
@@ -102,14 +101,41 @@ export interface ExplorePage {
   decades: DecadeBucket[];
   families: FamilyBucket[];
   topRated: TopRatedAlbum[];
-  mostReviewed: MostReviewedAlbum[];
+  popular: PopularSection;
 }
 
 /** Álbum de "Mejor valorados" con la cifra que lo ubica ahí (la tarjeta la muestra). */
 export type TopRatedAlbum = ReleaseGroup & { avgStars: number; ratingCount: number };
 
 /** Álbum de "Más reseñados" con su número de reseñas. */
-export type MostReviewedAlbum = ReleaseGroup & { reviewCount: number };
+/** Un ítem de "Popular ahora": `people` solo se muestra desde `POPULARITY_FIGURE_MIN`. */
+export type PopularAlbum = ReleaseGroup & { people: number };
+export interface PopularArtist {
+  id: string;
+  name: string;
+  /** Foto de Commons con licencia verificada; `null` si no hay o fue retirada. */
+  photoUrl: string | null;
+  people: number;
+}
+export interface PopularSong {
+  id: string;
+  title: string;
+  /** Artista principal de la grabación. */
+  artistName: string | null;
+  /** Carátula de un disco que contiene la grabación. */
+  coverThumbUrl: string | null;
+  people: number;
+}
+export interface PopularTab<T> {
+  window: PopularWindow;
+  items: T[];
+}
+/** "Popular ahora" (openspec: explore-popular-now): cada tipo con su ventana, o `null` si no llega al mínimo. */
+export interface PopularSection {
+  albums: PopularTab<PopularAlbum> | null;
+  artists: PopularTab<PopularArtist> | null;
+  songs: PopularTab<PopularSong> | null;
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -527,26 +553,65 @@ export async function listTopRated(limit = RAIL_SIZE, condition?: SQL): Promise<
 }
 
 /**
- * Más reseñados: álbumes con ≥ `MIN_REVIEWS_PER_ALBUM` reseñas, por conteo descendente.
- * Devuelve `[]` si hay menos de `MIN_ALBUMS_FOR_SECTION` álbumes elegibles.
+ * "Popular ahora" listo para pintar: las puntuaciones de `popularity.ts` (con su ventana y su caché) completadas con los datos de
+ * cada álbum, artista y canción, en el orden de la puntuación. Un ítem que ya no existe se descarta.
  */
-export async function listMostReviewed(limit = RAIL_SIZE): Promise<MostReviewedAlbum[]> {
-  const rows = await db
-    .select({
-      ...albumColumns,
-      reviewCount: sql<number>`count(*)::int`,
-    })
-    .from(review)
-    .innerJoin(releaseGroup, eq(releaseGroup.id, review.releaseGroupId))
-    .where(isNotNull(review.releaseGroupId))
-    .groupBy(releaseGroup.id)
-    .having(sql`count(*) >= ${MIN_REVIEWS_PER_ALBUM}`)
-    .orderBy(sql`count(*) desc`, asc(releaseGroup.id))
-    .limit(Math.max(limit, MIN_ALBUMS_FOR_SECTION));
-
-  if (rows.length < MIN_ALBUMS_FOR_SECTION) return [];
-  return rows.slice(0, limit).map((row) => ({ ...serializeAlbum(row), reviewCount: Number(row.reviewCount) }));
+export async function listPopularSection(): Promise<PopularSection> {
+  const popular = await listPopularNow();
+  const [albums, artists, songs] = await Promise.all([
+    hydrateAlbums(popular.albums),
+    hydrateArtists(popular.artists),
+    hydrateSongs(popular.songs),
+  ]);
+  return { albums, artists, songs };
 }
+
+function inScoreOrder<T extends { id: string }>(result: PopularResult, found: T[], extra: (item: T, people: number) => T) {
+  const byId = new Map(found.map((item) => [item.id, item]));
+  const items = result.items.flatMap((score) => {
+    const item = byId.get(score.id);
+    return item ? [extra(item, score.people)] : [];
+  });
+  return items.length > 0 ? { window: result.window, items } : null;
+}
+
+async function hydrateAlbums(result: PopularResult | null): Promise<PopularTab<PopularAlbum> | null> {
+  if (!result) return null;
+  const rows = await db
+    .select(albumColumns)
+    .from(releaseGroup)
+    .where(inArray(releaseGroup.id, result.items.map((item) => item.id)));
+  return inScoreOrder(result, rows.map((row) => ({ ...serializeAlbum(row), people: 0 })), (album, people) => ({ ...album, people }));
+}
+
+async function hydrateArtists(result: PopularResult | null): Promise<PopularTab<PopularArtist> | null> {
+  if (!result) return null;
+  const rows = await db
+    .select({ id: artist.id, name: artist.name, photoUrl: artist.photoUrl, photoBlockedAt: artist.photoBlockedAt })
+    .from(artist)
+    .where(inArray(artist.id, result.items.map((item) => item.id)));
+  const found = rows.map((row) => ({ id: row.id, name: row.name, photoUrl: row.photoBlockedAt ? null : row.photoUrl, people: 0 }));
+  return inScoreOrder(result, found, (item, people) => ({ ...item, people }));
+}
+
+async function hydrateSongs(result: PopularResult | null): Promise<PopularTab<PopularSong> | null> {
+  if (!result) return null;
+  const ids = result.items.map((item) => item.id);
+  // Una consulta: título, artista principal (primer crédito de la grabación) y una carátula de un disco que la contiene.
+  const rows = (await db.execute(sql`
+    select r.id, r.title,
+      (select a.name from credit c join artist a on a.id = c.artist_id
+        where c.recording_id = r.id order by c.position limit 1) as "artistName",
+      (select rg.cover_thumb_url from track t join release rl on rl.id = t.release_id
+        join release_group rg on rg.id = rl.release_group_id
+        where t.recording_id = r.id and rg.cover_thumb_url is not null
+        order by (rg.category = 'studio') desc, rg.first_release_year asc nulls last, rg.id limit 1) as "coverThumbUrl"
+    from recording r
+    where r.id in (${sql.join(ids.map((id) => sql`${id}`), sql`, `)})
+  `)) as unknown as { id: string; title: string; artistName: string | null; coverThumbUrl: string | null }[];
+  return inScoreOrder(result, rows.map((row) => ({ ...row, people: 0 })), (item, people) => ({ ...item, people }));
+}
+
 
 /** Fecha de lanzamiento de cada álbum (`YYYY-MM-DD`, parcial o `null`) y su año, en una consulta. */
 export async function albumReleaseDates(
@@ -584,16 +649,16 @@ export async function albumArtistNames(ids: string[]): Promise<Record<string, st
 
 /** Composición de la portada de `/explore` en una sola llamada. */
 export async function getExplorePage(): Promise<ExplorePage> {
-  const [collections, newReleases, upcoming, decades, families, topRated, mostReviewed] = await Promise.all([
+  const [collections, newReleases, upcoming, decades, families, topRated, popular] = await Promise.all([
     listCollections(),
     listNewReleases(),
     listUpcomingReleases(),
     listDecades(),
     listGenreFamilies(),
     listTopRated(),
-    listMostReviewed(),
+    listPopularSection(),
   ]);
-  return { collections, newReleases, upcoming, decades, families, topRated, mostReviewed };
+  return { collections, newReleases, upcoming, decades, families, topRated, popular };
 }
 
 // ---------------------------------------------------------------------------
@@ -680,10 +745,21 @@ export const bestOrder = [
   asc(releaseGroup.id),
 ];
 
-function albumOrder(sort: AlbumSort): SQL[] {
+/**
+ * Orden "Populares" (openspec: explore-popular-now): la posición del álbum en el ranking de popularidad de siempre (personas
+ * distintas con peso por gesto, `popularity.ts`), y los que no tienen actividad al final, en orden "Destacados". El ranking es una
+ * lista de ids que crece con la actividad; ordenar por su posición evita unir la consulta de gestos al listado.
+ */
+function popularOrder(ranking: string[]): SQL[] {
+  if (ranking.length === 0) return bestOrder;
+  const ids = sql`array[${sql.join(ranking.map((id) => sql`${id}`), sql`, `)}]::uuid[]`;
+  return [sql`array_position(${ids}, "release_group"."id") asc nulls last`, ...bestOrder];
+}
+
+function albumOrder(sort: AlbumSort, ranking: string[] = []): SQL[] {
   switch (sort) {
     case "popular":
-      return [sql`count(${rating.id}) desc`, ...bestOrder];
+      return popularOrder(ranking);
     case "newest":
       return [sql`${releaseGroup.firstReleaseYear} desc nulls last`, asc(releaseGroup.id)];
     case "oldest":
@@ -735,7 +811,7 @@ export async function listAlbumsFiltered(condition: SQL, options: AlbumFilterOpt
     .leftJoin(rating, eq(rating.releaseGroupId, releaseGroup.id))
     .where(and(...filters))
     .groupBy(releaseGroup.id)
-    .orderBy(...albumOrder(sort))
+    .orderBy(...albumOrder(sort, sort === "popular" ? await allTimeAlbumRanking() : []))
     .limit(limit)
     .offset(offset);
   return toAlbumPage(rows, page);

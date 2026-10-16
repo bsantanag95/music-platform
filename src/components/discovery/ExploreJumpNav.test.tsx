@@ -10,12 +10,12 @@ const items = (labels: Record<string, string>, ids: string[]): JumpItem[] => ids
 
 const es = {
   colecciones: catalogEs.explore.jump.collections,
+  popular: catalogEs.explore.jump.popular,
   generos: catalogEs.explore.jump.genres,
   novedades: catalogEs.explore.jump.newReleases,
   proximos: catalogEs.explore.jump.upcoming,
   premios: catalogEs.explore.jump.awards,
   "mejor-valorados": catalogEs.explore.jump.topRated,
-  "mas-resenados": catalogEs.explore.jump.mostReviewed,
   decadas: catalogEs.explore.jump.decades,
 };
 const ALL = Object.keys(es);
@@ -27,12 +27,12 @@ describe("ExploreJumpNav", () => {
     const links = within(nav).getAllByRole("link");
     expect(links.map((a) => a.textContent)).toEqual([
       "Colecciones",
+      "Popular",
       "Géneros",
       "Novedades",
       "Próximos",
       "Premios",
       "Mejor valorados",
-      "Más reseñados",
       "Décadas",
     ]);
     expect(links.map((a) => a.getAttribute("href"))).toEqual(ALL.map((id) => `#${id}`));

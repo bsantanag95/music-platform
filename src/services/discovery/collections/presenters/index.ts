@@ -8,7 +8,7 @@ import { awardsPresenter } from "./awards";
 import { genreSpotlightPresenter, onePerDecadePresenter } from "./eras";
 import { FAMILY_PRESENTERS } from "./families";
 import { newReleasesPresenter } from "./new-releases";
-import { mostReviewedPresenter, topRatedPresenter } from "./rankings";
+import { popularMonthPresenter, topRatedPresenter } from "./rankings";
 import { upcomingPresenter } from "./upcoming";
 import { resolveContext, type PresenterRegistry } from "./resolve";
 import type { CollectionContext, PresenterInput } from "./types";
@@ -22,7 +22,7 @@ export const TEMPLATE_PRESENTERS: PresenterRegistry["byTemplate"] = {
   "genre-spotlight": genreSpotlightPresenter,
   "one-per-decade": onePerDecadePresenter,
   "top-rated-quarter": topRatedPresenter,
-  "most-reviewed-month": mostReviewedPresenter,
+  "popular-month": popularMonthPresenter,
 };
 
 export const PRESENTER_REGISTRY: PresenterRegistry = { byTemplate: TEMPLATE_PRESENTERS, byFamily: FAMILY_PRESENTERS };

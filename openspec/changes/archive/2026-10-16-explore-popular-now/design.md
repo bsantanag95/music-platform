@@ -57,10 +57,12 @@ plantilla de colección `most-reviewed-month` usa reseñas del mes. Las señales
    peso, su usuario, su objetivo y su fecha), agrupada por persona y objetivo para aplicar tipos distintos y tope, y luego por objetivo.
    Las tablas son pequeñas (cientos de filas) y crecen con la actividad, no con el catálogo. El resultado de "Popular ahora" se guarda
    **15 minutos** en memoria con `ttl-cache.ts` (la actividad nueva aparece pronto y la portada no repite la consulta en cada visita).
-6. **Orden "Populares" de los listados = puntuación de siempre.** `listAlbumsFiltered` con `sort: popular` hace `left join` a la
-   puntuación de todos los tiempos agregada por disco (una subconsulta derivada, no correlacionada: se calcula una vez sobre las
-   tablas de gestos) y ordena por ella desc y luego por el orden "Destacados". Los discos sin actividad quedan al final en orden
-   "Destacados". La etiqueta pasa de "Más valorados" a "Populares" / "Popular".
+6. **Orden "Populares" de los listados = puntuación de siempre.** `allTimeAlbumRanking()` devuelve los ids de los discos con
+   alguna actividad, del más al menos popular de siempre (caché de 15 minutos), y `listAlbumsFiltered` con `sort: popular` ordena
+   por `array_position(ranking, release_group.id)` y luego por el orden "Destacados"; los discos sin actividad quedan al final en
+   orden "Destacados". Se descartó unir la consulta de gestos como tabla derivada: con el constructor de consultas obligaba a
+   rodeos, y la lista de ids crece con la actividad (no con el catálogo). La etiqueta pasa de "Más valorados" a "Populares" /
+   "Popular".
 7. **Sin tabla materializada.** Con cientos de gestos, la consulta es barata; materializar obligaría a mantener triggers en nueve
    tablas. Si la actividad crece hasta que cueste, la puntuación se puede materializar con el mismo contrato (decisión que quedaría en
    un ADR nuevo). Se mide en la implementación.
@@ -78,6 +80,10 @@ plantilla de colección `most-reviewed-month` usa reseñas del mes. Las señales
    `titles.ts` para que las archivadas sigan diciéndose en los dos idiomas; su presentador sí sale del registro (una prueba exige que
    todo presentador corresponda a una plantilla registrada).
 10. **Navegación rápida.** El ancla `mas-resenados` desaparece y entra `popular` ("Popular"), en su nueva posición.
+
+**Medido en scratch (35 personas, ~400 gestos):** la escalera completa de "Popular ahora" tarda 245–344 ms en frío (álbumes y
+artistas resuelven en la ventana del mes; canciones, en la de 90 días); cada consulta suelta, 4–65 ms; la popularidad de siempre de
+los álbumes, 7 ms.
 
 ## Risks / Trade-offs
 

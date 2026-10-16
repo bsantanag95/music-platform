@@ -37,6 +37,8 @@ describe("collectionTitle", () => {
     expect(collectionTitle("anniversaries", "2026-10", "en", FALLBACK)).toBe("Anniversaries in October 2026");
     expect(collectionTitle("most-reviewed-month", "2026-03", "es", FALLBACK)).toBe("Lo más reseñado de marzo de 2026");
     expect(collectionTitle("most-reviewed-month", "2026-03", "en", FALLBACK)).toBe("Most reviewed in March 2026");
+    expect(collectionTitle("popular-month", "2026-03", "es", FALLBACK)).toBe("Lo más popular de marzo de 2026");
+    expect(collectionTitle("popular-month", "2026-03", "en", FALLBACK)).toBe("Most popular in March 2026");
   });
 
   it("el archivo distingue el mismo mes de años distintos", () => {

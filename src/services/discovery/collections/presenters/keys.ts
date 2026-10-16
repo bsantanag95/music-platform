@@ -41,8 +41,8 @@ export const CONTEXT_MESSAGE_KEYS = [
   // Rankings de la comunidad.
   "topRatedSummary",
   "topRatedNote",
-  "mostReviewedSummary",
-  "mostReviewedNote",
+  "popularMonthSummary",
+  "popularMonthNote",
 ] as const;
 
 export type ContextMessageKey = (typeof CONTEXT_MESSAGE_KEYS)[number];

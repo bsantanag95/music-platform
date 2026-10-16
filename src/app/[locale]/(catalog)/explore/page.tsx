@@ -11,6 +11,7 @@ import { AwardsExploreSection } from "@/components/awards/AwardsExploreSection";
 import { listRecentCeremonies } from "@/services/awards/read";
 import { ExploreJumpNav } from "@/components/discovery/ExploreJumpNav";
 import { FilteredAlbumList } from "@/components/discovery/FilteredAlbumList";
+import { PopularNow } from "@/components/discovery/PopularNow";
 import { ApiError } from "@/lib/api/errors";
 import { isExploreEnabled } from "@/lib/config/discovery";
 import { genreHref } from "@/lib/catalog-links";
@@ -248,15 +249,12 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
     ensureCollectionsFresh(),
   ]);
   const railArtistNames = await albumArtistNames(
-    [explore.newReleases, explore.upcoming, explore.topRated, explore.mostReviewed].flat().map((album) => album.id),
+    [explore.newReleases, explore.upcoming, explore.topRated, explore.popular.albums?.items ?? []].flat().map((album) => album.id),
   );
   const starsFormat = new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-  // Cifra que ubica a cada disco en su riel, sobre la carátula: el promedio en "Mejor valorados", las reseñas
-  // en "Más reseñados".
+  // Cifra que ubica a cada disco en su riel, sobre la carátula: el promedio en "Mejor valorados".
   const topRatedStats = Object.fromEntries(explore.topRated.map((album) => [album.id, `★ ${starsFormat.format(album.avgStars)}`]));
-  const mostReviewedStats = Object.fromEntries(
-    explore.mostReviewed.map((album) => [album.id, t("reviewCount", { count: album.reviewCount })]),
-  );
+  const hasPopular = Boolean(explore.popular.albums || explore.popular.artists || explore.popular.songs);
   const familyTiles = (buckets: FamilyBucket[]): FamilyTile[] =>
     buckets.map((bucket) => ({
       key: bucket.key,
@@ -269,12 +267,12 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
   // en el orden de la página.
   const jumpItems = [
     { id: "colecciones", label: t("jump.collections"), visible: explore.collections.length > 0 },
+    { id: "popular", label: t("jump.popular"), visible: hasPopular },
     { id: "generos", label: t("jump.genres"), visible: explore.families.length > 0 },
     { id: "novedades", label: t("jump.newReleases"), visible: explore.newReleases.length > 0 },
     { id: "proximos", label: t("jump.upcoming"), visible: explore.upcoming.length > 0 },
     { id: "premios", label: t("jump.awards"), visible: recentCeremonies.length > 0 },
     { id: "mejor-valorados", label: t("jump.topRated"), visible: explore.topRated.length > 0 },
-    { id: "mas-resenados", label: t("jump.mostReviewed"), visible: explore.mostReviewed.length > 0 },
     { id: "decadas", label: t("jump.decades"), visible: explore.decades.length > 0 },
   ].filter((item) => item.visible);
 
@@ -301,6 +299,21 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         familyLabel={(family) => t(`collectionFamilies.${family}`)}
         seeAll={{ href: "/explore/collections", label: t("seeAllCollections") }}
         layout="scroll"
+      />
+
+      {/* Popular ahora (openspec: explore-popular-now): justo después de Colecciones, como prueba de que hay gente usando la
+          plataforma. Reemplaza al antiguo riel "Más reseñados". */}
+      <PopularNow
+        section={explore.popular}
+        heading={t("popularHeading")}
+        tabsLabel={t("popularTabsLabel")}
+        tabLabels={{ albums: t("popularTabs.albums"), artists: t("popularTabs.artists"), songs: t("popularTabs.songs") }}
+        windowDescription={(window) => t(`popularWindow.${window}`)}
+        peopleLabel={(count) => t("popularPeople", { count })}
+        categoryLabels={categoryLabels}
+        coverLabel={coverLabel}
+        authenticated={authenticated}
+        artistNames={railArtistNames}
       />
 
       <FamilyGrid
@@ -352,19 +365,6 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         albums={explore.topRated}
         artistNames={railArtistNames}
         stats={topRatedStats}
-        categoryLabels={categoryLabels}
-        coverLabel={coverLabel}
-      />
-
-      <AlbumRail
-        layout="scroll"
-        id="mas-resenados"
-        authenticated={authenticated}
-        heading={t("mostReviewedHeading")}
-        description={t("mostReviewedDescription")}
-        albums={explore.mostReviewed}
-        artistNames={railArtistNames}
-        stats={mostReviewedStats}
         categoryLabels={categoryLabels}
         coverLabel={coverLabel}
       />

@@ -7,7 +7,15 @@
     "decadesHeading": "Explorar por década",
     "genresHeading": "Explorar por género",
     "topRatedHeading": "Mejor valorados",
-    "mostReviewedHeading": "Más reseñados",
+    "popularHeading": "Popular ahora",
+    "popularTabsLabel": "Qué ver",
+    "popularPeople": "{count, plural, one {# persona} other {# personas}}",
+    "popularTabs": { "albums": "Álbumes", "artists": "Artistas", "songs": "Canciones" },
+    "popularWindow": {
+      "month": "Lo que más se escucha, valora y guarda en la comunidad este mes.",
+      "quarter": "Lo que más se escucha, valora y guarda en la comunidad en los últimos 3 meses.",
+      "all": "Lo que más se ha escuchado, valorado y guardado en la comunidad desde el principio."
+    },
     "decadeChip": "{decade}s",
     "collectionItems": "{count, plural, one {# álbum} other {# álbumes}}",
     "collectionAlbums": "Álbumes",
@@ -34,7 +42,6 @@
     "decadesDescription": "Cuántos álbumes hay en el catálogo por década de lanzamiento. Elige una para recorrerla.",
     "decadeBarLabel": "{decade}s: {formatted} {count, plural, one {álbum} other {álbumes}}",
     "topRatedDescription": "Por promedio, entre los discos con al menos {min} valoraciones.",
-    "mostReviewedDescription": "Los discos que más reseñas reúnen.",
     "scrollPrev": "Ver anteriores",
     "scrollNext": "Ver siguientes",
     "otherDecades": "Otras décadas",
@@ -46,17 +53,16 @@
     "pageIndicator": "Página {page}",
     "fewerFamilies": "Ver menos",
     "decadesEarlier": "Antes",
-    "reviewCount": "{count, plural, one {# reseña} other {# reseñas}}",
     "countdown": "{days, plural, =0 {Hoy} =1 {Mañana} other {En # días}}",
     "jump": {
       "label": "En esta página",
+      "popular": "Popular",
       "collections": "Colecciones",
       "genres": "Géneros",
       "newReleases": "Novedades",
       "upcoming": "Próximos",
       "awards": "Premios",
       "topRated": "Mejor valorados",
-      "mostReviewed": "Más reseñados",
       "decades": "Décadas"
     },
     "collectionsHeading": "Colecciones",
@@ -122,8 +128,8 @@
       "decadeNoteExact": "Década de {decade}",
       "topRatedSummary": "Los álbumes mejor valorados del {quarter}.º trimestre de {year}, con al menos {min} valoraciones.",
       "topRatedNote": "★ {average, number, ::.0} · {count, plural, one {# valoración} other {# valoraciones}}",
-      "mostReviewedSummary": "Los álbumes que más reseñas recibieron en {month}.",
-      "mostReviewedNote": "{count, plural, one {# reseña} other {# reseñas}}"
+      "popularMonthSummary": "Los álbumes que más movieron a la comunidad en {month}: escuchas, valoraciones, reseñas, favoritos y listas, contando personas.",
+      "popularMonthNote": "{count, plural, one {# persona} other {# personas}}"
     }
   },
   "search": {
@@ -1244,7 +1250,7 @@
         "exactLabel": "Solo este género",
         "sortLabel": "Ordenar por",
         "sortBest": "Destacados",
-        "sortPopular": "Más valorados",
+        "sortPopular": "Populares",
         "sortNewest": "Más recientes",
         "sortOldest": "Más antiguos",
         "sortAz": "A–Z",

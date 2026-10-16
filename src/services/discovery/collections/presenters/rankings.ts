@@ -1,10 +1,11 @@
-import { MIN_RATINGS_PER_ALBUM } from "../../constants";
+import { MIN_RATINGS_PER_ALBUM, POPULARITY_FIGURE_MIN } from "../../constants";
 import { ref } from "./keys";
 import { firstOfMonth, monthPeriod, quarterPeriod } from "./period";
-import { ratingStats, reviewCounts, type RatingStat } from "./ranking-stats";
+import { ratingStats, type RatingStat } from "./ranking-stats";
+import { popularPeopleOf } from "../../popularity";
 import { emptyContext, type CollectionContext, type CollectionPresenter } from "./types";
 
-// Presentadores de los rankings de la comunidad (`top-rated-quarter` y `most-reviewed-month`; openspec:
+// Presentadores de los rankings de la comunidad (`top-rated-quarter` y `popular-month`; openspec:
 // add-remaining-collection-presenters): cada disco dice la cifra que lo ubicó en el ranking, del período del propio
 // ranking, y los discos se numeran porque su orden ES un ranking.
 
@@ -35,27 +36,27 @@ export const topRatedPresenter: CollectionPresenter = async ({ periodKey, albumI
   return buildTopRatedContext(albumIds, await ratingStats(albumIds, period.bounds), period);
 };
 
-/** Función pura: el contexto de "Lo más reseñado del mes". */
-export function buildMostReviewedContext(
+/** Función pura: el contexto de "Lo más popular del mes". La cifra solo desde `POPULARITY_FIGURE_MIN` personas. */
+export function buildPopularMonthContext(
   albumIds: string[],
-  counts: Map<string, number>,
+  people: Map<string, number>,
   period: { year: number; month: number },
 ): CollectionContext {
   const context = emptyContext();
   context.numbered = true;
-  context.summary = ref("mostReviewedSummary", {
+  context.summary = ref("popularMonthSummary", {
     month: { date: firstOfMonth(period.year, period.month), style: "month-year-inline" },
   });
   for (const id of albumIds) {
-    const total = counts.get(id);
-    if (total && total > 0) context.notes.set(id, ref("mostReviewedNote", { count: total }));
+    const count = people.get(id);
+    if (count && count >= POPULARITY_FIGURE_MIN) context.notes.set(id, ref("popularMonthNote", { count }));
   }
   return context;
 }
 
-/** Se abstiene si el período no es `AAAA-MM`. */
-export const mostReviewedPresenter: CollectionPresenter = async ({ periodKey, albumIds }) => {
+/** Se abstiene si el período no es `AAAA-MM`. Las personas, en una sola consulta para todos los discos. */
+export const popularMonthPresenter: CollectionPresenter = async ({ periodKey, albumIds }) => {
   const period = monthPeriod(periodKey);
   if (!period) return null;
-  return buildMostReviewedContext(albumIds, await reviewCounts(albumIds, period.bounds), period);
+  return buildPopularMonthContext(albumIds, await popularPeopleOf(albumIds, period.bounds), period);
 };

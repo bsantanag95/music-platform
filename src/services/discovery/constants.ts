@@ -8,8 +8,6 @@
  */
 export const MIN_RATINGS_PER_ALBUM = 3;
 
-/** Elegibilidad del álbum en el riel "Más reseñados". */
-export const MIN_REVIEWS_PER_ALBUM = 1;
 
 /**
  * Visibilidad del riel: una sección por reglas se muestra solo si hay al
@@ -99,3 +97,12 @@ export const HUB_SUMMARY_LIMIT = 24;
 
 /** Colecciones por página del archivo de `/explore/collections`. */
 export const ARCHIVE_PAGE_SIZE = 24;
+
+/**
+ * "Popular ahora" (openspec: explore-popular-now): desde cuántas personas se muestra la cifra "N personas" (el mismo umbral que
+ * las cifras de los géneros). Por debajo, el ítem aparece sin cifra: con pocas personas, presumirla sería exagerar.
+ */
+export const POPULARITY_FIGURE_MIN = 5;
+
+/** Ventana con la que se calculó lo popular ahora: 30 días, 90 días o desde siempre. */
+export type PopularWindow = "month" | "quarter" | "all";

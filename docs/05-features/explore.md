@@ -16,19 +16,19 @@ sin tabla materializada. Cada sección se **omite** si no tiene contenido. En or
 | Sección | Fuente | Presentación |
 |---|---|---|
 | Colecciones | todas las filas de `user_list_featured` vigentes, sin distinguir el origen: las curadas a mano desde `/admin` (ADR 0034) y las generadas por plantillas (ADR 0033 y 0035), por `weight` desc y `rank` asc, máximo 10 (`COLLECTION_RAIL_LIMIT`, ADR 0038) | un solo riel, en fila desplazable con flechas; tarjeta `CollectionRail` (pila de hasta 6 fundas, **familia** sobre el título, título, descripción y número de álbumes) y «Ver todas →» a `/explore/collections`; la tarjeta no dice si la colección se armó a mano o por plantilla |
+| Popular ahora | popularidad de la comunidad por personas distintas (cambio `explore-popular-now`, ADR 0041, `popularity.ts`) | segunda sección, tras Colecciones: pestañas **Álbumes · Artistas · Canciones** (`PopularNow`, `PopularTabs`: `tablist` con flechas, la primera con resultado activa; los tres paneles llegan del servidor, sin JS se ve Álbumes); álbumes en riel de carátulas (hasta 12), artistas y canciones en listas numeradas de hasta 10 (`PopularRankList`: foto o inicial; carátula del disco y artista). El subtítulo dice la ventana usada por la pestaña activa (este mes / últimos 3 meses / de siempre). Cifra "N personas" solo desde 5 (`POPULARITY_FIGURE_MIN`). Una pestaña sin resultado no aparece; sin ninguna, la sección se omite. Reemplaza al antiguo riel "Más reseñados". Ver "Popular ahora" abajo |
 | Explorar por género | familias de géneros con álbumes (vista `release_group_effective_genre`, cambio `add-genre-taxonomy`) | tarjetas **visuales** (cambio `visual-genre-families`): un mosaico a sangre de hasta 4 carátulas de discos de estudio de la familia con el nombre encima sobre un velo (4 → 2×2, 3 → la primera a dos filas, 2 → dos columnas, 1 → una, 0 → tarjeta plana) → `/explore?familia=rock`; **sin número de álbumes ni barra**: el conteo de lo que la base ha guardado crece con cada artista que alguien abre y no dice nada de la familia (incluía sencillos, recopilaciones y discos en vivo), así que solo sirve internamente para omitir las familias vacías. La flecha solo aparece al pasar el mouse; las familias secundarias se despliegan desde una tarjeta "N familias más" dentro de la propia grilla (botón con `aria-expanded`, "Ver menos" para plegar) (`FamilyGrid`). Las cifras de las décadas siguen llevando separador de miles (`useGrouping: "always"`). Las carátulas (`family-covers.ts`) se eligen por la señal de las colecciones del día 0 (premio, calendario, valoración de la comunidad cuando existe) con desempate por id; un disco se usa en una sola familia (se atiende primero a la que tiene menos candidatos) salvo el relleno de las que quedarían con menos de dos; se calculan en una sola consulta con ventana y se guardan 6 horas en memoria (la consulta tarda ~1 s en frío); un error no se cachea y la portada pinta tarjetas planas |
 | Novedades | `release_group` studio/single_ep con `first_release_date` completa en los últimos `NEW_RELEASE_WINDOW_DAYS` (90) días hasta hoy, con carátula, por fecha desc | riel horizontal con la fecha ("9 oct") en cada tarjeta y "Ver todo →" a `/explore?novedades=1`; se omite con menos de `MIN_ALBUMS_FOR_SECTION` (6); sin lanzamientos futuros ni fechas parciales (cambios `redefine-explore-new-releases` y `add-explore-new-releases-listing`) |
 | Próximos lanzamientos | `release_group` studio/single_ep con `first_release_date` completa posterior a hoy y hasta hoy + `UPCOMING_WINDOW_DAYS` (180), con carátula, por fecha asc (cambio `add-explore-upcoming-releases`) | riel horizontal bajo Novedades, con la fecha ("24 oct") en cada tarjeta y "Ver todo →" a `/explore?proximos=1`; se omite con menos de `MIN_ALBUMS_FOR_SECTION` (6) |
 | Premios | ceremonias cargadas desde `data/awards/` (cambio `add-music-awards`, ADR 0032) | una tarjeta por cada una de las últimas 5 ceremonias, con el ganador destacado (Álbum del año en los Grammy: carátula, título y artista; `listRecentCeremonies` lo resuelve en una consulta para todas) → `/awards/<premio>/<año>` y "Ver todos" → `/awards`; se omite sin ceremonias (`AwardsExploreSection`). Ver `awards.md` |
 | Mejor valorados | `rating` agregado por álbum | riel horizontal; ver umbrales abajo |
-| Más reseñados | `review` contado por álbum | riel horizontal; ver umbrales abajo |
 | Explorar por década | `first_release_year` agrupado por década | histograma del catálogo: una columna por década en orden cronológico, altura proporcional a sus álbumes y la cifra pegada sobre la barra, cada columna → `/explore?decada=1990`; las décadas iniciales por debajo del 2 % de la más grande (hoy, de los 1890s a los 1940s) van en una lista compacta "Antes" a la izquierda en lugar de barras mínimas idénticas; en móvil, barras horizontales de la más reciente a la más antigua (`DecadeHistogram`) |
 
 ### Navegación rápida
 
 Bajo el título hay una fila de píldoras "En esta página" (`ExploreJumpNav`) con un enlace por cada sección que se
-renderiza, en el orden de la página. Las anclas son `colecciones`, `generos`, `novedades`, `proximos`, `premios`,
-`mejor-valorados`, `mas-resenados` y `decadas` (el `id` del `<section>`, con `scroll-mt-24` para que el encabezado fijo no
+renderiza, en el orden de la página. Las anclas son `colecciones`, `popular`, `generos`, `novedades`, `proximos`, `premios`,
+`mejor-valorados` y `decadas` (el `id` del `<section>`, con `scroll-mt-24` para que el encabezado fijo no
 tape el título). La página decide qué secciones están visibles con los mismos datos con los que cada una se omite, así que
 la fila nunca enlaza a una sección ausente. Se omite con menos de `MIN_SECTIONS_FOR_JUMP_NAV` (4) secciones. Es solo
 enlaces (sin JavaScript): no es fija ni resalta la sección activa. En móvil se desplaza en horizontal. Las etiquetas son
@@ -44,7 +44,7 @@ filas (`layout="grid"`, el predeterminado) sigue en la página de género y en l
 Las tarjetas de álbum de Explorar (rieles y listados) llevan bajo el título el **artista principal**
 (primer crédito `primary`, `albumArtistNames`: una consulta para todos los álbumes de la página). Los
 rieles por reglas muestran sobre la carátula la cifra que ubica al disco ahí: el promedio en Mejor
-valorados ("★ 4,3") y el número de reseñas en Más reseñados ("12 reseñas"). Próximos lanzamientos (riel y
+valorados ("★ 4,3") y, en Popular ahora, las personas ("12 personas", solo desde 5). Próximos lanzamientos (riel y
 listado) muestra ahí la cuenta regresiva ("Hoy", "Mañana", "En 5 días"; `daysUntilRelease`, días de calendario UTC
 como la fecha de la tarjeta). Los rieles no dibujan
 barra de desplazamiento: se avanzan con las flechas o deslizando.
@@ -72,13 +72,33 @@ familia y género si se combinan en la URL. Servicio: `listUpcomingReleases` (ri
 
 ### Umbrales de los rieles por reglas (`src/services/discovery/constants.ts`)
 
-- **Elegibilidad del álbum** — `MIN_RATINGS_PER_ALBUM` (=3), `MIN_REVIEWS_PER_ALBUM` (=1):
-  un álbum solo entra en el riel si supera ese conteo. Evita que un promedio alto con pocas
+- **Elegibilidad del álbum** — `MIN_RATINGS_PER_ALBUM` (=3) para Mejor valorados:
+  un álbum solo entra en el riel si supera ese conteo. Popular ahora tiene sus propios umbrales (abajo). Evita que un promedio alto con pocas
   señales domine.
 - **Visibilidad del riel** — `MIN_ALBUMS_FOR_SECTION` (=6): el riel se muestra solo si hay
   esa cantidad de álbumes elegibles; debajo, se omite por completo.
 
 Ajustar estos valores es editar la constante — no hay migración.
+
+### Popular ahora (cambio `explore-popular-now`, ADR 0041)
+
+Una sola definición de popularidad (`src/services/discovery/popularity.ts`) para tres usos: la sección "Popular ahora", el orden
+"Populares" de los listados y la colección automática "Lo más popular del mes".
+
+- **Puntuación**: por objetivo, cada persona aporta la suma de los pesos de los **tipos** de gesto distintos que hizo sobre él,
+  con tope 4 (`POPULARITY_PERSON_CAP`); se suma sobre las personas. Pesos (`POPULARITY_WEIGHTS`): favorito 3; reseña 2; seguir al
+  artista 2; escucha, valoración, lista y colección 1; pendiente y "en búsqueda" 0,5. Las estrellas no cuentan por su nota.
+  Desempate: personas, actividad más reciente, id. La valoración fecha por `updated_at` (cambiar la nota es actividad).
+- **Objetivos**: álbumes (gestos con `release_group_id`), canciones (`recording_id`) y artistas (gestos directos más los de sus
+  discos, atribuidos al primer crédito del disco).
+- **Privacidad**: solo cuentas activas; no cuenta nada con `audience = 'private'` (favoritos, diario, colección, "en búsqueda",
+  listas) ni reseñas ocultas.
+- **Ventana**: 30 días; si no hay al menos `POPULAR_MIN` (6 álbumes, 5 artistas, 5 canciones) con 2 personas, 90 días; si tampoco,
+  desde siempre con 1 persona. Cada tipo elige su escalón y lo informa. Medido en scratch: la escalera completa, 245–344 ms en frío.
+- **Caché**: 15 minutos en memoria (`ttl-cache.ts`) para la sección y para el ranking de siempre de los álbumes.
+- **Orden "Populares"** de los listados (familia, década, género, pestaña de álbumes de la página de género): posición del disco en
+  el ranking de siempre (`allTimeAlbumRanking`, `array_position`) y, para los que no tienen actividad, el orden "Destacados". La
+  etiqueta pasó de "Más valorados" a "Populares" / "Popular".
 
 ### Tarjetas de álbum
 
@@ -184,7 +204,7 @@ producen listas públicas de `@exploracion` (`kind='standard'`, no oficiales), r
 | `upcoming` | `evergreen` | "Lo que viene": próximos lanzamientos del calendario enlazados al catálogo, por rango de popularidad, completados con los próximos del catálogo |
 | `one-per-decade` | `evergreen` | "Un disco por década": el mejor studio de cada década según la señal de calidad, con carátula |
 | `top-rated-quarter` | trimestre (`2026-Q4`) | "Mejor valorados del N.º trimestre de AAAA": valoraciones del trimestre, ≥ `MIN_RATINGS_PER_ALBUM`. Comunidad: se activa sola (peso 10) |
-| `most-reviewed-month` | mes (`2026-10`) | "Lo más reseñado de <mes> de AAAA": reseñas visibles del mes. Comunidad: se activa sola (peso 10) |
+| `popular-month` | mes (`2026-10`) | "Lo más popular de <mes> de AAAA": la popularidad del mes (personas distintas con peso por gesto, ≥ 2 personas; cartela "N personas" solo desde 5). Comunidad: se activa sola (peso 10). Reemplazó a `most-reviewed-month` ("Lo más reseñado"), retirada en `explore-popular-now`: sus colecciones archivadas conservan título (es/en) y familia |
 
 Las seis primeras son el conjunto del **día 0**: no dependen de valoraciones ni reseñas. Las dos de comunidad
 siguen registradas, quedan sin colección hasta que haya actividad y, al crearse, pasan por delante dentro del
