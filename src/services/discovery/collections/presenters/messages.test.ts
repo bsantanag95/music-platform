@@ -38,8 +38,8 @@ const SAMPLE: Record<ContextMessageKey, Record<string, string | number>> = {
   decadeNoteExact: { decade: "2020" },
   topRatedSummary: { quarter: "4", year: "2026", min: 3 },
   topRatedNote: { average: 4.5, count: 12 },
-  mostReviewedSummary: { month: "octubre de 2026" },
-  mostReviewedNote: { count: 12 },
+  popularMonthSummary: { month: "octubre de 2026" },
+  popularMonthNote: { count: 12 },
 };
 
 const translator = (locale: "es" | "en") =>
@@ -68,8 +68,8 @@ describe("textos de los presentadores, formateados", () => {
     expect(translator("es")("topRatedNote", { average: 4.5, count: 12 })).toBe("★ 4,5 · 12 valoraciones");
     expect(translator("en")("topRatedNote", { average: 4.5, count: 12 })).toBe("★ 4.5 · 12 ratings");
     expect(translator("es")("topRatedNote", { average: 4, count: 1 })).toBe("★ 4,0 · 1 valoración");
-    expect(translator("es")("mostReviewedNote", { count: 1 })).toBe("1 reseña");
-    expect(translator("en")("mostReviewedNote", { count: 1 })).toBe("1 review");
+    expect(translator("es")("popularMonthNote", { count: 1 })).toBe("1 persona");
+    expect(translator("en")("popularMonthNote", { count: 12 })).toBe("12 people");
     expect(translator("es")("newReleasesWeeksAgo", { weeks: 1, date: "9 oct" })).toBe("Hace 1 semana · 9 oct");
     expect(translator("es")("upcomingWeeksIn", { weeks: 3, date: "4 nov" })).toBe("Sale en 3 semanas · 4 nov");
   });

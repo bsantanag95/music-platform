@@ -9,7 +9,6 @@ import {
   featuredActiveCondition,
   listFeaturedCollections,
   listGenreFamilies,
-  listMostReviewed,
   listNewAlbums,
   listNewReleases,
   listRecentByYear,
@@ -23,10 +22,13 @@ const mocks = vi.hoisted(() => ({
   db: { select: vi.fn() },
   enrichLists: vi.fn(),
   familyCovers: vi.fn(),
+  ranking: vi.fn(),
+  popularNow: vi.fn(),
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
 vi.mock("./family-covers", () => ({ listFamilyCovers: mocks.familyCovers }));
+vi.mock("./popularity", () => ({ allTimeAlbumRanking: mocks.ranking, listPopularNow: mocks.popularNow }));
 vi.mock("@/services/lists/lists", () => ({ enrichLists: mocks.enrichLists }));
 
 // Proxy que devuelve `this` para cualquier método encadenado y resuelve a
@@ -64,6 +66,8 @@ function albumRow(id: string) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Un ranking de popularidad por defecto: el orden «popular» lo lee siempre.
+  mocks.ranking.mockResolvedValue(["r1"]);
 });
 
 describe("listFeaturedCollections", () => {
@@ -128,10 +132,6 @@ describe("rieles por reglas: degradación grácil", () => {
     expect(result[0]).toMatchObject({ title: "Álbum a0", firstReleaseYear: 1994 });
   });
 
-  it("listMostReviewed omite el riel bajo umbral", async () => {
-    mocks.db.select.mockReturnValue(chain([{ ...albumRow("a0"), reviewCount: 2 }]));
-    await expect(listMostReviewed()).resolves.toEqual([]);
-  });
 });
 
 describe("listNewReleases", () => {
@@ -468,18 +468,37 @@ describe("listAlbumsFiltered", () => {
       expect(award).not.toContain(" or ");
     });
 
-    it("«popular» cuenta valoraciones primero y conserva el resto del orden", async () => {
+    it("«popular» ordena por la posición en el ranking de popularidad y conserva «Destacados» como desempate", async () => {
+      mocks.ranking.mockResolvedValue(["r2", "r1"]);
       const captured = capture();
       await listAlbumsFiltered(base, { sort: "popular" });
-      const order = captured.orderBy.map((o) => render(o).sql.replace(/\s+/g, " "));
+      const order = captured.orderBy.map((o) => render(o));
 
-      expect(order[0]).toMatch(/count\(.*desc/);
-      expect(order.some((text) => text.includes("award_nomination"))).toBe(true);
+      expect(order[0]!.sql).toMatch(/array_position\(array\[\$\d+, \$\d+\]::uuid\[\], "release_group"\."id"\) asc nulls last/);
+      expect(order[0]!.params).toEqual(["r2", "r1"]);
+      expect(order.some((chunk) => chunk.sql.includes("award_nomination"))).toBe(true);
+      expect(mocks.ranking).toHaveBeenCalledTimes(1);
+    });
+
+    it("«popular» sin actividad en ninguna parte cae al orden «Destacados»", async () => {
+      mocks.ranking.mockResolvedValue([]);
+      const captured = capture();
+      await listAlbumsFiltered(base, { sort: "popular" });
+
+      expect(render(captured.orderBy[0]).sql).toContain("current_date");
+    });
+
+    it("los demás órdenes no leen el ranking de popularidad", async () => {
+      mocks.ranking.mockClear();
+      capture();
+      await listAlbumsFiltered(base, { sort: "newest" });
+
+      expect(mocks.ranking).not.toHaveBeenCalled();
     });
   });
 
   it.each([
-    ["popular", /count\(.*desc/],
+    ["popular", /array_position\(array\[.*\]::uuid\[\], "release_group"\."id"\) asc nulls last/],
     ["newest", /first_release_year" desc nulls last/],
     ["oldest", /first_release_year" asc nulls last/],
     ["az", /search_normalize\(.*title.*asc/],

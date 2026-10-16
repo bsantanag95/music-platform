@@ -48,6 +48,7 @@ const { CollectionRail } = await import("@/components/discovery/CollectionRail")
 const { FeaturedCollection } = await import("@/components/discovery/FeaturedCollection");
 const { CollectionFamilyFilter } = await import("@/components/discovery/CollectionFamilyFilter");
 const { ExploreJumpNav } = await import("@/components/discovery/ExploreJumpNav");
+const { PopularNow } = await import("@/components/discovery/PopularNow");
 
 /** Todos los elementos de `type` dentro del árbol devuelto por el componente. */
 function findAll(node: ReactNode, type: unknown, found: ReactElement[] = []): ReactElement[] {
@@ -84,7 +85,7 @@ const empty = {
   decades: [],
   families: [],
   topRated: [],
-  mostReviewed: [],
+  popular: { albums: null, artists: null, songs: null },
 };
 
 const params = Promise.resolve({ locale: "es" });
@@ -140,6 +141,29 @@ describe("/explore: un solo riel de colecciones", () => {
     const nav = findAll(element, ExploreJumpNav)[0]!.props as { items: { id: string }[] };
 
     expect(nav.items.map((item) => item.id)).toEqual(["colecciones", "generos"]);
+  });
+
+  it("Popular ahora va después de Colecciones y la navegación rápida la enlaza solo si tiene contenido", async () => {
+    const popular = {
+      albums: null,
+      artists: { window: "month" as const, items: [{ id: "x", name: "Artista", photoUrl: null, people: 2 }] },
+      songs: null,
+    };
+    mocks.getExplorePage.mockResolvedValue({
+      ...empty,
+      popular,
+      collections: [collection("a1")],
+      families: [{ key: "rock", tier: "main", count: 3, covers: [] }],
+    });
+
+    const element = await ExplorePage({ params, searchParams: Promise.resolve({}) });
+    const nav = findAll(element, ExploreJumpNav)[0]!.props as { items: { id: string }[] };
+    const section = findAll(element, PopularNow)[0]!.props as { section: unknown };
+
+    expect(nav.items.map((item) => item.id)).toEqual(["colecciones", "popular", "generos"]);
+    expect(section.section).toBe(popular);
+    // Ya no hay un riel «Más reseñados».
+    expect(nav.items.some((item) => item.id === "mas-resenados")).toBe(false);
   });
 
   it("sin colecciones vigentes, el riel no se enlaza", async () => {

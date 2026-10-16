@@ -164,6 +164,23 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - Un perfil privado no revela contenido no autorizado: las superficies ajenas devuelven lista
   vacía (o `404` en el detalle) sin indicar si el usuario tiene contenido.
 
+## Popularidad (Explorar)
+
+Cambio `explore-popular-now` (2026-10, ADR 0041). "Popular" se mide en **personas distintas**, no en acciones, y es la misma regla
+para "Popular ahora", el orden "Populares" de los listados y la colección "Lo más popular del mes".
+
+- Por cada objetivo (álbum, artista, canción), cada persona aporta la suma de los pesos de los **tipos** de gesto distintos que hizo
+  sobre él, **con un tope de 4**. Diez escuchas de una persona valen 1.
+- Pesos: favorito **3**; reseña **2**; seguir al artista **2**; escucha del diario, valoración, añadir a una lista y tener en la
+  colección **1**; pendiente por escuchar y "en búsqueda" **0,5**.
+- Las estrellas no cuentan por su nota: popular no es bien valorado (eso es "Mejor valorados").
+- Un artista suma sus gestos directos y los de sus discos, atribuidos al primer artista acreditado del disco.
+- Solo cuentan cuentas activas. No cuenta nada marcado como privado (escuchas, favoritos, colección, "en búsqueda", listas privadas)
+  ni las reseñas ocultas por moderación. Nunca se muestra quién.
+- La cifra "N personas" solo se muestra desde **5**.
+- "Ahora" son 30 días; con pocos datos la ventana se agranda a 90 días y luego a "de siempre" (aceptando objetivos con una persona),
+  y la interfaz dice qué ventana usó.
+
 ## Agregados de comunidad del álbum
 
 Cambio `redesign-album-page` (2026-09). La cabecera del álbum muestra agregados de la

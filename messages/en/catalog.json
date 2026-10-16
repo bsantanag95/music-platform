@@ -7,7 +7,15 @@
     "decadesHeading": "Explore by decade",
     "genresHeading": "Explore by genre",
     "topRatedHeading": "Top rated",
-    "mostReviewedHeading": "Most reviewed",
+    "popularHeading": "Popular now",
+    "popularTabsLabel": "Show",
+    "popularPeople": "{count, plural, one {# person} other {# people}}",
+    "popularTabs": { "albums": "Albums", "artists": "Artists", "songs": "Songs" },
+    "popularWindow": {
+      "month": "What the community is listening to, rating and saving most this month.",
+      "quarter": "What the community has listened to, rated and saved most in the last 3 months.",
+      "all": "What the community has listened to, rated and saved most since the start."
+    },
     "decadeChip": "{decade}s",
     "collectionItems": "{count, plural, one {# album} other {# albums}}",
     "collectionAlbums": "Albums",
@@ -34,7 +42,6 @@
     "decadesDescription": "How many albums the catalog holds per release decade. Pick one to browse it.",
     "decadeBarLabel": "{decade}s: {formatted} {count, plural, one {album} other {albums}}",
     "topRatedDescription": "By average, among albums with at least {min} ratings.",
-    "mostReviewedDescription": "The albums with the most reviews.",
     "scrollPrev": "Show previous",
     "scrollNext": "Show next",
     "otherDecades": "Other decades",
@@ -46,17 +53,16 @@
     "pageIndicator": "Page {page}",
     "fewerFamilies": "Show fewer",
     "decadesEarlier": "Earlier",
-    "reviewCount": "{count, plural, one {# review} other {# reviews}}",
     "countdown": "{days, plural, =0 {Today} =1 {Tomorrow} other {In # days}}",
     "jump": {
       "label": "On this page",
+      "popular": "Popular",
       "collections": "Collections",
       "genres": "Genres",
       "newReleases": "New releases",
       "upcoming": "Upcoming",
       "awards": "Awards",
       "topRated": "Top rated",
-      "mostReviewed": "Most reviewed",
       "decades": "Decades"
     },
     "collectionsHeading": "Collections",
@@ -122,8 +128,8 @@
       "decadeNoteExact": "{decade}s",
       "topRatedSummary": "The highest-rated albums of Q{quarter} {year}, with at least {min} ratings.",
       "topRatedNote": "★ {average, number, ::.0} · {count, plural, one {# rating} other {# ratings}}",
-      "mostReviewedSummary": "The albums that received the most reviews in {month}.",
-      "mostReviewedNote": "{count, plural, one {# review} other {# reviews}}"
+      "popularMonthSummary": "The albums that moved the community most in {month}: listens, ratings, reviews, favorites and lists, counting people.",
+      "popularMonthNote": "{count, plural, one {# person} other {# people}}"
     }
   },
   "search": {
@@ -1244,7 +1250,7 @@
         "exactLabel": "This genre only",
         "sortLabel": "Sort by",
         "sortBest": "Featured",
-        "sortPopular": "Most rated",
+        "sortPopular": "Popular",
         "sortNewest": "Newest",
         "sortOldest": "Oldest",
         "sortAz": "A–Z",

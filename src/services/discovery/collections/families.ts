@@ -21,7 +21,7 @@ export const TEMPLATE_FAMILY: Record<string, CollectionFamily> = {
   // Rankings calculados de la actividad de la gente. La familia se llamaba `community` y se renombró para no
   // confundirla con las listas que escribe la comunidad (`/lists`).
   "top-rated-quarter": "rankings",
-  "most-reviewed-month": "rankings",
+  "popular-month": "rankings",
 };
 
 export function isCollectionFamily(value: string | undefined | null): value is CollectionFamily {

@@ -1,6 +1,6 @@
-import { and, count, eq, gte, inArray, lt, avg } from "drizzle-orm";
+import { and, count, gte, inArray, lt, avg } from "drizzle-orm";
 import { db } from "@/db";
-import { rating, review } from "@/db/schema";
+import { rating } from "@/db/schema";
 import type { PeriodBounds } from "./period";
 
 // Cifras de los rankings de la comunidad para presentarlos (openspec: add-remaining-collection-presenters): una
@@ -31,24 +31,4 @@ export async function ratingStats(albumIds: string[], bounds: PeriodBounds): Pro
     if (row.id) stats.set(row.id, { average: Number(row.average), count: Number(row.total) });
   }
   return stats;
-}
-
-/** Reseñas visibles de cada álbum dentro del período (las ocultas por moderación no cuentan). */
-export async function reviewCounts(albumIds: string[], bounds: PeriodBounds): Promise<Map<string, number>> {
-  const counts = new Map<string, number>();
-  if (albumIds.length === 0) return counts;
-  const rows = await db
-    .select({ id: review.releaseGroupId, total: count() })
-    .from(review)
-    .where(
-      and(
-        inArray(review.releaseGroupId, albumIds),
-        eq(review.moderationStatus, "visible"),
-        gte(review.createdAt, new Date(bounds.start)),
-        lt(review.createdAt, new Date(bounds.end)),
-      ),
-    )
-    .groupBy(review.releaseGroupId);
-  for (const row of rows) if (row.id) counts.set(row.id, Number(row.total));
-  return counts;
 }

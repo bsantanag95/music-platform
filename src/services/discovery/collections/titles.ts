@@ -87,7 +87,9 @@ export const TITLE_PATTERNS: Record<TitleLocale, Record<string, string>> = {
     anniversaries: "Cumplen años en {month} de {year}",
     "genre-spotlight": "Para entrar a {family}",
     "top-rated-quarter": "Mejor valorados del {quarter}.º trimestre de {year}",
+    // Retirada (explore-popular-now): se conserva para las colecciones archivadas.
     "most-reviewed-month": "Lo más reseñado de {month} de {year}",
+    "popular-month": "Lo más popular de {month} de {year}",
   },
   en: {
     "new-releases": "Essential new releases",
@@ -98,6 +100,7 @@ export const TITLE_PATTERNS: Record<TitleLocale, Record<string, string>> = {
     "genre-spotlight": "Getting into {family}",
     "top-rated-quarter": "Top rated of Q{quarter} {year}",
     "most-reviewed-month": "Most reviewed in {month} {year}",
+    "popular-month": "Most popular in {month} {year}",
   },
 };
 
@@ -119,7 +122,8 @@ function valuesFor(templateKey: string, periodKey: string, locale: TitleLocale):
       return { award: AWARD_NAMES[match[1]!] ?? match[1]!, year: match[2]! };
     }
     case "anniversaries":
-    case "most-reviewed-month": {
+    case "most-reviewed-month":
+    case "popular-month": {
       const match = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(periodKey);
       if (!match) return null;
       return { year: match[1]!, month: monthName(Number(match[1]), Number(match[2]), locale) };

@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ ratingStats: vi.fn(), reviewCounts: vi.fn() }));
-vi.mock("./ranking-stats", () => ({ ratingStats: mocks.ratingStats, reviewCounts: mocks.reviewCounts }));
+const mocks = vi.hoisted(() => ({ ratingStats: vi.fn(), popularPeopleOf: vi.fn() }));
+vi.mock("./ranking-stats", () => ({ ratingStats: mocks.ratingStats }));
+vi.mock("../../popularity", () => ({ popularPeopleOf: mocks.popularPeopleOf }));
 
-const { buildMostReviewedContext, buildTopRatedContext, mostReviewedPresenter, topRatedPresenter } = await import("./rankings");
+const { buildPopularMonthContext, buildTopRatedContext, popularMonthPresenter, topRatedPresenter } = await import("./rankings");
 
 const input = (templateKey: string, periodKey: string | null) => ({
   templateKey,
@@ -29,24 +30,25 @@ describe("buildTopRatedContext", () => {
   });
 });
 
-describe("buildMostReviewedContext", () => {
-  it("el resumen nombra el mes, numera y cada disco dice sus reseñas", () => {
-    const context = buildMostReviewedContext(["a", "b"], new Map([["a", 12]]), { year: 2026, month: 10 });
+describe("buildPopularMonthContext", () => {
+  it("el resumen nombra el mes, numera y la cartela dice las personas solo desde 5", () => {
+    const context = buildPopularMonthContext(["a", "b", "c"], new Map([["a", 12], ["b", 3]]), { year: 2026, month: 10 });
 
     expect(context.summary).toEqual({
-      key: "mostReviewedSummary",
+      key: "popularMonthSummary",
       params: { month: { date: "2026-10-01", style: "month-year-inline" } },
     });
     expect(context.numbered).toBe(true);
-    expect(context.notes.get("a")).toEqual({ key: "mostReviewedNote", params: { count: 12 } });
+    expect(context.notes.get("a")).toEqual({ key: "popularMonthNote", params: { count: 12 } });
     expect(context.notes.has("b")).toBe(false);
+    expect(context.notes.has("c")).toBe(false);
   });
 });
 
 describe("presentadores de ranking", () => {
   beforeEach(() => {
     mocks.ratingStats.mockReset();
-    mocks.reviewCounts.mockReset();
+    mocks.popularPeopleOf.mockReset();
   });
 
   it("top-rated consulta las valoraciones UNA vez, con los límites del trimestre de su período", async () => {
@@ -61,22 +63,23 @@ describe("presentadores de ranking", () => {
     expect(context!.notes.get("a")).toMatchObject({ key: "topRatedNote" });
   });
 
-  it("most-reviewed consulta las reseñas UNA vez, con los límites del mes de su período", async () => {
-    mocks.reviewCounts.mockResolvedValue(new Map([["a", 3]]));
-    const context = await mostReviewedPresenter(input("most-reviewed-month", "2026-09"));
+  it("popular-month consulta las personas UNA vez, con los límites del mes de su período", async () => {
+    mocks.popularPeopleOf.mockResolvedValue(new Map([["a", 6]]));
+    const context = await popularMonthPresenter(input("popular-month", "2026-09"));
 
-    expect(mocks.reviewCounts).toHaveBeenCalledTimes(1);
-    expect(mocks.reviewCounts).toHaveBeenCalledWith(["a", "b"], {
+    expect(mocks.popularPeopleOf).toHaveBeenCalledTimes(1);
+    expect(mocks.popularPeopleOf).toHaveBeenCalledWith(["a", "b"], {
       start: "2026-09-01T00:00:00.000Z",
       end: "2026-10-01T00:00:00.000Z",
     });
-    expect(context!.notes.get("a")).toEqual({ key: "mostReviewedNote", params: { count: 3 } });
+    expect(context!.notes.get("a")).toEqual({ key: "popularMonthNote", params: { count: 6 } });
   });
+
 
   it("se abstienen con un período ilegible, sin consultar la base", async () => {
     expect(await topRatedPresenter(input("top-rated-quarter", "2026-10"))).toBeNull();
-    expect(await mostReviewedPresenter(input("most-reviewed-month", "2026-Q4"))).toBeNull();
+    expect(await popularMonthPresenter(input("popular-month", "2026-Q4"))).toBeNull();
     expect(mocks.ratingStats).not.toHaveBeenCalled();
-    expect(mocks.reviewCounts).not.toHaveBeenCalled();
+    expect(mocks.popularPeopleOf).not.toHaveBeenCalled();
   });
 });
