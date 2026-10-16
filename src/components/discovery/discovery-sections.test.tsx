@@ -93,32 +93,89 @@ describe("DecadeHistogram", () => {
 });
 
 describe("FamilyGrid", () => {
-  const tile = (key: string, count: number) => ({
+  const tile = (key: string, covers: string[] = []) => ({
     key,
     label: key,
     href: `/explore?familia=${key}`,
-    count,
-    countLabel: `${count} álbumes`,
+    covers,
   });
+  const cover = (n: number) => `https://coverartarchive.org/release-group/${n}/front-250`;
 
   it("enlaza cada familia y deja las secundarias tras el desplegable", () => {
     renderWithIntl(
       <FamilyGrid
         heading="Explorar por género"
-        families={[tile("rock", 100), tile("jazz", 20)]}
-        moreFamilies={[tile("world", 2)]}
+        families={[tile("rock", [cover(1)]), tile("jazz")]}
+        moreFamilies={[tile("world")]}
         moreLabel="1 familia más"
         lessLabel="Ver menos"
       />,
     );
     expect(screen.getByRole("link", { name: /rock/ })).toHaveAttribute("href", "/es/explore?familia=rock");
-    expect(screen.getByText("20 álbumes")).toBeInTheDocument();
     const toggle = screen.getByRole("button", { name: /1 familia más/ });
     expect(toggle).toHaveAttribute("aria-expanded", "false");
     expect(screen.queryByRole("link", { name: /world/ })).not.toBeInTheDocument();
     fireEvent.click(toggle);
     expect(screen.getByRole("link", { name: /world/ })).toHaveAttribute("href", "/es/explore?familia=world");
     expect(screen.getByRole("button", { name: /Ver menos/ })).toHaveAttribute("aria-expanded", "true");
+  });
+});
+
+describe("FamilyGrid: tarjeta visual", () => {
+  const cover = (n: number) => `https://coverartarchive.org/release-group/${n}/front-250`;
+  const family = (key: string, covers: string[]) => ({ key, label: key, href: `/explore?familia=${key}`, covers });
+  const imagesIn = (name: RegExp) => screen.getByRole("link", { name }).querySelectorAll("img").length;
+
+  it("muestra un mosaico con tantas carátulas como haya, hasta cuatro", () => {
+    renderWithIntl(
+      <FamilyGrid
+        heading="Explorar por género"
+        families={[
+          family("rock", [1, 2, 3, 4, 5].map(cover)),
+          family("jazz", [1, 2, 3].map(cover)),
+          family("blues", [1, 2].map(cover)),
+          family("pop", [1].map(cover)),
+        ]}
+      />,
+    );
+
+    expect(imagesIn(/rock/)).toBe(4);
+    expect(imagesIn(/jazz/)).toBe(3);
+    expect(imagesIn(/blues/)).toBe(2);
+    expect(imagesIn(/pop/)).toBe(1);
+  });
+
+  it("con tres carátulas la primera ocupa las dos filas", () => {
+    renderWithIntl(<FamilyGrid heading="Explorar por género" families={[family("jazz", [1, 2, 3].map(cover))]} />);
+
+    const cells = screen.getByRole("link", { name: /jazz/ }).querySelectorAll("[aria-hidden] > div");
+    expect(cells[0]).toHaveClass("row-span-2");
+    expect(cells[1]).not.toHaveClass("row-span-2");
+  });
+
+  it("una familia sin carátulas es una tarjeta plana con su nombre y sigue enlazando", () => {
+    renderWithIntl(<FamilyGrid heading="Explorar por género" families={[family("latin", [])]} />);
+
+    const link = screen.getByRole("link", { name: /latin/ });
+    expect(link).toHaveAttribute("href", "/es/explore?familia=latin");
+    expect(link.querySelectorAll("img")).toHaveLength(0);
+  });
+
+  it("no muestra número de álbumes ni barra de tamaño", () => {
+    const { container } = renderWithIntl(
+      <FamilyGrid heading="Explorar por género" families={[family("rock", [1, 2].map(cover))]} />,
+    );
+
+    expect(screen.queryByText(/álbum/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/\d{2,}/)).not.toBeInTheDocument();
+    // La barra era un `span` con el ancho en porcentaje; las imágenes de `next/image` llevan su propio estilo.
+    expect(container.querySelector("span[style*='width']")).toBeNull();
+  });
+
+  it("las carátulas son decorativas: el enlace se nombra solo con la familia", () => {
+    renderWithIntl(<FamilyGrid heading="Explorar por género" families={[family("rock", [1, 2].map(cover))]} />);
+
+    expect(screen.getByRole("link", { name: "rock" })).toBeInTheDocument();
   });
 });
 

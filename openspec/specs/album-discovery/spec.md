@@ -146,10 +146,13 @@ reducido del sistema. La tarjeta SHALL NOT indicar si la colección se armó a m
 
 La vista `/explore` SHALL ofrecer navegación por **década** (derivada de
 `release_group.first_release_year`), por **familia** de géneros y por **género** (derivados de
-los géneros efectivos de cada álbum, ver capability `genre-seeds`). Los chips de género SHALL
-mostrar, en el orden de la taxonomía, las familias principales que tienen álbumes, con su número
-de álbumes, y las familias secundarias con álbumes agrupadas detrás de "Más"; una familia sin
-álbumes SHALL NOT mostrar chip. Al elegir una década, una familia o un género, el sistema SHALL mostrar
+los géneros efectivos de cada álbum, ver capability `genre-seeds`). Las tarjetas de familia SHALL
+mostrar, en el orden de la taxonomía, las familias principales que tienen álbumes, y las familias
+secundarias con álbumes agrupadas detrás de "Más"; una familia sin álbumes SHALL NOT mostrar tarjeta.
+Cada tarjeta SHALL ser visual: un mosaico de hasta cuatro carátulas de discos de estudio de la familia
+con el nombre de la familia encima, y SHALL NOT mostrar número de álbumes ni barra de tamaño. Una
+familia sin carátulas disponibles SHALL mostrarse como tarjeta plana con su nombre. Al elegir una década,
+una familia o un género, el sistema SHALL mostrar
 un listado paginado de álbumes de ese corte en `/{locale}/explore` acotado por un parámetro de
 consulta (`?decada=`, `?familia=<clave>` o `?genero=<slug>`), aplicando **un solo corte a la vez**
 con prioridad `decada` > `familia` > `genero`. El listado por familia SHALL incluir los álbumes con
@@ -203,6 +206,28 @@ estable. Los álbumes sin año conocido SHALL NOT aparecer en un listado por dé
 
 - **WHEN** la URL es `/explore?familia=inexistente`
 - **THEN** la vista muestra el estado vacío del listado
+
+#### Scenario: Tarjeta de familia con carátulas
+
+- **WHEN** una familia tiene discos de estudio con carátula
+- **THEN** su tarjeta muestra un mosaico de hasta cuatro de esas carátulas con el nombre de la familia, sin número de
+  álbumes ni barra
+
+#### Scenario: Familia sin carátulas
+
+- **WHEN** una familia tiene álbumes pero ninguno de estudio con carátula
+- **THEN** su tarjeta se muestra plana con el nombre de la familia y sigue llevando a su listado
+
+#### Scenario: Sin repetir discos entre familias
+
+- **WHEN** dos familias comparten discos entre sus mejores candidatos
+- **THEN** cada disco aparece en la tarjeta de una sola familia, salvo el relleno de una familia que de otro modo quedaría con
+  menos de dos carátulas
+
+#### Scenario: Carátulas estables
+
+- **WHEN** se abre `/explore` dos veces sin que cambien los datos
+- **THEN** cada familia muestra las mismas carátulas, elegidas por la señal de calidad y con desempate por id
 
 ### Requirement: Novedades
 

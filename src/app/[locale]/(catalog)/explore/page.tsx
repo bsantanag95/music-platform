@@ -254,8 +254,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
       key: bucket.key,
       label: tGenres(`families.${bucket.key}`),
       href: `/explore?familia=${bucket.key}`,
-      count: bucket.count,
-      countLabel: t("albumCount", { count: bucket.count, formatted: numberFormat.format(bucket.count) }),
+      covers: bucket.covers,
     }));
   const moreFamilies = explore.families.filter((f) => f.tier === "more");
   // Navegación rápida: una entrada por cada sección que se renderiza (mismos datos que cada sección usa para omitirse),

@@ -82,6 +82,7 @@ import { findGeneratedCollection, generatedRefsFor } from "../src/services/disco
 import { collectionTitle } from "../src/services/discovery/collections/titles";
 import { presentCollection } from "../src/services/discovery/collections/presenters";
 import { listCollectionSummaries } from "../src/services/discovery/collections/summaries";
+import { COVERS_PER_FAMILY, listFamilyCovers, resetFamilyCoversCache } from "../src/services/discovery/family-covers";
 import { presentList } from "../src/lib/list-presentation";
 
 assertSmokeAllowed();
@@ -1048,6 +1049,22 @@ async function main() {
     check(unknown.summary === undefined, "una familia de géneros desconocida se abstiene y cae a la familia");
 
     await db.delete(releaseGroup).where(sql`mbid::text like '5e0ce000-0000-4000-8000-0000000009e%'`);
+  }
+
+  console.log("Carátulas de las familias de géneros (visual-genre-families):");
+  {
+    resetFamilyCoversCache();
+    const first = await listFamilyCovers();
+    check([...first.values()].every((covers) => covers.length >= 1 && covers.length <= COVERS_PER_FAMILY), `cada familia con carátulas trae entre 1 y ${COVERS_PER_FAMILY}`);
+    const all = [...first.values()].flat();
+    check(all.every((cover) => typeof cover === "string" && cover.length > 0), "las carátulas son URLs de miniaturas");
+    // Un disco se usa en una sola familia salvo el relleno de las que quedarían con menos de dos.
+    check(new Set(all).size >= all.length - first.size, "los discos no se repiten entre familias (salvo el relleno)");
+    resetFamilyCoversCache();
+    const second = await listFamilyCovers();
+    check(JSON.stringify([...first.entries()]) === JSON.stringify([...second.entries()]), "la selección es estable entre lecturas (mismo desempate)");
+    check((await listFamilyCovers()) === second, "la segunda lectura sale de la caché en memoria");
+    resetFamilyCoversCache();
   }
 
   console.log("Plantillas reales (solo lectura, sin red):");
