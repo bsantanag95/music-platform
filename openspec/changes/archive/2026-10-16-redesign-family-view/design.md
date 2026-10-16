@@ -28,8 +28,10 @@ resuelta la piden al mostrarse con `LazyCoverImage`, así que la primera visita 
    columna o una subconsulta indexada; se omite el rango del calendario de `albumSignalOrder` (es para próximos lanzamientos). Se
    deja la lista explícita en la consulta en vez de importar `albumSignalOrder`, para no arrastrar términos que no aplican. Afecta
    a todo uso de `best`: décadas, familias, géneros y la pestaña de álbumes de la página de género; "popular", "newest", "oldest" y
-   "az" no cambian. La prueba de rendimiento es medir el listado de Rock (17.317 discos) antes y después; si el orden con las
-   subconsultas cuesta de más, se deja solo `studio` + carátula + año (columnas) y el premio solo para el cálculo de carátulas.
+   "az" no cambian. La prueba de rendimiento es medir el listado de Rock (17.317 discos) antes y después. **Medido:** con el premio como
+   subconsulta correlacionada por fila (`n.release_group_id = rg.id or n.anchor_release_group_id = rg.id`) el listado tardaba
+   ~1,5 s contra ~0,3 s de ordenar por columnas; con **subconsultas no correlacionadas** (`rg.id in (select … union select …)`,
+   que Postgres evalúa una vez como conjunto) vuelve a ~0,35–0,4 s, igual que el orden por columnas, y se conserva el premio.
 2. **Se renombra "Mejor valorados" a "Destacados" en el selector de los listados** (`sortBest`). Los rieles "Mejor valorados" de la
    portada siguen llamándose así: ahí sí ordenan por valoración con umbral.
 3. **"Todos" sigue siendo el filtro por defecto.** Con el orden nuevo, los discos de estudio con carátula ya salen primero sin

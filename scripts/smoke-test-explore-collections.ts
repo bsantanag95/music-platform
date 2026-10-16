@@ -69,6 +69,7 @@ import {
 import { COLLECTION_TEMPLATES, EVERGREEN, findTemplate, type CollectionTemplate } from "../src/services/discovery/collections/templates";
 import {
   listCollectionArchive,
+  listAlbumsFiltered,
   listCollectionFamilies,
   listCollections,
   listCollectionsHub,
@@ -83,6 +84,7 @@ import { collectionTitle } from "../src/services/discovery/collections/titles";
 import { presentCollection } from "../src/services/discovery/collections/presenters";
 import { listCollectionSummaries } from "../src/services/discovery/collections/summaries";
 import { COVERS_PER_FAMILY, listFamilyCovers, resetFamilyCoversCache } from "../src/services/discovery/family-covers";
+import { FAMILY_GENRES_LIMIT, listFamilyGenres, resetFamilyGenresCache } from "../src/services/discovery/family-genres";
 import { presentList } from "../src/lib/list-presentation";
 
 assertSmokeAllowed();
@@ -1049,6 +1051,58 @@ async function main() {
     check(unknown.summary === undefined, "una familia de géneros desconocida se abstiene y cae a la familia");
 
     await db.delete(releaseGroup).where(sql`mbid::text like '5e0ce000-0000-4000-8000-0000000009e%'`);
+  }
+
+  console.log("Orden por defecto «Destacados» y géneros de la familia (redesign-family-view):");
+  {
+    // Cuatro discos sintéticos sin valoraciones ni premios: lo que decide es estudio, carátula, año y fecha futura.
+    const day = 24 * 3600 * 1000;
+    const future = new Date(Date.now() + 30 * day).toISOString().slice(0, 10);
+    const rows = [
+      { tag: "a", title: "Smoke orden A (estudio, carátula, 2000)", category: "studio" as const, year: 2000, date: "2000-05-01", cover: "https://coverartarchive.org/smoke-a.jpg" },
+      { tag: "b", title: "Smoke orden B (sencillo, carátula, 2020)", category: "single_ep" as const, year: 2020, date: "2020-05-01", cover: "https://coverartarchive.org/smoke-b.jpg" },
+      { tag: "c", title: "Smoke orden C (estudio, sin carátula, 2010)", category: "studio" as const, year: 2010, date: "2010-05-01", cover: null },
+      { tag: "d", title: "Smoke orden D (estudio, carátula, por salir)", category: "studio" as const, year: Number(future.slice(0, 4)), date: future, cover: "https://coverartarchive.org/smoke-d.jpg" },
+    ];
+    const inserted = await db
+      .insert(releaseGroup)
+      .values(
+        rows.map((row) => ({
+          mbid: `5e0ce000-0000-4000-8000-0000000009f${row.tag === "a" ? 0 : row.tag === "b" ? 1 : row.tag === "c" ? 2 : 3}`,
+          title: row.title,
+          category: row.category,
+          firstReleaseDate: row.date,
+          firstReleaseYear: row.year,
+          coverThumbUrl: row.cover,
+        })),
+      )
+      .returning({ id: releaseGroup.id, title: releaseGroup.title });
+    try {
+      const ids = inserted.map((row) => row.id);
+      const only = sql`"release_group"."id" in (${sql.join(ids.map((id) => sql`${id}`), sql`, `)})`;
+      const page = await listAlbumsFiltered(only, { sort: "best" });
+      const tagOf = (title: string) => title.match(/Smoke orden (\w)/)?.[1];
+      check(
+        page.albums.map((album) => tagOf(album.title)).join("") === "ACBD",
+        "el orden por defecto: estudio con carátula, estudio sin carátula, sencillo y, al final, el que aún no sale",
+      );
+      check(page.albums[3]?.firstReleaseYear === Math.max(...rows.map((row) => row.year)), "el disco por salir queda último aunque su año sea el más reciente");
+      const newest = await listAlbumsFiltered(only, { sort: "newest" });
+      check(tagOf(newest.albums[0]!.title) === "D", "«Más recientes» no cambia: el disco por salir sigue primero");
+    } finally {
+      await db.delete(releaseGroup).where(sql`mbid::text like '5e0ce000-0000-4000-8000-0000000009f%'`);
+    }
+
+    resetFamilyGenresCache();
+    const genres = await listFamilyGenres("rock");
+    if (genres.length > 0) {
+      check(genres.length <= FAMILY_GENRES_LIMIT, `la familia trae como mucho ${FAMILY_GENRES_LIMIT} géneros`);
+      check(genres.every((item) => item.slug.length > 0 && item.name.length > 0), "cada género trae slug y nombre");
+      check(new Set(genres.map((item) => item.slug)).size === genres.length, "los géneros no se repiten");
+      check((await listFamilyGenres("rock")) === genres || JSON.stringify(await listFamilyGenres("rock")) === JSON.stringify(genres), "la segunda lectura sale de la caché");
+    }
+    check((await listFamilyGenres("inexistente")).length === 0, "una familia desconocida no trae géneros");
+    resetFamilyGenresCache();
   }
 
   console.log("Carátulas de las familias de géneros (visual-genre-families):");

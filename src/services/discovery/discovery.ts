@@ -600,8 +600,9 @@ export async function getExplorePage(): Promise<ExplorePage> {
 // Listados filtrados (un corte a la vez)
 // ---------------------------------------------------------------------------
 
-// Orden determinista compartido: valoración agregada cuando el álbum es elegible
-// (≥ MIN_RATINGS_PER_ALBUM), luego año descendente, desempate por id.
+// Orden determinista compartido ("Destacados", openspec: redesign-family-view): los lanzamientos que aún no salen van al
+// final; luego la valoración agregada cuando el álbum es elegible (≥ MIN_RATINGS_PER_ALBUM), el premio, los discos de
+// estudio antes que sencillos, recopilaciones y directos, la carátula ya resuelta, el año descendente y, al final, el id.
 const eligibleAvg = sql`
   case when count(${rating.id}) >= ${MIN_RATINGS_PER_ALBUM}
        then avg(${rating.stars})
@@ -647,8 +648,34 @@ export interface AlbumFilterOptions {
   sort?: AlbumSort;
 }
 
-const bestOrder = [
+/**
+ * 2 si el disco ganó un premio, 1 si fue nominado (directo o como disco ancla de una grabación), `null` si no tiene.
+ * Subconsultas **no correlacionadas**: Postgres las evalúa una vez como conjuntos y las consulta por fila; la versión
+ * correlacionada (`n.release_group_id = rg.id or n.anchor_release_group_id = rg.id`) recorría la tabla por cada disco y
+ * llevaba el listado de Rock de 0,2 s a 1,5 s.
+ */
+const awardScore = sql`(
+  case
+    when "release_group"."id" in (
+      select release_group_id from award_nomination where won and release_group_id is not null
+      union
+      select anchor_release_group_id from award_nomination where won and anchor_release_group_id is not null
+    ) then 2
+    when "release_group"."id" in (
+      select release_group_id from award_nomination where release_group_id is not null
+      union
+      select anchor_release_group_id from award_nomination where anchor_release_group_id is not null
+    ) then 1
+  end
+)`;
+
+export const bestOrder = [
+  // Un disco por salir pertenece a "Próximos", no a "lo mejor": `coalesce` porque sin fecha el booleano sería `null`.
+  sql`coalesce(${releaseGroup.firstReleaseDate} > current_date, false) asc`,
   sql`${eligibleAvg} desc nulls last`,
+  sql`${awardScore} desc nulls last`,
+  sql`(${releaseGroup.category} = 'studio') desc`,
+  sql`(${releaseGroup.coverThumbUrl} is not null) desc`,
   sql`${releaseGroup.firstReleaseYear} desc nulls last`,
   asc(releaseGroup.id),
 ];

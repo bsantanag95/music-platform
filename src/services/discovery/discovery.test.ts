@@ -422,6 +422,62 @@ describe("listAlbumsFiltered", () => {
     expect(order).toMatch(/first_release_year.*desc nulls last/);
   });
 
+  describe("orden por defecto «Destacados»", () => {
+    const rendered = async () => {
+      const captured = capture();
+      await listAlbumsFiltered(base, {});
+      return captured.orderBy.map((o) => render(o).sql.replace(/\s+/g, " "));
+    };
+    const at = (list: string[], pattern: RegExp) => list.findIndex((text) => pattern.test(text));
+
+    it("deja los lanzamientos futuros al final, antes que cualquier otro criterio", async () => {
+      const order = await rendered();
+
+      expect(order[0]).toMatch(/coalesce\(.*first_release_date" > current_date, false\) asc/);
+    });
+
+    it("sigue con la valoración, el premio, el estudio, la carátula, el año y el id, en ese orden", async () => {
+      const order = await rendered();
+      const positions = [
+        at(order, /avg\(/),
+        at(order, /award_nomination/),
+        at(order, /"category" = 'studio'\) desc/),
+        at(order, /cover_thumb_url" is not null\) desc/),
+        at(order, /first_release_year" desc nulls last/),
+        at(order, /"id" asc/),
+      ];
+
+      expect(positions.every((position) => position >= 0)).toBe(true);
+      expect([...positions].sort((a, b) => a - b)).toEqual(positions);
+    });
+
+    it("el premio cuenta al ganador (2) por encima del nominado (1), directo o como disco ancla", async () => {
+      const award = (await rendered()).find((text) => text.includes("award_nomination"))!;
+
+      expect(award).toMatch(/when "release_group"."id" in \( select release_group_id from award_nomination where won/);
+      expect(award).toContain("then 2");
+      expect(award).toContain("then 1");
+      expect(award).toContain("anchor_release_group_id");
+      expect(award).toContain("desc nulls last");
+    });
+
+    it("las subconsultas del premio no se correlacionan con cada fila: el listado no recorre la tabla por disco", async () => {
+      const award = (await rendered()).find((text) => text.includes("award_nomination"))!;
+
+      expect(award).not.toMatch(/n\.release_group_id = "release_group"/);
+      expect(award).not.toContain(" or ");
+    });
+
+    it("«popular» cuenta valoraciones primero y conserva el resto del orden", async () => {
+      const captured = capture();
+      await listAlbumsFiltered(base, { sort: "popular" });
+      const order = captured.orderBy.map((o) => render(o).sql.replace(/\s+/g, " "));
+
+      expect(order[0]).toMatch(/count\(.*desc/);
+      expect(order.some((text) => text.includes("award_nomination"))).toBe(true);
+    });
+  });
+
   it.each([
     ["popular", /count\(.*desc/],
     ["newest", /first_release_year" desc nulls last/],

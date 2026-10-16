@@ -15,9 +15,13 @@ export interface SliceLink {
   current: boolean;
 }
 
+export interface TopicLink {
+  key: string;
+  label: string;
+  href: string;
+}
+
 interface FilteredAlbumListProps {
-  /** Qué tipo de corte es ("Década", "Familia de géneros", "Género"). */
-  kicker: string;
   heading: string;
   /** Nombre corto del corte para la miga de pan ("1990s", "Rock"). */
   crumb: string;
@@ -29,8 +33,16 @@ interface FilteredAlbumListProps {
   coverLabel: string;
   /** Hay sesión: el menú de acciones de cada disco pide sus marcas. */
   authenticated?: boolean;
-  /** Cortes hermanos (las otras décadas o familias), para saltar sin volver a la portada. */
-  siblings?: { label: string; links: SliceLink[] };
+  /**
+   * Cortes hermanos (las otras décadas o familias), para saltar sin volver a la portada. Con `collapsed` van en un
+   * desplegable cerrado (veinte chips de familia empujaban el primer disco bajo el pliegue).
+   */
+  siblings?: { label: string; links: SliceLink[]; collapsed?: boolean };
+  /**
+   * Temas del corte (los géneros de una familia), cada uno con su página: la forma de seguir navegando hacia dentro. Sin
+   * cifras. No se pinta sin enlaces.
+   */
+  topics?: { label: string; links: TopicLink[] };
   /** Enlace relacionado bajo el título (la página completa del género). */
   related?: { href: string; label: string };
   /** Fecha de lanzamiento ya formateada por id de álbum; reemplaza al año en la tarjeta. */
@@ -41,6 +53,34 @@ interface FilteredAlbumListProps {
   stats?: Record<string, string>;
   /** Sin selector de orden (el listado tiene un orden fijo, p. ej. cronológico). */
   hideSort?: boolean;
+}
+
+/** Los cortes hermanos como chips; en móvil, una fila que se desplaza. */
+function SliceNav({ siblings, className = "" }: { siblings: { label: string; links: SliceLink[] }; className?: string }) {
+  return (
+    <nav
+      aria-label={siblings.label}
+      className={`themed-scrollbar -mx-4 w-[calc(100%+2rem)] overflow-x-auto px-4 pb-1 md:mx-0 md:w-full md:overflow-visible md:px-0 ${className}`}
+    >
+      <ul className="flex w-max gap-1.5 md:w-auto md:flex-wrap">
+        {siblings.links.map((link) => (
+          <li key={link.key}>
+            <Link
+              href={link.href}
+              aria-current={link.current ? "page" : undefined}
+              className={`inline-flex rounded-md px-2.5 py-1 font-data text-xs transition-colors ${
+                link.current
+                  ? "bg-ink-surface text-paper ring-1 ring-inset ring-amber"
+                  : "text-paper-muted hover:bg-ink-surface hover:text-paper"
+              }`}
+            >
+              {link.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
 }
 
 function PageArrow({ direction }: { direction: "prev" | "next" }) {
@@ -66,7 +106,6 @@ function PageArrow({ direction }: { direction: "prev" | "next" }) {
  * álbumes y paginación en servidor (`?page=`, anterior / siguiente). Sin endpoint propio.
  */
 export function FilteredAlbumList({
-  kicker,
   heading,
   crumb,
   result,
@@ -76,6 +115,7 @@ export function FilteredAlbumList({
   coverLabel,
   authenticated = false,
   siblings,
+  topics,
   related,
   dateLabels,
   artistNames,
@@ -103,7 +143,6 @@ export function FilteredAlbumList({
       />
 
       <header className="flex w-full flex-col gap-1.5">
-        <p className="font-data text-xs uppercase tracking-wider text-paper-muted">{kicker}</p>
         <h1 className="font-display text-3xl text-paper">{heading}</h1>
         {related ? (
           <Link
@@ -118,22 +157,14 @@ export function FilteredAlbumList({
         ) : null}
       </header>
 
-      {siblings && siblings.links.length > 1 ? (
-        <nav
-          aria-label={siblings.label}
-          className="themed-scrollbar -mx-4 w-[calc(100%+2rem)] overflow-x-auto px-4 pb-1 md:mx-0 md:w-full md:overflow-visible md:px-0"
-        >
-          <ul className="flex w-max gap-1.5 md:w-auto md:flex-wrap">
-            {siblings.links.map((link) => (
+      {topics && topics.links.length > 0 ? (
+        <nav aria-label={topics.label} className="w-full">
+          <ul className="flex flex-wrap gap-1.5">
+            {topics.links.map((link) => (
               <li key={link.key}>
                 <Link
                   href={link.href}
-                  aria-current={link.current ? "page" : undefined}
-                  className={`inline-flex rounded-md px-2.5 py-1 font-data text-xs transition-colors ${
-                    link.current
-                      ? "bg-ink-surface text-paper ring-1 ring-inset ring-amber"
-                      : "text-paper-muted hover:bg-ink-surface hover:text-paper"
-                  }`}
+                  className="inline-flex rounded-full border border-ink-border px-3 py-1 font-data text-xs text-paper-muted transition-colors hover:border-amber hover:text-paper focus-visible:border-amber"
                 >
                   {link.label}
                 </Link>
@@ -141,6 +172,29 @@ export function FilteredAlbumList({
             ))}
           </ul>
         </nav>
+      ) : null}
+
+      {siblings && siblings.links.length > 1 ? (
+        siblings.collapsed ? (
+          <details className="group w-full">
+            <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 font-data text-sm text-paper-muted transition-colors hover:text-paper focus-visible:text-paper [&::-webkit-details-marker]:hidden">
+              {siblings.label}
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+                className="size-3.5 transition-transform group-open:rotate-180"
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </summary>
+            <SliceNav siblings={siblings} className="pt-3" />
+          </details>
+        ) : (
+          <SliceNav siblings={siblings} />
+        )
       ) : null}
 
       <ExploreFilterBar baseHref={baseHref} params={params} categoryLabels={categoryLabels} hideSort={hideSort} />
