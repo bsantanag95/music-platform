@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import { Link } from "@/i18n/navigation";
+import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { SectionHeader } from "./SectionHeader";
 
 export interface FamilyTile {
   key: string;
   label: string;
   href: string;
-  count: number;
-  /** Conteo ya formateado ("17.285 álbumes"). */
-  countLabel: string;
+  /** Hasta cuatro carátulas de discos de la familia; vacío = tarjeta plana. */
+  covers: string[];
 }
 
 interface FamilyGridProps {
@@ -24,17 +24,44 @@ interface FamilyGridProps {
   lessLabel?: string;
 }
 
-function Tile({ family, max }: { family: FamilyTile; max: number }) {
-  // Escala de raíz cuadrada: con Rock en decenas de miles y Brasileña en decenas, una escala
-  // lineal dejaría casi todas las barras en el mínimo. Es una pista de tamaño, no un gráfico.
-  const width = Math.max(4, Math.round(Math.sqrt(family.count / max) * 100));
+/**
+ * Cómo se reparte el mosaico según cuántas carátulas hay: con cuatro, 2×2; con tres, la primera ocupa las dos filas; con
+ * dos, dos columnas a todo el alto; con una, a sangre.
+ */
+function mosaicLayout(count: number): { grid: string; span: (index: number) => string } {
+  if (count >= 4) return { grid: "grid-cols-2 grid-rows-2", span: () => "" };
+  if (count === 3) return { grid: "grid-cols-2 grid-rows-2", span: (i) => (i === 0 ? "row-span-2" : "") };
+  if (count === 2) return { grid: "grid-cols-2 grid-rows-1", span: () => "" };
+  return { grid: "grid-cols-1 grid-rows-1", span: () => "" };
+}
+
+function Tile({ family }: { family: FamilyTile }) {
+  const covers = family.covers.slice(0, 4);
+  const { grid, span } = mosaicLayout(covers.length);
   return (
     <Link
       href={family.href}
-      className="group flex h-full flex-col gap-2 rounded-lg border border-ink-border bg-ink-surface px-3 py-2.5 transition-colors hover:border-amber focus-visible:border-amber"
+      className="group relative isolate block aspect-[4/3] overflow-hidden rounded-lg border border-ink-border bg-ink-surface transition-colors hover:border-amber focus-visible:border-amber"
     >
-      <span className="flex items-baseline justify-between gap-2">
-        <span className="truncate font-display text-sm text-paper">{family.label}</span>
+      {covers.length > 0 ? (
+        <>
+          {/* Las carátulas son decorativas: el enlace se nombra con la familia. */}
+          <div aria-hidden="true" className={`absolute inset-0 -z-10 grid gap-px bg-ink ${grid}`}>
+            {covers.map((cover, i) => (
+              <div key={`${cover}-${i}`} className={`relative min-h-0 min-w-0 ${span(i)}`}>
+                <CoverThumb cover={cover} label="" className="size-full !rounded-none" />
+              </div>
+            ))}
+          </div>
+          {/* Velo bajo el nombre: garantiza su contraste sobre cualquier carátula. */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-x-0 bottom-0 -z-10 h-3/5 bg-gradient-to-t from-ink via-ink/70 to-transparent"
+          />
+        </>
+      ) : null}
+      <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-3">
+        <span className="font-display text-base leading-tight text-paper">{family.label}</span>
         {/* La flecha aparece solo al pasar el mouse o con foco: repetida en cada tarjeta era ruido. */}
         <span
           aria-hidden="true"
@@ -43,29 +70,23 @@ function Tile({ family, max }: { family: FamilyTile; max: number }) {
           →
         </span>
       </span>
-      <span className="font-data text-xs tabular-nums text-paper-muted">{family.countLabel}</span>
-      <span aria-hidden="true" className="mt-auto block h-1 rounded-full bg-ink-border">
-        <span
-          className="block h-full rounded-full bg-paper-muted/50 transition-colors group-hover:bg-amber"
-          style={{ width: `${width}%` }}
-        />
-      </span>
     </Link>
   );
 }
 
-const GRID = "grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6";
+const GRID = "grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6";
 
 /**
- * Familias de géneros de `/explore`: tarjetas con el número de álbumes y una barra de tamaño
- * relativo, cada una lleva a `/explore?familia=`. Las familias secundarias se despliegan desde
- * una tarjeta más de la propia grilla (ocupa el hueco de la última fila en lugar de quedar suelta
- * debajo) y se vuelven a plegar con "Ver menos". No renderiza nada si no hay familias.
+ * Familias de géneros de `/explore` (openspec: visual-genre-families): una tarjeta por familia que es imagen primero —un
+ * mosaico de carátulas reales con el nombre encima—, sin número de álbumes ni barra de tamaño: el conteo de lo que la base
+ * ha guardado crece con cada artista que alguien abre y no dice nada de la familia. Cada tarjeta lleva a
+ * `/explore?familia=`. Las familias secundarias se despliegan desde una tarjeta más de la propia grilla (ocupa el hueco de
+ * la última fila en lugar de quedar suelta debajo) y se vuelven a plegar con "Ver menos". No renderiza nada si no hay
+ * familias.
  */
 export function FamilyGrid({ heading, description, families, moreFamilies = [], moreLabel, lessLabel }: FamilyGridProps) {
   const [expanded, setExpanded] = useState(false);
   if (families.length === 0 && moreFamilies.length === 0) return null;
-  const max = Math.max(...families.map((f) => f.count), ...moreFamilies.map((f) => f.count), 1);
   const visible = expanded ? [...families, ...moreFamilies] : families;
   const canToggle = moreFamilies.length > 0 && moreLabel;
 
@@ -75,7 +96,7 @@ export function FamilyGrid({ heading, description, families, moreFamilies = [], 
       <ul id="explore-genre-families" className={GRID}>
         {visible.map((family) => (
           <li key={family.key}>
-            <Tile family={family} max={max} />
+            <Tile family={family} />
           </li>
         ))}
         {canToggle ? (
@@ -85,7 +106,7 @@ export function FamilyGrid({ heading, description, families, moreFamilies = [], 
               aria-expanded={expanded}
               aria-controls="explore-genre-families"
               onClick={() => setExpanded((open) => !open)}
-              className="flex size-full min-h-[4.75rem] items-center justify-center gap-1.5 rounded-lg border border-dashed border-ink-border px-3 py-2.5 font-data text-xs text-paper-muted transition-colors hover:border-paper-muted/60 hover:text-paper"
+              className="flex aspect-[4/3] size-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-ink-border px-3 py-2.5 font-data text-xs text-paper-muted transition-colors hover:border-paper-muted/60 hover:text-paper"
             >
               {expanded ? lessLabel ?? moreLabel : moreLabel}
               <svg

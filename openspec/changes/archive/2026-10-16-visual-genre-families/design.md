@@ -25,7 +25,11 @@ compite con las colecciones (que ya son visuales) siendo la única parte de `/ex
 2. **Qué carátulas: estudio, con carátula, por la señal de las colecciones.** Discos `studio` con `cover_thumb_url`, ordenados
    por premio ganador/nominado, rango de popularidad del calendario y, al final, el id (estable). La señal de valoración de la
    comunidad (`communityScore`) también entra en `albumSignalOrder`, así que las familias mejoran solas cuando la comunidad
-   opine. Un disco puede salir en dos familias (un rock/pop); no se evita: sería una restricción cruzada sin beneficio claro.
+   opine. **Un disco se usa en una sola familia** (`assignCovers`): los géneros se solapan y, sin esto, los mismos discos
+   premiados salían en Rock, Pop, R&B, Folk y Country y las tarjetas se parecían entre sí (se vio al probarlo). Se leen 16
+   candidatos por familia y se reparten atendiendo primero a la familia con menos candidatos; cada una toma sus mejores que nadie
+   haya tomado. Si a una le quedan menos de dos propios, se completa con discos ya usados (mejor un mosaico repetido que una
+   sola carátula a sangre). Es determinista.
 3. **Una consulta con ventana y no veinte.** `row_number() over (partition by family_key order by …) <= 4` sobre los discos de
    estudio con carátula. En frío tarda ~0,8 s sobre 47.000 discos con género.
 4. **Caché en memoria con TTL.** Un módulo con el resultado y su hora, vigente 6 horas, y una promesa en vuelo para que

@@ -22,6 +22,7 @@ import { escapeLike } from "@/services/catalog/search/normalize";
 import { GENRE_FAMILIES, type FamilyKey, type FamilyTier } from "@/services/genres/families";
 import { albumInFamily, albumInGenreTree, findStyleGenreBySlug, parseFamilyKey } from "@/services/genres/read";
 import { enrichLists } from "@/services/lists/lists";
+import { listFamilyCovers } from "./family-covers";
 import {
   ARCHIVE_PAGE_SIZE,
   COLLECTION_RAIL_LIMIT,
@@ -81,7 +82,9 @@ export interface DecadeBucket {
 export interface FamilyBucket {
   key: FamilyKey;
   tier: FamilyTier;
-  count: number; // álbumes con algún género efectivo de la familia
+  count: number; // álbumes con algún género efectivo de la familia (solo para omitir las vacías: no se muestra)
+  /** Hasta 4 carátulas de discos de estudio de la familia para su tarjeta; vacío si no hay ninguna. */
+  covers: string[];
 }
 
 export interface AlbumPage {
@@ -491,7 +494,10 @@ export async function listGenreFamilies(): Promise<FamilyBucket[]> {
     .innerJoin(genre, and(eq(genre.id, releaseGroupEffectiveGenre.genreId), eq(genre.kind, "style")))
     .groupBy(genreFamilyMember.familyKey);
   const counts = new Map(rows.map((r) => [r.key, Number(r.count)]));
-  return GENRE_FAMILIES.map((f) => ({ key: f.key, tier: f.tier, count: counts.get(f.key) ?? 0 })).filter((f) => f.count > 0);
+  const covers = await listFamilyCovers();
+  return GENRE_FAMILIES.map((f) => ({ key: f.key, tier: f.tier, count: counts.get(f.key) ?? 0, covers: covers.get(f.key) ?? [] })).filter(
+    (f) => f.count > 0,
+  );
 }
 
 /**

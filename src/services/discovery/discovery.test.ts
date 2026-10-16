@@ -22,9 +22,11 @@ import { FEATURED_RAIL_LIMIT, FILTERED_PAGE_SIZE, MIN_ALBUMS_FOR_SECTION, NEW_RE
 const mocks = vi.hoisted(() => ({
   db: { select: vi.fn() },
   enrichLists: vi.fn(),
+  familyCovers: vi.fn(),
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
+vi.mock("./family-covers", () => ({ listFamilyCovers: mocks.familyCovers }));
 vi.mock("@/services/lists/lists", () => ({ enrichLists: mocks.enrichLists }));
 
 // Proxy que devuelve `this` para cualquier método encadenado y resuelve a
@@ -306,7 +308,8 @@ describe("listRecentByYear", () => {
 });
 
 describe("listGenreFamilies", () => {
-  it("ordena las familias como la interfaz, con su tier, y omite las que no tienen álbumes", async () => {
+  it("ordena las familias como la interfaz, con su tier y sus carátulas, y omite las que no tienen álbumes", async () => {
+    mocks.familyCovers.mockResolvedValue(new Map([["rock", ["r1", "r2"]], ["jazz", ["j1"]]]));
     mocks.db.select.mockReturnValue(
       chain([
         { key: "latin", count: 4 },
@@ -316,10 +319,17 @@ describe("listGenreFamilies", () => {
       ]),
     );
     await expect(listGenreFamilies()).resolves.toEqual([
-      { key: "rock", tier: "main", count: 12 },
-      { key: "latin", tier: "main", count: 4 },
-      { key: "world", tier: "more", count: 1 },
+      { key: "rock", tier: "main", count: 12, covers: ["r1", "r2"] },
+      { key: "latin", tier: "main", count: 4, covers: [] },
+      { key: "world", tier: "more", count: 1, covers: [] },
     ]);
+  });
+
+  it("sin carátulas (p. ej. la lectura falló) las familias siguen apareciendo, con la lista vacía", async () => {
+    mocks.familyCovers.mockResolvedValue(new Map());
+    mocks.db.select.mockReturnValue(chain([{ key: "rock", count: 12 }]));
+
+    await expect(listGenreFamilies()).resolves.toEqual([{ key: "rock", tier: "main", count: 12, covers: [] }]);
   });
 });
 

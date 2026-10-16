@@ -76,6 +76,12 @@ estable. Los álbumes sin año conocido SHALL NOT aparecer en un listado por dé
 - **WHEN** una familia tiene álbumes pero ninguno de estudio con carátula
 - **THEN** su tarjeta se muestra plana con el nombre de la familia y sigue llevando a su listado
 
+#### Scenario: Sin repetir discos entre familias
+
+- **WHEN** dos familias comparten discos entre sus mejores candidatos
+- **THEN** cada disco aparece en la tarjeta de una sola familia, salvo el relleno de una familia que de otro modo quedaría con
+  menos de dos carátulas
+
 #### Scenario: Carátulas estables
 
 - **WHEN** se abre `/explore` dos veces sin que cambien los datos

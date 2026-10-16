@@ -47,7 +47,6 @@
     "clearFilters": "Clear filters",
     "paginationLabel": "Pagination",
     "pageIndicator": "Page {page}",
-    "albumCount": "{formatted} {count, plural, one {album} other {albums}}",
     "fewerFamilies": "Show fewer",
     "decadesEarlier": "Earlier",
     "reviewCount": "{count, plural, one {# review} other {# reviews}}",
