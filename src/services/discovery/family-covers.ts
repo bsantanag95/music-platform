@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/db";
+import { createTtlCache } from "@/lib/ttl-cache";
 import { albumSignalOrder } from "./collections/signal";
 
 // Carátulas de las tarjetas de familia de géneros de `/explore` (openspec: visual-genre-families). Cada tarjeta es un
@@ -81,35 +82,23 @@ async function queryFamilyCovers(): Promise<FamilyCovers> {
   return assignCovers(rows);
 }
 
-let cached: { at: number; value: FamilyCovers } | null = null;
-let inFlight: Promise<FamilyCovers> | null = null;
+const cache = createTtlCache<FamilyCovers>({
+  ttlMs: FAMILY_COVERS_TTL_MS,
+  load: queryFamilyCovers,
+  onError: () => new Map<string, string[]>(),
+  errorLabel: "No se pudieron leer las carátulas de las familias de géneros",
+});
 
 /**
  * Carátulas por familia, con caché en memoria (`FAMILY_COVERS_TTL_MS`): la consulta tarda cerca de un segundo en frío y
  * `/explore` no puede pagarla en cada visita. Las visitas simultáneas comparten una sola consulta. Un error no se cachea:
  * devuelve el mapa vacío (la portada pinta tarjetas planas) y se reintenta en la próxima visita.
  */
-export async function listFamilyCovers(now: number = Date.now()): Promise<FamilyCovers> {
-  if (cached && now - cached.at < FAMILY_COVERS_TTL_MS) return cached.value;
-  if (!inFlight) {
-    inFlight = queryFamilyCovers()
-      .then((value) => {
-        cached = { at: now, value };
-        return value;
-      })
-      .catch((error) => {
-        console.error("No se pudieron leer las carátulas de las familias de géneros", error);
-        return new Map<string, string[]>();
-      })
-      .finally(() => {
-        inFlight = null;
-      });
-  }
-  return inFlight;
+export function listFamilyCovers(now: number = Date.now()): Promise<FamilyCovers> {
+  return cache.get(now);
 }
 
 /** Solo para pruebas: vacía la caché. */
 export function resetFamilyCoversCache(): void {
-  cached = null;
-  inFlight = null;
+  cache.reset();
 }

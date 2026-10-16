@@ -29,6 +29,7 @@ import {
   type FamilyBucket,
 } from "@/services/discovery/discovery";
 import { ensureCollectionsFresh } from "@/services/discovery/collections/sync";
+import { listFamilyGenres } from "@/services/discovery/family-genres";
 import { exploreListHref, parseExploreListParams } from "@/services/discovery/explore-params";
 import { genreDisplayName, genreLocaleOf } from "@/services/genres/names";
 import type { ReleaseGroupCategory } from "@/lib/api/schemas";
@@ -109,7 +110,6 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
     return (
       <FilteredAlbumList
         {...listProps}
-        kicker={t("kickerDecade")}
         heading={t("decadeResultsHeading", { decade: decadeLabel })}
         crumb={t("decadeChip", { decade: decadeLabel })}
         result={result}
@@ -130,22 +130,33 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
     );
   }
   if (familia !== undefined) {
-    const [result, families] = await Promise.all([
+    const [result, families, familyGenres] = await Promise.all([
       listAlbumsByFamily(familia, listParams.page, listOptions),
       listGenreFamilies(),
+      listFamilyGenres(familia.trim()),
     ]);
     const family = result.family ? tGenres(`families.${result.family}`) : familia.trim();
     return (
       <FilteredAlbumList
         {...listProps}
-        kicker={t("kickerFamily")}
         heading={t("familyResultsHeading", { family })}
         crumb={family}
         result={result}
         artistNames={await albumArtistNames(result.albums.map((album) => album.id))}
         baseHref={`/explore?familia=${encodeURIComponent(result.family ?? familia.trim())}`}
+        // Los géneros más grandes de la familia, cada uno con su página completa: la forma de seguir navegando hacia dentro.
+        topics={{
+          label: t("familyGenresLabel", { family }),
+          links: familyGenres.map((item) => ({
+            key: item.slug,
+            label: genreDisplayName(item, genreLocaleOf(locale)),
+            href: genreHref(item.slug),
+          })),
+        }}
         siblings={{
           label: t("otherFamilies"),
+          // Veinte chips de familia empujaban el primer disco bajo el pliegue: van en un desplegable cerrado.
+          collapsed: true,
           links: families.map((bucket) => ({
             key: bucket.key,
             label: tGenres(`families.${bucket.key}`),
@@ -162,7 +173,6 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
     return (
       <FilteredAlbumList
         {...listProps}
-        kicker={t("kickerGenre")}
         heading={t("genreResultsHeading", { genre })}
         crumb={genre}
         result={result}
@@ -201,7 +211,6 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         {...listProps}
         params={fixedOrderParams}
         siblings={releaseSiblings("proximos")}
-        kicker={t("kickerReleases")}
         heading={t("upcomingResultsHeading")}
         crumb={t("upcomingCrumb")}
         result={result}
@@ -220,7 +229,6 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         {...listProps}
         params={fixedOrderParams}
         siblings={releaseSiblings("novedades")}
-        kicker={t("kickerReleases")}
         heading={t("newReleasesResultsHeading")}
         crumb={t("newReleasesHeading")}
         result={result}

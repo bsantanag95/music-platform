@@ -98,11 +98,19 @@ muestra el estado vacío; una década mal escrita (`?decada=abc`, `?decada=1995`
 de la pantalla de error. Las décadas válidas van de 1800 a 2100 (el catálogo tiene discos de los
 1890s; antes el límite era 1900 y esa columna llevaba a un error). No hay endpoint dedicado.
 
-La vista (`FilteredAlbumList`) tiene miga de pan (Inicio / Explorar / corte), un rótulo con el tipo
-de corte (Década, Familia de géneros, Género) y:
+La vista (`FilteredAlbumList`) tiene miga de pan (Inicio / Explorar / corte) y el título directamente bajo
+ella: **sin rótulo de tipo de corte encima** (cambio `redesign-family-view`: la miga ya dice dónde estás y el sistema
+de diseño no admite un eyebrow sobre el encabezado). Y:
 
+- **Géneros de la familia** (solo en `?familia=`): hasta 12 chips con los géneros de estilo más grandes de la familia
+  (`listFamilyGenres`, `family-genres.ts`), cada uno hacia su página `/genre/<slug>` con el nombre en el idioma activo y
+  **sin cifras**. Es la forma de seguir navegando hacia dentro (subgéneros) y de llegar a la ficha completa; incluye el
+  género raíz (`rock` dentro de Rock). La consulta tarda ~0,4 s en frío y se guarda 6 horas en memoria por familia
+  (`src/lib/ttl-cache.ts`, el mismo helper de las carátulas de las tarjetas de familia).
 - **Cortes hermanos**: las otras décadas o las otras familias, para saltar sin volver a la portada
-  (conservan tipo y orden). El listado por género enlaza en su lugar a la página del género.
+  (conservan tipo y orden). En la vista de familia van en un desplegable cerrado «Otras familias» (`<details>`, sin
+  JavaScript): veinte chips empujaban el primer disco bajo el pliegue; las décadas (13 chips) siguen a la vista. El
+  listado por género enlaza en su lugar a la página del género.
 - **Tipo y orden** (`ExploreFilterBar`): el tipo es una fila de enlaces (`?tipo=studio|single_ep|
   compilation|live_other`, sin JS) y el orden un `<select>` (`?orden=mejor|populares|recientes|
   antiguos|az`, los mismos valores que la página de género). Contrato de URL en
@@ -114,7 +122,27 @@ de corte (Década, Familia de géneros, Género) y:
 
 Cada género también tiene su propia página, `/genre/<slug>` (cambios `show-genres` y `redesign-genre-page`, ver
 `genres.md`), con pestañas, filtros y orden. Comparte con estos listados la función `listAlbumsFiltered`
-(`discovery.ts`): Explorar la llama con el tipo y el orden de la URL (sin ellos, el orden `best` de siempre).
+(`discovery.ts`): Explorar la llama con el tipo y el orden de la URL (sin ellos, el orden `best`).
+
+### Orden por defecto: «Destacados» (cambio `redesign-family-view`)
+
+El orden `best` ya no es "valoración y luego año" (con 32 discos valorados sobre 47.000, salía por año descendente y
+abría con lo último que se ingestó, incluso discos que aún no salen). Ahora, en este orden de prioridad:
+
+1. los lanzamientos con fecha **posterior a hoy** al final (pertenecen a "Próximos");
+2. la valoración agregada, si el disco alcanza `MIN_RATINGS_PER_ALBUM`;
+3. el premio (ganador antes que nominado, directo o como disco ancla de una grabación);
+4. los discos de **estudio** antes que sencillos, recopilaciones y directos;
+5. la **carátula ya resuelta**;
+6. `first_release_year` descendente, y el id como desempate.
+
+La etiqueta del selector pasó de "Mejor valorados" a **"Destacados" / "Featured"** (`catalog.genres.page.filters.sortBest`,
+compartida con la página de género): no ordena solo por valoración. Los rieles "Mejor valorados" de la portada sí siguen
+siendo por valoración. El premio se calcula con subconsultas **no correlacionadas** (conjuntos de ids que Postgres evalúa
+una vez): la versión correlacionada por fila llevaba el listado de Rock de ~0,3 s a ~1,5 s. Medido en scratch, el listado de
+Rock con el orden nuevo tarda ~0,35–0,4 s, igual que ordenar por columnas simples. El filtro por defecto sigue siendo
+"Todos" (sin `tipo` = todos); con este orden los discos de estudio ya salen primero. `popular`, `newest`, `oldest` y `az`
+no cambian, y `popular` conserva este orden como desempate.
 
 ## Flag de lanzamiento
 

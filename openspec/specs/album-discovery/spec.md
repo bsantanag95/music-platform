@@ -158,9 +158,12 @@ consulta (`?decada=`, `?familia=<clave>` o `?genero=<slug>`), aplicando **un sol
 con prioridad `decada` > `familia` > `genero`. El listado por familia SHALL incluir los álbumes con
 algún género efectivo de la familia; el listado por género SHALL incluir los álbumes con ese género
 o con cualquiera de sus subgéneros. Una familia o un slug desconocido SHALL mostrar el estado vacío.
-El listado SHALL ordenarse de forma determinista: por valoración agregada del álbum cuando
-alcanza `MIN_RATINGS_PER_ALBUM`, luego por `first_release_year` descendente, con desempate
-estable. Los álbumes sin año conocido SHALL NOT aparecer en un listado por década.
+El listado SHALL ordenarse de forma determinista. El orden por defecto, llamado **"Destacados"**
+(no "Mejor valorados"), SHALL ser, en este orden de prioridad: los lanzamientos con fecha posterior a
+hoy al final; luego la valoración agregada del álbum cuando alcanza `MIN_RATINGS_PER_ALBUM`; luego
+el premio (ganador antes que nominado); luego los discos de estudio antes que el resto de tipos;
+luego los de carátula ya resuelta; luego `first_release_year` descendente, con desempate estable por
+identificador. Los álbumes sin año conocido SHALL NOT aparecer en un listado por década.
 
 #### Scenario: Listado por década
 
@@ -228,6 +231,21 @@ estable. Los álbumes sin año conocido SHALL NOT aparecer en un listado por dé
 
 - **WHEN** se abre `/explore` dos veces sin que cambien los datos
 - **THEN** cada familia muestra las mismas carátulas, elegidas por la señal de calidad y con desempate por id
+
+#### Scenario: Estudio antes que sencillos en el orden por defecto
+
+- **WHEN** se abre un listado sin elegir orden ni tipo y hay discos de estudio y sencillos sin valoraciones ni premios
+- **THEN** los discos de estudio aparecen antes que los sencillos, las recopilaciones y los directos
+
+#### Scenario: Lanzamientos futuros al final
+
+- **WHEN** un disco tiene fecha de lanzamiento posterior a hoy
+- **THEN** en el orden por defecto aparece después de los ya publicados, aunque su año sea el más reciente
+
+#### Scenario: Valoración y premio mandan
+
+- **WHEN** un disco alcanza `MIN_RATINGS_PER_ALBUM` valoraciones o ganó un premio
+- **THEN** aparece antes que los discos sin valoración ni premio, y el de mayor promedio antes que el de menor
 
 ### Requirement: Novedades
 
@@ -512,4 +530,44 @@ el locale activo.
 
 - **WHEN** una persona activa "Premios" en la fila
 - **THEN** la página se desplaza a la sección Premios sin que el encabezado global tape su título
+
+### Requirement: Vista de familia de géneros
+
+El listado de una familia (`/{locale}/explore?familia=<clave>`) SHALL mostrar, en este orden, el título de la familia sin rótulo
+de tipo de corte encima, una fila de **géneros de la familia**, un selector de **otras familias** plegado y los filtros de tipo y orden
+sobre la rejilla. La fila de géneros SHALL ofrecer hasta 12 chips con los géneros de estilo más grandes de la familia (por número de
+álbumes con ese género efectivo), cada uno enlazado a la página del género (`/{locale}/genre/<slug>`), con el nombre en el idioma activo
+y sin mostrar ninguna cifra. El selector de otras familias SHALL ser un desplegable cerrado por defecto que lista las demás familias con
+álbumes y marca la actual. Ningún listado de década, familia, género, novedades o próximos SHALL mostrar un rótulo de tipo de corte sobre
+su título.
+
+#### Scenario: Géneros de la familia
+
+- **WHEN** una persona abre `/es/explore?familia=rock`
+- **THEN** ve una fila de géneros de Rock (por ejemplo "hard rock" y "psychedelic rock"), cada uno enlazado a su página, sin números
+
+#### Scenario: Página completa del género
+
+- **WHEN** elige un género de la fila
+- **THEN** llega a la página del género con su descripción, subgéneros, artistas y listas
+
+#### Scenario: Selector de familias plegado
+
+- **WHEN** la vista de familia se abre por primera vez
+- **THEN** el selector de otras familias está cerrado y el primer disco queda a la vista sin una fila de veinte chips antes
+
+#### Scenario: Cambio de familia
+
+- **WHEN** abre el selector y elige Jazz
+- **THEN** llega a `/explore?familia=jazz` conservando el tipo y el orden elegidos
+
+#### Scenario: Sin rótulo sobre el título
+
+- **WHEN** se abre un listado de década, familia, género, novedades o próximos
+- **THEN** el título va directamente bajo la miga de pan, sin un rótulo de tipo de corte encima
+
+#### Scenario: Familia con pocos géneros
+
+- **WHEN** una familia tiene menos de 12 géneros con álbumes
+- **THEN** la fila muestra solo los que tienen álbumes
 
