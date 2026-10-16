@@ -1880,7 +1880,7 @@ en el orden del riel y con las vencidas al final: `listId`, `title`, `source` (`
 `templateKey`, `periodKey`, `family` (`ephemeris` | `awards` | `releases` | `discovery` | `rankings`),
 `rank`, `weight`, `startsAt`, `expiresAt`, `itemCount`, `orderable` (vigente o
 programada) y `status` (`in_rail` | `beyond_limit` | `scheduled` | `expired` | `withdrawn` | `hidden` |
-`not_public`). `status` se evalúa contra el **tope único** del riel, contando curadas y generadas juntas. `eligible` son las listas que se pueden destacar (`{ id, title }`): oficiales publicadas de
+`not_public` | `empty`). `status` se evalúa contra el **tope único** del riel, contando curadas y generadas juntas. `eligible` son las listas que se pueden destacar (`{ id, title }`): oficiales publicadas de
 `@exploracion`, de álbumes, públicas y visibles, aún sin fila destacada.
 
 ### `POST /api/admin/editorial/featured`

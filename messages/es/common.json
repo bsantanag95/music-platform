@@ -133,7 +133,8 @@
         "expired": "Vencida",
         "withdrawn": "Fuera del riel: lista retirada",
         "hidden": "Fuera del riel: oculta por moderación",
-        "not_public": "Fuera del riel: no es pública"
+        "not_public": "Fuera del riel: no es pública",
+        "empty": "Fuera del riel: sin álbumes"
       },
       "items": "{count, plural, one {# álbum} other {# álbumes}}",
       "period": "Período {period}",
@@ -151,7 +152,7 @@
         "awards": "Premios",
         "releases": "Lanzamientos",
         "discovery": "Descubrimiento",
-        "rankings": "Lo que más valora la gente"
+        "rankings": "Más valorados"
       },
       "addSelect": "Lista oficial",
       "addFamily": "Tipo de colección",

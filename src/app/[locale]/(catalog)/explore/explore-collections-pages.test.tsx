@@ -13,11 +13,16 @@ const mocks = vi.hoisted(() => ({
   getExplorePage: vi.fn(),
   listCollectionsHub: vi.fn(),
   listCollectionArchive: vi.fn(),
+  listCollectionFamilies: vi.fn(),
+  listCollectionSummaries: vi.fn(),
 }));
 
 vi.mock("next-intl/server", () => ({
-  getTranslations: vi.fn().mockResolvedValue((key: string) => key),
+  getTranslations: vi
+    .fn()
+    .mockResolvedValue(Object.assign((key: string) => key, { rich: (key: string) => key, has: () => true })),
 }));
+vi.mock("@/services/discovery/collections/summaries", () => ({ listCollectionSummaries: mocks.listCollectionSummaries }));
 vi.mock("@/db", () => ({ db: {} }));
 vi.mock("@/i18n/navigation", () => ({ redirect: mocks.redirect, Link: () => null }));
 vi.mock("@/lib/config/discovery", () => ({ isExploreEnabled: mocks.isExploreEnabled }));
@@ -33,12 +38,15 @@ vi.mock("@/services/discovery/discovery", async () => {
     albumArtistNames: vi.fn().mockResolvedValue({}),
     listCollectionsHub: mocks.listCollectionsHub,
     listCollectionArchive: mocks.listCollectionArchive,
+    listCollectionFamilies: mocks.listCollectionFamilies,
   };
 });
 
 const { default: ExplorePage } = await import("./page");
 const { default: CollectionsPage } = await import("./collections/page");
 const { CollectionRail } = await import("@/components/discovery/CollectionRail");
+const { FeaturedCollection } = await import("@/components/discovery/FeaturedCollection");
+const { CollectionFamilyFilter } = await import("@/components/discovery/CollectionFamilyFilter");
 const { ExploreJumpNav } = await import("@/components/discovery/ExploreJumpNav");
 
 /** Todos los elementos de `type` dentro del árbol devuelto por el componente. */
@@ -87,6 +95,8 @@ beforeEach(() => {
   mocks.getExplorePage.mockResolvedValue(empty);
   mocks.listCollectionsHub.mockResolvedValue({ collections: [] });
   mocks.listCollectionArchive.mockResolvedValue({ collections: [], page: 1, pageSize: 24, hasNext: false });
+  mocks.listCollectionFamilies.mockResolvedValue([]);
+  mocks.listCollectionSummaries.mockResolvedValue(new Map());
 });
 
 describe("/explore: un solo riel de colecciones", () => {
@@ -150,37 +160,87 @@ describe("/explore/collections", () => {
     expect(mocks.redirect).toHaveBeenCalledWith({ href: "/", locale: "es" });
   });
 
-  it("agrupa las vigentes por familia, con las curadas dentro de su grupo", async () => {
+  const curated = (id: string, family: FeaturedCollection["family"] = "discovery") =>
+    collection(id, { source: "curated", templateKey: null, periodKey: null, family });
+  const railOf = (element: ReactNode, id: string) =>
+    findAll(element, CollectionRail).find((rail) => (rail.props as { id: string }).id === id)?.props as
+      | { collections: FeaturedCollection[]; emptyMessage?: ReactNode; compact?: boolean; bare?: boolean }
+      | undefined;
+
+  it("abre con la primera vigente como destacada y pone el resto en una sola rejilla, sin agrupar por familia", async () => {
     mocks.listCollectionsHub.mockResolvedValue({
-      collections: [
-        collection("a1", { family: "awards" }),
-        collection("a2", { family: "ephemeris" }),
-        collection("a3", { family: "awards" }),
-        collection("e1", { source: "curated", templateKey: null, periodKey: null, family: "ephemeris" }),
-      ],
+      collections: [curated("e1"), collection("a1", { family: "awards" }), collection("a2", { family: "ephemeris" })],
     });
 
     const element = await CollectionsPage({ params, searchParams: Promise.resolve({}) });
-    const rails = findAll(element, CollectionRail).map((rail) => rail.props as { id: string; collections: FeaturedCollection[] });
+    const featured = findAll(element, FeaturedCollection)[0]!.props as { title: string; familyLabel: string; href: string };
 
-    // Un bloque por familia, en el orden del vocabulario, y el archivo al final.
-    expect(rails.map((rail) => rail.id)).toEqual(["familia-ephemeris", "familia-awards", "anteriores"]);
-    expect(rails.find((rail) => rail.id === "familia-awards")!.collections.map((c) => c.id)).toEqual(["a1", "a3"]);
-    // La curada convive con la generada en el grupo de su familia.
-    expect(rails.find((rail) => rail.id === "familia-ephemeris")!.collections.map((c) => c.id)).toEqual(["a2", "e1"]);
+    // La destacada es la primera del orden editorial, curada o generada.
+    expect(featured.title).toBe("Colección e1");
+    expect(featured.familyLabel).toBe("collectionFamilies.discovery");
+    expect(featured.href).toContain("e1");
+    const grid = railOf(element, "vigentes-rejilla")!;
+    expect(grid.collections.map((c) => c.id)).toEqual(["a1", "a2"]);
+    expect(grid.bare).toBe(true);
+    // Ya no hay un bloque por familia.
+    expect(findAll(element, CollectionRail).some((rail) => String((rail.props as { id: string }).id).startsWith("familia-"))).toBe(false);
   });
 
-  it("omite las familias sin colecciones vigentes", async () => {
+  it("con una sola vigente, la muestra como destacada y no pinta la rejilla", async () => {
     mocks.listCollectionsHub.mockResolvedValue({ collections: [collection("a1", { family: "awards" })] });
 
     const element = await CollectionsPage({ params, searchParams: Promise.resolve({}) });
-    // `CollectionRail` no pinta nada con una lista vacía y sin mensaje.
-    const visible = findAll(element, CollectionRail)
-      .map((rail) => rail.props as { id: string; collections: unknown[]; emptyMessage?: string })
-      .filter((rail) => rail.collections.length > 0 || rail.emptyMessage)
-      .map((rail) => rail.id);
 
-    expect(visible).toEqual(["familia-awards", "anteriores"]);
+    expect(findAll(element, FeaturedCollection)).toHaveLength(1);
+    expect(railOf(element, "vigentes-rejilla")).toBeUndefined();
+  });
+
+  it("con un filtro de familia, muestra solo esa familia, sin destacada, y se lo pasa al archivo", async () => {
+    mocks.listCollectionsHub.mockResolvedValue({
+      collections: [collection("a1", { family: "awards" }), collection("a2", { family: "ephemeris" }), collection("a3", { family: "awards" })],
+    });
+
+    const element = await CollectionsPage({ params, searchParams: Promise.resolve({ familia: "awards" }) });
+
+    expect(findAll(element, FeaturedCollection)).toHaveLength(0);
+    expect(railOf(element, "vigentes-rejilla")!.collections.map((c) => c.id)).toEqual(["a1", "a3"]);
+    expect(mocks.listCollectionArchive).toHaveBeenLastCalledWith({ family: "awards", page: 1 });
+  });
+
+  it("sin vigentes no pinta destacada ni rejilla: queda el archivo", async () => {
+    mocks.listCollectionArchive.mockResolvedValue({ collections: [archived("v1")], page: 1, pageSize: 24, hasNext: false });
+
+    const element = await CollectionsPage({ params, searchParams: Promise.resolve({}) });
+
+    expect(findAll(element, FeaturedCollection)).toHaveLength(0);
+    expect(railOf(element, "vigentes-rejilla")).toBeUndefined();
+    expect(railOf(element, "anteriores")!.collections.map((c) => c.id)).toEqual(["v1"]);
+  });
+
+  it("ofrece el filtro con Todas y las familias que trae el servicio, y marca la activa", async () => {
+    mocks.listCollectionFamilies.mockResolvedValue(["ephemeris", "awards"]);
+
+    const element = await CollectionsPage({ params, searchParams: Promise.resolve({ familia: "awards" }) });
+    const filter = findAll(element, CollectionFamilyFilter)[0]!.props as {
+      options: { value: string | null; href: string }[];
+      active?: string;
+    };
+
+    expect(filter.options.map((option) => option.value)).toEqual([null, "ephemeris", "awards"]);
+    expect(filter.options[0]!.href).toBe("/explore/collections");
+    expect(filter.options[2]!.href).toBe("/explore/collections?familia=awards");
+    expect(filter.active).toBe("awards");
+  });
+
+  it("la frase de contexto de cada tarjeta sale del resumen del presentador", async () => {
+    mocks.listCollectionsHub.mockResolvedValue({ collections: [curated("e1"), collection("a1")] });
+    mocks.listCollectionSummaries.mockResolvedValue(new Map([["a1", { key: "anniversariesSummary" }]]));
+
+    const element = await CollectionsPage({ params, searchParams: Promise.resolve({}) });
+    const grid = railOf(element, "vigentes-rejilla") as unknown as { contextFor: (c: { id: string }) => string | undefined };
+
+    expect(grid.contextFor({ id: "a1" })).toBe("anniversariesSummary");
+    expect(grid.contextFor({ id: "e1" })).toBeUndefined();
   });
 
   it("pasa la familia y la página al archivo, e ignora una familia inválida", async () => {
@@ -191,18 +251,24 @@ describe("/explore/collections", () => {
     expect(mocks.listCollectionArchive).toHaveBeenLastCalledWith({ family: undefined, page: 1 });
   });
 
-  it("el archivo vacío muestra su mensaje en vez de omitirse", async () => {
+  it("el archivo vacío sin filtro no pinta nada (sin mensaje que lo mantenga)", async () => {
     const element = await CollectionsPage({ params, searchParams: Promise.resolve({}) });
-    const archive = findAll(element, CollectionRail).find((rail) => (rail.props as { id: string }).id === "anteriores")!;
 
-    expect((archive.props as { emptyMessage?: string }).emptyMessage).toBe("archiveEmpty");
+    expect(railOf(element, "anteriores")!.emptyMessage).toBeUndefined();
   });
 
-  it("con filtro de familia, el archivo vacío dice que no hay de ese tipo", async () => {
+  it("con filtro de familia, el archivo vacío dice que no hay de ese tipo y ofrece volver a Todas", async () => {
     const element = await CollectionsPage({ params, searchParams: Promise.resolve({ familia: "awards" }) });
-    const archive = findAll(element, CollectionRail).find((rail) => (rail.props as { id: string }).id === "anteriores")!;
+    const empty = railOf(element, "anteriores")!.emptyMessage;
 
-    expect((archive.props as { emptyMessage?: string }).emptyMessage).toBe("archiveEmptyFamily");
+    expect(empty).toBeDefined();
+    expect(isValidElement(empty)).toBe(true);
+  });
+
+  it("el archivo usa tarjetas densas", async () => {
+    const element = await CollectionsPage({ params, searchParams: Promise.resolve({}) });
+
+    expect(railOf(element, "anteriores")!.compact).toBe(true);
   });
 
   it("muestra la fecha en que cada colección del archivo dejó de estar vigente", async () => {

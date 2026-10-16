@@ -71,14 +71,15 @@
       "awards": "Premios",
       "releases": "Lanzamientos",
       "discovery": "Descubrimiento",
-      "rankings": "Lo que más valora la gente"
+      "rankings": "Más valorados"
     },
     "collectionsHub": {
       "pageTitle": "Colecciones",
       "heading": "Colecciones",
-      "description": "Todas las colecciones de la plataforma, por tipo, vigentes y pasadas.",
+      "description": "Selecciones de la plataforma con un criterio detrás: efemérides, premios, novedades y hallazgos. Las listas hechas por personas están en <lists>Listas</lists>.",
       "currentHeading": "Vigentes",
-      "currentDescription": "Lo que está en Explorar ahora mismo, agrupado por tipo.",
+      "openCollection": "Abrir colección",
+      "archiveEmptyAll": "Ver todas",
       "archiveHeading": "Anteriores",
       "archiveDescription": "Colecciones automáticas que ya salieron del riel. Siguen disponibles.",
       "familyFilterLabel": "Filtrar por tipo",

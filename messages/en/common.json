@@ -133,7 +133,8 @@
         "expired": "Expired",
         "withdrawn": "Out of the rail: list withdrawn",
         "hidden": "Out of the rail: hidden by moderation",
-        "not_public": "Out of the rail: not public"
+        "not_public": "Out of the rail: not public",
+        "empty": "Out of the rail: no albums"
       },
       "items": "{count, plural, one {# album} other {# albums}}",
       "period": "Period {period}",
@@ -151,7 +152,7 @@
         "awards": "Awards",
         "releases": "Releases",
         "discovery": "Discovery",
-        "rankings": "What people rate highest"
+        "rankings": "Top rated"
       },
       "addFamily": "Collection kind",
       "addSelect": "Official list",

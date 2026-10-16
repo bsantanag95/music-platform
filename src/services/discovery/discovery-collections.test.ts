@@ -5,46 +5,46 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Lecturas de colecciones de Explorar por grupo, y archivo (openspec: split-explore-collections). El
 // constructor de consultas registra el `where`, el `limit` y el `offset` para comprobar qué se pregunta.
 
-const mocks = vi.hoisted(() => ({
-  rows: [] as unknown[],
-  calls: [] as { where?: unknown; limit?: number; offset?: number; orderBy?: unknown[] }[],
-  enrichLists: vi.fn(),
-}));
+const mocks = vi.hoisted(() => {
+  const state = {
+    rows: [] as unknown[],
+    calls: [] as { where?: unknown; limit?: number; offset?: number; orderBy?: unknown[] }[],
+    enrichLists: vi.fn(),
+  };
+  const startSelect = () => {
+    const call: (typeof state.calls)[number] = {};
+    state.calls.push(call);
+    const builder: Record<string, unknown> = {
+      from: () => builder,
+      innerJoin: () => builder,
+      where: (condition: unknown) => {
+        call.where = condition;
+        return builder;
+      },
+      orderBy: (...order: unknown[]) => {
+        call.orderBy = order;
+        return builder;
+      },
+      limit: (value: number) => {
+        call.limit = value;
+        return builder;
+      },
+      offset: (value: number) => {
+        call.offset = value;
+        return Promise.resolve(state.rows);
+      },
+      then: (resolve: (rows: unknown[]) => unknown) => resolve(state.rows),
+    };
+    return builder;
+  };
+  return Object.assign(state, { startSelect });
+});
 
-vi.mock("@/db", () => ({
-  db: {
-    select: () => {
-      const call: (typeof mocks.calls)[number] = {};
-      mocks.calls.push(call);
-      const builder: Record<string, unknown> = {
-        from: () => builder,
-        innerJoin: () => builder,
-        where: (condition: unknown) => {
-          call.where = condition;
-          return builder;
-        },
-        orderBy: (...order: unknown[]) => {
-          call.orderBy = order;
-          return builder;
-        },
-        limit: (value: number) => {
-          call.limit = value;
-          return builder;
-        },
-        offset: (value: number) => {
-          call.offset = value;
-          return Promise.resolve(mocks.rows);
-        },
-        then: (resolve: (rows: unknown[]) => unknown) => resolve(mocks.rows),
-      };
-      return builder;
-    },
-  },
-}));
+vi.mock("@/db", () => ({ db: { select: () => mocks.startSelect(), selectDistinct: () => mocks.startSelect() } }));
 vi.mock("@/services/lists/lists", () => ({ enrichLists: mocks.enrichLists }));
 
 import { ARCHIVE_PAGE_SIZE, COLLECTION_RAIL_LIMIT, HUB_COLLECTION_LIMIT } from "./constants";
-import { listCollectionArchive, listCollections, listCollectionsHub } from "./discovery";
+import { listCollectionArchive, listCollectionFamilies, listCollections, listCollectionsHub } from "./discovery";
 
 const render = (condition: unknown) => {
   const query = new PgDialect().sqlToQuery(condition as SQL);
@@ -75,6 +75,13 @@ describe("listCollections", () => {
     expect(sql).toContain('"user_list_featured"."starts_at" <= now()');
     expect(sql).toContain('"user_list"."moderation_status" =');
     expect(sql).toContain('"user_list"."audience" =');
+  });
+
+  it("exige que la lista tenga al menos un álbum: una colección vacía no se lista", async () => {
+    await listCollections();
+    const { sql } = render(mocks.calls[0]!.where);
+    expect(sql).toContain('exists (select 1 from "user_list_item" where "user_list_item"."list_id" = "user_list"."id"');
+    expect(sql).toContain('"user_list_item"."release_group_id" is not null');
   });
 
   it("ordena por peso y, a igualdad, por rank", async () => {
@@ -134,6 +141,11 @@ describe("listCollectionArchive", () => {
     expect(offset).toBe(0);
   });
 
+  it("tampoco lista las colecciones vencidas sin álbumes", async () => {
+    await listCollectionArchive();
+    expect(render(mocks.calls[0]!.where).sql).toContain('exists (select 1 from "user_list_item"');
+  });
+
   it("pagina de a ARCHIVE_PAGE_SIZE y avisa si hay siguiente", async () => {
     mocks.rows = Array.from({ length: ARCHIVE_PAGE_SIZE + 1 }, (_, i) => ({
       id: `l${i}`,
@@ -170,5 +182,26 @@ describe("listCollectionArchive", () => {
     expect(params).toContain("awards");
     // Ya no pasa por el registro de plantillas: una clave retirada conserva su familia (migración 0071).
     expect(params).not.toContain("grammy-winners");
+  });
+});
+
+describe("listCollectionFamilies", () => {
+  it("devuelve las familias con contenido en el orden del registro, sin repetir", async () => {
+    mocks.rows = [{ family: "discovery" }, { family: "awards" }, { family: "ephemeris" }];
+
+    await expect(listCollectionFamilies()).resolves.toEqual(["ephemeris", "awards", "discovery"]);
+  });
+
+  it("sin colecciones no hay familias", async () => {
+    await expect(listCollectionFamilies()).resolves.toEqual([]);
+  });
+
+  it("cuenta vigentes y archivadas, con listas públicas, visibles y con álbumes", async () => {
+    await listCollectionFamilies();
+    const { sql } = render(mocks.calls[0]!.where);
+    expect(sql).toContain('"user_list"."moderation_status" =');
+    expect(sql).toContain('exists (select 1 from "user_list_item"');
+    expect(sql).toContain('"user_list_featured"."starts_at" <= now()');
+    expect(sql).toContain('"user_list_featured"."expires_at" <= now()');
   });
 });

@@ -41,7 +41,7 @@ describe("CollectionDetailHeader", () => {
   it("en inglés traduce la familia y el conteo", () => {
     renderWithIntl(<CollectionDetailHeader list={list} family="rankings" platformName="Explore" />, "en");
 
-    expect(screen.getByText("What people rate highest")).toBeInTheDocument();
+    expect(screen.getByText("Top rated")).toBeInTheDocument();
     expect(screen.getByText("10 albums")).toBeInTheDocument();
   });
 
