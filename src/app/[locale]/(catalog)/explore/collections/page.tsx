@@ -94,15 +94,6 @@ export default async function CollectionsPage({ params, searchParams }: Collecti
           ]}
         />
         <h1 className="font-display text-3xl text-paper">{tHub("heading")}</h1>
-        <p className="max-w-2xl font-body text-paper-muted">
-          {tHub.rich("description", {
-            lists: (chunks) => (
-              <Link href="/lists" className={TEXT_LINK}>
-                {chunks}
-              </Link>
-            ),
-          })}
-        </p>
         <CollectionFamilyFilter label={tHub("familyFilterLabel")} options={filterOptions} active={family} />
       </div>
 
