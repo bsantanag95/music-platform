@@ -20,8 +20,8 @@
 - [x] 3.1 Página de ceremonia: tres niveles con títulos, navegación de saltos y subtítulos por campo en el nivel `genre`; niveles `h2`, campos `h3`, categorías `h4` (`AwardCategory` con `headingLevel="h4"`)
 - [x] 3.2 Mensajes es/en (`awards.json`): `tierGeneral`, `tierAlbum`, `tierGenre`, `fields.*`, etiqueta de la navegación; quitar "Mejor álbum por género"
 - [x] 3.3 Prueba que lee `categories.json` y falla si algún `field` no tiene traducción es y en (design D3)
-- [ ] 3.4 Prueba de la página: orden de niveles, subtítulos por campo, nivel omitido cuando no hay categorías; revisión visual en `/es/awards/grammy/2026` (escritorio y móvil) con datos reales
-- [ ] 3.5 Revisar que la tarjeta de Explorar y el titular siguen tomando Álbum del año (nivel `general`, sujeto álbum)
+- [x] 3.4 Prueba de la página: orden de niveles, subtítulos por campo, nivel omitido cuando no hay categorías; revisión visual en `/es/awards/grammy/2026` (escritorio y móvil) con datos reales
+- [x] 3.5 Revisar que la tarjeta de Explorar y el titular siguen tomando Álbum del año (nivel `general`, sujeto álbum)
 
 ## 4. Categorías
 
@@ -48,7 +48,7 @@ ceremonia no otorgó no se escriben.
 
 - [x] 6.1 `scripts/load-awards.ts` sobre la BD de scratch: idempotente (segunda corrida sin filas modificadas)
 - [x] 6.2 Actualizar `scripts/smoke-test-music-awards.ts` para los tres niveles, `field` y una categoría de persona; correrlo contra scratch y limpiar según `AGENTS.md`
-- [ ] 6.3 Comprobar en `/es/awards/grammy/2026` y en la historia de una categoría nueva (`/awards/grammy/categories/best-rock-performance`) que los ganadores y la predecesora de country se ven bien
+- [x] 6.3 Comprobar en `/es/awards/grammy/2026` y en la historia de una categoría nueva (`/awards/grammy/categories/best-rock-performance`) que los ganadores y la predecesora de country se ven bien
 - [x] 6.4 `pnpm run typecheck && pnpm run lint && pnpm test && pnpm run build`
 
 ## 7. Documentación
