@@ -47,6 +47,11 @@ videojuegos.
   catálogo cuando está identificado; si no, se muestra solo el texto.
 - Las grabaciones muestran la carátula de su disco ancla y un enlace "del disco …". Canción del año aclara que premia
   a los autores.
+- La carga crea las grabaciones como stub, sin pistas, y la ficha de canción se arma desde las pistas (disco principal,
+  carátula, apariciones, créditos). Por eso, al abrir la ficha de una grabación que no tiene pistas, se ingiere bajo
+  demanda la lista de pistas de su disco ancla (`ensureAnchorTracks`, la misma función que usa la página de álbum): la
+  primera visita tarda lo que tarde MusicBrainz y las siguientes salen de la base. Si MusicBrainz falla, la ficha se
+  muestra mínima, sin error.
 - Una categoría con cobertura "solo ganador" lo dice: "De esta categoría solo registramos al ganador".
 - Los nombres de categoría se traducen; títulos y artistas no.
 - Sin logos ni imágenes de trofeos: las únicas imágenes son carátulas y fotos del catálogo.
