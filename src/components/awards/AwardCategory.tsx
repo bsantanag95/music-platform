@@ -20,7 +20,7 @@ interface AwardCategoryProps {
   heading?: string;
   /** Enlace junto al título (la historia de la categoría, o la ceremonia desde la historia). */
   link?: { href: string; label: string };
-  headingLevel?: "h2" | "h3";
+  headingLevel?: "h2" | "h3" | "h4";
 }
 
 export function AwardCategory({ name, coverage, honors, nominations, heading, link, headingLevel = "h3" }: AwardCategoryProps) {

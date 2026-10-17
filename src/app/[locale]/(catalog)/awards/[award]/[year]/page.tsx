@@ -5,6 +5,8 @@ import { Link } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { AwardCategory } from "@/components/awards/AwardCategory";
 import { awardsIndexHref, categoryHistoryHref, ceremonyHref } from "@/components/awards/award-links";
+import { groupByField } from "@/components/awards/group-by-field";
+import { AWARD_CATEGORY_TIERS } from "@/db/schema";
 import { getCeremonyPage } from "@/services/awards/read";
 
 // Página de una ceremonia cerrada (openspec: add-music-awards, design D5): campo general primero, luego las
@@ -38,10 +40,13 @@ export default async function CeremonyPage({ params }: CeremonyPageProps) {
   const date = new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
     new Date(`${page.ceremony.heldOn}T00:00:00Z`),
   );
-  const tiers = [
-    { tier: "general" as const, label: t("tierGeneral") },
-    { tier: "genre" as const, label: t("tierGenre") },
-  ];
+  // Orden de presentación (`AWARD_CATEGORY_TIERS`); un nivel sin categorías en esta ceremonia se omite.
+  const labels = { general: t("tierGeneral"), album: t("tierAlbum"), genre: t("tierGenre") } as const;
+  const tiers = AWARD_CATEGORY_TIERS.map((tier) => ({
+    tier,
+    label: labels[tier],
+    categories: page.categories.filter((c) => c.tier === tier),
+  })).filter(({ categories }) => categories.length > 0);
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col items-start gap-10 px-4 py-12">
@@ -84,26 +89,50 @@ export default async function CeremonyPage({ params }: CeremonyPageProps) {
         ) : null}
       </div>
 
-      {tiers.map(({ tier, label }) => {
-        const categories = page.categories.filter((c) => c.tier === tier);
-        if (categories.length === 0) return null;
+      {tiers.length > 1 ? (
+        <nav aria-label={t("tiersNav")} className="-mt-4 flex flex-wrap gap-1.5">
+          {tiers.map(({ tier, label }) => (
+            <a
+              key={tier}
+              href={`#tier-${tier}`}
+              className="inline-flex rounded-md px-2.5 py-1 font-data text-xs text-paper-muted transition-colors hover:bg-ink-surface hover:text-paper"
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
+      ) : null}
+
+      {tiers.map(({ tier, label, categories }) => {
+        const renderCategory = (category: (typeof categories)[number], headingLevel: "h3" | "h4") => (
+          <AwardCategory
+            key={category.key}
+            name={category.name}
+            coverage={category.coverage}
+            honors={category.honors}
+            nominations={category.nominations}
+            headingLevel={headingLevel}
+            link={{ href: categoryHistoryHref(page.awardSlug, category.key), label: t("categoryHistory") }}
+          />
+        );
+        const grid = `grid w-full gap-4 ${tier === "general" ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"}`;
         return (
-          <section key={tier} aria-labelledby={`tier-${tier}`} className="flex w-full flex-col gap-4">
-            <h2 id={`tier-${tier}`} className="font-display text-2xl text-paper">
+          <section key={tier} id={`tier-${tier}`} aria-labelledby={`tier-${tier}-title`} className="flex w-full scroll-mt-24 flex-col gap-4">
+            <h2 id={`tier-${tier}-title`} className="font-display text-2xl text-paper">
               {label}
             </h2>
-            <div className={`grid w-full gap-4 ${tier === "general" ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"}`}>
-              {categories.map((category) => (
-                <AwardCategory
-                  key={category.key}
-                  name={category.name}
-                  coverage={category.coverage}
-                  honors={category.honors}
-                  nominations={category.nominations}
-                  link={{ href: categoryHistoryHref(page.awardSlug, category.key), label: t("categoryHistory") }}
-                />
-              ))}
-            </div>
+            {tier === "genre" ? (
+              groupByField(categories).map((group) => (
+                <div key={group.field ?? "none"} className="flex flex-col gap-3">
+                  {group.field ? (
+                    <h3 className="font-data text-xs uppercase tracking-wider text-amber">{t(`fields.${group.field}`)}</h3>
+                  ) : null}
+                  <div className={grid}>{group.items.map((category) => renderCategory(category, "h4"))}</div>
+                </div>
+              ))
+            ) : (
+              <div className={grid}>{categories.map((category) => renderCategory(category, "h3"))}</div>
+            )}
           </section>
         );
       })}

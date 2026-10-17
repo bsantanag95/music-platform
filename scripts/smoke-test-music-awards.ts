@@ -57,8 +57,10 @@ const categoriesFile = {
     { key: "album-of-the-year", tier: "general", subject: "release_group", name: { es: "Álbum del año", en: "Album of the Year" }, order: 1 },
     { key: "record-of-the-year", tier: "general", subject: "recording", name: { es: "Grabación del año", en: "Record of the Year" }, order: 2 },
     { key: "best-new-artist", tier: "general", subject: "artist", name: { es: "Mejor artista nuevo", en: "Best New Artist" }, order: 3 },
-    { key: "best-smoke-album", tier: "genre", subject: "release_group", name: { es: "Mejor álbum smoke", en: "Best Smoke Album" }, order: 4 },
-    { key: "best-old-smoke-album", tier: "genre", subject: "release_group", name: { es: "Álbum smoke (antes)", en: "Old Smoke Album" }, order: 5 },
+    { key: "best-smoke-album", tier: "album", subject: "release_group", name: { es: "Mejor álbum smoke", en: "Best Smoke Album" }, order: 4 },
+    { key: "best-old-smoke-album", tier: "album", subject: "release_group", name: { es: "Álbum smoke (antes)", en: "Old Smoke Album" }, order: 5 },
+    // Nivel de género: exige campo (migración 0072) y sale al final, después de los álbumes.
+    { key: "best-smoke-performance", tier: "genre", field: "pop", subject: "recording", name: { es: "Mejor interpretación smoke", en: "Best Smoke Performance" }, order: 6 },
   ],
 };
 // La categoría nueva declara su predecesora (se agrega en la segunda escritura del archivo).
@@ -80,11 +82,13 @@ const ceremony = (year: number, edition: number) => ({
       nominees: [
         { title: "Smoke Álbum", artist: "Smoke Banda", won: false, resolved: { status: "exact", mbid: ALBUM, seed: { kind: "release_group", title: "Smoke Álbum", category: "studio", firstReleaseDate: "2024-05-01", credits } } },
         { title: "Sin Resolver", artist: "Nadie", won: true, resolved: { status: "ambiguous", candidates: [] } },
+        // Una categoría `complete` necesita al menos tres nominados.
+        { title: "Tercero", artist: "Alguien", won: false },
       ],
     },
     {
       key: "record-of-the-year",
-      coverage: "complete",
+      coverage: "winner_only",
       nominees: [
         {
           title: "Smoke Canción",
@@ -113,6 +117,34 @@ const ceremony = (year: number, edition: number) => ({
       nominees: [{ title: "Smoke Nueva", won: true, resolved: { status: "exact", mbid: NEW_ARTIST, seed: { kind: "artist", name: "Smoke Nueva", mbType: "Person", disambiguation: null } } }],
     },
     { key: year === 2025 ? "best-smoke-album" : "best-old-smoke-album", coverage: "winner_only", nominees: [{ title: "Otro Disco", artist: "Otra", won: true }] },
+    ...(year === 2025
+      ? [
+          {
+            key: "best-smoke-performance",
+            coverage: "winner_only",
+            nominees: [
+              {
+                title: "Smoke Canción",
+                artist: "Smoke Banda",
+                anchor: { title: "Smoke Sencillo", artist: "Smoke Banda" },
+                won: true,
+                resolved: {
+                  status: "manual",
+                  mbid: SONG,
+                  seed: {
+                    kind: "recording",
+                    title: "Smoke Canción",
+                    durationSec: 200,
+                    credits,
+                    anchorMbid: ANCHOR,
+                    anchor: { kind: "release_group", title: "Smoke Sencillo", category: "single_ep", credits },
+                  },
+                },
+              },
+            ],
+          },
+        ]
+      : []),
   ],
 });
 
@@ -193,7 +225,16 @@ async function main() {
     console.log("\nLectura");
     const page = await getCeremonyPage(SLUG, 2025);
     check(page !== null && page.ceremonies.map((c) => c.year).join() === "2025,2024", "la ceremonia lista las otras, de la más reciente");
-    check(page!.categories.map((c) => c.key).join() === "album-of-the-year,record-of-the-year,best-new-artist,best-smoke-album", "campo general primero, en el orden curado");
+    check(
+      page!.categories.map((c) => c.key).join() === "album-of-the-year,record-of-the-year,best-new-artist,best-smoke-album,best-smoke-performance",
+      "niveles en orden (general, álbum, género), cada uno en el orden curado",
+    );
+    check(
+      page!.categories.map((c) => c.tier).join() === "general,general,general,album,genre" &&
+        page!.categories[4]!.field === "pop" &&
+        page!.categories[3]!.field === null,
+      "el nivel de género trae su campo y los demás niveles no",
+    );
     const aoty = page!.categories[0]!;
     check(aoty.nominations[0]!.won && aoty.nominations[0]!.subject === null, "el ganador va primero; sin resolver queda como texto");
     check(aoty.nominations[1]!.subject?.kind === "release_group", "el álbum resuelto enlaza al catálogo");
@@ -212,6 +253,25 @@ async function main() {
     check(old?.successors.map((s) => s.key).join() === "best-smoke-album", "la predecesora muestra su sucesora");
     const aotyHistory = await getCategoryHistory(SLUG, "album-of-the-year");
     check(aotyHistory?.entries.map((e) => e.ceremony.year).join() === "2025,2024", "la historia va de la más reciente a la más antigua");
+
+    console.log("\nCHECK de nivel y campo (migración 0072)");
+    const [smokeAward] = await db.select({ id: award.id }).from(award).where(eq(award.slug, SLUG));
+    const insertCategory = async (key: string, tier: string, field: string | null) => {
+      try {
+        await db.execute(sql`
+          insert into award_category (award_id, key, tier, field, subject_kind, name_es, name_en, sort_order)
+          values (${smokeAward!.id}, ${key}, ${tier}, ${field}, 'recording', 'x', 'x', 99)
+        `);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+    check(!(await insertCategory("smoke-sin-campo", "genre", null)), "la base rechaza una categoría de género sin campo");
+    check(!(await insertCategory("smoke-nivel-raro", "otro", null)), "la base rechaza un nivel desconocido");
+    check(!(await insertCategory("smoke-campo-malo", "genre", "Rock Alternativo")), "la base rechaza un campo que no es un slug");
+    check(await insertCategory("smoke-album-sin-campo", "album", null), "un nivel de álbum no necesita campo");
+    await db.execute(sql`delete from award_category where award_id = ${smokeAward!.id} and key = 'smoke-album-sin-campo'`);
 
     console.log("\nArchivo inválido");
     const invalid = ceremony(2025, 2);

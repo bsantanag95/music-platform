@@ -11,7 +11,17 @@
   "heldOn": "Celebrada el {date}",
   "otherCeremonies": "Otras ceremonias",
   "tierGeneral": "Campo general",
-  "tierGenre": "Mejor álbum por género",
+  "tierAlbum": "Por álbum",
+  "tierGenre": "Por género",
+  "tiersNav": "Secciones de la ceremonia",
+  "fields": {
+    "pop": "Pop",
+    "dance-electronic": "Dance y electrónica",
+    "rock-alternative": "Rock y alternativa",
+    "rnb": "R&B",
+    "rap": "Rap",
+    "country": "Country"
+  },
   "winner": "Ganador",
   "nominees": "Nominados",
   "winnerOnlyNote": "De esta categoría solo registramos al ganador.",

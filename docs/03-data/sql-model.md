@@ -1166,7 +1166,10 @@ solo `scripts/load-awards.ts`, que es idempotente y borra lo que ya no está en 
 - `award_ceremony`: `award_id` (FK `CASCADE`), `year` (año de la **ceremonia**, no de elegibilidad; `CHECK` 1900–2100),
   `edition` (> 0), `held_on` (`DATE`, `CHECK` del mismo año). Únicos `(award_id, year)` y `(award_id, edition)`.
 - `award_category`: `award_id` (FK `CASCADE`), `key` (clave estable para la historia; único por premio), `tier`
-  (`general` | `genre`), `subject_kind` (`release_group` | `recording` | `artist`), `honors` (`performer` |
+  (`general` | `album` | `genre`, en ese orden de presentación; migración `0072` — antes `general` | `genre`, y las
+  filas `genre` de entonces pasaron a `album`), `field` (nullable; campo del nivel `genre` — `pop`, `dance-electronic`,
+  `rock-alternative`, `rnb`, `rap`, `country` —: `CHECK` de slug y `CHECK (tier <> 'genre' OR field IS NOT NULL)`),
+  `subject_kind` (`release_group` | `recording` | `artist`), `honors` (`performer` |
   `songwriter`: Canción del año premia la composición), `name_es`, `name_en` (curados, no en `messages`),
   `predecessor_id` (FK a sí misma, `SET NULL`, `CHECK` distinto de sí misma), `sort_order`. Una categoría renombrada,
   fusionada o dividida es otra fila enlazada con `predecessor_id`.

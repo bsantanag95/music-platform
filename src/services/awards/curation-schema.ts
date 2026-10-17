@@ -7,6 +7,9 @@ import { AWARD_CATEGORY_TIERS, AWARD_COVERAGES, AWARD_HONORS, AWARD_SUBJECT_KIND
 // cruzan archivos (la categoría existe, el sujeto coincide, `winner_only` solo con ganadores) viven en
 // `validateCeremony`, que devuelve los errores con archivo y categoría en vez de lanzar el primero.
 
+/** Los Grammy tienen cinco nominados por categoría (ocho en las grandes); menos de tres no es una lista completa. */
+export const MIN_COMPLETE_NOMINEES = 3;
+
 const slug = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "debe ser un slug en minúsculas con guiones");
 const mbid = z.uuid();
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "debe ser una fecha AAAA-MM-DD");
@@ -114,6 +117,8 @@ export const CategoryDefinitionSchema = z.object({
   tier: z.enum(AWARD_CATEGORY_TIERS),
   subject: z.enum(AWARD_SUBJECT_KINDS),
   honors: z.enum(AWARD_HONORS).default("performer"),
+  /** Campo (pop, rock-alternative…): obligatorio en el nivel `genre`, que agrupa por él; no se usa en los demás. */
+  field: slug.optional(),
   name: z.object({ es: z.string().min(1), en: z.string().min(1) }),
   /** Clave de la categoría anterior cuando esta la renombra, fusiona o divide. */
   predecessor: slug.optional(),
@@ -142,13 +147,34 @@ export function isLinkable(resolved: Resolution | undefined): resolved is Resolu
   );
 }
 
-/** Reglas propias de las categorías: claves únicas y predecesoras existentes. */
+/** Reglas propias de las categorías: claves únicas, predecesoras existentes y campos coherentes con el nivel. */
 export function validateCategories(file: CategoriesFile, fileName: string): string[] {
   const errors: string[] = [];
   const keys = new Set<string>();
   for (const category of file.categories) {
     if (keys.has(category.key)) errors.push(`${fileName}: la categoría "${category.key}" está repetida`);
     keys.add(category.key);
+  }
+  for (const category of file.categories) {
+    if (category.tier === "genre" && !category.field) {
+      errors.push(`${fileName}: la categoría "${category.key}" es de nivel genre y necesita "field"`);
+    }
+    if (category.tier !== "genre" && category.field) {
+      errors.push(`${fileName}: "field" solo se usa en el nivel genre ("${category.key}" es ${category.tier})`);
+    }
+  }
+  // La página agrupa por campo recorriendo las categorías en su orden curado: un campo partido en dos saldría
+  // como dos grupos con el mismo subtítulo.
+  const byOrder = [...file.categories].filter((c) => c.field).sort((a, b) => a.order - b.order);
+  const closed = new Set<string>();
+  let current: string | undefined;
+  for (const category of byOrder) {
+    if (category.field === current) continue;
+    if (closed.has(category.field!)) {
+      errors.push(`${fileName}: las categorías del campo "${category.field}" no son contiguas en "order"`);
+    }
+    if (current) closed.add(current);
+    current = category.field;
   }
   for (const category of file.categories) {
     if (!category.predecessor) continue;
@@ -185,6 +211,11 @@ export function validateCeremony(ceremony: CeremonyFile, categories: CategoriesF
       continue;
     }
     if (!category.nominees.some((n) => n.won)) errors.push(`${at(category.key)}: no tiene ganador`);
+    if (category.coverage === "complete" && category.nominees.length < MIN_COMPLETE_NOMINEES) {
+      errors.push(
+        `${at(category.key)}: la cobertura es complete pero hay ${category.nominees.length} nominados (mínimo ${MIN_COMPLETE_NOMINEES})`,
+      );
+    }
     if (category.coverage === "winner_only" && category.nominees.some((n) => !n.won)) {
       errors.push(`${at(category.key)}: la cobertura es winner_only pero hay nominados que no ganaron`);
     }

@@ -46,116 +46,379 @@
       "order": 4
     },
     {
+      "key": "producer-of-the-year-non-classical",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Productor del año, no clásico",
+        "en": "Producer of the Year, Non-Classical"
+      },
+      "order": 5
+    },
+    {
+      "key": "songwriter-of-the-year-non-classical",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Compositor del año, no clásico",
+        "en": "Songwriter of the Year, Non-Classical"
+      },
+      "order": 6
+    },
+    {
       "key": "best-pop-vocal-album",
-      "tier": "genre",
+      "tier": "album",
       "subject": "release_group",
       "honors": "performer",
       "name": {
         "es": "Mejor álbum vocal pop",
         "en": "Best Pop Vocal Album"
       },
-      "order": 5
+      "order": 10
     },
     {
       "key": "best-dance-electronic-album",
-      "tier": "genre",
+      "tier": "album",
       "subject": "release_group",
       "honors": "performer",
       "name": {
         "es": "Mejor álbum dance/electrónico",
         "en": "Best Dance/Electronic Album"
       },
-      "order": 6
+      "order": 11
     },
     {
       "key": "best-rock-album",
-      "tier": "genre",
+      "tier": "album",
       "subject": "release_group",
       "honors": "performer",
       "name": {
         "es": "Mejor álbum de rock",
         "en": "Best Rock Album"
       },
-      "order": 7
+      "order": 12
     },
     {
       "key": "best-alternative-music-album",
-      "tier": "genre",
+      "tier": "album",
       "subject": "release_group",
       "honors": "performer",
       "name": {
         "es": "Mejor álbum de música alternativa",
         "en": "Best Alternative Music Album"
       },
-      "order": 8
+      "order": 13
     },
     {
       "key": "best-rnb-album",
-      "tier": "genre",
+      "tier": "album",
       "subject": "release_group",
       "honors": "performer",
       "name": {
         "es": "Mejor álbum de R&B",
         "en": "Best R&B Album"
       },
-      "order": 9
+      "order": 14
     },
     {
       "key": "best-rap-album",
-      "tier": "genre",
+      "tier": "album",
       "subject": "release_group",
       "honors": "performer",
       "name": {
         "es": "Mejor álbum de rap",
         "en": "Best Rap Album"
       },
-      "order": 10
+      "order": 15
     },
     {
       "key": "best-country-album",
-      "tier": "genre",
+      "tier": "album",
       "subject": "release_group",
       "honors": "performer",
       "name": {
         "es": "Mejor álbum de country",
         "en": "Best Country Album"
       },
-      "order": 11
+      "order": 16
+    },
+    {
+      "key": "best-contemporary-country-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum contemporáneo de country",
+        "en": "Best Contemporary Country Album"
+      },
+      "order": 17,
+      "predecessor": "best-country-album"
+    },
+    {
+      "key": "best-traditional-country-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum tradicional de country",
+        "en": "Best Traditional Country Album"
+      },
+      "order": 18,
+      "predecessor": "best-country-album"
     },
     {
       "key": "best-latin-pop-album",
-      "tier": "genre",
+      "tier": "album",
       "subject": "release_group",
       "honors": "performer",
       "name": {
         "es": "Mejor álbum de pop latino",
         "en": "Best Latin Pop Album"
       },
-      "order": 12,
+      "order": 19,
       "predecessor": "best-latin-pop-or-urban-album"
     },
     {
       "key": "best-musica-urbana-album",
-      "tier": "genre",
+      "tier": "album",
       "subject": "release_group",
       "honors": "performer",
       "name": {
         "es": "Mejor álbum de música urbana",
         "en": "Best Música Urbana Album"
       },
-      "order": 13,
+      "order": 20,
       "predecessor": "best-latin-pop-or-urban-album"
     },
     {
       "key": "best-latin-pop-or-urban-album",
-      "tier": "genre",
+      "tier": "album",
       "subject": "release_group",
       "honors": "performer",
       "name": {
         "es": "Mejor álbum de pop latino o urbano",
         "en": "Best Latin Pop or Urban Album"
       },
-      "order": 14
+      "order": 21
+    },
+    {
+      "key": "best-pop-solo-performance",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "pop",
+      "name": {
+        "es": "Mejor interpretación pop solista",
+        "en": "Best Pop Solo Performance"
+      },
+      "order": 30
+    },
+    {
+      "key": "best-pop-duo-group-performance",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "pop",
+      "name": {
+        "es": "Mejor interpretación pop de dúo o grupo",
+        "en": "Best Pop Duo/Group Performance"
+      },
+      "order": 31
+    },
+    {
+      "key": "best-dance-recording",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "dance-electronic",
+      "name": {
+        "es": "Mejor grabación dance",
+        "en": "Best Dance Recording"
+      },
+      "order": 32
+    },
+    {
+      "key": "best-dance-pop-recording",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "dance-electronic",
+      "name": {
+        "es": "Mejor grabación dance pop",
+        "en": "Best Dance Pop Recording"
+      },
+      "order": 33
+    },
+    {
+      "key": "best-dance-electronic-recording",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "dance-electronic",
+      "name": {
+        "es": "Mejor grabación dance/electrónica",
+        "en": "Best Dance/Electronic Recording"
+      },
+      "order": 34,
+      "predecessor": "best-dance-recording"
+    },
+    {
+      "key": "best-rock-performance",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "rock-alternative",
+      "name": {
+        "es": "Mejor interpretación de rock",
+        "en": "Best Rock Performance"
+      },
+      "order": 35
+    },
+    {
+      "key": "best-metal-performance",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "rock-alternative",
+      "name": {
+        "es": "Mejor interpretación de metal",
+        "en": "Best Metal Performance"
+      },
+      "order": 36
+    },
+    {
+      "key": "best-rock-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "songwriter",
+      "field": "rock-alternative",
+      "name": {
+        "es": "Mejor canción de rock",
+        "en": "Best Rock Song"
+      },
+      "order": 37
+    },
+    {
+      "key": "best-alternative-music-performance",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "rock-alternative",
+      "name": {
+        "es": "Mejor interpretación de música alternativa",
+        "en": "Best Alternative Music Performance"
+      },
+      "order": 38
+    },
+    {
+      "key": "best-rnb-performance",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "rnb",
+      "name": {
+        "es": "Mejor interpretación de R&B",
+        "en": "Best R&B Performance"
+      },
+      "order": 39
+    },
+    {
+      "key": "best-traditional-rnb-performance",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "rnb",
+      "name": {
+        "es": "Mejor interpretación de R&B tradicional",
+        "en": "Best Traditional R&B Performance"
+      },
+      "order": 40
+    },
+    {
+      "key": "best-rnb-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "songwriter",
+      "field": "rnb",
+      "name": {
+        "es": "Mejor canción de R&B",
+        "en": "Best R&B Song"
+      },
+      "order": 41
+    },
+    {
+      "key": "best-rap-performance",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "rap",
+      "name": {
+        "es": "Mejor interpretación de rap",
+        "en": "Best Rap Performance"
+      },
+      "order": 42
+    },
+    {
+      "key": "best-melodic-rap-performance",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "rap",
+      "name": {
+        "es": "Mejor interpretación de rap melódico",
+        "en": "Best Melodic Rap Performance"
+      },
+      "order": 43
+    },
+    {
+      "key": "best-rap-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "songwriter",
+      "field": "rap",
+      "name": {
+        "es": "Mejor canción de rap",
+        "en": "Best Rap Song"
+      },
+      "order": 44
+    },
+    {
+      "key": "best-country-solo-performance",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "country",
+      "name": {
+        "es": "Mejor interpretación de country solista",
+        "en": "Best Country Solo Performance"
+      },
+      "order": 45
+    },
+    {
+      "key": "best-country-duo-group-performance",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "country",
+      "name": {
+        "es": "Mejor interpretación de country de dúo o grupo",
+        "en": "Best Country Duo/Group Performance"
+      },
+      "order": 46
+    },
+    {
+      "key": "best-country-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "songwriter",
+      "field": "country",
+      "name": {
+        "es": "Mejor canción de country",
+        "en": "Best Country Song"
+      },
+      "order": 47
     }
   ]
 }

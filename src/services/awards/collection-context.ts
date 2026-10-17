@@ -1,6 +1,6 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { award, awardCategory, awardCategoryEdition, awardCeremony, awardNomination } from "@/db/schema";
+import { award, awardCategory, awardCategoryEdition, awardCeremony, awardNomination, awardTierRankSql } from "@/db/schema";
 import type { CategoryName } from "./read";
 
 // Contexto de premios de una colección de ganadores (`grammy-winners`): qué ceremonia es y qué categoría ganó cada
@@ -59,8 +59,8 @@ export async function ceremonyContext(periodKey: string, albumIds: string[]): Pr
           inArray(albumId, ids),
         ),
       )
-      // Las categorías generales ("Álbum del año") antes que las de género, como en la página de la ceremonia.
-      .orderBy(sql`(${awardCategory.tier} = 'general') desc`, awardCategory.sortOrder);
+      // Por nivel (general, álbum, género), como en la página de la ceremonia.
+      .orderBy(awardTierRankSql(awardCategory.tier), awardCategory.sortOrder);
     for (const row of rows) {
       const list = wonByAlbum.get(row.albumId) ?? [];
       list.push({ key: row.key, name: { es: row.nameEs, en: row.nameEn } });

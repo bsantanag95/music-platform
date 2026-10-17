@@ -11,7 +11,17 @@
   "heldOn": "Held on {date}",
   "otherCeremonies": "Other ceremonies",
   "tierGeneral": "General field",
-  "tierGenre": "Best album by genre",
+  "tierAlbum": "By album",
+  "tierGenre": "By genre",
+  "tiersNav": "Ceremony sections",
+  "fields": {
+    "pop": "Pop",
+    "dance-electronic": "Dance and electronic",
+    "rock-alternative": "Rock and alternative",
+    "rnb": "R&B",
+    "rap": "Rap",
+    "country": "Country"
+  },
   "winner": "Winner",
   "nominees": "Nominees",
   "winnerOnlyNote": "For this category we only record the winner.",

@@ -3,7 +3,7 @@
 
 import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { releaseCalendarEntry, releaseGroup } from "@/db/schema";
+import { awardTierRankSql, releaseCalendarEntry, releaseGroup } from "@/db/schema";
 import { albumInFamily } from "@/services/genres/read";
 import { GENRE_FAMILIES, type FamilyKey } from "@/services/genres/families";
 import esCatalog from "../../../../messages/es/catalog.json";
@@ -40,7 +40,7 @@ export const grammyWinners: CollectionTemplate = {
     `);
     if (!ceremony) return { skip: "No hay ceremonias de premios cargadas (scripts/load-awards.ts)" };
 
-    // Ganadores con álbum (directo o disco ancla de la grabación): categorías generales primero.
+    // Ganadores con álbum (directo o disco ancla de la grabación): por nivel (general, álbum, género).
     const rows = await db.execute<{ rg_id: string } & Record<string, unknown>>(sql`
       select coalesce(n.release_group_id, n.anchor_release_group_id) as rg_id
       from award_nomination n
@@ -49,7 +49,7 @@ export const grammyWinners: CollectionTemplate = {
       where e.ceremony_id = ${ceremony.ceremony_id}
         and n.won
         and coalesce(n.release_group_id, n.anchor_release_group_id) is not null
-      order by (cat.tier = 'general') desc, cat.key, n.sort_order
+      order by ${awardTierRankSql(sql`cat.tier`)}, cat.key, n.sort_order
     `);
     const candidates = [...new Set([...rows].map((row) => row.rg_id))];
     if (candidates.length === 0) return { skip: `La ceremonia ${ceremony.year} no tiene ganadores con álbum` };

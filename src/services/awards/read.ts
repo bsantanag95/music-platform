@@ -11,6 +11,7 @@ import {
   credit,
   recording,
   releaseGroup,
+  awardTierRank,
   type AwardCategoryTier,
   type AwardCoverage,
   type AwardHonors,
@@ -57,6 +58,8 @@ export interface CategoryName {
 export interface CategoryView {
   key: string;
   tier: AwardCategoryTier;
+  /** Campo (pop, rock-alternative…) de las categorías de nivel `genre`; `null` en los demás niveles. */
+  field: string | null;
   name: CategoryName;
   honors: AwardHonors;
   subjectKind: AwardSubjectKind;
@@ -209,9 +212,12 @@ export function orderNominations(
     .map((row) => views.get(row.id)!);
 }
 
-/** Campo general primero, luego las de género; dentro de cada nivel, el orden curado. */
+/**
+ * Niveles en su orden de presentación (`awardTierRank`); dentro de cada nivel, el orden curado, que mantiene juntas
+ * las categorías de un mismo campo (lo valida `validateCategories`).
+ */
 export function sortCategoryEditions<T extends { tier: AwardCategoryTier; sortOrder: number }>(editions: T[]): T[] {
-  return [...editions].sort((a, b) => Number(a.tier !== "general") - Number(b.tier !== "general") || a.sortOrder - b.sortOrder);
+  return [...editions].sort((a, b) => awardTierRank(a.tier) - awardTierRank(b.tier) || a.sortOrder - b.sortOrder);
 }
 
 async function awardId(slug: string): Promise<string | null> {
@@ -315,6 +321,7 @@ export const getCeremonyPage = cache(async (slug: string, year: number): Promise
       coverage: awardCategoryEdition.coverage,
       key: awardCategory.key,
       tier: awardCategory.tier,
+      field: awardCategory.field,
       nameEs: awardCategory.nameEs,
       nameEn: awardCategory.nameEn,
       honors: awardCategory.honors,
@@ -337,6 +344,7 @@ export const getCeremonyPage = cache(async (slug: string, year: number): Promise
     categories: sortCategoryEditions(editions).map((e) => ({
       key: e.key,
       tier: e.tier,
+      field: e.field,
       name: { es: e.nameEs, en: e.nameEn },
       honors: e.honors,
       subjectKind: e.subjectKind,
