@@ -430,10 +430,10 @@ minúsculas; inexistente o que no es un estilo visible → `404`.
 ## Descubrimiento `/explore` (cambio `add-album-discovery`)
 
 **No expone endpoints.** La superficie `/[locale]/explore` y sus listados filtrados
-(`?decada=` con `?anio=` opcional, o `?familia=` / `?genero=` / `?page=`) se resuelven en Server Components llamando directo a
+(`?decada=` con `?anio=` y `?genero=` opcionales, o `?familia=` / `?genero=` / `?page=`) se resuelven en Server Components llamando directo a
 `src/services/discovery/discovery.ts`. Desde `add-genre-taxonomy`, `?familia=<clave>` lista los álbumes
 con algún género efectivo de esa familia y `?genero=<slug>` los de ese género **o un subgénero**
-(prioridad `decada` > `familia` > `genero`; `anio` refina la década y se ignora si no es de ella; una clave o un slug desconocido muestra el estado vacío). La paginación de los listados filtrados es
+(prioridad `decada` > `familia` > `genero`; `anio` y `genero` refinan la década (`?decada=1980&genero=hard-rock`; `anio` se ignora si no es de ella) y una `familia` junto a la década se ignora; una clave o un slug desconocido muestra el estado vacío). La paginación de los listados filtrados es
 server-side (anterior / siguiente por `?page=`), sin fetch de cliente. Ver
 `docs/05-features/explore.md`.
 

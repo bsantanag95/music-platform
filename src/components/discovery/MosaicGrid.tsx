@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Link } from "@/i18n/navigation";
-import { CoverThumb } from "@/components/catalog/CoverThumb";
+import { CoverMosaic } from "./CoverMosaic";
 import { SectionHeader } from "./SectionHeader";
 
 export interface MosaicTile {
@@ -29,20 +29,8 @@ interface MosaicGridProps {
   lessLabel?: string;
 }
 
-/**
- * Cómo se reparte el mosaico según cuántas carátulas hay: con cuatro, 2×2; con tres, la primera ocupa las dos filas; con
- * dos, dos columnas a todo el alto; con una, a sangre.
- */
-function mosaicLayout(count: number): { grid: string; span: (index: number) => string } {
-  if (count >= 4) return { grid: "grid-cols-2 grid-rows-2", span: () => "" };
-  if (count === 3) return { grid: "grid-cols-2 grid-rows-2", span: (i) => (i === 0 ? "row-span-2" : "") };
-  if (count === 2) return { grid: "grid-cols-2 grid-rows-1", span: () => "" };
-  return { grid: "grid-cols-1 grid-rows-1", span: () => "" };
-}
-
 function Tile({ tile }: { tile: MosaicTile }) {
   const covers = tile.covers.slice(0, 4);
-  const { grid, span } = mosaicLayout(covers.length);
   return (
     <Link
       href={tile.href}
@@ -51,13 +39,7 @@ function Tile({ tile }: { tile: MosaicTile }) {
       {covers.length > 0 ? (
         <>
           {/* Las carátulas son decorativas: el enlace se nombra con el corte. */}
-          <div aria-hidden="true" className={`absolute inset-0 -z-10 grid gap-px bg-ink ${grid}`}>
-            {covers.map((cover, i) => (
-              <div key={`${cover}-${i}`} className={`relative min-h-0 min-w-0 ${span(i)}`}>
-                <CoverThumb cover={cover} label="" className="size-full !rounded-none" />
-              </div>
-            ))}
-          </div>
+          <CoverMosaic covers={covers} className="absolute inset-0 -z-10 grid" />
           {/* Velo bajo el nombre: garantiza su contraste sobre cualquier carátula. */}
           <div
             aria-hidden="true"

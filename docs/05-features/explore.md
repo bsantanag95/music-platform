@@ -18,7 +18,7 @@ sin tabla materializada. Cada sección se **omite** si no tiene contenido. En or
 | Colecciones | todas las filas de `user_list_featured` vigentes, sin distinguir el origen: las curadas a mano desde `/admin` (ADR 0034) y las generadas por plantillas (ADR 0033 y 0035), por `weight` desc y `rank` asc, máximo 10 (`COLLECTION_RAIL_LIMIT`, ADR 0038) | un solo riel, en fila desplazable con flechas; tarjeta `CollectionRail` (pila de hasta 6 fundas, **familia** sobre el título, título, descripción y número de álbumes) y «Ver todas →» a `/explore/collections`; la tarjeta no dice si la colección se armó a mano o por plantilla |
 | Popular ahora | popularidad de la comunidad por personas distintas (cambio `explore-popular-now`, ADR 0041, `popularity.ts`) | segunda sección, tras Colecciones: pestañas **Álbumes · Artistas · Canciones** (`PopularNow`, `PopularTabs`: `tablist` con flechas, la primera con resultado activa; los tres paneles llegan del servidor, sin JS se ve Álbumes); las tres pestañas con la misma forma de **chart** (`PopularChart`, como los de Spotify, Apple Music o Last.fm): el n.º 1 como pieza grande con su imagen difuminada de fondo, y del 2 en adelante numerados en dos columnas (carátula cuadrada para álbumes y canciones, foto redonda o inicial para artistas; artista y "año · tipo" del disco). Las pestañas son un control segmentado. Hasta 12 álbumes y 10 artistas o canciones. El subtítulo dice la ventana usada por la pestaña activa (este mes / últimos 3 meses / de siempre). Cifra "N personas" solo desde 5 (`POPULARITY_FIGURE_MIN`). Una pestaña sin resultado no aparece; sin ninguna, la sección se omite. Reemplaza al antiguo riel "Más reseñados". Ver "Popular ahora" abajo |
 | Explorar por género | familias de géneros con álbumes (vista `release_group_effective_genre`, cambio `add-genre-taxonomy`) | tarjetas **visuales** (cambio `visual-genre-families`): un mosaico a sangre de hasta 4 carátulas de discos de estudio de la familia con el nombre encima sobre un velo (4 → 2×2, 3 → la primera a dos filas, 2 → dos columnas, 1 → una, 0 → tarjeta plana) → `/explore?familia=rock`; **sin número de álbumes ni barra**: el conteo de lo que la base ha guardado crece con cada artista que alguien abre y no dice nada de la familia (incluía sencillos, recopilaciones y discos en vivo), así que solo sirve internamente para omitir las familias vacías. La flecha solo aparece al pasar el mouse; las familias secundarias se despliegan desde una tarjeta "N familias más" dentro de la propia grilla (botón con `aria-expanded`, "Ver menos" para plegar) (`MosaicGrid`, que también usan las décadas). Las carátulas (`family-covers.ts`) se eligen por la señal de las colecciones del día 0 (premio, calendario, valoración de la comunidad cuando existe) con desempate por id; un disco se usa en una sola familia (se atiende primero a la que tiene menos candidatos) salvo el relleno de las que quedarían con menos de dos; se calculan en una sola consulta con ventana y se guardan 6 horas en memoria (la consulta tarda ~1 s en frío); un error no se cachea y la portada pinta tarjetas planas |
-| Explorar por década | `first_release_year` agrupado por década; carátulas por la señal de las colecciones (cambio `redesign-explore-decades`) | tarjetas **visuales**, las mismas de los géneros (`MosaicGrid`): un mosaico de hasta 4 carátulas de discos de estudio de la década con su nombre encima ("1990s") → `/explore?decada=1990`, **sin número de álbumes ni barra** (el histograma anterior mostraba lo que la base había guardado, no lo publicado: "2010s = 15.117" parecía decir que fue la mejor década y crecía con cada artista abierto). De la más reciente a la más antigua; desde 1950 (`MOSAIC_FIRST_DECADE`, una decisión de producto y no un umbral de datos, para que una década no cambie de sitio al ingerir discos) son tarjetas de la grilla y las anteriores van tras una tarjeta "Décadas anteriores" que las despliega (sin cifras; una década sin carátulas sale plana). Las carátulas (`decade-covers.ts`) son discos `studio` con carátula elegidos por la señal de las colecciones con desempate por id, en una consulta con ventana y 6 horas de caché en memoria; las décadas son disjuntas, así que no hace falta repartir discos como en las familias. Va justo después de Géneros: los dos ejes del catálogo juntos, antes de los feeds con fecha |
+| Explorar por década | `first_release_year` agrupado por década; carátulas por la señal de las colecciones (cambio `redesign-explore-decades`) | tarjetas **visuales**, las mismas de los géneros (`MosaicGrid`, `CoverMosaic`): un mosaico de hasta 4 carátulas de discos de estudio de la década con su nombre encima ("Años 90" en español, "1990s" en inglés) → `/explore?decada=1990`, **sin número de álbumes ni barra** (el histograma anterior mostraba lo que la base había guardado, no lo publicado: "2010s = 15.117" parecía decir que fue la mejor década y crecía con cada artista abierto). De la más reciente a la más antigua; desde 1950 (`MOSAIC_FIRST_DECADE`, una decisión de producto y no un umbral de datos, para que una década no cambie de sitio al ingerir discos) son tarjetas de la grilla y las anteriores van tras una tarjeta "Décadas anteriores" que las despliega (sin cifras; una década sin carátulas sale plana). Las carátulas (`decade-covers.ts`) son discos `studio` con carátula elegidos por la señal de las colecciones con desempate por id, en una consulta con ventana y 6 horas de caché en memoria; las décadas son disjuntas, así que no hace falta repartir discos como en las familias. Va justo después de Géneros: los dos ejes del catálogo juntos, antes de los feeds con fecha |
 | Novedades | `release_group` studio/single_ep con `first_release_date` completa en los últimos `NEW_RELEASE_WINDOW_DAYS` (90) días hasta hoy, con carátula, por fecha desc | riel horizontal con la fecha ("9 oct") en cada tarjeta y "Ver todo →" a `/explore?novedades=1`; se omite con menos de `MIN_ALBUMS_FOR_SECTION` (6); sin lanzamientos futuros ni fechas parciales (cambios `redefine-explore-new-releases` y `add-explore-new-releases-listing`) |
 | Próximos lanzamientos | `release_group` studio/single_ep con `first_release_date` completa posterior a hoy y hasta hoy + `UPCOMING_WINDOW_DAYS` (180), con carátula, por fecha asc (cambio `add-explore-upcoming-releases`) | riel horizontal bajo Novedades, con la fecha ("24 oct") en cada tarjeta y "Ver todo →" a `/explore?proximos=1`; se omite con menos de `MIN_ALBUMS_FOR_SECTION` (6) |
 | Premios | ceremonias cargadas desde `data/awards/` (cambio `add-music-awards`, ADR 0032) | una tarjeta por cada una de las últimas 5 ceremonias, con el ganador destacado (Álbum del año en los Grammy: carátula, título y artista; `listRecentCeremonies` lo resuelve en una consulta para todas) → `/awards/<premio>/<año>` y "Ver todos" → `/awards`; se omite sin ceremonias (`AwardsExploreSection`). Ver `awards.md` |
@@ -110,8 +110,9 @@ sesión a las tarjetas (antes las trataba a todas como anónimas).
 
 ## Listados filtrados
 
-`/explore?decada=<año>`, `/explore?familia=<clave>` o `/explore?genero=<slug>` (un corte a la vez;
-prioridad `decada` > `familia` > `genero`). La familia lista los álbumes con algún género efectivo de
+`/explore?decada=<año>`, `/explore?familia=<clave>` o `/explore?genero=<slug>` (prioridad `decada` > `familia` > `genero`).
+La **década se refina**: `anio` y `genero` acotan su listado (`?decada=1980&anio=1985&genero=hard-rock`, cambio `redesign-decade-view`) y
+una `familia` junto a la década se ignora; familia y género sueltos siguen siendo cortes de uno en uno. La familia lista los álbumes con algún género efectivo de
 ella; el género, los de ese género **o un subgénero** (CTE recursiva sobre "subgénero de"). Los
 géneros efectivos incluyen los heredados del artista (3 primeros). Una clave o un slug desconocido
 muestra el estado vacío; una década mal escrita (`?decada=abc`, `?decada=1995`) también, en lugar
@@ -122,25 +123,42 @@ La vista (`FilteredAlbumList`) tiene miga de pan (Inicio / Explorar / corte) y e
 ella: **sin rótulo de tipo de corte encima** (cambio `redesign-family-view`: la miga ya dice dónde estás y el sistema
 de diseño no admite un eyebrow sobre el encabezado). Y:
 
-- **Años de la década** (solo en `?decada=`, cambio `redesign-explore-decades`): una fila de chips "Toda la década · 1990 · 1991 …" con los
-  años que tienen álbumes (`listDecadeYears`), sin cifras; elegir uno filtra con `?anio=<año>` (título "Álbumes de 1994", miga de pan
-  Explorar / 1990s / 1994), conserva tipo y orden y "Toda la década" lo quita. El año es un refinamiento de la década, no un segundo corte
-  (el contrato sigue siendo uno a la vez). Un `anio` que no sea de la década (`?anio=1985`, `?anio=abc`) se ignora y muestra la década
-  completa; el servicio rechaza un año ajeno con `VALIDATION_ERROR`.
-- **Géneros de la década** (solo en `?decada=`): hasta 12 chips con los géneros de estilo con más discos de la década
-  (`listDecadeGenres`, `decade-genres.ts`), **sin cifras**, con como mucho 3 de una misma familia (`DECADE_GENRES_PER_FAMILY`): sin ese tope,
-  en la base de prueba, los 12 más grandes de los 1990s incluían cinco de Clásica (ópera, sinfonía, barroco…) y ninguno de hip hop. Cada
-  chip lleva a la página del género ya filtrada por la década (`/genre/<slug>?tab=albums&decada=1990`): así el cruce "Rock de los 90" existe
-  sin cambiar el contrato de Explorar. Una consulta con ventana, ~70 ms en frío en scratch, y 6 horas de caché por década.
+- **Vista de década** (solo en `?decada=`, cambios `redesign-explore-decades` y `redesign-decade-view`). Cabecera, dos filas de filtros
+  rotuladas y los filtros de tipo y orden:
+  - **Cabecera**: título, una línea de contexto con el orden "Destacados" ("Premiados y mejor valorados primero; con pocas valoraciones,
+    el orden es estable pero no un ranking": honesta con lo que hay, no promete una curaduría que los datos aún no tienen; se omite con
+    otro orden) y, desde `sm`, el mosaico 2×2 de la tarjeta de la portada (`listDecadeCovers`, misma selección y misma caché; `CoverMosaic`,
+    decorativo, sin cifras). Títulos: "Álbumes de los años 80", "Álbumes de 1985", "Álbumes de hard rock de los años 80" y "…de 1985".
+  - **Fila "Año"**: "Toda la década" y un chip por año con al menos un disco ya publicado (`listDecadeYears`; un año con solo
+    lanzamientos por salir no tiene chip, aunque `?anio=` con ese año funcione), sin cifras; filtra con `?anio=<año>`. Al final de la fila,
+    el menú **«Otras décadas»** (`<details>` cerrado, sin JavaScript; panel flotante desde `md` y en su propia línea en angosto), que
+    conserva género, tipo y orden y quita el año. Un `anio` que no sea de la década se ignora; el servicio rechaza un año ajeno con
+    `VALIDATION_ERROR`.
+  - **Fila "Género"**: "Todos" y hasta 12 chips con los géneros de estilo con más discos de la década (`listDecadeGenres`,
+    `decade-genres.ts`), **sin cifras**, con como mucho 3 de una misma familia (`DECADE_GENRES_PER_FAMILY`; sin ese tope, los 12 más
+    grandes de los 1990s incluían cinco de Clásica y ninguno de hip hop) y **mostrados por familia** en el orden de la taxonomía (Rock,
+    Metal, Pop… Clásica al final; `orderByFamily`) y por tamaño dentro de cada una. Los chips **filtran esta misma lista** con
+    `?genero=<slug>` (el género y sus subgéneros dentro de la década, `listAlbumsByGenre` con `decade`): antes enlazaban a la página del
+    género y no se sabía que salían de Explorar. Con un género elegido, bajo el título hay «Ir a la página de <género>» a
+    `/genre/<slug>?tab=albums&decada=<año>`; un género de la URL fuera de los 12 se agrega al final, marcado. Consulta con ventana,
+    ~85 ms en frío en scratch (Rock de los 1980s: ~110 ms) y 6 horas de caché por década.
+  - **Combinación**: cada chip conserva el resto de parámetros; "Toda la década" quita el año, "Todos" quita el género, y cambiar de década
+    conserva género, tipo y orden y quita el año (comparar épocas dentro de un género). Con un corte vacío, «Quitar filtros» vuelve a la
+    década sin refinamientos. La miga de pan tiene un nivel por refinamiento (Explorar / Años 80 / 1985 / hard rock).
+  - **Tipos sin discos** (`listDecadeCategories`, `ExploreFilterBar` con `availableCategories`): los chips de tipo que no tienen discos en el
+    corte salen deshabilitados, sin enlace; "Todos" y el tipo elegido siguen activos.
+  - **Nombre de la década** (`decade-label.ts`): en español "Años 80" (de 1920 a 1990; con cuatro cifras antes de 1920 y desde 2000,
+    "Años 1910", "Años 2000", "Años 2020", porque "Años 10" se lee como los 2010), en inglés "1980s". Solo en Explorar: las colecciones, el
+    perfil y la página de género conservan "1990s".
 - **Géneros de la familia** (solo en `?familia=`): hasta 12 chips con los géneros de estilo más grandes de la familia
   (`listFamilyGenres`, `family-genres.ts`), cada uno hacia su página `/genre/<slug>` con el nombre en el idioma activo y
   **sin cifras**. Es la forma de seguir navegando hacia dentro (subgéneros) y de llegar a la ficha completa; incluye el
   género raíz (`rock` dentro de Rock). La consulta tarda ~0,4 s en frío y se guarda 6 horas en memoria por familia
   (`src/lib/ttl-cache.ts`, el mismo helper de las carátulas de las tarjetas de familia).
-- **Cortes hermanos**: las otras décadas o las otras familias, para saltar sin volver a la portada
-  (conservan tipo y orden, y quitan el año). En la vista de familia y en la de década van en un desplegable cerrado («Otras familias», «Otras
-  décadas»; `<details>`, sin JavaScript): veinte chips de familia o catorce de década empujaban el primer disco bajo el pliegue. El
-  listado por género enlaza en su lugar a la página del género.
+- **Cortes hermanos**: las otras familias, para saltar sin volver a la portada (conservan tipo y orden), en un desplegable cerrado
+  («Otras familias»; `<details>`, sin JavaScript): veinte chips empujaban el primer disco bajo el pliegue. Las otras décadas son el menú de
+  la fila "Año" de la vista de década. El listado por género enlaza en su lugar a la página del género. Los chips de género de la vista
+  de familia siguen enlazando a la página del género (queda pendiente unificarlos con los de la década).
 - **Tipo y orden** (`ExploreFilterBar`): el tipo es una fila de enlaces (`?tipo=studio|single_ep|
   compilation|live_other`, sin JS) y el orden un `<select>` (`?orden=mejor|populares|recientes|
   antiguos|az`, los mismos valores que la página de género). Contrato de URL en

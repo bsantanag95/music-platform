@@ -17,6 +17,7 @@ import { genreHref } from "@/lib/catalog-links";
 import { getCurrentUser } from "@/services/auth/authorization";
 import {
   CURATOR_USERNAME,
+  isValidDecade,
   MIN_RATINGS_PER_ALBUM,
   MOSAIC_FIRST_DECADE,
   NEW_RELEASE_WINDOW_DAYS,
@@ -29,17 +30,22 @@ import {
   listAlbumsByFamily,
   listAlbumsByGenre,
   listDecades,
+  listDecadeCategories,
   listDecadeYears,
   listNewAlbums,
   listUpcomingAlbums,
   listGenreFamilies,
+  type AlbumPage,
   type FamilyBucket,
 } from "@/services/discovery/discovery";
 import { ensureCollectionsFresh } from "@/services/discovery/collections/sync";
+import { decadeLabel } from "@/services/discovery/decade-label";
+import { listDecadeCovers } from "@/services/discovery/decade-covers";
 import { listDecadeGenres } from "@/services/discovery/decade-genres";
 import { listFamilyGenres } from "@/services/discovery/family-genres";
 import { exploreListHref, parseExploreListParams } from "@/services/discovery/explore-params";
 import { genreDisplayName, genreLocaleOf } from "@/services/genres/names";
+import type { GenreRow } from "@/db/schema";
 import type { ReleaseGroupCategory } from "@/lib/api/schemas";
 
 interface ExplorePageProps {
@@ -100,70 +106,117 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
   // conservan el tipo y el orden elegidos. ---
   if (decada !== undefined) {
     const decade = Number(decada);
-    const decadeLabel = Number.isInteger(decade) ? decade : decada.trim();
-    // Una década mal escrita en la URL (`?decada=abc`, `?decada=1995`) muestra el estado vacío,
-    // como una familia o un género desconocidos, en lugar de la pantalla de error.
+    const decadeName = isValidDecade(decade) ? decadeLabel(decade, locale) : decada.trim();
     // Un año que no es de la década (`?anio=1985` en `?decada=1990`, `?anio=abc`) se ignora y se muestra la década completa.
     const rawYear = Array.isArray(raw.anio) ? raw.anio[0] : raw.anio;
     const yearValue = rawYear === undefined || rawYear.trim() === "" ? Number.NaN : Number(rawYear);
     const year = Number.isInteger(yearValue) && yearValue >= decade && yearValue <= decade + 9 ? yearValue : undefined;
+    // El género refina la década (`?decada=1980&genero=hard-rock`); una `familia` junto a la década se ignora.
+    const rawGenre = (Array.isArray(genero) ? genero[0] : genero)?.trim();
+    const genreSlug = rawGenre ? rawGenre : undefined;
     const ifInvalid = <T,>(empty: T) => (error: unknown) => {
       if (error instanceof ApiError && error.code === "VALIDATION_ERROR") return empty;
       throw error;
     };
-    const [result, decades, decadeYears, decadeGenres] = await Promise.all([
-      listAlbumsByDecade(decade, listParams.page, { ...listOptions, year }).catch(
-        ifInvalid({ albums: [], page: listParams.page, pageSize: 0, hasNext: false }),
-      ),
+    type DecadeListing = AlbumPage & { genre: GenreRow | null };
+    const emptyListing: DecadeListing = { albums: [], page: listParams.page, pageSize: 0, hasNext: false, genre: null };
+    const listing: Promise<DecadeListing> = genreSlug
+      ? listAlbumsByGenre(genreSlug, listParams.page, { ...listOptions, decade, year })
+      : listAlbumsByDecade(decade, listParams.page, { ...listOptions, year }).then((found) => ({ ...found, genre: null }));
+    const [result, decades, decadeYears, decadeGenres, decadeCovers] = await Promise.all([
+      listing.catch(ifInvalid(emptyListing)),
       listDecades(),
       listDecadeYears(decade).catch(ifInvalid([] as number[])),
       listDecadeGenres(decade),
+      listDecadeCovers(),
     ]);
-    const decadeHref = `/explore?decada=${decade}`;
+    const genre = result.genre ?? null;
+    const currentGenre = genre?.slug ?? genreSlug;
+    const genreName = genre ? genreDisplayName(genre, genreLocaleOf(locale)) : (genreSlug ?? "");
+    // Tipos con discos en el corte actual: los demás chips de tipo salen deshabilitados.
+    const availableCategories = await listDecadeCategories(decade, { year, genreId: genre?.id }).catch(ifInvalid([] as ReleaseGroupCategory[]));
+
+    // Cada chip conserva el resto de refinamientos y el tipo y el orden elegidos; la página vuelve a la 1.
+    const cutHref = (cut: { decade?: number; year?: number; genre?: string }) => {
+      const parts = [`decada=${cut.decade ?? decade}`];
+      if (cut.year !== undefined) parts.push(`anio=${cut.year}`);
+      if (cut.genre !== undefined) parts.push(`genero=${encodeURIComponent(cut.genre)}`);
+      return `/explore?${parts.join("&")}`;
+    };
+    const chipHref = (cut: Parameters<typeof cutHref>[0]) => exploreListHref(cutHref(cut), listParams, { page: 1 });
+    const decadePlainHref = cutHref({});
+    const baseHref = cutHref({ year, genre: currentGenre });
+
+    const genreLinks = decadeGenres.map((item) => ({
+      key: item.slug,
+      label: genreDisplayName(item, genreLocaleOf(locale)),
+      href: chipHref({ year, genre: item.slug }),
+      current: item.slug === currentGenre,
+    }));
+    // Un género de la URL que no está entre los de la fila se agrega al final, marcado.
+    if (genre && !genreLinks.some((link) => link.key === genre.slug)) {
+      genreLinks.push({ key: genre.slug, label: genreName, href: chipHref({ year, genre: genre.slug }), current: true });
+    }
+
     return (
       <FilteredAlbumList
         {...listProps}
-        heading={year !== undefined ? t("yearResultsHeading", { year }) : t("decadeResultsHeading", { decade: decadeLabel })}
-        crumb={year !== undefined ? String(year) : t("decadeChip", { decade: decadeLabel })}
-        parentCrumb={year !== undefined ? { label: t("decadeChip", { decade: decadeLabel }), href: decadeHref } : undefined}
+        heading={
+          genreSlug && year !== undefined
+            ? t("decadeGenreYearHeading", { genre: genreName, year })
+            : genreSlug
+              ? t("decadeGenreHeading", { genre: genreName, decade: decadeName.toLowerCase() })
+              : year !== undefined
+                ? t("yearResultsHeading", { year })
+                : t("decadeResultsHeading", { decade: decadeName.toLowerCase() })
+        }
+        // Un nivel por refinamiento: Explorar / década / año / género, con el último sin enlace.
+        parentCrumbs={[
+          ...(genreSlug || year !== undefined ? [{ label: decadeName, href: decadePlainHref }] : []),
+          ...(genreSlug && year !== undefined ? [{ label: String(year), href: cutHref({ year }) }] : []),
+        ]}
+        crumb={genreSlug ? genreName : year !== undefined ? String(year) : decadeName}
         result={result}
         artistNames={await albumArtistNames(result.albums.map((album) => album.id))}
-        baseHref={year !== undefined ? `${decadeHref}&anio=${year}` : decadeHref}
-        // Un chip por año con álbumes, sin cifras; conservan el tipo y el orden elegidos.
-        years={{
-          label: t("decadeYearsLabel", { decade: decadeLabel }),
-          links: [
-            { key: "all", label: t("decadeAllYears"), href: exploreListHref(decadeHref, listParams, { page: 1 }), current: year === undefined },
-            ...decadeYears.map((value) => ({
-              key: String(value),
-              label: String(value),
-              href: exploreListHref(`${decadeHref}&anio=${value}`, listParams, { page: 1 }),
-              current: value === year,
-            })),
-          ],
-        }}
-        // Los géneros más grandes de la década, cada uno con su página ya filtrada por esa década.
-        topics={{
-          label: t("decadeGenresLabel", { decade: decadeLabel }),
-          links: decadeGenres.map((item) => ({
-            key: item.slug,
-            label: genreDisplayName(item, genreLocaleOf(locale)),
-            href: `${genreHref(item.slug)}?tab=albums&decada=${decade}`,
-          })),
-        }}
-        siblings={{
-          label: t("otherDecades"),
-          // Catorce chips de década empujaban el primer disco bajo el pliegue: van en un desplegable cerrado.
-          collapsed: true,
-          links: [...decades]
-            .sort((a, b) => a.decade - b.decade)
-            .map((bucket) => ({
-              key: String(bucket.decade),
-              label: t("decadeChip", { decade: bucket.decade }),
-              href: exploreListHref(`/explore?decada=${bucket.decade}`, listParams, { page: 1 }),
-              current: bucket.decade === decade,
-            })),
-        }}
+        baseHref={baseHref}
+        lede={listParams.sort === "best" ? t("decadeLede") : undefined}
+        headerCovers={decadeCovers.get(decade) ?? []}
+        availableCategories={availableCategories}
+        related={genre ? { href: `${genreHref(genre.slug)}?tab=albums&decada=${decade}`, label: t("genrePageLink", { genre: genreName }) } : undefined}
+        clearHref={genreSlug || year !== undefined ? decadePlainHref : undefined}
+        facets={[
+          {
+            label: t("facetYear"),
+            links: [
+              { key: "all", label: t("decadeAllYears"), href: chipHref({ genre: currentGenre }), current: year === undefined },
+              ...decadeYears.map((value) => ({
+                key: String(value),
+                label: String(value),
+                href: chipHref({ year: value, genre: currentGenre }),
+                current: value === year,
+              })),
+            ],
+            // Las demás décadas conservan el género, el tipo y el orden y quitan el año: comparar una época con otra dentro de un género.
+            menu: {
+              label: t("otherDecades"),
+              links: [...decades]
+                .sort((a, b) => a.decade - b.decade)
+                .map((bucket) => ({
+                  key: String(bucket.decade),
+                  label: decadeLabel(bucket.decade, locale),
+                  href: chipHref({ decade: bucket.decade, genre: currentGenre }),
+                  current: bucket.decade === decade,
+                })),
+            },
+          },
+          {
+            label: t("facetGenre"),
+            links:
+              genreLinks.length > 0
+                ? [{ key: "all", label: t("facetAllGenres"), href: chipHref({ year }), current: !currentGenre }, ...genreLinks]
+                : [],
+          },
+        ]}
       />
     );
   }
@@ -303,7 +356,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
   // Décadas: de la más reciente a la más antigua; desde 1950 son tarjetas de la grilla y las anteriores van tras "Décadas anteriores".
   const decadeTile = (bucket: (typeof explore.decades)[number]): MosaicTile => ({
     key: String(bucket.decade),
-    label: t("decadeChip", { decade: bucket.decade }),
+    label: decadeLabel(bucket.decade, locale),
     href: `/explore?decada=${bucket.decade}`,
     covers: bucket.covers,
   });
