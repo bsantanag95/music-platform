@@ -161,9 +161,11 @@ familia sin carátulas disponibles SHALL mostrarse como tarjeta plana con su nom
 década se describen en "Sección Explorar por década". Al elegir una década,
 una familia o un género, el sistema SHALL mostrar
 un listado paginado de álbumes de ese corte en `/{locale}/explore` acotado por un parámetro de
-consulta (`?decada=`, `?familia=<clave>` o `?genero=<slug>`), aplicando **un solo corte a la vez**
-con prioridad `decada` > `familia` > `genero`; el año (`?anio=`) es un refinamiento de la década y no un
-corte aparte. El listado por familia SHALL incluir los álbumes con
+consulta (`?decada=`, `?familia=<clave>` o `?genero=<slug>`), con prioridad `decada` > `familia` > `genero`.
+La década es un corte que se **refina**: el año (`?anio=`) y el género (`?genero=`) acotan el listado de la
+década y no son cortes aparte, de modo que `?decada=1980&genero=hard-rock` lista los álbumes de hard rock (y
+sus subgéneros) de los años 80. Fuera de la década, familia y género siguen siendo cortes que se aplican **de
+uno en uno**, y una `familia` junto a una `decada` SHALL ignorarse. El listado por familia SHALL incluir los álbumes con
 algún género efectivo de la familia; el listado por género SHALL incluir los álbumes con ese género
 o con cualquiera de sus subgéneros. Una familia o un slug desconocido SHALL mostrar el estado vacío.
 El listado SHALL ordenarse de forma determinista. El orden por defecto, llamado **"Destacados"**
@@ -189,9 +191,15 @@ el orden pasa de la carátula resuelta directamente al identificador, para que l
 
 #### Scenario: Un corte a la vez
 
-- **WHEN** la URL incluye tanto `decada` como `genero`
-- **THEN** el sistema aplica solo uno de los dos (el documentado como prioritario) y
+- **WHEN** la URL incluye tanto `decada` como `familia`
+- **THEN** el sistema aplica la década y descarta la familia (la década es el corte prioritario) y
   compone el listado sin combinarlos
+
+#### Scenario: Década con género
+
+- **WHEN** la URL es `/explore?decada=1980&genero=hard-rock`
+- **THEN** el listado trae los álbumes de los años 80 que tienen "hard rock" o alguno de sus subgéneros, con el mismo orden
+  determinista y la paginación de siempre
 
 #### Scenario: Década con año
 
@@ -624,8 +632,10 @@ accesibles por teclado (`tablist`, flechas). La cifra "N personas" SHALL aparece
 
 La vista `/explore` SHALL mostrar la sección **Explorar por década** (ancla `decadas`) justo después de "Explorar por
 género", con una tarjeta por década que tiene álbumes, de la más reciente a la más antigua. Cada tarjeta SHALL ser visual: un
-mosaico de hasta cuatro carátulas de discos de estudio de la década con el nombre de la década encima ("1990s"), y SHALL NOT
-mostrar número de álbumes ni barra de tamaño. Una década sin discos de estudio con carátula SHALL mostrarse como tarjeta plana
+mosaico de hasta cuatro carátulas de discos de estudio de la década con el nombre de la década encima, y SHALL NOT
+mostrar número de álbumes ni barra de tamaño. El nombre de la década SHALL ser el de su idioma: en español "Años 80" (de 1920 a
+1990; con cuatro cifras en las décadas anteriores a 1920 y desde 2000, "Años 1910", "Años 2000", "Años 2020", para que "Años 10" no se
+lea como los 2010 y dos décadas no compartan nombre) y en inglés "1980s". Una década sin discos de estudio con carátula SHALL mostrarse como tarjeta plana
 con su nombre. Las décadas desde 1950 SHALL ser tarjetas de la grilla; las anteriores a 1950 SHALL agruparse detrás de una
 tarjeta "Décadas anteriores" que las despliega y pliega, sin cifras. Cada tarjeta SHALL enlazar a `/{locale}/explore?decada=`.
 Las carátulas SHALL elegirse por la señal de calidad de las colecciones (valoración de la comunidad, premio y calendario, con
@@ -635,13 +645,18 @@ vez y reutilizarse unas horas. La sección SHALL omitirse si no hay ninguna déc
 #### Scenario: Tarjeta de década con carátulas
 
 - **WHEN** la década de 1990 tiene discos de estudio con carátula
-- **THEN** su tarjeta muestra un mosaico de hasta cuatro de esas carátulas con "1990s" encima, sin número de álbumes ni barra,
-  y lleva a `/explore?decada=1990`
+- **THEN** su tarjeta muestra un mosaico de hasta cuatro de esas carátulas con "Años 90" encima (en inglés, "1990s"), sin número de
+  álbumes ni barra, y lleva a `/explore?decada=1990`
+
+#### Scenario: Nombre de la década en español
+
+- **WHEN** se muestran las décadas de 1890, 1900, 1910, 1920, 1990, 2000 y 2020 en español
+- **THEN** se llaman "Años 1890", "Años 1900", "Años 1910", "Años 20", "Años 90", "Años 2000" y "Años 2020"
 
 #### Scenario: Más reciente primero
 
 - **WHEN** se abre `/explore`
-- **THEN** las tarjetas de década van de los 2020s hacia atrás, con "Décadas anteriores" al final de la grilla
+- **THEN** las tarjetas de década van de los años 2020 hacia atrás, con "Décadas anteriores" al final de la grilla
 
 #### Scenario: Décadas anteriores a 1950
 
@@ -666,22 +681,38 @@ vez y reutilizarse unas horas. La sección SHALL omitirse si no hay ninguna déc
 
 ### Requirement: Vista de década
 
-El listado de una década (`/{locale}/explore?decada=<año>`) SHALL mostrar, en este orden, el título de la década sin rótulo de
-tipo de corte encima, una fila de **años** de la década, una fila de **géneros de la década**, un selector de **otras décadas**
-plegado y los filtros de tipo y orden sobre la rejilla. La fila de años SHALL ofrecer un chip por cada año de la década que tiene
-álbumes, en orden cronológico, y un primer chip "Toda la década"; elegir un año SHALL filtrar el listado con `?anio=<año>`
-(título "Álbumes de <año>"), conservando tipo y orden, y volver a "Toda la década" SHALL quitarlo. Un `anio` que no sea un año
-de la década SHALL ignorarse. La fila de géneros SHALL ofrecer hasta 12 chips con los géneros de estilo con más álbumes de esa
-década (por género efectivo, con herencia), con como mucho 3 de una misma familia de géneros para que una familia no ocupe la
-fila, cada uno enlazado a la página del género filtrada por la década
-(`/{locale}/genre/<slug>?tab=albums&decada=<año>`), con el nombre en el idioma activo y sin ninguna cifra; SHALL omitirse si la
-década no tiene géneros. El selector de otras décadas SHALL ser un desplegable cerrado por defecto que lista las demás décadas
-con álbumes y marca la actual; elegir una década SHALL conservar tipo y orden y quitar el año.
+El listado de una década (`/{locale}/explore?decada=<año>`) SHALL mostrar, en este orden: la miga de pan, la **cabecera de la
+década** (requisito aparte), una fila **Año**, una fila **Género** y los filtros de tipo y orden sobre la rejilla. Cada fila SHALL
+llevar un rótulo visible ("Año", "Género") que dice qué filtra, y todos sus chips SHALL filtrar esta misma lista sin salir de
+Explorar. Los parámetros `anio`, `genero`, `tipo` y `orden` SHALL combinarse: elegir uno conserva los demás, salvo cambiar de
+década, que conserva `genero`, `tipo` y `orden` y quita `anio`.
+
+La fila **Año** SHALL ofrecer un primer chip "Toda la década" y un chip por cada año de la década con al menos un álbum ya
+publicado (fecha de lanzamiento no posterior a hoy o, sin fecha, un año no posterior al actual), en orden cronológico; un año con
+solo lanzamientos por salir SHALL NOT tener chip, aunque `?anio=` con ese año siga funcionando. Elegir un año SHALL filtrar con
+`?anio=<año>` (título "Álbumes de <año>") y "Toda la década" SHALL quitarlo. Un `anio` que no sea un año de la década SHALL
+ignorarse. Al final de la misma fila SHALL ir un menú **Otras décadas**, cerrado por defecto, que lista las demás décadas con álbumes
+(nombradas como en "Sección Explorar por década") y marca la actual; en pantallas angostas el menú ocupa su propia línea bajo la fila.
+
+La fila **Género** SHALL ofrecer un primer chip "Todos" y hasta 12 chips con los géneros de estilo con más álbumes de esa década (por
+género efectivo, con herencia), con como mucho 3 de una misma familia para que una familia no ocupe la fila. Los chips SHALL mostrarse
+ordenados por familia, en el orden de la taxonomía, y por tamaño dentro de cada familia (un género sin familia, al final), con el
+nombre en el idioma activo y sin ninguna cifra. Elegir un género SHALL filtrar con `?genero=<slug>` los álbumes de la década con ese
+género o un subgénero; "Todos" SHALL quitarlo. Si el género de la URL no está entre los 12, SHALL agregarse como chip marcado. La
+fila SHALL omitirse si la década no tiene géneros y, en pantallas angostas, SHALL ser una sola línea desplazable. Con un género
+elegido, bajo el título SHALL haber un enlace "Ir a la página de <género>" a `/{locale}/genre/<slug>?tab=albums&decada=<año>`.
+
+Los títulos SHALL ser "Álbumes de los <década>" (en inglés "Albums from the <década>"), "Álbumes de <año>", "Álbumes de <género> de
+los <década>" y "Álbumes de <género> de <año>", y la miga de pan SHALL tener un nivel por cada refinamiento (Explorar / década /
+año / género), con el último sin enlace. En los chips de tipo, los que no tengan ningún álbum en el corte actual (década, año y
+género) SHALL mostrarse deshabilitados, sin enlace; "Todos" y el tipo elegido SHALL permanecer activos. Si el listado queda vacío con
+un género elegido, el estado vacío SHALL ofrecer "Quitar filtros" hacia la década sin refinamientos.
 
 #### Scenario: Años de la década
 
 - **WHEN** una persona abre `/es/explore?decada=1990`
-- **THEN** ve los chips "Toda la década", "1990", "1991", … "1999" (solo los años con álbumes), con "Toda la década" marcado
+- **THEN** ve una fila con el rótulo "Año" ("Toda la década", "1990" … "1999", marcado el primero) y otra con el rótulo "Género"
+  ("Todos" y los géneros de la década), y el primer disco aparece sin otras filas de navegación en medio
 
 #### Scenario: Elegir un año
 
@@ -699,11 +730,22 @@ con álbumes y marca la actual; elegir una década SHALL conservar tipo y orden 
 - **WHEN** la URL es `/explore?decada=1990&anio=1985` o `?decada=1990&anio=abc`
 - **THEN** el listado muestra la década completa, como si no llevara `anio`
 
+#### Scenario: Año con solo lanzamientos por salir
+
+- **WHEN** en la década de 2020 el año 2027 solo tiene discos con fecha posterior a hoy
+- **THEN** no hay chip "2027", y `/explore?decada=2020&anio=2027` sigue mostrando esos discos
+
 #### Scenario: Géneros de la década
 
 - **WHEN** una persona abre `/es/explore?decada=1990`
-- **THEN** ve una fila de géneros de esa década (por ejemplo "grunge" y "hip hop"), sin números, y cada uno lleva a la página
-  del género filtrada por los 1990s
+- **THEN** la fila "Género" muestra "Todos" y los géneros de esa década (por ejemplo "grunge" y "hip hop"), sin números, y elegir uno
+  filtra esta misma lista sin salir de Explorar
+
+#### Scenario: Géneros ordenados por familia
+
+- **WHEN** una década tiene entre sus géneros más grandes ópera, sinfonía, pop, rock y jazz
+- **THEN** la fila muestra primero los de Rock, luego Pop, luego Jazz y, al final, los de Clásica, y dentro de cada familia el más
+  grande antes
 
 #### Scenario: Una familia no ocupa la fila
 
@@ -711,23 +753,88 @@ con álbumes y marca la actual; elegir una década SHALL conservar tipo y orden 
   música barroca además de otros géneros clásicos)
 - **THEN** la fila muestra solo los tres más grandes de esa familia y completa con géneros de otras familias
 
+#### Scenario: Elegir un género
+
+- **WHEN** estando en `?decada=1980` elige el chip "hard rock"
+- **THEN** llega a `/explore?decada=1980&genero=hard-rock`, el título dice "Álbumes de hard rock de los años 80", el listado trae solo
+  discos de esa década con ese género o sus subgéneros, y el chip queda marcado
+
+#### Scenario: Género y año a la vez
+
+- **WHEN** estando en `?decada=1980&genero=hard-rock` elige el año 1985
+- **THEN** llega a `/explore?decada=1980&anio=1985&genero=hard-rock`, el título dice "Álbumes de hard rock de 1985" y la miga muestra
+  Explorar / Años 80 / 1985 / hard rock
+
+#### Scenario: Quitar el género
+
+- **WHEN** estando en `?decada=1980&anio=1985&genero=hard-rock` elige "Todos" en la fila Género
+- **THEN** llega a `/explore?decada=1980&anio=1985`, conservando el año
+
+#### Scenario: Género fuera de los 12
+
+- **WHEN** la URL es `/explore?decada=1980&genero=shoegaze` y "shoegaze" no está entre los 12 géneros de la fila
+- **THEN** la fila muestra además un chip "shoegaze" marcado, y el listado trae los discos de esa década con ese género
+
 #### Scenario: Género con la década aplicada
 
-- **WHEN** elige un género de la fila
-- **THEN** llega a `/genre/<slug>?tab=albums&decada=1990`, con la pestaña de álbumes ya filtrada por esa década
+- **WHEN** hay un género elegido en `?decada=1980&genero=hard-rock`
+- **THEN** bajo el título hay un enlace "Ir a la página de hard rock" a `/genre/hard-rock?tab=albums&decada=1980`
+
+#### Scenario: Género sin discos en la década
+
+- **WHEN** la URL es `/explore?decada=1910&genero=hard-rock` y no hay discos de hard rock de esa década
+- **THEN** el listado muestra el estado vacío con "Quitar filtros" hacia `/explore?decada=1910`
 
 #### Scenario: Selector de décadas plegado
 
-- **WHEN** la vista de década se abre por primera vez
-- **THEN** el selector de otras décadas está cerrado y el primer disco queda a la vista sin una fila de décadas antes
+- **WHEN** una persona abre el menú "Otras décadas" al final de la fila Año
+- **THEN** ve las demás décadas con álbumes con su nombre ("Años 70", "Años 90", …), con la actual marcada, y el menú estaba cerrado
+  por defecto
 
 #### Scenario: Cambio de década
 
-- **WHEN** estando en `?decada=1990&anio=1994&tipo=studio` abre el selector y elige los 2000s
-- **THEN** llega a `/explore?decada=2000&tipo=studio`, conservando el tipo y quitando el año
+- **WHEN** estando en `?decada=1990&anio=1994&genero=pop&tipo=studio` elige los años 2000 en "Otras décadas"
+- **THEN** llega a `/explore?decada=2000&genero=pop&tipo=studio`, conservando el género y el tipo y quitando el año
+
+#### Scenario: Tipos sin discos
+
+- **WHEN** la década de 1910 solo tiene dos sencillos
+- **THEN** los chips "De estudio", "Compilaciones" y "Directos y otros" aparecen deshabilitados, sin enlace, y "Todos" y "Singles y EPs"
+  siguen activos
 
 #### Scenario: Década con pocos años
 
 - **WHEN** la década de 1910 solo tiene álbumes en dos años
 - **THEN** la fila de años muestra "Toda la década" y esos dos años
+
+### Requirement: Cabecera de la vista de década
+
+La vista de década SHALL abrir con una cabecera que dice qué se está viendo: el título, una línea de contexto bajo él y, a la derecha
+en pantallas anchas, un mosaico 2×2 con las mismas carátulas de la tarjeta de esa década en `/explore` (misma selección, sin consulta
+propia). Con el orden "Destacados", la línea SHALL decir que se ordena por premios y valoraciones y que, mientras haya pocas
+valoraciones, el orden es estable pero no un ranking; con cualquier otro orden SHALL omitirse, porque ya no describiría lo que se
+ve. El mosaico SHALL ser decorativo (sin texto alternativo), SHALL omitirse en pantallas angostas y cuando la década no tiene
+carátulas, y SHALL NOT mostrar cifras.
+
+#### Scenario: Cabecera con contexto
+
+- **WHEN** una persona abre `/es/explore?decada=1980` con el orden por defecto
+- **THEN** bajo el título "Álbumes de los años 80" lee que se ordena por premios y valoraciones y que, con pocas valoraciones,
+  el orden es estable pero no un ranking
+
+#### Scenario: Mosaico de la época
+
+- **WHEN** la década de 1980 tiene discos de estudio con carátula
+- **THEN** la cabecera muestra a la derecha el mismo mosaico de cuatro carátulas que su tarjeta de la portada, sin texto alternativo ni
+  cifras
+
+#### Scenario: Otro orden
+
+- **WHEN** elige el orden "Más recientes"
+- **THEN** la línea de contexto sobre el orden desaparece
+
+#### Scenario: Década sin carátulas o pantalla angosta
+
+- **WHEN** la década no tiene discos de estudio con carátula, o la pantalla es angosta
+- **THEN** la cabecera no muestra el mosaico y el título y el contexto ocupan todo el ancho
 

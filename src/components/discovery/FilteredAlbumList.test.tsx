@@ -7,11 +7,16 @@ import type { AlbumPage } from "@/services/discovery/discovery";
 import type { ReleaseGroupCategory } from "@/lib/api/schemas";
 
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
-    <a href={`/es${href}`} {...rest}>
-      {children}
-    </a>
-  ),
+  Link: ({ href, children, ...rest }: { href: string; children: React.ReactNode; scroll?: boolean }) => {
+    // `scroll` es una prop del `Link` de next-intl, no un atributo de `<a>`.
+    const attrs: Record<string, unknown> = { ...rest };
+    delete attrs.scroll;
+    return (
+      <a href={`/es${href}`} {...attrs}>
+        {children}
+      </a>
+    );
+  },
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 vi.mock("@/components/catalog/AlbumCard", () => ({
@@ -55,49 +60,162 @@ describe("FilteredAlbumList", () => {
     expect(screen.queryByText(/^década$/i)).toBeNull();
   });
 
-  describe("años del corte", () => {
-    const years = {
-      label: "Años de los 1990s",
-      links: [
-        { key: "all", label: "Toda la década", href: "/explore?decada=1990", current: true },
-        { key: "1994", label: "1994", href: "/explore?decada=1990&anio=1994", current: false },
-        { key: "1995", label: "1995", href: "/explore?decada=1990&anio=1995", current: false },
-      ],
-    };
+  describe("filas de filtros rotuladas (openspec: redesign-decade-view)", () => {
+    const facets = [
+      {
+        label: "Año",
+        links: [
+          { key: "all", label: "Toda la década", href: "/explore?decada=1990", current: true },
+          { key: "1994", label: "1994", href: "/explore?decada=1990&anio=1994", current: false },
+          { key: "1995", label: "1995", href: "/explore?decada=1990&anio=1995", current: false },
+        ],
+        menu: {
+          label: "Otras décadas",
+          links: [
+            { key: "1980", label: "Años 80", href: "/explore?decada=1980", current: false },
+            { key: "1990", label: "Años 90", href: "/explore?decada=1990", current: true },
+          ],
+        },
+      },
+      {
+        label: "Género",
+        links: [
+          { key: "all", label: "Todos", href: "/explore?decada=1990", current: true },
+          { key: "grunge", label: "grunge", href: "/explore?decada=1990&genero=grunge", current: false },
+        ],
+      },
+    ];
 
-    it("pinta un chip por año, enlazado, y marca el actual", () => {
-      renderWithIntl(<FilteredAlbumList {...baseProps} years={years} />);
+    it("pinta cada fila con su rótulo visible y sus chips, y marca el actual", () => {
+      renderWithIntl(<FilteredAlbumList {...baseProps} facets={facets} />);
 
-      const nav = screen.getByRole("navigation", { name: "Años de los 1990s" });
-      expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["Toda la década", "1994", "1995"]);
-      expect(within(nav).getByRole("link", { name: "1994" })).toHaveAttribute("href", "/es/explore?decada=1990&anio=1994");
-      expect(within(nav).getByRole("link", { name: "Toda la década" })).toHaveAttribute("aria-current", "page");
-      expect(within(nav).getByRole("link", { name: "1994" })).not.toHaveAttribute("aria-current");
+      const years = screen.getByRole("navigation", { name: "Año" });
+      expect(within(years).getAllByRole("link").map((a) => a.textContent)).toEqual(["Toda la década", "1994", "1995"]);
+      expect(within(years).getByRole("link", { name: "1994" })).toHaveAttribute("href", "/es/explore?decada=1990&anio=1994");
+      expect(within(years).getByRole("link", { name: "Toda la década" })).toHaveAttribute("aria-current", "page");
+      expect(within(years).getByRole("link", { name: "1994" })).not.toHaveAttribute("aria-current");
+      // El rótulo está a la vista (no solo en el nombre accesible).
+      expect(screen.getByText("Año")).toBeVisible();
+      expect(screen.getByText("Género")).toBeVisible();
     });
 
-    it("va antes que los géneros del corte", () => {
+    it("los chips de género filtran esta misma lista: no enlazan a la página del género", () => {
+      renderWithIntl(<FilteredAlbumList {...baseProps} facets={facets} />);
+
+      const genres = screen.getByRole("navigation", { name: "Género" });
+      expect(within(genres).getByRole("link", { name: "grunge" })).toHaveAttribute("href", "/es/explore?decada=1990&genero=grunge");
+    });
+
+    it("las filas van en el orden recibido y antes de los géneros de familia", () => {
       renderWithIntl(
-        <FilteredAlbumList {...baseProps} years={years} topics={{ label: "Géneros de los 1990s", links: [{ key: "g", label: "grunge", href: "/genre/grunge" }] }} />,
+        <FilteredAlbumList {...baseProps} facets={facets} topics={{ label: "Géneros de Rock", links: [{ key: "g", label: "grunge", href: "/genre/grunge" }] }} />,
       );
 
-      const yearsNav = screen.getByRole("navigation", { name: "Años de los 1990s" });
-      const topicsNav = screen.getByRole("navigation", { name: "Géneros de los 1990s" });
-      expect(yearsNav.compareDocumentPosition(topicsNav) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      const year = screen.getByRole("navigation", { name: "Año" });
+      const genre = screen.getByRole("navigation", { name: "Género" });
+      const topics = screen.getByRole("navigation", { name: "Géneros de Rock" });
+      expect(year.compareDocumentPosition(genre) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(genre.compareDocumentPosition(topics) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
-    it("sin años (solo \"Toda la década\") no pinta la fila", () => {
-      renderWithIntl(<FilteredAlbumList {...baseProps} years={{ label: "Años de los 1990s", links: [years.links[0]!] }} />);
+    it("una fila sin chips no se pinta", () => {
+      renderWithIntl(<FilteredAlbumList {...baseProps} facets={[{ label: "Género", links: [] }]} />);
 
-      expect(screen.queryByRole("navigation", { name: "Años de los 1990s" })).toBeNull();
+      expect(screen.queryByRole("navigation", { name: "Género" })).toBeNull();
+      expect(screen.queryByText("Género")).toBeNull();
+    });
+
+    it("el menú de otras décadas está en la fila de años, cerrado por defecto", () => {
+      const { container } = renderWithIntl(<FilteredAlbumList {...baseProps} facets={facets} />);
+
+      const details = container.querySelector("details")!;
+      expect(details).not.toHaveAttribute("open");
+      expect(within(details).getByText("Otras décadas")).toBeInTheDocument();
+      expect(within(details).getAllByRole("link", { hidden: true }).map((a) => a.textContent)).toEqual(["Años 80", "Años 90"]);
+      expect(within(details).getByRole("link", { name: "Años 90", hidden: true })).toHaveAttribute("aria-current", "page");
+      // Va dentro de la fila de años, no como una fila propia.
+      expect(screen.getByRole("navigation", { name: "Año" }).parentElement).toContainElement(details);
+    });
+
+    it("sin otras décadas (solo la actual) no hay menú", () => {
+      const only = { ...facets[0]!, menu: { label: "Otras décadas", links: [facets[0]!.menu!.links[1]!] } };
+      const { container } = renderWithIntl(<FilteredAlbumList {...baseProps} facets={[only]} />);
+
+      expect(container.querySelector("details")).toBeNull();
     });
   });
 
-  it("con un nivel intermedio la miga de pan lo muestra enlazado antes del corte", () => {
-    renderWithIntl(<FilteredAlbumList {...baseProps} crumb="1994" parentCrumb={{ label: "1990s", href: "/explore?decada=1990" }} />);
+  describe("cabecera", () => {
+    it("muestra la línea de contexto bajo el título", () => {
+      renderWithIntl(<FilteredAlbumList {...baseProps} lede="Premiados y mejor valorados primero." />);
 
-    const crumbs = screen.getByRole("navigation", { name: /migas|breadcrumb|ruta/i });
-    expect(within(crumbs).getByRole("link", { name: "1990s" })).toHaveAttribute("href", "/es/explore?decada=1990");
-    expect(within(crumbs).getByText("1994")).toBeInTheDocument();
+      const heading = screen.getByRole("heading", { level: 1 });
+      expect(heading.nextElementSibling).toHaveTextContent("Premiados y mejor valorados primero.");
+    });
+
+    it("sin línea de contexto no pinta nada extra", () => {
+      renderWithIntl(<FilteredAlbumList {...baseProps} />);
+
+      expect(screen.getByRole("heading", { level: 1 }).nextElementSibling).toBeNull();
+    });
+
+    it("pinta el mosaico decorativo de las carátulas del corte, solo desde pantallas anchas y sin texto alternativo", () => {
+      const { container } = renderWithIntl(<FilteredAlbumList {...baseProps} headerCovers={["https://c/1.jpg", "https://c/2.jpg", "https://c/3.jpg", "https://c/4.jpg"]} />);
+
+      const mosaic = container.querySelector("header [aria-hidden='true']")!;
+      expect(mosaic).toHaveClass("hidden", "sm:grid");
+      expect(mosaic.querySelectorAll("img")).toHaveLength(4);
+      expect([...mosaic.querySelectorAll("img")].every((img) => img.getAttribute("alt") === "")).toBe(true);
+      expect(mosaic.textContent).toBe("");
+    });
+
+    it("sin carátulas no hay mosaico", () => {
+      const { container } = renderWithIntl(<FilteredAlbumList {...baseProps} headerCovers={[]} />);
+
+      expect(container.querySelector("header img")).toBeNull();
+    });
+  });
+
+  it("la miga de pan tiene un enlace por nivel intermedio y el último sin enlace", () => {
+    renderWithIntl(
+      <FilteredAlbumList
+        {...baseProps}
+        crumb="hard rock"
+        parentCrumbs={[
+          { label: "Años 80", href: "/explore?decada=1980" },
+          { label: "1985", href: "/explore?decada=1980&anio=1985" },
+        ]}
+      />,
+    );
+
+    const crumbs = screen.getByRole("navigation", { name: "breadcrumb" });
+    expect(within(crumbs).getAllByRole("link").map((a) => a.textContent)).toEqual(["Inicio", "Explorar", "Años 80", "1985"]);
+    expect(within(crumbs).getByRole("link", { name: "Años 80" })).toHaveAttribute("href", "/es/explore?decada=1980");
+    expect(within(crumbs).getByText("hard rock")).not.toHaveAttribute("href");
+  });
+
+  describe("estado vacío con refinamientos", () => {
+    const empty: AlbumPage = { albums: [], page: 1, pageSize: 24, hasNext: false };
+
+    it("con clearHref ofrece «Quitar filtros» hacia ese destino aunque el tipo y el orden sean los de siempre", () => {
+      renderWithIntl(<FilteredAlbumList {...baseProps} result={empty} baseHref="/explore?decada=1910&genero=hard-rock" clearHref="/explore?decada=1910" />);
+
+      expect(screen.getByRole("link", { name: "Quitar filtros" })).toHaveAttribute("href", "/es/explore?decada=1910");
+    });
+
+    it("sin clearHref y sin filtros ofrece volver a Explorar", () => {
+      renderWithIntl(<FilteredAlbumList {...baseProps} result={empty} />);
+
+      expect(screen.getByRole("link", { name: "Volver a Explorar" })).toHaveAttribute("href", "/es/explore");
+    });
+  });
+
+  it("pasa los tipos disponibles a la barra de filtros", () => {
+    renderWithIntl(<FilteredAlbumList {...baseProps} availableCategories={["single_ep"]} />);
+
+    expect(screen.getByRole("link", { name: "Singles y EPs" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "De estudio" })).toBeNull();
+    expect(screen.getByText("De estudio")).toHaveAttribute("aria-disabled", "true");
   });
 
   describe("géneros del corte", () => {

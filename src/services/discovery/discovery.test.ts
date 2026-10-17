@@ -6,6 +6,7 @@ import {
   listAlbumsByFamily,
   listAlbumsByGenre,
   listAlbumsFiltered,
+  listCategoriesIn,
   listDecadeYears,
   featuredActiveCondition,
   listFeaturedCollections,
@@ -331,6 +332,79 @@ describe("listGenreFamilies", () => {
     mocks.db.select.mockReturnValue(chain([{ key: "rock", count: 12 }]));
 
     await expect(listGenreFamilies()).resolves.toEqual([{ key: "rock", tier: "main", count: 12, covers: [] }]);
+  });
+});
+
+describe("listDecadeYears: solo años publicados (openspec: redesign-decade-view)", () => {
+  type Seen = { where?: SQL };
+  function captureDistinct(rows: unknown[]): Seen {
+    const seen: Seen = {};
+    const builder: Record<string, unknown> = {
+      from: () => builder,
+      where: (arg: SQL) => ((seen.where = arg), builder),
+      orderBy: () => Promise.resolve(rows),
+    };
+    mocks.db.selectDistinct.mockReturnValue(builder);
+    return seen;
+  }
+
+  it("excluye los años cuyos discos están todos por salir", async () => {
+    const seen = captureDistinct([{ year: 2026 }]);
+
+    await listDecadeYears(2020);
+
+    const text = new PgDialect().sqlToQuery(seen.where!).sql.replace(/\s+/g, " ");
+    expect(text).toContain('"first_release_year" between $1 and $2');
+    expect(text).toContain('coalesce("release_group"."first_release_date" <= current_date, "release_group"."first_release_year" <= extract(year from current_date))');
+  });
+});
+
+describe("listCategoriesIn", () => {
+  function captureDistinct(rows: unknown[]) {
+    const seen: { where?: SQL } = {};
+    const builder: Record<string, unknown> = {
+      from: () => builder,
+      where: (arg: SQL) => {
+        seen.where = arg;
+        return Promise.resolve(rows);
+      },
+    };
+    mocks.db.selectDistinct.mockReturnValue(builder);
+    return seen;
+  }
+  const render = (chunk: SQL | undefined) => new PgDialect().sqlToQuery(chunk!);
+
+  it("devuelve los tipos que hay en el corte", async () => {
+    captureDistinct([{ category: "single_ep" }, { category: "studio" }]);
+
+    await expect(listCategoriesIn(sql`1 = 1`, { decade: 1910 })).resolves.toEqual(["single_ep", "studio"]);
+  });
+
+  it("acota por la década y el año, además de la condición del corte", async () => {
+    const seen = captureDistinct([]);
+
+    await listCategoriesIn(sql`"release_group"."id" in (select 1)`, { decade: 1980, year: 1985 });
+
+    const { sql: text, params } = render(seen.where);
+    expect(text).toContain('"release_group"."id" in (select 1)');
+    expect(text).toMatch(/"first_release_year" between \$1 and \$2/);
+    expect(text).toContain('"first_release_year" = $3');
+    expect(params).toEqual([1980, 1989, 1985]);
+  });
+
+  it("sin período solo usa la condición", async () => {
+    const seen = captureDistinct([]);
+
+    await listCategoriesIn(sql`1 = 1`);
+
+    expect(render(seen.where).sql).not.toContain("between");
+  });
+
+  it("rechaza una década inválida sin consultar", async () => {
+    mocks.db.selectDistinct.mockClear();
+
+    await expect(listCategoriesIn(sql`1 = 1`, { decade: 1985 })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mocks.db.selectDistinct).not.toHaveBeenCalled();
   });
 });
 

@@ -19,6 +19,9 @@ const mocks = vi.hoisted(() => ({
   listDecades: vi.fn(),
   listDecadeYears: vi.fn(),
   listDecadeGenres: vi.fn(),
+  listDecadeCovers: vi.fn(),
+  listDecadeCategories: vi.fn(),
+  listAlbumsByGenre: vi.fn(),
 }));
 
 vi.mock("next-intl/server", () => ({
@@ -34,6 +37,7 @@ vi.mock("@/services/auth/authorization", () => ({ getCurrentUser: vi.fn().mockRe
 vi.mock("@/services/awards/read", () => ({ listRecentCeremonies: vi.fn().mockResolvedValue([]) }));
 vi.mock("@/services/discovery/collections/sync", () => ({ ensureCollectionsFresh: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@/services/discovery/decade-genres", () => ({ listDecadeGenres: mocks.listDecadeGenres }));
+vi.mock("@/services/discovery/decade-covers", () => ({ listDecadeCovers: mocks.listDecadeCovers }));
 vi.mock("@/services/genres/names", () => ({
   genreDisplayName: (item: { name: string }) => item.name,
   genreLocaleOf: vi.fn(),
@@ -50,6 +54,8 @@ vi.mock("@/services/discovery/discovery", async () => {
     listAlbumsByDecade: mocks.listAlbumsByDecade,
     listDecades: mocks.listDecades,
     listDecadeYears: mocks.listDecadeYears,
+    listDecadeCategories: mocks.listDecadeCategories,
+    listAlbumsByGenre: mocks.listAlbumsByGenre,
   };
 });
 
@@ -205,6 +211,9 @@ describe("/explore: Explorar por década (openspec: redesign-explore-decades)", 
 
     expect(decades.tiles.map((tile) => tile.key)).toEqual(["2020", "1990", "1950"]);
     expect(decades.tiles[0]).toMatchObject({ href: "/explore?decada=2020", covers: ["a", "b"] });
+    // En español la década se llama "Años 90", no "1990s".
+    expect(decades.tiles.map((tile) => (tile as unknown as { label: string }).label)).toEqual(["Años 2020", "Años 90", "Años 50"]);
+    expect((decades.moreTiles as unknown as { label: string }[]).map((tile) => tile.label)).toEqual(["Años 40", "Años 1890"]);
     expect(decades.moreTiles?.map((tile) => tile.key)).toEqual(["1940", "1890"]);
     expect(decades.moreLabel).toBe("earlierDecades");
     // La sección de géneros sigue siendo la otra grilla, antes de la de décadas.
@@ -227,37 +236,73 @@ describe("/explore: Explorar por década (openspec: redesign-explore-decades)", 
   });
 
   describe("vista de década", () => {
+    type Link = { key: string; label: string; href: string; current: boolean };
     type ListProps = {
       heading: string;
       crumb: string;
-      parentCrumb?: { label: string; href: string };
+      parentCrumbs?: { label: string; href: string }[];
       baseHref: string;
-      years: { links: { key: string; href: string; current: boolean }[] };
-      topics: { links: { key: string; label: string; href: string }[] };
-      siblings: { collapsed?: boolean; links: { key: string; href: string; current: boolean }[] };
+      lede?: string;
+      headerCovers: string[];
+      availableCategories: string[];
+      related?: { href: string; label: string };
+      clearHref?: string;
+      facets: { label: string; links: Link[]; menu?: { label: string; links: Link[] } }[];
     };
+
+    const hardRock = { id: "g-hr", slug: "hard-rock", name: "hard rock", nameEs: null };
 
     beforeEach(() => {
       mocks.listAlbumsByDecade.mockResolvedValue({ albums: [], page: 1, pageSize: 24, hasNext: false });
+      mocks.listAlbumsByGenre.mockResolvedValue({ albums: [], page: 1, pageSize: 24, hasNext: false, genre: hardRock });
       mocks.listDecades.mockResolvedValue([{ decade: 2000, count: 5 }, { decade: 1990, count: 9 }]);
       mocks.listDecadeYears.mockResolvedValue([1990, 1994, 1999]);
-      mocks.listDecadeGenres.mockResolvedValue([{ slug: "grunge", name: "grunge", nameEs: null }]);
+      mocks.listDecadeGenres.mockResolvedValue([
+        { slug: "grunge", name: "grunge", nameEs: null },
+        { slug: "hard-rock", name: "hard rock", nameEs: null },
+      ]);
+      mocks.listDecadeCovers.mockResolvedValue(new Map([[1990, ["c1", "c2", "c3", "c4"]]]));
+      mocks.listDecadeCategories.mockResolvedValue(["studio", "single_ep"]);
     });
 
     const open = async (searchParams: Record<string, string>) => {
       const element = await ExplorePage({ params, searchParams: Promise.resolve(searchParams) });
       return findAll(element, FilteredAlbumList)[0]!.props as ListProps;
     };
+    const facet = (props: ListProps, label: string) => props.facets.find((item) => item.label === label)!;
 
-    it("ofrece los años de la década, con «Toda la década» marcada, y no los pasa al listado sin año", async () => {
+    it("sin refinamientos: título, contexto, mosaico y filas rotuladas de la década", async () => {
       const props = await open({ decada: "1990" });
 
       expect(props.heading).toBe("decadeResultsHeading");
+      expect(props.crumb).toBe("Años 90");
+      expect(props.parentCrumbs).toEqual([]);
       expect(props.baseHref).toBe("/explore?decada=1990");
-      expect(props.years.links.map((link) => link.key)).toEqual(["all", "1990", "1994", "1999"]);
-      expect(props.years.links[0]).toMatchObject({ href: "/explore?decada=1990", current: true });
-      expect(props.years.links[2]).toMatchObject({ href: "/explore?decada=1990&anio=1994", current: false });
+      expect(props.lede).toBe("decadeLede");
+      expect(props.headerCovers).toEqual(["c1", "c2", "c3", "c4"]);
+      expect(props.related).toBeUndefined();
+      expect(props.clearHref).toBeUndefined();
+      expect(props.facets.map((item) => item.label)).toEqual(["facetYear", "facetGenre"]);
+    });
+
+    it("la fila de años ofrece «Toda la década» marcada y un chip por año, sin pasar el año al listado", async () => {
+      const props = await open({ decada: "1990" });
+      const years = facet(props, "facetYear");
+
+      expect(years.links.map((link) => link.key)).toEqual(["all", "1990", "1994", "1999"]);
+      expect(years.links[0]).toMatchObject({ href: "/explore?decada=1990", current: true });
+      expect(years.links[2]).toMatchObject({ href: "/explore?decada=1990&anio=1994", current: false });
       expect(mocks.listAlbumsByDecade).toHaveBeenCalledWith(1990, 1, expect.objectContaining({ year: undefined }));
+      expect(mocks.listAlbumsByGenre).not.toHaveBeenCalled();
+    });
+
+    it("la fila de géneros filtra en el sitio: «Todos» marcado y cada género con ?genero=", async () => {
+      const props = await open({ decada: "1990" });
+      const genres = facet(props, "facetGenre");
+
+      expect(genres.links.map((link) => link.key)).toEqual(["all", "grunge", "hard-rock"]);
+      expect(genres.links[0]).toMatchObject({ label: "facetAllGenres", href: "/explore?decada=1990", current: true });
+      expect(genres.links[1]).toMatchObject({ href: "/explore?decada=1990&genero=grunge", current: false });
     });
 
     it("un año de la década filtra el listado, cambia el título y agrega un nivel a la miga de pan", async () => {
@@ -266,12 +311,14 @@ describe("/explore: Explorar por década (openspec: redesign-explore-decades)", 
       expect(mocks.listAlbumsByDecade).toHaveBeenCalledWith(1990, 1, expect.objectContaining({ year: 1994, category: "studio" }));
       expect(props.heading).toBe("yearResultsHeading");
       expect(props.crumb).toBe("1994");
-      expect(props.parentCrumb).toEqual({ label: "decadeChip", href: "/explore?decada=1990" });
+      expect(props.parentCrumbs).toEqual([{ label: "Años 90", href: "/explore?decada=1990" }]);
       expect(props.baseHref).toBe("/explore?decada=1990&anio=1994");
-      expect(props.years.links.find((link) => link.current)?.key).toBe("1994");
-      // Los chips conservan el tipo elegido.
-      expect(props.years.links[0]!.href).toBe("/explore?decada=1990&tipo=studio");
-      expect(props.years.links[1]!.href).toBe("/explore?decada=1990&anio=1990&tipo=studio");
+      expect(props.clearHref).toBe("/explore?decada=1990");
+      expect(facet(props, "facetYear").links.find((link) => link.current)?.key).toBe("1994");
+      // Los chips conservan el tipo elegido; los de género conservan además el año.
+      expect(facet(props, "facetYear").links[0]!.href).toBe("/explore?decada=1990&tipo=studio");
+      expect(facet(props, "facetGenre").links[1]!.href).toBe("/explore?decada=1990&anio=1994&genero=grunge&tipo=studio");
+      expect(mocks.listDecadeCategories).toHaveBeenCalledWith(1990, { year: 1994, genreId: undefined });
     });
 
     it.each(["1985", "2000", "abc", "", "1994.5"])("un año inválido (%j) se ignora y muestra la década completa", async (anio) => {
@@ -279,23 +326,118 @@ describe("/explore: Explorar por década (openspec: redesign-explore-decades)", 
 
       expect(mocks.listAlbumsByDecade).toHaveBeenCalledWith(1990, 1, expect.objectContaining({ year: undefined }));
       expect(props.heading).toBe("decadeResultsHeading");
-      expect(props.parentCrumb).toBeUndefined();
-      expect(props.years.links[0]!.current).toBe(true);
+      expect(props.parentCrumbs).toEqual([]);
+      expect(facet(props, "facetYear").links[0]!.current).toBe(true);
     });
 
-    it("los géneros de la década llevan a la página del género ya filtrada por esa década", async () => {
-      const props = await open({ decada: "1990", anio: "1994" });
+    it("un género refina la década: lista por género con la década, título, miga, enlace a su página y «Quitar filtros»", async () => {
+      const props = await open({ decada: "1990", genero: "hard-rock", orden: "az" });
 
-      expect(props.topics.links).toEqual([{ key: "grunge", label: "grunge", href: "/genre/grunge?tab=albums&decada=1990" }]);
+      expect(mocks.listAlbumsByGenre).toHaveBeenCalledWith("hard-rock", 1, expect.objectContaining({ decade: 1990, year: undefined, sort: "az" }));
+      expect(mocks.listAlbumsByDecade).not.toHaveBeenCalled();
+      expect(props.heading).toBe("decadeGenreHeading");
+      expect(props.parentCrumbs).toEqual([{ label: "Años 90", href: "/explore?decada=1990" }]);
+      expect(props.crumb).toBe("hard rock");
+      expect(props.baseHref).toBe("/explore?decada=1990&genero=hard-rock");
+      expect(props.related).toEqual({ href: "/genre/hard-rock?tab=albums&decada=1990", label: "genrePageLink" });
+      expect(props.clearHref).toBe("/explore?decada=1990");
+      expect(mocks.listDecadeCategories).toHaveBeenCalledWith(1990, { year: undefined, genreId: "g-hr" });
+      const genres = facet(props, "facetGenre");
+      expect(genres.links[0]).toMatchObject({ current: false });
+      expect(genres.links.find((link) => link.current)?.key).toBe("hard-rock");
+      // «Todos» quita el género y conserva el orden.
+      expect(genres.links[0]!.href).toBe("/explore?decada=1990&orden=az");
     });
 
-    it("las otras décadas van plegadas, sin el año, conservando el tipo", async () => {
-      const props = await open({ decada: "1990", anio: "1994", tipo: "studio" });
+    it("género y año a la vez: los chips conservan el otro y la miga tiene los dos niveles", async () => {
+      const props = await open({ decada: "1990", anio: "1994", genero: "hard-rock" });
 
-      expect(props.siblings.collapsed).toBe(true);
-      expect(props.siblings.links.map((link) => link.key)).toEqual(["1990", "2000"]);
-      expect(props.siblings.links[1]).toMatchObject({ href: "/explore?decada=2000&tipo=studio", current: false });
-      expect(props.siblings.links[0]!.current).toBe(true);
+      expect(mocks.listAlbumsByGenre).toHaveBeenCalledWith("hard-rock", 1, expect.objectContaining({ decade: 1990, year: 1994 }));
+      expect(props.heading).toBe("decadeGenreYearHeading");
+      expect(props.parentCrumbs).toEqual([
+        { label: "Años 90", href: "/explore?decada=1990" },
+        { label: "1994", href: "/explore?decada=1990&anio=1994" },
+      ]);
+      expect(props.baseHref).toBe("/explore?decada=1990&anio=1994&genero=hard-rock");
+      // Año: conserva el género; «Toda la década» quita el año. Género: «Todos» conserva el año.
+      expect(facet(props, "facetYear").links[0]!.href).toBe("/explore?decada=1990&genero=hard-rock");
+      expect(facet(props, "facetYear").links[1]!.href).toBe("/explore?decada=1990&anio=1990&genero=hard-rock");
+      expect(facet(props, "facetGenre").links[0]!.href).toBe("/explore?decada=1990&anio=1994");
+    });
+
+    it("cambiar de década conserva el género, el tipo y el orden y quita el año", async () => {
+      const props = await open({ decada: "1990", anio: "1994", genero: "hard-rock", tipo: "studio", orden: "az" });
+      const menu = facet(props, "facetYear").menu!;
+
+      expect(menu.label).toBe("otherDecades");
+      expect(menu.links.map((link) => link.label)).toEqual(["Años 90", "Años 2000"]);
+      expect(menu.links[0]).toMatchObject({ current: true });
+      expect(menu.links[1]!.href).toBe("/explore?decada=2000&genero=hard-rock&tipo=studio&orden=az");
+    });
+
+    it("un género de la URL que no está entre los de la fila se agrega al final, marcado", async () => {
+      mocks.listAlbumsByGenre.mockResolvedValue({
+        albums: [],
+        page: 1,
+        pageSize: 24,
+        hasNext: false,
+        genre: { id: "g-sg", slug: "shoegaze", name: "shoegaze", nameEs: null },
+      });
+
+      const props = await open({ decada: "1990", genero: "shoegaze" });
+      const genres = facet(props, "facetGenre").links;
+
+      expect(genres.map((link) => link.key)).toEqual(["all", "grunge", "hard-rock", "shoegaze"]);
+      expect(genres[3]).toMatchObject({ label: "shoegaze", current: true });
+      expect(genres[0]!.current).toBe(false);
+    });
+
+    it("un género desconocido no inventa enlace a su página ni chip", async () => {
+      mocks.listAlbumsByGenre.mockResolvedValue({ albums: [], page: 1, pageSize: 24, hasNext: false, genre: null });
+
+      const props = await open({ decada: "1990", genero: "no-existe" });
+
+      expect(props.related).toBeUndefined();
+      expect(props.crumb).toBe("no-existe");
+      expect(props.clearHref).toBe("/explore?decada=1990");
+      expect(facet(props, "facetGenre").links.map((link) => link.key)).toEqual(["all", "grunge", "hard-rock"]);
+      expect(mocks.listDecadeCategories).toHaveBeenCalledWith(1990, { year: undefined, genreId: undefined });
+    });
+
+    it("una familia junto a la década se ignora", async () => {
+      await open({ decada: "1990", familia: "rock" });
+
+      expect(mocks.listAlbumsByDecade).toHaveBeenCalledTimes(1);
+      expect(mocks.listAlbumsByGenre).not.toHaveBeenCalled();
+    });
+
+    it("la línea de contexto solo acompaña al orden «Destacados»", async () => {
+      expect((await open({ decada: "1990" })).lede).toBe("decadeLede");
+      expect((await open({ decada: "1990", orden: "recientes" })).lede).toBeUndefined();
+    });
+
+    it("pasa los tipos con discos en el corte para deshabilitar los demás", async () => {
+      mocks.listDecadeCategories.mockResolvedValue(["single_ep"]);
+
+      expect((await open({ decada: "1910" })).availableCategories).toEqual(["single_ep"]);
+      expect(mocks.listDecadeCategories).toHaveBeenCalledWith(1910, { year: undefined, genreId: undefined });
+    });
+
+    it("sin carátulas de la década la cabecera no lleva mosaico", async () => {
+      mocks.listDecadeCovers.mockResolvedValue(new Map());
+
+      expect((await open({ decada: "1990" })).headerCovers).toEqual([]);
+    });
+
+    it("una década inválida muestra el estado vacío sin romper la página", async () => {
+      mocks.listAlbumsByDecade.mockRejectedValue(Object.assign(new (await import("@/lib/api/errors")).ApiError("VALIDATION_ERROR", 400, "La década no es válida")));
+      mocks.listDecadeYears.mockRejectedValue(new (await import("@/lib/api/errors")).ApiError("VALIDATION_ERROR", 400, "La década no es válida"));
+      mocks.listDecadeCategories.mockRejectedValue(new (await import("@/lib/api/errors")).ApiError("VALIDATION_ERROR", 400, "La década no es válida"));
+
+      const props = await open({ decada: "1995" });
+
+      expect(props.crumb).toBe("1995");
+      expect(props.availableCategories).toEqual([]);
     });
   });
 });

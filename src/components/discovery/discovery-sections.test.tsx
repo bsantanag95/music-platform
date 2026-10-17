@@ -5,6 +5,7 @@ import { encodeId } from "@/lib/slug";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { parseExploreListParams } from "@/services/discovery/explore-params";
 import { CollectionRail } from "./CollectionRail";
+import { CoverMosaic } from "./CoverMosaic";
 import { ExploreFilterBar } from "./ExploreFilterBar";
 import { MosaicGrid } from "./MosaicGrid";
 
@@ -232,6 +233,73 @@ describe("ExploreFilterBar", () => {
       <ExploreFilterBar baseHref="/explore?decada=1990" params={parseExploreListParams({})} categoryLabels={categoryLabels} />,
     );
     expect(screen.getByRole("combobox")).toBeInTheDocument();
+  });
+
+  describe("tipos disponibles (openspec: redesign-decade-view)", () => {
+    const bar = (tipo?: string) => (
+      <ExploreFilterBar
+        baseHref="/explore?decada=1910"
+        params={parseExploreListParams(tipo ? { tipo } : {})}
+        categoryLabels={categoryLabels}
+        availableCategories={["single_ep"]}
+      />
+    );
+
+    it("deshabilita, sin enlace, los tipos que no tienen discos en el corte", () => {
+      renderWithIntl(bar());
+
+      for (const name of ["De estudio", "Compilaciones", "Directos y otros"]) {
+        expect(screen.queryByRole("link", { name })).not.toBeInTheDocument();
+        expect(screen.getByText(name)).toHaveAttribute("aria-disabled", "true");
+      }
+      expect(screen.getByRole("link", { name: "Singles y EPs" })).toHaveAttribute("href", "/es/explore?decada=1910&tipo=single_ep");
+    });
+
+    it("«Todos» y el tipo elegido siguen activos aunque el corte no tenga discos de ese tipo", () => {
+      renderWithIntl(bar("studio"));
+
+      expect(screen.getByRole("link", { name: "Todos" })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "De estudio" })).toHaveAttribute("aria-current", "page");
+    });
+
+    it("sin la lista de tipos disponibles todos enlazan", () => {
+      renderWithIntl(
+        <ExploreFilterBar baseHref="/explore?decada=1910" params={parseExploreListParams({})} categoryLabels={categoryLabels} />,
+      );
+
+      expect(screen.getAllByRole("link")).toHaveLength(5);
+    });
+  });
+});
+
+describe("CoverMosaic", () => {
+  const cover = (n: number) => `https://coverartarchive.org/release-group/${n}/front-250`;
+
+  it.each([
+    [5, 4],
+    [4, 4],
+    [3, 3],
+    [2, 2],
+    [1, 1],
+  ])("con %i carátulas pinta %i imágenes decorativas", (given, shown) => {
+    const { container } = renderWithIntl(<CoverMosaic covers={Array.from({ length: given }, (_, i) => cover(i))} className="grid" />);
+
+    expect(container.querySelectorAll("img")).toHaveLength(shown);
+    expect(container.firstElementChild).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("con tres carátulas la primera ocupa las dos filas", () => {
+    const { container } = renderWithIntl(<CoverMosaic covers={[1, 2, 3].map(cover)} className="grid" />);
+
+    const cells = container.querySelectorAll("[aria-hidden] > div");
+    expect(cells[0]).toHaveClass("row-span-2");
+    expect(cells[1]).not.toHaveClass("row-span-2");
+  });
+
+  it("sin carátulas no pinta nada, y la propiedad display la pone quien lo usa", () => {
+    expect(renderWithIntl(<CoverMosaic covers={[]} />).container).toBeEmptyDOMElement();
+    const { container } = renderWithIntl(<CoverMosaic covers={[cover(1)]} className="hidden sm:grid" />);
+    expect(container.firstElementChild).toHaveClass("hidden", "sm:grid");
   });
 });
 

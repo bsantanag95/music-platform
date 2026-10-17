@@ -25,12 +25,17 @@ interface ExploreFilterBarProps {
   categoryLabels: Record<ReleaseGroupCategory, string>;
   /** Oculta el selector de orden (listados con orden fijo). */
   hideSort?: boolean;
+  /**
+   * Tipos que tienen al menos un disco en el corte actual (openspec: redesign-decade-view): los demás se muestran deshabilitados, sin
+   * enlace, porque llevarían a un estado vacío. "Todos" y el tipo elegido siempre quedan activos. Sin esta lista, todos enlazan.
+   */
+  availableCategories?: ReleaseGroupCategory[];
 }
 
 // Tipo y orden de los listados filtrados de Explorar. El estado vive en la URL (`tipo`, `orden`):
 // el tipo es una fila de enlaces (funciona sin JavaScript) y el orden un `<select>` que navega al
 // cambiar. Cambiar cualquiera vuelve a la página 1. Textos compartidos con la página de género.
-export function ExploreFilterBar({ baseHref, params, categoryLabels, hideSort = false }: ExploreFilterBarProps) {
+export function ExploreFilterBar({ baseHref, params, categoryLabels, hideSort = false, availableCategories }: ExploreFilterBarProps) {
   const t = useTranslations("catalog.genres.page.filters");
   const router = useRouter();
 
@@ -51,6 +56,15 @@ export function ExploreFilterBar({ baseHref, params, categoryLabels, hideSort = 
       <nav aria-label={t("typeLabel")} className="themed-scrollbar -mx-1 flex max-w-full gap-1.5 overflow-x-auto px-1 py-0.5">
         {options.map((option) => {
           const active = params.category === option.value;
+          const disabled =
+            availableCategories !== undefined && option.value !== undefined && !active && !availableCategories.includes(option.value);
+          if (disabled) {
+            return (
+              <span key={option.value} aria-disabled="true" className={`${pill(false)} cursor-not-allowed opacity-40 hover:border-ink-border hover:text-paper-muted`}>
+                {option.label}
+              </span>
+            );
+          }
           return (
             <Link
               key={option.value ?? "all"}

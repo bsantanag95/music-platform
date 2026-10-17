@@ -6,14 +6,11 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import type { AlbumPage } from "@/services/discovery/discovery";
 import { exploreListFiltered, exploreListHref, type ExploreListParams } from "@/services/discovery/explore-params";
 import type { ReleaseGroupCategory } from "@/lib/api/schemas";
+import { CoverMosaic } from "./CoverMosaic";
 import { ExploreFilterBar } from "./ExploreFilterBar";
+import { FacetRow, type Facet, type SliceLink } from "./FacetRow";
 
-export interface SliceLink {
-  key: string;
-  label: string;
-  href: string;
-  current: boolean;
-}
+export type { SliceLink } from "./FacetRow";
 
 export interface TopicLink {
   key: string;
@@ -25,8 +22,8 @@ interface FilteredAlbumListProps {
   heading: string;
   /** Nombre corto del corte para la miga de pan ("1990s", "Rock"). */
   crumb: string;
-  /** Nivel intermedio de la miga de pan antes de `crumb` (la década, cuando el corte es un año). */
-  parentCrumb?: { label: string; href: string };
+  /** Niveles intermedios de la miga de pan antes de `crumb` (la década y el año, cuando el corte es un género), cada uno con enlace. */
+  parentCrumbs?: { label: string; href: string }[];
   result: AlbumPage;
   /** Base del listado, ya con el corte (`/explore?decada=1990`). */
   baseHref: string;
@@ -41,10 +38,18 @@ interface FilteredAlbumListProps {
    */
   siblings?: { label: string; links: SliceLink[]; collapsed?: boolean };
   /**
-   * Años del corte (los de una década), como chips siempre visibles encima de los temas: el primero suele ser "Toda la
-   * década". No se pinta sin enlaces.
+   * Filas de filtros rotuladas del corte (openspec: redesign-decade-view): en la vista de década, "Año" y "Género", con chips que
+   * filtran esta misma lista. Van encima de los temas. Una fila sin chips no se pinta.
    */
-  years?: { label: string; links: SliceLink[] };
+  facets?: Facet[];
+  /** Línea de contexto bajo el título (cómo se ordena el listado). */
+  lede?: string;
+  /** Carátulas del corte para el mosaico decorativo de la cabecera (desde `sm`); vacío = sin mosaico. */
+  headerCovers?: string[];
+  /** Tipos con discos en el corte: los demás chips de tipo salen deshabilitados. */
+  availableCategories?: ReleaseGroupCategory[];
+  /** Destino de "Quitar filtros" en el estado vacío cuando el corte tiene refinamientos propios (un género elegido). */
+  clearHref?: string;
   /**
    * Temas del corte (los géneros de una familia), cada uno con su página: la forma de seguir navegando hacia dentro. Sin
    * cifras. No se pinta sin enlaces.
@@ -115,7 +120,7 @@ function PageArrow({ direction }: { direction: "prev" | "next" }) {
 export function FilteredAlbumList({
   heading,
   crumb,
-  parentCrumb,
+  parentCrumbs,
   result,
   baseHref,
   params,
@@ -123,7 +128,11 @@ export function FilteredAlbumList({
   coverLabel,
   authenticated = false,
   siblings,
-  years,
+  facets,
+  lede,
+  headerCovers,
+  availableCategories,
+  clearHref,
   topics,
   related,
   dateLabels,
@@ -134,7 +143,7 @@ export function FilteredAlbumList({
   const t = useTranslations("catalog.explore");
   const tCommon = useTranslations("common");
   const { albums, page, hasNext } = result;
-  const filtered = hideSort ? params.category !== undefined : exploreListFiltered(params);
+  const filtered = clearHref !== undefined || (hideSort ? params.category !== undefined : exploreListFiltered(params));
 
   const pageLink =
     "inline-flex items-center gap-1.5 rounded-md border border-ink-border px-3 py-1.5 font-data text-sm text-paper transition-colors hover:border-amber";
@@ -147,27 +156,40 @@ export function FilteredAlbumList({
         items={[
           { label: tCommon("home"), href: "/" },
           { label: t("heading"), href: "/explore" },
-          ...(parentCrumb ? [parentCrumb] : []),
+          ...(parentCrumbs ?? []),
           { label: crumb },
         ]}
       />
 
-      <header className="flex w-full flex-col gap-1.5">
-        <h1 className="font-display text-3xl text-paper">{heading}</h1>
-        {related ? (
-          <Link
-            href={related.href}
-            className="group inline-flex w-fit items-center gap-1 font-data text-sm text-paper-muted transition-colors hover:text-amber"
-          >
-            {related.label}
-            <span aria-hidden="true" className="transition-transform duration-150 group-hover:translate-x-0.5">
-              →
-            </span>
-          </Link>
+      <header className="flex w-full items-start justify-between gap-6">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <h1 className="font-display text-3xl text-paper">{heading}</h1>
+          {lede ? <p className="max-w-prose font-body text-sm text-paper-muted">{lede}</p> : null}
+          {related ? (
+            <Link
+              href={related.href}
+              className="group inline-flex w-fit items-center gap-1 font-data text-sm text-paper-muted transition-colors hover:text-amber"
+            >
+              {related.label}
+              <span aria-hidden="true" className="transition-transform duration-150 group-hover:translate-x-0.5">
+                →
+              </span>
+            </Link>
+          ) : null}
+        </div>
+        {/* El eco de la tarjeta de la portada: decorativo y solo en pantallas anchas, para no empujar el contenido en móvil. */}
+        {headerCovers && headerCovers.length > 0 ? (
+          <CoverMosaic covers={headerCovers} className="hidden size-24 shrink-0 overflow-hidden rounded-md border border-ink-border sm:grid" />
         ) : null}
       </header>
 
-      {years && years.links.length > 1 ? <SliceNav siblings={years} /> : null}
+      {facets && facets.some((facet) => facet.links.length > 0) ? (
+        <div className="flex w-full flex-col gap-2.5">
+          {facets.map((facet) => (
+            <FacetRow key={facet.label} facet={facet} />
+          ))}
+        </div>
+      ) : null}
 
       {topics && topics.links.length > 0 ? (
         <nav aria-label={topics.label} className="w-full">
@@ -209,7 +231,13 @@ export function FilteredAlbumList({
         )
       ) : null}
 
-      <ExploreFilterBar baseHref={baseHref} params={params} categoryLabels={categoryLabels} hideSort={hideSort} />
+      <ExploreFilterBar
+        baseHref={baseHref}
+        params={params}
+        categoryLabels={categoryLabels}
+        hideSort={hideSort}
+        availableCategories={availableCategories}
+      />
 
       {albums.length === 0 ? (
         <EmptyState
@@ -217,7 +245,7 @@ export function FilteredAlbumList({
           description={t("emptyFiltered")}
           action={
             filtered ? (
-              <Link href={baseHref} className={pageLink}>
+              <Link href={clearHref ?? baseHref} className={pageLink}>
                 {t("clearFilters")}
               </Link>
             ) : (

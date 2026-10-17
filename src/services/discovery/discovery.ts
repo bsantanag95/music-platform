@@ -519,14 +519,21 @@ async function listDecadeCards(): Promise<DecadeCard[]> {
 }
 
 /**
- * Años de una década con al menos un álbum, del más antiguo al más reciente: los chips de la vista de década. Sin cifras.
+ * Disco ya publicado: con fecha, no posterior a hoy; sin fecha completa, de un año no posterior al actual. Un año cuyos discos están
+ * todos por salir no es un año para recorrer (openspec: redesign-decade-view).
+ */
+const publishedCondition = sql`coalesce(${releaseGroup.firstReleaseDate} <= current_date, ${releaseGroup.firstReleaseYear} <= extract(year from current_date))`;
+
+/**
+ * Años de una década con al menos un álbum ya publicado, del más antiguo al más reciente: los chips de la vista de década. Sin
+ * cifras. Un año con solo lanzamientos por salir no aparece (aunque `?anio=` con ese año siga funcionando).
  */
 export async function listDecadeYears(decade: number): Promise<number[]> {
   assertDecade(decade);
   const rows = await db
     .selectDistinct({ year: releaseGroup.firstReleaseYear })
     .from(releaseGroup)
-    .where(sql`${releaseGroup.firstReleaseYear} between ${decade} and ${decade + 9}`)
+    .where(and(sql`${releaseGroup.firstReleaseYear} between ${decade} and ${decade + 9}`, publishedCondition))
     .orderBy(asc(releaseGroup.firstReleaseYear));
   return rows.flatMap((row) => (row.year === null ? [] : [row.year]));
 }
@@ -841,10 +848,7 @@ export async function listAlbumsFiltered(condition: SQL, options: AlbumFilterOpt
 
   const filters: SQL[] = [condition];
   if (category !== undefined) filters.push(eq(releaseGroup.category, category));
-  if (decade !== undefined) {
-    filters.push(sql`${releaseGroup.firstReleaseYear} between ${decade} and ${decade + 9}`);
-  }
-  if (year !== undefined) filters.push(eq(releaseGroup.firstReleaseYear, year));
+  filters.push(...periodFilters(decade, year));
   if (q) filters.push(albumTextMatch(q));
 
   const rows = await db
@@ -860,12 +864,49 @@ export async function listAlbumsFiltered(condition: SQL, options: AlbumFilterOpt
   return toAlbumPage(rows, page);
 }
 
-/** Tipo y orden opcionales de los listados de Explorar (la paginación va aparte). */
-export type ExploreListOptions = Pick<AlbumFilterOptions, "category" | "sort" | "year">;
+/** Filtros de período de un listado: la década (`between`) y el año exacto. Se comparten con `listCategoriesIn`. */
+function periodFilters(decade: number | undefined, year: number | undefined): SQL[] {
+  const filters: SQL[] = [];
+  if (decade !== undefined) filters.push(sql`${releaseGroup.firstReleaseYear} between ${decade} and ${decade + 9}`);
+  if (year !== undefined) filters.push(eq(releaseGroup.firstReleaseYear, year));
+  return filters;
+}
+
+/**
+ * Tipos de álbum que tienen al menos un disco en un corte (`condition` más década y año opcionales): los chips de tipo de la vista de
+ * década deshabilitan los demás. Una consulta `select distinct`, sin caché porque depende del corte.
+ */
+export async function listCategoriesIn(
+  condition: SQL,
+  scope: { decade?: number; year?: number } = {},
+): Promise<ReleaseGroupCategory[]> {
+  if (scope.decade !== undefined) assertDecade(scope.decade);
+  const rows = await db
+    .selectDistinct({ category: releaseGroup.category })
+    .from(releaseGroup)
+    .where(and(condition, ...periodFilters(scope.decade, scope.year)));
+  return rows.map((row) => row.category as ReleaseGroupCategory);
+}
+
+/**
+ * Tipos con discos en una década, refinada por año y por género (con sus subgéneros): los chips de tipo de la vista de década
+ * deshabilitan los demás (openspec: redesign-decade-view).
+ */
+export async function listDecadeCategories(
+  decade: number,
+  scope: { year?: number; genreId?: string } = {},
+): Promise<ReleaseGroupCategory[]> {
+  const condition = scope.genreId ? albumInGenreTree(scope.genreId) : isNotNull(releaseGroup.firstReleaseYear);
+  return listCategoriesIn(condition, { decade, year: scope.year });
+}
+
+/** Tipo y orden opcionales de los listados de Explorar (la paginación va aparte); la década solo la usa el listado por género. */
+export type ExploreListOptions = Pick<AlbumFilterOptions, "category" | "sort" | "year" | "decade">;
 
 /**
  * Álbumes cuyo `first_release_year` cae en `[decade, decade+9]` (o es exactamente `year`, que debe ser de la década). Sin
- * opciones es el orden compartido de Explorar (`best`); con ellas, el tipo y el orden elegidos en el listado.
+ * opciones es el orden compartido de Explorar (`best`); con ellas, el tipo y el orden elegidos en el listado. Para refinar por
+ * género dentro de la década se usa `listAlbumsByGenre(slug, page, { decade, … })`.
  */
 export async function listAlbumsByDecade(decade: number, page = 1, options: ExploreListOptions = {}): Promise<AlbumPage> {
   assertDecade(decade);

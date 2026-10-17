@@ -133,9 +133,9 @@ el orden pasa de la carátula resuelta directamente al identificador, para que l
 La vista `/explore` SHALL mostrar la sección **Explorar por década** (ancla `decadas`) justo después de "Explorar por
 género", con una tarjeta por década que tiene álbumes, de la más reciente a la más antigua. Cada tarjeta SHALL ser visual: un
 mosaico de hasta cuatro carátulas de discos de estudio de la década con el nombre de la década encima, y SHALL NOT
-mostrar número de álbumes ni barra de tamaño. El nombre de la década SHALL ser el de su idioma: en español "Años 80" (de 1910 a
-1990; con cuatro cifras en las décadas anteriores a 1910 y desde 2000, "Años 1900", "Años 2000", "Años 2020", para que dos
-décadas no compartan nombre) y en inglés "1980s". Una década sin discos de estudio con carátula SHALL mostrarse como tarjeta plana
+mostrar número de álbumes ni barra de tamaño. El nombre de la década SHALL ser el de su idioma: en español "Años 80" (de 1920 a
+1990; con cuatro cifras en las décadas anteriores a 1920 y desde 2000, "Años 1910", "Años 2000", "Años 2020", para que "Años 10" no se
+lea como los 2010 y dos décadas no compartan nombre) y en inglés "1980s". Una década sin discos de estudio con carátula SHALL mostrarse como tarjeta plana
 con su nombre. Las décadas desde 1950 SHALL ser tarjetas de la grilla; las anteriores a 1950 SHALL agruparse detrás de una
 tarjeta "Décadas anteriores" que las despliega y pliega, sin cifras. Cada tarjeta SHALL enlazar a `/{locale}/explore?decada=`.
 Las carátulas SHALL elegirse por la señal de calidad de las colecciones (valoración de la comunidad, premio y calendario, con
@@ -150,8 +150,8 @@ vez y reutilizarse unas horas. La sección SHALL omitirse si no hay ninguna déc
 
 #### Scenario: Nombre de la década en español
 
-- **WHEN** se muestran las décadas de 1890, 1900, 1910, 1990, 2000 y 2020 en español
-- **THEN** se llaman "Años 1890", "Años 1900", "Años 10", "Años 90", "Años 2000" y "Años 2020"
+- **WHEN** se muestran las décadas de 1890, 1900, 1910, 1920, 1990, 2000 y 2020 en español
+- **THEN** se llaman "Años 1890", "Años 1900", "Años 1910", "Años 20", "Años 90", "Años 2000" y "Años 2020"
 
 #### Scenario: Más reciente primero
 

@@ -55,9 +55,9 @@ la tarjeta (`MosaicGrid`) y `listDecadeCovers()` (con caché) tienen las carátu
 7. **Tipos deshabilitados.** `listCategoriesIn(condition, { decade, year })` (un `select distinct category` sobre el mismo corte,
    incluido el género) y `ExploreFilterBar` recibe `availableCategories`: los demás tipos se pintan como `<span aria-disabled>` sin enlace.
    Solo en la vista de década; la de familia y la de género quedan como están. "Todos" y el tipo elegido siempre activos.
-8. **Nombre de la década por idioma.** Función pura `decadeLabel(decade, locale)`: en español "Años 10"…"Años 90" para 1910–1990 y
-   cuatro cifras para el resto ("Años 1890", "Años 1900", "Años 2000", "Años 2020"), porque "Años 00" y "Años 20" serían ambiguos
-   con 1900 y 1920 y los 1890s y los 1990s compartirían nombre; en inglés `1980s`. Se usa en las tarjetas de la portada y en toda la
+8. **Nombre de la década por idioma.** Función pura `decadeLabel(decade, locale)`: en español "Años 20"…"Años 90" para 1920–1990 y
+   cuatro cifras para el resto ("Años 1890", "Años 1900", "Años 1910", "Años 2000", "Años 2020"), porque "Años 00" y "Años 10" se leen como
+   los 2000 y los 2010 (las revisamos en pantalla: "Años 10" junto a "Años 2010" confundía) y los 1890s y los 1990s compartirían nombre; en inglés `1980s`. Se usa en las tarjetas de la portada y en toda la
    vista de década (miga, título en minúsculas, chips del menú). Reemplaza al mensaje `decadeChip`. Las colecciones, el perfil y la
    página de género no cambian.
 9. **Estado vacío con género.** `FilteredAlbumList` acepta `clearHref`: con un género elegido el estado vacío ofrece "Quitar
