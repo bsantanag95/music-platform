@@ -10,7 +10,11 @@
     "popularHeading": "Popular ahora",
     "popularTabsLabel": "Qué ver",
     "popularPeople": "{count, plural, one {# persona} other {# personas}}",
-    "popularTabs": { "albums": "Álbumes", "artists": "Artistas", "songs": "Canciones" },
+    "popularTabs": {
+      "albums": "Álbumes",
+      "artists": "Artistas",
+      "songs": "Canciones"
+    },
     "popularWindow": {
       "month": "Lo que más se escucha, valora y guarda en la comunidad este mes.",
       "quarter": "Lo que más se escucha, valora y guarda en la comunidad en los últimos 3 meses.",
@@ -136,7 +140,8 @@
       "topRatedNote": "★ {average, number, ::.0} · {count, plural, one {# valoración} other {# valoraciones}}",
       "popularMonthSummary": "Los álbumes que más movieron a la comunidad en {month}: escuchas, valoraciones, reseñas, favoritos y listas, contando personas.",
       "popularMonthNote": "{count, plural, one {# persona} other {# personas}}"
-    }
+    },
+    "albumCount": "{formatted} {count, plural, one {álbum} other {álbumes}}"
   },
   "search": {
     "pageTitle": "Buscar",

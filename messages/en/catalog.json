@@ -10,7 +10,11 @@
     "popularHeading": "Popular now",
     "popularTabsLabel": "Show",
     "popularPeople": "{count, plural, one {# person} other {# people}}",
-    "popularTabs": { "albums": "Albums", "artists": "Artists", "songs": "Songs" },
+    "popularTabs": {
+      "albums": "Albums",
+      "artists": "Artists",
+      "songs": "Songs"
+    },
     "popularWindow": {
       "month": "What the community is listening to, rating and saving most this month.",
       "quarter": "What the community has listened to, rated and saved most in the last 3 months.",
@@ -136,7 +140,8 @@
       "topRatedNote": "★ {average, number, ::.0} · {count, plural, one {# rating} other {# ratings}}",
       "popularMonthSummary": "The albums that moved the community most in {month}: listens, ratings, reviews, favorites and lists, counting people.",
       "popularMonthNote": "{count, plural, one {# person} other {# people}}"
-    }
+    },
+    "albumCount": "{formatted} {count, plural, one {album} other {albums}}"
   },
   "search": {
     "pageTitle": "Search",
