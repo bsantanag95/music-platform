@@ -123,16 +123,19 @@ La vista (`FilteredAlbumList`) tiene miga de pan (Inicio / Explorar / corte) y e
 ella: **sin rótulo de tipo de corte encima** (cambio `redesign-family-view`: la miga ya dice dónde estás y el sistema
 de diseño no admite un eyebrow sobre el encabezado). Y:
 
-- **Vista de década** (solo en `?decada=`, cambios `redesign-explore-decades` y `redesign-decade-view`). Cabecera, dos filas de filtros
-  rotuladas y los filtros de tipo y orden:
-  - **Cabecera**: el título y, desde `sm`, el mosaico 2×2 de la tarjeta de la portada (`listDecadeCovers`, misma selección y misma caché; `CoverMosaic`,
-    decorativo, sin cifras). Títulos: "Álbumes de los años 80", "Álbumes de 1985", "Álbumes de hard rock de los años 80" y "…de 1985".
+- **Vista de década** (solo en `?decada=`, cambios `redesign-explore-decades` y `redesign-decade-view`). Portada, la fila de años y
+  una barra con **Género, Tipo y Orden como desplegables** en una sola línea (`ExploreFilterBar` con `selects` y `typeAsSelect`: tres filas
+  de chips empujaban el primer disco media pantalla abajo; el estado activo es el mismo borde ámbar en chips y filtros):
+  - **Portada** (`hero` de `FilteredAlbumList`): la cifra grande ("2020s", o el año elegido), el título, una línea de datos
+    ("11.449 álbumes · 2020–2026": el conteo de `listDecades` y los años de `listDecadeYears`) y las carátulas de la tarjeta de la
+    portada en abanico sobre la primera difuminada (`listDecadeCovers`, misma selección y misma caché). Títulos: "Álbumes de los años 80", "Álbumes de 1985", "Álbumes de hard rock de los años 80" y "…de 1985".
   - **Fila "Año"**: "Toda la década" y un chip por año con al menos un disco ya publicado (`listDecadeYears`; un año con solo
     lanzamientos por salir no tiene chip, aunque `?anio=` con ese año funcione), sin cifras; filtra con `?anio=<año>`. Al final de la fila,
     el menú **«Otras décadas»** (`<details>` cerrado, sin JavaScript; panel flotante desde `md` y en su propia línea en angosto), que
     conserva género, tipo y orden y quita el año. Un `anio` que no sea de la década se ignora; el servicio rechaza un año ajeno con
     `VALIDATION_ERROR`.
-  - **Fila "Género"**: "Todos" y hasta 12 chips con los géneros de estilo con más discos de la década (`listDecadeGenres`,
+  - **Género** (desplegable, antes una fila de chips): "Todos" y hasta 12 opciones, con **mayúscula inicial** ("Rock", no "rock";
+    la taxonomía guarda los nombres en minúscula), con los géneros de estilo con más discos de la década (`listDecadeGenres`,
     `decade-genres.ts`), **sin cifras**, con como mucho 3 de una misma familia (`DECADE_GENRES_PER_FAMILY`; sin ese tope, los 12 más
     grandes de los 1990s incluían cinco de Clásica y ninguno de hip hop) y **mostrados por familia** en el orden de la taxonomía (Rock,
     Metal, Pop… Clásica al final; `orderByFamily`) y por tamaño dentro de cada una. Los chips **filtran esta misma lista** con
@@ -176,6 +179,8 @@ El orden `best` ya no es "valoración y luego año" (con 32 discos valorados sob
 abría con lo último que se ingestó, incluso discos que aún no salen). Ahora, en este orden de prioridad:
 
 1. los lanzamientos con fecha **posterior a hoy** al final (pertenecen a "Próximos");
+1. bis. los discos **sin carátula confirmada** (comprobada y ausente, o retirada) después de los demás; uno aún no comprobado no se
+   mueve (puede tenerla). Sin esto, la primera página de una década abría con siluetas de disco (folklore, We Are…);
 2. la valoración agregada, si el disco alcanza `MIN_RATINGS_PER_ALBUM`;
 3. el premio (ganador antes que nominado, directo o como disco ancla de una grabación);
 4. los discos de **estudio** antes que sencillos, recopilaciones y directos;

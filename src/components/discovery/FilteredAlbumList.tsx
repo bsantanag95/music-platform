@@ -7,7 +7,9 @@ import type { AlbumPage } from "@/services/discovery/discovery";
 import { exploreListFiltered, exploreListHref, type ExploreListParams } from "@/services/discovery/explore-params";
 import type { ReleaseGroupCategory } from "@/lib/api/schemas";
 import { CoverMosaic } from "./CoverMosaic";
-import { ExploreFilterBar } from "./ExploreFilterBar";
+import { AppImage } from "@/components/ui/AppImage";
+import { SleeveStack } from "./CollectionSleeves";
+import { ExploreFilterBar, type FilterSelectGroup } from "./ExploreFilterBar";
 import { FacetRow, type Facet, type SliceLink } from "./FacetRow";
 
 export type { SliceLink } from "./FacetRow";
@@ -63,6 +65,15 @@ interface FilteredAlbumListProps {
   stats?: Record<string, string>;
   /** Sin selector de orden (el listado tiene un orden fijo, p. ej. cronológico). */
   hideSort?: boolean;
+  /**
+   * Portada del corte (la vista de década): la cifra grande ("2020s"), una línea de datos y las carátulas en abanico sobre la
+   * primera difuminada. Reemplaza al mosaico chico de `headerCovers`.
+   */
+  hero?: { display: string; stats?: string; covers: string[] };
+  /** Desplegables de la barra de filtros antes del tipo (el género en la década). */
+  selects?: FilterSelectGroup[];
+  /** El tipo como desplegable en lugar de chips. */
+  typeAsSelect?: boolean;
 }
 
 /** Los cortes hermanos como chips; en móvil, una fila que se desplaza. */
@@ -136,6 +147,9 @@ export function FilteredAlbumList({
   artistNames,
   stats,
   hideSort = false,
+  hero,
+  selects,
+  typeAsSelect = false,
 }: FilteredAlbumListProps) {
   const t = useTranslations("catalog.explore");
   const tCommon = useTranslations("common");
@@ -158,26 +172,62 @@ export function FilteredAlbumList({
         ]}
       />
 
-      <header className="flex w-full items-start justify-between gap-6">
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <h1 className="font-display text-3xl text-paper">{heading}</h1>
-          {related ? (
-            <Link
-              href={related.href}
-              className="group inline-flex w-fit items-center gap-1 font-data text-sm text-paper-muted transition-colors hover:text-amber"
-            >
-              {related.label}
-              <span aria-hidden="true" className="transition-transform duration-150 group-hover:translate-x-0.5">
-                →
-              </span>
-            </Link>
+      {hero ? (
+        // Portada de la década, con el mismo lenguaje que las colecciones: así cada década tiene identidad propia en lugar de
+        // leerse como un resultado de búsqueda con un mosaico chico suelto en la esquina.
+        <header className="relative isolate flex w-full flex-col-reverse gap-6 overflow-hidden rounded-xl border border-ink-border bg-ink-surface p-5 sm:p-8 md:flex-row md:items-center md:justify-between">
+          {hero.covers[0] ? (
+            <span aria-hidden="true" className="absolute inset-0 -z-10">
+              <AppImage src={hero.covers[0]} alt="" fill sizes="1280px" className="scale-125 object-cover opacity-30 blur-3xl saturate-150" />
+              <span className="absolute inset-0 bg-gradient-to-r from-ink via-ink/85 to-ink/40" />
+            </span>
           ) : null}
-        </div>
-        {/* El eco de la tarjeta de la portada: decorativo y solo en pantallas anchas, para no empujar el contenido en móvil. */}
-        {headerCovers && headerCovers.length > 0 ? (
-          <CoverMosaic covers={headerCovers} className="hidden size-24 shrink-0 overflow-hidden rounded-md border border-ink-border sm:grid" />
-        ) : null}
-      </header>
+          <div className="flex min-w-0 flex-col gap-2">
+            <span aria-hidden="true" className="font-display text-6xl leading-none text-paper sm:text-7xl">
+              {hero.display}
+            </span>
+            <h1 className="font-display text-xl text-paper-muted sm:text-2xl">{heading}</h1>
+            {hero.stats ? <p className="font-data text-xs text-paper-muted">{hero.stats}</p> : null}
+            {related ? (
+              <Link
+                href={related.href}
+                className="group inline-flex w-fit items-center gap-1 font-data text-sm text-paper-muted transition-colors hover:text-amber"
+              >
+                {related.label}
+                <span aria-hidden="true" className="transition-transform duration-150 group-hover:translate-x-0.5">
+                  →
+                </span>
+              </Link>
+            ) : null}
+          </div>
+          {hero.covers.length > 0 ? (
+            <div className="flex justify-center md:justify-end md:pr-2">
+              <SleeveStack covers={hero.covers} size="hero" />
+            </div>
+          ) : null}
+        </header>
+      ) : (
+        <header className="flex w-full items-start justify-between gap-6">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <h1 className="font-display text-3xl text-paper">{heading}</h1>
+            {related ? (
+              <Link
+                href={related.href}
+                className="group inline-flex w-fit items-center gap-1 font-data text-sm text-paper-muted transition-colors hover:text-amber"
+              >
+                {related.label}
+                <span aria-hidden="true" className="transition-transform duration-150 group-hover:translate-x-0.5">
+                  →
+                </span>
+              </Link>
+            ) : null}
+          </div>
+          {/* El eco de la tarjeta de la portada: decorativo y solo en pantallas anchas, para no empujar el contenido en móvil. */}
+          {headerCovers && headerCovers.length > 0 ? (
+            <CoverMosaic covers={headerCovers} className="hidden size-24 shrink-0 overflow-hidden rounded-md border border-ink-border sm:grid" />
+          ) : null}
+        </header>
+      )}
 
       {facets && facets.some((facet) => facet.links.length > 0) ? (
         <div className="flex w-full flex-col gap-2.5">
@@ -233,6 +283,8 @@ export function FilteredAlbumList({
         categoryLabels={categoryLabels}
         hideSort={hideSort}
         availableCategories={availableCategories}
+        selects={selects}
+        typeAsSelect={typeAsSelect}
       />
 
       {albums.length === 0 ? (

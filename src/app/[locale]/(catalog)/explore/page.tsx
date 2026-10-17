@@ -147,16 +147,29 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
     const decadePlainHref = cutHref({});
     const baseHref = cutHref({ year, genre: currentGenre });
 
+    // Con mayúscula inicial, como las familias de la portada ("Rock", no "rock"): la taxonomía guarda los nombres en minúscula.
+    const capitalize = (text: string) => text.charAt(0).toLocaleUpperCase(locale) + text.slice(1);
     const genreLinks = decadeGenres.map((item) => ({
       key: item.slug,
-      label: genreDisplayName(item, genreLocaleOf(locale)),
+      label: capitalize(genreDisplayName(item, genreLocaleOf(locale))),
       href: chipHref({ year, genre: item.slug }),
       current: item.slug === currentGenre,
     }));
     // Un género de la URL que no está entre los de la fila se agrega al final, marcado.
     if (genre && !genreLinks.some((link) => link.key === genre.slug)) {
-      genreLinks.push({ key: genre.slug, label: genreName, href: chipHref({ year, genre: genre.slug }), current: true });
+      genreLinks.push({ key: genre.slug, label: capitalize(genreName), href: chipHref({ year, genre: genre.slug }), current: true });
     }
+
+    // Datos de la portada: cuántos álbumes tiene la década en el catálogo y qué años abarca.
+    const numberFormat = new Intl.NumberFormat(locale, { useGrouping: "always" });
+    const decadeCount = decades.find((bucket) => bucket.decade === decade)?.count;
+    const yearsSpan = decadeYears.length > 0 ? `${Math.min(...decadeYears)}–${Math.max(...decadeYears)}` : null;
+    const decadeStats = [
+      decadeCount !== undefined ? t("albumCount", { count: decadeCount, formatted: numberFormat.format(decadeCount) }) : null,
+      yearsSpan,
+    ]
+      .filter(Boolean)
+      .join(" · ");
 
     return (
       <FilteredAlbumList
@@ -179,7 +192,26 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         result={result}
         artistNames={await albumArtistNames(result.albums.map((album) => album.id))}
         baseHref={baseHref}
-        headerCovers={decadeCovers.get(decade) ?? []}
+        hero={{
+          display: year !== undefined ? String(year) : `${decade}s`,
+          stats: decadeStats,
+          covers: decadeCovers.get(decade) ?? [],
+        }}
+        typeAsSelect
+        selects={
+          genreLinks.length > 0
+            ? [
+                {
+                  key: "genero",
+                  label: t("facetGenre"),
+                  options: [
+                    { key: "all", label: t("facetAllGenres"), href: chipHref({ year }), current: !currentGenre },
+                    ...genreLinks,
+                  ],
+                },
+              ]
+            : undefined
+        }
         availableCategories={availableCategories}
         related={genre ? { href: `${genreHref(genre.slug)}?tab=albums&decada=${decade}`, label: t("genrePageLink", { genre: genreName }) } : undefined}
         clearHref={genreSlug || year !== undefined ? decadePlainHref : undefined}
@@ -207,13 +239,6 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
                   current: bucket.decade === decade,
                 })),
             },
-          },
-          {
-            label: t("facetGenre"),
-            links:
-              genreLinks.length > 0
-                ? [{ key: "all", label: t("facetAllGenres"), href: chipHref({ year }), current: !currentGenre }, ...genreLinks]
-                : [],
           },
         ]}
       />

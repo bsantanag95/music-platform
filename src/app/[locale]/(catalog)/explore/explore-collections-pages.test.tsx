@@ -242,7 +242,9 @@ describe("/explore: Explorar por década (openspec: redesign-explore-decades)", 
       crumb: string;
       parentCrumbs?: { label: string; href: string }[];
       baseHref: string;
-      headerCovers: string[];
+      hero: { display: string; stats?: string; covers: string[] };
+      selects?: { key: string; label: string; options: Link[] }[];
+      typeAsSelect?: boolean;
       availableCategories: string[];
       related?: { href: string; label: string };
       clearHref?: string;
@@ -268,7 +270,11 @@ describe("/explore: Explorar por década (openspec: redesign-explore-decades)", 
       const element = await ExplorePage({ params, searchParams: Promise.resolve(searchParams) });
       return findAll(element, FilteredAlbumList)[0]!.props as ListProps;
     };
-    const facet = (props: ListProps, label: string) => props.facets.find((item) => item.label === label)!;
+    // El género es un desplegable de la barra de filtros (con el tipo), no una fila de chips; el año sigue en su fila.
+    const facet = (props: ListProps, label: string) =>
+      label === "facetGenre"
+        ? { label, links: props.selects?.find((group) => group.key === "genero")?.options ?? [] }
+        : props.facets.find((item) => item.label === label)!;
 
     it("sin refinamientos: título, contexto, mosaico y filas rotuladas de la década", async () => {
       const props = await open({ decada: "1990" });
@@ -278,10 +284,12 @@ describe("/explore: Explorar por década (openspec: redesign-explore-decades)", 
       expect(props.parentCrumbs).toEqual([]);
       expect(props.baseHref).toBe("/explore?decada=1990");
       expect(props).not.toHaveProperty("lede");
-      expect(props.headerCovers).toEqual(["c1", "c2", "c3", "c4"]);
+      expect(props.hero).toEqual({ display: "1990s", stats: "albumCount · 1990–1999", covers: ["c1", "c2", "c3", "c4"] });
+      expect(props.typeAsSelect).toBe(true);
       expect(props.related).toBeUndefined();
       expect(props.clearHref).toBeUndefined();
-      expect(props.facets.map((item) => item.label)).toEqual(["facetYear", "facetGenre"]);
+      expect(props.facets.map((item) => item.label)).toEqual(["facetYear"]);
+      expect(props.selects?.map((group) => group.label)).toEqual(["facetGenre"]);
     });
 
     it("la fila de años ofrece «Toda la década» marcada y un chip por año, sin pasar el año al listado", async () => {
@@ -387,7 +395,8 @@ describe("/explore: Explorar por década (openspec: redesign-explore-decades)", 
       const genres = facet(props, "facetGenre").links;
 
       expect(genres.map((link) => link.key)).toEqual(["all", "grunge", "hard-rock", "shoegaze"]);
-      expect(genres[3]).toMatchObject({ label: "shoegaze", current: true });
+      // Con mayúscula inicial, como las familias de la portada.
+      expect(genres[3]).toMatchObject({ label: "Shoegaze", current: true });
       expect(genres[0]!.current).toBe(false);
     });
 
@@ -420,7 +429,7 @@ describe("/explore: Explorar por década (openspec: redesign-explore-decades)", 
     it("sin carátulas de la década la cabecera no lleva mosaico", async () => {
       mocks.listDecadeCovers.mockResolvedValue(new Map());
 
-      expect((await open({ decada: "1990" })).headerCovers).toEqual([]);
+      expect((await open({ decada: "1990" })).hero.covers).toEqual([]);
     });
 
     it("una década inválida muestra el estado vacío sin romper la página", async () => {

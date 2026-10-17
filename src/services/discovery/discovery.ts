@@ -778,6 +778,9 @@ export function bestOrderFor({ yearTiebreak = true }: { yearTiebreak?: boolean }
   return [
     // Un disco por salir pertenece a "Próximos", no a "lo mejor": `coalesce` porque sin fecha el booleano sería `null`.
     sql`coalesce(${releaseGroup.firstReleaseDate} > current_date, false) asc`,
+    // Sin carátula confirmada (comprobada y ausente, o retirada) va después de todo lo que tiene o puede tener carátula: una
+    // primera página llena de siluetas de disco no invita a explorar. Un disco aún no comprobado no se mueve (puede tenerla).
+    sql`(${releaseGroup.coverBlockedAt} is not null or (${releaseGroup.coverThumbUrl} is null and ${releaseGroup.coverCheckedAt} is not null)) asc`,
     sql`${eligibleAvg} desc nulls last`,
     sql`${awardScore} desc nulls last`,
     sql`(${releaseGroup.category} = 'studio') desc`,

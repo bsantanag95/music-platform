@@ -170,7 +170,8 @@ algún género efectivo de la familia; el listado por género SHALL incluir los 
 o con cualquiera de sus subgéneros. Una familia o un slug desconocido SHALL mostrar el estado vacío.
 El listado SHALL ordenarse de forma determinista. El orden por defecto, llamado **"Destacados"**
 (no "Mejor valorados"), SHALL ser, en este orden de prioridad: los lanzamientos con fecha posterior a
-hoy al final; luego la valoración agregada del álbum cuando alcanza `MIN_RATINGS_PER_ALBUM`; luego
+hoy al final; luego los discos **sin carátula confirmada** (comprobada y ausente, o retirada) después de
+los demás —un disco cuya carátula aún no se comprobó no se mueve—; luego la valoración agregada del álbum cuando alcanza `MIN_RATINGS_PER_ALBUM`; luego
 el premio (ganador antes que nominado); luego los discos de estudio antes que el resto de tipos;
 luego los de carátula ya resuelta; luego `first_release_year` descendente, con desempate estable por
 identificador. Cuando el listado ya está acotado a una década (o a un año), el año SHALL NOT desempatar:
@@ -182,6 +183,11 @@ el orden pasa de la carátula resuelta directamente al identificador, para que l
 - **WHEN** una persona elige la década de 1990 en `/explore`
 - **THEN** ve un listado paginado de álbumes cuyo `first_release_year` cae en 1990–1999,
   con orden determinista
+
+#### Scenario: Discos sin carátula al final de "Destacados"
+
+- **WHEN** el listado incluye un disco valorado cuya carátula se comprobó y no existe, y discos sin valorar con carátula
+- **THEN** en el orden "Destacados" los discos con carátula (o aún sin comprobar) aparecen antes que el disco sin carátula
 
 #### Scenario: Listado por género
 
