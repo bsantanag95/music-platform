@@ -95,6 +95,7 @@ async function upsertCategories(tx: Tx, awardId: string, files: AwardFiles): Pro
         awardId,
         key: c.key,
         tier: c.tier,
+        field: c.field ?? null,
         subjectKind: c.subject,
         honors: c.honors,
         nameEs: c.name.es,
@@ -105,14 +106,15 @@ async function upsertCategories(tx: Tx, awardId: string, files: AwardFiles): Pro
         target: [awardCategory.awardId, awardCategory.key],
         set: {
           tier: sql`excluded.tier`,
+          field: sql`excluded.field`,
           subjectKind: sql`excluded.subject_kind`,
           honors: sql`excluded.honors`,
           nameEs: sql`excluded.name_es`,
           nameEn: sql`excluded.name_en`,
           sortOrder: sql`excluded.sort_order`,
         },
-        setWhere: sql`(${awardCategory.tier}, ${awardCategory.subjectKind}, ${awardCategory.honors}, ${awardCategory.nameEs}, ${awardCategory.nameEn}, ${awardCategory.sortOrder})
-          IS DISTINCT FROM (excluded.tier, excluded.subject_kind, excluded.honors, excluded.name_es, excluded.name_en, excluded.sort_order)`,
+        setWhere: sql`(${awardCategory.tier}, ${awardCategory.field}, ${awardCategory.subjectKind}, ${awardCategory.honors}, ${awardCategory.nameEs}, ${awardCategory.nameEn}, ${awardCategory.sortOrder})
+          IS DISTINCT FROM (excluded.tier, excluded.field, excluded.subject_kind, excluded.honors, excluded.name_es, excluded.name_en, excluded.sort_order)`,
       });
   }
   const rows = await tx.select({ id: awardCategory.id, key: awardCategory.key, predecessorId: awardCategory.predecessorId })

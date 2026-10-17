@@ -83,7 +83,9 @@ Un **Premio** (los Grammy) se entrega en **Ceremonias** anuales (la 67.ª, de 20
 renombrada, fusionada o dividida es otra, enlazada a la anterior. Una **Nominación** es un candidato de una
 categoría en una ceremonia, ganador o no, y apunta como mucho a un sujeto del catálogo: un Álbum, una Canción
 (grabación, con el disco donde aparece) o un Artista; si no se pudo identificar, queda solo su texto. Cada categoría
-en una ceremonia declara su **cobertura**: completa (todos los nominados) o solo el ganador. Los premios se curan a
+en una ceremonia declara su **cobertura**: completa (todos los nominados) o solo el ganador. Cada categoría pertenece a
+un **nivel** (campo general, por álbum o por género) y las de género, además, a un **campo** (pop, rock y alternativa…).
+Productor del año y Compositor del año tienen como sujeto a una persona, un Artista del catálogo. Los premios se curan a
 mano en archivos versionados (ADR 0032), no los escriben las personas usuarias.
 
 ## Crédito

@@ -126,6 +126,16 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - Una categoría con cobertura "solo ganador" no tiene nominados no ganadores, y la interfaz lo declara en vez de mostrar
   una lista parcial como si fuera completa.
 - Toda categoría de una ceremonia cerrada tiene al menos un ganador; puede tener más de uno (empates).
+- Una categoría con cobertura "completa" tiene al menos tres nominados: menos es casi siempre una carga a medias, y la
+  validación lo rechaza.
+- Las categorías tienen un **nivel** que fija el orden de presentación: campo general (las grandes, Productor y
+  Compositor del año), por álbum ("Mejor álbum de …") y por género (interpretaciones, canciones y grabaciones). El nivel
+  por género se agrupa por **campo** (pop, dance y electrónica, rock y alternativa, R&B, rap, country) y exige declararlo.
+- Productor y Compositor del año premian a una persona: su sujeto es el artista del catálogo y la nominación enlaza a
+  su perfil.
+- No se cubren todas las categorías del premio: solo las transversales, los álbumes de los campos principales y las
+  interpretaciones, canciones y grabaciones de pop, dance/electrónica, rock/metal/alternativa, R&B, rap y country. Quedan
+  fuera las técnicas, las de otros formatos y las de nicho (criterio en `05-features/awards.md`).
 - El sujeto de una nominación coincide con el tipo que premia su categoría (álbum, grabación o artista). Una nominación
   sin sujeto identificado se publica igual, como texto.
 - La carga nunca consulta MusicBrainz: la identificación (MBID) se hace antes, con un script que deja los casos

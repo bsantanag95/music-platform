@@ -8,7 +8,7 @@
 // tipado en las queries de la aplicación, y debe mantenerse sincronizado
 // a mano con cada migración nueva.
 
-import { sql } from "drizzle-orm";
+import { sql, type SQL } from "drizzle-orm";
 import {
   pgTable,
   uuid,
@@ -2000,8 +2000,21 @@ export type ReleaseCalendarSyncRow = typeof releaseCalendarSync.$inferSelect;
 // idempotente.
 // ---------------------------------------------------------------------------
 
-export const AWARD_CATEGORY_TIERS = ["general", "genre"] as const;
+// El orden de la tupla es el orden de presentación (migración 0072, openspec: expand-grammy-categories):
+// campo general, "Mejor álbum de …" y, al final, interpretaciones/canciones/grabaciones por género.
+export const AWARD_CATEGORY_TIERS = ["general", "album", "genre"] as const;
 export type AwardCategoryTier = (typeof AWARD_CATEGORY_TIERS)[number];
+
+/** Posición del nivel en la presentación (0 = primero). Única fuente del orden de niveles. */
+export function awardTierRank(tier: AwardCategoryTier): number {
+  return AWARD_CATEGORY_TIERS.indexOf(tier);
+}
+
+/** El mismo orden como expresión SQL, generada desde la tupla: `order by ${awardTierRankSql(col)}`. */
+export function awardTierRankSql(column: SQL | AnyPgColumn): SQL<number> {
+  const branches = AWARD_CATEGORY_TIERS.map((tier, index) => sql`when ${tier} then ${index}`);
+  return sql<number>`(case ${column} ${sql.join(branches, sql` `)} end)`;
+}
 export const AWARD_SUBJECT_KINDS = ["release_group", "recording", "artist"] as const;
 export type AwardSubjectKind = (typeof AWARD_SUBJECT_KINDS)[number];
 export const AWARD_HONORS = ["performer", "songwriter"] as const;
@@ -2053,6 +2066,8 @@ export const awardCategory = pgTable(
     // Clave estable; una categoría renombrada, fusionada o dividida es otra fila con `predecessorId`.
     key: text("key").notNull(),
     tier: text("tier").$type<AwardCategoryTier>().notNull(),
+    // Campo (pop, rock-alternative…): obligatorio en el nivel `genre`, que agrupa por él; NULL en los demás.
+    field: text("field"),
     subjectKind: text("subject_kind").$type<AwardSubjectKind>().notNull(),
     honors: text("honors").$type<AwardHonors>().notNull().default("performer"),
     nameEs: text("name_es").notNull(),
@@ -2063,7 +2078,9 @@ export const awardCategory = pgTable(
   (t) => [
     unique("uq_award_category_key").on(t.awardId, t.key),
     check("chk_award_category_key", sql`${t.key} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`),
-    check("chk_award_category_tier", sql`${t.tier} IN ('general', 'genre')`),
+    check("chk_award_category_tier", sql`${t.tier} IN ('general', 'album', 'genre')`),
+    check("chk_award_category_field", sql`${t.field} IS NULL OR ${t.field} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`),
+    check("chk_award_category_genre_field", sql`${t.tier} <> 'genre' OR ${t.field} IS NOT NULL`),
     check("chk_award_category_subject", sql`${t.subjectKind} IN ('release_group', 'recording', 'artist')`),
     check("chk_award_category_honors", sql`${t.honors} IN ('performer', 'songwriter')`),
     check("chk_award_category_not_own_predecessor", sql`${t.predecessorId} IS NULL OR ${t.predecessorId} <> ${t.id}`),

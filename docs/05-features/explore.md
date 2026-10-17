@@ -229,7 +229,7 @@ producen listas públicas de `@exploracion` (`kind='standard'`, no oficiales), r
 | Plantilla | Período | Contenido |
 |---|---|---|
 | `new-releases` | `evergreen` | "Novedades esenciales": studio/single_ep de los últimos `NEW_RELEASE_WINDOW_DAYS`, ordenados por la señal de calidad (popularidad del calendario si no hay comunidad) y desempatados por fecha |
-| `grammy-winners` | `<premio>-<año>` | "Ganadores del Grammy {año}": ganadores con álbum (directo o disco ancla) de la última ceremonia cargada; categorías generales primero |
+| `grammy-winners` | `<premio>-<año>` | "Ganadores del Grammy {año}": ganadores con álbum (directo o disco ancla) de la última ceremonia cargada, ordenados por nivel de categoría (general, álbum, género; `awardTierRankSql`) y por clave dentro de cada nivel; los ganadores sin álbum (Productor del año) no entran |
 | `genre-spotlight` | semana ISO + familia (`2026-W43-rock`) | "Para entrar a {familia}": una familia de géneros por semana (rota por el orden de la taxonomía); un álbum por era de 5 años, en orden cronológico |
 | `anniversaries` | mes (`2026-10`) | "Cumplen años en {mes}": studio con fecha completa que cumple 10 años o más en el mes; primero los múltiplos de 5, del mayor al menor; si no alcanzan, cualquier aniversario ≥ 10 |
 | `upcoming` | `evergreen` | "Lo que viene": próximos lanzamientos del calendario enlazados al catálogo, por rango de popularidad, completados con los próximos del catálogo |

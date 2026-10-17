@@ -1068,6 +1068,99 @@
       ]
     },
     {
+      "key": "producer-of-the-year-non-classical",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Andrew Watt",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "00136dd9-1047-4999-af1f-d709c5fa09f9",
+            "seed": {
+              "kind": "artist",
+              "name": "Andrew Watt",
+              "mbType": "Person",
+              "disambiguation": "producer, guitarist, singer, Earthlings, California Breed"
+            }
+          }
+        },
+        {
+          "title": "Jack Antonoff",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1155a7a9-a7b4-46ba-ba27-6b6c98be487e",
+            "seed": {
+              "kind": "artist",
+              "name": "Jack Antonoff",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Dan Auerbach",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "fa4f4b89-3ddc-4e97-88fa-0e30121f986a",
+            "seed": {
+              "kind": "artist",
+              "name": "Dan Auerbach",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Dave Cobb",
+          "won": false,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": [
+              {
+                "mbid": "966a5b7a-eea7-4a09-a408-2e0dee331638",
+                "label": "Dave Cobb (Cobzweb bassist)",
+                "score": 100,
+                "seed": {
+                  "kind": "artist",
+                  "name": "Dave Cobb",
+                  "mbType": "Person",
+                  "disambiguation": "Cobzweb bassist"
+                }
+              },
+              {
+                "mbid": "dec49112-1d81-4424-a9cf-9c43a8460018",
+                "label": "Dave Cobb (producer/songwriter) · US",
+                "score": 100,
+                "seed": {
+                  "kind": "artist",
+                  "name": "Dave Cobb",
+                  "mbType": "Person",
+                  "disambiguation": "producer/songwriter"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "title": "Flying Lotus",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "fc7376fe-1a6f-4414-b4a7-83f50ed59c92",
+            "seed": {
+              "kind": "artist",
+              "name": "Flying Lotus",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        }
+      ]
+    },
+    {
       "key": "best-pop-vocal-album",
       "coverage": "complete",
       "nominees": [
@@ -2067,6 +2160,3955 @@
           "resolved": {
             "status": "not_found",
             "candidates": []
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-pop-solo-performance",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Watermelon Sugar",
+          "artist": "Harry Styles",
+          "anchor": {
+            "title": "Watermelon Sugar",
+            "artist": "Harry Styles"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1ab009f2-d713-4f85-b4a3-c383c344e24a",
+            "seed": {
+              "kind": "recording",
+              "title": "Watermelon Sugar",
+              "durationSec": 174,
+              "credits": [
+                {
+                  "name": "Harry Styles",
+                  "artist": {
+                    "id": "7eb1ce54-a355-41f9-8d68-e018b096d427",
+                    "name": "Harry Styles"
+                  }
+                }
+              ],
+              "anchorMbid": "df371262-5776-4e48-8b41-400425963815",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Watermelon Sugar",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-11-16",
+                "credits": [
+                  {
+                    "name": "Harry Styles",
+                    "artist": {
+                      "id": "7eb1ce54-a355-41f9-8d68-e018b096d427",
+                      "name": "Harry Styles"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Yummy",
+          "artist": "Justin Bieber",
+          "anchor": {
+            "title": "Yummy",
+            "artist": "Justin Bieber"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "4dc241d5-4949-4bd6-83a2-89197f966ec3",
+            "seed": {
+              "kind": "recording",
+              "title": "Yummy",
+              "durationSec": 209,
+              "credits": [
+                {
+                  "name": "Justin Bieber",
+                  "artist": {
+                    "id": "e0140a67-e4d1-4f13-8a01-364355bee46e",
+                    "name": "Justin Bieber"
+                  }
+                }
+              ],
+              "anchorMbid": "b9709020-6368-4e5a-81ff-614b79c80b45",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Yummy",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-01-03",
+                "credits": [
+                  {
+                    "name": "Justin Bieber",
+                    "artist": {
+                      "id": "e0140a67-e4d1-4f13-8a01-364355bee46e",
+                      "name": "Justin Bieber"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Say So",
+          "artist": "Doja Cat",
+          "anchor": {
+            "title": "Say So",
+            "artist": "Doja Cat"
+          },
+          "won": false,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": [
+              {
+                "mbid": "5cd7baaf-e1f7-49fb-981a-cf502c165fe9",
+                "label": "Say So — Doja Cat (explicit)",
+                "score": 100,
+                "seed": {
+                  "kind": "recording",
+                  "title": "Say So",
+                  "durationSec": 238,
+                  "credits": [
+                    {
+                      "name": "Doja Cat",
+                      "artist": {
+                        "id": "5df62a88-cac9-490a-b62c-c7c88f4020f4",
+                        "name": "Doja Cat"
+                      }
+                    }
+                  ],
+                  "anchorMbid": "9344957a-adbc-4e53-929c-03e263b3191e",
+                  "anchor": {
+                    "kind": "release_group",
+                    "title": "Say So",
+                    "category": "single_ep",
+                    "firstReleaseDate": "2020-10-16",
+                    "credits": [
+                      {
+                        "name": "Doja Cat",
+                        "artist": {
+                          "id": "5df62a88-cac9-490a-b62c-c7c88f4020f4",
+                          "name": "Doja Cat"
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "mbid": "e6014ad7-5eee-4fb1-ac01-96067c53229e",
+                "label": "Say So — Doja Cat feat. Nicki Minaj (explicit)",
+                "score": 100,
+                "seed": {
+                  "kind": "recording",
+                  "title": "Say So",
+                  "durationSec": 206,
+                  "credits": [
+                    {
+                      "name": "Doja Cat",
+                      "joinphrase": " feat. ",
+                      "artist": {
+                        "id": "5df62a88-cac9-490a-b62c-c7c88f4020f4",
+                        "name": "Doja Cat"
+                      }
+                    },
+                    {
+                      "name": "Nicki Minaj",
+                      "artist": {
+                        "id": "1036b808-f58c-4a3e-b461-a2c4492ecf1b",
+                        "name": "Nicki Minaj"
+                      }
+                    }
+                  ],
+                  "anchorMbid": "9344957a-adbc-4e53-929c-03e263b3191e",
+                  "anchor": {
+                    "kind": "release_group",
+                    "title": "Say So",
+                    "category": "single_ep",
+                    "firstReleaseDate": "2020-10-16",
+                    "credits": [
+                      {
+                        "name": "Doja Cat",
+                        "artist": {
+                          "id": "5df62a88-cac9-490a-b62c-c7c88f4020f4",
+                          "name": "Doja Cat"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "title": "Everything I Wanted",
+          "artist": "Billie Eilish",
+          "anchor": {
+            "title": "Everything I Wanted",
+            "artist": "Billie Eilish"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c205a615-d1ee-468c-9fca-dda3cf8f9937",
+            "seed": {
+              "kind": "recording",
+              "title": "everything i wanted",
+              "durationSec": 245,
+              "credits": [
+                {
+                  "name": "Billie Eilish",
+                  "artist": {
+                    "id": "f4abc0b5-3f7a-4eff-8f78-ac078dbce533",
+                    "name": "Billie Eilish"
+                  }
+                }
+              ],
+              "anchorMbid": "bf16775d-b2e2-4e8b-9122-ef80cda6e461",
+              "anchor": {
+                "kind": "release_group",
+                "title": "everything i wanted",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-11-13",
+                "credits": [
+                  {
+                    "name": "Billie Eilish",
+                    "artist": {
+                      "id": "f4abc0b5-3f7a-4eff-8f78-ac078dbce533",
+                      "name": "Billie Eilish"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Don't Start Now",
+          "artist": "Dua Lipa",
+          "anchor": {
+            "title": "Don't Start Now",
+            "artist": "Dua Lipa"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6090c671-606f-4704-85c6-8a0c33763a3d",
+            "seed": {
+              "kind": "recording",
+              "title": "Don’t Start Now",
+              "durationSec": 183,
+              "credits": [
+                {
+                  "name": "Dua Lipa",
+                  "artist": {
+                    "id": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+                    "name": "Dua Lipa"
+                  }
+                }
+              ],
+              "anchorMbid": "5ba758cb-345a-4335-bba5-71adc18e14d9",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Don’t Start Now",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-10-30",
+                "credits": [
+                  {
+                    "name": "Dua Lipa",
+                    "artist": {
+                      "id": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+                      "name": "Dua Lipa"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Cardigan",
+          "artist": "Taylor Swift",
+          "anchor": {
+            "title": "Cardigan",
+            "artist": "Taylor Swift"
+          },
+          "won": false,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": [
+              {
+                "mbid": "275c75bf-c102-474e-b5ea-cfb3a18af34a",
+                "label": "cardigan — Taylor Swift",
+                "score": 100,
+                "seed": {
+                  "kind": "recording",
+                  "title": "cardigan",
+                  "durationSec": 274,
+                  "credits": [
+                    {
+                      "name": "Taylor Swift",
+                      "artist": {
+                        "id": "20244d07-534f-4eff-b4d4-930878889970",
+                        "name": "Taylor Swift"
+                      }
+                    }
+                  ],
+                  "anchorMbid": "3b570313-419f-4654-84be-5f8489b9cfa7",
+                  "anchor": {
+                    "kind": "release_group",
+                    "title": "cardigan",
+                    "category": "single_ep",
+                    "firstReleaseDate": "2020-07-24",
+                    "credits": [
+                      {
+                        "name": "Taylor Swift",
+                        "artist": {
+                          "id": "20244d07-534f-4eff-b4d4-930878889970",
+                          "name": "Taylor Swift"
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "mbid": "20a9ef25-b557-4770-8477-e1ca3a060eee",
+                "label": "cardigan — Taylor Swift",
+                "score": 100,
+                "seed": {
+                  "kind": "recording",
+                  "title": "cardigan",
+                  "durationSec": 240,
+                  "credits": [
+                    {
+                      "name": "Taylor Swift",
+                      "artist": {
+                        "id": "20244d07-534f-4eff-b4d4-930878889970",
+                        "name": "Taylor Swift"
+                      }
+                    }
+                  ],
+                  "anchorMbid": "3b570313-419f-4654-84be-5f8489b9cfa7",
+                  "anchor": {
+                    "kind": "release_group",
+                    "title": "cardigan",
+                    "category": "single_ep",
+                    "firstReleaseDate": "2020-07-24",
+                    "credits": [
+                      {
+                        "name": "Taylor Swift",
+                        "artist": {
+                          "id": "20244d07-534f-4eff-b4d4-930878889970",
+                          "name": "Taylor Swift"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-pop-duo-group-performance",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Rain on Me",
+          "artist": "Lady Gaga & Ariana Grande",
+          "anchor": {
+            "title": "Rain on Me",
+            "artist": "Lady Gaga"
+          },
+          "searchAs": {
+            "artist": "Lady Gaga"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a0eb8c91-e3ce-4fef-a9d7-3d03753c6ece",
+            "seed": {
+              "kind": "recording",
+              "title": "Rain on Me",
+              "durationSec": 182,
+              "credits": [
+                {
+                  "name": "Lady Gaga",
+                  "joinphrase": " with ",
+                  "artist": {
+                    "id": "650e7db6-b795-4eb5-a702-5ea2fc46c848",
+                    "name": "Lady Gaga"
+                  }
+                },
+                {
+                  "name": "Ariana Grande",
+                  "artist": {
+                    "id": "f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387",
+                    "name": "Ariana Grande"
+                  }
+                }
+              ],
+              "anchorMbid": "06c74f2f-e1ee-4c32-aee0-3bbbbb02bd11",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Rain on Me",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-05-22",
+                "credits": [
+                  {
+                    "name": "Lady Gaga",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "650e7db6-b795-4eb5-a702-5ea2fc46c848",
+                      "name": "Lady Gaga"
+                    }
+                  },
+                  {
+                    "name": "Ariana Grande",
+                    "artist": {
+                      "id": "f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387",
+                      "name": "Ariana Grande"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Un Día (One Day)",
+          "artist": "J Balvin, Dua Lipa, Bad Bunny & Tainy",
+          "anchor": {
+            "title": "Un Día (One Day)",
+            "artist": "J Balvin"
+          },
+          "searchAs": {
+            "artist": "J Balvin"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "000945fc-687c-4d00-90b4-4a4b741ca0bb",
+            "seed": {
+              "kind": "recording",
+              "title": "UN DÍA (ONE DAY)",
+              "durationSec": 232,
+              "credits": [
+                {
+                  "name": "J Balvin",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "5bdeb32d-56a5-4b6d-a768-264101fa0a0a",
+                    "name": "J Balvin"
+                  }
+                },
+                {
+                  "name": "Dua Lipa",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+                    "name": "Dua Lipa"
+                  }
+                },
+                {
+                  "name": "Bad Bunny",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "89aa5ecb-59ad-46f5-b3eb-2d424e941f19",
+                    "name": "Bad Bunny"
+                  }
+                },
+                {
+                  "name": "Tainy",
+                  "artist": {
+                    "id": "7e92584c-ca97-48bf-8a12-0327db0f6ac8",
+                    "name": "Tainy"
+                  }
+                }
+              ],
+              "anchorMbid": "3e0b6f92-3349-4c2d-beb7-cbf2151bf948",
+              "anchor": {
+                "kind": "release_group",
+                "title": "UN DÍA (ONE DAY)",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-07-24",
+                "credits": [
+                  {
+                    "name": "J.Balvin",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "5bdeb32d-56a5-4b6d-a768-264101fa0a0a",
+                      "name": "J Balvin"
+                    }
+                  },
+                  {
+                    "name": "Dua Lipa",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+                      "name": "Dua Lipa"
+                    }
+                  },
+                  {
+                    "name": "Bad Bunny",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "89aa5ecb-59ad-46f5-b3eb-2d424e941f19",
+                      "name": "Bad Bunny"
+                    }
+                  },
+                  {
+                    "name": "Tainy",
+                    "artist": {
+                      "id": "7e92584c-ca97-48bf-8a12-0327db0f6ac8",
+                      "name": "Tainy"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Intentions",
+          "artist": "Justin Bieber featuring Quavo",
+          "anchor": {
+            "title": "Intentions",
+            "artist": "Justin Bieber"
+          },
+          "searchAs": {
+            "artist": "Justin Bieber"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6343d1f0-8e04-42e4-b3ab-d6c31e751b53",
+            "seed": {
+              "kind": "recording",
+              "title": "Intentions (acoustic)",
+              "durationSec": 161,
+              "credits": [
+                {
+                  "name": "Justin Bieber",
+                  "artist": {
+                    "id": "e0140a67-e4d1-4f13-8a01-364355bee46e",
+                    "name": "Justin Bieber"
+                  }
+                }
+              ],
+              "anchorMbid": "4c66e111-8d9b-4273-9ad7-a5db448e80c1",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Intentions (acoustic)",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-03-19",
+                "credits": [
+                  {
+                    "name": "Justin Bieber",
+                    "artist": {
+                      "id": "e0140a67-e4d1-4f13-8a01-364355bee46e",
+                      "name": "Justin Bieber"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Dynamite",
+          "artist": "BTS",
+          "anchor": {
+            "title": "Dynamite",
+            "artist": "BTS"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "db965fe4-9e56-4fc7-837b-b2a0dcdb3206",
+            "seed": {
+              "kind": "recording",
+              "title": "Dynamite",
+              "durationSec": 199,
+              "credits": [
+                {
+                  "name": "BTS",
+                  "artist": {
+                    "id": "0d79fe8e-ba27-4859-bb8c-2f255f346853",
+                    "name": "BTS"
+                  }
+                }
+              ],
+              "anchorMbid": "d0d03eaa-d880-4c12-b3ae-3013e327ed90",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Dynamite",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-08-21",
+                "credits": [
+                  {
+                    "name": "BTS",
+                    "artist": {
+                      "id": "0d79fe8e-ba27-4859-bb8c-2f255f346853",
+                      "name": "BTS"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Exile",
+          "artist": "Taylor Swift featuring Bon Iver",
+          "anchor": {
+            "title": "Exile",
+            "artist": "Taylor Swift"
+          },
+          "searchAs": {
+            "artist": "Taylor Swift"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "32061334-1403-431a-8efb-3c0a8d7b97df",
+            "seed": {
+              "kind": "recording",
+              "title": "exile (lyric video)",
+              "durationSec": 286,
+              "credits": [
+                {
+                  "name": "Taylor Swift",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "20244d07-534f-4eff-b4d4-930878889970",
+                    "name": "Taylor Swift"
+                  }
+                },
+                {
+                  "name": "Bon Iver",
+                  "artist": {
+                    "id": "437a0e49-c6ae-42f6-a6c1-84f25ed366bc",
+                    "name": "Bon Iver"
+                  }
+                }
+              ],
+              "anchorMbid": "fc3f7d2f-f537-4508-8f28-6f5c32a28f9e",
+              "anchor": {
+                "kind": "release_group",
+                "title": "exile",
+                "category": "live_other",
+                "firstReleaseDate": "2020-07-24",
+                "credits": [
+                  {
+                    "name": "Taylor Swift",
+                    "joinphrase": " feat. ",
+                    "artist": {
+                      "id": "20244d07-534f-4eff-b4d4-930878889970",
+                      "name": "Taylor Swift"
+                    }
+                  },
+                  {
+                    "name": "Bon Iver",
+                    "artist": {
+                      "id": "437a0e49-c6ae-42f6-a6c1-84f25ed366bc",
+                      "name": "Bon Iver"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-dance-recording",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "10%",
+          "artist": "Kaytranada featuring Kali Uchis",
+          "anchor": {
+            "title": "10%",
+            "artist": "Kaytranada"
+          },
+          "searchAs": {
+            "artist": "Kaytranada"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a3ac343a-ed3c-4d79-9e7f-ed0c5ba361c7",
+            "seed": {
+              "kind": "recording",
+              "title": "KAYTRA2018 07 10 1K",
+              "durationSec": 142,
+              "credits": [
+                {
+                  "name": "KAYTRANADA",
+                  "artist": {
+                    "id": "e56aee57-d90e-40cf-a70d-beb70f6f3c69",
+                    "name": "KAYTRANADA"
+                  }
+                }
+              ],
+              "anchorMbid": "4e9b71d8-05c5-46f6-bdb1-5d97b8082470",
+              "anchor": {
+                "kind": "release_group",
+                "title": "KAYTRA2018 07 10 1K",
+                "category": "single_ep",
+                "firstReleaseDate": "2022-11-19",
+                "credits": [
+                  {
+                    "name": "KAYTRANADA",
+                    "artist": {
+                      "id": "e56aee57-d90e-40cf-a70d-beb70f6f3c69",
+                      "name": "KAYTRANADA"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "On My Mind",
+          "artist": "Diplo & Sidepiece",
+          "anchor": {
+            "title": "On My Mind",
+            "artist": "Diplo"
+          },
+          "searchAs": {
+            "artist": "Diplo"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "49c65f3e-995e-4cfb-aa5e-4ad9aacb35f9",
+            "seed": {
+              "kind": "recording",
+              "title": "On My Mind",
+              "durationSec": 189,
+              "credits": [
+                {
+                  "name": "Diplo",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "a56bd8f9-8ef8-4d63-89a4-794ed1360dd2",
+                    "name": "Diplo"
+                  }
+                },
+                {
+                  "name": "SIDEPIECE",
+                  "artist": {
+                    "id": "9afee8b9-0cb8-4e85-9d20-329dbf7d8cc5",
+                    "name": "SIDEPIECE"
+                  }
+                }
+              ],
+              "anchorMbid": "09310614-3851-4042-9d3d-7547c0eaad33",
+              "anchor": {
+                "kind": "release_group",
+                "title": "On My Mind",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-12-13",
+                "credits": [
+                  {
+                    "name": "Diplo",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "a56bd8f9-8ef8-4d63-89a4-794ed1360dd2",
+                      "name": "Diplo"
+                    }
+                  },
+                  {
+                    "name": "SIDEPIECE",
+                    "artist": {
+                      "id": "9afee8b9-0cb8-4e85-9d20-329dbf7d8cc5",
+                      "name": "SIDEPIECE"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "My High",
+          "artist": "Disclosure, Aminé and Slowthai",
+          "anchor": {
+            "title": "My High",
+            "artist": "Disclosure"
+          },
+          "searchAs": {
+            "artist": "Disclosure"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c76d67da-642f-4dea-b522-bb1d648e5fc7",
+            "seed": {
+              "kind": "recording",
+              "title": "My High",
+              "durationSec": 295,
+              "credits": [
+                {
+                  "name": "Disclosure",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "ae65c507-d9a0-4d42-9a6c-2b1f82158b9f",
+                    "name": "Disclosure"
+                  }
+                },
+                {
+                  "name": "slowthai",
+                  "artist": {
+                    "id": "333e76b4-9606-4fd3-bcb3-8e7660bb4d96",
+                    "name": "slowthai"
+                  }
+                }
+              ],
+              "anchorMbid": "cb7870af-8c12-4afd-a035-1ee230931008",
+              "anchor": {
+                "kind": "release_group",
+                "title": "My High",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-06-30",
+                "credits": [
+                  {
+                    "name": "Disclosure",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "ae65c507-d9a0-4d42-9a6c-2b1f82158b9f",
+                      "name": "Disclosure"
+                    }
+                  },
+                  {
+                    "name": "slowthai",
+                    "artist": {
+                      "id": "333e76b4-9606-4fd3-bcb3-8e7660bb4d96",
+                      "name": "slowthai"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "The Difference",
+          "artist": "Flume featuring Toro y Moi",
+          "anchor": {
+            "title": "The Difference",
+            "artist": "Flume"
+          },
+          "searchAs": {
+            "artist": "Flume"
+          },
+          "won": false,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": [
+              {
+                "mbid": "34350fac-a2b6-4e9e-8d2a-e21c461d62a8",
+                "label": "The Difference — Flume feat. Toro y Moi",
+                "score": 100,
+                "seed": {
+                  "kind": "recording",
+                  "title": "The Difference",
+                  "durationSec": 140,
+                  "credits": [
+                    {
+                      "name": "Flume",
+                      "joinphrase": " feat. ",
+                      "artist": {
+                        "id": "35fd8d42-b4a6-4414-9827-8766bd0daa3c",
+                        "name": "Flume"
+                      }
+                    },
+                    {
+                      "name": "Toro y Moi",
+                      "artist": {
+                        "id": "3a6d6481-142d-423f-91d4-55bbfff318ed",
+                        "name": "Toro y Moi"
+                      }
+                    }
+                  ],
+                  "anchorMbid": "0769e16d-a609-4cbb-a275-13c4b8cf6f0e",
+                  "anchor": {
+                    "kind": "release_group",
+                    "title": "The Difference",
+                    "category": "single_ep",
+                    "firstReleaseDate": "2020-03-11",
+                    "credits": [
+                      {
+                        "name": "Flume",
+                        "joinphrase": " feat. ",
+                        "artist": {
+                          "id": "35fd8d42-b4a6-4414-9827-8766bd0daa3c",
+                          "name": "Flume"
+                        }
+                      },
+                      {
+                        "name": "Toro y Moi",
+                        "artist": {
+                          "id": "3a6d6481-142d-423f-91d4-55bbfff318ed",
+                          "name": "Toro y Moi"
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "mbid": "6c87890d-79c5-4ba1-8a4d-bd047abe224d",
+                "label": "The Difference — Flume feat. Toro y Moi",
+                "score": 100,
+                "seed": {
+                  "kind": "recording",
+                  "title": "The Difference",
+                  "durationSec": 140,
+                  "credits": [
+                    {
+                      "name": "Flume",
+                      "joinphrase": " feat. ",
+                      "artist": {
+                        "id": "35fd8d42-b4a6-4414-9827-8766bd0daa3c",
+                        "name": "Flume"
+                      }
+                    },
+                    {
+                      "name": "Toro y Moi",
+                      "artist": {
+                        "id": "3a6d6481-142d-423f-91d4-55bbfff318ed",
+                        "name": "Toro y Moi"
+                      }
+                    }
+                  ],
+                  "anchorMbid": "0769e16d-a609-4cbb-a275-13c4b8cf6f0e",
+                  "anchor": {
+                    "kind": "release_group",
+                    "title": "The Difference",
+                    "category": "single_ep",
+                    "firstReleaseDate": "2020-03-11",
+                    "credits": [
+                      {
+                        "name": "Flume",
+                        "joinphrase": " feat. ",
+                        "artist": {
+                          "id": "35fd8d42-b4a6-4414-9827-8766bd0daa3c",
+                          "name": "Flume"
+                        }
+                      },
+                      {
+                        "name": "Toro y Moi",
+                        "artist": {
+                          "id": "3a6d6481-142d-423f-91d4-55bbfff318ed",
+                          "name": "Toro y Moi"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "title": "Both of Us",
+          "artist": "Jayda G",
+          "anchor": {
+            "title": "Both of Us",
+            "artist": "Jayda G"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "7fecd6fb-0b78-4c5e-9b4a-70dd326dcfc9",
+            "seed": {
+              "kind": "recording",
+              "title": "Both of Us",
+              "durationSec": 354,
+              "credits": [
+                {
+                  "name": "Jayda G",
+                  "artist": {
+                    "id": "b6ba12ae-1304-46b3-b96b-9be22dbdab4a",
+                    "name": "Jayda G"
+                  }
+                }
+              ],
+              "anchorMbid": "b2fd8739-0e09-4af5-8541-1ea9db404125",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Both of Us",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-05-26",
+                "credits": [
+                  {
+                    "name": "Jayda G",
+                    "artist": {
+                      "id": "b6ba12ae-1304-46b3-b96b-9be22dbdab4a",
+                      "name": "Jayda G"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-rock-performance",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Shameika",
+          "artist": "Fiona Apple",
+          "anchor": {
+            "title": "Shameika",
+            "artist": "Fiona Apple"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "64dc1582-8cdc-4470-891f-3a98e5f7d041",
+            "seed": {
+              "kind": "recording",
+              "title": "Shameika Said",
+              "durationSec": 179,
+              "credits": [
+                {
+                  "name": "Shameika",
+                  "joinphrase": " ft. ",
+                  "artist": {
+                    "id": "23c37ef7-32a0-414b-8f1d-6863967cbe76",
+                    "name": "Shameika"
+                  }
+                },
+                {
+                  "name": "Fiona Apple",
+                  "artist": {
+                    "id": "a9ee533f-8871-4f62-a6bb-91eb264abc90",
+                    "name": "Fiona Apple"
+                  }
+                }
+              ],
+              "anchorMbid": "d41686b0-d5ea-46a8-a070-bfff4e77b317",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Shameika Said",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-11-20",
+                "credits": [
+                  {
+                    "name": "Shameika",
+                    "joinphrase": " ft. ",
+                    "artist": {
+                      "id": "23c37ef7-32a0-414b-8f1d-6863967cbe76",
+                      "name": "Shameika"
+                    }
+                  },
+                  {
+                    "name": "Fiona Apple",
+                    "artist": {
+                      "id": "a9ee533f-8871-4f62-a6bb-91eb264abc90",
+                      "name": "Fiona Apple"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "The Steps",
+          "artist": "HAIM",
+          "anchor": {
+            "title": "The Steps",
+            "artist": "HAIM"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "0bb07f2f-fa18-404b-9242-8d06a1f958a0",
+            "seed": {
+              "kind": "recording",
+              "title": "The Steps",
+              "durationSec": 248,
+              "credits": [
+                {
+                  "name": "HAIM",
+                  "artist": {
+                    "id": "aef06569-098f-4218-a577-b413944d9493",
+                    "name": "HAIM"
+                  }
+                }
+              ],
+              "anchorMbid": "2649251b-9a90-48c3-aae3-7728fe0c7b3c",
+              "anchor": {
+                "kind": "release_group",
+                "title": "The Steps",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-03-03",
+                "credits": [
+                  {
+                    "name": "HAIM",
+                    "artist": {
+                      "id": "aef06569-098f-4218-a577-b413944d9493",
+                      "name": "HAIM"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Stay High",
+          "artist": "Brittany Howard",
+          "anchor": {
+            "title": "Stay High",
+            "artist": "Brittany Howard"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ded2f8a0-5b16-41f2-98e4-dac2e427225a",
+            "seed": {
+              "kind": "recording",
+              "title": "Stay High",
+              "durationSec": 191,
+              "credits": [
+                {
+                  "name": "Brittany Howard",
+                  "artist": {
+                    "id": "03eda2c4-a2b3-4a4e-9527-6791b0ed9d2d",
+                    "name": "Brittany Howard"
+                  }
+                }
+              ],
+              "anchorMbid": "e9d5f4d2-d99d-4221-9aeb-9605267a27d5",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Stay High",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-07-16",
+                "credits": [
+                  {
+                    "name": "Brittany Howard",
+                    "artist": {
+                      "id": "03eda2c4-a2b3-4a4e-9527-6791b0ed9d2d",
+                      "name": "Brittany Howard"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Not",
+          "artist": "Big Thief",
+          "anchor": {
+            "title": "Not",
+            "artist": "Big Thief"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d7a83b9e-3623-4a2f-8a19-715a8ae374a5",
+            "seed": {
+              "kind": "recording",
+              "title": "Not",
+              "durationSec": 367,
+              "credits": [
+                {
+                  "name": "Big Thief",
+                  "artist": {
+                    "id": "9f81247f-7f57-42f3-a8ba-75bef554e591",
+                    "name": "Big Thief"
+                  }
+                }
+              ],
+              "anchorMbid": "7e939c92-8327-435b-aa43-3c55434e6fda",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Not",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-08-13",
+                "credits": [
+                  {
+                    "name": "Big Thief",
+                    "artist": {
+                      "id": "9f81247f-7f57-42f3-a8ba-75bef554e591",
+                      "name": "Big Thief"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Kyoto",
+          "artist": "Phoebe Bridgers",
+          "anchor": {
+            "title": "Kyoto",
+            "artist": "Phoebe Bridgers"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "da642ef6-64db-4adf-8aeb-8ad4cacb6966",
+            "seed": {
+              "kind": "recording",
+              "title": "Kyoto",
+              "durationSec": 185,
+              "credits": [
+                {
+                  "name": "Phoebe Bridgers",
+                  "artist": {
+                    "id": "96855c21-b832-4366-ba12-0d2330c36a86",
+                    "name": "Phoebe Bridgers"
+                  }
+                }
+              ],
+              "anchorMbid": "83643054-a4d1-438a-b0cf-7c0c4ae841d3",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Kyoto",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-04-09",
+                "credits": [
+                  {
+                    "name": "Phoebe Bridgers",
+                    "artist": {
+                      "id": "96855c21-b832-4366-ba12-0d2330c36a86",
+                      "name": "Phoebe Bridgers"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Daylight",
+          "artist": "Grace Potter",
+          "anchor": {
+            "title": "Daylight",
+            "artist": "Grace Potter"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "8e55ebb3-ffac-4c90-9f9d-e916a425370b",
+            "seed": {
+              "kind": "recording",
+              "title": "Daylight",
+              "durationSec": 262,
+              "credits": [
+                {
+                  "name": "Grace Potter",
+                  "artist": {
+                    "id": "b1103b87-3b91-4ec5-9d7b-15c2d1e486af",
+                    "name": "Grace Potter"
+                  }
+                }
+              ],
+              "anchorMbid": "fdec1982-00ee-4c7f-9903-be50c35bbacf",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Daylight",
+                "category": "studio",
+                "firstReleaseDate": "2019-10-25",
+                "credits": [
+                  {
+                    "name": "Grace Potter",
+                    "artist": {
+                      "id": "b1103b87-3b91-4ec5-9d7b-15c2d1e486af",
+                      "name": "Grace Potter"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-metal-performance",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Bum-Rush",
+          "artist": "Body Count",
+          "anchor": {
+            "title": "Bum-Rush",
+            "artist": "Body Count"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "014d9e53-fff3-49fd-b27b-3ff6606bc673",
+            "seed": {
+              "kind": "recording",
+              "title": "Bum‐Rush",
+              "durationSec": 204,
+              "credits": [
+                {
+                  "name": "Body Count",
+                  "artist": {
+                    "id": "8b12db5d-54a9-4014-9fa8-d646ac291361",
+                    "name": "Body Count"
+                  }
+                }
+              ],
+              "anchorMbid": "bfe55430-e92b-48db-9ca0-052e377c17b5",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Bum‐Rush",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-02-21",
+                "credits": [
+                  {
+                    "name": "Body Count",
+                    "artist": {
+                      "id": "8b12db5d-54a9-4014-9fa8-d646ac291361",
+                      "name": "Body Count"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Underneath",
+          "artist": "Code Orange",
+          "anchor": {
+            "title": "Underneath",
+            "artist": "Code Orange"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "722d628a-a914-44e8-a990-a4bd9c9cfb0e",
+            "seed": {
+              "kind": "recording",
+              "title": "Underneath",
+              "durationSec": 279,
+              "credits": [
+                {
+                  "name": "Code Orange",
+                  "artist": {
+                    "id": "b87d5807-c37a-4d0e-a53c-9cdf6bc6caa1",
+                    "name": "Code Orange"
+                  }
+                }
+              ],
+              "anchorMbid": "b047b25c-d99b-47d2-ad08-6f15ce21be5e",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Underneath",
+                "category": "studio",
+                "firstReleaseDate": "2020-03-13",
+                "credits": [
+                  {
+                    "name": "Code Orange",
+                    "artist": {
+                      "id": "b87d5807-c37a-4d0e-a53c-9cdf6bc6caa1",
+                      "name": "Code Orange"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "The In-Between",
+          "artist": "In This Moment",
+          "anchor": {
+            "title": "The In-Between",
+            "artist": "In This Moment"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "8d637b49-a808-4fd4-9e49-e479344056f1",
+            "seed": {
+              "kind": "recording",
+              "title": "The In‐Between",
+              "durationSec": 255,
+              "credits": [
+                {
+                  "name": "In This Moment",
+                  "artist": {
+                    "id": "29266b3d-b5ae-4d09-b721-326246adf68f",
+                    "name": "In This Moment"
+                  }
+                }
+              ],
+              "anchorMbid": "5f3c3446-0349-425e-a817-0029e1f15ae2",
+              "anchor": {
+                "kind": "release_group",
+                "title": "The In-Between",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-01-22",
+                "credits": [
+                  {
+                    "name": "In This Moment",
+                    "artist": {
+                      "id": "29266b3d-b5ae-4d09-b721-326246adf68f",
+                      "name": "In This Moment"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Bloodmoney",
+          "artist": "Poppy",
+          "anchor": {
+            "title": "Bloodmoney",
+            "artist": "Poppy"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1aed735a-e752-4607-8822-a32e43d83e4c",
+            "seed": {
+              "kind": "recording",
+              "title": "BLOODMONEY",
+              "durationSec": 183,
+              "credits": [
+                {
+                  "name": "Poppy",
+                  "artist": {
+                    "id": "4ad8190b-d2fd-46f8-a3d9-c0f55c034976",
+                    "name": "Poppy"
+                  }
+                }
+              ],
+              "anchorMbid": "11867516-c82e-4742-acbc-48626252d53a",
+              "anchor": {
+                "kind": "release_group",
+                "title": "BLOODMONEY",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-11-06",
+                "credits": [
+                  {
+                    "name": "Poppy",
+                    "artist": {
+                      "id": "4ad8190b-d2fd-46f8-a3d9-c0f55c034976",
+                      "name": "Poppy"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Executioner's Tax (Swing of the Axe)",
+          "artist": "Power Trip",
+          "anchor": {
+            "title": "Executioner's Tax (Swing of the Axe)",
+            "artist": "Power Trip"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-rock-song",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Stay High",
+          "artist": "Brittany Howard",
+          "anchor": {
+            "title": "Stay High",
+            "artist": "Brittany Howard"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ded2f8a0-5b16-41f2-98e4-dac2e427225a",
+            "seed": {
+              "kind": "recording",
+              "title": "Stay High",
+              "durationSec": 191,
+              "credits": [
+                {
+                  "name": "Brittany Howard",
+                  "artist": {
+                    "id": "03eda2c4-a2b3-4a4e-9527-6791b0ed9d2d",
+                    "name": "Brittany Howard"
+                  }
+                }
+              ],
+              "anchorMbid": "e9d5f4d2-d99d-4221-9aeb-9605267a27d5",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Stay High",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-07-16",
+                "credits": [
+                  {
+                    "name": "Brittany Howard",
+                    "artist": {
+                      "id": "03eda2c4-a2b3-4a4e-9527-6791b0ed9d2d",
+                      "name": "Brittany Howard"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Kyoto",
+          "artist": "Phoebe Bridgers",
+          "anchor": {
+            "title": "Kyoto",
+            "artist": "Phoebe Bridgers"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "da642ef6-64db-4adf-8aeb-8ad4cacb6966",
+            "seed": {
+              "kind": "recording",
+              "title": "Kyoto",
+              "durationSec": 185,
+              "credits": [
+                {
+                  "name": "Phoebe Bridgers",
+                  "artist": {
+                    "id": "96855c21-b832-4366-ba12-0d2330c36a86",
+                    "name": "Phoebe Bridgers"
+                  }
+                }
+              ],
+              "anchorMbid": "83643054-a4d1-438a-b0cf-7c0c4ae841d3",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Kyoto",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-04-09",
+                "credits": [
+                  {
+                    "name": "Phoebe Bridgers",
+                    "artist": {
+                      "id": "96855c21-b832-4366-ba12-0d2330c36a86",
+                      "name": "Phoebe Bridgers"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Lost in Yesterday",
+          "artist": "Tame Impala",
+          "anchor": {
+            "title": "Lost in Yesterday",
+            "artist": "Tame Impala"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "4c4cba2e-a6a2-44ca-beac-560d33c923ed",
+            "seed": {
+              "kind": "recording",
+              "title": "Lost in Yesterday",
+              "durationSec": 250,
+              "credits": [
+                {
+                  "name": "Tame Impala",
+                  "artist": {
+                    "id": "63aa26c3-d59b-4da4-84ac-716b54f1ef4d",
+                    "name": "Tame Impala"
+                  }
+                }
+              ],
+              "anchorMbid": "8142e3dd-be7f-412f-947a-adbd45a9ae3e",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Lost in Yesterday",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-01-08",
+                "credits": [
+                  {
+                    "name": "Tame Impala",
+                    "artist": {
+                      "id": "63aa26c3-d59b-4da4-84ac-716b54f1ef4d",
+                      "name": "Tame Impala"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Not",
+          "artist": "Big Thief",
+          "anchor": {
+            "title": "Not",
+            "artist": "Big Thief"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d7a83b9e-3623-4a2f-8a19-715a8ae374a5",
+            "seed": {
+              "kind": "recording",
+              "title": "Not",
+              "durationSec": 367,
+              "credits": [
+                {
+                  "name": "Big Thief",
+                  "artist": {
+                    "id": "9f81247f-7f57-42f3-a8ba-75bef554e591",
+                    "name": "Big Thief"
+                  }
+                }
+              ],
+              "anchorMbid": "7e939c92-8327-435b-aa43-3c55434e6fda",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Not",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-08-13",
+                "credits": [
+                  {
+                    "name": "Big Thief",
+                    "artist": {
+                      "id": "9f81247f-7f57-42f3-a8ba-75bef554e591",
+                      "name": "Big Thief"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Shameika",
+          "artist": "Fiona Apple",
+          "anchor": {
+            "title": "Shameika",
+            "artist": "Fiona Apple"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "64dc1582-8cdc-4470-891f-3a98e5f7d041",
+            "seed": {
+              "kind": "recording",
+              "title": "Shameika Said",
+              "durationSec": 179,
+              "credits": [
+                {
+                  "name": "Shameika",
+                  "joinphrase": " ft. ",
+                  "artist": {
+                    "id": "23c37ef7-32a0-414b-8f1d-6863967cbe76",
+                    "name": "Shameika"
+                  }
+                },
+                {
+                  "name": "Fiona Apple",
+                  "artist": {
+                    "id": "a9ee533f-8871-4f62-a6bb-91eb264abc90",
+                    "name": "Fiona Apple"
+                  }
+                }
+              ],
+              "anchorMbid": "d41686b0-d5ea-46a8-a070-bfff4e77b317",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Shameika Said",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-11-20",
+                "credits": [
+                  {
+                    "name": "Shameika",
+                    "joinphrase": " ft. ",
+                    "artist": {
+                      "id": "23c37ef7-32a0-414b-8f1d-6863967cbe76",
+                      "name": "Shameika"
+                    }
+                  },
+                  {
+                    "name": "Fiona Apple",
+                    "artist": {
+                      "id": "a9ee533f-8871-4f62-a6bb-91eb264abc90",
+                      "name": "Fiona Apple"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-rnb-performance",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Black Parade",
+          "artist": "Beyoncé",
+          "anchor": {
+            "title": "Black Parade",
+            "artist": "Beyoncé"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "89ac67a4-5deb-4286-9956-6c3d773e0ae0",
+            "seed": {
+              "kind": "recording",
+              "title": "BLACK PARADE",
+              "durationSec": 281,
+              "credits": [
+                {
+                  "name": "Beyoncé",
+                  "artist": {
+                    "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                    "name": "Beyoncé"
+                  }
+                }
+              ],
+              "anchorMbid": "7bbaafd2-70c1-44c9-a17e-d4d8f52e4a57",
+              "anchor": {
+                "kind": "release_group",
+                "title": "BLACK PARADE",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-06-19",
+                "credits": [
+                  {
+                    "name": "Beyoncé",
+                    "artist": {
+                      "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                      "name": "Beyoncé"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Lightning & Thunder",
+          "artist": "Jhené Aiko featuring John Legend",
+          "anchor": {
+            "title": "Lightning & Thunder",
+            "artist": "Jhené Aiko"
+          },
+          "searchAs": {
+            "artist": "Jhené Aiko"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "All I Need",
+          "artist": "Jacob Collier featuring Mahalia & Ty Dolla $ign",
+          "anchor": {
+            "title": "All I Need",
+            "artist": "Jacob Collier"
+          },
+          "searchAs": {
+            "artist": "Jacob Collier"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "dbfca7cb-a793-4e41-9c66-dc3cdd36a9f7",
+            "seed": {
+              "kind": "recording",
+              "title": "All I Need",
+              "durationSec": 245,
+              "credits": [
+                {
+                  "name": "Jacob Collier",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "1df15ee0-b52b-4315-9cb9-bc5a27a685e9",
+                    "name": "Jacob Collier"
+                  }
+                },
+                {
+                  "name": "Mahalia",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "5751a689-8b70-4ba0-a9e6-f8a10f4f8531",
+                    "name": "Mahalia"
+                  }
+                },
+                {
+                  "name": "Ty Dolla $ign",
+                  "artist": {
+                    "id": "7bd66c18-cb33-49aa-9279-140acedbdb49",
+                    "name": "Ty Dolla $ign"
+                  }
+                }
+              ],
+              "anchorMbid": "0374e222-5903-48db-aa56-863c9958ee18",
+              "anchor": {
+                "kind": "release_group",
+                "title": "All I Need",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-05-14",
+                "credits": [
+                  {
+                    "name": "Jacob Collier",
+                    "joinphrase": " with ",
+                    "artist": {
+                      "id": "1df15ee0-b52b-4315-9cb9-bc5a27a685e9",
+                      "name": "Jacob Collier"
+                    }
+                  },
+                  {
+                    "name": "Mahalia",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "5751a689-8b70-4ba0-a9e6-f8a10f4f8531",
+                      "name": "Mahalia"
+                    }
+                  },
+                  {
+                    "name": "Ty Dolla $ign",
+                    "artist": {
+                      "id": "7bd66c18-cb33-49aa-9279-140acedbdb49",
+                      "name": "Ty Dolla $ign"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Goat Head",
+          "artist": "Brittany Howard",
+          "anchor": {
+            "title": "Goat Head",
+            "artist": "Brittany Howard"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "See Me",
+          "artist": "Emily King",
+          "anchor": {
+            "title": "See Me",
+            "artist": "Emily King"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "4479bfb9-9371-4dc9-b3fb-37ac0b467cc9",
+            "seed": {
+              "kind": "recording",
+              "title": "See Me",
+              "durationSec": 210,
+              "credits": [
+                {
+                  "name": "Emily King",
+                  "artist": {
+                    "id": "1b7de629-8e8a-4748-b402-bd58de30e5f1",
+                    "name": "Emily King"
+                  }
+                }
+              ],
+              "anchorMbid": "7f9546e2-aaef-4b0a-a994-671ab8304144",
+              "anchor": {
+                "kind": "release_group",
+                "title": "See Me",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-08-26",
+                "credits": [
+                  {
+                    "name": "Emily King",
+                    "artist": {
+                      "id": "1b7de629-8e8a-4748-b402-bd58de30e5f1",
+                      "name": "Emily King"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-traditional-rnb-performance",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Anything for You",
+          "artist": "Ledisi",
+          "anchor": {
+            "title": "Anything for You",
+            "artist": "Ledisi"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Sit On Down",
+          "artist": "The Baylor Project featuring Jean Baylor & Marcus Baylor",
+          "anchor": {
+            "title": "Sit On Down",
+            "artist": "The Baylor Project"
+          },
+          "searchAs": {
+            "artist": "The Baylor Project"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Wonder What She Thinks of Me",
+          "artist": "Chloe x Halle",
+          "anchor": {
+            "title": "Wonder What She Thinks of Me",
+            "artist": "Chloe"
+          },
+          "searchAs": {
+            "artist": "Chloe"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Let Me Go",
+          "artist": "Mykal Kilgore",
+          "anchor": {
+            "title": "Let Me Go",
+            "artist": "Mykal Kilgore"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Distance",
+          "artist": "Yebba",
+          "anchor": {
+            "title": "Distance",
+            "artist": "Yebba"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "0e9adea0-ca1c-4804-84d6-ca4a2a5645af",
+            "seed": {
+              "kind": "recording",
+              "title": "Distance",
+              "durationSec": 256,
+              "credits": [
+                {
+                  "name": "YEBBA",
+                  "artist": {
+                    "id": "0aeea1ef-8d96-4556-8c4a-84b88ae271bb",
+                    "name": "Yebba"
+                  }
+                }
+              ],
+              "anchorMbid": "6a3bd906-dd19-4e97-9970-193cfb0ab9e8",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Distance",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-05-08",
+                "credits": [
+                  {
+                    "name": "YEBBA",
+                    "artist": {
+                      "id": "0aeea1ef-8d96-4556-8c4a-84b88ae271bb",
+                      "name": "Yebba"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-rnb-song",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Better Than I Imagined",
+          "artist": "Robert Glasper featuring H.E.R. & Meshell Ndegeocello",
+          "anchor": {
+            "title": "Better Than I Imagined",
+            "artist": "Robert Glasper"
+          },
+          "searchAs": {
+            "artist": "Robert Glasper"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a9eaa9d6-ea6f-492b-b065-bf18810379de",
+            "seed": {
+              "kind": "recording",
+              "title": "Better Than I Imagined",
+              "durationSec": 292,
+              "credits": [
+                {
+                  "name": "Robert Glasper",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "6e8f82ea-9e6d-4fdd-9b32-32feef13186b",
+                    "name": "Robert Glasper"
+                  }
+                },
+                {
+                  "name": "H.E.R.",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "93998e01-ff53-4af7-ba2a-5674adcdf21e",
+                    "name": "H.E.R."
+                  }
+                },
+                {
+                  "name": "Meshell Ndegeocello",
+                  "artist": {
+                    "id": "55a8b485-1cbf-47ee-ae15-d106200fafe8",
+                    "name": "Meshell Ndegeocello"
+                  }
+                }
+              ],
+              "anchorMbid": "39ee23ae-4768-424c-88b3-8dcc3999800b",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Better Than I Imagined",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-08-27",
+                "credits": [
+                  {
+                    "name": "Robert Glasper",
+                    "joinphrase": " featuring ",
+                    "artist": {
+                      "id": "6e8f82ea-9e6d-4fdd-9b32-32feef13186b",
+                      "name": "Robert Glasper"
+                    }
+                  },
+                  {
+                    "name": "H.E.R.",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "93998e01-ff53-4af7-ba2a-5674adcdf21e",
+                      "name": "H.E.R."
+                    }
+                  },
+                  {
+                    "name": "Meshell Ndegeocello",
+                    "artist": {
+                      "id": "55a8b485-1cbf-47ee-ae15-d106200fafe8",
+                      "name": "Meshell Ndegeocello"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Black Parade",
+          "artist": "Beyoncé",
+          "anchor": {
+            "title": "Black Parade",
+            "artist": "Beyoncé"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "89ac67a4-5deb-4286-9956-6c3d773e0ae0",
+            "seed": {
+              "kind": "recording",
+              "title": "BLACK PARADE",
+              "durationSec": 281,
+              "credits": [
+                {
+                  "name": "Beyoncé",
+                  "artist": {
+                    "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                    "name": "Beyoncé"
+                  }
+                }
+              ],
+              "anchorMbid": "7bbaafd2-70c1-44c9-a17e-d4d8f52e4a57",
+              "anchor": {
+                "kind": "release_group",
+                "title": "BLACK PARADE",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-06-19",
+                "credits": [
+                  {
+                    "name": "Beyoncé",
+                    "artist": {
+                      "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                      "name": "Beyoncé"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Collide",
+          "artist": "Tiana Major9 & EarthGang",
+          "anchor": {
+            "title": "Collide",
+            "artist": "Tiana Major9"
+          },
+          "searchAs": {
+            "artist": "Tiana Major9"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Do It",
+          "artist": "Chloe x Halle",
+          "anchor": {
+            "title": "Do It",
+            "artist": "Chloe"
+          },
+          "searchAs": {
+            "artist": "Chloe"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1666f965-145b-478d-b23a-eaf89b3feebd",
+            "seed": {
+              "kind": "recording",
+              "title": "Do It",
+              "durationSec": 177,
+              "credits": [
+                {
+                  "name": "Chloe × Halle",
+                  "artist": {
+                    "id": "65dc16f0-2573-4747-ae7b-a7a2ff4dab8f",
+                    "name": "Chloe × Halle"
+                  }
+                }
+              ],
+              "anchorMbid": "464baa98-ed1b-4a11-a71e-6fb94a3b931c",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Do It",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-05-14",
+                "credits": [
+                  {
+                    "name": "Chloe × Halle",
+                    "artist": {
+                      "id": "65dc16f0-2573-4747-ae7b-a7a2ff4dab8f",
+                      "name": "Chloe × Halle"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Slow Down",
+          "artist": "Skip Marley & H.E.R.",
+          "anchor": {
+            "title": "Slow Down",
+            "artist": "Skip Marley"
+          },
+          "searchAs": {
+            "artist": "Skip Marley"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c932dda5-c6c0-4db5-a18f-9df34c27a2c5",
+            "seed": {
+              "kind": "recording",
+              "title": "Slow Down",
+              "durationSec": 222,
+              "credits": [
+                {
+                  "name": "Skip Marley",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "0f2b33e5-3969-4af0-a417-e111a373c624",
+                    "name": "Skip Marley"
+                  }
+                },
+                {
+                  "name": "H.E.R.",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "93998e01-ff53-4af7-ba2a-5674adcdf21e",
+                    "name": "H.E.R."
+                  }
+                },
+                {
+                  "name": "Wale",
+                  "artist": {
+                    "id": "e34e41f2-f480-45d3-8190-a3ce5ab34fab",
+                    "name": "Wale"
+                  }
+                }
+              ],
+              "anchorMbid": "0c3e023e-b843-492e-bdf3-38925cc1aa0f",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Slow Down (Remix)",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-04-17",
+                "credits": [
+                  {
+                    "name": "Skip Marley",
+                    "artist": {
+                      "id": "0f2b33e5-3969-4af0-a417-e111a373c624",
+                      "name": "Skip Marley"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-rap-performance",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Savage",
+          "artist": "Megan Thee Stallion featuring Beyoncé",
+          "anchor": {
+            "title": "Savage",
+            "artist": "Megan Thee Stallion"
+          },
+          "searchAs": {
+            "artist": "Megan Thee Stallion"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "734f4daa-22de-4e1e-899e-d530130e573b",
+            "seed": {
+              "kind": "recording",
+              "title": "Savage (Major Lazer remix)",
+              "durationSec": 300,
+              "credits": [
+                {
+                  "name": "Megan Thee Stallion",
+                  "artist": {
+                    "id": "ee27b2d8-648c-4a9d-a68c-e55066959975",
+                    "name": "Megan Thee Stallion"
+                  }
+                }
+              ],
+              "anchorMbid": "0e9887b1-f2b7-4a49-a3d2-9c67606b5422",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Savage (Major Lazer remix)",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-04-27",
+                "credits": [
+                  {
+                    "name": "Megan Thee Stallion",
+                    "artist": {
+                      "id": "ee27b2d8-648c-4a9d-a68c-e55066959975",
+                      "name": "Megan Thee Stallion"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Deep Reverence",
+          "artist": "Big Sean featuring Nipsey Hussle",
+          "anchor": {
+            "title": "Deep Reverence",
+            "artist": "Big Sean"
+          },
+          "searchAs": {
+            "artist": "Big Sean"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1203d1fc-dbbc-4df6-9a59-aa62d8f13d73",
+            "seed": {
+              "kind": "recording",
+              "title": "Deep Reverence",
+              "durationSec": 231,
+              "credits": [
+                {
+                  "name": "Big Sean",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "942a9807-9c1a-4a0e-a285-1fde2c5be9d1",
+                    "name": "Big Sean"
+                  }
+                },
+                {
+                  "name": "Nipsey Hussle",
+                  "artist": {
+                    "id": "410bbb19-8309-4a0b-9f87-3d65bde4a826",
+                    "name": "Nipsey Hussle"
+                  }
+                }
+              ],
+              "anchorMbid": "1ae775c9-2cb3-4a4e-9180-10171dacd4b6",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Deep Reverence",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-08-25",
+                "credits": [
+                  {
+                    "name": "Big Sean",
+                    "joinphrase": " feat. ",
+                    "artist": {
+                      "id": "942a9807-9c1a-4a0e-a285-1fde2c5be9d1",
+                      "name": "Big Sean"
+                    }
+                  },
+                  {
+                    "name": "Nipsey Hussle",
+                    "artist": {
+                      "id": "410bbb19-8309-4a0b-9f87-3d65bde4a826",
+                      "name": "Nipsey Hussle"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Bop",
+          "artist": "DaBaby",
+          "anchor": {
+            "title": "Bop",
+            "artist": "DaBaby"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "652aaeaa-70dd-4870-9b1a-255d935445ab",
+            "seed": {
+              "kind": "recording",
+              "title": "BOP",
+              "durationSec": 160,
+              "credits": [
+                {
+                  "name": "DaBaby",
+                  "artist": {
+                    "id": "87ae83df-6173-40cc-a0f2-bad543faa6aa",
+                    "name": "DaBaby"
+                  }
+                }
+              ],
+              "anchorMbid": "61819b81-bf3d-4dce-b01f-bd0e8213aeb0",
+              "anchor": {
+                "kind": "release_group",
+                "title": "BOP",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-11-19",
+                "credits": [
+                  {
+                    "name": "DaBaby",
+                    "artist": {
+                      "id": "87ae83df-6173-40cc-a0f2-bad543faa6aa",
+                      "name": "DaBaby"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Whats Poppin",
+          "artist": "Jack Harlow",
+          "anchor": {
+            "title": "Whats Poppin",
+            "artist": "Jack Harlow"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "73801df2-a595-4747-bf8c-1c71309bb649",
+            "seed": {
+              "kind": "recording",
+              "title": "WHATS POPPIN",
+              "durationSec": 140,
+              "credits": [
+                {
+                  "name": "Jack Harlow",
+                  "artist": {
+                    "id": "134cb0bc-06fa-42f7-8078-b0c858349975",
+                    "name": "Jack Harlow"
+                  }
+                }
+              ],
+              "anchorMbid": "f7da9c50-abf3-44c6-bfa3-d1b3f57aa0dc",
+              "anchor": {
+                "kind": "release_group",
+                "title": "WHATS POPPIN",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-01-21",
+                "credits": [
+                  {
+                    "name": "Jack Harlow",
+                    "artist": {
+                      "id": "134cb0bc-06fa-42f7-8078-b0c858349975",
+                      "name": "Jack Harlow"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "The Bigger Picture",
+          "artist": "Lil Baby",
+          "anchor": {
+            "title": "The Bigger Picture",
+            "artist": "Lil Baby"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d07096ad-6bf3-40ed-9e64-9776c1789bb4",
+            "seed": {
+              "kind": "recording",
+              "title": "The Bigger Picture",
+              "durationSec": 253,
+              "credits": [
+                {
+                  "name": "Lil Baby",
+                  "artist": {
+                    "id": "d42a5768-ada1-4fb6-85fd-f61aba6264e0",
+                    "name": "Lil Baby"
+                  }
+                }
+              ],
+              "anchorMbid": "4a6f020a-3281-43bc-951b-fad7c7fe3821",
+              "anchor": {
+                "kind": "release_group",
+                "title": "The Bigger Picture",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-06-12",
+                "credits": [
+                  {
+                    "name": "Lil Baby",
+                    "artist": {
+                      "id": "d42a5768-ada1-4fb6-85fd-f61aba6264e0",
+                      "name": "Lil Baby"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Dior",
+          "artist": "Pop Smoke",
+          "anchor": {
+            "title": "Dior",
+            "artist": "Pop Smoke"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b1a95c0d-bd8e-4004-9f50-c094ad15c328",
+            "seed": {
+              "kind": "recording",
+              "title": "Dior",
+              "durationSec": 216,
+              "credits": [
+                {
+                  "name": "Pop Smoke",
+                  "artist": {
+                    "id": "253c9ae7-850b-46be-8fbb-65e9fa621058",
+                    "name": "Pop Smoke"
+                  }
+                }
+              ],
+              "anchorMbid": "f7bb3f96-f7e6-4ec1-b784-02059126c849",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Dior",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-02-11",
+                "credits": [
+                  {
+                    "name": "Pop Smoke",
+                    "artist": {
+                      "id": "253c9ae7-850b-46be-8fbb-65e9fa621058",
+                      "name": "Pop Smoke"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-melodic-rap-performance",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Lockdown",
+          "artist": "Anderson .Paak",
+          "anchor": {
+            "title": "Lockdown",
+            "artist": "Anderson .Paak"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "293440d3-0521-4095-92bf-047d501f7bd6",
+            "seed": {
+              "kind": "recording",
+              "title": "Lockdown",
+              "durationSec": 212,
+              "credits": [
+                {
+                  "name": "Anderson .Paak",
+                  "artist": {
+                    "id": "d02dd67e-f655-4600-bc47-f789f59e7367",
+                    "name": "Anderson .Paak"
+                  }
+                }
+              ],
+              "anchorMbid": "ef766c71-9691-43e6-8f5e-57c863dbb60f",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Lockdown",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-06-18",
+                "credits": [
+                  {
+                    "name": "Anderson .Paak",
+                    "artist": {
+                      "id": "d02dd67e-f655-4600-bc47-f789f59e7367",
+                      "name": "Anderson .Paak"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Rockstar",
+          "artist": "DaBaby featuring Roddy Ricch",
+          "anchor": {
+            "title": "Rockstar",
+            "artist": "DaBaby"
+          },
+          "searchAs": {
+            "artist": "DaBaby"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "50a4f12b-8b19-4387-85e6-4ec98e1f2f69",
+            "seed": {
+              "kind": "recording",
+              "title": "ROCKSTAR",
+              "durationSec": 182,
+              "credits": [
+                {
+                  "name": "DaBaby",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "87ae83df-6173-40cc-a0f2-bad543faa6aa",
+                    "name": "DaBaby"
+                  }
+                },
+                {
+                  "name": "Roddy Ricch",
+                  "artist": {
+                    "id": "5721c227-4caf-48b1-bbfc-1a4ed3276963",
+                    "name": "Roddy Ricch"
+                  }
+                }
+              ],
+              "anchorMbid": "cb8e4abb-774d-4df3-aa40-d1d9770188b4",
+              "anchor": {
+                "kind": "release_group",
+                "title": "ROCKSTAR",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-04-17",
+                "credits": [
+                  {
+                    "name": "DaBaby",
+                    "joinphrase": " feat. ",
+                    "artist": {
+                      "id": "87ae83df-6173-40cc-a0f2-bad543faa6aa",
+                      "name": "DaBaby"
+                    }
+                  },
+                  {
+                    "name": "Roddy Ricch",
+                    "artist": {
+                      "id": "5721c227-4caf-48b1-bbfc-1a4ed3276963",
+                      "name": "Roddy Ricch"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Laugh Now Cry Later",
+          "artist": "Drake featuring Lil Durk",
+          "anchor": {
+            "title": "Laugh Now Cry Later",
+            "artist": "Drake"
+          },
+          "searchAs": {
+            "artist": "Drake"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1b273dd9-feeb-4f26-aa05-9913e2b9e4c0",
+            "seed": {
+              "kind": "recording",
+              "title": "Laugh Now Cry Later",
+              "durationSec": 261,
+              "credits": [
+                {
+                  "name": "Drake",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "9fff2f8a-21e6-47de-a2b8-7f449929d43f",
+                    "name": "Drake"
+                  }
+                },
+                {
+                  "name": "Lil Durk",
+                  "artist": {
+                    "id": "c9cd225b-4883-428e-82c2-73e0b6282fb6",
+                    "name": "Lil Durk"
+                  }
+                }
+              ],
+              "anchorMbid": "07c7c6fa-c9bb-46ba-a23e-3515960ce42b",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Laugh Now Cry Later",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-08-14",
+                "credits": [
+                  {
+                    "name": "Drake",
+                    "joinphrase": " feat. ",
+                    "artist": {
+                      "id": "9fff2f8a-21e6-47de-a2b8-7f449929d43f",
+                      "name": "Drake"
+                    }
+                  },
+                  {
+                    "name": "Lil Durk",
+                    "artist": {
+                      "id": "c9cd225b-4883-428e-82c2-73e0b6282fb6",
+                      "name": "Lil Durk"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "The Box",
+          "artist": "Roddy Ricch",
+          "anchor": {
+            "title": "The Box",
+            "artist": "Roddy Ricch"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "3e0b00ff-275f-4472-91b3-df760c8be195",
+            "seed": {
+              "kind": "recording",
+              "title": "The Box",
+              "durationSec": 197,
+              "credits": [
+                {
+                  "name": "Roddy Ricch",
+                  "artist": {
+                    "id": "5721c227-4caf-48b1-bbfc-1a4ed3276963",
+                    "name": "Roddy Ricch"
+                  }
+                }
+              ],
+              "anchorMbid": "53642561-8287-471c-a881-a575a099efb9",
+              "anchor": {
+                "kind": "release_group",
+                "title": "The Box",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-01-10",
+                "credits": [
+                  {
+                    "name": "Roddy Ricch",
+                    "artist": {
+                      "id": "5721c227-4caf-48b1-bbfc-1a4ed3276963",
+                      "name": "Roddy Ricch"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Highest in the Room",
+          "artist": "Travis Scott",
+          "anchor": {
+            "title": "Highest in the Room",
+            "artist": "Travis Scott"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "818548d8-869f-49e4-97b5-aff0eac2aab0",
+            "seed": {
+              "kind": "recording",
+              "title": "HIGHEST IN THE ROOM",
+              "durationSec": 177,
+              "credits": [
+                {
+                  "name": "Travis Scott",
+                  "artist": {
+                    "id": "e4a51f17-a57b-47b1-b37b-f552d0f8e9e6",
+                    "name": "Travis Scott"
+                  }
+                }
+              ],
+              "anchorMbid": "f1cc8696-f40f-45d3-a0d5-8fd2d51defa8",
+              "anchor": {
+                "kind": "release_group",
+                "title": "HIGHEST IN THE ROOM",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-10-04",
+                "credits": [
+                  {
+                    "name": "Travis Scott",
+                    "artist": {
+                      "id": "e4a51f17-a57b-47b1-b37b-f552d0f8e9e6",
+                      "name": "Travis Scott"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-rap-song",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Savage",
+          "artist": "Megan Thee Stallion featuring Beyoncé",
+          "anchor": {
+            "title": "Savage",
+            "artist": "Megan Thee Stallion"
+          },
+          "searchAs": {
+            "artist": "Megan Thee Stallion"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "734f4daa-22de-4e1e-899e-d530130e573b",
+            "seed": {
+              "kind": "recording",
+              "title": "Savage (Major Lazer remix)",
+              "durationSec": 300,
+              "credits": [
+                {
+                  "name": "Megan Thee Stallion",
+                  "artist": {
+                    "id": "ee27b2d8-648c-4a9d-a68c-e55066959975",
+                    "name": "Megan Thee Stallion"
+                  }
+                }
+              ],
+              "anchorMbid": "0e9887b1-f2b7-4a49-a3d2-9c67606b5422",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Savage (Major Lazer remix)",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-04-27",
+                "credits": [
+                  {
+                    "name": "Megan Thee Stallion",
+                    "artist": {
+                      "id": "ee27b2d8-648c-4a9d-a68c-e55066959975",
+                      "name": "Megan Thee Stallion"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "The Bigger Picture",
+          "artist": "Lil Baby",
+          "anchor": {
+            "title": "The Bigger Picture",
+            "artist": "Lil Baby"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d07096ad-6bf3-40ed-9e64-9776c1789bb4",
+            "seed": {
+              "kind": "recording",
+              "title": "The Bigger Picture",
+              "durationSec": 253,
+              "credits": [
+                {
+                  "name": "Lil Baby",
+                  "artist": {
+                    "id": "d42a5768-ada1-4fb6-85fd-f61aba6264e0",
+                    "name": "Lil Baby"
+                  }
+                }
+              ],
+              "anchorMbid": "4a6f020a-3281-43bc-951b-fad7c7fe3821",
+              "anchor": {
+                "kind": "release_group",
+                "title": "The Bigger Picture",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-06-12",
+                "credits": [
+                  {
+                    "name": "Lil Baby",
+                    "artist": {
+                      "id": "d42a5768-ada1-4fb6-85fd-f61aba6264e0",
+                      "name": "Lil Baby"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "The Box",
+          "artist": "Roddy Ricch",
+          "anchor": {
+            "title": "The Box",
+            "artist": "Roddy Ricch"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "3e0b00ff-275f-4472-91b3-df760c8be195",
+            "seed": {
+              "kind": "recording",
+              "title": "The Box",
+              "durationSec": 197,
+              "credits": [
+                {
+                  "name": "Roddy Ricch",
+                  "artist": {
+                    "id": "5721c227-4caf-48b1-bbfc-1a4ed3276963",
+                    "name": "Roddy Ricch"
+                  }
+                }
+              ],
+              "anchorMbid": "53642561-8287-471c-a881-a575a099efb9",
+              "anchor": {
+                "kind": "release_group",
+                "title": "The Box",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-01-10",
+                "credits": [
+                  {
+                    "name": "Roddy Ricch",
+                    "artist": {
+                      "id": "5721c227-4caf-48b1-bbfc-1a4ed3276963",
+                      "name": "Roddy Ricch"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Laugh Now Cry Later",
+          "artist": "Drake featuring Lil Durk",
+          "anchor": {
+            "title": "Laugh Now Cry Later",
+            "artist": "Drake"
+          },
+          "searchAs": {
+            "artist": "Drake"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1b273dd9-feeb-4f26-aa05-9913e2b9e4c0",
+            "seed": {
+              "kind": "recording",
+              "title": "Laugh Now Cry Later",
+              "durationSec": 261,
+              "credits": [
+                {
+                  "name": "Drake",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "9fff2f8a-21e6-47de-a2b8-7f449929d43f",
+                    "name": "Drake"
+                  }
+                },
+                {
+                  "name": "Lil Durk",
+                  "artist": {
+                    "id": "c9cd225b-4883-428e-82c2-73e0b6282fb6",
+                    "name": "Lil Durk"
+                  }
+                }
+              ],
+              "anchorMbid": "07c7c6fa-c9bb-46ba-a23e-3515960ce42b",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Laugh Now Cry Later",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-08-14",
+                "credits": [
+                  {
+                    "name": "Drake",
+                    "joinphrase": " feat. ",
+                    "artist": {
+                      "id": "9fff2f8a-21e6-47de-a2b8-7f449929d43f",
+                      "name": "Drake"
+                    }
+                  },
+                  {
+                    "name": "Lil Durk",
+                    "artist": {
+                      "id": "c9cd225b-4883-428e-82c2-73e0b6282fb6",
+                      "name": "Lil Durk"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Rockstar",
+          "artist": "DaBaby featuring Roddy Ricch",
+          "anchor": {
+            "title": "Rockstar",
+            "artist": "DaBaby"
+          },
+          "searchAs": {
+            "artist": "DaBaby"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "50a4f12b-8b19-4387-85e6-4ec98e1f2f69",
+            "seed": {
+              "kind": "recording",
+              "title": "ROCKSTAR",
+              "durationSec": 182,
+              "credits": [
+                {
+                  "name": "DaBaby",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "87ae83df-6173-40cc-a0f2-bad543faa6aa",
+                    "name": "DaBaby"
+                  }
+                },
+                {
+                  "name": "Roddy Ricch",
+                  "artist": {
+                    "id": "5721c227-4caf-48b1-bbfc-1a4ed3276963",
+                    "name": "Roddy Ricch"
+                  }
+                }
+              ],
+              "anchorMbid": "cb8e4abb-774d-4df3-aa40-d1d9770188b4",
+              "anchor": {
+                "kind": "release_group",
+                "title": "ROCKSTAR",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-04-17",
+                "credits": [
+                  {
+                    "name": "DaBaby",
+                    "joinphrase": " feat. ",
+                    "artist": {
+                      "id": "87ae83df-6173-40cc-a0f2-bad543faa6aa",
+                      "name": "DaBaby"
+                    }
+                  },
+                  {
+                    "name": "Roddy Ricch",
+                    "artist": {
+                      "id": "5721c227-4caf-48b1-bbfc-1a4ed3276963",
+                      "name": "Roddy Ricch"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-country-solo-performance",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "When My Amy Prays",
+          "artist": "Vince Gill",
+          "anchor": {
+            "title": "When My Amy Prays",
+            "artist": "Vince Gill"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Stick That in Your Country Song",
+          "artist": "Eric Church",
+          "anchor": {
+            "title": "Stick That in Your Country Song",
+            "artist": "Eric Church"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "606d6f21-a32b-4e14-b2ac-b9e886868001",
+            "seed": {
+              "kind": "recording",
+              "title": "Stick That in Your Country Song",
+              "durationSec": 229,
+              "credits": [
+                {
+                  "name": "Eric Church",
+                  "artist": {
+                    "id": "15856215-cc51-4423-879c-9ac955ccb11a",
+                    "name": "Eric Church"
+                  }
+                }
+              ],
+              "anchorMbid": "7f0a48f7-0d70-41fb-af7c-70cc3137d1a9",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Stick That in Your Country Song",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-06-25",
+                "credits": [
+                  {
+                    "name": "Eric Church",
+                    "artist": {
+                      "id": "15856215-cc51-4423-879c-9ac955ccb11a",
+                      "name": "Eric Church"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Who You Thought I Was",
+          "artist": "Brandy Clark",
+          "anchor": {
+            "title": "Who You Thought I Was",
+            "artist": "Brandy Clark"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Bluebird",
+          "artist": "Miranda Lambert",
+          "anchor": {
+            "title": "Bluebird",
+            "artist": "Miranda Lambert"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "194698f9-5b1d-49a0-a987-0a2033bef968",
+            "seed": {
+              "kind": "recording",
+              "title": "Bluebird",
+              "durationSec": 210,
+              "credits": [
+                {
+                  "name": "Miranda Lambert",
+                  "artist": {
+                    "id": "4eca1aa0-c79f-481b-af8a-4a2d6c41aa5c",
+                    "name": "Miranda Lambert"
+                  }
+                }
+              ],
+              "anchorMbid": "8874989b-06a6-45cf-b779-22a52d0cf020",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Bluebird",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-11-25",
+                "credits": [
+                  {
+                    "name": "Miranda Lambert",
+                    "artist": {
+                      "id": "4eca1aa0-c79f-481b-af8a-4a2d6c41aa5c",
+                      "name": "Miranda Lambert"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Black Like Me",
+          "artist": "Mickey Guyton",
+          "anchor": {
+            "title": "Black Like Me",
+            "artist": "Mickey Guyton"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6b6ec5d5-987f-4241-8351-d95f7bdb5dca",
+            "seed": {
+              "kind": "recording",
+              "title": "Black Like Me",
+              "durationSec": 210,
+              "credits": [
+                {
+                  "name": "Mickey Guyton",
+                  "artist": {
+                    "id": "77467723-5d0e-4293-a89b-d230f56eaf50",
+                    "name": "Mickey Guyton"
+                  }
+                }
+              ],
+              "anchorMbid": "96820ad3-e73c-47ae-b062-568643772971",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Black Like Me",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-06-02",
+                "credits": [
+                  {
+                    "name": "Mickey Guyton",
+                    "artist": {
+                      "id": "77467723-5d0e-4293-a89b-d230f56eaf50",
+                      "name": "Mickey Guyton"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-country-duo-group-performance",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "10,000 Hours",
+          "artist": "Dan + Shay and Justin Bieber",
+          "anchor": {
+            "title": "10,000 Hours",
+            "artist": "Dan + Shay"
+          },
+          "searchAs": {
+            "artist": "Dan + Shay"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ccdf08fc-0b64-4a8d-8768-358c3d276a12",
+            "seed": {
+              "kind": "recording",
+              "title": "10,000 Hours",
+              "durationSec": 168,
+              "credits": [
+                {
+                  "joinphrase": " & ",
+                  "name": "Dan + Shay",
+                  "artist": {
+                    "id": "33cf3954-10af-4dcb-985f-9420d1fa4168",
+                    "name": "Dan + Shay",
+                    "sort-name": "Dan + Shay",
+                    "aliases": [
+                      {
+                        "sort-name": "Dan & Shay",
+                        "name": "Dan & Shay",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Dan and Shay",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Dan and Shay",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Dan + Shay",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Dan + Shay",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Justin Bieber",
+                  "artist": {
+                    "id": "e0140a67-e4d1-4f13-8a01-364355bee46e",
+                    "name": "Justin Bieber",
+                    "sort-name": "Bieber, Justin",
+                    "aliases": [
+                      {
+                        "sort-name": "Bieber, Justin",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Justin Bieber",
+                        "locale": "en_US",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "贾斯汀·比伯",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Justin Bieber",
+                        "locale": "zh_Hans",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "저스틴 비버",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Justin Bieber",
+                        "locale": "ko_KR",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Justin Beiber",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Justin Beiber",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "ジャスティン・ビーバー",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "ジャスティン・ビーバー",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Bieber, Justin Drew",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Justin Drew Bieber",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "c0fa267d-762d-4772-af18-9bebc08a14aa",
+              "anchor": {
+                "kind": "release_group",
+                "title": "10,000 Hours",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-10-04",
+                "credits": [
+                  {
+                    "joinphrase": " & ",
+                    "name": "Dan + Shay",
+                    "artist": {
+                      "id": "33cf3954-10af-4dcb-985f-9420d1fa4168",
+                      "name": "Dan + Shay",
+                      "sort-name": "Dan + Shay",
+                      "aliases": [
+                        {
+                          "sort-name": "Dan & Shay",
+                          "name": "Dan & Shay",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Dan and Shay",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "Dan and Shay",
+                          "locale": null,
+                          "type": "Artist name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Dan + Shay",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "Dan + Shay",
+                          "locale": null,
+                          "type": "Artist name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "Justin Bieber",
+                    "artist": {
+                      "id": "e0140a67-e4d1-4f13-8a01-364355bee46e",
+                      "name": "Justin Bieber",
+                      "sort-name": "Bieber, Justin",
+                      "aliases": [
+                        {
+                          "sort-name": "Bieber, Justin",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "Justin Bieber",
+                          "locale": "en_US",
+                          "type": "Artist name",
+                          "primary": true,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "贾斯汀·比伯",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "Justin Bieber",
+                          "locale": "zh_Hans",
+                          "type": "Artist name",
+                          "primary": true,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "저스틴 비버",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "Justin Bieber",
+                          "locale": "ko_KR",
+                          "type": "Artist name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Justin Beiber",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Justin Beiber",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "ジャスティン・ビーバー",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "ジャスティン・ビーバー",
+                          "locale": "ja",
+                          "type": "Artist name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Bieber, Justin Drew",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "Justin Drew Bieber",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "All Night",
+          "artist": "Brothers Osborne",
+          "anchor": {
+            "title": "All Night",
+            "artist": "Brothers Osborne"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6890543d-1c65-45da-b51e-5de061fb635e",
+            "seed": {
+              "kind": "recording",
+              "title": "All Night",
+              "durationSec": 168,
+              "credits": [
+                {
+                  "name": "Brothers Osborne",
+                  "artist": {
+                    "id": "7a502bfc-4cab-4dc8-a618-b12aca7258e7",
+                    "name": "Brothers Osborne",
+                    "sort-name": "Brothers Osborne"
+                  }
+                }
+              ],
+              "anchorMbid": "576e2f2b-cebe-4260-8629-6aa80f16ed22",
+              "anchor": {
+                "kind": "release_group",
+                "title": "All Night",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-05-05",
+                "credits": [
+                  {
+                    "name": "Brothers Osborne",
+                    "artist": {
+                      "id": "7a502bfc-4cab-4dc8-a618-b12aca7258e7",
+                      "name": "Brothers Osborne",
+                      "sort-name": "Brothers Osborne"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Ocean",
+          "artist": "Lady A",
+          "anchor": {
+            "title": "Ocean",
+            "artist": "Lady A"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Sugar Coat",
+          "artist": "Little Big Town",
+          "anchor": {
+            "title": "Sugar Coat",
+            "artist": "Little Big Town"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c889c37d-2457-44d4-8de7-dbef2dc71474",
+            "seed": {
+              "kind": "recording",
+              "title": "Sugar Coat",
+              "durationSec": 220,
+              "credits": [
+                {
+                  "name": "Little Big Town",
+                  "artist": {
+                    "id": "76e78b58-f301-4975-8058-7f84d8360738",
+                    "name": "Little Big Town",
+                    "sort-name": "Little Big Town",
+                    "aliases": [
+                      {
+                        "sort-name": "LBT",
+                        "name": "LBT",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "3c55bc1a-13bd-49d8-9f14-d163a4a34ca5",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Sugar Coat",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-11-22",
+                "credits": [
+                  {
+                    "name": "Little Big Town",
+                    "artist": {
+                      "id": "76e78b58-f301-4975-8058-7f84d8360738",
+                      "name": "Little Big Town",
+                      "sort-name": "Little Big Town",
+                      "aliases": [
+                        {
+                          "sort-name": "LBT",
+                          "name": "LBT",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Some People Do",
+          "artist": "Old Dominion",
+          "anchor": {
+            "title": "Some People Do",
+            "artist": "Old Dominion"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b8eeaa06-1e2c-45aa-b954-a82f53ca4bf3",
+            "seed": {
+              "kind": "recording",
+              "title": "Some People Do",
+              "durationSec": 196,
+              "credits": [
+                {
+                  "name": "Old Dominion",
+                  "artist": {
+                    "id": "a320c615-206f-452f-9a9b-13ea15f8c0eb",
+                    "name": "Old Dominion",
+                    "sort-name": "Old Dominion",
+                    "disambiguation": "US country band"
+                  }
+                }
+              ],
+              "anchorMbid": "6e0327a3-7791-4adf-a0e2-b9a01807e8cc",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Some People Do",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-05-03",
+                "credits": [
+                  {
+                    "name": "Old Dominion",
+                    "artist": {
+                      "id": "a320c615-206f-452f-9a9b-13ea15f8c0eb",
+                      "name": "Old Dominion",
+                      "sort-name": "Old Dominion",
+                      "disambiguation": "US country band"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-country-song",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Crowded Table",
+          "artist": "The Highwomen",
+          "anchor": {
+            "title": "Crowded Table",
+            "artist": "The Highwomen"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b6ea9dd1-2c33-4346-bd56-f8d6fee225af",
+            "seed": {
+              "kind": "recording",
+              "title": "Crowded Table",
+              "durationSec": 210,
+              "credits": [
+                {
+                  "name": "The Highwomen",
+                  "artist": {
+                    "id": "1660fbb6-c55e-4ad3-8342-c424162c30a6",
+                    "name": "The Highwomen",
+                    "sort-name": "Highwomen, The"
+                  }
+                }
+              ],
+              "anchorMbid": "fbad42a4-197e-46a0-9f17-ad530be70160",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Crowded Table",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-07-25",
+                "credits": [
+                  {
+                    "name": "The Highwomen",
+                    "artist": {
+                      "id": "1660fbb6-c55e-4ad3-8342-c424162c30a6",
+                      "name": "The Highwomen",
+                      "sort-name": "Highwomen, The"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Bluebird",
+          "artist": "Miranda Lambert",
+          "anchor": {
+            "title": "Bluebird",
+            "artist": "Miranda Lambert"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "194698f9-5b1d-49a0-a987-0a2033bef968",
+            "seed": {
+              "kind": "recording",
+              "title": "Bluebird",
+              "durationSec": 210,
+              "credits": [
+                {
+                  "name": "Miranda Lambert",
+                  "artist": {
+                    "id": "4eca1aa0-c79f-481b-af8a-4a2d6c41aa5c",
+                    "name": "Miranda Lambert",
+                    "sort-name": "Lambert, Miranda",
+                    "aliases": [
+                      {
+                        "sort-name": "Lambert, Miranda Leigh",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Miranda Leigh Lambert",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "8874989b-06a6-45cf-b779-22a52d0cf020",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Bluebird",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-11-25",
+                "credits": [
+                  {
+                    "name": "Miranda Lambert",
+                    "artist": {
+                      "id": "4eca1aa0-c79f-481b-af8a-4a2d6c41aa5c",
+                      "name": "Miranda Lambert",
+                      "sort-name": "Lambert, Miranda",
+                      "aliases": [
+                        {
+                          "sort-name": "Lambert, Miranda Leigh",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "Miranda Leigh Lambert",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "The Bones",
+          "artist": "Maren Morris",
+          "anchor": {
+            "title": "The Bones",
+            "artist": "Maren Morris"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2e141c99-e791-435d-91de-db64e6b333cc",
+            "seed": {
+              "kind": "recording",
+              "title": "The Bones",
+              "durationSec": 196,
+              "credits": [
+                {
+                  "name": "Maren Morris",
+                  "artist": {
+                    "id": "109357f0-eb37-4672-9697-dca8c83a61b5",
+                    "name": "Maren Morris",
+                    "sort-name": "Morris, Maren",
+                    "aliases": [
+                      {
+                        "sort-name": "Maren Larae Morris",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Maren Larae Morris",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "a52516be-bd80-43ca-8231-a094964717f2",
+              "anchor": {
+                "kind": "release_group",
+                "title": "The Bones",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-08-12",
+                "credits": [
+                  {
+                    "name": "Maren Morris",
+                    "artist": {
+                      "id": "109357f0-eb37-4672-9697-dca8c83a61b5",
+                      "name": "Maren Morris",
+                      "sort-name": "Morris, Maren",
+                      "aliases": [
+                        {
+                          "sort-name": "Maren Larae Morris",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "Maren Larae Morris",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "More Hearts Than Mine",
+          "artist": "Ingrid Andress",
+          "anchor": {
+            "title": "More Hearts Than Mine",
+            "artist": "Ingrid Andress"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a05928be-d317-4b30-a424-d3fbd4c4fd4e",
+            "seed": {
+              "kind": "recording",
+              "title": "More Hearts Than Mine",
+              "durationSec": 215,
+              "credits": [
+                {
+                  "name": "Ingrid Andress",
+                  "artist": {
+                    "id": "3ae306a3-b2a6-4969-b59f-89f0370549e5",
+                    "name": "Ingrid Andress",
+                    "sort-name": "Andress, Ingrid"
+                  }
+                }
+              ],
+              "anchorMbid": "fb9ca63f-4f18-4e97-937f-9bb65b9501eb",
+              "anchor": {
+                "kind": "release_group",
+                "title": "More Hearts Than Mine",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-04-05",
+                "credits": [
+                  {
+                    "name": "Ingrid Andress",
+                    "artist": {
+                      "id": "3ae306a3-b2a6-4969-b59f-89f0370549e5",
+                      "name": "Ingrid Andress",
+                      "sort-name": "Andress, Ingrid"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Some People Do",
+          "artist": "Old Dominion",
+          "anchor": {
+            "title": "Some People Do",
+            "artist": "Old Dominion"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b8eeaa06-1e2c-45aa-b954-a82f53ca4bf3",
+            "seed": {
+              "kind": "recording",
+              "title": "Some People Do",
+              "durationSec": 196,
+              "credits": [
+                {
+                  "name": "Old Dominion",
+                  "artist": {
+                    "id": "a320c615-206f-452f-9a9b-13ea15f8c0eb",
+                    "name": "Old Dominion",
+                    "sort-name": "Old Dominion",
+                    "disambiguation": "US country band"
+                  }
+                }
+              ],
+              "anchorMbid": "6e0327a3-7791-4adf-a0e2-b9a01807e8cc",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Some People Do",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-05-03",
+                "credits": [
+                  {
+                    "name": "Old Dominion",
+                    "artist": {
+                      "id": "a320c615-206f-452f-9a9b-13ea15f8c0eb",
+                      "name": "Old Dominion",
+                      "sort-name": "Old Dominion",
+                      "disambiguation": "US country band"
+                    }
+                  }
+                ]
+              }
+            }
           }
         }
       ]

@@ -3,7 +3,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { readAllAwards, readAward } from "./curation-files";
-import { isLinkable, nomineeText, validateCeremony, type CategoriesFile, type CeremonyFile } from "./curation-schema";
+import {
+  isLinkable,
+  nomineeText,
+  validateCategories,
+  validateCeremony,
+  type CategoriesFile,
+  type CeremonyFile,
+} from "./curation-schema";
 
 const categories: CategoriesFile = {
   award: "grammy",
@@ -27,6 +34,7 @@ const ceremony = (overrides: Partial<CeremonyFile> = {}): CeremonyFile => ({
       nominees: [
         { title: "Cowboy Carter", artist: "Beyoncé", won: true },
         { title: "Brat", artist: "Charli xcx", won: false },
+        { title: "Hit Me Hard and Soft", artist: "Billie Eilish", won: false },
       ],
     },
   ],
@@ -105,10 +113,85 @@ describe("validateCeremony", () => {
     expect(errors).toEqual([expect.stringContaining('la semilla es de tipo "artist"')]);
   });
 
+  it("rechaza una categoría complete con menos de tres nominados", () => {
+    const errors = validateCeremony(
+      ceremony({
+        categories: [
+          {
+            key: "album-of-the-year",
+            coverage: "complete",
+            nominees: [
+              { title: "A", artist: "X", won: true },
+              { title: "B", artist: "Y", won: false },
+            ],
+          },
+        ],
+      }),
+      categories,
+      "2025.json",
+    );
+    expect(errors).toEqual([expect.stringContaining("2025.json › album-of-the-year: la cobertura es complete pero hay 2 nominados")]);
+  });
+
+  it("una categoría winner_only con un solo ganador no activa el mínimo", () => {
+    const errors = validateCeremony(
+      ceremony({
+        categories: [{ key: "album-of-the-year", coverage: "winner_only", nominees: [{ title: "A", artist: "X", won: true }] }],
+      }),
+      categories,
+      "2025.json",
+    );
+    expect(errors).toEqual([]);
+  });
+
   it("rechaza una fecha de otro año", () => {
     expect(validateCeremony(ceremony({ heldOn: "2024-02-04" }), categories, "2025.json")).toEqual([
       expect.stringContaining("no es del año 2025"),
     ]);
+  });
+});
+
+describe("validateCategories", () => {
+  const base = { subject: "recording" as const, honors: "performer" as const, name: { es: "x", en: "x" } };
+  const file = (list: CategoriesFile["categories"]): CategoriesFile => ({ award: "grammy", categories: list });
+
+  it("el nivel genre exige campo y los demás niveles no lo admiten", () => {
+    const errors = validateCategories(
+      file([
+        { ...base, key: "sin-campo", tier: "genre", order: 1 },
+        { ...base, key: "con-campo", tier: "album", field: "pop", order: 2 },
+      ]),
+      "categories.json",
+    );
+    expect(errors).toEqual([
+      expect.stringContaining('"sin-campo" es de nivel genre y necesita "field"'),
+      expect.stringContaining('"field" solo se usa en el nivel genre ("con-campo" es album)'),
+    ]);
+  });
+
+  it("rechaza un campo partido en dos tramos del orden curado", () => {
+    const errors = validateCategories(
+      file([
+        { ...base, key: "pop-a", tier: "genre", field: "pop", order: 1 },
+        { ...base, key: "rock-a", tier: "genre", field: "rock-alternative", order: 2 },
+        { ...base, key: "pop-b", tier: "genre", field: "pop", order: 3 },
+      ]),
+      "categories.json",
+    );
+    expect(errors).toEqual([expect.stringContaining('campo "pop" no son contiguas')]);
+  });
+
+  it("acepta campos contiguos", () => {
+    expect(
+      validateCategories(
+        file([
+          { ...base, key: "pop-a", tier: "genre", field: "pop", order: 1 },
+          { ...base, key: "pop-b", tier: "genre", field: "pop", order: 2 },
+          { ...base, key: "rock-a", tier: "genre", field: "rock-alternative", order: 3 },
+        ]),
+        "categories.json",
+      ),
+    ).toEqual([]);
   });
 });
 

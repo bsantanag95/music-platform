@@ -21,13 +21,22 @@ describe("orderNominations", () => {
 });
 
 describe("sortCategoryEditions", () => {
-  it("campo general primero y, dentro de cada nivel, el orden curado", () => {
+  it("niveles en orden (general, álbum, género) y, dentro de cada uno, el orden curado", () => {
     const editions = [
-      { key: "rock", tier: "genre" as const, sortOrder: 7 },
+      { key: "rock-perf", tier: "genre" as const, sortOrder: 30 },
+      { key: "rock-album", tier: "album" as const, sortOrder: 7 },
       { key: "bna", tier: "general" as const, sortOrder: 4 },
-      { key: "pop", tier: "genre" as const, sortOrder: 5 },
+      { key: "pop-perf", tier: "genre" as const, sortOrder: 20 },
       { key: "aoty", tier: "general" as const, sortOrder: 1 },
+      { key: "pop-album", tier: "album" as const, sortOrder: 5 },
     ];
-    expect(sortCategoryEditions(editions).map((e) => e.key)).toEqual(["aoty", "bna", "pop", "rock"]);
+    expect(sortCategoryEditions(editions).map((e) => e.key)).toEqual([
+      "aoty",
+      "bna",
+      "pop-album",
+      "rock-album",
+      "pop-perf",
+      "rock-perf",
+    ]);
   });
 });
