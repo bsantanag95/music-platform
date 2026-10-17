@@ -809,18 +809,15 @@ un género elegido, el estado vacío SHALL ofrecer "Quitar filtros" hacia la dé
 
 ### Requirement: Cabecera de la vista de década
 
-La vista de década SHALL abrir con una cabecera que dice qué se está viendo: el título, una línea de contexto bajo él y, a la derecha
-en pantallas anchas, un mosaico 2×2 con las mismas carátulas de la tarjeta de esa década en `/explore` (misma selección, sin consulta
-propia). Con el orden "Destacados", la línea SHALL decir que se ordena por premios y valoraciones y que, mientras haya pocas
-valoraciones, el orden es estable pero no un ranking; con cualquier otro orden SHALL omitirse, porque ya no describiría lo que se
-ve. El mosaico SHALL ser decorativo (sin texto alternativo), SHALL omitirse en pantallas angostas y cuando la década no tiene
+La vista de década SHALL abrir con una cabecera que dice qué se está viendo: el título y, a la derecha en pantallas anchas, un mosaico
+2×2 con las mismas carátulas de la tarjeta de esa década en `/explore` (misma selección, sin consulta propia). Bajo el título SHALL NOT
+haber una línea de texto explicativa. El mosaico SHALL ser decorativo (sin texto alternativo), SHALL omitirse en pantallas angostas y cuando la década no tiene
 carátulas, y SHALL NOT mostrar cifras.
 
-#### Scenario: Cabecera con contexto
+#### Scenario: Cabecera sin texto explicativo
 
-- **WHEN** una persona abre `/es/explore?decada=1980` con el orden por defecto
-- **THEN** bajo el título "Álbumes de los años 80" lee que se ordena por premios y valoraciones y que, con pocas valoraciones,
-  el orden es estable pero no un ranking
+- **WHEN** una persona abre `/es/explore?decada=1980`
+- **THEN** bajo el título "Álbumes de los años 80" no hay una línea de texto: siguen directamente las filas de filtros
 
 #### Scenario: Mosaico de la época
 
@@ -828,13 +825,8 @@ carátulas, y SHALL NOT mostrar cifras.
 - **THEN** la cabecera muestra a la derecha el mismo mosaico de cuatro carátulas que su tarjeta de la portada, sin texto alternativo ni
   cifras
 
-#### Scenario: Otro orden
-
-- **WHEN** elige el orden "Más recientes"
-- **THEN** la línea de contexto sobre el orden desaparece
-
 #### Scenario: Década sin carátulas o pantalla angosta
 
 - **WHEN** la década no tiene discos de estudio con carátula, o la pantalla es angosta
-- **THEN** la cabecera no muestra el mosaico y el título y el contexto ocupan todo el ancho
+- **THEN** la cabecera no muestra el mosaico y el título ocupa todo el ancho
 

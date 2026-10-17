@@ -125,9 +125,7 @@ de diseño no admite un eyebrow sobre el encabezado). Y:
 
 - **Vista de década** (solo en `?decada=`, cambios `redesign-explore-decades` y `redesign-decade-view`). Cabecera, dos filas de filtros
   rotuladas y los filtros de tipo y orden:
-  - **Cabecera**: título, una línea de contexto con el orden "Destacados" ("Premiados y mejor valorados primero; con pocas valoraciones,
-    el orden es estable pero no un ranking": honesta con lo que hay, no promete una curaduría que los datos aún no tienen; se omite con
-    otro orden) y, desde `sm`, el mosaico 2×2 de la tarjeta de la portada (`listDecadeCovers`, misma selección y misma caché; `CoverMosaic`,
+  - **Cabecera**: el título y, desde `sm`, el mosaico 2×2 de la tarjeta de la portada (`listDecadeCovers`, misma selección y misma caché; `CoverMosaic`,
     decorativo, sin cifras). Títulos: "Álbumes de los años 80", "Álbumes de 1985", "Álbumes de hard rock de los años 80" y "…de 1985".
   - **Fila "Año"**: "Toda la década" y un chip por año con al menos un disco ya publicado (`listDecadeYears`; un año con solo
     lanzamientos por salir no tiene chip, aunque `?anio=` con ese año funcione), sin cifras; filtra con `?anio=<año>`. Al final de la fila,
