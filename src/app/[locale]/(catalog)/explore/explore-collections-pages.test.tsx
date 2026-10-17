@@ -242,7 +242,6 @@ describe("/explore: Explorar por década (openspec: redesign-explore-decades)", 
       crumb: string;
       parentCrumbs?: { label: string; href: string }[];
       baseHref: string;
-      lede?: string;
       headerCovers: string[];
       availableCategories: string[];
       related?: { href: string; label: string };
@@ -278,7 +277,7 @@ describe("/explore: Explorar por década (openspec: redesign-explore-decades)", 
       expect(props.crumb).toBe("Años 90");
       expect(props.parentCrumbs).toEqual([]);
       expect(props.baseHref).toBe("/explore?decada=1990");
-      expect(props.lede).toBe("decadeLede");
+      expect(props).not.toHaveProperty("lede");
       expect(props.headerCovers).toEqual(["c1", "c2", "c3", "c4"]);
       expect(props.related).toBeUndefined();
       expect(props.clearHref).toBeUndefined();
@@ -409,11 +408,6 @@ describe("/explore: Explorar por década (openspec: redesign-explore-decades)", 
 
       expect(mocks.listAlbumsByDecade).toHaveBeenCalledTimes(1);
       expect(mocks.listAlbumsByGenre).not.toHaveBeenCalled();
-    });
-
-    it("la línea de contexto solo acompaña al orden «Destacados»", async () => {
-      expect((await open({ decada: "1990" })).lede).toBe("decadeLede");
-      expect((await open({ decada: "1990", orden: "recientes" })).lede).toBeUndefined();
     });
 
     it("pasa los tipos con discos en el corte para deshabilitar los demás", async () => {

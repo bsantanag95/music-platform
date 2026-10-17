@@ -146,14 +146,7 @@ describe("FilteredAlbumList", () => {
   });
 
   describe("cabecera", () => {
-    it("muestra la línea de contexto bajo el título", () => {
-      renderWithIntl(<FilteredAlbumList {...baseProps} lede="Premiados y mejor valorados primero." />);
-
-      const heading = screen.getByRole("heading", { level: 1 });
-      expect(heading.nextElementSibling).toHaveTextContent("Premiados y mejor valorados primero.");
-    });
-
-    it("sin línea de contexto no pinta nada extra", () => {
+    it("el título va solo, sin una línea de texto debajo", () => {
       renderWithIntl(<FilteredAlbumList {...baseProps} />);
 
       expect(screen.getByRole("heading", { level: 1 }).nextElementSibling).toBeNull();

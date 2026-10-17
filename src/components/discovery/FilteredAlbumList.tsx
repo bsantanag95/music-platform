@@ -42,8 +42,6 @@ interface FilteredAlbumListProps {
    * filtran esta misma lista. Van encima de los temas. Una fila sin chips no se pinta.
    */
   facets?: Facet[];
-  /** Línea de contexto bajo el título (cómo se ordena el listado). */
-  lede?: string;
   /** Carátulas del corte para el mosaico decorativo de la cabecera (desde `sm`); vacío = sin mosaico. */
   headerCovers?: string[];
   /** Tipos con discos en el corte: los demás chips de tipo salen deshabilitados. */
@@ -129,7 +127,6 @@ export function FilteredAlbumList({
   authenticated = false,
   siblings,
   facets,
-  lede,
   headerCovers,
   availableCategories,
   clearHref,
@@ -164,7 +161,6 @@ export function FilteredAlbumList({
       <header className="flex w-full items-start justify-between gap-6">
         <div className="flex min-w-0 flex-col gap-1.5">
           <h1 className="font-display text-3xl text-paper">{heading}</h1>
-          {lede ? <p className="max-w-prose font-body text-sm text-paper-muted">{lede}</p> : null}
           {related ? (
             <Link
               href={related.href}

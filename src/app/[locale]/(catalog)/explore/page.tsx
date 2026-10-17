@@ -179,7 +179,6 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         result={result}
         artistNames={await albumArtistNames(result.albums.map((album) => album.id))}
         baseHref={baseHref}
-        lede={listParams.sort === "best" ? t("decadeLede") : undefined}
         headerCovers={decadeCovers.get(decade) ?? []}
         availableCategories={availableCategories}
         related={genre ? { href: `${genreHref(genre.slug)}?tab=albums&decada=${decade}`, label: t("genrePageLink", { genre: genreName }) } : undefined}
