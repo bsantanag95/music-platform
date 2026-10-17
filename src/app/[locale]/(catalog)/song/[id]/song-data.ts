@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { ensureAnchorTracks } from "@/services/catalog/award-anchor-tracks";
 import { getRecordingDetail, getTrackStrip, loadRepresentativeRelease } from "@/services/catalog/recording-detail";
 import { getRecordingCredits } from "@/services/catalog/personnel-levels";
 import { getRecordingVersions, resolveVersionLine } from "@/services/catalog/recording-versions";
@@ -13,7 +14,12 @@ import { isFavorited } from "@/services/favorites/favorites";
 // Cargas de la página de canción (openspec: redesign-song-page, design D10). `cache()`
 // deduplica por request entre `generateMetadata` y la página.
 
-export const loadRecordingDetail = cache((id: string) => getRecordingDetail(id));
+// Una grabación llegada por los premios no tiene pistas: se ingiere antes el disco ancla de su nominación para que
+// la ficha tenga disco, carátula y apariciones (`ensureAnchorTracks`; no hace nada si ya las tiene).
+export const loadRecordingDetail = cache(async (id: string) => {
+  await ensureAnchorTracks(id);
+  return getRecordingDetail(id);
+});
 
 /**
  * Segmento canónico de la canción para la canonicalización (openspec: add-catalog-slugs):
