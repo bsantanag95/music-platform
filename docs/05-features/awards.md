@@ -48,8 +48,10 @@ videojuegos.
 - Las grabaciones muestran la carátula de su disco ancla y un enlace "del disco …". Canción del año aclara que premia
   a los autores.
 - La carga crea las grabaciones como stub, sin pistas, y la ficha de canción se arma desde las pistas (disco principal,
-  carátula, apariciones, créditos). Por eso, al abrir la ficha de una grabación que no tiene pistas, se ingiere bajo
-  demanda la lista de pistas de su disco ancla (`ensureAnchorTracks`, la misma función que usa la página de álbum): la
+  carátula, apariciones, créditos). Por eso, al abrir la ficha de una grabación de premios, se ingiere bajo demanda la
+  lista de pistas de su disco ancla si aún no la tiene (`ensureAnchorTracks`, la misma función que usa la página de
+  álbum, que no consulta MusicBrainz si el disco ya está ingerido). La ficha usa la edición representativa del disco
+  ancla, así que, cuando MusicBrainz tiene dos grabaciones duplicadas, la curaduría elige la que está en esa edición: la
   primera visita tarda lo que tarde MusicBrainz y las siguientes salen de la base. Si MusicBrainz falla, la ficha se
   muestra mínima, sin error.
 - Una categoría con cobertura "solo ganador" lo dice: "De esta categoría solo registramos al ganador".

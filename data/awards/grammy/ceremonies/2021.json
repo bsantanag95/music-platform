@@ -399,18 +399,81 @@
           },
           "won": false,
           "resolved": {
-            "status": "exact",
-            "mbid": "588ed726-1c5b-4eaf-b84c-68cd8b33e5f8",
+            "status": "manual",
+            "mbid": "5cd7baaf-e1f7-49fb-981a-cf502c165fe9",
             "seed": {
               "kind": "recording",
               "title": "Say So",
-              "durationSec": 235,
+              "durationSec": 238,
               "credits": [
                 {
                   "name": "Doja Cat",
                   "artist": {
                     "id": "5df62a88-cac9-490a-b62c-c7c88f4020f4",
-                    "name": "Doja Cat"
+                    "name": "Doja Cat",
+                    "sort-name": "Doja Cat",
+                    "aliases": [
+                      {
+                        "sort-name": "도자",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "도자",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "도자캣",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Doja Cat",
+                        "locale": "ko_KR",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "도자 캣",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "도자 캣",
+                        "locale": "ko",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "ドージャ・キャット",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "ドージャ・キャット",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Amalaratna Zandile Dlamini",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Amalaratna Zandile Dlamini",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Dlamini, Amala Ratna Zandile",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Amala Ratna Zandile Dlamini",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
                   }
                 }
               ],
@@ -1117,31 +1180,14 @@
           "title": "Dave Cobb",
           "won": false,
           "resolved": {
-            "status": "ambiguous",
-            "candidates": [
-              {
-                "mbid": "966a5b7a-eea7-4a09-a408-2e0dee331638",
-                "label": "Dave Cobb (Cobzweb bassist)",
-                "score": 100,
-                "seed": {
-                  "kind": "artist",
-                  "name": "Dave Cobb",
-                  "mbType": "Person",
-                  "disambiguation": "Cobzweb bassist"
-                }
-              },
-              {
-                "mbid": "dec49112-1d81-4424-a9cf-9c43a8460018",
-                "label": "Dave Cobb (producer/songwriter) · US",
-                "score": 100,
-                "seed": {
-                  "kind": "artist",
-                  "name": "Dave Cobb",
-                  "mbType": "Person",
-                  "disambiguation": "producer/songwriter"
-                }
-              }
-            ]
+            "status": "manual",
+            "mbid": "dec49112-1d81-4424-a9cf-9c43a8460018",
+            "seed": {
+              "kind": "artist",
+              "name": "Dave Cobb",
+              "mbType": "Person",
+              "disambiguation": "producer/songwriter"
+            }
           }
         },
         {
@@ -2258,92 +2304,106 @@
           "title": "Say So",
           "artist": "Doja Cat",
           "anchor": {
-            "title": "Say So",
+            "title": "Hot Pink",
             "artist": "Doja Cat"
           },
           "won": false,
           "resolved": {
-            "status": "ambiguous",
-            "candidates": [
-              {
-                "mbid": "5cd7baaf-e1f7-49fb-981a-cf502c165fe9",
-                "label": "Say So — Doja Cat (explicit)",
-                "score": 100,
-                "seed": {
-                  "kind": "recording",
-                  "title": "Say So",
-                  "durationSec": 238,
-                  "credits": [
-                    {
-                      "name": "Doja Cat",
-                      "artist": {
-                        "id": "5df62a88-cac9-490a-b62c-c7c88f4020f4",
-                        "name": "Doja Cat"
-                      }
-                    }
-                  ],
-                  "anchorMbid": "9344957a-adbc-4e53-929c-03e263b3191e",
-                  "anchor": {
-                    "kind": "release_group",
-                    "title": "Say So",
-                    "category": "single_ep",
-                    "firstReleaseDate": "2020-10-16",
-                    "credits": [
+            "status": "manual",
+            "mbid": "5cd7baaf-e1f7-49fb-981a-cf502c165fe9",
+            "seed": {
+              "kind": "recording",
+              "title": "Say So",
+              "durationSec": 238,
+              "credits": [
+                {
+                  "name": "Doja Cat",
+                  "artist": {
+                    "id": "5df62a88-cac9-490a-b62c-c7c88f4020f4",
+                    "name": "Doja Cat",
+                    "sort-name": "Doja Cat",
+                    "aliases": [
                       {
+                        "sort-name": "도자",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "도자",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "도자캣",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
                         "name": "Doja Cat",
-                        "artist": {
-                          "id": "5df62a88-cac9-490a-b62c-c7c88f4020f4",
-                          "name": "Doja Cat"
-                        }
+                        "locale": "ko_KR",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "도자 캣",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "도자 캣",
+                        "locale": "ko",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "ドージャ・キャット",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "ドージャ・キャット",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Amalaratna Zandile Dlamini",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Amalaratna Zandile Dlamini",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Dlamini, Amala Ratna Zandile",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Amala Ratna Zandile Dlamini",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
                       }
                     ]
                   }
                 }
-              },
-              {
-                "mbid": "e6014ad7-5eee-4fb1-ac01-96067c53229e",
-                "label": "Say So — Doja Cat feat. Nicki Minaj (explicit)",
-                "score": 100,
-                "seed": {
-                  "kind": "recording",
-                  "title": "Say So",
-                  "durationSec": 206,
-                  "credits": [
-                    {
-                      "name": "Doja Cat",
-                      "joinphrase": " feat. ",
-                      "artist": {
-                        "id": "5df62a88-cac9-490a-b62c-c7c88f4020f4",
-                        "name": "Doja Cat"
-                      }
-                    },
-                    {
-                      "name": "Nicki Minaj",
-                      "artist": {
-                        "id": "1036b808-f58c-4a3e-b461-a2c4492ecf1b",
-                        "name": "Nicki Minaj"
-                      }
+              ],
+              "anchorMbid": "88e46272-f172-42ad-ae4a-6df5dbfb5ae0",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Hot Pink",
+                "category": "studio",
+                "firstReleaseDate": "2019-11-07",
+                "credits": [
+                  {
+                    "name": "Doja Cat",
+                    "artist": {
+                      "id": "5df62a88-cac9-490a-b62c-c7c88f4020f4",
+                      "name": "Doja Cat"
                     }
-                  ],
-                  "anchorMbid": "9344957a-adbc-4e53-929c-03e263b3191e",
-                  "anchor": {
-                    "kind": "release_group",
-                    "title": "Say So",
-                    "category": "single_ep",
-                    "firstReleaseDate": "2020-10-16",
-                    "credits": [
-                      {
-                        "name": "Doja Cat",
-                        "artist": {
-                          "id": "5df62a88-cac9-490a-b62c-c7c88f4020f4",
-                          "name": "Doja Cat"
-                        }
-                      }
-                    ]
                   }
-                }
+                ]
               }
-            ]
+            }
           }
         },
         {
@@ -2436,84 +2496,43 @@
           "title": "Cardigan",
           "artist": "Taylor Swift",
           "anchor": {
-            "title": "Cardigan",
+            "title": "Folklore",
             "artist": "Taylor Swift"
           },
           "won": false,
           "resolved": {
-            "status": "ambiguous",
-            "candidates": [
-              {
-                "mbid": "275c75bf-c102-474e-b5ea-cfb3a18af34a",
-                "label": "cardigan — Taylor Swift",
-                "score": 100,
-                "seed": {
-                  "kind": "recording",
-                  "title": "cardigan",
-                  "durationSec": 274,
-                  "credits": [
-                    {
-                      "name": "Taylor Swift",
-                      "artist": {
-                        "id": "20244d07-534f-4eff-b4d4-930878889970",
-                        "name": "Taylor Swift"
-                      }
-                    }
-                  ],
-                  "anchorMbid": "3b570313-419f-4654-84be-5f8489b9cfa7",
-                  "anchor": {
-                    "kind": "release_group",
-                    "title": "cardigan",
-                    "category": "single_ep",
-                    "firstReleaseDate": "2020-07-24",
-                    "credits": [
-                      {
-                        "name": "Taylor Swift",
-                        "artist": {
-                          "id": "20244d07-534f-4eff-b4d4-930878889970",
-                          "name": "Taylor Swift"
-                        }
-                      }
-                    ]
+            "status": "manual",
+            "mbid": "20a9ef25-b557-4770-8477-e1ca3a060eee",
+            "seed": {
+              "kind": "recording",
+              "title": "cardigan",
+              "durationSec": 240,
+              "credits": [
+                {
+                  "name": "Taylor Swift",
+                  "artist": {
+                    "id": "20244d07-534f-4eff-b4d4-930878889970",
+                    "name": "Taylor Swift"
                   }
                 }
-              },
-              {
-                "mbid": "20a9ef25-b557-4770-8477-e1ca3a060eee",
-                "label": "cardigan — Taylor Swift",
-                "score": 100,
-                "seed": {
-                  "kind": "recording",
-                  "title": "cardigan",
-                  "durationSec": 240,
-                  "credits": [
-                    {
-                      "name": "Taylor Swift",
-                      "artist": {
-                        "id": "20244d07-534f-4eff-b4d4-930878889970",
-                        "name": "Taylor Swift"
-                      }
+              ],
+              "anchorMbid": "f1d08326-c23b-4b43-be3b-20b33ab10bf6",
+              "anchor": {
+                "kind": "release_group",
+                "title": "folklore",
+                "category": "studio",
+                "firstReleaseDate": "2020-07-24",
+                "credits": [
+                  {
+                    "name": "Taylor Swift",
+                    "artist": {
+                      "id": "20244d07-534f-4eff-b4d4-930878889970",
+                      "name": "Taylor Swift"
                     }
-                  ],
-                  "anchorMbid": "3b570313-419f-4654-84be-5f8489b9cfa7",
-                  "anchor": {
-                    "kind": "release_group",
-                    "title": "cardigan",
-                    "category": "single_ep",
-                    "firstReleaseDate": "2020-07-24",
-                    "credits": [
-                      {
-                        "name": "Taylor Swift",
-                        "artist": {
-                          "id": "20244d07-534f-4eff-b4d4-930878889970",
-                          "name": "Taylor Swift"
-                        }
-                      }
-                    ]
                   }
-                }
+                ]
               }
-            ]
+            }
           }
         }
       ]
@@ -3629,13 +3648,43 @@
           "title": "Executioner's Tax (Swing of the Axe)",
           "artist": "Power Trip",
           "anchor": {
-            "title": "Executioner's Tax (Swing of the Axe)",
+            "title": "Nightmare Logic",
             "artist": "Power Trip"
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "693fbea0-aae6-4727-9005-9532196c8443",
+            "seed": {
+              "kind": "recording",
+              "title": "Executioner’s Tax (Swing of the Axe)",
+              "durationSec": 225,
+              "credits": [
+                {
+                  "name": "Power Trip",
+                  "artist": {
+                    "id": "7f179acc-d6eb-4ca9-af90-c14e397fb613",
+                    "name": "Power Trip"
+                  }
+                }
+              ],
+              "anchorMbid": "ed3ea0e4-62c2-4d27-9d0a-6c4cd6c64cc3",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Nightmare Logic",
+                "category": "studio",
+                "firstReleaseDate": "2017-02-24",
+                "credits": [
+                  {
+                    "name": "Power Trip",
+                    "artist": {
+                      "id": "7f179acc-d6eb-4ca9-af90-c14e397fb613",
+                      "name": "Power Trip"
+                    }
+                  }
+                ]
+              }
+            }
           }
         }
       ]
@@ -3928,7 +3977,7 @@
           "title": "Lightning & Thunder",
           "artist": "Jhené Aiko featuring John Legend",
           "anchor": {
-            "title": "Lightning & Thunder",
+            "title": "Chilombo",
             "artist": "Jhené Aiko"
           },
           "searchAs": {
@@ -3936,8 +3985,46 @@
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "3fba98df-3801-4459-be2e-fa9bea4635ba",
+            "seed": {
+              "kind": "recording",
+              "title": "Lightning & Thunder",
+              "durationSec": 270,
+              "credits": [
+                {
+                  "name": "Jhené Aiko",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "ceb3f5b7-9f1a-430f-afbe-976fdcf30482",
+                    "name": "Jhené Aiko"
+                  }
+                },
+                {
+                  "name": "John Legend",
+                  "artist": {
+                    "id": "75a72702-a5ef-4513-bca5-c5b944903546",
+                    "name": "John Legend"
+                  }
+                }
+              ],
+              "anchorMbid": "75f527d4-413f-4a8f-a209-a8490a2491b4",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Chilombo",
+                "category": "studio",
+                "firstReleaseDate": "2020-03-06",
+                "credits": [
+                  {
+                    "name": "Jhené Aiko",
+                    "artist": {
+                      "id": "ceb3f5b7-9f1a-430f-afbe-976fdcf30482",
+                      "name": "Jhené Aiko"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -4022,13 +4109,43 @@
           "title": "Goat Head",
           "artist": "Brittany Howard",
           "anchor": {
-            "title": "Goat Head",
+            "title": "Jaime",
             "artist": "Brittany Howard"
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "7b4c7e61-66cf-48b4-acd2-0f90e59388e2",
+            "seed": {
+              "kind": "recording",
+              "title": "Goat Head",
+              "durationSec": 192,
+              "credits": [
+                {
+                  "name": "Brittany Howard",
+                  "artist": {
+                    "id": "03eda2c4-a2b3-4a4e-9527-6791b0ed9d2d",
+                    "name": "Brittany Howard"
+                  }
+                }
+              ],
+              "anchorMbid": "4577df3e-7447-43d2-a426-8ab74be0951f",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Jaime",
+                "category": "studio",
+                "firstReleaseDate": "2019-09-20",
+                "credits": [
+                  {
+                    "name": "Brittany Howard",
+                    "artist": {
+                      "id": "03eda2c4-a2b3-4a4e-9527-6791b0ed9d2d",
+                      "name": "Brittany Howard"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -4084,20 +4201,50 @@
           "title": "Anything for You",
           "artist": "Ledisi",
           "anchor": {
-            "title": "Anything for You",
+            "title": "The Wild Card",
             "artist": "Ledisi"
           },
           "won": true,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "804b8552-4927-4b9b-970a-9c792fd201ec",
+            "seed": {
+              "kind": "recording",
+              "title": "Anything for You",
+              "durationSec": 257,
+              "credits": [
+                {
+                  "name": "Ledisi",
+                  "artist": {
+                    "id": "617a2fbd-fef9-420f-981c-bda2ca103d38",
+                    "name": "Ledisi"
+                  }
+                }
+              ],
+              "anchorMbid": "18ba3aab-bdda-48b5-aa88-7d568fece019",
+              "anchor": {
+                "kind": "release_group",
+                "title": "The Wild Card",
+                "category": "studio",
+                "firstReleaseDate": "2020-08-28",
+                "credits": [
+                  {
+                    "name": "Ledisi",
+                    "artist": {
+                      "id": "617a2fbd-fef9-420f-981c-bda2ca103d38",
+                      "name": "Ledisi"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
           "title": "Sit On Down",
           "artist": "The Baylor Project featuring Jean Baylor & Marcus Baylor",
           "anchor": {
-            "title": "Sit On Down",
+            "title": "Generations",
             "artist": "The Baylor Project"
           },
           "searchAs": {
@@ -4105,7 +4252,7 @@
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
+            "status": "ambiguous",
             "candidates": []
           }
         },
@@ -4113,7 +4260,7 @@
           "title": "Wonder What She Thinks of Me",
           "artist": "Chloe x Halle",
           "anchor": {
-            "title": "Wonder What She Thinks of Me",
+            "title": "Ungodly Hour",
             "artist": "Chloe"
           },
           "searchAs": {
@@ -4121,21 +4268,81 @@
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "1716a2a7-9dd5-4f1c-bcf7-e9677e63d993",
+            "seed": {
+              "kind": "recording",
+              "title": "Wonder What She Thinks of Me",
+              "durationSec": 212,
+              "credits": [
+                {
+                  "name": "Chloe × Halle",
+                  "artist": {
+                    "id": "65dc16f0-2573-4747-ae7b-a7a2ff4dab8f",
+                    "name": "Chloe × Halle"
+                  }
+                }
+              ],
+              "anchorMbid": "3372986f-d68b-4b80-ac5b-0fba914d8536",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Ungodly Hour",
+                "category": "studio",
+                "firstReleaseDate": "2020-06-03",
+                "credits": [
+                  {
+                    "name": "Chloe × Halle",
+                    "artist": {
+                      "id": "65dc16f0-2573-4747-ae7b-a7a2ff4dab8f",
+                      "name": "Chloe × Halle"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
           "title": "Let Me Go",
           "artist": "Mykal Kilgore",
           "anchor": {
-            "title": "Let Me Go",
+            "title": "A Man Born Black",
             "artist": "Mykal Kilgore"
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "c5e93619-06f4-4608-95e4-31069194749b",
+            "seed": {
+              "kind": "recording",
+              "title": "Let Me Go",
+              "durationSec": 225,
+              "credits": [
+                {
+                  "name": "Mykal Kilgore",
+                  "artist": {
+                    "id": "00d7edb8-bfaa-4c65-80fd-3a76e7318d1e",
+                    "name": "Mykal Kilgore"
+                  }
+                }
+              ],
+              "anchorMbid": "cb04239c-1d5e-4461-bfff-bcc0b387cd48",
+              "anchor": {
+                "kind": "release_group",
+                "title": "A Man Born Black",
+                "category": "studio",
+                "firstReleaseDate": "2019-09-06",
+                "credits": [
+                  {
+                    "name": "Mykal Kilgore",
+                    "artist": {
+                      "id": "00d7edb8-bfaa-4c65-80fd-3a76e7318d1e",
+                      "name": "Mykal Kilgore"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -4312,7 +4519,7 @@
           "title": "Collide",
           "artist": "Tiana Major9 & EarthGang",
           "anchor": {
-            "title": "Collide",
+            "title": "At Sixes And Sevens",
             "artist": "Tiana Major9"
           },
           "searchAs": {
@@ -4320,8 +4527,46 @@
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "b7b444a1-b534-4ed3-816e-606f7713981b",
+            "seed": {
+              "kind": "recording",
+              "title": "Collide",
+              "durationSec": 205,
+              "credits": [
+                {
+                  "name": "Tiana Major9",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "08306f5a-c1de-42a2-8004-a9467fc30950",
+                    "name": "Tiana Major9"
+                  }
+                },
+                {
+                  "name": "EARTHGANG",
+                  "artist": {
+                    "id": "383005e1-657d-468b-a448-08ecf35b3943",
+                    "name": "EarthGang"
+                  }
+                }
+              ],
+              "anchorMbid": "ce99b87f-ae45-457e-a751-d3c5282d9151",
+              "anchor": {
+                "kind": "release_group",
+                "title": "At Sixes And Sevens",
+                "category": "studio",
+                "firstReleaseDate": "2020-08-07",
+                "credits": [
+                  {
+                    "name": "Tiana Major9",
+                    "artist": {
+                      "id": "08306f5a-c1de-42a2-8004-a9467fc30950",
+                      "name": "Tiana Major9"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -5249,13 +5494,43 @@
           "title": "When My Amy Prays",
           "artist": "Vince Gill",
           "anchor": {
-            "title": "When My Amy Prays",
+            "title": "Okie",
             "artist": "Vince Gill"
           },
           "won": true,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "890d832b-ec63-4a5f-86f9-ec1fa43b876c",
+            "seed": {
+              "kind": "recording",
+              "title": "When My Amy Prays",
+              "durationSec": 236,
+              "credits": [
+                {
+                  "name": "Vince Gill",
+                  "artist": {
+                    "id": "ec37ecfe-65b4-49a4-83c7-ee1ccaeec2e3",
+                    "name": "Vince Gill"
+                  }
+                }
+              ],
+              "anchorMbid": "64900a12-b372-4fb9-9c08-5a7bb4960cd5",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Okie",
+                "category": "studio",
+                "firstReleaseDate": "2019-08-23",
+                "credits": [
+                  {
+                    "name": "Vince Gill",
+                    "artist": {
+                      "id": "ec37ecfe-65b4-49a4-83c7-ee1ccaeec2e3",
+                      "name": "Vince Gill"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -5305,13 +5580,43 @@
           "title": "Who You Thought I Was",
           "artist": "Brandy Clark",
           "anchor": {
-            "title": "Who You Thought I Was",
+            "title": "Your Life Is a Record",
             "artist": "Brandy Clark"
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "b730a846-e68a-4cd7-87e6-4ca73918bbe1",
+            "seed": {
+              "kind": "recording",
+              "title": "Who You Thought I Was",
+              "durationSec": 189,
+              "credits": [
+                {
+                  "name": "Brandy Clark",
+                  "artist": {
+                    "id": "d264a026-7485-4d3a-b4f1-f13fea5c76e2",
+                    "name": "Brandy Clark"
+                  }
+                }
+              ],
+              "anchorMbid": "535d102e-949c-4f2a-b4df-6c1360d948ce",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Your Life Is a Record",
+                "category": "studio",
+                "firstReleaseDate": "2020-03-06",
+                "credits": [
+                  {
+                    "name": "Brandy Clark",
+                    "artist": {
+                      "id": "d264a026-7485-4d3a-b4f1-f13fea5c76e2",
+                      "name": "Brandy Clark"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -5426,113 +5731,18 @@
               "durationSec": 168,
               "credits": [
                 {
-                  "joinphrase": " & ",
                   "name": "Dan + Shay",
+                  "joinphrase": " & ",
                   "artist": {
                     "id": "33cf3954-10af-4dcb-985f-9420d1fa4168",
-                    "name": "Dan + Shay",
-                    "sort-name": "Dan + Shay",
-                    "aliases": [
-                      {
-                        "sort-name": "Dan & Shay",
-                        "name": "Dan & Shay",
-                        "locale": null,
-                        "type": null,
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Dan and Shay",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Dan and Shay",
-                        "locale": null,
-                        "type": "Artist name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Dan + Shay",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Dan + Shay",
-                        "locale": null,
-                        "type": "Artist name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      }
-                    ]
+                    "name": "Dan + Shay"
                   }
                 },
                 {
                   "name": "Justin Bieber",
                   "artist": {
                     "id": "e0140a67-e4d1-4f13-8a01-364355bee46e",
-                    "name": "Justin Bieber",
-                    "sort-name": "Bieber, Justin",
-                    "aliases": [
-                      {
-                        "sort-name": "Bieber, Justin",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Justin Bieber",
-                        "locale": "en_US",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "贾斯汀·比伯",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Justin Bieber",
-                        "locale": "zh_Hans",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "저스틴 비버",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Justin Bieber",
-                        "locale": "ko_KR",
-                        "type": "Artist name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Justin Beiber",
-                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
-                        "name": "Justin Beiber",
-                        "locale": null,
-                        "type": "Search hint",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "ジャスティン・ビーバー",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "ジャスティン・ビーバー",
-                        "locale": "ja",
-                        "type": "Artist name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Bieber, Justin Drew",
-                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                        "name": "Justin Drew Bieber",
-                        "locale": null,
-                        "type": "Legal name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      }
-                    ]
+                    "name": "Justin Bieber"
                   }
                 }
               ],
@@ -5544,113 +5754,18 @@
                 "firstReleaseDate": "2019-10-04",
                 "credits": [
                   {
-                    "joinphrase": " & ",
                     "name": "Dan + Shay",
+                    "joinphrase": " & ",
                     "artist": {
                       "id": "33cf3954-10af-4dcb-985f-9420d1fa4168",
-                      "name": "Dan + Shay",
-                      "sort-name": "Dan + Shay",
-                      "aliases": [
-                        {
-                          "sort-name": "Dan & Shay",
-                          "name": "Dan & Shay",
-                          "locale": null,
-                          "type": null,
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Dan and Shay",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Dan and Shay",
-                          "locale": null,
-                          "type": "Artist name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Dan + Shay",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Dan + Shay",
-                          "locale": null,
-                          "type": "Artist name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        }
-                      ]
+                      "name": "Dan + Shay"
                     }
                   },
                   {
                     "name": "Justin Bieber",
                     "artist": {
                       "id": "e0140a67-e4d1-4f13-8a01-364355bee46e",
-                      "name": "Justin Bieber",
-                      "sort-name": "Bieber, Justin",
-                      "aliases": [
-                        {
-                          "sort-name": "Bieber, Justin",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Justin Bieber",
-                          "locale": "en_US",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "贾斯汀·比伯",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Justin Bieber",
-                          "locale": "zh_Hans",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "저스틴 비버",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Justin Bieber",
-                          "locale": "ko_KR",
-                          "type": "Artist name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Justin Beiber",
-                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
-                          "name": "Justin Beiber",
-                          "locale": null,
-                          "type": "Search hint",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "ジャスティン・ビーバー",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "ジャスティン・ビーバー",
-                          "locale": "ja",
-                          "type": "Artist name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Bieber, Justin Drew",
-                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                          "name": "Justin Drew Bieber",
-                          "locale": null,
-                          "type": "Legal name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        }
-                      ]
+                      "name": "Justin Bieber"
                     }
                   }
                 ]
@@ -5678,8 +5793,7 @@
                   "name": "Brothers Osborne",
                   "artist": {
                     "id": "7a502bfc-4cab-4dc8-a618-b12aca7258e7",
-                    "name": "Brothers Osborne",
-                    "sort-name": "Brothers Osborne"
+                    "name": "Brothers Osborne"
                   }
                 }
               ],
@@ -5694,8 +5808,7 @@
                     "name": "Brothers Osborne",
                     "artist": {
                       "id": "7a502bfc-4cab-4dc8-a618-b12aca7258e7",
-                      "name": "Brothers Osborne",
-                      "sort-name": "Brothers Osborne"
+                      "name": "Brothers Osborne"
                     }
                   }
                 ]
@@ -5708,12 +5821,42 @@
           "artist": "Lady A",
           "anchor": {
             "title": "Ocean",
-            "artist": "Lady A"
+            "artist": "Lady Antebellum"
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "9d7c5216-f1be-4ff0-8bb9-e3b40051db2f",
+            "seed": {
+              "kind": "recording",
+              "title": "Ocean",
+              "durationSec": 210,
+              "credits": [
+                {
+                  "name": "Lady Antebellum",
+                  "artist": {
+                    "id": "0eedfc95-e79a-4fd9-832a-cd816a0b3fda",
+                    "name": "Lady A"
+                  }
+                }
+              ],
+              "anchorMbid": "75041e9f-aa7f-4cf0-b10b-fe954b8ada57",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Ocean",
+                "category": "studio",
+                "firstReleaseDate": "2019-11-15",
+                "credits": [
+                  {
+                    "name": "Lady Antebellum",
+                    "artist": {
+                      "id": "0eedfc95-e79a-4fd9-832a-cd816a0b3fda",
+                      "name": "Lady A"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -5736,19 +5879,7 @@
                   "name": "Little Big Town",
                   "artist": {
                     "id": "76e78b58-f301-4975-8058-7f84d8360738",
-                    "name": "Little Big Town",
-                    "sort-name": "Little Big Town",
-                    "aliases": [
-                      {
-                        "sort-name": "LBT",
-                        "name": "LBT",
-                        "locale": null,
-                        "type": null,
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      }
-                    ]
+                    "name": "Little Big Town"
                   }
                 }
               ],
@@ -5763,19 +5894,7 @@
                     "name": "Little Big Town",
                     "artist": {
                       "id": "76e78b58-f301-4975-8058-7f84d8360738",
-                      "name": "Little Big Town",
-                      "sort-name": "Little Big Town",
-                      "aliases": [
-                        {
-                          "sort-name": "LBT",
-                          "name": "LBT",
-                          "locale": null,
-                          "type": null,
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        }
-                      ]
+                      "name": "Little Big Town"
                     }
                   }
                 ]
@@ -5803,9 +5922,7 @@
                   "name": "Old Dominion",
                   "artist": {
                     "id": "a320c615-206f-452f-9a9b-13ea15f8c0eb",
-                    "name": "Old Dominion",
-                    "sort-name": "Old Dominion",
-                    "disambiguation": "US country band"
+                    "name": "Old Dominion"
                   }
                 }
               ],
@@ -5820,9 +5937,7 @@
                     "name": "Old Dominion",
                     "artist": {
                       "id": "a320c615-206f-452f-9a9b-13ea15f8c0eb",
-                      "name": "Old Dominion",
-                      "sort-name": "Old Dominion",
-                      "disambiguation": "US country band"
+                      "name": "Old Dominion"
                     }
                   }
                 ]
@@ -5856,8 +5971,7 @@
                   "name": "The Highwomen",
                   "artist": {
                     "id": "1660fbb6-c55e-4ad3-8342-c424162c30a6",
-                    "name": "The Highwomen",
-                    "sort-name": "Highwomen, The"
+                    "name": "The Highwomen"
                   }
                 }
               ],
@@ -5872,8 +5986,7 @@
                     "name": "The Highwomen",
                     "artist": {
                       "id": "1660fbb6-c55e-4ad3-8342-c424162c30a6",
-                      "name": "The Highwomen",
-                      "sort-name": "Highwomen, The"
+                      "name": "The Highwomen"
                     }
                   }
                 ]
@@ -5901,20 +6014,7 @@
                   "name": "Miranda Lambert",
                   "artist": {
                     "id": "4eca1aa0-c79f-481b-af8a-4a2d6c41aa5c",
-                    "name": "Miranda Lambert",
-                    "sort-name": "Lambert, Miranda",
-                    "aliases": [
-                      {
-                        "sort-name": "Lambert, Miranda Leigh",
-                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                        "name": "Miranda Leigh Lambert",
-                        "locale": null,
-                        "type": "Legal name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      }
-                    ]
+                    "name": "Miranda Lambert"
                   }
                 }
               ],
@@ -5929,20 +6029,7 @@
                     "name": "Miranda Lambert",
                     "artist": {
                       "id": "4eca1aa0-c79f-481b-af8a-4a2d6c41aa5c",
-                      "name": "Miranda Lambert",
-                      "sort-name": "Lambert, Miranda",
-                      "aliases": [
-                        {
-                          "sort-name": "Lambert, Miranda Leigh",
-                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                          "name": "Miranda Leigh Lambert",
-                          "locale": null,
-                          "type": "Legal name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        }
-                      ]
+                      "name": "Miranda Lambert"
                     }
                   }
                 ]
@@ -5970,20 +6057,7 @@
                   "name": "Maren Morris",
                   "artist": {
                     "id": "109357f0-eb37-4672-9697-dca8c83a61b5",
-                    "name": "Maren Morris",
-                    "sort-name": "Morris, Maren",
-                    "aliases": [
-                      {
-                        "sort-name": "Maren Larae Morris",
-                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                        "name": "Maren Larae Morris",
-                        "locale": null,
-                        "type": "Legal name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      }
-                    ]
+                    "name": "Maren Morris"
                   }
                 }
               ],
@@ -5998,20 +6072,7 @@
                     "name": "Maren Morris",
                     "artist": {
                       "id": "109357f0-eb37-4672-9697-dca8c83a61b5",
-                      "name": "Maren Morris",
-                      "sort-name": "Morris, Maren",
-                      "aliases": [
-                        {
-                          "sort-name": "Maren Larae Morris",
-                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                          "name": "Maren Larae Morris",
-                          "locale": null,
-                          "type": "Legal name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        }
-                      ]
+                      "name": "Maren Morris"
                     }
                   }
                 ]
@@ -6039,8 +6100,7 @@
                   "name": "Ingrid Andress",
                   "artist": {
                     "id": "3ae306a3-b2a6-4969-b59f-89f0370549e5",
-                    "name": "Ingrid Andress",
-                    "sort-name": "Andress, Ingrid"
+                    "name": "Ingrid Andress"
                   }
                 }
               ],
@@ -6055,8 +6115,7 @@
                     "name": "Ingrid Andress",
                     "artist": {
                       "id": "3ae306a3-b2a6-4969-b59f-89f0370549e5",
-                      "name": "Ingrid Andress",
-                      "sort-name": "Andress, Ingrid"
+                      "name": "Ingrid Andress"
                     }
                   }
                 ]
@@ -6084,9 +6143,7 @@
                   "name": "Old Dominion",
                   "artist": {
                     "id": "a320c615-206f-452f-9a9b-13ea15f8c0eb",
-                    "name": "Old Dominion",
-                    "sort-name": "Old Dominion",
-                    "disambiguation": "US country band"
+                    "name": "Old Dominion"
                   }
                 }
               ],
@@ -6101,9 +6158,7 @@
                     "name": "Old Dominion",
                     "artist": {
                       "id": "a320c615-206f-452f-9a9b-13ea15f8c0eb",
-                      "name": "Old Dominion",
-                      "sort-name": "Old Dominion",
-                      "disambiguation": "US country band"
+                      "name": "Old Dominion"
                     }
                   }
                 ]
