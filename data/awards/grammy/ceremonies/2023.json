@@ -1388,10 +1388,19 @@
         },
         {
           "title": "Dernst \"D'Mile\" Emile II",
+          "searchAs": {
+            "title": "D'Mile"
+          },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "5b1b48f6-9d07-46b2-aea2-995ab94a4ab3",
+            "seed": {
+              "kind": "artist",
+              "name": "D’Mile",
+              "mbType": "Person",
+              "disambiguation": "Dernst Emile II"
+            }
           }
         }
       ]
@@ -1418,50 +1427,31 @@
           "title": "Amy Allen",
           "won": false,
           "resolved": {
-            "status": "ambiguous",
-            "candidates": [
-              {
-                "mbid": "4d41868f-8901-4e77-bbd9-ead5bb7831ee",
-                "label": "Amy Allen (US indie-pop songwriter) · US",
-                "score": 100,
-                "seed": {
-                  "kind": "artist",
-                  "name": "Amy Allen",
-                  "mbType": "Person",
-                  "disambiguation": "US indie-pop songwriter"
-                }
-              },
-              {
-                "mbid": "a75fe946-9b62-4068-8f10-e31f5dbe4f62",
-                "label": "Amy Allen (Arkansas singer/songwriter)",
-                "score": 98,
-                "seed": {
-                  "kind": "artist",
-                  "name": "Amy Allen",
-                  "mbType": "Person",
-                  "disambiguation": "Arkansas singer/songwriter"
-                }
-              },
-              {
-                "mbid": "5095ad80-b5a9-4a17-815c-fe0a992a46e8",
-                "label": "Amy Allen (member of FEELS)",
-                "score": 96,
-                "seed": {
-                  "kind": "artist",
-                  "name": "Amy Allen",
-                  "mbType": "Person",
-                  "disambiguation": "member of FEELS"
-                }
-              }
-            ]
+            "status": "manual",
+            "mbid": "4d41868f-8901-4e77-bbd9-ead5bb7831ee",
+            "seed": {
+              "kind": "artist",
+              "name": "Amy Allen",
+              "mbType": "Person",
+              "disambiguation": "US indie-pop songwriter"
+            }
           }
         },
         {
           "title": "Nija Charles",
+          "searchAs": {
+            "title": "Nija"
+          },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "1f9e0b09-9f29-48e7-a187-3c3335e14e0d",
+            "seed": {
+              "kind": "artist",
+              "name": "Nija",
+              "mbType": "Person",
+              "disambiguation": "US singer, songwriter and producer Nija Charles"
+            }
           }
         },
         {
@@ -2895,84 +2885,43 @@
           "title": "As It Was",
           "artist": "Harry Styles",
           "anchor": {
-            "title": "As It Was",
+            "title": "Harry's House",
             "artist": "Harry Styles"
           },
           "won": false,
           "resolved": {
-            "status": "ambiguous",
-            "candidates": [
-              {
-                "mbid": "1d1edf98-48d0-43ea-9b78-82c56a1960b5",
-                "label": "As It Was — Harry Styles",
-                "score": 100,
-                "seed": {
-                  "kind": "recording",
-                  "title": "As It Was",
-                  "durationSec": 166,
-                  "credits": [
-                    {
-                      "name": "Harry Styles",
-                      "artist": {
-                        "id": "7eb1ce54-a355-41f9-8d68-e018b096d427",
-                        "name": "Harry Styles"
-                      }
-                    }
-                  ],
-                  "anchorMbid": "b800ebe9-970a-4501-93d9-c23ba3c0284e",
-                  "anchor": {
-                    "kind": "release_group",
-                    "title": "As It Was",
-                    "category": "single_ep",
-                    "firstReleaseDate": "2022-03-21",
-                    "credits": [
-                      {
-                        "name": "Harry Styles",
-                        "artist": {
-                          "id": "7eb1ce54-a355-41f9-8d68-e018b096d427",
-                          "name": "Harry Styles"
-                        }
-                      }
-                    ]
+            "status": "manual",
+            "mbid": "53969964-673a-4407-9396-3087be9245f6",
+            "seed": {
+              "kind": "recording",
+              "title": "As It Was",
+              "durationSec": 167,
+              "credits": [
+                {
+                  "name": "Harry Styles",
+                  "artist": {
+                    "id": "7eb1ce54-a355-41f9-8d68-e018b096d427",
+                    "name": "Harry Styles"
                   }
                 }
-              },
-              {
-                "mbid": "53969964-673a-4407-9396-3087be9245f6",
-                "label": "As It Was — Harry Styles",
-                "score": 100,
-                "seed": {
-                  "kind": "recording",
-                  "title": "As It Was",
-                  "durationSec": 167,
-                  "credits": [
-                    {
-                      "name": "Harry Styles",
-                      "artist": {
-                        "id": "7eb1ce54-a355-41f9-8d68-e018b096d427",
-                        "name": "Harry Styles"
-                      }
+              ],
+              "anchorMbid": "d712ba0e-25fa-4c03-aecd-ec0c100deba5",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Harry’s House",
+                "category": "studio",
+                "firstReleaseDate": "2022-04-20",
+                "credits": [
+                  {
+                    "name": "Harry Styles",
+                    "artist": {
+                      "id": "7eb1ce54-a355-41f9-8d68-e018b096d427",
+                      "name": "Harry Styles"
                     }
-                  ],
-                  "anchorMbid": "b800ebe9-970a-4501-93d9-c23ba3c0284e",
-                  "anchor": {
-                    "kind": "release_group",
-                    "title": "As It Was",
-                    "category": "single_ep",
-                    "firstReleaseDate": "2022-03-21",
-                    "credits": [
-                      {
-                        "name": "Harry Styles",
-                        "artist": {
-                          "id": "7eb1ce54-a355-41f9-8d68-e018b096d427",
-                          "name": "Harry Styles"
-                        }
-                      }
-                    ]
                   }
-                }
+                ]
               }
-            ]
+            }
           }
         }
       ]
@@ -3368,111 +3317,54 @@
           },
           "won": false,
           "resolved": {
-            "status": "ambiguous",
-            "candidates": [
-              {
-                "mbid": "72af7106-ffb0-4a32-af3a-d42f28913cca",
-                "label": "Don’t Forget My Love — Diplo & Miguel",
-                "score": 100,
-                "seed": {
-                  "kind": "recording",
-                  "title": "Don’t Forget My Love",
-                  "durationSec": 199,
-                  "credits": [
-                    {
-                      "name": "Diplo",
-                      "joinphrase": " & ",
-                      "artist": {
-                        "id": "a56bd8f9-8ef8-4d63-89a4-794ed1360dd2",
-                        "name": "Diplo"
-                      }
-                    },
-                    {
-                      "name": "Miguel",
-                      "artist": {
-                        "id": "285e1285-aecc-478f-a8da-0c8cf69e1217",
-                        "name": "Miguel"
-                      }
-                    }
-                  ],
-                  "anchorMbid": "c8e08a5a-8106-496f-8d7e-61fe32879a7b",
-                  "anchor": {
-                    "kind": "release_group",
-                    "title": "Don’t Forget My Love",
-                    "category": "single_ep",
-                    "firstReleaseDate": "2022-02-11",
-                    "credits": [
-                      {
-                        "name": "Diplo",
-                        "joinphrase": " & ",
-                        "artist": {
-                          "id": "a56bd8f9-8ef8-4d63-89a4-794ed1360dd2",
-                          "name": "Diplo"
-                        }
-                      },
-                      {
-                        "name": "Miguel",
-                        "artist": {
-                          "id": "285e1285-aecc-478f-a8da-0c8cf69e1217",
-                          "name": "Miguel"
-                        }
-                      }
-                    ]
+            "status": "manual",
+            "mbid": "951bcf21-a76e-46b7-b5bd-d7311209eac8",
+            "seed": {
+              "kind": "recording",
+              "title": "Don’t Forget My Love",
+              "durationSec": 199,
+              "credits": [
+                {
+                  "name": "Diplo",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "a56bd8f9-8ef8-4d63-89a4-794ed1360dd2",
+                    "name": "Diplo"
+                  }
+                },
+                {
+                  "name": "Miguel",
+                  "artist": {
+                    "id": "285e1285-aecc-478f-a8da-0c8cf69e1217",
+                    "name": "Miguel"
                   }
                 }
-              },
-              {
-                "mbid": "951bcf21-a76e-46b7-b5bd-d7311209eac8",
-                "label": "Don’t Forget My Love — Diplo & Miguel",
-                "score": 100,
-                "seed": {
-                  "kind": "recording",
-                  "title": "Don’t Forget My Love",
-                  "durationSec": 199,
-                  "credits": [
-                    {
-                      "name": "Diplo",
-                      "joinphrase": " & ",
-                      "artist": {
-                        "id": "a56bd8f9-8ef8-4d63-89a4-794ed1360dd2",
-                        "name": "Diplo"
-                      }
-                    },
-                    {
-                      "name": "Miguel",
-                      "artist": {
-                        "id": "285e1285-aecc-478f-a8da-0c8cf69e1217",
-                        "name": "Miguel"
-                      }
+              ],
+              "anchorMbid": "c8e08a5a-8106-496f-8d7e-61fe32879a7b",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Don’t Forget My Love",
+                "category": "single_ep",
+                "firstReleaseDate": "2022-02-11",
+                "credits": [
+                  {
+                    "name": "Diplo",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "a56bd8f9-8ef8-4d63-89a4-794ed1360dd2",
+                      "name": "Diplo"
                     }
-                  ],
-                  "anchorMbid": "c8e08a5a-8106-496f-8d7e-61fe32879a7b",
-                  "anchor": {
-                    "kind": "release_group",
-                    "title": "Don’t Forget My Love",
-                    "category": "single_ep",
-                    "firstReleaseDate": "2022-02-11",
-                    "credits": [
-                      {
-                        "name": "Diplo",
-                        "joinphrase": " & ",
-                        "artist": {
-                          "id": "a56bd8f9-8ef8-4d63-89a4-794ed1360dd2",
-                          "name": "Diplo"
-                        }
-                      },
-                      {
-                        "name": "Miguel",
-                        "artist": {
-                          "id": "285e1285-aecc-478f-a8da-0c8cf69e1217",
-                          "name": "Miguel"
-                        }
-                      }
-                    ]
+                  },
+                  {
+                    "name": "Miguel",
+                    "artist": {
+                      "id": "285e1285-aecc-478f-a8da-0c8cf69e1217",
+                      "name": "Miguel"
+                    }
                   }
-                }
+                ]
               }
-            ]
+            }
           }
         },
         {
@@ -3636,13 +3528,43 @@
           "title": "Broken Horses",
           "artist": "Brandi Carlile",
           "anchor": {
-            "title": "Broken Horses",
+            "title": "In These Silent Days",
             "artist": "Brandi Carlile"
           },
           "won": true,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "079acce3-8472-4f1c-a351-5079db966fed",
+            "seed": {
+              "kind": "recording",
+              "title": "Broken Horses",
+              "durationSec": 304,
+              "credits": [
+                {
+                  "name": "Brandi Carlile",
+                  "artist": {
+                    "id": "baf05baf-69fb-47dd-93c2-033536b8c385",
+                    "name": "Brandi Carlile"
+                  }
+                }
+              ],
+              "anchorMbid": "f72c752e-599f-40f0-b1db-ec74319303e0",
+              "anchor": {
+                "kind": "release_group",
+                "title": "In These Silent Days",
+                "category": "studio",
+                "firstReleaseDate": "2021-10-01",
+                "credits": [
+                  {
+                    "name": "Brandi Carlile",
+                    "artist": {
+                      "id": "baf05baf-69fb-47dd-93c2-033536b8c385",
+                      "name": "Brandi Carlile"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -3829,108 +3751,89 @@
           },
           "won": false,
           "resolved": {
-            "status": "ambiguous",
-            "candidates": [
-              {
-                "mbid": "d47d3151-38a8-43a2-8a02-2e7d8c50a7ba",
-                "label": "Patient Number 9 — Ozzy Osbourne feat. Jeff Beck",
-                "score": 100,
-                "seed": {
-                  "kind": "recording",
-                  "title": "Patient Number 9",
-                  "durationSec": 441,
-                  "credits": [
-                    {
-                      "name": "Ozzy Osbourne",
-                      "joinphrase": " feat. ",
-                      "artist": {
-                        "id": "8aa5b65a-5b3c-4029-92bf-47a544356934",
-                        "name": "Ozzy Osbourne"
-                      }
-                    },
-                    {
-                      "name": "Jeff Beck",
-                      "artist": {
-                        "id": "14a4bc78-1c2d-4ca7-8d1b-9b58076a2a17",
-                        "name": "Jeff Beck"
-                      }
-                    }
-                  ],
-                  "anchorMbid": "04773d95-c015-4ed3-a114-021391c6af7a",
-                  "anchor": {
-                    "kind": "release_group",
-                    "title": "Patient Number 9",
-                    "category": "studio",
-                    "firstReleaseDate": "2022-09-09",
-                    "credits": [
-                      {
-                        "name": "Ozzy Osbourne",
-                        "artist": {
-                          "id": "8aa5b65a-5b3c-4029-92bf-47a544356934",
-                          "name": "Ozzy Osbourne"
-                        }
-                      }
-                    ]
+            "status": "manual",
+            "mbid": "d47d3151-38a8-43a2-8a02-2e7d8c50a7ba",
+            "seed": {
+              "kind": "recording",
+              "title": "Patient Number 9",
+              "durationSec": 441,
+              "credits": [
+                {
+                  "name": "Ozzy Osbourne",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "8aa5b65a-5b3c-4029-92bf-47a544356934",
+                    "name": "Ozzy Osbourne"
+                  }
+                },
+                {
+                  "name": "Jeff Beck",
+                  "artist": {
+                    "id": "14a4bc78-1c2d-4ca7-8d1b-9b58076a2a17",
+                    "name": "Jeff Beck"
                   }
                 }
-              },
-              {
-                "mbid": "4d1aad6e-7889-4ac5-aff6-5f4325f176f0",
-                "label": "Patient Number 9 — Ozzy Osbourne feat. Jeff Beck",
-                "score": 100,
-                "seed": {
-                  "kind": "recording",
-                  "title": "Patient Number 9",
-                  "durationSec": 441,
-                  "credits": [
-                    {
-                      "name": "Ozzy Osbourne",
-                      "joinphrase": " feat. ",
-                      "artist": {
-                        "id": "8aa5b65a-5b3c-4029-92bf-47a544356934",
-                        "name": "Ozzy Osbourne"
-                      }
-                    },
-                    {
-                      "name": "Jeff Beck",
-                      "artist": {
-                        "id": "14a4bc78-1c2d-4ca7-8d1b-9b58076a2a17",
-                        "name": "Jeff Beck"
-                      }
+              ],
+              "anchorMbid": "04773d95-c015-4ed3-a114-021391c6af7a",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Patient Number 9",
+                "category": "studio",
+                "firstReleaseDate": "2022-09-09",
+                "credits": [
+                  {
+                    "name": "Ozzy Osbourne",
+                    "artist": {
+                      "id": "8aa5b65a-5b3c-4029-92bf-47a544356934",
+                      "name": "Ozzy Osbourne"
                     }
-                  ],
-                  "anchorMbid": "04773d95-c015-4ed3-a114-021391c6af7a",
-                  "anchor": {
-                    "kind": "release_group",
-                    "title": "Patient Number 9",
-                    "category": "studio",
-                    "firstReleaseDate": "2022-09-09",
-                    "credits": [
-                      {
-                        "name": "Ozzy Osbourne",
-                        "artist": {
-                          "id": "8aa5b65a-5b3c-4029-92bf-47a544356934",
-                          "name": "Ozzy Osbourne"
-                        }
-                      }
-                    ]
                   }
-                }
+                ]
               }
-            ]
+            }
           }
         },
         {
           "title": "Holiday",
           "artist": "Turnstile",
           "anchor": {
-            "title": "Holiday",
+            "title": "Glow On",
             "artist": "Turnstile"
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "manual",
+            "mbid": "d98c9021-5d60-42d5-a594-daee5a9b2165",
+            "seed": {
+              "kind": "recording",
+              "title": "HOLIDAY",
+              "durationSec": 172,
+              "credits": [
+                {
+                  "name": "Turnstile",
+                  "artist": {
+                    "id": "7b748dac-f5ce-45a7-9b95-c1d8b5b013ed",
+                    "name": "Turnstile"
+                  }
+                }
+              ],
+              "anchorMbid": "0f06bec9-22c7-4f7d-8784-5e902096246b",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Glow On",
+                "category": "studio",
+                "firstReleaseDate": "2021-08-27",
+                "credits": [
+                  {
+                    "name": "Turnstile",
+                    "artist": {
+                      "id": "7b748dac-f5ce-45a7-9b95-c1d8b5b013ed",
+                      "name": "Turnstile"
+                    }
+                  }
+                ]
+              }
+            }
           }
         }
       ]
@@ -4183,13 +4086,43 @@
           "title": "Broken Horses",
           "artist": "Brandi Carlile",
           "anchor": {
-            "title": "Broken Horses",
+            "title": "In These Silent Days",
             "artist": "Brandi Carlile"
           },
           "won": true,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "079acce3-8472-4f1c-a351-5079db966fed",
+            "seed": {
+              "kind": "recording",
+              "title": "Broken Horses",
+              "durationSec": 304,
+              "credits": [
+                {
+                  "name": "Brandi Carlile",
+                  "artist": {
+                    "id": "baf05baf-69fb-47dd-93c2-033536b8c385",
+                    "name": "Brandi Carlile"
+                  }
+                }
+              ],
+              "anchorMbid": "f72c752e-599f-40f0-b1db-ec74319303e0",
+              "anchor": {
+                "kind": "release_group",
+                "title": "In These Silent Days",
+                "category": "studio",
+                "firstReleaseDate": "2021-10-01",
+                "credits": [
+                  {
+                    "name": "Brandi Carlile",
+                    "artist": {
+                      "id": "baf05baf-69fb-47dd-93c2-033536b8c385",
+                      "name": "Brandi Carlile"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -4282,13 +4215,43 @@
           "title": "Harmonia's Dream",
           "artist": "The War On Drugs",
           "anchor": {
-            "title": "Harmonia's Dream",
+            "title": "I Don’t Live Here Anymore",
             "artist": "The War On Drugs"
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "bc1b6c8a-fa7b-43b5-864e-8b17dac44ec7",
+            "seed": {
+              "kind": "recording",
+              "title": "Harmonia’s Dream",
+              "durationSec": 386,
+              "credits": [
+                {
+                  "name": "The War on Drugs",
+                  "artist": {
+                    "id": "87b9b3b8-ab93-426c-a200-4012d667a626",
+                    "name": "The War on Drugs"
+                  }
+                }
+              ],
+              "anchorMbid": "af8f5795-7d03-449d-b6ee-65cf4b1e3a95",
+              "anchor": {
+                "kind": "release_group",
+                "title": "I Don’t Live Here Anymore",
+                "category": "studio",
+                "firstReleaseDate": "2021-10-29",
+                "credits": [
+                  {
+                    "name": "The War on Drugs",
+                    "artist": {
+                      "id": "87b9b3b8-ab93-426c-a200-4012d667a626",
+                      "name": "The War on Drugs"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -4303,95 +4266,46 @@
           },
           "won": false,
           "resolved": {
-            "status": "ambiguous",
-            "candidates": [
-              {
-                "mbid": "d47d3151-38a8-43a2-8a02-2e7d8c50a7ba",
-                "label": "Patient Number 9 — Ozzy Osbourne feat. Jeff Beck",
-                "score": 100,
-                "seed": {
-                  "kind": "recording",
-                  "title": "Patient Number 9",
-                  "durationSec": 441,
-                  "credits": [
-                    {
-                      "name": "Ozzy Osbourne",
-                      "joinphrase": " feat. ",
-                      "artist": {
-                        "id": "8aa5b65a-5b3c-4029-92bf-47a544356934",
-                        "name": "Ozzy Osbourne"
-                      }
-                    },
-                    {
-                      "name": "Jeff Beck",
-                      "artist": {
-                        "id": "14a4bc78-1c2d-4ca7-8d1b-9b58076a2a17",
-                        "name": "Jeff Beck"
-                      }
-                    }
-                  ],
-                  "anchorMbid": "04773d95-c015-4ed3-a114-021391c6af7a",
-                  "anchor": {
-                    "kind": "release_group",
-                    "title": "Patient Number 9",
-                    "category": "studio",
-                    "firstReleaseDate": "2022-09-09",
-                    "credits": [
-                      {
-                        "name": "Ozzy Osbourne",
-                        "artist": {
-                          "id": "8aa5b65a-5b3c-4029-92bf-47a544356934",
-                          "name": "Ozzy Osbourne"
-                        }
-                      }
-                    ]
+            "status": "manual",
+            "mbid": "d47d3151-38a8-43a2-8a02-2e7d8c50a7ba",
+            "seed": {
+              "kind": "recording",
+              "title": "Patient Number 9",
+              "durationSec": 441,
+              "credits": [
+                {
+                  "name": "Ozzy Osbourne",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "8aa5b65a-5b3c-4029-92bf-47a544356934",
+                    "name": "Ozzy Osbourne"
+                  }
+                },
+                {
+                  "name": "Jeff Beck",
+                  "artist": {
+                    "id": "14a4bc78-1c2d-4ca7-8d1b-9b58076a2a17",
+                    "name": "Jeff Beck"
                   }
                 }
-              },
-              {
-                "mbid": "4d1aad6e-7889-4ac5-aff6-5f4325f176f0",
-                "label": "Patient Number 9 — Ozzy Osbourne feat. Jeff Beck",
-                "score": 100,
-                "seed": {
-                  "kind": "recording",
-                  "title": "Patient Number 9",
-                  "durationSec": 441,
-                  "credits": [
-                    {
-                      "name": "Ozzy Osbourne",
-                      "joinphrase": " feat. ",
-                      "artist": {
-                        "id": "8aa5b65a-5b3c-4029-92bf-47a544356934",
-                        "name": "Ozzy Osbourne"
-                      }
-                    },
-                    {
-                      "name": "Jeff Beck",
-                      "artist": {
-                        "id": "14a4bc78-1c2d-4ca7-8d1b-9b58076a2a17",
-                        "name": "Jeff Beck"
-                      }
+              ],
+              "anchorMbid": "04773d95-c015-4ed3-a114-021391c6af7a",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Patient Number 9",
+                "category": "studio",
+                "firstReleaseDate": "2022-09-09",
+                "credits": [
+                  {
+                    "name": "Ozzy Osbourne",
+                    "artist": {
+                      "id": "8aa5b65a-5b3c-4029-92bf-47a544356934",
+                      "name": "Ozzy Osbourne"
                     }
-                  ],
-                  "anchorMbid": "04773d95-c015-4ed3-a114-021391c6af7a",
-                  "anchor": {
-                    "kind": "release_group",
-                    "title": "Patient Number 9",
-                    "category": "studio",
-                    "firstReleaseDate": "2022-09-09",
-                    "credits": [
-                      {
-                        "name": "Ozzy Osbourne",
-                        "artist": {
-                          "id": "8aa5b65a-5b3c-4029-92bf-47a544356934",
-                          "name": "Ozzy Osbourne"
-                        }
-                      }
-                    ]
                   }
-                }
+                ]
               }
-            ]
+            }
           }
         }
       ]
@@ -4639,13 +4553,43 @@
           "title": "Hrs and Hrs",
           "artist": "Muni Long",
           "anchor": {
-            "title": "Hrs and Hrs",
+            "title": "Public Displays of Affection",
             "artist": "Muni Long"
           },
           "won": true,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "039a5310-ec9b-4500-8307-024dcac1b71f",
+            "seed": {
+              "kind": "recording",
+              "title": "Hrs and Hrs",
+              "durationSec": 204,
+              "credits": [
+                {
+                  "name": "Muni Long",
+                  "artist": {
+                    "id": "66acfbaf-a28e-49c1-aeff-ef92e4358d90",
+                    "name": "Muni Long"
+                  }
+                }
+              ],
+              "anchorMbid": "334f0e97-3e13-478a-acc9-03429a7a1ff0",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Public Displays of Affection",
+                "category": "studio",
+                "firstReleaseDate": "2022-09-23",
+                "credits": [
+                  {
+                    "name": "Muni Long",
+                    "artist": {
+                      "id": "66acfbaf-a28e-49c1-aeff-ef92e4358d90",
+                      "name": "Muni Long"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -4695,7 +4639,7 @@
           "title": "Here With Me",
           "artist": "Mary J. Blige featuring Anderson .Paak",
           "anchor": {
-            "title": "Here With Me",
+            "title": "Good Morning Gorgeous",
             "artist": "Mary J. Blige"
           },
           "searchAs": {
@@ -4703,8 +4647,46 @@
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "08b730a8-8056-4681-9e71-935a55680f5e",
+            "seed": {
+              "kind": "recording",
+              "title": "Here With Me",
+              "durationSec": 140,
+              "credits": [
+                {
+                  "name": "Mary J. Blige",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
+                    "name": "Mary J. Blige"
+                  }
+                },
+                {
+                  "name": "Anderson .Paak",
+                  "artist": {
+                    "id": "d02dd67e-f655-4600-bc47-f789f59e7367",
+                    "name": "Anderson .Paak"
+                  }
+                }
+              ],
+              "anchorMbid": "453d1b44-bd15-4594-bd1c-7afc675ee84a",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Good Morning Gorgeous",
+                "category": "studio",
+                "firstReleaseDate": "2022-02-11",
+                "credits": [
+                  {
+                    "name": "Mary J. Blige",
+                    "artist": {
+                      "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
+                      "name": "Mary J. Blige"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -4754,13 +4736,43 @@
           "title": "Hurt Me So Good",
           "artist": "Jazmine Sullivan",
           "anchor": {
-            "title": "Hurt Me So Good",
+            "title": "Heaux Tales",
             "artist": "Jazmine Sullivan"
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "22d96a01-3a86-4e11-802d-a83691f66f96",
+            "seed": {
+              "kind": "recording",
+              "title": "Hurt Me So Good",
+              "durationSec": 212,
+              "credits": [
+                {
+                  "name": "Jazmine Sullivan",
+                  "artist": {
+                    "id": "6f92929a-6381-48ac-b348-83b43b9cf646",
+                    "name": "Jazmine Sullivan"
+                  }
+                }
+              ],
+              "anchorMbid": "912cb15a-5f34-46cd-b59b-ab1912ab6e45",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Heaux Tales",
+                "category": "studio",
+                "firstReleaseDate": "2021-01-08",
+                "credits": [
+                  {
+                    "name": "Jazmine Sullivan",
+                    "artist": {
+                      "id": "6f92929a-6381-48ac-b348-83b43b9cf646",
+                      "name": "Jazmine Sullivan"
+                    }
+                  }
+                ]
+              }
+            }
           }
         }
       ]
@@ -4773,13 +4785,43 @@
           "title": "Plastic Off the Sofa",
           "artist": "Beyoncé",
           "anchor": {
-            "title": "Plastic Off the Sofa",
+            "title": "RENAISSANCE",
             "artist": "Beyoncé"
           },
           "won": true,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "ecb56388-67a5-447a-9bc6-f3106d24fc39",
+            "seed": {
+              "kind": "recording",
+              "title": "PLASTIC OFF THE SOFA",
+              "durationSec": 254,
+              "credits": [
+                {
+                  "name": "Beyoncé",
+                  "artist": {
+                    "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                    "name": "Beyoncé"
+                  }
+                }
+              ],
+              "anchorMbid": "2c385052-5083-43a2-b1e5-36566d2ae3c0",
+              "anchor": {
+                "kind": "release_group",
+                "title": "RENAISSANCE",
+                "category": "studio",
+                "firstReleaseDate": "2022-07-29",
+                "credits": [
+                  {
+                    "name": "Beyoncé",
+                    "artist": {
+                      "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                      "name": "Beyoncé"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -4834,87 +4876,38 @@
           },
           "won": false,
           "resolved": {
-            "status": "ambiguous",
-            "candidates": [
-              {
-                "mbid": "9aeaf67f-bc61-4f76-838c-9cb897406df8",
-                "label": "Good Morning Gorgeous — Mary J. Blige",
-                "score": 100,
-                "seed": {
-                  "kind": "recording",
-                  "title": "Good Morning Gorgeous",
-                  "durationSec": 175,
-                  "credits": [
-                    {
-                      "name": "Mary J. Blige",
-                      "artist": {
-                        "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
-                        "name": "Mary J. Blige"
-                      }
-                    }
-                  ],
-                  "anchorMbid": "453d1b44-bd15-4594-bd1c-7afc675ee84a",
-                  "anchor": {
-                    "kind": "release_group",
-                    "title": "Good Morning Gorgeous",
-                    "category": "studio",
-                    "firstReleaseDate": "2022-02-11",
-                    "credits": [
-                      {
-                        "name": "Mary J. Blige",
-                        "artist": {
-                          "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
-                          "name": "Mary J. Blige"
-                        }
-                      }
-                    ]
+            "status": "manual",
+            "mbid": "9aeaf67f-bc61-4f76-838c-9cb897406df8",
+            "seed": {
+              "kind": "recording",
+              "title": "Good Morning Gorgeous",
+              "durationSec": 175,
+              "credits": [
+                {
+                  "name": "Mary J. Blige",
+                  "artist": {
+                    "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
+                    "name": "Mary J. Blige"
                   }
                 }
-              },
-              {
-                "mbid": "fad27b25-2dd7-4bce-99a2-04ac0826beed",
-                "label": "Good Morning Gorgeous — Mary J. Blige feat. H.E.R.",
-                "score": 100,
-                "seed": {
-                  "kind": "recording",
-                  "title": "Good Morning Gorgeous",
-                  "durationSec": 175,
-                  "credits": [
-                    {
-                      "name": "Mary J. Blige",
-                      "joinphrase": " feat. ",
-                      "artist": {
-                        "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
-                        "name": "Mary J. Blige"
-                      }
-                    },
-                    {
-                      "name": "H.E.R.",
-                      "artist": {
-                        "id": "93998e01-ff53-4af7-ba2a-5674adcdf21e",
-                        "name": "H.E.R."
-                      }
+              ],
+              "anchorMbid": "453d1b44-bd15-4594-bd1c-7afc675ee84a",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Good Morning Gorgeous",
+                "category": "studio",
+                "firstReleaseDate": "2022-02-11",
+                "credits": [
+                  {
+                    "name": "Mary J. Blige",
+                    "artist": {
+                      "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
+                      "name": "Mary J. Blige"
                     }
-                  ],
-                  "anchorMbid": "453d1b44-bd15-4594-bd1c-7afc675ee84a",
-                  "anchor": {
-                    "kind": "release_group",
-                    "title": "Good Morning Gorgeous",
-                    "category": "studio",
-                    "firstReleaseDate": "2022-02-11",
-                    "credits": [
-                      {
-                        "name": "Mary J. Blige",
-                        "artist": {
-                          "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
-                          "name": "Mary J. Blige"
-                        }
-                      }
-                    ]
                   }
-                }
+                ]
               }
-            ]
+            }
           }
         },
         {
@@ -5099,113 +5092,124 @@
           },
           "won": false,
           "resolved": {
-            "status": "ambiguous",
-            "candidates": [
-              {
-                "mbid": "9aeaf67f-bc61-4f76-838c-9cb897406df8",
-                "label": "Good Morning Gorgeous — Mary J. Blige",
-                "score": 100,
-                "seed": {
-                  "kind": "recording",
-                  "title": "Good Morning Gorgeous",
-                  "durationSec": 175,
-                  "credits": [
-                    {
-                      "name": "Mary J. Blige",
-                      "artist": {
-                        "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
-                        "name": "Mary J. Blige"
-                      }
-                    }
-                  ],
-                  "anchorMbid": "453d1b44-bd15-4594-bd1c-7afc675ee84a",
-                  "anchor": {
-                    "kind": "release_group",
-                    "title": "Good Morning Gorgeous",
-                    "category": "studio",
-                    "firstReleaseDate": "2022-02-11",
-                    "credits": [
-                      {
-                        "name": "Mary J. Blige",
-                        "artist": {
-                          "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
-                          "name": "Mary J. Blige"
-                        }
-                      }
-                    ]
+            "status": "manual",
+            "mbid": "9aeaf67f-bc61-4f76-838c-9cb897406df8",
+            "seed": {
+              "kind": "recording",
+              "title": "Good Morning Gorgeous",
+              "durationSec": 175,
+              "credits": [
+                {
+                  "name": "Mary J. Blige",
+                  "artist": {
+                    "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
+                    "name": "Mary J. Blige"
                   }
                 }
-              },
-              {
-                "mbid": "fad27b25-2dd7-4bce-99a2-04ac0826beed",
-                "label": "Good Morning Gorgeous — Mary J. Blige feat. H.E.R.",
-                "score": 100,
-                "seed": {
-                  "kind": "recording",
-                  "title": "Good Morning Gorgeous",
-                  "durationSec": 175,
-                  "credits": [
-                    {
-                      "name": "Mary J. Blige",
-                      "joinphrase": " feat. ",
-                      "artist": {
-                        "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
-                        "name": "Mary J. Blige"
-                      }
-                    },
-                    {
-                      "name": "H.E.R.",
-                      "artist": {
-                        "id": "93998e01-ff53-4af7-ba2a-5674adcdf21e",
-                        "name": "H.E.R."
-                      }
+              ],
+              "anchorMbid": "453d1b44-bd15-4594-bd1c-7afc675ee84a",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Good Morning Gorgeous",
+                "category": "studio",
+                "firstReleaseDate": "2022-02-11",
+                "credits": [
+                  {
+                    "name": "Mary J. Blige",
+                    "artist": {
+                      "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
+                      "name": "Mary J. Blige"
                     }
-                  ],
-                  "anchorMbid": "453d1b44-bd15-4594-bd1c-7afc675ee84a",
-                  "anchor": {
-                    "kind": "release_group",
-                    "title": "Good Morning Gorgeous",
-                    "category": "studio",
-                    "firstReleaseDate": "2022-02-11",
-                    "credits": [
-                      {
-                        "name": "Mary J. Blige",
-                        "artist": {
-                          "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
-                          "name": "Mary J. Blige"
-                        }
-                      }
-                    ]
                   }
-                }
+                ]
               }
-            ]
+            }
           }
         },
         {
           "title": "Hrs and Hrs",
           "artist": "Muni Long",
           "anchor": {
-            "title": "Hrs and Hrs",
+            "title": "Public Displays of Affection",
             "artist": "Muni Long"
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "039a5310-ec9b-4500-8307-024dcac1b71f",
+            "seed": {
+              "kind": "recording",
+              "title": "Hrs and Hrs",
+              "durationSec": 204,
+              "credits": [
+                {
+                  "name": "Muni Long",
+                  "artist": {
+                    "id": "66acfbaf-a28e-49c1-aeff-ef92e4358d90",
+                    "name": "Muni Long"
+                  }
+                }
+              ],
+              "anchorMbid": "334f0e97-3e13-478a-acc9-03429a7a1ff0",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Public Displays of Affection",
+                "category": "studio",
+                "firstReleaseDate": "2022-09-23",
+                "credits": [
+                  {
+                    "name": "Muni Long",
+                    "artist": {
+                      "id": "66acfbaf-a28e-49c1-aeff-ef92e4358d90",
+                      "name": "Muni Long"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
           "title": "Hurt Me So Good",
           "artist": "Jazmine Sullivan",
           "anchor": {
-            "title": "Hurt Me So Good",
+            "title": "Heaux Tales",
             "artist": "Jazmine Sullivan"
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "22d96a01-3a86-4e11-802d-a83691f66f96",
+            "seed": {
+              "kind": "recording",
+              "title": "Hurt Me So Good",
+              "durationSec": 212,
+              "credits": [
+                {
+                  "name": "Jazmine Sullivan",
+                  "artist": {
+                    "id": "6f92929a-6381-48ac-b348-83b43b9cf646",
+                    "name": "Jazmine Sullivan"
+                  }
+                }
+              ],
+              "anchorMbid": "912cb15a-5f34-46cd-b59b-ab1912ab6e45",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Heaux Tales",
+                "category": "studio",
+                "firstReleaseDate": "2021-01-08",
+                "credits": [
+                  {
+                    "name": "Jazmine Sullivan",
+                    "artist": {
+                      "id": "6f92929a-6381-48ac-b348-83b43b9cf646",
+                      "name": "Jazmine Sullivan"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -5433,7 +5437,7 @@
           "title": "Pushin P",
           "artist": "Gunna and Future featuring Young Thug",
           "anchor": {
-            "title": "Pushin P",
+            "title": "DS4EVER",
             "artist": "Gunna"
           },
           "searchAs": {
@@ -5441,8 +5445,54 @@
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "930eaed0-0217-45d7-86dc-69e147156ec1",
+            "seed": {
+              "kind": "recording",
+              "title": "pushin P",
+              "durationSec": 136,
+              "credits": [
+                {
+                  "name": "Gunna",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "100b8734-f4f0-4536-9960-47f7c59d1b4c",
+                    "name": "Gunna"
+                  }
+                },
+                {
+                  "name": "Future",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "48262e82-db9f-4a92-b650-dfef979b73ec",
+                    "name": "Future"
+                  }
+                },
+                {
+                  "name": "Young Thug",
+                  "artist": {
+                    "id": "800760de-bdf8-43a2-8fe0-44a2401a5515",
+                    "name": "Young Thug"
+                  }
+                }
+              ],
+              "anchorMbid": "df0c74cb-5759-41bc-be69-a5dab216ab5e",
+              "anchor": {
+                "kind": "release_group",
+                "title": "DS4EVER",
+                "category": "studio",
+                "firstReleaseDate": "2022-01-07",
+                "credits": [
+                  {
+                    "name": "Gunna",
+                    "artist": {
+                      "id": "100b8734-f4f0-4536-9960-47f7c59d1b4c",
+                      "name": "Gunna"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -5716,7 +5766,7 @@
           "title": "Die Hard",
           "artist": "Kendrick Lamar featuring Blxst and Amanda Reifer",
           "anchor": {
-            "title": "Die Hard",
+            "title": "Mr. Morale & the Big Steppers",
             "artist": "Kendrick Lamar"
           },
           "searchAs": {
@@ -5724,8 +5774,54 @@
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "ecb49a39-b3f9-4445-8d4a-3134395dc495",
+            "seed": {
+              "kind": "recording",
+              "title": "Die Hard",
+              "durationSec": 239,
+              "credits": [
+                {
+                  "name": "Kendrick Lamar",
+                  "joinphrase": " ft. ",
+                  "artist": {
+                    "id": "381086ea-f511-4aba-bdf9-71c753dc5077",
+                    "name": "Kendrick Lamar"
+                  }
+                },
+                {
+                  "name": "Blxst",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "41ca19c2-935f-4647-9ef5-26f81291a9aa",
+                    "name": "Blxst"
+                  }
+                },
+                {
+                  "name": "Amanda Reifer",
+                  "artist": {
+                    "id": "9d7a44f1-ec57-4d36-a9d3-a665c69d19f0",
+                    "name": "Amanda Reifer"
+                  }
+                }
+              ],
+              "anchorMbid": "6bd70eee-bd46-4738-851a-f50c19d8d6db",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Mr. Morale & the Big Steppers",
+                "category": "studio",
+                "firstReleaseDate": "2022-05-13",
+                "credits": [
+                  {
+                    "name": "Kendrick Lamar",
+                    "artist": {
+                      "id": "381086ea-f511-4aba-bdf9-71c753dc5077",
+                      "name": "Kendrick Lamar"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -5794,7 +5890,7 @@
           "title": "Churchill Downs",
           "artist": "Jack Harlow featuring Drake",
           "anchor": {
-            "title": "Churchill Downs",
+            "title": "Come Home the Kids Miss You",
             "artist": "Jack Harlow"
           },
           "searchAs": {
@@ -5802,8 +5898,46 @@
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "9973396c-6154-4e85-9016-bf5424aea466",
+            "seed": {
+              "kind": "recording",
+              "title": "Churchill Downs",
+              "durationSec": 309,
+              "credits": [
+                {
+                  "name": "Jack Harlow",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "134cb0bc-06fa-42f7-8078-b0c858349975",
+                    "name": "Jack Harlow"
+                  }
+                },
+                {
+                  "name": "Drake",
+                  "artist": {
+                    "id": "9fff2f8a-21e6-47de-a2b8-7f449929d43f",
+                    "name": "Drake"
+                  }
+                }
+              ],
+              "anchorMbid": "d0c823fc-ad7c-434d-8555-ad8e7592c33c",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Come Home the Kids Miss You",
+                "category": "studio",
+                "firstReleaseDate": "2022-05-05",
+                "credits": [
+                  {
+                    "name": "Jack Harlow",
+                    "artist": {
+                      "id": "134cb0bc-06fa-42f7-8078-b0c858349975",
+                      "name": "Jack Harlow"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -5896,7 +6030,7 @@
           "title": "Pushin P",
           "artist": "Gunna and Future featuring Young Thug",
           "anchor": {
-            "title": "Pushin P",
+            "title": "DS4EVER",
             "artist": "Gunna"
           },
           "searchAs": {
@@ -5904,8 +6038,54 @@
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "930eaed0-0217-45d7-86dc-69e147156ec1",
+            "seed": {
+              "kind": "recording",
+              "title": "pushin P",
+              "durationSec": 136,
+              "credits": [
+                {
+                  "name": "Gunna",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "100b8734-f4f0-4536-9960-47f7c59d1b4c",
+                    "name": "Gunna"
+                  }
+                },
+                {
+                  "name": "Future",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "48262e82-db9f-4a92-b650-dfef979b73ec",
+                    "name": "Future"
+                  }
+                },
+                {
+                  "name": "Young Thug",
+                  "artist": {
+                    "id": "800760de-bdf8-43a2-8fe0-44a2401a5515",
+                    "name": "Young Thug"
+                  }
+                }
+              ],
+              "anchorMbid": "df0c74cb-5759-41bc-be69-a5dab216ab5e",
+              "anchor": {
+                "kind": "release_group",
+                "title": "DS4EVER",
+                "category": "studio",
+                "firstReleaseDate": "2022-01-07",
+                "credits": [
+                  {
+                    "name": "Gunna",
+                    "artist": {
+                      "id": "100b8734-f4f0-4536-9960-47f7c59d1b4c",
+                      "name": "Gunna"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -5996,13 +6176,51 @@
           "title": "Live Forever",
           "artist": "Willie Nelson",
           "anchor": {
-            "title": "Live Forever",
-            "artist": "Willie Nelson"
+            "title": "Live Forever: A Tribute to Billy Joe Shaver",
+            "artist": "Various Artists"
           },
           "won": true,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "f942f1d7-fc06-490f-9d23-7fec2ec6ca2c",
+            "seed": {
+              "kind": "recording",
+              "title": "Live Forever",
+              "durationSec": 180,
+              "credits": [
+                {
+                  "name": "Willie Nelson",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "668fd73c-bf54-4310-a139-305517f05311",
+                    "name": "Willie Nelson"
+                  }
+                },
+                {
+                  "name": "Lucinda Williams",
+                  "artist": {
+                    "id": "21685b15-3074-446e-aa1d-ff7157014f53",
+                    "name": "Lucinda Williams"
+                  }
+                }
+              ],
+              "anchorMbid": "585b019c-a2d8-499d-8353-a4b21ad3a42b",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Live Forever: A Tribute to Billy Joe Shaver",
+                "category": "studio",
+                "firstReleaseDate": "2022-11-02",
+                "credits": [
+                  {
+                    "name": "Various Artists",
+                    "artist": {
+                      "id": "89ad4ac3-39f7-470e-963a-56509c546377",
+                      "name": "Various Artists"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -6025,19 +6243,7 @@
                   "name": "Kelsea Ballerini",
                   "artist": {
                     "id": "779d1126-e48c-43f2-8b51-005f3b116d7e",
-                    "name": "Kelsea Ballerini",
-                    "sort-name": "Ballerini, Kelsea",
-                    "aliases": [
-                      {
-                        "sort-name": "Ballerina, Kelsea",
-                        "name": "Kelsea Ballerina",
-                        "locale": null,
-                        "type": null,
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      }
-                    ]
+                    "name": "Kelsea Ballerini"
                   }
                 }
               ],
@@ -6052,19 +6258,7 @@
                     "name": "Kelsea Ballerini",
                     "artist": {
                       "id": "779d1126-e48c-43f2-8b51-005f3b116d7e",
-                      "name": "Kelsea Ballerini",
-                      "sort-name": "Ballerini, Kelsea",
-                      "aliases": [
-                        {
-                          "sort-name": "Ballerina, Kelsea",
-                          "name": "Kelsea Ballerina",
-                          "locale": null,
-                          "type": null,
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        }
-                      ]
+                      "name": "Kelsea Ballerini"
                     }
                   }
                 ]
@@ -6092,8 +6286,7 @@
                   "name": "Zach Bryan",
                   "artist": {
                     "id": "51e90731-08c0-4f60-89b6-5b78e5844de8",
-                    "name": "Zach Bryan",
-                    "sort-name": "Bryan, Zach"
+                    "name": "Zach Bryan"
                   }
                 }
               ],
@@ -6108,8 +6301,7 @@
                     "name": "Zach Bryan",
                     "artist": {
                       "id": "51e90731-08c0-4f60-89b6-5b78e5844de8",
-                      "name": "Zach Bryan",
-                      "sort-name": "Bryan, Zach"
+                      "name": "Zach Bryan"
                     }
                   }
                 ]
@@ -6126,291 +6318,107 @@
           },
           "won": false,
           "resolved": {
-            "status": "ambiguous",
-            "candidates": [
-              {
-                "mbid": "add0a04d-e084-42af-adb4-090f0f13aadc",
-                "score": 100,
-                "label": "In His Arms — Jack Ingram, Miranda Lambert & Jon Randall",
-                "seed": {
-                  "kind": "recording",
-                  "title": "In His Arms",
-                  "durationSec": 142,
-                  "credits": [
-                    {
-                      "joinphrase": ", ",
-                      "name": "Jack Ingram",
-                      "artist": {
-                        "id": "ef99a425-baac-4a0b-87c0-4cc99d77f97d",
-                        "name": "Jack Ingram",
-                        "sort-name": "Ingram, Jack",
-                        "disambiguation": "US country artist"
-                      }
-                    },
-                    {
-                      "joinphrase": " & ",
-                      "name": "Miranda Lambert",
-                      "artist": {
-                        "id": "4eca1aa0-c79f-481b-af8a-4a2d6c41aa5c",
-                        "name": "Miranda Lambert",
-                        "sort-name": "Lambert, Miranda",
-                        "aliases": [
-                          {
-                            "sort-name": "Lambert, Miranda Leigh",
-                            "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                            "name": "Miranda Leigh Lambert",
-                            "locale": null,
-                            "type": "Legal name",
-                            "primary": null,
-                            "begin-date": null,
-                            "end-date": null
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "name": "Jon Randall",
-                      "artist": {
-                        "id": "1d735e8c-a016-4cff-ab25-81f0980adc2f",
-                        "name": "Jon Randall",
-                        "sort-name": "Randall, Jon",
-                        "disambiguation": "US country singer, guitarist, and songwriter",
-                        "aliases": [
-                          {
-                            "sort-name": "Randall, John",
-                            "name": "John Randall",
-                            "locale": null,
-                            "type": null,
-                            "primary": null,
-                            "begin-date": null,
-                            "end-date": null
-                          },
-                          {
-                            "sort-name": "Jon Randall Stewart",
-                            "name": "Jon Randall Stewart",
-                            "locale": null,
-                            "type": null,
-                            "primary": null,
-                            "begin-date": null,
-                            "end-date": null
-                          }
-                        ]
-                      }
-                    }
-                  ],
-                  "anchorMbid": "875d45d4-c250-42c1-b8e5-a40ea0395385",
-                  "anchor": {
-                    "kind": "release_group",
-                    "title": "In His Arms",
-                    "category": "single_ep",
-                    "firstReleaseDate": "2021-03-05",
-                    "credits": [
+            "status": "manual",
+            "mbid": "add0a04d-e084-42af-adb4-090f0f13aadc",
+            "seed": {
+              "kind": "recording",
+              "title": "In His Arms",
+              "durationSec": 142,
+              "credits": [
+                {
+                  "joinphrase": ", ",
+                  "name": "Jack Ingram",
+                  "artist": {
+                    "id": "ef99a425-baac-4a0b-87c0-4cc99d77f97d",
+                    "name": "Jack Ingram",
+                    "sort-name": "Ingram, Jack",
+                    "disambiguation": "US country artist"
+                  }
+                },
+                {
+                  "joinphrase": " & ",
+                  "name": "Miranda Lambert",
+                  "artist": {
+                    "id": "4eca1aa0-c79f-481b-af8a-4a2d6c41aa5c",
+                    "name": "Miranda Lambert",
+                    "sort-name": "Lambert, Miranda",
+                    "aliases": [
                       {
-                        "joinphrase": ", ",
-                        "name": "Jack Ingram",
-                        "artist": {
-                          "id": "ef99a425-baac-4a0b-87c0-4cc99d77f97d",
-                          "name": "Jack Ingram",
-                          "sort-name": "Ingram, Jack",
-                          "disambiguation": "US country artist"
-                        }
+                        "sort-name": "Lambert, Miranda Leigh",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Miranda Leigh Lambert",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Jon Randall",
+                  "artist": {
+                    "id": "1d735e8c-a016-4cff-ab25-81f0980adc2f",
+                    "name": "Jon Randall",
+                    "sort-name": "Randall, Jon",
+                    "disambiguation": "US country singer, guitarist, and songwriter",
+                    "aliases": [
+                      {
+                        "sort-name": "Randall, John",
+                        "name": "John Randall",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
                       },
                       {
-                        "joinphrase": " & ",
-                        "name": "Miranda Lambert",
-                        "artist": {
-                          "id": "4eca1aa0-c79f-481b-af8a-4a2d6c41aa5c",
-                          "name": "Miranda Lambert",
-                          "sort-name": "Lambert, Miranda",
-                          "aliases": [
-                            {
-                              "sort-name": "Lambert, Miranda Leigh",
-                              "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                              "name": "Miranda Leigh Lambert",
-                              "locale": null,
-                              "type": "Legal name",
-                              "primary": null,
-                              "begin-date": null,
-                              "end-date": null
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "name": "Jon Randall",
-                        "artist": {
-                          "id": "1d735e8c-a016-4cff-ab25-81f0980adc2f",
-                          "name": "Jon Randall",
-                          "sort-name": "Randall, Jon",
-                          "disambiguation": "US country singer, guitarist, and songwriter",
-                          "aliases": [
-                            {
-                              "sort-name": "Randall, John",
-                              "name": "John Randall",
-                              "locale": null,
-                              "type": null,
-                              "primary": null,
-                              "begin-date": null,
-                              "end-date": null
-                            },
-                            {
-                              "sort-name": "Jon Randall Stewart",
-                              "name": "Jon Randall Stewart",
-                              "locale": null,
-                              "type": null,
-                              "primary": null,
-                              "begin-date": null,
-                              "end-date": null
-                            }
-                          ]
-                        }
+                        "sort-name": "Jon Randall Stewart",
+                        "name": "Jon Randall Stewart",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
                       }
                     ]
                   }
                 }
-              },
-              {
-                "mbid": "7ceab537-c459-4d13-b2bd-971291ed9e2e",
-                "score": 100,
-                "label": "In His Arms — Jack Ingram, Miranda Lambert & Jon Randall",
-                "seed": {
-                  "kind": "recording",
-                  "title": "In His Arms",
-                  "durationSec": 150,
-                  "credits": [
-                    {
-                      "joinphrase": ", ",
-                      "name": "Jack Ingram",
-                      "artist": {
-                        "id": "ef99a425-baac-4a0b-87c0-4cc99d77f97d",
-                        "name": "Jack Ingram",
-                        "sort-name": "Ingram, Jack",
-                        "disambiguation": "US country artist"
-                      }
-                    },
-                    {
-                      "joinphrase": " & ",
-                      "name": "Miranda Lambert",
-                      "artist": {
-                        "id": "4eca1aa0-c79f-481b-af8a-4a2d6c41aa5c",
-                        "name": "Miranda Lambert",
-                        "sort-name": "Lambert, Miranda",
-                        "aliases": [
-                          {
-                            "sort-name": "Lambert, Miranda Leigh",
-                            "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                            "name": "Miranda Leigh Lambert",
-                            "locale": null,
-                            "type": "Legal name",
-                            "primary": null,
-                            "begin-date": null,
-                            "end-date": null
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "name": "Jon Randall",
-                      "artist": {
-                        "id": "1d735e8c-a016-4cff-ab25-81f0980adc2f",
-                        "name": "Jon Randall",
-                        "sort-name": "Randall, Jon",
-                        "disambiguation": "US country singer, guitarist, and songwriter",
-                        "aliases": [
-                          {
-                            "sort-name": "Randall, John",
-                            "name": "John Randall",
-                            "locale": null,
-                            "type": null,
-                            "primary": null,
-                            "begin-date": null,
-                            "end-date": null
-                          },
-                          {
-                            "sort-name": "Jon Randall Stewart",
-                            "name": "Jon Randall Stewart",
-                            "locale": null,
-                            "type": null,
-                            "primary": null,
-                            "begin-date": null,
-                            "end-date": null
-                          }
-                        ]
-                      }
+              ],
+              "anchorMbid": "875d45d4-c250-42c1-b8e5-a40ea0395385",
+              "anchor": {
+                "kind": "release_group",
+                "title": "In His Arms",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-03-05",
+                "credits": [
+                  {
+                    "name": "Jack Ingram",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "ef99a425-baac-4a0b-87c0-4cc99d77f97d",
+                      "name": "Jack Ingram"
                     }
-                  ],
-                  "anchorMbid": "875d45d4-c250-42c1-b8e5-a40ea0395385",
-                  "anchor": {
-                    "kind": "release_group",
-                    "title": "In His Arms",
-                    "category": "single_ep",
-                    "firstReleaseDate": "2021-03-05",
-                    "credits": [
-                      {
-                        "joinphrase": ", ",
-                        "name": "Jack Ingram",
-                        "artist": {
-                          "id": "ef99a425-baac-4a0b-87c0-4cc99d77f97d",
-                          "name": "Jack Ingram",
-                          "sort-name": "Ingram, Jack",
-                          "disambiguation": "US country artist"
-                        }
-                      },
-                      {
-                        "joinphrase": " & ",
-                        "name": "Miranda Lambert",
-                        "artist": {
-                          "id": "4eca1aa0-c79f-481b-af8a-4a2d6c41aa5c",
-                          "name": "Miranda Lambert",
-                          "sort-name": "Lambert, Miranda",
-                          "aliases": [
-                            {
-                              "sort-name": "Lambert, Miranda Leigh",
-                              "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                              "name": "Miranda Leigh Lambert",
-                              "locale": null,
-                              "type": "Legal name",
-                              "primary": null,
-                              "begin-date": null,
-                              "end-date": null
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "name": "Jon Randall",
-                        "artist": {
-                          "id": "1d735e8c-a016-4cff-ab25-81f0980adc2f",
-                          "name": "Jon Randall",
-                          "sort-name": "Randall, Jon",
-                          "disambiguation": "US country singer, guitarist, and songwriter",
-                          "aliases": [
-                            {
-                              "sort-name": "Randall, John",
-                              "name": "John Randall",
-                              "locale": null,
-                              "type": null,
-                              "primary": null,
-                              "begin-date": null,
-                              "end-date": null
-                            },
-                            {
-                              "sort-name": "Jon Randall Stewart",
-                              "name": "Jon Randall Stewart",
-                              "locale": null,
-                              "type": null,
-                              "primary": null,
-                              "begin-date": null,
-                              "end-date": null
-                            }
-                          ]
-                        }
-                      }
-                    ]
+                  },
+                  {
+                    "name": "Miranda Lambert",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "4eca1aa0-c79f-481b-af8a-4a2d6c41aa5c",
+                      "name": "Miranda Lambert"
+                    }
+                  },
+                  {
+                    "name": "Jon Randall",
+                    "artist": {
+                      "id": "1d735e8c-a016-4cff-ab25-81f0980adc2f",
+                      "name": "Jon Randall"
+                    }
                   }
-                }
+                ]
               }
-            ]
+            }
           }
         },
         {
@@ -6433,20 +6441,7 @@
                   "name": "Maren Morris",
                   "artist": {
                     "id": "109357f0-eb37-4672-9697-dca8c83a61b5",
-                    "name": "Maren Morris",
-                    "sort-name": "Morris, Maren",
-                    "aliases": [
-                      {
-                        "sort-name": "Maren Larae Morris",
-                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                        "name": "Maren Larae Morris",
-                        "locale": null,
-                        "type": "Legal name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      }
-                    ]
+                    "name": "Maren Morris"
                   }
                 }
               ],
@@ -6461,20 +6456,7 @@
                     "name": "Maren Morris",
                     "artist": {
                       "id": "109357f0-eb37-4672-9697-dca8c83a61b5",
-                      "name": "Maren Morris",
-                      "sort-name": "Morris, Maren",
-                      "aliases": [
-                        {
-                          "sort-name": "Maren Larae Morris",
-                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                          "name": "Maren Larae Morris",
-                          "locale": null,
-                          "type": "Legal name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        }
-                      ]
+                      "name": "Maren Morris"
                     }
                   }
                 ]
@@ -6508,33 +6490,18 @@
               "durationSec": 214,
               "credits": [
                 {
-                  "joinphrase": " & ",
                   "name": "Carly Pearce",
+                  "joinphrase": " & ",
                   "artist": {
                     "id": "199affdb-93c0-4a9d-a4d0-26dc4fa01806",
-                    "name": "Carly Pearce",
-                    "sort-name": "Pearce, Carly",
-                    "disambiguation": "American country music singer",
-                    "aliases": [
-                      {
-                        "sort-name": "Slusser, Carly Cristyne",
-                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                        "name": "Carly Cristyne Slusser",
-                        "locale": null,
-                        "type": "Legal name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      }
-                    ]
+                    "name": "Carly Pearce"
                   }
                 },
                 {
                   "name": "Ashley McBryde",
                   "artist": {
                     "id": "ba8520a7-e14a-4ba6-9ab5-1fab4d0a154f",
-                    "name": "Ashley McBryde",
-                    "sort-name": "McBryde, Ashley"
+                    "name": "Ashley McBryde"
                   }
                 }
               ],
@@ -6546,33 +6513,18 @@
                 "firstReleaseDate": "2021-09-15",
                 "credits": [
                   {
-                    "joinphrase": " & ",
                     "name": "Carly Pearce",
+                    "joinphrase": " & ",
                     "artist": {
                       "id": "199affdb-93c0-4a9d-a4d0-26dc4fa01806",
-                      "name": "Carly Pearce",
-                      "sort-name": "Pearce, Carly",
-                      "disambiguation": "American country music singer",
-                      "aliases": [
-                        {
-                          "sort-name": "Slusser, Carly Cristyne",
-                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                          "name": "Carly Cristyne Slusser",
-                          "locale": null,
-                          "type": "Legal name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        }
-                      ]
+                      "name": "Carly Pearce"
                     }
                   },
                   {
                     "name": "Ashley McBryde",
                     "artist": {
                       "id": "ba8520a7-e14a-4ba6-9ab5-1fab4d0a154f",
-                      "name": "Ashley McBryde",
-                      "sort-name": "McBryde, Ashley"
+                      "name": "Ashley McBryde"
                     }
                   }
                 ]
@@ -6600,33 +6552,18 @@
               "durationSec": 195,
               "credits": [
                 {
-                  "joinphrase": " with ",
                   "name": "Ingrid Andress",
+                  "joinphrase": " with ",
                   "artist": {
                     "id": "3ae306a3-b2a6-4969-b59f-89f0370549e5",
-                    "name": "Ingrid Andress",
-                    "sort-name": "Andress, Ingrid"
+                    "name": "Ingrid Andress"
                   }
                 },
                 {
                   "name": "Sam Hunt",
                   "artist": {
                     "id": "b27229bb-5669-4e98-b4ce-0158b2451fe8",
-                    "name": "Sam Hunt",
-                    "sort-name": "Hunt, Sam",
-                    "disambiguation": "US country singer‐songwriter",
-                    "aliases": [
-                      {
-                        "sort-name": "Hunt, Sam Lowry",
-                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                        "name": "Sam Lowry Hunt",
-                        "locale": null,
-                        "type": "Legal name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      }
-                    ]
+                    "name": "Sam Hunt"
                   }
                 }
               ],
@@ -6638,33 +6575,18 @@
                 "firstReleaseDate": "2021-08-02",
                 "credits": [
                   {
-                    "joinphrase": " with ",
                     "name": "Ingrid Andress",
+                    "joinphrase": " with ",
                     "artist": {
                       "id": "3ae306a3-b2a6-4969-b59f-89f0370549e5",
-                      "name": "Ingrid Andress",
-                      "sort-name": "Andress, Ingrid"
+                      "name": "Ingrid Andress"
                     }
                   },
                   {
                     "name": "Sam Hunt",
                     "artist": {
                       "id": "b27229bb-5669-4e98-b4ce-0158b2451fe8",
-                      "name": "Sam Hunt",
-                      "sort-name": "Hunt, Sam",
-                      "disambiguation": "US country singer‐songwriter",
-                      "aliases": [
-                        {
-                          "sort-name": "Hunt, Sam Lowry",
-                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                          "name": "Sam Lowry Hunt",
-                          "locale": null,
-                          "type": "Legal name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        }
-                      ]
+                      "name": "Sam Hunt"
                     }
                   }
                 ]
@@ -6676,20 +6598,50 @@
           "title": "Midnight Rider's Prayer",
           "artist": "Brothers Osborne",
           "anchor": {
-            "title": "Midnight Rider's Prayer",
+            "title": "Skeletons",
             "artist": "Brothers Osborne"
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "75d4f566-9296-4e7f-aa73-2b73a1e7d89c",
+            "seed": {
+              "kind": "recording",
+              "title": "Midnight Rider’s Prayer",
+              "durationSec": 177,
+              "credits": [
+                {
+                  "name": "Brothers Osborne",
+                  "artist": {
+                    "id": "7a502bfc-4cab-4dc8-a618-b12aca7258e7",
+                    "name": "Brothers Osborne"
+                  }
+                }
+              ],
+              "anchorMbid": "89364e67-2a6b-48c5-a51a-2029e1b3a618",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Skeletons",
+                "category": "studio",
+                "firstReleaseDate": "2020-09-10",
+                "credits": [
+                  {
+                    "name": "Brothers Osborne",
+                    "artist": {
+                      "id": "7a502bfc-4cab-4dc8-a618-b12aca7258e7",
+                      "name": "Brothers Osborne"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
           "title": "Outrunnin' Your Memory",
           "artist": "Luke Combs and Miranda Lambert",
           "anchor": {
-            "title": "Outrunnin' Your Memory",
+            "title": "Growin’ Up",
             "artist": "Luke Combs"
           },
           "searchAs": {
@@ -6697,31 +6649,116 @@
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "16af409b-22d2-4a9f-88ea-0bdb524082bc",
+            "seed": {
+              "kind": "recording",
+              "title": "Outrunnin’ Your Memory",
+              "durationSec": 255,
+              "credits": [
+                {
+                  "name": "Luke Combs",
+                  "joinphrase": " with ",
+                  "artist": {
+                    "id": "c20ee61f-071f-4e65-9c81-45ee931a54ce",
+                    "name": "Luke Combs"
+                  }
+                },
+                {
+                  "name": "Miranda Lambert",
+                  "artist": {
+                    "id": "4eca1aa0-c79f-481b-af8a-4a2d6c41aa5c",
+                    "name": "Miranda Lambert"
+                  }
+                }
+              ],
+              "anchorMbid": "5e359856-3d25-42e5-80e4-91fac3db6ce0",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Growin’ Up",
+                "category": "studio",
+                "firstReleaseDate": "2022-06-24",
+                "credits": [
+                  {
+                    "name": "Luke Combs",
+                    "artist": {
+                      "id": "c20ee61f-071f-4e65-9c81-45ee931a54ce",
+                      "name": "Luke Combs"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
           "title": "Does He Love You (Revisited)",
           "artist": "Reba McEntire and Dolly Parton",
           "anchor": {
-            "title": "Does He Love You (Revisited)",
-            "artist": "Reba McEntire"
+            "title": "Does He Love You",
+            "artist": "Dolly Parton"
           },
           "searchAs": {
+            "title": "Does He Love You",
             "artist": "Reba McEntire"
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "7f081ce3-c6b0-4955-ba0d-6345523405e8",
+            "seed": {
+              "kind": "recording",
+              "title": "Does He Love You",
+              "durationSec": 289,
+              "credits": [
+                {
+                  "name": "Reba McEntire",
+                  "joinphrase": " ft. ",
+                  "artist": {
+                    "id": "3ec17e85-9284-4f4c-8831-4e56c2354cdb",
+                    "name": "Reba McEntire"
+                  }
+                },
+                {
+                  "name": "Dolly Parton",
+                  "artist": {
+                    "id": "1d543e07-d0d2-4834-a8db-d65c50c2a856",
+                    "name": "Dolly Parton"
+                  }
+                }
+              ],
+              "anchorMbid": "6f3369ee-d78a-4a20-aa46-c0fe99eb97e6",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Does He Love You",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-10-09",
+                "credits": [
+                  {
+                    "name": "Reba McEntire",
+                    "joinphrase": " ft. ",
+                    "artist": {
+                      "id": "3ec17e85-9284-4f4c-8831-4e56c2354cdb",
+                      "name": "Reba McEntire"
+                    }
+                  },
+                  {
+                    "name": "Dolly Parton",
+                    "artist": {
+                      "id": "1d543e07-d0d2-4834-a8db-d65c50c2a856",
+                      "name": "Dolly Parton"
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
           "title": "Going Where The Lonely Go",
           "artist": "Robert Plant and Alison Krauss",
           "anchor": {
-            "title": "Going Where The Lonely Go",
+            "title": "Raise the Roof",
             "artist": "Robert Plant"
           },
           "searchAs": {
@@ -6729,8 +6766,38 @@
           },
           "won": false,
           "resolved": {
-            "status": "not_found",
-            "candidates": []
+            "status": "exact",
+            "mbid": "ea6bbbe4-ecbc-4125-961a-ac3cfed50751",
+            "seed": {
+              "kind": "recording",
+              "title": "Going Where the Lonely Go",
+              "durationSec": 250,
+              "credits": [
+                {
+                  "name": "Robert Plant | Alison Krauss",
+                  "artist": {
+                    "id": "38eb4af8-2282-4b8f-8819-1c7f92640dde",
+                    "name": "Robert Plant & Alison Krauss"
+                  }
+                }
+              ],
+              "anchorMbid": "e78a611d-b0c8-4796-abdf-d0412918fe60",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Raise the Roof",
+                "category": "studio",
+                "firstReleaseDate": "2021-11-19",
+                "credits": [
+                  {
+                    "name": "Robert Plant | Alison Krauss",
+                    "artist": {
+                      "id": "38eb4af8-2282-4b8f-8819-1c7f92640dde",
+                      "name": "Robert Plant & Alison Krauss"
+                    }
+                  }
+                ]
+              }
+            }
           }
         }
       ]
@@ -6759,9 +6826,7 @@
                   "name": "Cody Johnson",
                   "artist": {
                     "id": "faabeed5-3dd0-4be5-aec5-e6486e68db2f",
-                    "name": "Cody Johnson",
-                    "sort-name": "Johnson, Cody",
-                    "disambiguation": "Country Music Singer"
+                    "name": "Cody Johnson"
                   }
                 }
               ],
@@ -6776,9 +6841,7 @@
                     "name": "Cody Johnson",
                     "artist": {
                       "id": "faabeed5-3dd0-4be5-aec5-e6486e68db2f",
-                      "name": "Cody Johnson",
-                      "sort-name": "Johnson, Cody",
-                      "disambiguation": "Country Music Singer"
+                      "name": "Cody Johnson"
                     }
                   }
                 ]
@@ -6806,20 +6869,7 @@
                   "name": "Maren Morris",
                   "artist": {
                     "id": "109357f0-eb37-4672-9697-dca8c83a61b5",
-                    "name": "Maren Morris",
-                    "sort-name": "Morris, Maren",
-                    "aliases": [
-                      {
-                        "sort-name": "Maren Larae Morris",
-                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                        "name": "Maren Larae Morris",
-                        "locale": null,
-                        "type": "Legal name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      }
-                    ]
+                    "name": "Maren Morris"
                   }
                 }
               ],
@@ -6834,20 +6884,7 @@
                     "name": "Maren Morris",
                     "artist": {
                       "id": "109357f0-eb37-4672-9697-dca8c83a61b5",
-                      "name": "Maren Morris",
-                      "sort-name": "Morris, Maren",
-                      "aliases": [
-                        {
-                          "sort-name": "Maren Larae Morris",
-                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                          "name": "Maren Larae Morris",
-                          "locale": null,
-                          "type": "Legal name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        }
-                      ]
+                      "name": "Maren Morris"
                     }
                   }
                 ]
@@ -6875,9 +6912,7 @@
                   "name": "Luke Combs",
                   "artist": {
                     "id": "c20ee61f-071f-4e65-9c81-45ee931a54ce",
-                    "name": "Luke Combs",
-                    "sort-name": "Combs, Luke",
-                    "disambiguation": "country music singer"
+                    "name": "Luke Combs"
                   }
                 }
               ],
@@ -6892,9 +6927,7 @@
                     "name": "Luke Combs",
                     "artist": {
                       "id": "c20ee61f-071f-4e65-9c81-45ee931a54ce",
-                      "name": "Luke Combs",
-                      "sort-name": "Combs, Luke",
-                      "disambiguation": "country music singer"
+                      "name": "Luke Combs"
                     }
                   }
                 ]
@@ -6922,605 +6955,18 @@
               "durationSec": 375,
               "credits": [
                 {
-                  "joinphrase": " feat. ",
                   "name": "Taylor Swift",
+                  "joinphrase": " feat. ",
                   "artist": {
                     "id": "20244d07-534f-4eff-b4d4-930878889970",
-                    "name": "Taylor Swift",
-                    "sort-name": "Swift, Taylor",
-                    "aliases": [
-                      {
-                        "sort-name": "泰勒丝",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "泰勒丝",
-                        "locale": "zh_Hans_SG",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "泰勒·斯威夫特",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "泰勒·斯威夫特",
-                        "locale": "zh",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "טעילאר סוויפט",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "טעילאר סוויפט",
-                        "locale": "yi",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "ٹیلر سوئفٹ",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "ٹیلر سوئفٹ",
-                        "locale": "ur",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Тейлор Свіфт",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Тейлор Свіфт",
-                        "locale": "uk",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Teýlor Swift",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Teýlor Swift",
-                        "locale": "tk",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "เทย์เลอร์ สวิฟต์",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "เทย์เลอร์ สวิฟต์",
-                        "locale": "th",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "టేలర్ స్విఫ్ట్",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "టేలర్ స్విఫ్ట్",
-                        "locale": "te",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "டேலர் ஸ்விஃப்ட்",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "டேலர் ஸ்விஃப்ட்",
-                        "locale": "ta",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Тејлор Свифт",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Тејлор Свифт",
-                        "locale": "sr",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "ٹیلر سوئفٹ",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "ٹیلر سوئفٹ",
-                        "locale": "skr",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Swiftová, Taylor",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Taylor Swiftová",
-                        "locale": "sk",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "ටේලර් ස්විෆ්ට්",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "ටේලර් ස්විෆ්ට්",
-                        "locale": "si",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Swift, Taylur",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Taylur Swift",
-                        "locale": "shi",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Тэйлор Суифт",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Тэйлор Суифт",
-                        "locale": "sah",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Тейлор Свифт",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Тейлор Свифт",
-                        "locale": "ru",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "ਟੇਲਰ ਸਵਿਫਟ",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "ਟੇਲਰ ਸਵਿਫਟ",
-                        "locale": "pa_Guru",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "ٹیلر سوئفٹ",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "ٹیلر سوئفٹ",
-                        "locale": "pa_Arab",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "टेलर स्विफ्ट",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "टेलर स्विफ्ट",
-                        "locale": "ne",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "တေလာဆွစ်ဖ်",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "တေလာဆွစ်ဖ်",
-                        "locale": "my",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "टेलर स्विफ्ट",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "टेलर स्विफ्ट",
-                        "locale": "mr",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Тэйлор Свифт",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Тэйлор Свифт",
-                        "locale": "mn",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "ടെയിലർ സ്വിഫ്റ്റ്",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "ടെയിലർ സ്വിഫ്റ്റ്",
-                        "locale": "ml",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Тејлор Свифт",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Тејлор Свифт",
-                        "locale": "mk",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "टेलर स्विफ्ट",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "टेलर स्विफ्ट",
-                        "locale": "mai",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Teilora Svifta",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Teilora Svifta",
-                        "locale": "lv",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "ເທເລໍ່ ສວິຟ",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "ເທເລໍ່ ສວິຟ",
-                        "locale": "lo",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Тейлор Свифт",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Тейлор Свифт",
-                        "locale": "ky",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "ٹیلر سوئفٹ",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "ٹیلر سوئفٹ",
-                        "locale": "ks",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "ಟೈಲರ್ ಸ್ವಿಫ್ಟ್",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "ಟೈಲರ್ ಸ್ವಿಫ್ಟ್",
-                        "locale": "kn",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "ថេល័រ ស្វីហ្វត៍",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "ថេល័រ ស្វីហ្វត៍",
-                        "locale": "km",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Тейлор Свифт",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Тейлор Свифт",
-                        "locale": "kk",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "ტეილორ სვიფტი",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "ტეილორ სვიფტი",
-                        "locale": "ka",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Թէյլըր Սուիֆթ",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Թէյլըր Սուիֆթ",
-                        "locale": "hy",
-                        "type": "Artist name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Թեյլոր Սվիֆթ",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Թեյլոր Սվիֆթ",
-                        "locale": "hy",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "टेलर स्विफ्ट",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "टेलर स्विफ्ट",
-                        "locale": "hi",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "טיילור סוויפט",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "טיילור סוויפט",
-                        "locale": "he",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "تیلور سوئیفت",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "تیلور سوئیفت",
-                        "locale": "fa",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Τέιλορ Σουίφτ",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Τέιλορ Σουίφτ",
-                        "locale": "el",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Swiftová, Taylor",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Taylor Swiftová",
-                        "locale": "cs",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "تایلر سویفت",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "تایلر سویفت",
-                        "locale": "ku",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Svift, Teylor",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "تیلور سوئیفت",
-                        "locale": "az",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "টেইলর সুইফট",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "টেইলর সুইফট",
-                        "locale": "bn",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "टेलर स्विफ्ट",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "टेलर स्विफ्ट",
-                        "locale": "bho",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Тейлър Суифт",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Тейлър Суифт",
-                        "locale": "bg",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Тэйлар Свіфт",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Тэйлар Свіфт",
-                        "locale": "be",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "টেইলৰ ছুইফ্ট",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "টেইলৰ ছুইফ্ট",
-                        "locale": "as",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Meimei",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "霉霉",
-                        "locale": "zh",
-                        "type": "Artist name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Taylor Swift",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "テイラー・スウィフト",
-                        "locale": "ja",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Taylor Swift",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "테일러 스위프트",
-                        "locale": "ko",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Swift, Taylor",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "泰勒·史薇芙特",
-                        "locale": "zh_Hans",
-                        "type": "Artist name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Swift, Taylor",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Taylor Swift",
-                        "locale": "en",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Swift, Taylor Alison",
-                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                        "name": "Taylor Alison Swift",
-                        "locale": "en",
-                        "type": "Legal name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "T-Swizzle",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "T-Swizzle",
-                        "locale": "en",
-                        "type": "Artist name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Swift, Taylor Alison, Dr.",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Dr. Taylor Alison Swift",
-                        "locale": "en",
-                        "type": "Artist name",
-                        "primary": null,
-                        "begin-date": "2022-05-18",
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Tàilēi sī",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "泰勒絲",
-                        "locale": "zh_Hant_TW",
-                        "type": "Artist name",
-                        "primary": true,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Sjöberg, Nils",
-                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                        "name": "Nils Sjöberg",
-                        "locale": "sv",
-                        "type": "Artist name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      }
-                    ]
+                    "name": "Taylor Swift"
                   }
                 },
                 {
                   "name": "Chris Stapleton",
                   "artist": {
                     "id": "71d58182-aa37-4c04-b21a-efe46ea0f221",
-                    "name": "Chris Stapleton",
-                    "sort-name": "Stapleton, Chris",
-                    "disambiguation": "American singer‐songwriter",
-                    "aliases": [
-                      {
-                        "sort-name": "Stapleton, Christopher Alvin",
-                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                        "name": "Christopher Alvin Stapleton",
-                        "locale": null,
-                        "type": "Legal name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      }
-                    ]
+                    "name": "Chris Stapleton"
                   }
                 }
               ],
@@ -7532,605 +6978,18 @@
                 "firstReleaseDate": "2021-11-12",
                 "credits": [
                   {
-                    "joinphrase": " feat. ",
                     "name": "Taylor Swift",
+                    "joinphrase": " feat. ",
                     "artist": {
                       "id": "20244d07-534f-4eff-b4d4-930878889970",
-                      "name": "Taylor Swift",
-                      "sort-name": "Swift, Taylor",
-                      "aliases": [
-                        {
-                          "sort-name": "泰勒丝",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "泰勒丝",
-                          "locale": "zh_Hans_SG",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "泰勒·斯威夫特",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "泰勒·斯威夫特",
-                          "locale": "zh",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "טעילאר סוויפט",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "טעילאר סוויפט",
-                          "locale": "yi",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "ٹیلر سوئفٹ",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "ٹیلر سوئفٹ",
-                          "locale": "ur",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Тейлор Свіфт",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Тейлор Свіфт",
-                          "locale": "uk",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Teýlor Swift",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Teýlor Swift",
-                          "locale": "tk",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "เทย์เลอร์ สวิฟต์",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "เทย์เลอร์ สวิฟต์",
-                          "locale": "th",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "టేలర్ స్విఫ్ట్",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "టేలర్ స్విఫ్ట్",
-                          "locale": "te",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "டேலர் ஸ்விஃப்ட்",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "டேலர் ஸ்விஃப்ட்",
-                          "locale": "ta",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Тејлор Свифт",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Тејлор Свифт",
-                          "locale": "sr",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "ٹیلر سوئفٹ",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "ٹیلر سوئفٹ",
-                          "locale": "skr",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Swiftová, Taylor",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Taylor Swiftová",
-                          "locale": "sk",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "ටේලර් ස්විෆ්ට්",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "ටේලර් ස්විෆ්ට්",
-                          "locale": "si",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Swift, Taylur",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Taylur Swift",
-                          "locale": "shi",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Тэйлор Суифт",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Тэйлор Суифт",
-                          "locale": "sah",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Тейлор Свифт",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Тейлор Свифт",
-                          "locale": "ru",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "ਟੇਲਰ ਸਵਿਫਟ",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "ਟੇਲਰ ਸਵਿਫਟ",
-                          "locale": "pa_Guru",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "ٹیلر سوئفٹ",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "ٹیلر سوئفٹ",
-                          "locale": "pa_Arab",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "टेलर स्विफ्ट",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "टेलर स्विफ्ट",
-                          "locale": "ne",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "တေလာဆွစ်ဖ်",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "တေလာဆွစ်ဖ်",
-                          "locale": "my",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "टेलर स्विफ्ट",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "टेलर स्विफ्ट",
-                          "locale": "mr",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Тэйлор Свифт",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Тэйлор Свифт",
-                          "locale": "mn",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "ടെയിലർ സ്വിഫ്റ്റ്",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "ടെയിലർ സ്വിഫ്റ്റ്",
-                          "locale": "ml",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Тејлор Свифт",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Тејлор Свифт",
-                          "locale": "mk",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "टेलर स्विफ्ट",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "टेलर स्विफ्ट",
-                          "locale": "mai",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Teilora Svifta",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Teilora Svifta",
-                          "locale": "lv",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "ເທເລໍ່ ສວິຟ",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "ເທເລໍ່ ສວິຟ",
-                          "locale": "lo",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Тейлор Свифт",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Тейлор Свифт",
-                          "locale": "ky",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "ٹیلر سوئفٹ",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "ٹیلر سوئفٹ",
-                          "locale": "ks",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "ಟೈಲರ್ ಸ್ವಿಫ್ಟ್",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "ಟೈಲರ್ ಸ್ವಿಫ್ಟ್",
-                          "locale": "kn",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "ថេល័រ ស្វីហ្វត៍",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "ថេល័រ ស្វីហ្វត៍",
-                          "locale": "km",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Тейлор Свифт",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Тейлор Свифт",
-                          "locale": "kk",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "ტეილორ სვიფტი",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "ტეილორ სვიფტი",
-                          "locale": "ka",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Թէյլըր Սուիֆթ",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Թէյլըր Սուիֆթ",
-                          "locale": "hy",
-                          "type": "Artist name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Թեյլոր Սվիֆթ",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Թեյլոր Սվիֆթ",
-                          "locale": "hy",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "टेलर स्विफ्ट",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "टेलर स्विफ्ट",
-                          "locale": "hi",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "טיילור סוויפט",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "טיילור סוויפט",
-                          "locale": "he",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "تیلور سوئیفت",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "تیلور سوئیفت",
-                          "locale": "fa",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Τέιλορ Σουίφτ",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Τέιλορ Σουίφτ",
-                          "locale": "el",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Swiftová, Taylor",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Taylor Swiftová",
-                          "locale": "cs",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "تایلر سویفت",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "تایلر سویفت",
-                          "locale": "ku",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Svift, Teylor",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "تیلور سوئیفت",
-                          "locale": "az",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "টেইলর সুইফট",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "টেইলর সুইফট",
-                          "locale": "bn",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "टेलर स्विफ्ट",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "टेलर स्विफ्ट",
-                          "locale": "bho",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Тейлър Суифт",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Тейлър Суифт",
-                          "locale": "bg",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Тэйлар Свіфт",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Тэйлар Свіфт",
-                          "locale": "be",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "টেইলৰ ছুইফ্ট",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "টেইলৰ ছুইফ্ট",
-                          "locale": "as",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Meimei",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "霉霉",
-                          "locale": "zh",
-                          "type": "Artist name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Taylor Swift",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "テイラー・スウィフト",
-                          "locale": "ja",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Taylor Swift",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "테일러 스위프트",
-                          "locale": "ko",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Swift, Taylor",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "泰勒·史薇芙特",
-                          "locale": "zh_Hans",
-                          "type": "Artist name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Swift, Taylor",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Taylor Swift",
-                          "locale": "en",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Swift, Taylor Alison",
-                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                          "name": "Taylor Alison Swift",
-                          "locale": "en",
-                          "type": "Legal name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "T-Swizzle",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "T-Swizzle",
-                          "locale": "en",
-                          "type": "Artist name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Swift, Taylor Alison, Dr.",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Dr. Taylor Alison Swift",
-                          "locale": "en",
-                          "type": "Artist name",
-                          "primary": null,
-                          "begin-date": "2022-05-18",
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Tàilēi sī",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "泰勒絲",
-                          "locale": "zh_Hant_TW",
-                          "type": "Artist name",
-                          "primary": true,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Sjöberg, Nils",
-                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-                          "name": "Nils Sjöberg",
-                          "locale": "sv",
-                          "type": "Artist name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        }
-                      ]
+                      "name": "Taylor Swift"
                     }
                   },
                   {
                     "name": "Chris Stapleton",
                     "artist": {
                       "id": "71d58182-aa37-4c04-b21a-efe46ea0f221",
-                      "name": "Chris Stapleton",
-                      "sort-name": "Stapleton, Chris",
-                      "disambiguation": "American singer‐songwriter",
-                      "aliases": [
-                        {
-                          "sort-name": "Stapleton, Christopher Alvin",
-                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                          "name": "Christopher Alvin Stapleton",
-                          "locale": null,
-                          "type": "Legal name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        }
-                      ]
+                      "name": "Chris Stapleton"
                     }
                   }
                 ]
@@ -8158,20 +7017,7 @@
                   "name": "Miranda Lambert",
                   "artist": {
                     "id": "4eca1aa0-c79f-481b-af8a-4a2d6c41aa5c",
-                    "name": "Miranda Lambert",
-                    "sort-name": "Lambert, Miranda",
-                    "aliases": [
-                      {
-                        "sort-name": "Lambert, Miranda Leigh",
-                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                        "name": "Miranda Leigh Lambert",
-                        "locale": null,
-                        "type": "Legal name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      }
-                    ]
+                    "name": "Miranda Lambert"
                   }
                 }
               ],
@@ -8186,20 +7032,7 @@
                     "name": "Miranda Lambert",
                     "artist": {
                       "id": "4eca1aa0-c79f-481b-af8a-4a2d6c41aa5c",
-                      "name": "Miranda Lambert",
-                      "sort-name": "Lambert, Miranda",
-                      "aliases": [
-                        {
-                          "sort-name": "Lambert, Miranda Leigh",
-                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                          "name": "Miranda Leigh Lambert",
-                          "locale": null,
-                          "type": "Legal name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        }
-                      ]
+                      "name": "Miranda Lambert"
                     }
                   }
                 ]
@@ -8227,29 +7060,7 @@
                   "name": "Willie Nelson",
                   "artist": {
                     "id": "668fd73c-bf54-4310-a139-305517f05311",
-                    "name": "Willie Nelson",
-                    "sort-name": "Nelson, Willie",
-                    "aliases": [
-                      {
-                        "sort-name": "Willy Nelson",
-                        "name": "Willy Nelson",
-                        "locale": null,
-                        "type": null,
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      },
-                      {
-                        "sort-name": "Nelson, Willie Hugh",
-                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                        "name": "Willie Hugh Nelson",
-                        "locale": null,
-                        "type": "Legal name",
-                        "primary": null,
-                        "begin-date": null,
-                        "end-date": null
-                      }
-                    ]
+                    "name": "Willie Nelson"
                   }
                 }
               ],
@@ -8264,29 +7075,7 @@
                     "name": "Willie Nelson",
                     "artist": {
                       "id": "668fd73c-bf54-4310-a139-305517f05311",
-                      "name": "Willie Nelson",
-                      "sort-name": "Nelson, Willie",
-                      "aliases": [
-                        {
-                          "sort-name": "Willy Nelson",
-                          "name": "Willy Nelson",
-                          "locale": null,
-                          "type": null,
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        },
-                        {
-                          "sort-name": "Nelson, Willie Hugh",
-                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
-                          "name": "Willie Hugh Nelson",
-                          "locale": null,
-                          "type": "Legal name",
-                          "primary": null,
-                          "begin-date": null,
-                          "end-date": null
-                        }
-                      ]
+                      "name": "Willie Nelson"
                     }
                   }
                 ]

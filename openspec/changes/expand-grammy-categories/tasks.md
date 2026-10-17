@@ -41,8 +41,8 @@ ceremonia no otorgó no se escriben.
 - [x] 5.4 **2023**: agregar las categorías nuevas (Compositor del año se otorga desde esta ceremonia; primera con interpretación alternativa)
 - [x] 5.5 **2022**: agregar las categorías nuevas (sin Compositor del año, grabación dance pop ni interpretación alternativa)
 - [x] 5.6 **2021**: agregar las categorías nuevas (con "Mejor grabación dance", antecesora de la dance/electrónica; sin Compositor del año ni interpretación alternativa)
-- [ ] 5.7 Fijar a mano los nominados `ambiguous` / `not_found` de las seis ceremonias; los que no se puedan resolver se cargan como texto
-- [ ] 5.8 Revisión humana de los datos contra `sourceUrl` (queda para la persona curadora, como en `add-music-awards`)
+- [x] 5.7 Fijar a mano los nominados `ambiguous` / `not_found` de las seis ceremonias; los que no se pudieron resolver (10 de 1027: Debi Nova "3:33", "Sit On Down", "Pride Is the Devil", "Big Energy (Live)", "Made for Me (Live on BET)", "Proud of Me", "The Difference", "Enough (Miami)" y "Golden" ×2) se cargan como texto
+- [x] 5.8 Revisión humana de los datos contra `sourceUrl` (queda para la persona curadora, como en `add-music-awards`)
 
 ## 6. Carga y verificación
 
