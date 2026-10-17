@@ -25,6 +25,8 @@ interface FilteredAlbumListProps {
   heading: string;
   /** Nombre corto del corte para la miga de pan ("1990s", "Rock"). */
   crumb: string;
+  /** Nivel intermedio de la miga de pan antes de `crumb` (la década, cuando el corte es un año). */
+  parentCrumb?: { label: string; href: string };
   result: AlbumPage;
   /** Base del listado, ya con el corte (`/explore?decada=1990`). */
   baseHref: string;
@@ -38,6 +40,11 @@ interface FilteredAlbumListProps {
    * desplegable cerrado (veinte chips de familia empujaban el primer disco bajo el pliegue).
    */
   siblings?: { label: string; links: SliceLink[]; collapsed?: boolean };
+  /**
+   * Años del corte (los de una década), como chips siempre visibles encima de los temas: el primero suele ser "Toda la
+   * década". No se pinta sin enlaces.
+   */
+  years?: { label: string; links: SliceLink[] };
   /**
    * Temas del corte (los géneros de una familia), cada uno con su página: la forma de seguir navegando hacia dentro. Sin
    * cifras. No se pinta sin enlaces.
@@ -108,6 +115,7 @@ function PageArrow({ direction }: { direction: "prev" | "next" }) {
 export function FilteredAlbumList({
   heading,
   crumb,
+  parentCrumb,
   result,
   baseHref,
   params,
@@ -115,6 +123,7 @@ export function FilteredAlbumList({
   coverLabel,
   authenticated = false,
   siblings,
+  years,
   topics,
   related,
   dateLabels,
@@ -138,6 +147,7 @@ export function FilteredAlbumList({
         items={[
           { label: tCommon("home"), href: "/" },
           { label: t("heading"), href: "/explore" },
+          ...(parentCrumb ? [parentCrumb] : []),
           { label: crumb },
         ]}
       />
@@ -156,6 +166,8 @@ export function FilteredAlbumList({
           </Link>
         ) : null}
       </header>
+
+      {years && years.links.length > 1 ? <SliceNav siblings={years} /> : null}
 
       {topics && topics.links.length > 0 ? (
         <nav aria-label={topics.label} className="w-full">

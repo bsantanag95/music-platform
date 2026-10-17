@@ -42,8 +42,12 @@ primera página es entera de 1999 (se vio en la prueba en pantalla). Ya existen 
    calcula con un `select distinct first_release_year` de la década (sin caché: es lo que ya cuesta `listDecades()` en cada visita
    a una década); un chip por año con álbumes, sin cifras. Cambiar de década quita el año.
 5. **Géneros de la década = chips a la página del género, con la década puesta.** `listDecadeGenres(decade)`: los 12 géneros de
-   estilo con más álbumes de la década (género efectivo con herencia), misma forma y caché por clave que `family-genres.ts`
-   (6 h). El número solo ordena. El enlace es `genreHref(slug)?tab=albums&decada=<año>`: la página de género ya filtra por década,
+   estilo con más álbumes de la década (género efectivo con herencia), con como mucho 3 por familia
+   (`DECADE_GENRES_PER_FAMILY`), misma forma y caché por clave que `family-genres.ts` (6 h). El número solo ordena. El tope salió
+   de medirlo: en la base de prueba, los 12 más grandes de los 1990s incluían cinco de Clásica (ópera, sinfonía, barroco…) y
+   ninguno de hip hop; con tope 3 la fila queda con clásica ×3, blues, pop, rock, r&b, jazz, hard rock, soul y heavy metal. Es
+   una consulta con ventana (`row_number() over (partition by familia)`); un género de varias familias cuenta en la que mejor lo
+   posiciona y uno sin familia cuenta aparte. El enlace es `genreHref(slug)?tab=albums&decada=<año>`: la página de género ya filtra por década,
    así que la mitad del cruce "Rock de los 90" existe sin tocar el contrato de Explorar (ver Non-Goals). Alternativa descartada:
    chips a `?genero=` dentro de Explorar, que perderían la década (un corte a la vez) y llevarían a un listado más pobre que la
    página del género.
@@ -69,8 +73,9 @@ primera página es entera de 1999 (se vio en la prueba en pantalla). Ya existen 
 - **Carátulas de décadas viejas por id:** sin señal, los mosaicos de los 60s–90s son estables pero no necesariamente
   representativos. Aceptado: es lo mismo que pasó con las familias y mejora con valoraciones; la señal es la de las colecciones, no
   una inventada aquí.
-- **Géneros repetitivos:** los 12 más grandes de una década pueden ser casi todos variantes de rock. Se mide al implementar; si la
-  fila sale monótona se limita a un máximo por familia (cambio local en la consulta, sin tocar contrato).
+- **Géneros repetitivos:** los 12 más grandes de una década pueden ser casi todos variantes de una familia. Se midió al
+  implementar (clásica ocupaba 5 de 12) y se resolvió con el tope de 3 por familia. El resto de la distorsión (la base tiene más
+  discos de lo que se ha abierto) sigue ahí: el orden por número de discos es una aproximación, no una verdad de la época.
 - **Cifras ocultas:** quien quería ver cuántos discos hay pierde esa información. Es intencional (misma decisión que en géneros).
 - **Cambio del orden en la página de género:** con `decada` el año deja de desempatar. Es coherente con el objetivo y se cubre
   con prueba; no hay cambio de contrato.

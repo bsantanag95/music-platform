@@ -204,7 +204,8 @@ plegado y los filtros de tipo y orden sobre la rejilla. La fila de años SHALL o
 álbumes, en orden cronológico, y un primer chip "Toda la década"; elegir un año SHALL filtrar el listado con `?anio=<año>`
 (título "Álbumes de <año>"), conservando tipo y orden, y volver a "Toda la década" SHALL quitarlo. Un `anio` que no sea un año
 de la década SHALL ignorarse. La fila de géneros SHALL ofrecer hasta 12 chips con los géneros de estilo con más álbumes de esa
-década (por género efectivo, con herencia), cada uno enlazado a la página del género filtrada por la década
+década (por género efectivo, con herencia), con como mucho 3 de una misma familia de géneros para que una familia no ocupe la
+fila, cada uno enlazado a la página del género filtrada por la década
 (`/{locale}/genre/<slug>?tab=albums&decada=<año>`), con el nombre en el idioma activo y sin ninguna cifra; SHALL omitirse si la
 década no tiene géneros. El selector de otras décadas SHALL ser un desplegable cerrado por defecto que lista las demás décadas
 con álbumes y marca la actual; elegir una década SHALL conservar tipo y orden y quitar el año.
@@ -235,6 +236,12 @@ con álbumes y marca la actual; elegir una década SHALL conservar tipo y orden 
 - **WHEN** una persona abre `/es/explore?decada=1990`
 - **THEN** ve una fila de géneros de esa década (por ejemplo "grunge" y "hip hop"), sin números, y cada uno lleva a la página
   del género filtrada por los 1990s
+
+#### Scenario: Una familia no ocupa la fila
+
+- **WHEN** una década tiene más de tres géneros de una misma familia entre los más grandes (por ejemplo, óperas, sinfonías y
+  música barroca además de otros géneros clásicos)
+- **THEN** la fila muestra solo los tres más grandes de esa familia y completa con géneros de otras familias
 
 #### Scenario: Género con la década aplicada
 

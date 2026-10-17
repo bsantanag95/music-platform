@@ -6,6 +6,7 @@ import {
   listAlbumsByFamily,
   listAlbumsByGenre,
   listAlbumsFiltered,
+  listDecadeYears,
   featuredActiveCondition,
   listFeaturedCollections,
   listGenreFamilies,
@@ -19,7 +20,7 @@ import {
 import { FEATURED_RAIL_LIMIT, FILTERED_PAGE_SIZE, MIN_ALBUMS_FOR_SECTION, NEW_RELEASE_WINDOW_DAYS, RAIL_SIZE, UPCOMING_WINDOW_DAYS } from "./constants";
 
 const mocks = vi.hoisted(() => ({
-  db: { select: vi.fn() },
+  db: { select: vi.fn(), selectDistinct: vi.fn() },
   enrichLists: vi.fn(),
   familyCovers: vi.fn(),
   ranking: vi.fn(),
@@ -333,6 +334,19 @@ describe("listGenreFamilies", () => {
   });
 });
 
+describe("listDecadeYears", () => {
+  it("devuelve los años de la década tal como llegan, sin nulos", async () => {
+    mocks.db.selectDistinct.mockReturnValue(chain([{ year: 1990 }, { year: 1994 }, { year: null }, { year: 1999 }]));
+
+    await expect(listDecadeYears(1990)).resolves.toEqual([1990, 1994, 1999]);
+  });
+
+  it("rechaza una década inválida sin consultar", async () => {
+    await expect(listDecadeYears(1995)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mocks.db.selectDistinct).not.toHaveBeenCalled();
+  });
+});
+
 describe("listados filtrados: validación", () => {
   it("rechaza una década no múltiplo de 10 o fuera de rango", async () => {
     mocks.db.select.mockReturnValue(chain([]));
@@ -535,6 +549,62 @@ describe("listAlbumsFiltered", () => {
     const captured = capture();
     await listAlbumsFiltered(base, { q: "   " });
     expect(render(captured.where).sql).not.toContain("credit c");
+  });
+
+  describe("año dentro de una década (openspec: redesign-explore-decades)", () => {
+    const orderOf = (captured: Captured) => captured.orderBy.map((o) => render(o).sql.replace(/\s+/g, " ")).join(" | ");
+
+    it("filtra por el año exacto además de la década", async () => {
+      const captured = capture();
+      await listAlbumsFiltered(base, { decade: 1990, year: 1994 });
+      const { sql: text, params } = render(captured.where);
+      expect(text).toContain('"first_release_year" = $');
+      expect(params).toContain(1994);
+      expect(params).toContain(1990);
+    });
+
+    it("rechaza un año que no es de la década o que no es entero", async () => {
+      capture();
+      await expect(listAlbumsFiltered(base, { decade: 1990, year: 1985 })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+      await expect(listAlbumsFiltered(base, { decade: 1990, year: 2000 })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+      await expect(listAlbumsFiltered(base, { decade: 1990, year: 1994.5 })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+      await expect(listAlbumsFiltered(base, { decade: 1990, year: 1990 })).resolves.toBeDefined();
+      await expect(listAlbumsFiltered(base, { decade: 1990, year: 1999 })).resolves.toBeDefined();
+    });
+
+    it("dentro de una década el año no desempata en «Destacados»: del año salta directamente al id", async () => {
+      const captured = capture();
+      await listAlbumsFiltered(base, { decade: 1990 });
+      const order = orderOf(captured);
+      expect(order).not.toMatch(/first_release_year" desc nulls last/);
+      expect(order).toMatch(/cover_thumb_url" is not null\) desc \| "release_group"\."id" asc$/);
+    });
+
+    it("con un año elegido tampoco desempata por año", async () => {
+      const captured = capture();
+      await listAlbumsFiltered(base, { decade: 1990, year: 1994 });
+      expect(orderOf(captured)).not.toMatch(/first_release_year" desc nulls last/);
+    });
+
+    it("sin década (familia, género) el año sigue desempatando", async () => {
+      const captured = capture();
+      await listAlbumsFiltered(base, {});
+      expect(orderOf(captured)).toMatch(/first_release_year" desc nulls last/);
+    });
+
+    it("el orden «Populares» tampoco apila el último año de la década en su desempate", async () => {
+      const captured = capture();
+      await listAlbumsFiltered(base, { decade: 1990, sort: "popular" });
+      const order = orderOf(captured);
+      expect(order).toMatch(/array_position/);
+      expect(order).not.toMatch(/first_release_year" desc nulls last/);
+    });
+
+    it("los órdenes por año de las listas siguen siendo los que se piden", async () => {
+      const captured = capture();
+      await listAlbumsFiltered(base, { decade: 1990, sort: "newest" });
+      expect(orderOf(captured)).toMatch(/first_release_year" desc nulls last/);
+    });
   });
 
   it("rechaza tipo, década, orden y paginación inválidos", async () => {

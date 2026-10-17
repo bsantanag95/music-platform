@@ -5,9 +5,8 @@ import { encodeId } from "@/lib/slug";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { parseExploreListParams } from "@/services/discovery/explore-params";
 import { CollectionRail } from "./CollectionRail";
-import { DecadeHistogram } from "./DecadeHistogram";
 import { ExploreFilterBar } from "./ExploreFilterBar";
-import { FamilyGrid } from "./FamilyGrid";
+import { MosaicGrid } from "./MosaicGrid";
 
 // jsdom no implementa ResizeObserver ni matchMedia (el riel desplazable los usa para las flechas y el movimiento).
 vi.stubGlobal("matchMedia", (query: string) => ({
@@ -46,53 +45,7 @@ const categoryLabels = {
   live_other: "Directos y otros",
 };
 
-describe("DecadeHistogram", () => {
-  const decades = [2000, 1990, 1970].map((decade, i) => ({
-    decade,
-    count: (i + 1) * 10,
-    href: `/explore?decada=${decade}`,
-    countLabel: String((i + 1) * 10),
-    ariaLabel: `${decade}s: ${(i + 1) * 10} álbumes`,
-  }));
-
-  it("dibuja las columnas en orden cronológico, cada una con su nombre accesible", () => {
-    renderWithIntl(<DecadeHistogram heading="Explorar por década" decades={decades} earlierLabel="Antes" />);
-    const [columns] = screen.getAllByRole("list");
-    const links = within(columns!).getAllByRole("link");
-    expect(links.map((a) => a.getAttribute("aria-label"))).toEqual([
-      "1970s: 30 álbumes",
-      "1990s: 20 álbumes",
-      "2000s: 10 álbumes",
-    ]);
-    expect(links[0]).toHaveAttribute("href", "/es/explore?decada=1970");
-  });
-
-  it("saca del gráfico las décadas iniciales con muy pocos álbumes", () => {
-    const column = (decade: number, count: number) => ({
-      decade,
-      count,
-      href: `/explore?decada=${decade}`,
-      countLabel: String(count),
-      ariaLabel: `${decade}s`,
-    });
-    renderWithIntl(
-      <DecadeHistogram
-        heading="Explorar por década"
-        decades={[column(1900, 2), column(1910, 5), column(1960, 500), column(2010, 10000)]}
-        earlierLabel="Antes"
-      />,
-    );
-    const earlier = screen.getByText("Antes").parentElement!;
-    expect(within(earlier).getAllByRole("link").map((a) => a.getAttribute("aria-label"))).toEqual(["1900s", "1910s"]);
-  });
-
-  it("no renderiza nada sin décadas", () => {
-    const { container } = renderWithIntl(<DecadeHistogram heading="Explorar por década" decades={[]} earlierLabel="Antes" />);
-    expect(container).toBeEmptyDOMElement();
-  });
-});
-
-describe("FamilyGrid", () => {
+describe("MosaicGrid", () => {
   const tile = (key: string, covers: string[] = []) => ({
     key,
     label: key,
@@ -103,10 +56,13 @@ describe("FamilyGrid", () => {
 
   it("enlaza cada familia y deja las secundarias tras el desplegable", () => {
     renderWithIntl(
-      <FamilyGrid
+      <MosaicGrid
+        id="generos"
+        headingId="genres-heading"
+        listId="genres-list"
         heading="Explorar por género"
-        families={[tile("rock", [cover(1)]), tile("jazz")]}
-        moreFamilies={[tile("world")]}
+        tiles={[tile("rock", [cover(1)]), tile("jazz")]}
+        moreTiles={[tile("world")]}
         moreLabel="1 familia más"
         lessLabel="Ver menos"
       />,
@@ -121,16 +77,19 @@ describe("FamilyGrid", () => {
   });
 });
 
-describe("FamilyGrid: tarjeta visual", () => {
+describe("MosaicGrid: tarjeta visual", () => {
   const cover = (n: number) => `https://coverartarchive.org/release-group/${n}/front-250`;
   const family = (key: string, covers: string[]) => ({ key, label: key, href: `/explore?familia=${key}`, covers });
   const imagesIn = (name: RegExp) => screen.getByRole("link", { name }).querySelectorAll("img").length;
 
   it("muestra un mosaico con tantas carátulas como haya, hasta cuatro", () => {
     renderWithIntl(
-      <FamilyGrid
+      <MosaicGrid
+        id="generos"
+        headingId="genres-heading"
+        listId="genres-list"
         heading="Explorar por género"
-        families={[
+        tiles={[
           family("rock", [1, 2, 3, 4, 5].map(cover)),
           family("jazz", [1, 2, 3].map(cover)),
           family("blues", [1, 2].map(cover)),
@@ -146,7 +105,7 @@ describe("FamilyGrid: tarjeta visual", () => {
   });
 
   it("con tres carátulas la primera ocupa las dos filas", () => {
-    renderWithIntl(<FamilyGrid heading="Explorar por género" families={[family("jazz", [1, 2, 3].map(cover))]} />);
+    renderWithIntl(<MosaicGrid id="generos" headingId="genres-heading" listId="genres-list" heading="Explorar por género" tiles={[family("jazz", [1, 2, 3].map(cover))]} />);
 
     const cells = screen.getByRole("link", { name: /jazz/ }).querySelectorAll("[aria-hidden] > div");
     expect(cells[0]).toHaveClass("row-span-2");
@@ -154,7 +113,7 @@ describe("FamilyGrid: tarjeta visual", () => {
   });
 
   it("una familia sin carátulas es una tarjeta plana con su nombre y sigue enlazando", () => {
-    renderWithIntl(<FamilyGrid heading="Explorar por género" families={[family("latin", [])]} />);
+    renderWithIntl(<MosaicGrid id="generos" headingId="genres-heading" listId="genres-list" heading="Explorar por género" tiles={[family("latin", [])]} />);
 
     const link = screen.getByRole("link", { name: /latin/ });
     expect(link).toHaveAttribute("href", "/es/explore?familia=latin");
@@ -163,7 +122,7 @@ describe("FamilyGrid: tarjeta visual", () => {
 
   it("no muestra número de álbumes ni barra de tamaño", () => {
     const { container } = renderWithIntl(
-      <FamilyGrid heading="Explorar por género" families={[family("rock", [1, 2].map(cover))]} />,
+      <MosaicGrid id="generos" headingId="genres-heading" listId="genres-list" heading="Explorar por género" tiles={[family("rock", [1, 2].map(cover))]} />,
     );
 
     expect(screen.queryByText(/álbum/i)).not.toBeInTheDocument();
@@ -173,9 +132,64 @@ describe("FamilyGrid: tarjeta visual", () => {
   });
 
   it("las carátulas son decorativas: el enlace se nombra solo con la familia", () => {
-    renderWithIntl(<FamilyGrid heading="Explorar por género" families={[family("rock", [1, 2].map(cover))]} />);
+    renderWithIntl(<MosaicGrid id="generos" headingId="genres-heading" listId="genres-list" heading="Explorar por género" tiles={[family("rock", [1, 2].map(cover))]} />);
 
     expect(screen.getByRole("link", { name: "rock" })).toBeInTheDocument();
+  });
+});
+
+describe("MosaicGrid: décadas", () => {
+  const cover = (n: number) => `https://coverartarchive.org/release-group/${n}/front-250`;
+  const decade = (year: number, covers: string[] = []) => ({ key: String(year), label: `${year}s`, href: `/explore?decada=${year}`, covers });
+  const renderDecades = (props: Partial<React.ComponentProps<typeof MosaicGrid>> = {}) =>
+    renderWithIntl(
+      <MosaicGrid
+        id="decadas"
+        headingId="explore-decades-heading"
+        listId="explore-decade-tiles"
+        heading="Explorar por década"
+        tiles={[decade(2020, [1, 2, 3, 4].map(cover)), decade(1990, [5, 6].map(cover)), decade(1950)]}
+        moreTiles={[decade(1940), decade(1890)]}
+        moreLabel="Décadas anteriores"
+        lessLabel="Ver menos"
+        {...props}
+      />,
+    );
+
+  it("lleva el ancla, el título y la lista que le pide quien la usa", () => {
+    const { container } = renderDecades();
+
+    expect(container.querySelector("section#decadas")).toHaveAttribute("aria-labelledby", "explore-decades-heading");
+    expect(screen.getByRole("heading", { name: "Explorar por década" })).toHaveAttribute("id", "explore-decades-heading");
+    expect(container.querySelector("ul#explore-decade-tiles")).not.toBeNull();
+    expect(screen.getByRole("button", { name: /Décadas anteriores/ })).toHaveAttribute("aria-controls", "explore-decade-tiles");
+  });
+
+  it("deja las décadas en el orden recibido, enlazadas a su listado", () => {
+    renderDecades();
+
+    const links = screen.getAllByRole("link");
+    expect(links.map((a) => a.textContent?.replace("→", ""))).toEqual(["2020s", "1990s", "1950s"]);
+    expect(links[1]).toHaveAttribute("href", "/es/explore?decada=1990");
+  });
+
+  it("las décadas anteriores quedan tras el desplegable, sin cifras, y se pliegan de nuevo", () => {
+    renderDecades();
+
+    expect(screen.queryByRole("link", { name: "1890s" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Décadas anteriores/ }));
+    expect(screen.getAllByRole("link").map((a) => a.textContent?.replace("→", ""))).toEqual(["2020s", "1990s", "1950s", "1940s", "1890s"]);
+    expect(screen.queryByText(/\d{3,}\s*álbum/i)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Ver menos/ }));
+    expect(screen.queryByRole("link", { name: "1940s" })).not.toBeInTheDocument();
+  });
+
+  it("una década sin carátulas es una tarjeta plana que sigue enlazando", () => {
+    renderDecades();
+
+    const link = screen.getByRole("link", { name: "1950s" });
+    expect(link.querySelectorAll("img")).toHaveLength(0);
+    expect(link).toHaveAttribute("href", "/es/explore?decada=1950");
   });
 });
 

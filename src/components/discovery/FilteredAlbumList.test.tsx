@@ -55,6 +55,51 @@ describe("FilteredAlbumList", () => {
     expect(screen.queryByText(/^década$/i)).toBeNull();
   });
 
+  describe("años del corte", () => {
+    const years = {
+      label: "Años de los 1990s",
+      links: [
+        { key: "all", label: "Toda la década", href: "/explore?decada=1990", current: true },
+        { key: "1994", label: "1994", href: "/explore?decada=1990&anio=1994", current: false },
+        { key: "1995", label: "1995", href: "/explore?decada=1990&anio=1995", current: false },
+      ],
+    };
+
+    it("pinta un chip por año, enlazado, y marca el actual", () => {
+      renderWithIntl(<FilteredAlbumList {...baseProps} years={years} />);
+
+      const nav = screen.getByRole("navigation", { name: "Años de los 1990s" });
+      expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["Toda la década", "1994", "1995"]);
+      expect(within(nav).getByRole("link", { name: "1994" })).toHaveAttribute("href", "/es/explore?decada=1990&anio=1994");
+      expect(within(nav).getByRole("link", { name: "Toda la década" })).toHaveAttribute("aria-current", "page");
+      expect(within(nav).getByRole("link", { name: "1994" })).not.toHaveAttribute("aria-current");
+    });
+
+    it("va antes que los géneros del corte", () => {
+      renderWithIntl(
+        <FilteredAlbumList {...baseProps} years={years} topics={{ label: "Géneros de los 1990s", links: [{ key: "g", label: "grunge", href: "/genre/grunge" }] }} />,
+      );
+
+      const yearsNav = screen.getByRole("navigation", { name: "Años de los 1990s" });
+      const topicsNav = screen.getByRole("navigation", { name: "Géneros de los 1990s" });
+      expect(yearsNav.compareDocumentPosition(topicsNav) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it("sin años (solo \"Toda la década\") no pinta la fila", () => {
+      renderWithIntl(<FilteredAlbumList {...baseProps} years={{ label: "Años de los 1990s", links: [years.links[0]!] }} />);
+
+      expect(screen.queryByRole("navigation", { name: "Años de los 1990s" })).toBeNull();
+    });
+  });
+
+  it("con un nivel intermedio la miga de pan lo muestra enlazado antes del corte", () => {
+    renderWithIntl(<FilteredAlbumList {...baseProps} crumb="1994" parentCrumb={{ label: "1990s", href: "/explore?decada=1990" }} />);
+
+    const crumbs = screen.getByRole("navigation", { name: /migas|breadcrumb|ruta/i });
+    expect(within(crumbs).getByRole("link", { name: "1990s" })).toHaveAttribute("href", "/es/explore?decada=1990");
+    expect(within(crumbs).getByText("1994")).toBeInTheDocument();
+  });
+
   describe("géneros del corte", () => {
     const topics = {
       label: "Géneros de Rock",

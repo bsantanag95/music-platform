@@ -81,10 +81,13 @@ import { listFeaturedLists } from "../src/services/lists/community";
 import { listEditorialLists } from "../src/services/lists/editorial";
 import { listUserLists } from "../src/services/lists/lists";
 import { listSavedLists, saveList } from "../src/services/lists/saved-lists";
+import { listAlbumsByDecade, listDecadeYears } from "../src/services/discovery/discovery";
 import { findGeneratedCollection, generatedRefsFor } from "../src/services/discovery/collections/generated";
 import { collectionTitle } from "../src/services/discovery/collections/titles";
 import { presentCollection } from "../src/services/discovery/collections/presenters";
 import { listCollectionSummaries } from "../src/services/discovery/collections/summaries";
+import { COVERS_PER_DECADE, listDecadeCovers, resetDecadeCoversCache } from "../src/services/discovery/decade-covers";
+import { DECADE_GENRES_LIMIT, listDecadeGenres, resetDecadeGenresCache } from "../src/services/discovery/decade-genres";
 import { COVERS_PER_FAMILY, listFamilyCovers, resetFamilyCoversCache } from "../src/services/discovery/family-covers";
 import { FAMILY_GENRES_LIMIT, listFamilyGenres, resetFamilyGenresCache } from "../src/services/discovery/family-genres";
 import { popularPeopleOf, popularityScoreQuery, resetAllTimeRankingCache } from "../src/services/discovery/popularity";
@@ -1202,6 +1205,84 @@ async function main() {
     check(JSON.stringify([...first.entries()]) === JSON.stringify([...second.entries()]), "la selección es estable entre lecturas (mismo desempate)");
     check((await listFamilyCovers()) === second, "la segunda lectura sale de la caché en memoria");
     resetFamilyCoversCache();
+  }
+
+  console.log("Décadas: carátulas, años, géneros y orden (redesign-explore-decades):");
+  {
+    // Siete discos sintéticos en la década de 2080 (sin datos reales): seis de estudio con carátula en cuatro años, un sencillo y
+    // uno de estudio sin carátula. Sin valoraciones ni premios, así que dentro de la década decide el id y no el año.
+    const specs = [
+      { n: "7", year: 2081, category: "studio" as const, cover: true },
+      { n: "8", year: 2081, category: "studio" as const, cover: true },
+      { n: "9", year: 2083, category: "studio" as const, cover: true },
+      { n: "a", year: 2085, category: "studio" as const, cover: true },
+      { n: "b", year: 2089, category: "studio" as const, cover: true },
+      { n: "c", year: 2089, category: "studio" as const, cover: true },
+      { n: "d", year: 2083, category: "single_ep" as const, cover: true },
+      { n: "e", year: 2085, category: "studio" as const, cover: false },
+    ];
+    const inserted = await db
+      .insert(releaseGroup)
+      .values(
+        specs.map((spec) => ({
+          mbid: `5e0ce000-0000-4000-8000-0000000009f${spec.n}`,
+          title: `Smoke década ${spec.n}`,
+          category: spec.category,
+          firstReleaseYear: spec.year,
+          coverThumbUrl: spec.cover ? `https://coverartarchive.org/smoke-decada-${spec.n}.jpg` : null,
+        })),
+      )
+      .returning({ id: releaseGroup.id, year: releaseGroup.firstReleaseYear });
+    try {
+      resetDecadeCoversCache();
+      const covers = await listDecadeCovers();
+      const ours = covers.get(2080) ?? [];
+      check(ours.length === COVERS_PER_DECADE, `la década trae como mucho ${COVERS_PER_DECADE} carátulas (hay seis candidatas)`);
+      check(ours.every((cover) => cover.includes("smoke-decada-") && !cover.endsWith("-d.jpg") && !cover.endsWith("-e.jpg")), "solo de discos de estudio con carátula");
+      check([...covers.values()].every((list) => list.length >= 1 && list.length <= COVERS_PER_DECADE), "ninguna década trae más de cuatro ni queda vacía en el mapa");
+      resetDecadeCoversCache();
+      check(JSON.stringify((await listDecadeCovers()).get(2080)) === JSON.stringify(ours), "la selección es estable entre lecturas (mismo desempate)");
+      const cached = await listDecadeCovers();
+      check((await listDecadeCovers()) === cached, "la segunda lectura sale de la caché en memoria");
+      resetDecadeCoversCache();
+
+      check(JSON.stringify(await listDecadeYears(2080)) === JSON.stringify([2081, 2083, 2085, 2089]), "los años de la década son los que tienen álbumes, en orden");
+      check((await listDecadeYears(2070)).length === 0, "una década sin álbumes no tiene años");
+
+      const whole = await listAlbumsByDecade(2080, 1);
+      check(whole.albums.length === specs.length, "el listado de la década trae todos sus discos");
+      const studioWithCover = whole.albums.filter((album) => album.category === "studio" && album.coverThumbUrl !== null);
+      const ids = studioWithCover.map((album) => album.id);
+      check(ids.length === 6 && ids.every((id, i) => i === 0 || ids[i - 1]! < id), "dentro de la década el año no desempata: los discos iguales salen por id");
+      const outside = await listAlbumsFiltered(sql`"release_group"."id" in (${sql.join(inserted.map((row) => sql`${row.id}`), sql`, `)})`, {});
+      const years = outside.albums.filter((album) => album.category === "studio" && album.coverThumbUrl !== null).map((album) => album.firstReleaseYear ?? 0);
+      check(years.every((year, i) => i === 0 || years[i - 1]! >= year), "fuera de una década el año sigue desempatando (más reciente primero)");
+
+      const year = await listAlbumsByDecade(2080, 1, { year: 2083 });
+      check(year.albums.length === 2 && year.albums.every((album) => album.firstReleaseYear === 2083), "con un año solo trae los discos de ese año");
+      check((await listAlbumsByDecade(2080, 1, { year: 2085, category: "studio" })).albums.length === 2, "el año se combina con el tipo");
+      let rejected = false;
+      await listAlbumsByDecade(2080, 1, { year: 1999 }).catch(() => {
+        rejected = true;
+      });
+      check(rejected, "un año que no es de la década se rechaza");
+    } finally {
+      await db.delete(releaseGroup).where(sql`mbid::text like '5e0ce000-0000-4000-8000-0000000009f%'`);
+      resetDecadeCoversCache();
+    }
+
+    resetDecadeGenresCache();
+    check((await listDecadeGenres(2080)).length === 0, "una década sin géneros no trae chips");
+    check((await listDecadeGenres(1995)).length === 0, "una década inválida no trae géneros");
+    const startedAt = Date.now();
+    const genres = await listDecadeGenres(1990);
+    console.log(`  (géneros de los 1990s en frío: ${Date.now() - startedAt} ms, ${genres.length} géneros: ${genres.map((item) => item.slug).join(", ")})`);
+    if (genres.length > 0) {
+      check(genres.length <= DECADE_GENRES_LIMIT, `la década trae como mucho ${DECADE_GENRES_LIMIT} géneros`);
+      check(new Set(genres.map((item) => item.slug)).size === genres.length, "los géneros no se repiten");
+      check(JSON.stringify(await listDecadeGenres(1990)) === JSON.stringify(genres), "la segunda lectura sale de la caché");
+    }
+    resetDecadeGenresCache();
   }
 
   console.log("Plantillas reales (solo lectura, sin red):");

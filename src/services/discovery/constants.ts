@@ -106,3 +106,15 @@ export const POPULARITY_FIGURE_MIN = 5;
 
 /** Ventana con la que se calculó lo popular ahora: 30 días, 90 días o desde siempre. */
 export type PopularWindow = "month" | "quarter" | "all";
+
+/** Década válida (año de inicio: 1890, 1990, …): múltiplo de 10 entre 1800 y 2100. */
+export function isValidDecade(decade: number): boolean {
+  return Number.isInteger(decade) && decade % 10 === 0 && decade >= 1800 && decade <= 2100;
+}
+
+/**
+ * Primera década que tiene tarjeta propia en la grilla de "Explorar por década" (openspec: redesign-explore-decades). Las
+ * anteriores van detrás de "Décadas anteriores". Es una decisión de producto, no un umbral de datos: una regla por cifras
+ * movería una década de sitio cuando se ingieren discos.
+ */
+export const MOSAIC_FIRST_DECADE = 1950;

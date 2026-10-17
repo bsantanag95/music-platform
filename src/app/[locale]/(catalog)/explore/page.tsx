@@ -4,19 +4,24 @@ import { redirect } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { AlbumRail } from "@/components/discovery/AlbumRail";
 import { CollectionRail } from "@/components/discovery/CollectionRail";
-import { DecadeHistogram } from "@/components/discovery/DecadeHistogram";
-import { FamilyGrid, type FamilyTile } from "@/components/discovery/FamilyGrid";
 import { daysUntilRelease, releaseDateLabel } from "@/components/discovery/release-date-label";
 import { AwardsExploreSection } from "@/components/awards/AwardsExploreSection";
 import { listRecentCeremonies } from "@/services/awards/read";
 import { ExploreJumpNav } from "@/components/discovery/ExploreJumpNav";
 import { FilteredAlbumList } from "@/components/discovery/FilteredAlbumList";
+import { MosaicGrid, type MosaicTile } from "@/components/discovery/MosaicGrid";
 import { PopularNow } from "@/components/discovery/PopularNow";
 import { ApiError } from "@/lib/api/errors";
 import { isExploreEnabled } from "@/lib/config/discovery";
 import { genreHref } from "@/lib/catalog-links";
 import { getCurrentUser } from "@/services/auth/authorization";
-import { CURATOR_USERNAME, MIN_RATINGS_PER_ALBUM, NEW_RELEASE_WINDOW_DAYS, UPCOMING_WINDOW_DAYS } from "@/services/discovery/constants";
+import {
+  CURATOR_USERNAME,
+  MIN_RATINGS_PER_ALBUM,
+  MOSAIC_FIRST_DECADE,
+  NEW_RELEASE_WINDOW_DAYS,
+  UPCOMING_WINDOW_DAYS,
+} from "@/services/discovery/constants";
 import {
   getExplorePage,
   albumArtistNames,
@@ -24,12 +29,14 @@ import {
   listAlbumsByFamily,
   listAlbumsByGenre,
   listDecades,
+  listDecadeYears,
   listNewAlbums,
   listUpcomingAlbums,
   listGenreFamilies,
   type FamilyBucket,
 } from "@/services/discovery/discovery";
 import { ensureCollectionsFresh } from "@/services/discovery/collections/sync";
+import { listDecadeGenres } from "@/services/discovery/decade-genres";
 import { listFamilyGenres } from "@/services/discovery/family-genres";
 import { exploreListHref, parseExploreListParams } from "@/services/discovery/explore-params";
 import { genreDisplayName, genreLocaleOf } from "@/services/genres/names";
@@ -37,7 +44,7 @@ import type { ReleaseGroupCategory } from "@/lib/api/schemas";
 
 interface ExplorePageProps {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ proximos?: string; novedades?: string; decada?: string; familia?: string; genero?: string; tipo?: string; orden?: string; page?: string }>;
+  searchParams: Promise<{ proximos?: string; novedades?: string; decada?: string; anio?: string; familia?: string; genero?: string; tipo?: string; orden?: string; page?: string }>;
 }
 
 export async function generateMetadata({ params }: ExplorePageProps): Promise<Metadata> {
@@ -58,9 +65,6 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
   const { decada, familia, genero, proximos, novedades } = raw;
   const listParams = parseExploreListParams(raw);
   const listOptions = { category: listParams.category, sort: listParams.sort };
-  // Separador de miles siempre: con la regla del español ("2112" pero "17.317") las cifras de una
-  // misma grilla quedaban con formatos distintos.
-  const numberFormat = new Intl.NumberFormat(locale, { useGrouping: "always" });
 
   const categoryLabels = {
     studio: tCat("categories.studio"),
@@ -99,25 +103,58 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
     const decadeLabel = Number.isInteger(decade) ? decade : decada.trim();
     // Una década mal escrita en la URL (`?decada=abc`, `?decada=1995`) muestra el estado vacío,
     // como una familia o un género desconocidos, en lugar de la pantalla de error.
-    const [result, decades] = await Promise.all([
-      listAlbumsByDecade(decade, listParams.page, listOptions).catch((error: unknown) => {
-        if (error instanceof ApiError && error.code === "VALIDATION_ERROR") {
-          return { albums: [], page: listParams.page, pageSize: 0, hasNext: false };
-        }
-        throw error;
-      }),
+    // Un año que no es de la década (`?anio=1985` en `?decada=1990`, `?anio=abc`) se ignora y se muestra la década completa.
+    const rawYear = Array.isArray(raw.anio) ? raw.anio[0] : raw.anio;
+    const yearValue = rawYear === undefined || rawYear.trim() === "" ? Number.NaN : Number(rawYear);
+    const year = Number.isInteger(yearValue) && yearValue >= decade && yearValue <= decade + 9 ? yearValue : undefined;
+    const ifInvalid = <T,>(empty: T) => (error: unknown) => {
+      if (error instanceof ApiError && error.code === "VALIDATION_ERROR") return empty;
+      throw error;
+    };
+    const [result, decades, decadeYears, decadeGenres] = await Promise.all([
+      listAlbumsByDecade(decade, listParams.page, { ...listOptions, year }).catch(
+        ifInvalid({ albums: [], page: listParams.page, pageSize: 0, hasNext: false }),
+      ),
       listDecades(),
+      listDecadeYears(decade).catch(ifInvalid([] as number[])),
+      listDecadeGenres(decade),
     ]);
+    const decadeHref = `/explore?decada=${decade}`;
     return (
       <FilteredAlbumList
         {...listProps}
-        heading={t("decadeResultsHeading", { decade: decadeLabel })}
-        crumb={t("decadeChip", { decade: decadeLabel })}
+        heading={year !== undefined ? t("yearResultsHeading", { year }) : t("decadeResultsHeading", { decade: decadeLabel })}
+        crumb={year !== undefined ? String(year) : t("decadeChip", { decade: decadeLabel })}
+        parentCrumb={year !== undefined ? { label: t("decadeChip", { decade: decadeLabel }), href: decadeHref } : undefined}
         result={result}
         artistNames={await albumArtistNames(result.albums.map((album) => album.id))}
-        baseHref={`/explore?decada=${decade}`}
+        baseHref={year !== undefined ? `${decadeHref}&anio=${year}` : decadeHref}
+        // Un chip por año con álbumes, sin cifras; conservan el tipo y el orden elegidos.
+        years={{
+          label: t("decadeYearsLabel", { decade: decadeLabel }),
+          links: [
+            { key: "all", label: t("decadeAllYears"), href: exploreListHref(decadeHref, listParams, { page: 1 }), current: year === undefined },
+            ...decadeYears.map((value) => ({
+              key: String(value),
+              label: String(value),
+              href: exploreListHref(`${decadeHref}&anio=${value}`, listParams, { page: 1 }),
+              current: value === year,
+            })),
+          ],
+        }}
+        // Los géneros más grandes de la década, cada uno con su página ya filtrada por esa década.
+        topics={{
+          label: t("decadeGenresLabel", { decade: decadeLabel }),
+          links: decadeGenres.map((item) => ({
+            key: item.slug,
+            label: genreDisplayName(item, genreLocaleOf(locale)),
+            href: `${genreHref(item.slug)}?tab=albums&decada=${decade}`,
+          })),
+        }}
         siblings={{
           label: t("otherDecades"),
+          // Catorce chips de década empujaban el primer disco bajo el pliegue: van en un desplegable cerrado.
+          collapsed: true,
           links: [...decades]
             .sort((a, b) => a.decade - b.decade)
             .map((bucket) => ({
@@ -255,7 +292,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
   // Cifra que ubica a cada disco en su riel, sobre la carátula: el promedio en "Mejor valorados".
   const topRatedStats = Object.fromEntries(explore.topRated.map((album) => [album.id, `★ ${starsFormat.format(album.avgStars)}`]));
   const hasPopular = Boolean(explore.popular.albums || explore.popular.artists || explore.popular.songs);
-  const familyTiles = (buckets: FamilyBucket[]): FamilyTile[] =>
+  const familyTiles = (buckets: FamilyBucket[]): MosaicTile[] =>
     buckets.map((bucket) => ({
       key: bucket.key,
       label: tGenres(`families.${bucket.key}`),
@@ -263,17 +300,26 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
       covers: bucket.covers,
     }));
   const moreFamilies = explore.families.filter((f) => f.tier === "more");
+  // Décadas: de la más reciente a la más antigua; desde 1950 son tarjetas de la grilla y las anteriores van tras "Décadas anteriores".
+  const decadeTile = (bucket: (typeof explore.decades)[number]): MosaicTile => ({
+    key: String(bucket.decade),
+    label: t("decadeChip", { decade: bucket.decade }),
+    href: `/explore?decada=${bucket.decade}`,
+    covers: bucket.covers,
+  });
+  const decadeTiles = explore.decades.filter((bucket) => bucket.decade >= MOSAIC_FIRST_DECADE).map(decadeTile);
+  const earlierDecadeTiles = explore.decades.filter((bucket) => bucket.decade < MOSAIC_FIRST_DECADE).map(decadeTile);
   // Navegación rápida: una entrada por cada sección que se renderiza (mismos datos que cada sección usa para omitirse),
   // en el orden de la página.
   const jumpItems = [
     { id: "colecciones", label: t("jump.collections"), visible: explore.collections.length > 0 },
     { id: "popular", label: t("jump.popular"), visible: hasPopular },
     { id: "generos", label: t("jump.genres"), visible: explore.families.length > 0 },
+    { id: "decadas", label: t("jump.decades"), visible: explore.decades.length > 0 },
     { id: "novedades", label: t("jump.newReleases"), visible: explore.newReleases.length > 0 },
     { id: "proximos", label: t("jump.upcoming"), visible: explore.upcoming.length > 0 },
     { id: "premios", label: t("jump.awards"), visible: recentCeremonies.length > 0 },
     { id: "mejor-valorados", label: t("jump.topRated"), visible: explore.topRated.length > 0 },
-    { id: "decadas", label: t("jump.decades"), visible: explore.decades.length > 0 },
   ].filter((item) => item.visible);
 
   return (
@@ -314,13 +360,30 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         artistNames={railArtistNames}
       />
 
-      <FamilyGrid
+      <MosaicGrid
+        id="generos"
+        headingId="explore-genres-heading"
+        listId="explore-genre-families"
         heading={t("genresHeading")}
         description={t("genresDescription")}
-        families={familyTiles(explore.families.filter((f) => f.tier === "main"))}
-        moreFamilies={familyTiles(moreFamilies)}
+        tiles={familyTiles(explore.families.filter((f) => f.tier === "main"))}
+        moreTiles={familyTiles(moreFamilies)}
         moreLabel={t("moreFamilies", { count: moreFamilies.length })}
         lessLabel={t("fewerFamilies")}
+      />
+
+      {/* Décadas (openspec: redesign-explore-decades): el mismo mosaico que los géneros, sin cifras, justo después de ellos: los
+          dos ejes del catálogo juntos, antes de los feeds con fecha. */}
+      <MosaicGrid
+        id="decadas"
+        headingId="explore-decades-heading"
+        listId="explore-decade-tiles"
+        heading={t("decadesHeading")}
+        description={t("decadesDescription")}
+        tiles={decadeTiles}
+        moreTiles={earlierDecadeTiles}
+        moreLabel={t("earlierDecades")}
+        lessLabel={t("fewerDecades")}
       />
 
       <AlbumRail
@@ -365,23 +428,6 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
         stats={topRatedStats}
         categoryLabels={categoryLabels}
         coverLabel={coverLabel}
-      />
-
-      <DecadeHistogram
-        heading={t("decadesHeading")}
-        description={t("decadesDescription")}
-        earlierLabel={t("decadesEarlier")}
-        decades={explore.decades.map((bucket) => ({
-          decade: bucket.decade,
-          count: bucket.count,
-          href: `/explore?decada=${bucket.decade}`,
-          countLabel: numberFormat.format(bucket.count),
-          ariaLabel: t("decadeBarLabel", {
-            decade: bucket.decade,
-            count: bucket.count,
-            formatted: numberFormat.format(bucket.count),
-          }),
-        }))}
       />
     </main>
   );
