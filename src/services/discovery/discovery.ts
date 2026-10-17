@@ -21,6 +21,7 @@ import { escapeLike } from "@/services/catalog/search/normalize";
 import { GENRE_FAMILIES, type FamilyKey, type FamilyTier } from "@/services/genres/families";
 import { albumInFamily, albumInGenreTree, findStyleGenreBySlug, parseFamilyKey } from "@/services/genres/read";
 import { enrichLists } from "@/services/lists/lists";
+import { listDecadeCovers } from "./decade-covers";
 import { listFamilyCovers } from "./family-covers";
 import { allTimeAlbumRanking, listPopularNow, type PopularResult, type PopularWindow } from "./popularity";
 import {
@@ -29,6 +30,7 @@ import {
   FEATURED_RAIL_LIMIT,
   FILTERED_PAGE_SIZE,
   HUB_COLLECTION_LIMIT,
+  isValidDecade,
   MIN_ALBUMS_FOR_SECTION,
   MIN_RATINGS_PER_ALBUM,
   NEW_RELEASE_CATEGORIES,
@@ -75,7 +77,12 @@ export interface CollectionsHub {
 
 export interface DecadeBucket {
   decade: number; // año de inicio de la década: 1990, 2000, ...
-  count: number;
+  count: number; // álbumes con año en la década (solo para omitir las vacías: no se muestra)
+}
+
+/** Década de la portada con las carátulas de su tarjeta (hasta 4 de discos de estudio; vacío si no hay ninguna). */
+export interface DecadeCard extends DecadeBucket {
+  covers: string[];
 }
 
 export interface FamilyBucket {
@@ -98,7 +105,7 @@ export interface ExplorePage {
   collections: FeaturedCollection[];
   newReleases: ReleaseGroup[];
   upcoming: ReleaseGroup[];
-  decades: DecadeBucket[];
+  decades: DecadeCard[];
   families: FamilyBucket[];
   topRated: TopRatedAlbum[];
   popular: PopularSection;
@@ -505,6 +512,25 @@ export async function listDecades(): Promise<DecadeBucket[]> {
   return rows.map((row) => ({ decade: Number(row.decade), count: Number(row.count) }));
 }
 
+/** Décadas de la portada con las carátulas de su tarjeta (openspec: redesign-explore-decades), de la más reciente a la más antigua. */
+async function listDecadeCards(): Promise<DecadeCard[]> {
+  const [decades, covers] = await Promise.all([listDecades(), listDecadeCovers()]);
+  return decades.map((bucket) => ({ ...bucket, covers: covers.get(bucket.decade) ?? [] }));
+}
+
+/**
+ * Años de una década con al menos un álbum, del más antiguo al más reciente: los chips de la vista de década. Sin cifras.
+ */
+export async function listDecadeYears(decade: number): Promise<number[]> {
+  assertDecade(decade);
+  const rows = await db
+    .selectDistinct({ year: releaseGroup.firstReleaseYear })
+    .from(releaseGroup)
+    .where(sql`${releaseGroup.firstReleaseYear} between ${decade} and ${decade + 9}`)
+    .orderBy(asc(releaseGroup.firstReleaseYear));
+  return rows.flatMap((row) => (row.year === null ? [] : [row.year]));
+}
+
 /**
  * Familias de géneros con su número de álbumes (géneros efectivos de estilo, con herencia), en
  * el orden de la interfaz. Las familias sin álbumes se omiten.
@@ -653,7 +679,7 @@ export async function getExplorePage(): Promise<ExplorePage> {
     listCollections(),
     listNewReleases(),
     listUpcomingReleases(),
-    listDecades(),
+    listDecadeCards(),
     listGenreFamilies(),
     listTopRated(),
     listPopularSection(),
@@ -691,7 +717,7 @@ function toAlbumPage(rows: unknown[], page: number): AlbumPage {
 }
 
 function assertDecade(decade: number): void {
-  if (!Number.isInteger(decade) || decade % 10 !== 0 || decade < 1800 || decade > 2100) {
+  if (!isValidDecade(decade)) {
     throw new ApiError("VALIDATION_ERROR", 400, "La década no es válida");
   }
 }
@@ -708,6 +734,8 @@ export interface AlbumFilterOptions {
   category?: ReleaseGroupCategory;
   /** Año de inicio de la década (1970, 1980, …). */
   decade?: number;
+  /** Año concreto; con `decade`, debe caer dentro de ella (openspec: redesign-explore-decades). */
+  year?: number;
   /** Texto libre: título del álbum o nombre de un artista acreditado, sin acentos ni mayúsculas. */
   q?: string;
   sort?: AlbumSort;
@@ -734,32 +762,42 @@ const awardScore = sql`(
   end
 )`;
 
-export const bestOrder = [
-  // Un disco por salir pertenece a "Próximos", no a "lo mejor": `coalesce` porque sin fecha el booleano sería `null`.
-  sql`coalesce(${releaseGroup.firstReleaseDate} > current_date, false) asc`,
-  sql`${eligibleAvg} desc nulls last`,
-  sql`${awardScore} desc nulls last`,
-  sql`(${releaseGroup.category} = 'studio') desc`,
-  sql`(${releaseGroup.coverThumbUrl} is not null) desc`,
-  sql`${releaseGroup.firstReleaseYear} desc nulls last`,
-  asc(releaseGroup.id),
-];
+/**
+ * Orden "Destacados". `yearTiebreak: false` quita el año descendente como desempate: dentro de una década (o un año) sin
+ * valoraciones ni premios apilaba en la primera página el último año del período; sin él, el id (un uuid) mezcla los años de
+ * forma estable (openspec: redesign-explore-decades).
+ */
+export function bestOrderFor({ yearTiebreak = true }: { yearTiebreak?: boolean } = {}): SQL[] {
+  return [
+    // Un disco por salir pertenece a "Próximos", no a "lo mejor": `coalesce` porque sin fecha el booleano sería `null`.
+    sql`coalesce(${releaseGroup.firstReleaseDate} > current_date, false) asc`,
+    sql`${eligibleAvg} desc nulls last`,
+    sql`${awardScore} desc nulls last`,
+    sql`(${releaseGroup.category} = 'studio') desc`,
+    sql`(${releaseGroup.coverThumbUrl} is not null) desc`,
+    ...(yearTiebreak ? [sql`${releaseGroup.firstReleaseYear} desc nulls last`] : []),
+    asc(releaseGroup.id),
+  ];
+}
+
+export const bestOrder = bestOrderFor();
 
 /**
  * Orden "Populares" (openspec: explore-popular-now): la posición del álbum en el ranking de popularidad de siempre (personas
  * distintas con peso por gesto, `popularity.ts`), y los que no tienen actividad al final, en orden "Destacados". El ranking es una
  * lista de ids que crece con la actividad; ordenar por su posición evita unir la consulta de gestos al listado.
  */
-function popularOrder(ranking: string[]): SQL[] {
-  if (ranking.length === 0) return bestOrder;
+function popularOrder(ranking: string[], best: SQL[]): SQL[] {
+  if (ranking.length === 0) return best;
   const ids = sql`array[${sql.join(ranking.map((id) => sql`${id}`), sql`, `)}]::uuid[]`;
-  return [sql`array_position(${ids}, "release_group"."id") asc nulls last`, ...bestOrder];
+  return [sql`array_position(${ids}, "release_group"."id") asc nulls last`, ...best];
 }
 
-function albumOrder(sort: AlbumSort, ranking: string[] = []): SQL[] {
+function albumOrder(sort: AlbumSort, ranking: string[] = [], yearTiebreak = true): SQL[] {
+  const best = yearTiebreak ? bestOrder : bestOrderFor({ yearTiebreak: false });
   switch (sort) {
     case "popular":
-      return popularOrder(ranking);
+      return popularOrder(ranking, best);
     case "newest":
       return [sql`${releaseGroup.firstReleaseYear} desc nulls last`, asc(releaseGroup.id)];
     case "oldest":
@@ -767,7 +805,7 @@ function albumOrder(sort: AlbumSort, ranking: string[] = []): SQL[] {
     case "az":
       return [sql`search_normalize(${releaseGroup.title}) asc`, asc(releaseGroup.id)];
     default:
-      return bestOrder;
+      return best;
   }
 }
 
@@ -789,12 +827,15 @@ function albumTextMatch(q: string): SQL {
  * Sin filtros y con `sort: "best"` es el orden compartido de Explorar.
  */
 export async function listAlbumsFiltered(condition: SQL, options: AlbumFilterOptions = {}): Promise<AlbumPage> {
-  const { page = 1, category, decade, sort = "best" } = options;
+  const { page = 1, category, decade, year, sort = "best" } = options;
   const { limit, offset } = paginate(page);
   if (category !== undefined && !ReleaseGroupCategorySchema.safeParse(category).success) {
     throw new ApiError("VALIDATION_ERROR", 400, "El tipo de álbum no es válido");
   }
   if (decade !== undefined) assertDecade(decade);
+  if (year !== undefined && (!Number.isInteger(year) || (decade !== undefined && (year < decade || year > decade + 9)))) {
+    throw new ApiError("VALIDATION_ERROR", 400, "El año no es válido");
+  }
   if (!ALBUM_SORTS.includes(sort)) throw new ApiError("VALIDATION_ERROR", 400, "El orden no es válido");
   const q = options.q?.trim();
 
@@ -803,6 +844,7 @@ export async function listAlbumsFiltered(condition: SQL, options: AlbumFilterOpt
   if (decade !== undefined) {
     filters.push(sql`${releaseGroup.firstReleaseYear} between ${decade} and ${decade + 9}`);
   }
+  if (year !== undefined) filters.push(eq(releaseGroup.firstReleaseYear, year));
   if (q) filters.push(albumTextMatch(q));
 
   const rows = await db
@@ -811,18 +853,19 @@ export async function listAlbumsFiltered(condition: SQL, options: AlbumFilterOpt
     .leftJoin(rating, eq(rating.releaseGroupId, releaseGroup.id))
     .where(and(...filters))
     .groupBy(releaseGroup.id)
-    .orderBy(...albumOrder(sort, sort === "popular" ? await allTimeAlbumRanking() : []))
+    // Dentro de una década o un año el año no desempata (ver `bestOrderFor`).
+    .orderBy(...albumOrder(sort, sort === "popular" ? await allTimeAlbumRanking() : [], decade === undefined && year === undefined))
     .limit(limit)
     .offset(offset);
   return toAlbumPage(rows, page);
 }
 
 /** Tipo y orden opcionales de los listados de Explorar (la paginación va aparte). */
-export type ExploreListOptions = Pick<AlbumFilterOptions, "category" | "sort">;
+export type ExploreListOptions = Pick<AlbumFilterOptions, "category" | "sort" | "year">;
 
 /**
- * Álbumes cuyo `first_release_year` cae en `[decade, decade+9]`. Sin opciones es el orden
- * compartido de Explorar (`best`); con ellas, el tipo y el orden elegidos en el listado.
+ * Álbumes cuyo `first_release_year` cae en `[decade, decade+9]` (o es exactamente `year`, que debe ser de la década). Sin
+ * opciones es el orden compartido de Explorar (`best`); con ellas, el tipo y el orden elegidos en el listado.
  */
 export async function listAlbumsByDecade(decade: number, page = 1, options: ExploreListOptions = {}): Promise<AlbumPage> {
   assertDecade(decade);
