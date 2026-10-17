@@ -1,9 +1,8 @@
 import type { ReleaseGroupCategory } from "@/lib/api/schemas";
-import { artistHref, songHref } from "@/lib/catalog-links";
+import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 import type { PopularSection } from "@/services/discovery/discovery";
 import { POPULARITY_FIGURE_MIN, type PopularWindow } from "@/services/discovery/constants";
-import { AlbumRail } from "./AlbumRail";
-import { PopularRankList } from "./PopularRankList";
+import { PopularChart } from "./PopularChart";
 import { PopularTabs, type PopularTabPanel } from "./PopularTabs";
 import { SectionHeader } from "./SectionHeader";
 
@@ -17,8 +16,6 @@ interface PopularNowProps {
   /** "12 personas". */
   peopleLabel: (count: number) => string;
   categoryLabels: Record<ReleaseGroupCategory, string>;
-  coverLabel: string;
-  authenticated?: boolean;
   artistNames?: Record<string, string>;
 }
 
@@ -36,35 +33,31 @@ export function PopularNow({
   windowDescription,
   peopleLabel,
   categoryLabels,
-  coverLabel,
-  authenticated = false,
   artistNames,
 }: PopularNowProps) {
   const figure = (people: number) => (people >= POPULARITY_FIGURE_MIN ? peopleLabel(people) : undefined);
   const tabs: PopularTabPanel[] = [];
 
   if (section.albums) {
-    const stats: Record<string, string> = {};
-    for (const album of section.albums.items) {
-      const text = figure(album.people);
-      if (text) stats[album.id] = text;
-    }
     tabs.push({
       key: "albums",
       label: tabLabels.albums,
       description: windowDescription(section.albums.window),
       panel: (
-        <AlbumRail
-          layout="scroll"
-          id="popular-albumes"
-          heading={tabLabels.albums}
-          headerless
-          albums={section.albums.items}
-          categoryLabels={categoryLabels}
-          coverLabel={coverLabel}
-          authenticated={authenticated}
-          artistNames={artistNames}
-          stats={stats}
+        <PopularChart
+          label={tabLabels.albums}
+          items={section.albums.items.map((album) => {
+            const artistName = artistNames?.[album.id] ?? null;
+            return {
+              id: album.id,
+              href: albumHref(artistName, album.title, album.id),
+              title: album.title,
+              subtitle: artistName,
+              meta: [album.firstReleaseYear, categoryLabels[album.category]].filter(Boolean).join(" · "),
+              image: { src: album.coverThumbUrl, shape: "square" as const },
+              figure: figure(album.people),
+            };
+          })}
         />
       ),
     });
@@ -75,7 +68,7 @@ export function PopularNow({
       label: tabLabels.artists,
       description: windowDescription(section.artists.window),
       panel: (
-        <PopularRankList
+        <PopularChart
           label={tabLabels.artists}
           items={section.artists.items.map((item) => ({
             id: item.id,
@@ -94,7 +87,7 @@ export function PopularNow({
       label: tabLabels.songs,
       description: windowDescription(section.songs.window),
       panel: (
-        <PopularRankList
+        <PopularChart
           label={tabLabels.songs}
           items={section.songs.items.map((item) => ({
             id: item.id,

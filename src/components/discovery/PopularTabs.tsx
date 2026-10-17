@@ -41,7 +41,9 @@ export function PopularTabs({ tabs, label }: { tabs: PopularTabPanel[]; label: s
   return (
     <div className="flex w-full flex-col gap-3">
       {tabs.length > 1 ? (
-        <div role="tablist" aria-label={label} className="flex gap-1.5">
+        // Control segmentado (como el de "Comentarios populares" de Inicio): es un cambio de tipo dentro de la misma
+        // sección, no tres filtros sueltos.
+        <div role="tablist" aria-label={label} className="flex w-fit gap-0.5 rounded-full border border-ink-border bg-ink-surface p-0.5">
           {tabs.map((tab, index) => {
             const selected = index === active;
             return (
@@ -58,8 +60,8 @@ export function PopularTabs({ tabs, label }: { tabs: PopularTabPanel[]; label: s
                 tabIndex={selected ? 0 : -1}
                 onClick={() => setActive(index)}
                 onKeyDown={onKeyDown}
-                className={`rounded-full border px-3 py-1 font-data text-xs transition-colors focus-visible:border-amber ${
-                  selected ? "border-amber text-paper" : "border-ink-border text-paper-muted hover:border-amber hover:text-paper"
+                className={`rounded-full px-3.5 py-1 font-data text-xs transition-colors focus-visible:outline focus-visible:outline-1 focus-visible:outline-amber ${
+                  selected ? "bg-paper text-ink" : "text-paper-muted hover:text-paper"
                 }`}
               >
                 {tab.label}
