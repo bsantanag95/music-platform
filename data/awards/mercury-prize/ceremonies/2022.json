@@ -1,0 +1,408 @@
+{
+  "award": "mercury-prize",
+  "year": 2022,
+  "edition": 31,
+  "heldOn": "2022-10-18",
+  "sourceUrl": "https://en.wikipedia.org/wiki/Mercury_Prize",
+  "categories": [
+    {
+      "key": "album-of-the-year",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Sometimes I Might Be Introvert",
+          "artist": "Little Simz",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e95de3f4-84db-4d24-8d06-fd970576a6ef",
+            "seed": {
+              "kind": "release_group",
+              "title": "Sometimes I Might Be Introvert",
+              "category": "studio",
+              "firstReleaseDate": "2021-09-03",
+              "credits": [
+                {
+                  "name": "Little Simz",
+                  "artist": {
+                    "id": "3cdb40fe-a63e-4bb9-b40d-17cda5f50979",
+                    "name": "Little Simz",
+                    "sort-name": "Little Simz",
+                    "aliases": [
+                      {
+                        "sort-name": "リトル・シムズ",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "リトル・シムズ",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Lil Simz",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Lil Simz",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Forest Floor",
+          "artist": "Fergus McCreadie",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e003bdd5-a384-43bd-879f-f7d823cca647",
+            "seed": {
+              "kind": "release_group",
+              "title": "Forest Floor",
+              "category": "studio",
+              "firstReleaseDate": "2022-03-08",
+              "credits": [
+                {
+                  "name": "Fergus McCreadie",
+                  "artist": {
+                    "id": "cc564538-5812-4a9e-a6b7-bfe9a59a52f6",
+                    "name": "Fergus McCreadie",
+                    "sort-name": "McCreadie, Fergus",
+                    "disambiguation": "Scottish jazz pianist/composer"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Tresor",
+          "artist": "Gwenno",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a09c9f77-844c-49b7-bb14-389641ef4a69",
+            "seed": {
+              "kind": "release_group",
+              "title": "Tresor",
+              "category": "studio",
+              "firstReleaseDate": "2022-07-01",
+              "credits": [
+                {
+                  "name": "Gwenno",
+                  "artist": {
+                    "id": "8f5b15bd-0777-4564-9801-17462e5ff715",
+                    "name": "Gwenno",
+                    "sort-name": "Gwenno",
+                    "aliases": [
+                      {
+                        "sort-name": "Gwenno Pipette",
+                        "name": "Gwenno Pipette",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Saunders, Gwenno",
+                        "name": "Gwenno Saunders",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Saunders, Gwenno Mererid",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Gwenno Mererid Saunders",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Harry's House",
+          "artist": "Harry Styles",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d712ba0e-25fa-4c03-aecd-ec0c100deba5",
+            "seed": {
+              "kind": "release_group",
+              "title": "Harry’s House",
+              "category": "studio",
+              "firstReleaseDate": "2022-04-20",
+              "credits": [
+                {
+                  "name": "Harry Styles",
+                  "artist": {
+                    "id": "7eb1ce54-a355-41f9-8d68-e018b096d427",
+                    "name": "Harry Styles",
+                    "sort-name": "Styles, Harry",
+                    "aliases": [
+                      {
+                        "sort-name": "Harry Styles",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Harry Styles",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Styles, Harry Edward",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Harry Edward Styles",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "For All Our Days That Tear the Heart",
+          "artist": "Jessie Buckley & Bernard Butler",
+          "searchAs": {
+            "artist": "Jessie Buckley"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "78c26850-bc21-406c-90bf-05074791cf0c",
+            "seed": {
+              "kind": "release_group",
+              "title": "For All Our Days That Tear the Heart",
+              "category": "studio",
+              "firstReleaseDate": "2022-06-17",
+              "credits": [
+                {
+                  "name": "Jessie Buckley & Bernard Butler",
+                  "artist": {
+                    "id": "58020b7b-f63b-44fe-97a7-1535264f7eb1",
+                    "name": "Jessie Buckley & Bernard Butler",
+                    "sort-name": "Buckley, Jessie & Butler, Bernard"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Skin",
+          "artist": "Joy Crookes",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "185279be-34f3-41b1-97b8-4ddbe98ee2f0",
+            "seed": {
+              "kind": "release_group",
+              "title": "Skin",
+              "category": "studio",
+              "firstReleaseDate": "2021-10-15",
+              "credits": [
+                {
+                  "name": "Joy Crookes",
+                  "artist": {
+                    "id": "548e9a34-7476-4510-b3cf-70d17106d507",
+                    "name": "Joy Crookes",
+                    "sort-name": "Crookes, Joy",
+                    "disambiguation": "British singer-songwriter"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Reason to Smile",
+          "artist": "Kojey Radical",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "bd890ab9-2253-4b9f-ac7d-e213e699f027",
+            "seed": {
+              "kind": "release_group",
+              "title": "Reason to Smile",
+              "category": "studio",
+              "firstReleaseDate": "2022-03-04",
+              "credits": [
+                {
+                  "name": "Kojey Radical",
+                  "artist": {
+                    "id": "478028d8-4c7b-46b2-940f-ac22b4ef37c2",
+                    "name": "Kojey Radical",
+                    "sort-name": "Radical, Kojey"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Supernova",
+          "artist": "Nova Twins",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d2be3115-311a-406c-ae69-873e26dec3cf",
+            "seed": {
+              "kind": "release_group",
+              "title": "Supernova",
+              "category": "studio",
+              "firstReleaseDate": "2022-06-17",
+              "credits": [
+                {
+                  "name": "Nova Twins",
+                  "artist": {
+                    "id": "6a81fbbc-acea-4221-9199-957842125078",
+                    "name": "Nova Twins",
+                    "sort-name": "Nova Twins"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Seventeen Going Under",
+          "artist": "Sam Fender",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "bbf0d104-5965-44bf-81d2-d163612086a2",
+            "seed": {
+              "kind": "release_group",
+              "title": "Seventeen Going Under",
+              "category": "studio",
+              "firstReleaseDate": "2021-10-08",
+              "credits": [
+                {
+                  "name": "Sam Fender",
+                  "artist": {
+                    "id": "3478a5d1-bd96-4584-aa54-4d6e0a329658",
+                    "name": "Sam Fender",
+                    "sort-name": "Fender, Sam"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Prioritise Pleasure",
+          "artist": "Self Esteem",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a6a4426e-39cb-48e7-b241-7858d973c3d1",
+            "seed": {
+              "kind": "release_group",
+              "title": "Prioritise Pleasure",
+              "category": "studio",
+              "firstReleaseDate": "2021-10-22",
+              "credits": [
+                {
+                  "name": "Self Esteem",
+                  "artist": {
+                    "id": "3a83d5ba-e243-4940-a755-3b700779665e",
+                    "name": "Self Esteem",
+                    "sort-name": "Self Esteem",
+                    "disambiguation": "Rebecca Lucy Taylor",
+                    "aliases": [
+                      {
+                        "sort-name": "Taylor, Rebecca Lucy",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Rebecca Lucy Taylor",
+                        "locale": "en",
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Wet Leg",
+          "artist": "Wet Leg",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d53be2e5-fe7c-4681-85f3-960493aa02b5",
+            "seed": {
+              "kind": "release_group",
+              "title": "Wet Leg",
+              "category": "studio",
+              "firstReleaseDate": "2022-04-08",
+              "credits": [
+                {
+                  "name": "Wet Leg",
+                  "artist": {
+                    "id": "90744b3e-363a-458e-8da1-e3e392a489c4",
+                    "name": "Wet Leg",
+                    "sort-name": "Wet Leg"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "The Overload",
+          "artist": "Yard Act",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c127d9f0-336b-4766-a927-b2eaa8737180",
+            "seed": {
+              "kind": "release_group",
+              "title": "The Overload",
+              "category": "studio",
+              "firstReleaseDate": "2022-01-21",
+              "credits": [
+                {
+                  "name": "Yard Act",
+                  "artist": {
+                    "id": "c69af97b-4d3b-4f72-9746-829b6b9d5f88",
+                    "name": "Yard Act",
+                    "sort-name": "Yard Act",
+                    "disambiguation": "UK post-punk band"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

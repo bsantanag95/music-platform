@@ -16,6 +16,7 @@ import {
   type AwardCoverage,
   type AwardHonors,
   type AwardSubjectKind,
+  type AwardVoting,
 } from "@/db/schema";
 import { isCoverResolved } from "@/services/catalog/cover-resolution";
 
@@ -76,7 +77,11 @@ export interface CeremonySummary {
 
 export interface CeremonyPage {
   awardSlug: string;
+  /** Quién decide el premio; `null` si el premio se cargó antes de la migración 0073 y no se volvió a cargar. */
+  voting: AwardVoting | null;
   ceremony: CeremonySummary;
+  /** Fuente contra la que se curó la ceremonia; `null` hasta la próxima carga (migración 0073). */
+  sourceUrl: string | null;
   /** Todas las ceremonias cargadas del premio, de la más reciente a la más antigua. */
   ceremonies: CeremonySummary[];
   categories: CategoryView[];
@@ -97,11 +102,6 @@ export interface CategoryHistoryPage {
   predecessor: { key: string; name: CategoryName } | null;
   successors: { key: string; name: CategoryName }[];
   entries: CategoryHistoryEntry[];
-}
-
-export interface AwardIndexEntry {
-  slug: string;
-  ceremonies: CeremonySummary[];
 }
 
 const ceremonyColumns = { year: awardCeremony.year, edition: awardCeremony.edition, heldOn: awardCeremony.heldOn };
@@ -225,46 +225,48 @@ async function awardId(slug: string): Promise<string | null> {
   return row?.id ?? null;
 }
 
+async function awardRow(slug: string): Promise<{ id: string; voting: AwardVoting | null } | null> {
+  const [row] = await db.select({ id: award.id, voting: award.voting }).from(award).where(eq(award.slug, slug)).limit(1);
+  return row ?? null;
+}
+
 async function ceremoniesOf(awardIdValue: string): Promise<CeremonySummary[]> {
   return db.select(ceremonyColumns).from(awardCeremony).where(eq(awardCeremony.awardId, awardIdValue)).orderBy(desc(awardCeremony.year));
 }
 
-/** Índice: premios con sus ceremonias cargadas, de la más reciente a la más antigua. */
-export async function listAwards(): Promise<AwardIndexEntry[]> {
-  const rows = await db
-    .select({ slug: award.slug, ...ceremonyColumns })
-    .from(award)
-    .innerJoin(awardCeremony, eq(awardCeremony.awardId, award.id))
-    .orderBy(asc(award.slug), desc(awardCeremony.year));
-  const bySlug = new Map<string, CeremonySummary[]>();
-  for (const { slug, ...ceremony } of rows) bySlug.set(slug, [...(bySlug.get(slug) ?? []), ceremony]);
-  return [...bySlug].map(([slug, ceremonies]) => ({ slug, ceremonies }));
-}
-
-/** Últimas ceremonias de todos los premios (sección "Premios" de Explorar). */
 export interface CeremonyHeadline {
   /** Categoría del titular: la general de álbum con menor orden curado (en los Grammy, Álbum del año). */
   category: CategoryName;
   winner: NominationView;
 }
 
-export interface RecentCeremony extends CeremonySummary {
+/** La ceremonia más reciente de un premio (tarjeta de la sección "Premios" de Explorar y del hub `/awards`). */
+export interface LatestCeremony extends CeremonySummary {
   awardSlug: string;
   /** Ganador destacado de la ceremonia; `null` si no hay categoría general de álbum con ganador cargado. */
   headline: CeremonyHeadline | null;
 }
 
 /**
- * Últimas ceremonias cargadas (de la más reciente a la más antigua), cada una con su ganador destacado para la
- * tarjeta de Explorar. Dos consultas más para todas las ceremonias juntas, no una por tarjeta.
+ * La ceremonia más reciente de cada premio, de la más reciente a la más antigua (por `heldOn`), sin importar cuántas
+ * ceremonias más recientes tengan los demás. Pura: la consulta trae todas las ceremonias (unas decenas) y aquí se elige.
  */
-export async function listRecentCeremonies(limit: number): Promise<RecentCeremony[]> {
-  const ceremonies = await db
+export function latestPerAward<T extends { awardSlug: string; heldOn: string }>(ceremonies: T[]): T[] {
+  const sorted = [...ceremonies].sort((a, b) => b.heldOn.localeCompare(a.heldOn) || a.awardSlug.localeCompare(b.awardSlug));
+  const seen = new Set<string>();
+  return sorted.filter((c) => (seen.has(c.awardSlug) ? false : (seen.add(c.awardSlug), true)));
+}
+
+/**
+ * Una tarjeta por premio: su ceremonia más reciente con el ganador destacado. Dos consultas para todas las tarjetas
+ * juntas, no una por tarjeta.
+ */
+export async function listLatestCeremoniesByAward(): Promise<LatestCeremony[]> {
+  const all = await db
     .select({ id: awardCeremony.id, awardSlug: award.slug, ...ceremonyColumns })
     .from(awardCeremony)
-    .innerJoin(award, eq(award.id, awardCeremony.awardId))
-    .orderBy(desc(awardCeremony.heldOn))
-    .limit(limit);
+    .innerJoin(award, eq(award.id, awardCeremony.awardId));
+  const ceremonies = latestPerAward(all);
   if (ceremonies.length === 0) return [];
 
   const winners = await db
@@ -316,11 +318,17 @@ export const getLatestCeremonyYear = cache(async (slug: string): Promise<number 
 /** Página de una ceremonia; `null` si el premio o el año no están cargados. */
 export const getCeremonyPage = cache(async (slug: string, year: number): Promise<CeremonyPage | null> => {
   if (!Number.isInteger(year)) return null;
-  const id = await awardId(slug);
-  if (!id) return null;
+  const awardInfo = await awardRow(slug);
+  if (!awardInfo) return null;
+  const id = awardInfo.id;
   const ceremonies = await ceremoniesOf(id);
   const ceremony = ceremonies.find((c) => c.year === year);
   if (!ceremony) return null;
+  const [source] = await db
+    .select({ sourceUrl: awardCeremony.sourceUrl })
+    .from(awardCeremony)
+    .where(and(eq(awardCeremony.awardId, id), eq(awardCeremony.year, year)))
+    .limit(1);
 
   const editions = await db
     .select({
@@ -346,7 +354,9 @@ export const getCeremonyPage = cache(async (slug: string, year: number): Promise
   const views = await nominationViews(rows);
   return {
     awardSlug: slug,
+    voting: awardInfo.voting,
     ceremony,
+    sourceUrl: source?.sourceUrl ?? null,
     ceremonies,
     categories: sortCategoryEditions(editions).map((e) => ({
       key: e.key,

@@ -1,0 +1,443 @@
+{
+  "award": "lo-nuestro",
+  "voting": "mixed",
+  "categories": [
+    {
+      "key": "artist-of-the-year",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Artista del año",
+        "en": "Artist of the Year"
+      },
+      "order": 1
+    },
+    {
+      "key": "album-of-the-year",
+      "tier": "general",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Álbum del año",
+        "en": "Album of the Year"
+      },
+      "order": 2
+    },
+    {
+      "key": "song-of-the-year",
+      "tier": "general",
+      "subject": "recording",
+      "honors": "performer",
+      "name": {
+        "es": "Canción del año",
+        "en": "Song of the Year"
+      },
+      "order": 3
+    },
+    {
+      "key": "new-artist-female",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Artista nueva del año",
+        "en": "New Artist – Female"
+      },
+      "order": 4
+    },
+    {
+      "key": "new-artist-male",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Artista nuevo del año",
+        "en": "New Artist – Male"
+      },
+      "order": 5
+    },
+    {
+      "key": "crossover-collaboration",
+      "tier": "general",
+      "subject": "recording",
+      "honors": "performer",
+      "name": {
+        "es": "Colaboración crossover del año",
+        "en": "Crossover Collaboration of the Year"
+      },
+      "order": 6
+    },
+    {
+      "key": "pop-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Álbum pop del año",
+        "en": "Pop Album of the Year"
+      },
+      "order": 10
+    },
+    {
+      "key": "pop-urban-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Álbum pop-urbano del año",
+        "en": "Pop-Urban Album of the Year"
+      },
+      "order": 11
+    },
+    {
+      "key": "urban-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Álbum urbano del año",
+        "en": "Urban Album of the Year"
+      },
+      "order": 12
+    },
+    {
+      "key": "tropical-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Álbum tropical del año",
+        "en": "Tropical Album of the Year"
+      },
+      "order": 13
+    },
+    {
+      "key": "regional-mexican-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Álbum de música mexicana del año",
+        "en": "Regional Mexican Album of the Year"
+      },
+      "order": 14
+    },
+    {
+      "key": "pop-artist",
+      "tier": "genre",
+      "subject": "artist",
+      "honors": "performer",
+      "field": "pop",
+      "name": {
+        "es": "Artista pop del año",
+        "en": "Pop Artist of the Year"
+      },
+      "order": 20
+    },
+    {
+      "key": "male-pop-artist",
+      "tier": "genre",
+      "subject": "artist",
+      "honors": "performer",
+      "field": "pop",
+      "name": {
+        "es": "Artista pop masculino del año",
+        "en": "Male Pop Artist of the Year"
+      },
+      "predecessor": "pop-artist",
+      "order": 21
+    },
+    {
+      "key": "female-pop-artist",
+      "tier": "genre",
+      "subject": "artist",
+      "honors": "performer",
+      "field": "pop",
+      "name": {
+        "es": "Artista pop femenina del año",
+        "en": "Female Pop Artist of the Year"
+      },
+      "predecessor": "pop-artist",
+      "order": 22
+    },
+    {
+      "key": "pop-group-duo",
+      "tier": "genre",
+      "subject": "artist",
+      "honors": "performer",
+      "field": "pop",
+      "name": {
+        "es": "Grupo o dúo pop del año",
+        "en": "Pop Group or Duo of the Year"
+      },
+      "order": 23
+    },
+    {
+      "key": "pop-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "pop",
+      "name": {
+        "es": "Canción pop del año",
+        "en": "Pop Song of the Year"
+      },
+      "order": 24
+    },
+    {
+      "key": "pop-ballad-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "pop",
+      "name": {
+        "es": "Canción pop/balada del año",
+        "en": "Pop/Ballad Song of the Year"
+      },
+      "order": 25
+    },
+    {
+      "key": "pop-collaboration",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "pop",
+      "name": {
+        "es": "Colaboración pop del año",
+        "en": "Pop Collaboration of the Year"
+      },
+      "order": 26
+    },
+    {
+      "key": "male-urban-artist",
+      "tier": "genre",
+      "subject": "artist",
+      "honors": "performer",
+      "field": "urban",
+      "name": {
+        "es": "Artista urbano masculino del año",
+        "en": "Male Urban Artist of the Year"
+      },
+      "order": 30
+    },
+    {
+      "key": "female-urban-artist",
+      "tier": "genre",
+      "subject": "artist",
+      "honors": "performer",
+      "field": "urban",
+      "name": {
+        "es": "Artista urbana femenina del año",
+        "en": "Female Urban Artist of the Year"
+      },
+      "order": 31
+    },
+    {
+      "key": "urban-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "urban",
+      "name": {
+        "es": "Canción urbana del año",
+        "en": "Urban Song of the Year"
+      },
+      "order": 32
+    },
+    {
+      "key": "urban-pop-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "urban",
+      "name": {
+        "es": "Canción urbano/pop del año",
+        "en": "Urban/Pop Song of the Year"
+      },
+      "order": 33
+    },
+    {
+      "key": "urban-collaboration",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "urban",
+      "name": {
+        "es": "Colaboración urbana del año",
+        "en": "Urban Collaboration of the Year"
+      },
+      "order": 34
+    },
+    {
+      "key": "tropical-artist",
+      "tier": "genre",
+      "subject": "artist",
+      "honors": "performer",
+      "field": "tropical",
+      "name": {
+        "es": "Artista tropical del año",
+        "en": "Tropical Artist of the Year"
+      },
+      "order": 40
+    },
+    {
+      "key": "tropical-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "tropical",
+      "name": {
+        "es": "Canción tropical del año",
+        "en": "Tropical Song of the Year"
+      },
+      "order": 41
+    },
+    {
+      "key": "tropical-collaboration",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "tropical",
+      "name": {
+        "es": "Colaboración tropical del año",
+        "en": "Tropical Collaboration of the Year"
+      },
+      "order": 42
+    },
+    {
+      "key": "regional-mexican-artist",
+      "tier": "genre",
+      "subject": "artist",
+      "honors": "performer",
+      "field": "regional-mexican",
+      "name": {
+        "es": "Artista de música mexicana del año",
+        "en": "Regional Mexican Artist of the Year"
+      },
+      "order": 50
+    },
+    {
+      "key": "male-regional-mexican-artist",
+      "tier": "genre",
+      "subject": "artist",
+      "honors": "performer",
+      "field": "regional-mexican",
+      "name": {
+        "es": "Artista masculino de música mexicana del año",
+        "en": "Male Regional Mexican Artist of the Year"
+      },
+      "predecessor": "regional-mexican-artist",
+      "order": 51
+    },
+    {
+      "key": "female-regional-mexican-artist",
+      "tier": "genre",
+      "subject": "artist",
+      "honors": "performer",
+      "field": "regional-mexican",
+      "name": {
+        "es": "Artista femenina de música mexicana del año",
+        "en": "Female Regional Mexican Artist of the Year"
+      },
+      "predecessor": "regional-mexican-artist",
+      "order": 52
+    },
+    {
+      "key": "regional-mexican-group-duo",
+      "tier": "genre",
+      "subject": "artist",
+      "honors": "performer",
+      "field": "regional-mexican",
+      "name": {
+        "es": "Grupo o dúo de música mexicana del año",
+        "en": "Regional Mexican Group or Duo of the Year"
+      },
+      "order": 53
+    },
+    {
+      "key": "regional-mexican-new-artist",
+      "tier": "genre",
+      "subject": "artist",
+      "honors": "performer",
+      "field": "regional-mexican",
+      "name": {
+        "es": "Artista nuevo de música mexicana del año",
+        "en": "Regional Mexican New Artist of the Year"
+      },
+      "order": 54
+    },
+    {
+      "key": "regional-mexican-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "regional-mexican",
+      "name": {
+        "es": "Canción de música mexicana del año",
+        "en": "Regional Mexican Song of the Year"
+      },
+      "order": 55
+    },
+    {
+      "key": "regional-mexican-collaboration",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "regional-mexican",
+      "name": {
+        "es": "Colaboración de música mexicana del año",
+        "en": "Regional Mexican Collaboration of the Year"
+      },
+      "order": 56
+    },
+    {
+      "key": "norteno-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "regional-mexican",
+      "name": {
+        "es": "Canción norteña del año",
+        "en": "Norteño Song of the Year"
+      },
+      "order": 57
+    },
+    {
+      "key": "banda-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "regional-mexican",
+      "name": {
+        "es": "Canción de banda del año",
+        "en": "Banda Song of the Year"
+      },
+      "order": 58
+    },
+    {
+      "key": "mariachi-ranchera-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "regional-mexican",
+      "name": {
+        "es": "Canción mariachi/ranchera del año",
+        "en": "Mariachi/Ranchera Song of the Year"
+      },
+      "order": 59
+    },
+    {
+      "key": "sierreno-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "regional-mexican",
+      "name": {
+        "es": "Canción sierreña del año",
+        "en": "Sierreño Song of the Year"
+      },
+      "order": 60
+    }
+  ]
+}

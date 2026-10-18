@@ -2,7 +2,11 @@
   "pageTitle": "Awards",
   "heading": "Awards",
   "names": {
-    "grammy": "Grammy Awards"
+    "grammy": "Grammy Awards",
+    "mercury-prize": "Mercury Prize",
+    "brit-awards": "Brit Awards",
+    "latin-grammy": "Latin Grammy Awards",
+    "lo-nuestro": "Premio Lo Nuestro"
   },
   "ceremonyTitle": "{award} {year}",
   "edition": "{edition, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition",
@@ -18,7 +22,13 @@
     "rock-alternative": "Rock and alternative",
     "rnb": "R&B",
     "rap": "Rap",
-    "country": "Country"
+    "country": "Country",
+    "urban": "Urban",
+    "tropical": "Tropical",
+    "regional-mexican": "Regional Mexican",
+    "singer-songwriter": "Singer-songwriter",
+    "brazilian": "Brazilian and Portuguese-language",
+    "other-genres": "Other genres"
   },
   "winner": "Winner",
   "nomineesCount": "Nominees ({count})",
@@ -34,5 +44,12 @@
   "exploreDescription": "Nominees and winners of the latest ceremonies.",
   "exploreSeeAll": "See all",
   "ceremonyCount": "{count, plural, one {# ceremony} other {# ceremonies}}",
-  "categoryHistoryShort": "History"
+  "categoryHistoryShort": "History",
+  "voting": {
+    "academy": "Voted by the academy's members",
+    "jury": "Decided by a jury",
+    "public": "Voted by the public",
+    "mixed": "Voted by the public and a committee"
+  },
+  "source": "Source: {site}"
 }

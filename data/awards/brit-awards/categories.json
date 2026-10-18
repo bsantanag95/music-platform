@@ -1,0 +1,257 @@
+{
+  "award": "brit-awards",
+  "voting": "academy",
+  "categories": [
+    {
+      "key": "album-of-the-year",
+      "tier": "general",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Álbum británico del año",
+        "en": "British Album of the Year"
+      },
+      "order": 1
+    },
+    {
+      "key": "song-of-the-year",
+      "tier": "general",
+      "subject": "recording",
+      "honors": "performer",
+      "name": {
+        "es": "Canción británica del año",
+        "en": "British Song of the Year"
+      },
+      "order": 2
+    },
+    {
+      "key": "artist-of-the-year",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Artista británico del año",
+        "en": "British Artist of the Year"
+      },
+      "order": 3
+    },
+    {
+      "key": "british-group",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Grupo británico",
+        "en": "British Group"
+      },
+      "order": 4
+    },
+    {
+      "key": "best-new-artist",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Artista nuevo",
+        "en": "New Artist"
+      },
+      "order": 5
+    },
+    {
+      "key": "male-solo-artist",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Solista masculino británico",
+        "en": "British Male Solo Artist"
+      },
+      "order": 6
+    },
+    {
+      "key": "female-solo-artist",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Solista femenina británica",
+        "en": "British Female Solo Artist"
+      },
+      "order": 7
+    },
+    {
+      "key": "international-artist-of-the-year",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Artista internacional del año",
+        "en": "International Artist of the Year"
+      },
+      "order": 8
+    },
+    {
+      "key": "international-group",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Grupo internacional",
+        "en": "International Group"
+      },
+      "order": 9
+    },
+    {
+      "key": "international-song",
+      "tier": "general",
+      "subject": "recording",
+      "honors": "performer",
+      "name": {
+        "es": "Canción internacional del año",
+        "en": "International Song of the Year"
+      },
+      "order": 10
+    },
+    {
+      "key": "international-male-solo-artist",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Solista masculino internacional",
+        "en": "International Male Solo Artist"
+      },
+      "order": 11
+    },
+    {
+      "key": "international-female-solo-artist",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Solista femenina internacional",
+        "en": "International Female Solo Artist"
+      },
+      "order": 12
+    },
+    {
+      "key": "rising-star",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Estrella emergente",
+        "en": "Rising Star"
+      },
+      "order": 13
+    },
+    {
+      "key": "critics-choice",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Elección de la crítica",
+        "en": "Critics' Choice"
+      },
+      "predecessor": "rising-star",
+      "order": 14
+    },
+    {
+      "key": "songwriter-of-the-year",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Compositor del año",
+        "en": "Songwriter of the Year"
+      },
+      "order": 15
+    },
+    {
+      "key": "producer-of-the-year",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Productor del año",
+        "en": "Producer of the Year"
+      },
+      "order": 16
+    },
+    {
+      "key": "pop-rnb-act",
+      "tier": "genre",
+      "subject": "artist",
+      "honors": "performer",
+      "field": "pop",
+      "name": {
+        "es": "Mejor acto de pop y R&B",
+        "en": "Best Pop/R&B Act"
+      },
+      "order": 20
+    },
+    {
+      "key": "pop-act",
+      "tier": "genre",
+      "subject": "artist",
+      "honors": "performer",
+      "field": "pop",
+      "name": {
+        "es": "Mejor acto de pop",
+        "en": "Best Pop Act"
+      },
+      "predecessor": "pop-rnb-act",
+      "order": 21
+    },
+    {
+      "key": "rnb-act",
+      "tier": "genre",
+      "subject": "artist",
+      "honors": "performer",
+      "field": "rnb",
+      "name": {
+        "es": "Mejor acto de R&B",
+        "en": "Best R&B Act"
+      },
+      "predecessor": "pop-rnb-act",
+      "order": 22
+    },
+    {
+      "key": "dance-act",
+      "tier": "genre",
+      "subject": "artist",
+      "honors": "performer",
+      "field": "dance-electronic",
+      "name": {
+        "es": "Mejor acto de dance",
+        "en": "Best Dance Act"
+      },
+      "order": 23
+    },
+    {
+      "key": "rock-alternative-act",
+      "tier": "genre",
+      "subject": "artist",
+      "honors": "performer",
+      "field": "rock-alternative",
+      "name": {
+        "es": "Mejor acto de rock y alternativa",
+        "en": "Best Rock/Alternative Act"
+      },
+      "order": 24
+    },
+    {
+      "key": "hip-hop-grime-rap-act",
+      "tier": "genre",
+      "subject": "artist",
+      "honors": "performer",
+      "field": "rap",
+      "name": {
+        "es": "Mejor acto de hip hop, grime y rap",
+        "en": "Best Hip Hop/Grime/Rap Act"
+      },
+      "order": 25
+    }
+  ]
+}
