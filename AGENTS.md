@@ -133,7 +133,10 @@ de cuál de las filas con el mismo título haya en la BD.
 >   migración `0068`. Verifica los `CHECK`, la carga idempotente (`xmin` sin cambios en la segunda corrida), que la
 >   carga no consulta MusicBrainz, los stubs desde la semilla (créditos y disco ancla), que un archivo inválido aborta
 >   sin escribir, la lectura de ceremonia e historia (predecesora y sucesora), el `ON DELETE SET NULL` y el borrado de
->   una ceremonia que ya no está en los archivos.
+>   una ceremonia que ya no está en los archivos. Desde `add-four-music-awards` (migración `0073`) también verifica los
+>   `CHECK` de `award.voting` y `award_ceremony.source_url`, que la carga los escribe de forma idempotente (`xmin` igual en
+>   la segunda corrida), `voting` y `sourceUrl` en la lectura de la ceremonia y la ceremonia más reciente por premio
+>   (`listLatestCeremoniesByAward`, con un segundo premio sintético `smoke-otro`).
 > - `smoke-test-release-calendar.ts` mockea ListenBrainz, MusicBrainz y Cover Art Archive, crea
 >   artistas y release-groups con MBID `5e0ce000-0000-4000-8000-000000008*` y usuarios `smoke_cal_*`,
 >   **respalda el calendario de lanzamientos y lo restaura al terminar** (también si falla) y borra sus

@@ -32,8 +32,8 @@
 
 ## 6. Verificación y documentación
 
-- [ ] 6.1 La prueba de validación de archivos (CI) pasa con los cuatro premios; `load-awards.ts` carga en la base de prueba y una segunda corrida no cambia filas
-- [ ] 6.2 Ampliar `scripts/smoke-test-music-awards.ts` con la lectura de la ceremonia más reciente por premio (varios premios sintéticos) y con `voting` y `source_url` (cargados, idempotentes, `CHECK`); aplicar `0073` y correrlo contra la base de prueba
-- [ ] 6.3 Verificar en el navegador a 1280 y 375 px: Explorar con cinco tarjetas, `/awards` (hub), una ceremonia de cada premio (la de Mercury con una sola categoría), las migas de pan y la historia de una categoría con predecesora; sin scroll horizontal
-- [ ] 6.4 `docs/05-features/awards.md` (premios cubiertos, años y alcance de cada uno, campos nuevos, fuente y tipo de votación, 2026 pendientes de Latin Grammy y Mercury) y ADR 0043 con los criterios para sumar un premio
-- [ ] 6.5 `pnpm run typecheck && pnpm run lint && pnpm test && pnpm run build`; `openspec validate --specs --strict`
+- [x] 6.1 La prueba de validación de archivos (CI) pasa con los cuatro premios; `load-awards.ts` carga en la base de prueba y una segunda corrida no cambia filas
+- [x] 6.2 Ampliar `scripts/smoke-test-music-awards.ts` con la lectura de la ceremonia más reciente por premio (varios premios sintéticos) y con `voting` y `source_url` (cargados, idempotentes, `CHECK`); aplicar `0073` y correrlo contra la base de prueba
+- [x] 6.3 Verificar en el navegador a 1280 y 375 px: Explorar con cinco tarjetas, `/awards` (hub), una ceremonia de cada premio (la de Mercury con una sola categoría), las migas de pan y la historia de una categoría con predecesora; sin scroll horizontal
+- [x] 6.4 `docs/05-features/awards.md` (premios cubiertos, años y alcance de cada uno, campos nuevos, fuente y tipo de votación, 2026 pendientes de Latin Grammy y Mercury) y ADR 0043 con los criterios para sumar un premio
+- [x] 6.5 `pnpm run typecheck && pnpm run lint && pnpm test && pnpm run build`; `openspec validate --specs --strict`
