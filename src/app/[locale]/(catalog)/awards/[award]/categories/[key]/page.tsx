@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { AwardCategory, categoryName } from "@/components/awards/AwardCategory";
-import { awardHref, categoryHistoryHref, ceremonyHref } from "@/components/awards/award-links";
+import { awardHref, awardsIndexHref, categoryHistoryHref, ceremonyHref } from "@/components/awards/award-links";
 import { getCategoryHistory } from "@/services/awards/read";
 
 // Historia de una categoría a través de las ceremonias (openspec: add-music-awards, design D5), con enlaces a la
@@ -41,6 +41,7 @@ export default async function CategoryHistoryPage({ params }: CategoryHistoryPro
         <Breadcrumbs
           items={[
             { label: tCommon("home"), href: "/" },
+            { label: t("heading"), href: awardsIndexHref() },
             { label: awardName, href: awardHref(page.awardSlug) },
             { label: name },
           ]}

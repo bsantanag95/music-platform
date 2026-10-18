@@ -1,0 +1,639 @@
+{
+  "award": "latin-grammy",
+  "voting": "academy",
+  "categories": [
+    {
+      "key": "record-of-the-year",
+      "tier": "general",
+      "subject": "recording",
+      "honors": "performer",
+      "name": {
+        "es": "Grabación del año",
+        "en": "Record of the Year"
+      },
+      "order": 1
+    },
+    {
+      "key": "album-of-the-year",
+      "tier": "general",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Álbum del año",
+        "en": "Album of the Year"
+      },
+      "order": 2
+    },
+    {
+      "key": "song-of-the-year",
+      "tier": "general",
+      "subject": "recording",
+      "honors": "songwriter",
+      "name": {
+        "es": "Canción del año",
+        "en": "Song of the Year"
+      },
+      "order": 3
+    },
+    {
+      "key": "best-new-artist",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor artista nuevo",
+        "en": "Best New Artist"
+      },
+      "order": 4
+    },
+    {
+      "key": "songwriter-of-the-year",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Compositor del año",
+        "en": "Songwriter of the Year"
+      },
+      "order": 5
+    },
+    {
+      "key": "producer-of-the-year",
+      "tier": "general",
+      "subject": "artist",
+      "honors": "performer",
+      "name": {
+        "es": "Productor del año",
+        "en": "Producer of the Year"
+      },
+      "order": 6
+    },
+    {
+      "key": "pop-vocal-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum vocal pop",
+        "en": "Best Pop Vocal Album"
+      },
+      "order": 10
+    },
+    {
+      "key": "contemporary-pop-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de pop contemporáneo",
+        "en": "Best Contemporary Pop Album"
+      },
+      "predecessor": "pop-vocal-album",
+      "order": 11
+    },
+    {
+      "key": "traditional-pop-vocal-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum vocal pop tradicional",
+        "en": "Best Traditional Pop Vocal Album"
+      },
+      "order": 12
+    },
+    {
+      "key": "traditional-pop-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de pop tradicional",
+        "en": "Best Traditional Pop Album"
+      },
+      "predecessor": "traditional-pop-vocal-album",
+      "order": 13
+    },
+    {
+      "key": "urban-music-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de música urbana",
+        "en": "Best Urban Music Album"
+      },
+      "order": 14
+    },
+    {
+      "key": "rock-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de rock",
+        "en": "Best Rock Album"
+      },
+      "order": 15
+    },
+    {
+      "key": "pop-rock-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de pop/rock",
+        "en": "Best Pop/Rock Album"
+      },
+      "order": 16
+    },
+    {
+      "key": "alternative-music-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de música alternativa",
+        "en": "Best Alternative Music Album"
+      },
+      "order": 17
+    },
+    {
+      "key": "salsa-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de salsa",
+        "en": "Best Salsa Album"
+      },
+      "order": 18
+    },
+    {
+      "key": "cumbia-vallenato-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de cumbia/vallenato",
+        "en": "Best Cumbia/Vallenato Album"
+      },
+      "order": 19
+    },
+    {
+      "key": "merengue-bachata-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de merengue/bachata",
+        "en": "Best Merengue/Bachata Album"
+      },
+      "order": 20
+    },
+    {
+      "key": "traditional-tropical-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum tropical tradicional",
+        "en": "Best Traditional Tropical Album"
+      },
+      "order": 21
+    },
+    {
+      "key": "contemporary-tropical-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum tropical contemporáneo",
+        "en": "Best Contemporary Tropical Album"
+      },
+      "order": 22
+    },
+    {
+      "key": "singer-songwriter-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de cantautor",
+        "en": "Best Singer-Songwriter Album"
+      },
+      "order": 23
+    },
+    {
+      "key": "ranchero-mariachi-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum ranchero/mariachi",
+        "en": "Best Ranchero/Mariachi Album"
+      },
+      "order": 24
+    },
+    {
+      "key": "banda-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de banda",
+        "en": "Best Banda Album"
+      },
+      "order": 25
+    },
+    {
+      "key": "tejano-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum tejano",
+        "en": "Best Tejano Album"
+      },
+      "order": 26
+    },
+    {
+      "key": "norteno-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum norteño",
+        "en": "Best Norteño Album"
+      },
+      "order": 27
+    },
+    {
+      "key": "contemporary-mexican-music-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de música mexicana contemporánea",
+        "en": "Best Contemporary Mexican Music Album"
+      },
+      "order": 28
+    },
+    {
+      "key": "instrumental-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum instrumental",
+        "en": "Best Instrumental Album"
+      },
+      "order": 29
+    },
+    {
+      "key": "folk-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de folclor",
+        "en": "Best Folk Album"
+      },
+      "order": 30
+    },
+    {
+      "key": "tango-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de tango",
+        "en": "Best Tango Album"
+      },
+      "order": 31
+    },
+    {
+      "key": "flamenco-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de flamenco",
+        "en": "Best Flamenco Album"
+      },
+      "order": 32
+    },
+    {
+      "key": "latin-jazz-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de jazz latino/jazz",
+        "en": "Best Latin Jazz/Jazz Album"
+      },
+      "order": 33
+    },
+    {
+      "key": "christian-album-spanish",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum cristiano (en español)",
+        "en": "Best Christian Album (Spanish Language)"
+      },
+      "order": 34
+    },
+    {
+      "key": "christian-album-portuguese",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum cristiano (en portugués)",
+        "en": "Best Christian Album (Portuguese Language)"
+      },
+      "order": 35
+    },
+    {
+      "key": "portuguese-pop-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de pop contemporáneo en portugués",
+        "en": "Best Portuguese Language Contemporary Pop Album"
+      },
+      "order": 36
+    },
+    {
+      "key": "portuguese-rock-alternative-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de rock o alternativa en portugués",
+        "en": "Best Portuguese Language Rock or Alternative Album"
+      },
+      "order": 37
+    },
+    {
+      "key": "samba-pagode-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de samba/pagode",
+        "en": "Best Samba/Pagode Album"
+      },
+      "order": 38
+    },
+    {
+      "key": "mpb-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de MPB/MAPB",
+        "en": "Best MPB/MAPB Album"
+      },
+      "order": 39
+    },
+    {
+      "key": "sertaneja-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de música sertaneja",
+        "en": "Best Sertaneja Music Album"
+      },
+      "order": 40
+    },
+    {
+      "key": "portuguese-roots-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum de raíces en portugués",
+        "en": "Best Portuguese Language Roots Album"
+      },
+      "order": 41
+    },
+    {
+      "key": "childrens-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum infantil",
+        "en": "Best Children's Album"
+      },
+      "order": 42
+    },
+    {
+      "key": "classical-album",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor álbum clásico",
+        "en": "Best Classical Album"
+      },
+      "order": 43
+    },
+    {
+      "key": "music-for-visual-media",
+      "tier": "album",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Mejor música para medios visuales",
+        "en": "Best Music for Visual Media"
+      },
+      "order": 44
+    },
+    {
+      "key": "pop-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "songwriter",
+      "field": "pop",
+      "name": {
+        "es": "Mejor canción pop",
+        "en": "Best Pop Song"
+      },
+      "order": 50
+    },
+    {
+      "key": "urban-fusion-performance",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "urban",
+      "name": {
+        "es": "Mejor interpretación de fusión urbana",
+        "en": "Best Urban Fusion/Performance"
+      },
+      "order": 51
+    },
+    {
+      "key": "reggaeton-performance",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "urban",
+      "name": {
+        "es": "Mejor interpretación de reguetón",
+        "en": "Best Reggaeton Performance"
+      },
+      "order": 52
+    },
+    {
+      "key": "rap-hip-hop-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "songwriter",
+      "field": "urban",
+      "name": {
+        "es": "Mejor canción de rap/hip hop",
+        "en": "Best Rap/Hip Hop Song"
+      },
+      "order": 53
+    },
+    {
+      "key": "urban-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "songwriter",
+      "field": "urban",
+      "name": {
+        "es": "Mejor canción urbana",
+        "en": "Best Urban Song"
+      },
+      "order": 54
+    },
+    {
+      "key": "rock-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "songwriter",
+      "field": "rock-alternative",
+      "name": {
+        "es": "Mejor canción de rock",
+        "en": "Best Rock Song"
+      },
+      "order": 55
+    },
+    {
+      "key": "pop-rock-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "songwriter",
+      "field": "rock-alternative",
+      "name": {
+        "es": "Mejor canción de pop/rock",
+        "en": "Best Pop/Rock Song"
+      },
+      "order": 56
+    },
+    {
+      "key": "alternative-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "songwriter",
+      "field": "rock-alternative",
+      "name": {
+        "es": "Mejor canción alternativa",
+        "en": "Best Alternative Song"
+      },
+      "order": 57
+    },
+    {
+      "key": "latin-electronic-music-performance",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "dance-electronic",
+      "name": {
+        "es": "Mejor interpretación de música electrónica latina",
+        "en": "Best Latin Electronic Music Performance"
+      },
+      "order": 58
+    },
+    {
+      "key": "tropical-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "songwriter",
+      "field": "tropical",
+      "name": {
+        "es": "Mejor canción tropical",
+        "en": "Best Tropical Song"
+      },
+      "order": 59
+    },
+    {
+      "key": "singer-songwriter-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "songwriter",
+      "field": "singer-songwriter",
+      "name": {
+        "es": "Mejor canción de cantautor",
+        "en": "Best Singer-Songwriter Song"
+      },
+      "order": 60
+    },
+    {
+      "key": "regional-mexican-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "songwriter",
+      "field": "regional-mexican",
+      "name": {
+        "es": "Mejor canción regional mexicana",
+        "en": "Best Regional Mexican Song"
+      },
+      "order": 61
+    },
+    {
+      "key": "portuguese-urban-performance",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "performer",
+      "field": "brazilian",
+      "name": {
+        "es": "Mejor interpretación urbana en portugués",
+        "en": "Best Portuguese-Language Urban Performance"
+      },
+      "order": 62
+    },
+    {
+      "key": "portuguese-language-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "songwriter",
+      "field": "brazilian",
+      "name": {
+        "es": "Mejor canción en portugués",
+        "en": "Best Portuguese Language Song"
+      },
+      "order": 63
+    },
+    {
+      "key": "roots-song",
+      "tier": "genre",
+      "subject": "recording",
+      "honors": "songwriter",
+      "field": "other-genres",
+      "name": {
+        "es": "Mejor canción de raíces",
+        "en": "Best Roots Song"
+      },
+      "order": 64
+    }
+  ]
+}

@@ -1,0 +1,524 @@
+{
+  "award": "mercury-prize",
+  "year": 2023,
+  "edition": 32,
+  "heldOn": "2023-09-07",
+  "sourceUrl": "https://en.wikipedia.org/wiki/Mercury_Prize",
+  "categories": [
+    {
+      "key": "album-of-the-year",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Where I'm Meant to Be",
+          "artist": "Ezra Collective",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ef3b1887-ead5-40c0-83e2-3c2f7ab8a8c3",
+            "seed": {
+              "kind": "release_group",
+              "title": "Where I’m Meant to Be",
+              "category": "studio",
+              "firstReleaseDate": "2022-11-04",
+              "credits": [
+                {
+                  "name": "Ezra Collective",
+                  "artist": {
+                    "id": "d51acca9-a88b-4f5c-a2fe-f069de70ca1d",
+                    "name": "Ezra Collective",
+                    "sort-name": "Ezra Collective",
+                    "disambiguation": "jazz fusion group"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "The Car",
+          "artist": "Arctic Monkeys",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "249d7049-7d56-497b-abfe-464e3c535daf",
+            "seed": {
+              "kind": "release_group",
+              "title": "The Car",
+              "category": "studio",
+              "firstReleaseDate": "2022-10-21",
+              "credits": [
+                {
+                  "name": "Arctic Monkeys",
+                  "artist": {
+                    "id": "ada7a83c-e3e1-40f1-93f9-3e73dbc9298a",
+                    "name": "Arctic Monkeys",
+                    "sort-name": "Arctic Monkeys",
+                    "aliases": [
+                      {
+                        "sort-name": "The Arctic Monkeys",
+                        "name": "The Arctic Monkeys",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Artic Monkeys",
+                        "name": "Artic Monkeys",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Actual Life 3 (January 1 – September 9 2022)",
+          "artist": "Fred again..",
+          "searchAs": {
+            "title": "Actual Life 3"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "fd4a7d8c-1bf1-4906-a46c-1ef2e64b6eaf",
+            "seed": {
+              "kind": "release_group",
+              "title": "Actual Life 3 (January 1 - September 9 2022)",
+              "category": "studio",
+              "firstReleaseDate": "2022-10-28",
+              "credits": [
+                {
+                  "name": "Fred again..",
+                  "artist": {
+                    "id": "bca46a0c-25c9-42ca-98c2-e64c8a5e337e",
+                    "name": "Fred again..",
+                    "sort-name": "Fred again..",
+                    "disambiguation": "UK producer, songwriter, multi-instrumentalist and DJ",
+                    "aliases": [
+                      {
+                        "sort-name": "Fred",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Fred",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Gibson, Frederick John Philip",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Frederick John Philip Gibson",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Gibson, Fred",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Fred Gibson",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Beautiful and Brutal Yard",
+          "artist": "J Hus",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "bc54e235-6f36-432b-86d2-319c6a029ce7",
+            "seed": {
+              "kind": "release_group",
+              "title": "Beautiful and Brutal Yard",
+              "category": "studio",
+              "firstReleaseDate": "2023-07-14",
+              "credits": [
+                {
+                  "name": "J Hus",
+                  "artist": {
+                    "id": "eca85dd0-f1fb-4e83-8c47-61403f479254",
+                    "name": "J Hus",
+                    "sort-name": "J Hus",
+                    "disambiguation": "British rapper and singer Momodou Lamin Jallow",
+                    "aliases": [
+                      {
+                        "sort-name": "Jallow, Momodou Lamin",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Momodou Lamin Jallow",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "That! Feels Good!",
+          "artist": "Jessie Ware",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "cebbae42-8612-4c33-9d1c-ac1319794ec4",
+            "seed": {
+              "kind": "release_group",
+              "title": "That! Feels Good!",
+              "category": "studio",
+              "firstReleaseDate": "2023-04-28",
+              "credits": [
+                {
+                  "name": "Jessie Ware",
+                  "artist": {
+                    "id": "6ed40778-8d03-4a5c-ad35-93cf814627c9",
+                    "name": "Jessie Ware",
+                    "sort-name": "Ware, Jessie",
+                    "disambiguation": "British singer‐songwriter",
+                    "aliases": [
+                      {
+                        "sort-name": "Ware, Jessica Lois",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Jessica Lois Ware",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Ware, Jessie",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Jessie Ware",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Jesse Ware",
+                        "name": "Jesse Ware",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "I Love You Jennifer B",
+          "artist": "Jockstrap",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "722e378e-a922-436a-b3ad-2419b27f971b",
+            "seed": {
+              "kind": "release_group",
+              "title": "I Love You Jennifer B",
+              "category": "studio",
+              "firstReleaseDate": "2022-09-09",
+              "credits": [
+                {
+                  "name": "Jockstrap",
+                  "artist": {
+                    "id": "7230b2f8-96da-4242-8d57-2a8c1c3d71e4",
+                    "name": "Jockstrap",
+                    "sort-name": "Jockstrap",
+                    "disambiguation": "UK electronic duo"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "False Lankum",
+          "artist": "Lankum",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "af0175f1-e142-408c-bf5b-9bb3af41991a",
+            "seed": {
+              "kind": "release_group",
+              "title": "False Lankum",
+              "category": "studio",
+              "firstReleaseDate": "2023-03-24",
+              "credits": [
+                {
+                  "name": "Lankum",
+                  "artist": {
+                    "id": "0898de3e-7045-478b-a5af-c7de9c66c86e",
+                    "name": "Lankum",
+                    "sort-name": "Lankum",
+                    "disambiguation": "formerly Lynched"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Hugo",
+          "artist": "Loyle Carner",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e2915062-5748-4cef-bece-1f2ec699ef59",
+            "seed": {
+              "kind": "release_group",
+              "title": "hugo",
+              "category": "studio",
+              "firstReleaseDate": "2022-10-21",
+              "credits": [
+                {
+                  "name": "Loyle Carner",
+                  "artist": {
+                    "id": "09589937-20f0-40f8-a473-b22a0bac9ce5",
+                    "name": "Loyle Carner",
+                    "sort-name": "Carner, Loyle",
+                    "disambiguation": "rapper from south London",
+                    "aliases": [
+                      {
+                        "sort-name": "Coyle‐Larner, Benjamin",
+                        "name": "Benjamin Coyle‐Larner",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Coyle-Larner, Benjamin",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Benjamin Coyle-Larner",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Messy",
+          "artist": "Olivia Dean",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "3653ac94-589e-414c-82f4-c363b0559d29",
+            "seed": {
+              "kind": "release_group",
+              "title": "Messy",
+              "category": "studio",
+              "firstReleaseDate": "2023-06-30",
+              "credits": [
+                {
+                  "name": "Olivia Dean",
+                  "artist": {
+                    "id": "15e0d608-0869-429b-898d-3d8db3ecedd5",
+                    "name": "Olivia Dean",
+                    "sort-name": "Dean, Olivia"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "My 21st Century Blues",
+          "artist": "Raye",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c9018967-1382-47e4-87ac-486a824cd81d",
+            "seed": {
+              "kind": "release_group",
+              "title": "My 21st Century Blues.",
+              "category": "studio",
+              "firstReleaseDate": "2023-02-03",
+              "credits": [
+                {
+                  "name": "RAYE",
+                  "artist": {
+                    "id": "8be564c3-dfba-440b-af8c-4ffbceeef45e",
+                    "name": "RAYE",
+                    "sort-name": "RAYE",
+                    "disambiguation": "English singer",
+                    "aliases": [
+                      {
+                        "sort-name": "Keen, Rachel",
+                        "name": "Rachel Keen",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Keen, Rachel Agatha",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Rachel Agatha Keen",
+                        "locale": "en_GB",
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Raye",
+                        "name": "Raye",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Nymph",
+          "artist": "Shygirl",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "521f21bc-6169-483e-98d5-48f4c108baf7",
+            "seed": {
+              "kind": "release_group",
+              "title": "Nymph",
+              "category": "studio",
+              "firstReleaseDate": "2022-09-30",
+              "credits": [
+                {
+                  "name": "Shygirl",
+                  "artist": {
+                    "id": "9385f1a7-8623-4d0c-b171-f1e6e87220c5",
+                    "name": "Shygirl",
+                    "sort-name": "Shygirl",
+                    "aliases": [
+                      {
+                        "sort-name": "Muise, Blane",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Blane Muise",
+                        "locale": "en",
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Mitchell, Doyelle Blane",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Doyelle Blane Mitchell",
+                        "locale": "en",
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Shygirl",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Shygirl",
+                        "locale": "en",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "シャイガール",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "シャイガール",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "ShyGirl",
+                        "name": "ShyGirl",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Heavy Heavy",
+          "artist": "Young Fathers",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2d47a09b-3fe4-45fb-b0c1-360da0929672",
+            "seed": {
+              "kind": "release_group",
+              "title": "Heavy Heavy",
+              "category": "studio",
+              "firstReleaseDate": "2023-02-03",
+              "credits": [
+                {
+                  "name": "Young Fathers",
+                  "artist": {
+                    "id": "24aa5c20-a275-468a-93a9-b3d96b344b6c",
+                    "name": "Young Fathers",
+                    "sort-name": "Young Fathers",
+                    "disambiguation": "Scottish lo‐fi hip hop group"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

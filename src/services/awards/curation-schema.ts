@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ReleaseGroupCategorySchema } from "@/lib/api/schemas";
-import { AWARD_CATEGORY_TIERS, AWARD_COVERAGES, AWARD_HONORS, AWARD_SUBJECT_KINDS } from "@/db/schema";
+import { AWARD_CATEGORY_TIERS, AWARD_COVERAGES, AWARD_HONORS, AWARD_SUBJECT_KINDS, AWARD_VOTINGS } from "@/db/schema";
 
 // Formato de los archivos de curaduría de premios (`data/awards/<premio>/`, openspec: add-music-awards, ADR 0032).
 // Lo comparten el script de resolución, el de carga y la prueba que valida los archivos en CI. Las reglas que
@@ -128,6 +128,8 @@ export type CategoryDefinition = z.infer<typeof CategoryDefinitionSchema>;
 
 export const CategoriesFileSchema = z.object({
   award: slug,
+  /** Quién decide el premio (se muestra en la ceremonia): la academia, un jurado, el público, o el público y un comité. */
+  voting: z.enum(AWARD_VOTINGS),
   categories: z.array(CategoryDefinitionSchema).min(1),
 });
 export type CategoriesFile = z.infer<typeof CategoriesFileSchema>;

@@ -1161,10 +1161,12 @@ sincronización arranque (la fila se toma bajo `pg_advisory_xact_lock`).
 solo `scripts/load-awards.ts`, que es idempotente y borra lo que ya no está en los archivos. Por eso ninguna lleva
 `updated_at`: dos cargas seguidas no deben cambiar ninguna fila.
 
-- `award`: `id`, `slug` (único, `CHECK` de slug en minúsculas con guiones). El nombre visible es texto de interfaz
-  (`messages/*/awards.json`, clave `names.<slug>`).
+- `award`: `id`, `slug` (único, `CHECK` de slug en minúsculas con guiones), `voting` (nulo o `academy` / `jury` / `public` /
+  `mixed`, `CHECK`; quién decide el premio, migración `0073`, `add-four-music-awards`). El nombre visible es texto de interfaz
+  (`messages/*/awards.json`, clave `names.<slug>`). `voting` sale de `categories.json` y es nulo hasta la próxima carga.
 - `award_ceremony`: `award_id` (FK `CASCADE`), `year` (año de la **ceremonia**, no de elegibilidad; `CHECK` 1900–2100),
-  `edition` (> 0), `held_on` (`DATE`, `CHECK` del mismo año). Únicos `(award_id, year)` y `(award_id, edition)`.
+  `edition` (> 0), `held_on` (`DATE`, `CHECK` del mismo año), `source_url` (nulo o una URL `http(s)`, `CHECK`; la fuente contra la
+  que se curó la ceremonia, migración `0073`, nula hasta la próxima carga). Únicos `(award_id, year)` y `(award_id, edition)`.
 - `award_category`: `award_id` (FK `CASCADE`), `key` (clave estable para la historia; único por premio), `tier`
   (`general` | `album` | `genre`, en ese orden de presentación; migración `0072` — antes `general` | `genre`, y las
   filas `genre` de entonces pasaron a `album`), `field` (nullable; campo del nivel `genre` — `pop`, `dance-electronic`,

@@ -1,0 +1,778 @@
+{
+  "award": "mercury-prize",
+  "year": 2024,
+  "edition": 33,
+  "heldOn": "2024-09-05",
+  "sourceUrl": "https://en.wikipedia.org/wiki/Mercury_Prize",
+  "categories": [
+    {
+      "key": "album-of-the-year",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "This Could Be Texas",
+          "artist": "English Teacher",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6a6b9cb9-92c1-45ff-b4ed-940887fc04ca",
+            "seed": {
+              "kind": "release_group",
+              "title": "This Could Be Texas",
+              "category": "studio",
+              "firstReleaseDate": "2024-04-12",
+              "credits": [
+                {
+                  "name": "English Teacher",
+                  "artist": {
+                    "id": "b60fd6f1-a47a-4021-b8df-83f8e8893e91",
+                    "name": "English Teacher",
+                    "sort-name": "English Teacher"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "When Will We Land?",
+          "artist": "Barry Can't Swim",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "672a4973-eaf5-4308-8261-ffad7a5a5887",
+            "seed": {
+              "kind": "release_group",
+              "title": "When Will We Land?",
+              "category": "studio",
+              "firstReleaseDate": "2023-10-20",
+              "credits": [
+                {
+                  "name": "Barry Can’t Swim",
+                  "artist": {
+                    "id": "7dcf3b98-701a-4309-a90c-eb4179b96ea9",
+                    "name": "Barry Can’t Swim",
+                    "sort-name": "Barry Can’t Swim",
+                    "aliases": [
+                      {
+                        "sort-name": "Mainnie, Joshua Spence",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Joshua Spence Mainnie",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Mainnie, Joshua",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Joshua Mainnie",
+                        "locale": "en",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Who Am I",
+          "artist": "Berwyn",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "3ab43d5f-0c9c-4b41-b57d-5c106014e8e6",
+            "seed": {
+              "kind": "release_group",
+              "title": "WHO AM I",
+              "category": "studio",
+              "firstReleaseDate": "2024-07-12",
+              "credits": [
+                {
+                  "name": "BERWYN",
+                  "artist": {
+                    "id": "1dca0c81-8361-424d-993f-1b40bcc22ae0",
+                    "name": "BERWYN",
+                    "sort-name": "BERWYN"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Lives Outgrown",
+          "artist": "Beth Gibbons",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "eaa72e4a-0e22-471f-bc92-97fd5d93d7d3",
+            "seed": {
+              "kind": "release_group",
+              "title": "Lives Outgrown",
+              "category": "studio",
+              "firstReleaseDate": "2024-05-17",
+              "credits": [
+                {
+                  "name": "Beth Gibbons",
+                  "artist": {
+                    "id": "5adcb9d9-5ea2-428d-af46-ef626966e106",
+                    "name": "Beth Gibbons",
+                    "sort-name": "Gibbons, Beth"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Early Twenties",
+          "artist": "Cat Burns",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "342310c7-3ef5-49c2-8d04-7c302a61c6f5",
+            "seed": {
+              "kind": "release_group",
+              "title": "early twenties",
+              "category": "studio",
+              "firstReleaseDate": "2024-07-11",
+              "credits": [
+                {
+                  "name": "Cat Burns",
+                  "artist": {
+                    "id": "a311903e-7f66-448e-af44-c1266840a906",
+                    "name": "Cat Burns",
+                    "sort-name": "Burns, Cat",
+                    "disambiguation": "British singer/songwriter",
+                    "aliases": [
+                      {
+                        "sort-name": "Burns-Temison, Catrina Keri Oluwaseun",
+                        "name": "Catrina Keri Oluwaseun Burns-Temison",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Temison, Catrina",
+                        "name": "Catrina Temison",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Burns-Temison, Catrina",
+                        "name": "Catrina Burns-Temison",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Burns, Catrina",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Catrina Burns",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Brat",
+          "artist": "Charli XCX",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e0fdb431-0109-420d-8a37-f99eaeb4d671",
+            "seed": {
+              "kind": "release_group",
+              "title": "BRAT",
+              "category": "studio",
+              "firstReleaseDate": "2024-06-07",
+              "credits": [
+                {
+                  "name": "Charli xcx",
+                  "artist": {
+                    "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                    "name": "Charli xcx",
+                    "sort-name": "Charli xcx",
+                    "aliases": [
+                      {
+                        "sort-name": "チャーリーxcx",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "チャーリーxcx",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "チャーリー・XCX",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "チャーリー・XCX",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "チャーリー・エックス・シー・エックス",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "チャーリー・エックス・シー・エックス",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "查里",
+                        "name": "查里",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "查里",
+                        "name": "charli xcx",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Aitchison, Charlotte",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Charlotte Aitchison",
+                        "locale": "en",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "ชาร์ล็อตส์ เอ็มม่า อิชชิซัน",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "ชาร์ล็อตส์ เอ็มม่า อิชชิซัน",
+                        "locale": "th",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "夏洛特·愛瑪·阿奇森",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "夏洛特·愛瑪·阿奇森",
+                        "locale": "zh",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Шарлота Ема Ејчисон",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Шарлота Ема Ејчисон",
+                        "locale": "sr",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Charli xcx",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Charli xcx",
+                        "locale": "en",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": "2024",
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Charli XCX",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Charli XCX",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": "2024"
+                      },
+                      {
+                        "sort-name": "Aitchison, Charlotte Emma",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Charlotte Emma Aitchison",
+                        "locale": "en",
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "چارلی ایکس‌سی‌ایکس",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "چارلی ایکس‌سی‌ایکس",
+                        "locale": "ur",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "ชาร์ลี เอ็กซ์ซีเอ็กซ์",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "ชาร์ลี เอ็กซ์ซีเอ็กซ์",
+                        "locale": "th",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "சார்லி எக்ஸ்சிஎக்ஸ்",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "சார்லி எக்ஸ்சிஎக்ஸ்",
+                        "locale": "ta",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Чарли Екс-Си-Екс",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Чарли Екс-Си-Екс",
+                        "locale": "sr",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "چارلي ايڪس‌سي ايڪس",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "چارلي ايڪس‌سي ايڪس",
+                        "locale": "sd",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "찰리 XCX",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "찰리 XCX",
+                        "locale": "ko",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Чарли XCX",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Чарли XCX",
+                        "locale": "kk",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "ჩარლი ექსიექსი",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "ჩარლი ექსიექსი",
+                        "locale": "ka",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Չարլի ԷքսՍիԷքս",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Չարլի ԷքսՍիԷքս",
+                        "locale": "hy",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "צ'ארלי XCX",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "צ'ארלי XCX",
+                        "locale": "he",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "شارلوت اما ایچیسن",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "شارلوت اما ایچیسن",
+                        "locale": "fa",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "چارلی ایکس‌سی‌ایکس",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "چارلی ایکس‌سی‌ایکس",
+                        "locale": "fa",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "چارلی ئێکس سی ئێکس",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "چارلی ئێکس سی ئێکس",
+                        "locale": "ku",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Чарли Екс Си Екс",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Чарли Екс Си Екс",
+                        "locale": "bg",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "چارلی ایکس‌سیایکس",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "چارلی ایکس‌سیایکس",
+                        "locale": "az_Arab",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "شارلي إكس سي إكس",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "شارلي إكس سي إكس",
+                        "locale": "ar",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "查莉 XCX",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "查莉 XCX",
+                        "locale": "zh",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Charlie XCX",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Charlie XCX",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Crazymad, for Me",
+          "artist": "CMAT",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "fd636b76-7d71-4125-9c37-71557578d2e5",
+            "seed": {
+              "kind": "release_group",
+              "title": "Crazymad, for Me",
+              "category": "studio",
+              "firstReleaseDate": "2023-10-13",
+              "credits": [
+                {
+                  "name": "CMAT",
+                  "artist": {
+                    "id": "2ac533ad-f3ec-4083-a2d4-6f30393414b3",
+                    "name": "CMAT",
+                    "sort-name": "CMAT",
+                    "aliases": [
+                      {
+                        "sort-name": "Thompson, Ciara Mary-Alice",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Ciara Mary-Alice Thompson",
+                        "locale": "en",
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Black Rainbows",
+          "artist": "Corinne Bailey Rae",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "539d7d3c-96a7-4b45-844e-30a85ee37a7b",
+            "seed": {
+              "kind": "release_group",
+              "title": "Black Rainbows",
+              "category": "studio",
+              "firstReleaseDate": "2023-09-14",
+              "credits": [
+                {
+                  "name": "Corinne Bailey Rae",
+                  "artist": {
+                    "id": "bc85c6f6-6b06-44c1-8754-ef32c1e6b824",
+                    "name": "Corinne Bailey Rae",
+                    "sort-name": "Bailey Rae, Corinne",
+                    "aliases": [
+                      {
+                        "sort-name": "Bailey Rae, Corinne Jacqueline",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Corinne Jacqueline Bailey Rae",
+                        "locale": "en",
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Corinne Bailey Ray",
+                        "name": "Corinne Bailey Ray",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Corrine Bailey Rae",
+                        "name": "Corrine Bailey Rae",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Bailey, Corinne Jacqueline",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Corinne Jacqueline Bailey",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": "2001"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Bad With Names",
+          "artist": "corto.alto",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ad3c505e-f45b-4437-abc9-db696d9cf6b6",
+            "seed": {
+              "kind": "release_group",
+              "title": "Bad With Names",
+              "category": "studio",
+              "firstReleaseDate": "2023-10-06",
+              "credits": [
+                {
+                  "name": "corto.alto",
+                  "artist": {
+                    "id": "5726d85f-b8eb-49d0-8ee5-8359c087206c",
+                    "name": "corto.alto",
+                    "sort-name": "corto.alto",
+                    "disambiguation": "Irish-Spanish jazz composer/producer from Glasgow",
+                    "aliases": [
+                      {
+                        "sort-name": "Shortall, Liam",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Liam Shortall",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "On Purpose, with Purpose",
+          "artist": "Ghetts",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e8c05939-a090-403a-9e35-f04731820e19",
+            "seed": {
+              "kind": "release_group",
+              "title": "On Purpose, With Purpose",
+              "category": "studio",
+              "firstReleaseDate": "2024-02-23",
+              "credits": [
+                {
+                  "name": "Ghetts",
+                  "artist": {
+                    "id": "62ffd9ee-13a1-49ed-8721-d07fd0b2f07d",
+                    "name": "Ghetts",
+                    "sort-name": "Ghetts",
+                    "disambiguation": "British-Jamaican grime MC, formerly Ghetto",
+                    "aliases": [
+                      {
+                        "sort-name": "Ghetto",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Ghetto",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": "2009"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Prelude to Ecstasy",
+          "artist": "The Last Dinner Party",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e279319c-2121-44c5-a93a-204492bfe7a6",
+            "seed": {
+              "kind": "release_group",
+              "title": "Prelude to Ecstasy",
+              "category": "studio",
+              "firstReleaseDate": "2024-02-02",
+              "credits": [
+                {
+                  "name": "The Last Dinner Party",
+                  "artist": {
+                    "id": "2f0c90b1-84d5-47f1-ad75-ad8d30f53f70",
+                    "name": "The Last Dinner Party",
+                    "sort-name": "Last Dinner Party, The",
+                    "aliases": [
+                      {
+                        "sort-name": "Last Dinner Party, The",
+                        "name": "The Last Dinner Party",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Silence Is Loud",
+          "artist": "Nia Archives",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "3d46f921-7b68-420e-bc3b-17c36fadb1e6",
+            "seed": {
+              "kind": "release_group",
+              "title": "Silence Is Loud",
+              "category": "studio",
+              "firstReleaseDate": "2024-04-12",
+              "credits": [
+                {
+                  "name": "Nia Archives",
+                  "artist": {
+                    "id": "09d6b57e-9cd9-4a74-b7cb-842b8443a1cd",
+                    "name": "Nia Archives",
+                    "sort-name": "Nia Archives",
+                    "aliases": [
+                      {
+                        "sort-name": "Hunt, Dehaney Nia Lishahn",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Dehaney Nia Lishahn Hunt",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

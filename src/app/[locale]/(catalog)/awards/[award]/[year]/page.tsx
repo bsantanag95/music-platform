@@ -8,7 +8,8 @@ import { NomineeVisual } from "@/components/awards/NominationItem";
 import { categoryName } from "@/components/awards/AwardCategory";
 import { FacetRow } from "@/components/discovery/FacetRow";
 import { AwardCategory } from "@/components/awards/AwardCategory";
-import { awardHref, categoryHistoryHref, ceremonyHref } from "@/components/awards/award-links";
+import { awardHref, awardsIndexHref, categoryHistoryHref, ceremonyHref } from "@/components/awards/award-links";
+import { sourceSite } from "@/components/awards/source-site";
 import { splitFeatured } from "@/components/awards/featured-categories";
 import { groupByField } from "@/components/awards/group-by-field";
 import { AWARD_CATEGORY_TIERS } from "@/db/schema";
@@ -46,6 +47,7 @@ export default async function CeremonyPage({ params }: CeremonyPageProps) {
   const date = new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
     new Date(`${page.ceremony.heldOn}T00:00:00Z`),
   );
+  const site = sourceSite(page.sourceUrl);
   // Orden de presentación (`AWARD_CATEGORY_TIERS`); un nivel sin categorías en esta ceremonia se omite.
   const labels = { general: t("tierGeneral"), album: t("tierAlbum"), genre: t("tierGenre") } as const;
   const tiers = AWARD_CATEGORY_TIERS.map((tier) => ({
@@ -98,6 +100,7 @@ export default async function CeremonyPage({ params }: CeremonyPageProps) {
         <Breadcrumbs
           items={[
             { label: tCommon("home"), href: "/" },
+            { label: t("heading"), href: awardsIndexHref() },
             { label: award, href: awardHref(page.awardSlug) },
             { label: String(page.ceremony.year) },
           ]}
@@ -120,6 +123,21 @@ export default async function CeremonyPage({ params }: CeremonyPageProps) {
             <p className="font-data text-sm text-paper-muted">
               {t("edition", { edition: page.ceremony.edition })} · {t("heldOn", { date })}
             </p>
+            {page.voting || site ? (
+              <p className="flex flex-wrap items-center gap-x-2 font-data text-xs text-paper-muted">
+                {page.voting ? <span>{t(`voting.${page.voting}`)}</span> : null}
+                {page.voting && site ? <span aria-hidden="true">·</span> : null}
+                {site && page.sourceUrl ? (
+                  <a
+                    href={page.sourceUrl}
+                    rel="noopener noreferrer"
+                    className="underline-offset-2 transition-colors hover:text-amber hover:underline"
+                  >
+                    {t("source", { site })}
+                  </a>
+                ) : null}
+              </p>
+            ) : null}
           </div>
           {headline?.winner && headlineAlbum ? (
             <div className="flex items-center gap-4 md:max-w-[45%]">

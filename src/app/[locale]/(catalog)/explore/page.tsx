@@ -6,7 +6,7 @@ import { AlbumRail } from "@/components/discovery/AlbumRail";
 import { CollectionRail } from "@/components/discovery/CollectionRail";
 import { daysUntilRelease, releaseDateLabel } from "@/components/discovery/release-date-label";
 import { AwardsExploreSection } from "@/components/awards/AwardsExploreSection";
-import { listRecentCeremonies } from "@/services/awards/read";
+import { listLatestCeremoniesByAward } from "@/services/awards/read";
 import { ExploreJumpNav } from "@/components/discovery/ExploreJumpNav";
 import { FilteredAlbumList } from "@/components/discovery/FilteredAlbumList";
 import { MosaicGrid, type MosaicTile } from "@/components/discovery/MosaicGrid";
@@ -359,7 +359,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
   // Las colecciones destacadas se regeneran cada semana bajo demanda, después de responder.
   const [explore, recentCeremonies] = await Promise.all([
     getExplorePage(),
-    listRecentCeremonies(5),
+    listLatestCeremoniesByAward(),
     ensureCollectionsFresh(),
   ]);
   const railArtistNames = await albumArtistNames(

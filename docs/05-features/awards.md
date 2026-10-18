@@ -4,12 +4,35 @@ Nominados y ganadores de ceremonias de premios musicales, enlazados al catálogo
 ADR 0032). Primera capa de "actualidad" de la plataforma: como Letterboxd o Backloggd con las ceremonias de cine y
 videojuegos.
 
-**Estado:** implementado para los Grammy (ceremonia principal), 2021–2026, solo ceremonias cerradas.
+**Estado:** implementado para cinco premios —Grammy, Latin Grammy, Premio Lo Nuestro, Brit Awards y Mercury Prize—, de 2021 en
+adelante y solo ceremonias cerradas (cambio `add-four-music-awards`, ADR 0043).
 
 ## Alcance
 
-- **Premios:** Grammy. El modelo admite cualquier otro (Grammy Latino, Mercury…) agregando su carpeta en
-  `data/awards/`.
+- **Premios cubiertos** (cada uno con su tipo de votación, `voting` en su `categories.json`):
+
+  | Premio | Carpeta | Años | Decide |
+  |---|---|---|---|
+  | Premios Grammy | `grammy` | 2021–2026 | la academia |
+  | Premios Latin Grammy | `latin-grammy` | 2021–2025 (22.ª a 26.ª; la de 2026 es el 12-nov-2026) | la academia |
+  | Premio Lo Nuestro | `lo-nuestro` | 2021–2026 (33.ª a 38.ª) | el público y un comité |
+  | Premios Brit | `brit-awards` | 2021–2026 (41.ª a 46.ª) | la academia (industria) |
+  | Premio Mercury | `mercury-prize` | 2021–2025 (30.ª a 34.ª; la de 2026 es el 22-oct-2026) | un jurado |
+
+  Las ediciones de 2026 del Latin Grammy y del Mercury se agregan cuando se celebren (el modelo solo admite ceremonias
+  cerradas). **Alcance de los cuatro nuevos:** toda categoría con nominados cuyo sujeto es un álbum, una grabación o un
+  artista; quedan fuera los reconocimientos honoríficos, el video, la gira, la ingeniería, los arreglos, el empaque, las
+  composiciones clásicas, las mezclas y remezclas y las categorías de DJ o de "combinación". El tipo de votación es por
+  premio, no por categoría (los Brit y Lo Nuestro mezclan: se muestra cómo se decide el premio en general).
+- **Campos nuevos** (nivel por género, ADR 0043): urbano, tropical, regional mexicano, cantautor, brasileña y portuguesa y
+  otros géneros (Latin Grammy: la canción de raíces). Los Brit reutilizan pop, R&B, dance y electrónica, rock y alternativa
+  y rap.
+- **Categorías renombradas:** Latin Grammy (álbum vocal pop → pop contemporáneo y pop tradicional, 2025), Lo Nuestro
+  (artista pop → masculino y femenino, artista de música mexicana → masculino y femenino) y Brit (Single → Canción, Rising
+  Star → Critics' Choice, pop y R&B → pop y R&B por separado) están enlazadas con `predecessor`. Los Brit de 2021 tenían
+  solista masculino y femenino por separado: son categorías propias de ese año.
+- **Premio de una sola categoría:** el Mercury solo tiene Álbum del año; su ceremonia no muestra los niveles por álbum ni por
+  género ni la navegación "En esta página".
 - **Tres niveles** (cambio `expand-grammy-categories`, ADR 0042), en este orden en la página de la ceremonia:
   1. **Campo general:** Álbum, Grabación y Canción del año, Mejor artista nuevo, **Productor del año** y **Compositor
      del año** (no clásicos; este último solo desde 2023). Los dos últimos premian a una persona: su sujeto es el
@@ -38,11 +61,11 @@ videojuegos.
 
 | Ruta | Qué muestra |
 |---|---|
-| `/awards` | Con **un solo premio** redirige a su ceremonia más reciente (la ceremonia ya trae la navegación por años: un índice de seis tarjetas de año añadía un clic y menos información que la tarjeta de Explorar, que muestra al ganador); con varios, una lista de premios con sus años como chips (más reciente primero); sin premios, un mensaje |
+| `/awards` | Con **un solo premio** redirige a su ceremonia más reciente (la ceremonia ya trae la navegación por años); con **varios**, el hub: una tarjeta por premio (la misma de Explorar: nombre, año, edición y ganador destacado de su ceremonia más reciente), de la más reciente a la más antigua, sin rótulo ni descripción sobre el título; sin premios, un mensaje |
 | `/awards/<premio>` | La dirección estable del premio ("Premios Grammy", la que enlazan las migas de pan): redirige a su ceremonia más reciente (`getLatestCeremonyYear`); inexistente → no encontrada |
 | `/awards/<premio>/<año>` | La ceremonia (ver abajo): cabecera, fila "Año", navegación "En esta página" y los tres niveles |
 | `/awards/<premio>/categories/<clave>` | Historia de una categoría por año, con "Antes llamada …" / "Después llamada …" |
-| `/explore` (sección Premios) | Una tarjeta por cada una de las últimas 5 ceremonias (año, edición y su ganador destacado: el de la categoría general de álbum con menor orden curado, en los Grammy Álbum del año, con carátula, título y artista) y "Ver todos" |
+| `/explore` (sección Premios) | Una tarjeta por **premio** con su ceremonia más reciente (año, edición y su ganador destacado: el de la categoría general de álbum con menor orden curado —Álbum del año, en los cinco—, con carátula, título y artista) y "Ver todos" al hub (`listLatestCeremoniesByAward`: una consulta para las ceremonias y otra para los ganadores) |
 
 ### La ceremonia (cambio `redesign-awards-pages`)
 
@@ -51,10 +74,15 @@ La página medía 9.036 px en escritorio y 19.370 en móvil (33 categorías, tod
 
 - **Cabecera**: una **portada** como las de las décadas y colecciones: el título grande, edición y fecha y, a la derecha, el ganador de la
   primera categoría general de álbum (en los Grammy, Álbum del año) con su carátula y trofeo, y esa carátula difuminada de fondo. Migas
-  Inicio / Premios Grammy / 2026 (el premio enlaza a `/awards/<premio>`), **sin rótulo
+  Inicio / Premios / Premios Grammy / 2026 ("Premios" enlaza al hub y el premio a `/awards/<premio>`), **sin rótulo
   encima** (se retiraron "Actualidad", "Ceremonia" y "Categoría": el sistema de diseño no admite un eyebrow sobre el encabezado) y una
   fila rotulada **Año** (`FacetRow`, el mismo componente de la vista de década; más reciente primero, como el índice, con la actual
   marcada).
+- **Votación y fuente** (cambio `add-four-music-awards`): bajo la edición y la fecha, una línea con quién decide el premio ("Votan los
+  miembros de la academia", "Lo decide un jurado", "Vota el público", "Votan el público y un comité"; `voting` del premio) y
+  "Fuente: <sitio>" enlazado a la `sourceUrl` de la ceremonia (`rel="noopener noreferrer"`; el sitio es el host de la URL). Ambos se
+  guardan en la base (`award.voting`, `award_ceremony.source_url`, migración `0073`, nulas hasta la próxima carga); si faltan, la
+  línea se omite.
 - **"En esta página"** (`StickyJumpNav`, enlaces `#ancla`): Campo general, Por álbum y, en lugar de "Por género", uno por cada campo (Pop,
   Dance y electrónica, Rock y alternativa, R&B, Rap, Country; `#field-<campo>`). **Queda fija** bajo la cabecera del sitio al bajar y marca
   el grupo que se está viendo (`aria-current="location"`): la página es muy larga y antes había que volver arriba para saltar de grupo.
@@ -94,14 +122,16 @@ La página medía 9.036 px en escritorio y 19.370 en móvil (33 categorías, tod
 
 ## Curaduría paso a paso
 
-Los datos viven en `data/awards/<premio>/`: `categories.json` (clave, nivel, `field` en el nivel de género, tipo de
-sujeto, `honors`, nombre es/en, predecesora, orden) y `ceremonies/<año>.json` (edición, fecha, `sourceUrl` y las
+Los datos viven en `data/awards/<premio>/`: `categories.json` (`voting` del premio; por categoría, clave, nivel, `field` en el nivel de
+género, tipo de sujeto, `honors`, nombre es/en, predecesora, orden) y `ceremonies/<año>.json` (edición, fecha, `sourceUrl` y las
 categorías con sus nominados). Una prueba de CI valida todos los archivos: el nivel `genre` exige `field`, los campos
 de un mismo grupo van contiguos en `order`, cada campo tiene nombre es/en en `messages/*/awards.json` (`fields.*`) y una
 categoría `complete` tiene al menos tres nominados.
 
 El artículo de cada ceremonia en Wikipedia (`sourceUrl`) trae categorías, nominados y ganador en un formato regular;
-al agregar categorías conviene extraerlo del texto fuente (no de un resumen, que omite nominados) y contrastar el
+al agregar categorías conviene extraerlo del texto fuente (no de un resumen, que omite nominados: el wikitexto
+se baja con `https://en.wikipedia.org/w/index.php?title=<página>&action=raw` y se procesa con un script, porque cada premio
+y año ordena distinto —título y artista, o artista y título, o el ganador sin viñeta—) y contrastar el
 conteo de nominados de cada categoría (cinco; ocho en las grandes; más si hubo empate en el último lugar) y los
 ganadores con el artículo antes de resolver. Una grabación sin disco conocido arranca con su sencillo homónimo como
 ancla; si la resolución no lo encuentra, se cambia `anchor` por el álbum donde aparece.
@@ -123,6 +153,14 @@ ancla; si la resolución no lo encuentra, se cambia `anchor` por el álbum donde
    MusicBrainz. Idempotente.
 
 Los nominados `ambiguous` o `not_found` se cargan igual, como texto sin enlace.
+
+**Resolución medida (base de prueba, 2026-10-18):** Mercury 100 % (60 de 60); Brit 93 % (473 de 507: las canciones con coautores
+y las artistas homónimas —Dave, JADE, Flo— se fijaron a mano o quedaron como texto); Premio Lo Nuestro 78 % (1.207 de 1.550) y
+Latin Grammy 60 % (827 de 1.388). En los dos latinos pesa MusicBrainz: los álbumes de nicho (tejano, tango, infantil, cristiano
+en portugués, clásico) y las canciones sin sencillo homónimo como disco ancla no se encuentran. Una canción solo se resuelve si
+su disco ancla (el sencillo homónimo, por omisión) existe en MusicBrainz con ese título; las que no, quedan como texto sin
+enlace, igual que los 56 ambiguos de esos dos premios. Mejorar la cifra es curaduría (cambiar `anchor` por el álbum, `searchAs`
+o fijar a mano), no código.
 
 ## Notas
 

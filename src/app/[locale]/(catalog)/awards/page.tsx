@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
-import { FacetRow } from "@/components/discovery/FacetRow";
 import { ceremonyHref } from "@/components/awards/award-links";
-import { listAwards } from "@/services/awards/read";
+import { AwardTileGrid } from "@/components/awards/AwardTile";
+import { listLatestCeremoniesByAward } from "@/services/awards/read";
 
-// Índice de premios (openspec: add-music-awards, design D5; redesign-awards-pages). Con un solo premio no hay nada que
-// indexar —la ceremonia ya trae la navegación por años—: redirige a su ceremonia más reciente. Con varios, lista cada premio
-// con sus ceremonias como chips de año.
+// Hub de premios (openspec: add-music-awards, design D5; redesign-awards-pages; add-four-music-awards, design D7). Con un solo
+// premio no hay nada que elegir —la ceremonia ya trae la navegación por años—: redirige a su ceremonia más reciente. Con varios,
+// una tarjeta por premio (la misma de Explorar), de la ceremonia más reciente a la más antigua.
 
 interface AwardsIndexProps {
   params: Promise<{ locale: string }>;
@@ -22,11 +22,11 @@ export async function generateMetadata({ params }: AwardsIndexProps): Promise<Me
 
 export default async function AwardsIndexPage({ params }: AwardsIndexProps) {
   const { locale } = await params;
-  const awards = await listAwards();
+  const ceremonies = await listLatestCeremoniesByAward();
 
-  const [only] = awards;
-  if (awards.length === 1 && only?.ceremonies[0]) {
-    redirect({ href: ceremonyHref(only.slug, only.ceremonies[0].year), locale });
+  const [only] = ceremonies;
+  if (ceremonies.length === 1 && only) {
+    redirect({ href: ceremonyHref(only.awardSlug, only.year), locale });
   }
 
   const t = await getTranslations("awards");
@@ -39,27 +39,7 @@ export default async function AwardsIndexPage({ params }: AwardsIndexProps) {
         <h1 className="font-display text-4xl text-paper">{t("heading")}</h1>
       </div>
 
-      {awards.length === 0 ? <p className="font-body text-paper-muted">{t("emptyIndex")}</p> : null}
-
-      {awards.map((award) => (
-        <section key={award.slug} aria-labelledby={`award-${award.slug}`} className="flex w-full flex-col gap-3">
-          <h2 id={`award-${award.slug}`} className="font-display text-2xl text-paper">
-            {t.has(`names.${award.slug}`) ? t(`names.${award.slug}`) : award.slug}
-          </h2>
-          <FacetRow
-            scroll
-            facet={{
-              label: t("yearRow"),
-              links: award.ceremonies.map((ceremony) => ({
-                key: String(ceremony.year),
-                label: String(ceremony.year),
-                href: ceremonyHref(award.slug, ceremony.year),
-                current: false,
-              })),
-            }}
-          />
-        </section>
-      ))}
+      {ceremonies.length === 0 ? <p className="font-body text-paper-muted">{t("emptyIndex")}</p> : <AwardTileGrid ceremonies={ceremonies} />}
     </main>
   );
 }

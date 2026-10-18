@@ -2021,14 +2021,22 @@ export const AWARD_HONORS = ["performer", "songwriter"] as const;
 export type AwardHonors = (typeof AWARD_HONORS)[number];
 export const AWARD_COVERAGES = ["complete", "winner_only"] as const;
 export type AwardCoverage = (typeof AWARD_COVERAGES)[number];
+// Quién decide el premio (migración 0073): la academia o la industria, un jurado, el público, o el público y un comité.
+export const AWARD_VOTINGS = ["academy", "jury", "public", "mixed"] as const;
+export type AwardVoting = (typeof AWARD_VOTINGS)[number];
 
 export const award = pgTable(
   "award",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     slug: text("slug").notNull().unique(),
+    // Nulo hasta la próxima carga de `data/awards/` (migración 0073); la página omite el dato mientras falte.
+    voting: text("voting").$type<AwardVoting>(),
   },
-  (t) => [check("chk_award_slug", sql`${t.slug} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`)],
+  (t) => [
+    check("chk_award_slug", sql`${t.slug} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`),
+    check("chk_award_voting", sql`${t.voting} IS NULL OR ${t.voting} IN ('academy', 'jury', 'public', 'mixed')`),
+  ],
 );
 
 export type AwardRow = typeof award.$inferSelect;
@@ -2044,6 +2052,8 @@ export const awardCeremony = pgTable(
     year: smallint("year").notNull(),
     edition: smallint("edition").notNull(),
     heldOn: date("held_on").notNull(),
+    // Fuente contra la que se curó la ceremonia; nula hasta la próxima carga (migración 0073).
+    sourceUrl: text("source_url"),
   },
   (t) => [
     unique("uq_award_ceremony_year").on(t.awardId, t.year),
@@ -2051,6 +2061,7 @@ export const awardCeremony = pgTable(
     check("chk_award_ceremony_year", sql`${t.year} BETWEEN 1900 AND 2100`),
     check("chk_award_ceremony_edition", sql`${t.edition} > 0`),
     check("chk_award_ceremony_held_on", sql`EXTRACT(YEAR FROM ${t.heldOn}) = ${t.year}`),
+    check("chk_award_ceremony_source_url", sql`${t.sourceUrl} IS NULL OR ${t.sourceUrl} ~ '^https?://'`),
   ],
 );
 

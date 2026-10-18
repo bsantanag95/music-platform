@@ -1,0 +1,439 @@
+{
+  "award": "mercury-prize",
+  "year": 2025,
+  "edition": 34,
+  "heldOn": "2025-10-16",
+  "sourceUrl": "https://en.wikipedia.org/wiki/Mercury_Prize",
+  "categories": [
+    {
+      "key": "album-of-the-year",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "People Watching",
+          "artist": "Sam Fender",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "5e04ecf9-2c55-4dbb-b03e-001727f9d285",
+            "seed": {
+              "kind": "release_group",
+              "title": "People Watching",
+              "category": "studio",
+              "firstReleaseDate": "2025-02-21",
+              "credits": [
+                {
+                  "name": "Sam Fender",
+                  "artist": {
+                    "id": "3478a5d1-bd96-4584-aa54-4d6e0a329658",
+                    "name": "Sam Fender",
+                    "sort-name": "Fender, Sam"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Euro-Country",
+          "artist": "CMAT",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "27491a67-6b77-43b3-ab3b-4d42ab82f9d7",
+            "seed": {
+              "kind": "release_group",
+              "title": "EURO-COUNTRY",
+              "category": "studio",
+              "firstReleaseDate": "2025-08-29",
+              "credits": [
+                {
+                  "name": "CMAT",
+                  "artist": {
+                    "id": "2ac533ad-f3ec-4083-a2d4-6f30393414b3",
+                    "name": "CMAT",
+                    "sort-name": "CMAT",
+                    "aliases": [
+                      {
+                        "sort-name": "Thompson, Ciara Mary-Alice",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Ciara Mary-Alice Thompson",
+                        "locale": "en",
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Weirdo",
+          "artist": "Emma-Jean Thackray",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2bbcaf71-d56c-46b9-8781-a0a0f55a0e3f",
+            "seed": {
+              "kind": "release_group",
+              "title": "Weirdo",
+              "category": "studio",
+              "firstReleaseDate": "2025-04-25",
+              "credits": [
+                {
+                  "name": "Emma‐Jean Thackray",
+                  "artist": {
+                    "id": "9c757ca6-7739-4962-9294-b5a41c653c51",
+                    "name": "Emma‐Jean Thackray",
+                    "sort-name": "Thackray, Emma‐Jean"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Eusexua",
+          "artist": "FKA twigs",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "05c8e133-ba85-48cc-82c3-afcf0cc9e9ff",
+            "seed": {
+              "kind": "release_group",
+              "title": "EUSEXUA",
+              "category": "studio",
+              "firstReleaseDate": "2025-01-24",
+              "credits": [
+                {
+                  "name": "FKA twigs",
+                  "artist": {
+                    "id": "1e4e9db7-5068-4a9c-bdd0-5777e47172c8",
+                    "name": "FKA twigs",
+                    "sort-name": "FKA twigs",
+                    "disambiguation": "British electro‐pop artist",
+                    "aliases": [
+                      {
+                        "sort-name": "F󠀱K󠀱A󠀱 tw󠀱ig󠀱s",
+                        "name": "F󠀱K󠀱A󠀱 tw󠀱ig󠀱s",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Barnett, Tahliah Debrett",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Tahliah Debrett Barnett",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "twigs",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "twigs",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": "2014-04"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Romance",
+          "artist": "Fontaines D.C.",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "92b095c1-3bbf-456f-9425-2078ad4e9504",
+            "seed": {
+              "kind": "release_group",
+              "title": "Romance",
+              "category": "studio",
+              "firstReleaseDate": "2024-08-23",
+              "credits": [
+                {
+                  "name": "Fontaines D.C.",
+                  "artist": {
+                    "id": "fd87acc7-e0a0-4a45-bc2a-d2ab5c10be68",
+                    "name": "Fontaines D.C.",
+                    "sort-name": "Fontaines D.C."
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "In Limerence",
+          "artist": "Jacob Alon",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "255d20ed-05cb-48b7-b547-dbe392513011",
+            "seed": {
+              "kind": "release_group",
+              "title": "In Limerence",
+              "category": "studio",
+              "firstReleaseDate": "2025-05-30",
+              "credits": [
+                {
+                  "name": "Jacob Alon",
+                  "artist": {
+                    "id": "86621e68-ef8f-45ac-a6d0-b1824beb2666",
+                    "name": "Jacob Alon",
+                    "sort-name": "Alon, Jacob",
+                    "aliases": [
+                      {
+                        "sort-name": "McDonough, Jacob Alan",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Jacob Alan McDonough",
+                        "locale": "en",
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Hamstrings & Hurricanes",
+          "artist": "Joe Webb",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "9affee83-5308-4644-b053-9e29e9b7fd9e",
+            "seed": {
+              "kind": "release_group",
+              "title": "Hamstrings & Hurricanes",
+              "category": "studio",
+              "firstReleaseDate": "2024-10-25",
+              "credits": [
+                {
+                  "name": "Joe Webb",
+                  "artist": {
+                    "id": "9daffa84-b437-46d0-a656-e15166a99e8c",
+                    "name": "Joe Webb",
+                    "sort-name": "Webb, Joe",
+                    "disambiguation": "jazz pianist and composer",
+                    "aliases": [
+                      {
+                        "sort-name": "Webb, Joseph",
+                        "name": "Joseph Webb",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Transform Me Then Into a Fish",
+          "artist": "Martin Carthy",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6a1bdea6-186a-4abb-903d-665101873a5d",
+            "seed": {
+              "kind": "release_group",
+              "title": "Transform Me Then Into a Fish",
+              "category": "studio",
+              "firstReleaseDate": "2025-05-21",
+              "credits": [
+                {
+                  "name": "Martin Carthy",
+                  "artist": {
+                    "id": "16bf7aa1-7b25-427c-8d5b-aeb5b5da4896",
+                    "name": "Martin Carthy",
+                    "sort-name": "Carthy, Martin"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Afrikan Alien",
+          "artist": "Pa Salieu",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "4d32db3b-e07a-4a62-941a-4257b47107ac",
+            "seed": {
+              "kind": "release_group",
+              "title": "Afrikan Alien",
+              "category": "studio",
+              "firstReleaseDate": "2024-11-08",
+              "credits": [
+                {
+                  "name": "Pa Salieu",
+                  "artist": {
+                    "id": "03100b87-7d27-4d56-b049-2007599656cc",
+                    "name": "Pa Salieu",
+                    "sort-name": "Salieu, Pa"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Fancy That",
+          "artist": "PinkPantheress",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "bf89cc4c-ab8b-4283-8b6a-948a40d342cb",
+            "seed": {
+              "kind": "release_group",
+              "title": "Fancy That",
+              "category": "live_other",
+              "firstReleaseDate": "2025-05-09",
+              "credits": [
+                {
+                  "name": "PinkPantheress",
+                  "artist": {
+                    "id": "7441014f-f8f5-494f-81db-ff166fbc078d",
+                    "name": "PinkPantheress",
+                    "sort-name": "PinkPantheress",
+                    "aliases": [
+                      {
+                        "sort-name": "Pink Pantheress",
+                        "name": "Pink Pantheress",
+                        "locale": "en",
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "PinkPantheress",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "PinkPantheress",
+                        "locale": "en",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Walker, Victoria Beverley",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Victoria Beverley Walker",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "More",
+          "artist": "Pulp",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "4a71079c-4145-4466-a52f-6e3dd1318ecb",
+            "seed": {
+              "kind": "release_group",
+              "title": "More.",
+              "category": "studio",
+              "firstReleaseDate": "2025-06-06",
+              "credits": [
+                {
+                  "name": "Pulp",
+                  "artist": {
+                    "id": "76b2e842-5e85-4c97-ab62-d5bc315595b5",
+                    "name": "Pulp",
+                    "sort-name": "Pulp",
+                    "aliases": [
+                      {
+                        "sort-name": "パルプ",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "パルプ",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "The Clearing",
+          "artist": "Wolf Alice",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "40ef5f61-a3f8-4624-834b-39290ee47ab2",
+            "seed": {
+              "kind": "release_group",
+              "title": "The Clearing",
+              "category": "studio",
+              "firstReleaseDate": "2025-08-22",
+              "credits": [
+                {
+                  "name": "Wolf Alice",
+                  "artist": {
+                    "id": "3547f34a-db02-4ab7-b4a0-380e1ef951a9",
+                    "name": "Wolf Alice",
+                    "sort-name": "Wolf Alice",
+                    "disambiguation": "British indie/rock band",
+                    "aliases": [
+                      {
+                        "sort-name": "ウルフ・アリス",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "ウルフ・アリス",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
