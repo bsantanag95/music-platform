@@ -51,5 +51,25 @@
     "public": "Vota el público",
     "mixed": "Votan el público y un comité"
   },
-  "source": "Fuente: {site}"
+  "source": "Fuente: {site}",
+  "yearRange": "{from}–{to}",
+  "votingShort": {
+    "academy": "Vota la academia",
+    "jury": "Jurado",
+    "public": "Vota el público",
+    "mixed": "Público y comité"
+  },
+  "previousEditions": "Ediciones anteriores de {award}",
+  "hubStats": "{awards, plural, one {# premio} other {# premios}} · {ceremonies, plural, one {# ceremonia} other {# ceremonias}}",
+  "recentWinnersHeading": "Ganadores recientes",
+  "recentWinnersDescription": "El álbum ganador de las últimas ceremonias de cada premio.",
+  "mostAwardedHeading": "Los más premiados",
+  "mostAwardedDescription": "Artistas con más premios ganados, sumando todos los premios y ceremonias.",
+  "winsCount": "{count, plural, one {# premio} other {# premios}}",
+  "groups": {
+    "general": "Generales",
+    "latin": "Música latina",
+    "critics": "Crítica y jurado",
+    "other": "Otros premios"
+  }
 }

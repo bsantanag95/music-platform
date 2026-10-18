@@ -16,7 +16,7 @@ import { NomineeVisual } from "./NominationItem";
 // iguales en gris se distinguían solo por el texto. Categoría y título pueden ocupar dos líneas ("Álbum británico del
 // año" o "DeBÍ TiRAR MáS FOTos" se cortaban a la mitad).
 
-function Trophy() {
+export function Trophy({ className = "size-3" }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -26,14 +26,26 @@ function Trophy() {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      className="size-3 shrink-0"
+      className={`shrink-0 ${className}`}
     >
       <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3" />
     </svg>
   );
 }
 
-export function AwardTile({ ceremony }: { ceremony: LatestCeremony }) {
+interface AwardTileProps {
+  ceremony: LatestCeremony;
+  /**
+   * Tarjeta del hub `/awards` (openspec: enrich-awards-hub): suma el rango de años cargados, cuántas ceremonias hay, quién
+   * vota y las ediciones anteriores como enlaces directos. En Explorar no: ahí la tarjeta es solo la puerta de entrada.
+   */
+  detailed?: boolean;
+}
+
+/** Ediciones anteriores que se ofrecen como atajo en la tarjeta del hub; el resto, desde la fila de años de la ceremonia. */
+const PREVIOUS_YEARS_SHOWN = 5;
+
+export function AwardTile({ ceremony, detailed = false }: AwardTileProps) {
   const t = useTranslations("awards");
   const locale = useLocale();
   const awardName = t.has(`names.${ceremony.awardSlug}`) ? t(`names.${ceremony.awardSlug}`) : ceremony.awardSlug;
@@ -46,31 +58,41 @@ export function AwardTile({ ceremony }: { ceremony: LatestCeremony }) {
   const credit = album ? album.artistName : headline?.winner.credit;
   const backdrop =
     album?.cover.coverThumbUrl ?? (subject?.kind === "recording" && subject.anchor ? subject.anchor.cover.coverThumbUrl : null);
+  const oldest = ceremony.years.at(-1) ?? ceremony.year;
+  const previous = ceremony.years.filter((year) => year !== ceremony.year).slice(0, PREVIOUS_YEARS_SHOWN);
+  const facts = [
+    oldest === ceremony.year ? String(oldest) : t("yearRange", { from: oldest, to: ceremony.year }),
+    t("ceremonyCount", { count: ceremony.years.length }),
+    ceremony.voting ? t(`votingShort.${ceremony.voting}`) : null,
+  ].filter(Boolean);
 
+  // La tarjeta entera abre la ceremonia (el enlace principal se estira sobre ella con `after:inset-0`); los años
+  // anteriores son enlaces propios por encima, porque un enlace no puede ir dentro de otro.
   return (
-    <li>
+    <li className="group relative isolate flex h-full flex-col gap-3 overflow-hidden rounded-lg border border-ink-border bg-ink-surface p-4 transition-colors hover:border-amber has-[a:focus-visible]:border-amber">
+      {backdrop ? (
+        <span aria-hidden="true" className="absolute inset-0 -z-10">
+          <AppImage
+            src={backdrop}
+            alt=""
+            fill
+            sizes="320px"
+            className="scale-150 object-cover opacity-25 blur-2xl saturate-150 transition-opacity group-hover:opacity-35"
+          />
+          <span className="absolute inset-0 bg-gradient-to-b from-ink/30 via-ink-surface/80 to-ink-surface" />
+        </span>
+      ) : null}
       <Link
         href={ceremonyHref(ceremony.awardSlug, ceremony.year)}
-        className="group relative isolate flex h-full flex-col gap-3 overflow-hidden rounded-lg border border-ink-border bg-ink-surface p-4 transition-colors hover:border-amber focus-visible:border-amber"
+        className="flex flex-1 flex-col gap-3 outline-none after:absolute after:inset-0 after:content-['']"
       >
-        {backdrop ? (
-          <span aria-hidden="true" className="absolute inset-0 -z-10">
-            <AppImage
-              src={backdrop}
-              alt=""
-              fill
-              sizes="320px"
-              className="scale-150 object-cover opacity-25 blur-2xl saturate-150 transition-opacity group-hover:opacity-35"
-            />
-            <span className="absolute inset-0 bg-gradient-to-b from-ink/30 via-ink-surface/80 to-ink-surface" />
-          </span>
-        ) : null}
         <span className="flex flex-col gap-0.5">
           <span className="truncate font-body text-sm text-paper">{awardName}</span>
           <span className="flex items-baseline justify-between gap-2">
             <span className="font-display text-3xl text-paper transition-colors group-hover:text-amber">{ceremony.year}</span>
             <span className="shrink-0 font-data text-xs text-paper-muted">{t("edition", { edition: ceremony.edition })}</span>
           </span>
+          {detailed ? <span className="mt-0.5 font-data text-xs leading-snug text-paper-muted">{facts.join(" · ")}</span> : null}
         </span>
         {headline ? (
           <span className="mt-auto flex items-center gap-3 border-t border-ink-border/70 pt-3">
@@ -88,16 +110,32 @@ export function AwardTile({ ceremony }: { ceremony: LatestCeremony }) {
           </span>
         ) : null}
       </Link>
+      {detailed && previous.length > 0 ? (
+        <nav aria-label={t("previousEditions", { award: awardName })} className="relative z-10">
+          <ul className="flex flex-wrap gap-1.5">
+            {previous.map((year) => (
+              <li key={year}>
+                <Link
+                  href={ceremonyHref(ceremony.awardSlug, year)}
+                  className="inline-flex rounded-full border border-ink-border bg-ink/60 px-2.5 py-0.5 font-data text-xs tabular-nums text-paper-muted transition-colors hover:border-paper-muted/60 hover:text-paper focus-visible:border-amber focus-visible:text-paper"
+                >
+                  {year}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ) : null}
     </li>
   );
 }
 
 /** Una tarjeta por premio, en el orden recibido (la ceremonia más reciente primero). */
-export function AwardTileGrid({ ceremonies }: { ceremonies: LatestCeremony[] }) {
+export function AwardTileGrid({ ceremonies, detailed = false }: { ceremonies: LatestCeremony[]; detailed?: boolean }) {
   return (
     <ul className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
       {ceremonies.map((ceremony) => (
-        <AwardTile key={ceremony.awardSlug} ceremony={ceremony} />
+        <AwardTile key={ceremony.awardSlug} ceremony={ceremony} detailed={detailed} />
       ))}
     </ul>
   );

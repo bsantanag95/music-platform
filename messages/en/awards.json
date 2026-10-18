@@ -51,5 +51,25 @@
     "public": "Voted by the public",
     "mixed": "Voted by the public and a committee"
   },
-  "source": "Source: {site}"
+  "source": "Source: {site}",
+  "yearRange": "{from}–{to}",
+  "votingShort": {
+    "academy": "Academy vote",
+    "jury": "Jury",
+    "public": "Public vote",
+    "mixed": "Public and committee"
+  },
+  "previousEditions": "Previous editions of {award}",
+  "hubStats": "{awards, plural, one {# award} other {# awards}} · {ceremonies, plural, one {# ceremony} other {# ceremonies}}",
+  "recentWinnersHeading": "Recent winners",
+  "recentWinnersDescription": "The winning album of each award’s latest ceremonies.",
+  "mostAwardedHeading": "Most awarded",
+  "mostAwardedDescription": "Artists with the most wins, across every award and ceremony.",
+  "winsCount": "{count, plural, one {# award} other {# awards}}",
+  "groups": {
+    "general": "General",
+    "latin": "Latin music",
+    "critics": "Critics and juries",
+    "other": "Other awards"
+  }
 }

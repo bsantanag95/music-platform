@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/db", () => ({ db: {} }));
 
-const { latestPerAward, orderNominations, sortCategoryEditions } = await import("./read");
+const { latestPerAward, orderNominations, recentPerAward, sortCategoryEditions } = await import("./read");
 import type { NominationView } from "./read";
 
 const view = (id: string, won: boolean): NominationView => ({ id, won, text: id, credit: null, subject: null });
@@ -65,5 +65,29 @@ describe("latestPerAward", () => {
   it("sin ceremonias da una lista vacía y desempata por premio si la fecha coincide", () => {
     expect(latestPerAward([])).toEqual([]);
     expect(latestPerAward([c("b", "2026-02-01"), c("a", "2026-02-01")]).map((x) => x.awardSlug)).toEqual(["a", "b"]);
+  });
+});
+
+describe("recentPerAward", () => {
+  const c = (awardSlug: string, heldOn: string) => ({ awardSlug, heldOn });
+
+  it("deja las últimas N ceremonias de cada premio, de la más reciente a la más antigua", () => {
+    const result = recentPerAward(
+      [
+        c("grammy", "2024-02-04"),
+        c("grammy", "2026-02-01"),
+        c("grammy", "2025-02-02"),
+        c("mercury-prize", "2025-09-11"),
+        c("mercury-prize", "2024-09-05"),
+        c("mercury-prize", "2023-09-07"),
+      ],
+      2,
+    );
+    expect(result).toEqual([c("grammy", "2026-02-01"), c("mercury-prize", "2025-09-11"), c("grammy", "2025-02-02"), c("mercury-prize", "2024-09-05")]);
+  });
+
+  it("un premio con menos ceremonias que N aporta las que tiene", () => {
+    expect(recentPerAward([c("a", "2026-01-01")], 3)).toEqual([c("a", "2026-01-01")]);
+    expect(recentPerAward([], 3)).toEqual([]);
   });
 });
