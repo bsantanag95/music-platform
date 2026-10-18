@@ -16,8 +16,8 @@
 
 ## 3. Datos: Brit Awards (2021–2026)
 
-- [ ] 3.1 `data/awards/brit-awards/categories.json` (general y actos por género con los campos existentes, con `predecessor` en las categorías renombradas) y `ceremonies/2021…2026.json`, contrastados con el artículo de cada ceremonia
-- [ ] 3.2 Resolver, revisar y cargar; comprobar las categorías renombradas y la historia de una categoría con predecesora
+- [x] 3.1 `data/awards/brit-awards/categories.json` (general y actos por género con los campos existentes, con `predecessor` en las categorías renombradas) y `ceremonies/2021…2026.json`, contrastados con el artículo de cada ceremonia
+- [x] 3.2 Resolver, revisar y cargar; comprobar las categorías renombradas y la historia de una categoría con predecesora
 
 ## 4. Datos: Latin Grammy (2021–2025)
 

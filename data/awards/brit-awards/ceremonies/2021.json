@@ -1,0 +1,2327 @@
+{
+  "award": "brit-awards",
+  "year": 2021,
+  "edition": 41,
+  "heldOn": "2021-05-11",
+  "sourceUrl": "https://en.wikipedia.org/wiki/Brit_Awards_2021",
+  "categories": [
+    {
+      "key": "album-of-the-year",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Future Nostalgia",
+          "artist": "Dua Lipa",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "aa366795-92d7-4d67-91fa-6741f82a4858",
+            "seed": {
+              "kind": "release_group",
+              "title": "Future Nostalgia",
+              "category": "studio",
+              "firstReleaseDate": "2020-03-21",
+              "credits": [
+                {
+                  "name": "Dua Lipa",
+                  "artist": {
+                    "id": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+                    "name": "Dua Lipa",
+                    "sort-name": "Lipa, Dua",
+                    "aliases": [
+                      {
+                        "sort-name": "두아리파",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "두아리파",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Dua Lipa",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "두아 리파",
+                        "locale": "ko",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Dua Lipa",
+                        "name": "デュア・リパ",
+                        "locale": "ja",
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Dula Peep",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Dula Peep",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Lipa, Dua",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Dua Lipa",
+                        "locale": "sq",
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Collapsed in Sunbeams",
+          "artist": "Arlo Parks",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "9700de59-1397-4375-ba4b-058e094e5f7a",
+            "seed": {
+              "kind": "release_group",
+              "title": "Collapsed in Sunbeams",
+              "category": "studio",
+              "firstReleaseDate": "2021-01-29",
+              "credits": [
+                {
+                  "name": "Arlo Parks",
+                  "artist": {
+                    "id": "6e8e3717-a62d-4a3f-886d-6a4e82507930",
+                    "name": "Arlo Parks",
+                    "sort-name": "Parks, Arlo",
+                    "disambiguation": "Alternative R&B artist",
+                    "aliases": [
+                      {
+                        "sort-name": "Marinho, Anaïs Oluwatoyin Estelle",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Anaïs Oluwatoyin Estelle Marinho",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Not Your Muse",
+          "artist": "Celeste",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "07a41871-12aa-4b90-ac94-9beac1854de2",
+            "seed": {
+              "kind": "release_group",
+              "title": "Not Your Muse",
+              "category": "studio",
+              "firstReleaseDate": "2021-01-29",
+              "credits": [
+                {
+                  "name": "Celeste",
+                  "artist": {
+                    "id": "1b8a634e-9fa2-4ddb-bdcf-50bc7e4b167c",
+                    "name": "Celeste",
+                    "sort-name": "Celeste",
+                    "disambiguation": "Brighton singer",
+                    "aliases": [
+                      {
+                        "sort-name": "Waite, Celeste",
+                        "name": "Celeste Waite",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Waite, Celeste Epiphany",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Celeste Epiphany Waite",
+                        "locale": "en",
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Big Conspiracy",
+          "artist": "J Hus",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "535c6fa2-15a8-4aa6-b8f8-08b6bc47f6bf",
+            "seed": {
+              "kind": "release_group",
+              "title": "Big Conspiracy",
+              "category": "studio",
+              "firstReleaseDate": "2020-01-23",
+              "credits": [
+                {
+                  "name": "J Hus",
+                  "artist": {
+                    "id": "eca85dd0-f1fb-4e83-8c47-61403f479254",
+                    "name": "J Hus",
+                    "sort-name": "J Hus",
+                    "disambiguation": "British rapper and singer Momodou Lamin Jallow",
+                    "aliases": [
+                      {
+                        "sort-name": "Jallow, Momodou Lamin",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Momodou Lamin Jallow",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "What's Your Pleasure?",
+          "artist": "Jessie Ware",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "38d0e2a3-06a0-4c2e-ac5d-faf1b2d7e563",
+            "seed": {
+              "kind": "release_group",
+              "title": "What’s Your Pleasure?",
+              "category": "studio",
+              "firstReleaseDate": "2020-06-26",
+              "credits": [
+                {
+                  "name": "Jessie Ware",
+                  "artist": {
+                    "id": "6ed40778-8d03-4a5c-ad35-93cf814627c9",
+                    "name": "Jessie Ware",
+                    "sort-name": "Ware, Jessie",
+                    "disambiguation": "British singer‐songwriter",
+                    "aliases": [
+                      {
+                        "sort-name": "Ware, Jessica Lois",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Jessica Lois Ware",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Ware, Jessie",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Jessie Ware",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Jesse Ware",
+                        "name": "Jesse Ware",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "song-of-the-year",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Watermelon Sugar",
+          "artist": "Harry Styles",
+          "anchor": {
+            "title": "Watermelon Sugar",
+            "artist": "Harry Styles"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1ab009f2-d713-4f85-b4a3-c383c344e24a",
+            "seed": {
+              "kind": "recording",
+              "title": "Watermelon Sugar",
+              "durationSec": 174,
+              "credits": [
+                {
+                  "name": "Harry Styles",
+                  "artist": {
+                    "id": "7eb1ce54-a355-41f9-8d68-e018b096d427",
+                    "name": "Harry Styles",
+                    "sort-name": "Styles, Harry",
+                    "aliases": [
+                      {
+                        "sort-name": "Harry Styles",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Harry Styles",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Styles, Harry Edward",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Harry Edward Styles",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "df371262-5776-4e48-8b41-400425963815",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Watermelon Sugar",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-11-16",
+                "credits": [
+                  {
+                    "name": "Harry Styles",
+                    "artist": {
+                      "id": "7eb1ce54-a355-41f9-8d68-e018b096d427",
+                      "name": "Harry Styles",
+                      "sort-name": "Styles, Harry",
+                      "aliases": [
+                        {
+                          "sort-name": "Harry Styles",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "Harry Styles",
+                          "locale": null,
+                          "type": "Artist name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Styles, Harry Edward",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "Harry Edward Styles",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Don't Need Love",
+          "artist": "220 Kid and Gracey",
+          "anchor": {
+            "title": "Don't Need Love",
+            "artist": "220 Kid"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b8e78b33-c792-4f9f-8e65-6fe3c059dd6f",
+            "seed": {
+              "kind": "recording",
+              "title": "Don’t Need Love",
+              "durationSec": 195,
+              "credits": [
+                {
+                  "joinphrase": " & ",
+                  "name": "220 KID",
+                  "artist": {
+                    "id": "6cd22c08-e353-4d47-ace7-84a2418a13b8",
+                    "name": "220 KID",
+                    "sort-name": "220 KID",
+                    "disambiguation": "English record producer",
+                    "aliases": [
+                      {
+                        "sort-name": "Graydon, William Edward",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "William Edward Graydon",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "GRACEY",
+                  "artist": {
+                    "id": "1ab023a6-466b-4ad3-b404-e6b801fe502c",
+                    "name": "GRACEY",
+                    "sort-name": "Gracey",
+                    "disambiguation": "UK pop",
+                    "aliases": [
+                      {
+                        "sort-name": "Barker, Grace",
+                        "name": "Grace Barker",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Barker, Grace Elizabeth",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Grace Elizabeth Barker",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "2c279d19-2faf-4cfa-bab6-b5f4e764ebe4",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Don’t Need Love",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-12-13",
+                "credits": [
+                  {
+                    "joinphrase": " & ",
+                    "name": "220 KID",
+                    "artist": {
+                      "id": "6cd22c08-e353-4d47-ace7-84a2418a13b8",
+                      "name": "220 KID",
+                      "sort-name": "220 KID",
+                      "disambiguation": "English record producer",
+                      "aliases": [
+                        {
+                          "sort-name": "Graydon, William Edward",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "William Edward Graydon",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "GRACEY",
+                    "artist": {
+                      "id": "1ab023a6-466b-4ad3-b404-e6b801fe502c",
+                      "name": "GRACEY",
+                      "sort-name": "Gracey",
+                      "disambiguation": "UK pop",
+                      "aliases": [
+                        {
+                          "sort-name": "Barker, Grace",
+                          "name": "Grace Barker",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Barker, Grace Elizabeth",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "Grace Elizabeth Barker",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Rain",
+          "artist": "Aitch and AJ Tracey featuring Tay Keith",
+          "anchor": {
+            "title": "Rain",
+            "artist": "Aitch"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "fe31f213-8470-43f5-a8aa-22514d25ba4f",
+            "seed": {
+              "kind": "recording",
+              "title": "Rain",
+              "durationSec": 183,
+              "credits": [
+                {
+                  "joinphrase": ", ",
+                  "name": "Aitch",
+                  "artist": {
+                    "id": "57dd4661-9f78-4442-8836-482fab983008",
+                    "name": "Aitch",
+                    "sort-name": "Aitch",
+                    "disambiguation": "British rapper",
+                    "aliases": [
+                      {
+                        "sort-name": "Armstrong, Harrison",
+                        "name": "Harrison Armstrong",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Armstrong, Harrison James",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Harrison James Armstrong",
+                        "locale": "en",
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                },
+                {
+                  "joinphrase": " & ",
+                  "name": "AJ Tracey",
+                  "artist": {
+                    "id": "b8638bdc-728d-4d43-a908-7be7db29073b",
+                    "name": "AJ Tracey",
+                    "sort-name": "AJ Tracey",
+                    "aliases": [
+                      {
+                        "sort-name": "Ché Wolton Grant",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Ché Wolton Grant",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "AJ Tracey",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "AJ Tracey",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Tay Keith",
+                  "artist": {
+                    "id": "e5d70460-7057-4cbe-9c07-11ca2dac975c",
+                    "name": "Tay Keith",
+                    "sort-name": "Tay Keith",
+                    "aliases": [
+                      {
+                        "sort-name": "Chambers, Brytavious Lakeith",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Brytavious Lakeith Chambers",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "94430712-c7a9-4052-8ed7-415901000d8e",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Rain",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-03-05",
+                "credits": [
+                  {
+                    "joinphrase": " & ",
+                    "name": "Aitch",
+                    "artist": {
+                      "id": "57dd4661-9f78-4442-8836-482fab983008",
+                      "name": "Aitch",
+                      "sort-name": "Aitch",
+                      "disambiguation": "British rapper",
+                      "aliases": [
+                        {
+                          "sort-name": "Armstrong, Harrison",
+                          "name": "Harrison Armstrong",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Armstrong, Harrison James",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "Harrison James Armstrong",
+                          "locale": "en",
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "AJ Tracey",
+                    "artist": {
+                      "id": "b8638bdc-728d-4d43-a908-7be7db29073b",
+                      "name": "AJ Tracey",
+                      "sort-name": "AJ Tracey",
+                      "aliases": [
+                        {
+                          "sort-name": "Ché Wolton Grant",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "Ché Wolton Grant",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "AJ Tracey",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "AJ Tracey",
+                          "locale": null,
+                          "type": "Artist name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Physical",
+          "artist": "Dua Lipa",
+          "anchor": {
+            "title": "Physical",
+            "artist": "Dua Lipa"
+          },
+          "won": false,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": [
+              {
+                "mbid": "19ddd84f-0353-4d6e-99a1-f00c0aa22cd1",
+                "score": 100,
+                "label": "Physical — Dua Lipa",
+                "seed": {
+                  "kind": "recording",
+                  "title": "Physical",
+                  "durationSec": 194,
+                  "credits": [
+                    {
+                      "name": "Dua Lipa",
+                      "artist": {
+                        "id": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+                        "name": "Dua Lipa",
+                        "sort-name": "Lipa, Dua",
+                        "aliases": [
+                          {
+                            "sort-name": "두아리파",
+                            "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                            "name": "두아리파",
+                            "locale": null,
+                            "type": "Search hint",
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "Dua Lipa",
+                            "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                            "name": "두아 리파",
+                            "locale": "ko",
+                            "type": "Artist name",
+                            "primary": true,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "Dua Lipa",
+                            "name": "デュア・リパ",
+                            "locale": "ja",
+                            "type": null,
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "Dula Peep",
+                            "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                            "name": "Dula Peep",
+                            "locale": null,
+                            "type": "Search hint",
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "Lipa, Dua",
+                            "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                            "name": "Dua Lipa",
+                            "locale": "sq",
+                            "type": "Legal name",
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "anchorMbid": "5f836bf1-6080-4d32-ae93-57fff34ab009",
+                  "anchor": {
+                    "kind": "release_group",
+                    "title": "Physical",
+                    "category": "single_ep",
+                    "firstReleaseDate": "2020-01-30",
+                    "credits": [
+                      {
+                        "name": "Dua Lipa",
+                        "artist": {
+                          "id": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+                          "name": "Dua Lipa",
+                          "sort-name": "Lipa, Dua",
+                          "aliases": [
+                            {
+                              "sort-name": "두아리파",
+                              "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                              "name": "두아리파",
+                              "locale": null,
+                              "type": "Search hint",
+                              "primary": null,
+                              "begin-date": null,
+                              "end-date": null
+                            },
+                            {
+                              "sort-name": "Dua Lipa",
+                              "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                              "name": "두아 리파",
+                              "locale": "ko",
+                              "type": "Artist name",
+                              "primary": true,
+                              "begin-date": null,
+                              "end-date": null
+                            },
+                            {
+                              "sort-name": "Dua Lipa",
+                              "name": "デュア・リパ",
+                              "locale": "ja",
+                              "type": null,
+                              "primary": null,
+                              "begin-date": null,
+                              "end-date": null
+                            },
+                            {
+                              "sort-name": "Dula Peep",
+                              "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                              "name": "Dula Peep",
+                              "locale": null,
+                              "type": "Search hint",
+                              "primary": null,
+                              "begin-date": null,
+                              "end-date": null
+                            },
+                            {
+                              "sort-name": "Lipa, Dua",
+                              "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                              "name": "Dua Lipa",
+                              "locale": "sq",
+                              "type": "Legal name",
+                              "primary": null,
+                              "begin-date": null,
+                              "end-date": null
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "mbid": "6ec098c8-9bcf-4373-b039-ada7fe8675ce",
+                "score": 100,
+                "label": "Physical — Dua Lipa featuring Troye Sivan",
+                "seed": {
+                  "kind": "recording",
+                  "title": "Physical",
+                  "durationSec": 193,
+                  "credits": [
+                    {
+                      "joinphrase": " featuring ",
+                      "name": "Dua Lipa",
+                      "artist": {
+                        "id": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+                        "name": "Dua Lipa",
+                        "sort-name": "Lipa, Dua",
+                        "aliases": [
+                          {
+                            "sort-name": "두아리파",
+                            "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                            "name": "두아리파",
+                            "locale": null,
+                            "type": "Search hint",
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "Dua Lipa",
+                            "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                            "name": "두아 리파",
+                            "locale": "ko",
+                            "type": "Artist name",
+                            "primary": true,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "Dua Lipa",
+                            "name": "デュア・リパ",
+                            "locale": "ja",
+                            "type": null,
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "Dula Peep",
+                            "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                            "name": "Dula Peep",
+                            "locale": null,
+                            "type": "Search hint",
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "Lipa, Dua",
+                            "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                            "name": "Dua Lipa",
+                            "locale": "sq",
+                            "type": "Legal name",
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Troye Sivan",
+                      "artist": {
+                        "id": "e5712ceb-c37a-4c49-a11c-ccf4e21852d4",
+                        "name": "Troye Sivan",
+                        "sort-name": "Sivan, Troye",
+                        "aliases": [
+                          {
+                            "sort-name": "トロイ・シヴァン",
+                            "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                            "name": "トロイ・シヴァン",
+                            "locale": "ja",
+                            "type": "Artist name",
+                            "primary": true,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "트로이",
+                            "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                            "name": "트로이",
+                            "locale": null,
+                            "type": "Search hint",
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "트로이 시반",
+                            "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                            "name": "트로이 시반",
+                            "locale": "ko",
+                            "type": "Artist name",
+                            "primary": true,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "Troye Sivan",
+                            "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                            "name": "Troye Sivan",
+                            "locale": "en",
+                            "type": "Artist name",
+                            "primary": true,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "Mellet, Troye Sivan",
+                            "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                            "name": "Troye Sivan Mellet",
+                            "locale": "en",
+                            "type": "Legal name",
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "anchorMbid": "5f836bf1-6080-4d32-ae93-57fff34ab009",
+                  "anchor": {
+                    "kind": "release_group",
+                    "title": "Physical",
+                    "category": "single_ep",
+                    "firstReleaseDate": "2020-01-30",
+                    "credits": [
+                      {
+                        "name": "Dua Lipa",
+                        "artist": {
+                          "id": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+                          "name": "Dua Lipa",
+                          "sort-name": "Lipa, Dua",
+                          "aliases": [
+                            {
+                              "sort-name": "두아리파",
+                              "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                              "name": "두아리파",
+                              "locale": null,
+                              "type": "Search hint",
+                              "primary": null,
+                              "begin-date": null,
+                              "end-date": null
+                            },
+                            {
+                              "sort-name": "Dua Lipa",
+                              "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                              "name": "두아 리파",
+                              "locale": "ko",
+                              "type": "Artist name",
+                              "primary": true,
+                              "begin-date": null,
+                              "end-date": null
+                            },
+                            {
+                              "sort-name": "Dua Lipa",
+                              "name": "デュア・リパ",
+                              "locale": "ja",
+                              "type": null,
+                              "primary": null,
+                              "begin-date": null,
+                              "end-date": null
+                            },
+                            {
+                              "sort-name": "Dula Peep",
+                              "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                              "name": "Dula Peep",
+                              "locale": null,
+                              "type": "Search hint",
+                              "primary": null,
+                              "begin-date": null,
+                              "end-date": null
+                            },
+                            {
+                              "sort-name": "Lipa, Dua",
+                              "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                              "name": "Dua Lipa",
+                              "locale": "sq",
+                              "type": "Legal name",
+                              "primary": null,
+                              "begin-date": null,
+                              "end-date": null
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "mbid": "02fb10ba-4ab0-4443-95f2-5401f590a7af",
+                "score": 100,
+                "label": "Physical — Dua Lipa feat. Hwa Sa",
+                "seed": {
+                  "kind": "recording",
+                  "title": "Physical",
+                  "durationSec": 194,
+                  "credits": [
+                    {
+                      "joinphrase": " feat. ",
+                      "name": "Dua Lipa",
+                      "artist": {
+                        "id": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+                        "name": "Dua Lipa",
+                        "sort-name": "Lipa, Dua",
+                        "aliases": [
+                          {
+                            "sort-name": "두아리파",
+                            "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                            "name": "두아리파",
+                            "locale": null,
+                            "type": "Search hint",
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "Dua Lipa",
+                            "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                            "name": "두아 리파",
+                            "locale": "ko",
+                            "type": "Artist name",
+                            "primary": true,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "Dua Lipa",
+                            "name": "デュア・リパ",
+                            "locale": "ja",
+                            "type": null,
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "Dula Peep",
+                            "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                            "name": "Dula Peep",
+                            "locale": null,
+                            "type": "Search hint",
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "Lipa, Dua",
+                            "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                            "name": "Dua Lipa",
+                            "locale": "sq",
+                            "type": "Legal name",
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Hwa Sa",
+                      "artist": {
+                        "id": "9c750319-8267-493a-aaaf-305e1c6bcc21",
+                        "name": "HWASA",
+                        "sort-name": "HWASA",
+                        "aliases": [
+                          {
+                            "sort-name": "HWASA",
+                            "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                            "name": "HWASA",
+                            "locale": "en",
+                            "type": "Artist name",
+                            "primary": true,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "Hwa Sa",
+                            "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                            "name": "Hwa Sa",
+                            "locale": null,
+                            "type": "Search hint",
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "Hwa Sa",
+                            "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                            "name": "화사",
+                            "locale": "ko",
+                            "type": "Artist name",
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                          },
+                          {
+                            "sort-name": "Ahn, Hye-jin",
+                            "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                            "name": "안혜진",
+                            "locale": "ko",
+                            "type": "Legal name",
+                            "primary": null,
+                            "begin-date": "1995-07-23",
+                            "end-date": null
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "anchorMbid": "5f836bf1-6080-4d32-ae93-57fff34ab009",
+                  "anchor": {
+                    "kind": "release_group",
+                    "title": "Physical",
+                    "category": "single_ep",
+                    "firstReleaseDate": "2020-01-30",
+                    "credits": [
+                      {
+                        "name": "Dua Lipa",
+                        "artist": {
+                          "id": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+                          "name": "Dua Lipa",
+                          "sort-name": "Lipa, Dua",
+                          "aliases": [
+                            {
+                              "sort-name": "두아리파",
+                              "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                              "name": "두아리파",
+                              "locale": null,
+                              "type": "Search hint",
+                              "primary": null,
+                              "begin-date": null,
+                              "end-date": null
+                            },
+                            {
+                              "sort-name": "Dua Lipa",
+                              "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                              "name": "두아 리파",
+                              "locale": "ko",
+                              "type": "Artist name",
+                              "primary": true,
+                              "begin-date": null,
+                              "end-date": null
+                            },
+                            {
+                              "sort-name": "Dua Lipa",
+                              "name": "デュア・リパ",
+                              "locale": "ja",
+                              "type": null,
+                              "primary": null,
+                              "begin-date": null,
+                              "end-date": null
+                            },
+                            {
+                              "sort-name": "Dula Peep",
+                              "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                              "name": "Dula Peep",
+                              "locale": null,
+                              "type": "Search hint",
+                              "primary": null,
+                              "begin-date": null,
+                              "end-date": null
+                            },
+                            {
+                              "sort-name": "Lipa, Dua",
+                              "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                              "name": "Dua Lipa",
+                              "locale": "sq",
+                              "type": "Legal name",
+                              "primary": null,
+                              "begin-date": null,
+                              "end-date": null
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "title": "Ain't It Different",
+          "artist": "Headie One, AJ Tracey and Stormzy",
+          "anchor": {
+            "title": "Ain't It Different",
+            "artist": "Headie One"
+          },
+          "won": false,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Head & Heart",
+          "artist": "Joel Corry featuring MNEK",
+          "anchor": {
+            "title": "Head & Heart",
+            "artist": "Joel Corry"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "168c30ff-7597-471b-a4c8-31c719f4f8af",
+            "seed": {
+              "kind": "recording",
+              "title": "Head & Heart",
+              "durationSec": 166,
+              "credits": [
+                {
+                  "joinphrase": " × ",
+                  "name": "Joel Corry",
+                  "artist": {
+                    "id": "7b545a9d-0be7-4a32-90ff-154489117216",
+                    "name": "Joel Corry",
+                    "sort-name": "Corry, Joel",
+                    "aliases": [
+                      {
+                        "sort-name": "Corry, Joel Louis",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Joel Louis Corry",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "MNEK",
+                  "artist": {
+                    "id": "27e7c2e8-badc-4a97-8b93-24b6c530b038",
+                    "name": "MNEK",
+                    "sort-name": "MNEK",
+                    "aliases": [
+                      {
+                        "sort-name": "Emenike, Uzoechi Osisioma",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Uzoechi Osisioma Emenike",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Emenike, Uzoechi",
+                        "name": "Uzoechi Emenike",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "5369b02b-78d2-4361-83dd-d26dfd96eda7",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Head & Heart",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-07-03",
+                "credits": [
+                  {
+                    "joinphrase": " feat. ",
+                    "name": "Joel Corry",
+                    "artist": {
+                      "id": "7b545a9d-0be7-4a32-90ff-154489117216",
+                      "name": "Joel Corry",
+                      "sort-name": "Corry, Joel",
+                      "aliases": [
+                        {
+                          "sort-name": "Corry, Joel Louis",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "Joel Louis Corry",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "MNEK",
+                    "artist": {
+                      "id": "27e7c2e8-badc-4a97-8b93-24b6c530b038",
+                      "name": "MNEK",
+                      "sort-name": "MNEK",
+                      "aliases": [
+                        {
+                          "sort-name": "Emenike, Uzoechi",
+                          "name": "Uzoechi Emenike",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Emenike, Uzoechi Osisioma",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "Uzoechi Osisioma Emenike",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Lighter",
+          "artist": "Nathan Dawe featuring KSI",
+          "anchor": {
+            "title": "Lighter",
+            "artist": "Nathan Dawe"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "7aa42c1c-6a53-4463-9eb8-a296be626fec",
+            "seed": {
+              "kind": "recording",
+              "title": "Lighter",
+              "durationSec": 182,
+              "credits": [
+                {
+                  "joinphrase": " feat. ",
+                  "name": "Nathan Dawe",
+                  "artist": {
+                    "id": "60a5ea44-537e-4f60-867c-d7789b6d4255",
+                    "name": "Nathan Dawe",
+                    "sort-name": "Dawe, Nathan"
+                  }
+                },
+                {
+                  "name": "KSI",
+                  "artist": {
+                    "id": "7b24231e-faa5-4838-b6a8-6a2eb2727b37",
+                    "name": "KSI",
+                    "sort-name": "KSI",
+                    "disambiguation": "UK comedian & rapper Olajide Olatunji (KSIOlajideBT)",
+                    "aliases": [
+                      {
+                        "sort-name": "Williams Olatunji, Olajide Olayinka",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Olajide Olayinka Williams Olatunji",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Olatunji, JJ",
+                        "name": "JJ Olatunji",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "cb94057e-cfa0-4d96-ab19-4a93c85b7851",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Lighter",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-07-24",
+                "credits": [
+                  {
+                    "joinphrase": " feat. ",
+                    "name": "Nathan Dawe",
+                    "artist": {
+                      "id": "60a5ea44-537e-4f60-867c-d7789b6d4255",
+                      "name": "Nathan Dawe",
+                      "sort-name": "Dawe, Nathan"
+                    }
+                  },
+                  {
+                    "name": "KSI",
+                    "artist": {
+                      "id": "7b24231e-faa5-4838-b6a8-6a2eb2727b37",
+                      "name": "KSI",
+                      "sort-name": "KSI",
+                      "disambiguation": "UK comedian & rapper Olajide Olatunji (KSIOlajideBT)",
+                      "aliases": [
+                        {
+                          "sort-name": "Williams Olatunji, Olajide Olayinka",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "Olajide Olayinka Williams Olatunji",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Olatunji, JJ",
+                          "name": "JJ Olatunji",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Secrets",
+          "artist": "Regard and Raye",
+          "anchor": {
+            "title": "Secrets",
+            "artist": "Regard"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "3b89ae1f-9b10-4417-ab8d-8c35b6264f65",
+            "seed": {
+              "kind": "recording",
+              "title": "Secrets",
+              "durationSec": 177,
+              "credits": [
+                {
+                  "joinphrase": " & ",
+                  "name": "Regard",
+                  "artist": {
+                    "id": "85f11607-6ed7-4a36-af69-dcadd32ad277",
+                    "name": "Regard",
+                    "sort-name": "Regard",
+                    "disambiguation": "DJ Regard",
+                    "aliases": [
+                      {
+                        "sort-name": "Regard",
+                        "name": "Regard",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "DJ Regard",
+                        "name": "DJ Regard",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "RAYE",
+                  "artist": {
+                    "id": "8be564c3-dfba-440b-af8c-4ffbceeef45e",
+                    "name": "RAYE",
+                    "sort-name": "RAYE",
+                    "disambiguation": "English singer",
+                    "aliases": [
+                      {
+                        "sort-name": "Keen, Rachel",
+                        "name": "Rachel Keen",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Keen, Rachel Agatha",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Rachel Agatha Keen",
+                        "locale": "en_GB",
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Raye",
+                        "name": "Raye",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "259055d9-b93b-4f04-accf-461e348df111",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Secrets",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-04-24",
+                "credits": [
+                  {
+                    "joinphrase": " & ",
+                    "name": "Regard",
+                    "artist": {
+                      "id": "85f11607-6ed7-4a36-af69-dcadd32ad277",
+                      "name": "Regard",
+                      "sort-name": "Regard",
+                      "disambiguation": "DJ Regard",
+                      "aliases": [
+                        {
+                          "sort-name": "Regard",
+                          "name": "Regard",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "DJ Regard",
+                          "name": "DJ Regard",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "RAYE",
+                    "artist": {
+                      "id": "8be564c3-dfba-440b-af8c-4ffbceeef45e",
+                      "name": "RAYE",
+                      "sort-name": "RAYE",
+                      "disambiguation": "English singer",
+                      "aliases": [
+                        {
+                          "sort-name": "Keen, Rachel",
+                          "name": "Rachel Keen",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Keen, Rachel Agatha",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "Rachel Agatha Keen",
+                          "locale": "en_GB",
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Raye",
+                          "name": "Raye",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Rover",
+          "artist": "S1mba featuring DTG",
+          "anchor": {
+            "title": "Rover",
+            "artist": "S1mba"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "317b257f-0b22-4c96-bcfa-4971b6258c5b",
+            "seed": {
+              "kind": "recording",
+              "title": "Rover",
+              "durationSec": 168,
+              "credits": [
+                {
+                  "joinphrase": " feat. ",
+                  "name": "S1MBA",
+                  "artist": {
+                    "id": "ccd7cf65-1bd9-401c-9e41-904ac93cb685",
+                    "name": "S1MBA",
+                    "sort-name": "S1MBA"
+                  }
+                },
+                {
+                  "name": "DTG",
+                  "artist": {
+                    "id": "2b8d5a80-545f-4ea5-a591-81a9f8732316",
+                    "name": "DTG",
+                    "sort-name": "DTG",
+                    "aliases": [
+                      {
+                        "sort-name": "Araoye, Deji",
+                        "name": "Deji Araoye",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Araoye, Ayodeji",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Ayodeji Araoye",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "832c6285-7883-4371-a97e-0251e7b228fc",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Rover",
+                "category": "single_ep",
+                "firstReleaseDate": "2019-11-15",
+                "credits": [
+                  {
+                    "joinphrase": " feat ",
+                    "name": "S1MBA",
+                    "artist": {
+                      "id": "ccd7cf65-1bd9-401c-9e41-904ac93cb685",
+                      "name": "S1MBA",
+                      "sort-name": "S1MBA"
+                    }
+                  },
+                  {
+                    "name": "DTG",
+                    "artist": {
+                      "id": "2b8d5a80-545f-4ea5-a591-81a9f8732316",
+                      "name": "DTG",
+                      "sort-name": "DTG",
+                      "aliases": [
+                        {
+                          "sort-name": "Araoye, Deji",
+                          "name": "Deji Araoye",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Araoye, Ayodeji",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "Ayodeji Araoye",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Don't Rush",
+          "artist": "Young T & Bugsey featuring Headie One",
+          "anchor": {
+            "title": "Don't Rush",
+            "artist": "Young T"
+          },
+          "won": false,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": []
+          }
+        }
+      ]
+    },
+    {
+      "key": "british-group",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Little Mix",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "38f59974-2f4d-4bfa-b2e3-d2696de1b675",
+            "seed": {
+              "kind": "artist",
+              "name": "Little Mix",
+              "mbType": "Group",
+              "disambiguation": "British girl group"
+            }
+          }
+        },
+        {
+          "title": "The 1975",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "5b6ebfe0-f72b-4902-bba9-74c8af0f1af0",
+            "seed": {
+              "kind": "artist",
+              "name": "The 1975",
+              "mbType": "Group",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Bicep",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "10e8f0df-90f9-4957-aedd-c4e0d187e3a8",
+            "seed": {
+              "kind": "artist",
+              "name": "Bicep",
+              "mbType": "Group",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Biffy Clyro",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "892500b7-09a6-4049-ba92-2d192dd70563",
+            "seed": {
+              "kind": "artist",
+              "name": "Biffy Clyro",
+              "mbType": "Group",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Young T & Bugsey",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6e3dad50-bc58-4050-9b54-94670e3c0bd3",
+            "seed": {
+              "kind": "artist",
+              "name": "Young T & Bugsey",
+              "mbType": "Group",
+              "disambiguation": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "best-new-artist",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Arlo Parks",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6e8e3717-a62d-4a3f-886d-6a4e82507930",
+            "seed": {
+              "kind": "artist",
+              "name": "Arlo Parks",
+              "mbType": "Person",
+              "disambiguation": "Alternative R&B artist"
+            }
+          }
+        },
+        {
+          "title": "Bicep",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "10e8f0df-90f9-4957-aedd-c4e0d187e3a8",
+            "seed": {
+              "kind": "artist",
+              "name": "Bicep",
+              "mbType": "Group",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Celeste",
+          "won": false,
+          "resolved": {
+            "status": "manual",
+            "mbid": "1b8a634e-9fa2-4ddb-bdcf-50bc7e4b167c",
+            "seed": {
+              "kind": "artist",
+              "name": "Celeste",
+              "mbType": "Person",
+              "disambiguation": "Brighton singer"
+            }
+          }
+        },
+        {
+          "title": "Joel Corry",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "7b545a9d-0be7-4a32-90ff-154489117216",
+            "seed": {
+              "kind": "artist",
+              "name": "Joel Corry",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Young T & Bugsey",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6e3dad50-bc58-4050-9b54-94670e3c0bd3",
+            "seed": {
+              "kind": "artist",
+              "name": "Young T & Bugsey",
+              "mbType": "Group",
+              "disambiguation": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "male-solo-artist",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "J Hus",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "eca85dd0-f1fb-4e83-8c47-61403f479254",
+            "seed": {
+              "kind": "artist",
+              "name": "J Hus",
+              "mbType": "Person",
+              "disambiguation": "British rapper and singer Momodou Lamin Jallow"
+            }
+          }
+        },
+        {
+          "title": "AJ Tracey",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b8638bdc-728d-4d43-a908-7be7db29073b",
+            "seed": {
+              "kind": "artist",
+              "name": "AJ Tracey",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Headie One",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2e2c71a6-1ac8-4442-ba00-c4dea71abd64",
+            "seed": {
+              "kind": "artist",
+              "name": "Headie One",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Joel Corry",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "7b545a9d-0be7-4a32-90ff-154489117216",
+            "seed": {
+              "kind": "artist",
+              "name": "Joel Corry",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Yungblud",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "97529a9e-4b5a-4a9c-9c08-c42401d1c268",
+            "seed": {
+              "kind": "artist",
+              "name": "YUNGBLUD",
+              "mbType": "Person",
+              "disambiguation": "English musician Dominic Richard Harrison"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "female-solo-artist",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Dua Lipa",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+            "seed": {
+              "kind": "artist",
+              "name": "Dua Lipa",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Arlo Parks",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6e8e3717-a62d-4a3f-886d-6a4e82507930",
+            "seed": {
+              "kind": "artist",
+              "name": "Arlo Parks",
+              "mbType": "Person",
+              "disambiguation": "Alternative R&B artist"
+            }
+          }
+        },
+        {
+          "title": "Celeste",
+          "won": false,
+          "resolved": {
+            "status": "manual",
+            "mbid": "1b8a634e-9fa2-4ddb-bdcf-50bc7e4b167c",
+            "seed": {
+              "kind": "artist",
+              "name": "Celeste",
+              "mbType": "Person",
+              "disambiguation": "Brighton singer"
+            }
+          }
+        },
+        {
+          "title": "Jessie Ware",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6ed40778-8d03-4a5c-ad35-93cf814627c9",
+            "seed": {
+              "kind": "artist",
+              "name": "Jessie Ware",
+              "mbType": "Person",
+              "disambiguation": "British singer‐songwriter"
+            }
+          }
+        },
+        {
+          "title": "Lianne La Havas",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "680466d6-f05b-44f6-858d-625d1b5087f6",
+            "seed": {
+              "kind": "artist",
+              "name": "Lianne La Havas",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "international-group",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Haim",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "aef06569-098f-4218-a577-b413944d9493",
+            "seed": {
+              "kind": "artist",
+              "name": "HAIM",
+              "mbType": "Group",
+              "disambiguation": "US pop‐rock trio"
+            }
+          }
+        },
+        {
+          "title": "BTS",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "0d79fe8e-ba27-4859-bb8c-2f255f346853",
+            "seed": {
+              "kind": "artist",
+              "name": "BTS",
+              "mbType": "Group",
+              "disambiguation": "South Korean boy group"
+            }
+          }
+        },
+        {
+          "title": "Fontaines D.C.",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "fd87acc7-e0a0-4a45-bc2a-d2ab5c10be68",
+            "seed": {
+              "kind": "artist",
+              "name": "Fontaines D.C.",
+              "mbType": "Group",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Foo Fighters",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "67f66c07-6e61-4026-ade5-7e782fad3a5d",
+            "seed": {
+              "kind": "artist",
+              "name": "Foo Fighters",
+              "mbType": "Group",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Run the Jewels",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a80c5dc5-b12e-4667-9f5a-b568961f3839",
+            "seed": {
+              "kind": "artist",
+              "name": "Run the Jewels",
+              "mbType": "Group",
+              "disambiguation": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "international-male-solo-artist",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "The Weeknd",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c8b03190-306c-4120-bb0b-6f2ebfc06ea9",
+            "seed": {
+              "kind": "artist",
+              "name": "The Weeknd",
+              "mbType": "Person",
+              "disambiguation": "Canadian R&B singer"
+            }
+          }
+        },
+        {
+          "title": "Bruce Springsteen",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "70248960-cb53-4ea4-943a-edb18f7d336f",
+            "seed": {
+              "kind": "artist",
+              "name": "Bruce Springsteen",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Burna Boy",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "78a19169-ac75-4868-b504-7e2e073118e0",
+            "seed": {
+              "kind": "artist",
+              "name": "Burna Boy",
+              "mbType": "Person",
+              "disambiguation": "Nigerian rapper, singer-songwriter, and record producer"
+            }
+          }
+        },
+        {
+          "title": "Childish Gambino",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "7fb57fba-a6ef-44c2-abab-2fa3bdee607e",
+            "seed": {
+              "kind": "artist",
+              "name": "Childish Gambino",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Tame Impala",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "63aa26c3-d59b-4da4-84ac-716b54f1ef4d",
+            "seed": {
+              "kind": "artist",
+              "name": "Tame Impala",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "international-female-solo-artist",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Billie Eilish",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "f4abc0b5-3f7a-4eff-8f78-ac078dbce533",
+            "seed": {
+              "kind": "artist",
+              "name": "Billie Eilish",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Ariana Grande",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387",
+            "seed": {
+              "kind": "artist",
+              "name": "Ariana Grande",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Cardi B",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2f3c4d70-0462-40da-bba3-0aec5772c556",
+            "seed": {
+              "kind": "artist",
+              "name": "Cardi B",
+              "mbType": "Person",
+              "disambiguation": "American rapper"
+            }
+          }
+        },
+        {
+          "title": "Miley Cyrus",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6950ce3c-f396-44c0-be1c-80bcc4d68b36",
+            "seed": {
+              "kind": "artist",
+              "name": "Miley Cyrus",
+              "disambiguation": "7FORM alias"
+            }
+          }
+        },
+        {
+          "title": "Taylor Swift",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "20244d07-534f-4eff-b4d4-930878889970",
+            "seed": {
+              "kind": "artist",
+              "name": "Taylor Swift",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "rising-star",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Griff",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b711d64a-32d1-4605-a366-0205d7256dc3",
+            "seed": {
+              "kind": "artist",
+              "name": "Griff",
+              "mbType": "Person",
+              "disambiguation": "English singer"
+            }
+          }
+        },
+        {
+          "title": "Pa Salieu",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "03100b87-7d27-4d56-b049-2007599656cc",
+            "seed": {
+              "kind": "artist",
+              "name": "Pa Salieu",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Rina Sawayama",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "52494f9b-789d-4467-bcaf-9915e70cc8f6",
+            "seed": {
+              "kind": "artist",
+              "name": "Rina Sawayama",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
