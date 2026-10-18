@@ -15,7 +15,7 @@ vi.mock("@/i18n/navigation", () => ({
   ),
 }));
 vi.mock("@/components/catalog/LazyCoverImage", () => ({ LazyCoverImage: () => <div data-testid="lazy-cover" /> }));
-vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: () => <div data-testid="cover" /> }));
+vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: ({ className }: { className?: string }) => <div data-testid="cover" className={className} /> }));
 
 const cover = (id: string) => ({ releaseGroupId: id, coverThumbUrl: null, coverResolved: true });
 
@@ -44,52 +44,106 @@ const nominations: NominationView[] = [
 ];
 
 describe("AwardCategory", () => {
-  it("muestra el nombre traducido, el ganador destacado primero y los nominados con sus enlaces", () => {
-    renderWithIntl(
-      <AwardCategory
-        name={{ es: "Álbum del año", en: "Album of the Year" }}
-        coverage="complete"
-        honors="performer"
-        nominations={nominations}
-        link={{ href: "/awards/grammy/categories/album-of-the-year", label: awardsEs.categoryHistory }}
-      />,
-    );
+  const props = { name: { es: "Álbum del año", en: "Album of the Year" }, coverage: "complete" as const, honors: "performer" as const, nominations };
+
+  it("muestra el nombre traducido y el ganador primero, con título y artista en dos líneas y el título enlazado", () => {
+    renderWithIntl(<AwardCategory {...props} link={{ href: "/awards/grammy/categories/album-of-the-year", label: awardsEs.categoryHistory }} />);
     expect(screen.getByRole("heading", { name: "Álbum del año" })).toBeInTheDocument();
     const lists = screen.getAllByRole("list");
-    const winner = within(lists[0]!).getByRole("link", { name: "Cowboy Carter — Beyoncé" });
+    const winner = within(lists[0]!).getByRole("link", { name: "COWBOY CARTER" });
     expect(winner.getAttribute("href")).toMatch(/^\/album\/.*rg-1/);
+    // El artista va en su propia línea, no pegado al título.
+    expect(within(lists[0]!).getByText("Beyoncé")).toBeInTheDocument();
+    expect(within(lists[0]!).queryByText(/COWBOY CARTER\s*—/)).not.toBeInTheDocument();
     expect(within(lists[0]!).getByText(awardsEs.winner)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: new RegExp(awardsEs.categoryHistory) })).toHaveAttribute(
+      "href",
+      "/awards/grammy/categories/album-of-the-year",
+    );
     expect(screen.queryByText(awardsEs.winnerOnlyNote)).not.toBeInTheDocument();
   });
 
-  it("un nominado sin resolver es solo texto, sin enlace", () => {
-    renderWithIntl(<AwardCategory name={{ es: "X", en: "X" }} coverage="complete" honors="performer" nominations={nominations} />);
+  it("un nominado sin resolver es solo el texto curado, sin enlace ni línea de artista", () => {
+    renderWithIntl(<AwardCategory {...props} name={{ es: "X", en: "X" }} />);
     expect(screen.getByText("Sin resolver — Alguien")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Sin resolver — Alguien" })).not.toBeInTheDocument();
   });
 
-  it("una grabación enlaza a su canción y a su disco ancla, y muestra los créditos", () => {
-    renderWithIntl(<AwardCategory name={{ es: "X", en: "X" }} coverage="complete" honors="songwriter" nominations={nominations} />);
-    expect(screen.getByRole("link", { name: "Espresso — Sabrina Carpenter" }).getAttribute("href")).toMatch(/^\/song\/.*rec-1/);
+  it("una grabación enlaza a su canción, muestra su artista, enlaza a su disco ancla y muestra los créditos", () => {
+    renderWithIntl(<AwardCategory {...props} name={{ es: "X", en: "X" }} honors="songwriter" />);
+    expect(screen.getByRole("link", { name: "Espresso" }).getAttribute("href")).toMatch(/^\/song\/.*rec-1/);
+    expect(screen.getByText("Sabrina Carpenter")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "del disco Short n’ Sweet" }).getAttribute("href")).toMatch(/^\/album\/.*rg-2/);
     expect(screen.getByText("Amy Allen, Steph Jones")).toBeInTheDocument();
     expect(screen.getByText(awardsEs.songwriterNote)).toBeInTheDocument();
   });
 
-  it("con cobertura winner_only lo dice", () => {
-    renderWithIntl(
-      <AwardCategory name={{ es: "X", en: "X" }} coverage="winner_only" honors="performer" nominations={[nominations[0]!]} />,
-    );
+  it("con cobertura winner_only lo dice y no ofrece nominados", () => {
+    renderWithIntl(<AwardCategory {...props} name={{ es: "X", en: "X" }} coverage="winner_only" nominations={[nominations[0]!]} />);
     expect(screen.getByText(awardsEs.winnerOnlyNote)).toBeInTheDocument();
-    expect(screen.queryByText(awardsEs.nominees)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Nominados \(/)).not.toBeInTheDocument();
   });
 
   it("en inglés usa el nombre en inglés", () => {
-    renderWithIntl(
-      <AwardCategory name={{ es: "Álbum del año", en: "Album of the Year" }} coverage="complete" honors="performer" nominations={nominations} />,
-      "en",
-    );
+    renderWithIntl(<AwardCategory {...props} />, "en");
     expect(screen.getByRole("heading", { name: "Album of the Year" })).toBeInTheDocument();
+    expect(screen.getByText("Nominees (2)")).toBeInTheDocument();
+  });
+
+  describe("destacada", () => {
+    it("deja a todos los nominados a la vista, con su número, y sin control para plegar", () => {
+      const { container } = renderWithIntl(<AwardCategory {...props} variant="featured" />);
+
+      expect(container.querySelector("details")).toBeNull();
+      expect(screen.getByText("Nominados (2)")).toBeVisible();
+      expect(screen.getByText("Sin resolver — Alguien")).toBeVisible();
+      expect(screen.getByRole("link", { name: "Espresso" })).toBeVisible();
+    });
+
+    it("el ganador es la imagen grande y los nominados, chicas", () => {
+      renderWithIntl(<AwardCategory {...props} variant="featured" />);
+
+      const covers = screen.getAllByTestId("cover");
+      expect(covers[0]).toHaveClass("size-28");
+      expect(covers[1]).toHaveClass("size-12");
+    });
+  });
+
+  describe("compacta", () => {
+    it("pliega a los nominados bajo «Nominados (N)», cerrado por defecto, y deja al ganador a la vista", () => {
+      const { container } = renderWithIntl(<AwardCategory {...props} variant="compact" />);
+
+      const details = container.querySelector("details")!;
+      expect(details).not.toHaveAttribute("open");
+      expect(within(details).getByText("Nominados (2)")).toBeInTheDocument();
+      expect(within(details).getByText("Sin resolver — Alguien")).toBeInTheDocument();
+      expect(within(details).getByRole("link", { name: "Espresso" })).toBeInTheDocument();
+      // El ganador queda fuera del control plegable.
+      expect(details).not.toContainElement(screen.getByRole("link", { name: "COWBOY CARTER" }));
+      expect(screen.getByText(awardsEs.winner)).toBeInTheDocument();
+    });
+
+    it("el ganador va con una imagen mediana y los nominados, chicas", () => {
+      renderWithIntl(<AwardCategory {...props} variant="compact" />);
+
+      const covers = screen.getAllByTestId("cover");
+      expect(covers[0]).toHaveClass("size-16");
+      expect(covers[1]).toHaveClass("size-12");
+    });
+
+    it("usa un encabezado más chico y mantiene el enlace a la historia", () => {
+      renderWithIntl(<AwardCategory {...props} variant="compact" headingLevel="h4" link={{ href: "/h", label: awardsEs.categoryHistory }} />);
+
+      expect(screen.getByRole("heading", { level: 4, name: "Álbum del año" })).toHaveClass("text-base");
+      expect(screen.getByRole("link", { name: new RegExp(awardsEs.categoryHistory) })).toHaveAttribute("href", "/h");
+    });
+
+    it("sin nominados (solo ganador) no hay control y sí la nota de cobertura", () => {
+      const { container } = renderWithIntl(<AwardCategory {...props} variant="compact" coverage="winner_only" nominations={[nominations[0]!]} />);
+
+      expect(container.querySelector("details")).toBeNull();
+      expect(screen.getByText(awardsEs.winnerOnlyNote)).toBeInTheDocument();
+    });
   });
 });
 

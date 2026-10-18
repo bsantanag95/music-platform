@@ -30,7 +30,7 @@ const CHIP_IDLE = "border-ink-border text-paper-muted hover:border-paper-muted/6
  * línea; desde `md` los chips se reparten en líneas y el menú es un panel flotante bajo su resumen. Todo son enlaces y un
  * `<details>`: funciona sin JavaScript. No pinta nada sin chips.
  */
-export function FacetRow({ facet }: { facet: Facet }) {
+export function FacetRow({ facet, scroll = false }: { facet: Facet; scroll?: boolean }) {
   const { label, links, menu } = facet;
   if (links.length === 0) return null;
   const showMenu = menu && menu.links.length > 1;
@@ -49,7 +49,7 @@ export function FacetRow({ facet }: { facet: Facet }) {
             <li key={link.key}>
               <Link
                 href={link.href}
-                scroll={false}
+                scroll={scroll}
                 aria-current={link.current ? "page" : undefined}
                 className={`${CHIP} ${link.current ? CHIP_CURRENT : CHIP_IDLE}`}
               >
@@ -79,7 +79,7 @@ export function FacetRow({ facet }: { facet: Facet }) {
               <li key={link.key}>
                 <Link
                   href={link.href}
-                  scroll={false}
+                  scroll={scroll}
                   aria-current={link.current ? "page" : undefined}
                   className={`${CHIP} ${link.current ? CHIP_CURRENT : CHIP_IDLE}`}
                 >

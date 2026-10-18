@@ -7,9 +7,11 @@ import { AppImage } from "@/components/ui/AppImage";
 import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 import type { AlbumRef, CoverInfo, NominationView } from "@/services/awards/read";
 
-// Un nominado de una categoría de premios (openspec: add-music-awards, design D5). El texto visible es el curado
-// (título y artista tal como los nombra la ceremonia) y enlaza al sujeto del catálogo cuando está resuelto; sin
-// resolver se muestra solo el texto. El ganador va destacado y más grande.
+// Un nominado de una categoría de premios (openspec: add-music-awards, design D5; redesign-awards-pages). Con el sujeto
+// resuelto en el catálogo (álbum o grabación) se muestran el título y el artista en dos líneas, como las tarjetas de
+// Explorar, y el título enlaza al sujeto; sin resolver se muestra el texto curado ("Título — Artista", tal como lo nombra
+// la ceremonia) y su crédito, sin enlace. El tamaño lo da quien lo usa: el ganador de una categoría destacada va grande,
+// el de una fila compacta mediano y los nominados chicos.
 
 function Cover({ cover, label, className }: { cover: CoverInfo; label: string; className: string }) {
   return cover.coverResolved ? (
@@ -30,7 +32,7 @@ export function NomineeVisual({ nomination, size }: { nomination: NominationView
   if (subject?.kind === "artist" && subject.photoUrl) {
     return (
       <div className={`relative shrink-0 overflow-hidden rounded-full ${size}`}>
-        <AppImage src={subject.photoUrl} alt="" fill sizes="96px" className="object-cover" />
+        <AppImage src={subject.photoUrl} alt="" fill sizes="128px" className="object-cover" />
       </div>
     );
   }
@@ -52,17 +54,33 @@ function subjectHref(nomination: NominationView): string | null {
 
 const anchorHref = (album: AlbumRef) => albumHref(album.artistName, album.title, album.id);
 
-export function NominationItem({ nomination, featured = false }: { nomination: NominationView; featured?: boolean }) {
+/** Título y artista del nominado: los del catálogo si el sujeto es un álbum o una grabación, el texto curado si no. */
+function titleAndArtist(nomination: NominationView): { title: string; artist: string | null } {
+  const subject = nomination.subject;
+  if (subject?.kind === "release_group") return { title: subject.album.title, artist: subject.album.artistName };
+  if (subject?.kind === "recording") return { title: subject.title, artist: subject.artistName };
+  return { title: nomination.text, artist: null };
+}
+
+export type NominationSize = "lg" | "md" | "sm";
+
+const SIZE: Record<NominationSize, { visual: string; gap: string; title: string }> = {
+  lg: { visual: "size-28 shrink-0", gap: "gap-4", title: "font-display text-xl text-paper" },
+  md: { visual: "size-16 shrink-0", gap: "gap-3", title: "font-display text-base text-paper" },
+  sm: { visual: "size-12 shrink-0", gap: "gap-3", title: "font-body text-sm text-paper" },
+};
+
+export function NominationItem({ nomination, size = "sm" }: { nomination: NominationView; size?: NominationSize }) {
   const t = useTranslations("awards");
   const href = subjectHref(nomination);
   const anchor = nomination.subject?.kind === "recording" ? nomination.subject.anchor : null;
-  const label = (
-    <span className={`line-clamp-2 ${featured ? "font-display text-lg text-paper" : "font-body text-sm text-paper"}`}>{nomination.text}</span>
-  );
+  const { title, artist } = titleAndArtist(nomination);
+  const style = SIZE[size];
+  const label = <span className={`line-clamp-2 ${style.title}`}>{title}</span>;
 
   return (
-    <div className={`flex min-w-0 items-center ${featured ? "gap-4" : "gap-3"}`}>
-      <NomineeVisual nomination={nomination} size={featured ? "size-20 shrink-0" : "size-12 shrink-0"} />
+    <div className={`flex min-w-0 items-center ${style.gap}`}>
+      <NomineeVisual nomination={nomination} size={style.visual} />
       <div className="flex min-w-0 flex-col gap-0.5">
         {nomination.won ? (
           <span className="w-fit rounded-sm bg-amber px-1.5 py-0.5 font-data text-[10px] font-semibold uppercase tracking-wider text-ink">
@@ -76,6 +94,7 @@ export function NominationItem({ nomination, featured = false }: { nomination: N
         ) : (
           <span className="min-w-0">{label}</span>
         )}
+        {artist ? <span className="truncate font-data text-xs text-paper-muted">{artist}</span> : null}
         {anchor ? (
           <Link href={anchorHref(anchor)} className="truncate font-data text-xs text-paper-muted transition-colors hover:text-amber">
             {t("fromAlbum", { album: anchor.title })}

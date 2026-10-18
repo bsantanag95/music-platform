@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { AwardCategory, categoryName } from "@/components/awards/AwardCategory";
-import { awardsIndexHref, categoryHistoryHref, ceremonyHref } from "@/components/awards/award-links";
+import { awardHref, categoryHistoryHref, ceremonyHref } from "@/components/awards/award-links";
 import { getCategoryHistory } from "@/services/awards/read";
 
 // Historia de una categoría a través de las ceremonias (openspec: add-music-awards, design D5), con enlaces a la
@@ -36,19 +36,16 @@ export default async function CategoryHistoryPage({ params }: CategoryHistoryPro
   );
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col items-start gap-8 px-4 py-12">
+    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col items-start gap-8 px-4 py-12">
       <div className="flex w-full flex-col gap-6">
         <Breadcrumbs
           items={[
             { label: tCommon("home"), href: "/" },
-            { label: t("heading"), href: awardsIndexHref() },
+            { label: awardName, href: awardHref(page.awardSlug) },
             { label: name },
           ]}
         />
         <header className="flex flex-col gap-2">
-          <p className="font-data text-xs uppercase tracking-wider text-amber">
-            {awardName} · {t("historyKicker")}
-          </p>
           <h1 className="font-display text-4xl text-paper">{name}</h1>
           {page.honors === "songwriter" ? <p className="font-data text-sm text-paper-muted">{t("songwriterNote")}</p> : null}
           <div className="flex flex-wrap gap-x-4 gap-y-1">

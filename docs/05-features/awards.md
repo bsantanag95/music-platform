@@ -38,13 +38,39 @@ videojuegos.
 
 | Ruta | Qué muestra |
 |---|---|
-| `/awards` | Premios cubiertos y sus ceremonias, de la más reciente a la más antigua |
-| `/awards/<premio>/<año>` | La ceremonia: edición y fecha, chips a las demás, navegación de saltos y los tres niveles (campo general, por álbum, por género con un subtítulo por campo); en cada categoría el ganador destacado y los nominados |
+| `/awards` | Con **un solo premio** redirige a su ceremonia más reciente (la ceremonia ya trae la navegación por años: un índice de seis tarjetas de año añadía un clic y menos información que la tarjeta de Explorar, que muestra al ganador); con varios, una lista de premios con sus años como chips (más reciente primero); sin premios, un mensaje |
+| `/awards/<premio>` | La dirección estable del premio ("Premios Grammy", la que enlazan las migas de pan): redirige a su ceremonia más reciente (`getLatestCeremonyYear`); inexistente → no encontrada |
+| `/awards/<premio>/<año>` | La ceremonia (ver abajo): cabecera, fila "Año", navegación "En esta página" y los tres niveles |
 | `/awards/<premio>/categories/<clave>` | Historia de una categoría por año, con "Antes llamada …" / "Después llamada …" |
 | `/explore` (sección Premios) | Una tarjeta por cada una de las últimas 5 ceremonias (año, edición y su ganador destacado: el de la categoría general de álbum con menor orden curado, en los Grammy Álbum del año, con carátula, título y artista) y "Ver todos" |
 
-- El texto del nominado es el curado ("Fortnight — Taylor Swift featuring Post Malone") y enlaza a la ficha del
-  catálogo cuando está identificado; si no, se muestra solo el texto.
+### La ceremonia (cambio `redesign-awards-pages`)
+
+La página medía 9.036 px en escritorio y 19.370 en móvil (33 categorías, todas con todos sus nominados y el ganador a ~50 px); ahora ~5.800 y
+~11.200, con el resultado primero y los nominados a un clic.
+
+- **Cabecera**: migas Inicio / Premios Grammy / 2026 (el premio enlaza a `/awards/<premio>`), título, edición y fecha, **sin rótulo
+  encima** (se retiraron "Actualidad", "Ceremonia" y "Categoría": el sistema de diseño no admite un eyebrow sobre el encabezado) y una
+  fila rotulada **Año** (`FacetRow`, el mismo componente de la vista de década; más reciente primero, como el índice, con la actual
+  marcada).
+- **"En esta página"** (`ExploreJumpNav`, enlaces `#ancla` sin JavaScript): Campo general, Por álbum y, en lugar de "Por género", uno por cada
+  campo (Pop, Dance y electrónica, Rock y alternativa, R&B, Rap, Country; `#field-<campo>`). Se omite con menos de 4 destinos.
+- **Categorías destacadas** (`FEATURED_CATEGORIES = 4`, `featured-categories.ts`): las cuatro primeras del campo general en el orden curado
+  (en los Grammy, las "Big Four": Álbum, Grabación y Canción del año y Mejor artista nuevo) llevan el ganador grande (carátula de 112 px) y
+  todos los nominados a la vista, con su número. Es una regla de presentación: no hay un campo nuevo en los JSON curados.
+- **Filas compactas** (`AwardCategory variant="compact"`): el resto del campo general (Productor y Compositor del año) y los niveles por
+  álbum y por género. Nombre con su enlace a la historia, el ganador con una carátula de 64 px y los nominados plegados bajo
+  **«Nominados (N)»** (`<details>`, cerrado, sin JavaScript; la búsqueda de la página del navegador lo abre). Una categoría de la que solo
+  se registró al ganador no lleva el control y dice por qué. Grilla de 1, 2 y 3 columnas según el ancho, `items-start` para que abrir una
+  fila no estire a la de al lado. El número de nominados es un dato editorial finito, no una cifra que crezca con la base: por eso se muestra.
+- La historia de una categoría usa la forma destacada (ahí el propósito es ver a todos los nominados de cada año), con el mismo ancho
+  de página que la ceremonia.
+- **Sin ámbar decorativo**: los campos son un encabezado normal; el ámbar queda para la insignia de ganador.
+
+- Con el sujeto resuelto en el catálogo (álbum o grabación), el nominado muestra **el título y el artista del catálogo en dos líneas**
+  (como las tarjetas de Explorar) y el título enlaza a la ficha; sin resolver se muestra el texto curado ("Fortnight — Taylor Swift featuring
+  Post Malone") y su crédito, sin enlace. El título del catálogo puede diferir en mayúsculas del curado (p. ej. "DeBÍ TiRAR MáS FOToS",
+  la grafía oficial).
 - Las grabaciones muestran la carátula de su disco ancla y un enlace "del disco …". Canción del año aclara que premia
   a los autores.
 - La carga crea las grabaciones como stub, sin pistas, y la ficha de canción se arma desde las pistas (disco principal,

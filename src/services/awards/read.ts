@@ -306,6 +306,13 @@ export async function listRecentCeremonies(limit: number): Promise<RecentCeremon
   });
 }
 
+/** Año de la ceremonia más reciente cargada de un premio; `null` si el premio no existe o no tiene ceremonias. */
+export const getLatestCeremonyYear = cache(async (slug: string): Promise<number | null> => {
+  const id = await awardId(slug);
+  if (!id) return null;
+  return (await ceremoniesOf(id))[0]?.year ?? null;
+});
+
 /** Página de una ceremonia; `null` si el premio o el año no están cargados. */
 export const getCeremonyPage = cache(async (slug: string, year: number): Promise<CeremonyPage | null> => {
   if (!Number.isInteger(year)) return null;

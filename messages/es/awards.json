@@ -1,19 +1,17 @@
 {
   "pageTitle": "Premios",
   "heading": "Premios",
-  "kicker": "Actualidad",
-  "intro": "Nominados y ganadores de las ceremonias de premios, enlazados al catálogo.",
   "names": {
     "grammy": "Premios Grammy"
   },
   "ceremonyTitle": "{award} {year}",
   "edition": "{edition}.ª edición",
   "heldOn": "Celebrada el {date}",
-  "otherCeremonies": "Otras ceremonias",
+  "yearRow": "Año",
+  "jumpLabel": "En esta página",
   "tierGeneral": "Campo general",
   "tierAlbum": "Por álbum",
   "tierGenre": "Por género",
-  "tiersNav": "Secciones de la ceremonia",
   "fields": {
     "pop": "Pop",
     "dance-electronic": "Dance y electrónica",
@@ -23,12 +21,11 @@
     "country": "Country"
   },
   "winner": "Ganador",
-  "nominees": "Nominados",
+  "nomineesCount": "Nominados ({count})",
   "winnerOnlyNote": "De esta categoría solo registramos al ganador.",
   "categoryHistory": "Historia de la categoría",
   "fromAlbum": "del disco {album}",
   "songwriterNote": "Premia a los autores de la canción.",
-  "historyKicker": "Categoría",
   "previouslyNamed": "Antes llamada {name}",
   "laterNamed": "Después llamada {name}",
   "ceremonyLink": "Ver ceremonia {year}",
@@ -36,6 +33,5 @@
   "exploreHeading": "Premios",
   "exploreDescription": "Nominados y ganadores de las últimas ceremonias.",
   "exploreSeeAll": "Ver todos",
-  "ceremonyCount": "{count, plural, one {# ceremonia} other {# ceremonias}}",
-  "ceremonyKicker": "Ceremonia"
+  "ceremonyCount": "{count, plural, one {# ceremonia} other {# ceremonias}}"
 }

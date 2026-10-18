@@ -23,7 +23,7 @@ import { db } from "../src/db";
 import { artist, award, awardNomination, credit, recording, releaseGroup } from "../src/db/schema";
 import { readAllAwards } from "../src/services/awards/curation-files";
 import { loadAward } from "../src/services/awards/load";
-import { getCategoryHistory, getCeremonyPage } from "../src/services/awards/read";
+import { getCategoryHistory, getCeremonyPage, getLatestCeremonyYear } from "../src/services/awards/read";
 
 assertSmokeAllowed();
 
@@ -243,6 +243,8 @@ async function main() {
     check(roty.credit === "Productora Smoke", "los créditos curados se leen");
     check(page!.categories[2]!.coverage === "winner_only", "la cobertura winner_only se conserva");
     check((await getCeremonyPage(SLUG, 1999)) === null, "un año sin ceremonia no existe");
+    check((await getLatestCeremonyYear(SLUG)) === 2025, "la ceremonia más reciente del premio es la de 2025 (redirección de /awards/<premio>)");
+    check((await getLatestCeremonyYear("premio-que-no-existe")) === null, "un premio inexistente no tiene ceremonia más reciente");
 
     console.log("\nPredecesora e historia");
     writeFiles(dir, { categories: withPredecessor, ceremonies: { 2024: ceremony(2024, 1), 2025: ceremony(2025, 2) } });

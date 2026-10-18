@@ -5,6 +5,11 @@ export function awardsIndexHref(): string {
   return "/awards";
 }
 
+/** Página de un premio: redirige a su ceremonia más reciente (openspec: redesign-awards-pages). */
+export function awardHref(awardSlug: string): string {
+  return `/awards/${awardSlug}`;
+}
+
 export function ceremonyHref(awardSlug: string, year: number): string {
   return `/awards/${awardSlug}/${year}`;
 }
