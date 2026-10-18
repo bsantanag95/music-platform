@@ -10,8 +10,8 @@ historia de categoría e índice de premios.
 El sistema SHALL modelar premios, ceremonias (por año de ceremonia y número de edición), categorías con una clave
 estable por premio y nominaciones. Cada categoría SHALL declarar su nivel (`general`, `album` o `genre`, en ese orden
 de presentación), el tipo de sujeto que premia (álbum, grabación o artista) y su nombre en español e inglés. Una
-categoría de nivel `genre` SHALL declarar además su campo (pop, dance/electrónica, rock y alternativa, R&B, rap o
-country); las de otros niveles SHALL NOT necesitarlo. Una categoría renombrada, fusionada o dividida SHALL ser una
+categoría de nivel `genre` SHALL declarar además su campo (pop, dance/electrónica, rock y alternativa, R&B, rap, country, urbano,
+tropical, regional mexicano o cantautor, entre los que tienen nombre en español e inglés); las de otros niveles SHALL NOT necesitarlo. Una categoría renombrada, fusionada o dividida SHALL ser una
 categoría distinta enlazada a su predecesora. Cada categoría en una ceremonia SHALL declarar su cobertura: `complete`
 (todos los nominados) o `winner_only` (solo el ganador). Una nominación SHALL tener siempre un texto visible y, como
 mucho, un sujeto del catálogo; una nominación sin sujeto SHALL mostrarse como texto, sin enlace. Una categoría con
@@ -46,6 +46,11 @@ cobertura `winner_only` SHALL NOT tener nominaciones no ganadoras.
 
 - **WHEN** se carga "Mejor álbum de rock"
 - **THEN** su nivel es `album` y no necesita campo
+
+#### Scenario: Campo de género latino
+
+- **WHEN** se carga "Mejor canción tropical" del Latin Grammy con el campo `tropical`
+- **THEN** la página de la ceremonia la agrupa bajo el encabezado "Tropical", y una prueba falla si falta el nombre del campo en español o en inglés
 
 ### Requirement: Curaduría en archivos versionados
 
@@ -92,8 +97,8 @@ textos de interfaz; una prueba SHALL fallar si falta alguno.
 
 ### Requirement: Página de ceremonia
 
-`/{locale}/awards/{premio}/{año}` SHALL mostrar una ceremonia cerrada, en este orden: la miga de pan (Inicio / nombre del premio /
-año, con el premio enlazado a `/awards/{premio}`), el título (nombre del premio y año) con el número de edición y la fecha, una fila
+`/{locale}/awards/{premio}/{año}` SHALL mostrar una ceremonia cerrada, en este orden: la miga de pan (Inicio / Premios / nombre del premio /
+año, con "Premios" enlazado a `/awards` y el premio enlazado a `/awards/{premio}`), el título (nombre del premio y año) con el número de edición y la fecha, una fila
 rotulada **Año** con las ceremonias cubiertas del mismo premio (de la más reciente a la más antigua, la actual marcada), una
 navegación **En esta página** y las categorías en tres niveles, en este orden: campo general, por álbum y por género, cada uno con su
 título. La navegación interna SHALL tener un enlace por cada nivel con categorías que no sea el de género y uno por cada campo del
@@ -184,6 +189,16 @@ sujeto; sin resolver SHALL mostrar el texto curado y su crédito, sin enlace.
 - **WHEN** de una categoría solo se registró al ganador
 - **THEN** su fila muestra al ganador y la nota de cobertura, sin control de nominados
 
+#### Scenario: Miga de pan con el hub
+
+- **WHEN** una persona abre `/es/awards/lo-nuestro/2025`
+- **THEN** la miga dice "Inicio / Premios / Premio Lo Nuestro / 2025", "Premios" enlaza a `/es/awards` y "Premio Lo Nuestro" a `/es/awards/lo-nuestro`
+
+#### Scenario: Ceremonia de un premio de una sola categoría
+
+- **WHEN** una persona abre `/es/awards/mercury-prize/2024`
+- **THEN** ve el título, la edición y la fecha, la fila "Año" y una sola categoría destacada (Álbum del año) con el ganador grande y los demás álbumes de la lista, sin navegación "En esta página"
+
 ### Requirement: Historia de una categoría
 
 `/{locale}/awards/{premio}/categories/{clave}` SHALL listar, de la ceremonia más reciente a la más antigua, el
@@ -204,14 +219,15 @@ encontrada.
 ### Requirement: Índice de premios
 
 `/{locale}/awards` SHALL depender de cuántos premios hay cargados. Con **un solo premio** SHALL redirigir a su ceremonia más reciente
-(`/{locale}/awards/{premio}/{año}`). Con **varios**, SHALL listar los premios, cada uno con su nombre y sus ceremonias como chips de año,
-de la más reciente a la más antigua, cada uno enlazado a su página, sin rótulo ni texto de relleno sobre el título. Sin premios SHALL
-mostrar un mensaje de que todavía no hay ceremonias cargadas.
+(`/{locale}/awards/{premio}/{año}`). Con **varios**, SHALL ser el hub de premios: una tarjeta por premio, de la ceremonia más
+reciente primero, con el nombre del premio, el año y la edición de su ceremonia más reciente y su ganador destacado (la tarjeta de la
+sección "Premios" de Explorar), cada una enlazada a `/{locale}/awards/{premio}`, sin rótulo ni texto de relleno sobre el título. Sin
+premios SHALL mostrar un mensaje de que todavía no hay ceremonias cargadas.
 
 #### Scenario: Índice
 
-- **WHEN** hay cargados dos premios, uno con las ceremonias 2021 a 2025 y otro con 2023 y 2024
-- **THEN** `/es/awards` muestra cada premio con sus años, de 2025 a 2021 y de 2024 a 2023, cada año enlazado a su ceremonia
+- **WHEN** hay cargados cinco premios
+- **THEN** `/es/awards` muestra cinco tarjetas, una por premio, cada una con su ceremonia más reciente y su ganador de Álbum del año, ordenadas de la ceremonia más reciente a la más antigua
 
 #### Scenario: Un solo premio
 
@@ -276,4 +292,60 @@ a esta dirección con el nombre del premio.
 
 - **WHEN** una persona está en `/es/awards/grammy/2024`
 - **THEN** la miga dice "Inicio / Premios Grammy / 2024" y "Premios Grammy" enlaza a `/es/awards/grammy`
+
+### Requirement: Premios cubiertos
+
+El sistema SHALL cubrir, con ceremonias ya cerradas, los premios y años siguientes: Grammy (2021–2026), Latin Grammy (2021–2025), Premio
+Lo Nuestro (2021–2026), Brit Awards (2021–2026) y Mercury Prize (2021–2025). Las ediciones de 2026 del Latin Grammy y del Mercury Prize
+SHALL agregarse cuando se celebren. De cada premio SHALL cubrirse toda categoría con nominados cuyo sujeto sea un álbum, una grabación o un
+artista; SHALL NOT cubrirse los reconocimientos honoríficos sin nominados ni las categorías de video, técnicas, de empaque o de otros
+sujetos. Cada premio SHALL tener un nombre traducido (español e inglés) para mostrarlo; las categorías y los campos, también.
+
+#### Scenario: Cada premio abre su ceremonia
+
+- **WHEN** una persona abre `/es/awards/latin-grammy/2024`, `/es/awards/lo-nuestro/2026`, `/es/awards/brit-awards/2023` y `/es/awards/mercury-prize/2021`
+- **THEN** cada una muestra el nombre del premio, el año, la edición y la fecha de su ceremonia
+
+#### Scenario: Ceremonia que aún no se celebra
+
+- **WHEN** una persona abre `/es/awards/latin-grammy/2026` antes del 12 de noviembre de 2026
+- **THEN** ve la página de no encontrado, porque la ceremonia no está cargada
+
+#### Scenario: Reconocimiento honorífico
+
+- **WHEN** un premio entrega un reconocimiento honorífico sin nominados (como un premio a la trayectoria)
+- **THEN** no aparece como categoría de la ceremonia
+
+#### Scenario: Premio con una sola categoría
+
+- **WHEN** se carga el Mercury Prize, cuya única categoría es Álbum del año
+- **THEN** la ceremonia tiene ese único nivel general y no muestra los niveles por álbum ni por género
+
+### Requirement: Fuente y tipo de votación de la ceremonia
+
+Cada premio SHALL declarar en sus archivos de curaduría cómo se decide (`voting`: la academia, un jurado, el público o un comité y el público
+a la vez) y cada ceremonia SHALL guardar la URL de su fuente. La página de la ceremonia SHALL mostrar, bajo el título, una línea con el tipo
+de votación del premio y un enlace a la fuente de la ceremonia, que se abre con `rel="noopener noreferrer"` y muestra el sitio de la URL. El
+tipo de votación SHALL ser por premio, no por categoría. Si el premio no tiene el dato guardado o la ceremonia no tiene fuente, SHALL omitirse
+esa parte de la línea. La carga SHALL escribir ambos datos de forma idempotente y rechazar un `voting` fuera de los cuatro valores.
+
+#### Scenario: Premio decidido por un jurado
+
+- **WHEN** una persona abre `/es/awards/mercury-prize/2024`
+- **THEN** bajo el título ve "Lo decide un jurado" y "Fuente: en.wikipedia.org" enlazado a la fuente de esa ceremonia
+
+#### Scenario: Premio con votación mixta
+
+- **WHEN** una persona abre `/es/awards/lo-nuestro/2025`
+- **THEN** ve "Votan el público y un comité"
+
+#### Scenario: Datos todavía no cargados
+
+- **WHEN** un premio ya cargado antes de la migración no tiene tipo de votación ni fuente guardados
+- **THEN** la cabecera no muestra esa línea y el resto de la página no cambia
+
+#### Scenario: Votación inválida
+
+- **WHEN** un `categories.json` declara `"voting": "fans"`
+- **THEN** la validación de los archivos falla y la carga aborta sin escribir
 
