@@ -1,5 +1,6 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { AppImage } from "@/components/ui/AppImage";
 import type { LatestCeremony } from "@/services/awards/read";
 import { ceremonyHref } from "./award-links";
 import { NomineeVisual } from "./NominationItem";
@@ -10,6 +11,10 @@ import { NomineeVisual } from "./NominationItem";
 // Lleva el ganador destacado de la ceremonia (la categoría general de álbum, en los Grammy Álbum del año) con su
 // carátula: tarjetas que solo repetían "PREMIOS GRAMMY" y un año no invitaban a entrar. El nombre del premio pasa a una
 // línea apagada junto a la edición; el ámbar queda para el rótulo del ganador.
+//
+// La carátula del ganador también tiñe la tarjeta (difuminada de fondo, como la cabecera de la ceremonia): cinco tarjetas
+// iguales en gris se distinguían solo por el texto. Categoría y título pueden ocupar dos líneas ("Álbum británico del
+// año" o "DeBÍ TiRAR MáS FOTos" se cortaban a la mitad).
 
 function Trophy() {
   return (
@@ -39,29 +44,45 @@ export function AwardTile({ ceremony }: { ceremony: LatestCeremony }) {
   const album = subject?.kind === "release_group" ? subject.album : null;
   const title = album?.title ?? headline?.winner.text;
   const credit = album ? album.artistName : headline?.winner.credit;
+  const backdrop =
+    album?.cover.coverThumbUrl ?? (subject?.kind === "recording" && subject.anchor ? subject.anchor.cover.coverThumbUrl : null);
 
   return (
     <li>
       <Link
         href={ceremonyHref(ceremony.awardSlug, ceremony.year)}
-        className="group flex h-full flex-col gap-3 rounded-lg border border-ink-border bg-ink-surface p-4 transition-colors hover:border-amber focus-visible:border-amber"
+        className="group relative isolate flex h-full flex-col gap-3 overflow-hidden rounded-lg border border-ink-border bg-ink-surface p-4 transition-colors hover:border-amber focus-visible:border-amber"
       >
+        {backdrop ? (
+          <span aria-hidden="true" className="absolute inset-0 -z-10">
+            <AppImage
+              src={backdrop}
+              alt=""
+              fill
+              sizes="320px"
+              className="scale-150 object-cover opacity-25 blur-2xl saturate-150 transition-opacity group-hover:opacity-35"
+            />
+            <span className="absolute inset-0 bg-gradient-to-b from-ink/30 via-ink-surface/80 to-ink-surface" />
+          </span>
+        ) : null}
         <span className="flex flex-col gap-0.5">
-          <span className="truncate font-data text-xs text-paper-muted">{awardName}</span>
+          <span className="truncate font-body text-sm text-paper">{awardName}</span>
           <span className="flex items-baseline justify-between gap-2">
             <span className="font-display text-3xl text-paper transition-colors group-hover:text-amber">{ceremony.year}</span>
             <span className="shrink-0 font-data text-xs text-paper-muted">{t("edition", { edition: ceremony.edition })}</span>
           </span>
         </span>
         {headline ? (
-          <span className="mt-auto flex items-center gap-3 border-t border-ink-border pt-3">
-            <NomineeVisual nomination={headline.winner} size="size-12 shrink-0" />
-            <span className="flex min-w-0 flex-col">
-              <span className="flex items-center gap-1 font-data text-[0.65rem] uppercase tracking-wide text-amber">
-                <Trophy />
-                <span className="truncate">{locale === "en" ? headline.category.en : headline.category.es}</span>
+          <span className="mt-auto flex items-center gap-3 border-t border-ink-border/70 pt-3">
+            <NomineeVisual nomination={headline.winner} size="size-14 shrink-0 rounded-md shadow-[0_4px_16px_rgba(0,0,0,0.45)]" />
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="flex items-start gap-1 font-data text-[0.65rem] uppercase leading-tight tracking-wide text-amber">
+                <span className="mt-px">
+                  <Trophy />
+                </span>
+                <span className="line-clamp-2">{locale === "en" ? headline.category.en : headline.category.es}</span>
               </span>
-              <span className="truncate font-display text-sm text-paper">{title}</span>
+              <span className="line-clamp-2 font-display text-sm leading-snug text-paper">{title}</span>
               {credit ? <span className="truncate font-data text-xs text-paper-muted">{credit}</span> : null}
             </span>
           </span>
