@@ -11,8 +11,8 @@
 
 ## 2. Datos: Mercury Prize (2021–2025)
 
-- [ ] 2.1 `data/awards/mercury-prize/categories.json` (Álbum del año, general, `release_group`) y `ceremonies/2021…2025.json` desde el artículo de cada ceremonia (`sourceUrl`), con edición, fecha, los 12 nominados y el ganador; contrastar el conteo con el artículo
-- [ ] 2.2 Resolver (`resolve-award-nominees.ts --award mercury-prize`), revisar ambiguos y no encontrados, y fijarlos a mano; cargar en la base de prueba y comprobar la página de cada año
+- [x] 2.1 `data/awards/mercury-prize/categories.json` (Álbum del año, general, `release_group`) y `ceremonies/2021…2025.json` desde el artículo de cada ceremonia (`sourceUrl`), con edición, fecha, los 12 nominados y el ganador; contrastar el conteo con el artículo
+- [x] 2.2 Resolver (`resolve-award-nominees.ts --award mercury-prize`), revisar ambiguos y no encontrados, y fijarlos a mano; cargar en la base de prueba y comprobar la página de cada año
 
 ## 3. Datos: Brit Awards (2021–2026)
 

@@ -1,0 +1,17 @@
+{
+  "award": "mercury-prize",
+  "voting": "jury",
+  "categories": [
+    {
+      "key": "album-of-the-year",
+      "tier": "general",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Álbum del año",
+        "en": "Album of the Year"
+      },
+      "order": 1
+    }
+  ]
+}
