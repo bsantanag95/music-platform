@@ -4,13 +4,15 @@ export {};
 // idempotente (la segunda corrida no reescribe ninguna fila), que la carga no consulta MusicBrainz (fetch bloqueado),
 // los stubs de catálogo desde la semilla (con créditos y disco ancla), que un archivo inválido aborta sin escribir,
 // la lectura de la ceremonia y la historia, el ON DELETE SET NULL y el borrado de lo que ya no está en los archivos.
+// Desde `add-four-music-awards` (migración 0073) también verifica los CHECK de `award.voting` y `award_ceremony.source_url`, que
+// la carga los escribe de forma idempotente y la ceremonia más reciente de cada premio (`listLatestCeremoniesByAward`).
 // Usa un premio sintético `smoke-premio` en una carpeta temporal (no toca `data/awards/`) y MBID
 // `5e0ce000-0000-4000-8000-00000000a8xx`; borra todo al terminar (también si falla). Si se interrumpió, limpiar con
 //   DELETE FROM award WHERE slug LIKE 'smoke-%';
 //   DELETE FROM recording WHERE mbid::text LIKE '5e0ce000%';
 //   DELETE FROM release_group WHERE mbid::text LIKE '5e0ce000%';
 //   DELETE FROM artist WHERE mbid::text LIKE '5e0ce000%';
-// (el ON DELETE CASCADE de `award` limpia ceremonias, categorías y nominaciones). Necesita la migración 0068.
+// (el ON DELETE CASCADE de `award` limpia ceremonias, categorías y nominaciones). Necesita las migraciones 0068 y 0073.
 //   ALLOW_SMOKE_ON_REAL_DB=1 npx tsx --env-file=.env scripts/smoke-test-music-awards.ts
 
 import { execSync } from "node:child_process";
@@ -23,7 +25,7 @@ import { db } from "../src/db";
 import { artist, award, awardNomination, credit, recording, releaseGroup } from "../src/db/schema";
 import { readAllAwards } from "../src/services/awards/curation-files";
 import { loadAward } from "../src/services/awards/load";
-import { getCategoryHistory, getCeremonyPage, getLatestCeremonyYear } from "../src/services/awards/read";
+import { getCategoryHistory, getCeremonyPage, getLatestCeremonyYear, listLatestCeremoniesByAward } from "../src/services/awards/read";
 
 assertSmokeAllowed();
 
@@ -53,6 +55,7 @@ async function codeOf(fn: () => Promise<unknown>): Promise<string | null> {
 const credits = [{ name: "Smoke Banda", artist: { id: CREDITED, name: "Smoke Banda" } }];
 const categoriesFile = {
   award: SLUG,
+  voting: "mixed",
   categories: [
     { key: "album-of-the-year", tier: "general", subject: "release_group", name: { es: "Álbum del año", en: "Album of the Year" }, order: 1 },
     { key: "record-of-the-year", tier: "general", subject: "recording", name: { es: "Grabación del año", en: "Record of the Year" }, order: 2 },
@@ -174,6 +177,17 @@ async function nominationVersions(): Promise<string> {
   return rows[0]?.v ?? "";
 }
 
+/** `xmin` del premio y de sus ceremonias: si una carga reescribe alguna fila, cambia. */
+async function awardVersions(): Promise<string> {
+  const rows = await db.execute<{ v: string }>(sql`
+    SELECT a.xmin::text || ':' || coalesce(string_agg(c.xmin::text, ',' ORDER BY c.year), '') AS v
+    FROM award a
+    LEFT JOIN award_ceremony c ON c.award_id = a.id
+    WHERE a.slug = ${SLUG}
+    GROUP BY a.id`);
+  return rows[0]?.v ?? "";
+}
+
 async function cleanup() {
   await db.delete(award).where(like(award.slug, "smoke-%"));
   await db.delete(recording).where(sql`${recording.mbid}::text LIKE '5e0ce000-0000-4000-8000-00000000a8%'`);
@@ -200,7 +214,19 @@ async function main() {
       (await codeOf(() => db.execute(sql`INSERT INTO award (slug) VALUES ('Mal Slug')`))) === "23514",
       "un slug con mayúsculas o espacios se rechaza",
     );
-    await db.delete(award).where(eq(award.slug, SLUG));
+    check(
+      (await codeOf(() => db.execute(sql`INSERT INTO award (slug, voting) VALUES ('smoke-votacion', 'fans')`))) === "23514",
+      "un tipo de votación desconocido se rechaza (0073)",
+    );
+    check(
+      (await codeOf(() => db.execute(sql`INSERT INTO award_ceremony (award_id, year, edition, held_on, source_url) VALUES (${a!.id}, 2025, 1, '2025-02-02', 'javascript:alert(1)')`))) === "23514",
+      "una fuente que no es http(s) se rechaza (0073)",
+    );
+    check(
+      (await codeOf(() => db.execute(sql`INSERT INTO award (slug, voting) VALUES ('smoke-votacion', 'jury')`))) === null,
+      "un premio con votación válida y las ceremonias sin fuente (nulas) se aceptan",
+    );
+    await db.delete(award).where(like(award.slug, "smoke-%"));
 
     console.log("\nPrimera carga");
     writeFiles(dir, { categories: categoriesFile, ceremonies: { 2024: ceremony(2024, 1), 2025: ceremony(2025, 2) } });
@@ -217,10 +243,12 @@ async function main() {
 
     console.log("\nSegunda carga (idempotencia)");
     const before = await nominationVersions();
+    const beforeAward = await awardVersions();
     const second = await loadDir(dir);
     check(second.stubsCreated === 0, "no crea stubs nuevos");
     check(second.ceremonies.every((c) => c.rewritten === 0), "no reescribe ninguna categoría");
     check((await nominationVersions()) === before, "ninguna fila de nominación cambió (xmin igual)");
+    check((await awardVersions()) === beforeAward, "el premio y sus ceremonias tampoco cambiaron (voting y source_url se escriben una vez)");
 
     console.log("\nLectura");
     const page = await getCeremonyPage(SLUG, 2025);
@@ -242,9 +270,21 @@ async function main() {
     check(roty.subject?.kind === "recording" && roty.subject.anchor?.title === "Smoke Sencillo", "la grabación trae su disco ancla");
     check(roty.credit === "Productora Smoke", "los créditos curados se leen");
     check(page!.categories[2]!.coverage === "winner_only", "la cobertura winner_only se conserva");
+    check(page!.voting === "mixed", "la ceremonia trae el tipo de votación del premio");
+    check(page!.sourceUrl === "https://example.org/smoke", "y la fuente de la ceremonia");
     check((await getCeremonyPage(SLUG, 1999)) === null, "un año sin ceremonia no existe");
     check((await getLatestCeremonyYear(SLUG)) === 2025, "la ceremonia más reciente del premio es la de 2025 (redirección de /awards/<premio>)");
     check((await getLatestCeremonyYear("premio-que-no-existe")) === null, "un premio inexistente no tiene ceremonia más reciente");
+
+    console.log("\nCeremonia más reciente por premio");
+    // Un segundo premio con una ceremonia más antigua: ninguno de los dos se pierde y van de la más reciente a la más antigua.
+    const [other] = await db.insert(award).values({ slug: "smoke-otro", voting: "jury" }).returning();
+    await db.execute(sql`INSERT INTO award_ceremony (award_id, year, edition, held_on) VALUES (${other!.id}, 2022, 7, '2022-09-08')`);
+    const latest = (await listLatestCeremoniesByAward()).filter((c) => c.awardSlug.startsWith("smoke-"));
+    check(latest.map((c) => `${c.awardSlug}:${c.year}`).join() === `${SLUG}:2025,smoke-otro:2022`, "una ceremonia por premio, la más reciente de cada uno, de la más reciente a la más antigua");
+    check(latest[0]!.headline?.category.es === "Álbum del año" && latest[0]!.headline.winner.text.startsWith("Sin Resolver"), "el ganador destacado es el de Álbum del año");
+    check(latest[1]!.headline === null, "un premio sin categoría general de álbum con ganador muestra la tarjeta sin ganador");
+    await db.delete(award).where(eq(award.slug, "smoke-otro"));
 
     console.log("\nPredecesora e historia");
     writeFiles(dir, { categories: withPredecessor, ceremonies: { 2024: ceremony(2024, 1), 2025: ceremony(2025, 2) } });

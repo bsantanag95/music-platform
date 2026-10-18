@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/db", () => ({ db: {} }));
 
-const { orderNominations, sortCategoryEditions } = await import("./read");
+const { latestPerAward, orderNominations, sortCategoryEditions } = await import("./read");
 import type { NominationView } from "./read";
 
 const view = (id: string, won: boolean): NominationView => ({ id, won, text: id, credit: null, subject: null });
@@ -38,5 +38,32 @@ describe("sortCategoryEditions", () => {
       "pop-perf",
       "rock-perf",
     ]);
+  });
+});
+
+describe("latestPerAward", () => {
+  const c = (awardSlug: string, heldOn: string) => ({ awardSlug, heldOn });
+
+  it("deja la ceremonia más reciente de cada premio, de la más reciente a la más antigua", () => {
+    const result = latestPerAward([
+      c("grammy", "2025-02-02"),
+      c("grammy", "2026-02-01"),
+      c("mercury-prize", "2025-09-11"),
+      c("brit-awards", "2026-02-28"),
+      c("brit-awards", "2025-03-08"),
+    ]);
+    expect(result).toEqual([c("brit-awards", "2026-02-28"), c("grammy", "2026-02-01"), c("mercury-prize", "2025-09-11")]);
+  });
+
+  it("no pierde un premio aunque otros tengan ceremonias más recientes", () => {
+    const many = ["a", "b", "c", "d", "e", "f"].flatMap((slug, i) => [c(slug, `2026-0${i + 1}-10`), c(slug, `2025-0${i + 1}-10`)]);
+    const withOld = [...many, c("viejo", "2021-01-01")];
+    expect(latestPerAward(withOld).map((x) => x.awardSlug)).toContain("viejo");
+    expect(latestPerAward(withOld)).toHaveLength(7);
+  });
+
+  it("sin ceremonias da una lista vacía y desempata por premio si la fecha coincide", () => {
+    expect(latestPerAward([])).toEqual([]);
+    expect(latestPerAward([c("b", "2026-02-01"), c("a", "2026-02-01")]).map((x) => x.awardSlug)).toEqual(["a", "b"]);
   });
 });

@@ -183,6 +183,35 @@ describe("AwardsExploreSection", () => {
     expect(screen.getByRole("link", { name: /Ver todos/ })).toHaveAttribute("href", "/awards");
   });
 
+  it("muestra una tarjeta por premio, con su nombre traducido", () => {
+    renderWithIntl(
+      <AwardsExploreSection
+        ceremonies={[
+          { awardSlug: "brit-awards", year: 2026, edition: 46, heldOn: "2026-02-28", headline: null },
+          { awardSlug: "grammy", year: 2026, edition: 68, heldOn: "2026-02-01", headline: null },
+          { awardSlug: "lo-nuestro", year: 2026, edition: 38, heldOn: "2026-02-19", headline: null },
+          { awardSlug: "mercury-prize", year: 2025, edition: 34, heldOn: "2025-09-11", headline: null },
+          { awardSlug: "latin-grammy", year: 2025, edition: 26, heldOn: "2025-11-13", headline: null },
+        ]}
+      />,
+    );
+    const hrefs = screen
+      .getAllByRole("link")
+      .map((link) => link.getAttribute("href"))
+      .filter((href) => href?.startsWith("/awards/"));
+    expect(hrefs).toEqual([
+      "/awards/brit-awards/2026",
+      "/awards/grammy/2026",
+      "/awards/lo-nuestro/2026",
+      "/awards/mercury-prize/2025",
+      "/awards/latin-grammy/2025",
+    ]);
+    expect(screen.getByText("Premios Brit")).toBeInTheDocument();
+    expect(screen.getByText("Premio Mercury")).toBeInTheDocument();
+    expect(screen.getByText("Premios Latin Grammy")).toBeInTheDocument();
+    expect(screen.getByText("Premio Lo Nuestro")).toBeInTheDocument();
+  });
+
   it("muestra el ganador destacado con título y artista del álbum del catálogo", () => {
     renderWithIntl(
       <AwardsExploreSection

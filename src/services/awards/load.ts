@@ -157,11 +157,11 @@ async function loadCeremony(
   const data = entry.data;
   const [ceremony] = await tx
     .insert(awardCeremony)
-    .values({ awardId, year: data.year, edition: data.edition, heldOn: data.heldOn })
+    .values({ awardId, year: data.year, edition: data.edition, heldOn: data.heldOn, sourceUrl: data.sourceUrl })
     .onConflictDoUpdate({
       target: [awardCeremony.awardId, awardCeremony.year],
-      set: { edition: sql`excluded.edition`, heldOn: sql`excluded.held_on` },
-      setWhere: sql`(${awardCeremony.edition}, ${awardCeremony.heldOn}) IS DISTINCT FROM (excluded.edition, excluded.held_on)`,
+      set: { edition: sql`excluded.edition`, heldOn: sql`excluded.held_on`, sourceUrl: sql`excluded.source_url` },
+      setWhere: sql`(${awardCeremony.edition}, ${awardCeremony.heldOn}, ${awardCeremony.sourceUrl}) IS DISTINCT FROM (excluded.edition, excluded.held_on, excluded.source_url)`,
     })
     .returning({ id: awardCeremony.id });
   const ceremonyId =
@@ -249,9 +249,11 @@ export async function loadAward(files: AwardFiles): Promise<LoadStats> {
   }
 
   return db.transaction(async (tx) => {
-    await tx.insert(award).values({ slug: files.slug }).onConflictDoNothing({ target: award.slug });
-    const [awardRow] = await tx.select({ id: award.id }).from(award).where(eq(award.slug, files.slug));
+    await tx.insert(award).values({ slug: files.slug, voting: files.categories.voting }).onConflictDoNothing({ target: award.slug });
+    const [awardRow] = await tx.select({ id: award.id, voting: award.voting }).from(award).where(eq(award.slug, files.slug));
     const awardId = awardRow!.id;
+    // Premio ya cargado antes de la migración 0073 (o con otro tipo de votación): solo escribe si cambia.
+    if (awardRow!.voting !== files.categories.voting) await tx.update(award).set({ voting: files.categories.voting }).where(eq(award.id, awardId));
 
     const { ids, removed } = await upsertCategories(tx, awardId, files);
     const ceremonies: CeremonyLoadStats[] = [];

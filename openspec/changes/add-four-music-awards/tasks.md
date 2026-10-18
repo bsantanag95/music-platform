@@ -1,13 +1,13 @@
 ## 1. Código
 
-- [ ] 1.1 `read.ts`: `listLatestCeremoniesByAward()` (la ceremonia más reciente de cada premio por `heldOn`, con el ganador destacado, ordenadas de la más reciente a la más antigua) en lugar de `listRecentCeremonies(limit)`; con prueba (un premio por tarjeta, no se pierde ninguno aunque otros tengan ceremonias más recientes, ceremonia sin ganador de álbum)
-- [ ] 1.2 Extraer `AwardTile` de `AwardsExploreSection`; Explorar muestra una tarjeta por premio y el hub la reutiliza
-- [ ] 1.3 `awards/page.tsx`: con más de un premio, el hub (grilla de `AwardTile`, sin rótulo ni descripción); con uno redirige; sin premios, el mensaje; con prueba
-- [ ] 1.4 Migas de pan de la ceremonia y de la historia con el nivel "Premios" (Inicio / Premios / <premio> / …); con prueba
-- [ ] 1.5 Mensajes `awards.json` (es/en): `names.mercury-prize`, `names.brit-awards`, `names.latin-grammy`, `names.lo-nuestro` y los campos `urban`, `tropical`, `regional-mexican`, `singer-songwriter`, `brazilian` y `other-genres`; la prueba de campos pasa
-- [ ] 1.6 Migración `0073_award_source_and_voting.sql` (`award.voting`, `award_ceremony.source_url`, nulas, con `CHECK`), espejo en `schema.ts` y `docs/03-data/sql-model.md`; `curation-schema.ts` (`voting` obligatorio en `categories.json`, `sourceUrl` ya existe) con prueba; `voting` en el `categories.json` de los Grammy; `load.ts` escribe ambas columnas y sigue siendo idempotente (prueba)
-- [ ] 1.7 `getCeremonyPage` devuelve `sourceUrl` y `voting`; la cabecera de la ceremonia muestra la línea de votación y "Fuente: <sitio>" enlazado, y las omite si faltan; mensajes `voting.*` y `source` (es/en); con prueba
-- [ ] 1.8 Ajustar las pruebas de `explore` y de `AwardsExploreSection` a una tarjeta por premio
+- [x] 1.1 `read.ts`: `listLatestCeremoniesByAward()` (la ceremonia más reciente de cada premio por `heldOn`, con el ganador destacado, ordenadas de la más reciente a la más antigua) en lugar de `listRecentCeremonies(limit)`; con prueba (un premio por tarjeta, no se pierde ninguno aunque otros tengan ceremonias más recientes, ceremonia sin ganador de álbum)
+- [x] 1.2 Extraer `AwardTile` de `AwardsExploreSection`; Explorar muestra una tarjeta por premio y el hub la reutiliza
+- [x] 1.3 `awards/page.tsx`: con más de un premio, el hub (grilla de `AwardTile`, sin rótulo ni descripción); con uno redirige; sin premios, el mensaje; con prueba
+- [x] 1.4 Migas de pan de la ceremonia y de la historia con el nivel "Premios" (Inicio / Premios / <premio> / …); con prueba
+- [x] 1.5 Mensajes `awards.json` (es/en): `names.mercury-prize`, `names.brit-awards`, `names.latin-grammy`, `names.lo-nuestro` y los campos `urban`, `tropical`, `regional-mexican`, `singer-songwriter`, `brazilian` y `other-genres`; la prueba de campos pasa
+- [x] 1.6 Migración `0073_award_source_and_voting.sql` (`award.voting`, `award_ceremony.source_url`, nulas, con `CHECK`), espejo en `schema.ts` y `docs/03-data/sql-model.md`; `curation-schema.ts` (`voting` obligatorio en `categories.json`, `sourceUrl` ya existe) con prueba; `voting` en el `categories.json` de los Grammy; `load.ts` escribe ambas columnas y sigue siendo idempotente (prueba)
+- [x] 1.7 `getCeremonyPage` devuelve `sourceUrl` y `voting`; la cabecera de la ceremonia muestra la línea de votación y "Fuente: <sitio>" enlazado, y las omite si faltan; mensajes `voting.*` y `source` (es/en); con prueba
+- [x] 1.8 Ajustar las pruebas de `explore` y de `AwardsExploreSection` a una tarjeta por premio
 
 ## 2. Datos: Mercury Prize (2021–2025)
 

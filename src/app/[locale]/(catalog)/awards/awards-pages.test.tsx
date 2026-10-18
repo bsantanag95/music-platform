@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
   notFound: vi.fn((): never => {
     throw new Error("NEXT_NOT_FOUND");
   }),
-  listAwards: vi.fn(),
+  listLatestCeremoniesByAward: vi.fn(),
   getLatestCeremonyYear: vi.fn(),
   getCeremonyPage: vi.fn(),
 }));
@@ -27,7 +27,7 @@ vi.mock("next/navigation", () => ({ notFound: mocks.notFound }));
 vi.mock("@/i18n/navigation", () => ({ redirect: mocks.redirect, Link: () => null }));
 vi.mock("@/db", () => ({ db: {} }));
 vi.mock("@/services/awards/read", () => ({
-  listAwards: mocks.listAwards,
+  listLatestCeremoniesByAward: mocks.listLatestCeremoniesByAward,
   getLatestCeremonyYear: mocks.getLatestCeremonyYear,
   getCeremonyPage: mocks.getCeremonyPage,
   getCategoryHistory: vi.fn(),
@@ -38,6 +38,7 @@ const { default: AwardPage } = await import("./[award]/page");
 const { default: CeremonyPageRoute } = await import("./[award]/[year]/page");
 const { AwardCategory } = await import("@/components/awards/AwardCategory");
 const { FacetRow } = await import("@/components/discovery/FacetRow");
+const { AwardTileGrid } = await import("@/components/awards/AwardTile");
 const { StickyJumpNav } = await import("@/components/awards/StickyJumpNav");
 const { Breadcrumbs } = await import("@/components/ui/Breadcrumbs");
 
@@ -62,39 +63,43 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe("/awards: índice", () => {
+const latest = (awardSlug: string, year: number) => ({ awardSlug, ...ceremony(year), headline: null });
+
+describe("/awards: hub de premios", () => {
   it("con un solo premio redirige a su ceremonia más reciente", async () => {
-    mocks.listAwards.mockResolvedValue([{ slug: "grammy", ceremonies: [ceremony(2026), ceremony(2025), ceremony(2021)] }]);
+    mocks.listLatestCeremoniesByAward.mockResolvedValue([latest("grammy", 2026)]);
 
     await expect(AwardsIndexPage({ params })).rejects.toThrow("NEXT_REDIRECT");
 
     expect(mocks.redirect).toHaveBeenCalledWith({ href: "/awards/grammy/2026", locale: "es" });
   });
 
-  it("con varios premios lista cada uno con sus años, de la más reciente a la más antigua, sin rótulo sobre el título", async () => {
-    mocks.listAwards.mockResolvedValue([
-      { slug: "grammy", ceremonies: [ceremony(2025), ceremony(2021)] },
-      { slug: "otro", ceremonies: [ceremony(2024), ceremony(2023)] },
-    ]);
+  it("con varios premios muestra una tarjeta por premio, en el orden recibido, sin rótulo sobre el título", async () => {
+    mocks.listLatestCeremoniesByAward.mockResolvedValue([latest("brit-awards", 2026), latest("grammy", 2026), latest("mercury-prize", 2025)]);
 
     const element = await AwardsIndexPage({ params });
-    const rows = findAll(element, FacetRow).map((row) => (row.props as { facet: { links: { label: string; href: string }[] } }).facet.links);
+    const grid = findAll(element, AwardTileGrid);
 
     expect(mocks.redirect).not.toHaveBeenCalled();
-    expect(rows.map((links) => links.map((link) => link.label))).toEqual([["2025", "2021"], ["2024", "2023"]]);
-    expect(rows[1]![0]!.href).toBe("/awards/otro/2024");
+    expect(grid).toHaveLength(1);
+    expect((grid[0]!.props as { ceremonies: { awardSlug: string }[] }).ceremonies.map((c) => c.awardSlug)).toEqual([
+      "brit-awards",
+      "grammy",
+      "mercury-prize",
+    ]);
     const text = JSON.stringify(element);
     expect(text).not.toContain("kicker");
     expect(text).not.toContain("intro");
   });
 
   it("sin premios dice que todavía no hay ceremonias cargadas, sin redirigir", async () => {
-    mocks.listAwards.mockResolvedValue([]);
+    mocks.listLatestCeremoniesByAward.mockResolvedValue([]);
 
     const element = await AwardsIndexPage({ params });
 
     expect(mocks.redirect).not.toHaveBeenCalled();
     expect(JSON.stringify(element)).toContain("emptyIndex");
+    expect(findAll(element, AwardTileGrid)).toHaveLength(0);
   });
 });
 
@@ -131,6 +136,8 @@ describe("/awards/{premio}/{año}: ceremonia", () => {
 
   const page = (over: Partial<CeremonyPage> = {}): CeremonyPage => ({
     awardSlug: "grammy",
+    voting: "academy",
+    sourceUrl: "https://en.wikipedia.org/wiki/66th_Annual_Grammy_Awards",
     ceremony: ceremony(2024),
     ceremonies: [ceremony(2026), ceremony(2025), ceremony(2024)],
     categories: [
@@ -200,13 +207,33 @@ describe("/awards/{premio}/{año}: ceremonia", () => {
     expect(nav.items.map((item) => item.id)).toEqual(["tier-general", "tier-album"]);
   });
 
-  it("la miga de pan enlaza el premio a su página y termina en el año", async () => {
+  it("la miga de pan lleva el nivel Premios al hub, enlaza el premio a su página y termina en el año", async () => {
     const element = await open(page());
     const items = (findAll(element, Breadcrumbs)[0]!.props as { items: { label: string; href?: string }[] }).items;
 
-    expect(items.map((item) => item.label)).toEqual(["home", "names.grammy", "2024"]);
-    expect(items[1]!.href).toBe("/awards/grammy");
-    expect(items[2]!.href).toBeUndefined();
+    expect(items.map((item) => item.label)).toEqual(["home", "heading", "names.grammy", "2024"]);
+    expect(items[1]!.href).toBe("/awards");
+    expect(items[2]!.href).toBe("/awards/grammy");
+    expect(items[3]!.href).toBeUndefined();
+  });
+
+  it("bajo el título dice quién decide el premio y enlaza la fuente con el sitio de la URL", async () => {
+    const element = await open(page({ voting: "jury" }));
+    const links = findAll(element, "a");
+    const source = links.find((a) => (a.props as { href?: string }).href?.includes("wikipedia"));
+    const text = JSON.stringify(element);
+
+    expect(text).toContain("voting.jury");
+    expect(source).toBeDefined();
+    expect((source!.props as { rel: string }).rel).toBe("noopener noreferrer");
+    expect(text).toContain("source");
+  });
+
+  it("sin tipo de votación ni fuente guardados, la cabecera omite la línea", async () => {
+    const text = JSON.stringify(await open(page({ voting: null, sourceUrl: null })));
+
+    expect(text).not.toContain("voting.");
+    expect(text).not.toContain("wikipedia");
   });
 
   it("no pinta ningún rótulo sobre el título", async () => {

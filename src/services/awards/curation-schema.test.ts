@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { readAllAwards, readAward } from "./curation-files";
 import {
+  CategoriesFileSchema,
   isLinkable,
   nomineeText,
   validateCategories,
@@ -14,6 +15,7 @@ import {
 
 const categories: CategoriesFile = {
   award: "grammy",
+  voting: "academy",
   categories: [
     { key: "album-of-the-year", tier: "general", subject: "release_group", honors: "performer", name: { es: "Álbum del año", en: "Album of the Year" }, order: 1 },
     { key: "record-of-the-year", tier: "general", subject: "recording", honors: "performer", name: { es: "Grabación del año", en: "Record of the Year" }, order: 2 },
@@ -153,7 +155,7 @@ describe("validateCeremony", () => {
 
 describe("validateCategories", () => {
   const base = { subject: "recording" as const, honors: "performer" as const, name: { es: "x", en: "x" } };
-  const file = (list: CategoriesFile["categories"]): CategoriesFile => ({ award: "grammy", categories: list });
+  const file = (list: CategoriesFile["categories"]): CategoriesFile => ({ award: "grammy", voting: "academy", categories: list });
 
   it("el nivel genre exige campo y los demás niveles no lo admiten", () => {
     const errors = validateCategories(
@@ -231,5 +233,18 @@ describe("data/awards", () => {
   it("todos los archivos de curaduría son válidos", () => {
     const { errors } = readAllAwards();
     expect(errors).toEqual([]);
+  });
+});
+
+describe("voting de categories.json", () => {
+  const withVoting = (voting: unknown) => CategoriesFileSchema.safeParse({ ...categories, voting });
+
+  it("acepta los cuatro tipos de votación", () => {
+    for (const voting of ["academy", "jury", "public", "mixed"]) expect(withVoting(voting).success).toBe(true);
+  });
+
+  it("rechaza un valor desconocido y exige el campo", () => {
+    expect(withVoting("fans").success).toBe(false);
+    expect(CategoriesFileSchema.safeParse({ award: categories.award, categories: categories.categories }).success).toBe(false);
   });
 });
