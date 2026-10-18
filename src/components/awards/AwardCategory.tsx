@@ -4,8 +4,11 @@ import type { AwardCoverage, AwardHonors } from "@/db/schema";
 import type { CategoryName, NominationView } from "@/services/awards/read";
 import { NominationItem } from "./NominationItem";
 
-// Una categoría de una ceremonia: título traducido, nota de cobertura, ganadores destacados y el resto de los
-// nominados en una grilla (openspec: add-music-awards, design D5).
+// Una categoría de una ceremonia (openspec: add-music-awards, design D5; redesign-awards-pages). Dos formas:
+//  - `featured`: el ganador grande y todos los nominados a la vista (las categorías grandes de la ceremonia y la historia
+//    de una categoría, donde el propósito es ver a todos los nominados de cada año);
+//  - `compact`: el nombre, el ganador con su carátula y los nominados plegados bajo "Nominados (N)" (`<details>`, cerrado
+//    por defecto y sin JavaScript). Una categoría de la que solo se registró al ganador no lleva el control y dice por qué.
 
 export function categoryName(name: CategoryName, locale: string): string {
   return locale === "en" ? name.en : name.es;
@@ -21,19 +24,30 @@ interface AwardCategoryProps {
   /** Enlace junto al título (la historia de la categoría, o la ceremonia desde la historia). */
   link?: { href: string; label: string };
   headingLevel?: "h2" | "h3" | "h4";
+  variant?: "featured" | "compact";
 }
 
-export function AwardCategory({ name, coverage, honors, nominations, heading, link, headingLevel = "h3" }: AwardCategoryProps) {
+export function AwardCategory({
+  name,
+  coverage,
+  honors,
+  nominations,
+  heading,
+  link,
+  headingLevel = "h3",
+  variant = "featured",
+}: AwardCategoryProps) {
   const t = useTranslations("awards");
   const locale = useLocale();
   const winners = nominations.filter((n) => n.won);
   const others = nominations.filter((n) => !n.won);
   const Heading = headingLevel;
+  const compact = variant === "compact";
 
   return (
-    <section className="flex w-full flex-col gap-4 rounded-lg border border-ink-border bg-ink-surface p-4">
+    <section className={`flex w-full flex-col rounded-lg border border-ink-border bg-ink-surface ${compact ? "gap-3 p-3" : "gap-4 p-4"}`}>
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <Heading className="font-display text-lg text-paper">{heading ?? categoryName(name, locale)}</Heading>
+        <Heading className={`font-display text-paper ${compact ? "text-base" : "text-lg"}`}>{heading ?? categoryName(name, locale)}</Heading>
         {link ? (
           <Link href={link.href} className="group inline-flex items-center gap-1 font-data text-xs text-paper-muted transition-colors hover:text-amber">
             {link.label}
@@ -48,22 +62,47 @@ export function AwardCategory({ name, coverage, honors, nominations, heading, li
       <ul className="flex flex-col gap-3">
         {winners.map((nomination) => (
           <li key={nomination.id}>
-            <NominationItem nomination={nomination} featured />
+            <NominationItem nomination={nomination} size={compact ? "md" : "lg"} />
           </li>
         ))}
       </ul>
 
       {others.length > 0 ? (
-        <div className="flex flex-col gap-2 border-t border-ink-border pt-3">
-          <p className="font-data text-xs uppercase tracking-wider text-paper-muted">{t("nominees")}</p>
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {others.map((nomination) => (
-              <li key={nomination.id} className="min-w-0">
-                <NominationItem nomination={nomination} />
-              </li>
-            ))}
-          </ul>
-        </div>
+        compact ? (
+          <details className="group">
+            <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 font-data text-xs text-paper-muted transition-colors hover:text-paper focus-visible:text-paper [&::-webkit-details-marker]:hidden">
+              {t("nomineesCount", { count: others.length })}
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+                className="size-3.5 transition-transform group-open:rotate-180"
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </summary>
+            <ul className="grid grid-cols-1 gap-3 border-t border-ink-border pt-3 mt-2 sm:grid-cols-2">
+              {others.map((nomination) => (
+                <li key={nomination.id} className="min-w-0">
+                  <NominationItem nomination={nomination} />
+                </li>
+              ))}
+            </ul>
+          </details>
+        ) : (
+          <div className="flex flex-col gap-2 border-t border-ink-border pt-3">
+            <p className="font-data text-xs text-paper-muted">{t("nomineesCount", { count: others.length })}</p>
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {others.map((nomination) => (
+                <li key={nomination.id} className="min-w-0">
+                  <NominationItem nomination={nomination} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
       ) : null}
 
       {coverage === "winner_only" ? <p className="font-data text-xs text-paper-muted">{t("winnerOnlyNote")}</p> : null}

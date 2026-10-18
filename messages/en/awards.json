@@ -1,19 +1,17 @@
 {
   "pageTitle": "Awards",
   "heading": "Awards",
-  "kicker": "What's happening",
-  "intro": "Nominees and winners of award ceremonies, linked to the catalog.",
   "names": {
     "grammy": "Grammy Awards"
   },
   "ceremonyTitle": "{award} {year}",
   "edition": "{edition, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition",
   "heldOn": "Held on {date}",
-  "otherCeremonies": "Other ceremonies",
+  "yearRow": "Year",
+  "jumpLabel": "On this page",
   "tierGeneral": "General field",
   "tierAlbum": "By album",
   "tierGenre": "By genre",
-  "tiersNav": "Ceremony sections",
   "fields": {
     "pop": "Pop",
     "dance-electronic": "Dance and electronic",
@@ -23,12 +21,11 @@
     "country": "Country"
   },
   "winner": "Winner",
-  "nominees": "Nominees",
+  "nomineesCount": "Nominees ({count})",
   "winnerOnlyNote": "For this category we only record the winner.",
   "categoryHistory": "Category history",
   "fromAlbum": "from {album}",
   "songwriterNote": "Honors the songwriters.",
-  "historyKicker": "Category",
   "previouslyNamed": "Previously {name}",
   "laterNamed": "Later {name}",
   "ceremonyLink": "See the {year} ceremony",
@@ -36,6 +33,5 @@
   "exploreHeading": "Awards",
   "exploreDescription": "Nominees and winners of the latest ceremonies.",
   "exploreSeeAll": "See all",
-  "ceremonyCount": "{count, plural, one {# ceremony} other {# ceremonies}}",
-  "ceremonyKicker": "Ceremony"
+  "ceremonyCount": "{count, plural, one {# ceremony} other {# ceremonies}}"
 }
