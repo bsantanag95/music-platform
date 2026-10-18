@@ -21,14 +21,14 @@
 
 ## 4. Datos: Latin Grammy (2021–2025)
 
-- [ ] 4.1 `data/awards/latin-grammy/categories.json` (general, álbum por género y canciones y grabaciones por campo, con los campos nuevos y `predecessor` donde corresponda)
-- [ ] 4.2 `ceremonies/2021…2025.json` (22.ª a 26.ª edición, a verificar) contrastados con el artículo de cada ceremonia: nominados y ganador de cada categoría
-- [ ] 4.3 Resolver (en tandas por año), revisar ambiguos y no encontrados, y cargar; medir el porcentaje de resolución exacta
+- [x] 4.1 `data/awards/latin-grammy/categories.json` (general, álbum por género y canciones y grabaciones por campo, con los campos nuevos y `predecessor` donde corresponda)
+- [x] 4.2 `ceremonies/2021…2025.json` (22.ª a 26.ª edición, a verificar) contrastados con el artículo de cada ceremonia: nominados y ganador de cada categoría
+- [x] 4.3 Resolver (en tandas por año), revisar ambiguos y no encontrados, y cargar; medir el porcentaje de resolución exacta
 
 ## 5. Datos: Premio Lo Nuestro (2021–2026)
 
-- [ ] 5.1 `data/awards/lo-nuestro/categories.json` (general, álbum por género y artistas y canciones por campo) y `ceremonies/2021…2026.json` (33.ª a 38.ª edición, a verificar), contrastados con el artículo de cada ceremonia
-- [ ] 5.2 Resolver (en tandas por año), revisar y cargar; comprobar las categorías de colaboración (varios artistas)
+- [x] 5.1 `data/awards/lo-nuestro/categories.json` (general, álbum por género y artistas y canciones por campo) y `ceremonies/2021…2026.json` (33.ª a 38.ª edición, a verificar), contrastados con el artículo de cada ceremonia
+- [x] 5.2 Resolver (en tandas por año), revisar y cargar; comprobar las categorías de colaboración (varios artistas)
 
 ## 6. Verificación y documentación
 
