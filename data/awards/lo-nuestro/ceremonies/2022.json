@@ -1,0 +1,5368 @@
+{
+  "award": "lo-nuestro",
+  "year": 2022,
+  "edition": 34,
+  "heldOn": "2022-02-24",
+  "sourceUrl": "https://en.wikipedia.org/wiki/Premio_Lo_Nuestro_2022",
+  "categories": [
+    {
+      "key": "artist-of-the-year",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Bad Bunny",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "89aa5ecb-59ad-46f5-b3eb-2d424e941f19",
+            "seed": {
+              "kind": "artist",
+              "name": "Bad Bunny",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Ángela Aguilar",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "cda7b93f-f9e9-4a1b-b66a-7d0c8678d4ae",
+            "seed": {
+              "kind": "artist",
+              "name": "Ángela Aguilar",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Camilo",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "138fe36a-0888-40d2-9390-3d9be0d74f07",
+            "seed": {
+              "kind": "artist",
+              "name": "Camilo Sesto",
+              "mbType": "Person",
+              "disambiguation": "singer, songwriter, music producer"
+            }
+          }
+        },
+        {
+          "title": "Christian Nodal",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "7f464f95-2410-4040-a88e-1dbe96f17fcd",
+            "seed": {
+              "kind": "artist",
+              "name": "Christian Nodal",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Grupo Firme",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "f8549adf-74e1-4955-b06a-2933ede7bb04",
+            "seed": {
+              "kind": "artist",
+              "name": "Grupo Firme",
+              "mbType": "Group",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "J Balvin",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "5bdeb32d-56a5-4b6d-a768-264101fa0a0a",
+            "seed": {
+              "kind": "artist",
+              "name": "J Balvin",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Karol G",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "de22adae-f8ac-414f-b653-b0162611bd60",
+            "seed": {
+              "kind": "artist",
+              "name": "KAROL G",
+              "mbType": "Person",
+              "disambiguation": "Colombian singer"
+            }
+          }
+        },
+        {
+          "title": "Maluma",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e8979f75-9110-4df8-ac70-898898d080d1",
+            "seed": {
+              "kind": "artist",
+              "name": "Maluma",
+              "mbType": "Person",
+              "disambiguation": "Juan Luis Londoño Arias, Colombian reggaeton/pop singer"
+            }
+          }
+        },
+        {
+          "title": "Rauw Alejandro",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "197b70c7-8910-4030-ad03-632d82aa40e3",
+            "seed": {
+              "kind": "artist",
+              "name": "Rauw Alejandro",
+              "mbType": "Person",
+              "disambiguation": "Puerto Rican rapper"
+            }
+          }
+        },
+        {
+          "title": "Sebastián Yatra",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "151d9c35-43b8-49b9-a69a-5db6525dbcd2",
+            "seed": {
+              "kind": "artist",
+              "name": "Sebastián Yatra",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "album-of-the-year",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "El Último Tour Del Mundo",
+          "artist": "Bad Bunny",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "4b550700-6912-4f3b-a804-bac8da786629",
+            "seed": {
+              "kind": "release_group",
+              "title": "EL ÚLTIMO TOUR DEL MUNDO",
+              "category": "studio",
+              "firstReleaseDate": "2020-11-27",
+              "credits": [
+                {
+                  "name": "Bad Bunny",
+                  "artist": {
+                    "id": "89aa5ecb-59ad-46f5-b3eb-2d424e941f19",
+                    "name": "Bad Bunny"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Entre Mar y Palmeras (Live)",
+          "artist": "Juan Luis Guerra",
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Esta Vida Es Muy Bonita",
+          "artist": "Banda El Recodo de Cruz Lizárraga",
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Jose",
+          "artist": "J Balvin",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ec71825d-bd4b-4c06-adf7-c7fb9ca1f823",
+            "seed": {
+              "kind": "release_group",
+              "title": "JOSE",
+              "category": "studio",
+              "firstReleaseDate": "2021-09-10",
+              "credits": [
+                {
+                  "name": "J Balvin",
+                  "artist": {
+                    "id": "5bdeb32d-56a5-4b6d-a768-264101fa0a0a",
+                    "name": "J Balvin"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "KG0516",
+          "artist": "Karol G",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "8d800840-ea35-4d01-bf68-0688bac0d67f",
+            "seed": {
+              "kind": "release_group",
+              "title": "KG0516",
+              "category": "studio",
+              "firstReleaseDate": "2021-03-26",
+              "credits": [
+                {
+                  "name": "KAROL G",
+                  "artist": {
+                    "id": "de22adae-f8ac-414f-b653-b0162611bd60",
+                    "name": "KAROL G"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Leyendas",
+          "artist": "Carlos Rivera",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "7ed938e5-0a56-48ad-9783-cabbc005c1f8",
+            "seed": {
+              "kind": "release_group",
+              "title": "Leyendas",
+              "category": "studio",
+              "firstReleaseDate": "2021-05-28",
+              "credits": [
+                {
+                  "name": "Carlos Rivera",
+                  "artist": {
+                    "id": "63b7412b-54f1-4568-a6b8-25194699ca96",
+                    "name": "Carlos Rivera"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Mexicana Enamorada",
+          "artist": "Ángela Aguilar",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a0af1140-d0ec-450f-806a-f244a5909e42",
+            "seed": {
+              "kind": "release_group",
+              "title": "Mexicana enamorada",
+              "category": "studio",
+              "firstReleaseDate": "2021-09-24",
+              "credits": [
+                {
+                  "name": "Ángela Aguilar",
+                  "artist": {
+                    "id": "cda7b93f-f9e9-4a1b-b66a-7d0c8678d4ae",
+                    "name": "Ángela Aguilar"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Mis Manos",
+          "artist": "Camilo",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "8b5aa41c-04c1-41c0-ab7d-12e6fb3c4ec1",
+            "seed": {
+              "kind": "release_group",
+              "title": "Mis manos",
+              "category": "studio",
+              "firstReleaseDate": "2021-03-04",
+              "credits": [
+                {
+                  "name": "Camilo",
+                  "artist": {
+                    "id": "ed90e3b4-8eb8-4f9d-a24e-533c0c60c720",
+                    "name": "Camilo"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Utopía Live From Metlife Stadium",
+          "artist": "Romeo Santos",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "0c1d0cc8-6c3b-465d-9cf1-bb09ca23df11",
+            "seed": {
+              "kind": "release_group",
+              "title": "Utopía Live From MetLife Stadium",
+              "category": "live_other",
+              "firstReleaseDate": "2021-09-10",
+              "credits": [
+                {
+                  "name": "Romeo Santos",
+                  "artist": {
+                    "id": "35f343df-3b87-4475-b0e4-d2ba5cc26eea",
+                    "name": "Romeo Santos"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Vamos Bien",
+          "artist": "Calibre 50",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "39efc1f7-3467-40e3-a969-87c02c77766b",
+            "seed": {
+              "kind": "release_group",
+              "title": "Vamos bien",
+              "category": "studio",
+              "firstReleaseDate": "2021-02-05",
+              "credits": [
+                {
+                  "name": "Calibre 50",
+                  "artist": {
+                    "id": "28c7230b-cf8f-49c8-aac9-92d36fb7a067",
+                    "name": "Calibre 50"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "song-of-the-year",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Bichota",
+          "artist": "Karol G",
+          "anchor": {
+            "title": "Bichota",
+            "artist": "Karol G"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "29e6113a-89d6-4ae7-85cc-08be1955e57f",
+            "seed": {
+              "kind": "recording",
+              "title": "BICHOTA",
+              "durationSec": 179,
+              "credits": [
+                {
+                  "name": "KAROL G",
+                  "artist": {
+                    "id": "de22adae-f8ac-414f-b653-b0162611bd60",
+                    "name": "KAROL G"
+                  }
+                }
+              ],
+              "anchorMbid": "a41e8e93-ab2c-45dc-8064-caab79bd01c4",
+              "anchor": {
+                "kind": "release_group",
+                "title": "BICHOTA",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-10-23",
+                "credits": [
+                  {
+                    "name": "KAROL G",
+                    "artist": {
+                      "id": "de22adae-f8ac-414f-b653-b0162611bd60",
+                      "name": "KAROL G"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Dakiti",
+          "artist": "Bad Bunny & Jhay Cortez",
+          "anchor": {
+            "title": "Dakiti",
+            "artist": "Bad Bunny"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b6e10c60-9abb-4b67-860b-876d2a2eeaec",
+            "seed": {
+              "kind": "recording",
+              "title": "DÁKITI",
+              "durationSec": 205,
+              "credits": [
+                {
+                  "name": "Bad Bunny",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "89aa5ecb-59ad-46f5-b3eb-2d424e941f19",
+                    "name": "Bad Bunny"
+                  }
+                },
+                {
+                  "name": "Jhay Cortez",
+                  "artist": {
+                    "id": "2b67658e-429f-425a-adf5-345b13112fc1",
+                    "name": "JHAYCO"
+                  }
+                }
+              ],
+              "anchorMbid": "ac972a5c-26b2-4600-9f35-73002861317f",
+              "anchor": {
+                "kind": "release_group",
+                "title": "DÁKITI",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-10-30",
+                "credits": [
+                  {
+                    "name": "Bad Bunny",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "89aa5ecb-59ad-46f5-b3eb-2d424e941f19",
+                      "name": "Bad Bunny"
+                    }
+                  },
+                  {
+                    "name": "Jhay Cortez",
+                    "artist": {
+                      "id": "2b67658e-429f-425a-adf5-345b13112fc1",
+                      "name": "JHAYCO"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "De Vuelta Pa’ La Vuelta",
+          "artist": "Daddy Yankee & Marc Anthony",
+          "anchor": {
+            "title": "De Vuelta Pa’ La Vuelta",
+            "artist": "Daddy Yankee"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "add98227-3d46-4463-893b-dd52600616a3",
+            "seed": {
+              "kind": "recording",
+              "title": "De vuelta pa' la vuelta",
+              "durationSec": 231,
+              "credits": [
+                {
+                  "name": "Daddy Yankee",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "2f522f5c-111c-4ce8-8bd0-d82e97c227ad",
+                    "name": "Daddy Yankee"
+                  }
+                },
+                {
+                  "name": "Marc Anthony",
+                  "artist": {
+                    "id": "25607613-aceb-445a-8519-83a2ee0f8402",
+                    "name": "Marc Anthony"
+                  }
+                }
+              ],
+              "anchorMbid": "5e8d8979-9adf-47cf-a5e6-d83e5ec9e481",
+              "anchor": {
+                "kind": "release_group",
+                "title": "De vuelta pa' la vuelta",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-12-10",
+                "credits": [
+                  {
+                    "name": "Daddy Yankee",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "2f522f5c-111c-4ce8-8bd0-d82e97c227ad",
+                      "name": "Daddy Yankee"
+                    }
+                  },
+                  {
+                    "name": "Marc Anthony",
+                    "artist": {
+                      "id": "25607613-aceb-445a-8519-83a2ee0f8402",
+                      "name": "Marc Anthony"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Dime Cómo Quieres",
+          "artist": "Christian Nodal &Ángela Aguilar",
+          "anchor": {
+            "title": "Dime Cómo Quieres",
+            "artist": "Christian Nodal &Ángela Aguilar"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Fiel",
+          "artist": "Los Legendarios, Wisin & Jhay Cortez",
+          "anchor": {
+            "title": "Fiel",
+            "artist": "Los Legendarios"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "cfecbf5a-1c29-4c39-9b40-2350ba158d75",
+            "seed": {
+              "kind": "recording",
+              "title": "Fiel (remix)",
+              "durationSec": 349,
+              "credits": [
+                {
+                  "name": "Wisin",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "6a6eea03-b435-446c-bab1-312b45580aee",
+                    "name": "Wisin"
+                  }
+                },
+                {
+                  "name": "Jhay Cortez",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "2b67658e-429f-425a-adf5-345b13112fc1",
+                    "name": "JHAYCO"
+                  }
+                },
+                {
+                  "name": "Myke Towers",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "d2945137-b01d-4195-9f82-64d20f8ba657",
+                    "name": "Myke Towers"
+                  }
+                },
+                {
+                  "name": "Anuel AA",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "87a75fc3-59e7-4598-925c-8e230bce5db9",
+                    "name": "Anuel AA"
+                  }
+                },
+                {
+                  "name": "Los Legendarios",
+                  "artist": {
+                    "id": "12c0f608-d993-4926-8c7b-489b2afc5c91",
+                    "name": "Los Legendarios"
+                  }
+                }
+              ],
+              "anchorMbid": "b6800d15-e00f-4aef-b504-697509701dc8",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Fiel (remix)",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-06-15",
+                "credits": [
+                  {
+                    "name": "Wisin",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "6a6eea03-b435-446c-bab1-312b45580aee",
+                      "name": "Wisin"
+                    }
+                  },
+                  {
+                    "name": "Jhay Cortez",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "2b67658e-429f-425a-adf5-345b13112fc1",
+                      "name": "JHAYCO"
+                    }
+                  },
+                  {
+                    "name": "Myke Towers",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "d2945137-b01d-4195-9f82-64d20f8ba657",
+                      "name": "Myke Towers"
+                    }
+                  },
+                  {
+                    "name": "Anuel AA",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "87a75fc3-59e7-4598-925c-8e230bce5db9",
+                      "name": "Anuel AA"
+                    }
+                  },
+                  {
+                    "name": "Los Legendarios",
+                    "artist": {
+                      "id": "12c0f608-d993-4926-8c7b-489b2afc5c91",
+                      "name": "Los Legendarios"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Pepas",
+          "artist": "Farruko",
+          "anchor": {
+            "title": "Pepas",
+            "artist": "Farruko"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "0140c969-784c-434f-96fb-031fff0ee296",
+            "seed": {
+              "kind": "recording",
+              "title": "Pepas",
+              "durationSec": 287,
+              "credits": [
+                {
+                  "name": "Farruko",
+                  "artist": {
+                    "id": "d2b3524f-67e8-45ef-bfc1-693cac525135",
+                    "name": "Farruko"
+                  }
+                }
+              ],
+              "anchorMbid": "d8e65b1d-e860-4fcd-b54d-5766b60b54bc",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Pepas",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-06-24",
+                "credits": [
+                  {
+                    "name": "Farruko",
+                    "artist": {
+                      "id": "d2b3524f-67e8-45ef-bfc1-693cac525135",
+                      "name": "Farruko"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Telepatía",
+          "artist": "Kali Uchis",
+          "anchor": {
+            "title": "Telepatía",
+            "artist": "Kali Uchis"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2fc3283f-dc40-4c7b-af4b-e60d27d66750",
+            "seed": {
+              "kind": "recording",
+              "title": "Telepatía",
+              "durationSec": 160,
+              "credits": [
+                {
+                  "name": "Kali Uchis",
+                  "artist": {
+                    "id": "d0c7656d-8169-4f77-9dbe-b8f24e40105d",
+                    "name": "Kali Uchis"
+                  }
+                }
+              ],
+              "anchorMbid": "c958a42c-3b7c-4f9a-a2c6-f9524331938b",
+              "anchor": {
+                "kind": "release_group",
+                "title": "telepatía",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-02-19",
+                "credits": [
+                  {
+                    "name": "Kali Uchis",
+                    "artist": {
+                      "id": "d0c7656d-8169-4f77-9dbe-b8f24e40105d",
+                      "name": "Kali Uchis"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Todo de Ti",
+          "artist": "Rauw Alejandro",
+          "anchor": {
+            "title": "Todo de Ti",
+            "artist": "Rauw Alejandro"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2928b0e8-1116-4593-a214-5838d574fb08",
+            "seed": {
+              "kind": "recording",
+              "title": "Todo de ti",
+              "durationSec": 200,
+              "credits": [
+                {
+                  "name": "Rauw Alejandro",
+                  "artist": {
+                    "id": "197b70c7-8910-4030-ad03-632d82aa40e3",
+                    "name": "Rauw Alejandro"
+                  }
+                }
+              ],
+              "anchorMbid": "6e148ec7-6f66-487c-8084-2191b942189a",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Todo de ti",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-05-19",
+                "credits": [
+                  {
+                    "name": "Rauw Alejandro",
+                    "artist": {
+                      "id": "197b70c7-8910-4030-ad03-632d82aa40e3",
+                      "name": "Rauw Alejandro"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Vida de Rico",
+          "artist": "Camilo",
+          "anchor": {
+            "title": "Vida de Rico",
+            "artist": "Camilo"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b1968a9c-8c66-4092-9fc3-6d8e1d704565",
+            "seed": {
+              "kind": "recording",
+              "title": "Vida de rico",
+              "durationSec": 185,
+              "credits": [
+                {
+                  "name": "Camilo",
+                  "artist": {
+                    "id": "ed90e3b4-8eb8-4f9d-a24e-533c0c60c720",
+                    "name": "Camilo"
+                  }
+                }
+              ],
+              "anchorMbid": "7acfb1a9-7204-4661-ab4d-13682f1e0070",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Vida de rico",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-09-21",
+                "credits": [
+                  {
+                    "name": "Camilo",
+                    "artist": {
+                      "id": "ed90e3b4-8eb8-4f9d-a24e-533c0c60c720",
+                      "name": "Camilo"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Yo Todo Lo Doy",
+          "artist": "Alfredo Olivas",
+          "anchor": {
+            "title": "Yo Todo Lo Doy",
+            "artist": "Alfredo Olivas"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        }
+      ]
+    },
+    {
+      "key": "new-artist-female",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Ángela Aguilar",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "cda7b93f-f9e9-4a1b-b66a-7d0c8678d4ae",
+            "seed": {
+              "kind": "artist",
+              "name": "Ángela Aguilar",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Elena Rose",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "8d1e7c48-f997-4ec4-ab86-864afdbeb932",
+            "seed": {
+              "kind": "artist",
+              "name": "Elena Rose",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Evaluna Montaner",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ca584beb-21ea-4821-a960-9dd074f90c27",
+            "seed": {
+              "kind": "artist",
+              "name": "Evaluna Montaner",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Kali Uchis",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d0c7656d-8169-4f77-9dbe-b8f24e40105d",
+            "seed": {
+              "kind": "artist",
+              "name": "Kali Uchis",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "La Ross María",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "5578dd73-cd39-4292-b9b2-f1b01f17eb96",
+            "seed": {
+              "kind": "artist",
+              "name": "La Ross María",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Majo Aguilar",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "818d11de-dbf7-4640-9562-fb244a77b63e",
+            "seed": {
+              "kind": "artist",
+              "name": "Majo Aguilar",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "María Becerra",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a69b643d-2cd9-4914-8a1a-3f3797a7323c",
+            "seed": {
+              "kind": "artist",
+              "name": "María Becerra",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "The Change",
+          "won": false,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": [
+              {
+                "mbid": "1492856d-bc0c-4582-9696-69ade034b246",
+                "score": 100,
+                "label": "The Change (Swedish hardcore band) · SE",
+                "seed": {
+                  "kind": "artist",
+                  "name": "The Change",
+                  "mbType": "Group",
+                  "disambiguation": "Swedish hardcore band"
+                }
+              },
+              {
+                "mbid": "b05f643f-977b-449b-9ad5-52ea719fe64d",
+                "score": 98,
+                "label": "The Change (All Girl Funk/R&B/Soul Band from WV)",
+                "seed": {
+                  "kind": "artist",
+                  "name": "The Change",
+                  "mbType": "Group",
+                  "disambiguation": "All Girl Funk/R&B/Soul Band from WV"
+                }
+              },
+              {
+                "mbid": "6a5e028d-6f5f-4c1a-b092-610b11e9b4ff",
+                "score": 97,
+                "label": "The Change (Salt Lake City, UT band) · US",
+                "seed": {
+                  "kind": "artist",
+                  "name": "The Change",
+                  "mbType": "Group",
+                  "disambiguation": "Salt Lake City, UT band"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "title": "VF7",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d67a6273-3da0-46f8-bd3b-d3634e5e5266",
+            "seed": {
+              "kind": "artist",
+              "name": "vf7",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Yendry",
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        }
+      ]
+    },
+    {
+      "key": "new-artist-male",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "El Alfa",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "0887484d-aed1-4aa6-9862-930a25815696",
+            "seed": {
+              "kind": "artist",
+              "name": "El Alfa",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Blessd",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d6450b43-baab-4406-8f77-d4c6abb803c1",
+            "seed": {
+              "kind": "artist",
+              "name": "Blessd",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Boza",
+          "won": false,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": [
+              {
+                "mbid": "46aaed31-3d1b-44c2-a6d7-22949e6c2e4e",
+                "score": 100,
+                "label": "Boza (Panamanian reggaeton artist) · PA",
+                "seed": {
+                  "kind": "artist",
+                  "name": "Boza",
+                  "mbType": "Person",
+                  "disambiguation": "Panamanian reggaeton artist"
+                }
+              },
+              {
+                "mbid": "4918927a-6f8e-402e-85ba-dac44e04c699",
+                "score": 98,
+                "label": "Bozá (Nueva Gaita)",
+                "seed": {
+                  "kind": "artist",
+                  "name": "Bozá",
+                  "mbType": "Group",
+                  "disambiguation": "Nueva Gaita"
+                }
+              },
+              {
+                "mbid": "85821b0f-21b8-4f31-9493-31ca24d8e379",
+                "score": 97,
+                "label": "Boza (Canadian techno producer) · CA",
+                "seed": {
+                  "kind": "artist",
+                  "name": "Boza",
+                  "mbType": "Person",
+                  "disambiguation": "Canadian techno producer"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "title": "Duki",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "44869536-0262-4f22-9c23-b4821c13cd97",
+            "seed": {
+              "kind": "artist",
+              "name": "Duki",
+              "mbType": "Person",
+              "disambiguation": "Argentine freestyle, rap & trap singer"
+            }
+          }
+        },
+        {
+          "title": "El Fantasma",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "576c18cd-f18a-4701-baf3-45edc8f85bd9",
+            "seed": {
+              "kind": "artist",
+              "name": "El Fantasma",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Feid",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "eaee97f6-f2e4-414a-966c-f31a1fb4696a",
+            "seed": {
+              "kind": "artist",
+              "name": "Feid",
+              "mbType": "Person",
+              "disambiguation": "Colombian singer-songwriter"
+            }
+          }
+        },
+        {
+          "title": "Khea",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "f222364e-abef-48a2-b440-5525ee985cb5",
+            "seed": {
+              "kind": "artist",
+              "name": "KHEA",
+              "mbType": "Person",
+              "disambiguation": "Argentine rapper"
+            }
+          }
+        },
+        {
+          "title": "Los Dos Carnales",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c8dc5e69-a456-4d97-841a-404dd77367c9",
+            "seed": {
+              "kind": "artist",
+              "name": "Los Dos Carnales",
+              "mbType": "Group",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Santa Fe Klan",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b414ddbf-2ffd-4a60-8749-124917688877",
+            "seed": {
+              "kind": "artist",
+              "name": "Santa Fe Klan",
+              "mbType": "Person",
+              "disambiguation": "Ángel Quezada"
+            }
+          }
+        },
+        {
+          "title": "Tiago PZK",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "5013fedb-a4aa-4467-b60e-374d704e5337",
+            "seed": {
+              "kind": "artist",
+              "name": "Tiago PZK",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "crossover-collaboration",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "‘In Da Ghetto’",
+          "artist": "J Balvin & Skrillex",
+          "anchor": {
+            "title": "‘In Da Ghetto’",
+            "artist": "J Balvin"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘Del Mar’",
+          "artist": "Ozuna, Doja Cat & Sia",
+          "anchor": {
+            "title": "‘Del Mar’",
+            "artist": "Ozuna"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e9269296-c86c-441c-86bc-17e060156db5",
+            "seed": {
+              "kind": "recording",
+              "title": "Ozuna X Doja Cat X Sia - Del Mar (Dimen5ions & DJ Alejandro Bachata Remix)",
+              "durationSec": 251,
+              "credits": [
+                {
+                  "name": "Ozuna",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "f2651b63-a44d-4d1d-ba64-d981d971ecd1",
+                    "name": "Ozuna"
+                  }
+                },
+                {
+                  "name": "Doja Cat",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "5df62a88-cac9-490a-b62c-c7c88f4020f4",
+                    "name": "Doja Cat"
+                  }
+                },
+                {
+                  "name": "Sia",
+                  "joinphrase": " RMX by ",
+                  "artist": {
+                    "id": "2f548675-008d-4332-876c-108b0c7ab9c5",
+                    "name": "Sia"
+                  }
+                },
+                {
+                  "name": "DJ Alejandro",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "f66fab00-1f8f-4404-8137-049e2606f2d1",
+                    "name": "DJ Alejandro"
+                  }
+                },
+                {
+                  "name": "Dj Dimen5ions",
+                  "artist": {
+                    "id": "ce71c263-60f7-4124-800e-2077f078cd3e",
+                    "name": "Dj Dimen5ions"
+                  }
+                }
+              ],
+              "anchorMbid": "f80b6e04-29df-4a00-b7ff-d28600f0b9d4",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Del Mar (Dimen5ions & DJ Alejandro Bachata Remix)",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-03-18",
+                "credits": [
+                  {
+                    "name": "Ozuna",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "f2651b63-a44d-4d1d-ba64-d981d971ecd1",
+                      "name": "Ozuna"
+                    }
+                  },
+                  {
+                    "name": "Doja Cat",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "5df62a88-cac9-490a-b62c-c7c88f4020f4",
+                      "name": "Doja Cat"
+                    }
+                  },
+                  {
+                    "name": "Sia",
+                    "joinphrase": " RMX by ",
+                    "artist": {
+                      "id": "2f548675-008d-4332-876c-108b0c7ab9c5",
+                      "name": "Sia"
+                    }
+                  },
+                  {
+                    "name": "DJ Alejandro",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "f66fab00-1f8f-4404-8137-049e2606f2d1",
+                      "name": "DJ Alejandro"
+                    }
+                  },
+                  {
+                    "name": "Dj Dimen5ions",
+                    "artist": {
+                      "id": "ce71c263-60f7-4124-800e-2077f078cd3e",
+                      "name": "Dj Dimen5ions"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Don´t Be Shy’",
+          "artist": "Tiesto & Karol G",
+          "anchor": {
+            "title": "‘Don´t Be Shy’",
+            "artist": "Tiesto"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘Girl Like Me’ (Remix)",
+          "artist": "Black Eyed Peas, Shakira & Twocolors",
+          "anchor": {
+            "title": "‘Girl Like Me’ (Remix)",
+            "artist": "Black Eyed Peas"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘Kesi (Remix)’",
+          "artist": "Camilo & Shawn Mendes",
+          "anchor": {
+            "title": "‘Kesi (Remix)’",
+            "artist": "Camilo"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "760095ce-03ee-45dc-a95a-a4ad6031f816",
+            "seed": {
+              "kind": "recording",
+              "title": "KESI (remix)",
+              "durationSec": 176,
+              "credits": [
+                {
+                  "name": "Camilo",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "ed90e3b4-8eb8-4f9d-a24e-533c0c60c720",
+                    "name": "Camilo"
+                  }
+                },
+                {
+                  "name": "Shawn Mendes",
+                  "artist": {
+                    "id": "b7d92248-97e3-4450-8057-6fe06738f735",
+                    "name": "Shawn Mendes"
+                  }
+                }
+              ],
+              "anchorMbid": "0918f4ac-a5d2-43f1-8bdd-0ae022ec3eb7",
+              "anchor": {
+                "kind": "release_group",
+                "title": "KESI (remix)",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-07-14",
+                "credits": [
+                  {
+                    "name": "Camilo",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "ed90e3b4-8eb8-4f9d-a24e-533c0c60c720",
+                      "name": "Camilo"
+                    }
+                  },
+                  {
+                    "name": "Shawn Mendes",
+                    "artist": {
+                      "id": "b7d92248-97e3-4450-8057-6fe06738f735",
+                      "name": "Shawn Mendes"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "pop-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Déja Vu",
+          "artist": "CNCO",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "656c06bc-a363-428a-8ada-fdc0100e7e5e",
+            "seed": {
+              "kind": "release_group",
+              "title": "Déjà vu",
+              "category": "studio",
+              "firstReleaseDate": "2021-02-05",
+              "credits": [
+                {
+                  "name": "CNCO",
+                  "artist": {
+                    "id": "c2258df3-cfce-4dec-a721-33ca87c1be8f",
+                    "name": "CNCO"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Desamorfosis",
+          "artist": "Thalía",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "363b7e4d-d862-4552-b7f9-0c451ff66f5d",
+            "seed": {
+              "kind": "release_group",
+              "title": "desAMORfosis",
+              "category": "studio",
+              "firstReleaseDate": "2021-05-14",
+              "credits": [
+                {
+                  "name": "Thalía",
+                  "artist": {
+                    "id": "ae33ce8d-f41a-4f6b-b9c6-7859acbd04ef",
+                    "name": "Thalía"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "El Amor En Los Tiempos Del Perreo",
+          "artist": "Piso 21",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "50c74572-12ac-4f8e-be91-a7d6f4dae696",
+            "seed": {
+              "kind": "release_group",
+              "title": "El amor en los tiempos del perreo",
+              "category": "studio",
+              "firstReleaseDate": "2021-03-18",
+              "credits": [
+                {
+                  "name": "Piso 21",
+                  "artist": {
+                    "id": "b1caae3b-3f57-419f-9df9-e250a94275d6",
+                    "name": "Piso 21"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "El Playlist De Anoche",
+          "artist": "Tommy Torres",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2b9db127-d1a9-4c9c-946c-3066ea130e4b",
+            "seed": {
+              "kind": "release_group",
+              "title": "El playlist de anoche",
+              "category": "studio",
+              "firstReleaseDate": "2021-07-23",
+              "credits": [
+                {
+                  "name": "Tommy Torres",
+                  "artist": {
+                    "id": "a3d655dd-4202-42b2-b1ba-bb96d2c4d4b3",
+                    "name": "Tommy Torres"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "La Más Bella",
+          "artist": "Ednita Nazario",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "44bc8e5c-e4bb-4119-97f2-c3e6d709ddb6",
+            "seed": {
+              "kind": "release_group",
+              "title": "La más bella",
+              "category": "single_ep",
+              "firstReleaseDate": "2021-11-12",
+              "credits": [
+                {
+                  "name": "Ednita Nazario",
+                  "artist": {
+                    "id": "0cb38216-4daf-452a-ab93-9a943f807de0",
+                    "name": "Ednita Nazario"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Leyendas",
+          "artist": "Carlos Rivera",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "7ed938e5-0a56-48ad-9783-cabbc005c1f8",
+            "seed": {
+              "kind": "release_group",
+              "title": "Leyendas",
+              "category": "studio",
+              "firstReleaseDate": "2021-05-28",
+              "credits": [
+                {
+                  "name": "Carlos Rivera",
+                  "artist": {
+                    "id": "63b7412b-54f1-4568-a6b8-25194699ca96",
+                    "name": "Carlos Rivera"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Mis Manos",
+          "artist": "Camilo",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "8b5aa41c-04c1-41c0-ab7d-12e6fb3c4ec1",
+            "seed": {
+              "kind": "release_group",
+              "title": "Mis manos",
+              "category": "studio",
+              "firstReleaseDate": "2021-03-04",
+              "credits": [
+                {
+                  "name": "Camilo",
+                  "artist": {
+                    "id": "ed90e3b4-8eb8-4f9d-a24e-533c0c60c720",
+                    "name": "Camilo"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Revelación",
+          "artist": "Selena Gomez",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "bb34208f-dff4-43af-aab8-99c8de394a45",
+            "seed": {
+              "kind": "release_group",
+              "title": "Revelación",
+              "category": "single_ep",
+              "firstReleaseDate": "2021-03-12",
+              "credits": [
+                {
+                  "name": "Selena Gomez",
+                  "artist": {
+                    "id": "e4bc69e2-a064-4f93-ada1-f7f209cc1cc3",
+                    "name": "Selena Gomez"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Rifresh",
+          "artist": "Mau y Ricky",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "59ced215-c0c4-4dcb-8009-b5225e1549f5",
+            "seed": {
+              "kind": "release_group",
+              "title": "Rifresh",
+              "category": "studio",
+              "firstReleaseDate": "2020-11-20",
+              "credits": [
+                {
+                  "name": "Mau y Ricky",
+                  "artist": {
+                    "id": "8116d0a6-f9de-42f6-b2f6-8c3c419043dd",
+                    "name": "Mau y Ricky"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Sin Miedo (Del Amor y Otros Demonios)",
+          "artist": "Kali Uchis",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "65435725-fb6c-4a72-a239-3971e2254956",
+            "seed": {
+              "kind": "release_group",
+              "title": "Sin miedo (del amor y otros demonios) ∞",
+              "category": "studio",
+              "firstReleaseDate": "2020-11-18",
+              "credits": [
+                {
+                  "name": "Kali Uchis",
+                  "artist": {
+                    "id": "d0c7656d-8169-4f77-9dbe-b8f24e40105d",
+                    "name": "Kali Uchis"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "urban-album",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "El Último Tour Del Mundo",
+          "artist": "Bad Bunny",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "4b550700-6912-4f3b-a804-bac8da786629",
+            "seed": {
+              "kind": "release_group",
+              "title": "EL ÚLTIMO TOUR DEL MUNDO",
+              "category": "studio",
+              "firstReleaseDate": "2020-11-27",
+              "credits": [
+                {
+                  "name": "Bad Bunny",
+                  "artist": {
+                    "id": "89aa5ecb-59ad-46f5-b3eb-2d424e941f19",
+                    "name": "Bad Bunny"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Jose",
+          "artist": "J Balvin",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ec71825d-bd4b-4c06-adf7-c7fb9ca1f823",
+            "seed": {
+              "kind": "release_group",
+              "title": "JOSE",
+              "category": "studio",
+              "firstReleaseDate": "2021-09-10",
+              "credits": [
+                {
+                  "name": "J Balvin",
+                  "artist": {
+                    "id": "5bdeb32d-56a5-4b6d-a768-264101fa0a0a",
+                    "name": "J Balvin"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "KG0516",
+          "artist": "Karol G",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "8d800840-ea35-4d01-bf68-0688bac0d67f",
+            "seed": {
+              "kind": "release_group",
+              "title": "KG0516",
+              "category": "studio",
+              "firstReleaseDate": "2021-03-26",
+              "credits": [
+                {
+                  "name": "KAROL G",
+                  "artist": {
+                    "id": "de22adae-f8ac-414f-b653-b0162611bd60",
+                    "name": "KAROL G"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "La 167",
+          "artist": "Farruko",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "4f7d1b17-f6c2-43b5-8dbc-b8ac62da65a3",
+            "seed": {
+              "kind": "release_group",
+              "title": "La 167",
+              "category": "studio",
+              "firstReleaseDate": "2021-10-01",
+              "credits": [
+                {
+                  "name": "Farruko",
+                  "artist": {
+                    "id": "d2b3524f-67e8-45ef-bfc1-693cac525135",
+                    "name": "Farruko"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "La Última Promesa",
+          "artist": "Justin Quiles",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "26e6a4ab-b764-4ed0-a7c4-57acd8e70d7a",
+            "seed": {
+              "kind": "release_group",
+              "title": "La última promesa",
+              "category": "studio",
+              "firstReleaseDate": "2021-08-19",
+              "credits": [
+                {
+                  "name": "Justin Quiles",
+                  "artist": {
+                    "id": "e5fdb46c-eb73-4820-94ba-5dd5b35948cf",
+                    "name": "Justin Quiles"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Los Favoritos 2.5",
+          "artist": "Arcángel",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "0604b091-c480-4232-a001-feba80ee2379",
+            "seed": {
+              "kind": "release_group",
+              "title": "Los favoritos 2.5",
+              "category": "studio",
+              "firstReleaseDate": "2021-09-17",
+              "credits": [
+                {
+                  "name": "Arcángel",
+                  "artist": {
+                    "id": "47e7833f-f1a7-4703-942d-9acf12f39a1d",
+                    "name": "Arcángel"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Los Legendarios 001",
+          "artist": "Los Legendarios",
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Nattividad",
+          "artist": "Natti Natasha",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "8d11a371-f4c6-47ea-9b61-e002ad5fef56",
+            "seed": {
+              "kind": "release_group",
+              "title": "NATTIVIDAD",
+              "category": "studio",
+              "firstReleaseDate": "2021-09-24",
+              "credits": [
+                {
+                  "name": "Natti Natasha",
+                  "artist": {
+                    "id": "25be91ac-7d7c-441f-a7d2-98e35d642e4c",
+                    "name": "Natti Natasha"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Timelezz",
+          "artist": "Jhayco",
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Vice Versa",
+          "artist": "Rauw Alejandro",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "89c26a1a-7c23-4dec-891f-22f5fd2c6f3f",
+            "seed": {
+              "kind": "release_group",
+              "title": "VICE VERSA",
+              "category": "studio",
+              "firstReleaseDate": "2021-06-05",
+              "credits": [
+                {
+                  "name": "Rauw Alejandro",
+                  "artist": {
+                    "id": "197b70c7-8910-4030-ad03-632d82aa40e3",
+                    "name": "Rauw Alejandro"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "pop-artist",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Camilo",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "138fe36a-0888-40d2-9390-3d9be0d74f07",
+            "seed": {
+              "kind": "artist",
+              "name": "Camilo Sesto",
+              "mbType": "Person",
+              "disambiguation": "singer, songwriter, music producer"
+            }
+          }
+        },
+        {
+          "title": "Carlos Rivera",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "63b7412b-54f1-4568-a6b8-25194699ca96",
+            "seed": {
+              "kind": "artist",
+              "name": "Carlos Rivera",
+              "mbType": "Person",
+              "disambiguation": "Mexican singer"
+            }
+          }
+        },
+        {
+          "title": "Luis Fonsi",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d68fda90-ab8d-4799-be56-317ba4ae700f",
+            "seed": {
+              "kind": "artist",
+              "name": "Luis Fonsi",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Maluma",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e8979f75-9110-4df8-ac70-898898d080d1",
+            "seed": {
+              "kind": "artist",
+              "name": "Maluma",
+              "mbType": "Person",
+              "disambiguation": "Juan Luis Londoño Arias, Colombian reggaeton/pop singer"
+            }
+          }
+        },
+        {
+          "title": "Mon Laferte",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ab966c0f-e526-46ae-b492-82c27b87f81f",
+            "seed": {
+              "kind": "artist",
+              "name": "Mon Laferte",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Ricardo Montaner",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "9ea7c031-a2d0-4a89-b469-72b51c47417c",
+            "seed": {
+              "kind": "artist",
+              "name": "Ricardo Montaner",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Ricky Martin",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "70ea63ea-70dc-4b63-951a-2c249d2b3b0a",
+            "seed": {
+              "kind": "artist",
+              "name": "Ricky Martin",
+              "mbType": "Person",
+              "disambiguation": "Puerto Rican singer, actor, author & king of Latin pop"
+            }
+          }
+        },
+        {
+          "title": "Rosalía",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "25f3abd9-63b5-471a-bd25-feb9672dfa11",
+            "seed": {
+              "kind": "artist",
+              "name": "ROSALÍA",
+              "mbType": "Person",
+              "disambiguation": "Spanish singer"
+            }
+          }
+        },
+        {
+          "title": "Sebastián Yatra",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "151d9c35-43b8-49b9-a69a-5db6525dbcd2",
+            "seed": {
+              "kind": "artist",
+              "name": "Sebastián Yatra",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Selena Gomez",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e4bc69e2-a064-4f93-ada1-f7f209cc1cc3",
+            "seed": {
+              "kind": "artist",
+              "name": "Selena Gomez",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "pop-group-duo",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "CNCO",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c2258df3-cfce-4dec-a721-33ca87c1be8f",
+            "seed": {
+              "kind": "artist",
+              "name": "CNCO",
+              "mbType": "Group",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Mau y Ricky",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "8116d0a6-f9de-42f6-b2f6-8c3c419043dd",
+            "seed": {
+              "kind": "artist",
+              "name": "Mau y Ricky",
+              "mbType": "Group",
+              "disambiguation": "aka MR"
+            }
+          }
+        },
+        {
+          "title": "Morat",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "664f5669-a550-49fc-a38c-951594ddc9a4",
+            "seed": {
+              "kind": "artist",
+              "name": "Morat",
+              "mbType": "Group",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Piso 21",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b1caae3b-3f57-419f-9df9-e250a94275d6",
+            "seed": {
+              "kind": "artist",
+              "name": "Piso 21",
+              "mbType": "Group",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Reik",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "04cff564-a2e3-4560-8e7e-bc2539e7b46c",
+            "seed": {
+              "kind": "artist",
+              "name": "Reik",
+              "mbType": "Group",
+              "disambiguation": "Mexican pop rock band"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "pop-song",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "‘Tan Enamorados’",
+          "artist": "CNCO",
+          "anchor": {
+            "title": "‘Tan Enamorados’",
+            "artist": "CNCO"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘Amén’",
+          "artist": "Ricardo Montaner, Mau y Ricky, Camilo & Evaluna Montaner",
+          "anchor": {
+            "title": "‘Amén’",
+            "artist": "Ricardo Montaner"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ab1e6140-d11b-48c1-8fee-960869b09b29",
+            "seed": {
+              "kind": "recording",
+              "title": "Amén",
+              "durationSec": 253,
+              "credits": [
+                {
+                  "name": "Ricardo Montaner",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "9ea7c031-a2d0-4a89-b469-72b51c47417c",
+                    "name": "Ricardo Montaner"
+                  }
+                },
+                {
+                  "name": "Evaluna Montaner",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "ca584beb-21ea-4821-a960-9dd074f90c27",
+                    "name": "Evaluna Montaner"
+                  }
+                },
+                {
+                  "name": "Camilo",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "ed90e3b4-8eb8-4f9d-a24e-533c0c60c720",
+                    "name": "Camilo"
+                  }
+                },
+                {
+                  "name": "Mau y Ricky",
+                  "artist": {
+                    "id": "8116d0a6-f9de-42f6-b2f6-8c3c419043dd",
+                    "name": "Mau y Ricky"
+                  }
+                }
+              ],
+              "anchorMbid": "60d1b0f6-8c8b-4665-a75a-716c5c48d54d",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Amén",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-12-23",
+                "credits": [
+                  {
+                    "name": "Ricardo Montaner",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "9ea7c031-a2d0-4a89-b469-72b51c47417c",
+                      "name": "Ricardo Montaner"
+                    }
+                  },
+                  {
+                    "name": "Evaluna Montaner",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "ca584beb-21ea-4821-a960-9dd074f90c27",
+                      "name": "Evaluna Montaner"
+                    }
+                  },
+                  {
+                    "name": "Camilo",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "ed90e3b4-8eb8-4f9d-a24e-533c0c60c720",
+                      "name": "Camilo"
+                    }
+                  },
+                  {
+                    "name": "Mau y Ricky",
+                    "artist": {
+                      "id": "8116d0a6-f9de-42f6-b2f6-8c3c419043dd",
+                      "name": "Mau y Ricky"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Eres Mi Religión’",
+          "artist": "Maná & Joy",
+          "anchor": {
+            "title": "‘Eres Mi Religión’",
+            "artist": "Maná"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "afe4cf52-ce56-4351-b76c-272af3e88b0b",
+            "seed": {
+              "kind": "recording",
+              "title": "Eres mi religión",
+              "durationSec": 268,
+              "credits": [
+                {
+                  "name": "Maná",
+                  "joinphrase": " + ",
+                  "artist": {
+                    "id": "55441123-89a2-49ab-ae3f-df7a3e86835a",
+                    "name": "Maná"
+                  }
+                },
+                {
+                  "name": "Joy",
+                  "artist": {
+                    "id": "aa52ddf3-75c7-4f95-92ff-4617ef98a865",
+                    "name": "Joy"
+                  }
+                }
+              ],
+              "anchorMbid": "28275f38-5e23-481b-9f1c-15f3c578480a",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Eres mi religión",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-05-07",
+                "credits": [
+                  {
+                    "name": "Maná",
+                    "joinphrase": " + ",
+                    "artist": {
+                      "id": "55441123-89a2-49ab-ae3f-df7a3e86835a",
+                      "name": "Maná"
+                    }
+                  },
+                  {
+                    "name": "Joy",
+                    "artist": {
+                      "id": "aa52ddf3-75c7-4f95-92ff-4617ef98a865",
+                      "name": "Joy"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Estar Enamorado’",
+          "artist": "Carlos Rivera & Raphael",
+          "anchor": {
+            "title": "‘Estar Enamorado’",
+            "artist": "Carlos Rivera"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘Lo Intenté Todo’",
+          "artist": "Reik & Jessie Reyez",
+          "anchor": {
+            "title": "‘Lo Intenté Todo’",
+            "artist": "Reik"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘Se Nos Fue La Mano’",
+          "artist": "Ednita Nazario & Luis Fonsi",
+          "anchor": {
+            "title": "‘Se Nos Fue La Mano’",
+            "artist": "Ednita Nazario"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘Siempre He Estado Aquí’",
+          "artist": "RBD",
+          "anchor": {
+            "title": "‘Siempre He Estado Aquí’",
+            "artist": "RBD"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "610efcd0-8170-4b8a-81f3-f8a888de005c",
+            "seed": {
+              "kind": "recording",
+              "title": "Siempre he estado aquí",
+              "durationSec": 191,
+              "credits": [
+                {
+                  "name": "RBD",
+                  "artist": {
+                    "id": "5bae9c05-fabd-420f-b806-c5b8ba88bd7e",
+                    "name": "RBD"
+                  }
+                }
+              ],
+              "anchorMbid": "ac977f9d-5136-49e9-b2c5-890067625701",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Siempre he estado aquí",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-11-18",
+                "credits": [
+                  {
+                    "name": "RBD",
+                    "artist": {
+                      "id": "5bae9c05-fabd-420f-b806-c5b8ba88bd7e",
+                      "name": "RBD"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Telepatía’",
+          "artist": "Kali Uchis",
+          "anchor": {
+            "title": "‘Telepatía’",
+            "artist": "Kali Uchis"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2fc3283f-dc40-4c7b-af4b-e60d27d66750",
+            "seed": {
+              "kind": "recording",
+              "title": "Telepatía",
+              "durationSec": 160,
+              "credits": [
+                {
+                  "name": "Kali Uchis",
+                  "artist": {
+                    "id": "d0c7656d-8169-4f77-9dbe-b8f24e40105d",
+                    "name": "Kali Uchis"
+                  }
+                }
+              ],
+              "anchorMbid": "c958a42c-3b7c-4f9a-a2c6-f9524331938b",
+              "anchor": {
+                "kind": "release_group",
+                "title": "telepatía",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-02-19",
+                "credits": [
+                  {
+                    "name": "Kali Uchis",
+                    "artist": {
+                      "id": "d0c7656d-8169-4f77-9dbe-b8f24e40105d",
+                      "name": "Kali Uchis"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Un Beso En Madrid’",
+          "artist": "Tini & Alejandro Sanz",
+          "anchor": {
+            "title": "‘Un Beso En Madrid’",
+            "artist": "Tini"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "5456b768-5dac-44a1-a59e-7dd41c85d2fd",
+            "seed": {
+              "kind": "recording",
+              "title": "Un beso en Madrid",
+              "durationSec": 144,
+              "credits": [
+                {
+                  "name": "Tini",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "95bad1d4-ba1f-4060-940b-d415d66e934e",
+                    "name": "TINI"
+                  }
+                },
+                {
+                  "name": "Alejandro Sanz",
+                  "artist": {
+                    "id": "9bacf78f-9132-43da-8873-8a9eb49da0e9",
+                    "name": "Alejandro Sanz"
+                  }
+                }
+              ],
+              "anchorMbid": "cf43d153-0af2-478f-996c-ba272a02e171",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Un beso en Madrid",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-10-29",
+                "credits": [
+                  {
+                    "name": "Tini",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "95bad1d4-ba1f-4060-940b-d415d66e934e",
+                      "name": "TINI"
+                    }
+                  },
+                  {
+                    "name": "Alejandro Sanz",
+                    "artist": {
+                      "id": "9bacf78f-9132-43da-8873-8a9eb49da0e9",
+                      "name": "Alejandro Sanz"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Vida De Rico’",
+          "artist": "Camilo",
+          "anchor": {
+            "title": "‘Vida De Rico’",
+            "artist": "Camilo"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b1968a9c-8c66-4092-9fc3-6d8e1d704565",
+            "seed": {
+              "kind": "recording",
+              "title": "Vida de rico",
+              "durationSec": 185,
+              "credits": [
+                {
+                  "name": "Camilo",
+                  "artist": {
+                    "id": "ed90e3b4-8eb8-4f9d-a24e-533c0c60c720",
+                    "name": "Camilo"
+                  }
+                }
+              ],
+              "anchorMbid": "7acfb1a9-7204-4661-ab4d-13682f1e0070",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Vida de rico",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-09-21",
+                "credits": [
+                  {
+                    "name": "Camilo",
+                    "artist": {
+                      "id": "ed90e3b4-8eb8-4f9d-a24e-533c0c60c720",
+                      "name": "Camilo"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "pop-ballad-song",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "‘Amén’",
+          "artist": "Ricardo Montaner, Mau y Ricky, Camilo & Evaluna Montaner",
+          "anchor": {
+            "title": "‘Amén’",
+            "artist": "Ricardo Montaner"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ab1e6140-d11b-48c1-8fee-960869b09b29",
+            "seed": {
+              "kind": "recording",
+              "title": "Amén",
+              "durationSec": 253,
+              "credits": [
+                {
+                  "name": "Ricardo Montaner",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "9ea7c031-a2d0-4a89-b469-72b51c47417c",
+                    "name": "Ricardo Montaner"
+                  }
+                },
+                {
+                  "name": "Evaluna Montaner",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "ca584beb-21ea-4821-a960-9dd074f90c27",
+                    "name": "Evaluna Montaner"
+                  }
+                },
+                {
+                  "name": "Camilo",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "ed90e3b4-8eb8-4f9d-a24e-533c0c60c720",
+                    "name": "Camilo"
+                  }
+                },
+                {
+                  "name": "Mau y Ricky",
+                  "artist": {
+                    "id": "8116d0a6-f9de-42f6-b2f6-8c3c419043dd",
+                    "name": "Mau y Ricky"
+                  }
+                }
+              ],
+              "anchorMbid": "60d1b0f6-8c8b-4665-a75a-716c5c48d54d",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Amén",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-12-23",
+                "credits": [
+                  {
+                    "name": "Ricardo Montaner",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "9ea7c031-a2d0-4a89-b469-72b51c47417c",
+                      "name": "Ricardo Montaner"
+                    }
+                  },
+                  {
+                    "name": "Evaluna Montaner",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "ca584beb-21ea-4821-a960-9dd074f90c27",
+                      "name": "Evaluna Montaner"
+                    }
+                  },
+                  {
+                    "name": "Camilo",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "ed90e3b4-8eb8-4f9d-a24e-533c0c60c720",
+                      "name": "Camilo"
+                    }
+                  },
+                  {
+                    "name": "Mau y Ricky",
+                    "artist": {
+                      "id": "8116d0a6-f9de-42f6-b2f6-8c3c419043dd",
+                      "name": "Mau y Ricky"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Estar Enamorado’",
+          "artist": "Carlos Rivera & Raphael",
+          "anchor": {
+            "title": "‘Estar Enamorado’",
+            "artist": "Carlos Rivera"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘Se Nos Fue La Mano’",
+          "artist": "Ednita Nazario & Luis Fonsi",
+          "anchor": {
+            "title": "‘Se Nos Fue La Mano’",
+            "artist": "Ednita Nazario"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘Te Hubieras Ido Antes’",
+          "artist": "Reik",
+          "anchor": {
+            "title": "‘Te Hubieras Ido Antes’",
+            "artist": "Reik"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘Volaré’",
+          "artist": "Nella & Pedro Capó",
+          "anchor": {
+            "title": "‘Volaré’",
+            "artist": "Nella"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        }
+      ]
+    },
+    {
+      "key": "pop-collaboration",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "‘Pareja Del Año’",
+          "artist": "Sebastián Yatra & Myke Towers",
+          "anchor": {
+            "title": "‘Pareja Del Año’",
+            "artist": "Sebastián Yatra"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "762c5b90-4463-4068-a31d-5ff226efc893",
+            "seed": {
+              "kind": "recording",
+              "title": "Pareja del año",
+              "durationSec": 195,
+              "credits": [
+                {
+                  "name": "Sebastián Yatra",
+                  "joinphrase": " x ",
+                  "artist": {
+                    "id": "151d9c35-43b8-49b9-a69a-5db6525dbcd2",
+                    "name": "Sebastián Yatra"
+                  }
+                },
+                {
+                  "name": "Myke Towers",
+                  "artist": {
+                    "id": "d2945137-b01d-4195-9f82-64d20f8ba657",
+                    "name": "Myke Towers"
+                  }
+                }
+              ],
+              "anchorMbid": "df45d3de-3de7-44eb-82bf-4895b88d4393",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Pareja del año",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-04-15",
+                "credits": [
+                  {
+                    "name": "Sebastián Yatra",
+                    "joinphrase": " x ",
+                    "artist": {
+                      "id": "151d9c35-43b8-49b9-a69a-5db6525dbcd2",
+                      "name": "Sebastián Yatra"
+                    }
+                  },
+                  {
+                    "name": "Myke Towers",
+                    "artist": {
+                      "id": "d2945137-b01d-4195-9f82-64d20f8ba657",
+                      "name": "Myke Towers"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Baila Conmigo’",
+          "artist": "Selena Gomez & Rauw Alejandro",
+          "anchor": {
+            "title": "‘Baila Conmigo’",
+            "artist": "Selena Gomez"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "f90720d0-3c4e-42a9-94f1-df26dd4ad472",
+            "seed": {
+              "kind": "recording",
+              "title": "Baila conmigo",
+              "durationSec": 186,
+              "credits": [
+                {
+                  "name": "Selena Gomez",
+                  "joinphrase": " w/ ",
+                  "artist": {
+                    "id": "e4bc69e2-a064-4f93-ada1-f7f209cc1cc3",
+                    "name": "Selena Gomez"
+                  }
+                },
+                {
+                  "name": "Rauw Alejandro",
+                  "artist": {
+                    "id": "197b70c7-8910-4030-ad03-632d82aa40e3",
+                    "name": "Rauw Alejandro"
+                  }
+                }
+              ],
+              "anchorMbid": "02077693-3a6d-4950-adc9-4a65fbc9831d",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Baila conmigo",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-01-29",
+                "credits": [
+                  {
+                    "name": "Selena Gomez",
+                    "joinphrase": " with ",
+                    "artist": {
+                      "id": "e4bc69e2-a064-4f93-ada1-f7f209cc1cc3",
+                      "name": "Selena Gomez"
+                    }
+                  },
+                  {
+                    "name": "Rauw Alejandro",
+                    "artist": {
+                      "id": "197b70c7-8910-4030-ad03-632d82aa40e3",
+                      "name": "Rauw Alejandro"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Fan De Tus Fotos’",
+          "artist": "Nicky Jam & Romeo Santos",
+          "anchor": {
+            "title": "‘Fan De Tus Fotos’",
+            "artist": "Nicky Jam"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "8ec1a79e-fb6e-4eba-8286-83e443cdc7c4",
+            "seed": {
+              "kind": "recording",
+              "title": "Fan de tus fotos",
+              "durationSec": 197,
+              "credits": [
+                {
+                  "name": "Nicky Jam",
+                  "joinphrase": " x ",
+                  "artist": {
+                    "id": "c458e9dc-e0d5-45ea-9e83-f9d0395f030d",
+                    "name": "Nicky Jam"
+                  }
+                },
+                {
+                  "name": "Romeo Santos",
+                  "artist": {
+                    "id": "35f343df-3b87-4475-b0e4-d2ba5cc26eea",
+                    "name": "Romeo Santos"
+                  }
+                }
+              ],
+              "anchorMbid": "d09e9b08-3e87-4953-8dc6-3660b0fdd825",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Fan de tus fotos",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-02-08",
+                "credits": [
+                  {
+                    "name": "Nicky Jam",
+                    "joinphrase": " x ",
+                    "artist": {
+                      "id": "c458e9dc-e0d5-45ea-9e83-f9d0395f030d",
+                      "name": "Nicky Jam"
+                    }
+                  },
+                  {
+                    "name": "Romeo Santos",
+                    "artist": {
+                      "id": "35f343df-3b87-4475-b0e4-d2ba5cc26eea",
+                      "name": "Romeo Santos"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Perfecta’",
+          "artist": "Reik & Maluma",
+          "anchor": {
+            "title": "‘Perfecta’",
+            "artist": "Reik"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "90e3b27c-c433-404d-89fe-b2eea82348a4",
+            "seed": {
+              "kind": "recording",
+              "title": "Perfecta",
+              "durationSec": 174,
+              "credits": [
+                {
+                  "name": "Reik",
+                  "joinphrase": " + ",
+                  "artist": {
+                    "id": "04cff564-a2e3-4560-8e7e-bc2539e7b46c",
+                    "name": "Reik"
+                  }
+                },
+                {
+                  "name": "Maluma",
+                  "artist": {
+                    "id": "e8979f75-9110-4df8-ac70-898898d080d1",
+                    "name": "Maluma"
+                  }
+                }
+              ],
+              "anchorMbid": "c978c4bb-70ff-40ae-8a29-e0a903f98a1f",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Perfecta",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-05-27",
+                "credits": [
+                  {
+                    "name": "Reik",
+                    "joinphrase": " + ",
+                    "artist": {
+                      "id": "04cff564-a2e3-4560-8e7e-bc2539e7b46c",
+                      "name": "Reik"
+                    }
+                  },
+                  {
+                    "name": "Maluma",
+                    "artist": {
+                      "id": "e8979f75-9110-4df8-ac70-898898d080d1",
+                      "name": "Maluma"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Vacío’",
+          "artist": "Luis Fonsi & Rauw Alejandro",
+          "anchor": {
+            "title": "‘Vacío’",
+            "artist": "Luis Fonsi"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "267a2d24-c537-4608-bafa-580e46860cb6",
+            "seed": {
+              "kind": "recording",
+              "title": "Vacío",
+              "durationSec": 167,
+              "credits": [
+                {
+                  "name": "Luis Fonsi",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "d68fda90-ab8d-4799-be56-317ba4ae700f",
+                    "name": "Luis Fonsi"
+                  }
+                },
+                {
+                  "name": "Rauw Alejandro",
+                  "artist": {
+                    "id": "197b70c7-8910-4030-ad03-632d82aa40e3",
+                    "name": "Rauw Alejandro"
+                  }
+                }
+              ],
+              "anchorMbid": "09bb2d78-105a-4104-afe8-d508da3d2d3e",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Vacío",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-02-19",
+                "credits": [
+                  {
+                    "name": "Luis Fonsi",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "d68fda90-ab8d-4799-be56-317ba4ae700f",
+                      "name": "Luis Fonsi"
+                    }
+                  },
+                  {
+                    "name": "Rauw Alejandro",
+                    "artist": {
+                      "id": "197b70c7-8910-4030-ad03-632d82aa40e3",
+                      "name": "Rauw Alejandro"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "male-urban-artist",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Bad Bunny",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "89aa5ecb-59ad-46f5-b3eb-2d424e941f19",
+            "seed": {
+              "kind": "artist",
+              "name": "Bad Bunny",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Daddy Yankee",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2f522f5c-111c-4ce8-8bd0-d82e97c227ad",
+            "seed": {
+              "kind": "artist",
+              "name": "Daddy Yankee",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Farruko",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d2b3524f-67e8-45ef-bfc1-693cac525135",
+            "seed": {
+              "kind": "artist",
+              "name": "Farruko",
+              "mbType": "Person",
+              "disambiguation": "Carlos Efrén Reyes Rosado, reggaeton artist"
+            }
+          }
+        },
+        {
+          "title": "J Balvin",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "5bdeb32d-56a5-4b6d-a768-264101fa0a0a",
+            "seed": {
+              "kind": "artist",
+              "name": "J Balvin",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Jhay Cortez",
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Justin Quiles",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e5fdb46c-eb73-4820-94ba-5dd5b35948cf",
+            "seed": {
+              "kind": "artist",
+              "name": "Justin Quiles",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Myke Towers",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d2945137-b01d-4195-9f82-64d20f8ba657",
+            "seed": {
+              "kind": "artist",
+              "name": "Myke Towers",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Ozuna",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "f2651b63-a44d-4d1d-ba64-d981d971ecd1",
+            "seed": {
+              "kind": "artist",
+              "name": "Ozuna",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Rauw Alejandro",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "197b70c7-8910-4030-ad03-632d82aa40e3",
+            "seed": {
+              "kind": "artist",
+              "name": "Rauw Alejandro",
+              "mbType": "Person",
+              "disambiguation": "Puerto Rican rapper"
+            }
+          }
+        },
+        {
+          "title": "Wisin",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6a6eea03-b435-446c-bab1-312b45580aee",
+            "seed": {
+              "kind": "artist",
+              "name": "Wisin",
+              "mbType": "Person",
+              "disambiguation": "Juan Luis Morera Luna, from Wisin & Yandel"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "female-urban-artist",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Karol G",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "de22adae-f8ac-414f-b653-b0162611bd60",
+            "seed": {
+              "kind": "artist",
+              "name": "KAROL G",
+              "mbType": "Person",
+              "disambiguation": "Colombian singer"
+            }
+          }
+        },
+        {
+          "title": "Anitta",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d606b860-cc03-4959-a3fd-3a24bccf2560",
+            "seed": {
+              "kind": "artist",
+              "name": "Anitta",
+              "mbType": "Person",
+              "disambiguation": "Brazilian singer"
+            }
+          }
+        },
+        {
+          "title": "Becky G",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "eb90c8b8-d733-4c14-a293-105c3d1ba9b3",
+            "seed": {
+              "kind": "artist",
+              "name": "Becky G",
+              "mbType": "Person",
+              "disambiguation": "American singer"
+            }
+          }
+        },
+        {
+          "title": "Cazzu",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1d47b224-2cd9-4852-8e55-b9ec635e0c43",
+            "seed": {
+              "kind": "artist",
+              "name": "Cazzu",
+              "mbType": "Person",
+              "disambiguation": "Argentinian freestyle, rap and trap singer"
+            }
+          }
+        },
+        {
+          "title": "Emilia",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "025df4dd-aaab-46e2-ba0c-6c6909a4ffe6",
+            "seed": {
+              "kind": "artist",
+              "name": "Emilia",
+              "mbType": "Person",
+              "disambiguation": "Swedish singer Emilia Rydberg (Mitiku), “Big Big World”, “Twist of Fate”"
+            }
+          }
+        },
+        {
+          "title": "Farina",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "f49933c8-da21-4c1e-af19-61b782ec50d5",
+            "seed": {
+              "kind": "artist",
+              "name": "Farina",
+              "mbType": "Person",
+              "disambiguation": "Colombian urban singer, aka FARIANA"
+            }
+          }
+        },
+        {
+          "title": "María Becerra",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a69b643d-2cd9-4914-8a1a-3f3797a7323c",
+            "seed": {
+              "kind": "artist",
+              "name": "María Becerra",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Mariah Angeliq",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "9aab3aaf-d99c-4a4c-8dca-e4bf2e8c0404",
+            "seed": {
+              "kind": "artist",
+              "name": "Mariah Angeliq",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Natti Natasha",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "25be91ac-7d7c-441f-a7d2-98e35d642e4c",
+            "seed": {
+              "kind": "artist",
+              "name": "Natti Natasha",
+              "mbType": "Person",
+              "disambiguation": "Natalia Alexandra Gutiérrez Batista"
+            }
+          }
+        },
+        {
+          "title": "Nicki Nicole",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c1a07a33-72c3-4f2d-801a-37c57923daf5",
+            "seed": {
+              "kind": "artist",
+              "name": "Nicki Nicole",
+              "mbType": "Person",
+              "disambiguation": "Argentine singer"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "urban-song",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "‘Bichota’",
+          "artist": "Karol G",
+          "anchor": {
+            "title": "‘Bichota’",
+            "artist": "Karol G"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "29e6113a-89d6-4ae7-85cc-08be1955e57f",
+            "seed": {
+              "kind": "recording",
+              "title": "BICHOTA",
+              "durationSec": 179,
+              "credits": [
+                {
+                  "name": "KAROL G",
+                  "artist": {
+                    "id": "de22adae-f8ac-414f-b653-b0162611bd60",
+                    "name": "KAROL G"
+                  }
+                }
+              ],
+              "anchorMbid": "a41e8e93-ab2c-45dc-8064-caab79bd01c4",
+              "anchor": {
+                "kind": "release_group",
+                "title": "BICHOTA",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-10-23",
+                "credits": [
+                  {
+                    "name": "KAROL G",
+                    "artist": {
+                      "id": "de22adae-f8ac-414f-b653-b0162611bd60",
+                      "name": "KAROL G"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Antes’",
+          "artist": "Anuel AA & Ozuna",
+          "anchor": {
+            "title": "‘Antes’",
+            "artist": "Anuel AA"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘Ayer Me Llamo Mi Ex’ (Remix)",
+          "artist": "Khea, Natti Natasha & Prince Royce Ft. Lenny Santos",
+          "anchor": {
+            "title": "‘Ayer Me Llamo Mi Ex’ (Remix)",
+            "artist": "Khea"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "347898b3-6711-485d-88ba-7e97e59bbc5d",
+            "seed": {
+              "kind": "recording",
+              "title": "Ayer me llamó mi ex (remix)",
+              "durationSec": 256,
+              "credits": [
+                {
+                  "name": "KHEA",
+                  "joinphrase": " x ",
+                  "artist": {
+                    "id": "f222364e-abef-48a2-b440-5525ee985cb5",
+                    "name": "KHEA"
+                  }
+                },
+                {
+                  "name": "Natti Natasha",
+                  "joinphrase": " x ",
+                  "artist": {
+                    "id": "25be91ac-7d7c-441f-a7d2-98e35d642e4c",
+                    "name": "Natti Natasha"
+                  }
+                },
+                {
+                  "name": "Prince Royce",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "d1689304-23ac-4eae-a147-bd2e4100581a",
+                    "name": "Prince Royce"
+                  }
+                },
+                {
+                  "name": "Lenny Santos",
+                  "artist": {
+                    "id": "37289cee-5082-4434-8ad3-3e1e4cfaaaaf",
+                    "name": "Lenny Santos"
+                  }
+                }
+              ],
+              "anchorMbid": "c1a88910-5fca-43fb-9138-6af88e552343",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Ayer me llamó mi ex (remix)",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-08-20",
+                "credits": [
+                  {
+                    "name": "KHEA",
+                    "joinphrase": " x ",
+                    "artist": {
+                      "id": "f222364e-abef-48a2-b440-5525ee985cb5",
+                      "name": "KHEA"
+                    }
+                  },
+                  {
+                    "name": "Natti Natasha",
+                    "joinphrase": " x ",
+                    "artist": {
+                      "id": "25be91ac-7d7c-441f-a7d2-98e35d642e4c",
+                      "name": "Natti Natasha"
+                    }
+                  },
+                  {
+                    "name": "Prince Royce",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "d1689304-23ac-4eae-a147-bd2e4100581a",
+                      "name": "Prince Royce"
+                    }
+                  },
+                  {
+                    "name": "Lenny Santos",
+                    "artist": {
+                      "id": "37289cee-5082-4434-8ad3-3e1e4cfaaaaf",
+                      "name": "Lenny Santos"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Dákiti’",
+          "artist": "Bad Bunny & Jhay Cortez",
+          "anchor": {
+            "title": "‘Dákiti’",
+            "artist": "Bad Bunny"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b6e10c60-9abb-4b67-860b-876d2a2eeaec",
+            "seed": {
+              "kind": "recording",
+              "title": "DÁKITI",
+              "durationSec": 205,
+              "credits": [
+                {
+                  "name": "Bad Bunny",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "89aa5ecb-59ad-46f5-b3eb-2d424e941f19",
+                    "name": "Bad Bunny"
+                  }
+                },
+                {
+                  "name": "Jhay Cortez",
+                  "artist": {
+                    "id": "2b67658e-429f-425a-adf5-345b13112fc1",
+                    "name": "JHAYCO"
+                  }
+                }
+              ],
+              "anchorMbid": "ac972a5c-26b2-4600-9f35-73002861317f",
+              "anchor": {
+                "kind": "release_group",
+                "title": "DÁKITI",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-10-30",
+                "credits": [
+                  {
+                    "name": "Bad Bunny",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "89aa5ecb-59ad-46f5-b3eb-2d424e941f19",
+                      "name": "Bad Bunny"
+                    }
+                  },
+                  {
+                    "name": "Jhay Cortez",
+                    "artist": {
+                      "id": "2b67658e-429f-425a-adf5-345b13112fc1",
+                      "name": "JHAYCO"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Fiel’",
+          "artist": "Los Legendarios, Wisin & Jhay Cortez",
+          "anchor": {
+            "title": "‘Fiel’",
+            "artist": "Los Legendarios"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "cfecbf5a-1c29-4c39-9b40-2350ba158d75",
+            "seed": {
+              "kind": "recording",
+              "title": "Fiel (remix)",
+              "durationSec": 349,
+              "credits": [
+                {
+                  "name": "Wisin",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "6a6eea03-b435-446c-bab1-312b45580aee",
+                    "name": "Wisin"
+                  }
+                },
+                {
+                  "name": "Jhay Cortez",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "2b67658e-429f-425a-adf5-345b13112fc1",
+                    "name": "JHAYCO"
+                  }
+                },
+                {
+                  "name": "Myke Towers",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "d2945137-b01d-4195-9f82-64d20f8ba657",
+                    "name": "Myke Towers"
+                  }
+                },
+                {
+                  "name": "Anuel AA",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "87a75fc3-59e7-4598-925c-8e230bce5db9",
+                    "name": "Anuel AA"
+                  }
+                },
+                {
+                  "name": "Los Legendarios",
+                  "artist": {
+                    "id": "12c0f608-d993-4926-8c7b-489b2afc5c91",
+                    "name": "Los Legendarios"
+                  }
+                }
+              ],
+              "anchorMbid": "b6800d15-e00f-4aef-b504-697509701dc8",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Fiel (remix)",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-06-15",
+                "credits": [
+                  {
+                    "name": "Wisin",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "6a6eea03-b435-446c-bab1-312b45580aee",
+                      "name": "Wisin"
+                    }
+                  },
+                  {
+                    "name": "Jhay Cortez",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "2b67658e-429f-425a-adf5-345b13112fc1",
+                      "name": "JHAYCO"
+                    }
+                  },
+                  {
+                    "name": "Myke Towers",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "d2945137-b01d-4195-9f82-64d20f8ba657",
+                      "name": "Myke Towers"
+                    }
+                  },
+                  {
+                    "name": "Anuel AA",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "87a75fc3-59e7-4598-925c-8e230bce5db9",
+                      "name": "Anuel AA"
+                    }
+                  },
+                  {
+                    "name": "Los Legendarios",
+                    "artist": {
+                      "id": "12c0f608-d993-4926-8c7b-489b2afc5c91",
+                      "name": "Los Legendarios"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘La Nota’",
+          "artist": "Manuel Turizo, Rauw Alejandro & Myke Towers",
+          "anchor": {
+            "title": "‘La Nota’",
+            "artist": "Manuel Turizo"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e3b3e099-ebcc-4824-8787-cc041fb632fb",
+            "seed": {
+              "kind": "recording",
+              "title": "La nota",
+              "durationSec": 216,
+              "credits": [
+                {
+                  "name": "Manuel Turizo",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "30a57b7b-47c9-4234-86fd-9b8ff660e7cb",
+                    "name": "Manuel Turizo"
+                  }
+                },
+                {
+                  "name": "Rauw Alejandro",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "197b70c7-8910-4030-ad03-632d82aa40e3",
+                    "name": "Rauw Alejandro"
+                  }
+                },
+                {
+                  "name": "Myke Towers",
+                  "artist": {
+                    "id": "d2945137-b01d-4195-9f82-64d20f8ba657",
+                    "name": "Myke Towers"
+                  }
+                }
+              ],
+              "anchorMbid": "6e0d6ff0-ad1f-4ae4-bf62-7dafc6a6c73b",
+              "anchor": {
+                "kind": "release_group",
+                "title": "La Nota",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-10-08",
+                "credits": [
+                  {
+                    "name": "Manuel Turizo",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "30a57b7b-47c9-4234-86fd-9b8ff660e7cb",
+                      "name": "Manuel Turizo"
+                    }
+                  },
+                  {
+                    "name": "Rauw Alejandro",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "197b70c7-8910-4030-ad03-632d82aa40e3",
+                      "name": "Rauw Alejandro"
+                    }
+                  },
+                  {
+                    "name": "Myke Towers",
+                    "artist": {
+                      "id": "d2945137-b01d-4195-9f82-64d20f8ba657",
+                      "name": "Myke Towers"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Loco’",
+          "artist": "Justin Quiles, Chimbala & Zion y Lennox",
+          "anchor": {
+            "title": "‘Loco’",
+            "artist": "Justin Quiles"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "586b2ca0-6d83-4f9f-a241-3a4e1191c05d",
+            "seed": {
+              "kind": "recording",
+              "title": "Loco",
+              "durationSec": 232,
+              "credits": [
+                {
+                  "name": "Justin Quiles",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "e5fdb46c-eb73-4820-94ba-5dd5b35948cf",
+                    "name": "Justin Quiles"
+                  }
+                },
+                {
+                  "name": "Chimbala",
+                  "joinphrase": " x ",
+                  "artist": {
+                    "id": "12233494-e5d7-427f-8cea-0fc6893fc1d1",
+                    "name": "Chimbala"
+                  }
+                },
+                {
+                  "name": "Zion & Lennox",
+                  "artist": {
+                    "id": "a06afacd-7894-442e-95ba-49366b2b3e02",
+                    "name": "Zion & Lennox"
+                  }
+                }
+              ],
+              "anchorMbid": "42611521-da7f-4745-b7b1-4fcd774e4331",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Loco",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-05-13",
+                "credits": [
+                  {
+                    "name": "Justin Quiles",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "e5fdb46c-eb73-4820-94ba-5dd5b35948cf",
+                      "name": "Justin Quiles"
+                    }
+                  },
+                  {
+                    "name": "Chimbala",
+                    "joinphrase": " x ",
+                    "artist": {
+                      "id": "12233494-e5d7-427f-8cea-0fc6893fc1d1",
+                      "name": "Chimbala"
+                    }
+                  },
+                  {
+                    "name": "Zion & Lennox",
+                    "artist": {
+                      "id": "a06afacd-7894-442e-95ba-49366b2b3e02",
+                      "name": "Zion & Lennox"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Pepas’",
+          "artist": "Farruko",
+          "anchor": {
+            "title": "‘Pepas’",
+            "artist": "Farruko"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "0140c969-784c-434f-96fb-031fff0ee296",
+            "seed": {
+              "kind": "recording",
+              "title": "Pepas",
+              "durationSec": 287,
+              "credits": [
+                {
+                  "name": "Farruko",
+                  "artist": {
+                    "id": "d2b3524f-67e8-45ef-bfc1-693cac525135",
+                    "name": "Farruko"
+                  }
+                }
+              ],
+              "anchorMbid": "d8e65b1d-e860-4fcd-b54d-5766b60b54bc",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Pepas",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-06-24",
+                "credits": [
+                  {
+                    "name": "Farruko",
+                    "artist": {
+                      "id": "d2b3524f-67e8-45ef-bfc1-693cac525135",
+                      "name": "Farruko"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Problema’",
+          "artist": "Daddy Yankee",
+          "anchor": {
+            "title": "‘Problema’",
+            "artist": "Daddy Yankee"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2d75a369-335a-4e06-9c24-c5d1009b556e",
+            "seed": {
+              "kind": "recording",
+              "title": "PROBLEMA",
+              "durationSec": 185,
+              "credits": [
+                {
+                  "name": "Daddy Yankee",
+                  "artist": {
+                    "id": "2f522f5c-111c-4ce8-8bd0-d82e97c227ad",
+                    "name": "Daddy Yankee"
+                  }
+                }
+              ],
+              "anchorMbid": "e203bcc1-9b68-4c61-acfd-7014bf7734c1",
+              "anchor": {
+                "kind": "release_group",
+                "title": "PROBLEMA",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-02-26",
+                "credits": [
+                  {
+                    "name": "Daddy Yankee",
+                    "artist": {
+                      "id": "2f522f5c-111c-4ce8-8bd0-d82e97c227ad",
+                      "name": "Daddy Yankee"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Tu Veneno’",
+          "artist": "J Balvin",
+          "anchor": {
+            "title": "‘Tu Veneno’",
+            "artist": "J Balvin"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "45eea781-a5ab-4331-ba75-cb191bf1b046",
+            "seed": {
+              "kind": "recording",
+              "title": "Tu veneno",
+              "durationSec": 157,
+              "credits": [
+                {
+                  "name": "J Balvin",
+                  "artist": {
+                    "id": "5bdeb32d-56a5-4b6d-a768-264101fa0a0a",
+                    "name": "J Balvin"
+                  }
+                }
+              ],
+              "anchorMbid": "1e705632-9919-4126-ad37-d1f3d29c28e1",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Tu veneno",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-03-19",
+                "credits": [
+                  {
+                    "name": "J Balvin",
+                    "artist": {
+                      "id": "5bdeb32d-56a5-4b6d-a768-264101fa0a0a",
+                      "name": "J Balvin"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "urban-pop-song",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "‘Qué Más Pues?’",
+          "artist": "J Balvin & María Becerra",
+          "anchor": {
+            "title": "‘Qué Más Pues?’",
+            "artist": "J Balvin"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘Antes Que Salga El Sol’",
+          "artist": "Natti Natasha & Prince Royce",
+          "anchor": {
+            "title": "‘Antes Que Salga El Sol’",
+            "artist": "Natti Natasha"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d2336859-a707-4733-8f53-f28fe33612c3",
+            "seed": {
+              "kind": "recording",
+              "title": "ANTES QUE SALGA EL SOL",
+              "durationSec": 184,
+              "credits": [
+                {
+                  "name": "Natti Natasha",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "25be91ac-7d7c-441f-a7d2-98e35d642e4c",
+                    "name": "Natti Natasha"
+                  }
+                },
+                {
+                  "name": "Prince Royce",
+                  "artist": {
+                    "id": "d1689304-23ac-4eae-a147-bd2e4100581a",
+                    "name": "Prince Royce"
+                  }
+                }
+              ],
+              "anchorMbid": "1e6332f6-208b-40ef-b93d-144bdb384bca",
+              "anchor": {
+                "kind": "release_group",
+                "title": "ANTES QUE SALGA EL SOL",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-01-14",
+                "credits": [
+                  {
+                    "name": "Natti Natasha",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "25be91ac-7d7c-441f-a7d2-98e35d642e4c",
+                      "name": "Natti Natasha"
+                    }
+                  },
+                  {
+                    "name": "Prince Royce",
+                    "artist": {
+                      "id": "d1689304-23ac-4eae-a147-bd2e4100581a",
+                      "name": "Prince Royce"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘La Tóxica’",
+          "artist": "Farruko",
+          "anchor": {
+            "title": "‘La Tóxica’",
+            "artist": "Farruko"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a4293c30-c0a4-479a-a014-564d458e233a",
+            "seed": {
+              "kind": "recording",
+              "title": "La tóxica",
+              "durationSec": 180,
+              "credits": [
+                {
+                  "name": "Farruko",
+                  "artist": {
+                    "id": "d2b3524f-67e8-45ef-bfc1-693cac525135",
+                    "name": "Farruko"
+                  }
+                }
+              ],
+              "anchorMbid": "b0bed1da-1841-4336-b6fd-95cf2e501052",
+              "anchor": {
+                "kind": "release_group",
+                "title": "La tóxica",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-07-24",
+                "credits": [
+                  {
+                    "name": "Farruko",
+                    "artist": {
+                      "id": "d2b3524f-67e8-45ef-bfc1-693cac525135",
+                      "name": "Farruko"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Sobrio’",
+          "artist": "Maluma",
+          "anchor": {
+            "title": "‘Sobrio’",
+            "artist": "Maluma"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ff1387ed-653d-49b3-9ea3-1a76eb419f7c",
+            "seed": {
+              "kind": "recording",
+              "title": "Sobrio",
+              "durationSec": 201,
+              "credits": [
+                {
+                  "name": "Maluma",
+                  "artist": {
+                    "id": "e8979f75-9110-4df8-ac70-898898d080d1",
+                    "name": "Maluma"
+                  }
+                }
+              ],
+              "anchorMbid": "07a8c574-ddcf-46cc-97b4-1a361d552977",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Sobrio",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-07-08",
+                "credits": [
+                  {
+                    "name": "Maluma",
+                    "artist": {
+                      "id": "e8979f75-9110-4df8-ac70-898898d080d1",
+                      "name": "Maluma"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Todo de Ti’",
+          "artist": "Rauw Alejandro",
+          "anchor": {
+            "title": "‘Todo de Ti’",
+            "artist": "Rauw Alejandro"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2928b0e8-1116-4593-a214-5838d574fb08",
+            "seed": {
+              "kind": "recording",
+              "title": "Todo de ti",
+              "durationSec": 200,
+              "credits": [
+                {
+                  "name": "Rauw Alejandro",
+                  "artist": {
+                    "id": "197b70c7-8910-4030-ad03-632d82aa40e3",
+                    "name": "Rauw Alejandro"
+                  }
+                }
+              ],
+              "anchorMbid": "6e148ec7-6f66-487c-8084-2191b942189a",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Todo de ti",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-05-19",
+                "credits": [
+                  {
+                    "name": "Rauw Alejandro",
+                    "artist": {
+                      "id": "197b70c7-8910-4030-ad03-632d82aa40e3",
+                      "name": "Rauw Alejandro"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "urban-collaboration",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "‘AM’ (Remix)",
+          "artist": "Nio García, J Balvin & Bad Bunny",
+          "anchor": {
+            "title": "‘AM’ (Remix)",
+            "artist": "Nio García"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e027ffd8-40d2-43ac-ad55-b1f3ac23a0eb",
+            "seed": {
+              "kind": "recording",
+              "title": "AM (remix)",
+              "durationSec": 261,
+              "credits": [
+                {
+                  "name": "Nio García",
+                  "joinphrase": " x ",
+                  "artist": {
+                    "id": "db1a36ef-fa59-48a6-a2d6-d6da432fdca4",
+                    "name": "Nio García"
+                  }
+                },
+                {
+                  "name": "J Balvin",
+                  "joinphrase": " x ",
+                  "artist": {
+                    "id": "5bdeb32d-56a5-4b6d-a768-264101fa0a0a",
+                    "name": "J Balvin"
+                  }
+                },
+                {
+                  "name": "Bad Bunny",
+                  "artist": {
+                    "id": "89aa5ecb-59ad-46f5-b3eb-2d424e941f19",
+                    "name": "Bad Bunny"
+                  }
+                }
+              ],
+              "anchorMbid": "d8790990-cf58-4a91-b472-9d494584a5a4",
+              "anchor": {
+                "kind": "release_group",
+                "title": "AM (remix)",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-06-24",
+                "credits": [
+                  {
+                    "name": "Nio García",
+                    "joinphrase": " x ",
+                    "artist": {
+                      "id": "db1a36ef-fa59-48a6-a2d6-d6da432fdca4",
+                      "name": "Nio García"
+                    }
+                  },
+                  {
+                    "name": "J Balvin",
+                    "joinphrase": " x ",
+                    "artist": {
+                      "id": "5bdeb32d-56a5-4b6d-a768-264101fa0a0a",
+                      "name": "J Balvin"
+                    }
+                  },
+                  {
+                    "name": "Bad Bunny",
+                    "artist": {
+                      "id": "89aa5ecb-59ad-46f5-b3eb-2d424e941f19",
+                      "name": "Bad Bunny"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Amor En Coma’",
+          "artist": "Manuel Turizo & Maluma",
+          "anchor": {
+            "title": "‘Amor En Coma’",
+            "artist": "Manuel Turizo"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘Ayer Me Llamo Mi Ex’ (Remix)",
+          "artist": "Khea, Natti Natasha & Prince Royce Ft. Lenny Santos",
+          "anchor": {
+            "title": "‘Ayer Me Llamo Mi Ex’ (Remix)",
+            "artist": "Khea"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "347898b3-6711-485d-88ba-7e97e59bbc5d",
+            "seed": {
+              "kind": "recording",
+              "title": "Ayer me llamó mi ex (remix)",
+              "durationSec": 256,
+              "credits": [
+                {
+                  "name": "KHEA",
+                  "joinphrase": " x ",
+                  "artist": {
+                    "id": "f222364e-abef-48a2-b440-5525ee985cb5",
+                    "name": "KHEA"
+                  }
+                },
+                {
+                  "name": "Natti Natasha",
+                  "joinphrase": " x ",
+                  "artist": {
+                    "id": "25be91ac-7d7c-441f-a7d2-98e35d642e4c",
+                    "name": "Natti Natasha"
+                  }
+                },
+                {
+                  "name": "Prince Royce",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "d1689304-23ac-4eae-a147-bd2e4100581a",
+                    "name": "Prince Royce"
+                  }
+                },
+                {
+                  "name": "Lenny Santos",
+                  "artist": {
+                    "id": "37289cee-5082-4434-8ad3-3e1e4cfaaaaf",
+                    "name": "Lenny Santos"
+                  }
+                }
+              ],
+              "anchorMbid": "c1a88910-5fca-43fb-9138-6af88e552343",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Ayer me llamó mi ex (remix)",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-08-20",
+                "credits": [
+                  {
+                    "name": "KHEA",
+                    "joinphrase": " x ",
+                    "artist": {
+                      "id": "f222364e-abef-48a2-b440-5525ee985cb5",
+                      "name": "KHEA"
+                    }
+                  },
+                  {
+                    "name": "Natti Natasha",
+                    "joinphrase": " x ",
+                    "artist": {
+                      "id": "25be91ac-7d7c-441f-a7d2-98e35d642e4c",
+                      "name": "Natti Natasha"
+                    }
+                  },
+                  {
+                    "name": "Prince Royce",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "d1689304-23ac-4eae-a147-bd2e4100581a",
+                      "name": "Prince Royce"
+                    }
+                  },
+                  {
+                    "name": "Lenny Santos",
+                    "artist": {
+                      "id": "37289cee-5082-4434-8ad3-3e1e4cfaaaaf",
+                      "name": "Lenny Santos"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Dime Dónde’",
+          "artist": "Cazzu & Justin Quiles",
+          "anchor": {
+            "title": "‘Dime Dónde’",
+            "artist": "Cazzu"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1660330a-d374-4836-9384-7da5c935d34b",
+            "seed": {
+              "kind": "recording",
+              "title": "Dime dónde",
+              "durationSec": 179,
+              "credits": [
+                {
+                  "name": "Cazzu",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "1d47b224-2cd9-4852-8e55-b9ec635e0c43",
+                    "name": "Cazzu"
+                  }
+                },
+                {
+                  "name": "Justin Quiles",
+                  "artist": {
+                    "id": "e5fdb46c-eb73-4820-94ba-5dd5b35948cf",
+                    "name": "Justin Quiles"
+                  }
+                }
+              ],
+              "anchorMbid": "8a81161c-6ad3-49c4-b54d-4f41e197f8f8",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Dime dónde",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-06-17",
+                "credits": [
+                  {
+                    "name": "Cazzu",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "1d47b224-2cd9-4852-8e55-b9ec635e0c43",
+                      "name": "Cazzu"
+                    }
+                  },
+                  {
+                    "name": "Justin Quiles",
+                    "artist": {
+                      "id": "e5fdb46c-eb73-4820-94ba-5dd5b35948cf",
+                      "name": "Justin Quiles"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Fulanito’",
+          "artist": "Becky G & El Alfa",
+          "anchor": {
+            "title": "‘Fulanito’",
+            "artist": "Becky G"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "79a4c527-0dae-4aa7-84e9-bfe835f0e73c",
+            "seed": {
+              "kind": "recording",
+              "title": "FULANITO",
+              "durationSec": 158,
+              "credits": [
+                {
+                  "name": "Becky G",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "eb90c8b8-d733-4c14-a293-105c3d1ba9b3",
+                    "name": "Becky G"
+                  }
+                },
+                {
+                  "name": "El Alfa",
+                  "artist": {
+                    "id": "0887484d-aed1-4aa6-9862-930a25815696",
+                    "name": "El Alfa"
+                  }
+                }
+              ],
+              "anchorMbid": "f9a753fe-36eb-476c-8299-8a3c5611d476",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Fulanito",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-06-03",
+                "credits": [
+                  {
+                    "name": "Becky G",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "eb90c8b8-d733-4c14-a293-105c3d1ba9b3",
+                      "name": "Becky G"
+                    }
+                  },
+                  {
+                    "name": "El Alfa",
+                    "artist": {
+                      "id": "0887484d-aed1-4aa6-9862-930a25815696",
+                      "name": "El Alfa"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Antes’",
+          "artist": "Anuel AA & Ozuna",
+          "anchor": {
+            "title": "‘Antes’",
+            "artist": "Anuel AA"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘La Noche De Anoche’",
+          "artist": "Bad Bunny & Rosalía",
+          "anchor": {
+            "title": "‘La Noche De Anoche’",
+            "artist": "Bad Bunny"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘Location’",
+          "artist": "Karol G, Anuel AA & J Balvin",
+          "anchor": {
+            "title": "‘Location’",
+            "artist": "Karol G"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "fc225a12-cff1-4ae9-8416-b9e63a510616",
+            "seed": {
+              "kind": "recording",
+              "title": "LOCATION",
+              "durationSec": 265,
+              "credits": [
+                {
+                  "name": "KAROL G",
+                  "artist": {
+                    "id": "de22adae-f8ac-414f-b653-b0162611bd60",
+                    "name": "KAROL G"
+                  }
+                }
+              ],
+              "anchorMbid": "472def8c-a5eb-4b19-9b2b-88f002844985",
+              "anchor": {
+                "kind": "release_group",
+                "title": "LOCATION",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-02-12",
+                "credits": [
+                  {
+                    "name": "KAROL G",
+                    "artist": {
+                      "id": "de22adae-f8ac-414f-b653-b0162611bd60",
+                      "name": "KAROL G"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Mi Niña’",
+          "artist": "Wisin, Los Legendarios & Myke Towers",
+          "anchor": {
+            "title": "‘Mi Niña’",
+            "artist": "Wisin"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "57068dd1-32a5-4250-bc59-501f81c35409",
+            "seed": {
+              "kind": "recording",
+              "title": "Mi niña",
+              "durationSec": 213,
+              "credits": [
+                {
+                  "name": "Wisin",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "6a6eea03-b435-446c-bab1-312b45580aee",
+                    "name": "Wisin"
+                  }
+                },
+                {
+                  "name": "Myke Towers",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "d2945137-b01d-4195-9f82-64d20f8ba657",
+                    "name": "Myke Towers"
+                  }
+                },
+                {
+                  "name": "Los Legendarios",
+                  "artist": {
+                    "id": "12c0f608-d993-4926-8c7b-489b2afc5c91",
+                    "name": "Los Legendarios"
+                  }
+                }
+              ],
+              "anchorMbid": "6bade4c8-7bf6-45a2-a471-2de8535c03bc",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Mi niña",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-09-23",
+                "credits": [
+                  {
+                    "name": "Los Legendarios",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "12c0f608-d993-4926-8c7b-489b2afc5c91",
+                      "name": "Los Legendarios"
+                    }
+                  },
+                  {
+                    "name": "Wisin",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "6a6eea03-b435-446c-bab1-312b45580aee",
+                      "name": "Wisin"
+                    }
+                  },
+                  {
+                    "name": "Myke Towers",
+                    "artist": {
+                      "id": "d2945137-b01d-4195-9f82-64d20f8ba657",
+                      "name": "Myke Towers"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Patria y Vida’",
+          "artist": "Yotuel, Gente De Zona, Descemer Bueno, Maykel Osorbo & El Funky",
+          "anchor": {
+            "title": "‘Patria y Vida’",
+            "artist": "Yotuel"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1c712841-6127-4b59-8d83-90c7063af8aa",
+            "seed": {
+              "kind": "recording",
+              "title": "Patria y vida",
+              "durationSec": 245,
+              "credits": [
+                {
+                  "name": "Yotuel",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "38a6aabb-ef6e-4180-a201-1861e719442d",
+                    "name": "Yotuel"
+                  }
+                },
+                {
+                  "name": "Gente de Zona",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "35e53195-f6e1-40bc-a3ae-62b1900ee199",
+                    "name": "Gente de Zona"
+                  }
+                },
+                {
+                  "name": "Descemer",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "cdfa25d4-b9fa-4e99-a163-18fddf7d514f",
+                    "name": "Descemer Bueno"
+                  }
+                },
+                {
+                  "name": "M Osorbo",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "33a2fd5e-c868-4f7e-9350-92ebc0a873ad",
+                    "name": "Maykel Osorbo"
+                  }
+                },
+                {
+                  "name": "El Funky",
+                  "artist": {
+                    "id": "6a7e3e12-6be7-4908-b92e-4b7087ae1904",
+                    "name": "El Funky"
+                  }
+                }
+              ],
+              "anchorMbid": "c1ecf926-c148-400d-94d4-784913608875",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Patria y vida",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-02-16",
+                "credits": [
+                  {
+                    "name": "Yotuel",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "38a6aabb-ef6e-4180-a201-1861e719442d",
+                      "name": "Yotuel"
+                    }
+                  },
+                  {
+                    "name": "Gente de Zona",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "35e53195-f6e1-40bc-a3ae-62b1900ee199",
+                      "name": "Gente de Zona"
+                    }
+                  },
+                  {
+                    "name": "Descemer",
+                    "joinphrase": ", ",
+                    "artist": {
+                      "id": "cdfa25d4-b9fa-4e99-a163-18fddf7d514f",
+                      "name": "Descemer Bueno"
+                    }
+                  },
+                  {
+                    "name": "M Osorbo",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "33a2fd5e-c868-4f7e-9350-92ebc0a873ad",
+                      "name": "Maykel Osorbo"
+                    }
+                  },
+                  {
+                    "name": "El Funky",
+                    "artist": {
+                      "id": "6a7e3e12-6be7-4908-b92e-4b7087ae1904",
+                      "name": "El Funky"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "tropical-artist",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Romeo Santos",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "35f343df-3b87-4475-b0e4-d2ba5cc26eea",
+            "seed": {
+              "kind": "artist",
+              "name": "Romeo Santos",
+              "mbType": "Person",
+              "disambiguation": "lead vocalist of Aventura"
+            }
+          }
+        },
+        {
+          "title": "Carlos Vives",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ac367c2e-7783-41e5-a184-131da6b0c166",
+            "seed": {
+              "kind": "artist",
+              "name": "Carlos Vives",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Juan Luis Guerra 4.40",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1659a41f-27d3-4823-8a15-bf7cd295cf59",
+            "seed": {
+              "kind": "artist",
+              "name": "Juan Luis Guerra 4.40",
+              "mbType": "Group",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "La India",
+          "won": false,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": [
+              {
+                "mbid": "bf97f735-b082-4be6-8be6-ec44ad0b4c60",
+                "score": 100,
+                "label": "La India Meliyara · CO",
+                "seed": {
+                  "kind": "artist",
+                  "name": "La India Meliyara",
+                  "mbType": "Person",
+                  "disambiguation": null
+                }
+              },
+              {
+                "mbid": "0709eb46-7edc-44da-b1eb-518c5f9b15d0",
+                "score": 96,
+                "label": "La India Canela · DO",
+                "seed": {
+                  "kind": "artist",
+                  "name": "La India Canela",
+                  "mbType": "Person",
+                  "disambiguation": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "title": "Luis Figueroa",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "8d593646-dc3f-45fe-9f62-854cbb4ac6db",
+            "seed": {
+              "kind": "artist",
+              "name": "Luis Figueroa",
+              "mbType": "Person",
+              "disambiguation": "Puerto Rican singer-songwriter"
+            }
+          }
+        },
+        {
+          "title": "Marc Anthony",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "25607613-aceb-445a-8519-83a2ee0f8402",
+            "seed": {
+              "kind": "artist",
+              "name": "Marc Anthony",
+              "mbType": "Person",
+              "disambiguation": "Marco Antonio Muñiz, salsa and latin pop singer"
+            }
+          }
+        },
+        {
+          "title": "Milly Quezada",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "824a74bb-5218-4f88-ae17-dbca9daa24ad",
+            "seed": {
+              "kind": "artist",
+              "name": "Milly Quezada",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Olga Tañón",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "368e6707-d17c-4f06-97e2-cca841afd52f",
+            "seed": {
+              "kind": "artist",
+              "name": "Olga Tañón",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Prince Royce",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d1689304-23ac-4eae-a147-bd2e4100581a",
+            "seed": {
+              "kind": "artist",
+              "name": "Prince Royce",
+              "mbType": "Person",
+              "disambiguation": null
+            }
+          }
+        },
+        {
+          "title": "Víctor Manuelle",
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "cdee2787-9d93-4ae6-b60d-322e0db15ddb",
+            "seed": {
+              "kind": "artist",
+              "name": "Víctor Manuelle",
+              "mbType": "Person",
+              "disambiguation": "Víctor Manuel Ruiz Velázquez, Puerto Rican salsa singer"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "tropical-song",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "‘Bebé’",
+          "artist": "Camilo & El Alfa",
+          "anchor": {
+            "title": "‘Bebé’",
+            "artist": "Camilo"
+          },
+          "won": true,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘Canción Bonita’",
+          "artist": "Carlos Vives & Ricky Martin",
+          "anchor": {
+            "title": "‘Canción Bonita’",
+            "artist": "Carlos Vives"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c5e0daaf-785c-4a98-88db-5b154e04aa9d",
+            "seed": {
+              "kind": "recording",
+              "title": "Canción bonita",
+              "durationSec": 169,
+              "credits": [
+                {
+                  "name": "Carlos Vives",
+                  "joinphrase": " + ",
+                  "artist": {
+                    "id": "ac367c2e-7783-41e5-a184-131da6b0c166",
+                    "name": "Carlos Vives"
+                  }
+                },
+                {
+                  "name": "Ricky Martin",
+                  "artist": {
+                    "id": "70ea63ea-70dc-4b63-951a-2c249d2b3b0a",
+                    "name": "Ricky Martin"
+                  }
+                }
+              ],
+              "anchorMbid": "12279ff1-ff0a-4cf6-a973-d5ff64c548f1",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Canción bonita",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-04-13",
+                "credits": [
+                  {
+                    "name": "Carlos Vives",
+                    "joinphrase": " + ",
+                    "artist": {
+                      "id": "ac367c2e-7783-41e5-a184-131da6b0c166",
+                      "name": "Carlos Vives"
+                    }
+                  },
+                  {
+                    "name": "Ricky Martin",
+                    "artist": {
+                      "id": "70ea63ea-70dc-4b63-951a-2c249d2b3b0a",
+                      "name": "Ricky Martin"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Cómo Olvidar (Version 2021)’",
+          "artist": "Olga Tañón y Jay Wheeler",
+          "anchor": {
+            "title": "‘Cómo Olvidar (Version 2021)’",
+            "artist": "Olga Tañón"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘De Vuelta Pa’ La Vuelta’",
+          "artist": "Daddy Yankee & Marc Anthony",
+          "anchor": {
+            "title": "‘De Vuelta Pa’ La Vuelta’",
+            "artist": "Daddy Yankee"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "add98227-3d46-4463-893b-dd52600616a3",
+            "seed": {
+              "kind": "recording",
+              "title": "De vuelta pa' la vuelta",
+              "durationSec": 231,
+              "credits": [
+                {
+                  "name": "Daddy Yankee",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "2f522f5c-111c-4ce8-8bd0-d82e97c227ad",
+                    "name": "Daddy Yankee"
+                  }
+                },
+                {
+                  "name": "Marc Anthony",
+                  "artist": {
+                    "id": "25607613-aceb-445a-8519-83a2ee0f8402",
+                    "name": "Marc Anthony"
+                  }
+                }
+              ],
+              "anchorMbid": "5e8d8979-9adf-47cf-a5e6-d83e5ec9e481",
+              "anchor": {
+                "kind": "release_group",
+                "title": "De vuelta pa' la vuelta",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-12-10",
+                "credits": [
+                  {
+                    "name": "Daddy Yankee",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "2f522f5c-111c-4ce8-8bd0-d82e97c227ad",
+                      "name": "Daddy Yankee"
+                    }
+                  },
+                  {
+                    "name": "Marc Anthony",
+                    "artist": {
+                      "id": "25607613-aceb-445a-8519-83a2ee0f8402",
+                      "name": "Marc Anthony"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Dios Así Lo Quiso’",
+          "artist": "Ricardo Montaner & Juan Luis Guerra 4.40",
+          "anchor": {
+            "title": "‘Dios Así Lo Quiso’",
+            "artist": "Ricardo Montaner"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2990c488-3542-459c-8c8d-3da89300a206",
+            "seed": {
+              "kind": "recording",
+              "title": "Dios así lo quiso",
+              "durationSec": 213,
+              "credits": [
+                {
+                  "name": "Ricardo Montaner",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "9ea7c031-a2d0-4a89-b469-72b51c47417c",
+                    "name": "Ricardo Montaner"
+                  }
+                },
+                {
+                  "name": "Juan Luis Guerra",
+                  "artist": {
+                    "id": "c3dcad1b-1380-4a94-98d8-3f8272f19df6",
+                    "name": "Juan Luis Guerra"
+                  }
+                }
+              ],
+              "anchorMbid": "9c430a72-7d78-4792-b8d5-c6c4c35011ed",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Dios así lo quiso",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-04-09",
+                "credits": [
+                  {
+                    "name": "Ricardo Montaner",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "9ea7c031-a2d0-4a89-b469-72b51c47417c",
+                      "name": "Ricardo Montaner"
+                    }
+                  },
+                  {
+                    "name": "Juan Luis Guerra",
+                    "artist": {
+                      "id": "c3dcad1b-1380-4a94-98d8-3f8272f19df6",
+                      "name": "Juan Luis Guerra"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Hasta El Sol De Hoy’",
+          "artist": "Luis Figueroa",
+          "anchor": {
+            "title": "‘Hasta El Sol De Hoy’",
+            "artist": "Luis Figueroa"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘Lotería’",
+          "artist": "Prince Royce",
+          "anchor": {
+            "title": "‘Lotería’",
+            "artist": "Prince Royce"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘Tengo Un Dios’",
+          "artist": "Silvestre Dangond",
+          "anchor": {
+            "title": "‘Tengo Un Dios’",
+            "artist": "Silvestre Dangond"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d73d80c6-9f1b-4e5e-b1c2-91fe37da1e2b",
+            "seed": {
+              "kind": "recording",
+              "title": "Tengo un Dios",
+              "durationSec": 199,
+              "credits": [
+                {
+                  "name": "Silvestre Dangond",
+                  "artist": {
+                    "id": "644569a3-6cfd-4f5c-9fe5-80bc4d78f816",
+                    "name": "Silvestre Dangond"
+                  }
+                }
+              ],
+              "anchorMbid": "fd1c0cf6-709c-4b4d-9b79-db0ed44c9a0f",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Tengo un Dios",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-10-29",
+                "credits": [
+                  {
+                    "name": "Silvestre Dangond",
+                    "artist": {
+                      "id": "644569a3-6cfd-4f5c-9fe5-80bc4d78f816",
+                      "name": "Silvestre Dangond"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Un Amor Eterno’",
+          "artist": "Marc Anthony",
+          "anchor": {
+            "title": "‘Un Amor Eterno’",
+            "artist": "Marc Anthony"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "5b3e4b53-01e0-4390-aeee-b5292ecef72b",
+            "seed": {
+              "kind": "recording",
+              "title": "Un amor eterno",
+              "durationSec": 191,
+              "credits": [
+                {
+                  "name": "Marc Anthony",
+                  "artist": {
+                    "id": "25607613-aceb-445a-8519-83a2ee0f8402",
+                    "name": "Marc Anthony"
+                  }
+                }
+              ],
+              "anchorMbid": "8857478e-0462-464f-8a6d-e746c92a6902",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Un amor eterno (versión balada)",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-11-12",
+                "credits": [
+                  {
+                    "name": "Marc Anthony",
+                    "artist": {
+                      "id": "25607613-aceb-445a-8519-83a2ee0f8402",
+                      "name": "Marc Anthony"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Víctimas Las Dos’",
+          "artist": "Víctor Manuelle & La India",
+          "anchor": {
+            "title": "‘Víctimas Las Dos’",
+            "artist": "Víctor Manuelle"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "30f6176c-b97b-41f2-92d0-d7b7e2bb69a2",
+            "seed": {
+              "kind": "recording",
+              "title": "Víctimas las dos",
+              "durationSec": 258,
+              "credits": [
+                {
+                  "name": "Víctor Manuelle",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "cdee2787-9d93-4ae6-b60d-322e0db15ddb",
+                    "name": "Víctor Manuelle"
+                  }
+                },
+                {
+                  "name": "La India",
+                  "artist": {
+                    "id": "fb842eee-c5c8-4748-8da8-e33e17e5041d",
+                    "name": "India"
+                  }
+                }
+              ],
+              "anchorMbid": "e00cc492-c244-4423-82d8-74c01b24adf7",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Víctimas las dos",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-02-18",
+                "credits": [
+                  {
+                    "name": "Víctor Manuelle",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "cdee2787-9d93-4ae6-b60d-322e0db15ddb",
+                      "name": "Víctor Manuelle"
+                    }
+                  },
+                  {
+                    "name": "La India",
+                    "artist": {
+                      "id": "fb842eee-c5c8-4748-8da8-e33e17e5041d",
+                      "name": "India"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "tropical-collaboration",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "‘De Vuelta Pa’ La Vuelta’",
+          "artist": "Daddy Yankee & Marc Anthony",
+          "anchor": {
+            "title": "‘De Vuelta Pa’ La Vuelta’",
+            "artist": "Daddy Yankee"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "add98227-3d46-4463-893b-dd52600616a3",
+            "seed": {
+              "kind": "recording",
+              "title": "De vuelta pa' la vuelta",
+              "durationSec": 231,
+              "credits": [
+                {
+                  "name": "Daddy Yankee",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "2f522f5c-111c-4ce8-8bd0-d82e97c227ad",
+                    "name": "Daddy Yankee"
+                  }
+                },
+                {
+                  "name": "Marc Anthony",
+                  "artist": {
+                    "id": "25607613-aceb-445a-8519-83a2ee0f8402",
+                    "name": "Marc Anthony"
+                  }
+                }
+              ],
+              "anchorMbid": "5e8d8979-9adf-47cf-a5e6-d83e5ec9e481",
+              "anchor": {
+                "kind": "release_group",
+                "title": "De vuelta pa' la vuelta",
+                "category": "single_ep",
+                "firstReleaseDate": "2020-12-10",
+                "credits": [
+                  {
+                    "name": "Daddy Yankee",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "2f522f5c-111c-4ce8-8bd0-d82e97c227ad",
+                      "name": "Daddy Yankee"
+                    }
+                  },
+                  {
+                    "name": "Marc Anthony",
+                    "artist": {
+                      "id": "25607613-aceb-445a-8519-83a2ee0f8402",
+                      "name": "Marc Anthony"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Búscame’",
+          "artist": "Kany García & Carlos Vives",
+          "anchor": {
+            "title": "‘Búscame’",
+            "artist": "Kany García"
+          },
+          "won": false,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "‘Lo Veo y No Lo Creo’",
+          "artist": "Willy García & Gilberto Santa Rosa",
+          "anchor": {
+            "title": "‘Lo Veo y No Lo Creo’",
+            "artist": "Willy García"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1cda1adb-5d5f-467a-bd44-ace2fca44a2e",
+            "seed": {
+              "kind": "recording",
+              "title": "Lo veo y no lo creo",
+              "durationSec": 200,
+              "credits": [
+                {
+                  "name": "Willy García",
+                  "joinphrase": " ft. ",
+                  "artist": {
+                    "id": "f7e529e8-fbbf-4408-a76d-9af6e7fc5234",
+                    "name": "Willy García"
+                  }
+                },
+                {
+                  "name": "Gilberto Santa Rosa",
+                  "artist": {
+                    "id": "de13522c-692e-4755-955e-dc931fea4e2b",
+                    "name": "Gilberto Santa Rosa"
+                  }
+                }
+              ],
+              "anchorMbid": "6a1c4f12-7677-4df2-a0ad-8d70e594e77a",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Lo veo y no lo creo",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-04-09",
+                "credits": [
+                  {
+                    "name": "Willy García",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "f7e529e8-fbbf-4408-a76d-9af6e7fc5234",
+                      "name": "Willy García"
+                    }
+                  },
+                  {
+                    "name": "Gilberto Santa Rosa",
+                    "artist": {
+                      "id": "de13522c-692e-4755-955e-dc931fea4e2b",
+                      "name": "Gilberto Santa Rosa"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Señor Juez’",
+          "artist": "Ozuna & Anthony Santos",
+          "anchor": {
+            "title": "‘Señor Juez’",
+            "artist": "Ozuna"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "313c529c-f8b4-4486-9e59-c82d0bce5be4",
+            "seed": {
+              "kind": "recording",
+              "title": "Señor juez",
+              "durationSec": 264,
+              "credits": [
+                {
+                  "name": "Ozuna",
+                  "joinphrase": " x ",
+                  "artist": {
+                    "id": "f2651b63-a44d-4d1d-ba64-d981d971ecd1",
+                    "name": "Ozuna"
+                  }
+                },
+                {
+                  "name": "Anthony Santos",
+                  "artist": {
+                    "id": "fef0e932-c8bc-4ba9-8a37-52aed5b0a633",
+                    "name": "Antony Santos"
+                  }
+                }
+              ],
+              "anchorMbid": "9441b735-124b-4575-bbac-316fe7cae0d1",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Señor juez",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-11-04",
+                "credits": [
+                  {
+                    "name": "Ozuna",
+                    "joinphrase": " x ",
+                    "artist": {
+                      "id": "f2651b63-a44d-4d1d-ba64-d981d971ecd1",
+                      "name": "Ozuna"
+                    }
+                  },
+                  {
+                    "name": "Anthony Santos",
+                    "artist": {
+                      "id": "fef0e932-c8bc-4ba9-8a37-52aed5b0a633",
+                      "name": "Antony Santos"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "‘Víctimas Las Dos’",
+          "artist": "Víctor Manuelle & La India",
+          "anchor": {
+            "title": "‘Víctimas Las Dos’",
+            "artist": "Víctor Manuelle"
+          },
+          "won": false,
+          "resolved": {
+            "status": "exact",
+            "mbid": "30f6176c-b97b-41f2-92d0-d7b7e2bb69a2",
+            "seed": {
+              "kind": "recording",
+              "title": "Víctimas las dos",
+              "durationSec": 258,
+              "credits": [
+                {
+                  "name": "Víctor Manuelle",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "cdee2787-9d93-4ae6-b60d-322e0db15ddb",
+                    "name": "Víctor Manuelle"
+                  }
+                },
+                {
+                  "name": "La India",
+                  "artist": {
+                    "id": "fb842eee-c5c8-4748-8da8-e33e17e5041d",
+                    "name": "India"
+                  }
+                }
+              ],
+              "anchorMbid": "e00cc492-c244-4423-82d8-74c01b24adf7",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Víctimas las dos",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-02-18",
+                "credits": [
+                  {
+                    "name": "Víctor Manuelle",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "cdee2787-9d93-4ae6-b60d-322e0db15ddb",
+                      "name": "Víctor Manuelle"
+                    }
+                  },
+                  {
+                    "name": "La India",
+                    "artist": {
+                      "id": "fb842eee-c5c8-4748-8da8-e33e17e5041d",
+                      "name": "India"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
