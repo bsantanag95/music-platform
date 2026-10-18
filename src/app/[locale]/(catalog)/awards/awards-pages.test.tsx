@@ -38,7 +38,7 @@ const { default: AwardPage } = await import("./[award]/page");
 const { default: CeremonyPageRoute } = await import("./[award]/[year]/page");
 const { AwardCategory } = await import("@/components/awards/AwardCategory");
 const { FacetRow } = await import("@/components/discovery/FacetRow");
-const { ExploreJumpNav } = await import("@/components/discovery/ExploreJumpNav");
+const { StickyJumpNav } = await import("@/components/awards/StickyJumpNav");
 const { Breadcrumbs } = await import("@/components/ui/Breadcrumbs");
 
 /** Todos los elementos de `type` dentro del árbol devuelto por el componente. */
@@ -182,7 +182,7 @@ describe("/awards/{premio}/{año}: ceremonia", () => {
 
   it("la navegación interna lleva a los niveles general y por álbum y a cada campo del nivel por género", async () => {
     const element = await open(page());
-    const nav = findAll(element, ExploreJumpNav)[0]!.props as { label: string; items: { id: string; label: string }[] };
+    const nav = findAll(element, StickyJumpNav)[0]!.props as { label: string; items: { id: string; label: string }[] };
 
     expect(nav.label).toBe("jumpLabel");
     expect(nav.items).toEqual([
@@ -195,7 +195,7 @@ describe("/awards/{premio}/{año}: ceremonia", () => {
 
   it("sin nivel por género la navegación no tiene campos", async () => {
     const element = await open(page({ categories: page().categories.filter((item) => item.tier !== "genre") }));
-    const nav = findAll(element, ExploreJumpNav)[0]!.props as { items: { id: string }[] };
+    const nav = findAll(element, StickyJumpNav)[0]!.props as { items: { id: string }[] };
 
     expect(nav.items.map((item) => item.id)).toEqual(["tier-general", "tier-album"]);
   });
