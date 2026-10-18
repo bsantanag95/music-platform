@@ -33,5 +33,6 @@
   "exploreHeading": "Awards",
   "exploreDescription": "Nominees and winners of the latest ceremonies.",
   "exploreSeeAll": "See all",
-  "ceremonyCount": "{count, plural, one {# ceremony} other {# ceremonies}}"
+  "ceremonyCount": "{count, plural, one {# ceremony} other {# ceremonies}}",
+  "categoryHistoryShort": "History"
 }

@@ -44,6 +44,28 @@ const nominations: NominationView[] = [
 ];
 
 describe("AwardCategory", () => {
+  it("en una categoría de personas, un nominado sin foto lleva su inicial y no la silueta de disco", () => {
+    const { container } = renderWithIntl(
+      <AwardCategory
+        name={{ es: "Productor del año", en: "Producer of the Year" }}
+        coverage="complete"
+        honors="performer"
+        subjectKind="artist"
+        nominations={[{ id: "p", won: true, text: "Cirkut", credit: null, subject: null }]}
+      />,
+    );
+
+    expect(container.querySelector("[aria-hidden='true'].rounded-full")?.textContent).toBe("C");
+  });
+
+  it("el ganador se marca con trofeo y texto, sin bloque relleno", () => {
+    renderWithIntl(<AwardCategory {...{ name: { es: "Álbum del año", en: "Album of the Year" }, coverage: "complete" as const, honors: "performer" as const, nominations }} />);
+
+    const badge = screen.getByText(awardsEs.winner);
+    expect(badge).not.toHaveClass("bg-amber");
+    expect(badge.querySelector("svg")).not.toBeNull();
+  });
+
   const props = { name: { es: "Álbum del año", en: "Album of the Year" }, coverage: "complete" as const, honors: "performer" as const, nominations };
 
   it("muestra el nombre traducido y el ganador primero, con título y artista en dos líneas y el título enlazado", () => {

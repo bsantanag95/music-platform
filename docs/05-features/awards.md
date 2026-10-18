@@ -49,19 +49,27 @@ videojuegos.
 La página medía 9.036 px en escritorio y 19.370 en móvil (33 categorías, todas con todos sus nominados y el ganador a ~50 px); ahora ~5.800 y
 ~11.200, con el resultado primero y los nominados a un clic.
 
-- **Cabecera**: migas Inicio / Premios Grammy / 2026 (el premio enlaza a `/awards/<premio>`), título, edición y fecha, **sin rótulo
+- **Cabecera**: una **portada** como las de las décadas y colecciones: el título grande, edición y fecha y, a la derecha, el ganador de la
+  primera categoría general de álbum (en los Grammy, Álbum del año) con su carátula y trofeo, y esa carátula difuminada de fondo. Migas
+  Inicio / Premios Grammy / 2026 (el premio enlaza a `/awards/<premio>`), **sin rótulo
   encima** (se retiraron "Actualidad", "Ceremonia" y "Categoría": el sistema de diseño no admite un eyebrow sobre el encabezado) y una
   fila rotulada **Año** (`FacetRow`, el mismo componente de la vista de década; más reciente primero, como el índice, con la actual
   marcada).
-- **"En esta página"** (`ExploreJumpNav`, enlaces `#ancla` sin JavaScript): Campo general, Por álbum y, en lugar de "Por género", uno por cada
-  campo (Pop, Dance y electrónica, Rock y alternativa, R&B, Rap, Country; `#field-<campo>`). Se omite con menos de 4 destinos.
+- **"En esta página"** (`StickyJumpNav`, enlaces `#ancla`): Campo general, Por álbum y, en lugar de "Por género", uno por cada campo (Pop,
+  Dance y electrónica, Rock y alternativa, R&B, Rap, Country; `#field-<campo>`). **Queda fija** bajo la cabecera del sitio al bajar y marca
+  el grupo que se está viendo (`aria-current="location"`): la página es muy larga y antes había que volver arriba para saltar de grupo.
+- **Ganador**: trofeo y "Ganador" en texto ámbar, sin bloque relleno (con decenas de categorías, el bloque ámbar macizo en cada una gastaba
+  el color). Los nominados usan la misma tipografía de títulos que el ganador. En las categorías de personas (`subjectKind = artist`:
+  Mejor artista nuevo, Productor y Compositor del año), un nominado sin foto lleva su **inicial** en un círculo, no la silueta de disco.
 - **Categorías destacadas** (`FEATURED_CATEGORIES = 4`, `featured-categories.ts`): las cuatro primeras del campo general en el orden curado
   (en los Grammy, las "Big Four": Álbum, Grabación y Canción del año y Mejor artista nuevo) llevan el ganador grande (carátula de 112 px) y
   todos los nominados a la vista, con su número. Es una regla de presentación: no hay un campo nuevo en los JSON curados.
 - **Filas compactas** (`AwardCategory variant="compact"`): el resto del campo general (Productor y Compositor del año) y los niveles por
   álbum y por género. Nombre con su enlace a la historia, el ganador con una carátula de 64 px y los nominados plegados bajo
   **«Nominados (N)»** (`<details>`, cerrado, sin JavaScript; la búsqueda de la página del navegador lo abre). Una categoría de la que solo
-  se registró al ganador no lleva el control y dice por qué. Grilla de 1, 2 y 3 columnas según el ancho, `items-start` para que abrir una
+  se registró al ganador no lleva el control y dice por qué. El enlace a la historia va siempre arriba a la derecha ("Historia" a secas en
+  las compactas, para no apretar el título). Grilla de 1, 2 y 3 columnas según el ancho —dos en `xl` cuando el grupo tiene 2 o 4 categorías,
+  para no dejar huecos—, `items-start` para que abrir una
   fila no estire a la de al lado. El número de nominados es un dato editorial finito, no una cifra que crezca con la base: por eso se muestra.
 - La historia de una categoría usa la forma destacada (ahí el propósito es ver a todos los nominados de cada año), con el mismo ancho
   de página que la ceremonia.

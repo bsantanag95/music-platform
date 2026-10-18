@@ -21,8 +21,23 @@ function Cover({ cover, label, className }: { cover: CoverInfo; label: string; c
   );
 }
 
-/** Carátula, foto o silueta del nominado (también en la tarjeta de ceremonia de Explorar). */
-export function NomineeVisual({ nomination, size }: { nomination: NominationView; size: string }) {
+/** Inicial de una persona sin foto, en círculo: una silueta de disco para alguien (no un disco) confundía. */
+function Initial({ name, size }: { name: string; size: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`flex shrink-0 items-center justify-center rounded-full bg-ink font-display text-paper-muted ring-1 ring-ink-border ${size}`}
+    >
+      {name.trim().charAt(0).toUpperCase()}
+    </span>
+  );
+}
+
+/**
+ * Carátula, foto o silueta del nominado (también en la tarjeta de ceremonia de Explorar). `person`: la categoría premia a
+ * personas (artista, productor, compositor); sin foto se muestra la inicial en lugar del disco.
+ */
+export function NomineeVisual({ nomination, size, person = false }: { nomination: NominationView; size: string; person?: boolean }) {
   const t = useTranslations("catalog.explore");
   const subject = nomination.subject;
   if (subject?.kind === "release_group") return <Cover cover={subject.album.cover} label={t("albumCoverLabel")} className={size} />;
@@ -36,10 +51,12 @@ export function NomineeVisual({ nomination, size }: { nomination: NominationView
       </div>
     );
   }
+  if (subject?.kind === "artist") return <Initial name={subject.name} size={size} />;
+  if (!subject && person) return <Initial name={nomination.text} size={size} />;
   // Decorativo: el nombre ya está en el texto del nominado.
   return (
     <span aria-hidden className="contents">
-      <DiscPlaceholder alt="" className={`shrink-0 ${size} ${subject?.kind === "artist" ? "rounded-full" : ""}`} />
+      <DiscPlaceholder alt="" className={`shrink-0 ${size}`} />
     </span>
   );
 }
@@ -67,10 +84,20 @@ export type NominationSize = "lg" | "md" | "sm";
 const SIZE: Record<NominationSize, { visual: string; gap: string; title: string }> = {
   lg: { visual: "size-28 shrink-0", gap: "gap-4", title: "font-display text-xl text-paper" },
   md: { visual: "size-16 shrink-0", gap: "gap-3", title: "font-display text-base text-paper" },
-  sm: { visual: "size-12 shrink-0", gap: "gap-3", title: "font-body text-sm text-paper" },
+  // La misma tipografía de títulos que el ganador y el resto de la app (antes serif negrita solo en los nominados).
+  sm: { visual: "size-12 shrink-0", gap: "gap-3", title: "font-display text-sm text-paper" },
 };
 
-export function NominationItem({ nomination, size = "sm" }: { nomination: NominationView; size?: NominationSize }) {
+export function NominationItem({
+  nomination,
+  size = "sm",
+  person = false,
+}: {
+  nomination: NominationView;
+  size?: NominationSize;
+  /** La categoría premia a personas: sin foto, la inicial. */
+  person?: boolean;
+}) {
   const t = useTranslations("awards");
   const href = subjectHref(nomination);
   const anchor = nomination.subject?.kind === "recording" ? nomination.subject.anchor : null;
@@ -80,10 +107,24 @@ export function NominationItem({ nomination, size = "sm" }: { nomination: Nomina
 
   return (
     <div className={`flex min-w-0 items-center ${style.gap}`}>
-      <NomineeVisual nomination={nomination} size={style.visual} />
+      <NomineeVisual nomination={nomination} size={style.visual} person={person} />
       <div className="flex min-w-0 flex-col gap-0.5">
         {nomination.won ? (
-          <span className="w-fit rounded-sm bg-amber px-1.5 py-0.5 font-data text-[10px] font-semibold uppercase tracking-wider text-ink">
+          // Trofeo y texto en ámbar, sin bloque relleno: en una ceremonia hay decenas de ganadores y el bloque macizo en cada
+          // categoría gastaba el ámbar.
+          <span className="inline-flex w-fit items-center gap-1 font-data text-[0.65rem] font-semibold uppercase tracking-wider text-amber">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              className="size-3"
+            >
+              <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3" />
+            </svg>
             {t("winner")}
           </span>
         ) : null}

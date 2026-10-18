@@ -1,6 +1,6 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import type { AwardCoverage, AwardHonors } from "@/db/schema";
+import type { AwardCoverage, AwardHonors, AwardSubjectKind } from "@/db/schema";
 import type { CategoryName, NominationView } from "@/services/awards/read";
 import { NominationItem } from "./NominationItem";
 
@@ -25,6 +25,8 @@ interface AwardCategoryProps {
   link?: { href: string; label: string };
   headingLevel?: "h2" | "h3" | "h4";
   variant?: "featured" | "compact";
+  /** Qué premia la categoría: con `artist`, los nominados sin foto llevan su inicial. */
+  subjectKind?: AwardSubjectKind;
 }
 
 export function AwardCategory({
@@ -36,6 +38,7 @@ export function AwardCategory({
   link,
   headingLevel = "h3",
   variant = "featured",
+  subjectKind,
 }: AwardCategoryProps) {
   const t = useTranslations("awards");
   const locale = useLocale();
@@ -43,13 +46,16 @@ export function AwardCategory({
   const others = nominations.filter((n) => !n.won);
   const Heading = headingLevel;
   const compact = variant === "compact";
+  const person = subjectKind === "artist";
 
   return (
     <section className={`flex w-full flex-col rounded-lg border border-ink-border bg-ink-surface ${compact ? "gap-3 p-3" : "gap-4 p-4"}`}>
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <Heading className={`font-display text-paper ${compact ? "text-base" : "text-lg"}`}>{heading ?? categoryName(name, locale)}</Heading>
+      {/* El enlace siempre arriba a la derecha, sin saltar de línea: el que se ajusta es el título. Antes, según el ancho de
+          la tarjeta, quedaba a la derecha o debajo del título. */}
+      <div className="flex items-start justify-between gap-4">
+        <Heading className={`min-w-0 font-display text-paper ${compact ? "text-base" : "text-lg"}`}>{heading ?? categoryName(name, locale)}</Heading>
         {link ? (
-          <Link href={link.href} className="group inline-flex items-center gap-1 font-data text-xs text-paper-muted transition-colors hover:text-amber">
+          <Link href={link.href} className="group mt-0.5 inline-flex shrink-0 items-center gap-1 whitespace-nowrap font-data text-xs text-paper-muted transition-colors hover:text-amber">
             {link.label}
             <span aria-hidden="true" className="transition-transform duration-150 group-hover:translate-x-0.5">
               →
@@ -62,7 +68,7 @@ export function AwardCategory({
       <ul className="flex flex-col gap-3">
         {winners.map((nomination) => (
           <li key={nomination.id}>
-            <NominationItem nomination={nomination} size={compact ? "md" : "lg"} />
+            <NominationItem nomination={nomination} size={compact ? "md" : "lg"} person={person} />
           </li>
         ))}
       </ul>
@@ -86,7 +92,7 @@ export function AwardCategory({
             <ul className="grid grid-cols-1 gap-3 border-t border-ink-border pt-3 mt-2 sm:grid-cols-2">
               {others.map((nomination) => (
                 <li key={nomination.id} className="min-w-0">
-                  <NominationItem nomination={nomination} />
+                  <NominationItem nomination={nomination} person={person} />
                 </li>
               ))}
             </ul>
@@ -97,7 +103,7 @@ export function AwardCategory({
             <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {others.map((nomination) => (
                 <li key={nomination.id} className="min-w-0">
-                  <NominationItem nomination={nomination} />
+                  <NominationItem nomination={nomination} person={person} />
                 </li>
               ))}
             </ul>
