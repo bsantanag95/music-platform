@@ -6,6 +6,8 @@ import awardsEs from "../../../messages/es/awards.json";
 import type { NominationView } from "@/services/awards/read";
 import { AwardCategory } from "./AwardCategory";
 import { AwardsExploreSection } from "./AwardsExploreSection";
+import { AwardTileGrid } from "./AwardTile";
+import { RecentWinnersRail } from "./RecentWinnersRail";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, ...rest }: { href: string; children: ReactNode }) => (
@@ -177,7 +179,7 @@ describe("AwardsExploreSection", () => {
 
   it("enlaza cada ceremonia y el índice", () => {
     renderWithIntl(
-      <AwardsExploreSection ceremonies={[{ awardSlug: "grammy", year: 2025, edition: 67, heldOn: "2025-02-02", headline: null }]} />,
+      <AwardsExploreSection ceremonies={[{ awardSlug: "grammy", year: 2025, edition: 67, heldOn: "2025-02-02", voting: null, years: [2025], headline: null }]} />,
     );
     expect(screen.getByRole("link", { name: /Premios Grammy\s*2025/ })).toHaveAttribute("href", "/awards/grammy/2025");
     expect(screen.getByRole("link", { name: /Ver todos/ })).toHaveAttribute("href", "/awards");
@@ -187,11 +189,11 @@ describe("AwardsExploreSection", () => {
     renderWithIntl(
       <AwardsExploreSection
         ceremonies={[
-          { awardSlug: "brit-awards", year: 2026, edition: 46, heldOn: "2026-02-28", headline: null },
-          { awardSlug: "grammy", year: 2026, edition: 68, heldOn: "2026-02-01", headline: null },
-          { awardSlug: "lo-nuestro", year: 2026, edition: 38, heldOn: "2026-02-19", headline: null },
-          { awardSlug: "mercury-prize", year: 2025, edition: 34, heldOn: "2025-09-11", headline: null },
-          { awardSlug: "latin-grammy", year: 2025, edition: 26, heldOn: "2025-11-13", headline: null },
+          { awardSlug: "brit-awards", year: 2026, edition: 46, heldOn: "2026-02-28", voting: null, years: [2026], headline: null },
+          { awardSlug: "grammy", year: 2026, edition: 68, heldOn: "2026-02-01", voting: null, years: [2026], headline: null },
+          { awardSlug: "lo-nuestro", year: 2026, edition: 38, heldOn: "2026-02-19", voting: null, years: [2026], headline: null },
+          { awardSlug: "mercury-prize", year: 2025, edition: 34, heldOn: "2025-09-11", voting: null, years: [2025], headline: null },
+          { awardSlug: "latin-grammy", year: 2025, edition: 26, heldOn: "2025-11-13", voting: null, years: [2025], headline: null },
         ]}
       />,
     );
@@ -221,6 +223,8 @@ describe("AwardsExploreSection", () => {
             year: 2024,
             edition: 66,
             heldOn: "2024-02-04",
+            voting: null,
+            years: [2024],
             headline: {
               category: { es: "Álbum del año", en: "Album of the Year" },
               winner: {
@@ -248,5 +252,75 @@ describe("AwardsExploreSection", () => {
     expect(card).toHaveTextContent("Midnights");
     expect(card).toHaveTextContent("Taylor Swift");
     expect(card).not.toHaveTextContent("Midnights — Taylor Swift");
+  });
+});
+
+describe("AwardTileGrid detallada (hub)", () => {
+  const brit = { awardSlug: "brit-awards", year: 2026, edition: 46, heldOn: "2026-02-28", headline: null };
+
+  it("suma años, ceremonias y quién vota, y enlaza las ediciones anteriores fuera del enlace principal", () => {
+    renderWithIntl(
+      <AwardTileGrid detailed ceremonies={[{ ...brit, voting: "academy", years: [2026, 2025, 2024, 2023, 2022, 2021, 2020] }]} />,
+    );
+    const main = screen.getByRole("link", { name: /Premios Brit\s*2026/ });
+    expect(main).toHaveAttribute("href", "/awards/brit-awards/2026");
+    expect(main).toHaveTextContent("2020–2026 · 7 ceremonias · Vota la academia");
+    const previous = within(screen.getByRole("navigation", { name: "Ediciones anteriores de Premios Brit" })).getAllByRole("link");
+    expect(previous.map((link) => link.textContent)).toEqual(["2025", "2024", "2023", "2022", "2021"]);
+    expect(previous[0]).toHaveAttribute("href", "/awards/brit-awards/2025");
+    expect(main).not.toContainElement(previous[0]!);
+  });
+
+  it("con una sola ceremonia no muestra rango ni ediciones anteriores; en Explorar no muestra nada de eso", () => {
+    const { unmount } = renderWithIntl(<AwardTileGrid detailed ceremonies={[{ ...brit, voting: null, years: [2026] }]} />);
+    expect(screen.getByRole("link", { name: /Premios Brit/ })).toHaveTextContent("2026 · 1 ceremonia");
+    expect(screen.queryByRole("navigation")).toBeNull();
+    unmount();
+
+    renderWithIntl(<AwardTileGrid ceremonies={[{ ...brit, voting: "academy", years: [2026, 2025] }]} />);
+    expect(screen.queryByRole("navigation")).toBeNull();
+    expect(screen.getByRole("link")).not.toHaveTextContent("ceremonias");
+  });
+});
+
+describe("RecentWinnersRail", () => {
+  // jsdom no implementa ResizeObserver (el riel desplazable lo usa para las flechas).
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  );
+
+  it("no se renderiza sin ganadores; con ganadores, cada carátula abre el álbum o, sin álbum, la ceremonia", () => {
+    const { container, unmount } = renderWithIntl(<RecentWinnersRail winners={[]} />);
+    expect(container).toBeEmptyDOMElement();
+    unmount();
+
+    const album = { id: "rg1", title: "Brat", artistName: "Charli xcx", cover: { releaseGroupId: "rg1", coverThumbUrl: null, coverResolved: true } };
+    renderWithIntl(
+      <RecentWinnersRail
+        winners={[
+          {
+            awardSlug: "brit-awards",
+            year: 2025,
+            category: { es: "Álbum británico del año", en: "British Album of the Year" },
+            winner: { id: "n1", won: true, text: "Brat — Charli xcx", credit: null, subject: { kind: "release_group", album } },
+          },
+          {
+            awardSlug: "mercury-prize",
+            year: 2023,
+            category: { es: "Álbum del año", en: "Album of the Year" },
+            winner: { id: "n2", won: true, text: "Sin catálogo", credit: "Alguien", subject: null },
+          },
+        ]}
+      />,
+    );
+    const brat = screen.getByRole("link", { name: /Brat/ });
+    expect(brat.getAttribute("href")).toContain("rg1");
+    expect(brat).toHaveTextContent("Premios Brit 2025");
+    expect(screen.getByRole("link", { name: /Sin catálogo/ })).toHaveAttribute("href", "/awards/mercury-prize/2023");
   });
 });

@@ -14,6 +14,8 @@ const mocks = vi.hoisted(() => ({
     throw new Error("NEXT_NOT_FOUND");
   }),
   listLatestCeremoniesByAward: vi.fn(),
+  listRecentHeadlineWinners: vi.fn(),
+  listMostAwardedArtists: vi.fn(),
   getLatestCeremonyYear: vi.fn(),
   getCeremonyPage: vi.fn(),
 }));
@@ -28,6 +30,8 @@ vi.mock("@/i18n/navigation", () => ({ redirect: mocks.redirect, Link: () => null
 vi.mock("@/db", () => ({ db: {} }));
 vi.mock("@/services/awards/read", () => ({
   listLatestCeremoniesByAward: mocks.listLatestCeremoniesByAward,
+  listRecentHeadlineWinners: mocks.listRecentHeadlineWinners,
+  listMostAwardedArtists: mocks.listMostAwardedArtists,
   getLatestCeremonyYear: mocks.getLatestCeremonyYear,
   getCeremonyPage: mocks.getCeremonyPage,
   getCategoryHistory: vi.fn(),
@@ -39,6 +43,8 @@ const { default: CeremonyPageRoute } = await import("./[award]/[year]/page");
 const { AwardCategory } = await import("@/components/awards/AwardCategory");
 const { FacetRow } = await import("@/components/discovery/FacetRow");
 const { AwardTileGrid } = await import("@/components/awards/AwardTile");
+const { RecentWinnersRail } = await import("@/components/awards/RecentWinnersRail");
+const { PopularChart } = await import("@/components/discovery/PopularChart");
 const { StickyJumpNav } = await import("@/components/awards/StickyJumpNav");
 const { Breadcrumbs } = await import("@/components/ui/Breadcrumbs");
 
@@ -61,9 +67,11 @@ const params = Promise.resolve({ locale: "es" });
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.listRecentHeadlineWinners.mockResolvedValue([]);
+  mocks.listMostAwardedArtists.mockResolvedValue([]);
 });
 
-const latest = (awardSlug: string, year: number) => ({ awardSlug, ...ceremony(year), headline: null });
+const latest = (awardSlug: string, year: number) => ({ awardSlug, ...ceremony(year), voting: null, years: [year], headline: null });
 
 describe("/awards: hub de premios", () => {
   it("con un solo premio redirige a su ceremonia más reciente", async () => {
@@ -100,6 +108,49 @@ describe("/awards: hub de premios", () => {
     expect(mocks.redirect).not.toHaveBeenCalled();
     expect(JSON.stringify(element)).toContain("emptyIndex");
     expect(findAll(element, AwardTileGrid)).toHaveLength(0);
+    expect(mocks.listRecentHeadlineWinners).not.toHaveBeenCalled();
+    expect(mocks.listMostAwardedArtists).not.toHaveBeenCalled();
+  });
+
+  it("las tarjetas del hub van en modo detallado y en una sola grilla (la agrupación está apagada)", async () => {
+    mocks.listLatestCeremoniesByAward.mockResolvedValue([latest("grammy", 2026), latest("latin-grammy", 2025)]);
+
+    const element = await AwardsIndexPage({ params });
+    const grids = findAll(element, AwardTileGrid);
+
+    expect(grids).toHaveLength(1);
+    expect((grids[0]!.props as { detailed?: boolean }).detailed).toBe(true);
+  });
+
+  it("muestra los ganadores recientes y el ranking de los más premiados con sus premios", async () => {
+    mocks.listLatestCeremoniesByAward.mockResolvedValue([latest("grammy", 2026), latest("latin-grammy", 2025)]);
+    const winner = { id: "n1", won: true, text: "X — Y", credit: null, subject: null };
+    mocks.listRecentHeadlineWinners.mockResolvedValue([{ awardSlug: "grammy", year: 2026, category: { es: "Álbum del año", en: "AOTY" }, winner }]);
+    mocks.listMostAwardedArtists.mockResolvedValue(
+      ["a", "b", "c"].map((id, index) => ({ id, name: `Artista ${id}`, photoUrl: null, wins: 5 - index, awardSlugs: ["grammy", "latin-grammy"] })),
+    );
+
+    const element = await AwardsIndexPage({ params });
+
+    expect(mocks.listRecentHeadlineWinners).toHaveBeenCalledWith(3);
+    expect(findAll(element, RecentWinnersRail)).toHaveLength(1);
+    const chart = findAll(element, PopularChart);
+    expect(chart).toHaveLength(1);
+    const items = (chart[0]!.props as { items: { title: string; subtitle: string; figure: string }[] }).items;
+    expect(items.map((item) => item.title)).toEqual(["Artista a", "Artista b", "Artista c"]);
+    expect(items[0]!.subtitle).toBe("names.grammy · names.latin-grammy");
+  });
+
+  it("sin ganadores ni un ranking de al menos tres artistas no muestra esas secciones", async () => {
+    mocks.listLatestCeremoniesByAward.mockResolvedValue([latest("grammy", 2026), latest("latin-grammy", 2025)]);
+    mocks.listMostAwardedArtists.mockResolvedValue(
+      ["a", "b"].map((id) => ({ id, name: id, photoUrl: null, wins: 2, awardSlugs: ["grammy"] })),
+    );
+
+    const element = await AwardsIndexPage({ params });
+
+    expect(findAll(element, RecentWinnersRail).map((rail) => (rail.props as { winners: unknown[] }).winners)).toEqual([[]]);
+    expect(findAll(element, PopularChart)).toHaveLength(0);
   });
 });
 

@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   artist,
@@ -243,6 +243,10 @@ export interface CeremonyHeadline {
 /** La ceremonia más reciente de un premio (tarjeta de la sección "Premios" de Explorar y del hub `/awards`). */
 export interface LatestCeremony extends CeremonySummary {
   awardSlug: string;
+  /** Quién decide el premio; `null` hasta la próxima carga (migración 0073). */
+  voting: AwardVoting | null;
+  /** Años de todas las ceremonias cargadas del premio, del más reciente al más antiguo (incluye el de esta). */
+  years: number[];
   /** Ganador destacado de la ceremonia; `null` si no hay categoría general de álbum con ganador cargado. */
   headline: CeremonyHeadline | null;
 }
@@ -258,23 +262,17 @@ export function latestPerAward<T extends { awardSlug: string; heldOn: string }>(
 }
 
 /**
- * Una tarjeta por premio: su ceremonia más reciente con el ganador destacado. Dos consultas para todas las tarjetas
- * juntas, no una por tarjeta.
+ * Ganador destacado de cada ceremonia: el primero de la categoría general de álbum con menor orden curado (en los Grammy,
+ * Álbum del año). Una consulta para todas las ceremonias juntas, no una por ceremonia.
  */
-export async function listLatestCeremoniesByAward(): Promise<LatestCeremony[]> {
-  const all = await db
-    .select({ id: awardCeremony.id, awardSlug: award.slug, ...ceremonyColumns })
-    .from(awardCeremony)
-    .innerJoin(award, eq(award.id, awardCeremony.awardId));
-  const ceremonies = latestPerAward(all);
-  if (ceremonies.length === 0) return [];
-
+async function headlinesFor(ceremonyIds: string[]): Promise<Map<string, CeremonyHeadline>> {
+  const result = new Map<string, CeremonyHeadline>();
+  if (ceremonyIds.length === 0) return result;
   const winners = await db
     .select({
       ceremonyId: awardCategoryEdition.ceremonyId,
       nameEs: awardCategory.nameEs,
       nameEn: awardCategory.nameEn,
-      categoryOrder: awardCategory.sortOrder,
       nomination: awardNomination,
     })
     .from(awardNomination)
@@ -282,10 +280,7 @@ export async function listLatestCeremoniesByAward(): Promise<LatestCeremony[]> {
     .innerJoin(awardCategory, eq(awardCategory.id, awardCategoryEdition.categoryId))
     .where(
       and(
-        inArray(
-          awardCategoryEdition.ceremonyId,
-          ceremonies.map((c) => c.id),
-        ),
+        inArray(awardCategoryEdition.ceremonyId, ceremonyIds),
         eq(awardNomination.won, true),
         eq(awardCategory.tier, "general"),
         eq(awardCategory.subjectKind, "release_group"),
@@ -297,15 +292,132 @@ export async function listLatestCeremoniesByAward(): Promise<LatestCeremony[]> {
   const firstByCeremony = new Map<string, (typeof winners)[number]>();
   for (const row of winners) if (!firstByCeremony.has(row.ceremonyId)) firstByCeremony.set(row.ceremonyId, row);
   const views = await nominationViews([...firstByCeremony.values()].map((row) => row.nomination));
+  for (const [ceremonyId, row] of firstByCeremony) {
+    const winner = views.get(row.nomination.id);
+    if (winner) result.set(ceremonyId, { category: { es: row.nameEs, en: row.nameEn }, winner });
+  }
+  return result;
+}
 
-  return ceremonies.map(({ id, ...ceremony }) => {
-    const row = firstByCeremony.get(id);
-    const winner = row ? views.get(row.nomination.id) : undefined;
-    return {
-      ...ceremony,
-      headline: row && winner ? { category: { es: row.nameEs, en: row.nameEn }, winner } : null,
-    };
+/** Todas las ceremonias cargadas, con su premio (unas decenas): las funciones puras de abajo eligen cuáles mostrar. */
+async function allCeremonies() {
+  return db
+    .select({ id: awardCeremony.id, awardSlug: award.slug, voting: award.voting, ...ceremonyColumns })
+    .from(awardCeremony)
+    .innerJoin(award, eq(award.id, awardCeremony.awardId));
+}
+
+/**
+ * Una tarjeta por premio: su ceremonia más reciente con el ganador destacado, quién vota y los años cargados. Dos
+ * consultas para todas las tarjetas juntas (más las de los sujetos), no una por tarjeta.
+ */
+export async function listLatestCeremoniesByAward(): Promise<LatestCeremony[]> {
+  const all = await allCeremonies();
+  const ceremonies = latestPerAward(all);
+  if (ceremonies.length === 0) return [];
+  const headlines = await headlinesFor(ceremonies.map((c) => c.id));
+  const yearsOf = (slug: string) =>
+    all
+      .filter((c) => c.awardSlug === slug)
+      .map((c) => c.year)
+      .sort((a, b) => b - a);
+
+  return ceremonies.map(({ id, ...ceremony }) => ({
+    ...ceremony,
+    years: yearsOf(ceremony.awardSlug),
+    headline: headlines.get(id) ?? null,
+  }));
+}
+
+/** Un ganador del muro "Ganadores recientes" del hub. */
+export interface RecentHeadlineWinner extends CeremonyHeadline {
+  awardSlug: string;
+  year: number;
+}
+
+/**
+ * Las últimas `perAward` ceremonias de cada premio, de la más reciente a la más antigua (por `heldOn`), sin importar
+ * cuántas ceremonias tengan los demás premios. Pura, como `latestPerAward`.
+ */
+export function recentPerAward<T extends { awardSlug: string; heldOn: string }>(ceremonies: T[], perAward: number): T[] {
+  const sorted = [...ceremonies].sort((a, b) => b.heldOn.localeCompare(a.heldOn) || a.awardSlug.localeCompare(b.awardSlug));
+  const taken = new Map<string, number>();
+  return sorted.filter((c) => {
+    const count = taken.get(c.awardSlug) ?? 0;
+    if (count >= perAward) return false;
+    taken.set(c.awardSlug, count + 1);
+    return true;
   });
+}
+
+/**
+ * Muro "Ganadores recientes" del hub `/awards` (openspec: enrich-awards-hub): el ganador destacado de las últimas
+ * `perAward` ceremonias de cada premio, de la ceremonia más reciente a la más antigua. Una ceremonia sin ganador destacado
+ * no aporta nada.
+ */
+export async function listRecentHeadlineWinners(perAward = 3): Promise<RecentHeadlineWinner[]> {
+  const ceremonies = recentPerAward(await allCeremonies(), perAward);
+  const headlines = await headlinesFor(ceremonies.map((c) => c.id));
+  return ceremonies.flatMap((c) => {
+    const headline = headlines.get(c.id);
+    return headline ? [{ awardSlug: c.awardSlug, year: c.year, ...headline }] : [];
+  });
+}
+
+/** Una fila del ranking "Los más premiados" del hub. */
+export interface MostAwardedArtist {
+  id: string;
+  name: string;
+  photoUrl: string | null;
+  /** Premios ganados: nominaciones ganadoras, sumando todas las ceremonias y todos los premios. */
+  wins: number;
+  /** Premios distintos en los que ganó (slugs, en orden alfabético). */
+  awardSlugs: string[];
+}
+
+/** Mínimo de premios ganados para entrar al ranking: con uno solo, medio catálogo empataría. */
+export const MOST_AWARDED_MIN_WINS = 2;
+
+/**
+ * Ranking "Los más premiados" del hub (openspec: enrich-awards-hub): los artistas con más nominaciones ganadas, cruzando
+ * todos los premios y ceremonias. Solo cuentan las categorías que premian al intérprete (`honors = 'performer'`): una de
+ * compositores premia a los autores, no al artista de la grabación. El premio es del artista nominado o, si el nominado es
+ * un álbum o una grabación, de sus artistas principales (un dúo suma a los dos); un nominado que solo es texto, sin sujeto
+ * del catálogo, no cuenta. Empates: más ceremonias distintas, luego el premio más reciente, luego el nombre.
+ */
+export async function listMostAwardedArtists(limit = 10): Promise<MostAwardedArtist[]> {
+  const rows = (await db.execute(sql`
+    WITH wins AS (
+      SELECT n.id AS nomination_id, n.artist_id, n.release_group_id, n.recording_id,
+             c.id AS ceremony_id, c.held_on, a.slug AS award_slug
+      FROM award_nomination n
+      JOIN award_category_edition e ON e.id = n.category_edition_id
+      JOIN award_category k ON k.id = e.category_id
+      JOIN award_ceremony c ON c.id = e.ceremony_id
+      JOIN award a ON a.id = c.award_id
+      WHERE n.won AND k.honors = 'performer'
+    ), credited AS (
+      SELECT w.nomination_id, w.ceremony_id, w.held_on, w.award_slug, w.artist_id AS credited_id
+      FROM wins w WHERE w.artist_id IS NOT NULL
+      UNION
+      SELECT w.nomination_id, w.ceremony_id, w.held_on, w.award_slug, cr.artist_id
+      FROM wins w JOIN credit cr ON cr.release_group_id = w.release_group_id AND cr.role = 'primary'
+      UNION
+      SELECT w.nomination_id, w.ceremony_id, w.held_on, w.award_slug, cr.artist_id
+      FROM wins w JOIN credit cr ON cr.recording_id = w.recording_id AND cr.role = 'primary'
+    )
+    SELECT ar.id, ar.name,
+           CASE WHEN ar.photo_blocked_at IS NULL THEN ar.photo_url END AS photo_url,
+           count(DISTINCT cd.nomination_id)::int AS wins,
+           array_agg(DISTINCT cd.award_slug ORDER BY cd.award_slug) AS award_slugs
+    FROM credited cd
+    JOIN artist ar ON ar.id = cd.credited_id
+    GROUP BY ar.id
+    HAVING count(DISTINCT cd.nomination_id) >= ${MOST_AWARDED_MIN_WINS}
+    ORDER BY wins DESC, count(DISTINCT cd.ceremony_id) DESC, max(cd.held_on) DESC, ar.name
+    LIMIT ${limit}
+  `)) as unknown as { id: string; name: string; photo_url: string | null; wins: number; award_slugs: string[] }[];
+  return rows.map((row) => ({ id: row.id, name: row.name, photoUrl: row.photo_url, wins: row.wins, awardSlugs: row.award_slugs }));
 }
 
 /** Año de la ceremonia más reciente cargada de un premio; `null` si el premio no existe o no tiene ceremonias. */
