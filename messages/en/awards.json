@@ -71,5 +71,13 @@
     "latin": "Latin music",
     "critics": "Critics and juries",
     "other": "Other awards"
-  }
+  },
+  "winnersProgress": "{total, plural, one {You have listened to {heard} of # winning album} other {You have listened to {heard} of # winning albums}}",
+  "winnersProgressAll": "{total, plural, one {You have listened to the winning album} other {You have listened to all # winning albums}}",
+  "winnersProgressLabel": "Winning albums listened to",
+  "winnersFilterLabel": "Filter recent winners",
+  "winnersFilterAll": "All",
+  "winnersFilterMissing": "{count} to go",
+  "winnerHeard": "Listened",
+  "winnerPending": "To listen"
 }

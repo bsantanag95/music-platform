@@ -324,3 +324,46 @@ describe("RecentWinnersRail", () => {
     expect(screen.getByRole("link", { name: /Sin catálogo/ })).toHaveAttribute("href", "/awards/mercury-prize/2023");
   });
 });
+
+describe("RecentWinnersRail con sesión", () => {
+  const album = (id: string) => ({ id, title: id, artistName: "A", cover: { releaseGroupId: id, coverThumbUrl: null, coverResolved: true } });
+  const entry = (awardSlug: string, id: string) => ({
+    awardSlug,
+    year: 2026,
+    category: { es: "Álbum del año", en: "Album of the Year" },
+    winner: { id: `${awardSlug}-n`, won: true, text: id, credit: null, subject: { kind: "release_group" as const, album: album(id) } },
+  });
+  const winners = [entry("grammy", "dtmf"), entry("brit-awards", "loving"), entry("mercury-prize", "people")];
+
+  it("muestra el progreso, marca escuchados y pendientes y ofrece el filtro de los que faltan", () => {
+    renderWithIntl(
+      <RecentWinnersRail
+        winners={winners}
+        personal={{ heard: new Set(["loving"]), pending: new Set(["people"]), total: 3, heardCount: 1, missingOnly: false }}
+      />,
+    );
+    expect(screen.getByText("Has escuchado 1 de 3 álbumes ganadores")).toBeInTheDocument();
+    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "1");
+    expect(screen.getByRole("link", { name: /loving/ })).toHaveTextContent("Escuchado");
+    expect(screen.getByRole("link", { name: /people/ })).toHaveTextContent("Pendiente");
+    expect(screen.getByRole("link", { name: /dtmf/ })).not.toHaveTextContent(/Escuchado|Pendiente/);
+    const filter = within(screen.getByRole("navigation", { name: "Filtrar ganadores recientes" }));
+    expect(filter.getByRole("link", { name: "Todos" })).toHaveAttribute("aria-current", "page");
+    expect(filter.getByRole("link", { name: "Te faltan 2" })).toBeInTheDocument();
+  });
+
+  it("con todo escuchado lo dice y no ofrece filtro; con el filtro activo y nada pendiente, la sección sigue sin riel", () => {
+    renderWithIntl(
+      <RecentWinnersRail winners={[]} personal={{ heard: new Set(["dtmf"]), pending: new Set(), total: 1, heardCount: 1, missingOnly: true }} />,
+    );
+    expect(screen.getByText("Escuchaste el álbum ganador")).toBeInTheDocument();
+    expect(screen.queryByRole("navigation")).toBeNull();
+    expect(screen.queryAllByRole("listitem")).toHaveLength(0);
+  });
+
+  it("sin sesión no muestra progreso ni marcas", () => {
+    renderWithIntl(<RecentWinnersRail winners={winners} />);
+    expect(screen.queryByRole("progressbar")).toBeNull();
+    expect(screen.queryByText("Escuchado")).toBeNull();
+  });
+});

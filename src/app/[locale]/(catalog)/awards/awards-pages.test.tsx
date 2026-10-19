@@ -16,6 +16,8 @@ const mocks = vi.hoisted(() => ({
   listLatestCeremoniesByAward: vi.fn(),
   listRecentHeadlineWinners: vi.fn(),
   listMostAwardedArtists: vi.fn(),
+  getCurrentUser: vi.fn(),
+  getWinnerMarks: vi.fn(),
   getLatestCeremonyYear: vi.fn(),
   getCeremonyPage: vi.fn(),
 }));
@@ -28,6 +30,11 @@ vi.mock("next-intl/server", () => ({
 vi.mock("next/navigation", () => ({ notFound: mocks.notFound }));
 vi.mock("@/i18n/navigation", () => ({ redirect: mocks.redirect, Link: () => null }));
 vi.mock("@/db", () => ({ db: {} }));
+vi.mock("@/services/auth/authorization", () => ({ getCurrentUser: mocks.getCurrentUser }));
+vi.mock("@/services/awards/personal", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/services/awards/personal")>()),
+  getWinnerMarks: mocks.getWinnerMarks,
+}));
 vi.mock("@/services/awards/read", () => ({
   listLatestCeremoniesByAward: mocks.listLatestCeremoniesByAward,
   listRecentHeadlineWinners: mocks.listRecentHeadlineWinners,
@@ -69,6 +76,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.listRecentHeadlineWinners.mockResolvedValue([]);
   mocks.listMostAwardedArtists.mockResolvedValue([]);
+  mocks.getCurrentUser.mockResolvedValue(null);
 });
 
 const latest = (awardSlug: string, year: number) => ({ awardSlug, ...ceremony(year), voting: null, years: [year], headline: null });
@@ -151,6 +159,59 @@ describe("/awards: hub de premios", () => {
 
     expect(findAll(element, RecentWinnersRail).map((rail) => (rail.props as { winners: unknown[] }).winners)).toEqual([[]]);
     expect(findAll(element, PopularChart)).toHaveLength(0);
+  });
+});
+
+describe("/awards: tu relación con los ganadores recientes", () => {
+  const cover = (id: string) => ({ releaseGroupId: id, coverThumbUrl: null, coverResolved: true });
+  const winner = (awardSlug: string, albumId: string) => ({
+    awardSlug,
+    year: 2026,
+    category: { es: "Álbum del año", en: "Album of the Year" },
+    winner: {
+      id: `${awardSlug}-n`,
+      won: true,
+      text: albumId,
+      credit: null,
+      subject: { kind: "release_group", album: { id: albumId, title: albumId, artistName: null, cover: cover(albumId) } },
+    },
+  });
+  const rail = (element: unknown) =>
+    findAll(element as ReactNode, RecentWinnersRail)[0]!.props as {
+      winners: { awardSlug: string }[];
+      personal: { total: number; heardCount: number; missingOnly: boolean } | null;
+    };
+
+  beforeEach(() => {
+    mocks.listLatestCeremoniesByAward.mockResolvedValue([latest("grammy", 2026), latest("lo-nuestro", 2026)]);
+    mocks.listRecentHeadlineWinners.mockResolvedValue([winner("grammy", "dtmf"), winner("lo-nuestro", "dtmf"), winner("brit-awards", "loving")]);
+    mocks.getWinnerMarks.mockResolvedValue({ heard: new Set(["loving"]), pending: new Set() });
+  });
+
+  it("sin sesión no calcula ni muestra la relación", async () => {
+    const element = await AwardsIndexPage({ params });
+
+    expect(mocks.getWinnerMarks).not.toHaveBeenCalled();
+    expect(rail(element).personal).toBeNull();
+  });
+
+  it("con sesión cuenta los álbumes distintos escuchados", async () => {
+    mocks.getCurrentUser.mockResolvedValue({ id: "u1" });
+
+    const element = await AwardsIndexPage({ params });
+
+    expect(mocks.getWinnerMarks).toHaveBeenCalledWith("u1", ["dtmf", "loving"]);
+    expect(rail(element).personal).toMatchObject({ total: 2, heardCount: 1, missingOnly: false });
+    expect(rail(element).winners).toHaveLength(3);
+  });
+
+  it("con ?ganadores=faltan deja solo los álbumes que no escuchó, una vez cada uno", async () => {
+    mocks.getCurrentUser.mockResolvedValue({ id: "u1" });
+
+    const element = await AwardsIndexPage({ params, searchParams: Promise.resolve({ ganadores: "faltan" }) });
+
+    expect(rail(element).personal).toMatchObject({ missingOnly: true });
+    expect(rail(element).winners.map((w) => w.awardSlug)).toEqual(["grammy"]);
   });
 });
 
