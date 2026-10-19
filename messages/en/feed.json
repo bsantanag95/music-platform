@@ -1,10 +1,10 @@
 {
-  "title": "Feed",
+  "title": "Activity from people you follow",
   "emptyTitle": "Nothing to see yet",
-  "emptyDescription": "Follow people to see their listens, favorites, lists, ratings, comments, Paths and collection records here.",
+  "emptyDescription": "Follow people to see their listens, favorites, lists, ratings, comments, lists to complete and collection records here.",
   "community": {
-    "pageTitle": "Community activity",
-    "heading": "Activity",
+    "pageTitle": "Community",
+    "heading": "Community",
     "recentHeading": "Recent",
     "followingHeading": "From people you follow",
     "ownHeading": "Your activity",
@@ -64,7 +64,7 @@
     "review": "Review",
     "collection": "Collection",
     "wanted": "Looking for",
-    "camino": "Path"
+    "camino": "List to complete"
   },
   "context": {
     "first_listen": "First listen",
@@ -87,8 +87,8 @@
     "other": "Other format"
   },
   "camino": {
-    "created": "Created a Path",
-    "completed": "Completed a Path"
+    "created": "Started a list to complete",
+    "completed": "Completed a list"
   },
   "caminoAlbums": "{count, plural, one {# album} other {# albums}}",
   "opinion": {

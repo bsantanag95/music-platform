@@ -108,6 +108,14 @@ Flujo confirmado:
 
 **Nombre confirmado (2026-09-13):** se mantiene "Recorrido de artista". Se evaluaron alternativas ("discografía personal", "selección personal", "completismo dinámico") y se descartaron por reintroducir directa o indirectamente el campo semántico de meta/logro que motivó el renombre original, o por perder la referencia a un artista concreto. Ningún texto de UI de este feature debe usar "completismo" ni variantes de "completar X discos" — ver framing en 6.4.1.
 
+**Actualización de nombres visibles (2026-10-19, `clarify-user-menu-names`):** "Recorrido" no
+describía qué se puede hacer dentro de la sección y se confundía con "Caminos". La interfaz pasa a
+llamarlo **"Discografía"** (pestaña de `/me/progress`) y su acción **"Completar discografía"**; el
+Camino pasa a **"lista para completar"**. Esta decisión posterior **prevalece sobre la restricción
+de "completar X discos"** del párrafo anterior: se aceptó nombrar el propósito (completismo) para que la
+función sea inmediatamente comprensible, manteniendo el criterio de no mostrar fracciones ni
+alertas de logro (progreso discreto). El nombre de dominio "recorrido de artista" no cambia.
+
 #### 6.4.1 Estados y visibilidad en perfil (retomado y extendido, 2026-09-13)
 
 Un recorrido de artista tiene exactamente **tres estados**, sin un cuarto estado de "pendiente":

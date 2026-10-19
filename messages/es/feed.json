@@ -1,10 +1,10 @@
 {
-  "title": "Feed",
+  "title": "Actividad de quienes sigues",
   "emptyTitle": "Nada para ver todavía",
-  "emptyDescription": "Sigue a personas para que sus escuchas, favoritos, listas, valoraciones, comentarios, Caminos y discos de su colección aparezcan acá.",
+  "emptyDescription": "Sigue a personas para que sus escuchas, favoritos, listas, valoraciones, comentarios, listas para completar y discos de su colección aparezcan acá.",
   "community": {
-    "pageTitle": "Actividad de la comunidad",
-    "heading": "Actividad",
+    "pageTitle": "Comunidad",
+    "heading": "Comunidad",
     "recentHeading": "Recientes",
     "followingHeading": "De la gente que sigues",
     "ownHeading": "Tu actividad",
@@ -64,7 +64,7 @@
     "review": "Reseña",
     "collection": "Colección",
     "wanted": "En búsqueda",
-    "camino": "Camino"
+    "camino": "Lista para completar"
   },
   "context": {
     "first_listen": "Primera escucha",
@@ -87,8 +87,8 @@
     "other": "Otro formato"
   },
   "camino": {
-    "created": "Creó un Camino",
-    "completed": "Completó un Camino"
+    "created": "Armó una lista para completar",
+    "completed": "Completó una lista"
   },
   "caminoAlbums": "{count, plural, one {# disco} other {# discos}}",
   "opinion": {

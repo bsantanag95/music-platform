@@ -17,7 +17,16 @@ import type { Permission } from "@/services/auth/authorization";
 export type UserMenuSurface = "header" | "panel" | "settings";
 
 /** Bloque visual dentro del menú / panel; separa grupos con un divisor. */
-export type UserMenuGroup = "identity" | "library" | "network" | "tools" | "account";
+export type UserMenuGroup = "identity" | "music" | "social" | "tools" | "account";
+
+/**
+ * Título (clave del namespace `common`) de los grupos que lo llevan. Hace de posesivo para todo
+ * el bloque, así que ningún acceso lleva "Mi"/"Mis" (openspec: clarify-user-menu-names).
+ */
+export const USER_MENU_GROUP_LABELS: Partial<Record<UserMenuGroup, string>> = {
+  music: "menuGroups.music",
+  social: "menuGroups.social",
+};
 
 export interface UserMenuItemDef {
   /** Identificador estable del ítem (para `key` de React y tests). */
@@ -46,42 +55,36 @@ const NETWORK: readonly UserMenuSurface[] = ["header", "panel", "settings"];
 export const USER_MENU_ITEMS: readonly UserMenuItemDef[] = [
   { id: "profile", href: "/users/:username", labelKey: "profile", group: "identity", surfaces: ["header"] },
 
-  { id: "diary", href: "/me/diary", labelKey: "diary", group: "library", surfaces: BOTH },
-  { id: "favorites", href: "/me/favorites", labelKey: "favorites", group: "library", surfaces: BOTH },
-  { id: "ratings", href: "/me/ratings", labelKey: "ratings", group: "library", surfaces: BOTH },
-  { id: "wantToListen", href: "/me/want-to-listen", labelKey: "wantToListen", group: "library", surfaces: BOTH },
-  { id: "lists", href: "/me/lists", labelKey: "lists", group: "library", surfaces: BOTH },
-  { id: "collection", href: "/me/collection", labelKey: "collection", group: "library", surfaces: BOTH },
-  { id: "artists", href: "/me/artists", labelKey: "artists", group: "library", surfaces: BOTH },
-  {
-    id: "artistJourneys",
-    href: "/me/artist-journeys",
-    labelKey: "artistJourneys",
-    group: "library",
-    surfaces: BOTH,
-  },
-  { id: "caminos", href: "/me/caminos", labelKey: "caminos", group: "library", surfaces: BOTH },
-  { id: "feed", href: "/me/feed", labelKey: "feed", group: "library", surfaces: ["header"] },
+  { id: "diary", href: "/me/diary", labelKey: "diary", group: "music", surfaces: BOTH },
+  { id: "ratings", href: "/me/ratings", labelKey: "ratings", group: "music", surfaces: BOTH },
+  { id: "favorites", href: "/me/favorites", labelKey: "favorites", group: "music", surfaces: BOTH },
+  { id: "wantToListen", href: "/me/want-to-listen", labelKey: "wantToListen", group: "music", surfaces: BOTH },
+  { id: "collection", href: "/me/collection", labelKey: "collection", group: "music", surfaces: BOTH },
+  { id: "lists", href: "/me/lists", labelKey: "lists", group: "music", surfaces: BOTH },
+  // Un solo acceso para recorridos de artista, Caminos y listas seguidas (panel con pestañas).
+  { id: "progress", href: "/me/progress", labelKey: "progress", group: "music", surfaces: BOTH },
 
+  { id: "feed", href: "/me/feed", labelKey: "feed", group: "social", surfaces: ["header"] },
+  { id: "artists", href: "/me/artists", labelKey: "artists", group: "social", surfaces: BOTH },
   {
     id: "followers",
     href: "/users/:username/connections/followers",
     labelKey: "followers",
-    group: "network",
+    group: "social",
     surfaces: NETWORK,
   },
   {
     id: "following",
     href: "/users/:username/connections/following",
     labelKey: "following",
-    group: "network",
+    group: "social",
     surfaces: NETWORK,
   },
   {
     id: "followRequests",
     href: "/me/follow-requests",
     labelKey: "followRequests",
-    group: "network",
+    group: "social",
     surfaces: NETWORK,
     badge: "pendingFollowRequests",
   },
@@ -169,8 +172,8 @@ export function buildUserMenuItems({
 /** Grupos en orden de presentación, para insertar divisores entre bloques. */
 export const USER_MENU_GROUP_ORDER: readonly UserMenuGroup[] = [
   "identity",
-  "library",
-  "network",
+  "music",
+  "social",
   "tools",
   "account",
 ];

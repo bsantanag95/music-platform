@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import commonEs from "../../../messages/es/common.json";
 import commonEn from "../../../messages/en/common.json";
 import {
+  USER_MENU_GROUP_LABELS,
   USER_MENU_ITEMS,
   buildUserMenuItems,
 } from "./user-menu-items";
@@ -12,6 +13,41 @@ describe("user-menu-items", () => {
       expect(commonEs, `es.common.${item.labelKey}`).toHaveProperty(item.labelKey);
       expect(commonEn, `en.common.${item.labelKey}`).toHaveProperty(item.labelKey);
     }
+  });
+
+  it("los rótulos de grupo resuelven en common de es y en", () => {
+    for (const key of Object.values(USER_MENU_GROUP_LABELS)) {
+      const [group, name] = key!.split(".");
+      expect(commonEs).toHaveProperty([group!, name!]);
+      expect(commonEn).toHaveProperty([group!, name!]);
+    }
+  });
+
+  it("ninguna etiqueta de acceso lleva posesivo, en es ni en en", () => {
+    for (const item of USER_MENU_ITEMS) {
+      for (const messages of [commonEs, commonEn]) {
+        const label = (messages as Record<string, unknown>)[item.labelKey] as string;
+        expect(label, item.id).not.toMatch(/^(Mi|Mis|My)\b/);
+      }
+    }
+  });
+
+  it("el menú agrupa en Tu música y Social, con un solo acceso a Progreso", () => {
+    const items = buildUserMenuItems({ username: "ana", surface: "header" });
+    const idsOf = (group: string) => items.filter((i) => i.group === group).map((i) => i.id);
+    expect(idsOf("music")).toEqual([
+      "diary",
+      "ratings",
+      "favorites",
+      "wantToListen",
+      "collection",
+      "lists",
+      "progress",
+    ]);
+    expect(idsOf("social")).toEqual(["feed", "artists", "followers", "following", "followRequests"]);
+    expect(items.find((i) => i.id === "progress")?.href).toBe("/me/progress");
+    expect(items.map((i) => i.id)).not.toContain("artistJourneys");
+    expect(items.map((i) => i.id)).not.toContain("caminos");
   });
 
   it("common tiene la cadena de solicitudes pendientes en ambos locales", () => {

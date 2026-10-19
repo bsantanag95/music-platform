@@ -6,11 +6,10 @@ import {
   FavoritesIcon,
   ListsIcon,
   JourneysIcon,
-  CaminosIcon,
 } from "@/components/home/QuickLinkIcons";
 
 // Accesos rápidos de usuario logueado en Inicio: diario, favoritos, listas,
-// colección, recorridos y caminos. El resto de la navegación completa vive en el Header.
+// colección física y progreso. El resto de la navegación completa vive en el Header.
 // Vive dentro de WelcomePanel, por eso el grid asume una columna angosta.
 export async function QuickLinks() {
   const t = await getTranslations("common");
@@ -20,8 +19,7 @@ export async function QuickLinks() {
     { href: "/me/favorites" as const, label: t("favorites"), Icon: FavoritesIcon },
     { href: "/me/lists" as const, label: t("lists"), Icon: ListsIcon },
     { href: "/me/collection" as const, label: t("collection"), Icon: CollectionIcon },
-    { href: "/me/artist-journeys" as const, label: t("artistJourneys"), Icon: JourneysIcon },
-    { href: "/me/caminos" as const, label: t("caminos"), Icon: CaminosIcon },
+    { href: "/me/progress" as const, label: t("progress"), Icon: JourneysIcon },
   ];
 
   return (

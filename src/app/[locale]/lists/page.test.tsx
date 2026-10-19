@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   listPopularLists: vi.fn(),
   listsFromFollowing: vi.fn(),
   listDiscoverLists: vi.fn(),
+  discoverCaminos: vi.fn(),
 }));
 
 vi.mock("next-intl/server", () => ({
@@ -17,6 +18,10 @@ vi.mock("@/i18n/navigation", () => ({
   Link: ({ children }: { children: unknown }) => children,
 }));
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: mocks.resolveSession }));
+vi.mock("@/services/camino/discovery", () => ({ discoverCaminos: mocks.discoverCaminos }));
+vi.mock("@/components/camino/CaminoDiscoveryGrid", () => ({
+  CaminoDiscoveryGrid: () => <div data-testid="to-complete-grid" />,
+}));
 vi.mock("@/services/lists/discovery", () => ({ listDiscoverLists: mocks.listDiscoverLists }));
 vi.mock("@/services/lists/community", () => ({
   listFeaturedLists: mocks.listFeaturedLists,
@@ -52,6 +57,7 @@ describe("/lists", () => {
     mocks.listPopularLists.mockResolvedValue(page([]));
     mocks.listsFromFollowing.mockResolvedValue(page([]));
     mocks.listDiscoverLists.mockResolvedValue(page([]));
+    mocks.discoverCaminos.mockResolvedValue({ caminos: [], page: 1, pageSize: 8, hasNext: false });
   });
 
   it("con sesión compone las cuatro secciones que tienen contenido", async () => {
@@ -71,6 +77,28 @@ describe("/lists", () => {
       "community.followingHeading",
       "community.recentHeading",
     ]);
+  });
+
+  it("muestra 'Para completar' con las listas seguidas y enlaza a /caminos", async () => {
+    mocks.resolveSession.mockResolvedValue(null);
+    mocks.discoverCaminos.mockResolvedValue({ caminos: [{ id: "c1" }], page: 1, pageSize: 8, hasNext: false });
+
+    await renderPage();
+
+    expect(mocks.discoverCaminos).toHaveBeenCalledWith({}, 1, 8);
+    expect(screen.getByTestId("to-complete-grid")).toBeInTheDocument();
+    expect(screen.getByText("hub.toComplete")).toBeInTheDocument();
+    // Una sección con contenido evita el estado vacío global.
+    expect(screen.queryByText("community.emptyTitle")).not.toBeInTheDocument();
+  });
+
+  it("sin listas con seguimiento no renderiza 'Para completar'", async () => {
+    mocks.resolveSession.mockResolvedValue(null);
+    mocks.listDiscoverLists.mockResolvedValue(page([list]));
+
+    await renderPage();
+
+    expect(screen.queryByTestId("to-complete-grid")).not.toBeInTheDocument();
   });
 
   it("sin sesión no consulta ni muestra 'De usuarios seguidos'", async () => {

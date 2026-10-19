@@ -3,8 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ListCoverMosaic } from "@/components/lists/ListCoverMosaic";
-import { listHref } from "@/lib/catalog-links";
+import { CaminoDiscoveryGrid } from "@/components/camino/CaminoDiscoveryGrid";
 import { discoverCaminos } from "@/services/camino/discovery";
 import { listGenreFamilies } from "@/services/discovery/discovery";
 
@@ -17,7 +16,7 @@ interface CaminosDiscoveryPageProps {
   searchParams: Promise<{ family?: string; genre?: string; artist?: string }>;
 }
 
-// Descubrimiento público de Caminos populares (openspec: add-camino,
+// Descubrimiento público de "Listas para completar" (los Caminos y listas con seguimiento) (openspec: add-camino,
 // capability camino-discovery): ordenado por conteo de trackeo activo, no
 // por guardado simple — vitrina, sin posiciones numeradas ni ranking entre
 // usuarios. Filtros por familia de géneros, género (slug, con subgéneros) y
@@ -92,29 +91,7 @@ export default async function CaminosDiscoveryPage({ searchParams }: CaminosDisc
           description={hasFilters ? t("noResultsDescription") : t("discoveryEmpty")}
         />
       ) : (
-        <ul className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-          {result.caminos.map((camino) => (
-            <li key={camino.id}>
-              <Link
-                href={
-                  camino.kind === "custom_journey"
-                    ? `/users/${camino.owner.username}/caminos/${camino.id}`
-                    : listHref(camino.owner.username, camino.title, camino.id)
-                }
-                className="flex flex-col gap-2 rounded-lg border border-ink-border bg-ink-surface p-3 transition-colors hover:border-amber"
-              >
-                <ListCoverMosaic coverThumbs={camino.coverThumbs} className="w-full" />
-                <span className="truncate font-display text-sm text-paper">{camino.title}</span>
-                <span className="font-data text-xs text-paper-muted">
-                  {t("ownedBy", { username: camino.owner.username })}
-                </span>
-                <span className="font-data text-xs text-petrol">
-                  {t("trackingCount", { count: camino.trackingCount })}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <CaminoDiscoveryGrid caminos={result.caminos} />
       )}
     </main>
   );

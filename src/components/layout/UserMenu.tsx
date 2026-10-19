@@ -7,6 +7,7 @@ import type { Permission } from "@/services/auth/authorization";
 import { UserAvatar } from "@/components/social/UserAvatar";
 import {
   buildUserMenuItems,
+  USER_MENU_GROUP_LABELS,
   USER_MENU_GROUP_ORDER,
   type ResolvedUserMenuItem,
   type UserMenuSurface,
@@ -61,6 +62,12 @@ export function UserMenuList({
             index > 0 ? "mt-1 flex flex-col gap-1 border-t border-ink-border pt-1" : "flex flex-col gap-1"
           }
         >
+          {USER_MENU_GROUP_LABELS[group] ? (
+            // Rótulo no interactivo: no recibe foco ni es un enlace.
+            <p className="px-3 pb-0.5 pt-1.5 font-data text-[10px] uppercase tracking-wider text-paper-muted/70">
+              {t(USER_MENU_GROUP_LABELS[group])}
+            </p>
+          ) : null}
           {groupItems.map((item) => (
             <UserMenuLink key={item.id} item={item} label={t(item.labelKey)} onNavigate={onNavigate} />
           ))}

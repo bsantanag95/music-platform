@@ -131,10 +131,10 @@ describe("QuickActionsDialog", () => {
       "Favorito",
       "Pendiente",
       "Colección",
-      "Recorrido",
+      "Completar discografía",
       "A lista",
       "Nueva lista",
-      "Nuevo Camino",
+      "Nueva lista para completar",
     ]);
   });
 
@@ -271,7 +271,7 @@ describe("QuickActionsDialog", () => {
     expect(screen.queryByRole("radio", { name: "Canción" })).not.toBeInTheDocument();
   });
 
-  it("Colección busca solo álbumes y Recorrido solo artistas, sin conmutador de tipo", async () => {
+  it("Colección busca solo álbumes y Completar discografía solo artistas, sin conmutador de tipo", async () => {
     mocks.searchArtists.mockResolvedValue({ ...searchResponse, type: "artist", results: [] });
     renderWithIntl(<QuickActionsDialog onClose={() => {}} />);
     await userEvent.click(await screen.findByRole("radio", { name: "Canción" }));
@@ -280,7 +280,7 @@ describe("QuickActionsDialog", () => {
     expect(screen.queryByRole("radio", { name: "Canción" })).not.toBeInTheDocument();
     expect(screen.queryByRole("radio", { name: "Artista" })).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("radio", { name: "Recorrido" }));
+    await userEvent.click(screen.getByRole("radio", { name: "Completar discografía" }));
     expect(screen.queryByRole("radio", { name: "Álbum" })).not.toBeInTheDocument();
     await userEvent.type(screen.getByRole("searchbox"), "pink");
     await waitFor(() => expect(mocks.searchArtists).toHaveBeenCalledWith("pink", { signal: expect.any(AbortSignal) }), { timeout: 1500 });
@@ -296,15 +296,15 @@ describe("QuickActionsDialog", () => {
     expect(await screen.findByTestId("collection-panel")).toBeInTheDocument();
   });
 
-  it("Nuevo Camino no muestra el buscador y 'Agregar a este Camino' pasa a A lista con álbumes fijados", async () => {
+  it("Nueva lista para completar no muestra el buscador y 'Agregar álbumes' pasa a A lista con álbumes fijados", async () => {
     mocks.createCamino.mockResolvedValue({ id: "c1", title: "Para el auto" });
     renderWithIntl(<QuickActionsDialog onClose={() => {}} />);
 
-    await userEvent.click(await screen.findByRole("radio", { name: "Nuevo Camino" }));
+    await userEvent.click(await screen.findByRole("radio", { name: "Nueva lista para completar" }));
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
-    await userEvent.type(screen.getByLabelText("Nombre del Camino"), "Para el auto");
-    await userEvent.click(screen.getByRole("button", { name: "Crear Camino" }));
-    await userEvent.click(await screen.findByRole("button", { name: "Agregar a este Camino" }));
+    await userEvent.type(screen.getByLabelText("Nombre de la lista"), "Para el auto");
+    await userEvent.click(screen.getByRole("button", { name: "Crear lista" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Agregar álbumes" }));
 
     expect(screen.getByRole("radio", { name: "A lista", checked: true })).toBeInTheDocument();
     expect(screen.getByRole("searchbox")).toBeInTheDocument();

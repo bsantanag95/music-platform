@@ -795,7 +795,7 @@ describe("FeedActivityList", () => {
         />,
       );
 
-      expect(screen.getByText(/Completó un Camino · 12 discos/)).toBeInTheDocument();
+      expect(screen.getByText(/Completó una lista · 12 discos/)).toBeInTheDocument();
       expect(screen.getByRole("link", { name: "Krautrock esencial" })).toHaveAttribute(
         "href",
         "/users/fran/caminos/ca1",
@@ -814,8 +814,8 @@ describe("FeedActivityList", () => {
         />,
       );
 
-      expect(screen.getByText(/Creó un Camino/)).toBeInTheDocument();
-      expect(screen.getByText(/Completó un Camino/)).toBeInTheDocument();
+      expect(screen.getByText(/Armó una lista para completar/)).toBeInTheDocument();
+      expect(screen.getByText(/Completó una lista/)).toBeInTheDocument();
       // React avisa por console.error ante keys repetidas.
       expect(consoleError).not.toHaveBeenCalled();
       consoleError.mockRestore();

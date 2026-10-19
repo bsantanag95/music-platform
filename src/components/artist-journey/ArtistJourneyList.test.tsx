@@ -74,7 +74,7 @@ describe("ArtistJourneyList", () => {
 
   it("estado vacío sin recorridos, sin buscador ni conmutador de vista", () => {
     renderWithIntl(<ArtistJourneyList journeys={[]} />);
-    expect(screen.getByText("Todavía no armaste ningún recorrido.")).toBeInTheDocument();
+    expect(screen.getByText("Todavía no estás completando ninguna discografía.")).toBeInTheDocument();
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
     expect(screen.queryByRole("radiogroup")).not.toBeInTheDocument();
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
@@ -326,7 +326,7 @@ describe("ArtistJourneyList", () => {
     await openCardMenu(user);
     await user.click(screen.getByRole("menuitem", { name: "Eliminar" }));
     await user.click(screen.getByRole("button", { name: "Confirmar eliminación" }));
-    expect(await screen.findByText("Todavía no armaste ningún recorrido.")).toBeInTheDocument();
+    expect(await screen.findByText("Todavía no estás completando ninguna discografía.")).toBeInTheDocument();
   });
 
   it("un error al eliminar muestra un aviso y conserva la entrada", async () => {
@@ -336,7 +336,7 @@ describe("ArtistJourneyList", () => {
     await openCardMenu(user);
     await user.click(screen.getByRole("menuitem", { name: "Eliminar" }));
     await user.click(screen.getByRole("button", { name: "Confirmar eliminación" }));
-    expect(await screen.findByText("No pudimos eliminar el recorrido. Intenta de nuevo.")).toBeInTheDocument();
+    expect(await screen.findByText("No pudimos eliminar la discografía. Intenta de nuevo.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Deep Purple" })).toBeInTheDocument();
   });
 

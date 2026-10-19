@@ -44,7 +44,7 @@ export default async function ArtistJourneyManagePage({ params }: ArtistJourneyM
         <Breadcrumbs
           items={[
             { label: tCommon("home"), href: "/" },
-            { label: t("myJourneysTitle"), href: "/me/artist-journeys" },
+            { label: t("myJourneysTitle"), href: "/me/progress?tab=discographies" },
             { label: artistRow.name },
           ]}
         />

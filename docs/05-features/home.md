@@ -120,10 +120,11 @@ entró) seguido de los mismos bloques de descubrimiento. Este cambio cierra su j
    visible solo si el email del usuario no está verificado (`email_verified_at` nulo).
    Compacto, no bloqueante, con acción de reenvío. Desaparece cuando el email se verifica.
    Ver `docs/02-architecture/auth.md` sección 9.
-3. **Accesos rápidos** (`QuickLinks`): diario, favoritos, listas, colección, recorridos
-   (`/me/artist-journeys`) y caminos (`/me/caminos`) — todos de la biblioteca propia; la
-   búsqueda ya vive en el Header. Se ubican junto al saludo, antes del feed, para no quedar
-   relegados tras el contenido de lectura. Conservan seis enlaces.
+3. **Accesos rápidos** (`QuickLinks`): diario, favoritos, listas, colección física y progreso
+   (`/me/progress`, que reúne recorridos de artista, Caminos y listas seguidas) — todos de la
+   biblioteca propia; la búsqueda ya vive en el Header. Se ubican junto al saludo, antes del
+   feed, para no quedar relegados tras el contenido de lectura. Son cinco enlaces
+   (`clarify-user-menu-names`). La vista previa del feed se titula "Actividad de quienes sigues".
 4. **Feed de seguidos** (`FeedPreview`) como bloque principal, o **nudge de onboarding**
    (`OnboardingPrompt`) si no sigue a nadie. El nudge ahora también invita a registrar la
    primera escucha, en prosa (no un checklist con tildes). `FeedPreview` usa

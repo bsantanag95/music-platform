@@ -3,19 +3,18 @@
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
-import { CAMINOS_TABS, type CaminosTab } from "./caminos-tabs";
+import { DEFAULT_PROGRESS_TAB, PROGRESS_TABS, type ProgressTab } from "./progress-tabs";
 
-// Sub-navegación de /me/caminos, calcada de `ListsSection` — mismo problema
+// Sub-navegación de /me/progress, calcada de `ListsSection` — mismo problema
 // (contenido propio vs. ajeno) resuelto en `/me/lists` con "Mis listas ·
-// Guardadas · Descubrir" (decisión del usuario tras comparar mockups: dos
-// pestañas en vez de una lista unificada). La pestaña activa vive en `?tab=`
+// Guardadas · Descubrir": pestañas en vez de una lista unificada. La pestaña activa vive en `?tab=`
 // para ser enlazable y sobrevivir a la recarga; cada cambio de pestaña es una
 // navegación (el panel se resuelve en el servidor).
-export function CaminosSection({
+export function ProgressSection({
   activeTab,
   children,
 }: {
-  activeTab: CaminosTab;
+  activeTab: ProgressTab;
   children: ReactNode;
 }) {
   const t = useTranslations("camino");
@@ -24,14 +23,14 @@ export function CaminosSection({
   const onKeyDown = (event: React.KeyboardEvent) => {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
     event.preventDefault();
-    const i = CAMINOS_TABS.indexOf(activeTab);
+    const i = PROGRESS_TABS.indexOf(activeTab);
     const nextIndex =
       event.key === "ArrowRight"
-        ? (i + 1) % CAMINOS_TABS.length
-        : (i - 1 + CAMINOS_TABS.length) % CAMINOS_TABS.length;
-    const next = CAMINOS_TABS[nextIndex]!;
-    document.getElementById(`caminos-tab-${next}`)?.focus();
-    document.getElementById(`caminos-tab-${next}`)?.click();
+        ? (i + 1) % PROGRESS_TABS.length
+        : (i - 1 + PROGRESS_TABS.length) % PROGRESS_TABS.length;
+    const next = PROGRESS_TABS[nextIndex]!;
+    document.getElementById(`progress-tab-${next}`)?.focus();
+    document.getElementById(`progress-tab-${next}`)?.click();
   };
 
   return (
@@ -42,16 +41,16 @@ export function CaminosSection({
         onKeyDown={onKeyDown}
         className="flex flex-wrap gap-2 border-b border-ink-border pb-3"
       >
-        {CAMINOS_TABS.map((tab) => {
+        {PROGRESS_TABS.map((tab) => {
           const selected = tab === activeTab;
           return (
             <Link
               key={tab}
-              id={`caminos-tab-${tab}`}
+              id={`progress-tab-${tab}`}
               role="tab"
               aria-selected={selected}
               tabIndex={selected ? 0 : -1}
-              href={{ pathname, query: tab === "mine" ? {} : { tab } }}
+              href={{ pathname, query: tab === DEFAULT_PROGRESS_TAB ? {} : { tab } }}
               className={`rounded border px-3 py-1.5 font-data text-xs transition-colors ${
                 selected
                   ? "border-amber text-paper"
@@ -64,7 +63,7 @@ export function CaminosSection({
         })}
       </div>
 
-      <div role="tabpanel" aria-labelledby={`caminos-tab-${activeTab}`}>
+      <div role="tabpanel" aria-labelledby={`progress-tab-${activeTab}`}>
         {children}
       </div>
     </div>

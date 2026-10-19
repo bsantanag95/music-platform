@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { resolveSession } from "@/services/auth/sessions";
 import { listDiscoverLists } from "@/services/lists/discovery";
+import { discoverCaminos } from "@/services/camino/discovery";
+import { CaminoDiscoveryGrid } from "@/components/camino/CaminoDiscoveryGrid";
 import { listFeaturedLists, listPopularLists, listsFromFollowing } from "@/services/lists/community";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -31,6 +33,7 @@ export default async function CommunityListsPage({
 }) {
   const t = await getTranslations("lists");
   const tCommon = await getTranslations("common");
+  const tCamino = await getTranslations("camino");
   const session = await resolveSession();
   const viewerId = session?.user.id ?? null;
   const canSave = viewerId !== null;
@@ -41,18 +44,20 @@ export default async function CommunityListsPage({
     const initial = await listDiscoverLists(viewerId, 1, 20, toDiscoverFilters(filters));
     content = <CommunityExploreGrid initial={initial} filters={filters} canSave={canSave} />;
   } else {
-    const [featured, popular, fromFollowing, recent] = await Promise.all([
+    const [featured, popular, fromFollowing, recent, toComplete] = await Promise.all([
       listFeaturedLists(viewerId),
       listPopularLists(viewerId, 1, 20),
       viewerId ? listsFromFollowing(viewerId, 1, 20) : Promise.resolve(null),
       listDiscoverLists(viewerId, 1, 20),
+      discoverCaminos({}, 1, 8),
     ]);
 
     const anySection =
       featured.lists.length > 0 ||
       popular.lists.length > 0 ||
       (fromFollowing?.lists.length ?? 0) > 0 ||
-      recent.lists.length > 0;
+      recent.lists.length > 0 ||
+      toComplete.caminos.length > 0;
 
     content = (
       <>
@@ -90,6 +95,19 @@ export default async function CommunityListsPage({
             cols={3}
             dense
           />
+        ) : null}
+
+        {toComplete.caminos.length > 0 ? (
+          // Descubrimiento de listas para completar (openspec: clarify-user-menu-names): sale de la
+          // barra general y se alcanza desde aquí; mismo orden y vitrina que `/caminos`.
+          <section className="flex w-full flex-col gap-4">
+            <SectionHeader
+              heading={tCamino("hub.toComplete")}
+              description={tCamino("hub.toCompleteDescription")}
+              seeAll={{ href: "/caminos", label: tCamino("hub.seeAll") }}
+            />
+            <CaminoDiscoveryGrid caminos={toComplete.caminos} />
+          </section>
         ) : null}
 
         {fromFollowing && fromFollowing.lists.length > 0 ? (

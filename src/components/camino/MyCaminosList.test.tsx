@@ -72,7 +72,7 @@ describe("MyCaminosList", () => {
 
   it("estado vacío sin Caminos, sin buscador ni conmutador de vista", () => {
     renderWithIntl(<MyCaminosList caminos={[]} />);
-    expect(screen.getByText("Armá tu primer Camino: una selección propia de álbumes, sin relación con ningún artista en particular.")).toBeInTheDocument();
+    expect(screen.getByText("Arma tu primera lista para completar: una selección propia de álbumes, sin relación con ningún artista en particular.")).toBeInTheDocument();
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
     expect(screen.queryByRole("radiogroup")).not.toBeInTheDocument();
   });
@@ -224,7 +224,7 @@ describe("MyCaminosList", () => {
     await user.click(screen.getByRole("menuitem", { name: "Eliminar" }));
     await user.click(screen.getByRole("button", { name: "Eliminar" }));
     expect(
-      await screen.findByText("No pudimos eliminar el Camino. Intenta de nuevo."),
+      await screen.findByText("No pudimos eliminar la lista. Intenta de nuevo."),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Shoegaze esencial" })).toBeInTheDocument();
   });

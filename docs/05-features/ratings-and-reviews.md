@@ -148,7 +148,7 @@ reemplazo ni límite de cantidad.
 Los comentarios publicados pueden editarse o borrarse únicamente por su autor. El borrado es
 físico e irreversible, y las mutaciones requieren una sesión válida.
 
-## Mis valoraciones (cambio `add-my-ratings-library`)
+## Valoraciones (antes «Mis valoraciones») (cambio `add-my-ratings-library`)
 
 Página propia `/me/ratings` con las valoraciones de álbumes y canciones del usuario en sesión.
 Solo el dueño ve su biblioteca; no existe ruta pública equivalente.

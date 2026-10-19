@@ -12,8 +12,8 @@
     "addToList": "A lista",
     "newList": "Nueva lista",
     "collection": "Colección",
-    "journey": "Recorrido",
-    "newCamino": "Nuevo Camino"
+    "journey": "Completar discografía",
+    "newCamino": "Nueva lista para completar"
   },
   "prompt": {
     "listen": "¿Qué quieres registrar?",
@@ -22,7 +22,7 @@
     "pending": "¿Qué quieres dejar pendiente?",
     "addToList": "¿Qué quieres agregar a una lista?",
     "collection": "¿Qué álbum quieres agregar a tu colección?",
-    "journey": "¿De qué artista quieres un Recorrido?"
+    "journey": "¿De qué artista quieres completar la discografía?"
   },
   "picker": {
     "typeLabel": "Qué buscar",
@@ -96,18 +96,18 @@
   },
   "journey": {
     "checking": "Comprobando...",
-    "activating": "Activando el Recorrido...",
-    "activated": "Recorrido activado",
-    "already": "Ya tienes este Recorrido",
-    "open": "Ver Recorrido"
+    "activating": "Activando...",
+    "activated": "Discografía en marcha",
+    "already": "Ya estás completando esta discografía",
+    "open": "Ver progreso"
   },
   "newCamino": {
-    "titleLabel": "Nombre del Camino",
-    "submit": "Crear Camino",
+    "titleLabel": "Nombre de la lista",
+    "submit": "Crear lista",
     "creating": "Creando...",
     "titleRequired": "El título es obligatorio",
-    "created": "Camino creado",
-    "viewCamino": "Ver Camino",
-    "addAlbums": "Agregar a este Camino"
+    "created": "Lista creada",
+    "viewCamino": "Ver lista",
+    "addAlbums": "Agregar álbumes"
   }
 }

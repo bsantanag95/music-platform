@@ -98,7 +98,7 @@ describe("CaminoManager", () => {
 
   it("sin álbumes, muestra el estado vacío en vez de la lista", () => {
     renderManager({ progress: { selectedCount: 0, listenedCount: 0 }, albums: [] });
-    expect(screen.getByText("Este Camino todavía no tiene álbumes.")).toBeInTheDocument();
+    expect(screen.getByText("Esta lista todavía no tiene álbumes.")).toBeInTheDocument();
   });
 
   it("archivar y desarchivar alternan según el estado actual", async () => {
@@ -117,7 +117,7 @@ describe("CaminoManager", () => {
     await user.click(screen.getByRole("button", { name: "Eliminar" }));
     await user.click(screen.getByRole("button", { name: "Confirmar eliminación" }));
     expect(mocks.deleteCamino).toHaveBeenCalledWith("camino-1");
-    expect(mocks.push).toHaveBeenCalledWith("/me/caminos");
+    expect(mocks.push).toHaveBeenCalledWith("/me/progress?tab=lists");
   });
 
   it("cancelar la confirmación de borrado no elimina nada", async () => {
@@ -135,7 +135,7 @@ describe("CaminoManager", () => {
       camino({ progress: { selectedCount: 1, listenedCount: 0 }, albums: [camino().albums[1]!] }),
     );
     renderManager();
-    await user.click(screen.getByRole("button", { name: "Quitar Loveless del Camino" }));
+    await user.click(screen.getByRole("button", { name: "Quitar Loveless de la lista" }));
     expect(mocks.removeAlbumFromCamino).toHaveBeenCalledWith("camino-1", "a1");
     expect(await screen.findByRole("link", { name: "Souvlaki" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Loveless" })).not.toBeInTheDocument();

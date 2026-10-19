@@ -18,7 +18,7 @@ canción a su página. `add-feed-album-sweep` (rediseñado en `widen-feed-album-
 extiende la agrupación por tipo a un tramo de escuchas/favoritos/valoraciones del mismo
 álbum con `kind` alternado, aunque no sean consecutivas del mismo tipo en la lista cruda.
 `expand-feed-coverage` (2026-10-06) suma las altas de **colección física** y de **"En tu
-búsqueda"** (wishlist) y los **Caminos** creados y completados como fuentes nuevas, muestra el
+búsqueda"** (wishlist) y los **Caminos** (en la interfaz, «listas para completar») creados y completados como fuentes nuevas, muestra el
 **puntaje detallado** (`86/100`) en el feed, **fusiona** valoración + reseña + comentario
 contiguos sobre el mismo objetivo en una sola fila y retira la franja de eventos ambiente.
 

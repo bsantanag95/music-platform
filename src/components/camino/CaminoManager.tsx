@@ -98,7 +98,7 @@ export function CaminoManager({ initial }: CaminoManagerProps) {
     setErrorMessage(null);
     try {
       await deleteCamino(camino.id);
-      router.push("/me/caminos");
+      router.push("/me/progress?tab=lists");
     } catch {
       setErrorMessage(t("deleteError"));
       setDeleting(false);

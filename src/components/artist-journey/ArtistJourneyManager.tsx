@@ -179,7 +179,7 @@ export function ArtistJourneyManager({
     setErrorCode(null);
     try {
       await deleteArtistJourney(artistId);
-      router.push("/me/artist-journeys");
+      router.push("/me/progress?tab=discographies");
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
       setBusy(false);

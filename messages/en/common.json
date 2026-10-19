@@ -6,17 +6,14 @@
   "search": "Search",
   "users": "Users",
   "diary": "Diary",
-  "feed": "Feed",
+  "feed": "Activity",
   "favorites": "Favorites",
   "wantToListen": "Listen Later",
-  "ratings": "My Ratings",
+  "ratings": "Ratings",
   "lists": "Lists",
-  "activity": "Activity",
-  "collection": "Collection",
-  "profile": "My profile",
+  "collection": "Physical collection",
+  "profile": "Profile",
   "artists": "Artists you follow",
-  "artistJourneys": "Journeys",
-  "caminos": "Paths",
   "followers": "Followers",
   "following": "Following",
   "followRequests": "Requests",
@@ -219,5 +216,11 @@
     "song": "Loading song..."
   },
   "showPassword": "Show password",
-  "hidePassword": "Hide password"
+  "hidePassword": "Hide password",
+  "community": "Community",
+  "progress": "Progress",
+  "menuGroups": {
+    "music": "Your music",
+    "social": "Social"
+  }
 }

@@ -57,12 +57,15 @@ vi.mock("next-intl", async () => {
         signedInAs: "Sesión iniciada como",
         localeSwitcher: "Idioma",
         diary: "Diario",
-        feed: "Feed",
+        feed: "Actividad",
         favorites: "Favoritos",
         lists: "Listas",
-        activity: "Actividad",
-        collection: "Colección",
-        profile: "Mi perfil",
+        community: "Comunidad",
+        progress: "Progreso",
+        "menuGroups.music": "Tu música",
+        "menuGroups.social": "Social",
+        collection: "Colección física",
+        profile: "Perfil",
         artists: "Artistas seguidos",
         followers: "Seguidores",
         following: "Seguidos",
@@ -210,7 +213,7 @@ describe("Header", () => {
       <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
     );
 
-    for (const label of ["Diario", "Feed", "Favoritos", "Colección"]) {
+    for (const label of ["Diario", "Actividad", "Favoritos", "Colección física", "Progreso"]) {
       expect(screen.queryByRole("link", { name: label })).not.toBeInTheDocument();
     }
   });
@@ -222,12 +225,18 @@ describe("Header", () => {
     expect(listsLink).toHaveAttribute("href", "/lists");
   });
 
-  it("la barra general muestra 'Actividad' hacia la superficie pública /activity, con y sin sesión", () => {
+  it("la barra general muestra 'Comunidad' hacia la superficie pública /activity, con y sin sesión", () => {
     renderWithIntl(<Header />);
-    expect(screen.getByRole("link", { name: "Actividad" })).toHaveAttribute("href", "/activity");
+    expect(screen.getByRole("link", { name: "Comunidad" })).toHaveAttribute("href", "/activity");
 
     renderWithIntl(<Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />);
-    expect(screen.getAllByRole("link", { name: "Actividad" })[0]).toHaveAttribute("href", "/activity");
+    expect(screen.getAllByRole("link", { name: "Comunidad" })[0]).toHaveAttribute("href", "/activity");
+  });
+
+  it("la barra general no ofrece un enlace a /caminos", () => {
+    renderWithIntl(<Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />);
+    const hrefs = screen.getAllByRole("link").map((link) => link.getAttribute("href"));
+    expect(hrefs).not.toContain("/caminos");
   });
 
   it("el control 'Añadir' no aparece sin sesión", () => {
@@ -298,19 +307,24 @@ describe("Header", () => {
     expect(screen.queryByRole("link", { name: "Diario" })).not.toBeInTheDocument();
   });
 
-  it("el menú de usuario agrupa las superficies personales, con Feed dentro", () => {
+  it("el menú de usuario agrupa las superficies personales con rótulos de grupo", () => {
     renderWithIntl(
       <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Ana" }));
 
-    expect(screen.getByRole("link", { name: "Mi perfil" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Perfil" })).toHaveAttribute(
       "href",
       "/users/ana",
     );
-    expect(screen.getByRole("link", { name: "Feed" })).toHaveAttribute("href", "/me/feed");
+    expect(screen.getByRole("link", { name: "Actividad" })).toHaveAttribute("href", "/me/feed");
     expect(screen.getByRole("link", { name: "Diario" })).toHaveAttribute("href", "/me/diary");
+    expect(screen.getByRole("link", { name: "Progreso" })).toHaveAttribute("href", "/me/progress");
+    // Los rótulos de grupo son texto, no enlaces.
+    expect(screen.getByText("Tu música")).toBeInTheDocument();
+    expect(screen.getByText("Social")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Tu música" })).not.toBeInTheDocument();
   });
 
   it("cierra el menú de usuario con Escape y devuelve el foco al disparador", () => {

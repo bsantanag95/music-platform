@@ -126,7 +126,7 @@ describe("ArtistJourneyManager", () => {
 
   it("con selección vacía, el editor está abierto por defecto sin necesitar un clic", () => {
     renderManager(emptyJourney());
-    expect(screen.getByRole("checkbox", { name: "Incluir Studio One en el recorrido" })).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "Incluir Studio One en tu discografía" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Agregar o quitar álbumes" })).not.toBeInTheDocument();
   });
 
@@ -156,7 +156,7 @@ describe("ArtistJourneyManager", () => {
     const user = userEvent.setup();
     renderManager();
     await openEditor(user);
-    await user.click(screen.getByRole("checkbox", { name: "Incluir Studio Two en el recorrido" }));
+    await user.click(screen.getByRole("checkbox", { name: "Incluir Studio Two en tu discografía" }));
     expect(screen.queryByText("Sin cambios pendientes")).not.toBeInTheDocument();
   });
 
@@ -174,7 +174,7 @@ describe("ArtistJourneyManager", () => {
     renderManager();
     await openEditor(user);
     expect(screen.getByRole("button", { name: "Guardar" })).toBeDisabled();
-    await user.click(screen.getByRole("checkbox", { name: "Incluir Studio Two en el recorrido" }));
+    await user.click(screen.getByRole("checkbox", { name: "Incluir Studio Two en tu discografía" }));
     expect(screen.getByRole("button", { name: "Guardar" })).toBeEnabled();
     await user.click(screen.getByRole("button", { name: "Guardar" }));
     expect(mocks.setArtistJourneySelection).toHaveBeenCalledWith("artist-1", expect.arrayContaining(["s1", "s2"]));
@@ -186,7 +186,7 @@ describe("ArtistJourneyManager", () => {
     await openEditor(user);
     const group = screen.getByText("Estudio").closest("div")!.parentElement!;
     await user.click(within(group).getByRole("checkbox", { name: /seleccionar todos/i }));
-    expect(screen.getByRole("checkbox", { name: "Incluir Studio Two en el recorrido" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Incluir Studio Two en tu discografía" })).toBeChecked();
     expect(mocks.setArtistJourneySelection).not.toHaveBeenCalled();
   });
 
@@ -194,7 +194,7 @@ describe("ArtistJourneyManager", () => {
     const user = userEvent.setup();
     renderManager();
     await openEditor(user);
-    await user.click(screen.getByRole("checkbox", { name: "Incluir Studio Two en el recorrido" }));
+    await user.click(screen.getByRole("checkbox", { name: "Incluir Studio Two en tu discografía" }));
     await user.click(screen.getByRole("button", { name: "Ocultar" }));
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Guardar" })).toBeEnabled();
@@ -217,7 +217,7 @@ describe("ArtistJourneyManager", () => {
     await user.click(screen.getByRole("button", { name: "Eliminar" }));
     await user.click(screen.getByRole("button", { name: "Confirmar" }));
     expect(mocks.deleteArtistJourney).toHaveBeenCalledWith("artist-1");
-    expect(mocks.push).toHaveBeenCalledWith("/me/artist-journeys");
+    expect(mocks.push).toHaveBeenCalledWith("/me/progress?tab=discographies");
   });
 
   describe("vista de selección", () => {
@@ -271,7 +271,7 @@ describe("ArtistJourneyManager", () => {
       const user = userEvent.setup();
       renderManager();
       await user.click(screen.getByRole("button", { name: "Quitar Studio One de la selección" }));
-      expect(screen.getByRole("checkbox", { name: "Incluir Studio One en el recorrido" })).toBeInTheDocument();
+      expect(screen.getByRole("checkbox", { name: "Incluir Studio One en tu discografía" })).toBeInTheDocument();
     });
   });
 
@@ -431,7 +431,7 @@ describe("ArtistJourneyManager", () => {
       mocks.createListenEntry.mockRejectedValueOnce(new mocks.ApiError("INTERNAL_ERROR"));
       renderManager();
       await openEditor(user);
-      await user.click(screen.getByRole("checkbox", { name: "Incluir Studio Two en el recorrido" }));
+      await user.click(screen.getByRole("checkbox", { name: "Incluir Studio Two en tu discografía" }));
       await user.click(screen.getByRole("button", { name: "Ocultar" }));
 
       await user.click(screen.getByRole("button", { name: "Registrar escucha de Studio One" }));

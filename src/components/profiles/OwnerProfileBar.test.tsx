@@ -56,9 +56,9 @@ describe("OwnerProfileBar", () => {
     );
   });
 
-  it("'Mis valoraciones' lleva a /me/ratings", () => {
+  it("'Valoraciones' lleva a /me/ratings", () => {
     renderBar();
-    expect(screen.getByRole("link", { name: "Mis valoraciones" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Valoraciones" })).toHaveAttribute(
       "href",
       "/me/ratings",
     );

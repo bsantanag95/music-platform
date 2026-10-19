@@ -71,8 +71,8 @@ describe("ArtistJourneyStartModal", () => {
 
   it("preselecciona los álbumes de estudio; el resto de grupos arranca colapsado", () => {
     renderModal();
-    expect(screen.getByRole("checkbox", { name: "Incluir Studio One en el recorrido" })).toBeChecked();
-    expect(screen.getByRole("checkbox", { name: "Incluir Studio Two en el recorrido" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Incluir Studio One en tu discografía" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Incluir Studio Two en tu discografía" })).toBeChecked();
     expect(screen.queryByText("Live One")).not.toBeInTheDocument();
   });
 
@@ -89,7 +89,7 @@ describe("ArtistJourneyStartModal", () => {
     mocks.activateArtistJourney.mockResolvedValueOnce(journey());
     mocks.setArtistJourneySelection.mockResolvedValueOnce(journey());
     renderModal();
-    await user.click(screen.getByRole("checkbox", { name: "Incluir Studio Two en el recorrido" }));
+    await user.click(screen.getByRole("checkbox", { name: "Incluir Studio Two en tu discografía" }));
     await user.click(screen.getByRole("button", { name: "Guardar" }));
     expect(mocks.activateArtistJourney).toHaveBeenCalledWith("artist-1");
     expect(mocks.setArtistJourneySelection).toHaveBeenCalledWith("artist-1", ["s1"]);

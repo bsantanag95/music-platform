@@ -12,8 +12,8 @@
     "addToList": "To list",
     "newList": "New list",
     "collection": "Collection",
-    "journey": "Journey",
-    "newCamino": "New Path"
+    "journey": "Complete discography",
+    "newCamino": "New list to complete"
   },
   "prompt": {
     "listen": "What do you want to log?",
@@ -22,7 +22,7 @@
     "pending": "What do you want to leave pending?",
     "addToList": "What do you want to add to a list?",
     "collection": "Which album do you want to add to your collection?",
-    "journey": "Which artist do you want a Journey for?"
+    "journey": "Which artist's discography do you want to complete?"
   },
   "picker": {
     "typeLabel": "What to search",
@@ -96,18 +96,18 @@
   },
   "journey": {
     "checking": "Checking...",
-    "activating": "Activating the Journey...",
-    "activated": "Journey activated",
-    "already": "You already have this Journey",
-    "open": "View Journey"
+    "activating": "Activating...",
+    "activated": "Discography started",
+    "already": "You're already completing this discography",
+    "open": "View progress"
   },
   "newCamino": {
-    "titleLabel": "Path name",
-    "submit": "Create Path",
+    "titleLabel": "List name",
+    "submit": "Create list",
     "creating": "Creating...",
     "titleRequired": "Title is required",
-    "created": "Path created",
-    "viewCamino": "View Path",
-    "addAlbums": "Add to this Path"
+    "created": "List created",
+    "viewCamino": "View list",
+    "addAlbums": "Add albums"
   }
 }

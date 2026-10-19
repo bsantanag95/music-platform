@@ -100,11 +100,11 @@ describe("JourneyPanel", () => {
     mocks.activateArtistJourney.mockResolvedValue({});
     renderWithIntl(<JourneyPanel target={artist} onReset={() => {}} onNavigate={() => {}} />);
 
-    expect(await screen.findByText("Recorrido activado")).toBeInTheDocument();
+    expect(await screen.findByText("Discografía en marcha")).toBeInTheDocument();
     expect(mocks.getArtistJourneyStatuses).toHaveBeenCalledWith([artist.id]);
     expect(mocks.activateArtistJourney).toHaveBeenCalledTimes(1);
     expect(mocks.activateArtistJourney).toHaveBeenCalledWith(artist.id);
-    expect(screen.getByRole("link", { name: "Ver Recorrido" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Ver progreso" })).toHaveAttribute(
       "href",
       `/me/artist-journeys/${artist.id}`,
     );
@@ -114,9 +114,9 @@ describe("JourneyPanel", () => {
     mocks.getArtistJourneyStatuses.mockResolvedValue([artist.id]);
     renderWithIntl(<JourneyPanel target={artist} onReset={() => {}} onNavigate={() => {}} />);
 
-    expect(await screen.findByText("Ya tienes este Recorrido")).toBeInTheDocument();
+    expect(await screen.findByText("Ya estás completando esta discografía")).toBeInTheDocument();
     expect(mocks.activateArtistJourney).not.toHaveBeenCalled();
-    expect(screen.getByRole("link", { name: "Ver Recorrido" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Ver progreso" })).toBeInTheDocument();
   });
 
   it("si la lectura falla no activa nada y muestra el error", async () => {
@@ -137,12 +137,12 @@ describe("JourneyPanel", () => {
 describe("NewCaminoPanel", () => {
   it("el campo del título no ofrece autocompletar del navegador", () => {
     renderWithIntl(<NewCaminoPanel onAddAlbums={() => {}} onNavigate={() => {}} />);
-    expect(screen.getByLabelText("Nombre del Camino")).toHaveAttribute("autocomplete", "off");
+    expect(screen.getByLabelText("Nombre de la lista")).toHaveAttribute("autocomplete", "off");
   });
 
   it("sin título no crea el Camino y lo indica", async () => {
     renderWithIntl(<NewCaminoPanel onAddAlbums={() => {}} onNavigate={() => {}} />);
-    await userEvent.click(screen.getByRole("button", { name: "Crear Camino" }));
+    await userEvent.click(screen.getByRole("button", { name: "Crear lista" }));
     expect(screen.getByText("El título es obligatorio")).toBeInTheDocument();
     expect(mocks.createCamino).not.toHaveBeenCalled();
   });
@@ -151,32 +151,32 @@ describe("NewCaminoPanel", () => {
     mocks.createCamino.mockResolvedValue({ id: "c1", title: "Para el auto" });
     renderWithIntl(<NewCaminoPanel onAddAlbums={() => {}} onNavigate={() => {}} />);
 
-    await userEvent.type(screen.getByLabelText("Nombre del Camino"), "Para el auto");
-    await userEvent.click(screen.getByRole("button", { name: "Crear Camino" }));
+    await userEvent.type(screen.getByLabelText("Nombre de la lista"), "Para el auto");
+    await userEvent.click(screen.getByRole("button", { name: "Crear lista" }));
 
     expect(mocks.createCamino).toHaveBeenCalledTimes(1);
     const input = mocks.createCamino.mock.calls[0]![0];
     expect(input).toEqual({ title: "Para el auto" });
     expect("audience" in input).toBe(false);
-    expect(await screen.findByText("Camino creado")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Ver Camino" })).toHaveAttribute("href", "/me/caminos/c1");
+    expect(await screen.findByText("Lista creada")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Ver lista" })).toHaveAttribute("href", "/me/caminos/c1");
   });
 
   it("'Agregar a este Camino' avisa al diálogo", async () => {
     mocks.createCamino.mockResolvedValue({ id: "c1", title: "X" });
     const onAddAlbums = vi.fn();
     renderWithIntl(<NewCaminoPanel onAddAlbums={onAddAlbums} onNavigate={() => {}} />);
-    await userEvent.type(screen.getByLabelText("Nombre del Camino"), "X");
-    await userEvent.click(screen.getByRole("button", { name: "Crear Camino" }));
-    await userEvent.click(await screen.findByRole("button", { name: "Agregar a este Camino" }));
+    await userEvent.type(screen.getByLabelText("Nombre de la lista"), "X");
+    await userEvent.click(screen.getByRole("button", { name: "Crear lista" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Agregar álbumes" }));
     await waitFor(() => expect(onAddAlbums).toHaveBeenCalledTimes(1));
   });
 
   it("un error del servidor se muestra sin el mensaje crudo", async () => {
     mocks.createCamino.mockRejectedValue(new ApiError("INTERNAL_ERROR", 500, "boom interno"));
     renderWithIntl(<NewCaminoPanel onAddAlbums={() => {}} onNavigate={() => {}} />);
-    await userEvent.type(screen.getByLabelText("Nombre del Camino"), "X");
-    await userEvent.click(screen.getByRole("button", { name: "Crear Camino" }));
+    await userEvent.type(screen.getByLabelText("Nombre de la lista"), "X");
+    await userEvent.click(screen.getByRole("button", { name: "Crear lista" }));
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("No pudimos guardar");
     expect(alert).not.toHaveTextContent("boom interno");

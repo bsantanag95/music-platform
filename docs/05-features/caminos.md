@@ -1,5 +1,26 @@
 # Camino
 
+> **Nombres visibles (`clarify-user-menu-names`, 2026-10-19).** El concepto de dominio, el código,
+> la API, las tablas y las claves de mensajes siguen llamándose *Camino* y *Recorrido*, pero la
+> interfaz ya no usa esas palabras. Correspondencia:
+>
+> | Dominio / clave interna | Se muestra (es) | Se muestra (en) |
+> |---|---|---|
+> | Recorrido de artista (`artist_journey`, `artistJourney.*`) | Discografía · «Completar discografía» · «Tu progreso» | Discography · "Complete discography" · "Your progress" |
+> | Camino (`custom_journey`, `camino.*`) | «lista para completar» · «Nueva lista para completar» | "list to complete" · "New list to complete" |
+> | Camino propio (pestaña) | Mis listas | My lists |
+> | Lista ajena con seguimiento (`tracked`) | Listas que sigo | Lists I follow |
+> | Descubrimiento `/caminos` y estante del perfil | Listas para completar | Lists to complete |
+> | `/activity` (pública) | Comunidad | Community |
+> | `/me/feed` | Actividad (título: «Actividad de quienes sigues») | Activity |
+>
+> **Un solo destino.** `/me/progress` reúne, como pestañas en `?tab=`, `discographies` (recorridos),
+> `lists` (Caminos propios) y `following` (listas ajenas con seguimiento). `/me/artist-journeys` y
+> `/me/caminos` redirigen a la pestaña equivalente (`mine` → `lists`, `tracked` → `following`); las
+> rutas de detalle no cambian. El descubrimiento público `/caminos` ya no está en la barra general:
+> se alcanza desde la sección «Para completar» de `/lists`. El texto de abajo conserva los nombres de
+> dominio originales.
+
 **Fase:** 5 (roadmap). **Estado:** ✅ Implementado (cambio `add-camino`). Este documento es la
 especificación de producto cerrada; el detalle de implementación vive en el change de OpenSpec y
 en `04-api/contracts.md`.

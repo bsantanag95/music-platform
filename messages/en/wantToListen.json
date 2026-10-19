@@ -23,7 +23,7 @@
   "removeItemShort": "Remove?",
   "removeItemNamed": "Remove {title} from the list",
   "removeItemConfirm": "Confirm removal",
-  "journeyAdd": "Add to Journey",
+  "journeyAdd": "Add to discography",
   "journeyAdding": "Adding...",
-  "journeyAlreadyAdded": "Already in your Journey"
+  "journeyAlreadyAdded": "Already in your discography"
 }

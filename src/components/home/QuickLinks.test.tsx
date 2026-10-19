@@ -21,12 +21,12 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 
 describe("QuickLinks", () => {
-  it("renderiza los 6 accesos rápidos con su ícono y su ruta", async () => {
+  it("renderiza los 5 accesos rápidos con su ícono y su ruta", async () => {
     const ui = await QuickLinks();
     renderWithIntl(ui);
 
     const links = screen.getAllByRole("link");
-    expect(links).toHaveLength(6);
+    expect(links).toHaveLength(5);
 
     const hrefs = links.map((link) => link.getAttribute("href"));
     expect(hrefs).toEqual([
@@ -34,8 +34,7 @@ describe("QuickLinks", () => {
       "/me/favorites",
       "/me/lists",
       "/me/collection",
-      "/me/artist-journeys",
-      "/me/caminos",
+      "/me/progress",
     ]);
   });
 });

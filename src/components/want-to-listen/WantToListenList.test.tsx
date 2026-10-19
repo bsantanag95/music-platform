@@ -114,7 +114,7 @@ describe("WantToListenList", () => {
 
     await waitFor(() => expect(mocks.getArtistJourneyStatuses).toHaveBeenCalledTimes(1));
     expect(mocks.getArtistJourneyStatuses).toHaveBeenCalledWith(["a1", "a2"]);
-    expect(await screen.findAllByRole("button", { name: "Agregar al Recorrido" })).toHaveLength(2);
+    expect(await screen.findAllByRole("button", { name: "Agregar a la discografía" })).toHaveLength(2);
   });
 
   it("sin artistas no hace ninguna petición de recorridos", () => {
@@ -132,21 +132,21 @@ describe("WantToListenList", () => {
     mocks.getArtistJourneyStatuses.mockResolvedValue(["a1"]);
     renderWithIntl(<WantToListenList initial={{ ...initial, items: [artistEntry, second] }} />);
 
-    expect(await screen.findByRole("link", { name: "Ya está en tu Recorrido" })).toHaveAttribute(
+    expect(await screen.findByRole("link", { name: "Ya está en tu discografía" })).toHaveAttribute(
       "href",
       "/me/artist-journeys/a1",
     );
-    expect(screen.getAllByRole("button", { name: "Agregar al Recorrido" })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: "Agregar a la discografía" })).toHaveLength(1);
   });
 
   it("activar un recorrido lo marca como agregado sin volver a consultar", async () => {
     mocks.activateArtistJourney.mockResolvedValue({});
     renderWithIntl(<WantToListenList initial={initial} />);
 
-    await userEvent.click(await screen.findByRole("button", { name: "Agregar al Recorrido" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Agregar a la discografía" }));
 
     expect(mocks.activateArtistJourney).toHaveBeenCalledWith("a1");
-    expect(await screen.findByRole("link", { name: "Ya está en tu Recorrido" })).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Ya está en tu discografía" })).toBeInTheDocument();
     expect(mocks.getArtistJourneyStatuses).toHaveBeenCalledTimes(1);
   });
 
@@ -171,7 +171,7 @@ describe("WantToListenList", () => {
     mocks.getArtistJourneyStatuses.mockRejectedValue(new Error("x"));
     renderWithIntl(<WantToListenList initial={initial} />);
     await waitFor(() => expect(mocks.getArtistJourneyStatuses).toHaveBeenCalled());
-    expect(screen.queryByRole("button", { name: "Agregar al Recorrido" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Agregar a la discografía" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Pink Floyd" })).toBeInTheDocument();
   });
 
