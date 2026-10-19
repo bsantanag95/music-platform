@@ -79,5 +79,12 @@
   "winnersFilterAll": "All",
   "winnersFilterMissing": "{count} to go",
   "winnerHeard": "Listened",
-  "winnerPending": "To listen"
+  "winnerPending": "To listen",
+  "editionsCount": "{count, plural, one {# edition} other {# editions}}",
+  "winnersByYear": "Winners by year",
+  "tiedWinners": "{count, plural, one {and # more winner (tie)} other {and # more winners (tie)}}",
+  "categoryLeadersHeading": "Most nominated",
+  "leaderNominations": "{count, plural, one {# nomination} other {# nominations}}",
+  "leaderWins": "{count, plural, one {# win} other {# wins}}",
+  "otherCategoriesHeading": "Other {award} categories"
 }

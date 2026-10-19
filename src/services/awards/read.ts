@@ -99,8 +99,11 @@ export interface CategoryHistoryPage {
   name: CategoryName;
   tier: AwardCategoryTier;
   honors: AwardHonors;
+  subjectKind: AwardSubjectKind;
   predecessor: { key: string; name: CategoryName } | null;
   successors: { key: string; name: CategoryName }[];
+  /** Las demás categorías del premio, en el orden de la ceremonia (nivel y orden curado), para pasar de una a otra. */
+  otherCategories: { key: string; name: CategoryName }[];
   entries: CategoryHistoryEntry[];
 }
 
@@ -510,8 +513,10 @@ export const getCategoryHistory = cache(async (slug: string, key: string): Promi
     name: { es: category.nameEs, en: category.nameEn },
     tier: category.tier,
     honors: category.honors,
+    subjectKind: category.subjectKind,
     predecessor: predecessorRow ? nameOf(predecessorRow) : null,
     successors: categories.filter((c) => c.predecessorId === category.id).map(nameOf),
+    otherCategories: sortCategoryEditions(categories.filter((c) => c.id !== category.id)).map(nameOf),
     entries: editions.map((e) => ({
       ceremony: { year: e.year, edition: e.edition, heldOn: e.heldOn },
       coverage: e.coverage,

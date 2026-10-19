@@ -64,7 +64,7 @@ adelante y solo ceremonias cerradas (cambio `add-four-music-awards`, ADR 0043).
 | `/awards` | Con **un solo premio** redirige a su ceremonia más reciente (la ceremonia ya trae la navegación por años); con **varios**, el hub (openspec: enrich-awards-hub): bajo el título, "N premios · M ceremonias"; una tarjeta por premio (la de Explorar en modo `detailed`: además del ganador destacado, el rango de años, las ceremonias, quién vota y hasta cinco ediciones anteriores como enlaces), de la más reciente a la más antigua, en una sola grilla (la agrupación por tipo de premio de `award-groups.ts` está preparada y apagada: `GROUP_AWARDS_ON_HUB`); **Ganadores recientes**, el ganador destacado de las últimas tres ceremonias de cada premio como riel de carátulas (`listRecentHeadlineWinners`; con sesión, la relación de la persona —openspec: add-awards-personal-progress—: "Has escuchado N de M álbumes ganadores" con barra, marca Escuchado (escucha o valoración) o Pendiente en cada carátula y el filtro Todos / Te faltan N, `?ganadores=faltan`, que deja los no escuchados una vez cada uno; `services/awards/personal.ts` reutiliza `getDiscographyMarks`), y **Los más premiados**, hasta diez artistas con más premios ganados cruzando todos los premios (`listMostAwardedArtists`: solo categorías de intérprete; el premio de un álbum o grabación suma a cada artista principal; los nominados solo texto no cuentan; mínimo dos premios; se muestra desde tres artistas). Sin premios, un mensaje |
 | `/awards/<premio>` | La dirección estable del premio ("Premios Grammy", la que enlazan las migas de pan): redirige a su ceremonia más reciente (`getLatestCeremonyYear`); inexistente → no encontrada |
 | `/awards/<premio>/<año>` | La ceremonia (ver abajo): cabecera, fila "Año", navegación "En esta página" y los tres niveles |
-| `/awards/<premio>/categories/<clave>` | Historia de una categoría por año, con "Antes llamada …" / "Después llamada …" |
+| `/awards/<premio>/categories/<clave>` | Historial de una categoría (openspec: redesign-category-history): bajo el título, "Premio · N ediciones · desde–hasta"; "Ganadores por año" en una fila (carátula o foto del ganador de cada ceremonia, enlazada a su año); cada año en forma compacta con ancla `#anio-<año>`, el ganador y los nominados plegados (abierto solo el más reciente); al costado, **Los más nominados** (artistas con 2 o más nominaciones en la categoría, con sus victorias; calculado en la página, sin consultas nuevas) y **Otras categorías** del premio en el orden de la ceremonia. Con "Antes llamada …" / "Después llamada …" |
 | `/explore` (sección Premios) | Una tarjeta por **premio** con su ceremonia más reciente (año, edición y su ganador destacado: el de la categoría general de álbum con menor orden curado —Álbum del año, en los cinco—, con carátula, título y artista) y "Ver todos" al hub (`listLatestCeremoniesByAward`: una consulta para las ceremonias y otra para los ganadores) |
 
 ### La ceremonia (cambio `redesign-awards-pages`)
@@ -95,12 +95,12 @@ La página medía 9.036 px en escritorio y 19.370 en móvil (33 categorías, tod
 - **Filas compactas** (`AwardCategory variant="compact"`): el resto del campo general (Productor y Compositor del año) y los niveles por
   álbum y por género. Nombre con su enlace a la historia, el ganador con una carátula de 64 px y los nominados plegados bajo
   **«Nominados (N)»** (`<details>`, cerrado, sin JavaScript; la búsqueda de la página del navegador lo abre). Una categoría de la que solo
-  se registró al ganador no lleva el control y dice por qué. El enlace a la historia va siempre arriba a la derecha ("Historia" a secas en
+  se registró al ganador no lleva el control y dice por qué. El enlace a la historia va siempre arriba a la derecha ("Historial" a secas en
   las compactas, para no apretar el título). Grilla de 1, 2 y 3 columnas según el ancho —dos en `xl` cuando el grupo tiene 2 o 4 categorías,
   para no dejar huecos—, `items-start` para que abrir una
   fila no estire a la de al lado. El número de nominados es un dato editorial finito, no una cifra que crezca con la base: por eso se muestra.
-- La historia de una categoría usa la forma destacada (ahí el propósito es ver a todos los nominados de cada año), con el mismo ancho
-  de página que la ceremonia.
+- El historial de una categoría usa la forma compacta por año (abierto solo el más reciente): con la forma destacada, seis años
+  eran unos 3.500 px y para saber quién ganó cada año había que recorrerlos todos. Mismo ancho de página que la ceremonia.
 - **Sin ámbar decorativo**: los campos son un encabezado normal; el ámbar queda para la insignia de ganador.
 
 - Con el sujeto resuelto en el catálogo (álbum o grabación), el nominado muestra **el título y el artista del catálogo en dos líneas**

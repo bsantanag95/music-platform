@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   getWinnerMarks: vi.fn(),
   getLatestCeremonyYear: vi.fn(),
   getCeremonyPage: vi.fn(),
+  getCategoryHistory: vi.fn(),
 }));
 
 vi.mock("next-intl/server", () => ({
@@ -41,7 +42,7 @@ vi.mock("@/services/awards/read", () => ({
   listMostAwardedArtists: mocks.listMostAwardedArtists,
   getLatestCeremonyYear: mocks.getLatestCeremonyYear,
   getCeremonyPage: mocks.getCeremonyPage,
-  getCategoryHistory: vi.fn(),
+  getCategoryHistory: mocks.getCategoryHistory,
 }));
 
 const { default: AwardsIndexPage } = await import("./page");
@@ -52,6 +53,8 @@ const { FacetRow } = await import("@/components/discovery/FacetRow");
 const { AwardTileGrid } = await import("@/components/awards/AwardTile");
 const { RecentWinnersRail } = await import("@/components/awards/RecentWinnersRail");
 const { PopularChart } = await import("@/components/discovery/PopularChart");
+const { default: CategoryHistoryRoute } = await import("./[award]/categories/[key]/page");
+const { CategoryWinnersTimeline } = await import("@/components/awards/CategoryWinnersTimeline");
 const { StickyJumpNav } = await import("@/components/awards/StickyJumpNav");
 const { Breadcrumbs } = await import("@/components/ui/Breadcrumbs");
 
@@ -358,5 +361,56 @@ describe("/awards/{premio}/{año}: ceremonia", () => {
   it("un año o premio sin ceremonia es una página no encontrada, y un año mal escrito también", async () => {
     await expect(open(null)).rejects.toThrow("NEXT_NOT_FOUND");
     await expect(open(page(), "abc")).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+});
+
+describe("/awards/{premio}/categories/{clave}: historial", () => {
+  const historyParams = Promise.resolve({ locale: "es", award: "lo-nuestro", key: "album-of-the-year" });
+  const nom = (id: string, won: boolean, credit: string) => ({ id, won, text: id, credit, subject: null });
+  const history = {
+    awardSlug: "lo-nuestro",
+    key: "album-of-the-year",
+    name: { es: "Álbum del año", en: "Album of the Year" },
+    tier: "general",
+    honors: "performer",
+    subjectKind: "release_group",
+    predecessor: null,
+    successors: [],
+    otherCategories: [{ key: "song-of-the-year", name: { es: "Canción del año", en: "Song of the Year" } }],
+    entries: [2026, 2025, 2024].map((year) => ({
+      ceremony: { year, edition: year - 1988, heldOn: `${year}-02-20` },
+      coverage: "complete",
+      nominations: [nom(`w${year}`, true, year === 2025 ? "Shakira" : "Bad Bunny"), nom(`n${year}`, false, "KAROL G")],
+    })),
+  };
+
+  it("una clave inexistente es una página no encontrada", async () => {
+    mocks.getCategoryHistory.mockResolvedValue(null);
+    await expect(CategoryHistoryRoute({ params: historyParams })).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  it("muestra el resumen, la fila de ganadores y cada año compacto con ancla, abierto solo el más reciente", async () => {
+    mocks.getCategoryHistory.mockResolvedValue(history);
+
+    const element = await CategoryHistoryRoute({ params: historyParams });
+    const text = JSON.stringify(element);
+
+    expect(text).toContain("editionsCount");
+    expect(findAll(element, CategoryWinnersTimeline)).toHaveLength(1);
+    const years = findAll(element, AwardCategory).map((c) => c.props as { id: string; variant: string; nomineesOpen: boolean; subjectKind: string });
+    expect(years.map((y) => y.id)).toEqual(["anio-2026", "anio-2025", "anio-2024"]);
+    expect(years.every((y) => y.variant === "compact" && y.subjectKind === "release_group")).toBe(true);
+    expect(years.map((y) => y.nomineesOpen)).toEqual([true, false, false]);
+  });
+
+  it("muestra los más nominados y enlaza las demás categorías del premio", async () => {
+    mocks.getCategoryHistory.mockResolvedValue(history);
+
+    const text = JSON.stringify(await CategoryHistoryRoute({ params: historyParams }));
+
+    expect(text).toContain("categoryLeadersHeading");
+    expect(text).toContain("KAROL G");
+    expect(text).toContain("Bad Bunny");
+    expect(text).toContain("/awards/lo-nuestro/categories/song-of-the-year");
   });
 });

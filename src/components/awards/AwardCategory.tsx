@@ -5,10 +5,10 @@ import type { CategoryName, NominationView } from "@/services/awards/read";
 import { NominationItem } from "./NominationItem";
 
 // Una categoría de una ceremonia (openspec: add-music-awards, design D5; redesign-awards-pages). Dos formas:
-//  - `featured`: el ganador grande y todos los nominados a la vista (las categorías grandes de la ceremonia y la historia
-//    de una categoría, donde el propósito es ver a todos los nominados de cada año);
+//  - `featured`: el ganador grande y todos los nominados a la vista (las categorías grandes de la ceremonia);
 //  - `compact`: el nombre, el ganador con su carátula y los nominados plegados bajo "Nominados (N)" (`<details>`, cerrado
-//    por defecto y sin JavaScript). Una categoría de la que solo se registró al ganador no lleva el control y dice por qué.
+//    por defecto y sin JavaScript; `nomineesOpen` lo abre). También cada año del historial de una categoría
+//    (openspec: redesign-category-history), con el año más reciente abierto. Una categoría de la que solo se registró al ganador no lleva el control y dice por qué.
 
 export function categoryName(name: CategoryName, locale: string): string {
   return locale === "en" ? name.en : name.es;
@@ -27,6 +27,10 @@ interface AwardCategoryProps {
   variant?: "featured" | "compact";
   /** Qué premia la categoría: con `artist`, los nominados sin foto llevan su inicial. */
   subjectKind?: AwardSubjectKind;
+  /** Ancla de la tarjeta (el año, en el historial de una categoría). */
+  id?: string;
+  /** En `compact`, los nominados empiezan desplegados (el año más reciente del historial). */
+  nomineesOpen?: boolean;
 }
 
 export function AwardCategory({
@@ -39,6 +43,8 @@ export function AwardCategory({
   headingLevel = "h3",
   variant = "featured",
   subjectKind,
+  id,
+  nomineesOpen = false,
 }: AwardCategoryProps) {
   const t = useTranslations("awards");
   const locale = useLocale();
@@ -49,7 +55,7 @@ export function AwardCategory({
   const person = subjectKind === "artist";
 
   return (
-    <section className={`flex w-full flex-col rounded-lg border border-ink-border bg-ink-surface ${compact ? "gap-3 p-3" : "gap-4 p-4"}`}>
+    <section id={id} className={`flex w-full scroll-mt-24 flex-col rounded-lg border border-ink-border bg-ink-surface ${compact ? "gap-3 p-3" : "gap-4 p-4"}`}>
       {/* El enlace siempre arriba a la derecha, sin saltar de línea: el que se ajusta es el título. Antes, según el ancho de
           la tarjeta, quedaba a la derecha o debajo del título. */}
       <div className="flex items-start justify-between gap-4">
@@ -75,7 +81,7 @@ export function AwardCategory({
 
       {others.length > 0 ? (
         compact ? (
-          <details className="group">
+          <details className="group" open={nomineesOpen || undefined}>
             <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 font-data text-xs text-paper-muted transition-colors hover:text-paper focus-visible:text-paper [&::-webkit-details-marker]:hidden">
               {t("nomineesCount", { count: others.length })}
               <svg

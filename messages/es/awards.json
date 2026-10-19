@@ -33,7 +33,7 @@
   "winner": "Ganador",
   "nomineesCount": "Nominados ({count})",
   "winnerOnlyNote": "De esta categoría solo registramos al ganador.",
-  "categoryHistory": "Historia de la categoría",
+  "categoryHistory": "Historial de la categoría",
   "fromAlbum": "del disco {album}",
   "songwriterNote": "Premia a los autores de la canción.",
   "previouslyNamed": "Antes llamada {name}",
@@ -44,7 +44,7 @@
   "exploreDescription": "Nominados y ganadores de las últimas ceremonias.",
   "exploreSeeAll": "Ver todos",
   "ceremonyCount": "{count, plural, one {# ceremonia} other {# ceremonias}}",
-  "categoryHistoryShort": "Historia",
+  "categoryHistoryShort": "Historial",
   "voting": {
     "academy": "Votan los miembros de la academia",
     "jury": "Lo decide un jurado",
@@ -79,5 +79,12 @@
   "winnersFilterAll": "Todos",
   "winnersFilterMissing": "Te faltan {count}",
   "winnerHeard": "Escuchado",
-  "winnerPending": "Pendiente"
+  "winnerPending": "Pendiente",
+  "editionsCount": "{count, plural, one {# edición} other {# ediciones}}",
+  "winnersByYear": "Ganadores por año",
+  "tiedWinners": "{count, plural, one {y # ganador más (empate)} other {y # ganadores más (empate)}}",
+  "categoryLeadersHeading": "Los más nominados",
+  "leaderNominations": "{count, plural, one {# nominación} other {# nominaciones}}",
+  "leaderWins": "{count, plural, one {# victoria} other {# victorias}}",
+  "otherCategoriesHeading": "Otras categorías de {award}"
 }
