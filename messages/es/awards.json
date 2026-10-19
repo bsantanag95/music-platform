@@ -79,5 +79,12 @@
   "winnersFilterAll": "Todos",
   "winnersFilterMissing": "Te faltan {count}",
   "winnerHeard": "Escuchado",
-  "winnerPending": "Pendiente"
+  "winnerPending": "Pendiente",
+  "editionsCount": "{count, plural, one {# edición} other {# ediciones}}",
+  "winnersByYear": "Ganadores por año",
+  "tiedWinners": "{count, plural, one {y # ganador más (empate)} other {y # ganadores más (empate)}}",
+  "categoryLeadersHeading": "Los más nominados",
+  "leaderNominations": "{count, plural, one {# nominación} other {# nominaciones}}",
+  "leaderWins": "{count, plural, one {# victoria} other {# victorias}}",
+  "otherCategoriesHeading": "Otras categorías de {award}"
 }
