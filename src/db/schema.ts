@@ -2024,6 +2024,10 @@ export type AwardCoverage = (typeof AWARD_COVERAGES)[number];
 // Quién decide el premio (migración 0073): la academia o la industria, un jurado, el público, o el público y un comité.
 export const AWARD_VOTINGS = ["academy", "jury", "public", "mixed"] as const;
 export type AwardVoting = (typeof AWARD_VOTINGS)[number];
+// Tipo de premio (migración 0074): una competencia con nominados y ganadores, o un salón de la fama que incorpora una
+// clase cada año.
+export const AWARD_KINDS = ["competition", "hall_of_fame"] as const;
+export type AwardKind = (typeof AWARD_KINDS)[number];
 
 export const award = pgTable(
   "award",
@@ -2032,9 +2036,12 @@ export const award = pgTable(
     slug: text("slug").notNull().unique(),
     // Nulo hasta la próxima carga de `data/awards/` (migración 0073); la página omite el dato mientras falte.
     voting: text("voting").$type<AwardVoting>(),
+    // `competition` por omisión: describe a todo premio cargado antes de la migración 0074.
+    kind: text("kind").$type<AwardKind>().notNull().default("competition"),
   },
   (t) => [
     check("chk_award_slug", sql`${t.slug} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`),
+    check("chk_award_kind", sql`${t.kind} IN ('competition', 'hall_of_fame')`),
     check("chk_award_voting", sql`${t.voting} IS NULL OR ${t.voting} IN ('academy', 'jury', 'public', 'mixed')`),
   ],
 );
@@ -2050,7 +2057,8 @@ export const awardCeremony = pgTable(
       .references(() => award.id, { onDelete: "cascade" }),
     // Año de la ceremonia (no el de elegibilidad).
     year: smallint("year").notNull(),
-    edition: smallint("edition").notNull(),
+    // Nulo en las clases de un salón de la fama (no se numeran; migración 0074).
+    edition: smallint("edition"),
     heldOn: date("held_on").notNull(),
     // Fuente contra la que se curó la ceremonia; nula hasta la próxima carga (migración 0073).
     sourceUrl: text("source_url"),
@@ -2059,8 +2067,9 @@ export const awardCeremony = pgTable(
     unique("uq_award_ceremony_year").on(t.awardId, t.year),
     unique("uq_award_ceremony_edition").on(t.awardId, t.edition),
     check("chk_award_ceremony_year", sql`${t.year} BETWEEN 1900 AND 2100`),
-    check("chk_award_ceremony_edition", sql`${t.edition} > 0`),
-    check("chk_award_ceremony_held_on", sql`EXTRACT(YEAR FROM ${t.heldOn}) = ${t.year}`),
+    check("chk_award_ceremony_edition", sql`${t.edition} IS NULL OR ${t.edition} > 0`),
+    // Del año de la ceremonia o del anterior (migración 0074): la clase 2021 de un salón se anunció en diciembre de 2020.
+    check("chk_award_ceremony_held_on", sql`EXTRACT(YEAR FROM ${t.heldOn}) BETWEEN ${t.year} - 1 AND ${t.year}`),
     check("chk_award_ceremony_source_url", sql`${t.sourceUrl} IS NULL OR ${t.sourceUrl} ~ '^https?://'`),
   ],
 );

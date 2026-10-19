@@ -90,7 +90,9 @@ export function AwardTile({ ceremony, detailed = false }: AwardTileProps) {
           <span className="truncate font-body text-sm text-paper">{awardName}</span>
           <span className="flex items-baseline justify-between gap-2">
             <span className="font-display text-3xl text-paper transition-colors group-hover:text-amber">{ceremony.year}</span>
-            <span className="shrink-0 font-data text-xs text-paper-muted">{t("edition", { edition: ceremony.edition })}</span>
+            {ceremony.edition !== null ? (
+              <span className="shrink-0 font-data text-xs text-paper-muted">{t("edition", { edition: ceremony.edition })}</span>
+            ) : null}
           </span>
           {detailed ? <span className="mt-0.5 font-data text-xs leading-snug text-paper-muted">{facts.join(" · ")}</span> : null}
         </span>

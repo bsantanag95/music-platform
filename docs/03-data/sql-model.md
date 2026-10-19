@@ -1188,3 +1188,14 @@ Reglas que cruzan tablas y no pueden ser `CHECK` (el tipo de sujeto coincide con
 `winner_only` solo tiene ganadores; toda categoría tiene al menos un ganador) las valida la carga antes de escribir
 (`src/services/awards/curation-schema.ts`) y una prueba de CI sobre todos los archivos. No se exige un único ganador:
 los empates existen.
+
+### Tipo de premio y clases de un salón de la fama (migración `0074`, ADR 0044)
+
+- `award.kind` (`TEXT NOT NULL DEFAULT 'competition'`, `CHECK IN ('competition','hall_of_fame')`): una competencia con nominados y
+  ganadores, o un salón de la fama que incorpora una clase cada año. El valor por omisión describe a todo premio cargado antes de
+  la migración.
+- `award_ceremony.edition` admite `NULL` (`CHECK edition IS NULL OR edition > 0`): las clases de un salón no se numeran. Que una
+  competencia exija edición y un salón no la tenga lo valida la carga, no la base (cruza `award` y `award_ceremony`).
+- `award_ceremony.held_on` puede ser del año de la ceremonia o del anterior (`CHECK EXTRACT(YEAR FROM held_on) BETWEEN year - 1 AND
+  year`): la clase "2021" del Grammy Hall of Fame se anunció el 21-dic-2020. Una competencia sigue exigiendo el mismo año en la
+  carga.

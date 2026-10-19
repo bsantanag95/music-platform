@@ -79,6 +79,7 @@ export function readAward(awardDir: string, slug: string): { award: AwardFiles |
   }
   const editions = new Map<number, string>();
   for (const { fileName, data } of ceremonies) {
+    if (data.edition === undefined) continue; // un salón de la fama no numera sus clases
     const other = editions.get(data.edition);
     if (other) errors.push(`${fileName}: la edición ${data.edition} ya la usa ${other}`);
     editions.set(data.edition, fileName);

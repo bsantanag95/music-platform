@@ -542,7 +542,9 @@ describe("listAlbumsFiltered", () => {
     it("el premio cuenta al ganador (2) por encima del nominado (1), directo o como disco ancla", async () => {
       const award = (await rendered()).find((text) => text.includes("award_nomination"))!;
 
-      expect(award).toMatch(/when "release_group"."id" in \( select release_group_id from award_nomination where won/);
+      // Solo premios competitivos: una incorporación a un salón de la fama no es un premio ganado (ADR 0044).
+      expect(award).toContain("a.kind = 'competition'");
+      expect(award).toMatch(/when "release_group"."id" in \( select release_group_id from \(.*\) cn where cn\.won/);
       expect(award).toContain("then 2");
       expect(award).toContain("then 1");
       expect(award).toContain("anchor_release_group_id");

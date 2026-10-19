@@ -141,6 +141,11 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - La carga nunca consulta MusicBrainz: la identificación (MBID) se hace antes, con un script que deja los casos
   ambiguos para el curador en vez de elegir.
 - El nombre del premio se usa solo para describir: sin logos, imágenes de trofeos ni nada que sugiera afiliación.
+- Un **salón de la fama** incorpora una clase por año, no entrega ganadores entre nominados (ADR 0044): sus clases no tienen número de
+  edición, su fecha puede ser del año anterior al de la clase y solo se cargan clases cerradas (con la gala ya celebrada o, si no
+  hubo, el anuncio ya hecho).
+- Una incorporación a un salón de la fama no es un premio ganado: no cuenta en las tarjetas de premios, los ganadores recientes, los
+  más premiados ni el orden del catálogo.
 
 ## Internacionalización
 

@@ -12,6 +12,7 @@
 import { asc, sql, type SQL } from "drizzle-orm";
 import { releaseGroup } from "@/db/schema";
 import { NEGATIVE_RETRY_MS } from "@/lib/config/cover-mirror";
+import { competitionNominations } from "@/services/awards/competition";
 import { MIN_RATINGS_PER_ALBUM } from "../constants";
 
 const RG = sql`"release_group"."id"`;
@@ -23,9 +24,9 @@ const communityScore = sql`(
   having count(*) >= ${MIN_RATINGS_PER_ALBUM}
 )`;
 
-/** 2 si ganó un premio, 1 si fue nominado, `null` si no tiene. */
+/** 2 si ganó un premio, 1 si fue nominado, `null` si no tiene. Solo premios competitivos: un salón de la fama no cuenta (ADR 0044). */
 const awardScore = sql`(
-  select max(case when n.won then 2 else 1 end) from award_nomination n
+  select max(case when n.won then 2 else 1 end) from ${competitionNominations} n
   where n.release_group_id = ${RG} or n.anchor_release_group_id = ${RG}
 )`;
 

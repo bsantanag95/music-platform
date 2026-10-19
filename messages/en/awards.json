@@ -6,7 +6,8 @@
     "mercury-prize": "Mercury Prize",
     "brit-awards": "Brit Awards",
     "latin-grammy": "Latin Grammy Awards",
-    "lo-nuestro": "Premio Lo Nuestro"
+    "lo-nuestro": "Premio Lo Nuestro",
+    "grammy-hall-of-fame": "Grammy Hall of Fame"
   },
   "ceremonyTitle": "{award} {year}",
   "edition": "{edition, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition",
@@ -86,5 +87,25 @@
   "categoryLeadersHeading": "Most nominated",
   "leaderNominations": "{count, plural, one {# nomination} other {# nominations}}",
   "leaderWins": "{count, plural, one {# win} other {# wins}}",
-  "otherCategoriesHeading": "Other {award} categories"
+  "otherCategoriesHeading": "Other {award} categories",
+  "hall": {
+    "classTitle": "Class of {year}",
+    "classFull": "{award} · Class of {year}",
+    "inducted": "Inducted",
+    "date": "Class date: {date}",
+    "recordingCount": "{count, plural, one {# recording} other {# recordings}}",
+    "classYearRow": "Class",
+    "exploreHeading": "Hall of Fame",
+    "exploreDescription": "Recordings added each year for their lasting historical or qualitative significance.",
+    "exploreSeeAll": "See all classes",
+    "latestClass": "Class of {year}",
+    "hubHeading": "Halls of fame",
+    "hubClasses": "{count, plural, one {# class} other {# classes}}"
+  },
+  "votingHall": {
+    "academy": "Chosen by an academy committee",
+    "jury": "Chosen by a selection committee",
+    "public": "Chosen by the public",
+    "mixed": "Chosen by a committee and the public"
+  }
 }

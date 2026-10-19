@@ -6,7 +6,8 @@ import { AlbumRail } from "@/components/discovery/AlbumRail";
 import { CollectionRail } from "@/components/discovery/CollectionRail";
 import { daysUntilRelease, releaseDateLabel } from "@/components/discovery/release-date-label";
 import { AwardsExploreSection } from "@/components/awards/AwardsExploreSection";
-import { listLatestCeremoniesByAward } from "@/services/awards/read";
+import { HallOfFameExploreSection } from "@/components/awards/HallOfFameExploreSection";
+import { listHallOfFameClasses, listLatestCeremoniesByAward } from "@/services/awards/read";
 import { ExploreJumpNav } from "@/components/discovery/ExploreJumpNav";
 import { FilteredAlbumList } from "@/components/discovery/FilteredAlbumList";
 import { MosaicGrid, type MosaicTile } from "@/components/discovery/MosaicGrid";
@@ -357,9 +358,10 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
 
   // --- Portada ---
   // Las colecciones destacadas se regeneran cada semana bajo demanda, después de responder.
-  const [explore, recentCeremonies] = await Promise.all([
+  const [explore, recentCeremonies, hallClasses] = await Promise.all([
     getExplorePage(),
     listLatestCeremoniesByAward(),
+    listHallOfFameClasses(),
     ensureCollectionsFresh(),
   ]);
   const railArtistNames = await albumArtistNames(
@@ -396,6 +398,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
     { id: "novedades", label: t("jump.newReleases"), visible: explore.newReleases.length > 0 },
     { id: "proximos", label: t("jump.upcoming"), visible: explore.upcoming.length > 0 },
     { id: "premios", label: t("jump.awards"), visible: recentCeremonies.length > 0 },
+    { id: "salon-de-la-fama", label: t("jump.hallOfFame"), visible: hallClasses.length > 0 },
     { id: "mejor-valorados", label: t("jump.topRated"), visible: explore.topRated.length > 0 },
   ].filter((item) => item.visible);
 
@@ -493,6 +496,8 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
       />
 
       <AwardsExploreSection ceremonies={recentCeremonies} />
+
+      <HallOfFameExploreSection halls={hallClasses} />
 
       <AlbumRail
         layout="scroll"

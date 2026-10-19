@@ -6,7 +6,8 @@
     "mercury-prize": "Premio Mercury",
     "brit-awards": "Premios Brit",
     "latin-grammy": "Premios Latin Grammy",
-    "lo-nuestro": "Premio Lo Nuestro"
+    "lo-nuestro": "Premio Lo Nuestro",
+    "grammy-hall-of-fame": "Salón de la Fama de los Grammy"
   },
   "ceremonyTitle": "{award} {year}",
   "edition": "{edition}.ª edición",
@@ -86,5 +87,25 @@
   "categoryLeadersHeading": "Los más nominados",
   "leaderNominations": "{count, plural, one {# nominación} other {# nominaciones}}",
   "leaderWins": "{count, plural, one {# victoria} other {# victorias}}",
-  "otherCategoriesHeading": "Otras categorías de {award}"
+  "otherCategoriesHeading": "Otras categorías de {award}",
+  "hall": {
+    "classTitle": "Clase de {year}",
+    "classFull": "{award} · Clase de {year}",
+    "inducted": "Ingresó",
+    "date": "Fecha de la clase: {date}",
+    "recordingCount": "{count, plural, one {# grabación} other {# grabaciones}}",
+    "classYearRow": "Clase",
+    "exploreHeading": "Salón de la Fama",
+    "exploreDescription": "Grabaciones que se incorporan cada año por su valor histórico o cualitativo.",
+    "exploreSeeAll": "Ver todas las clases",
+    "latestClass": "Clase de {year}",
+    "hubHeading": "Salones de la fama",
+    "hubClasses": "{count, plural, one {# clase} other {# clases}}"
+  },
+  "votingHall": {
+    "academy": "Lo elige un comité de la academia",
+    "jury": "Lo elige un comité de selección",
+    "public": "Lo elige el público",
+    "mixed": "Lo eligen un comité y el público"
+  }
 }

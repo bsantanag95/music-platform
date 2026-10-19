@@ -22,12 +22,13 @@ sin tabla materializada. Cada sección se **omite** si no tiene contenido. En or
 | Novedades | `release_group` studio/single_ep con `first_release_date` completa en los últimos `NEW_RELEASE_WINDOW_DAYS` (90) días hasta hoy, con carátula, por fecha desc | riel horizontal con la fecha ("9 oct") en cada tarjeta y "Ver todo →" a `/explore?novedades=1`; se omite con menos de `MIN_ALBUMS_FOR_SECTION` (6); sin lanzamientos futuros ni fechas parciales (cambios `redefine-explore-new-releases` y `add-explore-new-releases-listing`) |
 | Próximos lanzamientos | `release_group` studio/single_ep con `first_release_date` completa posterior a hoy y hasta hoy + `UPCOMING_WINDOW_DAYS` (180), con carátula, por fecha asc (cambio `add-explore-upcoming-releases`) | riel horizontal bajo Novedades, con la fecha ("24 oct") en cada tarjeta y "Ver todo →" a `/explore?proximos=1`; se omite con menos de `MIN_ALBUMS_FOR_SECTION` (6) |
 | Premios | ceremonias cargadas desde `data/awards/` (cambio `add-music-awards`, ADR 0032) | una tarjeta por cada una de las últimas 5 ceremonias, con el ganador destacado (Álbum del año en los Grammy: carátula, título y artista; `listRecentCeremonies` lo resuelve en una consulta para todas) → `/awards/<premio>/<año>` y "Ver todos" → `/awards`; se omite sin ceremonias (`AwardsExploreSection`). Ver `awards.md` |
+| Salón de la Fama | clases cerradas de los salones de la fama cargados desde `data/awards/` (cambio `add-grammy-hall-of-fame`, ADR 0044; hoy el Grammy Hall of Fame) | tras Premios: por salón, su última clase ("Clase de 2026 · 14 grabaciones") como riel de carátulas (las canciones, con la de su disco ancla), cada una a su ficha, y "Ver todas las clases"; se omite sin clases cerradas (`HallOfFameExploreSection`, `listHallOfFameClasses`). Ver `awards.md` |
 | Mejor valorados | `rating` agregado por álbum | riel horizontal; ver umbrales abajo |
 
 ### Navegación rápida
 
 Bajo el título hay una fila de píldoras "En esta página" (`ExploreJumpNav`) con un enlace por cada sección que se
-renderiza, en el orden de la página. Las anclas son `colecciones`, `popular`, `generos`, `decadas`, `novedades`, `proximos`, `premios` y
+renderiza, en el orden de la página. Las anclas son `colecciones`, `popular`, `generos`, `decadas`, `novedades`, `proximos`, `premios`, `salon-de-la-fama` y
 `mejor-valorados` (el `id` del `<section>`, con `scroll-mt-24` para que el encabezado fijo no
 tape el título). La página decide qué secciones están visibles con los mismos datos con los que cada una se omite, así que
 la fila nunca enlaza a una sección ausente. Se omite con menos de `MIN_SECTIONS_FOR_JUMP_NAV` (4) secciones. Es solo

@@ -14,6 +14,7 @@ import {
   awardTierRank,
   type AwardCategoryTier,
   type AwardCoverage,
+  type AwardKind,
   type AwardHonors,
   type AwardSubjectKind,
   type AwardVoting,
@@ -71,12 +72,15 @@ export interface CategoryView {
 
 export interface CeremonySummary {
   year: number;
-  edition: number;
+  /** Nulo en las clases de un salón de la fama: no se numeran (migración 0074). */
+  edition: number | null;
   heldOn: string;
 }
 
 export interface CeremonyPage {
   awardSlug: string;
+  /** Una competencia o un salón de la fama: cambia el vocabulario de la página ("Ganador" / "Ingresó", "Clase de 2026"). */
+  kind: AwardKind;
   /** Quién decide el premio; `null` si el premio se cargó antes de la migración 0073 y no se volvió a cargar. */
   voting: AwardVoting | null;
   ceremony: CeremonySummary;
@@ -228,8 +232,8 @@ async function awardId(slug: string): Promise<string | null> {
   return row?.id ?? null;
 }
 
-async function awardRow(slug: string): Promise<{ id: string; voting: AwardVoting | null } | null> {
-  const [row] = await db.select({ id: award.id, voting: award.voting }).from(award).where(eq(award.slug, slug)).limit(1);
+async function awardRow(slug: string): Promise<{ id: string; voting: AwardVoting | null; kind: AwardKind } | null> {
+  const [row] = await db.select({ id: award.id, voting: award.voting, kind: award.kind }).from(award).where(eq(award.slug, slug)).limit(1);
   return row ?? null;
 }
 
@@ -302,12 +306,17 @@ async function headlinesFor(ceremonyIds: string[]): Promise<Map<string, Ceremony
   return result;
 }
 
-/** Todas las ceremonias cargadas, con su premio (unas decenas): las funciones puras de abajo eligen cuáles mostrar. */
-async function allCeremonies() {
+/**
+ * Las ceremonias cargadas de los premios de un tipo, con su premio (unas decenas): las funciones puras de abajo eligen
+ * cuáles mostrar. Los salones de la fama NO son premios ganados (ADR 0044): las tarjetas, los ganadores recientes y los
+ * rankings piden `competition`; el bloque de salones pide `hall_of_fame`.
+ */
+async function allCeremonies(kind: AwardKind = "competition") {
   return db
     .select({ id: awardCeremony.id, awardSlug: award.slug, voting: award.voting, ...ceremonyColumns })
     .from(awardCeremony)
-    .innerJoin(award, eq(award.id, awardCeremony.awardId));
+    .innerJoin(award, eq(award.id, awardCeremony.awardId))
+    .where(eq(award.kind, kind));
 }
 
 /**
@@ -330,6 +339,65 @@ export async function listLatestCeremoniesByAward(): Promise<LatestCeremony[]> {
     years: yearsOf(ceremony.awardSlug),
     headline: headlines.get(id) ?? null,
   }));
+}
+
+/** La última clase cerrada de un salón de la fama, con todas sus incorporaciones (sección "Salón de la Fama" de Explorar y hub). */
+export interface HallOfFameClass extends CeremonySummary {
+  awardSlug: string;
+  voting: AwardVoting | null;
+  /** Años de todas las clases cerradas cargadas del salón, del más reciente al más antiguo (incluye el de esta). */
+  years: number[];
+  /** Incorporaciones de la clase: primero las de la categoría de nivel más alto y, dentro, el orden curado. */
+  inductees: NominationView[];
+  /** Cuántas incorporaciones son álbumes y cuántas grabaciones (canciones). */
+  albumCount: number;
+  recordingCount: number;
+}
+
+/** Una clase es cerrada cuando su gala ya se celebró (`heldOn` no es posterior a `today`, ambas AAAA-MM-DD). */
+export function isClosedClass(heldOn: string, today: string): boolean {
+  return heldOn <= today;
+}
+
+/**
+ * La última clase cerrada de cada salón de la fama, de la más reciente a la más antigua (por `heldOn`), con todas sus
+ * incorporaciones. Dos consultas para todos los salones juntos (más las de los sujetos), no una por salón. Un salón sin
+ * ninguna clase cerrada no aparece.
+ */
+export async function listHallOfFameClasses(today: string = new Date().toISOString().slice(0, 10)): Promise<HallOfFameClass[]> {
+  const closed = (await allCeremonies("hall_of_fame")).filter((c) => isClosedClass(c.heldOn, today));
+  const latest = latestPerAward(closed);
+  if (latest.length === 0) return [];
+
+  const rows = await db
+    .select({
+      ceremonyId: awardCategoryEdition.ceremonyId,
+      tier: awardCategory.tier,
+      categorySort: awardCategory.sortOrder,
+      subjectKind: awardCategory.subjectKind,
+      nomination: awardNomination,
+    })
+    .from(awardNomination)
+    .innerJoin(awardCategoryEdition, eq(awardCategoryEdition.id, awardNomination.categoryEditionId))
+    .innerJoin(awardCategory, eq(awardCategory.id, awardCategoryEdition.categoryId))
+    .where(inArray(awardCategoryEdition.ceremonyId, latest.map((c) => c.id)));
+  const views = await nominationViews(rows.map((r) => r.nomination));
+
+  return latest.map(({ id, ...ceremony }) => {
+    const own = rows
+      .filter((r) => r.ceremonyId === id)
+      .sort((a, b) => awardTierRank(a.tier) - awardTierRank(b.tier) || a.categorySort - b.categorySort || a.nomination.sortOrder - b.nomination.sortOrder);
+    return {
+      ...ceremony,
+      years: closed
+        .filter((c) => c.awardSlug === ceremony.awardSlug)
+        .map((c) => c.year)
+        .sort((a, b) => b - a),
+      inductees: own.map((r) => views.get(r.nomination.id)!),
+      albumCount: own.filter((r) => r.subjectKind === "release_group").length,
+      recordingCount: own.filter((r) => r.subjectKind === "recording").length,
+    };
+  });
 }
 
 /** Un ganador del muro "Ganadores recientes" del hub. */
@@ -398,7 +466,8 @@ export async function listMostAwardedArtists(limit = 10): Promise<MostAwardedArt
       JOIN award_category k ON k.id = e.category_id
       JOIN award_ceremony c ON c.id = e.ceremony_id
       JOIN award a ON a.id = c.award_id
-      WHERE n.won AND k.honors = 'performer'
+      -- Un salón de la fama no es un premio ganado (ADR 0044): solo cuentan las competencias.
+      WHERE n.won AND k.honors = 'performer' AND a.kind = 'competition'
     ), credited AS (
       SELECT w.nomination_id, w.ceremony_id, w.held_on, w.award_slug, w.artist_id AS credited_id
       FROM wins w WHERE w.artist_id IS NOT NULL
@@ -469,6 +538,7 @@ export const getCeremonyPage = cache(async (slug: string, year: number): Promise
   const views = await nominationViews(rows);
   return {
     awardSlug: slug,
+    kind: awardInfo.kind,
     voting: awardInfo.voting,
     ceremony,
     sourceUrl: source?.sourceUrl ?? null,

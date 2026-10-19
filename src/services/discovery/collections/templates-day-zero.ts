@@ -36,6 +36,9 @@ export const grammyWinners: CollectionTemplate = {
     const [ceremony] = await db.execute<CeremonyRow & Record<string, unknown>>(sql`
       select a.slug, c.year::int as year, c.id as ceremony_id
       from award_ceremony c join award a on a.id = c.award_id
+      -- Un salón de la fama es una clase de incorporaciones, no una ceremonia de ganadores (ADR 0044): sin este filtro la
+      -- clase del Grammy Hall of Fame, la más reciente de todas, se volvería "Ganadores del grammy-hall-of-fame".
+      where a.kind = 'competition'
       order by c.held_on desc limit 1
     `);
     if (!ceremony) return { skip: "No hay ceremonias de premios cargadas (scripts/load-awards.ts)" };

@@ -1,0 +1,314 @@
+{
+  "award": "grammy-hall-of-fame",
+  "year": 2024,
+  "heldOn": "2024-05-21",
+  "sourceUrl": "https://www.grammy.com/news/grammy-hall-fame-2024-inductees/",
+  "categories": [
+    {
+      "key": "albums",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "3 Feet High and Rising",
+          "artist": "De La Soul",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "5243f39c-c344-3989-a0f6-2a2f75a9d827",
+            "seed": {
+              "kind": "release_group",
+              "title": "3 Feet High and Rising",
+              "category": "studio",
+              "firstReleaseDate": "1989-05-14",
+              "credits": [
+                {
+                  "name": "De La Soul",
+                  "artist": {
+                    "id": "a8ebde98-7e91-46c7-992c-90039ba42017",
+                    "name": "De La Soul"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Appetite for Destruction",
+          "artist": "Guns N' Roses",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a0b94d0a-210b-4b15-bd1d-93be2196c14a",
+            "seed": {
+              "kind": "release_group",
+              "title": "Appetite for Destruction",
+              "category": "studio",
+              "firstReleaseDate": "1987-07-21",
+              "credits": [
+                {
+                  "name": "Guns N' Roses",
+                  "artist": {
+                    "id": "eeb1195b-f213-4ce1-b28c-8565211f8e43",
+                    "name": "Guns N’ Roses"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Buena Vista Social Club",
+          "artist": "Buena Vista Social Club",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "32bbab8e-02c0-30d2-9e23-a19739864b84",
+            "seed": {
+              "kind": "release_group",
+              "title": "Buena Vista Social Club",
+              "category": "studio",
+              "firstReleaseDate": "1997-06-23",
+              "credits": [
+                {
+                  "name": "Buena Vista Social Club",
+                  "artist": {
+                    "id": "2a85ecff-41e9-4be1-aca6-c87054a4c334",
+                    "name": "Buena Vista Social Club"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "The Miseducation of Lauryn Hill",
+          "artist": "Lauryn Hill",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "8691d12c-abd8-385c-b1eb-d841190124f7",
+            "seed": {
+              "kind": "release_group",
+              "title": "The Miseducation of Lauryn Hill",
+              "category": "studio",
+              "firstReleaseDate": "1998-08-19",
+              "credits": [
+                {
+                  "name": "Lauryn Hill",
+                  "artist": {
+                    "id": "e8414012-4a1c-4ad4-be5e-fc55294e28cc",
+                    "name": "Ms. Lauryn Hill"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "songs",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "I Feel Love",
+          "artist": "Donna Summer",
+          "anchor": {
+            "title": "I Feel Love",
+            "artist": "Donna Summer"
+          },
+          "won": true,
+          "resolved": {
+            "status": "manual",
+            "mbid": "232b8e6e-0aa5-4310-8df3-583047af3126",
+            "seed": {
+              "kind": "recording",
+              "title": "I Feel Love",
+              "durationSec": 353,
+              "credits": [
+                {
+                  "name": "Donna Summer",
+                  "artist": {
+                    "id": "b60527cc-54f3-4bbe-a01b-dcf34c95ae14",
+                    "name": "Donna Summer"
+                  }
+                }
+              ],
+              "anchorMbid": "d5e3b639-dd70-3ad6-847a-2566c96b31af",
+              "anchor": {
+                "kind": "release_group",
+                "title": "I Feel Love",
+                "category": "single_ep",
+                "firstReleaseDate": "1977",
+                "credits": [
+                  {
+                    "name": "Donna Summer",
+                    "artist": {
+                      "id": "b60527cc-54f3-4bbe-a01b-dcf34c95ae14",
+                      "name": "Donna Summer"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Kiss an Angel Good Mornin'",
+          "artist": "Charley Pride",
+          "anchor": {
+            "title": "Kiss an Angel Good Mornin'",
+            "artist": "Charley Pride"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "fb4a1507-5882-4757-82b5-9385683eb4ff",
+            "seed": {
+              "kind": "recording",
+              "title": "Kiss an Angel Good Mornin’",
+              "durationSec": 124,
+              "credits": [
+                {
+                  "name": "Charley Pride",
+                  "artist": {
+                    "id": "1c1de177-984d-4208-9177-ca94f8776a39",
+                    "name": "Charley Pride"
+                  }
+                }
+              ],
+              "anchorMbid": "f8285841-3960-4103-bfc5-103acb3fdea6",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Kiss an Angel Good Mornin'",
+                "category": "single_ep",
+                "firstReleaseDate": "1971-10",
+                "credits": [
+                  {
+                    "name": "Charley Pride",
+                    "artist": {
+                      "id": "1c1de177-984d-4208-9177-ca94f8776a39",
+                      "name": "Charley Pride"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Let's Have a Party",
+          "artist": "Wanda Jackson",
+          "anchor": {
+            "title": "Rockin' with Wanda!",
+            "artist": "Wanda Jackson"
+          },
+          "won": true,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Ory's Creole Trombone",
+          "artist": "Kid Ory's Creole Orchestra",
+          "anchor": {
+            "title": "Ory's Creole Trombone",
+            "artist": "Kid Ory's Creole Orchestra"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "What a Fool Believes",
+          "artist": "The Doobie Brothers",
+          "anchor": {
+            "title": "What a Fool Believes",
+            "artist": "The Doobie Brothers"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6764b741-fc9f-40d5-bbd5-d0ed0982ef07",
+            "seed": {
+              "kind": "recording",
+              "title": "What a Fool Believes",
+              "durationSec": 223,
+              "credits": [
+                {
+                  "name": "The Doobie Brothers",
+                  "artist": {
+                    "id": "588dea29-eea3-456b-a815-3ee04f75c8e7",
+                    "name": "The Doobie Brothers"
+                  }
+                }
+              ],
+              "anchorMbid": "1adfacb3-5b90-32c7-8c56-fcd1b1cfa8c8",
+              "anchor": {
+                "kind": "release_group",
+                "title": "What a Fool Believes",
+                "category": "single_ep",
+                "firstReleaseDate": "1978",
+                "credits": [
+                  {
+                    "name": "The Doobie Brothers",
+                    "artist": {
+                      "id": "588dea29-eea3-456b-a815-3ee04f75c8e7",
+                      "name": "The Doobie Brothers"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "You Don't Miss Your Water",
+          "artist": "William Bell",
+          "anchor": {
+            "title": "You Don't Miss Your Water",
+            "artist": "William Bell"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2e1352c7-ae9d-4b5c-bf08-04ddaec9bf12",
+            "seed": {
+              "kind": "recording",
+              "title": "You Don’t Miss Your Water",
+              "durationSec": 178,
+              "credits": [
+                {
+                  "name": "William Bell",
+                  "artist": {
+                    "id": "d9c9cfb7-f751-4fb0-97c0-b3ddd768bc78",
+                    "name": "William Bell"
+                  }
+                }
+              ],
+              "anchorMbid": "ae908311-4cf7-336d-9095-f4e8770c1e65",
+              "anchor": {
+                "kind": "release_group",
+                "title": "You Don’t Miss Your Water / Formula of Love",
+                "category": "single_ep",
+                "firstReleaseDate": "1961",
+                "credits": [
+                  {
+                    "name": "William Bell",
+                    "artist": {
+                      "id": "d9c9cfb7-f751-4fb0-97c0-b3ddd768bc78",
+                      "name": "William Bell"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

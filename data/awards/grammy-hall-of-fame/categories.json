@@ -1,0 +1,29 @@
+{
+  "award": "grammy-hall-of-fame",
+  "kind": "hall_of_fame",
+  "voting": "academy",
+  "categories": [
+    {
+      "key": "albums",
+      "tier": "general",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Álbumes",
+        "en": "Albums"
+      },
+      "order": 1
+    },
+    {
+      "key": "songs",
+      "tier": "general",
+      "subject": "recording",
+      "honors": "performer",
+      "name": {
+        "es": "Canciones",
+        "en": "Songs"
+      },
+      "order": 2
+    }
+  ]
+}

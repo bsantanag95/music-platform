@@ -15,6 +15,7 @@ import {
 
 const categories: CategoriesFile = {
   award: "grammy",
+  kind: "competition",
   voting: "academy",
   categories: [
     { key: "album-of-the-year", tier: "general", subject: "release_group", honors: "performer", name: { es: "Álbum del año", en: "Album of the Year" }, order: 1 },
@@ -155,7 +156,7 @@ describe("validateCeremony", () => {
 
 describe("validateCategories", () => {
   const base = { subject: "recording" as const, honors: "performer" as const, name: { es: "x", en: "x" } };
-  const file = (list: CategoriesFile["categories"]): CategoriesFile => ({ award: "grammy", voting: "academy", categories: list });
+  const file = (list: CategoriesFile["categories"]): CategoriesFile => ({ award: "grammy", kind: "competition", voting: "academy", categories: list });
 
   it("el nivel genre exige campo y los demás niveles no lo admiten", () => {
     const errors = validateCategories(
@@ -246,5 +247,118 @@ describe("voting de categories.json", () => {
   it("rechaza un valor desconocido y exige el campo", () => {
     expect(withVoting("fans").success).toBe(false);
     expect(CategoriesFileSchema.safeParse({ award: categories.award, categories: categories.categories }).success).toBe(false);
+  });
+});
+
+describe("salones de la fama (ADR 0044)", () => {
+  const hall: CategoriesFile = {
+    award: "grammy-hall-of-fame",
+    kind: "hall_of_fame",
+    voting: "academy",
+    categories: [
+      { key: "albums", tier: "general", subject: "release_group", honors: "performer", name: { es: "Álbumes", en: "Albums" }, order: 1 },
+      { key: "songs", tier: "general", subject: "recording", honors: "performer", name: { es: "Canciones", en: "Songs" }, order: 2 },
+    ],
+  };
+  const TODAY = "2026-10-19";
+  const inducted = (title: string, artist: string) => ({ title, artist, won: true });
+  const song = (title: string, artist: string) => ({ ...inducted(title, artist), anchor: { title, artist } });
+
+  const hallClass = (overrides: Partial<CeremonyFile> = {}): CeremonyFile => ({
+    award: "grammy-hall-of-fame",
+    year: 2026,
+    heldOn: "2026-05-08",
+    sourceUrl: "https://grammy.com/news/grammy-hall-of-fame-2026-inducted-recordings",
+    categories: [
+      { key: "albums", coverage: "complete", nominees: [inducted("OK Computer", "Radiohead")] },
+      { key: "songs", coverage: "complete", nominees: [song("Trouble in Mind", "Bertha Hill"), song("Jesus Gave Me Water", "The Soul Stirrers")] },
+    ],
+    ...overrides,
+  });
+
+  it("acepta una clase sin edición ni mínimo de nominados (dos canciones)", () => {
+    expect(validateCeremony(hallClass(), hall, "2026.json", TODAY)).toEqual([]);
+  });
+
+  it("el tipo del archivo de categorías es competition si se omite", () => {
+    const parsed = CategoriesFileSchema.parse({ award: "x", voting: "academy", categories: hall.categories });
+    expect(parsed.kind).toBe("competition");
+    expect(CategoriesFileSchema.safeParse({ ...hall, kind: "club" }).success).toBe(false);
+  });
+
+  it("un salón no admite número de edición", () => {
+    expect(validateCeremony(hallClass({ edition: 3 }), hall, "2026.json", TODAY)).toEqual([
+      expect.stringContaining('"edition" no aplica a un salón de la fama'),
+    ]);
+  });
+
+  it("una competencia sigue exigiendo su número de edición", () => {
+    const { edition: _edition, ...withoutEdition } = ceremony();
+    expect(validateCeremony(withoutEdition as CeremonyFile, categories, "2025.json", TODAY)).toEqual([
+      expect.stringContaining('un premio competitivo necesita "edition"'),
+    ]);
+  });
+
+  it("rechaza una clase cuya gala aún no se celebró y acepta la de hoy", () => {
+    expect(validateCeremony(hallClass({ heldOn: "2026-11-14" }), hall, "2026.json", TODAY)).toEqual([
+      expect.stringContaining("la clase aún no se celebró (2026-11-14)"),
+    ]);
+    expect(validateCeremony(hallClass({ heldOn: TODAY }), hall, "2026.json", TODAY)).toEqual([]);
+  });
+
+  it("la fecha puede ser del año de la clase o del anterior, pero no de dos años antes", () => {
+    expect(validateCeremony(hallClass({ year: 2021, heldOn: "2020-12-21" }), hall, "2021.json", TODAY)).toEqual([]);
+    expect(validateCeremony(hallClass({ year: 2021, heldOn: "2019-12-21" }), hall, "2021.json", TODAY)).toEqual([
+      expect.stringContaining("no es del año 2021 ni del anterior"),
+    ]);
+  });
+
+  it("una competencia sigue exigiendo la fecha del mismo año", () => {
+    expect(validateCeremony(ceremony({ heldOn: "2024-12-31" }), categories, "2025.json", TODAY)).toEqual([
+      expect.stringContaining("no es del año 2025"),
+    ]);
+  });
+
+  it("exige cobertura complete y al menos una incorporación por categoría", () => {
+    const errors = validateCeremony(
+      hallClass({
+        categories: [
+          { key: "albums", coverage: "winner_only", nominees: [inducted("OK Computer", "Radiohead")] },
+          { key: "songs", coverage: "complete", nominees: [{ ...song("Trouble in Mind", "Bertha Hill"), won: false }] },
+        ],
+      }),
+      hall,
+      "2026.json",
+      TODAY,
+    );
+    expect(errors.join("\n")).toMatch(/albums: en un salón de la fama la cobertura es complete/);
+    expect(errors.join("\n")).toMatch(/songs: no tiene incorporaciones/);
+  });
+
+  it("las canciones de un salón siguen exigiendo su disco ancla", () => {
+    const errors = validateCeremony(
+      hallClass({
+        categories: [
+          { key: "albums", coverage: "complete", nominees: [inducted("OK Computer", "Radiohead")] },
+          { key: "songs", coverage: "complete", nominees: [inducted("Trouble in Mind", "Bertha Hill")] },
+        ],
+      }),
+      hall,
+      "2026.json",
+      TODAY,
+    );
+    expect(errors).toEqual([expect.stringContaining('exige "anchor"')]);
+  });
+
+  it("dos clases de un salón sin edición no chocan entre sí al leer la carpeta", () => {
+    const dir = mkdtempSync(join(tmpdir(), "awards-hall-"));
+    const awardDir = join(dir, "grammy-hall-of-fame");
+    mkdirSync(join(awardDir, "ceremonies"), { recursive: true });
+    writeFileSync(join(awardDir, "categories.json"), JSON.stringify(hall));
+    writeFileSync(join(awardDir, "ceremonies", "2025.json"), JSON.stringify(hallClass({ year: 2025, heldOn: "2025-05-16" })));
+    writeFileSync(join(awardDir, "ceremonies", "2024.json"), JSON.stringify(hallClass({ year: 2024, heldOn: "2024-05-21" })));
+    const { award, errors } = readAward(awardDir, "grammy-hall-of-fame");
+    expect(errors).toEqual([]);
+    expect(award?.ceremonies.map((c) => c.data.year)).toEqual([2024, 2025]);
   });
 });

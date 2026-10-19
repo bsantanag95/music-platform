@@ -7,6 +7,29 @@ videojuegos.
 **Estado:** implementado para cinco premios —Grammy, Latin Grammy, Premio Lo Nuestro, Brit Awards y Mercury Prize—, de 2021 en
 adelante y solo ceremonias cerradas (cambio `add-four-music-awards`, ADR 0043).
 
+## Salones de la fama (cambio `add-grammy-hall-of-fame`, ADR 0044)
+
+Un **salón de la fama** (`award.kind = hall_of_fame`) incorpora cada año una **clase** de grabaciones o artistas, sin nominados
+ni competencia. Cubre el **Grammy Hall of Fame** (carpeta `grammy-hall-of-fame`, lo decide un comité de la Recording Academy)
+con sus **últimas cinco clases cerradas**: 2020 (25 grabaciones), 2021 (29), 2024 (10), 2025 (13) y 2026 (14), 91 en total; el
+salón no tuvo clases en 2022 ni 2023. Cada clase tiene dos categorías, Álbumes y Canciones (estas ancladas a su sencillo o
+disco); 81 de las 91 incorporaciones están enlazadas al catálogo y 10 se muestran como texto (singles antiguos sin disco ancla
+en MusicBrainz). Los datos salen de los comunicados oficiales de la Academia (`sourceUrl` de cada clase), contrastados con
+Wikipedia.
+
+- **Una clase no es una ceremonia de ganadores:** no tiene número de edición (`edition` nulo), se presenta como "Clase de
+  2026" con "Fecha de la clase" (la gala existe desde 2024; las clases 2020 y 2021 solo tienen la fecha del anuncio, que puede
+  ser del año anterior: la clase 2021 se anunció el 21-dic-2020), rotula "Ingresó" en lugar de "Ganador" y no ofrece historia
+  de la categoría.
+- **No cuenta como premio ganado:** no aparece en las tarjetas de Premios, "Ganadores recientes", "Los más premiados", "Tu
+  relación…", los puntajes que ordenan el catálogo ni la plantilla de colección `grammy-winners` (`competitionNominations`,
+  `allCeremonies(kind)`).
+- **Dónde se ve:** sección "Salón de la Fama" de `/explore` (tras Premios: riel con las incorporaciones de la última clase y
+  "Ver todas las clases"), bloque "Salones de la fama" del hub `/awards` y `/awards/grammy-hall-of-fame[/<año>]`
+  (`/awards/<salón>` redirige a la clase más reciente; las demás salen como años en la fila "Clase").
+- **Para sumar otro salón:** una carpeta en `data/awards/<salón>/` con `kind: "hall_of_fame"` en `categories.json`, sin `edition`
+  en sus clases, y su nombre en `messages/*/awards.json` (`names.<slug>`). Criterios en el ADR 0044.
+
 ## Alcance
 
 - **Premios cubiertos** (cada uno con su tipo de votación, `voting` en su `categories.json`):
@@ -164,5 +187,6 @@ o fijar a mano), no código.
 
 ## Notas
 
-- La **marca** "Grammy" se usa solo para describir ("Premios Grammy 2025").
+- La **marca** "Grammy" se usa solo para describir ("Premios Grammy 2025", "Grammy Hall of Fame"): sin logos ni imágenes del
+  Grammy Museum, y sin copiar las descripciones del sitio de la Academia (solo hechos).
 - Smoke test: `scripts/smoke-test-music-awards.ts` (ver `AGENTS.md`).

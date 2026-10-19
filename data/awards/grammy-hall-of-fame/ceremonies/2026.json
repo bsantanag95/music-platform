@@ -1,0 +1,949 @@
+{
+  "award": "grammy-hall-of-fame",
+  "year": 2026,
+  "heldOn": "2026-05-08",
+  "sourceUrl": "https://grammy.com/news/grammy-hall-of-fame-2026-inducted-recordings",
+  "categories": [
+    {
+      "key": "albums",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "All Eyez on Me",
+          "artist": "2Pac",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e2621417-9236-36b4-9f9e-376c416dc4b0",
+            "seed": {
+              "kind": "release_group",
+              "title": "All Eyez on Me",
+              "category": "studio",
+              "firstReleaseDate": "1996-02-13",
+              "credits": [
+                {
+                  "name": "2Pac",
+                  "artist": {
+                    "id": "382f1005-e9ab-4684-afd4-0bdae4ee37f2",
+                    "name": "2Pac",
+                    "sort-name": "2Pac",
+                    "disambiguation": "US rapper",
+                    "aliases": [
+                      {
+                        "sort-name": "Makaveli",
+                        "name": "Makaveli",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "2Pacalypse",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "2Pacalypse",
+                        "locale": "en",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "2パック",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "2パック",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "New York, MC",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "MC New York",
+                        "locale": "en",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "2Pac",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "2Pac",
+                        "locale": "en",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Tupac",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Tupac",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Tupac Shakur",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Tupac Shakur",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "2 Pacalypse",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "2 Pacalypse",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "2Pac (Makaveli the Don)",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "2Pac (Makaveli the Don)",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "2 Pac",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "2 Pac",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Amor Prohibido",
+          "artist": "Selena",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "bc5e0495-4db9-3dae-9883-104d5df6b2cc",
+            "seed": {
+              "kind": "release_group",
+              "title": "Amor Prohibido",
+              "category": "studio",
+              "firstReleaseDate": "1994-03-22",
+              "credits": [
+                {
+                  "name": "Selena",
+                  "artist": {
+                    "id": "03746227-c9f9-4b3b-b2c6-9b31f79564f7",
+                    "name": "Selena",
+                    "sort-name": "Selena",
+                    "disambiguation": "Mexican–American cumbia/tejano singer",
+                    "aliases": [
+                      {
+                        "sort-name": "Selena Pérez",
+                        "name": "Selena Pérez",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Quintanilla-Pérez, Selena",
+                        "name": "Selena Quintanilla-Pérez",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Quintanilla, Selena",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Selena Quintanilla",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Selena - Entre A Mi Mundo",
+                        "name": "Selena - Entre A Mi Mundo",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Car Wheels on a Gravel Road",
+          "artist": "Lucinda Williams",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "493de006-33bf-3404-9bb7-1f3b0c22ce05",
+            "seed": {
+              "kind": "release_group",
+              "title": "Car Wheels on a Gravel Road",
+              "category": "studio",
+              "firstReleaseDate": "1998-06-30",
+              "credits": [
+                {
+                  "name": "Lucinda Williams",
+                  "artist": {
+                    "id": "21685b15-3074-446e-aa1d-ff7157014f53",
+                    "name": "Lucinda Williams",
+                    "sort-name": "Williams, Lucinda",
+                    "aliases": [
+                      {
+                        "sort-name": "Williams, Lucinda",
+                        "name": "Williams, Lucinda",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Williams, Lucinda Gayl",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Lucinda Gayl Williams",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Dreamboat Annie",
+          "artist": "Heart",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "65ebadae-3fcc-32c2-a161-a2cd53854c9b",
+            "seed": {
+              "kind": "release_group",
+              "title": "Dreamboat Annie",
+              "category": "studio",
+              "firstReleaseDate": "1975-09",
+              "credits": [
+                {
+                  "name": "Heart",
+                  "artist": {
+                    "id": "bdbd48f5-abf3-4a4f-9a21-4551dbc3fde9",
+                    "name": "Heart",
+                    "sort-name": "Heart",
+                    "disambiguation": "rock band, Ann and Nancy Wilson"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Journey in Satchidananda",
+          "artist": "Alice Coltrane",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "cf154081-2678-3778-95cf-cd31c4ea5dfe",
+            "seed": {
+              "kind": "release_group",
+              "title": "Journey in Satchidananda",
+              "category": "studio",
+              "firstReleaseDate": "1971",
+              "credits": [
+                {
+                  "joinphrase": " featuring ",
+                  "name": "Alice Coltrane",
+                  "artist": {
+                    "id": "d24fc285-7b2f-47da-8ac5-4070b08570b1",
+                    "name": "Alice Coltrane",
+                    "sort-name": "Coltrane, Alice",
+                    "aliases": [
+                      {
+                        "sort-name": "Coltrane, Alice, Sextet",
+                        "name": "Alice Coltrane Sextet",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Coltrane, Alice With Strings",
+                        "name": "Alice Coltrane With Strings",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Coltrane, Turiya Alice",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Turiya Alice Coltrane",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Turiyasangitananda",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Turiyasangitananda",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "McLeod, Alice",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Alice McLeod",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": "1937-08-27",
+                        "end-date": "1965"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Pharoah Sanders",
+                  "artist": {
+                    "id": "b3a0912a-a62a-4388-9368-7cb21ed5caf9",
+                    "name": "Pharoah Sanders",
+                    "sort-name": "Sanders, Pharoah",
+                    "disambiguation": "US jazz saxophonist",
+                    "aliases": [
+                      {
+                        "sort-name": "Sanders, Farrell Lee",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Farrell Lee Sanders",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "ファラオ・サンダース",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "ファラオ・サンダース",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Pharaoh Sanders",
+                        "name": "Pharaoh Sanders",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Maggot Brain",
+          "artist": "Funkadelic",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a334e612-e736-3b4f-82b4-c4dfb774983c",
+            "seed": {
+              "kind": "release_group",
+              "title": "Maggot Brain",
+              "category": "studio",
+              "firstReleaseDate": "1971-07-12",
+              "credits": [
+                {
+                  "name": "Funkadelic",
+                  "artist": {
+                    "id": "cf042013-3edd-46c4-9b0e-a62faac98d0b",
+                    "name": "Funkadelic",
+                    "sort-name": "Funkadelic",
+                    "disambiguation": "original funk band",
+                    "aliases": [
+                      {
+                        "sort-name": "Funkadellic",
+                        "name": "Funkadellic",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "OK Computer",
+          "artist": "Radiohead",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b1392450-e666-3926-a536-22c65f834433",
+            "seed": {
+              "kind": "release_group",
+              "title": "OK Computer",
+              "category": "studio",
+              "firstReleaseDate": "1997-05-21",
+              "credits": [
+                {
+                  "name": "Radiohead",
+                  "artist": {
+                    "id": "a74b1b7f-71a5-4011-9441-d0b5e4122711",
+                    "name": "Radiohead",
+                    "sort-name": "Radiohead",
+                    "aliases": [
+                      {
+                        "sort-name": "Radiohead",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Radiohead",
+                        "locale": "en",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "r/head",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "r/head",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "电台司令",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "电台司令",
+                        "locale": "zh",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "れでぃおへっど",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "レディオヘッド",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Radiohead & Thom Yorke",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Radiohead & Thom Yorke",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Radio Head",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Radio Head",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Paid in Full",
+          "artist": "Eric B. & Rakim",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e124668d-731c-3d2f-bd38-facf91df5e27",
+            "seed": {
+              "kind": "release_group",
+              "title": "Paid in Full",
+              "category": "studio",
+              "firstReleaseDate": "1987-07-07",
+              "credits": [
+                {
+                  "name": "Eric B. & Rakim",
+                  "artist": {
+                    "id": "925228de-bbe5-4c7b-b76f-78e382ec9148",
+                    "name": "Eric B. & Rakim",
+                    "sort-name": "Eric B. & Rakim",
+                    "aliases": [
+                      {
+                        "sort-name": "Eric B. & Rakim",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Eric B. & Rakim",
+                        "locale": "en",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Eric B. and Rakim",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Eric B. and Rakim",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Eric B / Rakim",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Eric B / Rakim",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Eric B and Rakim",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Eric B and Rakim",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Eric B & Rakin",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Eric B & Rakin",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Eric B & Rakim",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Eric B & Rakim",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Erik B. & Rakim",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Erik B. & Rakim",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Pink Moon",
+          "artist": "Nick Drake",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "740ec10a-e887-38a6-a04d-fe2069c9e2a7",
+            "seed": {
+              "kind": "release_group",
+              "title": "Pink Moon",
+              "category": "studio",
+              "firstReleaseDate": "1972-02-25",
+              "credits": [
+                {
+                  "name": "Nick Drake",
+                  "artist": {
+                    "id": "99ea432a-e3d8-42cb-9d5e-db316a6a8458",
+                    "name": "Nick Drake",
+                    "sort-name": "Drake, Nick",
+                    "disambiguation": "English singer‐songwriter",
+                    "aliases": [
+                      {
+                        "sort-name": "Nicholas Rodney Drake",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Nicholas Rodney Drake",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Rhythm Nation 1814",
+          "artist": "Janet Jackson",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "20aaac17-e4e8-373c-99cc-211321b82832",
+            "seed": {
+              "kind": "release_group",
+              "title": "Rhythm Nation 1814",
+              "category": "studio",
+              "firstReleaseDate": "1989-09-15",
+              "credits": [
+                {
+                  "name": "Janet Jackson",
+                  "artist": {
+                    "id": "6be2828f-6c0d-4059-99d4-fa18acf1a296",
+                    "name": "Janet Jackson",
+                    "sort-name": "Jackson, Janet",
+                    "aliases": [
+                      {
+                        "sort-name": "Janet",
+                        "name": "Janet",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Jackson, Janet",
+                        "name": "Jackson, Janet",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Jackson, Janet Damita Jo",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Janet Damita Jo Jackson",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "ジャネット・ジャクソン",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "ジャネット・ジャクソン",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "You'll Sing a Song and I'll Sing a Song",
+          "artist": "Ella Jenkins",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "656517de-b776-341a-abff-e5edef5de142",
+            "seed": {
+              "kind": "release_group",
+              "title": "You’ll Sing a Song and I’ll Sing a Song",
+              "category": "studio",
+              "firstReleaseDate": "1966",
+              "credits": [
+                {
+                  "name": "Ella Jenkins",
+                  "artist": {
+                    "id": "27431fe7-ed97-4e78-abe7-16ccc2348dd5",
+                    "name": "Ella Jenkins",
+                    "sort-name": "Jenkins, Ella",
+                    "disambiguation": "folk singer/actress",
+                    "aliases": [
+                      {
+                        "sort-name": "Jenkins, Ella Louise",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Ella Louise Jenkins",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "songs",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Jesus Gave Me Water",
+          "artist": "The Soul Stirrers",
+          "anchor": {
+            "title": "Jesus Gave Me Water",
+            "artist": "The Soul Stirrers"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "7dc52110-400d-4d93-b6c7-d2b8886bf948",
+            "seed": {
+              "kind": "recording",
+              "title": "Jesus Gave Me Water",
+              "durationSec": 151,
+              "credits": [
+                {
+                  "name": "The Soul Stirrers",
+                  "artist": {
+                    "id": "5aa8b4de-5e87-40c1-b230-e29e415578ec",
+                    "name": "The Soul Stirrers",
+                    "sort-name": "Soul Stirrers, The",
+                    "aliases": [
+                      {
+                        "sort-name": "The Soul Strrers",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "The Soul Strrers",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "The Soul Strirrers",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "The Soul Strirrers",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "8759e716-5ce3-39c6-81d9-3567bd7cbff5",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Jesus Gave Me Water",
+                "category": "studio",
+                "firstReleaseDate": "1993-01-31",
+                "credits": [
+                  {
+                    "name": "The Soul Stirrers",
+                    "artist": {
+                      "id": "5aa8b4de-5e87-40c1-b230-e29e415578ec",
+                      "name": "The Soul Stirrers",
+                      "sort-name": "Soul Stirrers, The",
+                      "aliases": [
+                        {
+                          "sort-name": "The Soul Strrers",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "The Soul Strrers",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "The Soul Strirrers",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "The Soul Strirrers",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Orange Blossom Special",
+          "artist": "The Rouse Brothers",
+          "anchor": {
+            "title": "Orange Blossom Special",
+            "artist": "The Rouse Brothers"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Trouble in Mind",
+          "artist": "Bertha \"Chippie\" Hill",
+          "anchor": {
+            "title": "Trouble in Mind",
+            "artist": "Bertha \"Chippie\" Hill"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6fcfb31f-48ae-4e66-a9c5-21956114364d",
+            "seed": {
+              "kind": "recording",
+              "title": "Trouble in Mind",
+              "durationSec": 197,
+              "credits": [
+                {
+                  "name": "Bertha “Chippie” Hill",
+                  "artist": {
+                    "id": "9a0bc465-9174-432d-a85d-54c8dec8a93c",
+                    "name": "Bertha “Chippie” Hill",
+                    "sort-name": "Hill, Bertha “Chippie”",
+                    "aliases": [
+                      {
+                        "sort-name": "Berha 'Chippie' Hill",
+                        "name": "Berha 'Chippie' Hill",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Chippie Hill",
+                        "name": "Chippie Hill",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "bd2d93c8-dde2-4528-99e9-755d81faf648",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Trouble in Mind / Georgia Man",
+                "category": "single_ep",
+                "firstReleaseDate": "1926-04",
+                "credits": [
+                  {
+                    "name": "Bertha “Chippie” Hill",
+                    "artist": {
+                      "id": "9a0bc465-9174-432d-a85d-54c8dec8a93c",
+                      "name": "Bertha “Chippie” Hill",
+                      "sort-name": "Hill, Bertha “Chippie”",
+                      "aliases": [
+                        {
+                          "sort-name": "Berha 'Chippie' Hill",
+                          "name": "Berha 'Chippie' Hill",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Chippie Hill",
+                          "name": "Chippie Hill",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

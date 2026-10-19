@@ -1,0 +1,1030 @@
+{
+  "award": "grammy-hall-of-fame",
+  "year": 2021,
+  "heldOn": "2020-12-21",
+  "sourceUrl": "https://www.grammy.com/news/grammy-hall-fame-2021-inductions-welcomes-recordings-tribe-called-quest-billie-holiday-journey-linda/",
+  "categories": [
+    {
+      "key": "albums",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Blues Breakers",
+          "artist": "John Mayall with Eric Clapton",
+          "searchAs": {
+            "title": "Blues Breakers with Eric Clapton",
+            "artist": "John Mayall"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2b031a2e-9d80-3240-b065-9445fb37f00b",
+            "seed": {
+              "kind": "release_group",
+              "title": "Blues Breakers With Eric Clapton",
+              "category": "studio",
+              "firstReleaseDate": "1966-07-22",
+              "credits": [
+                {
+                  "name": "John Mayall & the Bluesbreakers",
+                  "artist": {
+                    "id": "4756395c-57ed-4a63-afb2-01117f14dff6",
+                    "name": "John Mayall & the Bluesbreakers"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Canciones de Mi Padre",
+          "artist": "Linda Ronstadt",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ec6df4a3-e40c-3fa4-8c72-8633f572c8c3",
+            "seed": {
+              "kind": "release_group",
+              "title": "Canciones de mi padre",
+              "category": "studio",
+              "firstReleaseDate": "1987",
+              "credits": [
+                {
+                  "name": "Linda Ronstadt",
+                  "artist": {
+                    "id": "498f2581-be21-4eef-8756-fbb89d79b1c0",
+                    "name": "Linda Ronstadt"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Greetings from Asbury Park, N.J.",
+          "artist": "Bruce Springsteen",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c497fc44-ddaf-3cce-a9b4-bfec958a0f3c",
+            "seed": {
+              "kind": "release_group",
+              "title": "Greetings From Asbury Park, N.J.",
+              "category": "studio",
+              "firstReleaseDate": "1973-01-05",
+              "credits": [
+                {
+                  "name": "Bruce Springsteen",
+                  "artist": {
+                    "id": "70248960-cb53-4ea4-943a-edb18f7d336f",
+                    "name": "Bruce Springsteen"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Horses",
+          "artist": "Patti Smith",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ff8f533c-3cb3-3877-9209-11f433edaad2",
+            "seed": {
+              "kind": "release_group",
+              "title": "Horses",
+              "category": "studio",
+              "firstReleaseDate": "1975-11",
+              "credits": [
+                {
+                  "name": "Patti Smith",
+                  "artist": {
+                    "id": "d135874d-9cae-4fef-97e3-36acbd9f5a26",
+                    "name": "Patti Smith"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Hot Buttered Soul",
+          "artist": "Isaac Hayes",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e76d4f75-f09b-3f5b-aca9-44ac4489e58d",
+            "seed": {
+              "kind": "release_group",
+              "title": "Hot Buttered Soul",
+              "category": "studio",
+              "firstReleaseDate": "1969",
+              "credits": [
+                {
+                  "name": "Isaac Hayes",
+                  "artist": {
+                    "id": "a2361c7d-ddb6-41c1-a9a0-be09fbbb8d21",
+                    "name": "Isaac Hayes"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "In the Right Place",
+          "artist": "Dr. John",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "4bec5aa0-b2ee-3931-a8d9-81d4e533b8b2",
+            "seed": {
+              "kind": "release_group",
+              "title": "In the Right Place",
+              "category": "studio",
+              "firstReleaseDate": "1973-02-25",
+              "credits": [
+                {
+                  "name": "Dr. John",
+                  "artist": {
+                    "id": "fe0e1895-aa84-47d9-8e5b-7930fc20709b",
+                    "name": "Dr. John"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Licensed to Ill",
+          "artist": "Beastie Boys",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "57f5e7c8-2a6e-34a0-b4cd-0e77695bc36f",
+            "seed": {
+              "kind": "release_group",
+              "title": "Licensed to Ill",
+              "category": "studio",
+              "firstReleaseDate": "1986-11-15",
+              "credits": [
+                {
+                  "name": "Beastie Boys",
+                  "artist": {
+                    "id": "9beb62b2-88db-4cea-801e-162cd344ee53",
+                    "name": "Beastie Boys"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Mad Dogs & Englishmen",
+          "artist": "Joe Cocker",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "48599cd5-8def-3224-8e68-6551d2e2c19f",
+            "seed": {
+              "kind": "release_group",
+              "title": "Mad Dogs & Englishmen",
+              "category": "live_other",
+              "firstReleaseDate": "1970-08",
+              "credits": [
+                {
+                  "name": "Joe Cocker",
+                  "artist": {
+                    "id": "32f2d6bd-c22b-42cf-a7bc-0c4b48cd2bcb",
+                    "name": "Joe Cocker"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Mercy, Mercy, Mercy! Live at \"The Club\"",
+          "artist": "The Cannonball Adderley Quintet",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "28ea51ba-f497-3bc1-9290-dc9d476c21ea",
+            "seed": {
+              "kind": "release_group",
+              "title": "Mercy, Mercy, Mercy! Live at “The Club”",
+              "category": "live_other",
+              "firstReleaseDate": "1966",
+              "credits": [
+                {
+                  "name": "The Cannonball Adderley Quintet",
+                  "artist": {
+                    "id": "19a4c591-7a8d-4792-b465-6955346be1df",
+                    "name": "The Cannonball Adderley Quintet"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Ravel: Piano Concerto in G Major",
+          "artist": "Leonard Bernstein with the Philharmonia Orchestra of London",
+          "searchAs": {
+            "artist": "Leonard Bernstein"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "7f7420db-9fae-4ef1-a6da-8b8014570f6b",
+            "seed": {
+              "kind": "release_group",
+              "title": "The Royal Edition, no. 43 of 100: Liszt: Piano Concerto no. 1 / Rachmaninov: Rhapsody on a Theme by Paganini / Ravel: Piano Concerto in G major",
+              "category": "compilation",
+              "firstReleaseDate": "1992",
+              "credits": [
+                {
+                  "name": "Liszt",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "2cd475bb-1abd-40c4-9904-6d4b691c752c",
+                    "name": "Franz Liszt"
+                  }
+                },
+                {
+                  "name": "Rachmaninov",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "44b16e44-da77-4580-b851-0d765904573e",
+                    "name": "Сергей Васильевич Рахманинов"
+                  }
+                },
+                {
+                  "name": "Ravel",
+                  "joinphrase": "; ",
+                  "artist": {
+                    "id": "6fdd3b3e-1ea6-4da9-8d6f-8f8de01c133a",
+                    "name": "Maurice Ravel"
+                  }
+                },
+                {
+                  "name": "André Watts",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "558bb0fe-6cff-4ab5-926d-1d699e141829",
+                    "name": "André Watts"
+                  }
+                },
+                {
+                  "name": "Gary Graffman",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "97816210-708e-4792-ac23-34d10c671e5d",
+                    "name": "Gary Graffman"
+                  }
+                },
+                {
+                  "name": "Leonard Bernstein",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "fa39bc82-9b27-4bbb-9425-d719a72e09ac",
+                    "name": "Leonard Bernstein"
+                  }
+                },
+                {
+                  "name": "Columbia Symphony Orchestra",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "4443207a-5293-44bc-9af0-1fdcca83fee4",
+                    "name": "Columbia Symphony Orchestra"
+                  }
+                },
+                {
+                  "name": "New York Philharmonic",
+                  "artist": {
+                    "id": "7cdb68bc-c4f1-4a92-9bd2-739641c5eff0",
+                    "name": "New York Philharmonic"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Schoenberg: The Four String Quartets",
+          "artist": "Kolisch String Quartet",
+          "searchAs": {
+            "artist": "Kolisch Quartet"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "So",
+          "artist": "Peter Gabriel",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "be3cc3e7-bdb0-3c13-a60b-a985b30eb603",
+            "seed": {
+              "kind": "release_group",
+              "title": "So",
+              "category": "studio",
+              "firstReleaseDate": "1986-05-19",
+              "credits": [
+                {
+                  "name": "Peter Gabriel",
+                  "artist": {
+                    "id": "8e66ea2b-b57b-47d9-8df0-df4630aeb8e5",
+                    "name": "Peter Gabriel"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Ten",
+          "artist": "Pearl Jam",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "cea5d18a-1924-3cda-bebc-38933834b25d",
+            "seed": {
+              "kind": "release_group",
+              "title": "Ten",
+              "category": "studio",
+              "firstReleaseDate": "1991-08-27",
+              "credits": [
+                {
+                  "name": "Pearl Jam",
+                  "artist": {
+                    "id": "83b9cbe7-9857-49e2-ab8e-b57b01038103",
+                    "name": "Pearl Jam"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Texas Flood",
+          "artist": "Stevie Ray Vaughan and Double Trouble",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ee31030f-a226-309b-b29c-3b51deb771df",
+            "seed": {
+              "kind": "release_group",
+              "title": "Texas Flood",
+              "category": "studio",
+              "firstReleaseDate": "1983-06-13",
+              "credits": [
+                {
+                  "name": "Stevie Ray Vaughan and Double Trouble",
+                  "artist": {
+                    "id": "e3c8b0c8-3fa0-464b-b1f5-119cb52d3817",
+                    "name": "Stevie Ray Vaughan and Double Trouble"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "The Cars",
+          "artist": "The Cars",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "36172f3d-9b55-37f1-9fd4-0cbd2f3af0ce",
+            "seed": {
+              "kind": "release_group",
+              "title": "The Cars",
+              "category": "studio",
+              "firstReleaseDate": "1978-06-06",
+              "credits": [
+                {
+                  "name": "The Cars",
+                  "artist": {
+                    "id": "092b603f-eb4c-4958-b10e-02420de5885b",
+                    "name": "The Cars"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "The Low End Theory",
+          "artist": "A Tribe Called Quest",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c3733436-fcba-3c08-b082-d548df5c5139",
+            "seed": {
+              "kind": "release_group",
+              "title": "The Low End Theory",
+              "category": "studio",
+              "firstReleaseDate": "1991-09-24",
+              "credits": [
+                {
+                  "name": "A Tribe Called Quest",
+                  "artist": {
+                    "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                    "name": "A Tribe Called Quest"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Trio",
+          "artist": "Dolly Parton, Linda Ronstadt, Emmylou Harris",
+          "searchAs": {
+            "artist": "Dolly Parton"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "7703474b-4953-385d-89de-66c1e0f0b156",
+            "seed": {
+              "kind": "release_group",
+              "title": "Trio",
+              "category": "studio",
+              "firstReleaseDate": "1987-03-02",
+              "credits": [
+                {
+                  "name": "Dolly Parton",
+                  "joinphrase": ", ",
+                  "artist": {
+                    "id": "1d543e07-d0d2-4834-a8db-d65c50c2a856",
+                    "name": "Dolly Parton"
+                  }
+                },
+                {
+                  "name": "Linda Ronstadt",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "498f2581-be21-4eef-8756-fbb89d79b1c0",
+                    "name": "Linda Ronstadt"
+                  }
+                },
+                {
+                  "name": "Emmylou Harris",
+                  "artist": {
+                    "id": "35ef61ca-43db-4772-ba27-0489e9ebcb69",
+                    "name": "Emmylou Harris"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "songs",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Au Clair de la Lune",
+          "artist": "Édouard-Léon Scott de Martinville",
+          "anchor": {
+            "title": "Au Clair de la Lune",
+            "artist": "Édouard-Léon Scott de Martinville"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "cdf319af-c0bd-4651-88a3-f45d04adcd92",
+            "seed": {
+              "kind": "recording",
+              "title": "Au clair de la lune",
+              "durationSec": 20,
+              "credits": [
+                {
+                  "name": "Édouard‐Léon Scott de Martinville",
+                  "artist": {
+                    "id": "58d32f3c-2eb9-401a-8e5e-9663b25e52a1",
+                    "name": "Édouard‐Léon Scott de Martinville"
+                  }
+                }
+              ],
+              "anchorMbid": "e91c2ea0-0d88-4d7a-ae0f-5c65183cbfe7",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Au clair de la lune",
+                "category": "single_ep",
+                "firstReleaseDate": "2009-08-22",
+                "credits": [
+                  {
+                    "name": "Édouard‐Léon Scott de Martinville",
+                    "artist": {
+                      "id": "58d32f3c-2eb9-401a-8e5e-9663b25e52a1",
+                      "name": "Édouard‐Léon Scott de Martinville"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Clean Up Woman",
+          "artist": "Betty Wright",
+          "anchor": {
+            "title": "Clean Up Woman",
+            "artist": "Betty Wright"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "79d9ba2a-ba1f-42d8-a430-e2206c6b5af0",
+            "seed": {
+              "kind": "recording",
+              "title": "Clean Up Woman",
+              "durationSec": 167,
+              "credits": [
+                {
+                  "name": "Betty Wright",
+                  "artist": {
+                    "id": "eed5f159-4858-4464-93c3-fc2da3796446",
+                    "name": "Betty Wright"
+                  }
+                }
+              ],
+              "anchorMbid": "7f4030e1-a5a7-46c0-a65e-d781cf2844fc",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Clean Up Woman",
+                "category": "single_ep",
+                "firstReleaseDate": "1971",
+                "credits": [
+                  {
+                    "name": "Betty Wright",
+                    "artist": {
+                      "id": "eed5f159-4858-4464-93c3-fc2da3796446",
+                      "name": "Betty Wright"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Copenhagen",
+          "artist": "Fletcher Henderson and His Orchestra",
+          "anchor": {
+            "title": "Copenhagen",
+            "artist": "Fletcher Henderson and His Orchestra"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "26f07034-f40e-4f53-ad7a-b4533fd927fc",
+            "seed": {
+              "kind": "recording",
+              "title": "Copenhagen",
+              "durationSec": null,
+              "credits": [
+                {
+                  "name": "Fletcher Henderson and His Orchestra",
+                  "artist": {
+                    "id": "6e6170a4-31c6-4cae-a3f9-f0db3b9f5892",
+                    "name": "Fletcher Henderson and His Orchestra"
+                  }
+                }
+              ],
+              "anchorMbid": "ab5ca12c-9887-4f1a-90d1-2b0ffbb697e5",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Words / Copenhagen",
+                "category": "single_ep",
+                "firstReleaseDate": "1925",
+                "credits": [
+                  {
+                    "name": "Fletcher Henderson and His Orchestra",
+                    "artist": {
+                      "id": "6e6170a4-31c6-4cae-a3f9-f0db3b9f5892",
+                      "name": "Fletcher Henderson and His Orchestra"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Don't Stop Believin'",
+          "artist": "Journey",
+          "anchor": {
+            "title": "Don't Stop Believin'",
+            "artist": "Journey"
+          },
+          "won": true,
+          "resolved": {
+            "status": "manual",
+            "mbid": "93036a0a-0513-4d27-b384-4a5d9b674a37",
+            "seed": {
+              "kind": "recording",
+              "title": "Don’t Stop Believin’",
+              "durationSec": 250,
+              "credits": [
+                {
+                  "name": "Journey",
+                  "artist": {
+                    "id": "abd506e1-6f2b-4d6f-b937-92c267f6f88b",
+                    "name": "Journey"
+                  }
+                }
+              ],
+              "anchorMbid": "7f6c1bdf-5218-44ad-87f5-82a74354c95c",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Don’t Stop Believin’",
+                "category": "single_ep",
+                "firstReleaseDate": "1981-10",
+                "credits": [
+                  {
+                    "name": "Journey",
+                    "artist": {
+                      "id": "abd506e1-6f2b-4d6f-b937-92c267f6f88b",
+                      "name": "Journey"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Freight Train",
+          "artist": "Elizabeth Cotten",
+          "anchor": {
+            "title": "Folksongs and Instrumentals With Guitar",
+            "artist": "Elizabeth Cotten"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "41ce7f45-88e1-4f5b-a5fc-fd78d9e2a810",
+            "seed": {
+              "kind": "recording",
+              "title": "Freight Train",
+              "durationSec": 166,
+              "credits": [
+                {
+                  "name": "Elizabeth Cotten",
+                  "artist": {
+                    "id": "907f53c2-f7d1-406a-8071-30262ba472ca",
+                    "name": "Elizabeth Cotten"
+                  }
+                }
+              ],
+              "anchorMbid": "3d360ea7-e0f5-420e-af07-7400dee2aace",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Folksongs and Instrumentals With Guitar",
+                "category": "studio",
+                "firstReleaseDate": "1958",
+                "credits": [
+                  {
+                    "name": "Elizabeth Cotten",
+                    "artist": {
+                      "id": "907f53c2-f7d1-406a-8071-30262ba472ca",
+                      "name": "Elizabeth Cotten"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Solitude",
+          "artist": "Billie Holiday",
+          "anchor": {
+            "title": "Solitude",
+            "artist": "Billie Holiday"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e5e8d716-f09d-4378-87da-dc8ce85f7a7d",
+            "seed": {
+              "kind": "recording",
+              "title": "Solitude",
+              "durationSec": 211,
+              "credits": [
+                {
+                  "name": "Billie Holiday",
+                  "artist": {
+                    "id": "d59c4cda-11d9-48db-8bfe-b557ee602aed",
+                    "name": "Billie Holiday"
+                  }
+                }
+              ],
+              "anchorMbid": "ecfcf28e-ec0e-3f88-906b-5544d898521d",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Solitude",
+                "category": "studio",
+                "firstReleaseDate": "1952-03-26",
+                "credits": [
+                  {
+                    "name": "Billie Holiday",
+                    "artist": {
+                      "id": "d59c4cda-11d9-48db-8bfe-b557ee602aed",
+                      "name": "Billie Holiday"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "The Gambler",
+          "artist": "Kenny Rogers",
+          "anchor": {
+            "title": "The Gambler",
+            "artist": "Kenny Rogers"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "959ad463-e973-4afa-b2d2-db06392d09d1",
+            "seed": {
+              "kind": "recording",
+              "title": "The Gambler",
+              "durationSec": 211,
+              "credits": [
+                {
+                  "name": "Kenny Rogers",
+                  "artist": {
+                    "id": "c3d14b41-a48d-488f-bfed-ce0597bb0b1f",
+                    "name": "Kenny Rogers"
+                  }
+                }
+              ],
+              "anchorMbid": "8c318de7-c3f5-37cd-9906-5fc38d238c40",
+              "anchor": {
+                "kind": "release_group",
+                "title": "The Gambler",
+                "category": "studio",
+                "firstReleaseDate": "1978",
+                "credits": [
+                  {
+                    "name": "Kenny Rogers",
+                    "artist": {
+                      "id": "c3d14b41-a48d-488f-bfed-ce0597bb0b1f",
+                      "name": "Kenny Rogers"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Time Is on My Side",
+          "artist": "Irma Thomas",
+          "anchor": {
+            "title": "Time Is on My Side",
+            "artist": "Irma Thomas"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "f33cdd57-1808-432a-8422-efabb27455ac",
+            "seed": {
+              "kind": "recording",
+              "title": "Time Is on My Side",
+              "durationSec": 172,
+              "credits": [
+                {
+                  "name": "Irma Thomas",
+                  "artist": {
+                    "id": "710c7ffa-977e-4431-9f00-c8d4eddf6808",
+                    "name": "Irma Thomas"
+                  }
+                }
+              ],
+              "anchorMbid": "e4611a95-aae7-356f-937f-f0b70c8b4ae9",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Time Is on My Side",
+                "category": "studio",
+                "firstReleaseDate": "1983",
+                "credits": [
+                  {
+                    "name": "Irma Thomas",
+                    "artist": {
+                      "id": "710c7ffa-977e-4431-9f00-c8d4eddf6808",
+                      "name": "Irma Thomas"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "We Are the World",
+          "artist": "USA for Africa",
+          "anchor": {
+            "title": "We Are the World",
+            "artist": "USA for Africa"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "11f5ba51-e8c1-424c-a977-2987134fee5a",
+            "seed": {
+              "kind": "recording",
+              "title": "We Are the World",
+              "durationSec": 382,
+              "credits": [
+                {
+                  "name": "USA for Africa",
+                  "artist": {
+                    "id": "45e3c90f-2de6-4452-99b3-8dbf7a3cf6df",
+                    "name": "USA for Africa"
+                  }
+                }
+              ],
+              "anchorMbid": "85480bb3-40dc-34d8-b106-0a9470f13a73",
+              "anchor": {
+                "kind": "release_group",
+                "title": "We Are the World",
+                "category": "single_ep",
+                "firstReleaseDate": "1985-03-07",
+                "credits": [
+                  {
+                    "name": "USA for Africa",
+                    "artist": {
+                      "id": "45e3c90f-2de6-4452-99b3-8dbf7a3cf6df",
+                      "name": "USA for Africa"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "When the Levee Breaks",
+          "artist": "Kansas Joe and Memphis Minnie",
+          "anchor": {
+            "title": "When the Levee Breaks",
+            "artist": "Kansas Joe and Memphis Minnie"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "f8bced80-a83d-4026-93bc-35c24e533c45",
+            "seed": {
+              "kind": "recording",
+              "title": "When the Levee Breaks",
+              "durationSec": 191,
+              "credits": [
+                {
+                  "name": "Memphis Minnie",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "ff748426-8873-4725-bdc7-c2b18b510d41",
+                    "name": "Memphis Minnie"
+                  }
+                },
+                {
+                  "name": "Kansas Joe",
+                  "artist": {
+                    "id": "302886da-969c-44da-b6c5-3f4eea07ea49",
+                    "name": "Kansas Joe McCoy"
+                  }
+                }
+              ],
+              "anchorMbid": "3ef2a562-a113-43da-8ac1-50abf8820c18",
+              "anchor": {
+                "kind": "release_group",
+                "title": "When the levee breaks",
+                "category": "single_ep",
+                "firstReleaseDate": "1929",
+                "credits": [
+                  {
+                    "name": "Kansas Joe",
+                    "joinphrase": " and ",
+                    "artist": {
+                      "id": "302886da-969c-44da-b6c5-3f4eea07ea49",
+                      "name": "Kansas Joe McCoy"
+                    }
+                  },
+                  {
+                    "name": "Memphis Minnie",
+                    "artist": {
+                      "id": "ff748426-8873-4725-bdc7-c2b18b510d41",
+                      "name": "Memphis Minnie"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Wreck of the Old 97",
+          "artist": "Vernon Dalhart",
+          "anchor": {
+            "title": "Wreck of the Old 97",
+            "artist": "Vernon Dalhart"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "118a7dcc-aeb5-4a12-b537-20e536807908",
+            "seed": {
+              "kind": "recording",
+              "title": "Wreck of the Old 97",
+              "durationSec": null,
+              "credits": [
+                {
+                  "name": "Vernon Dalhart",
+                  "artist": {
+                    "id": "bcbbc073-dc37-43c1-8eb8-9ee2c40a0620",
+                    "name": "Vernon Dalhart"
+                  }
+                }
+              ],
+              "anchorMbid": "c6cd5995-ce36-3601-83da-8d456c189d19",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Wreck of the Old 97 / The Prisoner's Song",
+                "category": "single_ep",
+                "firstReleaseDate": "1924-11",
+                "credits": [
+                  {
+                    "name": "Vernon Dalhart",
+                    "artist": {
+                      "id": "bcbbc073-dc37-43c1-8eb8-9ee2c40a0620",
+                      "name": "Vernon Dalhart"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Y.M.C.A.",
+          "artist": "Village People",
+          "anchor": {
+            "title": "Y.M.C.A.",
+            "artist": "Village People"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e86cc040-5acb-4845-96d9-de9364f0864b",
+            "seed": {
+              "kind": "recording",
+              "title": "Y.M.C.A.",
+              "durationSec": 412,
+              "credits": [
+                {
+                  "name": "Village People",
+                  "artist": {
+                    "id": "f19d3d49-be22-4ca6-9903-64d86984fbf2",
+                    "name": "Village People"
+                  }
+                }
+              ],
+              "anchorMbid": "0cbcc50a-7009-324a-b321-30316b29f75c",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Y.M.C.A.",
+                "category": "single_ep",
+                "firstReleaseDate": "1978",
+                "credits": [
+                  {
+                    "name": "Village People",
+                    "artist": {
+                      "id": "f19d3d49-be22-4ca6-9903-64d86984fbf2",
+                      "name": "Village People"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
