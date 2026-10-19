@@ -72,7 +72,7 @@
       "newReleases": "New releases",
       "upcoming": "Upcoming",
       "awards": "Awards",
-      "hallOfFame": "Hall of Fame",
+      "hallOfFame": "{count, plural, one {Hall of Fame} other {Halls of Fame}}",
       "topRated": "Top rated",
       "decades": "Decades"
     },

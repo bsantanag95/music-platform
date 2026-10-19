@@ -1,0 +1,895 @@
+{
+  "award": "national-recording-registry",
+  "year": 2025,
+  "heldOn": "2025-04-09",
+  "sourceUrl": "https://newsroom.loc.gov/news/national-recording-registry-inducts-sounds-of-elton-john--chicago--broadway-s--hamilton---mary-j.-bl/s/986b2312-27dd-4b66-bd41-3113e0cb2e57",
+  "categories": [
+    {
+      "key": "albums",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Hello Dummy!",
+          "artist": "Don Rickles",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a9316b54-78ae-315d-a3ba-cf5c1d8f01cf",
+            "seed": {
+              "kind": "release_group",
+              "title": "Hello Dummy!",
+              "category": "live_other",
+              "firstReleaseDate": "1968",
+              "credits": [
+                {
+                  "name": "Don Rickles",
+                  "artist": {
+                    "id": "56859f40-9dd3-43c7-a7cf-863ff9a87e5b",
+                    "name": "Don Rickles"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Chicago Transit Authority",
+          "artist": "Chicago",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1eeb1e2c-ae11-3b2e-80fc-22233f0ca648",
+            "seed": {
+              "kind": "release_group",
+              "title": "Chicago Transit Authority",
+              "category": "studio",
+              "firstReleaseDate": "1969",
+              "credits": [
+                {
+                  "name": "Chicago Transit Authority",
+                  "artist": {
+                    "id": "3f5be744-e867-42fb-8913-5fd69e4099b5",
+                    "name": "Chicago"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Bitches Brew",
+          "artist": "Miles Davis",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a9e30282-5b37-3f92-b897-b9659a1a312b",
+            "seed": {
+              "kind": "release_group",
+              "title": "Bitches Brew",
+              "category": "studio",
+              "firstReleaseDate": "1970",
+              "credits": [
+                {
+                  "name": "Miles Davis",
+                  "artist": {
+                    "id": "561d854a-6a28-4aa7-8c99-323e6ce46c2a",
+                    "name": "Miles Davis"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Goodbye Yellow Brick Road",
+          "artist": "Elton John",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "80df0f1b-4ce7-348a-aa1b-0d31ebff111a",
+            "seed": {
+              "kind": "release_group",
+              "title": "Goodbye Yellow Brick Road",
+              "category": "studio",
+              "firstReleaseDate": "1973-10-05",
+              "credits": [
+                {
+                  "name": "Elton John",
+                  "artist": {
+                    "id": "b83bc61f-8451-4a5d-8b8e-7e9ed295e822",
+                    "name": "Elton John"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "I've Got the Music in Me",
+          "artist": "Thelma Houston & Pressure Cooker",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2ebcd1a4-6851-382f-a974-a42115ea00a1",
+            "seed": {
+              "kind": "release_group",
+              "title": "I’ve Got the Music in Me",
+              "category": "studio",
+              "firstReleaseDate": "1975",
+              "credits": [
+                {
+                  "name": "Thelma Houston",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "cb327970-cf95-4f2d-91db-b1b787aa51f9",
+                    "name": "Thelma Houston"
+                  }
+                },
+                {
+                  "name": "Pressure Cooker",
+                  "artist": {
+                    "id": "5aa10524-f33f-4c55-ba4b-5265017edccf",
+                    "name": "Pressure Cooker"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "The Köln Concert",
+          "artist": "Keith Jarrett",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "516d4629-7bf3-3ac3-907a-ed9a022db840",
+            "seed": {
+              "kind": "release_group",
+              "title": "The Köln Concert",
+              "category": "live_other",
+              "firstReleaseDate": "1975-11-30",
+              "credits": [
+                {
+                  "name": "Keith Jarrett",
+                  "artist": {
+                    "id": "061c4920-3ea6-4835-98f6-02f3b82f5e3a",
+                    "name": "Keith Jarrett"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Fly Like an Eagle",
+          "artist": "Steve Miller Band",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "03cf0b3d-48f1-3b04-a3be-5e4d5b7dcae2",
+            "seed": {
+              "kind": "release_group",
+              "title": "Fly Like an Eagle",
+              "category": "studio",
+              "firstReleaseDate": "1976-01-01",
+              "credits": [
+                {
+                  "name": "Steve Miller Band",
+                  "artist": {
+                    "id": "e57f0cac-4f56-473c-8d7e-d93f753fd586",
+                    "name": "Steve Miller Band"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Tracy Chapman",
+          "artist": "Tracy Chapman",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a738bdf1-f610-30aa-9ae7-9a4f90d6f2d7",
+            "seed": {
+              "kind": "release_group",
+              "title": "Tracy Chapman",
+              "category": "studio",
+              "firstReleaseDate": "1988-04-05",
+              "credits": [
+                {
+                  "name": "Tracy Chapman",
+                  "artist": {
+                    "id": "1129817c-488a-4096-80c1-77fc1b107c93",
+                    "name": "Tracy Chapman"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "My Life",
+          "artist": "Mary J. Blige",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "49acb129-7958-3132-988c-bb85955b1c3c",
+            "seed": {
+              "kind": "release_group",
+              "title": "My Life",
+              "category": "studio",
+              "firstReleaseDate": "1994-11-29",
+              "credits": [
+                {
+                  "name": "Mary J. Blige",
+                  "artist": {
+                    "id": "db76c5ca-d555-4f09-b1db-baa1b713d875",
+                    "name": "Mary J. Blige"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Our American Journey",
+          "artist": "Chanticleer",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "316c41bf-257d-35e9-9a2e-5c3895149772",
+            "seed": {
+              "kind": "release_group",
+              "title": "Our American Journey",
+              "category": "studio",
+              "firstReleaseDate": "2002",
+              "credits": [
+                {
+                  "name": "Chanticleer",
+                  "artist": {
+                    "id": "bf59079f-f03a-461b-a85b-72a7e12e014e",
+                    "name": "Chanticleer"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Back to Black",
+          "artist": "Amy Winehouse",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6eac2e57-ee50-36f8-b0c4-c4c847a2c098",
+            "seed": {
+              "kind": "release_group",
+              "title": "Back to Black",
+              "category": "studio",
+              "firstReleaseDate": "2006-10-30",
+              "credits": [
+                {
+                  "name": "Amy Winehouse",
+                  "artist": {
+                    "id": "dfe9a7c4-8cf2-47f4-9dcb-d233c2b86ec3",
+                    "name": "Amy Winehouse"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Minecraft: Volume Alpha",
+          "artist": "Daniel Rosenfeld",
+          "searchAs": {
+            "title": "Minecraft - Volume Alpha",
+            "artist": "C418"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "7f4856cd-f078-4c0d-aef7-48474d8fa890",
+            "seed": {
+              "kind": "release_group",
+              "title": "Minecraft – Volume Alpha",
+              "category": "studio",
+              "firstReleaseDate": "2011-03-04",
+              "credits": [
+                {
+                  "name": "C418",
+                  "artist": {
+                    "id": "fac55e3c-d459-45ed-9f9f-f5078d3b3423",
+                    "name": "C418",
+                    "sort-name": "C418",
+                    "aliases": [
+                      {
+                        "sort-name": "Rosfeldas, Danielis Markas",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Danielis Markas Rosfeldas",
+                        "locale": "lt",
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Rosenfeld, Daniel Mark",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Daniel Mark Rosenfeld",
+                        "locale": "en",
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Rosenfeld, Daniel Mark",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Daniel Mark Rosenfeld",
+                        "locale": "de",
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "D ROSENFELD",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "D ROSENFELD",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "D. R.",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "D. R.",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Rosenfeld-C418, Daniel",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Daniel Rosenfeld-C418",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "ROSENFELD D",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "ROSENFELD D",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "DANIEL ROSENFELD",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "DANIEL ROSENFELD",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Rosenfeld, Daniel",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Daniel Rosenfeld",
+                        "locale": "de",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "D. M. R.",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "D. M. R.",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "D. Rosenfeld",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "D. Rosenfeld",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Daniel R.",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Daniel R.",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Daniel M. Rosenfeld",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Daniel M. Rosenfeld",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Daniel M. R.",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Daniel M. R.",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Rosfeldas, Danielis",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Danielis Rosfeldas",
+                        "locale": "lt",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Hamilton",
+          "artist": "Original Broadway Cast",
+          "searchAs": {
+            "title": "Hamilton",
+            "artist": "Lin-Manuel Miranda"
+          },
+          "won": true,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": [
+              {
+                "mbid": "03172c86-07a3-4401-8d63-64cbdb8a9314",
+                "label": "Hamilton: Washington's Story — Lin-Manuel Miranda (2025-08-08)",
+                "score": 100,
+                "seed": {
+                  "kind": "release_group",
+                  "title": "Hamilton: Washington's Story",
+                  "category": "single_ep",
+                  "firstReleaseDate": "2025-08-08",
+                  "credits": [
+                    {
+                      "name": "Lin-Manuel Miranda",
+                      "artist": {
+                        "id": "925c7673-0e85-410f-b7e4-d9705a7aa619",
+                        "name": "Lin‐Manuel Miranda"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "mbid": "2e9eec95-d141-4388-8626-721d534619b1",
+                "label": "Hamilton: Angelica's Story — Lin-Manuel Miranda (2025-07-25)",
+                "score": 100,
+                "seed": {
+                  "kind": "release_group",
+                  "title": "Hamilton: Angelica's Story",
+                  "category": "single_ep",
+                  "firstReleaseDate": "2025-07-25",
+                  "credits": [
+                    {
+                      "name": "Lin-Manuel Miranda",
+                      "artist": {
+                        "id": "925c7673-0e85-410f-b7e4-d9705a7aa619",
+                        "name": "Lin‐Manuel Miranda"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "mbid": "31c8fe87-bbfc-423c-b0f5-b5a05f16f5e5",
+                "label": "Hamilton: Burr's Story — Lin-Manuel Miranda (2025-06-23)",
+                "score": 100,
+                "seed": {
+                  "kind": "release_group",
+                  "title": "Hamilton: Burr's Story",
+                  "category": "single_ep",
+                  "firstReleaseDate": "2025-06-23",
+                  "credits": [
+                    {
+                      "name": "Lin-Manuel Miranda",
+                      "artist": {
+                        "id": "925c7673-0e85-410f-b7e4-d9705a7aa619",
+                        "name": "Lin‐Manuel Miranda"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "mbid": "f937f972-cceb-478a-8911-2672eb3dd561",
+                "label": "Hamilton: Eliza's Story — Lin-Manuel Miranda (2025-06-09)",
+                "score": 100,
+                "seed": {
+                  "kind": "release_group",
+                  "title": "Hamilton: Eliza's Story",
+                  "category": "single_ep",
+                  "firstReleaseDate": "2025-06-09",
+                  "credits": [
+                    {
+                      "name": "Lin-Manuel Miranda",
+                      "artist": {
+                        "id": "925c7673-0e85-410f-b7e4-d9705a7aa619",
+                        "name": "Lin‐Manuel Miranda"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "mbid": "a8596415-4ed5-4806-b72c-34817c1a8995",
+                "label": "Hamilton: The German EP — Lin‐Manuel Miranda (2023-05-12)",
+                "score": 96,
+                "seed": {
+                  "kind": "release_group",
+                  "title": "Hamilton: The German EP",
+                  "category": "single_ep",
+                  "firstReleaseDate": "2023-05-12",
+                  "credits": [
+                    {
+                      "name": "Lin‐Manuel Miranda",
+                      "artist": {
+                        "id": "925c7673-0e85-410f-b7e4-d9705a7aa619",
+                        "name": "Lin‐Manuel Miranda"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "key": "songs",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Aloha 'Oe",
+          "artist": "Hawaiian Quintette",
+          "anchor": {
+            "title": "Aloha 'Oe",
+            "artist": "Hawaiian Quintette"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Sweet Georgia Brown",
+          "artist": "Brother Bones & His Shadows",
+          "anchor": {
+            "title": "Sweet Georgia Brown",
+            "artist": "Brother Bones & His Shadows"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Happy Trails",
+          "artist": "Roy Rogers and Dale Evans",
+          "anchor": {
+            "title": "Happy Trails",
+            "artist": "Roy Rogers and Dale Evans"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "66d15a21-0cf9-44ba-955c-9840943f2f24",
+            "seed": {
+              "kind": "recording",
+              "title": "Happy Trails",
+              "durationSec": null,
+              "credits": [
+                {
+                  "name": "Roy Rogers",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "5a2e5b57-b8d6-46d3-9b9b-1c7c575102ba",
+                    "name": "Roy Rogers"
+                  }
+                },
+                {
+                  "name": "Dale Evans",
+                  "artist": {
+                    "id": "830398a8-6124-48de-8305-0e162e668387",
+                    "name": "Dale Evans"
+                  }
+                }
+              ],
+              "anchorMbid": "6dfb5dcd-8a74-3a5e-a5e2-f6184b1cf22a",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Happy Trails / California Rose",
+                "category": "single_ep",
+                "firstReleaseDate": "1952",
+                "credits": [
+                  {
+                    "name": "Roy Rogers",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "5a2e5b57-b8d6-46d3-9b9b-1c7c575102ba",
+                      "name": "Roy Rogers"
+                    }
+                  },
+                  {
+                    "name": "Dale Evans",
+                    "artist": {
+                      "id": "830398a8-6124-48de-8305-0e162e668387",
+                      "name": "Dale Evans"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Kiss an Angel Good Mornin'",
+          "artist": "Charley Pride",
+          "anchor": {
+            "title": "Kiss an Angel Good Mornin'",
+            "artist": "Charley Pride"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "fb4a1507-5882-4757-82b5-9385683eb4ff",
+            "seed": {
+              "kind": "recording",
+              "title": "Kiss an Angel Good Mornin’",
+              "durationSec": 124,
+              "credits": [
+                {
+                  "name": "Charley Pride",
+                  "artist": {
+                    "id": "1c1de177-984d-4208-9177-ca94f8776a39",
+                    "name": "Charley Pride"
+                  }
+                }
+              ],
+              "anchorMbid": "f8285841-3960-4103-bfc5-103acb3fdea6",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Kiss an Angel Good Mornin'",
+                "category": "single_ep",
+                "firstReleaseDate": "1971-10",
+                "credits": [
+                  {
+                    "name": "Charley Pride",
+                    "artist": {
+                      "id": "1c1de177-984d-4208-9177-ca94f8776a39",
+                      "name": "Charley Pride"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "I Am Woman",
+          "artist": "Helen Reddy",
+          "anchor": {
+            "title": "I Am Woman",
+            "artist": "Helen Reddy"
+          },
+          "won": true,
+          "resolved": {
+            "status": "manual",
+            "mbid": "27664f4b-10eb-4dbd-96b0-d092ba99c007",
+            "seed": {
+              "kind": "recording",
+              "title": "I Am Woman",
+              "durationSec": 202,
+              "credits": [
+                {
+                  "name": "Helen Reddy",
+                  "artist": {
+                    "id": "0f4681f3-1d4d-4463-8a68-eaa60d6d6865",
+                    "name": "Helen Reddy"
+                  }
+                }
+              ],
+              "anchorMbid": "b8f5ceb9-9750-3fee-a8a9-9cc0165791b7",
+              "anchor": {
+                "kind": "release_group",
+                "title": "I Am Woman",
+                "category": "studio",
+                "firstReleaseDate": "1972",
+                "credits": [
+                  {
+                    "name": "Helen Reddy",
+                    "artist": {
+                      "id": "0f4681f3-1d4d-4463-8a68-eaa60d6d6865",
+                      "name": "Helen Reddy"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "El Rey",
+          "artist": "Vicente Fernández",
+          "anchor": {
+            "title": "El Rey",
+            "artist": "Vicente Fernández"
+          },
+          "won": true,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Before the Next Teardrop Falls",
+          "artist": "Freddy Fender",
+          "anchor": {
+            "title": "Before the Next Teardrop Falls",
+            "artist": "Freddy Fender"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "be3f71ce-a29b-462d-83d9-e76a512c452d",
+            "seed": {
+              "kind": "recording",
+              "title": "Before the Next Teardrop Falls",
+              "durationSec": 155,
+              "credits": [
+                {
+                  "name": "Freddy Fender",
+                  "artist": {
+                    "id": "e2050382-282f-40e5-8f33-01ee4647ad3f",
+                    "name": "Freddy Fender"
+                  }
+                }
+              ],
+              "anchorMbid": "fbe677a1-bd75-4770-980e-79c63dfc4171",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Before the Next Teardrop Falls",
+                "category": "studio",
+                "firstReleaseDate": "1974",
+                "credits": [
+                  {
+                    "name": "Freddy Fender",
+                    "artist": {
+                      "id": "e2050382-282f-40e5-8f33-01ee4647ad3f",
+                      "name": "Freddy Fender"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "My Heart Will Go On",
+          "artist": "Celine Dion",
+          "anchor": {
+            "title": "My Heart Will Go On",
+            "artist": "Celine Dion"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "0bd43a7b-6e91-448f-8deb-2a46d9a62c21",
+            "seed": {
+              "kind": "recording",
+              "title": "My Heart Will Go On",
+              "durationSec": 280,
+              "credits": [
+                {
+                  "name": "Céline Dion",
+                  "artist": {
+                    "id": "847e8a0c-cc20-4213-9e16-975515c2a926",
+                    "name": "Céline Dion"
+                  }
+                }
+              ],
+              "anchorMbid": "dbfc2927-2c4f-415b-9903-79a5b79c906a",
+              "anchor": {
+                "kind": "release_group",
+                "title": "My Heart Will Go On",
+                "category": "single_ep",
+                "firstReleaseDate": "1997",
+                "credits": [
+                  {
+                    "name": "Céline Dion",
+                    "artist": {
+                      "id": "847e8a0c-cc20-4213-9e16-975515c2a926",
+                      "name": "Céline Dion"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "other",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Radio Broadcast of Game 7 of the 1960 World Series",
+          "artist": "Chuck Thompson",
+          "won": true,
+          "resolved": {
+            "status": "not_found"
+          }
+        },
+        {
+          "title": "Harry Urata Field Recordings",
+          "artist": "Harry Urata",
+          "won": true,
+          "resolved": {
+            "status": "not_found"
+          }
+        },
+        {
+          "title": "Nimrod Workman Collection",
+          "artist": "Nimrod Workman",
+          "won": true,
+          "resolved": {
+            "status": "not_found"
+          }
+        },
+        {
+          "title": "Microsoft Windows Reboot Chime",
+          "artist": "Brian Eno",
+          "won": true,
+          "resolved": {
+            "status": "not_found"
+          }
+        }
+      ]
+    }
+  ]
+}

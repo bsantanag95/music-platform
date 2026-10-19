@@ -1,0 +1,843 @@
+{
+  "award": "national-recording-registry",
+  "year": 2026,
+  "heldOn": "2026-05-14",
+  "sourceUrl": "https://newsroom.loc.gov/news/national-recording-registry-inducts-sounds-of-taylor-swift--beyonc---the-go-go-s--vince-gill--weezer/s/bc258688-e655-4ffb-9f91-f32b94956f36",
+  "categories": [
+    {
+      "key": "albums",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "The Blues and the Abstract Truth",
+          "artist": "Oliver Nelson",
+          "won": true,
+          "resolved": {
+            "status": "manual",
+            "mbid": "8bbec9cc-ba01-4a8e-b9cc-4843654f0ac2",
+            "seed": {
+              "kind": "release_group",
+              "title": "The Blues and the Abstract Truth",
+              "category": "studio",
+              "firstReleaseDate": "1961-08",
+              "credits": [
+                {
+                  "name": "Oliver Nelson",
+                  "artist": {
+                    "id": "4704f86b-33b0-458a-9460-8f9b52869d74",
+                    "name": "Oliver Nelson"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Modern Sounds in Country and Western Music",
+          "artist": "Ray Charles",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "38671d62-32bd-399d-abbd-0f685c2fd4a3",
+            "seed": {
+              "kind": "release_group",
+              "title": "Modern Sounds in Country and Western Music",
+              "category": "studio",
+              "firstReleaseDate": "1962-04",
+              "credits": [
+                {
+                  "name": "Ray Charles",
+                  "artist": {
+                    "id": "2ce02909-598b-44ef-a456-151ba0a3bd70",
+                    "name": "Ray Charles"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Chicago (Original Cast Album)",
+          "artist": "Original Broadway Cast",
+          "searchAs": {
+            "title": "Chicago",
+            "artist": "Original Broadway Cast"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Beauty and the Beat",
+          "artist": "The Go-Go's",
+          "searchAs": {
+            "artist": "Go-Go's"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "8b64edc9-1a59-3840-8b12-85a4e19cf48a",
+            "seed": {
+              "kind": "release_group",
+              "title": "Beauty and the Beat",
+              "category": "studio",
+              "firstReleaseDate": "1981-07",
+              "credits": [
+                {
+                  "name": "Go‐Go’s",
+                  "artist": {
+                    "id": "eec163e4-a013-4af0-9641-c5b2df41fff7",
+                    "name": "Go‐Go’s",
+                    "sort-name": "Go‐Go’s",
+                    "disambiguation": "all-female American rock band formed in 1978",
+                    "aliases": [
+                      {
+                        "sort-name": "The GoGos",
+                        "name": "The GoGos",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "The GoGo's",
+                        "name": "The GoGo's",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Go Go's",
+                        "name": "Go Go's",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "The Go Go's",
+                        "name": "The Go Go's",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "GoGo's",
+                        "name": "GoGo's",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "The Go-Gos",
+                        "name": "The Go-Gos",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Texas Flood",
+          "artist": "Stevie Ray Vaughan and Double Trouble",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ee31030f-a226-309b-b29c-3b51deb771df",
+            "seed": {
+              "kind": "release_group",
+              "title": "Texas Flood",
+              "category": "studio",
+              "firstReleaseDate": "1983-06-13",
+              "credits": [
+                {
+                  "name": "Stevie Ray Vaughan and Double Trouble",
+                  "artist": {
+                    "id": "e3c8b0c8-3fa0-464b-b1f5-119cb52d3817",
+                    "name": "Stevie Ray Vaughan and Double Trouble"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Rumor Has It",
+          "artist": "Reba McEntire",
+          "searchAs": {
+            "title": "Rumor Has It"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "The Wheel",
+          "artist": "Rosanne Cash",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "52e8f16b-c369-398c-a77f-60665aed426e",
+            "seed": {
+              "kind": "release_group",
+              "title": "The Wheel",
+              "category": "studio",
+              "firstReleaseDate": "1993-03-09",
+              "credits": [
+                {
+                  "name": "Rosanne Cash",
+                  "artist": {
+                    "id": "5ff6f6eb-31ad-4903-a3c3-4c9283fcde8b",
+                    "name": "Rosanne Cash"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Doom (Soundtrack)",
+          "artist": "Bobby Prince",
+          "searchAs": {
+            "title": "Doom",
+            "artist": "Bobby Prince"
+          },
+          "won": true,
+          "resolved": {
+            "status": "manual",
+            "mbid": "bb6013cb-c505-4e50-8699-26dd33c9dbc7",
+            "seed": {
+              "kind": "release_group",
+              "title": "Doom",
+              "category": "studio",
+              "firstReleaseDate": "1993-12-10",
+              "credits": [
+                {
+                  "name": "Bobby Prince",
+                  "artist": {
+                    "id": "0b27f6b8-96db-465e-a94e-5184f63e8fad",
+                    "name": "Bobby Prince"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Weezer (The Blue Album)",
+          "artist": "Weezer",
+          "searchAs": {
+            "title": "Weezer (Blue Album)"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "1989",
+          "artist": "Taylor Swift",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "4d9ec1c2-58ec-48a4-aa0a-916718adead0",
+            "seed": {
+              "kind": "release_group",
+              "title": "1989",
+              "category": "studio",
+              "firstReleaseDate": "2014-10-24",
+              "credits": [
+                {
+                  "name": "Taylor Swift",
+                  "artist": {
+                    "id": "20244d07-534f-4eff-b4d4-930878889970",
+                    "name": "Taylor Swift"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "songs",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Cocktails for Two",
+          "artist": "Spike Jones and His City Slickers",
+          "anchor": {
+            "title": "Cocktails for Two",
+            "artist": "Spike Jones and His City Slickers"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "54b94943-ea34-40d0-8776-c249a24a4ac8",
+            "seed": {
+              "kind": "recording",
+              "title": "Cocktails for Two",
+              "durationSec": 179,
+              "credits": [
+                {
+                  "name": "Spike Jones and His City Slickers",
+                  "artist": {
+                    "id": "99e5bcc2-1792-472b-880e-7fd415700c35",
+                    "name": "Spike Jones and His City Slickers"
+                  }
+                }
+              ],
+              "anchorMbid": "7c6c1dc3-23a5-4547-bdb9-1fbbaf239230",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Cocktails For Two",
+                "category": "compilation",
+                "firstReleaseDate": "2006",
+                "credits": [
+                  {
+                    "name": "Spike Jones and His City Slickers",
+                    "artist": {
+                      "id": "99e5bcc2-1792-472b-880e-7fd415700c35",
+                      "name": "Spike Jones and His City Slickers"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Mambo No. 5",
+          "artist": "Pérez Prado and His Orchestra",
+          "anchor": {
+            "title": "Mambo No. 5",
+            "artist": "Pérez Prado and His Orchestra"
+          },
+          "searchAs": {
+            "artist": "Pérez Prado"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Teardrops from My Eyes",
+          "artist": "Ruth Brown",
+          "anchor": {
+            "title": "Teardrops from My Eyes",
+            "artist": "Ruth Brown"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e0d9350d-ffd0-4290-abbd-3574f2c30d57",
+            "seed": {
+              "kind": "recording",
+              "title": "Teardrops From My Eyes",
+              "durationSec": 173,
+              "credits": [
+                {
+                  "name": "Ruth Brown",
+                  "joinphrase": " with ",
+                  "artist": {
+                    "id": "948137e5-783e-4386-bd7c-a56c2666d1e2",
+                    "name": "Ruth Brown"
+                  }
+                },
+                {
+                  "name": "Budd Johnson’s Orchestra",
+                  "artist": {
+                    "id": "59aac244-4233-4805-9942-347ee7975959",
+                    "name": "Budd Johnson Orchestra"
+                  }
+                }
+              ],
+              "anchorMbid": "df090eaf-0b70-31f3-abed-6d55b24db3f9",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Teardrops From My Eyes",
+                "category": "compilation",
+                "firstReleaseDate": "2004",
+                "credits": [
+                  {
+                    "name": "Ruth Brown",
+                    "artist": {
+                      "id": "948137e5-783e-4386-bd7c-a56c2666d1e2",
+                      "name": "Ruth Brown"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Fly Me to the Moon (In Other Words)",
+          "artist": "Kaye Ballard",
+          "anchor": {
+            "title": "Fly Me to the Moon (In Other Words)",
+            "artist": "Kaye Ballard"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Put Your Head on My Shoulder",
+          "artist": "Paul Anka",
+          "anchor": {
+            "title": "Put Your Head on My Shoulder",
+            "artist": "Paul Anka"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "52ab51bc-9dbb-4f5c-b745-260b83856ad4",
+            "seed": {
+              "kind": "recording",
+              "title": "Put Your Head on My Shoulder",
+              "durationSec": 287,
+              "credits": [
+                {
+                  "name": "Paul Anka",
+                  "joinphrase": " with ",
+                  "artist": {
+                    "id": "420c6768-0885-415a-bb59-d6a275121125",
+                    "name": "Paul Anka"
+                  }
+                },
+                {
+                  "name": "Olivia Newton‐John",
+                  "artist": {
+                    "id": "10ccb5d8-f9d5-4954-9441-3419b522a214",
+                    "name": "Olivia Newton‐John"
+                  }
+                }
+              ],
+              "anchorMbid": "f5662d03-7d4e-44b7-b1d6-e87c2acd14e5",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Put Your Head on My Shoulder",
+                "category": "single_ep",
+                "firstReleaseDate": "2021-05-07",
+                "credits": [
+                  {
+                    "name": "Paul Anka",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "420c6768-0885-415a-bb59-d6a275121125",
+                      "name": "Paul Anka"
+                    }
+                  },
+                  {
+                    "name": "Olivia Newton‐John",
+                    "artist": {
+                      "id": "10ccb5d8-f9d5-4954-9441-3419b522a214",
+                      "name": "Olivia Newton‐John"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Turn! Turn! Turn! (To Everything There Is a Season)",
+          "artist": "The Byrds",
+          "anchor": {
+            "title": "Turn! Turn! Turn! (To Everything There Is a Season)",
+            "artist": "The Byrds"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "4ca26ca2-a085-46d2-9816-8474184cebfb",
+            "seed": {
+              "kind": "recording",
+              "title": "Turn! Turn! Turn! (To Everything There Is a Season)",
+              "durationSec": 215,
+              "credits": [
+                {
+                  "name": "The Byrds",
+                  "artist": {
+                    "id": "2819834e-4e08-47b0-a2c4-b7672318e8f0",
+                    "name": "The Byrds"
+                  }
+                }
+              ],
+              "anchorMbid": "8203bf59-72a8-4e1a-a6ff-9dcfde5ba604",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Mr. Tambourine Man / Turn, Turn, Turn (To Everything There Is a Season)",
+                "category": "single_ep",
+                "firstReleaseDate": "1978-02",
+                "credits": [
+                  {
+                    "name": "The Byrds",
+                    "artist": {
+                      "id": "2819834e-4e08-47b0-a2c4-b7672318e8f0",
+                      "name": "The Byrds"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Amen, Brother",
+          "artist": "The Winstons",
+          "anchor": {
+            "title": "Amen, Brother",
+            "artist": "The Winstons"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "61ef31c0-d65b-4d76-b9bb-80eec6e107de",
+            "seed": {
+              "kind": "recording",
+              "title": "Amen, Brother",
+              "durationSec": 155,
+              "credits": [
+                {
+                  "name": "The Winstons",
+                  "artist": {
+                    "id": "ae718339-fcd0-412e-9b33-b8d5cc94a030",
+                    "name": "The Winstons"
+                  }
+                }
+              ],
+              "anchorMbid": "3b2ee045-63ac-41cd-a857-5c407b4949c5",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Color Him Father / Amen, Brother",
+                "category": "single_ep",
+                "firstReleaseDate": "1969",
+                "credits": [
+                  {
+                    "name": "The Winstons",
+                    "artist": {
+                      "id": "ae718339-fcd0-412e-9b33-b8d5cc94a030",
+                      "name": "The Winstons"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Feliz Navidad",
+          "artist": "José Feliciano",
+          "anchor": {
+            "title": "Feliz Navidad",
+            "artist": "José Feliciano"
+          },
+          "won": true,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Midnight Train to Georgia",
+          "artist": "Gladys Knight and the Pips",
+          "anchor": {
+            "title": "Midnight Train to Georgia",
+            "artist": "Gladys Knight and the Pips"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "512b6b10-63ea-490b-a08f-aec345e44e58",
+            "seed": {
+              "kind": "recording",
+              "title": "Midnight Train to Georgia",
+              "durationSec": 279,
+              "credits": [
+                {
+                  "name": "Gladys Knight & the Pips",
+                  "artist": {
+                    "id": "ca825016-f7fd-4ccf-a523-6ee36ea88828",
+                    "name": "Gladys Knight & the Pips"
+                  }
+                }
+              ],
+              "anchorMbid": "6210c95f-72b7-457d-9231-2fe4cc7df573",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Midnight Train to Georgia",
+                "category": "single_ep",
+                "firstReleaseDate": "1973-08",
+                "credits": [
+                  {
+                    "name": "Gladys Knight & the Pips",
+                    "artist": {
+                      "id": "ca825016-f7fd-4ccf-a523-6ee36ea88828",
+                      "name": "Gladys Knight & the Pips"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "The Devil Went Down to Georgia",
+          "artist": "The Charlie Daniels Band",
+          "anchor": {
+            "title": "The Devil Went Down to Georgia",
+            "artist": "The Charlie Daniels Band"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "70dda220-34cf-457c-aab9-fc5db5aaa244",
+            "seed": {
+              "kind": "recording",
+              "title": "The Devil Went Down to Georgia",
+              "durationSec": 216,
+              "credits": [
+                {
+                  "name": "The Charlie Daniels Band",
+                  "artist": {
+                    "id": "35885131-9d16-40cb-9289-e18997a8b77c",
+                    "name": "The Charlie Daniels Band"
+                  }
+                }
+              ],
+              "anchorMbid": "d587dea9-fa98-4d99-924e-cfa385885ce4",
+              "anchor": {
+                "kind": "release_group",
+                "title": "The Devil Went Down To Georgia",
+                "category": "single_ep",
+                "firstReleaseDate": "1979-05-21",
+                "credits": [
+                  {
+                    "name": "The Charlie Daniels Band",
+                    "artist": {
+                      "id": "35885131-9d16-40cb-9289-e18997a8b77c",
+                      "name": "The Charlie Daniels Band"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "I Feel for You",
+          "artist": "Chaka Khan",
+          "anchor": {
+            "title": "I Feel for You",
+            "artist": "Chaka Khan"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "bfc4ad4d-2709-4ac1-8ee6-c18822d6c068",
+            "seed": {
+              "kind": "recording",
+              "title": "I Feel for You",
+              "durationSec": 346,
+              "credits": [
+                {
+                  "name": "Chaka Khan",
+                  "artist": {
+                    "id": "900e9144-019d-4043-86cb-ec0e127c39d0",
+                    "name": "Chaka Khan"
+                  }
+                }
+              ],
+              "anchorMbid": "4936c087-239a-38f7-b2d8-54167cb33d94",
+              "anchor": {
+                "kind": "release_group",
+                "title": "I Feel for You",
+                "category": "studio",
+                "firstReleaseDate": "1984-10-01",
+                "credits": [
+                  {
+                    "name": "Chaka Khan",
+                    "artist": {
+                      "id": "900e9144-019d-4043-86cb-ec0e127c39d0",
+                      "name": "Chaka Khan"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Your Love",
+          "artist": "Jamie Principle",
+          "anchor": {
+            "title": "Your Love",
+            "artist": "Jamie Principle"
+          },
+          "won": true,
+          "resolved": {
+            "status": "manual",
+            "mbid": "38bc3870-9be1-4783-8240-f31d39477bbf",
+            "seed": {
+              "kind": "recording",
+              "title": "Your Love (Original Mix)",
+              "durationSec": 405,
+              "credits": [
+                {
+                  "name": "Jamie Principle",
+                  "artist": {
+                    "id": "500df185-4a22-40a5-baf6-bdcabab5ed22",
+                    "name": "Jamie Principle"
+                  }
+                }
+              ],
+              "anchorMbid": "68700a0e-e969-41c1-b038-e7768bdae1f4",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Your Love",
+                "category": "single_ep",
+                "firstReleaseDate": "1986",
+                "credits": [
+                  {
+                    "name": "Jamie Principle",
+                    "artist": {
+                      "id": "500df185-4a22-40a5-baf6-bdcabab5ed22",
+                      "name": "Jamie Principle"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Go Rest High on That Mountain",
+          "artist": "Vince Gill",
+          "anchor": {
+            "title": "When Love Finds You",
+            "artist": "Vince Gill"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e178700b-3768-4346-b5d5-7f08a79338a8",
+            "seed": {
+              "kind": "recording",
+              "title": "Go Rest High on That Mountain",
+              "durationSec": 314,
+              "credits": [
+                {
+                  "name": "Vince Gill",
+                  "artist": {
+                    "id": "ec37ecfe-65b4-49a4-83c7-ee1ccaeec2e3",
+                    "name": "Vince Gill"
+                  }
+                }
+              ],
+              "anchorMbid": "dcaa2403-32ba-3f5a-944a-e9432698a8c0",
+              "anchor": {
+                "kind": "release_group",
+                "title": "When Love Finds You",
+                "category": "studio",
+                "firstReleaseDate": "1994-06-07",
+                "credits": [
+                  {
+                    "name": "Vince Gill",
+                    "artist": {
+                      "id": "ec37ecfe-65b4-49a4-83c7-ee1ccaeec2e3",
+                      "name": "Vince Gill"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Single Ladies (Put a Ring on It)",
+          "artist": "Beyoncé",
+          "anchor": {
+            "title": "Single Ladies (Put a Ring on It)",
+            "artist": "Beyoncé"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "67dc066b-d84e-444c-b250-82917db7281e",
+            "seed": {
+              "kind": "recording",
+              "title": "Single Ladies (Put a Ring on It)",
+              "durationSec": 193,
+              "credits": [
+                {
+                  "name": "Beyoncé",
+                  "artist": {
+                    "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                    "name": "Beyoncé"
+                  }
+                }
+              ],
+              "anchorMbid": "bee7b869-903a-41ae-bc8a-6d5d503b50af",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Single Ladies (Put a Ring on It)",
+                "category": "single_ep",
+                "firstReleaseDate": "2008",
+                "credits": [
+                  {
+                    "name": "Beyoncé",
+                    "artist": {
+                      "id": "859d0860-d480-4efd-970c-c05d5f1776b8",
+                      "name": "Beyoncé"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "other",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "The Fight of the Century: Ali vs. Frazier",
+          "artist": "Muhammad Ali and Joe Frazier",
+          "won": true,
+          "resolved": {
+            "status": "not_found"
+          }
+        }
+      ]
+    }
+  ]
+}

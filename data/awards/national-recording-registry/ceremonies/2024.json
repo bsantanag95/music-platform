@@ -1,0 +1,961 @@
+{
+  "award": "national-recording-registry",
+  "year": 2024,
+  "heldOn": "2024-04-16",
+  "sourceUrl": "https://newsroom.loc.gov/news/national-recording-registry-inducts-sounds-of-abba--blondie--the-cars--the-chicks--juan-gabriel/s/29ee4224-3060-4247-a7a4-7deea2c2f816",
+  "categories": [
+    {
+      "key": "albums",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "The Sidewinder",
+          "artist": "Lee Morgan",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "24d2fedc-7976-3b88-bb91-b49a05f26e55",
+            "seed": {
+              "kind": "release_group",
+              "title": "The Sidewinder",
+              "category": "studio",
+              "firstReleaseDate": "1964-07",
+              "credits": [
+                {
+                  "name": "Lee Morgan",
+                  "artist": {
+                    "id": "a1235272-3650-4ed7-9317-5a55a08701ec",
+                    "name": "Lee Morgan"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Surrealistic Pillow",
+          "artist": "Jefferson Airplane",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e6440cd2-5e8e-367d-bc49-cc042b5ef524",
+            "seed": {
+              "kind": "release_group",
+              "title": "Surrealistic Pillow",
+              "category": "studio",
+              "firstReleaseDate": "1967-02",
+              "credits": [
+                {
+                  "name": "Jefferson Airplane",
+                  "artist": {
+                    "id": "39c2a93d-9afa-4a22-9bba-c087ab056e1c",
+                    "name": "Jefferson Airplane"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "This Is a Recording",
+          "artist": "Lily Tomlin",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d761cb87-090d-3592-b9b0-eb5089dc5529",
+            "seed": {
+              "kind": "release_group",
+              "title": "This Is a Recording",
+              "category": "live_other",
+              "firstReleaseDate": "1971",
+              "credits": [
+                {
+                  "name": "Lily Tomlin",
+                  "artist": {
+                    "id": "9f3abc35-a308-430d-833a-cb793eeec95e",
+                    "name": "Lily Tomlin"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "J.D. Crowe & the New South",
+          "artist": "J.D. Crowe & the New South",
+          "searchAs": {
+            "title": "J.D. Crowe & The New South",
+            "artist": "J. D. Crowe & The New South"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Arrival",
+          "artist": "ABBA",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e464e167-83ab-3b59-88bd-262cf552056e",
+            "seed": {
+              "kind": "release_group",
+              "title": "Arrival",
+              "category": "studio",
+              "firstReleaseDate": "1976-10-11",
+              "credits": [
+                {
+                  "name": "ABBA",
+                  "artist": {
+                    "id": "d87e52c5-bb8d-4da8-b941-9f4928627dc8",
+                    "name": "ABBA"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "The Cars",
+          "artist": "The Cars",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "36172f3d-9b55-37f1-9fd4-0cbd2f3af0ce",
+            "seed": {
+              "kind": "release_group",
+              "title": "The Cars",
+              "category": "studio",
+              "firstReleaseDate": "1978-06-06",
+              "credits": [
+                {
+                  "name": "The Cars",
+                  "artist": {
+                    "id": "092b603f-eb4c-4958-b10e-02420de5885b",
+                    "name": "The Cars"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Parallel Lines",
+          "artist": "Blondie",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "0c1a4d70-5926-3ae8-aa25-466fe65639fe",
+            "seed": {
+              "kind": "release_group",
+              "title": "Parallel Lines",
+              "category": "studio",
+              "firstReleaseDate": "1978-09-08",
+              "credits": [
+                {
+                  "name": "Blondie",
+                  "artist": {
+                    "id": "4d2956d1-a3f7-44bb-9a41-67563e1a0c94",
+                    "name": "Blondie"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Pieces of Africa",
+          "artist": "Kronos Quartet",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "23b30602-5a61-31b0-9970-fa6edc849ca9",
+            "seed": {
+              "kind": "release_group",
+              "title": "Pieces of Africa",
+              "category": "studio",
+              "firstReleaseDate": "1992-02-14",
+              "credits": [
+                {
+                  "name": "Kronos Quartet",
+                  "artist": {
+                    "id": "f5586dfa-7031-4af0-8042-19b6a1170389",
+                    "name": "Kronos Quartet"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Dookie",
+          "artist": "Green Day",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "314cffd4-daa5-3337-85e5-e54165a96113",
+            "seed": {
+              "kind": "release_group",
+              "title": "Dookie",
+              "category": "studio",
+              "firstReleaseDate": "1994-01-28",
+              "credits": [
+                {
+                  "name": "Green Day",
+                  "artist": {
+                    "id": "084308bd-1654-436f-ba03-df6697104e19",
+                    "name": "Green Day"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Ready to Die",
+          "artist": "The Notorious B.I.G.",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "5afcfeac-118a-35e6-af0d-35ec9003354d",
+            "seed": {
+              "kind": "release_group",
+              "title": "Ready to Die",
+              "category": "studio",
+              "firstReleaseDate": "1994-09-13",
+              "credits": [
+                {
+                  "name": "The Notorious B.I.G.",
+                  "artist": {
+                    "id": "d5d97b2b-b83b-4976-814a-056d9076c8c3",
+                    "name": "The Notorious B.I.G."
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Wide Open Spaces",
+          "artist": "The Chicks",
+          "searchAs": {
+            "artist": "Dixie Chicks"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "aa59ec91-3d04-3fd1-a53c-96730b2afa75",
+            "seed": {
+              "kind": "release_group",
+              "title": "Wide Open Spaces",
+              "category": "studio",
+              "firstReleaseDate": "1998-01-27",
+              "credits": [
+                {
+                  "name": "Dixie Chicks",
+                  "artist": {
+                    "id": "3248ed2d-bada-41b5-a7b6-ac88faa1f1ac",
+                    "name": "The Chicks",
+                    "sort-name": "Chicks, The",
+                    "disambiguation": "US country trio, formerly known as the Dixie Chicks",
+                    "aliases": [
+                      {
+                        "sort-name": "Chicks, The",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "The Chicks",
+                        "locale": "en",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": "2020-06-25",
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Dixie Chicks",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Dixie Chicks",
+                        "locale": "en",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": "1989",
+                        "end-date": "2020-06-25"
+                      },
+                      {
+                        "sort-name": "Dixie Chicks, The",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "The Dixie Chicks",
+                        "locale": "en",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": "1989",
+                        "end-date": "2020-06-25"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "songs",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Clarinet Marmalade",
+          "artist": "Lt. James Reese Europe's 369th U.S. Infantry Band",
+          "anchor": {
+            "title": "Clarinet Marmalade",
+            "artist": "Lt. James Reese Europe's 369th U.S. Infantry Band"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Kauhavan Polkka",
+          "artist": "Viola Turpeinen and John Rosendahl",
+          "anchor": {
+            "title": "Kauhavan Polkka",
+            "artist": "Viola Turpeinen and John Rosendahl"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Rose Room",
+          "artist": "Benny Goodman Sextet with Charlie Christian",
+          "anchor": {
+            "title": "Rose Room",
+            "artist": "Benny Goodman Sextet with Charlie Christian"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Rudolph, the Red-Nosed Reindeer",
+          "artist": "Gene Autry",
+          "anchor": {
+            "title": "Rudolph, the Red-Nosed Reindeer",
+            "artist": "Gene Autry"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "5c0b30cf-785b-4946-9685-392cdb5af509",
+            "seed": {
+              "kind": "recording",
+              "title": "Rudolph the Red-Nosed Reindeer / Santa Claus Is Coming to Town",
+              "durationSec": 331,
+              "credits": [
+                {
+                  "name": "Gene Autry",
+                  "artist": {
+                    "id": "675b7627-6b5d-4a46-a728-785cb24a299e",
+                    "name": "Gene Autry"
+                  }
+                }
+              ],
+              "anchorMbid": "bffac05c-a866-46ab-84bb-b9df5b076ab5",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Rudolph the Red-Nosed Reindeer",
+                "category": "studio",
+                "firstReleaseDate": "1994",
+                "credits": [
+                  {
+                    "name": "Gene Autry",
+                    "artist": {
+                      "id": "675b7627-6b5d-4a46-a728-785cb24a299e",
+                      "name": "Gene Autry"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Tennessee Waltz",
+          "artist": "Patti Page",
+          "anchor": {
+            "title": "Tennessee Waltz",
+            "artist": "Patti Page"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d2b29f88-4b40-4cc1-9ea5-347ab569a283",
+            "seed": {
+              "kind": "recording",
+              "title": "The Tennessee Waltz",
+              "durationSec": 183,
+              "credits": [
+                {
+                  "name": "Patti Page",
+                  "artist": {
+                    "id": "46bd1529-4301-4d10-9124-17d9e858034e",
+                    "name": "Patti Page"
+                  }
+                }
+              ],
+              "anchorMbid": "af2ce34f-bda1-4fd7-9a0d-ab050c25d93b",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Tennessee Waltz",
+                "category": "studio",
+                "firstReleaseDate": "1952",
+                "credits": [
+                  {
+                    "name": "Patti Page",
+                    "artist": {
+                      "id": "46bd1529-4301-4d10-9124-17d9e858034e",
+                      "name": "Patti Page"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Rocket \"88\"",
+          "artist": "Jackie Brenston and His Delta Cats",
+          "anchor": {
+            "title": "Rocket \"88\"",
+            "artist": "Jackie Brenston and His Delta Cats"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "bfd745d0-4956-4bdd-afd3-85c5aa93afed",
+            "seed": {
+              "kind": "recording",
+              "title": "Rocket 88",
+              "durationSec": 169,
+              "credits": [
+                {
+                  "name": "Jackie Brenston and His Delta Cats",
+                  "artist": {
+                    "id": "f9f6f164-32ca-4cbc-9177-de57c4c484bb",
+                    "name": "Jackie Brenston & His Delta Cats"
+                  }
+                }
+              ],
+              "anchorMbid": "6325c422-e5ba-4109-ba63-def08026445b",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Rocket \"88\" / Come Back Where You Belong",
+                "category": "single_ep",
+                "firstReleaseDate": "1951-04",
+                "credits": [
+                  {
+                    "name": "Jackie Brenston and His Delta Cats",
+                    "artist": {
+                      "id": "f9f6f164-32ca-4cbc-9177-de57c4c484bb",
+                      "name": "Jackie Brenston & His Delta Cats"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Catch a Falling Star / Magic Moments",
+          "artist": "Perry Como",
+          "anchor": {
+            "title": "Catch a Falling Star / Magic Moments",
+            "artist": "Perry Como"
+          },
+          "searchAs": {
+            "title": "Catch a Falling Star"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b1cfd79d-670d-4028-84dd-ff819d8ce015",
+            "seed": {
+              "kind": "recording",
+              "title": "Catch a Falling Star",
+              "durationSec": 150,
+              "credits": [
+                {
+                  "joinphrase": " with ",
+                  "name": "Perry Como",
+                  "artist": {
+                    "id": "0182474b-8a1d-46d0-9d0f-e6df353335ea",
+                    "name": "Perry Como",
+                    "sort-name": "Como, Perry",
+                    "disambiguation": "US pop singer & TV personality, 1912–2001",
+                    "aliases": [
+                      {
+                        "sort-name": "Como, Perry",
+                        "name": "Como, Perry",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Pierino Ronaldo Como",
+                        "name": "Pierino Ronaldo Como",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                },
+                {
+                  "joinphrase": " & ",
+                  "name": "Mitchell Ayres Orchestra",
+                  "artist": {
+                    "id": "3c82f540-c300-47d2-ae60-a6aca677f98c",
+                    "name": "Mitchell Ayres and His Orchestra",
+                    "sort-name": "Ayres, Mitchell and His Orchestra",
+                    "aliases": [
+                      {
+                        "sort-name": "Mitchell Ayres Orchestra, The",
+                        "name": "The Mitchell Ayres Orchestra",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Mitchell Ayres and His Fashions-In-Music",
+                        "name": "Mitchell Ayres and His Fashions-In-Music",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "The Ray Charles Singers",
+                  "artist": {
+                    "id": "a534d84e-f764-403e-bbd4-8968e852738a",
+                    "name": "The Ray Charles Singers",
+                    "sort-name": "Ray Charles Singers, The",
+                    "aliases": [
+                      {
+                        "sort-name": "Ray Charles Singers",
+                        "name": "Ray Charles Singers",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "85a52306-2b8b-4d76-9bb8-3616f5e8001c",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Catch a Falling Star / Magic Moments",
+                "category": "single_ep",
+                "firstReleaseDate": "1957-12",
+                "credits": [
+                  {
+                    "joinphrase": " with ",
+                    "name": "Perry Como",
+                    "artist": {
+                      "id": "0182474b-8a1d-46d0-9d0f-e6df353335ea",
+                      "name": "Perry Como",
+                      "sort-name": "Como, Perry",
+                      "disambiguation": "US pop singer & TV personality, 1912–2001",
+                      "aliases": [
+                        {
+                          "sort-name": "Como, Perry",
+                          "name": "Como, Perry",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Pierino Ronaldo Como",
+                          "name": "Pierino Ronaldo Como",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "joinphrase": " & ",
+                    "name": "Mitchell Ayres Orchestra",
+                    "artist": {
+                      "id": "3c82f540-c300-47d2-ae60-a6aca677f98c",
+                      "name": "Mitchell Ayres and His Orchestra",
+                      "sort-name": "Ayres, Mitchell and His Orchestra",
+                      "aliases": [
+                        {
+                          "sort-name": "Mitchell Ayres Orchestra, The",
+                          "name": "The Mitchell Ayres Orchestra",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Mitchell Ayres and His Fashions-In-Music",
+                          "name": "Mitchell Ayres and His Fashions-In-Music",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "The Ray Charles Singers",
+                    "artist": {
+                      "id": "a534d84e-f764-403e-bbd4-8968e852738a",
+                      "name": "The Ray Charles Singers",
+                      "sort-name": "Ray Charles Singers, The",
+                      "aliases": [
+                        {
+                          "sort-name": "Ray Charles Singers",
+                          "name": "Ray Charles Singers",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Chances Are",
+          "artist": "Johnny Mathis",
+          "anchor": {
+            "title": "Chances Are",
+            "artist": "Johnny Mathis"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "95af10d7-19c9-41ba-ba11-690ae2713390",
+            "seed": {
+              "kind": "recording",
+              "title": "Chances Are",
+              "durationSec": 192,
+              "credits": [
+                {
+                  "name": "Johnny Mathis",
+                  "artist": {
+                    "id": "48896dee-a985-424d-9849-84802f7e79c9",
+                    "name": "Johnny Mathis"
+                  }
+                }
+              ],
+              "anchorMbid": "0012a82b-224b-4a9e-b020-b04fa408f699",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Chances Are",
+                "category": "live_other",
+                "firstReleaseDate": "1991",
+                "credits": [
+                  {
+                    "name": "Johnny Mathis",
+                    "artist": {
+                      "id": "48896dee-a985-424d-9849-84802f7e79c9",
+                      "name": "Johnny Mathis"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Ain't No Sunshine",
+          "artist": "Bill Withers",
+          "anchor": {
+            "title": "Ain't No Sunshine",
+            "artist": "Bill Withers"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "3442b706-8cef-4053-ab3e-dca0283c41dc",
+            "seed": {
+              "kind": "recording",
+              "title": "Ain’t No Sunshine",
+              "durationSec": 125,
+              "credits": [
+                {
+                  "name": "Bill Withers",
+                  "artist": {
+                    "id": "fd1a2d9d-9bb6-44de-83a3-41560658aba9",
+                    "name": "Bill Withers"
+                  }
+                }
+              ],
+              "anchorMbid": "cd9ace3b-a634-3ca6-ad7f-a775dba662df",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Ain't No Sunshine",
+                "category": "single_ep",
+                "firstReleaseDate": "1988",
+                "credits": [
+                  {
+                    "name": "Bill Withers",
+                    "artist": {
+                      "id": "fd1a2d9d-9bb6-44de-83a3-41560658aba9",
+                      "name": "Bill Withers"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "El Cantante",
+          "artist": "Héctor Lavoe",
+          "anchor": {
+            "title": "Comedia",
+            "artist": "Héctor Lavoe"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "120b2b93-b774-41b8-bbb5-448e68e25c8a",
+            "seed": {
+              "kind": "recording",
+              "title": "El cantante",
+              "durationSec": 623,
+              "credits": [
+                {
+                  "name": "Héctor Lavoe",
+                  "artist": {
+                    "id": "2cf18512-c129-482b-aff1-7430a1a7850b",
+                    "name": "Héctor Lavoe",
+                    "sort-name": "Lavoe, Héctor",
+                    "aliases": [
+                      {
+                        "sort-name": "Avoe, Hector",
+                        "name": "Hector Avoe",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Hector Lavoe",
+                        "name": "Hector Lavoe",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Héctor Lavoé",
+                        "name": "Héctor Lavoé",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Martínez, Héctor Juan Pérez",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Héctor Juan Pérez Martínez",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "bc11b3c3-49e2-3c5d-bec3-7cfc75851e54",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Comedia",
+                "category": "studio",
+                "firstReleaseDate": "1978",
+                "credits": [
+                  {
+                    "name": "Héctor Lavoe",
+                    "artist": {
+                      "id": "2cf18512-c129-482b-aff1-7430a1a7850b",
+                      "name": "Héctor Lavoe",
+                      "sort-name": "Lavoe, Héctor",
+                      "aliases": [
+                        {
+                          "sort-name": "Avoe, Hector",
+                          "name": "Hector Avoe",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Hector Lavoe",
+                          "name": "Hector Lavoe",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Héctor Lavoé",
+                          "name": "Héctor Lavoé",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Martínez, Héctor Juan Pérez",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "Héctor Juan Pérez Martínez",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "La-Di-Da-Di",
+          "artist": "Doug E. Fresh and Slick Rick (MC Ricky D)",
+          "anchor": {
+            "title": "La-Di-Da-Di",
+            "artist": "Doug E. Fresh and Slick Rick (MC Ricky D)"
+          },
+          "searchAs": {
+            "title": "La Di Da Di",
+            "artist": "Doug E. Fresh"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Don't Worry, Be Happy",
+          "artist": "Bobby McFerrin",
+          "anchor": {
+            "title": "Don't Worry, Be Happy",
+            "artist": "Bobby McFerrin"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6b74f878-6c0b-4625-a878-cbabd81d0db2",
+            "seed": {
+              "kind": "recording",
+              "title": "Don’t Worry, Be Happy",
+              "durationSec": 291,
+              "credits": [
+                {
+                  "name": "Bobby McFerrin",
+                  "artist": {
+                    "id": "a996b5bd-db99-4257-b036-336f63448aa2",
+                    "name": "Bobby McFerrin"
+                  }
+                }
+              ],
+              "anchorMbid": "e0e69f2d-923b-40ff-b31c-f4c0188aef3c",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Don't Worry Be Happy!",
+                "category": "studio",
+                "credits": [
+                  {
+                    "name": "Bobby McFerrin",
+                    "artist": {
+                      "id": "a996b5bd-db99-4257-b036-336f63448aa2",
+                      "name": "Bobby McFerrin"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Amor Eterno",
+          "artist": "Juan Gabriel",
+          "anchor": {
+            "title": "Recuerdos, Vol. II",
+            "artist": "Juan Gabriel"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        }
+      ]
+    },
+    {
+      "key": "other",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Wisconsin Folksong Collection",
+          "artist": "Various artists",
+          "won": true,
+          "resolved": {
+            "status": "not_found"
+          }
+        }
+      ]
+    }
+  ]
+}

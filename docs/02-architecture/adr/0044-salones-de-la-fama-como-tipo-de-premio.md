@@ -68,6 +68,14 @@ año de su edición, y toda nominación ganadora cuenta como premio ganado en la
 - Un salón futuro que publique nominados que no entraron cabe en el modelo (`won: false`); la presentación ya omite el bloque
   "Nominados" solo cuando no hay ninguno.
 
+## Nota (cambio `add-national-recording-registry`, 2026-10)
+
+El segundo salón, el National Recording Registry de la Biblioteca del Congreso (`voting: jury`), se sumó **sin cambios de modelo ni de
+lectura**: una carpeta en `data/awards/`, su nombre en los mensajes y una categoría más ("Otras grabaciones", de entradas que no son música
+y se cargan siempre como texto). Confirma el punto 1 (un salón es una carpeta de datos). Con dos salones, la sección de Explorar dejó
+el riel con las incorporaciones por una tarjeta por salón, como Premios (el riel de cada clase escalaba mal); las incorporaciones se
+ven en la página de la clase.
+
 ## Alternativas descartadas
 
 - **Tablas propias para los salones:** duplicaría curaduría, resolución y carga para un modelo que ya los cubre.

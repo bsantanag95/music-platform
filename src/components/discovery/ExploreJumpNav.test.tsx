@@ -1,3 +1,4 @@
+import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import { screen, within } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
@@ -15,7 +16,8 @@ const es = {
   novedades: catalogEs.explore.jump.newReleases,
   proximos: catalogEs.explore.jump.upcoming,
   premios: catalogEs.explore.jump.awards,
-  "salon-de-la-fama": catalogEs.explore.jump.hallOfFame,
+  // Con un solo salón (la etiqueta es un mensaje con plural: la página le pasa cuántos hay).
+  "salon-de-la-fama": "Salón de la Fama",
   "mejor-valorados": catalogEs.explore.jump.topRated,
   decadas: catalogEs.explore.jump.decades,
 };
@@ -60,5 +62,15 @@ describe("ExploreJumpNav", () => {
     expect(Object.keys(catalogEn.explore.jump)).toEqual(Object.keys(catalogEs.explore.jump));
     expect(catalogEn.explore.jump.label).toBe("On this page");
     for (const value of Object.values(catalogEn.explore.jump)) expect(value.length).toBeGreaterThan(0);
+  });
+
+  it("la entrada del Salón de la Fama va en plural cuando hay más de un salón", () => {
+    type Translate = (key: string, values: { count: number }) => string;
+    const translator = (locale: string, messages: unknown): Translate =>
+      createTranslator({ locale, messages, namespace: "explore.jump" } as never) as unknown as Translate;
+    const es = translator("es", { explore: catalogEs.explore });
+    expect([es("hallOfFame", { count: 1 }), es("hallOfFame", { count: 2 })]).toEqual(["Salón de la Fama", "Salones de la Fama"]);
+    const en = translator("en", { explore: catalogEn.explore });
+    expect([en("hallOfFame", { count: 1 }), en("hallOfFame", { count: 2 })]).toEqual(["Hall of Fame", "Halls of Fame"]);
   });
 });

@@ -280,6 +280,37 @@ describe("salones de la fama (ADR 0044)", () => {
     expect(validateCeremony(hallClass(), hall, "2026.json", TODAY)).toEqual([]);
   });
 
+  // openspec: add-national-recording-registry (design D1): un segundo salón es solo datos, con una categoría de entradas que
+  // nunca se enlazan (discursos, radio, sonidos de campo) y la fecha del anuncio como fecha de la clase.
+  it("acepta un salón con una categoría de otras grabaciones: sin ancla ni resolución, con la fecha del anuncio", () => {
+    const registry: CategoriesFile = {
+      ...hall,
+      award: "national-recording-registry",
+      voting: "jury",
+      categories: [
+        ...hall.categories,
+        { key: "other", tier: "general", subject: "release_group", honors: "performer", name: { es: "Otras grabaciones", en: "Other recordings" }, order: 3 },
+      ],
+    };
+    const registryClass = hallClass({
+      award: "national-recording-registry",
+      year: 2026,
+      heldOn: "2026-05-14",
+      sourceUrl: "https://newsroom.loc.gov/news/national-recording-registry-2026",
+      categories: [
+        { key: "albums", coverage: "complete", nominees: [inducted("1989", "Taylor Swift")] },
+        { key: "songs", coverage: "complete", nominees: [song("Single Ladies (Put a Ring on It)", "Beyoncé")] },
+        {
+          key: "other",
+          coverage: "complete",
+          nominees: [{ ...inducted("The Fight of the Century: Ali vs. Frazier", "Muhammad Ali and Joe Frazier"), resolved: { status: "not_found" } }],
+        },
+      ],
+    });
+    expect(CategoriesFileSchema.parse(registry).voting).toBe("jury");
+    expect(validateCeremony(registryClass, registry, "2026.json", TODAY)).toEqual([]);
+  });
+
   it("el tipo del archivo de categorías es competition si se omite", () => {
     const parsed = CategoriesFileSchema.parse({ award: "x", voting: "academy", categories: hall.categories });
     expect(parsed.kind).toBe("competition");

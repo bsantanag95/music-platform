@@ -7,7 +7,7 @@ videojuegos.
 **Estado:** implementado para cinco premios —Grammy, Latin Grammy, Premio Lo Nuestro, Brit Awards y Mercury Prize—, de 2021 en
 adelante y solo ceremonias cerradas (cambio `add-four-music-awards`, ADR 0043).
 
-## Salones de la fama (cambio `add-grammy-hall-of-fame`, ADR 0044)
+## Salones de la fama (cambios `add-grammy-hall-of-fame` y `add-national-recording-registry`, ADR 0044)
 
 Un **salón de la fama** (`award.kind = hall_of_fame`) incorpora cada año una **clase** de grabaciones o artistas, sin nominados
 ni competencia. Cubre el **Grammy Hall of Fame** (carpeta `grammy-hall-of-fame`, lo decide un comité de la Recording Academy)
@@ -17,6 +17,16 @@ disco); 81 de las 91 incorporaciones están enlazadas al catálogo y 10 se muest
 en MusicBrainz). Los datos salen de los comunicados oficiales de la Academia (`sourceUrl` de cada clase), contrastados con
 Wikipedia.
 
+El segundo salón es el **National Recording Registry** de la Biblioteca del Congreso de EE. UU. (carpeta
+`national-recording-registry`, `voting: jury`: la Bibliotecaria elige con el consejo del National Recording Preservation Board y las
+nominaciones del público). Cubre las **últimas cinco clases** (2022, 2023, 2024, 2025 y 2026; una por primavera, sin
+interrupciones), con 25 grabaciones cada una, 125 en total. Tiene tres categorías: Álbumes, Canciones (ancladas en su disco o
+sencillo) y **Otras grabaciones** (discursos, emisiones de radio, entrevistas, pódcast y sonidos de campo, que se cargan siempre
+como texto con `resolved.status = not_found` para que el resolutor no las busque). La fecha de cada clase es la del anuncio (no hay
+gala) y su `sourceUrl`, el comunicado de la Biblioteca. 88 de las 125 incorporaciones están enlazadas al catálogo y 37 se muestran
+como texto (13 no son música; las demás son grabaciones históricas que MusicBrainz no tiene como disco). Hay entradas fijadas a mano
+(`status: manual`) donde MusicBrainz tiene varias grabaciones de la misma canción o el disco de 1961 junto a su reedición.
+
 - **Una clase no es una ceremonia de ganadores:** no tiene número de edición (`edition` nulo), se presenta como "Clase de
   2026" con "Fecha de la clase" (la gala existe desde 2024; las clases 2020 y 2021 solo tienen la fecha del anuncio, que puede
   ser del año anterior: la clase 2021 se anunció el 21-dic-2020), rotula "Ingresó" en lugar de "Ganador" y no ofrece historia
@@ -24,9 +34,11 @@ Wikipedia.
 - **No cuenta como premio ganado:** no aparece en las tarjetas de Premios, "Ganadores recientes", "Los más premiados", "Tu
   relación…", los puntajes que ordenan el catálogo ni la plantilla de colección `grammy-winners` (`competitionNominations`,
   `allCeremonies(kind)`).
-- **Dónde se ve:** sección "Salón de la Fama" de `/explore` (tras Premios: riel con las incorporaciones de la última clase y
-  "Ver todas las clases"), bloque "Salones de la fama" del hub `/awards` y `/awards/grammy-hall-of-fame[/<año>]`
-  (`/awards/<salón>` redirige a la clase más reciente; las demás salen como años en la fila "Clase").
+- **Dónde se ve:** sección "Salón de la Fama" de `/explore` (tras Premios y con su mismo aspecto: una tarjeta por salón, `HallOfFameTile`,
+  con el año de su última clase y cuatro carátulas, que abre esa clase; "Ver todos" al hub; el encabezado va en plural con más de un
+  salón), bloque "Salones de la fama" del hub `/awards` (la misma tarjeta en su forma detallada: rango de clases, cuántas, quién
+  decide y las clases anteriores como enlaces) y `/awards/<salón>[/<año>]` (`/awards/<salón>` redirige a la clase más reciente; las
+  demás salen como años en la fila "Clase"). Las incorporaciones se listan solo en la página de la clase.
 - **Para sumar otro salón:** una carpeta en `data/awards/<salón>/` con `kind: "hall_of_fame"` en `categories.json`, sin `edition`
   en sus clases, y su nombre en `messages/*/awards.json` (`names.<slug>`). Criterios en el ADR 0044.
 

@@ -7,7 +7,8 @@
     "brit-awards": "Premios Brit",
     "latin-grammy": "Premios Latin Grammy",
     "lo-nuestro": "Premio Lo Nuestro",
-    "grammy-hall-of-fame": "Salón de la Fama de los Grammy"
+    "grammy-hall-of-fame": "Salón de la Fama de los Grammy",
+    "national-recording-registry": "Registro Nacional de Grabaciones"
   },
   "ceremonyTitle": "{award} {year}",
   "edition": "{edition}.ª edición",
@@ -95,11 +96,11 @@
     "date": "Fecha de la clase: {date}",
     "recordingCount": "{count, plural, one {# grabación} other {# grabaciones}}",
     "classYearRow": "Clase",
-    "exploreHeading": "Salón de la Fama",
+    "exploreHeading": "{count, plural, one {Salón de la Fama} other {Salones de la Fama}}",
     "exploreDescription": "Grabaciones que se incorporan cada año por su valor histórico o cualitativo.",
-    "exploreSeeAll": "Ver todas las clases",
-    "latestClass": "Clase de {year}",
+    "exploreSeeAll": "Ver todos",
     "hubHeading": "Salones de la fama",
+    "previousClasses": "Clases anteriores de {award}",
     "hubClasses": "{count, plural, one {# clase} other {# clases}}"
   },
   "votingHall": {

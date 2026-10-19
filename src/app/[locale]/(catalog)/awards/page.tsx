@@ -129,7 +129,7 @@ export default async function AwardsIndexPage({ params, searchParams }: AwardsIn
       {halls.length > 0 ? (
         <section id="salones-de-la-fama" aria-labelledby="salones-de-la-fama-heading" className="flex w-full scroll-mt-24 flex-col gap-3">
           <SectionHeader heading={t("hall.hubHeading")} description={t("hall.exploreDescription")} headingId="salones-de-la-fama-heading" />
-          <HallOfFameTileGrid halls={halls} />
+          <HallOfFameTileGrid halls={halls} detailed />
         </section>
       ) : null}
     </main>

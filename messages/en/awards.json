@@ -7,7 +7,8 @@
     "brit-awards": "Brit Awards",
     "latin-grammy": "Latin Grammy Awards",
     "lo-nuestro": "Premio Lo Nuestro",
-    "grammy-hall-of-fame": "Grammy Hall of Fame"
+    "grammy-hall-of-fame": "Grammy Hall of Fame",
+    "national-recording-registry": "National Recording Registry"
   },
   "ceremonyTitle": "{award} {year}",
   "edition": "{edition, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition",
@@ -95,11 +96,11 @@
     "date": "Class date: {date}",
     "recordingCount": "{count, plural, one {# recording} other {# recordings}}",
     "classYearRow": "Class",
-    "exploreHeading": "Hall of Fame",
+    "exploreHeading": "{count, plural, one {Hall of Fame} other {Halls of Fame}}",
     "exploreDescription": "Recordings added each year for their lasting historical or qualitative significance.",
-    "exploreSeeAll": "See all classes",
-    "latestClass": "Class of {year}",
+    "exploreSeeAll": "See all",
     "hubHeading": "Halls of fame",
+    "previousClasses": "Previous classes of {award}",
     "hubClasses": "{count, plural, one {# class} other {# classes}}"
   },
   "votingHall": {
