@@ -33,7 +33,7 @@
   "winner": "Ganador",
   "nomineesCount": "Nominados ({count})",
   "winnerOnlyNote": "De esta categoría solo registramos al ganador.",
-  "categoryHistory": "Historia de la categoría",
+  "categoryHistory": "Historial de la categoría",
   "fromAlbum": "del disco {album}",
   "songwriterNote": "Premia a los autores de la canción.",
   "previouslyNamed": "Antes llamada {name}",
@@ -44,7 +44,7 @@
   "exploreDescription": "Nominados y ganadores de las últimas ceremonias.",
   "exploreSeeAll": "Ver todos",
   "ceremonyCount": "{count, plural, one {# ceremonia} other {# ceremonias}}",
-  "categoryHistoryShort": "Historia",
+  "categoryHistoryShort": "Historial",
   "voting": {
     "academy": "Votan los miembros de la academia",
     "jury": "Lo decide un jurado",

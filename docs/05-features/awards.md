@@ -95,7 +95,7 @@ La página medía 9.036 px en escritorio y 19.370 en móvil (33 categorías, tod
 - **Filas compactas** (`AwardCategory variant="compact"`): el resto del campo general (Productor y Compositor del año) y los niveles por
   álbum y por género. Nombre con su enlace a la historia, el ganador con una carátula de 64 px y los nominados plegados bajo
   **«Nominados (N)»** (`<details>`, cerrado, sin JavaScript; la búsqueda de la página del navegador lo abre). Una categoría de la que solo
-  se registró al ganador no lleva el control y dice por qué. El enlace a la historia va siempre arriba a la derecha ("Historia" a secas en
+  se registró al ganador no lleva el control y dice por qué. El enlace a la historia va siempre arriba a la derecha ("Historial" a secas en
   las compactas, para no apretar el título). Grilla de 1, 2 y 3 columnas según el ancho —dos en `xl` cuando el grupo tiene 2 o 4 categorías,
   para no dejar huecos—, `items-start` para que abrir una
   fila no estire a la de al lado. El número de nominados es un dato editorial finito, no una cifra que crezca con la base: por eso se muestra.

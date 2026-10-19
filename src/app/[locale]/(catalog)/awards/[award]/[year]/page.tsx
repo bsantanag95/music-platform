@@ -75,7 +75,7 @@ export default async function CeremonyPage({ params }: CeremonyPageProps) {
       headingLevel={headingLevel}
       variant={variant}
       subjectKind={item.subjectKind}
-      // En las tarjetas compactas, "Historia" a secas: el enlace largo, fijo a la derecha, apretaba el título a tres líneas.
+      // En las tarjetas compactas, "Historial" a secas: el enlace largo, fijo a la derecha, apretaba el título a tres líneas.
       link={{
         href: categoryHistoryHref(page.awardSlug, item.key),
         label: variant === "compact" ? t("categoryHistoryShort") : t("categoryHistory"),
