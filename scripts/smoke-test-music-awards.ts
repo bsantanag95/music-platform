@@ -25,7 +25,15 @@ import { db } from "../src/db";
 import { artist, award, awardNomination, credit, recording, releaseGroup } from "../src/db/schema";
 import { readAllAwards } from "../src/services/awards/curation-files";
 import { loadAward } from "../src/services/awards/load";
-import { getCategoryHistory, getCeremonyPage, getLatestCeremonyYear, listLatestCeremoniesByAward } from "../src/services/awards/read";
+import { competitionNominations } from "../src/services/awards/competition";
+import {
+  getCategoryHistory,
+  getCeremonyPage,
+  getLatestCeremonyYear,
+  listHallOfFameClasses,
+  listLatestCeremoniesByAward,
+  listMostAwardedArtists,
+} from "../src/services/awards/read";
 
 assertSmokeAllowed();
 
@@ -36,6 +44,13 @@ const ANCHOR = MB(2);
 const SONG = MB(3);
 const NEW_ARTIST = MB(4);
 const CREDITED = MB(5);
+// Salón de la fama sintético (migración 0074, ADR 0044).
+const HALL = "smoke-salon";
+const HALL_ALBUM_1 = MB(6);
+const HALL_ALBUM_2 = MB(7);
+const HALL_SONG = MB(8);
+const HALL_SONG_ANCHOR = MB(9);
+const HALL_ARTIST = MB(10);
 
 function check(condition: unknown, message: string): void {
   if (!condition) throw new Error(`FALLÓ: ${message}`);
@@ -207,8 +222,8 @@ async function main() {
     console.log("\nCHECK de la migración 0068");
     const [a] = await db.insert(award).values({ slug: SLUG }).returning();
     check(
-      (await codeOf(() => db.execute(sql`INSERT INTO award_ceremony (award_id, year, edition, held_on) VALUES (${a!.id}, 2025, 1, '2024-12-31')`))) === "23514",
-      "held_on de otro año que la ceremonia se rechaza",
+      (await codeOf(() => db.execute(sql`INSERT INTO award_ceremony (award_id, year, edition, held_on) VALUES (${a!.id}, 2025, 1, '2023-12-31')`))) === "23514",
+      "held_on de dos años antes que la ceremonia se rechaza (el año anterior sí vale, migración 0074)",
     );
     check(
       (await codeOf(() => db.execute(sql`INSERT INTO award (slug) VALUES ('Mal Slug')`))) === "23514",
@@ -346,6 +361,132 @@ async function main() {
     check((await getCeremonyPage(SLUG, 2024)) === null, "y deja de existir");
     const leftovers = await db.select({ id: awardNomination.id }).from(awardNomination).where(inArray(awardNomination.releaseGroupId, [album!.id]));
     check(leftovers.length === 0, "no quedan nominaciones apuntando al álbum borrado");
+
+    console.log("\nSalón de la fama (migración 0074, ADR 0044)");
+    const hallAward = (kind: string) => db.execute(sql`INSERT INTO award (slug, kind) VALUES ('smoke-malo', ${kind})`);
+    check((await codeOf(() => hallAward("club"))) === "23514", "un tipo de premio desconocido se rechaza");
+    const [typed] = await db.insert(award).values({ slug: "smoke-tipo", kind: "hall_of_fame" }).returning();
+    check(typed?.kind === "hall_of_fame", "un premio puede ser un salón de la fama");
+    const [byDefault] = await db.select({ kind: award.kind }).from(award).where(eq(award.slug, SLUG));
+    check(byDefault?.kind === "competition", "un premio cargado sin tipo es una competencia");
+    const ceremonyRow = (year: number, edition: string, heldOn: string) =>
+      db.execute(sql`INSERT INTO award_ceremony (award_id, year, edition, held_on) VALUES (${typed!.id}, ${year}, ${sql.raw(edition)}, ${heldOn})`);
+    check((await codeOf(() => ceremonyRow(2025, "NULL", "2025-05-16"))) === null, "la edición puede ser nula (las clases no se numeran)");
+    check((await codeOf(() => ceremonyRow(2021, "NULL", "2020-12-21"))) === null, "held_on puede ser del año anterior al de la clase");
+    check((await codeOf(() => ceremonyRow(2019, "NULL", "2017-12-21"))) === "23514", "pero no de dos años antes");
+    check((await codeOf(() => ceremonyRow(2018, "0", "2018-05-16"))) === "23514", "una edición presente sigue debiendo ser positiva");
+    await db.delete(award).where(eq(award.slug, "smoke-tipo"));
+
+    const hallDir = mkdtempSync(join(tmpdir(), "smoke-hall-"));
+    const hallCategories = {
+      award: HALL,
+      kind: "hall_of_fame",
+      voting: "academy",
+      categories: [
+        { key: "albums", tier: "general", subject: "release_group", name: { es: "Álbumes", en: "Albums" }, order: 1 },
+        { key: "songs", tier: "general", subject: "recording", name: { es: "Canciones", en: "Songs" }, order: 2 },
+      ],
+    };
+    // Artista propio del salón: "Smoke Banda" ya tiene premios competitivos de los fixtures anteriores.
+    const hallCredits = [{ name: "Smoke Salon Banda", artist: { id: HALL_ARTIST, name: "Smoke Salon Banda" } }];
+    const hallAlbum = (title: string, mbid: string) => ({
+      title,
+      artist: "Smoke Salon Banda",
+      won: true,
+      resolved: { status: "exact", mbid, seed: { kind: "release_group", title, category: "studio", firstReleaseDate: "1999-01-01", credits: hallCredits } },
+    });
+    const hallClass = (year: number, heldOn: string, albums: unknown[], songs: unknown[]) => ({
+      award: HALL,
+      year,
+      heldOn,
+      sourceUrl: "https://example.org/smoke-salon",
+      categories: [
+        { key: "albums", coverage: "complete", nominees: albums },
+        ...(songs.length ? [{ key: "songs", coverage: "complete", nominees: songs }] : []),
+      ],
+    });
+    const hallSong = {
+      title: "Smoke Clásica",
+      artist: "Smoke Salon Banda",
+      anchor: { title: "Smoke Ancla", artist: "Smoke Salon Banda" },
+      won: true,
+      resolved: {
+        status: "manual",
+        mbid: HALL_SONG,
+        seed: {
+          kind: "recording",
+          title: "Smoke Clásica",
+          durationSec: 180,
+          credits: hallCredits,
+          anchorMbid: HALL_SONG_ANCHOR,
+          anchor: { kind: "release_group", title: "Smoke Ancla", category: "single_ep", credits: hallCredits },
+        },
+      },
+    };
+    const writeHall = (ceremonies: Record<number, unknown>) => {
+      const awardDir = join(hallDir, HALL);
+      rmSync(awardDir, { recursive: true, force: true });
+      mkdirSync(join(awardDir, "ceremonies"), { recursive: true });
+      writeFileSync(join(awardDir, "categories.json"), JSON.stringify(hallCategories));
+      for (const [year, data] of Object.entries(ceremonies)) writeFileSync(join(awardDir, "ceremonies", `${year}.json`), JSON.stringify(data));
+    };
+    const loadHall = async () => {
+      const { awards, errors } = readAllAwards(hallDir);
+      if (errors.length) throw new Error(`Archivos inválidos:\n${errors.join("\n")}`);
+      return loadAward(awards[0]!);
+    };
+    const hallVersions = async () =>
+      (
+        await db.execute<{ v: string }>(sql`
+          SELECT a.xmin::text || ':' || string_agg(c.xmin::text, ',' ORDER BY c.year) || ':' || coalesce(string_agg(n.xmin::text, ',' ORDER BY n.id), '') AS v
+          FROM award a
+          JOIN award_ceremony c ON c.award_id = a.id
+          LEFT JOIN award_category_edition e ON e.ceremony_id = c.id
+          LEFT JOIN award_nomination n ON n.category_edition_id = e.id
+          WHERE a.slug = ${HALL}
+          GROUP BY a.id`)
+      )[0]?.v ?? "";
+
+    // Dos álbumes de la misma banda y una canción: si contaran como premios ganados, la banda entraría a "Los más premiados".
+    writeHall({
+      2025: hallClass(2025, "2025-05-16", [hallAlbum("Smoke Clásico Uno", HALL_ALBUM_1), hallAlbum("Smoke Clásico Dos", HALL_ALBUM_2)], [hallSong]),
+      2021: hallClass(2021, "2020-12-21", [{ title: "Solo Texto", artist: "Nadie", won: true }], []),
+    });
+    const loaded = await loadHall();
+    check(loaded.stubsCreated === 4, `crea los stubs de la clase (dos álbumes, la canción y su ancla); creó ${loaded.stubsCreated}`);
+    const [kindRow] = await db.select({ kind: award.kind, voting: award.voting }).from(award).where(eq(award.slug, HALL));
+    check(kindRow?.kind === "hall_of_fame" && kindRow.voting === "academy", "la carga escribe el tipo y la votación del salón");
+    const hallBefore = await hallVersions();
+    await loadHall();
+    check((await hallVersions()) === hallBefore, "la segunda carga no reescribe nada (xmin igual): idempotente con edición nula");
+
+    console.log("\nLectura de un salón");
+    const hallPage = await getCeremonyPage(HALL, 2025);
+    check(hallPage?.kind === "hall_of_fame" && hallPage.ceremony.edition === null, "la ceremonia es de un salón y no tiene edición");
+    check(hallPage?.ceremonies.map((c) => c.year).join() === "2025,2021", "las clases salen de la más reciente a la más antigua");
+    check(hallPage!.categories.map((c) => c.key).join() === "albums,songs", "álbumes antes que canciones");
+    check(hallPage!.categories[1]!.nominations[0]!.subject?.kind === "recording", "la canción de la clase enlaza a su grabación");
+    check((await getLatestCeremonyYear(HALL)) === 2025, "/awards/<salón> redirige a la clase más reciente");
+    const classes = (await listHallOfFameClasses()).filter((c) => c.awardSlug === HALL);
+    check(classes.length === 1 && classes[0]!.year === 2025, "el bloque de salones trae la última clase cerrada");
+    check(classes[0]!.inductees.length === 3 && classes[0]!.albumCount === 2 && classes[0]!.recordingCount === 1, "con todas sus incorporaciones (2 álbumes y 1 canción)");
+    check(classes[0]!.years.join() === "2025,2021", "y los años de todas las clases cerradas");
+
+    console.log("\nUn salón no cuenta como premio ganado");
+    const competitive = (await listLatestCeremoniesByAward()).filter((c) => c.awardSlug.startsWith("smoke-"));
+    check(!competitive.some((c) => c.awardSlug === HALL), "las tarjetas de premios no incluyen el salón");
+    check(!(await listMostAwardedArtists(1000)).some((a) => a.name === "Smoke Salon Banda"), "«Los más premiados» no cuenta las incorporaciones (dos álbumes habrían bastado para entrar)");
+    const [hallAlbumRow] = await db.select({ id: releaseGroup.id }).from(releaseGroup).where(eq(releaseGroup.mbid, HALL_ALBUM_1));
+    const [raw] = await db.execute<{ n: number }>(sql`SELECT count(*)::int AS n FROM award_nomination WHERE release_group_id = ${hallAlbumRow!.id}`);
+    const [scored] = await db.execute<{ n: number }>(sql`SELECT count(*)::int AS n FROM ${competitionNominations} cn WHERE cn.release_group_id = ${hallAlbumRow!.id}`);
+    check(raw!.n === 1 && scored!.n === 0, "el puntaje de destacados no ve la incorporación (está en la tabla, no en la subconsulta competitiva)");
+
+    console.log("\nSolo clases cerradas");
+    writeHall({ 2099: hallClass(2099, "2099-05-08", [{ title: "Futuro", artist: "Nadie", won: true }], []) });
+    check(readAllAwards(hallDir).errors.some((e) => e.includes("aún no se celebró")), "una clase con la gala en el futuro no se puede cargar");
+    writeHall({ 2025: { ...hallClass(2025, "2025-05-16", [{ title: "X", artist: "Y", won: true }], []), edition: 3 } });
+    check(readAllAwards(hallDir).errors.some((e) => e.includes('"edition" no aplica')), "ni una con número de edición");
+    rmSync(hallDir, { recursive: true, force: true });
 
     console.log("\nSmoke de premios: OK");
   } finally {

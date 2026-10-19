@@ -1,0 +1,922 @@
+{
+  "award": "grammy-hall-of-fame",
+  "year": 2020,
+  "heldOn": "2020-01-14",
+  "sourceUrl": "https://www.grammy.com/news/grammy-hall-fame-welcomes-recordings-neil-diamond-eurythmics-elton-john-joni/",
+  "categories": [
+    {
+      "key": "albums",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Capitol Presents the King Cole Trio",
+          "artist": "The King Cole Trio",
+          "searchAs": {
+            "title": "King Cole Trio",
+            "artist": "Nat King Cole"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ea72dcd4-14ae-490c-a5bf-955fa52ebb59",
+            "seed": {
+              "kind": "release_group",
+              "title": "Selection of Nat King Cole Trio",
+              "category": "compilation",
+              "firstReleaseDate": "1998-06-16",
+              "credits": [
+                {
+                  "name": "Nat King Cole",
+                  "artist": {
+                    "id": "7739b88f-8d40-4af5-b4d4-5e5e53755fd5",
+                    "name": "The Nat King Cole Trio"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Clouds",
+          "artist": "Joni Mitchell",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e0f5f627-ce00-3ed1-a3d4-8e19440b7acf",
+            "seed": {
+              "kind": "release_group",
+              "title": "Clouds",
+              "category": "studio",
+              "firstReleaseDate": "1969-05",
+              "credits": [
+                {
+                  "name": "Joni Mitchell",
+                  "artist": {
+                    "id": "a6de8ef9-b1a1-4756-97aa-481bbb8a4069",
+                    "name": "Joni Mitchell"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Eat a Peach",
+          "artist": "The Allman Brothers Band",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "0b1189ad-0bdf-34bc-89e4-ff05133ec51b",
+            "seed": {
+              "kind": "release_group",
+              "title": "Eat a Peach",
+              "category": "studio",
+              "firstReleaseDate": "1972-02-12",
+              "credits": [
+                {
+                  "name": "The Allman Brothers Band",
+                  "artist": {
+                    "id": "72359492-22be-4ed9-aaa0-efa434fb2b01",
+                    "name": "The Allman Brothers Band"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Frampton Comes Alive!",
+          "artist": "Peter Frampton",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "cbf9819e-4a0b-35f1-9b1c-ab34764cf10c",
+            "seed": {
+              "kind": "release_group",
+              "title": "Frampton Comes Alive!",
+              "category": "live_other",
+              "firstReleaseDate": "1976-01-06",
+              "credits": [
+                {
+                  "name": "Peter Frampton",
+                  "artist": {
+                    "id": "638206ee-0e3d-47cf-9769-d73330b15a87",
+                    "name": "Peter Frampton"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "It Takes a Nation of Millions to Hold Us Back",
+          "artist": "Public Enemy",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "01921d99-9d15-3fce-8734-46e58327cfb7",
+            "seed": {
+              "kind": "release_group",
+              "title": "It Takes a Nation of Millions to Hold Us Back",
+              "category": "studio",
+              "firstReleaseDate": "1988-06-28",
+              "credits": [
+                {
+                  "name": "Public Enemy",
+                  "artist": {
+                    "id": "bf2e15d0-4b77-469e-bfb4-f8414415baca",
+                    "name": "Public Enemy"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Piano Rags by Scott Joplin",
+          "artist": "Joshua Rifkin",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2fbd7fe8-3844-3347-908b-8033e2af56f1",
+            "seed": {
+              "kind": "release_group",
+              "title": "Piano Rags by Scott Joplin",
+              "category": "studio",
+              "firstReleaseDate": "1970",
+              "credits": [
+                {
+                  "name": "Scott Joplin",
+                  "joinphrase": "; ",
+                  "artist": {
+                    "id": "aec8a328-d2e8-4780-b2ea-318c7f8d6f75",
+                    "name": "Scott Joplin"
+                  }
+                },
+                {
+                  "name": "Joshua Rifkin",
+                  "artist": {
+                    "id": "d63cbb12-0d16-4fd5-8fbf-a57dc8ddfe83",
+                    "name": "Joshua Rifkin"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Q: Are We Not Men? A: We Are Devo!",
+          "artist": "Devo",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "60a754f9-50e1-346a-97db-925a1e2ad7e0",
+            "seed": {
+              "kind": "release_group",
+              "title": "Q: Are We Not Men? A: We Are Devo!",
+              "category": "studio",
+              "firstReleaseDate": "1978-07",
+              "credits": [
+                {
+                  "name": "DEVO",
+                  "artist": {
+                    "id": "d2db1078-c170-4e22-b261-14f3ad60a690",
+                    "name": "DEVO"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Taj Mahal",
+          "artist": "Taj Mahal",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "492a6f99-0e60-37ff-8548-5d571b3ec10d",
+            "seed": {
+              "kind": "release_group",
+              "title": "Taj Mahal",
+              "category": "studio",
+              "firstReleaseDate": "1968",
+              "credits": [
+                {
+                  "name": "Taj Mahal",
+                  "artist": {
+                    "id": "4f48167c-29b8-4bde-a749-6803ce0a3922",
+                    "name": "Taj Mahal"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Zodiac Suite",
+          "artist": "Mary Lou Williams",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "bf0ae0c9-7d4e-42ed-a782-da48f565daa4",
+            "seed": {
+              "kind": "release_group",
+              "title": "Zodiac Suite",
+              "category": "studio",
+              "firstReleaseDate": "1975",
+              "credits": [
+                {
+                  "name": "Mary Lou Williams",
+                  "artist": {
+                    "id": "4a0c1055-ec66-47a0-a668-c60f48477ed2",
+                    "name": "Mary Lou Williams"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "songs",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Afro-Cuban Jazz Suite",
+          "artist": "Machito",
+          "anchor": {
+            "title": "Afro-Cuban Jazz Suite",
+            "artist": "Machito and His Afro-Cubans"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Carolina Shout",
+          "artist": "James P. Johnson",
+          "anchor": {
+            "title": "Carolina Shout",
+            "artist": "James P. Johnson"
+          },
+          "won": true,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Devil Got My Woman",
+          "artist": "Skip James",
+          "anchor": {
+            "title": "Devil Got My Woman",
+            "artist": "Skip James"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "96bf6318-1b49-4ebd-8a9a-694d84f9ad84",
+            "seed": {
+              "kind": "recording",
+              "title": "Devil Got My Woman",
+              "durationSec": 315,
+              "credits": [
+                {
+                  "name": "Skip James",
+                  "artist": {
+                    "id": "f205743d-4441-471d-a3af-66f584738e29",
+                    "name": "Skip James"
+                  }
+                }
+              ],
+              "anchorMbid": "ff0645a3-598f-366b-8653-3acc86f5274e",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Devil Got My Woman",
+                "category": "studio",
+                "firstReleaseDate": "1968",
+                "credits": [
+                  {
+                    "name": "Skip James",
+                    "artist": {
+                      "id": "f205743d-4441-471d-a3af-66f584738e29",
+                      "name": "Skip James"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "How Can a Poor Man Stand Such Times and Live",
+          "artist": "Blind Alfred Reed",
+          "anchor": {
+            "title": "How Can a Poor Man Stand Such Times and Live",
+            "artist": "Blind Alfred Reed"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "f3eeba35-f9be-43d5-910d-a9eeddaac48d",
+            "seed": {
+              "kind": "recording",
+              "title": "How Can a Poor Man Stand Such Times and Live",
+              "durationSec": 191,
+              "credits": [
+                {
+                  "name": "Blind Alfred Reed",
+                  "artist": {
+                    "id": "b73930f3-bdad-436c-b7b0-40260056836b",
+                    "name": "Blind Alfred Reed"
+                  }
+                }
+              ],
+              "anchorMbid": "84becef5-69a5-4490-aff4-d943709bf48a",
+              "anchor": {
+                "kind": "release_group",
+                "title": "How Can a Poor Man Stand Such Times and Live / Money Cravin' Folks",
+                "category": "single_ep",
+                "firstReleaseDate": "1930-05-16",
+                "credits": [
+                  {
+                    "name": "Blind Alfred Reed",
+                    "artist": {
+                      "id": "b73930f3-bdad-436c-b7b0-40260056836b",
+                      "name": "Blind Alfred Reed"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "I'll Fly Away",
+          "artist": "The Chuck Wagon Gang",
+          "anchor": {
+            "title": "I'll Fly Away",
+            "artist": "The Chuck Wagon Gang"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "9611dfd5-d7e8-4d1b-a84b-0100880e6a3c",
+            "seed": {
+              "kind": "recording",
+              "title": "I'll Fly Away",
+              "durationSec": null,
+              "credits": [
+                {
+                  "name": "The Chuck Wagon Gang",
+                  "artist": {
+                    "id": "d6a43d15-4263-4aa0-853e-c30877292bb0",
+                    "name": "The Chuck Wagon Gang"
+                  }
+                }
+              ],
+              "anchorMbid": "124f2371-63b1-4f8e-be4b-93f9c3273703",
+              "anchor": {
+                "kind": "release_group",
+                "title": "I'll Fly Away",
+                "category": "compilation",
+                "firstReleaseDate": "2004",
+                "credits": [
+                  {
+                    "name": "The Chuck Wagon Gang",
+                    "artist": {
+                      "id": "d6a43d15-4263-4aa0-853e-c30877292bb0",
+                      "name": "The Chuck Wagon Gang"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "I'm a Man",
+          "artist": "Bo Diddley",
+          "anchor": {
+            "title": "I'm a Man",
+            "artist": "Bo Diddley"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a01cd0d1-f0d1-4d3a-8d85-6fb37fa05cc8",
+            "seed": {
+              "kind": "recording",
+              "title": "I'm a Man",
+              "durationSec": 165,
+              "credits": [
+                {
+                  "name": "Bo Diddley",
+                  "artist": {
+                    "id": "bf659d74-0b61-488c-8a7d-594f43bed9e0",
+                    "name": "Bo Diddley"
+                  }
+                }
+              ],
+              "anchorMbid": "dd3e7eff-05bd-4a0d-8333-ef06c3fe9875",
+              "anchor": {
+                "kind": "release_group",
+                "title": "I'm A Man",
+                "category": "single_ep",
+                "firstReleaseDate": "1965",
+                "credits": [
+                  {
+                    "name": "Bo Diddley",
+                    "artist": {
+                      "id": "bf659d74-0b61-488c-8a7d-594f43bed9e0",
+                      "name": "Bo Diddley"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "I'm a Man of Constant Sorrow",
+          "artist": "The Stanley Brothers & The Clinch Mountain Boys",
+          "anchor": {
+            "title": "I'm a Man of Constant Sorrow",
+            "artist": "The Stanley Brothers & The Clinch Mountain Boys"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ecd130e8-5cec-4855-97d7-225c0a8b593e",
+            "seed": {
+              "kind": "recording",
+              "title": "I'm a Man of Constant Sorrow",
+              "durationSec": 177,
+              "credits": [
+                {
+                  "name": "The Stanley Brothers",
+                  "artist": {
+                    "id": "8f918972-81e9-43a5-80a4-d244a42dc5b2",
+                    "name": "The Stanley Brothers"
+                  }
+                }
+              ],
+              "anchorMbid": "2af6923d-1231-30fa-9e0f-a5a94418087b",
+              "anchor": {
+                "kind": "release_group",
+                "title": "I'm a Man of Constant Sorrow",
+                "category": "compilation",
+                "firstReleaseDate": "2002",
+                "credits": [
+                  {
+                    "name": "The Stanley Brothers",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "8f918972-81e9-43a5-80a4-d244a42dc5b2",
+                      "name": "The Stanley Brothers"
+                    }
+                  },
+                  {
+                    "name": "The Clinch Mountain Boys",
+                    "artist": {
+                      "id": "a1bab8e5-8a9c-4c0a-8315-006170b1330b",
+                      "name": "The Clinch Mountain Boys"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Miserlou",
+          "artist": "Dick Dale and the Del-Tones",
+          "anchor": {
+            "title": "Surfers' Choice",
+            "artist": "Dick Dale"
+          },
+          "searchAs": {
+            "artist": "Dick Dale"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "73ba7085-0936-4173-ad95-6a03886948ca",
+            "seed": {
+              "kind": "recording",
+              "title": "Miserlou",
+              "durationSec": null,
+              "credits": [
+                {
+                  "name": "Dick Dale and His Del‐Tones",
+                  "artist": {
+                    "id": "820263ae-ab51-426d-85e9-bed5a74f00e1",
+                    "name": "Dick Dale and His Del‐Tones"
+                  }
+                }
+              ],
+              "anchorMbid": "572ab42c-22d6-39c0-b886-d098d451f8d9",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Surfers’ Choice",
+                "category": "studio",
+                "firstReleaseDate": "1962",
+                "credits": [
+                  {
+                    "name": "Dick Dale and His Del‐Tones",
+                    "artist": {
+                      "id": "820263ae-ab51-426d-85e9-bed5a74f00e1",
+                      "name": "Dick Dale and His Del‐Tones"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Oh Mary Don't You Weep",
+          "artist": "Swan Silvertones",
+          "anchor": {
+            "title": "Oh Mary Don't You Weep",
+            "artist": "The Swan Silvertones"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Pancho and Lefty",
+          "artist": "Willie Nelson and Merle Haggard",
+          "anchor": {
+            "title": "Pancho and Lefty",
+            "artist": "Willie Nelson and Merle Haggard"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "7a20f7c4-b3eb-4888-8aff-14476591b413",
+            "seed": {
+              "kind": "recording",
+              "title": "Pancho and Lefty",
+              "durationSec": 285,
+              "credits": [
+                {
+                  "name": "Willie Nelson",
+                  "joinphrase": " and ",
+                  "artist": {
+                    "id": "668fd73c-bf54-4310-a139-305517f05311",
+                    "name": "Willie Nelson"
+                  }
+                },
+                {
+                  "name": "Merle Haggard",
+                  "artist": {
+                    "id": "deb2448c-6fdf-4d31-921e-757630515dbd",
+                    "name": "Merle Haggard"
+                  }
+                }
+              ],
+              "anchorMbid": "34146cb9-a8ab-458a-8ef9-a820ac9ac5ad",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Pancho and Lefty",
+                "category": "single_ep",
+                "firstReleaseDate": "1982",
+                "credits": [
+                  {
+                    "name": "Willie Nelson",
+                    "joinphrase": " and ",
+                    "artist": {
+                      "id": "668fd73c-bf54-4310-a139-305517f05311",
+                      "name": "Willie Nelson"
+                    }
+                  },
+                  {
+                    "name": "Merle Haggard",
+                    "artist": {
+                      "id": "deb2448c-6fdf-4d31-921e-757630515dbd",
+                      "name": "Merle Haggard"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Sweet Caroline (Good Times Never Seemed So Good)",
+          "artist": "Neil Diamond",
+          "anchor": {
+            "title": "Brother Love's Travelling Salvation Show",
+            "artist": "Neil Diamond"
+          },
+          "searchAs": {
+            "title": "Sweet Caroline"
+          },
+          "won": true,
+          "resolved": {
+            "status": "manual",
+            "mbid": "9d0a89d7-72aa-4b60-bf0e-b8b8247ad805",
+            "seed": {
+              "kind": "recording",
+              "title": "Sweet Caroline",
+              "durationSec": 203,
+              "credits": [
+                {
+                  "name": "Neil Diamond",
+                  "artist": {
+                    "id": "a42d3fd5-55de-4206-86c3-4fbb5404018f",
+                    "name": "Neil Diamond"
+                  }
+                }
+              ],
+              "anchorMbid": "fafbec54-cec5-3d3f-bb55-baa245e8b0d2",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Brother Love’s Travelling Salvation Show",
+                "category": "studio",
+                "firstReleaseDate": "1969-04",
+                "credits": [
+                  {
+                    "name": "Neil Diamond",
+                    "artist": {
+                      "id": "a42d3fd5-55de-4206-86c3-4fbb5404018f",
+                      "name": "Neil Diamond"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Sweet Dreams (Are Made of This)",
+          "artist": "Eurythmics",
+          "anchor": {
+            "title": "Sweet Dreams (Are Made of This)",
+            "artist": "Eurythmics"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "bf8e28bb-b4ef-4b9a-bc64-8f58dd4ff5dd",
+            "seed": {
+              "kind": "recording",
+              "title": "Sweet Dreams (Are Made of This)",
+              "durationSec": 216,
+              "credits": [
+                {
+                  "name": "Eurythmics",
+                  "artist": {
+                    "id": "b4d32cff-f19e-455f-86c4-f347d824ca61",
+                    "name": "Eurythmics"
+                  }
+                }
+              ],
+              "anchorMbid": "b969f851-b5cf-3a3f-9bfe-1280eb271406",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Sweet Dreams (Are Made of This)",
+                "category": "studio",
+                "firstReleaseDate": "1983",
+                "credits": [
+                  {
+                    "name": "Eurythmics",
+                    "artist": {
+                      "id": "b4d32cff-f19e-455f-86c4-f347d824ca61",
+                      "name": "Eurythmics"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "These Boots Are Made for Walkin'",
+          "artist": "Nancy Sinatra",
+          "anchor": {
+            "title": "Boots",
+            "artist": "Nancy Sinatra"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ccba168d-bcfe-4564-a9e1-8cacc3307545",
+            "seed": {
+              "kind": "recording",
+              "title": "These Boots Are Made for Walkin’",
+              "durationSec": 163,
+              "credits": [
+                {
+                  "name": "Nancy Sinatra",
+                  "artist": {
+                    "id": "c2e36518-9c3b-4dcb-82ad-a3fc7fe99c67",
+                    "name": "Nancy Sinatra",
+                    "sort-name": "Sinatra, Nancy",
+                    "aliases": [
+                      {
+                        "sort-name": "Nancy Sinatra & Dean Martin",
+                        "name": "Nancy Sinatra & Dean Martin",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Sinatra, Nancy Sandra",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Nancy Sandra Sinatra",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "931e62e5-6cbf-3a36-a54f-c230e67d7b6b",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Boots",
+                "category": "studio",
+                "firstReleaseDate": "1966",
+                "credits": [
+                  {
+                    "name": "Nancy Sinatra",
+                    "artist": {
+                      "id": "c2e36518-9c3b-4dcb-82ad-a3fc7fe99c67",
+                      "name": "Nancy Sinatra",
+                      "sort-name": "Sinatra, Nancy",
+                      "aliases": [
+                        {
+                          "sort-name": "Nancy Sinatra & Dean Martin",
+                          "name": "Nancy Sinatra & Dean Martin",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Sinatra, Nancy Sandra",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "Nancy Sandra Sinatra",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Tiny Dancer",
+          "artist": "Elton John",
+          "anchor": {
+            "title": "Tiny Dancer",
+            "artist": "Elton John"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "4da75f1a-070f-47b1-8870-cda54957a1ca",
+            "seed": {
+              "kind": "recording",
+              "title": "Tiny Dancer (Hold Me Closer)",
+              "durationSec": 204,
+              "credits": [
+                {
+                  "name": "DJ Ironik",
+                  "joinphrase": " feat. ",
+                  "artist": {
+                    "id": "b27f61b3-7599-46ea-a385-e150bf0b5b95",
+                    "name": "Ironik"
+                  }
+                },
+                {
+                  "name": "Chipmunk",
+                  "joinphrase": " & ",
+                  "artist": {
+                    "id": "8ec6bf47-d22f-4a2f-b930-0f7feb10ea3f",
+                    "name": "Chip"
+                  }
+                },
+                {
+                  "name": "Elton John",
+                  "artist": {
+                    "id": "b83bc61f-8451-4a5d-8b8e-7e9ed295e822",
+                    "name": "Elton John"
+                  }
+                }
+              ],
+              "anchorMbid": "65956223-41d9-45fb-a7d3-49fcda11156a",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Tiny Dancer (Hold Me Closer) (radio edit)",
+                "category": "single_ep",
+                "firstReleaseDate": "2009-04-24",
+                "credits": [
+                  {
+                    "name": "Ironik",
+                    "joinphrase": " ft. ",
+                    "artist": {
+                      "id": "b27f61b3-7599-46ea-a385-e150bf0b5b95",
+                      "name": "Ironik"
+                    }
+                  },
+                  {
+                    "name": "Chipmunk",
+                    "joinphrase": " & ",
+                    "artist": {
+                      "id": "8ec6bf47-d22f-4a2f-b930-0f7feb10ea3f",
+                      "name": "Chip"
+                    }
+                  },
+                  {
+                    "name": "Elton John",
+                    "artist": {
+                      "id": "b83bc61f-8451-4a5d-8b8e-7e9ed295e822",
+                      "name": "Elton John"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Walkin' After Midnight",
+          "artist": "Patsy Cline",
+          "anchor": {
+            "title": "Walkin' After Midnight",
+            "artist": "Patsy Cline"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "e4bfcb0d-7071-412a-9e2e-9ed5538f17ca",
+            "seed": {
+              "kind": "recording",
+              "title": "Walkin’ After Midnight",
+              "durationSec": 120,
+              "credits": [
+                {
+                  "name": "Patsy Cline",
+                  "artist": {
+                    "id": "ad82dd72-0df3-4a09-8d7a-1af9c9e80522",
+                    "name": "Patsy Cline"
+                  }
+                }
+              ],
+              "anchorMbid": "75997448-a11c-49b0-82e0-20cb6811b15c",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Walkin’ After Midnight",
+                "category": "single_ep",
+                "firstReleaseDate": "1966",
+                "credits": [
+                  {
+                    "name": "Patsy Cline",
+                    "artist": {
+                      "id": "ad82dd72-0df3-4a09-8d7a-1af9c9e80522",
+                      "name": "Patsy Cline"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Wipe Out",
+          "artist": "The Surfaris",
+          "anchor": {
+            "title": "Wipe Out",
+            "artist": "The Surfaris"
+          },
+          "won": true,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": []
+          }
+        }
+      ]
+    }
+  ]
+}

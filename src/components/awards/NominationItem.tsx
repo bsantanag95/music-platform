@@ -61,7 +61,8 @@ export function NomineeVisual({ nomination, size, person = false }: { nomination
   );
 }
 
-function subjectHref(nomination: NominationView): string | null {
+/** Enlace de la ficha del sujeto del catálogo (álbum, canción o artista); `null` si el nominado es solo texto. */
+export function subjectHref(nomination: NominationView): string | null {
   const subject = nomination.subject;
   if (!subject) return null;
   if (subject.kind === "release_group") return albumHref(subject.album.artistName, subject.album.title, subject.album.id);
@@ -72,7 +73,7 @@ function subjectHref(nomination: NominationView): string | null {
 const anchorHref = (album: AlbumRef) => albumHref(album.artistName, album.title, album.id);
 
 /** Título y artista del nominado: los del catálogo si el sujeto es un álbum o una grabación, el texto curado si no. */
-function titleAndArtist(nomination: NominationView): { title: string; artist: string | null } {
+export function titleAndArtist(nomination: NominationView): { title: string; artist: string | null } {
   const subject = nomination.subject;
   if (subject?.kind === "release_group") return { title: subject.album.title, artist: subject.album.artistName };
   if (subject?.kind === "recording") return { title: subject.title, artist: subject.artistName };
@@ -92,11 +93,14 @@ export function NominationItem({
   nomination,
   size = "sm",
   person = false,
+  wonLabel,
 }: {
   nomination: NominationView;
   size?: NominationSize;
   /** La categoría premia a personas: sin foto, la inicial. */
   person?: boolean;
+  /** Rótulo de quien ganó; por omisión "Ganador". Un salón de la fama usa "Ingresó" (ADR 0044). */
+  wonLabel?: string;
 }) {
   const t = useTranslations("awards");
   const href = subjectHref(nomination);
@@ -125,7 +129,7 @@ export function NominationItem({
             >
               <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3" />
             </svg>
-            {t("winner")}
+            {wonLabel ?? t("winner")}
           </span>
         ) : null}
         {href ? (

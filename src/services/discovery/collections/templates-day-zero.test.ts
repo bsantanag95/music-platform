@@ -1,10 +1,24 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/db", () => ({ db: {} }));
+const mocks = vi.hoisted(() => ({ execute: vi.fn() }));
+vi.mock("@/db", () => ({ db: { execute: mocks.execute } }));
 
+import { PgDialect } from "drizzle-orm/pg-core";
+import type { SQL } from "drizzle-orm";
 import { GENRE_FAMILIES } from "@/services/genres/families";
-import { familiesFromWeek } from "./templates-day-zero";
+import { familiesFromWeek, grammyWinners } from "./templates-day-zero";
 import { weekNumber } from "./periods";
+
+describe("grammyWinners", () => {
+  it("elige la ceremonia más reciente solo entre premios competitivos: un salón de la fama no es una ceremonia de ganadores", async () => {
+    mocks.execute.mockResolvedValue([]);
+    const result = await grammyWinners.plan(new Date("2026-10-19T00:00:00Z"), {} as never);
+    expect(result).toHaveProperty("skip");
+    const text = new PgDialect().sqlToQuery(mocks.execute.mock.calls[0]![0] as SQL).sql;
+    expect(text).toContain("a.kind = 'competition'");
+    expect(text).toContain("order by c.held_on desc limit 1");
+  });
+});
 
 describe("familiesFromWeek", () => {
   it("contiene todas las familias, rotadas, sin repetir", () => {

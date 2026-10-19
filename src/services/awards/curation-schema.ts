@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ReleaseGroupCategorySchema } from "@/lib/api/schemas";
-import { AWARD_CATEGORY_TIERS, AWARD_COVERAGES, AWARD_HONORS, AWARD_SUBJECT_KINDS, AWARD_VOTINGS } from "@/db/schema";
+import { AWARD_CATEGORY_TIERS, AWARD_COVERAGES, AWARD_HONORS, AWARD_KINDS, AWARD_SUBJECT_KINDS, AWARD_VOTINGS } from "@/db/schema";
 
 // Formato de los archivos de curaduría de premios (`data/awards/<premio>/`, openspec: add-music-awards, ADR 0032).
 // Lo comparten el script de resolución, el de carga y la prueba que valida los archivos en CI. Las reglas que
@@ -104,7 +104,9 @@ export const CeremonyCategorySchema = z.object({
 export const CeremonyFileSchema = z.object({
   award: slug,
   year: z.number().int().min(1900).max(2100),
-  edition: z.number().int().positive(),
+  /** Número de edición: obligatorio en una competencia y ausente en un salón de la fama, cuyas clases no se numeran (ADR 0044). */
+  edition: z.number().int().positive().optional(),
+  /** Fecha de la ceremonia; en un salón, la de la gala de la clase (o, si la fuente no la da, la de su anuncio). */
   heldOn: isoDate,
   /** Fuente contra la que se revisó la ceremonia (Wikipedia o el sitio oficial). */
   sourceUrl: z.url(),
@@ -128,6 +130,8 @@ export type CategoryDefinition = z.infer<typeof CategoryDefinitionSchema>;
 
 export const CategoriesFileSchema = z.object({
   award: slug,
+  /** Una competencia (nominados y ganadores) o un salón de la fama (una clase de incorporaciones por año); omitido = competencia. */
+  kind: z.enum(AWARD_KINDS).default("competition"),
   /** Quién decide el premio (se muestra en la ceremonia): la academia, un jurado, el público, o el público y un comité. */
   voting: z.enum(AWARD_VOTINGS),
   categories: z.array(CategoryDefinitionSchema).min(1),
@@ -193,14 +197,30 @@ export function validateCategories(file: CategoriesFile, fileName: string): stri
  * Reglas que cruzan la ceremonia con las categorías. Devuelve todos los errores con archivo y categoría; una lista
  * vacía significa que la ceremonia se puede cargar.
  */
-export function validateCeremony(ceremony: CeremonyFile, categories: CategoriesFile, fileName: string): string[] {
+export function validateCeremony(
+  ceremony: CeremonyFile,
+  categories: CategoriesFile,
+  fileName: string,
+  today: string = new Date().toISOString().slice(0, 10),
+): string[] {
   const errors: string[] = [];
   const at = (key: string) => `${fileName} › ${key}`;
+  const hall = categories.kind === "hall_of_fame";
+  if (hall) {
+    if (ceremony.edition !== undefined) errors.push(`${fileName}: "edition" no aplica a un salón de la fama (las clases no se numeran)`);
+    // Solo se cubre una clase cerrada, es decir, con su gala ya celebrada.
+    if (ceremony.heldOn > today) errors.push(`${fileName}: la clase aún no se celebró (${ceremony.heldOn}); solo se cargan clases cerradas`);
+  } else if (ceremony.edition === undefined) {
+    errors.push(`${fileName}: un premio competitivo necesita "edition"`);
+  }
   if (ceremony.award !== categories.award) {
     errors.push(`${fileName}: el premio "${ceremony.award}" no coincide con el de las categorías ("${categories.award}")`);
   }
-  if (Number(ceremony.heldOn.slice(0, 4)) !== ceremony.year) {
-    errors.push(`${fileName}: la fecha ${ceremony.heldOn} no es del año ${ceremony.year}`);
+  // Una competencia se celebra en el año de su edición; la clase de un salón puede anunciarse el año anterior (la "2021" del
+  // Grammy Hall of Fame se anunció el 21 de diciembre de 2020).
+  const heldYear = Number(ceremony.heldOn.slice(0, 4));
+  if (hall ? heldYear !== ceremony.year && heldYear !== ceremony.year - 1 : heldYear !== ceremony.year) {
+    errors.push(`${fileName}: la fecha ${ceremony.heldOn} no es del año ${ceremony.year}${hall ? " ni del anterior" : ""}`);
   }
   const definitions = new Map(categories.categories.map((c) => [c.key, c]));
   const seen = new Set<string>();
@@ -212,8 +232,14 @@ export function validateCeremony(ceremony: CeremonyFile, categories: CategoriesF
       errors.push(`${at(category.key)}: la categoría no existe en categories.json`);
       continue;
     }
-    if (!category.nominees.some((n) => n.won)) errors.push(`${at(category.key)}: no tiene ganador`);
-    if (category.coverage === "complete" && category.nominees.length < MIN_COMPLETE_NOMINEES) {
+    if (!category.nominees.some((n) => n.won)) {
+      errors.push(`${at(category.key)}: ${hall ? "no tiene incorporaciones" : "no tiene ganador"}`);
+    }
+    if (hall && category.coverage !== "complete") {
+      errors.push(`${at(category.key)}: en un salón de la fama la cobertura es complete (la clase se publica entera)`);
+    }
+    // Una clase de un salón puede ser corta (dos canciones): el mínimo de las listas completas es de las competencias.
+    if (!hall && category.coverage === "complete" && category.nominees.length < MIN_COMPLETE_NOMINEES) {
       errors.push(
         `${at(category.key)}: la cobertura es complete pero hay ${category.nominees.length} nominados (mínimo ${MIN_COMPLETE_NOMINEES})`,
       );

@@ -1,0 +1,591 @@
+{
+  "award": "grammy-hall-of-fame",
+  "year": 2025,
+  "heldOn": "2025-05-16",
+  "sourceUrl": "https://www.grammy.com/news/grammy-hall-of-fame-2025-inductees/",
+  "categories": [
+    {
+      "key": "albums",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "#1 Record",
+          "artist": "Big Star",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "18ec10a7-864f-3f1b-8d68-5cb622165b20",
+            "seed": {
+              "kind": "release_group",
+              "title": "#1 Record",
+              "category": "studio",
+              "firstReleaseDate": "1972",
+              "credits": [
+                {
+                  "name": "Big Star",
+                  "artist": {
+                    "id": "21d177ba-3d51-461e-9b3f-ad9a80b419dc",
+                    "name": "Big Star"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "J.D. Crowe & The New South",
+          "artist": "J.D. Crowe & The New South",
+          "searchAs": {
+            "title": "J.D. Crowe & the New South",
+            "artist": "J. D. Crowe"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Never Too Much",
+          "artist": "Luther Vandross",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6e49186d-ce5c-3686-86cd-021f0ce1eda3",
+            "seed": {
+              "kind": "release_group",
+              "title": "Never Too Much",
+              "category": "studio",
+              "firstReleaseDate": "1981-08-12",
+              "credits": [
+                {
+                  "name": "Luther Vandross",
+                  "artist": {
+                    "id": "816d9b5d-eaf9-4a97-b5f7-6e82cd01aafe",
+                    "name": "Luther Vandross"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Reasonable Doubt",
+          "artist": "JAY-Z",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a7f852ba-08bc-36f1-92f3-4dc127f4b70a",
+            "seed": {
+              "kind": "release_group",
+              "title": "Reasonable Doubt",
+              "category": "studio",
+              "firstReleaseDate": "1996-06-25",
+              "credits": [
+                {
+                  "name": "Jaÿ‐Z",
+                  "artist": {
+                    "id": "f82bcf78-5b69-4622-a5ef-73800768d9ac",
+                    "name": "JAŸ-Z"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Supernatural",
+          "artist": "Santana",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "70e23797-9da2-33bb-be6f-a85e7b581b69",
+            "seed": {
+              "kind": "release_group",
+              "title": "Supernatural",
+              "category": "studio",
+              "firstReleaseDate": "1999-06-15",
+              "credits": [
+                {
+                  "name": "Santana",
+                  "artist": {
+                    "id": "9a3bf45c-347d-4630-894d-7cf3e8e0b632",
+                    "name": "Santana"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Tea for the Tillerman",
+          "artist": "Cat Stevens",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "418678e7-2807-3bed-a305-11b4181e533e",
+            "seed": {
+              "kind": "release_group",
+              "title": "Tea for the Tillerman",
+              "category": "studio",
+              "firstReleaseDate": "1970-11-23",
+              "credits": [
+                {
+                  "name": "Cat Stevens",
+                  "artist": {
+                    "id": "e2345fdf-2be7-47c5-a6dd-be64353ad134",
+                    "name": "Cat Stevens"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Wrecking Ball",
+          "artist": "Emmylou Harris",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "50bf0710-3c1f-3e96-aca7-21c8fd3c4930",
+            "seed": {
+              "kind": "release_group",
+              "title": "Wrecking Ball",
+              "category": "studio",
+              "firstReleaseDate": "1995-09-26",
+              "credits": [
+                {
+                  "name": "Emmylou Harris",
+                  "artist": {
+                    "id": "35ef61ca-43db-4772-ba27-0489e9ebcb69",
+                    "name": "Emmylou Harris"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Zombie",
+          "artist": "Fela Kuti & Afrika 70",
+          "searchAs": {
+            "artist": "Fela Kuti"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d3de5856-816a-4759-bf9c-d5ff0e5cd740",
+            "seed": {
+              "kind": "release_group",
+              "title": "Na Poi / Zombie",
+              "category": "compilation",
+              "firstReleaseDate": "1998-09-23",
+              "credits": [
+                {
+                  "joinphrase": " and ",
+                  "name": "Fela Kuti",
+                  "artist": {
+                    "id": "6514cffa-fbe0-4965-ad88-e998ead8a82a",
+                    "name": "Fela Kuti",
+                    "sort-name": "Kuti, Fela",
+                    "aliases": [
+                      {
+                        "sort-name": "フェラ・クティ",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "フェラ・クティ",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Ransome Kuti, Fela",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Fela Ransome Kuti",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Anikulapo-Kuti, Fela",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Fela Anikulapo-kuti",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Anikulapo Kuti, Fela",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Fela Anikulapo Kuti",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Ransome-Kuti, Olufela Olusegun Oludotun",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Olufela Olusegun Oludotun Ransome-Kuti",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": "1938-10-15",
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Fela & Egypt 80",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Fela & Egypt 80",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Fela and Africa 70",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Fela and Africa 70",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Fela Anikulapo Kuti & Africa '70",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Fela Anikulapo Kuti & Africa '70",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Fela",
+                        "name": "Fela",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Africa 70",
+                  "artist": {
+                    "id": "dc45f2dc-ef36-4a7a-aa52-97495fca8ced",
+                    "name": "Africa 70",
+                    "sort-name": "Africa 70",
+                    "aliases": [
+                      {
+                        "sort-name": "Fela Ransome Kuti & Africa 70",
+                        "name": "Fela Ransome Kuti & Africa 70",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Fela Kuti & Africa '70",
+                        "name": "Fela Kuti & Africa '70",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Fela Ransome Kuti & the Africa '70",
+                        "name": "Fela Ransome Kuti & the Africa '70",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Fela Anikulapo Kuti & Afrika 70",
+                        "name": "Fela Anikulapo Kuti & Afrika 70",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Fela Ransome-Kuti and Africa '70",
+                        "name": "Fela Ransome-Kuti and Africa '70",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Kuti, Fela & Afrika 70",
+                        "name": "Fela Kuti & Afrika 70",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "songs",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Color Him Father",
+          "artist": "Linda Martell",
+          "anchor": {
+            "title": "Color Him Father",
+            "artist": "Linda Martell"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1f2deb9b-4eba-45dc-9375-fc1bf5a67b98",
+            "seed": {
+              "kind": "recording",
+              "title": "Color Him Father",
+              "durationSec": 161,
+              "credits": [
+                {
+                  "name": "Linda Martell",
+                  "artist": {
+                    "id": "86e8d0f5-68e8-4875-979a-c46205be3f66",
+                    "name": "Linda Martell"
+                  }
+                }
+              ],
+              "anchorMbid": "a9a86c76-be4d-4e0e-815b-91f698935836",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Color Him Father",
+                "category": "single_ep",
+                "firstReleaseDate": "1970",
+                "credits": [
+                  {
+                    "name": "Linda Martell",
+                    "artist": {
+                      "id": "86e8d0f5-68e8-4875-979a-c46205be3f66",
+                      "name": "Linda Martell"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Conga",
+          "artist": "Gloria Estefan & Miami Sound Machine",
+          "anchor": {
+            "title": "Primitive Love",
+            "artist": "Miami Sound Machine"
+          },
+          "searchAs": {
+            "artist": "Miami Sound Machine"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c7a0fed2-988b-43d2-b7ff-4055fcad868f",
+            "seed": {
+              "kind": "recording",
+              "title": "Conga",
+              "durationSec": 255,
+              "credits": [
+                {
+                  "name": "Miami Sound Machine",
+                  "artist": {
+                    "id": "72b3b981-92b7-4b5c-8a83-35717358b76e",
+                    "name": "Miami Sound Machine",
+                    "sort-name": "Miami Sound Machine",
+                    "aliases": [
+                      {
+                        "sort-name": "MSM",
+                        "name": "MSM",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Miame Sound Machine (MSM)",
+                        "name": "Miame Sound Machine (MSM)",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "f9f909ab-f88e-3f77-a9b9-e3590604f12b",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Primitive Love",
+                "category": "studio",
+                "firstReleaseDate": "1985-08-09",
+                "credits": [
+                  {
+                    "name": "Miami Sound Machine",
+                    "artist": {
+                      "id": "72b3b981-92b7-4b5c-8a83-35717358b76e",
+                      "name": "Miami Sound Machine",
+                      "sort-name": "Miami Sound Machine",
+                      "aliases": [
+                        {
+                          "sort-name": "MSM",
+                          "name": "MSM",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Miame Sound Machine (MSM)",
+                          "name": "Miame Sound Machine (MSM)",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "How I Got Over",
+          "artist": "Clara Ward",
+          "anchor": {
+            "title": "How I Got Over",
+            "artist": "Clara Ward"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Knock on Wood",
+          "artist": "Eddie Floyd",
+          "anchor": {
+            "title": "Knock on Wood",
+            "artist": "Eddie Floyd"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "83936b86-05ff-4584-b6dc-d152747ac670",
+            "seed": {
+              "kind": "recording",
+              "title": "Knock on Wood",
+              "durationSec": 184,
+              "credits": [
+                {
+                  "name": "Eddie Floyd",
+                  "artist": {
+                    "id": "484e8d72-ad54-43cf-bceb-283529ac2b62",
+                    "name": "Eddie Floyd"
+                  }
+                }
+              ],
+              "anchorMbid": "7390c605-808e-3086-923b-9be0019e7ded",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Knock on Wood",
+                "category": "studio",
+                "firstReleaseDate": "1967",
+                "credits": [
+                  {
+                    "name": "Eddie Floyd",
+                    "artist": {
+                      "id": "484e8d72-ad54-43cf-bceb-283529ac2b62",
+                      "name": "Eddie Floyd"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Last Kind Words Blues",
+          "artist": "Geeshie Wiley",
+          "anchor": {
+            "title": "Last Kind Words Blues",
+            "artist": "Geeshie Wiley"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "76261be7-de54-4972-bb67-50202f3a1560",
+            "seed": {
+              "kind": "recording",
+              "title": "Last Kind Words Blues",
+              "durationSec": null,
+              "credits": [
+                {
+                  "name": "Geeshie Wiley",
+                  "artist": {
+                    "id": "139b1c0a-cd39-4281-9242-b5510c453a7e",
+                    "name": "Geeshie Wiley"
+                  }
+                }
+              ],
+              "anchorMbid": "9ed92866-6ea2-4543-b4bf-df82798a8e39",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Last Kind Words Blues / Skinny Leg Blues",
+                "category": "single_ep",
+                "firstReleaseDate": "1930-07",
+                "credits": [
+                  {
+                    "name": "Geeshie Wiley",
+                    "artist": {
+                      "id": "139b1c0a-cd39-4281-9242-b5510c453a7e",
+                      "name": "Geeshie Wiley"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

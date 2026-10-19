@@ -16,7 +16,13 @@ import {
 import { artistHref } from "@/lib/catalog-links";
 import { getCurrentUser } from "@/services/auth/authorization";
 import { getWinnerMarks, missingWinners, winnerAlbumIds } from "@/services/awards/personal";
-import { listLatestCeremoniesByAward, listMostAwardedArtists, listRecentHeadlineWinners } from "@/services/awards/read";
+import { HallOfFameTileGrid } from "@/components/awards/HallOfFameTile";
+import {
+  listHallOfFameClasses,
+  listLatestCeremoniesByAward,
+  listMostAwardedArtists,
+  listRecentHeadlineWinners,
+} from "@/services/awards/read";
 
 // Hub de premios (openspec: add-music-awards, design D5; redesign-awards-pages; add-four-music-awards, design D7;
 // enrich-awards-hub). Con un solo premio no hay nada que elegir —la ceremonia ya trae la navegación por años—: redirige a su
@@ -46,7 +52,7 @@ export async function generateMetadata({ params }: AwardsIndexProps): Promise<Me
 export default async function AwardsIndexPage({ params, searchParams }: AwardsIndexProps) {
   const { locale } = await params;
   const query = (await searchParams) ?? {};
-  const ceremonies = await listLatestCeremoniesByAward();
+  const [ceremonies, halls] = await Promise.all([listLatestCeremoniesByAward(), listHallOfFameClasses()]);
 
   const [only] = ceremonies;
   if (ceremonies.length === 1 && only) {
@@ -96,9 +102,9 @@ export default async function AwardsIndexPage({ params, searchParams }: AwardsIn
         </div>
       </div>
 
-      {ceremonies.length === 0 ? (
+      {ceremonies.length === 0 && halls.length === 0 ? (
         <p className="font-body text-paper-muted">{t("emptyIndex")}</p>
-      ) : GROUP_AWARDS_ON_HUB ? (
+      ) : ceremonies.length === 0 ? null : GROUP_AWARDS_ON_HUB ? (
         groupAwards(ceremonies).map(({ group, awards }) => (
           <section key={group} aria-labelledby={`grupo-${group}`} className="flex w-full flex-col gap-3">
             <h2 id={`grupo-${group}`} className="font-display text-xl text-paper">
@@ -117,6 +123,13 @@ export default async function AwardsIndexPage({ params, searchParams }: AwardsIn
         <section aria-labelledby="mas-premiados" className="flex w-full flex-col gap-4">
           <SectionHeader heading={t("mostAwardedHeading")} description={t("mostAwardedDescription")} headingId="mas-premiados" />
           <PopularChart items={chartItems} label={t("mostAwardedHeading")} />
+        </section>
+      ) : null}
+
+      {halls.length > 0 ? (
+        <section id="salones-de-la-fama" aria-labelledby="salones-de-la-fama-heading" className="flex w-full scroll-mt-24 flex-col gap-3">
+          <SectionHeader heading={t("hall.hubHeading")} description={t("hall.exploreDescription")} headingId="salones-de-la-fama-heading" />
+          <HallOfFameTileGrid halls={halls} />
         </section>
       ) : null}
     </main>

@@ -34,7 +34,10 @@ vi.mock("@/db", () => ({ db: {} }));
 vi.mock("@/i18n/navigation", () => ({ redirect: mocks.redirect, Link: () => null }));
 vi.mock("@/lib/config/discovery", () => ({ isExploreEnabled: mocks.isExploreEnabled }));
 vi.mock("@/services/auth/authorization", () => ({ getCurrentUser: vi.fn().mockResolvedValue(null) }));
-vi.mock("@/services/awards/read", () => ({ listLatestCeremoniesByAward: vi.fn().mockResolvedValue([]) }));
+vi.mock("@/services/awards/read", () => ({
+  listLatestCeremoniesByAward: vi.fn().mockResolvedValue([]),
+  listHallOfFameClasses: vi.fn().mockResolvedValue([]),
+}));
 vi.mock("@/services/discovery/collections/sync", () => ({ ensureCollectionsFresh: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@/services/discovery/decade-genres", () => ({ listDecadeGenres: mocks.listDecadeGenres }));
 vi.mock("@/services/discovery/decade-covers", () => ({ listDecadeCovers: mocks.listDecadeCovers }));

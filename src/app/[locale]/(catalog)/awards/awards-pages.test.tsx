@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
     throw new Error("NEXT_NOT_FOUND");
   }),
   listLatestCeremoniesByAward: vi.fn(),
+  listHallOfFameClasses: vi.fn(),
   listRecentHeadlineWinners: vi.fn(),
   listMostAwardedArtists: vi.fn(),
   getCurrentUser: vi.fn(),
@@ -38,6 +39,7 @@ vi.mock("@/services/awards/personal", async (importOriginal) => ({
 }));
 vi.mock("@/services/awards/read", () => ({
   listLatestCeremoniesByAward: mocks.listLatestCeremoniesByAward,
+  listHallOfFameClasses: mocks.listHallOfFameClasses,
   listRecentHeadlineWinners: mocks.listRecentHeadlineWinners,
   listMostAwardedArtists: mocks.listMostAwardedArtists,
   getLatestCeremonyYear: mocks.getLatestCeremonyYear,
@@ -51,6 +53,8 @@ const { default: CeremonyPageRoute } = await import("./[award]/[year]/page");
 const { AwardCategory } = await import("@/components/awards/AwardCategory");
 const { FacetRow } = await import("@/components/discovery/FacetRow");
 const { AwardTileGrid } = await import("@/components/awards/AwardTile");
+const { HallOfFameTileGrid } = await import("@/components/awards/HallOfFameTile");
+const { HallOfFameClassView } = await import("@/components/awards/HallOfFameClassView");
 const { RecentWinnersRail } = await import("@/components/awards/RecentWinnersRail");
 const { PopularChart } = await import("@/components/discovery/PopularChart");
 const { default: CategoryHistoryRoute } = await import("./[award]/categories/[key]/page");
@@ -77,6 +81,7 @@ const params = Promise.resolve({ locale: "es" });
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.listHallOfFameClasses.mockResolvedValue([]);
   mocks.listRecentHeadlineWinners.mockResolvedValue([]);
   mocks.listMostAwardedArtists.mockResolvedValue([]);
   mocks.getCurrentUser.mockResolvedValue(null);
@@ -121,6 +126,49 @@ describe("/awards: hub de premios", () => {
     expect(findAll(element, AwardTileGrid)).toHaveLength(0);
     expect(mocks.listRecentHeadlineWinners).not.toHaveBeenCalled();
     expect(mocks.listMostAwardedArtists).not.toHaveBeenCalled();
+  });
+
+  it("con salones de la fama suma el bloque «Salones de la fama» bajo los premios, sin mezclarlos con las tarjetas", async () => {
+    mocks.listLatestCeremoniesByAward.mockResolvedValue([latest("grammy", 2026), latest("brit-awards", 2026)]);
+    mocks.listHallOfFameClasses.mockResolvedValue([{ awardSlug: "grammy-hall-of-fame", year: 2026, years: [2026, 2025], inductees: [] }]);
+
+    const element = await AwardsIndexPage({ params });
+    const text = JSON.stringify(element);
+
+    expect(text).toContain("salones-de-la-fama");
+    expect(text).toContain("hall.hubHeading");
+    expect(findAll(element, HallOfFameTileGrid)).toHaveLength(1);
+    expect((findAll(element, AwardTileGrid)[0]!.props as { ceremonies: { awardSlug: string }[] }).ceremonies.map((c) => c.awardSlug)).toEqual([
+      "grammy",
+      "brit-awards",
+    ]);
+  });
+
+  it("sin salones no muestra el bloque", async () => {
+    mocks.listLatestCeremoniesByAward.mockResolvedValue([latest("grammy", 2026), latest("brit-awards", 2026)]);
+
+    const element = await AwardsIndexPage({ params });
+
+    expect(JSON.stringify(element)).not.toContain("salones-de-la-fama");
+    expect(findAll(element, HallOfFameTileGrid)).toHaveLength(0);
+  });
+
+  it("con un solo premio y un salón sigue redirigiendo al premio: el salón no cuenta para el hub", async () => {
+    mocks.listLatestCeremoniesByAward.mockResolvedValue([latest("grammy", 2026)]);
+    mocks.listHallOfFameClasses.mockResolvedValue([{ awardSlug: "grammy-hall-of-fame", year: 2026, years: [2026], inductees: [] }]);
+
+    await expect(AwardsIndexPage({ params })).rejects.toThrow("NEXT_REDIRECT");
+  });
+
+  it("con solo salones no dice que no hay ceremonias y muestra el bloque", async () => {
+    mocks.listLatestCeremoniesByAward.mockResolvedValue([]);
+    mocks.listHallOfFameClasses.mockResolvedValue([{ awardSlug: "grammy-hall-of-fame", year: 2026, years: [2026], inductees: [] }]);
+
+    const element = await AwardsIndexPage({ params });
+    const text = JSON.stringify(element);
+
+    expect(text).not.toContain("emptyIndex");
+    expect(text).toContain("salones-de-la-fama");
   });
 
   it("las tarjetas del hub van en modo detallado y en una sola grilla (la agrupación está apagada)", async () => {
@@ -251,6 +299,7 @@ describe("/awards/{premio}/{año}: ceremonia", () => {
 
   const page = (over: Partial<CeremonyPage> = {}): CeremonyPage => ({
     awardSlug: "grammy",
+    kind: "competition",
     voting: "academy",
     sourceUrl: "https://en.wikipedia.org/wiki/66th_Annual_Grammy_Awards",
     ceremony: ceremony(2024),
@@ -272,6 +321,13 @@ describe("/awards/{premio}/{año}: ceremonia", () => {
   };
   const variantsOf = (element: ReactNode) =>
     Object.fromEntries(findAll(element, AwardCategory).map((item) => [(item.props as { name: { es: string } }).name.es, (item.props as { variant: string }).variant]));
+
+  it("la clase de un salón de la fama usa su vista propia, sin las categorías destacadas de una competencia", async () => {
+    const element = await open(page({ kind: "hall_of_fame", awardSlug: "grammy-hall-of-fame" }), "2024");
+
+    expect(findAll(element, HallOfFameClassView)).toHaveLength(1);
+    expect(findAll(element, AwardCategory)).toHaveLength(0);
+  });
 
   it("las cuatro primeras del campo general van destacadas y el resto, compactas", async () => {
     const variants = variantsOf(await open(page()));

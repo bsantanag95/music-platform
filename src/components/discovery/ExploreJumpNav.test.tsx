@@ -15,6 +15,7 @@ const es = {
   novedades: catalogEs.explore.jump.newReleases,
   proximos: catalogEs.explore.jump.upcoming,
   premios: catalogEs.explore.jump.awards,
+  "salon-de-la-fama": catalogEs.explore.jump.hallOfFame,
   "mejor-valorados": catalogEs.explore.jump.topRated,
   decadas: catalogEs.explore.jump.decades,
 };
@@ -32,6 +33,7 @@ describe("ExploreJumpNav", () => {
       "Novedades",
       "Próximos",
       "Premios",
+      "Salón de la Fama",
       "Mejor valorados",
       "Décadas",
     ]);

@@ -22,6 +22,7 @@ import { GENRE_FAMILIES, type FamilyKey, type FamilyTier } from "@/services/genr
 import { albumInFamily, albumInGenreTree, findStyleGenreBySlug, parseFamilyKey } from "@/services/genres/read";
 import { enrichLists } from "@/services/lists/lists";
 import { listDecadeCovers } from "./decade-covers";
+import { competitionNominations } from "@/services/awards/competition";
 import { listFamilyCovers } from "./family-covers";
 import { allTimeAlbumRanking, listPopularNow, type PopularResult, type PopularWindow } from "./popularity";
 import {
@@ -749,6 +750,7 @@ export interface AlbumFilterOptions {
 }
 
 /**
+ * Solo cuentan los premios competitivos: una incorporación a un salón de la fama no es un premio ganado (ADR 0044).
  * 2 si el disco ganó un premio, 1 si fue nominado (directo o como disco ancla de una grabación), `null` si no tiene.
  * Subconsultas **no correlacionadas**: Postgres las evalúa una vez como conjuntos y las consulta por fila; la versión
  * correlacionada (`n.release_group_id = rg.id or n.anchor_release_group_id = rg.id`) recorría la tabla por cada disco y
@@ -757,14 +759,14 @@ export interface AlbumFilterOptions {
 const awardScore = sql`(
   case
     when "release_group"."id" in (
-      select release_group_id from award_nomination where won and release_group_id is not null
+      select release_group_id from ${competitionNominations} cn where cn.won and cn.release_group_id is not null
       union
-      select anchor_release_group_id from award_nomination where won and anchor_release_group_id is not null
+      select anchor_release_group_id from ${competitionNominations} cn where cn.won and cn.anchor_release_group_id is not null
     ) then 2
     when "release_group"."id" in (
-      select release_group_id from award_nomination where release_group_id is not null
+      select release_group_id from ${competitionNominations} cn where cn.release_group_id is not null
       union
-      select anchor_release_group_id from award_nomination where anchor_release_group_id is not null
+      select anchor_release_group_id from ${competitionNominations} cn where cn.anchor_release_group_id is not null
     ) then 1
   end
 )`;

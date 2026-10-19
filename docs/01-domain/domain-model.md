@@ -88,6 +88,10 @@ un **nivel** (campo general, por álbum o por género) y las de género, además
 Productor del año y Compositor del año tienen como sujeto a una persona, un Artista del catálogo. Los premios se curan a
 mano en archivos versionados (ADR 0032), no los escriben las personas usuarias.
 
+Un **Salón de la fama** (el Grammy Hall of Fame) es otro tipo de premio: cada año incorpora una **Clase** de grabaciones, sin
+nominados ni competencia. Una clase es una ceremonia sin número de edición, con sus incorporaciones como nominaciones ganadoras,
+y no cuenta como premio ganado (ADR 0044).
+
 ## Crédito
 
 El **Crédito** conecta un Artista con un Álbum o con una Canción, y resuelve los distintos patrones de autoría de la industria:

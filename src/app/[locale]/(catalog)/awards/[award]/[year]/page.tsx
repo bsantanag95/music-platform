@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { AppImage } from "@/components/ui/AppImage";
 import { StickyJumpNav } from "@/components/awards/StickyJumpNav";
+import { HallOfFameClassView } from "@/components/awards/HallOfFameClassView";
 import { NomineeVisual } from "@/components/awards/NominationItem";
 import { categoryName } from "@/components/awards/AwardCategory";
 import { FacetRow } from "@/components/discovery/FacetRow";
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: CeremonyPageProps): Promise<M
   if (!page) return {};
   const t = await getTranslations("awards");
   const award = t.has(`names.${page.awardSlug}`) ? t(`names.${page.awardSlug}`) : page.awardSlug;
-  return { title: t("ceremonyTitle", { award, year: page.ceremony.year }) };
+  return { title: t(page.kind === "hall_of_fame" ? "hall.classFull" : "ceremonyTitle", { award, year: page.ceremony.year }) };
 }
 
 export default async function CeremonyPage({ params }: CeremonyPageProps) {
@@ -43,6 +44,8 @@ export default async function CeremonyPage({ params }: CeremonyPageProps) {
   const t = await getTranslations("awards");
   const tCommon = await getTranslations("common");
   const award = t.has(`names.${page.awardSlug}`) ? t(`names.${page.awardSlug}`) : page.awardSlug;
+  // Un salón de la fama se presenta como una clase (sin edición ni ganadores entre nominados): vista propia (ADR 0044).
+  if (page.kind === "hall_of_fame") return <HallOfFameClassView page={page} awardName={award} />;
   const title = t("ceremonyTitle", { award, year: page.ceremony.year });
   const date = new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
     new Date(`${page.ceremony.heldOn}T00:00:00Z`),
@@ -121,7 +124,8 @@ export default async function CeremonyPage({ params }: CeremonyPageProps) {
           <div className="flex min-w-0 flex-col gap-2">
             <h1 className="font-display text-4xl text-paper sm:text-5xl">{title}</h1>
             <p className="font-data text-sm text-paper-muted">
-              {t("edition", { edition: page.ceremony.edition })} · {t("heldOn", { date })}
+              {page.ceremony.edition !== null ? `${t("edition", { edition: page.ceremony.edition })} · ` : ""}
+              {t("heldOn", { date })}
             </p>
             {page.voting || site ? (
               <p className="flex flex-wrap items-center gap-x-2 font-data text-xs text-paper-muted">
